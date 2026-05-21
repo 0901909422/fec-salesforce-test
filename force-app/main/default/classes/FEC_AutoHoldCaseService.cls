@@ -30,7 +30,10 @@ public with sharing class FEC_AutoHoldCaseService {
         }
 
         List<Case> caseRows = [
-            SELECT FEC_Final_Status__c, FEC_Stage_Name__c
+            SELECT
+                FEC_Final_Status__c,
+                FEC_Stage_Name__c,
+                FEC_Current_Case_Stage__c
             FROM Case
             WHERE Id = :caseId
             LIMIT 1
@@ -45,10 +48,63 @@ public with sharing class FEC_AutoHoldCaseService {
             FEC_Routing_Action__c = 'Submit',
             FEC_Current_Status__c = currentStatusBeforeSubmit,
             FEC_Changed_Status__c = endCase.FEC_Final_Status__c,
-            FEC_Stage_Name__c = endCase.FEC_Stage_Name__c
+            FEC_Stage_Name__c = endCase.FEC_Stage_Name__c,
+            FEC_Previous_Stage__c = endCase.FEC_Current_Case_Stage__c
         );
         Database.insert(history, AccessLevel.SYSTEM_MODE);
         enqueueAfterRoutingHistory(history.Id);
+    }
+
+    /** Cập nhật Changed Status sau Route rồi enqueue Auto Hold (GSR / Route to). */
+    public static void syncChangedStatusAndEnqueue(Id routingHistoryId) {
+        if (routingHistoryId == null) {
+            return;
+        }
+        List<FEC_Routing_Action_History__c> rows = [
+            SELECT Id, FEC_Case__c, FEC_Changed_Status__c
+            FROM FEC_Routing_Action_History__c
+            WHERE Id = :routingHistoryId
+            LIMIT 1
+        ];
+        if (rows.isEmpty() || rows[0].FEC_Case__c == null) {
+            return;
+        }
+        List<Case> endCases = [
+            SELECT FEC_Final_Status__c
+            FROM Case
+            WHERE Id = :rows[0].FEC_Case__c
+            LIMIT 1
+        ];
+        if (!endCases.isEmpty()) {
+            String changedStatus = endCases[0].FEC_Final_Status__c;
+            if (rows[0].FEC_Changed_Status__c != changedStatus) {
+                Database.update(
+                    new FEC_Routing_Action_History__c(
+                        Id = routingHistoryId,
+                        FEC_Changed_Status__c = changedStatus
+                    ),
+                    AccessLevel.SYSTEM_MODE
+                );
+            }
+        }
+        enqueueAfterRoutingHistory(routingHistoryId);
+    }
+
+    /** Enqueue Auto Hold theo Routing History mới nhất của Case (luồng GSR tạo nhiều history). */
+    public static void syncChangedStatusAndEnqueueForCase(Id caseId) {
+        if (caseId == null) {
+            return;
+        }
+        List<FEC_Routing_Action_History__c> rows = [
+            SELECT Id
+            FROM FEC_Routing_Action_History__c
+            WHERE FEC_Case__c = :caseId
+            ORDER BY CreatedDate DESC
+            LIMIT 1
+        ];
+        if (!rows.isEmpty()) {
+            syncChangedStatusAndEnqueue(rows[0].Id);
+        }
     }
 
     public static void processAutoHoldCase(Id routingHistoryId) {
@@ -61,6 +117,7 @@ public with sharing class FEC_AutoHoldCaseService {
                 Id,
                 FEC_Current_Status__c,
                 FEC_Changed_Status__c,
+                FEC_Previous_Stage__c,
                 FEC_Case__c,
                 FEC_Case__r.FEC_Product_Type__c,
                 FEC_Case__r.FEC_Category__c,
@@ -86,14 +143,19 @@ public with sharing class FEC_AutoHoldCaseService {
             return;
         }
 
-        Id nocId = resolveNatureOfCaseId(relatedCase);
+        Id stageIdForConfig = resolveStageIdForAutoHoldConfig(history, relatedCase);
+        if (stageIdForConfig == null) {
+            return;
+        }
+
+        Id nocId = resolveNatureOfCaseId(relatedCase, stageIdForConfig);
         if (nocId == null) {
             return;
         }
 
         FEC_Hold_Case_Config__c config = findMatchingAutoConfig(
             nocId,
-            relatedCase.FEC_Current_Case_Stage__c,
+            stageIdForConfig,
             history.FEC_Current_Status__c,
             history.FEC_Changed_Status__c
         );
@@ -167,8 +229,25 @@ public with sharing class FEC_AutoHoldCaseService {
         );
     }
 
+    /** Stage trước Submit/Route — ưu tiên FEC_Previous_Stage__c trên Routing History. */
+    @TestVisible
+    private static Id resolveStageIdForAutoHoldConfig(
+        FEC_Routing_Action_History__c history,
+        Case relatedCase
+    ) {
+        if (history?.FEC_Previous_Stage__c != null) {
+            return history.FEC_Previous_Stage__c;
+        }
+        return relatedCase?.FEC_Current_Case_Stage__c;
+    }
+
     @TestVisible
     private static Id resolveNatureOfCaseId(Case c) {
+        return resolveNatureOfCaseId(c, c?.FEC_Current_Case_Stage__c);
+    }
+
+    @TestVisible
+    private static Id resolveNatureOfCaseId(Case c, Id stageIdForConfig) {
         List<FEC_Nature_of_Case__c> nocs;
         if (c.FEC_SubCode__c != null) {
             nocs = [
@@ -205,7 +284,7 @@ public with sharing class FEC_AutoHoldCaseService {
             WHERE FEC_Nature_of_Cases__c IN :nocIds
               AND Hold_Case_Type__c = :HOLD_CASE_TYPE_AUTO
               AND FEC_Active__c = TRUE
-              AND FEC_Case_Stage__c = :c.FEC_Current_Case_Stage__c
+              AND FEC_Case_Stage__c = :stageIdForConfig
             LIMIT 1
         ];
         if (!configs.isEmpty() && configs[0].FEC_Nature_of_Cases__c != null) {

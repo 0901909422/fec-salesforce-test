@@ -97,6 +97,10 @@
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
+        <apexClass>FEC_BatchCaseHandlingImportQueueable</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
         <apexClass>FEC_BatchCaseHandlingImportService</apexClass>
         <enabled>true</enabled>
     </classAccesses>
@@ -126,6 +130,10 @@
     </classAccesses>
     <classAccesses>
         <apexClass>FEC_BCH_FilterPropertyService</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_BCH_TemplateExportService</apexClass>
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
@@ -274,6 +282,18 @@
     </classAccesses>
     <classAccesses>
         <apexClass>FEC_CaseRemarkController</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_CaseRemarksRollupService</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_CaseRemarksRollupServiceTest</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_CaseRemarksTriggerHandler</apexClass>
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
@@ -786,6 +806,10 @@
     </classAccesses>
     <classAccesses>
         <apexClass>FEC_NatureOfCaseTriggerHandler</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_NatureOfCaseUserGroupService</apexClass>
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>

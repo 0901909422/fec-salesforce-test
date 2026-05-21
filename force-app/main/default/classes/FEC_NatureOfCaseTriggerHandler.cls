@@ -106,6 +106,10 @@ public without sharing class FEC_NatureOfCaseTriggerHandler {
                 if (child.Id == parent.Id) {
                     continue;
                 }
+                //tungnm37: chỉ update con chưa có config riêng
+                if (String.isNotBlank(child.FEC_Channel__c)) {
+                    continue;
+                }
                 toUpdate.add(new FEC_Nature_of_Case__c(
                     Id = child.Id,
                     FEC_Channel__c = channelVal

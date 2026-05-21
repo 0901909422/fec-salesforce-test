@@ -526,6 +526,7 @@ public without sharing class FEC_CaseEditNOCController {
   
   /**
    * Xóa bộ NOC trên Case khi reload màn (chỉ Case chưa submit).
+   * Mọi user mở trang đều clear — không giới hạn Owner (tránh non-owner vẫn thấy NOC draft).
    * Toannd61
    */
   @AuraEnabled
@@ -534,9 +535,8 @@ public without sharing class FEC_CaseEditNOCController {
       return;
     }
 
-    Id currentUserId = UserInfo.getUserId();
     List<Case> caselst = [
-      SELECT Id, OwnerId, FEC_Is_Submited__c, FEC_Is_Call_API_Success__c
+      SELECT Id, FEC_Is_Submited__c, FEC_Is_Call_API_Success__c
       FROM Case
       WHERE Id = :recordId
       LIMIT 1
@@ -546,9 +546,6 @@ public without sharing class FEC_CaseEditNOCController {
     }
 
     Case c = caselst[0];
-    if (c.OwnerId != currentUserId) {
-      throw new AuraHandledException(System.Label.FEC_MSG_Edit_Owner_Only);
-    }
     if (c.FEC_Is_Submited__c == true || c.FEC_Is_Call_API_Success__c == true) {
       return;
     }

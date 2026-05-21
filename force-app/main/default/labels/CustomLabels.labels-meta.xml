@@ -15984,18 +15984,25 @@
         <value>Có thể tạo yêu cầu giấy xác nhận đóng thẻ</value>
     </labels>
     <labels>
+        <fullName>FEC_MSG_Cannot_Create_Card_Close_Certificate</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Không đủ điều kiện phát hành giấy xác nhận đóng thẻ</shortDescription>
+        <value>Không đủ điều kiện phát hành yêu cầu giấy xác nhận đóng thẻ</value>
+    </labels>
+    <labels>
         <fullName>FEC_MSG_Cannot_Request_Payment_History</fullName>
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>Không đủ điều kiện gửi yêu cầu lịch sử thanh toán</shortDescription>
-        <value>Không thể tạo yêu cầu gửi lịch sử thanh toán</value>
+        <value>Không đủ điều kiện phát hành lịch sử thanh toán</value>
     </labels>
     <labels>
         <fullName>FEC_MSG_Cannot_Request_Repayment_Schedule</fullName>
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>Hợp đồng Closed không gửi lịch trả nợ</shortDescription>
-        <value>Không thể tạo yêu cầu gửi lịch trả nợ</value>
+        <value>Không đủ điều kiện phát hành lịch trả nợ</value>
     </labels>
     <labels>
         <fullName>FEC_LABEL_Months</fullName>
@@ -17063,7 +17070,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC_BCH_Col_TotalRecords</shortDescription>
-        <value>Total Records Count</value>
+        <value>Total Records</value>
     </labels>
     <labels>
         <fullName>FEC_BCH_Col_TotalSuccess</fullName>
@@ -18118,10 +18125,60 @@
         <value>Information</value>
     </labels>
     <labels>
+        <fullName>FEC_Label_Edit_RA</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Edit Routing Assignment</shortDescription>
+        <value>Edit Routing Assignment</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Label_Nature_of_Cases</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Nature of Cases</shortDescription>
+        <value>Nature of Cases</value>
+    </labels>
+    <labels>
+        <fullName>FEC_RA_Error_Update</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>RA Error Update</shortDescription>
+        <value>Có lỗi xảy ra khi cập nhật.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_RA_Error_Load</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>RA Error Load</shortDescription>
+        <value>Không thể tải thông tin Routing Assignment.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Label_Customer_All</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Customer Type All</shortDescription>
+        <value>All</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Label_Customer_Existing</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Customer Type Existing</shortDescription>
+        <value>Existing Customer</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Label_Customer_Non_Existing</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Customer Type Non-Existing</shortDescription>
+        <value>Non-existing Customer</value>
+    </labels>
+    <labels>
         <fullName>FEC_Error_Download</fullName>
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>Error Download</shortDescription>
         <value>Select at least one record and try again.</value>
     </labels>
+   
 </CustomLabels>
