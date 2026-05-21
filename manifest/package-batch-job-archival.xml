@@ -21,7 +21,6 @@
 		<members>FEC_ArchiveVerifyBatchTest</members>
 		<members>FEC_ArchiveVerifyHttpServiceTest</members>
 		<members>FEC_AttachmentExportBatch</members>
-		<members>FEC_AttachmentExportBatch_Test</members>
 		<members>FEC_AttachmentExportHttpService</members>
 		<members>FEC_AttachmentExportBatchTest</members>
 		<members>FEC_AttachmentExportHttpServiceTest</members>
