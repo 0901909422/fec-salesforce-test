@@ -271,7 +271,11 @@ public without sharing class FEC_BCH_TemplateExportService {
             List<String> values = dataRows[i];
             builtRows.add(buildDataRowXml(templateRowXml, templateDataRow1, rowNum1, mappedCols, values));
         }
-        String sheetDataInner = rebuildSheetData(xml, headerRowIndex + 1, builtRows);
+        Integer keepRowsUntil = headerRowIndex + 1;
+        if (templateDataRow1 != null && templateDataRow1 > 1 && templateDataRow1 - 1 > keepRowsUntil) {
+            keepRowsUntil = templateDataRow1 - 1;
+        }
+        String sheetDataInner = rebuildSheetData(xml, keepRowsUntil, builtRows);
         String out = xml.replaceFirst(
             '(?s)<sheetData>.*?</sheetData>',
             '<sheetData>' + sheetDataInner + '</sheetData>'
@@ -844,7 +848,9 @@ public without sharing class FEC_BCH_TemplateExportService {
         String x14Block =
             '<x14:dataValidations count="' +
             String.valueOf(x14ValidationNodes.size()) +
-            '" xmlns:xm="http://schemas.microsoft.com/office/excel/2006/main">' +
+            '" xmlns:x14="http://schemas.microsoft.com/office/spreadsheetml/2009/9/main"' +
+            ' xmlns:xr="http://schemas.microsoft.com/office/spreadsheetml/2014/revision"' +
+            ' xmlns:xm="http://schemas.microsoft.com/office/excel/2006/main">' +
             String.join(x14ValidationNodes, FEC_ConstantCommon.STR_EMPTY) +
             '</x14:dataValidations>';
         String out = upsertX14DataValidationsBlock(xml, x14Block);
@@ -1052,11 +1058,19 @@ public without sharing class FEC_BCH_TemplateExportService {
         return columnName;
     }
 
+    private static String sanitizeXmlText(String value) {
+        if (value == null) {
+            return FEC_ConstantCommon.STR_EMPTY;
+        }
+        return value.replaceAll('[\\u0000-\\u0008\\u000B\\u000C\\u000E-\\u001F]', FEC_ConstantCommon.STR_EMPTY);
+    }
+
     private static String escapeXml(String value) {
         if (value == null) {
             return FEC_ConstantCommon.STR_EMPTY;
         }
-        return value.replace('&', '&amp;')
+        String sanitized = sanitizeXmlText(value);
+        return sanitized.replace('&', '&amp;')
             .replace('<', '&lt;')
             .replace('>', '&gt;')
             .replace('"', '&quot;');
