@@ -208,14 +208,14 @@ public without sharing class FEC_AssignmentRoutingActionHandler {
         Case caseRecord = cases.isEmpty() ? null : cases[0];
         
         List<FEC_Assignment__c> assignmentsList = [
-           SELECT Id, FEC_OwnerID__c, FEC_Team__c, FEC_Assignment_Status__c, FEC_Case__r.FEC_Current_Case_Stage__r.FEC_Code__c FROM FEC_Assignment__c WHERE  Id = :assignmentId 
+           SELECT Id, FEC_OwnerID__c,  FEC_Assignment_Status__c, FEC_Case__r.FEC_Current_Case_Stage__r.FEC_Code__c FROM FEC_Assignment__c WHERE  Id = :assignmentId 
         ];
         
         FEC_Assignment__c assignment = assignmentsList.isEmpty() ? null : assignmentsList[0];
         
         String queueId = subDecision;
         List<Group> groups = [
-            SELECT Id, Name, DeveloperName
+            SELECT Id, Name
             FROM
             GROUP
             WHERE Id = :queueId
@@ -224,37 +224,66 @@ public without sharing class FEC_AssignmentRoutingActionHandler {
         
         Group queue = groups.isEmpty() ? null : groups[0];
         
-        //tungnm37 start: resolve status dua tren team hien tai cua assignment vs team dich (ko check user group)
-        String targetTeam = null;
-        if (queue != null) {
-            List<FEC_Team_Queue__c> tqs = [
-                SELECT FEC_Select_Team__r.Name FROM FEC_Team_Queue__c
-                WHERE FEC_Queue_Name__c = :queue.DeveloperName OR FEC_Queue_Name__c = :queue.Name
-                LIMIT 1
-            ];
-            targetTeam = tqs.isEmpty() ? null : tqs[0].FEC_Select_Team__r?.Name;
-        }
-
-        String currentTeam = assignment != null ? assignment.FEC_Team__c : null;
-        String newStatus;
-        if (FEC_ConstantCommon.CS_BACKOFFICE_TEAMS.contains(currentTeam)
-            && FEC_ConstantCommon.CS_BACKOFFICE_TEAMS.contains(targetTeam)
-            && currentTeam != targetTeam) {
-            newStatus = FEC_ConstantCommon.STATUS_CS_REVIEW;
-        } else if (targetTeam != null) {
-            newStatus = FEC_CofGsrAssignmentService.resolveAssignmentStatusWithOwner(targetTeam, currentTeam);
+        String userDepart;
+        
+        if (isCSSupport()) {
+            userDepart = 'CS Support';
+            
+        } else if (isCSCustomerCare()) {
+            userDepart = 'CS Customer Care';
+            
         } else {
-            newStatus = FEC_ConstantCommon.STATUS_CS_REVIEW;
+            userDepart = 'OTHER';
         }
-
-        assignment.FEC_OwnerID__c = queue != null ? queue.Name : null;
-        assignment.FEC_Assignment_Status__c = newStatus;
-        assignment.FEC_Team__c = targetTeam;
+        
+        System.debug('=== User department: ' + userDepart);
+        
+        /*
+         * OTHER DEPT
+         */
+        if (userDepart == 'OTHER') {
+            if (assignment != null
+            && String.isNotBlank(assignment.FEC_Case__r.FEC_Current_Case_Stage__r.FEC_Code__c)) {
+                /*
+                 * GSR
+                 * Route về CS Support
+                 */
+                if (assignment.FEC_Case__r.FEC_Current_Case_Stage__r.FEC_Code__c.contains(
+                FEC_ConstantCommon.BP_GSR)) {
+                    assignment.FEC_OwnerID__c = queue.Name;
+                    assignment.FEC_Assignment_Status__c = FEC_ConstantCommon.STATUS_CS_BACKOFFICE;
+                }
+                
+                /*
+                 * COF
+                 * Route về CS Customer Care
+                 */
+                else if (assignment.FEC_Case__r.FEC_Current_Case_Stage__r.FEC_Code__c.contains(
+                FEC_ConstantCommon.BP_COF)) {
+                    assignment.FEC_OwnerID__c = queue.Name;
+                    assignment.FEC_Assignment_Status__c = FEC_ConstantCommon.STATUS_CS_BACKOFFICE;
+                }
+            }
+        }
+        
+        /*
+         * CS Support / CS Customer Care
+         */
+        else if (userDepart == 'CS Support' || userDepart == 'CS Customer Care') {
+            System.debug('Test routing CS');
+            assignment.FEC_OwnerID__c = queue.Name;
+            if(queue.Name.contains('CS')){
+                assignment.FEC_Assignment_Status__c = FEC_ConstantCommon.STATUS_CS_REVIEW;
+            }else{
+                assignment.FEC_Assignment_Status__c = FEC_ConstantCommon.STATUS_OTHER_DEPT;
+            }
+            
+        }
+        
         assignment.FEC_Assignment_Owner__c = null;
         update assignment;
         syncAssignmentUsersToCase(caseRecord.Id, assignmentId);
         insertHistory(caseRecord.Id, assignmentId, FEC_ConstantCommon.ACTION_ROUTE_TO_DISPLAY, remark);
-        //tungnm37 end
         
         
     }
