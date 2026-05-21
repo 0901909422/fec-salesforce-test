@@ -13,31 +13,17 @@
         <lightning-layout multiple-rows>
           <lightning-layout-item size="12" padding="around-small">
             <div class="fec-delivery-field-slot">
-              <template if:true={useMrcSingleDeliveryPicklist}>
-                <lightning-combobox
-                  data-fec-field="deliveryPicklist"
-                  label={customLabel.deliveryOption}
-                  placeholder={customLabel.placeholderDelivery}
-                  options={deliveryPicklistOptions}
-                  value={mrcDeliverySingleValue}
-                  required={closureFieldRequired}
-                  disabled={closureFieldsReadonly}
-                  onchange={handleMrcDeliveryComboboxChange}
-                ></lightning-combobox>
-              </template>
-              <template if:false={useMrcSingleDeliveryPicklist}>
-                <c-fec_-multi-picklist-input
-                  data-fec-field="deliveryPicklist"
-                  label={customLabel.deliveryOption}
-                  placeholder={customLabel.placeholderDelivery}
-                  options={deliveryPicklistOptions}
-                  value={selectedDeliveryValues}
-                  required={closureFieldRequired}
-                  read-only={closureFieldsReadonly}
-                  is-search
-                  onchange={handlePicklistChange}
-                ></c-fec_-multi-picklist-input>
-              </template>
+              <c-fec_-multi-picklist-input
+                data-fec-field="deliveryPicklist"
+                label={customLabel.deliveryOption}
+                placeholder={customLabel.placeholderDelivery}
+                options={deliveryPicklistOptions}
+                value={selectedDeliveryValues}
+                required={closureFieldRequired}
+                read-only={closureFieldsReadonly}
+                is-search
+                onchange={handlePicklistChange}
+              ></c-fec_-multi-picklist-input>
             </div>
           </lightning-layout-item>
 

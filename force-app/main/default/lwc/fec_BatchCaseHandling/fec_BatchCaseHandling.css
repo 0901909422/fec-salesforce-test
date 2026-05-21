@@ -468,6 +468,12 @@
   flex-wrap: wrap;
 }
 
+.fec-bulk-link {
+  color: #0176d3;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
 .fec-import-chip {
   display: inline-flex;
   align-items: center;
