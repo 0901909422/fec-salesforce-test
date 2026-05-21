@@ -22,6 +22,10 @@
 		<members>FEC_UpdateDisbursementStatusRestService</members>
         <members>FEC_NocInheritanceUtil</members>
 	    <members>FEC_NocInheritanceUtilTest</members>
+        <members>FEC_DownloadReportScheduler</members>
+        <members>FEC_DownloadReportJob</members>
+        <members>FEC_DownloadReportController</members>
+        <members>FEC_DownloadReportService</members>
 		<members>FEC_AutoHoldCaseApi</members>
 		<members>FEC_AutoHoldCaseExpireBatch</members>
 		<members>FEC_AutoHoldCaseExpireSchedulable</members>
@@ -87,6 +91,14 @@
         <members>FEC_BilledTx_Col_Plan</members>
         <members>FEC_BilledTx_Col_PostDate</members>
         <members>FEC_BilledTx_Col_TxnCode</members>
+        <members>FEC_Download_Report</members>
+        <members>FEC_Export_View</members>
+        <members>FEC_Formatted_Report</members>
+        <members>FEC_Title_Context_Report</members>
+        <members>FEC_Details_Only</members>
+        <members>FEC_Export_Detail</members>
+        <members>FEC_Format</members>
+        <members>FEC_Format_Excel</members>
         <name>CustomLabel</name>
     </types>
 
@@ -143,6 +155,7 @@
         <members>FEC_BatchCaseHandlingImportQueueable</members>
         <members>FEC_BatchCaseHandlingExportService</members>
         <members>FEC_BatchCaseHandlingExportRow</members>
+        <members>FEC_BCH_TemplateExportService</members>
         <members>FEC_SubProcessService</members>
         <members>Fec_HoldCaseConfigurationController</members>
         <members>FEC_ChannelFunctionService</members>
@@ -211,6 +224,7 @@
         <members>FEC_TranferInformationCallout</members>
         <members>FEC_TransactionsController</members>
         <members>FEC_UpdateCustomerAddress</members>
+		<members>FEC_NatureOfCaseUserGroupService</members>
         <name>ApexClass</name>
     </types>
 	<types>
@@ -693,6 +707,7 @@
 		<members>FEC_Case_Assignment_NOC__c</members>
 		<members>FEC_Case_Assignment__c</members>
         <members>FEC_Transfer_Call_Error__c</members>
+		<members>Download_Report__c</members>
 		<members>FEC_Case_Hold_History__c</members>
 		<members>FEC_Notification__c</members>
         <members>FEC_Notification_Template_Channel__c</members>
@@ -800,6 +815,7 @@
         <members>fec_NewAssignmentAction</members>
         <members>fec_holdCaseAuto</members>
         <members>fec_DoNotBotherResultView</members>
+        <members>fec_DownloadReport</members>
         <members>fec_AccountOrContractPicklistCustomerCase</members>
         <members>fec_CardClosureRefundForm</members>
         <members>fec_CaseNote</members>
@@ -1253,6 +1269,7 @@
         <members>FEC_MSG_SLA_Notif_Title_Approaching</members>
         <members>FEC_MSG_SLA_Notif_Title_Exceeded</members>
         <members>FEC_LABEL_API_Code</members>
+        <members>FEC_Error_Download</members>
         <members>FEC_LABEL_Description</members>
         <members>FEC_LABEL_Months</members>
         <members>FEC_MSG_Card_Block_Fail_Retry</members>
@@ -1268,6 +1285,7 @@
         <members>FEC_NEW_ASSIGNMENT_SUCCESS_MSG</members>
         <members>FEC_NEW_ASSIGNMENT_SUCCESS_MSG</members>
         <members>FEC_NEW_ASSIGNMENT_ERR_CREATE</members>
+		<members>FEC_MSG_Cannot_Create_Card_Close_Certificate</members>
         <name>CustomLabel</name>
     </types>
 	<types>
@@ -1443,6 +1461,7 @@
         <members>RD_IT_User_System_Management</members>
         <!-- Case Assignment -->
         <members>FEC_Case_Assignment_Management</members>
+        <members>FEC_Download_Report_Data</members>
         <name>PermissionSet</name>
     </types>
     <types>
@@ -1505,6 +1524,7 @@
         <members>Case.FEC_Execute_Assigment</members>
         <members>Case.FEC_New_Assignment_LWC</members>
         <members>Case.New_Assignment</members>
+        <members>Download_Report__c.FEC_DownloadReport</members>
         <name>QuickAction</name>
     </types>
     <types>
@@ -1512,8 +1532,8 @@
         <name>MilestoneType</name>
     </types>
     <types>
-        <members>case sla main v1</members>
-        <members>case sla main v3</members>
+        <members>Case SLA Main 1</members>
+        <members>Case SLA Main 2</members>
         <name>EntitlementProcess</name>
     </types>
     <types>
@@ -1649,6 +1669,7 @@
 	<types>
 		<members>FEC_Assignment_Set_User_Role</members>
 		<members>Assign_Entitlement_to_Case</members>
+        <members>FEC_DownloadReportFlow</members>
 		<name>Flow</name>
 	</types>
     <types>
@@ -1905,12 +1926,16 @@
     </types>
     <types>
         <members>fecNewGeneralAssignmentAction</members>
+        <members>fecRoutingAssignmentEditOverride</members>
+        <members>fec_CaseAssignmentNocEditOverride</members>
         <name>AuraDefinitionBundle</name>
     </types>
     <types>
         <members>fec_NewGeneralAssignment</members>
         <members>fec_NocGeneralAssignment</members>
         <members>fec_NocRoutingAssignment</members>
+        <members>fecRoutingAssignmentEditForm</members>
+        <members>fec_DownloadReports</members>
         <name>LightningComponentBundle</name>
     </types>
     <types>
@@ -1935,11 +1960,13 @@
     <types>
         <members>FEC_General_Assignment_Config__c</members>
         <members>FEC_General_Assignment__c</members>
+        <members>FEC_Download_Report__c</members>
         <name>CustomObject</name>
     </types>
     <types>
         <members>FEC_General_Assignment_Config__c</members>
         <members>FEC_General_Assignment__c</members>
+        <members>FEC_Download_Report__c</members>
         <name>CustomTab</name>
     </types>
     <types>
@@ -1954,6 +1981,7 @@
         <members>FEC_General_Assignment_Record_Page</members>
         <members>FEC_Routing_Assignment_Record_Page</members>
         <members>Nature_of_Cases_Record_Page</members>
+        <members>FEC_Download_Report_Record_Page</members>
         <name>FlexiPage</name>
     </types>
     <types>
@@ -1995,6 +2023,13 @@
         <members>FEC_Label_Required_Info</members>
         <members>FEC_Label_Search_Channel</members>
         <members>FEC_Label_Team</members>
+        <members>FEC_Label_Customer_All</members>
+        <members>FEC_Label_Customer_Existing</members>
+        <members>FEC_Label_Customer_Non_Existing</members>
+        <members>FEC_Label_Edit_RA</members>
+        <members>FEC_Label_Nature_of_Cases</members>
+        <members>FEC_RA_Error_Load</members>
+        <members>FEC_RA_Error_Update</members>
         <name>CustomLabel</name>
     </types>
     <types>
@@ -2060,6 +2095,9 @@
     <types>
         <members>FEC_General_Assignment_Config__c.All</members>
         <members>FEC_General_Assignment__c.All</members>
+        <members>FEC_Download_Report__c.All</members>
+        <members>FEC_Download_Report__c.INTERACTIONS_SERVICE_CASES_SUMMARY_TAT</members>
+        <members>FEC_Download_Report__c.Interaction_and_Service_Case_Summary</members>
         <name>ListView</name>
     </types>
 
@@ -2106,6 +2144,8 @@
         <members>FEC_Routing_Action_History__c.FEC_Submitted_On__c</members>
         <members>FEC_Routing_Action_History__c.FEC_TAT_by_Assignment_Hrs__c</members>
         <members>FEC_Routing_Action_History__c.FEC_TAT_by_Assignment__c</members>
+        <members>FEC_Download_Report__c.FEC_Link__c</members>
+        <members>FEC_Download_Report__c.FEC_Report_Unique_Name__c</members>
         <name>CustomField</name>
     </types>
     <types>
@@ -2183,5 +2223,9 @@
         <members>BusinessHours</members>
         <name>Settings</name>
     </types>
+	<types>
+	    <members>FEC_Download_Report__c.FEC_Download</members>
+	    <name>WebLink</name>
+	</types>
 	<version>66.0</version>
 </Package>
