@@ -265,6 +265,7 @@
         <members>FEC_Download_Report__c.FEC_Link__c</members>
         <members>FEC_Download_Report__c.FEC_Report_Unique_Name__c</members>
         <members>FEC_Case_Assignment_Log_Detail__c.FEC_Case_Assignment_log_Name__c</members>
+        <members>FEC_Additional_Info__c.FEC_Statement_Fee__c</members>
         <name>CustomField</name>
     </types>
     <types>
