@@ -23,7 +23,17 @@ import getRoleOptions from "@salesforce/apex/FEC_CaseAssignmentConfigController.
 import getBusinessHourOptions from "@salesforce/apex/FEC_CaseAssignmentConfigController.getBusinessHourOptions";
 
 const OBJECT_API_NAME = "FEC_Case_Assignment__c";
+const STATUS_DRAFT = "Draft";
 const STATUS_ACTIVE = "Active";
+const STATUS_ARCHIVED = "Archived";
+/** Luôn hiển thị đủ 3 giá trị trên form New (org picklist API có thể thiếu Active). */
+const STATUS_OPTIONS_CANONICAL = [
+  { label: STATUS_DRAFT, value: STATUS_DRAFT },
+  { label: STATUS_ACTIVE, value: STATUS_ACTIVE },
+  { label: STATUS_ARCHIVED, value: STATUS_ARCHIVED },
+];
+const MSG_NAME_BLANK = "Name can't be blank";
+const MSG_DUPLICATE_NAME = "Case Assignment Name đã tồn tại.";
 const MSG_CANNOT_ACTIVE_WITHOUT_NOC =
   "Không thể Active khi chưa thêm Case Assignment NOC.";
 
@@ -47,7 +57,9 @@ export default class FecCaseAssignmentNewForm extends NavigationMixin(LightningE
   ownerName = "";
   isSaving = false;
   pageErrors = [];
+  showErrorModal = false;
   queueHasError = false;
+  roleHasError = false;
   currentTabId;
 
   @wire(IsConsoleNavigation) isConsoleNavigation;
@@ -61,9 +73,9 @@ export default class FecCaseAssignmentNewForm extends NavigationMixin(LightningE
   })
   wiredStatus({ data }) {
     if (data) {
-      this.statusOptions = data.values;
-      if (!this.status && data.defaultValue) {
-        this.status = data.defaultValue.value;
+      this._wiredStatusOptions = data.values;
+      if (!this.status) {
+        this.status = STATUS_DRAFT;
       }
     }
   }
@@ -110,14 +122,12 @@ export default class FecCaseAssignmentNewForm extends NavigationMixin(LightningE
   }
 
   get statusOptions() {
-    return this._statusOptions || [];
-  }
-  set statusOptions(value) {
-    this._statusOptions = value;
-  }
-
-  get availableStatusOptions() {
-    return this.statusOptions.filter((option) => option.value !== STATUS_ACTIVE);
+    const wiredByValue = new Map(
+      (this._wiredStatusOptions || []).map((option) => [option.value, option])
+    );
+    return STATUS_OPTIONS_CANONICAL.map(
+      (canonical) => wiredByValue.get(canonical.value) || canonical
+    );
   }
 
   get assignmentMethodOptions() {
@@ -249,14 +259,7 @@ export default class FecCaseAssignmentNewForm extends NavigationMixin(LightningE
   }
 
   handleStatusChange(event) {
-    const nextStatus = event.detail.value || "";
-    if (nextStatus === STATUS_ACTIVE) {
-      this.status = this._statusOptions?.[0]?.value || "Draft";
-      this.pageErrors = [MSG_CANNOT_ACTIVE_WITHOUT_NOC];
-      this.reportFieldValidity(this.pageErrors);
-      return;
-    }
-    this.status = nextStatus;
+    this.status = event.detail.value || "";
     this.clearPageErrors();
   }
 
@@ -368,8 +371,7 @@ export default class FecCaseAssignmentNewForm extends NavigationMixin(LightningE
     this.clearPageErrors();
     const validationErrors = this.validateBeforeSave();
     if (validationErrors.length) {
-      this.pageErrors = validationErrors;
-      this.reportFieldValidity(validationErrors);
+      this.presentPageErrors(validationErrors);
       return;
     }
 
@@ -406,10 +408,9 @@ export default class FecCaseAssignmentNewForm extends NavigationMixin(LightningE
       }
     } catch (e) {
       const messages = this.extractRecordErrors(e);
-      this.pageErrors = messages.length
-        ? messages
-        : [e?.body?.message || "Create Case Assignment failed."];
-      this.reportFieldValidity(this.pageErrors);
+      this.presentPageErrors(
+        messages.length ? messages : [e?.body?.message || "Create Case Assignment failed."]
+      );
     } finally {
       this.isSaving = false;
     }
@@ -506,6 +507,8 @@ export default class FecCaseAssignmentNewForm extends NavigationMixin(LightningE
     this.selectedTimeSlots = [];
     this.businessHoursId = "";
     this.clearPageErrors();
+    const draftOption = this.statusOptions.find((option) => option.value === STATUS_DRAFT);
+    this.status = draftOption?.value || STATUS_DRAFT;
   }
 
   validateBeforeSave() {
@@ -513,7 +516,7 @@ export default class FecCaseAssignmentNewForm extends NavigationMixin(LightningE
     const trimmedName = (this.assignmentName || "").trim();
 
     if (!trimmedName) {
-      errors.push("Case Assignment Name can't be blank");
+      errors.push(MSG_NAME_BLANK);
     }
     if (!this.status) {
       errors.push("Status can't be blank");
@@ -558,12 +561,57 @@ export default class FecCaseAssignmentNewForm extends NavigationMixin(LightningE
         }
       });
     }
-    return [...new Set(messages)];
+    const bodyMessage = error?.body?.message;
+    if (bodyMessage) {
+      messages.push(bodyMessage);
+    }
+    return this.normalizePageErrors(messages);
+  }
+
+  normalizePageErrors(messages) {
+    const normalized = [];
+    const seen = new Set();
+    (messages || []).forEach((raw) => {
+      if (!raw) {
+        return;
+      }
+      let message = String(raw).trim();
+      const lower = message.toLowerCase();
+      if (
+        message === MSG_DUPLICATE_NAME ||
+        lower.includes("đã tồn tại") ||
+        lower.includes("duplicate") ||
+        lower.includes("must be unique")
+      ) {
+        message = MSG_DUPLICATE_NAME;
+      }
+      if (!seen.has(message)) {
+        seen.add(message);
+        normalized.push(message);
+      }
+    });
+    return normalized;
+  }
+
+  presentPageErrors(messages) {
+    this.pageErrors = this.normalizePageErrors(messages);
+    this.showErrorModal = this.pageErrors.length > 0;
+    this.reportFieldValidity(this.pageErrors);
+    requestAnimationFrame(() => {
+      const anchor = this.template.querySelector('[data-id="page-error-anchor"]');
+      anchor?.scrollIntoView?.({ behavior: "smooth", block: "start" });
+    });
+  }
+
+  closeErrorModal() {
+    this.showErrorModal = false;
   }
 
   clearPageErrors() {
     this.pageErrors = [];
+    this.showErrorModal = false;
     this.queueHasError = false;
+    this.roleHasError = false;
     this.template.querySelectorAll("[data-field]").forEach((field) => {
       if (typeof field.setCustomValidity === "function") {
         field.setCustomValidity("");
@@ -573,34 +621,59 @@ export default class FecCaseAssignmentNewForm extends NavigationMixin(LightningE
   }
 
   reportFieldValidity(messages) {
-    const blankName = messages.some((msg) => msg.includes("Case Assignment Name"));
-    if (blankName) {
-      const nameInput = this.template.querySelector('[data-field="assignmentName"]');
-      if (nameInput) {
-        nameInput.setCustomValidity("Case Assignment Name can't be blank");
-        nameInput.reportValidity();
-      }
-    }
+    const hasDuplicate = messages.includes(MSG_DUPLICATE_NAME);
+    const fieldRules = [
+      {
+        blankMessage: MSG_NAME_BLANK,
+        selector: '[data-field="assignmentName"]',
+      },
+      {
+        blankMessage: "Status can't be blank",
+        selector: '[data-field="status"]',
+      },
+      {
+        blankMessage: "Assignment Method can't be blank",
+        selector: '[data-field="assignmentMethod"]',
+      },
+      {
+        blankMessage: "Business Hours can't be blank",
+        selector: '[data-field="businessHours"]',
+      },
+      {
+        blankMessage: "Time Slots can't be blank",
+        selector: '[data-field="timeSlots"]',
+      },
+    ];
 
-    const blankBusinessHours = messages.some((msg) => msg.includes("Business Hours"));
-    if (blankBusinessHours) {
-      const businessHoursField = this.template.querySelector('[data-field="businessHours"]');
-      if (businessHoursField) {
-        businessHoursField.setCustomValidity("Business Hours can't be blank");
-        businessHoursField.reportValidity();
+    fieldRules.forEach(({ blankMessage, selector }) => {
+      const field = this.template.querySelector(selector);
+      if (!field) {
+        return;
       }
-    }
-
-    this.queueHasError = messages.some((msg) => msg.includes("Select Queues"));
-
-    const activeWithoutNoc = messages.some((msg) => msg === MSG_CANNOT_ACTIVE_WITHOUT_NOC);
-    if (activeWithoutNoc) {
-      const statusField = this.template.querySelector('[data-field="status"]');
-      if (statusField) {
-        statusField.setCustomValidity(MSG_CANNOT_ACTIVE_WITHOUT_NOC);
-        statusField.reportValidity();
+      if (messages.includes(blankMessage)) {
+        field.setCustomValidity(blankMessage);
+        field.reportValidity();
+        return;
       }
-    }
+      if (selector.includes("assignmentName") && hasDuplicate) {
+        field.setCustomValidity("");
+        field.reportValidity();
+        return;
+      }
+      if (
+        selector.includes("status") &&
+        messages.includes(MSG_CANNOT_ACTIVE_WITHOUT_NOC)
+      ) {
+        field.setCustomValidity(MSG_CANNOT_ACTIVE_WITHOUT_NOC);
+        field.reportValidity();
+        return;
+      }
+      field.setCustomValidity("");
+      field.reportValidity();
+    });
+
+    this.queueHasError = messages.includes("Select Queues can't be blank");
+    this.roleHasError = messages.includes("Role can't be blank");
   }
 
   handleAddRole() {
