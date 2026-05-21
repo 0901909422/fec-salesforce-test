@@ -1935,6 +1935,7 @@
         <members>fec_NocGeneralAssignment</members>
         <members>fec_NocRoutingAssignment</members>
         <members>fecRoutingAssignmentEditForm</members>
+        <members>fec_DownloadReports</members>
         <name>LightningComponentBundle</name>
     </types>
     <types>
@@ -1959,6 +1960,7 @@
     <types>
         <members>FEC_General_Assignment_Config__c</members>
         <members>FEC_General_Assignment__c</members>
+        <members>FEC_Download_Report__c</members>
         <name>CustomObject</name>
     </types>
     <types>
@@ -1978,6 +1980,7 @@
         <members>FEC_General_Assignment_Record_Page</members>
         <members>FEC_Routing_Assignment_Record_Page</members>
         <members>Nature_of_Cases_Record_Page</members>
+        <members>FEC_Download_Report_Record_Page</members>
         <name>FlexiPage</name>
     </types>
     <types>
@@ -2091,6 +2094,9 @@
     <types>
         <members>FEC_General_Assignment_Config__c.All</members>
         <members>FEC_General_Assignment__c.All</members>
+        <members>FEC_Download_Report__c.All</members>
+        <members>FEC_Download_Report__c.INTERACTIONS_SERVICE_CASES_SUMMARY_TAT</members>
+        <members>FEC_Download_Report__c.Interaction_and_Service_Case_Summary</members>
         <name>ListView</name>
     </types>
 
@@ -2137,6 +2143,8 @@
         <members>FEC_Routing_Action_History__c.FEC_Submitted_On__c</members>
         <members>FEC_Routing_Action_History__c.FEC_TAT_by_Assignment_Hrs__c</members>
         <members>FEC_Routing_Action_History__c.FEC_TAT_by_Assignment__c</members>
+        <members>FEC_Download_Report__c.FEC_Link__c</members>
+        <members>FEC_Download_Report__c.FEC_Report_Unique_Name__c</members>
         <name>CustomField</name>
     </types>
     <types>
@@ -2214,5 +2222,9 @@
         <members>BusinessHours</members>
         <name>Settings</name>
     </types>
+	<types>
+	    <members>FEC_Download_Report__c.FEC_Download</members>
+	    <name>WebLink</name>
+	</types>
 	<version>66.0</version>
 </Package>
