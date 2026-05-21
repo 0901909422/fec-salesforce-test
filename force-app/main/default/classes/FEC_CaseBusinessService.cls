@@ -4532,7 +4532,8 @@ public without sharing class FEC_CaseBusinessService {
         Id,
         FEC_Perform_User__c,
         FEC_Updated_User_Queue__c,
-        FEC_Updated_User_Queue_ID__c
+        FEC_Updated_User_Queue_ID__c,
+        FEC_Stage_Name__c
       FROM FEC_Routing_Action_History__c
       WHERE
         FEC_Case__c = :caseId
@@ -4565,6 +4566,21 @@ public without sharing class FEC_CaseBusinessService {
         currentUserId == lastAction.FEC_Perform_User__c &&
         lastAction.FEC_Updated_User_Queue_ID__c == c.OwnerId
       ) {
+          if (String.isNotBlank(lastAction.FEC_Stage_Name__c)) {
+            List<FEC_Case_Stage__c> caseStageList = [
+            SELECT
+              Id,
+              Name
+            FROM FEC_Case_Stage__c
+            WHERE
+              Name = :lastAction.FEC_Stage_Name__c
+            LIMIT 1
+            ];
+          if (!caseStageList.isEmpty()) {
+            c.FEC_Current_Case_Stage__c = caseStageList[0].Id;
+          }
+        }
+        
         c.OwnerId = currentUserId;
         c.Status = FEC_ConstantCommon.CASE_STATUS_PENDING;
         registerSkipOwnerChangeRoutingHistory(c.Id);
