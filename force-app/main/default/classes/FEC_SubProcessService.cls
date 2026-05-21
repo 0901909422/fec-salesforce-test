@@ -154,12 +154,15 @@ public with sharing class FEC_SubProcessService {
             result.showHoldCaseManual = !manualConfigs.isEmpty();
 
             // ===== HOLD CASE — Auto =====
+            FEC_Nature_of_Case__c nocForHoldCase =
+                resolveHoldCaseNatureOfCase(nocList, currentStageId);
             List<FEC_Hold_Case_Config__c> autoConfigs = [
                 SELECT Id
                 FROM FEC_Hold_Case_Config__c
-                WHERE FEC_Nature_of_Cases__c = :noc.Id
-                  AND Hold_Case_Type__c = 'Auto'
+                WHERE Hold_Case_Type__c = 'Auto'
                   AND FEC_Active__c = true
+                  AND FEC_Case_Stage__c = :currentStageId
+                  AND (FEC_Nature_of_Cases__c = :nocForHoldCase.Id OR FEC_Nature_of_Cases__c = null)
                 WITH SECURITY_ENFORCED
                 LIMIT 1
             ];
@@ -175,6 +178,39 @@ public with sharing class FEC_SubProcessService {
                 ex.getMessage()
                 );
         }
+    }
+
+    /** Duplicate NOC cùng Product/Category/SubCategory/SubCode: ưu tiên NOC có Hold Case Config Auto khớp stage. */
+    private static FEC_Nature_of_Case__c resolveHoldCaseNatureOfCase(
+        List<FEC_Nature_of_Case__c> nocList,
+        Id currentStageId
+    ) {
+        if (nocList == null || nocList.isEmpty()) {
+            return null;
+        }
+        if (nocList.size() == 1 || currentStageId == null) {
+            return nocList[0];
+        }
+
+        Set<Id> nocIds = new Map<Id, FEC_Nature_of_Case__c>(nocList).keySet();
+        List<FEC_Hold_Case_Config__c> configs = [
+            SELECT FEC_Nature_of_Cases__c
+            FROM FEC_Hold_Case_Config__c
+            WHERE FEC_Nature_of_Cases__c IN :nocIds
+              AND Hold_Case_Type__c = 'Auto'
+              AND FEC_Active__c = true
+              AND FEC_Case_Stage__c = :currentStageId
+            WITH SECURITY_ENFORCED
+            LIMIT 1
+        ];
+        if (!configs.isEmpty() && configs[0].FEC_Nature_of_Cases__c != null) {
+            for (FEC_Nature_of_Case__c noc : nocList) {
+                if (noc.Id == configs[0].FEC_Nature_of_Cases__c) {
+                    return noc;
+                }
+            }
+        }
+        return nocList[0];
     }
     
     

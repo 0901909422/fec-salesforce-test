@@ -51,7 +51,7 @@ export default class Fec_CaseAssignmentConfig extends LightningElement {
     );
   }
 
-  /** Chỉ Draft được sửa config; chờ wire xong mới mở chỉnh sửa. */
+  /** Chỉ Draft được sửa Role/Scale; Select Queues không đổi sau khi tạo. */
   _statusFromWire = "";
 
   get configReadOnly() {
@@ -61,11 +61,15 @@ export default class Fec_CaseAssignmentConfig extends LightningElement {
     return this._statusFromWire !== "Draft";
   }
 
+  get queuesReadOnly() {
+    return true;
+  }
+
   get configFrozenHint() {
     if (!this.loaded || !this.configReadOnly || !this._statusFromWire) {
       return "";
     }
-    return "Chỉ khi Case Assignment có Status Draft mới chỉnh sửa được cấu hình Queues và Role.";
+    return "Chỉ khi Case Assignment có Status Draft mới chỉnh sửa được cấu hình Role.";
   }
 
   get configSaveTitle() {
@@ -87,9 +91,23 @@ export default class Fec_CaseAssignmentConfig extends LightningElement {
   async loadRolesByQueues() {
     try {
       this.roleOptions = await getRoleOptions({ queueNames: this.selectedQueues });
+      this.pruneRoleRowsToAvailableOptions();
     } catch (e) {
       this.roleOptions = [];
       this.showToast("Error", "Cannot load role options.", "error");
+    }
+  }
+
+  pruneRoleRowsToAvailableOptions() {
+    if (!this.selectedQueues.length) {
+      this.roleRows = [];
+      this.selectedRole = "";
+      return;
+    }
+    const allowed = new Set((this.roleOptions || []).map((item) => item.value));
+    this.roleRows = this.roleRows.filter((row) => allowed.has(row.role));
+    if (this.selectedRole && !allowed.has(this.selectedRole)) {
+      this.selectedRole = "";
     }
   }
 
@@ -142,12 +160,12 @@ export default class Fec_CaseAssignmentConfig extends LightningElement {
     return rows.filter((row) => row.role && row.scale >= 1);
   }
 
-  handleQueuesChange(event) {
-    if (this.configReadOnly) {
+  async handleQueuesChange(event) {
+    if (this.configReadOnly || this.queuesReadOnly) {
       return;
     }
     this.selectedQueues = event.detail.value || [];
-    this.loadRolesByQueues();
+    await this.loadRolesByQueues();
   }
 
   handleRoleChange(event) {

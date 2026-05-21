@@ -15,6 +15,19 @@
             </value>
         </assignmentItems>
     </assignments>
+    <assignments>
+        <name>Copy_1_of_Assign_Entitlement_to_Case</name>
+        <label>Assign Entitlement to Case</label>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <assignmentItems>
+            <assignToReference>$Record.EntitlementId</assignToReference>
+            <operator>Assign</operator>
+            <value>
+                <elementReference>Copy_1_of_Get_Active_Entitlement.Id</elementReference>
+            </value>
+        </assignmentItems>
+    </assignments>
     <decisions>
         <name>Check_if_Entitlement_Found</name>
         <label>Check if Entitlement Found</label>
@@ -37,7 +50,108 @@
             <label>Yes</label>
         </rules>
     </decisions>
+    <decisions>
+        <name>Copy_1_of_Check_if_Entitlement_Found</name>
+        <label>Check if Entitlement Found</label>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <defaultConnectorLabel>Default Outcome</defaultConnectorLabel>
+        <rules>
+            <name>Copy_1_of_Yes</name>
+            <conditionLogic>and</conditionLogic>
+            <conditions>
+                <leftValueReference>Get_Active_Entitlement.Id</leftValueReference>
+                <operator>IsNull</operator>
+                <rightValue>
+                    <booleanValue>false</booleanValue>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>Copy_1_of_Assign_Entitlement_to_Case</targetReference>
+            </connector>
+            <label>Yes</label>
+        </rules>
+    </decisions>
+    <decisions>
+        <name>Decision_2</name>
+        <label>Is Config</label>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <defaultConnector>
+            <targetReference>Copy_1_of_Get_Active_Entitlement</targetReference>
+        </defaultConnector>
+        <defaultConnectorLabel>false</defaultConnectorLabel>
+        <rules>
+            <name>Outcome_1_of_Decision_2</name>
+            <conditionLogic>and</conditionLogic>
+            <conditions>
+                <leftValueReference>SLAConfig</leftValueReference>
+                <operator>EqualTo</operator>
+                <rightValue>
+                    <booleanValue>true</booleanValue>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>Get_Active_Entitlement</targetReference>
+            </connector>
+            <label>true</label>
+        </rules>
+    </decisions>
     <environments>Default</environments>
+    <formulas>
+        <name>SLAConfig</name>
+        <dataType>Boolean</dataType>
+        <expression>OR(
+  {!varSubCode.FEC_Code__c} = &quot;CC05.01&quot;,
+  {!varSubCode.FEC_Code__c} = &quot;CC05.02&quot;,
+  {!varSubCode.FEC_Code__c} = &quot;CL05.01&quot;,
+  {!varSubCode.FEC_Code__c} = &quot;CL05.02&quot;,
+  {!varSubCode.FEC_Code__c} = &quot;FC05.01&quot;,
+  {!varSubCode.FEC_Code__c} = &quot;FC05.02&quot;,
+  {!varSubCode.FEC_Code__c} = &quot;FC05.04&quot;,
+  {!varSubCode.FEC_Code__c} = &quot;FL05.01&quot;,
+  {!varSubCode.FEC_Code__c} = &quot;FL05.02&quot;,
+  {!varSubCode.FEC_Code__c} = &quot;FL05.04&quot;,
+  {!varSubCode.FEC_Code__c} = &quot;RC09.01&quot;,
+  {!varSubCode.FEC_Code__c} = &quot;RL16.01&quot;,
+  {!varSubCode.FEC_Code__c} = &quot;CC03.01&quot;,
+  {!varSubCode.FEC_Code__c} = &quot;CC03.03&quot;,
+  {!varSubCode.FEC_Code__c} = &quot;CC03.04&quot;,
+  {!varSubCode.FEC_Code__c} = &quot;CL03.01&quot;,
+  {!varSubCode.FEC_Code__c} = &quot;CL03.03&quot;,
+  {!varSubCode.FEC_Code__c} = &quot;CL03.04&quot;,
+  {!varSubCode.FEC_Code__c} = &quot;FC03.01&quot;,
+  {!varSubCode.FEC_Code__c} = &quot;FC03.03&quot;,
+  {!varSubCode.FEC_Code__c} = &quot;FC03.04&quot;,
+  {!varSubCode.FEC_Code__c} = &quot;FL03.01&quot;,
+  {!varSubCode.FEC_Code__c} = &quot;FL03.03&quot;,
+  {!varSubCode.FEC_Code__c} = &quot;FL03.04&quot;,
+  {!varSubCode.FEC_Code__c} = &quot;FL07.03&quot;,
+  {!varSubCode.FEC_Code__c} = &quot;RC04.04&quot;,
+  {!varSubCode.FEC_Code__c} = &quot;RL04.01&quot;,
+  {!varSubCode.FEC_Code__c} = &quot;RC24.01&quot;,
+  {!varSubCategory.FEC_Code__c} = &quot;RC13&quot;,
+  {!varSubCategory.FEC_Code__c} = &quot;RC17&quot;,
+  {!varSubCategory.FEC_Code__c} = &quot;RC20&quot;,
+  {!varSubCategory.FEC_Code__c} = &quot;RC21&quot;,
+  {!varSubCategory.FEC_Code__c} = &quot;RL13&quot;,
+  {!varSubCategory.FEC_Code__c} = &quot;RL17&quot;,
+  {!varSubCategory.FEC_Code__c} = &quot;RL20&quot;,
+  {!varSubCategory.FEC_Code__c} = &quot;RL21&quot;,
+  {!varSubCategory.FEC_Code__c} = &quot;RC10&quot;,
+  {!varSubCategory.FEC_Code__c} = &quot;RL10&quot;,
+  {!varSubCategory.FEC_Code__c} = &quot;CC01&quot;,
+  {!varSubCategory.FEC_Code__c} = &quot;CL01&quot;,
+  {!varSubCategory.FEC_Code__c} = &quot;CU01&quot;,
+  {!varSubCategory.FEC_Code__c} = &quot;CU04&quot;,
+  {!varSubCategory.FEC_Code__c} = &quot;FC01&quot;,
+  {!varSubCategory.FEC_Code__c} = &quot;FC06&quot;,
+  {!varSubCategory.FEC_Code__c} = &quot;FL01&quot;,
+  {!varSubCategory.FEC_Code__c} = &quot;FL06&quot;,
+  {!varSubCategory.FEC_Code__c} = &quot;FU01&quot;,
+  {!varSubCategory.FEC_Code__c} = &quot;FU04&quot;
+)</expression>
+    </formulas>
     <interviewLabel>Assign Entitlement to Case {!$Flow.CurrentDateTime}</interviewLabel>
     <label>Assign Entitlement to Case</label>
     <processMetadataValues>
@@ -60,13 +174,13 @@
     </processMetadataValues>
     <processType>AutoLaunchedFlow</processType>
     <recordLookups>
-        <name>Get_Active_Entitlement</name>
-        <label>Get Active Entitlement</label>
+        <name>Copy_1_of_Get_Active_Entitlement</name>
+        <label>Get Main Case Entitlement</label>
         <locationX>0</locationX>
         <locationY>0</locationY>
         <assignNullValuesIfNoRecordsFound>false</assignNullValuesIfNoRecordsFound>
         <connector>
-            <targetReference>Check_if_Entitlement_Found</targetReference>
+            <targetReference>Copy_1_of_Check_if_Entitlement_Found</targetReference>
         </connector>
         <filterLogic>and</filterLogic>
         <filters>
@@ -89,11 +203,85 @@
         <sortOrder>Desc</sortOrder>
         <storeOutputAutomatically>true</storeOutputAutomatically>
     </recordLookups>
+    <recordLookups>
+        <name>Get_Active_Entitlement</name>
+        <label>Get Case NOC Entitlement</label>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <assignNullValuesIfNoRecordsFound>false</assignNullValuesIfNoRecordsFound>
+        <connector>
+            <targetReference>Check_if_Entitlement_Found</targetReference>
+        </connector>
+        <filterLogic>and</filterLogic>
+        <filters>
+            <field>Status</field>
+            <operator>EqualTo</operator>
+            <value>
+                <stringValue>Active</stringValue>
+            </value>
+        </filters>
+        <filters>
+            <field>Name</field>
+            <operator>EqualTo</operator>
+            <value>
+                <stringValue>NOC SLA</stringValue>
+            </value>
+        </filters>
+        <getFirstRecordOnly>true</getFirstRecordOnly>
+        <object>Entitlement</object>
+        <sortField>CreatedDate</sortField>
+        <sortOrder>Desc</sortOrder>
+        <storeOutputAutomatically>true</storeOutputAutomatically>
+    </recordLookups>
+    <recordLookups>
+        <name>Get_Sub_Category</name>
+        <label>Get Sub Category</label>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <assignNullValuesIfNoRecordsFound>false</assignNullValuesIfNoRecordsFound>
+        <connector>
+            <targetReference>Decision_2</targetReference>
+        </connector>
+        <filterLogic>and</filterLogic>
+        <filters>
+            <field>Id</field>
+            <operator>EqualTo</operator>
+            <value>
+                <elementReference>$Record.FEC_SubCategory__r.Id</elementReference>
+            </value>
+        </filters>
+        <object>FEC_Sub_Category__c</object>
+        <outputReference>varSubCategory</outputReference>
+        <queriedFields>Id</queriedFields>
+        <queriedFields>FEC_Code__c</queriedFields>
+    </recordLookups>
+    <recordLookups>
+        <name>Get_Sub_Code</name>
+        <label>Get Sub Code</label>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <assignNullValuesIfNoRecordsFound>false</assignNullValuesIfNoRecordsFound>
+        <connector>
+            <targetReference>Get_Sub_Category</targetReference>
+        </connector>
+        <filterLogic>and</filterLogic>
+        <filters>
+            <field>Id</field>
+            <operator>EqualTo</operator>
+            <value>
+                <elementReference>$Record.FEC_SubCode__r.Id</elementReference>
+            </value>
+        </filters>
+        <object>FEC_Sub_Code__c</object>
+        <outputReference>varSubCode</outputReference>
+        <queriedFields>Id</queriedFields>
+        <queriedFields>FEC_Code__c</queriedFields>
+    </recordLookups>
     <start>
         <locationX>0</locationX>
         <locationY>0</locationY>
         <connector>
-            <targetReference>Get_Active_Entitlement</targetReference>
+            <targetReference>Get_Sub_Code</targetReference>
         </connector>
         <filterLogic>and</filterLogic>
         <filters>
@@ -108,4 +296,20 @@
         <triggerType>RecordBeforeSave</triggerType>
     </start>
     <status>Active</status>
+    <variables>
+        <name>varSubCategory</name>
+        <dataType>SObject</dataType>
+        <isCollection>false</isCollection>
+        <isInput>false</isInput>
+        <isOutput>false</isOutput>
+        <objectType>FEC_Sub_Category__c</objectType>
+    </variables>
+    <variables>
+        <name>varSubCode</name>
+        <dataType>SObject</dataType>
+        <isCollection>false</isCollection>
+        <isInput>false</isInput>
+        <isOutput>false</isOutput>
+        <objectType>FEC_Sub_Code__c</objectType>
+    </variables>
 </Flow>

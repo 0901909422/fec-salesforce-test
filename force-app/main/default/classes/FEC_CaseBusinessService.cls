@@ -200,9 +200,14 @@ public without sharing class FEC_CaseBusinessService {
           FEC_Account_or_Contract__r.FEC_Product_Code__c,
           FEC_Account_or_Contract__r.FEC_Days_Past_Due__c,
           FEC_Account_or_Contract__r.FEC_Fast_Cash_Status__c,
+          FEC_Account_or_Contract__r.FEC_Status_ID__c,
+          FEC_Account_or_Contract__r.FEC_MRC_Status__c,
+          FEC_Account_or_Contract__r.FEC_Contract_Status__c,
+          FEC_Customer_Confirmation__c,
           FEC_Interaction__c,
           FEC_Category__r.Name,
           FEC_SubCategory__r.Name,
+          FEC_SubCategory__r.FEC_Code__c,
           FEC_SubCode__r.Name,
           FEC_Assignment_Count__c,
           FEC_SubCode__r.FEC_Code__c, //linhdev fix jira FECREDIT_CSM_2025_KH-1393-1394
@@ -358,6 +363,13 @@ public without sharing class FEC_CaseBusinessService {
         } catch (Exception e) {
           System.debug('getByCase subCategoryCode: ' + e.getMessage());
         }
+      }
+      if (
+        String.isBlank(result.subCategoryCode) &&
+        selectedCase.FEC_SubCategory__r != null &&
+        String.isNotBlank(selectedCase.FEC_SubCategory__r.FEC_Code__c)
+      ) {
+        result.subCategoryCode = selectedCase.FEC_SubCategory__r.FEC_Code__c.trim();
       }
 
       // =============================== GET ROUTING ACTION ===========================
@@ -605,8 +617,17 @@ public without sharing class FEC_CaseBusinessService {
             result.subCodeCode
           );
           if (!mrcErr.errorlst.isEmpty()) {
-            err = mrcErr;
-            result.sectionlst.add(new Section('Case Information', err));
+            Section caseInfoMrc = result.findSection('Case Information');
+            if (caseInfoMrc == null) {
+              caseInfoMrc = new Section('Case Information', mrcErr);
+              result.sectionlst.add(caseInfoMrc);
+            } else {
+              caseInfoMrc.error = mrcErr;
+            }
+            // RL05.03 + DPD≥15: hiển thị cảnh báo nhưng vẫn load Delivery (giống RL05.01 + thêm Email).
+            if (!isRl0503DpdOnlyValidation(mrcErr, result.subCodeCode)) {
+              err = mrcErr;
+            }
           }
         }
       } catch (DmlException e) {
@@ -727,6 +748,11 @@ public without sharing class FEC_CaseBusinessService {
         try { update selectedCase; } catch (DmlException e) {
           System.debug('Update case failed (no stage): ' + e.getMessage());
         }
+        // RL05.01 / RL05.03: vẫn hiển thị Delivery khi chưa resolve stage (giống luồng 01).
+        FEC_MrcReturnCaseService.supplementMrcRl05CaseInformationWhenStageMissing(
+          result,
+          selectedCase
+        );
         return result;
       }
 
@@ -820,6 +846,34 @@ public without sharing class FEC_CaseBusinessService {
           );
         }
 
+        FEC_MrcReturnCaseService.MrcRl05UiContext mrcRl05UiCtx = null;
+        try {
+          FEC_MrcDuplicateCaseService.OpenDupInfo mrcDupEarly = FEC_MrcDuplicateCaseService.findOlderOpenRl05DuplicateInfo(
+            selectedCase.Id,
+            selectedCase.FEC_Account_or_Contract__c,
+            selectedCase.CreatedDate,
+            result.subCategoryCode,
+            result.subCodeCode
+          );
+          if (mrcDupEarly != null) {
+            result.mrcRl0502DuplicateOpenCaseId = mrcDupEarly.caseIdStr;
+            result.mrcRl0502DuplicateCaseNumber = mrcDupEarly.caseNumber;
+          }
+          mrcRl05UiCtx = FEC_MrcReturnCaseService.buildUiContext(
+            selectedCase,
+            result.subCategoryCode,
+            result.subCodeCode,
+            selectedCase.FEC_Customer_Confirmation__c,
+            mrcDupEarly != null
+          );
+          result.mrcRl05Ui = mrcRl05UiCtx;
+        } catch (Exception mrcCtxEx) {
+          System.debug(
+            LoggingLevel.WARN,
+            'getByCase MRC RL05 UI context: ' + mrcCtxEx.getMessage()
+          );
+        }
+
         for (SObject item : masterDatalst) {
           sectionNameTemp = (String) item.get('FEC_Section__c');
           subSectionNameTemp = (String) item.get('FEC_Sub_Section__c');
@@ -852,8 +906,29 @@ public without sharing class FEC_CaseBusinessService {
             continue;
           }
 
-          //linhdev fix jira FECREDIT_CSM_2025_KH-1393-1394 — RC33.01–03: ẩn C360 / Property
-          if (shouldSkipPointsRedemptionSubSection(result.subCodeCode, sectionNameTemp, subSectionNameTemp)) {
+          // MRC Return RL05: ẩn Property Info / fec_MRC; Assessment & Customer Confirmation theo context.
+          if (
+            FEC_MrcReturnCaseService.shouldSkipMasterDataRow(
+              sectionNameTemp,
+              subSectionNameTemp,
+              TYPE_LWC.equals(itemType) ? (String) item.get('FEC_LWC_Name__c') : null,
+              fieldApiNameTemp,
+              mrcRl05UiCtx
+            )
+          ) {
+            continue;
+          }
+
+          if (
+            FEC_MrcReturnCaseService.shouldSkipStage1Field(
+              businessProcessCode,
+              result.subCategoryCode,
+              result.subCodeCode,
+              selectedStage.Name,
+              fieldApiNameTemp,
+              mrcRl05UiCtx
+            )
+          ) {
             continue;
           }
 
@@ -1035,6 +1110,16 @@ public without sharing class FEC_CaseBusinessService {
 
           sectionItem.sort();
         }
+
+        FEC_MrcReturnCaseService.ensureDeliveryLwcOnCaseInformation(
+          result,
+          mrcRl05UiCtx
+        );
+        FEC_MrcReturnCaseService.finalizeCaseInformationForRl05(
+          result,
+          mrcRl05UiCtx,
+          selectedCase
+        );
 
         result.removeEmptySections();
       }
@@ -1228,24 +1313,7 @@ public without sharing class FEC_CaseBusinessService {
       // tungnm37 thêm: trả customerType để LWC fec_RoutingAssignment query đúng
       result.customerType = selectedCase.FEC_Customer_Type__c;
 
-      try {
-        FEC_MrcDuplicateCaseService.OpenDupInfo mrcDupInfo = FEC_MrcDuplicateCaseService.findOlderOpenRl05DuplicateInfo(
-          selectedCase.Id,
-          selectedCase.FEC_Account_or_Contract__c,
-          selectedCase.CreatedDate,
-          result.subCategoryCode,
-          result.subCodeCode
-        );
-        if (mrcDupInfo != null) {
-          result.mrcRl0502DuplicateOpenCaseId = mrcDupInfo.caseIdStr;
-          result.mrcRl0502DuplicateCaseNumber = mrcDupInfo.caseNumber;
-        }
-      } catch (Exception mrcDupEx) {
-        System.debug(
-          LoggingLevel.WARN,
-          'getByCase MRC RL05.02 duplicate banner: ' + mrcDupEx.getMessage()
-        );
-      }
+      // RL05 duplicate + UI context đã resolve trước vòng master data (mrcRl05Ui / mrcRl0502Duplicate*).
 
       if (Schema.sObjectType.Case.isUpdateable()) {
         try {
@@ -2014,13 +2082,30 @@ public without sharing class FEC_CaseBusinessService {
 
   @AuraEnabled
   public static void markCaseSubmittedWithoutRouting(String caseId) {
+    String statusBefore = readCaseFinalStatusBeforeSubmit(caseId);
     markCaseSubmittedAndClearDrafts(caseId);
+    FEC_AutoHoldCaseService.enqueueAfterCaseSubmit(caseId, statusBefore);
   }
 //PhongBT: tạo FEC_Case_Flow_History__c khi submit case lần đầu.
   @AuraEnabled
   public static void markCaseSubmittedWithoutRoutingWithHistory(String caseId, String natureOfCaseId, String fieldListJson) {
+    String statusBefore = readCaseFinalStatusBeforeSubmit(caseId);
     markCaseSubmittedAndClearDrafts(caseId);
     createCaseFlowHistory(caseId, natureOfCaseId, fieldListJson);
+    FEC_AutoHoldCaseService.enqueueAfterCaseSubmit(caseId, statusBefore);
+  }
+
+  private static String readCaseFinalStatusBeforeSubmit(String caseId) {
+    if (String.isBlank(caseId)) {
+      return null;
+    }
+    List<Case> rows = [
+      SELECT FEC_Final_Status__c
+      FROM Case
+      WHERE Id = :caseId
+      LIMIT 1
+    ];
+    return rows.isEmpty() ? null : rows[0].FEC_Final_Status__c;
   }
   //PhongBT: tạo FEC_Case_Flow_History__c khi submit case lần đầu.
   /**
@@ -2294,6 +2379,7 @@ public without sharing class FEC_CaseBusinessService {
           Owner.Name,
           FEC_Current_Case_Stage__c,
           FEC_Current_Case_Stage__r.FEC_Default_Stage__c,
+          // // Toannd61 19/05/26 jira 1423 jira 1423
           FEC_Current_Case_Stage__r.FEC_Code__c,
           FEC_Current_Case_Stage__r.Name,
           FEC_Actual_Nature_of_Case__c,
@@ -2710,11 +2796,23 @@ public without sharing class FEC_CaseBusinessService {
       );
     try {
       new FEC_CaseBusinessWithoutSharing().doInsert(new List<FEC_Routing_Action_History__c>{ history });
+
+      Case endCase = [
+        SELECT FEC_Final_Status__c
+        FROM Case
+        WHERE Id = :caseId
+        LIMIT 1
+      ];
+      history.FEC_Changed_Status__c = endCase.FEC_Final_Status__c;
+      Database.update(history, AccessLevel.SYSTEM_MODE);
+
       FEC_AutoHoldCaseService.enqueueAfterRoutingHistory(history.Id);
       System.debug(
         'FEC_DEBUG CaseBusinessService.createRoutingActionHis corrId=' + corrId +
         ' inserted historyId=' + history.Id +
         ' routingAction=' + history.FEC_Routing_Action__c +
+        ' currentStatus=' + history.FEC_Current_Status__c +
+        ' changedStatus=' + history.FEC_Changed_Status__c +
         ' originalQueue=' + history.FEC_Original_User_Queue__c +
         ' updatedQueue=' + history.FEC_Updated_User_Queue__c +
         ' description=' + history.FEC_Description__c
@@ -3916,6 +4014,10 @@ public without sharing class FEC_CaseBusinessService {
     @AuraEnabled
     public String mrcRl0502DuplicateCaseNumber;
 
+    /** RL05 — cờ hiển thị Delivery / Customer Confirmation / routing (Batch 7). */
+    @AuraEnabled
+    public FEC_MrcReturnCaseService.MrcRl05UiContext mrcRl05Ui;
+
     @AuraEnabled
     public Map<String, Map<String, List<PicklistOptionDto>>> picklistOptionsMap;
 
@@ -4006,6 +4108,10 @@ public without sharing class FEC_CaseBusinessService {
 
     @AuraEnabled
     public Boolean isCollapsible;
+
+    /** RL05 MRC Return: ẩn subsection trên UI (Property Info, …). */
+    @AuraEnabled
+    public Boolean hideForMrcRl05;
 
     // Default constructor
     public Section() {
@@ -4569,27 +4675,41 @@ public without sharing class FEC_CaseBusinessService {
     }
   }
 
-  //linhdev fix jira FECREDIT_CSM_2025_KH-1393-1394 — RC33.01–03: ẩn C360 (Account) / Property (Case)
-  private static Boolean shouldSkipPointsRedemptionSubSection(
-    String subCodeCode,
-    String sectionName,
-    String subSectionName
-  ) {
-    if (String.isBlank(subCodeCode)) {
-      return false;
-    }
-    String s = subCodeCode.toUpperCase();
-    if (!s.contains('RC33.01') && !s.contains('RC33.02') && !s.contains('RC33.03')) {
-      return false;
-    }
-    return ('Account Information'.equals(sectionName) && 'C360 Info'.equals(subSectionName))
-      || ('Case Information'.equals(sectionName) && 'Property Info'.equals(subSectionName));
-  }
-
   /**
    * MRC Return (Batch 7): chặn nhập Case Information khi không đủ điều kiện (giống pattern Phone Update).
    * Áp khi FEC_SubCategory__r.FEC_Code__c chứa RL05; kiểm tra Product Code TW và DPD cho RL05.03.
    */
+  /**
+   * Chỉ cảnh báo DPD RL05.03 — không chặn master data / fec_ContractClosureForm.
+   */
+  private static Boolean isRl0503DpdOnlyValidation(
+    Error mrcErr,
+    String subCodeCode
+  ) {
+    if (
+      mrcErr == null ||
+      mrcErr.errorlst == null ||
+      mrcErr.errorlst.isEmpty() ||
+      String.isBlank(subCodeCode) ||
+      !subCodeCode.toUpperCase().contains('RL05.03')
+    ) {
+      return false;
+    }
+    String dpdMsg = System.Label.FEC_MRC_Return_Msg_DPD_RL0503;
+    Boolean hasDpd = false;
+    for (String line : mrcErr.errorlst) {
+      if (String.isBlank(line)) {
+        continue;
+      }
+      if (line == dpdMsg) {
+        hasDpd = true;
+      } else {
+        return false;
+      }
+    }
+    return hasDpd;
+  }
+
   public static Error mrcReturnCaseInformationValidate(
     Case selectedCase,
     String subCategoryCode,
@@ -4620,12 +4740,7 @@ public without sharing class FEC_CaseBusinessService {
       }
     }
 
-    if (String.isNotBlank(subCodeCode) && subCodeCode.toUpperCase().contains('RL05.03')) {
-      Decimal dpd = selectedCase.FEC_Account_or_Contract__r.FEC_Days_Past_Due__c;
-      if (dpd != null && dpd >= 15) {
-        errorlst.add(System.Label.FEC_MRC_Return_Msg_DPD_RL0503);
-      }
-    }
+    // RL05.03: DPD validate tại NOC picker; getByCase luôn load Delivery giống RL05.01.
 
     if (errorlst.isEmpty()) {
       return new Error();
@@ -5263,6 +5378,17 @@ public without sharing class FEC_CaseBusinessService {
       return Integer.valueOf(m.group(1));
     }
     return null;
+  }
+
+  private static Id parseIdSafelyForRouting(String rawId) {
+    if (String.isBlank(rawId)) {
+      return null;
+    }
+    try {
+      return Id.valueOf(rawId.trim());
+    } catch (Exception e) {
+      return null;
+    }
   }
 
   public class CaseBusinessServiceException extends Exception {

@@ -28,7 +28,7 @@ public without sharing class FEC_AssignmentRoutingActionHandler {
                 handleTransfer(caseId, assignmentId, remark, decision, subDecision);
                 
             } else if (action == FEC_ConstantCommon.ACTION_ROUTE_TO) {
-                handleRouteTo(caseId, assignmentId, remark, decision, subDecision);
+                handleRouteTo(caseId, assignmentId, remark, subDecision);
                 
             } else if (action == FEC_ConstantCommon.ACTION_UPDATE) {
                 handleUpdate(caseId, assignmentId, remark, decision);
@@ -118,11 +118,16 @@ public without sharing class FEC_AssignmentRoutingActionHandler {
     ) {
         
         // ===== UPDATE ASSIGNMENT =====
+        // tungnm37: clear cả FEC_OwnerID__c để syncAssignmentUsersToCase không đọc nhầm User cũ
         update new FEC_Assignment__c(
             Id = assignmentId,
         FEC_Assignment_Status__c = FEC_ConstantCommon.ASSIGNMENT_STATUS_COMPLETED,
-        FEC_Assignment_Owner__c = null
+        FEC_Assignment_Owner__c = null,
+        FEC_OwnerID__c = null
             );
+        
+        // tungnm37: sync lại Case.FEC_Assignment_Users__c → clear về null sau khi resolve
+        syncAssignmentUsersToCase(caseId, assignmentId);
         
         // ===== HISTORY =====
         insertHistory(caseId, assignmentId, FEC_ConstantCommon.ACTION_RESOLVE, remark);
@@ -187,71 +192,100 @@ public without sharing class FEC_AssignmentRoutingActionHandler {
         Id caseId,
     Id assignmentId,
     String remark,
-    String decision,
     String subDecision
     ) {
-        if (String.isBlank(decision)) {
-            throw new AuraHandledException(System.Label.FEC_ERR_TEAM_REQUIRED);
-        }
         
         // ===== GET CASE =====
-        Case c = [
-        SELECT Id,
-               RecordType.DeveloperName,
-               FEC_Business_Process__c
-        FROM Case
-        WHERE Id = :caseId
-        LIMIT 1
-    ];
+        List<Case> cases = [
+            SELECT Id,
+                RecordType.DeveloperName,
+                FEC_Stage_Name__c
+            FROM Case
+            WHERE Id = :caseId
+            LIMIT 1
+        ];
         
-        // ===== DETERMINE TEAM + QUEUE =====
-        String team;
-        Id targetQueueId;
+        Case caseRecord = cases.isEmpty() ? null : cases[0];
         
-        // ===== CASE TYPE LOGIC =====
-        if (c.FEC_Business_Process__c == FEC_ConstantCommon.BP_GENERAL_SERVICE) {
-            team = FEC_ConstantCommon.TEAM_CS_SUPPORT;
-            targetQueueId = getQueueIdByName(FEC_ConstantCommon.QUEUE_CS_SUPPORT);
+        List<FEC_Assignment__c> assignmentsList = [
+           SELECT Id, FEC_OwnerID__c,  FEC_Assignment_Status__c, FEC_Case__r.FEC_Current_Case_Stage__r.FEC_Code__c FROM FEC_Assignment__c WHERE  Id = :assignmentId 
+        ];
+        
+        FEC_Assignment__c assignment = assignmentsList.isEmpty() ? null : assignmentsList[0];
+        
+        String queueId = subDecision;
+        List<Group> groups = [
+            SELECT Id, Name
+            FROM
+            GROUP
+            WHERE Id = :queueId
+            AND Type='Queue'
+        ];
+        
+        Group queue = groups.isEmpty() ? null : groups[0];
+        
+        String userDepart;
+        
+        if (isCSSupport()) {
+            userDepart = 'CS Support';
             
-        } else if (c.FEC_Business_Process__c == FEC_ConstantCommon.BP_COMPLAINT || c.FEC_Business_Process__c == FEC_ConstantCommon.BP_FEEDBACK) {
-            team = FEC_ConstantCommon.TEAM_CS_CUSTOMER_CARE;
-            targetQueueId = getQueueIdByName(FEC_ConstantCommon.QUEUE_CS_CUSTOMER_CARE);
+        } else if (isCSCustomerCare()) {
+            userDepart = 'CS Customer Care';
             
         } else {
-            // fallback: dùng subDecision (team user chọn)
-            team = subDecision;
-            targetQueueId = getQueueIdByTeam(team);
+            userDepart = 'OTHER';
         }
         
-        if (targetQueueId == null) {
-            throw new AuraHandledException(System.Label.FEC_ERR_QUEUE_NOT_FOUND + ': ' + team);
+        System.debug('=== User department: ' + userDepart);
+        
+        /*
+         * OTHER DEPT
+         */
+        if (userDepart == 'OTHER') {
+            if (assignment != null
+            && String.isNotBlank(assignment.FEC_Case__r.FEC_Current_Case_Stage__r.FEC_Code__c)) {
+                /*
+                 * GSR
+                 * Route về CS Support
+                 */
+                if (assignment.FEC_Case__r.FEC_Current_Case_Stage__r.FEC_Code__c.contains(
+                FEC_ConstantCommon.BP_GSR)) {
+                    assignment.FEC_OwnerID__c = queue.Name;
+                    assignment.FEC_Assignment_Status__c = FEC_ConstantCommon.STATUS_CS_BACKOFFICE;
+                }
+                
+                /*
+                 * COF
+                 * Route về CS Customer Care
+                 */
+                else if (assignment.FEC_Case__r.FEC_Current_Case_Stage__r.FEC_Code__c.contains(
+                FEC_ConstantCommon.BP_COF)) {
+                    assignment.FEC_OwnerID__c = queue.Name;
+                    assignment.FEC_Assignment_Status__c = FEC_ConstantCommon.STATUS_CS_BACKOFFICE;
+                }
+            }
         }
         
-        // ===== CHECK HISTORY =====
-        Id lastUser = getLastUserOfTeam(caseId, team);
-        
-        FEC_Assignment__c assignment = new FEC_Assignment__c(
-            Id = assignmentId
-            );
-        
-        // ===== FIRST TIME → QUEUE =====
-        if (lastUser == null) {
-            assignment.FEC_Assignment_Owner__c = null;
-            assignment.FEC_OwnerID__c = targetQueueId;
+        /*
+         * CS Support / CS Customer Care
+         */
+        else if (userDepart == 'CS Support' || userDepart == 'CS Customer Care') {
+            System.debug('Test routing CS');
+            assignment.FEC_OwnerID__c = queue.Name;
+            if(queue.Name.contains('CS')){
+                assignment.FEC_Assignment_Status__c = FEC_ConstantCommon.STATUS_CS_REVIEW;
+            }else{
+                assignment.FEC_Assignment_Status__c = FEC_ConstantCommon.STATUS_OTHER_DEPT;
+            }
             
-            // ===== RETURN → USER =====
-        } else {
-            assignment.FEC_Assignment_Owner__c = lastUser;
-            assignment.FEC_OwnerID__c = lastUser;
         }
         
-        // ===== STATUS =====
-        assignment.FEC_Assignment_Status__c = getRouteToStatus(team);
-        
+        assignment.FEC_Assignment_Owner__c = null;
         update assignment;
-        syncAssignmentUsersToCase(caseId, assignmentId);
+        syncAssignmentUsersToCase(caseRecord.Id, assignmentId);
+        insertHistory(caseRecord.Id, assignmentId, FEC_ConstantCommon.ACTION_ROUTE_TO_DISPLAY, remark);
         
-        insertHistory(caseId, assignmentId, FEC_ConstantCommon.ACTION_ROUTE_TO_DISPLAY, remark);
+        
     }
     
     private static void handleTransfer(
@@ -277,17 +311,25 @@ public without sharing class FEC_AssignmentRoutingActionHandler {
         if (decision ==  FEC_ConstantCommon.DECISION_USER) {
             assignment.FEC_Assignment_Owner__c = subDecision;
             assignment.FEC_OwnerID__c = subDecision;
-            
+            assignment.FEC_Assignment_Status__c = FEC_ConstantCommon.STATUS_CS_BACKOFFICE;
             // ===== QUEUE =====
         } else if (decision ==  FEC_ConstantCommon.DECISION_QUEUE ) {
             assignment.FEC_Assignment_Owner__c = null;
-            assignment.FEC_OwnerID__c = getQueueNameById(subDecision);
+            String queueName = getQueueNameById(subDecision);
+            System.debug('queueName: ');
+            System.debug(queueName);
+            assignment.FEC_OwnerID__c = queueName;
+            if(queueName.contains('CS')){
+                System.debug('CS Khác: ');
+                assignment.FEC_Assignment_Status__c = FEC_ConstantCommon.STATUS_CS_BACKOFFICE;
+            }else{
+                System.debug('Khác CS: ');
+                assignment.FEC_Assignment_Status__c = FEC_ConstantCommon.STATUS_OTHER_DEPT;
+            }
             
         } else {
             throw new AuraHandledException(System.Label.FEC_ERR_INVALID_INPUT);
         }
-        
-        assignment.FEC_Assignment_Status__c = FEC_ConstantCommon.STATUS_CS_BACKOFFICE;
         
         update assignment;
         syncAssignmentUsersToCase(caseId, assignmentId);
@@ -596,46 +638,49 @@ public without sharing class FEC_AssignmentRoutingActionHandler {
      * - Nếu FEC_Assignment_Owner__c != null → lưu User ID
      * - Nếu FEC_Assignment_Owner__c == null → lưu Queue Name từ FEC_OwnerID__c
      */
+        //tungnm37: Re-query TAT CA assignments con active cua Case de rebuild FEC_Assignment_Users__c chinh xac
+    //tungnm37: Tranh truong hop resolve 1 assignment nhung clear het ca field
     private static void syncAssignmentUsersToCase(Id caseId, Id assignmentId) {
         try {
-            List<FEC_Assignment__c> assignments = [
+            List<FEC_Assignment__c> activeAssignments = [
                 SELECT Id, FEC_Assignment_Owner__c, FEC_OwnerID__c
                 FROM FEC_Assignment__c
-                WHERE Id = :assignmentId
-                LIMIT 1
+                WHERE FEC_Case__c = :caseId
+                  AND FEC_Assignment_Status__c NOT IN :FEC_ConstantCommon.CLOSED_ASSIGNMENT_STATUSES
             ];
-            if (assignments.isEmpty()) return;
-            
-            FEC_Assignment__c a = assignments[0];
-            String userValue;
-            if (a.FEC_Assignment_Owner__c != null) {
-                // tungnm37: Owner là User → lưu User ID
-                userValue = String.valueOf(a.FEC_Assignment_Owner__c);
-            } else if (String.isNotBlank(a.FEC_OwnerID__c)) {
-                // tungnm37: Owner là Queue → FEC_OwnerID__c lưu Queue Name → dùng trực tiếp
-                // Nếu là Salesforce Id (bắt đầu 00G) thì lookup Name
-                String ownerIdStr = a.FEC_OwnerID__c.trim();
-                Boolean looksLikeId = ownerIdStr.length() >= 15 && ownerIdStr.startsWith('00G');
-                if (looksLikeId) {
-                    try {
-                        Id queueId = (Id) ownerIdStr;
-                        List<Group> groups = [SELECT Name FROM Group WHERE Id = :queueId AND Type = 'Queue' LIMIT 1];
-                        userValue = groups.isEmpty() ? ownerIdStr : groups[0].Name;
-                    } catch (Exception ex) {
+
+            List<String> userValues = new List<String>();
+            for (FEC_Assignment__c a : activeAssignments) {
+                String userValue;
+                if (a.FEC_Assignment_Owner__c != null) {
+                    userValue = String.valueOf(a.FEC_Assignment_Owner__c);
+                } else if (String.isNotBlank(a.FEC_OwnerID__c)) {
+                    String ownerIdStr = a.FEC_OwnerID__c.trim();
+                    Boolean looksLikeId = ownerIdStr.length() >= 15 && ownerIdStr.startsWith('00G');
+                    if (looksLikeId) {
+                        try {
+                            Id queueId = (Id) ownerIdStr;
+                            List<Group> groups = [SELECT Name FROM Group WHERE Id = :queueId AND Type = 'Queue' LIMIT 1];
+                            userValue = groups.isEmpty() ? ownerIdStr : groups[0].Name;
+                        } catch (Exception ex) {
+                            userValue = ownerIdStr;
+                        }
+                    } else {
                         userValue = ownerIdStr;
                     }
-                } else {
-                    // Đã là Queue Name
-                    userValue = ownerIdStr;
+                }
+                if (String.isNotBlank(userValue)) {
+                    userValues.add(userValue);
                 }
             }
-            
-            if (String.isNotBlank(userValue)) {
-                Database.update(
-                    new Case(Id = caseId, FEC_Assignment_Users__c = userValue),
+
+            String newFieldValue = userValues.isEmpty() ? null : String.join(userValues, ',');
+            Database.update(
+                new Case(Id = caseId, FEC_Assignment_Users__c = newFieldValue),
                 AccessLevel.SYSTEM_MODE
-                    );
-                // tungnm37: nếu Owner là User → share Case với quyền Edit
+            );
+
+            for (FEC_Assignment__c a : activeAssignments) {
                 if (a.FEC_Assignment_Owner__c != null) {
                     shareCaseToUser(caseId, a.FEC_Assignment_Owner__c);
                 }
@@ -644,8 +689,7 @@ public without sharing class FEC_AssignmentRoutingActionHandler {
             System.debug('FEC_DEBUG syncAssignmentUsersToCase error: ' + e.getMessage() + ' | ' + e.getStackTraceString());
         }
     }
-    
-    
+
     private static void claimAssignmentIfQueueOwner(
         Id caseId,
     Id assignmentId
@@ -780,23 +824,189 @@ public without sharing class FEC_AssignmentRoutingActionHandler {
     
     // private static String getReviewStatus() {
         
-    //     User u = [
-    //     SELECT FEC_User_Group__c
-    //     FROM User
-    //     WHERE Id = :UserInfo.getUserId()
-    //     LIMIT 1
-    // ];
+        //     User u = [
+        //     SELECT FEC_User_Group__c
+        //     FROM User
+        //     WHERE Id = :UserInfo.getUserId()
+        //     LIMIT 1
+        // ];
         
-    //     if (
-    //         u.FEC_User_Group__c != null &&
-    //         (
-    //         u.FEC_User_Group__c.contains('SP') ||
-    //         u.FEC_User_Group__c.contains('CC')
-    //         )
-    //     ) {
-    //         return FEC_ConstantCommon.STATUS_CS_BACKOFFICE;
-    //     }
+        //     if (
+        //         u.FEC_User_Group__c != null &&
+        //         (
+        //         u.FEC_User_Group__c.contains('SP') ||
+        //         u.FEC_User_Group__c.contains('CC')
+        //         )
+        //     ) {
+            //         return FEC_ConstantCommon.STATUS_CS_BACKOFFICE;
+        //     }
         
-    //     return FEC_ConstantCommon.STATUS_OTHER_DEPT;
+        //     return FEC_ConstantCommon.STATUS_OTHER_DEPT;
     // }
+    
+    
+    // check current user
+    // public static Boolean isCurrentUserInQueue(String queueDeveloperName) {
+        
+        //     Id userId = UserInfo.getUserId();
+        
+        //     User u = [
+        //         SELECT Id, UserRoleId
+        //         FROM User
+        //         WHERE Id = :userId
+        //         LIMIT 1
+        //     ];
+        
+        //     Group queueGroup = [
+        //         SELECT Id
+        //         FROM Group
+        //         WHERE Type = 'Queue'
+        //         AND DeveloperName = :queueDeveloperName
+        //         LIMIT 1
+        //     ];
+        
+        //     List<GroupMember> members = [
+        //         SELECT UserOrGroupId
+        //         FROM GroupMember
+        //         WHERE GroupId = :queueGroup.Id
+        //     ];
+        
+        //     Set<Id> memberIds = new Set<Id>();
+        
+        //     for (GroupMember gm : members) {
+            //         memberIds.add(gm.UserOrGroupId);
+        //     }
+        
+        //     // Direct user
+        //     if (memberIds.contains(userId)) {
+            //         return true;
+        //     }
+        
+        //     // Role
+        //     if (u.UserRoleId != null &&
+        //     memberIds.contains(u.UserRoleId)) {
+            //         return true;
+        //     }
+        
+        //     // Public Group / nested groups
+        //     return isUserInNestedGroups(userId, memberIds);
+    // }
+    
+    public static Boolean isCurrentUserInQueue(
+        String queueDeveloperName
+    ) {
+        
+        Id userId = UserInfo.getUserId();
+        
+        User u = [
+        SELECT
+            Id,
+            UserRoleId
+        FROM User
+        WHERE Id = :userId
+        LIMIT 1
+    ];
+        
+        /*
+         * Queue
+         */
+        Group queueGroup = [
+        SELECT
+            Id,
+            Name
+        FROM Group
+        WHERE
+            Type = 'Queue'
+            AND DeveloperName = :queueDeveloperName
+        LIMIT 1
+    ];
+        
+        /*
+         * Queue members
+         */
+        List<GroupMember> members = [
+        SELECT
+            UserOrGroupId
+        FROM GroupMember
+        WHERE GroupId = :queueGroup.Id
+    ];
+        
+        Set<Id> memberIds = new Set<Id>();
+        
+        for (GroupMember gm : members) {
+            memberIds.add(gm.UserOrGroupId);
+        }
+        
+        /*
+         * Direct user
+         */
+        if (memberIds.contains(userId)) {
+            return true;
+        }
+        
+        /*
+         * Resolve Role Groups
+         */
+        if (u.UserRoleId != null) {
+            
+            List<Group> roleGroups = [
+            SELECT
+                Id,
+                Type,
+                RelatedId
+            FROM Group
+            WHERE
+                RelatedId = :u.UserRoleId
+                AND Type IN (
+                    'Role',
+                    'RoleAndSubordinates'
+                )
+        ];
+            
+            for (Group g : roleGroups) {
+                
+                if (memberIds.contains(g.Id)) {
+                    return true;
+                }
+            }
+        }
+        
+        return false;
+    }
+    private static Boolean isUserInNestedGroups(
+        Id userId,
+    Set<Id> groupIds
+    ) {
+        
+        if (groupIds.isEmpty()) {
+            return false;
+        }
+        
+        List<GroupMember> nested = [
+            SELECT GroupId, UserOrGroupId
+            FROM GroupMember
+            WHERE GroupId IN :groupIds
+        ];
+        
+        for (GroupMember gm :nested) {
+            
+            if (gm.UserOrGroupId == userId) {
+                return true;
+            }
+        }
+        
+        return false;
+    }
+    
+    public static Boolean isCSSupport() {
+        return isCurrentUserInQueue(
+            'FEC_DQ_CS_Support'
+            );
+    }
+    
+    public static Boolean isCSCustomerCare() {
+        return isCurrentUserInQueue(
+            'FEC_DQ_CS_Customer_Care'
+            );
+    }
 }

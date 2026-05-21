@@ -58,6 +58,11 @@ public without sharing class FEC_CaseAssignmentApplyOwnerBatch implements Databa
                 batch.add(new Case(Id = caseIds[idx], OwnerId = newOwnerIds[idx]));
             }
             if (!batch.isEmpty()) {
+                for (Case c : batch) {
+                    if (c != null && c.Id != null) {
+                        FEC_CaseBusinessService.registerSkipOwnerChangeRoutingHistory(c.Id);
+                    }
+                }
                 update batch;
             }
         } catch (Exception ex) {

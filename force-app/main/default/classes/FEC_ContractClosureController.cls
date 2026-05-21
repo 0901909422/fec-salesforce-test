@@ -103,6 +103,7 @@ public without sharing class FEC_ContractClosureController {
         public Boolean deliveryEmailSelected;
         public Boolean deliveryAddressSelected;
         public Boolean deliveryOfficeSelected;
+        public Boolean deliveryPosSelected;
         public Boolean useExistingEmail;
         public String temporaryEmail;
         public String recipientName;
@@ -619,6 +620,7 @@ public without sharing class FEC_ContractClosureController {
         Boolean hasEmail = p.deliveryEmailSelected == true;
         Boolean hasAddr = p.deliveryAddressSelected == true;
         Boolean hasOffice = p.deliveryOfficeSelected == true;
+        Boolean hasPos = p.deliveryPosSelected == true;
         Integer cnt = 0;
         if (hasEmail) {
             cnt++;
@@ -627,6 +629,9 @@ public without sharing class FEC_ContractClosureController {
             cnt++;
         }
         if (hasOffice) {
+            cnt++;
+        }
+        if (hasPos) {
             cnt++;
         }
         if (cnt == 0) {
