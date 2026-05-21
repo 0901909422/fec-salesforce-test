@@ -384,8 +384,9 @@ public without sharing class FEC_BatchCaseHandlingController {
         return out;
     }
 
-    @AuraEnabled(cacheable=true)
+    @AuraEnabled
     public static List<BatchRow> getRecentRows() {
+        FEC_BatchCaseHandlingImportService.expireStaleProcessingBatchImports(UserInfo.getUserId());
         Map<String, Schema.SObjectField> fieldMap = Schema.getGlobalDescribe().get(OBJECT_API_NAME).getDescribe().fields.getMap();
         String fileField = FEC_BatchCaseHandlingSObjectUtil.pickField(fieldMap, new List<String>{ 'FEC_File_Name__c' });
         String nameField = fieldMap.containsKey('Name') ? 'Name' : null;
