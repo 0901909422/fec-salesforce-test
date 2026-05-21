@@ -106,6 +106,7 @@
         <members>FEC_BCH_FilterPropertyService</members>
         <members>FEC_BatchCaseHandlingCaseFilter</members>
         <members>FEC_BatchCaseHandlingImportRow</members>
+        <members>FEC_BatchCaseHandlingImportQueueable</members>
         <members>FEC_BatchCaseHandlingImportService</members>
         <members>FEC_BatchCaseHandlingSObjectUtil</members>
         <members>FEC_BatchCaseHandlingTemplateHelper</members>

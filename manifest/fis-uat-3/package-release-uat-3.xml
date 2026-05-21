@@ -132,6 +132,7 @@
         <members>FEC_BatchCaseHandlingCaseFilter</members>
         <members>FEC_BatchCaseHandlingTemplateHelper</members>
         <members>FEC_BatchCaseHandlingSObjectUtil</members>
+        <members>FEC_BatchCaseHandlingImportQueueable</members>
         <members>FEC_BatchCaseHandlingZipResult</members>
         <members>FEC_BatchCaseHandlingZipService</members>
         <members>FEC_BatchCaseHandlingImportRow</members>
