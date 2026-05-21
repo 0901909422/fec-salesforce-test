@@ -32,7 +32,8 @@ const STATUS_OPTIONS_CANONICAL = [
   { label: STATUS_ACTIVE, value: STATUS_ACTIVE },
   { label: STATUS_ARCHIVED, value: STATUS_ARCHIVED },
 ];
-const MSG_NAME_BLANK = "Name can't be blank";
+const MSG_NAME_BLANK = "Case Assignment can't be blank";
+const MSG_ROLE_REQUIRED_WITH_QUEUE = "Role is required when Select Queues is specified.";
 const MSG_DUPLICATE_NAME = "Case Assignment Name đã tồn tại.";
 const MSG_CANNOT_ACTIVE_WITHOUT_NOC =
   "Không thể Active khi chưa thêm Case Assignment NOC.";
@@ -536,8 +537,8 @@ export default class FecCaseAssignmentNewForm extends NavigationMixin(LightningE
     if (this.isTimeBasedMethod && !this.selectedTimeSlots.length) {
       errors.push("Time Slots can't be blank");
     }
-    if (!this.roleRows.length) {
-      errors.push("Role can't be blank");
+    if (this.selectedQueues.length && !this.roleRows.length) {
+      errors.push(MSG_ROLE_REQUIRED_WITH_QUEUE);
     }
     return errors;
   }
@@ -673,7 +674,7 @@ export default class FecCaseAssignmentNewForm extends NavigationMixin(LightningE
     });
 
     this.queueHasError = messages.includes("Select Queues can't be blank");
-    this.roleHasError = messages.includes("Role can't be blank");
+    this.roleHasError = messages.includes(MSG_ROLE_REQUIRED_WITH_QUEUE);
   }
 
   handleAddRole() {

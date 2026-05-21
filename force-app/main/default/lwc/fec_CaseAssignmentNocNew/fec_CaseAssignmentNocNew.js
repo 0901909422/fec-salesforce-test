@@ -17,8 +17,23 @@ import getCategoryOptions from "@salesforce/apex/FEC_CaseAssignmentNocController
 import getSubCategoryOptions from "@salesforce/apex/FEC_CaseAssignmentNocController.getSubCategoryOptions";
 import getSubCodeOptions from "@salesforce/apex/FEC_CaseAssignmentNocController.getSubCodeOptions";
 import createNoc from "@salesforce/apex/FEC_CaseAssignmentNocController.createNoc";
+import updateNoc from "@salesforce/apex/FEC_CaseAssignmentNocController.updateNoc";
+import NOC_ASSIGNMENT_FIELD from "@salesforce/schema/FEC_Case_Assignment_NOC__c.FEC_Case_Assignment_Name__c";
+import NOC_PRODUCT_TYPE_FIELD from "@salesforce/schema/FEC_Case_Assignment_NOC__c.FEC_Product_Type__c";
+import NOC_CATEGORY_FIELD from "@salesforce/schema/FEC_Case_Assignment_NOC__c.FEC_Category__c";
+import NOC_CATEGORY_NAME_FIELD from "@salesforce/schema/FEC_Case_Assignment_NOC__c.FEC_Category__r.Name";
+import NOC_SUB_CATEGORY_FIELD from "@salesforce/schema/FEC_Case_Assignment_NOC__c.FEC_Sub_Category__c";
+import NOC_SUB_CODE_FIELD from "@salesforce/schema/FEC_Case_Assignment_NOC__c.FEC_Sub_Code__c";
 
 const USER_FIELDS = [NAME_FIELD];
+const NOC_EDIT_FIELDS = [
+  NOC_ASSIGNMENT_FIELD,
+  NOC_PRODUCT_TYPE_FIELD,
+  NOC_CATEGORY_FIELD,
+  NOC_CATEGORY_NAME_FIELD,
+  NOC_SUB_CATEGORY_FIELD,
+  NOC_SUB_CODE_FIELD,
+];
 
 const ASSIGNMENT_LOOKUP = "FEC_Case_Assignment_Name__c";
 
@@ -156,7 +171,10 @@ function resolveParentAssignmentFromState(state) {
 
 export default class Fec_CaseAssignmentNocNew extends NavigationMixin(LightningElement) {
   pageTitle = "New Case Assignment NOC";
-  sectionTitle = "Case Assignment NOC Information";
+
+  nocRecordId;
+  isEditMode = false;
+  nocHydrated = false;
 
   @track productTypeOptionlst = [];
   @track categoryOptionlst = [];
@@ -195,6 +213,21 @@ export default class Fec_CaseAssignmentNocNew extends NavigationMixin(LightningE
 
   @wire(CurrentPageReference)
   wiredPageRef(pageRef) {
+    const objectApiName = pageRef?.attributes?.objectApiName;
+    const actionName = pageRef?.attributes?.actionName;
+    const recordId = pageRef?.attributes?.recordId;
+    if (
+      objectApiName === "FEC_Case_Assignment_NOC__c" &&
+      actionName === "edit" &&
+      recordId
+    ) {
+      this.isEditMode = true;
+      this.nocRecordId = recordId;
+      this.pageTitle = "Edit Case Assignment NOC";
+      this.lockRelatedAssignmentPicker = true;
+      return;
+    }
+
     const merged = {
       ...(pageRef?.state || {}),
       ...this._readUrlStateParams(),
@@ -203,6 +236,30 @@ export default class Fec_CaseAssignmentNocNew extends NavigationMixin(LightningE
     if (aid) {
       this.applyResolvedAssignmentId(aid);
     }
+  }
+
+  @wire(getRecord, { recordId: "$nocRecordId", fields: NOC_EDIT_FIELDS })
+  wiredNocRecord({ data, error }) {
+    if (!this.isEditMode || !data || this.nocHydrated) {
+      return;
+    }
+    if (error) {
+      return;
+    }
+    this.assignmentRecordId = getFieldValue(data, NOC_ASSIGNMENT_FIELD);
+    this.selectedProductTypeId = getFieldValue(data, NOC_PRODUCT_TYPE_FIELD);
+    this.selectedCategoryKey = getFieldValue(data, NOC_CATEGORY_NAME_FIELD);
+    this.selectedSubCategoryId = getFieldValue(data, NOC_SUB_CATEGORY_FIELD);
+    this.selectedSubCodeId = getFieldValue(data, NOC_SUB_CODE_FIELD);
+    this.nocHydrated = true;
+    this.pickerRemountNonce += 1;
+    this.hydrateNocComboOptions();
+  }
+
+  async hydrateNocComboOptions() {
+    await this.refreshCategories();
+    await this.refreshSubCategories();
+    await this.refreshSubCodes();
   }
 
   @wire(getRecord, { recordId: USER_ID, fields: USER_FIELDS })
@@ -269,7 +326,7 @@ export default class Fec_CaseAssignmentNocNew extends NavigationMixin(LightningE
   }
 
   get assignmentPickerLocked() {
-    return this.lockRelatedAssignmentPicker === true;
+    return this.lockRelatedAssignmentPicker === true || this.isEditMode === true;
   }
 
   connectedCallback() {
@@ -493,7 +550,7 @@ export default class Fec_CaseAssignmentNocNew extends NavigationMixin(LightningE
   validateBeforeSave() {
     const errors = [];
     if (!this.assignmentRecordId) {
-      errors.push("Case Assignment Name can't be blank");
+      errors.push("Case Assignment can't be blank");
     }
     if (!this.selectedProductTypeId) {
       errors.push("Product Type can't be blank");
@@ -514,9 +571,9 @@ export default class Fec_CaseAssignmentNocNew extends NavigationMixin(LightningE
   reportFieldValidity(messages) {
     const assignmentPicker = this.template.querySelector('[data-id="picker-assignment"]');
     if (assignmentPicker) {
-      const blankAssignment = messages.some((msg) => msg.includes("Case Assignment Name"));
+      const blankAssignment = messages.some((msg) => msg.includes("Case Assignment"));
       assignmentPicker.setCustomValidity?.(
-        blankAssignment ? "Case Assignment Name can't be blank" : ""
+        blankAssignment ? "Case Assignment can't be blank" : ""
       );
       assignmentPicker.reportValidity?.();
     }
@@ -621,6 +678,17 @@ export default class Fec_CaseAssignmentNocNew extends NavigationMixin(LightningE
   }
 
   handleCancel() {
+    if (this.isEditMode && this.nocRecordId) {
+      this[NavigationMixin.Navigate]({
+        type: "standard__recordPage",
+        attributes: {
+          recordId: this.nocRecordId,
+          objectApiName: "FEC_Case_Assignment_NOC__c",
+          actionName: "view",
+        },
+      });
+      return;
+    }
     if (this.assignmentRecordId) {
       this[NavigationMixin.Navigate]({
         type: "standard__recordPage",
@@ -652,13 +720,21 @@ export default class Fec_CaseAssignmentNocNew extends NavigationMixin(LightningE
 
     this.isSaving = true;
     try {
-      const nocId = await createNoc({
-        assignmentId: this.assignmentRecordId,
-        productTypeId: this.selectedProductTypeId,
-        categoryKey: this.selectedCategoryKey,
-        subCategoryId: this.selectedSubCategoryId,
-        subCodeId: this.selectedSubCodeId || null,
-      });
+      const nocId = this.isEditMode
+        ? await updateNoc({
+            nocId: this.nocRecordId,
+            productTypeId: this.selectedProductTypeId,
+            categoryKey: this.selectedCategoryKey,
+            subCategoryId: this.selectedSubCategoryId,
+            subCodeId: this.selectedSubCodeId || null,
+          })
+        : await createNoc({
+            assignmentId: this.assignmentRecordId,
+            productTypeId: this.selectedProductTypeId,
+            categoryKey: this.selectedCategoryKey,
+            subCategoryId: this.selectedSubCategoryId,
+            subCodeId: this.selectedSubCodeId || null,
+          });
       this.showToast("Success", "Case Assignment NOC saved.", "success");
       await this.navigateAfterSave(nocId);
     } catch (e) {

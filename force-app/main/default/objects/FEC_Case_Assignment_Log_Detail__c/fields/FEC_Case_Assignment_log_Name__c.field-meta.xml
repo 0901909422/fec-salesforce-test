@@ -4,7 +4,7 @@
     <deleteConstraint>SetNull</deleteConstraint>
     <label>Case Assignment log Name</label>
     <referenceTo>FEC_Case_Assignment_Logs__c</referenceTo>
-    <relationshipLabel>Case Assignment Log Details</relationshipLabel>
+    <relationshipLabel>User Information</relationshipLabel>
     <relationshipName>Case_Assignment_Log_Details</relationshipName>
     <required>false</required>
     <trackTrending>false</trackTrending>

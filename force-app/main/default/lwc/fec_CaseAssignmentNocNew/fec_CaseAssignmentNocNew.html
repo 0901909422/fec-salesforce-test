@@ -1,6 +1,6 @@
 <template>
   <div class="page-wrap slds-p-around_medium">
-    <div class="slds-m-bottom_medium">
+    <div class="slds-m-bottom_medium slds-text-align_center">
       <h1 class="page-heading">{pageTitle}</h1>
     </div>
 
@@ -16,15 +16,12 @@
     </template>
 
     <div class="slds-card slds-card_boundary">
-      <div class="slds-card__header slds-theme_shade slds-border_bottom">
-        <h2 class="slds-card__header-title">{sectionTitle}</h2>
-      </div>
       <div class="slds-card__body slds-card__body_inner slds-p-around_medium">
         <lightning-layout multiple-rows pull-to-boundary="small">
           <lightning-layout-item flexibility="auto" padding="horizontal-small" size="12" large-device-size="6">
             <lightning-record-picker
               key={assignmentPickerKey}
-              label="Case Assignment Name"
+              label="Case Assignment"
               object-api-name="FEC_Case_Assignment__c"
               value={assignmentRecordId}
               disabled={assignmentPickerLocked}
