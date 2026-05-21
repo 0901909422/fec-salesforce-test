@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CustomMetadata xmlns="http://soap.sforce.com/2006/04/metadata" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-    <label>FEC MFASOUTSTANDINGAUTHINQ</label>
+    <label>FEC VMX AUTH DETAIL INQ</label>
     <protected>false</protected>
     <values>
         <field>FEC_Account_Number_Hard_Code__c</field>
-        <value xsi:type="xsd:string">0001500040000597830</value>
+        <value xsi:type="xsd:string">0001500060000003944</value>
     </values>
     <values>
         <field>FEC_Endpoint__c</field>
@@ -15,4 +15,3 @@
         <value xsi:nil="true"/>
     </values>
 </CustomMetadata>
-
