@@ -168,6 +168,7 @@
 		<members>FEC_AutoHoldCaseService</members>
 		<members>FEC_MrcDuplicateCaseService</members>
 		<members>FEC_MrcReturnCaseService</members>
+		<members>FEC_MrcReturnCaseServiceTest</members>
 		<members>FEC_GsrStage1RevertMasterDataHelper</members>
         <members>FEC_BCH_FilterPropertyService</members>
         <members>FEC_CaseAssignmentTriggerHandler</members>
@@ -200,6 +201,7 @@
         <members>Case.FEC_Sales_Check_Supervisor__c</members>
         <members>Case.FEC_Sales_Check_Discipline_Result__c</members>
         <members>Case.FEC_Complain_Type__c</members>
+        <members>Case.FEC_Collections_Response__c</members>
         <members>FEC_Routing_Action_History__c.FEC_Assignment__c</members>
         <members>FEC_Routing_Action_History__c.FEC_Routing_Action_Type__c</members>
         <members>FEC_Assignment__c.FEC_Assignment_Owner_Text__c</members>
@@ -661,6 +663,7 @@
 		<members>FEC_Incorrect_Payment_Info__c-Incorrect Payment Info Layout</members>
         <members>FEC_Contract_List_for_Remove_Phone__c-Contract List for Remove Phone Layout</members>
         <members>FEC_Assignment_MDS__c-Assignment MDS Layout</members>
+        <members>FEC_Case_Assignment_Logs__c-Case Assignment Log Layout</members>
         <members>FEC_Currency_Code__c-Currency Code Layout</members>
 		<members>FEC_Batch_Case_Handling__c-Batch Case Handling Layout</members>
         <members>FEC_Sales_Logic__c-Sales Logic Layout</members>
@@ -679,6 +682,7 @@
         <members>FEC_Batch_Case_Handling</members>
 		<members>Template_Import_Record_Page</members>
 		<members>Hold_Case_Config_Record_Page</members>
+		<members>FEC_Case_Assignment_Log_Record_Page</members>
 		<members>FEC_Case_Assignment_Record_Page</members>
         <name>FlexiPage</name>
     </types>
@@ -1423,7 +1427,8 @@
         <name>MilestoneType</name>
     </types>
     <types>
-        <members>case sla main</members>
+        <members>case sla main v1</members>
+        <members>case sla main v3</members>
         <name>EntitlementProcess</name>
     </types>
     <types>
