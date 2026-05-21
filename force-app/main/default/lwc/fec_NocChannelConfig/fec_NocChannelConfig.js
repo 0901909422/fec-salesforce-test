@@ -154,8 +154,19 @@ export default class Fec_NocChannelConfig extends LightningElement {
     }
 
     handleCancel() {
-        // Restore về giá trị ban đầu
-        this.loadCurrentChannels();
+        // tungnm37: Restore về giá trị ban đầu từ _originalIds, không gọi lại Apex (cache)
+        if (this._originalIds) {
+            const idList = this._originalIds.split(',').map(s => s.trim()).filter(s => s);
+            searchChannels({ searchTerm: '' })
+                .then(results => {
+                    this.selectedChannels = results
+                        .filter(ch => idList.includes(ch.Id))
+                        .map(ch => ({ id: ch.Id, name: ch.FEC_Channel_Vietnamese_name__c || ch.Name }));
+                })
+                .catch(() => {});
+        } else {
+            this.selectedChannels = [];
+        }
         this.searchTerm = '';
         this.searchResults = [];
         this.isOpen = false;
