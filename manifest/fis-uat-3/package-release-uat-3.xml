@@ -39,6 +39,9 @@
 		<members>FEC_API_Config.FEC_GetSMSInfoFromITTelco</members>
 		<members>FEC_API_Config.FEC_Search_By_List_Phones</members>
 		<members>FEC_API_Config.FEC_Search_Test_Service_Error_Account</members>
+		<members>FEC_API_Config.FEC_Get_IPP_Detail</members>
+		<members>FEC_API_Config.FEC_MCMSCARDTOCARDINQEMEA</members>
+		<members>FEC_API_Config.FEC_MFASOUTSTANDINGAUTHINQ</members>
 		<name>CustomMetadata</name>
 	</types>
 	<types>
@@ -175,6 +178,39 @@
         <members>FEC_BCH_FilterPropertyService</members>
         <members>FEC_CaseAssignmentTriggerHandler</members>
         <members>FEC_CaseSlaNotificationService</members>
+        <members>FEC_BlockCodeRoutingService</members>
+        <members>FEC_CardClosureRefundController</members>
+        <members>FEC_CardInfoController</members>
+        <members>FEC_CaseManagerListService</members>
+        <members>FEC_ContractClosureController</members>
+        <members>FEC_CreateCSCaseService</members>
+        <members>FEC_GetCSCaseStatusService</members>
+        <members>FEC_GetCardBasicInfo</members>
+        <members>FEC_GetCardFinancialTransactions</members>
+        <members>FEC_GetCardSecInfo</members>
+        <members>FEC_GetIPPDetailsCallout</members>
+        <members>FEC_GetMRCInfo</members>
+        <members>FEC_IPPClosureController</members>
+        <members>FEC_IPPController</members>
+        <members>FEC_IPPConversionController</members>
+        <members>FEC_IncorrectPaymentController</members>
+        <members>FEC_MFASOUTSTANDINGAUTHINQ</members>
+        <members>FEC_MainInfoAccountController</members>
+        <members>FEC_MainInfoController</members>
+        <members>FEC_MainInfoLoanAccountController</members>
+        <members>FEC_MarkNFU</members>
+        <members>FEC_MockData</members>
+        <members>FEC_PaymentHistoryController</members>
+        <members>FEC_PinResetHandler</members>
+        <members>FEC_RefundRequestController</members>
+        <members>FEC_RemovePhoneController</members>
+        <members>FEC_RepaySchedPayHistController</members>
+        <members>FEC_SecondaryInfoAccountController</members>
+        <members>FEC_StatementsAccountController</members>
+        <members>FEC_TerminationLoanController</members>
+        <members>FEC_TranferInformationCallout</members>
+        <members>FEC_TransactionsController</members>
+        <members>FEC_UpdateCustomerAddress</members>
         <name>ApexClass</name>
     </types>
 	<types>
@@ -612,6 +648,11 @@
         <members>FEC_Hold_Case_Config__c.FEC_Auto_Hold_Duration_Minutes__c</members>
         <members>FEC_Hold_Case_Config__c.FEC_Auto_Hold_Release_Case_Status__c</members>
         <members>FEC_Case_Assignment__c.FEC_Case_Assignmetn_NOC_Count__c</members>
+        <members>Case.FEC_Delivery_Option_2__c</members>
+        <members>FEC_Action_Button__c.FEC_Code__c</members>
+        <members>FEC_Case_Assignment_Logs__c.FEC_Case_Assignment_Name__c</members>
+        <members>FEC_Stage_Change__c.FEC_Code__c</members>
+        <members>FEC_Stage_Screen__c.FEC_Code__c</members>
         <name>CustomField</name>
     </types>
     <types>
@@ -689,6 +730,8 @@
 		<members>Hold_Case_Config_Record_Page</members>
 		<members>FEC_Case_Assignment_Log_Record_Page</members>
 		<members>FEC_Case_Assignment_Record_Page</members>
+        <members>FEC_Notification_Record_Page_Auto</members>
+        <members>FEC_Notification_Record_Page_Manual</members>
         <name>FlexiPage</name>
     </types>
     <types>
@@ -758,6 +801,24 @@
         <members>fec_NewAssignmentAction</members>
         <members>fec_holdCaseAuto</members>
         <members>fec_DoNotBotherResultView</members>
+        <members>fec_AccountOrContractPicklistCustomerCase</members>
+        <members>fec_CardClosureRefundForm</members>
+        <members>fec_CaseNote</members>
+        <members>fec_ContractClosureForm</members>
+        <members>fec_CustomerCaseExecuteAction</members>
+        <members>fec_IPPClosureForm</members>
+        <members>fec_IPPDetails</members>
+        <members>fec_MRC</members>
+        <members>fec_MainInfoLoanAccount</members>
+        <members>fec_NotificationOverride</members>
+        <members>fec_PaymentHistoryAcount</members>
+        <members>fec_PinResetView</members>
+        <members>fec_RepaymentSchedulePaymentHistory</members>
+        <members>fec_StatementsAccountTabView</members>
+        <members>fec_TransactionsAccount</members>
+        <members>fec_TransactionsAccountTabView</members>
+        <members>fec_UpdateAddress</members>
+        <members>maskedToggleDatatable</members>
 		<name>LightningComponentBundle</name>
     </types>
     <types>
@@ -1192,6 +1253,14 @@
         <members>FEC_MSG_SLA_Notif_Body_Exceeded</members>
         <members>FEC_MSG_SLA_Notif_Title_Approaching</members>
         <members>FEC_MSG_SLA_Notif_Title_Exceeded</members>
+        <members>FEC_LABEL_API_Code</members>
+        <members>FEC_LABEL_Description</members>
+        <members>FEC_LABEL_Months</members>
+        <members>FEC_MSG_Card_Block_Fail_Retry</members>
+        <members>FEC_MSG_IPP_Conversion_Fail_Retry</members>
+        <members>FEC_MSG_IPP_Conversion_Success</members>
+        <members>FEC_MSG_Parsing_Error</members>
+        <members>FEC_MSG_Remove_Phone_Service_Failed</members>
         <name>CustomLabel</name>
     </types>
 	<types>
@@ -1603,6 +1672,10 @@
         <members>FEC_Service</members>
         <name>CustomApplication</name>
     </types>
+	<types>
+	    <members>Case</members>
+	    <name>SharingRules</name>
+	</types>
 
     <!-- Document Request -->
     <types>
