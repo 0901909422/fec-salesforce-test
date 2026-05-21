@@ -648,8 +648,9 @@ public with sharing class FEC_ConstantCommon {
 
     // ================= ROUTE STATUS =================
     public static final String STATUS_CS_BACKOFFICE = 'CSBackOfficeReview';
+    public static final String STATUS_CS_REVIEW = 'CSReview';
     public static final String STATUS_OTHER_DEPT = 'OtherDeptReview';
-    
+
     // ================= ROUTING TYPE =================
     public static final String ROUTING_TYPE_ASSIGNMENT = 'Assignment';
     
@@ -817,6 +818,20 @@ public with sharing class FEC_ConstantCommon {
 
     public static final String ASSIGNMENT_AUTORECALLED_STATUS = 'AutoRecalled';
     public static final String ASSIGNMENT_AUTOCOMPLETE_STATUS = 'AutoCompleted';
+
+    //tungnm37: Tap hop team CS BackOffice (SP, CC)
+    public static final Set<String> CS_BACKOFFICE_TEAMS = new Set<String>{ 'SP', 'CC' };
+    //tungnm37: Tap hop team CS khac (Inbound, Ecom, Outbound, QC, OM, F2F, CA, CL, CX)
+    public static final Set<String> CS_REVIEW_TEAMS = new Set<String>{ 'IB', 'EC', 'OB', 'QC', 'OM', 'F2F', 'CA', 'CL', 'CX' };
+    //tungnm37: Tap hop team Other Dept (Collections, Payment, CP, DS, IA, IT, TS)
+    public static final Set<String> OTHER_DEPT_TEAMS = new Set<String>{ 'CO', 'PM', 'CP', 'DS', 'IA', 'IT', 'TS' };
+    
+    //tungnm37: Tap hop cac status Assignment da dong (dung de query active assignments)
+    public static final Set<String> CLOSED_ASSIGNMENT_STATUSES = new Set<String>{
+        ASSIGNMENT_STATUS_COMPLETED,
+        ASSIGNMENT_AUTOCOMPLETE_STATUS,
+        ASSIGNMENT_AUTORECALLED_STATUS
+    };
 
     public static final String QUEUE_ID_START = '00G';
     /** Prefix URL tải file theo ContentVersionId (servlet shepherd). */

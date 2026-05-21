@@ -20,6 +20,37 @@ public with sharing class FEC_AutoHoldCaseService {
         System.enqueueJob(new FEC_AutoHoldCaseQueueable(routingHistoryId));
     }
 
+    /**
+     * Submit không qua Routing Action (creation stage / không có dropdown routing):
+     * tạo Routing Action History tối thiểu rồi enqueue Auto Hold Case.
+     */
+    public static void enqueueAfterCaseSubmit(Id caseId, String currentStatusBeforeSubmit) {
+        if (caseId == null) {
+            return;
+        }
+
+        List<Case> caseRows = [
+            SELECT FEC_Final_Status__c, FEC_Stage_Name__c
+            FROM Case
+            WHERE Id = :caseId
+            LIMIT 1
+        ];
+        if (caseRows.isEmpty()) {
+            return;
+        }
+
+        Case endCase = caseRows[0];
+        FEC_Routing_Action_History__c history = new FEC_Routing_Action_History__c(
+            FEC_Case__c = caseId,
+            FEC_Routing_Action__c = 'Submit',
+            FEC_Current_Status__c = currentStatusBeforeSubmit,
+            FEC_Changed_Status__c = endCase.FEC_Final_Status__c,
+            FEC_Stage_Name__c = endCase.FEC_Stage_Name__c
+        );
+        Database.insert(history, AccessLevel.SYSTEM_MODE);
+        enqueueAfterRoutingHistory(history.Id);
+    }
+
     public static void processAutoHoldCase(Id routingHistoryId) {
         if (routingHistoryId == null) {
             return;
@@ -101,9 +132,10 @@ public with sharing class FEC_AutoHoldCaseService {
                     RESULT_ALREADY_MARKED,
                     nfuCode,
                     holdCaseMaster.FEC_NFU_Reason_VN__c,
-                    null,
-                    parseNfuTillDate(lastResult.nfuTillDate),
-                    config
+                    parseNfuDateTime(lastResult.nfuStartDate),
+                    parseNfuDateTime(lastResult.nfuTillDate),
+                    config,
+                    System.Label.FEC_STOP_IMPACT_ALREADY_MARKED_MSG
                 );
                 return;
             }
@@ -115,14 +147,24 @@ public with sharing class FEC_AutoHoldCaseService {
                     nfuCode,
                     holdCaseMaster.FEC_NFU_Reason_VN__c,
                     DateTime.now(),
-                    parseNfuTillDate(lastResult.nfuTillDate),
-                    config
+                    parseNfuDateTime(lastResult.nfuTillDate),
+                    config,
+                    System.Label.FEC_MSG_SUCCESS
                 );
                 return;
             }
         }
 
-        updateCaseAfterApi(caseId, RESULT_ERROR, null, null, null, null, null);
+        updateCaseAfterApi(
+            caseId,
+            RESULT_ERROR,
+            null,
+            null,
+            null,
+            null,
+            null,
+            System.Label.FEC_MSG_ERROR
+        );
     }
 
     @TestVisible
@@ -136,7 +178,7 @@ public with sharing class FEC_AutoHoldCaseService {
                   AND FEC_Category__c = :c.FEC_Category__c
                   AND FEC_Sub_Category__c = :c.FEC_SubCategory__c
                   AND FEC_Sub_Code__c = :c.FEC_SubCode__c
-                LIMIT 1
+                ORDER BY LastModifiedDate DESC
             ];
         } else {
             nocs = [
@@ -146,10 +188,30 @@ public with sharing class FEC_AutoHoldCaseService {
                   AND FEC_Category__c = :c.FEC_Category__c
                   AND FEC_Sub_Category__c = :c.FEC_SubCategory__c
                   AND FEC_Sub_Code__c = NULL
-                LIMIT 1
+                ORDER BY LastModifiedDate DESC
             ];
         }
-        return nocs.isEmpty() ? null : nocs[0].Id;
+        if (nocs.isEmpty()) {
+            return null;
+        }
+        if (nocs.size() == 1) {
+            return nocs[0].Id;
+        }
+
+        Set<Id> nocIds = new Map<Id, FEC_Nature_of_Case__c>(nocs).keySet();
+        List<FEC_Hold_Case_Config__c> configs = [
+            SELECT FEC_Nature_of_Cases__c
+            FROM FEC_Hold_Case_Config__c
+            WHERE FEC_Nature_of_Cases__c IN :nocIds
+              AND Hold_Case_Type__c = :HOLD_CASE_TYPE_AUTO
+              AND FEC_Active__c = TRUE
+              AND FEC_Case_Stage__c = :c.FEC_Current_Case_Stage__c
+            LIMIT 1
+        ];
+        if (!configs.isEmpty() && configs[0].FEC_Nature_of_Cases__c != null) {
+            return configs[0].FEC_Nature_of_Cases__c;
+        }
+        return nocs[0].Id;
     }
 
     @TestVisible
@@ -173,7 +235,7 @@ public with sharing class FEC_AutoHoldCaseService {
                 FEC_Auto_Hold_Duration_Minutes__c,
                 FEC_Auto_Hold_Release_Case_Status__c
             FROM FEC_Hold_Case_Config__c
-            WHERE FEC_Nature_of_Cases__c = :nocId
+            WHERE (FEC_Nature_of_Cases__c = :nocId OR FEC_Nature_of_Cases__c = NULL)
               AND Hold_Case_Type__c = :HOLD_CASE_TYPE_AUTO
               AND FEC_Active__c = TRUE
               AND FEC_Case_Stage__c = :caseStageId
@@ -195,11 +257,26 @@ public with sharing class FEC_AutoHoldCaseService {
         if (String.isBlank(configValue) || String.isBlank(historyValue)) {
             return false;
         }
-        String cleaned = historyValue.replaceAll(
-            FEC_ConstantCommon.PATTERN_CLEAN_TEXT,
-            ''
-        );
-        return configValue.contains(cleaned);
+        String normalizedHistory = normalizeStatusKey(historyValue);
+        if (String.isBlank(normalizedHistory)) {
+            return false;
+        }
+        for (String token : configValue.split(',')) {
+            if (normalizeStatusKey(token) == normalizedHistory) {
+                return true;
+            }
+        }
+        return normalizeStatusKey(configValue).contains(normalizedHistory);
+    }
+
+    @TestVisible
+    private static String normalizeStatusKey(String raw) {
+        if (String.isBlank(raw)) {
+            return '';
+        }
+        return raw.trim()
+            .replaceAll(FEC_ConstantCommon.PATTERN_CLEAN_TEXT, '')
+            .toLowerCase();
     }
 
     @TestVisible
@@ -231,12 +308,17 @@ public with sharing class FEC_AutoHoldCaseService {
         String nfuReason,
         DateTime startedDate,
         DateTime expiryDate,
-        FEC_Hold_Case_Config__c matchedHoldConfig
+        FEC_Hold_Case_Config__c matchedHoldConfig,
+        String collectionsResponse
     ) {
         Case patch = new Case(
             Id = caseId,
             FEC_NFU_Description_Result__c = resultType
         );
+
+        if (String.isNotBlank(collectionsResponse)) {
+            patch.FEC_Collections_Response__c = collectionsResponse;
+        }
 
         if (resultType == RESULT_ERROR) {
             Database.update(patch, AccessLevel.SYSTEM_MODE);
@@ -260,7 +342,7 @@ public with sharing class FEC_AutoHoldCaseService {
     }
 
     @TestVisible
-    private static DateTime parseNfuTillDate(String raw) {
+    private static DateTime parseNfuDateTime(String raw) {
         if (String.isBlank(raw)) {
             return null;
         }
@@ -275,7 +357,7 @@ public with sharing class FEC_AutoHoldCaseService {
             }
             return DateTime.valueOfGmt(normalized);
         } catch (Exception ex) {
-            System.debug('[FEC_AutoHoldCaseService] parseNfuTillDate failed: ' + ex.getMessage());
+            System.debug('[FEC_AutoHoldCaseService] parseNfuDateTime failed: ' + ex.getMessage());
             return null;
         }
     }

@@ -7,10 +7,11 @@ public with sharing class FEC_MarkNFU {
     public String NFUUpdatedBy;
   }
 
-  public class MarkNFUResult {
+    public class MarkNFUResult {
     public String code;
     public String description;
     public String nfuReasonCode;
+    public String nfuStartDate;
     public String nfuTillDate;
     public Integer httpStatus;
     public String rawResponse;
@@ -97,6 +98,10 @@ public with sharing class FEC_MarkNFU {
       result.code = FEC_CommonUltils.getXmlValue(responseNode, 'Code');
       result.description = FEC_CommonUltils.getXmlValue(responseNode, 'Description');
       result.nfuReasonCode = FEC_CommonUltils.getXmlValue(responseNode, 'NFUReasonCode');
+      result.nfuStartDate = FEC_CommonUltils.getXmlValue(responseNode, 'NFUStartDate');
+      if (String.isBlank(result.nfuStartDate)) {
+        result.nfuStartDate = FEC_CommonUltils.getXmlValue(responseNode, 'NFUFromDate');
+      }
       result.nfuTillDate = FEC_CommonUltils.getXmlValue(responseNode, 'NFUTillDate');
       
       result.success = (result.code == FEC_ConstantCommon.SUCCESS_CODE_1 || 

@@ -48,18 +48,6 @@ import FEC_Merchant_Description from '@salesforce/label/c.FEC_Merchant_Descripti
 import FEC_OTP_Sent from '@salesforce/label/c.FEC_OTP_Sent';
 import FEC_Merchant_Category_Code from '@salesforce/label/c.FEC_Merchant_Category_Code';
 
-import FEC_BilledTx_Col_EffectiveDate from '@salesforce/label/c.FEC_BilledTx_Col_EffectiveDate';
-import FEC_BilledTx_Col_PostDate from '@salesforce/label/c.FEC_BilledTx_Col_PostDate';
-import FEC_BilledTx_Col_Amount from '@salesforce/label/c.FEC_BilledTx_Col_Amount';
-import FEC_BilledTx_Col_Merchant from '@salesforce/label/c.FEC_BilledTx_Col_Merchant';
-import FEC_BilledTx_Col_DebitCredit from '@salesforce/label/c.FEC_BilledTx_Col_DebitCredit';
-import FEC_BilledTx_Col_Plan from '@salesforce/label/c.FEC_BilledTx_Col_Plan';
-import FEC_BilledTx_Col_TxnCode from '@salesforce/label/c.FEC_BilledTx_Col_TxnCode';
-import FEC_BilledTx_Col_AuthCode from '@salesforce/label/c.FEC_BilledTx_Col_AuthCode';
-import FEC_BilledTx_Col_MCC from '@salesforce/label/c.FEC_BilledTx_Col_MCC';
-import FEC_BilledTx_Col_Currency from '@salesforce/label/c.FEC_BilledTx_Col_Currency';
-import FEC_BilledTx_Col_OTP from '@salesforce/label/c.FEC_BilledTx_Col_OTP';
-
 export default class Fec_StatementsAccountTabView extends NavigationMixin(LightningElement) {
 
     // ==============================
@@ -101,18 +89,7 @@ export default class Fec_StatementsAccountTabView extends NavigationMixin(Lightn
         currencyCodeLabel: FEC_Currency_Code,
         merchantDescriptionLabel: FEC_Merchant_Description,
         otpSentLabel: FEC_OTP_Sent,
-        merchantCategoryCodeLabel: FEC_Merchant_Category_Code,
-        billedColEffectiveDate: FEC_BilledTx_Col_EffectiveDate,
-        billedColPostDate: FEC_BilledTx_Col_PostDate,
-        billedColAmount: FEC_BilledTx_Col_Amount,
-        billedColMerchant: FEC_BilledTx_Col_Merchant,
-        billedColDebitCredit: FEC_BilledTx_Col_DebitCredit,
-        billedColPlan: FEC_BilledTx_Col_Plan,
-        billedColTxnCode: FEC_BilledTx_Col_TxnCode,
-        billedColAuthCode: FEC_BilledTx_Col_AuthCode,
-        billedColMcc: FEC_BilledTx_Col_MCC,
-        billedColCurrency: FEC_BilledTx_Col_Currency,
-        billedColOtp: FEC_BilledTx_Col_OTP
+        merchantCategoryCodeLabel: FEC_Merchant_Category_Code
     };
 
     // ==============================
@@ -140,92 +117,66 @@ export default class Fec_StatementsAccountTabView extends NavigationMixin(Lightn
                 { label: this.customLabel.otpSentLabel, fieldName: 'otpSent' }
             ]
         },
-        { label: this.customLabel.effectiveDateLabel, fieldName: 'effectiveDate', type: 'text', cellAlign: 'center' },
-        { label: this.customLabel.postDateLabel, fieldName: 'postDate', type: 'text', cellAlign: 'center' },
-        { label: this.customLabel.transactionAmountLabel, fieldName: 'transactionAmount', type: 'text', cellAlign: 'right' },
-        { label: this.customLabel.merchantDescriptionLabel, fieldName: 'merchantDescription', type: 'text', width: '240px' },
-        { label: this.customLabel.creditDebitFlagLabel, fieldName: 'creditDebitFlag', type: 'text', cellAlign: 'center' },
-        { label: this.customLabel.transactionPlanLabel, fieldName: 'transactionPlan', type: 'text', cellAlign: 'center' },
-        { label: this.customLabel.authorizationCodeLabel, fieldName: 'authorizationCode', type: 'text', cellAlign: 'center' },
-        { label: this.customLabel.merchantCategoryCodeLabel, fieldName: 'merchantCategoryCode', type: 'text', cellAlign: 'center' },
-        { label: this.customLabel.currencyCodeLabel, fieldName: 'currencyCode', type: 'text', cellAlign: 'center' },
-        { label: this.customLabel.otpSentLabel, fieldName: 'otpSent', type: 'text', cellAlign: 'center' },
         {
-            label: this.customLabel.billedColTxnCode,
-            fieldName: 'transactionCode',
-            type: 'text',
-            cellAlign: 'center',
-            width: '120px'
-        },
-        {
-            label: this.customLabel.billedColEffectiveDate,
+            label: this.customLabel.effectiveDateLabel,
             fieldName: 'effectiveDate',
             sortFieldName: 'effectiveSortEpoch',
             type: 'text',
-            cellAlign: 'center',
-            width: '120px'
+            cellAlign: 'center'
         },
         {
-            label: this.customLabel.billedColPostDate,
+            label: this.customLabel.postDateLabel,
             fieldName: 'postDate',
             type: 'text',
-            cellAlign: 'center',
-            width: '120px'
+            cellAlign: 'center'
         },
         {
-            label: this.customLabel.billedColAmount,
+            label: this.customLabel.transactionAmountLabel,
             fieldName: 'transactionAmount',
             type: 'text',
-            cellAlign: 'right',
-            width: '140px'
+            cellAlign: 'right'
         },
         {
-            label: this.customLabel.billedColMerchant,
+            label: this.customLabel.merchantDescriptionLabel,
             fieldName: 'merchantDescription',
             type: 'text',
-            width: '220px'
+            width: '240px'
         },
         {
-            label: this.customLabel.billedColDebitCredit,
+            label: this.customLabel.creditDebitFlagLabel,
             fieldName: 'creditDebitFlag',
             type: 'text',
-            cellAlign: 'center',
-            width: '120px'
+            cellAlign: 'center'
         },
         {
-            label: this.customLabel.billedColPlan,
+            label: this.customLabel.transactionPlanLabel,
             fieldName: 'transactionPlan',
             type: 'text',
-            cellAlign: 'left',
-            width: '100px'
+            cellAlign: 'center'
         },
         {
-            label: this.customLabel.billedColAuthCode,
+            label: this.customLabel.authorizationCodeLabel,
             fieldName: 'authorizationCode',
             type: 'text',
-            cellAlign: 'center',
-            width: '120px'
+            cellAlign: 'center'
         },
         {
-            label: this.customLabel.billedColMcc,
+            label: this.customLabel.merchantCategoryCodeLabel,
             fieldName: 'merchantCategoryCode',
             type: 'text',
-            cellAlign: 'center',
-            width: '100px'
+            cellAlign: 'center'
         },
         {
-            label: this.customLabel.billedColCurrency,
+            label: this.customLabel.currencyCodeLabel,
             fieldName: 'currencyCode',
             type: 'text',
-            cellAlign: 'center',
-            width: '100px'
+            cellAlign: 'center'
         },
         {
-            label: this.customLabel.billedColOtp,
+            label: this.customLabel.otpSentLabel,
             fieldName: 'otpSent',
             type: 'text',
-            cellAlign: 'center',
-            width: '88px'
+            cellAlign: 'center'
         }
     ];
 
