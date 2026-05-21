@@ -13,6 +13,7 @@ import FEC_Batch_TemplateNoAttachment from "@salesforce/label/c.FEC_Batch_Templa
 import FEC_Batch_Msg_InvalidImportData from "@salesforce/label/c.FEC_Batch_Msg_InvalidImportData";
 import FEC_Batch_Msg_CannotReadExcelContent from "@salesforce/label/c.FEC_Batch_Msg_CannotReadExcelContent";
 import FEC_Batch_Msg_Select_Template from "@salesforce/label/c.FEC_Batch_Msg_Select_Template";
+import FEC_Batch_Import_Missing_Excel_Column from "@salesforce/label/c.FEC_Batch_Import_Missing_Excel_Column";
 import FEC_SheetJS from "@salesforce/resourceUrl/FEC_SheetJS";
 import {
   normalizeHeaderCell,
@@ -48,12 +49,44 @@ const HEADER_INTERACTION_PHONE = [
   "interaction phone number",
   "phone"
 ];
-const RESULT_APPEND_HEADERS = [
-  "__Status",
-  "__Interaction ID",
-  "__Case ID",
-  "__Errors"
-];
+const RESULT_APPEND_HEADERS = ["ID", "Status", "Errors"];
+
+const isResultExportCutoffHeader = (header) => {
+  const norm = normalizeHeaderCell(header);
+  if (!norm) {
+    return false;
+  }
+  if (norm === "note" || norm === "id" || norm === "status" || norm === "errors") {
+    return true;
+  }
+  return norm.startsWith("__");
+};
+
+const trimSourceForResultExport = (headers, rows) => {
+  const headerList = Array.isArray(headers) ? headers : [];
+  let cutoff = headerList.length;
+  headerList.forEach((header, idx) => {
+    if (isResultExportCutoffHeader(header)) {
+      cutoff = Math.min(cutoff, idx);
+    }
+  });
+  const exportHeaders = headerList.slice(0, cutoff);
+  const exportRows = (Array.isArray(rows) ? rows : []).map((row) =>
+    exportHeaders.map((_, colIdx) => {
+      const value = Array.isArray(row) ? row[colIdx] : "";
+      return value == null ? "" : value;
+    })
+  );
+  return { headers: exportHeaders, rows: exportRows };
+};
+
+const formatErrorsForExport = (errors) =>
+  String(errors ?? "")
+    .replace(/[\r\n\u2028\u2029]+/g, ", ")
+    .replace(/\s*,\s*/g, ", ")
+    .replace(/,(\s*,)+/g, ",")
+    .replace(/^,\s*|\s*,$/g, "")
+    .trim();
 
 export default class Fec_BatchCaseCreation extends LightningElement {
   labelSelectTemplate = FEC_Batch_Msg_Select_Template;
@@ -367,7 +400,7 @@ export default class Fec_BatchCaseCreation extends LightningElement {
     if (missing.length > 0) {
       return {
         ok: false,
-        message: `File thiếu cột: ${missing.join(", ")}.`
+        message: FEC_Batch_Import_Missing_Excel_Column.replace("{0}", missing.join(", "))
       };
     }
 
@@ -538,8 +571,8 @@ export default class Fec_BatchCaseCreation extends LightningElement {
         IMPORT_TIMEOUT_MS,
         IMPORT_TIMEOUT_MESSAGE
       );
-      if (result?.success) {
-        if (result.batchRecordId && result.resultRowsJson) {
+      if (result?.batchRecordId && result?.resultRowsJson) {
+        try {
           await this.saveResultWorkbook(
             result.batchRecordId,
             fileToUpload.name,
@@ -547,7 +580,13 @@ export default class Fec_BatchCaseCreation extends LightningElement {
             this.pendingImportHeaders,
             this.pendingImportSourceRows
           );
+        } catch (saveErr) {
+          // Batch row + server CSV result still allow download; do not block table refresh.
+          // eslint-disable-next-line no-console
+          console.warn("saveResultWorkbook", saveErr);
         }
+      }
+      if (result?.success) {
         this.showSuccess("Success", result.message || "Import started.");
         this.selectedFile = null;
         this.selectedFileName = "";
@@ -556,23 +595,33 @@ export default class Fec_BatchCaseCreation extends LightningElement {
         this.pendingImportRows = [];
         this.importValidationError = "";
         this.attachDataRequiredError = false;
-        await this.refreshRows();
-        return;
+      } else {
+        // Validation/DML failure: bảng lịch sử + Result đã có — không hiện toast đỏ.
+        this.importValidationError = result?.batchRecordId
+          ? ""
+          : result?.message || "";
       }
-      this.showError("Import failed", result?.message || "Unable to import.");
     } catch (error) {
       if (error?.message === IMPORT_TIMEOUT_MESSAGE) {
         this.importValidationError = IMPORT_TIMEOUT_MESSAGE;
       } else {
-        this.showError("Import failed", extractErrorMessage(error));
+        this.importValidationError = extractErrorMessage(error);
       }
     } finally {
+      try {
+        await this.refreshRows(false);
+      } catch (refreshErr) {
+        // eslint-disable-next-line no-console
+        console.warn("refreshRows", refreshErr);
+      }
       this.isLoading = false;
     }
   }
 
-  async refreshRows() {
-    this.isLoading = true;
+  async refreshRows(showLoading = true) {
+    if (showLoading) {
+      this.isLoading = true;
+    }
     try {
       const data = await getRecentRows();
       this.rows = Array.isArray(data) ? data.map((row) => this.normalizeRow(row)) : [];
@@ -586,7 +635,9 @@ export default class Fec_BatchCaseCreation extends LightningElement {
       this.pagedRows = [];
       this.showError("Load failed", extractErrorMessage(error));
     } finally {
-      this.isLoading = false;
+      if (showLoading) {
+        this.isLoading = false;
+      }
     }
   }
 
@@ -616,18 +667,26 @@ export default class Fec_BatchCaseCreation extends LightningElement {
     sourceRows = []
   ) {
     await this.ensureSheetJsLoaded();
+    const { headers: exportHeaders, rows: exportSourceRows } = trimSourceForResultExport(
+      sourceHeaders,
+      sourceRows
+    );
     const parsedRows = JSON.parse(resultRowsJson || "[]");
     const exportRows = Array.isArray(parsedRows)
-      ? parsedRows.map((r, index) => [
-          ...(sourceRows[index] || sourceHeaders.map(() => "")),
-          String(r?.finalStatus || ""),
-          String(r?.interactionId || ""),
-          String(r?.caseBusinessId || ""),
-          String(r?.errors || "")
-        ])
+      ? parsedRows.map((r, index) => {
+          const rowStatus = String(r?.status || "");
+          const exportId =
+            rowStatus.toLowerCase() === "succeeded" ? String(r?.recordId || "") : "";
+          return [
+            ...(exportSourceRows[index] || exportHeaders.map(() => "")),
+            exportId,
+            rowStatus,
+            formatErrorsForExport(r?.errors)
+          ];
+        })
       : [];
     const worksheet = window.XLSX.utils.aoa_to_sheet([
-      [...sourceHeaders, ...RESULT_APPEND_HEADERS],
+      [...exportHeaders, ...RESULT_APPEND_HEADERS],
       ...exportRows
     ]);
     const workbook = window.XLSX.utils.book_new();
