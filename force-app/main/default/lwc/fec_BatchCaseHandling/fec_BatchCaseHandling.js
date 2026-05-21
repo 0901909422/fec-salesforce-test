@@ -267,10 +267,7 @@ const EXPORT_USER_FILL_HEADERS = new Set([
   ...HEADERS_ASSIGNMENT_ROUTING_ACTION,
   ...HEADERS_CS_D2C_ASSESSMENT,
   ...HEADERS_RISK_LEVEL,
-  ...HEADERS_REQUIRED_ACTION,
-  ...HEADERS_CLASSIFICATION_BY_CS,
-  ...HEADERS_EVALUATION_BY_CS,
-  ...HEADERS_FINAL_PRODUCT
+  ...HEADERS_REQUIRED_ACTION
 ]);
 const EXPORT_HEADER_FIELD_MAP = {
   customername: "customerName",
@@ -2072,6 +2069,19 @@ export default class Fec_BatchCaseHandling extends LightningElement {
     this.bpSubmitLoading = false;
   }
 
+  resolveTemplateGroupKey(templateMeta, businessProcessCode) {
+    const versionId = String(templateMeta?.templateContentVersionId || STR_EMPTY).trim();
+    if (versionId) {
+      return `cv:${versionId}`;
+    }
+    const templateName = String(templateMeta?.templateName || STR_EMPTY).trim();
+    if (templateName) {
+      return `name:${templateName.toLowerCase()}`;
+    }
+    const bp = String(businessProcessCode || STR_EMPTY).trim().toLowerCase();
+    return `bp:${bp || "other"}`;
+  }
+
   async handleBpSubmit() {
     if (this.bpSubmitLoading) {
       return;
@@ -2095,10 +2105,16 @@ export default class Fec_BatchCaseHandling extends LightningElement {
     const groups = {};
     rows.forEach((r) => {
       const bp = this.rowBusinessProcessKey(r) || "Other";
-      if (!groups[bp]) {
-        groups[bp] = [];
+      const tmplMeta = this.bpTemplateMetaByCode[bp] || {};
+      const groupKey = this.resolveTemplateGroupKey(tmplMeta, bp);
+      if (!groups[groupKey]) {
+        groups[groupKey] = {
+          rows: [],
+          templateMeta: tmplMeta,
+          fallbackBusinessProcessCode: bp
+        };
       }
-      groups[bp].push(r);
+      groups[groupKey].rows.push(r);
     });
 
     this.bpSubmitLoading = true;
@@ -2106,17 +2122,18 @@ export default class Fec_BatchCaseHandling extends LightningElement {
     try {
       await this.ensureSheetJsLoaded();
       const filesPayload = [];
-      const bpKeys = Object.keys(groups);
-      for (let i = 0; i < bpKeys.length; i += 1) {
-        const bp = bpKeys[i];
-        const tmplMeta = this.bpTemplateMetaByCode[bp] || {};
+      const groupKeys = Object.keys(groups);
+      for (let i = 0; i < groupKeys.length; i += 1) {
+        const groupItem = groups[groupKeys[i]];
+        const tmplMeta = groupItem?.templateMeta || {};
+        const fallbackBp = groupItem?.fallbackBusinessProcessCode || "Other";
         const fileName = this.resolveExportFileName(
           tmplMeta.templateName,
-          bp
+          fallbackBp
         );
         const file = await this.withTimeout(
           this.buildExcelFileFromTemplate(
-            groups[bp],
+            groupItem?.rows || [],
             fileName,
             tmplMeta.templateContentVersionId
           ),
