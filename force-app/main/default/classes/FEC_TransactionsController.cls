@@ -314,9 +314,7 @@ public without sharing class FEC_TransactionsController {
             FEC_MFASOUTSTANDINGAUTHINQ.AuthTableRow ar =
                 String.isNotBlank(k) ? fasByKey.get(k) : null;
 
-            Date effB = effectiveDateFromBasic(ti);
-            Date effF = ar != null ? FEC_CommonUltils.toDateStr(ar.EFF_DATE) : null;
-            dto.effectiveDateDualDisplay = dualDateLine(effB, effF);
+            dto.effectiveDateDualDisplay = dualEffectiveDateTimeLine(ti, ar);
 
             Date postB = postingDateFromBasic(ti);
             Date postF = postingDateFromFas(ar);
@@ -446,31 +444,96 @@ public without sharing class FEC_TransactionsController {
         return postF != null ? postF : eff;
     }
 
+    private static final String DASH = '-';
+
     private static String dashIfNull(Date d) {
-        return d == null ? '\u2014' : String.valueOf(d);
+        return d == null ? DASH : FEC_CommonUltils.formatDateDDMMYYYY(d);
     }
 
     private static String dashIfNullDec(Decimal x) {
-        return x == null ? '\u2014' : String.valueOf(x);
+        return x == null
+            ? DASH
+            : FEC_CommonUltils.formatCurrencyFixed(x, 0);
     }
 
     private static String dashIfBlank(String s) {
-        return String.isBlank(s) ? '\u2014' : s.trim();
+        return String.isBlank(s) ? DASH : s.trim();
     }
 
-    private static final String EM_DASH = '\u2014';
+    private static String formatEffectiveDateTime(Datetime dt) {
+        return dt == null
+            ? DASH
+            : dt.format('dd/MM/yyyy HH:mm:ss');
+    }
+
+    private static String formatEffectiveDateTimeFromFas(String effRaw) {
+        if (String.isBlank(effRaw)) {
+            return DASH;
+        }
+        String v = effRaw.trim();
+        Datetime dt = FEC_CommonUltils.parseDateTime(v);
+        if (dt == null && (v.contains('T') || v.contains(' '))) {
+            try {
+                String normalized = v.replace('T', ' ');
+                if (normalized.length() > 19) {
+                    normalized = normalized.substring(0, 19);
+                }
+                dt = Datetime.valueOf(normalized);
+            } catch (Exception e) {
+                dt = null;
+            }
+        }
+        if (dt != null) {
+            return formatEffectiveDateTime(dt);
+        }
+        Date d = FEC_CommonUltils.toDateStr(v);
+        if (d != null) {
+            return formatEffectiveDateTime(
+                Datetime.newInstance(d, Time.newInstance(0, 0, 0, 0))
+            );
+        }
+        return DASH;
+    }
+
+    private static String dualEffectiveDateTimeLine(
+        FEC_GetCardBasicInfo.TransactionInfo ti,
+        FEC_MFASOUTSTANDINGAUTHINQ.AuthTableRow ar
+    ) {
+        String left = DASH;
+        if (ti != null) {
+            if (ti.TRNXDateTime != null) {
+                left = formatEffectiveDateTime(ti.TRNXDateTime);
+            } else {
+                Date d = effectiveDateFromBasic(ti);
+                left =
+                    d == null
+                        ? DASH
+                        : formatEffectiveDateTime(
+                              Datetime.newInstance(
+                                  d,
+                                  Time.newInstance(0, 0, 0, 0)
+                              )
+                          );
+            }
+        }
+        String right =
+            ar != null ? formatEffectiveDateTimeFromFas(ar.EFF_DATE) : DASH;
+        return dualPairDisplay(left, right);
+    }
 
     /**
      * Renders "left | right" only when both sides have real values;
      * if exactly one side is present, returns that side only (no trailing " | ╬ô├ç├╢").
      */
+    private static Boolean isMissingDisplayToken(String s) {
+        return String.isBlank(s) || DASH.equals(s) || '\u2014'.equals(s);
+    }
+
     private static String dualPairDisplay(String leftShown, String rightShown) {
-        Boolean lMiss =
-            String.isBlank(leftShown) || EM_DASH.equals(leftShown);
-        Boolean rMiss =
-            String.isBlank(rightShown) || EM_DASH.equals(rightShown);
+        Boolean lMiss = isMissingDisplayToken(leftShown);
+        Boolean rMiss = isMissingDisplayToken(rightShown);
         if (lMiss && rMiss) {
-            return EM_DASH;
+            return DASH;
         }
         if (rMiss) {
             return leftShown;
