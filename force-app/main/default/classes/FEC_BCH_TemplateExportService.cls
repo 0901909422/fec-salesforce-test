@@ -41,7 +41,15 @@ public without sharing class FEC_BCH_TemplateExportService {
             : req.mappedColumnIndexes;
         List<List<String>> dataRows = req.dataRows == null ? new List<List<String>>() : req.dataRows;
         String worksheetXml = blobToUtf8(entryByPath.get(worksheetPath));
-        String patchedXml = patchWorksheetXml(worksheetXml, headerRowIndex, mappedCols, dataRows);
+        String patchedXml = patchWorksheetXml(
+            worksheetXml,
+            headerRowIndex,
+            mappedCols,
+            dataRows,
+            entryByPath,
+            workbookXml,
+            workbookRelsXml
+        );
         entryByPath.put(worksheetPath, Blob.valueOf(patchedXml));
         Blob outBlob = writeZipEntries(entryByPath, sourceBlob);
         return outBlob == null ? null : EncodingUtil.base64Encode(outBlob);
@@ -145,11 +153,22 @@ public without sharing class FEC_BCH_TemplateExportService {
         return 'xl/worksheets/sheet1.xml';
     }
 
+    private class ValidationHeaderPair {
+        List<String> mainMustContain;
+        List<String> mainMustNotContain;
+        List<String> lookupMustContain;
+        Boolean mainMatchAny;
+        Boolean lookupMatchAny;
+    }
+
     private static String patchWorksheetXml(
         String xml,
         Integer headerRowIndex,
         List<Integer> mappedCols,
-        List<List<String>> dataRows
+        List<List<String>> dataRows,
+        Map<String, Blob> entryByPath,
+        String workbookXml,
+        String workbookRelsXml
     ) {
         if (String.isBlank(xml)) {
             return xml;
@@ -180,8 +199,451 @@ public without sharing class FEC_BCH_TemplateExportService {
         );
         Integer lastRow1 = templateDataRow1 + rowCount - 1;
         out = updateDimensionRef(out, lastRow1);
-        out = extendAllListValidationSqrefs(out, templateDataRow1, lastRow1);
+        out = applyHeaderBasedListValidations(
+            out,
+            entryByPath,
+            workbookXml,
+            workbookRelsXml,
+            headerRowIndex,
+            templateDataRow1,
+            lastRow1
+        );
         return out;
+    }
+
+    private static String resolveLookupSheetPath(String workbookXml, String workbookRelsXml) {
+        if (String.isBlank(workbookXml) || String.isBlank(workbookRelsXml)) {
+            return 'xl/worksheets/sheet2.xml';
+        }
+        String chosenRid = null;
+        Pattern sheetPat = Pattern.compile('<sheet[^>]+name="([^"]+)"[^>]+r:id="([^"]+)"');
+        Matcher sheetMat = sheetPat.matcher(workbookXml);
+        while (sheetMat.find()) {
+            String sheetName = sheetMat.group(1);
+            if ('Sheet1'.equalsIgnoreCase(sheetName.trim())) {
+                chosenRid = sheetMat.group(2);
+                break;
+            }
+        }
+        if (String.isBlank(chosenRid)) {
+            return 'xl/worksheets/sheet2.xml';
+        }
+        Pattern relPat = Pattern.compile(
+            'Id="' + Pattern.quote(chosenRid) + '"[^>]+Target="([^"]+)"'
+        );
+        Matcher relMat = relPat.matcher(workbookRelsXml);
+        if (relMat.find()) {
+            String target = relMat.group(1);
+            if (target.startsWith('/')) {
+                target = target.substring(1);
+            }
+            if (!target.startsWith('xl/')) {
+                target = 'xl/' + target;
+            }
+            return target;
+        }
+        return 'xl/worksheets/sheet2.xml';
+    }
+
+    private static List<String> parseSharedStrings(String sharedStringsXml) {
+        List<String> out = new List<String>();
+        if (String.isBlank(sharedStringsXml)) {
+            return out;
+        }
+        Pattern siPat = Pattern.compile('(?s)<si>(.*?)</si>');
+        Matcher siMat = siPat.matcher(sharedStringsXml);
+        while (siMat.find()) {
+            String block = siMat.group(1);
+            String text = FEC_ConstantCommon.STR_EMPTY;
+            Pattern tPat = Pattern.compile('<t[^>]*>([^<]*)</t>');
+            Matcher tMat = tPat.matcher(block);
+            while (tMat.find()) {
+                text += tMat.group(1);
+            }
+            out.add(text);
+        }
+        return out;
+    }
+
+    private static String normalizeHeaderName(String value) {
+        if (String.isBlank(value)) {
+            return FEC_ConstantCommon.STR_EMPTY;
+        }
+        return value.trim().toLowerCase().replaceAll('[^a-z0-9]', FEC_ConstantCommon.STR_EMPTY);
+    }
+
+    private static String resolveCellDisplayText(String cellXml, List<String> sharedStrings) {
+        if (String.isBlank(cellXml)) {
+            return FEC_ConstantCommon.STR_EMPTY;
+        }
+        Pattern inlinePat = Pattern.compile('(?s)<is>.*?<t[^>]*>([^<]*)</t>');
+        Matcher inlineMat = inlinePat.matcher(cellXml);
+        if (inlineMat.find()) {
+            return inlineMat.group(1);
+        }
+        Pattern sharedPat = Pattern.compile('<v>(\\d+)</v>');
+        Matcher sharedMat = sharedPat.matcher(cellXml);
+        if (sharedMat.find() && sharedStrings != null && !sharedStrings.isEmpty()) {
+            Integer idx = Integer.valueOf(sharedMat.group(1));
+            if (idx >= 0 && idx < sharedStrings.size()) {
+                return sharedStrings[idx];
+            }
+        }
+        return FEC_ConstantCommon.STR_EMPTY;
+    }
+
+    private static Map<String, String> parseRowHeaderColumns(
+        String worksheetXml,
+        Integer rowNum1,
+        List<String> sharedStrings
+    ) {
+        Map<String, String> out = new Map<String, String>();
+        String rowXml = extractRowXml(worksheetXml, rowNum1);
+        if (String.isBlank(rowXml)) {
+            return out;
+        }
+        Pattern cellPat = Pattern.compile('(?s)<c r="([A-Z]{1,3})' + rowNum1 + '"([^>]*)(?:>(.*?)</c>|/>)');
+        Matcher cellMat = cellPat.matcher(rowXml);
+        while (cellMat.find()) {
+            String col = cellMat.group(1);
+            String attrs = cellMat.group(2) == null ? FEC_ConstantCommon.STR_EMPTY : cellMat.group(2);
+            String cellBody = cellMat.group(3) == null ? FEC_ConstantCommon.STR_EMPTY : cellMat.group(3);
+            String text = resolveCellDisplayText(attrs + cellBody, sharedStrings);
+            if (String.isNotBlank(text)) {
+                out.put(col, normalizeHeaderName(text));
+            }
+        }
+        return out;
+    }
+
+    private static String resolveLookupSheetName(String workbookXml) {
+        if (String.isBlank(workbookXml)) {
+            return 'Sheet1';
+        }
+        Pattern sheetPat = Pattern.compile('<sheet[^>]+name="([^"]+)"[^>]+r:id="([^"]+)"');
+        Matcher sheetMat = sheetPat.matcher(workbookXml);
+        while (sheetMat.find()) {
+            String sheetName = sheetMat.group(1);
+            if ('Sheet1'.equalsIgnoreCase(sheetName.trim())) {
+                return sheetName;
+            }
+        }
+        return 'Sheet1';
+    }
+
+    private static String buildLookupFormulaRef(
+        String lookupSheetName,
+        String col,
+        Integer firstRow,
+        Integer lastRow
+    ) {
+        String sheetRef = lookupSheetName;
+        if (sheetRef.contains(' ') || sheetRef.contains('\'')) {
+            sheetRef = '\'' + sheetRef.replace('\'', '\'\'') + '\'';
+        }
+        return sheetRef +
+            '!$' +
+            col +
+            '$' +
+            String.valueOf(firstRow) +
+            ':$' +
+            col +
+            '$' +
+            String.valueOf(lastRow);
+    }
+
+    private static Map<String, String> computeLookupColumnFormulas(
+        String lookupXml,
+        List<String> sharedStrings,
+        String lookupSheetName
+    ) {
+        Map<String, String> formulas = new Map<String, String>();
+        Map<String, Integer> firstRowByCol = new Map<String, Integer>();
+        Map<String, Integer> lastRowByCol = new Map<String, Integer>();
+        Pattern rowPat = Pattern.compile('(?s)<row r="(\\d+)"[^>]*>(.*?)</row>');
+        Matcher rowMat = rowPat.matcher(lookupXml);
+        while (rowMat.find()) {
+            Integer rowNum1 = Integer.valueOf(rowMat.group(1));
+            if (rowNum1 < 2) {
+                continue;
+            }
+            String rowInner = rowMat.group(2);
+            Pattern cellPat = Pattern.compile('(?s)<c r="([A-Z]{1,3})(\\d+)"([^>]*)(?:>(.*?)</c>|/>)');
+            Matcher cellMat = cellPat.matcher(rowInner);
+            while (cellMat.find()) {
+                Integer cellRow = Integer.valueOf(cellMat.group(2));
+                if (cellRow != rowNum1) {
+                    continue;
+                }
+                String col = cellMat.group(1);
+                String attrs = cellMat.group(3) == null ? FEC_ConstantCommon.STR_EMPTY : cellMat.group(3);
+                String cellBody = cellMat.group(4) == null ? FEC_ConstantCommon.STR_EMPTY : cellMat.group(4);
+                String text = resolveCellDisplayText(attrs + cellBody, sharedStrings);
+                if (String.isBlank(text)) {
+                    continue;
+                }
+                if (!firstRowByCol.containsKey(col)) {
+                    firstRowByCol.put(col, rowNum1);
+                }
+                lastRowByCol.put(col, rowNum1);
+            }
+        }
+        for (String col : firstRowByCol.keySet()) {
+            Integer firstRow = firstRowByCol.get(col);
+            Integer lastRow = lastRowByCol.get(col);
+            formulas.put(
+                col,
+                buildLookupFormulaRef(lookupSheetName, col, firstRow, lastRow)
+            );
+        }
+        return formulas;
+    }
+
+    private static List<ValidationHeaderPair> buildValidationHeaderPairs() {
+        List<ValidationHeaderPair> pairs = new List<ValidationHeaderPair>();
+        ValidationHeaderPair routing = new ValidationHeaderPair();
+        routing.mainMustContain = new List<String>{ 'routingaction' };
+        routing.mainMustNotContain = new List<String>{ 'assignmentrouting' };
+        routing.lookupMustContain = new List<String>{ 'routingaction' };
+        pairs.add(routing);
+        ValidationHeaderPair assignmentRouting = new ValidationHeaderPair();
+        assignmentRouting.mainMustContain = new List<String>{ 'assignmentroutingaction' };
+        assignmentRouting.lookupMustContain = new List<String>{ 'assignmentroutingaction' };
+        pairs.add(assignmentRouting);
+        ValidationHeaderPair classification = new ValidationHeaderPair();
+        classification.mainMustContain = new List<String>{ 'classificationbycs' };
+        classification.lookupMustContain = new List<String>{ 'classificationbycs' };
+        pairs.add(classification);
+        ValidationHeaderPair evaluation = new ValidationHeaderPair();
+        evaluation.mainMustContain = new List<String>{ 'evaluationbycs' };
+        evaluation.lookupMustContain = new List<String>{ 'evaluationbycs' };
+        pairs.add(evaluation);
+        ValidationHeaderPair finalProduct = new ValidationHeaderPair();
+        finalProduct.mainMustContain = new List<String>{ 'finalproduct' };
+        finalProduct.lookupMustContain = new List<String>{ 'productfinal' };
+        pairs.add(finalProduct);
+        ValidationHeaderPair csSupport = new ValidationHeaderPair();
+        csSupport.mainMustContain = new List<String>{ 'cssupport', 'danhgia' };
+        csSupport.mainMatchAny = true;
+        csSupport.lookupMustContain = new List<String>{ 'cssupport', 'danhgia' };
+        csSupport.lookupMatchAny = true;
+        pairs.add(csSupport);
+        ValidationHeaderPair csD2c = new ValidationHeaderPair();
+        csD2c.mainMustContain = new List<String>{ 'csd2c', 'danhgia' };
+        csD2c.mainMatchAny = true;
+        csD2c.lookupMustContain = new List<String>{ 'csd2c', 'danhgia' };
+        csD2c.lookupMatchAny = true;
+        pairs.add(csD2c);
+        ValidationHeaderPair riskLevel = new ValidationHeaderPair();
+        riskLevel.mainMustContain = new List<String>{ 'risklevel', 'mucdoruiro' };
+        riskLevel.mainMatchAny = true;
+        riskLevel.lookupMustContain = new List<String>{ 'risklevel', 'mucdoruiro' };
+        riskLevel.lookupMatchAny = true;
+        pairs.add(riskLevel);
+        ValidationHeaderPair requiredAction = new ValidationHeaderPair();
+        requiredAction.mainMustContain = new List<String>{ 'requiredaction', 'requiredcorrectiveaction', 'hanhdongcanthiet' };
+        requiredAction.mainMatchAny = true;
+        requiredAction.lookupMustContain = new List<String>{ 'requiredaction', 'requiredcorrectiveaction', 'hanhdongcanthiet' };
+        requiredAction.lookupMatchAny = true;
+        pairs.add(requiredAction);
+        return pairs;
+    }
+
+    @TestVisible
+    private static String matchColumnByHeaderRules(
+        Map<String, String> colToHeader,
+        List<String> mustContain,
+        List<String> mustNotContain,
+        Boolean matchAnyContain
+    ) {
+        if (colToHeader == null || colToHeader.isEmpty()) {
+            return null;
+        }
+        Boolean useAny = matchAnyContain == true;
+        for (String col : colToHeader.keySet()) {
+            String header = colToHeader.get(col);
+            if (String.isBlank(header)) {
+                continue;
+            }
+            Boolean matched = useAny ? false : true;
+            if (mustContain != null && !mustContain.isEmpty()) {
+                if (useAny) {
+                    for (String token : mustContain) {
+                        if (String.isNotBlank(token) && header.contains(token)) {
+                            matched = true;
+                            break;
+                        }
+                    }
+                } else {
+                    for (String token : mustContain) {
+                        if (String.isBlank(token) || !header.contains(token)) {
+                            matched = false;
+                            break;
+                        }
+                    }
+                }
+            }
+            if (!matched) {
+                continue;
+            }
+            if (mustNotContain != null) {
+                for (String token : mustNotContain) {
+                    if (String.isNotBlank(token) && header.contains(token)) {
+                        matched = false;
+                        break;
+                    }
+                }
+            }
+            if (matched) {
+                return col;
+            }
+        }
+        return null;
+    }
+
+    private static String buildSqrefRange(String colLetter, Integer firstRow1, Integer lastRow1) {
+        if (String.isBlank(colLetter)) {
+            return FEC_ConstantCommon.STR_EMPTY;
+        }
+        if (firstRow1.equals(lastRow1)) {
+            return colLetter + String.valueOf(firstRow1);
+        }
+        return colLetter + String.valueOf(firstRow1) + ':' + colLetter + String.valueOf(lastRow1);
+    }
+
+    private static String buildDataValidationXml(String formula1, String sqref, Integer uidSeed) {
+        String uid =
+            '{00000000-0000-4000-8000-' +
+            String.valueOf(uidSeed).leftPad(12, '0') +
+            '}';
+        return '<x14:dataValidation type="list" allowBlank="1" showInputMessage="1" showErrorMessage="1" xr:uid="' +
+            uid +
+            '"><x14:formula1><xm:f>' +
+            escapeXml(formula1) +
+            '</xm:f></x14:formula1><xm:sqref>' +
+            sqref +
+            '</xm:sqref></x14:dataValidation>';
+    }
+
+    private static String applyHeaderBasedListValidations(
+        String mainWorksheetXml,
+        Map<String, Blob> entryByPath,
+        String workbookXml,
+        String workbookRelsXml,
+        Integer headerRowIndex,
+        Integer templateDataRow1,
+        Integer lastDataRow1
+    ) {
+        if (String.isBlank(mainWorksheetXml) || entryByPath == null || entryByPath.isEmpty()) {
+            return mainWorksheetXml;
+        }
+        List<String> sharedStrings = parseSharedStrings(
+            blobToUtf8(entryByPath.get('xl/sharedStrings.xml'))
+        );
+        Integer headerRow1 = headerRowIndex + 1;
+        Map<String, String> mainHeaders = parseRowHeaderColumns(
+            mainWorksheetXml,
+            headerRow1,
+            sharedStrings
+        );
+        String lookupPath = resolveLookupSheetPath(workbookXml, workbookRelsXml);
+        if (!entryByPath.containsKey(lookupPath)) {
+            return mainWorksheetXml;
+        }
+        String lookupXml = blobToUtf8(entryByPath.get(lookupPath));
+        Map<String, String> lookupHeaders = parseRowHeaderColumns(lookupXml, 1, sharedStrings);
+        String lookupSheetName = resolveLookupSheetName(workbookXml);
+        Map<String, String> lookupFormulas = computeLookupColumnFormulas(
+            lookupXml,
+            sharedStrings,
+            lookupSheetName
+        );
+        List<String> validationNodes = new List<String>();
+        Set<String> usedMainCols = new Set<String>();
+        Set<String> usedLookupCols = new Set<String>();
+        Integer uidSeed = 1;
+        for (ValidationHeaderPair pair : buildValidationHeaderPairs()) {
+            String mainCol = matchColumnByHeaderRules(
+                mainHeaders,
+                pair.mainMustContain,
+                pair.mainMustNotContain,
+                pair.mainMatchAny
+            );
+            if (String.isBlank(mainCol) || usedMainCols.contains(mainCol)) {
+                continue;
+            }
+            String lookupCol = matchColumnByHeaderRules(
+                lookupHeaders,
+                pair.lookupMustContain,
+                null,
+                pair.lookupMatchAny
+            );
+            if (String.isBlank(lookupCol) || usedLookupCols.contains(lookupCol)) {
+                continue;
+            }
+            String formula1 = lookupFormulas.get(lookupCol);
+            if (String.isBlank(formula1)) {
+                continue;
+            }
+            String sqref = buildSqrefRange(mainCol, templateDataRow1, lastDataRow1);
+            validationNodes.add(buildDataValidationXml(formula1, sqref, uidSeed));
+            usedMainCols.add(mainCol);
+            usedLookupCols.add(lookupCol);
+            uidSeed += 1;
+        }
+        if (validationNodes.isEmpty()) {
+            return mainWorksheetXml;
+        }
+        String dataValidationsXml =
+            '<x14:dataValidations count="' +
+            String.valueOf(validationNodes.size()) +
+            '" xmlns:xm="http://schemas.microsoft.com/office/excel/2006/main">' +
+            String.join(validationNodes, FEC_ConstantCommon.STR_EMPTY) +
+            '</x14:dataValidations>';
+        return upsertDataValidationsBlock(mainWorksheetXml, dataValidationsXml);
+    }
+
+    private static String replaceFirstMatch(String source, Pattern pattern, String replacement) {
+        Matcher matcher = pattern.matcher(source);
+        if (!matcher.find()) {
+            return source;
+        }
+        return source.substring(0, matcher.start()) + replacement + source.substring(matcher.end());
+    }
+
+    private static String upsertDataValidationsBlock(String xml, String dataValidationsXml) {
+        Pattern existing = Pattern.compile(
+            '(?s)<x14:dataValidations[^>]*/>|<x14:dataValidations[^>]*>.*?</x14:dataValidations>'
+        );
+        Matcher existingMatcher = existing.matcher(xml);
+        if (existingMatcher.find()) {
+            return replaceFirstMatch(xml, existing, dataValidationsXml);
+        }
+        Boolean hasX14Ns = xml.contains(
+            'xmlns:x14="http://schemas.microsoft.com/office/spreadsheetml/2009/9/main"'
+        );
+        String extTag =
+            '<ext uri="{CCE6A557-97BC-4b89-ADB6-D9C93CAAB3DF}"' +
+            (hasX14Ns
+                ? ''
+                : ' xmlns:x14="http://schemas.microsoft.com/office/spreadsheetml/2009/9/main"') +
+            '>' +
+            dataValidationsXml +
+            '</ext>';
+        Pattern extLst = Pattern.compile('(?s)(<extLst>)(.*?)(</extLst>)');
+        Matcher extMat = extLst.matcher(xml);
+        if (extMat.find()) {
+            String replacement =
+                extMat.group(1) +
+                extMat.group(2) +
+                extTag +
+                extMat.group(3);
+            return replaceFirstMatch(xml, extLst, replacement);
+        }
+        return xml.replace(
+            '</worksheet>',
+            '<extLst>' + extTag + '</extLst></worksheet>'
+        );
     }
 
     private static String extractRowXml(String xml, Integer rowNum1) {
@@ -269,14 +731,14 @@ public without sharing class FEC_BCH_TemplateExportService {
         if (mClose.find()) {
             String styleAttr = extractStyleAttr(mClose.group(1));
             String newCell = buildInlineCell(addr, styleAttr, escaped);
-            return mClose.replaceFirst(Matcher.quoteReplacement(newCell));
+            return replaceFirstMatch(rowXml, selfClosing, newCell);
         }
         Pattern fullCell = Pattern.compile('<c r="' + addr + '"[^>]*>.*?</c>');
         Matcher mFull = fullCell.matcher(rowXml);
         if (mFull.find()) {
             String styleAttr = extractStyleAttr(mFull.group(0));
             String newCell = buildInlineCell(addr, styleAttr, escaped);
-            return mFull.replaceFirst(Matcher.quoteReplacement(newCell));
+            return replaceFirstMatch(rowXml, fullCell, newCell);
         }
         Integer closeIdx = rowXml.lastIndexOf('</row>');
         if (closeIdx < 0) {
@@ -329,82 +791,4 @@ public without sharing class FEC_BCH_TemplateExportService {
         return xml;
     }
 
-    private static String extendAllListValidationSqrefs(
-        String xml,
-        Integer templateDataRow1,
-        Integer lastDataRow1
-    ) {
-        if (String.isBlank(xml) || templateDataRow1 == null || lastDataRow1 == null) {
-            return xml;
-        }
-        Pattern sqrefPattern = Pattern.compile('<xm:sqref>([^<]+)</xm:sqref>');
-        Matcher matcher = sqrefPattern.matcher(xml);
-        String result = FEC_ConstantCommon.STR_EMPTY;
-        Integer lastEnd = 0;
-        while (matcher.find()) {
-            result += xml.substring(lastEnd, matcher.start());
-            String extendedSqref = extendSqrefForDataRows(
-                matcher.group(1),
-                templateDataRow1,
-                lastDataRow1
-            );
-            result += '<xm:sqref>' + extendedSqref + '</xm:sqref>';
-            lastEnd = matcher.end();
-        }
-        result += xml.substring(lastEnd);
-        return result;
-    }
-
-    @TestVisible
-    private static String extendSqrefForDataRows(
-        String sqref,
-        Integer templateDataRow1,
-        Integer lastDataRow1
-    ) {
-        if (String.isBlank(sqref)) {
-            return sqref;
-        }
-        List<String> updatedRanges = new List<String>();
-        Pattern cellRefPattern = Pattern.compile('^\\$?([A-Z]{1,3})\\$?(\\d+)$');
-        for (String rangeToken : sqref.split(' ')) {
-            if (String.isBlank(rangeToken)) {
-                continue;
-            }
-            String rangeValue = rangeToken.trim();
-            List<String> parts = rangeValue.split(':');
-            String startRef = parts[0].trim();
-            String endRef = parts.size() > 1 ? parts[1].trim() : startRef;
-            Matcher startMatcher = cellRefPattern.matcher(startRef);
-            if (!startMatcher.find()) {
-                updatedRanges.add(rangeValue);
-                continue;
-            }
-            String startCol = startMatcher.group(1);
-            Integer startRow = Integer.valueOf(startMatcher.group(2));
-            String endCol = startCol;
-            Integer endRow = startRow;
-            Matcher endMatcher = cellRefPattern.matcher(endRef);
-            if (endMatcher.find()) {
-                endCol = endMatcher.group(1);
-                endRow = Integer.valueOf(endMatcher.group(2));
-            }
-            if (endRow < templateDataRow1) {
-                updatedRanges.add(rangeValue);
-                continue;
-            }
-            Integer newEndRow = Math.max(endRow, lastDataRow1);
-            if (startRow.equals(newEndRow) && startCol.equals(endCol)) {
-                updatedRanges.add(startCol + String.valueOf(startRow));
-            } else {
-                updatedRanges.add(
-                    startCol +
-                    String.valueOf(startRow) +
-                    ':' +
-                    endCol +
-                    String.valueOf(newEndRow)
-                );
-            }
-        }
-        return String.join(updatedRanges, ' ');
-    }
 }
