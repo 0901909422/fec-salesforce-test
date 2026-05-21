@@ -132,10 +132,12 @@
         <members>FEC_BatchCaseHandlingCaseFilter</members>
         <members>FEC_BatchCaseHandlingTemplateHelper</members>
         <members>FEC_BatchCaseHandlingSObjectUtil</members>
+        <members>FEC_BatchCaseHandlingImportQueueable</members>
         <members>FEC_BatchCaseHandlingZipResult</members>
         <members>FEC_BatchCaseHandlingZipService</members>
         <members>FEC_BatchCaseHandlingImportRow</members>
         <members>FEC_BatchCaseHandlingImportService</members>
+        <members>FEC_BatchCaseHandlingImportQueueable</members>
         <members>FEC_BatchCaseHandlingExportService</members>
         <members>FEC_BatchCaseHandlingExportRow</members>
         <members>FEC_SubProcessService</members>
@@ -551,6 +553,7 @@
 		<members>FEC_Customer_History__c.FEC_Top_up_Xsell_Eligibility__c</members>
         <members>FEC_Customer_History__c.FEC_Sales_Channel__c</members>
         <members>FEC_Customer_History__c.FEC_Sales_Sub_Channel__c</members>
+        <members>FEC_Customer_History__c.FEC_Search_Result_National_ID__c</members>
 		<members>FEC_Notification_History__c.FEC_Case_ID__c</members>
 		<members>FEC_Team_Queue__c.FEC_Select_Team__c</members>
 		<members>Case.FEC_Assignment_Users__c</members>
