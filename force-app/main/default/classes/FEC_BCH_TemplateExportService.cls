@@ -92,7 +92,7 @@ public without sharing class FEC_BCH_TemplateExportService {
             String path = normalizeZipPath(entryName);
             Blob body = entryByPath.containsKey(path) ? entryByPath.get(path) : reader.extract(entryName);
             if (body != null) {
-                writer.addEntry(path, body);
+                writer.addEntry(entryName, body);
             }
         }
         return writer.getArchive();
@@ -173,7 +173,10 @@ public without sharing class FEC_BCH_TemplateExportService {
         if (String.isBlank(xml)) {
             return xml;
         }
-        Integer templateDataRow1 = headerRowIndex + 2;
+        Integer templateDataRow1 = resolveTemplateDataRowFromValidations(xml);
+        if (templateDataRow1 == null || templateDataRow1 < 1) {
+            templateDataRow1 = headerRowIndex + 2;
+        }
         Integer rowCount = dataRows == null ? 0 : dataRows.size();
         if (rowCount < 1) {
             return xml;
@@ -528,6 +531,38 @@ public without sharing class FEC_BCH_TemplateExportService {
             '</xm:sqref></x14:dataValidation>';
     }
 
+    private static String buildLegacyDataValidationXml(String formula1, String sqref, String xrUid) {
+        String uidAttr = String.isNotBlank(xrUid)
+            ? ' xr:uid="' + xrUid + '"'
+            : FEC_ConstantCommon.STR_EMPTY;
+        return '<dataValidation type="list" allowBlank="1" showInputMessage="1" showErrorMessage="1" sqref="' +
+            sqref +
+            '"' +
+            uidAttr +
+            '><formula1>' +
+            escapeXml(formula1) +
+            '</formula1></dataValidation>';
+    }
+
+    private static Integer resolveTemplateDataRowFromValidations(String worksheetXml) {
+        Integer minRow = null;
+        for (String node : parseExistingDataValidationNodes(worksheetXml)) {
+            String sqref = extractDataValidationSqref(node);
+            if (String.isBlank(sqref)) {
+                continue;
+            }
+            Pattern p = Pattern.compile('([A-Z]{1,3})(\\d+)');
+            Matcher m = p.matcher(sqref);
+            while (m.find()) {
+                Integer rowNum = Integer.valueOf(m.group(2));
+                if (minRow == null || rowNum < minRow) {
+                    minRow = rowNum;
+                }
+            }
+        }
+        return minRow;
+    }
+
     private static String extractColumnFromSqref(String sqref) {
         if (String.isBlank(sqref)) {
             return null;
@@ -697,13 +732,7 @@ public without sharing class FEC_BCH_TemplateExportService {
         if (validationNodes.isEmpty()) {
             return mainWorksheetXml;
         }
-        String dataValidationsXml =
-            '<x14:dataValidations count="' +
-            String.valueOf(validationNodes.size()) +
-            '" xmlns:xm="http://schemas.microsoft.com/office/excel/2006/main">' +
-            String.join(validationNodes, FEC_ConstantCommon.STR_EMPTY) +
-            '</x14:dataValidations>';
-        return upsertDataValidationsBlock(mainWorksheetXml, dataValidationsXml);
+        return upsertAllListValidations(mainWorksheetXml, validationNodes);
     }
 
     private static String extendExistingListValidationsOnly(
@@ -720,13 +749,42 @@ public without sharing class FEC_BCH_TemplateExportService {
         if (validationNodes.isEmpty()) {
             return mainWorksheetXml;
         }
-        String dataValidationsXml =
+        return upsertAllListValidations(mainWorksheetXml, validationNodes);
+    }
+
+    private static String upsertAllListValidations(
+        String xml,
+        List<String> x14ValidationNodes
+    ) {
+        if (x14ValidationNodes == null || x14ValidationNodes.isEmpty()) {
+            return xml;
+        }
+        List<String> legacyNodes = new List<String>();
+        for (String x14Node : x14ValidationNodes) {
+            String formula1 = extractDataValidationFormula(x14Node);
+            String sqref = extractDataValidationSqref(x14Node);
+            String xrUid = extractDataValidationAttribute(x14Node, 'xr:uid');
+            if (String.isNotBlank(formula1) && String.isNotBlank(sqref)) {
+                legacyNodes.add(buildLegacyDataValidationXml(formula1, sqref, xrUid));
+            }
+        }
+        String x14Block =
             '<x14:dataValidations count="' +
-            String.valueOf(validationNodes.size()) +
+            String.valueOf(x14ValidationNodes.size()) +
             '" xmlns:xm="http://schemas.microsoft.com/office/excel/2006/main">' +
-            String.join(validationNodes, FEC_ConstantCommon.STR_EMPTY) +
+            String.join(x14ValidationNodes, FEC_ConstantCommon.STR_EMPTY) +
             '</x14:dataValidations>';
-        return upsertDataValidationsBlock(mainWorksheetXml, dataValidationsXml);
+        String out = upsertX14DataValidationsBlock(xml, x14Block);
+        if (!legacyNodes.isEmpty()) {
+            String legacyBlock =
+                '<dataValidations count="' +
+                String.valueOf(legacyNodes.size()) +
+                '">' +
+                String.join(legacyNodes, FEC_ConstantCommon.STR_EMPTY) +
+                '</dataValidations>';
+            out = upsertLegacyDataValidationsBlock(out, legacyBlock);
+        }
+        return out;
     }
 
     private static String replaceFirstMatch(String source, Pattern pattern, String replacement) {
@@ -737,14 +795,11 @@ public without sharing class FEC_BCH_TemplateExportService {
         return source.substring(0, matcher.start()) + replacement + source.substring(matcher.end());
     }
 
-    private static String upsertDataValidationsBlock(String xml, String dataValidationsXml) {
-        Pattern existing = Pattern.compile(
-            '(?s)<x14:dataValidations[^>]*/>|<x14:dataValidations[^>]*>.*?</x14:dataValidations>'
+    private static String upsertX14DataValidationsBlock(String xml, String dataValidationsXml) {
+        Pattern extDvPat = Pattern.compile(
+            '(?s)<ext uri="\\{CCE6A557-97BC-4b89-ADB6-D9C93CAAB3DF\\}"[^>]*>.*?</ext>'
         );
-        Matcher existingMatcher = existing.matcher(xml);
-        if (existingMatcher.find()) {
-            return replaceFirstMatch(xml, existing, dataValidationsXml);
-        }
+        Matcher extDvMat = extDvPat.matcher(xml);
         Boolean hasX14Ns = xml.contains(
             'xmlns:x14="http://schemas.microsoft.com/office/spreadsheetml/2009/9/main"'
         );
@@ -756,6 +811,16 @@ public without sharing class FEC_BCH_TemplateExportService {
             '>' +
             dataValidationsXml +
             '</ext>';
+        if (extDvMat.find()) {
+            return replaceFirstMatch(xml, extDvPat, extTag);
+        }
+        Pattern existing = Pattern.compile(
+            '(?s)<x14:dataValidations[^>]*/>|<x14:dataValidations[^>]*>.*?</x14:dataValidations>'
+        );
+        Matcher existingMatcher = existing.matcher(xml);
+        if (existingMatcher.find()) {
+            return replaceFirstMatch(xml, existing, dataValidationsXml);
+        }
         Pattern extLst = Pattern.compile('(?s)(<extLst>)(.*?)(</extLst>)');
         Matcher extMat = extLst.matcher(xml);
         if (extMat.find()) {
@@ -770,6 +835,22 @@ public without sharing class FEC_BCH_TemplateExportService {
             '</worksheet>',
             '<extLst>' + extTag + '</extLst></worksheet>'
         );
+    }
+
+    private static String upsertLegacyDataValidationsBlock(String xml, String dataValidationsXml) {
+        Pattern existing = Pattern.compile(
+            '(?s)<dataValidations[^>]*/>|<dataValidations[^>]*>.*?</dataValidations>'
+        );
+        Matcher existingMatcher = existing.matcher(xml);
+        if (existingMatcher.find()) {
+            return replaceFirstMatch(xml, existing, dataValidationsXml);
+        }
+        Pattern extLst = Pattern.compile('(?s)<extLst>');
+        Matcher extMat = extLst.matcher(xml);
+        if (extMat.find()) {
+            return replaceFirstMatch(xml, extLst, dataValidationsXml + '<extLst>');
+        }
+        return xml.replace('</worksheet>', dataValidationsXml + '</worksheet>');
     }
 
     private static String extractRowXml(String xml, Integer rowNum1) {

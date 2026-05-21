@@ -259,15 +259,6 @@ const HEADERS_CS_SUPPORT_ASSESSMENT = [
   "cssupportassessmenttype",
   "cssupportevaluation"
 ];
-const LOOKUP_HEADER_ROUTING_TOKENS = ["routingaction"];
-const LOOKUP_HEADER_CS_SUPPORT_TOKENS = ["cssupport", "danhgia"];
-const EXPORT_VALIDATION_MAX_ROW = 5000;
-const TEMPLATE_LOOKUP_HEADER_FILL = {
-  patternType: "solid",
-  fgColor: { rgb: "FFFFFF00" },
-  bgColor: { rgb: "000000" }
-};
-const TEMPLATE_LOOKUP_HEADER_CELLS = ["A1", "C1"];
 const HEADERS_RISK_LEVEL = ["mứcđộrủiro", "mucdoruiro", "risklevel"];
 const HEADERS_REQUIRED_ACTION = [
   "hànhđộngcầnthiết",
@@ -440,17 +431,6 @@ const ATTACHMENT_VALUE_OPTIONS = [
   { label: FEC_BCH_AttachNo, value: "false" }
 ];
 
-const FILTERED_CASE_EXPORT_HEADERS = [
-  FEC_BCH_Col_CustomerType,
-  FEC_BCH_Col_CaseId,
-  FEC_BCH_Col_Category,
-  FEC_BCH_Col_SubCategory,
-  FEC_BCH_Col_SubCode,
-  FEC_BCH_Col_CaseStatus,
-  FEC_BCH_Col_CaseCreatedOn,
-  FEC_BCH_Col_LastUpdatedOn,
-  FEC_BCH_Col_Attachments
-];
 const ACTION_OPTIONS = [
   { label: FEC_BCH_ActionPickPlaceholder, value: STR_EMPTY },
   { label: FEC_BCH_ActionDownload, value: ACTION_DOWNLOAD_ATTACHMENTS },
@@ -2828,17 +2808,12 @@ export default class Fec_BatchCaseHandling extends LightningElement {
 
   async buildExcelFileFromTemplate(rows, fileName, contentVersionId) {
     if (!contentVersionId) {
-      return this.buildExcelFile(rows, fileName);
+      throw new Error(FEC_BCH_CannotCreateExportFile);
     }
     await this.ensureSheetJsLoaded();
-    let base64 = null;
-    try {
-      base64 = await getTemplateFileBase64({ contentVersionId });
-    } catch (e) {
-      base64 = null;
-    }
+    const base64 = await getTemplateFileBase64({ contentVersionId });
     if (!base64) {
-      return this.buildExcelFile(rows, fileName);
+      throw new Error(FEC_BCH_CannotCreateExportFile);
     }
     const templateWorkbook = window.XLSX.read(this.base64ToArrayBuffer(base64), {
       type: "array",
@@ -2849,12 +2824,12 @@ export default class Fec_BatchCaseHandling extends LightningElement {
       ? templateWorkbook.SheetNames
       : [];
     if (!sheetNames.length) {
-      return this.buildExcelFile(rows, fileName);
+      throw new Error(MSG_HEADER_INVALID);
     }
     const templateSheetName = this.resolveMainTemplateSheetName(templateWorkbook);
     const templateSheet = templateWorkbook.Sheets[templateSheetName];
     if (!templateSheet) {
-      return this.buildExcelFile(rows, fileName);
+      throw new Error(MSG_HEADER_INVALID);
     }
     const aoa = window.XLSX.utils.sheet_to_json(templateSheet, {
       header: 1,
@@ -2862,12 +2837,12 @@ export default class Fec_BatchCaseHandling extends LightningElement {
       raw: false
     });
     if (!Array.isArray(aoa) || !aoa.length) {
-      return this.buildExcelFile(rows, fileName);
+      throw new Error(MSG_HEADER_INVALID);
     }
     const layout = this.resolveTemplateSheetLayout(aoa);
     const headerRow = layout.headerRow;
     if (!headerRow.length) {
-      return this.buildExcelFile(rows, fileName);
+      throw new Error(MSG_HEADER_INVALID);
     }
     const headerRowIndex =
       Number.isInteger(layout.headerRowIndex) && layout.headerRowIndex >= 0
@@ -2884,73 +2859,18 @@ export default class Fec_BatchCaseHandling extends LightningElement {
         mappedColumnIndexes.push(i);
       }
     }
-    try {
-      const outBase64 = await exportTemplateWorkbook({
-        requestJson: JSON.stringify({
-          contentVersionId,
-          headerRowIndex,
-          mappedColumnIndexes,
-          dataRows
-        })
-      });
-      if (outBase64) {
-        return { fileName, base64Body: outBase64 };
-      }
-    } catch (e) {
-      /* fall through to generic export */
-    }
-    return this.buildExcelFile(rows, fileName);
-  }
-
-  buildExcelFile(rows, fileName) {
-    return new Promise((resolve, reject) => {
-      setTimeout(() => {
-        try {
-          const list = Array.isArray(rows) ? rows : [];
-          const exportRows = list.map((r) => [
-            String(r?.customerType || STR_EMPTY),
-            String(r?.caseIdSearch || STR_EMPTY),
-            String(r?.categoryCode || STR_EMPTY),
-            String(r?.subCategoryCode || STR_EMPTY),
-            String(r?.subCodeCode || STR_EMPTY),
-            String(r?.caseStatus || STR_EMPTY),
-            String(r?.caseCreatedOnLabel || STR_EMPTY),
-            String(r?.lastUpdatedOnLabel || STR_EMPTY),
-            String(r?.hasAttachmentLabel || STR_EMPTY)
-          ]);
-          const worksheet = window.XLSX.utils.aoa_to_sheet([
-            FILTERED_CASE_EXPORT_HEADERS,
-            ...exportRows
-          ]);
-          const fallbackHeaderStyle = {
-            fill: {
-              patternType: "solid",
-              fgColor: { rgb: "C9C9C9" },
-              bgColor: { rgb: "000000" }
-            },
-            font: { bold: true }
-          };
-          for (let c = 0; c < FILTERED_CASE_EXPORT_HEADERS.length; c += 1) {
-            const addr = window.XLSX.utils.encode_cell({ r: 0, c });
-            if (worksheet[addr]) {
-              worksheet[addr].s = fallbackHeaderStyle;
-            }
-          }
-          const workbook = window.XLSX.utils.book_new();
-          window.XLSX.utils.book_append_sheet(workbook, worksheet, "Cases");
-          const wbout = window.XLSX.write(workbook, {
-            type: "array",
-            bookType: "xlsx",
-            compression: true,
-            cellStyles: true
-          });
-          const base64 = arrayBufferToBase64(wbout);
-          resolve({ fileName, base64Body: base64 });
-        } catch (err) {
-          reject(err);
-        }
-      }, 0);
+    const outBase64 = await exportTemplateWorkbook({
+      requestJson: JSON.stringify({
+        contentVersionId,
+        headerRowIndex,
+        mappedColumnIndexes,
+        dataRows
+      })
     });
+    if (!outBase64) {
+      throw new Error(FEC_BCH_CannotCreateExportFile);
+    }
+    return { fileName, base64Body: outBase64 };
   }
 
   async refreshRows() {
