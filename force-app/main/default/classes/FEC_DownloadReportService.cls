@@ -73,7 +73,7 @@ public without sharing class FEC_DownloadReportService {
 
             Map<String,String> headers = new Map<String,String>{
                 'Authorization' => 'Bearer ' + UserInfo.getSessionId(),
-                'Content-Type'  => 'application/json'
+                'Content-Type'  => FEC_ConstantCommon.API_CONTENT_TYPE_JSON
             };
 
             HttpResponse res = FEC_CommonUltils.calloutApiWithHeaders(
