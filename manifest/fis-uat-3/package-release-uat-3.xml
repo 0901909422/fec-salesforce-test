@@ -1260,6 +1260,14 @@
         <members>FEC_MSG_IPP_Conversion_Success</members>
         <members>FEC_MSG_Parsing_Error</members>
         <members>FEC_MSG_Remove_Phone_Service_Failed</members>
+        <members>FEC_NEW_ASSIGNMENT_ERR_CASE_NOT_FOUND</members>
+        <members>FEC_NEW_ASSIGNMENT_ERR_TYPE_REQUIRED</members>
+        <members>FEC_NEW_ASSIGNMENT_ERR_NAME_REQUIRED</members>
+        <members>FEC_NEW_ASSIGNMENT_ERR_NAME_REQUIRED</members>
+        <members>FEC_NEW_ASSIGNMENT_CALL_NAME</members>
+        <members>FEC_NEW_ASSIGNMENT_SUCCESS_MSG</members>
+        <members>FEC_NEW_ASSIGNMENT_SUCCESS_MSG</members>
+        <members>FEC_NEW_ASSIGNMENT_ERR_CREATE</members>
         <name>CustomLabel</name>
     </types>
 	<types>
