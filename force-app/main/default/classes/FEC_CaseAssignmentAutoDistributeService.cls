@@ -29,7 +29,13 @@ public without sharing class FEC_CaseAssignmentAutoDistributeService {
         DateTime nowTime = System.now();
 
         List<FEC_Case_Assignment__c> activeAssignments = [
-            SELECT Id, FEC_Assignment_Method__c, FEC_Scheduled_Time__c, FEC_Time_Slots__c
+            SELECT
+                Id,
+                FEC_Assignment_Method__c,
+                FEC_Scheduled_Time__c,
+                FEC_Time_Slots__c,
+                FEC_Business_Hours__c,
+                FEC_Business_Hours__r.TimeZoneSidKey
             FROM FEC_Case_Assignment__c
             WHERE FEC_Status__c = :FEC_ConstantCommon.FEC_CASE_ASSIGNMENT_STATUS_ACTIVE
         ];
@@ -50,7 +56,7 @@ public without sharing class FEC_CaseAssignmentAutoDistributeService {
             if (!isDueToRun(assignmentRecord, nowTime, latestLogUtc)) {
                 continue;
             }
-            if (hasLogInCurrentMinute(assignmentRecord.Id, nowTime)) {
+            if (hasLogInCurrentMinute(assignmentRecord, nowTime)) {
                 continue;
             }
             dueAssignmentIds.add(assignmentRecord.Id);
@@ -85,7 +91,9 @@ public without sharing class FEC_CaseAssignmentAutoDistributeService {
                 FEC_Select_Queues__c,
                 FEC_Role__c,
                 FEC_Scale__c,
-                FEC_Status__c
+                FEC_Status__c,
+                FEC_Business_Hours__c,
+                FEC_Business_Hours__r.TimeZoneSidKey
             FROM FEC_Case_Assignment__c
             WHERE Id = :assignmentId
             LIMIT 1
@@ -308,8 +316,23 @@ public without sharing class FEC_CaseAssignmentAutoDistributeService {
         return lines;
     }
 
-    private static String userTimezoneSid() {
-        return UserInfo.getTimeZone().getID();
+    private static final String DEFAULT_ASSIGNMENT_TIMEZONE_SID = 'Asia/Ho_Chi_Minh';
+
+    private static String assignmentTimezoneSid(FEC_Case_Assignment__c assignmentRecord) {
+        if (
+            assignmentRecord != null &&
+            assignmentRecord.FEC_Business_Hours__r != null &&
+            String.isNotBlank(assignmentRecord.FEC_Business_Hours__r.TimeZoneSidKey)
+        ) {
+            return assignmentRecord.FEC_Business_Hours__r.TimeZoneSidKey;
+        }
+        return DEFAULT_ASSIGNMENT_TIMEZONE_SID;
+    }
+
+    private static String formatAssignmentRunLogName(String assignmentName, Integer runNumber) {
+        String baseName = String.isBlank(assignmentName) ? 'Assignment' : assignmentName.trim();
+        Integer run = runNumber == null || runNumber < 1 ? 1 : runNumber;
+        return baseName + ' - ' + String.valueOf(run).leftPad(5, '0');
     }
 
     /**
@@ -363,7 +386,7 @@ public without sharing class FEC_CaseAssignmentAutoDistributeService {
         Datetime latestSuccessfulLogUtc
     ) {
         String method = normalizedAssignmentMethod(assignmentRecord);
-        String tz = userTimezoneSid();
+        String tz = assignmentTimezoneSid(assignmentRecord);
 
         if (method == METHOD_CONTINUOUS) {
             Integer scheduledMinutes =
@@ -399,11 +422,15 @@ public without sharing class FEC_CaseAssignmentAutoDistributeService {
      * Tránh DateTime.newInstance(y,m,d,h,mi,0) gây canh phút theo GMT sai lệch timezone:
      * đối chiếu yyyy-MM-dd HH:mm theo múi của user chạy Apex (Scheduled Job = user submit schedule).
      */
-    private static Boolean hasLogInCurrentMinute(Id assignmentId, DateTime nowTime) {
-        if (assignmentId == null || nowTime == null) {
+    private static Boolean hasLogInCurrentMinute(
+        FEC_Case_Assignment__c assignmentRecord,
+        DateTime nowTime
+    ) {
+        if (assignmentRecord == null || assignmentRecord.Id == null || nowTime == null) {
             return false;
         }
-        String tz = userTimezoneSid();
+        String tz = assignmentTimezoneSid(assignmentRecord);
+        Id assignmentId = assignmentRecord.Id;
         String minuteKey = nowTime.format('yyyy-MM-dd HH:mm', tz);
         DateTime probeStart = nowTime.addMinutes(-3);
         List<FEC_Case_Assignment_Logs__c> recentLogs = [
@@ -597,6 +624,7 @@ public without sharing class FEC_CaseAssignmentAutoDistributeService {
             eligibleUsers
         );
         Map<Id, Integer> numberByUser = new Map<Id, Integer>();
+        List<Id> usersInAssignmentOrder = new List<Id>();
         String allocationMethod = normalizedAssignmentMethod(assignmentRecord);
         if (allocationMethod == METHOD_CONTINUOUS) {
             distributeWeightedLeastLoaded(
@@ -604,7 +632,8 @@ public without sharing class FEC_CaseAssignmentAutoDistributeService {
                 eligibleUsers,
                 roleScaleMap,
                 historicalCountByUser,
-                numberByUser
+                numberByUser,
+                usersInAssignmentOrder
             );
         } else {
             distributeWeightedSequentialFromHistory(
@@ -612,7 +641,8 @@ public without sharing class FEC_CaseAssignmentAutoDistributeService {
                 eligibleUsers,
                 roleScaleMap,
                 historicalCountByUser,
-                numberByUser
+                numberByUser,
+                usersInAssignmentOrder
             );
         }
         if (numberByUser.isEmpty()) {
@@ -628,7 +658,8 @@ public without sharing class FEC_CaseAssignmentAutoDistributeService {
                 assignmentRecord.Name,
                 runNumber,
                 totalTargets,
-                numberByUser
+                numberByUser,
+                usersInAssignmentOrder
             );
             return totalTargets;
         }
@@ -642,10 +673,7 @@ public without sharing class FEC_CaseAssignmentAutoDistributeService {
 
         List<Id> summaryUserIds = new List<Id>();
         List<Integer> summaryCounts = new List<Integer>();
-        for (Id uid : numberByUser.keySet()) {
-            summaryUserIds.add(uid);
-            summaryCounts.add(numberByUser.get(uid));
-        }
+        appendSummaryFromAssignmentOrder(usersInAssignmentOrder, numberByUser, summaryUserIds, summaryCounts);
 
         Database.executeBatch(
             new FEC_CaseAssignmentApplyOwnerBatch(
@@ -670,11 +698,29 @@ public without sharing class FEC_CaseAssignmentAutoDistributeService {
         Integer totalCasesAssigned,
         Map<Id, Integer> countsByAssignedUserId
     ) {
+        insertAssignmentRunLog(
+            assignmentId,
+            assignmentName,
+            runNumber,
+            totalCasesAssigned,
+            countsByAssignedUserId,
+            null
+        );
+    }
+
+    public static void insertAssignmentRunLog(
+        Id assignmentId,
+        String assignmentName,
+        Integer runNumber,
+        Integer totalCasesAssigned,
+        Map<Id, Integer> countsByAssignedUserId,
+        List<Id> userIdsInAssignmentOrder
+    ) {
         if (assignmentId == null || totalCasesAssigned == null || totalCasesAssigned < 0) {
             return;
         }
         FEC_Case_Assignment_Logs__c logRecord = new FEC_Case_Assignment_Logs__c(
-            Name = assignmentName + ' - ' + String.valueOf(runNumber),
+            Name = formatAssignmentRunLogName(assignmentName, runNumber),
             FEC_Case_Assignment_Name__c = assignmentId,
             FEC_Number_of_Case__c = totalCasesAssigned
         );
@@ -688,8 +734,13 @@ public without sharing class FEC_CaseAssignmentAutoDistributeService {
             [SELECT Id, Email FROM User WHERE Id IN :countsByAssignedUserId.keySet()]
         );
 
+        List<Id> orderedUserIds = buildOrderedUserIdsForLogDetails(
+            userIdsInAssignmentOrder,
+            countsByAssignedUserId
+        );
+
         List<FEC_Case_Assignment_Log_Detail__c> detailList = new List<FEC_Case_Assignment_Log_Detail__c>();
-        for (Id userId : countsByAssignedUserId.keySet()) {
+        for (Id userId : orderedUserIds) {
             User u = userRows.get(userId);
             String emailValue = u != null ? u.Email : null;
             detailList.add(
@@ -976,13 +1027,101 @@ public without sharing class FEC_CaseAssignmentAutoDistributeService {
         if (candidates == null || roleScaleMap == null || roleScaleMap.isEmpty()) {
             return eligible;
         }
+        Set<Id> configuredRoleIds = resolveConfiguredUserRoleIds(roleScaleMap);
         for (User u : candidates) {
+            if (u.UserRoleId == null) {
+                continue;
+            }
             String rn = u.UserRole == null ? null : u.UserRole.Name;
-            if (roleScaleMap.containsKey(normalizeRoleKey(rn))) {
+            if (
+                roleScaleMap.containsKey(normalizeRoleKey(rn)) &&
+                configuredRoleIds.contains(u.UserRoleId)
+            ) {
                 eligible.add(u);
             }
         }
         return eligible;
+    }
+
+    private static Set<Id> resolveConfiguredUserRoleIds(Map<String, Integer> roleScaleMap) {
+        Set<Id> roleIds = new Set<Id>();
+        if (roleScaleMap == null || roleScaleMap.isEmpty()) {
+            return roleIds;
+        }
+        Set<String> normalizedRoleKeys = roleScaleMap.keySet();
+        for (UserRole roleRecord : [SELECT Id, Name FROM UserRole]) {
+            if (
+                String.isNotBlank(roleRecord.Name) &&
+                normalizedRoleKeys.contains(normalizeRoleKey(roleRecord.Name))
+            ) {
+                roleIds.add(roleRecord.Id);
+            }
+        }
+        return roleIds;
+    }
+
+    private static void trackUserInAssignmentOrder(List<Id> usersInAssignmentOrder, Id userId) {
+        if (usersInAssignmentOrder == null || userId == null) {
+            return;
+        }
+        if (!usersInAssignmentOrder.contains(userId)) {
+            usersInAssignmentOrder.add(userId);
+        }
+    }
+
+    private static void appendSummaryFromAssignmentOrder(
+        List<Id> usersInAssignmentOrder,
+        Map<Id, Integer> numberByUser,
+        List<Id> summaryUserIds,
+        List<Integer> summaryCounts
+    ) {
+        if (numberByUser == null || numberByUser.isEmpty()) {
+            return;
+        }
+        Set<Id> seen = new Set<Id>();
+        if (usersInAssignmentOrder != null) {
+            for (Id userId : usersInAssignmentOrder) {
+                if (userId == null || seen.contains(userId) || !numberByUser.containsKey(userId)) {
+                    continue;
+                }
+                seen.add(userId);
+                summaryUserIds.add(userId);
+                summaryCounts.add(numberByUser.get(userId));
+            }
+        }
+        for (Id userId : numberByUser.keySet()) {
+            if (seen.contains(userId)) {
+                continue;
+            }
+            summaryUserIds.add(userId);
+            summaryCounts.add(numberByUser.get(userId));
+        }
+    }
+
+    private static List<Id> buildOrderedUserIdsForLogDetails(
+        List<Id> userIdsInAssignmentOrder,
+        Map<Id, Integer> countsByAssignedUserId
+    ) {
+        List<Id> ordered = new List<Id>();
+        if (countsByAssignedUserId == null || countsByAssignedUserId.isEmpty()) {
+            return ordered;
+        }
+        Set<Id> seen = new Set<Id>();
+        if (userIdsInAssignmentOrder != null) {
+            for (Id userId : userIdsInAssignmentOrder) {
+                if (userId == null || seen.contains(userId) || !countsByAssignedUserId.containsKey(userId)) {
+                    continue;
+                }
+                seen.add(userId);
+                ordered.add(userId);
+            }
+        }
+        for (Id userId : countsByAssignedUserId.keySet()) {
+            if (!seen.contains(userId)) {
+                ordered.add(userId);
+            }
+        }
+        return ordered;
     }
 
     private static Map<Id, Integer> getHistoricalAssignedCountByUser(
@@ -1063,7 +1202,8 @@ public without sharing class FEC_CaseAssignmentAutoDistributeService {
         List<User> eligibleUsers,
         Map<String, Integer> roleScaleMap,
         Map<Id, Integer> historicalCountByUser,
-        Map<Id, Integer> numberByUser
+        Map<Id, Integer> numberByUser,
+        List<Id> usersInAssignmentOrder
     ) {
         if (targetCases == null || eligibleUsers == null || eligibleUsers.isEmpty()) {
             return;
@@ -1108,10 +1248,12 @@ public without sharing class FEC_CaseAssignmentAutoDistributeService {
             Integer newCnt = bestCnt + 1;
             runCountByIndex[bestIdx] = newCnt;
             historicalCountByUser.put(chosenId, newCnt);
-            numberByUser.put(
-                chosenId,
-                numberByUser.containsKey(chosenId) ? numberByUser.get(chosenId) + 1 : 1
-            );
+            Integer nextCount =
+                numberByUser.containsKey(chosenId) ? numberByUser.get(chosenId) + 1 : 1;
+            numberByUser.put(chosenId, nextCount);
+            if (nextCount == 1) {
+                trackUserInAssignmentOrder(usersInAssignmentOrder, chosenId);
+            }
         }
     }
 
@@ -1123,7 +1265,8 @@ public without sharing class FEC_CaseAssignmentAutoDistributeService {
         List<User> eligibleUsers,
         Map<String, Integer> roleScaleMap,
         Map<Id, Integer> historicalCountByUser,
-        Map<Id, Integer> numberByUser
+        Map<Id, Integer> numberByUser,
+        List<Id> usersInAssignmentOrder
     ) {
         List<Id> weightedSlots = buildWeightedUserSlots(eligibleUsers, roleScaleMap);
         if (
@@ -1146,10 +1289,12 @@ public without sharing class FEC_CaseAssignmentAutoDistributeService {
                 newOwnerId,
                 getCountValue(historicalCountByUser, newOwnerId) + 1
             );
-            numberByUser.put(
-                newOwnerId,
-                numberByUser.containsKey(newOwnerId) ? numberByUser.get(newOwnerId) + 1 : 1
-            );
+            Integer nextCount =
+                numberByUser.containsKey(newOwnerId) ? numberByUser.get(newOwnerId) + 1 : 1;
+            numberByUser.put(newOwnerId, nextCount);
+            if (nextCount == 1) {
+                trackUserInAssignmentOrder(usersInAssignmentOrder, newOwnerId);
+            }
             pointer = Math.mod(pointer + 1, weightedSlots.size());
         }
     }

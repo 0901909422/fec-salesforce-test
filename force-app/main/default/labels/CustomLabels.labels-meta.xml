@@ -15412,18 +15412,25 @@
         <value>Có thể tạo yêu cầu giấy xác nhận đóng thẻ</value>
     </labels>
     <labels>
+        <fullName>FEC_MSG_Cannot_Create_Card_Close_Certificate</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Không đủ điều kiện phát hành giấy xác nhận đóng thẻ</shortDescription>
+        <value>Không đủ điều kiện phát hành giấy xác nhận đóng thẻ</value>
+    </labels>
+    <labels>
         <fullName>FEC_MSG_Cannot_Request_Payment_History</fullName>
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>Không đủ điều kiện gửi yêu cầu lịch sử thanh toán</shortDescription>
-        <value>Không thể tạo yêu cầu gửi lịch sử thanh toán</value>
+        <value>Không đủ điều kiện phát hành lịch sử thanh toán</value>
     </labels>
     <labels>
         <fullName>FEC_MSG_Cannot_Request_Repayment_Schedule</fullName>
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>Hợp đồng Closed không gửi lịch trả nợ</shortDescription>
-        <value>Không thể tạo yêu cầu gửi lịch trả nợ</value>
+        <value>Không đủ điều kiện phát hành lịch trả nợ</value>
     </labels>
     <labels>
         <fullName>FEC_LABEL_Months</fullName>
@@ -16946,7 +16953,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC_BCH_Col_TotalRecords</shortDescription>
-        <value>Total Records Count</value>
+        <value>Total Records</value>
     </labels>
     <labels>
         <fullName>FEC_BCH_Col_TotalSuccess</fullName>
@@ -17639,7 +17646,70 @@
         <shortDescription>FEC Batch Msg Select Template</shortDescription>
         <value>Vui lòng chọn mẫu cần tạo dữ liệu</value>
     </labels>
-
+    <labels>
+        <fullName>FEC_Download_Report</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Download Report</shortDescription>
+        <value>Download Report</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Export_View</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Export View</shortDescription>
+        <value>Export View</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Formatted_Report</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Formatted Report</shortDescription>
+        <value>Formatted Report</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Title_Context_Report</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Title Context Report</shortDescription>
+        <value>Export the report, including the report header, groupings, and filter settings.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Details_Only</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Details Only</shortDescription>
+        <value>Details Only</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Export_Detail</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Export Detail</shortDescription>
+        <value>Export only the detail rows. Use this to do further calculations or for uploading to other systems.</value>
+    </labels>
+     <labels>
+        <fullName>FEC_Format</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Format</shortDescription>
+        <value>Format</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Format_Excel</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Format Exce</shortDescription>
+        <value> Excel Format .xlsx</value>
+    </labels> 
     <labels>
         <fullName>FEC_GA_Save_Success</fullName>
         <language>en_US</language>
@@ -17752,7 +17822,6 @@
         <shortDescription>RA Queue Required</shortDescription>
         <value>Vui lòng chọn Queue</value>
     </labels>
-
     <labels>
         <fullName>FEC_Label_Detail_Information</fullName>
         <language>en_US</language>
@@ -17952,4 +18021,61 @@
         <shortDescription>Information</shortDescription>
         <value>Information</value>
     </labels>
+    <labels>
+        <fullName>FEC_Label_Edit_RA</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Edit Routing Assignment</shortDescription>
+        <value>Edit Routing Assignment</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Label_Nature_of_Cases</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Nature of Cases</shortDescription>
+        <value>Nature of Cases</value>
+    </labels>
+    <labels>
+        <fullName>FEC_RA_Error_Update</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>RA Error Update</shortDescription>
+        <value>Có lỗi xảy ra khi cập nhật.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_RA_Error_Load</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>RA Error Load</shortDescription>
+        <value>Không thể tải thông tin Routing Assignment.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Label_Customer_All</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Customer Type All</shortDescription>
+        <value>All</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Label_Customer_Existing</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Customer Type Existing</shortDescription>
+        <value>Existing Customer</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Label_Customer_Non_Existing</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Customer Type Non-Existing</shortDescription>
+        <value>Non-existing Customer</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Error_Download</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Error Download</shortDescription>
+        <value>Select at least one record and try again.</value>
+    </labels>
+   
 </CustomLabels>

@@ -23,7 +23,7 @@
         <div class="slds-col slds-size_1-of-1 slds-large-size_1-of-2">
           <lightning-input
             data-field="assignmentName"
-            label="Name"
+            label="Case Assignment"
             required
             value={assignmentName}
             onchange={handleNameChange}
@@ -213,7 +213,7 @@
               placeholder="Select role"
             ></lightning-combobox>
             <template if:true={roleHasError}>
-              <div class="slds-form-element__help">Role can't be blank</div>
+              <div class="slds-form-element__help">Role is required when Select Queues is specified.</div>
             </template>
           </div>
         </div>
@@ -269,7 +269,7 @@
       </div>
     </div>
 
-    <div class="slds-m-top_medium slds-text-align_right">
+    <div class="footer-actions slds-text-align_center">
       <lightning-button label="Cancel" onclick={handleCancel}></lightning-button>
       <lightning-button
         class="slds-m-left_small"
