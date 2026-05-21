@@ -214,7 +214,8 @@ public without sharing class FEC_CofGsrAssignmentService {
                     FEC_Case__c = caseId,
                     FEC_Assignment_Name__c = FEC_ConstantCommon.ASSIGNMENT_NAME_ROUTING,
                     FEC_Assignment_Type__c = FEC_ConstantCommon.ASSIGNMENT_TYPE_ROUTING,
-                    FEC_Assignment_Status__c = FEC_ConstantCommon.ASSIGNMENT_STATUS_OPEN,
+                    //tungnm37: set status theo team thay vi hardcode Open
+                    FEC_Assignment_Status__c = resolveAssignmentStatus(ra.FEC_Team__c),
                     FEC_OwnerID__c = ra.FEC_Queue__c, // tungnm37 sửa: lưu Queue Name để formula FEC_Assignment_Owner_Text__c hiện đúng
                     FEC_Assignment_Owner__c = null,
                     FEC_Team__c = ra.FEC_Team__c,
@@ -357,7 +358,8 @@ public without sharing class FEC_CofGsrAssignmentService {
                     FEC_Case__c = caseId,
                     FEC_Assignment_Name__c = FEC_ConstantCommon.ASSIGNMENT_NAME_ROUTING,
                     FEC_Assignment_Type__c = FEC_ConstantCommon.ASSIGNMENT_TYPE_ROUTING,
-                    FEC_Assignment_Status__c = FEC_ConstantCommon.ASSIGNMENT_STATUS_OPEN,
+                    //tungnm37: set status theo team thay vi hardcode Open
+                    FEC_Assignment_Status__c = resolveAssignmentStatus(teamName),
                     FEC_OwnerID__c = queueDevNameToDisplayName.containsKey(queueName) ? queueDevNameToDisplayName.get(queueName) : queueName, // tungnm37 sửa: lưu Queue Name
                     FEC_Assignment_Owner__c = null,
                     FEC_Team__c = teamName,
@@ -453,6 +455,23 @@ public without sharing class FEC_CofGsrAssignmentService {
             System.debug('createAssignmentsFromManualItems error: ' + e.getMessage() + ' | ' + e.getStackTraceString());
             FEC_CommonUltils.logException('tungnm37', 'createAssignmentsFromManualItems', e.getMessage(), e.getStackTraceString());
         }
+    }
+
+    //tungnm37: Resolve Assignment Status theo team code
+    //tungnm37: SP/CC → CSBackOfficeReview; CS khac (IB/EC/OB/QC/OM/F2F/CA/CL/CX) → CSReview
+    //tungnm37: Other Dept (CO/PM/CP/DS/IA/IT/TS) → OtherDeptReview; con lai → Open
+    private static String resolveAssignmentStatus(String teamCode) {
+        if (String.isBlank(teamCode)) return FEC_ConstantCommon.ASSIGNMENT_STATUS_OPEN;
+        if (FEC_ConstantCommon.CS_BACKOFFICE_TEAMS.contains(teamCode)) {
+            return FEC_ConstantCommon.STATUS_CS_BACKOFFICE;
+        }
+        if (FEC_ConstantCommon.CS_REVIEW_TEAMS.contains(teamCode)) {
+            return FEC_ConstantCommon.STATUS_CS_REVIEW;
+        }
+        if (FEC_ConstantCommon.OTHER_DEPT_TEAMS.contains(teamCode)) {
+            return FEC_ConstantCommon.STATUS_OTHER_DEPT;
+        }
+        return FEC_ConstantCommon.ASSIGNMENT_STATUS_OPEN;
     }
 
     // tungnm37 fix: lưu Queue Name cho queue (để hiển thị listview), User Id cho user
