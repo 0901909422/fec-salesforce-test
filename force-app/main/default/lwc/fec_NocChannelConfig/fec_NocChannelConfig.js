@@ -5,6 +5,7 @@ import { getRecord, getRecordNotifyChange } from 'lightning/uiRecordApi';
 import searchChannels from '@salesforce/apex/FEC_NocChannelConfigController.searchChannels';
 import getChannelIds from '@salesforce/apex/FEC_NocChannelConfigController.getChannelIds';
 import saveChannelIds from '@salesforce/apex/FEC_NocChannelConfigController.saveChannelIds';
+import canEditChannelConfig from '@salesforce/apex/FEC_NocChannelConfigController.canEditChannelConfig';
 import FEC_Toast_Success from '@salesforce/label/c.FEC_Toast_Success';
 import FEC_Toast_Error from '@salesforce/label/c.FEC_Toast_Error';
 import FEC_Channel_Config_Save_Success from '@salesforce/label/c.FEC_Channel_Config_Save_Success';
@@ -23,6 +24,7 @@ export default class Fec_NocChannelConfig extends LightningElement {
     @track isLoading = false;
     @track isSaving = false;
     @track isEditMode = false;
+    @track canEdit = false;
     _timer = null;
     _originalIds = '';
 
@@ -33,6 +35,10 @@ export default class Fec_NocChannelConfig extends LightningElement {
 
     connectedCallback() {
         this.loadCurrentChannels();
+        //tungnm37: check permission khi load
+        canEditChannelConfig()
+            .then(result => { this.canEdit = result; })
+            .catch(() => { this.canEdit = false; });
     }
 
     async loadCurrentChannels() {
@@ -148,8 +154,19 @@ export default class Fec_NocChannelConfig extends LightningElement {
     }
 
     handleCancel() {
-        // Restore về giá trị ban đầu
-        this.loadCurrentChannels();
+        // tungnm37: Restore về giá trị ban đầu từ _originalIds, không gọi lại Apex (cache)
+        if (this._originalIds) {
+            const idList = this._originalIds.split(',').map(s => s.trim()).filter(s => s);
+            searchChannels({ searchTerm: '' })
+                .then(results => {
+                    this.selectedChannels = results
+                        .filter(ch => idList.includes(ch.Id))
+                        .map(ch => ({ id: ch.Id, name: ch.FEC_Channel_Vietnamese_name__c || ch.Name }));
+                })
+                .catch(() => {});
+        } else {
+            this.selectedChannels = [];
+        }
         this.searchTerm = '';
         this.searchResults = [];
         this.isOpen = false;
