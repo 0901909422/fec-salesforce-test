@@ -94,7 +94,7 @@ public without sharing class FEC_CaseSlaNotificationService {
                     unitHeadCcIds
                 );
             }
-            caseIdToRecipientIds.put(caseId, recipientIds);
+            caseIdToRecipientIds.put(caseId, deduplicateRecipientIds(recipientIds));
         }
         return caseIdToRecipientIds;
     }
@@ -380,6 +380,20 @@ public without sharing class FEC_CaseSlaNotificationService {
             return;
         }
         target.addAll(source);
+    }
+
+    /** Lọc trùng Id người nhận (và bỏ blank) trước khi trả kết quả cuối. */
+    private static Set<String> deduplicateRecipientIds(Set<String> recipientIds) {
+        Set<String> deduped = new Set<String>();
+        if (recipientIds == null || recipientIds.isEmpty()) {
+            return deduped;
+        }
+        for (String recipientId : recipientIds) {
+            if (String.isNotBlank(recipientId)) {
+                deduped.add(recipientId.trim());
+            }
+        }
+        return deduped;
     }
 
     private static Set<String> queryActiveUserRecipientIdsByRoleFragment(String roleNameFragment) {
