@@ -1,12 +1,6 @@
 import { LightningElement, api, wire, track } from 'lwc';
-import { getRecord, getFieldValue } from 'lightning/uiRecordApi';
 import { refreshApex } from '@salesforce/apex';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
-
-import CASE_SUBCODE_CODE from '@salesforce/schema/Case.FEC_SubCode__r.FEC_Code__c';
-import CASE_SUBCATEGORY_CODE from '@salesforce/schema/Case.FEC_SubCategory__r.FEC_Code__c';
-
-const CASE_RL05_FIELDS = [CASE_SUBCODE_CODE, CASE_SUBCATEGORY_CODE];
 
 import FEC_Error_Title from '@salesforce/label/c.FEC_Error_Title';
 import FEC_Success_Title from '@salesforce/label/c.FEC_Success_Title';
@@ -61,8 +55,7 @@ import {
     CONTRACT_CLOSURE_EMAIL_CHANNEL_TEMPORARY,
     CONTRACT_CLOSURE_ADDRESS_TYPE_TEMPORARY,
     CONTRACT_CLOSURE_DELIVERY_VALUE_ADDRESS_DEFAULT,
-    CONTRACT_CLOSURE_DELIVERY_VALUE_OFFICE_DEFAULT,
-    CONTRACT_CLOSURE_DELIVERY_VALUE_POS_DEFAULT
+    CONTRACT_CLOSURE_DELIVERY_VALUE_OFFICE_DEFAULT
 } from 'c/fec_CommonConst';
 import { normalizePhone } from 'c/fec_CommonUtils';
 
@@ -75,24 +68,8 @@ const CC_MSG_LOAD_FAILED = 'Load failed';
 
 export default class Fec_ContractClosureForm extends LightningElement {
     @api recordId;
-    /** Từ fec_CaseBussiness — lọc Delivery Option theo RL05.01 / RL05.03. */
-    @api subCodeCode;
-    @api subCategoryCode;
     /** Từ cha (vd. fec_CaseBussiness lwc:component is-edit). undefined = hiển thị như cũ (Record Page). */
     @api isEdit;
-
-    _wiredSubCodeCode = STR_EMPTY;
-    _wiredSubCategoryCode = STR_EMPTY;
-
-    @wire(getRecord, { recordId: '$recordId', fields: CASE_RL05_FIELDS })
-    wiredCaseRl05Codes({ data }) {
-        if (data) {
-            this._wiredSubCodeCode =
-                getFieldValue(data, CASE_SUBCODE_CODE) || STR_EMPTY;
-            this._wiredSubCategoryCode =
-                getFieldValue(data, CASE_SUBCATEGORY_CODE) || STR_EMPTY;
-        }
-    }
 
     /** false = chế độ xem: vẫn render form + dữ liệu; không validate/gọi save từ đây. */
     get isClosureEditable() {
@@ -118,7 +95,6 @@ export default class Fec_ContractClosureForm extends LightningElement {
     deliveryEmailSelected = false;
     deliveryAddressSelected = false;
     deliveryOfficeSelected = false;
-    deliveryPosSelected = false;
 
     useExistingEmail = false;
     showTempEmailRow = false;
@@ -205,7 +181,6 @@ export default class Fec_ContractClosureForm extends LightningElement {
     resolvedEmailValue;
     resolvedAddressValue;
     resolvedOfficeValue;
-    resolvedPosValue;
 
     addressTypeTemporaryLabel = CONTRACT_CLOSURE_ADDRESS_TYPE_TEMPORARY;
 
@@ -349,74 +324,13 @@ export default class Fec_ContractClosureForm extends LightningElement {
         }
     }
 
-    get _effectiveSubCodeCode() {
-        return (
-            this.subCodeCode ||
-            this._wiredSubCodeCode ||
-            STR_EMPTY
-        ).trim();
-    }
-
-    get _effectiveSubCategoryCode() {
-        return (
-            this.subCategoryCode ||
-            this._wiredSubCategoryCode ||
-            STR_EMPTY
-        ).trim();
-    }
-
-    get _subCodeUpper() {
-        return this._effectiveSubCodeCode.toUpperCase();
-    }
-
-    get _isMrcRl05Branch() {
-        const cat = this._effectiveSubCategoryCode.toUpperCase();
-        const sub = this._subCodeUpper;
-        return cat.includes('RL05') || sub.includes('RL05');
-    }
-
-    get _isMrcRl05Photo() {
-        const s = this._subCodeUpper;
-        return s.includes('RL05.01') || s.includes('RL05.03');
-    }
-
-    get _isMrcRl0503() {
-        return this._subCodeUpper.includes('RL05.03');
-    }
-
-    get _isMrcRl0502() {
-        return this._subCodeUpper.includes('RL05.02');
-    }
-
-    get useMrcSingleDeliveryPicklist() {
-        return this._isMrcRl05Photo || this._isMrcRl0502;
-    }
-
-    get mrcDeliverySingleValue() {
-        if (this.deliveryEmailSelected && this.resolvedEmailValue) {
-            return this.resolvedEmailValue;
-        }
-        if (this.deliveryAddressSelected && this.resolvedAddressValue) {
-            return this.resolvedAddressValue;
-        }
-        if (this.deliveryOfficeSelected && this.resolvedOfficeValue) {
-            return this.resolvedOfficeValue;
-        }
-        if (this.deliveryPosSelected && this.resolvedPosValue) {
-            return this.resolvedPosValue;
-        }
-        return STR_EMPTY;
-    }
-
     resolveDeliveryMeta() {
         const emailO = this.pickDeliveryMeta('EMAIL');
         const addrO = this.pickDeliveryMeta('ADDRESS');
         const offO = this.pickDeliveryMeta('OFFICE');
-        const posO = this.pickDeliveryMeta('POS');
         this.resolvedEmailValue = emailO ? emailO.value : this.customLabel.emailLabel;
         this.resolvedAddressValue = addrO ? addrO.value : CONTRACT_CLOSURE_DELIVERY_VALUE_ADDRESS_DEFAULT;
         this.resolvedOfficeValue = offO ? offO.value : CONTRACT_CLOSURE_DELIVERY_VALUE_OFFICE_DEFAULT;
-        this.resolvedPosValue = posO ? posO.value : CONTRACT_CLOSURE_DELIVERY_VALUE_POS_DEFAULT;
     }
 
     pickDeliveryMeta(kind) {
@@ -442,27 +356,7 @@ export default class Fec_ContractClosureForm extends LightningElement {
                     /văn\s*phòng|van\s*phong/i.test((o.value || STR_EMPTY).toLowerCase())
             );
         }
-        if (kind === 'POS') {
-            return opts.find(
-                (o) =>
-                    /\bpos\b/i.test(o.label || STR_EMPTY) ||
-                    /\bpos\b/i.test(o.value || STR_EMPTY)
-            );
-        }
         return undefined;
-    }
-
-    _allowDeliveryKind(kind) {
-        if (this._isMrcRl0502) {
-            return kind !== 'EMAIL';
-        }
-        if (!this._isMrcRl05Photo) {
-            return true;
-        }
-        if (kind === 'EMAIL') {
-            return this._isMrcRl0503;
-        }
-        return true;
     }
 
     applySavedDelivery() {
@@ -481,77 +375,24 @@ export default class Fec_ContractClosureForm extends LightningElement {
             if (this.resolvedOfficeValue && p === this.resolvedOfficeValue) {
                 this.deliveryOfficeSelected = true;
             }
-            if (this.resolvedPosValue && p === this.resolvedPosValue) {
-                this.deliveryPosSelected = true;
-            }
         });
     }
 
     get deliveryPicklistOptions() {
-        if (this.useMrcSingleDeliveryPicklist) {
-            return this._mrcRl05SingleDeliveryOptions;
-        }
         const rows = [];
         const ev = this.resolvedEmailValue;
         const av = this.resolvedAddressValue;
         const ov = this.resolvedOfficeValue;
-        const pv = this.resolvedPosValue;
-        if (ev && this._allowDeliveryKind('EMAIL')) {
+        if (ev) {
             rows.push({ label: this.labelEmail, value: ev });
         }
-        if (av && this._allowDeliveryKind('ADDRESS')) {
+        if (av) {
             rows.push({ label: this.labelAddress, value: av });
         }
-        if (ov && this._allowDeliveryKind('OFFICE')) {
+        if (ov) {
             rows.push({ label: this.labelOffice, value: ov });
         }
-        if (this._allowDeliveryKind('POS')) {
-            rows.push({
-                label: this.labelPos,
-                value: pv || CONTRACT_CLOSURE_DELIVERY_VALUE_POS_DEFAULT
-            });
-        }
         return rows;
-    }
-
-    /** RL05.01 / RL05.03 — combobox một lựa chọn, nhãn cố định theo design Batch 7. */
-    get _mrcRl05SingleDeliveryOptions() {
-        const rows = [];
-        const ev = this.resolvedEmailValue;
-        const av =
-            this.resolvedAddressValue ||
-            CONTRACT_CLOSURE_DELIVERY_VALUE_ADDRESS_DEFAULT;
-        const ov =
-            this.resolvedOfficeValue ||
-            CONTRACT_CLOSURE_DELIVERY_VALUE_OFFICE_DEFAULT;
-        const pv =
-            this.resolvedPosValue || CONTRACT_CLOSURE_DELIVERY_VALUE_POS_DEFAULT;
-        if (this._isMrcRl0503 && ev) {
-            rows.push({ label: 'Email', value: ev });
-        }
-        if (av) {
-            rows.push({ label: 'Địa chỉ', value: av });
-        }
-        if (ov) {
-            rows.push({ label: 'Văn phòng', value: ov });
-        }
-        rows.push({ label: 'POS', value: pv });
-        return rows;
-    }
-
-    handleMrcDeliveryComboboxChange(event) {
-        if (this.closureFieldsReadonly) {
-            return;
-        }
-        const pick = event.detail?.value || STR_EMPTY;
-        const ev = this.resolvedEmailValue;
-        const av = this.resolvedAddressValue;
-        const ov = this.resolvedOfficeValue;
-        const pv = this.resolvedPosValue || CONTRACT_CLOSURE_DELIVERY_VALUE_POS_DEFAULT;
-        this.deliveryEmailSelected = !!(ev && pick === ev);
-        this.deliveryAddressSelected = !!(av && pick === av);
-        this.deliveryOfficeSelected = !!(ov && pick === ov);
-        this.deliveryPosSelected = !!(pv && pick === pv);
     }
 
     get selectedDeliveryValues() {
@@ -565,9 +406,6 @@ export default class Fec_ContractClosureForm extends LightningElement {
         if (this.deliveryOfficeSelected && this.resolvedOfficeValue) {
             vals.push(this.resolvedOfficeValue);
         }
-        if (this.deliveryPosSelected && this.resolvedPosValue) {
-            vals.push(this.resolvedPosValue);
-        }
         return vals;
     }
 
@@ -576,21 +414,8 @@ export default class Fec_ContractClosureForm extends LightningElement {
             return;
         }
         let ids = event.detail && event.detail.ids ? [...event.detail.ids] : [];
-        const ev = this.resolvedEmailValue;
         const av = this.resolvedAddressValue;
         const ov = this.resolvedOfficeValue;
-        const pv = this.resolvedPosValue;
-
-        if (this._isMrcRl05Photo) {
-            if (ids.length > 1) {
-                ids = [ids[ids.length - 1]];
-            }
-            this.deliveryEmailSelected = !!(ev && ids.includes(ev));
-            this.deliveryAddressSelected = !!(av && ids.includes(av));
-            this.deliveryOfficeSelected = !!(ov && ids.includes(ov));
-            this.deliveryPosSelected = !!(pv && ids.includes(pv));
-            return;
-        }
 
         const hasA = av && ids.includes(av);
         const hasO = ov && ids.includes(ov);
@@ -605,10 +430,10 @@ export default class Fec_ContractClosureForm extends LightningElement {
                 ids = ids.filter((v) => v !== ov);
             }
         }
+        const ev = this.resolvedEmailValue;
         this.deliveryEmailSelected = !!(ev && ids.includes(ev));
         this.deliveryAddressSelected = !!(av && ids.includes(av));
         this.deliveryOfficeSelected = !!(ov && ids.includes(ov));
-        this.deliveryPosSelected = !!(pv && ids.includes(pv));
     }
 
     get labelEmail() {
@@ -624,11 +449,6 @@ export default class Fec_ContractClosureForm extends LightningElement {
     get labelOffice() {
         const o = this.pickDeliveryMeta('OFFICE');
         return o ? o.label : CONTRACT_CLOSURE_DELIVERY_VALUE_OFFICE_DEFAULT;
-    }
-
-    get labelPos() {
-        const o = this.pickDeliveryMeta('POS');
-        return o ? o.label : CONTRACT_CLOSURE_DELIVERY_VALUE_POS_DEFAULT;
     }
 
     get lockAddTempEmailBtn() {
@@ -1307,15 +1127,12 @@ export default class Fec_ContractClosureForm extends LightningElement {
         if (this.deliveryOfficeSelected) {
             parts.push(this.resolvedOfficeValue);
         }
-        if (this.deliveryPosSelected) {
-            parts.push(this.resolvedPosValue);
-        }
+
         return {
             deliveryOptionCombined: parts.join(';'),
             deliveryEmailSelected: this.deliveryEmailSelected,
             deliveryAddressSelected: this.deliveryAddressSelected,
             deliveryOfficeSelected: this.deliveryOfficeSelected,
-            deliveryPosSelected: this.deliveryPosSelected,
             useExistingEmail: this.useExistingEmail,
             emailDeliveryChannel: this.resolveEmailDeliveryChannel(),
             temporaryEmail: this.temporaryEmail,
