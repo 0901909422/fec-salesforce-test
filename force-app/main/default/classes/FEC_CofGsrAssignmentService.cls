@@ -471,6 +471,7 @@ public without sharing class FEC_CofGsrAssignmentService {
     }
 
     //tungnm37: Overload voi caseOwnerTeam de xu ly cross-team SP<->CC
+    //tungnm37: caseOwnerTeam = team cua Queue dang giu Case (khong phai FEC_User_Group__c)
     public static String resolveAssignmentStatusWithOwner(String teamCode, String caseOwnerTeam) {
         if (String.isBlank(teamCode)) return FEC_ConstantCommon.ASSIGNMENT_STATUS_OPEN;
         if (FEC_ConstantCommon.CS_BACKOFFICE_TEAMS.contains(teamCode)) {
@@ -489,6 +490,23 @@ public without sharing class FEC_CofGsrAssignmentService {
             return FEC_ConstantCommon.STATUS_OTHER_DEPT;
         }
         return FEC_ConstantCommon.ASSIGNMENT_STATUS_OPEN;
+    }
+
+    //tungnm37: Resolve team code tu Queue ID (Case Owner) bang cach lookup FEC_Team_Queue__c
+    private static String resolveTeamFromQueueId(Id queueId) {
+        if (queueId == null) return null;
+        // Lay DeveloperName cua Queue
+        List<Group> groups = [SELECT DeveloperName FROM Group WHERE Id = :queueId AND Type = 'Queue' LIMIT 1];
+        if (groups.isEmpty()) return null;
+        String devName = groups[0].DeveloperName;
+        // Lookup team tu FEC_Team_Queue__c
+        List<FEC_Team_Queue__c> tqs = [
+            SELECT FEC_Select_Team__r.Name
+            FROM FEC_Team_Queue__c
+            WHERE FEC_Queue_Name__c = :devName
+            LIMIT 1
+        ];
+        return tqs.isEmpty() ? null : tqs[0].FEC_Select_Team__r?.Name;
     }
 
     // tungnm37 fix: lưu Queue Name cho queue (để hiển thị listview), User Id cho user
