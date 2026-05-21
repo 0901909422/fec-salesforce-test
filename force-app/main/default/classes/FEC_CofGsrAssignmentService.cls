@@ -206,10 +206,14 @@ public without sharing class FEC_CofGsrAssignmentService {
             );
             String userRoleName = currentUser.UserRole?.Name;
 
-            //tungnm37 start: resolve team cua Service Case Owner (Queue) de check cross-team SP<->CC
+            //tungnm37 start: resolve team cua Service Case Owner (Queue hoac User) de check cross-team SP<->CC
             String caseOwnerTeam = null;
-            if (currentCase.OwnerId != null && currentCase.OwnerId.getSObjectType() == Group.SObjectType) {
-                caseOwnerTeam = resolveTeamFromQueueId(currentCase.OwnerId);
+            if (currentCase.OwnerId != null) {
+                if (currentCase.OwnerId.getSObjectType() == Group.SObjectType) {
+                    caseOwnerTeam = resolveTeamFromQueueId(currentCase.OwnerId);
+                } else if (currentCase.OwnerId.getSObjectType() == User.SObjectType) {
+                    caseOwnerTeam = resolveTeamFromUserId(currentCase.OwnerId);
+                }
             }
             //tungnm37 end
 
@@ -355,10 +359,14 @@ public without sharing class FEC_CofGsrAssignmentService {
                 ? String.valueOf(currentUser.Id)
                 : (currentCase.OwnerId != null ? String.valueOf(currentCase.OwnerId) : null);
 
-            //tungnm37 start: resolve team cua Service Case Owner (Queue)
+            //tungnm37 start: resolve team cua Service Case Owner (Queue hoac User)
             String caseOwnerTeamManual = null;
-            if (currentCase.OwnerId != null && currentCase.OwnerId.getSObjectType() == Group.SObjectType) {
-                caseOwnerTeamManual = resolveTeamFromQueueId(currentCase.OwnerId);
+            if (currentCase.OwnerId != null) {
+                if (currentCase.OwnerId.getSObjectType() == Group.SObjectType) {
+                    caseOwnerTeamManual = resolveTeamFromQueueId(currentCase.OwnerId);
+                } else if (currentCase.OwnerId.getSObjectType() == User.SObjectType) {
+                    caseOwnerTeamManual = resolveTeamFromUserId(currentCase.OwnerId);
+                }
             }
             //tungnm37 end
 
@@ -507,6 +515,7 @@ public without sharing class FEC_CofGsrAssignmentService {
     }
 
     //tungnm37: Resolve team code tu Queue ID (Case Owner) bang cach lookup FEC_Team_Queue__c
+    @TestVisible
     private static String resolveTeamFromQueueId(Id queueId) {
         if (queueId == null) return null;
         // Lay DeveloperName cua Queue
@@ -521,6 +530,68 @@ public without sharing class FEC_CofGsrAssignmentService {
             LIMIT 1
         ];
         return tqs.isEmpty() ? null : tqs[0].FEC_Select_Team__r?.Name;
+    }
+
+    //tungnm37: Resolve team code tu User ID (Case Owner) bang cach lookup FEC_Team_Queue__c qua FEC_Main_Queue__c
+    @TestVisible
+    private static String resolveTeamFromUserId(Id userId) {
+        if (userId == null) return null;
+        List<User> users = [SELECT FEC_Main_Queue__c, UserRoleId FROM User WHERE Id = :userId LIMIT 1];
+        if (users.isEmpty()) return null;
+        
+        String mainQueue = users[0].FEC_Main_Queue__c;
+        if (String.isNotBlank(mainQueue) && mainQueue != 'default value') {
+            List<FEC_Team_Queue__c> tqs = [
+                SELECT FEC_Select_Team__r.Name
+                FROM FEC_Team_Queue__c
+                WHERE FEC_Queue_Name__c = :mainQueue
+                LIMIT 1
+            ];
+            if (!tqs.isEmpty()) {
+                return tqs[0].FEC_Select_Team__r?.Name;
+            }
+        }
+        
+        // Fallback: GroupMember
+        Set<Id> memberIds = new Set<Id>{ userId };
+        if (users[0].UserRoleId != null) {
+            for (Group grp : [
+                SELECT Id 
+                FROM Group 
+                WHERE RelatedId = :users[0].UserRoleId 
+                  AND Type IN ('Role', 'RoleAndSubordinates')
+            ]) {
+                memberIds.add(grp.Id);
+            }
+        }
+        
+        Set<String> queueDevNames = new Set<String>();
+        for (GroupMember gm : [
+            SELECT Group.DeveloperName 
+            FROM GroupMember 
+            WHERE UserOrGroupId IN :memberIds 
+              AND Group.Type = 'Queue'
+        ]) {
+            queueDevNames.add(gm.Group.DeveloperName);
+        }
+        
+        if (!queueDevNames.isEmpty()) {
+            List<FEC_Team_Queue__c> tqs = [
+                SELECT FEC_Select_Team__r.Name
+                FROM FEC_Team_Queue__c
+                WHERE FEC_Queue_Name__c IN :queueDevNames
+            ];
+            for (FEC_Team_Queue__c tq : tqs) {
+                String teamName = tq.FEC_Select_Team__r?.Name;
+                if (String.isNotBlank(teamName) && FEC_ConstantCommon.CS_BACKOFFICE_TEAMS.contains(teamName)) {
+                    return teamName;
+                }
+            }
+            if (!tqs.isEmpty()) {
+                return tqs[0].FEC_Select_Team__r?.Name;
+            }
+        }
+        return null;
     }
 
     // tungnm37 fix: lưu Queue Name cho queue (để hiển thị listview), User Id cho user
