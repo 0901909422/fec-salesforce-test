@@ -98,7 +98,12 @@ public with sharing class FEC_CaseRemarksRollupService {
     }
 
     if (!toUpdate.isEmpty()) {
-      update toUpdate;
+      FEC_CaseTriggerHandler.isExecuting = true;
+      try {
+        update toUpdate;
+      } finally {
+        FEC_CaseTriggerHandler.isExecuting = false;
+      }
     }
   }
 
@@ -285,7 +290,10 @@ public with sharing class FEC_CaseRemarksRollupService {
     if (dt == null) {
       return '';
     }
-    return dt.format('dd/MM/yyyy HH:mm:ss', UserInfo.getTimeZone().getID());
+    return dt.format(
+      FEC_ConstantCommon.DATETIME_FORMAT_OUTPUT,
+      UserInfo.getTimeZone().getID()
+    );
   }
 
   @TestVisible
