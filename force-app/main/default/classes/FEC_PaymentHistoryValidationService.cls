@@ -27,7 +27,7 @@ public with sharing class FEC_PaymentHistoryValidationService {
    *   Account Status : FEC_Customer_History__c.FEC_Account_Status__c
    *   Block Code     : FEC_Customer_History__c.FEC_Block_Code__c
    *   IPP Principal  : FEC_Statement__c.FEC_IPP_Principal__c  (kỳ sao kê gần nhất của Customer History)
-   *   OTB            : FEC_Account_Status__c.FEC_OTB__c (bản ghi Account Status mới nhất của Customer History)
+   *   OTB            : FEC_Customer_History__c.FEC_OTB__c
    *   Card Limit     : FEC_Customer_History__c.FEC_Credit_Limit__c
    */
   private static String buildRc0404InfoMessageIfEligible(Id customerHistoryId) {
@@ -38,6 +38,7 @@ public with sharing class FEC_PaymentHistoryValidationService {
       SELECT
         FEC_Account_Status__c,
         FEC_Block_Code__c,
+        FEC_OTB__c,
         FEC_Credit_Limit__c
       FROM FEC_Customer_History__c
       WHERE Id = :customerHistoryId
@@ -59,7 +60,7 @@ public with sharing class FEC_PaymentHistoryValidationService {
       : h.FEC_Block_Code__c.trim();
     Boolean blockCodeC = CARD_BLOCK_CODE_C.equals(block);
 
-    Decimal otb = resolveOtbFromAccountStatus(customerHistoryId);
+    Decimal otb = h.FEC_OTB__c;
     Decimal limitAmt = h.FEC_Credit_Limit__c;
     Boolean otbGteLimit =
       otb != null && limitAmt != null && otb >= limitAmt;
@@ -82,21 +83,6 @@ public with sharing class FEC_PaymentHistoryValidationService {
       return null;
     }
     return System.Label.FEC_MSG_Cannot_Create_Card_Close_Certificate;
-    }
-
-  /** OTB từ FEC_Account_Status__c (bản ghi mới nhất theo Customer History). */
-  private static Decimal resolveOtbFromAccountStatus(Id customerHistoryId) {
-    if (customerHistoryId == null) {
-    return null;
-    }
-    List<FEC_Account_Status__c> statusRows = [
-      SELECT FEC_OTB__c
-      FROM FEC_Account_Status__c
-      WHERE FEC_Customer_History__c = :customerHistoryId
-      ORDER BY LastModifiedDate DESC, CreatedDate DESC
-      LIMIT 1
-    ];
-    return statusRows.isEmpty() ? null : statusRows[0].FEC_OTB__c;
   }
 
   /**
