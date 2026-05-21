@@ -2,8 +2,7 @@ trigger FEC_CaseAssignmentTrigger on FEC_Case_Assignment__c (before insert, befo
     if (Trigger.isBefore) {
         if (Trigger.isInsert) {
             FEC_CaseAssignmentMutationGuard.enforceActiveRequiresNocOnInsert(Trigger.new);
-        }
-        if (Trigger.isUpdate) {
+        } else if (Trigger.isUpdate) {
             FEC_CaseAssignmentMutationGuard.enforceActiveRequiresNocOnUpdate(Trigger.new, Trigger.oldMap);
             FEC_CaseAssignmentMutationGuard.enforceBeforeUpdate(Trigger.new, Trigger.oldMap);
         }

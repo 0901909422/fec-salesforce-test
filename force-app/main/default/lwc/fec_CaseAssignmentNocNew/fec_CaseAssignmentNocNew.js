@@ -2,7 +2,7 @@ import { LightningElement, wire, track } from "lwc";
 import { CurrentPageReference, NavigationMixin } from "lightning/navigation";
 import { ShowToastEvent } from "lightning/platformShowToastEvent";
 import USER_ID from "@salesforce/user/Id";
-import { getRecord, getFieldValue } from "lightning/uiRecordApi";
+import { getRecord, getFieldValue, getRecordNotifyChange } from "lightning/uiRecordApi";
 import NAME_FIELD from "@salesforce/schema/User.Name";
 import {
   IsConsoleNavigation,
@@ -736,6 +736,9 @@ export default class Fec_CaseAssignmentNocNew extends NavigationMixin(LightningE
             subCodeId: this.selectedSubCodeId || null,
           });
       this.showToast("Success", "Case Assignment NOC saved.", "success");
+      if (this.assignmentRecordId) {
+        getRecordNotifyChange([{ recordId: this.assignmentRecordId }]);
+      }
       await this.navigateAfterSave(nocId);
     } catch (e) {
       const msg =
