@@ -889,8 +889,8 @@ public without sharing class FEC_CaseBusinessService {
           if(
             DOCUMENT_REQUEST.equals(businessProcessCode)
             && String.isNotBlank(docReqValidationMessage)
-            && 'Case Information'.equals(sectionNameTemp)
-            && !'Property Info'.equals(subSectionNameTemp)
+            && (FEC_ConstantCommon.SECTION_CASE_INFORMATION.equals(sectionNameTemp)
+              || FEC_ConstantCommon.SUB_SECTION_C360_INFO.equals(subSectionNameTemp))
           ){
             continue;
           }
@@ -2792,7 +2792,8 @@ public without sharing class FEC_CaseBusinessService {
         FEC_User__c = emailLocalPart(usr.Email),
         FEC_User_Role__c = usr.UserRole?.Name,
         FEC_Current_Status__c = finalStatusBeforeSubmit,
-        FEC_Changed_Status__c = c.FEC_Final_Status__c
+        FEC_Changed_Status__c = c.FEC_Final_Status__c,
+        FEC_Previous_Stage__c = currentStageId
       );
     try {
       new FEC_CaseBusinessWithoutSharing().doInsert(new List<FEC_Routing_Action_History__c>{ history });

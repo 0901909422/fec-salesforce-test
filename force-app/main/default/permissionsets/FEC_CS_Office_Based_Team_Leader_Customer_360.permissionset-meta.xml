@@ -1322,6 +1322,11 @@
     </fieldPermissions>
     <fieldPermissions>
         <editable>false</editable>
+        <field>FEC_Customer_History__c.FEC_Search_Result_National_ID__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
         <field>FEC_Customer_History__c.FEC_Sold_Amount__c</field>
         <readable>true</readable>
     </fieldPermissions>
