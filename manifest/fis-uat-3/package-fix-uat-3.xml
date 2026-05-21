@@ -247,6 +247,7 @@
         <members>FEC_Template_Import__c.FEC_User_Group__c</members>
         <members>FEC_Case_Assignment_Logs__c.FEC_Case_Assignment_Name__c</members>
         <members>FEC_Case_Assignment__c.FEC_Case_Assignmetn_NOC_Count__c</members>
+        <members>FEC_Customer_History__c.FEC_Search_Result_National_ID__c</members>
         <name>CustomField</name>
     </types>
     <types>
