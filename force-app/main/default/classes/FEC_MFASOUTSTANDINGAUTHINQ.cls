@@ -11,6 +11,7 @@
    1.2      2026-05-12     Agent                Parse AUTH_GRP / MODULE007 + AUTH_AMT; pad Auths when AUTHS_TABLE empty; relax row EFF/AMT
    1.3      2026-05-12     Agent                EFF_DATE_AUTH_DETAIL from AUTH_GRP (prefer MODULE007 path) for Pending effective
    1.4      2026-05-12     Agent                Pending: DTL_* from MODULE007 AUTH_GRP; VMX_MSGOUT.AUTH_CD on rows as MSGOUT_AUTH_CD
+   1.5      2026-05-20     Agent                VMX_AUTH_DETAIL_INQ: Non-Prod hardcode ACCT in callout (FEC_GetIPPDetailsCallout pattern)
  
 ****************************************************************************************/
 
@@ -155,7 +156,27 @@ public with sharing class FEC_MFASOUTSTANDINGAUTHINQ {
         String acct,
         String serviceNodeName
     ) {
-        validateRequest(transID, requestorId, dateTimeStr, context, signOnName, org, acct);
+        FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
+        FEC_API_Config__mdt apiConfig =
+            FEC_API_Config__mdt.getInstance(API_CONFIG);
+
+        String acctForCall = acct;
+        if (SERVICE_VMX_AUTH_DETAIL_INQ.equals(serviceNodeName)
+            && apiSetting?.FEC_Enviroment__c
+                == FEC_ConstantCommon.ENVIROMENT_NON_PRODUCTION
+            && String.isNotBlank(apiConfig?.FEC_Account_Number_Hard_Code__c)) {
+            acctForCall = apiConfig.FEC_Account_Number_Hard_Code__c.trim();
+        }
+
+        validateRequest(
+            transID,
+            requestorId,
+            dateTimeStr,
+            context,
+            signOnName,
+            org,
+            acctForCall
+        );
 
         String soapBody = buildSoapRequest(
             transID,
@@ -165,13 +186,9 @@ public with sharing class FEC_MFASOUTSTANDINGAUTHINQ {
             context,
             signOnName,
             org,
-            acct,
+            acctForCall,
             serviceNodeName
         );
-
-        FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
-        FEC_API_Config__mdt apiConfig =
-            FEC_API_Config__mdt.getInstance(API_CONFIG);
 
         String endpoint = apiSetting?.FEC_Call_Mock__c
             ? FEC_MockupEndpoint.GET_UNBILLED_TRANSACTION_ENDPOINT_MOCKUP

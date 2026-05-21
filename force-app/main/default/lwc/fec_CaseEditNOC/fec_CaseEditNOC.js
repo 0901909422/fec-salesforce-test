@@ -233,6 +233,7 @@ export default class Fec_CaseEditNOC extends LightningElement {
 
   subscription = null;
   subscriptionNOC = null;
+  _nocResolveEpoch = 0;
   subscriptionResetPin = null;
   subscriptionPinReissue = null;
   subscriptionDoNotBother = null;
@@ -361,6 +362,9 @@ export default class Fec_CaseEditNOC extends LightningElement {
   }
 
   _applyPointsRedemptionNocSelectionFromStorage() {
+    if (!this.isNocLockedAfterPointsRedemption) {
+      return;
+    }
     const sel = this._readPointsRedemptionNocSelectionFromStorage();
     if (!sel || !this._isNocSelectionComplete(sel)) {
       return;
@@ -1551,11 +1555,21 @@ export default class Fec_CaseEditNOC extends LightningElement {
   }
 
   //linhdev fix section Account Info + Case Info
+  _bumpNocResolveEpoch() {
+    this._nocResolveEpoch += 1;
+    return this._nocResolveEpoch;
+  }
+
+  _isNocResolveEpochCurrent(epoch) {
+    return epoch === this._nocResolveEpoch;
+  }
+
   handleChangeCategory(e) {
     //linhdev fix jira FECREDIT_CSM_2025_KH-1366
     if (this.isNocNatureLocked) {
       return;
     }
+    this._bumpNocResolveEpoch();
     this.categorySelectedId = e.detail.value;
     this.subCategorySelectedId = null;
     this.subCodeSelectedId = null;
@@ -1573,6 +1587,7 @@ export default class Fec_CaseEditNOC extends LightningElement {
     if (this.isNocNatureLocked) {
       return;
     }
+    this._bumpNocResolveEpoch();
     this.subCategorySelectedId = e.detail.value;
     this.subCodeSelectedId = null;
     this.natureOfCase = null;
@@ -1597,17 +1612,25 @@ export default class Fec_CaseEditNOC extends LightningElement {
     }
 
     if (this.subCodeSelectedId) {
+      const epoch = this._bumpNocResolveEpoch();
+      const resolvedSubCodeId = this.subCodeSelectedId;
       getNatureOfCase({
         productTypeId: this.productTypeSelectedId,
         categoryId: this.categorySelectedId,
         subCategoryId: this.subCategorySelectedId,
-        subCodeId: this.subCodeSelectedId
+        subCodeId: resolvedSubCodeId
       })
         .then((result) => {
+          if (!this._isNocResolveEpochCurrent(epoch)) {
+            return;
+          }
           this.natureOfCase = result;
           return this._persistSelectedNocToDatabase(result?.Id);
         })
         .then(() => {
+          if (!this._isNocResolveEpochCurrent(epoch)) {
+            return;
+          }
           this._savePointsRedemptionNocSelectionToStorage();
           this.handlePublishMessageChanel();
         })
@@ -1690,6 +1713,7 @@ export default class Fec_CaseEditNOC extends LightningElement {
     if (this.isNocNatureLocked) {
       return;
     }
+    this._bumpNocResolveEpoch();
     this.updatedCategoryId = e.detail.categoryId;
     this.updatedSubCategoryId = null;
     this.updatedSubCodeId = null;
@@ -1719,45 +1743,57 @@ export default class Fec_CaseEditNOC extends LightningElement {
     if (this.isNocNatureLocked) {
       return;
     }
+    const epoch = this._bumpNocResolveEpoch();
     this.updatedSubCategoryId = e.detail.subCategoryId;
     this.updatedSubCodeId = null;
 
     // Reload Sub-Code options theo Sub-Category mới
     if (this.updatedSubCategoryId) {
+      const resolvedSubCategoryId = this.updatedSubCategoryId;
+      const resolvedCategoryId = this.updatedCategoryId;
       getSubCodelst({
         recordId: this.recordId,
         productTypeId: this.productTypeSelectedId,
-        categoryId: this.updatedCategoryId,
-        subCategoryId: this.updatedSubCategoryId
+        categoryId: resolvedCategoryId,
+        subCategoryId: resolvedSubCategoryId
       })
         .then((res) => {
+          if (!this._isNocResolveEpochCurrent(epoch)) {
+            return;
+          }
           this.subCodeOptionlst = res;
 
           const noSubCodeOptions = !res || res.length === 0;
-          if (this.productTypeSelectedId && this.updatedCategoryId && this.updatedSubCategoryId && noSubCodeOptions) {
+          if (this.productTypeSelectedId && resolvedCategoryId && resolvedSubCategoryId && noSubCodeOptions) {
             return getNatureOfCaseWithoutSubCode({
               productTypeId: this.productTypeSelectedId,
-              categoryId: this.updatedCategoryId,
-              subCategoryId: this.updatedSubCategoryId
+              categoryId: resolvedCategoryId,
+              subCategoryId: resolvedSubCategoryId
             })
               .then((noc) => {
+                if (!this._isNocResolveEpochCurrent(epoch)) {
+                  return;
+                }
                 const payload = {
                   caseId: this.recordId,
                   productTypeId: this.productTypeSelectedId,
-                  categoryId: this.updatedCategoryId,
-                  subCategoryId: this.updatedSubCategoryId,
+                  categoryId: resolvedCategoryId,
+                  subCategoryId: resolvedSubCategoryId,
                   subCodeId: null,
                   natureOfCaseId: noc?.Id ?? null
                 };
                 return this._publishCaseNocAfterPersist(payload);
               })
               .catch((err) => {
+                if (!this._isNocResolveEpochCurrent(epoch)) {
+                  return;
+                }
                 console.error("getNatureOfCaseWithoutSubCode error (Updated section):", err);
                 const payload = {
                   caseId: this.recordId,
                   productTypeId: this.productTypeSelectedId,
-                  categoryId: this.updatedCategoryId,
-                  subCategoryId: this.updatedSubCategoryId,
+                  categoryId: resolvedCategoryId,
+                  subCategoryId: resolvedSubCategoryId,
                   subCodeId: null,
                   natureOfCaseId: null
                 };
