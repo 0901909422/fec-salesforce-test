@@ -109,9 +109,9 @@ public class FEC_AttachmentExportHttpService {
             try {
                 HttpRequest req = new HttpRequest();
                 req.setEndpoint(API_CREDENTIAL + UPLOAD_PATH);
-                req.setMethod('POST');
-                req.setHeader('Content-Type', 'multipart/form-data; boundary=' + boundary);
-                req.setHeader('X-API-KEY', 'RkVDX1NBTEVTRk9SQ0U=');
+                req.setMethod(FEC_ConstantCommon.API_METHOD_POST);
+                req.setHeader('Content-Type', FEC_ConstantArchive.API_CONTENT_TYPE_MULTIPART + boundary);
+                req.setHeader('X-API-KEY', FEC_ConstantArchive.X_API_KEY_ARCHIVE);
                 req.setTimeout(TIMEOUT_MS);
                 req.setBodyAsBlob(bodyBlob);
 
@@ -172,11 +172,11 @@ public class FEC_AttachmentExportHttpService {
             try {
                 HttpRequest req = new HttpRequest();
                 req.setEndpoint(API_CREDENTIAL + BATCH_PATH);
-                req.setMethod('POST');
-                req.setHeader('Content-Type', 'application/json');
+                req.setMethod(FEC_ConstantCommon.API_METHOD_POST);
+                req.setHeader('Content-Type', FEC_ConstantCommon.API_CONTENT_TYPE_JSON);
                 req.setBody(jsonPayload);
                 req.setTimeout(TIMEOUT_MS);
-                req.setHeader('X-API-KEY', 'RkVDX1NBTEVTRk9SQ0U=');
+                req.setHeader('X-API-KEY', FEC_ConstantArchive.X_API_KEY_ARCHIVE);
 
                 HttpResponse res = new Http().send(req);
                 lastStatus = res.getStatusCode();

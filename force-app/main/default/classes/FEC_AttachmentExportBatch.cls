@@ -35,9 +35,9 @@ public class FEC_AttachmentExportBatch
         return Database.getQueryLocator([
             SELECT Id, CaseNumber, FEC_ID_Search__c
             FROM Case
-            WHERE Status = 'Closed'
+            WHERE Status = :FEC_ConstantCommon.STATUS_CLOSED
             AND ClosedDate <= :threshold
-            AND FEC_Archive_Status__c = 'Processing'
+            AND FEC_Archive_Status__c = :FEC_ConstantCommon.PROCESSING_STATUS
             AND FEC_Attachment_Status__c = NULL
             ORDER BY ClosedDate ASC
         ]);
