@@ -143,6 +143,7 @@
         <members>FEC_BatchCaseHandlingImportQueueable</members>
         <members>FEC_BatchCaseHandlingExportService</members>
         <members>FEC_BatchCaseHandlingExportRow</members>
+        <members>FEC_BCH_TemplateExportService</members>
         <members>FEC_SubProcessService</members>
         <members>Fec_HoldCaseConfigurationController</members>
         <members>FEC_ChannelFunctionService</members>

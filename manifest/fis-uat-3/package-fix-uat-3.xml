@@ -108,6 +108,7 @@
         <members>FEC_BatchCaseHandlingImportRow</members>
         <members>FEC_BatchCaseHandlingImportQueueable</members>
         <members>FEC_BatchCaseHandlingImportService</members>
+        <members>FEC_BCH_TemplateExportService</members>
         <members>FEC_BatchCaseHandlingSObjectUtil</members>
         <members>FEC_BatchCaseHandlingTemplateHelper</members>
         <members>FEC_BatchCaseHandlingZipResult</members>
@@ -360,6 +361,7 @@
         <members>FEC_MSG_Cannot_Create_Card_Close_Certificate</members>
         <members>FEC_MSG_Cannot_Request_Payment_History</members>
         <members>FEC_MSG_Cannot_Request_Repayment_Schedule</members>
+        <members>FEC_BCH_Col_TotalRecords</members>
 		<name>CustomLabel</name>
 	</types>
     <types>
@@ -541,6 +543,7 @@
 	</types>
     <types>
 		<members>FEC_CommonCss</members>
+		<members>FEC_SheetJS</members>
 		<name>StaticResource</name>
 	</types>
 	<types>
