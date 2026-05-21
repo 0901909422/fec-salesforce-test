@@ -2785,7 +2785,8 @@ export default class Fec_BatchCaseHandling extends LightningElement {
     const arrayBuffer = this.base64ToArrayBuffer(base64);
     const workbook = window.XLSX.read(arrayBuffer, {
       type: "array",
-      cellText: false
+      cellText: false,
+      cellStyles: true
     });
     const sheetName =
       Array.isArray(workbook.SheetNames) && workbook.SheetNames.length > 0
@@ -2803,7 +2804,7 @@ export default class Fec_BatchCaseHandling extends LightningElement {
     if (!Array.isArray(aoa) || !aoa.length) {
       return null;
     }
-    const parsed = { sheetName, aoa };
+    const parsed = { sheetName, aoa, base64 };
     if (cacheKey) {
       this.templateFileCache[cacheKey] = parsed;
     }
@@ -2829,6 +2830,30 @@ export default class Fec_BatchCaseHandling extends LightningElement {
     if (!headerRow.length) {
       return this.buildExcelFile(rows, fileName);
     }
+    if (!templateData.base64) {
+      return this.buildExcelFile(rows, fileName);
+    }
+    const templateWorkbook = window.XLSX.read(
+      this.base64ToArrayBuffer(templateData.base64),
+      {
+        type: "array",
+        cellText: false,
+        cellStyles: true
+      }
+    );
+    const templateSheetName =
+      templateData.sheetName ||
+      (Array.isArray(templateWorkbook.SheetNames) &&
+      templateWorkbook.SheetNames.length > 0
+        ? templateWorkbook.SheetNames[0]
+        : STR_EMPTY);
+    if (!templateSheetName) {
+      return this.buildExcelFile(rows, fileName);
+    }
+    const templateSheet = templateWorkbook.Sheets[templateSheetName];
+    if (!templateSheet) {
+      return this.buildExcelFile(rows, fileName);
+    }
     let mappings = this.buildExportColumnMappings(headerRow);
     const extended = this.appendExtraExportColumns(headerRow, mappings);
     const finalHeader = extended.headerRow;
@@ -2837,25 +2862,29 @@ export default class Fec_BatchCaseHandling extends LightningElement {
     const dataRows = list.map((r) =>
       this.mapCaseRowToExportCells(r, finalMappings)
     );
-    const sheetData = [];
-    if (
-      layout.sectionRow &&
-      layout.sectionRow.some((cell) => String(cell || STR_EMPTY).trim().length)
-    ) {
-      sheetData.push(layout.sectionRow);
+    const headerRowIndex =
+      Number.isInteger(layout.headerRowIndex) && layout.headerRowIndex >= 0
+        ? layout.headerRowIndex
+        : 0;
+    window.XLSX.utils.sheet_add_aoa(templateSheet, [finalHeader], {
+      origin: { r: headerRowIndex, c: 0 }
+    });
+    if (dataRows.length) {
+      window.XLSX.utils.sheet_add_aoa(templateSheet, dataRows, {
+        origin: { r: headerRowIndex + 1, c: 0 }
+      });
     }
-    sheetData.push(finalHeader, ...dataRows);
-    const workbook = window.XLSX.utils.book_new();
-    const sheet = window.XLSX.utils.aoa_to_sheet(sheetData);
-    window.XLSX.utils.book_append_sheet(
-      workbook,
-      sheet,
-      templateData.sheetName || "Sheet1"
-    );
-    const wbout = window.XLSX.write(workbook, {
+    const maxCol = Math.max(finalHeader.length - 1, 0);
+    const maxRow = headerRowIndex + dataRows.length;
+    templateSheet["!ref"] = window.XLSX.utils.encode_range({
+      s: { r: 0, c: 0 },
+      e: { r: maxRow, c: maxCol }
+    });
+    const wbout = window.XLSX.write(templateWorkbook, {
       type: "array",
       bookType: "xlsx",
-      compression: true
+      compression: true,
+      cellStyles: true
     });
     const base64 = arrayBufferToBase64(wbout);
     return { fileName, base64Body: base64 };
