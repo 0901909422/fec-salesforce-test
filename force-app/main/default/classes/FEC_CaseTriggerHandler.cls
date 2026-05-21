@@ -114,6 +114,7 @@ public without sharing class FEC_CaseTriggerHandler {
      * @modified: 2026/01/16
      * @modified: 2026/02/02
      * @modified: 2026/04/06 - Added Auto Notification for Internal User (Loại 3 Email + Loại 4 SF App)
+     * @modified: 2026/05/21 - Added SLA bell notification (sendSLANotifications)
      */
     private void onAfterUpdate(List<Case> newCases, Map<Id, Case> oldMap) {
         isExecuting = true;
@@ -129,6 +130,7 @@ public without sharing class FEC_CaseTriggerHandler {
         FEC_NotificationService.sendEmailNotifications(newCases, oldMap);
         FEC_CaseTatFullProcessSvc.syncAfterSave(newCases, oldMap);
         FEC_NotificationService.sendSFAppNotifications(newCases, oldMap);
+        sendSLANotifications(newCases, oldMap);
         // tungnm37 fix: comment out syncAssignmentUsersOnOwnerChange vì đã được xử lý trong FEC_AssignmentTriggerHandler
         // tungnm37 fix: logic cũ set FEC_Assignment_Users__c = OwnerId mà không check assignment type
         // syncAssignmentUsersOnOwnerChange(newCases, oldMap);
