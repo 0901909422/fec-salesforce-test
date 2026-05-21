@@ -823,10 +823,11 @@ public with sharing class FEC_ConstantCommon {
 
     //tungnm37: Tap hop team CS BackOffice (SP, CC)
     public static final Set<String> CS_BACKOFFICE_TEAMS = new Set<String>{ 'SP', 'CC' };
-    //tungnm37: Tap hop team CS khac (Inbound, Ecom, Outbound, QC, OM, F2F, CA, CL, CX)
-    public static final Set<String> CS_REVIEW_TEAMS = new Set<String>{ 'IB', 'EC', 'OB', 'QC', 'OM', 'F2F', 'CA', 'CL', 'CX' };
-    //tungnm37: Tap hop team Other Dept (Collections, Payment, CP, DS, IA, IT, TS)
-    public static final Set<String> OTHER_DEPT_TEAMS = new Set<String>{ 'CO', 'PM', 'CP', 'DS', 'IA', 'IT', 'TS' };
+    //tungnm37: Tap hop team CS khac (IB, OB, EC, F2F, QC, OM, CX)
+    //tungnm37: CA, CL k phai CS Review
+    public static final Set<String> CS_REVIEW_TEAMS = new Set<String>{ 'IB', 'EC', 'OB', 'QC', 'OM', 'F2F', 'CX' };
+    //tungnm37: Tap hop team Other Dept (CO, CL, CP, PM, DS, TS, CA, IA, IT)
+    public static final Set<String> OTHER_DEPT_TEAMS = new Set<String>{ 'CO', 'CL', 'CP', 'PM', 'DS', 'TS', 'CA', 'IA', 'IT' };
 
     //tungnm37: Tap hop cac status Assignment da dong (dung de query active assignments)
     public static final Set<String> CLOSED_ASSIGNMENT_STATUSES = new Set<String>{

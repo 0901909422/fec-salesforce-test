@@ -214,8 +214,8 @@ public without sharing class FEC_CofGsrAssignmentService {
                     FEC_Case__c = caseId,
                     FEC_Assignment_Name__c = FEC_ConstantCommon.ASSIGNMENT_NAME_ROUTING,
                     FEC_Assignment_Type__c = FEC_ConstantCommon.ASSIGNMENT_TYPE_ROUTING,
-                    //tungnm37: set status theo team thay vi hardcode Open
-                    FEC_Assignment_Status__c = resolveAssignmentStatus(ra.FEC_Team__c),
+                    //tungnm37: set status theo team + caseOwnerTeam de xu ly cross-team SP<->CC
+                    FEC_Assignment_Status__c = resolveAssignmentStatusWithOwner(ra.FEC_Team__c, currentUser.FEC_User_Group__c),
                     FEC_OwnerID__c = ra.FEC_Queue__c, // tungnm37 sửa: lưu Queue Name để formula FEC_Assignment_Owner_Text__c hiện đúng
                     FEC_Assignment_Owner__c = null,
                     FEC_Team__c = ra.FEC_Team__c,
@@ -362,8 +362,8 @@ public without sharing class FEC_CofGsrAssignmentService {
                     FEC_Case__c = caseId,
                     FEC_Assignment_Name__c = FEC_ConstantCommon.ASSIGNMENT_NAME_ROUTING,
                     FEC_Assignment_Type__c = FEC_ConstantCommon.ASSIGNMENT_TYPE_ROUTING,
-                    //tungnm37: set status theo team thay vi hardcode Open
-                    FEC_Assignment_Status__c = resolveAssignmentStatus(teamName),
+                    //tungnm37: set status theo team + caseOwnerTeam de xu ly cross-team SP<->CC
+                    FEC_Assignment_Status__c = resolveAssignmentStatusWithOwner(teamName, currentUser.FEC_User_Group__c),
                     FEC_OwnerID__c = queueDevNameToDisplayName.containsKey(queueName) ? queueDevNameToDisplayName.get(queueName) : queueName, // tungnm37 sửa: lưu Queue Name
                     FEC_Assignment_Owner__c = null,
                     FEC_Team__c = teamName,
@@ -463,11 +463,23 @@ public without sharing class FEC_CofGsrAssignmentService {
     }
 
     //tungnm37: Resolve Assignment Status theo team code
-    //tungnm37: SP/CC → CSBackOfficeReview; CS khac (IB/EC/OB/QC/OM/F2F/CA/CL/CX) → CSReview
-    //tungnm37: Other Dept (CO/PM/CP/DS/IA/IT/TS) → OtherDeptReview; con lai → Open
+    //tungnm37: SP/CC → CSBackOfficeReview; nhung neu cross-team (CC→SP hoac SP→CC) → CSReview
+    //tungnm37: CS khac (IB/EC/OB/QC/OM/F2F/CX) → CSReview
+    //tungnm37: Other Dept (CO/CL/CP/PM/DS/TS/CA/IA/IT) → OtherDeptReview; con lai → Open
     private static String resolveAssignmentStatus(String teamCode) {
+        return resolveAssignmentStatusWithOwner(teamCode, null);
+    }
+
+    //tungnm37: Overload voi caseOwnerTeam de xu ly cross-team SP<->CC
+    public static String resolveAssignmentStatusWithOwner(String teamCode, String caseOwnerTeam) {
         if (String.isBlank(teamCode)) return FEC_ConstantCommon.ASSIGNMENT_STATUS_OPEN;
         if (FEC_ConstantCommon.CS_BACKOFFICE_TEAMS.contains(teamCode)) {
+            //tungnm37: cross-team trong CS BackOffice (CC→SP hoac SP→CC) → CSReview
+            if (String.isNotBlank(caseOwnerTeam)
+                && FEC_ConstantCommon.CS_BACKOFFICE_TEAMS.contains(caseOwnerTeam)
+                && caseOwnerTeam != teamCode) {
+                return FEC_ConstantCommon.STATUS_CS_REVIEW;
+            }
             return FEC_ConstantCommon.STATUS_CS_BACKOFFICE;
         }
         if (FEC_ConstantCommon.CS_REVIEW_TEAMS.contains(teamCode)) {
