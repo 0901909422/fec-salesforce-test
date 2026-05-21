@@ -1127,7 +1127,6 @@ export default class Fec_ContractClosureForm extends LightningElement {
         if (this.deliveryOfficeSelected) {
             parts.push(this.resolvedOfficeValue);
         }
-
         return {
             deliveryOptionCombined: parts.join(';'),
             deliveryEmailSelected: this.deliveryEmailSelected,
