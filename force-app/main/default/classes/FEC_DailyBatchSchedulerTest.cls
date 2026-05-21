@@ -5,7 +5,7 @@
  * ─────────────────────────────────────────────────────────────────────────────
  */
 @IsTest
-private class FEC_DailyBatchScheduler_Test {
+private class FEC_DailyBatchSchedulerTest {
 
     // ══════════════════════════════════════════════════════════════════════════
     // Unit Tests: scheduleAll / unscheduleAll

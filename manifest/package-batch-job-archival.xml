@@ -26,7 +26,7 @@
 		<members>FEC_AttachmentExportBatchTest</members>
 		<members>FEC_AttachmentExportHttpServiceTest</members>
 		<members>FEC_DailyBatchScheduler</members>
-		<members>FEC_DailyBatchScheduler_Test</members>
+		<members>FEC_DailyBatchSchedulerTest</members>
 		<members>FEC_ConstantArchive</members>
 		<name>ApexClass</name>
 	</types>
