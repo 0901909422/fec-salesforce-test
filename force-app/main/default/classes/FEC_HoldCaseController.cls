@@ -372,7 +372,8 @@ public with sharing class FEC_HoldCaseController {
             System.debug('[saveHoldCase] caseId=' + caseId + ' attempt=' + attempt
                 + ' MarkNFU=' + JSON.serialize(markResult));
 
-            DateTime expiryDate = parseNfuTillDate(markResult != null ? markResult.nfuTillDate : null);
+            DateTime expiryDate = parseNfuDateTime(markResult != null ? markResult.nfuTillDate : null);
+            DateTime startedDate = parseNfuDateTime(markResult != null ? markResult.nfuStartDate : null);
 
             // tungnm37: TH1 - Contract đã được mark NFU trước đó (code 203)
             // Description = Contract has already marked as NFU
@@ -382,7 +383,7 @@ public with sharing class FEC_HoldCaseController {
                     RESULT_ALREADY_MARKED,
                     model.nfuCode,
                     nfuReasonLabel,
-                    null,
+                    startedDate,
                     expiryDate,
                     System.Label.FEC_STOP_IMPACT_ALREADY_MARKED_MSG,
                     null
@@ -521,10 +522,14 @@ public with sharing class FEC_HoldCaseController {
         String caseStatus
     ) {
         if (resultType == RESULT_ERROR) {
-            saveCasePatch(new Case(
+            Case errorPatch = new Case(
                 Id = caseId,
                 FEC_NFU_Description_Result__c = resultType
-            ));
+            );
+            if (String.isNotBlank(collectionsResponse)) {
+                errorPatch.FEC_Collections_Response__c = collectionsResponse;
+            }
+            saveCasePatch(errorPatch);
             return;
         }
 
@@ -532,6 +537,10 @@ public with sharing class FEC_HoldCaseController {
             Id = caseId,
             FEC_NFU_Description_Result__c = resultType
         );
+
+        if (String.isNotBlank(collectionsResponse)) {
+            patch.FEC_Collections_Response__c = collectionsResponse;
+        }
 
         if (String.isNotBlank(caseStatus)) {
             patch.Status = caseStatus;
@@ -583,7 +592,7 @@ public with sharing class FEC_HoldCaseController {
     }
 
     @TestVisible
-    private static DateTime parseNfuTillDate(String raw) {
+    private static DateTime parseNfuDateTime(String raw) {
         if (String.isBlank(raw)) {
             return null;
         }
@@ -598,7 +607,7 @@ public with sharing class FEC_HoldCaseController {
             }
             return DateTime.valueOfGmt(normalized);
         } catch (Exception ex) {
-            System.debug('[FEC_HoldCaseController] parseNfuTillDate failed: ' + ex.getMessage());
+            System.debug('[FEC_HoldCaseController] parseNfuDateTime failed: ' + ex.getMessage());
             return null;
         }
     }

@@ -620,7 +620,7 @@ public with sharing class FEC_ConstantCommon {
     public static final String DECISION_QUEUE = 'QUEUE';
     public static final String DECISION_USER_QUEUE = 'USER_QUEUE';
     public static final String DECISION_USER_TEAM_QUEUE = 'USER_TEAM_QUEUE';
-    
+
     public static final String DECISION_CANNOT_CONTACT = 'CANNOT_CONTACT';
     
     // ================= ASSIGNMENT STATUS =================
@@ -642,11 +642,15 @@ public with sharing class FEC_ConstantCommon {
     public static final String BP_GENERAL_SERVICE = 'General Service Request';
     public static final String BP_COMPLAINT = 'Complaint';
     public static final String BP_FEEDBACK = 'Feedback';
-    
+
+    public static final String BP_GSR= 'GSR';
+    public static final String BP_COF= 'COF';
+
     // ================= ROUTE STATUS =================
     public static final String STATUS_CS_BACKOFFICE = 'CSBackOfficeReview';
+    public static final String STATUS_CS_REVIEW = 'CSReview';
     public static final String STATUS_OTHER_DEPT = 'OtherDeptReview';
-    
+
     // ================= ROUTING TYPE =================
     public static final String ROUTING_TYPE_ASSIGNMENT = 'Assignment';
     
@@ -731,7 +735,7 @@ public with sharing class FEC_ConstantCommon {
         'subCategory',
         'subCode',
         'remark'
-    };  
+    };
 
     public static final String TRANSFER_ERR_EN_GENESYS_ID_NULL = 'genesysId is null';
     public static final String TRANSFER_ERR_EN_PHONE_NUMBER_NULL = 'phoneNumber is null';
@@ -769,7 +773,7 @@ public with sharing class FEC_ConstantCommon {
 
     /** Transfer Call: pattern hợp lệ cho productType dạng tên (ngoài whitelist code). */
     public static final String TRANSFER_CALL_PRODUCT_TYPE_NAME_PATTERN = '^[A-Za-z0-9 _\\-]{1,50}$';
-    
+
     public static final Map<String, String> TEAM_QUEUE_MAP = new Map<String, String>{
         TEAM_CS_SUPPORT => QUEUE_CS_SUPPORT,
         TEAM_CS_CUSTOMER_CARE => QUEUE_CS_CUSTOMER_CARE
@@ -815,10 +819,40 @@ public with sharing class FEC_ConstantCommon {
     public static final String ASSIGNMENT_AUTORECALLED_STATUS = 'AutoRecalled';
     public static final String ASSIGNMENT_AUTOCOMPLETE_STATUS = 'AutoCompleted';
 
+    //tungnm37: Tap hop team CS BackOffice (SP, CC)
+    public static final Set<String> CS_BACKOFFICE_TEAMS = new Set<String>{ 'SP', 'CC' };
+    //tungnm37: Tap hop team CS khac (Inbound, Ecom, Outbound, QC, OM, F2F, CA, CL, CX)
+    public static final Set<String> CS_REVIEW_TEAMS = new Set<String>{ 'IB', 'EC', 'OB', 'QC', 'OM', 'F2F', 'CA', 'CL', 'CX' };
+    //tungnm37: Tap hop team Other Dept (Collections, Payment, CP, DS, IA, IT, TS)
+    public static final Set<String> OTHER_DEPT_TEAMS = new Set<String>{ 'CO', 'PM', 'CP', 'DS', 'IA', 'IT', 'TS' };
+
+    //tungnm37: Tap hop cac status Assignment da dong (dung de query active assignments)
+    public static final Set<String> CLOSED_ASSIGNMENT_STATUSES = new Set<String>{
+        ASSIGNMENT_STATUS_COMPLETED,
+        ASSIGNMENT_AUTOCOMPLETE_STATUS,
+        ASSIGNMENT_AUTORECALLED_STATUS
+    };
+
     public static final String QUEUE_ID_START = '00G';
     /** Prefix URL tải file theo ContentVersionId (servlet shepherd). */
     public static final String CONTENT_VERSION_DOWNLOAD_URL_PREFIX = '/sfc/servlet.shepherd/version/download/';
     /** Prefix URL tải file theo ContentDocumentId (servlet shepherd). */
     public static final String CONTENT_DOCUMENT_DOWNLOAD_URL_PREFIX = '/sfc/servlet.shepherd/document/download/';
+    public static final String API_VERSION = 'v59.0';
 
+    public static final List<Map<String, String>> REPORT_CONFIGS =
+    new List<Map<String, String>>{
+        new Map<String, String>{
+            'name'       => 'Download BÁO CÁO INTERACTIONS & SERVICE',
+            'uniqueName' => 'BO_CO_INTERACTIONS_SERVICE_CASES_SUM_Rsl'
+        },
+        new Map<String, String>{
+            'name'       => 'Interactions & Service Cases Summary TAT',
+            'uniqueName' => 'FEC_RP_02'
+        },
+        new Map<String, String>{
+            'name'       => 'Interactions & Service Cases Summary',
+            'uniqueName' => 'FEC_RP_01'
+        }
+    };
 }

@@ -823,6 +823,7 @@
 		<members>FEC_Premium_Free</members>s
         <members>FEC_Points_Redeem_Button_Label</members>
 		<members>FEC_Points_Redeem_Fail_After_Max</members>
+		<members>FEC_Points_Redeem_Fail_Retry</members>
 		<members>FEC_Points_Redeem_Fail_Prefix</members>
 		<members>FEC_Points_Redeem_Success_Message</members>
 		<members>FEC_Points_Redeemed_Points_Label</members>
@@ -1251,7 +1252,8 @@
         <name>MilestoneType</name>
     </types>
     <types>
-        <members>case sla main</members>
+        <members>case sla main v1</members>
+        <members>case sla main v3</members>
         <name>EntitlementProcess</name>
     </types>
     <types>
