@@ -18062,4 +18062,53 @@
         <shortDescription>Information</shortDescription>
         <value>Information</value>
     </labels>
+    <labels>
+        <fullName>FEC_Label_Edit_RA</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Edit Routing Assignment</shortDescription>
+        <value>Edit Routing Assignment</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Label_Nature_of_Cases</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Nature of Cases</shortDescription>
+        <value>Nature of Cases</value>
+    </labels>
+    <labels>
+        <fullName>FEC_RA_Error_Update</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>RA Error Update</shortDescription>
+        <value>Có lỗi xảy ra khi cập nhật.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_RA_Error_Load</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>RA Error Load</shortDescription>
+        <value>Không thể tải thông tin Routing Assignment.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Label_Customer_All</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Customer Type All</shortDescription>
+        <value>All</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Label_Customer_Existing</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Customer Type Existing</shortDescription>
+        <value>Existing Customer</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Label_Customer_Non_Existing</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Customer Type Non-Existing</shortDescription>
+        <value>Non-existing Customer</value>
+    </labels>
 </CustomLabels>

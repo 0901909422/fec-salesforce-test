@@ -1909,12 +1909,14 @@
     </types>
     <types>
         <members>fecNewGeneralAssignmentAction</members>
+        <members>fecRoutingAssignmentEditOverride</members>
         <name>AuraDefinitionBundle</name>
     </types>
     <types>
         <members>fec_NewGeneralAssignment</members>
         <members>fec_NocGeneralAssignment</members>
         <members>fec_NocRoutingAssignment</members>
+        <members>fecRoutingAssignmentEditForm</members>
         <name>LightningComponentBundle</name>
     </types>
     <types>
@@ -1999,6 +2001,13 @@
         <members>FEC_Label_Required_Info</members>
         <members>FEC_Label_Search_Channel</members>
         <members>FEC_Label_Team</members>
+        <members>FEC_Label_Customer_All</members>
+        <members>FEC_Label_Customer_Existing</members>
+        <members>FEC_Label_Customer_Non_Existing</members>
+        <members>FEC_Label_Edit_RA</members>
+        <members>FEC_Label_Nature_of_Cases</members>
+        <members>FEC_RA_Error_Load</members>
+        <members>FEC_RA_Error_Update</members>
         <name>CustomLabel</name>
     </types>
     <types>
