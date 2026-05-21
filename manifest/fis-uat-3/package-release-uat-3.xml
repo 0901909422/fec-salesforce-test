@@ -211,6 +211,7 @@
         <members>FEC_TranferInformationCallout</members>
         <members>FEC_TransactionsController</members>
         <members>FEC_UpdateCustomerAddress</members>
+		<members>FEC_NatureOfCaseUserGroupService</members>
         <name>ApexClass</name>
     </types>
 	<types>
@@ -1269,6 +1270,7 @@
         <members>FEC_NEW_ASSIGNMENT_SUCCESS_MSG</members>
         <members>FEC_NEW_ASSIGNMENT_SUCCESS_MSG</members>
         <members>FEC_NEW_ASSIGNMENT_ERR_CREATE</members>
+		<members>FEC_MSG_Cannot_Create_Card_Close_Certificate</members>
         <name>CustomLabel</name>
     </types>
 	<types>
