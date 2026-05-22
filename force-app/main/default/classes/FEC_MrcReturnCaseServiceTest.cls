@@ -56,7 +56,7 @@ private class FEC_MrcReturnCaseServiceTest {
         System.assertEquals(true, ctx.isPhotoSubCode);
         System.assertEquals(true, ctx.showDeliveryForm);
         System.assertEquals(true, ctx.hideMrcInfoLwc);
-        System.assertEquals(true, ctx.hidePropertyInfo);
+        System.assertNotEquals(true, ctx.hidePropertyInfo);
     }
 
     @IsTest

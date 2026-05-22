@@ -915,7 +915,7 @@ public without sharing class FEC_CaseBusinessService {
             continue;
           }
 
-          // MRC Return RL05: ẩn Property Info / fec_MRC; Assessment & Customer Confirmation theo context.
+          // MRC Return RL05: ẩn fec_MRC / ContractClosure khi panel Delivery; Assessment & Customer Confirmation theo context.
           if (
             FEC_MrcReturnCaseService.shouldSkipMasterDataRow(
               sectionNameTemp,

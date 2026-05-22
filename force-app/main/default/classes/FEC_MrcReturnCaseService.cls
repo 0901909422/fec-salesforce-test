@@ -136,7 +136,6 @@ public without sharing class FEC_MrcReturnCaseService {
         ctx.rl05Scenario = null;
 
         if (ctx.isPhotoSubCode) {
-            ctx.hidePropertyInfo = true;
             ctx.hideMrcInfoLwc = true;
             ctx.showDeliveryForm = true;
             ctx.showCustomerConfirmation = false;
@@ -144,7 +143,6 @@ public without sharing class FEC_MrcReturnCaseService {
         }
 
         if (ctx.isReturnSubCode) {
-            ctx.hidePropertyInfo = true;
             ctx.hideMrcInfoLwc = true;
             ctx.processingFlow = resolveProcessingFlow(mrcStatusId, contractStatus);
             applyRoutingFlags(ctx);
@@ -181,7 +179,6 @@ public without sharing class FEC_MrcReturnCaseService {
             return ctx;
         }
 
-        ctx.hidePropertyInfo = true;
         return ctx;
     }
 
@@ -305,10 +302,6 @@ public without sharing class FEC_MrcReturnCaseService {
         if (ctx == null || ctx.isRl05Branch != true) {
             return false;
         }
-        if ('Case Information'.equals(sectionName) &&
-            'Property Info'.equals(subSectionName)) {
-            return ctx.hidePropertyInfo == true;
-        }
         if (TYPE_LWC.equals(getRowType(lwcName, fieldApiName)) &&
             'fec_MRC'.equalsIgnoreCase(lwcName) &&
             ctx.hideMrcInfoLwc == true) {
@@ -424,9 +417,6 @@ public without sharing class FEC_MrcReturnCaseService {
         MrcRl05UiContext ctx
     ) {
         for (FEC_CaseBusinessService.Section sub : caseInfo.subSectionlst) {
-            if (ctx.hidePropertyInfo == true && 'Property Info'.equals(sub.name)) {
-                sub.hideForMrcRl05 = true;
-            }
             if (sub.objlst == null) {
                 continue;
             }
