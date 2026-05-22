@@ -22,7 +22,9 @@ public with sharing class FEC_ConstantCommon {
     public static final String STR_EMPTY = '';
     public static final String STR_PERCENT = '%';
     public static final String STR_DASH = '-';
-    
+    /** Legacy em-dash placeholder (historical UI); treat as missing like STR_DASH. */
+    public static final String STR_EM_DASH = '\u2014';
+
     /** Dấu phân tách dùng cho key (vd: RecordType|Channel). */
     public static final String KEY_DELIMITER_PIPE = '|';
     
