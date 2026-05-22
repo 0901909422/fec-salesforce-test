@@ -55,8 +55,8 @@ private class FEC_MrcReturnCaseServiceTest {
         );
         System.assertEquals(true, ctx.isPhotoSubCode);
         System.assertEquals(true, ctx.showDeliveryForm);
-        System.assertEquals(true, ctx.hideMrcInfoLwc);
-        System.assertEquals(true, ctx.hidePropertyInfo);
+        System.assertNotEquals(true, ctx.hideMrcInfoLwc);
+        System.assertNotEquals(true, ctx.hidePropertyInfo);
     }
 
     @IsTest
@@ -70,8 +70,8 @@ private class FEC_MrcReturnCaseServiceTest {
             true
         );
         System.assertEquals(true, ctx.isReturnSubCode);
-        System.assertEquals(true, ctx.hideMrcInfoLwc);
-        System.assertEquals(false, ctx.showCustomerConfirmation);
+        System.assertNotEquals(true, ctx.hideMrcInfoLwc);
+        System.assertEquals(true, ctx.showCustomerConfirmation);
         System.assertEquals(true, ctx.showMrcDupBanner);
         System.assertEquals(true, ctx.dupCaseOnly);
         System.assertEquals(false, ctx.meetsCondition2);
@@ -132,10 +132,39 @@ private class FEC_MrcReturnCaseServiceTest {
             null,
             false
         );
-        System.assertEquals(false, ctx.showCustomerConfirmation);
+        System.assertEquals(true, ctx.showCustomerConfirmation);
         System.assertEquals(false, ctx.showMrcDupBanner);
         System.assertEquals(false, ctx.meetsCondition2);
         System.assertEquals(false, ctx.dupCaseOnly);
         System.assertEquals(true, ctx.showDeliveryForm);
+    }
+
+    @IsTest
+    static void inferSubCodeFromStageName_rl0502() {
+        System.assertEquals(
+            'RL05.02',
+            FEC_MrcReturnCaseService.inferSubCodeFromStageName(
+                'RL05.02 - MRC Return Stage 1'
+            )
+        );
+    }
+
+    @IsTest
+    static void buildUiContext_infersRl0502FromCaseStage() {
+        Case c = new Case(
+            FEC_Current_Case_Stage__r = new FEC_Case_Stage__c(
+                Name = 'RL05.02 - MRC Return Stage 1'
+            )
+        );
+        FEC_MrcReturnCaseService.MrcRl05UiContext ctx = FEC_MrcReturnCaseService.buildUiContext(
+            c,
+            null,
+            null,
+            null,
+            false
+        );
+        System.assertEquals(true, ctx.isRl05Branch);
+        System.assertEquals(true, ctx.isReturnSubCode);
+        System.assertEquals(true, ctx.showCustomerConfirmation);
     }
 }

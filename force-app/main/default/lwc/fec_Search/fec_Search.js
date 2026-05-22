@@ -61,7 +61,7 @@ import SEARCH_ACCOUNT_FIELD from "@salesforce/schema/Case.FEC_Search_Account_Num
 import SEARCH_EMAIL_FIELD from "@salesforce/schema/Case.FEC_Search_Email_Address__c";
 import SEARCH_CUSTOMER_NUM_FIELD from "@salesforce/schema/Case.FEC_Search_Customer_Number__c";
 import { CurrentPageReference } from 'lightning/navigation';
-import { formatDateTimeVNShort, normalizePhone } from 'c/fec_CommonUtils';
+import { formatDateTimeVNShort, normalizePhone, formatDateVNI } from 'c/fec_CommonUtils';
 
 const FIELDS_TO_CHECK = [
     'FEC_Search_National_ID__c',
@@ -140,10 +140,6 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
     return this.pageRef?.type === 'standard__objectPage' &&
       this.pageRef?.attributes?.objectApiName === 'Case' &&
       !this.recordId;
-  }
-
-  get isListViewActual() {
-      return this.isListView || this.isCaseListView;
   }
 
   get isCreateCaseTab() {
@@ -469,7 +465,7 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
       //linhdev Fix jira FECREDIT_CSM_2025_KH-1243
       this.caseRecordTypeName = result?.RecordType?.Name;
       this.isTestApiCase = result?.FEC_Is_Test_API__c === true;
-      this.nationalId = this.fieldPermissions['FEC_Search_National_ID__c'] ? result.FEC_National_ID_Passport_ID__c : null;
+      this.nationalId = this.fieldPermissions['FEC_Search_National_ID__c'] ? result.FEC_Search_Result_National_ID__c : null;
       this.phoneNumber = this.fieldPermissions['FEC_Search_Phone_Number__c'] ? result.FEC_Phone_Number__c : null;
       this.applicationId = this.fieldPermissions['FEC_Search_Application_ID__c'] ? result.FEC_Application_ID__c : null;
       this.contractNumber = this.fieldPermissions['FEC_Search_Contract_Number__c'] ? result.FEC_Contract_Number__c : null;
@@ -1089,6 +1085,19 @@ async fetchBancaInsuranceByPhone(phones) {
     return Array.from(map.values());
   }
 
+  formatDate(dateStr) {
+    if (!dateStr) return '';
+    try {
+        const d = new Date(dateStr);
+        if (isNaN(d.getTime())) return dateStr;
+        const day = d.getDate().toString().padStart(2, '0');
+        const month = (d.getMonth() + 1).toString().padStart(2, '0');
+        const year = d.getFullYear();
+        return `${day}/${month}/${year}`;
+    } catch (e) {
+        return dateStr;
+    }
+  }
 
   preferInsuranceRow(a, b) {
     const phoneA = a?.Phone && String(a.Phone).trim();
@@ -1100,6 +1109,18 @@ async fetchBancaInsuranceByPhone(phones) {
       return a;
     }
     return a;
+  }
+
+  /** CCCD từ dòng kết quả (GetCustomerList / Banca), fallback ô search. */
+  _resolveSearchNationalIdFromRow(row) {
+    const trim = (v) => (v != null && v !== undefined ? String(v).trim() : "");
+    return (
+      trim(row?.BuyerNID) ||
+      trim(row?.NationalID1) ||
+      trim(row?.NationalID2) ||
+      trim(this.nationalId) ||
+      ""
+    );
   }
 
 /**
@@ -1184,7 +1205,7 @@ hasAnySearchCriteria(params) {
                             FullName: cust.FullName,
                             NationalID1: currentNationalId,
                             NationalID2: "",
-                            DateOfBirth: formatDateFlexibleVN(cust.DateOfBirth),
+                            DateOfBirth: cust.DateOfBirth,
                             AccountNumber: accNum,
                             AccountStatus: app.Status,
                             PlasticID: "Loading...", // Hiển thị trạng thái đang lấy data
@@ -1208,7 +1229,7 @@ hasAnySearchCriteria(params) {
                             FullName: cust.FullName,
                             NationalID1: currentNationalId,
                             NationalID2: "",
-                            DateOfBirth: formatDateFlexibleVN(cust.DateOfBirth),
+                            DateOfBirth: this.formatDate(cust.DateOfBirth),
                             ContractNumber: contractNum,
                             ProductCode: app.Product,
                             ContractStatus: app.Status,
@@ -1517,7 +1538,7 @@ hasAnySearchCriteria(params) {
       ...r,
       _historyState: this.appHistoryMap[r.AccountNumber] || null,
       _btnClass: (this.appHistoryMap[r.AccountNumber]?.expanded) ? 'fec-toggle-btn fec-expanded' : 'fec-toggle-btn',
-      _dateOfBirth: formatDateFlexibleVN(r.DateOfBirth)
+      _dateOfBirth: this._formatDate(r.DateOfBirth)
     }));
   }
 
@@ -1526,10 +1547,15 @@ hasAnySearchCriteria(params) {
       ...r,
       _historyState: this.appHistoryMap[r.ContractNumber] || null,
       _btnClass: (this.appHistoryMap[r.ContractNumber]?.expanded) ? 'fec-toggle-btn fec-expanded' : 'fec-toggle-btn',
-      _dateOfBirth: formatDateFlexibleVN(r.DateOfBirth)
+      _dateOfBirth: this._formatDate(r.DateOfBirth)
     }));
   }
 
+  _formatDate(dateStr) {
+    if (!dateStr) return '';
+    const formatted = formatDateVNI(dateStr);
+    return formatted ? formatted : dateStr;
+  }
 
   // Returns interleaved array: each data row followed by its history row (if expanded)
   // Used for Account/Contract Search to render history inline
@@ -1629,7 +1655,7 @@ hasAnySearchCriteria(params) {
         let searchProducts = categories.join(";");
         this.isLoaded = false;
         let customerName = row?.FullName;
-        let isListViewActual = this.isListViewActual;
+        let isListViewActual = this.isListView || this.isCaseListView;
         if (action.label.fieldName === 'UserId') {
           if (categories.includes("Card") || categories.includes("Loan")) {
             this.isLoaded = true;
@@ -1648,7 +1674,7 @@ hasAnySearchCriteria(params) {
             customerName = this._customers[customerIndex].FullName;
           }
           // Align isListView for Insurance search tab to ensure Internal Case and navigation
-          isListViewActual = this.isListViewActual;
+          isListViewActual = this.isListView || this.isCaseListView;
         }
 
         const resolvedPhone = (this.phoneNumber && normalizePhone(this.phoneNumber)) || null;
@@ -1665,7 +1691,7 @@ hasAnySearchCriteria(params) {
           applicationId: row?.ApplicationID,
           isListView: isListViewActual,
           policyNumber: row?.PolicyNumber || '', // Only for Insurance
-          buyerNID: (this.nationalId && String(this.nationalId).trim()) || '',
+          buyerNID: this._resolveSearchNationalIdFromRow(row),
         })
           .then(async (res) => {
             this.showToast("Success", "History created successfully", "success");

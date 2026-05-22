@@ -20,6 +20,11 @@
                 <default>false</default>
                 <label>Field</label>
             </value>
+            <value>
+                <fullName>Assignment</fullName>
+                <default>false</default>
+                <label>Assignment</label>
+            </value>
         </valueSetDefinition>
     </valueSet>
 </CustomField>
