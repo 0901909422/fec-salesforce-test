@@ -161,6 +161,10 @@ export default class Fec_MrcReturnPanel extends LightningElement {
     );
   }
 
+  @api getDeliveryForm() {
+    return this.template.querySelector("c-fec_-mrc-delivery-form");
+  }
+
   @api validateForSubmit() {
     if (
       (this.showDupBanner || this.showStandaloneDupBanner) &&
@@ -168,11 +172,27 @@ export default class Fec_MrcReturnPanel extends LightningElement {
     ) {
       return false;
     }
-    const delivery = this.template.querySelector("c-fec_-mrc-delivery-form");
-    if (delivery && typeof delivery.validateForComplete === "function") {
-      return delivery.validateForComplete();
+    const delivery = this.getDeliveryForm();
+    if (delivery && typeof delivery.validateForSubmit === "function") {
+      return delivery.validateForSubmit();
     }
     return true;
+  }
+
+  @api async saveToCase() {
+    const delivery = this.getDeliveryForm();
+    if (delivery && typeof delivery.saveToCase === "function") {
+      return delivery.saveToCase();
+    }
+    return { valid: true, messages: [] };
+  }
+
+  @api async saveDraftIfApplicable() {
+    const delivery = this.getDeliveryForm();
+    if (delivery && typeof delivery.saveDraftIfApplicable === "function") {
+      return delivery.saveDraftIfApplicable();
+    }
+    return { valid: true, messages: [] };
   }
 
   @api getHandlingOptionValue() {
