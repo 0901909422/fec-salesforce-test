@@ -170,7 +170,8 @@ public with sharing class FEC_AutoHoldCaseService {
         }
 
         Id caseId = history.FEC_Case__c;
-        markCasePending(caseId);
+        // Không DML trước callout — Salesforce: "uncommitted work pending" (Manual: API trước DML).
+        // UI PENDING: fec_CaseBussiness.refreshAutoHoldCase() set holdCaseResultOverride = PENDING.
 
         String userEmail = [
             SELECT Email
