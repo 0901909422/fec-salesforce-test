@@ -53,6 +53,9 @@ import {
   NEW_STATUS,
 } from "c/fec_CommonConst";
 import { getUsernameBeforeAt } from "c/fec_CommonUtils";
+import isCSSupport from "@salesforce/apex/FEC_AssignmentListHandler.isCSSupport";
+
+import isCSCustomerCare from "@salesforce/apex/FEC_AssignmentListHandler.isCSCustomerCare";
 export default class Fec_AssignmentList extends LightningElement {
   label = {
     FEC_Assignment_List,
@@ -72,6 +75,17 @@ export default class Fec_AssignmentList extends LightningElement {
       this.userDept = await getUserDepartment();
 
       console.log("After getUserDepartment:", JSON.stringify(this.userDept));
+
+      /*
+       * Load department flags
+       */
+      this.isCSSupportUser = await isCSSupport();
+
+      this.isCSCustomerCareUser = await isCSCustomerCare();
+
+      console.log("isCSSupportUser:", this.isCSSupportUser);
+
+      console.log("isCSCustomerCareUser:", this.isCSCustomerCareUser);
 
       this.initSubscription();
 
@@ -109,7 +123,9 @@ export default class Fec_AssignmentList extends LightningElement {
   @track queueOptionsByTeam = [];
 
   subscription = null;
+  isCSSupportUser = false;
 
+  isCSCustomerCareUser = false;
   initSubscription() {
     if (this.subscription) return;
 
@@ -301,7 +317,7 @@ export default class Fec_AssignmentList extends LightningElement {
         decision: null,
         subDecision: null,
 
-        decisionOptions: DECISION_OPTIONS_MAP[value] || [],
+        decisionOptions: this.getDecisionOptions(value),
 
         showDecision: ACTIONS_REQUIRE_DECISION.includes(value),
 
@@ -338,6 +354,34 @@ export default class Fec_AssignmentList extends LightningElement {
         );
       }
     }
+  }
+
+  getDecisionOptions(action) {
+    /*
+     * UPDATE
+     */
+    if (action === "Update") {
+      /*
+       * CS Support
+       */
+      if (this.isCSSupportUser) {
+        return DECISION_OPTIONS_MAP.UpdateSP || [];
+      }
+
+      /*
+       * CS Customer Care
+       */
+      if (this.isCSCustomerCareUser) {
+        return DECISION_OPTIONS_MAP.UpdateCC || [];
+      }
+
+      return [];
+    }
+
+    /*
+     * Default
+     */
+    return DECISION_OPTIONS_MAP[action] || [];
   }
 
   handleDecisionChange(event) {
