@@ -17,8 +17,8 @@ import SUB_CODE_FIELD from "@salesforce/schema/FEC_Notification__c.FEC_SubCode__
 import CURRENT_STATUS_FIELD from "@salesforce/schema/FEC_Notification__c.FEC_Current_Status__c";
 import CHANGED_STATUS_FIELD from "@salesforce/schema/FEC_Notification__c.FEC_Changed_Status__c";
 import NOTIFICATION_STATUS_FIELD from "@salesforce/schema/FEC_Notification__c.FEC_Notification_Status__c";
-import NOTIFICATION_CHANNEL_FIELD from "@salesforce/schema/FEC_Notification__c.FEC_Notification_Channel__c";
-import NOTIFICATION_TEMPLATE_FIELD from "@salesforce/schema/FEC_Notification__c.FEC_Notification_Template__c";
+// import NOTIFICATION_CHANNEL_FIELD from "@salesforce/schema/FEC_Notification__c.FEC_Notification_Channel__c";
+// import NOTIFICATION_TEMPLATE_FIELD from "@salesforce/schema/FEC_Notification__c.FEC_Notification_Template__c";
 import APPLICABLE_USER_GROUPS_FIELD from "@salesforce/schema/FEC_Notification__c.FEC_Applicable_User_Groups__c";
 import CASE_STAGE_FIELD from "@salesforce/schema/FEC_Notification__c.FEC_Case_Stage__c";
 import ASSIGNED_TO_QUEUE_FIELD from "@salesforce/schema/FEC_Notification__c.FEC_Assigned_to_Queue__c";
@@ -75,6 +75,7 @@ export default class Fec_Notification extends NavigationMixin(LightningElement) 
   @track initialCategory = [];
   @track initialSubCategory = [];
   @track initialSubCode = [];
+  @track initialCaseStage = [];
   @track initialCurrentStatus = [];
   @track initialChangedStatus = [];
   @track initialAssignedToQueue = [];
@@ -114,8 +115,8 @@ export default class Fec_Notification extends NavigationMixin(LightningElement) 
 
   // Notification Information fields
   notificationStatusField = NOTIFICATION_STATUS_FIELD;
-  notificationChannelField = NOTIFICATION_CHANNEL_FIELD;
-  notificationTemplateField = NOTIFICATION_TEMPLATE_FIELD;
+  // notificationChannelField = NOTIFICATION_CHANNEL_FIELD;
+  // notificationTemplateField = NOTIFICATION_TEMPLATE_FIELD;
   applicableUserGroupsField = APPLICABLE_USER_GROUPS_FIELD;
   caseStageField = CASE_STAGE_FIELD;
   assignedToQueueField = ASSIGNED_TO_QUEUE_FIELD;
@@ -135,6 +136,8 @@ export default class Fec_Notification extends NavigationMixin(LightningElement) 
 
   selectedSubCodeId = null;
 
+  selectedCaseStageId = null;
+
   //selectedNotificationTemplateId = null;
 
   selectedAssignedToQueueId = null;
@@ -149,17 +152,17 @@ export default class Fec_Notification extends NavigationMixin(LightningElement) 
   @wire(getObjectInfo, { objectApiName: '$notificationObject' })
   objectInfo;
 
-  @wire(getRecord, { recordId: '$selectedNotiChannelId', fields: ['FEC_Notification_Channel__c.FEC_Noti_Channel_Status__c'] })
-  wiredChannelStatus({ error, data }) {
-    if (data) {
-      const status = data.fields.FEC_Noti_Channel_Status__c.value;
-      // Show warning only if the status explicitly equals false
-      this.showChannelWarning = status === false;
-    } else if (error) {
-      console.error('Error fetching channel status', error);
-      this.showChannelWarning = false;
-    }
-  }
+  // @wire(getRecord, { recordId: '$selectedNotiChannelId', fields: ['FEC_Notification_Channel__c.FEC_Noti_Channel_Status__c'] })
+  // wiredChannelStatus({ error, data }) {
+  //   if (data) {
+  //     const status = data.fields.FEC_Noti_Channel_Status__c.value;
+  //     // Show warning only if the status explicitly equals false
+  //     this.showChannelWarning = status === false;
+  //   } else if (error) {
+  //     console.error('Error fetching channel status', error);
+  //     this.showChannelWarning = false;
+  //   }
+  // }
 
   handleNotificationChannelChange(event) {
     // lightning-input-field lookup returns an array of selected IDs
@@ -246,14 +249,20 @@ export default class Fec_Notification extends NavigationMixin(LightningElement) 
         }
         break;
       case SUB_CATEGORY_OBJECT:
+        this.initialSubCategory = event.detail || [];
         if (this.selectedSubCategoryId !== joined) {
            this.selectedSubCategoryId = joined || null;
-           // Cascade reset down to sub code
+           // Cascade reset down to subc code
            this.selectedSubCodeId = null; this.initialSubCode = [];
         }
         break;
       case SUB_CODE_OBJECT:
+        this.initialSubCode = event.detail || [];
         this.selectedSubCodeId = joined || null;
+        break;
+      case 'FEC_Case_Stage__c':
+        this.initialCaseStage = event.detail || [];
+        this.selectedCaseStageId = joined || null;
         break;
       // case 'EmailTemplate':
       //   this.selectedNotificationTemplateId = joined || null;
@@ -423,12 +432,10 @@ export default class Fec_Notification extends NavigationMixin(LightningElement) 
             this.targetGroup = res.FEC_Target_Group__c;
             this.recordType.DeveloperName = res?.RecordType?.DeveloperName;
             this.recordTypeId = res.RecordTypeId;
-            this.selectedNotiChannelId = res.FEC_Notification_Channel__c;
+            // this.selectedNotiChannelId = res.FEC_Notification_Channel__c;
             this.selectedChannelId = res.FEC_Channel__c;
             this.selectedProductTypeId = res.FEC_Product_Type__c;
             this.selectedCategoryId = res.FEC_Category__c;
-            this.selectedSubCategoryId = res.FEC_SubCategory__c;
-            this.selectedSubCodeId = res.FEC_SubCode__c;
             this.selectedAssignedToQueueId = res.FEC_Assigned_to_Queue__c || null;
             this.selectedCurrentStatus = res.FEC_Current_Status__c;
             this.selectedChangedStatus = res.FEC_Changed_Status__c;
@@ -458,12 +465,15 @@ export default class Fec_Notification extends NavigationMixin(LightningElement) 
             if (res.FEC_Category__c) {
                 this.initialCategory = [{ id: res.FEC_Category__c, title: res?.FEC_Category__r?.Name }];
             }
-            if (res.FEC_SubCategory__c) {
-                this.initialSubCategory = [{ id: res.FEC_SubCategory__c, title: res?.FEC_SubCategory__r?.Name }];
-            }
-            if (res.FEC_SubCode__c) {
-                this.initialSubCode = [{ id: res.FEC_SubCode__c, title: res?.FEC_SubCode__r?.Name }];
-            }
+            this.initialSubCategory = response.subCategoryPills || [];
+            this.selectedSubCategoryId = this.initialSubCategory.length ? this.initialSubCategory.map(p => p.id).join(',') : null;
+            
+            this.initialSubCode = response.subCodePills || [];
+            this.selectedSubCodeId = this.initialSubCode.length ? this.initialSubCode.map(p => p.id).join(',') : null;
+            
+            this.initialCaseStage = response.caseStagePills || [];
+            this.selectedCaseStageId = this.initialCaseStage.length ? this.initialCaseStage.map(p => p.id).join(',') : null;
+            
             if (res.FEC_Assigned_to_Queue__c && response.queue) {
                 this.initialAssignedToQueue = [{ 
                     id: response?.queue?.DeveloperName, 
@@ -492,8 +502,9 @@ export default class Fec_Notification extends NavigationMixin(LightningElement) 
     fields[PRODUCT_TYPE_FIELD.fieldApiName] = this.selectedProductTypeId || fields[PRODUCT_TYPE_FIELD.fieldApiName];
     fields[ASSIGNED_TO_QUEUE_FIELD.fieldApiName] = this.selectedAssignedToQueueId || fields[ASSIGNED_TO_QUEUE_FIELD.fieldApiName];
     fields[CATEGORY_FIELD.fieldApiName] = this.selectedCategoryId || fields[CATEGORY_FIELD.fieldApiName];
-    fields[SUB_CATEGORY_FIELD.fieldApiName] = this.selectedSubCategoryId;
-    fields[SUB_CODE_FIELD.fieldApiName] = this.selectedSubCodeId;
+    fields[SUB_CATEGORY_FIELD.fieldApiName] = this.initialSubCategory && this.initialSubCategory.length > 0 ? this.initialSubCategory.map(p => p.title).join(',') : null;
+    fields[SUB_CODE_FIELD.fieldApiName] = this.initialSubCode && this.initialSubCode.length > 0 ? this.initialSubCode.map(p => p.title).join(',') : null;
+    fields[CASE_STAGE_FIELD.fieldApiName] = this.initialCaseStage && this.initialCaseStage.length > 0 ? this.initialCaseStage.map(p => p.title).join(',') : null;
     //fields[NOTIFICATION_TEMPLATE_FIELD.fieldApiName] = this.selectedNotificationTemplateId || fields[NOTIFICATION_TEMPLATE_FIELD.fieldApiName];
     if (this.selectedCurrentStatus !== null) {
       fields[CURRENT_STATUS_FIELD.fieldApiName] = this.selectedCurrentStatus;
@@ -629,6 +640,7 @@ export default class Fec_Notification extends NavigationMixin(LightningElement) 
     this.selectedCategoryId = null;
     this.selectedSubCategoryId = null;
     this.selectedSubCodeId = null;
+    this.selectedCaseStageId = null;
     //this.selectedNotificationTemplateId = null;
     this.selectedAssignedToQueueId = null;
     this.selectedCurrentStatus = null;
