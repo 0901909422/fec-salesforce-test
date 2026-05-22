@@ -81,16 +81,6 @@
                 <identifier>RecordFEC_CALog_NumberOfCaseField</identifier>
             </fieldInstance>
         </itemInstances>
-        <itemInstances>
-            <fieldInstance>
-                <fieldInstanceProperties>
-                    <name>uiBehavior</name>
-                    <value>readonly</value>
-                </fieldInstanceProperties>
-                <fieldItem>Record.CreatedDate</fieldItem>
-                <identifier>RecordFEC_CALog_CreatedDateField</identifier>
-            </fieldInstance>
-        </itemInstances>
         <name>Facet_FEC_CALog_DetailsCol1</name>
         <type>Facet</type>
     </flexiPageRegions>
