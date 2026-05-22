@@ -19,7 +19,6 @@ public with sharing class FEC_MFASOUTSTANDINGAUTHINQ {
 
     private static final String NS_VMX = 'http://fecredit.com.vn/cms/ws/v2';
     private static final String SERVICE_OUTSTANDING_AUTH_INQ = 'M_FAS_OUTSTANDING_AUTH_INQ';
-    private static final String SERVICE_VMX_AUTH_DETAIL_INQ = 'M_FAS_VMX_AUTH_DETAIL_INQ';
     private static final String API_CONFIG = 'FEC_MFASOUTSTANDINGAUTHINQ';
 
     /* =====================================================
@@ -119,9 +118,9 @@ public with sharing class FEC_MFASOUTSTANDINGAUTHINQ {
         );
     }
 
-    /* =====================================================
-       PUBLIC METHOD — Pending: VMX_AUTH_DETAIL_INQ
-       ===================================================== */
+    /**
+     * @deprecated Use {@link FEC_VMXAUTHDETAILINQ#callService} — spec node VMX_AUTH_DETAIL_INQ.
+     */
     public static ResponseWrapper callVmxAuthDetailInqService(
         String transID,
         String requestorId,
@@ -132,17 +131,19 @@ public with sharing class FEC_MFASOUTSTANDINGAUTHINQ {
         String org,
         String acct
     ) {
-        return callServiceInternal(
+        ResponseWrapper wrapper = new ResponseWrapper();
+        wrapper.VMXMsgOut = new VMXMsgOut();
+        wrapper.VMXMsgOut.Auths = FEC_VMXAUTHDETAILINQ.callServiceAsAuthRows(
             transID,
             requestorId,
             dateTimeStr,
             vmxVersion,
             context,
             signOnName,
-            org,
             acct,
-            SERVICE_VMX_AUTH_DETAIL_INQ
+            ''
         );
+        return wrapper;
     }
 
     private static ResponseWrapper callServiceInternal(
@@ -161,12 +162,6 @@ public with sharing class FEC_MFASOUTSTANDINGAUTHINQ {
             FEC_API_Config__mdt.getInstance(API_CONFIG);
 
         String acctForCall = acct;
-        if (SERVICE_VMX_AUTH_DETAIL_INQ.equals(serviceNodeName)
-            && apiSetting?.FEC_Enviroment__c
-                == FEC_ConstantCommon.ENVIROMENT_NON_PRODUCTION
-            && String.isNotBlank(apiConfig?.FEC_Account_Number_Hard_Code__c)) {
-            acctForCall = apiConfig.FEC_Account_Number_Hard_Code__c.trim();
-        }
 
         validateRequest(
             transID,
