@@ -6,6 +6,21 @@
     <compactLayoutAssignment>Customer_Case_Compact</compactLayoutAssignment>
     <label>Customer Case</label>
     <picklistValues>
+        <picklist>FEC_Complain_Type__c</picklist>
+        <values>
+            <fullName>High risk</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>Normal</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>Urgent</fullName>
+            <default>false</default>
+        </values>
+    </picklistValues>
+    <picklistValues>
         <picklist>Origin</picklist>
         <values>
             <fullName>Email</fullName>
