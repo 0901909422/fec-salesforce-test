@@ -13,7 +13,7 @@
  *                                              ACTN_RSN, MEMO_ACTN, ORIG_CURR_AMT,
  *                                              POS_ENTRY_MODE, MERCH_CNTRY_CD
  *                                              Fix: hint→errorHint, TIME→TRANS_TIME
- *                                              Fix: AuthTableRow moved to FEC_MFASOUTSTANDINGAUTHINQ
+ *                                              AuthTableRow DTO for AUTH_GRP rows
 ****************************************************************************************/
 
 public with sharing class FEC_VMXAUTHDETAILINQ {
@@ -47,7 +47,7 @@ public with sharing class FEC_VMXAUTHDETAILINQ {
         public Integer      NBR_AUTHS;
         public String       CONT_DATA;
         public String       AUTH_CD;
-        public List<FEC_MFASOUTSTANDINGAUTHINQ.AuthTableRow> Auths;
+        public List<AuthTableRow> Auths;
     }
 
     public class RCData {
@@ -55,10 +55,33 @@ public with sharing class FEC_VMXAUTHDETAILINQ {
         public String RETURN_DESC;
     }
 
+    public class AuthTableRow {
+        public String EFF_DATE;
+        public String EFF_DATE_AUTH_DETAIL;
+        public String POSTING_DATE;
+        public String AUTH_AMOUNT;
+        public String Description;
+        public String CREDIT_PLAN;
+        public String AUTHORIZATION_CODE;
+        public String AUTH_CD;
+        public String MERCH_CAT;
+        public String TXN_CURR_CODE;
+        public String FINAL_ACTN;
+        public String ACTN_RSN_DESC;
+        public String DTL_AUTH_AMT;
+        public String DTL_MERC_NAME_LOC;
+        public String DTL_CR_PLAN;
+        public String DTL_MERCH_CAT;
+        public String DTL_TXN_CURR_CODE;
+        public String DTL_FINAL_ACTN;
+        public String DTL_ACTN_RSN_DESC;
+        public String MSGOUT_AUTH_CD;
+    }
+
     /* =====================================================
        PUBLIC METHODS
        ===================================================== */
-    public static List<FEC_MFASOUTSTANDINGAUTHINQ.AuthTableRow> callServiceAsAuthRows(
+    public static List<AuthTableRow> callServiceAsAuthRows(
         String transID,
         String requestorId,
         String dateTimeStr,
@@ -75,7 +98,7 @@ public with sharing class FEC_VMXAUTHDETAILINQ {
         if (res != null && res.VMXMsgOut != null && res.VMXMsgOut.Auths != null) {
             return res.VMXMsgOut.Auths;
         }
-        return new List<FEC_MFASOUTSTANDINGAUTHINQ.AuthTableRow>();
+        return new List<AuthTableRow>();
     }
 
     public static ResponseWrapper callService(
@@ -118,7 +141,7 @@ public with sharing class FEC_VMXAUTHDETAILINQ {
                              : FEC_ConstantCommon.REQUESTOR_VMX_CONTEXT;
         String msgName = String.isNotBlank(name)
                              ? name.trim()
-                             : FEC_ConstantCommon.VMX_MSGIN_NAME_DEFAULT;
+                             : FEC_ConstantCommon.REQUESTOR_VMX_CONTEXT;
         String ver     = String.isNotBlank(vmxVersion)
                              ? vmxVersion.trim()
                              : VMX_VERSION_E8V6;
@@ -239,7 +262,7 @@ public with sharing class FEC_VMXAUTHDETAILINQ {
         result.VMXMsgOut         = new VMXMsgOut();
         result.VMXMsgOut.RC_DATA = new List<RCData>();
         result.VMXMsgOut.Auths   =
-            new List<FEC_MFASOUTSTANDINGAUTHINQ.AuthTableRow>();
+            new List<AuthTableRow>();
 
         String xmlBody = prepareResponseXml(xml);
         if (String.isBlank(xmlBody)) return result;
@@ -320,7 +343,7 @@ public with sharing class FEC_VMXAUTHDETAILINQ {
         /* ---------- AUTH_GRP ---------- */
         List<Dom.XmlNode> authGrps = collectAuthGrpNodes(msgOutNode);
         for (Dom.XmlNode grp : authGrps) {
-            FEC_MFASOUTSTANDINGAUTHINQ.AuthTableRow ar =
+            AuthTableRow ar =
                 authRowFromAuthGrp(grp, out.AUTH_CD);
             if (ar != null) out.Auths.add(ar);
         }
@@ -331,7 +354,7 @@ public with sharing class FEC_VMXAUTHDETAILINQ {
     /* =====================================================
        AUTH_GRP → AuthTableRow
        ===================================================== */
-    private static FEC_MFASOUTSTANDINGAUTHINQ.AuthTableRow authRowFromAuthGrp(
+    private static AuthTableRow authRowFromAuthGrp(
         Dom.XmlNode n,
         String msgAuthCd
     ) {
@@ -369,8 +392,8 @@ public with sharing class FEC_VMXAUTHDETAILINQ {
         }
         if (String.isBlank(effRaw)) return null;
 
-        FEC_MFASOUTSTANDINGAUTHINQ.AuthTableRow ar =
-            new FEC_MFASOUTSTANDINGAUTHINQ.AuthTableRow();
+        AuthTableRow ar =
+            new AuthTableRow();
 
         // existing fields
         ar.EFF_DATE             = effRaw.trim();
@@ -405,7 +428,7 @@ public with sharing class FEC_VMXAUTHDETAILINQ {
         ar.DTL_ACTN_RSN_DESC    = pickXmlField(n, 'ACTN_RSN_DESC');
         ar.MSGOUT_AUTH_CD       = msgAuthCd;
 
-        // NEW fields per spec — must exist in FEC_MFASOUTSTANDINGAUTHINQ.AuthTableRow
+        // NEW fields per spec — must exist in AuthTableRow
         // ar.CARD_NBR             = pickXmlField(n, 'CARD_NBR');
         // ar.CARD_SEQ             = pickXmlField(n, 'CARD_SEQ');
         // ar.TRANS_TIME           = pickXmlField(n, 'TIME');        // TIME is reserved in Apex
