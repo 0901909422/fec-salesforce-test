@@ -91,7 +91,9 @@ public without sharing class FEC_NotificationService {
                          FEC_Product_Type__c,
                          FEC_Category__c,
                          FEC_SubCategory__c,
-                         FEC_SubCode__c
+                         FEC_SubCategory__r.FEC_Code__c,
+                         FEC_SubCode__c,
+                         FEC_SubCode__r.FEC_Code__c
                   FROM Case
                   WHERE Id IN :routedCaseIds
               ]);
@@ -294,7 +296,9 @@ public without sharing class FEC_NotificationService {
                          FEC_Product_Type__c,
                          FEC_Category__c,
                          FEC_SubCategory__c,
-                         FEC_SubCode__c
+                         FEC_SubCategory__r.FEC_Code__c,
+                         FEC_SubCode__c,
+                         FEC_SubCode__r.FEC_Code__c
                   FROM Case
                   WHERE Id IN :routedCaseIdsSf
               ]);
@@ -536,13 +540,13 @@ public without sharing class FEC_NotificationService {
         if (n.FEC_Product_Type__c != null && n.FEC_Product_Type__c != c.FEC_Product_Type__c) return false;
         if (n.FEC_Category__c != null && n.FEC_Category__c != c.FEC_Category__c) return false;
 
-        String caseSubCategory = String.valueOf(c.get('FEC_SubCategory__c'));
-        String caseSubCode = String.valueOf(c.get('FEC_SubCode__c'));
+        String caseSubCategoryCode = c.FEC_SubCategory__r != null ? c.FEC_SubCategory__r.FEC_Code__c : null;
+        String caseSubCodeCode = c.FEC_SubCode__r != null ? c.FEC_SubCode__r.FEC_Code__c : null;
 
-        if (String.isNotBlank(n.FEC_SubCategory__c) && !containsConfiguredValue(n.FEC_SubCategory__c, caseSubCategory)) {
+        if (String.isNotBlank(n.FEC_SubCategory__c) && !containsConfiguredValue(n.FEC_SubCategory__c, caseSubCategoryCode)) {
             return false;
         }
-        if (String.isNotBlank(n.FEC_SubCode__c) && !containsConfiguredValue(n.FEC_SubCode__c, caseSubCode)) {
+        if (String.isNotBlank(n.FEC_SubCode__c) && !containsConfiguredValue(n.FEC_SubCode__c, caseSubCodeCode)) {
             return false;
         }
         return true;
