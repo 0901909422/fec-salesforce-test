@@ -208,4 +208,3 @@ export default class Fec_SubProcessContainer extends LightningElement {
     });
   }
 }
->>>>>>> force-app/main/default/lwc/fec_SubProcessContainer/fec_SubProcessContainer.js
