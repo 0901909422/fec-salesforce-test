@@ -851,7 +851,13 @@ public without sharing class FEC_BatchCaseHandlingController {
             return out;
         }
 
-        Map<String, Schema.SObjectField> fieldMap = Schema.getGlobalDescribe().get(OBJECT_API_NAME).getDescribe().fields.getMap();
+        Schema.SObjectType batchType = Schema.getGlobalDescribe().get(OBJECT_API_NAME);
+        if (batchType == null) {
+            out.message = System.Label.FEC_BCH_ImportFailed;
+            upsertFailedBatchHandling(fileName, templateName, out.message);
+            return out;
+        }
+        Map<String, Schema.SObjectField> fieldMap = batchType.getDescribe().fields.getMap();
         SObject batchRow;
         try {
             List<Object> inputRows = (List<Object>) JSON.deserializeUntyped(rowsJson);
@@ -874,7 +880,7 @@ public without sharing class FEC_BatchCaseHandlingController {
                 LIMIT 1
             ];
 
-            batchRow = Schema.getGlobalDescribe().get(OBJECT_API_NAME).newSObject();
+            batchRow = batchType.newSObject();
             FEC_BatchCaseHandlingSObjectUtil.putIfFieldExists(fieldMap, batchRow, new List<String>{ 'FEC_File_Name__c' }, fileName);
             FEC_BatchCaseHandlingSObjectUtil.putIfFieldExists(
                 fieldMap,
@@ -997,8 +1003,12 @@ public without sharing class FEC_BatchCaseHandlingController {
 
     private static void upsertFailedBatchHandling(String fileName, String templateName, String reason) {
         try {
-            Map<String, Schema.SObjectField> fieldMap = Schema.getGlobalDescribe().get(OBJECT_API_NAME).getDescribe().fields.getMap();
-            SObject failedRow = Schema.getGlobalDescribe().get(OBJECT_API_NAME).newSObject();
+            Schema.SObjectType batchType = Schema.getGlobalDescribe().get(OBJECT_API_NAME);
+            if (batchType == null) {
+                return;
+            }
+            Map<String, Schema.SObjectField> fieldMap = batchType.getDescribe().fields.getMap();
+            SObject failedRow = batchType.newSObject();
             FEC_BatchCaseHandlingSObjectUtil.putIfFieldExists(fieldMap, failedRow, new List<String>{ 'FEC_File_Name__c' }, fileName);
             FEC_BatchCaseHandlingSObjectUtil.putIfFieldExists(fieldMap, failedRow, new List<String>{ 'FEC_Uploaded_On__c' }, Datetime.now());
             FEC_BatchCaseHandlingSObjectUtil.putIfFieldExists(fieldMap, failedRow, new List<String>{ 'FEC_Uploaded_By__c' }, UserInfo.getUserEmail());
