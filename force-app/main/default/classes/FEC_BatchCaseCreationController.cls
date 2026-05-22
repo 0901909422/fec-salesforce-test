@@ -573,7 +573,7 @@ public with sharing class FEC_BatchCaseCreationController {
             }
 
             rr.status = errs.isEmpty() ? 'Succeeded' : 'Failed';
-            rr.errors = errs.isEmpty() ? '' : joinRowErrors(errs);
+            rr.errors = errs.isEmpty() ? '' : FEC_BatchImportCommon.joinRowErrors(errs);
             rowResults.add(rr);
         }
 
@@ -1092,26 +1092,6 @@ public with sharing class FEC_BatchCaseCreationController {
             return false;
         }
         return allowed.contains(raw.trim().toLowerCase());
-    }
-
-    private static String joinRowErrors(List<String> errs) {
-        List<String> normalized = new List<String>();
-        if (errs == null) {
-            return '';
-        }
-        for (String err : errs) {
-            if (String.isBlank(err)) {
-                continue;
-            }
-            String message = err.trim().replaceAll('[\\r\\n\\u2028\\u2029]+', ' ').replaceAll('\\s+', ' ');
-            while (message.endsWith('.')) {
-                message = message.substring(0, message.length() - 1).trim();
-            }
-            if (String.isNotBlank(message)) {
-                normalized.add(message);
-            }
-        }
-        return String.join(normalized, ', ');
     }
 
     private static Set<String> resolveSubCodesForCategorySubCategory(

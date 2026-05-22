@@ -329,7 +329,6 @@ FEC_BatchImportCommon.linkFileToBatch((Id) batchRow.get('Id'), insertedCvEmpty.C
                 out.resultRowsJson = '[]';
                 return out;
             }
-            System.debug(((Map<String, Object>) inputRows[0]).get('note'));
             ContentVersion cv = new ContentVersion();
             cv.Title = FEC_BatchImportCommon.removeFileExtension(fileName);
             cv.PathOnClient = '/' + fileName;
@@ -364,8 +363,24 @@ FEC_BatchImportCommon.putIfFieldExists(fieldMap, batchRow, new List<String>{ 'FE
             ValidationOutput vo = validateAndBuildAbsences(inputRows);
             List<RowResult> rowResults = vo.rowResults;
             Integer totalCount = rowResults.size();
+            Integer failedCount = countFailedRowResults(rowResults);
+            String batchFailureReason = failedCount > 0
+                ? String.format(System.Label.FEC_Batch_Import_Invalid_Row_Count, new List<String>{ String.valueOf(failedCount) })
+                : '';
 
-            // Tách các record sẵn sàng insert + ghi nhớ index gốc để map ngược recordId.
+            // Có bất kỳ dòng lỗi validation → không import cả file.
+            if (failedCount > 0) {
+                markAllRowResultsFailedForBatchNoImport(rowResults);
+                applyBatchImportFailureOutcome(fieldMap, batchRow, totalCount, failedCount, batchFailureReason);
+                out.success = false;
+                out.message = batchFailureReason;
+                out.batchRecordId = (Id) batchRow.get('Id');
+                out.contentDocumentId = insertedCv.ContentDocumentId;
+                out.status = 'Failure';
+                out.resultRowsJson = JSON.serialize(rowResults);
+                return out;
+            }
+
             List<FEC_Service_Resource_Absence__c> toInsert = new List<FEC_Service_Resource_Absence__c>();
             List<Integer> originalIdxByInsertIdx = new List<Integer>();
             for (Integer i = 0; i < vo.absencesByIndex.size(); i += 1) {
@@ -376,66 +391,70 @@ FEC_BatchImportCommon.putIfFieldExists(fieldMap, batchRow, new List<String>{ 'FE
                 }
             }
 
-            Set<Id> insertedIds = new Set<Id>();
+            Savepoint importSavepoint = Database.setSavepoint();
+            Boolean anyDmlFailed = false;
             if (!toInsert.isEmpty()) {
                 Database.SaveResult[] saveResults = Database.insert(toInsert, false);
+                Set<Id> insertedIds = new Set<Id>();
                 for (Integer k = 0; k < saveResults.size(); k += 1) {
                     Database.SaveResult srRes = saveResults[k];
                     Integer originalIdx = originalIdxByInsertIdx[k];
                     if (srRes.isSuccess()) {
                         insertedIds.add(srRes.getId());
                     } else {
-                        // DML lỗi → đánh dấu Failed cho dòng đó (giữ các dòng khác đã insert thành công).
+                        anyDmlFailed = true;
                         List<String> dmlErrs = new List<String>();
                         for (Database.Error err : srRes.getErrors()) {
                             dmlErrs.add(err.getMessage());
                         }
                         rowResults[originalIdx].status = 'Failed';
-                        rowResults[originalIdx].errors = String.join(dmlErrs, ' ');
+                        rowResults[originalIdx].errors = FEC_BatchImportCommon.joinRowErrors(dmlErrs);
                         rowResults[originalIdx].recordId = '';
                     }
                 }
 
-                // Query Name (Auto Number) cho các record vừa insert.
-                Map<Id, FEC_Service_Resource_Absence__c> nameById = insertedIds.isEmpty()
-                    ? new Map<Id, FEC_Service_Resource_Absence__c>()
-                    : new Map<Id, FEC_Service_Resource_Absence__c>([
+                if (!anyDmlFailed && !insertedIds.isEmpty()) {
+                    Map<Id, FEC_Service_Resource_Absence__c> nameById = new Map<Id, FEC_Service_Resource_Absence__c>([
                         SELECT Id, Name FROM FEC_Service_Resource_Absence__c WHERE Id IN :insertedIds
                     ]);
-                for (Integer k = 0; k < saveResults.size(); k += 1) {
-                    Database.SaveResult srRes = saveResults[k];
-                    if (!srRes.isSuccess()) {
-                        continue;
+                    for (Integer k = 0; k < saveResults.size(); k += 1) {
+                        Database.SaveResult srRes = saveResults[k];
+                        if (!srRes.isSuccess()) {
+                            continue;
+                        }
+                        Integer originalIdx = originalIdxByInsertIdx[k];
+                        FEC_Service_Resource_Absence__c queried = nameById.get(srRes.getId());
+                        rowResults[originalIdx].recordId = queried != null && String.isNotBlank(queried.Name)
+                            ? queried.Name
+                            : String.valueOf(srRes.getId());
                     }
-                    Integer originalIdx = originalIdxByInsertIdx[k];
-                    FEC_Service_Resource_Absence__c queried = nameById.get(srRes.getId());
-                    rowResults[originalIdx].recordId = queried != null && String.isNotBlank(queried.Name)
-                        ? queried.Name
-                        : String.valueOf(srRes.getId());
                 }
             }
 
-            Integer successCount = 0;
-            Integer failedCount = 0;
-            for (RowResult rr : rowResults) {
-                if (rr.status == 'Succeeded') {
-                    successCount += 1;
-                } else if (rr.status == 'Failed') {
-                    failedCount += 1;
-                }
+            if (anyDmlFailed) {
+                Database.rollback(importSavepoint);
+                markAllRowResultsFailedForBatchNoImport(rowResults);
+                failedCount = countFailedRowResults(rowResults);
+                batchFailureReason = String.format(
+                    System.Label.FEC_Batch_Import_Invalid_Row_Count,
+                    new List<String>{ String.valueOf(failedCount) }
+                );
+                applyBatchImportFailureOutcome(fieldMap, batchRow, totalCount, failedCount, batchFailureReason);
+                out.success = false;
+                out.message = batchFailureReason;
+                out.batchRecordId = (Id) batchRow.get('Id');
+                out.contentDocumentId = insertedCv.ContentDocumentId;
+                out.status = 'Failure';
+                out.resultRowsJson = JSON.serialize(rowResults);
+                return out;
             }
 
 FEC_BatchImportCommon.putIfFieldExists(fieldMap, batchRow, new List<String>{ 'FEC_Status__c' }, 'Processed');
 FEC_BatchImportCommon.putIfFieldExists(fieldMap, batchRow, new List<String>{ 'FEC_Result__c' }, 'Result');
 FEC_BatchImportCommon.putIfFieldExists(fieldMap, batchRow, new List<String>{ 'FEC_Total_Records_Count__c', 'FEC_Total_Records__c' }, totalCount);
-FEC_BatchImportCommon.putIfFieldExists(fieldMap, batchRow, new List<String>{ 'FEC_Total_Success_Records__c' }, successCount);
-FEC_BatchImportCommon.putIfFieldExists(fieldMap, batchRow, new List<String>{ 'FEC_Total_Failed_Records__c' }, failedCount);
-FEC_BatchImportCommon.putIfFieldExists(
-                fieldMap,
-                batchRow,
-                new List<String>{ 'FEC_Failure_Reason__c' },
-                failedCount > 0 ? 'Có ' + failedCount + ' dòng dữ liệu không hợp lệ.' : ''
-            );
+FEC_BatchImportCommon.putIfFieldExists(fieldMap, batchRow, new List<String>{ 'FEC_Total_Success_Records__c' }, totalCount);
+FEC_BatchImportCommon.putIfFieldExists(fieldMap, batchRow, new List<String>{ 'FEC_Total_Failed_Records__c' }, 0);
+FEC_BatchImportCommon.putIfFieldExists(fieldMap, batchRow, new List<String>{ 'FEC_Failure_Reason__c' }, '');
             update batchRow;
 
             out.success = true;
@@ -654,7 +673,7 @@ FEC_BatchImportCommon.linkFileToBatch((Id) failedRow.get('Id'), contentDocumentI
 
             if (!errs.isEmpty()) {
                 rr.status = 'Failed';
-                rr.errors = String.join(errs, ' ');
+                rr.errors = FEC_BatchImportCommon.joinRowErrors(errs);
             } else {
                 FEC_Service_Resource_Absence__c rec = new FEC_Service_Resource_Absence__c();
                 rec.FEC_Service_Resource__c = srId;
@@ -777,15 +796,26 @@ FEC_BatchImportCommon.linkFileToBatch((Id) failedRow.get('Id'), contentDocumentI
             String dateTimePart = raw.substring(0, tzPos); // yyyy-MM-ddTHH:mm:ss.SSS
             String offsetPart = raw.substring(tzPos); // +0700 / -0500
             String corePart = dateTimePart.substring(0, dateTimePart.indexOf('.')).replace('T', ' ');
-
-            Datetime localDt = Datetime.valueOf(corePart);
+            List<String> dateAndTime = corePart.split(' ');
+            List<String> dateParts = dateAndTime[0].split('-');
+            List<String> timeParts = dateAndTime[1].split(':');
+            // Parse wall-clock components as GMT first — Datetime.valueOf() applies the
+            // running user's timezone and would double-shift when offset is also applied.
+            Datetime wallClockAsGmt = Datetime.newInstanceGmt(
+                Integer.valueOf(dateParts[0]),
+                Integer.valueOf(dateParts[1]),
+                Integer.valueOf(dateParts[2]),
+                Integer.valueOf(timeParts[0]),
+                Integer.valueOf(timeParts[1]),
+                Integer.valueOf(timeParts[2])
+            );
             Integer sign = offsetPart.startsWith('-') ? -1 : 1;
             Integer tzHour = Integer.valueOf(offsetPart.substring(1, 3));
             Integer tzMin = Integer.valueOf(offsetPart.substring(3, 5));
             Integer offsetMinutes = sign * (tzHour * 60 + tzMin);
 
             // Convert input local time with explicit offset to UTC datetime.
-            return localDt.addMinutes(-offsetMinutes);
+            return wallClockAsGmt.addMinutes(-offsetMinutes);
         } catch (Exception e) {
             throw new AuraHandledException(
                 String.format(
@@ -805,6 +835,45 @@ FEC_BatchImportCommon.linkFileToBatch((Id) failedRow.get('Id'), contentDocumentI
             return false;
         }
         return Pattern.matches(FEC_ConstantCommon.PATTERN_ALPHANUMERIC, value);
+    }
+
+    private static Integer countFailedRowResults(List<RowResult> rowResults) {
+        Integer failedCount = 0;
+        if (rowResults == null) {
+            return failedCount;
+        }
+        for (RowResult rr : rowResults) {
+            if ('Failed'.equals(rr.status)) {
+                failedCount += 1;
+            }
+        }
+        return failedCount;
+    }
+
+    private static void markAllRowResultsFailedForBatchNoImport(List<RowResult> rowResults) {
+        if (rowResults == null) {
+            return;
+        }
+        for (RowResult rr : rowResults) {
+            rr.status = 'Failed';
+            rr.recordId = '';
+        }
+    }
+
+    private static void applyBatchImportFailureOutcome(
+        Map<String, Schema.SObjectField> fieldMap,
+        SObject batchRow,
+        Integer totalCount,
+        Integer failedCount,
+        String batchFailureReason
+    ) {
+        FEC_BatchImportCommon.putIfFieldExists(fieldMap, batchRow, new List<String>{ 'FEC_Status__c' }, 'Failure');
+        FEC_BatchImportCommon.putIfFieldExists(fieldMap, batchRow, new List<String>{ 'FEC_Result__c' }, 'Result');
+        FEC_BatchImportCommon.putIfFieldExists(fieldMap, batchRow, new List<String>{ 'FEC_Total_Records_Count__c', 'FEC_Total_Records__c' }, totalCount);
+        FEC_BatchImportCommon.putIfFieldExists(fieldMap, batchRow, new List<String>{ 'FEC_Total_Success_Records__c' }, 0);
+        FEC_BatchImportCommon.putIfFieldExists(fieldMap, batchRow, new List<String>{ 'FEC_Total_Failed_Records__c' }, failedCount);
+        FEC_BatchImportCommon.putIfFieldExists(fieldMap, batchRow, new List<String>{ 'FEC_Failure_Reason__c' }, batchFailureReason);
+        update batchRow;
     }
 
     /** Ghi log khi không có file đính kèm / không parse được — trạng thái Processed (đã tiếp nhận yêu cầu). */

@@ -124,6 +124,9 @@
 		<members>FEC_DownloadReportJob</members>
 		<members>FEC_DownloadReportScheduler</members>
 		<members>FEC_DownloadReportService</members>
+		<members>FEC_BatchCaseCreationController</members>
+		<members>FEC_BatchDataCreationController</members>
+		<members>FEC_BatchImportCommon</members>
 		<name>Apexclass</name>
 	</types>
     <types>
@@ -196,6 +199,8 @@
         <members>fec_holdCaseAuto</members>
         <members>fec_MRC</members>
         <members>fec_MrcReturnCaseForm</members>
+        <members>fec_MrcDeliveryForm</members>
+        <members>fec_MrcReturnPanel</members>
         <members>fec_MrcReturnDupBanner</members>
         <members>fecMrcReturnCaseLogic</members>
         <members>fec_DoNotBotherResultView</members>
@@ -214,6 +219,7 @@
         <members>fec_ScopedStageChangeRoutingAction</members>
 		<members>fecRoutingAssignmentEditForm</members>
 		<members>fec_DownloadReports</members>
+		<members>fec_BatchDataCreation</members>
 		<name>LightningComponentBundle</name>
 	</types>
     <types>
@@ -226,6 +232,8 @@
         <members>Case.FEC_NFU_Description_Result__c</members>
         <members>Case.FEC_Collections_Response__c</members>
         <members>Case.FEC_Delivery_Option_2__c</members>
+		<members>Case.FEC_Customer_Confirmation__c</members>
+		<members>Case.FEC_MRC_Request_Handling_Option__c</members>
 		<members>Case.FEC_Is_DNB__c</members>
 		<members>FEC_Assignment__c.FEC_Submitted_On__c</members>
 		<members>FEC_Assignment__c.FEC_Assignment_Name__c</members>
