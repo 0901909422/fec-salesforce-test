@@ -74,7 +74,7 @@ private class FEC_MrcReturnCaseServiceTest {
         System.assertEquals(false, ctx.showCustomerConfirmation);
         System.assertEquals(true, ctx.showMrcDupBanner);
         System.assertEquals(true, ctx.dupCaseOnly);
-        System.assertEquals('TH2', ctx.rl05Scenario);
+        System.assertEquals(false, ctx.meetsCondition2);
         System.assertEquals(false, ctx.showDeliveryForm);
     }
 
@@ -94,8 +94,8 @@ private class FEC_MrcReturnCaseServiceTest {
         );
         System.assertEquals(true, ctx.showCustomerConfirmation);
         System.assertEquals(true, ctx.showMrcDupBanner);
+        System.assertEquals(true, ctx.meetsCondition2);
         System.assertEquals(false, ctx.dupCaseOnly);
-        System.assertEquals('TH1', ctx.rl05Scenario);
     }
 
     @IsTest
@@ -114,7 +114,8 @@ private class FEC_MrcReturnCaseServiceTest {
         );
         System.assertEquals(true, ctx.showCustomerConfirmation);
         System.assertEquals(false, ctx.showMrcDupBanner);
-        System.assertEquals('TH3', ctx.rl05Scenario);
+        System.assertEquals(true, ctx.meetsCondition2);
+        System.assertEquals(false, ctx.dupCaseOnly);
     }
 
     @IsTest
@@ -129,7 +130,8 @@ private class FEC_MrcReturnCaseServiceTest {
         );
         System.assertEquals(false, ctx.showCustomerConfirmation);
         System.assertEquals(false, ctx.showMrcDupBanner);
-        System.assertEquals('TH4', ctx.rl05Scenario);
+        System.assertEquals(false, ctx.meetsCondition2);
+        System.assertEquals(false, ctx.dupCaseOnly);
         System.assertEquals(true, ctx.showDeliveryForm);
     }
 }
