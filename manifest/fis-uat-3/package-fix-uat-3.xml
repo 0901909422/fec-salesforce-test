@@ -108,6 +108,7 @@
         <members>FEC_BatchCaseHandlingImportRow</members>
         <members>FEC_BatchCaseHandlingImportQueueable</members>
         <members>FEC_BatchCaseHandlingImportService</members>
+        <members>FEC_BCH_TemplateExportService</members>
         <members>FEC_BatchCaseHandlingSObjectUtil</members>
         <members>FEC_BatchCaseHandlingTemplateHelper</members>
         <members>FEC_BatchCaseHandlingZipResult</members>
@@ -118,6 +119,11 @@
         <members>FEC_ScopedStageChangeRoutingService</members>
         <members>FEC_NatureOfCaseUserGroupService</members>
         <members>FEC_PaymentHistoryValidationService</members>
+		<members>FEC_NocRoutingAssignmentController</members>
+		<members>FEC_DownloadReportController</members>
+		<members>FEC_DownloadReportJob</members>
+		<members>FEC_DownloadReportScheduler</members>
+		<members>FEC_DownloadReportService</members>
 		<name>Apexclass</name>
 	</types>
     <types>
@@ -203,6 +209,8 @@
         <members>fec_CaseBussinessScopedRoutingIntegration</members>
         <members>fec_ScopedStageChangeRouting</members>
         <members>fec_ScopedStageChangeRoutingAction</members>
+		<members>fecRoutingAssignmentEditForm</members>
+		<members>fec_DownloadReports</members>
 		<name>LightningComponentBundle</name>
 	</types>
     <types>
@@ -254,6 +262,10 @@
         <members>FEC_Case_Assignment_Logs__c.FEC_Case_Assignment_Name__c</members>
         <members>FEC_Case_Assignment__c.FEC_Case_Assignmetn_NOC_Count__c</members>
         <members>FEC_Customer_History__c.FEC_Search_Result_National_ID__c</members>
+        <members>FEC_Download_Report__c.FEC_Link__c</members>
+        <members>FEC_Download_Report__c.FEC_Report_Unique_Name__c</members>
+        <members>FEC_Case_Assignment_Log_Detail__c.FEC_Case_Assignment_log_Name__c</members>
+        <members>FEC_Additional_Info__c.FEC_Statement_Fee__c</members>
         <name>CustomField</name>
     </types>
     <types>
@@ -264,10 +276,16 @@
 		<members>FEC_Case_Hold_History__c</members>
 		<members>FEC_Notification__c</members>
         <members>FEC_Notification_Template_Channel__c</members>
+		<members>FEC_Routing_Assignment__c</members>
+		<members>FEC_Download_Report__c</members>
+		<members>FEC_Case_Assignment_Log_Detail__c</members>
+		<members>FEC_Case_Assignment_Logs__c</members>
 		<name>CustomObject</name>
 	</types>
     <types>
         <members>fec_CaseAssignmentNocNewOverride</members>
+        <members>fecRoutingAssignmentEditOverride</members>
+        <members>fec_CaseAssignmentNocEditOverride</members>
         <name>AuraDefinitionBundle</name>
     </types>
 	<types>
@@ -280,6 +298,7 @@
         <members>FEC_Case_Assignment_Record_Page</members>
         <members>FEC_Notification_Record_Page_Auto</members>
         <members>FEC_Notification_Record_Page_Manual</members>
+		<members>FEC_Download_Report_Record_Page</members>
         <name>FlexiPage</name>
     </types>
 	<types>
@@ -360,6 +379,23 @@
         <members>FEC_MSG_Cannot_Create_Card_Close_Certificate</members>
         <members>FEC_MSG_Cannot_Request_Payment_History</members>
         <members>FEC_MSG_Cannot_Request_Repayment_Schedule</members>
+        <members>FEC_BCH_Col_TotalRecords</members>
+		<members>FEC_Label_Customer_All</members>
+		<members>FEC_Label_Customer_Existing</members>
+		<members>FEC_Label_Customer_Non_Existing</members>
+		<members>FEC_Label_Edit_RA</members>
+		<members>FEC_Label_Nature_of_Cases</members>
+		<members>FEC_RA_Error_Load</members>
+		<members>FEC_RA_Error_Update</members>
+		<members>FEC_Details_Only</members>
+		<members>FEC_Download_Report</members>
+		<members>FEC_Error_Download</members>
+		<members>FEC_Export_Detail</members>
+		<members>FEC_Export_View</members>
+		<members>FEC_Format</members>
+		<members>FEC_Format_Excel</members>
+		<members>FEC_Formatted_Report</members>
+		<members>FEC_Title_Context_Report</members>
 		<name>CustomLabel</name>
 	</types>
     <types>
@@ -537,15 +573,18 @@
         <members>RD_IT_User_Master_Data_Management</members>
         <members>FEC_Batch_Case_Creation</members>
         <members>FEC_Permission_Set_Batch_Data_Creation</members>
+		<members>FEC_Download_Report_Data</members>
 		<name>PermissionSet</name>
 	</types>
     <types>
 		<members>FEC_CommonCss</members>
+		<members>FEC_SheetJS</members>
 		<name>StaticResource</name>
 	</types>
 	<types>
 		<members>FEC_Assignment_Set_User_Role</members>
 		<members>Assign_Entitlement_to_Case</members>
+		<members>FEC_DownloadReportFlow</members>
 		<name>Flow</name>
 	</types>
     <types>
@@ -598,12 +637,40 @@
     </types>
 	<types>
 		<members>Batch_Case_Handling</members>
+		<members>FEC_Download_Report__c</members>
         <name>CustomTab</name>
     </types>
 	<types>
-        <members>case sla main v1</members>
-        <members>case sla main v3</members>
+        <members>Case SLA Main 1</members>
+        <members>Case SLA Main 2</members>
         <name>EntitlementProcess</name>
     </types>
+	<types>
+	    <members>FEC_Download_Report__c.All</members>
+	    <members>FEC_Download_Report__c.INTERACTIONS_SERVICE_CASES_SUMMARY_TAT</members>
+	    <members>FEC_Download_Report__c.Interaction_and_Service_Case_Summary</members>
+	    <name>ListView</name>
+	</types>
+	<types>
+	    <members>FEC_PSG_CS_CS_Operations_Management_Specialist</members>
+	    <members>FEC_PSG_CS_CS_Operations_Manager</members>
+	    <members>FEC_PSG_CS_CS_Support_Manager</members>
+	    <members>FEC_PSG_CS_CS_Support_Specialist</members>
+	    <members>FEC_PSG_CS_Card_Risk_Monitoring_Specialist</members>
+	    <members>FEC_PSG_CS_Customer_Care_Manager</members>
+	    <members>FEC_PSG_CS_Customer_Care_Specialist</members>
+	    <members>FEC_PSG_CS_Senior_CS_Operations_Management_Specialist</members>
+	    <members>FEC_PSG_CS_Senior_CS_Support_Specialist</members>
+	    <members>FEC_PSG_CS_Senior_Card_Risk_Monitoring_Specialist</members>
+	    <members>FEC_PSG_CS_Senior_Customer_Care_Specialist</members>
+	    <members>FEC_PSG_CS_Unit_Head_of_CS_Operations_Management</members>
+	    <members>FEC_PSG_CS_Unit_Head_of_CS_Support</members>
+	    <members>FEC_PSG_CS_Unit_Head_of_Customer_Care</members>
+	    <name>PermissionSetGroup</name>
+	</types>
+	<types>
+	    <members>FEC_Download_Report__c.FEC_Download</members>
+	    <name>WebLink</name>
+	</types>
 	<version>66.0</version>
 </Package>
