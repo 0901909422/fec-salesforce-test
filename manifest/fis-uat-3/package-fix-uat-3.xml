@@ -124,6 +124,9 @@
 		<members>FEC_DownloadReportJob</members>
 		<members>FEC_DownloadReportScheduler</members>
 		<members>FEC_DownloadReportService</members>
+		<members>FEC_BatchCaseCreationController</members>
+		<members>FEC_BatchDataCreationController</members>
+		<members>FEC_BatchImportCommon</members>
 		<name>Apexclass</name>
 	</types>
     <types>
@@ -214,6 +217,7 @@
         <members>fec_ScopedStageChangeRoutingAction</members>
 		<members>fecRoutingAssignmentEditForm</members>
 		<members>fec_DownloadReports</members>
+		<members>fec_BatchDataCreation</members>
 		<name>LightningComponentBundle</name>
 	</types>
     <types>
