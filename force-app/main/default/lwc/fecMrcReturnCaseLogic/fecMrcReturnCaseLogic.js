@@ -302,11 +302,7 @@ export function applyMrcRl05SectionVisibility(business, handlingOptionValue) {
     business,
     handlingOptionValue,
   );
-  const hidePropertyInfo =
-    ctx?.hidePropertyInfo === true ||
-    isMrcRl05PhotoSubCodeFromBusiness(business) ||
-    ctx?.isReturnSubCode === true ||
-    String(business?.subCodeCode ?? STR_EMPTY).toUpperCase().includes("RL05.02");
+  const hidePropertyInfo = ctx?.hidePropertyInfo === true;
   const panelMounted = hasMrcReturnPanelInBusiness(business);
   const panelShowsDelivery =
     panelMounted &&

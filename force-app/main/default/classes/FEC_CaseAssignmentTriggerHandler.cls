@@ -1,6 +1,7 @@
 /**
  * Kích hoạt phân bổ Case Assignment ngay khi Status chuyển sang Active
  * (insert Active hoặc update từ trạng thái khác → Active).
+ * Chỉ Continuous — Time-Based chờ đến Time Slot (scheduler).
  */
 public without sharing class FEC_CaseAssignmentTriggerHandler {
     private static Boolean isDispatching = false;
@@ -43,18 +44,16 @@ public without sharing class FEC_CaseAssignmentTriggerHandler {
     }
 
     private static void enqueueImmediateDistribution(Set<Id> assignmentIds) {
-        if (assignmentIds == null || assignmentIds.isEmpty() || isDispatching) {
+        Set<Id> continuousAssignmentIds =
+            FEC_CaseAssignmentAutoDistributeService.filterAssignmentIdsForImmediateActivation(
+                assignmentIds
+            );
+        if (continuousAssignmentIds == null || continuousAssignmentIds.isEmpty() || isDispatching) {
             return;
         }
         isDispatching = true;
         try {
-            List<Id> idList = new List<Id>(assignmentIds);
-            if (FEC_BatchCaseHandlingImportService.isBatchImportApplyInProgress()) {
-                for (Id assignmentId : idList) {
-                    FEC_CaseAssignmentAutoDistributeService.executeImmediatelyForAssignmentId(assignmentId);
-                }
-                return;
-            }
+            List<Id> idList = new List<Id>(continuousAssignmentIds);
             if (Limits.getQueueableJobs() < Limits.getLimitQueueableJobs()) {
                 System.enqueueJob(new FEC_CaseAssignmentAutoDistQueueJob(idList));
             } else {

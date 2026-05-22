@@ -1219,6 +1219,13 @@ public without sharing class FEC_CaseBusinessService {
         }
       }
 
+      FEC_MrcReturnCaseService.supplementStage1RoutingActionsIfEmpty(
+        result,
+        selectedStage != null ? selectedStage.Name : null,
+        rolelst,
+        isRevert
+      );
+
       // Hiển thị Team/Queue Route to theo nhánh Stage Change (không ảnh hưởng logic submit route()).
       RouteToDisplayInfo routeToDisplayInfo = resolveRouteToDisplayInfo(
         selectedCase.Id,
