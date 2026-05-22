@@ -11,6 +11,12 @@ public without sharing class FEC_BatchCaseHandlingImportRow {
     @AuraEnabled public String classificationByCS;
     @AuraEnabled public String evaluationByCS;
     @AuraEnabled public String finalProduct;
+    @AuraEnabled public String csD2CAssessmentTypeApiValue;
+    @AuraEnabled public String riskLevelApiValue;
+    @AuraEnabled public String requiredActionApiValue;
+    @AuraEnabled public String classificationByCSApiValue;
+    @AuraEnabled public String evaluationByCSApiValue;
+    @AuraEnabled public String finalProductApiValue;
     @AuraEnabled public String recordId;
     @AuraEnabled public String status;
     @AuraEnabled public String errors;

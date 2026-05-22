@@ -573,16 +573,11 @@ public without sharing class FEC_BatchCaseHandlingImportService {
             }
         }
         Map<Id, Set<String>> configuredLabelsByStage = loadConfiguredLabelsByStage(stageIds);
-        Map<String, Map<String, String>> picklistValueByNormByField = buildPicklistValueByNormalizedInputByField(
-            new List<String>{
-                'FEC_CS_D2C_Assessment_Type__c',
-                'FEC_CS_D2C_Required_Corrective_Action__c',
-                'FEC_CS_D2C_Risk_Level__c',
-                'FEC_CS_Check_Classification_by_CS__c',
-                'FEC_CS_Check_Evaluation_by_CS__c',
-                'FEC_CS_Check_Final_product__c'
-            }
-        );
+        FEC_BatchCaseHandlingPicklistResolver.clearCache();
+        Map<String, Map<String, String>> picklistValueByNormByField =
+            FEC_BatchCaseHandlingPicklistResolver.buildNormalizedToApiValueByField(
+                importPicklistFieldApis()
+            );
 
         Set<String> seenCaseSearch = new Set<String>();
         for (FEC_BatchCaseHandlingImportRow rr : output) {
@@ -740,16 +735,10 @@ public without sharing class FEC_BatchCaseHandlingImportService {
                 WHERE Id IN :caseIds
             ]);
         Map<String, Schema.SObjectField> caseFieldMap = Case.SObjectType.getDescribe().fields.getMap();
-        Map<String, Map<String, String>> picklistValueByNormByField = buildPicklistValueByNormalizedInputByField(
-            new List<String>{
-                'FEC_CS_D2C_Assessment_Type__c',
-                'FEC_CS_D2C_Required_Corrective_Action__c',
-                'FEC_CS_D2C_Risk_Level__c',
-                'FEC_CS_Check_Classification_by_CS__c',
-                'FEC_CS_Check_Evaluation_by_CS__c',
-                'FEC_CS_Check_Final_product__c'
-            }
-        );
+        Map<String, Map<String, String>> picklistValueByNormByField =
+            FEC_BatchCaseHandlingPicklistResolver.buildNormalizedToApiValueByField(
+                importPicklistFieldApis()
+            );
         List<RemarkDraftUpdateItem> remarkDraftItems = new List<RemarkDraftUpdateItem>();
         Map<Id, Case> pendingCaseFieldUpdatesById = new Map<Id, Case>();
         Map<Id, List<FEC_BatchCaseHandlingImportRow>> rowsByCaseForFieldUpdate = new Map<Id, List<FEC_BatchCaseHandlingImportRow>>();
@@ -1266,35 +1255,15 @@ public without sharing class FEC_BatchCaseHandlingImportService {
         return out;
     }
 
-    private static Map<String, Map<String, String>> buildPicklistValueByNormalizedInputByField(List<String> caseFieldApis) {
-        Map<String, Map<String, String>> out = new Map<String, Map<String, String>>();
-        if (caseFieldApis == null || caseFieldApis.isEmpty()) {
-            return out;
-        }
-        Map<String, Schema.SObjectField> fieldMap = Case.SObjectType.getDescribe().fields.getMap();
-        for (String apiName : caseFieldApis) {
-            if (String.isBlank(apiName) || !fieldMap.containsKey(apiName)) {
-                continue;
-            }
-            Schema.DescribeFieldResult dfr = fieldMap.get(apiName).getDescribe();
-            if (dfr.getType() != Schema.DisplayType.PICKLIST && dfr.getType() != Schema.DisplayType.MULTIPICKLIST) {
-                continue;
-            }
-            Map<String, String> normalizedToValue = new Map<String, String>();
-            for (Schema.PicklistEntry entry : dfr.getPicklistValues()) {
-                if (entry == null || !entry.isActive()) {
-                    continue;
-                }
-                String value = entry.getValue();
-                if (String.isBlank(value)) {
-                    continue;
-                }
-                normalizedToValue.put(normalizeToken(value), value);
-                normalizedToValue.put(normalizeToken(entry.getLabel()), value);
-            }
-            out.put(apiName, normalizedToValue);
-        }
-        return out;
+    private static List<String> importPicklistFieldApis() {
+        return new List<String>{
+            'FEC_CS_D2C_Assessment_Type__c',
+            'FEC_CS_D2C_Required_Corrective_Action__c',
+            'FEC_CS_D2C_Risk_Level__c',
+            'FEC_CS_Check_Classification_by_CS__c',
+            'FEC_CS_Check_Evaluation_by_CS__c',
+            'FEC_CS_Check_Final_product__c'
+        };
     }
 
     private static List<String> validateScopeFieldsForCase(
@@ -1319,6 +1288,7 @@ public without sharing class FEC_BatchCaseHandlingImportService {
         String profile = importScope.fieldProfile;
         if (profile == FEC_BatchCaseHandlingImportProfile.FIELD_PROFILE_D2C) {
             validateD2CField(
+                rr,
                 rr.csD2CAssessmentType,
                 LABEL_CS_D2C_ASSESSMENT,
                 ERR_MISSING_CS_D2C_ASSESSMENT,
@@ -1330,6 +1300,7 @@ public without sharing class FEC_BatchCaseHandlingImportService {
                 true
             );
             validateD2CField(
+                rr,
                 rr.riskLevel,
                 LABEL_RISK_LEVEL,
                 ERR_MISSING_RISK_LEVEL,
@@ -1341,6 +1312,7 @@ public without sharing class FEC_BatchCaseHandlingImportService {
                 true
             );
             validateD2CField(
+                rr,
                 rr.requiredAction,
                 LABEL_REQUIRED_ACTION,
                 ERR_MISSING_REQUIRED_ACTION,
@@ -1358,6 +1330,7 @@ public without sharing class FEC_BatchCaseHandlingImportService {
                 ? rr.csSupportAssessment
                 : rr.classificationByCS;
             validateD2CField(
+                rr,
                 csSupportValue,
                 LABEL_CS_SUPPORT_ASSESSMENT,
                 'Thiếu giá trị CS Support đánh giá yêu cầu',
@@ -1369,6 +1342,7 @@ public without sharing class FEC_BatchCaseHandlingImportService {
                 true
             );
             validateD2CField(
+                rr,
                 rr.evaluationByCS,
                 LABEL_CS_SUPPORT_ASSESSMENT,
                 'Thiếu giá trị Evaluation by CS',
@@ -1380,6 +1354,7 @@ public without sharing class FEC_BatchCaseHandlingImportService {
                 false
             );
             validateD2CField(
+                rr,
                 rr.finalProduct,
                 LABEL_CS_SUPPORT_ASSESSMENT,
                 'Thiếu giá trị Final Product',
@@ -1398,6 +1373,7 @@ public without sharing class FEC_BatchCaseHandlingImportService {
             String.isNotBlank(rr.requiredAction);
         if (hasAnyD2CInput) {
             validateD2CField(
+                rr,
                 rr.csD2CAssessmentType,
                 LABEL_CS_D2C_ASSESSMENT,
                 ERR_MISSING_CS_D2C_ASSESSMENT,
@@ -1409,6 +1385,7 @@ public without sharing class FEC_BatchCaseHandlingImportService {
                 false
             );
             validateD2CField(
+                rr,
                 rr.riskLevel,
                 LABEL_RISK_LEVEL,
                 ERR_MISSING_RISK_LEVEL,
@@ -1420,6 +1397,7 @@ public without sharing class FEC_BatchCaseHandlingImportService {
                 false
             );
             validateD2CField(
+                rr,
                 rr.requiredAction,
                 LABEL_REQUIRED_ACTION,
                 ERR_MISSING_REQUIRED_ACTION,
@@ -1435,6 +1413,7 @@ public without sharing class FEC_BatchCaseHandlingImportService {
     }
 
     private static void validateD2CField(
+        FEC_BatchCaseHandlingImportRow rr,
         String inputValue,
         String fieldLabel,
         String missingError,
@@ -1458,7 +1437,60 @@ public without sharing class FEC_BatchCaseHandlingImportService {
         String resolvedValue = resolvePicklistValue(caseFieldApi, inputValue, picklistValueByNormByField);
         if (String.isBlank(resolvedValue)) {
             errs.add(invalidError);
+            return;
         }
+        storeResolvedPicklistApiValue(rr, caseFieldApi, resolvedValue);
+    }
+
+    private static void storeResolvedPicklistApiValue(
+        FEC_BatchCaseHandlingImportRow rr,
+        String caseFieldApi,
+        String apiValue
+    ) {
+        if (rr == null || String.isBlank(caseFieldApi) || String.isBlank(apiValue)) {
+            return;
+        }
+        if (caseFieldApi == 'FEC_CS_D2C_Assessment_Type__c') {
+            rr.csD2CAssessmentTypeApiValue = apiValue;
+        } else if (caseFieldApi == 'FEC_CS_D2C_Required_Corrective_Action__c') {
+            rr.riskLevelApiValue = apiValue;
+        } else if (caseFieldApi == 'FEC_CS_D2C_Risk_Level__c') {
+            rr.requiredActionApiValue = apiValue;
+        } else if (caseFieldApi == 'FEC_CS_Check_Classification_by_CS__c') {
+            rr.classificationByCSApiValue = apiValue;
+        } else if (caseFieldApi == 'FEC_CS_Check_Evaluation_by_CS__c') {
+            rr.evaluationByCSApiValue = apiValue;
+        } else if (caseFieldApi == 'FEC_CS_Check_Final_product__c') {
+            rr.finalProductApiValue = apiValue;
+        }
+    }
+
+    private static String readResolvedPicklistApiValue(
+        FEC_BatchCaseHandlingImportRow rr,
+        String caseFieldApi
+    ) {
+        if (rr == null || String.isBlank(caseFieldApi)) {
+            return null;
+        }
+        if (caseFieldApi == 'FEC_CS_D2C_Assessment_Type__c') {
+            return rr.csD2CAssessmentTypeApiValue;
+        }
+        if (caseFieldApi == 'FEC_CS_D2C_Required_Corrective_Action__c') {
+            return rr.riskLevelApiValue;
+        }
+        if (caseFieldApi == 'FEC_CS_D2C_Risk_Level__c') {
+            return rr.requiredActionApiValue;
+        }
+        if (caseFieldApi == 'FEC_CS_Check_Classification_by_CS__c') {
+            return rr.classificationByCSApiValue;
+        }
+        if (caseFieldApi == 'FEC_CS_Check_Evaluation_by_CS__c') {
+            return rr.evaluationByCSApiValue;
+        }
+        if (caseFieldApi == 'FEC_CS_Check_Final_product__c') {
+            return rr.finalProductApiValue;
+        }
+        return null;
     }
 
     private static Case buildD2CCaseUpdate(
@@ -1472,23 +1504,41 @@ public without sharing class FEC_BatchCaseHandlingImportService {
         }
         Case c = new Case(Id = caseId);
         Boolean hasAny = false;
-        String assessmentValue = resolvePicklistValue('FEC_CS_D2C_Assessment_Type__c', rr.csD2CAssessmentType, picklistValueByNormByField);
-        String riskValue = resolvePicklistValue('FEC_CS_D2C_Required_Corrective_Action__c', rr.riskLevel, picklistValueByNormByField);
-        String requiredActionValue = resolvePicklistValue('FEC_CS_D2C_Risk_Level__c', rr.requiredAction, picklistValueByNormByField);
+        String assessmentValue = resolvePicklistValueForApply(
+            rr,
+            'FEC_CS_D2C_Assessment_Type__c',
+            rr.csD2CAssessmentType,
+            picklistValueByNormByField
+        );
+        String riskValue = resolvePicklistValueForApply(
+            rr,
+            'FEC_CS_D2C_Required_Corrective_Action__c',
+            rr.riskLevel,
+            picklistValueByNormByField
+        );
+        String requiredActionValue = resolvePicklistValueForApply(
+            rr,
+            'FEC_CS_D2C_Risk_Level__c',
+            rr.requiredAction,
+            picklistValueByNormByField
+        );
         String csSupportInput = String.isNotBlank(rr.csSupportAssessment)
             ? rr.csSupportAssessment
             : rr.classificationByCS;
-        String classificationByCSValue = resolvePicklistValue(
+        String classificationByCSValue = resolvePicklistValueForApply(
+            rr,
             'FEC_CS_Check_Classification_by_CS__c',
             csSupportInput,
             picklistValueByNormByField
         );
-        String evaluationByCSValue = resolvePicklistValue(
+        String evaluationByCSValue = resolvePicklistValueForApply(
+            rr,
             'FEC_CS_Check_Evaluation_by_CS__c',
             rr.evaluationByCS,
             picklistValueByNormByField
         );
-        String finalProductValue = resolvePicklistValue(
+        String finalProductValue = resolvePicklistValueForApply(
+            rr,
             'FEC_CS_Check_Final_product__c',
             rr.finalProduct,
             picklistValueByNormByField
@@ -1549,21 +1599,28 @@ public without sharing class FEC_BatchCaseHandlingImportService {
         String userInput,
         Map<String, Map<String, String>> picklistValueByNormByField
     ) {
-        if (String.isBlank(caseFieldApi) || String.isBlank(userInput) || picklistValueByNormByField == null) {
-            return null;
+        return FEC_BatchCaseHandlingPicklistResolver.resolveApiValue(
+            caseFieldApi,
+            userInput,
+            picklistValueByNormByField
+        );
+    }
+
+    private static String resolvePicklistValueForApply(
+        FEC_BatchCaseHandlingImportRow rr,
+        String caseFieldApi,
+        String userInput,
+        Map<String, Map<String, String>> picklistValueByNormByField
+    ) {
+        String cached = readResolvedPicklistApiValue(rr, caseFieldApi);
+        if (String.isNotBlank(cached)) {
+            return cached;
         }
-        Map<String, String> normalizedToValue = picklistValueByNormByField.get(caseFieldApi);
-        if (normalizedToValue == null || normalizedToValue.isEmpty()) {
-            return null;
-        }
-        return normalizedToValue.get(normalizeToken(userInput));
+        return resolvePicklistValue(caseFieldApi, userInput, picklistValueByNormByField);
     }
 
     private static String normalizeToken(String value) {
-        if (String.isBlank(value)) {
-            return FEC_ConstantCommon.STR_EMPTY;
-        }
-        return value.trim().toLowerCase().replaceAll('\\s+', FEC_ConstantCommon.STR_EMPTY);
+        return FEC_BatchCaseHandlingPicklistResolver.normalizeToken(value);
     }
 
     private static String pickRowString(Map<String, Object> row, List<String> normalizedKeys) {

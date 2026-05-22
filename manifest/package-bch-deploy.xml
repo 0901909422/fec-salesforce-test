@@ -14,6 +14,8 @@
         <members>FEC_BatchCaseHandlingImportRow</members>
         <members>FEC_BatchCaseHandlingImportProfile</members>
         <members>FEC_BatchCaseHandlingImportService</members>
+        <members>FEC_BatchCaseHandlingPicklistResolver</members>
+        <members>FEC_BCH_PicklistTranslationCtrl</members>
         <members>FEC_BatchCaseHandlingResultXlsxBuilder</members>
         <members>FEC_BatchCaseHandlingSObjectUtil</members>
         <members>FEC_BatchCaseHandlingTemplateHelper</members>
@@ -24,6 +26,10 @@
     <types>
         <members>fec_BatchCaseHandling</members>
         <name>LightningComponentBundle</name>
+    </types>
+    <types>
+        <members>FEC_BCH_PicklistTranslation</members>
+        <name>ApexPage</name>
     </types>
     <version>65.0</version>
 </Package>

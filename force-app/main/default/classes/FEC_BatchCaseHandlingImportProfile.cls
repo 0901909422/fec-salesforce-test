@@ -27,15 +27,13 @@ public with sharing class FEC_BatchCaseHandlingImportProfile {
         if (String.isBlank(businessProcessCode)) {
             return scope;
         }
-        String bpKey = normalizeBusinessProcessKey(businessProcessCode);
-        String prefix = FEC_BatchCaseHandlingTemplateHelper.mapImportBusinessProcessPrefix(
-            businessProcessCode,
-            null
+        String prefix = FEC_BatchCaseHandlingTemplateHelper.mapBusinessProcessToTemplatePrefix(
+            businessProcessCode
         );
         if (String.isBlank(prefix)) {
             return scope;
         }
-        List<String> suffixes = FEC_BatchCaseHandlingTemplateHelper.mapImportUserGroupSuffixes(
+        List<String> suffixes = FEC_BatchCaseHandlingTemplateHelper.mapUserGroupToTemplateSuffixes(
             businessProcessCode,
             userGroup
         );
