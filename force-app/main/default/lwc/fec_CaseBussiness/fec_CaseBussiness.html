@@ -273,7 +273,8 @@
                     </template>
                     <template if:false={row.dynCmp.isMrcReturnPanel}>
                       <lwc:component lwc:is={row.dynCmp.ctor} record-id={recordId} sub-code-code={business.subCodeCode} sub-category-code={business.subCategoryCode}
-                        is-edit={row.dynCmp.isEdit} is-hidden-lwc={isHiddenLwc}></lwc:component>
+                                     is-edit={row.dynCmp.isEdit} is-hidden-lwc={isHiddenLwc}
+                                     ondeliveryoptionchange={handleContractClosureDeliveryChange}></lwc:component>
                     </template>
                   </div>
                 </template>
@@ -301,7 +302,8 @@
                         </template>
                         <template if:false={row.dynCmp.isMrcReturnPanel}>
                           <lwc:component lwc:is={row.dynCmp.ctor} record-id={recordId} sub-code-code={business.subCodeCode} sub-category-code={business.subCategoryCode}
-                            is-edit={row.dynCmp.isEdit} is-hidden-lwc={isHiddenLwc}></lwc:component>
+                                         is-edit={row.dynCmp.isEdit} is-hidden-lwc={isHiddenLwc}
+                                         ondeliveryoptionchange={handleContractClosureDeliveryChange}></lwc:component>
                         </template>
                       </div>
                     </lightning-accordion-section>
