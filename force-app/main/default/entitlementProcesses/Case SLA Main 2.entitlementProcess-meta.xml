@@ -24,6 +24,26 @@
 )</milestoneCriteriaFormula>
         <milestoneName>Case Time TAT</milestoneName>
         <minutesToComplete>7200</minutesToComplete>
+        <timeTriggers>
+            <timeLength>-40</timeLength>
+            <workflowTimeTriggerUnit>Hours</workflowTimeTriggerUnit>
+        </timeTriggers>
+        <timeTriggers>
+            <actions>
+                <name>SLA_Warning_80h</name>
+                <type>FieldUpdate</type>
+            </actions>
+            <timeLength>-80</timeLength>
+            <workflowTimeTriggerUnit>Hours</workflowTimeTriggerUnit>
+        </timeTriggers>
+        <timeTriggers>
+            <actions>
+                <name>SLA_Warning_76h</name>
+                <type>FieldUpdate</type>
+            </actions>
+            <timeLength>-76</timeLength>
+            <workflowTimeTriggerUnit>Hours</workflowTimeTriggerUnit>
+        </timeTriggers>
         <useCriteriaStartTime>true</useCriteriaStartTime>
     </milestones>
     <milestones>
@@ -41,6 +61,22 @@ FEC_SubCategory__r.FEC_Code__c=&quot;RL21&quot;
 )</milestoneCriteriaFormula>
         <milestoneName>Case Time TAT</milestoneName>
         <minutesToComplete>7200</minutesToComplete>
+        <timeTriggers>
+            <actions>
+                <name>SLA_Warning_120h</name>
+                <type>FieldUpdate</type>
+            </actions>
+            <timeLength>0</timeLength>
+            <workflowTimeTriggerUnit>Hours</workflowTimeTriggerUnit>
+        </timeTriggers>
+        <timeTriggers>
+            <actions>
+                <name>SLA_Warning_119h</name>
+                <type>FieldUpdate</type>
+            </actions>
+            <timeLength>-1</timeLength>
+            <workflowTimeTriggerUnit>Hours</workflowTimeTriggerUnit>
+        </timeTriggers>
         <useCriteriaStartTime>true</useCriteriaStartTime>
     </milestones>
     <milestones>
@@ -72,6 +108,22 @@ FEC_SubCategory__r.FEC_Code__c=&quot;RL10&quot;
 )</milestoneCriteriaFormula>
         <milestoneName>Case Time TAT</milestoneName>
         <minutesToComplete>10080</minutesToComplete>
+        <timeTriggers>
+            <actions>
+                <name>SLA_Warning_128h</name>
+                <type>FieldUpdate</type>
+            </actions>
+            <timeLength>-128</timeLength>
+            <workflowTimeTriggerUnit>Hours</workflowTimeTriggerUnit>
+        </timeTriggers>
+        <timeTriggers>
+            <actions>
+                <name>SLA_Warning_124h</name>
+                <type>FieldUpdate</type>
+            </actions>
+            <timeLength>-124</timeLength>
+            <workflowTimeTriggerUnit>Hours</workflowTimeTriggerUnit>
+        </timeTriggers>
         <useCriteriaStartTime>true</useCriteriaStartTime>
     </milestones>
     <milestones>
@@ -81,6 +133,22 @@ FEC_SubCode__r.FEC_Code__c=&quot;RL04.01&quot;
 )</milestoneCriteriaFormula>
         <milestoneName>Case Time TAT</milestoneName>
         <minutesToComplete>10080</minutesToComplete>
+        <timeTriggers>
+            <actions>
+                <name>SLA_Warning_168h</name>
+                <type>FieldUpdate</type>
+            </actions>
+            <timeLength>0</timeLength>
+            <workflowTimeTriggerUnit>Hours</workflowTimeTriggerUnit>
+        </timeTriggers>
+        <timeTriggers>
+            <actions>
+                <name>SLA_Warning_167h</name>
+                <type>FieldUpdate</type>
+            </actions>
+            <timeLength>-1</timeLength>
+            <workflowTimeTriggerUnit>Hours</workflowTimeTriggerUnit>
+        </timeTriggers>
         <useCriteriaStartTime>true</useCriteriaStartTime>
     </milestones>
     <milestones>
@@ -96,6 +164,22 @@ FEC_SubCategory__r.FEC_Code__c=&quot;FU01&quot;
 )</milestoneCriteriaFormula>
         <milestoneName>Case Time TAT</milestoneName>
         <minutesToComplete>10080</minutesToComplete>
+        <timeTriggers>
+            <actions>
+                <name>SLA_Warning_164h</name>
+                <type>FieldUpdate</type>
+            </actions>
+            <timeLength>-4</timeLength>
+            <workflowTimeTriggerUnit>Hours</workflowTimeTriggerUnit>
+        </timeTriggers>
+        <timeTriggers>
+            <actions>
+                <name>SLA_Warning_144h</name>
+                <type>FieldUpdate</type>
+            </actions>
+            <timeLength>-24</timeLength>
+            <workflowTimeTriggerUnit>Hours</workflowTimeTriggerUnit>
+        </timeTriggers>
         <useCriteriaStartTime>true</useCriteriaStartTime>
     </milestones>
     <milestones>

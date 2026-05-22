@@ -825,6 +825,11 @@
         <members>fec_IPPClosureForm</members>
         <members>fec_IPPDetails</members>
         <members>fec_MRC</members>
+        <members>fec_MrcReturnCaseForm</members>
+        <members>fec_MrcDeliveryForm</members>
+        <members>fec_MrcReturnPanel</members>
+        <members>fec_MrcReturnDupBanner</members>
+        <members>fecMrcReturnCaseLogic</members>
         <members>fec_MainInfoLoanAccount</members>
         <members>fec_NotificationOverride</members>
         <members>fec_PaymentHistoryAcount</members>
@@ -1570,6 +1575,18 @@
         <members>Case.Update_Case_72h_Warning</members>
         <members>Case.Update_Case_96h_Violating</members>
         <members>Case.Update_Case_96h_Warning</members>
+        <members>Case.SLA_Violating_Warning_44h</members>
+        <members>Case.SLA_Warning_119h</members>
+        <members>Case.SLA_Warning_120h</members>
+        <members>Case.SLA_Warning_124h</members>
+        <members>Case.SLA_Warning_128h</members>
+        <members>Case.SLA_Warning_144h</members>
+        <members>Case.SLA_Warning_164h</members>
+        <members>Case.SLA_Warning_167h</members>
+        <members>Case.SLA_Warning_168h</members>
+        <members>Case.SLA_Warning_48h</members>
+        <members>Case.SLA_Warning_76h</members>
+        <members>Case.SLA_Warning_80h</members>
         <name>WorkflowFieldUpdate</name>
     </types>
 	<types>
@@ -1937,6 +1954,7 @@
         <members>fec_NocRoutingAssignment</members>
         <members>fecRoutingAssignmentEditForm</members>
         <members>fec_DownloadReports</members>
+        <members>fecMrcReturnStageChangeRouting</members>
         <name>LightningComponentBundle</name>
     </types>
     <types>
@@ -2111,6 +2129,11 @@
         <members>FEC_CaseRemarksRollupService</members>
         <members>FEC_CaseRemarksTriggerHandler</members>
         <members>FEC_CaseRemarksRollupServiceTest</members>
+        <members>FEC_BCH_ImportRoutingResolver</members>
+        <members>FEC_BCH_PicklistTranslationCtrl</members>
+        <members>FEC_BatchCaseHandlingImportProfile</members>
+        <members>FEC_BatchCaseHandlingPicklistResolver</members>
+        <members>FEC_BatchCaseHandlingResultXlsxBuilder</members>
         <name>ApexClass</name>
     </types>
     <types>
@@ -2227,6 +2250,10 @@
 	<types>
 	    <members>FEC_Download_Report__c.FEC_Download</members>
 	    <name>WebLink</name>
+	</types>
+	<types>
+	    <members>FEC_BCH_PicklistTranslation</members>
+	    <name>ApexPage</name>
 	</types>
 	<version>66.0</version>
 </Package>
