@@ -2977,7 +2977,20 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
   }
 
   _getMrcReturnPanelEl() {
-    return this.template.querySelector("c-fec_-mrc-return-panel");
+    const direct = this.template.querySelector("c-fec_-mrc-return-panel");
+    if (direct) {
+      return direct;
+    }
+    const wraps = this.template.querySelectorAll(
+      '[data-fec-lwc="fec_MrcReturnPanel"]',
+    );
+    for (const wrap of wraps) {
+      const panel = wrap.querySelector("c-fec_-mrc-return-panel");
+      if (panel) {
+        return panel;
+      }
+    }
+    return null;
   }
 
   _getContractClosureFormEl() {
@@ -3294,12 +3307,24 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
     return updateRecord({ fields });
   }
 
+  _saveMrcReturnDeliveryIfApplicable() {
+    if (!isMrcRl05Branch(this.business)) {
+      return Promise.resolve({ valid: true, messages: [] });
+    }
+    const panel = this._getMrcReturnPanelEl();
+    if (panel && typeof panel.saveToCase === "function") {
+      return panel.saveToCase();
+    }
+    return Promise.resolve({ valid: true, messages: [] });
+  }
+
   //linhdev: Persist child data before case record form submit
   _persistChildDataBeforeCaseRecordFormSubmit() {
     //linhdev fix jira FECREDIT_CSM_2025_KH-1469-1474 — gap 2: lưu Redeemed Points trước record form submit
     this._syncPointsRedemptionFieldToRecordForm();
     return Promise.all([
       this._syncMrcReturnCaseFieldsBeforeSubmit(),
+      this._saveMrcReturnDeliveryIfApplicable(),
       this._saveRemovePhoneDraftIfApplicable(),
       this._savePointsRedemptionDraftIfApplicable(),
     ]);
@@ -4614,7 +4639,6 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
   /** Refresh Auto Hold Case sau Submit (poll khi Queueable Mark NFU hoàn tất). */
   @api
   refreshAutoHoldCase() {
-    void this._refreshHoldCaseAutoDisplay();
     // void this._refreshHoldCaseAutoDisplay();
     // const subprocess = this._getSubProcessContainerEl();
     // subprocess?.refreshAutoHoldCase?.();
