@@ -52,7 +52,7 @@ const MrcFields = {
 
 const CASE_SUB_FIELDS = [FEC_SUBCODE_ID];
 
-/** RL05 MRC Return: ẩn toàn bộ block trên FlexiPage Case (logic nằm trong fec_CaseBussiness). */
+/** RL05 MRC Return: ẩn toàn bộ block trên FlexiPage Case (logic nằm trong fec_MrcReturnCaseForm / fecMrcReturnCaseLogic). */
 const RL05_HIDE_SUB_CODES = ['RL05.01', 'RL05.02', 'RL05.03'];
 
 export default class Fec_MRC extends LightningElement {
