@@ -1,5 +1,9 @@
 <template>
-    <template if:false={shouldHideComponent}>
+    <template if:true={shouldRenderMrc}>
+    <template if:true={isLoading}>
+        <lightning-spinner alternative-text="Loading" size="small"></lightning-spinner>
+    </template>
+    <template if:false={isLoading}>
     <template if:true={hasData}>
         <lightning-accordion allow-multiple-sections-open active-section-name={activeSections}>
 
@@ -56,6 +60,7 @@
             </section>
             </template>
         </div>
+    </template>
     </template>
     </template>
 </template>
