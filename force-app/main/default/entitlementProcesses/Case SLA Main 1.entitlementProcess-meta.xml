@@ -126,6 +126,26 @@ FEC_SubCategory__r.FEC_Code__c=&quot;FU03&quot;
 )</milestoneCriteriaFormula>
         <milestoneName>Case Time TAT</milestoneName>
         <minutesToComplete>2880</minutesToComplete>
+        <timeTriggers>
+            <timeLength>4</timeLength>
+            <workflowTimeTriggerUnit>Hours</workflowTimeTriggerUnit>
+        </timeTriggers>
+        <timeTriggers>
+            <actions>
+                <name>SLA_Violating_Warning_44h</name>
+                <type>FieldUpdate</type>
+            </actions>
+            <timeLength>-4</timeLength>
+            <workflowTimeTriggerUnit>Hours</workflowTimeTriggerUnit>
+        </timeTriggers>
+        <timeTriggers>
+            <actions>
+                <name>SLA_Warning_48h</name>
+                <type>FieldUpdate</type>
+            </actions>
+            <timeLength>-8</timeLength>
+            <workflowTimeTriggerUnit>Hours</workflowTimeTriggerUnit>
+        </timeTriggers>
         <useCriteriaStartTime>true</useCriteriaStartTime>
     </milestones>
     <milestones>

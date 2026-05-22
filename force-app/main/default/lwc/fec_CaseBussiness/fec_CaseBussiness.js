@@ -4593,6 +4593,7 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
   /** Refresh Auto Hold Case sau Submit (poll khi Queueable Mark NFU hoàn tất). */
   @api
   refreshAutoHoldCase() {
+    void this._refreshHoldCaseAutoDisplay();
     // void this._refreshHoldCaseAutoDisplay();
     // const subprocess = this._getSubProcessContainerEl();
     // subprocess?.refreshAutoHoldCase?.();
