@@ -12,9 +12,15 @@ public without sharing class FEC_RoutingHistTatSvc {
         }
 
         Set<Id> caseIds = new Set<Id>();
+        Set<Id> caseIdsForFullTat = new Set<Id>();
+        Set<Id> assignmentIds = new Set<Id>();
         for (FEC_Routing_Action_History__c h : newRows) {
             if (h.FEC_Case__c != null) {
                 caseIds.add(h.FEC_Case__c);
+                caseIdsForFullTat.add(h.FEC_Case__c);
+            }
+            if (h.FEC_Assignment__c != null) {
+                assignmentIds.add(h.FEC_Assignment__c);
             }
         }
 
@@ -24,6 +30,14 @@ public without sharing class FEC_RoutingHistTatSvc {
                   SELECT Id, FEC_Case_Created_On__c, CreatedDate
                   FROM Case
                   WHERE Id IN :caseIds
+              ]);
+
+        Map<Id, FEC_Assignment__c> assignmentById = assignmentIds.isEmpty()
+            ? new Map<Id, FEC_Assignment__c>()
+            : new Map<Id, FEC_Assignment__c>([
+                  SELECT Id, FEC_Manual__c
+                  FROM FEC_Assignment__c
+                  WHERE Id IN :assignmentIds
               ]);
 
         applySubmittedOn(newRows, oldMap);
@@ -59,27 +73,19 @@ public without sharing class FEC_RoutingHistTatSvc {
                 continue;
             }
 
-            Case c = caseById.get(h.FEC_Case__c);
-            Datetime assignedOn = resolveAssignedOn(h, pool, caseById);
+            Datetime assignedOn = resolveAssignedOn(h, pool, caseById, assignmentById);
             h.FEC_Assigned_On__c = assignedOn;
             applyTatField(h, bhId, assignedOn);
         }
 
-        Set<Id> caseIdsForFullTat = new Set<Id>();
-        for (FEC_Routing_Action_History__c h : newRows) {
-            if (h.FEC_Case__c != null) {
-                caseIdsForFullTat.add(h.FEC_Case__c);
-            }
-        }
         if (!caseIdsForFullTat.isEmpty()) {
             FEC_CaseTatFullProcessSvc.syncCasesFromRoutingHistory(caseIdsForFullTat);
         }
     }
 
     /**
-     * Code duoi nay cua hoangnm107
-     * FEC_Submitted_On__c = thời điểm khởi tạo RAH (FEC_Date_Time__c ≈ CreatedDate).
-     * Insert: offset giây trong batch để thứ tự strict &lt; khi suy Assigned On.
+     * TH1 & TH2 (spec 11/05): có FEC_Case__c thì FEC_Submitted_On__c = thời điểm sinh RAH (FEC_Date_Time__c).
+     * Không phân nhánh theo FEC_Assignment__c = null. Insert: offset giây trong batch cho thứ tự Assigned On.
      */
     private static void applySubmittedOn(
         List<FEC_Routing_Action_History__c> newRows,
@@ -91,10 +97,8 @@ public without sharing class FEC_RoutingHistTatSvc {
             if (h.FEC_Case__c == null) {
                 continue;
             }
-            if (oldMap != null && oldMap.containsKey(h.Id) && h.FEC_Submitted_On__c != null) {
-                continue;
-            }
-            if (h.FEC_Submitted_On__c != null) {
+            Boolean isUpdate = oldMap != null && oldMap.containsKey(h.Id);
+            if (isUpdate && h.FEC_Submitted_On__c != null) {
                 continue;
             }
 
@@ -146,7 +150,25 @@ public without sharing class FEC_RoutingHistTatSvc {
     private static Datetime resolveAssignedOn(
         FEC_Routing_Action_History__c h,
         List<FEC_Routing_Action_History__c> pool,
-        Map<Id, Case> caseById
+        Map<Id, Case> caseById,
+        Map<Id, FEC_Assignment__c> assignmentById
+    ) {
+        Case c = caseById.get(h.FEC_Case__c);
+        Datetime anchor = caseAnchorCreatedOn(c);
+
+        if (h.FEC_Assignment__c == null) {
+            return resolveTh1AssignedOn(h, pool, anchor);
+        }
+        return resolveTh2AssignedOn(h, pool, assignmentById, anchor);
+    }
+
+    /**
+     * TH1: bản ghi không gắn Assignment — prior cùng Case, không lọc FEC_Assignment__c = null.
+     */
+    private static Datetime resolveTh1AssignedOn(
+        FEC_Routing_Action_History__c h,
+        List<FEC_Routing_Action_History__c> pool,
+        Datetime caseCreatedAnchor
     ) {
         if (h.FEC_Submitted_On__c == null) {
             return null;
@@ -155,22 +177,67 @@ public without sharing class FEC_RoutingHistTatSvc {
             pool,
             h,
             h.FEC_Case__c,
+            null,
             h.FEC_Submitted_On__c,
             true
         );
         if (prior != null && prior.FEC_Submitted_On__c != null) {
             return prior.FEC_Submitted_On__c;
         }
-        return caseAnchorCreatedOn(caseById.get(h.FEC_Case__c));
+        return caseCreatedAnchor;
     }
 
     /**
-     * RAH trước cùng Case (không lọc FEC_Assignment__c), FEC_Submitted_On__c &lt; current.
+     * TH2: bản ghi gắn Assignment — ưu tiên prior cùng Assignment; manual fallback prior cùng Case (không lọc Assignment = null).
+     */
+    private static Datetime resolveTh2AssignedOn(
+        FEC_Routing_Action_History__c h,
+        List<FEC_Routing_Action_History__c> pool,
+        Map<Id, FEC_Assignment__c> assignmentById,
+        Datetime caseCreatedAnchor
+    ) {
+        if (h.FEC_Submitted_On__c == null) {
+            return null;
+        }
+        FEC_Routing_Action_History__c priorSameAssign = findBestPrior(
+            pool,
+            h,
+            h.FEC_Case__c,
+            h.FEC_Assignment__c,
+            h.FEC_Submitted_On__c,
+            true
+        );
+        if (priorSameAssign != null && priorSameAssign.FEC_Submitted_On__c != null) {
+            return priorSameAssign.FEC_Submitted_On__c;
+        }
+
+        FEC_Assignment__c ass = assignmentById.get(h.FEC_Assignment__c);
+        if (ass != null && ass.FEC_Manual__c == true) {
+            FEC_Routing_Action_History__c priorOnCase = findBestPrior(
+                pool,
+                h,
+                h.FEC_Case__c,
+                null,
+                h.FEC_Submitted_On__c,
+                false
+            );
+            if (priorOnCase != null && priorOnCase.FEC_Submitted_On__c != null) {
+                return priorOnCase.FEC_Submitted_On__c;
+            }
+        }
+
+        return caseCreatedAnchor;
+    }
+
+    /**
+     * @param assignmentIdFilter null = mọi RAH cùng Case; non-null = cùng FEC_Assignment__c.
+     * @param strictLessSubmitted true: Submitted &lt; current; false: Submitted &lt;= current (TH2.2.2).
      */
     private static FEC_Routing_Action_History__c findBestPrior(
         List<FEC_Routing_Action_History__c> pool,
         FEC_Routing_Action_History__c current,
         Id caseId,
+        Id assignmentIdFilter,
         Datetime currentSubmitted,
         Boolean strictLessSubmitted
     ) {
@@ -180,6 +247,9 @@ public without sharing class FEC_RoutingHistTatSvc {
                 continue;
             }
             if (cand.FEC_Case__c != caseId) {
+                continue;
+            }
+            if (assignmentIdFilter != null && cand.FEC_Assignment__c != assignmentIdFilter) {
                 continue;
             }
             if (cand.FEC_Submitted_On__c == null) {
