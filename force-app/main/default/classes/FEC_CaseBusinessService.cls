@@ -141,9 +141,7 @@ public without sharing class FEC_CaseBusinessService {
       if (String.isNotBlank(currentUser.FEC_User_Group__c)) {
         rolelst.add(currentUser.FEC_User_Group__c);
       }
-      List<String> additionalRolelst = FEC_NatureOfCaseUserGroupService.buildRoleListForIncludes(
-        currentUser.FEC_User_Group__c
-      );
+      List<String> additionalRolelst = FEC_NatureOfCaseUserGroupService.buildRoleListForIncludes();
 
       //  ===================================== GET CASE ===============================
             List<Case> caselst = [
@@ -2382,9 +2380,7 @@ public without sharing class FEC_CaseBusinessService {
       if (String.isNotBlank(currentUser.FEC_User_Group__c)) {
         rolelst.add(currentUser.FEC_User_Group__c);
       }
-      List<String> additionalRolelst = FEC_NatureOfCaseUserGroupService.buildRoleListForIncludes(
-        currentUser.FEC_User_Group__c
-      );
+      List<String> additionalRolelst = FEC_NatureOfCaseUserGroupService.buildRoleListForIncludes();
 
       List<Case> caselst = [
         SELECT
