@@ -24,6 +24,7 @@ function normalizeText(value) {
   return String(value)
     .trim()
     .toLowerCase()
+    .replace(/đ/g, "d")
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "");
 }
@@ -40,15 +41,23 @@ function deliveryTokens(deliveryOptionRaw) {
 }
 
 function includesAddress(tokens) {
-  return tokens.some((t) => t.includes("dia chi"));
+  return tokens.some(
+    (t) => t.includes("dia chi") || t === "address" || t.includes("address"),
+  );
 }
 
 function includesOffice(tokens) {
-  return tokens.some((t) => t.includes("van phong"));
+  return tokens.some(
+    (t) => t.includes("van phong") || t === "office" || t.includes("office"),
+  );
 }
 
 function includesPos(tokens) {
   return tokens.some((t) => t === "pos" || t.includes("pos"));
+}
+
+function includesEmail(tokens) {
+  return tokens.some((t) => t === "email" || t.includes("email"));
 }
 
 /** RL05.01 — Địa chỉ | Văn phòng | POS → CP */
@@ -57,10 +66,10 @@ export function matchesRl0501Delivery(deliveryOptionRaw) {
   return includesAddress(tokens) || includesOffice(tokens) || includesPos(tokens);
 }
 
-/** RL05.03 — Địa chỉ | POS → SP */
+/** RL05.03 — Địa chỉ | POS | Email → SP */
 export function matchesRl0503DeliveryAddressOrPos(deliveryOptionRaw) {
   const tokens = deliveryTokens(deliveryOptionRaw);
-  return includesAddress(tokens) || includesPos(tokens);
+  return includesAddress(tokens) || includesPos(tokens) || includesEmail(tokens);
 }
 
 /** RL05.03 — chỉ Văn phòng → F2F */

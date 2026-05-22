@@ -865,6 +865,12 @@ public without sharing class FEC_CaseBusinessService {
           );
         }
 
+        FEC_MrcReturnCaseService.applyRl05CodeFallbacks(
+          result,
+          selectedCase,
+          result.stageName
+        );
+
         FEC_MrcReturnCaseService.MrcRl05UiContext mrcRl05UiCtx = null;
         try {
           FEC_MrcDuplicateCaseService.OpenDupInfo mrcDupEarly = FEC_MrcDuplicateCaseService.findOlderOpenRl05DuplicateInfo(

@@ -47,20 +47,51 @@ public without sharing class FEC_DocumentRequestRoutingService {
 
     FEC_Stage_Change__c sc = changelst[0];
     result.nextTeam = sc.FEC_Team_User_Group__c;
-    if (String.isNotBlank(sc.FEC_Next_Queue__c)) {
-      List<Group> queues = [
-        SELECT Id, Name
-        FROM Group
-        WHERE
-          Type = :FEC_ConstantCommon.GROUP_TYPE_QUEUE
-          AND DeveloperName = :sc.FEC_Next_Queue__c
-        LIMIT 1
-      ];
-      if (!queues.isEmpty()) {
-        result.nextQueueLabel = queues[0].Name;
-        result.nextQueueId = (String) queues[0].Id;
-      }
+    Group nextQueue = resolveQueueFromStageChangeValue(sc.FEC_Next_Queue__c);
+    if (nextQueue != null) {
+      result.nextQueueLabel = nextQueue.Name;
+      result.nextQueueId = (String) nextQueue.Id;
     }
     return result;
+  }
+
+  private static Group resolveQueueFromStageChangeValue(String nextQueueValue) {
+    if (String.isBlank(nextQueueValue)) {
+      return null;
+    }
+    String normalized = nextQueueValue.trim();
+    try {
+      Id queueId = Id.valueOf(normalized);
+      List<Group> queuesById = [
+        SELECT Id, Name, DeveloperName
+        FROM Group
+        WHERE Id = :queueId AND Type = :FEC_ConstantCommon.GROUP_TYPE_QUEUE
+        LIMIT 1
+      ];
+      if (!queuesById.isEmpty()) {
+        return queuesById[0];
+      }
+    } catch (Exception ignore) {
+    }
+
+    List<Group> queuesByDeveloperName = [
+      SELECT Id, Name, DeveloperName
+      FROM Group
+      WHERE
+        Type = :FEC_ConstantCommon.GROUP_TYPE_QUEUE
+        AND DeveloperName = :normalized
+      LIMIT 1
+    ];
+    if (!queuesByDeveloperName.isEmpty()) {
+      return queuesByDeveloperName[0];
+    }
+
+    List<Group> queuesByName = [
+      SELECT Id, Name, DeveloperName
+      FROM Group
+      WHERE Type = :FEC_ConstantCommon.GROUP_TYPE_QUEUE AND Name = :normalized
+      LIMIT 1
+    ];
+    return queuesByName.isEmpty() ? null : queuesByName[0];
   }
 }
