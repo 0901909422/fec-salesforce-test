@@ -81,6 +81,12 @@ public without sharing class FEC_MrcReturnCaseService {
         public Boolean autoRoutePayment;
         @AuraEnabled
         public Boolean autoRouteCp;
+        /** TH1 | TH2 | TH3 | TH4 — phân nhánh RL05.02 theo Cond1/Cond2. */
+        @AuraEnabled
+        public String rl05Scenario;
+        /** TH3: sau Chưa nhận MRC — hiện radio Noti-11 (không có Case trùng). */
+        @AuraEnabled
+        public Boolean showHandlingRadioOnNotReceived;
     }
 
     public static MrcRl05UiContext buildUiContext(
@@ -126,6 +132,8 @@ public without sharing class FEC_MrcReturnCaseService {
         Boolean cond2 = ctx.meetsCondition2;
         ctx.dupCaseOnly = ctx.isReturnSubCode && cond1 && !cond2;
         ctx.showMrcDupBanner = ctx.isReturnSubCode && cond1;
+        ctx.showHandlingRadioOnNotReceived = false;
+        ctx.rl05Scenario = null;
 
         if (ctx.isPhotoSubCode) {
             ctx.hidePropertyInfo = true;
@@ -155,15 +163,19 @@ public without sharing class FEC_MrcReturnCaseService {
                 : null;
 
             if (cond1 && cond2) {
-                ctx.showDeliveryForm =
-                    CONF_NOT_RECEIVED.equalsIgnoreCase(conf);
+                ctx.rl05Scenario = 'TH1';
+                // Delivery sau Noti-11 + Option 2 — LWC điều khiển.
+                ctx.showDeliveryForm = false;
             } else if (cond1) {
+                ctx.rl05Scenario = 'TH2';
                 ctx.showDeliveryForm = false;
             } else if (cond2) {
-                ctx.showDeliveryForm =
-                    String.isBlank(conf) ||
-                    CONF_NOT_RECEIVED.equalsIgnoreCase(conf);
+                ctx.rl05Scenario = 'TH3';
+                // TH3: Chưa nhận MRC → Noti-11 radio → Option 2 → Delivery (LWC).
+                ctx.showHandlingRadioOnNotReceived = true;
+                ctx.showDeliveryForm = false;
             } else {
+                ctx.rl05Scenario = 'TH4';
                 ctx.showDeliveryForm = true;
             }
             return ctx;

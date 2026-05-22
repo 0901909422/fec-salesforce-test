@@ -473,6 +473,16 @@ export default class Fec_MrcDeliveryForm extends LightningElement {
         this.deliveryAddressSelected = !!(av && ids.includes(av));
         this.deliveryOfficeSelected = !!(ov && ids.includes(ov));
         this.deliveryPosSelected = !!(pv && ids.includes(pv));
+        const payload = this.buildPayload();
+        this.dispatchEvent(
+            new CustomEvent('mrcdeliverychange', {
+                detail: {
+                    deliveryOptionCombined: payload.deliveryOptionCombined || STR_EMPTY
+                },
+                bubbles: true,
+                composed: true
+            })
+        );
     }
 
     get labelEmail() {

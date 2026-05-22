@@ -267,7 +267,8 @@
                         customer-confirmation-value={mrcReturnCustomerConfirmationValue}
                         customer-confirmation-options={mrcCustomerConfirmationOptions}
                         onhandlingoptionchange={handleMrcReturnHandlingOptionChange}
-                        oncustomerconfirmationchange={handleMrcReturnCustomerConfirmationChange}>
+                        oncustomerconfirmationchange={handleMrcReturnCustomerConfirmationChange}
+                        onmrcdeliverychange={handleMrcDeliveryChange}>
                       </c-fec_-mrc-return-panel>
                     </template>
                     <template if:false={row.dynCmp.isMrcReturnPanel}>
@@ -294,7 +295,8 @@
                             customer-confirmation-value={mrcReturnCustomerConfirmationValue}
                             customer-confirmation-options={mrcCustomerConfirmationOptions}
                             onhandlingoptionchange={handleMrcReturnHandlingOptionChange}
-                            oncustomerconfirmationchange={handleMrcReturnCustomerConfirmationChange}>
+                            oncustomerconfirmationchange={handleMrcReturnCustomerConfirmationChange}
+                            onmrcdeliverychange={handleMrcDeliveryChange}>
                           </c-fec_-mrc-return-panel>
                         </template>
                         <template if:false={row.dynCmp.isMrcReturnPanel}>
@@ -457,7 +459,7 @@
     </lightning-accordion-section>
 
     <!--PhongBT 18/05/26: Document Request sử dụng cục routing action mới-->
-    <lightning-accordion-section if:true={showDocumentRequestStageChangeRoutingSection}
+    <lightning-accordion-section if:true={showStage1AutoRouteToRoutingSection}
       name="routing-action-doc-request" label={customLabel.routingActionLabel}>
       <c-fec_-document-request-routing-action is-edit={isEdit}
         action-value={actionValue} routing-action-options={business.routingActionlst}
