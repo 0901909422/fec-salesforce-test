@@ -132,6 +132,7 @@
 		<members>FEC_BatchCaseHandlingImportProfile</members>
 		<members>FEC_BatchCaseHandlingPicklistResolver</members>
 		<members>FEC_BatchCaseHandlingResultXlsxBuilder</members>
+		<members>FEC_NotificationService</members>
 		<name>Apexclass</name>
 	</types>
     <types>
