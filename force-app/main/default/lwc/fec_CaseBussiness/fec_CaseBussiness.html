@@ -305,7 +305,8 @@
                   </template>
                   <div data-fec-lwc={row.dynCmp.componentName}>
                     <lwc:component lwc:is={row.dynCmp.ctor} record-id={recordId} sub-code-code={business.subCodeCode} sub-category-code={business.subCategoryCode}
-                      is-edit={row.dynCmp.isEdit} is-hidden-lwc={isHiddenLwc}></lwc:component>
+                      is-edit={row.dynCmp.isEdit} is-hidden-lwc={isHiddenLwc}
+                      ondeliveryoptionchange={handleContractClosureDeliveryChange}></lwc:component>
                   </div>
                 </template>
 
@@ -314,7 +315,8 @@
                     <lightning-accordion-section name={row.dynCmp.subSectionName} label={row.dynCmp.subSectionName}>
                       <div data-fec-lwc={row.dynCmp.componentName}>
                         <lwc:component lwc:is={row.dynCmp.ctor} record-id={recordId} sub-code-code={business.subCodeCode} sub-category-code={business.subCategoryCode}
-                          is-edit={row.dynCmp.isEdit} is-hidden-lwc={isHiddenLwc}></lwc:component>
+                          is-edit={row.dynCmp.isEdit} is-hidden-lwc={isHiddenLwc}
+                          ondeliveryoptionchange={handleContractClosureDeliveryChange}></lwc:component>
                       </div>
                     </lightning-accordion-section>
                   </lightning-accordion>

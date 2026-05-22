@@ -100,7 +100,10 @@ import FEC_Duplicate_Queue_Error from "@salesforce/label/c.FEC_Duplicate_Queue_E
 import getTeamQueueOptions from "@salesforce/apex/FEC_CaseBusinessService.getTeamQueueOptions";
 //PhongBT 18/05/26: Document Request sử dụng cục routing action mới
 import getDocumentRequestStageChangeRouting from "@salesforce/apex/FEC_DocumentRequestRoutingService.getStageChangeRouting";
-import { getDocumentRequestRoutingContext } from "./fecDocumentRequestStageChangeRouting";
+import {
+  getDocumentRequestRoutingContext,
+  setBusinessFieldValue,
+} from "./fecDocumentRequestStageChangeRouting";
 // // Toannd61 19/05/26 jira 1423 jira 1423
 import {
   computeShowScopedStageChangeRoutingSection,
@@ -2050,7 +2053,10 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
         // Hiện section Routing khi Apex trả ít nhất một option; chế độ xem vẫn thấy Action, chỉ khóa dropdown (isRoutingActionDisabled).
         // tungnm37: COF/GSR luôn hiện section dù routingActionlst rỗng (chưa có stage)
         //PhongBT 18/05/26: Document Request sử dụng cục routing action mới
-        const docReqRoutingCtx = getDocumentRequestRoutingContext(this.business);
+        const docReqRoutingCtx = getDocumentRequestRoutingContext(
+          this.business,
+          this._documentRequestRoutingFieldOverrides(),
+        );
         this._documentRequestDeliveryEligible = docReqRoutingCtx.deliveryEligible;
         this.business.hasRoutingAction =
           (typeof this.business.code === 'string' && (this.business.code.startsWith('COF') || this.business.code.startsWith('GSR'))) ||
@@ -2665,14 +2671,14 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
       this._rebuildAllSectionSortedRows();
     }
 
-    //PhongBT 18/05/26: Document Request sử dụng cục routing action mới
+    //PhongBT 18/05/26: Document Request — cập nhật Route To khi đổi delivery / hình thức văn bản
     if (
       fieldName === Fec_CaseBussiness.DOC_REQ_FIELD_DELIVERY ||
       fieldName === Fec_CaseBussiness.DOC_REQ_FIELD_DOCUMENT_TYPE
     ) {
-      this._loadDocumentRequestStageChangeRouting().then(() => {
-        this._syncActiveRoutingSection();
-      });
+      setBusinessFieldValue(this.business, fieldName, value);
+      this.business = { ...this.business };
+      this._syncDocumentRequestRoutingFromBusinessFields();
     }
 
     if (PHONE_VALIDATED_FIELD_APIS.has(fieldName) && field) {
@@ -3518,6 +3524,7 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
           if (closureRes && closureRes.valid === false) {
             return Promise.reject(new Error("FEC_CONTRACT_CLOSURE_SAVE_FAILED"));
           }
+          return this._syncDocumentRequestRoutingFromBusinessFields();
         });
 
     if (total === 0) {
@@ -4771,6 +4778,40 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
     }
   }
 
+  _documentRequestRoutingFieldOverrides() {
+    const overrides = {};
+    const closureEl = this._getContractClosureFormEl();
+    if (
+      closureEl &&
+      typeof closureEl.getDeliveryOptionForRouting === "function"
+    ) {
+      const fromClosure = closureEl.getDeliveryOptionForRouting();
+      if (fromClosure) {
+        overrides.deliveryOption = fromClosure;
+      }
+    }
+    return overrides;
+  }
+
+  /** Delivery / Document Type đổi trên Case Information hoặc fec_ContractClosureForm. */
+  _syncDocumentRequestRoutingFromBusinessFields() {
+    return this._loadDocumentRequestStageChangeRouting().then(() => {
+      this._syncActiveRoutingSection();
+    });
+  }
+
+  handleContractClosureDeliveryChange(event) {
+    const combined = event.detail?.deliveryOptionCombined ?? "";
+    setBusinessFieldValue(
+      this.business,
+      Fec_CaseBussiness.DOC_REQ_FIELD_DELIVERY,
+      combined,
+      "Case",
+    );
+    this.business = { ...this.business };
+    this._syncDocumentRequestRoutingFromBusinessFields();
+  }
+
   //PhongBT 18/05/26: Document Request sử dụng cục routing action mới
   _loadDocumentRequestStageChangeRouting() {
     // Stage 2+ (Document Request / Original MRC Return): luôn Scoped; PhongBT chỉ Stage 1.
@@ -4781,7 +4822,10 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
       return Promise.resolve();
     }
 
-    const ctx = getDocumentRequestRoutingContext(this.business);
+    const ctx = getDocumentRequestRoutingContext(
+      this.business,
+      this._documentRequestRoutingFieldOverrides(),
+    );
     this._documentRequestDeliveryEligible = ctx.deliveryEligible;
 
     if (!ctx.subCodeSupported || !ctx.team) {
@@ -4794,6 +4838,7 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
     if (!ctx.deliveryEligible) {
       this.business = {
         ...this.business,
+        nextTeam: null,
         nextQueue: null,
       };
       this.business = { ...this.business };
@@ -4818,6 +4863,7 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
         } else {
           this.business = {
             ...this.business,
+            nextTeam: null,
             nextQueue: null,
           };
           this.dispatchEvent(
@@ -4837,6 +4883,7 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
         );
         this.business = {
           ...this.business,
+          nextTeam: null,
           nextQueue: null,
         };
         this.business = { ...this.business };
