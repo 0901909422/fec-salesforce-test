@@ -22,6 +22,8 @@ public with sharing class FEC_CaseAssignmentMutationGuard {
         'Khi Status là Draft, không được chỉnh sửa Select Queues.';
     public static final String MSG_ROLE_REQUIRED_WHEN_QUEUES =
         'Role is required when Select Queues is specified.';
+    public static final String MSG_ROLE_REQUIRED_PER_QUEUE =
+        'Phải thêm Role cho mỗi queue đã chọn trong Select Queues.';
 
     private static final String RUNNING_TIMES_FIELD = 'FEC_Running_Times__c';
 
@@ -65,9 +67,56 @@ public with sharing class FEC_CaseAssignmentMutationGuard {
         String roles = populated.containsKey('FEC_Role__c')
             ? newRow.FEC_Role__c
             : (oldRow == null ? null : oldRow.FEC_Role__c);
-        if (String.isNotBlank(queues) && String.isBlank(roles)) {
-            newRow.addError(FEC_Case_Assignment__c.FEC_Role__c, MSG_ROLE_REQUIRED_WHEN_QUEUES);
+        if (String.isBlank(queues)) {
+            return;
         }
+        if (String.isBlank(roles)) {
+            newRow.addError(FEC_Case_Assignment__c.FEC_Role__c, MSG_ROLE_REQUIRED_WHEN_QUEUES);
+            return;
+        }
+        List<String> queueNames = splitSemicolonValues(queues);
+        List<String> assignedRoleNames = parseRoleNamesFromAssignmentField(roles);
+        List<String> missingQueues = FEC_CaseAssignmentConfigController.findQueuesMissingRoleCoverage(
+            queueNames,
+            assignedRoleNames
+        );
+        if (!missingQueues.isEmpty()) {
+            newRow.addError(FEC_Case_Assignment__c.FEC_Role__c, MSG_ROLE_REQUIRED_PER_QUEUE);
+        }
+    }
+
+    private static List<String> splitSemicolonValues(String rawValue) {
+        List<String> values = new List<String>();
+        if (String.isBlank(rawValue)) {
+            return values;
+        }
+        for (String part : rawValue.split(';')) {
+            String trimmed = part.trim();
+            if (String.isNotBlank(trimmed)) {
+                values.add(trimmed);
+            }
+        }
+        return values;
+    }
+
+    private static List<String> parseRoleNamesFromAssignmentField(String rolesRaw) {
+        List<String> roleNames = new List<String>();
+        if (String.isBlank(rolesRaw)) {
+            return roleNames;
+        }
+        for (String part : rolesRaw.split(';')) {
+            String trimmed = part.trim();
+            if (String.isBlank(trimmed)) {
+                continue;
+            }
+            String roleName = trimmed.contains('|')
+                ? trimmed.substringBefore('|').trim()
+                : trimmed;
+            if (String.isNotBlank(roleName)) {
+                roleNames.add(roleName);
+            }
+        }
+        return roleNames;
     }
 
     public static void enforceActiveRequiresNocOnUpdate(

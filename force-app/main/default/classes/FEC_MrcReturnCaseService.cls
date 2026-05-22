@@ -81,6 +81,12 @@ public without sharing class FEC_MrcReturnCaseService {
         public Boolean autoRoutePayment;
         @AuraEnabled
         public Boolean autoRouteCp;
+        /** TH1 | TH2 | TH3 | TH4 — phân nhánh RL05.02 theo Cond1/Cond2. */
+        @AuraEnabled
+        public String rl05Scenario;
+        /** TH3: sau Chưa nhận MRC — hiện radio Noti-11 (không có Case trùng). */
+        @AuraEnabled
+        public Boolean showHandlingRadioOnNotReceived;
     }
 
     public static MrcRl05UiContext buildUiContext(
@@ -126,6 +132,8 @@ public without sharing class FEC_MrcReturnCaseService {
         Boolean cond2 = ctx.meetsCondition2;
         ctx.dupCaseOnly = ctx.isReturnSubCode && cond1 && !cond2;
         ctx.showMrcDupBanner = ctx.isReturnSubCode && cond1;
+        ctx.showHandlingRadioOnNotReceived = false;
+        ctx.rl05Scenario = null;
 
         if (ctx.isPhotoSubCode) {
             ctx.hidePropertyInfo = true;
@@ -148,21 +156,26 @@ public without sharing class FEC_MrcReturnCaseService {
                 return ctx;
             }
 
+            // TH1/TH3: Cond2 → Xác nhận KH; TH2/TH4: không hiện combobox.
             ctx.showCustomerConfirmation = cond2;
             String conf = customerConfirmation != null
                 ? customerConfirmation.trim()
                 : null;
 
             if (cond1 && cond2) {
-                ctx.showDeliveryForm =
-                    CONF_NOT_RECEIVED.equalsIgnoreCase(conf);
+                ctx.rl05Scenario = 'TH1';
+                // Delivery sau Noti-11 + Option 2 — LWC điều khiển.
+                ctx.showDeliveryForm = false;
             } else if (cond1) {
+                ctx.rl05Scenario = 'TH2';
                 ctx.showDeliveryForm = false;
             } else if (cond2) {
-                ctx.showDeliveryForm =
-                    String.isBlank(conf) ||
-                    CONF_NOT_RECEIVED.equalsIgnoreCase(conf);
+                ctx.rl05Scenario = 'TH3';
+                // TH3: Chưa nhận MRC → Noti-11 radio → Option 2 → Delivery (LWC).
+                ctx.showHandlingRadioOnNotReceived = true;
+                ctx.showDeliveryForm = false;
             } else {
+                ctx.rl05Scenario = 'TH4';
                 ctx.showDeliveryForm = true;
             }
             return ctx;
@@ -257,6 +270,11 @@ public without sharing class FEC_MrcReturnCaseService {
             return true;
         }
 
+        // RL05.02: không hiện picklist — dùng radio Noti-11 (fec_MrcReturnDupBanner).
+        if ('FEC_MRC_Request_Handling_Option__c'.equals(fieldApiName)) {
+            return ctx != null && ctx.isReturnSubCode == true;
+        }
+
         return false;
     }
 
@@ -294,6 +312,11 @@ public without sharing class FEC_MrcReturnCaseService {
         if (TYPE_LWC.equals(getRowType(lwcName, fieldApiName)) &&
             'fec_MRC'.equalsIgnoreCase(lwcName) &&
             ctx.hideMrcInfoLwc == true) {
+            return true;
+        }
+        if (TYPE_LWC.equals(getRowType(lwcName, fieldApiName)) &&
+            'fec_ContractClosureForm'.equalsIgnoreCase(lwcName) &&
+            needsDeliveryLwc(ctx)) {
             return true;
         }
         return false;
@@ -555,12 +578,13 @@ public without sharing class FEC_MrcReturnCaseService {
         }
         for (FEC_CaseBusinessService.DynamicLwcComponent slot : caseInfo.componentlst) {
             if (slot != null &&
-                'fec_ContractClosureForm'.equalsIgnoreCase(slot.componentName)) {
+                ('fec_MrcDeliveryForm'.equalsIgnoreCase(slot.componentName) ||
+                'fec_MrcReturnPanel'.equalsIgnoreCase(slot.componentName))) {
                 return;
             }
         }
         FEC_CaseBusinessService.DynamicLwcComponent deliverySlot = new FEC_CaseBusinessService.DynamicLwcComponent();
-        deliverySlot.componentName = 'fec_ContractClosureForm';
+        deliverySlot.componentName = 'fec_MrcReturnPanel';
         deliverySlot.order = 1;
         deliverySlot.fieldLayout = 12;
         deliverySlot.subSectionName = null;
