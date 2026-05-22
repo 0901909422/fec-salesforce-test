@@ -2776,6 +2776,33 @@ export default class Fec_BatchCaseHandling extends LightningElement {
     });
   }
 
+  applyResultErrorsColumnFormat(sheet, headers, rowCount) {
+    if (!sheet || !Array.isArray(headers) || !rowCount) {
+      return;
+    }
+    const errorsColIdx = headers.indexOf(RESULT_COL_ERRORS);
+    if (errorsColIdx < 0) {
+      return;
+    }
+    if (!sheet["!cols"]) {
+      sheet["!cols"] = [];
+    }
+    sheet["!cols"][errorsColIdx] = { wch: 60 };
+    for (let rowIdx = 1; rowIdx < rowCount; rowIdx++) {
+      const cellRef = window.XLSX.utils.encode_cell({ c: errorsColIdx, r: rowIdx });
+      const cell = sheet[cellRef];
+      if (!cell) {
+        continue;
+      }
+      cell.s = {
+        alignment: {
+          wrapText: true,
+          vertical: "top"
+        }
+      };
+    }
+  }
+
   async saveResultWorkbook(
     batchRecordId,
     originalFileName,
@@ -2840,6 +2867,7 @@ export default class Fec_BatchCaseHandling extends LightningElement {
     }
     const workbook = window.XLSX.utils.book_new();
     const sheet = window.XLSX.utils.aoa_to_sheet(sheetData);
+    this.applyResultErrorsColumnFormat(sheet, headers, sheetData.length);
     window.XLSX.utils.book_append_sheet(workbook, sheet, "Result");
     const arrayBuffer = window.XLSX.write(workbook, {
       bookType: "xlsx",
