@@ -15,6 +15,7 @@ public without sharing class FEC_BatchCaseHandlingImportService {
     private static final String ERR_INVALID_CS_D2C_ASSESSMENT = 'Giá trị CS D2C đánh giá yêu cầu không tồn tại trong Datagroup.';
     private static final String ERR_INVALID_RISK_LEVEL = 'Giá trị Mức độ rủi ro không tồn tại trong Datagroup.';
     private static final String ERR_INVALID_REQUIRED_ACTION = 'Giá trị Hành động cần thiết không tồn tại trong Datagroup.';
+    private static final String ERR_IMPORT_PROCESSING_TIMEOUT = 'Import quá thời gian xử lý (quá 1 giờ). Vui lòng thử lại.';
     private class RoutingParseResult {
         public String methodKey;
         public String decision;
@@ -23,6 +24,8 @@ public without sharing class FEC_BatchCaseHandlingImportService {
     }
 
     private static final String BATCH_OBJECT_API_NAME = 'FEC_Batch_Case_Handling__c';
+    @TestVisible
+    private static final Integer IMPORT_PROCESSING_TIMEOUT_HOURS = 1;
     private static Map<String, Map<String, String>> routeParamsCacheByKey = new Map<String, Map<String, String>>();
     private static Map<String, String> queueIdCacheByToken = new Map<String, String>();
 
@@ -86,6 +89,99 @@ public without sharing class FEC_BatchCaseHandlingImportService {
         failBatchImportRecord(batchRecordId, reason, null);
     }
 
+    public static void expireStaleProcessingBatchImports(Id scopeUserId) {
+        if (scopeUserId == null) {
+            return;
+        }
+        Map<String, Schema.SObjectField> fieldMap = batchFieldMap();
+        String statusField = FEC_BatchCaseHandlingSObjectUtil.pickField(
+            fieldMap,
+            new List<String>{ 'FEC_Status__c' }
+        );
+        if (String.isBlank(statusField)) {
+            return;
+        }
+        String uploadedOnField = FEC_BatchCaseHandlingSObjectUtil.pickField(
+            fieldMap,
+            new List<String>{ 'FEC_Uploaded_On__c' }
+        );
+        Datetime cutoff = Datetime.now().addHours(-IMPORT_PROCESSING_TIMEOUT_HOURS);
+        List<String> whereParts = new List<String>{
+            statusField + ' = \'Processing\'',
+            'CreatedById = :scopeUserId'
+        };
+        if (String.isNotBlank(uploadedOnField)) {
+            whereParts.add(
+                '(' +
+                    uploadedOnField +
+                    ' < :cutoff OR (' +
+                    uploadedOnField +
+                    ' = null AND CreatedDate < :cutoff))'
+            );
+        } else {
+            whereParts.add('CreatedDate < :cutoff');
+        }
+        List<SObject> staleRows = Database.query(
+            'SELECT Id FROM ' +
+                BATCH_OBJECT_API_NAME +
+                ' WHERE ' +
+                String.join(whereParts, ' AND ')
+        );
+        if (staleRows.isEmpty()) {
+            return;
+        }
+        String timeoutReason = resolveImportProcessingTimeoutReason();
+        for (SObject staleRow : staleRows) {
+            failBatchImportRecord((Id) staleRow.get('Id'), timeoutReason, null);
+        }
+    }
+
+    public static Boolean isBatchImportProcessingExpired(Id batchRecordId) {
+        if (batchRecordId == null) {
+            return false;
+        }
+        Map<String, Schema.SObjectField> fieldMap = batchFieldMap();
+        String statusField = FEC_BatchCaseHandlingSObjectUtil.pickField(
+            fieldMap,
+            new List<String>{ 'FEC_Status__c' }
+        );
+        if (String.isBlank(statusField)) {
+            return false;
+        }
+        String uploadedOnField = FEC_BatchCaseHandlingSObjectUtil.pickField(
+            fieldMap,
+            new List<String>{ 'FEC_Uploaded_On__c' }
+        );
+        List<String> selectParts = new List<String>{ 'Id', statusField, 'CreatedDate' };
+        FEC_BatchCaseHandlingSObjectUtil.addIfNotBlank(selectParts, uploadedOnField);
+        List<SObject> rows = Database.query(
+            'SELECT ' +
+                String.join(selectParts, ', ') +
+                ' FROM ' +
+                BATCH_OBJECT_API_NAME +
+                ' WHERE Id = :batchRecordId LIMIT 1'
+        );
+        if (rows.isEmpty()) {
+            return false;
+        }
+        SObject row = rows[0];
+        String status = FEC_BatchCaseHandlingSObjectUtil.asString(row.get(statusField));
+        if (status != 'Processing') {
+            return false;
+        }
+        Datetime startedOn = FEC_BatchCaseHandlingSObjectUtil.asDatetime(row.get('CreatedDate'));
+        if (String.isNotBlank(uploadedOnField)) {
+            Datetime uploadedOn = FEC_BatchCaseHandlingSObjectUtil.asDatetime(row.get(uploadedOnField));
+            if (uploadedOn != null) {
+                startedOn = uploadedOn;
+            }
+        }
+        if (startedOn == null) {
+            return false;
+        }
+        return startedOn < Datetime.now().addHours(-IMPORT_PROCESSING_TIMEOUT_HOURS);
+    }
+
     public static void failBatchImportRecord(
         Id batchRecordId,
         String reason,
@@ -112,6 +208,17 @@ public without sharing class FEC_BatchCaseHandlingImportService {
         );
         update batchRow;
         persistBatchResultArtifact(batchRecordId, rowResults, failureReason);
+    }
+
+    public static String resolveImportProcessingTimeoutReason() {
+        try {
+            String labelVal = System.Label.FEC_BCH_RequestTimeout;
+            if (String.isNotBlank(labelVal)) {
+                return labelVal;
+            }
+        } catch (Exception ex) {
+        }
+        return ERR_IMPORT_PROCESSING_TIMEOUT;
     }
 
     private static Map<String, Schema.SObjectField> batchFieldMap() {

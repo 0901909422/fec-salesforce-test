@@ -1,0 +1,23 @@
+<template>
+  <template if:true={showStandaloneDupBanner}>
+    <lightning-record-edit-form object-api-name="Case" record-id={recordId}>
+      <c-fec_-mrc-return-dup-banner
+        record-id={recordId}
+        duplicate-case-id={duplicateCaseId}
+        duplicate-case-number={duplicateCaseNumber}
+        handling-option-value={handlingOptionValue}
+        is-edit={isEdit}
+        display-mode="standalone"
+        onhandlingoptionchange={handleHandlingOptionChange}>
+      </c-fec_-mrc-return-dup-banner>
+      <lightning-input-field
+        class="slds-hide"
+        data-field={trackedFieldApiName}
+        data-obj-name="Case"
+        variant="label-hidden"
+        field-name={trackedFieldApiName}
+        value={handlingOptionValue}>
+      </lightning-input-field>
+    </lightning-record-edit-form>
+  </template>
+</template>
