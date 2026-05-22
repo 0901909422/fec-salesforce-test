@@ -28,6 +28,12 @@ public without sharing class FEC_BatchCaseHandlingImportService {
     private static final Integer IMPORT_PROCESSING_TIMEOUT_HOURS = 1;
     private static Map<String, Map<String, String>> routeParamsCacheByKey = new Map<String, Map<String, String>>();
     private static Map<String, String> queueIdCacheByToken = new Map<String, String>();
+    @TestVisible
+    private static Boolean batchImportApplyInProgress = false;
+
+    public static Boolean isBatchImportApplyInProgress() {
+        return batchImportApplyInProgress == true;
+    }
 
     public static Boolean shouldApplyImportRow(FEC_BatchCaseHandlingImportRow row) {
         return row != null &&
@@ -322,14 +328,19 @@ public without sharing class FEC_BatchCaseHandlingImportService {
         }
         try {
             String fileName = resolveBatchResultFileName(batchRecordId);
-            String csvBody = buildBatchResultCsv(rowResults, batchFailureReason, isCofOrGsrImportRows(rowResults));
-            if (String.isBlank(csvBody)) {
+            List<List<String>> sheetRows = buildBatchResultSheetRows(
+                rowResults,
+                batchFailureReason,
+                isCofOrGsrImportRows(rowResults)
+            );
+            Blob workbookBlob = FEC_BatchCaseHandlingResultXlsxBuilder.buildWorkbookBlob(sheetRows);
+            if (workbookBlob == null) {
                 return;
             }
             ContentVersion cv = new ContentVersion();
             cv.Title = ensureResultContentTitle(fileName);
             cv.PathOnClient = '/' + fileName;
-            cv.VersionData = Blob.valueOf(csvBody);
+            cv.VersionData = workbookBlob;
             cv.FirstPublishLocationId = batchRecordId;
             insert cv;
         } catch (Exception ex) {
@@ -337,7 +348,7 @@ public without sharing class FEC_BatchCaseHandlingImportService {
     }
 
     private static String resolveBatchResultFileName(Id batchRecordId) {
-        return FEC_BatchCaseHandlingSObjectUtil.removeFileExtension(queryBatchFileName(batchRecordId)) + '_Result.csv';
+        return FEC_BatchCaseHandlingSObjectUtil.removeFileExtension(queryBatchFileName(batchRecordId)) + '_Result.xlsx';
     }
 
     private static String queryBatchFileName(Id batchRecordId) {
@@ -361,16 +372,34 @@ public without sharing class FEC_BatchCaseHandlingImportService {
         return String.isBlank(sourceName) ? 'Import' : sourceName;
     }
 
-    private static String buildBatchResultCsv(
+    private static List<List<String>> buildBatchResultSheetRows(
         List<FEC_BatchCaseHandlingImportRow> rowResults,
         String batchFailureReason,
         Boolean cofOrGsr
     ) {
-        List<String> lines = new List<String>();
+        List<List<String>> sheetRows = new List<List<String>>();
         if (cofOrGsr) {
-            lines.add('Case ID Search,Routing Action,Inputted Remarks,Assignment ID,Assignment Routing Action,Status,Errors');
+            sheetRows.add(
+                new List<String>{
+                    'Case ID Search',
+                    'Routing Action',
+                    'Inputted Remarks',
+                    'Assignment ID',
+                    'Assignment Routing Action',
+                    'Status',
+                    'Errors'
+                }
+            );
         } else {
-            lines.add('Case ID Search,Routing Action,Inputted Remarks,Status,Errors');
+            sheetRows.add(
+                new List<String>{
+                    'Case ID Search',
+                    'Routing Action',
+                    'Inputted Remarks',
+                    'Status',
+                    'Errors'
+                }
+            );
         }
         if (rowResults != null && !rowResults.isEmpty()) {
             for (FEC_BatchCaseHandlingImportRow row : rowResults) {
@@ -378,36 +407,33 @@ public without sharing class FEC_BatchCaseHandlingImportService {
                     continue;
                 }
                 List<String> cols = new List<String>{
-                    csvEscape(row.caseIdSearch),
-                    csvEscape(row.routingAction),
-                    csvEscape(row.inputtedRemarks)
+                    rowValue(row.caseIdSearch),
+                    rowValue(row.routingAction),
+                    rowValue(row.inputtedRemarks)
                 };
                 if (cofOrGsr) {
-                    cols.add(csvEscape(row.assignmentId));
-                    cols.add(csvEscape(row.assignmentRoutingAction));
+                    cols.add(rowValue(row.assignmentId));
+                    cols.add(rowValue(row.assignmentRoutingAction));
                 }
-                cols.add(csvEscape(row.status));
-                cols.add(csvEscape(row.errors));
-                lines.add(String.join(cols, ','));
+                cols.add(rowValue(row.status));
+                cols.add(rowValue(row.errors));
+                sheetRows.add(cols);
             }
         } else if (String.isNotBlank(batchFailureReason)) {
-            List<String> emptyCols = new List<String>();
-            for (Integer i = 0; i < (cofOrGsr ? 6 : 3); i++) {
-                emptyCols.add('');
+            Integer totalCols = cofOrGsr ? 7 : 5;
+            List<String> failureRow = new List<String>{ rowValue(batchFailureReason) };
+            for (Integer i = 1; i < totalCols; i++) {
+                failureRow.add(FEC_ConstantCommon.STR_EMPTY);
             }
-            lines.add(csvEscape(batchFailureReason) + ',' + String.join(emptyCols, ','));
+            sheetRows.add(failureRow);
         } else {
             return null;
         }
-        return String.join(lines, '\n');
+        return sheetRows;
     }
 
-    private static String csvEscape(String value) {
-        String v = value == null ? FEC_ConstantCommon.STR_EMPTY : String.valueOf(value);
-        if (v.contains('"') || v.contains(',') || v.contains('\n') || v.contains('\r')) {
-            return '"' + v.replace('"', '""') + '"';
-        }
-        return v;
+    private static String rowValue(String value) {
+        return value == null ? FEC_ConstantCommon.STR_EMPTY : String.valueOf(value);
     }
 
     public static Integer countFailedImportRows(List<FEC_BatchCaseHandlingImportRow> rows) {
@@ -660,6 +686,15 @@ public without sharing class FEC_BatchCaseHandlingImportService {
         if (rows == null || rows.isEmpty()) {
             return;
         }
+        batchImportApplyInProgress = true;
+        try {
+            applyCaseHandlingUpdatesCore(rows, cofOrGsr);
+        } finally {
+            batchImportApplyInProgress = false;
+        }
+    }
+
+    private static void applyCaseHandlingUpdatesCore(List<FEC_BatchCaseHandlingImportRow> rows, Boolean cofOrGsr) {
         routeParamsCacheByKey.clear();
         queueIdCacheByToken.clear();
         Set<Id> caseIds = new Set<Id>();
