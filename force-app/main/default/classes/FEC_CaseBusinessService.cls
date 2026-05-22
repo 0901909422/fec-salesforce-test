@@ -2268,12 +2268,14 @@ public without sharing class FEC_CaseBusinessService {
         when REJECT {
           markCaseSubmittedAndClearDrafts(caseId);
           reject(caseId);
+          FEC_AssignmentRoutingActionHandler.resolveAllAssignments(caseId);
           createRoutingActionHis('Reject', '', oldOwnerName, oldOwnerId, caseId, stageName, finalStatusBeforeSubmit, currentStageId);
           return null;
         }
         when RESOLVE {
           markCaseSubmittedAndClearDrafts(caseId);
           resolve(caseId);
+          FEC_AssignmentRoutingActionHandler.resolveAllAssignments(caseId);
           createRoutingActionHis('Resolve', '', oldOwnerName, oldOwnerId, caseId, stageName, finalStatusBeforeSubmit, currentStageId);
           return null;
         }
