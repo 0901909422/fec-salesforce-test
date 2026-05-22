@@ -19,7 +19,7 @@ public without sharing class FEC_NotificationService {
      * @param newCases Danh sách Case sau update
      * @param oldMap Map chứa giá trị cũ
      * @return void
-     * @created: 2026/04/06
+     * @created: 2026/04/06 
      */
     public static void sendEmailNotifications(List<Case> newCases, Map<Id, Case> oldMap) {
         System.debug('--- [sendEmailNotifications] START cases=' + newCases.size());
