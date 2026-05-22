@@ -35,11 +35,15 @@ const IMPORT_TIMEOUT_MS = 60 * 1000;
 const IMPORT_TIMEOUT_MESSAGE = FEC_Batch_RequestTimeout;
 const REQUIRED_HEADERS = ["service resource", "start date", "end date"];
 const NOTE_HEADER = "note";
-const RESULT_APPEND_HEADERS = [
-  "ID",
-  "Status",
-  "Errors"
-];
+const RESULT_APPEND_HEADERS = ["ID", "Status", "Errors"];
+
+const formatErrorsForExport = (errors) =>
+  String(errors ?? "")
+    .replace(/[\r\n\u2028\u2029]+/g, ", ")
+    .replace(/\s*,\s*/g, ", ")
+    .replace(/,(\s*,)+/g, ",")
+    .replace(/^,\s*|\s*,$/g, "")
+    .trim();
 
 export default class Fec_BatchDataCreation extends LightningElement {
   labelSelectTemplate = FEC_Batch_Msg_Select_Template;
@@ -522,8 +526,8 @@ export default class Fec_BatchDataCreation extends LightningElement {
         IMPORT_TIMEOUT_MS,
         IMPORT_TIMEOUT_MESSAGE
       );
-      if (result?.success) {
-        if (result.batchRecordId && result.resultRowsJson) {
+      if (result?.batchRecordId && result?.resultRowsJson) {
+        try {
           await this.saveResultWorkbook(
             result.batchRecordId,
             fileToUpload.name,
@@ -531,7 +535,12 @@ export default class Fec_BatchDataCreation extends LightningElement {
             this.pendingImportHeaders,
             this.pendingImportSourceRows
           );
+        } catch (saveErr) {
+          // eslint-disable-next-line no-console
+          console.warn("saveResultWorkbook", saveErr);
         }
+      }
+      if (result?.success) {
         this.showSuccess("Success", result.message || "Import started.");
         this.selectedFile = null;
         this.selectedFileName = "";
@@ -540,10 +549,9 @@ export default class Fec_BatchDataCreation extends LightningElement {
         this.pendingImportRows = [];
         this.importValidationError = "";
         this.attachDataRequiredError = false;
-        await this.refreshRows();
-        return;
+      } else {
+        this.importValidationError = result?.message || "";
       }
-      this.showError("Import failed", result?.message || "Unable to import.");
     } catch (error) {
       if (error?.message === IMPORT_TIMEOUT_MESSAGE) {
         this.importValidationError = IMPORT_TIMEOUT_MESSAGE;
@@ -551,12 +559,20 @@ export default class Fec_BatchDataCreation extends LightningElement {
         this.showError("Import failed", extractErrorMessage(error));
       }
     } finally {
+      try {
+        await this.refreshRows(false);
+      } catch (refreshErr) {
+        // eslint-disable-next-line no-console
+        console.warn("refreshRows", refreshErr);
+      }
       this.isLoading = false;
     }
   }
 
-  async refreshRows() {
-    this.isLoading = true;
+  async refreshRows(showLoading = true) {
+    if (showLoading) {
+      this.isLoading = true;
+    }
     try {
       const data = await getRecentRows();
       this.rows = Array.isArray(data) ? data.map((row) => this.normalizeRow(row)) : [];
@@ -570,7 +586,9 @@ export default class Fec_BatchDataCreation extends LightningElement {
       this.pagedRows = [];
       this.showError("Load failed", extractErrorMessage(error));
     } finally {
-      this.isLoading = false;
+      if (showLoading) {
+        this.isLoading = false;
+      }
     }
   }
 
@@ -602,12 +620,17 @@ export default class Fec_BatchDataCreation extends LightningElement {
     await this.ensureSheetJsLoaded();
     const parsedRows = JSON.parse(resultRowsJson || "[]");
     const exportRows = Array.isArray(parsedRows)
-      ? parsedRows.map((r, index) => [
-          ...(sourceRows[index] || sourceHeaders.map(() => "")),
-          String(r?.recordId || ""),
-          String(r?.status || ""),
-          String(r?.errors || "")
-        ])
+      ? parsedRows.map((r, index) => {
+          const rowStatus = String(r?.status || "");
+          const exportId =
+            rowStatus.toLowerCase() === "succeeded" ? String(r?.recordId || "") : "";
+          return [
+            ...(sourceRows[index] || sourceHeaders.map(() => "")),
+            exportId,
+            rowStatus,
+            formatErrorsForExport(r?.errors)
+          ];
+        })
       : [];
     const worksheet = window.XLSX.utils.aoa_to_sheet([
       [...sourceHeaders, ...RESULT_APPEND_HEADERS],
