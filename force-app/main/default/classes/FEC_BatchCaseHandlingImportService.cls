@@ -73,6 +73,9 @@ public without sharing class FEC_BatchCaseHandlingImportService {
         }
         Map<String, Schema.SObjectField> fieldMap = batchFieldMap();
         SObject batchRow = newBatchRow(batchRecordId);
+        if (batchRow == null) {
+            return;
+        }
         Integer failedCount = countFailedImportRows(rowResults);
         Integer totalCount = rowResults == null ? 0 : rowResults.size();
         String failureReason = FEC_ConstantCommon.STR_EMPTY;
@@ -209,6 +212,9 @@ public without sharing class FEC_BatchCaseHandlingImportService {
         }
         Map<String, Schema.SObjectField> fieldMap = batchFieldMap();
         SObject batchRow = newBatchRow(batchRecordId);
+        if (batchRow == null) {
+            return;
+        }
         String failureReason = String.isBlank(reason) ? System.Label.FEC_BCH_ImportFailed : reason;
         putBatchStatusAndResult(fieldMap, batchRow, 'Failure');
         Integer totalCount = rowResults == null ? 0 : rowResults.size();
@@ -239,11 +245,19 @@ public without sharing class FEC_BatchCaseHandlingImportService {
     }
 
     private static Map<String, Schema.SObjectField> batchFieldMap() {
-        return Schema.getGlobalDescribe().get(BATCH_OBJECT_API_NAME).getDescribe().fields.getMap();
+        Schema.SObjectType batchType = Schema.getGlobalDescribe().get(BATCH_OBJECT_API_NAME);
+        if (batchType == null) {
+            return new Map<String, Schema.SObjectField>();
+        }
+        return batchType.getDescribe().fields.getMap();
     }
 
     private static SObject newBatchRow(Id batchRecordId) {
-        return Schema.getGlobalDescribe().get(BATCH_OBJECT_API_NAME).newSObject(batchRecordId);
+        Schema.SObjectType batchType = Schema.getGlobalDescribe().get(BATCH_OBJECT_API_NAME);
+        if (batchType == null) {
+            return null;
+        }
+        return batchType.newSObject(batchRecordId);
     }
 
     private static void putBatchStatusAndResult(
@@ -613,10 +627,12 @@ public without sharing class FEC_BatchCaseHandlingImportService {
         Map<String, String> routingSignatureByCaseSearch = new Map<String, String>();
         for (FEC_BatchCaseHandlingImportRow rr : output) {
             List<String> errs = new List<String>();
+            Case matched = null;
+            try {
             if (String.isBlank(rr.caseIdSearch)) {
-                errs.add(System.Label.FEC_Batch_Case_Handling_Import_Err_Missing_Case_Id);
+                addImportError(errs, System.Label.FEC_Batch_Case_Handling_Import_Err_Missing_Case_Id);
             }
-            Case matched = String.isNotBlank(rr.caseIdSearch) ? caseBySearch.get(rr.caseIdSearch) : null;
+            matched = String.isNotBlank(rr.caseIdSearch) ? caseBySearch.get(rr.caseIdSearch) : null;
             if (String.isNotBlank(rr.caseIdSearch) && matched == null) {
                 errs.add(System.Label.FEC_Batch_Case_Handling_Import_Err_Case_Id_Not_Found);
             } else if (matched != null && matched.IsClosed) {
@@ -646,8 +662,8 @@ public without sharing class FEC_BatchCaseHandlingImportService {
                         resolveCaseBusinessProcessCode(matched),
                         currentUserGroup
                     );
-                if (importScope != null && importScope.allowed != true) {
-                    errs.add(importScope.errorMessage);
+                if (importScope != null && importScope.allowed == false) {
+                    addImportError(errs, importScope.errorMessage);
                 } else if (importScope != null) {
                     errs.addAll(
                         validateScopeFieldsForCase(
@@ -688,7 +704,7 @@ public without sharing class FEC_BatchCaseHandlingImportService {
                     }
                     if (String.isNotBlank(rr.routingAction) && String.isBlank(rr.actionButtonId)) {
                         RoutingParseResult routingParsed = parseRoutingPattern(rr.routingAction);
-                        String caseMethod = routingParsed.methodKey;
+                        String caseMethod = routingParsed == null ? null : routingParsed.methodKey;
                         if (caseMethod == null) {
                             errs.add(System.Label.FEC_Batch_Case_Handling_Import_Err_Routing_Action_Invalid);
                         } else if (!isResolvedOrRejectCaseRouting(caseMethod)) {
@@ -729,14 +745,22 @@ public without sharing class FEC_BatchCaseHandlingImportService {
             }
 
             if (String.isBlank(rr.inputtedRemarks)) {
-                errs.add(System.Label.FEC_Batch_Case_Handling_Import_Err_Missing_Remark);
+                addImportError(errs, System.Label.FEC_Batch_Case_Handling_Import_Err_Missing_Remark);
             } else if (rr.inputtedRemarks.length() > REMARK_MAX_LEN) {
-                errs.add(System.Label.FEC_Batch_Case_Handling_Import_Err_Remark_Too_Long);
+                addImportError(errs, System.Label.FEC_Batch_Case_Handling_Import_Err_Remark_Too_Long);
+            }
+            } catch (Exception rowEx) {
+                addImportError(
+                    errs,
+                    String.isNotBlank(rowEx.getMessage())
+                        ? rowEx.getMessage()
+                        : System.Label.FEC_BCH_ImportFailed
+                );
             }
 
             if (!errs.isEmpty()) {
                 rr.status = System.Label.FEC_Batch_Case_Handling_Import_Row_Status_Failed;
-                rr.errors = String.join(errs, ' ');
+                rr.errors = joinImportErrors(errs);
             } else {
                 rr.recordId = matched == null ? FEC_ConstantCommon.STR_EMPTY : String.valueOf(matched.Id);
             }
@@ -807,21 +831,23 @@ public without sharing class FEC_BatchCaseHandlingImportService {
                 : caseLiteById.get(caseId).FEC_Current_Case_Stage__c;
             FEC_BCH_ImportRoutingResolver.ResolvedRouting resolvedRouting =
                 FEC_BCH_ImportRoutingResolver.resolve(stageIdForRow, actionLabel);
-            if (String.isBlank(rr.actionButtonId) && resolvedRouting.actionButtonId != null) {
+            if (resolvedRouting != null && String.isBlank(rr.actionButtonId) && resolvedRouting.actionButtonId != null) {
                 applyResolvedRoutingToRow(rr, resolvedRouting);
             }
             RoutingParseResult routingParsed = parseRoutingPattern(actionLabel);
-            String methodKey = String.isNotBlank(resolvedRouting.methodKey)
+            String methodKey = resolvedRouting != null && String.isNotBlank(resolvedRouting.methodKey)
                 ? resolvedRouting.methodKey
-                : routingParsed.methodKey;
-            if (String.isBlank(routingParsed.decision) && String.isNotBlank(resolvedRouting.decision)) {
-                routingParsed.decision = resolvedRouting.decision;
-            }
-            if (String.isBlank(routingParsed.routeTeamHint) && String.isNotBlank(resolvedRouting.routeTeamHint)) {
-                routingParsed.routeTeamHint = resolvedRouting.routeTeamHint;
-            }
-            if (String.isBlank(routingParsed.routeQueueHint) && String.isNotBlank(resolvedRouting.routeQueueHint)) {
-                routingParsed.routeQueueHint = resolvedRouting.routeQueueHint;
+                : (routingParsed == null ? null : routingParsed.methodKey);
+            if (routingParsed != null && resolvedRouting != null) {
+                if (String.isBlank(routingParsed.decision) && String.isNotBlank(resolvedRouting.decision)) {
+                    routingParsed.decision = resolvedRouting.decision;
+                }
+                if (String.isBlank(routingParsed.routeTeamHint) && String.isNotBlank(resolvedRouting.routeTeamHint)) {
+                    routingParsed.routeTeamHint = resolvedRouting.routeTeamHint;
+                }
+                if (String.isBlank(routingParsed.routeQueueHint) && String.isNotBlank(resolvedRouting.routeQueueHint)) {
+                    routingParsed.routeQueueHint = resolvedRouting.routeQueueHint;
+                }
             }
             if (String.isBlank(methodKey)) {
                 rr.status = System.Label.FEC_Batch_Case_Handling_Import_Row_Status_Failed;
@@ -833,7 +859,7 @@ public without sharing class FEC_BatchCaseHandlingImportService {
                 );
                 continue;
             }
-            if (routingActionRequiresExtraParams(methodKey, routingParsed.decision)) {
+            if (routingParsed != null && routingActionRequiresExtraParams(methodKey, routingParsed.decision)) {
                 rr.status = System.Label.FEC_Batch_Case_Handling_Import_Row_Status_Failed;
                 rr.errors = appendError(
                     rr.errors,
@@ -843,10 +869,10 @@ public without sharing class FEC_BatchCaseHandlingImportService {
             }
             try {
                 Map<String, String> runParams = new Map<String, String>{ 'caseId' => String.valueOf(caseId) };
-                if (methodKey == FEC_CaseBusinessService.UPDATEACTION && String.isNotBlank(routingParsed.decision)) {
+                if (routingParsed != null && methodKey == FEC_CaseBusinessService.UPDATEACTION && String.isNotBlank(routingParsed.decision)) {
                     runParams.put('decision', routingParsed.decision);
                 }
-                if (methodKey == FEC_CaseBusinessService.ROUTE_TO) {
+                if (routingParsed != null && methodKey == FEC_CaseBusinessService.ROUTE_TO) {
                     Case caseLite = caseLiteById.get(caseId);
                     Map<String, String> routeParams = caseLite == null
                         ? null
@@ -1045,7 +1071,7 @@ public without sharing class FEC_BatchCaseHandlingImportService {
     }
 
     private static String resolveRoutingMethodKey(String raw) {
-        if (String.isBlank(raw)) {
+        if (String.isBlank(raw) || FEC_CaseBusinessService.METHOD_MAP == null) {
             return null;
         }
         String trimmed = raw.trim();
@@ -1500,7 +1526,7 @@ public without sharing class FEC_BatchCaseHandlingImportService {
         Id stageId = matched == null ? null : matched.FEC_Current_Case_Stage__c;
         FEC_BCH_ImportRoutingResolver.ResolvedRouting resolved =
             FEC_BCH_ImportRoutingResolver.resolve(stageId, primaryLabel);
-        if (String.isBlank(resolved.methodKey)) {
+        if (resolved == null || String.isBlank(resolved.methodKey)) {
             errs.add(System.Label.FEC_Batch_Case_Handling_Import_Err_Routing_Action_Invalid);
             return errs;
         }
@@ -1521,7 +1547,7 @@ public without sharing class FEC_BatchCaseHandlingImportService {
         if (cofOrGsr == true && String.isNotBlank(rr.routingAction)) {
             FEC_BCH_ImportRoutingResolver.ResolvedRouting caseResolved =
                 FEC_BCH_ImportRoutingResolver.resolve(stageId, rr.routingAction);
-            if (String.isBlank(caseResolved.methodKey) ||
+            if (caseResolved == null || String.isBlank(caseResolved.methodKey) ||
                 !isResolvedOrRejectCaseRouting(caseResolved.methodKey)) {
                 errs.add(System.Label.FEC_Batch_Case_Handling_Import_Err_Assignment_Routing_Resolve_Only);
             }
@@ -1531,7 +1557,7 @@ public without sharing class FEC_BatchCaseHandlingImportService {
             String.isBlank(rr.routingAction)) {
             FEC_BCH_ImportRoutingResolver.ResolvedRouting asgResolved =
                 FEC_BCH_ImportRoutingResolver.resolve(stageId, rr.assignmentRoutingAction);
-            if (String.isBlank(asgResolved.methodKey)) {
+            if (asgResolved == null || String.isBlank(asgResolved.methodKey)) {
                 errs.add(System.Label.FEC_Batch_Case_Handling_Import_Err_Assignment_Routing_Invalid);
             } else {
                 applyResolvedRoutingToRow(rr, asgResolved);
@@ -2018,6 +2044,26 @@ public without sharing class FEC_BatchCaseHandlingImportService {
             jsonStr,
             List<FEC_Case_Remarks__c>.class
         );
+    }
+
+    private static void addImportError(List<String> errs, String message) {
+        if (errs == null || String.isBlank(message)) {
+            return;
+        }
+        errs.add(message);
+    }
+
+    private static String joinImportErrors(List<String> errs) {
+        if (errs == null || errs.isEmpty()) {
+            return FEC_ConstantCommon.STR_EMPTY;
+        }
+        List<String> parts = new List<String>();
+        for (String err : errs) {
+            if (String.isNotBlank(err)) {
+                parts.add(err);
+            }
+        }
+        return parts.isEmpty() ? FEC_ConstantCommon.STR_EMPTY : String.join(parts, ' ');
     }
 
     private static String appendError(String current, String incoming) {
