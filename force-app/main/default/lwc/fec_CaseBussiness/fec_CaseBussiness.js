@@ -2853,6 +2853,13 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
       isAllValid = false;
     }
 
+    const mrcPanel = this._getMrcReturnPanelEl();
+    if (mrcPanel && typeof mrcPanel.validateForSubmit === "function") {
+      if (!mrcPanel.validateForSubmit()) {
+        isAllValid = false;
+      }
+    }
+
     const contractClosureEl = this._getContractClosureFormEl();
     if (
       contractClosureEl &&
@@ -2929,10 +2936,26 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
     return null;
   }
 
+  _getMrcReturnPanelEl() {
+    return this.template.querySelector("c-fec_-mrc-return-panel");
+  }
+
   _getContractClosureFormEl() {
+    const panel = this._getMrcReturnPanelEl();
+    if (panel && typeof panel.getDeliveryForm === "function") {
+      const delivery = panel.getDeliveryForm();
+      if (
+        delivery &&
+        (typeof delivery.validateForSubmit === "function" ||
+          typeof delivery.saveToCase === "function" ||
+          typeof delivery.saveDraftIfApplicable === "function")
+      ) {
+        return delivery;
+      }
+    }
     return (
-      this._getDynamicFormEl('fec_ContractClosureForm') ||
-      this._getDynamicFormEl('fec_MrcDeliveryForm')
+      this._getDynamicFormEl("fec_ContractClosureForm") ||
+      this._getDynamicFormEl("fec_MrcDeliveryForm")
     );
   }
 
@@ -2968,6 +2991,10 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
   }
 
   _saveContractClosureDraftIfApplicable() {
+    const panel = this._getMrcReturnPanelEl();
+    if (panel && typeof panel.saveDraftIfApplicable === "function") {
+      return panel.saveDraftIfApplicable();
+    }
     const el = this._getContractClosureFormEl();
     if (!el || typeof el.saveDraftIfApplicable !== "function") {
       return Promise.resolve({ valid: true, messages: [] });
@@ -2976,6 +3003,10 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
   }
 
   _saveContractClosureIfApplicable() {
+    const panel = this._getMrcReturnPanelEl();
+    if (panel && typeof panel.saveToCase === "function") {
+      return panel.saveToCase();
+    }
     const el = this._getContractClosureFormEl();
     if (!el || typeof el.saveToCase !== "function") {
       return Promise.resolve({ valid: true, messages: [] });
@@ -3204,11 +3235,31 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
       this.business?.lockApiLwcsAfterRevertToDefaultStage === true;
   }
 
+  _syncMrcReturnCaseFieldsBeforeSubmit() {
+    if (!isMrcRl05Branch(this.business)) {
+      return Promise.resolve();
+    }
+    const fields = { [ID_FIELD.fieldApiName]: this.recordId };
+    const confirmation = this.mrcReturnCustomerConfirmationValue;
+    if (confirmation) {
+      fields[FIELD_MRC_CUSTOMER_CONFIRMATION] = confirmation;
+    }
+    const handlingOption = this.mrcReturnHandlingOptionValue;
+    if (handlingOption) {
+      fields[FIELD_MRC_HANDLING_OPTION] = handlingOption;
+    }
+    if (Object.keys(fields).length <= 1) {
+      return Promise.resolve();
+    }
+    return updateRecord({ fields });
+  }
+
   //linhdev: Persist child data before case record form submit
   _persistChildDataBeforeCaseRecordFormSubmit() {
     //linhdev fix jira FECREDIT_CSM_2025_KH-1469-1474 — gap 2: lưu Redeemed Points trước record form submit
     this._syncPointsRedemptionFieldToRecordForm();
     return Promise.all([
+      this._syncMrcReturnCaseFieldsBeforeSubmit(),
       this._saveRemovePhoneDraftIfApplicable(),
       this._savePointsRedemptionDraftIfApplicable(),
     ]);
