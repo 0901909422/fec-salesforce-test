@@ -1348,6 +1348,8 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
       },
       detail: { value },
     });
+    this._applyMrcReturnCaseIntegration();
+    this.business = { ...this.business };
   }
 
   _applyMrcReturnCaseIntegration() {

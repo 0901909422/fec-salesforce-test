@@ -106,26 +106,28 @@ function shouldShowMrcDeliveryForm(
     const code = String(business?.subCodeCode ?? STR_EMPTY).toUpperCase();
     return code.includes("RL05.02");
   }
-  if (ctx.showDeliveryForm !== true) {
-    return false;
-  }
-  if (
-    ctx.dupCaseOnly === true &&
-    handlingOptionValue !== MRC_OPT_CANCEL_PREVIOUS
-  ) {
-    return false;
-  }
+
   const confVal =
     customerConfirmationOverride != null &&
     String(customerConfirmationOverride).trim() !== STR_EMPTY
       ? String(customerConfirmationOverride).trim()
       : getCaseFieldValue(business, FIELD_MRC_CUSTOMER_CONFIRMATION);
+
+  // TH2: chỉ Cond1 — Delivery sau radio Option 2 (bỏ qua showDeliveryForm=false từ Apex).
+  if (ctx.dupCaseOnly === true) {
+    return handlingOptionValue === MRC_OPT_CANCEL_PREVIOUS;
+  }
+
+  // TH1: Cond1+Cond2 + "Chưa nhận MRC" — Delivery sau radio Option 2.
   if (
     ctx.isReturnSubCode &&
     showMrcRl0502DupBanner(business) &&
-    isMrcNotReceivedConfirmation(confVal) &&
-    !handlingOptionValue
+    isMrcNotReceivedConfirmation(confVal)
   ) {
+    return handlingOptionValue === MRC_OPT_CANCEL_PREVIOUS;
+  }
+
+  if (ctx.showDeliveryForm !== true) {
     return false;
   }
   return true;

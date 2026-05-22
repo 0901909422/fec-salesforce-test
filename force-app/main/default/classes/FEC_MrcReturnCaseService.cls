@@ -148,8 +148,8 @@ public without sharing class FEC_MrcReturnCaseService {
                 return ctx;
             }
 
-            // RL05.02: luôn hiện dropdown Xác nhận KH trước; radio Noti-11 sau khi chọn "chưa nhận MRC".
-            ctx.showCustomerConfirmation = true;
+            // TH1/TH3: Cond2 → Xác nhận KH; TH2/TH4: không hiện combobox.
+            ctx.showCustomerConfirmation = cond2;
             String conf = customerConfirmation != null
                 ? customerConfirmation.trim()
                 : null;
