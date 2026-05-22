@@ -172,7 +172,6 @@ export default class Fec_SubProcessContainer extends LightningElement {
       console.error("[initializeCase] ERROR", error);
     }
   }
-}
 
   /** Gọi từ fec_CaseBussiness sau Submit / Manual Hold để refresh kết quả Hold Case. */
   @api
