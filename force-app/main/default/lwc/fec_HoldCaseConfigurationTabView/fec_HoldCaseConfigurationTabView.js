@@ -1,4 +1,6 @@
 import { LightningElement, wire, track } from 'lwc';
+import { getObjectInfo } from 'lightning/uiObjectInfoApi';
+import HOLD_CASE_CONFIG_OBJECT from '@salesforce/schema/FEC_Hold_Case_Config__c';
 import { CurrentPageReference, NavigationMixin } from 'lightning/navigation';
 import { loadStyle } from 'lightning/platformResourceLoader';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
@@ -51,6 +53,7 @@ export default class Fec_HoldCaseConfigurationTabView extends NavigationMixin(Li
     @track isShowNfuModal = false;
 
     isLoading = false;
+    canEdit = false;
 
     holdCaseConfigurationId;
     activeSections = ['holaCaseConfigHistory'];
@@ -169,6 +172,13 @@ export default class Fec_HoldCaseConfigurationTabView extends NavigationMixin(Li
         if (holdCaseConfigurationId) {
             this.holdCaseConfigurationId = holdCaseConfigurationId;
             this.loadDetail();
+        }
+    }
+
+    @wire(getObjectInfo, { objectApiName: HOLD_CASE_CONFIG_OBJECT })
+    wiredHoldCaseConfigObjectInfo({ data }) {
+        if (data) {
+            this.canEdit = data.updateable;
         }
     }
 
@@ -291,7 +301,7 @@ export default class Fec_HoldCaseConfigurationTabView extends NavigationMixin(Li
     }
 
     handleEdit() {
-        if (!this.record) {
+        if (!this.canEdit || !this.record) {
             return;
         }
         this.populateFormForEdit();
@@ -722,6 +732,10 @@ export default class Fec_HoldCaseConfigurationTabView extends NavigationMixin(Li
     }
 
     handleSave() {
+        if (!this.canEdit) {
+            return;
+        }
+
         const isValid = this.validateForm();
         if (!isValid) {
             return;
