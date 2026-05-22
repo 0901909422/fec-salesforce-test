@@ -5,6 +5,19 @@
 public with sharing class FEC_BatchCaseHandlingResultXlsxBuilder {
 
     private static final String SHEET_NAME = 'Result';
+    private static final String XML_DECL_STANDALONE = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>';
+    private static final String XML_DECL = '<?xml version="1.0" encoding="UTF-8"?>';
+    private static final String NS_PACKAGE_RELATIONSHIPS = 'http://schemas.openxmlformats.org/package/2006/relationships';
+    private static final String REL_OFFICE_DOCUMENT = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument';
+    private static final String REL_WORKSHEET = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet';
+    private static final String REL_STYLES = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles';
+    private static final String NS_SPREADSHEET_MAIN = 'http://schemas.openxmlformats.org/spreadsheetml/2006/main';
+    private static final String NS_CONTENT_TYPES = 'http://schemas.openxmlformats.org/package/2006/content-types';
+    private static final String CT_RELS = 'application/vnd.openxmlformats-package.relationships+xml';
+    private static final String CT_XML = 'application/xml';
+    private static final String CT_WORKBOOK = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml';
+    private static final String CT_WORKSHEET = 'application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml';
+    private static final String CT_STYLES = 'application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml';
 
     public static Blob buildWorkbookBlob(List<List<String>> sheetRows) {
         if (sheetRows == null || sheetRows.isEmpty()) {
@@ -27,8 +40,10 @@ public with sharing class FEC_BatchCaseHandlingResultXlsxBuilder {
             rowXmlParts.add(buildRowXml(rowIdx + 1, sheetRows[rowIdx], maxCols));
         }
         String sheetXml =
-            '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
-            '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">' +
+            XML_DECL_STANDALONE +
+            '<worksheet xmlns="' +
+            NS_SPREADSHEET_MAIN +
+            '">' +
             '<dimension ref="' +
             dimensionRef +
             '"/>' +
@@ -42,40 +57,64 @@ public with sharing class FEC_BatchCaseHandlingResultXlsxBuilder {
         writer.addEntry(
             '[Content_Types].xml',
             Blob.valueOf(
-                '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
-                    '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">' +
-                    '<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>' +
-                    '<Default Extension="xml" ContentType="application/xml"/>' +
-                    '<Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>' +
-                    '<Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>' +
-                    '<Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>' +
+                XML_DECL_STANDALONE +
+                    '<Types xmlns="' +
+                    NS_CONTENT_TYPES +
+                    '">' +
+                    '<Default Extension="rels" ContentType="' +
+                    CT_RELS +
+                    '"/>' +
+                    '<Default Extension="xml" ContentType="' +
+                    CT_XML +
+                    '"/>' +
+                    '<Override PartName="/xl/workbook.xml" ContentType="' +
+                    CT_WORKBOOK +
+                    '"/>' +
+                    '<Override PartName="/xl/worksheets/sheet1.xml" ContentType="' +
+                    CT_WORKSHEET +
+                    '"/>' +
+                    '<Override PartName="/xl/styles.xml" ContentType="' +
+                    CT_STYLES +
+                    '"/>' +
                     '</Types>'
             )
         );
         writer.addEntry(
             '_rels/.rels',
             Blob.valueOf(
-                '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
-                    '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">' +
-                    '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/>' +
+                XML_DECL_STANDALONE +
+                    '<Relationships xmlns="' +
+                    NS_PACKAGE_RELATIONSHIPS +
+                    '">' +
+                    '<Relationship Id="rId1" Type="' +
+                    REL_OFFICE_DOCUMENT +
+                    '" Target="xl/workbook.xml"/>' +
                     '</Relationships>'
             )
         );
         writer.addEntry(
             'xl/_rels/workbook.xml.rels',
             Blob.valueOf(
-                '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
-                    '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">' +
-                    '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/>' +
-                    '<Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>' +
+                XML_DECL_STANDALONE +
+                    '<Relationships xmlns="' +
+                    NS_PACKAGE_RELATIONSHIPS +
+                    '">' +
+                    '<Relationship Id="rId1" Type="' +
+                    REL_WORKSHEET +
+                    '" Target="worksheets/sheet1.xml"/>' +
+                    '<Relationship Id="rId2" Type="' +
+                    REL_STYLES +
+                    '" Target="styles.xml"/>' +
                     '</Relationships>'
             )
         );
         writer.addEntry(
             'xl/workbook.xml',
             Blob.valueOf(
-                '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
-                    '<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">' +
+                XML_DECL_STANDALONE +
+                    '<workbook xmlns="' +
+                    NS_SPREADSHEET_MAIN +
+                    '" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">' +
                     '<sheets><sheet name="' +
                     xmlEscape(SHEET_NAME) +
                     '" sheetId="1" r:id="rId1"/></sheets>' +
@@ -85,8 +124,10 @@ public with sharing class FEC_BatchCaseHandlingResultXlsxBuilder {
         writer.addEntry(
             'xl/styles.xml',
             Blob.valueOf(
-                '<?xml version="1.0" encoding="UTF-8"?>' +
-                    '<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">' +
+                XML_DECL +
+                    '<styleSheet xmlns="' +
+                    NS_SPREADSHEET_MAIN +
+                    '">' +
                     '<fonts count="1"><font><sz val="11"/><name val="Calibri"/></font></fonts>' +
                     '<fills count="1"><fill><patternFill patternType="none"/></fill></fills>' +
                     '<borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders>' +

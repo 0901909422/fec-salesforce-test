@@ -16502,7 +16502,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC_BCH_ResultHdr_Status</shortDescription>
-        <value>Status</value>
+        <value>__Status</value>
     </labels>
     <labels>
         <fullName>FEC_BCH_ResultHdr_Errors</fullName>
@@ -16510,7 +16510,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC_BCH_ResultHdr_Errors</shortDescription>
-        <value>Errors</value>
+        <value>__Errors</value>
     </labels>
     <labels>
         <fullName>FEC_BCH_ResultHdr_AssignmentId</fullName>
@@ -17797,7 +17797,7 @@
         <shortDescription>Export Detail</shortDescription>
         <value>Export only the detail rows. Use this to do further calculations or for uploading to other systems.</value>
     </labels>
-     <labels>
+    <labels>
         <fullName>FEC_Format</fullName>
         <categories>Label</categories>
         <language>en_US</language>
@@ -17812,7 +17812,7 @@
         <protected>false</protected>
         <shortDescription>Format Exce</shortDescription>
         <value> Excel Format .xlsx</value>
-    </labels> 
+    </labels>
     <labels>
         <fullName>FEC_GA_Save_Success</fullName>
         <language>en_US</language>
@@ -18180,5 +18180,5 @@
         <shortDescription>Error Download</shortDescription>
         <value>Select at least one record and try again.</value>
     </labels>
-   
+
 </CustomLabels>

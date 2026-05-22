@@ -7,8 +7,8 @@ public without sharing class FEC_BatchCaseHandlingImportService {
     private static final String LABEL_CS_SUPPORT_ASSESSMENT = 'CS Support đánh giá yêu cầu';
     private static final String LABEL_RISK_LEVEL = 'Mức độ rủi ro';
     private static final String LABEL_REQUIRED_ACTION = 'Hành động cần thiết';
-    private static final String RESULT_COL_STATUS = 'Status';
-    private static final String RESULT_COL_ERRORS = 'Errors';
+    private static final String RESULT_COL_STATUS = '__Status';
+    private static final String RESULT_COL_ERRORS = '__Errors';
     private static final String ERR_NOT_OWNER = 'Người dùng không phải chủ sở hữu Case';
     private static final String ERR_FIELD_NOT_CONFIGURED = 'Trường dữ liệu chưa được thiết lập trong Master Data Setting';
     private static final String ERR_MISSING_CS_D2C_ASSESSMENT = 'Thiếu giá trị CS D2C đánh giá yêu cầu';
