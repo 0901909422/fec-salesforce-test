@@ -50,8 +50,8 @@ public without sharing class FEC_NotificationService {
                    FEC_Notification_Template__r.FEC_Enhanced_Letterhead__c,
                    FEC_Product_Type__c,
                    FEC_Category__c,
-                //    FEC_SubCategory__c,
-                //    FEC_SubCode__c,
+                   FEC_Sub_Category__c,
+                   FEC_Sub_Code__c,
                    FEC_Customer_Type__c,
                    FEC_Schedule_Start_Time__c,
                    FEC_Schedule_End_Time__c
@@ -93,8 +93,8 @@ public without sharing class FEC_NotificationService {
                          FEC_Customer_Type__c,
                          FEC_Product_Type__c,
                          FEC_Category__c,
-                         FEC_SubCategory__c,
-                         FEC_SubCode__c
+                         FEC_Sub_Category__c,
+                         FEC_Sub_Code__c
                   FROM Case
                   WHERE Id IN :routedCaseIds
               ]);
@@ -151,7 +151,7 @@ public without sharing class FEC_NotificationService {
                 List<String> toAddresses = FEC_CommonUltils.parseReceivers(n.FEC_Receivers__c);
                 Boolean templateActive = n.FEC_Notification_Template__r?.FEC_Active__c == true;
                 Boolean hasSubject = String.isNotBlank(n.FEC_Notification_Template__r?.FEC_Subject_Line__c);
-                System.debug('--- toAddresses=' + toAddresses + ' templateActive=' + templateActive + ' hasSubject=' + hasSubject);
+                System.debug('--- toAddresses=' + toAddresses);
                 if (toAddresses.isEmpty()) continue;
                 if (!hasSubject) continue;
                 if (!templateActive) continue;
@@ -255,14 +255,15 @@ public without sharing class FEC_NotificationService {
                    FEC_Assigned_to_Queue__c,
                    FEC_Receivers__c,
                    FEC_Notification_Channel__r.Name,
+                   FEC_Notification_Template__c,
                    FEC_Notification_Template__r.Name,
                    FEC_Notification_Template__r.FEC_Subject_Line__c,
                    FEC_Notification_Template__r.FEC_Body__c,
                    FEC_Notification_Template__r.FEC_Active__c,
                    FEC_Product_Type__c,
                    FEC_Category__c,
-                //    FEC_SubCategory__c,
-                //    FEC_SubCode__c,
+                   FEC_Sub_Category__c,
+                   FEC_Sub_Code__c,
                    FEC_Customer_Type__c,
                    FEC_Schedule_Start_Time__c,
                    FEC_Schedule_End_Time__c
@@ -301,8 +302,8 @@ public without sharing class FEC_NotificationService {
                          FEC_Customer_Type__c,
                          FEC_Product_Type__c,
                          FEC_Category__c,
-                         FEC_SubCategory__c,
-                         FEC_SubCode__c
+                         FEC_Sub_Category__c,
+                         FEC_Sub_Code__c
                   FROM Case
                   WHERE Id IN :routedCaseIdsSf
               ]);
@@ -448,9 +449,31 @@ public without sharing class FEC_NotificationService {
         }
         if (n.FEC_Product_Type__c != null && n.FEC_Product_Type__c != c.FEC_Product_Type__c) return false;
         if (n.FEC_Category__c != null && n.FEC_Category__c != c.FEC_Category__c) return false;
-        // if (n.FEC_SubCategory__c != null && n.FEC_SubCategory__c != c.FEC_SubCategory__c) return false;
-        // if (n.FEC_SubCode__c != null && n.FEC_SubCode__c != c.FEC_SubCode__c) return false;
+
+        String caseSubCategory = String.valueOf(c.get('FEC_Sub_Category__c'));
+        String caseSubCode = String.valueOf(c.get('FEC_Sub_Code__c'));
+
+        if (String.isNotBlank(n.FEC_Sub_Category__c) && !containsConfiguredValue(n.FEC_Sub_Category__c, caseSubCategory)) {
+            return false;
+        }
+        if (String.isNotBlank(n.FEC_Sub_Code__c) && !containsConfiguredValue(n.FEC_Sub_Code__c, caseSubCode)) {
+            return false;
+        }
         return true;
+    }
+
+    private static Boolean containsConfiguredValue(String configuredValues, String caseValue) {
+        if (String.isBlank(configuredValues)) return true;
+        if (String.isBlank(caseValue)) return false;
+
+        String normalizedCaseValue = caseValue.trim().toLowerCase();
+        for (String token : configuredValues.split('[;,\\n\\r]+')) {
+            if (String.isBlank(token)) continue;
+            if (token.trim().toLowerCase() == normalizedCaseValue) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
