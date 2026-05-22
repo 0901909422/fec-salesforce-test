@@ -34,7 +34,8 @@ public with sharing class FEC_AutoHoldCaseService {
 
         List<Case> caseRows = [
             SELECT
-                FEC_Final_Status__c,
+                Status,
+                FEC_Team__c,
                 FEC_Stage_Name__c,
                 FEC_Current_Case_Stage__c
             FROM Case
@@ -50,7 +51,9 @@ public with sharing class FEC_AutoHoldCaseService {
             FEC_Case__c = caseId,
             FEC_Routing_Action__c = 'Submit',
             FEC_Current_Status__c = currentStatusBeforeSubmit,
-            FEC_Changed_Status__c = endCase.FEC_Final_Status__c,
+            FEC_Changed_Status__c = FEC_CaseBusinessService.routingHistoryStatusSnapshot(
+                endCase
+            ),
             FEC_Stage_Name__c = endCase.FEC_Stage_Name__c,
             FEC_Previous_Stage__c = endCase.FEC_Current_Case_Stage__c
         );
@@ -73,13 +76,15 @@ public with sharing class FEC_AutoHoldCaseService {
             return;
         }
         List<Case> endCases = [
-            SELECT FEC_Final_Status__c
+            SELECT Status, FEC_Team__c
             FROM Case
             WHERE Id = :rows[0].FEC_Case__c
             LIMIT 1
         ];
         if (!endCases.isEmpty()) {
-            String changedStatus = endCases[0].FEC_Final_Status__c;
+            String changedStatus = FEC_CaseBusinessService.routingHistoryStatusSnapshot(
+                endCases[0]
+            );
             if (rows[0].FEC_Changed_Status__c != changedStatus) {
                 Database.update(
                     new FEC_Routing_Action_History__c(
