@@ -825,6 +825,9 @@
         <members>fec_IPPClosureForm</members>
         <members>fec_IPPDetails</members>
         <members>fec_MRC</members>
+        <members>fec_MrcReturnCaseForm</members>
+        <members>fec_MrcReturnDupBanner</members>
+        <members>fecMrcReturnCaseLogic</members>
         <members>fec_MainInfoLoanAccount</members>
         <members>fec_NotificationOverride</members>
         <members>fec_PaymentHistoryAcount</members>

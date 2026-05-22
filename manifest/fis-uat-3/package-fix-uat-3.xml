@@ -195,6 +195,9 @@
         <members>fec_BatchCaseHandling</members>
         <members>fec_holdCaseAuto</members>
         <members>fec_MRC</members>
+        <members>fec_MrcReturnCaseForm</members>
+        <members>fec_MrcReturnDupBanner</members>
+        <members>fecMrcReturnCaseLogic</members>
         <members>fec_DoNotBotherResultView</members>
         <members>fec_Banca</members>
         <members>fec_CommonDetailView</members>
