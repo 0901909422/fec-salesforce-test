@@ -83,7 +83,7 @@ public without sharing class FEC_BatchCaseHandlingImportQueueable implements Que
     }
 
     private static Boolean canEnqueueFollowUpJob() {
-        return Limits.getQueueableJobs() < Limits.getLimitQueueableJobs();
+        return Limits.getQueueableJobs() == 0;
     }
 
     private static void enqueueFollowUpJob(

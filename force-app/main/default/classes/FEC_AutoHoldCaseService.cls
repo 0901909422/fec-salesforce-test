@@ -17,6 +17,9 @@ public with sharing class FEC_AutoHoldCaseService {
         if (routingHistoryId == null) {
             return;
         }
+        if (FEC_BatchCaseHandlingImportService.isBatchImportApplyInProgress()) {
+            return;
+        }
         System.enqueueJob(new FEC_AutoHoldCaseQueueable(routingHistoryId));
     }
 
