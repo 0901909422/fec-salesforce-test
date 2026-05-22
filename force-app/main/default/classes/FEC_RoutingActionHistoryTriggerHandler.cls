@@ -59,6 +59,12 @@ public without sharing class FEC_RoutingActionHistoryTriggerHandler {
 
   public static void sendNotificationEmails(List<FEC_Routing_Action_History__c> newList) {
     if (newList == null || newList.isEmpty()) return;
+    if (FEC_BatchCaseHandlingImportService.isBatchImportApplyInProgress()) {
+      return;
+    }
+    if (Limits.getQueueableJobs() >= Limits.getLimitQueueableJobs()) {
+      return;
+    }
     System.enqueueJob(new FEC_SendNotificationEmailsQueueable(newList));
   }
 

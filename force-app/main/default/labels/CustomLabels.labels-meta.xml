@@ -17694,7 +17694,7 @@
         <shortDescription>Export Detail</shortDescription>
         <value>Export only the detail rows. Use this to do further calculations or for uploading to other systems.</value>
     </labels>
-     <labels>
+    <labels>
         <fullName>FEC_Format</fullName>
         <categories>Label</categories>
         <language>en_US</language>
@@ -17709,7 +17709,7 @@
         <protected>false</protected>
         <shortDescription>Format Exce</shortDescription>
         <value> Excel Format .xlsx</value>
-    </labels> 
+    </labels>
     <labels>
         <fullName>FEC_GA_Save_Success</fullName>
         <language>en_US</language>
@@ -18077,7 +18077,7 @@
         <shortDescription>Error Download</shortDescription>
         <value>Select at least one record and try again.</value>
     </labels>
-   
+
     <labels>
         <fullName>FEC_Template_ID</fullName>
         <language>en_US</language>

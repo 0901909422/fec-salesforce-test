@@ -3,12 +3,16 @@ import { getRecord, updateRecord } from "lightning/uiRecordApi";
 import { ShowToastEvent } from "lightning/platformShowToastEvent";
 import getActiveCaseQueues from "@salesforce/apex/FEC_CaseAssignmentConfigController.getActiveCaseQueues";
 import getRoleOptions from "@salesforce/apex/FEC_CaseAssignmentConfigController.getRoleOptions";
+import findQueuesMissingRoleCoverage from "@salesforce/apex/FEC_CaseAssignmentConfigController.findQueuesMissingRoleCoverage";
 
 import QUEUES_FIELD from "@salesforce/schema/FEC_Case_Assignment__c.FEC_Select_Queues__c";
 import ROLE_FIELD from "@salesforce/schema/FEC_Case_Assignment__c.FEC_Role__c";
 import SCALE_FIELD from "@salesforce/schema/FEC_Case_Assignment__c.FEC_Scale__c";
 import ID_FIELD from "@salesforce/schema/FEC_Case_Assignment__c.Id";
 import STATUS_FIELD from "@salesforce/schema/FEC_Case_Assignment__c.FEC_Status__c";
+
+const MSG_ROLE_REQUIRED_PER_QUEUE =
+  "Phải thêm Role cho mỗi queue đã chọn trong Select Queues.";
 
 const FIELDS = [QUEUES_FIELD, ROLE_FIELD, SCALE_FIELD, STATUS_FIELD];
 
@@ -222,6 +226,20 @@ export default class Fec_CaseAssignmentConfig extends LightningElement {
     }
     if (!this.roleRows.length) {
       this.showToast("Warning", "Please add at least one role-scale.", "warning");
+      return;
+    }
+
+    try {
+      const missingQueues = await findQueuesMissingRoleCoverage({
+        queueNames: this.selectedQueues,
+        assignedRoleNames: this.roleRows.map((row) => row.role),
+      });
+      if (missingQueues?.length) {
+        this.showToast("Error", MSG_ROLE_REQUIRED_PER_QUEUE, "error");
+        return;
+      }
+    } catch (e) {
+      this.showToast("Error", "Cannot validate Role for selected queues.", "error");
       return;
     }
 

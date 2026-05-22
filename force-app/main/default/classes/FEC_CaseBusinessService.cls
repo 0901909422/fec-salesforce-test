@@ -859,6 +859,7 @@ public without sharing class FEC_CaseBusinessService {
           FEC_MrcDuplicateCaseService.OpenDupInfo mrcDupEarly = FEC_MrcDuplicateCaseService.findOlderOpenRl05DuplicateInfo(
             selectedCase.Id,
             selectedCase.FEC_Account_or_Contract__c,
+            selectedCase.FEC_Account_Contract_Number_Text__c,
             selectedCase.CreatedDate,
             result.subCategoryCode,
             result.subCodeCode
@@ -2267,12 +2268,14 @@ public without sharing class FEC_CaseBusinessService {
         when REJECT {
           markCaseSubmittedAndClearDrafts(caseId);
           reject(caseId);
+          FEC_AssignmentRoutingActionHandler.resolveAllAssignments(caseId);
           createRoutingActionHis('Reject', '', oldOwnerName, oldOwnerId, caseId, stageName, finalStatusBeforeSubmit, currentStageId);
           return null;
         }
         when RESOLVE {
           markCaseSubmittedAndClearDrafts(caseId);
           resolve(caseId);
+          FEC_AssignmentRoutingActionHandler.resolveAllAssignments(caseId);
           createRoutingActionHis('Resolve', '', oldOwnerName, oldOwnerId, caseId, stageName, finalStatusBeforeSubmit, currentStageId);
           return null;
         }
@@ -4545,7 +4548,8 @@ public without sharing class FEC_CaseBusinessService {
         Id,
         FEC_Perform_User__c,
         FEC_Updated_User_Queue__c,
-        FEC_Updated_User_Queue_ID__c
+        FEC_Updated_User_Queue_ID__c,
+        FEC_Stage_Name__c
       FROM FEC_Routing_Action_History__c
       WHERE
         FEC_Case__c = :caseId
@@ -4578,6 +4582,17 @@ public without sharing class FEC_CaseBusinessService {
         currentUserId == lastAction.FEC_Perform_User__c &&
         lastAction.FEC_Updated_User_Queue_ID__c == c.OwnerId
       ) {
+        if (String.isNotBlank(lastAction.FEC_Stage_Name__c)) {
+          List<FEC_Case_Stage__c> caseStageList = [
+            SELECT Id, Name
+            FROM FEC_Case_Stage__c
+            WHERE Name = :lastAction.FEC_Stage_Name__c
+            LIMIT 1
+          ];
+          if (!caseStageList.isEmpty()) {
+            c.FEC_Current_Case_Stage__c = caseStageList[0].Id;
+          }
+        }
         c.OwnerId = currentUserId;
         c.Status = FEC_ConstantCommon.CASE_STATUS_PENDING;
         registerSkipOwnerChangeRoutingHistory(c.Id);
