@@ -19,7 +19,7 @@ public without sharing class FEC_NotificationService {
      * @param newCases Danh sách Case sau update
      * @param oldMap Map chứa giá trị cũ
      * @return void
-     * @created: 2026/04/06
+     * @created: 2026/04/06 
      */
     public static void sendEmailNotifications(List<Case> newCases, Map<Id, Case> oldMap) {
         System.debug('--- [sendEmailNotifications] START cases=' + newCases.size());
@@ -41,26 +41,21 @@ public without sharing class FEC_NotificationService {
                    Name,
                    FEC_Assigned_to_Queue__c,
                    FEC_Receivers__c,
-                   FEC_Notification_Channel__r.Name,
-                   FEC_Notification_Template__c,
-                   FEC_Notification_Template__r.Name,
-                   FEC_Notification_Template__r.FEC_Subject_Line__c,
-                   FEC_Notification_Template__r.FEC_Body__c,
-                   FEC_Notification_Template__r.FEC_Active__c,
-                   FEC_Notification_Template__r.FEC_Enhanced_Letterhead__c,
                    FEC_Product_Type__c,
                    FEC_Category__c,
-                //    FEC_SubCategory__c,
-                //    FEC_SubCode__c,
+                   FEC_SubCategory__c,
+                   FEC_SubCode__c,
                    FEC_Customer_Type__c,
                    FEC_Schedule_Start_Time__c,
                    FEC_Schedule_End_Time__c
             FROM FEC_Notification__c
             WHERE FEC_Target_Group__c = :targetInternal
               AND FEC_Notification_Status__c = true
-              AND FEC_Notification_Channel__r.Name = :channelEmail
               AND FEC_Assigned_to_Queue__c != null
         ];
+        Map<Id, List<FEC_Notification_Template_Channel__c>> templateChannelsByNotificationId = loadTemplateChannels(notifications);
+        Map<Id, FEC_Notification_Channel__c> channelById = loadNotificationChannels(templateChannelsByNotificationId);
+        Map<Id, FEC_Template__c> templateById = loadTemplates(templateChannelsByNotificationId);
         System.debug('--- [sendEmailNotifications] notifications queried=' + notifications.size());
 
         if (notifications.isEmpty()) return;
@@ -68,6 +63,8 @@ public without sharing class FEC_NotificationService {
         Map<Id, List<FEC_Notification__c>> queueIdToNotifs = new Map<Id, List<FEC_Notification__c>>();
         for (FEC_Notification__c n : notifications) {
             if (String.isBlank(n.FEC_Receivers__c)) { System.debug('--- SKIP no receivers: ' + n.Id); continue; }
+            List<FEC_Notification_Template_Channel__c> templateChannels = templateChannelsByNotificationId.get(n.Id);
+            if (!hasChannelName(templateChannels, channelById, channelEmail)) continue;
             String assignedVal = n.FEC_Assigned_to_Queue__c.trim();
             Id matchedQueueId = queueLookup.get(assignedVal);
             System.debug('--- notif assignedVal=[' + assignedVal + '] matchedQueueId=' + matchedQueueId);
@@ -94,7 +91,9 @@ public without sharing class FEC_NotificationService {
                          FEC_Product_Type__c,
                          FEC_Category__c,
                          FEC_SubCategory__c,
-                         FEC_SubCode__c
+                         FEC_SubCategory__r.FEC_Code__c,
+                         FEC_SubCode__c,
+                         FEC_SubCode__r.FEC_Code__c
                   FROM Case
                   WHERE Id IN :routedCaseIds
               ]);
@@ -110,10 +109,7 @@ public without sharing class FEC_NotificationService {
         Map<Id, FEC_Enhanced_Letterhead__c> letterheadCache = new Map<Id, FEC_Enhanced_Letterhead__c>();
 
         // Bulk query ContentDocumentLink cho tất cả template
-        Set<Id> templateIds = new Set<Id>();
-        for (FEC_Notification__c n : notifications) {
-            if (n.FEC_Notification_Template__c != null) templateIds.add(n.FEC_Notification_Template__c);
-        }
+        Set<Id> templateIds = new Set<Id>(templateById.keySet());
         Map<Id, List<ContentVersion>> templateAttachments = new Map<Id, List<ContentVersion>>();
         if (!templateIds.isEmpty()) {
             Map<Id, Id> docToTemplate = new Map<Id, Id>();
@@ -149,19 +145,20 @@ public without sharing class FEC_NotificationService {
                 if (!scheduleOk) continue;
 
                 List<String> toAddresses = FEC_CommonUltils.parseReceivers(n.FEC_Receivers__c);
-                Boolean templateActive = n.FEC_Notification_Template__r?.FEC_Active__c == true;
-                Boolean hasSubject = String.isNotBlank(n.FEC_Notification_Template__r?.FEC_Subject_Line__c);
-                System.debug('--- toAddresses=' + toAddresses + ' templateActive=' + templateActive + ' hasSubject=' + hasSubject);
+                FEC_Template__c templateRow = getTemplateForChannel(templateChannelsByNotificationId.get(n.Id), channelById, templateById, channelEmail);
+                Boolean templateActive = templateRow != null && templateRow.FEC_Active__c == true;
+                Boolean hasSubject = templateRow != null && String.isNotBlank(templateRow.FEC_Subject_Line__c);
+                System.debug('--- toAddresses=' + toAddresses);
                 if (toAddresses.isEmpty()) continue;
                 if (!hasSubject) continue;
                 if (!templateActive) continue;
 
-                String subject = resolveTemplate(n.FEC_Notification_Template__r.FEC_Subject_Line__c, c);
-                String bodyContent = String.isNotBlank(n.FEC_Notification_Template__r?.FEC_Body__c)
-                    ? resolveTemplate(n.FEC_Notification_Template__r.FEC_Body__c, c) : '';
+                String subject = resolveTemplate(templateRow.FEC_Subject_Line__c, c);
+                String bodyContent = String.isNotBlank(templateRow.FEC_Body__c)
+                    ? resolveTemplate(templateRow.FEC_Body__c, c) : '';
 
                 // Wrap body với letterhead header/footer nếu có
-                Id lhId = n.FEC_Notification_Template__r?.FEC_Enhanced_Letterhead__c;
+                Id lhId = templateRow.FEC_Enhanced_Letterhead__c;
                 if (lhId != null) {
                     if (!letterheadCache.containsKey(lhId)) {
                         try {
@@ -183,7 +180,7 @@ public without sharing class FEC_NotificationService {
                 Messaging.SingleEmailMessage mail = FEC_CommonUltils.buildEmailWithSender(toAddresses, subject, bodyContent, orgWideId);
 
                 // Attach files từ ContentDocumentLink của template (đã bulk query)
-                Id templateId = n.FEC_Notification_Template__c;
+                Id templateId = templateRow != null ? templateRow.Id : null;
                 if (templateId != null && templateAttachments.containsKey(templateId)) {
                     List<Messaging.EmailFileAttachment> attachments = new List<Messaging.EmailFileAttachment>();
                     for (ContentVersion cv : templateAttachments.get(templateId)) {
@@ -198,10 +195,8 @@ public without sharing class FEC_NotificationService {
                 emailsToSend.add(mail);
                 Case cStageRow = caseStageById.get(c.Id);
                 String stageNm = cStageRow != null ? cStageRow.FEC_Stage_Name__c : null;
-                String tmplNm = n.FEC_Notification_Template__r != null ? n.FEC_Notification_Template__r.Name : null;
-                String chNm = (n.FEC_Notification_Channel__r != null && String.isNotBlank(n.FEC_Notification_Channel__r.Name))
-                    ? n.FEC_Notification_Channel__r.Name
-                    : channelEmail;
+                String tmplNm = templateRow != null ? templateRow.Name : null;
+                String chNm = getChannelName(templateChannelsByNotificationId.get(n.Id), channelById, channelEmail);
                 AutoEmailHistoryMeta histMeta = new AutoEmailHistoryMeta();
                 histMeta.caseId = c.Id;
                 histMeta.notificationRuleId = n.Id;
@@ -254,30 +249,29 @@ public without sharing class FEC_NotificationService {
                    Name,
                    FEC_Assigned_to_Queue__c,
                    FEC_Receivers__c,
-                   FEC_Notification_Channel__r.Name,
-                   FEC_Notification_Template__r.Name,
-                   FEC_Notification_Template__r.FEC_Subject_Line__c,
-                   FEC_Notification_Template__r.FEC_Body__c,
-                   FEC_Notification_Template__r.FEC_Active__c,
                    FEC_Product_Type__c,
                    FEC_Category__c,
-                //    FEC_SubCategory__c,
-                //    FEC_SubCode__c,
+                   FEC_SubCategory__c,
+                   FEC_SubCode__c,
                    FEC_Customer_Type__c,
                    FEC_Schedule_Start_Time__c,
                    FEC_Schedule_End_Time__c
             FROM FEC_Notification__c
             WHERE FEC_Target_Group__c = :targetInternal
               AND FEC_Notification_Status__c = true
-              AND FEC_Notification_Channel__r.Name = :channelSfApp
               AND FEC_Assigned_to_Queue__c != null
         ];
+        Map<Id, List<FEC_Notification_Template_Channel__c>> templateChannelsByNotificationId = loadTemplateChannels(notifications);
+        Map<Id, FEC_Notification_Channel__c> channelById = loadNotificationChannels(templateChannelsByNotificationId);
+        Map<Id, FEC_Template__c> templateById = loadTemplates(templateChannelsByNotificationId);
 
         if (notifications.isEmpty()) return;
 
         Map<Id, List<FEC_Notification__c>> queueIdToNotifs = new Map<Id, List<FEC_Notification__c>>();
         for (FEC_Notification__c n : notifications) {
             if (String.isBlank(n.FEC_Receivers__c)) continue;
+            List<FEC_Notification_Template_Channel__c> templateChannels = templateChannelsByNotificationId.get(n.Id);
+            if (!hasChannelName(templateChannels, channelById, channelSfApp)) continue;
             String assignedVal = n.FEC_Assigned_to_Queue__c.trim();
             Id matchedQueueId = queueLookup.get(assignedVal);
             if (matchedQueueId == null) continue;
@@ -302,7 +296,9 @@ public without sharing class FEC_NotificationService {
                          FEC_Product_Type__c,
                          FEC_Category__c,
                          FEC_SubCategory__c,
-                         FEC_SubCode__c
+                         FEC_SubCategory__r.FEC_Code__c,
+                         FEC_SubCode__c,
+                         FEC_SubCode__r.FEC_Code__c
                   FROM Case
                   WHERE Id IN :routedCaseIdsSf
               ]);
@@ -352,20 +348,19 @@ public without sharing class FEC_NotificationService {
                 }
                 if (recipientIds.isEmpty()) continue;
 
-                if (String.isBlank(n.FEC_Notification_Template__r?.FEC_Subject_Line__c)) continue;
-                if (n.FEC_Notification_Template__r?.FEC_Active__c != true) continue;
-                String title = resolveTemplate(n.FEC_Notification_Template__r.FEC_Subject_Line__c, c);
-                String body = String.isNotBlank(n.FEC_Notification_Template__r?.FEC_Body__c)
-                    ? resolveTemplate(n.FEC_Notification_Template__r.FEC_Body__c, c)
+                FEC_Template__c templateRow = getTemplateForChannel(templateChannelsByNotificationId.get(n.Id), channelById, templateById, channelSfApp);
+                if (templateRow == null || String.isBlank(templateRow.FEC_Subject_Line__c)) continue;
+                if (templateRow.FEC_Active__c != true) continue;
+                String title = resolveTemplate(templateRow.FEC_Subject_Line__c, c);
+                String body = String.isNotBlank(templateRow.FEC_Body__c)
+                    ? resolveTemplate(templateRow.FEC_Body__c, c)
                     : '';
 
                 Boolean sentOk = sendCustomAppNotification(recipientIds, c.Id, title, body, notifType);
                 Case cSfSt = caseStageByIdSf.get(c.Id);
                 String stNameSf = cSfSt != null ? cSfSt.FEC_Stage_Name__c : null;
-                String tmplNmSf = n.FEC_Notification_Template__r != null ? n.FEC_Notification_Template__r.Name : null;
-                String chNmSf = (n.FEC_Notification_Channel__r != null && String.isNotBlank(n.FEC_Notification_Channel__r.Name))
-                    ? n.FEC_Notification_Channel__r.Name
-                    : channelSfApp;
+                String tmplNmSf = templateRow != null ? templateRow.Name : null;
+                String chNmSf = getChannelName(templateChannelsByNotificationId.get(n.Id), channelById, channelSfApp);
                 sfAppHistoryRows.add(
                     FEC_NotificationHistoryService.buildRow(
                         c.Id,
@@ -438,6 +433,102 @@ public without sharing class FEC_NotificationService {
         return result;
     }
 
+    private static Map<Id, List<FEC_Notification_Template_Channel__c>> loadTemplateChannels(List<FEC_Notification__c> notifications) {
+        Set<Id> notificationIds = new Set<Id>();
+        for (FEC_Notification__c n : notifications) {
+            if (n.Id != null) notificationIds.add(n.Id);
+        }
+        Map<Id, List<FEC_Notification_Template_Channel__c>> result = new Map<Id, List<FEC_Notification_Template_Channel__c>>();
+        if (notificationIds.isEmpty()) return result;
+
+        for (FEC_Notification_Template_Channel__c row : [
+            SELECT Id, FEC_Notification__c, FEC_Notification_Channel__c, FEC_Notification_Template__c
+            FROM FEC_Notification_Template_Channel__c
+            WHERE FEC_Notification__c IN :notificationIds
+        ]) {
+            if (!result.containsKey(row.FEC_Notification__c)) {
+                result.put(row.FEC_Notification__c, new List<FEC_Notification_Template_Channel__c>());
+            }
+            result.get(row.FEC_Notification__c).add(row);
+        }
+        return result;
+    }
+
+    private static Map<Id, FEC_Notification_Channel__c> loadNotificationChannels(Map<Id, List<FEC_Notification_Template_Channel__c>> templateChannelsByNotificationId) {
+        Set<Id> channelIds = new Set<Id>();
+        for (List<FEC_Notification_Template_Channel__c> rows : templateChannelsByNotificationId.values()) {
+            for (FEC_Notification_Template_Channel__c row : rows) {
+                if (row.FEC_Notification_Channel__c != null) channelIds.add(row.FEC_Notification_Channel__c);
+            }
+        }
+        return channelIds.isEmpty()
+            ? new Map<Id, FEC_Notification_Channel__c>()
+            : new Map<Id, FEC_Notification_Channel__c>([
+                SELECT Id, Name
+                FROM FEC_Notification_Channel__c
+                WHERE Id IN :channelIds
+            ]);
+    }
+
+    private static Map<Id, FEC_Template__c> loadTemplates(Map<Id, List<FEC_Notification_Template_Channel__c>> templateChannelsByNotificationId) {
+        Set<Id> templateIds = new Set<Id>();
+        for (List<FEC_Notification_Template_Channel__c> rows : templateChannelsByNotificationId.values()) {
+            for (FEC_Notification_Template_Channel__c row : rows) {
+                if (row.FEC_Notification_Template__c != null) templateIds.add(row.FEC_Notification_Template__c);
+            }
+        }
+        return templateIds.isEmpty()
+            ? new Map<Id, FEC_Template__c>()
+            : new Map<Id, FEC_Template__c>([
+                SELECT Id, Name, FEC_Subject_Line__c, FEC_Body__c, FEC_Active__c, FEC_Enhanced_Letterhead__c
+                FROM FEC_Template__c
+                WHERE Id IN :templateIds
+            ]);
+    }
+
+    private static Boolean hasChannelName(
+        List<FEC_Notification_Template_Channel__c> templateChannels,
+        Map<Id, FEC_Notification_Channel__c> channelById,
+        String expectedChannelName
+    ) {
+        if (templateChannels == null || templateChannels.isEmpty()) return false;
+        for (FEC_Notification_Template_Channel__c row : templateChannels) {
+            FEC_Notification_Channel__c channelRow = channelById.get(row.FEC_Notification_Channel__c);
+            if (channelRow != null && channelRow.Name == expectedChannelName) return true;
+        }
+        return false;
+    }
+
+    private static FEC_Template__c getTemplateForChannel(
+        List<FEC_Notification_Template_Channel__c> templateChannels,
+        Map<Id, FEC_Notification_Channel__c> channelById,
+        Map<Id, FEC_Template__c> templateById,
+        String expectedChannelName
+    ) {
+        if (templateChannels == null || templateChannels.isEmpty()) return null;
+        for (FEC_Notification_Template_Channel__c row : templateChannels) {
+            FEC_Notification_Channel__c channelRow = channelById.get(row.FEC_Notification_Channel__c);
+            if (channelRow != null && channelRow.Name == expectedChannelName) {
+                return templateById.get(row.FEC_Notification_Template__c);
+            }
+        }
+        return null;
+    }
+
+    private static String getChannelName(
+        List<FEC_Notification_Template_Channel__c> templateChannels,
+        Map<Id, FEC_Notification_Channel__c> channelById,
+        String fallbackChannelName
+    ) {
+        if (templateChannels != null) {
+            for (FEC_Notification_Template_Channel__c row : templateChannels) {
+                FEC_Notification_Channel__c channelRow = channelById.get(row.FEC_Notification_Channel__c);
+                if (channelRow != null && String.isNotBlank(channelRow.Name)) return channelRow.Name;
+            }
+        }
+        return fallbackChannelName;
+    }
+
     /**
      * Kiểm tra Nature of Case của Case có khớp với Notification record không.
      * Nếu Notification không set field nào → match all (wildcard).
@@ -448,9 +539,31 @@ public without sharing class FEC_NotificationService {
         }
         if (n.FEC_Product_Type__c != null && n.FEC_Product_Type__c != c.FEC_Product_Type__c) return false;
         if (n.FEC_Category__c != null && n.FEC_Category__c != c.FEC_Category__c) return false;
-        // if (n.FEC_SubCategory__c != null && n.FEC_SubCategory__c != c.FEC_SubCategory__c) return false;
-        // if (n.FEC_SubCode__c != null && n.FEC_SubCode__c != c.FEC_SubCode__c) return false;
+
+        String caseSubCategoryCode = c.FEC_SubCategory__r != null ? c.FEC_SubCategory__r.FEC_Code__c : null;
+        String caseSubCodeCode = c.FEC_SubCode__r != null ? c.FEC_SubCode__r.FEC_Code__c : null;
+
+        if (String.isNotBlank(n.FEC_SubCategory__c) && !containsConfiguredValue(n.FEC_SubCategory__c, caseSubCategoryCode)) {
+            return false;
+        }
+        if (String.isNotBlank(n.FEC_SubCode__c) && !containsConfiguredValue(n.FEC_SubCode__c, caseSubCodeCode)) {
+            return false;
+        }
         return true;
+    }
+
+    private static Boolean containsConfiguredValue(String configuredValues, String caseValue) {
+        if (String.isBlank(configuredValues)) return true;
+        if (String.isBlank(caseValue)) return false;
+
+        String normalizedCaseValue = caseValue.trim().toLowerCase();
+        for (String token : configuredValues.split('[;,\\n\\r]+')) {
+            if (String.isBlank(token)) continue;
+            if (token.trim().toLowerCase() == normalizedCaseValue) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
