@@ -891,6 +891,16 @@ public without sharing class FEC_BatchCaseHandlingController {
                 businessProcessCode,
                 businessProcessName
             );
+            if (
+                FEC_BatchCaseHandlingTemplateHelper.validateUploadedTemplateFileName(
+                    fileName,
+                    resolvedTemplateName
+                ) != null
+            ) {
+                out.message = 'Tên file không khớp template Bulk Actions của quy trình và nhóm người dùng.';
+                upsertFailedBatchHandling(fileName, resolvedTemplateName, out.message);
+                return out;
+            }
             FEC_BatchCaseHandlingSObjectUtil.putIfFieldExists(
                 fieldMap,
                 batchRow,
@@ -907,7 +917,7 @@ public without sharing class FEC_BatchCaseHandlingController {
             FEC_BatchCaseHandlingSObjectUtil.putIfFieldExists(fieldMap, batchRow, new List<String>{ 'FEC_Status__c' }, 'Processing');
             update batchRow;
 
-            Boolean cofOrGsr = FEC_BatchCaseHandlingImportService.isCofOrGsrTemplate(templateName);
+            Boolean cofOrGsr = FEC_BatchCaseHandlingImportService.isCofOrGsrTemplate(resolvedTemplateName);
             List<FEC_BatchCaseHandlingImportRow> rowResults = FEC_BatchCaseHandlingImportService.validateCaseHandlingImportRows(inputRows, cofOrGsr);
             if (FEC_BatchCaseHandlingImportService.hasApplicableImportRows(rowResults)) {
                 System.enqueueJob(

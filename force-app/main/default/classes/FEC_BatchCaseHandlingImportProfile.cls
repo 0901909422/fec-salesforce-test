@@ -7,6 +7,8 @@ public with sharing class FEC_BatchCaseHandlingImportProfile {
     public static final String FIELD_PROFILE_NONE = 'NONE';
     public static final String FIELD_PROFILE_D2C = 'D2C';
     public static final String FIELD_PROFILE_CS_SUPPORT = 'CS_SUPPORT';
+    public static final String FIELD_PROFILE_PM_PAYMENT = 'PM_PAYMENT';
+    public static final String FIELD_PROFILE_CP_ASSESSMENT = 'CP_ASSESSMENT';
     private static final String ERR_IMPORT_OUT_OF_SCOPE =
         'Case không thuộc phạm vi import cho quy trình {0} và nhóm người dùng {1}.';
 
@@ -43,14 +45,16 @@ public with sharing class FEC_BatchCaseHandlingImportProfile {
             return scope;
         }
         String suffixNorm = suffixes[0].trim().toUpperCase();
+        String bpNorm = normalizeBusinessProcessKey(businessProcessCode);
         if (suffixNorm == 'CSD2C') {
             scope.fieldProfile = FIELD_PROFILE_D2C;
-        } else if (
-            suffixNorm == 'CSSUPPORT' ||
-            suffixNorm == 'CSCUSTOMERCARE' ||
-            suffixNorm == 'OTHERCS'
-        ) {
+        } else if (suffixNorm == 'CSSUPPORT' || suffixNorm == 'CSCUSTOMERCARE') {
             scope.fieldProfile = FIELD_PROFILE_CS_SUPPORT;
+        }
+        if (suffixNorm == 'PM' && isPaymentAssessmentBusinessProcess(bpNorm)) {
+            scope.fieldProfile = FIELD_PROFILE_PM_PAYMENT;
+        } else if (suffixNorm == 'CP' && isCpAssessmentBusinessProcess(bpNorm)) {
+            scope.fieldProfile = FIELD_PROFILE_CP_ASSESSMENT;
         }
         return scope;
     }
@@ -94,5 +98,15 @@ public with sharing class FEC_BatchCaseHandlingImportProfile {
             return FEC_ConstantCommon.STR_EMPTY;
         }
         return value.trim().toLowerCase().replaceAll('\\s+', FEC_ConstantCommon.STR_EMPTY);
+    }
+
+    private static Boolean isPaymentAssessmentBusinessProcess(String bpNorm) {
+        return bpNorm == 'CONTRACTCLOSURE' ||
+            bpNorm == 'ORIGINALMRCRETURN' ||
+            bpNorm == 'MRCRETURN';
+    }
+
+    private static Boolean isCpAssessmentBusinessProcess(String bpNorm) {
+        return bpNorm == 'ORIGINALMRCRETURN' || bpNorm == 'MRCRETURN';
     }
 }

@@ -18,6 +18,14 @@ public without sharing class FEC_BatchCaseHandlingImportService {
     private static final String ERR_INVALID_RISK_LEVEL = 'Giá trị Mức độ rủi ro không tồn tại trong Datagroup.';
     private static final String ERR_INVALID_REQUIRED_ACTION = 'Giá trị Hành động cần thiết không tồn tại trong Datagroup.';
     private static final String ERR_IMPORT_PROCESSING_TIMEOUT = 'Import quá thời gian xử lý (quá 1 giờ). Vui lòng thử lại.';
+    private static final String ERR_ROUTING_CONFLICT = 'Cùng Case ID có nhiều Routing Action khác nhau trong file import.';
+    private static final String ERR_TEMPLATE_FILE_MISMATCH = 'Tên file không khớp template Bulk Actions của quy trình và nhóm người dùng.';
+    private static final String LABEL_PAYMENT_CONTRACT_ASSESSMENT = 'Payment đánh giá yêu cầu đóng hợp đồng';
+    private static final String LABEL_CP_ASSESSMENT = 'CP đánh giá yêu cầu';
+    private static final String ERR_MISSING_PAYMENT_ASSESSMENT = 'Thiếu giá trị Payment đánh giá yêu cầu đóng hợp đồng';
+    private static final String ERR_INVALID_PAYMENT_ASSESSMENT = 'Giá trị Payment đánh giá yêu cầu đóng hợp đồng không tồn tại trong Datagroup.';
+    private static final String ERR_MISSING_CP_ASSESSMENT = 'Thiếu giá trị CP đánh giá yêu cầu';
+    private static final String ERR_INVALID_CP_ASSESSMENT = 'Giá trị CP đánh giá yêu cầu không tồn tại trong Datagroup.';
     private class RoutingParseResult {
         public String methodKey;
         public String decision;
@@ -497,6 +505,24 @@ public without sharing class FEC_BatchCaseHandlingImportService {
                 row,
                 new List<String>{ 'finalproduct' }
             );
+            rr.paymentContractAssessment = pickRowString(
+                row,
+                new List<String>{
+                    'paymentđánhgiáyêucầuđónghợpđồng',
+                    'paymentdanhgiayeucaudonghopdong',
+                    'paymentcontractassessment',
+                    'rdpaymentcontractassessment'
+                }
+            );
+            rr.cpAssessment = pickRowString(
+                row,
+                new List<String>{
+                    'cpđánhgiáyêucầu',
+                    'cpdanhgiayeucau',
+                    'cpassessment',
+                    'contractprocessingassessment'
+                }
+            );
             Boolean rowEmpty =
                 String.isBlank(rr.caseIdSearch) &&
                 String.isBlank(rr.routingAction) &&
@@ -509,7 +535,9 @@ public without sharing class FEC_BatchCaseHandlingImportService {
                 String.isBlank(rr.requiredAction) &&
                 String.isBlank(rr.classificationByCS) &&
                 String.isBlank(rr.evaluationByCS) &&
-                String.isBlank(rr.finalProduct);
+                String.isBlank(rr.finalProduct) &&
+                String.isBlank(rr.paymentContractAssessment) &&
+                String.isBlank(rr.cpAssessment);
             if (rowEmpty) {
                 continue;
             }
@@ -574,12 +602,15 @@ public without sharing class FEC_BatchCaseHandlingImportService {
         }
         Map<Id, Set<String>> configuredLabelsByStage = loadConfiguredLabelsByStage(stageIds);
         FEC_BatchCaseHandlingPicklistResolver.clearCache();
+        FEC_BCH_ImportRoutingResolver.clearCache();
+        FEC_BCH_ImportRoutingResolver.preloadStageScreens(stageIds, currentUserGroup);
         Map<String, Map<String, String>> picklistValueByNormByField =
             FEC_BatchCaseHandlingPicklistResolver.buildNormalizedToApiValueByField(
                 importPicklistFieldApis()
             );
 
         Set<String> seenCaseSearch = new Set<String>();
+        Map<String, String> routingSignatureByCaseSearch = new Map<String, String>();
         for (FEC_BatchCaseHandlingImportRow rr : output) {
             List<String> errs = new List<String>();
             if (String.isBlank(rr.caseIdSearch)) {
@@ -598,6 +629,14 @@ public without sharing class FEC_BatchCaseHandlingImportService {
                     errs.add(System.Label.FEC_Batch_Case_Handling_Import_Err_Duplicate_Case_Id);
                 } else {
                     seenCaseSearch.add(rr.caseIdSearch);
+                }
+                String routingSig = buildRoutingSignature(rr, cofOrGsr);
+                if (routingSignatureByCaseSearch.containsKey(rr.caseIdSearch)) {
+                    if (routingSignatureByCaseSearch.get(rr.caseIdSearch) != routingSig) {
+                        errs.add(ERR_ROUTING_CONFLICT);
+                    }
+                } else if (String.isNotBlank(routingSig)) {
+                    routingSignatureByCaseSearch.put(rr.caseIdSearch, routingSig);
                 }
             }
 
@@ -622,6 +661,8 @@ public without sharing class FEC_BatchCaseHandlingImportService {
                 }
             }
 
+            errs.addAll(validateResolvedRoutingForRow(rr, matched, cofOrGsr));
+
             if (cofOrGsr) {
                 Boolean hasAssignment = String.isNotBlank(rr.assignmentId);
                 if (hasAssignment) {
@@ -642,13 +683,10 @@ public without sharing class FEC_BatchCaseHandlingImportService {
                             errs.add(System.Label.FEC_Batch_Case_Handling_Import_Err_Assignment_Closed);
                         }
                     }
-                    if (String.isNotBlank(rr.routingAction) && String.isNotBlank(rr.assignmentRoutingAction)) {
-                        errs.add(System.Label.FEC_Batch_Case_Handling_Import_Err_Both_Routing_Actions);
-                    }
                     if (String.isBlank(rr.routingAction) && String.isBlank(rr.assignmentRoutingAction)) {
                         errs.add(System.Label.FEC_Batch_Case_Handling_Import_Err_Missing_Routing_Or_Assignment_Routing);
                     }
-                    if (String.isNotBlank(rr.routingAction)) {
+                    if (String.isNotBlank(rr.routingAction) && String.isBlank(rr.actionButtonId)) {
                         RoutingParseResult routingParsed = parseRoutingPattern(rr.routingAction);
                         String caseMethod = routingParsed.methodKey;
                         if (caseMethod == null) {
@@ -657,14 +695,13 @@ public without sharing class FEC_BatchCaseHandlingImportService {
                             errs.add(System.Label.FEC_Batch_Case_Handling_Import_Err_Assignment_Routing_Resolve_Only);
                         }
                     }
-                    if (String.isNotBlank(rr.assignmentRoutingAction) &&
-                        parseRoutingPattern(rr.assignmentRoutingAction).methodKey == null) {
+                    if (String.isNotBlank(rr.assignmentRoutingAction) && String.isBlank(rr.actionButtonId)) {
                         errs.add(System.Label.FEC_Batch_Case_Handling_Import_Err_Assignment_Routing_Invalid);
                     }
                 } else {
                     if (String.isBlank(rr.routingAction)) {
                         errs.add(System.Label.FEC_Batch_Case_Handling_Import_Err_Missing_Routing_Action);
-                    } else if (parseRoutingPattern(rr.routingAction).methodKey == null) {
+                    } else if (String.isBlank(rr.actionButtonId)) {
                         errs.add(System.Label.FEC_Batch_Case_Handling_Import_Err_Routing_Action_Invalid);
                     }
                     if (String.isNotBlank(rr.assignmentRoutingAction)) {
@@ -680,7 +717,7 @@ public without sharing class FEC_BatchCaseHandlingImportService {
                 }
                 if (String.isBlank(rr.routingAction)) {
                     errs.add(System.Label.FEC_Batch_Case_Handling_Import_Err_Missing_Routing_Action);
-                } else if (parseRoutingPattern(rr.routingAction).methodKey == null) {
+                } else if (String.isBlank(rr.actionButtonId)) {
                     errs.add(System.Label.FEC_Batch_Case_Handling_Import_Err_Routing_Action_Invalid);
                 }
             }
@@ -717,6 +754,7 @@ public without sharing class FEC_BatchCaseHandlingImportService {
         routeParamsCacheByKey.clear();
         revertActionIdCacheByStage.clear();
         queueIdCacheByToken.clear();
+        FEC_BCH_ImportRoutingResolver.clearCache();
         Set<Id> caseIds = new Set<Id>();
         for (FEC_BatchCaseHandlingImportRow rr : rows) {
             if (rr == null || rr.status == System.Label.FEC_Batch_Case_Handling_Import_Row_Status_Failed || String.isBlank(rr.recordId)) {
@@ -758,8 +796,27 @@ public without sharing class FEC_BatchCaseHandlingImportService {
             if (cofOrGsr && String.isBlank(actionLabel)) {
                 actionLabel = rr.assignmentRoutingAction;
             }
+            Id stageIdForRow = caseLiteById.get(caseId) == null
+                ? null
+                : caseLiteById.get(caseId).FEC_Current_Case_Stage__c;
+            FEC_BCH_ImportRoutingResolver.ResolvedRouting resolvedRouting =
+                FEC_BCH_ImportRoutingResolver.resolve(stageIdForRow, actionLabel);
+            if (String.isBlank(rr.actionButtonId) && resolvedRouting.actionButtonId != null) {
+                applyResolvedRoutingToRow(rr, resolvedRouting);
+            }
             RoutingParseResult routingParsed = parseRoutingPattern(actionLabel);
-            String methodKey = routingParsed.methodKey;
+            String methodKey = String.isNotBlank(resolvedRouting.methodKey)
+                ? resolvedRouting.methodKey
+                : routingParsed.methodKey;
+            if (String.isBlank(routingParsed.decision) && String.isNotBlank(resolvedRouting.decision)) {
+                routingParsed.decision = resolvedRouting.decision;
+            }
+            if (String.isBlank(routingParsed.routeTeamHint) && String.isNotBlank(resolvedRouting.routeTeamHint)) {
+                routingParsed.routeTeamHint = resolvedRouting.routeTeamHint;
+            }
+            if (String.isBlank(routingParsed.routeQueueHint) && String.isNotBlank(resolvedRouting.routeQueueHint)) {
+                routingParsed.routeQueueHint = resolvedRouting.routeQueueHint;
+            }
             if (String.isBlank(methodKey)) {
                 rr.status = System.Label.FEC_Batch_Case_Handling_Import_Row_Status_Failed;
                 rr.errors = appendError(
@@ -787,7 +844,12 @@ public without sharing class FEC_BatchCaseHandlingImportService {
                     Case caseLite = caseLiteById.get(caseId);
                     Map<String, String> routeParams = caseLite == null
                         ? null
-                        : resolveRouteToParams(caseLite.FEC_Current_Case_Stage__c, routingParsed);
+                        : resolveRouteToParams(
+                            caseLite.FEC_Current_Case_Stage__c,
+                            routingParsed,
+                            rr.actionButtonId,
+                            rr.routeViaRevertButton == true
+                        );
                     if (routeParams == null || String.isBlank(routeParams.get('actionId')) || String.isBlank(routeParams.get('queueId'))) {
                         rr.status = System.Label.FEC_Batch_Case_Handling_Import_Row_Status_Failed;
                         rr.errors = appendError(
@@ -803,7 +865,11 @@ public without sharing class FEC_BatchCaseHandlingImportService {
                     Case caseLite = caseLiteById.get(caseId);
                     String revertActionId = caseLite == null
                         ? null
-                        : resolveRevertActionId(caseLite.FEC_Current_Case_Stage__c);
+                        : resolveRevertActionId(
+                            caseLite.FEC_Current_Case_Stage__c,
+                            rr.actionButtonId,
+                            rr.revertPreferRevertedChange == true
+                        );
                     if (String.isBlank(revertActionId)) {
                         rr.status = System.Label.FEC_Batch_Case_Handling_Import_Row_Status_Failed;
                         rr.errors = appendError(
@@ -813,6 +879,9 @@ public without sharing class FEC_BatchCaseHandlingImportService {
                         continue;
                     }
                     runParams.put('actionId', revertActionId);
+                }
+                if (methodKey == FEC_CaseBusinessService.REVERT && String.isNotBlank(rr.routingActionValue)) {
+                    runParams.put('routingActionValue', rr.routingActionValue);
                 }
                 FEC_CaseBusinessService.run(methodKey, runParams);
             } catch (Exception ex) {
@@ -833,6 +902,7 @@ public without sharing class FEC_BatchCaseHandlingImportService {
                 item.row = rr;
                 item.caseId = caseId;
                 item.inputtedRemarks = rr.inputtedRemarks;
+                item.assignmentId = parseAssignmentId(rr.assignmentId);
                 remarkDraftItems.add(item);
             }
         }
@@ -845,10 +915,21 @@ public without sharing class FEC_BatchCaseHandlingImportService {
                 validRemarkItems.add(item);
             }
         }
-        applyDraftRemarksBulk(validRemarkItems);
+        applyDraftRemarksBulk(validRemarkItems, cofOrGsr);
     }
 
-    private static void applyDraftRemarksBulk(List<RemarkDraftUpdateItem> remarkDraftItems) {
+    private static Id parseAssignmentId(String assignmentIdRaw) {
+        if (String.isBlank(assignmentIdRaw)) {
+            return null;
+        }
+        try {
+            return Id.valueOf(assignmentIdRaw.trim());
+        } catch (Exception ex) {
+            return null;
+        }
+    }
+
+    private static void applyDraftRemarksBulk(List<RemarkDraftUpdateItem> remarkDraftItems, Boolean cofOrGsr) {
         if (remarkDraftItems == null || remarkDraftItems.isEmpty()) {
             return;
         }
@@ -934,6 +1015,9 @@ public without sharing class FEC_BatchCaseHandlingImportService {
                         rr.errors = appendError(rr.errors, message);
                     }
                 }
+            }
+            if (cofOrGsr == true) {
+                applyAssignmentRemarksBulk(remarkDraftItems);
             }
         } catch (Exception ex) {
             for (RemarkDraftUpdateItem item : remarkDraftItems) {
@@ -1044,7 +1128,48 @@ public without sharing class FEC_BatchCaseHandlingImportService {
         if (methodKey == FEC_CaseBusinessService.UPDATEACTION) {
             return String.isBlank(decision);
         }
-        return methodKey == FEC_CaseBusinessService.TRANSFER;
+        return false;
+    }
+
+    private static void applyAssignmentRemarksBulk(List<RemarkDraftUpdateItem> remarkDraftItems) {
+        if (remarkDraftItems == null || remarkDraftItems.isEmpty()) {
+            return;
+        }
+        Map<Id, FEC_Assignment__c> assignmentUpdatesById = new Map<Id, FEC_Assignment__c>();
+        Map<Id, List<FEC_BatchCaseHandlingImportRow>> rowsByAssignmentId = new Map<Id, List<FEC_BatchCaseHandlingImportRow>>();
+        for (RemarkDraftUpdateItem item : remarkDraftItems) {
+            if (item == null || item.assignmentId == null || item.row == null || String.isBlank(item.inputtedRemarks)) {
+                continue;
+            }
+            if (!assignmentUpdatesById.containsKey(item.assignmentId)) {
+                assignmentUpdatesById.put(
+                    item.assignmentId,
+                    new FEC_Assignment__c(
+                        Id = item.assignmentId,
+                        FEC_Assignment_Remark__c = item.inputtedRemarks
+                    )
+                );
+                rowsByAssignmentId.put(item.assignmentId, new List<FEC_BatchCaseHandlingImportRow>());
+            }
+            rowsByAssignmentId.get(item.assignmentId).add(item.row);
+        }
+        if (assignmentUpdatesById.isEmpty()) {
+            return;
+        }
+        Database.SaveResult[] saveResults = Database.update(assignmentUpdatesById.values(), false);
+        for (Integer i = 0; i < saveResults.size(); i++) {
+            if (saveResults[i].isSuccess()) {
+                continue;
+            }
+            Id failedAssignmentId = assignmentUpdatesById.values()[i].Id;
+            String message = saveResults[i].getErrors().isEmpty() ? null : saveResults[i].getErrors()[0].getMessage();
+            if (rowsByAssignmentId.containsKey(failedAssignmentId)) {
+                for (FEC_BatchCaseHandlingImportRow rr : rowsByAssignmentId.get(failedAssignmentId)) {
+                    rr.status = System.Label.FEC_Batch_Case_Handling_Import_Row_Status_Failed;
+                    rr.errors = appendError(rr.errors, message);
+                }
+            }
+        }
     }
 
     private static Boolean isResolvedOrRejectCaseRouting(String methodKey) {
@@ -1054,22 +1179,53 @@ public without sharing class FEC_BatchCaseHandlingImportService {
         return methodKey == FEC_CaseBusinessService.RESOLVE || methodKey == FEC_CaseBusinessService.REJECT;
     }
 
-    private static Map<String, String> resolveRouteToParams(Id currentStageId, RoutingParseResult parsed) {
+    private static Map<String, String> resolveRouteToParams(
+        Id currentStageId,
+        RoutingParseResult parsed,
+        String actionButtonIdOverride,
+        Boolean routeViaRevertButton
+    ) {
         if (currentStageId == null || parsed == null) {
             return null;
         }
-        String cacheKey = buildRouteParamsCacheKey(currentStageId, parsed);
+        String cacheKey = buildRouteParamsCacheKey(currentStageId, parsed) +
+            '|' +
+            String.valueOf(actionButtonIdOverride) +
+            '|' +
+            String.valueOf(routeViaRevertButton == true);
         if (routeParamsCacheByKey.containsKey(cacheKey)) {
             return routeParamsCacheByKey.get(cacheKey);
         }
-        List<FEC_Stage_Change__c> candidates = [
-            SELECT FEC_Action_Button__c, FEC_Next_Queue__c, FEC_Team_User_Group__c
-            FROM FEC_Stage_Change__c
-            WHERE FEC_Previous_Stage__c = :currentStageId
-            AND FEC_Active__c = TRUE
-            AND FEC_Action_Button__r.FEC_Code__c = :FEC_CaseBusinessService.ROUTE_TO
-            ORDER BY CreatedDate DESC
-        ];
+        Id routeToButtonId = null;
+        try {
+            if (String.isNotBlank(actionButtonIdOverride)) {
+                routeToButtonId = Id.valueOf(actionButtonIdOverride);
+            }
+        } catch (Exception ex) {
+        }
+        String routeButtonCode = routeViaRevertButton == true
+            ? FEC_CaseBusinessService.REVERT
+            : FEC_CaseBusinessService.ROUTE_TO;
+        List<FEC_Stage_Change__c> candidates;
+        if (routeToButtonId != null) {
+            candidates = [
+                SELECT FEC_Action_Button__c, FEC_Next_Queue__c, FEC_Team_User_Group__c, FEC_IsReverted__c
+                FROM FEC_Stage_Change__c
+                WHERE FEC_Previous_Stage__c = :currentStageId
+                AND FEC_Active__c = TRUE
+                AND FEC_Action_Button__c = :routeToButtonId
+                ORDER BY FEC_IsReverted__c DESC, CreatedDate DESC
+            ];
+        } else {
+            candidates = [
+                SELECT FEC_Action_Button__c, FEC_Next_Queue__c, FEC_Team_User_Group__c, FEC_IsReverted__c
+                FROM FEC_Stage_Change__c
+                WHERE FEC_Previous_Stage__c = :currentStageId
+                AND FEC_Active__c = TRUE
+                AND FEC_Action_Button__r.FEC_Code__c = :routeButtonCode
+                ORDER BY CreatedDate DESC
+            ];
+        }
         if (candidates.isEmpty()) {
             routeParamsCacheByKey.put(cacheKey, null);
             return null;
@@ -1139,15 +1295,43 @@ public without sharing class FEC_BatchCaseHandlingImportService {
         return resolved;
     }
 
-    private static String resolveRevertActionId(Id currentStageId) {
+    private static String resolveRevertActionId(
+        Id currentStageId,
+        String actionButtonIdOverride,
+        Boolean preferRevertedChange
+    ) {
         if (currentStageId == null) {
             return null;
         }
-        String cacheKey = String.valueOf(currentStageId);
+        String cacheKey =
+            String.valueOf(currentStageId) +
+            '|' +
+            String.valueOf(actionButtonIdOverride) +
+            '|' +
+            String.valueOf(preferRevertedChange == true);
         if (revertActionIdCacheByStage.containsKey(cacheKey)) {
             return revertActionIdCacheByStage.get(cacheKey);
         }
+        if (String.isNotBlank(actionButtonIdOverride)) {
+            revertActionIdCacheByStage.put(cacheKey, actionButtonIdOverride);
+            return actionButtonIdOverride;
+        }
         List<FEC_Stage_Change__c> changes = [
+            SELECT FEC_Action_Button__c
+            FROM FEC_Stage_Change__c
+            WHERE FEC_Previous_Stage__c = :currentStageId
+            AND FEC_Active__c = TRUE
+            AND FEC_Action_Button__r.FEC_Code__c = :FEC_CaseBusinessService.REVERT
+            AND FEC_IsReverted__c = :preferRevertedChange
+            ORDER BY CreatedDate DESC
+            LIMIT 1
+        ];
+        if (!changes.isEmpty() && changes[0].FEC_Action_Button__c != null) {
+            String actionId = String.valueOf(changes[0].FEC_Action_Button__c);
+            revertActionIdCacheByStage.put(cacheKey, actionId);
+            return actionId;
+        }
+        List<FEC_Stage_Change__c> fallbackChanges = [
             SELECT FEC_Action_Button__c
             FROM FEC_Stage_Change__c
             WHERE FEC_Previous_Stage__c = :currentStageId
@@ -1156,8 +1340,8 @@ public without sharing class FEC_BatchCaseHandlingImportService {
             ORDER BY CreatedDate DESC
             LIMIT 1
         ];
-        if (!changes.isEmpty() && changes[0].FEC_Action_Button__c != null) {
-            String actionId = String.valueOf(changes[0].FEC_Action_Button__c);
+        if (!fallbackChanges.isEmpty() && fallbackChanges[0].FEC_Action_Button__c != null) {
+            String actionId = String.valueOf(fallbackChanges[0].FEC_Action_Button__c);
             revertActionIdCacheByStage.put(cacheKey, actionId);
             return actionId;
         }
@@ -1241,7 +1425,9 @@ public without sharing class FEC_BatchCaseHandlingImportService {
                 LABEL_CS_D2C_ASSESSMENT,
                 LABEL_CS_SUPPORT_ASSESSMENT,
                 LABEL_RISK_LEVEL,
-                LABEL_REQUIRED_ACTION
+                LABEL_REQUIRED_ACTION,
+                LABEL_PAYMENT_CONTRACT_ASSESSMENT,
+                LABEL_CP_ASSESSMENT
             }
         ]) {
             if (row.FEC_Stage_Name__c == null || String.isBlank(row.FEC_Field_Label_Name__c)) {
@@ -1262,8 +1448,98 @@ public without sharing class FEC_BatchCaseHandlingImportService {
             'FEC_CS_D2C_Risk_Level__c',
             'FEC_CS_Check_Classification_by_CS__c',
             'FEC_CS_Check_Evaluation_by_CS__c',
-            'FEC_CS_Check_Final_product__c'
+            'FEC_CS_Check_Final_product__c',
+            'FEC_RD_Payment_Contract_Assessment__c',
+            'FEC_Contract_Processing_Assessment_Type__c'
         };
+    }
+
+    private static List<String> validateResolvedRoutingForRow(
+        FEC_BatchCaseHandlingImportRow rr,
+        Case matched,
+        Boolean cofOrGsr
+    ) {
+        List<String> errs = new List<String>();
+        if (rr == null) {
+            return errs;
+        }
+        String primaryLabel = rr.routingAction;
+        if (cofOrGsr == true && String.isBlank(primaryLabel)) {
+            primaryLabel = rr.assignmentRoutingAction;
+        }
+        if (String.isBlank(primaryLabel)) {
+            return errs;
+        }
+        Id stageId = matched == null ? null : matched.FEC_Current_Case_Stage__c;
+        FEC_BCH_ImportRoutingResolver.ResolvedRouting resolved =
+            FEC_BCH_ImportRoutingResolver.resolve(stageId, primaryLabel);
+        if (String.isBlank(resolved.methodKey)) {
+            errs.add(System.Label.FEC_Batch_Case_Handling_Import_Err_Routing_Action_Invalid);
+            return errs;
+        }
+        if (resolved.methodKey == FEC_CaseBusinessService.TRANSFER) {
+            errs.add(System.Label.FEC_Batch_Case_Handling_Import_Err_Routing_Action_Invalid);
+            return errs;
+        }
+        if (FEC_BCH_ImportRoutingResolver.requiresStageScreenMatch(resolved.methodKey) &&
+            stageId != null &&
+            resolved.matchedStageScreen != true) {
+            errs.add(System.Label.FEC_Batch_Case_Handling_Import_Err_Routing_Action_Invalid);
+            return errs;
+        }
+        applyResolvedRoutingToRow(rr, resolved);
+        if (cofOrGsr == true && String.isNotBlank(rr.routingAction) && String.isNotBlank(rr.assignmentRoutingAction)) {
+            errs.add(System.Label.FEC_Batch_Case_Handling_Import_Err_Both_Routing_Actions);
+        }
+        if (cofOrGsr == true && String.isNotBlank(rr.routingAction)) {
+            FEC_BCH_ImportRoutingResolver.ResolvedRouting caseResolved =
+                FEC_BCH_ImportRoutingResolver.resolve(stageId, rr.routingAction);
+            if (String.isBlank(caseResolved.methodKey) ||
+                !isResolvedOrRejectCaseRouting(caseResolved.methodKey)) {
+                errs.add(System.Label.FEC_Batch_Case_Handling_Import_Err_Assignment_Routing_Resolve_Only);
+            }
+        }
+        if (cofOrGsr == true &&
+            String.isNotBlank(rr.assignmentRoutingAction) &&
+            String.isBlank(rr.routingAction)) {
+            FEC_BCH_ImportRoutingResolver.ResolvedRouting asgResolved =
+                FEC_BCH_ImportRoutingResolver.resolve(stageId, rr.assignmentRoutingAction);
+            if (String.isBlank(asgResolved.methodKey)) {
+                errs.add(System.Label.FEC_Batch_Case_Handling_Import_Err_Assignment_Routing_Invalid);
+            } else {
+                applyResolvedRoutingToRow(rr, asgResolved);
+            }
+        }
+        return errs;
+    }
+
+    private static void applyResolvedRoutingToRow(
+        FEC_BatchCaseHandlingImportRow rr,
+        FEC_BCH_ImportRoutingResolver.ResolvedRouting resolved
+    ) {
+        if (rr == null || resolved == null) {
+            return;
+        }
+        if (resolved.actionButtonId != null) {
+            rr.actionButtonId = String.valueOf(resolved.actionButtonId);
+        }
+        rr.routingActionValue = resolved.routingActionValue;
+        rr.routeViaRevertButton = resolved.routeViaRevertButton == true;
+        rr.revertPreferRevertedChange = resolved.revertPreferRevertedChange == true;
+    }
+
+    private static String buildRoutingSignature(FEC_BatchCaseHandlingImportRow rr, Boolean cofOrGsr) {
+        if (rr == null) {
+            return FEC_ConstantCommon.STR_EMPTY;
+        }
+        String caseRouting = String.isBlank(rr.routingAction) ? FEC_ConstantCommon.STR_EMPTY : rr.routingAction.trim();
+        String asgRouting = String.isBlank(rr.assignmentRoutingAction)
+            ? FEC_ConstantCommon.STR_EMPTY
+            : rr.assignmentRoutingAction.trim();
+        if (cofOrGsr != true) {
+            return normalizeToken(caseRouting);
+        }
+        return normalizeToken(caseRouting) + '|' + normalizeToken(asgRouting);
     }
 
     private static List<String> validateScopeFieldsForCase(
@@ -1318,6 +1594,36 @@ public without sharing class FEC_BatchCaseHandlingImportService {
                 ERR_MISSING_REQUIRED_ACTION,
                 ERR_INVALID_REQUIRED_ACTION,
                 'FEC_CS_D2C_Risk_Level__c',
+                configuredLabels,
+                picklistValueByNormByField,
+                errs,
+                true
+            );
+            return errs;
+        }
+        if (profile == FEC_BatchCaseHandlingImportProfile.FIELD_PROFILE_PM_PAYMENT) {
+            validateD2CField(
+                rr,
+                rr.paymentContractAssessment,
+                LABEL_PAYMENT_CONTRACT_ASSESSMENT,
+                ERR_MISSING_PAYMENT_ASSESSMENT,
+                ERR_INVALID_PAYMENT_ASSESSMENT,
+                'FEC_RD_Payment_Contract_Assessment__c',
+                configuredLabels,
+                picklistValueByNormByField,
+                errs,
+                true
+            );
+            return errs;
+        }
+        if (profile == FEC_BatchCaseHandlingImportProfile.FIELD_PROFILE_CP_ASSESSMENT) {
+            validateD2CField(
+                rr,
+                rr.cpAssessment,
+                LABEL_CP_ASSESSMENT,
+                ERR_MISSING_CP_ASSESSMENT,
+                ERR_INVALID_CP_ASSESSMENT,
+                'FEC_Contract_Processing_Assessment_Type__c',
                 configuredLabels,
                 picklistValueByNormByField,
                 errs,
@@ -1462,6 +1768,10 @@ public without sharing class FEC_BatchCaseHandlingImportService {
             rr.evaluationByCSApiValue = apiValue;
         } else if (caseFieldApi == 'FEC_CS_Check_Final_product__c') {
             rr.finalProductApiValue = apiValue;
+        } else if (caseFieldApi == 'FEC_RD_Payment_Contract_Assessment__c') {
+            rr.paymentContractAssessmentApiValue = apiValue;
+        } else if (caseFieldApi == 'FEC_Contract_Processing_Assessment_Type__c') {
+            rr.cpAssessmentApiValue = apiValue;
         }
     }
 
@@ -1489,6 +1799,12 @@ public without sharing class FEC_BatchCaseHandlingImportService {
         }
         if (caseFieldApi == 'FEC_CS_Check_Final_product__c') {
             return rr.finalProductApiValue;
+        }
+        if (caseFieldApi == 'FEC_RD_Payment_Contract_Assessment__c') {
+            return rr.paymentContractAssessmentApiValue;
+        }
+        if (caseFieldApi == 'FEC_Contract_Processing_Assessment_Type__c') {
+            return rr.cpAssessmentApiValue;
         }
         return null;
     }
@@ -1565,6 +1881,26 @@ public without sharing class FEC_BatchCaseHandlingImportService {
         }
         if (String.isNotBlank(finalProductValue) && caseFieldMap.containsKey('FEC_CS_Check_Final_product__c')) {
             c.put('FEC_CS_Check_Final_product__c', finalProductValue);
+            hasAny = true;
+        }
+        String paymentValue = resolvePicklistValueForApply(
+            rr,
+            'FEC_RD_Payment_Contract_Assessment__c',
+            rr.paymentContractAssessment,
+            picklistValueByNormByField
+        );
+        String cpValue = resolvePicklistValueForApply(
+            rr,
+            'FEC_Contract_Processing_Assessment_Type__c',
+            rr.cpAssessment,
+            picklistValueByNormByField
+        );
+        if (String.isNotBlank(paymentValue) && caseFieldMap.containsKey('FEC_RD_Payment_Contract_Assessment__c')) {
+            c.put('FEC_RD_Payment_Contract_Assessment__c', paymentValue);
+            hasAny = true;
+        }
+        if (String.isNotBlank(cpValue) && caseFieldMap.containsKey('FEC_Contract_Processing_Assessment_Type__c')) {
+            c.put('FEC_Contract_Processing_Assessment_Type__c', cpValue);
             hasAny = true;
         }
         return hasAny ? c : null;
@@ -1678,6 +2014,7 @@ public without sharing class FEC_BatchCaseHandlingImportService {
     private class RemarkDraftUpdateItem {
         public FEC_BatchCaseHandlingImportRow row;
         public Id caseId;
+        public Id assignmentId;
         public String inputtedRemarks;
     }
 }

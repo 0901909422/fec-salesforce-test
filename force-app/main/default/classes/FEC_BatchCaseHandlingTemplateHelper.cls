@@ -401,6 +401,7 @@ public without sharing class FEC_BatchCaseHandlingTemplateHelper {
             'IPP CLOSURE' => 'IPPClosure',
             'IPP CONVERSION' => 'IPPConversion',
             'CARD UNBLOCK' => 'CardUnblock',
+            'CARD BLOCK' => 'CardUnblock',
             'CONTRACT CLOSURE' => 'ContractClosure',
             'CARD CLOSURE & REFUND REQUEST (CARD)' => 'CardClosure',
             'CARD REPLACEMENT' => 'CardReplacement',
@@ -656,5 +657,20 @@ public without sharing class FEC_BatchCaseHandlingTemplateHelper {
             return false;
         }
         return pathOrTitle.trim().toLowerCase().endsWith('.xlsx');
+    }
+
+    public static String validateUploadedTemplateFileName(String fileName, String expectedTemplateName) {
+        if (String.isBlank(expectedTemplateName)) {
+            return null;
+        }
+        if (String.isBlank(fileName)) {
+            return FEC_ConstantCommon.STR_EMPTY;
+        }
+        String expectedCore = expectedTemplateName.trim().toLowerCase().replace('.xlsx', FEC_ConstantCommon.STR_EMPTY);
+        String fileCore = fileName.trim().toLowerCase().replace('.xlsx', FEC_ConstantCommon.STR_EMPTY);
+        if (fileCore == expectedCore || fileCore.contains(expectedCore)) {
+            return null;
+        }
+        return 'TEMPLATE_MISMATCH';
     }
 }

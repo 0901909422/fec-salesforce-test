@@ -14,6 +14,7 @@
         <members>FEC_BatchCaseHandlingImportRow</members>
         <members>FEC_BatchCaseHandlingImportProfile</members>
         <members>FEC_BatchCaseHandlingImportService</members>
+        <members>FEC_BCH_ImportRoutingResolver</members>
         <members>FEC_BatchCaseHandlingPicklistResolver</members>
         <members>FEC_BCH_PicklistTranslationCtrl</members>
         <members>FEC_BatchCaseHandlingResultXlsxBuilder</members>
