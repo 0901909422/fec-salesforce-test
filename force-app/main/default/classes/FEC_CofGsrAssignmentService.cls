@@ -752,20 +752,6 @@ public without sharing class FEC_CofGsrAssignmentService {
                     );
                     Database.insert(gsrHistory, AccessLevel.SYSTEM_MODE);
                     gsrRoutingHistoryId = gsrHistory.Id;
-                    // tungnm37 fix: tạo Case Remark cho CC/SP team path
-                    if (String.isNotBlank(remarkContent)) {
-                        try {
-                            insert new FEC_Case_Remarks__c(
-                                FEC_Case__c = caseId,
-                                FEC_Remark_Type__c = FEC_ConstantCommon.REMARK_TYPE_ASSIGNMENT,
-                                FEC_Case_Remarks__c = remarkContent,
-                                FEC_User__c = emailLocalPart(currentUser.Email),
-                                FEC_Stage_Name__c = stageName
-                            );
-                        } catch (Exception er) {
-                            System.debug('FEC_DEBUG createRemark CC/SP error: ' + er.getMessage());
-                        }
-                    }
                 } catch (Exception eh) {
                     System.debug('FEC_DEBUG createRoutingHistory CC/SP error: ' + eh.getMessage());
                 }
