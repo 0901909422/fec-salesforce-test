@@ -170,6 +170,8 @@ public with sharing class FEC_ConstantCommon {
     public static final String REQUESTOR_VMX_CONTEXT = 'FECVMX';
     public static final String REQUESTOR_LANDING_PAGE = 'FEC_LandingPage';
     public static final String REQUESTOR_ORG_EMEA_CARD = '150';
+    public static final String VMX_VERSION_DEFAULT = 'E8V6';
+    public static final String VMX_MSGIN_NAME_DEFAULT = 'FECVMX';
     
     public static final String ADDRESS_TYPE_CURRES = 'CURRES';
     public static final String ADDRESS_TYPE_PERMNENT = 'PERMNENT';
@@ -245,7 +247,7 @@ public with sharing class FEC_ConstantCommon {
     public static final String CASE_STATUS_AUTO_CANCELLED = 'Resolved-AutoCancelled';
     public static final String CASE_STATUS_AUTO_CLOSED = 'Auto-Closed';
     public static final String INTERACTION_STATUS_CLOSED = 'Closed';
-    
+
     public static final String INTERACTION_VIEW_MODE = 'view';
     public static final String INTERACTION_HANDLING_MODE = 'handling';
     public static final String INTERACTION_REVIEW_MODE = 'review';

@@ -680,6 +680,10 @@ public without sharing class FEC_CofGsrAssignmentService {
         String manualItemsJson = (String) params.get('manualItemsJson');
         String remarkContent = (String) params.get('remarkContent');
 
+        String currentStatusBeforeSubmit = FEC_CaseBusinessService.readRoutingHistoryCurrentStatus(
+            caseId
+        );
+
         try { FEC_CaseBusinessService.markCaseSubmittedAndClearDrafts(caseId); } catch (Exception e1) {
             System.debug('markCaseSubmitted error: ' + e1.getMessage());
         }
@@ -716,7 +720,7 @@ public without sharing class FEC_CofGsrAssignmentService {
             if (!targetQueues.isEmpty()) {
                 // tungnm37 fix: query Case TRƯỚC khi đổi owner để lấy đúng originalOwner
                 Case caseBeforeUpdate = [
-                    SELECT Id, OwnerId, Owner.Name, Owner.Type, FEC_Final_Status__c, FEC_Current_Case_Stage__c
+                    SELECT Id, OwnerId, Owner.Name, Owner.Type, FEC_Current_Case_Stage__c
                     FROM Case WHERE Id = :caseId LIMIT 1
                 ];
                 // tungnm37 fix: Stage 1 → Original = currentUser (người submit), không phải Case owner
@@ -747,7 +751,7 @@ public without sharing class FEC_CofGsrAssignmentService {
                         FEC_Original_User_Queue_ID__c = originalOwnerIdStr,
                         FEC_Updated_User_Queue__c = targetQueueName,
                         FEC_Updated_User_Queue_ID__c = String.valueOf(targetQueues[0].Id),
-                        FEC_Current_Status__c = caseBeforeUpdate.FEC_Final_Status__c,
+                        FEC_Current_Status__c = currentStatusBeforeSubmit,
                         FEC_Submitted_On__c = DateTime.now()
                     );
                     Database.insert(gsrHistory, AccessLevel.SYSTEM_MODE);

@@ -2,6 +2,9 @@ public without sharing class FEC_CaseAssignmentAutoDistributeService {
     private static final String METHOD_CONTINUOUS = 'Continuous';
     private static final String METHOD_TIME_BASED = 'Time-Based';
 
+    /** Khớp FEC_AssignAutoDistribSched polling (~5 phút) — Time-Based chạy trong cửa sổ slot. */
+    private static final Integer SCHEDULER_POLL_WINDOW_MINUTES = 5;
+
     /** Giới hạn vòng lặp Bung Public Group / sub-group trong queue. */
     private static final Integer MAX_PUBLIC_GROUP_EXPAND_ITERATIONS = 25;
 
@@ -108,20 +111,127 @@ public without sharing class FEC_CaseAssignmentAutoDistributeService {
         Integer logCount = [
             SELECT COUNT()
             FROM FEC_Case_Assignment_Logs__c
-            WHERE FEC_Case_Assignment_Name__c = :assignmentId
+            WHERE FEC_Case_Assignment_Name__c = :assignmentId AND FEC_Number_of_Case__c > 0
         ];
         Integer runNumber = logCount + 1;
-        Integer assignedCount = executeSingleAssignment(assignmentRecord, runNumber);
-        if (assignedCount == 0) {
-            insertAssignmentRunLog(
-                assignmentRecord.Id,
-                assignmentRecord.Name,
-                runNumber,
-                0,
-                new Map<Id, Integer>()
-            );
+        return executeSingleAssignment(assignmentRecord, runNumber);
+    }
+
+    /**
+     * Continuous: khi Case mới vào queue khớp assignment Active, chạy phân bổ nếu đã đến kỳ Scheduled Time
+     * (không chờ tick scheduler). Time-Based không gọi từ đây — chỉ chạy theo Time Slot.
+     */
+    public static void handleQueueCasesAfterSave(List<Case> cases, Map<Id, Case> oldMap) {
+        if (cases == null || cases.isEmpty()) {
+            return;
         }
-        return assignedCount;
+
+        Set<Id> queueOwnerIds = new Set<Id>();
+        for (Case caseRow : cases) {
+            if (caseRow == null || caseRow.IsClosed == true || caseRow.OwnerId == null) {
+                continue;
+            }
+            if (caseRow.OwnerId.getSObjectType() != Group.SObjectType) {
+                continue;
+            }
+            if (oldMap != null) {
+                Case oldRow = oldMap.get(caseRow.Id);
+                if (oldRow != null && oldRow.OwnerId == caseRow.OwnerId) {
+                    continue;
+                }
+            }
+            queueOwnerIds.add(caseRow.OwnerId);
+        }
+        if (queueOwnerIds.isEmpty()) {
+            return;
+        }
+
+        Map<Id, String> queueNameById = new Map<Id, String>();
+        for (Group queueRow : [SELECT Id, Name FROM Group WHERE Id IN :queueOwnerIds AND Type = 'Queue']) {
+            queueNameById.put(queueRow.Id, queueRow.Name);
+        }
+        if (queueNameById.isEmpty()) {
+            return;
+        }
+        Set<String> queueNames = new Set<String>(queueNameById.values());
+
+        List<FEC_Case_Assignment__c> activeContinuous = [
+            SELECT
+                Id,
+                FEC_Assignment_Method__c,
+                FEC_Scheduled_Time__c,
+                FEC_Time_Slots__c,
+                FEC_Business_Hours__c,
+                FEC_Business_Hours__r.TimeZoneSidKey,
+                FEC_Select_Queues__c
+            FROM FEC_Case_Assignment__c
+            WHERE FEC_Status__c = :FEC_ConstantCommon.FEC_CASE_ASSIGNMENT_STATUS_ACTIVE
+        ];
+        if (activeContinuous.isEmpty()) {
+            return;
+        }
+
+        List<FEC_Case_Assignment__c> continuousAssignments = new List<FEC_Case_Assignment__c>();
+        for (FEC_Case_Assignment__c assignmentRecord : activeContinuous) {
+            if (normalizedAssignmentMethod(assignmentRecord) == METHOD_CONTINUOUS) {
+                continuousAssignments.add(assignmentRecord);
+            }
+        }
+        if (continuousAssignments.isEmpty()) {
+            return;
+        }
+
+        DateTime nowTime = System.now();
+        Set<Id> candidateAssignmentIds = new Set<Id>();
+        for (FEC_Case_Assignment__c assignmentRecord : continuousAssignments) {
+            if (!assignmentQueueNamesOverlap(assignmentRecord.FEC_Select_Queues__c, queueNames)) {
+                continue;
+            }
+            candidateAssignmentIds.add(assignmentRecord.Id);
+        }
+        if (candidateAssignmentIds.isEmpty()) {
+            return;
+        }
+
+        Map<Id, Datetime> lastLogUtcByAssignmentId =
+            fetchLatestAssignmentLogCreatedDateByAssignments(candidateAssignmentIds);
+
+        List<Id> dueAssignmentIds = new List<Id>();
+        for (FEC_Case_Assignment__c assignmentRecord : continuousAssignments) {
+            if (!candidateAssignmentIds.contains(assignmentRecord.Id)) {
+                continue;
+            }
+            Datetime latestLogUtc = lastLogUtcByAssignmentId.get(assignmentRecord.Id);
+            if (!isDueToRun(assignmentRecord, nowTime, latestLogUtc)) {
+                continue;
+            }
+            if (hasLogInCurrentMinute(assignmentRecord, nowTime)) {
+                continue;
+            }
+            dueAssignmentIds.add(assignmentRecord.Id);
+        }
+
+        if (!dueAssignmentIds.isEmpty() && Limits.getQueueableJobs() < Limits.getLimitQueueableJobs()) {
+            System.enqueueJob(new FEC_CaseAssignmentAutoDistQueueJob(dueAssignmentIds));
+        }
+    }
+
+    /** Chỉ Continuous được phân ngay khi Active; Time-Based chờ Time Slot. */
+    public static Set<Id> filterAssignmentIdsForImmediateActivation(Set<Id> assignmentIds) {
+        Set<Id> eligible = new Set<Id>();
+        if (assignmentIds == null || assignmentIds.isEmpty()) {
+            return eligible;
+        }
+        for (FEC_Case_Assignment__c row : [
+            SELECT Id, FEC_Assignment_Method__c
+            FROM FEC_Case_Assignment__c
+            WHERE Id IN :assignmentIds
+        ]) {
+            if (normalizedAssignmentMethod(row) == METHOD_CONTINUOUS) {
+                eligible.add(row.Id);
+            }
+        }
+        return eligible;
     }
 
     /**
@@ -332,7 +442,7 @@ public without sharing class FEC_CaseAssignmentAutoDistributeService {
     private static String formatAssignmentRunLogName(String assignmentName, Integer runNumber) {
         String baseName = String.isBlank(assignmentName) ? 'Assignment' : assignmentName.trim();
         Integer run = runNumber == null || runNumber < 1 ? 1 : runNumber;
-        return baseName + ' - ' + String.valueOf(run).leftPad(5, '0');
+        return baseName + ' - ' + String.valueOf(run);
     }
 
     /**
@@ -363,7 +473,9 @@ public without sharing class FEC_CaseAssignmentAutoDistributeService {
         for (AggregateResult ar : [
             SELECT FEC_Case_Assignment_Name__c aidKey, MAX(CreatedDate) lastCreatedUtc
             FROM FEC_Case_Assignment_Logs__c
-            WHERE FEC_Case_Assignment_Name__c IN :assignmentIds
+            WHERE
+                FEC_Case_Assignment_Name__c IN :assignmentIds
+                AND FEC_Number_of_Case__c > 0
             GROUP BY FEC_Case_Assignment_Name__c
         ]) {
             Id aid = (Id) ar.get('aidKey');
@@ -408,11 +520,114 @@ public without sharing class FEC_CaseAssignmentAutoDistributeService {
             if (String.isBlank(assignmentRecord.FEC_Time_Slots__c)) {
                 return false;
             }
-            String currentHm = nowTime.format('HH:mm', tz);
             for (String slot : assignmentRecord.FEC_Time_Slots__c.split(';')) {
-                if (slot != null && slot.trim() == currentHm) {
-                    return true;
+                if (String.isBlank(slot)) {
+                    continue;
                 }
+                String slotHm = slot.trim();
+                if (!isWithinTimeSlotExecutionWindow(nowTime, tz, slotHm)) {
+                    continue;
+                }
+                if (hasLogForTimeSlotToday(assignmentRecord.Id, nowTime, tz, slotHm)) {
+                    continue;
+                }
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static Boolean assignmentQueueNamesOverlap(String assignmentQueuesRaw, Set<String> queueNames) {
+        if (queueNames == null || queueNames.isEmpty()) {
+            return false;
+        }
+        Set<String> configured = splitToSet(assignmentQueuesRaw);
+        for (String queueName : configured) {
+            if (queueNames.contains(queueName)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /** Slot HH:mm đã qua và vẫn trong cửa sổ polling scheduler (mặc định 5 phút). */
+    private static Boolean isWithinTimeSlotExecutionWindow(
+        DateTime nowTime,
+        String timezoneSid,
+        String slotHm
+    ) {
+        Integer slotMinutes = parseSlotHmToMinutes(slotHm);
+        if (slotMinutes == null) {
+            return false;
+        }
+        Integer currentMinutes = getMinutesSinceMidnight(nowTime, timezoneSid);
+        return currentMinutes >= slotMinutes &&
+            currentMinutes < slotMinutes + SCHEDULER_POLL_WINDOW_MINUTES;
+    }
+
+    private static Integer parseSlotHmToMinutes(String slotHm) {
+        if (String.isBlank(slotHm) || !slotHm.contains(':')) {
+            return null;
+        }
+        List<String> parts = slotHm.trim().split(':');
+        if (parts.size() < 2) {
+            return null;
+        }
+        try {
+            Integer hour = Integer.valueOf(parts[0].trim());
+            Integer minute = Integer.valueOf(parts[1].trim());
+            if (hour < 0 || hour > 23 || minute < 0 || minute > 59) {
+                return null;
+            }
+            return hour * 60 + minute;
+        } catch (Exception ex) {
+            return null;
+        }
+    }
+
+    private static Integer getMinutesSinceMidnight(DateTime value, String timezoneSid) {
+        if (value == null) {
+            return 0;
+        }
+        String tz = String.isBlank(timezoneSid) ? DEFAULT_ASSIGNMENT_TIMEZONE_SID : timezoneSid;
+        List<String> parts = value.format('HH:mm', tz).split(':');
+        Integer hour = Integer.valueOf(parts[0]);
+        Integer minute = Integer.valueOf(parts[1]);
+        return hour * 60 + minute;
+    }
+
+    /** Một slot Time-Based chỉ ghi log một lần mỗi ngày (theo timezone assignment). */
+    private static Boolean hasLogForTimeSlotToday(
+        Id assignmentId,
+        DateTime nowTime,
+        String timezoneSid,
+        String slotHm
+    ) {
+        if (assignmentId == null || nowTime == null || String.isBlank(slotHm)) {
+            return false;
+        }
+        Integer slotMinutes = parseSlotHmToMinutes(slotHm);
+        if (slotMinutes == null) {
+            return false;
+        }
+        String dayKey = nowTime.format('yyyy-MM-dd', timezoneSid);
+        DateTime probeStart = nowTime.addHours(-36);
+        for (FEC_Case_Assignment_Logs__c logRow : [
+            SELECT CreatedDate, FEC_Number_of_Case__c
+            FROM FEC_Case_Assignment_Logs__c
+            WHERE
+                FEC_Case_Assignment_Name__c = :assignmentId
+                AND CreatedDate >= :probeStart
+                AND FEC_Number_of_Case__c > 0
+            ORDER BY CreatedDate DESC
+            LIMIT 30
+        ]) {
+            if (logRow.CreatedDate.format('yyyy-MM-dd', timezoneSid) != dayKey) {
+                continue;
+            }
+            Integer logMinutes = getMinutesSinceMidnight(logRow.CreatedDate, timezoneSid);
+            if (logMinutes >= slotMinutes && logMinutes < slotMinutes + SCHEDULER_POLL_WINDOW_MINUTES) {
+                return true;
             }
         }
         return false;
@@ -434,9 +649,12 @@ public without sharing class FEC_CaseAssignmentAutoDistributeService {
         String minuteKey = nowTime.format('yyyy-MM-dd HH:mm', tz);
         DateTime probeStart = nowTime.addMinutes(-3);
         List<FEC_Case_Assignment_Logs__c> recentLogs = [
-            SELECT CreatedDate
+            SELECT CreatedDate, FEC_Number_of_Case__c
             FROM FEC_Case_Assignment_Logs__c
-            WHERE FEC_Case_Assignment_Name__c = :assignmentId AND CreatedDate >= :probeStart
+            WHERE
+                FEC_Case_Assignment_Name__c = :assignmentId
+                AND CreatedDate >= :probeStart
+                AND FEC_Number_of_Case__c > 0
             ORDER BY CreatedDate DESC
             LIMIT 10
         ];
@@ -716,7 +934,7 @@ public without sharing class FEC_CaseAssignmentAutoDistributeService {
         Map<Id, Integer> countsByAssignedUserId,
         List<Id> userIdsInAssignmentOrder
     ) {
-        if (assignmentId == null || totalCasesAssigned == null || totalCasesAssigned < 0) {
+        if (assignmentId == null || totalCasesAssigned == null || totalCasesAssigned <= 0) {
             return;
         }
         FEC_Case_Assignment_Logs__c logRecord = new FEC_Case_Assignment_Logs__c(

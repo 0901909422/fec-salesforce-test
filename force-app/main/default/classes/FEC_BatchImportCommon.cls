@@ -161,4 +161,12 @@ public with sharing class FEC_BatchImportCommon {
             // continue without blocking import if file is already linked
         }
     }
+
+    /** Insert Case từ batch import (không dùng System.runAs — chỉ hợp lệ trong @IsTest). */
+    public static Database.SaveResult[] insertImportCases(List<Case> cases, Boolean allOrNone) {
+        if (cases == null || cases.isEmpty()) {
+            return new List<Database.SaveResult>();
+        }
+        return Database.insert(cases, allOrNone);
+    }
 }

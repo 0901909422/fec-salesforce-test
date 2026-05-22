@@ -62,7 +62,6 @@ export default class FecCaseAssignmentNewForm extends NavigationMixin(LightningE
   ownerName = "";
   isSaving = false;
   pageErrors = [];
-  showErrorModal = false;
   queueHasError = false;
   roleHasError = false;
   currentTabId;
@@ -140,10 +139,6 @@ export default class FecCaseAssignmentNewForm extends NavigationMixin(LightningE
   }
   set assignmentMethodOptions(value) {
     this._assignmentMethodOptions = value;
-  }
-
-  get hasPageErrors() {
-    return (this.pageErrors || []).length > 0;
   }
 
   get isContinuousMethod() {
@@ -616,21 +611,18 @@ export default class FecCaseAssignmentNewForm extends NavigationMixin(LightningE
 
   presentPageErrors(messages) {
     this.pageErrors = this.normalizePageErrors(messages);
-    this.showErrorModal = this.pageErrors.length > 0;
     this.reportFieldValidity(this.pageErrors);
+    if (this.pageErrors.length) {
+      this.showToast("Error", this.pageErrors.join(" "), "error");
+    }
     requestAnimationFrame(() => {
       const anchor = this.template.querySelector('[data-id="page-error-anchor"]');
       anchor?.scrollIntoView?.({ behavior: "smooth", block: "start" });
     });
   }
 
-  closeErrorModal() {
-    this.showErrorModal = false;
-  }
-
   clearPageErrors() {
     this.pageErrors = [];
-    this.showErrorModal = false;
     this.queueHasError = false;
     this.roleHasError = false;
     this.template.querySelectorAll("[data-field]").forEach((field) => {

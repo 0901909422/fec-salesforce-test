@@ -196,10 +196,6 @@ export default class Fec_BatchDataCreation extends LightningElement {
     return this.getSortIcon("status");
   }
 
-  get failureReasonSortIcon() {
-    return this.getSortIcon("failureReason");
-  }
-
   get resultSortIcon() {
     return this.getSortIcon("result");
   }

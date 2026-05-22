@@ -16541,7 +16541,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC_BCH_HeaderInvalid</shortDescription>
-        <value>Tệp đính kèm thiếu cột bắt buộc (Case ID, Routing Action, Inputted Remarks).</value>
+        <value>Tệp đính kèm thiếu cột bắt buộc (Case ID, Inputted Remarks và Routing Action hoặc Assignment Routing Action).</value>
     </labels>
     <labels>
         <fullName>FEC_BCH_BpRequired</fullName>

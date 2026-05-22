@@ -233,6 +233,10 @@
             <fullName>Địa chỉ</fullName>
             <default>false</default>
         </values>
+        <values>
+            <fullName>RL05_POS</fullName>
+            <default>false</default>
+        </values>
     </picklistValues>
     <picklistValues>
         <picklist>FEC_Gender__c</picklist>
