@@ -1926,13 +1926,13 @@ public without sharing class FEC_AssignmentListHandler {
         
         return false;
     }
-    
+    @AuraEnabled(cacheable=true)
     public static Boolean isCSSupport() {
         return isCurrentUserInQueue(
             FEC_ConstantCommon.QUEUE_DQ_CS_SUPPORT_NAME
             );
     }
-    
+    @AuraEnabled(cacheable=true)
     public static Boolean isCSCustomerCare() {
         return isCurrentUserInQueue(
             FEC_ConstantCommon.QUEUE_DQ_CS_CUSTOMER_CARE_NAME
