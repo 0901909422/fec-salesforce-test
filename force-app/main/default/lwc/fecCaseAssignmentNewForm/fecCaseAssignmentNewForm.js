@@ -450,63 +450,60 @@ export default class FecCaseAssignmentNewForm extends NavigationMixin(LightningE
       },
     };
 
+    const scheduleCloseCreateTab = (tabId) => {
+      if (!tabId) {
+        return;
+      }
+      setTimeout(async () => {
+        try {
+          await closeTab(tabId);
+        } catch (e) {
+          // ignore tab close failures
+        }
+      }, 500);
+    };
+
     let tabToClose = this.currentTabId;
     try {
       const focusedTab = await getFocusedTabInfo();
       if (!tabToClose) {
         tabToClose = focusedTab.tabId;
       }
-      const parentTabId = focusedTab.isSubtab
-        ? focusedTab.parentTabId
-        : focusedTab.tabId;
 
-      await openSubtab(parentTabId, {
-        pageReference,
-        focus: true,
-      });
-
-      setTimeout(async () => {
-        try {
-          if (tabToClose) {
-            await closeTab(tabToClose);
-          }
-        } catch (e) {
-          // ignore tab close failures
-        }
-      }, 500);
-      return;
-    } catch (e) {
-      // fall through to console / standard navigation
-    }
-
-    if (this.isConsoleNavigation?.data === true) {
-      if (!tabToClose) {
-        try {
-          const { tabId } = await getFocusedTabInfo();
-          tabToClose = tabId;
-        } catch (err) {
-          tabToClose = null;
-        }
+      if (focusedTab.isSubtab && focusedTab.parentTabId) {
+        await openSubtab(focusedTab.parentTabId, {
+          pageReference,
+          focus: true,
+        });
+        scheduleCloseCreateTab(tabToClose);
+        return;
       }
 
-      await openTab({
-        recordId,
-        focus: true,
-      });
+      if (this.isConsoleNavigation?.data === true) {
+        await openTab({
+          recordId,
+          focus: true,
+        });
+        scheduleCloseCreateTab(tabToClose);
+        return;
+      }
 
-      setTimeout(async () => {
+      this[NavigationMixin.Navigate](pageReference);
+    } catch (e) {
+      if (this.isConsoleNavigation?.data === true) {
         try {
-          if (tabToClose) {
-            await closeTab(tabToClose);
-          }
+          await openTab({
+            recordId,
+            focus: true,
+          });
+          scheduleCloseCreateTab(tabToClose);
         } catch (err) {
-          // ignore tab close failures
+          this[NavigationMixin.Navigate](pageReference);
         }
-      }, 500);
-      return;
+      } else {
+        this[NavigationMixin.Navigate](pageReference);
+      }
     }
-
-    this[NavigationMixin.Navigate](pageReference);
   }
 
   handleCancel() {
