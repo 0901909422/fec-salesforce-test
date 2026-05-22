@@ -656,7 +656,7 @@ public without sharing class FEC_BatchCaseHandlingImportService {
                 }
             }
 
-            if (matched != null) {
+            if (matched != null && cofOrGsr != true) {
                 FEC_BatchCaseHandlingImportProfile.ImportScope importScope =
                     FEC_BatchCaseHandlingImportProfile.resolveForCase(
                         resolveCaseBusinessProcessCode(matched),
