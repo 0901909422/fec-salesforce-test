@@ -628,7 +628,7 @@ public with sharing class FEC_ConstantCommon {
     public static final String DECISION_USER_QUEUE = 'USER_QUEUE';
     public static final String DECISION_USER_TEAM_QUEUE = 'USER_TEAM_QUEUE';
     
-    public static final String DECISION_CANNOT_CONTACT = 'CANNOT_CONTACT';
+    public static final String DECISION_CANNOT_CONTACT = 'Cannot Contact Customer';
     
     // ================= ASSIGNMENT STATUS =================
     public static final String ASSIGNMENT_STATUS_COMPLETED = 'Completed';
@@ -671,10 +671,10 @@ public with sharing class FEC_ConstantCommon {
     public static final String HISTORY_ACTION_ROUTE_TO = 'Route to';
     
     // ================= UPDATE DECISION KEYS =================
-    public static final String DECISION_OUT_OF_PROCESS = 'OUT_OF_PROCESS';
-    public static final String DECISION_CIC_RELATED = 'CIC_RELATED';
-    public static final String DECISION_DOCUMENT_PREP = 'DOCUMENT_PREP';
-    public static final String DECISION_TASK_UNDER_REVIEW = 'TASK_UNDER_REVIEW';
+    public static final String DECISION_OUT_OF_PROCESS = 'Out Of Process';
+    public static final String DECISION_CIC_RELATED = 'CIC Related';
+    public static final String DECISION_DOCUMENT_PREP = 'Document Preparation';
+    public static final String DECISION_TASK_UNDER_REVIEW = 'Task Under Review';
     
     // ================= CASE STATUS =================
     public static final String STATUS_PENDING_CS = 'Pending-CSInternal';
