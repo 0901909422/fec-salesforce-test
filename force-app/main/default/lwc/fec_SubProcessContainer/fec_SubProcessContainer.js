@@ -159,6 +159,12 @@ export default class Fec_SubProcessContainer extends LightningElement {
 
       console.log("submitted subprocesses = ", JSON.stringify(result));
 
+      // release-uat-3: visibility sau submit; giữ Hold Case khi Case đã có kết quả
+      this.showHoldCase = !!result.showHoldCase || this.holdCaseResultOnCase;
+      // this.showHoldCaseManual = !!result.showHoldCaseManual;
+      // if (!this.holdCaseResultOnCase) {
+      //   this.showHoldCaseAuto = !!result.showHoldCaseAuto;
+      // }
       this.showRemovePhone = !!result.showRemovePhone;
       this.showDoNotBother = !!result.showDNB;
       this.showTransferCall = !!result.showTransferCall;
@@ -167,3 +173,39 @@ export default class Fec_SubProcessContainer extends LightningElement {
     }
   }
 }
+
+  /** Gọi từ fec_CaseBussiness sau Submit / Manual Hold để refresh kết quả Hold Case. */
+  @api
+  refreshAutoHoldCase() {
+    this._checkHoldCaseRefreshFlag();
+    const promises = [];
+    if (this.wiredCaseAutoResultWire) {
+      promises.push(
+        refreshApex(this.wiredCaseAutoResultWire).then(() => {
+          const resultVal = getFieldValue(
+            this.wiredCaseAutoResultWire?.data,
+            FEC_NFU_DESCRIPTION_RESULT,
+          );
+          this.holdCaseResultOnCase = !!resultVal;
+          if (resultVal) {
+            this.showHoldCase = true;
+            this.showHoldCaseAuto = true;
+          }
+        }),
+      );
+    }
+    if (this.holdCaseResultOverride) {
+      this.showHoldCase = true;
+      this.showHoldCaseAuto = true;
+    }
+    return Promise.all(promises).then(() => {
+      // tungnm37: mount fec_holdCaseAuto sau khi showHoldCaseSection = true rồi refresh
+      const autoCmp = this.template.querySelector("c-fec_hold-case-auto");
+      if (autoCmp?.refresh) {
+        return autoCmp.refresh();
+      }
+      return undefined;
+    });
+  }
+}
+>>>>>>> force-app/main/default/lwc/fec_SubProcessContainer/fec_SubProcessContainer.js

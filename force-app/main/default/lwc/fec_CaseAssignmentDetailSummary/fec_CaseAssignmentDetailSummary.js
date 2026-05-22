@@ -1,9 +1,11 @@
 import { LightningElement, api, wire, track } from "lwc";
 import { NavigationMixin } from "lightning/navigation";
 import { getRecord, getRecordNotifyChange, updateRecord } from "lightning/uiRecordApi";
+import { getObjectInfo, getPicklistValues } from "lightning/uiObjectInfoApi";
 import { ShowToastEvent } from "lightning/platformShowToastEvent";
 import getBusinessHourOptions from "@salesforce/apex/FEC_CaseAssignmentConfigController.getBusinessHourOptions";
 import getActiveCaseQueues from "@salesforce/apex/FEC_CaseAssignmentConfigController.getActiveCaseQueues";
+import isCaseAssignmentNameTaken from "@salesforce/apex/FEC_CaseAssignmentConfigController.isCaseAssignmentNameTaken";
 
 import BUSINESS_HOURS_FIELD from "@salesforce/schema/FEC_Case_Assignment__c.FEC_Business_Hours__c";
 import NAME_FIELD from "@salesforce/schema/FEC_Case_Assignment__c.Name";
@@ -16,14 +18,16 @@ import QUEUES_FIELD from "@salesforce/schema/FEC_Case_Assignment__c.FEC_Select_Q
 import ROLE_FIELD from "@salesforce/schema/FEC_Case_Assignment__c.FEC_Role__c";
 import SCALE_FIELD from "@salesforce/schema/FEC_Case_Assignment__c.FEC_Scale__c";
 import NOC_COUNT_FIELD from "@salesforce/schema/FEC_Case_Assignment__c.FEC_Case_Assignmetn_NOC_Count__c";
+import CASE_ASSIGNMENT_OBJECT from "@salesforce/schema/FEC_Case_Assignment__c";
 
 const OBJECT_API_NAME = "FEC_Case_Assignment__c";
 
 const MSG_CANNOT_ACTIVE_WITHOUT_NOC =
   "Không thể Active khi chưa thêm Case Assignment NOC.";
+const MSG_DUPLICATE_NAME = "Case Assignment Name đã tồn tại.";
 
 const FIELD_EDIT_LABELS = {
-  Name: "Name",
+  Name: "Case Assignment Name",
   FEC_Status__c: "Status",
   FEC_Business_Hours__c: "Business Hours",
   FEC_Assignment_Method__c: "Assignment Method",
@@ -82,7 +86,23 @@ export default class Fec_CaseAssignmentDetailSummary extends NavigationMixin(Lig
   @track modalSelectedQueues = [];
   @track isQueuesSaving = false;
   @track queueOptions = [];
+  @track modalTimeSlotsValue = [];
+  @track isTimeSlotsSaving = false;
+  @track timeSlotOptions = [];
   businessHourOptionsWire;
+
+  @wire(getObjectInfo, { objectApiName: CASE_ASSIGNMENT_OBJECT })
+  objectInfo;
+
+  @wire(getPicklistValues, {
+    recordTypeId: "$objectInfo.data.defaultRecordTypeId",
+    fieldApiName: TIME_SLOTS_FIELD,
+  })
+  wiredTimeSlotOptions({ data }) {
+    if (data) {
+      this.timeSlotOptions = data.values;
+    }
+  }
 
   get assignmentName() {
     return this.getFieldValue("Name");
@@ -277,15 +297,11 @@ export default class Fec_CaseAssignmentDetailSummary extends NavigationMixin(Lig
   }
 
   get draftStatusEditOptions() {
-    const options = [
+    return [
       { label: STATUS_DRAFT, value: STATUS_DRAFT },
       { label: STATUS_ACTIVE, value: STATUS_ACTIVE },
       { label: STATUS_ARCHIVED, value: STATUS_ARCHIVED },
     ];
-    if (this.canSelectActiveStatus) {
-      return options;
-    }
-    return options.filter((option) => option.value !== STATUS_ACTIVE);
   }
 
   get isEditingDraftStatus() {
@@ -309,6 +325,17 @@ export default class Fec_CaseAssignmentDetailSummary extends NavigationMixin(Lig
     return (
       this.editingFieldName === "FEC_Select_Queues__c" && this.canEditSelectQueues
     );
+  }
+
+  get isEditingTimeSlots() {
+    return this.editingFieldName === "FEC_Time_Slots__c";
+  }
+
+  get timeSlotDualListboxOptions() {
+    return (this.timeSlotOptions || []).map((item) => ({
+      label: item.label,
+      value: item.value,
+    }));
   }
 
   get queueDualListboxOptions() {
@@ -348,7 +375,8 @@ export default class Fec_CaseAssignmentDetailSummary extends NavigationMixin(Lig
       !this.isEditingActiveToArchive &&
       !this.isEditingDraftStatus &&
       !this.isEditingName &&
-      !this.isEditingQueues
+      !this.isEditingQueues &&
+      !this.isEditingTimeSlots
     );
   }
 
@@ -389,10 +417,14 @@ export default class Fec_CaseAssignmentDetailSummary extends NavigationMixin(Lig
       this.modalBusinessHoursValue = this.businessHoursId || "";
     }
     if (fieldApiName === "FEC_Status__c" && this.canEditDraftDetailFields) {
+      getRecordNotifyChange([{ recordId: this.recordId }]);
       this.modalStatusValue = this.assignmentStatusKey || STATUS_DRAFT;
     }
     if (fieldApiName === "Name") {
       this.modalNameValue = this.assignmentName || "";
+    }
+    if (fieldApiName === "FEC_Time_Slots__c") {
+      this.modalTimeSlotsValue = this.parseSemicolonList(this.timeSlots);
     }
     this.modalFormRenderKey += 1;
     this.isEditModalOpen = true;
@@ -417,6 +449,8 @@ export default class Fec_CaseAssignmentDetailSummary extends NavigationMixin(Lig
     this.isNameSaving = false;
     this.modalSelectedQueues = [];
     this.isQueuesSaving = false;
+    this.modalTimeSlotsValue = [];
+    this.isTimeSlotsSaving = false;
   }
 
   handleModalNameChange(event) {
@@ -425,6 +459,59 @@ export default class Fec_CaseAssignmentDetailSummary extends NavigationMixin(Lig
 
   handleModalQueuesChange(event) {
     this.modalSelectedQueues = event.detail.value || [];
+  }
+
+  handleModalTimeSlotsChange(event) {
+    this.modalTimeSlotsValue = event.detail.value || [];
+  }
+
+  async handleSaveTimeSlots() {
+    if (!this.recordId || !this.canEditDraftDetailFields) {
+      return;
+    }
+    if (!this.modalTimeSlotsValue.length) {
+      this.dispatchEvent(
+        new ShowToastEvent({
+          title: "Error",
+          message: "Time Slots can't be blank",
+          variant: "error",
+        })
+      );
+      return;
+    }
+    this.isTimeSlotsSaving = true;
+    try {
+      await updateRecord({
+        fields: {
+          Id: this.recordId,
+          [TIME_SLOTS_FIELD.fieldApiName]: this.modalTimeSlotsValue.join(";"),
+        },
+      });
+      getRecordNotifyChange([{ recordId: this.recordId }]);
+      this.closeEditModal();
+      this.dispatchEvent(
+        new ShowToastEvent({
+          title: "Saved",
+          message: "Record updated.",
+          variant: "success",
+        })
+      );
+    } catch (e) {
+      const msg =
+        e?.body?.output?.errors?.[0]?.message ||
+        e?.body?.message ||
+        e?.message ||
+        "Could not update Time Slots.";
+      this.dispatchEvent(
+        new ShowToastEvent({
+          title: "Error",
+          message: msg,
+          variant: "error",
+        })
+      );
+    } finally {
+      this.isTimeSlotsSaving = false;
+    }
   }
 
   async ensureQueueOptionsLoaded() {
@@ -454,7 +541,7 @@ export default class Fec_CaseAssignmentDetailSummary extends NavigationMixin(Lig
       this.dispatchEvent(
         new ShowToastEvent({
           title: "Error",
-          message: "Name can't be blank",
+          message: "Case Assignment Name can't be blank",
           variant: "error",
         })
       );
@@ -462,6 +549,21 @@ export default class Fec_CaseAssignmentDetailSummary extends NavigationMixin(Lig
     }
     this.isNameSaving = true;
     try {
+      const nameTaken = await isCaseAssignmentNameTaken({
+        assignmentName: trimmedName,
+        excludeRecordId: this.recordId,
+      });
+      if (nameTaken) {
+        this.dispatchEvent(
+          new ShowToastEvent({
+            title: "Error",
+            message: MSG_DUPLICATE_NAME,
+            variant: "error",
+          })
+        );
+        return;
+      }
+
       await updateRecord({
         fields: {
           Id: this.recordId,
@@ -555,19 +657,31 @@ export default class Fec_CaseAssignmentDetailSummary extends NavigationMixin(Lig
   }
 
   handleModalStatusChange(event) {
-    const nextStatus = event.detail.value || STATUS_DRAFT;
-    if (nextStatus === STATUS_ACTIVE && !this.canSelectActiveStatus) {
-      this.modalStatusValue = this.assignmentStatusKey || STATUS_DRAFT;
-      this.dispatchEvent(
-        new ShowToastEvent({
-          title: "Error",
-          message: MSG_CANNOT_ACTIVE_WITHOUT_NOC,
-          variant: "error",
-        })
-      );
-      return;
+    this.modalStatusValue = event.detail.value || STATUS_DRAFT;
+    this.clearModalStatusError();
+  }
+
+  reportModalStatusError() {
+    this.dispatchEvent(
+      new ShowToastEvent({
+        title: "Error",
+        message: MSG_CANNOT_ACTIVE_WITHOUT_NOC,
+        variant: "error",
+      })
+    );
+    const statusField = this.template.querySelector('[data-field="modalStatus"]');
+    if (statusField?.setCustomValidity) {
+      statusField.setCustomValidity(MSG_CANNOT_ACTIVE_WITHOUT_NOC);
+      statusField.reportValidity();
     }
-    this.modalStatusValue = nextStatus;
+  }
+
+  clearModalStatusError() {
+    const statusField = this.template.querySelector('[data-field="modalStatus"]');
+    if (statusField?.setCustomValidity) {
+      statusField.setCustomValidity("");
+      statusField.reportValidity();
+    }
   }
 
   async handleSaveDraftStatus() {
@@ -575,13 +689,7 @@ export default class Fec_CaseAssignmentDetailSummary extends NavigationMixin(Lig
       return;
     }
     if (this.modalStatusValue === STATUS_ACTIVE && !this.canSelectActiveStatus) {
-      this.dispatchEvent(
-        new ShowToastEvent({
-          title: "Error",
-          message: MSG_CANNOT_ACTIVE_WITHOUT_NOC,
-          variant: "error",
-        })
-      );
+      this.reportModalStatusError();
       return;
     }
     this.isStatusSaving = true;

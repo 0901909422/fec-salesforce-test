@@ -21,6 +21,8 @@ import TIME_SLOTS_FIELD from "@salesforce/schema/FEC_Case_Assignment__c.FEC_Time
 import getActiveCaseQueues from "@salesforce/apex/FEC_CaseAssignmentConfigController.getActiveCaseQueues";
 import getRoleOptions from "@salesforce/apex/FEC_CaseAssignmentConfigController.getRoleOptions";
 import getBusinessHourOptions from "@salesforce/apex/FEC_CaseAssignmentConfigController.getBusinessHourOptions";
+import isCaseAssignmentNameTaken from "@salesforce/apex/FEC_CaseAssignmentConfigController.isCaseAssignmentNameTaken";
+import findQueuesMissingRoleCoverage from "@salesforce/apex/FEC_CaseAssignmentConfigController.findQueuesMissingRoleCoverage";
 
 const OBJECT_API_NAME = "FEC_Case_Assignment__c";
 const STATUS_DRAFT = "Draft";
@@ -32,7 +34,10 @@ const STATUS_OPTIONS_CANONICAL = [
   { label: STATUS_ACTIVE, value: STATUS_ACTIVE },
   { label: STATUS_ARCHIVED, value: STATUS_ARCHIVED },
 ];
-const MSG_NAME_BLANK = "Name can't be blank";
+const MSG_NAME_BLANK = "Case Assignment Name can't be blank";
+const MSG_ROLE_REQUIRED_WITH_QUEUE = "Role is required when Select Queues is specified.";
+const MSG_ROLE_REQUIRED_PER_QUEUE =
+  "Phải thêm Role cho mỗi queue đã chọn trong Select Queues.";
 const MSG_DUPLICATE_NAME = "Case Assignment Name đã tồn tại.";
 const MSG_CANNOT_ACTIVE_WITHOUT_NOC =
   "Không thể Active khi chưa thêm Case Assignment NOC.";
@@ -375,26 +380,45 @@ export default class FecCaseAssignmentNewForm extends NavigationMixin(LightningE
       return;
     }
 
-    this.isSaving = true;
     const trimmedName = (this.assignmentName || "").trim();
-    const fields = {
-      Name: trimmedName,
-      FEC_Status__c: this.status,
-      FEC_Assignment_Method__c: this.assignmentMethod,
-      FEC_Select_Queues__c: this.selectedQueues.join(";"),
-      FEC_Role__c: this.roleRows.map((row) => `${row.role}|${row.scale}`).join(";"),
-      FEC_Business_Hours__c: this.businessHoursId,
-    };
 
-    fields.FEC_Scale__c = this.roleRows.length === 1 ? this.roleRows[0].scale : null;
-    if (this.isContinuousMethod && this.scheduledTime !== "") {
-      fields.FEC_Scheduled_Time__c = Number(this.scheduledTime);
-    }
-    if (this.isTimeBasedMethod && this.selectedTimeSlots.length) {
-      fields.FEC_Time_Slots__c = this.selectedTimeSlots.join(";");
-    }
-
+    this.isSaving = true;
     try {
+      const nameTaken = await isCaseAssignmentNameTaken({
+        assignmentName: trimmedName,
+        excludeRecordId: null,
+      });
+      if (nameTaken) {
+        this.presentPageErrors([MSG_DUPLICATE_NAME]);
+        return;
+      }
+
+      const missingQueues = await findQueuesMissingRoleCoverage({
+        queueNames: this.selectedQueues,
+        assignedRoleNames: this.roleRows.map((row) => row.role),
+      });
+      if (missingQueues?.length) {
+        this.presentPageErrors([MSG_ROLE_REQUIRED_PER_QUEUE]);
+        return;
+      }
+
+      const fields = {
+        Name: trimmedName,
+        FEC_Status__c: this.status,
+        FEC_Assignment_Method__c: this.assignmentMethod,
+        FEC_Select_Queues__c: this.selectedQueues.join(";"),
+        FEC_Role__c: this.roleRows.map((row) => `${row.role}|${row.scale}`).join(";"),
+        FEC_Business_Hours__c: this.businessHoursId,
+      };
+
+      fields.FEC_Scale__c = this.roleRows.length === 1 ? this.roleRows[0].scale : null;
+      if (this.isContinuousMethod && this.scheduledTime !== "") {
+        fields.FEC_Scheduled_Time__c = Number(this.scheduledTime);
+      }
+      if (this.isTimeBasedMethod && this.selectedTimeSlots.length) {
+        fields.FEC_Time_Slots__c = this.selectedTimeSlots.join(";");
+      }
+
       const result = await createRecord({
         apiName: OBJECT_API_NAME,
         fields,
@@ -536,8 +560,8 @@ export default class FecCaseAssignmentNewForm extends NavigationMixin(LightningE
     if (this.isTimeBasedMethod && !this.selectedTimeSlots.length) {
       errors.push("Time Slots can't be blank");
     }
-    if (!this.roleRows.length) {
-      errors.push("Role can't be blank");
+    if (this.selectedQueues.length && !this.roleRows.length) {
+      errors.push(MSG_ROLE_REQUIRED_WITH_QUEUE);
     }
     return errors;
   }
@@ -673,7 +697,9 @@ export default class FecCaseAssignmentNewForm extends NavigationMixin(LightningE
     });
 
     this.queueHasError = messages.includes("Select Queues can't be blank");
-    this.roleHasError = messages.includes("Role can't be blank");
+    this.roleHasError =
+      messages.includes(MSG_ROLE_REQUIRED_WITH_QUEUE) ||
+      messages.includes(MSG_ROLE_REQUIRED_PER_QUEUE);
   }
 
   handleAddRole() {

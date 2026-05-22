@@ -206,6 +206,17 @@ public without sharing class FEC_CofGsrAssignmentService {
             );
             String userRoleName = currentUser.UserRole?.Name;
 
+            //tungnm37 start: resolve team cua Service Case Owner (Queue hoac User) de check cross-team SP<->CC
+            String caseOwnerTeam = null;
+            if (currentCase.OwnerId != null) {
+                if (currentCase.OwnerId.getSObjectType() == Group.SObjectType) {
+                    caseOwnerTeam = resolveTeamFromQueueId(currentCase.OwnerId);
+                } else if (currentCase.OwnerId.getSObjectType() == User.SObjectType) {
+                    caseOwnerTeam = resolveTeamFromUserId(currentCase.OwnerId);
+                }
+            }
+            //tungnm37 end
+
             List<FEC_Assignment__c> assignments = new List<FEC_Assignment__c>();
             for (FEC_Routing_Assignment__c ra : routingAssignments) {
                 String queueId = queueNameToId.containsKey(ra.FEC_Queue__c)
@@ -214,8 +225,8 @@ public without sharing class FEC_CofGsrAssignmentService {
                     FEC_Case__c = caseId,
                     FEC_Assignment_Name__c = FEC_ConstantCommon.ASSIGNMENT_NAME_ROUTING,
                     FEC_Assignment_Type__c = FEC_ConstantCommon.ASSIGNMENT_TYPE_ROUTING,
-                    //tungnm37: set status theo team thay vi hardcode Open
-                    FEC_Assignment_Status__c = resolveAssignmentStatus(ra.FEC_Team__c),
+                    //tungnm37: set status theo team + caseOwnerTeam (tu Case Owner Queue)
+                    FEC_Assignment_Status__c = resolveAssignmentStatusWithOwner(ra.FEC_Team__c, caseOwnerTeam),
                     FEC_OwnerID__c = ra.FEC_Queue__c, // tungnm37 sửa: lưu Queue Name để formula FEC_Assignment_Owner_Text__c hiện đúng
                     FEC_Assignment_Owner__c = null,
                     FEC_Team__c = ra.FEC_Team__c,
@@ -348,6 +359,17 @@ public without sharing class FEC_CofGsrAssignmentService {
                 ? String.valueOf(currentUser.Id)
                 : (currentCase.OwnerId != null ? String.valueOf(currentCase.OwnerId) : null);
 
+            //tungnm37 start: resolve team cua Service Case Owner (Queue hoac User)
+            String caseOwnerTeamManual = null;
+            if (currentCase.OwnerId != null) {
+                if (currentCase.OwnerId.getSObjectType() == Group.SObjectType) {
+                    caseOwnerTeamManual = resolveTeamFromQueueId(currentCase.OwnerId);
+                } else if (currentCase.OwnerId.getSObjectType() == User.SObjectType) {
+                    caseOwnerTeamManual = resolveTeamFromUserId(currentCase.OwnerId);
+                }
+            }
+            //tungnm37 end
+
             List<FEC_Assignment__c> assignments = new List<FEC_Assignment__c>();
             List<String> remarkList = new List<String>();
             List<String> queueNameList = new List<String>(); // tungnm37: lưu queueName để dùng cho history
@@ -362,8 +384,8 @@ public without sharing class FEC_CofGsrAssignmentService {
                     FEC_Case__c = caseId,
                     FEC_Assignment_Name__c = FEC_ConstantCommon.ASSIGNMENT_NAME_ROUTING,
                     FEC_Assignment_Type__c = FEC_ConstantCommon.ASSIGNMENT_TYPE_ROUTING,
-                    //tungnm37: set status theo team thay vi hardcode Open
-                    FEC_Assignment_Status__c = resolveAssignmentStatus(teamName),
+                    //tungnm37: set status theo team + caseOwnerTeam (tu Case Owner Queue)
+                    FEC_Assignment_Status__c = resolveAssignmentStatusWithOwner(teamName, caseOwnerTeamManual),
                     FEC_OwnerID__c = queueDevNameToDisplayName.containsKey(queueName) ? queueDevNameToDisplayName.get(queueName) : queueName, // tungnm37 sửa: lưu Queue Name
                     FEC_Assignment_Owner__c = null,
                     FEC_Team__c = teamName,
@@ -463,11 +485,24 @@ public without sharing class FEC_CofGsrAssignmentService {
     }
 
     //tungnm37: Resolve Assignment Status theo team code
-    //tungnm37: SP/CC → CSBackOfficeReview; CS khac (IB/EC/OB/QC/OM/F2F/CA/CL/CX) → CSReview
-    //tungnm37: Other Dept (CO/PM/CP/DS/IA/IT/TS) → OtherDeptReview; con lai → Open
+    //tungnm37: SP/CC → CSBackOfficeReview; nhung neu cross-team (CC→SP hoac SP→CC) → CSReview
+    //tungnm37: CS khac (IB/EC/OB/QC/OM/F2F/CX) → CSReview
+    //tungnm37: Other Dept (CO/CL/CP/PM/DS/TS/CA/IA/IT) → OtherDeptReview; con lai → Open
     private static String resolveAssignmentStatus(String teamCode) {
+        return resolveAssignmentStatusWithOwner(teamCode, null);
+    }
+
+    //tungnm37: Overload voi caseOwnerTeam de xu ly cross-team SP<->CC
+    //tungnm37: caseOwnerTeam = team cua Queue dang giu Case (khong phai FEC_User_Group__c)
+    public static String resolveAssignmentStatusWithOwner(String teamCode, String caseOwnerTeam) {
         if (String.isBlank(teamCode)) return FEC_ConstantCommon.ASSIGNMENT_STATUS_OPEN;
         if (FEC_ConstantCommon.CS_BACKOFFICE_TEAMS.contains(teamCode)) {
+            //tungnm37: cross-team trong CS BackOffice (CC→SP hoac SP→CC) → CSReview
+            if (String.isNotBlank(caseOwnerTeam)
+                && FEC_ConstantCommon.CS_BACKOFFICE_TEAMS.contains(caseOwnerTeam)
+                && caseOwnerTeam != teamCode) {
+                return FEC_ConstantCommon.STATUS_CS_REVIEW;
+            }
             return FEC_ConstantCommon.STATUS_CS_BACKOFFICE;
         }
         if (FEC_ConstantCommon.CS_REVIEW_TEAMS.contains(teamCode)) {
@@ -477,6 +512,86 @@ public without sharing class FEC_CofGsrAssignmentService {
             return FEC_ConstantCommon.STATUS_OTHER_DEPT;
         }
         return FEC_ConstantCommon.ASSIGNMENT_STATUS_OPEN;
+    }
+
+    //tungnm37: Resolve team code tu Queue ID (Case Owner) bang cach lookup FEC_Team_Queue__c
+    @TestVisible
+    private static String resolveTeamFromQueueId(Id queueId) {
+        if (queueId == null) return null;
+        // Lay DeveloperName cua Queue
+        List<Group> groups = [SELECT DeveloperName FROM Group WHERE Id = :queueId AND Type = 'Queue' LIMIT 1];
+        if (groups.isEmpty()) return null;
+        String devName = groups[0].DeveloperName;
+        // Lookup team tu FEC_Team_Queue__c
+        List<FEC_Team_Queue__c> tqs = [
+            SELECT FEC_Select_Team__r.Name
+            FROM FEC_Team_Queue__c
+            WHERE FEC_Queue_Name__c = :devName
+            LIMIT 1
+        ];
+        return tqs.isEmpty() ? null : tqs[0].FEC_Select_Team__r?.Name;
+    }
+
+    //tungnm37: Resolve team code tu User ID (Case Owner) bang cach lookup FEC_Team_Queue__c qua FEC_Main_Queue__c
+    @TestVisible
+    private static String resolveTeamFromUserId(Id userId) {
+        if (userId == null) return null;
+        List<User> users = [SELECT FEC_Main_Queue__c, UserRoleId FROM User WHERE Id = :userId LIMIT 1];
+        if (users.isEmpty()) return null;
+        
+        String mainQueue = users[0].FEC_Main_Queue__c;
+        if (String.isNotBlank(mainQueue) && mainQueue != 'default value') {
+            List<FEC_Team_Queue__c> tqs = [
+                SELECT FEC_Select_Team__r.Name
+                FROM FEC_Team_Queue__c
+                WHERE FEC_Queue_Name__c = :mainQueue
+                LIMIT 1
+            ];
+            if (!tqs.isEmpty()) {
+                return tqs[0].FEC_Select_Team__r?.Name;
+            }
+        }
+        
+        // Fallback: GroupMember
+        Set<Id> memberIds = new Set<Id>{ userId };
+        if (users[0].UserRoleId != null) {
+            for (Group grp : [
+                SELECT Id 
+                FROM Group 
+                WHERE RelatedId = :users[0].UserRoleId 
+                  AND Type IN ('Role', 'RoleAndSubordinates')
+            ]) {
+                memberIds.add(grp.Id);
+            }
+        }
+        
+        Set<String> queueDevNames = new Set<String>();
+        for (GroupMember gm : [
+            SELECT Group.DeveloperName 
+            FROM GroupMember 
+            WHERE UserOrGroupId IN :memberIds 
+              AND Group.Type = 'Queue'
+        ]) {
+            queueDevNames.add(gm.Group.DeveloperName);
+        }
+        
+        if (!queueDevNames.isEmpty()) {
+            List<FEC_Team_Queue__c> tqs = [
+                SELECT FEC_Select_Team__r.Name
+                FROM FEC_Team_Queue__c
+                WHERE FEC_Queue_Name__c IN :queueDevNames
+            ];
+            for (FEC_Team_Queue__c tq : tqs) {
+                String teamName = tq.FEC_Select_Team__r?.Name;
+                if (String.isNotBlank(teamName) && FEC_ConstantCommon.CS_BACKOFFICE_TEAMS.contains(teamName)) {
+                    return teamName;
+                }
+            }
+            if (!tqs.isEmpty()) {
+                return tqs[0].FEC_Select_Team__r?.Name;
+            }
+        }
+        return null;
     }
 
     // tungnm37 fix: lưu Queue Name cho queue (để hiển thị listview), User Id cho user
@@ -637,20 +752,6 @@ public without sharing class FEC_CofGsrAssignmentService {
                     );
                     Database.insert(gsrHistory, AccessLevel.SYSTEM_MODE);
                     gsrRoutingHistoryId = gsrHistory.Id;
-                    // tungnm37 fix: tạo Case Remark cho CC/SP team path
-                    if (String.isNotBlank(remarkContent)) {
-                        try {
-                            insert new FEC_Case_Remarks__c(
-                                FEC_Case__c = caseId,
-                                FEC_Remark_Type__c = FEC_ConstantCommon.REMARK_TYPE_ASSIGNMENT,
-                                FEC_Case_Remarks__c = remarkContent,
-                                FEC_User__c = emailLocalPart(currentUser.Email),
-                                FEC_Stage_Name__c = stageName
-                            );
-                        } catch (Exception er) {
-                            System.debug('FEC_DEBUG createRemark CC/SP error: ' + er.getMessage());
-                        }
-                    }
                 } catch (Exception eh) {
                     System.debug('FEC_DEBUG createRoutingHistory CC/SP error: ' + eh.getMessage());
                 }

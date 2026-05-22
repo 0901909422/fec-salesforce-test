@@ -20,13 +20,13 @@
         <div class="section-body">
           <div class="detail-grid">
             <div class="detail-cell">
-              <div class="detail-label">Name</div>
+              <div class="detail-label">Case Assignment Name</div>
               <div class="detail-value-row">
                 <span class="detail-value">{displayName}</span>
                 <template if:true={canEditDraftDetailFields}>
                   <lightning-button-icon
                     icon-name="utility:edit"
-                    alternative-text="Edit Name"
+                    alternative-text="Edit Case Assignment Name"
                     variant="bare"
                     class="edit-pencil"
                     data-field="Name"
@@ -291,6 +291,7 @@
             </template>
             <template if:true={isEditingDraftStatus}>
               <lightning-combobox
+                data-field="modalStatus"
                 name="fecStatusDraftEdit"
                 label="Status"
                 value={modalStatusValue}
@@ -314,9 +315,37 @@
                 ></lightning-button>
               </div>
             </template>
+            <template if:true={isEditingTimeSlots}>
+              <lightning-dual-listbox
+                name="fecTimeSlotsEdit"
+                label="Time Slots"
+                source-label="Available"
+                selected-label="Chosen"
+                options={timeSlotDualListboxOptions}
+                value={modalTimeSlotsValue}
+                required
+                disabled={isTimeSlotsSaving}
+                onchange={handleModalTimeSlotsChange}
+              ></lightning-dual-listbox>
+              <div class="slds-m-top_medium slds-text-align_right">
+                <lightning-button
+                  variant="neutral"
+                  label="Cancel"
+                  onclick={closeEditModal}
+                  disabled={isTimeSlotsSaving}
+                ></lightning-button>
+                <lightning-button
+                  variant="brand"
+                  label="Save"
+                  onclick={handleSaveTimeSlots}
+                  disabled={isTimeSlotsSaving}
+                  class="slds-m-left_x-small"
+                ></lightning-button>
+              </div>
+            </template>
             <template if:true={isEditingName}>
               <lightning-input
-                label="Name"
+                label="Case Assignment Name"
                 value={modalNameValue}
                 required
                 disabled={isNameSaving}

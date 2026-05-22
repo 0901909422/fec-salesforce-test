@@ -133,6 +133,30 @@
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
+        <apexClass>FEC_BatchCaseHandlingResultXlsxBuilder</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_BatchCaseHandlingPicklistResolver</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_BatchCaseHandlingImportProfile</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_BCH_PicklistTranslationCtrl</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_BCH_ImportRoutingResolver</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_BCH_TemplateExportService</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
         <apexClass>FEC_BeneficiaryBankInfoController</apexClass>
         <enabled>true</enabled>
     </classAccesses>
@@ -278,6 +302,18 @@
     </classAccesses>
     <classAccesses>
         <apexClass>FEC_CaseRemarkController</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_CaseRemarksRollupService</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_CaseRemarksRollupServiceTest</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_CaseRemarksTriggerHandler</apexClass>
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
@@ -434,6 +470,22 @@
     </classAccesses>
     <classAccesses>
         <apexClass>FEC_DocumentRequestRoutingService</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_DownloadReportController</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_DownloadReportJob</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_DownloadReportScheduler</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_DownloadReportService</apexClass>
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
@@ -790,6 +842,10 @@
     </classAccesses>
     <classAccesses>
         <apexClass>FEC_NatureOfCaseTriggerHandler</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_NatureOfCaseUserGroupService</apexClass>
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>

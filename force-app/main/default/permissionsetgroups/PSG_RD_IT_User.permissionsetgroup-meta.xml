@@ -15,5 +15,6 @@
     <permissionSets>FEC_Batch_Case_Handling</permissionSets>
     <permissionSets>FEC_Batch_Case_Creation</permissionSets>
     <permissionSets>FEC_Permission_Set_Batch_Data_Creation</permissionSets>
+    <permissionSets>FEC_Download_Report_Data</permissionSets>
     <status>Updated</status>
 </PermissionSetGroup>

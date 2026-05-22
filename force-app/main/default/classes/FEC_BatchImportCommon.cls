@@ -125,6 +125,27 @@ public with sharing class FEC_BatchImportCommon {
         }
     }
 
+    /** Nối nhiều lỗi bằng dấu phẩy (file result Batch Data / Batch Case). */
+    public static String joinRowErrors(List<String> errs) {
+        List<String> normalized = new List<String>();
+        if (errs == null) {
+            return '';
+        }
+        for (String err : errs) {
+            if (String.isBlank(err)) {
+                continue;
+            }
+            String message = err.trim().replaceAll('[\\r\\n\\u2028\\u2029]+', ' ').replaceAll('\\s+', ' ');
+            while (message.endsWith('.')) {
+                message = message.substring(0, message.length() - 1).trim();
+            }
+            if (String.isNotBlank(message)) {
+                normalized.add(message);
+            }
+        }
+        return String.join(normalized, ', ');
+    }
+
     public static void linkFileToBatch(Id batchId, Id contentDocumentId) {
         if (batchId == null || contentDocumentId == null) {
             return;

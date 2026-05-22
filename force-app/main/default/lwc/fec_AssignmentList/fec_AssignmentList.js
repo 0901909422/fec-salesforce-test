@@ -2,8 +2,10 @@ import { LightningElement, api, wire, track } from "lwc";
 import { getRecord, getFieldValue } from "lightning/uiRecordApi";
 import { loadStyle } from "lightning/platformResourceLoader";
 import COMMON_STYLES from "@salesforce/resourceUrl/FEC_CommonCss";
-import getAssignments from "@salesforce/apex/FEC_AssignmentListHandler.getAssignments";
+// import getAssignments from "@salesforce/apex/FEC_AssignmentListHandler.getAssignments";
+import getAssignmentsNEW from "@salesforce/apex/FEC_AssignmentListHandler.getAssignmentsNEW";
 import getQueueNames from "@salesforce/apex/FEC_AssignmentListHandler.getQueueNames"; // tungnm37 thêm
+import getAction from "@salesforce/apex/FEC_AssignmentListHandler.getAction";
 import getUserDepartment from "@salesforce/apex/FEC_AssignmentListHandler.getUserDepartment";
 import getUsersInGroup from "@salesforce/apex/FEC_AssignmentListHandler.getUsersInGroup";
 import getQueuesForUser from "@salesforce/apex/FEC_AssignmentListHandler.getQueuesForUser";
@@ -72,6 +74,8 @@ export default class Fec_AssignmentList extends LightningElement {
       console.log("After getUserDepartment:", JSON.stringify(this.userDept));
 
       this.initSubscription();
+
+      this.loadActions();
     } catch (error) {
       console.error("getUserDepartment error:", JSON.stringify(error));
     }
@@ -97,7 +101,7 @@ export default class Fec_AssignmentList extends LightningElement {
   @track currentPage = 1;
 
   @track assignments = [];
-
+  @track actionOptions = [];
   @track userOptions = [];
   @track queueOptions = [];
 
@@ -193,7 +197,7 @@ export default class Fec_AssignmentList extends LightningElement {
 
   async initData() {
     try {
-      const result = await getAssignments({
+      const result = await getAssignmentsNEW({
         caseId: this.recordId,
       });
       console.log("getAssignments result:", JSON.stringify(result));
@@ -264,45 +268,21 @@ export default class Fec_AssignmentList extends LightningElement {
     return this.userDept === "CS";
   }
 
-  get getActionOptions() {
-    console.log("userDept:", this.userDept);
-    console.log("isCSSupport:", this.isCSSupport);
-    console.log(
-      "ACTION_OPTIONS_CS_SUPPORT:",
-      JSON.stringify(ACTION_OPTIONS_CS_SUPPORT),
-    );
-    console.log("ACTION_OPTIONS_OTHER:", JSON.stringify(ACTION_OPTIONS_OTHER));
+  async loadActions() {
+    try {
+      const result = await getAction({
+        caseId: this.recordId,
+      });
 
-    return this.isCSSupport ? ACTION_OPTIONS_CS_SUPPORT : ACTION_OPTIONS_OTHER;
+      this.actionOptions = result;
+
+      console.log("actionOptions:", JSON.stringify(result));
+    } catch (e) {
+      console.error("getAction error", e);
+
+      this.error = e;
+    }
   }
-
-  // handleActionChange(event) {
-  //   const id = event.target.dataset.id;
-  //   const value = event.detail.value;
-
-  //   this.assignments = this.assignments.map((item) => {
-  //     if (item.id !== id) return item;
-
-  //     return {
-  //       ...item,
-  //       action: value,
-  //       decision: null,
-  //       subDecision: null,
-
-  //       decisionOptions: DECISION_OPTIONS_MAP[value] || [],
-
-  //       showDecision: ACTIONS_REQUIRE_DECISION.includes(value),
-
-  //       showSubDecision: false,
-  //       isUserDecision: false,
-  //       isQueueDecision: false,
-
-  //       showTeam: item.action == 'Route_to' ? true: false,
-  //       showQueueByTeam: false,
-  //     };
-  //   });
-  //   this.updatePagedData();
-  // }
 
   handleActionChange(event) {
     const id = event.target.dataset.id;
