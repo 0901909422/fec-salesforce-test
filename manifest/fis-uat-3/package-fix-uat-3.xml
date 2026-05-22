@@ -50,6 +50,7 @@
         <members>FEC_AssignmentTriggerHandler</members>
         <members>FEC_BancaController</members>
         <members>FEC_DNBHandler</members>
+        <members>FEC_DocumentRequestRoutingService</members>
         <members>FEC_GetCSCaseStatusService</members>
 		<members>Fec_HoldCaseConfigurationController</members>
 		<members>FEC_HoldCaseInheritanceService</members>
@@ -724,6 +725,13 @@
     <types>
         <members>Case</members>
         <name>Workflow</name>
+    </types>
+    <types>
+        <members>Case.Customer_Case</members>
+        <members>Case.Interaction</members>
+        <members>Case.Internal_Case</members>
+        <members>Case.Search_Interaction</members>
+        <name>RecordType</name>
     </types>
 	<version>66.0</version>
 </Package>
