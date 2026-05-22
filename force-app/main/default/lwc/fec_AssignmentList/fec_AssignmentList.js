@@ -2,7 +2,8 @@ import { LightningElement, api, wire, track } from "lwc";
 import { getRecord, getFieldValue } from "lightning/uiRecordApi";
 import { loadStyle } from "lightning/platformResourceLoader";
 import COMMON_STYLES from "@salesforce/resourceUrl/FEC_CommonCss";
-import getAssignments from "@salesforce/apex/FEC_AssignmentListHandler.getAssignments";
+// import getAssignments from "@salesforce/apex/FEC_AssignmentListHandler.getAssignments";
+import getAssignmentsNEW from "@salesforce/apex/FEC_AssignmentListHandler.getAssignmentsNEW";
 import getQueueNames from "@salesforce/apex/FEC_AssignmentListHandler.getQueueNames"; // tungnm37 thêm
 import getUserDepartment from "@salesforce/apex/FEC_AssignmentListHandler.getUserDepartment";
 import getUsersInGroup from "@salesforce/apex/FEC_AssignmentListHandler.getUsersInGroup";
@@ -193,7 +194,7 @@ export default class Fec_AssignmentList extends LightningElement {
 
   async initData() {
     try {
-      const result = await getAssignments({
+      const result = await getAssignmentsNEW({
         caseId: this.recordId,
       });
       console.log("getAssignments result:", JSON.stringify(result));
