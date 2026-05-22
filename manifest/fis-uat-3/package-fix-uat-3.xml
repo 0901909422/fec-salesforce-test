@@ -227,6 +227,7 @@
 		<members>fecRoutingAssignmentEditForm</members>
 		<members>fec_DownloadReports</members>
 		<members>fec_BatchDataCreation</members>
+		<members>fecMrcReturnStageChangeRouting</members>
 		<name>LightningComponentBundle</name>
 	</types>
     <types>
@@ -698,6 +699,7 @@
 	    <members>FEC_BCH_PicklistTranslation</members>
 	    <name>ApexPage</name>
 	</types>
+	<types>
 	    <members>Case.SLA_Violating_Warning_44h</members>
 	    <members>Case.SLA_Warning_119h</members>
 	    <members>Case.SLA_Warning_120h</members>
