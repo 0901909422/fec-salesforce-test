@@ -49,6 +49,12 @@ public without sharing class FEC_CaseAssignmentTriggerHandler {
         isDispatching = true;
         try {
             List<Id> idList = new List<Id>(assignmentIds);
+            if (FEC_BatchCaseHandlingImportService.isBatchImportApplyInProgress()) {
+                for (Id assignmentId : idList) {
+                    FEC_CaseAssignmentAutoDistributeService.executeImmediatelyForAssignmentId(assignmentId);
+                }
+                return;
+            }
             if (Limits.getQueueableJobs() < Limits.getLimitQueueableJobs()) {
                 System.enqueueJob(new FEC_CaseAssignmentAutoDistQueueJob(idList));
             } else {
