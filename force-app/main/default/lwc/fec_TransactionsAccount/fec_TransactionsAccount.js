@@ -11,13 +11,76 @@
    1.1      2026-05-12     Agent                Unbilled: show dual-source columns (BasicInfo | M_FAS); sort effective by effectiveSortEpoch
    1.2      2026-05-12     Agent                Unbilled table: Currency Code, Merchant Category Code, OTP Sent columns
    1.3      2026-05-12     Agent                Pending: columns per sheet; M_FAS AUTHS rows; dual vs VMX detail (detail null); no row nav without Id
+   1.4      2026-05-21     Agent                Unbilled table: dd/MM/yyyy HH:mm:ss, post date, currency(18,0), null → '-'
  
 ****************************************************************************************/
 
 import { LightningElement, api, track } from 'lwc';
 import { NavigationMixin } from 'lightning/navigation';
 import loadTransactions from '@salesforce/apex/FEC_TransactionsController.loadTransactions';
-import { formatDateVNI, formatDateTime, formatNumber } from 'c/fec_CommonUtils';
+import {
+    formatDateFlexibleVN,
+    formatCurrency0,
+    formatDateTime,
+    formatNumber
+} from 'c/fec_CommonUtils';
+
+const UNBILLED_DASH = '-';
+
+const isBlankUnbilled = (value) =>
+    value == null ||
+    value === '' ||
+    value === UNBILLED_DASH ||
+    value === '\u2014';
+
+const formatUnbilledEffectiveDateTime = (value) => {
+    if (isBlankUnbilled(value)) {
+        return UNBILLED_DASH;
+    }
+    const d = new Date(value);
+    if (isNaN(d.getTime())) {
+        return UNBILLED_DASH;
+    }
+    const day = String(d.getDate()).padStart(2, '0');
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const year = d.getFullYear();
+    const h = String(d.getHours()).padStart(2, '0');
+    const m = String(d.getMinutes()).padStart(2, '0');
+    const s = String(d.getSeconds()).padStart(2, '0');
+    return `${day}/${month}/${year} ${h}:${m}:${s}`;
+};
+
+const formatUnbilledPostDate = (value) => {
+    if (isBlankUnbilled(value)) {
+        return UNBILLED_DASH;
+    }
+    return formatDateFlexibleVN(value) || UNBILLED_DASH;
+};
+
+const formatUnbilledAmountPart = (value) => {
+    if (isBlankUnbilled(value)) {
+        return UNBILLED_DASH;
+    }
+    const cleaned = String(value).replace(/,/g, '').trim();
+    const num = Number(cleaned);
+    if (!Number.isNaN(num)) {
+        return formatCurrency0(num);
+    }
+    return String(value).trim();
+};
+
+const formatUnbilledDualDisplay = (raw, formatPart) => {
+    if (isBlankUnbilled(raw)) {
+        return UNBILLED_DASH;
+    }
+    return raw
+        .split(' | ')
+        .map((part) => formatPart((part || '').trim()))
+        .join(' | ');
+};
+
+const displayOrDash = (value) =>
+    isBlankUnbilled(value) ? UNBILLED_DASH : value;
 
 import FEC_Transaction_Code from '@salesforce/label/c.FEC_Transaction_Code';
 import FEC_Unbilled_Transactions from '@salesforce/label/c.FEC_Unbilled_Transactions';
@@ -98,41 +161,42 @@ export default class Fec_TransactionsAccount extends NavigationMixin(LightningEl
             fieldName: 'effectiveDateDualDisplay',
             sortFieldName: 'effectiveSortEpoch',
             type: 'text',
-            cellAlign: 'left',
+            cellAlign: 'center',
             width: '260px'
         },
         {
             label: this.customLabel.postDateLabel,
             fieldName: 'postDateDualDisplay',
             type: 'text',
-            cellAlign: 'left',
+            cellAlign: 'center',
             width: '240px'
         },
         {
             label: this.customLabel.transactionAmountLabel,
             fieldName: 'transactionAmountDualDisplay',
             type: 'text',
-            cellAlign: 'left',
+            cellAlign: 'center',
             width: '220px'
         },
         {
             label: this.customLabel.authorizationCodeLabel,
             fieldName: 'authorizationCodeDualDisplay',
             type: 'text',
-            cellAlign: 'left',
+            cellAlign: 'center',
             width: '220px'
         },
         {
             label: this.customLabel.transactionPlanLabel,
             fieldName: 'transactionPlanDualDisplay',
             type: 'text',
-            cellAlign: 'left',
+            cellAlign: 'center',
             width: '200px'
         },
         {
             label: this.customLabel.merchantDescriptionLabel,
             fieldName: 'merchantDescription',
             type: 'text',
+            cellAlign: 'center',
             width: '240px'
         },
         {
@@ -283,32 +347,52 @@ export default class Fec_TransactionsAccount extends NavigationMixin(LightningEl
         return {
             Id: tx.Id,
 
-            transactionCode: tx.transactionCode || '',
-            merchantDescription: tx.merchantDescription || '',
-            creditDebitFlag: tx.creditDebitFlag || '',
+            transactionCode: displayOrDash(tx.transactionCode),
+            merchantDescription: displayOrDash(tx.merchantDescription),
+            creditDebitFlag: displayOrDash(tx.creditDebitFlag),
 
-            effectiveDateDualDisplay:
-                tx.effectiveDateDualDisplay || formatDateTime(tx.effectiveDate),
-            postDateDualDisplay:
-                tx.postDateDualDisplay || formatDateVNI(tx.postingDate),
-            transactionAmountDualDisplay:
-                tx.transactionAmountDualDisplay || formatNumber(tx.transactionAmount),
-            authorizationCodeDualDisplay:
-                tx.authorizationCodeDualDisplay || (tx.authorizationCode || ''),
-            transactionPlanDualDisplay:
-                tx.transactionPlanDualDisplay || (tx.transactionPlan || ''),
+            effectiveDateDualDisplay: tx.effectiveDateDualDisplay
+                ? formatUnbilledDualDisplay(
+                      tx.effectiveDateDualDisplay,
+                      formatUnbilledEffectiveDateTime
+                  )
+                : formatUnbilledEffectiveDateTime(tx.effectiveDate),
+            postDateDualDisplay: tx.postDateDualDisplay
+                ? formatUnbilledDualDisplay(
+                      tx.postDateDualDisplay,
+                      formatUnbilledPostDate
+                  )
+                : formatUnbilledPostDate(tx.postingDate),
+            transactionAmountDualDisplay: tx.transactionAmountDualDisplay
+                ? formatUnbilledDualDisplay(
+                      tx.transactionAmountDualDisplay,
+                      formatUnbilledAmountPart
+                  )
+                : formatUnbilledAmountPart(tx.transactionAmount),
+            authorizationCodeDualDisplay: tx.authorizationCodeDualDisplay
+                ? formatUnbilledDualDisplay(
+                      tx.authorizationCodeDualDisplay,
+                      displayOrDash
+                  )
+                : displayOrDash(tx.authorizationCode),
+            transactionPlanDualDisplay: tx.transactionPlanDualDisplay
+                ? formatUnbilledDualDisplay(
+                      tx.transactionPlanDualDisplay,
+                      displayOrDash
+                  )
+                : displayOrDash(tx.transactionPlan),
 
             effectiveSortEpoch,
 
-            effectiveDate: formatDateTime(tx.effectiveDate),
-            postDate: formatDateVNI(tx.postingDate),
-            transactionAmount: formatNumber(tx.transactionAmount),
+            effectiveDate: formatUnbilledEffectiveDateTime(tx.effectiveDate),
+            postDate: formatUnbilledPostDate(tx.postingDate),
+            transactionAmount: formatUnbilledAmountPart(tx.transactionAmount),
 
-            transactionPlan: tx.transactionPlan || '',
-            authorizationCode: tx.authorizationCode || '',
-            currencyCode: tx.currencyCode || '',
-            merchantCategoryCode: tx.merchantCategoryCode || '',
-            otpSent: tx.otpSent || ''
+            transactionPlan: displayOrDash(tx.transactionPlan),
+            authorizationCode: displayOrDash(tx.authorizationCode),
+            currencyCode: displayOrDash(tx.currencyCode),
+            merchantCategoryCode: displayOrDash(tx.merchantCategoryCode),
+            otpSent: displayOrDash(tx.otpSent)
         };
     }
 
