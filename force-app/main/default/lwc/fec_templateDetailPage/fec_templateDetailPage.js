@@ -303,6 +303,10 @@ export default class Fec_templateDetailPage extends LightningElement {
         return this._isLoading;
     }
 
+    get isZNSTemplate() {
+        return Boolean(this._record?.isZNSTemplate);
+    }
+
     // ─── Content History ─────────────────────────────────
 
     get contentHistoryData() {
@@ -405,7 +409,12 @@ export default class Fec_templateDetailPage extends LightningElement {
     }
 
     handlePreview() {
-        this._isPreviewOpen = true;
+        if(this.isZNSTemplate) {
+            const znsComponent = this.template.querySelector('c-fec_-z-n-s-template-param-mapping');
+            if (znsComponent) znsComponent.handleOpenPreview();
+        } else {
+            this._isPreviewOpen = true;
+        }
     }
 
     handleClosePreview() {
@@ -462,7 +471,10 @@ export default class Fec_templateDetailPage extends LightningElement {
             emailBody:              rec.FEC_Body__c || '',
             lastModifiedBy:         rec.LastModifiedBy ? rec.LastModifiedBy.Name : '',
             lastModifiedById:       rec.LastModifiedById || '',
-            lastModifiedDate:       rec.LastModifiedDate
+            lastModifiedDate:       rec.LastModifiedDate,
+            isZNSTemplate:          rec.FEC_Is_ZNS_Template__c,
+            previewZNSUrl:          rec.FEC_Preview_ZNS_Url__c,
+            templateZNSStatus:      rec.FEC_Template_ZNS_Status__c
         };
     }
 

@@ -24,7 +24,10 @@ public with sharing class FEC_TemplateSelector {
         'LastModifiedById',
         'LastModifiedBy.Name',
         'LastModifiedDate',
-        'CreatedDate'
+        'CreatedDate',
+        'FEC_Preview_ZNS_Url__c',
+        'FEC_Is_ZNS_Template__c',
+        'FEC_Template_ZNS_Status__c'
     };
 
     /**

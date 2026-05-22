@@ -1,5 +1,5 @@
 <template>
-
+    <div class="wrapper">
     <!-- ═══════════════════════════════════════════════════════ -->
     <!-- TEMPLATE EDITOR (full-page, replaces list view)        -->
     <!-- ═══════════════════════════════════════════════════════ -->
@@ -55,6 +55,11 @@
                         variant="neutral"
                         onclick={handleNewFolder}
                     ></lightning-button>
+                    <template if:true={isUpdateZnsButtonVisible}><lightning-button
+                        label={label.FEC_Update_ZNS_Template}
+                        variant="neutral"
+                        onclick={handleUpdateZNSTemplate}
+                    ></lightning-button></template>
                 </div>
             </div>
 
@@ -148,4 +153,9 @@
             oncancel={handleFolderEditorCancel}
         ></c-fec_folder-editor>
     </template>
+
+    <template if:true={isLoading}>
+        <lightning-spinner alternative-text="Loading"></lightning-spinner>
+    </template>
+    </div>
 </template>

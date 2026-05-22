@@ -14,12 +14,63 @@
         <name>CustomField</name>
     </types>
 
+
+    <!-- Apex Classes -->
+    <types>
+        <members>FEC_TemplateSelector</members>
+        <members>FEC_ZNSTemplateCallout</members>
+        <members>FEC_ZNSTemplateController</members>
+        <members>FEC_ZNSTemplateParamMappingController</members>
+        <members>FEC_MockupEndpoint</members>
+        <name>ApexClass</name>
+    </types>
+
+    <!-- Custom Metadata Type Object -->
     <types>
         <members>FEC_Notification_ZNS_Param_Mapping__c</members>
+        <members>FEC_Template__c</members>
+        <members>FEC_Folder__c</members>
         <name>CustomObject</name>
     </types>
 
-    
+    <types>
+        <members>Is_Update_ZNS_Button_Visible</members>
+        <name>CustomPermission</name>
+    </types>
+
+    <types>
+        <members>FEC_Action_Preview</members>
+        <members>FEC_Template_Back_To_List</members>
+        <members>FEC_Col_Last_Modified_Date</members>
+        <members>FEC_Col_Last_Modified_By</members>
+        <members>FEC_Template_History_Tab</members>
+        <members>FEC_Msg_No_Content</members>
+        <members>FEC_Merge_Field_Cancel</members>
+        <members>FEC_Btn_Finish</members>
+        <members>CS_OrgChart_Table_HistoryLog_OldValue_Column</members>
+        <members>CS_OrgChart_Table_HistoryLog_NewValue_Column</members>
+        <members>FEC_Field</members>
+        <members>FEC_Btn_History</members>
+        <members>Loading</members>
+        <members>FEC_Button_Save</members>
+        <members>FEC_Opt_Select</members>
+        <members>FEC_Label_Type</members>
+        <members>FEC_Label_Field_Object_Name</members>
+        <members>FEC_Template_ID</members>
+        <members>FEC_DT_Search_Placeholder</members>
+        <members>FEC_Parameter</members>
+        <members>FEC_Page_Context</members>
+        <members>FEC_Function</members>
+        <members>FEC_Update_ZNS_Template</members>
+        <members>FEC_Update_ZNS_Template_Confirm</members>
+        <members>FEC_Save_Template_Config_Success</members>
+        <name>CustomLabel</name>
+    </types>
+
+    <types>
+        <members>Zalo_Cloud</members>
+        <name>CspTrustedSite</name>
+    </types>
 
     <types>
 		<members>FEC_CS_CS_Ecom_Officer_Master_Data_Management</members>
@@ -78,5 +129,11 @@
 		<name>PermissionSet</name>
 	</types>
 
+    <types>
+		<members>fec_ZNSTemplateParamMapping</members>
+        <members>fec_templateManagementConsole</members>
+        <members>fec_templateDetailPage</members>
+		<name>LightningComponentBundle</name>
+	</types>
     <version>66.0</version>
 </Package>

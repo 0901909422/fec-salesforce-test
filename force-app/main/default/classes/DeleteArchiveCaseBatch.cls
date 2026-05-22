@@ -23,7 +23,8 @@ global class DeleteArchiveCaseBatch implements Database.Batchable<sObject>, Data
         'FEC_IPP__c',
         'FEC_Card_Payment__c',
         'FEC_Process_Action__c',
-        'FEC_Integration_Case__c'
+        'FEC_Integration_Case__c',
+        'FEC_Case_Stage__c'
     };
 
     private Integer currentObjectIndex = 0;

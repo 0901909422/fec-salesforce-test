@@ -18078,4 +18078,53 @@
         <value>Select at least one record and try again.</value>
     </labels>
    
+    <labels>
+        <fullName>FEC_Template_ID</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Template ID</shortDescription>
+        <value>Template ID</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Parameter</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Pamameter</shortDescription>
+        <value>Pamameter</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Page_Context</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Page Context</shortDescription>
+        <value>Page Context</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Function</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Function</shortDescription>
+        <value>Function</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Update_ZNS_Template</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Update ZNS Template</shortDescription>
+        <value>Update ZNS Template</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Update_ZNS_Template_Confirm</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Are you sure you want to update all ZNS templates? This action cannot be undone.</shortDescription>
+        <value>Are you sure you want to update all ZNS templates? This action cannot be undone.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Save_Template_Config_Success</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Template Config Saved Successfully</shortDescription>
+        <value>Template Config Saved Successfully</value>
+    </labels>
 </CustomLabels>
