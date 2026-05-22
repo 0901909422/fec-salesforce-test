@@ -1954,6 +1954,7 @@
         <members>fec_NocRoutingAssignment</members>
         <members>fecRoutingAssignmentEditForm</members>
         <members>fec_DownloadReports</members>
+        <members>fecMrcReturnStageChangeRouting</members>
         <name>LightningComponentBundle</name>
     </types>
     <types>

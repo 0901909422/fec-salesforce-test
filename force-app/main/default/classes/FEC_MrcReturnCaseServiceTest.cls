@@ -96,10 +96,13 @@ private class FEC_MrcReturnCaseServiceTest {
         System.assertEquals(true, ctx.showMrcDupBanner);
         System.assertEquals(true, ctx.meetsCondition2);
         System.assertEquals(false, ctx.dupCaseOnly);
+        System.assertEquals('TH1', ctx.rl05Scenario);
+        System.assertEquals(false, ctx.showDeliveryForm);
+        System.assertEquals(false, ctx.showHandlingRadioOnNotReceived);
     }
 
     @IsTest
-    static void buildUiContext_returnSubCode_cond2_showsCustomerConfirmation() {
+    static void buildUiContext_returnSubCode_th3_cond2Only() {
         FEC_Customer_History__c ch = new FEC_Customer_History__c(
             FEC_MRC_Status__c = 'TLDN',
             FEC_Contract_Status__c = 'ACTIVE'
@@ -114,8 +117,9 @@ private class FEC_MrcReturnCaseServiceTest {
         );
         System.assertEquals(true, ctx.showCustomerConfirmation);
         System.assertEquals(false, ctx.showMrcDupBanner);
-        System.assertEquals(true, ctx.meetsCondition2);
-        System.assertEquals(false, ctx.dupCaseOnly);
+        System.assertEquals('TH3', ctx.rl05Scenario);
+        System.assertEquals(true, ctx.showHandlingRadioOnNotReceived);
+        System.assertEquals(false, ctx.showDeliveryForm);
     }
 
     @IsTest

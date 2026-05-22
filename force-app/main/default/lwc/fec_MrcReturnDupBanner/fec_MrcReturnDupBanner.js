@@ -23,6 +23,8 @@ export default class Fec_MrcReturnDupBanner extends NavigationMixin(
   @api objId;
   /** standalone | inline */
   @api displayMode = "inline";
+  /** TH3: chỉ hiện radio Noti-11, không hiện banner Case trùng. */
+  @api hideDupMessage = false;
 
   get isReadOnly() {
     return this.isEdit === false;
@@ -38,6 +40,10 @@ export default class Fec_MrcReturnDupBanner extends NavigationMixin(
     return this.displayMode === "standalone"
       ? "mrcRl0502DupStandalone"
       : `mrcRl0502DupInline-${this.objId || this.recordId}`;
+  }
+
+  get showDupMessage() {
+    return this.hideDupMessage !== true;
   }
 
   get mrcDupCaseNumber() {
