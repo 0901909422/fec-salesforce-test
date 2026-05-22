@@ -1455,6 +1455,11 @@
         <field>FEC_Team__c.FEC_Team_Label__c</field>
         <readable>true</readable>
     </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Case_Stage__c.IsArchiveTemp__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
     <hasActivationRequired>false</hasActivationRequired>
     <label>Common System Setting</label>
     <license>Salesforce</license>
