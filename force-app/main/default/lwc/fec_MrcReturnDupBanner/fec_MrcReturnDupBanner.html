@@ -1,10 +1,12 @@
 <template>
   <div class={wrapperClass}>
-    <p class="mrc-dup-message">
-      {mrcDupMessageBeforeLink}
-      <a href="#" class="mrc-dup-case-link" onclick={handleOpenMrcDupCase}>{mrcDupCaseNumber}</a>
-      {mrcDupMessageAfterLink}
-    </p>
+    <template if:true={showDupMessage}>
+      <p class="mrc-dup-message">
+        {mrcDupMessageBeforeLink}
+        <a href="#" class="mrc-dup-case-link" onclick={handleOpenMrcDupCase}>{mrcDupCaseNumber}</a>
+        {mrcDupMessageAfterLink}
+      </p>
+    </template>
     <template if:false={isReadOnly}>
       <lightning-radio-group
         name={radioName}

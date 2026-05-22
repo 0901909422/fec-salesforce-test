@@ -862,6 +862,7 @@ public without sharing class FEC_CaseBusinessService {
           FEC_MrcDuplicateCaseService.OpenDupInfo mrcDupEarly = FEC_MrcDuplicateCaseService.findOlderOpenRl05DuplicateInfo(
             selectedCase.Id,
             selectedCase.FEC_Account_or_Contract__c,
+            selectedCase.FEC_Account_Contract_Number_Text__c,
             selectedCase.CreatedDate,
             result.subCategoryCode,
             result.subCodeCode
@@ -2279,12 +2280,14 @@ public without sharing class FEC_CaseBusinessService {
         when REJECT {
           markCaseSubmittedAndClearDrafts(caseId);
           reject(caseId);
+          FEC_AssignmentRoutingActionHandler.resolveAllAssignments(caseId);
           createRoutingActionHis('Reject', '', oldOwnerName, oldOwnerId, caseId, stageName, finalStatusBeforeSubmit, currentStageId);
           return null;
         }
         when RESOLVE {
           markCaseSubmittedAndClearDrafts(caseId);
           resolve(caseId);
+          FEC_AssignmentRoutingActionHandler.resolveAllAssignments(caseId);
           createRoutingActionHis('Resolve', '', oldOwnerName, oldOwnerId, caseId, stageName, finalStatusBeforeSubmit, currentStageId);
           return null;
         }

@@ -1,0 +1,1 @@
+<apex:page controller="FEC_BCH_PicklistTranslationCtrl" contentType="application/json" showHeader="false" sidebar="false" language="{!$CurrentPage.parameters.lang}">{!jsonPayload}</apex:page>

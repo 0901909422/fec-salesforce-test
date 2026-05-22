@@ -11,29 +11,114 @@ public with sharing class FEC_CaseAssignmentConfigController {
 
     @AuraEnabled(cacheable=true)
     public static List<OptionItem> getActiveCaseQueues() {
-        Map<Id, String> queueNameById = new Map<Id, String>();
-        for (QueueSobject queueMapping : [
-            SELECT QueueId, Queue.Name
-            FROM QueueSobject
-            WHERE SobjectType = 'Case'
+        Set<String> queueDevNames = new Set<String>();
+        for (FEC_Team_Queue__c teamQueueRow : [
+            SELECT FEC_Queue_Name__c
+            FROM FEC_Team_Queue__c
+            WHERE FEC_Queue_Name__c != NULL
         ]) {
-            if (
-                queueMapping.QueueId != null &&
-                String.isNotBlank(queueMapping.Queue.Name)
-            ) {
-                queueNameById.put(queueMapping.QueueId, queueMapping.Queue.Name);
-            }
+            queueDevNames.add(teamQueueRow.FEC_Queue_Name__c);
         }
 
-        List<String> sortedNames = new List<String>();
-        sortedNames.addAll(queueNameById.values());
-        sortedNames.sort();
+        Map<String, String> labelByDevName = new Map<String, String>();
+        for (Group queueGroup : [
+            SELECT Name, DeveloperName
+            FROM Group
+            WHERE Type = 'Queue' AND DeveloperName IN :queueDevNames
+        ]) {
+            labelByDevName.put(queueGroup.DeveloperName, queueGroup.Name);
+        }
+
+        Set<String> seenLabels = new Set<String>();
+        List<String> sortedLabels = new List<String>();
+        for (String devName : queueDevNames) {
+            String queueLabel = labelByDevName.get(devName);
+            if (String.isBlank(queueLabel) || seenLabels.contains(queueLabel)) {
+                continue;
+            }
+            seenLabels.add(queueLabel);
+            sortedLabels.add(queueLabel);
+        }
+        sortedLabels.sort();
 
         List<OptionItem> result = new List<OptionItem>();
-        for (String queueName : sortedNames) {
+        for (String queueName : sortedLabels) {
             result.add(new OptionItem(queueName, queueName));
         }
         return result;
+    }
+
+    @AuraEnabled
+    public static Boolean isCaseAssignmentNameTaken(
+        String assignmentName,
+        Id excludeRecordId
+    ) {
+        if (String.isBlank(assignmentName)) {
+            return false;
+        }
+        String trimmedName = assignmentName.trim();
+        List<FEC_Case_Assignment__c> matches = [
+            SELECT Id
+            FROM FEC_Case_Assignment__c
+            WHERE Name = :trimmedName
+            LIMIT 1
+        ];
+        if (matches.isEmpty()) {
+            return false;
+        }
+        return excludeRecordId == null || matches[0].Id != excludeRecordId;
+    }
+
+    @AuraEnabled
+    public static List<String> findQueuesMissingRoleCoverage(
+        List<String> queueNames,
+        List<String> assignedRoleNames
+    ) {
+        List<String> missingQueues = new List<String>();
+        if (queueNames == null || queueNames.isEmpty()) {
+            return missingQueues;
+        }
+
+        Set<String> assignedRoles = new Set<String>();
+        if (assignedRoleNames != null) {
+            for (String roleName : assignedRoleNames) {
+                if (String.isNotBlank(roleName)) {
+                    assignedRoles.add(roleName.trim());
+                }
+            }
+        }
+
+        for (String queueName : queueNames) {
+            if (String.isBlank(queueName)) {
+                continue;
+            }
+            String normalizedQueueName = queueName.trim();
+            Set<String> singleQueue = new Set<String>{ normalizedQueueName };
+            Set<Id> queueIdsFromCaseUi = resolveCaseQueueIds(singleQueue);
+            Set<Id> resolvedQueueIds = FEC_CaseAssignmentQueueRoleResolver.ensureQueueIds(
+                singleQueue,
+                queueIdsFromCaseUi
+            );
+            List<OptionItem> queueRoleOptions =
+                FEC_CaseAssignmentQueueRoleResolver.buildPicklist(resolvedQueueIds);
+            if (queueRoleOptions.isEmpty()) {
+                continue;
+            }
+
+            Boolean hasMatchingRole = false;
+            for (OptionItem roleOption : queueRoleOptions) {
+                if (assignedRoles.contains(roleOption.value)) {
+                    hasMatchingRole = true;
+                    break;
+                }
+            }
+            if (!hasMatchingRole) {
+                missingQueues.add(normalizedQueueName);
+            }
+        }
+
+        missingQueues.sort();
+        return missingQueues;
     }
 
     @AuraEnabled(cacheable=true)
