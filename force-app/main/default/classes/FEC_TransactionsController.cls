@@ -444,31 +444,33 @@ public without sharing class FEC_TransactionsController {
         return postF != null ? postF : eff;
     }
 
-    private static final String DASH = '-';
-
     private static String dashIfNull(Date d) {
-        return d == null ? DASH : FEC_CommonUltils.formatDateDDMMYYYY(d);
+        return d == null
+            ? FEC_ConstantCommon.STR_DASH
+            : FEC_CommonUltils.formatDateDDMMYYYY(d);
     }
 
     private static String dashIfNullDec(Decimal x) {
         return x == null
-            ? DASH
+            ? FEC_ConstantCommon.STR_DASH
             : FEC_CommonUltils.formatCurrencyFixed(x, 0);
     }
 
     private static String dashIfBlank(String s) {
-        return String.isBlank(s) ? DASH : s.trim();
+        return String.isBlank(s)
+            ? FEC_ConstantCommon.STR_DASH
+            : s.trim();
     }
 
     private static String formatEffectiveDateTime(Datetime dt) {
         return dt == null
-            ? DASH
+            ? FEC_ConstantCommon.STR_DASH
             : dt.format('dd/MM/yyyy HH:mm:ss');
     }
 
     private static String formatEffectiveDateTimeFromFas(String effRaw) {
         if (String.isBlank(effRaw)) {
-            return DASH;
+            return FEC_ConstantCommon.STR_DASH;
         }
         String v = effRaw.trim();
         Datetime dt = FEC_CommonUltils.parseDateTime(v);
@@ -492,14 +494,14 @@ public without sharing class FEC_TransactionsController {
                 Datetime.newInstance(d, Time.newInstance(0, 0, 0, 0))
             );
         }
-        return DASH;
+        return FEC_ConstantCommon.STR_DASH;
     }
 
     private static String dualEffectiveDateTimeLine(
         FEC_GetCardBasicInfo.TransactionInfo ti,
         FEC_MFASOUTSTANDINGAUTHINQ.AuthTableRow ar
     ) {
-        String left = DASH;
+        String left = FEC_ConstantCommon.STR_DASH;
         if (ti != null) {
             if (ti.TRNXDateTime != null) {
                 left = formatEffectiveDateTime(ti.TRNXDateTime);
@@ -507,7 +509,7 @@ public without sharing class FEC_TransactionsController {
                 Date d = effectiveDateFromBasic(ti);
                 left =
                     d == null
-                        ? DASH
+                        ? FEC_ConstantCommon.STR_DASH
                         : formatEffectiveDateTime(
                               Datetime.newInstance(
                                   d,
@@ -517,7 +519,9 @@ public without sharing class FEC_TransactionsController {
             }
         }
         String right =
-            ar != null ? formatEffectiveDateTimeFromFas(ar.EFF_DATE) : DASH;
+            ar != null
+                ? formatEffectiveDateTimeFromFas(ar.EFF_DATE)
+                : FEC_ConstantCommon.STR_DASH;
         return dualPairDisplay(left, right);
     }
 
@@ -526,14 +530,16 @@ public without sharing class FEC_TransactionsController {
      * if exactly one side is present, returns that side only (no trailing " | ╬ô├ç├╢").
      */
     private static Boolean isMissingDisplayToken(String s) {
-        return String.isBlank(s) || DASH.equals(s) || '\u2014'.equals(s);
+        return String.isBlank(s)
+            || FEC_ConstantCommon.STR_DASH.equals(s)
+            || FEC_ConstantCommon.STR_EM_DASH.equals(s);
     }
 
     private static String dualPairDisplay(String leftShown, String rightShown) {
         Boolean lMiss = isMissingDisplayToken(leftShown);
         Boolean rMiss = isMissingDisplayToken(rightShown);
         if (lMiss && rMiss) {
-            return DASH;
+            return FEC_ConstantCommon.STR_DASH;
         }
         if (rMiss) {
             return leftShown;
