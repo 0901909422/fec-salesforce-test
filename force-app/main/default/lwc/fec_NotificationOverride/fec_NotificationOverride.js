@@ -54,6 +54,7 @@ import FEC_Notification_Channel_Disabled_Msg from "@salesforce/label/c.FEC_Notif
 
 const SUB_CATEGORY_OBJECT = "FEC_Sub_Category__c";
 const SUB_CODE_OBJECT = "FEC_Sub_Code__c";
+const CASE_STAGE_OBJECT = "FEC_Case_Stage__c";
 /** Nhiều FEC_Case_Status__c.Name trên FEC_Current_Status__c / FEC_Changed_Status__c */
 const CASE_STATUS_NAME_DELIMITER = ",";
 
@@ -260,7 +261,7 @@ export default class Fec_Notification extends NavigationMixin(LightningElement) 
         this.initialSubCode = event.detail || [];
         this.selectedSubCodeId = joined || null;
         break;
-      case 'FEC_Case_Stage__c':
+      case CASE_STAGE_OBJECT:
         this.initialCaseStage = event.detail || [];
         this.selectedCaseStageId = joined || null;
         break;
