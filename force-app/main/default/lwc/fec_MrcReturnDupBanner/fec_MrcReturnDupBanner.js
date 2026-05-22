@@ -17,7 +17,7 @@ export default class Fec_MrcReturnDupBanner extends NavigationMixin(
   @api duplicateCaseId;
   @api duplicateCaseNumber;
   @api handlingOptionValue = STR_EMPTY;
-  @api isEdit = true;
+  @api isEdit = false;
   @api sectionId;
   @api subSectionName;
   @api objId;

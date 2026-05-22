@@ -14,10 +14,12 @@ export const MRC_CONF_NOT_RECEIVED = "Customer has not received MRC";
 export const MRC_CONF_RECEIVED = "Customer received MRC";
 
 const LWC_MRC_INFO = "fec_MRC";
-const LWC_MRC_DELIVERY = "fec_ContractClosureForm";
+const LWC_MRC_DELIVERY = "fec_MrcDeliveryForm";
+const LWC_CONTRACT_CLOSURE = "fec_ContractClosureForm";
+const FIELD_DELIVERY_OPTION = "FEC_Delivery_Option_2__c";
 const SECTION_NAME_CASE_INFORMATION = "Case Information";
 const SUBSECTION_NAME_PROPERTY_INFO = "Property Info";
-const MRC_RETURN_FORM = "fec_MrcReturnCaseForm";
+const MRC_RETURN_PANEL = "fec_MrcReturnPanel";
 
 const ACTION_ROUTE_TO = "Route to";
 const ACTION_REJECT = "Reject";
@@ -58,13 +60,32 @@ export function getCaseFieldValue(business, apiName) {
   return STR_EMPTY;
 }
 
-export function showMrcRl0502DupBanner(business) {
-  const ctx = getMrcRl05Ui(business);
-  if (ctx?.showMrcDupBanner !== true) {
+function hasMrcRl0502DuplicateCaseId(business) {
+  const v = String(business?.mrcRl0502DuplicateOpenCaseId ?? STR_EMPTY).trim();
+  return v.length >= 15;
+}
+
+export function isMrcNotReceivedConfirmation(value) {
+  const normalized = String(value ?? STR_EMPTY).trim().toLowerCase();
+  if (!normalized) {
     return false;
   }
-  const v = business?.mrcRl0502DuplicateOpenCaseId;
-  return typeof v === "string" && v.length >= 15;
+  return (
+    normalized === MRC_CONF_NOT_RECEIVED.toLowerCase() ||
+    normalized.includes("not received") ||
+    normalized.includes("chưa nhận")
+  );
+}
+
+export function showMrcRl0502DupBanner(business) {
+  if (!hasMrcRl0502DuplicateCaseId(business)) {
+    return false;
+  }
+  const ctx = getMrcRl05Ui(business);
+  if (ctx?.showMrcDupBanner === false) {
+    return false;
+  }
+  return true;
 }
 
 function isMrcRl05PhotoSubCodeFromBusiness(business) {
@@ -72,11 +93,20 @@ function isMrcRl05PhotoSubCodeFromBusiness(business) {
   return code.includes("RL05.01") || code.includes("RL05.03");
 }
 
-function shouldShowMrcDeliveryForm(ctx, business, handlingOptionValue) {
+function shouldShowMrcDeliveryForm(
+  ctx,
+  business,
+  handlingOptionValue,
+  customerConfirmationOverride,
+) {
   if (isMrcRl05PhotoSubCodeFromBusiness(business)) {
     return true;
   }
-  if (!ctx || ctx.showDeliveryForm !== true) {
+  if (!ctx) {
+    const code = String(business?.subCodeCode ?? STR_EMPTY).toUpperCase();
+    return code.includes("RL05.02");
+  }
+  if (ctx.showDeliveryForm !== true) {
     return false;
   }
   if (
@@ -85,16 +115,50 @@ function shouldShowMrcDeliveryForm(ctx, business, handlingOptionValue) {
   ) {
     return false;
   }
+  const confVal =
+    customerConfirmationOverride != null &&
+    String(customerConfirmationOverride).trim() !== STR_EMPTY
+      ? String(customerConfirmationOverride).trim()
+      : getCaseFieldValue(business, FIELD_MRC_CUSTOMER_CONFIRMATION);
   if (
     ctx.isReturnSubCode &&
     showMrcRl0502DupBanner(business) &&
-    getCaseFieldValue(business, FIELD_MRC_CUSTOMER_CONFIRMATION) ===
-      MRC_CONF_NOT_RECEIVED &&
+    isMrcNotReceivedConfirmation(confVal) &&
     !handlingOptionValue
   ) {
     return false;
   }
   return true;
+}
+
+export function shouldShowMrcReturnDelivery(
+  ctx,
+  business,
+  handlingOptionValue,
+  customerConfirmationValue,
+) {
+  return shouldShowMrcDeliveryForm(
+    ctx,
+    business,
+    handlingOptionValue,
+    customerConfirmationValue,
+  );
+}
+
+function hasMrcReturnPanelInBusiness(business) {
+  const section = business?.sectionlst?.find(
+    (s) => s.name === SECTION_NAME_CASE_INFORMATION,
+  );
+  if (!section?.componentlst?.length) {
+    return false;
+  }
+  return section.componentlst.some((entry) => {
+    const meta = normalizeMasterDataLwcEntry(entry);
+    return (
+      meta.componentName === MRC_RETURN_PANEL ||
+      meta.componentName === "fec_MrcReturnCaseForm"
+    );
+  });
 }
 
 function normalizeMasterDataLwcEntry(entry) {
@@ -105,7 +169,7 @@ function normalizeMasterDataLwcEntry(entry) {
   return { componentName: o.componentName };
 }
 
-/** Chèn fec_MrcReturnCaseForm vào Case Information khi RL05 (nếu master data chưa có). */
+/** Chèn fec_MrcReturnPanel vào Case Information khi RL05 (nếu master data chưa có). */
 export function ensureMrcReturnCaseFormInBusiness(business) {
   if (!isMrcRl05Branch(business) || !business?.sectionlst) {
     return business;
@@ -119,13 +183,14 @@ export function ensureMrcReturnCaseFormInBusiness(business) {
   if (!section.componentlst) {
     section.componentlst = [];
   }
+  const legacyNames = new Set([MRC_RETURN_PANEL, "fec_MrcReturnCaseForm"]);
   const exists = section.componentlst.some((entry) => {
     const meta = normalizeMasterDataLwcEntry(entry);
-    return meta.componentName === MRC_RETURN_FORM;
+    return legacyNames.has(meta.componentName);
   });
   if (!exists) {
     section.componentlst.unshift({
-      componentName: MRC_RETURN_FORM,
+      componentName: MRC_RETURN_PANEL,
       order: 0,
       fieldLayout: 12,
       subSectionName: null,
@@ -142,12 +207,9 @@ export function applyMrcRl0502DupFieldLayout(business, handlingOptionValue) {
 
   const ctx = getMrcRl05Ui(business);
   const showDup = showMrcRl0502DupBanner(business);
-  const confVal = getCaseFieldValue(business, FIELD_MRC_CUSTOMER_CONFIRMATION);
-  const showDupInline =
-    showDup &&
-    ctx?.showCustomerConfirmation === true &&
-    (confVal === MRC_CONF_NOT_RECEIVED || !confVal);
-  const showDupStandalone = showDup && ctx?.dupCaseOnly === true;
+  const showDupInline = false;
+  const showDupStandalone = false;
+  const usePanel = isMrcRl05Branch(business);
   let nextHandling = handlingOptionValue;
 
   business.sectionlst.forEach((section) => {
@@ -158,14 +220,15 @@ export function applyMrcRl0502DupFieldLayout(business, handlingOptionValue) {
       sub.objlst?.forEach((obj) => {
         obj.fieldlst?.forEach((field) => {
           if (field.apiName === FIELD_MRC_HANDLING_OPTION) {
-            field.isHidden = showDup;
+            field.isHidden = ctx?.isReturnSubCode === true;
             if (showDup && !nextHandling && field.value) {
               nextHandling = field.value;
             }
           }
           if (field.apiName === FIELD_MRC_CUSTOMER_CONFIRMATION) {
             field.showMrcDupInline = showDupInline;
-            field.isHidden = ctx?.showCustomerConfirmation === false;
+            field.isHidden =
+              usePanel === true || ctx?.showCustomerConfirmation !== true;
           }
           if (field.apiName === "FEC_Contract_Processing_Assessment_Type__c") {
             if (ctx?.isReturnSubCode) {
@@ -201,7 +264,14 @@ export function applyMrcRl05SectionVisibility(business, handlingOptionValue) {
     handlingOptionValue,
   );
   const hidePropertyInfo =
-    ctx?.hidePropertyInfo === true || isMrcRl05PhotoSubCodeFromBusiness(business);
+    ctx?.hidePropertyInfo === true ||
+    isMrcRl05PhotoSubCodeFromBusiness(business) ||
+    ctx?.isReturnSubCode === true ||
+    String(business?.subCodeCode ?? STR_EMPTY).toUpperCase().includes("RL05.02");
+  const panelMounted = hasMrcReturnPanelInBusiness(business);
+  const panelShowsDelivery =
+    panelMounted &&
+    shouldShowMrcDeliveryForm(ctx, business, handlingOptionValue);
   let changed = false;
 
   business.sectionlst.forEach((section) => {
@@ -234,9 +304,12 @@ export function applyMrcRl05SectionVisibility(business, handlingOptionValue) {
       let hide = false;
       if (name === LWC_MRC_INFO) {
         hide = ctx?.hideMrcInfoLwc === true;
-      } else if (name === LWC_MRC_DELIVERY) {
-        hide = !showDelivery;
-      } else if (name === MRC_RETURN_FORM) {
+      } else if (name === LWC_MRC_DELIVERY || name === LWC_CONTRACT_CLOSURE) {
+        hide = panelShowsDelivery === true;
+      } else if (
+        name === MRC_RETURN_PANEL ||
+        name === "fec_MrcReturnCaseForm"
+      ) {
         hide = false;
       }
       if (entry._hideForMrcRl05 !== hide) {
@@ -248,9 +321,15 @@ export function applyMrcRl05SectionVisibility(business, handlingOptionValue) {
       let hide = false;
       if (dyn.componentName === LWC_MRC_INFO) {
         hide = ctx?.hideMrcInfoLwc === true;
-      } else if (dyn.componentName === LWC_MRC_DELIVERY) {
-        hide = !showDelivery;
-      } else if (dyn.componentName === MRC_RETURN_FORM) {
+      } else if (
+        dyn.componentName === LWC_MRC_DELIVERY ||
+        dyn.componentName === LWC_CONTRACT_CLOSURE
+      ) {
+        hide = panelShowsDelivery === true;
+      } else if (
+        dyn.componentName === MRC_RETURN_PANEL ||
+        dyn.componentName === "fec_MrcReturnCaseForm"
+      ) {
         hide = false;
       }
       if (dyn._hideForMrcRl05 !== hide) {
@@ -282,10 +361,14 @@ export function getMrcReturnAutoRoutingActionCode(business, isEdit) {
 }
 
 export function validateMrcReturnCase(business, handlingOptionValue) {
-  if (showMrcRl0502DupBanner(business) && !handlingOptionValue) {
-    return false;
+  if (!showMrcRl0502DupBanner(business)) {
+    return true;
   }
-  return true;
+  const confVal = getCaseFieldValue(business, FIELD_MRC_CUSTOMER_CONFIRMATION);
+  if (!isMrcNotReceivedConfirmation(confVal)) {
+    return true;
+  }
+  return Boolean(handlingOptionValue);
 }
 
 export function isMrcReturnTrackedField(fieldName) {

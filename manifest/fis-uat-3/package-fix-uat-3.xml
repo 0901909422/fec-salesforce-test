@@ -196,6 +196,8 @@
         <members>fec_holdCaseAuto</members>
         <members>fec_MRC</members>
         <members>fec_MrcReturnCaseForm</members>
+        <members>fec_MrcDeliveryForm</members>
+        <members>fec_MrcReturnPanel</members>
         <members>fec_MrcReturnDupBanner</members>
         <members>fecMrcReturnCaseLogic</members>
         <members>fec_DoNotBotherResultView</members>

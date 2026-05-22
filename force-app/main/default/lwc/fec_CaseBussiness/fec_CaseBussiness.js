@@ -60,7 +60,9 @@ import FEC_Reason_Label from "@salesforce/label/c.FEC_Reason_Label";
 import {
   applyMrcRl0502DupFieldLayout,
   ensureMrcReturnCaseFormInBusiness,
+  FIELD_MRC_CUSTOMER_CONFIRMATION,
   FIELD_MRC_HANDLING_OPTION,
+  getCaseFieldValue,
   getMrcReturnAutoRoutingActionCode,
   isMrcReturnTrackedField,
   isMrcRl05Branch,
@@ -491,6 +493,8 @@ const DYNAMIC_COMPONENT_REGISTRY = {
   fec_IPPConversionRetailForm: () => import('c/fec_IPPConversionRetailForm'),
   fec_MRC: () => import('c/fec_MRC'),
   fec_MrcReturnCaseForm: () => import('c/fec_MrcReturnCaseForm'),
+  fec_MrcReturnPanel: () => import('c/fec_MrcReturnPanel'),
+  fec_MrcDeliveryForm: () => import('c/fec_MrcDeliveryForm'),
   fec_RefundRequestForm: () => import('c/fec_RefundRequestForm'),
   fec_ContractClosureForm: () => import('c/fec_ContractClosureForm'),
   fec_BeneficiaryBankInfoBlock: () => import('c/fec_BeneficiaryBankInfoBlock'),
@@ -1279,6 +1283,46 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
     return showMrcRl0502DupBanner(this.business);
   }
 
+  get mrcReturnCustomerConfirmationValue() {
+    const draft = this.business?.mrcCustomerConfirmationDraft;
+    if (typeof draft === "string" && draft.trim()) {
+      return draft.trim();
+    }
+    return getCaseFieldValue(this.business, FIELD_MRC_CUSTOMER_CONFIRMATION);
+  }
+
+  get mrcCustomerConfirmationOptions() {
+    return this.business?.picklistOptionsMap?.Case?.[
+      FIELD_MRC_CUSTOMER_CONFIRMATION
+    ];
+  }
+
+  handleMrcReturnCustomerConfirmationChange(event) {
+    const value = event.detail?.value ?? STR_EMPTY;
+    let fieldUpdated = false;
+    this.business?.sectionlst?.forEach((section) => {
+      section.subSectionlst?.forEach((sub) => {
+        sub.objlst?.forEach((obj) => {
+          if (obj.name !== "Case") {
+            return;
+          }
+          const field = obj.fieldlst?.find(
+            (f) => f.apiName === FIELD_MRC_CUSTOMER_CONFIRMATION,
+          );
+          if (field) {
+            field.value = value;
+            fieldUpdated = true;
+          }
+        });
+      });
+    });
+    if (!fieldUpdated && this.business) {
+      this.business.mrcCustomerConfirmationDraft = value;
+    }
+    this._applyMrcReturnCaseIntegration();
+    this.business = { ...this.business };
+  }
+
   handleMrcReturnHandlingOptionChange(event) {
     const detail = event.detail || {};
     const value = detail.value ?? STR_EMPTY;
@@ -1316,7 +1360,7 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
     );
     this.mrcReturnHandlingOptionValue = result.handlingOptionValue;
     this.business = result.business;
-    if (result.rebuildSections) {
+    if (result.rebuildSections || isMrcRl05Branch(this.business)) {
       this._rebuildAllSectionSortedRows();
     }
     const actionCode = getMrcReturnAutoRoutingActionCode(
@@ -2065,6 +2109,15 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
         this._applyFastCashPropertyInfoVisibility();
         //linhdev fix jira FECREDIT_CSM_2025_KH-1469-1474 — C360/Property: LWC Points Redemption quyết định sau initData (đủ điều kiện mới ẩn)
         this._setPointsRedemptionHideFlag(false);
+        ensureMrcReturnCaseFormInBusiness(this.business);
+        if (isMrcRl05Branch(this.business)) {
+          const layoutResult = applyMrcRl0502DupFieldLayout(
+            this.business,
+            this.mrcReturnHandlingOptionValue,
+          );
+          this.mrcReturnHandlingOptionValue = layoutResult.handlingOptionValue;
+          this.business = layoutResult.business;
+        }
         this._rebuildAllSectionSortedRows();
         this._prepareRoutingSectionForDisplay();
         this._syncActiveRoutingSection();
@@ -2080,8 +2133,6 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
         this.applyDraft();
         this._applyCsSupportAssessmentRoutingActionSync();
         this._applyRdPaymentContractAssessmentRouting(); // Toannd61
-        ensureMrcReturnCaseFormInBusiness(this.business);
-        // Resolve LWC name strings from componentlst into constructors for lwc:is
         this._resolveComponentlst();
 
         //PhongBT: query FEC_Case_Flow_History__c sau khi đổi bộ noc khác để lấy lại giá trị đã nhập lên
@@ -2100,14 +2151,6 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
         }
         // PhuongNT add handle set update field read only
         this.handleSetUpdateFieldReadOnly();
-        if (isMrcRl05Branch(this.business)) {
-          const layoutResult = applyMrcRl0502DupFieldLayout(
-            this.business,
-            this.mrcReturnHandlingOptionValue,
-          );
-          this.mrcReturnHandlingOptionValue = layoutResult.handlingOptionValue;
-          this.business = layoutResult.business;
-        }
 
         console.log("🚀 ~ Fec_CaseBussiness ~ getData ~ this.business after:", JSON.stringify(this.business))
         publish(this.messageContext, CASE_NOTIFICATION, {
@@ -2367,10 +2410,6 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
 
     this.setDraft(objId, fieldName, value);
 
-    if (isMrcReturnTrackedField(fieldName)) {
-      this._applyMrcReturnCaseIntegration();
-    }
-
     if (PHONE_VALIDATED_FIELD_APIS.has(fieldName)) {
       value = applyPhoneInputMaxLength(value);
     }
@@ -2410,6 +2449,9 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
 
     if (field) {
       field.value = value;
+      if (isMrcReturnTrackedField(fieldName)) {
+        this._applyMrcReturnCaseIntegration();
+      }
       if (fieldName === FIELD_ACCOUNT_CONTRACT_NUMBER_PL) {
         // field.isInternalRequest = value === INTERNAL_REQUEST;
         publish(this.messageContext, CASE_NOC, {
@@ -2878,8 +2920,15 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
   }
 
   _getContractClosureFormEl() {
+    return (
+      this._getDynamicFormEl('fec_ContractClosureForm') ||
+      this._getDynamicFormEl('fec_MrcDeliveryForm')
+    );
+  }
+
+  _getDynamicFormEl(componentName) {
     const wrap = this.template.querySelector(
-      '[data-fec-lwc="fec_ContractClosureForm"]',
+      `[data-fec-lwc="${componentName}"]`,
     );
     const host = wrap && wrap.firstElementChild;
     if (
@@ -4233,7 +4282,10 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
               key: `${name}-${idx}`,
               ctor: mod.default,
               componentName: name,
-              isMrcReturnCaseForm: name === "fec_MrcReturnCaseForm",
+              isMrcReturnPanel:
+                name === "fec_MrcReturnPanel" || name === "fec_MrcReturnCaseForm",
+              isMrcReturnCaseForm:
+                name === "fec_MrcReturnPanel" || name === "fec_MrcReturnCaseForm",
               fecMasterDataSettingIsEdit,
               isEdit: this._isEdit && masterResolved,
               /** Thứ tự merge: cùng nguồn FEC_Sub_Section_Order__c (Apex → meta.order). */
@@ -4244,6 +4296,7 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
               hideSubSectionHeading: meta.hideSubSectionHeading === true,
               isCollapsible: meta.isCollapsible === true,
               lwcColClassName,
+              _hideForMrcRl05: entry._hideForMrcRl05 === true,
             };
           })
           .catch((err) => {

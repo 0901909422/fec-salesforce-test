@@ -9,7 +9,7 @@ export default class Fec_MrcReturnCaseForm extends LightningElement {
   @api recordId;
   @api subCodeCode;
   @api subCategoryCode;
-  @api isEdit = true;
+  @api isEdit = false;
   @api mrcRl05Ui;
   @api duplicateCaseId;
   @api duplicateCaseNumber;

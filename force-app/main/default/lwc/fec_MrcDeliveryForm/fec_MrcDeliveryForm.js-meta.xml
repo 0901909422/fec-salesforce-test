@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <LightningComponentBundle xmlns="http://soap.sforce.com/2006/04/metadata">
-    <apiVersion>65.0</apiVersion>
+    <apiVersion>66.0</apiVersion>
     <capabilities>
         <capability>lightning__dynamicComponent</capability>
     </capabilities>
     <isExposed>true</isExposed>
-    <masterLabel>FEC MRC Return Case Form</masterLabel>
+    <masterLabel>FEC MRC Delivery Form</masterLabel>
     <targets>
         <target>lightning__RecordPage</target>
     </targets>
