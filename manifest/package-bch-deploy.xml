@@ -12,6 +12,7 @@
         <members>FEC_CaseAssignmentTriggerHandler</members>
         <members>FEC_RoutingActionHistoryTriggerHandler</members>
         <members>FEC_BatchCaseHandlingImportRow</members>
+        <members>FEC_BatchCaseHandlingImportProfile</members>
         <members>FEC_BatchCaseHandlingImportService</members>
         <members>FEC_BatchCaseHandlingResultXlsxBuilder</members>
         <members>FEC_BatchCaseHandlingSObjectUtil</members>

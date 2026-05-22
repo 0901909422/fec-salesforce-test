@@ -4,11 +4,13 @@ public without sharing class FEC_BatchCaseHandlingImportService {
     private static final String USER_GROUP_OM = 'OM';
     private static final String BUSINESS_PROCESS_PHONE_UPDATE = 'Phone Update';
     private static final String LABEL_CS_D2C_ASSESSMENT = 'CS D2C đánh giá yêu cầu';
+    private static final String LABEL_CS_SUPPORT_ASSESSMENT = 'CS Support đánh giá yêu cầu';
     private static final String LABEL_RISK_LEVEL = 'Mức độ rủi ro';
     private static final String LABEL_REQUIRED_ACTION = 'Hành động cần thiết';
+    private static final String RESULT_COL_STATUS = '__Status';
+    private static final String RESULT_COL_ERRORS = '__Errors';
     private static final String ERR_NOT_OWNER = 'Người dùng không phải chủ sở hữu Case';
     private static final String ERR_FIELD_NOT_CONFIGURED = 'Trường dữ liệu chưa được thiết lập trong Master Data Setting';
-    private static final String ERR_NOT_OM_OR_PHONE_UPDATE = 'Case không thuộc phạm vi Phone Update cho nhóm OM';
     private static final String ERR_MISSING_CS_D2C_ASSESSMENT = 'Thiếu giá trị CS D2C đánh giá yêu cầu';
     private static final String ERR_MISSING_RISK_LEVEL = 'Thiếu giá trị Mức độ rủi ro';
     private static final String ERR_MISSING_REQUIRED_ACTION = 'Thiếu giá trị Hành động cần thiết';
@@ -27,6 +29,7 @@ public without sharing class FEC_BatchCaseHandlingImportService {
     @TestVisible
     private static final Integer IMPORT_PROCESSING_TIMEOUT_HOURS = 1;
     private static Map<String, Map<String, String>> routeParamsCacheByKey = new Map<String, Map<String, String>>();
+    private static Map<String, String> revertActionIdCacheByStage = new Map<String, String>();
     private static Map<String, String> queueIdCacheByToken = new Map<String, String>();
     @TestVisible
     private static Boolean batchImportApplyInProgress = false;
@@ -386,8 +389,8 @@ public without sharing class FEC_BatchCaseHandlingImportService {
                     'Inputted Remarks',
                     'Assignment ID',
                     'Assignment Routing Action',
-                    'Status',
-                    'Errors'
+                    RESULT_COL_STATUS,
+                    RESULT_COL_ERRORS
                 }
             );
         } else {
@@ -396,8 +399,8 @@ public without sharing class FEC_BatchCaseHandlingImportService {
                     'Case ID Search',
                     'Routing Action',
                     'Inputted Remarks',
-                    'Status',
-                    'Errors'
+                    RESULT_COL_STATUS,
+                    RESULT_COL_ERRORS
                 }
             );
         }
@@ -415,7 +418,7 @@ public without sharing class FEC_BatchCaseHandlingImportService {
                     cols.add(rowValue(row.assignmentId));
                     cols.add(rowValue(row.assignmentRoutingAction));
                 }
-                cols.add(rowValue(row.status));
+                cols.add(rowValue(resolveImportResultStatusLabel(row.status)));
                 cols.add(rowValue(row.errors));
                 sheetRows.add(cols);
             }
@@ -464,6 +467,16 @@ public without sharing class FEC_BatchCaseHandlingImportService {
                 row,
                 new List<String>{ 'csd2cđánhgiáyêucầu', 'csd2cdanhgiayeucau', 'csd2cassessment', 'csd2cassessmenttype' }
             );
+            rr.csSupportAssessment = pickRowString(
+                row,
+                new List<String>{
+                    'cssupportđánhgiáyêucầu',
+                    'cssupportdanhgiayeucau',
+                    'cssupportassessment',
+                    'cssupportassessmenttype',
+                    'cssupportevaluation'
+                }
+            );
             rr.riskLevel = pickRowString(
                 row,
                 new List<String>{ 'mứcđộrủiro', 'mucdoruiro', 'risklevel' }
@@ -491,6 +504,7 @@ public without sharing class FEC_BatchCaseHandlingImportService {
                 String.isBlank(rr.assignmentId) &&
                 String.isBlank(rr.assignmentRoutingAction) &&
                 String.isBlank(rr.csD2CAssessmentType) &&
+                String.isBlank(rr.csSupportAssessment) &&
                 String.isBlank(rr.riskLevel) &&
                 String.isBlank(rr.requiredAction) &&
                 String.isBlank(rr.classificationByCS) &&
@@ -593,14 +607,24 @@ public without sharing class FEC_BatchCaseHandlingImportService {
             }
 
             if (matched != null) {
-                errs.addAll(
-                    validateD2CFieldsForCase(
-                        rr,
-                        matched,
-                        configuredLabelsByStage,
-                        picklistValueByNormByField
-                    )
-                );
+                FEC_BatchCaseHandlingImportProfile.ImportScope importScope =
+                    FEC_BatchCaseHandlingImportProfile.resolveForCase(
+                        matched.FEC_Business_Process__r.FEC_Code__c,
+                        currentUserGroup
+                    );
+                if (importScope != null && importScope.allowed != true) {
+                    errs.add(importScope.errorMessage);
+                } else if (importScope != null) {
+                    errs.addAll(
+                        validateScopeFieldsForCase(
+                            rr,
+                            matched,
+                            importScope,
+                            configuredLabelsByStage,
+                            picklistValueByNormByField
+                        )
+                    );
+                }
             }
 
             if (cofOrGsr) {
@@ -696,6 +720,7 @@ public without sharing class FEC_BatchCaseHandlingImportService {
 
     private static void applyCaseHandlingUpdatesCore(List<FEC_BatchCaseHandlingImportRow> rows, Boolean cofOrGsr) {
         routeParamsCacheByKey.clear();
+        revertActionIdCacheByStage.clear();
         queueIdCacheByToken.clear();
         Set<Id> caseIds = new Set<Id>();
         for (FEC_BatchCaseHandlingImportRow rr : rows) {
@@ -784,6 +809,21 @@ public without sharing class FEC_BatchCaseHandlingImportService {
                     }
                     runParams.put('actionId', routeParams.get('actionId'));
                     runParams.put('queueId', routeParams.get('queueId'));
+                }
+                if (methodKey == FEC_CaseBusinessService.REVERT) {
+                    Case caseLite = caseLiteById.get(caseId);
+                    String revertActionId = caseLite == null
+                        ? null
+                        : resolveRevertActionId(caseLite.FEC_Current_Case_Stage__c);
+                    if (String.isBlank(revertActionId)) {
+                        rr.status = System.Label.FEC_Batch_Case_Handling_Import_Row_Status_Failed;
+                        rr.errors = appendError(
+                            rr.errors,
+                            System.Label.FEC_Batch_Case_Handling_Import_Err_Routing_Requires_Params
+                        );
+                        continue;
+                    }
+                    runParams.put('actionId', revertActionId);
                 }
                 FEC_CaseBusinessService.run(methodKey, runParams);
             } catch (Exception ex) {
@@ -1015,8 +1055,7 @@ public without sharing class FEC_BatchCaseHandlingImportService {
         if (methodKey == FEC_CaseBusinessService.UPDATEACTION) {
             return String.isBlank(decision);
         }
-        return methodKey == FEC_CaseBusinessService.TRANSFER ||
-            methodKey == FEC_CaseBusinessService.REVERT;
+        return methodKey == FEC_CaseBusinessService.TRANSFER;
     }
 
     private static Boolean isResolvedOrRejectCaseRouting(String methodKey) {
@@ -1046,7 +1085,12 @@ public without sharing class FEC_BatchCaseHandlingImportService {
             routeParamsCacheByKey.put(cacheKey, null);
             return null;
         }
-        String teamHintNorm = normalizeToken(parsed.routeTeamHint);
+        String mappedTeam = FEC_BatchCaseHandlingImportProfile.mapExcelRouteTeamToStageChangeGroup(
+            parsed.routeTeamHint
+        );
+        String teamHintNorm = normalizeToken(
+            String.isNotBlank(mappedTeam) ? mappedTeam : parsed.routeTeamHint
+        );
         String queueHintNorm = normalizeToken(parsed.routeQueueHint);
         Set<String> stageChangeQueueTokens = new Set<String>();
         for (FEC_Stage_Change__c item : candidates) {
@@ -1106,6 +1150,53 @@ public without sharing class FEC_BatchCaseHandlingImportService {
         return resolved;
     }
 
+    private static String resolveRevertActionId(Id currentStageId) {
+        if (currentStageId == null) {
+            return null;
+        }
+        String cacheKey = String.valueOf(currentStageId);
+        if (revertActionIdCacheByStage.containsKey(cacheKey)) {
+            return revertActionIdCacheByStage.get(cacheKey);
+        }
+        List<FEC_Stage_Change__c> changes = [
+            SELECT FEC_Action_Button__c
+            FROM FEC_Stage_Change__c
+            WHERE FEC_Previous_Stage__c = :currentStageId
+            AND FEC_Active__c = TRUE
+            AND FEC_Action_Button__r.FEC_Code__c = :FEC_CaseBusinessService.REVERT
+            ORDER BY CreatedDate DESC
+            LIMIT 1
+        ];
+        if (!changes.isEmpty() && changes[0].FEC_Action_Button__c != null) {
+            String actionId = String.valueOf(changes[0].FEC_Action_Button__c);
+            revertActionIdCacheByStage.put(cacheKey, actionId);
+            return actionId;
+        }
+        List<FEC_Stage_Screen__c> screens = [
+            SELECT FEC_Action_Button__c
+            FROM FEC_Stage_Screen__c
+            WHERE FEC_Case_Stage__c = :currentStageId
+            AND FEC_Active__c = TRUE
+            AND FEC_Action_Button__r.FEC_Code__c = :FEC_CaseBusinessService.REVERT
+            LIMIT 1
+        ];
+        String resolved = screens.isEmpty() || screens[0].FEC_Action_Button__c == null
+            ? null
+            : String.valueOf(screens[0].FEC_Action_Button__c);
+        revertActionIdCacheByStage.put(cacheKey, resolved);
+        return resolved;
+    }
+
+    private static String resolveImportResultStatusLabel(String rowStatus) {
+        if (rowStatus == System.Label.FEC_Batch_Case_Handling_Import_Row_Status_Failed) {
+            return System.Label.FEC_Batch_Case_Handling_Import_Row_Status_Failed;
+        }
+        if (String.isBlank(rowStatus)) {
+            return FEC_ConstantCommon.STR_EMPTY;
+        }
+        return System.Label.FEC_Operation_Success;
+    }
+
     private static String buildRouteParamsCacheKey(Id currentStageId, RoutingParseResult parsed) {
         String teamHint = parsed == null ? FEC_ConstantCommon.STR_EMPTY : normalizeToken(parsed.routeTeamHint);
         String queueHint = parsed == null ? FEC_ConstantCommon.STR_EMPTY : normalizeToken(parsed.routeQueueHint);
@@ -1157,7 +1248,12 @@ public without sharing class FEC_BatchCaseHandlingImportService {
             SELECT FEC_Stage_Name__c, FEC_Field_Label_Name__c
             FROM FEC_Master_Data_Setting__c
             WHERE FEC_Stage_Name__c IN :stageIds
-            AND FEC_Field_Label_Name__c IN :new List<String>{ LABEL_CS_D2C_ASSESSMENT, LABEL_RISK_LEVEL, LABEL_REQUIRED_ACTION }
+            AND FEC_Field_Label_Name__c IN :new List<String>{
+                LABEL_CS_D2C_ASSESSMENT,
+                LABEL_CS_SUPPORT_ASSESSMENT,
+                LABEL_RISK_LEVEL,
+                LABEL_REQUIRED_ACTION
+            }
         ]) {
             if (row.FEC_Stage_Name__c == null || String.isBlank(row.FEC_Field_Label_Name__c)) {
                 continue;
@@ -1201,21 +1297,15 @@ public without sharing class FEC_BatchCaseHandlingImportService {
         return out;
     }
 
-    private static List<String> validateD2CFieldsForCase(
+    private static List<String> validateScopeFieldsForCase(
         FEC_BatchCaseHandlingImportRow rr,
         Case matched,
+        FEC_BatchCaseHandlingImportProfile.ImportScope importScope,
         Map<Id, Set<String>> configuredLabelsByStage,
         Map<String, Map<String, String>> picklistValueByNormByField
     ) {
         List<String> errs = new List<String>();
-        if (rr == null || matched == null) {
-            return errs;
-        }
-        Boolean hasAnyD2CInput =
-            String.isNotBlank(rr.csD2CAssessmentType) ||
-            String.isNotBlank(rr.riskLevel) ||
-            String.isNotBlank(rr.requiredAction);
-        if (!hasAnyD2CInput) {
+        if (rr == null || matched == null || importScope == null) {
             return errs;
         }
         if (matched.FEC_Current_Case_Stage__c == null) {
@@ -1226,37 +1316,121 @@ public without sharing class FEC_BatchCaseHandlingImportService {
         if (configuredLabels == null) {
             configuredLabels = new Set<String>();
         }
-
-        validateD2CField(
-            rr.csD2CAssessmentType,
-            LABEL_CS_D2C_ASSESSMENT,
-            ERR_MISSING_CS_D2C_ASSESSMENT,
-            ERR_INVALID_CS_D2C_ASSESSMENT,
-            'FEC_CS_D2C_Assessment_Type__c',
-            configuredLabels,
-            picklistValueByNormByField,
-            errs
-        );
-        validateD2CField(
-            rr.riskLevel,
-            LABEL_RISK_LEVEL,
-            ERR_MISSING_RISK_LEVEL,
-            ERR_INVALID_RISK_LEVEL,
-            'FEC_CS_D2C_Required_Corrective_Action__c',
-            configuredLabels,
-            picklistValueByNormByField,
-            errs
-        );
-        validateD2CField(
-            rr.requiredAction,
-            LABEL_REQUIRED_ACTION,
-            ERR_MISSING_REQUIRED_ACTION,
-            ERR_INVALID_REQUIRED_ACTION,
-            'FEC_CS_D2C_Risk_Level__c',
-            configuredLabels,
-            picklistValueByNormByField,
-            errs
-        );
+        String profile = importScope.fieldProfile;
+        if (profile == FEC_BatchCaseHandlingImportProfile.FIELD_PROFILE_D2C) {
+            validateD2CField(
+                rr.csD2CAssessmentType,
+                LABEL_CS_D2C_ASSESSMENT,
+                ERR_MISSING_CS_D2C_ASSESSMENT,
+                ERR_INVALID_CS_D2C_ASSESSMENT,
+                'FEC_CS_D2C_Assessment_Type__c',
+                configuredLabels,
+                picklistValueByNormByField,
+                errs,
+                true
+            );
+            validateD2CField(
+                rr.riskLevel,
+                LABEL_RISK_LEVEL,
+                ERR_MISSING_RISK_LEVEL,
+                ERR_INVALID_RISK_LEVEL,
+                'FEC_CS_D2C_Required_Corrective_Action__c',
+                configuredLabels,
+                picklistValueByNormByField,
+                errs,
+                true
+            );
+            validateD2CField(
+                rr.requiredAction,
+                LABEL_REQUIRED_ACTION,
+                ERR_MISSING_REQUIRED_ACTION,
+                ERR_INVALID_REQUIRED_ACTION,
+                'FEC_CS_D2C_Risk_Level__c',
+                configuredLabels,
+                picklistValueByNormByField,
+                errs,
+                true
+            );
+            return errs;
+        }
+        if (profile == FEC_BatchCaseHandlingImportProfile.FIELD_PROFILE_CS_SUPPORT) {
+            String csSupportValue = String.isNotBlank(rr.csSupportAssessment)
+                ? rr.csSupportAssessment
+                : rr.classificationByCS;
+            validateD2CField(
+                csSupportValue,
+                LABEL_CS_SUPPORT_ASSESSMENT,
+                'Thiếu giá trị CS Support đánh giá yêu cầu',
+                'Giá trị CS Support đánh giá yêu cầu không tồn tại trong Datagroup.',
+                'FEC_CS_Check_Classification_by_CS__c',
+                configuredLabels,
+                picklistValueByNormByField,
+                errs,
+                true
+            );
+            validateD2CField(
+                rr.evaluationByCS,
+                LABEL_CS_SUPPORT_ASSESSMENT,
+                'Thiếu giá trị Evaluation by CS',
+                'Giá trị Evaluation by CS không tồn tại trong Datagroup.',
+                'FEC_CS_Check_Evaluation_by_CS__c',
+                configuredLabels,
+                picklistValueByNormByField,
+                errs,
+                false
+            );
+            validateD2CField(
+                rr.finalProduct,
+                LABEL_CS_SUPPORT_ASSESSMENT,
+                'Thiếu giá trị Final Product',
+                'Giá trị Final Product không tồn tại trong Datagroup.',
+                'FEC_CS_Check_Final_product__c',
+                configuredLabels,
+                picklistValueByNormByField,
+                errs,
+                false
+            );
+            return errs;
+        }
+        Boolean hasAnyD2CInput =
+            String.isNotBlank(rr.csD2CAssessmentType) ||
+            String.isNotBlank(rr.riskLevel) ||
+            String.isNotBlank(rr.requiredAction);
+        if (hasAnyD2CInput) {
+            validateD2CField(
+                rr.csD2CAssessmentType,
+                LABEL_CS_D2C_ASSESSMENT,
+                ERR_MISSING_CS_D2C_ASSESSMENT,
+                ERR_INVALID_CS_D2C_ASSESSMENT,
+                'FEC_CS_D2C_Assessment_Type__c',
+                configuredLabels,
+                picklistValueByNormByField,
+                errs,
+                false
+            );
+            validateD2CField(
+                rr.riskLevel,
+                LABEL_RISK_LEVEL,
+                ERR_MISSING_RISK_LEVEL,
+                ERR_INVALID_RISK_LEVEL,
+                'FEC_CS_D2C_Required_Corrective_Action__c',
+                configuredLabels,
+                picklistValueByNormByField,
+                errs,
+                false
+            );
+            validateD2CField(
+                rr.requiredAction,
+                LABEL_REQUIRED_ACTION,
+                ERR_MISSING_REQUIRED_ACTION,
+                ERR_INVALID_REQUIRED_ACTION,
+                'FEC_CS_D2C_Risk_Level__c',
+                configuredLabels,
+                picklistValueByNormByField,
+                errs,
+                false
+            );
+        }
         return errs;
     }
 
@@ -1268,9 +1442,13 @@ public without sharing class FEC_BatchCaseHandlingImportService {
         String caseFieldApi,
         Set<String> configuredLabels,
         Map<String, Map<String, String>> picklistValueByNormByField,
-        List<String> errs
+        List<String> errs,
+        Boolean required
     ) {
         if (String.isBlank(inputValue)) {
+            if (required) {
+                errs.add(missingError);
+            }
             return;
         }
         if (configuredLabels == null || !configuredLabels.contains(normalizeToken(fieldLabel))) {
@@ -1297,9 +1475,12 @@ public without sharing class FEC_BatchCaseHandlingImportService {
         String assessmentValue = resolvePicklistValue('FEC_CS_D2C_Assessment_Type__c', rr.csD2CAssessmentType, picklistValueByNormByField);
         String riskValue = resolvePicklistValue('FEC_CS_D2C_Required_Corrective_Action__c', rr.riskLevel, picklistValueByNormByField);
         String requiredActionValue = resolvePicklistValue('FEC_CS_D2C_Risk_Level__c', rr.requiredAction, picklistValueByNormByField);
+        String csSupportInput = String.isNotBlank(rr.csSupportAssessment)
+            ? rr.csSupportAssessment
+            : rr.classificationByCS;
         String classificationByCSValue = resolvePicklistValue(
             'FEC_CS_Check_Classification_by_CS__c',
-            rr.classificationByCS,
+            csSupportInput,
             picklistValueByNormByField
         );
         String evaluationByCSValue = resolvePicklistValue(

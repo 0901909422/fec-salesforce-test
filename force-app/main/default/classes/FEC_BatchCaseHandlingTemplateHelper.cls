@@ -161,6 +161,15 @@ public without sharing class FEC_BatchCaseHandlingTemplateHelper {
         return mapBusinessProcessToTemplatePrefix(bpKey) != null;
     }
 
+    public static String mapImportBusinessProcessPrefix(String businessProcessCode, String businessProcessName) {
+        String bpKey = String.isNotBlank(businessProcessCode) ? businessProcessCode : businessProcessName;
+        return mapBusinessProcessToTemplatePrefix(bpKey);
+    }
+
+    public static List<String> mapImportUserGroupSuffixes(String businessProcessCode, String userGroup) {
+        return mapUserGroupToTemplateSuffixes(businessProcessCode, userGroup);
+    }
+
     public static List<SObject> queryActiveBatchCaseHandlingTemplates() {
         Schema.SObjectType templateType = Schema.getGlobalDescribe().get(TEMPLATE_OBJECT_API_NAME);
         if (templateType == null) {
