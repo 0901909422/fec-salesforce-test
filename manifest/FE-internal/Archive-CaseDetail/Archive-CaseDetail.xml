@@ -32,6 +32,7 @@
         <members>FEC_Card_Payment__c.IsArchiveTemp__c</members>
         <members>FEC_Process_Action__c.IsArchiveTemp__c</members>
         <members>FEC_Integration_Case__c.IsArchiveTemp__c</members>
+        <members>FEC_Case_Stage__c.IsArchiveTemp__c</members>
         <name>CustomField</name>
     </types>
 
