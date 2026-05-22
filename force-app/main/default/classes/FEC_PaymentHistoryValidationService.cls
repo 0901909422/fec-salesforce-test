@@ -21,7 +21,7 @@ public with sharing class FEC_PaymentHistoryValidationService {
   /**
    * RC04.04 — Giấy xác nhận đóng thẻ: trả infoMessage khi không đủ điều kiện;
    * đủ điều kiện thì không trả message (null).
-   * Điều kiện đủ: Account Status (T-1) in (8,9) OR (not in (8,9) AND ít nhất một: Block Code = C, IPP Principal T-1 = 0, OTB >= Credit Limit).
+   * Điều kiện đủ: Account Status (T-1) in (8,9) OR (not in (8,9) AND đồng thời: Block Code = C, IPP Principal T-1 = 0, OTB >= Credit Limit).
    *
    * Field mapping:
    *   Account Status : FEC_Customer_History__c.FEC_Account_Status__c
@@ -79,7 +79,10 @@ public with sharing class FEC_PaymentHistoryValidationService {
       ippPrincipalZero = stmtRows[0].FEC_IPP_Principal__c == 0;
     }
 
-    if (statusEightOrNine || (!statusEightOrNine && (blockCodeC || ippPrincipalZero || otbGteLimit))) {
+    if (
+      statusEightOrNine ||
+      (!statusEightOrNine && blockCodeC && ippPrincipalZero && otbGteLimit)
+    ) {
       return null;
     }
     return System.Label.FEC_MSG_Cannot_Create_Card_Close_Certificate;

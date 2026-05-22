@@ -2,7 +2,8 @@ import { LightningElement, api, wire, track } from "lwc";
 import { getRecord, getFieldValue } from "lightning/uiRecordApi";
 import { loadStyle } from "lightning/platformResourceLoader";
 import COMMON_STYLES from "@salesforce/resourceUrl/FEC_CommonCss";
-import getAssignments from "@salesforce/apex/FEC_AssignmentListHandler.getAssignments";
+// import getAssignments from "@salesforce/apex/FEC_AssignmentListHandler.getAssignments";
+import getAssignmentsNEW from "@salesforce/apex/FEC_AssignmentListHandler.getAssignmentsNEW";
 import getQueueNames from "@salesforce/apex/FEC_AssignmentListHandler.getQueueNames"; // tungnm37 thêm
 import getUserDepartment from "@salesforce/apex/FEC_AssignmentListHandler.getUserDepartment";
 import getUsersInGroup from "@salesforce/apex/FEC_AssignmentListHandler.getUsersInGroup";
@@ -193,7 +194,7 @@ export default class Fec_AssignmentList extends LightningElement {
 
   async initData() {
     try {
-      const result = await getAssignments({
+      const result = await getAssignmentsNEW({
         caseId: this.recordId,
       });
       console.log("getAssignments result:", JSON.stringify(result));
@@ -276,33 +277,7 @@ export default class Fec_AssignmentList extends LightningElement {
     return this.isCSSupport ? ACTION_OPTIONS_CS_SUPPORT : ACTION_OPTIONS_OTHER;
   }
 
-  // handleActionChange(event) {
-  //   const id = event.target.dataset.id;
-  //   const value = event.detail.value;
-
-  //   this.assignments = this.assignments.map((item) => {
-  //     if (item.id !== id) return item;
-
-  //     return {
-  //       ...item,
-  //       action: value,
-  //       decision: null,
-  //       subDecision: null,
-
-  //       decisionOptions: DECISION_OPTIONS_MAP[value] || [],
-
-  //       showDecision: ACTIONS_REQUIRE_DECISION.includes(value),
-
-  //       showSubDecision: false,
-  //       isUserDecision: false,
-  //       isQueueDecision: false,
-
-  //       showTeam: item.action == 'Route_to' ? true: false,
-  //       showQueueByTeam: false,
-  //     };
-  //   });
-  //   this.updatePagedData();
-  // }
+  
 
   handleActionChange(event) {
     const id = event.target.dataset.id;
