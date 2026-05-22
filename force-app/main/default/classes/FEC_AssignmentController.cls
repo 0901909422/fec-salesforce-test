@@ -89,11 +89,11 @@ public without sharing class FEC_AssignmentController {
                 ? caseAssignmentCount.get(c.Id)
                 : 0;
 
-            if (assignmentCount == 1) {
+            if (assignmentCount == 1 && !hasMultipleTeams(c)) {
                 c.FEC_Team__c = null;
                 addTeam(c, targetTeam);
             } else {
-                removeTeam(c, FEC_ConstantCommon.TEAM_VALUE_CSSUPPORT);
+                removeCsSupportTeam(c);
                 if (!isTeamExist(c, targetTeam)) {
                     addTeam(c, targetTeam);
                 }
@@ -189,6 +189,10 @@ public without sharing class FEC_AssignmentController {
             if (c == null) continue;
 
             Integer activeCount = countActiveAssignments(caseAssignments.get(c.Id), current.Id);
+            Integer assignmentCount = caseAssignments.containsKey(c.Id)
+                ? caseAssignments.get(c.Id).size()
+                : 0;
+            Boolean stripCsSupport = shouldRemoveCsSupport(c, assignmentCount);
             String currentTeam = current.FEC_Team__c;
             String action = h.FEC_Routing_Action__c;
 
@@ -209,6 +213,9 @@ public without sharing class FEC_AssignmentController {
                 }
 
                 removeTeam(c, currentTeam);
+                if (stripCsSupport) {
+                    removeCsSupportTeam(c);
+                }
                 addTeam(c, targetTeam);
 
                 assignmentsToUpdate.add(new FEC_Assignment__c(
@@ -220,19 +227,22 @@ public without sharing class FEC_AssignmentController {
             // ===== REVERT =====
             else if (action == FEC_ConstantCommon.CASE_REVERT_ACTION) {
 
-            String targetTeam = FEC_ConstantCommon.CASE_REVERTING_CREATOR;
+                String targetTeam = FEC_ConstantCommon.CASE_REVERTING_CREATOR;
 
-            removeTeam(c, currentTeam);
+                removeTeam(c, currentTeam);
+                if (stripCsSupport) {
+                    removeCsSupportTeam(c);
+                }
 
-            if (!isTeamExist(c, targetTeam)) {
-                addTeam(c, targetTeam);
+                if (!isTeamExist(c, targetTeam)) {
+                    addTeam(c, targetTeam);
+                }
+
+                assignmentsToUpdate.add(new FEC_Assignment__c(
+                    Id = current.Id,
+                    FEC_Team__c = targetTeam
+                ));
             }
-
-            assignmentsToUpdate.add(new FEC_Assignment__c(
-                Id = current.Id,
-                FEC_Team__c = targetTeam
-            ));
-        }
 
             // ===== UPDATE =====
             else if (action == FEC_ConstantCommon.CASE_UPDATE_VALUE && h.FEC_Decision__c != null) {
@@ -403,45 +413,97 @@ public without sharing class FEC_AssignmentController {
         return count;
     }
 
+    /** Chuẩn hóa token team — khớp FEC_RoutingActionHistoryTriggerHandler.updateCaseTeams. */
+    private static String normalizeTeamToken(String team) {
+        if (String.isBlank(team)) {
+            return '';
+        }
+        return team.replaceAll('\\W+', '').trim();
+    }
+
+    private static Boolean hasMultipleTeams(Case c) {
+        if (String.isBlank(c.FEC_Team__c)) {
+            return false;
+        }
+        Integer count = 0;
+        for (String t : c.FEC_Team__c.split('_')) {
+            if (String.isNotBlank(normalizeTeamToken(t))) {
+                count++;
+            }
+        }
+        return count >= 2;
+    }
+
+    private static Boolean shouldRemoveCsSupport(Case c, Integer assignmentCount) {
+        return assignmentCount >= 2 || hasMultipleTeams(c);
+    }
+
+    private static void removeCsSupportTeam(Case c) {
+        removeTeam(c, FEC_ConstantCommon.TEAM_VALUE_CSSUPPORT);
+    }
+
     // ===== REMOVE TEAM =====
     private static void removeTeam(Case c, String team) {
-        if (String.isBlank(c.FEC_Team__c) || String.isBlank(team)) return;
+        if (String.isBlank(c.FEC_Team__c) || String.isBlank(team)) {
+            return;
+        }
 
-        Set<String> setTeam = new Set<String>(c.FEC_Team__c.split('_'));
-        setTeam.remove(team);
+        String normalizedTarget = normalizeTeamToken(team);
+        Set<String> setTeam = new Set<String>();
+
+        for (String t : c.FEC_Team__c.split('_')) {
+            String normalized = normalizeTeamToken(t);
+            if (String.isBlank(normalized) || normalized.equalsIgnoreCase(normalizedTarget)) {
+                continue;
+            }
+            setTeam.add(normalized);
+        }
 
         String joined = setTeam.isEmpty() ? null : String.join(new List<String>(setTeam), '_');
-        c.FEC_Team__c = FEC_CommonUltils.sortTeamField(joined); 
+        c.FEC_Team__c = FEC_CommonUltils.sortTeamField(joined);
     }
 
     // ===== ADD TEAM =====
     private static void addTeam(Case c, String team) {
-        if (String.isBlank(team)) return;
+        String normalizedTeam = normalizeTeamToken(team);
+        if (String.isBlank(normalizedTeam)) {
+            return;
+        }
 
         Set<String> setTeam = new Set<String>();
 
         if (String.isNotBlank(c.FEC_Team__c)) {
-            setTeam.addAll(c.FEC_Team__c.split('_'));
-        }
-
-        setTeam.add(team);
-
-        String joined = setTeam.isEmpty() ? null : String.join(new List<String>(setTeam), '_');
-        c.FEC_Team__c = FEC_CommonUltils.sortTeamField(joined); 
-    }
-
-    private static Boolean isTeamExist(Case c, String team) {
-        if (String.isBlank(c.FEC_Team__c) || String.isBlank(team)) return false;
-
-        Set<String> setTeam = new Set<String>();
-
-        for (String t : c.FEC_Team__c.split('_')) {
-            if (String.isNotBlank(t)) {
-                setTeam.add(t.trim().toLowerCase());
+            for (String t : c.FEC_Team__c.split('_')) {
+                String normalized = normalizeTeamToken(t);
+                if (String.isNotBlank(normalized)) {
+                    setTeam.add(normalized);
+                }
             }
         }
 
-        return setTeam.contains(team.trim().toLowerCase());
+        setTeam.add(normalizedTeam);
+
+        String joined = setTeam.isEmpty() ? null : String.join(new List<String>(setTeam), '_');
+        c.FEC_Team__c = FEC_CommonUltils.sortTeamField(joined);
+    }
+
+    private static Boolean isTeamExist(Case c, String team) {
+        if (String.isBlank(c.FEC_Team__c) || String.isBlank(team)) {
+            return false;
+        }
+
+        String normalizedTarget = normalizeTeamToken(team);
+        if (String.isBlank(normalizedTarget)) {
+            return false;
+        }
+
+        for (String t : c.FEC_Team__c.split('_')) {
+            if (normalizeTeamToken(t).equalsIgnoreCase(normalizedTarget)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private static String mapDecisionToTeam(String decision) {
