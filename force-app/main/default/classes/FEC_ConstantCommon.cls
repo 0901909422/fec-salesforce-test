@@ -163,6 +163,7 @@ public with sharing class FEC_ConstantCommon {
     public static final String REQUESTOR_VTIGER_PL = 'VTIGER_PL';
     public static final String REQUESTOR_VMXVERSION_EMEA = 'E8V8';
     public static final String REQUESTOR_VMXVERSION_EMEA_CARD = 'E8V2';
+    public static final String REQUESTOR_VMXVERSION_EMEA_BLKCD_UPD = 'E8V3';
     public static final String REQUESTOR_VMX_CONTEXT = 'FECVMX';
     public static final String REQUESTOR_LANDING_PAGE = 'FEC_LandingPage';
     public static final String REQUESTOR_ORG_EMEA_CARD = '150';
@@ -349,7 +350,7 @@ public with sharing class FEC_ConstantCommon {
     public static final String CASE_RESOLVE_ACTION = 'Resolve';
     public static final String REMARK_TYPE_ASSIGNMENT = 'Assignment';
     public static final String TEAM_VALUE = 'CannotContactCustomer';
-    
+    public static final String TEAM_VALUE_CSSUPPORT = 'CSSupport';
     /** Giá trị trường FEC_Routing_Action__c khi đổi Owner (Salesforce / trigger). */
     public static final String FEC_ROUTING_ACTION_CHANGE_OWNER = 'Change Owner';
     /** Routing Action History: cộng dồn FEC_Team__c / Pending-{Team1}_{Team2} (cùng luồng Route to). */
@@ -560,6 +561,8 @@ public with sharing class FEC_ConstantCommon {
     
     /** Profile names */
     public static final String PROFILE_RELEVANT_DEPTS = 'Relevant Depts';
+    public static final String PROFILE_CS_BO = 'CS Back Office';
+    public static final String PROFILE_CS_FL = 'CS Frontline';
     
     /** MIME types for file attachments */
     public static final String MIME_OCTET_STREAM = 'application/octet-stream';
