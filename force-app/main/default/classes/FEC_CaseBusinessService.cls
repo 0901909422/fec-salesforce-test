@@ -1,5 +1,6 @@
 public without sharing class FEC_CaseBusinessService {
   public static final String TYPE_LWC = 'LWC';
+  public static final String TYPE_ASSIGNMENT = 'Assignment';
   public static final String LWC_INCORRECT_PAYMENT_FORM = 'fec_IncorrectPaymentForm';
 
   public static final String ROUTE_TO = 'Route to';
@@ -141,9 +142,7 @@ public without sharing class FEC_CaseBusinessService {
       if (String.isNotBlank(currentUser.FEC_User_Group__c)) {
         rolelst.add(currentUser.FEC_User_Group__c);
       }
-      List<String> additionalRolelst = FEC_NatureOfCaseUserGroupService.buildRoleListForIncludes(
-        currentUser.FEC_User_Group__c
-      );
+      List<String> additionalRolelst = FEC_NatureOfCaseUserGroupService.buildRoleListForIncludes();
 
       //  ===================================== GET CASE ===============================
             List<Case> caselst = [
@@ -773,10 +772,9 @@ public without sharing class FEC_CaseBusinessService {
 
       result.stage = selectedStage.Id;
       result.stageName = selectedStage.Name;
-      Boolean isLatestRevertToCurrentStage = isLatestRevertToCurrentStage(
-        selectedCase.Id,
-        selectedStage.Id
-      );
+      FEC_Routing_Action_History__c latestRevertHistToCurrentStage =
+        getLatestRevertedHistoryToStage(selectedCase.Id, selectedStage.Id);
+      Boolean isLatestRevertToCurrentStage = latestRevertHistToCurrentStage != null;
 
       // ============================= GET MASTET DATA SETTING ===========================
       if (err.errorlst.isEmpty()) {
@@ -786,7 +784,7 @@ public without sharing class FEC_CaseBusinessService {
           'FEC_Field_ReadOnly__c, FEC_Section__c, FEC_Field_Order_Display__c,' +
           'FEC_Field_Label_Name__c, FEC_Editable_User_Group__c, FEC_Field_Masking__c, FEC_Masking_Type__c, ' +
           'FEC_Sub_Section__c, FEC_Sub_Section_Order__c, FEC_Sub_Section_Layout__c, FEC_Field_Reverted__c, FEC_Sub_Section_Field_Layout__c, ' +
-          'FEC_LWC_Name__c, FEC_Type__c ' +
+          'FEC_LWC_Name__c, FEC_Type__c, FEC_Hidden__c ' +
           'FROM ' +
           masterDataSettingObj +
           ' ' +
@@ -826,19 +824,32 @@ public without sharing class FEC_CaseBusinessService {
         Boolean isCOF = selectedStage?.FEC_Business_Process__r?.Name == FEC_ConstantCommon.COF_GENERAL_FLOW;
         Boolean isCOFStage1Revert = isLatestRevertToCurrentStage && isCOF && checkStageName(selectedStage.Name,FEC_ConstantCommon.STAGE_ONE);
         result.contextFlags.put('isCOFStage1Revert', isCOFStage1Revert);
-        Boolean isGsrBusinessProcess =
-          String.isNotBlank(businessProcessCode) &&
-          businessProcessCode.toUpperCase().contains('GSR');
         Boolean isGsrStage1Revert =
           isLatestRevertToCurrentStage &&
-          isGsrBusinessProcess &&
+          isActualNatureGsrOnly &&
           checkStageName(selectedStage.Name, FEC_ConstantCommon.STAGE_ONE);
+        Boolean isGsrStage2ToStage1Revert =
+          isGsrStage1Revert &&
+          latestRevertHistToCurrentStage != null &&
+          checkStageName(
+            latestRevertHistToCurrentStage.FEC_Previous_Stage__r?.Name,
+            FEC_ConstantCommon.STAGE_TWO
+          );
+        Boolean isGsrStage1RevertMasterReadonly =
+          isGsrStage1Revert && !isGsrStage2ToStage1Revert;
         result.contextFlags.put('isGsrStage1Revert', isGsrStage1Revert);
+        result.contextFlags.put('isGsrStage2ToStage1Revert', isGsrStage2ToStage1Revert);
+        result.contextFlags.put(
+          'isGsrStage1RevertMasterReadonly',
+          isGsrStage1RevertMasterReadonly
+        );
+        Boolean hasCaseAssignment = getCaseAssignmentCountByCaseId(selectedCase) > 0;
+        result.contextFlags.put('hasCaseAssignment', hasCaseAssignment);
         // GSR Stage 3 (code Stage 2 + đã có Assignment): Property Info chỉ khi Updated NOC khác Original → read-only.
         Boolean isGsrStage3PropertyInfoReadonly =
           isActualNatureGsrOnly &&
           isUpdatedNocDifferentFromCurrent &&
-          getCaseAssignmentCountByCaseId(selectedCase) > 0;
+          hasCaseAssignment;
         result.contextFlags.put(
           'isGsrStage3PropertyInfoReadonly',
           isGsrStage3PropertyInfoReadonly
@@ -893,6 +904,14 @@ public without sharing class FEC_CaseBusinessService {
             'FEC_Sub_Section_Layout__c'
           );
           String itemType = (String) item.get('FEC_Type__c');
+          if (TYPE_ASSIGNMENT.equals(itemType)) {
+            if (!hasCaseAssignment) {
+              continue;
+            }
+            if (item.get('FEC_Hidden__c') == true) {
+              continue;
+            }
+          }
           //PhongBT 14/05/26: Document Request
           //Ẩn Case Info (trừ Property Info), chỉ khi sub-code RL04.02/RL04.03/RC04.04 trả về message
           if(
@@ -993,7 +1012,7 @@ public without sharing class FEC_CaseBusinessService {
                 currentUser.FEC_User_Group__c,
                 selectedStage.Name
               );
-              if (isGsrStage1Revert) {
+              if (isGsrStage1RevertMasterReadonly) {
                 lwcSlot.fecMasterDataSettingIsEdit = false;
               }
               if (
@@ -1206,6 +1225,13 @@ public without sharing class FEC_CaseBusinessService {
           );
         }
       }
+
+      FEC_MrcReturnCaseService.supplementStage1RoutingActionsIfEmpty(
+        result,
+        selectedStage != null ? selectedStage.Name : null,
+        rolelst,
+        isRevert
+      );
 
       // Hiển thị Team/Queue Route to theo nhánh Stage Change (không ảnh hưởng logic submit route()).
       RouteToDisplayInfo routeToDisplayInfo = resolveRouteToDisplayInfo(
@@ -2268,12 +2294,14 @@ public without sharing class FEC_CaseBusinessService {
         when REJECT {
           markCaseSubmittedAndClearDrafts(caseId);
           reject(caseId);
+          FEC_AssignmentRoutingActionHandler.resolveAllAssignments(caseId);
           createRoutingActionHis('Reject', '', oldOwnerName, oldOwnerId, caseId, stageName, finalStatusBeforeSubmit, currentStageId);
           return null;
         }
         when RESOLVE {
           markCaseSubmittedAndClearDrafts(caseId);
           resolve(caseId);
+          FEC_AssignmentRoutingActionHandler.resolveAllAssignments(caseId);
           createRoutingActionHis('Resolve', '', oldOwnerName, oldOwnerId, caseId, stageName, finalStatusBeforeSubmit, currentStageId);
           return null;
         }
@@ -2383,9 +2411,7 @@ public without sharing class FEC_CaseBusinessService {
       if (String.isNotBlank(currentUser.FEC_User_Group__c)) {
         rolelst.add(currentUser.FEC_User_Group__c);
       }
-      List<String> additionalRolelst = FEC_NatureOfCaseUserGroupService.buildRoleListForIncludes(
-        currentUser.FEC_User_Group__c
-      );
+      List<String> additionalRolelst = FEC_NatureOfCaseUserGroupService.buildRoleListForIncludes();
 
       List<Case> caselst = [
         SELECT
@@ -3566,7 +3592,8 @@ public without sharing class FEC_CaseBusinessService {
         FEC_Field_Reverted__c,
         FEC_Sub_Section_Field_Layout__c, 
         FEC_LWC_Name__c, 
-        FEC_Type__c
+        FEC_Type__c,
+        FEC_Hidden__c
       FROM FEC_Master_Data_Setting__c
       WHERE FEC_Nature_of_Case__c = :natureOfCaseId
       // AND FEC_Stage_Name__c = :stageNameId
@@ -3605,6 +3632,7 @@ public without sharing class FEC_CaseBusinessService {
       tgt.FEC_Sub_Section_Field_Layout__c = src.FEC_Sub_Section_Field_Layout__c;
       tgt.FEC_LWC_Name__c = src.FEC_LWC_Name__c;
       tgt.FEC_Type__c = src.FEC_Type__c;
+      tgt.FEC_Hidden__c = src.FEC_Hidden__c;
 
       targetlst.add(tgt);
     }
@@ -3788,12 +3816,15 @@ public without sharing class FEC_CaseBusinessService {
     return out;
   }
 
-  private static Boolean isLatestRevertToCurrentStage(Id caseId, Id currentStageId) {
+  private static FEC_Routing_Action_History__c getLatestRevertedHistoryToStage(
+    Id caseId,
+    Id currentStageId
+  ) {
     if (caseId == null || currentStageId == null) {
-      return false;
+      return null;
     }
     List<FEC_Routing_Action_History__c> latestRevertHist = [
-      SELECT Id
+      SELECT Id, FEC_Previous_Stage__r.Name
       FROM FEC_Routing_Action_History__c
       WHERE
         FEC_Case__c = :caseId
@@ -3803,7 +3834,11 @@ public without sharing class FEC_CaseBusinessService {
       ORDER BY LastModifiedDate DESC
       LIMIT 1
     ];
-    return !latestRevertHist.isEmpty();
+    return latestRevertHist.isEmpty() ? null : latestRevertHist[0];
+  }
+
+  private static Boolean isLatestRevertToCurrentStage(Id caseId, Id currentStageId) {
+    return getLatestRevertedHistoryToStage(caseId, currentStageId) != null;
   }
 
   private static Field transform(
@@ -3811,7 +3846,8 @@ public without sharing class FEC_CaseBusinessService {
     SObject objTemp,
     String userGr,
     Boolean isStageRevert,
-    Boolean forceMasterDataReadOnly
+    Boolean forceMasterDataReadOnly,
+    Boolean hasCaseAssignment
   ) {
     String maskingTypeTemp = (String) masterDataItem.get('FEC_Masking_Type__c');
     String editableGr = (String) masterDataItem.get(
@@ -3867,6 +3903,16 @@ public without sharing class FEC_CaseBusinessService {
     Boolean outEditable =
       isEditable ||
       (String.isNotBlank(editableGr) && editableGr.contains(userGr));
+    String mdsType = (String) masterDataItem.get('FEC_Type__c');
+    if (
+      hasCaseAssignment == true &&
+      TYPE_ASSIGNMENT.equals(mdsType) &&
+      isEditable == true &&
+      forceMasterDataReadOnly != true
+    ) {
+      outReadOnly = false;
+      outEditable = true;
+    }
     if (forceMasterDataReadOnly == true) {
       outReadOnly = true;
       outEditable = false;

@@ -1954,6 +1954,7 @@
         <members>fec_NocRoutingAssignment</members>
         <members>fecRoutingAssignmentEditForm</members>
         <members>fec_DownloadReports</members>
+        <members>fecMrcReturnStageChangeRouting</members>
         <name>LightningComponentBundle</name>
     </types>
     <types>
@@ -2133,6 +2134,7 @@
         <members>FEC_BatchCaseHandlingImportProfile</members>
         <members>FEC_BatchCaseHandlingPicklistResolver</members>
         <members>FEC_BatchCaseHandlingResultXlsxBuilder</members>
+        <members>FEC_NotificationService</members>
         <name>ApexClass</name>
     </types>
     <types>
@@ -2169,6 +2171,11 @@
         <members>FEC_Routing_Action_History__c.FEC_TAT_by_Assignment__c</members>
         <members>FEC_Download_Report__c.FEC_Link__c</members>
         <members>FEC_Download_Report__c.FEC_Report_Unique_Name__c</members>
+        <members>FEC_Actual_Master_Data_Setting__c.FEC_Hidden__c</members>
+        <members>FEC_Master_Data_Setting__c.FEC_Hidden__c</members>
+        <members>FEC_Actual_Master_Data_Setting__c.FEC_Type__c</members>
+        <members>FEC_Case_Assignment_Log_Detail__c.FEC_Case_Assignment_log_Name__c</members>
+        <members>FEC_Master_Data_Setting__c.FEC_Type__c</members>
         <name>CustomField</name>
     </types>
     <types>

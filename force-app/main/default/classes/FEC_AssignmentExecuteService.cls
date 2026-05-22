@@ -691,13 +691,13 @@ public without sharing class FEC_AssignmentExecuteService {
              * Updated owner email
              */
             if (updatedOwner != null) {
-                history.FEC_Updated_User_Queue__c = updatedOwner.Email;
+                history.FEC_Updated_User_Queue__c = emailLocalPart(updatedOwner.Email);
             }
             
             /*
              * Execute user
              */
-            history.FEC_User__c = currentUser.Email;
+            history.FEC_User__c = emailLocalPart(currentUser.Email);
             
             /*
              * Execute user role
@@ -789,6 +789,19 @@ public without sharing class FEC_AssignmentExecuteService {
         } finally {
             FEC_CaseTriggerHandler.isSystemUpdate = false;
         }
+    }
+
+     private static String emailLocalPart(String email) {
+        
+        if (String.isBlank(email)) {
+            return null;
+        }
+        
+        List<String> parts = email.split(FEC_ConstantCommon.EMAIL_SEPARATOR_AT);
+        
+        return parts.isEmpty()
+            ? email.trim()
+            : parts[0].trim();
     }
 }
 

@@ -1,13 +1,5 @@
 <template>
   <div class="mrc-return-panel">
-    <template if:true={showDelivery}>
-      <c-fec_-mrc-delivery-form
-        record-id={recordId}
-        sub-code-code={subCodeCode}
-        is-edit={isEdit}>
-      </c-fec_-mrc-delivery-form>
-    </template>
-
     <!-- RL05.02: Xác nhận của Khách hàng -->
     <template if:true={showCustomerConfirmation}>
       <lightning-record-edit-form object-api-name="Case" record-id={recordId}>
@@ -51,6 +43,23 @@
             value={handlingOptionValue}>
           </lightning-input-field>
         </template>
+
+        <template if:true={showHandlingRadioInline}>
+          <c-fec_-mrc-return-dup-banner
+            record-id={recordId}
+            handling-option-value={handlingOptionValue}
+            is-edit={isEdit}
+            display-mode="inline"
+            hide-dup-message
+            onhandlingoptionchange={handleHandlingOptionChange}>
+          </c-fec_-mrc-return-dup-banner>
+          <lightning-input-field
+            class="slds-hide"
+            field-name={handlingOptionField}
+            variant="label-hidden"
+            value={handlingOptionValue}>
+          </lightning-input-field>
+        </template>
       </lightning-record-edit-form>
     </template>
 
@@ -72,6 +81,14 @@
           value={handlingOptionValue}>
         </lightning-input-field>
       </lightning-record-edit-form>
+    </template>
+
+    <template if:true={showDelivery}>
+      <c-fec_-mrc-delivery-form
+        record-id={recordId}
+        sub-code-code={subCodeCode}
+        is-edit={isEdit}>
+      </c-fec_-mrc-delivery-form>
     </template>
   </div>
 </template>

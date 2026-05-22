@@ -227,6 +227,7 @@
 		<members>fecRoutingAssignmentEditForm</members>
 		<members>fec_DownloadReports</members>
 		<members>fec_BatchDataCreation</members>
+		<members>fecMrcReturnStageChangeRouting</members>
 		<name>LightningComponentBundle</name>
 	</types>
     <types>
@@ -284,6 +285,10 @@
         <members>FEC_Download_Report__c.FEC_Report_Unique_Name__c</members>
         <members>FEC_Case_Assignment_Log_Detail__c.FEC_Case_Assignment_log_Name__c</members>
         <members>FEC_Additional_Info__c.FEC_Statement_Fee__c</members>
+        <members>FEC_Actual_Master_Data_Setting__c.FEC_Hidden__c</members>
+        <members>FEC_Actual_Master_Data_Setting__c.FEC_Type__c</members>
+        <members>FEC_Master_Data_Setting__c.FEC_Hidden__c</members>
+        <members>FEC_Master_Data_Setting__c.FEC_Type__c</members>
         <name>CustomField</name>
     </types>
     <types>
@@ -698,6 +703,7 @@
 	    <members>FEC_BCH_PicklistTranslation</members>
 	    <name>ApexPage</name>
 	</types>
+	<types>
 	    <members>Case.SLA_Violating_Warning_44h</members>
 	    <members>Case.SLA_Warning_119h</members>
 	    <members>Case.SLA_Warning_120h</members>

@@ -83,7 +83,7 @@ public without sharing class FEC_GsrStage1RevertMasterDataHelper {
       'FEC_Field_ReadOnly__c, FEC_Section__c, FEC_Field_Order_Display__c,' +
       'FEC_Field_Label_Name__c, FEC_Editable_User_Group__c, FEC_Field_Masking__c, FEC_Masking_Type__c, ' +
       'FEC_Sub_Section__c, FEC_Sub_Section_Order__c, FEC_Sub_Section_Layout__c, FEC_Field_Reverted__c, FEC_Sub_Section_Field_Layout__c, ' +
-      'FEC_LWC_Name__c, FEC_Type__c';
+      'FEC_LWC_Name__c, FEC_Type__c, FEC_Hidden__c';
     String rowSoql =
       'SELECT ' +
       fieldsSoql +
