@@ -553,7 +553,7 @@ public without sharing class FEC_BatchCaseHandlingImportService {
         Map<String, Case> caseBySearch = new Map<String, Case>();
         if (!searchKeys.isEmpty()) {
             for (Case c : [
-                SELECT Id, IsClosed, FEC_ID_Search__c, OwnerId, FEC_Current_Case_Stage__c, FEC_Business_Process__r.FEC_Code__c
+                SELECT Id, IsClosed, FEC_ID_Search__c, OwnerId, FEC_Current_Case_Stage__c, FEC_Business_Process__r.FEC_Code__c, FEC_Current_Case_Stage__r.FEC_Business_Process__r.FEC_Code__c
                 FROM Case
                 WHERE FEC_ID_Search__c IN :searchKeys
                 LIMIT 5000
@@ -643,7 +643,7 @@ public without sharing class FEC_BatchCaseHandlingImportService {
             if (matched != null) {
                 FEC_BatchCaseHandlingImportProfile.ImportScope importScope =
                     FEC_BatchCaseHandlingImportProfile.resolveForCase(
-                        matched.FEC_Business_Process__r.FEC_Code__c,
+                        resolveCaseBusinessProcessCode(matched),
                         currentUserGroup
                     );
                 if (importScope != null && importScope.allowed != true) {
@@ -699,10 +699,16 @@ public without sharing class FEC_BatchCaseHandlingImportService {
                         errs.add(System.Label.FEC_Batch_Case_Handling_Import_Err_Assignment_Routing_Invalid);
                     }
                 } else {
-                    if (String.isBlank(rr.routingAction)) {
+                    if (String.isBlank(rr.routingAction) && String.isBlank(rr.assignmentRoutingAction)) {
                         errs.add(System.Label.FEC_Batch_Case_Handling_Import_Err_Missing_Routing_Action);
-                    } else if (String.isBlank(rr.actionButtonId)) {
+                    } else if (String.isNotBlank(rr.routingAction) && String.isBlank(rr.actionButtonId)) {
                         errs.add(System.Label.FEC_Batch_Case_Handling_Import_Err_Routing_Action_Invalid);
+                    } else if (
+                        String.isBlank(rr.routingAction) &&
+                        String.isNotBlank(rr.assignmentRoutingAction) &&
+                        String.isBlank(rr.actionButtonId)
+                    ) {
+                        errs.add(System.Label.FEC_Batch_Case_Handling_Import_Err_Assignment_Routing_Invalid);
                     }
                     if (String.isNotBlank(rr.assignmentRoutingAction)) {
                         errs.add(System.Label.FEC_Batch_Case_Handling_Import_Err_Assignment_Routing_Without_Assignment_Id);
@@ -1410,6 +1416,27 @@ public without sharing class FEC_BatchCaseHandlingImportService {
         String resolvedId = byName.isEmpty() ? null : String.valueOf(byName[0].Id);
         queueIdCacheByToken.put(token, resolvedId);
         return resolvedId;
+    }
+
+    private static String resolveCaseBusinessProcessCode(Case matched) {
+        if (matched == null) {
+            return FEC_ConstantCommon.STR_EMPTY;
+        }
+        if (
+            matched.FEC_Business_Process__r != null &&
+            String.isNotBlank(matched.FEC_Business_Process__r.FEC_Code__c)
+        ) {
+            return matched.FEC_Business_Process__r.FEC_Code__c.trim();
+        }
+        SObject stage = matched.getSObject('FEC_Current_Case_Stage__r');
+        if (stage == null) {
+            return FEC_ConstantCommon.STR_EMPTY;
+        }
+        SObject bp = stage.getSObject('FEC_Business_Process__r');
+        if (bp == null || bp.get('FEC_Code__c') == null) {
+            return FEC_ConstantCommon.STR_EMPTY;
+        }
+        return String.valueOf(bp.get('FEC_Code__c')).trim();
     }
 
     private static Map<Id, Set<String>> loadConfiguredLabelsByStage(Set<Id> stageIds) {
