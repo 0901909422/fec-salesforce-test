@@ -1309,4 +1309,8 @@
         <tab>FEC_General_Assignment__c</tab>
         <visibility>Visible</visibility>
     </tabSettings>
+    <customPermissions>
+        <enabled>true</enabled>
+        <name>Is_Update_ZNS_Button_Visible</name>
+    </customPermissions>
 </PermissionSet>
