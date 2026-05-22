@@ -5,6 +5,7 @@ import COMMON_STYLES from "@salesforce/resourceUrl/FEC_CommonCss";
 // import getAssignments from "@salesforce/apex/FEC_AssignmentListHandler.getAssignments";
 import getAssignmentsNEW from "@salesforce/apex/FEC_AssignmentListHandler.getAssignmentsNEW";
 import getQueueNames from "@salesforce/apex/FEC_AssignmentListHandler.getQueueNames"; // tungnm37 thêm
+import getAction from "@salesforce/apex/FEC_AssignmentListHandler.getAction";
 import getUserDepartment from "@salesforce/apex/FEC_AssignmentListHandler.getUserDepartment";
 import getUsersInGroup from "@salesforce/apex/FEC_AssignmentListHandler.getUsersInGroup";
 import getQueuesForUser from "@salesforce/apex/FEC_AssignmentListHandler.getQueuesForUser";
@@ -52,6 +53,9 @@ import {
   NEW_STATUS,
 } from "c/fec_CommonConst";
 import { getUsernameBeforeAt } from "c/fec_CommonUtils";
+import isCSSupport from "@salesforce/apex/FEC_AssignmentListHandler.isCSSupport";
+
+import isCSCustomerCare from "@salesforce/apex/FEC_AssignmentListHandler.isCSCustomerCare";
 export default class Fec_AssignmentList extends LightningElement {
   label = {
     FEC_Assignment_List,
@@ -72,7 +76,20 @@ export default class Fec_AssignmentList extends LightningElement {
 
       console.log("After getUserDepartment:", JSON.stringify(this.userDept));
 
+      /*
+       * Load department flags
+       */
+      this.isCSSupportUser = await isCSSupport();
+
+      this.isCSCustomerCareUser = await isCSCustomerCare();
+
+      console.log("isCSSupportUser:", this.isCSSupportUser);
+
+      console.log("isCSCustomerCareUser:", this.isCSCustomerCareUser);
+
       this.initSubscription();
+
+      this.loadActions();
     } catch (error) {
       console.error("getUserDepartment error:", JSON.stringify(error));
     }
@@ -98,7 +115,7 @@ export default class Fec_AssignmentList extends LightningElement {
   @track currentPage = 1;
 
   @track assignments = [];
-
+  @track actionOptions = [];
   @track userOptions = [];
   @track queueOptions = [];
 
@@ -106,7 +123,9 @@ export default class Fec_AssignmentList extends LightningElement {
   @track queueOptionsByTeam = [];
 
   subscription = null;
+  isCSSupportUser = false;
 
+  isCSCustomerCareUser = false;
   initSubscription() {
     if (this.subscription) return;
 
@@ -265,19 +284,21 @@ export default class Fec_AssignmentList extends LightningElement {
     return this.userDept === "CS";
   }
 
-  get getActionOptions() {
-    console.log("userDept:", this.userDept);
-    console.log("isCSSupport:", this.isCSSupport);
-    console.log(
-      "ACTION_OPTIONS_CS_SUPPORT:",
-      JSON.stringify(ACTION_OPTIONS_CS_SUPPORT),
-    );
-    console.log("ACTION_OPTIONS_OTHER:", JSON.stringify(ACTION_OPTIONS_OTHER));
+  async loadActions() {
+    try {
+      const result = await getAction({
+        caseId: this.recordId,
+      });
 
-    return this.isCSSupport ? ACTION_OPTIONS_CS_SUPPORT : ACTION_OPTIONS_OTHER;
+      this.actionOptions = result;
+
+      console.log("actionOptions:", JSON.stringify(result));
+    } catch (e) {
+      console.error("getAction error", e);
+
+      this.error = e;
+    }
   }
-
-  
 
   handleActionChange(event) {
     const id = event.target.dataset.id;
@@ -296,7 +317,7 @@ export default class Fec_AssignmentList extends LightningElement {
         decision: null,
         subDecision: null,
 
-        decisionOptions: DECISION_OPTIONS_MAP[value] || [],
+        decisionOptions: this.getDecisionOptions(value),
 
         showDecision: ACTIONS_REQUIRE_DECISION.includes(value),
 
@@ -333,6 +354,34 @@ export default class Fec_AssignmentList extends LightningElement {
         );
       }
     }
+  }
+
+  getDecisionOptions(action) {
+    /*
+     * UPDATE
+     */
+    if (action === "Update") {
+      /*
+       * CS Support
+       */
+      if (this.isCSSupportUser) {
+        return DECISION_OPTIONS_MAP.UpdateSP || [];
+      }
+
+      /*
+       * CS Customer Care
+       */
+      if (this.isCSCustomerCareUser) {
+        return DECISION_OPTIONS_MAP.UpdateCC || [];
+      }
+
+      return [];
+    }
+
+    /*
+     * Default
+     */
+    return DECISION_OPTIONS_MAP[action] || [];
   }
 
   handleDecisionChange(event) {

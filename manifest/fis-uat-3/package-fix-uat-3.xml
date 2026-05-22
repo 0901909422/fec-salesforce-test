@@ -127,7 +127,13 @@
 		<members>FEC_BatchCaseCreationController</members>
 		<members>FEC_BatchDataCreationController</members>
 		<members>FEC_BatchImportCommon</members>
+		<members>FEC_BCH_ImportRoutingResolver</members>
+		<members>FEC_BCH_PicklistTranslationCtrl</members>
+		<members>FEC_BatchCaseHandlingImportProfile</members>
+		<members>FEC_BatchCaseHandlingPicklistResolver</members>
+		<members>FEC_BatchCaseHandlingResultXlsxBuilder</members>
 		<members>FEC_NotificationService</members>
+		<members>FEC_CaseAssignmentConfigController</members>
 		<name>Apexclass</name>
 	</types>
     <types>
@@ -221,6 +227,7 @@
 		<members>fecRoutingAssignmentEditForm</members>
 		<members>fec_DownloadReports</members>
 		<members>fec_BatchDataCreation</members>
+		<members>fecMrcReturnStageChangeRouting</members>
 		<name>LightningComponentBundle</name>
 	</types>
     <types>
@@ -278,6 +285,10 @@
         <members>FEC_Download_Report__c.FEC_Report_Unique_Name__c</members>
         <members>FEC_Case_Assignment_Log_Detail__c.FEC_Case_Assignment_log_Name__c</members>
         <members>FEC_Additional_Info__c.FEC_Statement_Fee__c</members>
+        <members>FEC_Actual_Master_Data_Setting__c.FEC_Hidden__c</members>
+        <members>FEC_Actual_Master_Data_Setting__c.FEC_Type__c</members>
+        <members>FEC_Master_Data_Setting__c.FEC_Hidden__c</members>
+        <members>FEC_Master_Data_Setting__c.FEC_Type__c</members>
         <name>CustomField</name>
     </types>
     <types>
@@ -394,6 +405,7 @@
         <members>FEC_MSG_Cannot_Request_Payment_History</members>
         <members>FEC_MSG_Cannot_Request_Repayment_Schedule</members>
         <members>FEC_BCH_Col_TotalRecords</members>
+        <members>FEC_BCH_HeaderInvalid</members>
 		<members>FEC_Label_Customer_All</members>
 		<members>FEC_Label_Customer_Existing</members>
 		<members>FEC_Label_Customer_Non_Existing</members>
@@ -410,6 +422,8 @@
 		<members>FEC_Format_Excel</members>
 		<members>FEC_Formatted_Report</members>
 		<members>FEC_Title_Context_Report</members>
+		<members>FEC_BCH_ResultHdr_Errors</members>
+		<members>FEC_BCH_ResultHdr_Status</members>
 		<name>CustomLabel</name>
 	</types>
     <types>
@@ -686,5 +700,28 @@
 	    <members>FEC_Download_Report__c.FEC_Download</members>
 	    <name>WebLink</name>
 	</types>
+	<types>
+	    <members>FEC_BCH_PicklistTranslation</members>
+	    <name>ApexPage</name>
+	</types>
+	<types>
+	    <members>Case.SLA_Violating_Warning_44h</members>
+	    <members>Case.SLA_Warning_119h</members>
+	    <members>Case.SLA_Warning_120h</members>
+	    <members>Case.SLA_Warning_124h</members>
+	    <members>Case.SLA_Warning_128h</members>
+	    <members>Case.SLA_Warning_144h</members>
+	    <members>Case.SLA_Warning_164h</members>
+	    <members>Case.SLA_Warning_167h</members>
+	    <members>Case.SLA_Warning_168h</members>
+	    <members>Case.SLA_Warning_48h</members>
+	    <members>Case.SLA_Warning_76h</members>
+	    <members>Case.SLA_Warning_80h</members>
+	    <name>WorkflowFieldUpdate</name>
+	</types>
+    <types>
+        <members>Case</members>
+        <name>Workflow</name>
+    </types>
 	<version>66.0</version>
 </Package>

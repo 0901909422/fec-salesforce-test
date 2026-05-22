@@ -45,7 +45,8 @@ export function computeShowScopedStageChangeRoutingSection(host) {
     return base;
   }
 
-  return base && host._documentRequestStageChangeRoutingActive !== true;
+  return base && host._documentRequestStageChangeRoutingActive !== true &&
+    host._mrcReturnStageChangeRoutingActive !== true;
 }
 
 /** PhongBT read-only: chỉ Stage 1 trên BP Document Request / Original MRC Return. */
@@ -54,6 +55,22 @@ export function computeShowDocumentRequestStageChangeRoutingSection(host) {
     host.isEdit === true &&
     host._documentRequestStageChangeRoutingActive === true &&
     !shouldPreferScopedRoutingFromStage2(host)
+  );
+}
+
+/** MRC Return RL05 — read-only Team/Queue Stage 1 (giống Document Request). */
+export function computeShowMrcReturnStageChangeRoutingSection(host) {
+  return (
+    host.isEdit === true &&
+    host._mrcReturnStageChangeRoutingActive === true &&
+    !shouldPreferScopedRoutingFromStage2(host)
+  );
+}
+
+export function computeShowStage1AutoRouteToRoutingSection(host) {
+  return (
+    computeShowDocumentRequestStageChangeRoutingSection(host) ||
+    computeShowMrcReturnStageChangeRoutingSection(host)
   );
 }
 
@@ -129,7 +146,8 @@ export function resolveRoutingActionSelectEl(host) {
   if (computeShowScopedStageChangeRoutingSection(host)) {
     return getScopedRoutingCmp(host)?.getRoutingActionSelect?.() ?? null;
   }
-  if (host.showDocumentRequestStageChangeRoutingSection) {
+  if (computeShowDocumentRequestStageChangeRoutingSection(host) ||
+      computeShowMrcReturnStageChangeRoutingSection(host)) {
     const child = host.template?.querySelector(
       "c-fec_-document-request-routing-action",
     );

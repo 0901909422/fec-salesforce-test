@@ -77,6 +77,40 @@ export function isMrcNotReceivedConfirmation(value) {
   );
 }
 
+export function isMrcReceivedConfirmation(value) {
+  const normalized = String(value ?? STR_EMPTY).trim().toLowerCase();
+  if (!normalized) {
+    return false;
+  }
+  return (
+    normalized === MRC_CONF_RECEIVED.toLowerCase() ||
+    (normalized.includes("received") && !normalized.includes("not received")) ||
+    normalized.includes("đã nhận")
+  );
+}
+
+function requiresHandlingOptionBeforeDelivery(ctx, business, confVal) {
+  if (!ctx?.isReturnSubCode) {
+    return false;
+  }
+  if (ctx.dupCaseOnly === true && showMrcRl0502DupBanner(business)) {
+    return true;
+  }
+  if (
+    showMrcRl0502DupBanner(business) &&
+    isMrcNotReceivedConfirmation(confVal)
+  ) {
+    return true;
+  }
+  if (
+    ctx.showHandlingRadioOnNotReceived === true &&
+    isMrcNotReceivedConfirmation(confVal)
+  ) {
+    return true;
+  }
+  return false;
+}
+
 export function showMrcRl0502DupBanner(business) {
   if (!hasMrcRl0502DuplicateCaseId(business)) {
     return false;
@@ -113,21 +147,20 @@ function shouldShowMrcDeliveryForm(
       ? String(customerConfirmationOverride).trim()
       : getCaseFieldValue(business, FIELD_MRC_CUSTOMER_CONFIRMATION);
 
-  // TH2: chỉ Cond1 — Delivery sau radio Option 2 (bỏ qua showDeliveryForm=false từ Apex).
-  if (ctx.dupCaseOnly === true) {
-    return handlingOptionValue === MRC_OPT_CANCEL_PREVIOUS;
+  if (
+    ctx?.showCustomerConfirmation === true &&
+    isMrcReceivedConfirmation(confVal)
+  ) {
+    return false;
   }
 
-  // TH1: Cond1+Cond2 + "Chưa nhận MRC" — Delivery sau radio Option 2.
   if (
-    ctx.isReturnSubCode &&
-    showMrcRl0502DupBanner(business) &&
-    isMrcNotReceivedConfirmation(confVal)
+    requiresHandlingOptionBeforeDelivery(ctx, business, confVal)
   ) {
     return handlingOptionValue === MRC_OPT_CANCEL_PREVIOUS;
   }
 
-  if (ctx.showDeliveryForm !== true) {
+  if (ctx?.showDeliveryForm !== true) {
     return false;
   }
   return true;
@@ -242,7 +275,11 @@ export function applyMrcRl0502DupFieldLayout(business, handlingOptionValue) {
     });
   });
 
-  if (!showDup) {
+  if (
+    !showDup &&
+    ctx?.dupCaseOnly !== true &&
+    ctx?.showHandlingRadioOnNotReceived !== true
+  ) {
     nextHandling = STR_EMPTY;
   }
 
@@ -265,11 +302,7 @@ export function applyMrcRl05SectionVisibility(business, handlingOptionValue) {
     business,
     handlingOptionValue,
   );
-  const hidePropertyInfo =
-    ctx?.hidePropertyInfo === true ||
-    isMrcRl05PhotoSubCodeFromBusiness(business) ||
-    ctx?.isReturnSubCode === true ||
-    String(business?.subCodeCode ?? STR_EMPTY).toUpperCase().includes("RL05.02");
+  const hidePropertyInfo = ctx?.hidePropertyInfo === true;
   const panelMounted = hasMrcReturnPanelInBusiness(business);
   const panelShowsDelivery =
     panelMounted &&
@@ -363,14 +396,28 @@ export function getMrcReturnAutoRoutingActionCode(business, isEdit) {
 }
 
 export function validateMrcReturnCase(business, handlingOptionValue) {
-  if (!showMrcRl0502DupBanner(business)) {
-    return true;
-  }
+  const ctx = getMrcRl05Ui(business);
   const confVal = getCaseFieldValue(business, FIELD_MRC_CUSTOMER_CONFIRMATION);
-  if (!isMrcNotReceivedConfirmation(confVal)) {
-    return true;
+
+  if (ctx?.dupCaseOnly === true && showMrcRl0502DupBanner(business)) {
+    return Boolean(handlingOptionValue);
   }
-  return Boolean(handlingOptionValue);
+
+  if (
+    showMrcRl0502DupBanner(business) &&
+    isMrcNotReceivedConfirmation(confVal)
+  ) {
+    return Boolean(handlingOptionValue);
+  }
+
+  if (
+    ctx?.showHandlingRadioOnNotReceived === true &&
+    isMrcNotReceivedConfirmation(confVal)
+  ) {
+    return Boolean(handlingOptionValue);
+  }
+
+  return true;
 }
 
 export function isMrcReturnTrackedField(fieldName) {

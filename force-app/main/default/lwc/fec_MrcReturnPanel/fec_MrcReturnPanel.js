@@ -114,6 +114,24 @@ export default class Fec_MrcReturnPanel extends LightningElement {
     return this.hasDuplicateCase || showMrcRl0502DupBanner(this._businessSnapshot);
   }
 
+  /** TH3: Cond2, Chưa nhận MRC — Noti-11 radio (không có Case trùng). */
+  get showHandlingRadioInline() {
+    if (!this.showCustomerConfirmation) {
+      return false;
+    }
+    if (this.showDupBanner) {
+      return false;
+    }
+    if (this.mrcRl05Ui?.showHandlingRadioOnNotReceived !== true) {
+      return false;
+    }
+    return isMrcNotReceivedConfirmation(this._confirmationValue);
+  }
+
+  get showHandlingRadioBlock() {
+    return this.showDupBanner || this.showStandaloneDupBanner || this.showHandlingRadioInline;
+  }
+
   get showDelivery() {
     if (this.isRl05PhotoSubCode) {
       return true;
@@ -161,18 +179,35 @@ export default class Fec_MrcReturnPanel extends LightningElement {
     );
   }
 
+  @api getDeliveryForm() {
+    return this.template.querySelector("c-fec_-mrc-delivery-form");
+  }
+
   @api validateForSubmit() {
-    if (
-      (this.showDupBanner || this.showStandaloneDupBanner) &&
-      !this.handlingOptionValue
-    ) {
+    if (this.showHandlingRadioBlock && !this.handlingOptionValue) {
       return false;
     }
-    const delivery = this.template.querySelector("c-fec_-mrc-delivery-form");
-    if (delivery && typeof delivery.validateForComplete === "function") {
-      return delivery.validateForComplete();
+    const delivery = this.getDeliveryForm();
+    if (delivery && typeof delivery.validateForSubmit === "function") {
+      return delivery.validateForSubmit();
     }
     return true;
+  }
+
+  @api async saveToCase() {
+    const delivery = this.getDeliveryForm();
+    if (delivery && typeof delivery.saveToCase === "function") {
+      return delivery.saveToCase();
+    }
+    return { valid: true, messages: [] };
+  }
+
+  @api async saveDraftIfApplicable() {
+    const delivery = this.getDeliveryForm();
+    if (delivery && typeof delivery.saveDraftIfApplicable === "function") {
+      return delivery.saveDraftIfApplicable();
+    }
+    return { valid: true, messages: [] };
   }
 
   @api getHandlingOptionValue() {
