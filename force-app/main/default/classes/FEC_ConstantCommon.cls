@@ -22,7 +22,9 @@ public with sharing class FEC_ConstantCommon {
     public static final String STR_EMPTY = '';
     public static final String STR_PERCENT = '%';
     public static final String STR_DASH = '-';
-    
+    /** Legacy em-dash placeholder (historical UI); treat as missing like STR_DASH. */
+    public static final String STR_EM_DASH = '\u2014';
+
     /** Dấu phân tách dùng cho key (vd: RecordType|Channel). */
     public static final String KEY_DELIMITER_PIPE = '|';
     
@@ -310,7 +312,7 @@ public with sharing class FEC_ConstantCommon {
     public static final String SECTION_CUSTOMER_INFORMATION = 'Customer Information';
     public static final String SECTION_CASE_INFORMATION = 'Case Information';
     public static final String SUB_SECTION_C360_INFO = 'C360 Info';
-
+    
     public static final String EMAIL = 'Email';
     public static final String PHONE = 'Phone';
     public static final String PRIMARY_PHONE = 'Primary Phone';
@@ -625,7 +627,7 @@ public with sharing class FEC_ConstantCommon {
     public static final String DECISION_QUEUE = 'QUEUE';
     public static final String DECISION_USER_QUEUE = 'USER_QUEUE';
     public static final String DECISION_USER_TEAM_QUEUE = 'USER_TEAM_QUEUE';
-
+    
     public static final String DECISION_CANNOT_CONTACT = 'CANNOT_CONTACT';
     
     // ================= ASSIGNMENT STATUS =================
@@ -642,7 +644,7 @@ public with sharing class FEC_ConstantCommon {
     // ================= QUEUE NAME =================
     public static final String QUEUE_CS_SUPPORT = 'DQ-CS Support';
     public static final String QUEUE_CS_CUSTOMER_CARE = 'DQ-CS Customer Care';
-
+    
     public static final String QUEUE_CS_SUPPORT_W_SPACE = 'DQ - CS Support';
     public static final String QUEUE_CS_CUSTOMER_CARE_W_SPACE = 'DQ - CS Customer Care';
     
@@ -661,7 +663,7 @@ public with sharing class FEC_ConstantCommon {
     public static final String STATUS_CS_BACKOFFICE = 'CSBackOfficeReview';
     public static final String STATUS_CS_REVIEW = 'CSReview';
     public static final String STATUS_OTHER_DEPT = 'OtherDeptReview';
-
+    
     // ================= ROUTING TYPE =================
     public static final String ROUTING_TYPE_ASSIGNMENT = 'Assignment';
     
@@ -747,7 +749,7 @@ public with sharing class FEC_ConstantCommon {
         'subCode',
         'remark'
     };
-
+    
     public static final String TRANSFER_ERR_EN_GENESYS_ID_NULL = 'genesysId is null';
     public static final String TRANSFER_ERR_EN_PHONE_NUMBER_NULL = 'phoneNumber is null';
     public static final String TRANSFER_ERR_EN_PHONE_NUMBER_INVALID = 'Invalid format PhoneNumber';
@@ -784,7 +786,7 @@ public with sharing class FEC_ConstantCommon {
     
     /** Transfer Call: pattern hợp lệ cho productType dạng tên (ngoài whitelist code). */
     public static final String TRANSFER_CALL_PRODUCT_TYPE_NAME_PATTERN = '^[A-Za-z0-9 _\\-]{1,50}$';
-
+    
     public static final Map<String, String> TEAM_QUEUE_MAP = new Map<String, String>{
         TEAM_CS_SUPPORT => QUEUE_CS_SUPPORT,
         TEAM_CS_CUSTOMER_CARE => QUEUE_CS_CUSTOMER_CARE
@@ -829,7 +831,7 @@ public with sharing class FEC_ConstantCommon {
     
     public static final String ASSIGNMENT_AUTORECALLED_STATUS = 'AutoRecalled';
     public static final String ASSIGNMENT_AUTOCOMPLETE_STATUS = 'AutoCompleted';
-
+    
     //tungnm37: Tap hop team CS BackOffice (SP, CC)
     public static final Set<String> CS_BACKOFFICE_TEAMS = new Set<String>{ 'SP', 'CC' };
     //tungnm37: Tap hop team CS khac (IB, OB, EC, F2F, QC, OM, CX)
@@ -874,10 +876,43 @@ public with sharing class FEC_ConstantCommon {
             'uniqueName' => 'FEC_RP_01'
         }
     };
-
+    
     public static final String REPORT_EXPORT_ENDPOINT = '{0}/services/data/{1}/analytics/reports/{2}?includeDetails=true';
     public static final String CONTENT_DOWNLOAD_ENDPOINT = '{0}/sfc/servlet.shepherd/document/download/{1}';
     
     public static final String ROLE_STR = 'Role';
     public static final String ROLE_SUBORDINATE_STR = 'RoleAndSubordinates';
+    
+    
+    public static final List<Map<String, String>> ACTION_OPTIONS_CS_SUPPORT =
+    new List<Map<String, String>>{
+        
+        new Map<String, String>{ 'label' => 'Reject', 'value' => 'Reject' },
+        
+        new Map<String, String>{ 'label' => 'Resolve', 'value' => 'Resolve' },
+        
+        new Map<String, String>{ 'label' => 'Escalate', 'value' => 'Escalate' },
+        
+        new Map<String, String>{ 'label' => 'Revert', 'value' => 'Revert' },
+        
+        new Map<String, String>{ 'label' => 'Transfer', 'value' => 'Transfer' },
+        
+        new Map<String, String>{ 'label' => 'Route to', 'value' => 'Route_to' },
+        
+        new Map<String, String>{ 'label' => 'Update', 'value' => 'Update' }
+    };
+    
+    public static final List<Map<String, String>> ACTION_OPTIONS_OTHER =
+    new List<Map<String, String>>{
+        
+        new Map<String, String>{ 'label' => 'Escalate', 'value' => 'Escalate' },
+        
+        new Map<String, String>{ 'label' => 'Reject', 'value' => 'Reject' },
+        
+        new Map<String, String>{ 'label' => 'Resolve', 'value' => 'Resolve' },
+        
+        new Map<String, String>{ 'label' => 'Transfer', 'value' => 'Transfer' },
+        
+        new Map<String, String>{ 'label' => 'Route to', 'value' => 'Route_to' }
+    };
 }

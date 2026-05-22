@@ -10,7 +10,7 @@ public without sharing class FEC_AssignmentRoutingActionHandler {
     String subDecision
     ) {
         try {
-            claimAssignmentIfQueueOwner(caseId, assignmentId);
+            // claimAssignmentIfQueueOwner(caseId, assignmentId);
             
             if (action == FEC_ConstantCommon.ACTION_ESCALATE) {
                 handleEscalate(caseId, assignmentId, remark);
@@ -88,7 +88,7 @@ public without sharing class FEC_AssignmentRoutingActionHandler {
         update a;
         syncAssignmentUsersToCase(caseId, assignmentId);
         
-        insertHistory(caseId, assignmentId, FEC_ConstantCommon.ACTION_ESCALATE, remark);
+        insertHistoryEscalate(caseId, assignmentId, FEC_ConstantCommon.ACTION_ESCALATE, remark );
     }
     
     
@@ -185,7 +185,7 @@ public without sharing class FEC_AssignmentRoutingActionHandler {
         update assignment;
         syncAssignmentUsersToCase(caseId, assignmentId);
         
-        insertHistory(caseId, assignmentId, FEC_ConstantCommon.ACTION_REVERT, remark);
+        insertHistoryRevert(caseId, assignmentId, FEC_ConstantCommon.ACTION_REVERT, remark,decision);
     }
     
     
@@ -275,10 +275,13 @@ public without sharing class FEC_AssignmentRoutingActionHandler {
         /*
          * CS Support / CS Customer Care
          */
-        else if (userDepart == FEC_ConstantCommon.TEAM_CS_SUPPORT || userDepart == FEC_ConstantCommon.TEAM_CS_CUSTOMER_CARE||userDepart == FEC_ConstantCommon.TEAM_CS_OTHER) {
+        else if (userDepart == FEC_ConstantCommon.TEAM_CS_SUPPORT || userDepart == FEC_ConstantCommon.TEAM_CS_CUSTOMER_CARE) {
             System.debug('Test routing CS');
             assignment.FEC_OwnerID__c = queue.Name;
             assignment.FEC_Assignment_Status__c = FEC_ConstantCommon.STATUS_CS_REVIEW;
+        }else if(userDepart == FEC_ConstantCommon.TEAM_CS_OTHER){
+            assignment.FEC_OwnerID__c = queue.Name;
+            assignment.FEC_Assignment_Status__c = FEC_ConstantCommon.STATUS_CS_BACKOFFICE;
         }
         
         
@@ -332,7 +335,6 @@ public without sharing class FEC_AssignmentRoutingActionHandler {
         if (decision ==  FEC_ConstantCommon.DECISION_USER) {
             assignment.FEC_Assignment_Owner__c = subDecision;
             assignment.FEC_OwnerID__c = subDecision;
-            assignment.FEC_Assignment_Status__c = FEC_ConstantCommon.STATUS_CS_BACKOFFICE;
             // ===== QUEUE =====
         } else if (decision ==  FEC_ConstantCommon.DECISION_QUEUE ) {
             assignment.FEC_Assignment_Owner__c = null;
@@ -340,12 +342,6 @@ public without sharing class FEC_AssignmentRoutingActionHandler {
             System.debug('queueName: ');
             System.debug(queueName);
             assignment.FEC_OwnerID__c = queueName;
-            if(queueName.contains(FEC_ConstantCommon.TEAM_CODE_CS)){
-                assignment.FEC_Assignment_Status__c = FEC_ConstantCommon.STATUS_CS_REVIEW;
-            }else{
-                assignment.FEC_Assignment_Status__c = FEC_ConstantCommon.STATUS_OTHER_DEPT;
-            }
-            
         } else {
             throw new AuraHandledException(System.Label.FEC_ERR_INVALID_INPUT);
         }
@@ -353,7 +349,7 @@ public without sharing class FEC_AssignmentRoutingActionHandler {
         update assignment;
         syncAssignmentUsersToCase(caseId, assignmentId);
         
-        insertHistory(caseId, assignmentId, FEC_ConstantCommon.ACTION_TRANSFER, remark);
+        insertHistoryTransfer(caseId, assignmentId, FEC_ConstantCommon.ACTION_TRANSFER, remark, decision);
     }
     
     
@@ -407,7 +403,7 @@ public without sharing class FEC_AssignmentRoutingActionHandler {
             caseUpdate.Status = status;
         }
         
-        assignment.FEC_Assignment_Status__c = FEC_ConstantCommon.STATUS_CS_BACKOFFICE;
+        // assignment.FEC_Assignment_Status__c = FEC_ConstantCommon.STATUS_CS_BACKOFFICE;
         update assignment;
         syncAssignmentUsersToCase(caseId, assignmentId);
         update caseUpdate;
@@ -435,55 +431,22 @@ public without sharing class FEC_AssignmentRoutingActionHandler {
         
         // ===== GET DATA =====
         User u = [
-        SELECT Id, Email, UserRole.Name
-        FROM User
-        WHERE Id = :UserInfo.getUserId()
-    ];
+            SELECT Id, Email, UserRole.Name
+            FROM User
+            WHERE Id = :UserInfo.getUserId()
+        ];
         
         FEC_Assignment__c ass = [
-        SELECT Id, FEC_Assignment_Owner__c
-        FROM FEC_Assignment__c
-        WHERE Id = :assignmentId
-    ];
-        
-        
+            SELECT Id, FEC_Assignment_Owner__c, FEC_Assignment_Owner_Text__c
+            FROM FEC_Assignment__c
+            WHERE Id = :assignmentId
+        ];
         
         Case c = [
-        SELECT FEC_Current_Case_Stage__r.FEC_Code__c
-        FROM Case
-        WHERE Id = :caseId
+            SELECT FEC_Current_Case_Stage__r.FEC_Code__c
+            FROM Case
+            WHERE Id = :caseId
         ];
-        // /*
-        //  * Resolve owner value
-        //  */
-        // String ownerValue =
-        //     String.valueOf(
-        //     ass.FEC_Assignment_Owner__c
-        //     );
-        
-        // String ownerIdValue =
-        //     String.valueOf(
-        //     ass.FEC_Assignment_Owner__c
-        //     );
-        
-        // String ownerStr =
-        //     String.valueOf(
-        //     ass.FEC_Assignment_Owner__c
-        //     );
-        // /*
-        //  * Only query when value is User Id
-        //  */
-        // if (String.isNotBlank(ownerStr)
-        // && ownerStr.startsWith(FEC_ConstantCommon.USER_ID_START)) {
-            //     User ownerUser = [
-            //         SELECT Id, Name, Email FROM User WHERE Id = : ass.FEC_Assignment_Owner__c LIMIT 1
-            //     ];
-            
-            //     ownerValue = emailLocalPart(ownerUser.Email);
-            
-            //     ownerIdValue = ownerUser.Id;
-        // }
-        
         // ===== BUILD RECORDS =====
         List<SObject> records = new List<SObject>();
         
@@ -494,9 +457,9 @@ public without sharing class FEC_AssignmentRoutingActionHandler {
         FEC_Assignment__c = assignmentId,
         FEC_Routing_Action__c = action,
         
-        FEC_Original_User_Queue__c = ass.FEC_Assignment_Owner__c,
-        FEC_Original_User_Queue_ID__c = ass.FEC_Assignment_Owner__c,
-        FEC_Updated_User_Queue__c = ass.FEC_Assignment_Owner__c,
+        FEC_Original_User_Queue__c = emailLocalPart(u.Email),
+        FEC_Original_User_Queue_ID__c = u.Id,
+        FEC_Updated_User_Queue__c = ass.FEC_Assignment_Owner_Text__c,
         FEC_Updated_User_Queue_ID__c =  ass.FEC_Assignment_Owner__c,
         
         FEC_Stage_Name__c = c.FEC_Current_Case_Stage__r.FEC_Code__c,
@@ -551,36 +514,6 @@ public without sharing class FEC_AssignmentRoutingActionHandler {
         FROM Case
         WHERE Id = :caseId
         ];
-        // /*
-        //  * Resolve owner value
-        //  */
-        // String ownerValue =
-        //     String.valueOf(
-        //     ass.FEC_Assignment_Owner__c
-        //     );
-        
-        // String ownerIdValue =
-        //     String.valueOf(
-        //     ass.FEC_Assignment_Owner__c
-        //     );
-        
-        // String ownerStr =
-        //     String.valueOf(
-        //     ass.FEC_Assignment_Owner__c
-        //     );
-        // /*
-        //  * Only query when value is User Id
-        //  */
-        // if (String.isNotBlank(ownerStr)
-        // && ownerStr.startsWith(FEC_ConstantCommon.USER_ID_START)) {
-            //     User ownerUser = [
-            //         SELECT Id, Name, Email FROM User WHERE Id = : ass.FEC_Assignment_Owner__c LIMIT 1
-            //     ];
-            
-            //     ownerValue = emailLocalPart(ownerUser.Email);
-            
-            //     ownerIdValue = ownerUser.Id;
-        // }
         
         // ===== BUILD RECORDS =====
         List<SObject> records = new List<SObject>();
@@ -703,6 +636,226 @@ public without sharing class FEC_AssignmentRoutingActionHandler {
         FEC_User__c = emailLocalPart(u.Email),
         FEC_User_Role__c = u.UserRole != null ? u.UserRole.Name : null,
         FEC_Decision__c  = decision
+            ));
+        
+        // --- Case Remark ---
+        records.add(new FEC_Case_Remarks__c(
+            FEC_Remark_Type__c = FEC_ConstantCommon.ROUTING_TYPE_ASSIGNMENT,
+        FEC_Case_Remarks__c = remark,
+        FEC_Case__c = caseId,
+        FEC_Assignment__c = assignmentId,
+        FEC_Stage_Name__c = c.FEC_Current_Case_Stage__r.FEC_Code__c,
+        FEC_User__c = emailLocalPart(u.Email),
+        FEC_User_Role__c = u.UserRole != null ? u.UserRole.Name : null
+            ));
+        
+        insert records;
+    }
+    
+    
+    private static void insertHistoryEscalate(
+        Id caseId,
+    Id assignmentId,
+    String action,
+    String remark
+    ) {
+        
+        System.debug(caseId);
+        System.debug(assignmentId);
+        System.debug(action);
+        System.debug(remark);
+        // ===== GET DATA =====
+        User u = [
+            SELECT Id, Email, UserRole.Name
+            FROM User
+            WHERE Id = :UserInfo.getUserId()
+        ];
+        
+        FEC_Assignment__c ass = [
+            SELECT Id, FEC_Assignment_Owner__c, FEC_Assignment_Owner_Text__c
+            FROM FEC_Assignment__c
+            WHERE Id = :assignmentId
+        ];
+        Case c = [
+            SELECT FEC_Current_Case_Stage__r.FEC_Code__c
+            FROM Case
+            WHERE Id = :caseId
+        ];
+        // ===== BUILD RECORDS =====
+        List<SObject> records = new List<SObject>();
+        
+        // --- Routing History ---
+        records.add(new FEC_Routing_Action_History__c(
+            FEC_Routing_Action_Type__c = FEC_ConstantCommon.ROUTING_TYPE_ASSIGNMENT,
+        FEC_Case__c = caseId,
+        FEC_Assignment__c = assignmentId,
+        FEC_Routing_Action__c = action,
+        FEC_Original_User_Queue__c = emailLocalPart(u.Email),
+        FEC_Original_User_Queue_ID__c = u.Id,
+        FEC_Updated_User_Queue__c = ass.FEC_Assignment_Owner_Text__c,
+        FEC_Updated_User_Queue_ID__c =  ass.FEC_Assignment_Owner__c,
+        
+        FEC_Stage_Name__c = c.FEC_Current_Case_Stage__r.FEC_Code__c,
+        
+        FEC_User__c = emailLocalPart(u.Email),
+        FEC_User_Role__c = u.UserRole != null ? u.UserRole.Name : null
+            ));
+        
+        // --- Case Remark ---
+        records.add(new FEC_Case_Remarks__c(
+            FEC_Remark_Type__c = FEC_ConstantCommon.ROUTING_TYPE_ASSIGNMENT,
+        FEC_Case_Remarks__c = remark,
+        FEC_Case__c = caseId,
+        FEC_Assignment__c = assignmentId,
+        FEC_Stage_Name__c = c.FEC_Current_Case_Stage__r.FEC_Code__c,
+        FEC_User__c = emailLocalPart(u.Email),
+        FEC_User_Role__c = u.UserRole != null ? u.UserRole.Name : null
+            ));
+        
+        insert records;
+    }
+    
+    
+    private static void insertHistoryTransfer(
+        Id caseId,
+    Id assignmentId,
+    String action,
+    String remark,
+    String decision
+    ) {
+        
+        System.debug(caseId);
+        System.debug(assignmentId);
+        System.debug(action);
+        System.debug(remark);
+        System.debug(decision);
+        
+        // ===== GET DATA =====
+        User u = [
+            SELECT Id, Email, UserRole.Name
+            FROM User
+            WHERE Id = :UserInfo.getUserId()
+        ];
+        
+        FEC_Assignment__c ass = [
+            SELECT Id, FEC_Assignment_Owner__c,FEC_Assignment_Owner_Text__c, FEC_OwnerID__c
+            FROM FEC_Assignment__c
+            WHERE Id = :assignmentId
+        ];
+        
+        Case c = [
+            SELECT FEC_Current_Case_Stage__r.FEC_Code__c
+            FROM Case
+            WHERE Id = :caseId
+        ];
+        
+        String updatedUserQueueId = '';
+        String updatedUserQueue = '';
+        if (decision ==  FEC_ConstantCommon.DECISION_USER) {
+            updatedUserQueueId = ass.FEC_Assignment_Owner__c;
+            updatedUserQueue = ass.FEC_Assignment_Owner_Text__c ;
+            // ===== QUEUE =====
+        } else if (decision ==  FEC_ConstantCommon.DECISION_QUEUE ) {
+            updatedUserQueueId = ass.FEC_OwnerID__c;
+            updatedUserQueue = ass.FEC_Assignment_Owner_Text__c ;
+        }
+        // ===== BUILD RECORDS =====
+        List<SObject> records = new List<SObject>();
+        
+        // --- Routing History ---
+        records.add(new FEC_Routing_Action_History__c(
+            FEC_Routing_Action_Type__c = FEC_ConstantCommon.ROUTING_TYPE_ASSIGNMENT,
+        FEC_Case__c = caseId,
+        FEC_Assignment__c = assignmentId,
+        FEC_Routing_Action__c = action,
+        
+        FEC_Original_User_Queue__c = emailLocalPart(u.Email),
+        FEC_Original_User_Queue_ID__c = u.Id,
+        FEC_Updated_User_Queue__c = updatedUserQueue,
+        FEC_Updated_User_Queue_ID__c = updatedUserQueueId,
+        
+        FEC_Stage_Name__c = c.FEC_Current_Case_Stage__r.FEC_Code__c,
+        
+        FEC_User__c = emailLocalPart(u.Email),
+        FEC_User_Role__c = u.UserRole != null ? u.UserRole.Name : null
+            ));
+        
+        // --- Case Remark ---
+        records.add(new FEC_Case_Remarks__c(
+            FEC_Remark_Type__c = FEC_ConstantCommon.ROUTING_TYPE_ASSIGNMENT,
+        FEC_Case_Remarks__c = remark,
+        FEC_Case__c = caseId,
+        FEC_Assignment__c = assignmentId,
+        FEC_Stage_Name__c = c.FEC_Current_Case_Stage__r.FEC_Code__c,
+        FEC_User__c = emailLocalPart(u.Email),
+        FEC_User_Role__c = u.UserRole != null ? u.UserRole.Name : null
+            ));
+        
+        insert records;
+    }
+    
+    
+    private static void insertHistoryRevert(
+        Id caseId,
+    Id assignmentId,
+    String action,
+    String remark,
+    String decision
+    ) {
+        
+        System.debug(caseId);
+        System.debug(assignmentId);
+        System.debug(action);
+        System.debug(remark);
+        
+        // ===== GET DATA =====
+        User u = [
+            SELECT Id, Email, UserRole.Name
+            FROM User
+            WHERE Id = :UserInfo.getUserId()
+        ];
+        
+        FEC_Assignment__c ass = [
+            SELECT Id, FEC_Assignment_Owner__c,FEC_Assignment_Owner_Text__c, FEC_OwnerID__c
+            FROM FEC_Assignment__c
+            WHERE Id = :assignmentId
+        ];
+        
+        Case c = [
+            SELECT FEC_Current_Case_Stage__r.FEC_Code__c
+            FROM Case
+            WHERE Id = :caseId
+        ];
+        
+        String updatedUserQueueId = '';
+        String updatedUserQueue = '';
+        if (decision ==  FEC_ConstantCommon.DECISION_USER) {
+            updatedUserQueueId = ass.FEC_Assignment_Owner__c;
+            updatedUserQueue = ass.FEC_Assignment_Owner_Text__c ;
+            // ===== QUEUE =====
+        } else if (decision ==  FEC_ConstantCommon.DECISION_QUEUE ) {
+            updatedUserQueueId = ass.FEC_OwnerID__c;
+            updatedUserQueue = ass.FEC_Assignment_Owner_Text__c ;
+        }
+        // ===== BUILD RECORDS =====
+        List<SObject> records = new List<SObject>();
+        
+        // --- Routing History ---
+        records.add(new FEC_Routing_Action_History__c(
+            FEC_Routing_Action_Type__c = FEC_ConstantCommon.ROUTING_TYPE_ASSIGNMENT,
+        FEC_Case__c = caseId,
+        FEC_Assignment__c = assignmentId,
+        FEC_Routing_Action__c = action,
+        
+        FEC_Original_User_Queue__c =  emailLocalPart(u.Email),
+        FEC_Original_User_Queue_ID__c =  emailLocalPart(u.Email),
+        FEC_Updated_User_Queue__c = updatedUserQueue,
+        FEC_Updated_User_Queue_ID__c =  updatedUserQueueId,
+        
+        FEC_Stage_Name__c = c.FEC_Current_Case_Stage__r.FEC_Code__c,
+        
+        FEC_User__c = emailLocalPart(u.Email),
+        FEC_User_Role__c = u.UserRole != null ? u.UserRole.Name : null
             ));
         
         // --- Case Remark ---
