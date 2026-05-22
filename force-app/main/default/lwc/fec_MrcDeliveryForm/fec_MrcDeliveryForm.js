@@ -315,6 +315,7 @@ export default class Fec_MrcDeliveryForm extends LightningElement {
             }
             this.resolveDeliveryMeta();
             this.applySavedDelivery();
+            this._emitDeliveryChange();
             const serverRecipientName =
                 data.savedRecipientName || this.demographicCustomerName || STR_EMPTY;
             const serverRecipientPhone =
@@ -342,7 +343,7 @@ export default class Fec_MrcDeliveryForm extends LightningElement {
         this.resolvedEmailValue = emailO ? emailO.value : this.customLabel.emailLabel;
         this.resolvedAddressValue = addrO ? addrO.value : CONTRACT_CLOSURE_DELIVERY_VALUE_ADDRESS_DEFAULT;
         this.resolvedOfficeValue = offO ? offO.value : CONTRACT_CLOSURE_DELIVERY_VALUE_OFFICE_DEFAULT;
-        this.resolvedPosValue = posO ? posO.value : CONTRACT_CLOSURE_DELIVERY_VALUE_POS_DEFAULT;
+        this.resolvedPosValue = posO ? posO.value : null;
     }
 
     pickDeliveryMeta(kind) {
@@ -372,7 +373,8 @@ export default class Fec_MrcDeliveryForm extends LightningElement {
             return opts.find(
                 (o) =>
                     /^pos$/i.test((o.label || STR_EMPTY).trim()) ||
-                    /^pos$/i.test((o.value || STR_EMPTY).trim())
+                    /^pos$/i.test((o.value || STR_EMPTY).trim()) ||
+                    /^rl05_pos$/i.test((o.value || STR_EMPTY).trim())
             );
         }
         return undefined;
@@ -473,6 +475,10 @@ export default class Fec_MrcDeliveryForm extends LightningElement {
         this.deliveryAddressSelected = !!(av && ids.includes(av));
         this.deliveryOfficeSelected = !!(ov && ids.includes(ov));
         this.deliveryPosSelected = !!(pv && ids.includes(pv));
+        this._emitDeliveryChange();
+    }
+
+    _emitDeliveryChange() {
         const payload = this.buildPayload();
         this.dispatchEvent(
             new CustomEvent('mrcdeliverychange', {

@@ -1382,6 +1382,7 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
     const actionCode = getMrcReturnAutoRoutingActionCode(
       this.business,
       this.isEdit,
+      this.mrcReturnCustomerConfirmationValue,
     );
     if (actionCode) {
       this._setActionValueByCode(actionCode);
@@ -2137,6 +2138,7 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
           );
           this.mrcReturnHandlingOptionValue = layoutResult.handlingOptionValue;
           this.business = layoutResult.business;
+          this._applyMrcReturnCaseIntegration();
         }
         this._rebuildAllSectionSortedRows();
         this._prepareRoutingSectionForDisplay();
@@ -4781,6 +4783,7 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
         } else {
           this.business = {
             ...this.business,
+            nextTeam: res?.nextTeam || ctx.team || this.business.nextTeam,
             nextQueue: null,
           };
           this.dispatchEvent(
@@ -4848,6 +4851,13 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
 
     this._mrcReturnStageChangeRoutingActive = true;
 
+    this.business = {
+      ...this.business,
+      nextTeam: null,
+      nextQueue: null,
+    };
+    this.business = { ...this.business };
+
     return getDocumentRequestStageChangeRouting({
       caseId: this.recordId,
       teamUserGroup: ctx.team,
@@ -4866,6 +4876,7 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
         } else {
           this.business = {
             ...this.business,
+            nextTeam: res?.nextTeam || ctx.team || this.business.nextTeam,
             nextQueue: null,
           };
           this.dispatchEvent(
