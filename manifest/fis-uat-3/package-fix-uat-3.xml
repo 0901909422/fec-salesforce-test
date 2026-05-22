@@ -64,6 +64,7 @@
 		<members>FEC_MFASOUTSTANDINGAUTHINQ</members>
 		<members>FEC_StatementsAccountController</members>
 		<members>FEC_TransactionsController</members>
+		<members>FEC_VMXAUTHDETAILINQ</members>
 		<members>FEC_InteractionInforHandler</members>
 		<members>FEC_NocInheritanceUtil</members>
 		<members>FEC_NocInheritanceUtilTest</members>
@@ -405,6 +406,7 @@
         <members>FEC_MSG_Cannot_Request_Payment_History</members>
         <members>FEC_MSG_Cannot_Request_Repayment_Schedule</members>
         <members>FEC_BCH_Col_TotalRecords</members>
+        <members>FEC_BCH_HeaderInvalid</members>
 		<members>FEC_Label_Customer_All</members>
 		<members>FEC_Label_Customer_Existing</members>
 		<members>FEC_Label_Customer_Non_Existing</members>
@@ -430,6 +432,7 @@
 		<members>FEC_API_Config.FEC_Search_Test_Service_Error_Account</members>
 		<members>FEC_API_Config.FEC_Get_IPP_Detail</members>
 	    <members>FEC_API_Config.FEC_MFASOUTSTANDINGAUTHINQ</members>
+		<members>FEC_API_Config.FEC_VMX_AUTH_DETAIL_INQ</members>
 		<name>CustomMetadata</name>
 	</types>
     <types>

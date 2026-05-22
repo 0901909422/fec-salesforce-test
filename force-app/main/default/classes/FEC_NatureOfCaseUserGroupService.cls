@@ -11,14 +11,13 @@ public without sharing class FEC_NatureOfCaseUserGroupService {
   };
 
   /**
-   * Các FEC_User_Group__c của user CS Frontline / CS Back Office (trừ CX).
-   * Dùng gộp vào phía FEC_Nature_of_Case__c.FEC_User_Group__c khi lọc NOC (xem buildNatureOfCaseUserGroupFilterClause).
+   * Các FEC_User_Group__c từ user CS Frontline / CS Back Office (trừ CX).
+   * Dùng làm additionalRolelst: rolelst[0] ∈ list này → bypass lọc FEC_User_Group__c trên NOC.
    *
    * Sample:
-   *   currentUserGroup = 'Team A'
-   *   Kết quả: ['Team A', 'Team B', 'Team C'] (distinct từ User CS FL/BO, không có CX)
+   *   Kết quả: ['Team A', 'Team B', 'Team C'] (distinct User CS FL/BO, không có CX)
    */
-  public static List<String> buildRoleListForIncludes(String currentUserGroup) {
+  public static List<String> buildRoleListForIncludes() {
     Set<String> groups = new Set<String>();
     for (AggregateResult ar : [
       SELECT FEC_User_Group__c
@@ -40,47 +39,15 @@ public without sharing class FEC_NatureOfCaseUserGroupService {
 
   /**
    * Điều kiện WHERE cho FEC_Nature_of_Case__c.FEC_User_Group__c.
-   * additionalRolelst gộp vào phía NOC: khớp nếu NOC INCLUDES user hoặc INCLUDES bất kỳ nhóm trong additional.
-   * User thuộc additionalRolelst (pool CS FL/BO) nhưng không có trên NOC → không lọc FEC_User_Group__c.
+   * Lấy NOC khi một trong hai điều kiện đúng:
+   *   A) rolelst[0] thuộc additionalRolelst (pool CS FL/BO)
+   *   B) FEC_Nature_of_Case__c.FEC_User_Group__c INCLUDES rolelst[0]
    *
-   * --- Case 1: User thuộc pool CS FL/BO ---
-   * Input:
-   *   rolelst = ['Team A']
-   *   additionalRolelst = ['Team A', 'Team B', 'Team C']
+   * --- A: User CS, nhóm user trong additionalRolelst ---
    * Output: '' (không thêm điều kiện FEC_User_Group__c)
    *
-   * Sample query:
-   *   SELECT Id FROM FEC_Nature_of_Case__c
-   *   WHERE FEC_Product_Type__c = :productType
-   *     AND FEC_Category__c = :category
-   *     ... -- không có AND FEC_User_Group__c
-   *
-   * Kết quả (NOC.FEC_User_Group__c):
-   *   NOC-1: 'Team X' only     -> Lấy (user Team A không trên NOC vẫn được)
-   *   NOC-2: 'Team A'          -> Lấy
-   *   NOC-3: 'Team B'          -> Lấy
-   *
-   * --- Case 2: User không thuộc pool (vd CX) ---
-   * Input:
-   *   rolelst = ['CX Support']
-   *   additionalRolelst = ['Team A', 'Team B']
-   * Output:
-   *   AND (FEC_User_Group__c INCLUDES ('CX Support')
-   *        OR FEC_User_Group__c INCLUDES ('Team A')
-   *        OR FEC_User_Group__c INCLUDES ('Team B'))
-   *
-   * Sample query:
-   *   SELECT Id FROM FEC_Nature_of_Case__c
-   *   WHERE ...
-   *     AND (FEC_User_Group__c INCLUDES ('CX Support')
-   *          OR FEC_User_Group__c INCLUDES ('Team A')
-   *          OR FEC_User_Group__c INCLUDES ('Team B'))
-   *
-   * Kết quả (coi NOC.FEC_User_Group__c đã gộp thêm Team A, Team B):
-   *   NOC-1: 'CX Support'      -> Lấy (INCLUDES user)
-   *   NOC-2: 'Team A'          -> Lấy (INCLUDES nhóm trong additional)
-   *   NOC-3: 'Team B;Team C'   -> Lấy (INCLUDES Team B)
-   *   NOC-4: 'Team X' only     -> Không lấy
+   * --- B: User không thuộc pool ---
+   * Output: AND FEC_User_Group__c INCLUDES ('<nhóm user>')
    */
   public static String buildNatureOfCaseUserGroupFilterClause(
     List<String> rolelst,
@@ -104,19 +71,9 @@ public without sharing class FEC_NatureOfCaseUserGroupService {
     if (additional.contains(userGroup)) {
       return '';
     }
-    List<String> orParts = new List<String>{
-      'FEC_User_Group__c INCLUDES (\'' +
+    return 'AND FEC_User_Group__c INCLUDES (\'' +
       String.escapeSingleQuotes(userGroup) +
-      '\')'
-    };
-    for (String g : additional) {
-      orParts.add(
-        'FEC_User_Group__c INCLUDES (\'' + String.escapeSingleQuotes(g) + '\')'
-      );
-    }
-    return orParts.size() == 1
-      ? 'AND ' + orParts[0]
-      : 'AND (' + String.join(orParts, ' OR ') + ')';
+      '\')';
   }
 
   /**

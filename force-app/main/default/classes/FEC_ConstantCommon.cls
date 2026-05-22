@@ -169,6 +169,8 @@ public with sharing class FEC_ConstantCommon {
     public static final String REQUESTOR_VMX_CONTEXT = 'FECVMX';
     public static final String REQUESTOR_LANDING_PAGE = 'FEC_LandingPage';
     public static final String REQUESTOR_ORG_EMEA_CARD = '150';
+    public static final String VMX_VERSION_DEFAULT = 'E8V6';
+    public static final String VMX_MSGIN_NAME_DEFAULT = 'FECVMX';
     
     public static final String ADDRESS_TYPE_CURRES = 'CURRES';
     public static final String ADDRESS_TYPE_PERMNENT = 'PERMNENT';

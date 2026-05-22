@@ -434,6 +434,15 @@ export default class Fec_ContractClosureForm extends LightningElement {
         this.deliveryEmailSelected = !!(ev && ids.includes(ev));
         this.deliveryAddressSelected = !!(av && ids.includes(av));
         this.deliveryOfficeSelected = !!(ov && ids.includes(ov));
+        this.dispatchEvent(
+            new CustomEvent('deliveryoptionchange', {
+                bubbles: true,
+                composed: true,
+                detail: {
+                    deliveryOptionCombined: this.buildPayload().deliveryOptionCombined
+                }
+            })
+        );
     }
 
     get labelEmail() {
@@ -1114,6 +1123,12 @@ export default class Fec_ContractClosureForm extends LightningElement {
             this.addrRenderKey++;
         }
         await this.refreshAddresses();
+    }
+
+    /** Giá trị delivery hiện tại (multiselect Case.FEC_Delivery_Option_2__c) cho routing Document Request. */
+    @api
+    getDeliveryOptionForRouting() {
+        return this.buildPayload().deliveryOptionCombined || STR_EMPTY;
     }
 
     buildPayload() {

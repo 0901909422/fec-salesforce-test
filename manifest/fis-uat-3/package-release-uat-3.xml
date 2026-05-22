@@ -46,6 +46,7 @@
 		<members>FEC_API_Config.FEC_Get_IPP_Detail</members>
 		<members>FEC_API_Config.FEC_MCMSCARDTOCARDINQEMEA</members>
 		<members>FEC_API_Config.FEC_MFASOUTSTANDINGAUTHINQ</members>
+		<members>FEC_API_Config.FEC_VMX_AUTH_DETAIL_INQ</members>
 		<name>CustomMetadata</name>
 	</types>
 	<types>
@@ -223,6 +224,7 @@
         <members>FEC_TerminationLoanController</members>
         <members>FEC_TranferInformationCallout</members>
         <members>FEC_TransactionsController</members>
+        <members>FEC_VMXAUTHDETAILINQ</members>
         <members>FEC_UpdateCustomerAddress</members>
 		<members>FEC_NatureOfCaseUserGroupService</members>
         <name>ApexClass</name>

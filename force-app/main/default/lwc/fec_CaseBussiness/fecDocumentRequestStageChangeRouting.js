@@ -105,6 +105,48 @@ export function isDocumentRequestStageChangeRoutingSubCode(
   );
 }
 
+/** Chuỗi dùng cho routing (multiselect có thể là mảng). */
+export function formatRoutingFieldValue(value) {
+  if (value == null) {
+    return "";
+  }
+  if (Array.isArray(value)) {
+    return value
+      .map((v) => String(v ?? "").trim())
+      .filter(Boolean)
+      .join(";");
+  }
+  return String(value).trim();
+}
+
+/**
+ * Ghi value vào mọi field cùng apiName trong sectionlst (trước khi đọc routing).
+ */
+export function setBusinessFieldValue(business, apiName, rawValue, objectName) {
+  const value = formatRoutingFieldValue(rawValue);
+  let updated = false;
+  for (const section of business?.sectionlst ?? []) {
+    for (const sub of section.subSectionlst ?? []) {
+      for (const obj of sub.objlst ?? []) {
+        if (objectName && obj.name !== objectName) {
+          continue;
+        }
+        const f = obj.fieldlst?.find((x) => x.apiName === apiName);
+        if (f == null) {
+          continue;
+        }
+        f.value = value;
+        if (!f.isDate) {
+          f.displayValue = value;
+        }
+        f.readonlyDisplayValue = f.masked ? f.value : f.displayValue;
+        updated = true;
+      }
+    }
+  }
+  return updated;
+}
+
 /**
  * Lấy giá trị field từ business.sectionlst (giống getFieldValue trong fecDocumentRequestPdfData).
  */
@@ -115,8 +157,7 @@ export function getBusinessFieldValue(business, objectName, apiName) {
         if (obj.name !== objectName) continue;
         const f = obj.fieldlst?.find((x) => x.apiName === apiName);
         if (f != null) {
-          const v = f.value;
-          return typeof v === "string" ? v.trim() : (v ?? "");
+          return formatRoutingFieldValue(f.value);
         }
       }
     }
@@ -124,12 +165,14 @@ export function getBusinessFieldValue(business, objectName, apiName) {
   return "";
 }
 
-export function getDocumentRequestRoutingContext(business) {
+export function getDocumentRequestRoutingContext(business, options = {}) {
   const subCodeCode = business?.subCodeCode;
   const deliveryOption =
+    formatRoutingFieldValue(options.deliveryOption) ||
     getBusinessFieldValue(business, OBJ_CASE, FIELD_DELIVERY_OPTION) ||
     getBusinessFieldValue(business, OBJ_ADDITIONAL_INFO, FIELD_DELIVERY_OPTION);
   const documentType =
+    formatRoutingFieldValue(options.documentType) ||
     getBusinessFieldValue(business, OBJ_ADDITIONAL_INFO, FIELD_DOCUMENT_TYPE) ||
     getBusinessFieldValue(business, OBJ_CASE, FIELD_DOCUMENT_TYPE);
 
