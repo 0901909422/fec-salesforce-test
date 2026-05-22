@@ -1437,218 +1437,221 @@ public without sharing class FEC_AssignmentRoutingActionHandler {
         System.debug('caseId = ' + caseId);
         
         try {
-            /*
-             * Get assignments
-             */
-            List<FEC_Assignment__c> assignments = [
+            
+            if(isCSSupport()||isCSCustomerCare()){
+                /*
+                 * Get assignments
+                 */
+                List<FEC_Assignment__c> assignments = [
                 SELECT Id, Name, FEC_Assignment_Status__c, FEC_Assignment_Owner__c,
                 FEC_OwnerID__c FROM FEC_Assignment__c WHERE FEC_Case__c = : caseId
             ];
-            
-            System.debug('=== assignments size === ' + assignments.size());
-            
-            if (assignments.isEmpty()) {
-                System.debug('=== NO ASSIGNMENTS FOUND ===');
                 
-                return;
-            }
-            
-            /*
-             * Current User
-             */
-            User currentUser = [
+                System.debug('=== assignments size === ' + assignments.size());
+                
+                if (assignments.isEmpty()) {
+                    System.debug('=== NO ASSIGNMENTS FOUND ===');
+                    
+                    return;
+                }
+                
+                /*
+                 * Current User
+                 */
+                User currentUser = [
                 SELECT Id, Email,
                 UserRole.Name FROM User WHERE Id = : UserInfo.getUserId()
             ];
-            
-            /*
-             * Case
-             */
-            Case c = [
+                
+                /*
+                 * Case
+                 */
+                Case c = [
                 SELECT Id,
                 FEC_Current_Case_Stage__r.FEC_Code__c FROM Case WHERE Id = : caseId
             ];
-            
-            
-            System.debug('FEC_Current_Case_Stage');
-            System.debug(c.FEC_Current_Case_Stage__r.FEC_Code__c);
-            /*
-             * Collect queue ids
-             */
-            Set<Id> queueIds = new Set<Id>();
-            
-            for (FEC_Assignment__c ass : assignments) {
-                if (String.isNotBlank(ass.FEC_OwnerID__c)
-                && ass.FEC_OwnerID__c.startsWith(FEC_ConstantCommon.QUEUE_ID_START)) {
-                    try {
-                        queueIds.add((Id) ass.FEC_OwnerID__c);
-                        
-                    } catch (Exception ex) {
-                        System.debug('Invalid Queue Id: ' + ass.FEC_OwnerID__c);
+                
+                
+                System.debug('FEC_Current_Case_Stage');
+                System.debug(c.FEC_Current_Case_Stage__r.FEC_Code__c);
+                /*
+                 * Collect queue ids
+                 */
+                Set<Id> queueIds = new Set<Id>();
+                
+                for (FEC_Assignment__c ass : assignments) {
+                    if (String.isNotBlank(ass.FEC_OwnerID__c)
+                    && ass.FEC_OwnerID__c.startsWith(FEC_ConstantCommon.QUEUE_ID_START)) {
+                        try {
+                            queueIds.add((Id) ass.FEC_OwnerID__c);
+                            
+                        } catch (Exception ex) {
+                            System.debug('Invalid Queue Id: ' + ass.FEC_OwnerID__c);
+                        }
                     }
                 }
-            }
-            
-            /*
-             * Query queues ONCE
-             */
-            Map<Id, Group> queueMap = new Map<Id, Group>();
-            
-            if (!queueIds.isEmpty()) {
-                queueMap = new Map<Id, Group>([
+                
+                /*
+                 * Query queues ONCE
+                 */
+                Map<Id, Group> queueMap = new Map<Id, Group>();
+                
+                if (!queueIds.isEmpty()) {
+                    queueMap = new Map<Id, Group>([
                     SELECT Id, Name FROM Group WHERE Id IN : queueIds AND Type = :FEC_ConstantCommon.GROUP_TYPE_QUEUE
                 ]);
-            }
-            
-            /*
-             * Build records
-             */
-            List<FEC_Routing_Action_History__c> histories = new List<FEC_Routing_Action_History__c>();
-            
-            List<FEC_Case_Remarks__c> remarks = new List<FEC_Case_Remarks__c>();
-            
-            /*
-             * Process assignments
-             */
-            for (FEC_Assignment__c ass : assignments) {
-                System.debug('=== PROCESS ASSIGNMENT === ' + ass.Id);
-                
-                System.debug('OLD STATUS = ' + ass.FEC_Assignment_Status__c);
-                
-                /*
-                 * Resolve owner display
-                 */
-                String ownerValue;
-                
-                /*
-                 * User owner
-                 */
-                if (ass.FEC_Assignment_Owner__c != null) {
-                    ownerValue = String.valueOf(ass.FEC_Assignment_Owner__c);
                 }
                 
                 /*
-                 * Queue owner
+                 * Build records
                  */
-                else if (String.isNotBlank(ass.FEC_OwnerID__c)) {
-                    if (ass.FEC_OwnerID__c.startsWith(FEC_ConstantCommon.QUEUE_ID_START)) {
-                        Group q = queueMap.get((Id) ass.FEC_OwnerID__c);
-                        
-                        ownerValue = q != null ? q.Name : ass.FEC_OwnerID__c;
+                List<FEC_Routing_Action_History__c> histories = new List<FEC_Routing_Action_History__c>();
+                
+                List<FEC_Case_Remarks__c> remarks = new List<FEC_Case_Remarks__c>();
+                
+                /*
+                 * Process assignments
+                 */
+                for (FEC_Assignment__c ass : assignments) {
+                    System.debug('=== PROCESS ASSIGNMENT === ' + ass.Id);
+                    
+                    System.debug('OLD STATUS = ' + ass.FEC_Assignment_Status__c);
+                    
+                    /*
+                     * Resolve owner display
+                     */
+                    String ownerValue;
+                    
+                    /*
+                     * User owner
+                     */
+                    if (ass.FEC_Assignment_Owner__c != null) {
+                        ownerValue = String.valueOf(ass.FEC_Assignment_Owner__c);
+                    }
+                    
+                    /*
+                     * Queue owner
+                     */
+                    else if (String.isNotBlank(ass.FEC_OwnerID__c)) {
+                        if (ass.FEC_OwnerID__c.startsWith(FEC_ConstantCommon.QUEUE_ID_START)) {
+                            Group q = queueMap.get((Id) ass.FEC_OwnerID__c);
+                            
+                            ownerValue = q != null ? q.Name : ass.FEC_OwnerID__c;
+                            
+                        } else {
+                            ownerValue = ass.FEC_OwnerID__c;
+                        }
+                    }
+                    
+                    System.debug('ownerValue = ' + ownerValue);
+                    
+                    /*
+                     * Status mapping
+                     */
+                    if (ass.FEC_Assignment_Status__c
+                    == FEC_ConstantCommon.STATUS_CS_BACKOFFICE) {
+                        ass.FEC_Assignment_Status__c =
+                            FEC_ConstantCommon.ASSIGNMENT_AUTOCOMPLETE_STATUS;
                         
                     } else {
-                        ownerValue = ass.FEC_OwnerID__c;
+                        ass.FEC_Assignment_Status__c =
+                            FEC_ConstantCommon.ASSIGNMENT_AUTORECALLED_STATUS;
                     }
+                    
+                    System.debug('NEW STATUS = ' + ass.FEC_Assignment_Status__c);
+                    
+                    /*
+                     * Routing History
+                     */
+                    histories.add(new FEC_Routing_Action_History__c(
+                        
+                    FEC_Routing_Action_Type__c =
+                        FEC_ConstantCommon.ROUTING_TYPE_ASSIGNMENT,
+                    
+                    FEC_Case__c = caseId,
+                    
+                    FEC_Assignment__c = ass.Id,
+                    
+                    FEC_Routing_Action__c = FEC_ConstantCommon.ACTION_RESOLVE,
+                    
+                    FEC_Original_User_Queue__c = ownerValue,
+                    
+                    FEC_Original_User_Queue_ID__c = ass.FEC_OwnerID__c,
+                    
+                    FEC_Updated_User_Queue__c = ownerValue,
+                    
+                    FEC_Updated_User_Queue_ID__c = ass.FEC_OwnerID__c,
+                    
+                    FEC_Stage_Name__c = c.FEC_Current_Case_Stage__r.FEC_Code__c,
+                    
+                    FEC_User__c = currentUser.Id,
+                    
+                    FEC_User_Role__c = currentUser.UserRole != null
+                        ? currentUser.UserRole.Name
+                        : null));
+                    
+                    /*
+                     * Case Remark
+                     */
+                    remarks.add(new FEC_Case_Remarks__c(
+                        
+                    FEC_Remark_Type__c = FEC_ConstantCommon.ROUTING_TYPE_ASSIGNMENT,
+                    
+                    FEC_Case_Remarks__c = FEC_ConstantCommon.ASSIGNMENT_AUTO_COMPLETED_REMARK,
+                    FEC_Stage_Name__c   = c.FEC_Current_Case_Stage__r.FEC_Code__c,
+                    FEC_Case__c = caseId,
+                    
+                    FEC_Assignment__c = ass.Id,
+                    
+                    FEC_User__c = emailLocalPart(currentUser.Email),
+                    
+                    FEC_User_Role__c = currentUser.UserRole != null
+                        ? currentUser.UserRole.Name
+                        : null));
                 }
                 
-                System.debug('ownerValue = ' + ownerValue);
+                /*
+                 * UPDATE assignments
+                 */
+                System.debug('=== BEFORE UPDATE ===');
+                
+                update assignments;
+                
+                System.debug('=== UPDATE SUCCESS ===');
                 
                 /*
-                 * Status mapping
+                 * INSERT histories + remarks
                  */
-                if (ass.FEC_Assignment_Status__c
-                == FEC_ConstantCommon.STATUS_CS_BACKOFFICE) {
-                    ass.FEC_Assignment_Status__c =
-                        FEC_ConstantCommon.ASSIGNMENT_AUTOCOMPLETE_STATUS;
+                System.debug(
+                    '=== HISTORIES SIZE === ' +
+                    histories.size()
+                    );
+                
+                if (!histories.isEmpty()) {
                     
-                } else {
-                    ass.FEC_Assignment_Status__c =
-                        FEC_ConstantCommon.ASSIGNMENT_AUTORECALLED_STATUS;
+                    insert histories;
+                    
+                    System.debug(
+                        '=== HISTORIES INSERTED ==='
+                        );
                 }
                 
-                System.debug('NEW STATUS = ' + ass.FEC_Assignment_Status__c);
-                
-                /*
-                 * Routing History
-                 */
-                histories.add(new FEC_Routing_Action_History__c(
-                    
-                FEC_Routing_Action_Type__c =
-                    FEC_ConstantCommon.ROUTING_TYPE_ASSIGNMENT,
-                
-                FEC_Case__c = caseId,
-                
-                FEC_Assignment__c = ass.Id,
-                
-                FEC_Routing_Action__c = FEC_ConstantCommon.ACTION_RESOLVE,
-                
-                FEC_Original_User_Queue__c = ownerValue,
-                
-                FEC_Original_User_Queue_ID__c = ass.FEC_OwnerID__c,
-                
-                FEC_Updated_User_Queue__c = ownerValue,
-                
-                FEC_Updated_User_Queue_ID__c = ass.FEC_OwnerID__c,
-                
-                FEC_Stage_Name__c = c.FEC_Current_Case_Stage__r.FEC_Code__c,
-                
-                FEC_User__c = currentUser.Id,
-                
-                FEC_User_Role__c = currentUser.UserRole != null
-                    ? currentUser.UserRole.Name
-                    : null));
-                
-                /*
-                 * Case Remark
-                 */
-                remarks.add(new FEC_Case_Remarks__c(
-                    
-                FEC_Remark_Type__c = FEC_ConstantCommon.ROUTING_TYPE_ASSIGNMENT,
-                
-                FEC_Case_Remarks__c = FEC_ConstantCommon.ASSIGNMENT_AUTO_COMPLETED_REMARK,
-                FEC_Stage_Name__c   = c.FEC_Current_Case_Stage__r.FEC_Code__c,
-                FEC_Case__c = caseId,
-                
-                FEC_Assignment__c = ass.Id,
-                
-                FEC_User__c = emailLocalPart(currentUser.Email),
-                
-                FEC_User_Role__c = currentUser.UserRole != null
-                    ? currentUser.UserRole.Name
-                    : null));
-            }
-            
-            /*
-             * UPDATE assignments
-             */
-            System.debug('=== BEFORE UPDATE ===');
-            
-            update assignments;
-            
-            System.debug('=== UPDATE SUCCESS ===');
-            
-            /*
-             * INSERT histories + remarks
-             */
-            System.debug(
-                '=== HISTORIES SIZE === ' +
-                histories.size()
-                );
-            
-            if (!histories.isEmpty()) {
-                
-                insert histories;
-                
                 System.debug(
-                    '=== HISTORIES INSERTED ==='
+                    '=== REMARKS SIZE === ' +
+                    remarks.size()
                     );
-            }
-            
-            System.debug(
-                '=== REMARKS SIZE === ' +
-                remarks.size()
-                );
-            
-            if (!remarks.isEmpty()) {
                 
-                insert remarks;
+                if (!remarks.isEmpty()) {
+                    
+                    insert remarks;
+                    
+                    System.debug(
+                        '=== REMARKS INSERTED ==='
+                        );
+                }
                 
-                System.debug(
-                    '=== REMARKS INSERTED ==='
-                    );
+                System.debug('=== INSERT SUCCESS ===');
             }
-            
-            System.debug('=== INSERT SUCCESS ===');
             
         } catch (Exception e) {
             System.debug(LoggingLevel.ERROR, '=== ERROR MESSAGE === ' + e.getMessage());
