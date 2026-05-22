@@ -127,6 +127,7 @@
 		<members>FEC_BatchCaseCreationController</members>
 		<members>FEC_BatchDataCreationController</members>
 		<members>FEC_BatchImportCommon</members>
+		<members>FEC_NotificationService</members>
 		<name>Apexclass</name>
 	</types>
     <types>
