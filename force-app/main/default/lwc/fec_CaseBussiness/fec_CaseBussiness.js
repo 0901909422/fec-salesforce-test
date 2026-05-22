@@ -703,6 +703,7 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
   routingAccordionSectionKey = "routing-action";
   //PhongBT 18/05/26: Document Request sử dụng cục routing action mới
   _documentRequestStageChangeRoutingActive = false;
+  _documentRequestDeliveryEligible = false;
 
   //PhongBT 18/05/26: Document Request sử dụng cục routing action mới
   static DOC_REQ_FIELD_DELIVERY = "FEC_Delivery_Option_2__c";
@@ -1092,6 +1093,12 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
   }
 
   get showRouteTo() {
+    if (
+      this._documentRequestStageChangeRoutingActive &&
+      !this._documentRequestDeliveryEligible
+    ) {
+      return false;
+    }
     return ACTION_ROUTE_TO === this._getCurrentActionCode();
   }
 
@@ -1831,11 +1838,12 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
         // tungnm37: COF/GSR luôn hiện section dù routingActionlst rỗng (chưa có stage)
         //PhongBT 18/05/26: Document Request sử dụng cục routing action mới
         const docReqRoutingCtx = getDocumentRequestRoutingContext(this.business);
+        this._documentRequestDeliveryEligible = docReqRoutingCtx.deliveryEligible;
         this.business.hasRoutingAction =
           (typeof this.business.code === 'string' && (this.business.code.startsWith('COF') || this.business.code.startsWith('GSR'))) ||
           (Array.isArray(this.business.routingActionlst) &&
             this.business.routingActionlst.length > 0) ||
-          docReqRoutingCtx.eligible;
+          docReqRoutingCtx.subCodeSupported;
 
         // Ưu tiên draft đã lưu, nếu không có hoặc không hợp lệ thì dùng option đầu tiên
         const draftCode = this.business.draftRoutingActionCode;
@@ -4565,13 +4573,27 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
     // Stage 2+ (Document Request / Original MRC Return): luôn Scoped; PhongBT chỉ Stage 1.
     if (shouldPreferScopedRoutingFromStage2(this)) {
       this._documentRequestStageChangeRoutingActive = false;
+      this._documentRequestDeliveryEligible = false;
       this.business = { ...this.business };
       return Promise.resolve();
     }
 
     const ctx = getDocumentRequestRoutingContext(this.business);
-    if (!ctx.eligible || !ctx.team) {
+    this._documentRequestDeliveryEligible = ctx.deliveryEligible;
+
+    if (!ctx.subCodeSupported || !ctx.team) {
       this._documentRequestStageChangeRoutingActive = false;
+      return Promise.resolve();
+    }
+
+    this._documentRequestStageChangeRoutingActive = true;
+
+    if (!ctx.deliveryEligible) {
+      this.business = {
+        ...this.business,
+        nextQueue: null,
+      };
+      this.business = { ...this.business };
       return Promise.resolve();
     }
 
@@ -4581,7 +4603,6 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
     })
       .then((res) => {
         if (res?.nextQueueId) {
-          this._documentRequestStageChangeRoutingActive = true;
           this.business = {
             ...this.business,
             nextTeam: res.nextTeam || ctx.team,
@@ -4592,7 +4613,10 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
           };
           this._setActionValueByCode(ACTION_ROUTE_TO);
         } else {
-          this._documentRequestStageChangeRoutingActive = false;
+          this.business = {
+            ...this.business,
+            nextQueue: null,
+          };
           this.dispatchEvent(
             new ShowToastEvent({
               title: FEC_Warning_Title,
@@ -4608,7 +4632,11 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
           "[DocumentRequestStageChangeRouting]",
           JSON.stringify(err),
         );
-        this._documentRequestStageChangeRoutingActive = false;
+        this.business = {
+          ...this.business,
+          nextQueue: null,
+        };
+        this.business = { ...this.business };
       });
   }
 
