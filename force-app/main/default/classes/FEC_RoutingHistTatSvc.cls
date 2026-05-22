@@ -1,8 +1,5 @@
 public without sharing class FEC_RoutingHistTatSvc {
     private static final String FEC_BUSINESS_HOURS_NAME = 'FEC Business Hours';
-    /** 1 "ngày" khi hiển thị TAT = 24 giờ (diffMs vẫn từ BusinessHours.diff). */
-    private static final Integer FEC_TAT_DISPLAY_HOURS_PER_DAY = 24;
-
     private static Id cachedBusinessHoursId;
     private static Boolean businessHoursLookupDone = false;
 
@@ -335,28 +332,28 @@ public without sharing class FEC_RoutingHistTatSvc {
     }
 
     /**
-     * Hiển thị duration (diffMs từ BusinessHours.diff) dạng "N ngày N giờ N phút N giây".
-     * 1 ngày hiển thị = 24 giờ.
+     * Hiển thị duration (diffMs từ BusinessHours.diff) dạng HH:mm (vd 08:30).
+     * Tổng giờ làm việc và phút; giờ có thể > 23 nếu TAT dài hơn một ngày làm việc.
+     * Code duoi nay cua hoangnm107
      */
     public static String formatTatDisplay(Long diffMs) {
-        return formatAsDaysHours(diffMs);
+        return formatAsHoursMinutes(diffMs);
     }
 
     @TestVisible
-    private static String formatAsDaysHours(Long diffMs) {
+    private static String formatAsHoursMinutes(Long diffMs) {
         if (diffMs == null || diffMs <= 0) {
-            return '0 ngày 0 giờ 0 phút 0 giây';
+            return '00:00';
         }
 
-        Long totalSec = diffMs / 1000L;
-        Long secPerDay = (Long)FEC_TAT_DISPLAY_HOURS_PER_DAY * 3600L;
-        Long days = totalSec / secPerDay;
-        Long rem = totalSec - days * secPerDay;
-        Integer hours = (Integer)(rem / 3600L);
-        Integer remAfterHours = (Integer)(rem - hours * 3600L);
-        Integer minutes = remAfterHours / 60;
-        Integer seconds = Math.mod(remAfterHours, 60);
+        Long totalMinutes = diffMs / 60000L;
+        Long hours = totalMinutes / 60L;
+        Integer minutes = (Integer)Math.mod(totalMinutes, 60);
+        return padAtLeastTwoDigits(hours) + ':' + padAtLeastTwoDigits(minutes);
+    }
 
-        return days + ' ngày ' + hours + ' giờ ' + minutes + ' phút ' + seconds + ' giây';
+    private static String padAtLeastTwoDigits(Long value) {
+        String s = String.valueOf(value);
+        return s.length() < 2 ? '0' + s : s;
     }
 }
