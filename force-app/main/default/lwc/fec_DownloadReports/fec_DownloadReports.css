@@ -1,0 +1,139 @@
+:host {
+    display: block;
+    background: transparent;
+}
+
+.modal-container {
+    display: flex;
+    flex-direction: column;
+    max-width: 600px;
+    min-height: 400px;
+    margin: 2rem auto;
+    background: #fff;
+    border-radius: 0.5rem;
+    box-shadow: 0 2px 16px rgba(0,0,0,0.15);
+    font-family: 'Salesforce Sans', Arial, sans-serif;
+    overflow: hidden;
+}
+
+/* HEADER */
+.modal-header {
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid #dddbda;
+    text-align: center;
+}
+
+.modal-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #181818;
+    margin: 0;
+}
+
+/* BODY */
+.modal-body {
+    flex: 1;
+    padding: 1.5rem;
+    overflow-y: auto;
+}
+
+.section-label {
+    font-weight: 700;
+    font-size: 0.875rem;
+    color: #181818;
+    margin-bottom: 1rem;
+}
+
+/* CARDS */
+.cards-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.option-card {
+    position: relative;
+    border: 1px solid #dddbda;
+    border-radius: 0.5rem;
+    padding: 1.25rem;
+    cursor: pointer;
+    text-align: center;
+    transition: border-color 0.15s;
+}
+
+.option-card:hover {
+    border-color: #0176d3;
+}
+
+.option-card.selected {
+    border: 2px solid #0176d3;
+    border-radius: 0.5rem;
+}
+
+.check-icon {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.75rem;
+    color: #0176d3;
+    font-size: 1rem;
+    font-weight: 700;
+}
+
+.card-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #181818;
+    margin-bottom: 0.75rem;
+}
+
+.card-desc {
+    font-size: 0.8125rem;
+    color: #706e6b;
+    line-height: 1.5;
+}
+
+/* FORMAT */
+.format-section {
+    margin-top: 0.5rem;
+}
+
+.format-label {
+    font-weight: 700;
+    font-size: 0.875rem;
+    color: #181818;
+    margin-bottom: 0.5rem;
+}
+
+.format-select {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border: 1px solid #dddbda;
+    border-radius: 0.25rem;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
+    color: #181818;
+    background: #f3f3f3;
+    width: fit-content;
+    min-width: 200px;
+}
+
+.select-arrow {
+    font-size: 0.625rem;
+    color: #706e6b;
+    margin-left: 1rem;
+    display: flex;
+    flex-direction: column;
+    line-height: 1;
+}
+
+/* FOOTER */
+.modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    padding: 1rem 1.5rem;
+    border-top: 1px solid #dddbda;
+    gap: 0.5rem;
+}

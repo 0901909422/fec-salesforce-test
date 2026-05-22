@@ -17,40 +17,6 @@
           </template>
         </div>
 
-        <template if:true={section.showMrcRl0502DupStandalone}>
-          <template if:true={showMrcRl0502DupBanner}>
-            <div class="mrc-dup-standalone slds-m-top_small slds-p-horizontal_small">
-              <p class="mrc-dup-message">
-                {mrcDupMessageBeforeLink}
-                <a href="#" class="mrc-dup-case-link" onclick={handleOpenMrcDupCase}>{mrcDupCaseNumber}</a>
-                {mrcDupMessageAfterLink}
-              </p>
-              <lightning-record-edit-form object-api-name="Case" record-id={recordId}>
-                <lightning-radio-group
-                  name="mrcRl0502DupStandalone"
-                  label=""
-                  options={mrcHandlingRadioOptions}
-                  value={mrcHandlingOptionValue}
-                  type="radio"
-                  variant="label-hidden"
-                  data-obj={recordId}
-                  data-obj-name="Case"
-                  onchange={handleMrcHandlingOptionChange}>
-                </lightning-radio-group>
-                <lightning-input-field
-                  class="slds-hide"
-                  data-field="FEC_MRC_Request_Handling_Option__c"
-                  data-obj-name="Case"
-                  variant="label-hidden"
-                  field-name="FEC_MRC_Request_Handling_Option__c"
-                  value={mrcHandlingOptionValue}
-                  onchange={handleChangeInput}>
-                </lightning-input-field>
-              </lightning-record-edit-form>
-            </div>
-          </template>
-        </template>
-
         <div class="slds-grid slds-wrap slds-m-top--small">
           <template for:each={section.sortedSectionContentlst} for:item="row">
             <div key={row.rowKey} class={row.outerClass}>
@@ -110,38 +76,30 @@
                                   </div>
                                   <template if:true={field.showMrcDupInline}>
                                     <template if:true={showMrcRl0502DupBanner}>
-                                      <div class="mrc-dup-inline slds-m-top_x-small">
-                                        <p class="mrc-dup-message">
-                                          {mrcDupMessageBeforeLink}
-                                          <a href="#" class="mrc-dup-case-link" onclick={handleOpenMrcDupCase}>{mrcDupCaseNumber}</a>
-                                          {mrcDupMessageAfterLink}
-                                        </p>
-                                        <lightning-radio-group
-                                          data-section={section.id}
-                                          data-sub={row.sub.name}
-                                          data-obj={obj.id}
-                                          data-obj-name={obj.name}
-                                          name={obj.id}
-                                          label=""
-                                          options={mrcHandlingRadioOptions}
-                                          value={mrcHandlingOptionValue}
-                                          type="radio"
-                                          variant="label-hidden"
-                                          onchange={handleMrcHandlingOptionChange}>
-                                        </lightning-radio-group>
-                                        <lightning-input-field
-                                          class="slds-hide"
-                                          data-section={section.id}
-                                          data-sub={row.sub.name}
-                                          data-obj={obj.id}
-                                          data-field="FEC_MRC_Request_Handling_Option__c"
-                                          data-obj-name={obj.name}
-                                          variant="label-hidden"
-                                          field-name="FEC_MRC_Request_Handling_Option__c"
-                                          value={mrcHandlingOptionValue}
-                                          onchange={handleChangeInput}>
-                                        </lightning-input-field>
-                                      </div>
+                                      <c-fec_-mrc-return-dup-banner
+                                        record-id={recordId}
+                                        duplicate-case-id={business.mrcRl0502DuplicateOpenCaseId}
+                                        duplicate-case-number={business.mrcRl0502DuplicateCaseNumber}
+                                        handling-option-value={mrcReturnHandlingOptionValue}
+                                        is-edit={isEdit}
+                                        section-id={section.id}
+                                        sub-section-name={row.sub.name}
+                                        obj-id={obj.id}
+                                        display-mode="inline"
+                                        onhandlingoptionchange={handleMrcReturnHandlingOptionChange}>
+                                      </c-fec_-mrc-return-dup-banner>
+                                      <lightning-input-field
+                                        class="slds-hide"
+                                        data-section={section.id}
+                                        data-sub={row.sub.name}
+                                        data-obj={obj.id}
+                                        data-field="FEC_MRC_Request_Handling_Option__c"
+                                        data-obj-name={obj.name}
+                                        variant="label-hidden"
+                                        field-name="FEC_MRC_Request_Handling_Option__c"
+                                        value={mrcReturnHandlingOptionValue}
+                                        onchange={handleChangeInput}>
+                                      </lightning-input-field>
                                     </template>
                                   </template>
                                 </template>
@@ -229,38 +187,30 @@
                                       </div>
                                       <template if:true={field.showMrcDupInline}>
                                         <template if:true={showMrcRl0502DupBanner}>
-                                          <div class="mrc-dup-inline slds-m-top_x-small">
-                                            <p class="mrc-dup-message">
-                                              {mrcDupMessageBeforeLink}
-                                              <a href="#" class="mrc-dup-case-link" onclick={handleOpenMrcDupCase}>{mrcDupCaseNumber}</a>
-                                              {mrcDupMessageAfterLink}
-                                            </p>
-                                            <lightning-radio-group
-                                              data-section={section.id}
-                                              data-sub={row.sub.name}
-                                              data-obj={obj.id}
-                                              data-obj-name={obj.name}
-                                              name={obj.id}
-                                              label=""
-                                              options={mrcHandlingRadioOptions}
-                                              value={mrcHandlingOptionValue}
-                                              type="radio"
-                                              variant="label-hidden"
-                                              onchange={handleMrcHandlingOptionChange}>
-                                            </lightning-radio-group>
-                                            <lightning-input-field
-                                              class="slds-hide"
-                                              data-section={section.id}
-                                              data-sub={row.sub.name}
-                                              data-obj={obj.id}
-                                              data-field="FEC_MRC_Request_Handling_Option__c"
-                                              data-obj-name={obj.name}
-                                              variant="label-hidden"
-                                              field-name="FEC_MRC_Request_Handling_Option__c"
-                                              value={mrcHandlingOptionValue}
-                                              onchange={handleChangeInput}>
-                                            </lightning-input-field>
-                                          </div>
+                                          <c-fec_-mrc-return-dup-banner
+                                            record-id={recordId}
+                                            duplicate-case-id={business.mrcRl0502DuplicateOpenCaseId}
+                                            duplicate-case-number={business.mrcRl0502DuplicateCaseNumber}
+                                            handling-option-value={mrcReturnHandlingOptionValue}
+                                            is-edit={isEdit}
+                                            section-id={section.id}
+                                            sub-section-name={row.sub.name}
+                                            obj-id={obj.id}
+                                            display-mode="inline"
+                                            onhandlingoptionchange={handleMrcReturnHandlingOptionChange}>
+                                          </c-fec_-mrc-return-dup-banner>
+                                          <lightning-input-field
+                                            class="slds-hide"
+                                            data-section={section.id}
+                                            data-sub={row.sub.name}
+                                            data-obj={obj.id}
+                                            data-field="FEC_MRC_Request_Handling_Option__c"
+                                            data-obj-name={obj.name}
+                                            variant="label-hidden"
+                                            field-name="FEC_MRC_Request_Handling_Option__c"
+                                            value={mrcReturnHandlingOptionValue}
+                                            onchange={handleChangeInput}>
+                                          </lightning-input-field>
                                         </template>
                                       </template>
                                     </template>
@@ -304,8 +254,26 @@
                     <p class="sub-section">{row.dynCmp.subSectionName}</p>
                   </template>
                   <div data-fec-lwc={row.dynCmp.componentName}>
-                    <lwc:component lwc:is={row.dynCmp.ctor} record-id={recordId} sub-code-code={business.subCodeCode} sub-category-code={business.subCategoryCode}
-                      is-edit={row.dynCmp.isEdit} is-hidden-lwc={isHiddenLwc}></lwc:component>
+                    <template if:true={row.dynCmp.isMrcReturnPanel}>
+                      <c-fec_-mrc-return-panel
+                        record-id={recordId}
+                        sub-code-code={business.subCodeCode}
+                        sub-category-code={business.subCategoryCode}
+                        is-edit={row.dynCmp.isEdit}
+                        mrc-rl05-ui={business.mrcRl05Ui}
+                        duplicate-case-id={business.mrcRl0502DuplicateOpenCaseId}
+                        duplicate-case-number={business.mrcRl0502DuplicateCaseNumber}
+                        handling-option-value={mrcReturnHandlingOptionValue}
+                        customer-confirmation-value={mrcReturnCustomerConfirmationValue}
+                        customer-confirmation-options={mrcCustomerConfirmationOptions}
+                        onhandlingoptionchange={handleMrcReturnHandlingOptionChange}
+                        oncustomerconfirmationchange={handleMrcReturnCustomerConfirmationChange}>
+                      </c-fec_-mrc-return-panel>
+                    </template>
+                    <template if:false={row.dynCmp.isMrcReturnPanel}>
+                      <lwc:component lwc:is={row.dynCmp.ctor} record-id={recordId} sub-code-code={business.subCodeCode} sub-category-code={business.subCategoryCode}
+                        is-edit={row.dynCmp.isEdit} is-hidden-lwc={isHiddenLwc}></lwc:component>
+                    </template>
                   </div>
                 </template>
 
@@ -313,8 +281,26 @@
                   <lightning-accordion allow-multiple-sections-open>
                     <lightning-accordion-section name={row.dynCmp.subSectionName} label={row.dynCmp.subSectionName}>
                       <div data-fec-lwc={row.dynCmp.componentName}>
-                        <lwc:component lwc:is={row.dynCmp.ctor} record-id={recordId} sub-code-code={business.subCodeCode} sub-category-code={business.subCategoryCode}
-                          is-edit={row.dynCmp.isEdit} is-hidden-lwc={isHiddenLwc}></lwc:component>
+                        <template if:true={row.dynCmp.isMrcReturnPanel}>
+                          <c-fec_-mrc-return-panel
+                            record-id={recordId}
+                            sub-code-code={business.subCodeCode}
+                            sub-category-code={business.subCategoryCode}
+                            is-edit={row.dynCmp.isEdit}
+                            mrc-rl05-ui={business.mrcRl05Ui}
+                            duplicate-case-id={business.mrcRl0502DuplicateOpenCaseId}
+                            duplicate-case-number={business.mrcRl0502DuplicateCaseNumber}
+                            handling-option-value={mrcReturnHandlingOptionValue}
+                            customer-confirmation-value={mrcReturnCustomerConfirmationValue}
+                            customer-confirmation-options={mrcCustomerConfirmationOptions}
+                            onhandlingoptionchange={handleMrcReturnHandlingOptionChange}
+                            oncustomerconfirmationchange={handleMrcReturnCustomerConfirmationChange}>
+                          </c-fec_-mrc-return-panel>
+                        </template>
+                        <template if:false={row.dynCmp.isMrcReturnPanel}>
+                          <lwc:component lwc:is={row.dynCmp.ctor} record-id={recordId} sub-code-code={business.subCodeCode} sub-category-code={business.subCategoryCode}
+                            is-edit={row.dynCmp.isEdit} is-hidden-lwc={isHiddenLwc}></lwc:component>
+                        </template>
                       </div>
                     </lightning-accordion-section>
                   </lightning-accordion>

@@ -67,20 +67,3 @@
   color: var(--slds-g-color-error-1);
   font-size: 0.75rem;
 }
-
-.mrc-dup-inline {
-  margin-top: 0.25rem;
-}
-
-.mrc-dup-message {
-  color: #0176d3;
-  font-size: 0.8125rem;
-  line-height: 1.5;
-  margin-bottom: 0.5rem;
-}
-
-.mrc-dup-case-link {
-  color: #0176d3;
-  text-decoration: underline;
-  cursor: pointer;
-}

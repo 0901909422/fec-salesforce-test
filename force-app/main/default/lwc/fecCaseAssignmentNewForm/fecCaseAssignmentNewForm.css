@@ -116,3 +116,9 @@
   margin-top: 0.5rem;
   text-align: right;
 }
+
+.footer-actions {
+  border-top: var(--slds-border-width-thin, 1px) solid var(--slds-color-border-brand, #c9c9c9);
+  padding-top: var(--slds-spacing-medium, 1rem);
+  margin-top: var(--slds-spacing-medium, 1rem);
+}

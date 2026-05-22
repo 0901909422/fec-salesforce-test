@@ -133,6 +133,10 @@
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
+        <apexClass>FEC_BCH_TemplateExportService</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
         <apexClass>FEC_BeneficiaryBankInfoController</apexClass>
         <enabled>true</enabled>
     </classAccesses>
@@ -446,6 +450,22 @@
     </classAccesses>
     <classAccesses>
         <apexClass>FEC_DocumentRequestRoutingService</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_DownloadReportController</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_DownloadReportJob</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_DownloadReportScheduler</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_DownloadReportService</apexClass>
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
@@ -802,6 +822,10 @@
     </classAccesses>
     <classAccesses>
         <apexClass>FEC_NatureOfCaseTriggerHandler</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_NatureOfCaseUserGroupService</apexClass>
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
