@@ -465,7 +465,7 @@ public without sharing class FEC_TransactionsController {
     private static String formatEffectiveDateTime(Datetime dt) {
         return dt == null
             ? FEC_ConstantCommon.STR_DASH
-            : dt.format('dd/MM/yyyy HH:mm:ss');
+            : dt.format(FEC_ConstantCommon.DATETIME_FORMAT_OUTPUT);
     }
 
     private static String formatEffectiveDateTimeFromFas(String effRaw) {
