@@ -38,4 +38,6 @@ public with sharing class FEC_MockupEndpoint {
     public static final String GET_SMS_INFO_FROM_IT_TELCO_ENDPOINT_MOCKUP = 'https://0ad0dbbf-693f-473e-a8db-d69d703f19a2.mock.pstmn.io/SMSLogWS';
     public static final String GET_CASE_ARCHIVE_ENDPOINT_MOCKUP = 'https://sf-csm-service-dev.fecredit.cloud/archival/dispatcher/api/v1/cases/case-archive?s3Key=';
     public static final String GET_CASE_ARCHIVE_ATTACHMENT_ENDPOINT_MOCKUP = 'https://sf-csm-service-dev.fecredit.cloud/archival/dispatcher/api/v1/attachments/download?s3Key=';
+    public static final String GET_TEMPLATES      = 'https://zns-notification.free.beeceptor.com/GetTemplates';
+    public static final String GET_TEMPLATE_BY_ID = 'https://zns-notification.free.beeceptor.com/GetTemplateByID';
 }
