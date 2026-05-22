@@ -1197,6 +1197,10 @@
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
+        <apexClass>FEC_VMXAUTHDETAILINQ</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
         <apexClass>FEC_UpdateCustomerAddress</apexClass>
         <enabled>true</enabled>
     </classAccesses>

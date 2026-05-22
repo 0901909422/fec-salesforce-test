@@ -46,6 +46,7 @@
 		<members>FEC_API_Config.FEC_Get_IPP_Detail</members>
 		<members>FEC_API_Config.FEC_MCMSCARDTOCARDINQEMEA</members>
 		<members>FEC_API_Config.FEC_MFASOUTSTANDINGAUTHINQ</members>
+		<members>FEC_API_Config.FEC_VMX_AUTH_DETAIL_INQ</members>
 		<name>CustomMetadata</name>
 	</types>
 	<types>
@@ -223,6 +224,7 @@
         <members>FEC_TerminationLoanController</members>
         <members>FEC_TranferInformationCallout</members>
         <members>FEC_TransactionsController</members>
+        <members>FEC_VMXAUTHDETAILINQ</members>
         <members>FEC_UpdateCustomerAddress</members>
 		<members>FEC_NatureOfCaseUserGroupService</members>
         <name>ApexClass</name>
@@ -1590,7 +1592,9 @@
     </types>
 	<types>
 	 	<members>Case.Customer_Case</members>
+	 	<members>Case.Interaction</members>
 	 	<members>Case.Internal_Case</members>
+	 	<members>Case.Search_Interaction</members>
 		<name>RecordType</name>
 	</types>
 	<types>
@@ -2133,6 +2137,7 @@
         <members>FEC_BatchCaseHandlingImportProfile</members>
         <members>FEC_BatchCaseHandlingPicklistResolver</members>
         <members>FEC_BatchCaseHandlingResultXlsxBuilder</members>
+        <members>FEC_NotificationService</members>
         <name>ApexClass</name>
     </types>
     <types>
@@ -2169,6 +2174,11 @@
         <members>FEC_Routing_Action_History__c.FEC_TAT_by_Assignment__c</members>
         <members>FEC_Download_Report__c.FEC_Link__c</members>
         <members>FEC_Download_Report__c.FEC_Report_Unique_Name__c</members>
+        <members>FEC_Actual_Master_Data_Setting__c.FEC_Hidden__c</members>
+        <members>FEC_Master_Data_Setting__c.FEC_Hidden__c</members>
+        <members>FEC_Actual_Master_Data_Setting__c.FEC_Type__c</members>
+        <members>FEC_Case_Assignment_Log_Detail__c.FEC_Case_Assignment_log_Name__c</members>
+        <members>FEC_Master_Data_Setting__c.FEC_Type__c</members>
         <name>CustomField</name>
     </types>
     <types>

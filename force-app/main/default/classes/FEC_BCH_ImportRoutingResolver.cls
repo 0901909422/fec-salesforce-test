@@ -65,7 +65,10 @@ public with sharing class FEC_BCH_ImportRoutingResolver {
             item.screenId = row.Id;
             item.stageId = row.FEC_Case_Stage__c;
             item.actionButtonId = row.FEC_Action_Button__c;
-            item.actionButtonCode = row.FEC_Action_Button__r.FEC_Code__c;
+            SObject actionButton = row.getSObject('FEC_Action_Button__r');
+            item.actionButtonCode = actionButton == null || actionButton.get('FEC_Code__c') == null
+                ? FEC_ConstantCommon.STR_EMPTY
+                : String.valueOf(actionButton.get('FEC_Code__c'));
             item.screenCode = row.FEC_Code__c;
             item.customLabel = row.FEC_Custom_Action_Button_Label__c;
             item.fieldType = row.FEC_Field_Type__c;
@@ -97,10 +100,10 @@ public with sharing class FEC_BCH_ImportRoutingResolver {
         out.decision = parsed.decision;
         out.routeTeamHint = parsed.routeTeamHint;
         out.routeQueueHint = parsed.routeQueueHint;
-        if (parsed.routeViaRevertButton) {
+        if (parsed.routeViaRevertButton == true) {
             out.routeViaRevertButton = true;
         }
-        if (parsed.revertPreferRevertedChange) {
+        if (parsed.revertPreferRevertedChange == true) {
             out.revertPreferRevertedChange = true;
         }
         List<StageScreenRow> screens = screensByStageId.get(stageId);
@@ -156,7 +159,7 @@ public with sharing class FEC_BCH_ImportRoutingResolver {
             return null;
         }
         if (targetMethod == FEC_CaseBusinessService.REVERT) {
-            Boolean wantTeamQueue = parsed.revertPreferRevertedChange || normExcel.contains('teamqueue');
+            Boolean wantTeamQueue = parsed.revertPreferRevertedChange == true || normExcel.contains('teamqueue');
             for (StageScreenRow s : screens) {
                 if (!FEC_CaseBusinessService.REVERT.equalsIgnoreCase(s.actionButtonCode)) {
                     continue;
@@ -195,7 +198,7 @@ public with sharing class FEC_BCH_ImportRoutingResolver {
                     return s;
                 }
             }
-            if (out.routeViaRevertButton) {
+            if (out.routeViaRevertButton == true) {
                 for (StageScreenRow s : screens) {
                     if (FEC_CaseBusinessService.REVERT.equalsIgnoreCase(s.actionButtonCode)) {
                         out.methodKey = FEC_CaseBusinessService.ROUTE_TO;
@@ -264,7 +267,7 @@ public with sharing class FEC_BCH_ImportRoutingResolver {
     }
 
     private static String resolveMethodKeyFromMap(String raw) {
-        if (String.isBlank(raw)) {
+        if (String.isBlank(raw) || FEC_CaseBusinessService.METHOD_MAP == null) {
             return null;
         }
         String trimmed = raw.trim();
@@ -290,6 +293,8 @@ public with sharing class FEC_BCH_ImportRoutingResolver {
 
     private static ParsedPattern parseExcelPattern(String raw) {
         ParsedPattern out = new ParsedPattern();
+        out.routeViaRevertButton = false;
+        out.revertPreferRevertedChange = false;
         if (String.isBlank(raw)) {
             return out;
         }
