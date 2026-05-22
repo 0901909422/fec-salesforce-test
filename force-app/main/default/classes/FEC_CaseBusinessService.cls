@@ -771,10 +771,9 @@ public without sharing class FEC_CaseBusinessService {
 
       result.stage = selectedStage.Id;
       result.stageName = selectedStage.Name;
-      Boolean isLatestRevertToCurrentStage = isLatestRevertToCurrentStage(
-        selectedCase.Id,
-        selectedStage.Id
-      );
+      FEC_Routing_Action_History__c latestRevertHistToCurrentStage =
+        getLatestRevertedHistoryToStage(selectedCase.Id, selectedStage.Id);
+      Boolean isLatestRevertToCurrentStage = latestRevertHistToCurrentStage != null;
 
       // ============================= GET MASTET DATA SETTING ===========================
       if (err.errorlst.isEmpty()) {
@@ -824,14 +823,25 @@ public without sharing class FEC_CaseBusinessService {
         Boolean isCOF = selectedStage?.FEC_Business_Process__r?.Name == FEC_ConstantCommon.COF_GENERAL_FLOW;
         Boolean isCOFStage1Revert = isLatestRevertToCurrentStage && isCOF && checkStageName(selectedStage.Name,FEC_ConstantCommon.STAGE_ONE);
         result.contextFlags.put('isCOFStage1Revert', isCOFStage1Revert);
-        Boolean isGsrBusinessProcess =
-          String.isNotBlank(businessProcessCode) &&
-          businessProcessCode.toUpperCase().contains('GSR');
         Boolean isGsrStage1Revert =
           isLatestRevertToCurrentStage &&
-          isGsrBusinessProcess &&
+          isActualNatureGsrOnly &&
           checkStageName(selectedStage.Name, FEC_ConstantCommon.STAGE_ONE);
+        Boolean isGsrStage2ToStage1Revert =
+          isGsrStage1Revert &&
+          latestRevertHistToCurrentStage != null &&
+          checkStageName(
+            latestRevertHistToCurrentStage.FEC_Previous_Stage__r?.Name,
+            FEC_ConstantCommon.STAGE_TWO
+          );
+        Boolean isGsrStage1RevertMasterReadonly =
+          isGsrStage1Revert && !isGsrStage2ToStage1Revert;
         result.contextFlags.put('isGsrStage1Revert', isGsrStage1Revert);
+        result.contextFlags.put('isGsrStage2ToStage1Revert', isGsrStage2ToStage1Revert);
+        result.contextFlags.put(
+          'isGsrStage1RevertMasterReadonly',
+          isGsrStage1RevertMasterReadonly
+        );
         // GSR Stage 3 (code Stage 2 + đã có Assignment): Property Info chỉ khi Updated NOC khác Original → read-only.
         Boolean isGsrStage3PropertyInfoReadonly =
           isActualNatureGsrOnly &&
@@ -991,7 +1001,7 @@ public without sharing class FEC_CaseBusinessService {
                 currentUser.FEC_User_Group__c,
                 selectedStage.Name
               );
-              if (isGsrStage1Revert) {
+              if (isGsrStage1RevertMasterReadonly) {
                 lwcSlot.fecMasterDataSettingIsEdit = false;
               }
               if (
@@ -1091,7 +1101,7 @@ public without sharing class FEC_CaseBusinessService {
                     objTemp,
                     currentUser.FEC_User_Group__c,
                     isRevert,
-                    isGsrStage1Revert || forceGsrPropertyInfoReadonly
+                    isGsrStage1RevertMasterReadonly || forceGsrPropertyInfoReadonly
                   );
 
                   if (fieldTemp == null)
@@ -3786,12 +3796,15 @@ public without sharing class FEC_CaseBusinessService {
     return out;
   }
 
-  private static Boolean isLatestRevertToCurrentStage(Id caseId, Id currentStageId) {
+  private static FEC_Routing_Action_History__c getLatestRevertedHistoryToStage(
+    Id caseId,
+    Id currentStageId
+  ) {
     if (caseId == null || currentStageId == null) {
-      return false;
+      return null;
     }
     List<FEC_Routing_Action_History__c> latestRevertHist = [
-      SELECT Id
+      SELECT Id, FEC_Previous_Stage__r.Name
       FROM FEC_Routing_Action_History__c
       WHERE
         FEC_Case__c = :caseId
@@ -3801,7 +3814,11 @@ public without sharing class FEC_CaseBusinessService {
       ORDER BY LastModifiedDate DESC
       LIMIT 1
     ];
-    return !latestRevertHist.isEmpty();
+    return latestRevertHist.isEmpty() ? null : latestRevertHist[0];
+  }
+
+  private static Boolean isLatestRevertToCurrentStage(Id caseId, Id currentStageId) {
+    return getLatestRevertedHistoryToStage(caseId, currentStageId) != null;
   }
 
   private static Field transform(

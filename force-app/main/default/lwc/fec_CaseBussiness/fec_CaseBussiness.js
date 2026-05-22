@@ -1512,12 +1512,14 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
     return false;
   }
 
-  /** COF/GSR Stage 1 sau Revert: toàn bộ field master data read-only. */
+  /** COF Stage 1 sau Revert, hoặc GSR Stage 1 revert (trừ Stage 2 → Stage 1): master data read-only. */
   _isStage1RevertMasterReadonly() {
     const flags = this.business?.contextFlags;
-    return (
-      flags?.isCOFStage1Revert === true || flags?.isGsrStage1Revert === true
-    );
+    const gsrReadonly =
+      flags?.isGsrStage1RevertMasterReadonly === true ||
+      (flags?.isGsrStage1Revert === true &&
+        flags?.isGsrStage2ToStage1Revert !== true);
+    return flags?.isCOFStage1Revert === true || gsrReadonly;
   }
 
   /** GSR Stage 3 (đã có Assignment): subsection Property Info read-only. */
@@ -1560,7 +1562,7 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
   _resolveDynCmpMasterIsEdit(componentName, fecMasterDataSettingIsEdit) {
     const master =
       typeof fecMasterDataSettingIsEdit === "boolean" ? fecMasterDataSettingIsEdit : true;
-    if (this.business?.contextFlags?.isGsrStage1Revert === true) {
+    if (this._isStage1RevertMasterReadonly()) {
       return false;
     }
     if (
@@ -1700,6 +1702,9 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
     }
     //linhdev fix jira FECREDIT_CSM_2025_KH-1469-1474
     if (message.pointsRedemptionNocLocked === true) {
+      return;
+    }
+    if (message.contextFlagsSync === true) {
       return;
     }
 
@@ -2189,6 +2194,13 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
           subCodeId: subCodeId,
           stageId: res.stage
         });
+        if (this.business?.contextFlags) {
+          publish(this.messageContext, CASE_NOC, {
+            caseId: this.recordId,
+            contextFlagsSync: true,
+            contextFlags: this.business.contextFlags,
+          });
+        }
         // void this._refreshHoldCaseAutoDisplay();
       })
       .catch((err) => {
