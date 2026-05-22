@@ -86,6 +86,23 @@
         <members>FEC_RA_Save_Success</members>
         <members>FEC_RA_Team_Required</members>
         <members>FEC_RA_Update_Success</members>
+        <members>FEC_Label_Back</members>
+        <members>FEC_Label_Customer_Type</members>
+        <members>FEC_Label_Detail_Information</members>
+        <members>FEC_Label_Edit</members>
+        <members>FEC_Label_GA_Code</members>
+        <members>FEC_Label_GA_Name</members>
+        <members>FEC_Label_Information</members>
+        <members>FEC_Label_New_GA</members>
+        <members>FEC_Label_New_RA</members>
+        <members>FEC_Label_No_History_Short</members>
+        <members>FEC_Label_No_Records</members>
+        <members>FEC_Label_Queue</members>
+        <members>FEC_Label_RA_History</members>
+        <members>FEC_Label_RA_Name</members>
+        <members>FEC_Label_Required_Info</members>
+        <members>FEC_Label_Search_Channel</members>
+        <members>FEC_Label_Team</members>
         <name>CustomLabel</name>
     </types>
     <types>

@@ -416,6 +416,7 @@ export default class Fec_ContractClosureForm extends LightningElement {
         let ids = event.detail && event.detail.ids ? [...event.detail.ids] : [];
         const av = this.resolvedAddressValue;
         const ov = this.resolvedOfficeValue;
+
         const hasA = av && ids.includes(av);
         const hasO = ov && ids.includes(ov);
         if (hasA && hasO) {

@@ -1,4 +1,5 @@
 import { LightningElement, api, wire } from "lwc";
+import { NavigationMixin } from "lightning/navigation";
 import { getRecord, getFieldValue } from "lightning/uiRecordApi";
 import { refreshApex } from "@salesforce/apex";
 
@@ -8,6 +9,8 @@ import FEC_NFU_CODE from "@salesforce/schema/Case.FEC_NFU_Code__c";
 import FEC_NFU_STARTED_DATE from "@salesforce/schema/Case.FEC_NFU_Started_Date__c";
 import FEC_NFU_EXPIRY_DATE from "@salesforce/schema/Case.FEC_NFU_Expiry_Date__c";
 import FEC_NFU_REASON from "@salesforce/schema/Case.FEC_NFU_Reason__c";
+import FEC_TEAM from "@salesforce/schema/Case.FEC_Team__c";
+import CASE_IS_CLOSED from "@salesforce/schema/Case.IsClosed";
 
 import FEC_Hold_Case from "@salesforce/label/c.FEC_Hold_Case";
 import FEC_NFU_Code from "@salesforce/label/c.FEC_NFU_Code";
@@ -18,6 +21,7 @@ import FEC_NFUExpiryDate from "@salesforce/label/c.FEC_NFUExpiryDate";
 import FEC_STOP_IMPACT_ALREADY_MARKED_MSG from "@salesforce/label/c.FEC_STOP_IMPACT_ALREADY_MARKED_MSG";
 import FEC_MSG_SUCCESS from "@salesforce/label/c.FEC_MSG_SUCCESS";
 import FEC_MSG_ERROR from "@salesforce/label/c.FEC_MSG_ERROR";
+import FEC_Show_Action_Hold_Case from "@salesforce/label/c.FEC_Show_Action_Hold_Case";
 import { formatDateTimeVN } from "c/fec_CommonUtils";
 import { STR_EMPTY } from "c/fec_CommonConst";
 
@@ -28,14 +32,18 @@ const CASE_FIELDS = [
   FEC_NFU_STARTED_DATE,
   FEC_NFU_EXPIRY_DATE,
   FEC_NFU_REASON,
+  FEC_TEAM,
+  CASE_IS_CLOSED,
 ];
 
 const RESULT_PENDING = "PENDING";
 const RESULT_ALREADY_MARKED = "ALREADY_MARKED";
 const RESULT_SUCCESS = "SUCCESS";
 const RESULT_ERROR = "ERROR";
+const TEAM_CS_SUPPORT = "CS Support";
+const TEAM_CS_CUSTOMER_CARE = "CS Customer Care";
 
-export default class Fec_holdCaseAuto extends LightningElement {
+export default class Fec_holdCaseAuto extends NavigationMixin(LightningElement) {
   @api recordId;
   /** Fallback từ Manual Hold (sessionStorage) khi LDS chưa refresh field trên Case. */
   @api resultOverride;
@@ -54,6 +62,7 @@ export default class Fec_holdCaseAuto extends LightningElement {
     messageSuccess: FEC_MSG_SUCCESS,
     messageError: FEC_MSG_ERROR,
     messageProcessing: "Đang xử lý yêu cầu Hold Case...",
+    manualHoldCaseAction: FEC_Show_Action_Hold_Case || FEC_Hold_Case,
   };
 
   @wire(getRecord, { recordId: "$recordId", fields: CASE_FIELDS })
@@ -152,5 +161,39 @@ export default class Fec_holdCaseAuto extends LightningElement {
       this.resultType === RESULT_ALREADY_MARKED ||
       this.resultType === RESULT_SUCCESS
     );
+  }
+
+  get caseTeam() {
+    return getFieldValue(this.wiredCaseResult?.data, FEC_TEAM) || STR_EMPTY;
+  }
+
+  get isCaseClosed() {
+    return getFieldValue(this.wiredCaseResult?.data, CASE_IS_CLOSED) === true;
+  }
+
+  /** TH3: Auto fail 3 lần + Case mở + thuộc CS Support / CS Customer Care → nút Hold Case thủ công. */
+  get showManualHoldCaseButton() {
+    return (
+      this.resultType === RESULT_ERROR &&
+      !this.isCaseClosed &&
+      (this.caseTeam === TEAM_CS_SUPPORT ||
+        this.caseTeam === TEAM_CS_CUSTOMER_CARE)
+    );
+  }
+
+  handleManualHoldCaseClick(event) {
+    event.preventDefault();
+    if (!this.recordId) {
+      return;
+    }
+    this[NavigationMixin.Navigate]({
+      type: "standard__quickAction",
+      attributes: {
+        apiName: "Case.Hold_Case",
+      },
+      state: {
+        recordId: this.recordId,
+      },
+    });
   }
 }
