@@ -2128,6 +2128,11 @@
         <members>FEC_CaseRemarksRollupService</members>
         <members>FEC_CaseRemarksTriggerHandler</members>
         <members>FEC_CaseRemarksRollupServiceTest</members>
+        <members>FEC_BCH_ImportRoutingResolver</members>
+        <members>FEC_BCH_PicklistTranslationCtrl</members>
+        <members>FEC_BatchCaseHandlingImportProfile</members>
+        <members>FEC_BatchCaseHandlingPicklistResolver</members>
+        <members>FEC_BatchCaseHandlingResultXlsxBuilder</members>
         <name>ApexClass</name>
     </types>
     <types>
@@ -2244,6 +2249,10 @@
 	<types>
 	    <members>FEC_Download_Report__c.FEC_Download</members>
 	    <name>WebLink</name>
+	</types>
+	<types>
+	    <members>FEC_BCH_PicklistTranslation</members>
+	    <name>ApexPage</name>
 	</types>
 	<version>66.0</version>
 </Package>

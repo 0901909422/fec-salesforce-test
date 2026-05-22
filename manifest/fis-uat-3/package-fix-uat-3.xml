@@ -127,6 +127,11 @@
 		<members>FEC_BatchCaseCreationController</members>
 		<members>FEC_BatchDataCreationController</members>
 		<members>FEC_BatchImportCommon</members>
+		<members>FEC_BCH_ImportRoutingResolver</members>
+		<members>FEC_BCH_PicklistTranslationCtrl</members>
+		<members>FEC_BatchCaseHandlingImportProfile</members>
+		<members>FEC_BatchCaseHandlingPicklistResolver</members>
+		<members>FEC_BatchCaseHandlingResultXlsxBuilder</members>
 		<members>FEC_NotificationService</members>
 		<members>FEC_CaseAssignmentConfigController</members>
 		<name>Apexclass</name>
@@ -411,6 +416,8 @@
 		<members>FEC_Format_Excel</members>
 		<members>FEC_Formatted_Report</members>
 		<members>FEC_Title_Context_Report</members>
+		<members>FEC_BCH_ResultHdr_Errors</members>
+		<members>FEC_BCH_ResultHdr_Status</members>
 		<name>CustomLabel</name>
 	</types>
     <types>
@@ -688,6 +695,9 @@
 	    <name>WebLink</name>
 	</types>
 	<types>
+	    <members>FEC_BCH_PicklistTranslation</members>
+	    <name>ApexPage</name>
+	</types>
 	    <members>Case.SLA_Violating_Warning_44h</members>
 	    <members>Case.SLA_Warning_119h</members>
 	    <members>Case.SLA_Warning_120h</members>

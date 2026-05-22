@@ -378,7 +378,7 @@ public without sharing class FEC_BatchCaseHandlingTemplateHelper {
         return null;
     }
 
-    private static String mapBusinessProcessToTemplatePrefix(String businessProcessCode) {
+    public static String mapBusinessProcessToTemplatePrefix(String businessProcessCode) {
         if (String.isBlank(businessProcessCode)) {
             return null;
         }
@@ -401,6 +401,7 @@ public without sharing class FEC_BatchCaseHandlingTemplateHelper {
             'IPP CLOSURE' => 'IPPClosure',
             'IPP CONVERSION' => 'IPPConversion',
             'CARD UNBLOCK' => 'CardUnblock',
+            'CARD BLOCK' => 'CardUnblock',
             'CONTRACT CLOSURE' => 'ContractClosure',
             'CARD CLOSURE & REFUND REQUEST (CARD)' => 'CardClosure',
             'CARD REPLACEMENT' => 'CardReplacement',
@@ -421,7 +422,7 @@ public without sharing class FEC_BatchCaseHandlingTemplateHelper {
         return null;
     }
 
-    private static List<String> mapUserGroupToTemplateSuffixes(String businessProcessCode, String userGroup) {
+    public static List<String> mapUserGroupToTemplateSuffixes(String businessProcessCode, String userGroup) {
         String bp = String.isBlank(businessProcessCode) ? FEC_ConstantCommon.STR_EMPTY : businessProcessCode.trim().toUpperCase();
         String ug = String.isBlank(userGroup) ? FEC_ConstantCommon.STR_EMPTY : userGroup.trim().toUpperCase();
         List<String> out = new List<String>();
@@ -656,5 +657,20 @@ public without sharing class FEC_BatchCaseHandlingTemplateHelper {
             return false;
         }
         return pathOrTitle.trim().toLowerCase().endsWith('.xlsx');
+    }
+
+    public static String validateUploadedTemplateFileName(String fileName, String expectedTemplateName) {
+        if (String.isBlank(expectedTemplateName)) {
+            return null;
+        }
+        if (String.isBlank(fileName)) {
+            return FEC_ConstantCommon.STR_EMPTY;
+        }
+        String expectedCore = expectedTemplateName.trim().toLowerCase().replace('.xlsx', FEC_ConstantCommon.STR_EMPTY);
+        String fileCore = fileName.trim().toLowerCase().replace('.xlsx', FEC_ConstantCommon.STR_EMPTY);
+        if (fileCore == expectedCore || fileCore.contains(expectedCore)) {
+            return null;
+        }
+        return 'TEMPLATE_MISMATCH';
     }
 }
