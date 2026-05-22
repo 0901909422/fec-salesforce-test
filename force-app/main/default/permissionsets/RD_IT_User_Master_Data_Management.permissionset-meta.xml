@@ -96,7 +96,7 @@
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
-        <editable>false</editable>
+        <editable>true</editable>
         <field>FEC_Actual_Master_Data_Setting__c.FEC_Hidden__c</field>
         <readable>true</readable>
     </fieldPermissions>
@@ -1031,7 +1031,7 @@
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
-        <editable>false</editable>
+        <editable>true</editable>
         <field>FEC_Master_Data_Setting__c.FEC_Hidden__c</field>
         <readable>true</readable>
     </fieldPermissions>
