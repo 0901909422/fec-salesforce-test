@@ -1,5 +1,6 @@
 public without sharing class FEC_CaseBusinessService {
   public static final String TYPE_LWC = 'LWC';
+  public static final String TYPE_ASSIGNMENT = 'Assignment';
   public static final String LWC_INCORRECT_PAYMENT_FORM = 'fec_IncorrectPaymentForm';
 
   public static final String ROUTE_TO = 'Route to';
@@ -786,7 +787,7 @@ public without sharing class FEC_CaseBusinessService {
           'FEC_Field_ReadOnly__c, FEC_Section__c, FEC_Field_Order_Display__c,' +
           'FEC_Field_Label_Name__c, FEC_Editable_User_Group__c, FEC_Field_Masking__c, FEC_Masking_Type__c, ' +
           'FEC_Sub_Section__c, FEC_Sub_Section_Order__c, FEC_Sub_Section_Layout__c, FEC_Field_Reverted__c, FEC_Sub_Section_Field_Layout__c, ' +
-          'FEC_LWC_Name__c, FEC_Type__c ' +
+          'FEC_LWC_Name__c, FEC_Type__c, FEC_Hidden__c ' +
           'FROM ' +
           masterDataSettingObj +
           ' ' +
@@ -834,11 +835,13 @@ public without sharing class FEC_CaseBusinessService {
           isGsrBusinessProcess &&
           checkStageName(selectedStage.Name, FEC_ConstantCommon.STAGE_ONE);
         result.contextFlags.put('isGsrStage1Revert', isGsrStage1Revert);
+        Boolean hasCaseAssignment = getCaseAssignmentCountByCaseId(selectedCase) > 0;
+        result.contextFlags.put('hasCaseAssignment', hasCaseAssignment);
         // GSR Stage 3 (code Stage 2 + đã có Assignment): Property Info chỉ khi Updated NOC khác Original → read-only.
         Boolean isGsrStage3PropertyInfoReadonly =
           isActualNatureGsrOnly &&
           isUpdatedNocDifferentFromCurrent &&
-          getCaseAssignmentCountByCaseId(selectedCase) > 0;
+          hasCaseAssignment;
         result.contextFlags.put(
           'isGsrStage3PropertyInfoReadonly',
           isGsrStage3PropertyInfoReadonly
@@ -892,6 +895,14 @@ public without sharing class FEC_CaseBusinessService {
             'FEC_Sub_Section_Layout__c'
           );
           String itemType = (String) item.get('FEC_Type__c');
+          if (TYPE_ASSIGNMENT.equals(itemType)) {
+            if (!hasCaseAssignment) {
+              continue;
+            }
+            if (item.get('FEC_Hidden__c') == true) {
+              continue;
+            }
+          }
           //PhongBT 14/05/26: Document Request
           //Ẩn Case Info (trừ Property Info), chỉ khi sub-code RL04.02/RL04.03/RC04.04 trả về message
           if(
@@ -1092,7 +1103,8 @@ public without sharing class FEC_CaseBusinessService {
                     objTemp,
                     currentUser.FEC_User_Group__c,
                     isRevert,
-                    isGsrStage1Revert || forceGsrPropertyInfoReadonly
+                    isGsrStage1Revert || forceGsrPropertyInfoReadonly,
+                    hasCaseAssignment
                   );
 
                   if (fieldTemp == null)
@@ -3565,7 +3577,8 @@ public without sharing class FEC_CaseBusinessService {
         FEC_Field_Reverted__c,
         FEC_Sub_Section_Field_Layout__c, 
         FEC_LWC_Name__c, 
-        FEC_Type__c
+        FEC_Type__c,
+        FEC_Hidden__c
       FROM FEC_Master_Data_Setting__c
       WHERE FEC_Nature_of_Case__c = :natureOfCaseId
       // AND FEC_Stage_Name__c = :stageNameId
@@ -3604,6 +3617,7 @@ public without sharing class FEC_CaseBusinessService {
       tgt.FEC_Sub_Section_Field_Layout__c = src.FEC_Sub_Section_Field_Layout__c;
       tgt.FEC_LWC_Name__c = src.FEC_LWC_Name__c;
       tgt.FEC_Type__c = src.FEC_Type__c;
+      tgt.FEC_Hidden__c = src.FEC_Hidden__c;
 
       targetlst.add(tgt);
     }
@@ -3810,7 +3824,8 @@ public without sharing class FEC_CaseBusinessService {
     SObject objTemp,
     String userGr,
     Boolean isStageRevert,
-    Boolean forceMasterDataReadOnly
+    Boolean forceMasterDataReadOnly,
+    Boolean hasCaseAssignment
   ) {
     String maskingTypeTemp = (String) masterDataItem.get('FEC_Masking_Type__c');
     String editableGr = (String) masterDataItem.get(
@@ -3866,6 +3881,16 @@ public without sharing class FEC_CaseBusinessService {
     Boolean outEditable =
       isEditable ||
       (String.isNotBlank(editableGr) && editableGr.contains(userGr));
+    String mdsType = (String) masterDataItem.get('FEC_Type__c');
+    if (
+      hasCaseAssignment == true &&
+      TYPE_ASSIGNMENT.equals(mdsType) &&
+      isEditable == true &&
+      forceMasterDataReadOnly != true
+    ) {
+      outReadOnly = false;
+      outEditable = true;
+    }
     if (forceMasterDataReadOnly == true) {
       outReadOnly = true;
       outEditable = false;
