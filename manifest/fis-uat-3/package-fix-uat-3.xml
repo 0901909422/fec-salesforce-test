@@ -231,6 +231,7 @@
 		<members>fec_DownloadReports</members>
 		<members>fec_BatchDataCreation</members>
 		<members>fecMrcReturnStageChangeRouting</members>
+		<members>fec_BatchCaseCreation</members>
 		<name>LightningComponentBundle</name>
 	</types>
     <types>
