@@ -86,12 +86,12 @@
                 <c-fec_-lookup label={FEC_Label_Sub_Category} placeholder={placeholderSearchSubCategory}
                   data-id="subCategory" object-api-name="FEC_Sub_Category__c" field-api-name="Name"
                   icon-name="standard:contact" disabled={isCategory} selected-product-type-id={selectedProductTypeId}
-                  selected-category-id={selectedCategoryId} onselect={handleSelected} required value={initialSubCategory} is-multi-select></c-fec_-lookup>
+                  selected-category-id={selectedCategoryId} onselect={handleSelected} required value={initialSubCategory}></c-fec_-lookup>
                 <c-fec_-lookup label={FEC_Label_Sub_Code} placeholder={placeholderSearchSubCode} data-id="subCode"
                   object-api-name="FEC_Sub_Code__c" disabled={isSubCategory}
                   selected-product-type-id={selectedProductTypeId} selected-category-id={selectedCategoryId}
                   selected-sub-category-id={selectedSubCategoryId} field-api-name="Name" icon-name="standard:contact"
-                  onselect={handleSelected} value={initialSubCode} is-multi-select></c-fec_-lookup>
+                  onselect={handleSelected} value={initialSubCode}></c-fec_-lookup>
               </div>
             </div>
           </div>
@@ -131,9 +131,7 @@
               </template>
             
               <template if:true={showCaseStage}>
-                <c-fec_-lookup label="Case Stage" placeholder="Search Case Stage..." is-multi-select data-id="caseStage"
-                  object-api-name="FEC_Case_Stage__c" field-api-name="Name" icon-name="standard:stage"
-                  onselect={handleSelected} value={initialCaseStage}></c-fec_-lookup>
+                <lightning-input-field field-name={caseStageField}></lightning-input-field>
               </template>
             
               <template if:true={showAssignedToQueue}>
