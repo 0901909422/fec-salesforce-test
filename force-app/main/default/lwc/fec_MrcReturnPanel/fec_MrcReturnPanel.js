@@ -22,6 +22,7 @@ export default class Fec_MrcReturnPanel extends LightningElement {
   @api recordId;
   @api subCodeCode;
   @api subCategoryCode;
+  @api stageName;
   @api isEdit = false;
   @api mrcRl05Ui;
   @api duplicateCaseId;
@@ -50,6 +51,10 @@ export default class Fec_MrcReturnPanel extends LightningElement {
     if (code.includes("RL05.02")) {
       return true;
     }
+    const stage = String(this.stageName ?? STR_EMPTY).toUpperCase();
+    if (stage.includes("RL05.02")) {
+      return true;
+    }
     if (this.mrcRl05Ui?.isReturnSubCode === true) {
       return true;
     }
@@ -69,7 +74,10 @@ export default class Fec_MrcReturnPanel extends LightningElement {
     if (this.mrcRl05Ui?.autoRouteReject === true) {
       return false;
     }
-    return this.mrcRl05Ui?.showCustomerConfirmation === true;
+    if (!this.mrcRl05Ui) {
+      return true;
+    }
+    return this.mrcRl05Ui.showCustomerConfirmation !== false;
   }
 
   get confirmationPicklistOptions() {
@@ -172,6 +180,16 @@ export default class Fec_MrcReturnPanel extends LightningElement {
   handleHandlingOptionChange(event) {
     this.dispatchEvent(
       new CustomEvent("handlingoptionchange", {
+        detail: event.detail || {},
+        bubbles: true,
+        composed: true,
+      }),
+    );
+  }
+
+  handleMrcDeliveryChange(event) {
+    this.dispatchEvent(
+      new CustomEvent("mrcdeliverychange", {
         detail: event.detail || {},
         bubbles: true,
         composed: true,

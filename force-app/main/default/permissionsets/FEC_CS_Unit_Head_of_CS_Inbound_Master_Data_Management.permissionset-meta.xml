@@ -105,6 +105,11 @@
     </fieldPermissions>
     <fieldPermissions>
         <editable>false</editable>
+        <field>FEC_Actual_Master_Data_Setting__c.FEC_Hidden__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
         <field>FEC_Actual_Master_Data_Setting__c.FEC_LWC_Name__c</field>
         <readable>true</readable>
     </fieldPermissions>
@@ -466,6 +471,11 @@
     <fieldPermissions>
         <editable>false</editable>
         <field>FEC_Master_Data_Setting__c.FEC_Field_Status__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
+        <field>FEC_Master_Data_Setting__c.FEC_Hidden__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>

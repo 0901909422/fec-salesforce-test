@@ -132,7 +132,12 @@ public with sharing class FEC_BatchCaseHandlingResultXlsxBuilder {
                     '<fills count="1"><fill><patternFill patternType="none"/></fill></fills>' +
                     '<borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders>' +
                     '<cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>' +
-                    '<cellXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/></cellXfs>' +
+                    '<cellXfs count="2">' +
+                    '<xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/>' +
+                    '<xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0" applyAlignment="1">' +
+                    '<alignment wrapText="1" vertical="top"/>' +
+                    '</xf>' +
+                    '</cellXfs>' +
                     '</styleSheet>'
             )
         );
@@ -147,11 +152,20 @@ public with sharing class FEC_BatchCaseHandlingResultXlsxBuilder {
             if (values != null && colIdx < values.size() && values[colIdx] != null) {
                 cellValue = values[colIdx];
             }
+            Boolean isErrorsCol = colIdx == maxCols - 1;
+            String styleAttr = isErrorsCol ? ' s="1"' : FEC_ConstantCommon.STR_EMPTY;
+            String tTagOpen =
+                cellValue.contains('\n') || cellValue.contains('\r')
+                    ? '<t xml:space="preserve">'
+                    : '<t>';
             cellParts.add(
                 '<c r="' +
                     columnLetter(colIdx) +
                     String.valueOf(rowNumber) +
-                    '" t="inlineStr"><is><t>' +
+                    '"' +
+                    styleAttr +
+                    ' t="inlineStr"><is>' +
+                    tTagOpen +
                     xmlEscape(cellValue) +
                     '</t></is></c>'
             );
