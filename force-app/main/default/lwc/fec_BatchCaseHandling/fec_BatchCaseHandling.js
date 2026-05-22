@@ -350,8 +350,8 @@ const FILTERED_EXPORT_EXTRA_COLUMNS = [
   { header: FEC_BCH_Col_LastUpdatedOn, field: "lastUpdatedOnLabel" },
   { header: FEC_BCH_Col_Attachments, field: "hasAttachmentLabel" }
 ];
-const RESULT_COL_STATUS = "__Status";
-const RESULT_COL_ERRORS = "__Errors";
+const RESULT_COL_STATUS = "Status";
+const RESULT_COL_ERRORS = "Errors";
 const RESULT_HEADERS_BASIC = [
   FEC_BCH_Col_CaseId,
   FEC_BCH_ResultHdr_RoutingAction,

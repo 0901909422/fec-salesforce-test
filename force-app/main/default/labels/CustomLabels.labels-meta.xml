@@ -16502,7 +16502,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC_BCH_ResultHdr_Status</shortDescription>
-        <value>__Status</value>
+        <value>Status</value>
     </labels>
     <labels>
         <fullName>FEC_BCH_ResultHdr_Errors</fullName>
@@ -16510,7 +16510,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC_BCH_ResultHdr_Errors</shortDescription>
-        <value>__Errors</value>
+        <value>Errors</value>
     </labels>
     <labels>
         <fullName>FEC_BCH_ResultHdr_AssignmentId</fullName>
