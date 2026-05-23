@@ -361,7 +361,8 @@ export function applyMrcRl05SectionVisibility(business, handlingOptionValue) {
       const name = meta.componentName;
       let hide = false;
       if (name === LWC_MRC_INFO) {
-        hide = ctx?.hideMrcInfoLwc === true;
+        hide =
+          ctx?.hideMrcInfoLwc === true || ctx?.isRl05Branch === true;
       } else if (name === LWC_MRC_DELIVERY || name === LWC_CONTRACT_CLOSURE) {
         hide = panelShowsDelivery === true;
       } else if (
@@ -378,7 +379,8 @@ export function applyMrcRl05SectionVisibility(business, handlingOptionValue) {
     (section.resolvedComponentlst || []).forEach((dyn) => {
       let hide = false;
       if (dyn.componentName === LWC_MRC_INFO) {
-        hide = ctx?.hideMrcInfoLwc === true;
+        hide =
+          ctx?.hideMrcInfoLwc === true || ctx?.isRl05Branch === true;
       } else if (
         dyn.componentName === LWC_MRC_DELIVERY ||
         dyn.componentName === LWC_CONTRACT_CLOSURE

@@ -3,17 +3,10 @@ import { STR_EMPTY } from "c/fec_CommonConst";
 import {
   FIELD_MRC_CUSTOMER_CONFIRMATION,
   FIELD_MRC_HANDLING_OPTION,
-  MRC_CONF_NOT_RECEIVED,
-  MRC_CONF_RECEIVED,
   isMrcNotReceivedConfirmation,
   showMrcRl0502DupBanner,
   shouldShowMrcReturnDelivery,
 } from "c/fecMrcReturnCaseLogic";
-
-const DEFAULT_CONFIRMATION_OPTIONS = [
-  { label: "Customer received MRC", value: MRC_CONF_RECEIVED },
-  { label: "Customer has not received MRC", value: MRC_CONF_NOT_RECEIVED },
-];
 
 /**
  * RL05 MRC Return — panel gom Delivery Option + Xác nhận KH (RL05.02) + Noti-11.
@@ -29,6 +22,7 @@ export default class Fec_MrcReturnPanel extends LightningElement {
   @api duplicateCaseNumber;
   @api handlingOptionValue = STR_EMPTY;
   @api customerConfirmationOptions;
+  @api handlingOptionOptions;
 
   customerConfirmationField = FIELD_MRC_CUSTOMER_CONFIRMATION;
   handlingOptionField = FIELD_MRC_HANDLING_OPTION;
@@ -80,17 +74,32 @@ export default class Fec_MrcReturnPanel extends LightningElement {
     return this.mrcRl05Ui.showCustomerConfirmation !== false;
   }
 
+  get customerConfirmationFieldLabel() {
+    const labels = this.mrcRl05Ui?.caseFieldLabels;
+    return (
+      labels?.[FIELD_MRC_CUSTOMER_CONFIRMATION] ||
+      FIELD_MRC_CUSTOMER_CONFIRMATION
+    );
+  }
+
   get confirmationPicklistOptions() {
     const fromBusiness = Array.isArray(this.customerConfirmationOptions)
       ? this.customerConfirmationOptions
       : [];
-    if (fromBusiness.length) {
-      return fromBusiness.map((o) => ({
-        label: o.label || o.value,
-        value: o.value,
-      }));
-    }
-    return DEFAULT_CONFIRMATION_OPTIONS;
+    return fromBusiness.map((o) => ({
+      label: o.label || o.value,
+      value: o.value,
+    }));
+  }
+
+  get handlingOptionPicklistOptions() {
+    const fromBusiness = Array.isArray(this.handlingOptionOptions)
+      ? this.handlingOptionOptions
+      : [];
+    return fromBusiness.map((o) => ({
+      label: o.label || o.value,
+      value: o.value,
+    }));
   }
 
   get showStandaloneDupBanner() {
@@ -202,6 +211,13 @@ export default class Fec_MrcReturnPanel extends LightningElement {
   }
 
   @api validateForSubmit() {
+    if (
+      this.showCustomerConfirmation &&
+      this.customerConfirmationRequired &&
+      !String(this._confirmationValue ?? STR_EMPTY).trim()
+    ) {
+      return false;
+    }
     if (this.showHandlingRadioBlock && !this.handlingOptionValue) {
       return false;
     }
