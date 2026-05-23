@@ -1859,7 +1859,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>Gender Label</shortDescription>
-        <value>Buyer Gender</value>
+        <value>Gender</value>
     </labels>
     <labels>
         <fullName>FEC_Go_Button_Label</fullName>
@@ -18180,5 +18180,12 @@
         <shortDescription>Error Download</shortDescription>
         <value>Select at least one record and try again.</value>
     </labels>
-
+    <labels>
+        <fullName>FEC_Gender_Buyer_Label</fullName>
+        <categories>Customer Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Gender Label</shortDescription>
+        <value>Buyer Gender</value>
+    </labels>
 </CustomLabels>
