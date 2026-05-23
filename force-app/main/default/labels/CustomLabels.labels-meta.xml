@@ -18220,5 +18220,12 @@
         <shortDescription>Other case account contract must not contain dash</shortDescription>
         <value>Account/ Contract Number không đúng định dạng.</value>
     </labels>
-
+    <labels>
+        <fullName>FEC_Gender_Buyer_Label</fullName>
+        <categories>Customer Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Gender Label</shortDescription>
+        <value>Buyer Gender</value>
+    </labels>
 </CustomLabels>

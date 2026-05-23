@@ -1042,6 +1042,7 @@
 		<members>FEC_Buyer_Name</members>
 		<members>FEC_Buyer_DOB</members>
 		<members>FEC_Buyer_NID</members>
+		<members>FEC_Gender_Buyer_Label</members>
 		<members>FEC_Product_Name</members>
 		<members>FEC_Sales_Channel</members>
 		<members>FEC_Insurance_Company</members>
