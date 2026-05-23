@@ -1,8 +1,6 @@
 public with sharing class FEC_BatchCaseCreationService {
-    private static final String WELCOME_CALL_TEMPLATE_TOKEN = 'welcome call';
-    private static final String WELCOME_CALL_TEMPLATE_TOKEN_COMPACT = 'welcomecall';
-
     private class ParsedCaseRow {
+        String fileType;
         String layout;
         String contractNumber;
         String interactionPhone;
@@ -29,8 +27,11 @@ public with sharing class FEC_BatchCaseCreationService {
         String templateName
     ) {
         List<ParsedCaseRow> parsed = parseInputRows(inputRows);
-        Boolean isWelcomeFlow = isWelcomeCallInput(templateName, parsed);
-        List<FEC_BatchCaseCreationController.CaseRowResult> rowResults = validateAndBuildCases(parsed, isWelcomeFlow);
+        Boolean isWelcomeFlow = isWelcomeCallInput(parsed);
+        List<FEC_BatchCaseCreationController.CaseRowResult> rowResults = validateAndBuildCases(
+            parsed,
+            isWelcomeFlow
+        );
         if (isWelcomeFlow) {
             insertWelcomeCallCases(parsed, rowResults);
         } else {
@@ -43,6 +44,7 @@ private static List<ParsedCaseRow> parseInputRows(List<Object> inputRows) {
         for (Object rowObj : inputRows) {
             Map<String, Object> m = (Map<String, Object>) rowObj;
             ParsedCaseRow r = new ParsedCaseRow();
+            r.fileType = FEC_BatchImportCommon.normalizeText(m.get('fileType'));
             r.layout = FEC_BatchImportCommon.normalizeText(m.get('layout'));
             r.contractNumber = FEC_BatchImportCommon.normalizeText(m.get('contractNumber'));
             r.interactionPhone = FEC_BatchImportCommon.normalizeText(m.get('interactionPhone'));
@@ -60,7 +62,10 @@ private static List<ParsedCaseRow> parseInputRows(List<Object> inputRows) {
         return out;
     }
 
-    private static List<FEC_BatchCaseCreationController.CaseRowResult> validateAndBuildCases(List<ParsedCaseRow> parsed, Boolean welcome) {
+    private static List<FEC_BatchCaseCreationController.CaseRowResult> validateAndBuildCases(
+        List<ParsedCaseRow> parsed,
+        Boolean welcome
+    ) {
         LookupMaps maps = loadLookupMaps(parsed);
 
         Schema.DescribeFieldResult channelDfr = Case.FEC_Channel__c.getDescribe();
@@ -79,7 +84,13 @@ private static List<ParsedCaseRow> parseInputRows(List<Object> inputRows) {
             }
 
             if (String.isBlank(r.contractNumber)) {
-                errs.add(System.Label.FEC_Batch_Import_Required_Contract_Number);
+                errs.add(
+                    welcome
+                        ? System.Label.FEC_Batch_Import_Required_Contract_Number
+                        : System.Label.FEC_Batch_Import_Required_Account_Contract_Number
+                );
+            } else {
+                appendContractNumberFormatRules(r.contractNumber, welcome, errs);
             }
             if (String.isBlank(r.interactionPhone)) {
                 errs.add(System.Label.FEC_Batch_Import_Required_Interaction_Phone);
@@ -93,11 +104,11 @@ private static List<ParsedCaseRow> parseInputRows(List<Object> inputRows) {
             if (String.isBlank(r.subCategory)) {
                 errs.add(System.Label.FEC_Batch_Import_Required_Sub_Category);
             }
-            if (String.isBlank(r.subCode)) {
-                errs.add(System.Label.FEC_Batch_Import_Required_Sub_Code);
-            }
             if (!welcome && String.isBlank(r.caseStatus)) {
                 errs.add(System.Label.FEC_Batch_Import_Required_Case_Status);
+            }
+            if (welcome) {
+                appendWelcomeCaseStatusRules(r, statusDfr, errs);
             }
 
             if (extended) {
@@ -231,43 +242,57 @@ private static List<ParsedCaseRow> parseInputRows(List<Object> inputRows) {
         }
     }
 
-    private static Boolean isWelcomeCallTemplate(String templateName) {
-        if (String.isBlank(templateName)) {
-            return false;
-        }
-        String lowered = templateName.toLowerCase();
-        if (lowered.contains(WELCOME_CALL_TEMPLATE_TOKEN)) {
-            return true;
-        }
-        String compact = lowered.replaceAll('[^a-z0-9]', '');
-        return compact.contains(WELCOME_CALL_TEMPLATE_TOKEN_COMPACT);
+    private static Boolean isWelcomeCallInput(List<ParsedCaseRow> parsed) {
+        return 'welcome'.equalsIgnoreCase(resolveConsistentImportFileType(parsed));
     }
 
-    private static Boolean isWelcomeCallInput(String templateName, List<ParsedCaseRow> parsed) {
-        if (isWelcomeCallTemplate(templateName)) {
-            return true;
-        }
+    private static String resolveConsistentImportFileType(List<ParsedCaseRow> parsed) {
         if (parsed == null || parsed.isEmpty()) {
-            return false;
+            return null;
         }
+        String resolved = null;
         for (ParsedCaseRow r : parsed) {
-            if (looksLikeWelcomeValue(r.category) || looksLikeWelcomeValue(r.subCategory) || looksLikeWelcomeValue(r.subCode)) {
-                return true;
+            if (r == null || String.isBlank(r.fileType)) {
+                continue;
+            }
+            String ft = r.fileType.trim().toLowerCase();
+            if (resolved == null) {
+                resolved = ft;
+            } else if (!resolved.equals(ft)) {
+                return null;
             }
         }
-        return false;
+        return resolved;
     }
 
-    private static Boolean looksLikeWelcomeValue(String raw) {
-        if (String.isBlank(raw)) {
-            return false;
+    private static void appendContractNumberFormatRules(
+        String contractNumber,
+        Boolean welcome,
+        List<String> errs
+    ) {
+        if (String.isBlank(contractNumber) || errs == null) {
+            return;
         }
-        String lowered = raw.toLowerCase();
-        if (lowered.contains('welcome') || lowered.contains('wc_')) {
-            return true;
+        Boolean dashed = contractNumber.contains('-');
+        if (welcome && !dashed) {
+            errs.add(System.Label.FEC_Batch_Import_Welcome_Contract_Number_Requires_Dash);
+        } else if (!welcome && dashed) {
+            errs.add(System.Label.FEC_Batch_Import_Other_Contract_Number_No_Dash);
         }
-        String compact = lowered.replaceAll('[^a-z0-9]', '');
-        return compact.contains('welcomecall') || compact.startsWith('wc');
+    }
+
+    private static void appendWelcomeCaseStatusRules(
+        ParsedCaseRow r,
+        Schema.DescribeFieldResult statusDfr,
+        List<String> errs
+    ) {
+        if (r == null || errs == null || String.isBlank(r.caseStatus)) {
+            return;
+        }
+        String statusApi = matchCaseStatus(statusDfr, r.caseStatus);
+        if (statusApi != FEC_ConstantCommon.CASE_STATUS_RESOLVED_COMPLETED) {
+            errs.add(System.Label.FEC_Batch_Import_Welcome_Case_Status_Only_Resolved_Completed);
+        }
     }
 
     private static String formatSaveResultErrors(Database.SaveResult sr) {
