@@ -554,10 +554,10 @@ public without sharing class FEC_ScopedStageChangeRoutingService {
       WHERE Id = :caseId
       LIMIT 1
     ];
-    history.FEC_Changed_Status__c = FEC_CaseBusinessService.routingHistoryStatusSnapshot(
-      endCase
+    FEC_CaseBusinessService.patchRoutingHistoryChangedStatus(
+      history.Id,
+      FEC_CaseBusinessService.routingHistoryStatusSnapshot(endCase)
     );
-    Database.update(history, AccessLevel.SYSTEM_MODE);
     FEC_AutoHoldCaseService.enqueueAfterRoutingHistory(history.Id);
   }
 
