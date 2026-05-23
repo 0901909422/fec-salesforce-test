@@ -1348,6 +1348,16 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
     this.business = { ...this.business };
   }
 
+  _syncMrcDeliveryDraftFromCase() {
+    if (!isMrcRl05Branch(this.business)) {
+      return;
+    }
+    const saved = this._getCaseFieldValue(Fec_CaseBussiness.DOC_REQ_FIELD_DELIVERY);
+    if (saved && !String(this._mrcDeliveryOptionDraft ?? STR_EMPTY).trim()) {
+      this._mrcDeliveryOptionDraft = saved;
+    }
+  }
+
   handleMrcReturnHandlingOptionChange(event) {
     const detail = event.detail || {};
     const value = detail.value ?? STR_EMPTY;
@@ -2157,6 +2167,7 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
           );
           this.mrcReturnHandlingOptionValue = layoutResult.handlingOptionValue;
           this.business = layoutResult.business;
+          this._syncMrcDeliveryDraftFromCase();
           this._applyMrcReturnCaseIntegration();
         }
         this._rebuildAllSectionSortedRows();
@@ -3580,6 +3591,14 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
     if (closureSaveRes && closureSaveRes.valid === false) {
       return false;
     }
+    this._syncMrcDeliveryDraftFromCase();
+    if (isMrcRl05Branch(this.business)) {
+      await this._loadMrcReturnStageChangeRouting({
+        showMissingQueueToast: false,
+      });
+      routeToEle = this._getRoutingActionSelectEl();
+      this._syncActiveRoutingSection();
+    }
     console.log('FEC_DEBUG submit before routeToEle check routeToEle=' + !!routeToEle + ' isRoutingAssignmentMode=' + this.isRoutingAssignmentMode + ' natureOfCase=' + this.business?.natureOfCase);
 
     // tungnm37: validate form Add Item chưa confirm
@@ -4874,7 +4893,8 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
       });
   }
 
-  _loadMrcReturnStageChangeRouting() {
+  _loadMrcReturnStageChangeRouting(options = {}) {
+    const showMissingQueueToast = options.showMissingQueueToast === true;
     if (shouldPreferScopedRoutingFromStage2(this)) {
       this._mrcReturnStageChangeRoutingActive = false;
       return Promise.resolve();
@@ -4892,6 +4912,8 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
 
     this._mrcReturnStageChangeRoutingActive = true;
 
+    const priorQueue = this.business?.nextQueue;
+    const priorTeam = this.business?.nextTeam;
     const ctx = getMrcReturnRoutingContext(
       this.business,
       this.mrcReturnHandlingOptionValue,
@@ -4900,6 +4922,10 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
     );
 
     if (!ctx.eligible || !ctx.team) {
+      if (priorQueue?.value || priorTeam) {
+        this.business = { ...this.business };
+        return Promise.resolve();
+      }
       this.business = {
         ...this.business,
         nextTeam: null,
@@ -4909,15 +4935,13 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
       return Promise.resolve();
     }
 
-    const priorQueue = this.business?.nextQueue;
-    const priorTeam = this.business?.nextTeam;
     const routeToActionId = this._resolveRouteToActionId();
-
     this.business = {
       ...this.business,
       nextTeam: ctx.team,
-      nextQueue: null,
+      nextQueue: priorQueue?.value ? priorQueue : this.business?.nextQueue,
     };
+    this._setActionValueByCode(ACTION_ROUTE_TO);
     this.business = { ...this.business };
 
     return getDocumentRequestStageChangeRouting({
@@ -4948,7 +4972,9 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
             nextTeam: res?.nextTeam || ctx.team || priorTeam,
             nextQueue: fallbackQueue,
           };
-          if (!fallbackQueue) {
+          if (fallbackQueue) {
+            this._setActionValueByCode(ACTION_ROUTE_TO);
+          } else if (showMissingQueueToast) {
             this.dispatchEvent(
               new ShowToastEvent({
                 title: FEC_Warning_Title,
@@ -4956,8 +4982,6 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
                 variant: "warning",
               }),
             );
-          } else {
-            this._setActionValueByCode(ACTION_ROUTE_TO);
           }
         }
         this.business = { ...this.business };
@@ -4966,8 +4990,8 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
         console.error("[MrcReturnStageChangeRouting]", JSON.stringify(err));
         this.business = {
           ...this.business,
-          nextTeam: ctx.team,
-          nextQueue: priorQueue || null,
+          nextTeam: ctx.team || priorTeam,
+          nextQueue: priorQueue?.value ? priorQueue : null,
         };
         this.business = { ...this.business };
       });
@@ -4975,16 +4999,20 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
 
   _resolveRouteToActionId() {
     const actions = this.business?.routingActionlst || [];
-    const match = actions.find(
-      (a) => a.code === ACTION_ROUTE_TO || a.value === ACTION_ROUTE_TO,
-    );
+    const match = actions.find((a) => {
+      const code = String(a?.code ?? STR_EMPTY).trim();
+      const value = String(a?.value ?? STR_EMPTY).trim();
+      return code === ACTION_ROUTE_TO || value === ACTION_ROUTE_TO;
+    });
     return match?.id ?? null;
   }
 
   handleMrcDeliveryChange(event) {
     const combined = event.detail?.deliveryOptionCombined ?? STR_EMPTY;
     this._mrcDeliveryOptionDraft = combined;
-    this._loadMrcReturnStageChangeRouting().then(() => {
+    this._loadMrcReturnStageChangeRouting({
+      showMissingQueueToast: false,
+    }).then(() => {
       this._syncActiveRoutingSection();
     });
   }

@@ -261,6 +261,21 @@ export function getMrcReturnRoutingContext(
     return { eligible: false, team: null, scenario: null, deliveryOption };
   }
 
+  if (flowTeam && (ctx?.autoRouteCp === true || ctx?.autoRoutePayment === true)) {
+    const needsHandling =
+      ctx?.dupCaseOnly === true ||
+      ctx?.showMrcDupBanner === true ||
+      ctx?.showHandlingRadioOnNotReceived === true;
+    if (!needsHandling || handlingOption === MRC_OPT_CANCEL_PREVIOUS) {
+      return {
+        eligible: true,
+        team: flowTeam,
+        scenario: rl05Scenario || "FLOW",
+        deliveryOption,
+      };
+    }
+  }
+
   return { eligible: false, team: null, scenario: null, deliveryOption };
 }
 
