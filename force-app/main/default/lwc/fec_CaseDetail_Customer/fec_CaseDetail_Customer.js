@@ -417,6 +417,10 @@ export default class Fec_CaseDetail_Customer extends LightningElement {
     if (message.caseId !== this.recordId) {
       return;
     }
+    // Sync context flags only — fec_CaseEditNOC/fec_CaseBussiness đã xử lý; tránh getData() lặp vô hạn khi init.
+    if (message.contextFlagsSync === true) {
+      return;
+    }
     //linhdev fix jira FECREDIT_CSM_2025_KH-1366 — Có/Không pop-up Block Amount: không getData(null) → mất Case Information / Fast Cash
     if (message.fastCashNocLocked === true) {
       return;

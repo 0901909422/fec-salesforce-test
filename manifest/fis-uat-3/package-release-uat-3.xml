@@ -669,6 +669,7 @@
         <members>FEC_Hold_Case_Config__c.FEC_Auto_Hold_Release_Case_Status__c</members>
         <members>FEC_Case_Assignment__c.FEC_Case_Assignmetn_NOC_Count__c</members>
         <members>FEC_Case_Assignment__c.FEC_Time_Slots_Tracked__c</members>
+        <members>FEC_Case_Assignment__c.FEC_Time_Slots__c</members>
         <members>Case.FEC_Delivery_Option_2__c</members>
         <members>FEC_Action_Button__c.FEC_Code__c</members>
         <members>FEC_Case_Assignment_Logs__c.FEC_Case_Assignment_Name__c</members>
