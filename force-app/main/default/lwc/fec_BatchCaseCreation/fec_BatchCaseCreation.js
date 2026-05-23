@@ -676,7 +676,9 @@ export default class Fec_BatchCaseCreation extends LightningElement {
       ? parsedRows.map((r, index) => {
           const rowStatus = String(r?.status || "");
           const exportId =
-            rowStatus.toLowerCase() === "succeeded" ? String(r?.recordId || "") : "";
+            rowStatus.toLowerCase() === "succeeded"
+              ? String(r?.fecIdSearch || r?.recordId || "")
+              : "";
           return [
             ...(exportSourceRows[index] || exportHeaders.map(() => "")),
             exportId,

@@ -259,6 +259,7 @@
                         record-id={recordId}
                         sub-code-code={business.subCodeCode}
                         sub-category-code={business.subCategoryCode}
+                        stage-name={business.stageName}
                         is-edit={row.dynCmp.isEdit}
                         mrc-rl05-ui={business.mrcRl05Ui}
                         duplicate-case-id={business.mrcRl0502DuplicateOpenCaseId}
@@ -273,7 +274,8 @@
                     </template>
                     <template if:false={row.dynCmp.isMrcReturnPanel}>
                       <lwc:component lwc:is={row.dynCmp.ctor} record-id={recordId} sub-code-code={business.subCodeCode} sub-category-code={business.subCategoryCode}
-                        is-edit={row.dynCmp.isEdit} is-hidden-lwc={isHiddenLwc}></lwc:component>
+                                     is-edit={row.dynCmp.isEdit} is-hidden-lwc={isHiddenLwc}
+                                     ondeliveryoptionchange={handleContractClosureDeliveryChange}></lwc:component>
                     </template>
                   </div>
                 </template>
@@ -287,6 +289,7 @@
                             record-id={recordId}
                             sub-code-code={business.subCodeCode}
                             sub-category-code={business.subCategoryCode}
+                            stage-name={business.stageName}
                             is-edit={row.dynCmp.isEdit}
                             mrc-rl05-ui={business.mrcRl05Ui}
                             duplicate-case-id={business.mrcRl0502DuplicateOpenCaseId}
@@ -301,7 +304,8 @@
                         </template>
                         <template if:false={row.dynCmp.isMrcReturnPanel}>
                           <lwc:component lwc:is={row.dynCmp.ctor} record-id={recordId} sub-code-code={business.subCodeCode} sub-category-code={business.subCategoryCode}
-                            is-edit={row.dynCmp.isEdit} is-hidden-lwc={isHiddenLwc}></lwc:component>
+                                         is-edit={row.dynCmp.isEdit} is-hidden-lwc={isHiddenLwc}
+                                         ondeliveryoptionchange={handleContractClosureDeliveryChange}></lwc:component>
                         </template>
                       </div>
                     </lightning-accordion-section>
