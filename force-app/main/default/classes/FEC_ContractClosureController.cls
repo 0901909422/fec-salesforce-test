@@ -103,7 +103,6 @@ public without sharing class FEC_ContractClosureController {
         public Boolean deliveryEmailSelected;
         public Boolean deliveryAddressSelected;
         public Boolean deliveryOfficeSelected;
-        public Boolean deliveryPosSelected;
         public Boolean useExistingEmail;
         public String temporaryEmail;
         public String recipientName;
@@ -148,7 +147,6 @@ public without sharing class FEC_ContractClosureController {
             Map<String, Schema.SObjectField> caseFields = Schema.SObjectType.Case.fields.getMap();
             List<Case> rows = [
                 SELECT Id,
-                    RecordTypeId,
                     FEC_Account_or_Contract__c,
                     FEC_Account_or_Contract__r.Id,
                     FEC_Account_or_Contract__r.FEC_Email__c,
@@ -220,7 +218,7 @@ public without sharing class FEC_ContractClosureController {
                     }
                 }
             }
-            out.deliveryOptions = describeDeliveryPicklistForRecordType(c.RecordTypeId);
+            out.deliveryOptions = describePicklist(OBJ_CASE, FLD_DELIVERY);
             out.wardOptions = mergePicklistOptions(
                 describePicklist(OBJ_ADDRESS, 'FEC_Ward__c'),
                 describePicklist(OBJ_ADDRESS, 'FEC_Ward_Text__c')
@@ -589,7 +587,7 @@ public without sharing class FEC_ContractClosureController {
     private static ValidationResultDTO persistClosureForm(Id caseId, InitDataDTO init, SavePayloadDTO p) {
         ValidationResultDTO vr = new ValidationResultDTO();
         try {
-            SObject caseRec = buildCaseUpdate(caseId, p, init.deliveryOptions);
+            SObject caseRec = buildCaseUpdate(caseId, p);
             if (caseRec != null && hasNonIdField(caseRec)) {
                 SObjectAccessDecision dec = Security.stripInaccessible(
                     AccessType.UPDATABLE,
@@ -621,7 +619,6 @@ public without sharing class FEC_ContractClosureController {
         Boolean hasEmail = p.deliveryEmailSelected == true;
         Boolean hasAddr = p.deliveryAddressSelected == true;
         Boolean hasOffice = p.deliveryOfficeSelected == true;
-        Boolean hasPos = p.deliveryPosSelected == true;
         Integer cnt = 0;
         if (hasEmail) {
             cnt++;
@@ -632,26 +629,10 @@ public without sharing class FEC_ContractClosureController {
         if (hasOffice) {
             cnt++;
         }
-        if (hasPos) {
-            cnt++;
-        }
         if (cnt == 0) {
             if (forComplete || requireDelivery) {
                 r.addFail(MSG_NOTI_02);
             }
-        }
-        Integer physicalCnt = 0;
-        if (hasAddr) {
-            physicalCnt++;
-        }
-        if (hasOffice) {
-            physicalCnt++;
-        }
-        if (hasPos) {
-            physicalCnt++;
-        }
-        if (physicalCnt > 1) {
-            r.addFail(MSG_NOTI_02);
         }
         if (hasAddr && hasOffice) {
             r.addFail(MSG_NOTI_02);
@@ -659,7 +640,6 @@ public without sharing class FEC_ContractClosureController {
         if (cnt > 2) {
             r.addFail(MSG_NOTI_02);
         }
-        validateDeliveryPicklistValues(init.deliveryOptions, p, r);
         if (hasEmail) {
             String channel = p.emailDeliveryChannel;
             if (String.isBlank(channel) && p.useExistingEmail == true) {
@@ -731,11 +711,7 @@ public without sharing class FEC_ContractClosureController {
         return r;
     }
 
-    private static SObject buildCaseUpdate(
-        Id caseId,
-        SavePayloadDTO p,
-        List<PicklistEntryDTO> deliveryOptions
-    ) {
+    private static SObject buildCaseUpdate(Id caseId, SavePayloadDTO p) {
         Map<String, Schema.SObjectField> fm = Case.SObjectType.getDescribe().fields.getMap();
         SObject c = Case.SObjectType.newSObject();
         c.put('Id', caseId);
@@ -745,7 +721,7 @@ public without sharing class FEC_ContractClosureController {
             if (String.isBlank(combined) && p.deliveryValues != null && !p.deliveryValues.isEmpty()) {
                 combined = String.join(p.deliveryValues, ';');
             }
-            c.put(FLD_DELIVERY, sanitizeDeliveryCombined(combined, deliveryOptions));
+            c.put(FLD_DELIVERY, combined);
         }
         Schema.SObjectField fRn = fm.get(flc(FLD_RECIPIENT_NAME));
         if (fRn != null && fRn.getDescribe().isUpdateable()) {
@@ -1065,145 +1041,6 @@ public without sharing class FEC_ContractClosureController {
             opts.add(new PicklistEntryDTO(po.label, po.value));
         }
         return opts;
-    }
-
-    private static List<PicklistEntryDTO> describeDeliveryPicklistForRecordType(Id recordTypeId) {
-        List<PicklistEntryDTO> opts = new List<PicklistEntryDTO>();
-        if (recordTypeId != null) {
-            try {
-                ConnectApi.PicklistValuesCollection picklistValues = ConnectApi.RecordUi.getPicklistValuesByRecordType(
-                    OBJ_CASE,
-                    recordTypeId
-                );
-                if (
-                    picklistValues != null &&
-                    picklistValues.picklistFieldValues != null &&
-                    picklistValues.picklistFieldValues.containsKey(FLD_DELIVERY)
-                ) {
-                    ConnectApi.PicklistValues fieldValues = picklistValues.picklistFieldValues.get(FLD_DELIVERY);
-                    if (fieldValues != null && fieldValues.values != null) {
-                        for (ConnectApi.PicklistValue entry : fieldValues.values) {
-                            if (entry == null || String.isBlank(entry.value)) {
-                                continue;
-                            }
-                            opts.add(new PicklistEntryDTO(entry.label, entry.value));
-                        }
-                    }
-                }
-            } catch (Exception ex) {
-                System.debug(
-                    LoggingLevel.WARN,
-                    'describeDeliveryPicklistForRecordType: ' + ex.getMessage()
-                );
-            }
-        }
-        if (opts.isEmpty()) {
-            opts = describePicklist(OBJ_CASE, FLD_DELIVERY);
-        } else {
-            opts = mergeDeliveryPicklistWithGlobalPos(opts);
-        }
-        return opts;
-    }
-
-    private static List<PicklistEntryDTO> mergeDeliveryPicklistWithGlobalPos(
-        List<PicklistEntryDTO> recordTypeOptions
-    ) {
-        if (recordTypeOptions == null || recordTypeOptions.isEmpty()) {
-            return recordTypeOptions;
-        }
-        Set<String> existingValues = new Set<String>();
-        for (PicklistEntryDTO opt : recordTypeOptions) {
-            if (opt != null && String.isNotBlank(opt.value)) {
-                existingValues.add(opt.value);
-            }
-        }
-        List<PicklistEntryDTO> merged = new List<PicklistEntryDTO>(recordTypeOptions);
-        for (PicklistEntryDTO globalOpt : describePicklist(OBJ_CASE, FLD_DELIVERY)) {
-            if (globalOpt == null || String.isBlank(globalOpt.value)) {
-                continue;
-            }
-            if (existingValues.contains(globalOpt.value)) {
-                continue;
-            }
-            if (isPosDeliveryPicklistValue(globalOpt)) {
-                merged.add(globalOpt);
-                existingValues.add(globalOpt.value);
-            }
-        }
-        return merged;
-    }
-
-    private static Boolean isPosDeliveryPicklistValue(PicklistEntryDTO opt) {
-        if (opt == null) {
-            return false;
-        }
-        String valueUpper = opt.value != null ? opt.value.trim().toUpperCase() : FEC_ConstantCommon.STR_EMPTY;
-        String labelUpper = opt.label != null ? opt.label.trim().toUpperCase() : FEC_ConstantCommon.STR_EMPTY;
-        return valueUpper == 'RL05_POS' ||
-            valueUpper == 'POS' ||
-            labelUpper == 'POS';
-    }
-
-    private static void validateDeliveryPicklistValues(
-        List<PicklistEntryDTO> deliveryOptions,
-        SavePayloadDTO p,
-        ValidationResultDTO r
-    ) {
-        if (r == null || r.valid != true || p == null) {
-            return;
-        }
-        Set<String> allowed = buildAllowedDeliveryValueSet(deliveryOptions);
-        if (allowed.isEmpty()) {
-            return;
-        }
-        String combined = p.deliveryOptionCombined;
-        if (String.isBlank(combined) && p.deliveryValues != null && !p.deliveryValues.isEmpty()) {
-            combined = String.join(p.deliveryValues, ';');
-        }
-        if (String.isBlank(combined)) {
-            return;
-        }
-        for (String part : combined.split(';')) {
-            String trimmed = part == null ? FEC_ConstantCommon.STR_EMPTY : part.trim();
-            if (String.isNotBlank(trimmed) && !allowed.contains(trimmed)) {
-                r.addFail(MSG_NOTI_02);
-                return;
-            }
-        }
-    }
-
-    private static String sanitizeDeliveryCombined(
-        String combined,
-        List<PicklistEntryDTO> deliveryOptions
-    ) {
-        if (String.isBlank(combined)) {
-            return combined;
-        }
-        Set<String> allowed = buildAllowedDeliveryValueSet(deliveryOptions);
-        if (allowed.isEmpty()) {
-            return combined;
-        }
-        List<String> kept = new List<String>();
-        for (String part : combined.split(';')) {
-            String trimmed = part == null ? FEC_ConstantCommon.STR_EMPTY : part.trim();
-            if (String.isNotBlank(trimmed) && allowed.contains(trimmed)) {
-                kept.add(trimmed);
-            }
-        }
-        return kept.isEmpty() ? null : String.join(kept, ';');
-    }
-
-    private static Set<String> buildAllowedDeliveryValueSet(List<PicklistEntryDTO> deliveryOptions) {
-        Set<String> allowed = new Set<String>();
-        if (deliveryOptions == null) {
-            return allowed;
-        }
-        for (PicklistEntryDTO opt : deliveryOptions) {
-            if (opt != null && String.isNotBlank(opt.value)) {
-                allowed.add(opt.value);
-            }
-        }
-        return allowed;
     }
 
     private static List<PicklistEntryDTO> mergePicklistOptions(

@@ -226,11 +226,11 @@
             <default>false</default>
         </values>
         <values>
-            <fullName>Văn phòng</fullName>
+            <fullName>Office</fullName>
             <default>false</default>
         </values>
         <values>
-            <fullName>Địa chỉ</fullName>
+            <fullName>Address</fullName>
             <default>false</default>
         </values>
         <values>

@@ -51,6 +51,7 @@
         <members>FEC_BancaController</members>
         <members>FEC_DNBHandler</members>
         <members>FEC_DocumentRequestRoutingService</members>
+        <members>FEC_DocumentRequestRoutingActionService</members>
         <members>FEC_GetCSCaseStatusService</members>
 		<members>Fec_HoldCaseConfigurationController</members>
 		<members>FEC_HoldCaseInheritanceService</members>
@@ -130,6 +131,7 @@
 		<members>FEC_DownloadReportScheduler</members>
 		<members>FEC_DownloadReportService</members>
 		<members>FEC_BatchCaseCreationController</members>
+		<members>FEC_BatchCaseCreationService</members>
 		<members>FEC_BatchDataCreationController</members>
 		<members>FEC_BatchImportCommon</members>
 		<members>FEC_BCH_ImportRoutingResolver</members>
@@ -417,6 +419,12 @@
         <members>FEC_MSG_Cannot_Request_Repayment_Schedule</members>
         <members>FEC_BCH_Col_TotalRecords</members>
         <members>FEC_BCH_HeaderInvalid</members>
+        <members>FEC_Batch_Import_Contract_Header_Ambiguous</members>
+        <members>FEC_Batch_Import_File_Type_Template_Mismatch</members>
+        <members>FEC_Batch_Import_Other_Contract_Number_No_Dash</members>
+        <members>FEC_Batch_Import_Required_Sub_Code</members>
+        <members>FEC_Batch_Import_Welcome_Case_Status_Only_Resolved_Completed</members>
+        <members>FEC_Batch_Import_Welcome_Contract_Number_Requires_Dash</members>
 		<members>FEC_Label_Customer_All</members>
 		<members>FEC_Label_Customer_Existing</members>
 		<members>FEC_Label_Customer_Non_Existing</members>
