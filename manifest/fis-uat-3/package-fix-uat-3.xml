@@ -136,6 +136,7 @@
 		<members>FEC_BatchCaseHandlingResultXlsxBuilder</members>
 		<members>FEC_NotificationService</members>
 		<members>FEC_CaseAssignmentConfigController</members>
+        <members>FEC_RoutingHistTatSvc</members>
 		<name>Apexclass</name>
 	</types>
     <types>
@@ -230,6 +231,7 @@
 		<members>fec_DownloadReports</members>
 		<members>fec_BatchDataCreation</members>
 		<members>fecMrcReturnStageChangeRouting</members>
+		<members>fec_BatchCaseCreation</members>
 		<name>LightningComponentBundle</name>
 	</types>
     <types>

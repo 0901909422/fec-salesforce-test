@@ -197,7 +197,7 @@ public without sharing class FEC_TransactionsController {
             return result;
         }
 
-        for (FEC_MFASOUTSTANDINGAUTHINQ.AuthTableRow auth : res.VMXMsgOut.Auths) {
+        for (FEC_VMXAUTHDETAILINQ.AuthTableRow auth : res.VMXMsgOut.Auths) {
 
             FEC_Transaction__c tx;
 
