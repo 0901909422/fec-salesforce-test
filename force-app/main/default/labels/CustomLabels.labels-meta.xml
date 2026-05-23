@@ -17278,7 +17278,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC_Batch_Import_Required_Sub_Code</shortDescription>
-        <value>Sub Code là bắt buộc.</value>
+        <value>Bộ NOC có Sub Code nhưng không có Sub Code trong file import.</value>
     </labels>
     <labels>
         <fullName>FEC_Batch_Import_Required_Case_Status</fullName>
@@ -18076,6 +18076,46 @@
         <protected>false</protected>
         <shortDescription>Error Download</shortDescription>
         <value>Select at least one record and try again.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Batch_Import_Contract_Header_Ambiguous</fullName>
+        <categories>Apex FEC_BatchImport,LWC fec_BatchCaseCreation</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Batch Import contract header ambiguous</shortDescription>
+        <value>File chỉ được có một cột Contract Number hoặc Account/ Contract Number.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Batch_Import_File_Type_Template_Mismatch</fullName>
+        <categories>Apex FEC_BatchImport</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Import file type does not match template</shortDescription>
+        <value>Loại file import không khớp template đã chọn.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Batch_Import_Welcome_Case_Status_Only_Resolved_Completed</fullName>
+        <categories>Apex FEC_BatchImport</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Welcome Call case status only Resolved-Completed</shortDescription>
+        <value>File Welcome Call: Case Status chỉ được phép Resolved-Completed.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Batch_Import_Welcome_Contract_Number_Requires_Dash</fullName>
+        <categories>Apex FEC_BatchImport</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Welcome contract number must contain dash</shortDescription>
+        <value>Contract Number không đúng định dạng.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Batch_Import_Other_Contract_Number_No_Dash</fullName>
+        <categories>Apex FEC_BatchImport</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Other case account contract must not contain dash</shortDescription>
+        <value>Account/ Contract Number không đúng định dạng.</value>
     </labels>
 
     <labels>

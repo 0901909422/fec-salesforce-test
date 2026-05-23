@@ -66,6 +66,7 @@
 		<members>FEC_StatementsAccountController</members>
 		<members>FEC_TransactionsController</members>
 		<members>FEC_VMXAUTHDETAILINQ</members>
+		<members>FEC_VmxAcctBlkcdUpdEmeaCallout</members>
 		<members>FEC_InteractionInforHandler</members>
 		<members>FEC_NocInheritanceUtil</members>
 		<members>FEC_NocInheritanceUtilTest</members>
@@ -90,6 +91,8 @@
 		<members>FEC_CaseAssignmentAutoDistQueueJob</members>
 		<members>FEC_CaseAssignmentAutoDistributeService</members>
 		<members>FEC_CaseAssignmentMutationGuard</members>
+		<members>FEC_CaseAssignmentFieldHistorySync</members>
+		<members>FEC_CaseAssignmentFieldHistorySyncTest</members>
 		<members>FEC_CaseAssignmentNOCTriggerHandler</members>
 		<members>FEC_CaseAssignmentNocController</members>
 		<members>FEC_CaseManagerListService</members>
@@ -127,6 +130,7 @@
 		<members>FEC_DownloadReportScheduler</members>
 		<members>FEC_DownloadReportService</members>
 		<members>FEC_BatchCaseCreationController</members>
+		<members>FEC_BatchCaseCreationService</members>
 		<members>FEC_BatchDataCreationController</members>
 		<members>FEC_BatchImportCommon</members>
 		<members>FEC_BCH_ImportRoutingResolver</members>
@@ -233,6 +237,7 @@
 		<members>fec_BatchDataCreation</members>
 		<members>fecMrcReturnStageChangeRouting</members>
 		<members>fec_BatchCaseCreation</members>
+		<members>fec_CardReplacementAddress</members>
 		<name>LightningComponentBundle</name>
 	</types>
     <types>
@@ -285,6 +290,8 @@
         <members>FEC_Template_Import__c.FEC_User_Group__c</members>
         <members>FEC_Case_Assignment_Logs__c.FEC_Case_Assignment_Name__c</members>
         <members>FEC_Case_Assignment__c.FEC_Case_Assignmetn_NOC_Count__c</members>
+        <members>FEC_Case_Assignment__c.FEC_Time_Slots__c</members>
+        <members>FEC_Case_Assignment__c.FEC_Time_Slots_Tracked__c</members>
         <members>FEC_Customer_History__c.FEC_Search_Result_National_ID__c</members>
         <members>FEC_Download_Report__c.FEC_Link__c</members>
         <members>FEC_Download_Report__c.FEC_Report_Unique_Name__c</members>
@@ -411,6 +418,12 @@
         <members>FEC_MSG_Cannot_Request_Repayment_Schedule</members>
         <members>FEC_BCH_Col_TotalRecords</members>
         <members>FEC_BCH_HeaderInvalid</members>
+        <members>FEC_Batch_Import_Contract_Header_Ambiguous</members>
+        <members>FEC_Batch_Import_File_Type_Template_Mismatch</members>
+        <members>FEC_Batch_Import_Other_Contract_Number_No_Dash</members>
+        <members>FEC_Batch_Import_Required_Sub_Code</members>
+        <members>FEC_Batch_Import_Welcome_Case_Status_Only_Resolved_Completed</members>
+        <members>FEC_Batch_Import_Welcome_Contract_Number_Requires_Dash</members>
 		<members>FEC_Label_Customer_All</members>
 		<members>FEC_Label_Customer_Existing</members>
 		<members>FEC_Label_Customer_Non_Existing</members>
@@ -437,6 +450,7 @@
 		<members>FEC_API_Config.FEC_Get_IPP_Detail</members>
 	    <members>FEC_API_Config.FEC_MFASOUTSTANDINGAUTHINQ</members>
 		<members>FEC_API_Config.FEC_VMX_AUTH_DETAIL_INQ</members>
+		<members>FEC_API_Config.FEC_Vmx_Acct_Blkcd_Upd_Emea</members>
 		<name>CustomMetadata</name>
 	</types>
     <types>
@@ -680,7 +694,6 @@
         <name>EntitlementProcess</name>
     </types>
 	<types>
-	    <members>FEC_Download_Report__c.All</members>
 	    <members>FEC_Download_Report__c.INTERACTIONS_SERVICE_CASES_SUMMARY_TAT</members>
 	    <members>FEC_Download_Report__c.Interaction_and_Service_Case_Summary</members>
 	    <name>ListView</name>
