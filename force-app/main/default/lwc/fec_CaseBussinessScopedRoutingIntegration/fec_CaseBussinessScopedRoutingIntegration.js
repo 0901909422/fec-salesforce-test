@@ -199,7 +199,20 @@ export async function trySubmitScopedRouteTo(host) {
     typeof cmpAddr.hasPendingAddressUpdates === "function" &&
     cmpAddr.hasPendingAddressUpdates();
 
-  if (routeToEle && noUpdate && !hasAddressUpdate) {
+  const hasAssessmentChange =
+    typeof host.hasContractProcessingAssessmentTypeChanged === "function" &&
+    host.hasContractProcessingAssessmentTypeChanged();
+  const hasRdPaymentAssessmentChange =
+    typeof host.hasRdPaymentContractAssessmentChanged === "function" &&
+    host.hasRdPaymentContractAssessmentChanged();
+
+  if (
+    routeToEle &&
+    noUpdate &&
+    !hasAddressUpdate &&
+    !hasAssessmentChange &&
+    !hasRdPaymentAssessmentChange
+  ) {
     host.showToast?.(
       FEC_Warning_Title,
       FEC_MSG_UPDATED_INFO_NOT_UPDATED,
@@ -222,6 +235,37 @@ export async function trySubmitScopedRouteTo(host) {
   }
 
   try {
+    if (
+      typeof host.persistContractProcessingAssessmentTypeBeforeScopedRouteTo ===
+      "function"
+    ) {
+      const persistResult =
+        await host.persistContractProcessingAssessmentTypeBeforeScopedRouteTo();
+      if (persistResult?.success === false) {
+        host.showToast?.(
+          FEC_Error_Title,
+          persistResult.errorMessage || FEC_Error_Title,
+          "error",
+        );
+        return false;
+      }
+    }
+
+    if (
+      typeof host.persistRdPaymentContractAssessmentBeforeSubmit === "function"
+    ) {
+      const rdPersistResult =
+        await host.persistRdPaymentContractAssessmentBeforeSubmit();
+      if (rdPersistResult?.success === false) {
+        host.showToast?.(
+          FEC_Error_Title,
+          rdPersistResult.errorMessage || FEC_Error_Title,
+          "error",
+        );
+        return false;
+      }
+    }
+
     const ok = await executeScopedRouteToSubmit(host);
     if (ok) {
       host._notifyRemovePhoneCaseSubmitted?.();
