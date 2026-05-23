@@ -1556,6 +1556,30 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
     );
   }
 
+  /** Chỉ hiện section Routing khi thực sự có option (tránh dropdown trống RL04.02/03). */
+  _syncHasRoutingAction() {
+    if (!this.business) {
+      return;
+    }
+    const hasOptions =
+      Array.isArray(this.business.routingActionlst) &&
+      this.business.routingActionlst.length > 0;
+    const isCofGsr =
+      typeof this.business.code === "string" &&
+      (this.business.code.startsWith("COF") ||
+        this.business.code.startsWith("GSR"));
+    const docReqRoutingCtx = getDocumentRequestRoutingContext(
+      this.business,
+      this._documentRequestRoutingFieldOverrides(),
+    );
+    this.business.hasRoutingAction =
+      isCofGsr ||
+      hasOptions ||
+      docReqRoutingCtx.subCodeSupported ||
+      shouldActivateMrcReturnRouting(this.business);
+    this.business = { ...this.business };
+  }
+
   /**
    * Cập nhật readonly/editable cho toàn bộ field khi isEdit đổi.
    * Không gọi Apex, chỉ sửa dữ liệu đã có trong memory.
@@ -1578,26 +1602,6 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
       });
     });
     this._syncHasRoutingAction();
-  }
-
-  /** Chỉ hiện section Routing khi thực sự có option (tránh dropdown trống RL04.02/03). */
-  _syncHasRoutingAction(extraHasRouting = false) {
-    if (!this.business) {
-      return;
-    }
-    const hasOptions =
-      Array.isArray(this.business.routingActionlst) &&
-      this.business.routingActionlst.length > 0;
-    const isCofGsr =
-      typeof this.business.code === "string" &&
-      (this.business.code.startsWith("COF") ||
-        this.business.code.startsWith("GSR"));
-    this.business.hasRoutingAction =
-      isCofGsr ||
-      hasOptions ||
-      extraHasRouting ||
-      shouldActivateMrcReturnRouting(this.business);
-    this.business = { ...this.business };
   }
 
   _isRl0402OrRl0403SubCode() {
@@ -2038,7 +2042,7 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
           this._documentRequestRoutingFieldOverrides(),
         );
         this._documentRequestDeliveryEligible = docReqRoutingCtx.deliveryEligible;
-        this._syncHasRoutingAction(docReqRoutingCtx.subCodeSupported);
+        this._syncHasRoutingAction();
         this._mrcReturnStageChangeRoutingActive =
           shouldActivateMrcReturnRouting(this.business);
 
