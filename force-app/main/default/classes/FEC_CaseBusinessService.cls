@@ -909,6 +909,11 @@ public without sharing class FEC_CaseBusinessService {
           );
         }
 
+        masterDatalst = removeMasterDataRowsByHiddenAssignmentFieldApis(
+          masterDatalst,
+          hasCaseAssignment
+        );
+
         for (SObject item : masterDatalst) {
           sectionNameTemp = (String) item.get('FEC_Section__c');
           subSectionNameTemp = (String) item.get('FEC_Sub_Section__c');
@@ -921,9 +926,6 @@ public without sharing class FEC_CaseBusinessService {
           String itemType = (String) item.get('FEC_Type__c');
           if (TYPE_ASSIGNMENT.equals(itemType)) {
             if (!hasCaseAssignment) {
-              continue;
-            }
-            if (item.get('FEC_Hidden__c') == true) {
               continue;
             }
           }
@@ -2010,6 +2012,48 @@ public without sharing class FEC_CaseBusinessService {
       return caseRec.FEC_Assignment_Count__c;
     }
     return getCaseAssignmentCountByCaseId(caseRec?.Id);
+  }
+
+  /**
+   * Assignment + FEC_Hidden__c: loại khỏi masterDatalst mọi dòng có cùng FEC_Field_API_Name__c
+   * (kể cả type Field/LWC khác Assignment).
+   */
+  @TestVisible
+  private static List<SObject> removeMasterDataRowsByHiddenAssignmentFieldApis(
+    List<SObject> masterDatalst,
+    Boolean hasCaseAssignment
+  ) {
+    if (
+      masterDatalst == null ||
+      masterDatalst.isEmpty() ||
+      hasCaseAssignment != true
+    ) {
+      return masterDatalst;
+    }
+    Set<String> hiddenFieldApis = new Set<String>();
+    for (SObject mdsRow : masterDatalst) {
+      if (
+        TYPE_ASSIGNMENT.equals((String) mdsRow.get('FEC_Type__c')) &&
+        mdsRow.get('FEC_Hidden__c') == true
+      ) {
+        String fieldApi = (String) mdsRow.get('FEC_Field_API_Name__c');
+        if (String.isNotBlank(fieldApi)) {
+          hiddenFieldApis.add(fieldApi);
+        }
+      }
+    }
+    if (hiddenFieldApis.isEmpty()) {
+      return masterDatalst;
+    }
+    List<SObject> filtered = new List<SObject>();
+    for (SObject mdsRow : masterDatalst) {
+      String fieldApi = (String) mdsRow.get('FEC_Field_API_Name__c');
+      if (String.isNotBlank(fieldApi) && hiddenFieldApis.contains(fieldApi)) {
+        continue;
+      }
+      filtered.add(mdsRow);
+    }
+    return filtered;
   }
 
   //thangtv: khi Owner hiện tại là Queue, tra FEC_Routing_Action_History__c để tìm User thực sự
