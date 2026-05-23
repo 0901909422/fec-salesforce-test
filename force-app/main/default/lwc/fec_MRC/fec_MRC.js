@@ -52,21 +52,12 @@ const MrcFields = {
 
 const CASE_SUB_FIELDS = [FEC_SUBCODE_ID];
 
-/** RL05 MRC Return: ẩn toàn bộ block (RL05.01 / RL05.02 / RL05.03). */
-const RL05_HIDE_SUB_CODES = ['RL05.01', 'RL05.02', 'RL05.03'];
-
+/** Chỉ ẩn khi parent/master data ép (isHiddenLwc). RL05 vẫn hiển thị Properties/MRC Info. */
 function normalizeSubCodeUpper(value) {
     if (value == null || value === STR_EMPTY) {
         return STR_EMPTY;
     }
     return String(value).trim().toUpperCase();
-}
-
-function isRl05SubCodeUpper(subCodeUpper) {
-    if (!subCodeUpper) {
-        return false;
-    }
-    return RL05_HIDE_SUB_CODES.some((code) => subCodeUpper.includes(code));
 }
 
 export default class Fec_MRC extends LightningElement {
@@ -175,16 +166,10 @@ export default class Fec_MRC extends LightningElement {
     }
 
     get shouldHideComponent() {
-        if (this.isHiddenLwc === true) {
-            return true;
-        }
-        if (!this._isSubCodeContextReady) {
-            return false;
-        }
-        return isRl05SubCodeUpper(this._effectiveSubCodeUpper);
+        return this.isHiddenLwc === true;
     }
 
-    /** Chỉ render sau khi biết Sub-Code và không thuộc RL05. */
+    /** Chỉ render sau khi biết Sub-Code. */
     get shouldRenderMrc() {
         return this._isSubCodeContextReady && !this.shouldHideComponent;
     }

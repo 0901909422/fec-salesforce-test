@@ -178,6 +178,9 @@ public with sharing class FEC_SearchController {
                 ? sourceCase.FEC_Search_National_ID__c
                 : buyerNID
             );
+        // CCCD từ kết quả search (UI/API), tách khỏi FEC_National_ID_Passport_ID__c (demographic API).
+        String resolvedSearchNationalId =
+            String.isNotBlank(buyerNID) ? buyerNID : resolvedNationalId;
 
         FEC_Customer_History__c rec = new FEC_Customer_History__c();
         if (fieldName == 'AccountNumber') {
@@ -200,7 +203,8 @@ public with sharing class FEC_SearchController {
             //     String.isNotBlank(searchPhoneFromCase) ? searchPhoneFromCase : phone;
             // rec.FEC_National_ID_Passport_ID__c =
             //     String.isNotBlank(searchNidFromCase) ? searchNidFromCase : buyerNID;
-            rec.FEC_Buyer_NID__c = buyerNID;
+            rec.FEC_Buyer_NID__c = resolvedSearchNationalId;
+            rec.FEC_Search_Result_National_ID__c = resolvedSearchNationalId;
 
             if (caseId == null && isListView == true) {
                 rec.FEC_Contract_Number__c = policyNumber;
@@ -216,8 +220,9 @@ public with sharing class FEC_SearchController {
         // rec.FEC_Customer_Name__c = customerName;
         rec.FEC_Work_Phone__c = resolvedPrimaryPhone;
         rec.FEC_Primary_Phone__c = resolvedPrimaryPhone;
-        rec.FEC_National_ID_Passport_ID__c = resolvedNationalId;
+        //rec.FEC_National_ID_Passport_ID__c = resolvedNationalId;
         rec.FEC_Customer_Name__c = resolvedCustomerName;
+        rec.FEC_Search_Result_National_ID__c = resolvedSearchNationalId;
         // Old behavior (kept for reference):
         // - rec.FEC_Primary_Phone__c, rec.FEC_National_ID_Passport_ID__c chỉ được set trong nhánh UserId.
         // - Card/Loan không được đồng bộ 2 field này từ Case.
@@ -242,8 +247,8 @@ public with sharing class FEC_SearchController {
         if (String.isNotBlank(phone)) {
             objCase.FEC_Search_Phone_Number__c = phone;
         }
-        if (String.isNotBlank(buyerNID)) {
-            objCase.FEC_Search_National_ID__c = buyerNID;
+        if (String.isNotBlank(resolvedSearchNationalId)) {
+            objCase.FEC_Search_National_ID__c = resolvedSearchNationalId;
         }
 
         update objCase;
@@ -474,6 +479,7 @@ public with sharing class FEC_SearchController {
                 SELECT Id,
                     FEC_Customer_Name__c,
                     FEC_National_ID_Passport_ID__c,
+                    FEC_Search_Result_National_ID__c,
                     FEC_Gender__c,
                     FEC_Date_of_Birth__c,
                     FEC_Primary_Phone__c,
@@ -489,13 +495,13 @@ public with sharing class FEC_SearchController {
                     || String.isNotBlank(hist.FEC_Primary_Phone__c)
                     || hist.FEC_Date_of_Birth__c != null
                     || String.isNotBlank(hist.FEC_Gender__c)
-                    || hist.FEC_National_ID_Passport_ID__c != null
+                    || hist.FEC_Search_Result_National_ID__c != null
                     || String.isNotBlank(hist.FEC_Email__c)
                     || String.isNotBlank(hist.FEC_Plastic_ID__c);
             return new Map<String, Object>{
                 'isReady'      => isReady,
                 'customerName' => hist.FEC_Customer_Name__c,
-                'nationalId'   => hist.FEC_National_ID_Passport_ID__c,
+                'nationalId'   => hist.FEC_Search_Result_National_ID__c,
                 'gender'       => hist.FEC_Gender__c,
                 'dateOfBirth'  => hist.FEC_Date_of_Birth__c,
                 'primaryPhone' => hist.FEC_Primary_Phone__c,

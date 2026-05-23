@@ -45,7 +45,8 @@ export function computeShowScopedStageChangeRoutingSection(host) {
     return base;
   }
 
-  return base && host._documentRequestStageChangeRoutingActive !== true;
+  return base && host._documentRequestStageChangeRoutingActive !== true &&
+    host._mrcReturnStageChangeRoutingActive !== true;
 }
 
 /** PhongBT read-only: chỉ Stage 1 trên BP Document Request / Original MRC Return. */
@@ -54,6 +55,22 @@ export function computeShowDocumentRequestStageChangeRoutingSection(host) {
     host.isEdit === true &&
     host._documentRequestStageChangeRoutingActive === true &&
     !shouldPreferScopedRoutingFromStage2(host)
+  );
+}
+
+/** MRC Return RL05 — read-only Team/Queue Stage 1 (giống Document Request). */
+export function computeShowMrcReturnStageChangeRoutingSection(host) {
+  return (
+    host.isEdit === true &&
+    host._mrcReturnStageChangeRoutingActive === true &&
+    !shouldPreferScopedRoutingFromStage2(host)
+  );
+}
+
+export function computeShowStage1AutoRouteToRoutingSection(host) {
+  return (
+    computeShowDocumentRequestStageChangeRoutingSection(host) ||
+    computeShowMrcReturnStageChangeRoutingSection(host)
   );
 }
 
@@ -129,7 +146,8 @@ export function resolveRoutingActionSelectEl(host) {
   if (computeShowScopedStageChangeRoutingSection(host)) {
     return getScopedRoutingCmp(host)?.getRoutingActionSelect?.() ?? null;
   }
-  if (host.showDocumentRequestStageChangeRoutingSection) {
+  if (computeShowDocumentRequestStageChangeRoutingSection(host) ||
+      computeShowMrcReturnStageChangeRoutingSection(host)) {
     const child = host.template?.querySelector(
       "c-fec_-document-request-routing-action",
     );
@@ -181,7 +199,11 @@ export async function trySubmitScopedRouteTo(host) {
     typeof cmpAddr.hasPendingAddressUpdates === "function" &&
     cmpAddr.hasPendingAddressUpdates();
 
-  if (routeToEle && noUpdate && !hasAddressUpdate) {
+  const hasSubmitPicklistChange =
+    typeof host.hasAnySubmitCasePicklistFieldChanged === "function" &&
+    host.hasAnySubmitCasePicklistFieldChanged();
+
+  if (routeToEle && noUpdate && !hasAddressUpdate && !hasSubmitPicklistChange) {
     host.showToast?.(
       FEC_Warning_Title,
       FEC_MSG_UPDATED_INFO_NOT_UPDATED,
@@ -204,6 +226,21 @@ export async function trySubmitScopedRouteTo(host) {
   }
 
   try {
+    if (
+      typeof host.persistSubmitCasePicklistFieldsBeforeSubmit === "function"
+    ) {
+      const persistResult =
+        await host.persistSubmitCasePicklistFieldsBeforeSubmit();
+      if (persistResult?.success === false) {
+        host.showToast?.(
+          FEC_Error_Title,
+          persistResult.errorMessage || FEC_Error_Title,
+          "error",
+        );
+        return false;
+      }
+    }
+
     const ok = await executeScopedRouteToSubmit(host);
     if (ok) {
       host._notifyRemovePhoneCaseSubmitted?.();

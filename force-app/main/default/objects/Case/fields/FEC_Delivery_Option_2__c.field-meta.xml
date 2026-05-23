@@ -18,17 +18,17 @@
                 <label>Email</label>
             </value>
             <value>
-                <fullName>Địa chỉ</fullName>
+                <fullName>Address</fullName>
                 <default>false</default>
-                <label>Địa chỉ</label>
+                <label>Address</label>
             </value>
             <value>
-                <fullName>Văn phòng</fullName>
+                <fullName>Office</fullName>
                 <default>false</default>
-                <label>Văn phòng</label>
+                <label>Office</label>
             </value>
             <value>
-                <fullName>POS</fullName>
+                <fullName>RL05_POS</fullName>
                 <default>false</default>
                 <label>POS</label>
             </value>
