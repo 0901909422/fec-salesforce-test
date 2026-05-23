@@ -51,6 +51,7 @@
         <members>FEC_BancaController</members>
         <members>FEC_DNBHandler</members>
         <members>FEC_DocumentRequestRoutingService</members>
+        <members>FEC_DocumentRequestRoutingActionService</members>
         <members>FEC_GetCSCaseStatusService</members>
 		<members>Fec_HoldCaseConfigurationController</members>
 		<members>FEC_HoldCaseInheritanceService</members>
@@ -142,6 +143,7 @@
 		<members>FEC_CaseAssignmentConfigController</members>
         <members>FEC_RoutingHistTatSvc</members>
         <members>FEC_PsDNBServiceCallout</members>
+        <members>FEC_FullCustomerIntegrationJob</members>
 		<name>Apexclass</name>
 	</types>
     <types>
