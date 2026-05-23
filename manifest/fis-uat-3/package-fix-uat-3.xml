@@ -234,6 +234,7 @@
 		<members>fec_BatchDataCreation</members>
 		<members>fecMrcReturnStageChangeRouting</members>
 		<members>fec_BatchCaseCreation</members>
+		<members>fec_CardReplacementAddress</members>
 		<name>LightningComponentBundle</name>
 	</types>
     <types>
