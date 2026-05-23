@@ -204,6 +204,9 @@ public with sharing class FEC_BatchCaseCreationController {
                 if (String.isBlank(versionId) || String.isBlank(title)) {
                     continue;
                 }
+                if (FEC_BatchImportCommon.isPendingImportPayloadTitle(title)) {
+                    continue;
+                }
                 String url = FEC_ConstantCommon.CONTENT_VERSION_DOWNLOAD_URL_PREFIX + versionId;
                 Id sourceDocId = sourceDocIdByBatchId.get(link.LinkedEntityId);
                 if (sourceDocId != null) {
@@ -316,10 +319,13 @@ public with sharing class FEC_BatchCaseCreationController {
             FEC_BatchImportCommon.putIfFieldExists(batchFieldMap, batchRow, new List<String>{ 'FEC_Total_Failed_Records__c' }, 0);
             FEC_BatchImportCommon.putIfFieldExists(batchFieldMap, batchRow, new List<String>{ 'FEC_Failure_Reason__c' }, '');
             insert batchRow;
-            FEC_BatchImportCommon.linkFileToBatch((Id) batchRow.get('Id'), insertedCv.ContentDocumentId);
-
-            FEC_BatchImportCommon.putIfFieldExists(batchFieldMap, batchRow, new List<String>{ 'FEC_Status__c' }, 'Processing');
-            update batchRow;
+            Id batchId = (Id) batchRow.get('Id');
+            FEC_BatchImportCommon.linkFileToBatch(batchId, insertedCv.ContentDocumentId);
+            FEC_BatchCaseCreationPendingService.attachPendingImportPayload(
+                batchId,
+                templateName,
+                rowsJson
+            );
 
             List<ParsedCaseRow> parsed = parseInputRows(inputRows);
             Boolean isWelcomeFlow = isWelcomeCallInput(templateName, parsed);
@@ -330,7 +336,7 @@ public with sharing class FEC_BatchCaseCreationController {
                 ? String.format(System.Label.FEC_Batch_Import_Invalid_Row_Count, new List<String>{ String.valueOf(failedCount) })
                 : '';
 
-            // Có bất kỳ dòng lỗi validation → không import cả file, không tạo Case.
+            // Có bất kỳ dòng lỗi validation → không chờ EOD, không tạo Case.
             if (failedCount > 0) {
                 markAllRowResultsFailedForBatchNoImport(rowResults);
                 applyBatchImportFailureOutcome(
@@ -344,64 +350,18 @@ public with sharing class FEC_BatchCaseCreationController {
                 );
                 out.success = false;
                 out.message = batchFailureReason;
-                out.batchRecordId = (Id) batchRow.get('Id');
+                out.batchRecordId = batchId;
                 out.contentDocumentId = insertedCv.ContentDocumentId;
                 out.status = 'Failure';
                 out.resultRowsJson = JSON.serialize(rowResults);
                 return out;
             }
-
-            Savepoint importSavepoint = Database.setSavepoint();
-            if (isWelcomeFlow) {
-                insertWelcomeCallCases(parsed, rowResults);
-            } else {
-                insertStandardCasesWithInteraction(parsed, rowResults);
-            }
-
-            failedCount = countFailedRowResults(rowResults);
-            if (failedCount > 0) {
-                Database.rollback(importSavepoint);
-                markRowResultsNotImportedAfterRollback(rowResults);
-                markAllRowResultsFailedForBatchNoImport(rowResults);
-                batchFailureReason = String.format(
-                    System.Label.FEC_Batch_Import_Invalid_Row_Count,
-                    new List<String>{ String.valueOf(failedCount) }
-                );
-                applyBatchImportFailureOutcome(
-                    batchFieldMap,
-                    batchRow,
-                    totalCount,
-                    failedCount,
-                    batchFailureReason,
-                    fileName,
-                    rowResults
-                );
-                out.success = false;
-                out.message = batchFailureReason;
-                out.batchRecordId = (Id) batchRow.get('Id');
-                out.contentDocumentId = insertedCv.ContentDocumentId;
-                out.status = 'Failure';
-                out.resultRowsJson = JSON.serialize(rowResults);
-                return out;
-            }
-
-            enrichRowResultsFromInsertedCases(rowResults);
-            prepareCaseRowResultsForExport(rowResults);
-
-            FEC_BatchImportCommon.putIfFieldExists(batchFieldMap, batchRow, new List<String>{ 'FEC_Status__c' }, 'Processed');
-            FEC_BatchImportCommon.putIfFieldExists(batchFieldMap, batchRow, new List<String>{ 'FEC_Result__c' }, 'Result');
-            FEC_BatchImportCommon.putIfFieldExists(batchFieldMap, batchRow, new List<String>{ 'FEC_Total_Records__c', 'FEC_Total_Records_Count__c' }, totalCount);
-            FEC_BatchImportCommon.putIfFieldExists(batchFieldMap, batchRow, new List<String>{ 'FEC_Total_Success_Records__c' }, totalCount);
-            FEC_BatchImportCommon.putIfFieldExists(batchFieldMap, batchRow, new List<String>{ 'FEC_Total_Failed_Records__c' }, 0);
-            FEC_BatchImportCommon.putIfFieldExists(batchFieldMap, batchRow, new List<String>{ 'FEC_Failure_Reason__c' }, '');
-            update batchRow;
 
             out.success = true;
-            out.message = System.Label.FEC_Batch_Import_Submitted;
-            out.batchRecordId = (Id) batchRow.get('Id');
+            out.message = System.Label.FEC_Msg_Process_End_Of_Day;
+            out.batchRecordId = batchId;
             out.contentDocumentId = insertedCv.ContentDocumentId;
-            out.status = 'Processed';
-            out.resultRowsJson = JSON.serialize(rowResults);
+            out.status = 'Uploaded';
             return out;
         } catch (Exception ex) {
             if (batchRow != null && batchRow.get('Id') != null) {
@@ -419,6 +379,148 @@ public with sharing class FEC_BatchCaseCreationController {
             out.message = ex.getMessage();
             return out;
         }
+    }
+
+    /**
+     * Nightly job: Uploaded → Processing → tạo Interaction/Case → Processed / Failure.
+     */
+    public static void processPendingBatchImport(Id batchRecordId) {
+        if (batchRecordId == null) {
+            return;
+        }
+
+        Schema.SObjectType batchType = Schema.getGlobalDescribe().get(OBJECT_API_NAME);
+        if (batchType == null) {
+            return;
+        }
+
+        Map<String, Schema.SObjectField> batchFieldMap = batchType.getDescribe().fields.getMap();
+        String statusField = FEC_BatchImportCommon.pickField(batchFieldMap, new List<String>{ 'FEC_Status__c' });
+        String fileField = FEC_BatchImportCommon.pickField(batchFieldMap, new List<String>{ 'FEC_File_Name__c', 'Name' });
+        if (String.isBlank(statusField)) {
+            return;
+        }
+
+        String queryText =
+            'SELECT Id, ' +
+            statusField +
+            (String.isBlank(fileField) ? '' : ', ' + fileField) +
+            ' FROM ' +
+            OBJECT_API_NAME +
+            ' WHERE Id = :batchRecordId LIMIT 1';
+        List<SObject> loaded = Database.query(queryText);
+        if (loaded.isEmpty()) {
+            return;
+        }
+
+        SObject batchRow = loaded[0];
+        String currentStatus = FEC_BatchImportCommon.asString(batchRow.get(statusField));
+        if (!FEC_ConstantCommon.UPLOADED_STATUS.equalsIgnoreCase(currentStatus)) {
+            return;
+        }
+
+        String fileName = FEC_BatchImportCommon.asString(
+            FEC_BatchImportCommon.getFieldValue(batchRow, fileField)
+        );
+        if (String.isBlank(fileName)) {
+            fileName = FEC_BatchImportCommon.asString(batchRow.get('Name'));
+        }
+
+        FEC_BatchCaseCreationPendingService.ImportPayload payload = FEC_BatchCaseCreationPendingService.loadPendingImportPayload(
+            batchRecordId
+        );
+        if (payload.rows == null || payload.rows.isEmpty()) {
+            markBatchImportSystemFailure(batchRecordId, System.Label.FEC_BCH_RequireFile);
+            return;
+        }
+
+        FEC_BatchImportCommon.putIfFieldExists(batchFieldMap, batchRow, new List<String>{ 'FEC_Status__c' }, 'Processing');
+        update batchRow;
+
+        String templateName = payload.templateName;
+        List<ParsedCaseRow> parsed = parseInputRows(payload.rows);
+        Boolean isWelcomeFlow = isWelcomeCallInput(templateName, parsed);
+        List<CaseRowResult> rowResults = validateAndBuildCases(parsed, isWelcomeFlow);
+        Integer totalCount = rowResults.size();
+        Integer failedCount = countFailedRowResults(rowResults);
+        String batchFailureReason = failedCount > 0
+            ? String.format(System.Label.FEC_Batch_Import_Invalid_Row_Count, new List<String>{ String.valueOf(failedCount) })
+            : '';
+
+        if (failedCount > 0) {
+            markAllRowResultsFailedForBatchNoImport(rowResults);
+            applyBatchImportFailureOutcome(
+                batchFieldMap,
+                batchRow,
+                totalCount,
+                failedCount,
+                batchFailureReason,
+                fileName,
+                rowResults
+            );
+            return;
+        }
+
+        Savepoint importSavepoint = Database.setSavepoint();
+        if (isWelcomeFlow) {
+            insertWelcomeCallCases(parsed, rowResults);
+        } else {
+            insertStandardCasesWithInteraction(parsed, rowResults);
+        }
+
+        failedCount = countFailedRowResults(rowResults);
+        if (failedCount > 0) {
+            Database.rollback(importSavepoint);
+            markRowResultsNotImportedAfterRollback(rowResults);
+            markAllRowResultsFailedForBatchNoImport(rowResults);
+            batchFailureReason = String.format(
+                System.Label.FEC_Batch_Import_Invalid_Row_Count,
+                new List<String>{ String.valueOf(failedCount) }
+            );
+            applyBatchImportFailureOutcome(
+                batchFieldMap,
+                batchRow,
+                totalCount,
+                failedCount,
+                batchFailureReason,
+                fileName,
+                rowResults
+            );
+            return;
+        }
+
+        enrichRowResultsFromInsertedCases(rowResults);
+        prepareCaseRowResultsForExport(rowResults);
+
+        FEC_BatchImportCommon.putIfFieldExists(batchFieldMap, batchRow, new List<String>{ 'FEC_Status__c' }, 'Processed');
+        FEC_BatchImportCommon.putIfFieldExists(batchFieldMap, batchRow, new List<String>{ 'FEC_Result__c' }, 'Result');
+        FEC_BatchImportCommon.putIfFieldExists(batchFieldMap, batchRow, new List<String>{ 'FEC_Total_Records__c', 'FEC_Total_Records_Count__c' }, totalCount);
+        FEC_BatchImportCommon.putIfFieldExists(
+            batchFieldMap,
+            batchRow,
+            new List<String>{ 'FEC_Total_Success_Records__c' },
+            totalCount
+        );
+        FEC_BatchImportCommon.putIfFieldExists(batchFieldMap, batchRow, new List<String>{ 'FEC_Total_Failed_Records__c' }, 0);
+        FEC_BatchImportCommon.putIfFieldExists(batchFieldMap, batchRow, new List<String>{ 'FEC_Failure_Reason__c' }, '');
+        update batchRow;
+        saveCaseImportResultCsv(batchRecordId, fileName, rowResults);
+    }
+
+    public static void markBatchImportSystemFailure(Id batchRecordId, String reason) {
+        if (batchRecordId == null) {
+            return;
+        }
+        Schema.SObjectType batchType = Schema.getGlobalDescribe().get(OBJECT_API_NAME);
+        if (batchType == null) {
+            return;
+        }
+        Map<String, Schema.SObjectField> batchFieldMap = batchType.getDescribe().fields.getMap();
+        SObject batchRow = batchType.newSObject(batchRecordId);
+        FEC_BatchImportCommon.putIfFieldExists(batchFieldMap, batchRow, new List<String>{ 'FEC_Status__c' }, 'Failure');
+        FEC_BatchImportCommon.putIfFieldExists(batchFieldMap, batchRow, new List<String>{ 'FEC_Result__c' }, 'Result');
+        FEC_BatchImportCommon.putIfFieldExists(batchFieldMap, batchRow, new List<String>{ 'FEC_Failure_Reason__c' }, reason);
+        update batchRow;
     }
 
     @AuraEnabled

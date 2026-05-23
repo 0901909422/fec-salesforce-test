@@ -14,6 +14,7 @@ import FEC_Batch_Msg_InvalidImportData from "@salesforce/label/c.FEC_Batch_Msg_I
 import FEC_Batch_Msg_CannotReadExcelContent from "@salesforce/label/c.FEC_Batch_Msg_CannotReadExcelContent";
 import FEC_Batch_Msg_Select_Template from "@salesforce/label/c.FEC_Batch_Msg_Select_Template";
 import FEC_Batch_Import_Missing_Excel_Column from "@salesforce/label/c.FEC_Batch_Import_Missing_Excel_Column";
+import FEC_Msg_Process_End_Of_Day from "@salesforce/label/c.FEC_Msg_Process_End_Of_Day";
 import FEC_SheetJS from "@salesforce/resourceUrl/FEC_SheetJS";
 import {
   normalizeHeaderCell,
@@ -571,7 +572,13 @@ export default class Fec_BatchCaseCreation extends LightningElement {
         IMPORT_TIMEOUT_MS,
         IMPORT_TIMEOUT_MESSAGE
       );
-      if (result?.batchRecordId && result?.resultRowsJson) {
+      const importStatus = (result?.status || "").trim();
+      const isDeferredUpload = importStatus === "Uploaded";
+      if (
+        result?.batchRecordId &&
+        result?.resultRowsJson &&
+        !isDeferredUpload
+      ) {
         try {
           await this.saveResultWorkbook(
             result.batchRecordId,
@@ -587,7 +594,10 @@ export default class Fec_BatchCaseCreation extends LightningElement {
         }
       }
       if (result?.success) {
-        this.showSuccess("Success", result.message || "Import started.");
+        const successMessage = isDeferredUpload
+          ? result.message || FEC_Msg_Process_End_Of_Day
+          : result.message || "Import started.";
+        this.showSuccess("Success", successMessage);
         this.selectedFile = null;
         this.selectedFileName = "";
         this.pendingImportHeaders = [];
@@ -644,9 +654,9 @@ export default class Fec_BatchCaseCreation extends LightningElement {
   normalizeRow(row) {
     const status = row.status || "";
     const resultLabel =
-      status === "Processed" || status === "Failure" || row.resultDownloadUrl
-        ? "Result"
-        : "";
+      status === "Processed" || status === "Failure" ? "Result" : "";
+    const showResultDownload =
+      status === "Processed" || status === "Failure";
     return {
       ...row,
       fileDownloadUrl: row.fileDownloadUrl || "",
@@ -655,7 +665,7 @@ export default class Fec_BatchCaseCreation extends LightningElement {
       totalSuccessRecords: row.totalSuccessRecords ?? 0,
       totalFailedRecords: row.totalFailedRecords ?? 0,
       result: resultLabel,
-      resultDownloadUrl: row.resultDownloadUrl || ""
+      resultDownloadUrl: showResultDownload ? row.resultDownloadUrl || "" : ""
     };
   }
 
