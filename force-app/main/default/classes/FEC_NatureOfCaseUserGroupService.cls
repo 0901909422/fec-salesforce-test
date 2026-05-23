@@ -17,7 +17,7 @@ public without sharing class FEC_NatureOfCaseUserGroupService {
    * Sample:
    *   Kết quả: ['Team A', 'Team B', 'Team C'] (distinct User CS FL/BO, không có CX)
    */
-  public static List<String> buildRoleListForIncludes() {
+  public static List<String> buildRoleListForIncludes(String currentUserGroup) {
     Set<String> groups = new Set<String>();
     for (AggregateResult ar : [
       SELECT FEC_User_Group__c
