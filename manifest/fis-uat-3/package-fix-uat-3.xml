@@ -66,6 +66,7 @@
 		<members>FEC_StatementsAccountController</members>
 		<members>FEC_TransactionsController</members>
 		<members>FEC_VMXAUTHDETAILINQ</members>
+		<members>FEC_VmxAcctBlkcdUpdEmeaCallout</members>
 		<members>FEC_InteractionInforHandler</members>
 		<members>FEC_NocInheritanceUtil</members>
 		<members>FEC_NocInheritanceUtilTest</members>
@@ -90,6 +91,8 @@
 		<members>FEC_CaseAssignmentAutoDistQueueJob</members>
 		<members>FEC_CaseAssignmentAutoDistributeService</members>
 		<members>FEC_CaseAssignmentMutationGuard</members>
+		<members>FEC_CaseAssignmentFieldHistorySync</members>
+		<members>FEC_CaseAssignmentFieldHistorySyncTest</members>
 		<members>FEC_CaseAssignmentNOCTriggerHandler</members>
 		<members>FEC_CaseAssignmentNocController</members>
 		<members>FEC_CaseManagerListService</members>
@@ -233,6 +236,7 @@
 		<members>fec_BatchDataCreation</members>
 		<members>fecMrcReturnStageChangeRouting</members>
 		<members>fec_BatchCaseCreation</members>
+		<members>fec_CardReplacementAddress</members>
 		<name>LightningComponentBundle</name>
 	</types>
     <types>
@@ -285,6 +289,8 @@
         <members>FEC_Template_Import__c.FEC_User_Group__c</members>
         <members>FEC_Case_Assignment_Logs__c.FEC_Case_Assignment_Name__c</members>
         <members>FEC_Case_Assignment__c.FEC_Case_Assignmetn_NOC_Count__c</members>
+        <members>FEC_Case_Assignment__c.FEC_Time_Slots__c</members>
+        <members>FEC_Case_Assignment__c.FEC_Time_Slots_Tracked__c</members>
         <members>FEC_Customer_History__c.FEC_Search_Result_National_ID__c</members>
         <members>FEC_Download_Report__c.FEC_Link__c</members>
         <members>FEC_Download_Report__c.FEC_Report_Unique_Name__c</members>
@@ -437,6 +443,7 @@
 		<members>FEC_API_Config.FEC_Get_IPP_Detail</members>
 	    <members>FEC_API_Config.FEC_MFASOUTSTANDINGAUTHINQ</members>
 		<members>FEC_API_Config.FEC_VMX_AUTH_DETAIL_INQ</members>
+		<members>FEC_API_Config.FEC_Vmx_Acct_Blkcd_Upd_Emea</members>
 		<name>CustomMetadata</name>
 	</types>
     <types>
@@ -680,7 +687,6 @@
         <name>EntitlementProcess</name>
     </types>
 	<types>
-	    <members>FEC_Download_Report__c.All</members>
 	    <members>FEC_Download_Report__c.INTERACTIONS_SERVICE_CASES_SUMMARY_TAT</members>
 	    <members>FEC_Download_Report__c.Interaction_and_Service_Case_Summary</members>
 	    <name>ListView</name>
