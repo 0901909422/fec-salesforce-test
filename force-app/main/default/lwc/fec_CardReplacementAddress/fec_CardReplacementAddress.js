@@ -106,7 +106,8 @@ export default class Fec_CardReplacementAddress extends LightningElement {
                 this.selectedRows = [this.selectedAddressId];
                 this.newSelectedAddressId = this.selectedAddressId;
             }
-            if (this.selectedAddressId && !this.isEdit) {
+            const hasSelectedAddress = addressInfos.some(address => address.Id === this.selectedAddressId); 
+            if (this.selectedAddressId && !this.isEdit && !hasSelectedAddress) {
                 getAddressInfo({ addressId: this.selectedAddressId })
                 .then((addressInfo) => {
                     this.isDisableBtnAddTempAddress = true;
