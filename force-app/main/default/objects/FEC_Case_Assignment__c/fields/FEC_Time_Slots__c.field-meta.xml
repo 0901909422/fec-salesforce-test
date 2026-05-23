@@ -4,7 +4,7 @@
     <description>Selected execution slots for Time-Based mode.</description>
     <label>Time Slots</label>
     <required>false</required>
-    <trackHistory>true</trackHistory>
+    <trackHistory>false</trackHistory>
     <trackTrending>false</trackTrending>
     <type>MultiselectPicklist</type>
     <valueSet>

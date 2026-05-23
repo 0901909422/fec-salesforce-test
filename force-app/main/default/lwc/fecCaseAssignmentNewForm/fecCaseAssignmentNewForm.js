@@ -4,7 +4,7 @@ import { ShowToastEvent } from "lightning/platformShowToastEvent";
 import { createRecord, getRecord } from "lightning/uiRecordApi";
 import { getObjectInfo, getPicklistValues } from "lightning/uiObjectInfoApi";
 import {
-  IsConsoleNavigation,
+  EnclosingTabId,
   getFocusedTabInfo,
   closeTab,
   openTab,
@@ -66,7 +66,7 @@ export default class FecCaseAssignmentNewForm extends NavigationMixin(LightningE
   roleHasError = false;
   currentTabId;
 
-  @wire(IsConsoleNavigation) isConsoleNavigation;
+  @wire(EnclosingTabId) enclosingTabId;
 
   @wire(getObjectInfo, { objectApiName: CASE_ASSIGNMENT_OBJECT })
   objectInfo;
@@ -445,59 +445,47 @@ export default class FecCaseAssignmentNewForm extends NavigationMixin(LightningE
       },
     };
 
-    const scheduleCloseCreateTab = (tabId) => {
-      if (!tabId) {
-        return;
+    const resolveCreateTabId = async () => {
+      if (this.enclosingTabId) {
+        return this.enclosingTabId;
       }
-      setTimeout(async () => {
-        try {
-          await closeTab(tabId);
-        } catch (e) {
-          // ignore tab close failures
-        }
-      }, 500);
+      if (this.currentTabId) {
+        return this.currentTabId;
+      }
+      try {
+        const { tabId } = await getFocusedTabInfo();
+        return tabId;
+      } catch (e) {
+        return null;
+      }
     };
 
-    let tabToClose = this.currentTabId;
     try {
       const focusedTab = await getFocusedTabInfo();
-      if (!tabToClose) {
-        tabToClose = focusedTab.tabId;
-      }
+      const tabToClose = await resolveCreateTabId();
 
-      if (focusedTab.isSubtab && focusedTab.parentTabId) {
+      if (focusedTab?.isSubtab && focusedTab.parentTabId) {
         await openSubtab(focusedTab.parentTabId, {
           pageReference,
           focus: true,
         });
-        scheduleCloseCreateTab(tabToClose);
-        return;
-      }
-
-      if (this.isConsoleNavigation?.data === true) {
+      } else {
         await openTab({
           recordId,
           focus: true,
         });
-        scheduleCloseCreateTab(tabToClose);
-        return;
       }
 
-      this[NavigationMixin.Navigate](pageReference);
-    } catch (e) {
-      if (this.isConsoleNavigation?.data === true) {
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      if (tabToClose) {
         try {
-          await openTab({
-            recordId,
-            focus: true,
-          });
-          scheduleCloseCreateTab(tabToClose);
-        } catch (err) {
-          this[NavigationMixin.Navigate](pageReference);
+          await closeTab(tabToClose);
+        } catch (e) {
+          // ignore tab close failures
         }
-      } else {
-        this[NavigationMixin.Navigate](pageReference);
       }
+    } catch (e) {
+      this[NavigationMixin.Navigate](pageReference, true);
     }
   }
 
