@@ -189,10 +189,6 @@ public without sharing class FEC_AssignmentController {
             if (c == null) continue;
 
             Integer activeCount = countActiveAssignments(caseAssignments.get(c.Id), current.Id);
-            Integer assignmentCount = caseAssignments.containsKey(c.Id)
-                ? caseAssignments.get(c.Id).size()
-                : 0;
-            Boolean stripCsSupport = shouldRemoveCsSupport(c, assignmentCount);
             String currentTeam = current.FEC_Team__c;
             String action = h.FEC_Routing_Action__c;
 
@@ -212,11 +208,12 @@ public without sharing class FEC_AssignmentController {
                     }
                 }
 
-                removeTeam(c, currentTeam);
-                if (stripCsSupport) {
-                    removeCsSupportTeam(c);
+                if (currentTeam != targetTeam) {
+                    removeTeam(c, currentTeam);
+                    if (String.isNotBlank(targetTeam) && !isTeamExist(c, targetTeam)) {
+                        addTeam(c, targetTeam);
+                    }
                 }
-                addTeam(c, targetTeam);
 
                 assignmentsToUpdate.add(new FEC_Assignment__c(
                     Id = current.Id,
@@ -230,9 +227,6 @@ public without sharing class FEC_AssignmentController {
                 String targetTeam = FEC_ConstantCommon.CASE_REVERTING_CREATOR;
 
                 removeTeam(c, currentTeam);
-                if (stripCsSupport) {
-                    removeCsSupportTeam(c);
-                }
 
                 if (!isTeamExist(c, targetTeam)) {
                     addTeam(c, targetTeam);
@@ -432,10 +426,6 @@ public without sharing class FEC_AssignmentController {
             }
         }
         return count >= 2;
-    }
-
-    private static Boolean shouldRemoveCsSupport(Case c, Integer assignmentCount) {
-        return assignmentCount >= 2 || hasMultipleTeams(c);
     }
 
     private static void removeCsSupportTeam(Case c) {
