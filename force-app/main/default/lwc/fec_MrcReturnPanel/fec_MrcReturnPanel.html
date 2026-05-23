@@ -17,42 +17,19 @@
           onchange={handleCustomerConfirmationChange}>
         </lightning-combobox>
       </div>
-
-      <template if:true={showDupBanner}>
-        <c-fec_-mrc-return-dup-banner
-          record-id={recordId}
-          duplicate-case-id={duplicateCaseId}
-          duplicate-case-number={duplicateCaseNumber}
-          handling-option-value={handlingOptionValue}
-          handling-option-options={handlingOptionPicklistOptions}
-          is-edit={isEdit}
-          display-mode="inline"
-          onhandlingoptionchange={handleHandlingOptionChange}>
-        </c-fec_-mrc-return-dup-banner>
-      </template>
-
-      <template if:true={showHandlingRadioInline}>
-        <c-fec_-mrc-return-dup-banner
-          record-id={recordId}
-          handling-option-value={handlingOptionValue}
-          handling-option-options={handlingOptionPicklistOptions}
-          is-edit={isEdit}
-          display-mode="inline"
-          hide-dup-message
-          onhandlingoptionchange={handleHandlingOptionChange}>
-        </c-fec_-mrc-return-dup-banner>
-      </template>
     </template>
 
-    <template if:true={showStandaloneDupBanner}>
+    <template if:true={showMrcHandlingRadioBlock}>
       <c-fec_-mrc-return-dup-banner
         record-id={recordId}
         duplicate-case-id={duplicateCaseId}
         duplicate-case-number={duplicateCaseNumber}
         handling-option-value={handlingOptionValue}
         handling-option-options={handlingOptionPicklistOptions}
+        handling-option-label={handlingOptionFieldLabel}
         is-edit={isEdit}
-        display-mode="standalone"
+        display-mode="inline"
+        hide-dup-message={hideMrcDupMessageForRadio}
         onhandlingoptionchange={handleHandlingOptionChange}>
       </c-fec_-mrc-return-dup-banner>
     </template>

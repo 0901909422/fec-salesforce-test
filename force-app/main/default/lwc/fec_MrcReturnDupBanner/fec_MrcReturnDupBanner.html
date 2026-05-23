@@ -8,17 +8,21 @@
       </p>
     </template>
     <template if:false={isReadOnly}>
-      <lightning-radio-group
-        name={radioName}
-        label=""
-        options={mrcHandlingRadioOptions}
-        value={handlingOptionValue}
-        type="radio"
-        variant="label-hidden"
-        data-obj={objId}
-        data-obj-name="Case"
-        onchange={handleMrcHandlingOptionChange}>
-      </lightning-radio-group>
+      <template if:true={showHandlingRadio}>
+        <lightning-radio-group
+          class="mrc-handling-radio"
+          name={radioName}
+          label={handlingOptionLabel}
+          options={mrcHandlingRadioOptions}
+          value={handlingOptionValue}
+          type="radio"
+          variant="label-stacked"
+          required
+          data-obj={objId}
+          data-obj-name="Case"
+          onchange={handleMrcHandlingOptionChange}>
+        </lightning-radio-group>
+      </template>
     </template>
   </div>
 </template>
