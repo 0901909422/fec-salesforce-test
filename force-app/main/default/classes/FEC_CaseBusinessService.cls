@@ -834,13 +834,31 @@ public without sharing class FEC_CaseBusinessService {
           isGsrBusinessProcess &&
           checkStageName(selectedStage.Name, FEC_ConstantCommon.STAGE_ONE);
         result.contextFlags.put('isGsrStage1Revert', isGsrStage1Revert);
+        Boolean isGsrStage2ToStage1Revert =
+          isGsrStage1Revert &&
+          isGsrRevertFromPreviousStageName(
+            selectedCase.Id,
+            selectedStage.Id,
+            FEC_ConstantCommon.STAGE_TWO
+          );
+        result.contextFlags.put(
+          'isGsrStage2ToStage1Revert',
+          isGsrStage2ToStage1Revert
+        );
+        Boolean isGsrStage1RevertMasterReadonly =
+          isGsrStage1Revert && !isGsrStage2ToStage1Revert;
+        result.contextFlags.put(
+          'isGsrStage1RevertMasterReadonly',
+          isGsrStage1RevertMasterReadonly
+        );
         Boolean hasCaseAssignment = getCaseAssignmentCountByCaseId(selectedCase) > 0;
         result.contextFlags.put('hasCaseAssignment', hasCaseAssignment);
-        // GSR Stage 3 (code Stage 2 + đã có Assignment): Property Info chỉ khi Updated NOC khác Original → read-only.
+        // GSR Stage 3 (code Stage 2 + đã có Assignment): Property Info chỉ khi Updated NOC khác Original → read-only (không áp Stage 1).
         Boolean isGsrStage3PropertyInfoReadonly =
           isActualNatureGsrOnly &&
           isUpdatedNocDifferentFromCurrent &&
-          hasCaseAssignment;
+          hasCaseAssignment &&
+          !checkStageName(selectedStage.Name, FEC_ConstantCommon.STAGE_ONE);
         result.contextFlags.put(
           'isGsrStage3PropertyInfoReadonly',
           isGsrStage3PropertyInfoReadonly
@@ -1009,7 +1027,7 @@ public without sharing class FEC_CaseBusinessService {
                 currentUser.FEC_User_Group__c,
                 selectedStage.Name
               );
-              if (isGsrStage1Revert) {
+              if (isGsrStage1RevertMasterReadonly) {
                 lwcSlot.fecMasterDataSettingIsEdit = false;
               }
               if (
@@ -1109,7 +1127,7 @@ public without sharing class FEC_CaseBusinessService {
                     objTemp,
                     currentUser.FEC_User_Group__c,
                     isRevert,
-                    isGsrStage1Revert || forceGsrPropertyInfoReadonly,
+                    isGsrStage1RevertMasterReadonly || forceGsrPropertyInfoReadonly,
                     hasCaseAssignment
                   );
 
@@ -3869,6 +3887,39 @@ public without sharing class FEC_CaseBusinessService {
       LIMIT 1
     ];
     return !latestRevertHist.isEmpty();
+  }
+
+  /** GSR revert về currentStage: stage trước revert (FEC_Previous_Stage) khớp previousStageNameToken (vd Stage 2). */
+  private static Boolean isGsrRevertFromPreviousStageName(
+    Id caseId,
+    Id currentStageId,
+    String previousStageNameToken
+  ) {
+    if (
+      caseId == null ||
+      currentStageId == null ||
+      String.isBlank(previousStageNameToken)
+    ) {
+      return false;
+    }
+    List<FEC_Routing_Action_History__c> latestRevertHist = [
+      SELECT FEC_Previous_Stage__r.Name
+      FROM FEC_Routing_Action_History__c
+      WHERE
+        FEC_Case__c = :caseId
+        AND FEC_Next_Stage__c = :currentStageId
+        AND FEC_Next_Stage__c != NULL
+        AND FEC_IsReverted__c = true
+      ORDER BY LastModifiedDate DESC
+      LIMIT 1
+    ];
+    if (latestRevertHist.isEmpty()) {
+      return false;
+    }
+    return checkStageName(
+      latestRevertHist[0].FEC_Previous_Stage__r?.Name,
+      previousStageNameToken
+    );
   }
 
   private static Field transform(
