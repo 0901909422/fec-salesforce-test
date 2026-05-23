@@ -60,13 +60,29 @@ public without sharing class FEC_DocumentRequestRoutingService {
     String teamUserGroup,
     Id routeToActionId
   ) {
-    if (String.isNotBlank(teamUserGroup) && routeToActionId != null) {
+    if (routeToActionId != null && String.isNotBlank(teamUserGroup)) {
       List<FEC_Stage_Change__c> rows = [
         SELECT FEC_Next_Queue__c, FEC_Team_User_Group__c
         FROM FEC_Stage_Change__c
         WHERE
           FEC_Previous_Stage__c = :previousStageId
           AND FEC_Team_User_Group__c = :teamUserGroup
+          AND FEC_Action_Button__c = :routeToActionId
+          AND FEC_Active__c = TRUE
+          AND FEC_IsReverted__c = FALSE
+        LIMIT 1
+      ];
+      if (!rows.isEmpty()) {
+        return rows[0];
+      }
+    }
+
+    if (routeToActionId != null) {
+      List<FEC_Stage_Change__c> rows = [
+        SELECT FEC_Next_Queue__c, FEC_Team_User_Group__c
+        FROM FEC_Stage_Change__c
+        WHERE
+          FEC_Previous_Stage__c = :previousStageId
           AND FEC_Action_Button__c = :routeToActionId
           AND FEC_Active__c = TRUE
           AND FEC_IsReverted__c = FALSE
@@ -101,7 +117,6 @@ public without sharing class FEC_DocumentRequestRoutingService {
           FEC_Previous_Stage__c = :previousStageId
           AND FEC_Action_Button__c = :routeToActionId
           AND FEC_Active__c = TRUE
-          AND FEC_IsReverted__c = FALSE
         LIMIT 1
       ];
       if (!rows.isEmpty()) {
@@ -109,7 +124,17 @@ public without sharing class FEC_DocumentRequestRoutingService {
       }
     }
 
-    return null;
+    List<FEC_Stage_Change__c> fallbackRows = [
+      SELECT FEC_Next_Queue__c, FEC_Team_User_Group__c
+      FROM FEC_Stage_Change__c
+      WHERE
+        FEC_Previous_Stage__c = :previousStageId
+        AND FEC_Active__c = TRUE
+        AND FEC_IsReverted__c = FALSE
+      ORDER BY LastModifiedDate DESC
+      LIMIT 1
+    ];
+    return fallbackRows.isEmpty() ? null : fallbackRows[0];
   }
 
   private static Group resolveQueueFromStageChangeValue(String nextQueueValue) {
