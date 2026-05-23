@@ -735,5 +735,9 @@
         <members>Case.Search_Interaction</members>
         <name>RecordType</name>
     </types>
+    <types>
+        <members>Case-en_US</members>
+        <name>CustomObjectTranslation</name>
+    </types>
 	<version>66.0</version>
 </Package>
