@@ -1,8 +1,14 @@
 import { LightningElement, api } from "lwc";
 import { NavigationMixin } from "lightning/navigation";
 import FEC_MRC_RL0502_Dup_Banner from "@salesforce/label/c.FEC_MRC_RL0502_Dup_Banner";
+import FEC_MRC_RL0502_Dup_Opt_Cancel_New from "@salesforce/label/c.FEC_MRC_RL0502_Dup_Opt_Cancel_New";
+import FEC_MRC_RL0502_Dup_Opt_Cancel_Prev from "@salesforce/label/c.FEC_MRC_RL0502_Dup_Opt_Cancel_Prev";
 import { STR_EMPTY } from "c/fec_CommonConst";
-import { FIELD_MRC_HANDLING_OPTION } from "c/fecMrcReturnCaseLogic";
+import {
+  FIELD_MRC_HANDLING_OPTION,
+  MRC_OPT_CANCEL_NEW,
+  MRC_OPT_CANCEL_PREVIOUS,
+} from "c/fecMrcReturnCaseLogic";
 
 export default class Fec_MrcReturnDupBanner extends NavigationMixin(
   LightningElement,
@@ -20,6 +26,7 @@ export default class Fec_MrcReturnDupBanner extends NavigationMixin(
   @api displayMode = "inline";
   /** TH3: chỉ hiện radio Noti-11, không hiện banner Case trùng. */
   @api hideDupMessage = false;
+  @api handlingOptionLabel = "Phương án xử lý yêu cầu MRC";
 
   get isReadOnly() {
     return this.isEdit === false;
@@ -56,13 +63,31 @@ export default class Fec_MrcReturnDupBanner extends NavigationMixin(
   }
 
   get mrcHandlingRadioOptions() {
+    const defaults = [
+      {
+        label: FEC_MRC_RL0502_Dup_Opt_Cancel_Prev,
+        value: MRC_OPT_CANCEL_PREVIOUS,
+      },
+      {
+        label: FEC_MRC_RL0502_Dup_Opt_Cancel_New,
+        value: MRC_OPT_CANCEL_NEW,
+      },
+    ];
     const fromBusiness = Array.isArray(this.handlingOptionOptions)
       ? this.handlingOptionOptions
       : [];
+    if (!fromBusiness.length) {
+      return defaults;
+    }
+    const labelByValue = new Map(defaults.map((o) => [o.value, o.label]));
     return fromBusiness.map((o) => ({
-      label: o.label || o.value,
+      label: labelByValue.get(o.value) || o.label || o.value,
       value: o.value,
     }));
+  }
+
+  get showHandlingRadio() {
+    return this.mrcHandlingRadioOptions.length > 0;
   }
 
   handleOpenMrcDupCase(event) {
