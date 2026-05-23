@@ -220,7 +220,7 @@ public with sharing class FEC_SearchController {
         // rec.FEC_Customer_Name__c = customerName;
         rec.FEC_Work_Phone__c = resolvedPrimaryPhone;
         rec.FEC_Primary_Phone__c = resolvedPrimaryPhone;
-        rec.FEC_National_ID_Passport_ID__c = resolvedNationalId;
+        //rec.FEC_National_ID_Passport_ID__c = resolvedNationalId;
         rec.FEC_Customer_Name__c = resolvedCustomerName;
         rec.FEC_Search_Result_National_ID__c = resolvedSearchNationalId;
         // Old behavior (kept for reference):
