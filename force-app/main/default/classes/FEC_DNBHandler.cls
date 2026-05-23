@@ -47,7 +47,7 @@ public without sharing class FEC_DNBHandler {
         // Simulate fetching data from server
         Case caseRecord = [
       SELECT Id, FEC_Customer_Name__c,
-      FEC_Account_or_Contract__r.FEC_National_ID_Passport_ID__c,
+      FEC_Account_or_Contract__r.FEC_Search_Result_National_ID__c ,
       FEC_Phone_Number__c, FEC_Interaction__r.FEC_Phone_Number__c,
       FEC_Interaction__r.FEC_Interaction_Masked_Phone__c,
       FEC_Interaction__r.FEC_Interaction_Email__c,
@@ -59,7 +59,7 @@ public without sharing class FEC_DNBHandler {
         CaseInfoResponse response = new CaseInfoResponse();
         response.customerName = caseRecord.FEC_Customer_Name__c;
         response.nationalId =
-            caseRecord.FEC_Account_or_Contract__r.FEC_National_ID_Passport_ID__c;
+            caseRecord.FEC_Account_or_Contract__r.FEC_Search_Result_National_ID__c;
         response.primaryPhoneNumber = caseRecord.FEC_Phone_Number__c;
         response.interactionPhoneNumber =
             caseRecord.FEC_Interaction__r.FEC_Phone_Number__c;
@@ -83,7 +83,7 @@ public without sharing class FEC_DNBHandler {
         // Simulate fetching data from server
         Case caseRecord = [
       SELECT Id, FEC_Customer_Name__c,
-      FEC_Account_or_Contract__r.FEC_National_ID_Passport_ID__c,
+      FEC_Account_or_Contract__r.FEC_Search_Result_National_ID__c,
       FEC_Phone_Number__c, FEC_Interaction__r.FEC_Phone_Number__c,
       FEC_Interaction__r.FEC_Interaction_Masked_Phone__c,
       FEC_Interaction__r.FEC_Interaction_Email__c,
@@ -95,7 +95,7 @@ public without sharing class FEC_DNBHandler {
         CaseInfoNonExistingResponse response = new CaseInfoNonExistingResponse();
         response.customerName = caseRecord.FEC_Customer_Name__c;
         response.nationalId =
-            caseRecord.FEC_Account_or_Contract__r.FEC_National_ID_Passport_ID__c;
+            caseRecord.FEC_Account_or_Contract__r.FEC_Search_Result_National_ID__c;
         response.interactionPhoneNumber =
             caseRecord.FEC_Interaction__r.FEC_Phone_Number__c;
         response.interactionMaskedPhone =
