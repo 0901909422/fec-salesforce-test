@@ -48,6 +48,7 @@
 		<members>FEC_API_Config.FEC_MCMSCARDTOCARDINQEMEA</members>
 		<members>FEC_API_Config.FEC_MFASOUTSTANDINGAUTHINQ</members>
 		<members>FEC_API_Config.FEC_Vmx_Acct_Blkcd_Upd_Emea</members>
+		<members>FEC_API_Config.FEC_VMX_AUTH_DETAIL_INQ</members>
 		<name>CustomMetadata</name>
 	</types>
 	<types>
@@ -225,6 +226,7 @@
         <members>FEC_TerminationLoanController</members>
         <members>FEC_TranferInformationCallout</members>
         <members>FEC_TransactionsController</members>
+        <members>FEC_VMXAUTHDETAILINQ</members>
         <members>FEC_UpdateCustomerAddress</members>
 		<members>FEC_NatureOfCaseUserGroupService</members>
         <name>ApexClass</name>
@@ -827,6 +829,11 @@
         <members>fec_IPPClosureForm</members>
         <members>fec_IPPDetails</members>
         <members>fec_MRC</members>
+        <members>fec_MrcReturnCaseForm</members>
+        <members>fec_MrcDeliveryForm</members>
+        <members>fec_MrcReturnPanel</members>
+        <members>fec_MrcReturnDupBanner</members>
+        <members>fecMrcReturnCaseLogic</members>
         <members>fec_MainInfoLoanAccount</members>
         <members>fec_NotificationOverride</members>
         <members>fec_PaymentHistoryAcount</members>
@@ -1572,11 +1579,25 @@
         <members>Case.Update_Case_72h_Warning</members>
         <members>Case.Update_Case_96h_Violating</members>
         <members>Case.Update_Case_96h_Warning</members>
+        <members>Case.SLA_Violating_Warning_44h</members>
+        <members>Case.SLA_Warning_119h</members>
+        <members>Case.SLA_Warning_120h</members>
+        <members>Case.SLA_Warning_124h</members>
+        <members>Case.SLA_Warning_128h</members>
+        <members>Case.SLA_Warning_144h</members>
+        <members>Case.SLA_Warning_164h</members>
+        <members>Case.SLA_Warning_167h</members>
+        <members>Case.SLA_Warning_168h</members>
+        <members>Case.SLA_Warning_48h</members>
+        <members>Case.SLA_Warning_76h</members>
+        <members>Case.SLA_Warning_80h</members>
         <name>WorkflowFieldUpdate</name>
     </types>
 	<types>
 	 	<members>Case.Customer_Case</members>
+	 	<members>Case.Interaction</members>
 	 	<members>Case.Internal_Case</members>
+	 	<members>Case.Search_Interaction</members>
 		<name>RecordType</name>
 	</types>
 	<types>
@@ -1941,6 +1962,7 @@
         <members>fec_NocRoutingAssignment</members>
         <members>fecRoutingAssignmentEditForm</members>
         <members>fec_DownloadReports</members>
+        <members>fecMrcReturnStageChangeRouting</members>
         <name>LightningComponentBundle</name>
     </types>
     <types>
@@ -2115,6 +2137,12 @@
         <members>FEC_CaseRemarksRollupService</members>
         <members>FEC_CaseRemarksTriggerHandler</members>
         <members>FEC_CaseRemarksRollupServiceTest</members>
+        <members>FEC_BCH_ImportRoutingResolver</members>
+        <members>FEC_BCH_PicklistTranslationCtrl</members>
+        <members>FEC_BatchCaseHandlingImportProfile</members>
+        <members>FEC_BatchCaseHandlingPicklistResolver</members>
+        <members>FEC_BatchCaseHandlingResultXlsxBuilder</members>
+        <members>FEC_NotificationService</members>
         <name>ApexClass</name>
     </types>
     <types>
@@ -2151,6 +2179,11 @@
         <members>FEC_Routing_Action_History__c.FEC_TAT_by_Assignment__c</members>
         <members>FEC_Download_Report__c.FEC_Link__c</members>
         <members>FEC_Download_Report__c.FEC_Report_Unique_Name__c</members>
+        <members>FEC_Actual_Master_Data_Setting__c.FEC_Hidden__c</members>
+        <members>FEC_Master_Data_Setting__c.FEC_Hidden__c</members>
+        <members>FEC_Actual_Master_Data_Setting__c.FEC_Type__c</members>
+        <members>FEC_Case_Assignment_Log_Detail__c.FEC_Case_Assignment_log_Name__c</members>
+        <members>FEC_Master_Data_Setting__c.FEC_Type__c</members>
         <name>CustomField</name>
     </types>
     <types>
@@ -2231,6 +2264,10 @@
 	<types>
 	    <members>FEC_Download_Report__c.FEC_Download</members>
 	    <name>WebLink</name>
+	</types>
+	<types>
+	    <members>FEC_BCH_PicklistTranslation</members>
+	    <name>ApexPage</name>
 	</types>
 	<version>66.0</version>
 </Package>

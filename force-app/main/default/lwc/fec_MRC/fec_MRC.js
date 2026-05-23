@@ -52,62 +52,78 @@ const MrcFields = {
 
 const CASE_SUB_FIELDS = [FEC_SUBCODE_ID];
 
-/** RL05 MRC Return: ẩn toàn bộ block trên FlexiPage Case (logic nằm trong fec_CaseBussiness). */
-const RL05_HIDE_SUB_CODES = ['RL05.01', 'RL05.02', 'RL05.03'];
+/** Chỉ ẩn khi parent/master data ép (isHiddenLwc). RL05 vẫn hiển thị Properties/MRC Info. */
+function normalizeSubCodeUpper(value) {
+    if (value == null || value === STR_EMPTY) {
+        return STR_EMPTY;
+    }
+    return String(value).trim().toUpperCase();
+}
 
 export default class Fec_MRC extends LightningElement {
     @api recordId;
+    /** Từ fec_CaseBussiness — Sub-Code code đã chọn (ưu tiên hơn wire Case). */
+    _subCodeCodeFromParent = STR_EMPTY;
+    @api
+    get subCodeCode() {
+        return this._subCodeCodeFromParent;
+    }
+    set subCodeCode(value) {
+        const next = normalizeSubCodeUpper(value);
+        if (this._subCodeCodeFromParent === next) {
+            return;
+        }
+        this._subCodeCodeFromParent = next;
+        this.syncAccordionSections();
+        this._syncHideAndLoad();
+    }
     /** Master data / parent có thể ép ẩn (fec_CaseBussiness). */
     @api isHiddenLwc;
+
     @track accountData;
     @track error;
     @track isLoading = false;
 
     subCodeRecordId;
-    _subCodeCodeUpper = STR_EMPTY;
+    _subCodeCodeFromWire = STR_EMPTY;
     _mrcLoadStarted = false;
+    _caseWireLoaded = false;
+    _subCodeWireLoaded = false;
 
     @wire(getRecord, { recordId: '$recordId', fields: CASE_SUB_FIELDS })
     wiredCaseSub({ data }) {
+        this._caseWireLoaded = true;
         this.subCodeRecordId = data ? getFieldValue(data, FEC_SUBCODE_ID) : null;
         if (!this.subCodeRecordId) {
-            this._subCodeCodeUpper = STR_EMPTY;
+            this._subCodeCodeFromWire = STR_EMPTY;
+            this._subCodeWireLoaded = true;
             this.syncAccordionSections();
-            this._maybeLoadMrc();
+        } else {
+            this._subCodeWireLoaded = false;
         }
+        this._syncHideAndLoad();
     }
 
     @wire(getRecord, { recordId: '$subCodeRecordId', fields: [FEC_SUBCODE_CODE_FIELD] })
-    wiredSubCode({ data }) {
+    wiredSubCode({ data, error }) {
+        if (!this.subCodeRecordId) {
+            return;
+        }
         if (data) {
             const v = getFieldValue(data, FEC_SUBCODE_CODE_FIELD);
-            this._subCodeCodeUpper = v ? String(v).toUpperCase() : STR_EMPTY;
-        } else if (this.subCodeRecordId) {
-            return;
+            this._subCodeCodeFromWire = v ? normalizeSubCodeUpper(v) : STR_EMPTY;
+            this._subCodeWireLoaded = true;
+        } else if (error) {
+            this._subCodeCodeFromWire = STR_EMPTY;
+            this._subCodeWireLoaded = true;
         } else {
-            this._subCodeCodeUpper = STR_EMPTY;
+            return;
         }
         this.syncAccordionSections();
-        this._maybeLoadMrc();
-    }
-
-    _maybeLoadMrc() {
-        if (this._mrcLoadStarted || !this.recordId || this.shouldHideComponent) {
-            return;
-        }
-        this._mrcLoadStarted = true;
-        this.loadData();
+        this._syncHideAndLoad();
     }
 
     @track activeSections = [FEC_Original_MRC, FEC_Notarized_MRC];
-
-    syncAccordionSections() {
-        const next = [FEC_Original_MRC];
-        if (this.showNotarizedMrcBlock) {
-            next.push(FEC_Notarized_MRC);
-        }
-        this.activeSections = next;
-    }
 
     customLabel = {
         originalMRCLabel: FEC_Original_MRC,
@@ -127,43 +143,110 @@ export default class Fec_MRC extends LightningElement {
         postalCodeLabel: FEC_Postal_Code,
         providedNumberLabel: FEC_Provided_Number,
         msgErrorAPI: FEC_MSG_Error_API_Label,
-
     };
 
-    get shouldHideComponent() {
-        if (this.isHiddenLwc === true) {
+    get _effectiveSubCodeUpper() {
+        if (this._subCodeCodeFromParent) {
+            return this._subCodeCodeFromParent;
+        }
+        return this._subCodeCodeFromWire || STR_EMPTY;
+    }
+
+    get _isSubCodeContextReady() {
+        if (this._subCodeCodeFromParent) {
             return true;
         }
-        const s = this._subCodeCodeUpper || STR_EMPTY;
-        return RL05_HIDE_SUB_CODES.some((code) => s.includes(code));
+        if (!this._caseWireLoaded) {
+            return false;
+        }
+        if (!this.subCodeRecordId) {
+            return true;
+        }
+        return this._subCodeWireLoaded;
+    }
+
+    get shouldHideComponent() {
+        return this.isHiddenLwc === true;
+    }
+
+    /** Chỉ render sau khi biết Sub-Code. */
+    get shouldRenderMrc() {
+        return this._isSubCodeContextReady && !this.shouldHideComponent;
     }
 
     get showOriginalMrcBlock() {
-        return !this.shouldHideComponent;
+        return this.shouldRenderMrc;
     }
 
     get showNotarizedMrcBlock() {
-        if (this.shouldHideComponent) {
+        if (!this.shouldRenderMrc) {
             return false;
         }
-        const s = this._subCodeCodeUpper || STR_EMPTY;
+        const s = this._effectiveSubCodeUpper;
         if (s.includes('RL05.01')) {
             return false;
         }
         return true;
     }
 
+    syncAccordionSections() {
+        const next = [FEC_Original_MRC];
+        if (this.showNotarizedMrcBlock) {
+            next.push(FEC_Notarized_MRC);
+        }
+        this.activeSections = next;
+    }
+
+    _clearMrcDisplayState() {
+        this.accountData = undefined;
+        this.error = undefined;
+        this.isLoading = false;
+        this._mrcLoadStarted = false;
+    }
+
+    _syncHideAndLoad() {
+        if (this.shouldHideComponent) {
+            this._clearMrcDisplayState();
+            return;
+        }
+        this._maybeLoadMrc();
+    }
+
+    _maybeLoadMrc() {
+        if (
+            !this._isSubCodeContextReady ||
+            this.shouldHideComponent ||
+            !this.recordId ||
+            this._mrcLoadStarted
+        ) {
+            return;
+        }
+        this._mrcLoadStarted = true;
+        this.loadData();
+    }
+
     loadData() {
-        if (!this.recordId || this.shouldHideComponent) return;
+        if (!this.recordId || !this.shouldRenderMrc) {
+            this._mrcLoadStarted = false;
+            return;
+        }
 
         this.isLoading = true;
 
         updateMRCRecord({ caseId: this.recordId })
-            .then(result => {
+            .then((result) => {
+                if (!this.shouldRenderMrc) {
+                    this._clearMrcDisplayState();
+                    return;
+                }
                 this.accountData = result;
                 this.error = undefined;
             })
-            .catch(err => {
+            .catch((err) => {
+                if (!this.shouldRenderMrc) {
+                    this._clearMrcDisplayState();
+                    return;
+                }
                 this.handleError(err);
             })
             .finally(() => {
@@ -171,7 +254,6 @@ export default class Fec_MRC extends LightningElement {
             });
     }
 
-    /* ================= UI HELPERS ================= */
     get hasData() {
         return Boolean(this.accountData && Object.keys(this.accountData).length > 0);
     }
@@ -218,7 +300,6 @@ export default class Fec_MRC extends LightningElement {
         };
     }
 
-    /* ================= ERROR + TOAST ================= */
     handleError(err) {
         this.error = err?.body?.message || err?.message || STATUS.UNKNOWN_ERROR;
     }

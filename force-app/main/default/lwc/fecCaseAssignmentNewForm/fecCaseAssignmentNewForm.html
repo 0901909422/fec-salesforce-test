@@ -23,7 +23,7 @@
         <div class="slds-col slds-size_1-of-1 slds-large-size_1-of-2">
           <lightning-input
             data-field="assignmentName"
-            label="Case Assignment"
+            label="Case Assignment Name"
             required
             value={assignmentName}
             onchange={handleNameChange}
@@ -286,33 +286,4 @@
       ></lightning-button>
     </div>
   </div>
-
-  <template if:true={showErrorModal}>
-    <section role="dialog" tabindex="-1" aria-modal="true" class="slds-modal slds-fade-in-open">
-      <div class="slds-modal__container">
-        <header class="slds-modal__header">
-          <h2 class="slds-modal__title slds-hyphenate">Review the errors on this page</h2>
-          <button
-            type="button"
-            class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse"
-            title="Close"
-            onclick={closeErrorModal}
-          >
-            <lightning-icon icon-name="utility:close" alternative-text="Close" size="small"></lightning-icon>
-          </button>
-        </header>
-        <div class="slds-modal__content slds-p-around_medium">
-          <ul class="slds-list_dotted">
-            <template for:each={pageErrors} for:item="msg">
-              <li key={msg}>{msg}</li>
-            </template>
-          </ul>
-        </div>
-        <footer class="slds-modal__footer">
-          <lightning-button label="OK" variant="brand" onclick={closeErrorModal}></lightning-button>
-        </footer>
-      </div>
-    </section>
-    <div class="slds-backdrop slds-backdrop_open"></div>
-  </template>
 </template>

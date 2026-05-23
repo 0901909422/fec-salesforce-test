@@ -1,5 +1,8 @@
 public without sharing class FEC_BCH_TemplateExportService {
 
+    private static final String DBG = 'FEC_BCH_EXPORT';
+    private static final Integer MAX_EXPORT_DATA_ROWS = 5000;
+
     public class ExportRequest {
         @AuraEnabled public Id contentVersionId;
         @AuraEnabled public Integer headerRowIndex;
@@ -7,52 +10,125 @@ public without sharing class FEC_BCH_TemplateExportService {
         @AuraEnabled public List<List<String>> dataRows;
     }
 
-    public static String exportWorkbookBase64(String requestJson) {
+    public class ExportWorkbookResponse {
+        @AuraEnabled public Boolean success;
+        @AuraEnabled public String base64Body;
+        @AuraEnabled public String errorCode;
+        @AuraEnabled public String errorMessage;
+    }
+
+    public static ExportWorkbookResponse exportWorkbook(String requestJson) {
+        ExportWorkbookResponse out = new ExportWorkbookResponse();
+        out.success = false;
         if (String.isBlank(requestJson)) {
-            return null;
+            return fail(out, 'EMPTY_REQUEST', 'requestJson is blank');
         }
-        ExportRequest req = (ExportRequest) JSON.deserialize(requestJson, ExportRequest.class);
-        if (req == null || req.contentVersionId == null) {
-            return null;
+        try {
+            ExportRequest req = (ExportRequest) JSON.deserialize(requestJson, ExportRequest.class);
+            if (req == null || req.contentVersionId == null) {
+                return fail(out, 'INVALID_REQUEST', 'contentVersionId is required');
+            }
+            List<ContentVersion> versions = [
+                SELECT VersionData
+                FROM ContentVersion
+                WHERE Id = :req.contentVersionId
+                LIMIT 1
+            ];
+            if (versions.isEmpty()) {
+                return fail(out, 'TEMPLATE_NOT_FOUND', String.valueOf(req.contentVersionId));
+            }
+            if (versions[0].VersionData == null) {
+                return fail(out, 'TEMPLATE_EMPTY', String.valueOf(req.contentVersionId));
+            }
+            Blob sourceBlob = versions[0].VersionData;
+            dbg('TEMPLATE', 'bytes=' + sourceBlob.size());
+            Map<String, Blob> entryByPath = readZipEntries(sourceBlob);
+            if (entryByPath.isEmpty()) {
+                return fail(out, 'ZIP_READ_EMPTY', 'no zip entries');
+            }
+            dbg('ZIP', 'entries=' + entryByPath.size());
+            String workbookXml = blobToUtf8(entryByPath.get('xl/workbook.xml'));
+            String workbookRelsXml = blobToUtf8(entryByPath.get('xl/_rels/workbook.xml.rels'));
+            String worksheetPath = resolveMainWorksheetPath(workbookXml, workbookRelsXml);
+            if (String.isBlank(worksheetPath) || !entryByPath.containsKey(worksheetPath)) {
+                return fail(
+                    out,
+                    'WORKSHEET_NOT_FOUND',
+                    'path=' +
+                        worksheetPath +
+                        ';hasPath=' +
+                        entryByPath.containsKey(worksheetPath)
+                );
+            }
+            Integer headerRowIndex = req.headerRowIndex == null || req.headerRowIndex < 0 ? 0 : req.headerRowIndex;
+            List<Integer> mappedCols = req.mappedColumnIndexes == null
+                ? new List<Integer>()
+                : req.mappedColumnIndexes;
+            List<List<String>> dataRows = req.dataRows == null ? new List<List<String>>() : req.dataRows;
+            if (dataRows.isEmpty()) {
+                return fail(out, 'NO_DATA_ROWS', 'dataRows is empty');
+            }
+            if (dataRows.size() > MAX_EXPORT_DATA_ROWS) {
+                return fail(out, 'ROW_LIMIT', String.valueOf(dataRows.size()));
+            }
+            String worksheetXml = blobToUtf8(entryByPath.get(worksheetPath));
+            Integer templateDataRow1 = resolveTemplateDataRowFromValidations(worksheetXml);
+            if (templateDataRow1 == null || templateDataRow1 < 1) {
+                templateDataRow1 = headerRowIndex + 2;
+            }
+            if (String.isBlank(extractRowXml(worksheetXml, templateDataRow1))) {
+                templateDataRow1 = headerRowIndex + 1;
+            }
+            if (String.isBlank(extractRowXml(worksheetXml, templateDataRow1))) {
+                return fail(out, 'TEMPLATE_ROW_MISSING', 'headerRow=' + headerRowIndex);
+            }
+            dbg('PATCH', 'sheet=' + worksheetPath + ';rows=' + dataRows.size() + ';dataRow=' + templateDataRow1);
+            String patchedXml = patchWorksheetXml(
+                worksheetXml,
+                headerRowIndex,
+                mappedCols,
+                dataRows,
+                entryByPath,
+                workbookXml,
+                workbookRelsXml
+            );
+            entryByPath.put(worksheetPath, Blob.valueOf(patchedXml));
+            Blob outBlob = writeZipEntries(entryByPath, sourceBlob);
+            if (outBlob == null) {
+                return fail(out, 'ZIP_WRITE_FAILED', worksheetPath);
+            }
+            dbg('OUT', 'bytes=' + outBlob.size());
+            out.base64Body = EncodingUtil.base64Encode(outBlob);
+            out.success = true;
+            out.errorCode = FEC_ConstantCommon.STR_EMPTY;
+            out.errorMessage = FEC_ConstantCommon.STR_EMPTY;
+            dbg('OK', 'base64Len=' + (out.base64Body == null ? 0 : out.base64Body.length()));
+            return out;
+        } catch (Exception ex) {
+            return fail(out, 'EXCEPTION', ex.getTypeName() + ': ' + ex.getMessage());
         }
-        List<ContentVersion> versions = [
-            SELECT VersionData
-            FROM ContentVersion
-            WHERE Id = :req.contentVersionId
-            LIMIT 1
-        ];
-        if (versions.isEmpty() || versions[0].VersionData == null) {
-            return null;
-        }
-        Blob sourceBlob = versions[0].VersionData;
-        Map<String, Blob> entryByPath = readZipEntries(sourceBlob);
-        if (entryByPath.isEmpty()) {
-            return null;
-        }
-        String workbookXml = blobToUtf8(entryByPath.get('xl/workbook.xml'));
-        String workbookRelsXml = blobToUtf8(entryByPath.get('xl/_rels/workbook.xml.rels'));
-        String worksheetPath = resolveMainWorksheetPath(workbookXml, workbookRelsXml);
-        if (String.isBlank(worksheetPath) || !entryByPath.containsKey(worksheetPath)) {
-            return null;
-        }
-        Integer headerRowIndex = req.headerRowIndex == null || req.headerRowIndex < 0 ? 0 : req.headerRowIndex;
-        List<Integer> mappedCols = req.mappedColumnIndexes == null
-            ? new List<Integer>()
-            : req.mappedColumnIndexes;
-        List<List<String>> dataRows = req.dataRows == null ? new List<List<String>>() : req.dataRows;
-        String worksheetXml = blobToUtf8(entryByPath.get(worksheetPath));
-        String patchedXml = patchWorksheetXml(
-            worksheetXml,
-            headerRowIndex,
-            mappedCols,
-            dataRows,
-            entryByPath,
-            workbookXml,
-            workbookRelsXml
-        );
-        entryByPath.put(worksheetPath, Blob.valueOf(patchedXml));
-        Blob outBlob = writeZipEntries(entryByPath, sourceBlob);
-        return outBlob == null ? null : EncodingUtil.base64Encode(outBlob);
+    }
+
+    public static String exportWorkbookBase64(String requestJson) {
+        ExportWorkbookResponse res = exportWorkbook(requestJson);
+        return res != null && res.success == true ? res.base64Body : null;
+    }
+
+    private static ExportWorkbookResponse fail(
+        ExportWorkbookResponse out,
+        String code,
+        String detail
+    ) {
+        out.success = false;
+        out.base64Body = null;
+        out.errorCode = code;
+        out.errorMessage = detail;
+        dbg(code, detail);
+        return out;
+    }
+
+    private static void dbg(String step, String detail) {
+        System.debug(LoggingLevel.ERROR, DBG + '|' + step + '|' + detail);
     }
 
     private static Map<String, Blob> readZipEntries(Blob archiveBlob) {
@@ -195,7 +271,11 @@ public without sharing class FEC_BCH_TemplateExportService {
             List<String> values = dataRows[i];
             builtRows.add(buildDataRowXml(templateRowXml, templateDataRow1, rowNum1, mappedCols, values));
         }
-        String sheetDataInner = rebuildSheetData(xml, headerRowIndex + 1, builtRows);
+        Integer keepRowsUntil = headerRowIndex + 1;
+        if (templateDataRow1 != null && templateDataRow1 > 1 && templateDataRow1 - 1 > keepRowsUntil) {
+            keepRowsUntil = templateDataRow1 - 1;
+        }
+        String sheetDataInner = rebuildSheetData(xml, keepRowsUntil, builtRows);
         String out = xml.replaceFirst(
             '(?s)<sheetData>.*?</sheetData>',
             '<sheetData>' + sheetDataInner + '</sheetData>'
@@ -531,19 +611,6 @@ public without sharing class FEC_BCH_TemplateExportService {
             '</xm:sqref></x14:dataValidation>';
     }
 
-    private static String buildLegacyDataValidationXml(String formula1, String sqref, String xrUid) {
-        String uidAttr = String.isNotBlank(xrUid)
-            ? ' xr:uid="' + xrUid + '"'
-            : FEC_ConstantCommon.STR_EMPTY;
-        return '<dataValidation type="list" allowBlank="1" showInputMessage="1" showErrorMessage="1" sqref="' +
-            sqref +
-            '"' +
-            uidAttr +
-            '><formula1>' +
-            escapeXml(formula1) +
-            '</formula1></dataValidation>';
-    }
-
     private static Integer resolveTemplateDataRowFromValidations(String worksheetXml) {
         Integer minRow = null;
         for (String node : parseExistingDataValidationNodes(worksheetXml)) {
@@ -756,32 +823,13 @@ public without sharing class FEC_BCH_TemplateExportService {
         if (x14ValidationNodes == null || x14ValidationNodes.isEmpty()) {
             return xml;
         }
-        List<String> legacyNodes = new List<String>();
-        for (String x14Node : x14ValidationNodes) {
-            String formula1 = extractDataValidationFormula(x14Node);
-            String sqref = extractDataValidationSqref(x14Node);
-            String xrUid = extractDataValidationAttribute(x14Node, 'xr:uid');
-            if (String.isNotBlank(formula1) && String.isNotBlank(sqref)) {
-                legacyNodes.add(buildLegacyDataValidationXml(formula1, sqref, xrUid));
-            }
-        }
         String x14Block =
             '<x14:dataValidations count="' +
             String.valueOf(x14ValidationNodes.size()) +
             '" xmlns:xm="http://schemas.microsoft.com/office/excel/2006/main">' +
             String.join(x14ValidationNodes, FEC_ConstantCommon.STR_EMPTY) +
             '</x14:dataValidations>';
-        String out = upsertX14DataValidationsBlock(xml, x14Block);
-        if (!legacyNodes.isEmpty()) {
-            String legacyBlock =
-                '<dataValidations count="' +
-                String.valueOf(legacyNodes.size()) +
-                '">' +
-                String.join(legacyNodes, FEC_ConstantCommon.STR_EMPTY) +
-                '</dataValidations>';
-            out = upsertLegacyDataValidationsBlock(out, legacyBlock);
-        }
-        return out;
+        return upsertX14DataValidationsBlock(xml, x14Block);
     }
 
     private static String replaceFirstMatch(String source, Pattern pattern, String replacement) {
@@ -797,15 +845,8 @@ public without sharing class FEC_BCH_TemplateExportService {
             '(?s)<ext uri="\\{CCE6A557-97BC-4b89-ADB6-D9C93CAAB3DF\\}"[^>]*>.*?</ext>'
         );
         Matcher extDvMat = extDvPat.matcher(xml);
-        Boolean hasX14Ns = xml.contains(
-            'xmlns:x14="http://schemas.microsoft.com/office/spreadsheetml/2009/9/main"'
-        );
         String extTag =
-            '<ext uri="{CCE6A557-97BC-4b89-ADB6-D9C93CAAB3DF}"' +
-            (hasX14Ns
-                ? ''
-                : ' xmlns:x14="http://schemas.microsoft.com/office/spreadsheetml/2009/9/main"') +
-            '>' +
+            '<ext uri="{CCE6A557-97BC-4b89-ADB6-D9C93CAAB3DF}" xmlns:x14="http://schemas.microsoft.com/office/spreadsheetml/2009/9/main">' +
             dataValidationsXml +
             '</ext>';
         if (extDvMat.find()) {
@@ -832,22 +873,6 @@ public without sharing class FEC_BCH_TemplateExportService {
             '</worksheet>',
             '<extLst>' + extTag + '</extLst></worksheet>'
         );
-    }
-
-    private static String upsertLegacyDataValidationsBlock(String xml, String dataValidationsXml) {
-        Pattern existing = Pattern.compile(
-            '(?s)<dataValidations[^>]*/>|<dataValidations[^>]*>.*?</dataValidations>'
-        );
-        Matcher existingMatcher = existing.matcher(xml);
-        if (existingMatcher.find()) {
-            return replaceFirstMatch(xml, existing, dataValidationsXml);
-        }
-        Pattern extLst = Pattern.compile('(?s)<extLst>');
-        Matcher extMat = extLst.matcher(xml);
-        if (extMat.find()) {
-            return replaceFirstMatch(xml, extLst, dataValidationsXml + '<extLst>');
-        }
-        return xml.replace('</worksheet>', dataValidationsXml + '</worksheet>');
     }
 
     private static String extractRowXml(String xml, Integer rowNum1) {
@@ -976,11 +1001,19 @@ public without sharing class FEC_BCH_TemplateExportService {
         return columnName;
     }
 
+    private static String sanitizeXmlText(String value) {
+        if (value == null) {
+            return FEC_ConstantCommon.STR_EMPTY;
+        }
+        return value.replaceAll('[\\u0000-\\u0008\\u000B\\u000C\\u000E-\\u001F]', FEC_ConstantCommon.STR_EMPTY);
+    }
+
     private static String escapeXml(String value) {
         if (value == null) {
             return FEC_ConstantCommon.STR_EMPTY;
         }
-        return value.replace('&', '&amp;')
+        String sanitized = sanitizeXmlText(value);
+        return sanitized.replace('&', '&amp;')
             .replace('<', '&lt;')
             .replace('>', '&gt;')
             .replace('"', '&quot;');

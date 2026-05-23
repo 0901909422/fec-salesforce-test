@@ -144,7 +144,8 @@ export default class Fec_Banca extends NavigationMixin(LightningElement) {
             this.insuranceInfo = [];
             this.hasData = false;
 
-            console.error('Load Insurance Error:', this.error);
+            // console.error('Load Insurance Error:', this.error);
+            console.error('Load Insurance Error:', JSON.stringify(err));
 
         } finally {
 

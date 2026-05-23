@@ -235,7 +235,8 @@ public without sharing class FEC_CaseEditNOCController {
           RecordType.DeveloperName,
           FEC_Is_Call_API_Success__c,
           //PhongBT: update bộ noc chọn ở updated khi revert về
-          FEC_Current_Case_Stage__r.Name
+          FEC_Current_Case_Stage__r.Name,
+          FEC_Actual_Nature_of_Case__r.FEC_Business_Process__r.FEC_Code__c
         FROM Case
         WHERE Id = :recordId
       ];
