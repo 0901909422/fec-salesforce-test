@@ -110,6 +110,7 @@ import getTeamQueueOptions from "@salesforce/apex/FEC_CaseBusinessService.getTea
 //PhongBT 18/05/26: Document Request sử dụng cục routing action mới
 import getDocumentRequestStageChangeRouting from "@salesforce/apex/FEC_DocumentRequestRoutingService.getStageChangeRouting";
 import getRoutingActionsForRl0402Rl0403 from "@salesforce/apex/FEC_DocumentRequestRoutingActionService.getRoutingActionsForRl0402Rl0403";
+import getRoutingActionsForMrcRl05 from "@salesforce/apex/FEC_DocumentRequestRoutingActionService.getRoutingActionsForMrcRl05";
 import {
   getDocumentRequestRoutingContext,
   setBusinessFieldValue,
@@ -1429,6 +1430,7 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
     }
     this._loadMrcReturnStageChangeRouting().then(() => {
       this._syncActiveRoutingSection();
+      this._syncDocumentRequestRoutingActionSelection();
     });
   }
 
@@ -1820,10 +1822,40 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
     }
   }
 
-  /** Đồng bộ action sau khi section Document Request routing mount. */
-  _syncDocumentRequestRoutingActionSelection() {
+  /** RL05 — bổ sung routing actions khi Stage Screen chưa trả option (Stage 1 / template). */
+  async _supplementMrcRl05RoutingActionsIfNeeded() {
     if (
-      !this._documentRequestStageChangeRoutingActive ||
+      !isMrcRl05Branch(this.business) ||
+      !shouldActivateMrcReturnRouting(this.business)
+    ) {
+      return;
+    }
+    if ((this.business?.routingActionlst?.length ?? 0) > 0) {
+      return;
+    }
+    try {
+      const actions = await getRoutingActionsForMrcRl05({
+        caseId: this.recordId,
+      });
+      if (Array.isArray(actions) && actions.length > 0) {
+        this.business = { ...this.business, routingActionlst: actions };
+        this._syncHasRoutingAction();
+        if (!this.actionValue) {
+          this.actionValue = actions[0]?.value;
+        }
+      }
+    } catch (err) {
+      console.error("[MRC RL05 routing supplement]", JSON.stringify(err));
+    }
+  }
+
+  /** Đồng bộ action sau khi section Document Request / MRC Return routing mount. */
+  _syncDocumentRequestRoutingActionSelection() {
+    const stage1AutoRouteActive =
+      this._documentRequestStageChangeRoutingActive ||
+      this._mrcReturnStageChangeRoutingActive;
+    if (
+      !stage1AutoRouteActive ||
       !this.isEdit ||
       !(this.business?.routingActionlst?.length > 0)
     ) {
@@ -1834,12 +1866,17 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
     const hasAction = (code) =>
       actions.some((a) => (a.code || a.value) === code);
 
-    if (this._hasDocumentRequestPaperValidationError() && hasAction(ACTION_REJECT)) {
+    if (
+      this._documentRequestStageChangeRoutingActive &&
+      this._hasDocumentRequestPaperValidationError() &&
+      hasAction(ACTION_REJECT)
+    ) {
       this._setActionValueByCode(ACTION_REJECT);
       return;
     }
 
     if (
+      this._documentRequestStageChangeRoutingActive &&
       !this._documentRequestDeliveryEligible &&
       this._getCurrentActionCode() === ACTION_ROUTE_TO
     ) {
@@ -1856,12 +1893,44 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
       return;
     }
 
+    if (
+      this._mrcReturnStageChangeRoutingActive &&
+      !this.business?.mrcRl05CaseInfoWarningOnly &&
+      this._hasMrcBlockingCaseInformationError() &&
+      hasAction(ACTION_REJECT)
+    ) {
+      this._setActionValueByCode(ACTION_REJECT);
+      return;
+    }
+
+    if (this._mrcReturnStageChangeRoutingActive) {
+      const ctx = getMrcReturnRoutingContext(
+        this.business,
+        this.mrcReturnHandlingOptionValue,
+        this.mrcReturnCustomerConfirmationValue,
+        this._mrcDeliveryOptionDraft,
+      );
+      if (ctx.eligible && hasAction(ACTION_ROUTE_TO)) {
+        this._setActionValueByCode(ACTION_ROUTE_TO);
+        return;
+      }
+    }
+
     if (this.actionValue) {
       const el = this._getRoutingActionSelectEl();
       if (el) {
         el.value = this.actionValue;
       }
     }
+  }
+
+  _hasMrcBlockingCaseInformationError() {
+    return !!this.business?.sectionlst?.some(
+      (section) =>
+        section.name === SECTION_NAME_CASE_INFORMATION &&
+        (section.hasError || section.error?.label) &&
+        this.business?.mrcRl05CaseInfoWarningOnly !== true,
+    );
   }
 
   //linhdev: Fix jira FECREDIT_CSM_2025_KH-1162
@@ -2249,7 +2318,12 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
             });
 
             if (section.error?.errorlst?.length > 0 || section.error?.label) {
-            this._setActionValueByCode(ACTION_REJECT);
+            const mrcWarningOnly =
+              section.name === SECTION_NAME_CASE_INFORMATION &&
+              this.business?.mrcRl05CaseInfoWarningOnly === true;
+            if (!mrcWarningOnly) {
+              this._setActionValueByCode(ACTION_REJECT);
+            }
             }
           }
           section.id = crypto.randomUUID();
@@ -2488,6 +2562,7 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
         }
         //PhongBT 18/05/26: Document Request sử dụng cục routing action mới
         void this._supplementRl0402Rl0403RoutingActionsIfNeeded()
+          .then(() => this._supplementMrcRl05RoutingActionsIfNeeded())
           .then(() => this._loadDocumentRequestStageChangeRouting())
           .then(() => {
             this._syncActiveRoutingSection();
