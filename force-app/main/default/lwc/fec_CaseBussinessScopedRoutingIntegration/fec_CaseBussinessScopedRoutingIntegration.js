@@ -199,20 +199,11 @@ export async function trySubmitScopedRouteTo(host) {
     typeof cmpAddr.hasPendingAddressUpdates === "function" &&
     cmpAddr.hasPendingAddressUpdates();
 
-  const hasAssessmentChange =
-    typeof host.hasContractProcessingAssessmentTypeChanged === "function" &&
-    host.hasContractProcessingAssessmentTypeChanged();
-  const hasRdPaymentAssessmentChange =
-    typeof host.hasRdPaymentContractAssessmentChanged === "function" &&
-    host.hasRdPaymentContractAssessmentChanged();
+  const hasSubmitPicklistChange =
+    typeof host.hasAnySubmitCasePicklistFieldChanged === "function" &&
+    host.hasAnySubmitCasePicklistFieldChanged();
 
-  if (
-    routeToEle &&
-    noUpdate &&
-    !hasAddressUpdate &&
-    !hasAssessmentChange &&
-    !hasRdPaymentAssessmentChange
-  ) {
+  if (routeToEle && noUpdate && !hasAddressUpdate && !hasSubmitPicklistChange) {
     host.showToast?.(
       FEC_Warning_Title,
       FEC_MSG_UPDATED_INFO_NOT_UPDATED,
@@ -236,30 +227,14 @@ export async function trySubmitScopedRouteTo(host) {
 
   try {
     if (
-      typeof host.persistContractProcessingAssessmentTypeBeforeScopedRouteTo ===
-      "function"
+      typeof host.persistSubmitCasePicklistFieldsBeforeSubmit === "function"
     ) {
       const persistResult =
-        await host.persistContractProcessingAssessmentTypeBeforeScopedRouteTo();
+        await host.persistSubmitCasePicklistFieldsBeforeSubmit();
       if (persistResult?.success === false) {
         host.showToast?.(
           FEC_Error_Title,
           persistResult.errorMessage || FEC_Error_Title,
-          "error",
-        );
-        return false;
-      }
-    }
-
-    if (
-      typeof host.persistRdPaymentContractAssessmentBeforeSubmit === "function"
-    ) {
-      const rdPersistResult =
-        await host.persistRdPaymentContractAssessmentBeforeSubmit();
-      if (rdPersistResult?.success === false) {
-        host.showToast?.(
-          FEC_Error_Title,
-          rdPersistResult.errorMessage || FEC_Error_Title,
           "error",
         );
         return false;
