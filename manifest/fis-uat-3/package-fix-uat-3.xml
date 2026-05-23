@@ -66,6 +66,7 @@
 		<members>FEC_StatementsAccountController</members>
 		<members>FEC_TransactionsController</members>
 		<members>FEC_VMXAUTHDETAILINQ</members>
+		<members>FEC_VmxAcctBlkcdUpdEmeaCallout</members>
 		<members>FEC_InteractionInforHandler</members>
 		<members>FEC_NocInheritanceUtil</members>
 		<members>FEC_NocInheritanceUtilTest</members>
@@ -137,6 +138,7 @@
 		<members>FEC_NotificationService</members>
 		<members>FEC_CaseAssignmentConfigController</members>
         <members>FEC_RoutingHistTatSvc</members>
+        <members>FEC_PsDNBServiceCallout</members>
 		<name>Apexclass</name>
 	</types>
     <types>
@@ -436,6 +438,7 @@
 		<members>FEC_API_Config.FEC_Get_IPP_Detail</members>
 	    <members>FEC_API_Config.FEC_MFASOUTSTANDINGAUTHINQ</members>
 		<members>FEC_API_Config.FEC_VMX_AUTH_DETAIL_INQ</members>
+		<members>FEC_API_Config.FEC_Vmx_Acct_Blkcd_Upd_Emea</members>
 		<name>CustomMetadata</name>
 	</types>
     <types>
@@ -679,7 +682,6 @@
         <name>EntitlementProcess</name>
     </types>
 	<types>
-	    <members>FEC_Download_Report__c.All</members>
 	    <members>FEC_Download_Report__c.INTERACTIONS_SERVICE_CASES_SUMMARY_TAT</members>
 	    <members>FEC_Download_Report__c.Interaction_and_Service_Case_Summary</members>
 	    <name>ListView</name>
