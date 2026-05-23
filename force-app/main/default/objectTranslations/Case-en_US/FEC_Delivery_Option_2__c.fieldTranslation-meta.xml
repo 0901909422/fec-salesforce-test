@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomFieldTranslation xmlns="http://soap.sforce.com/2006/04/metadata">
+    <label><!-- Delivery Option 2 --></label>
+    <name>FEC_Delivery_Option_2__c</name>
+    <picklistValues>
+        <masterLabel>Address</masterLabel>
+        <translation>Địa chỉ</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Email</masterLabel>
+        <translation><!-- Email --></translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Office</masterLabel>
+        <translation>Văn phòng</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>POS</masterLabel>
+        <translation><!-- POS --></translation>
+    </picklistValues>
+</CustomFieldTranslation>
