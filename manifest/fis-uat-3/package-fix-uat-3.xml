@@ -66,6 +66,7 @@
 		<members>FEC_StatementsAccountController</members>
 		<members>FEC_TransactionsController</members>
 		<members>FEC_VMXAUTHDETAILINQ</members>
+		<members>FEC_VmxAcctBlkcdUpdEmeaCallout</members>
 		<members>FEC_InteractionInforHandler</members>
 		<members>FEC_NocInheritanceUtil</members>
 		<members>FEC_NocInheritanceUtilTest</members>
@@ -437,6 +438,7 @@
 		<members>FEC_API_Config.FEC_Get_IPP_Detail</members>
 	    <members>FEC_API_Config.FEC_MFASOUTSTANDINGAUTHINQ</members>
 		<members>FEC_API_Config.FEC_VMX_AUTH_DETAIL_INQ</members>
+		<members>FEC_API_Config.FEC_Vmx_Acct_Blkcd_Upd_Emea</members>
 		<name>CustomMetadata</name>
 	</types>
     <types>
