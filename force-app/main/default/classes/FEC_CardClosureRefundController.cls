@@ -294,7 +294,13 @@ public without sharing class FEC_CardClosureRefundController {
         }
 
         List<FEC_Customer_History__c> historyRows = [
-            SELECT Id, FEC_Account_Number__c, FEC_Card_Number__c, FEC_Block_Code__c, FEC_Block_Code_1__c
+            SELECT Id,
+                Name,
+                FEC_Account_Number__c,
+                FEC_Card_Number__c,
+                FEC_Block_Code__c,
+                FEC_Block_Code_1__c,
+                FEC_Block_Code_2__c
             FROM FEC_Customer_History__c
             WHERE Id = :c.FEC_Account_or_Contract__c
             LIMIT 1
@@ -319,8 +325,10 @@ public without sharing class FEC_CardClosureRefundController {
         }
 
         Boolean cardOnlyLock = false;
+        Boolean callAccountBlkcdApi = false;
         if (funcCode == FUNC_BLOCK) {
             cardOnlyLock = isCardOnlyLockByAccountBlockCode1(customerHistory.FEC_Block_Code_1__c);
+            callAccountBlkcdApi = !cardOnlyLock;
         }
 
         String transId = UUID.randomUUID().toString();
@@ -355,6 +363,32 @@ public without sharing class FEC_CardClosureRefundController {
             dto.description = response != null && response.Sys != null ? response.Sys.Description : null;
             dto.errorMessage = response != null ? response.errorMessage : null;
 
+            if (dto.success && funcCode == FUNC_BLOCK && callAccountBlkcdApi) {
+                String vmxCardNbr = resolveVmxCardNbr(customerHistory, accountNumber);
+                if (String.isBlank(vmxCardNbr)) {
+                    dto.success = false;
+                    dto.errorMessage = String.format(System.Label.FEC_MSG_Param_Required, new List<String>{ 'CARD_NBR' });
+                } else {
+                    try {
+                        FEC_VmxAcctBlkcdUpdEmeaCallout.BlkcdUpdInput vmxInput =
+                            FEC_VmxAcctBlkcdUpdEmeaCallout.buildDefaultInput(vmxCardNbr);
+                        FEC_VmxAcctBlkcdUpdEmeaCallout.BlkcdUpdResult vmxResult =
+                            FEC_VmxAcctBlkcdUpdEmeaCallout.executeUpdateAccountBlockCode(vmxInput);
+                        if (!FEC_VmxAcctBlkcdUpdEmeaCallout.isBlkcdUpdSuccess(vmxResult)) {
+                            dto.success = false;
+                            dto.errorMessage = String.isNotBlank(vmxResult?.responseDesc)
+                                ? vmxResult.responseDesc
+                                : System.Label.FEC_MSG_Card_Block_Failed;
+                        }
+                    } catch (Exception vmxEx) {
+                        dto.success = false;
+                        dto.errorMessage = System.Label.FEC_MSG_Card_Block_Failed;
+                    } finally {
+                        FEC_VmxAcctBlkcdUpdEmeaCallout.logApiResponse();
+                    }
+                }
+            }
+
             if (dto.success && funcCode == FUNC_BLOCK) {
                 updateCustomerHistoryAfterBlock(customerHistory.Id, cardOnlyLock);
                 resetCaseBlockServiceAttempts(caseId);
@@ -380,12 +414,26 @@ public without sharing class FEC_CardClosureRefundController {
         return dto;
     }
 
+    /**
+     * Block Code 1 (Account level) = F hoặc N → chỉ khóa Card level (API 57).
+     * Các trường hợp còn lại → khóa Account + Card (API 57 + 91).
+     */
     private static Boolean isCardOnlyLockByAccountBlockCode1(String blockCode1) {
         if (String.isBlank(blockCode1)) {
             return false;
         }
         String v = blockCode1.trim().toUpperCase();
         return v == 'F' || v == 'N';
+    }
+
+    private static String resolveVmxCardNbr(FEC_Customer_History__c customerHistory, String accountNumber) {
+        if (customerHistory != null && String.isNotBlank(customerHistory.Name)) {
+            return customerHistory.Name.trim();
+        }
+        if (String.isNotBlank(accountNumber)) {
+            return accountNumber.trim();
+        }
+        return null;
     }
 
     private static Integer incrementCaseBlockServiceAttempts(Id caseId) {
