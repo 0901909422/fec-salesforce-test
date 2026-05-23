@@ -992,7 +992,7 @@ public without sharing class FEC_DNBHandler {
         Case caseRecord = [
       SELECT Id, FEC_Phone_Number__c,
       FEC_Interaction__r.FEC_Interaction_Email__c,
-      FEC_Account_or_Contract__r.FEC_National_ID_Passport_ID__c FROM Case WHERE
+      FEC_Account_or_Contract__r.FEC_Search_Result_National_ID__c FROM Case WHERE
           Id = : caseId LIMIT 1
     ];
         
@@ -1006,8 +1006,8 @@ public without sharing class FEC_DNBHandler {
         
         req.nid = (caseRecord.FEC_Account_or_Contract__r != null
             && String.isNotBlank(caseRecord.FEC_Account_or_Contract__r
-            .FEC_National_ID_Passport_ID__c))
-            ? caseRecord.FEC_Account_or_Contract__r.FEC_National_ID_Passport_ID__c
+            .FEC_Search_Result_National_ID__c))
+            ? caseRecord.FEC_Account_or_Contract__r.FEC_Search_Result_National_ID__c
             : '';
         
         req.email = (caseRecord.FEC_Interaction__r != null
