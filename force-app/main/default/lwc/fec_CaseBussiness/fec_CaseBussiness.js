@@ -112,8 +112,6 @@ import {
   getDocumentRequestRoutingContext,
   setBusinessFieldValue,
 } from "./fecDocumentRequestStageChangeRouting";
-// // Toannd61 19/05/26 jira 1423 jira 1423
-import { getDocumentRequestRoutingContext } from "./fecDocumentRequestStageChangeRouting";
 import {
   getMrcReturnRoutingContext,
   isMrcReturnRoutingSubCode,
@@ -1313,6 +1311,12 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
   get mrcCustomerConfirmationOptions() {
     return this.business?.picklistOptionsMap?.Case?.[
       FIELD_MRC_CUSTOMER_CONFIRMATION
+    ];
+  }
+
+  get mrcHandlingOptionOptions() {
+    return this.business?.picklistOptionsMap?.Case?.[
+      FIELD_MRC_HANDLING_OPTION
     ];
   }
 
@@ -3326,7 +3330,6 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
     this._syncPointsRedemptionFieldToRecordForm();
     return Promise.all([
       this._syncMrcReturnCaseFieldsBeforeSubmit(),
-      this._saveMrcReturnDeliveryIfApplicable(),
       this._saveRemovePhoneDraftIfApplicable(),
       this._savePointsRedemptionDraftIfApplicable(),
     ]);

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CustomFieldTranslation xmlns="http://soap.sforce.com/2006/04/metadata">
-    <label><!-- MRC Request Handling Option --></label>
+    <label>Phương án xử lý yêu cầu MRC</label>
     <name>FEC_MRC_Request_Handling_Option__c</name>
     <picklistValues>
         <masterLabel>Cancel new request, continue previous request handling</masterLabel>

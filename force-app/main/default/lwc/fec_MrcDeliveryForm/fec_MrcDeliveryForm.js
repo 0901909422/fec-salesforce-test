@@ -916,7 +916,7 @@ export default class Fec_MrcDeliveryForm extends LightningElement {
             return true;
         }
         if (this.loading === true) {
-            return true;
+            return false;
         }
         if (this.loadError) {
             return false;
