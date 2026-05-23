@@ -71,6 +71,7 @@ public with sharing class FEC_AutoHoldCaseService {
             SELECT Id, FEC_Case__c, FEC_Changed_Status__c
             FROM FEC_Routing_Action_History__c
             WHERE Id = :routingHistoryId
+            WITH SYSTEM_MODE
             LIMIT 1
         ];
         if (rows.isEmpty() || rows[0].FEC_Case__c == null) {
@@ -80,6 +81,7 @@ public with sharing class FEC_AutoHoldCaseService {
             SELECT Status, FEC_Team__c
             FROM Case
             WHERE Id = :rows[0].FEC_Case__c
+            WITH SYSTEM_MODE
             LIMIT 1
         ];
         if (!endCases.isEmpty()) {
@@ -87,12 +89,9 @@ public with sharing class FEC_AutoHoldCaseService {
                 endCases[0]
             );
             if (rows[0].FEC_Changed_Status__c != changedStatus) {
-                Database.update(
-                    new FEC_Routing_Action_History__c(
-                        Id = routingHistoryId,
-                        FEC_Changed_Status__c = changedStatus
-                    ),
-                    AccessLevel.SYSTEM_MODE
+                FEC_CaseBusinessService.patchRoutingHistoryChangedStatus(
+                    routingHistoryId,
+                    changedStatus
                 );
             }
         }
@@ -108,6 +107,7 @@ public with sharing class FEC_AutoHoldCaseService {
             SELECT Id
             FROM FEC_Routing_Action_History__c
             WHERE FEC_Case__c = :caseId
+            WITH SYSTEM_MODE
             ORDER BY CreatedDate DESC
             LIMIT 1
         ];

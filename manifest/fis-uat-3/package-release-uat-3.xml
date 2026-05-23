@@ -1737,6 +1737,7 @@
     <types>
 		<members>FEC_CaseBusinessService</members>
 		<members>FEC_DocumentRequestRoutingService</members>
+		<members>FEC_DocumentRequestRoutingActionService</members>
 		<members>FEC_ClientPDFService</members>
 		<members>FEC_ClientPDFServiceTest</members>
 		<members>FEC_PaymentHistoryValidationService</members>
