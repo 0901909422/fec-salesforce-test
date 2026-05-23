@@ -102,8 +102,6 @@
         <members>FEC_Export_Detail</members>
         <members>FEC_Format</members>
         <members>FEC_Format_Excel</members>
-        <members>FEC_Batch_Import_Contract_Header_Ambiguous</members>
-		<members>FEC_Batch_Import_File_Type_Template_Mismatch</members>
         <name>CustomLabel</name>
     </types>
 
@@ -1878,6 +1876,8 @@
 		<members>FEC_Batch_Import_Sub_Category_Not_In_Datagroup</members>
 		<members>FEC_Batch_Import_Sub_Code_Not_In_Datagroup</members>
 		<members>FEC_Batch_Import_Missing_Excel_Column</members>
+        <members>FEC_Batch_Import_Contract_Header_Ambiguous</members>
+        <members>FEC_Batch_Import_File_Type_Template_Mismatch</members>
         <members>FEC_Batch_Import_Welcome_Case_Status_Only_Resolved_Completed</members>
         <members>FEC_Batch_Import_Welcome_Contract_Number_Requires_Dash</members>
         <members>FEC_Batch_Import_Other_Contract_Number_No_Dash</members>
