@@ -50,6 +50,7 @@
         <members>FEC_AssignmentTriggerHandler</members>
         <members>FEC_BancaController</members>
         <members>FEC_DNBHandler</members>
+        <members>FEC_DocumentRequestRoutingService</members>
         <members>FEC_GetCSCaseStatusService</members>
 		<members>Fec_HoldCaseConfigurationController</members>
 		<members>FEC_HoldCaseInheritanceService</members>
@@ -64,6 +65,7 @@
 		<members>FEC_MFASOUTSTANDINGAUTHINQ</members>
 		<members>FEC_StatementsAccountController</members>
 		<members>FEC_TransactionsController</members>
+		<members>FEC_VMXAUTHDETAILINQ</members>
 		<members>FEC_InteractionInforHandler</members>
 		<members>FEC_NocInheritanceUtil</members>
 		<members>FEC_NocInheritanceUtilTest</members>
@@ -134,6 +136,7 @@
 		<members>FEC_BatchCaseHandlingResultXlsxBuilder</members>
 		<members>FEC_NotificationService</members>
 		<members>FEC_CaseAssignmentConfigController</members>
+        <members>FEC_RoutingHistTatSvc</members>
 		<name>Apexclass</name>
 	</types>
     <types>
@@ -228,6 +231,7 @@
 		<members>fec_DownloadReports</members>
 		<members>fec_BatchDataCreation</members>
 		<members>fecMrcReturnStageChangeRouting</members>
+		<members>fec_BatchCaseCreation</members>
 		<name>LightningComponentBundle</name>
 	</types>
     <types>
@@ -285,6 +289,10 @@
         <members>FEC_Download_Report__c.FEC_Report_Unique_Name__c</members>
         <members>FEC_Case_Assignment_Log_Detail__c.FEC_Case_Assignment_log_Name__c</members>
         <members>FEC_Additional_Info__c.FEC_Statement_Fee__c</members>
+        <members>FEC_Actual_Master_Data_Setting__c.FEC_Hidden__c</members>
+        <members>FEC_Actual_Master_Data_Setting__c.FEC_Type__c</members>
+        <members>FEC_Master_Data_Setting__c.FEC_Hidden__c</members>
+        <members>FEC_Master_Data_Setting__c.FEC_Type__c</members>
         <name>CustomField</name>
     </types>
     <types>
@@ -401,6 +409,7 @@
         <members>FEC_MSG_Cannot_Request_Payment_History</members>
         <members>FEC_MSG_Cannot_Request_Repayment_Schedule</members>
         <members>FEC_BCH_Col_TotalRecords</members>
+        <members>FEC_BCH_HeaderInvalid</members>
 		<members>FEC_Label_Customer_All</members>
 		<members>FEC_Label_Customer_Existing</members>
 		<members>FEC_Label_Customer_Non_Existing</members>
@@ -426,6 +435,7 @@
 		<members>FEC_API_Config.FEC_Search_Test_Service_Error_Account</members>
 		<members>FEC_API_Config.FEC_Get_IPP_Detail</members>
 	    <members>FEC_API_Config.FEC_MFASOUTSTANDINGAUTHINQ</members>
+		<members>FEC_API_Config.FEC_VMX_AUTH_DETAIL_INQ</members>
 		<name>CustomMetadata</name>
 	</types>
     <types>
@@ -717,6 +727,13 @@
     <types>
         <members>Case</members>
         <name>Workflow</name>
+    </types>
+    <types>
+        <members>Case.Customer_Case</members>
+        <members>Case.Interaction</members>
+        <members>Case.Internal_Case</members>
+        <members>Case.Search_Interaction</members>
+        <name>RecordType</name>
     </types>
 	<version>66.0</version>
 </Package>

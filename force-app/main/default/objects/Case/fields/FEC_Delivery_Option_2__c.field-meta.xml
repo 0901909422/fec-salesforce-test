@@ -28,7 +28,7 @@
                 <label>Văn phòng</label>
             </value>
             <value>
-                <fullName>POS</fullName>
+                <fullName>RL05_POS</fullName>
                 <default>false</default>
                 <label>POS</label>
             </value>
