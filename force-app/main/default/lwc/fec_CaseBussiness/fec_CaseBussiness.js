@@ -1589,6 +1589,7 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
     const cmp = this._getFecUpdateAddressCmp();
     const hasAddressUpdate = cmp && typeof cmp.hasPendingAddressUpdates === 'function' && cmp.hasPendingAddressUpdates();
     const hasRdPaymentAssessmentChange =
+      this._isRdPaymentContractAssessmentOnForm() &&
       this.hasRdPaymentContractAssessmentChanged();
 
     if (noUpdate && !hasAddressUpdate && !hasRdPaymentAssessmentChange) {
@@ -1657,6 +1658,9 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
   }
 
   _syncCasePicklistValueFromForm(fieldApiName) {
+    if (!this.isEdit) {
+      return;
+    }
     const field = this._findCaseFieldByApiName(fieldApiName);
     if (!field) {
       return;
@@ -1699,11 +1703,11 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
   }
 
   async _persistCasePicklistField(fieldApiName) {
-    this._syncCasePicklistValueFromForm(fieldApiName);
     const field = this._findCaseFieldByApiName(fieldApiName);
     if (!field || !this.recordId) {
       return { success: true };
     }
+    this._syncCasePicklistValueFromForm(fieldApiName);
     const apiVal = this._casePicklistRawToApi(fieldApiName, field.value);
     if (apiVal == null) {
       return { success: true };
@@ -1755,6 +1759,11 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
 
   _findRdPaymentContractAssessmentField() {
     return this._findCaseFieldByApiName(FIELD_RD_PAYMENT_CONTRACT_ASSESSMENT);
+  }
+
+  /** Master Data đang hiển thị FEC_RD_Payment_Contract_Assessment__c trên form. */
+  _isRdPaymentContractAssessmentOnForm() {
+    return this._findRdPaymentContractAssessmentField() != null;
   }
 
   hasRdPaymentContractAssessmentChanged() {
@@ -3800,6 +3809,7 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
     const cmp = this._getFecUpdateAddressCmp();
     const hasAddressUpdate = cmp && typeof cmp.hasPendingAddressUpdates === 'function' && cmp.hasPendingAddressUpdates();
     const hasRdPaymentAssessmentChange =
+      this._isRdPaymentContractAssessmentOnForm() &&
       this.hasRdPaymentContractAssessmentChanged();
 
     // Chỉ chặn khi có dropdown routing và user chưa cập nhật bất kỳ trường Updated nào.
@@ -3833,15 +3843,17 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
     // PhuongNT add handle save data for fields readonly were changed data by another field
     this.handleSaveFieldReadOnly();
 
-    const rdPersistResult =
-      await this.persistRdPaymentContractAssessmentBeforeSubmit();
-    if (rdPersistResult?.success === false) {
-      this.showToast(
-        FEC_Error_Title,
-        rdPersistResult.errorMessage || FEC_Error_Title,
-        'error',
-      );
-      return false;
+    if (this._isRdPaymentContractAssessmentOnForm()) {
+      const rdPersistResult =
+        await this.persistRdPaymentContractAssessmentBeforeSubmit();
+      if (rdPersistResult?.success === false) {
+        this.showToast(
+          FEC_Error_Title,
+          rdPersistResult.errorMessage || FEC_Error_Title,
+          'error',
+        );
+        return false;
+      }
     }
 
     await Promise.all([
