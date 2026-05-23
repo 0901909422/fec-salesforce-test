@@ -1549,6 +1549,22 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
     );
   }
 
+  /** Chỉ hiện section Routing khi thực sự có option (tránh dropdown trống RL04.02/03). */
+  _syncHasRoutingAction() {
+    if (!this.business) {
+      return;
+    }
+    const hasOptions =
+      Array.isArray(this.business.routingActionlst) &&
+      this.business.routingActionlst.length > 0;
+    const isCofGsr =
+      typeof this.business.code === "string" &&
+      (this.business.code.startsWith("COF") ||
+        this.business.code.startsWith("GSR"));
+    this.business.hasRoutingAction = isCofGsr || hasOptions;
+    this.business = { ...this.business };
+  }
+
   /**
    * Cập nhật readonly/editable cho toàn bộ field khi isEdit đổi.
    * Không gọi Apex, chỉ sửa dữ liệu đã có trong memory.
@@ -1571,22 +1587,6 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
       });
     });
     this._syncHasRoutingAction();
-  }
-
-  /** Chỉ hiện section Routing khi thực sự có option (tránh dropdown trống RL04.02/03). */
-  _syncHasRoutingAction() {
-    if (!this.business) {
-      return;
-    }
-    const hasOptions =
-      Array.isArray(this.business.routingActionlst) &&
-      this.business.routingActionlst.length > 0;
-    const isCofGsr =
-      typeof this.business.code === "string" &&
-      (this.business.code.startsWith("COF") ||
-        this.business.code.startsWith("GSR"));
-    this.business.hasRoutingAction = isCofGsr || hasOptions;
-    this.business = { ...this.business };
   }
 
   _isRl0402OrRl0403SubCode() {
