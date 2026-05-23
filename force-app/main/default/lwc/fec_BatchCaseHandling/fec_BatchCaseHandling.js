@@ -2588,7 +2588,8 @@ export default class Fec_BatchCaseHandling extends LightningElement {
     for (let i = headerRowIndex + 1; i < aoa.length; i++) {
       const r = aoa[i] || [];
       const caseIdSearch = this.cellAsString(r[idxCaseId]);
-      const routingAction = this.cellAsString(r[idxRouting]);
+      const routingAction =
+        idxRouting >= 0 ? this.cellAsString(r[idxRouting]) : STR_EMPTY;
       const inputtedRemarks = this.cellAsString(r[idxRemark]);
       const assignmentId =
         idxAssignmentId >= 0 ? this.cellAsString(r[idxAssignmentId]) : STR_EMPTY;
@@ -2673,8 +2674,13 @@ export default class Fec_BatchCaseHandling extends LightningElement {
       );
       const idxCaseId = this.findHeaderIndex(normalized, HEADERS_CASE_ID);
       const idxRouting = this.findHeaderIndex(normalized, HEADERS_ROUTING_ACTION);
+      const idxAssignmentRouting = this.findHeaderIndex(
+        normalized,
+        HEADERS_ASSIGNMENT_ROUTING_ACTION
+      );
       const idxRemark = this.findHeaderIndex(normalized, HEADERS_REMARKS);
-      if (idxCaseId >= 0 && idxRouting >= 0 && idxRemark >= 0) {
+      const hasRoutingHeaderCol = idxRouting >= 0 || idxAssignmentRouting >= 0;
+      if (idxCaseId >= 0 && hasRoutingHeaderCol && idxRemark >= 0) {
         return {
           headerRowIndex: i,
           headerRow: row,
@@ -2770,6 +2776,33 @@ export default class Fec_BatchCaseHandling extends LightningElement {
     });
   }
 
+  applyResultErrorsColumnFormat(sheet, headers, rowCount) {
+    if (!sheet || !Array.isArray(headers) || !rowCount) {
+      return;
+    }
+    const errorsColIdx = headers.indexOf(RESULT_COL_ERRORS);
+    if (errorsColIdx < 0) {
+      return;
+    }
+    if (!sheet["!cols"]) {
+      sheet["!cols"] = [];
+    }
+    sheet["!cols"][errorsColIdx] = { wch: 60 };
+    for (let rowIdx = 1; rowIdx < rowCount; rowIdx++) {
+      const cellRef = window.XLSX.utils.encode_cell({ c: errorsColIdx, r: rowIdx });
+      const cell = sheet[cellRef];
+      if (!cell) {
+        continue;
+      }
+      cell.s = {
+        alignment: {
+          wrapText: true,
+          vertical: "top"
+        }
+      };
+    }
+  }
+
   async saveResultWorkbook(
     batchRecordId,
     originalFileName,
@@ -2834,6 +2867,7 @@ export default class Fec_BatchCaseHandling extends LightningElement {
     }
     const workbook = window.XLSX.utils.book_new();
     const sheet = window.XLSX.utils.aoa_to_sheet(sheetData);
+    this.applyResultErrorsColumnFormat(sheet, headers, sheetData.length);
     window.XLSX.utils.book_append_sheet(workbook, sheet, "Result");
     const arrayBuffer = window.XLSX.write(workbook, {
       bookType: "xlsx",

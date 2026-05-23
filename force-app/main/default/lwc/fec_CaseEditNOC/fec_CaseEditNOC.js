@@ -94,6 +94,10 @@ export default class Fec_CaseEditNOC extends LightningElement {
 
   //PhongBT: update bộ noc chọn ở updated khi revert về
   _currentStageName = null;
+  /** FEC_Actual_Nature_of_Case__r.FEC_Business_Process__r.FEC_Code__c */
+  _actualBusinessProcessCode = null;
+  /** contextFlags từ FEC_CaseBusinessService.getByCase (đồng bộ qua CASE_NOC). */
+  _caseBusinessContextFlags = {};
 
   //PhongBT11 update jira KH-1084 bổ sung Updated Information cho NOC, GSR Handling Stage
   updatedCategoryId;       // Category đã chọn trong Updated section
@@ -127,6 +131,15 @@ export default class Fec_CaseEditNOC extends LightningElement {
     return (this._currentStageName || '').includes('Stage 1');
   }
 
+  /** GSR (Actual NOC) + Revert Stage 2 → Stage 1: cho phép sửa Updated NOC khi bật mode edit Case. */
+  _isGsrStage2ToStage1RevertEditable() {
+    const actualBp = (this._actualBusinessProcessCode || '').toUpperCase();
+    if (!actualBp.includes('GSR') || !this._isStage1) {
+      return false;
+    }
+    return this._caseBusinessContextFlags?.isGsrStage2ToStage1Revert === true;
+  }
+
   // Sau submit (Submitted + Updated section): chỉ cho sửa khi user bật lại mode edit Case.
   // Không dùng interactionViewMode === handling — sau submit field Case có thể chưa kịp review
   // nên vẫn là handling và Updated NOC bị editable tới khi reload; chỉ còn modeEditCase là đúng UX.
@@ -138,8 +151,11 @@ export default class Fec_CaseEditNOC extends LightningElement {
     if (this.isNocNatureLocked) {
       return false;
     }
-    //PhongBT: update bộ noc chọn ở updated khi revert về
-    // Stage 1 → readonly Updated NOC
+    // GSR Revert Stage 2 → Stage 1: cho phép edit Updated NOC (Actual NOC chứa GSR).
+    if (this._isGsrStage2ToStage1RevertEditable()) {
+      return this.modeEditCase === true;
+    }
+    // Stage 1 → readonly Updated NOC (COF / GSR revert từ stage khác)
     if (this._isStage1) return false;
     //PhongBT 15/06/26: Có Routing Assignment (hasAutoRoutingAssignment) → không cho edit Updated NOC
     if (this.hasAutoRoutingAssignment) return false;
@@ -147,7 +163,11 @@ export default class Fec_CaseEditNOC extends LightningElement {
   }
 
   get showUpdatedSection() {
-    const bpCode = (this.originalNOCBusinessProcessCode || "").toUpperCase();
+    const bpCode = (
+      this._actualBusinessProcessCode ||
+      this.originalNOCBusinessProcessCode ||
+      ""
+    ).toUpperCase();
     const isGsrOrCof = bpCode.includes("GSR") || bpCode.includes("COF");
     console.log('bpCode ' + bpCode);
     console.log('isGsrOrCof ' + isGsrOrCof);
@@ -552,6 +572,8 @@ export default class Fec_CaseEditNOC extends LightningElement {
         this.isDisableNOC = res.FEC_Is_Call_API_Success__c;
         //PhongBT: update bộ noc chọn ở updated khi revert về
         this._currentStageName = res.FEC_Current_Case_Stage__r?.Name || null;
+        this._actualBusinessProcessCode =
+          res.FEC_Actual_Nature_of_Case__r?.FEC_Business_Process__r?.FEC_Code__c || null;
         this.getProdType();
         this.getCategory();
         this.getSubCategory();
@@ -613,6 +635,7 @@ export default class Fec_CaseEditNOC extends LightningElement {
         })
           .then((res) => {
             if (!res) return;
+            this._caseBusinessContextFlags = res.contextFlags || {};
 
             let business = { ...res };
             const actions = business.routingActionlst || [];
@@ -996,6 +1019,10 @@ export default class Fec_CaseEditNOC extends LightningElement {
     if (message.caseId != null && message.caseId !== this.recordId) {
       return;
     }
+    if (message.contextFlagsSync === true && message.contextFlags) {
+      this._caseBusinessContextFlags = message.contextFlags;
+      return;
+    }
     //linhdev fix jira FECREDIT_CSM_2025_KH-1366 — khóa NOC ngay khi Có/Không pop-up Block Amount
     if (message.fastCashNocLocked === true) {
       this.applyFastCashBlockNocLock();
@@ -1215,6 +1242,8 @@ export default class Fec_CaseEditNOC extends LightningElement {
         this._isInternalRequest = res.FEC_Account_Contract_Number_PL__c === INTERNAL_REQUEST;
         //PhongBT: update bộ noc chọn ở updated khi revert về
         this._currentStageName = res.FEC_Current_Case_Stage__r?.Name || null;
+        this._actualBusinessProcessCode =
+          res.FEC_Actual_Nature_of_Case__r?.FEC_Business_Process__r?.FEC_Code__c || null;
         this.getProdType();
         this.getCategory();
         this.getSubCategory();

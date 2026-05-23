@@ -29,18 +29,41 @@ export function getMrcRl05Ui(business) {
   return business?.mrcRl05Ui || null;
 }
 
+function inferRl05FromStageName(stageName) {
+  const upper = String(stageName ?? STR_EMPTY).toUpperCase();
+  if (!upper.includes("RL05")) {
+    return { subCodeCode: STR_EMPTY, subCategoryCode: STR_EMPTY };
+  }
+  let subCodeCode = "RL05";
+  if (upper.includes("RL05.02")) {
+    subCodeCode = "RL05.02";
+  } else if (upper.includes("RL05.03")) {
+    subCodeCode = "RL05.03";
+  } else if (upper.includes("RL05.01")) {
+    subCodeCode = "RL05.01";
+  }
+  return { subCodeCode, subCategoryCode: "RL05" };
+}
+
 export function isMrcRl05Branch(business) {
   const ctx = getMrcRl05Ui(business);
   if (ctx?.isRl05Branch === true) {
     return true;
   }
   const subCodeUpper = String(business?.subCodeCode ?? STR_EMPTY).toUpperCase();
-  const isRl05OnBusiness =
+  if (
     subCodeUpper.includes("RL05") ||
     String(business?.subCategoryCode ?? STR_EMPTY)
       .toUpperCase()
-      .includes("RL05");
-  return isRl05OnBusiness;
+      .includes("RL05")
+  ) {
+    return true;
+  }
+  const fromStage = inferRl05FromStageName(business?.stageName);
+  return (
+    fromStage.subCodeCode.includes("RL05") ||
+    fromStage.subCategoryCode.includes("RL05")
+  );
 }
 
 export function getCaseFieldValue(business, apiName) {
@@ -302,11 +325,7 @@ export function applyMrcRl05SectionVisibility(business, handlingOptionValue) {
     business,
     handlingOptionValue,
   );
-  const hidePropertyInfo =
-    ctx?.hidePropertyInfo === true ||
-    isMrcRl05PhotoSubCodeFromBusiness(business) ||
-    ctx?.isReturnSubCode === true ||
-    String(business?.subCodeCode ?? STR_EMPTY).toUpperCase().includes("RL05.02");
+  const hidePropertyInfo = ctx?.hidePropertyInfo === true;
   const panelMounted = hasMrcReturnPanelInBusiness(business);
   const panelShowsDelivery =
     panelMounted &&
@@ -381,7 +400,11 @@ export function applyMrcRl05SectionVisibility(business, handlingOptionValue) {
   return { business, rebuildSections: changed };
 }
 
-export function getMrcReturnAutoRoutingActionCode(business, isEdit) {
+export function getMrcReturnAutoRoutingActionCode(
+  business,
+  isEdit,
+  customerConfirmationValue,
+) {
   const ctx = getMrcRl05Ui(business);
   if (!ctx?.isReturnSubCode || !isEdit) {
     return null;
@@ -392,8 +415,17 @@ export function getMrcReturnAutoRoutingActionCode(business, isEdit) {
   if (ctx.autoRoutePayment === true || ctx.autoRouteCp === true) {
     return ACTION_ROUTE_TO;
   }
-  const conf = getCaseFieldValue(business, FIELD_MRC_CUSTOMER_CONFIRMATION);
-  if (conf === MRC_CONF_RECEIVED) {
+  const draft =
+    typeof business?.mrcCustomerConfirmationDraft === "string"
+      ? business.mrcCustomerConfirmationDraft.trim()
+      : STR_EMPTY;
+  const conf =
+    (typeof customerConfirmationValue === "string"
+      ? customerConfirmationValue.trim()
+      : STR_EMPTY) ||
+    draft ||
+    getCaseFieldValue(business, FIELD_MRC_CUSTOMER_CONFIRMATION);
+  if (isMrcReceivedConfirmation(conf)) {
     return ACTION_CANCEL;
   }
   return null;

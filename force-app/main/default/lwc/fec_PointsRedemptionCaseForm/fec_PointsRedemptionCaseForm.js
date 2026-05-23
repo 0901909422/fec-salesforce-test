@@ -12,7 +12,6 @@ import initData from '@salesforce/apex/FEC_PointsRedemptionCaseController.initDa
 import redeem from '@salesforce/apex/FEC_PointsRedemptionCaseController.redeem';
 import saveDraftSelection from '@salesforce/apex/FEC_PointsRedemptionCaseController.saveDraftSelection';
 import FEC_Toast_Error from '@salesforce/label/c.FEC_Toast_Error';
-import FEC_Success_Title from '@salesforce/label/c.FEC_Success_Title';
 import FEC_Toast_Validation_Title from '@salesforce/label/c.FEC_Toast_Validation_Title';
 import FEC_Complete_This_Field from '@salesforce/label/c.FEC_Complete_This_Field';
 import FEC_Points_Redeem_Button_Label from '@salesforce/label/c.FEC_Points_Redeem_Button_Label';
@@ -88,6 +87,8 @@ export default class Fec_PointsRedemptionCaseForm extends NavigationMixin(Lightn
     @track failCount = 0;
     //linhdev fix jira FECREDIT_CSM_2025_KH-1469-1474 — Noti-06/07: thông báo đỏ in đậm dưới nút Redeem Points
     @track redeemFailMessage;
+    //linhdev fix jira FECREDIT_CSM_2025_KH-1469-1474 — thông báo xanh in đậm dưới nút Redeem Points (không toast)
+    @track redeemSuccessMessage;
     @track showRedeemConfirmModal = false;
 
     _lastSub = STR_EMPTY;
@@ -151,6 +152,7 @@ export default class Fec_PointsRedemptionCaseForm extends NavigationMixin(Lightn
         try {
             if (this.lsOkKey && window.localStorage.getItem(this.lsOkKey) === '1') {
                 this.redeemDisabled = true;
+                this.redeemSuccessMessage = FEC_Points_Redeem_Success_Message;
             }
             if (this.lsFailKey) {
                 const n = parseInt(window.localStorage.getItem(this.lsFailKey) || '0', 10);
@@ -283,13 +285,14 @@ export default class Fec_PointsRedemptionCaseForm extends NavigationMixin(Lightn
             return;
         }
         this.redeemFailMessage = null;
+        this.redeemSuccessMessage = null;
         this.loading = true;
         redeem({ caseId: this.recordId, tierJson: this.selectedTierJson, subCodeCode: this.subCodeCode || null })
             .then((res) => {
                 if (res && res.success) {
                     this.persistOk();
                     this.redeemDisabled = true;
-                    this.toast(FEC_Success_Title, FEC_Points_Redeem_Success_Message, VARIANT.SUCCESS);
+                    this.redeemSuccessMessage = FEC_Points_Redeem_Success_Message;
                     this.navigateCase();
                 } else {
                     this.onRedeemFail();

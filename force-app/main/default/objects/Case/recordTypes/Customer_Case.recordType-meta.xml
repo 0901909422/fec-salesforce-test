@@ -108,4 +108,23 @@
             <default>false</default>
         </values>
     </picklistValues>
+    <picklistValues>
+        <picklist>FEC_Delivery_Option_2__c</picklist>
+        <values>
+            <fullName>Email</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>Văn phòng</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>Địa chỉ</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>RL05_POS</fullName>
+            <default>false</default>
+        </values>
+    </picklistValues>
 </RecordType>

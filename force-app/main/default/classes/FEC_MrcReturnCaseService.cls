@@ -97,15 +97,22 @@ public without sharing class FEC_MrcReturnCaseService {
         Boolean hasDupOpenCase
     ) {
         MrcRl05UiContext ctx = new MrcRl05UiContext();
-        ctx.isRl05Branch = isRl05Branch(subCategoryCode, subCodeCode);
+        String resolvedSubCategoryCode = resolveSubCategoryCode(
+            subCategoryCode,
+            selectedCase,
+            null
+        );
+        String resolvedSubCodeCode = resolveSubCodeCode(
+            subCodeCode,
+            selectedCase,
+            null
+        );
+        ctx.isRl05Branch = isRl05Branch(resolvedSubCategoryCode, resolvedSubCodeCode);
         if (!ctx.isRl05Branch) {
             return ctx;
         }
 
-        String subUpper = normalizeCode(subCodeCode);
-        if (String.isBlank(subUpper) && selectedCase?.FEC_SubCode__r != null) {
-            subUpper = normalizeCode(selectedCase.FEC_SubCode__r.FEC_Code__c);
-        }
+        String subUpper = normalizeCode(resolvedSubCodeCode);
         ctx.isPhotoSubCode = isPhotoSubCode(subUpper);
         ctx.isReturnSubCode = isReturnSubCode(subUpper);
 
@@ -136,16 +143,12 @@ public without sharing class FEC_MrcReturnCaseService {
         ctx.rl05Scenario = null;
 
         if (ctx.isPhotoSubCode) {
-            ctx.hidePropertyInfo = true;
-            ctx.hideMrcInfoLwc = true;
             ctx.showDeliveryForm = true;
             ctx.showCustomerConfirmation = false;
             return ctx;
         }
 
         if (ctx.isReturnSubCode) {
-            ctx.hidePropertyInfo = true;
-            ctx.hideMrcInfoLwc = true;
             ctx.processingFlow = resolveProcessingFlow(mrcStatusId, contractStatus);
             applyRoutingFlags(ctx);
 
@@ -156,8 +159,9 @@ public without sharing class FEC_MrcReturnCaseService {
                 return ctx;
             }
 
-            // TH1/TH3: Cond2 → Xác nhận KH; TH2/TH4: không hiện combobox.
-            ctx.showCustomerConfirmation = cond2;
+            // RL05.02: Xác nhận KH — luôn hiển thị trừ NOT_ELIGIBLE (CN/CC).
+            ctx.showCustomerConfirmation =
+                !FLOW_NOT_ELIGIBLE.equals(ctx.processingFlow);
             String conf = customerConfirmation != null
                 ? customerConfirmation.trim()
                 : null;
@@ -181,7 +185,6 @@ public without sharing class FEC_MrcReturnCaseService {
             return ctx;
         }
 
-        ctx.hidePropertyInfo = true;
         return ctx;
     }
 
@@ -232,6 +235,108 @@ public without sharing class FEC_MrcReturnCaseService {
         }
         return String.isNotBlank(subCodeCode) &&
             subCodeCode.toUpperCase().contains('RL05');
+    }
+
+    public static String inferSubCodeFromStageName(String stageName) {
+        if (String.isBlank(stageName)) {
+            return null;
+        }
+        String upper = stageName.trim().toUpperCase();
+        if (upper.contains('RL05.02')) {
+            return 'RL05.02';
+        }
+        if (upper.contains('RL05.03')) {
+            return 'RL05.03';
+        }
+        if (upper.contains('RL05.01')) {
+            return 'RL05.01';
+        }
+        if (upper.contains('RL05')) {
+            return 'RL05';
+        }
+        return null;
+    }
+
+    public static String inferSubCategoryFromStageName(String stageName) {
+        if (String.isBlank(stageName)) {
+            return null;
+        }
+        String upper = stageName.trim().toUpperCase();
+        return upper.contains('RL05') ? 'RL05' : null;
+    }
+
+    public static String resolveSubCodeCode(
+        String subCodeCode,
+        Case selectedCase,
+        String stageName
+    ) {
+        if (String.isNotBlank(subCodeCode)) {
+            return subCodeCode.trim();
+        }
+        if (selectedCase?.FEC_SubCode__r != null &&
+            String.isNotBlank(selectedCase.FEC_SubCode__r.FEC_Code__c)) {
+            return selectedCase.FEC_SubCode__r.FEC_Code__c.trim();
+        }
+        if (String.isNotBlank(stageName)) {
+            return inferSubCodeFromStageName(stageName);
+        }
+        if (selectedCase?.FEC_Current_Case_Stage__r != null &&
+            String.isNotBlank(selectedCase.FEC_Current_Case_Stage__r.Name)) {
+            return inferSubCodeFromStageName(
+                selectedCase.FEC_Current_Case_Stage__r.Name
+            );
+        }
+        return null;
+    }
+
+    public static String resolveSubCategoryCode(
+        String subCategoryCode,
+        Case selectedCase,
+        String stageName
+    ) {
+        if (String.isNotBlank(subCategoryCode)) {
+            return subCategoryCode.trim();
+        }
+        if (selectedCase?.FEC_SubCategory__r != null &&
+            String.isNotBlank(selectedCase.FEC_SubCategory__r.FEC_Code__c)) {
+            return selectedCase.FEC_SubCategory__r.FEC_Code__c.trim();
+        }
+        if (String.isNotBlank(stageName)) {
+            return inferSubCategoryFromStageName(stageName);
+        }
+        if (selectedCase?.FEC_Current_Case_Stage__r != null &&
+            String.isNotBlank(selectedCase.FEC_Current_Case_Stage__r.Name)) {
+            return inferSubCategoryFromStageName(
+                selectedCase.FEC_Current_Case_Stage__r.Name
+            );
+        }
+        return null;
+    }
+
+    public static void applyRl05CodeFallbacks(
+        FEC_CaseBusinessService.Business result,
+        Case selectedCase,
+        String stageName
+    ) {
+        if (result == null) {
+            return;
+        }
+        String subCode = resolveSubCodeCode(
+            result.subCodeCode,
+            selectedCase,
+            stageName
+        );
+        if (String.isNotBlank(subCode)) {
+            result.subCodeCode = subCode;
+        }
+        String subCat = resolveSubCategoryCode(
+            result.subCategoryCode,
+            selectedCase,
+            stageName
+        );
+        if (String.isNotBlank(subCat)) {
+            result.subCategoryCode = subCat;
+        }
     }
 
     /**
@@ -305,10 +410,6 @@ public without sharing class FEC_MrcReturnCaseService {
         if (ctx == null || ctx.isRl05Branch != true) {
             return false;
         }
-        if ('Case Information'.equals(sectionName) &&
-            'Property Info'.equals(subSectionName)) {
-            return ctx.hidePropertyInfo == true;
-        }
         if (TYPE_LWC.equals(getRowType(lwcName, fieldApiName)) &&
             'fec_MRC'.equalsIgnoreCase(lwcName) &&
             ctx.hideMrcInfoLwc == true) {
@@ -343,6 +444,11 @@ public without sharing class FEC_MrcReturnCaseService {
         if (result == null || selectedCase == null) {
             return;
         }
+        applyRl05CodeFallbacks(
+            result,
+            selectedCase,
+            selectedCase?.FEC_Current_Case_Stage__r?.Name
+        );
         String subCat = result.subCategoryCode;
         String subCode = result.subCodeCode;
         if (!isRl05Branch(subCat, subCode)) {
@@ -424,9 +530,6 @@ public without sharing class FEC_MrcReturnCaseService {
         MrcRl05UiContext ctx
     ) {
         for (FEC_CaseBusinessService.Section sub : caseInfo.subSectionlst) {
-            if (ctx.hidePropertyInfo == true && 'Property Info'.equals(sub.name)) {
-                sub.hideForMrcRl05 = true;
-            }
             if (sub.objlst == null) {
                 continue;
             }
@@ -559,14 +662,20 @@ public without sharing class FEC_MrcReturnCaseService {
         if (result == null) {
             return;
         }
-        Boolean needDelivery = needsDeliveryLwc(ctx);
-        if (
-            !needDelivery &&
-            isPhotoSubCode(normalizeCode(result.subCodeCode))
-        ) {
-            needDelivery = true;
+        Boolean needPanel = false;
+        if (ctx != null && ctx.isReturnSubCode == true) {
+            needPanel = true;
+        } else {
+            Boolean needDelivery = needsDeliveryLwc(ctx);
+            if (
+                !needDelivery &&
+                isPhotoSubCode(normalizeCode(result.subCodeCode))
+            ) {
+                needDelivery = true;
+            }
+            needPanel = needDelivery;
         }
-        if (!needDelivery) {
+        if (!needPanel) {
             return;
         }
         FEC_CaseBusinessService.Section caseInfo = result.findSection(
@@ -616,4 +725,106 @@ public without sharing class FEC_MrcReturnCaseService {
     }
 
     private static final String TYPE_LWC = 'LWC';
+
+    /**
+     * Stage 1 RL05: org chưa config FEC_Stage_Screen — fallback routing từ stage mẫu cùng nhánh.
+     * RL05.01/.03 → RL05.01 Stage 1; RL05.02 → RL05.02 Stage 1, fallback RL05.01.
+     */
+    public static void supplementStage1RoutingActionsIfEmpty(
+        FEC_CaseBusinessService.Business result,
+        String stageName,
+        List<String> rolelst,
+        Boolean isRevert
+    ) {
+        if (
+            result == null ||
+            result.routingActionlst == null ||
+            !result.routingActionlst.isEmpty() ||
+            String.isBlank(stageName) ||
+            !stageName.contains(FEC_ConstantCommon.STAGE_ONE) ||
+            !isRl05Branch(result.subCategoryCode, result.subCodeCode)
+        ) {
+            return;
+        }
+
+        String subCode = normalizeCode(result.subCodeCode);
+        List<String> templatePatterns = new List<String>();
+        if (isPhotoSubCode(subCode)) {
+            templatePatterns.add('RL05.01%Stage 1');
+        } else if (isReturnSubCode(subCode)) {
+            templatePatterns.add('RL05.02%Stage 1');
+            templatePatterns.add('RL05.01%Stage 1');
+        } else {
+            return;
+        }
+
+        for (String pattern : templatePatterns) {
+            appendStage1RoutingActionsFromTemplate(
+                result,
+                pattern,
+                rolelst,
+                isRevert
+            );
+            if (!result.routingActionlst.isEmpty()) {
+                return;
+            }
+        }
+    }
+
+    private static void appendStage1RoutingActionsFromTemplate(
+        FEC_CaseBusinessService.Business result,
+        String stageNamePattern,
+        List<String> rolelst,
+        Boolean isRevert
+    ) {
+        List<FEC_Case_Stage__c> templateStages = [
+            SELECT Id
+            FROM FEC_Case_Stage__c
+            WHERE FEC_Active__c = TRUE AND Name LIKE :stageNamePattern
+            LIMIT 1
+        ];
+        if (templateStages.isEmpty()) {
+            return;
+        }
+
+        String query =
+            'SELECT Id, FEC_Action_Button__c, ' +
+            'FEC_Action_Button__r.Name, ' +
+            'FEC_Action_Button__r.FEC_Type__c, ' +
+            'FEC_Action_Button__r.FEC_Code__c, ' +
+            'FEC_Custom_Action_Button_Label__c, ' +
+            'FEC_Field_Type__c ' +
+            'FROM FEC_Stage_Screen__c ' +
+            'WHERE FEC_Action_Button__c != NULL AND FEC_Active__c = TRUE ' +
+            'AND FEC_Action_Button__r.FEC_Type__c = \'Routing Action\' ' +
+            'AND FEC_Case_Stage__c = \'' +
+            String.escapeSingleQuotes(String.valueOf(templateStages[0].Id)) +
+            '\' ' +
+            'AND FEC_User_Group__c INCLUDES (\'' +
+            String.join(rolelst, '\',\'') +
+            '\')';
+
+        for (FEC_Stage_Screen__c item : (List<FEC_Stage_Screen__c>) Database.query(query)) {
+            if (!'Routing Action'.equals(item.FEC_Action_Button__r.FEC_Type__c)) {
+                continue;
+            }
+            FEC_CaseBusinessService.Action act = new FEC_CaseBusinessService.Action(
+                item.FEC_Action_Button__c,
+                String.isNotBlank(item.FEC_Custom_Action_Button_Label__c)
+                    ? item.FEC_Custom_Action_Button_Label__c
+                    : item.FEC_Action_Button__r.FEC_Code__c,
+                String.isNotBlank(item.FEC_Custom_Action_Button_Label__c)
+                    ? item.FEC_Custom_Action_Button_Label__c
+                    : item.FEC_Action_Button__r.Name,
+                item.FEC_Action_Button__r.FEC_Code__c
+            );
+            if (item.FEC_Field_Type__c == 'All') {
+                result.routingActionlst.add(act);
+            } else if (item.FEC_Field_Type__c == 'New' && isRevert != true) {
+                result.routingActionlst.add(act);
+            } else if (item.FEC_Field_Type__c == 'Revert' && isRevert == true) {
+                result.routingActionlst.add(act);
+            }
+        }
+    }
 }

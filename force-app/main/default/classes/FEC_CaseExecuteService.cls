@@ -234,8 +234,8 @@ public without sharing class FEC_CaseExecuteService {
       
       /*
        * Routing history
-       */
-      createRoutingActionHistory(caseId, oldOwnerId, userId);
+      //  */
+      // createRoutingActionHistory(caseId, oldOwnerId, userId);
       
       System.debug('SUCCESS: Owner updated');
       
