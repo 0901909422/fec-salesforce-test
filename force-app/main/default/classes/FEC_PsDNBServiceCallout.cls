@@ -125,77 +125,168 @@ public with sharing class FEC_PsDNBServiceCallout {
     }
     
     // ================= MAIN METHOD =================
+    // @AuraEnabled
+    // public static DNBResult notifyPsDNB(List<DNBRequest> reqList) {
+        
+        //     // ✅ VALIDATION
+        //     if (reqList == null || reqList.isEmpty()) {
+            //         return error(String.format(System.Label.FEC_MSG_Param_Required, new List<String>{'Request'}));
+        //     }
+        
+        //     for (DNBRequest r : reqList) {
+            //         if (String.isBlank(r.reason) ||
+            //             String.isBlank(r.full_name) ||
+            //             String.isBlank(r.nid) ||
+            //             r.do_not_bother == null ||
+            //             String.isBlank(r.type) ||
+            //         String.isBlank(r.type_value)) {
+                
+                //             return error(System.Label.FEC_MISSING_REQUIRED_FIELDS_MSG);
+            //         }
+            
+            //         if (r.nid != null && r.nid.length() > 255) {
+                //             return error(String.format(System.Label.FEC_MSG_Param_Maxlength, new List<String>{'Field nid', '255'}));
+            //         }
+            
+            //         // ✅ validate max length type_value (<=40)
+            //         if (r.type_value != null && r.type_value.length() > 40) {
+                //             return error(String.format(System.Label.FEC_MSG_Param_Maxlength, new List<String>{'Field type_value', '40'}));
+            //         }
+        //     }
+        
+        
+        //     try {
+            //         HttpResponse res = sendRequest(reqList);
+            
+            //         logApiFull(
+            //             API_CONFIG_NAME,
+            //         FEC_ConstantCommon.API_METHOD_POST,
+            //         reqList,
+            //         res != null ? res.getBody() : null,
+            //         true,
+            //         String.valueOf(res != null ? res.getStatusCode() : null),
+            //         null,
+            //         null
+            //             );
+            
+            //         System.debug('HTTP Response: ' + res);
+            
+            //         return parseResponse(
+            //             res != null ? res.getBody() : null,
+            //         res != null ? res.getStatusCode() : 500
+            //             );
+            
+        //     } catch (Exception ex) {
+            
+            //         // ✅ LOG ERROR
+            //         logApiFull(
+            //             API_CONFIG_NAME,
+            //         FEC_ConstantCommon.API_METHOD_POST,
+            //         reqList,
+            //         null,
+            //         false,
+            //         '500',
+            //         ex.getMessage(),
+            //         null
+            //             );
+            
+            //         System.debug('ERROR: ' + ex.getMessage());
+            //         System.debug('STACK: ' + ex.getStackTraceString());
+            
+            //         return error(ex.getMessage());
+        //     }
+    // }
+    
+    
     @AuraEnabled
     public static DNBResult notifyPsDNB(List<DNBRequest> reqList) {
-        
         // ✅ VALIDATION
         if (reqList == null || reqList.isEmpty()) {
-            return error(String.format(System.Label.FEC_MSG_Param_Required, new List<String>{'Request'}));
+            return error(String.format(
+            System.Label.FEC_MSG_Param_Required, new List<String>{'Request'}));
         }
         
         for (DNBRequest r : reqList) {
-            if (String.isBlank(r.reason) ||
-                String.isBlank(r.full_name) ||
-                String.isBlank(r.nid) ||
-                r.do_not_bother == null ||
-                String.isBlank(r.type) ||
-            String.isBlank(r.type_value)) {
-                
+            if (String.isBlank(r.reason) || String.isBlank(r.full_name)
+                || String.isBlank(r.nid) || r.do_not_bother == null
+            || String.isBlank(r.type) || String.isBlank(r.type_value)) {
                 return error(System.Label.FEC_MISSING_REQUIRED_FIELDS_MSG);
             }
             
             if (r.nid != null && r.nid.length() > 255) {
-                return error(String.format(System.Label.FEC_MSG_Param_Maxlength, new List<String>{'Field nid', '255'}));
+                return error(String.format(System.Label.FEC_MSG_Param_Maxlength,
+                new List<String>{'Field nid', '255'}));
             }
             
             // ✅ validate max length type_value (<=40)
             if (r.type_value != null && r.type_value.length() > 40) {
-                return error(String.format(System.Label.FEC_MSG_Param_Maxlength, new List<String>{'Field type_value', '40'}));
+                return error(String.format(System.Label.FEC_MSG_Param_Maxlength,
+                new List<String>{'Field type_value', '40'}));
             }
         }
-        
         
         try {
             HttpResponse res = sendRequest(reqList);
             
-            logApiFull(
-                API_CONFIG_NAME,
-            FEC_ConstantCommon.API_METHOD_POST,
-            reqList,
-            res != null ? res.getBody() : null,
-            true,
-            String.valueOf(res != null ? res.getStatusCode() : null),
-            null,
-            null
-                );
+            // ✅ SAFE LOG SUCCESS
+            try {
+                logApiFull(API_CONFIG_NAME, FEC_ConstantCommon.API_METHOD_POST, reqList,
+                res != null ? res.getBody() : '', true,
+                String.valueOf(res != null ? res.getStatusCode() : null), null,
+                null);
+            } catch (Exception logEx) {
+                System.debug('LOG SUCCESS ERROR: ' + logEx.getMessage());
+            }
             
             System.debug('HTTP Response: ' + res);
             
-            return parseResponse(
-                res != null ? res.getBody() : null,
-            res != null ? res.getStatusCode() : 500
-                );
+            return parseResponse(res != null ? res.getBody() : null,
+            res != null ? res.getStatusCode() : 500);
             
         } catch (Exception ex) {
-            
-            // ✅ LOG ERROR
-            logApiFull(
-                API_CONFIG_NAME,
-            FEC_ConstantCommon.API_METHOD_POST,
-            reqList,
-            null,
-            false,
-            '500',
-            ex.getMessage(),
-            null
-                );
-            
             System.debug('ERROR: ' + ex.getMessage());
             System.debug('STACK: ' + ex.getStackTraceString());
+            
+            // ✅ SAFE LOG ERROR
+            try {
+                logApiFull(API_CONFIG_NAME, FEC_ConstantCommon.API_METHOD_POST, reqList,
+                '', false, '500', ex.getMessage(), null);
+            } catch (Exception logEx) {
+                System.debug('LOG ERROR FAILED: ' + logEx.getMessage());
+            }
             
             return error(ex.getMessage());
         }
     }
+    
+    // private static void logApiFull(
+    //     String endpoint,
+    // String method,
+    // Object requestObj,
+    // Object responseObj,
+    // Boolean isSuccess,
+    // String statusCode,
+    // String errorMessage,
+    // String transactionId
+    // ) {
+        //     try {
+            //         HttpResponse apiResponse = new HttpResponse();
+            //         apiResponse.setStatusCode(isSuccess ? 200 : 500);
+            //         apiResponse.setBody(FEC_CommonUltils.serializeSafe(responseObj));
+            
+            //         FEC_CommonUltils.logApi(
+            //             'FEC_Ps_DNB',
+            //         endpoint,
+            //         method,
+            //         FEC_CommonUltils.serializeSafe(requestObj),
+            //         apiResponse,
+            //         errorMessage
+            //             );
+            
+        //     } catch (Exception e) {
+            //         System.debug('LOG_API_ERROR: ' + e.getMessage());
+        //     }
+    // }
     
     private static void logApiFull(
         String endpoint,
@@ -208,9 +299,18 @@ public with sharing class FEC_PsDNBServiceCallout {
     String transactionId
     ) {
         try {
+            
             HttpResponse apiResponse = new HttpResponse();
-            apiResponse.setStatusCode(isSuccess ? 200 : 500);
-            apiResponse.setBody(FEC_CommonUltils.serializeSafe(responseObj));
+            
+            apiResponse.setStatusCode(
+                isSuccess ? 200 : 500
+                );
+            
+            apiResponse.setBody(
+                responseObj != null
+                ? FEC_CommonUltils.serializeSafe(responseObj)
+                : ''
+                );
             
             FEC_CommonUltils.logApi(
                 'FEC_Ps_DNB',
@@ -222,7 +322,9 @@ public with sharing class FEC_PsDNBServiceCallout {
                 );
             
         } catch (Exception e) {
-            System.debug('LOG_API_ERROR: ' + e.getMessage());
+            System.debug(
+                'LOG_API_ERROR: ' + e.getMessage()
+                );
         }
     }
     
