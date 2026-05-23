@@ -222,6 +222,7 @@
         <members>fecMrcReturnCaseLogic</members>
         <members>fec_DoNotBotherResultView</members>
         <members>fec_Banca</members>
+        <members>fec_BancaTabView</members>
         <members>fec_CommonDetailView</members>
         <members>fec_CaseAssignmentConfig</members>
         <members>fec_CaseAssignmentDetailSummary</members>
@@ -439,7 +440,8 @@
 		<members>FEC_Export_Detail</members>
 		<members>FEC_Export_View</members>
 		<members>FEC_Format</members>
-		<members>FEC_Format_Excel</members>
+        <members>FEC_Format_Excel</members>
+        <members>FEC_Gender_Buyer_Label</members>
 		<members>FEC_Formatted_Report</members>
 		<members>FEC_Title_Context_Report</members>
 		<members>FEC_BCH_ResultHdr_Errors</members>
