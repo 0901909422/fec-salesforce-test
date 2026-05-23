@@ -313,7 +313,7 @@ public without sharing class FEC_CofGsrAssignmentService {
                 ));
             }
             if (!histories.isEmpty()) {
-                Database.insert(histories);
+                Database.insert(histories, AccessLevel.SYSTEM_MODE);
             }
         } catch (Exception e) {
             System.debug('FEC_DEBUG createAssignmentsOnRoute error: ' + e.getMessage() + ' | ' + e.getStackTraceString());
@@ -476,7 +476,7 @@ public without sharing class FEC_CofGsrAssignmentService {
                 ));
             }
             if (!histories.isEmpty()) {
-                Database.insert(histories);
+                Database.insert(histories, AccessLevel.SYSTEM_MODE);
             }
         } catch (Exception e) {
             System.debug('createAssignmentsFromManualItems error: ' + e.getMessage() + ' | ' + e.getStackTraceString());
