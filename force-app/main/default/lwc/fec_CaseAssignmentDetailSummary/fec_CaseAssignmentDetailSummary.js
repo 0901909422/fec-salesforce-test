@@ -89,6 +89,12 @@ export default class Fec_CaseAssignmentDetailSummary extends NavigationMixin(Lig
   @track modalTimeSlotsValue = [];
   @track isTimeSlotsSaving = false;
   @track timeSlotOptions = [];
+  @track modalAssignmentMethodValue = "";
+  @track modalMethodTimeSlotsValue = [];
+  @track modalScheduledTimeValue = "";
+  @track isAssignmentMethodSaving = false;
+  @track isScheduledTimeSaving = false;
+  @track assignmentMethodOptions = [];
   businessHourOptionsWire;
 
   @wire(getObjectInfo, { objectApiName: CASE_ASSIGNMENT_OBJECT })
@@ -101,6 +107,16 @@ export default class Fec_CaseAssignmentDetailSummary extends NavigationMixin(Lig
   wiredTimeSlotOptions({ data }) {
     if (data) {
       this.timeSlotOptions = data.values;
+    }
+  }
+
+  @wire(getPicklistValues, {
+    recordTypeId: "$objectInfo.data.defaultRecordTypeId",
+    fieldApiName: METHOD_FIELD,
+  })
+  wiredAssignmentMethodOptions({ data }) {
+    if (data) {
+      this.assignmentMethodOptions = data.values || [];
     }
   }
 
@@ -331,6 +347,23 @@ export default class Fec_CaseAssignmentDetailSummary extends NavigationMixin(Lig
     return this.editingFieldName === "FEC_Time_Slots__c";
   }
 
+  get isEditingAssignmentMethod() {
+    return this.editingFieldName === "FEC_Assignment_Method__c";
+  }
+
+  get isEditingScheduledTime() {
+    return this.editingFieldName === "FEC_Scheduled_Time__c";
+  }
+
+  get modalIsContinuousMethod() {
+    return this.normalizeMethodKey(this.modalAssignmentMethodValue) === "continuous";
+  }
+
+  get modalIsTimeBasedMethod() {
+    const method = this.normalizeMethodKey(this.modalAssignmentMethodValue);
+    return method === "time-based";
+  }
+
   get timeSlotDualListboxOptions() {
     return (this.timeSlotOptions || []).map((item) => ({
       label: item.label,
@@ -369,15 +402,7 @@ export default class Fec_CaseAssignmentDetailSummary extends NavigationMixin(Lig
   }
 
   get showGenericFieldEditForm() {
-    return (
-      Boolean(this.editingFieldName) &&
-      !this.isEditingBusinessHours &&
-      !this.isEditingActiveToArchive &&
-      !this.isEditingDraftStatus &&
-      !this.isEditingName &&
-      !this.isEditingQueues &&
-      !this.isEditingTimeSlots
-    );
+    return false;
   }
 
   toggleCaseSection() {
@@ -426,6 +451,24 @@ export default class Fec_CaseAssignmentDetailSummary extends NavigationMixin(Lig
     if (fieldApiName === "FEC_Time_Slots__c") {
       this.modalTimeSlotsValue = this.parseSemicolonList(this.timeSlots);
     }
+    if (fieldApiName === "FEC_Assignment_Method__c") {
+      this.modalAssignmentMethodValue = this.assignmentMethod || "";
+      this.modalScheduledTimeValue =
+        this.scheduledTime !== null &&
+        this.scheduledTime !== undefined &&
+        this.scheduledTime !== ""
+          ? String(this.scheduledTime)
+          : "";
+      this.modalMethodTimeSlotsValue = this.parseSemicolonList(this.timeSlots);
+    }
+    if (fieldApiName === "FEC_Scheduled_Time__c") {
+      this.modalScheduledTimeValue =
+        this.scheduledTime !== null &&
+        this.scheduledTime !== undefined &&
+        this.scheduledTime !== ""
+          ? String(this.scheduledTime)
+          : "";
+    }
     this.modalFormRenderKey += 1;
     this.isEditModalOpen = true;
   }
@@ -451,6 +494,200 @@ export default class Fec_CaseAssignmentDetailSummary extends NavigationMixin(Lig
     this.isQueuesSaving = false;
     this.modalTimeSlotsValue = [];
     this.isTimeSlotsSaving = false;
+    this.modalAssignmentMethodValue = "";
+    this.modalMethodTimeSlotsValue = [];
+    this.modalScheduledTimeValue = "";
+    this.isAssignmentMethodSaving = false;
+    this.isScheduledTimeSaving = false;
+  }
+
+  handleModalAssignmentMethodChange(event) {
+    this.modalAssignmentMethodValue = event.detail.value || "";
+    if (this.modalIsContinuousMethod) {
+      this.modalMethodTimeSlotsValue = [];
+    } else if (this.modalIsTimeBasedMethod) {
+      this.modalScheduledTimeValue = "";
+    } else {
+      this.modalScheduledTimeValue = "";
+      this.modalMethodTimeSlotsValue = [];
+    }
+  }
+
+  handleModalMethodTimeSlotsChange(event) {
+    this.modalMethodTimeSlotsValue = event.detail.value || [];
+  }
+
+  handleModalScheduledTimeChange(event) {
+    this.modalScheduledTimeValue = event.detail.value ?? "";
+  }
+
+  normalizeMethodKey(value) {
+    const normalized = String(value || "")
+      .trim()
+      .toLowerCase();
+    if (normalized === "continous") {
+      return "continuous";
+    }
+    if (normalized === "time based" || normalized === "time_based") {
+      return "time-based";
+    }
+    return normalized;
+  }
+
+  sortTimeSlotValues(values) {
+    const unique = [...new Set((values || []).map((item) => String(item).trim()).filter(Boolean))];
+    return unique.sort((a, b) => this.timeSlotSortKey(a) - this.timeSlotSortKey(b));
+  }
+
+  timeSlotSortKey(value) {
+    const parts = String(value).split(":");
+    if (parts.length < 2) {
+      return 0;
+    }
+    const hour = Number(parts[0]);
+    const minute = Number(parts[1]);
+    if (!Number.isFinite(hour) || !Number.isFinite(minute)) {
+      return 0;
+    }
+    return hour * 60 + minute;
+  }
+
+  formatTimeSlotsForSave(values) {
+    return this.sortTimeSlotValues(values).join(";");
+  }
+
+  async handleSaveAssignmentMethod() {
+    if (!this.recordId || !this.canEditDraftDetailFields) {
+      return;
+    }
+    if (!this.modalAssignmentMethodValue) {
+      this.dispatchEvent(
+        new ShowToastEvent({
+          title: "Error",
+          message: "Assignment Method can't be blank",
+          variant: "error",
+        })
+      );
+      return;
+    }
+    if (this.modalIsContinuousMethod) {
+      const scheduledNum = Number(this.modalScheduledTimeValue);
+      if (!Number.isFinite(scheduledNum) || scheduledNum < 1) {
+        this.dispatchEvent(
+          new ShowToastEvent({
+            title: "Error",
+            message: "Scheduled Time is required when Assignment Method is Continuous.",
+            variant: "error",
+          })
+        );
+        return;
+      }
+    }
+    if (this.modalIsTimeBasedMethod && !this.modalMethodTimeSlotsValue.length) {
+      this.dispatchEvent(
+        new ShowToastEvent({
+          title: "Error",
+          message: "Time Slots are required when Assignment Method is Time-Based.",
+          variant: "error",
+        })
+      );
+      return;
+    }
+
+    this.isAssignmentMethodSaving = true;
+    try {
+      const fields = {
+        Id: this.recordId,
+        [METHOD_FIELD.fieldApiName]: this.modalAssignmentMethodValue,
+      };
+      if (this.modalIsContinuousMethod) {
+        fields[SCHEDULED_TIME_FIELD.fieldApiName] = Number(this.modalScheduledTimeValue);
+        fields[TIME_SLOTS_FIELD.fieldApiName] = null;
+      } else if (this.modalIsTimeBasedMethod) {
+        fields[TIME_SLOTS_FIELD.fieldApiName] = this.formatTimeSlotsForSave(
+          this.modalMethodTimeSlotsValue
+        );
+        fields[SCHEDULED_TIME_FIELD.fieldApiName] = null;
+      } else {
+        fields[SCHEDULED_TIME_FIELD.fieldApiName] = null;
+        fields[TIME_SLOTS_FIELD.fieldApiName] = null;
+      }
+      await updateRecord({ fields });
+      getRecordNotifyChange([{ recordId: this.recordId }]);
+      this.closeEditModal();
+      this.dispatchEvent(
+        new ShowToastEvent({
+          title: "Saved",
+          message: "Record updated.",
+          variant: "success",
+        })
+      );
+    } catch (e) {
+      const msg =
+        e?.body?.output?.errors?.[0]?.message ||
+        e?.body?.message ||
+        e?.message ||
+        "Could not update Assignment Method.";
+      this.dispatchEvent(
+        new ShowToastEvent({
+          title: "Error",
+          message: msg,
+          variant: "error",
+        })
+      );
+    } finally {
+      this.isAssignmentMethodSaving = false;
+    }
+  }
+
+  async handleSaveScheduledTime() {
+    if (!this.recordId || !this.canEditDraftDetailFields || !this.isContinuousMethod) {
+      return;
+    }
+    const scheduledNum = Number(this.modalScheduledTimeValue);
+    if (!Number.isFinite(scheduledNum) || scheduledNum < 1) {
+      this.dispatchEvent(
+        new ShowToastEvent({
+          title: "Error",
+          message: "Scheduled Time is required when Assignment Method is Continuous.",
+          variant: "error",
+        })
+      );
+      return;
+    }
+    this.isScheduledTimeSaving = true;
+    try {
+      await updateRecord({
+        fields: {
+          Id: this.recordId,
+          [SCHEDULED_TIME_FIELD.fieldApiName]: scheduledNum,
+        },
+      });
+      getRecordNotifyChange([{ recordId: this.recordId }]);
+      this.closeEditModal();
+      this.dispatchEvent(
+        new ShowToastEvent({
+          title: "Saved",
+          message: "Record updated.",
+          variant: "success",
+        })
+      );
+    } catch (e) {
+      const msg =
+        e?.body?.output?.errors?.[0]?.message ||
+        e?.body?.message ||
+        e?.message ||
+        "Could not update Scheduled Time.";
+      this.dispatchEvent(
+        new ShowToastEvent({
+          title: "Error",
+          message: msg,
+          variant: "error",
+        })
+      );
+    } finally {
+      this.isScheduledTimeSaving = false;
+    }
   }
 
   handleModalNameChange(event) {
@@ -484,7 +721,7 @@ export default class Fec_CaseAssignmentDetailSummary extends NavigationMixin(Lig
       await updateRecord({
         fields: {
           Id: this.recordId,
-          [TIME_SLOTS_FIELD.fieldApiName]: this.modalTimeSlotsValue.join(";"),
+          [TIME_SLOTS_FIELD.fieldApiName]: this.formatTimeSlotsForSave(this.modalTimeSlotsValue),
         },
       });
       getRecordNotifyChange([{ recordId: this.recordId }]);
