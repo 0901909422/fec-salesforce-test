@@ -83,7 +83,6 @@ public without sharing class FEC_AssignmentRoutingActionHandler {
         a.FEC_Assignment_Owner__c = managerId;
         a.FEC_OwnerID__c = managerId;
         
-        a.FEC_Assignment_Status__c = FEC_ConstantCommon.STATUS_CS_REVIEW;
         
         update a;
         syncAssignmentUsersToCase(caseId, assignmentId);
