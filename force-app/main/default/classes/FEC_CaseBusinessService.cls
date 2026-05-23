@@ -2086,6 +2086,23 @@ public without sharing class FEC_CaseBusinessService {
     return k.Status;
   }
 
+  /** Chỉ ghi FEC_Changed_Status__c — tránh update full history (re-validate lookup Stage / FLS field khác). */
+  public static void patchRoutingHistoryChangedStatus(
+    Id historyId,
+    String changedStatus
+  ) {
+    if (historyId == null) {
+      return;
+    }
+    Database.update(
+      new FEC_Routing_Action_History__c(
+        Id = historyId,
+        FEC_Changed_Status__c = changedStatus
+      ),
+      AccessLevel.SYSTEM_MODE
+    );
+  }
+
   /**
    * Snapshot Status Case cho FEC_Routing_Action_History__c.FEC_Current_Status__c.
    * Gọi trước markCaseSubmittedAndClearDrafts (method đó set Status = Pending).
@@ -2783,8 +2800,10 @@ public without sharing class FEC_CaseBusinessService {
         WHERE Id = :caseId
         LIMIT 1
       ];
-      history.FEC_Changed_Status__c = routingHistoryFinalStatusSnapshot(endCase);
-      Database.update(history, AccessLevel.SYSTEM_MODE);
+      patchRoutingHistoryChangedStatus(
+        history.Id,
+        routingHistoryFinalStatusSnapshot(endCase)
+      );
       FEC_AutoHoldCaseService.enqueueAfterRoutingHistory(history.Id);
     } catch (Exception e) {
       throw new CaseBusinessServiceException(e.getMessage());
@@ -2859,8 +2878,8 @@ public without sharing class FEC_CaseBusinessService {
         WHERE Id = :caseId
         LIMIT 1
       ];
-      history.FEC_Changed_Status__c = routingHistoryFinalStatusSnapshot(endCase);
-      Database.update(history, AccessLevel.SYSTEM_MODE);
+      String changedStatus = routingHistoryFinalStatusSnapshot(endCase);
+      patchRoutingHistoryChangedStatus(history.Id, changedStatus);
 
       FEC_AutoHoldCaseService.enqueueAfterRoutingHistory(history.Id);
       System.debug(
@@ -2868,7 +2887,7 @@ public without sharing class FEC_CaseBusinessService {
         ' inserted historyId=' + history.Id +
         ' routingAction=' + history.FEC_Routing_Action__c +
         ' currentStatus=' + history.FEC_Current_Status__c +
-        ' changedStatus=' + history.FEC_Changed_Status__c +
+        ' changedStatus=' + changedStatus +
         ' originalQueue=' + history.FEC_Original_User_Queue__c +
         ' updatedQueue=' + history.FEC_Updated_User_Queue__c +
         ' description=' + history.FEC_Description__c
@@ -3483,8 +3502,10 @@ public without sharing class FEC_CaseBusinessService {
             WHERE Id = :caseId
             LIMIT 1
           ];
-          newHistory.FEC_Changed_Status__c = routingHistoryFinalStatusSnapshot(endCase);
-          update newHistory;
+          patchRoutingHistoryChangedStatus(
+            newHistory.Id,
+            routingHistoryFinalStatusSnapshot(endCase)
+          );
     } catch (Exception e) {
       throw new CaseBusinessServiceException(e.getMessage());
     }
