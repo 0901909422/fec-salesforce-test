@@ -4,10 +4,10 @@
     <name>FEC_Customer_Confirmation__c</name>
     <picklistValues>
         <masterLabel>Customer has not received MRC</masterLabel>
-        <translation>Khách hàng đã xác nhận MRC</translation>
+        <translation>Khách hàng chưa xác nhận MRC</translation>
     </picklistValues>
     <picklistValues>
         <masterLabel>Customer received MRC</masterLabel>
-        <translation>Khách hàng chưa xác nhận MRC</translation>
+        <translation>Khách hàng đã xác nhận MRC</translation>
     </picklistValues>
 </CustomFieldTranslation>
