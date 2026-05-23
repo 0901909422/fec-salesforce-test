@@ -309,6 +309,14 @@
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
+        <apexClass>FEC_CaseAssignmentFieldHistorySync</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_CaseAssignmentFieldHistorySyncTest</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
         <apexClass>FEC_CaseAssignmentMutationGuard</apexClass>
         <enabled>true</enabled>
     </classAccesses>
@@ -1198,6 +1206,10 @@
     </classAccesses>
     <classAccesses>
         <apexClass>FEC_VMXAUTHDETAILINQ</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_VmxAcctBlkcdUpdEmeaCallout</apexClass>
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>

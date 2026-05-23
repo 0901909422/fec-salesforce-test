@@ -20,6 +20,7 @@
 		<members>FEC_MockupEndpoint</members>
 		<members>FEC_SearchByListPhonesServiceCallout</members>
 		<members>FEC_UpdateDisbursementStatusRestService</members>
+		<members>FEC_VmxAcctBlkcdUpdEmeaCallout</members>
         <members>FEC_NocInheritanceUtil</members>
 	    <members>FEC_NocInheritanceUtilTest</members>
         <members>FEC_DownloadReportScheduler</members>
@@ -46,6 +47,7 @@
 		<members>FEC_API_Config.FEC_Get_IPP_Detail</members>
 		<members>FEC_API_Config.FEC_MCMSCARDTOCARDINQEMEA</members>
 		<members>FEC_API_Config.FEC_MFASOUTSTANDINGAUTHINQ</members>
+		<members>FEC_API_Config.FEC_Vmx_Acct_Blkcd_Upd_Emea</members>
 		<members>FEC_API_Config.FEC_VMX_AUTH_DETAIL_INQ</members>
 		<name>CustomMetadata</name>
 	</types>
@@ -172,6 +174,8 @@
 		<members>FEC_CaseAssignmentAutoDistQueueJob</members>
 		<members>FEC_CaseAssignmentApplyOwnerBatch</members>
 		<members>FEC_CaseAssignmentMutationGuard</members>
+		<members>FEC_CaseAssignmentFieldHistorySync</members>
+		<members>FEC_CaseAssignmentFieldHistorySyncTest</members>
 		<members>FEC_CaseAssignmentConfigController</members>
 		<members>FEC_CaseAssignmentConflictService</members>
 		<members>FEC_CaseAssignmentConflictServiceTest</members>
@@ -664,6 +668,8 @@
         <members>FEC_Hold_Case_Config__c.FEC_Auto_Hold_Duration_Minutes__c</members>
         <members>FEC_Hold_Case_Config__c.FEC_Auto_Hold_Release_Case_Status__c</members>
         <members>FEC_Case_Assignment__c.FEC_Case_Assignmetn_NOC_Count__c</members>
+        <members>FEC_Case_Assignment__c.FEC_Time_Slots_Tracked__c</members>
+        <members>FEC_Case_Assignment__c.FEC_Time_Slots__c</members>
         <members>Case.FEC_Delivery_Option_2__c</members>
         <members>FEC_Action_Button__c.FEC_Code__c</members>
         <members>FEC_Case_Assignment_Logs__c.FEC_Case_Assignment_Name__c</members>
@@ -1869,6 +1875,11 @@
 		<members>FEC_Batch_Import_Sub_Category_Not_In_Datagroup</members>
 		<members>FEC_Batch_Import_Sub_Code_Not_In_Datagroup</members>
 		<members>FEC_Batch_Import_Missing_Excel_Column</members>
+        <members>FEC_Batch_Import_Contract_Header_Ambiguous</members>
+        <members>FEC_Batch_Import_File_Type_Template_Mismatch</members>
+        <members>FEC_Batch_Import_Welcome_Case_Status_Only_Resolved_Completed</members>
+        <members>FEC_Batch_Import_Welcome_Contract_Number_Requires_Dash</members>
+        <members>FEC_Batch_Import_Other_Contract_Number_No_Dash</members>
 		<name>CustomLabel</name>
 	</types>
 	<types>
@@ -2117,7 +2128,6 @@
     <types>
         <members>FEC_General_Assignment_Config__c.All</members>
         <members>FEC_General_Assignment__c.All</members>
-        <members>FEC_Download_Report__c.All</members>
         <members>FEC_Download_Report__c.INTERACTIONS_SERVICE_CASES_SUMMARY_TAT</members>
         <members>FEC_Download_Report__c.Interaction_and_Service_Case_Summary</members>
         <name>ListView</name>
