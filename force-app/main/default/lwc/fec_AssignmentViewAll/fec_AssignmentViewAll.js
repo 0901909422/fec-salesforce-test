@@ -2,7 +2,8 @@ import { LightningElement, wire } from "lwc";
 
 import { CurrentPageReference } from "lightning/navigation";
 
-import getAssignmentsForView from "@salesforce/apex/FEC_AssignmentListHandler.getAssignmentsForView";
+// import getAssignmentsForView from "@salesforce/apex/FEC_AssignmentListHandler.getAssignmentsForView";
+import getAssignmentsForViewNEW from "@salesforce/apex/FEC_AssignmentListHandler.getAssignmentsForViewNEW";
 
 import { getUsernameBeforeAt, formatDateTime } from "c/fec_CommonUtils";
 
@@ -143,7 +144,7 @@ export default class Fec_AssignmentViewAll extends LightningElement {
     this.isLoading = true;
 
     try {
-      const result = await getAssignmentsForView({
+      const result = await getAssignmentsForViewNEW({
         caseId: this.recordId,
 
         pageSize: this.pageSize,

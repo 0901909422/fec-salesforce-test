@@ -361,6 +361,58 @@ public without sharing class FEC_AssignmentListHandler {
     }
     
     
+    //HieuTT Update  [23/5/2026]-----------------------------------------//
+    public static Set<Id> getCurrentUserQueueIds(Id userId) {
+        
+        Set<Id> queueIds = new Set<Id>();
+        
+        User u = [
+        SELECT Id, UserRoleId
+        FROM User
+        WHERE Id = :userId
+        LIMIT 1
+    ];
+        
+        Set<Id> accessibleMemberIds = new Set<Id>();
+        accessibleMemberIds.add(userId);
+        
+        if (u.UserRoleId != null) {
+            
+            List<Group> roleGroups = [
+            SELECT Id
+            FROM Group
+            WHERE
+                RelatedId = :u.UserRoleId
+                AND Type IN (
+                    :FEC_ConstantCommon.ROLE_STR,
+                    :FEC_ConstantCommon.ROLE_SUBORDINATE_STR
+                )
+        ];
+            
+            for (Group g : roleGroups) {
+                accessibleMemberIds.add(g.Id);
+            }
+        }
+        
+        List<GroupMember> queueMembers = [
+        SELECT GroupId
+        FROM GroupMember
+        WHERE
+            Group.Type = :FEC_ConstantCommon.GROUP_TYPE_QUEUE
+            AND UserOrGroupId IN :accessibleMemberIds
+    ];
+        
+        for (GroupMember gm : queueMembers) {
+            queueIds.add(gm.GroupId);
+        }
+        
+        return queueIds;
+    }
+    
+    
+    
+    //------------------------------------------------------------------//
+    
     @AuraEnabled(cacheable=true)
     public static AssignmentViewResponse getAssignmentsForViewNEW(
         String caseId,
@@ -1273,6 +1325,9 @@ public without sharing class FEC_AssignmentListHandler {
         
         Case caseRecord = cases.isEmpty() ? null : cases[0];
         
+        if (caseRecord == null) {
+            return teamOptions;
+        }
         /*
          * Detect user department
          */
@@ -1336,45 +1391,50 @@ public without sharing class FEC_AssignmentListHandler {
             /*
              * Current login user queues
              */
-            List<String> currentUserQueues =
-                getQueueNamesByUserOrRoleId(UserInfo.getUserId());
+            Set<Id> currentUserQueueIds =
+                getCurrentUserQueueIds(UserInfo.getUserId());
             
             System.debug(
-                'currentUserQueues = ' + JSON.serializePretty(currentUserQueues));
+                'currentUserQueueIds = ' +
+                JSON.serializePretty(currentUserQueueIds)
+                );
             
-            /*
-             * Resolve case owner queues
-             */
-            List<String> caseOwnerQueues = new List<String>();
+            Set<Id> caseOwnerQueueIds = new Set<Id>();
             
             /*
              * Case owner = Queue
              */
-            if (String.valueOf(currentCase.OwnerId).startsWith(FEC_ConstantCommon.QUEUE_ID_START)) {
-                Group g = [
-      SELECT Id, Name FROM Group WHERE Id = : currentCase.OwnerId LIMIT 1
-    ];
+            if (
+                String.valueOf(currentCase.OwnerId)
+                .startsWith(FEC_ConstantCommon.QUEUE_ID_START)
+            ) {
                 
-                caseOwnerQueues.add(g.Name);
+                caseOwnerQueueIds.add(currentCase.OwnerId);
             }
             
             /*
              * Case owner = User
              */
             else {
-                caseOwnerQueues =
-                    getQueueNamesByUserOrRoleId(String.valueOf(currentCase.OwnerId));
+                
+                caseOwnerQueueIds =
+                    getCurrentUserQueueIds(currentCase.OwnerId);
             }
             
-            System.debug('caseOwnerQueues = ' + JSON.serializePretty(caseOwnerQueues));
+            System.debug(
+                'caseOwnerQueueIds = ' +
+                JSON.serializePretty(caseOwnerQueueIds)
+                );
             
             /*
              * Check same queue
              */
             Boolean sameQueue = false;
             
-            for (String q : currentUserQueues) {
-                if (caseOwnerQueues.contains(q)) {
+            for (Id qId : currentUserQueueIds) {
+                
+                if (caseOwnerQueueIds.contains(qId)) {
+                    
                     sameQueue = true;
                     break;
                 }
@@ -1411,7 +1471,6 @@ public without sharing class FEC_AssignmentListHandler {
                     }
                 }
             }
-            
             /*
              * Same queue
              * => Original processing team
@@ -1443,7 +1502,9 @@ public without sharing class FEC_AssignmentListHandler {
   ];
         
         Case caseRecord = cases.isEmpty() ? null : cases[0];
-        
+        if (caseRecord == null) {
+            return queueOptions;
+        }
         /*
          * Detect user department
          */
@@ -1489,48 +1550,58 @@ public without sharing class FEC_AssignmentListHandler {
          * CS Support / CS Customer Care
          */
         else if (userDepart == FEC_ConstantCommon.TEAM_CS_SUPPORT || userDepart == FEC_ConstantCommon.TEAM_CS_CUSTOMER_CARE) {
+            
+            /*
+             * Case owner
+             */
+            Case currentCase = [SELECT Id, OwnerId FROM Case WHERE Id = : caseId LIMIT 1];
             /*
              * Current login user queues
              */
-            List<String> currentUserQueues =
-                getQueueNamesByUserOrRoleId(UserInfo.getUserId());
+            Set<Id> currentUserQueueIds =
+                getCurrentUserQueueIds(UserInfo.getUserId());
             
             System.debug(
-                'currentUserQueues = ' + JSON.serializePretty(currentUserQueues));
+                'currentUserQueueIds = ' +
+                JSON.serializePretty(currentUserQueueIds)
+                );
             
-            /*
-             * Resolve CASE OWNER queues
-             */
-            List<String> caseOwnerQueues = new List<String>();
+            Set<Id> caseOwnerQueueIds = new Set<Id>();
             
             /*
              * Case owner = Queue
              */
-            if (String.valueOf(caseRecord.OwnerId).startsWith(FEC_ConstantCommon.QUEUE_ID_START)) {
-                Group g = [
-        SELECT Id, Name FROM Group WHERE Id = : caseRecord.OwnerId LIMIT 1
-      ];
+            if (
+                String.valueOf(currentCase.OwnerId)
+                .startsWith(FEC_ConstantCommon.QUEUE_ID_START)
+            ) {
                 
-                caseOwnerQueues.add(g.Name);
+                caseOwnerQueueIds.add(currentCase.OwnerId);
             }
             
             /*
              * Case owner = User
              */
             else {
-                caseOwnerQueues =
-                    getQueueNamesByUserOrRoleId(String.valueOf(caseRecord.OwnerId));
+                
+                caseOwnerQueueIds =
+                    getCurrentUserQueueIds(currentCase.OwnerId);
             }
             
-            System.debug('caseOwnerQueues = ' + JSON.serializePretty(caseOwnerQueues));
+            System.debug(
+                'caseOwnerQueueIds = ' +
+                JSON.serializePretty(caseOwnerQueueIds)
+                );
             
             /*
              * Check same queue
              */
             Boolean sameQueue = false;
             
-            for (String q : currentUserQueues) {
-                if (caseOwnerQueues.contains(q)) {
+            for (Id qId : currentUserQueueIds) {
+                
+                if (caseOwnerQueueIds.contains(qId)) {
+                    
                     sameQueue = true;
                     break;
                 }
@@ -1821,7 +1892,7 @@ public without sharing class FEC_AssignmentListHandler {
     
     
     public static Boolean isCurrentUserInQueue(
-        String queueDeveloperName
+        Set<String> queueDeveloperNames
     ) {
         
         Id userId = UserInfo.getUserId();
@@ -1838,16 +1909,22 @@ public without sharing class FEC_AssignmentListHandler {
         /*
          * Queue
          */
-        Group queueGroup = [
+        List<Group> queueGroup = [
         SELECT
             Id,
             Name
         FROM Group
         WHERE
             Type = :FEC_ConstantCommon.GROUP_TYPE_QUEUE
-            AND DeveloperName = :queueDeveloperName
-        LIMIT 1
-    ];
+            AND DeveloperName IN :queueDeveloperNames
+        ];
+        
+        Set<Id> queueGroupIds = new Set<Id>();
+        
+        for (Group g : queueGroup) {
+            queueGroupIds.add(g.Id);
+        }
+        
         
         /*
          * Queue members
@@ -1856,7 +1933,7 @@ public without sharing class FEC_AssignmentListHandler {
         SELECT
             UserOrGroupId
         FROM GroupMember
-        WHERE GroupId = :queueGroup.Id
+        WHERE GroupId IN :queueGroupIds
     ];
         
         Set<Id> memberIds = new Set<Id>();
@@ -1928,15 +2005,22 @@ public without sharing class FEC_AssignmentListHandler {
     }
     @AuraEnabled(cacheable=true)
     public static Boolean isCSSupport() {
+        
         return isCurrentUserInQueue(
+        new Set<String>{
             FEC_ConstantCommon.QUEUE_DQ_CS_SUPPORT_NAME
-            );
+        }
+        );
     }
+    
     @AuraEnabled(cacheable=true)
     public static Boolean isCSCustomerCare() {
+        
         return isCurrentUserInQueue(
-            FEC_ConstantCommon.QUEUE_DQ_CS_CUSTOMER_CARE_NAME
-            );
+        new Set<String>{
+            FEC_ConstantCommon.QUEUE_DQ_CS_CUSTOMER_CARE_NAME,  FEC_ConstantCommon.QUEUE_DQ_CS_CUSTOMER_CARE_DEPT_NAME
+        }
+        );
     }
     
     
@@ -2016,6 +2100,9 @@ public without sharing class FEC_AssignmentListHandler {
                 &&
                 devName !=
                 FEC_ConstantCommon.QUEUE_DQ_CS_CUSTOMER_CARE_NAME
+                &&
+                devName != FEC_ConstantCommon.QUEUE_DQ_CS_CUSTOMER_CARE_DEPT_NAME
+                
             ) {
                 
                 return true;

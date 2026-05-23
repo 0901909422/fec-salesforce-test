@@ -75,6 +75,12 @@ export function getCaseFieldValue(business, apiName) {
         const f = obj.fieldlst?.find((x) => x.apiName === apiName);
         if (f != null) {
           const v = f.value;
+          if (Array.isArray(v)) {
+            return v
+              .map((item) => String(item ?? STR_EMPTY).trim())
+              .filter(Boolean)
+              .join(";");
+          }
           return typeof v === "string" ? v.trim() : (v ?? STR_EMPTY);
         }
       }
