@@ -1859,7 +1859,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>Gender Label</shortDescription>
-        <value>Gender</value>
+        <value>Buyer Gender</value>
     </labels>
     <labels>
         <fullName>FEC_Go_Button_Label</fullName>
