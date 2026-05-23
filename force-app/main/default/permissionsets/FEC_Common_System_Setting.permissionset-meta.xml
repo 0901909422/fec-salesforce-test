@@ -269,6 +269,14 @@
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
+        <apexClass>FEC_CaseAssignmentFieldHistorySync</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_CaseAssignmentFieldHistorySyncTest</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
         <apexClass>FEC_CaseAssignmentMutationGuard</apexClass>
         <enabled>true</enabled>
     </classAccesses>

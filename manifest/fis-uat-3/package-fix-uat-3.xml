@@ -91,6 +91,8 @@
 		<members>FEC_CaseAssignmentAutoDistQueueJob</members>
 		<members>FEC_CaseAssignmentAutoDistributeService</members>
 		<members>FEC_CaseAssignmentMutationGuard</members>
+		<members>FEC_CaseAssignmentFieldHistorySync</members>
+		<members>FEC_CaseAssignmentFieldHistorySyncTest</members>
 		<members>FEC_CaseAssignmentNOCTriggerHandler</members>
 		<members>FEC_CaseAssignmentNocController</members>
 		<members>FEC_CaseManagerListService</members>
@@ -287,6 +289,8 @@
         <members>FEC_Template_Import__c.FEC_User_Group__c</members>
         <members>FEC_Case_Assignment_Logs__c.FEC_Case_Assignment_Name__c</members>
         <members>FEC_Case_Assignment__c.FEC_Case_Assignmetn_NOC_Count__c</members>
+        <members>FEC_Case_Assignment__c.FEC_Time_Slots__c</members>
+        <members>FEC_Case_Assignment__c.FEC_Time_Slots_Tracked__c</members>
         <members>FEC_Customer_History__c.FEC_Search_Result_National_ID__c</members>
         <members>FEC_Download_Report__c.FEC_Link__c</members>
         <members>FEC_Download_Report__c.FEC_Report_Unique_Name__c</members>
