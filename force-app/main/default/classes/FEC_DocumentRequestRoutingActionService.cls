@@ -237,7 +237,7 @@ public with sharing class FEC_DocumentRequestRoutingActionService {
       WHERE
         FEC_Action_Button__c != NULL
         AND FEC_Active__c = TRUE
-        AND FEC_Action_Button__r.FEC_Type__c = 'Routing Action'
+        AND FEC_Action_Button__r.FEC_Type__c = :FEC_ConstantCommon.ACTION_BUTTON_TYPE_ROUTING_ACTION
         AND FEC_Case_Stage__c = :stageId
         AND FEC_User_Group__c INCLUDES (:userGroup)
     ];
@@ -253,11 +253,17 @@ public with sharing class FEC_DocumentRequestRoutingActionService {
           : item.FEC_Action_Button__r.Name,
         item.FEC_Action_Button__r.FEC_Code__c
       );
-      if (item.FEC_Field_Type__c == 'All') {
+      if (item.FEC_Field_Type__c == FEC_ConstantCommon.STAGE_SCREEN_FIELD_TYPE_ALL) {
         actions.add(act);
-      } else if (item.FEC_Field_Type__c == 'New' && isRevert != true) {
+      } else if (
+        item.FEC_Field_Type__c == FEC_ConstantCommon.STAGE_SCREEN_FIELD_TYPE_NEW &&
+        isRevert != true
+      ) {
         actions.add(act);
-      } else if (item.FEC_Field_Type__c == 'Revert' && isRevert == true) {
+      } else if (
+        item.FEC_Field_Type__c == FEC_ConstantCommon.ACTION_REVERT &&
+        isRevert == true
+      ) {
         actions.add(act);
       }
     }

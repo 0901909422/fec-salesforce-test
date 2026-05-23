@@ -591,7 +591,15 @@ public with sharing class FEC_ConstantCommon {
     public static final String SUB_CODE_PROCESS_UPDATE_ADDRESS = 'RC09.02';
     public static final String SUB_CODE_RD_PAYMENT_ASSESSMENT_1 = 'RL16.02';
     public static final String SUB_CODE_RD_PAYMENT_ASSESSMENT_2 = 'RL16.03';
-    
+    public static final String FEC_SUB_CATEGORY_CODE_RL05 = 'RL05';
+    public static final String SUB_CODE_RL0503 = 'RL05.03';
+
+    /** FEC_Action_Button__c.FEC_Type__c */
+    public static final String ACTION_BUTTON_TYPE_ROUTING_ACTION = 'Routing Action';
+    /** FEC_Stage_Screen__c.FEC_Field_Type__c */
+    public static final String STAGE_SCREEN_FIELD_TYPE_ALL = 'All';
+    public static final String STAGE_SCREEN_FIELD_TYPE_NEW = 'New';
+
     // RD Payment Contract Assessment — picklist API values & routing keys
     public static final String RD_ASSESSMENT_CANNOT_CLOSE            = 'Cannot close contract';
     public static final String RD_ASSESSMENT_CLOSE_WITH_STATEMENT    = 'Contract can be closed with statement';
