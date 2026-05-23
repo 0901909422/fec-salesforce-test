@@ -13,7 +13,7 @@
  
 ****************************************************************************************/
 
-public with sharing class FEC_FullCustomerIntegrationJob 
+public without sharing class FEC_FullCustomerIntegrationJob 
 implements Queueable, Database.AllowsCallouts {
 
     private Id historyId;
