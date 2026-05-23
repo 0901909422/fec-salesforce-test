@@ -757,6 +757,12 @@ public without sharing class FEC_CaseBusinessService {
           System.debug('Update case failed (no stage): ' + e.getMessage());
         }
         // RL05.01 / RL05.03: vẫn hiển thị Delivery khi chưa resolve stage (giống luồng 01).
+        FEC_MrcReturnCaseService.supplementStage1RoutingActionsIfEmpty(
+          result,
+          FEC_ConstantCommon.STAGE_ONE,
+          rolelst,
+          latestRoutingHistoryIsReverted
+        );
         FEC_MrcReturnCaseService.supplementMrcRl05CaseInformationWhenStageMissing(
           result,
           selectedCase
@@ -884,6 +890,14 @@ public without sharing class FEC_CaseBusinessService {
             mrcDupEarly != null
           );
           result.mrcRl05Ui = mrcRl05UiCtx;
+          if (mrcRl05UiCtx != null) {
+            FEC_MrcReturnCaseService.enrichRl05PicklistOptions(
+              result,
+              mrcRl05UiCtx
+            );
+          }
+          result.mrcCustomerConfirmationSaved = selectedCase.FEC_Customer_Confirmation__c;
+          result.mrcHandlingOptionSaved = selectedCase.FEC_MRC_Request_Handling_Option__c;
         } catch (Exception mrcCtxEx) {
           System.debug(
             LoggingLevel.WARN,
@@ -931,31 +945,30 @@ public without sharing class FEC_CaseBusinessService {
             continue;
           }
 
-          // MRC Return RL05: tạm tắt filter master data / field theo RL05 context.
-          // if (
-          //   FEC_MrcReturnCaseService.shouldSkipMasterDataRow(
-          //     sectionNameTemp,
-          //     subSectionNameTemp,
-          //     TYPE_LWC.equals(itemType) ? (String) item.get('FEC_LWC_Name__c') : null,
-          //     fieldApiNameTemp,
-          //     mrcRl05UiCtx
-          //   )
-          // ) {
-          //   continue;
-          // }
+          if (
+            FEC_MrcReturnCaseService.shouldSkipMasterDataRow(
+              sectionNameTemp,
+              subSectionNameTemp,
+              TYPE_LWC.equals(itemType) ? (String) item.get('FEC_LWC_Name__c') : null,
+              fieldApiNameTemp,
+              mrcRl05UiCtx
+            )
+          ) {
+            continue;
+          }
 
-          // if (
-          //   FEC_MrcReturnCaseService.shouldSkipStage1Field(
-          //     businessProcessCode,
-          //     result.subCategoryCode,
-          //     result.subCodeCode,
-          //     selectedStage.Name,
-          //     fieldApiNameTemp,
-          //     mrcRl05UiCtx
-          //   )
-          // ) {
-          //   continue;
-          // }
+          if (
+            FEC_MrcReturnCaseService.shouldSkipStage1Field(
+              businessProcessCode,
+              result.subCategoryCode,
+              result.subCodeCode,
+              selectedStage.Name,
+              fieldApiNameTemp,
+              mrcRl05UiCtx
+            )
+          ) {
+            continue;
+          }
 
           // GSR handling: điều chỉnh field hiển thị theo việc bộ NOC updated có đổi hay không.
           if (isGsrNocOnlyDisplayMode) {
@@ -1137,16 +1150,14 @@ public without sharing class FEC_CaseBusinessService {
           sectionItem.sort();
         }
 
-        // MRC Return (RL05): tạm tắt inject fec_MrcReturnPanel / field MRC Return trên Case Information.
-        // FEC_MrcReturnCaseService.ensureDeliveryLwcOnCaseInformation(
-        //   result,
-        //   mrcRl05UiCtx
-        // );
-        // FEC_MrcReturnCaseService.finalizeCaseInformationForRl05(
-        //   result,
-        //   mrcRl05UiCtx,
-        //   selectedCase
-        // );
+        // MRC Return (RL05): inject field ẩn + picklist; panel LWC do client ensureMrcReturnCaseFormInBusiness.
+        if (mrcRl05UiCtx != null) {
+          FEC_MrcReturnCaseService.finalizeCaseInformationForRl05(
+            result,
+            mrcRl05UiCtx,
+            selectedCase
+          );
+        }
 
         result.removeEmptySections();
       }
@@ -1224,6 +1235,13 @@ public without sharing class FEC_CaseBusinessService {
           );
         }
       }
+
+      FEC_MrcReturnCaseService.supplementStage1RoutingActionsIfEmpty(
+        result,
+        selectedStage.Name,
+        rolelst,
+        isRevert
+      );
 
       // Hiển thị Team/Queue Route to theo nhánh Stage Change (không ảnh hưởng logic submit route()).
       RouteToDisplayInfo routeToDisplayInfo = resolveRouteToDisplayInfo(
@@ -4086,6 +4104,13 @@ public without sharing class FEC_CaseBusinessService {
     /** RL05 — cờ hiển thị Delivery / Customer Confirmation / routing (Batch 7). */
     @AuraEnabled
     public FEC_MrcReturnCaseService.MrcRl05UiContext mrcRl05Ui;
+
+    /** Giá trị đã lưu trên Case — dùng khôi phục panel sau submit/reload. */
+    @AuraEnabled
+    public String mrcCustomerConfirmationSaved;
+
+    @AuraEnabled
+    public String mrcHandlingOptionSaved;
 
     @AuraEnabled
     public Map<String, Map<String, List<PicklistOptionDto>>> picklistOptionsMap;

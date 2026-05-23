@@ -373,10 +373,11 @@ public without sharing class FEC_MrcReturnCaseService {
         }
 
         if ('FEC_Customer_Confirmation__c'.equals(fieldApiName)) {
-            if (ctx != null && ctx.showCustomerConfirmation == true) {
-                return false;
+            // RL05.02: panel fec_MrcReturnPanel quản lý — không render trên master data.
+            if (ctx != null && ctx.isReturnSubCode == true) {
+                return true;
             }
-            return true;
+            return ctx == null || ctx.showCustomerConfirmation != true;
         }
 
         // RL05.02: không hiện picklist — dùng radio Noti-11 (fec_MrcReturnDupBanner).
@@ -583,7 +584,15 @@ public without sharing class FEC_MrcReturnCaseService {
             caseObj.id = selectedCase.Id;
             sub.objlst.add(caseObj);
         }
-        if (caseObj.findField(fieldApiName) != null) {
+        String rawVal = (String) selectedCase.get(fieldApiName);
+        FEC_CaseBusinessService.Field existing = caseObj.findField(fieldApiName);
+        if (existing != null) {
+            if (String.isNotBlank(rawVal)) {
+                existing.value = rawVal;
+            }
+            if (forceHidden) {
+                existing.hidden = true;
+            }
             return;
         }
 
@@ -594,7 +603,6 @@ public without sharing class FEC_MrcReturnCaseService {
             return;
         }
 
-        String rawVal = (String) selectedCase.get(fieldApiName);
         FEC_CaseBusinessService.Field injected = new FEC_CaseBusinessService.Field(
             fieldApiName,
             dfr.getLabel(),
@@ -612,6 +620,13 @@ public without sharing class FEC_MrcReturnCaseService {
             injected.hidden = true;
         }
         caseObj.fieldlst.add(injected);
+    }
+
+    public static void enrichRl05PicklistOptions(
+        FEC_CaseBusinessService.Business result,
+        MrcRl05UiContext ctx
+    ) {
+        mergeInjectedPicklistOptions(result, ctx);
     }
 
     private static void mergeInjectedPicklistOptions(
@@ -650,6 +665,24 @@ public without sharing class FEC_MrcReturnCaseService {
                 continue;
             }
             List<FEC_CaseBusinessService.PicklistOptionDto> opts = new List<FEC_CaseBusinessService.PicklistOptionDto>();
+            if ('FEC_Customer_Confirmation__c'.equals(apiName)) {
+                opts.add(
+                    new FEC_CaseBusinessService.PicklistOptionDto(
+                        CONF_NOT_RECEIVED,
+                        'Khách hàng chưa xác nhận MRC',
+                        false
+                    )
+                );
+                opts.add(
+                    new FEC_CaseBusinessService.PicklistOptionDto(
+                        CONF_RECEIVED,
+                        'Khách hàng đã xác nhận MRC',
+                        false
+                    )
+                );
+                caseOpts.put(apiName, opts);
+                continue;
+            }
             for (Schema.PicklistEntry entry : dfr.getPicklistValues()) {
                 if (entry.isActive()) {
                     opts.add(
@@ -763,6 +796,9 @@ public without sharing class FEC_MrcReturnCaseService {
         String subCode = normalizeCode(result.subCodeCode);
         List<String> templatePatterns = new List<String>();
         if (isPhotoSubCode(subCode)) {
+            if (subCode != null && subCode.contains('RL05.03')) {
+                templatePatterns.add('RL05.03%Stage 1');
+            }
             templatePatterns.add('RL05.01%Stage 1');
         } else if (isReturnSubCode(subCode)) {
             templatePatterns.add('RL05.02%Stage 1');
