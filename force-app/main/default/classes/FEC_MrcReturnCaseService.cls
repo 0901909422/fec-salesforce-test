@@ -87,6 +87,9 @@ public without sharing class FEC_MrcReturnCaseService {
         /** TH3: sau Chưa nhận MRC — hiện radio Noti-11 (không có Case trùng). */
         @AuraEnabled
         public Boolean showHandlingRadioOnNotReceived;
+        /** Nhãn field Case (theo locale user) cho MRC UI. */
+        @AuraEnabled
+        public Map<String, String> caseFieldLabels;
     }
 
     public static MrcRl05UiContext buildUiContext(
@@ -111,6 +114,7 @@ public without sharing class FEC_MrcReturnCaseService {
         if (!ctx.isRl05Branch) {
             return ctx;
         }
+        ctx.hideMrcInfoLwc = true;
 
         String subUpper = normalizeCode(resolvedSubCodeCode);
         ctx.isPhotoSubCode = isPhotoSubCode(subUpper);
@@ -493,13 +497,12 @@ public without sharing class FEC_MrcReturnCaseService {
         }
 
         applyRl05SubSectionVisibility(caseInfo, ctx);
+        mergeInjectedPicklistOptions(result, ctx);
 
         if (ctx.isReturnSubCode != true) {
             caseInfo.sort();
             return;
         }
-
-        mergeInjectedPicklistOptions(result);
 
         if (ctx.showCustomerConfirmation == true) {
             injectCaseInformationField(
@@ -612,7 +615,8 @@ public without sharing class FEC_MrcReturnCaseService {
     }
 
     private static void mergeInjectedPicklistOptions(
-        FEC_CaseBusinessService.Business result
+        FEC_CaseBusinessService.Business result,
+        MrcRl05UiContext ctx
     ) {
         if (result.picklistOptionsMap == null) {
             result.picklistOptionsMap = new Map<String, Map<String, List<FEC_CaseBusinessService.PicklistOptionDto>>>();
@@ -626,17 +630,23 @@ public without sharing class FEC_MrcReturnCaseService {
         Map<String, List<FEC_CaseBusinessService.PicklistOptionDto>> caseOpts = result.picklistOptionsMap.get(
             'Case'
         );
+        if (ctx != null && ctx.caseFieldLabels == null) {
+            ctx.caseFieldLabels = new Map<String, String>();
+        }
         for (String apiName : new List<String>{
             'FEC_Customer_Confirmation__c',
             'FEC_MRC_Request_Handling_Option__c'
         }) {
-            if (caseOpts.containsKey(apiName)) {
-                continue;
-            }
             Schema.DescribeFieldResult dfr = Schema.SObjectType.Case.fields.getMap()
                 .get(apiName)
                 ?.getDescribe();
             if (dfr == null) {
+                continue;
+            }
+            if (ctx != null) {
+                ctx.caseFieldLabels.put(apiName, dfr.getLabel());
+            }
+            if (caseOpts.containsKey(apiName)) {
                 continue;
             }
             List<FEC_CaseBusinessService.PicklistOptionDto> opts = new List<FEC_CaseBusinessService.PicklistOptionDto>();
@@ -652,6 +662,9 @@ public without sharing class FEC_MrcReturnCaseService {
                 }
             }
             caseOpts.put(apiName, opts);
+        }
+        if (ctx != null) {
+            result.mrcRl05Ui = ctx;
         }
     }
 

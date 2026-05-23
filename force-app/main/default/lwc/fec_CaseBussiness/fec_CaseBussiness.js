@@ -1314,6 +1314,12 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
     ];
   }
 
+  get mrcHandlingOptionOptions() {
+    return this.business?.picklistOptionsMap?.Case?.[
+      FIELD_MRC_HANDLING_OPTION
+    ];
+  }
+
   handleMrcReturnCustomerConfirmationChange(event) {
     const value = event.detail?.value ?? STR_EMPTY;
     let fieldUpdated = false;
@@ -3324,7 +3330,6 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
     this._syncPointsRedemptionFieldToRecordForm();
     return Promise.all([
       this._syncMrcReturnCaseFieldsBeforeSubmit(),
-      this._saveMrcReturnDeliveryIfApplicable(),
       this._saveRemovePhoneDraftIfApplicable(),
       this._savePointsRedemptionDraftIfApplicable(),
     ]);
