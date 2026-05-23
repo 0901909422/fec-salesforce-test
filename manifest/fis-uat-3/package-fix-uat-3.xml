@@ -319,6 +319,7 @@
 		<members>FEC_Download_Report__c</members>
 		<members>FEC_Case_Assignment_Log_Detail__c</members>
 		<members>FEC_Case_Assignment_Logs__c</members>
+		<members>FEC_Do_Not_Bother__c</members>
 		<name>CustomObject</name>
 	</types>
     <types>
@@ -340,6 +341,7 @@
 		<members>FEC_Download_Report_Record_Page</members>
 		<members>FEC_General_Assignment_Record_Page</members>
 		<members>FEC_Routing_Assignment_Record_Page</members>
+        <members>FEC_Do_Not_Bother_Record_Page</members>
         <name>FlexiPage</name>
     </types>
 	<types>

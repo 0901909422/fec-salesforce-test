@@ -756,6 +756,7 @@
 		<members>FEC_Case_Assignment_Record_Page</members>
         <members>FEC_Notification_Record_Page_Auto</members>
         <members>FEC_Notification_Record_Page_Manual</members>
+        <members>FEC_Do_Not_Bother_Record_Page</members>
         <name>FlexiPage</name>
     </types>
     <types>
