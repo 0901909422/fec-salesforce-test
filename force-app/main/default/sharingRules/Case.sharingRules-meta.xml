@@ -1,185 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <SharingRules xmlns="http://soap.sforce.com/2006/04/metadata">
     <sharingCriteriaRules>
-        <fullName>CA_Credit_Assessment</fullName>
-        <accessLevel>Edit</accessLevel>
-        <label>CA - Credit Assessment</label>
-        <sharedTo>
-            <group>CA_Credit_Assessment</group>
-        </sharedTo>
-        <criteriaItems>
-            <field>FEC_Assignment_Users__c</field>
-            <operation>contains</operation>
-            <value>DQ - Credit Assessment</value>
-        </criteriaItems>
-        <includeRecordsOwnedByAll>true</includeRecordsOwnedByAll>
-    </sharingCriteriaRules>
-    <sharingCriteriaRules>
-        <fullName>CL_Collections</fullName>
-        <accessLevel>Edit</accessLevel>
-        <label>CL - Collections</label>
-        <sharedTo>
-            <group>CL_Collections</group>
-        </sharedTo>
-        <booleanFilter>1 or 2 or 3 or  4 or 5 or 6</booleanFilter>
-        <criteriaItems>
-            <field>FEC_Assignment_Users__c</field>
-            <operation>contains</operation>
-            <value>DQ - Collections</value>
-        </criteriaItems>
-        <criteriaItems>
-            <field>FEC_Assignment_Users__c</field>
-            <operation>contains</operation>
-            <value>Call Colls Support</value>
-        </criteriaItems>
-        <criteriaItems>
-            <field>FEC_Assignment_Users__c</field>
-            <operation>contains</operation>
-            <value>Colls Coordination &amp; Reporting</value>
-        </criteriaItems>
-        <criteriaItems>
-            <field>FEC_Assignment_Users__c</field>
-            <operation>contains</operation>
-            <value>Call Queue</value>
-        </criteriaItems>
-        <criteriaItems>
-            <field>FEC_Assignment_Users__c</field>
-            <operation>contains</operation>
-            <value>Colls Complaint Handling</value>
-        </criteriaItems>
-        <criteriaItems>
-            <field>FEC_Assignment_Users__c</field>
-            <operation>contains</operation>
-            <value>Colls Training</value>
-        </criteriaItems>
-        <includeRecordsOwnedByAll>true</includeRecordsOwnedByAll>
-    </sharingCriteriaRules>
-    <sharingCriteriaRules>
-        <fullName>CO_Card_Operations</fullName>
-        <accessLevel>Edit</accessLevel>
-        <label>CO Card Operations</label>
-        <sharedTo>
-            <group>CO_Card_Operations</group>
-        </sharedTo>
-        <booleanFilter>1 or 2 or 3 or 4 or 5 or 6</booleanFilter>
-        <criteriaItems>
-            <field>FEC_Assignment_Users__c</field>
-            <operation>contains</operation>
-            <value>DQ - Card Operations</value>
-        </criteriaItems>
-        <criteriaItems>
-            <field>FEC_Assignment_Users__c</field>
-            <operation>contains</operation>
-            <value>Card Ops Control &amp; Support</value>
-        </criteriaItems>
-        <criteriaItems>
-            <field>FEC_Assignment_Users__c</field>
-            <operation>contains</operation>
-            <value>Card Issuance</value>
-        </criteriaItems>
-        <criteriaItems>
-            <field>FEC_Assignment_Users__c</field>
-            <operation>contains</operation>
-            <value>Card Settlement</value>
-        </criteriaItems>
-        <criteriaItems>
-            <field>FEC_Assignment_Users__c</field>
-            <operation>contains</operation>
-            <value>Card Transaction</value>
-        </criteriaItems>
-        <criteriaItems>
-            <field>FEC_Assignment_Users__c</field>
-            <operation>contains</operation>
-            <value>Card Dispute &amp; Charge Back</value>
-        </criteriaItems>
-        <includeRecordsOwnedByAll>true</includeRecordsOwnedByAll>
-    </sharingCriteriaRules>
-    <sharingCriteriaRules>
-        <fullName>CP_Contract_Processing</fullName>
-        <accessLevel>Edit</accessLevel>
-        <label>CP - Contract Processing</label>
-        <sharedTo>
-            <group>CP_Contract_Processing</group>
-        </sharedTo>
-        <booleanFilter>1 or 2 or 3 or 4</booleanFilter>
-        <criteriaItems>
-            <field>FEC_Assignment_Users__c</field>
-            <operation>contains</operation>
-            <value>DQ - Contract Processing</value>
-        </criteriaItems>
-        <criteriaItems>
-            <field>FEC_Assignment_Users__c</field>
-            <operation>contains</operation>
-            <value>Disbursal Document</value>
-        </criteriaItems>
-        <criteriaItems>
-            <field>FEC_Assignment_Users__c</field>
-            <operation>contains</operation>
-            <value>Doc Processing &amp; Archiving</value>
-        </criteriaItems>
-        <criteriaItems>
-            <field>FEC_Assignment_Users__c</field>
-            <operation>contains</operation>
-            <value>MRC Support</value>
-        </criteriaItems>
-        <includeRecordsOwnedByAll>true</includeRecordsOwnedByAll>
-    </sharingCriteriaRules>
-    <sharingCriteriaRules>
-        <fullName>FS_Direct_Sales</fullName>
-        <accessLevel>Edit</accessLevel>
-        <label>FS - Direct Sales</label>
-        <sharedTo>
-            <group>FS_Direct_Sales</group>
-        </sharedTo>
-        <booleanFilter>1 or 2</booleanFilter>
-        <criteriaItems>
-            <field>FEC_Assignment_Users__c</field>
-            <operation>contains</operation>
-            <value>DQ - Direct Sales</value>
-        </criteriaItems>
-        <criteriaItems>
-            <field>FEC_Assignment_Users__c</field>
-            <operation>contains</operation>
-            <value>DQ - POS Sales</value>
-        </criteriaItems>
-        <includeRecordsOwnedByAll>true</includeRecordsOwnedByAll>
-    </sharingCriteriaRules>
-    <sharingCriteriaRules>
-        <fullName>IA_Internal_Audit</fullName>
-        <accessLevel>Edit</accessLevel>
-        <label>IA - Internal Audit</label>
-        <sharedTo>
-            <group>IA_Internal_Audit</group>
-        </sharedTo>
-        <criteriaItems>
-            <field>FEC_Assignment_Users__c</field>
-            <operation>contains</operation>
-            <value>DQ - Internal Audit</value>
-        </criteriaItems>
-        <includeRecordsOwnedByAll>true</includeRecordsOwnedByAll>
-    </sharingCriteriaRules>
-    <sharingCriteriaRules>
-        <fullName>IT_IT_Operations_Support</fullName>
-        <accessLevel>Edit</accessLevel>
-        <label>IT IT Operations Support</label>
-        <sharedTo>
-            <group>IT_IT_Operations_Support</group>
-        </sharedTo>
-        <criteriaItems>
-            <field>FEC_Assignment_Users__c</field>
-            <operation>contains</operation>
-            <value>DQ - IT Operations Support</value>
-        </criteriaItems>
-        <includeRecordsOwnedByAll>true</includeRecordsOwnedByAll>
-    </sharingCriteriaRules>
-    <sharingCriteriaRules>
         <fullName>PM_Payment</fullName>
         <accessLevel>Edit</accessLevel>
         <label>PM - Payment</label>
         <sharedTo>
             <group>PM_Payment</group>
         </sharedTo>
-        <booleanFilter>1 or 2 or 3</booleanFilter>
+        <booleanFilter>1 or 2 or 3 or 4</booleanFilter>
         <criteriaItems>
             <field>FEC_Assignment_Users__c</field>
             <operation>contains</operation>
@@ -195,25 +23,10 @@
             <operation>contains</operation>
             <value>Outgoing Payment</value>
         </criteriaItems>
-        <includeRecordsOwnedByAll>true</includeRecordsOwnedByAll>
-    </sharingCriteriaRules>
-    <sharingCriteriaRules>
-        <fullName>TS_Telesales</fullName>
-        <accessLevel>Edit</accessLevel>
-        <label>TS - Telesales</label>
-        <sharedTo>
-            <group>TS_Telesales</group>
-        </sharedTo>
-        <booleanFilter>1 or 2</booleanFilter>
         <criteriaItems>
             <field>FEC_Assignment_Users__c</field>
             <operation>contains</operation>
-            <value>DQ - Telesales</value>
-        </criteriaItems>
-        <criteriaItems>
-            <field>FEC_Assignment_Users__c</field>
-            <operation>contains</operation>
-            <value>LG</value>
+            <value>DQ - Payment</value>
         </criteriaItems>
         <includeRecordsOwnedByAll>true</includeRecordsOwnedByAll>
     </sharingCriteriaRules>

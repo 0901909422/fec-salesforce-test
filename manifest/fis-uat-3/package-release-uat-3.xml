@@ -1685,6 +1685,7 @@
 		<members>IT_IT_Operations_Support</members>
 		<members>PM_Payment</members>
 		<members>TS_Telesales</members>
+        <members>PM_Payment</members>
 		<name>Group</name>
 	</types>
 	<types>
@@ -1697,6 +1698,7 @@
 		<members>Case.IT_IT_Operations_Support</members>
 		<members>Case.PM_Payment</members>
 		<members>Case.TS_Telesales</members>
+        <members>Case.PM_Payment</members>
 		<name>SharingCriteriaRule</name>
 	</types>
     <types>
