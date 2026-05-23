@@ -5,12 +5,26 @@ import {
   MRC_OPT_CANCEL_PREVIOUS,
   isMrcNotReceivedConfirmation,
   getCaseFieldValue,
+  resolveMrcReturnSubCodeCode,
 } from "c/fecMrcReturnCaseLogic";
 
 const TEAM_CP = "CP";
 const TEAM_SP = "SP";
 const TEAM_F2F = "F2F";
 const TEAM_PM = "PM";
+
+/** Hiển thị Team theo spec RL05 (I–IV). */
+const TEAM_DISPLAY_BY_CODE = {
+  CP: "Contract Processing",
+  PM: "Payment",
+  SP: "CS Support",
+  F2F: "CS Office Based",
+};
+
+export function formatMrcReturnTeamDisplay(teamCode) {
+  const code = String(teamCode ?? "").trim().toUpperCase();
+  return TEAM_DISPLAY_BY_CODE[code] || teamCode || "";
+}
 
 const FIELD_DELIVERY_OPTION = "FEC_Delivery_Option_2__c";
 const FIELD_CUSTOMER_CONFIRMATION = "FEC_Customer_Confirmation__c";
@@ -146,8 +160,26 @@ export function isMrcReturnRoutingSubCode(subCodeCode) {
   );
 }
 
+function inferRl0502Scenario(ctx) {
+  if (!ctx?.isReturnSubCode) {
+    return null;
+  }
+  const cond1 = ctx.showMrcDupBanner === true;
+  const cond2 = ctx.meetsCondition2 === true;
+  if (cond1 && cond2) {
+    return "TH1";
+  }
+  if (cond1) {
+    return "TH2";
+  }
+  if (cond2) {
+    return "TH3";
+  }
+  return "TH4";
+}
+
 /**
- * @returns {{ eligible: boolean, team: string|null, scenario: string|null, deliveryOption: string }}
+ * @returns {{ eligible: boolean, team: string|null, teamCode: string|null, scenario: string|null, deliveryOption: string }}
  */
 export function getMrcReturnRoutingContext(
   business,
@@ -155,7 +187,7 @@ export function getMrcReturnRoutingContext(
   customerConfirmationValue,
   deliveryOptionOverride,
 ) {
-  const subCodeCode = business?.subCodeCode;
+  const subCodeCode = resolveMrcReturnSubCodeCode(business);
   const ctx = business?.mrcRl05Ui;
   const deliveryOption = resolveDeliveryOption(
     business,
@@ -174,91 +206,76 @@ export function getMrcReturnRoutingContext(
   const option2Selected = handlingOption === MRC_OPT_CANCEL_PREVIOUS;
   const notReceived = isMrcNotReceivedConfirmation(confirmation);
 
+  function buildEligible(teamCode, scenario) {
+    return {
+      eligible: true,
+      team: formatMrcReturnTeamDisplay(teamCode),
+      teamCode,
+      scenario,
+      deliveryOption,
+    };
+  }
+
+  function buildIneligible() {
+    return {
+      eligible: false,
+      team: null,
+      teamCode: null,
+      scenario: null,
+      deliveryOption,
+    };
+  }
+
   if (isRl0501SubCode(subCodeCode)) {
     if (matchesRl0501Delivery(deliveryOption)) {
-      return {
-        eligible: true,
-        team: TEAM_CP,
-        scenario: "I",
-        deliveryOption,
-      };
+      return buildEligible(TEAM_CP, "I");
     }
-    return { eligible: false, team: null, scenario: null, deliveryOption };
+    return buildIneligible();
   }
 
   if (isRl0503SubCode(subCodeCode)) {
     if (matchesRl0503DeliveryOfficeOnly(deliveryOption)) {
-      return {
-        eligible: true,
-        team: TEAM_F2F,
-        scenario: "III",
-        deliveryOption,
-      };
+      return buildEligible(TEAM_F2F, "III");
     }
     if (matchesRl0503DeliveryAddressOrPos(deliveryOption)) {
-      return {
-        eligible: true,
-        team: TEAM_SP,
-        scenario: "II",
-        deliveryOption,
-      };
+      return buildEligible(TEAM_SP, "II");
     }
-    return { eligible: false, team: null, scenario: null, deliveryOption };
+    return buildIneligible();
   }
 
   if (!isRl0502SubCode(subCodeCode)) {
-    return { eligible: false, team: null, scenario: null, deliveryOption };
+    return buildIneligible();
   }
 
-  const rl05Scenario = ctx?.rl05Scenario;
+  const rl05Scenario = ctx?.rl05Scenario || inferRl0502Scenario(ctx);
   const flowTeam = resolveRl0502FlowTeam(ctx);
 
   if (rl05Scenario === "TH1") {
     if (notReceived && option2Selected && flowTeam) {
-      return {
-        eligible: true,
-        team: flowTeam,
-        scenario: "IV-1",
-        deliveryOption,
-      };
+      return buildEligible(flowTeam, "IV-1");
     }
-    return { eligible: false, team: null, scenario: null, deliveryOption };
+    return buildIneligible();
   }
 
   if (rl05Scenario === "TH2") {
     if (option2Selected && flowTeam) {
-      return {
-        eligible: true,
-        team: flowTeam,
-        scenario: "IV-2",
-        deliveryOption,
-      };
+      return buildEligible(flowTeam, "IV-2");
     }
-    return { eligible: false, team: null, scenario: null, deliveryOption };
+    return buildIneligible();
   }
 
   if (rl05Scenario === "TH3") {
     if (notReceived && flowTeam) {
-      return {
-        eligible: true,
-        team: flowTeam,
-        scenario: "IV-3",
-        deliveryOption,
-      };
+      return buildEligible(flowTeam, "IV-3");
     }
-    return { eligible: false, team: null, scenario: null, deliveryOption };
+    return buildIneligible();
   }
 
   if (rl05Scenario === "TH4") {
     if (matchesRl0501Delivery(deliveryOption)) {
-      return {
-        eligible: true,
-        team: flowTeam || TEAM_CP,
-        scenario: "TH4",
-        deliveryOption,
-      };
+      return buildEligible(flowTeam || TEAM_CP, "TH4");
     }
-    return { eligible: false, team: null, scenario: null, deliveryOption };
+    return buildIneligible();
   }
 
   if (flowTeam && (ctx?.autoRouteCp === true || ctx?.autoRoutePayment === true)) {
@@ -267,16 +284,14 @@ export function getMrcReturnRoutingContext(
       ctx?.showMrcDupBanner === true ||
       ctx?.showHandlingRadioOnNotReceived === true;
     if (!needsHandling || handlingOption === MRC_OPT_CANCEL_PREVIOUS) {
-      return {
-        eligible: true,
-        team: flowTeam,
-        scenario: rl05Scenario || "FLOW",
-        deliveryOption,
-      };
+      return buildEligible(flowTeam, rl05Scenario || "FLOW");
+    }
+    if (matchesRl0501Delivery(deliveryOption)) {
+      return buildEligible(flowTeam, "DELIVERY-FLOW");
     }
   }
 
-  return { eligible: false, team: null, scenario: null, deliveryOption };
+  return buildIneligible();
 }
 
 export function getBusinessFieldValue(business, objectName, apiName) {
