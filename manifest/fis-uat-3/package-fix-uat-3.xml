@@ -51,6 +51,7 @@
         <members>FEC_BancaController</members>
         <members>FEC_DNBHandler</members>
         <members>FEC_DocumentRequestRoutingService</members>
+        <members>FEC_DocumentRequestRoutingActionService</members>
         <members>FEC_GetCSCaseStatusService</members>
 		<members>Fec_HoldCaseConfigurationController</members>
 		<members>FEC_HoldCaseInheritanceService</members>
@@ -142,6 +143,8 @@
 		<members>FEC_CaseAssignmentConfigController</members>
         <members>FEC_RoutingHistTatSvc</members>
         <members>FEC_PsDNBServiceCallout</members>
+        <members>FEC_FullCustomerIntegrationJob</members>
+        <members>FEC_RDPaymentContractAssessmentService</members>
 		<name>Apexclass</name>
 	</types>
     <types>
@@ -220,6 +223,7 @@
         <members>fecMrcReturnCaseLogic</members>
         <members>fec_DoNotBotherResultView</members>
         <members>fec_Banca</members>
+        <members>fec_BancaTabView</members>
         <members>fec_CommonDetailView</members>
         <members>fec_CaseAssignmentConfig</members>
         <members>fec_CaseAssignmentDetailSummary</members>
@@ -247,6 +251,7 @@
         <members>Case.FEC_Original_Category__c</members>
         <members>Case.FEC_Original_Sub_Category__c</members>
         <members>Case.FEC_Original_Sub_Code__c</members>
+        <members>Case.FEC_Recently_Auto_Case_Assignment__c</members>
         <members>Case.FEC_NFU_Description_Result__c</members>
         <members>Case.FEC_Collections_Response__c</members>
         <members>Case.FEC_Delivery_Option_2__c</members>
@@ -315,6 +320,7 @@
 		<members>FEC_Download_Report__c</members>
 		<members>FEC_Case_Assignment_Log_Detail__c</members>
 		<members>FEC_Case_Assignment_Logs__c</members>
+		<members>FEC_Do_Not_Bother__c</members>
 		<name>CustomObject</name>
 	</types>
     <types>
@@ -336,6 +342,7 @@
 		<members>FEC_Download_Report_Record_Page</members>
 		<members>FEC_General_Assignment_Record_Page</members>
 		<members>FEC_Routing_Assignment_Record_Page</members>
+        <members>FEC_Do_Not_Bother_Record_Page</members>
         <name>FlexiPage</name>
     </types>
 	<types>
@@ -437,7 +444,8 @@
 		<members>FEC_Export_Detail</members>
 		<members>FEC_Export_View</members>
 		<members>FEC_Format</members>
-		<members>FEC_Format_Excel</members>
+        <members>FEC_Format_Excel</members>
+        <members>FEC_Gender_Buyer_Label</members>
 		<members>FEC_Formatted_Report</members>
 		<members>FEC_Title_Context_Report</members>
 		<members>FEC_BCH_ResultHdr_Errors</members>

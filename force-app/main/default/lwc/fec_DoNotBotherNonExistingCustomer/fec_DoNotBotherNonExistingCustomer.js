@@ -204,7 +204,7 @@ export default class Fec_DoNotBotherNonExistingCustomer extends LightningElement
       const result = await getCaseData({ caseId: this.recordId });
 
       this.customerName = result.customerName;
-      this.nationalId = result.nationalId;
+      // this.nationalId = result.nationalId;
       this.contractId = result.contractId;
       this.retryCount = result.processActionCount || 0;
 

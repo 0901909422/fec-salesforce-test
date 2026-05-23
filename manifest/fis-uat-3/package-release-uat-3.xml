@@ -247,6 +247,7 @@
 		<members>Case.FEC_Max_Amount__c</members>
 		<members>Case.FEC_Requested_Amount__c</members>
         <members>Case.FEC_Assignment_Count__c</members>
+        <members>Case.FEC_Recently_Auto_Case_Assignment__c</members>
         <members>Case.FEC_Disbursement_Date__c</members>
         <members>Case.FEC_Disbursement_Status__c</members>
         <members>Case.FEC_CS_Check_Classification_by_CS__c</members>
@@ -754,6 +755,7 @@
 		<members>FEC_Case_Assignment_Record_Page</members>
         <members>FEC_Notification_Record_Page_Auto</members>
         <members>FEC_Notification_Record_Page_Manual</members>
+        <members>FEC_Do_Not_Bother_Record_Page</members>
         <name>FlexiPage</name>
     </types>
     <types>
@@ -1041,6 +1043,7 @@
 		<members>FEC_Buyer_Name</members>
 		<members>FEC_Buyer_DOB</members>
 		<members>FEC_Buyer_NID</members>
+		<members>FEC_Gender_Buyer_Label</members>
 		<members>FEC_Product_Name</members>
 		<members>FEC_Sales_Channel</members>
 		<members>FEC_Insurance_Company</members>
@@ -1736,6 +1739,7 @@
     <types>
 		<members>FEC_CaseBusinessService</members>
 		<members>FEC_DocumentRequestRoutingService</members>
+		<members>FEC_DocumentRequestRoutingActionService</members>
 		<members>FEC_ClientPDFService</members>
 		<members>FEC_ClientPDFServiceTest</members>
 		<members>FEC_PaymentHistoryValidationService</members>
