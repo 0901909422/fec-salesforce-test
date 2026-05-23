@@ -1457,7 +1457,7 @@ public without sharing class FEC_AssignmentRoutingActionHandler {
                  * Get assignments
                  */
                 List<FEC_Assignment__c> assignments = [
-                SELECT Id, Name, FEC_Assignment_Status__c, FEC_Assignment_Owner__c,
+                SELECT Id, Name, FEC_Assignment_Status__c, FEC_Assignment_Owner__c, FEC_Assignment_Owner_Text__c,
                 FEC_OwnerID__c FROM FEC_Assignment__c WHERE FEC_Case__c = : caseId
             ];
                 
@@ -1588,17 +1588,17 @@ public without sharing class FEC_AssignmentRoutingActionHandler {
                     
                     FEC_Routing_Action__c = FEC_ConstantCommon.ACTION_RESOLVE,
                     
-                    FEC_Original_User_Queue__c = ownerValue,
+                    FEC_Original_User_Queue__c = ass.FEC_Assignment_Owner_Text__c,
                     
                     FEC_Original_User_Queue_ID__c = ass.FEC_OwnerID__c,
                     
-                    FEC_Updated_User_Queue__c = ownerValue,
+                    FEC_Updated_User_Queue__c = ass.FEC_Assignment_Owner_Text__c,
                     
                     FEC_Updated_User_Queue_ID__c = ass.FEC_OwnerID__c,
                     
                     FEC_Stage_Name__c = c.FEC_Current_Case_Stage__r.FEC_Code__c,
                     
-                    FEC_User__c = currentUser.Id,
+                    FEC_User__c = emailLocalPart(currentUser.Email),
                     
                     FEC_User_Role__c = currentUser.UserRole != null
                         ? currentUser.UserRole.Name
