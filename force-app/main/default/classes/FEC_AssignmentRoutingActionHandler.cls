@@ -1230,7 +1230,7 @@ public without sharing class FEC_AssignmentRoutingActionHandler {
     
     
     public static Boolean isCurrentUserInQueue(
-        String queueDeveloperName
+        Set<String> queueDeveloperNames
     ) {
         
         Id userId = UserInfo.getUserId();
@@ -1247,16 +1247,22 @@ public without sharing class FEC_AssignmentRoutingActionHandler {
         /*
          * Queue
          */
-        Group queueGroup = [
+        List<Group> queueGroup = [
         SELECT
             Id,
             Name
         FROM Group
         WHERE
             Type = :FEC_ConstantCommon.GROUP_TYPE_QUEUE
-            AND DeveloperName = :queueDeveloperName
-        LIMIT 1
-    ];
+            AND DeveloperName IN :queueDeveloperNames
+        ];
+        
+        Set<Id> queueGroupIds = new Set<Id>();
+        
+        for (Group g : queueGroup) {
+            queueGroupIds.add(g.Id);
+        }
+        
         
         /*
          * Queue members
@@ -1265,7 +1271,7 @@ public without sharing class FEC_AssignmentRoutingActionHandler {
         SELECT
             UserOrGroupId
         FROM GroupMember
-        WHERE GroupId = :queueGroup.Id
+        WHERE GroupId IN :queueGroupIds
     ];
         
         Set<Id> memberIds = new Set<Id>();
@@ -1336,15 +1342,21 @@ public without sharing class FEC_AssignmentRoutingActionHandler {
     }
     
     public static Boolean isCSSupport() {
+        
         return isCurrentUserInQueue(
+        new Set<String>{
             FEC_ConstantCommon.QUEUE_DQ_CS_SUPPORT_NAME
-            );
+        }
+        );
     }
     
     public static Boolean isCSCustomerCare() {
+        
         return isCurrentUserInQueue(
-            FEC_ConstantCommon.QUEUE_DQ_CS_CUSTOMER_CARE_NAME
-            );
+        new Set<String>{
+            FEC_ConstantCommon.QUEUE_DQ_CS_CUSTOMER_CARE_NAME,  FEC_ConstantCommon.QUEUE_DQ_CS_CUSTOMER_CARE_DEPT_NAME
+        }
+        );
     }
     
     public static Boolean isOtherCS(Id userID) {
@@ -1423,6 +1435,8 @@ public without sharing class FEC_AssignmentRoutingActionHandler {
                 &&
                 devName !=
                 FEC_ConstantCommon.QUEUE_DQ_CS_CUSTOMER_CARE_NAME
+                &&
+                devName !=FEC_ConstantCommon.QUEUE_DQ_CS_CUSTOMER_CARE_DEPT_NAME
             ) {
                 
                 return true;
