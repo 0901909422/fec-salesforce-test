@@ -16,9 +16,11 @@ public without sharing class FEC_MrcReturnCaseService {
         'FEC_Contract_Processing_Assessment_Type__c'
     };
 
+    /** CN / CC / TLCN — mọi Contract Status → Reject (Chưa đủ điều kiện hỗ trợ). */
     private static final Set<String> MRC_STATUS_NOT_ELIGIBLE = new Set<String>{
         'CN',
-        'CC'
+        'CC',
+        'TLCN'
     };
 
     private static final Set<String> MRC_STATUS_CP_ALWAYS = new Set<String>{
@@ -29,8 +31,8 @@ public without sharing class FEC_MrcReturnCaseService {
         'DTMRC_CTLHD'
     };
 
+    /** LK, THDB, MN, … — Payment khi ACTIVE/CHARGE-OFF/N/A; CP khi CLOSED. */
     private static final Set<String> MRC_STATUS_MIXED = new Set<String>{
-        'TLCN',
         'LK',
         'THDB',
         'THĐB',
@@ -192,6 +194,12 @@ public without sharing class FEC_MrcReturnCaseService {
         return ctx;
     }
 
+    /**
+     * Ma trận RL05.02 — MRC Status × Contract Status → luồng xử lý (design Batch 7).
+     * ACTIVE/CHARGE-OFF: Group B → Payment, Group C → CP.
+     * CLOSED: Group B/C → CP.
+     * N/A (contract): Group B/C → Payment.
+     */
     public static String resolveProcessingFlow(
         String mrcStatusId,
         String contractStatus
@@ -205,16 +213,23 @@ public without sharing class FEC_MrcReturnCaseService {
         if (MRC_STATUS_NOT_ELIGIBLE.contains(statusId)) {
             return FLOW_NOT_ELIGIBLE;
         }
-        if (MRC_STATUS_CP_ALWAYS.contains(statusId)) {
+
+        Boolean inGroupC = MRC_STATUS_CP_ALWAYS.contains(statusId);
+        Boolean inGroupB = MRC_STATUS_MIXED.contains(statusId);
+        if (!inGroupC && !inGroupB) {
+            return null;
+        }
+
+        if (CONTRACT_CLOSED.contains(contract)) {
             return FLOW_CP_SUPPORT;
         }
-        if (MRC_STATUS_MIXED.contains(statusId)) {
-            if (CONTRACT_CLOSED.contains(contract)) {
-                return FLOW_CP_SUPPORT;
-            }
+        if (String.isBlank(contract) || 'N/A'.equals(contract)) {
             return FLOW_PAYMENT_SUPPORT;
         }
-        return null;
+        if (inGroupC) {
+            return FLOW_CP_SUPPORT;
+        }
+        return FLOW_PAYMENT_SUPPORT;
     }
 
     public static Boolean meetsCondition2(String mrcStatusId) {
