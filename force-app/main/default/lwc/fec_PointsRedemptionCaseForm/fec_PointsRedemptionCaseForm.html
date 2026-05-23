@@ -6,7 +6,7 @@
       </lightning-layout-item>
     </template>
     <template if:false={loading}>
-      <template if:true={notEligibleMessage}>
+      <template if:true={showNotEligiblePanel}>
         <lightning-layout-item size="12" padding="around-small">
           <p class="fec-pr-not-eligible">{notEligibleMessage}</p>
           <template if:true={notEligibleReason}>
@@ -14,7 +14,7 @@
           </template>
         </lightning-layout-item>
       </template>
-      <template if:true={showPanel}>
+      <template if:true={showEligiblePanel}>
         <lightning-layout-item size="6" padding="around-small">
           <lightning-combobox
             name="redeemedPoints"
