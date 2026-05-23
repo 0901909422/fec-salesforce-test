@@ -137,6 +137,7 @@
 		<members>FEC_NotificationService</members>
 		<members>FEC_CaseAssignmentConfigController</members>
         <members>FEC_RoutingHistTatSvc</members>
+        <members>FEC_PsDNBServiceCallout</members>
 		<name>Apexclass</name>
 	</types>
     <types>
@@ -734,6 +735,10 @@
         <members>Case.Internal_Case</members>
         <members>Case.Search_Interaction</members>
         <name>RecordType</name>
+    </types>
+    <types>
+        <members>Case-en_US</members>
+        <name>CustomObjectTranslation</name>
     </types>
 	<version>66.0</version>
 </Package>

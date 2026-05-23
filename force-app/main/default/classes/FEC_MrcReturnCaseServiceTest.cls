@@ -55,7 +55,7 @@ private class FEC_MrcReturnCaseServiceTest {
         );
         System.assertEquals(true, ctx.isPhotoSubCode);
         System.assertEquals(true, ctx.showDeliveryForm);
-        System.assertNotEquals(true, ctx.hideMrcInfoLwc);
+        System.assertEquals(true, ctx.hideMrcInfoLwc);
         System.assertNotEquals(true, ctx.hidePropertyInfo);
     }
 
@@ -70,7 +70,7 @@ private class FEC_MrcReturnCaseServiceTest {
             true
         );
         System.assertEquals(true, ctx.isReturnSubCode);
-        System.assertNotEquals(true, ctx.hideMrcInfoLwc);
+        System.assertEquals(true, ctx.hideMrcInfoLwc);
         System.assertEquals(true, ctx.showCustomerConfirmation);
         System.assertEquals(true, ctx.showMrcDupBanner);
         System.assertEquals(true, ctx.dupCaseOnly);

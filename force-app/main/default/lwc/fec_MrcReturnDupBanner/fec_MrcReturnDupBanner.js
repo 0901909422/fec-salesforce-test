@@ -1,14 +1,8 @@
 import { LightningElement, api } from "lwc";
 import { NavigationMixin } from "lightning/navigation";
 import FEC_MRC_RL0502_Dup_Banner from "@salesforce/label/c.FEC_MRC_RL0502_Dup_Banner";
-import FEC_MRC_RL0502_Dup_Opt_Cancel_New from "@salesforce/label/c.FEC_MRC_RL0502_Dup_Opt_Cancel_New";
-import FEC_MRC_RL0502_Dup_Opt_Cancel_Prev from "@salesforce/label/c.FEC_MRC_RL0502_Dup_Opt_Cancel_Prev";
 import { STR_EMPTY } from "c/fec_CommonConst";
-import {
-  FIELD_MRC_HANDLING_OPTION,
-  MRC_OPT_CANCEL_NEW,
-  MRC_OPT_CANCEL_PREVIOUS,
-} from "c/fecMrcReturnCaseLogic";
+import { FIELD_MRC_HANDLING_OPTION } from "c/fecMrcReturnCaseLogic";
 
 export default class Fec_MrcReturnDupBanner extends NavigationMixin(
   LightningElement,
@@ -17,6 +11,7 @@ export default class Fec_MrcReturnDupBanner extends NavigationMixin(
   @api duplicateCaseId;
   @api duplicateCaseNumber;
   @api handlingOptionValue = STR_EMPTY;
+  @api handlingOptionOptions;
   @api isEdit = false;
   @api sectionId;
   @api subSectionName;
@@ -61,16 +56,13 @@ export default class Fec_MrcReturnDupBanner extends NavigationMixin(
   }
 
   get mrcHandlingRadioOptions() {
-    return [
-      {
-        label: FEC_MRC_RL0502_Dup_Opt_Cancel_New,
-        value: MRC_OPT_CANCEL_NEW,
-      },
-      {
-        label: FEC_MRC_RL0502_Dup_Opt_Cancel_Prev,
-        value: MRC_OPT_CANCEL_PREVIOUS,
-      },
-    ];
+    const fromBusiness = Array.isArray(this.handlingOptionOptions)
+      ? this.handlingOptionOptions
+      : [];
+    return fromBusiness.map((o) => ({
+      label: o.label || o.value,
+      value: o.value,
+    }));
   }
 
   handleOpenMrcDupCase(event) {
