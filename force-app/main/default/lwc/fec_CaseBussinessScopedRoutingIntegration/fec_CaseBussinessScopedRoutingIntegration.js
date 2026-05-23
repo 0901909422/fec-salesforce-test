@@ -199,7 +199,11 @@ export async function trySubmitScopedRouteTo(host) {
     typeof cmpAddr.hasPendingAddressUpdates === "function" &&
     cmpAddr.hasPendingAddressUpdates();
 
-  if (routeToEle && noUpdate && !hasAddressUpdate) {
+  const hasSubmitPicklistChange =
+    typeof host.hasAnySubmitCasePicklistFieldChanged === "function" &&
+    host.hasAnySubmitCasePicklistFieldChanged();
+
+  if (routeToEle && noUpdate && !hasAddressUpdate && !hasSubmitPicklistChange) {
     host.showToast?.(
       FEC_Warning_Title,
       FEC_MSG_UPDATED_INFO_NOT_UPDATED,
@@ -222,6 +226,21 @@ export async function trySubmitScopedRouteTo(host) {
   }
 
   try {
+    if (
+      typeof host.persistSubmitCasePicklistFieldsBeforeSubmit === "function"
+    ) {
+      const persistResult =
+        await host.persistSubmitCasePicklistFieldsBeforeSubmit();
+      if (persistResult?.success === false) {
+        host.showToast?.(
+          FEC_Error_Title,
+          persistResult.errorMessage || FEC_Error_Title,
+          "error",
+        );
+        return false;
+      }
+    }
+
     const ok = await executeScopedRouteToSubmit(host);
     if (ok) {
       host._notifyRemovePhoneCaseSubmitted?.();

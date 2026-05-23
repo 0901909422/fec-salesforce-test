@@ -31,7 +31,7 @@ import FEC_Buyer_NID from '@salesforce/label/c.FEC_Buyer_NID';
 import FEC_Product_Name from '@salesforce/label/c.FEC_Product_Name';
 import FEC_Label_Status from '@salesforce/label/c.FEC_Label_Status';
 
-import FEC_Gender_Label from '@salesforce/label/c.FEC_Gender_Label';
+import FEC_Gender_Buyer_Label from '@salesforce/label/c.FEC_Gender_Buyer_Label';
 import FEC_Sales_Channel from '@salesforce/label/c.FEC_Sales_Channel';
 import FEC_Insurance_Company from '@salesforce/label/c.FEC_Insurance_Company';
 import FEC_Sub_Channel from '@salesforce/label/c.FEC_Sub_Channel';
@@ -75,7 +75,7 @@ export default class Fec_BancaTabView extends LightningElement {
         productNameLabel: FEC_Product_Name,
         statusLabel: FEC_Label_Status,
 
-        genderLabel: FEC_Gender_Label,
+        genderLabel: FEC_Gender_Buyer_Label,
         salesChannelLabel: FEC_Sales_Channel,
         insuranceCompanyLabel: FEC_Insurance_Company,
         subChannelLabel: FEC_Sub_Channel,
