@@ -4883,6 +4883,13 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
       return Promise.resolve();
     }
 
+    if (!isMrcReturnRoutingSubCode(this.business?.subCodeCode)) {
+      this._mrcReturnStageChangeRoutingActive = false;
+      return Promise.resolve();
+    }
+
+    this._mrcReturnStageChangeRoutingActive = true;
+
     const ctx = getMrcReturnRoutingContext(
       this.business,
       this.mrcReturnHandlingOptionValue,
@@ -4890,33 +4897,23 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
       this._mrcDeliveryOptionDraft,
     );
 
-    if (!isMrcReturnRoutingSubCode(this.business?.subCodeCode) || !ctx.team) {
-      this._mrcReturnStageChangeRoutingActive = false;
-      if (!ctx.eligible) {
-        this.business = {
-          ...this.business,
-          nextQueue: null,
-        };
-        this.business = { ...this.business };
-      }
-      return Promise.resolve();
-    }
-
-    if (!ctx.eligible) {
-      this._mrcReturnStageChangeRoutingActive = true;
+    if (!ctx.eligible || !ctx.team) {
       this.business = {
         ...this.business,
+        nextTeam: null,
         nextQueue: null,
       };
       this.business = { ...this.business };
       return Promise.resolve();
     }
 
-    this._mrcReturnStageChangeRoutingActive = true;
+    const priorQueue = this.business?.nextQueue;
+    const priorTeam = this.business?.nextTeam;
+    const routeToActionId = this._resolveRouteToActionId();
 
     this.business = {
       ...this.business,
-      nextTeam: null,
+      nextTeam: ctx.team,
       nextQueue: null,
     };
     this.business = { ...this.business };
@@ -4924,6 +4921,7 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
     return getDocumentRequestStageChangeRouting({
       caseId: this.recordId,
       teamUserGroup: ctx.team,
+      routeToActionId,
     })
       .then((res) => {
         if (res?.nextQueueId) {
@@ -4937,18 +4935,28 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
           };
           this._setActionValueByCode(ACTION_ROUTE_TO);
         } else {
+          const fallbackQueue =
+            priorQueue &&
+            (priorQueue.value || priorQueue.label) &&
+            (!priorTeam || priorTeam === ctx.team)
+              ? priorQueue
+              : null;
           this.business = {
             ...this.business,
-            nextTeam: res?.nextTeam || ctx.team || this.business.nextTeam,
-            nextQueue: null,
+            nextTeam: res?.nextTeam || ctx.team || priorTeam,
+            nextQueue: fallbackQueue,
           };
-          this.dispatchEvent(
-            new ShowToastEvent({
-              title: FEC_Warning_Title,
-              message: FEC_MSG_Can_Not_Find_Next_Stage,
-              variant: "warning",
-            }),
-          );
+          if (!fallbackQueue) {
+            this.dispatchEvent(
+              new ShowToastEvent({
+                title: FEC_Warning_Title,
+                message: FEC_MSG_Can_Not_Find_Next_Stage,
+                variant: "warning",
+              }),
+            );
+          } else {
+            this._setActionValueByCode(ACTION_ROUTE_TO);
+          }
         }
         this.business = { ...this.business };
       })
@@ -4956,10 +4964,19 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
         console.error("[MrcReturnStageChangeRouting]", JSON.stringify(err));
         this.business = {
           ...this.business,
-          nextQueue: null,
+          nextTeam: ctx.team,
+          nextQueue: priorQueue || null,
         };
         this.business = { ...this.business };
       });
+  }
+
+  _resolveRouteToActionId() {
+    const actions = this.business?.routingActionlst || [];
+    const match = actions.find(
+      (a) => a.code === ACTION_ROUTE_TO || a.value === ACTION_ROUTE_TO,
+    );
+    return match?.id ?? null;
   }
 
   handleMrcDeliveryChange(event) {

@@ -680,7 +680,6 @@
         <name>EntitlementProcess</name>
     </types>
 	<types>
-	    <members>FEC_Download_Report__c.All</members>
 	    <members>FEC_Download_Report__c.INTERACTIONS_SERVICE_CASES_SUMMARY_TAT</members>
 	    <members>FEC_Download_Report__c.Interaction_and_Service_Case_Summary</members>
 	    <name>ListView</name>

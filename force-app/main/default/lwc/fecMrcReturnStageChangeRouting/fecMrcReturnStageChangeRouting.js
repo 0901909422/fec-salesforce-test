@@ -17,6 +17,37 @@ const FIELD_CUSTOMER_CONFIRMATION = "FEC_Customer_Confirmation__c";
 const FIELD_HANDLING_OPTION = "FEC_MRC_Request_Handling_Option__c";
 const OBJ_CASE = "Case";
 
+function formatRoutingFieldValue(value) {
+  if (value == null) {
+    return "";
+  }
+  if (Array.isArray(value)) {
+    return value
+      .map((item) => String(item ?? "").trim())
+      .filter(Boolean)
+      .join(";");
+  }
+  return String(value).trim();
+}
+
+function resolveDeliveryOption(business, deliveryOptionOverride) {
+  const override = formatRoutingFieldValue(deliveryOptionOverride);
+  if (override) {
+    return override;
+  }
+  return formatRoutingFieldValue(
+    getCaseFieldValue(business, FIELD_DELIVERY_OPTION),
+  );
+}
+
+function resolveFieldOverride(overrideValue, business, fieldApiName) {
+  const override = formatRoutingFieldValue(overrideValue);
+  if (override) {
+    return override;
+  }
+  return getCaseFieldValue(business, fieldApiName);
+}
+
 function normalizeText(value) {
   if (value == null) {
     return "";
@@ -126,15 +157,20 @@ export function getMrcReturnRoutingContext(
 ) {
   const subCodeCode = business?.subCodeCode;
   const ctx = business?.mrcRl05Ui;
-  const deliveryOption =
-    deliveryOptionOverride ??
-    getCaseFieldValue(business, FIELD_DELIVERY_OPTION) ??
-    "";
-  const confirmation =
-    customerConfirmationValue ??
-    getCaseFieldValue(business, FIELD_CUSTOMER_CONFIRMATION);
-  const handlingOption =
-    handlingOptionValue ?? getCaseFieldValue(business, FIELD_HANDLING_OPTION);
+  const deliveryOption = resolveDeliveryOption(
+    business,
+    deliveryOptionOverride,
+  );
+  const confirmation = resolveFieldOverride(
+    customerConfirmationValue,
+    business,
+    FIELD_CUSTOMER_CONFIRMATION,
+  );
+  const handlingOption = resolveFieldOverride(
+    handlingOptionValue,
+    business,
+    FIELD_HANDLING_OPTION,
+  );
   const option2Selected = handlingOption === MRC_OPT_CANCEL_PREVIOUS;
   const notReceived = isMrcNotReceivedConfirmation(confirmation);
 
