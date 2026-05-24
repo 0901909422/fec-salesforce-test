@@ -5,7 +5,6 @@ import getCaseData from "@salesforce/apex/FEC_DNBHandler.getCaseData";
 import createDNB from "@salesforce/apex/FEC_DNBHandler.createDNB";
 import checkDNBExisting from "@salesforce/apex/FEC_DNBHandler.checkDNBExisting";
 import createExistingDNBRows from "@salesforce/apex/FEC_DNBHandler.createExistingDNBRows";
-// import getDNB from "@salesforce/apex/FEC_DNBHandler.getDNBResult";
 import getListDNBs from "@salesforce/apex/FEC_DNBHandler.getListDNBs";
 import updateFieldDoNotBother from "@salesforce/apex/FEC_DNBHandler.updateFieldDoNotBother";
 import updateDNBProcessCount from "@salesforce/apex/FEC_DNBHandler.updateDNBProcessCount";

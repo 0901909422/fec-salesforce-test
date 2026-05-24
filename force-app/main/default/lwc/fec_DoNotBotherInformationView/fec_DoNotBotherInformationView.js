@@ -1,5 +1,5 @@
 import { LightningElement, api, track } from "lwc";
-import getDNBResult from "@salesforce/apex/FEC_DNBHandler.getDNBResultC360";
+import getDNBResultC360 from "@salesforce/apex/FEC_DNBHandler.getDNBResultC360";
 import getListDNBs from "@salesforce/apex/FEC_DNBHandler.getListDNBs";
 import { PAGE_SIZE_OPTIONS_MAP } from "c/fec_CommonConst";
 
@@ -207,7 +207,7 @@ export default class Fec_DoNotBotherInformationView extends LightningElement {
         return;
       }
 
-      const dnbResult = await getDNBResult({ caseId: this.recordId });
+      const dnbResult = await getDNBResultC360({ caseId: this.recordId });
       console.log("DNB Result from API:", JSON.stringify(dnbResult));
 
       // 🔥 STOP HERE if API failed
