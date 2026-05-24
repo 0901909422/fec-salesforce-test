@@ -614,30 +614,39 @@ public without sharing class FEC_CaseBusinessService {
           when else {
           }
         }
-        // MRC Return (Batch 7): tạm tắt validate Case Information trên fec_CaseBussiness — xử lý qua subprocess/LWC riêng.
-        // if (
-        //   err.errorlst.isEmpty() &&
-        //   String.isNotBlank(result.subCategoryCode) &&
-        //   result.subCategoryCode.toUpperCase().contains('RL05')
-        // ) {
-        //   Error mrcErr = mrcReturnCaseInformationValidate(
-        //     selectedCase,
-        //     result.subCategoryCode,
-        //     result.subCodeCode
-        //   );
-        //   if (!mrcErr.errorlst.isEmpty()) {
-        //     Section caseInfoMrc = result.findSection('Case Information');
-        //     if (caseInfoMrc == null) {
-        //       caseInfoMrc = new Section('Case Information', mrcErr);
-        //       result.sectionlst.add(caseInfoMrc);
-        //     } else {
-        //       caseInfoMrc.error = mrcErr;
-        //     }
-        //     if (!isRl0503DpdOnlyValidation(mrcErr, result.subCodeCode)) {
-        //       err = mrcErr;
-        //     }
-        //   }
-        // }
+        // MRC Return (RL05): validate Case Information — Product Code TW (chặn như Phone Update); RL05.03 DPD chỉ cảnh báo.
+        if (
+          err.errorlst.isEmpty() &&
+          FEC_MrcReturnCaseService.isRl05Branch(
+            result.subCategoryCode,
+            result.subCodeCode
+          )
+        ) {
+          Error mrcErr = mrcReturnCaseInformationValidate(
+            selectedCase,
+            result.subCategoryCode,
+            result.subCodeCode
+          );
+          if (!mrcErr.errorlst.isEmpty()) {
+            Section caseInfoMrc = result.findSection(
+              FEC_ConstantCommon.SECTION_CASE_INFORMATION
+            );
+            if (caseInfoMrc == null) {
+              caseInfoMrc = new Section(
+                FEC_ConstantCommon.SECTION_CASE_INFORMATION,
+                mrcErr
+              );
+              result.sectionlst.add(caseInfoMrc);
+            } else {
+              caseInfoMrc.error = mrcErr;
+            }
+            if (isRl0503DpdOnlyValidation(mrcErr, result.subCodeCode)) {
+              result.mrcRl05CaseInfoWarningOnly = true;
+            } else {
+              err = mrcErr;
+            }
+          }
+        }
       } catch (DmlException e) {
       }
 
@@ -4127,6 +4136,10 @@ public without sharing class FEC_CaseBusinessService {
     @AuraEnabled
     public FEC_MrcReturnCaseService.MrcRl05UiContext mrcRl05Ui;
 
+    /** RL05.03 DPD ≥ 15: chỉ cảnh báo Case Information, không chặn routing. */
+    @AuraEnabled
+    public Boolean mrcRl05CaseInfoWarningOnly;
+
     /** Giá trị đã lưu trên Case — dùng khôi phục panel sau submit/reload. */
     @AuraEnabled
     public String mrcCustomerConfirmationSaved;
@@ -4819,7 +4832,7 @@ public without sharing class FEC_CaseBusinessService {
       mrcErr.errorlst == null ||
       mrcErr.errorlst.isEmpty() ||
       String.isBlank(subCodeCode) ||
-      !subCodeCode.toUpperCase().contains('RL05.03')
+      !subCodeCode.toUpperCase().contains(FEC_ConstantCommon.SUB_CODE_RL0503)
     ) {
       return false;
     }
@@ -4868,7 +4881,16 @@ public without sharing class FEC_CaseBusinessService {
       }
     }
 
-    // RL05.03: DPD validate tại NOC picker; getByCase luôn load Delivery giống RL05.01.
+    if (
+      errorlst.isEmpty() &&
+      String.isNotBlank(subCodeCode) &&
+      subCodeCode.toUpperCase().contains(FEC_ConstantCommon.SUB_CODE_RL0503)
+    ) {
+      Decimal daysPastDue = selectedCase.FEC_Account_or_Contract__r.FEC_Days_Past_Due__c;
+      if (daysPastDue != null && daysPastDue >= 15) {
+        errorlst.add(System.Label.FEC_MRC_Return_Msg_DPD_RL0503);
+      }
+    }
 
     if (errorlst.isEmpty()) {
       return new Error();

@@ -144,6 +144,7 @@
         <members>FEC_RoutingHistTatSvc</members>
         <members>FEC_PsDNBServiceCallout</members>
         <members>FEC_FullCustomerIntegrationJob</members>
+        <members>FEC_RDPaymentContractAssessmentService</members>
 		<name>Apexclass</name>
 	</types>
     <types>
@@ -235,6 +236,7 @@
         <members>fec_CaseBussinessScopedRoutingIntegration</members>
         <members>fec_ScopedStageChangeRouting</members>
         <members>fec_ScopedStageChangeRoutingAction</members>
+        <members>fec_RdPaymentRoutingUtils</members>
 		<members>fecRoutingAssignmentEditForm</members>
 		<members>fec_DownloadReports</members>
 		<members>fec_BatchDataCreation</members>
