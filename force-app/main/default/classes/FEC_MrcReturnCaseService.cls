@@ -516,6 +516,7 @@ public without sharing class FEC_MrcReturnCaseService {
         mergeInjectedPicklistOptions(result, ctx);
 
         if (ctx.isReturnSubCode != true) {
+            ensureDeliveryLwcOnCaseInformation(result, ctx);
             caseInfo.sort();
             return;
         }
@@ -541,6 +542,7 @@ public without sharing class FEC_MrcReturnCaseService {
             );
         }
 
+        ensureDeliveryLwcOnCaseInformation(result, ctx);
         caseInfo.sort();
     }
 
