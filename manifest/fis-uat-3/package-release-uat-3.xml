@@ -231,6 +231,7 @@
         <members>FEC_VMXAUTHDETAILINQ</members>
         <members>FEC_UpdateCustomerAddress</members>
 		<members>FEC_NatureOfCaseUserGroupService</members>
+        <members>FEC_CustomerIntegrationService</members>
         <name>ApexClass</name>
     </types>
 	<types>

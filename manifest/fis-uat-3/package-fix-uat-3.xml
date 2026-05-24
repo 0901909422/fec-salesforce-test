@@ -145,6 +145,7 @@
         <members>FEC_PsDNBServiceCallout</members>
         <members>FEC_FullCustomerIntegrationJob</members>
         <members>FEC_RDPaymentContractAssessmentService</members>
+        <members>FEC_CustomerIntegrationService</members>
 		<name>Apexclass</name>
 	</types>
     <types>
