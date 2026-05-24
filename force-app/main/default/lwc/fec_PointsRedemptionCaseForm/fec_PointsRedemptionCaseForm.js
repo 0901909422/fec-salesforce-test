@@ -36,12 +36,18 @@ const LS_OK = 'fec-pr-ok-';
 const MAX_FAIL = 3;
 const VARIANT = { ERROR: 'error', SUCCESS: 'success', WARNING: 'warning' };
 
-//linhdev fix jira FECREDIT_CSM_2025_KH-1393-1394
-function isPointsRedemptionRc33Branch(subCode) {
-    if (!subCode) {
+//linhdev fix jira FECREDIT_CSM_2025_KH-1393-1394 — Sub Category RC33 hoặc Sub Code RC33.x
+function isPointsRedemptionRc33Branch(subCategoryCode, subCodeCode) {
+    const cat = subCategoryCode ? String(subCategoryCode).trim().toUpperCase() : '';
+    const code = subCodeCode ? String(subCodeCode).trim().toUpperCase() : '';
+    return cat.includes('RC33') || code.includes('RC33');
+}
+
+function isPointsRedemptionRedeemSubCode(subCodeCode) {
+    if (!subCodeCode) {
         return false;
     }
-    const s = String(subCode).trim().toUpperCase();
+    const s = String(subCodeCode).trim().toUpperCase();
     return s.includes('RC33.01') || s.includes('RC33.02') || s.includes('RC33.03');
 }
 
@@ -73,6 +79,7 @@ function resolveSelectedTierFromSaved(savedRedeemedPoints, tierOptionsUi) {
 export default class Fec_PointsRedemptionCaseForm extends NavigationMixin(LightningElement) {
     @api recordId;
     @api subCodeCode;
+    @api subCategoryCode;
     @api isEdit;
 
     @track loading = false;
@@ -92,6 +99,7 @@ export default class Fec_PointsRedemptionCaseForm extends NavigationMixin(Lightn
     @track showRedeemConfirmModal = false;
 
     _lastSub = STR_EMPTY;
+    _lastSubCat = STR_EMPTY;
     //linhdev fix jira FECREDIT_CSM_2025_KH-1469-1474 — khóa NOC sau Có/Không pop-up Redeem Points
     _redeemModalConfirmed = false;
     _redeemConfirmResolver;
@@ -117,6 +125,7 @@ export default class Fec_PointsRedemptionCaseForm extends NavigationMixin(Lightn
         //linhdev fix jira FECREDIT_CSM_2025_KH-1469-1474 — gap 1: re-publish khóa NOC khi reload tab
         this._syncNocLockToCaseEditNocIfNeeded();
         this._lastSub = (this.subCodeCode || STR_EMPTY).trim();
+        this._lastSubCat = (this.subCategoryCode || STR_EMPTY).trim();
         //linhdev fix jira FECREDIT_CSM_2025_KH-1393-1394
         this._notifyPointsRedemptionSectionVisibility();
         this.refreshInit();
@@ -124,8 +133,10 @@ export default class Fec_PointsRedemptionCaseForm extends NavigationMixin(Lightn
 
     renderedCallback() {
         const sub = (this.subCodeCode || STR_EMPTY).trim();
-        if (this.recordId && sub !== this._lastSub) {
+        const subCat = (this.subCategoryCode || STR_EMPTY).trim();
+        if (this.recordId && (sub !== this._lastSub || subCat !== this._lastSubCat)) {
             this._lastSub = sub;
+            this._lastSubCat = subCat;
             //linhdev fix jira FECREDIT_CSM_2025_KH-1393-1394
             this._notifyPointsRedemptionSectionVisibility();
             this.refreshInit();
@@ -134,7 +145,7 @@ export default class Fec_PointsRedemptionCaseForm extends NavigationMixin(Lightn
 
     //linhdev fix jira FECREDIT_CSM_2025_KH-1469-1474 — chỉ ẩn C360/Property khi không đủ điều kiện đổi điểm
     _notifyPointsRedemptionSectionVisibility() {
-        if (!isPointsRedemptionRc33Branch(this.subCodeCode)) {
+        if (!isPointsRedemptionRc33Branch(this.subCategoryCode, this.subCodeCode)) {
             return;
         }
         this.dispatchEvent(
@@ -168,11 +179,25 @@ export default class Fec_PointsRedemptionCaseForm extends NavigationMixin(Lightn
         }
     }
 
+    _resetEligibilityUi() {
+        this.showPanel = false;
+        this.notEligibleMessage = null;
+        this.notEligibleReason = null;
+        this.cmsPhone = STR_EMPTY;
+        this.tierOptionsUi = [];
+        this.selectedTierJson = null;
+    }
+
     //linhdev fix jira FECREDIT_CSM_2025_KH-1393-1394
     _applyInitResult(r) {
         this.showPanel = !!(r && r.showRedemptionUi);
-        this.notEligibleMessage = r && r.notEligibleMessage ? r.notEligibleMessage : null;
-        this.notEligibleReason = r && r.notEligibleReason ? r.notEligibleReason : null;
+        if (this.showPanel) {
+            this.notEligibleMessage = null;
+            this.notEligibleReason = null;
+        } else {
+            this.notEligibleMessage = r && r.notEligibleMessage ? r.notEligibleMessage : null;
+            this.notEligibleReason = r && r.notEligibleReason ? r.notEligibleReason : null;
+        }
         this.cmsPhone = r && r.cmsPhone ? r.cmsPhone : STR_EMPTY;
         const opts = (r && r.tierOptions) || [];
         this.tierOptionsUi = opts.map((o) => ({
@@ -189,23 +214,29 @@ export default class Fec_PointsRedemptionCaseForm extends NavigationMixin(Lightn
         if (!this.recordId) {
             return;
         }
+        if (!isPointsRedemptionRc33Branch(this.subCategoryCode, this.subCodeCode)) {
+            this._resetEligibilityUi();
+            return;
+        }
         this.loading = true;
-        this.notEligibleMessage = null;
-        this.notEligibleReason = null;
+        this._resetEligibilityUi();
         this._notifyPointsRedemptionSectionVisibility();
-        initData({ caseId: this.recordId, subCodeCode: this.subCodeCode || null })
+        initData({
+            caseId: this.recordId,
+            subCodeCode: this.subCodeCode || null,
+            subCategoryCode: this.subCategoryCode || null
+        })
             .then((r) => {
                 this._applyInitResult(r);
             })
             .catch((err) => {
-                this.showPanel = false;
-                this.notEligibleMessage = null;
-                this.notEligibleReason = null;
+                this._resetEligibilityUi();
                 this._notifyPointsRedemptionSectionVisibility();
                 this.toast(FEC_Toast_Error, this.msg(err), VARIANT.ERROR);
             })
             .finally(() => {
                 this.loading = false;
+                this._notifyPointsRedemptionSectionVisibility();
             });
     }
 
@@ -415,6 +446,14 @@ export default class Fec_PointsRedemptionCaseForm extends NavigationMixin(Lightn
 
     get loadingLabel() {
         return Loading;
+    }
+
+    get showNotEligiblePanel() {
+        return !this.loading && !!this.notEligibleMessage;
+    }
+
+    get showEligiblePanel() {
+        return !this.loading && this.showPanel;
     }
 
     get labelRedeemedPoints() {

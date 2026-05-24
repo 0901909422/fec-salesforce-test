@@ -7,8 +7,20 @@ private class FEC_MrcReturnCaseServiceTest {
             FEC_MrcReturnCaseService.resolveProcessingFlow('CN', 'ACTIVE')
         );
         System.assertEquals(
+            FEC_MrcReturnCaseService.FLOW_NOT_ELIGIBLE,
+            FEC_MrcReturnCaseService.resolveProcessingFlow('TLCN', 'ACTIVE')
+        );
+        System.assertEquals(
             FEC_MrcReturnCaseService.FLOW_CP_SUPPORT,
             FEC_MrcReturnCaseService.resolveProcessingFlow('TLDN', 'ACTIVE')
+        );
+        System.assertEquals(
+            FEC_MrcReturnCaseService.FLOW_CP_SUPPORT,
+            FEC_MrcReturnCaseService.resolveProcessingFlow('TLDN', 'CHARGE-OFF')
+        );
+        System.assertEquals(
+            FEC_MrcReturnCaseService.FLOW_PAYMENT_SUPPORT,
+            FEC_MrcReturnCaseService.resolveProcessingFlow('TLDN', 'N/A')
         );
         System.assertEquals(
             FEC_MrcReturnCaseService.FLOW_PAYMENT_SUPPORT,
@@ -18,6 +30,75 @@ private class FEC_MrcReturnCaseServiceTest {
             FEC_MrcReturnCaseService.FLOW_CP_SUPPORT,
             FEC_MrcReturnCaseService.resolveProcessingFlow('LK', 'CLOSED')
         );
+        System.assertEquals(
+            FEC_MrcReturnCaseService.FLOW_PAYMENT_SUPPORT,
+            FEC_MrcReturnCaseService.resolveProcessingFlow('HT', 'N/A')
+        );
+    }
+
+    @IsTest
+    static void buildUiContext_returnSubCode_notEligible_autoReject() {
+        FEC_Customer_History__c ch = new FEC_Customer_History__c(
+            FEC_MRC_Status__c = 'CN',
+            FEC_Contract_Status__c = 'ACTIVE'
+        );
+        Case c = new Case(FEC_Account_or_Contract__r = ch);
+        FEC_MrcReturnCaseService.MrcRl05UiContext ctx = FEC_MrcReturnCaseService.buildUiContext(
+            c,
+            'RL05',
+            'RL05.02',
+            null,
+            false
+        );
+        System.assertEquals(
+            FEC_MrcReturnCaseService.FLOW_NOT_ELIGIBLE,
+            ctx.processingFlow
+        );
+        System.assertEquals(true, ctx.autoRouteReject);
+        System.assertEquals(false, ctx.showCustomerConfirmation);
+    }
+
+    @IsTest
+    static void buildUiContext_returnSubCode_paymentFlow_autoRoutePayment() {
+        FEC_Customer_History__c ch = new FEC_Customer_History__c(
+            FEC_MRC_Status__c = 'LK',
+            FEC_Contract_Status__c = 'ACTIVE'
+        );
+        Case c = new Case(FEC_Account_or_Contract__r = ch);
+        FEC_MrcReturnCaseService.MrcRl05UiContext ctx = FEC_MrcReturnCaseService.buildUiContext(
+            c,
+            'RL05',
+            'RL05.02',
+            null,
+            false
+        );
+        System.assertEquals(
+            FEC_MrcReturnCaseService.FLOW_PAYMENT_SUPPORT,
+            ctx.processingFlow
+        );
+        System.assertEquals(true, ctx.autoRoutePayment);
+        System.assertEquals('TH4', ctx.rl05Scenario);
+    }
+
+    @IsTest
+    static void buildUiContext_returnSubCode_cpFlow_autoRouteCp() {
+        FEC_Customer_History__c ch = new FEC_Customer_History__c(
+            FEC_MRC_Status__c = 'TLDN',
+            FEC_Contract_Status__c = 'CLOSED'
+        );
+        Case c = new Case(FEC_Account_or_Contract__r = ch);
+        FEC_MrcReturnCaseService.MrcRl05UiContext ctx = FEC_MrcReturnCaseService.buildUiContext(
+            c,
+            'RL05',
+            'RL05.02',
+            null,
+            false
+        );
+        System.assertEquals(
+            FEC_MrcReturnCaseService.FLOW_CP_SUPPORT,
+            ctx.processingFlow
+        );
+        System.assertEquals(true, ctx.autoRouteCp);
     }
 
     @IsTest

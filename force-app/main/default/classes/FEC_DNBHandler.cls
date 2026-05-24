@@ -706,7 +706,7 @@ public without sharing class FEC_DNBHandler {
         return res;
     }
     
-   
+    
     
     @AuraEnabled
     public static FEC_GetDNBCalloutService.DNBResult checkDNBExisting(
@@ -757,7 +757,7 @@ public without sharing class FEC_DNBHandler {
     Id caseId, String nid) {
         // ===== Get Case =====
         Case caseRecord = [
-      SELECT Id, FEC_Phone_Number__c,
+      SELECT Id, FEC_Case_Phone_Number__c,
       FEC_Interaction__r.FEC_Interaction_Email__c FROM Case WHERE
           Id = : caseId LIMIT 1
     ];
@@ -766,8 +766,8 @@ public without sharing class FEC_DNBHandler {
         FEC_GetDNBCalloutService.DNBRequest req =
             new FEC_GetDNBCalloutService.DNBRequest();
         
-        req.phone = String.isNotBlank(caseRecord.FEC_Phone_Number__c)
-            ? normalizePhone(caseRecord.FEC_Phone_Number__c)
+        req.phone = String.isNotBlank(caseRecord.FEC_Case_Phone_Number__c)
+            ? normalizePhone(caseRecord.FEC_Case_Phone_Number__c)
             : '';
         
         req.nid = nid;
@@ -992,6 +992,7 @@ public without sharing class FEC_DNBHandler {
         Case caseRecord = [
       SELECT Id, FEC_Phone_Number__c,
       FEC_Interaction__r.FEC_Interaction_Email__c,
+      FEC_Account_or_Contract__c,
       FEC_Account_or_Contract__r.FEC_Search_Result_National_ID__c FROM Case WHERE
           Id = : caseId LIMIT 1
     ];
@@ -1063,7 +1064,7 @@ public without sharing class FEC_DNBHandler {
                 dnbRecord.FEC_DNB_Channel__c = item.source;
                 dnbRecord.FEC_Type__c = item.type;
                 dnbRecord.FEC_Phone_Email__c = item.type_value;
-                
+                dnbRecord.FEC_Customer_History__c =caseRecord.FEC_Account_or_Contract__c;
                 if (String.isNotBlank(item.expected_exclude_time)
                 && item.expected_exclude_time != 'N/A') {
                     try {
