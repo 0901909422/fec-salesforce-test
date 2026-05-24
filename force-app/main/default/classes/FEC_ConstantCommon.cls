@@ -486,7 +486,8 @@ public with sharing class FEC_ConstantCommon {
     public static final String QUEUE_QUALITY_CONTROL_MAILBOX_NAME = 'FEC_Quality_Control_Mailbox';
     public static final String QUEUE_DQ_CS_SUPPORT_NAME = 'FEC_DQ_CS_Support';
     public static final String QUEUE_DQ_CS_CUSTOMER_CARE_NAME = 'FEC_DQ_CS_Customer_Care';
-     public static final String QUEUE_DQ_CS_CUSTOMER_CARE_DEPT_NAME = 'FEC_DQ_CS_Customer_Care_Dept';
+    public static final String QUEUE_DQ_CS_CUSTOMER_CARE_DEPT_NAME = 'FEC_DQ_CS_Customer_Care_Dept';
+    public static final String QUEUE_DQ_CONTRACT_PROCESSING_NAME = 'FEC_DQ_Contract_Processing';
     public static final String PRODUCT_TYPE_CARD_CASE = 'Card';
     public static final String PRODUCT_TYPE_LOAN_CASE = 'Loan';
     public static final String PRODUCT_TYPE_INSURANCE_CASE = 'Insurance';
@@ -648,6 +649,19 @@ public with sharing class FEC_ConstantCommon {
     // ================= TEAM =================
     public static final String TEAM_CS_SUPPORT = 'CS Support';
     public static final String TEAM_CS_CUSTOMER_CARE = 'CS Customer Care';
+
+    // RD Payment — FEC_Team_User_Group__c / FEC_Next_Queue__c (scoped Stage 2+ filter → query Stage Change)
+    /** assessment "không thể đóng" → FEC_Team_User_Group__c = SP; FEC_Next_Queue__c = FEC_DQ_CS_Support. */
+    public static final String RD_ASSESSMENT_TEAM_CS_SUPPORT = RD_ASSESSMENT_TEAM_SP;
+    /** assessment "đóng với tờ trình" → FEC_Team_User_Group__c = CC; FEC_Next_Queue__c = FEC_DQ_CS_Customer_Care. */
+    public static final String RD_ASSESSMENT_TEAM_CS_CUSTOMER_CARE = RD_ASSESSMENT_TEAM_CC;
+    /** FEC_Team_User_Group__c trên FEC_Stage_Change__c (vd assessment "đóng không cần tờ trình" → CP). */
+    public static final String RD_ASSESSMENT_TEAM_CP = 'CP';
+    public static final String RD_ASSESSMENT_TEAM_CONTRACT_PROCESSING = RD_ASSESSMENT_TEAM_CP;
+    public static final String RD_ASSESSMENT_QUEUE_CS_SUPPORT = QUEUE_DQ_CS_SUPPORT_NAME;
+    public static final String RD_ASSESSMENT_QUEUE_CS_CUSTOMER_CARE = QUEUE_DQ_CS_CUSTOMER_CARE_NAME;
+    /** FEC_Next_Queue__c kỳ vọng cùng team CP (đóng không cần tờ trình). */
+    public static final String RD_ASSESSMENT_QUEUE_CONTRACT_PROCESSING = QUEUE_DQ_CONTRACT_PROCESSING_NAME;
     
     public static final String TEAM_CS_OTHER = 'Other CS';
     public static final String TEAM_OTHER = 'OTHER';
