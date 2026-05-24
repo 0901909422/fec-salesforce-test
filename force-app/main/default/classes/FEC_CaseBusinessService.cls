@@ -617,8 +617,10 @@ public without sharing class FEC_CaseBusinessService {
         // MRC Return (RL05): validate Case Information — Product Code TW (chặn như Phone Update); RL05.03 DPD chỉ cảnh báo.
         if (
           err.errorlst.isEmpty() &&
-          String.isNotBlank(result.subCategoryCode) &&
-          result.subCategoryCode.toUpperCase().contains('RL05')
+          FEC_MrcReturnCaseService.isRl05Branch(
+            result.subCategoryCode,
+            result.subCodeCode
+          )
         ) {
           Error mrcErr = mrcReturnCaseInformationValidate(
             selectedCase,
@@ -626,9 +628,14 @@ public without sharing class FEC_CaseBusinessService {
             result.subCodeCode
           );
           if (!mrcErr.errorlst.isEmpty()) {
-            Section caseInfoMrc = result.findSection('Case Information');
+            Section caseInfoMrc = result.findSection(
+              FEC_ConstantCommon.SECTION_CASE_INFORMATION
+            );
             if (caseInfoMrc == null) {
-              caseInfoMrc = new Section('Case Information', mrcErr);
+              caseInfoMrc = new Section(
+                FEC_ConstantCommon.SECTION_CASE_INFORMATION,
+                mrcErr
+              );
               result.sectionlst.add(caseInfoMrc);
             } else {
               caseInfoMrc.error = mrcErr;
@@ -4830,7 +4837,7 @@ public without sharing class FEC_CaseBusinessService {
       mrcErr.errorlst == null ||
       mrcErr.errorlst.isEmpty() ||
       String.isBlank(subCodeCode) ||
-      !subCodeCode.toUpperCase().contains('RL05.03')
+      !subCodeCode.toUpperCase().contains(FEC_ConstantCommon.SUB_CODE_RL0503)
     ) {
       return false;
     }
@@ -4882,7 +4889,7 @@ public without sharing class FEC_CaseBusinessService {
     if (
       errorlst.isEmpty() &&
       String.isNotBlank(subCodeCode) &&
-      subCodeCode.toUpperCase().contains('RL05.03')
+      subCodeCode.toUpperCase().contains(FEC_ConstantCommon.SUB_CODE_RL0503)
     ) {
       Decimal daysPastDue = selectedCase.FEC_Account_or_Contract__r.FEC_Days_Past_Due__c;
       if (daysPastDue != null && daysPastDue >= 15) {
