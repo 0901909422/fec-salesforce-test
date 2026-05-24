@@ -147,7 +147,8 @@ public without sharing class FEC_ScopedStageChangeRoutingService {
         OwnerId,
         Owner.Name,
         FEC_Current_Case_Stage__c,
-        FEC_Final_Status__c,
+        Status,
+        FEC_Team__c,
         FEC_Is_Submited__c,
         FEC_Actual_Nature_of_Case__c
       FROM Case
@@ -165,7 +166,9 @@ public without sharing class FEC_ScopedStageChangeRoutingService {
         String.format(System.Label.FEC_MSG_Invalid, new List<String>{ 'Case submit status' })
       );
     }
-    String finalStatusBeforeSubmit = updatedCase.FEC_Final_Status__c;
+    String finalStatusBeforeSubmit = FEC_CaseBusinessService.routingHistoryStatusSnapshot(
+      updatedCase
+    );
 
     List<FEC_Stage_Change__c> changelst = [
       SELECT
@@ -546,13 +549,15 @@ public without sharing class FEC_ScopedStageChangeRoutingService {
     Database.update(updatedCase, AccessLevel.SYSTEM_MODE);
 
     Case endCase = [
-      SELECT FEC_Final_Status__c
+      SELECT Status, FEC_Team__c
       FROM Case
       WHERE Id = :caseId
       LIMIT 1
     ];
-    history.FEC_Changed_Status__c = endCase.FEC_Final_Status__c;
-    Database.update(history, AccessLevel.SYSTEM_MODE);
+    FEC_CaseBusinessService.patchRoutingHistoryChangedStatus(
+      history.Id,
+      FEC_CaseBusinessService.routingHistoryStatusSnapshot(endCase)
+    );
     FEC_AutoHoldCaseService.enqueueAfterRoutingHistory(history.Id);
   }
 

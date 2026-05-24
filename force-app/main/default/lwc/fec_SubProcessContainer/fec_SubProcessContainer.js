@@ -1,7 +1,4 @@
 import { LightningElement, api, wire } from "lwc";
-import { getRecord, getFieldValue } from "lightning/uiRecordApi";
-import { refreshApex } from "@salesforce/apex";
-import FEC_NFU_DESCRIPTION_RESULT from "@salesforce/schema/Case.FEC_NFU_Description_Result__c";
 
 import {
   subscribe,
@@ -22,29 +19,8 @@ export default class Fec_SubProcessContainer extends LightningElement {
   @wire(MessageContext)
   messageContext;
 
-  wiredCaseAutoResultWire;
-  /** Case đã có kết quả Manual/Auto Hold (SUCCESS | ALREADY_MARKED | ERROR | PENDING). */
-  holdCaseResultOnCase = false;
-  /** Fallback từ Manual Hold popup (sessionStorage) khi field Case chưa kịp refresh. */
-  holdCaseResultOverride = null;
-
-  @wire(getRecord, { recordId: "$recordId", fields: [FEC_NFU_DESCRIPTION_RESULT] })
-  wiredCaseAutoResult(result) {
-    this.wiredCaseAutoResultWire = result;
-    const resultVal = getFieldValue(result.data, FEC_NFU_DESCRIPTION_RESULT);
-    this.holdCaseResultOnCase = !!resultVal;
-    if (resultVal) {
-      this.showHoldCase = true;
-      this.showHoldCaseAuto = true;
-    }
-  }
-
   subscription = null;
   params;
-  showHoldCase = false;
-  showHoldCaseManual = false;
-  /** Từ Hold Case Config type Auto — không ghi đè khi Case đã có FEC_NFU_Description_Result__c. */
-  showHoldCaseAuto = false;
   showRemovePhone = false;
   showDoNotBother = false;
   showTransferCall = false;
@@ -53,44 +29,10 @@ export default class Fec_SubProcessContainer extends LightningElement {
     this.params = { recordId: this.recordId };
     this.subscribeToMessageChannel();
     this.initializeCase();
-    this._boundCheckHoldCaseRefresh = this._checkHoldCaseRefreshFlag.bind(this);
-    window.addEventListener("focus", this._boundCheckHoldCaseRefresh);
-    this._checkHoldCaseRefreshFlag();
   }
 
   disconnectedCallback() {
     this.unsubscribeFromMessageChannel();
-    if (this._boundCheckHoldCaseRefresh) {
-      window.removeEventListener("focus", this._boundCheckHoldCaseRefresh);
-    }
-  }
-
-  /** Manual Hold Case (Quick Action) báo refresh qua sessionStorage sau TH1/TH2/TH3. */
-  _checkHoldCaseRefreshFlag() {
-    if (!this.recordId) {
-      return;
-    }
-    try {
-      const key = "fec_hold_case_refresh_" + this.recordId;
-      const displayKey = "fec_hold_case_display_" + this.recordId;
-      const displayVal = sessionStorage.getItem(displayKey);
-      if (displayVal) {
-        this.holdCaseResultOverride = displayVal;
-        console.log("[fec_SubProcessContainer] holdCaseResultOverride=", displayVal);
-      }
-      if (sessionStorage.getItem(key)) {
-        sessionStorage.removeItem(key);
-        sessionStorage.removeItem(displayKey);
-        this.refreshAutoHoldCase();
-        // Poll thêm khi Quick Action đóng — component có thể mount sau
-        // eslint-disable-next-line @lwc/lwc/no-async-operation
-        window.setTimeout(() => this.refreshAutoHoldCase(), 600);
-        // eslint-disable-next-line @lwc/lwc/no-async-operation
-        window.setTimeout(() => this.refreshAutoHoldCase(), 1200);
-      }
-    } catch (e) {
-      // ignore
-    }
   }
 
   subscribeToMessageChannel() {
@@ -118,8 +60,6 @@ export default class Fec_SubProcessContainer extends LightningElement {
       return;
     }
 
-    this._checkHoldCaseRefreshFlag();
-
     const { productTypeId, categoryId, subCategoryId, subCodeId } = message;
 
     this.params = {
@@ -133,21 +73,14 @@ export default class Fec_SubProcessContainer extends LightningElement {
     // tungnm37: lưu NOC IDs vào sessionStorage để fec_holdCaseManual đọc được
     // (holdCaseManual mount sau khi message đã publish nên không nhận được message)
     try {
-      const key = 'fec_case_noc_' + this.recordId;
-      sessionStorage.setItem(key, JSON.stringify({ productTypeId, categoryId, subCategoryId, subCodeId }));
+      const key = "fec_case_noc_" + this.recordId;
+      sessionStorage.setItem(
+        key,
+        JSON.stringify({ productTypeId, categoryId, subCategoryId, subCodeId }),
+      );
     } catch (e) {
       // ignore
     }
-  }
-
-  /** Hiển thị block Hold Case (Manual/Auto/đã có kết quả trên Case). */
-  get showHoldCaseSection() {
-    return (
-      this.showHoldCaseAuto ||
-      this.showHoldCaseManual ||
-      this.holdCaseResultOnCase ||
-      !!this.holdCaseResultOverride
-    );
   }
 
   @wire(getSubProcesses, {
@@ -159,12 +92,6 @@ export default class Fec_SubProcessContainer extends LightningElement {
   })
   wiredSubProcesses({ data, error }) {
     if (data) {
-      this.showHoldCase = !!data.showHoldCase || this.holdCaseResultOnCase;
-      this.showHoldCaseManual = !!data.showHoldCaseManual;
-      // tungnm37: không reset khi Case đã có kết quả Hold (TH1/TH2/TH3 Manual)
-      if (!this.holdCaseResultOnCase) {
-        this.showHoldCaseAuto = !!data.showHoldCaseAuto;
-      }
       this.showRemovePhone = !!data.showRemovePhone;
       this.showDoNotBother = !!data.showDNB;
       this.showTransferCall = !!data.showTransferCall;

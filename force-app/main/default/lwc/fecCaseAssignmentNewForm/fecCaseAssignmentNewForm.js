@@ -4,7 +4,7 @@ import { ShowToastEvent } from "lightning/platformShowToastEvent";
 import { createRecord, getRecord } from "lightning/uiRecordApi";
 import { getObjectInfo, getPicklistValues } from "lightning/uiObjectInfoApi";
 import {
-  IsConsoleNavigation,
+  EnclosingTabId,
   getFocusedTabInfo,
   closeTab,
   openTab,
@@ -62,12 +62,11 @@ export default class FecCaseAssignmentNewForm extends NavigationMixin(LightningE
   ownerName = "";
   isSaving = false;
   pageErrors = [];
-  showErrorModal = false;
   queueHasError = false;
   roleHasError = false;
   currentTabId;
 
-  @wire(IsConsoleNavigation) isConsoleNavigation;
+  @wire(EnclosingTabId) enclosingTabId;
 
   @wire(getObjectInfo, { objectApiName: CASE_ASSIGNMENT_OBJECT })
   objectInfo;
@@ -140,10 +139,6 @@ export default class FecCaseAssignmentNewForm extends NavigationMixin(LightningE
   }
   set assignmentMethodOptions(value) {
     this._assignmentMethodOptions = value;
-  }
-
-  get hasPageErrors() {
-    return (this.pageErrors || []).length > 0;
   }
 
   get isContinuousMethod() {
@@ -450,63 +445,48 @@ export default class FecCaseAssignmentNewForm extends NavigationMixin(LightningE
       },
     };
 
-    let tabToClose = this.currentTabId;
+    const resolveCreateTabId = async () => {
+      if (this.enclosingTabId) {
+        return this.enclosingTabId;
+      }
+      if (this.currentTabId) {
+        return this.currentTabId;
+      }
+      try {
+        const { tabId } = await getFocusedTabInfo();
+        return tabId;
+      } catch (e) {
+        return null;
+      }
+    };
+
     try {
       const focusedTab = await getFocusedTabInfo();
-      if (!tabToClose) {
-        tabToClose = focusedTab.tabId;
+      const tabToClose = await resolveCreateTabId();
+
+      if (focusedTab?.isSubtab && focusedTab.parentTabId) {
+        await openSubtab(focusedTab.parentTabId, {
+          pageReference,
+          focus: true,
+        });
+      } else {
+        await openTab({
+          recordId,
+          focus: true,
+        });
       }
-      const parentTabId = focusedTab.isSubtab
-        ? focusedTab.parentTabId
-        : focusedTab.tabId;
 
-      await openSubtab(parentTabId, {
-        pageReference,
-        focus: true,
-      });
-
-      setTimeout(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      if (tabToClose) {
         try {
-          if (tabToClose) {
-            await closeTab(tabToClose);
-          }
+          await closeTab(tabToClose);
         } catch (e) {
           // ignore tab close failures
         }
-      }, 500);
-      return;
-    } catch (e) {
-      // fall through to console / standard navigation
-    }
-
-    if (this.isConsoleNavigation?.data === true) {
-      if (!tabToClose) {
-        try {
-          const { tabId } = await getFocusedTabInfo();
-          tabToClose = tabId;
-        } catch (err) {
-          tabToClose = null;
-        }
       }
-
-      await openTab({
-        recordId,
-        focus: true,
-      });
-
-      setTimeout(async () => {
-        try {
-          if (tabToClose) {
-            await closeTab(tabToClose);
-          }
-        } catch (err) {
-          // ignore tab close failures
-        }
-      }, 500);
-      return;
+    } catch (e) {
+      this[NavigationMixin.Navigate](pageReference, true);
     }
-
-    this[NavigationMixin.Navigate](pageReference);
   }
 
   handleCancel() {
@@ -619,21 +599,18 @@ export default class FecCaseAssignmentNewForm extends NavigationMixin(LightningE
 
   presentPageErrors(messages) {
     this.pageErrors = this.normalizePageErrors(messages);
-    this.showErrorModal = this.pageErrors.length > 0;
     this.reportFieldValidity(this.pageErrors);
+    if (this.pageErrors.length) {
+      this.showToast("Error", this.pageErrors.join(" "), "error");
+    }
     requestAnimationFrame(() => {
       const anchor = this.template.querySelector('[data-id="page-error-anchor"]');
       anchor?.scrollIntoView?.({ behavior: "smooth", block: "start" });
     });
   }
 
-  closeErrorModal() {
-    this.showErrorModal = false;
-  }
-
   clearPageErrors() {
     this.pageErrors = [];
-    this.showErrorModal = false;
     this.queueHasError = false;
     this.roleHasError = false;
     this.template.querySelectorAll("[data-field]").forEach((field) => {

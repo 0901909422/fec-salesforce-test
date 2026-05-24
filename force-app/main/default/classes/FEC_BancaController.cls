@@ -10,7 +10,7 @@
  * 1.0      2025-01-17                         Create
 ****************************************************************************************/
 
-public with sharing class FEC_BancaController {
+public without sharing class FEC_BancaController {
 
     /* =====================================================
      * DTO
