@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Package xmlns="http://soap.sforce.com/2006/04/metadata">
+    <types>
+        <members>FEC_CaseAssignmentAutoDistributeService</members>
+        <name>ApexClass</name>
+    </types>
+    <types>
+        <members>FEC_Case_Assignment_Log_Record_Page</members>
+        <members>FEC_Case_Assignment_Record_Page</members>
+        <name>FlexiPage</name>
+    </types>
+    <types>
+        <members>FEC_Case_Assignment_Logs__c-Case Assignment Log Layout</members>
+        <members>FEC_Case_Assignment__c-Case Assignment Layout</members>
+        <name>Layout</name>
+    </types>
+    <types>
+        <members>fec_CaseAssignmentNocNew</members>
+        <name>LightningComponentBundle</name>
+    </types>
+    <types>
+        <members>FEC_Case_Assignment_Management</members>
+        <name>PermissionSet</name>
+    </types>
+    <version>65.0</version>
+</Package>
