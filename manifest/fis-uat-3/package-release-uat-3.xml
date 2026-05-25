@@ -49,6 +49,7 @@
 		<members>FEC_API_Config.FEC_MFASOUTSTANDINGAUTHINQ</members>
 		<members>FEC_API_Config.FEC_Vmx_Acct_Blkcd_Upd_Emea</members>
 		<members>FEC_API_Config.FEC_VMX_AUTH_DETAIL_INQ</members>
+		<members>FEC_API_Config.FEC_Get_Customer_List</members>
 		<name>CustomMetadata</name>
 	</types>
 	<types>
@@ -189,6 +190,7 @@
 		<members>FEC_CaseAssignmentQueueRoleResolver</members>
         <members>FEC_CurrencyCodeLookup</members>
 		<members>FEC_HoldCaseInheritanceService</members>
+		<members>FEC_HoldCaseStage2DisplayService</members>
 		<members>FEC_UpdateTransferInfoRestService</members>
 		<members>FEC_NewAssignmentController</members>
 		<members>FEC_AutoHoldCaseQueueable</members>
@@ -600,6 +602,7 @@
 		<members>FEC_Sub_Code__c.FEC_Do_Not_Bother__c</members>
 		<members>Case.FEC_Can_Execute__c</members>
         <members>Case.FEC_Can_Execute_Assignment__c</members>
+        <members>Case.FEC_Case_Executor__c</members>
 		<members>FEC_Customer_History__c.FEC_Available_Credit_Limit__c</members>
 		<members>FEC_Customer_History__c.FEC_Description__c</members>
 		<members>FEC_Customer_History__c.FEC_Error_Code__c</members>
@@ -1077,6 +1080,7 @@
 		<members>FEC_Points_Redemption_Confirm_Message</members>
 		<members>FEC_Points_Redemption_Confirm_Title</members>
 		<members>FEC_Confirm_Before_Submit</members>
+		<members>FEC_Channel_Config_Invalid_Selection</members>
 		<members>FEC_Channel_Config_Save_Success</members>
 		<members>FEC_Channel_Config_Save_Error</members>
 		<members>FEC_Search_Channel_Placeholder</members>
@@ -1271,6 +1275,9 @@
         <members>FEC_TransferCall_Field_CollAgent</members>
         <members>FEC_STOP_IMPACT_ALREADY_MARKED_MSG</members>
         <members>FEC_MSG_SUCCESS</members>
+        <members>FEC_MSG_HOLD_CASE_AUTO_FAIL_RETRY</members>
+        <members>FEC_MSG_HOLD_CASE_NOC_HAS_AUTO</members>
+        <members>FEC_MSG_HOLD_CASE_NOC_NO_AUTO</members>
         <members>FEC_MSG_ERROR</members>
         <members>FEC_Account_Contract_Status</members>
         <members>FEC_MRC_Return_Case_Info_Block_Title</members>
@@ -1279,6 +1286,7 @@
         <members>FEC_MRC_RL0502_Dup_Banner</members>
         <members>FEC_MRC_Dup_Remark_Cancel_Prev</members>
         <members>FEC_MRC_Dup_Remark_Cancel_New</members>
+        <members>FEC_MRC_Dup_Remark_Received_Confirm</members>
         <members>FEC_MRC_RL0502_Dup_Open_Case_Btn</members>
 		<members>FEC_Transfer_Err_Remark_Null</members>
         <members>FEC_MRC_RL0502_Dup_Opt_Cancel_New</members>

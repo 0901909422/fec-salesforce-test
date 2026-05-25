@@ -305,6 +305,14 @@ public without sharing class FEC_RoutingActionHistoryTriggerHandler {
   public static String buildPendingStatusFromRouteHistoryRow(
     FEC_Routing_Action_History__c history
   ) {
+    return buildPendingStatusFromRouteHistoryRow(history, null);
+  }
+
+  /** @param teamByOwnerId map preload từ getTeamsFromIds (bulk); null = query theo owner trên history. */
+  public static String buildPendingStatusFromRouteHistoryRow(
+    FEC_Routing_Action_History__c history,
+    Map<Id, String> teamByOwnerId
+  ) {
     if (history == null) {
       return FEC_ConstantCommon.CASE_STATUS_PENDING;
     }
@@ -315,18 +323,21 @@ public without sharing class FEC_RoutingActionHistoryTriggerHandler {
       if (updId == null) {
         return FEC_ConstantCommon.CASE_STATUS_PENDING;
       }
-      Map<Id, String> teamMap = getTeamsFromIds(new Set<Id>{ updId });
-      String tUpd = teamMap.get(updId);
-      if (String.isBlank(tUpd)) {
-        return FEC_ConstantCommon.CASE_STATUS_PENDING;
-      }
-      return FEC_ConstantCommon.CASE_STATUS_PENDING_PREFIX + tUpd;
+      return buildPendingStatusFromOwnerIds(null, updId, teamByOwnerId);
     }
-    return buildPendingStatusFromOwnerIds(origId, updId);
+    return buildPendingStatusFromOwnerIds(origId, updId, teamByOwnerId);
   }
 
   /** Hai Id Owner (User hoặc Queue) — Team từ User qua FEC_Main_Queue__c + FEC_Team_Queue__c; Queue trực tiếp. */
   public static String buildPendingStatusFromOwnerIds(Id originalOwnerId, Id updatedOwnerId) {
+    return buildPendingStatusFromOwnerIds(originalOwnerId, updatedOwnerId, null);
+  }
+
+  public static String buildPendingStatusFromOwnerIds(
+    Id originalOwnerId,
+    Id updatedOwnerId,
+    Map<Id, String> teamByOwnerId
+  ) {
     Set<Id> idSet = new Set<Id>();
     if (originalOwnerId != null) {
       idSet.add(originalOwnerId);
@@ -337,7 +348,7 @@ public without sharing class FEC_RoutingActionHistoryTriggerHandler {
     if (idSet.isEmpty()) {
       return FEC_ConstantCommon.CASE_STATUS_PENDING;
     }
-    Map<Id, String> teamMap = getTeamsFromIds(idSet);
+    Map<Id, String> teamMap = teamByOwnerId != null ? teamByOwnerId : getTeamsFromIds(idSet);
     String tOrig = originalOwnerId != null ? teamMap.get(originalOwnerId) : null;
     String tUpd = updatedOwnerId != null ? teamMap.get(updatedOwnerId) : null;
 
@@ -430,6 +441,7 @@ public without sharing class FEC_RoutingActionHistoryTriggerHandler {
     Map<Id, String> teamMap = getTeamsFromIds(idSet);
     Map<String, String> decisionToTeamMap = FEC_ConstantCommon.decisionToTeamMap;
     String updatedTeamOnly = teamMap.get(updatedUserQueueId);
+    updatedTeamOnly = FEC_CommonUltils.cleanNonWordCharacters(updatedTeamOnly);
     if (String.isNotBlank(updatedTeamOnly)) {
       caseRecord.FEC_Team__c = FEC_CommonUltils.sortTeamField(updatedTeamOnly);
     } else {
@@ -471,6 +483,30 @@ public without sharing class FEC_RoutingActionHistoryTriggerHandler {
     //     FEC_ConstantCommon.DELIMITER_UNDERSCORE
     //   ));
     // }
+  }
+  
+  /** Gom Id owner từ nhiều routing history — dùng trước getTeamsFromIds khi xử lý bulk. */
+  public static Set<Id> collectOwnerIdsFromRouteHistory(
+    Iterable<FEC_Routing_Action_History__c> histories
+  ) {
+    Set<Id> ownerIds = new Set<Id>();
+    if (histories == null) {
+      return ownerIds;
+    }
+    for (FEC_Routing_Action_History__c hist : histories) {
+      if (hist == null) {
+        continue;
+      }
+      Id origId = parseOwnerIdField(hist.FEC_Original_User_Queue_ID__c);
+      Id updId = parseOwnerIdField(hist.FEC_Updated_User_Queue_ID__c);
+      if (origId != null) {
+        ownerIds.add(origId);
+      }
+      if (updId != null) {
+        ownerIds.add(updId);
+      }
+    }
+    return ownerIds;
   }
 
   public static Map<Id, String> getTeamsFromIds(Set<Id> targetIds) {

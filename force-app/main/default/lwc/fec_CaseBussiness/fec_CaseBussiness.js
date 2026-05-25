@@ -23,6 +23,7 @@ import { refreshApex } from "@salesforce/apex";
 import FEC_NFU_DESCRIPTION_RESULT from "@salesforce/schema/Case.FEC_NFU_Description_Result__c";
 import getSubProcesses from "@salesforce/apex/FEC_SubProcessService.getSubProcesses";
 import getSubmittedSubProcesses from "@salesforce/apex/FEC_SubProcessService.getSubmittedSubProcesses";
+import evaluateHoldCaseStage2Display from "@salesforce/apex/FEC_HoldCaseStage2DisplayService.evaluate";
 import USER_ID from "@salesforce/user/Id";
 import USER_GROUP_FIELD from "@salesforce/schema/User.FEC_User_Group__c";
 import ID_FIELD from "@salesforce/schema/Case.Id";
@@ -64,6 +65,7 @@ import {
   FIELD_MRC_HANDLING_OPTION,
   getCaseFieldValue,
   getMrcReturnAutoRoutingActionCode,
+  isMrcReceivedConfirmation,
   isMrcReturnTrackedField,
   isMrcRl05Branch,
   isMrcRl05CaseInformationBlocked,
@@ -724,6 +726,7 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
   showHoldCase = false;
   showHoldCaseManual = false;
   showHoldCaseAuto = false;
+  @track holdCaseStage2Display = null;
 
   //linhdev: Fix jira FECREDIT_CSM_2025_KH-1226 — tách active name theo từng lightning-accordion
   // (tránh trộn "routing-action" với UUID section: active-section-name có tên lạ có thể làm co section).
@@ -791,7 +794,7 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
   }
 
   get isStage1() {
-    return (this.currentStageName || '').includes('Stage 1');
+    return !this.currentStageName || this.currentStageName.includes('Stage 1');
   }
 
   @wire(MessageContext)
@@ -813,6 +816,7 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
     } else if (result.error) {
       console.error("[fec_CaseBussiness] wiredCaseHoldResult error", result.error);
     }
+    void this._refreshHoldCaseStage2Display();
   }
 
   @wire(getSubProcesses, {
@@ -829,6 +833,7 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
       if (!this.holdCaseResultOnCase) {
         this.showHoldCaseAuto = !!data.showHoldCaseAuto;
       }
+      void this._refreshHoldCaseStage2Display();
     }
     if (error) {
       console.error("[fec_CaseBussiness] hold case subprocess wire error", error);
@@ -844,12 +849,31 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
   // }
 
   get showHoldCaseSection() {
+    if (this.holdCaseStage2Display?.showHoldCaseSection) {
+      return true;
+    }
     return (
       this.showHoldCaseAuto ||
       this.showHoldCaseManual ||
       this.holdCaseResultOnCase ||
       !!this.holdCaseResultOverride
     );
+  }
+
+  get holdCaseStage2DisplayMode() {
+    return this.holdCaseStage2Display?.displayMode ?? "DEFAULT";
+  }
+
+  get holdCaseStage2InfoMessage() {
+    return this.holdCaseStage2Display?.infoMessage ?? null;
+  }
+
+  get holdCaseStage2ErrorMessage() {
+    return this.holdCaseStage2Display?.errorMessage ?? null;
+  }
+
+  get holdCaseStage2ShowManualButton() {
+    return this.holdCaseStage2Display?.showManualHoldCaseButton === true;
   }
 
   get iconHideConst() {
@@ -886,6 +910,7 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
       { label: "Pending Product", value: "Pending Product" },
       { label: "Pending RCP&A", value: "Pending RCP&A" },
       { label: "Pending Security", value: "Pending Security" },
+      { label: "Cannot Contact Customer", value: "Cannot Contact Customer" },
     ];
 
     const vendorOption = { label: "Pending Vendor", value: "Pending Vendor" };
@@ -1963,6 +1988,13 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
     }
 
     if (this._mrcReturnStageChangeRoutingActive) {
+      if (
+        isMrcReceivedConfirmation(this.mrcReturnCustomerConfirmationValue) &&
+        hasAction(ACTION_CANCEL)
+      ) {
+        this._setActionValueByCode(ACTION_CANCEL);
+        return;
+      }
       const ctx = getMrcReturnRoutingContext(
         this.business,
         this.mrcReturnHandlingOptionValue,
@@ -2594,6 +2626,15 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
         this._prepareRoutingSectionForDisplay();
         this._syncActiveRoutingSection();
         this.businessLoaded = true;
+        if (
+          productTypeId == null &&
+          categoryId == null &&
+          subCategoryId == null &&
+          subCodeId == null
+        ) {
+          this._syncHoldCaseNocParamsFromBusiness();
+        }
+        void this._refreshHoldCaseStage2Display();
         this._syncRemovePhoneLockAfterRevert();
         //linhdev: Fix jira FECREDIT_CSM_2025_KH-1226 — mỗi accordion chỉ nhận đúng tên section của nó.
         this.activeMainSectionlst = [...sectionlst];
@@ -3844,16 +3885,39 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
     });
   }
 
+  _resolveMrcReturnFieldsForSubmit() {
+    let confirmation = this.mrcReturnCustomerConfirmationValue;
+    let handlingOption = this.mrcReturnHandlingOptionValue;
+    const panel = this._getMrcReturnPanelEl();
+    if (panel) {
+      if (typeof panel.getHandlingOptionValue === "function") {
+        const fromPanel = String(panel.getHandlingOptionValue() ?? STR_EMPTY).trim();
+        if (fromPanel) {
+          handlingOption = fromPanel;
+          this.mrcReturnHandlingOptionValue = fromPanel;
+        }
+      }
+      const fromConf = String(panel.customerConfirmationValue ?? STR_EMPTY).trim();
+      if (fromConf) {
+        confirmation = fromConf;
+        if (this.business) {
+          this.business.mrcCustomerConfirmationDraft = fromConf;
+        }
+      }
+    }
+    return { confirmation, handlingOption };
+  }
+
   _syncMrcReturnCaseFieldsBeforeSubmit() {
     if (!isMrcRl05Branch(this.business)) {
       return Promise.resolve();
     }
+    const { confirmation, handlingOption } = this._resolveMrcReturnFieldsForSubmit();
+    this._syncMrcReturnFieldsToRecordForm();
     const fields = { [ID_FIELD.fieldApiName]: this.recordId };
-    const confirmation = this.mrcReturnCustomerConfirmationValue;
     if (confirmation) {
       fields[FIELD_MRC_CUSTOMER_CONFIRMATION] = confirmation;
     }
-    const handlingOption = this.mrcReturnHandlingOptionValue;
     if (handlingOption) {
       fields[FIELD_MRC_HANDLING_OPTION] = handlingOption;
     }
@@ -3879,11 +3943,24 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
     //linhdev fix jira FECREDIT_CSM_2025_KH-1469-1474 — gap 2: lưu Redeemed Points trước record form submit
     this._syncPointsRedemptionFieldToRecordForm();
     this._syncMrcReturnFieldsToRecordForm();
-    return Promise.all([
+    const persistTasks = [
       this._syncMrcReturnCaseFieldsBeforeSubmit(),
       this._saveRemovePhoneDraftIfApplicable(),
       this._savePointsRedemptionDraftIfApplicable(),
-    ]);
+    ];
+    if (isMrcRl05Branch(this.business)) {
+      persistTasks.push(this._saveMrcReturnDeliveryIfApplicable());
+    }
+    return Promise.all(persistTasks).then((results) => {
+      if (!isMrcRl05Branch(this.business)) {
+        return results;
+      }
+      const deliveryResult = results[results.length - 1];
+      if (deliveryResult?.valid === false) {
+        return Promise.reject(deliveryResult);
+      }
+      return results;
+    });
   }
 
   /*Lấy element của form IPP Closure*/
@@ -4108,7 +4185,17 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
     // Dữ liệu địa chỉ đã được lưu vào Case DB khi User A nhấn Save.
     // Không gọi API tại đây — API sẽ được user xử lý gọi qua Process Action "Address Update".
 
-    await this._persistChildDataBeforeCaseRecordFormSubmit();
+    try {
+      await this._persistChildDataBeforeCaseRecordFormSubmit();
+    } catch (mrcPersistErr) {
+      const msgs = mrcPersistErr?.messages;
+      const message =
+        Array.isArray(msgs) && msgs.length > 0
+          ? msgs.join(", ")
+          : FEC_Error_Title;
+      this.showToast(FEC_Error_Title, message, "error");
+      return false;
+    }
     await this._submitFormsPromise();
     // DungLT — flush upload file trước các bước lưu khác khi Submit
     await this._uploadFecFileUploadCardsIfApplicable();
@@ -4140,6 +4227,9 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
     const closureSaveRes = await this._saveContractClosureIfApplicable();
     if (closureSaveRes && closureSaveRes.valid === false) {
       return false;
+    }
+    if (isMrcRl05Branch(this.business)) {
+      await this._syncMrcReturnCaseFieldsBeforeSubmit();
     }
     this._syncMrcDeliveryDraftFromCase();
     if (isMrcRl05Branch(this.business)) {
@@ -5119,6 +5209,88 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
     this._scheduleRefreshFileUploadCards();
   }
 
+  /** Đồng bộ holdCaseNocParams từ business sau getData (fallback khi chưa có CASE_NOC message). */
+  _syncHoldCaseNocParamsFromBusiness() {
+    if (!this.recordId || !this.business) {
+      return;
+    }
+    const sections = this.business.sectionlst;
+    if (!Array.isArray(sections)) {
+      return;
+    }
+    let productTypeId;
+    let categoryId;
+    let subCategoryId;
+    let subCodeId;
+    for (const section of sections) {
+      const fields = section?.fieldlst;
+      if (!Array.isArray(fields)) {
+        continue;
+      }
+      for (const field of fields) {
+        const api = field?.apiName;
+        const val = field?.value;
+        if (!val) {
+          continue;
+        }
+        if (api === "FEC_Product_Type__c") {
+          productTypeId = val;
+        } else if (api === "FEC_Category__c") {
+          categoryId = val;
+        } else if (api === "FEC_SubCategory__c") {
+          subCategoryId = val;
+        } else if (api === "FEC_SubCode__c") {
+          subCodeId = val;
+        }
+      }
+    }
+    if (!productTypeId && !categoryId && !subCategoryId) {
+      return;
+    }
+    this.holdCaseNocParams = {
+      recordId: this.recordId,
+      productTypeId: productTypeId || null,
+      categoryId: categoryId || null,
+      subCategoryId: subCategoryId || null,
+      subCodeId: subCodeId ?? null,
+    };
+  }
+
+  /**
+   * Stage 2+ (CS Support / CS Customer Care): đánh giá hiển thị Hold Case khi đổi NOC.
+   */
+  async _refreshHoldCaseStage2Display() {
+    if (!this.recordId) {
+      this.holdCaseStage2Display = null;
+      return;
+    }
+    // Apex kiểm tra FEC_Is_Submited__c; chỉ bỏ qua khi business đã load và chắc chắn Stage 1
+    if (this.business && this.business.isSubmited !== true) {
+      this.holdCaseStage2Display = null;
+      return;
+    }
+    const p = this.holdCaseNocParams || {};
+    try {
+      const result = await evaluateHoldCaseStage2Display({
+        caseId: this.recordId,
+        productTypeId: p.productTypeId || null,
+        categoryId: p.categoryId || null,
+        subCategoryId: p.subCategoryId || null,
+        subCodeId: p.subCodeId ?? null,
+      });
+      this.holdCaseStage2Display = result;
+      if (result?.showHoldCaseSection) {
+        this.showHoldCase = true;
+        this.showHoldCaseAuto = true;
+        this._ensureCaseInformationHoldCaseFlags();
+        this.business = { ...this.business };
+      }
+    } catch (error) {
+      console.error("[fec_CaseBussiness] _refreshHoldCaseStage2Display", error);
+      this.holdCaseStage2Display = null;
+    }
+  }
+
   /** Manual Hold Case (Quick Action) báo refresh qua sessionStorage sau TH1/TH2/TH3. */
   _checkHoldCaseRefreshFlag() {
     if (!this.recordId) {
@@ -5207,11 +5379,13 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
         this._ensureCaseInformationHoldCaseFlags();
         this.business = { ...this.business };
       }
-      const autoCmp = this.template.querySelector("c-fec_hold-case-auto");
-      if (autoCmp?.refresh) {
-        return autoCmp.refresh();
-      }
-      return undefined;
+      return this._refreshHoldCaseStage2Display().then(() => {
+        const autoCmp = this.template.querySelector("c-fec_hold-case-auto");
+        if (autoCmp?.refresh) {
+          return autoCmp.refresh();
+        }
+        return undefined;
+      });
     });
   }
 
@@ -5464,6 +5638,21 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
 
     if (!shouldActivateMrcReturnRouting(this.business)) {
       this._mrcReturnStageChangeRoutingActive = false;
+      return Promise.resolve();
+    }
+
+    if (
+      isMrcReceivedConfirmation(this.mrcReturnCustomerConfirmationValue) &&
+      this.business?.routingActionlst?.length
+    ) {
+      this._mrcReturnStageChangeRoutingActive = false;
+      this._setActionValueByCode(ACTION_CANCEL);
+      this.business = {
+        ...this.business,
+        nextTeam: null,
+        nextQueue: null,
+      };
+      this.business = { ...this.business };
       return Promise.resolve();
     }
 
