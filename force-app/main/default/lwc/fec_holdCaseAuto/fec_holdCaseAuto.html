@@ -20,15 +20,22 @@
         <div class="hold-case-auto-message hold-case-auto-message--error">
           {responseMessage}
         </div>
-        <template if:true={showManualHoldCaseButton}>
-          <div class="hold-case-auto-manual-action">
-            <lightning-button
-              variant="brand"
-              label={customLabel.manualHoldCaseAction}
-              onclick={handleManualHoldCaseClick}
-            ></lightning-button>
-          </div>
-        </template>
+      </template>
+
+      <template if:true={hasStage2InfoMessage}>
+        <div class="hold-case-auto-message hold-case-auto-message--info">
+          {stage2InfoMessage}
+        </div>
+      </template>
+
+      <template if:true={showManualHoldCaseButton}>
+        <div class="hold-case-auto-manual-action">
+          <lightning-button
+            variant="brand"
+            label={customLabel.manualHoldCaseAction}
+            onclick={handleManualHoldCaseClick}
+          ></lightning-button>
+        </div>
       </template>
 
       <template if:true={showNfuDetails}>

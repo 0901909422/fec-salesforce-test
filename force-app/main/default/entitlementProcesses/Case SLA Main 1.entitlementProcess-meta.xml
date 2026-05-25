@@ -73,18 +73,18 @@
         <minutesToComplete>2880</minutesToComplete>
         <timeTriggers>
             <actions>
-                <name>Update_Case_48h_1_Violating</name>
-                <type>FieldUpdate</type>
-            </actions>
-            <timeLength>0</timeLength>
-            <workflowTimeTriggerUnit>Hours</workflowTimeTriggerUnit>
-        </timeTriggers>
-        <timeTriggers>
-            <actions>
                 <name>Update_Case_48h_1</name>
                 <type>FieldUpdate</type>
             </actions>
             <timeLength>-1</timeLength>
+            <workflowTimeTriggerUnit>Hours</workflowTimeTriggerUnit>
+        </timeTriggers>
+        <timeTriggers>
+            <actions>
+                <name>Update_Case_48h_1_Violating</name>
+                <type>FieldUpdate</type>
+            </actions>
+            <timeLength>0</timeLength>
             <workflowTimeTriggerUnit>Hours</workflowTimeTriggerUnit>
         </timeTriggers>
         <useCriteriaStartTime>true</useCriteriaStartTime>
@@ -127,6 +127,14 @@ FEC_SubCategory__r.FEC_Code__c=&quot;FU03&quot;
         <milestoneName>Case Time TAT</milestoneName>
         <minutesToComplete>2880</minutesToComplete>
         <timeTriggers>
+            <actions>
+                <name>SLA_Warning_48h</name>
+                <type>FieldUpdate</type>
+            </actions>
+            <timeLength>-8</timeLength>
+            <workflowTimeTriggerUnit>Hours</workflowTimeTriggerUnit>
+        </timeTriggers>
+        <timeTriggers>
             <timeLength>4</timeLength>
             <workflowTimeTriggerUnit>Hours</workflowTimeTriggerUnit>
         </timeTriggers>
@@ -136,14 +144,6 @@ FEC_SubCategory__r.FEC_Code__c=&quot;FU03&quot;
                 <type>FieldUpdate</type>
             </actions>
             <timeLength>-4</timeLength>
-            <workflowTimeTriggerUnit>Hours</workflowTimeTriggerUnit>
-        </timeTriggers>
-        <timeTriggers>
-            <actions>
-                <name>SLA_Warning_48h</name>
-                <type>FieldUpdate</type>
-            </actions>
-            <timeLength>-8</timeLength>
             <workflowTimeTriggerUnit>Hours</workflowTimeTriggerUnit>
         </timeTriggers>
         <useCriteriaStartTime>true</useCriteriaStartTime>
@@ -156,8 +156,8 @@ FEC_SubCategory__r.FEC_Code__c=&quot;FU03&quot;
   FEC_SubCategory__r.FEC_Code__c=&quot;RC14&quot;,
   FEC_SubCategory__r.FEC_Code__c=&quot;RC15&quot;,
   FEC_SubCode__r.FEC_Code__c=&quot;RC16.06&quot;,
+  FEC_SubCode__r.FEC_Code__c=&quot;RC23.01&quot;,
   FEC_SubCategory__r.FEC_Code__c=&quot;RC22&quot;,
-  FEC_SubCategory__r.FEC_Code__c=&quot;RC23&quot;,
   FEC_SubCategory__r.FEC_Code__c=&quot;RC27&quot;,
   FEC_SubCategory__r.FEC_Code__c=&quot;RC28&quot;,
   FEC_SubCategory__r.FEC_Code__c=&quot;RC33&quot;,
@@ -193,7 +193,7 @@ FEC_SubCategory__r.FEC_Code__c=&quot;FU03&quot;
   FEC_SubCode__r.FEC_Code__c=&quot;RC09.05&quot;,
   FEC_SubCode__r.FEC_Code__c=&quot;RC09.06&quot;,
   FEC_SubCode__r.FEC_Code__c=&quot;RC09.07&quot;,
-  FEC_SubCategory__r.FEC_Code__c=&quot;RC23&quot;,
+  FEC_SubCode__r.FEC_Code__c=&quot;RC23.02&quot;,
   FEC_SubCode__r.FEC_Code__c=&quot;RL05.01&quot;,
   FEC_SubCategory__r.FEC_Code__c=&quot;RL09&quot;
 )</milestoneCriteriaFormula>
@@ -233,6 +233,22 @@ FEC_SubCategory__r.FEC_Code__c=&quot;FU03&quot;
 )</milestoneCriteriaFormula>
         <milestoneName>Case Time TAT</milestoneName>
         <minutesToComplete>8640</minutesToComplete>
+        <timeTriggers>
+            <actions>
+                <name>SLA_Warning_0h</name>
+                <type>FieldUpdate</type>
+            </actions>
+            <timeLength>0</timeLength>
+            <workflowTimeTriggerUnit>Hours</workflowTimeTriggerUnit>
+        </timeTriggers>
+        <timeTriggers>
+            <actions>
+                <name>SLA_Warning_143h</name>
+                <type>FieldUpdate</type>
+            </actions>
+            <timeLength>-1</timeLength>
+            <workflowTimeTriggerUnit>Hours</workflowTimeTriggerUnit>
+        </timeTriggers>
         <useCriteriaStartTime>true</useCriteriaStartTime>
     </milestones>
     <milestones>

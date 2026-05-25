@@ -2461,6 +2461,10 @@
         <visibility>Visible</visibility>
     </tabSettings>
     <tabSettings>
+        <tab>FEC_Notification_Template_Channel__c</tab>
+        <visibility>Visible</visibility>
+    </tabSettings>
+    <tabSettings>
         <tab>FEC_Notification__c</tab>
         <visibility>Visible</visibility>
     </tabSettings>
