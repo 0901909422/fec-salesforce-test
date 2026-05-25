@@ -191,13 +191,23 @@ public without sharing class FEC_Notification {
         }
         if (names.isEmpty() && ids.isEmpty()) return pills;
         
-        String query = 'SELECT Id, Name FROM ' + String.escapeSingleQuotes(objectApiName) + ' WHERE Name IN :names OR Id IN :ids';
+        Boolean hasCodeField = (objectApiName == FEC_ConstantCommon.FEC_SUB_CATEGORY || objectApiName == FEC_ConstantCommon.FEC_SUB_CODE);
+        String query = 'SELECT Id, Name' + (hasCodeField ? ', FEC_Code__c' : '') + ' FROM ' + String.escapeSingleQuotes(objectApiName);
+        if (hasCodeField) {
+            query += ' WHERE Name IN :names OR Id IN :ids OR FEC_Code__c IN :names';
+        } else {
+            query += ' WHERE Name IN :names OR Id IN :ids';
+        }
         try {
             for (SObject row : Database.query(query)) {
                 Map<String, String> m = new Map<String, String>();
                 m.put('id', (String)row.get('Id'));
                 m.put('title', (String)row.get('Name'));
-                m.put('subtitle', objectApiName);
+                if (hasCodeField && row.get('FEC_Code__c') != null) {
+                    m.put('subtitle', (String)row.get('FEC_Code__c'));
+                } else {
+                    m.put('subtitle', objectApiName);
+                }
                 pills.add(m);
             }
         } catch (Exception e) {
@@ -270,6 +280,7 @@ public without sharing class FEC_Notification {
                                    FEC_Category__c, FEC_SubCategory__c, FEC_SubCode__c, 
                                    FEC_Current_Case_Stage__c,
                                    FEC_SubCategory__r.Name, FEC_SubCode__r.Name,
+                                   FEC_SubCategory__r.FEC_Code__c, FEC_SubCode__r.FEC_Code__c,
                                    FEC_Current_Case_Stage__r.Name,
                                    FEC_Account_or_Contract__r.FEC_Email__c,
                                    FEC_Interaction__r.FEC_Interaction_Email__c,
@@ -293,12 +304,12 @@ public without sharing class FEC_Notification {
                        'WHERE FEC_Notification_Status__c = true ';
         
         String stageName = currentCase?.FEC_Current_Case_Stage__r?.Name;
-        String subCategoryName = currentCase?.FEC_SubCategory__r?.Name;
-        String subCodeName = currentCase?.FEC_SubCode__r?.Name;
+        String subCategoryCode = currentCase?.FEC_SubCategory__r?.FEC_Code__c;
+        String subCodeCode = currentCase?.FEC_SubCode__r?.FEC_Code__c;
 
         String stagePattern = String.isNotBlank(stageName) ? '%' + stageName + '%' : '';
-        String subCategoryPattern = String.isNotBlank(subCategoryName) ? '%' + subCategoryName + '%' : '';
-        String subCodePattern = String.isNotBlank(subCodeName) ? '%' + subCodeName + '%' : '';
+        String subCategoryPattern = String.isNotBlank(subCategoryCode) ? '%' + subCategoryCode + '%' : '';
+        String subCodePattern = String.isNotBlank(subCodeCode) ? '%' + subCodeCode + '%' : '';
 
         if (String.isNotBlank(stageId)) {
             query += ' AND FEC_Case_Stage__c LIKE :stagePattern';

@@ -88,7 +88,8 @@ public without sharing class FEC_RoutingActionHistoryTriggerHandler {
     Map<Id, Case> caseMap = new Map<Id, Case>([
         SELECT Id, FEC_Customer_Type__c, FEC_Product_Type__c, FEC_Category__c, 
                FEC_SubCategory__c, FEC_SubCode__c, FEC_Current_Case_Stage__c,
-               FEC_SubCategory__r.Name, FEC_SubCode__r.Name, FEC_Stage_Name__c,
+               FEC_SubCategory__r.Name, FEC_SubCode__r.Name, 
+               FEC_SubCategory__r.FEC_Code__c, FEC_SubCode__r.FEC_Code__c, FEC_Stage_Name__c,
                FEC_Account_or_Contract__r.FEC_Customer_Type__c, 
                FEC_Account_or_Contract__r.FEC_Email__c,
                FEC_Interaction__r.FEC_Interaction_Email__c, 
@@ -128,8 +129,8 @@ public without sharing class FEC_RoutingActionHistoryTriggerHandler {
                 && FEC_CommonUltils.notificationCustomerTypeMatchesCase(notif.FEC_Customer_Type__c, relatedCase.FEC_Customer_Type__c)
                 && (notif.FEC_Product_Type__c == relatedCase.FEC_Product_Type__c)
                 && (notif.FEC_Category__c == relatedCase.FEC_Category__c)
-                && notif?.FEC_SubCategory__c?.contains(relatedCase.FEC_SubCategory__r.Name)
-                && (String.isNotBlank(notif?.FEC_SubCode__c) || notif?.FEC_SubCode__c?.contains(relatedCase?.FEC_SubCode__r?.Name) || String.isBlank(relatedCase?.FEC_SubCode__r?.Name));
+                && (relatedCase.FEC_SubCategory__r != null && notif?.FEC_SubCategory__c?.contains(relatedCase.FEC_SubCategory__r.FEC_Code__c) == true)
+                && (String.isNotBlank(notif?.FEC_SubCode__c) || (relatedCase?.FEC_SubCode__r != null && notif?.FEC_SubCode__c?.contains(relatedCase?.FEC_SubCode__r?.FEC_Code__c) == true) || String.isBlank(relatedCase?.FEC_SubCode__r?.FEC_Code__c));
             //  if (notif.Name == 'TestAutoKHv1_14/4') {
             //     System.debug('--- [sendNotificationEmails] notif name: ' + notif.Name);
             //     System.debug('--- [sendNotificationEmails] history.FEC_Current_Status__c.replaceAll(FEC_ConstantCommon.PATTERN_CLEAN_TEXT, ""): ' + history.FEC_Current_Status__c?.replaceAll(FEC_ConstantCommon.PATTERN_CLEAN_TEXT, ''));

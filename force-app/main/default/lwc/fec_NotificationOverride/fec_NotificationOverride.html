@@ -85,12 +85,13 @@
               <div class="slds-col slds-size_1-of-2 column">
                 <c-fec_-lookup label={FEC_Label_Sub_Category} placeholder={placeholderSearchSubCategory}
                   data-id="subCategory" object-api-name="FEC_Sub_Category__c" field-api-name="Name"
+                  sub-field-api-name="FEC_Code__c"
                   icon-name="standard:contact" disabled={isCategory} selected-product-type-id={selectedProductTypeId}
                   selected-category-id={selectedCategoryId} onselect={handleSelected} required value={initialSubCategory} is-multi-select></c-fec_-lookup>
                 <c-fec_-lookup label={FEC_Label_Sub_Code} placeholder={placeholderSearchSubCode} data-id="subCode"
                   object-api-name="FEC_Sub_Code__c" disabled={isSubCategory}
                   selected-product-type-id={selectedProductTypeId} selected-category-id={selectedCategoryId}
-                  selected-sub-category-id={selectedSubCategoryId} field-api-name="Name" icon-name="standard:contact"
+                  selected-sub-category-id={selectedSubCategoryId} field-api-name="Name" sub-field-api-name="FEC_Code__c" icon-name="standard:contact"
                   onselect={handleSelected} value={initialSubCode} is-multi-select></c-fec_-lookup>
               </div>
             </div>

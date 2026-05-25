@@ -940,4 +940,6 @@ public with sharing class FEC_ConstantCommon {
         
         new Map<String, String>{ 'label' => 'Route to', 'value' => 'Route_to' }
     };
+    public static final String FEC_SUB_CATEGORY = 'FEC_Sub_Category__c';
+    public static final String FEC_SUB_CODE = 'FEC_Sub_Code__c';
 }

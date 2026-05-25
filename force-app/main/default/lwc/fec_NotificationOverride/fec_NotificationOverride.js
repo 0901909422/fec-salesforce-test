@@ -503,8 +503,8 @@ export default class Fec_Notification extends NavigationMixin(LightningElement) 
     fields[PRODUCT_TYPE_FIELD.fieldApiName] = this.selectedProductTypeId || fields[PRODUCT_TYPE_FIELD.fieldApiName];
     fields[ASSIGNED_TO_QUEUE_FIELD.fieldApiName] = this.selectedAssignedToQueueId || fields[ASSIGNED_TO_QUEUE_FIELD.fieldApiName];
     fields[CATEGORY_FIELD.fieldApiName] = this.selectedCategoryId || fields[CATEGORY_FIELD.fieldApiName];
-    fields[SUB_CATEGORY_FIELD.fieldApiName] = this.initialSubCategory && this.initialSubCategory.length > 0 ? this.initialSubCategory.map(p => p.title).join(',') : null;
-    fields[SUB_CODE_FIELD.fieldApiName] = this.initialSubCode && this.initialSubCode.length > 0 ? this.initialSubCode.map(p => p.title).join(',') : null;
+    fields[SUB_CATEGORY_FIELD.fieldApiName] = this.initialSubCategory && this.initialSubCategory.length > 0 ? this.initialSubCategory.map(p => p.subtitle).join(',') : null;
+    fields[SUB_CODE_FIELD.fieldApiName] = this.initialSubCode && this.initialSubCode.length > 0 ? this.initialSubCode.map(p => p.subtitle).join(',') : null;
     fields[CASE_STAGE_FIELD.fieldApiName] = this.initialCaseStage && this.initialCaseStage.length > 0 ? this.initialCaseStage.map(p => p.title).join(',') : null;
     //fields[NOTIFICATION_TEMPLATE_FIELD.fieldApiName] = this.selectedNotificationTemplateId || fields[NOTIFICATION_TEMPLATE_FIELD.fieldApiName];
     if (this.selectedCurrentStatus !== null) {
