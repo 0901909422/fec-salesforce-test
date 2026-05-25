@@ -79,6 +79,7 @@ export default class Fec_DoNotBotherNonExistingCustomer extends LightningElement
 
   customerName = "";
   nationalId = "";
+  phoneNumber = "";
   contractId = "";
   radioOptions = [
     { label: "Không", value: "no" },
@@ -204,7 +205,8 @@ export default class Fec_DoNotBotherNonExistingCustomer extends LightningElement
       const result = await getCaseData({ caseId: this.recordId });
 
       this.customerName = result.customerName;
-      // this.nationalId = result.nationalId;
+      this.nationalId = result.nationalId;
+      this.phoneNumber = result.phoneNumber;
       this.contractId = result.contractId;
       this.retryCount = result.processActionCount || 0;
 
@@ -932,5 +934,44 @@ export default class Fec_DoNotBotherNonExistingCustomer extends LightningElement
     return (
       !this.isReadonlyMode && !this.isDNBUpdated && !this.isMaxRetryReached
     );
+  }
+
+  @api
+  validate() {
+    /*
+     * National ID input
+     */
+    const nidInput = this.template.querySelector(
+      'lightning-input[name="nationalId"]',
+    );
+
+    if (!nidInput) {
+      return true;
+    }
+
+    /*
+     * show UI error
+     */
+    nidInput.reportValidity();
+
+    /*
+     * invalid
+     */
+    if (!nidInput.checkValidity()) {
+      this.showToast("Error", "Vui lòng nhập National ID hợp lệ", "error");
+
+      return false;
+    }
+
+    /*
+     * additional business validation
+     */
+    if (!this.isValidNationalId) {
+      this.showToast("Error", "National ID phải gồm 9 hoặc 12 chữ số", "error");
+
+      return false;
+    }
+
+    return true;
   }
 }
