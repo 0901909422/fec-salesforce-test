@@ -1,0 +1,42 @@
+.custom-card {
+    border-radius: 8px !important;
+}
+
+.custom-icon-purple {
+    --slds-c-icon-color-background: #af52de;
+}
+
+.custom-header-title {
+    color: #004487;
+    font-weight: 700;
+}
+
+/* DB JOB INFO: Chữ to, đậm, màu nổi bật nhẹ */
+.db-job-announcement {
+    color: #2e2e2e;
+    font-size: 1rem;
+    line-height: 1.4;
+    display: flex;
+    align-items: center;
+}
+
+.info-icon-bold {
+    --slds-c-icon-color-foreground: #0070d2;
+}
+
+/* Vùng xám Weekend */
+.schedule-section-gray {
+    background-color: #f3f3f3;
+    border: 1px solid #d8dde6;
+    border-radius: 4px;
+    padding: 16px 24px;
+}
+
+/* Border-radius override cho Push Record button wrapper */
+.custom-push-btn-wrapper {
+    --slds-c-button-radius-border: 20px;
+}
+
+.upload-icon-blue {
+    --slds-c-icon-color-foreground: #0070d2;
+}

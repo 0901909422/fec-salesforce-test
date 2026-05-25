@@ -1,0 +1,44 @@
+<template>
+    <c-fec-generic-modal title={label.lblPushRecordsTitle} onclose={handleCancel}>
+        <div class="slds-var-p-around_small">
+            <fieldset class="slds-form-element">
+                <legend class="slds-form-element__legend slds-form-element__label slds-text-title_bold">
+                    {label.lblTypeOfRecord}
+                </legend>
+                <div class="slds-form-element__control">
+                    <div class="slds-radio slds-var-m-bottom_x-small">
+                        <input type="radio" id="existing" value="existing" name="recordType"
+                            checked={isExistingSelected} onchange={handleTypeChange} />
+                        <label class="slds-radio__label" for="existing">
+                            <span class="slds-radio_faux"></span>
+                            <span class="slds-form-element__label">{label.lblExistingRecords}</span>
+                        </label>
+                    </div>
+                    <div class="slds-radio slds-var-m-bottom_x-small">
+                        <input type="radio" id="fresh" value="fresh" name="recordType"
+                            checked={isFreshSelected} onchange={handleTypeChange} />
+                        <label class="slds-radio__label" for="fresh">
+                            <span class="slds-radio_faux"></span>
+                            <span class="slds-form-element__label">{label.lblFreshRecords}</span>
+                        </label>
+                    </div>
+                    <div class="slds-radio">
+                        <input type="radio" id="callback" value="callback" name="recordType"
+                            checked={isCallbackSelected} onchange={handleTypeChange} />
+                        <label class="slds-radio__label" for="callback">
+                            <span class="slds-radio_faux"></span>
+                            <span class="slds-form-element__label">{label.lblCallbackRecords}</span>
+                        </label>
+                    </div>
+                </div>
+            </fieldset>
+        </div>
+
+        <div slot="footer">
+            <lightning-button label={label.btnCancel} onclick={handleCancel}
+                class="slds-var-m-right_small"></lightning-button>
+            <lightning-button label={label.btnComplete} variant="brand"
+                onclick={handleComplete}></lightning-button>
+        </div>
+    </c-fec-generic-modal>
+</template>

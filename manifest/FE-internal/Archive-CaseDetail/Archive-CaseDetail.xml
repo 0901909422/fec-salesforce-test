@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Package xmlns="http://soap.sforce.com/2006/04/metadata">
+
+    <types>
+        <members>Case.ArchiveExternalId__c</members>
+        <members>Case.ArchiveCreatedDate__c</members>
+        <members>Case.ArchiveLastModifiedDate__c</members>
+        <members>Case.FEC_Case_Created_On__c</members>
+        <members>Case.FEC_Last_Updated_On__c</members>
+        <members>Case.ArchiveInteractionId__c</members>
+        <members>Case.FEC_Interaction_ID__c</members>
+        <members>Case.ArchiveAttachment__c</members>
+        <members>Case.ArchiveServiceCaseOwner__c</members>
+        <members>Case.FEC_Service_Case_Owner__c</members>
+        <members>Case.ArchiveCaseCreatedBy__c</members>
+        <members>Case.FEC_Case_Created_By__c</members>
+        <members>Case.ArchiveLastUpdatedBy__c</members>
+        <members>Case.FEC_Last_Updated_By__c</members>
+        <members>Case.ArchiveMigrationSource__c</members>
+        <members>Case.ArchiveAccOrContract__c</members>
+        <members>Case.ArchiveSelectedAddress__c</members>
+        <members>FEC_Actual_Nature_of_Case__c.IsArchiveTemp__c</members>
+        <members>FEC_Customer_History__c.IsArchiveTemp__c</members>
+        <members>FEC_Customer_History__c.ArchiveExternalId__c</members>
+        <members>FEC_Product_Type__c.IsArchiveTemp__c</members>
+        <members>FEC_Category__c.IsArchiveTemp__c</members>
+        <members>FEC_Sub_Category__c.IsArchiveTemp__c</members>
+        <members>FEC_Sub_Code__c.IsArchiveTemp__c</members>
+        <members>FEC_Business_Process__c.IsArchiveTemp__c</members>
+        <members>FEC_Address_Info__c.ArchiveExternalId__c</members>
+        <members>FEC_IPP__c.IsArchiveTemp__c</members>
+        <members>FEC_Card_Payment__c.IsArchiveTemp__c</members>
+        <members>FEC_Process_Action__c.IsArchiveTemp__c</members>
+        <members>FEC_Integration_Case__c.IsArchiveTemp__c</members>
+        <members>FEC_Case_Stage__c.IsArchiveTemp__c</members>
+        <name>CustomField</name>
+    </types>
+
+    <types>
+        <members>ArchiveCaseController</members>
+        <members>ArchiveCaseController_Test</members>
+        <members>DeleteArchiveCaseBatch</members>
+        <members>DeleteArchiveCaseBatch_Test</members>
+        <members>FEC_MockupEndpoint</members>
+        <members>ArchiveInteractionCaseController</members>
+        <members>ArchiveInteractionCaseRedirectCtrl_Test</members>
+        <members>FEC_CaseTriggerHandler</members>
+        <members>ArchiveCaseAttachmentController</members>
+        <members>ArchiveCaseAttachmentController_Test</members>
+        <name>ApexClass</name>
+    </types>
+
+    <types>
+        <members>ArchiveCaseRedirect</members>
+        <members>ArchiveInteractionCaseRedirect</members>
+        <name>ApexPage</name>
+    </types>
+
+    <types>
+        <members>fec_ArchiveAttachments</members>
+        <name>LightningComponentBundle</name>
+    </types>
+
+    <types>
+        <members>TECH_LIST_ATT_IGNORED</members>
+        <members>TECH_CASE_RECORDTYPE_NAME_CUSTOMER_CASE</members>
+        <members>TECH_CASE_RECORDTYPE_NAME_INTERACTION</members>
+        <members>TECH_CASE_RECORDTYPE_NAME_SEARCH_INTERACTION</members>
+        <members>TECH_CASE_RECORDTYPE_NAME_INTERNAL_CASE</members>
+        <members>TECH_API_GET_ARCHIVE_DETAIL_CASE</members>
+        <members>TECH_ARCHIEVE_MAPPING_DEV_FIELD</members>
+        <members>TECH_API_GET_ARCHIVE_ATTACHMENT</members>
+        <members>CS_TITLE_NAME_OF_ATTACHMENT</members>
+        <members>CS_TYPE_OF_ATTACHMENT</members>
+        <members>CS_DOWNLOAD_ATTACHMENT</members>
+        <members>CS_NO_ARCHIVE_ATTACHMENT</members>
+        <members>TECH_LIST_SPECIAL_ARCHIVE_FIELD_AND_OBJECT</members>
+        <members>TECH_LIST_OBJ_IS_ARCHIVE_TEMP</members>
+        <members>TECH_LIST_OBJ_IS_MASTER_DETAIL</members>
+        <members>TECH_LIST_FIELD_PARENT_OF_CASE</members>
+        <members>TECH_LIST_OBJ_DEL_ARCHIVE_CASE</members>
+        <name>CustomLabel</name>
+    </types>
+
+     <types>
+        <members>fec_ArchiveAttachments</members>
+        <name>LightningComponentBundle</name>
+    </types>
+
+    <types>
+        <members>FEC_API_Config.FEC_Get_Archive_Detail_Case</members>
+        <members>FEC_API_Config.FEC_Get_Archive_Attachment</members>
+        <name>CustomMetadata</name>
+    </types>
+
+    <types>
+        <members>FEC_Common_System_Setting</members>
+        <name>PermissionSet</name>
+    </types>
+
+    <types>
+        <members>FEC_Customer_Case_Record_Page</members>
+        <name>FlexiPage</name>
+    </types>
+
+    <version>65.0</version>
+</Package>

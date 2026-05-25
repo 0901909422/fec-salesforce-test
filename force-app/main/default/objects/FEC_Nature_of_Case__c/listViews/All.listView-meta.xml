@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ListView xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>All</fullName>
+    <columns>NAME</columns>
+    <columns>FEC_Product_Type__c</columns>
+    <columns>FEC_Category__c</columns>
+    <columns>FEC_Sub_Category__c</columns>
+    <columns>FEC_Sub_Code__c</columns>
+    <columns>FEC_Business_Process__c</columns>
+    <columns>FEC_Active__c</columns>
+    <columns>FEC_User_Group__c</columns>
+    <columns>FEC_Customer_Type__c</columns>
+    <columns>LAST_UPDATE</columns>
+    <columns>UPDATEDBY_USER</columns>
+    <filterScope>Everything</filterScope>
+    <filters>
+        <field>FEC_Category__c</field>
+        <operation>equals</operation>
+        <value>Request</value>
+    </filters>
+    <label>All Nature of Cases</label>
+</ListView>

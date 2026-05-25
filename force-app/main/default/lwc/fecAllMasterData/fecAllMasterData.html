@@ -1,0 +1,256 @@
+<template>
+    <lightning-card title={labelTitle} icon-name="standard:record_lookup">
+        <div slot="actions">
+            <lightning-button-group>
+                <lightning-button label={labelRefresh} icon-name="utility:refresh" onclick={handleRefresh}
+                    variant="neutral">
+                </lightning-button>
+                <lightning-button label={labelReset} variant="brand" icon-name="utility:sync"
+                    onclick={handleSyncDataToMDM} loading={isSyncing} disabled={isSyncing}>
+                </lightning-button>
+                <lightning-button label={labelPush} variant="brand" icon-name="utility:upload"
+                    onclick={handlePushToLive} disabled={isSyncing}>
+                </lightning-button>
+            </lightning-button-group>
+        </div>
+        <div class="slds-p-around_small">
+            <lightning-tabset variant="scoped">
+
+                <!-- Product Type -->
+                <lightning-tab label={labelTabProduct}>
+                    <div class="slds-p-bottom_x-small">
+                        <lightning-input type="search" placeholder={labelSearchAll} data-tab="ProductType"
+                            onchange={handleSearch} variant="label-hidden"></lightning-input>
+                    </div>
+                    <lightning-datatable key-field="Id" data={pagedProductType}
+                        columns={columnsBasic} hide-checkbox-column></lightning-datatable>
+                    <c-fec-pagination
+                        current-page={currentPageProductType}
+                        total-records={totalRecordsProductType}
+                        page-size={pageSize}
+                        data-tab="ProductType"
+                        onpagechange={handleTabPageChange}
+                        onpagesizechange={handleTabPageSizeChange}>
+                    </c-fec-pagination>
+                </lightning-tab>
+
+                <!-- Business Process -->
+                <lightning-tab label={labelTabBP}>
+                    <div class="slds-p-bottom_x-small">
+                        <lightning-input type="search" placeholder={labelSearchAll} data-tab="BusinessProcess"
+                            onchange={handleSearch} variant="label-hidden"></lightning-input>
+                    </div>
+                    <lightning-datatable key-field="Id" data={pagedBusinessProcess}
+                        columns={columnsBasic} hide-checkbox-column></lightning-datatable>
+                    <c-fec-pagination
+                        current-page={currentPageBusinessProcess}
+                        total-records={totalRecordsBusinessProcess}
+                        page-size={pageSize}
+                        data-tab="BusinessProcess"
+                        onpagechange={handleTabPageChange}
+                        onpagesizechange={handleTabPageSizeChange}>
+                    </c-fec-pagination>
+                </lightning-tab>
+
+                <!-- Category -->
+                <lightning-tab label={labelTabCategory}>
+                    <div class="slds-p-bottom_x-small">
+                        <lightning-input type="search" placeholder={labelSearchAll} data-tab="Category"
+                            onchange={handleSearch} variant="label-hidden"></lightning-input>
+                    </div>
+                    <lightning-datatable key-field="Id" data={pagedCategory}
+                        columns={columnsBasic} hide-checkbox-column></lightning-datatable>
+                    <c-fec-pagination
+                        current-page={currentPageCategory}
+                        total-records={totalRecordsCategory}
+                        page-size={pageSize}
+                        data-tab="Category"
+                        onpagechange={handleTabPageChange}
+                        onpagesizechange={handleTabPageSizeChange}>
+                    </c-fec-pagination>
+                </lightning-tab>
+
+                <!-- Sub Category -->
+                <lightning-tab label={labelTabSubCategory}>
+                    <div class="slds-p-bottom_x-small">
+                        <lightning-input type="search" placeholder={labelSearchAll} data-tab="SubCategory"
+                            onchange={handleSearch} variant="label-hidden"></lightning-input>
+                    </div>
+                    <lightning-datatable key-field="Id" data={pagedSubCategory}
+                        columns={columnsBasic} hide-checkbox-column></lightning-datatable>
+                    <c-fec-pagination
+                        current-page={currentPageSubCategory}
+                        total-records={totalRecordsSubCategory}
+                        page-size={pageSize}
+                        data-tab="SubCategory"
+                        onpagechange={handleTabPageChange}
+                        onpagesizechange={handleTabPageSizeChange}>
+                    </c-fec-pagination>
+                </lightning-tab>
+
+                <!-- Sub Code -->
+                <lightning-tab label={labelTabSubCode}>
+                    <div class="slds-p-bottom_x-small">
+                        <lightning-input type="search" placeholder={labelSearchAll} data-tab="SubCode"
+                            onchange={handleSearch} variant="label-hidden"></lightning-input>
+                    </div>
+                    <lightning-datatable key-field="Id" data={pagedSubCode}
+                        columns={columnsBasic} hide-checkbox-column></lightning-datatable>
+                    <c-fec-pagination
+                        current-page={currentPageSubCode}
+                        total-records={totalRecordsSubCode}
+                        page-size={pageSize}
+                        data-tab="SubCode"
+                        onpagechange={handleTabPageChange}
+                        onpagesizechange={handleTabPageSizeChange}>
+                    </c-fec-pagination>
+                </lightning-tab>
+
+                <!-- Master Setting -->
+                <lightning-tab label={labelTabMasterSetting}>
+                    <div class="slds-p-bottom_x-small">
+                        <lightning-input type="search" placeholder={labelSearchAll} data-tab="MasterSetting"
+                            onchange={handleSearch} variant="label-hidden"></lightning-input>
+                    </div>
+                    <lightning-datatable key-field="Id" data={pagedMasterSetting}
+                        columns={columnsMsSetting} hide-checkbox-column></lightning-datatable>
+                    <c-fec-pagination
+                        current-page={currentPageMasterSetting}
+                        total-records={totalRecordsMasterSetting}
+                        page-size={pageSize}
+                        data-tab="MasterSetting"
+                        onpagechange={handleTabPageChange}
+                        onpagesizechange={handleTabPageSizeChange}>
+                    </c-fec-pagination>
+                </lightning-tab>
+
+                <!-- Channel -->
+                <lightning-tab label={labelTabChannel}>
+                    <div class="slds-p-bottom_x-small">
+                        <lightning-input type="search" placeholder={labelSearchAll} data-tab="Channel"
+                            onchange={handleSearch} variant="label-hidden"></lightning-input>
+                    </div>
+                    <lightning-datatable key-field="Id" data={pagedChannel}
+                        columns={columnsSetting} hide-checkbox-column></lightning-datatable>
+                    <c-fec-pagination
+                        current-page={currentPageChannel}
+                        total-records={totalRecordsChannel}
+                        page-size={pageSize}
+                        data-tab="Channel"
+                        onpagechange={handleTabPageChange}
+                        onpagesizechange={handleTabPageSizeChange}>
+                    </c-fec-pagination>
+                </lightning-tab>
+
+                <!-- Nature of Case -->
+                <lightning-tab label={labelTabNOC}>
+                    <div class="slds-p-bottom_x-small">
+                        <lightning-input type="search" placeholder={labelSearchAll} data-tab="NatureOfCase"
+                            onchange={handleSearch} variant="label-hidden"></lightning-input>
+                    </div>
+                    <lightning-datatable key-field="Id" data={pagedNatureOfCase}
+                        columns={columnsNOC} hide-checkbox-column></lightning-datatable>
+                    <c-fec-pagination
+                        current-page={currentPageNatureOfCase}
+                        total-records={totalRecordsNatureOfCase}
+                        page-size={pageSize}
+                        data-tab="NatureOfCase"
+                        onpagechange={handleTabPageChange}
+                        onpagesizechange={handleTabPageSizeChange}>
+                    </c-fec-pagination>
+                </lightning-tab>
+
+                <!-- Additional Field -->
+                <lightning-tab label={labelTabAddField}>
+                    <div class="slds-p-bottom_x-small">
+                        <lightning-input type="search" placeholder={labelSearchAll} data-tab="AdditionalField"
+                            onchange={handleSearch} variant="label-hidden"></lightning-input>
+                    </div>
+                    <lightning-datatable key-field="Id" data={pagedAdditionalField}
+                        columns={columnsField} hide-checkbox-column></lightning-datatable>
+                    <c-fec-pagination
+                        current-page={currentPageAdditionalField}
+                        total-records={totalRecordsAdditionalField}
+                        page-size={pageSize}
+                        data-tab="AdditionalField"
+                        onpagechange={handleTabPageChange}
+                        onpagesizechange={handleTabPageSizeChange}>
+                    </c-fec-pagination>
+                </lightning-tab>
+
+                <!-- Additional Field List -->
+                <lightning-tab label={labelTabAddFieldList}>
+                    <div class="slds-p-bottom_x-small">
+                        <lightning-input type="search" placeholder={labelSearchAll} data-tab="AdditionalFieldList"
+                            onchange={handleSearch} variant="label-hidden"></lightning-input>
+                    </div>
+                    <lightning-datatable key-field="Id" data={pagedAdditionalFieldList}
+                        columns={columnsSetting} hide-checkbox-column></lightning-datatable>
+                    <c-fec-pagination
+                        current-page={currentPageAdditionalFieldList}
+                        total-records={totalRecordsAdditionalFieldList}
+                        page-size={pageSize}
+                        data-tab="AdditionalFieldList"
+                        onpagechange={handleTabPageChange}
+                        onpagesizechange={handleTabPageSizeChange}>
+                    </c-fec-pagination>
+                </lightning-tab>
+
+                <!-- Case Stage -->
+                <lightning-tab label={labelTabCaseStage} value="CaseStage">
+                    <div class="slds-p-bottom_x-small">
+                        <lightning-input type="search" placeholder={labelSearchAll} data-tab="CaseStage"
+                            onchange={handleSearch} variant="label-hidden"></lightning-input>
+                    </div>
+                    <lightning-datatable key-field="Id" data={pagedCaseStage}
+                        columns={columnsStage} hide-checkbox-column></lightning-datatable>
+                    <c-fec-pagination
+                        current-page={currentPageCaseStage}
+                        total-records={totalRecordsCaseStage}
+                        page-size={pageSize}
+                        data-tab="CaseStage"
+                        onpagechange={handleTabPageChange}
+                        onpagesizechange={handleTabPageSizeChange}>
+                    </c-fec-pagination>
+                </lightning-tab>
+
+                <!-- Action Button -->
+                <lightning-tab label={labelTabActionButton} value="ActionButton">
+                    <div class="slds-p-bottom_x-small">
+                        <lightning-input type="search" placeholder={labelSearchAll} data-tab="ActionButton"
+                            onchange={handleSearch} variant="label-hidden"></lightning-input>
+                    </div>
+                    <lightning-datatable key-field="Id" data={pagedActionButton}
+                        columns={columnsActionButton} hide-checkbox-column></lightning-datatable>
+                    <c-fec-pagination
+                        current-page={currentPageActionButton}
+                        total-records={totalRecordsActionButton}
+                        page-size={pageSize}
+                        data-tab="ActionButton"
+                        onpagechange={handleTabPageChange}
+                        onpagesizechange={handleTabPageSizeChange}>
+                    </c-fec-pagination>
+                </lightning-tab>
+
+                <!-- Stage Change -->
+                <lightning-tab label={labelTabStageChange} value="StageChange">
+                    <div class="slds-p-bottom_x-small">
+                        <lightning-input type="search" placeholder={labelSearchAll} data-tab="StageChange"
+                            onchange={handleSearch} variant="label-hidden"></lightning-input>
+                    </div>
+                    <lightning-datatable key-field="Id" data={pagedStageChange}
+                        columns={columnsStageChange} hide-checkbox-column></lightning-datatable>
+                    <c-fec-pagination
+                        current-page={currentPageStageChange}
+                        total-records={totalRecordsStageChange}
+                        page-size={pageSize}
+                        data-tab="StageChange"
+                        onpagechange={handleTabPageChange}
+                        onpagesizechange={handleTabPageSizeChange}>
+                    </c-fec-pagination>
+                </lightning-tab>
+
+            </lightning-tabset>
+        </div>
+    </lightning-card>
+</template>

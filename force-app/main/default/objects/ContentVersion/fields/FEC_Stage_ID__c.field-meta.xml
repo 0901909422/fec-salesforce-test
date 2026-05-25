@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>FEC_Stage_ID__c</fullName>
+    <description>Lưu thông tin Stage ID của Case tại thời điểm file được thêm vào bản ghi để phục vụ việt thiết lập điều kiện xóa file cho User</description>
+    <externalId>false</externalId>
+    <label>Stage ID</label>
+    <length>255</length>
+    <required>false</required>
+    <trackHistory>false</trackHistory>
+    <type>Text</type>
+    <unique>false</unique>
+</CustomField>

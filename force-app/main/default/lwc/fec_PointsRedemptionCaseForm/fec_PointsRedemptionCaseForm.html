@@ -1,0 +1,78 @@
+<template>
+  <lightning-layout multiple-rows>
+    <template if:true={loading}>
+      <lightning-layout-item size="12" padding="around-small">
+        <lightning-spinner alternative-text={loadingLabel} size="small"></lightning-spinner>
+      </lightning-layout-item>
+    </template>
+    <template if:false={loading}>
+      <template if:true={showNotEligiblePanel}>
+        <lightning-layout-item size="12" padding="around-small">
+          <p class="fec-pr-not-eligible">{notEligibleMessage}</p>
+          <template if:true={notEligibleReason}>
+            <p class="fec-pr-not-eligible-reason">{notEligibleReason}</p>
+          </template>
+        </lightning-layout-item>
+      </template>
+      <template if:true={showEligiblePanel}>
+        <lightning-layout-item size="6" padding="around-small">
+          <lightning-combobox
+            name="redeemedPoints"
+            label={labelRedeemedPoints}
+            value={selectedTierJson}
+            options={tierOptionsUi}
+            onchange={handleTierChange}
+            disabled={isReadOnly}
+            required
+          >
+          </lightning-combobox>
+        </lightning-layout-item>
+        <lightning-layout-item size="6" padding="around-small">
+          <lightning-input type="tel" label={labelCmsPhone} value={cmsPhone} disabled></lightning-input>
+        </lightning-layout-item>
+        <lightning-layout-item size="12" padding="around-small">
+          <template if:false={isReadOnly}>
+            <lightning-button
+              variant="brand"
+              label={labelRedeemPoints}
+              onclick={handleRedeemClick}
+              disabled={redeemDisabled}
+            >
+            </lightning-button>
+          </template>
+          <!-- linhdev fix jira FECREDIT_CSM_2025_KH-1469-1474 — Noti-06/07 + success inline dưới nút Redeem Points -->
+          <template if:true={redeemFailMessage}>
+            <p class="slds-m-top_x-small fec-pr-redeem-fail">{redeemFailMessage}</p>
+          </template>
+          <template if:true={redeemSuccessMessage}>
+            <p class="slds-m-top_x-small fec-pr-redeem-success">{redeemSuccessMessage}</p>
+          </template>
+        </lightning-layout-item>
+      </template>
+    </template>
+  </lightning-layout>
+  <template if:true={showRedeemConfirmModal}>
+    <section role="dialog" tabindex="-1" aria-modal="true" class="slds-modal slds-fade-in-open">
+      <div class="slds-modal__container">
+        <header class="slds-modal__header">
+          <h2 class="slds-text-heading_medium">{labelRedeemConfirmTitle}</h2>
+        </header>
+        <div class="slds-modal__content slds-p-around_medium">
+          <p>{labelRedeemConfirmMessage}</p>
+        </div>
+        <footer class="slds-modal__footer">
+          <lightning-button label={labelNoBtn} variant="neutral" onclick={handleCancelRedeemConfirmModal}>
+          </lightning-button>
+          <lightning-button
+            label={labelYesBtn}
+            variant="brand"
+            class="slds-m-left_small"
+            onclick={handleConfirmRedeemConfirmModal}
+          >
+          </lightning-button>
+        </footer>
+      </div>
+    </section>
+    <div class="slds-backdrop slds-backdrop_open"></div>
+  </template>
+</template>

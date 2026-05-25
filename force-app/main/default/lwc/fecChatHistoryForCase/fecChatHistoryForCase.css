@@ -1,0 +1,82 @@
+.chat-window {
+    max-height: 400px;
+    overflow-y: auto;
+    background: #f3f3f3;
+    display: flex;
+    flex-direction: column-reverse;
+}
+
+/* Tùy chỉnh màu sắc bong bóng Outbound (Nhân viên) */
+.slds-chat-message__text_outbound {
+    background-color: #0070d2 !important;
+    color: white !important;
+}
+
+/* Tùy chỉnh màu sắc bong bóng Inbound (Khách hàng) */
+.slds-chat-message__text_inbound {
+    background-color: #e4e6eb !important;
+    color: black !important;
+}
+
+.w-full {
+    width: 100%;
+}
+
+.container-chat-history {
+    max-height: 400px;
+    overflow: auto;
+}
+
+.container-chat-history__body--outbound {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+}
+
+.container-chat-history__body--inbound {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+.container-chat-history__body__sender-name {
+    color: var(--slds-g-color-on-surface-2);
+    font-size: var(--slds-g-font-scale-neg-2);
+    margin-top: 0.125rem;
+    /* margin-inline: var(--slds-g-spacing-2) 0; */
+}
+
+.slds-chat-message__text_outbound a {
+    color: white !important;
+}
+
+.manual-textarea {
+    width: 100%;
+    min-height: 80px;
+    max-height: 400px;
+    resize: none;
+    overflow-y: auto;
+}
+
+.saved-message-text {
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+.container-chat-history__body--manual {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    width: 100%;
+}
+
+.slds-chat-message__text_manual {
+    background-color: transparent !important;
+    color: #333 !important;
+    border: none;
+    white-space: pre-wrap;
+    word-break: break-word;
+    padding: 0.5rem 0;
+    max-width: 100%;
+    box-shadow: none;
+}

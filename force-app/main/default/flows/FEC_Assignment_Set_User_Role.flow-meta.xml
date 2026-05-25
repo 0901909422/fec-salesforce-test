@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Flow xmlns="http://soap.sforce.com/2006/04/metadata">
+    <apiVersion>66.0</apiVersion>
+    <areMetricsLoggedToDataCloud>false</areMetricsLoggedToDataCloud>
+    <assignments>
+        <name>FEC_Set_User_Role</name>
+        <label>Set User Role</label>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <assignmentItems>
+            <assignToReference>$Record.FEC_User_Role__c</assignToReference>
+            <operator>Assign</operator>
+            <value>
+                <elementReference>FEC_GetUserRoleName</elementReference>
+            </value>
+        </assignmentItems>
+    </assignments>
+    <environments>Default</environments>
+    <formulas>
+        <name>FEC_GetUserRoleName</name>
+        <dataType>String</dataType>
+        <expression>IF(
+      ISBLANK({!$Record.CreatedBy.UserRole.Name}),
+      &quot;No Role Assigned&quot;,
+      {!$Record.CreatedBy.UserRole.Name}
+    )</expression>
+    </formulas>
+    <formulas>
+        <name>FEC_UserRoleName</name>
+        <dataType>String</dataType>
+        <expression>IF(
+      ISBLANK({!$Record.CreatedBy.UserRole.Name}),
+      &quot;No Role Assigned&quot;,
+      {!$Record.CreatedBy.UserRole.Name}
+    )</expression>
+    </formulas>
+    <interviewLabel>Assignment Set User Role {!$Flow.CurrentDateTime}</interviewLabel>
+    <label>Assignment Set User Role</label>
+    <processMetadataValues>
+        <name>BuilderType</name>
+        <value>
+            <stringValue>LightningFlowBuilder</stringValue>
+        </value>
+    </processMetadataValues>
+    <processMetadataValues>
+        <name>CanvasMode</name>
+        <value>
+            <stringValue>AUTO_LAYOUT_CANVAS</stringValue>
+        </value>
+    </processMetadataValues>
+    <processMetadataValues>
+        <name>OriginBuilderType</name>
+        <value>
+            <stringValue>LightningFlowBuilder</stringValue>
+        </value>
+    </processMetadataValues>
+    <processType>AutoLaunchedFlow</processType>
+    <start>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <connector>
+            <targetReference>FEC_Set_User_Role</targetReference>
+        </connector>
+        <filterLogic>1</filterLogic>
+        <filters>
+            <field>FEC_User_Role__c</field>
+            <operator>IsNull</operator>
+            <value>
+                <booleanValue>true</booleanValue>
+            </value>
+        </filters>
+        <object>FEC_Assignment__c</object>
+        <recordTriggerType>Create</recordTriggerType>
+        <triggerType>RecordBeforeSave</triggerType>
+    </start>
+    <status>Active</status>
+</Flow>

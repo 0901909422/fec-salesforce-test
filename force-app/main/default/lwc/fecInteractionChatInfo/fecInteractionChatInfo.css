@@ -1,0 +1,90 @@
+:host {
+  --fec-border-color: var(--lwc-colorBorder, #e5e5e5);
+  --fec-label-color: var(--lwc-colorTextWeak, #6b6d70);
+  --fec-link-color: var(--lwc-colorTextLink, #0176d3);
+  --fec-empty-color: var(--lwc-colorTextPlaceholder, #706e6b);
+  --fec-error-color: var(--lwc-colorTextError, #c23934);
+  --fec-save-color: #2e844a;
+  --fec-icon-color: #747474;
+}
+
+/* Header background xám như Ubank */
+.fec-chat-info {
+  --slds-c-accordion-summary-color-background: var(--lwc-colorBackground, #f3f2f2);
+}
+
+.fec-info-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  column-gap: var(--lwc-spacingXxLarge, 3rem);
+}
+
+.fec-info-col {
+  display: flex;
+  flex-direction: column;
+}
+
+.fec-info-row {
+  display: grid;
+  grid-template-columns: 220px 1fr 20px;
+  align-items: center;
+  min-height: 2.25rem;
+  border-bottom: 1px solid var(--fec-border-color);
+}
+
+.fec-info-label {
+  font-size: 0.8125rem;
+  color: var(--fec-label-color);
+  font-weight: 400;
+  display: flex;
+  align-items: center;
+}
+
+.fec-info-value {
+  font-size: 0.8125rem;
+  font-weight: 400;
+  display: flex;
+  align-items: center;
+  gap: var(--lwc-spacingXSmall, 0.5rem);
+  flex-wrap: wrap;
+}
+
+.fec-info-action {
+  display: flex;
+  align-items: center;
+  gap: 0.125rem;
+}
+
+.fec-edit-icon {
+  cursor: pointer;
+  color: var(--fec-icon-color);
+}
+
+.fec-edit-icon:hover {
+  color: var(--lwc-colorTextDefault, #000);
+}
+
+.fec-save-icon {
+  color: var(--fec-save-color);
+}
+
+.fec-empty {
+  color: var(--fec-empty-color);
+}
+
+.fec-error-text {
+  color: var(--fec-error-color);
+  font-size: 0.75rem;
+  width: 100%;
+}
+
+@media (max-width: 600px) {
+  .fec-info-grid {
+    grid-template-columns: 1fr;
+    row-gap: var(--lwc-spacingSmall, 0.75rem);
+  }
+
+  .fec-info-row {
+    grid-template-columns: 160px 1fr 20px;
+  }
+}

@@ -1,0 +1,49 @@
+<template>
+    <section class="slds-card">
+        <div class="slds-card__header slds-grid slds-p-horizontal_small">
+            <div class="slds-card__header-title slds-no-flex">
+                <lightning-button
+                    variant="brand-outline"
+                    label={expandLabel}
+                    onclick={handleExpandClick}
+                    disabled={isLoading}>
+                </lightning-button>
+            </div>
+        </div>
+
+        <div class="slds-card__body slds-p-horizontal_small slds-p-bottom_small">
+            <template if:true={isLoading}>
+                <div class="slds-is-relative slds-m-vertical_small" style="min-height: 3rem;">
+                    <lightning-spinner alternative-text="Loading history..." size="small"></lightning-spinner>
+                </div>
+            </template>
+
+            <template if:true={hasError}>
+                <div class="slds-text-color_error slds-m-vertical_x-small">
+                    {errorMessage}
+                </div>
+            </template>
+
+            <template if:true={isExpanded}>
+                <template if:true={dataLogs.length}>
+                    <div class="table-history-container slds-m-bottom_small">
+                        <c-fec_-custom-datatable
+                            key-field="Id"
+                            data={dataLogs}
+                            columns={columns}
+                            hide-checkbox-column
+                            enable-infinite-loading
+                            show-row-number-column
+                            resize-column-disabled>
+                        </c-fec_-custom-datatable>
+                    </div>
+                </template>
+                <template if:false={dataLogs.length}>
+                    <div class="slds-text-align_center slds-m-vertical_small slds-text-color_weak">
+                        {customLabels.CS_OrgChart_Text_HistoryLog_No_Result}
+                    </div>
+                </template>
+            </template>
+        </div>
+    </section>
+</template>

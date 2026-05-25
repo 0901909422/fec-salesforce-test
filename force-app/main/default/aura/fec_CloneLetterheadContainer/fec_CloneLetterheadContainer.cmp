@@ -1,0 +1,31 @@
+<aura:component implements="lightning:actionOverride,force:hasRecordId,force:hasSObjectName,force:lightningQuickActionWithoutHeader,lightning:hasPageReference" access="global">
+    <lightning:workspaceAPI aura:id="workspace" />
+    <lightning:overlayLibrary aura:id="overlayLib"/>
+    <lightning:navigation aura:id="navService" />
+    <aura:attribute name="letterheadFields" type="Object" />
+    <aura:attribute name="recordError" type="String" />
+    <aura:attribute name="headerEditLabel" type="String"/>
+     <!-- Customize Modal Width -->
+    <aura:html tag="style">
+       
+    </aura:html>
+    <force:recordData aura:id="recordLoader"
+        recordId="{!v.recordId}"
+        fields="Name,FEC_Description__c,FEC_Header__c,FEC_Footer__c"
+        targetFields="{!v.letterheadFields}"
+        targetError="{!v.recordError}" />
+
+      <aura:if isTrue="{!not(empty(v.letterheadFields))}">
+            <c:fec_CustomLetterheadEditor 
+                isCloneMode="true"
+                recordId="{!v.recordId}"
+                name="{!v.letterheadFields.Name}"
+                description="{!v.letterheadFields.FEC_Description__c}"
+                header="{!v.letterheadFields.FEC_Header__c}"
+                footer="{!v.letterheadFields.FEC_Footer__c}"
+                headerEditLabel="{!v.headerEditLabel}"
+                 onsave="{!c.handleSaveSuccess}"
+            onclose="{!c.handleClose}" />
+
+      </aura:if>
+</aura:component>

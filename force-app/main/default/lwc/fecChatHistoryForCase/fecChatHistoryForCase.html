@@ -1,0 +1,82 @@
+<template>
+    <lightning-card title={labelChatHistory} icon-name="standard:live_chat">
+        <div class="slds-p-around_small container-chat-history">
+
+            <!-- AUTOMATION CASE: show chat messages from FEC_ChatHistory__c -->
+            <template if:true={isChatAutomation}>
+                <section role="log" class="slds-chat">
+                    <template if:true={hasMessages}>
+                        <ul class="slds-chat-list">
+                            <template for:each={chatMessages} for:item="msg">
+                                <li key={msg.Id} class={msg.itemClass}>
+                                    <div class="slds-chat-message">
+                                        <div class={msg.bodyClass}>
+                                            <div class="container-chat-history__body__sender-name">
+                                                <b>{msg.FEC_SenderName__c}</b> • {msg.formattedTime}
+                                            </div>
+                                            <div class={msg.bubbleClass}>
+                                                <template if:true={msg.isText}>
+                                                    <span>{msg.FEC_Message__c}</span>
+                                                </template>
+                                                <template if:true={msg.isFile}>
+                                                    <div class="slds-grid slds-grid_vertical-align-center">
+                                                        <lightning-icon icon-name="doctype:attachment" size="small" title="Attachment" class="slds-m-right_x-small"></lightning-icon>
+                                                        <template if:true={msg.downloadUrl}>
+                                                            <a href={msg.downloadUrl} target="_blank" download={msg.fileName}>
+                                                                {msg.fileName}
+                                                            </a>
+                                                        </template>
+                                                        <template if:false={msg.downloadUrl}>
+                                                            <span class="slds-text-color_error">{msg.fileName} {labelFileNotFound}</span>
+                                                        </template>
+                                                    </div>
+                                                </template>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </li>
+                            </template>
+                        </ul>
+                    </template>
+                    <template if:false={hasMessages}>
+                        <div class="slds-align_absolute-center slds-m-top_large slds-m-bottom_large slds-text-color_weak">
+                            {labelNoChatHistory}
+                        </div>
+                    </template>
+                </section>
+            </template>
+
+            <!-- NON-AUTOMATION CASE: manual input or display saved content -->
+            <template if:false={isChatAutomation}>
+                <!-- Already saved: show read-only content -->
+                <template if:true={isSaved}>
+                    <div class="slds-box slds-m-top_small manual-history-content">
+                        <lightning-formatted-rich-text value={formattedManualContent}></lightning-formatted-rich-text>
+                    </div>
+                </template>
+
+                <!-- Not saved yet: show textarea input -->
+                <template if:false={isSaved}>
+                    <div class="slds-m-top_small manual-input-container">
+                        <label class="slds-form-element__label">Nhập nội dung chat</label>
+                        <textarea
+                            class="slds-textarea manual-textarea"
+                            oninput={handleMessageInput}
+                            placeholder="Nhập nội dung cuộc hội thoại..."
+                            maxlength="131072"
+                        ></textarea>
+                        <div class="slds-m-top_small slds-text-align_right">
+                            <lightning-button
+                                variant="brand"
+                                label="Lưu"
+                                onclick={handleSaveMessage}
+                                disabled={isSaveDisabled}
+                            ></lightning-button>
+                        </div>
+                    </div>
+                </template>
+            </template>
+
+        </div>
+    </lightning-card>
+</template>

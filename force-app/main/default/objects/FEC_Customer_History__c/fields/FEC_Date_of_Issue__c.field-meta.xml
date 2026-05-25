@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>FEC_Date_of_Issue__c</fullName>
+    <description>Ngày cấp</description>
+    <externalId>false</externalId>
+    <inlineHelpText></inlineHelpText>
+    <label>Date of Issue</label>
+    <required>false</required>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Date</type>
+</CustomField>

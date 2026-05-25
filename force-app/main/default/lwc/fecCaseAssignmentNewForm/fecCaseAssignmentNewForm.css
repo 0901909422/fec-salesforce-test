@@ -1,0 +1,124 @@
+.section-box {
+  background: #f3f3f3;
+  border-radius: 0.5rem;
+  padding: 0.75rem;
+}
+
+.section-title {
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.queue-multiselect-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 8990;
+  background: transparent;
+}
+
+.queue-trigger-wrap.queue-dropdown-open {
+  z-index: 9010;
+}
+
+.queue-trigger-wrap {
+  width: 100%;
+}
+
+.queue-trigger {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 2.5rem;
+  padding: 0 0.75rem;
+  border: 1px solid #c9c9c9;
+  border-radius: 0.25rem;
+  background: #fff;
+  cursor: pointer;
+  text-align: left;
+}
+
+.queue-trigger:hover {
+  border-color: #747474;
+}
+
+.queue-trigger_error,
+.queue-trigger_error:hover {
+  border-color: #c23934;
+  box-shadow: #c23934 0 0 0 1px inset;
+}
+
+.queue-trigger-text {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.8125rem;
+  color: #080707;
+}
+
+.queue-trigger-chevron {
+  flex-shrink: 0;
+  margin-left: 0.5rem;
+}
+
+.queue-dropdown {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(100% + 0.125rem);
+  z-index: 9005;
+  max-height: 16rem;
+  overflow-y: auto;
+  background: #fff;
+  border: 1px solid #c9c9c9;
+  border-radius: 0.25rem;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+.queue-option {
+  padding: 0.125rem 0.5rem;
+  border-bottom: 1px solid #f3f3f3;
+}
+
+.queue-option:last-child {
+  border-bottom: none;
+}
+
+.queue-cb-label {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  cursor: pointer;
+  font-size: 0.8125rem;
+  color: #080707;
+  line-height: 1.25rem;
+}
+
+.queue-cb-label input[type="checkbox"] {
+  margin-top: 0.125rem;
+  flex-shrink: 0;
+  width: 1rem;
+  height: 1rem;
+  cursor: pointer;
+}
+
+.selected-list {
+  min-height: 2rem;
+}
+
+.hint-text {
+  color: #5c5c5c;
+  font-size: 0.8125rem;
+}
+
+.add-button-wrap {
+  margin-top: 0.5rem;
+  text-align: right;
+}
+
+.footer-actions {
+  border-top: var(--slds-border-width-thin, 1px) solid var(--slds-color-border-brand, #c9c9c9);
+  padding-top: var(--slds-spacing-medium, 1rem);
+  margin-top: var(--slds-spacing-medium, 1rem);
+}

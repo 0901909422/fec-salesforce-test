@@ -1,0 +1,99 @@
+<template>
+  <lightning-accordion class="fec-ubank-email-info" allow-multiple-sections-open
+    active-section-name={activeSections}>
+    <lightning-accordion-section name="interactionEmailInfoUbank" label={labels.sectionTitle}>
+      <template if:true={isLoaded}>
+        <div class="slds-var-p-horizontal_medium slds-var-p-vertical_small">
+          <div class="fec-info-grid">
+
+            <!-- Col 1 -->
+            <div class="fec-info-col">
+              <!-- Interaction Email -->
+              <div class="fec-info-row">
+                <span class="fec-info-label">{labels.interactionEmail}</span>
+                <span class="fec-info-value">
+                  <template if:true={isEmailReadOnly}>
+                    {displayInteractionEmail}
+                  </template>
+                  <template if:false={isEmailReadOnly}>
+                    <template if:true={isEditingEmail}>
+                      <lightning-input type="email" value={emailDraft} onchange={handleEmailChange}
+                        variant="label-hidden" placeholder={labels.inputPlaceholder}
+                        message-when-value-missing={labels.emailRequiredMsg}></lightning-input>
+                      <template if:true={emailError}>
+                        <span class="fec-error-text">{emailError}</span>
+                      </template>
+                    </template>
+                    <template if:false={isEditingEmail}>
+                      <span class="fec-empty">{labels.empty}</span>
+                    </template>
+                  </template>
+                </span>
+                <span class="fec-info-action">
+                  <template if:true={showEmailEditIcon}>
+                    <lightning-icon icon-name="utility:edit" size="x-small" class="fec-edit-icon"
+                      onclick={handleEditEmail} title="Edit email"></lightning-icon>
+                  </template>
+                  <template if:true={isEditingEmail}>
+                    <lightning-icon icon-name="utility:check" size="x-small" class="fec-edit-icon fec-save-icon"
+                      onclick={handleSaveEmail} title="Save"></lightning-icon>
+                    <lightning-icon icon-name="utility:close" size="x-small" class="fec-edit-icon"
+                      onclick={handleCancelEditEmail} title="Cancel"></lightning-icon>
+                  </template>
+                </span>
+              </div>
+
+              <!-- Interaction Created On -->
+              <div class="fec-info-row">
+                <span class="fec-info-label">{labels.interactionCreatedOn}</span>
+                <span class="fec-info-value">{createdOn}</span>
+                <span class="fec-info-action"></span>
+              </div>
+
+              <!-- Interaction Created By -->
+              <div class="fec-info-row">
+                <span class="fec-info-label">{labels.interactionCreatedBy}</span>
+                <span class="fec-info-value">{createdBy}</span>
+                <span class="fec-info-action"></span>
+              </div>
+            </div>
+
+            <!-- Col 2 -->
+            <div class="fec-info-col">
+              <!-- Send To -->
+              <div class="fec-info-row">
+                <span class="fec-info-label">{labels.sendTo}</span>
+                <span class="fec-info-value">{sendTo}</span>
+                <span class="fec-info-action"></span>
+              </div>
+
+              <!-- Parent ID -->
+              <div class="fec-info-row">
+                <span class="fec-info-label">{labels.parentId}</span>
+                <span class="fec-info-value">
+                  <template if:true={showParentIdLink}>
+                    <a href="javascript:void(0);" class="fec-parent-link" onclick={handleNavigateToParent}>
+                      {parentId}
+                    </a>
+                  </template>
+                  <template if:false={showParentIdLink}>
+                    <span class="fec-empty">--</span>
+                  </template>
+                </span>
+                <span class="fec-info-action"></span>
+              </div>
+
+              <!-- External Interaction ID -->
+              <div class="fec-info-row">
+                <span class="fec-info-label">{labels.externalInteractionId}</span>
+                <span class="fec-info-value">{externalInteractionId}</span>
+                <span class="fec-info-action"></span>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </template>
+    </lightning-accordion-section>
+  </lightning-accordion>
+</template>

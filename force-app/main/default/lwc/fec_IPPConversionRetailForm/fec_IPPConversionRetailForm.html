@@ -1,0 +1,214 @@
+<template>
+  <div class="slds-box slds-theme_shade">
+    <template if:true={isLoading}>
+      <lightning-spinner
+        alternative-text={lblSpinnerLoading}
+        size="medium"
+      ></lightning-spinner>
+    </template>
+    <template if:false={isLoading}>
+      <template if:true={hasNoEligibleTransactions}>
+        <p class="slds-m-bottom_medium validation-msg validation-msg-red">{noEligibleMessage}</p>
+      </template>
+      <template if:true={hasEligibleTransactions}>
+        <h3 class="slds-text-heading_small slds-m-bottom_small">
+          {ippRetailUi.unbilledHeading}
+        </h3>
+        <div class="ipp-retail-datatable">
+          <lightning-datatable
+            key={datatableRenderKey}
+            key-field="transactionId"
+            data={pagedTransactions}
+            columns={transactionColumns}
+            max-row-selection={datatableMaxRowSelection}
+            hide-checkbox-column={isReadOnly}
+            selected-rows={selectedRowIds}
+            onrowselection={handleRowSelection}
+          >
+          </lightning-datatable>
+          <template if:true={showPagination}>
+            <div class="table-pagination slds-m-top_small slds-grid slds-grid_align-spread slds-grid_vertical-align-center">
+              <div class="page-size slds-grid slds-grid_vertical-align-center">
+                <span class="slds-m-right_x-small">{paginationLabels.pageSizeLabel}</span>
+                <lightning-combobox
+                  value={pageSizeStr}
+                  options={pageSizeOptions}
+                  onchange={handlePageSizeChange}
+                  variant="label-hidden"
+                ></lightning-combobox>
+              </div>
+              <div class="pagination-controls slds-grid slds-grid_vertical-align-center">
+                <lightning-button-icon
+                  class="square-icon"
+                  icon-name="utility:chevronleft"
+                  alternative-text={paginationLabels.prevLabel}
+                  onclick={handlePrevPage}
+                  disabled={disablePaginationPrevPage}
+                ></lightning-button-icon>
+                <span class="page-number">{currentPage}</span>
+                <lightning-button-icon
+                  class="square-icon"
+                  icon-name="utility:chevronright"
+                  alternative-text={paginationLabels.nextLabel}
+                  onclick={handleNextPage}
+                  disabled={disablePaginationNextPage}
+                ></lightning-button-icon>
+              </div>
+              <div class="go-to-page slds-grid slds-grid_vertical-align-center">
+                <span class="slds-m-right_x-small">{paginationLabels.goToPageLabel}</span>
+                <lightning-input
+                  type="number"
+                  value={goToPageValue}
+                  min="1"
+                  max={totalPages}
+                  variant="label-hidden"
+                  class="page-input"
+                  onchange={handleGoToPageInput}
+                ></lightning-input>
+                <span class="page-of">of {totalPages}</span>
+                <lightning-button
+                  class="square-go-btn"
+                  label={paginationLabels.goBtnLabel}
+                  onclick={handleGoToPage}
+                  variant="brand"
+                ></lightning-button>
+              </div>
+            </div>
+          </template>
+        </div>
+        <template if:true={showCheckDetailsButton}>
+          <div class="slds-m-top_medium">
+            <lightning-button
+              label={ippRetailUi.btnCheckDetails}
+              onclick={handleCheckIPPDetails}
+              variant="brand"
+              disabled={isReadOnly}
+            ></lightning-button>
+          </div>
+        </template>
+        <template if:true={detailsLoading}>
+          <lightning-spinner
+            alternative-text={lblSpinnerDetails}
+            size="small"
+            class="slds-m-top_small"
+          ></lightning-spinner>
+        </template>
+        <template if:true={showDetailsSection}>
+          <div class="slds-m-top_medium slds-box slds-box_x-small">
+            <div class="slds-grid slds-gutters slds-wrap details-row">
+              <div
+                class="slds-col slds-size_1-of-1 slds-medium-size_1-of-4 slds-p-horizontal_x-small"
+              >
+                <div class="slds-form-element">
+                  <template if:true={tenorBlockReady}>
+                    <lightning-combobox
+                      label={lblTenor}
+                      name="tenor"
+                      value={selectedTenor}
+                      options={tenorOptions}
+                      onchange={handleTenorChange}
+                      required
+                      disabled={isReadOnly}
+                    ></lightning-combobox>
+                  </template>
+                </div>
+              </div>
+              <div
+                class="slds-col slds-size_1-of-1 slds-medium-size_1-of-4 slds-p-horizontal_x-small"
+              >
+                <div class="slds-form-element">
+                  <lightning-input
+                    type="text"
+                    label={lblInterest}
+                    value={detailsInterestDisplay}
+                    disabled
+                  ></lightning-input>
+                </div>
+              </div>
+              <div
+                class="slds-col slds-size_1-of-1 slds-medium-size_1-of-4 slds-p-horizontal_x-small"
+              >
+                <div class="slds-form-element">
+                  <lightning-input
+                    type="text"
+                    label={lblConversionFee}
+                    value={detailsFeeDisplay}
+                    disabled
+                  ></lightning-input>
+                </div>
+              </div>
+              <div
+                class="slds-col slds-size_1-of-1 slds-medium-size_1-of-4 slds-p-horizontal_x-small"
+              >
+                <div class="slds-form-element">
+                  <lightning-input
+                    type="text"
+                    label={lblEmi}
+                    value={detailsEmiDisplay}
+                    disabled
+                  ></lightning-input>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="slds-m-top_small">
+            <lightning-button
+              label={ippRetailUi.btnConvert}
+              onclick={handleConvertIPP}
+              variant="brand"
+              disabled={convertButtonDisabled}
+            ></lightning-button>
+            <template if:true={showNoti08}>
+              <p class="slds-m-top_x-small validation-msg validation-msg-green">{noti08Message}</p>
+            </template>
+            <template if:true={showNoti09BelowButton}>
+              <p class="slds-m-top_x-small validation-msg validation-msg-red">{noti09Message}</p>
+            </template>
+            <template if:true={showNoti10BelowButton}>
+              <p class="slds-m-top_x-small validation-msg validation-msg-red">{noti10Message}</p>
+            </template>
+          </div>
+        </template>
+      </template>
+    </template>
+  </div>
+  <template if:true={showConfirmModal}>
+    <section role="dialog" tabindex="-1" class="slds-modal slds-fade-in-open">
+      <div class="slds-modal__container">
+        <header class="slds-modal__header">
+          <h2 class="slds-modal__title">{ippRetailUi.modalTitle}</h2>
+          <button
+            class="slds-button slds-modal__close slds-button_icon-inverse"
+            title={lblClose}
+            onclick={handleConfirmNo}
+          ></button>
+        </header>
+        <div class="slds-modal__content slds-p-around_medium">
+          <p>
+            {ippRetailUi.modalBody}
+          </p>
+        </div>
+        <footer class="slds-modal__footer">
+          <lightning-button
+            label={ippRetailUi.plNo}
+            onclick={handleConfirmNo}
+            class="slds-m-right_x-small"
+            variant="neutral"
+          ></lightning-button>
+          <lightning-button
+            label={ippRetailUi.plYes}
+            onclick={handleConfirmYes}
+            variant="brand"
+          ></lightning-button>
+        </footer>
+      </div>
+    </section>
+    <div class="slds-backdrop slds-backdrop_open"></div>
+  </template>
+  <template if:true={convertLoading}>
+    <lightning-spinner
+      alternative-text={lblSpinnerConverting}
+      size="medium"
+    ></lightning-spinner>
+  </template>
+</template>

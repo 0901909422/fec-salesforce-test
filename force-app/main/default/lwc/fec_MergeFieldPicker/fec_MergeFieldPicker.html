@@ -1,0 +1,56 @@
+<template>
+    <section role="dialog" tabindex="-1" class="slds-modal slds-fade-in-open slds-modal_small">
+        <div class="slds-modal__container">
+            <header class="slds-modal__header">
+                <h2 class="slds-modal__title">{labels.insertMegeLabel}</h2>
+            </header>
+
+            <div class="slds-modal__content slds-grid modal-main-body">
+                <div class="slds-size_1-of-4 slds-border_right sidebar-container">
+                    <lightning-vertical-navigation 
+                        selected-item={selectedObject} 
+                        onselect={handleObjectSelect}>
+                        <lightning-vertical-navigation-section>
+                            <lightning-vertical-navigation-item label={labels.senderLabel} name="User"></lightning-vertical-navigation-item>
+                            <lightning-vertical-navigation-item label={labels.caseLabel} name="Case"></lightning-vertical-navigation-item>
+                            <lightning-vertical-navigation-item label={labels.additionalInfoLabel} name="FEC_Additional_Info__c"></lightning-vertical-navigation-item>
+                            <lightning-vertical-navigation-item label={labels.customerHistoryLabel} name="FEC_Customer_History__c"></lightning-vertical-navigation-item>
+                        </lightning-vertical-navigation-section>
+                    </lightning-vertical-navigation>
+                </div>
+
+                <div class="slds-size_3-of-4 flex-container">
+                    <div class="slds-p-around_medium slds-border_bottom">
+                        <p class="slds-m-bottom_small slds-text-title_caps">{labels.selectMergeFieldLabel}</p>
+                        <div class="slds-form-element">
+                            <div class="slds-form-element__control slds-input-has-icon slds-input-has-icon_left">
+                                <lightning-icon icon-name="utility:search" size="x-small" class="slds-input__icon"></lightning-icon>
+                                <input type="text" placeholder={labels.placeholderLabel} class="slds-input" oninput={handleSearch} />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="field-scroll-viewport slds-p-horizontal_medium">
+                        <template for:each={filteredFields} for:item="field">
+                            <div key={field.value} class="field-row">
+                                <span class="slds-radio slds-grid ">
+                                    <input type="radio" id={field.value} name="field-group" value={field.value} onchange={handleFieldChange} />
+                                    <label class="slds-radio__label field-row-layout" for={field.value}>
+                                        <span class="slds-radio_faux"></span>
+                                        <span class="slds-form-element__label">{field.label}</span>
+                                    </label>
+                                </span>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+            </div>
+
+            <footer class="slds-modal__footer">
+                <button class="slds-button slds-button_neutral" onclick={handleCancel}>{labels.cancelLabel}</button>
+                <button class="slds-button slds-button_brand" onclick={handleInsert} disabled={isInsertDisabled}>{labels.insertLabel}</button>
+            </footer>
+        </div>
+    </section>
+    <div class="slds-backdrop slds-backdrop_open"></div>
+</template>
