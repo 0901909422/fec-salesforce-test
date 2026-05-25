@@ -138,20 +138,29 @@ public with sharing class FEC_HoldCaseStage2DisplayService {
             ? null
             : c.FEC_NFU_Description_Result__c.trim();
 
-        // TH1: Stage 1 Auto Hold thất bại — luôn hiện nút Hold Case (đến khi count >= 3); đổi NOC chỉ thêm info
+        // TH1: Stage 1 Auto Hold thất bại — hiện kết quả lỗi; có nút retry trừ khi đổi NOC không có Auto (TH3 spec)
         if (stage1Result == RESULT_ERROR) {
             Integer userRetryCount = FEC_AutoHoldCaseService.getHoldCaseUserRetryCount(
                 caseId
             );
             Boolean maxRetryReached = userRetryCount >= 3;
             out.showHoldCaseSection = true;
-            out.displayMode = MODE_ERROR_RETRY;
             out.errorMessage = System.Label.FEC_MSG_HOLD_CASE_AUTO_FAIL_RETRY;
-            out.showManualHoldCaseButton = !c.IsClosed && !maxRetryReached;
             if (nocChanged && !newHasAuto) {
+                out.displayMode = MODE_ERROR_RETRY_INFO_NO_AUTO;
                 out.infoMessage = System.Label.FEC_MSG_HOLD_CASE_NOC_NO_AUTO;
+                out.showManualHoldCaseButton = false;
+            } else {
+                out.displayMode = MODE_ERROR_RETRY;
+                out.showManualHoldCaseButton = !c.IsClosed && !maxRetryReached;
             }
-            debugStage2Evaluate(caseId, 'TH1', nocChanged, newHasAuto, out);
+            debugStage2Evaluate(
+                caseId,
+                nocChanged && !newHasAuto ? 'TH1+TH3-NO-AUTO' : 'TH1',
+                nocChanged,
+                newHasAuto,
+                out
+            );
             return out;
         }
 
