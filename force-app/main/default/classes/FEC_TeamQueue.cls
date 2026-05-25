@@ -3,7 +3,7 @@
  * @author FEC Team
  * @since 2026-03-24
  */
-public with sharing class FEC_TeamQueue {
+public without sharing class FEC_TeamQueue {
     public static final String CLASS_NAME = 'FEC_TeamQueue';
     public static final String QUEUE_TYPE = 'Queue';
     /**

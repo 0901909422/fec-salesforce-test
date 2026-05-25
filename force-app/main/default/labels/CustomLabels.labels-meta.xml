@@ -18174,4 +18174,32 @@
         <shortDescription>Template Config Saved Successfully</shortDescription>
         <value>Template Config Saved Successfully</value>
     </labels>
+    <labels>
+        <fullName>TECH_LIST_FIELD_PARENT_OF_CASE</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>TECH_LIST_FIELD_PARENT_OF_CASE</shortDescription>
+        <value>FEC_Product_Type__c,FEC_Category__c,FEC_SubCategory__c,FEC_SubCode__c,FEC_Business_Process__c,FEC_Current_Case_Stage__c</value>
+    </labels>
+    <labels>
+        <fullName>TECH_LIST_OBJ_DEL_ARCHIVE_CASE</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>TECH_LIST_OBJ_DEL_ARCHIVE_CASE</shortDescription>
+        <value>Case,FEC_Actual_Nature_of_Case__c,FEC_Customer_History__c,FEC_Product_Type__c,FEC_Category__c,FEC_Sub_Category__c,FEC_Sub_Code__c,FEC_Business_Process__c,FEC_IPP__c,FEC_Card_Payment__c,FEC_Process_Action__c,FEC_Integration_Case__c,FEC_Case_Stage__c</value>
+    </labels>
+    <labels>
+        <fullName>TECH_PEGA_SOURCE</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>TECH_PEGA_SOURCE</shortDescription>
+        <value>pega</value>
+    </labels>
+    <labels>
+        <fullName>TECH_PEGA_SOURCE_S3</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>TECH_PEGA_SOURCE_S3</shortDescription>
+        <value>pegas3</value>
+    </labels>
 </CustomLabels>

@@ -11,21 +11,7 @@ global class DeleteArchiveCaseBatch implements Database.Batchable<sObject>, Data
 
     // All other objects use IsArchiveTemp__c = true.
     // Deletion order: Case first (they reference lookup objects), then lookup objects.
-    private static final List<String> DELETION_ORDER = new List<String>{
-        'Case',
-        'FEC_Actual_Nature_of_Case__c',
-        'FEC_Customer_History__c',
-        'FEC_Product_Type__c',
-        'FEC_Category__c',
-        'FEC_Sub_Category__c',
-        'FEC_Sub_Code__c',
-        'FEC_Business_Process__c',
-        'FEC_IPP__c',
-        'FEC_Card_Payment__c',
-        'FEC_Process_Action__c',
-        'FEC_Integration_Case__c',
-        'FEC_Case_Stage__c'
-    };
+    List<String> listObjToDelArchiveCase = label.TECH_LIST_OBJ_DEL_ARCHIVE_CASE.split(',');
 
     private Integer currentObjectIndex = 0;
 
@@ -44,7 +30,7 @@ global class DeleteArchiveCaseBatch implements Database.Batchable<sObject>, Data
 
     global Database.QueryLocator start(Database.BatchableContext context) {
         
-        String sObjectName = DELETION_ORDER[currentObjectIndex];
+        String sObjectName = listObjToDelArchiveCase[currentObjectIndex];
         String query;
         if (sObjectName == 'Case') {
             query = 'SELECT Id FROM Case WHERE ArchiveExternalId__c != NULL AND ArchiveExternalId__c != ' 
@@ -68,7 +54,7 @@ global class DeleteArchiveCaseBatch implements Database.Batchable<sObject>, Data
 
     public void finish(Database.BatchableContext bc) {
         currentObjectIndex++;
-        if (currentObjectIndex < DELETION_ORDER.size()) {
+        if (currentObjectIndex < listObjToDelArchiveCase.size()) {
             Database.executeBatch(this, 200);
         } else {
             System.debug('ArchiveCaseDeletionBatch: Completed cleanup of all archive temp records.');

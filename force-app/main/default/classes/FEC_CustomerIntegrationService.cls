@@ -42,16 +42,8 @@ public with sharing class FEC_CustomerIntegrationService {
                 FEC_GetCustomerInfoBasic.callGetCustomerInfoBasic(requestId, requestor, timestampZ, cifNumber);
 
             if (basicRes != null && basicRes.CustomerBasicInfo != null) {
-                hist.FEC_First_Name__c     = basicRes.CustomerBasicInfo.FirstName;
-                hist.FEC_Middle_Name__c    = basicRes.CustomerBasicInfo.MiddleName;
-                hist.FEC_Last_Name__c      = basicRes.CustomerBasicInfo.LastName;
-                hist.FEC_Customer_Name__c  = basicRes.CustomerBasicInfo.FullName;
-                hist.FEC_Date_of_Birth__c  = basicRes.CustomerBasicInfo.Birthday;
-                hist.FEC_Gender__c         = basicRes.CustomerBasicInfo.Gender;
-                hist.FEC_CIF_Number__c     = basicRes.CustomerBasicInfo.CIFNumber;
 
                 result.customerName = basicRes.CustomerBasicInfo.FullName;
-                result.nationalId = hist.FEC_National_ID_Passport_ID__c;
                 result.gender = basicRes.CustomerBasicInfo.Gender;
                 result.dateOfBirth = basicRes.CustomerBasicInfo.Birthday;
 
@@ -70,7 +62,21 @@ public with sharing class FEC_CustomerIntegrationService {
             System.debug('### BASIC ERROR: ' + e.getMessage());
         }
 
-        // 2. PRIMARY PHONE
+        // 2. DOCUMENT
+        try {
+            FEC_GetDocumentsList.ResponseWrapper docRes =
+                FEC_GetDocumentsList.callGetDocumentsList(requestId, requestor, timestamp, cifNumber);
+
+            if (docRes != null && docRes.Documents != null && !docRes.Documents.isEmpty()) {
+                hist.FEC_National_ID_Passport_ID__c = docRes.Documents[0].DocumentID;
+
+                result.nationalId = docRes.Documents[0].DocumentID;
+            }
+        } catch (Exception e) {
+            System.debug('### DOCUMENT ERROR: ' + e.getMessage());
+        }
+
+        // 3. PRIMARY PHONE
         try {
             if (String.isNotBlank(accountNumber)) {
                 hist.FEC_Primary_Phone__c = getPrimaryPhone(accountNumber);

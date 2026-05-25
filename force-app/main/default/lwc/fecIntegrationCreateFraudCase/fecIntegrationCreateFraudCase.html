@@ -1,5 +1,5 @@
 <template>
-    <lightning-card title="Create Fraud Case" variant="base">
+    <lightning-card title="" variant="base">
         <div class="slds-p-around_medium">
 
             <!-- LOADING -->
@@ -16,9 +16,9 @@
                         <div class="slds-box slds-theme_default">
 
                             <!-- TITLE -->
-                            <h3 class="slds-text-heading_small slds-m-bottom_small slds-text-title_caps">
-                                {fraudIntChannel} Properties
-                            </h3>
+                            <!-- <h3 class="slds-text-heading_small slds-m-bottom_small">
+                                Fraud  Properties
+                            </h3> -->
                     
                             <!-- GRID -->
                             <div class="slds-grid slds-wrap slds-gutters">
@@ -182,14 +182,16 @@
                 <div class="slds-m-top_medium slds-box slds-p-around_small">
                     <div class="slds-grid slds-wrap slds-gutters">
                         
-                        <!-- Column 1 -->
-                        <div class="slds-col slds-size_1-of-3">
+                        
+                        <div class="slds-col slds-size_1-of-1">
                             <lightning-textarea
-                                label="Remarks"
+                                label="Fraud Remarks"
                                 data-field="remarks"
                                 required
                                 value={remarks}
-                                onchange={onSimpleChange}>
+                                max-length="5000"
+                                onchange={onSimpleChange}
+                                style="min-height: 150px;">
                             </lightning-textarea>
                         </div>                
                     </div>
@@ -201,17 +203,17 @@
                     <lightning-button
                         label={labels.Create_Fraud_Case_Button}
                         variant="brand"
-                        onclick={onSubmit}
+                        onclick={onSubmitFraudCase}
                         disabled={isCreateSubmitting}>
                     </lightning-button>
 
-                    <!-- <lightning-button
+                    <lightning-button
                         label="Submit Without Callout"
                         variant="brand-outline"
                         onclick={onSubmitWithoutCallout}
                         disabled={isCreateSubmitting}
                         class="slds-m-left_small">
-                    </lightning-button> -->
+                    </lightning-button>
                 
                     
                 </div>
