@@ -17,6 +17,10 @@ function extractStageNumber(stageName) {
   return m ? parseInt(m[1], 10) : null;
 }
 
+function scopedActionDebug(label, payload) {
+  console.log(`[RD-Payment-Scoped][ScopedAction] ${label}`, payload ?? "");
+}
+
 /**
  * Routing Action cho Document Request / Original MRC Return — Stage 2+ chọn Team từ FEC_Stage_Change__c.
  */
@@ -34,6 +38,8 @@ export default class Fec_ScopedStageChangeRoutingAction extends LightningElement
   @api showRouteTo;
   @api readOnlyTeam;
   @api routeToQueueDisplayLabel;
+  /** RD Payment assessment (Stage 2+): khóa chọn Team — hiển thị read-only. */
+  @api lockRouteToTeamSelection = false;
 
   @api showRevert;
   @api revertDecisionDisplayLabel;
@@ -51,6 +57,8 @@ export default class Fec_ScopedStageChangeRoutingAction extends LightningElement
   @track selectedStageChangeId = "";
   /** Stage 2+ Route to: tránh flash Team/Queue read-only trước khi Apex trả combobox options. */
   @track _teamOptionsResolved = false;
+  /** Selection ép từ parent (vd RD Payment assessment) — giữ sau khi reload options. */
+  _pendingForcedSelection = null;
 
   labels = {
     actionLabel: FEC_Action_Label,
@@ -79,19 +87,57 @@ export default class Fec_ScopedStageChangeRoutingAction extends LightningElement
     );
   }
 
-  /** Stage 2+, đã submit (qua Stage 1), Route to → combobox Team/Queue */
+  /** Stage 2+, đã submit (qua Stage 1), Route to → combobox Team/Queue (trừ khi bị khóa). */
   get showTeamSelection() {
-    return this.expectsTeamSelection && this.allOptions.length > 0;
+    return (
+      this.expectsTeamSelection &&
+      this.allOptions.length > 0 &&
+      !this.lockRouteToTeamSelection &&
+      !this._pendingForcedSelection
+    );
   }
 
   get showTeamOptionsLoading() {
+    if (
+      this.lockRouteToTeamSelection &&
+      this.showRouteTo &&
+      !this._hasLockedRouteToDisplay
+    ) {
+      return true;
+    }
     return this.expectsTeamSelection && !this._teamOptionsResolved;
   }
 
-  /** Stage 1 hoặc sau khi load xong mà không có Team selectable → read-only. */
+  get _hasLockedRouteToDisplay() {
+    return !!(
+      this.readOnlyTeam ||
+      this._pendingForcedSelection?.team ||
+      this.selectedTeam
+    );
+  }
+
+  /** Queue label — ưu tiên FEC_Stage_Change__c.FEC_Next_Queue__c (Group.Name) từ selection ép. */
+  get effectiveRouteToQueueDisplayLabel() {
+    const forced = this._pendingForcedSelection;
+    if (forced?.queueDeveloperName || forced?.queueLabel) {
+      return forced.queueLabel || forced.queueDeveloperName || "";
+    }
+    return this.routeToQueueDisplayLabel || "";
+  }
+
+  /** Stage 1, RD Payment locked, hoặc sau load xong không có Team selectable → read-only. */
   get showRouteToReadOnly() {
     if (!this.showRouteTo || this.showTeamSelection) {
       return false;
+    }
+    if (this.lockRouteToTeamSelection && this._hasLockedRouteToDisplay) {
+      return true;
+    }
+    if (this.lockRouteToTeamSelection) {
+      return false;
+    }
+    if (this._pendingForcedSelection) {
+      return this._hasLockedRouteToDisplay;
     }
     if (this.expectsTeamSelection) {
       return this._teamOptionsResolved;
@@ -152,6 +198,13 @@ export default class Fec_ScopedStageChangeRoutingAction extends LightningElement
       if (this.selectedTeam && !this.selectedStageChangeId) {
         valid = false;
       }
+    } else if (
+      this.lockRouteToTeamSelection &&
+      this.showRouteTo &&
+      !this._pendingForcedSelection?.stageChangeId &&
+      !this.selectedStageChangeId
+    ) {
+      valid = false;
     }
     return valid;
   }
@@ -171,6 +224,67 @@ export default class Fec_ScopedStageChangeRoutingAction extends LightningElement
   @api
   getSelectedQueueId() {
     return this.getSubmitParams().queueId;
+  }
+
+  /**
+   * Áp dụng Team/Queue/Stage Change từ FEC_Stage_Change__c (vd RD Payment assessment).
+   * Gọi sau khi parent resolve Apex — có thể trước hoặc sau khi load combobox options.
+   */
+  @api
+  clearForcedRoutingSelection() {
+    scopedActionDebug("clearForcedRoutingSelection");
+    this._pendingForcedSelection = null;
+  }
+
+  @api
+  applyRoutingSelection(opt) {
+    scopedActionDebug("applyRoutingSelection", opt);
+    if (!opt?.stageChangeId) {
+      scopedActionDebug("applyRoutingSelection:skip-no-stageChangeId");
+      return;
+    }
+    this._pendingForcedSelection = opt;
+    this._mergeForcedOptionIntoAllOptions(opt);
+    this._applySelection(opt);
+    this._teamOptionsResolved = true;
+    this._notifySelectionChange();
+    this._logUiState("after-applyRoutingSelection");
+  }
+
+  _logUiState(trigger) {
+    scopedActionDebug(`ui-state:${trigger}`, {
+      lockRouteToTeamSelection: this.lockRouteToTeamSelection,
+      showRouteTo: this.showRouteTo,
+      expectsTeamSelection: this.expectsTeamSelection,
+      showTeamSelection: this.showTeamSelection,
+      showRouteToReadOnly: this.showRouteToReadOnly,
+      showTeamOptionsLoading: this.showTeamOptionsLoading,
+      readOnlyTeam: this.readOnlyTeam,
+      routeToQueueDisplayLabel: this.routeToQueueDisplayLabel,
+      selectedTeam: this.selectedTeam,
+      selectedStageChangeId: this.selectedStageChangeId,
+      allOptionsCount: this.allOptions?.length ?? 0,
+      hasPendingForced: !!this._pendingForcedSelection,
+    });
+  }
+
+  _mergeForcedOptionIntoAllOptions(opt) {
+    const exists = (this.allOptions || []).some(
+      (o) => o.stageChangeId === opt.stageChangeId,
+    );
+    if (!exists) {
+      this.allOptions = [...(this.allOptions || []), opt];
+    }
+  }
+
+  _applyPendingForcedSelectionIfAny() {
+    const opt = this._pendingForcedSelection;
+    if (!opt?.stageChangeId) {
+      return;
+    }
+    this._mergeForcedOptionIntoAllOptions(opt);
+    this._applySelection(opt);
+    this._notifySelectionChange();
   }
 
   connectedCallback() {
@@ -194,15 +308,25 @@ export default class Fec_ScopedStageChangeRoutingAction extends LightningElement
     this._optionsLoadedFor = this._optionsLoadKey;
     this._teamOptionsResolved = false;
     this.allOptions = [];
-    this.selectedTeam = "";
-    this.selectedStageChangeId = "";
+    if (!this._pendingForcedSelection) {
+      this.selectedTeam = "";
+      this.selectedStageChangeId = "";
+    }
+    scopedActionDebug("loadTeamOptions:start", {
+      caseId: this.recordId,
+      routeToActionId: this.routeToActionId,
+      lockRouteToTeamSelection: this.lockRouteToTeamSelection,
+      loadKey: this._optionsLoadKey,
+    });
     getRouteToTeamOptions({
       caseId: this.recordId,
       routeToActionId: this.routeToActionId,
     })
       .then((data) => {
         this.allOptions = data || [];
-        if (this.allOptions.length === 1) {
+        if (this._pendingForcedSelection) {
+          this._applyPendingForcedSelectionIfAny();
+        } else if (this.allOptions.length === 1) {
           this._applySelection(this.allOptions[0]);
         }
         this._notifySelectionChange();
@@ -213,6 +337,7 @@ export default class Fec_ScopedStageChangeRoutingAction extends LightningElement
       })
       .finally(() => {
         this._teamOptionsResolved = true;
+        this._logUiState("after-loadTeamOptions");
       });
   }
 
@@ -260,6 +385,10 @@ export default class Fec_ScopedStageChangeRoutingAction extends LightningElement
   }
 
   handleTeamChange(event) {
+    scopedActionDebug("handleTeamChange", {
+      value: event.detail.value,
+      lockRouteToTeamSelection: this.lockRouteToTeamSelection,
+    });
     this.selectedTeam = event.detail.value;
     this._syncQueueFromTeam();
     this._notifySelectionChange();

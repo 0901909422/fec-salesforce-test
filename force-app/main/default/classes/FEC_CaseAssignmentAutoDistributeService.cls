@@ -352,6 +352,7 @@ public without sharing class FEC_CaseAssignmentAutoDistributeService {
             distributionTargets.size());
         if (distributionTargets.isEmpty()) {
             lines.add('STOP: không Case nào khớp rule 2.1/2.2 — kiểm tra Pending, Assignment Count, queue và NOC.');
+            lines.add('HINT 2.1: Owner=queue, FEC_Assignment_Count__c=0. 2.2: Count>0 + Assignment mở trên queue (query FEC_Assignment__c, không chỉ FEC_Assignment_Users__c).');
             return lines;
         }
 
@@ -740,6 +741,39 @@ public without sharing class FEC_CaseAssignmentAutoDistributeService {
         return false;
     }
 
+    /** Tên queue + Id queue — FEC_OwnerID__c trên Assignment có thể lưu một trong hai. */
+    private static Set<String> buildQueueOwnerMatchTokens(
+        Set<String> queueNames,
+        Map<Id, Group> queueById
+    ) {
+        Set<String> tokens = new Set<String>();
+        if (queueNames != null) {
+            for (String queueName : queueNames) {
+                if (String.isNotBlank(queueName)) {
+                    tokens.add(queueName.trim());
+                }
+            }
+        }
+        if (queueById != null) {
+            for (Group queueRow : queueById.values()) {
+                if (queueRow != null && queueRow.Id != null) {
+                    tokens.add(String.valueOf(queueRow.Id));
+                }
+            }
+        }
+        return tokens;
+    }
+
+    private static Boolean assignmentOwnerMatchesSelectedQueues(
+        String assignmentOwnerRaw,
+        Set<String> queueOwnerTokens
+    ) {
+        if (String.isBlank(assignmentOwnerRaw) || queueOwnerTokens == null || queueOwnerTokens.isEmpty()) {
+            return false;
+        }
+        return queueOwnerTokens.contains(assignmentOwnerRaw.trim());
+    }
+
     private static Boolean caseMatchesNoc(
         Case caseRecord,
         Set<String> nocExactKeys,
@@ -765,10 +799,10 @@ public without sharing class FEC_CaseAssignmentAutoDistributeService {
 
     private static Map<Id, FEC_Assignment__c> preloadOldestQueueAssignmentByCaseId(
         Set<Id> caseIds,
-        Set<String> queueNames
+        Set<String> queueOwnerTokens
     ) {
         Map<Id, FEC_Assignment__c> oldestByCaseId = new Map<Id, FEC_Assignment__c>();
-        if (caseIds == null || caseIds.isEmpty() || queueNames == null || queueNames.isEmpty()) {
+        if (caseIds == null || caseIds.isEmpty() || queueOwnerTokens == null || queueOwnerTokens.isEmpty()) {
             return oldestByCaseId;
         }
         for (FEC_Assignment__c assignmentRow : [
@@ -777,7 +811,7 @@ public without sharing class FEC_CaseAssignmentAutoDistributeService {
             WHERE
                 FEC_Case__c IN :caseIds
                 AND FEC_Assignment_Owner__c = NULL
-                AND FEC_OwnerID__c IN :queueNames
+                AND FEC_OwnerID__c IN :queueOwnerTokens
                 AND (
                     FEC_Assignment_Status__c = NULL
                     OR FEC_Assignment_Status__c NOT IN :FEC_ConstantCommon.CLOSED_ASSIGNMENT_STATUSES
@@ -799,6 +833,7 @@ public without sharing class FEC_CaseAssignmentAutoDistributeService {
     ) {
         List<DistributionTarget> targets = new List<DistributionTarget>();
         Set<Id> seenCaseIds = new Set<Id>();
+        Set<String> queueOwnerTokens = buildQueueOwnerMatchTokens(queueNames, queueById);
 
         List<Case> noAssignmentCases = [
             SELECT
@@ -834,50 +869,63 @@ public without sharing class FEC_CaseAssignmentAutoDistributeService {
             seenCaseIds.add(caseRow.Id);
         }
 
-        List<Case> withAssignmentCases = [
+        Map<Id, Case> assignmentCaseCandidatesById = new Map<Id, Case>();
+        Map<Id, FEC_Assignment__c> oldestAssignmentByCaseId = new Map<Id, FEC_Assignment__c>();
+        for (FEC_Assignment__c assignmentRow : [
             SELECT
                 Id,
-                OwnerId,
-                Status,
+                FEC_Case__c,
+                FEC_OwnerID__c,
                 CreatedDate,
-                FEC_Assignment_Count__c,
-                FEC_Assignment_Users__c,
-                FEC_Product_Type__c,
-                FEC_Product_Type__r.Name,
-                FEC_Category__c,
-                FEC_Category__r.Name,
-                FEC_SubCategory__c,
-                FEC_SubCategory__r.Name,
-                FEC_SubCode__c,
-                FEC_SubCode__r.Name
-            FROM Case
-            WHERE IsClosed = FALSE AND FEC_Assignment_Count__c > 0
+                FEC_Case__r.Id,
+                FEC_Case__r.OwnerId,
+                FEC_Case__r.Status,
+                FEC_Case__r.CreatedDate,
+                FEC_Case__r.FEC_Assignment_Count__c,
+                FEC_Case__r.FEC_Assignment_Users__c,
+                FEC_Case__r.FEC_Product_Type__c,
+                FEC_Case__r.FEC_Product_Type__r.Name,
+                FEC_Case__r.FEC_Category__c,
+                FEC_Case__r.FEC_Category__r.Name,
+                FEC_Case__r.FEC_SubCategory__c,
+                FEC_Case__r.FEC_SubCategory__r.Name,
+                FEC_Case__r.FEC_SubCode__c,
+                FEC_Case__r.FEC_SubCode__r.Name
+            FROM FEC_Assignment__c
+            WHERE
+                FEC_Assignment_Owner__c = NULL
+                AND FEC_OwnerID__c IN :queueOwnerTokens
+                AND (
+                    FEC_Assignment_Status__c = NULL
+                    OR FEC_Assignment_Status__c NOT IN :FEC_ConstantCommon.CLOSED_ASSIGNMENT_STATUSES
+                )
+                AND FEC_Case__r.IsClosed = FALSE
+                AND FEC_Case__r.FEC_Assignment_Count__c > 0
             ORDER BY CreatedDate ASC
-        ];
-        Set<Id> assignmentCaseCandidateIds = new Set<Id>();
-        Map<Id, Case> assignmentCaseCandidatesById = new Map<Id, Case>();
-        for (Case caseRow : withAssignmentCases) {
-            if (seenCaseIds.contains(caseRow.Id)) {
+        ]) {
+            if (
+                assignmentRow.FEC_Case__c == null ||
+                assignmentRow.FEC_Case__r == null ||
+                seenCaseIds.contains(assignmentRow.FEC_Case__c) ||
+                oldestAssignmentByCaseId.containsKey(assignmentRow.FEC_Case__c)
+            ) {
                 continue;
             }
+            if (!assignmentOwnerMatchesSelectedQueues(assignmentRow.FEC_OwnerID__c, queueOwnerTokens)) {
+                continue;
+            }
+            Case caseRow = assignmentRow.FEC_Case__r;
             if (!isPendingCaseStatus(caseRow.Status)) {
                 continue;
             }
             if (!caseMatchesNoc(caseRow, nocExactKeys, nocWithoutSubCodeKeys)) {
                 continue;
             }
-            if (!assignmentUsersContainsAnyQueue(caseRow.FEC_Assignment_Users__c, queueNames, queueById)) {
-                continue;
-            }
-            assignmentCaseCandidateIds.add(caseRow.Id);
-            assignmentCaseCandidatesById.put(caseRow.Id, caseRow);
+            oldestAssignmentByCaseId.put(assignmentRow.FEC_Case__c, assignmentRow);
+            assignmentCaseCandidatesById.put(assignmentRow.FEC_Case__c, caseRow);
         }
 
-        Map<Id, FEC_Assignment__c> oldestAssignmentByCaseId = preloadOldestQueueAssignmentByCaseId(
-            assignmentCaseCandidateIds,
-            queueNames
-        );
-        for (Id caseId : assignmentCaseCandidateIds) {
+        for (Id caseId : oldestAssignmentByCaseId.keySet()) {
             FEC_Assignment__c assignmentRow = oldestAssignmentByCaseId.get(caseId);
             Case caseRow = assignmentCaseCandidatesById.get(caseId);
             if (assignmentRow == null || caseRow == null) {
@@ -1625,7 +1673,7 @@ public without sharing class FEC_CaseAssignmentAutoDistributeService {
         Id assignmentId,
         List<User> eligibleUsers
     ) {
-        Map<String, Id> userIdByEmail = new Map<String, Id>();
+        Map<String, List<Id>> userIdsByEmail = new Map<String, List<Id>>();
         Map<Id, Integer> countByUser = new Map<Id, Integer>();
         Set<String> emails = new Set<String>();
 
@@ -1633,7 +1681,10 @@ public without sharing class FEC_CaseAssignmentAutoDistributeService {
             countByUser.put(userRecord.Id, 0);
             if (String.isNotBlank(userRecord.Email)) {
                 String normalizedEmail = userRecord.Email.trim().toLowerCase();
-                userIdByEmail.put(normalizedEmail, userRecord.Id);
+                if (!userIdsByEmail.containsKey(normalizedEmail)) {
+                    userIdsByEmail.put(normalizedEmail, new List<Id>());
+                }
+                userIdsByEmail.get(normalizedEmail).add(userRecord.Id);
                 emails.add(normalizedEmail);
             }
         }
@@ -1653,12 +1704,19 @@ public without sharing class FEC_CaseAssignmentAutoDistributeService {
             if (String.isBlank(emailValue)) {
                 continue;
             }
-            Id userId = userIdByEmail.get(emailValue.trim().toLowerCase());
-            if (userId == null) {
+            List<Id> matchedUserIds = userIdsByEmail.get(emailValue.trim().toLowerCase());
+            if (matchedUserIds == null || matchedUserIds.isEmpty()) {
                 continue;
             }
             Decimal totalAssigned = (Decimal) ar.get('totalCase');
-            countByUser.put(userId, totalAssigned == null ? 0 : Integer.valueOf(totalAssigned));
+            Integer totalCount = totalAssigned == null ? 0 : Integer.valueOf(totalAssigned);
+            Integer perUserCount = totalCount / matchedUserIds.size();
+            Integer remainder = Math.mod(totalCount, matchedUserIds.size());
+            for (Integer idx = 0; idx < matchedUserIds.size(); idx++) {
+                Id userId = matchedUserIds[idx];
+                Integer assignedCount = perUserCount + (idx < remainder ? 1 : 0);
+                countByUser.put(userId, assignedCount);
+            }
         }
         return countByUser;
     }

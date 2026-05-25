@@ -34,7 +34,7 @@ public without sharing class FEC_MrcDuplicateCaseService {
             return null;
         }
         List<Case> rows = [
-            SELECT CaseNumber
+            SELECT FEC_ID_Search__c, CaseNumber
             FROM Case
             WHERE Id = :dupId
             LIMIT 1
@@ -44,8 +44,19 @@ public without sharing class FEC_MrcDuplicateCaseService {
         }
         OpenDupInfo out = new OpenDupInfo();
         out.caseIdStr = String.valueOf(dupId);
-        out.caseNumber = rows[0].CaseNumber;
+        out.caseNumber = resolveCaseIdForBanner(rows[0]);
         return out;
+    }
+
+    /** Case ID hiển thị Noti-11 — FEC_Case_ID__c (formula) dùng FEC_ID_Search__c làm text. */
+    private static String resolveCaseIdForBanner(Case c) {
+        if (c == null) {
+            return null;
+        }
+        if (String.isNotBlank(c.FEC_ID_Search__c)) {
+            return c.FEC_ID_Search__c.trim();
+        }
+        return c.CaseNumber;
     }
 
     public static Id findOlderOpenRl05DuplicateId(
@@ -143,6 +154,7 @@ public without sharing class FEC_MrcDuplicateCaseService {
             SELECT
                 Id,
                 CaseNumber,
+                FEC_ID_Search__c,
                 CreatedDate,
                 FEC_MRC_Request_Handling_Option__c,
                 FEC_Account_or_Contract__c,
@@ -199,7 +211,7 @@ public without sharing class FEC_MrcDuplicateCaseService {
                         olderDupId,
                         String.format(
                             System.Label.FEC_MRC_Dup_Remark_Cancel_Prev,
-                            new List<String>{ c.CaseNumber }
+                            new List<String>{ resolveCaseIdForBanner(c) }
                         ),
                         emailLocal,
                         roleName
@@ -209,14 +221,16 @@ public without sharing class FEC_MrcDuplicateCaseService {
                 String olderNum = FEC_ConstantCommon.STR_EMPTY;
                 if (olderDupId != null) {
                     List<Case> peerLst = [
-                        SELECT CaseNumber
+                        SELECT FEC_ID_Search__c, CaseNumber
                         FROM Case
                         WHERE Id = :olderDupId
                         LIMIT 1
                     ];
                     if (!peerLst.isEmpty()) {
-                        olderNum =
-                            peerLst[0].CaseNumber == null ? '' : peerLst[0].CaseNumber;
+                        olderNum = resolveCaseIdForBanner(peerLst[0]);
+                        if (olderNum == null) {
+                            olderNum = FEC_ConstantCommon.STR_EMPTY;
+                        }
                     }
                 }
                 toCancelStatus.add(
