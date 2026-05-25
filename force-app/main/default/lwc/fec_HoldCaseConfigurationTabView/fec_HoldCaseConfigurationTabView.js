@@ -231,6 +231,13 @@ export default class Fec_HoldCaseConfigurationTabView extends NavigationMixin(Li
     get changedStatusError() { return this.errors.changedStatus; }
     get nfuError() { return this.errors.nfuCode; }
 
+    get currentNfuSelectedIds() {
+        if (this.isManual) {
+            return this.selectedNfuRowsManual.map(r => r.Id);
+        }
+        return this.selectedNfuRow ? [this.selectedNfuRow.Id] : [];
+    }
+
     get sections() {
         if (!this.record) {
             return null;
@@ -335,6 +342,42 @@ export default class Fec_HoldCaseConfigurationTabView extends NavigationMixin(Li
             changedStatus: STR_EMPTY,
             nfuCode: STR_EMPTY
         };
+
+        getNfuCodes()
+            .then(result => this.syncNfuSelectionFromOptions(result))
+            .catch(error => console.error(error));
+    }
+
+    parseNfuCodes(value) {
+        if (!value) {
+            return [];
+        }
+
+        return value
+            .split(',')
+            .map(item => item.trim())
+            .filter(Boolean);
+    }
+
+    syncNfuSelectionFromOptions(nfuOptions) {
+        const codes = this.parseNfuCodes(this.formData.nfuCode);
+
+        if (!codes.length) {
+            this.selectedNfuRow = null;
+            this.selectedNfuRowsManual = [];
+            return;
+        }
+
+        const matched = (nfuOptions || []).filter(row =>
+            codes.includes((row.FEC_NFU_Code__c || '').trim())
+        );
+
+        if (this.isManual) {
+            this.selectedNfuRowsManual = matched;
+            return;
+        }
+
+        this.selectedNfuRow = matched.length ? matched[0] : null;
     }
 
     parseMultiSelect(value) {
@@ -379,6 +422,8 @@ export default class Fec_HoldCaseConfigurationTabView extends NavigationMixin(Li
         this.changedStatusSearch = STR_EMPTY;
         this.nfuSearch = STR_EMPTY;
         this.nfuSearchManual = STR_EMPTY;
+        this.selectedNfuRow = null;
+        this.selectedNfuRowsManual = [];
         this.errors = {
             channel: STR_EMPTY,
             currentStatus: STR_EMPTY,
@@ -549,15 +594,10 @@ export default class Fec_HoldCaseConfigurationTabView extends NavigationMixin(Li
     handleOpenNfuModal() {
         this.nfuModalError = STR_EMPTY;
 
-        if (this.isManual) {
-            this.selectedNfuRowsManual = [];
-        } else {
-            this.selectedNfuRow = null;
-        }
-
         getNfuCodes()
             .then(result => {
                 this.nfuOptions = result;
+                this.syncNfuSelectionFromOptions(result);
                 this.isShowNfuModal = true;
             })
             .catch(error => console.error(error));
@@ -566,7 +606,6 @@ export default class Fec_HoldCaseConfigurationTabView extends NavigationMixin(Li
     handleCloseNfuModal() {
         this.isShowNfuModal = false;
         this.nfuModalError = STR_EMPTY;
-        this.selectedNfuRow = null;
     }
 
     handleNfuRowSelect(event) {
@@ -621,7 +660,7 @@ export default class Fec_HoldCaseConfigurationTabView extends NavigationMixin(Li
         }
 
         this.selectedNfuRowsManual = this.nfuOptions.filter(r =>
-            selectedIds.includes(r.Id)
+            selectedIds.some(id => String(id) === String(r.Id))
         );
     }
 
@@ -791,6 +830,7 @@ export default class Fec_HoldCaseConfigurationTabView extends NavigationMixin(Li
         this.changedStatusSearch = STR_EMPTY;
         this.nfuSearch = STR_EMPTY;
         this.nfuSearchManual = STR_EMPTY;
+        this.selectedNfuRow = null;
         this.selectedNfuRowsManual = [];
         this.errors = {
             channel: STR_EMPTY,

@@ -13,46 +13,46 @@ public without sharing class FEC_AssignmentListHandler {
     // @AuraEnabled
     // public static List<FEC_Assignment__c> getAssignments(String caseId) {
         
-    //     if (caseId == null) {
-    //         throw new AuraHandledException(System.Label.LBL_CaseIdRequired);
-    //     }
+        //     if (caseId == null) {
+            //         throw new AuraHandledException(System.Label.LBL_CaseIdRequired);
+        //     }
         
-    //     try {
+        //     try {
             
-    //         if (!Schema.sObjectType.FEC_Assignment__c.isAccessible()) {
-    //             throw new AuraHandledException(
-    //                 System.Label.FEC_MSG_NO_ACCESS_ASSIGNMENT
-    //                 );
-    //         }
+            //         if (!Schema.sObjectType.FEC_Assignment__c.isAccessible()) {
+                //             throw new AuraHandledException(
+                //                 System.Label.FEC_MSG_NO_ACCESS_ASSIGNMENT
+                //                 );
+            //         }
             
-    //         List<FEC_Assignment__c> records = [
-    //         SELECT
-    //             Id,
-    //             Name,
-    //             FEC_Assignment_Owner__c,
-    //             FEC_Assignment_Owner__r.Name,
-    //             FEC_Assignment_Owner__r.Email,
-    //             FEC_Assignment_Status__c,
-    //             FEC_OwnerID__c, // tungnm37 thêm: Queue Id để LWC resolve queue name
-    //             FEC_Assignment_Type__c, // tungnm37 thêm: để phân biệt COF/GSR vs thường
-    //             FEC_Assignment_Owner_Text__c // tungnm37 thêm: formula field hiện đúng owner/queue/Unassigned
-    //         FROM FEC_Assignment__c
-    //         WHERE FEC_Case__c = :caseId
-    //     ];
+            //         List<FEC_Assignment__c> records = [
+            //         SELECT
+            //             Id,
+            //             Name,
+            //             FEC_Assignment_Owner__c,
+            //             FEC_Assignment_Owner__r.Name,
+            //             FEC_Assignment_Owner__r.Email,
+            //             FEC_Assignment_Status__c,
+            //             FEC_OwnerID__c, // tungnm37 thêm: Queue Id để LWC resolve queue name
+            //             FEC_Assignment_Type__c, // tungnm37 thêm: để phân biệt COF/GSR vs thường
+            //             FEC_Assignment_Owner_Text__c // tungnm37 thêm: formula field hiện đúng owner/queue/Unassigned
+            //         FROM FEC_Assignment__c
+            //         WHERE FEC_Case__c = :caseId
+            //     ];
             
-    //         return records;
+            //         return records;
             
-    //     } catch (Exception e) {
+        //     } catch (Exception e) {
             
-    //         System.debug(
-    //             LoggingLevel.ERROR,
-    //         'getAssignments error: ' + e.getMessage()
-    //             );
+            //         System.debug(
+            //             LoggingLevel.ERROR,
+            //         'getAssignments error: ' + e.getMessage()
+            //             );
             
-    //         throw new AuraHandledException(
-    //             System.Label.FEC_MSG_LOAD_ASSIGNMENT_FAILED
-    //             );
-    //     }
+            //         throw new AuraHandledException(
+            //             System.Label.FEC_MSG_LOAD_ASSIGNMENT_FAILED
+            //             );
+        //     }
     // }
     
     //HieuTT74: [Update: 22/5/2026] -Update Hiển thị Assignment List với các user thuộc bộ phận khác nhau
@@ -360,6 +360,58 @@ public without sharing class FEC_AssignmentListHandler {
         return queueNames;
     }
     
+    
+    //HieuTT Update  [23/5/2026]-----------------------------------------//
+    public static Set<Id> getCurrentUserQueueIds(Id userId) {
+        
+        Set<Id> queueIds = new Set<Id>();
+        
+        User u = [
+        SELECT Id, UserRoleId
+        FROM User
+        WHERE Id = :userId
+        LIMIT 1
+    ];
+        
+        Set<Id> accessibleMemberIds = new Set<Id>();
+        accessibleMemberIds.add(userId);
+        
+        if (u.UserRoleId != null) {
+            
+            List<Group> roleGroups = [
+            SELECT Id
+            FROM Group
+            WHERE
+                RelatedId = :u.UserRoleId
+                AND Type IN (
+                    :FEC_ConstantCommon.ROLE_STR,
+                    :FEC_ConstantCommon.ROLE_SUBORDINATE_STR
+                )
+        ];
+            
+            for (Group g : roleGroups) {
+                accessibleMemberIds.add(g.Id);
+            }
+        }
+        
+        List<GroupMember> queueMembers = [
+        SELECT GroupId
+        FROM GroupMember
+        WHERE
+            Group.Type = :FEC_ConstantCommon.GROUP_TYPE_QUEUE
+            AND UserOrGroupId IN :accessibleMemberIds
+    ];
+        
+        for (GroupMember gm : queueMembers) {
+            queueIds.add(gm.GroupId);
+        }
+        
+        return queueIds;
+    }
+    
+    
+    
+    //------------------------------------------------------------------//
     
     @AuraEnabled(cacheable=true)
     public static AssignmentViewResponse getAssignmentsForViewNEW(
@@ -750,6 +802,130 @@ public without sharing class FEC_AssignmentListHandler {
         }
     }
     
+    
+    
+    @AuraEnabled
+    public static List<SelectOptionWrapper> getAction(String caseId)
+    {
+        Case caseRecord = [
+                SELECT Id,
+                FEC_Business_Process__c,
+                FEC_Stage_Name__c,
+                OwnerId
+                FROM Case
+                WHERE Id = : caseId
+                LIMIT 1
+            ];
+        
+        // =====================================================
+        // DETECT USER DEPARTMENT
+        // =====================================================
+        String userDepart;
+        
+        if (isCSSupport()) {
+            
+            userDepart = FEC_ConstantCommon.TEAM_CS_SUPPORT;
+        } else if (isCSCustomerCare()) {
+            
+            userDepart = FEC_ConstantCommon.TEAM_CS_CUSTOMER_CARE;
+        } else {
+            
+            userDepart = FEC_ConstantCommon.TEAM_OTHER;
+        }
+        
+        System.debug('=== User department: ' + userDepart);
+        
+        // =====================================================
+        // OTHER DEPT
+        // =====================================================
+        if (userDepart == FEC_ConstantCommon.TEAM_OTHER) {
+            return buildOptions(
+                FEC_ConstantCommon.ACTION_OPTIONS_OTHER
+                );
+        }
+        // =====================================================
+        // CS SUPPORT / CS CUSTOMER CARE
+        // =====================================================
+        if (userDepart == FEC_ConstantCommon.TEAM_CS_SUPPORT || userDepart == FEC_ConstantCommon.TEAM_CS_CUSTOMER_CARE) {
+            // =================================================
+            // CURRENT USER QUEUES
+            // =================================================
+            Set<String> currentUserQueues = getCurrentUserQueues(UserInfo.getUserId());
+            System.debug('currentUserQueues = ' +
+                JSON.serializePretty(currentUserQueues));
+            // =================================================
+            // CASE OWNER QUEUES
+            // =================================================
+            Set<String> caseOwnerQueues = new Set<String>();
+            
+            // =============================================
+            // CASE OWNER = QUEUE
+            // =============================================
+            if (String.valueOf(caseRecord.OwnerId)
+            .startsWith(FEC_ConstantCommon.QUEUE_ID_START)) {
+                
+                Group g = [
+                SELECT Id,
+                Name
+                FROM Group
+                WHERE Id = : caseRecord.OwnerId
+                LIMIT 1
+                ];
+                
+                caseOwnerQueues.add(g.Name);
+            }else {
+                
+                caseOwnerQueues = getCurrentUserQueues(caseRecord.OwnerId);
+            }
+            
+            System.debug('caseOwnerQueues = ' + JSON.serializePretty(caseOwnerQueues));
+            
+            Boolean sameQueue = false;
+            
+            for (String q : currentUserQueues) {
+                
+                if (caseOwnerQueues.contains(q)) {
+                    
+                    sameQueue = true;
+                    break;
+                }
+            }
+            
+            if (!sameQueue) {
+                
+                return buildOptions(
+                    FEC_ConstantCommon.ACTION_OPTIONS_OTHER
+                    );
+            }
+            
+            return buildOptions(
+                FEC_ConstantCommon.ACTION_OPTIONS_CS_SUPPORT
+                );
+        }
+        
+        return new List<SelectOptionWrapper>();
+    }
+    
+    private static List<SelectOptionWrapper> buildOptions(
+        List<Map<String, String>> configs
+    ) {
+        
+        List<SelectOptionWrapper> results =
+            new List<SelectOptionWrapper>();
+        
+        for (Map<String, String> item : configs) {
+            
+            results.add(
+                new SelectOptionWrapper(
+                item.get('value'),
+            item.get('label')
+                )
+                );
+        }
+        
+        return results;
+    }
+    
     //--------------------------[END]-----------------------------------------------------------------------
     
     @AuraEnabled(cacheable=true)
@@ -808,7 +984,7 @@ public without sharing class FEC_AssignmentListHandler {
         List<User> users = [
         SELECT Id, Name
         FROM User
-        WHERE FEC_User_Group__c = :currentUser.FEC_User_Group__c
+        WHERE FEC_User_Group__c = :currentUser.FEC_User_Group__c AND Id != :UserInfo.getUserId()
         AND IsActive = true
     ];
         
@@ -942,179 +1118,179 @@ public without sharing class FEC_AssignmentListHandler {
     // Integer pageNumber
     // ) {
         
-    //     if (String.isBlank(caseId)) {
+        //     if (String.isBlank(caseId)) {
             
-    //         throw new AuraHandledException(
-    //             System.Label.LBL_CaseIdRequired
-    //             );
-    //     }
+            //         throw new AuraHandledException(
+            //             System.Label.LBL_CaseIdRequired
+            //             );
+        //     }
         
-    //     try {
+        //     try {
             
-    //         // DEFAULT VALUES
-    //         pageSize =
-    //             (pageSize == null || pageSize <= 0)
-    //             ? 10
-    //             : pageSize;
+            //         // DEFAULT VALUES
+            //         pageSize =
+            //             (pageSize == null || pageSize <= 0)
+            //             ? 10
+            //             : pageSize;
             
-    //         pageNumber =
-    //             (pageNumber == null || pageNumber <= 0)
-    //             ? 1
-    //             : pageNumber;
+            //         pageNumber =
+            //             (pageNumber == null || pageNumber <= 0)
+            //             ? 1
+            //             : pageNumber;
             
-    //         Integer offsetValue =
-    //             (pageNumber - 1) * pageSize;
+            //         Integer offsetValue =
+            //             (pageNumber - 1) * pageSize;
             
-    //         AssignmentViewResponse response =
-    //             new AssignmentViewResponse();
+            //         AssignmentViewResponse response =
+            //             new AssignmentViewResponse();
             
-    //         // TOTAL COUNT
-    //         response.totalCount = [
-
-    //         SELECT COUNT()
-
-    //         FROM FEC_Assignment__c
-
-    //         WHERE FEC_Case__c = :caseId
-    //     ];
+            //         // TOTAL COUNT
+            //         response.totalCount = [
             
-    //         // PAGING QUERY
-    //         List<FEC_Assignment__c> assignments = [
-
-    //         SELECT
-    //             Id,
-    //             Name,
-    //             FEC_Assignment_Name__c,
-    //             CreatedDate,
-    //             CreatedBy.Email,
-    //             CreatedBy.UserRole.Name,
-    //             FEC_Assignment_Status__c,
-    //             FEC_OwnerID__c,
-    //             FEC_Assignment_Type__c
-
-    //         FROM FEC_Assignment__c
-
-    //         WHERE FEC_Case__c = :caseId
-
-    //         ORDER BY CreatedDate DESC
-
-    //         LIMIT :pageSize
-    //         OFFSET :offsetValue
-    //     ];
+            //         SELECT COUNT()
             
-    //         Set<Id> assignmentIds =
-    //             new Set<Id>();
+            //         FROM FEC_Assignment__c
             
-    //         for (FEC_Assignment__c item : assignments) {
+            //         WHERE FEC_Case__c = :caseId
+            //     ];
+            
+            //         // PAGING QUERY
+            //         List<FEC_Assignment__c> assignments = [
+            
+            //         SELECT
+            //             Id,
+            //             Name,
+            //             FEC_Assignment_Name__c,
+            //             CreatedDate,
+            //             CreatedBy.Email,
+            //             CreatedBy.UserRole.Name,
+            //             FEC_Assignment_Status__c,
+            //             FEC_OwnerID__c,
+            //             FEC_Assignment_Type__c
+            
+            //         FROM FEC_Assignment__c
+            
+            //         WHERE FEC_Case__c = :caseId
+            
+            //         ORDER BY CreatedDate DESC
+            
+            //         LIMIT :pageSize
+            //         OFFSET :offsetValue
+            //     ];
+            
+            //         Set<Id> assignmentIds =
+            //             new Set<Id>();
+            
+            //         for (FEC_Assignment__c item : assignments) {
                 
-    //             assignmentIds.add(item.Id);
-    //         }
+                //             assignmentIds.add(item.Id);
+            //         }
             
-    //         Map<Id, FEC_Case_Remarks__c> latestRemarkMap =
-    //             new Map<Id, FEC_Case_Remarks__c>();
+            //         Map<Id, FEC_Case_Remarks__c> latestRemarkMap =
+            //             new Map<Id, FEC_Case_Remarks__c>();
             
-    //         // QUERY REMARKS ONLY WHEN HAVE ASSIGNMENTS
-    //         if (!assignmentIds.isEmpty()) {
+            //         // QUERY REMARKS ONLY WHEN HAVE ASSIGNMENTS
+            //         if (!assignmentIds.isEmpty()) {
                 
-    //             List<FEC_Case_Remarks__c> remarks = [
-
-    //             SELECT
-    //                 Id,
-    //                 FEC_Assignment__c,
-    //                 FEC_Stage_Name__c,
-    //                 LastModifiedDate
-
-    //             FROM FEC_Case_Remarks__c
-
-    //             WHERE FEC_Remark_Type__c =
-    //                 :FEC_ConstantCommon.REMARK_TYPE_ASSIGNMENT
-
-    //             AND FEC_Case__c = :caseId
-
-    //             AND FEC_Assignment__c IN :assignmentIds
-
-    //             ORDER BY LastModifiedDate DESC
-    //         ];
+                //             List<FEC_Case_Remarks__c> remarks = [
                 
-    //             for (FEC_Case_Remarks__c remark : remarks) {
+                //             SELECT
+                //                 Id,
+                //                 FEC_Assignment__c,
+                //                 FEC_Stage_Name__c,
+                //                 LastModifiedDate
+                
+                //             FROM FEC_Case_Remarks__c
+                
+                //             WHERE FEC_Remark_Type__c =
+                //                 :FEC_ConstantCommon.REMARK_TYPE_ASSIGNMENT
+                
+                //             AND FEC_Case__c = :caseId
+                
+                //             AND FEC_Assignment__c IN :assignmentIds
+                
+                //             ORDER BY LastModifiedDate DESC
+                //         ];
+                
+                //             for (FEC_Case_Remarks__c remark : remarks) {
                     
-    //                 // FIRST = LATEST
-    //                 if (!latestRemarkMap.containsKey(
-    //                     remark.FEC_Assignment__c
-    //                 )) {
+                    //                 // FIRST = LATEST
+                    //                 if (!latestRemarkMap.containsKey(
+                    //                     remark.FEC_Assignment__c
+                    //                 )) {
                         
-    //                     latestRemarkMap.put(
-    //                         remark.FEC_Assignment__c,
-    //                     remark
-    //                         );
-    //                 }
-    //             }
-    //         }
+                        //                     latestRemarkMap.put(
+                        //                         remark.FEC_Assignment__c,
+                        //                     remark
+                        //                         );
+                    //                 }
+                //             }
+            //         }
             
-    //         response.assignments =
-    //             new List<AssignmentViewWrapper>();
+            //         response.assignments =
+            //             new List<AssignmentViewWrapper>();
             
-    //         for (FEC_Assignment__c assignment : assignments) {
+            //         for (FEC_Assignment__c assignment : assignments) {
                 
-    //             AssignmentViewWrapper wrapper =
-    //                 new AssignmentViewWrapper();
+                //             AssignmentViewWrapper wrapper =
+                //                 new AssignmentViewWrapper();
                 
-    //             wrapper.id =
-    //                 assignment.Id;
+                //             wrapper.id =
+                //                 assignment.Id;
                 
-    //             wrapper.assignmentId =
-    //                 assignment.Name;
+                //             wrapper.assignmentId =
+                //                 assignment.Name;
                 
-    //             wrapper.assignmentType =
-    //                 assignment.FEC_Assignment_Type__c;
+                //             wrapper.assignmentType =
+                //                 assignment.FEC_Assignment_Type__c;
                 
-    //             wrapper.assignmentName =
-    //                 assignment.FEC_Assignment_Name__c;
+                //             wrapper.assignmentName =
+                //                 assignment.FEC_Assignment_Name__c;
                 
-    //             wrapper.assignmentStatus =
-    //                 assignment.FEC_Assignment_Status__c;
+                //             wrapper.assignmentStatus =
+                //                 assignment.FEC_Assignment_Status__c;
                 
-    //             wrapper.user =
-    //                 assignment.CreatedBy != null
-    //                 ? assignment.CreatedBy.Email
-    //                 : '';
+                //             wrapper.user =
+                //                 assignment.CreatedBy != null
+                //                 ? assignment.CreatedBy.Email
+                //                 : '';
                 
-    //             wrapper.userRole =
-    //                 assignment.CreatedBy != null &&
-    //                 assignment.CreatedBy.UserRole != null
-    //                 ? assignment.CreatedBy.UserRole.Name
-    //                 : 'No Role Assigned';
+                //             wrapper.userRole =
+                //                 assignment.CreatedBy != null &&
+                //                 assignment.CreatedBy.UserRole != null
+                //                 ? assignment.CreatedBy.UserRole.Name
+                //                 : 'No Role Assigned';
                 
-    //             wrapper.latestModifiedDateTime =
-    //                 assignment.CreatedDate;
+                //             wrapper.latestModifiedDateTime =
+                //                 assignment.CreatedDate;
                 
-    //             if (latestRemarkMap.containsKey(
-    //                 assignment.Id
-    //             )) {
+                //             if (latestRemarkMap.containsKey(
+                //                 assignment.Id
+                //             )) {
                     
-    //                 wrapper.stageName =
-    //                     latestRemarkMap.get(
-    //                     assignment.Id
-    //                     ).FEC_Stage_Name__c;
-    //             }
+                    //                 wrapper.stageName =
+                    //                     latestRemarkMap.get(
+                    //                     assignment.Id
+                    //                     ).FEC_Stage_Name__c;
+                //             }
                 
-    //             response.assignments.add(wrapper);
-    //         }
+                //             response.assignments.add(wrapper);
+            //         }
             
-    //         return response;
+            //         return response;
             
-    //     } catch (Exception e) {
+        //     } catch (Exception e) {
             
-    //         System.debug(
-    //             LoggingLevel.ERROR,
-    //         'getAssignmentsForView error: ' +
-    //             e.getMessage()
-    //             );
+            //         System.debug(
+            //             LoggingLevel.ERROR,
+            //         'getAssignmentsForView error: ' +
+            //             e.getMessage()
+            //             );
             
-    //         throw new AuraHandledException(
-    //             System.Label.FEC_MSG_LOAD_ASSIGNMENT_FAILED
-    //             );
-    //     }
+            //         throw new AuraHandledException(
+            //             System.Label.FEC_MSG_LOAD_ASSIGNMENT_FAILED
+            //             );
+        //     }
     // }
     
     @AuraEnabled
@@ -1149,6 +1325,9 @@ public without sharing class FEC_AssignmentListHandler {
         
         Case caseRecord = cases.isEmpty() ? null : cases[0];
         
+        if (caseRecord == null) {
+            return teamOptions;
+        }
         /*
          * Detect user department
          */
@@ -1212,45 +1391,50 @@ public without sharing class FEC_AssignmentListHandler {
             /*
              * Current login user queues
              */
-            List<String> currentUserQueues =
-                getQueueNamesByUserOrRoleId(UserInfo.getUserId());
+            Set<Id> currentUserQueueIds =
+                getCurrentUserQueueIds(UserInfo.getUserId());
             
             System.debug(
-                'currentUserQueues = ' + JSON.serializePretty(currentUserQueues));
+                'currentUserQueueIds = ' +
+                JSON.serializePretty(currentUserQueueIds)
+                );
             
-            /*
-             * Resolve case owner queues
-             */
-            List<String> caseOwnerQueues = new List<String>();
+            Set<Id> caseOwnerQueueIds = new Set<Id>();
             
             /*
              * Case owner = Queue
              */
-            if (String.valueOf(currentCase.OwnerId).startsWith(FEC_ConstantCommon.QUEUE_ID_START)) {
-                Group g = [
-      SELECT Id, Name FROM Group WHERE Id = : currentCase.OwnerId LIMIT 1
-    ];
+            if (
+                String.valueOf(currentCase.OwnerId)
+                .startsWith(FEC_ConstantCommon.QUEUE_ID_START)
+            ) {
                 
-                caseOwnerQueues.add(g.Name);
+                caseOwnerQueueIds.add(currentCase.OwnerId);
             }
             
             /*
              * Case owner = User
              */
             else {
-                caseOwnerQueues =
-                    getQueueNamesByUserOrRoleId(String.valueOf(currentCase.OwnerId));
+                
+                caseOwnerQueueIds =
+                    getCurrentUserQueueIds(currentCase.OwnerId);
             }
             
-            System.debug('caseOwnerQueues = ' + JSON.serializePretty(caseOwnerQueues));
+            System.debug(
+                'caseOwnerQueueIds = ' +
+                JSON.serializePretty(caseOwnerQueueIds)
+                );
             
             /*
              * Check same queue
              */
             Boolean sameQueue = false;
             
-            for (String q : currentUserQueues) {
-                if (caseOwnerQueues.contains(q)) {
+            for (Id qId : currentUserQueueIds) {
+                
+                if (caseOwnerQueueIds.contains(qId)) {
+                    
                     sameQueue = true;
                     break;
                 }
@@ -1287,7 +1471,6 @@ public without sharing class FEC_AssignmentListHandler {
                     }
                 }
             }
-            
             /*
              * Same queue
              * => Original processing team
@@ -1319,7 +1502,9 @@ public without sharing class FEC_AssignmentListHandler {
   ];
         
         Case caseRecord = cases.isEmpty() ? null : cases[0];
-        
+        if (caseRecord == null) {
+            return queueOptions;
+        }
         /*
          * Detect user department
          */
@@ -1365,48 +1550,58 @@ public without sharing class FEC_AssignmentListHandler {
          * CS Support / CS Customer Care
          */
         else if (userDepart == FEC_ConstantCommon.TEAM_CS_SUPPORT || userDepart == FEC_ConstantCommon.TEAM_CS_CUSTOMER_CARE) {
+            
+            /*
+             * Case owner
+             */
+            Case currentCase = [SELECT Id, OwnerId FROM Case WHERE Id = : caseId LIMIT 1];
             /*
              * Current login user queues
              */
-            List<String> currentUserQueues =
-                getQueueNamesByUserOrRoleId(UserInfo.getUserId());
+            Set<Id> currentUserQueueIds =
+                getCurrentUserQueueIds(UserInfo.getUserId());
             
             System.debug(
-                'currentUserQueues = ' + JSON.serializePretty(currentUserQueues));
+                'currentUserQueueIds = ' +
+                JSON.serializePretty(currentUserQueueIds)
+                );
             
-            /*
-             * Resolve CASE OWNER queues
-             */
-            List<String> caseOwnerQueues = new List<String>();
+            Set<Id> caseOwnerQueueIds = new Set<Id>();
             
             /*
              * Case owner = Queue
              */
-            if (String.valueOf(caseRecord.OwnerId).startsWith(FEC_ConstantCommon.QUEUE_ID_START)) {
-                Group g = [
-        SELECT Id, Name FROM Group WHERE Id = : caseRecord.OwnerId LIMIT 1
-      ];
+            if (
+                String.valueOf(currentCase.OwnerId)
+                .startsWith(FEC_ConstantCommon.QUEUE_ID_START)
+            ) {
                 
-                caseOwnerQueues.add(g.Name);
+                caseOwnerQueueIds.add(currentCase.OwnerId);
             }
             
             /*
              * Case owner = User
              */
             else {
-                caseOwnerQueues =
-                    getQueueNamesByUserOrRoleId(String.valueOf(caseRecord.OwnerId));
+                
+                caseOwnerQueueIds =
+                    getCurrentUserQueueIds(currentCase.OwnerId);
             }
             
-            System.debug('caseOwnerQueues = ' + JSON.serializePretty(caseOwnerQueues));
+            System.debug(
+                'caseOwnerQueueIds = ' +
+                JSON.serializePretty(caseOwnerQueueIds)
+                );
             
             /*
              * Check same queue
              */
             Boolean sameQueue = false;
             
-            for (String q : currentUserQueues) {
-                if (caseOwnerQueues.contains(q)) {
+            for (Id qId : currentUserQueueIds) {
+                
+                if (caseOwnerQueueIds.contains(qId)) {
+                    
                     sameQueue = true;
                     break;
                 }
@@ -1697,7 +1892,7 @@ public without sharing class FEC_AssignmentListHandler {
     
     
     public static Boolean isCurrentUserInQueue(
-        String queueDeveloperName
+        Set<String> queueDeveloperNames
     ) {
         
         Id userId = UserInfo.getUserId();
@@ -1714,16 +1909,22 @@ public without sharing class FEC_AssignmentListHandler {
         /*
          * Queue
          */
-        Group queueGroup = [
+        List<Group> queueGroup = [
         SELECT
             Id,
             Name
         FROM Group
         WHERE
             Type = :FEC_ConstantCommon.GROUP_TYPE_QUEUE
-            AND DeveloperName = :queueDeveloperName
-        LIMIT 1
-    ];
+            AND DeveloperName IN :queueDeveloperNames
+        ];
+        
+        Set<Id> queueGroupIds = new Set<Id>();
+        
+        for (Group g : queueGroup) {
+            queueGroupIds.add(g.Id);
+        }
+        
         
         /*
          * Queue members
@@ -1732,7 +1933,7 @@ public without sharing class FEC_AssignmentListHandler {
         SELECT
             UserOrGroupId
         FROM GroupMember
-        WHERE GroupId = :queueGroup.Id
+        WHERE GroupId IN :queueGroupIds
     ];
         
         Set<Id> memberIds = new Set<Id>();
@@ -1802,17 +2003,24 @@ public without sharing class FEC_AssignmentListHandler {
         
         return false;
     }
-    
+    @AuraEnabled(cacheable=true)
     public static Boolean isCSSupport() {
+        
         return isCurrentUserInQueue(
+        new Set<String>{
             FEC_ConstantCommon.QUEUE_DQ_CS_SUPPORT_NAME
-            );
+        }
+        );
     }
     
+    @AuraEnabled(cacheable=true)
     public static Boolean isCSCustomerCare() {
+        
         return isCurrentUserInQueue(
-            FEC_ConstantCommon.QUEUE_DQ_CS_CUSTOMER_CARE_NAME
-            );
+        new Set<String>{
+            FEC_ConstantCommon.QUEUE_DQ_CS_CUSTOMER_CARE_NAME,  FEC_ConstantCommon.QUEUE_DQ_CS_CUSTOMER_CARE_DEPT_NAME
+        }
+        );
     }
     
     
@@ -1892,6 +2100,9 @@ public without sharing class FEC_AssignmentListHandler {
                 &&
                 devName !=
                 FEC_ConstantCommon.QUEUE_DQ_CS_CUSTOMER_CARE_NAME
+                &&
+                devName != FEC_ConstantCommon.QUEUE_DQ_CS_CUSTOMER_CARE_DEPT_NAME
+                
             ) {
                 
                 return true;

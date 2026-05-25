@@ -1,4 +1,4 @@
-import { LightningElement, wire, track } from "lwc";
+import { LightningElement, api, wire, track } from "lwc";
 import { CurrentPageReference, NavigationMixin } from "lightning/navigation";
 import { ShowToastEvent } from "lightning/platformShowToastEvent";
 import USER_ID from "@salesforce/user/Id";
@@ -150,6 +150,24 @@ function assignmentIdFromInContextRef(raw) {
   return scrapeAssignmentIdFromText(s);
 }
 
+function scrapeNocRecordIdFromHref(href) {
+  if (!href) {
+    return undefined;
+  }
+  const m = String(href).match(
+    /\/FEC_Case_Assignment_NOC__c\/([a-zA-Z0-9]{15,18})(?:\/edit|$|\?|#)/i
+  );
+  return m?.[1];
+}
+
+function resolveNocRecordIdFromState(state, href) {
+  const recordId = state?.recordId || state?.c__recordId;
+  if (recordId) {
+    return String(recordId).trim();
+  }
+  return scrapeNocRecordIdFromHref(href);
+}
+
 function resolveParentAssignmentFromState(state) {
   if (!state) {
     return undefined;
@@ -175,6 +193,20 @@ export default class Fec_CaseAssignmentNocNew extends NavigationMixin(LightningE
   nocRecordId;
   isEditMode = false;
   nocHydrated = false;
+
+  _recordId;
+
+  /** Aura Edit override truyền recordId — CurrentPageReference thường không có trên action override. */
+  @api
+  get recordId() {
+    return this._recordId;
+  }
+  set recordId(value) {
+    this._recordId = value;
+    if (value) {
+      this.applyEditContext(String(value).trim());
+    }
+  }
 
   @track productTypeOptionlst = [];
   @track categoryOptionlst = [];
@@ -221,10 +253,16 @@ export default class Fec_CaseAssignmentNocNew extends NavigationMixin(LightningE
       actionName === "edit" &&
       recordId
     ) {
-      this.isEditMode = true;
-      this.nocRecordId = recordId;
-      this.pageTitle = "Edit Case Assignment NOC";
-      this.lockRelatedAssignmentPicker = true;
+      this.applyEditContext(recordId);
+      return;
+    }
+
+    const nocFromState = resolveNocRecordIdFromState(
+      pageRef?.state,
+      typeof window !== "undefined" ? window.location?.href : undefined
+    );
+    if (nocFromState) {
+      this.applyEditContext(nocFromState);
       return;
     }
 
@@ -238,12 +276,28 @@ export default class Fec_CaseAssignmentNocNew extends NavigationMixin(LightningE
     }
   }
 
-  @wire(getRecord, { recordId: "$nocRecordId", fields: NOC_EDIT_FIELDS })
-  wiredNocRecord({ data, error }) {
-    if (!this.isEditMode || !data || this.nocHydrated) {
+  applyEditContext(recordId) {
+    if (!recordId) {
       return;
     }
-    if (error) {
+    const normalizedId = String(recordId).trim();
+    if (this.nocRecordId === normalizedId && this.isEditMode) {
+      return;
+    }
+    this.nocHydrated = false;
+    this.isEditMode = true;
+    this.nocRecordId = normalizedId;
+    this._recordId = normalizedId;
+    this.pageTitle = "Edit Case Assignment NOC";
+    this.lockRelatedAssignmentPicker = true;
+  }
+
+  @wire(getRecord, { recordId: "$nocRecordId", fields: NOC_EDIT_FIELDS })
+  wiredNocRecord({ data, error }) {
+    if (!this.isEditMode || !this.nocRecordId || !data || this.nocHydrated) {
+      if (error && this.isEditMode) {
+        this.showToast("Error", "Cannot load Case Assignment NOC.", "error");
+      }
       return;
     }
     this.assignmentRecordId = getFieldValue(data, NOC_ASSIGNMENT_FIELD);
@@ -260,6 +314,7 @@ export default class Fec_CaseAssignmentNocNew extends NavigationMixin(LightningE
     await this.refreshCategories();
     await this.refreshSubCategories();
     await this.refreshSubCodes();
+    this.pickerRemountNonce += 1;
   }
 
   @wire(getRecord, { recordId: USER_ID, fields: USER_FIELDS })
@@ -337,14 +392,20 @@ export default class Fec_CaseAssignmentNocNew extends NavigationMixin(LightningE
       } catch (e) {
         this.currentTabId = null;
       }
-      this.applyResolvedAssignmentId(resolveParentAssignmentFromState(this._readUrlStateParams()));
-      this.syncAssignmentFromWindowLocation();
-      this.clearComboUi();
+      const nocFromUrl = scrapeNocRecordIdFromHref(window.location?.href);
+      if (nocFromUrl) {
+        this.applyEditContext(nocFromUrl);
+      }
+      if (!this.isEditMode) {
+        this.applyResolvedAssignmentId(resolveParentAssignmentFromState(this._readUrlStateParams()));
+        this.syncAssignmentFromWindowLocation();
+        this.clearComboUi();
+      }
     });
   }
 
   renderedCallback() {
-    if (this.assignmentRecordId || this.assignmentSyncPass >= 2) {
+    if (this.isEditMode || this.assignmentRecordId || this.assignmentSyncPass >= 2) {
       return;
     }
     this.assignmentSyncPass += 1;

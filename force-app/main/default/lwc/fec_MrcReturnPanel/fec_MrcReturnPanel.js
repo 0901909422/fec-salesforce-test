@@ -6,14 +6,9 @@ import {
   MRC_CONF_NOT_RECEIVED,
   MRC_CONF_RECEIVED,
   isMrcNotReceivedConfirmation,
-  showMrcRl0502DupBanner,
+  shouldShowMrcHandlingRadio,
   shouldShowMrcReturnDelivery,
 } from "c/fecMrcReturnCaseLogic";
-
-const DEFAULT_CONFIRMATION_OPTIONS = [
-  { label: "Customer received MRC", value: MRC_CONF_RECEIVED },
-  { label: "Customer has not received MRC", value: MRC_CONF_NOT_RECEIVED },
-];
 
 /**
  * RL05 MRC Return — panel gom Delivery Option + Xác nhận KH (RL05.02) + Noti-11.
@@ -22,12 +17,14 @@ export default class Fec_MrcReturnPanel extends LightningElement {
   @api recordId;
   @api subCodeCode;
   @api subCategoryCode;
+  @api stageName;
   @api isEdit = false;
   @api mrcRl05Ui;
   @api duplicateCaseId;
   @api duplicateCaseNumber;
   @api handlingOptionValue = STR_EMPTY;
   @api customerConfirmationOptions;
+  @api handlingOptionOptions;
 
   customerConfirmationField = FIELD_MRC_CUSTOMER_CONFIRMATION;
   handlingOptionField = FIELD_MRC_HANDLING_OPTION;
@@ -42,12 +39,16 @@ export default class Fec_MrcReturnPanel extends LightningElement {
   }
 
   get isReadOnly() {
-    return this.isEdit === false;
+    return this.isEdit !== true;
   }
 
   get isRl0502() {
     const code = String(this.subCodeCode ?? STR_EMPTY).toUpperCase();
     if (code.includes("RL05.02")) {
+      return true;
+    }
+    const stage = String(this.stageName ?? STR_EMPTY).toUpperCase();
+    if (stage.includes("RL05.02")) {
       return true;
     }
     if (this.mrcRl05Ui?.isReturnSubCode === true) {
@@ -69,30 +70,54 @@ export default class Fec_MrcReturnPanel extends LightningElement {
     if (this.mrcRl05Ui?.autoRouteReject === true) {
       return false;
     }
-    return this.mrcRl05Ui?.showCustomerConfirmation === true;
+    if (!this.mrcRl05Ui) {
+      return true;
+    }
+    return this.mrcRl05Ui.showCustomerConfirmation !== false;
+  }
+
+  get customerConfirmationFieldLabel() {
+    const labels = this.mrcRl05Ui?.caseFieldLabels;
+    return (
+      labels?.[FIELD_MRC_CUSTOMER_CONFIRMATION] ||
+      "Xác nhận khách hàng"
+    );
+  }
+
+  get handlingOptionFieldLabel() {
+    const labels = this.mrcRl05Ui?.caseFieldLabels;
+    return (
+      labels?.[FIELD_MRC_HANDLING_OPTION] ||
+      "Phương án xử lý yêu cầu MRC"
+    );
   }
 
   get confirmationPicklistOptions() {
-    const fromBusiness = Array.isArray(this.customerConfirmationOptions)
-      ? this.customerConfirmationOptions
+    // Luôn dùng map label/value chuẩn — tránh bản dịch org bị đảo label↔value.
+    return [
+      {
+        label: "Khách hàng đã xác nhận MRC",
+        value: MRC_CONF_RECEIVED,
+      },
+      {
+        label: "Khách hàng chưa xác nhận MRC",
+        value: MRC_CONF_NOT_RECEIVED,
+      },
+    ];
+  }
+
+  get handlingOptionPicklistOptions() {
+    const fromBusiness = Array.isArray(this.handlingOptionOptions)
+      ? this.handlingOptionOptions
       : [];
-    if (fromBusiness.length) {
-      return fromBusiness.map((o) => ({
-        label: o.label || o.value,
-        value: o.value,
-      }));
-    }
-    return DEFAULT_CONFIRMATION_OPTIONS;
+    return fromBusiness.map((o) => ({
+      label: o.label || o.value,
+      value: o.value,
+    }));
   }
 
   get showStandaloneDupBanner() {
-    if (this.showCustomerConfirmation) {
-      return false;
-    }
-    if (this.mrcRl05Ui?.showMrcDupBanner !== true) {
-      return false;
-    }
-    return showMrcRl0502DupBanner(this._businessSnapshot);
+    return false;
   }
 
   get customerConfirmationRequired() {
@@ -104,14 +129,37 @@ export default class Fec_MrcReturnPanel extends LightningElement {
     return id.length >= 15;
   }
 
+  get showMrcHandlingRadioBlock() {
+    if (!this.isRl0502 || this.mrcRl05Ui?.autoRouteReject === true) {
+      return false;
+    }
+    return (
+      isMrcNotReceivedConfirmation(this._confirmationValue) ||
+      shouldShowMrcHandlingRadio(
+        this._businessSnapshot,
+        this._confirmationValue,
+      )
+    );
+  }
+
+  get hideMrcDupMessageForRadio() {
+    if (!this.hasDuplicateCase) {
+      return true;
+    }
+    return !isMrcNotReceivedConfirmation(this._confirmationValue);
+  }
+
   get showDupBanner() {
-    if (!this.showCustomerConfirmation) {
-      return false;
-    }
-    if (!isMrcNotReceivedConfirmation(this._confirmationValue)) {
-      return false;
-    }
-    return this.hasDuplicateCase || showMrcRl0502DupBanner(this._businessSnapshot);
+    return false;
+  }
+
+  /** @deprecated use showMrcHandlingRadioBlock */
+  get showHandlingRadioInline() {
+    return false;
+  }
+
+  get showHandlingRadioBlock() {
+    return this.showMrcHandlingRadioBlock;
   }
 
   get showDelivery() {
@@ -133,6 +181,7 @@ export default class Fec_MrcReturnPanel extends LightningElement {
     return {
       subCodeCode: this.subCodeCode,
       subCategoryCode: this.subCategoryCode,
+      stageName: this.stageName,
       mrcRl05Ui: this.mrcRl05Ui,
       mrcRl0502DuplicateOpenCaseId: this.duplicateCaseId,
       mrcRl0502DuplicateCaseNumber: this.duplicateCaseNumber,
@@ -161,18 +210,52 @@ export default class Fec_MrcReturnPanel extends LightningElement {
     );
   }
 
+  handleMrcDeliveryChange(event) {
+    this.dispatchEvent(
+      new CustomEvent("mrcdeliverychange", {
+        detail: event.detail || {},
+        bubbles: true,
+        composed: true,
+      }),
+    );
+  }
+
+  @api getDeliveryForm() {
+    return this.template.querySelector("c-fec_-mrc-delivery-form");
+  }
+
   @api validateForSubmit() {
     if (
-      (this.showDupBanner || this.showStandaloneDupBanner) &&
-      !this.handlingOptionValue
+      this.showCustomerConfirmation &&
+      this.customerConfirmationRequired &&
+      !String(this._confirmationValue ?? STR_EMPTY).trim()
     ) {
       return false;
     }
-    const delivery = this.template.querySelector("c-fec_-mrc-delivery-form");
-    if (delivery && typeof delivery.validateForComplete === "function") {
-      return delivery.validateForComplete();
+    if (this.showHandlingRadioBlock && !this.handlingOptionValue) {
+      return false;
+    }
+    const delivery = this.getDeliveryForm();
+    if (delivery && typeof delivery.validateForSubmit === "function") {
+      return delivery.validateForSubmit();
     }
     return true;
+  }
+
+  @api async saveToCase() {
+    const delivery = this.getDeliveryForm();
+    if (delivery && typeof delivery.saveToCase === "function") {
+      return delivery.saveToCase();
+    }
+    return { valid: true, messages: [] };
+  }
+
+  @api async saveDraftIfApplicable() {
+    const delivery = this.getDeliveryForm();
+    if (delivery && typeof delivery.saveDraftIfApplicable === "function") {
+      return delivery.saveDraftIfApplicable();
+    }
+    return { valid: true, messages: [] };
   }
 
   @api getHandlingOptionValue() {

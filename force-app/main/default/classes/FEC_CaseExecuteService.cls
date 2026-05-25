@@ -16,6 +16,7 @@ public without sharing class FEC_CaseExecuteService {
       return;
     }
     try {
+      FEC_CaseInitUpdateService.registerSystemCaseUpdate(caseId);
       FEC_CaseTriggerHandler.isSystemUpdate = true;
       updateCaseExecuteFlag(caseId, false);
       System.debug('FORCE UPDATE FEC_Can_Execute__c = false');
@@ -172,9 +173,10 @@ public without sharing class FEC_CaseExecuteService {
     if (result.shouldUpdate) {
       try {
         System.debug('START UPDATE CASE');
-        
+
+        FEC_CaseInitUpdateService.registerSystemCaseUpdate(c.Id);
         FEC_CaseTriggerHandler.isSystemUpdate = true;
-        
+
         //thangtv: SYSTEM_MODE — reset flag khi user không có FLS edit trên Case
         updateCaseExecuteFlag(c.Id, canExecute);
         
@@ -234,8 +236,8 @@ public without sharing class FEC_CaseExecuteService {
       
       /*
        * Routing history
-       */
-      createRoutingActionHistory(caseId, oldOwnerId, userId);
+      //  */
+      // createRoutingActionHistory(caseId, oldOwnerId, userId);
       
       System.debug('SUCCESS: Owner updated');
       

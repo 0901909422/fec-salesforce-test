@@ -3,7 +3,7 @@
  * → gọi Mark NFU qua FEC_AutoHoldCaseApi.markNFU (retry tối đa 3 lần)
  * → cập nhật Case (+ FEC_NFU_Description_Result__c khi field đã deploy).
  */
-public with sharing class FEC_AutoHoldCaseService {
+public without sharing class FEC_AutoHoldCaseService {
     public static final String RESULT_PENDING = 'PENDING';
     public static final String RESULT_ALREADY_MARKED = 'ALREADY_MARKED';
     public static final String RESULT_SUCCESS = 'SUCCESS';
@@ -12,9 +12,13 @@ public with sharing class FEC_AutoHoldCaseService {
     private static final Integer MAX_ATTEMPTS = 3;
     private static final String NFU_STATUS_YES = 'Yes';
     private static final String HOLD_CASE_TYPE_AUTO = 'Auto';
+    private static final String ROUTING_ACTION_RESOLVE = 'Resolve';
 
     public static void enqueueAfterRoutingHistory(Id routingHistoryId) {
         if (routingHistoryId == null) {
+            return;
+        }
+        if (FEC_BatchCaseHandlingImportService.isBatchImportApplyInProgress()) {
             return;
         }
         System.enqueueJob(new FEC_AutoHoldCaseQueueable(routingHistoryId));
@@ -31,7 +35,8 @@ public with sharing class FEC_AutoHoldCaseService {
 
         List<Case> caseRows = [
             SELECT
-                FEC_Final_Status__c,
+                Status,
+                FEC_Team__c,
                 FEC_Stage_Name__c,
                 FEC_Current_Case_Stage__c
             FROM Case
@@ -47,7 +52,9 @@ public with sharing class FEC_AutoHoldCaseService {
             FEC_Case__c = caseId,
             FEC_Routing_Action__c = 'Submit',
             FEC_Current_Status__c = currentStatusBeforeSubmit,
-            FEC_Changed_Status__c = endCase.FEC_Final_Status__c,
+            FEC_Changed_Status__c = FEC_CaseBusinessService.routingHistoryStatusSnapshot(
+                endCase
+            ),
             FEC_Stage_Name__c = endCase.FEC_Stage_Name__c,
             FEC_Previous_Stage__c = endCase.FEC_Current_Case_Stage__c
         );
@@ -64,26 +71,27 @@ public with sharing class FEC_AutoHoldCaseService {
             SELECT Id, FEC_Case__c, FEC_Changed_Status__c
             FROM FEC_Routing_Action_History__c
             WHERE Id = :routingHistoryId
+            WITH SYSTEM_MODE
             LIMIT 1
         ];
         if (rows.isEmpty() || rows[0].FEC_Case__c == null) {
             return;
         }
         List<Case> endCases = [
-            SELECT FEC_Final_Status__c
+            SELECT Status, FEC_Team__c
             FROM Case
             WHERE Id = :rows[0].FEC_Case__c
+            WITH SYSTEM_MODE
             LIMIT 1
         ];
         if (!endCases.isEmpty()) {
-            String changedStatus = endCases[0].FEC_Final_Status__c;
+            String changedStatus = FEC_CaseBusinessService.routingHistoryStatusSnapshot(
+                endCases[0]
+            );
             if (rows[0].FEC_Changed_Status__c != changedStatus) {
-                Database.update(
-                    new FEC_Routing_Action_History__c(
-                        Id = routingHistoryId,
-                        FEC_Changed_Status__c = changedStatus
-                    ),
-                    AccessLevel.SYSTEM_MODE
+                FEC_CaseBusinessService.patchRoutingHistoryChangedStatus(
+                    routingHistoryId,
+                    changedStatus
                 );
             }
         }
@@ -99,6 +107,7 @@ public with sharing class FEC_AutoHoldCaseService {
             SELECT Id
             FROM FEC_Routing_Action_History__c
             WHERE FEC_Case__c = :caseId
+            WITH SYSTEM_MODE
             ORDER BY CreatedDate DESC
             LIMIT 1
         ];
@@ -115,6 +124,7 @@ public with sharing class FEC_AutoHoldCaseService {
         List<FEC_Routing_Action_History__c> histories = [
             SELECT
                 Id,
+                FEC_Routing_Action__c,
                 FEC_Current_Status__c,
                 FEC_Changed_Status__c,
                 FEC_Previous_Stage__c,
@@ -153,12 +163,25 @@ public with sharing class FEC_AutoHoldCaseService {
             return;
         }
 
-        FEC_Hold_Case_Config__c config = findMatchingAutoConfig(
-            nocId,
-            stageIdForConfig,
-            history.FEC_Current_Status__c,
-            history.FEC_Changed_Status__c
-        );
+        FEC_Hold_Case_Config__c config;
+        if (ROUTING_ACTION_RESOLVE.equalsIgnoreCase(history.FEC_Routing_Action__c)) {
+            config = findMatchingAutoConfigForResolve(
+                nocId,
+                stageIdForConfig,
+                history.FEC_Changed_Status__c
+            );
+            if (config == null) {
+                config = findFirstAutoHoldConfigForStage(nocId, stageIdForConfig);
+            }
+        }
+        if (config == null) {
+            config = findMatchingAutoConfig(
+                nocId,
+                stageIdForConfig,
+                history.FEC_Current_Status__c,
+                history.FEC_Changed_Status__c
+            );
+        }
         if (config == null || String.isBlank(config.FEC_NFU_Code__c)) {
             return;
         }
@@ -170,7 +193,8 @@ public with sharing class FEC_AutoHoldCaseService {
         }
 
         Id caseId = history.FEC_Case__c;
-        markCasePending(caseId);
+        // Không DML trước callout — Salesforce: "uncommitted work pending" (Manual: API trước DML).
+        // UI PENDING: fec_CaseBussiness.refreshAutoHoldCase() set holdCaseResultOverride = PENDING.
 
         String userEmail = [
             SELECT Email
@@ -293,17 +317,37 @@ public with sharing class FEC_AutoHoldCaseService {
         return nocs[0].Id;
     }
 
+    /**
+     * Resolve submit: Case → Resolved-Completed; chỉ khớp Stage + Changed Status (không Current).
+     * FEC_Hold_Case_Config__c.FEC_Changed_Status__c cần có Resolved-Completed (hoặc status resolved tương ứng).
+     */
     @TestVisible
-    private static FEC_Hold_Case_Config__c findMatchingAutoConfig(
+    private static FEC_Hold_Case_Config__c findMatchingAutoConfigForResolve(
         Id nocId,
         Id caseStageId,
-        String currentStatus,
         String changedStatus
     ) {
         if (nocId == null || caseStageId == null) {
             return null;
         }
 
+        for (FEC_Hold_Case_Config__c cfg : queryAutoHoldConfigs(nocId, caseStageId)) {
+            if (statusConfigContains(cfg.FEC_Changed_Status__c, changedStatus)) {
+                return cfg;
+            }
+        }
+        return null;
+    }
+
+    /** Resolve: dùng NFU code Auto Hold đầu tiên theo Stage + NOC khi không có dòng Changed = Resolved. */
+    @TestVisible
+    private static FEC_Hold_Case_Config__c findFirstAutoHoldConfigForStage(
+        Id nocId,
+        Id caseStageId
+    ) {
+        if (nocId == null || caseStageId == null) {
+            return null;
+        }
         List<FEC_Hold_Case_Config__c> configs = [
             SELECT
                 Id,
@@ -318,7 +362,24 @@ public with sharing class FEC_AutoHoldCaseService {
               AND Hold_Case_Type__c = :HOLD_CASE_TYPE_AUTO
               AND FEC_Active__c = TRUE
               AND FEC_Case_Stage__c = :caseStageId
+              AND FEC_NFU_Code__c != NULL
+            LIMIT 1
         ];
+        return configs.isEmpty() ? null : configs[0];
+    }
+
+    @TestVisible
+    private static FEC_Hold_Case_Config__c findMatchingAutoConfig(
+        Id nocId,
+        Id caseStageId,
+        String currentStatus,
+        String changedStatus
+    ) {
+        if (nocId == null || caseStageId == null) {
+            return null;
+        }
+
+        List<FEC_Hold_Case_Config__c> configs = queryAutoHoldConfigs(nocId, caseStageId);
 
         for (FEC_Hold_Case_Config__c cfg : configs) {
             if (
@@ -329,6 +390,27 @@ public with sharing class FEC_AutoHoldCaseService {
             }
         }
         return null;
+    }
+
+    private static List<FEC_Hold_Case_Config__c> queryAutoHoldConfigs(
+        Id nocId,
+        Id caseStageId
+    ) {
+        return [
+            SELECT
+                Id,
+                FEC_NFU_Code__c,
+                FEC_Case_Stage__c,
+                FEC_Current_Status__c,
+                FEC_Changed_Status__c,
+                FEC_Auto_Hold_Duration_Minutes__c,
+                FEC_Auto_Hold_Release_Case_Status__c
+            FROM FEC_Hold_Case_Config__c
+            WHERE (FEC_Nature_of_Cases__c = :nocId OR FEC_Nature_of_Cases__c = NULL)
+              AND Hold_Case_Type__c = :HOLD_CASE_TYPE_AUTO
+              AND FEC_Active__c = TRUE
+              AND FEC_Case_Stage__c = :caseStageId
+        ];
     }
 
     @TestVisible

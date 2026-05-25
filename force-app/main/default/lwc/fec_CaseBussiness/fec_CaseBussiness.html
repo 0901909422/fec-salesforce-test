@@ -81,6 +81,7 @@
                                         duplicate-case-id={business.mrcRl0502DuplicateOpenCaseId}
                                         duplicate-case-number={business.mrcRl0502DuplicateCaseNumber}
                                         handling-option-value={mrcReturnHandlingOptionValue}
+                                        handling-option-options={mrcHandlingOptionOptions}
                                         is-edit={isEdit}
                                         section-id={section.id}
                                         sub-section-name={row.sub.name}
@@ -192,6 +193,7 @@
                                             duplicate-case-id={business.mrcRl0502DuplicateOpenCaseId}
                                             duplicate-case-number={business.mrcRl0502DuplicateCaseNumber}
                                             handling-option-value={mrcReturnHandlingOptionValue}
+                                            handling-option-options={mrcHandlingOptionOptions}
                                             is-edit={isEdit}
                                             section-id={section.id}
                                             sub-section-name={row.sub.name}
@@ -259,6 +261,7 @@
                         record-id={recordId}
                         sub-code-code={business.subCodeCode}
                         sub-category-code={business.subCategoryCode}
+                        stage-name={business.stageName}
                         is-edit={row.dynCmp.isEdit}
                         mrc-rl05-ui={business.mrcRl05Ui}
                         duplicate-case-id={business.mrcRl0502DuplicateOpenCaseId}
@@ -266,13 +269,16 @@
                         handling-option-value={mrcReturnHandlingOptionValue}
                         customer-confirmation-value={mrcReturnCustomerConfirmationValue}
                         customer-confirmation-options={mrcCustomerConfirmationOptions}
+                        handling-option-options={mrcHandlingOptionOptions}
                         onhandlingoptionchange={handleMrcReturnHandlingOptionChange}
-                        oncustomerconfirmationchange={handleMrcReturnCustomerConfirmationChange}>
+                        oncustomerconfirmationchange={handleMrcReturnCustomerConfirmationChange}
+                        onmrcdeliverychange={handleMrcDeliveryChange}>
                       </c-fec_-mrc-return-panel>
                     </template>
                     <template if:false={row.dynCmp.isMrcReturnPanel}>
                       <lwc:component lwc:is={row.dynCmp.ctor} record-id={recordId} sub-code-code={business.subCodeCode} sub-category-code={business.subCategoryCode}
-                        is-edit={row.dynCmp.isEdit} is-hidden-lwc={isHiddenLwc}></lwc:component>
+                                     is-edit={row.dynCmp.isEdit} is-hidden-lwc={isHiddenLwc}
+                                     ondeliveryoptionchange={handleContractClosureDeliveryChange}></lwc:component>
                     </template>
                   </div>
                 </template>
@@ -286,6 +292,7 @@
                             record-id={recordId}
                             sub-code-code={business.subCodeCode}
                             sub-category-code={business.subCategoryCode}
+                            stage-name={business.stageName}
                             is-edit={row.dynCmp.isEdit}
                             mrc-rl05-ui={business.mrcRl05Ui}
                             duplicate-case-id={business.mrcRl0502DuplicateOpenCaseId}
@@ -293,13 +300,16 @@
                             handling-option-value={mrcReturnHandlingOptionValue}
                             customer-confirmation-value={mrcReturnCustomerConfirmationValue}
                             customer-confirmation-options={mrcCustomerConfirmationOptions}
+                            handling-option-options={mrcHandlingOptionOptions}
                             onhandlingoptionchange={handleMrcReturnHandlingOptionChange}
-                            oncustomerconfirmationchange={handleMrcReturnCustomerConfirmationChange}>
+                            oncustomerconfirmationchange={handleMrcReturnCustomerConfirmationChange}
+                            onmrcdeliverychange={handleMrcDeliveryChange}>
                           </c-fec_-mrc-return-panel>
                         </template>
                         <template if:false={row.dynCmp.isMrcReturnPanel}>
                           <lwc:component lwc:is={row.dynCmp.ctor} record-id={recordId} sub-code-code={business.subCodeCode} sub-category-code={business.subCategoryCode}
-                            is-edit={row.dynCmp.isEdit} is-hidden-lwc={isHiddenLwc}></lwc:component>
+                                         is-edit={row.dynCmp.isEdit} is-hidden-lwc={isHiddenLwc}
+                                         ondeliveryoptionchange={handleContractClosureDeliveryChange}></lwc:component>
                         </template>
                       </div>
                     </lightning-accordion-section>
@@ -438,6 +448,7 @@
         is-submited={business.isSubmited}
         route-to-action-id={routeToActionButtonId}
         show-route-to={showRouteTo}
+        lock-route-to-team-selection={rdPaymentScopedRouteToLocked}
         read-only-team={business.nextTeam}
         route-to-queue-display-label={routeToQueueDisplayLabel}
         show-revert={showRevert}
@@ -457,7 +468,7 @@
     </lightning-accordion-section>
 
     <!--PhongBT 18/05/26: Document Request sử dụng cục routing action mới-->
-    <lightning-accordion-section if:true={showDocumentRequestStageChangeRoutingSection}
+    <lightning-accordion-section if:true={showStage1AutoRouteToRoutingSection}
       name="routing-action-doc-request" label={customLabel.routingActionLabel}>
       <c-fec_-document-request-routing-action is-edit={isEdit}
         action-value={actionValue} routing-action-options={business.routingActionlst}
