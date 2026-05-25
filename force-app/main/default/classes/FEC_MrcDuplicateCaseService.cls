@@ -546,6 +546,31 @@ public without sharing class FEC_MrcDuplicateCaseService {
     }
 
     /**
+     * Ghi Routing Action History (Cancel Case trùng RL05, …) — delegate FEC_CaseBusinessService.createRoutingActionHis.
+     */
+    public static void createRoutingActionHistoryForCase(
+        String routingAction,
+        String decision,
+        String oldOwnerName,
+        Id originalOwnerId,
+        String caseId,
+        String stageName,
+        String finalStatusBeforeSubmit,
+        Id currentStageId
+    ) {
+        FEC_CaseBusinessService.createRoutingActionHis(
+            routingAction,
+            decision,
+            oldOwnerName,
+            originalOwnerId,
+            caseId,
+            stageName,
+            finalStatusBeforeSubmit,
+            currentStageId
+        );
+    }
+
+    /**
      * RL05 / MRC — ghi Routing Action History cho Case (vd. auto-cancel Case trùng TH1).
      */
     public static void recordRoutingActionHistoryForCase(
@@ -571,7 +596,7 @@ public without sharing class FEC_MrcDuplicateCaseService {
             return;
         }
         Case c = rows[0];
-        FEC_CaseBusinessService.createRoutingActionHistoryForCase(
+        createRoutingActionHistoryForCase(
             routingAction,
             '',
             FEC_CaseBusinessService.resolveRoutingHistoryOwnerLabel(c.OwnerId, c.Owner?.Name),

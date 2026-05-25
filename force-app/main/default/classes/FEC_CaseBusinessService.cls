@@ -2833,7 +2833,7 @@ public without sharing class FEC_CaseBusinessService {
     }
   }
 
-  private static void createRoutingActionHis(
+  public static void createRoutingActionHis(
     String routingAction,
     String decision,
     String oldOwnerName,
@@ -2918,29 +2918,6 @@ public without sharing class FEC_CaseBusinessService {
     } catch (Exception e) {
       throw new CaseBusinessServiceException(e.getMessage());
     }
-  }
-
-  /** Wrapper cho MRC / service khác ghi Routing Action History (giữ createRoutingActionHis private). */
-  public static void createRoutingActionHistoryForCase(
-    String routingAction,
-    String decision,
-    String oldOwnerName,
-    Id originalOwnerId,
-    String caseId,
-    String stageName,
-    String finalStatusBeforeSubmit,
-    Id currentStageId
-  ) {
-    createRoutingActionHis(
-      routingAction,
-      decision,
-      oldOwnerName,
-      originalOwnerId,
-      caseId,
-      stageName,
-      finalStatusBeforeSubmit,
-      currentStageId
-    );
   }
 
   private without sharing class FEC_CaseBusinessWithoutSharing {
