@@ -8,11 +8,6 @@
         <apexClass>FEC_CaseAssignmentNocController</apexClass>
         <enabled>true</enabled>
     </classAccesses>
-    <fieldPermissions>
-        <editable>false</editable>
-        <field>FEC_Case_Assignment_Logs__c.FEC_Number_of_Case__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
     <description>Quản lý phân bổ: 4 object Case Assignment + Apex/tab. PS Interaction Case không chỉnh. FLS theo viewAllFields trên object (tránh field required).</description>
     <hasActivationRequired>false</hasActivationRequired>
     <label>Case Assignment Management</label>
