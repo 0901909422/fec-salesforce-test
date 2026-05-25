@@ -1,6 +1,8 @@
 public without sharing class FEC_RoutingActionHistoryTriggerHandler {
   public class RoutingActionHistoryException extends Exception {}
   private static Boolean isExecuting = false;
+  // SOQL 101: cache/dedupe theo transaction, tránh query lặp khi submit NOC bulk.
+  private static Map<Id, Case> txnCaseTeamRowById = new Map<Id, Case>();
 
   public static void run() {
     FEC_RoutingActionHistoryTriggerHandler handler = new FEC_RoutingActionHistoryTriggerHandler();
@@ -49,6 +51,9 @@ public without sharing class FEC_RoutingActionHistoryTriggerHandler {
     try {
       handleUpdateCaseTeamsOnInsert(newRecords);
       FEC_CaseManagerListService.applyAfterRoutingHistoryInsert(newRecords);
+      // SOQL 101: TAT Full Process enqueue Queueable — không sync Case đồng bộ trong trigger.
+      FEC_RoutingHistTatSvc.queueCaseFullProcessTatAfterSave(newRecords);
+      FEC_RoutingHistTatSvc.commitPendingCaseFullProcessTatSync();
       sendNotificationEmails(newRecords);
     } catch (Exception e) {
       throw new RoutingActionHistoryException('Error processing Routing Action History after insert: ' + e.getMessage());
@@ -88,8 +93,7 @@ public without sharing class FEC_RoutingActionHistoryTriggerHandler {
     Map<Id, Case> caseMap = new Map<Id, Case>([
         SELECT Id, FEC_Customer_Type__c, FEC_Product_Type__c, FEC_Category__c, 
                FEC_SubCategory__c, FEC_SubCode__c, FEC_Current_Case_Stage__c,
-               FEC_SubCategory__r.Name, FEC_SubCode__r.Name, 
-               FEC_SubCategory__r.FEC_Code__c, FEC_SubCode__r.FEC_Code__c, FEC_Stage_Name__c,
+               FEC_Stage_Name__c,
                FEC_Account_or_Contract__r.FEC_Customer_Type__c, 
                FEC_Account_or_Contract__r.FEC_Email__c,
                FEC_Interaction__r.FEC_Interaction_Email__c, 
@@ -98,39 +102,37 @@ public without sharing class FEC_RoutingActionHistoryTriggerHandler {
     ]);
 
     // 3. Query các Notification đang active và lấy thêm trường Template ID
-    List<FEC_Notification_Template_Channel__c> activeChannels = [
-        SELECT FEC_Notification_Template__c,
-               FEC_Notification__r.Id, FEC_Notification__r.Name, FEC_Notification__r.FEC_Current_Status__c, 
-               FEC_Notification__r.FEC_Changed_Status__c, FEC_Notification__r.FEC_Target_Group__c, 
-               FEC_Notification__r.FEC_Customer_Type__c, FEC_Notification__r.FEC_Product_Type__c, 
-               FEC_Notification__r.FEC_Category__c, FEC_Notification__r.FEC_SubCategory__c, 
-               FEC_Notification__r.FEC_SubCode__c, FEC_Notification__r.FEC_Case_Stage__c
-        FROM FEC_Notification_Template_Channel__c
-        WHERE FEC_Notification__r.FEC_Notification_Status__c = true 
-          AND FEC_Notification_Channel__r.Name = :FEC_ConstantCommon.EMAIL
-          AND FEC_Notification__r.FEC_Target_Group__c = :FEC_ConstantCommon.TARGET_GROUP_CUSTOMER
+    List<FEC_Notification__c> activeNotifications = [
+        SELECT Id, Name, FEC_Current_Status__c, FEC_Changed_Status__c, FEC_Target_Group__c, 
+               FEC_Customer_Type__c, FEC_Product_Type__c, FEC_Category__c,
+               FEC_SubCategory__c, FEC_SubCode__c, FEC_Case_Stage__c
+               // FEC_Notification_Channel__r.Name,
+               // FEC_Notification_Template__c
+        FROM FEC_Notification__c
+        WHERE FEC_Notification_Status__c = true 
+          // AND FEC_Notification_Channel__r.Name = :FEC_ConstantCommon.EMAIL
+          AND FEC_Target_Group__c = :FEC_ConstantCommon.TARGET_GROUP_CUSTOMER
     ];
 
     // Cấu trúc để lưu vết các bản ghi cần gửi mail và tập hợp ID Template
-    Map<FEC_Routing_Action_History__c, FEC_Notification_Template_Channel__c> historyToChannelMap = new Map<FEC_Routing_Action_History__c, FEC_Notification_Template_Channel__c>();
+    Map<FEC_Routing_Action_History__c, FEC_Notification__c> historyToNotifMap = new Map<FEC_Routing_Action_History__c, FEC_Notification__c>();
     Set<Id> templateIds = new Set<Id>();
 
-    if (activeChannels.isEmpty()) return;
+    if (activeNotifications.isEmpty()) return;
 
     for (FEC_Routing_Action_History__c history : newList) {
         if (history.FEC_Case__c == null || !caseMap.containsKey(history.FEC_Case__c)) continue;
         Case relatedCase = caseMap.get(history.FEC_Case__c);
 
-        for (FEC_Notification_Template_Channel__c channel : activeChannels) {
-            FEC_Notification__c notif = channel.FEC_Notification__r;
+        for (FEC_Notification__c notif : activeNotifications) {
             // Logic so khớp điều kiện (Giữ nguyên logic cũ của bạn)
             Boolean isMatch = (String.isNotBlank(history.FEC_Current_Status__c) && notif.FEC_Current_Status__c?.contains(history.FEC_Current_Status__c?.replaceAll(FEC_ConstantCommon.PATTERN_CLEAN_TEXT, '')) == true)
                 && (String.isNotBlank(history.FEC_Changed_Status__c) && notif.FEC_Changed_Status__c?.contains(history.FEC_Changed_Status__c?.replaceAll(FEC_ConstantCommon.PATTERN_CLEAN_TEXT, '')) == true)
                 && FEC_CommonUltils.notificationCustomerTypeMatchesCase(notif.FEC_Customer_Type__c, relatedCase.FEC_Customer_Type__c)
                 && (notif.FEC_Product_Type__c == relatedCase.FEC_Product_Type__c)
                 && (notif.FEC_Category__c == relatedCase.FEC_Category__c)
-                && (relatedCase.FEC_SubCategory__r != null && notif?.FEC_SubCategory__c?.contains(relatedCase.FEC_SubCategory__r.FEC_Code__c) == true)
-                && (String.isNotBlank(notif?.FEC_SubCode__c) || (relatedCase?.FEC_SubCode__r != null && notif?.FEC_SubCode__c?.contains(relatedCase?.FEC_SubCode__r?.FEC_Code__c) == true) || String.isBlank(relatedCase?.FEC_SubCode__r?.FEC_Code__c));
+                && (notif.FEC_SubCategory__c == relatedCase.FEC_SubCategory__c)
+                && (notif.FEC_SubCode__c == relatedCase.FEC_SubCode__c);
             //  if (notif.Name == 'TestAutoKHv1_14/4') {
             //     System.debug('--- [sendNotificationEmails] notif name: ' + notif.Name);
             //     System.debug('--- [sendNotificationEmails] history.FEC_Current_Status__c.replaceAll(FEC_ConstantCommon.PATTERN_CLEAN_TEXT, ""): ' + history.FEC_Current_Status__c?.replaceAll(FEC_ConstantCommon.PATTERN_CLEAN_TEXT, ''));
@@ -147,16 +149,16 @@ public without sharing class FEC_RoutingActionHistoryTriggerHandler {
             // }
             
             if (isMatch) {
-                historyToChannelMap.put(history, channel);
-                if (channel.FEC_Notification_Template__c != null) {
-                    templateIds.add(channel.FEC_Notification_Template__c);
-                }
+                historyToNotifMap.put(history, notif);
+                // if (notif.FEC_Notification_Template__c != null) {
+                //     templateIds.add(notif.FEC_Notification_Template__c);
+                // }
                 break; 
             }
         }
     }
 
-    if (historyToChannelMap.isEmpty()) return;
+    if (historyToNotifMap.isEmpty()) return;
 
     // 4. Query toàn bộ nội dung Template 1 lần duy nhất (Bulk SOQL)
     Map<Id, FEC_Template__c> templateMap = new Map<Id, FEC_Template__c>();
@@ -172,9 +174,8 @@ public without sharing class FEC_RoutingActionHistoryTriggerHandler {
     List<FEC_Notification.EmailInfo> listEmailsToProcess = new List<FEC_Notification.EmailInfo>();
     List<FEC_Notification.RoutingEmailHistoryInput> routingHistories = new List<FEC_Notification.RoutingEmailHistoryInput>();
 
-    for (FEC_Routing_Action_History__c history : historyToChannelMap.keySet()) {
-        FEC_Notification_Template_Channel__c matchedChannel = historyToChannelMap.get(history);
-        FEC_Notification__c matchedNotification = matchedChannel.FEC_Notification__r;
+    for (FEC_Routing_Action_History__c history : historyToNotifMap.keySet()) {
+        FEC_Notification__c matchedNotification = historyToNotifMap.get(history);
         Case relatedCase = caseMap.get(history.FEC_Case__c);
         
         // Xác định địa chỉ email nhận
@@ -189,35 +190,36 @@ public without sharing class FEC_RoutingActionHistoryTriggerHandler {
         }
 
         // Lấy Template tương ứng từ Map
-        FEC_Template__c template = templateMap.get(matchedChannel.FEC_Notification_Template__c);
+        // FEC_Template__c template = templateMap.get(matchedNotification.FEC_Notification_Template__c);
 
          //System.debug('--- [sendNotificationEmails] targetEmailAddress: ' + targetEmailAddress);
          //System.debug('--- [sendNotificationEmails] template: ' + template);
-        if (String.isNotBlank(targetEmailAddress) && template != null) {
-            listEmailsToProcess.add(new FEC_Notification.EmailInfo(
-                relatedCase.Id,
-                targetEmailAddress,
-                String.isNotBlank(template.FEC_Subject_Line__c) ? template.FEC_Subject_Line__c : 'Notification',
-                template.FEC_Enhanced_Letterhead__r?.FEC_Header__c,
-                template.FEC_Body__c,
-                template.FEC_Enhanced_Letterhead__r?.FEC_Footer__c,
-                template.Id
-            ));
+        // if (String.isNotBlank(targetEmailAddress) && template != null) {
+        //     listEmailsToProcess.add(new FEC_Notification.EmailInfo(
+        //         relatedCase.Id,
+        //         targetEmailAddress,
+        //         String.isNotBlank(template.FEC_Subject_Line__c) ? template.FEC_Subject_Line__c : 'Notification',
+        //         template.FEC_Enhanced_Letterhead__r?.FEC_Header__c,
+        //         template.FEC_Body__c,
+        //         template.FEC_Enhanced_Letterhead__r?.FEC_Footer__c,
+        //         template.Id
+        //     ));
 
-            FEC_Notification.RoutingEmailHistoryInput hi = new FEC_Notification.RoutingEmailHistoryInput();
-            hi.caseId = relatedCase.Id;
-            hi.notificationRuleId = matchedNotification.Id;
-            hi.stageName = relatedCase.FEC_Stage_Name__c;
-            hi.templateDisplayName = template.Name;
-            hi.channelName =
-                (matchedChannel.FEC_Notification_Channel__r != null &&
-                String.isNotBlank(matchedChannel.FEC_Notification_Channel__r.Name))
-                    ? matchedChannel.FEC_Notification_Channel__r.Name
-                    : FEC_ConstantCommon.EMAIL;
-            hi.targetGroup = matchedNotification.FEC_Target_Group__c;
-            hi.notificationRuleName = matchedNotification.Name;
-            routingHistories.add(hi);
-        }
+        //     FEC_Notification.RoutingEmailHistoryInput hi = new FEC_Notification.RoutingEmailHistoryInput();
+        //     hi.caseId = relatedCase.Id;
+        //     hi.notificationRuleId = matchedNotification.Id;
+        //     hi.stageName = relatedCase.FEC_Stage_Name__c;
+        //     hi.templateDisplayName = template.Name;
+        //     // hi.channelName =
+        //     //     (matchedNotification.FEC_Notification_Channel__r != null &&
+        //     //     String.isNotBlank(matchedNotification.FEC_Notification_Channel__r.Name))
+        //     //         ? matchedNotification.FEC_Notification_Channel__r.Name
+        //     //         : FEC_ConstantCommon.EMAIL;
+        //     hi.channelName = FEC_ConstantCommon.EMAIL;
+        //     hi.targetGroup = matchedNotification.FEC_Target_Group__c;
+        //     hi.notificationRuleName = matchedNotification.Name;
+        //     routingHistories.add(hi);
+        // }
     }
 
     // 6. Gửi hàng loạt qua hàm Bulk của FEC_Notification
@@ -227,56 +229,137 @@ public without sharing class FEC_RoutingActionHistoryTriggerHandler {
     }
   }
 
+  // SOQL 101: bulk merge FEC_Team__c — cache Case/owner/assignment, lookup qua FEC_OwnerTeamLookupSvc.
   private void handleUpdateCaseTeamsOnInsert(
     List<FEC_Routing_Action_History__c> newRecords
   ) {
-    Set<Id> caseIds = new Set<Id>();
-    for (FEC_Routing_Action_History__c history : newRecords) {
-      if (
-        history.FEC_Case__c != null &&
-        history.FEC_Routing_Action_Type__c == 'Case' &&
-        history.FEC_Assignment__c == null
-      ) {
-        caseIds.add(history.FEC_Case__c);
-      }
-    }
-
-    if (caseIds.isEmpty()) {
+    Map<Id, Case> caseById = loadCachedCaseTeamRows(newRecords);
+    if (caseById.isEmpty()) {
       return;
     }
 
-    Map<Id, Case> caseMap = new Map<Id, Case>(
-      [
-        SELECT Id, FEC_Team__c, FEC_Assignment_Count__c
-        FROM Case
-        WHERE Id IN :caseIds
-      ]
-    );
+    List<FEC_Routing_Action_History__c> caseLevel = new List<FEC_Routing_Action_History__c>();
+    List<FEC_Routing_Action_History__c> assignmentLevel = new List<FEC_Routing_Action_History__c>();
+    // SOQL 101: tách Route to (case) vs bulk Assignment RAH — xử lý team khác nhau.
+    partitionHistoriesByAssignment(newRecords, caseLevel, assignmentLevel);
 
-    for (FEC_Routing_Action_History__c history : newRecords) {
-      if (
-        history.FEC_Case__c == null ||
-        history.FEC_Routing_Action_Type__c != 'Case' ||
-        history.FEC_Assignment__c != null
-      ) {
-        continue;
-      }
+    Map<Id, FEC_Assignment__c> assignmentById = loadAssignmentsForHistories(assignmentLevel);
+    Set<Id> ownerIds = new Set<Id>();
+    ownerIds.addAll(collectOwnerIdsFromRouteHistory(caseLevel, true));
+    // SOQL 101: assignment RAH chỉ lookup original owner; updated team từ FEC_Assignment__c.FEC_Team__c.
+    ownerIds.addAll(collectOwnerIdsFromRouteHistory(assignmentLevel, false));
+    Map<Id, String> teamByOwnerId = FEC_OwnerTeamLookupSvc.getByOwnerIds(ownerIds);
 
-      Case caseRecord = caseMap.get(history.FEC_Case__c);
-      if (caseRecord == null) {
-        continue;
-      }
-
-      updateCaseTeams(
-        parseOwnerIdField(history.FEC_Updated_User_Queue_ID__c),
-        caseRecord,
-        history
+    for (FEC_Routing_Action_History__c history : caseLevel) {
+      applyCaseTeamFromHistory(history, caseById, teamByOwnerId, null);
+    }
+    for (FEC_Routing_Action_History__c history : assignmentLevel) {
+      FEC_Assignment__c asg = assignmentById.get(history.FEC_Assignment__c);
+      applyCaseTeamFromHistory(
+        history,
+        caseById,
+        teamByOwnerId,
+        asg != null ? asg.FEC_Team__c : null
       );
     }
 
-    if (!caseMap.isEmpty()) {
-      Database.update(caseMap.values(), AccessLevel.SYSTEM_MODE);
+    // SOQL 101: isSystemUpdate — Case trigger bỏ qua syncChannel/participants khi update FEC_Team__c.
+    Boolean priorSystem = FEC_CaseTriggerHandler.isSystemUpdate;
+    FEC_CaseTriggerHandler.isSystemUpdate = true;
+    try {
+      Database.update(caseById.values(), AccessLevel.SYSTEM_MODE);
+    } finally {
+      FEC_CaseTriggerHandler.isSystemUpdate = priorSystem;
     }
+  }
+
+  // SOQL 101: mỗi Case Id chỉ SELECT FEC_Team__c một lần/transaction.
+  private static Map<Id, Case> loadCachedCaseTeamRows(
+    List<FEC_Routing_Action_History__c> histories
+  ) {
+    Set<Id> caseIds = new Set<Id>();
+    for (FEC_Routing_Action_History__c history : histories) {
+      if (history.FEC_Case__c != null) {
+        caseIds.add(history.FEC_Case__c);
+      }
+    }
+    Set<Id> missingCaseIds = new Set<Id>();
+    for (Id caseId : caseIds) {
+      if (!txnCaseTeamRowById.containsKey(caseId)) {
+        missingCaseIds.add(caseId);
+      }
+    }
+    if (!missingCaseIds.isEmpty()) {
+      for (Case row : [
+        SELECT Id, FEC_Team__c
+        FROM Case
+        WHERE Id IN :missingCaseIds
+      ]) {
+        txnCaseTeamRowById.put(row.Id, row);
+      }
+    }
+    Map<Id, Case> caseById = new Map<Id, Case>();
+    for (Id caseId : caseIds) {
+      if (txnCaseTeamRowById.containsKey(caseId)) {
+        caseById.put(caseId, txnCaseTeamRowById.get(caseId));
+      }
+    }
+    return caseById;
+  }
+
+  private static void partitionHistoriesByAssignment(
+    List<FEC_Routing_Action_History__c> source,
+    List<FEC_Routing_Action_History__c> caseLevel,
+    List<FEC_Routing_Action_History__c> assignmentLevel
+  ) {
+    for (FEC_Routing_Action_History__c history : source) {
+      if (history.FEC_Case__c == null) {
+        continue;
+      }
+      if (history.FEC_Assignment__c != null) {
+        assignmentLevel.add(history);
+      } else {
+        caseLevel.add(history);
+      }
+    }
+  }
+
+  // SOQL 101: bulk SELECT FEC_Team__c từ Assignment — không lookup Group/FEC_Team_Queue__c từng RAH.
+  private static Map<Id, FEC_Assignment__c> loadAssignmentsForHistories(
+    List<FEC_Routing_Action_History__c> assignmentLevel
+  ) {
+    Set<Id> assignmentIds = new Set<Id>();
+    for (FEC_Routing_Action_History__c history : assignmentLevel) {
+      assignmentIds.add(history.FEC_Assignment__c);
+    }
+    if (assignmentIds.isEmpty()) {
+      return new Map<Id, FEC_Assignment__c>();
+    }
+    return new Map<Id, FEC_Assignment__c>([
+      SELECT Id, FEC_Team__c
+      FROM FEC_Assignment__c
+      WHERE Id IN :assignmentIds
+    ]);
+  }
+
+  private static void applyCaseTeamFromHistory(
+    FEC_Routing_Action_History__c history,
+    Map<Id, Case> caseById,
+    Map<Id, String> teamByOwnerId,
+    String updatedTeamOverride
+  ) {
+    Case caseRecord = caseById.get(history.FEC_Case__c);
+    if (caseRecord == null) {
+      return;
+    }
+    updateCaseTeams(
+      parseOwnerIdField(history.FEC_Original_User_Queue_ID__c),
+      parseOwnerIdField(history.FEC_Updated_User_Queue_ID__c),
+      caseRecord,
+      history,
+      teamByOwnerId,
+      updatedTeamOverride
+    );
   }
 
   private void onAfterUpdate(
@@ -291,7 +374,9 @@ public without sharing class FEC_RoutingActionHistoryTriggerHandler {
     isExecuting = true;
 
     try {
-      // TODO: Add after update logic here
+      // Chỉ sync khi field TAT RAH đổi (needsRecalc trong queueCaseFullProcessTatAfterSave).
+      FEC_RoutingHistTatSvc.queueCaseFullProcessTatAfterSave(newRecords, oldMap);
+      FEC_RoutingHistTatSvc.commitPendingCaseFullProcessTatSync();
       sendNotificationEmails(newRecords);
     } finally {
       isExecuting = false;
@@ -308,7 +393,6 @@ public without sharing class FEC_RoutingActionHistoryTriggerHandler {
     return buildPendingStatusFromRouteHistoryRow(history, null);
   }
 
-  /** @param teamByOwnerId map preload từ getTeamsFromIds (bulk); null = query theo owner trên history. */
   public static String buildPendingStatusFromRouteHistoryRow(
     FEC_Routing_Action_History__c history,
     Map<Id, String> teamByOwnerId
@@ -348,7 +432,10 @@ public without sharing class FEC_RoutingActionHistoryTriggerHandler {
     if (idSet.isEmpty()) {
       return FEC_ConstantCommon.CASE_STATUS_PENDING;
     }
-    Map<Id, String> teamMap = teamByOwnerId != null ? teamByOwnerId : getTeamsFromIds(idSet);
+    // SOQL 101: teamByOwnerId preload từ bulk; null thì FEC_OwnerTeamLookupSvc (cache transaction).
+    Map<Id, String> teamMap = teamByOwnerId != null
+      ? teamByOwnerId
+      : FEC_OwnerTeamLookupSvc.getByOwnerIds(idSet);
     String tOrig = originalOwnerId != null ? teamMap.get(originalOwnerId) : null;
     String tUpd = updatedOwnerId != null ? teamMap.get(updatedOwnerId) : null;
 
@@ -382,196 +469,165 @@ public without sharing class FEC_RoutingActionHistoryTriggerHandler {
   }
 
   public static void updateCaseTeams(
+    Id originalUserQueueId,
     Id updatedUserQueueId,
     Case caseRecord,
     FEC_Routing_Action_History__c history
   ) {
+    updateCaseTeams(
+      originalUserQueueId,
+      updatedUserQueueId,
+      caseRecord,
+      history,
+      null
+    );
+  }
+
+  public static void updateCaseTeams(
+    Id originalUserQueueId,
+    Id updatedUserQueueId,
+    Case caseRecord,
+    FEC_Routing_Action_History__c history,
+    Map<Id, String> teamByOwnerId
+  ) {
+    updateCaseTeams(
+      originalUserQueueId,
+      updatedUserQueueId,
+      caseRecord,
+      history,
+      teamByOwnerId,
+      null
+    );
+  }
+
+  public static void updateCaseTeams(
+    Id originalUserQueueId,
+    Id updatedUserQueueId,
+    Case caseRecord,
+    FEC_Routing_Action_History__c history,
+    Map<Id, String> teamByOwnerId,
+    String preResolvedUpdatedTeam
+  ) {
     if (caseRecord == null || history == null) {
       return;
     }
-    FEC_CaseBusinessService.Method actionMethod = FEC_CaseBusinessService.METHOD_MAP.get(history?.FEC_Routing_Action__c);
-    switch on actionMethod {
-      when CANCEL {
-        caseRecord.FEC_Team__c = null;
-      }
-      when REJECT, RESOLVE {
-        if (caseRecord.FEC_Assignment_Count__c > 0) {
-          caseRecord.FEC_Team__c = null;
-        } else {
-          updateTeamFromQueue(updatedUserQueueId, caseRecord, history);
-        }
-      }
-      when UPDATEACTION {
-        if (caseRecord.FEC_Assignment_Count__c == 0) {
-          updateTeamForUpdateAction(caseRecord, history);
-        }
-      }
-      when else {
-        if (caseRecord.FEC_Assignment_Count__c == 0) {
-          updateTeamFromQueue(updatedUserQueueId, caseRecord, history);
-        }
-      }
-    }
-  }
 
-  private static void updateTeamForUpdateAction(Case caseRecord, FEC_Routing_Action_History__c history) {
-    if (history.FEC_Decision__c != FEC_ConstantCommon.CASE_DECISION_VALUE) {
-      Map<String, String> decisionToTeamMap = FEC_ConstantCommon.decisionToTeamMap;
-      String updatedTeamOnly = decisionToTeamMap.get(history.FEC_Decision__c);
+    if (
+      history.FEC_Routing_Action__c == FEC_CaseBusinessService.CANCEL ||
+      history.FEC_Routing_Action__c == FEC_CaseBusinessService.REJECT ||
+      history.FEC_Routing_Action__c == FEC_CaseBusinessService.RESOLVE
+    ) {
+      caseRecord.FEC_Team__c = null;
+      return;
+    }
+
+    Set<Id> idSet = new Set<Id>();
+    if (originalUserQueueId != null)
+      idSet.add(originalUserQueueId);
+    if (updatedUserQueueId != null)
+      idSet.add(updatedUserQueueId);
+
+    // SOQL 101: teamByOwnerId preload từ handleUpdateCaseTeamsOnInsert; fallback FEC_OwnerTeamLookupSvc.
+    Map<Id, String> teamMap = teamByOwnerId != null
+      ? teamByOwnerId
+      : FEC_OwnerTeamLookupSvc.getByOwnerIds(idSet);
+    Map<String, String> decisionToTeamMap = FEC_ConstantCommon.decisionToTeamMap;
+    String originalTeam = teamMap.get(originalUserQueueId);
+    if (String.isNotBlank(originalTeam)) {
+        // Xóa sạch khoảng trắng dư thừa, ký tự invisible, newline...
+        originalTeam = originalTeam.replaceAll('\\W+', '').trim();
+    }
+
+    if (history.FEC_Routing_Action__c == FEC_CaseBusinessService.REOPEN) {
+      caseRecord.FEC_Team__c = originalTeam;
+      return;
+    }
+    // Change Owner: gán FEC_Team__c = team của owner mới (thay thế toàn bộ), không merge với team cũ trên Case
+    if (history.FEC_Routing_Action__c == FEC_CaseBusinessService.CHANGE_OWNER) {
+      String updatedTeamOnly = teamMap.get(updatedUserQueueId);
       if (String.isNotBlank(updatedTeamOnly)) {
         caseRecord.FEC_Team__c = FEC_CommonUltils.sortTeamField(updatedTeamOnly);
       } else {
         caseRecord.FEC_Team__c = null;
       }
+      return;
+    }
+    String updatedTeam;
+    // SOQL 101: preResolvedUpdatedTeam từ Assignment — bỏ getTeamsFromIds cho updated queue Id.
+    if (String.isNotBlank(preResolvedUpdatedTeam)) {
+      updatedTeam = preResolvedUpdatedTeam.replaceAll('\\W+', '').trim();
+    } else if (history.FEC_Routing_Action__c == FEC_CaseBusinessService.UPDATEACTION) {
+      updatedTeam = decisionToTeamMap.get(history.FEC_Decision__c);
     } else {
-      caseRecord.FEC_Team__c = null;
-      caseRecord.Status = 'Resolved-CannotContactCustomer';
+      updatedTeam = teamMap.get(updatedUserQueueId)?.replaceAll('\\W+', '').trim();
+    }
 
-      FEC_Routing_Action_History__c clonedHistory = history.clone(false, true, false, false);
-      clonedHistory.FEC_Routing_Action__c = FEC_CaseBusinessService.RESOLVE;
-      insert clonedHistory;
+    String currentTeamsStr = caseRecord.FEC_Team__c;
+    Set<String> teamSet = new Set<String>();
+    if (String.isNotBlank(currentTeamsStr)) {
+      for (
+        String t : currentTeamsStr.split(FEC_ConstantCommon.DELIMITER_UNDERSCORE)
+      ) {
+        if (String.isNotBlank(t)) {
+          teamSet.add(t.replaceAll('\\W+', '').trim());
+        }
+      }
+    }
+    if (teamSet.contains(originalTeam)) {
+      teamSet.remove(originalTeam);
+    }
+
+    // Add updated team if not exists
+    if (String.isNotBlank(updatedTeam)) {
+      teamSet.add(updatedTeam);
+    }
+
+    if (teamSet.isEmpty()) {
+      caseRecord.FEC_Team__c = null;
+    } else {
+      caseRecord.FEC_Team__c = FEC_CommonUltils.sortTeamField(String.join(
+        new List<String>(teamSet),
+        FEC_ConstantCommon.DELIMITER_UNDERSCORE
+      ));
     }
   }
 
-  private static void updateTeamFromQueue(Id updatedUserQueueId, Case caseRecord, FEC_Routing_Action_History__c history) {
-    Set<Id> idSet = new Set<Id>();
-    if (updatedUserQueueId != null) {
-      idSet.add(updatedUserQueueId);
-    }
-    Map<Id, String> teamMap = getTeamsFromIds(idSet);
-    Map<String, String> decisionToTeamMap = FEC_ConstantCommon.decisionToTeamMap;
-    String updatedTeamOnly = teamMap.get(updatedUserQueueId);
-    if (String.isNotBlank(updatedTeamOnly)) {
-      caseRecord.FEC_Team__c = FEC_CommonUltils.sortTeamField(updatedTeamOnly);
-    } else {
-      caseRecord.FEC_Team__c = null;
-    }
-
-    // if (originalUserQueueId != null)
-    //   idSet.add(originalUserQueueId);
-    
-
-    
-    //String updatedTeam = history.FEC_Routing_Action__c == FEC_CaseBusinessService.UPDATEACTION ? decisionToTeamMap.get(history.FEC_Decision__c) : teamMap.get(updatedUserQueueId)?.replaceAll('\\W+', '').trim();
-
-    // String currentTeamsStr = caseRecord.FEC_Team__c;
-    // Set<String> teamSet = new Set<String>();
-    // if (String.isNotBlank(currentTeamsStr)) {
-    //   for (
-    //     String t : currentTeamsStr.split(FEC_ConstantCommon.DELIMITER_UNDERSCORE)
-    //   ) {
-    //     if (String.isNotBlank(t)) {
-    //       teamSet.add(t.replaceAll('\\W+', '').trim());
-    //     }
-    //   }
-    // }
-    // if (teamSet.contains(originalTeam)) {
-    //   teamSet.remove(originalTeam);
-    // }
-
-    // Add updated team if not exists
-    // if (String.isNotBlank(updatedTeam)) {
-    //   teamSet.add(updatedTeam);
-    // }
-
-    // if (teamSet.isEmpty()) {
-    //   caseRecord.FEC_Team__c = null;
-    // } else {
-    //   caseRecord.FEC_Team__c = FEC_CommonUltils.sortTeamField(String.join(
-    //     new List<String>(teamSet),
-    //     FEC_ConstantCommon.DELIMITER_UNDERSCORE
-    //   ));
-    // }
-  /** Gom Id owner từ nhiều routing history — dùng trước getTeamsFromIds khi xử lý bulk. */
   public static Set<Id> collectOwnerIdsFromRouteHistory(
     Iterable<FEC_Routing_Action_History__c> histories
+  ) {
+    return collectOwnerIdsFromRouteHistory(histories, true);
+  }
+
+  // SOQL 101: includeUpdatedOwnerId=false — assignment bulk chỉ cần original owner Id.
+  public static Set<Id> collectOwnerIdsFromRouteHistory(
+    Iterable<FEC_Routing_Action_History__c> histories,
+    Boolean includeUpdatedOwnerId
   ) {
     Set<Id> ownerIds = new Set<Id>();
     if (histories == null) {
       return ownerIds;
     }
+    Boolean withUpdated = includeUpdatedOwnerId != null && includeUpdatedOwnerId;
     for (FEC_Routing_Action_History__c hist : histories) {
       if (hist == null) {
         continue;
       }
       Id origId = parseOwnerIdField(hist.FEC_Original_User_Queue_ID__c);
-      Id updId = parseOwnerIdField(hist.FEC_Updated_User_Queue_ID__c);
       if (origId != null) {
         ownerIds.add(origId);
       }
-      if (updId != null) {
-        ownerIds.add(updId);
+      if (withUpdated) {
+        Id updId = parseOwnerIdField(hist.FEC_Updated_User_Queue_ID__c);
+        if (updId != null) {
+          ownerIds.add(updId);
+        }
       }
     }
     return ownerIds;
   }
 
+  // SOQL 101: lookup owner → team (cache transaction) — logic trong FEC_OwnerTeamLookupSvc.
   public static Map<Id, String> getTeamsFromIds(Set<Id> targetIds) {
-    Map<Id, String> resultMap = new Map<Id, String>();
-    if (targetIds == null || targetIds.isEmpty()) {
-      return resultMap;
-    }
-
-    Map<Id, String> idToQueueNameMap = new Map<Id, String>();
-    Set<Id> userIds = new Set<Id>();
-    Set<Id> groupIds = new Set<Id>();
-
-    for (Id tid : targetIds) {
-      if (tid == null)
-        continue;
-      String sObjName = tid.getSObjectType().getDescribe().getName();
-      if (sObjName == FEC_ConstantCommon.SOBJECT_USER) {
-        userIds.add(tid);
-      } else if (sObjName == FEC_ConstantCommon.SOBJECT_GROUP) {
-        groupIds.add(tid);
-      }
-    }
-
-    if (!userIds.isEmpty()) {
-      for (User u : [
-        SELECT Id, FEC_Main_Queue__c
-        FROM User
-        WHERE Id IN :userIds
-      ]) {
-        if (String.isNotBlank(u.FEC_Main_Queue__c)) {
-          idToQueueNameMap.put(u.Id, u.FEC_Main_Queue__c);
-        }
-      }
-    }
-
-    if (!groupIds.isEmpty()) {
-      for (Group g : [
-        SELECT Id, DeveloperName
-        FROM Group
-        WHERE Id IN :groupIds AND Type = :FEC_ConstantCommon.GROUP_TYPE_QUEUE
-      ]) {
-        idToQueueNameMap.put(g.Id, g.DeveloperName);
-      }
-    }
-
-    if (idToQueueNameMap.isEmpty()) {
-      return resultMap;
-    }
-
-    Set<String> queueNames = new Set<String>(idToQueueNameMap.values());
-    Map<String, String> queueToTeamMap = new Map<String, String>();
-    for (FEC_Team_Queue__c tq : [
-      SELECT FEC_Queue_Name__c, FEC_Team__c
-      FROM FEC_Team_Queue__c
-      WHERE FEC_Queue_Name__c IN :queueNames
-    ]) {
-      queueToTeamMap.put(tq.FEC_Queue_Name__c, tq.FEC_Team__c);
-    }
-
-    for (Id tid : targetIds) {
-      if (idToQueueNameMap.containsKey(tid)) {
-        String qName = idToQueueNameMap.get(tid);
-        if (queueToTeamMap.containsKey(qName)) {
-          resultMap.put(tid, queueToTeamMap.get(qName));
-        }
-      }
-    }
-
-    return resultMap;
+    return FEC_OwnerTeamLookupSvc.getByOwnerIds(targetIds);
   }
 }
