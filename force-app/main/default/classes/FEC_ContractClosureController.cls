@@ -621,17 +621,20 @@ public without sharing class FEC_ContractClosureController {
         Boolean hasAddr = p.deliveryAddressSelected == true;
         Boolean hasOffice = p.deliveryOfficeSelected == true;
         Boolean hasPos = p.deliveryPosSelected == true;
-        Integer physicalCnt = 0;
+        Integer cnt = 0;
+        if (hasEmail) {
+            cnt++;
+        }
         if (hasAddr) {
-            physicalCnt++;
+            cnt++;
         }
         if (hasOffice) {
-            physicalCnt++;
+            cnt++;
         }
         if (hasPos) {
-            physicalCnt++;
+            cnt++;
         }
-        if (physicalCnt == 0 && !hasEmail) {
+        if (cnt == 0) {
             if (forComplete || requireDelivery) {
                 r.addFail(MSG_NOTI_02);
             }
@@ -639,10 +642,10 @@ public without sharing class FEC_ContractClosureController {
         if (hasAddr && hasOffice) {
             r.addFail(MSG_NOTI_02);
         }
-        if (physicalCnt > 1) {
+        if ((hasAddr && hasPos) || (hasOffice && hasPos)) {
             r.addFail(MSG_NOTI_02);
         }
-        if (hasEmail && physicalCnt > 1) {
+        if (cnt > 2) {
             r.addFail(MSG_NOTI_02);
         }
         if (hasEmail) {
