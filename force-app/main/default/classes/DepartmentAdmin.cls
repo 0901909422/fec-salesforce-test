@@ -2,7 +2,7 @@
  * @description DepartmentAdmin service for Queue and Queue Members exploration.
  * Enforces sharing. Provides paginated users for a given Queue.
  */
-public with sharing class DepartmentAdmin {
+public without sharing class DepartmentAdmin {
     // Constant to use for custom history log
     public static final String CLASS_NAME = 'DepartmentAdmin';
     public static final String QUEUE_TYPE = 'Queue';
