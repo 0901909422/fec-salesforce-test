@@ -3090,6 +3090,46 @@
         <value>Case Id is invalid.</value>
     </labels>
     <labels>
+        <fullName>FEC_SLA_DS_TS_Use_Test_Thresholds</fullName>
+        <categories>DS TS SLA</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>DS/TS SLA: true = ngưỡng 1/2/3 phút UAT; false = giờ làm việc production</shortDescription>
+        <value>false</value>
+    </labels>
+    <labels>
+        <fullName>FEC_SLA_DS_TS_Recipient_Telesales</fullName>
+        <categories>DS TS SLA</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>DS/TS SLA bell recipients — Telesales queue</shortDescription>
+        <value>vy.dang.2@fecredit.com.vn</value>
+    </labels>
+    <labels>
+        <fullName>FEC_SLA_DS_TS_Recipient_LG</fullName>
+        <categories>DS TS SLA</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>DS/TS SLA bell recipients — LG queue</shortDescription>
+        <value>vy.dang.2@fecredit.com.vn;qc_lg@fecredit.com.vn</value>
+    </labels>
+    <labels>
+        <fullName>FEC_SLA_DS_TS_Recipient_Direct_Sales</fullName>
+        <categories>DS TS SLA</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>DS/TS SLA bell recipients — Direct Sales queue</shortDescription>
+        <value>dong.nguyen.4@fecredit.com.vn</value>
+    </labels>
+    <labels>
+        <fullName>FEC_SLA_DS_TS_Recipient_Pos_Sales</fullName>
+        <categories>DS TS SLA</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>DS/TS SLA bell recipients — POS Sales queue</shortDescription>
+        <value>dong.nguyen.4@fecredit.com.vn</value>
+    </labels>
+    <labels>
         <fullName>FEC_MSG_SLA_Notif_Title_Approaching</fullName>
         <categories>SLA Notification</categories>
         <language>en_US</language>

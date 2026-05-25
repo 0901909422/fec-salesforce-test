@@ -201,6 +201,10 @@
 		<members>FEC_GsrStage1RevertMasterDataHelper</members>
         <members>FEC_BCH_FilterPropertyService</members>
         <members>FEC_CaseAssignmentTriggerHandler</members>
+        <members>FEC_CaseDsTsSlaBatch</members>
+        <members>FEC_CaseDsTsSlaNotificationSender</members>
+        <members>FEC_CaseDsTsSlaSchedulable</members>
+        <members>FEC_CaseDsTsSlaService</members>
         <members>FEC_CaseSlaNotificationService</members>
         <members>FEC_BlockCodeRoutingService</members>
         <members>FEC_CardClosureRefundController</members>
@@ -1300,6 +1304,11 @@
         <members>FEC_BCH_FilterScopePreDefine</members>
         <members>FEC_BCH_Import_Rows_Invalid</members>
         <members>FEC_BCH_Import_Submitted</members>
+        <members>FEC_SLA_DS_TS_Recipient_Direct_Sales</members>
+        <members>FEC_SLA_DS_TS_Recipient_LG</members>
+        <members>FEC_SLA_DS_TS_Recipient_Pos_Sales</members>
+        <members>FEC_SLA_DS_TS_Recipient_Telesales</members>
+        <members>FEC_SLA_DS_TS_Use_Test_Thresholds</members>
         <members>FEC_MSG_SLA_Notif_Body_Approaching</members>
         <members>FEC_MSG_SLA_Notif_Body_Exceeded</members>
         <members>FEC_MSG_SLA_Notif_Title_Approaching</members>
