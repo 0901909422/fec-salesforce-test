@@ -332,7 +332,7 @@
         </div>
         </div>
          <!-- Fraud Manage Component under Property Info -->
-         <template if:true={section.showFraudManageComponent}>
+         <template if:true={section.isCaseInformationSection}>
           <div class="slds-m-top_medium">
             <c-fec-integration-manage-fraud-case
               record-id={recordId}
