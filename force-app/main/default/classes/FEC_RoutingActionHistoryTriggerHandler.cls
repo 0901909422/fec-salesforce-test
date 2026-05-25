@@ -1,6 +1,8 @@
 public without sharing class FEC_RoutingActionHistoryTriggerHandler {
   public class RoutingActionHistoryException extends Exception {}
   private static Boolean isExecuting = false;
+  // SOQL 101: cache/dedupe theo transaction, tránh query lặp khi submit NOC bulk.
+  private static Map<Id, Case> txnCaseTeamRowById = new Map<Id, Case>();
 
   public static void run() {
     FEC_RoutingActionHistoryTriggerHandler handler = new FEC_RoutingActionHistoryTriggerHandler();
@@ -49,6 +51,9 @@ public without sharing class FEC_RoutingActionHistoryTriggerHandler {
     try {
       handleUpdateCaseTeamsOnInsert(newRecords);
       FEC_CaseManagerListService.applyAfterRoutingHistoryInsert(newRecords);
+      // SOQL 101: TAT Full Process enqueue Queueable — không sync Case đồng bộ trong trigger.
+      FEC_RoutingHistTatSvc.queueCaseFullProcessTatAfterSave(newRecords);
+      FEC_RoutingHistTatSvc.commitPendingCaseFullProcessTatSync();
       sendNotificationEmails(newRecords);
     } catch (Exception e) {
       throw new RoutingActionHistoryException('Error processing Routing Action History after insert: ' + e.getMessage());
@@ -227,56 +232,86 @@ public without sharing class FEC_RoutingActionHistoryTriggerHandler {
     }
   }
 
+  // SOQL 101: bulk merge FEC_Team__c — cache Case, preload owner→team qua FEC_OwnerTeamLookupSvc.
   private void handleUpdateCaseTeamsOnInsert(
     List<FEC_Routing_Action_History__c> newRecords
   ) {
-    Set<Id> caseIds = new Set<Id>();
-    for (FEC_Routing_Action_History__c history : newRecords) {
-      if (
-        history.FEC_Case__c != null &&
-        history.FEC_Routing_Action_Type__c == 'Case' &&
-        history.FEC_Assignment__c == null
-      ) {
-        caseIds.add(history.FEC_Case__c);
-      }
-    }
-
-    if (caseIds.isEmpty()) {
+    Map<Id, Case> caseById = loadCachedCaseTeamRows(newRecords);
+    if (caseById.isEmpty()) {
       return;
     }
 
-    Map<Id, Case> caseMap = new Map<Id, Case>(
-      [
-        SELECT Id, FEC_Team__c, FEC_Assignment_Count__c
-        FROM Case
-        WHERE Id IN :caseIds
-      ]
-    );
+    Set<Id> ownerIds = new Set<Id>();
+    for (FEC_Routing_Action_History__c history : newRecords) {
+      if (!isCaseLevelRoutingHistory(history)) {
+        continue;
+      }
+      Id updId = parseOwnerIdField(history.FEC_Updated_User_Queue_ID__c);
+      if (updId != null) {
+        ownerIds.add(updId);
+      }
+    }
+    Map<Id, String> teamByOwnerId = FEC_OwnerTeamLookupSvc.getByOwnerIds(ownerIds);
 
     for (FEC_Routing_Action_History__c history : newRecords) {
-      if (
-        history.FEC_Case__c == null ||
-        history.FEC_Routing_Action_Type__c != 'Case' ||
-        history.FEC_Assignment__c != null
-      ) {
+      if (!isCaseLevelRoutingHistory(history)) {
         continue;
       }
 
-      Case caseRecord = caseMap.get(history.FEC_Case__c);
+      Case caseRecord = caseById.get(history.FEC_Case__c);
       if (caseRecord == null) {
         continue;
       }
 
-      updateCaseTeams(
-        parseOwnerIdField(history.FEC_Updated_User_Queue_ID__c),
-        caseRecord,
-        history
-      );
+      updateCaseTeams(parseOwnerIdField(history.FEC_Updated_User_Queue_ID__c), caseRecord, history, teamByOwnerId);
     }
 
-    if (!caseMap.isEmpty()) {
-      Database.update(caseMap.values(), AccessLevel.SYSTEM_MODE);
+    // SOQL 101: isSystemUpdate — Case trigger bỏ qua syncChannel khi update FEC_Team__c.
+    Boolean priorSystem = FEC_CaseTriggerHandler.isSystemUpdate;
+    FEC_CaseTriggerHandler.isSystemUpdate = true;
+    try {
+      Database.update(caseById.values(), AccessLevel.SYSTEM_MODE);
+    } finally {
+      FEC_CaseTriggerHandler.isSystemUpdate = priorSystem;
     }
+  }
+
+  private static Boolean isCaseLevelRoutingHistory(FEC_Routing_Action_History__c history) {
+    return history != null && history.FEC_Case__c != null && history.FEC_Routing_Action_Type__c == 'Case' && history.FEC_Assignment__c == null;
+  }
+
+  // SOQL 101: mỗi Case Id chỉ SELECT FEC_Team__c một lần/transaction.
+  private static Map<Id, Case> loadCachedCaseTeamRows(
+    List<FEC_Routing_Action_History__c> histories
+  ) {
+    Set<Id> caseIds = new Set<Id>();
+    for (FEC_Routing_Action_History__c history : histories) {
+      if (isCaseLevelRoutingHistory(history)) {
+        caseIds.add(history.FEC_Case__c);
+      }
+    }
+    Set<Id> missingCaseIds = new Set<Id>();
+    for (Id caseId : caseIds) {
+      if (!txnCaseTeamRowById.containsKey(caseId)) {
+        missingCaseIds.add(caseId);
+      }
+    }
+    if (!missingCaseIds.isEmpty()) {
+      for (Case row : [
+        SELECT Id, FEC_Team__c, FEC_Assignment_Count__c
+        FROM Case
+        WHERE Id IN :missingCaseIds
+      ]) {
+        txnCaseTeamRowById.put(row.Id, row);
+      }
+    }
+    Map<Id, Case> caseById = new Map<Id, Case>();
+    for (Id caseId : caseIds) {
+      if (txnCaseTeamRowById.containsKey(caseId)) {
+        caseById.put(caseId, txnCaseTeamRowById.get(caseId));
+      }
+    }
+    return caseById;
   }
 
   private void onAfterUpdate(
@@ -291,7 +326,8 @@ public without sharing class FEC_RoutingActionHistoryTriggerHandler {
     isExecuting = true;
 
     try {
-      // TODO: Add after update logic here
+      FEC_RoutingHistTatSvc.queueCaseFullProcessTatAfterSave(newRecords, oldMap);
+      FEC_RoutingHistTatSvc.commitPendingCaseFullProcessTatSync();
       sendNotificationEmails(newRecords);
     } finally {
       isExecuting = false;
@@ -348,7 +384,8 @@ public without sharing class FEC_RoutingActionHistoryTriggerHandler {
     if (idSet.isEmpty()) {
       return FEC_ConstantCommon.CASE_STATUS_PENDING;
     }
-    Map<Id, String> teamMap = teamByOwnerId != null ? teamByOwnerId : getTeamsFromIds(idSet);
+    // SOQL 101: teamByOwnerId preload từ bulk; null thì FEC_OwnerTeamLookupSvc (cache transaction).
+    Map<Id, String> teamMap = teamByOwnerId != null ? teamByOwnerId : FEC_OwnerTeamLookupSvc.getByOwnerIds(idSet);
     String tOrig = originalOwnerId != null ? teamMap.get(originalOwnerId) : null;
     String tUpd = updatedOwnerId != null ? teamMap.get(updatedOwnerId) : null;
 
@@ -386,6 +423,10 @@ public without sharing class FEC_RoutingActionHistoryTriggerHandler {
     Case caseRecord,
     FEC_Routing_Action_History__c history
   ) {
+    updateCaseTeams(updatedUserQueueId, caseRecord, history, null);
+  }
+
+  public static void updateCaseTeams(Id updatedUserQueueId, Case caseRecord, FEC_Routing_Action_History__c history, Map<Id, String> teamByOwnerId) {
     if (caseRecord == null || history == null) {
       return;
     }
@@ -398,7 +439,7 @@ public without sharing class FEC_RoutingActionHistoryTriggerHandler {
         if (caseRecord.FEC_Assignment_Count__c > 0) {
           caseRecord.FEC_Team__c = null;
         } else {
-          updateTeamFromQueue(updatedUserQueueId, caseRecord, history);
+          updateTeamFromQueue(updatedUserQueueId, caseRecord, history, teamByOwnerId);
         }
       }
       when UPDATEACTION {
@@ -408,7 +449,7 @@ public without sharing class FEC_RoutingActionHistoryTriggerHandler {
       }
       when else {
         if (caseRecord.FEC_Assignment_Count__c == 0) {
-          updateTeamFromQueue(updatedUserQueueId, caseRecord, history);
+          updateTeamFromQueue(updatedUserQueueId, caseRecord, history, teamByOwnerId);
         }
       }
     }
@@ -434,11 +475,16 @@ public without sharing class FEC_RoutingActionHistoryTriggerHandler {
   }
 
   private static void updateTeamFromQueue(Id updatedUserQueueId, Case caseRecord, FEC_Routing_Action_History__c history) {
+    updateTeamFromQueue(updatedUserQueueId, caseRecord, history, null);
+  }
+
+  private static void updateTeamFromQueue(Id updatedUserQueueId, Case caseRecord, FEC_Routing_Action_History__c history, Map<Id, String> teamByOwnerId) {
     Set<Id> idSet = new Set<Id>();
     if (updatedUserQueueId != null) {
       idSet.add(updatedUserQueueId);
     }
-    Map<Id, String> teamMap = getTeamsFromIds(idSet);
+    // SOQL 101: teamByOwnerId preload từ handleUpdateCaseTeamsOnInsert; fallback FEC_OwnerTeamLookupSvc.
+    Map<Id, String> teamMap = teamByOwnerId != null ? teamByOwnerId : FEC_OwnerTeamLookupSvc.getByOwnerIds(idSet);
     Map<String, String> decisionToTeamMap = FEC_ConstantCommon.decisionToTeamMap;
     String updatedTeamOnly = teamMap.get(updatedUserQueueId);
     updatedTeamOnly = FEC_CommonUltils.cleanNonWordCharacters(updatedTeamOnly);
@@ -484,97 +530,44 @@ public without sharing class FEC_RoutingActionHistoryTriggerHandler {
     //   ));
     // }
   }
-  
+
   /** Gom Id owner từ nhiều routing history — dùng trước getTeamsFromIds khi xử lý bulk. */
   public static Set<Id> collectOwnerIdsFromRouteHistory(
     Iterable<FEC_Routing_Action_History__c> histories
+  ) {
+    return collectOwnerIdsFromRouteHistory(histories, true);
+  }
+
+  // SOQL 101: includeUpdatedOwnerId=false — assignment bulk chỉ cần original owner Id.
+  public static Set<Id> collectOwnerIdsFromRouteHistory(
+    Iterable<FEC_Routing_Action_History__c> histories,
+    Boolean includeUpdatedOwnerId
   ) {
     Set<Id> ownerIds = new Set<Id>();
     if (histories == null) {
       return ownerIds;
     }
+    Boolean withUpdated = includeUpdatedOwnerId != null && includeUpdatedOwnerId;
     for (FEC_Routing_Action_History__c hist : histories) {
       if (hist == null) {
         continue;
       }
       Id origId = parseOwnerIdField(hist.FEC_Original_User_Queue_ID__c);
-      Id updId = parseOwnerIdField(hist.FEC_Updated_User_Queue_ID__c);
       if (origId != null) {
         ownerIds.add(origId);
       }
-      if (updId != null) {
-        ownerIds.add(updId);
+      if (withUpdated) {
+        Id updId = parseOwnerIdField(hist.FEC_Updated_User_Queue_ID__c);
+        if (updId != null) {
+          ownerIds.add(updId);
+        }
       }
     }
     return ownerIds;
   }
 
+  // SOQL 101: lookup owner → team (cache transaction) — logic trong FEC_OwnerTeamLookupSvc.
   public static Map<Id, String> getTeamsFromIds(Set<Id> targetIds) {
-    Map<Id, String> resultMap = new Map<Id, String>();
-    if (targetIds == null || targetIds.isEmpty()) {
-      return resultMap;
-    }
-
-    Map<Id, String> idToQueueNameMap = new Map<Id, String>();
-    Set<Id> userIds = new Set<Id>();
-    Set<Id> groupIds = new Set<Id>();
-
-    for (Id tid : targetIds) {
-      if (tid == null)
-        continue;
-      String sObjName = tid.getSObjectType().getDescribe().getName();
-      if (sObjName == FEC_ConstantCommon.SOBJECT_USER) {
-        userIds.add(tid);
-      } else if (sObjName == FEC_ConstantCommon.SOBJECT_GROUP) {
-        groupIds.add(tid);
-      }
-    }
-
-    if (!userIds.isEmpty()) {
-      for (User u : [
-        SELECT Id, FEC_Main_Queue__c
-        FROM User
-        WHERE Id IN :userIds
-      ]) {
-        if (String.isNotBlank(u.FEC_Main_Queue__c)) {
-          idToQueueNameMap.put(u.Id, u.FEC_Main_Queue__c);
-        }
-      }
-    }
-
-    if (!groupIds.isEmpty()) {
-      for (Group g : [
-        SELECT Id, DeveloperName
-        FROM Group
-        WHERE Id IN :groupIds AND Type = :FEC_ConstantCommon.GROUP_TYPE_QUEUE
-      ]) {
-        idToQueueNameMap.put(g.Id, g.DeveloperName);
-      }
-    }
-
-    if (idToQueueNameMap.isEmpty()) {
-      return resultMap;
-    }
-
-    Set<String> queueNames = new Set<String>(idToQueueNameMap.values());
-    Map<String, String> queueToTeamMap = new Map<String, String>();
-    for (FEC_Team_Queue__c tq : [
-      SELECT FEC_Queue_Name__c, FEC_Team__c
-      FROM FEC_Team_Queue__c
-      WHERE FEC_Queue_Name__c IN :queueNames
-    ]) {
-      queueToTeamMap.put(tq.FEC_Queue_Name__c, tq.FEC_Team__c);
-    }
-
-    for (Id tid : targetIds) {
-      if (idToQueueNameMap.containsKey(tid)) {
-        String qName = idToQueueNameMap.get(tid);
-        if (queueToTeamMap.containsKey(qName)) {
-          resultMap.put(tid, queueToTeamMap.get(qName));
-        }
-      }
-    }
-
-    return resultMap;
+    return FEC_OwnerTeamLookupSvc.getByOwnerIds(targetIds);
   }
 }

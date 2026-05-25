@@ -20,11 +20,13 @@
 	    <members>FEC_MainInfoLoanAccountController</members>
 	    <members>FEC_TerminationLoanController</members>
 	    <members>FEC_CaseRemarkController</members>
+	    <members>FEC_CaseRemarksRollupService</members>
 	    <members>FEC_CaseTriggerHandler</members>
 	    <members>FEC_PinResetHandler</members>
 	    <members>FEC_GetSMSInfoFromITTelcoCallout</members>
 	    <members>FEC_NotificationHistoryController</members>
 	    <members>FEC_Notification</members>
+	    <members>FEC_OwnerTeamLookupSvc</members>
 	    <members>FEC_NatureOfCaseTriggerHandler</members>
 	    <members>FEC_NocChannelConfigController</members>
 	    <members>FEC_GetCardSecInfo</members>
@@ -38,6 +40,7 @@
 	    <members>FEC_AssignmentExecuteService</members>
         <members>FEC_AssignmentCaseShareService</members>
 	    <members>FEC_CaseExecuteService</members>
+	    <members>FEC_CaseFullProcessTatQueueJob</members>
 	    <members>FEC_CaseInitUpdateService</members>
 	    <members>FEC_CaseInitUpdateServiceTest</members>
 	    <members>FEC_SubProcessService</members>
@@ -128,6 +131,7 @@
         <members>FEC_BatchCaseHandlingZipResult</members>
         <members>FEC_BatchCaseHandlingZipService</members>
         <members>FEC_CaseTatFullProcessSvc</members>
+        <members>FEC_CaseFullProcessTatQueueJob</members>
         <members>FEC_CaseDsTsSlaBatch</members>
         <members>FEC_CaseDsTsSlaNotificationSender</members>
         <members>FEC_CaseDsTsSlaSchedulable</members>
