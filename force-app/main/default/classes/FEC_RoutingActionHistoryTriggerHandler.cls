@@ -430,6 +430,7 @@ public without sharing class FEC_RoutingActionHistoryTriggerHandler {
     Map<Id, String> teamMap = getTeamsFromIds(idSet);
     Map<String, String> decisionToTeamMap = FEC_ConstantCommon.decisionToTeamMap;
     String updatedTeamOnly = teamMap.get(updatedUserQueueId);
+    updatedTeamOnly = FEC_CommonUltils.cleanNonWordCharacters(updatedTeamOnly);
     if (String.isNotBlank(updatedTeamOnly)) {
       caseRecord.FEC_Team__c = FEC_CommonUltils.sortTeamField(updatedTeamOnly);
     } else {
