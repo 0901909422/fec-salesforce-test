@@ -153,28 +153,26 @@ export default class fec_DoNotBotherHandling extends LightningElement {
     return this.customerType === "Existing";
   }
 
+  _findDNBNonExistingEl() {
+    const selectors = ["c-fec_-do-not-bother-non-existing-customer"];
+
+    for (let i = 0; i < selectors.length; i++) {
+      const el = this.template.querySelector(selectors[i]);
+
+      if (el) {
+        return el;
+      }
+    }
+
+    return null;
+  }
+
   @api
-  validate() {
-    /*
-     * Existing customer component
-     */
-    // const existingCmp = this.template.querySelector(
-    //   "c-fec_-do-not-bother-existing-customer",
-    // );
+  validateForSubmit() {
+    const dnbEl = this._findDNBNonExistingEl();
 
-    // if (existingCmp?.validate && !existingCmp.validate()) {
-    //   return false;
-    // }
-
-    /*
-     * Non existing customer component
-     */
-    const nonExistingCmp = this.template.querySelector(
-      "c-fec_-do-not-bother-non-existing-customer",
-    );
-
-    if (nonExistingCmp?.validate && !nonExistingCmp.validate()) {
-      return false;
+    if (dnbEl && typeof dnbEl.validateForSubmit === "function") {
+      return dnbEl.validateForSubmit();
     }
 
     return true;
