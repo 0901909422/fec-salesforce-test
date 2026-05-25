@@ -18228,4 +18228,11 @@
         <shortDescription>Gender Label</shortDescription>
         <value>Buyer Gender</value>
     </labels>
+    <labels>
+        <fullName>FEC_Channel_Config_Invalid_Selection</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Channel Config invalid selection message</shortDescription>
+        <value>Vui lòng chọn một Channel hợp lệ từ danh sách kết quả tìm kiếm trước khi lưu.</value>
+    </labels>
 </CustomLabels>
