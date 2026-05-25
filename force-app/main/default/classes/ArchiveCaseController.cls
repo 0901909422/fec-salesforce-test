@@ -7,7 +7,7 @@ History
 <Date>         <Authors Name>     <Brief Description of Change>
 2026/04/01     Thanh Van          Init
 ------------------------------------------------------------*/
-public with sharing class ArchiveCaseController {
+public without sharing class ArchiveCaseController {
 
     @TestVisible private static List<AthenaCases__x> mockExternalRecords;
     public String errorMessage { get; set; }

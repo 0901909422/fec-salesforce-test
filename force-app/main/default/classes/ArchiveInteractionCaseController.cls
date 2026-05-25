@@ -8,7 +8,7 @@ History
 <Date>         <Authors Name>     <Brief Description of Change>
 2026/04/16     Thanh Van          Init
 ------------------------------------------------------------*/
-public with sharing class ArchiveInteractionCaseController {
+public without sharing class ArchiveInteractionCaseController {
 
     @TestVisible private static List<AthenaCases__x> mockExternalRecords;
     public static Boolean isTestWithError = false;

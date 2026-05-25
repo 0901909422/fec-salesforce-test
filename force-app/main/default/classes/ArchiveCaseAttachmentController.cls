@@ -9,7 +9,7 @@ History
 <Date>         <Authors Name>     <Brief Description of Change>
 2026/04/28     Thanh Van          Init
 ------------------------------------------------------------*/
-public with sharing class ArchiveCaseAttachmentController {
+public without sharing class ArchiveCaseAttachmentController {
 
     /*------------------------------------------------------------
     Author:        Thanh Van
