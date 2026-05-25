@@ -127,12 +127,15 @@
         <members>FEC_AssignmentController</members>
         <members>FEC_CofGsrAssignmentService</members>
         <members>FEC_CaseEditNOCController</members>
+        <members>FEC_CaseEditNOCControllerTest</members>
         <members>FEC_CloseInterationSchedulerBatch</members>
         <members>FEC_AssignmentListHandler</members>
         <members>FEC_AssignmentRoutingActionHandler</members>
 		<members>FEC_AssignmentExecuteService</members>
         <members>FEC_AssignmentCaseShareService</members>
         <members>FEC_CaseExecuteService</members>
+        <members>FEC_CaseInitUpdateService</members>
+        <members>FEC_CaseInitUpdateServiceTest</members>
         <members>FEC_RoutingActionHistoryTriggerHandler</members>
         <members>FEC_RelevantTicketTriggerHandler</members>
         <members>FEC_PointsRedemptionCaseController</members>
@@ -791,6 +794,7 @@
         <members>fec_InteractionCreateCase</members>
         <members>fec_ReusableDNBCustomTable</members>
         <members>fec_CaseEditNOC</members>
+        <members>fec_CaseModePublisher</members>
         <members>fec_CaseNocUpdatedSection</members>
         <members>fec_AssignmentList</members>
         <members>fec_AssignmentRemarkHistoryTable</members>

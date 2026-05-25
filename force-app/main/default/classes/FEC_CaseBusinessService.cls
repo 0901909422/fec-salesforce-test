@@ -228,6 +228,7 @@ public without sharing class FEC_CaseBusinessService {
         return result;
 
       Case selectedCase = caselst.get(0);
+      Case caseBaseline = selectedCase.clone(true, true, true, true);
       // Giữ stage đọc từ DB trước khi draft null field — dùng map sang stage tương đương khi đổi bộ NOC.
       Id caseStageIdPreservedAtLoad = selectedCase.FEC_Current_Case_Stage__c;
 
@@ -517,9 +518,7 @@ public without sharing class FEC_CaseBusinessService {
         if (caseStageIdPreservedAtLoad != null) {
           selectedCase.FEC_Current_Case_Stage__c = caseStageIdPreservedAtLoad;
         }
-        try { update selectedCase; } catch (DmlException e) {
-          System.debug('Update case failed (no NOC): ' + e.getMessage());
-        }
+        FEC_CaseInitUpdateService.runSystemCaseUpdateIfChanged(selectedCase, caseBaseline);
         return result;
       }
 
@@ -764,9 +763,7 @@ public without sharing class FEC_CaseBusinessService {
         if (caseStageIdPreservedAtLoad != null) {
           selectedCase.FEC_Current_Case_Stage__c = caseStageIdPreservedAtLoad;
         }
-        try { update selectedCase; } catch (DmlException e) {
-          System.debug('Update case failed (no stage): ' + e.getMessage());
-        }
+        FEC_CaseInitUpdateService.runSystemCaseUpdateIfChanged(selectedCase, caseBaseline);
         // RL05.01 / RL05.03: vẫn hiển thị Delivery khi chưa resolve stage (giống luồng 01).
         FEC_MrcReturnCaseService.supplementStage1RoutingActionsIfEmpty(
           result,
@@ -1371,14 +1368,7 @@ public without sharing class FEC_CaseBusinessService {
 
       // RL05 duplicate + UI context đã resolve trước vòng master data (mrcRl05Ui / mrcRl0502Duplicate*).
 
-      if (Schema.sObjectType.Case.isUpdateable()) {
-        try {
-          FEC_CaseTriggerHandler.isSystemUpdate = true;
-          update selectedCase;
-        } catch (DmlException e) {
-          // User có thể không có quyền sửa Case (vd: Case đã assign Queue). Vẫn trả result để hiển thị section.
-        }
-      }
+      FEC_CaseInitUpdateService.runSystemCaseUpdateIfChanged(selectedCase, caseBaseline);
 
       return result;
     } catch (CaseBusinessServiceException e) {
@@ -4988,7 +4978,6 @@ public without sharing class FEC_CaseBusinessService {
     ) {
       selectedCase.FEC_Updated_Info_Phone_Number__c = selectedCase.FEC_Original_Info_Phone_Number__c;
     }
-    update selectedCase;
   }
 
   /**
@@ -5023,7 +5012,6 @@ public without sharing class FEC_CaseBusinessService {
         selectedCase.FEC_Updated_Info_Last_Name__c = selectedCase.FEC_Original_Info_Last_Name__c;
       }
     }
-    update selectedCase;
   }
 
   /**
@@ -5047,7 +5035,6 @@ public without sharing class FEC_CaseBusinessService {
     ) {
       selectedCase.FEC_Updated_Info_Email__c = selectedCase.FEC_Original_Info_Email__c;
     }
-    update selectedCase;
   }
 
   /**
@@ -5071,7 +5058,6 @@ public without sharing class FEC_CaseBusinessService {
     ) {
       selectedCase.FEC_Updated_Info_Date_of_Birth__c = selectedCase.FEC_Original_Info_Date_of_Birth__c;
     }
-    update selectedCase;
   }
 
   /**
@@ -5095,7 +5081,6 @@ public without sharing class FEC_CaseBusinessService {
     ) {
       selectedCase.FEC_Updated_Info_Gender__c = selectedCase.FEC_Original_Info_Gender__c;
     }
-    update selectedCase;
   }
 
   /**
@@ -5130,7 +5115,6 @@ public without sharing class FEC_CaseBusinessService {
         selectedCase.FEC_Updated_Info_Place_of_Issue__c = selectedCase.FEC_Original_Info_Place_of_Issue__c;
       }
     }
-    update selectedCase;
   }
 
   private static void undeliveriedCardUpdate(Case selectedCase) {
@@ -5141,7 +5125,6 @@ public without sharing class FEC_CaseBusinessService {
     if (cardDeliveryInfo != null) {
       selectedCase.FEC_Delivery_Status__c = cardDeliveryInfo.status;
       selectedCase.FEC_Delay_Note__c = cardDeliveryInfo.deliveryNotes;
-      update selectedCase;
     }
   }
 
