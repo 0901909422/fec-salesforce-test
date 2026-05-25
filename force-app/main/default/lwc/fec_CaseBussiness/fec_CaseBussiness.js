@@ -5566,7 +5566,7 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
         this.holdCaseResultOverride = null;
         void this._refreshHoldCaseAutoDisplay();
       }
-    }, 22000);
+    }, 3000);
   }
 
   applyDraft() {
