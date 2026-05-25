@@ -183,7 +183,8 @@ public without sharing class FEC_RoutingHistTatSvc {
             h.FEC_Case__c,
             null,
             h.FEC_Submitted_On__c,
-            true
+            true,
+            false
         );
         if (prior != null && prior.FEC_Submitted_On__c != null) {
             return prior.FEC_Submitted_On__c;
@@ -192,7 +193,7 @@ public without sharing class FEC_RoutingHistTatSvc {
     }
 
     /**
-     * TH2: bản ghi gắn Assignment — ưu tiên prior cùng Assignment; manual fallback prior cùng Case (không lọc Assignment = null).
+     * TH2: ưu tiên prior cùng Assignment; TH2.2.2 Manual fallback prior cùng Case (không lọc FEC_Assignment__c = null).
      */
     private static Datetime resolveTh2AssignedOn(
         FEC_Routing_Action_History__c h,
@@ -209,7 +210,8 @@ public without sharing class FEC_RoutingHistTatSvc {
             h.FEC_Case__c,
             h.FEC_Assignment__c,
             h.FEC_Submitted_On__c,
-            true
+            true,
+            false
         );
         if (priorSameAssign != null && priorSameAssign.FEC_Submitted_On__c != null) {
             return priorSameAssign.FEC_Submitted_On__c;
@@ -223,6 +225,7 @@ public without sharing class FEC_RoutingHistTatSvc {
                 h.FEC_Case__c,
                 null,
                 h.FEC_Submitted_On__c,
+                false,
                 false
             );
             if (priorOnCase != null && priorOnCase.FEC_Submitted_On__c != null) {
@@ -234,26 +237,35 @@ public without sharing class FEC_RoutingHistTatSvc {
     }
 
     /**
-     * @param assignmentIdFilter null = mọi RAH cùng Case; non-null = cùng FEC_Assignment__c.
+     * @param assignmentIdFilter non-null = cùng FEC_Assignment__c; null = không lọc theo Id Assignment.
+     * @param assignmentMustBeNullOnly giữ tham số cho tương lai; TH2.2.2 luôn false (bỏ lọc Assignment = null).
      * @param strictLessSubmitted true: Submitted &lt; current; false: Submitted &lt;= current (TH2.2.2).
      */
+    @TestVisible
     private static FEC_Routing_Action_History__c findBestPrior(
         List<FEC_Routing_Action_History__c> pool,
         FEC_Routing_Action_History__c current,
         Id caseId,
         Id assignmentIdFilter,
         Datetime currentSubmitted,
-        Boolean strictLessSubmitted
+        Boolean strictLessSubmitted,
+        Boolean assignmentMustBeNullOnly
     ) {
         FEC_Routing_Action_History__c best = null;
         for (FEC_Routing_Action_History__c cand : pool) {
             if (cand == current) {
                 continue;
             }
+            if (current.Id != null && cand.Id == current.Id) {
+                continue;
+            }
             if (cand.FEC_Case__c != caseId) {
                 continue;
             }
             if (assignmentIdFilter != null && cand.FEC_Assignment__c != assignmentIdFilter) {
+                continue;
+            }
+            if (assignmentMustBeNullOnly == true && cand.FEC_Assignment__c != null) {
                 continue;
             }
             if (cand.FEC_Submitted_On__c == null) {
