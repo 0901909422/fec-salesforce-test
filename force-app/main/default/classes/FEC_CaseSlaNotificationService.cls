@@ -65,7 +65,7 @@ public without sharing class FEC_CaseSlaNotificationService {
 
             Set<String> recipientIds;
             if (isSlaCancelRequestInternalTaskCase(slaCase)) {
-                // Trường hợp 2 — Request/Internal Task + ISL01/ISC01
+                // Trường hợp 2 — Request / Internal Task
                 recipientIds = resolveSlaRecipientsCase2CancelRequest(
                     performUserIds,
                     performUserById,
