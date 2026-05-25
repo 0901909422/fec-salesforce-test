@@ -183,12 +183,14 @@
 	    <members>fec_AssignmentRemarkHistoryTable</members>
 	    <members>fec_AssignmentViewAll</members>
 	    <members>fec_CustomDoNotBotherViewDatatable</members>
+	    <members>fec_CreateCaseNonExistingCustomer</members>
 	    <members>fec_CustomerCaseExecuteAction</members>
 	    <members>fec_DoNotBotherHandling</members>
 	    <members>fec_DoNotBotherNonExistingCustomer</members>
 	    <members>fec_SubProcessContainer</members>
 	    <members>fec_DoNotBotherExistingCustomer</members>
 	    <members>fec_DoNotBotherInformationView</members>
+	    <members>fec_InteractionCreateCase</members>
 	    <members>fec_ReusableDNBCustomTable</members>
 	    <members>fec_AssignmentExecuteVisibility</members>
         <members>fec_communicationHistory</members>
