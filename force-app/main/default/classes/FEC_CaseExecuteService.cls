@@ -2,6 +2,7 @@ public without sharing class FEC_CaseExecuteService {
   public class ExecuteVisibilityResult {
     @AuraEnabled public Boolean value;
     @AuraEnabled public Boolean shouldUpdate;
+    @AuraEnabled public String message;
   }
   
   //thangtv: không ép true — luôn tính lại quyền qua canExecute
@@ -31,11 +32,12 @@ public without sharing class FEC_CaseExecuteService {
   public static ExecuteVisibilityResult canExecute(Id caseId) {
     Case c = [
       SELECT Id, OwnerId, IsClosed, FEC_Interaction_View_Mode__c,
-      FEC_Assignment_Count__c,
+      FEC_Assignment_Count__c,FEC_Case_Executor__c,
       FEC_Can_Execute__c FROM Case WHERE Id = : caseId LIMIT 1
     ];
     
     Id userId = UserInfo.getUserId();
+    String currentUsername = UserInfo.getUserName();
     
     System.debug('==============================');
     System.debug('FEC_CaseExecuteService START');
@@ -43,15 +45,23 @@ public without sharing class FEC_CaseExecuteService {
     System.debug('User Id = ' + userId);
     System.debug('Owner Id = ' + c.OwnerId);
     System.debug('Current FEC_Can_Execute__c = ' + c.FEC_Can_Execute__c);
+    System.debug('Executor = ' + c.FEC_Case_Executor__c);
     System.debug('==============================');
     
+    /* * 0. EXECUTOR CHECK * * If already executed by another user * => hide Execute - hieutt cập nhật ngày 25/5/2026
+     * button */
+    if (String.isNotBlank(c.FEC_Case_Executor__c)
+    && c.FEC_Case_Executor__c != currentUsername) {
+      System.debug('FAILED: already executed by another user');
+      return buildResult(c, false,'Case đã được execute bởi User khác');
+    }
     /*
      * 1. Closed check
      */
     if (c.IsClosed) {
       System.debug('FAILED: Case is closed');
       
-      return buildResult(c, false);
+      return buildResult(c, false,'');
     }
     
     /*
@@ -70,7 +80,7 @@ public without sharing class FEC_CaseExecuteService {
     if (!hasAccess) {
       System.debug('FAILED: User has no access');
       
-      return buildResult(c, false);
+      return buildResult(c, false,'');
     }
     
     /*
@@ -111,7 +121,7 @@ public without sharing class FEC_CaseExecuteService {
       canExecute = assignmentCount == 0;
     }
     
-    return buildResult(c, canExecute);
+    return buildResult(c, canExecute,'');
   }
   
   private static Boolean hasCaseAccess(Case c, Id currentUserId) {
@@ -145,9 +155,9 @@ public without sharing class FEC_CaseExecuteService {
   
   private static final QueueMembershipAccess QUEUE_MEMBERSHIP_ACCESS =
     new QueueMembershipAccess();
-
+  
   private static ExecuteVisibilityResult buildResult(
-  Case c, Boolean canExecute) {
+  Case c, Boolean canExecute, String message) {
     ExecuteVisibilityResult result = new ExecuteVisibilityResult();
     
     result.value = canExecute;
@@ -155,6 +165,8 @@ public without sharing class FEC_CaseExecuteService {
     Boolean currentValue = c.FEC_Can_Execute__c == true;
     
     result.shouldUpdate = currentValue != canExecute;
+
+    result.message = message;
     
     System.debug('----------------------');
     System.debug('currentValue = ' + currentValue);
@@ -162,6 +174,8 @@ public without sharing class FEC_CaseExecuteService {
     System.debug('newValue = ' + canExecute);
     
     System.debug('shouldUpdate = ' + result.shouldUpdate);
+
+    System.debug( 'message = ' + message );
     System.debug('----------------------');
     
     /*
@@ -199,9 +213,65 @@ public without sharing class FEC_CaseExecuteService {
     return result;
   }
   
+  // @AuraEnabled
+  // public static void executeCase(Id caseId) {
+    //   Id userId = UserInfo.getUserId();
+    
+    //   System.debug('==============================');
+    //   System.debug('START executeCase');
+    //   System.debug('caseId = ' + caseId);
+    //   System.debug('userId = ' + userId);
+    //   System.debug('==============================');
+    
+    //   Case c = [SELECT Id, OwnerId FROM Case WHERE Id = : caseId LIMIT 1];
+    
+    //   Id oldOwnerId = c.OwnerId;
+    
+    //   System.debug('OLD OwnerId = ' + oldOwnerId);
+    
+    //   /*
+    //    * STOP IF OWNER ALREADY CURRENT USER
+    //    */
+    //   if (oldOwnerId == userId) {
+      //     System.debug('SKIP UPDATE: Owner already current user');
+      
+      //     return;
+    //   }
+    
+    //   /*
+    //    * UPDATE OWNER
+    //    */
+    //   try {
+      //     FEC_CaseTriggerHandler.isSystemUpdate = true;
+      
+      //     update new Case(Id = caseId, OwnerId = userId);
+      
+      //     /*
+      //      * Routing history
+      //     //  */
+      //     // createRoutingActionHistory(caseId, oldOwnerId, userId);
+      
+      //     System.debug('SUCCESS: Owner updated');
+      
+      //     System.debug('NEW OwnerId = ' + userId);
+      
+    //   } catch (Exception e) {
+      //     System.debug('ERROR executeCase = ' + e.getMessage());
+      
+      //     throw new AuraHandledException(e.getMessage());
+      
+    //   } finally {
+      //     FEC_CaseTriggerHandler.isSystemUpdate = false;
+    //   }
+  // }
+  
+  
   @AuraEnabled
   public static void executeCase(Id caseId) {
     Id userId = UserInfo.getUserId();
+    
+    User currentUser =
+      [SELECT Id, Username FROM User WHERE Id = : userId LIMIT 1];
     
     System.debug('==============================');
     System.debug('START executeCase');
@@ -209,35 +279,61 @@ public without sharing class FEC_CaseExecuteService {
     System.debug('userId = ' + userId);
     System.debug('==============================');
     
-    Case c = [SELECT Id, OwnerId FROM Case WHERE Id = : caseId LIMIT 1];
+    Case c = [
+      SELECT Id, OwnerId,
+      FEC_Case_Executor__c FROM Case WHERE Id = : caseId LIMIT 1 FOR UPDATE
+    ];
+    
+    /*
+     * CHECK EXECUTOR
+     */
+    if (String.isNotBlank(c.FEC_Case_Executor__c)
+    && c.FEC_Case_Executor__c != currentUser.Username) {
+      throw new AuraHandledException(
+        'Case đã được execute bởi User: ' + c.FEC_Case_Executor__c);
+    }
     
     Id oldOwnerId = c.OwnerId;
     
     System.debug('OLD OwnerId = ' + oldOwnerId);
     
+    Case updateCase = new Case(Id = caseId);
+    
+    Boolean hasUpdate = false;
+    
     /*
-     * STOP IF OWNER ALREADY CURRENT USER
+     * SAVE EXECUTOR FIRST TIME
      */
-    if (oldOwnerId == userId) {
-      System.debug('SKIP UPDATE: Owner already current user');
+    if (String.isBlank(c.FEC_Case_Executor__c)) {
+      updateCase.FEC_Case_Executor__c = currentUser.Username;
       
-      return;
+      hasUpdate = true;
     }
     
     /*
      * UPDATE OWNER
      */
+    if (c.OwnerId != userId) {
+      updateCase.OwnerId = userId;
+      
+      hasUpdate = true;
+    }
+    
+    /*
+     * NOTHING TO UPDATE
+     */
+    if (!hasUpdate) {
+      System.debug('SKIP UPDATE: no changes');
+      
+      return;
+    }
+    
     try {
       FEC_CaseTriggerHandler.isSystemUpdate = true;
       
-      update new Case(Id = caseId, OwnerId = userId);
+      update updateCase;
       
-      /*
-       * Routing history
-      //  */
-      // createRoutingActionHistory(caseId, oldOwnerId, userId);
-      
-      System.debug('SUCCESS: Owner updated');
+      System.debug('SUCCESS executeCase');
       
       System.debug('NEW OwnerId = ' + userId);
       
@@ -250,6 +346,7 @@ public without sharing class FEC_CaseExecuteService {
       FEC_CaseTriggerHandler.isSystemUpdate = false;
     }
   }
+  
   
   /**
    * Create Routing Action History
@@ -436,29 +533,29 @@ public without sharing class FEC_CaseExecuteService {
   private static Boolean isCurrentUserOwner(Id ownerId, Id currentUserId) {
     return ownerId != null && currentUserId != null && ownerId == currentUserId;
   }
-
+  
   private static void updateCaseExecuteFlag(Id caseId, Boolean canExecute) {
     Database.update(
       new Case(Id = caseId, FEC_Can_Execute__c = canExecute),
-      AccessLevel.SYSTEM_MODE
-    );
+    AccessLevel.SYSTEM_MODE
+      );
   }
-
+  
   //thangtv: đọc GroupMember without sharing (giống FEC_AssignmentExecuteService)
   private class QueueMembershipAccess {
     Boolean isUserInQueue(Id userId, Id queueId) {
       if (userId == null || queueId == null) {
         return false;
       }
-
+      
       Set<Id> visitedGroupIds = new Set<Id>();
       Set<Id> groupsToProcess = new Set<Id>{ queueId };
-
+      
       while (!groupsToProcess.isEmpty()) {
         Set<Id> currentBatch = new Set<Id>(groupsToProcess);
         groupsToProcess.clear();
         visitedGroupIds.addAll(currentBatch);
-
+        
         for (GroupMember gm : [
           SELECT GroupId, UserOrGroupId
           FROM GroupMember
@@ -470,30 +567,30 @@ public without sharing class FEC_CaseExecuteService {
           }
           if (memberId.getSObjectType() == Group.SObjectType
             && !visitedGroupIds.contains(memberId)
-            && !groupsToProcess.contains(memberId)) {
+          && !groupsToProcess.contains(memberId)) {
             groupsToProcess.add(memberId);
           }
         }
       }
       return false;
     }
-
+    
     Boolean isUserRoleInQueue(Id userId, Id queueId) {
       if (userId == null || queueId == null) {
         return false;
       }
-
+      
       User userRecord = [
         SELECT Id, UserRoleId
         FROM User
         WHERE Id = :userId
         LIMIT 1
       ];
-
+      
       if (userRecord.UserRoleId == null) {
         return false;
       }
-
+      
       Set<Id> queueRoleIds = new Set<Id>();
       for (Group g : [
         SELECT RelatedId
@@ -513,7 +610,7 @@ public without sharing class FEC_CaseExecuteService {
           queueRoleIds.add(g.RelatedId);
         }
       }
-
+      
       return queueRoleIds.contains(userRecord.UserRoleId);
     }
   }
