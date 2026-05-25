@@ -101,7 +101,7 @@ public without sharing class FEC_AssignmentRoutingActionHandler {
         //Chưa có trường FEC_Assignment_Owner__c(formular)
         FEC_Assignment__c assignmentToUpdate = new FEC_Assignment__c(
             Id = assignmentId,
-        FEC_Assignment_Status__c = FEC_ConstantCommon.ASSIGNMENT_STATUS_COMPLETED,
+        FEC_Assignment_Status__c = FEC_ConstantCommon.ASSIGNMENT_STATUS_COMPLETED
         // FEC_OwnerID__c = null // unassigned
         );
         
