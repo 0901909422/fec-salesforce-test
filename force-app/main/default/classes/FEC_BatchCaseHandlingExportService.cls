@@ -406,7 +406,7 @@ public without sharing class FEC_BatchCaseHandlingExportService {
     private static Map<Id, AssignmentExportData> loadPrimaryAssignmentExportData(Set<Id> caseIds) {
         Map<Id, AssignmentExportData> out = new Map<Id, AssignmentExportData>();
         for (FEC_Assignment__c asg : [
-            SELECT Id, FEC_Case__c, FEC_Team__c, FEC_Assignment_Owner_Text__c, FEC_Assignment_Status__c, CreatedDate
+            SELECT Id, Name, FEC_Case__c, FEC_Team__c, FEC_Assignment_Owner_Text__c, FEC_Assignment_Status__c, CreatedDate
             FROM FEC_Assignment__c
             WHERE FEC_Case__c IN :caseIds
             ORDER BY FEC_Case__c, CreatedDate DESC
@@ -419,7 +419,7 @@ public without sharing class FEC_BatchCaseHandlingExportService {
             }
             AssignmentExportData item = new AssignmentExportData();
             item.assignmentRecordId = asg.Id;
-            item.assignmentId = String.valueOf(asg.Id);
+            item.assignmentId = asg.Name;
             item.assignmentOwner = String.isNotBlank(asg.FEC_Team__c)
                 ? asg.FEC_Team__c
                 : asg.FEC_Assignment_Owner_Text__c;

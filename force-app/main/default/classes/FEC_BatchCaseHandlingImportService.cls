@@ -579,24 +579,16 @@ public without sharing class FEC_BatchCaseHandlingImportService {
             }
         }
 
-        Set<Id> assignmentIdSet = new Set<Id>();
+        Set<String> assignmentNames = new Set<String>();
+        Set<Id> assignmentRecordIds = new Set<Id>();
         for (FEC_BatchCaseHandlingImportRow rr : output) {
             if (!cofOrGsr || String.isBlank(rr.assignmentId)) {
                 continue;
             }
-            try {
-                assignmentIdSet.add(Id.valueOf(rr.assignmentId.trim()));
-            } catch (Exception e) {
-            }
+            collectAssignmentLookupKeys(rr.assignmentId, assignmentNames, assignmentRecordIds);
         }
-        Map<Id, FEC_Assignment__c> assignmentById = new Map<Id, FEC_Assignment__c>();
-        if (!assignmentIdSet.isEmpty()) {
-            assignmentById.putAll([
-                SELECT Id, FEC_Case__c, FEC_Assignment_Status__c
-                FROM FEC_Assignment__c
-                WHERE Id IN :assignmentIdSet
-            ]);
-        }
+        Map<String, FEC_Assignment__c> assignmentByName = loadAssignmentsByName(assignmentNames);
+        Map<Id, FEC_Assignment__c> assignmentByRecordId = loadAssignmentsByRecordId(assignmentRecordIds);
 
         Id currentUserId = UserInfo.getUserId();
         String currentUserGroup = null;
@@ -683,22 +675,17 @@ public without sharing class FEC_BatchCaseHandlingImportService {
             if (cofOrGsr) {
                 Boolean hasAssignment = String.isNotBlank(rr.assignmentId);
                 if (hasAssignment) {
-                    Id asgId;
-                    try {
-                        asgId = Id.valueOf(rr.assignmentId.trim());
-                    } catch (Exception e) {
+                    FEC_Assignment__c asg = resolveAssignmentForImport(
+                        rr.assignmentId,
+                        assignmentByName,
+                        assignmentByRecordId
+                    );
+                    if (asg == null) {
                         errs.add(System.Label.FEC_Batch_Case_Handling_Import_Err_Assignment_Id_Not_Found);
-                        asgId = null;
-                    }
-                    if (asgId != null) {
-                        FEC_Assignment__c asg = assignmentById.get(asgId);
-                        if (asg == null) {
-                            errs.add(System.Label.FEC_Batch_Case_Handling_Import_Err_Assignment_Id_Not_Found);
-                        } else if (matched != null && asg.FEC_Case__c != matched.Id) {
-                            errs.add(System.Label.FEC_Batch_Case_Handling_Import_Err_Assignment_Id_Not_Found);
-                        } else if (String.isNotBlank(asg.FEC_Assignment_Status__c) && asg.FEC_Assignment_Status__c.startsWith('Resolved-')) {
-                            errs.add(System.Label.FEC_Batch_Case_Handling_Import_Err_Assignment_Closed);
-                        }
+                    } else if (matched != null && asg.FEC_Case__c != matched.Id) {
+                        errs.add(System.Label.FEC_Batch_Case_Handling_Import_Err_Assignment_Id_Not_Found);
+                    } else if (String.isNotBlank(asg.FEC_Assignment_Status__c) && asg.FEC_Assignment_Status__c.startsWith('Resolved-')) {
+                        errs.add(System.Label.FEC_Batch_Case_Handling_Import_Err_Assignment_Closed);
                     }
                     if (String.isBlank(rr.routingAction) && String.isBlank(rr.assignmentRoutingAction)) {
                         errs.add(System.Label.FEC_Batch_Case_Handling_Import_Err_Missing_Routing_Or_Assignment_Routing);
@@ -808,6 +795,18 @@ public without sharing class FEC_BatchCaseHandlingImportService {
             FEC_BatchCaseHandlingPicklistResolver.buildNormalizedToApiValueByField(
                 importPicklistFieldApis()
             );
+        Set<String> assignmentNames = new Set<String>();
+        Set<Id> assignmentRecordIds = new Set<Id>();
+        if (cofOrGsr == true) {
+            for (FEC_BatchCaseHandlingImportRow rr : rows) {
+                if (rr == null || String.isBlank(rr.assignmentId)) {
+                    continue;
+                }
+                collectAssignmentLookupKeys(rr.assignmentId, assignmentNames, assignmentRecordIds);
+            }
+        }
+        Map<String, FEC_Assignment__c> assignmentByName = loadAssignmentsByName(assignmentNames);
+        Map<Id, FEC_Assignment__c> assignmentByRecordId = loadAssignmentsByRecordId(assignmentRecordIds);
         List<RemarkDraftUpdateItem> remarkDraftItems = new List<RemarkDraftUpdateItem>();
         Map<Id, Case> pendingCaseFieldUpdatesById = new Map<Id, Case>();
         Map<Id, List<FEC_BatchCaseHandlingImportRow>> rowsByCaseForFieldUpdate = new Map<Id, List<FEC_BatchCaseHandlingImportRow>>();
@@ -935,7 +934,7 @@ public without sharing class FEC_BatchCaseHandlingImportService {
                 item.row = rr;
                 item.caseId = caseId;
                 item.inputtedRemarks = rr.inputtedRemarks;
-                item.assignmentId = parseAssignmentId(rr.assignmentId);
+                item.assignmentId = parseAssignmentId(rr.assignmentId, assignmentByName, assignmentByRecordId);
                 remarkDraftItems.add(item);
             }
         }
@@ -951,15 +950,93 @@ public without sharing class FEC_BatchCaseHandlingImportService {
         applyDraftRemarksBulk(validRemarkItems, cofOrGsr);
     }
 
-    private static Id parseAssignmentId(String assignmentIdRaw) {
+    private static void collectAssignmentLookupKeys(
+        String assignmentIdRaw,
+        Set<String> assignmentNames,
+        Set<Id> assignmentRecordIds
+    ) {
         if (String.isBlank(assignmentIdRaw)) {
+            return;
+        }
+        String trimmed = assignmentIdRaw.trim();
+        Id recordId = tryParseAssignmentRecordId(trimmed);
+        if (recordId != null) {
+            assignmentRecordIds.add(recordId);
+        } else if (assignmentNames != null) {
+            assignmentNames.add(trimmed);
+        }
+    }
+
+    private static Id tryParseAssignmentRecordId(String trimmed) {
+        if (String.isBlank(trimmed)) {
             return null;
         }
         try {
-            return Id.valueOf(assignmentIdRaw.trim());
+            Id recordId = Id.valueOf(trimmed);
+            if (recordId.getSobjectType() != FEC_Assignment__c.SObjectType) {
+                return null;
+            }
+            return recordId;
         } catch (Exception ex) {
             return null;
         }
+    }
+
+    private static Map<String, FEC_Assignment__c> loadAssignmentsByName(Set<String> assignmentNames) {
+        Map<String, FEC_Assignment__c> out = new Map<String, FEC_Assignment__c>();
+        if (assignmentNames == null || assignmentNames.isEmpty()) {
+            return out;
+        }
+        for (FEC_Assignment__c asg : [
+            SELECT Id, Name, FEC_Case__c, FEC_Assignment_Status__c
+            FROM FEC_Assignment__c
+            WHERE Name IN :assignmentNames
+        ]) {
+            if (String.isNotBlank(asg.Name)) {
+                out.put(asg.Name, asg);
+            }
+        }
+        return out;
+    }
+
+    private static Map<Id, FEC_Assignment__c> loadAssignmentsByRecordId(Set<Id> assignmentRecordIds) {
+        Map<Id, FEC_Assignment__c> out = new Map<Id, FEC_Assignment__c>();
+        if (assignmentRecordIds == null || assignmentRecordIds.isEmpty()) {
+            return out;
+        }
+        return new Map<Id, FEC_Assignment__c>([
+            SELECT Id, Name, FEC_Case__c, FEC_Assignment_Status__c
+            FROM FEC_Assignment__c
+            WHERE Id IN :assignmentRecordIds
+        ]);
+    }
+
+    private static FEC_Assignment__c resolveAssignmentForImport(
+        String assignmentIdRaw,
+        Map<String, FEC_Assignment__c> assignmentByName,
+        Map<Id, FEC_Assignment__c> assignmentByRecordId
+    ) {
+        if (String.isBlank(assignmentIdRaw)) {
+            return null;
+        }
+        String trimmed = assignmentIdRaw.trim();
+        if (assignmentByName != null && assignmentByName.containsKey(trimmed)) {
+            return assignmentByName.get(trimmed);
+        }
+        Id recordId = tryParseAssignmentRecordId(trimmed);
+        if (recordId != null && assignmentByRecordId != null) {
+            return assignmentByRecordId.get(recordId);
+        }
+        return null;
+    }
+
+    private static Id parseAssignmentId(
+        String assignmentIdRaw,
+        Map<String, FEC_Assignment__c> assignmentByName,
+        Map<Id, FEC_Assignment__c> assignmentByRecordId
+    ) {
+        FEC_Assignment__c asg = resolveAssignmentForImport(assignmentIdRaw, assignmentByName, assignmentByRecordId);
+        return asg == null ? null : asg.Id;
     }
 
     private static void applyDraftRemarksBulk(List<RemarkDraftUpdateItem> remarkDraftItems, Boolean cofOrGsr) {
