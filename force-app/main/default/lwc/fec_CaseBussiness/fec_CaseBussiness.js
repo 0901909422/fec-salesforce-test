@@ -64,6 +64,7 @@ import {
   FIELD_MRC_HANDLING_OPTION,
   getCaseFieldValue,
   getMrcReturnAutoRoutingActionCode,
+  isMrcReceivedConfirmation,
   isMrcReturnTrackedField,
   isMrcRl05Branch,
   isMrcRl05CaseInformationBlocked,
@@ -1963,6 +1964,13 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
     }
 
     if (this._mrcReturnStageChangeRoutingActive) {
+      if (
+        isMrcReceivedConfirmation(this.mrcReturnCustomerConfirmationValue) &&
+        hasAction(ACTION_CANCEL)
+      ) {
+        this._setActionValueByCode(ACTION_CANCEL);
+        return;
+      }
       const ctx = getMrcReturnRoutingContext(
         this.business,
         this.mrcReturnHandlingOptionValue,
@@ -5513,6 +5521,21 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
 
     if (!shouldActivateMrcReturnRouting(this.business)) {
       this._mrcReturnStageChangeRoutingActive = false;
+      return Promise.resolve();
+    }
+
+    if (
+      isMrcReceivedConfirmation(this.mrcReturnCustomerConfirmationValue) &&
+      this.business?.routingActionlst?.length
+    ) {
+      this._mrcReturnStageChangeRoutingActive = false;
+      this._setActionValueByCode(ACTION_CANCEL);
+      this.business = {
+        ...this.business,
+        nextTeam: null,
+        nextQueue: null,
+      };
+      this.business = { ...this.business };
       return Promise.resolve();
     }
 

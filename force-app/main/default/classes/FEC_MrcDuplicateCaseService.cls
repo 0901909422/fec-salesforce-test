@@ -126,56 +126,65 @@ public without sharing class FEC_MrcDuplicateCaseService {
         return dups.isEmpty() ? null : dups[0].Id;
     }
 
-    /** After update Case: đổi FEC_MRC_Request_Handling_Option__c → auto-cancel đúng case + remark. */
+    /** Giữ hook trigger (nếu có) — RL05.02 không auto-cancel khi đổi radio; chỉ submit Route To. */
     public static void applyHandlingOptionChanges(List<Case> newCases, Map<Id, Case> oldMap) {
-        if (FEC_CaseTriggerHandler.isSystemUpdate || newCases == null || oldMap == null) {
-            return;
-        }
-        List<Case> candidates = new List<Case>();
-        for (Case c : newCases) {
-            Case oldC = oldMap.get(c.Id);
-            if (oldC == null) {
-                continue;
-            }
-            if (c.FEC_MRC_Request_Handling_Option__c == oldC.FEC_MRC_Request_Handling_Option__c) {
-                continue;
-            }
-            if (String.isBlank(c.FEC_MRC_Request_Handling_Option__c)) {
-                continue;
-            }
-            candidates.add(c);
-        }
-        if (candidates.isEmpty()) {
-            return;
-        }
+        return;
+    }
 
-        Set<Id> ids = new Map<Id, Case>(candidates).keySet();
-        List<Case> fullRows = [
+    /**
+     * RL05.02 — Submit: "Chưa nhận MRC" + Option 1 (hủy Case cũ) → auto-cancel Case trùng cũ.
+     * Chỉ chạy sau submit thành công (Route To), không chạy khi user mới chọn radio.
+     */
+    public static void applyNotReceivedHandlingOptionOnSubmit(Id caseId) {
+        if (caseId == null) {
+            return;
+        }
+        List<Case> rows = [
             SELECT
                 Id,
                 CaseNumber,
                 FEC_ID_Search__c,
                 CreatedDate,
+                FEC_Customer_Confirmation__c,
                 FEC_MRC_Request_Handling_Option__c,
                 FEC_Account_or_Contract__c,
                 FEC_Account_Contract_Number_Text__c,
                 FEC_SubCategory__r.FEC_Code__c,
                 FEC_SubCode__r.FEC_Code__c
             FROM Case
-            WHERE Id IN :ids
+            WHERE Id = :caseId
+            LIMIT 1
         ];
+        applyNotReceivedHandlingOptionCancel(rows, true);
+    }
+
+    private static void applyNotReceivedHandlingOptionCancel(
+        List<Case> cases,
+        Boolean submitOnlyCancelPrevious
+    ) {
+        if (cases == null || cases.isEmpty()) {
+            return;
+        }
 
         List<Case> toCancelStatus = new List<Case>();
         List<FEC_Case_Remarks__c> remarks = new List<FEC_Case_Remarks__c>();
+        List<CancelPreviousDupContext> cancelPreviousContexts =
+            new List<CancelPreviousDupContext>();
 
         String emailLocal = emailLocalSafe(UserInfo.getUserEmail());
         String roleName = resolveUserRoleName();
 
-        for (Case c : fullRows) {
+        for (Case c : cases) {
+            if (!isNotReceivedConfirmation(c.FEC_Customer_Confirmation__c)) {
+                continue;
+            }
+
             String subCat = c.FEC_SubCategory__r == null
                 ? null
                 : c.FEC_SubCategory__r.FEC_Code__c;
-            String subCod = c.FEC_SubCode__r == null ? null : c.FEC_SubCode__r.FEC_Code__c;
+            String subCod = c.FEC_SubCode__r == null
+                ? null
+                : c.FEC_SubCode__r.FEC_Code__c;
             Id olderDupId = findOlderOpenRl05DuplicateId(
                 c.Id,
                 c.FEC_Account_or_Contract__c,
@@ -206,6 +215,9 @@ public without sharing class FEC_MrcDuplicateCaseService {
                         Status = FEC_ConstantCommon.CASE_STATUS_AUTO_CANCELLED
                     )
                 );
+                cancelPreviousContexts.add(
+                    new CancelPreviousDupContext(olderDupId, c)
+                );
                 remarks.add(
                     buildRemark(
                         olderDupId,
@@ -217,7 +229,7 @@ public without sharing class FEC_MrcDuplicateCaseService {
                         roleName
                     )
                 );
-            } else if (OPT_CANCEL_NEW.equals(opt)) {
+            } else if (!submitOnlyCancelPrevious && OPT_CANCEL_NEW.equals(opt)) {
                 String olderNum = FEC_ConstantCommon.STR_EMPTY;
                 if (olderDupId != null) {
                     List<Case> peerLst = [
@@ -254,16 +266,49 @@ public without sharing class FEC_MrcDuplicateCaseService {
             return;
         }
 
+        Set<Id> dupIds = new Set<Id>();
+        for (CancelPreviousDupContext ctx : cancelPreviousContexts) {
+            dupIds.add(ctx.dupCaseId);
+        }
+        Map<Id, String> dupStatusBefore = new Map<Id, String>();
+        if (!dupIds.isEmpty()) {
+            for (Case dupRow : [
+                SELECT Id, FEC_Final_Status__c
+                FROM Case
+                WHERE Id IN :dupIds
+            ]) {
+                dupStatusBefore.put(dupRow.Id, dupRow.FEC_Final_Status__c);
+            }
+        }
+
         try {
             FEC_CaseTriggerHandler.isSystemUpdate = true;
             Database.update(toCancelStatus, AccessLevel.USER_MODE);
         } catch (Exception e) {
             System.debug(
                 LoggingLevel.ERROR,
-                'FEC_MrcDuplicateCaseService: update cancelled cases failed — ' + e.getMessage()
+                'FEC_MrcDuplicateCaseService: update cancelled cases failed — ' +
+                e.getMessage()
             );
+            return;
         } finally {
             FEC_CaseTriggerHandler.isSystemUpdate = false;
+        }
+
+        for (CancelPreviousDupContext ctx : cancelPreviousContexts) {
+            try {
+                FEC_CaseBusinessService.recordRoutingActionHistoryForCase(
+                    ctx.dupCaseId,
+                    'Cancel',
+                    dupStatusBefore.get(ctx.dupCaseId)
+                );
+            } catch (Exception e) {
+                System.debug(
+                    LoggingLevel.ERROR,
+                    'FEC_MrcDuplicateCaseService: RAH cancel previous failed — ' +
+                    e.getMessage()
+                );
+            }
         }
 
         if (!remarks.isEmpty()) {
@@ -272,9 +317,20 @@ public without sharing class FEC_MrcDuplicateCaseService {
             } catch (Exception e) {
                 System.debug(
                     LoggingLevel.ERROR,
-                    'FEC_MrcDuplicateCaseService: insert remarks failed — ' + e.getMessage()
+                    'FEC_MrcDuplicateCaseService: insert remarks failed — ' +
+                    e.getMessage()
                 );
             }
+        }
+    }
+
+    private class CancelPreviousDupContext {
+        Id dupCaseId;
+        Case newCase;
+
+        CancelPreviousDupContext(Id dupCaseId, Case newCase) {
+            this.dupCaseId = dupCaseId;
+            this.newCase = newCase;
         }
     }
 
@@ -311,5 +367,181 @@ public without sharing class FEC_MrcDuplicateCaseService {
             LIMIT 1
         ];
         return rl.isEmpty() ? null : rl[0].Name;
+    }
+
+    /**
+     * RL05.02 TH1 — Case mới Cancel + "Đã nhận MRC": auto-cancel Case trùng cũ hơn,
+     * sinh Routing Action History và Case Remark theo spec.
+     */
+    public static void applyReceivedConfirmationDuplicateCancel(Id newCaseId) {
+        if (newCaseId == null) {
+            return;
+        }
+        List<Case> newRows = [
+            SELECT
+                Id,
+                CaseNumber,
+                FEC_ID_Search__c,
+                CreatedDate,
+                FEC_Customer_Confirmation__c,
+                FEC_Account_or_Contract__c,
+                FEC_Account_Contract_Number_Text__c,
+                FEC_SubCategory__r.FEC_Code__c,
+                FEC_SubCode__r.FEC_Code__c,
+                FEC_Account_or_Contract__r.FEC_MRC_Status__c,
+                FEC_Account_or_Contract__r.FEC_Status_ID__c
+            FROM Case
+            WHERE Id = :newCaseId
+            LIMIT 1
+        ];
+        if (newRows.isEmpty()) {
+            return;
+        }
+        Case newCase = newRows[0];
+        String subCat = newCase.FEC_SubCategory__r == null
+            ? null
+            : newCase.FEC_SubCategory__r.FEC_Code__c;
+        String subCod = newCase.FEC_SubCode__r == null
+            ? null
+            : newCase.FEC_SubCode__r.FEC_Code__c;
+        if (
+            String.isBlank(subCod) ||
+            !subCod.toUpperCase().contains('RL05.02') ||
+            !isReceivedConfirmation(newCase.FEC_Customer_Confirmation__c)
+        ) {
+            return;
+        }
+
+        Id olderDupId = findOlderOpenRl05DuplicateId(
+            newCase.Id,
+            newCase.FEC_Account_or_Contract__c,
+            newCase.FEC_Account_Contract_Number_Text__c,
+            newCase.CreatedDate,
+            subCat,
+            subCod
+        );
+        if (olderDupId == null) {
+            return;
+        }
+
+        String mrcStatusId = null;
+        if (newCase.FEC_Account_or_Contract__r != null) {
+            mrcStatusId = newCase.FEC_Account_or_Contract__r.FEC_MRC_Status__c;
+            if (String.isBlank(mrcStatusId)) {
+                mrcStatusId = newCase.FEC_Account_or_Contract__r.FEC_Status_ID__c;
+            }
+        }
+        if (!FEC_MrcReturnCaseService.meetsCondition2(mrcStatusId)) {
+            return;
+        }
+
+        List<Case> dupRows = [
+            SELECT
+                Id,
+                FEC_Final_Status__c,
+                Status
+            FROM Case
+            WHERE Id = :olderDupId
+            LIMIT 1
+        ];
+        if (dupRows.isEmpty()) {
+            return;
+        }
+        String dupStatusBefore = dupRows[0].FEC_Final_Status__c;
+
+        try {
+            FEC_CaseTriggerHandler.isSystemUpdate = true;
+            Database.update(
+                new List<Case>{
+                    new Case(
+                        Id = olderDupId,
+                        Status = FEC_ConstantCommon.CASE_STATUS_AUTO_CANCELLED
+                    )
+                },
+                AccessLevel.USER_MODE
+            );
+        } catch (Exception e) {
+            System.debug(
+                LoggingLevel.ERROR,
+                'FEC_MrcDuplicateCaseService.applyReceivedConfirmationDuplicateCancel: update dup failed — ' +
+                e.getMessage()
+            );
+            return;
+        } finally {
+            FEC_CaseTriggerHandler.isSystemUpdate = false;
+        }
+
+        try {
+            FEC_CaseBusinessService.recordRoutingActionHistoryForCase(
+                olderDupId,
+                'Cancel',
+                dupStatusBefore
+            );
+        } catch (Exception e) {
+            System.debug(
+                LoggingLevel.ERROR,
+                'FEC_MrcDuplicateCaseService.applyReceivedConfirmationDuplicateCancel: RAH failed — ' +
+                e.getMessage()
+            );
+        }
+
+        String emailLocal = emailLocalSafe(UserInfo.getUserEmail());
+        String roleName = resolveUserRoleName();
+        String newCaseDisplayId = resolveCaseIdForBanner(newCase);
+        String remarkBody = String.format(
+            System.Label.FEC_MRC_Dup_Remark_Received_Confirm,
+            new List<String>{
+                String.isNotBlank(newCaseDisplayId)
+                    ? newCaseDisplayId
+                    : newCase.CaseNumber
+            }
+        );
+        try {
+            insert buildRemark(olderDupId, remarkBody, emailLocal, roleName);
+        } catch (Exception e) {
+            System.debug(
+                LoggingLevel.ERROR,
+                'FEC_MrcDuplicateCaseService.applyReceivedConfirmationDuplicateCancel: remark failed — ' +
+                e.getMessage()
+            );
+        }
+    }
+
+    private static Boolean isNotReceivedConfirmation(String value) {
+        if (String.isBlank(value)) {
+            return false;
+        }
+        String normalized = value.trim().toLowerCase();
+        return normalized.equals(
+                FEC_MrcReturnCaseService.CONF_NOT_RECEIVED.toLowerCase()
+            ) ||
+            normalized.contains('not received') ||
+            normalized.contains('chua nhan') ||
+            normalized.contains('chua xac nhan') ||
+            normalized.contains('chưa nhận') ||
+            normalized.contains('chưa xác nhận');
+    }
+
+    private static Boolean isReceivedConfirmation(String value) {
+        if (String.isBlank(value)) {
+            return false;
+        }
+        String normalized = value.trim().toLowerCase();
+        if (
+            normalized.contains('not received') ||
+            normalized.contains('chua nhan') ||
+            normalized.contains('chua xac nhan') ||
+            normalized.contains('chưa nhận') ||
+            normalized.contains('chưa xác nhận')
+        ) {
+            return false;
+        }
+        return normalized.equals(
+                FEC_MrcReturnCaseService.CONF_RECEIVED.toLowerCase()
+            ) ||
+            (normalized.contains('received') &&
+            !normalized.contains('not received')) ||
+            normalized.contains('đã nhận') ||
+            normalized.contains('đã xác nhận');
     }
 }
