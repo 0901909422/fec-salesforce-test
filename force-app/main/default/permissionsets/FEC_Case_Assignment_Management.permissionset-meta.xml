@@ -10,11 +10,6 @@
     </classAccesses>
     <fieldPermissions>
         <editable>false</editable>
-        <field>FEC_Case_Assignment_Logs__c.Name</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>false</editable>
         <field>FEC_Case_Assignment_Logs__c.FEC_Number_of_Case__c</field>
         <readable>true</readable>
     </fieldPermissions>
