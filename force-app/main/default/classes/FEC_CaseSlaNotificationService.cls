@@ -5,8 +5,6 @@ public without sharing class FEC_CaseSlaNotificationService {
 
     private static final String SLA_CATEGORY_REQUEST = 'Request';
     private static final String SLA_CATEGORY_INTERNAL_TASK = 'Internal Task';
-    private static final String SLA_SUBCODE_ISL01 = 'ISL01';
-    private static final String SLA_SUBCODE_ISC01 = 'ISC01';
     /** CS Support → User Group SP; CS Customer Care → User Group CC. */
     private static final String SLA_RECIP_USER_GROUP_CS_SUPPORT = FEC_ConstantCommon.RD_ASSESSMENT_TEAM_SP;
     private static final String SLA_RECIP_USER_GROUP_CS_CUSTOMER_CARE = FEC_ConstantCommon.RD_ASSESSMENT_TEAM_CC;
@@ -16,23 +14,15 @@ public without sharing class FEC_CaseSlaNotificationService {
     private static final String SLA_RECIP_ROLE_SENIOR_CSS_SUPPORT = 'Senior Customer Service Support Specialist';
     private static final String SLA_RECIP_ROLE_UNIT_HEAD_CSS = 'Unit Head of Customer Service Support';
     /**
-     * Trường hợp 2: Category = Request / Internal Task và Sub-Code ISL01 hoặc ISC01 (Hủy yêu cầu).
+     * Trường hợp 2: Category = Request hoặc Internal Task.
      */
     public static Boolean isSlaCancelRequestInternalTaskCase(Case c) {
         if (c == null) {
             return false;
         }
         String categoryName = c.FEC_Category__r != null ? c.FEC_Category__r.Name : null;
-        String subCategoryCode = c.FEC_SubCategory__r != null
-            ? c.FEC_SubCategory__r.FEC_Code__c
-            : null;
-        Boolean isRequestOrInternalTask =
-            SLA_CATEGORY_REQUEST.equalsIgnoreCase(categoryName) ||
-            SLA_CATEGORY_INTERNAL_TASK.equalsIgnoreCase(categoryName);
-        Boolean isCancelSubCode =
-            SLA_SUBCODE_ISL01.equalsIgnoreCase(subCategoryCode) ||
-            SLA_SUBCODE_ISC01.equalsIgnoreCase(subCategoryCode);
-        return isRequestOrInternalTask && isCancelSubCode;
+        return SLA_CATEGORY_REQUEST.equalsIgnoreCase(categoryName)
+            || SLA_CATEGORY_INTERNAL_TASK.equalsIgnoreCase(categoryName);
     }
 
     /**
@@ -75,7 +65,7 @@ public without sharing class FEC_CaseSlaNotificationService {
 
             Set<String> recipientIds;
             if (isSlaCancelRequestInternalTaskCase(slaCase)) {
-                // Trường hợp 2 — Request/Internal Task + ISL01/ISC01
+                // Trường hợp 2 — Request / Internal Task
                 recipientIds = resolveSlaRecipientsCase2CancelRequest(
                     performUserIds,
                     performUserById,
