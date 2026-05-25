@@ -909,6 +909,7 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
       { label: "Pending Product", value: "Pending Product" },
       { label: "Pending RCP&A", value: "Pending RCP&A" },
       { label: "Pending Security", value: "Pending Security" },
+      { label: "Cannot Contact Customer", value: "Cannot Contact Customer" },
     ];
 
     const vendorOption = { label: "Pending Vendor", value: "Pending Vendor" };
