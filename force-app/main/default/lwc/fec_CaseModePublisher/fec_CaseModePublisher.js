@@ -1,10 +1,9 @@
 import { LightningElement, api, wire } from 'lwc';
-import { getRecord, getFieldValue, updateRecord } from 'lightning/uiRecordApi';
+import { getRecord, getFieldValue } from 'lightning/uiRecordApi';
 import { publish, MessageContext } from 'lightning/messageService';
 import IS_MODE_EDIT from "@salesforce/messageChannel/FEC_Case_Mode__c";
+import clearCreatedFromSearchFlag from '@salesforce/apex/FEC_CaseInitUpdateService.clearCreatedFromSearchFlag';
 
-// Import fields
-import ID_FIELD from '@salesforce/schema/Case.Id';
 import IS_CREATED_FROM_SEARCH_FIELD from '@salesforce/schema/Case.FEC_Is_Created_From_Search__c';
 
 const FIELDS = [IS_CREATED_FROM_SEARCH_FIELD];
@@ -32,25 +31,24 @@ export default class Fec_CaseModePublisher extends LightningElement {
     }
 
     handleUpdateAndPublish() {
-        // eslint-disable-next-line @lwc/lwc/no-async-operation
-        const fields = {};
-        fields[ID_FIELD.fieldApiName] = this.recordId;
-        fields[IS_CREATED_FROM_SEARCH_FIELD.fieldApiName] = false;
-
-        const recordInput = { fields };
-        updateRecord(recordInput);
-        console.log('Record updated successfully');
-        setTimeout(() => {
-            try {
-                const payload = {
-                    isModeEdit: true
-                };
-                publish(this.messageContext, IS_MODE_EDIT, payload);
-                console.log('Message published with payload:', payload);
-
-            } catch (error) {
-                console.error('Error in update/publish process:', error);
-            }
-        }, 500);
+        clearCreatedFromSearchFlag({ caseId: this.recordId })
+            .then(() => {
+                console.log('Record updated successfully');
+                // eslint-disable-next-line @lwc/lwc/no-async-operation
+                setTimeout(() => {
+                    try {
+                        const payload = {
+                            isModeEdit: true
+                        };
+                        publish(this.messageContext, IS_MODE_EDIT, payload);
+                        console.log('Message published with payload:', payload);
+                    } catch (error) {
+                        console.error('Error in update/publish process:', error);
+                    }
+                }, 500);
+            })
+            .catch((error) => {
+                console.error('Error clearing created-from-search flag:', error);
+            });
     }
 }
