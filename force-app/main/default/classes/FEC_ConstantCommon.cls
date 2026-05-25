@@ -633,6 +633,7 @@ public with sharing class FEC_ConstantCommon {
     public static final String ACTION_ROUTE_TO = 'Route_to';
     public static final String ACTION_ROUTE_TO_DISPLAY = 'Route to';
     public static final String ACTION_UPDATE = 'Update';
+    public static final String ACTION_RECALL = 'Recall';
     
     // ================= DECISION =================
     public static final String DECISION_USER = 'USER';
