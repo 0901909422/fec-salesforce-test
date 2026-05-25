@@ -123,7 +123,15 @@ public with sharing class ArchiveCaseController {
         String methodOfApi = FEC_ConstantCommon.API_METHOD_GET;
         String recTypeName = label.TECH_CASE_RECORDTYPE_NAME_CUSTOMER_CASE;
         String archieveExternalId = archiveCaseIns.case_id__c;
-        String migrationSource = archiveCaseIns.migration_source__c;
+        String migrationSourceStr = archiveCaseIns.migration_source__c;
+        if (String.isNotBlank(migrationSourceStr)) {
+            if (migrationSourceStr.containsIgnoreCase(label.TECH_PEGA_SOURCE) 
+                & !migrationSourceStr.equalsIgnoreCase(label.TECH_PEGA_SOURCE_S3))
+                migrationSourceStr = Label.TECH_PEGA_SOURCE_S3;
+
+            migrationSourceStr = migrationSourceStr.toUpperCase();
+        }
+        String migrationSource = String.isNotBlank(migrationSourceStr) ? migrationSourceStr : '';
         List<String> listOfAttIgnored = label.TECH_LIST_ATT_IGNORED.split(',');
         String attachmentStr = '';
         String resBody = '';
