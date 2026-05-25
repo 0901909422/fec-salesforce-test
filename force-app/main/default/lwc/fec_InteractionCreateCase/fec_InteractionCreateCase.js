@@ -93,6 +93,7 @@ export default class Fec_InteractionCreateCase extends NavigationMixin(
     this.isLoading = true;
     if (this.isCreatedFromSearch === 'true' && this.recordId && this.recordTypeDevName === 'Internal_Case') {
         this.isLoading = false;
+      console.log('recordTypeDevName =====>', this.recordTypeDevName);
         if (this.isConsoleNavigation) {
             const allTabs = await getAllTabInfo();
             const componentTab = allTabs.find(t =>
@@ -129,7 +130,7 @@ export default class Fec_InteractionCreateCase extends NavigationMixin(
                 },
             });
         }
-      return;
+        return;
     }
     if (!this.isNonExistingCustomer) {
       createCustomerCaseFromCase({ caseId: this.recordId })
@@ -219,7 +220,7 @@ export default class Fec_InteractionCreateCase extends NavigationMixin(
           //     await resetViewMode({ recordId: this.recordId, viewMode: "handling" });
           //   }
         })
-        
+
         .catch((error) => {
           this.isLoading = false;
           console.error(error);

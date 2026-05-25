@@ -5,6 +5,7 @@
 	    <members>FEC_AssignmentListHandler</members>
 	    <members>FEC_CaseBusinessService</members>
 	    <members>FEC_CaseEditNOCController</members>
+	    <members>FEC_CaseEditNOCControllerTest</members>
 	    <members>FEC_CofGsrRoutePrepareService</members>
 	    <members>FEC_ContractClosureController</members>
 	    <members>FEC_CheckEligibilityIPPCallout</members>
@@ -36,6 +37,8 @@
 	    <members>FEC_AssignmentExecuteService</members>
         <members>FEC_AssignmentCaseShareService</members>
 	    <members>FEC_CaseExecuteService</members>
+	    <members>FEC_CaseInitUpdateService</members>
+	    <members>FEC_CaseInitUpdateServiceTest</members>
 	    <members>FEC_SubProcessService</members>
 	    <members>FEC_CheckEligibleController</members>
 	    <members>FEC_CardClosureRefundController</members>
@@ -157,6 +160,7 @@
 	    <members>fec_CaseBussiness</members>
 	    <members>fec_CaseDetail_Customer</members>
 	    <members>fec_CaseEditNOC</members>
+	    <members>fec_CaseModePublisher</members>
 	    <members>fec_CaseRemarks</members>
 	    <members>fec_IPPClosureForm</members>
 	    <members>fec_AssignmentExecuteAction</members>
@@ -183,12 +187,14 @@
 	    <members>fec_AssignmentRemarkHistoryTable</members>
 	    <members>fec_AssignmentViewAll</members>
 	    <members>fec_CustomDoNotBotherViewDatatable</members>
+	    <members>fec_CreateCaseNonExistingCustomer</members>
 	    <members>fec_CustomerCaseExecuteAction</members>
 	    <members>fec_DoNotBotherHandling</members>
 	    <members>fec_DoNotBotherNonExistingCustomer</members>
 	    <members>fec_SubProcessContainer</members>
 	    <members>fec_DoNotBotherExistingCustomer</members>
 	    <members>fec_DoNotBotherInformationView</members>
+	    <members>fec_InteractionCreateCase</members>
 	    <members>fec_ReusableDNBCustomTable</members>
 	    <members>fec_AssignmentExecuteVisibility</members>
         <members>fec_communicationHistory</members>
