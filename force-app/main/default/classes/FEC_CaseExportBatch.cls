@@ -215,6 +215,14 @@ public class FEC_CaseExportBatch
     }
 
     /**
+     * Lookup objects KHÔNG cần export — bỏ qua khi query.
+     */
+    private static final Set<String> LOOKUP_OBJECTS_EXCLUDED = new Set<String>{
+        'User',
+        'BusinessHours'
+    };
+
+    /**
      * Query tất cả lookup objects cho batch.
      * Gom tất cả lookup IDs từ tất cả cases, group theo object type, 1 SOQL/type.
      *
@@ -247,7 +255,7 @@ public class FEC_CaseExportBatch
                 Id refId = (Id) refIdValue;
                 for (Schema.SObjectType refType : referenceTo) {
                     String objectName = refType.getDescribe().getName();
-                    if (objectName == 'Case') {
+                    if (objectName == 'Case' || LOOKUP_OBJECTS_EXCLUDED.contains(objectName)) {
                         continue;
                     }
                     if (!idsByObjectType.containsKey(objectName)) {
@@ -368,7 +376,7 @@ public class FEC_CaseExportBatch
             }
             for (Schema.SObjectType refType : referenceTo) {
                 String objName = refType.getDescribe().getName();
-                if (objName != 'Case') {
+                if (objName != 'Case' && !LOOKUP_OBJECTS_EXCLUDED.contains(objName)) {
                     allReferencedTypes.add(objName);
                 }
             }
