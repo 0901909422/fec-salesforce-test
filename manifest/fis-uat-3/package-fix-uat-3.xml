@@ -745,16 +745,20 @@
 	</types>
 	<types>
 	    <members>Case.SLA_Violating_Warning_44h</members>
+	    <members>Case.SLA_Violation_Warning_124h</members>
+	    <members>Case.SLA_Violation_Warning_164h</members>
+	    <members>Case.SLA_Violation_Warning_76h</members>
+	    <members>Case.SLA_Warning_0h</members>
 	    <members>Case.SLA_Warning_119h</members>
 	    <members>Case.SLA_Warning_120h</members>
-	    <members>Case.SLA_Warning_124h</members>
+	    <members>Case.SLA_Warning_125h</members>
+	    <members>Case.SLA_Warning_126h</members>
 	    <members>Case.SLA_Warning_128h</members>
+	    <members>Case.SLA_Warning_143h</members>
 	    <members>Case.SLA_Warning_144h</members>
-	    <members>Case.SLA_Warning_164h</members>
 	    <members>Case.SLA_Warning_167h</members>
 	    <members>Case.SLA_Warning_168h</members>
 	    <members>Case.SLA_Warning_48h</members>
-	    <members>Case.SLA_Warning_76h</members>
 	    <members>Case.SLA_Warning_80h</members>
 	    <name>WorkflowFieldUpdate</name>
 	</types>
