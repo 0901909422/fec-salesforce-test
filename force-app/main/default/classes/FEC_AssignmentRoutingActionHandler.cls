@@ -101,7 +101,7 @@ public without sharing class FEC_AssignmentRoutingActionHandler {
         //Chưa có trường FEC_Assignment_Owner__c(formular)
         FEC_Assignment__c assignmentToUpdate = new FEC_Assignment__c(
             Id = assignmentId,
-        FEC_Assignment_Status__c = FEC_ConstantCommon.ASSIGNMENT_STATUS_COMPLETED,
+        FEC_Assignment_Status__c = FEC_ConstantCommon.ASSIGNMENT_STATUS_COMPLETED
         // FEC_OwnerID__c = null // unassigned
         );
         
@@ -1583,13 +1583,15 @@ public without sharing class FEC_AssignmentRoutingActionHandler {
                      * => AUTO RECALLED
                      */
                     else if (oldStatus
-                    == FEC_ConstantCommon.ASSIGNMENT_REVERTING_CREATOR_STATUS) {
+                    == FEC_ConstantCommon.ASSIGNMENT_STATUS_REVERTING_CREATOR) {
                         ass.FEC_Assignment_Status__c =
                             FEC_ConstantCommon.ASSIGNMENT_AUTORECALLED_STATUS;
                         
                         routingAction = FEC_ConstantCommon.ACTION_RECALL;
+                    }else if (oldStatus == FEC_ConstantCommon.STATUS_CS_BACKOFFICE) {
+                        ass.FEC_Assignment_Status__c = FEC_ConstantCommon.ASSIGNMENT_AUTOCOMPLETE_STATUS;
+                        routingAction = FEC_ConstantCommon.ACTION_RESOLVE;
                     }
-                    
                     /*
                      * OTHER STATUS
                      * => AUTO COMPLETE
@@ -1600,15 +1602,6 @@ public without sharing class FEC_AssignmentRoutingActionHandler {
                         
                         routingAction = FEC_ConstantCommon.ACTION_RESOLVE;
                     }
-                    // if (ass.FEC_Assignment_Status__c
-                    // == FEC_ConstantCommon.STATUS_CS_BACKOFFICE) {
-                        //     ass.FEC_Assignment_Status__c =
-                        //         FEC_ConstantCommon.ASSIGNMENT_AUTOCOMPLETE_STATUS;
-                        
-                    // } else {
-                        //     ass.FEC_Assignment_Status__c =
-                        //         FEC_ConstantCommon.ASSIGNMENT_AUTORECALLED_STATUS;
-                    // }
                     
                     System.debug('NEW STATUS = ' + ass.FEC_Assignment_Status__c);
                     
