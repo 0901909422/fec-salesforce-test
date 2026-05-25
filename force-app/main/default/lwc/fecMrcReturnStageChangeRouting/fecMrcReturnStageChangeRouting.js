@@ -98,7 +98,13 @@ function includesOffice(tokens) {
 }
 
 function includesPos(tokens) {
-  return tokens.some((t) => t === "pos" || t.includes("pos"));
+  return tokens.some(
+    (t) =>
+      t === "pos" ||
+      t.includes("pos") ||
+      t === "rl05_pos" ||
+      t.includes("rl05_pos"),
+  );
 }
 
 function includesEmail(tokens) {
@@ -130,7 +136,35 @@ function resolveRl0502FlowTeam(ctx) {
   if (ctx?.autoRouteCp === true) {
     return TEAM_CP;
   }
+  const flow = String(ctx?.processingFlow ?? "")
+    .trim()
+    .toUpperCase();
+  if (flow === "PAYMENT_SUPPORT") {
+    return TEAM_PM;
+  }
+  if (flow === "CP_SUPPORT") {
+    return TEAM_CP;
+  }
   return null;
+}
+
+function isMrcCancelPreviousOption(value) {
+  const normalized = String(value ?? "")
+    .trim()
+    .toLowerCase();
+  if (!normalized) {
+    return false;
+  }
+  return (
+    normalized === MRC_OPT_CANCEL_PREVIOUS.toLowerCase() ||
+    normalized.includes("cancel previous") ||
+    normalized.includes("huy yeu cau cu") ||
+    normalized.includes("hủy yêu cầu cũ")
+  );
+}
+
+function resolveRl0502DeliveryCpTeam(deliveryOption) {
+  return matchesRl0501Delivery(deliveryOption) ? TEAM_CP : null;
 }
 
 function isRl0502SubCode(subCodeCode) {
@@ -203,7 +237,7 @@ export function getMrcReturnRoutingContext(
     business,
     FIELD_HANDLING_OPTION,
   );
-  const option2Selected = handlingOption === MRC_OPT_CANCEL_PREVIOUS;
+  const option2Selected = isMrcCancelPreviousOption(handlingOption);
   const notReceived = isMrcNotReceivedConfirmation(confirmation);
 
   function buildEligible(teamCode, scenario) {
@@ -251,21 +285,38 @@ export function getMrcReturnRoutingContext(
   const flowTeam = resolveRl0502FlowTeam(ctx);
 
   if (rl05Scenario === "TH1") {
-    if (notReceived && option2Selected && flowTeam) {
-      return buildEligible(flowTeam, "IV-1");
+    if (notReceived && option2Selected) {
+      const deliveryTeam = resolveRl0502DeliveryCpTeam(deliveryOption);
+      if (deliveryTeam) {
+        return buildEligible(deliveryTeam, "IV-1-DELIVERY");
+      }
+      if (flowTeam) {
+        return buildEligible(flowTeam, "IV-1");
+      }
     }
     return buildIneligible();
   }
 
   if (rl05Scenario === "TH2") {
-    // TH2: Option 2 | Chưa nhận MRC | cả hai → auto Team/Queue theo luồng Payment/CP.
-    if (flowTeam && (option2Selected || notReceived)) {
-      return buildEligible(flowTeam, "IV-2");
+    if (option2Selected || notReceived) {
+      if (flowTeam) {
+        return buildEligible(flowTeam, "IV-2");
+      }
+      const deliveryTeam = resolveRl0502DeliveryCpTeam(deliveryOption);
+      if (deliveryTeam) {
+        return buildEligible(deliveryTeam, "IV-2-DELIVERY");
+      }
     }
     return buildIneligible();
   }
 
   if (rl05Scenario === "TH3") {
+    if (option2Selected) {
+      const deliveryTeam = resolveRl0502DeliveryCpTeam(deliveryOption);
+      if (deliveryTeam) {
+        return buildEligible(deliveryTeam, "IV-3-DELIVERY");
+      }
+    }
     if (notReceived && flowTeam) {
       return buildEligible(flowTeam, "IV-3");
     }
@@ -284,7 +335,7 @@ export function getMrcReturnRoutingContext(
       ctx?.dupCaseOnly === true ||
       ctx?.showMrcDupBanner === true ||
       ctx?.showHandlingRadioOnNotReceived === true;
-    if (!needsHandling || handlingOption === MRC_OPT_CANCEL_PREVIOUS) {
+    if (!needsHandling || isMrcCancelPreviousOption(handlingOption)) {
       return buildEligible(flowTeam, rl05Scenario || "FLOW");
     }
     if (matchesRl0501Delivery(deliveryOption)) {
