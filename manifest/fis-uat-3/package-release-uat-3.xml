@@ -204,6 +204,7 @@
         <members>FEC_CardClosureRefundController</members>
         <members>FEC_CardInfoController</members>
         <members>FEC_CaseManagerListService</members>
+        <members>FEC_CaseMasterDataHelper</members>
         <members>FEC_ContractClosureController</members>
         <members>FEC_CreateCSCaseService</members>
         <members>FEC_GetCSCaseStatusService</members>
