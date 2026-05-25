@@ -66,9 +66,9 @@ implements Queueable, Database.AllowsCallouts {
             if (String.isNotBlank(result.customerName)) {
                 hist.FEC_Customer_Name__c = result.customerName;
             }
-            // if (String.isNotBlank(result.nationalId)) {
-            //     hist.FEC_National_ID_Passport_ID__c = result.nationalId;
-            // }
+            if (String.isNotBlank(result.nationalId)) {
+                hist.FEC_National_ID_Passport_ID__c = result.nationalId;
+            }
             if (String.isNotBlank(result.gender)) {
                 hist.FEC_Gender__c = result.gender;
             }

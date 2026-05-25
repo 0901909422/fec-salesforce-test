@@ -25,6 +25,11 @@
     color: #c23934;
 }
 
+.hold-case-auto-message--info {
+    color: #0176d3;
+    font-weight: 500;
+}
+
 .hold-case-auto-manual-action {
     margin-bottom: 0.75rem;
 }

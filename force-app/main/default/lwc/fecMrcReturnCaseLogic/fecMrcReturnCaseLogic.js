@@ -91,6 +91,21 @@ export function shouldActivateMrcReturnRouting(business) {
   );
 }
 
+/** Case Information bị chặn (Product Code ≠ TW) — chỉ hiện banner lỗi, không panel/routing. */
+export function isMrcRl05CaseInformationBlocked(business) {
+  if (business?.mrcRl05CaseInfoBlocked === true) {
+    return true;
+  }
+  if (business?.mrcRl05CaseInfoWarningOnly === true) {
+    return false;
+  }
+  return !!business?.sectionlst?.some(
+    (section) =>
+      section.name === SECTION_NAME_CASE_INFORMATION &&
+      (section.hasError || section.error?.label),
+  );
+}
+
 export function isMrcRl05Branch(business) {
   const ctx = getMrcRl05Ui(business);
   if (ctx?.isRl05Branch === true) {
@@ -310,10 +325,44 @@ function normalizeMasterDataLwcEntry(entry) {
   return { componentName: o.componentName };
 }
 
+/** Ẩn panel MRC khi Case Information bị chặn validation. */
+export function stripMrcReturnPanelWhenBlocked(business) {
+  if (!isMrcRl05CaseInformationBlocked(business) || !business?.sectionlst) {
+    return business;
+  }
+  business.sectionlst.forEach((section) => {
+    if (section.name !== SECTION_NAME_CASE_INFORMATION) {
+      return;
+    }
+    if (Array.isArray(section.componentlst)) {
+      section.componentlst = section.componentlst.filter((entry) => {
+        const meta = normalizeMasterDataLwcEntry(entry);
+        return (
+          meta.componentName !== MRC_RETURN_PANEL &&
+          meta.componentName !== "fec_MrcReturnCaseForm"
+        );
+      });
+    }
+    (section.resolvedComponentlst || []).forEach((dyn) => {
+      if (
+        dyn?.componentName === MRC_RETURN_PANEL ||
+        dyn?.componentName === "fec_MrcReturnCaseForm"
+      ) {
+        dyn._hideForMrcRl05 = true;
+      }
+    });
+  });
+  return business;
+}
+
 /** Chèn fec_MrcReturnPanel vào Case Information khi RL05 (nếu master data chưa có). */
 export function ensureMrcReturnCaseFormInBusiness(business) {
-  if (!isMrcRl05Branch(business) || !business?.sectionlst) {
-    return business;
+  if (
+    !isMrcRl05Branch(business) ||
+    !business?.sectionlst ||
+    isMrcRl05CaseInformationBlocked(business)
+  ) {
+    return stripMrcReturnPanelWhenBlocked(business);
   }
   const section = business.sectionlst.find(
     (s) => s.name === SECTION_NAME_CASE_INFORMATION,
@@ -395,6 +444,11 @@ export function applyMrcRl0502DupFieldLayout(
 
   if (!needsHandlingRadio) {
     nextHandling = STR_EMPTY;
+  } else if (!nextHandling) {
+    const saved = String(business?.mrcHandlingOptionSaved ?? STR_EMPTY).trim();
+    if (saved) {
+      nextHandling = saved;
+    }
   }
 
   const visibility = applyMrcRl05SectionVisibility(

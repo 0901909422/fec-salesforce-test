@@ -118,6 +118,7 @@
         <members>FEC_CustomerAdditionalDataController</members>
         <members>FEC_ConstantCommon</members>
         <members>FEC_NotificationHistoryController</members>
+        <members>FEC_Notification</members>
         <members>FEC_CheckEligibleController</members>
         <members>FEC_CardEligibilityController</members>
         <members>FEC_CommonUltils</members>
@@ -127,12 +128,15 @@
         <members>FEC_AssignmentController</members>
         <members>FEC_CofGsrAssignmentService</members>
         <members>FEC_CaseEditNOCController</members>
+        <members>FEC_CaseEditNOCControllerTest</members>
         <members>FEC_CloseInterationSchedulerBatch</members>
         <members>FEC_AssignmentListHandler</members>
         <members>FEC_AssignmentRoutingActionHandler</members>
 		<members>FEC_AssignmentExecuteService</members>
         <members>FEC_AssignmentCaseShareService</members>
         <members>FEC_CaseExecuteService</members>
+        <members>FEC_CaseInitUpdateService</members>
+        <members>FEC_CaseInitUpdateServiceTest</members>
         <members>FEC_RoutingActionHistoryTriggerHandler</members>
         <members>FEC_RelevantTicketTriggerHandler</members>
         <members>FEC_PointsRedemptionCaseController</members>
@@ -185,6 +189,7 @@
 		<members>FEC_CaseAssignmentQueueRoleResolver</members>
         <members>FEC_CurrencyCodeLookup</members>
 		<members>FEC_HoldCaseInheritanceService</members>
+		<members>FEC_HoldCaseStage2DisplayService</members>
 		<members>FEC_UpdateTransferInfoRestService</members>
 		<members>FEC_NewAssignmentController</members>
 		<members>FEC_AutoHoldCaseQueueable</members>
@@ -200,6 +205,7 @@
         <members>FEC_CardClosureRefundController</members>
         <members>FEC_CardInfoController</members>
         <members>FEC_CaseManagerListService</members>
+        <members>FEC_CaseMasterDataHelper</members>
         <members>FEC_ContractClosureController</members>
         <members>FEC_CreateCSCaseService</members>
         <members>FEC_GetCSCaseStatusService</members>
@@ -231,6 +237,8 @@
         <members>FEC_VMXAUTHDETAILINQ</members>
         <members>FEC_UpdateCustomerAddress</members>
 		<members>FEC_NatureOfCaseUserGroupService</members>
+        <members>FEC_CustomerIntegrationService</members>
+        <members>FEC_LookupController</members>
         <name>ApexClass</name>
     </types>
 	<types>
@@ -593,6 +601,7 @@
 		<members>FEC_Sub_Code__c.FEC_Do_Not_Bother__c</members>
 		<members>Case.FEC_Can_Execute__c</members>
         <members>Case.FEC_Can_Execute_Assignment__c</members>
+        <members>Case.FEC_Case_Executor__c</members>
 		<members>FEC_Customer_History__c.FEC_Available_Credit_Limit__c</members>
 		<members>FEC_Customer_History__c.FEC_Description__c</members>
 		<members>FEC_Customer_History__c.FEC_Error_Code__c</members>
@@ -790,6 +799,7 @@
         <members>fec_InteractionCreateCase</members>
         <members>fec_ReusableDNBCustomTable</members>
         <members>fec_CaseEditNOC</members>
+        <members>fec_CaseModePublisher</members>
         <members>fec_CaseNocUpdatedSection</members>
         <members>fec_AssignmentList</members>
         <members>fec_AssignmentRemarkHistoryTable</members>
@@ -843,6 +853,7 @@
         <members>fec_MrcReturnDupBanner</members>
         <members>fecMrcReturnCaseLogic</members>
         <members>fec_MainInfoLoanAccount</members>
+        <members>fec_ManualNotification</members>
         <members>fec_NotificationOverride</members>
         <members>fec_PaymentHistoryAcount</members>
         <members>fec_PinResetView</members>
@@ -1068,6 +1079,7 @@
 		<members>FEC_Points_Redemption_Confirm_Message</members>
 		<members>FEC_Points_Redemption_Confirm_Title</members>
 		<members>FEC_Confirm_Before_Submit</members>
+		<members>FEC_Channel_Config_Invalid_Selection</members>
 		<members>FEC_Channel_Config_Save_Success</members>
 		<members>FEC_Channel_Config_Save_Error</members>
 		<members>FEC_Search_Channel_Placeholder</members>
@@ -1262,6 +1274,9 @@
         <members>FEC_TransferCall_Field_CollAgent</members>
         <members>FEC_STOP_IMPACT_ALREADY_MARKED_MSG</members>
         <members>FEC_MSG_SUCCESS</members>
+        <members>FEC_MSG_HOLD_CASE_AUTO_FAIL_RETRY</members>
+        <members>FEC_MSG_HOLD_CASE_NOC_HAS_AUTO</members>
+        <members>FEC_MSG_HOLD_CASE_NOC_NO_AUTO</members>
         <members>FEC_MSG_ERROR</members>
         <members>FEC_Account_Contract_Status</members>
         <members>FEC_MRC_Return_Case_Info_Block_Title</members>
@@ -1589,16 +1604,20 @@
         <members>Case.Update_Case_96h_Violating</members>
         <members>Case.Update_Case_96h_Warning</members>
         <members>Case.SLA_Violating_Warning_44h</members>
+        <members>Case.SLA_Violation_Warning_124h</members>
+        <members>Case.SLA_Violation_Warning_164h</members>
+        <members>Case.SLA_Violation_Warning_76h</members>
+        <members>Case.SLA_Warning_0h</members>
         <members>Case.SLA_Warning_119h</members>
         <members>Case.SLA_Warning_120h</members>
-        <members>Case.SLA_Warning_124h</members>
+        <members>Case.SLA_Warning_125h</members>
+        <members>Case.SLA_Warning_126h</members>
         <members>Case.SLA_Warning_128h</members>
+        <members>Case.SLA_Warning_143h</members>
         <members>Case.SLA_Warning_144h</members>
-        <members>Case.SLA_Warning_164h</members>
         <members>Case.SLA_Warning_167h</members>
         <members>Case.SLA_Warning_168h</members>
         <members>Case.SLA_Warning_48h</members>
-        <members>Case.SLA_Warning_76h</members>
         <members>Case.SLA_Warning_80h</members>
         <name>WorkflowFieldUpdate</name>
     </types>
@@ -2007,6 +2026,7 @@
         <members>FEC_General_Assignment_Config__c</members>
         <members>FEC_General_Assignment__c</members>
         <members>FEC_Download_Report__c</members>
+        <members>FEC_Notification_Template_Channel__c</members>
         <name>CustomTab</name>
     </types>
     <types>
