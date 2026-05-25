@@ -3,7 +3,7 @@
  * → gọi Mark NFU qua FEC_AutoHoldCaseApi.markNFU (retry tối đa 3 lần)
  * → cập nhật Case (+ FEC_NFU_Description_Result__c khi field đã deploy).
  */
-public with sharing class FEC_AutoHoldCaseService {
+public without sharing class FEC_AutoHoldCaseService {
     public static final String RESULT_PENDING = 'PENDING';
     public static final String RESULT_ALREADY_MARKED = 'ALREADY_MARKED';
     public static final String RESULT_SUCCESS = 'SUCCESS';
@@ -249,7 +249,7 @@ public with sharing class FEC_AutoHoldCaseService {
             null,
             null,
             null,
-            System.Label.FEC_MSG_ERROR
+            System.Label.FEC_MSG_HOLD_CASE_AUTO_FAIL_RETRY
         );
     }
 
