@@ -478,6 +478,7 @@
 	    <members>FEC_API_Config.FEC_MFASOUTSTANDINGAUTHINQ</members>
 		<members>FEC_API_Config.FEC_VMX_AUTH_DETAIL_INQ</members>
 		<members>FEC_API_Config.FEC_Vmx_Acct_Blkcd_Upd_Emea</members>
+		<members>FEC_API_Config.FEC_Get_Customer_List</members>
 		<name>CustomMetadata</name>
 	</types>
     <types>
