@@ -1077,6 +1077,7 @@
 		<members>FEC_Points_Redemption_Confirm_Message</members>
 		<members>FEC_Points_Redemption_Confirm_Title</members>
 		<members>FEC_Confirm_Before_Submit</members>
+		<members>FEC_Channel_Config_Invalid_Selection</members>
 		<members>FEC_Channel_Config_Save_Success</members>
 		<members>FEC_Channel_Config_Save_Error</members>
 		<members>FEC_Search_Channel_Placeholder</members>
