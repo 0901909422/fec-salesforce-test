@@ -317,20 +317,15 @@ public with sharing class ArchiveCaseController {
         // These 3 fields are not used in the system. Also checked the function (Where is this used ?)
         // FEC_New_Category__c, FEC_New_SubCategory__c, FEC_New_SubCode__c
 
-        String codeFiled = 'FEC_Code__c';
-        Map<String, String> mapObjNameAndFieldOnCase = new Map<String, String>{
-            'FEC_Product_Type__c'      => 'FEC_Product_Type__c',
-            'FEC_Category__c'          => 'FEC_Category__c',
-            'FEC_Sub_Category__c'      => 'FEC_SubCategory__c',
-            'FEC_Sub_Code__c'          => 'FEC_SubCode__c',
-            'FEC_Business_Process__c'  => 'FEC_Business_Process__c',
-            'FEC_Case_Stage__c'        => 'FEC_Current_Case_Stage__c'
-        };
+        String codeField = 'FEC_Code__c';
+        List<String> lookupFieldNames = label.TECH_LIST_FIELD_PARENT_OF_CASE.split(',');
+        Map<String, String> mapObjNameAndFieldOnCase = getLookupObjectMapByFields(lookupFieldNames);
 
         for (String objName : mapObjNameAndFieldOnCase.keySet()) {
+            String fieldOnCase = mapObjNameAndFieldOnCase.get(objName);
             resolveByCode(mapOfFieldAndValue, mapRelationshipObjects,
-                        objName, mapObjNameAndFieldOnCase.get(objName).toLowerCase(),
-                        objName, codeFiled);
+                        objName, fieldOnCase.toLowerCase(),
+                        objName, codeField);
         }
 
         // --- FEC_Actual_Nature_of_Case__c → composite match ---
@@ -686,7 +681,13 @@ public with sharing class ArchiveCaseController {
         } else if (ft == Schema.DisplayType.INTEGER) {
             record.put(fieldName, Integer.valueOf(String.valueOf(rawValue)));
         } else if (ft == Schema.DisplayType.DATE) {
-            record.put(fieldName, Date.valueOf(String.valueOf(rawValue)));
+            String valueStr = String.valueOf(rawValue);
+            if (!valueStr.contains('-') && valueStr.length() == 8) {
+                valueStr = valueStr.substring(0, 4) + '-' + 
+                          valueStr.substring(4, 6) + '-' + 
+                          valueStr.substring(6, 8);
+            }
+            record.put(fieldName, Date.valueOf(valueStr));
         } else if (ft == Schema.DisplayType.DATETIME) {
             String dtStr = String.valueOf(rawValue).replace('T', ' ');
             if (dtStr.contains('+')) dtStr = dtStr.substringBefore('+');
@@ -1166,6 +1167,41 @@ public with sharing class ArchiveCaseController {
         }
 
         return mapAddrInfoAndId;
+    }
+
+    /*------------------------------------------------------------
+    Author:        Thanh Van
+    Company:       Amaris
+    Description:   For a given list of lookup field API names on Case,
+                   find the related object each field references.
+                   Returns Map<String, String> where:
+                     Key   = Related Object API Name (e.g. 'FEC_Sub_Category__c')
+                     Value = Field API Name on Case (e.g. 'FEC_SubCategory__c')
+    Returns:       Map<String, String>
+    History
+    <Date>          <Authors Name>      <Brief Description of Change>
+    2026/05/22      Thanh Van           Init
+    ------------------------------------------------------------*/
+    public static Map<String, String> getLookupObjectMapByFields(List<String> lookupFieldNames) {
+        Map<String, String> result = new Map<String, String>();
+        Map<String, Schema.SObjectField> caseFieldMap = Case.sObjectType.getDescribe().fields.getMap();
+
+        for (String fieldName : lookupFieldNames) {
+            String trimmed = fieldName.trim();
+            String fieldKey = trimmed.toLowerCase();
+            if (!caseFieldMap.containsKey(fieldKey)) continue;
+
+            Schema.DescribeFieldResult fieldDesc = caseFieldMap.get(fieldKey).getDescribe();
+            if (fieldDesc.getType() != Schema.DisplayType.REFERENCE) continue;
+
+            List<Schema.SObjectType> referenceTo = fieldDesc.getReferenceTo();
+            if (!referenceTo.isEmpty()) {
+                String objApiName = referenceTo[0].getDescribe().getName();
+                result.put(objApiName, trimmed);
+            }
+        }
+
+        return result;
     }
 
     /*------------------------------------------------------------
