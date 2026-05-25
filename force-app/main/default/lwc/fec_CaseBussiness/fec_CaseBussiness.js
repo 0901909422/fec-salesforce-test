@@ -5569,10 +5569,9 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
 
     const routeToActionId = this._resolveRouteToActionId();
     const teamUserGroup = ctx.teamCode || ctx.team;
-    const teamDisplay = ctx.teamCode || ctx.team;
     this.business = {
       ...this.business,
-      nextTeam: teamDisplay,
+      nextTeam: ctx.team,
       nextQueue: priorQueue?.value ? priorQueue : this.business?.nextQueue,
     };
     this._setActionValueByCode(ACTION_ROUTE_TO);
@@ -5588,7 +5587,7 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
         if (res?.nextQueueId) {
           this.business = {
             ...this.business,
-            nextTeam: res.nextTeam || teamDisplay,
+            nextTeam: res.nextTeam || ctx.team,
             nextQueue: {
               label: res.nextQueueLabel || STR_EMPTY,
               value: res.nextQueueId,
@@ -5599,12 +5598,12 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
           const fallbackQueue =
             priorQueue &&
             (priorQueue.value || priorQueue.label) &&
-            (!priorTeam || priorTeam === teamDisplay)
+            (!priorTeam || priorTeam === ctx.team)
               ? priorQueue
               : null;
           this.business = {
             ...this.business,
-            nextTeam: teamDisplay || res?.nextTeam || priorTeam,
+            nextTeam: ctx.team || res?.nextTeam || priorTeam,
             nextQueue: fallbackQueue,
           };
           if (fallbackQueue) {
@@ -5625,7 +5624,7 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
         console.error("[MrcReturnStageChangeRouting]", JSON.stringify(err));
         this.business = {
           ...this.business,
-          nextTeam: teamDisplay || priorTeam,
+          nextTeam: ctx.team || priorTeam,
           nextQueue: priorQueue?.value ? priorQueue : null,
         };
         this.business = { ...this.business };

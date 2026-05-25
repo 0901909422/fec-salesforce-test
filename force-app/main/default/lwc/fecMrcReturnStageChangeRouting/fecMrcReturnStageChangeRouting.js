@@ -13,6 +13,19 @@ const TEAM_SP = "SP";
 const TEAM_F2F = "F2F";
 const TEAM_PM = "PM";
 
+/** Hiển thị Team theo spec RL05 (I–IV). */
+const TEAM_DISPLAY_BY_CODE = {
+  CP: "Contract Processing",
+  PM: "Payment",
+  SP: "CS Support",
+  F2F: "CS Office Based",
+};
+
+export function formatMrcReturnTeamDisplay(teamCode) {
+  const code = String(teamCode ?? "").trim().toUpperCase();
+  return TEAM_DISPLAY_BY_CODE[code] || teamCode || "";
+}
+
 const FIELD_DELIVERY_OPTION = "FEC_Delivery_Option_2__c";
 const FIELD_CUSTOMER_CONFIRMATION = "FEC_Customer_Confirmation__c";
 const FIELD_HANDLING_OPTION = "FEC_MRC_Request_Handling_Option__c";
@@ -316,7 +329,7 @@ export function getMrcReturnRoutingContext(
     const code = String(teamCode ?? "").trim().toUpperCase();
     return {
       eligible: true,
-      team: code,
+      team: formatMrcReturnTeamDisplay(code),
       teamCode: code,
       scenario,
       deliveryOption,
