@@ -2003,6 +2003,7 @@
         <members>FEC_Routing_Assignment__c.FEC_Nature_of_Cases__c</members>
         <members>FEC_Routing_Assignment__c.FEC_Queue__c</members>
         <members>FEC_Routing_Assignment__c.FEC_Team__c</members>
+        <members>Case.FEC_IsImported__c</members>
         <name>CustomField</name>
     </types>
     <types>
