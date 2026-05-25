@@ -50,6 +50,7 @@ public with sharing class FEC_IntegrationCreateFraudController{
     }
 
     public class FraudPropertyDTO {
+        @AuraEnabled public String intCaseId;
         @AuraEnabled public String intChannel;                   
         @AuraEnabled public String intUserType;          
         @AuraEnabled public String intProductLine;       
@@ -71,7 +72,102 @@ public with sharing class FEC_IntegrationCreateFraudController{
         @AuraEnabled public String property;
     }
 
-    
+     /**
+     * Creates a snapshot of the original fraud case data after successful creation.
+     * Only creates one snapshot per service case (ORIGINAL type).
+     *
+     * @param fraudCaseId    The fraud case ID (FH-xxx)
+     * @param serviceCaseId  The service case ID
+     */
+    /**
+     * Auto-submits a fraud case without UI interaction.
+     * Reads Case data, resolves mapping, auto-fills properties, and calls submitCreateFraudCase.
+     *
+     * @param serviceCaseId  Salesforce Case record Id
+     * @param natureOfCaseId Nature of Case Id for mapping resolution
+     * @param remarks        Optional remarks/description for the fraud case
+     * @return FraudCaseResponse with success/failure info
+     */
+    public static FEC_IntegrationFraudCaseUtil.FraudCaseResponse autoSubmitFraudCase(String serviceCaseId, String natureOfCaseId, String remarks) {
+        FEC_IntegrationFraudCaseUtil.FraudCaseResponse result = new FEC_IntegrationFraudCaseUtil.FraudCaseResponse();
+
+        try {
+            log('========= AUTO SUBMIT FRAUD CASE START =========');
+            log('serviceCaseId=' + serviceCaseId + ' | natureOfCaseId=' + natureOfCaseId);
+
+            if (String.isBlank(serviceCaseId) || String.isBlank(natureOfCaseId)) {
+                result.success = false;
+                result.message = 'serviceCaseId and natureOfCaseId are required.';
+                return result;
+            }
+
+            // Step 1: Get FEC_ID_Search__c from Case
+            List<Case> cases = [SELECT FEC_ID_Search__c FROM Case WHERE Id = :serviceCaseId LIMIT 1];
+            if (cases.isEmpty()) {
+                result.success = false;
+                result.message = 'Case not found: ' + serviceCaseId;
+                return result;
+            }
+            String intServiceCaseId = cases[0].FEC_ID_Search__c;
+
+            // Step 2: Resolve mapping from nature of case
+            String mappingId = getIntegrateMappingIdByNatureOfCaseId(natureOfCaseId);
+            FraudPropertyDTO mappingData = getDataIntegrationMapping(mappingId, serviceCaseId);
+            log('Debg-FraudPropertyDTO: ' + JSON.serializePretty(mappingData));
+            if (mappingData == null || String.isBlank(mappingData.intServiceType)) {
+                result.success = false;
+                result.message = 'No integration mapping found for natureOfCaseId: ' + natureOfCaseId;
+                return result;
+            }
+
+            // Step 3: Build AdditionalInfo from auto-mapped values
+            List<Map<String, Object>> additionalInfoList = new List<Map<String, Object>>();
+            if (mappingData.propertyValues != null) {
+                for (PropertyDTO prop : mappingData.propertyValues) {
+                    // Use auto-mapped value from propertyMappingValues if available
+                    String autoValue = (mappingData.propertyMappingValues != null && mappingData.propertyMappingValues.containsKey(prop.property))
+                        ? mappingData.propertyMappingValues.get(prop.property)
+                        : prop.value;
+
+                    additionalInfoList.add(new Map<String, Object>{
+                        'ID' => prop.property,
+                        'Value' => autoValue != null ? autoValue : '',
+                        'Type' => prop.type
+                    });
+                }
+            }
+
+            // Step 4: Build payload matching submitCreateFraudCase format
+            Map<String, Object> payload = new Map<String, Object>{
+                'CaseType' => mappingData.intServiceType,
+                'ProductType' => mappingData.intProductLine,
+                'Category' => mappingData.intCategory,
+                'SubCategory' => mappingData.intSubCategory,
+                'SubCode' => mappingData.intSubCode,
+                'Remarks' => remarks,
+                'UserType' => mappingData.intUserType,
+                'ServiceCaseId' => intServiceCaseId,
+                'caseDataId' => serviceCaseId,
+                'AdditionalInfo' => additionalInfoList
+            };
+
+            log('AUTO PAYLOAD: ' + JSON.serializePretty(payload));
+
+            // Step 5: Call existing submitCreateFraudCase
+            result = submitCreateFraudCase(payload);
+
+            log('========= AUTO SUBMIT FRAUD CASE END =========');
+            return result;
+
+        } catch (Exception ex) {
+            log('ERROR autoSubmitFraudCase: ' + ex.getMessage());
+            result.success = false;
+            result.responseCode = 0;
+            result.message = ex.getMessage();
+            return result;
+        }
+    }
+
 
     @AuraEnabled(cacheable=true)
     public static FEC_IntegrationFraudCaseUtil.CategoryMappingResponse loadCategoryMapping(String channelCode) {
@@ -243,12 +339,16 @@ public static FraudPropertyDTO getFraudCaseById(String fraudCaseId) {
     if (!existing.isEmpty()) {
 
         FEC_Integration_Case__c rec = existing[0];
+        resultData.intCaseId = rec.Id;
 		resultData.intChannel      = rec.FEC_Sys_Channel__c;
         resultData.intUserType     = rec.FEC_Customer_User_Type__c;
         resultData.intProductLine  = rec.FEC_Product_Type__c;
         resultData.intServiceType = rec.FEC_Case_Type__c;
         resultData.serviceCaseId  = rec.FEC_Service_Case_ID__c;
-        resultData.fraudCaseId  = rec.FEC_CaseID__c;
+        FEC_FraudConstantCommon.IntegrationField caseField = new FEC_FraudConstantCommon.IntegrationField();
+        resultData.fraudCaseId  = (rec.FEC_CaseID__c != null && rec.FEC_CaseID__c.startsWith(caseField.CASEFH))
+            ? rec.FEC_CaseID__c
+            : null;
         resultData.intCategory     = rec.FEC_Category__c;
         resultData.intSubCategory  = rec.FEC_Sub_Category__c;
         resultData.intSubCode      = rec.FEC_Sub_Code__c;
@@ -269,6 +369,27 @@ public static FraudPropertyDTO getFraudCaseById(String fraudCaseId) {
     }
 
     return resultData;
+}
+
+private static String getIntegrateMappingIdByNatureOfCaseId(String natureOfCaseId) {
+    if (String.isBlank(natureOfCaseId)) {
+        return null;
+    }
+    List<FEC_Master_Data_Setting__c> mappings = [
+        SELECT FEC_Data_Integration_Mapping__c
+        FROM FEC_Master_Data_Setting__c
+        WHERE FEC_Nature_Of_Case__c = :natureOfCaseId
+          AND FEC_Field_Status__c = true
+          AND FEC_Data_Integration_Mapping__c != null
+        ORDER BY CreatedDate DESC
+        LIMIT 1
+    ];
+    if (!mappings.isEmpty()) {
+        log('[getIntegrateMappingIdByNatureOfCase] Found mappingId=' + mappings[0].FEC_Data_Integration_Mapping__c);
+        return mappings[0].FEC_Data_Integration_Mapping__c;
+    }
+    log('[getIntegrateMappingIdByNatureOfCase] No mapping found for natureOfCaseId=' + natureOfCaseId);
+    return null;
 }
 
 private static List<FEC_Data_Integration_Mapping_Info__c> getDataIntegrationMappingInfoByMappingId(String mappingId) {
@@ -516,10 +637,24 @@ private static FraudPropertyDTO getDataIntegrationMapping(String integrationMapp
         Map<String, List<AvailableValueDTO>> availableValueMap =
             queryAvailableValues(propKeys, isVietnamese);
 
+        // Query display names from master data
+        Map<String, String> displayNameMap = new Map<String, String>();
+        List<FEC_Master_Data_Integration__c> masterRecords = [
+            SELECT FEC_Source_Id__c, FEC_Source_Name__c, FEC_Source_NameVN__c
+            FROM FEC_Master_Data_Integration__c
+            WHERE FEC_Source_Id__c IN :propKeys
+            AND FEC_Source_Type__c != :FEC_FraudConstantCommon.KEY_AVAILABLE_VALUE
+        ];
+        for (FEC_Master_Data_Integration__c m : masterRecords) {
+            displayNameMap.put(m.FEC_Source_Id__c, isVietnamese
+                ? m.FEC_Source_NameVN__c
+                : m.FEC_Source_Name__c);
+        }
+
         List<PropertyDTO> result = new List<PropertyDTO>();
 
         for (FEC_Integration_Case_Info__c rec : infoList) {
-            result.add(buildPropertyDTO(rec, availableValueMap));
+            result.add(buildPropertyDTO(rec, availableValueMap, displayNameMap));
         }
 
         log('[END] loadAdditionalProperties | result size=' + result.size());
@@ -583,14 +718,17 @@ private static FraudPropertyDTO getDataIntegrationMapping(String integrationMapp
     
     private static PropertyDTO buildPropertyDTO(
         FEC_Integration_Case_Info__c rec,
-        Map<String, List<AvailableValueDTO>> availableValueMap
+        Map<String, List<AvailableValueDTO>> availableValueMap,
+        Map<String, String> displayNameMap
     ) {
 
         PropertyDTO dto = new PropertyDTO();
 
         dto.id = rec.Id;
         dto.property = rec.FEC_Info_ID__c;
-        dto.displayName = rec.FEC_Info_ID__c;
+        dto.displayName = displayNameMap.containsKey(rec.FEC_Info_ID__c)
+            ? displayNameMap.get(rec.FEC_Info_ID__c)
+            : rec.FEC_Info_ID__c;
         dto.value = rec.FEC_Info_Value__c;
         dto.type = rec.FEC_Property_Type__c;
         dto.mandatory = rec.FEC_Source_Is_Mandatory__c;
@@ -682,6 +820,19 @@ private static FraudPropertyDTO getDataIntegrationMapping(String integrationMapp
         };
     }
 
+    @AuraEnabled(cacheable=true)
+    public static Map<String, String> getIntegrationActionModes() {
+        return new Map<String, String>{
+            'CREATE_MODE' => FEC_FraudConstantCommon.INTEGRATING_FRAUD_CREATE_MODE,
+            'EDIT_MODE'   => FEC_FraudConstantCommon.INTEGRATING_FRAUD_EDIT_MODE,
+            'SUBMIT_MODE' => FEC_FraudConstantCommon.INTEGRATING_FRAUD_SUBMIT_MODE,
+            'VIEW_MODE'   => FEC_FraudConstantCommon.INTEGRATING_FRAUD_VIEW_MODE,
+            'NOT_MAPPING' => FEC_FraudConstantCommon.INTEGRATING_FRAUD_NOTMAPPING_MODE
+        };
+    }
+
+    
+
     /**
      * Submits a Create Fraud Case request to the external SOAP service.
      *
@@ -707,6 +858,8 @@ private static FraudPropertyDTO getDataIntegrationMapping(String integrationMapp
 
         FEC_IntegrationFraudCaseUtil.FraudCaseResponse result =
             new FEC_IntegrationFraudCaseUtil.FraudCaseResponse();
+        String serviceName = FEC_FraudConstantCommon.FRAUD_CASE_CREATE_NAME;
+        String defaultChannel = FEC_FraudConstantCommon.DEFAULT_CHANNEL_INTEGRATION_CODE;
 
         try {
 
@@ -737,7 +890,11 @@ private static FraudPropertyDTO getDataIntegrationMapping(String integrationMapp
             log('LOG-callCreateFraudCaseService: '+ apiRes);
             // 4. Handle response
             result = handleCreateResponse(apiRes, reqWrapper, sys, cust, reqOriginal, creator);
-            log('LOG-handleCreateResponse: '+ result);
+            log('LOG-handleCreateResponse: '+ result); 
+            // 6. Create snapshot on first successful create
+            if (result.success && String.isNotBlank(result.fraudCaseId)) {
+                createOriginalSnapshot(result.fraudCaseId, reqWrapper.caseDataId);
+            }
 
             log('========= SUBMIT CREATE  CASE END =========');
             return result;
@@ -745,6 +902,18 @@ private static FraudPropertyDTO getDataIntegrationMapping(String integrationMapp
         } catch (Exception ex) {
 
             log('ERROR submitCreateFraudCase: ' + ex.getMessage());
+
+            FEC_IntegrationFraudCaseUtil.logIntegrationService(
+                serviceName,
+                defaultChannel,
+                null,
+                null,
+                JSON.serializePretty(payload),
+                ex.getMessage(),
+                'Error',
+                UserInfo.getUserEmail(),
+                ex.getMessage()
+            );
 
             result.success = false;
             result.responseCode = 0;
@@ -786,7 +955,7 @@ private static FraudPropertyDTO getDataIntegrationMapping(String integrationMapp
 
             // 3. Generate a local case ID if not provided
             if (String.isBlank(reqWrapper.caseId)) {
-                reqWrapper.caseId = 'LOCAL-' + FEC_IntegrationFraudCaseUtil.generateUUID().substring(0, 8);
+                reqWrapper.caseId = 'DRAFT-' + FEC_IntegrationFraudCaseUtil.generateUUID().substring(0, 8);
             }
 
             String caseDataId = reqWrapper.caseDataId;
@@ -802,13 +971,20 @@ private static FraudPropertyDTO getDataIntegrationMapping(String integrationMapp
                 reqOriginal,
                 cust,
                 creator,
-                caseDataId
+                caseDataId,
+                null
             );
 
             result.success = isUpsert;
             result.responseCode = isUpsert ? 1 : 0;
             result.message = isUpsert ? MSG_CREATE_SUCCESS : MSG_CREATE_FAILED;
             result.fraudCaseId = reqWrapper.caseId;
+            if(isUpsert) {
+                //Create snapshot on first successful create
+                if (result.success && String.isNotBlank(result.fraudCaseId)) {
+                    createOriginalSnapshot(result.fraudCaseId, reqWrapper.caseDataId);
+                }
+            }
 
             log('========= SUBMIT WITHOUT CREATE FRAUD CASE END =========');
             return result;
@@ -900,7 +1076,8 @@ private static FraudPropertyDTO getDataIntegrationMapping(String integrationMapp
                     req,
                     cust,
                     creator,
-                    caseDataId
+                    caseDataId,
+                    null
                 );
 
             result.success = isUpsert;
@@ -966,6 +1143,10 @@ private static FraudPropertyDTO getDataIntegrationMapping(String integrationMapp
 
             responseDescription = apiRes.Sys.Description;
         }
+         // Update Fraud Case ID if returned from external system
+        if (apiRes != null && String.isNotBlank(apiRes.CaseID)) {
+            w.caseId = apiRes.CaseID;
+        }
 
 
         // Success condition:
@@ -988,7 +1169,8 @@ private static FraudPropertyDTO getDataIntegrationMapping(String integrationMapp
                     req,
                     cust,
                     creator,
-                    caseDataId
+                    caseDataId,
+                    w.intCaseId
                 );
 
             result.success = isUpsert;
@@ -1094,7 +1276,8 @@ private static FraudPropertyDTO getDataIntegrationMapping(String integrationMapp
         
         FEC_IntegrationFraudCaseUtil.FraudCaseResponse result =
             new FEC_IntegrationFraudCaseUtil.FraudCaseResponse();
-
+        String serviceName = FEC_FraudConstantCommon.FRAUD_CASE_CREATE_NAME;
+        String defaultChannel = FEC_FraudConstantCommon.DEFAULT_CHANNEL_INTEGRATION_CODE;
         try {
 
             log('========= SUBMIT UPDATE FRAUD CASE START =========');
@@ -1133,6 +1316,17 @@ private static FraudPropertyDTO getDataIntegrationMapping(String integrationMapp
         } catch (Exception ex) {
 
             log('ERROR submitUpdateFraudCase: ' + ex.getMessage());
+            FEC_IntegrationFraudCaseUtil.logIntegrationService(
+                serviceName,
+                defaultChannel,
+                null,
+                null,
+                JSON.serializePretty(payload),
+                ex.getMessage(),
+                'Error',
+                UserInfo.getUserEmail(),
+                ex.getMessage()
+            );
 
             result.success = false;
             result.responseCode = 0;
@@ -1185,24 +1379,38 @@ private static FraudPropertyDTO getDataIntegrationMapping(String integrationMapp
     FEC_IntegrationSoapFraudcaseService.RequestInfoCustom_element req,
     FEC_IntegrationSoapFraudcaseService.CustomerInfo_element cust,
     FEC_IntegrationSoapFraudcaseService.CreatorInfoType creator,
-    String caseDataId
+    String caseDataId,
+    String integrationCaseId
     ) {
 
         log('==================== UPSERT FRAUD CASE START ====================');
         log('LOG-upsertFraudCaseService CASEID: '+ caseId);
+        String serviceCaseDataId = caseDataId;
         FEC_FraudConstantCommon.IntegrationFieldType caseFileType = new FEC_FraudConstantCommon.IntegrationFieldType();
         try {
 
             // =============================================================
             // 1) FIND EXISTING
             // =============================================================
-            List<FEC_Integration_Case__c> existing = [
-                SELECT Id
-                FROM FEC_Integration_Case__c
-                WHERE FEC_CaseID__c = :caseId
-                AND FEC_Sys_Channel__c = :channelCode
-                LIMIT 1
-            ];
+            List<FEC_Integration_Case__c> existing;
+            if (String.isBlank(integrationCaseId)) {
+                existing = [
+                    SELECT Id
+                    FROM FEC_Integration_Case__c
+                    WHERE FEC_CaseID__c = :caseId
+                    AND FEC_Sys_Channel__c = :channelCode
+                    LIMIT 1
+                ];
+            } else {
+                existing = [
+                    SELECT Id,FEC_Integrate_Case_ID__c
+                    FROM FEC_Integration_Case__c
+                    WHERE Id = :integrationCaseId
+                    LIMIT 1
+                ];
+                serviceCaseDataId = existing.isEmpty() ? caseDataId : existing[0].FEC_Integrate_Case_ID__c;
+            }
+           
 
             FEC_Integration_Case__c rec =
                 existing.isEmpty()
@@ -1214,7 +1422,7 @@ private static FraudPropertyDTO getDataIntegrationMapping(String integrationMapp
             // =============================================================
 
             rec.FEC_CaseID__c = caseId;
-            rec.FEC_Integrate_Case_ID__c = caseDataId;
+            rec.FEC_Integrate_Case_ID__c = serviceCaseDataId;
             rec.FEC_Service_Case_ID__c = serviceCaseId;
             rec.FEC_Parent_CaseID__c = parentCaseId;
             rec.FEC_Case_Status__c = caseStatus;
@@ -1803,7 +2011,93 @@ private static FraudPropertyDTO getDataIntegrationMapping(String integrationMapp
             System.debug(LoggingLevel.INFO, msg);
         }
     }
- 
-    
+
+    /**
+     * Fetches base64 content for a list of ContentDocument IDs.
+     * Returns a map of ContentDocumentId → base64 string.
+     */
+    @AuraEnabled
+    public static Map<String, String> getFileBase64ByDocumentIds(List<String> documentIds) {
+        Map<String, String> result = new Map<String, String>();
+        if (documentIds == null || documentIds.isEmpty()) {
+            return result;
+        }
+        for (ContentVersion cv : [
+            SELECT ContentDocumentId, VersionData
+            FROM ContentVersion
+            WHERE ContentDocumentId IN :documentIds
+              AND IsLatest = true
+        ]) {
+            if (cv.VersionData != null) {
+                result.put(cv.ContentDocumentId, EncodingUtil.base64Encode(cv.VersionData));
+            }
+        }
+        return result;
+    }
+
+    /**
+     * Creates a snapshot of the original fraud case data after successful creation.
+     * Only creates one snapshot per service case (ORIGINAL type).
+     *
+     * @param fraudCaseId    The fraud case ID (FH-xxx)
+     * @param serviceCaseId  The service case ID
+     */
+    private static void createOriginalSnapshot(String fraudCaseId, String serviceCaseId) {
+        try {
+            // Check if snapshot already exists for this service case
+            List<FEC_Integration_Case_Snapshot__c> existing = [
+                SELECT Id FROM FEC_Integration_Case_Snapshot__c
+                WHERE FEC_Service_Case_Id__c = :serviceCaseId
+                AND FEC_Type__c = 'ORIGINAL'
+                LIMIT 1
+            ];
+            if (!existing.isEmpty()) {
+                log('[createOriginalSnapshot] Snapshot already exists for serviceCaseId=' + serviceCaseId);
+                return;
+            }
+
+            // Query the integration case
+            List<FEC_Integration_Case__c> cases = [
+                SELECT Id, FEC_CaseID__c, FEC_Parent_CaseID__c, FEC_Service_Case_ID__c,
+                       FEC_Case_Status__c, FEC_Category__c, FEC_Sub_Category__c, FEC_Sub_Code__c,
+                       FEC_Sys_Channel__c, FEC_Customer_User_Type__c, FEC_Product_Type__c,
+                       FEC_Case_Type__c, FEC_CS_Remark__c, FEC_Creator_Email__c,
+                       CreatedDate, LastModifiedDate
+                FROM FEC_Integration_Case__c
+                WHERE FEC_CaseID__c = :fraudCaseId
+                ORDER BY CreatedDate ASC
+                LIMIT 1
+            ];
+            if (cases.isEmpty()) {
+                log('[createOriginalSnapshot] No case found for fraudCaseId=' + fraudCaseId);
+                return;
+            }
+
+            FEC_Integration_Case__c fraudCase = cases[0];
+
+            // Query case info records
+            List<FEC_Integration_Case_Info__c> infos = [
+                SELECT Id, FEC_Info_ID__c, FEC_Info_Value__c, FEC_Property_Type__c, FEC_Source_Is_Mandatory__c
+                FROM FEC_Integration_Case_Info__c
+                WHERE FEC_Parent_Case__c = :fraudCase.Id
+            ];
+
+            // Build snapshot data
+            Map<String, Object> snapshotData = new Map<String, Object>();
+            snapshotData.put('case', fraudCase);
+            snapshotData.put('infos', infos);
+
+            // Create snapshot record
+            FEC_Integration_Case_Snapshot__c snapshot = new FEC_Integration_Case_Snapshot__c();
+            snapshot.FEC_Service_Case_Id__c = serviceCaseId;
+            snapshot.FEC_Type__c = 'ORIGINAL';
+            snapshot.FEC_Data__c = JSON.serialize(snapshotData);
+            insert snapshot;
+
+            log('[createOriginalSnapshot] Snapshot created for serviceCaseId=' + serviceCaseId);
+        } catch (Exception ex) {
+            log('[createOriginalSnapshot] ERROR: ' + ex.getMessage());
+        }
+    }
  
 }

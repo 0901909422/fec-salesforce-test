@@ -366,4 +366,110 @@ public static String responseSuccessCancelFraudCase() {
     private static String xmlPart7() {
         return '      <Type>SubCategory</Type>\n                     <AdditionalProperties>\n                        <ID>CustomerReport</ID>\n                        <Name>Nội dung khách hàng phản ánh</Name>\n                        <NameVN>Nội dung khách hàng phản ánh</NameVN>\n                        <PosOrder>1</PosOrder>\n                        <ApplyTo>ALL</ApplyTo>\n                        <Mandatory>true</Mandatory>\n                        <Type>string</Type>\n                     </AdditionalProperties>\n                     <AdditionalProperties>\n                        <ID>SuspectInformation</ID>\n                        <Name>Thông tin đối tượng tư vấn/ liên hệ với khách hàng</Name>\n                        <NameVN>Thông tin đối tượng tư vấn/ liên hệ với khách hàng</NameVN>\n                        <PosOrder>2</PosOrder>\n                        <ApplyTo>ALL</ApplyTo>\n                        <Mandatory>true</Mandatory>\n                        <Type>string</Type>\n                     </AdditionalProperties>\n                     <AdditionalProperties>\n                        <ID>AppID</ID>\n                        <Name>App ID</Name>\n                        <NameVN>App ID</NameVN>\n                        <PosOrder>4</PosOrder>\n                        <ApplyTo>ALL</ApplyTo>\n                        <Mandatory>true</Mandatory>\n                        <Type>string</Type>\n                     </AdditionalProperties>\n                     <AdditionalProperties>\n                        <ID>CF_CUS_MOB</ID>\n                        <Name>CF_CUS MOB</Name>\n                        <NameVN>Số điện thoại trên CMS có phải là của khách hàng không</NameVN>\n                        <PosOrder>5</PosOrder>\n                        <ApplyTo>ALL</ApplyTo>\n                        <Mandatory>true</Mandatory>\n                        <Type>list</Type>\n                        <AvailableValues>\n                           <ID>NO</ID>\n                           <Name>KHÔNG</Name>\n                           <NameVN>KHÔNG</NameVN>\n                        </AvailableValues>\n                        <AvailableValues>\n                           <ID>YES</ID>\n                           <Name>CÓ</Name>\n                           <NameVN>CÓ</NameVN>\n                        </AvailableValues>\n                     </AdditionalProperties>\n                     <AdditionalProperties>\n                        <ID>CF_CardKeep</ID>\n                        <Name>CF_CardKeep</Name>\n                        <NameVN>Khách hàng còn giữ thẻ lúc giao dịch phát sinh hay không</NameVN>\n                        <PosOrder>6</PosOrder>\n                        <ApplyTo>ALL</ApplyTo>\n                        <Mandatory>true</Mandatory>\n                        <Type>list</Type>\n                        <AvailableValues>\n                           <ID>NO</ID>\n                           <Name>KHÔNG</Name>\n                           <NameVN>KHÔNG</NameVN>\n                        </AvailableValues>\n                        <AvailableValues>\n                           <ID>YES</ID>\n                           <Name>CÓ</Name>\n                           <NameVN>CÓ</NameVN>\n                        </AvailableValues>\n                     </AdditionalProperties>\n                     <AdditionalProperties>\n                        <ID>CF_HowToKnow</ID>\n                        <Name>CF_HowToKnow</Name>\n                        <NameVN>Khách hàng biết được giao dịch gian lận của mình bằng cách nào</NameVN>\n                        <PosOrder>7</PosOrder>\n                        <ApplyTo>ALL</ApplyTo>\n                        <Mandatory>true</Mandatory>\n                        <Type>list</Type>\n                        <AvailableValues>\n                           <ID>COL</ID>\n                           <Name>Thu hồi nợ</Name>\n                           <NameVN>Thu hồi nợ</NameVN>\n                        </AvailableValues>\n                        <AvailableValues>\n                           <ID>OTH</ID>\n                           <Name>OTHER</Name>\n                           <NameVN>OTHER</NameVN>\n                        </AvailableValues>\n                        <AvailableValues>\n                           <ID>SMS</ID>\n                           <Name>Tin Nhắn</Name>\n                           <NameVN>Tin Nhắn</NameVN>\n                        </AvailableValues>\n                        <AvailableValues>\n                           <ID>STA</ID>\n                           <Name>Sao Kê</Name>\n                           <NameVN>Sao Kê</NameVN>\n                        </AvailableValues>\n                     </AdditionalProperties>\n                     <AdditionalProperties>\n                        <ID>CF_CardInfoShare</ID>\n                        <Name>CF_CardInfoShare</Name>\n                        <NameVN>Khách hàng có từng đưa thẻ cho ai hoặc đọc/ chụp hình thông tin OTP/ thẻ (2 mặt thẻ) của mình cho người khác không</NameVN>\n                        <PosOrder>9</PosOrder>\n                        <ApplyTo>ALL</ApplyTo>\n                        <Mandatory>false</Mandatory>\n                        <Type>list</Type>\n                        <AvailableValues>\n                           <ID>NO</ID>\n                           <Name>KHÔNG</Name>\n                           <NameVN>KHÔNG</NameVN>\n                        </AvailableValues>\n                        <AvailableValues>\n                           <ID>YES</ID>\n                           <Name>CÓ</Name>\n                           <NameVN>CÓ</NameVN>\n                        </AvailableValues>\n                     </AdditionalProperties>\n                     <AdditionalProperties>\n                        <ID>CF_ReasonOTP</ID>\n                        <Name>CF_ReasonOTP</Name>\n                        <NameVN>Lý do khách hàng cung cấp OTP/thông tin thẻ (2 mặt thẻ)/ chụp hình thẻ</NameVN>\n                        <PosOrder>10</PosOrder>\n                        <ApplyTo>ALL</ApplyTo>\n                        <Mandatory>true</Mandatory>\n                        <Type>list</Type>\n                        <AvailableValues>\n                           <ID>F01</ID>\n                           <Name>Nhân viên gọi tư vấn thu hồi thẻ</Name>\n                           <NameVN>Nhân viên gọi tư vấn thu hồi thẻ</NameVN>\n                        </AvailableValues>\n                        <AvailableValues>\n                           <ID>F02</ID>\n                           <Name>Nhân viên tư vấn rút tiền mặt</Name>\n                           <NameVN>Nhân viên tư vấn rút tiền mặt</NameVN>\n                        </AvailableValues>\n                        <AvailableValues>\n                           <ID>F03</ID>\n                           <Name>Nhân viên tư vấn chuyển đổi trả góp</Name>\n                           <NameVN>Nhân viên tư vấn chuyển đổi trả góp</NameVN>\n                        </AvailableValues>\n                        <AvailableValues>\n                           <ID>F04</ID>\n                           <Name>Nhân viên tư vấn gọi đến hỗ trợ hủy thẻ</Name>\n                           <NameVN>Nhân viên tư vấn gọi đến hỗ trợ hủy thẻ</NameVN>\n                        </AvailableValues>\n                        <AvailableValues>\n                           <ID>F05</ID>\n                           <Name>Nhân viên hỗ trợ kiểm tra tài khoản/Kiểm tra số dư</Name>\n                           <NameVN>Nhân viên hỗ trợ kiểm tra tài khoản/Kiểm tra số dư</NameVN>\n                        </AvailableValues>\n                        <AvailableValues>\n                           <ID>F06</ID>\n                           <Name>Nhân viên tư vấn đáo hạn</Name>\n                           <NameVN>Nhân viên tư vấn đáo hạn</NameVN>\n                        </AvailableValues>\n                        <AvailableValues>\n                           <ID>F07</ID>\n                           <Name>Nhân viên tư vấn hủy bảo hiểm</Name>\n                           <NameVN>Nhân viên tư vấn hủy bảo hiểm</NameVN>\n                        </AvailableValues>\n                        <AvailableValues>\n                           <ID>F08</ID>\n                           <Name>Nhân viên tư vấn về phí thường niên</Name>\n                           <NameVN>Nhân viên tư vấn về phí thường niên</NameVN>\n                        </AvailableValues>\n                        <AvailableValues>\n                           <ID>F09</ID>\n                           <Name>Nhân viên tư vấn nhận thẻ cào/chương trình khuyến mãi/trúng thưởng</Name>\n                           <NameVN>Nhân viên tư vấn nhận thẻ cào/chương trình khuyến mãi/trúng thưởng</NameVN>\n                        </AvailableValues>\n                        <AvailableValues>\n                           <ID>F10</ID>\n                           <Name>Gia hạn thẻ</Name>\n                           <NameVN>Gia hạn thẻ</NameVN>\n                        </AvailableValues>\n                        <AvailableValues>\n                           <ID>F11</ID>\n                           <Name>Nhân viên tư vấn để không bị gọi nhắc nợ</Name>\n                           <NameVN>Nhân viên tư vấn để không bị gọi nhắc nợ</NameVN>\n                        </AvailableValues>\n                        <AvailableValues>\n                           <ID>F12</ID>\n                           <Name>Hỗ trợ kích hoạt thẻ</Name>\n                           <NameVN>Hỗ trợ kích hoạt thẻ</NameVN>\n                        </AvailableValues>\n                        <AvailableValues>\n                           <ID>F13</ID>\n                           <Name>Rút tiền dư trong thẻ</Name>\n                           <NameVN>Rút tiền dư trong thẻ</NameVN>\n                        </AvailableValues>\n                        <AvailableValues>\n                           <ID>NULL</ID>\n                           <Name>Không có</Name>\n                           <NameVN>Không có</NameVN>\n                        </AvailableValues>\n                     </AdditionalProperties>\n                     <AdditionalProperties>\n                        <ID>CF_CashReceive</ID>\n                        <Name>CF_CashReceive</Name>\n                        <NameVN>Nếu có người tư vấn rút tiền/vay/trả góp khách hàng có nhận được tiền hay không</NameVN>\n                        <PosOrder>12</PosOrder>\n                        <ApplyTo>ALL</ApplyTo>\n                        <Mandatory>true</Mandatory>\n                        <Type>list</Type>\n                        <AvailableValues>\n                           <ID>NO</ID>\n                           <Name>KHÔNG</Name>\n                           <NameVN>KHÔNG</NameVN>\n                        </AvailableValues>\n                        <AvailableValues>\n                           <ID>YES</ID>\n                           <Name>CÓ</Name>\n                           <NameVN>CÓ</NameVN>\n                        </AvailableValues>\n                     </AdditionalProperties>\n                     <AdditionalProperties>\n                        <ID>CF_ReceiveAmount</ID>\n                        <Name>CF_ReceiveAmount</Name>\n                        <NameVN>Số tiền khách hàng nhận được</NameVN>\n                        <PosOrder>13</PosOrder>\n                        <ApplyTo>ALL</ApplyTo>\n                        <Mandatory>true</Mandatory>\n                        <Type>number</Type>\n                     </AdditionalProperties>\n                     <AdditionalProperties>\n                        <ID>CF_ReceiveMethod</ID>\n                        <Name>CF_ReceiveMethod</Name>\n                        <NameVN>Cách thức KH nhận tiền</NameVN>\n                        <PosOrder>14</PosOrder>\n                        <ApplyTo>ALL</ApplyTo>\n                        <Mandatory>true</Mandatory>\n                        <Type>list</Type>\n                        <AvailableValues>\n                           <ID>BT</ID>\n                           <Name>Chuyển khoản</Name>\n                           <NameVN>Chuyển khoản</NameVN>\n                        </AvailableValues>\n                        <AvailableValues>\n                           <ID>DMX</ID>\n                           <Name>Điện máy xanh</Name>\n                           <NameVN>Điện máy xanh</NameVN>\n                        </AvailableValues>\n                        <AvailableValues>\n                           <ID>NUL</ID>\n                           <Name>Không có</Name>\n                           <NameVN>Không có</NameVN>\n                        </AvailableValues>\n                        <AvailableValues>\n                           <ID>TGD</ID>\n                           <Name>Thế giới di động</Name>\n                           <NameVN>Thế giới di động</NameVN>\n                        </AvailableValues>\n                        <AvailableValues>\n                           <ID>VNP</ID>\n                           <Name>VNPOST</Name>\n                           <NameVN>VNPOST</NameVN>\n                        </AvailableValues>\n                        <AvailableValues>\n                           <ID>VT</ID>\n                           <Name>Viettel</Name>\n                           <NameVN>Viettel</NameVN>\n                        </AvailableValues>\n                     </AdditionalProperties>\n                  </Children>\n               </Children>\n            </Children>\n         </MasterDataItems>\n         <Sys>\n            <TransactionID>2cc1685d-3545-4322-8956-e9b7af1b35c8</TransactionID>\n            <DateTime>2025-11-06T06:46:30.0342034Z</DateTime>\n            <Code>1</Code>\n            <Description>Success</Description>\n         </Sys>\n      </GetFraudMasterDataResponse>\n   </s:Body>\n</s:Envelope>';
     }
+
+    /**
+     * Returns mock data simulating CifFeDictLocationVw__x external object records.
+     * Each record has: ExternalId, CODE__c, NAME__c, NAME_EN__c, PARENTCODE__c, ISACTIVE__c, SCHEME__c, EFFECTIVEDATE__c
+     */
+    public static List<Map<String, Object>> getCifFeDictLocationVw() {
+        return new List<Map<String, Object>>{
+            // ===== COUNTRIES =====
+            new Map<String, Object>{
+                'ExternalId' => 'CTR-001',
+                'CODE__c' => '1',
+                'NAME__c' => 'Việt Nam',
+                'NAME_EN__c' => 'Vietnam',
+                'PARENTCODE__c' => null,
+                'ISACTIVE__c' => true,
+                'SCHEME__c' => 'Country',
+                'EFFECTIVEDATE__c' => null
+            },
+            new Map<String, Object>{
+                'ExternalId' => 'CTR-002',
+                'CODE__c' => '2',
+                'NAME__c' => 'Việt Nam',
+                'NAME_EN__c' => 'Vietnam',
+                'PARENTCODE__c' => null,
+                'ISACTIVE__c' => true,
+                'SCHEME__c' => 'Country',
+                'EFFECTIVEDATE__c' => '2025-07-24'
+            },
+
+            // ===== PROVINCES =====
+            new Map<String, Object>{
+                'ExternalId' => 'PRV-001',
+                'CODE__c' => '125',
+                'NAME__c' => 'Thành phố Hồ Chí Minh',
+                'NAME_EN__c' => 'Ho Chi Minh City',
+                'PARENTCODE__c' => '1',
+                'ISACTIVE__c' => true,
+                'SCHEME__c' => 'Province',
+                'EFFECTIVEDATE__c' => '2025-04-26'
+            },
+            new Map<String, Object>{
+                'ExternalId' => 'PRV-002',
+                'CODE__c' => '579',
+                'NAME__c' => 'Thành phố Hồ Chí Minh',
+                'NAME_EN__c' => 'Ho Chi Minh City',
+                'PARENTCODE__c' => '2',
+                'ISACTIVE__c' => true,
+                'SCHEME__c' => 'Province',
+                'EFFECTIVEDATE__c' => '2025-07-24'
+            },
+
+            // ===== DISTRICTS (SCHEME = City) =====
+            new Map<String, Object>{
+                'ExternalId' => 'DST-001',
+                'CODE__c' => '1394',
+                'NAME__c' => 'Cần Giờ',
+                'NAME_EN__c' => 'Can Gio',
+                'PARENTCODE__c' => '125',
+                'ISACTIVE__c' => true,
+                'SCHEME__c' => 'City',
+                'EFFECTIVEDATE__c' => null
+            },
+            new Map<String, Object>{
+                'ExternalId' => 'DST-002',
+                'CODE__c' => '76506',
+                'NAME__c' => 'Phường Vũng Tàu',
+                'NAME_EN__c' => 'Phuong Vung Tau',
+                'PARENTCODE__c' => '579',
+                'ISACTIVE__c' => true,
+                'SCHEME__c' => 'City',
+                'EFFECTIVEDATE__c' => '2025-07-24'
+            },
+            new Map<String, Object>{
+                'ExternalId' => 'DST-003',
+                'CODE__c' => '76526',
+                'NAME__c' => 'Phường Tam Thắng',
+                'NAME_EN__c' => 'Phuong Tam Thang',
+                'PARENTCODE__c' => '579',
+                'ISACTIVE__c' => true,
+                'SCHEME__c' => 'City',
+                'EFFECTIVEDATE__c' => '2025-07-24'
+            },
+
+            // ===== WARDS (SCHEME = other/Ward) =====
+            new Map<String, Object>{
+                'ExternalId' => 'WRD-001',
+                'CODE__c' => '11772',
+                'NAME__c' => 'Xã Lý Nhơn',
+                'NAME_EN__c' => 'Xa Ly Nhon',
+                'PARENTCODE__c' => '1394',
+                'ISACTIVE__c' => true,
+                'SCHEME__c' => 'Ward',
+                'EFFECTIVEDATE__c' => null
+            },
+            new Map<String, Object>{
+                'ExternalId' => 'WRD-002',
+                'CODE__c' => '11771',
+                'NAME__c' => 'Xã Long Hòa',
+                'NAME_EN__c' => 'Xa Long Hoa',
+                'PARENTCODE__c' => '1394',
+                'ISACTIVE__c' => true,
+                'SCHEME__c' => 'Ward',
+                'EFFECTIVEDATE__c' => '2026-01-20'
+            }
+        };
+    }
 }

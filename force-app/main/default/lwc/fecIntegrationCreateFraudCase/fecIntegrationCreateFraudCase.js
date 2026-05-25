@@ -269,6 +269,22 @@ export default class IntegrationCreateFraudCase extends LightningElement {
                 ? { ...p, value }
                 : p
         );
+
+        // Dispatch event for field mapping sync
+        this.dispatchEvent(new CustomEvent('fraudfieldchange', {
+            detail: { fieldId, value },
+            bubbles: true,
+            composed: true
+        }));
+    }
+
+    @api
+    setFieldValue(fieldId, value) {
+        this.additionalProps = this.additionalProps.map(p =>
+            p.id === fieldId
+                ? { ...p, value }
+                : p
+        );
     }
 
     // -------------------------------------------------------------------
@@ -307,21 +323,11 @@ export default class IntegrationCreateFraudCase extends LightningElement {
     // -------------------------------------------------------------------
     buildPayload() {
         const additionalInfoPayload = this.additionalProps
-            .filter(p => {
-                if (p.type === this.fieldTypes.FILE) {
-                    return !!p.fileName;
-                }
-                if (p.isBoolean) {
-                    return p.value !== null && p.value !== undefined;
-                }
-            
-                return p.value !== null && p.value !== undefined && p.value !== '';
-            })
             .map(p => ({
                 ID: p.property,
                 Value: p.value !== null && p.value !== undefined
                     ? String(p.value)
-                    : null,
+                    : '',
                 FileName: p.fileName || null,
                 Type: p.type,
                 Mandatory: p.mandatory
@@ -376,6 +382,7 @@ export default class IntegrationCreateFraudCase extends LightningElement {
         }
     }
     
+    @api
     validateForm() {
         const allInputs = this.template.querySelectorAll(
             'lightning-input, lightning-combobox, lightning-textarea'
@@ -384,7 +391,18 @@ export default class IntegrationCreateFraudCase extends LightningElement {
         let isValid = true;
         let firstInvalid = null;
 
+        // Collect file field IDs that already have data
+        const fileFieldsWithData = new Set(
+            this.additionalProps
+                .filter(p => p.isFile && p.fileName)
+                .map(p => p.id)
+        );
+
         allInputs.forEach(el => {
+            // Skip validation for file inputs that already have data
+            if (el.type === 'file' && fileFieldsWithData.has(el.dataset.id)) {
+                return;
+            }
             if (!el.checkValidity()) {
                 el.reportValidity();
                 isValid = false;
@@ -415,19 +433,20 @@ export default class IntegrationCreateFraudCase extends LightningElement {
             if (firstInvalid) {
                 firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' });
             }
-            this.showErrorToast(this.labels.missingRequiredTitle, this.labels.missingRequiredMsg);
+            //this.showErrorToast(this.labels.missingRequiredTitle, this.labels.missingRequiredMsg);
             return false;
         }
 
         if (this.additionalProps.length === 0) {
-            this.showErrorToast(this.labels.missingAdditionalTitle, this.labels.missingAdditionalMsg);
+            //this.showErrorToast(this.labels.missingAdditionalTitle, this.labels.missingAdditionalMsg);
             return false;
         }
 
         return true;
     }
 
-    async onSubmit() {
+    @api
+    async onSubmitFraudCase() {
         if (this.isCreateSubmitting) return;
         this.isCreateSubmitting = true;
         this.loading = true;
@@ -452,12 +471,14 @@ export default class IntegrationCreateFraudCase extends LightningElement {
             await this.confirmSubmit();
         } catch (error) {
             this.showErrorToast('Error', error?.body?.message || error.message);
+            throw error;
         } finally {
             this.loading = false;
             this.isCreateSubmitting = false;
         }
     }
 
+    @api
     async onSubmitWithoutCallout() {
         if (this.isCreateSubmitting) return;
         this.isCreateSubmitting = true;
@@ -540,10 +561,12 @@ export default class IntegrationCreateFraudCase extends LightningElement {
                 composed: true
             }));
         } else {
-            this.showErrorToast(
-                this.labels.responseFailed,
-                actionPromise.message
-            );
+            const errMsg = actionPromise?.message || 'Fraud case submission failed.';
+            // this.showErrorToast(
+            //     this.labels.responseFailed,
+            //     errMsg
+            // );
+            throw new Error(errMsg);
         }
     
         this.resultMessage = actionPromise?.message;

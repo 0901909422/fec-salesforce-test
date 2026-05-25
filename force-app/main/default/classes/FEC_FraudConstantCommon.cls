@@ -345,6 +345,7 @@ public with sharing class FEC_FraudConstantCommon {
 
 	 public static final String INTEGRATING_FRAUD_CREATE_MODE    = 'CreateMode';
 	 public static final String INTEGRATING_FRAUD_EDIT_MODE    = 'EditMode';
+	 public static final String INTEGRATING_FRAUD_SUBMIT_MODE    = 'SubmitMode';
 	 public static final String INTEGRATING_FRAUD_VIEW_MODE    = 'ViewMode';
 	 public static final String INTEGRATING_FRAUD_NOTMAPPING_MODE    = 'NotMapping';
 

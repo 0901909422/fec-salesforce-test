@@ -442,6 +442,8 @@ global with sharing class FEC_IntegrationSearchFraudCaseController {
             'FEC_Sub_Category__c',
             'FEC_Sub_Code__c',
             'FEC_Case_Status__c',
+            'FEC_Sys_Channel__c',
+            'FEC_Creator_Email__c',
             'CreatedDate'
         };
     

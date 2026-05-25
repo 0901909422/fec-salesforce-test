@@ -1,5 +1,5 @@
 <template>
-    <lightning-card title="Update Fraud Case" variant="base">
+    <lightning-card title="" variant="base">
         <div class="slds-p-around_medium">
 
             <!-- LOADING -->
@@ -15,8 +15,8 @@
                         <div class="slds-box slds-theme_default">
 
                             <!-- TITLE -->
-                            <h3 class="slds-text-heading_small slds-m-bottom_small slds-text-title_caps">
-                                {fraudIntChannel} Properties
+                            <h3 class="slds-text-heading_small slds-m-bottom_small">
+                                Fraud Properties
                             </h3>
                     
                             <!-- GRID -->
@@ -162,8 +162,8 @@
                                                 required={prop.mandatory}
                                                 onchange={onFileChange}>
                                             </lightning-input>
-                                             <!-- FILE TYPE -->
-                                            <template if:true={prop.isFile}>
+                                             <!-- Download button only when file exists -->
+                                            <template if:true={prop.isFileWithValue}>
                                                 <lightning-button
                                                     label={labels.downloadFile}
                                                     icon-name="utility:download"
@@ -194,7 +194,7 @@
                         <!-- Column 1 -->
                         <div class="slds-col slds-size_1-of-3">
                             <lightning-textarea
-                                label="Remarks"
+                                label="Fraud Remarks"
                                 data-field="remarks"
                                 required
                                 value={remarks}
@@ -215,6 +215,8 @@
                         onclick={onSubmit}
                         disabled={isUpdateSubmitting}>
                     </lightning-button>
+                    
+                    <template if:true={showCancelButton}>
                     <lightning-button
                     label={labels.Cancel_Fraud_Case_Button}
                     variant="brand"
@@ -222,15 +224,16 @@
                     onclick={onSubmitCancel}
                     disabled={isCancelSubmitting}>
                 </lightning-button>
+                    </template>
                 </div>
                 
 
                 <!-- Result -->
-                <template lwc:if={resultMessage}>
+                <!-- <template lwc:if={resultMessage}>
                     <div class="slds-m-top_medium">
                         <lightning-formatted-text value={resultMessage}></lightning-formatted-text>
                     </div>
-                </template>
+                </template> -->
                 <!-- Preview Modal -->
             <template lwc:if={showPreview}>
                 <section role="dialog" tabindex="-1" class="slds-modal slds-fade-in-open">

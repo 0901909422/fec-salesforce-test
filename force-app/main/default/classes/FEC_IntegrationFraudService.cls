@@ -675,11 +675,19 @@ global with sharing class FEC_IntegrationFraudService {
                 statusCode = FEC_FraudConstantCommon.SUCCESSFULL;
                 log('LOG-callCreateFraudCaseService MOCKUP: ');
             }
-            FEC_IntegrationSoapFraudcaseService.CreateFraudCaseResponseType resultData = parseCreateFraudCaseResponse(responseBody);
+            FEC_IntegrationSoapFraudcaseService.CreateFraudCaseResponseType resultData;
+            try {
+                resultData = parseCreateFraudCaseResponse(responseBody);
+            } catch (Exception parseEx) {
+                log('ERROR parsing create response: ' + parseEx.getMessage());
+                String parseServiceName = FEC_FraudConstantCommon.FRAUD_CASE_CREATE_NAME;
+                writeLogIntegrationService(parseServiceName, reqWrapper.channelCode, reqWrapper.caseId, reqWrapper.serviceCaseId, requestBody, responseBody, 'ParseError', requestor, parseEx.getMessage());
+                throw parseEx;
+            }
             //Central integration logging
             String serviceName = FEC_FraudConstantCommon.FRAUD_CASE_CREATE_NAME;
             description =  String.valueOf(statusCode);
-            messageStatus = resultData.Sys.Description;
+            messageStatus = (resultData != null && resultData.Sys != null) ? resultData.Sys.Description : null;
             writeLogIntegrationService(serviceName, reqWrapper.channelCode, reqWrapper.caseId, 
             reqWrapper.serviceCaseId, requestBody, responseBody, messageStatus, requestor, description);
     
@@ -778,7 +786,15 @@ global with sharing class FEC_IntegrationFraudService {
                 statusCode = FEC_FraudConstantCommon.SUCCESSFULL;
                 log('LOG-callCreateFraudCaseService MOCKUP: ');
             }
-            FEC_IntegrationSoapFraudcaseService.ProcessCaseResponseType resultData = parseProcessFraudCaseResponse(responseBody);
+            FEC_IntegrationSoapFraudcaseService.ProcessCaseResponseType resultData;
+            try {
+                resultData = parseProcessFraudCaseResponse(responseBody);
+            } catch (Exception parseEx) {
+                log('ERROR parsing process response: ' + parseEx.getMessage());
+                String parseServiceName = FEC_FraudConstantCommon.FRAUD_CASE_PROCESS_NAME;
+                writeLogIntegrationService(parseServiceName, reqWrapper.channelCode, reqWrapper.caseId, reqWrapper.serviceCaseId, requestBody, responseBody, 'ParseError', requestor, parseEx.getMessage());
+                throw parseEx;
+            }
             //Central integration logging
             String serviceName = FEC_FraudConstantCommon.FRAUD_CASE_PROCESS_NAME;
             description =  String.valueOf(statusCode);
@@ -881,12 +897,20 @@ global with sharing class FEC_IntegrationFraudService {
                 statusCode = FEC_FraudConstantCommon.SUCCESSFULL;
                 log('LOG-callUpdateFraudCaseService MOCKUP: ');
             }
-            FEC_IntegrationSoapFraudcaseService.CreateFraudCaseResponseType resultData = parseCreateFraudCaseResponse(responseBody);
+            FEC_IntegrationSoapFraudcaseService.CreateFraudCaseResponseType resultData;
+            try {
+                resultData = parseCreateFraudCaseResponse(responseBody);
+            } catch (Exception parseEx) {
+                log('ERROR parsing update response: ' + parseEx.getMessage());
+                String parseServiceName = FEC_FraudConstantCommon.FRAUD_CASE_UPDATE_NAME;
+                writeLogIntegrationService(parseServiceName, reqWrapper.channelCode, reqWrapper.caseId, reqWrapper.serviceCaseId, requestBody, responseBody, 'ParseError', requestor, parseEx.getMessage());
+                throw parseEx;
+            }
 
             //Central integration logging
             String serviceName = FEC_FraudConstantCommon.FRAUD_CASE_UPDATE_NAME;
             description =  String.valueOf(statusCode);
-            messageStatus = resultData.Sys.Description;
+            messageStatus = (resultData != null && resultData.Sys != null) ? resultData.Sys.Description : null;
             writeLogIntegrationService(serviceName, reqWrapper.channelCode, reqWrapper.caseId, reqWrapper.serviceCaseId, requestBody, responseBody, messageStatus, requestor, description);
     
            
@@ -1009,12 +1033,20 @@ global with sharing class FEC_IntegrationFraudService {
                 statusCode = FEC_FraudConstantCommon.SUCCESSFULL;
                 log('LOG-callCancelFraudCaseService MOCKUP: ');
             }
-            FEC_IntegrationSoapFraudcaseService.CancelFraudCaseResponseType resultData = parseCancelFraudCaseResponse(responseBody);
+            FEC_IntegrationSoapFraudcaseService.CancelFraudCaseResponseType resultData;
+            try {
+                resultData = parseCancelFraudCaseResponse(responseBody);
+            } catch (Exception parseEx) {
+                log('ERROR parsing cancel response: ' + parseEx.getMessage());
+                String parseServiceName = FEC_FraudConstantCommon.FRAUD_CASE_CANCEL_NAME;
+                writeLogIntegrationService(parseServiceName, reqWrapper.channelCode, reqWrapper.caseId, reqWrapper.serviceCaseId, requestBody, responseBody, 'ParseError', requestor, parseEx.getMessage());
+                throw parseEx;
+            }
 
             //Central integration logging
             String serviceName = FEC_FraudConstantCommon.FRAUD_CASE_CANCEL_NAME;
             description =  String.valueOf(statusCode);
-            messageStatus = resultData.Sys.Description;
+            messageStatus = (resultData != null && resultData.Sys != null) ? resultData.Sys.Description : null;
             writeLogIntegrationService(serviceName, reqWrapper.channelCode, reqWrapper.caseId, reqWrapper.serviceCaseId, requestBody, responseBody, messageStatus, requestor, description);
     
            
