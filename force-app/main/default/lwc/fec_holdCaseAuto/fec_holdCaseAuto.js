@@ -21,6 +21,7 @@ import FEC_NFUExpiryDate from "@salesforce/label/c.FEC_NFUExpiryDate";
 import FEC_STOP_IMPACT_ALREADY_MARKED_MSG from "@salesforce/label/c.FEC_STOP_IMPACT_ALREADY_MARKED_MSG";
 import FEC_MSG_SUCCESS from "@salesforce/label/c.FEC_MSG_SUCCESS";
 import FEC_MSG_ERROR from "@salesforce/label/c.FEC_MSG_ERROR";
+import FEC_MSG_HOLD_CASE_AUTO_FAIL_RETRY from "@salesforce/label/c.FEC_MSG_HOLD_CASE_AUTO_FAIL_RETRY";
 import FEC_Show_Action_Hold_Case from "@salesforce/label/c.FEC_Show_Action_Hold_Case";
 import { formatDateTimeVN } from "c/fec_CommonUtils";
 import { STR_EMPTY } from "c/fec_CommonConst";
@@ -43,10 +44,22 @@ const RESULT_ERROR = "ERROR";
 const TEAM_CS_SUPPORT = "CS Support";
 const TEAM_CS_CUSTOMER_CARE = "CS Customer Care";
 
+const MODE_DEFAULT = "DEFAULT";
+const MODE_ERROR_RETRY = "ERROR_RETRY";
+const MODE_ERROR_RETRY_INFO_NO_AUTO = "ERROR_RETRY_INFO_NO_AUTO";
+const MODE_INFO_NO_AUTO_ONLY = "INFO_NO_AUTO_ONLY";
+const MODE_INFO_HAS_AUTO_BUTTON = "INFO_HAS_AUTO_BUTTON";
+
 export default class Fec_holdCaseAuto extends NavigationMixin(LightningElement) {
   @api recordId;
   /** Fallback từ Manual Hold (sessionStorage) khi LDS chưa refresh field trên Case. */
   @api resultOverride;
+
+  /** Stage 2+ NOC change — từ FEC_HoldCaseStage2DisplayService.evaluate */
+  @api stage2DisplayMode = MODE_DEFAULT;
+  @api stage2InfoMessage;
+  @api stage2ErrorMessage;
+  @api stage2ShowManualHoldButton = false;
 
   wiredCaseResult;
 
@@ -61,6 +74,7 @@ export default class Fec_holdCaseAuto extends NavigationMixin(LightningElement) 
     messageAlreadyMarked: FEC_STOP_IMPACT_ALREADY_MARKED_MSG,
     messageSuccess: FEC_MSG_SUCCESS,
     messageError: FEC_MSG_ERROR,
+    messageErrorRetry: FEC_MSG_HOLD_CASE_AUTO_FAIL_RETRY,
     messageProcessing: "Đang xử lý yêu cầu Hold Case...",
     manualHoldCaseAction: FEC_Show_Action_Hold_Case || FEC_Hold_Case,
   };
@@ -77,6 +91,10 @@ export default class Fec_holdCaseAuto extends NavigationMixin(LightningElement) 
       return refreshApex(this.wiredCaseResult);
     }
     return Promise.resolve();
+  }
+
+  get _isStage2Override() {
+    return this.stage2DisplayMode && this.stage2DisplayMode !== MODE_DEFAULT;
   }
 
   get resultType() {
@@ -115,6 +133,13 @@ export default class Fec_holdCaseAuto extends NavigationMixin(LightningElement) 
   }
 
   get hasResult() {
+    if (this._isStage2Override) {
+      return (
+        this.isErrorMessage ||
+        this.isSuccessMessage ||
+        this.hasStage2InfoMessage
+      );
+    }
     return (
       this.resultType === RESULT_ALREADY_MARKED ||
       this.resultType === RESULT_SUCCESS ||
@@ -124,14 +149,31 @@ export default class Fec_holdCaseAuto extends NavigationMixin(LightningElement) 
 
   /** Ẩn section khi chưa có kết quả Auto Hold Case. */
   get hasVisibleContent() {
+    if (this._isStage2Override) {
+      return (
+        this.hasStage2InfoMessage ||
+        this.isErrorMessage ||
+        this.isSuccessMessage ||
+        this.showManualHoldCaseButton
+      );
+    }
     return this.isPending || this.hasResult;
   }
 
   get isPending() {
+    if (this._isStage2Override) {
+      return false;
+    }
     return this.resultType === RESULT_PENDING;
   }
 
   get isSuccessMessage() {
+    if (this.stage2DisplayMode === MODE_INFO_NO_AUTO_ONLY) {
+      return false;
+    }
+    if (this._isStage2Override && this.stage2DisplayMode !== MODE_DEFAULT) {
+      return false;
+    }
     return (
       this.resultType === RESULT_ALREADY_MARKED ||
       this.resultType === RESULT_SUCCESS
@@ -139,10 +181,30 @@ export default class Fec_holdCaseAuto extends NavigationMixin(LightningElement) 
   }
 
   get isErrorMessage() {
+    if (this.stage2DisplayMode === MODE_ERROR_RETRY) {
+      return true;
+    }
+    if (this.stage2DisplayMode === MODE_ERROR_RETRY_INFO_NO_AUTO) {
+      return true;
+    }
     return this.resultType === RESULT_ERROR;
   }
 
+  get hasStage2InfoMessage() {
+    return (
+      this._isStage2Override &&
+      (this.stage2DisplayMode === MODE_ERROR_RETRY_INFO_NO_AUTO ||
+        this.stage2DisplayMode === MODE_INFO_NO_AUTO_ONLY ||
+        this.stage2DisplayMode === MODE_INFO_HAS_AUTO_BUTTON) &&
+      !!this.stage2InfoMessage
+    );
+  }
+
   get responseMessage() {
+    if (this.stage2DisplayMode === MODE_ERROR_RETRY ||
+        this.stage2DisplayMode === MODE_ERROR_RETRY_INFO_NO_AUTO) {
+      return this.stage2ErrorMessage || this.customLabel.messageErrorRetry;
+    }
     if (this.resultType === RESULT_ALREADY_MARKED) {
       return this.customLabel.messageAlreadyMarked;
     }
@@ -150,13 +212,16 @@ export default class Fec_holdCaseAuto extends NavigationMixin(LightningElement) 
       return this.customLabel.messageSuccess;
     }
     if (this.resultType === RESULT_ERROR) {
-      return this.customLabel.messageError;
+      return this.customLabel.messageErrorRetry;
     }
     return STR_EMPTY;
   }
 
   /** TH1 & TH2: hiển thị block NFU Details read-only. */
   get showNfuDetails() {
+    if (this._isStage2Override) {
+      return false;
+    }
     return (
       this.resultType === RESULT_ALREADY_MARKED ||
       this.resultType === RESULT_SUCCESS
@@ -171,8 +236,11 @@ export default class Fec_holdCaseAuto extends NavigationMixin(LightningElement) 
     return getFieldValue(this.wiredCaseResult?.data, CASE_IS_CLOSED) === true;
   }
 
-  /** TH3: Auto fail 3 lần + Case mở + thuộc CS Support / CS Customer Care → nút Hold Case thủ công. */
+  /** TH3 / TH1: nút Hold Case thủ công (Quick Action). */
   get showManualHoldCaseButton() {
+    if (this.stage2ShowManualHoldButton === true) {
+      return !this.isCaseClosed;
+    }
     return (
       this.resultType === RESULT_ERROR &&
       !this.isCaseClosed &&

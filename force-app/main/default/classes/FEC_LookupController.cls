@@ -37,6 +37,13 @@ public with sharing class FEC_LookupController {
             strQuery += ' AND Type = \'Queue\'';
         }
 
+        List<String> subCategoryIds = new List<String>();
+        if (String.isNotBlank(selectedSubCategoryId)) {
+            for (String s : selectedSubCategoryId.split(',')) {
+                subCategoryIds.add(s.trim());
+            }
+        }
+
         // Logic filter đặc thù cho các đối tượng FEC
         if (sObjectName == 'FEC_Product_Type__c') {
             strQuery += ' AND Id IN (SELECT FEC_Product_Type__c FROM FEC_Nature_of_Case__c WHERE FEC_Product_Type__c != NULL)';
@@ -45,7 +52,7 @@ public with sharing class FEC_LookupController {
         } else if (sObjectName == 'FEC_Sub_Category__c') {
             strQuery += ' AND Id IN (SELECT FEC_Sub_Category__c FROM FEC_Nature_of_Case__c WHERE FEC_Sub_Category__c != NULL AND FEC_Product_Type__c = :selectedProductTypeId AND FEC_Category__c = :selectedCategoryId)';
         } else if (sObjectName == 'FEC_Sub_Code__c') {
-            strQuery += ' AND Id IN (SELECT FEC_Sub_Code__c FROM FEC_Nature_of_Case__c WHERE FEC_Sub_Code__c != NULL AND FEC_Product_Type__c = :selectedProductTypeId AND FEC_Category__c = :selectedCategoryId AND FEC_Sub_Category__c = :selectedSubCategoryId)';
+            strQuery += ' AND Id IN (SELECT FEC_Sub_Code__c FROM FEC_Nature_of_Case__c WHERE FEC_Sub_Code__c != NULL AND FEC_Product_Type__c = :selectedProductTypeId AND FEC_Category__c = :selectedCategoryId AND FEC_Sub_Category__c IN :subCategoryIds)';
         }
 
         strQuery += ' ORDER BY ' + field + ' LIMIT :maxResults';

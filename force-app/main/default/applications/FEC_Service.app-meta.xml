@@ -583,6 +583,7 @@
     <tabs>FEC_Enhanced_Letterhead__c</tabs>
     <tabs>Templates</tabs>
     <tabs>FEC_Clear_Session__c</tabs>
+    <tabs>FEC_Notification_Template_Channel__c</tabs>
     <tabs>FEC_Download_Report__c</tabs>
     <tabs>FE_Department_Admin</tabs>
     <uiType>Lightning</uiType>
@@ -647,6 +648,9 @@
         </mappings>
         <mappings>
             <tab>FEC_Notification_Channel__c</tab>
+        </mappings>
+        <mappings>
+            <tab>FEC_Notification_Template_Channel__c</tab>
         </mappings>
         <mappings>
             <tab>FEC_Notification__c</tab>

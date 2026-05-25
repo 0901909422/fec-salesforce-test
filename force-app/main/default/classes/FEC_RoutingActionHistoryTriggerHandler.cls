@@ -88,7 +88,8 @@ public without sharing class FEC_RoutingActionHistoryTriggerHandler {
     Map<Id, Case> caseMap = new Map<Id, Case>([
         SELECT Id, FEC_Customer_Type__c, FEC_Product_Type__c, FEC_Category__c, 
                FEC_SubCategory__c, FEC_SubCode__c, FEC_Current_Case_Stage__c,
-               FEC_Stage_Name__c,
+               FEC_SubCategory__r.Name, FEC_SubCode__r.Name, 
+               FEC_SubCategory__r.FEC_Code__c, FEC_SubCode__r.FEC_Code__c, FEC_Stage_Name__c,
                FEC_Account_or_Contract__r.FEC_Customer_Type__c, 
                FEC_Account_or_Contract__r.FEC_Email__c,
                FEC_Interaction__r.FEC_Interaction_Email__c, 
@@ -97,37 +98,39 @@ public without sharing class FEC_RoutingActionHistoryTriggerHandler {
     ]);
 
     // 3. Query các Notification đang active và lấy thêm trường Template ID
-    List<FEC_Notification__c> activeNotifications = [
-        SELECT Id, Name, FEC_Current_Status__c, FEC_Changed_Status__c, FEC_Target_Group__c, 
-               FEC_Customer_Type__c, FEC_Product_Type__c, FEC_Category__c, 
-              //  FEC_SubCategory__c, FEC_SubCode__c,
-               FEC_Notification_Channel__r.Name,
-               FEC_Notification_Template__c
-        FROM FEC_Notification__c
-        WHERE FEC_Notification_Status__c = true 
+    List<FEC_Notification_Template_Channel__c> activeChannels = [
+        SELECT FEC_Notification_Template__c,
+               FEC_Notification__r.Id, FEC_Notification__r.Name, FEC_Notification__r.FEC_Current_Status__c, 
+               FEC_Notification__r.FEC_Changed_Status__c, FEC_Notification__r.FEC_Target_Group__c, 
+               FEC_Notification__r.FEC_Customer_Type__c, FEC_Notification__r.FEC_Product_Type__c, 
+               FEC_Notification__r.FEC_Category__c, FEC_Notification__r.FEC_SubCategory__c, 
+               FEC_Notification__r.FEC_SubCode__c, FEC_Notification__r.FEC_Case_Stage__c
+        FROM FEC_Notification_Template_Channel__c
+        WHERE FEC_Notification__r.FEC_Notification_Status__c = true 
           AND FEC_Notification_Channel__r.Name = :FEC_ConstantCommon.EMAIL
-          AND FEC_Target_Group__c = :FEC_ConstantCommon.TARGET_GROUP_CUSTOMER
+          AND FEC_Notification__r.FEC_Target_Group__c = :FEC_ConstantCommon.TARGET_GROUP_CUSTOMER
     ];
 
     // Cấu trúc để lưu vết các bản ghi cần gửi mail và tập hợp ID Template
-    Map<FEC_Routing_Action_History__c, FEC_Notification__c> historyToNotifMap = new Map<FEC_Routing_Action_History__c, FEC_Notification__c>();
+    Map<FEC_Routing_Action_History__c, FEC_Notification_Template_Channel__c> historyToChannelMap = new Map<FEC_Routing_Action_History__c, FEC_Notification_Template_Channel__c>();
     Set<Id> templateIds = new Set<Id>();
 
-    if (activeNotifications.isEmpty()) return;
+    if (activeChannels.isEmpty()) return;
 
     for (FEC_Routing_Action_History__c history : newList) {
         if (history.FEC_Case__c == null || !caseMap.containsKey(history.FEC_Case__c)) continue;
         Case relatedCase = caseMap.get(history.FEC_Case__c);
 
-        for (FEC_Notification__c notif : activeNotifications) {
+        for (FEC_Notification_Template_Channel__c channel : activeChannels) {
+            FEC_Notification__c notif = channel.FEC_Notification__r;
             // Logic so khớp điều kiện (Giữ nguyên logic cũ của bạn)
             Boolean isMatch = (String.isNotBlank(history.FEC_Current_Status__c) && notif.FEC_Current_Status__c?.contains(history.FEC_Current_Status__c?.replaceAll(FEC_ConstantCommon.PATTERN_CLEAN_TEXT, '')) == true)
                 && (String.isNotBlank(history.FEC_Changed_Status__c) && notif.FEC_Changed_Status__c?.contains(history.FEC_Changed_Status__c?.replaceAll(FEC_ConstantCommon.PATTERN_CLEAN_TEXT, '')) == true)
                 && FEC_CommonUltils.notificationCustomerTypeMatchesCase(notif.FEC_Customer_Type__c, relatedCase.FEC_Customer_Type__c)
                 && (notif.FEC_Product_Type__c == relatedCase.FEC_Product_Type__c)
-                && (notif.FEC_Category__c == relatedCase.FEC_Category__c);
-                // && (notif.FEC_SubCategory__c == relatedCase.FEC_SubCategory__c)
-                // && (notif.FEC_SubCode__c == relatedCase.FEC_SubCode__c);
+                && (notif.FEC_Category__c == relatedCase.FEC_Category__c)
+                && (relatedCase.FEC_SubCategory__r != null && notif?.FEC_SubCategory__c?.contains(relatedCase.FEC_SubCategory__r.FEC_Code__c) == true)
+                && (String.isNotBlank(notif?.FEC_SubCode__c) || (relatedCase?.FEC_SubCode__r != null && notif?.FEC_SubCode__c?.contains(relatedCase?.FEC_SubCode__r?.FEC_Code__c) == true) || String.isBlank(relatedCase?.FEC_SubCode__r?.FEC_Code__c));
             //  if (notif.Name == 'TestAutoKHv1_14/4') {
             //     System.debug('--- [sendNotificationEmails] notif name: ' + notif.Name);
             //     System.debug('--- [sendNotificationEmails] history.FEC_Current_Status__c.replaceAll(FEC_ConstantCommon.PATTERN_CLEAN_TEXT, ""): ' + history.FEC_Current_Status__c?.replaceAll(FEC_ConstantCommon.PATTERN_CLEAN_TEXT, ''));
@@ -144,16 +147,16 @@ public without sharing class FEC_RoutingActionHistoryTriggerHandler {
             // }
             
             if (isMatch) {
-                historyToNotifMap.put(history, notif);
-                if (notif.FEC_Notification_Template__c != null) {
-                    templateIds.add(notif.FEC_Notification_Template__c);
+                historyToChannelMap.put(history, channel);
+                if (channel.FEC_Notification_Template__c != null) {
+                    templateIds.add(channel.FEC_Notification_Template__c);
                 }
                 break; 
             }
         }
     }
 
-    if (historyToNotifMap.isEmpty()) return;
+    if (historyToChannelMap.isEmpty()) return;
 
     // 4. Query toàn bộ nội dung Template 1 lần duy nhất (Bulk SOQL)
     Map<Id, FEC_Template__c> templateMap = new Map<Id, FEC_Template__c>();
@@ -169,8 +172,9 @@ public without sharing class FEC_RoutingActionHistoryTriggerHandler {
     List<FEC_Notification.EmailInfo> listEmailsToProcess = new List<FEC_Notification.EmailInfo>();
     List<FEC_Notification.RoutingEmailHistoryInput> routingHistories = new List<FEC_Notification.RoutingEmailHistoryInput>();
 
-    for (FEC_Routing_Action_History__c history : historyToNotifMap.keySet()) {
-        FEC_Notification__c matchedNotification = historyToNotifMap.get(history);
+    for (FEC_Routing_Action_History__c history : historyToChannelMap.keySet()) {
+        FEC_Notification_Template_Channel__c matchedChannel = historyToChannelMap.get(history);
+        FEC_Notification__c matchedNotification = matchedChannel.FEC_Notification__r;
         Case relatedCase = caseMap.get(history.FEC_Case__c);
         
         // Xác định địa chỉ email nhận
@@ -185,7 +189,7 @@ public without sharing class FEC_RoutingActionHistoryTriggerHandler {
         }
 
         // Lấy Template tương ứng từ Map
-        FEC_Template__c template = templateMap.get(matchedNotification.FEC_Notification_Template__c);
+        FEC_Template__c template = templateMap.get(matchedChannel.FEC_Notification_Template__c);
 
          //System.debug('--- [sendNotificationEmails] targetEmailAddress: ' + targetEmailAddress);
          //System.debug('--- [sendNotificationEmails] template: ' + template);
@@ -206,9 +210,9 @@ public without sharing class FEC_RoutingActionHistoryTriggerHandler {
             hi.stageName = relatedCase.FEC_Stage_Name__c;
             hi.templateDisplayName = template.Name;
             hi.channelName =
-                (matchedNotification.FEC_Notification_Channel__r != null &&
-                String.isNotBlank(matchedNotification.FEC_Notification_Channel__r.Name))
-                    ? matchedNotification.FEC_Notification_Channel__r.Name
+                (matchedChannel.FEC_Notification_Channel__r != null &&
+                String.isNotBlank(matchedChannel.FEC_Notification_Channel__r.Name))
+                    ? matchedChannel.FEC_Notification_Channel__r.Name
                     : FEC_ConstantCommon.EMAIL;
             hi.targetGroup = matchedNotification.FEC_Target_Group__c;
             hi.notificationRuleName = matchedNotification.Name;
@@ -301,6 +305,14 @@ public without sharing class FEC_RoutingActionHistoryTriggerHandler {
   public static String buildPendingStatusFromRouteHistoryRow(
     FEC_Routing_Action_History__c history
   ) {
+    return buildPendingStatusFromRouteHistoryRow(history, null);
+  }
+
+  /** @param teamByOwnerId map preload từ getTeamsFromIds (bulk); null = query theo owner trên history. */
+  public static String buildPendingStatusFromRouteHistoryRow(
+    FEC_Routing_Action_History__c history,
+    Map<Id, String> teamByOwnerId
+  ) {
     if (history == null) {
       return FEC_ConstantCommon.CASE_STATUS_PENDING;
     }
@@ -311,18 +323,21 @@ public without sharing class FEC_RoutingActionHistoryTriggerHandler {
       if (updId == null) {
         return FEC_ConstantCommon.CASE_STATUS_PENDING;
       }
-      Map<Id, String> teamMap = getTeamsFromIds(new Set<Id>{ updId });
-      String tUpd = teamMap.get(updId);
-      if (String.isBlank(tUpd)) {
-        return FEC_ConstantCommon.CASE_STATUS_PENDING;
-      }
-      return FEC_ConstantCommon.CASE_STATUS_PENDING_PREFIX + tUpd;
+      return buildPendingStatusFromOwnerIds(null, updId, teamByOwnerId);
     }
-    return buildPendingStatusFromOwnerIds(origId, updId);
+    return buildPendingStatusFromOwnerIds(origId, updId, teamByOwnerId);
   }
 
   /** Hai Id Owner (User hoặc Queue) — Team từ User qua FEC_Main_Queue__c + FEC_Team_Queue__c; Queue trực tiếp. */
   public static String buildPendingStatusFromOwnerIds(Id originalOwnerId, Id updatedOwnerId) {
+    return buildPendingStatusFromOwnerIds(originalOwnerId, updatedOwnerId, null);
+  }
+
+  public static String buildPendingStatusFromOwnerIds(
+    Id originalOwnerId,
+    Id updatedOwnerId,
+    Map<Id, String> teamByOwnerId
+  ) {
     Set<Id> idSet = new Set<Id>();
     if (originalOwnerId != null) {
       idSet.add(originalOwnerId);
@@ -333,7 +348,7 @@ public without sharing class FEC_RoutingActionHistoryTriggerHandler {
     if (idSet.isEmpty()) {
       return FEC_ConstantCommon.CASE_STATUS_PENDING;
     }
-    Map<Id, String> teamMap = getTeamsFromIds(idSet);
+    Map<Id, String> teamMap = teamByOwnerId != null ? teamByOwnerId : getTeamsFromIds(idSet);
     String tOrig = originalOwnerId != null ? teamMap.get(originalOwnerId) : null;
     String tUpd = updatedOwnerId != null ? teamMap.get(updatedOwnerId) : null;
 
@@ -467,6 +482,30 @@ public without sharing class FEC_RoutingActionHistoryTriggerHandler {
     //     FEC_ConstantCommon.DELIMITER_UNDERSCORE
     //   ));
     // }
+  }
+  
+  /** Gom Id owner từ nhiều routing history — dùng trước getTeamsFromIds khi xử lý bulk. */
+  public static Set<Id> collectOwnerIdsFromRouteHistory(
+    Iterable<FEC_Routing_Action_History__c> histories
+  ) {
+    Set<Id> ownerIds = new Set<Id>();
+    if (histories == null) {
+      return ownerIds;
+    }
+    for (FEC_Routing_Action_History__c hist : histories) {
+      if (hist == null) {
+        continue;
+      }
+      Id origId = parseOwnerIdField(hist.FEC_Original_User_Queue_ID__c);
+      Id updId = parseOwnerIdField(hist.FEC_Updated_User_Queue_ID__c);
+      if (origId != null) {
+        ownerIds.add(origId);
+      }
+      if (updId != null) {
+        ownerIds.add(updId);
+      }
+    }
+    return ownerIds;
   }
 
   public static Map<Id, String> getTeamsFromIds(Set<Id> targetIds) {
