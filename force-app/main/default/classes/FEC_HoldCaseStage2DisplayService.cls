@@ -16,8 +16,9 @@ public with sharing class FEC_HoldCaseStage2DisplayService {
     private static final String RESULT_ALREADY_MARKED = 'ALREADY_MARKED';
 
     private static final Set<String> ELIGIBLE_TEAMS = new Set<String>{
-        'CS Support',
-        'CS Customer Care'
+        FEC_ConstantCommon.TEAM_CS_SUPPORT,
+        FEC_ConstantCommon.TEAM_VALUE_CSSUPPORT,
+        FEC_ConstantCommon.TEAM_CS_CUSTOMER_CARE
     };
 
     public class HoldCaseStage2Display {
@@ -39,7 +40,11 @@ public with sharing class FEC_HoldCaseStage2DisplayService {
         Id productTypeId,
         Id categoryId,
         Id subCategoryId,
-        Id subCodeId
+        Id subCodeId,
+        Id baselineProductTypeId,
+        Id baselineCategoryId,
+        Id baselineSubCategoryId,
+        Id baselineSubCodeId
     ) {
         HoldCaseStage2Display out = new HoldCaseStage2Display();
         out.displayMode = MODE_DEFAULT;
@@ -56,6 +61,7 @@ public with sharing class FEC_HoldCaseStage2DisplayService {
             SELECT
                 Id,
                 IsClosed,
+                Status,
                 FEC_Is_Submited__c,
                 FEC_Stage_Name__c,
                 FEC_Team__c,
@@ -91,44 +97,61 @@ public with sharing class FEC_HoldCaseStage2DisplayService {
         Id savedSub = c.FEC_SubCategory__c;
         Id savedCode = c.FEC_SubCode__c;
 
+        // Baseline = bộ NOC trên Case lúc mở màn hình (trước khi fec_CaseEditNOC persist saveCaseNOC).
+        // UI publish CASE_NOC sau persist nên so với Case hiện tại sẽ luôn trùng → không phát hiện đổi NOC.
+        Id comparePt = baselineProductTypeId != null ? baselineProductTypeId : savedPt;
+        Id compareCat = baselineCategoryId != null ? baselineCategoryId : savedCat;
+        Id compareSub = baselineSubCategoryId != null
+            ? baselineSubCategoryId
+            : savedSub;
+        Id compareCode = baselineSubCodeId != null ? baselineSubCodeId : savedCode;
+
         Id currentStageId = c.FEC_Current_Case_Stage__c;
         Id newNocId = resolveNatureOfCaseId(newPt, newCat, newSub, newCode, currentStageId);
-        Id savedNocId = resolveNatureOfCaseId(savedPt, savedCat, savedSub, savedCode, currentStageId);
+        Id baselineNocId = resolveNatureOfCaseId(
+            comparePt,
+            compareCat,
+            compareSub,
+            compareCode,
+            currentStageId
+        );
 
         Boolean newHasAuto = hasHoldConfig(
             HOLD_TYPE_AUTO,
             newNocId,
             currentStageId
         );
-        Boolean savedHadAutoAtStage1 = savedNocId != null &&
-            hasHoldConfigAtStage1(HOLD_TYPE_AUTO, savedNocId, currentStageId);
+        Boolean savedHadAutoAtStage1 = baselineNocId != null &&
+            hasHoldConfigAtStage1(HOLD_TYPE_AUTO, baselineNocId, currentStageId);
         Boolean nocChanged = isNatureOfCaseChanged(
             newPt,
             newCat,
             newSub,
             newCode,
-            savedPt,
-            savedCat,
-            savedSub,
-            savedCode
+            comparePt,
+            compareCat,
+            compareSub,
+            compareCode
         );
 
         String stage1Result = String.isBlank(c.FEC_NFU_Description_Result__c)
             ? null
             : c.FEC_NFU_Description_Result__c.trim();
 
-        // TH1: Stage 1 Auto Hold thất bại — 1.1/1.2 giữ nút khi có Auto; 1.3 chỉ khi đổi NOC sang bộ không Auto
+        // TH1: Stage 1 Auto Hold thất bại — luôn hiện nút Hold Case (đến khi count >= 3); đổi NOC chỉ thêm info
         if (stage1Result == RESULT_ERROR) {
+            Integer userRetryCount = FEC_AutoHoldCaseService.getHoldCaseUserRetryCount(
+                caseId
+            );
+            Boolean maxRetryReached = userRetryCount >= 3;
             out.showHoldCaseSection = true;
+            out.displayMode = MODE_ERROR_RETRY;
             out.errorMessage = System.Label.FEC_MSG_HOLD_CASE_AUTO_FAIL_RETRY;
-            if (newHasAuto) {
-                out.displayMode = MODE_ERROR_RETRY;
-                out.showManualHoldCaseButton = !c.IsClosed;
-            } else if (nocChanged) {
-                out.displayMode = MODE_ERROR_RETRY_INFO_NO_AUTO;
+            out.showManualHoldCaseButton = !c.IsClosed && !maxRetryReached;
+            if (nocChanged && !newHasAuto) {
                 out.infoMessage = System.Label.FEC_MSG_HOLD_CASE_NOC_NO_AUTO;
-                out.showManualHoldCaseButton = false;
             }
+            debugStage2Evaluate(caseId, 'TH1', nocChanged, newHasAuto, out);
             return out;
         }
 
@@ -142,15 +165,49 @@ public with sharing class FEC_HoldCaseStage2DisplayService {
             return out;
         }
 
-        // TH3: Stage 1 không Auto — chỉ khi user chọn NOC mới có Auto tại stage hiện tại
-        if (nocChanged && newHasAuto && !savedHadAutoAtStage1) {
+        // TH3: Stage 1 chọn NOC không có Auto (không có kết quả NFU + baseline không có config Auto Stage 1),
+        // Stage 2 đổi sang NOC có Auto tại stage hiện tại → thông báo xanh + nút Hold Case Auto.
+        if (
+            stage1Result == null &&
+            nocChanged &&
+            newHasAuto &&
+            !savedHadAutoAtStage1
+        ) {
             out.showHoldCaseSection = true;
             out.displayMode = MODE_INFO_HAS_AUTO_BUTTON;
             out.infoMessage = System.Label.FEC_MSG_HOLD_CASE_NOC_HAS_AUTO;
             out.showManualHoldCaseButton = !c.IsClosed;
+            debugStage2Evaluate(caseId, 'TH3', nocChanged, newHasAuto, out);
         }
 
         return out;
+    }
+
+    @TestVisible
+    private static void debugStage2Evaluate(
+        Id caseId,
+        String scenario,
+        Boolean nocChanged,
+        Boolean newHasAuto,
+        HoldCaseStage2Display out
+    ) {
+        System.debug(
+            LoggingLevel.WARN,
+            '[FEC_HoldCaseStage2Display] evaluate ' +
+                scenario +
+                ' caseId=' +
+                caseId +
+                ' nocChanged=' +
+                nocChanged +
+                ' newHasAuto=' +
+                newHasAuto +
+                ' displayMode=' +
+                out.displayMode +
+                ' showHoldCaseSection=' +
+                out.showHoldCaseSection +
+                ' showManualHoldCaseButton=' +
+                out.showManualHoldCaseButton
+        );
     }
 
     /** So sánh bộ NOC trên UI (hoặc fallback Case) với bộ đã lưu trên Case. */
@@ -185,7 +242,29 @@ public with sharing class FEC_HoldCaseStage2DisplayService {
         if (String.isNotBlank(stageName) && stageName.containsIgnoreCase('Stage 1')) {
             return false;
         }
-        return ELIGIBLE_TEAMS.contains(c.FEC_Team__c);
+        return isEligibleHoldCaseTeam(c.FEC_Team__c, c.Status);
+    }
+
+    /** FEC_Team__c có thể là một team hoặc chuỗi ghép (vd. CSSupport_Other). */
+    @TestVisible
+    private static Boolean isEligibleHoldCaseTeam(String team, String caseStatus) {
+        if (String.isNotBlank(team)) {
+            if (ELIGIBLE_TEAMS.contains(team.trim())) {
+                return true;
+            }
+            for (String part : team.split('_')) {
+                if (ELIGIBLE_TEAMS.contains(part.trim())) {
+                    return true;
+                }
+            }
+        }
+        if (String.isNotBlank(caseStatus)) {
+            String status = caseStatus.trim();
+            return status.containsIgnoreCase(FEC_ConstantCommon.TEAM_VALUE_CSSUPPORT) ||
+                status.containsIgnoreCase(FEC_ConstantCommon.TEAM_CS_SUPPORT) ||
+                status.containsIgnoreCase(FEC_ConstantCommon.TEAM_CS_CUSTOMER_CARE);
+        }
+        return false;
     }
 
     @TestVisible

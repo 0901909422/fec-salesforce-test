@@ -17802,7 +17802,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC MSG ERROR</shortDescription>
-        <value>Số hợp đồng/ tài khoản đã chuyển ngưng tác động thất bại</value>
+        <value>Số hợp đồng/ tài khoản đã chuyển ngưng tác động thất bại.</value>
     </labels>
     <labels>
         <fullName>FEC_Transfer_Err_Remark_Null</fullName>
