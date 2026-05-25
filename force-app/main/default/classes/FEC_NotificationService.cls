@@ -13,8 +13,8 @@ public without sharing class FEC_NotificationService {
      *   - FEC_Target_Group__c = 'Internal User'
      *   - FEC_Notification_Status__c = true (Active)
      *   - FEC_Notification_Channel__c.Name = 'Email'
-     *   - FEC_Assigned_to_Queue__c khớp DeveloperName của Queue mới
-     *   - Nature of Case (Product Type, Category, Sub Category, Sub Code) khớp
+     *   - Case vừa được route sang Queue mới qua OwnerId
+     *   - Nature of Case khớp theo các field trên Case: Product Type, Category, Sub Category, Sub Code
      *   - Trong khung giờ Schedule Start Time → Schedule End Time
      * @param newCases Danh sách Case sau update
      * @param oldMap Map chứa giá trị cũ
@@ -27,19 +27,12 @@ public without sharing class FEC_NotificationService {
         System.debug('--- [sendEmailNotifications] routedCases=' + routedCases.size());
         if (routedCases.isEmpty()) return;
 
-        Set<Id> queueIds = new Set<Id>();
-        for (Case c : routedCases) queueIds.add(c.OwnerId);
-
-        Map<String, Id> queueLookup = buildQueueLookupMap(queueIds);
-        System.debug('--- [sendEmailNotifications] queueLookup=' + queueLookup);
-
         String channelEmail = FEC_ConstantCommon.NOTIFICATION_CHANNEL_EMAIL;
         String targetInternal = FEC_ConstantCommon.NOTIFICATION_TARGET_GROUP_INTERNAL;
 
         List<FEC_Notification__c> notifications = [
             SELECT Id,
                    Name,
-                   FEC_Assigned_to_Queue__c,
                    FEC_Receivers__c,
                    FEC_Product_Type__c,
                    FEC_Category__c,
@@ -51,7 +44,6 @@ public without sharing class FEC_NotificationService {
             FROM FEC_Notification__c
             WHERE FEC_Target_Group__c = :targetInternal
               AND FEC_Notification_Status__c = true
-              AND FEC_Assigned_to_Queue__c != null
         ];
         Map<Id, List<FEC_Notification_Template_Channel__c>> templateChannelsByNotificationId = loadTemplateChannels(notifications);
         Map<Id, FEC_Notification_Channel__c> channelById = loadNotificationChannels(templateChannelsByNotificationId);
@@ -60,28 +52,22 @@ public without sharing class FEC_NotificationService {
 
         if (notifications.isEmpty()) return;
 
-        Map<Id, List<FEC_Notification__c>> queueIdToNotifs = new Map<Id, List<FEC_Notification__c>>();
+        List<FEC_Notification__c> eligibleNotifications = new List<FEC_Notification__c>();
         for (FEC_Notification__c n : notifications) {
             if (String.isBlank(n.FEC_Receivers__c)) { System.debug('--- SKIP no receivers: ' + n.Id); continue; }
             List<FEC_Notification_Template_Channel__c> templateChannels = templateChannelsByNotificationId.get(n.Id);
             if (!hasChannelName(templateChannels, channelById, channelEmail)) continue;
-            String assignedVal = n.FEC_Assigned_to_Queue__c.trim();
-            Id matchedQueueId = queueLookup.get(assignedVal);
-            System.debug('--- notif assignedVal=[' + assignedVal + '] matchedQueueId=' + matchedQueueId);
-            if (matchedQueueId == null) continue;
-            if (!queueIdToNotifs.containsKey(matchedQueueId)) {
-                queueIdToNotifs.put(matchedQueueId, new List<FEC_Notification__c>());
-            }
-            queueIdToNotifs.get(matchedQueueId).add(n);
+            eligibleNotifications.add(n);
         }
-        System.debug('--- [sendEmailNotifications] queueIdToNotifs size=' + queueIdToNotifs.size());
+        System.debug('--- [sendEmailNotifications] eligibleNotifications size=' + eligibleNotifications.size());
 
-        if (queueIdToNotifs.isEmpty()) return;
+        if (eligibleNotifications.isEmpty()) return;
 
         Set<Id> routedCaseIds = new Set<Id>();
         for (Case rc : routedCases) {
             routedCaseIds.add(rc.Id);
         }
+
         Map<Id, Case> caseStageById = routedCaseIds.isEmpty()
             ? new Map<Id, Case>()
             : new Map<Id, Case>([
@@ -132,11 +118,8 @@ public without sharing class FEC_NotificationService {
         }
 
         for (Case c : routedCases) {
-            List<FEC_Notification__c> candidates = queueIdToNotifs.get(c.OwnerId);
-            System.debug('--- case=' + c.Id + ' OwnerId=' + c.OwnerId + ' candidates=' + (candidates == null ? 0 : candidates.size()));
-            if (candidates == null || candidates.isEmpty()) continue;
-
-            for (FEC_Notification__c n : candidates) {
+            System.debug('--- case=' + c.Id + ' OwnerId=' + c.OwnerId + ' candidates=' + eligibleNotifications.size());
+            for (FEC_Notification__c n : eligibleNotifications) {
                 Case cNature = caseStageById.get(c.Id);
                 Boolean natureOk = matchesNatureOfCase(cNature != null ? cNature : c, n);
                 Boolean scheduleOk = FEC_CommonUltils.isWithinSchedule(nowTime, n.FEC_Schedule_Start_Time__c, n.FEC_Schedule_End_Time__c);
@@ -224,7 +207,7 @@ public without sharing class FEC_NotificationService {
 
     /**
      * Method Description: Gửi SF App (bell) notification khi Case được route đến Queue khác
-     * Điều kiện lọc tương tự nhưng FEC_Notification_Channel__c.Name = 'Salesforce App'
+     * Điều kiện lọc tương tự, match nature theo các field trên Case
      * FEC_Receivers__c chứa email của User → query UserId để gửi notification
      * Click vào notification → navigate đến Case
      * @param newCases Danh sách Case sau update
@@ -236,18 +219,12 @@ public without sharing class FEC_NotificationService {
         List<Case> routedCases = filterCasesRoutedToQueue(newCases, oldMap);
         if (routedCases.isEmpty()) return;
 
-        Set<Id> queueIds = new Set<Id>();
-        for (Case c : routedCases) queueIds.add(c.OwnerId);
-
-        Map<String, Id> queueLookup = buildQueueLookupMap(queueIds);
-
         String channelSfApp = FEC_ConstantCommon.NOTIFICATION_CHANNEL_SF_APP;
         String targetInternal = FEC_ConstantCommon.NOTIFICATION_TARGET_GROUP_INTERNAL;
 
         List<FEC_Notification__c> notifications = [
             SELECT Id,
                    Name,
-                   FEC_Assigned_to_Queue__c,
                    FEC_Receivers__c,
                    FEC_Product_Type__c,
                    FEC_Category__c,
@@ -259,7 +236,6 @@ public without sharing class FEC_NotificationService {
             FROM FEC_Notification__c
             WHERE FEC_Target_Group__c = :targetInternal
               AND FEC_Notification_Status__c = true
-              AND FEC_Assigned_to_Queue__c != null
         ];
         Map<Id, List<FEC_Notification_Template_Channel__c>> templateChannelsByNotificationId = loadTemplateChannels(notifications);
         Map<Id, FEC_Notification_Channel__c> channelById = loadNotificationChannels(templateChannelsByNotificationId);
@@ -267,26 +243,21 @@ public without sharing class FEC_NotificationService {
 
         if (notifications.isEmpty()) return;
 
-        Map<Id, List<FEC_Notification__c>> queueIdToNotifs = new Map<Id, List<FEC_Notification__c>>();
+        List<FEC_Notification__c> eligibleNotifications = new List<FEC_Notification__c>();
         for (FEC_Notification__c n : notifications) {
             if (String.isBlank(n.FEC_Receivers__c)) continue;
             List<FEC_Notification_Template_Channel__c> templateChannels = templateChannelsByNotificationId.get(n.Id);
             if (!hasChannelName(templateChannels, channelById, channelSfApp)) continue;
-            String assignedVal = n.FEC_Assigned_to_Queue__c.trim();
-            Id matchedQueueId = queueLookup.get(assignedVal);
-            if (matchedQueueId == null) continue;
-            if (!queueIdToNotifs.containsKey(matchedQueueId)) {
-                queueIdToNotifs.put(matchedQueueId, new List<FEC_Notification__c>());
-            }
-            queueIdToNotifs.get(matchedQueueId).add(n);
+            eligibleNotifications.add(n);
         }
 
-        if (queueIdToNotifs.isEmpty()) return;
+        if (eligibleNotifications.isEmpty()) return;
 
         Set<Id> routedCaseIdsSf = new Set<Id>();
         for (Case rc2 : routedCases) {
             routedCaseIdsSf.add(rc2.Id);
         }
+
         Map<Id, Case> caseStageByIdSf = routedCaseIdsSf.isEmpty()
             ? new Map<Id, Case>()
             : new Map<Id, Case>([
@@ -332,10 +303,7 @@ public without sharing class FEC_NotificationService {
         List<FEC_Notification_History__c> sfAppHistoryRows = new List<FEC_Notification_History__c>();
 
         for (Case c : routedCases) {
-            List<FEC_Notification__c> candidates = queueIdToNotifs.get(c.OwnerId);
-            if (candidates == null || candidates.isEmpty()) continue;
-
-            for (FEC_Notification__c n : candidates) {
+            for (FEC_Notification__c n : eligibleNotifications) {
                 Case cNatureSf = caseStageByIdSf.get(c.Id);
                 if (!matchesNatureOfCase(cNatureSf != null ? cNatureSf : c, n)) continue;
                 if (!FEC_CommonUltils.isWithinSchedule(nowTime, n.FEC_Schedule_Start_Time__c, n.FEC_Schedule_End_Time__c)) continue;
