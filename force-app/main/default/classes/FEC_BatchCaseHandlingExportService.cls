@@ -256,6 +256,15 @@ public without sharing class FEC_BatchCaseHandlingExportService {
         Map<Id, FEC_Routing_Action_History__c> latestChangeOwnerByCaseId =
             loadLatestChangeOwnerHistoryByCaseId(pendingCaseIds);
 
+        Map<Id, String> teamByOwnerId = new Map<Id, String>();
+        if (!latestChangeOwnerByCaseId.isEmpty()) {
+            teamByOwnerId = FEC_RoutingActionHistoryTriggerHandler.getTeamsFromIds(
+                FEC_RoutingActionHistoryTriggerHandler.collectOwnerIdsFromRouteHistory(
+                    latestChangeOwnerByCaseId.values()
+                )
+            );
+        }
+
         for (FEC_BatchCaseHandlingExportRow r : rows) {
             if (r == null || r.caseId == null) {
                 continue;
@@ -268,7 +277,10 @@ public without sharing class FEC_BatchCaseHandlingExportService {
             FEC_Routing_Action_History__c hist = latestChangeOwnerByCaseId.get(r.caseId);
             String compactPending;
             if (hist != null) {
-                compactPending = FEC_RoutingActionHistoryTriggerHandler.buildPendingStatusFromRouteHistoryRow(hist);
+                compactPending = FEC_RoutingActionHistoryTriggerHandler.buildPendingStatusFromRouteHistoryRow(
+                    hist,
+                    teamByOwnerId
+                );
             } else if (String.isNotBlank(c.FEC_Team__c)) {
                 compactPending = FEC_ConstantCommon.CASE_STATUS_PENDING_PREFIX + c.FEC_Team__c;
             } else {
