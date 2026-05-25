@@ -43,6 +43,7 @@ export default class Fec_ManualNotification extends NavigationMixin(LightningEle
     @track rawNotifications = [];
     @track _record = null;
     @track _isPreviewOpen = false;
+    @track channelOptions = [];
     SEARCH_PLACEHOLDER = SEARCH_PLACEHOLDER;
 
     label = {
@@ -191,10 +192,10 @@ export default class Fec_ManualNotification extends NavigationMixin(LightningEle
             this.options = data.map(item => {
                 return { label: item.label, value: item.value };
             });
-                        // Reset all selections since the available notifications just changed
             this.selectedNotificationId = null;
             this.selectedTemplateId = null;
             this.selectedChannel = '';
+            this.channelOptions = [];
             this.selectedTargetGroup = '';
             this.targetEmail = '';
             this.searchTerm = '';
@@ -224,12 +225,20 @@ export default class Fec_ManualNotification extends NavigationMixin(LightningEle
         const selectedItem = this.rawNotifications.find(item => item.value === this.selectedNotificationId);
 
         if (selectedItem) {
-            this.selectedChannel = selectedItem.channel;
-            this.selectedTemplateId = selectedItem.templateId;
             this.selectedTargetGroup = selectedItem.targetGroup;
-            this.targetEmail = selectedItem.targetEmail;
-            // Xóa email và reset trạng thái combobox nếu là Internal User
-            if (this.selectedTargetGroup === TARGET_GROUP_INTERNAL_USER || this.selectedChannel === NOTIFICATION_CHANNEL_SF_APP) {
+            
+            if (selectedItem.channels && selectedItem.channels.length > 0) {
+                this.channelOptions = selectedItem.channels.map(ch => {
+                    return { label: ch.channelName, value: ch.channelName };
+                });
+            } else {
+                this.channelOptions = [];
+            }
+            
+            this.selectedChannel = '';
+            this.selectedTemplateId = null;
+            
+            if (this.selectedTargetGroup === TARGET_GROUP_INTERNAL_USER) {
                 this.targetEmail = '';
                 this.searchTerm = '';
                 this.isDropdownOpen = false;
@@ -237,6 +246,27 @@ export default class Fec_ManualNotification extends NavigationMixin(LightningEle
             } else {
                 this.targetEmail = selectedItem.targetEmail;
             }
+        }
+    }
+
+    handleChannelChange(event) {
+        this.selectedChannel = event.detail.value;
+        const selectedItem = this.rawNotifications.find(item => item.value === this.selectedNotificationId);
+        
+        if (selectedItem && selectedItem.channels) {
+            const selectedChannelObj = selectedItem.channels.find(ch => ch.channelName === this.selectedChannel);
+            if (selectedChannelObj) {
+                this.selectedTemplateId = selectedChannelObj.templateId;
+            }
+        }
+        
+        if (this.selectedTargetGroup === TARGET_GROUP_INTERNAL_USER || this.selectedChannel === NOTIFICATION_CHANNEL_SF_APP) {
+            this.targetEmail = '';
+            this.searchTerm = '';
+            this.isDropdownOpen = false;
+            this.userSearchResults = [];
+        } else {
+            this.targetEmail = selectedItem ? selectedItem.targetEmail : '';
         }
     }
 
@@ -315,7 +345,7 @@ export default class Fec_ManualNotification extends NavigationMixin(LightningEle
     }
 
     get isActionDisabled() {
-        return !this.selectedNotificationId;
+        return !this.selectedNotificationId || !this.selectedChannel;
     }
 
     handleClosePreview() {
@@ -398,7 +428,8 @@ export default class Fec_ManualNotification extends NavigationMixin(LightningEle
             caseId: this.recordId,
             templateId: this.selectedTemplateId,
             toEmail: this.targetEmail,
-            fecNotificationConfigId: this.selectedNotificationId
+            fecNotificationConfigId: this.selectedNotificationId,
+            selectedChannel: this.selectedChannel
         })
                 .then(() => {
                     this.dispatchEvent(
@@ -412,6 +443,7 @@ export default class Fec_ManualNotification extends NavigationMixin(LightningEle
                     this.selectedNotificationId = null; 
                     this.selectedTemplateId = null;
                     this.selectedChannel = '';
+                    this.channelOptions = [];
                     this.selectedTargetGroup = '';
                     this.targetEmail = '';
                     this.searchTerm = '';

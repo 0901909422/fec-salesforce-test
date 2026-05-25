@@ -16696,6 +16696,30 @@
         <value>Số hợp đồng/ tài khoản này đã chuyển ngưng tác động thành công</value>
     </labels>
     <labels>
+        <fullName>FEC_MSG_HOLD_CASE_AUTO_FAIL_RETRY</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Auto Hold Case failed at Stage 1 — retry message at Stage 2</shortDescription>
+        <value>Số hợp đồng/ tài khoản đã chuyển ngưng tác động thất bại. Vui lòng thử lại</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_HOLD_CASE_NOC_NO_AUTO</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>New NOC has no Auto Hold Case process</shortDescription>
+        <value>Giá trị Nature of Case mới không thiết lập quy trình Hold Case tự động</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_HOLD_CASE_NOC_HAS_AUTO</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>New NOC has Auto Hold Case process at Stage 2</shortDescription>
+        <value>Giá trị Nature of Case mới có thiết lập quy trình Hold Case tự động</value>
+    </labels>
+    <labels>
         <fullName>FEC_MSG_ERROR</fullName>
         <categories>Label</categories>
         <language>en_US</language>
@@ -17197,5 +17221,12 @@
         <protected>false</protected>
         <shortDescription>Gender Label</shortDescription>
         <value>Buyer Gender</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Channel_Config_Invalid_Selection</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Channel Config invalid selection message</shortDescription>
+        <value>Vui lòng chọn một Channel hợp lệ từ danh sách kết quả tìm kiếm trước khi lưu.</value>
     </labels>
 </CustomLabels>
