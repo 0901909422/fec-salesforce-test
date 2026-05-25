@@ -23,9 +23,11 @@ import { refreshApex } from "@salesforce/apex";
 import FEC_NFU_DESCRIPTION_RESULT from "@salesforce/schema/Case.FEC_NFU_Description_Result__c";
 import getSubProcesses from "@salesforce/apex/FEC_SubProcessService.getSubProcesses";
 import getSubmittedSubProcesses from "@salesforce/apex/FEC_SubProcessService.getSubmittedSubProcesses";
+import evaluateHoldCaseStage2Display from "@salesforce/apex/FEC_HoldCaseStage2DisplayService.evaluate";
 import USER_ID from "@salesforce/user/Id";
 import USER_GROUP_FIELD from "@salesforce/schema/User.FEC_User_Group__c";
 import ID_FIELD from "@salesforce/schema/Case.Id";
+import IS_ROUTING_ACTION_DISPLAY_FIELD from "@salesforce/schema/Case.FEC_Is_Routing_Action_Display__c";
 // PhuongNT add field FEC_Stage_Name__c
 import STAGE_NAME_FIELD from "@salesforce/schema/Case.FEC_Stage_Name__c";
 import {
@@ -724,6 +726,7 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
   showHoldCase = false;
   showHoldCaseManual = false;
   showHoldCaseAuto = false;
+  @track holdCaseStage2Display = null;
 
   //linhdev: Fix jira FECREDIT_CSM_2025_KH-1226 — tách active name theo từng lightning-accordion
   // (tránh trộn "routing-action" với UUID section: active-section-name có tên lạ có thể làm co section).
@@ -813,6 +816,7 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
     } else if (result.error) {
       console.error("[fec_CaseBussiness] wiredCaseHoldResult error", result.error);
     }
+    void this._refreshHoldCaseStage2Display();
   }
 
   @wire(getSubProcesses, {
@@ -829,6 +833,7 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
       if (!this.holdCaseResultOnCase) {
         this.showHoldCaseAuto = !!data.showHoldCaseAuto;
       }
+      void this._refreshHoldCaseStage2Display();
     }
     if (error) {
       console.error("[fec_CaseBussiness] hold case subprocess wire error", error);
@@ -844,12 +849,31 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
   // }
 
   get showHoldCaseSection() {
+    if (this.holdCaseStage2Display?.showHoldCaseSection) {
+      return true;
+    }
     return (
       this.showHoldCaseAuto ||
       this.showHoldCaseManual ||
       this.holdCaseResultOnCase ||
       !!this.holdCaseResultOverride
     );
+  }
+
+  get holdCaseStage2DisplayMode() {
+    return this.holdCaseStage2Display?.displayMode ?? "DEFAULT";
+  }
+
+  get holdCaseStage2InfoMessage() {
+    return this.holdCaseStage2Display?.infoMessage ?? null;
+  }
+
+  get holdCaseStage2ErrorMessage() {
+    return this.holdCaseStage2Display?.errorMessage ?? null;
+  }
+
+  get holdCaseStage2ShowManualButton() {
+    return this.holdCaseStage2Display?.showManualHoldCaseButton === true;
   }
 
   get iconHideConst() {
@@ -972,10 +996,12 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
   }
 
   updateRoutingActionDisplay(field) {
-    updateRoutingActionDisplayApex({
-      caseId: this.recordId,
-      routingActionDisplay: field
-    })
+    let fields = {};
+    fields[ID_FIELD.fieldApiName] = this.recordId;
+    fields[IS_ROUTING_ACTION_DISPLAY_FIELD.fieldApiName] = field;
+    let recordInput = { fields };
+
+    updateRecord(recordInput)
       .then(() => {
         console.log("Record updated successfully");
       })
@@ -2594,6 +2620,15 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
         this._prepareRoutingSectionForDisplay();
         this._syncActiveRoutingSection();
         this.businessLoaded = true;
+        if (
+          productTypeId == null &&
+          categoryId == null &&
+          subCategoryId == null &&
+          subCodeId == null
+        ) {
+          this._syncHoldCaseNocParamsFromBusiness();
+        }
+        void this._refreshHoldCaseStage2Display();
         this._syncRemovePhoneLockAfterRevert();
         //linhdev: Fix jira FECREDIT_CSM_2025_KH-1226 — mỗi accordion chỉ nhận đúng tên section của nó.
         this.activeMainSectionlst = [...sectionlst];
@@ -5119,6 +5154,88 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
     this._scheduleRefreshFileUploadCards();
   }
 
+  /** Đồng bộ holdCaseNocParams từ business sau getData (fallback khi chưa có CASE_NOC message). */
+  _syncHoldCaseNocParamsFromBusiness() {
+    if (!this.recordId || !this.business) {
+      return;
+    }
+    const sections = this.business.sectionlst;
+    if (!Array.isArray(sections)) {
+      return;
+    }
+    let productTypeId;
+    let categoryId;
+    let subCategoryId;
+    let subCodeId;
+    for (const section of sections) {
+      const fields = section?.fieldlst;
+      if (!Array.isArray(fields)) {
+        continue;
+      }
+      for (const field of fields) {
+        const api = field?.apiName;
+        const val = field?.value;
+        if (!val) {
+          continue;
+        }
+        if (api === "FEC_Product_Type__c") {
+          productTypeId = val;
+        } else if (api === "FEC_Category__c") {
+          categoryId = val;
+        } else if (api === "FEC_SubCategory__c") {
+          subCategoryId = val;
+        } else if (api === "FEC_SubCode__c") {
+          subCodeId = val;
+        }
+      }
+    }
+    if (!productTypeId && !categoryId && !subCategoryId) {
+      return;
+    }
+    this.holdCaseNocParams = {
+      recordId: this.recordId,
+      productTypeId: productTypeId || null,
+      categoryId: categoryId || null,
+      subCategoryId: subCategoryId || null,
+      subCodeId: subCodeId ?? null,
+    };
+  }
+
+  /**
+   * Stage 2+ (CS Support / CS Customer Care): đánh giá hiển thị Hold Case khi đổi NOC.
+   */
+  async _refreshHoldCaseStage2Display() {
+    if (!this.recordId) {
+      this.holdCaseStage2Display = null;
+      return;
+    }
+    // Apex kiểm tra FEC_Is_Submited__c; chỉ bỏ qua khi business đã load và chắc chắn Stage 1
+    if (this.business && this.business.isSubmited !== true) {
+      this.holdCaseStage2Display = null;
+      return;
+    }
+    const p = this.holdCaseNocParams || {};
+    try {
+      const result = await evaluateHoldCaseStage2Display({
+        caseId: this.recordId,
+        productTypeId: p.productTypeId || null,
+        categoryId: p.categoryId || null,
+        subCategoryId: p.subCategoryId || null,
+        subCodeId: p.subCodeId ?? null,
+      });
+      this.holdCaseStage2Display = result;
+      if (result?.showHoldCaseSection) {
+        this.showHoldCase = true;
+        this.showHoldCaseAuto = true;
+        this._ensureCaseInformationHoldCaseFlags();
+        this.business = { ...this.business };
+      }
+    } catch (error) {
+      console.error("[fec_CaseBussiness] _refreshHoldCaseStage2Display", error);
+      this.holdCaseStage2Display = null;
+    }
+  }
+
   /** Manual Hold Case (Quick Action) báo refresh qua sessionStorage sau TH1/TH2/TH3. */
   _checkHoldCaseRefreshFlag() {
     if (!this.recordId) {
@@ -5207,11 +5324,13 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
         this._ensureCaseInformationHoldCaseFlags();
         this.business = { ...this.business };
       }
-      const autoCmp = this.template.querySelector("c-fec_hold-case-auto");
-      if (autoCmp?.refresh) {
-        return autoCmp.refresh();
-      }
-      return undefined;
+      return this._refreshHoldCaseStage2Display().then(() => {
+        const autoCmp = this.template.querySelector("c-fec_hold-case-auto");
+        if (autoCmp?.refresh) {
+          return autoCmp.refresh();
+        }
+        return undefined;
+      });
     });
   }
 

@@ -249,7 +249,7 @@ public without sharing class FEC_AutoHoldCaseService {
             null,
             null,
             null,
-            System.Label.FEC_MSG_ERROR
+            System.Label.FEC_MSG_HOLD_CASE_AUTO_FAIL_RETRY
         );
     }
 

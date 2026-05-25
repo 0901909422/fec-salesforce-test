@@ -1,8 +1,9 @@
 /**
  * Ghi đè hiển thị / Route to Team & Queue theo nghiệp vụ:
- * 1) RC27 tại Stage 2 → Stage 3: Team/Queue theo FEC_Stage_Change__c (SP / CS Support), ưu tiên hơn Block Code.
- * 2) Customer History Block Code → Team OM, queue FEC_Day_2_Check.
- * 3) RC27 + sibling RC09 trên Interaction → Team SP, queue FEC_DQ_CS_Support.
+ * 1) RC27 tại Stage 2 → Stage 3: Team/Queue theo FEC_Stage_Change__c (Action Route to), ưu tiên hơn Block Code.
+ * 2) RC27 + blockCode/blockCode1 null + không sibling RC09 → Stage Change OM / FEC_Day_2_Check (bỏ qua Stage 1→3 SP).
+ * 3) Customer History Block Code → Team OM, queue FEC_Day_2_Check.
+ * 4) RC27 + không block ép OM + sibling RC09 → Stage Change SP / FEC_DQ_CS_Support (Stage 1→3).
  * Tách khỏi FEC_CaseBusinessService để dễ bảo trì.
  * @author Toannd61
  */
@@ -244,6 +245,271 @@ public without sharing class FEC_BlockCodeRoutingService {
     return isCaseAtStageTwo(c) && isCurrentCaseRc27ByCaseFields(c);
   }
 
+  /**
+   * RC27.01/02: blockCode/blockCode1 không ép OM trên Customer History và không sibling RC09.01/02.
+   * Chỉ dùng Stage Change OM + Day 2 (tương đương bỏ qua dòng Stage 1→3 SP trên master data).
+   */
+  @TestVisible
+  public static Boolean isRc27DefaultOmDay2Routing(
+    Case c,
+    String categoryId,
+    String subCategoryId,
+    String subCodeId
+  ) {
+    if (!isCurrentCaseRc27ByCurrentNoc(c, categoryId, subCategoryId, subCodeId)) {
+      return false;
+    }
+    if (isCustomerHistoryForcedOmDay2(c?.FEC_Account_or_Contract__c)) {
+      return false;
+    }
+    return !hasSiblingRc09CasesOnInteraction(c.FEC_Interaction__c, c.Id);
+  }
+
+  @TestVisible
+  public static Boolean isRc27DefaultOmDay2Routing(Case c) {
+    if (c == null) {
+      return false;
+    }
+    return isRc27DefaultOmDay2Routing(
+      c,
+      c.FEC_Category__c != null ? String.valueOf(c.FEC_Category__c) : null,
+      c.FEC_SubCategory__c != null ? String.valueOf(c.FEC_SubCategory__c) : null,
+      c.FEC_SubCode__c != null ? String.valueOf(c.FEC_SubCode__c) : null
+    );
+  }
+
+  @TestVisible
+  private static Boolean isRc27DefaultOmDay2StageChangeRow(FEC_Stage_Change__c sc) {
+    if (sc == null) {
+      return false;
+    }
+    return TEAM_DISPLAY_OM.equals(trimSafe(sc.FEC_Team_User_Group__c)) &&
+      FEC_ConstantCommon.QUEUE_DAY_2_CHECK_NAME.equals(trimSafe(sc.FEC_Next_Queue__c));
+  }
+
+  /** Chọn dòng OM/Day 2; bỏ qua dòng Stage 1→3 SP (FEC_DQ_CS_Support). */
+  @TestVisible
+  public static FEC_Stage_Change__c selectRc27DefaultOmDay2FromList(
+    List<FEC_Stage_Change__c> candidates
+  ) {
+    if (candidates == null || candidates.isEmpty()) {
+      return null;
+    }
+    for (FEC_Stage_Change__c sc : candidates) {
+      if (isRc27DefaultOmDay2StageChangeRow(sc)) {
+        return sc;
+      }
+    }
+    return null;
+  }
+
+  @TestVisible
+  public static FEC_Stage_Change__c queryRc27DefaultOmDay2StageChange(
+    Id previousStageId,
+    Id routeToActionId
+  ) {
+    if (previousStageId == null) {
+      return null;
+    }
+    List<FEC_Stage_Change__c> rows;
+    if (routeToActionId != null) {
+      rows = [
+        SELECT
+          Id,
+          FEC_Previous_Stage__c,
+          FEC_Previous_Stage__r.FEC_Code__c,
+          FEC_Next_Stage__c,
+          FEC_Next_Queue__c,
+          FEC_Team_User_Group__c
+        FROM FEC_Stage_Change__c
+        WHERE
+          FEC_Previous_Stage__c = :previousStageId
+          AND FEC_Active__c = TRUE
+          AND FEC_IsReverted__c = FALSE
+          AND FEC_Action_Button__c = :routeToActionId
+          AND FEC_Team_User_Group__c = :TEAM_DISPLAY_OM
+          AND FEC_Next_Queue__c = :FEC_ConstantCommon.QUEUE_DAY_2_CHECK_NAME
+        LIMIT 1
+      ];
+    } else {
+      rows = [
+        SELECT
+          Id,
+          FEC_Previous_Stage__c,
+          FEC_Previous_Stage__r.FEC_Code__c,
+          FEC_Next_Stage__c,
+          FEC_Next_Queue__c,
+          FEC_Team_User_Group__c
+        FROM FEC_Stage_Change__c
+        WHERE
+          FEC_Previous_Stage__c = :previousStageId
+          AND FEC_Active__c = TRUE
+          AND FEC_IsReverted__c = FALSE
+          AND FEC_Team_User_Group__c = :TEAM_DISPLAY_OM
+          AND FEC_Next_Queue__c = :FEC_ConstantCommon.QUEUE_DAY_2_CHECK_NAME
+        LIMIT 1
+      ];
+    }
+    return rows.isEmpty() ? null : rows[0];
+  }
+
+  /**
+   * RC27 + không block ép OM (null/khác F/S/G/N) + có sibling RC09.01/02 → dòng Stage 1→3 SP/DQ.
+   */
+  @TestVisible
+  public static Boolean isRc27SiblingSpDqStageThreeRouting(
+    Case c,
+    String categoryId,
+    String subCategoryId,
+    String subCodeId
+  ) {
+    if (!isCurrentCaseRc27ByCurrentNoc(c, categoryId, subCategoryId, subCodeId)) {
+      return false;
+    }
+    if (isCustomerHistoryForcedOmDay2(c?.FEC_Account_or_Contract__c)) {
+      return false;
+    }
+    return hasSiblingRc09CasesOnInteraction(c.FEC_Interaction__c, c.Id);
+  }
+
+  @TestVisible
+  public static Boolean isRc27SiblingSpDqStageThreeRouting(Case c) {
+    if (c == null) {
+      return false;
+    }
+    return isRc27SiblingSpDqStageThreeRouting(
+      c,
+      c.FEC_Category__c != null ? String.valueOf(c.FEC_Category__c) : null,
+      c.FEC_SubCategory__c != null ? String.valueOf(c.FEC_SubCategory__c) : null,
+      c.FEC_SubCode__c != null ? String.valueOf(c.FEC_SubCode__c) : null
+    );
+  }
+
+  @TestVisible
+  private static Boolean isRc27SiblingSpDqStageChangeRow(FEC_Stage_Change__c sc) {
+    if (sc == null) {
+      return false;
+    }
+    return TEAM_DISPLAY_SP.equals(trimSafe(sc.FEC_Team_User_Group__c)) &&
+      FEC_ConstantCommon.QUEUE_DQ_CS_SUPPORT_NAME.equals(trimSafe(sc.FEC_Next_Queue__c));
+  }
+
+  @TestVisible
+  public static FEC_Stage_Change__c selectRc27SiblingSpDqStageThreeFromList(
+    List<FEC_Stage_Change__c> candidates
+  ) {
+    if (candidates == null || candidates.isEmpty()) {
+      return null;
+    }
+    for (FEC_Stage_Change__c sc : candidates) {
+      if (isRc27SiblingSpDqStageChangeRow(sc)) {
+        return sc;
+      }
+    }
+    return null;
+  }
+
+  @TestVisible
+  public static FEC_Stage_Change__c queryRc27SiblingSpDqStageThreeStageChange(
+    Id previousStageId,
+    Id routeToActionId
+  ) {
+    if (previousStageId == null) {
+      return null;
+    }
+    List<FEC_Stage_Change__c> rows;
+    if (routeToActionId != null) {
+      rows = [
+        SELECT
+          Id,
+          FEC_Previous_Stage__c,
+          FEC_Previous_Stage__r.FEC_Code__c,
+          FEC_Next_Stage__c,
+          FEC_Next_Queue__c,
+          FEC_Team_User_Group__c
+        FROM FEC_Stage_Change__c
+        WHERE
+          FEC_Previous_Stage__c = :previousStageId
+          AND FEC_Active__c = TRUE
+          AND FEC_IsReverted__c = FALSE
+          AND FEC_Action_Button__c = :routeToActionId
+          AND FEC_Team_User_Group__c = :TEAM_DISPLAY_SP
+          AND FEC_Next_Queue__c = :FEC_ConstantCommon.QUEUE_DQ_CS_SUPPORT_NAME
+        LIMIT 1
+      ];
+    } else {
+      rows = [
+        SELECT
+          Id,
+          FEC_Previous_Stage__c,
+          FEC_Previous_Stage__r.FEC_Code__c,
+          FEC_Next_Stage__c,
+          FEC_Next_Queue__c,
+          FEC_Team_User_Group__c
+        FROM FEC_Stage_Change__c
+        WHERE
+          FEC_Previous_Stage__c = :previousStageId
+          AND FEC_Active__c = TRUE
+          AND FEC_IsReverted__c = FALSE
+          AND FEC_Team_User_Group__c = :TEAM_DISPLAY_SP
+          AND FEC_Next_Queue__c = :FEC_ConstantCommon.QUEUE_DQ_CS_SUPPORT_NAME
+        LIMIT 1
+      ];
+    }
+    return rows.isEmpty() ? null : rows[0];
+  }
+
+  private static void applyRc27SiblingSpDqStageThreeFromStageChange(
+    FEC_CaseBusinessService.Business businessResult,
+    Id currentStageId,
+    Id routeToActionId
+  ) {
+    applyStageChangeTeamQueueToBusiness(
+      businessResult,
+      queryRc27SiblingSpDqStageThreeStageChange(currentStageId, routeToActionId)
+    );
+  }
+
+  private static void applyStageChangeTeamQueueToBusiness(
+    FEC_CaseBusinessService.Business businessResult,
+    FEC_Stage_Change__c stageChange
+  ) {
+    if (businessResult == null || stageChange == null) {
+      return;
+    }
+    if (String.isNotBlank(stageChange.FEC_Team_User_Group__c)) {
+      businessResult.nextTeam = stageChange.FEC_Team_User_Group__c;
+    }
+    if (String.isNotBlank(stageChange.FEC_Next_Queue__c)) {
+      List<Group> ql = [
+        SELECT Id, Name
+        FROM Group
+        WHERE
+          Type = :FEC_ConstantCommon.GROUP_TYPE_QUEUE
+          AND DeveloperName = :stageChange.FEC_Next_Queue__c
+        LIMIT 1
+      ];
+      if (!ql.isEmpty()) {
+        businessResult.nextQueue = new FEC_CommonUltils.PicklistOption(
+          ql[0].Name,
+          (String) ql[0].Id,
+          null
+        );
+      }
+    }
+  }
+
+  private static void applyRc27DefaultOmDay2FromStageChange(
+    FEC_CaseBusinessService.Business businessResult,
+    Id currentStageId,
+    Id routeToActionId
+  ) {
+    applyStageChangeTeamQueueToBusiness(
+      businessResult,
+      queryRc27DefaultOmDay2StageChange(currentStageId, routeToActionId)
+    );
+  }
+
   private static void applyRc27StageTwoToThreeFromStageChange(
     FEC_CaseBusinessService.Business businessResult,
     Id currentStageId,
@@ -266,41 +532,9 @@ public without sharing class FEC_BlockCodeRoutingService {
       ];
     }
     if (stageChangelst.isEmpty()) {
-      stageChangelst = [
-        SELECT FEC_Team_User_Group__c, FEC_Next_Queue__c
-        FROM FEC_Stage_Change__c
-        WHERE
-          FEC_Previous_Stage__c = :currentStageId
-          AND FEC_Active__c = TRUE
-          AND FEC_Team_User_Group__c = :TEAM_DISPLAY_SP
-          AND FEC_IsReverted__c = false
-        LIMIT 1
-      ];
-    }
-    if (stageChangelst.isEmpty()) {
       return;
     }
-    FEC_Stage_Change__c stageChange = stageChangelst[0];
-    if (String.isNotBlank(stageChange.FEC_Team_User_Group__c)) {
-      businessResult.nextTeam = stageChange.FEC_Team_User_Group__c;
-    }
-    if (String.isNotBlank(stageChange.FEC_Next_Queue__c)) {
-      List<Group> ql = [
-        SELECT Id, Name
-        FROM Group
-        WHERE
-          Type = :FEC_ConstantCommon.GROUP_TYPE_QUEUE
-          AND DeveloperName = :stageChange.FEC_Next_Queue__c
-        LIMIT 1
-      ];
-      if (!ql.isEmpty()) {
-        businessResult.nextQueue = new FEC_CommonUltils.PicklistOption(
-          ql[0].Name,
-          (String) ql[0].Id,
-          null
-        );
-      }
-    }
+    applyStageChangeTeamQueueToBusiness(businessResult, stageChangelst[0]);
   }
 
   /** @author Toannd61 */
@@ -335,8 +569,8 @@ public without sharing class FEC_BlockCodeRoutingService {
   }
 
   /**
-   * Sau khi getByCase đã tính nextTeam/nextQueue — ưu tiên RC27 Stage2→3 (theo Stage Change),
-   * rồi Block Code (OM/Day 2), rồi RC27 + sibling RC09.
+   * Sau khi getByCase đã tính nextTeam/nextQueue — RC27 Stage2→3, RC27 default OM/Day2,
+   * Block Code (OM/Day 2), RC27 + sibling RC09.
    * Dùng NOC hiện tại trên màn (category/subcategory/subcode Id), không phụ thuộc Case đã save.
    * @author Toannd61
    */
@@ -390,6 +624,21 @@ public without sharing class FEC_BlockCodeRoutingService {
       );
       return;
     }
+    if (
+      isRc27DefaultOmDay2Routing(
+        theCase,
+        currentCategoryId,
+        currentSubCategoryId,
+        currentSubCodeId
+      )
+    ) {
+      applyRc27DefaultOmDay2FromStageChange(
+        businessResult,
+        currentStageId,
+        routeToActionId
+      );
+      return;
+    }
     if (isCustomerHistoryForcedOmDay2(theCase.FEC_Account_or_Contract__c)) {
       List<Group> ql = [
         SELECT Id, Name
@@ -409,29 +658,18 @@ public without sharing class FEC_BlockCodeRoutingService {
       return;
     }
     if (
-      isCurrentCaseRc27ByCurrentNoc(
+      isRc27SiblingSpDqStageThreeRouting(
         theCase,
         currentCategoryId,
         currentSubCategoryId,
         currentSubCodeId
-      ) &&
-      hasSiblingRc09CasesOnInteraction(theCase.FEC_Interaction__c, theCase.Id)
+      )
     ) {
-      List<Group> ql = [
-        SELECT Id, Name
-        FROM Group
-        WHERE Type = :FEC_ConstantCommon.GROUP_TYPE_QUEUE
-          AND DeveloperName = :FEC_ConstantCommon.QUEUE_DQ_CS_SUPPORT_NAME
-        LIMIT 1
-      ];
-      if (!ql.isEmpty()) {
-        businessResult.nextTeam = TEAM_DISPLAY_SP;
-        businessResult.nextQueue = new FEC_CommonUltils.PicklistOption(
-          ql[0].Name,
-          (String) ql[0].Id,
-          null
-        );
-      }
+      applyRc27SiblingSpDqStageThreeFromStageChange(
+        businessResult,
+        currentStageId,
+        routeToActionId
+      );
       return;
     }
   }
