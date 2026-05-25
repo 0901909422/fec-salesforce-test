@@ -1048,7 +1048,9 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
 
   /** Áp dụng routing (Team/Queue + action) dựa trên giá trị đã lưu của FEC_RD_Payment_Contract_Assessment__c khi load form. */
   _applyRdPaymentContractAssessmentRouting() {
-    if (!this.isEdit) return;
+    if (!this.isEdit || !this._isRdPaymentSubCode || isMrcRl05Branch(this.business)) {
+      return;
+    }
     const assessmentVal = this._getCaseFieldValue(FIELD_RD_PAYMENT_CONTRACT_ASSESSMENT);
     if (!assessmentVal || assessmentVal === STR_EMPTY) {
       return;
@@ -1404,6 +1406,26 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
     if (saved && !String(this._mrcDeliveryOptionDraft ?? STR_EMPTY).trim()) {
       this._mrcDeliveryOptionDraft = saved;
     }
+  }
+
+  _resolveMrcDeliveryOptionForRouting() {
+    const draft = String(this._mrcDeliveryOptionDraft ?? STR_EMPTY).trim();
+    if (draft) {
+      return draft;
+    }
+    const panel = this._getMrcReturnPanelEl();
+    const deliveryForm = panel?.getDeliveryForm?.();
+    if (deliveryForm && typeof deliveryForm.buildPayload === "function") {
+      try {
+        const combined = deliveryForm.buildPayload()?.deliveryOptionCombined;
+        if (combined && String(combined).trim()) {
+          return String(combined).trim();
+        }
+      } catch (ignore) {
+        /* panel chưa mount */
+      }
+    }
+    return this._getCaseFieldValue(Fec_CaseBussiness.DOC_REQ_FIELD_DELIVERY);
   }
 
   handleMrcReturnHandlingOptionChange(event) {
@@ -1945,7 +1967,7 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
         this.business,
         this.mrcReturnHandlingOptionValue,
         this.mrcReturnCustomerConfirmationValue,
-        this._mrcDeliveryOptionDraft,
+        this._resolveMrcDeliveryOptionForRouting(),
       );
       if (ctx.eligible && hasAction(ACTION_ROUTE_TO)) {
         this._setActionValueByCode(ACTION_ROUTE_TO);
@@ -2317,8 +2339,7 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
         );
         this._documentRequestDeliveryEligible = docReqRoutingCtx.deliveryEligible;
         this._syncHasRoutingAction();
-        this._mrcReturnStageChangeRoutingActive =
-          shouldActivateMrcReturnRouting(this.business);
+        this._mrcReturnStageChangeRoutingActive = false;
 
         // Ưu tiên draft đã lưu, nếu không có hoặc không hợp lệ thì dùng option đầu tiên
         const draftCode = this.business.draftRoutingActionCode;
@@ -2975,7 +2996,9 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
     if (
       fieldName === FIELD_RD_PAYMENT_CONTRACT_ASSESSMENT &&
       value &&
-      value !== STR_EMPTY
+      value !== STR_EMPTY &&
+      this._isRdPaymentSubCode &&
+      !isMrcRl05Branch(this.business)
     ) {
       applyRdPaymentAssessmentRoutingImmediate(this, value);
       void this._applyRdPaymentRoutingByAssessment(value);
@@ -5452,7 +5475,7 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
       this.business,
       this.mrcReturnHandlingOptionValue,
       this.mrcReturnCustomerConfirmationValue,
-      this._mrcDeliveryOptionDraft,
+      this._resolveMrcDeliveryOptionForRouting(),
     );
 
     if (!ctx.eligible || !ctx.team) {
