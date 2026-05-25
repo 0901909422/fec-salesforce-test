@@ -24,7 +24,7 @@ public with sharing class FEC_CheckEligibleController {
         }
 
         List<FEC_Customer_History__c> chList = [
-            SELECT FEC_National_ID_Passport_ID__c, FEC_Primary_Phone__c
+            SELECT FEC_Search_Result_National_ID__c, FEC_Primary_Phone__c
             FROM FEC_Customer_History__c
             WHERE Id = :chId
             LIMIT 1
@@ -35,7 +35,7 @@ public with sharing class FEC_CheckEligibleController {
         }
 
         FEC_Customer_History__c ch = chList[0];
-        String nationalId = ch.FEC_National_ID_Passport_ID__c != null ? ch.FEC_National_ID_Passport_ID__c.trim() : null;
+        String nationalId = resolveNationalIdFromSearchResult(ch.FEC_Search_Result_National_ID__c);
         if (String.isBlank(nationalId)) {
             return errMessageResponse(System.Label.FEC_MSG_Error_API_Label);
         }
@@ -76,6 +76,67 @@ public with sharing class FEC_CheckEligibleController {
 
     private static FEC_CheckEligibleCallout.CheckEligibleResponse errMessageResponse(String userMessage) {
         return errResponse('CASE_RESOLUTION', userMessage);
+    }
+
+    private static String resolveNationalIdFromSearchResult(String searchResultNationalId) {
+        List<String> parts = parseSearchResultNationalIds(searchResultNationalId);
+        if (parts.isEmpty()) {
+            return null;
+        }
+        if (parts.size() == 1) {
+            return parts[0];
+        }
+
+        String nationalId1 = parts[0];
+        String nationalId2 = parts[1];
+        String format1 = getNationalIdFormat(nationalId1);
+        String format2 = getNationalIdFormat(nationalId2);
+
+        if (format1 != format2) {
+            if (isCccd(nationalId1)) {
+                return nationalId1;
+            }
+            if (isCccd(nationalId2)) {
+                return nationalId2;
+            }
+            return nationalId1;
+        }
+        return nationalId1;
+    }
+
+    private static List<String> parseSearchResultNationalIds(String raw) {
+        List<String> nationalIds = new List<String>();
+        if (String.isBlank(raw)) {
+            return nationalIds;
+        }
+        for (String part : raw.split('[,;\\n\\r]+')) {
+            String trimmed = part != null ? part.trim() : null;
+            if (String.isNotBlank(trimmed)) {
+                nationalIds.add(trimmed);
+            }
+        }
+        return nationalIds;
+    }
+
+    private static String getNationalIdFormat(String value) {
+        if (String.isBlank(value)) {
+            return 'OTHER';
+        }
+        String t = value.trim();
+        if (Pattern.matches('^\\d{12}$', t)) {
+            return 'CCCD';
+        }
+        if (Pattern.matches('^\\d{9}$', t)) {
+            return 'CMND';
+        }
+        if (Pattern.matches('^[A-Z]\\d{7}$', t)) {
+            return 'PASSPORT';
+        }
+        return 'OTHER';
+    }
+
+    private static Boolean isCccd(String value) {
+        return String.isNotBlank(value) && Pattern.matches('^\\d{12}$', value.trim());
     }
 
     /**
