@@ -6,6 +6,7 @@ import importBatchData from "@salesforce/apex/FEC_BatchCaseCreationController.im
 import saveResultFile from "@salesforce/apex/FEC_BatchCaseCreationController.saveResultFile";
 import logFailedImport from "@salesforce/apex/FEC_BatchCaseCreationController.logFailedImport";
 import getTemplateOptions from "@salesforce/apex/FEC_BatchCaseCreationController.getTemplateOptions";
+import runPendingImportBatch from "@salesforce/apex/FEC_BatchCaseCreationController.runPendingImportBatch";
 import FEC_Batch_RequestTimeout from "@salesforce/label/c.FEC_Batch_RequestTimeout";
 import FEC_Batch_FileExcelXlsxOnly from "@salesforce/label/c.FEC_Batch_FileExcelXlsxOnly";
 import FEC_Batch_FileMaxSize150MB from "@salesforce/label/c.FEC_Batch_FileMaxSize150MB";
@@ -827,6 +828,27 @@ export default class Fec_BatchCaseCreation extends LightningElement {
 
   async handleRefresh() {
     await this.refreshRows();
+  }
+
+  async handleProcessPending() {
+    this.isLoading = true;
+    try {
+      const count = await runPendingImportBatch();
+      const processed = Number(count) || 0;
+      this.showSuccess(
+        processed > 1 ? "Processing started" : "Processing completed",
+        processed > 1
+          ? `Đang xử lý ${processed} file Uploaded (từng file một). Refresh sau 1–2 phút.`
+          : processed > 0
+            ? "Đã xử lý file Uploaded. Vui lòng Refresh để xem kết quả."
+            : "Không có file Uploaded nào cần xử lý."
+      );
+      await this.refreshRows(false);
+    } catch (error) {
+      this.showError("Process failed", extractErrorMessage(error));
+    } finally {
+      this.isLoading = false;
+    }
   }
 
   readFileAsBase64(file) {

@@ -8,6 +8,19 @@ private class FEC_BatchCaseCreationSchedulerTest {
   }
 
   @IsTest
+  static void runPendingImportBatch_processesUploadedRows() {
+    FEC_Batch_Case_Creation__c batchRow = new FEC_Batch_Case_Creation__c(
+      FEC_File_Name__c = 'batch_test.xlsx',
+      FEC_Status__c = FEC_ConstantCommon.UPLOADED_STATUS
+    );
+    insert batchRow;
+    Test.startTest();
+    Integer count = FEC_BatchCaseCreationController.runPendingImportBatch();
+    Test.stopTest();
+    System.assertEquals(1, count);
+  }
+
+  @IsTest
   static void attachAndLoadPendingPayload() {
     FEC_Batch_Case_Creation__c batchRow = new FEC_Batch_Case_Creation__c(
       FEC_File_Name__c = 'batch_test.xlsx',

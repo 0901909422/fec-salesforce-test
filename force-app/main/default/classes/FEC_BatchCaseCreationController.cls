@@ -1,4 +1,4 @@
-public with sharing class FEC_BatchCaseCreationController {
+public without sharing class FEC_BatchCaseCreationController {
     private static final String OBJECT_API_NAME = 'FEC_Batch_Case_Creation__c';
     private static final String TEMPLATE_OBJECT_API_NAME = 'FEC_Template_Import__c';
     private static final String TEMPLATE_APPLICABLE_VALUE = 'Batch Case Creation';
@@ -362,6 +362,7 @@ public with sharing class FEC_BatchCaseCreationController {
             out.batchRecordId = batchId;
             out.contentDocumentId = insertedCv.ContentDocumentId;
             out.status = 'Uploaded';
+            enqueuePendingImport(batchId);
             return out;
         } catch (Exception ex) {
             if (batchRow != null && batchRow.get('Id') != null) {
@@ -396,20 +397,25 @@ public with sharing class FEC_BatchCaseCreationController {
 
         Map<String, Schema.SObjectField> batchFieldMap = batchType.getDescribe().fields.getMap();
         String statusField = FEC_BatchImportCommon.pickField(batchFieldMap, new List<String>{ 'FEC_Status__c' });
-        String fileField = FEC_BatchImportCommon.pickField(batchFieldMap, new List<String>{ 'FEC_File_Name__c', 'Name' });
+        String fileNameField = FEC_BatchImportCommon.pickField(batchFieldMap, new List<String>{ 'FEC_File_Name__c' });
         if (String.isBlank(statusField)) {
             return;
         }
 
+        List<String> selectParts = new List<String>{ 'Id', 'Name', statusField };
+        FEC_BatchImportCommon.addIfNotBlank(selectParts, fileNameField);
         String queryText =
-            'SELECT Id, ' +
-            statusField +
-            (String.isBlank(fileField) ? '' : ', ' + fileField) +
+            'SELECT ' +
+            String.join(selectParts, ', ') +
             ' FROM ' +
             OBJECT_API_NAME +
             ' WHERE Id = :batchRecordId LIMIT 1';
         List<SObject> loaded = Database.query(queryText);
         if (loaded.isEmpty()) {
+            markBatchImportSystemFailure(
+                batchRecordId,
+                'Batch record not found or not accessible for processing.'
+            );
             return;
         }
 
@@ -420,7 +426,7 @@ public with sharing class FEC_BatchCaseCreationController {
         }
 
         String fileName = FEC_BatchImportCommon.asString(
-            FEC_BatchImportCommon.getFieldValue(batchRow, fileField)
+            FEC_BatchImportCommon.getFieldValue(batchRow, fileNameField)
         );
         if (String.isBlank(fileName)) {
             fileName = FEC_BatchImportCommon.asString(batchRow.get('Name'));
@@ -531,6 +537,53 @@ public with sharing class FEC_BatchCaseCreationController {
     @AuraEnabled
     public static void logFailedImport(String fileName, String templateName, String reason) {
         upsertFailedBatch(fileName, templateName, reason);
+    }
+
+    /** Xử lý đồng bộ mọi batch Uploaded (không phụ thuộc Database.executeBatch / permission batch). */
+    @AuraEnabled
+    public static Integer runPendingImportBatch() {
+        return processAllPendingImports();
+    }
+
+    public static Integer processAllPendingImports() {
+        List<FEC_Batch_Case_Creation__c> pending = [
+            SELECT Id
+            FROM FEC_Batch_Case_Creation__c
+            WHERE FEC_Status__c = :FEC_ConstantCommon.UPLOADED_STATUS
+            ORDER BY CreatedDate ASC
+            LIMIT 200
+        ];
+        if (pending.isEmpty()) {
+            return 0;
+        }
+        if (pending.size() == 1) {
+            processPendingBatchImport(pending[0].Id);
+            return 1;
+        }
+        List<Id> batchIds = new List<Id>();
+        for (FEC_Batch_Case_Creation__c row : pending) {
+            batchIds.add(row.Id);
+        }
+        if (System.isQueueable() || System.isBatch()) {
+            processPendingBatchImport(batchIds[0]);
+            return 1;
+        }
+        if (Limits.getQueueableJobs() < Limits.getLimitQueueableJobs()) {
+            System.enqueueJob(new FEC_BatchCaseChainQueueable(batchIds));
+        } else {
+            Database.executeBatch(new FEC_BatchCaseCreationProcessBatch(), 1);
+        }
+        return pending.size();
+    }
+
+    public static void enqueuePendingImport(Id batchRecordId) {
+        if (batchRecordId == null || System.isQueueable() || System.isBatch() || System.isFuture()) {
+            return;
+        }
+        if (Limits.getQueueableJobs() >= Limits.getLimitQueueableJobs()) {
+            return;
+        }
+        System.enqueueJob(new FEC_BatchCaseCreationProcessQueueable(batchRecordId));
     }
 
     private static List<ParsedCaseRow> parseInputRows(List<Object> inputRows) {

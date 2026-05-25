@@ -1,7 +1,7 @@
 /**
  * Stores and loads deferred batch case import payloads (processed at end of day).
  */
-public with sharing class FEC_BatchCaseCreationPendingService {
+public without sharing class FEC_BatchCaseCreationPendingService {
   public static final String PAYLOAD_CONTENT_TITLE = 'BatchCaseCreation_ImportPayload';
 
   public class ImportPayload {
@@ -35,6 +35,20 @@ public with sharing class FEC_BatchCaseCreationPendingService {
     if (batchId == null) {
       return out;
     }
+    for (ContentVersion cv : [
+      SELECT VersionData, Description
+      FROM ContentVersion
+      WHERE
+        FirstPublishLocationId = :batchId
+        AND Title = :PAYLOAD_CONTENT_TITLE
+      ORDER BY CreatedDate DESC
+      LIMIT 1
+    ]) {
+      if (!isPayloadContentVersion(cv)) {
+        continue;
+      }
+      return parsePayloadBlob(cv.VersionData);
+    }
     for (ContentDocumentLink link : [
       SELECT
         ContentDocument.Title,
@@ -47,28 +61,42 @@ public with sharing class FEC_BatchCaseCreationPendingService {
       if (link.ContentDocument == null || link.ContentDocument.LatestPublishedVersion == null) {
         continue;
       }
-      String docTitle = link.ContentDocument.Title;
-      if (!PAYLOAD_CONTENT_TITLE.equalsIgnoreCase(docTitle)) {
+      if (!PAYLOAD_CONTENT_TITLE.equalsIgnoreCase(link.ContentDocument.Title)) {
         continue;
       }
       ContentVersion cv = link.ContentDocument.LatestPublishedVersion;
-      if (cv.Description != FEC_ConstantCommon.JSON_DATA_FOR_PROCESSING) {
+      if (!isPayloadContentVersion(cv)) {
         continue;
       }
-      if (cv.VersionData == null) {
-        continue;
-      }
-      Map<String, Object> parsed = (Map<String, Object>) JSON.deserializeUntyped(
-        cv.VersionData.toString()
-      );
-      out.templateName = parsed.get('templateName') == null
-        ? null
-        : String.valueOf(parsed.get('templateName'));
-      Object rowsObj = parsed.get('rows');
-      if (rowsObj instanceof List<Object>) {
-        out.rows = (List<Object>) rowsObj;
-      }
+      return parsePayloadBlob(cv.VersionData);
+    }
+    return out;
+  }
+
+  private static Boolean isPayloadContentVersion(ContentVersion cv) {
+    if (cv == null || cv.VersionData == null) {
+      return false;
+    }
+    if (String.isBlank(cv.Description)) {
+      return true;
+    }
+    return cv.Description == FEC_ConstantCommon.JSON_DATA_FOR_PROCESSING;
+  }
+
+  private static ImportPayload parsePayloadBlob(Blob versionData) {
+    ImportPayload out = new ImportPayload();
+    if (versionData == null) {
       return out;
+    }
+    Map<String, Object> parsed = (Map<String, Object>) JSON.deserializeUntyped(
+      versionData.toString()
+    );
+    out.templateName = parsed.get('templateName') == null
+      ? null
+      : String.valueOf(parsed.get('templateName'));
+    Object rowsObj = parsed.get('rows');
+    if (rowsObj instanceof List<Object>) {
+      out.rows = (List<Object>) rowsObj;
     }
     return out;
   }
