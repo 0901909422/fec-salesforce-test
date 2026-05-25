@@ -33,28 +33,8 @@
     <flexiPageRegions>
         <itemInstances>
             <componentInstance>
-                <componentInstanceProperties>
-                    <name>parentFieldApiName</name>
-                    <value>FEC_Case_Assignment_Logs__c.Id</value>
-                </componentInstanceProperties>
-                <componentInstanceProperties>
-                    <name>relatedListApiName</name>
-                    <value>Case_Assignment_Log_Details__r</value>
-                </componentInstanceProperties>
-                <componentInstanceProperties>
-                    <name>relatedListComponentOverride</name>
-                    <value>NONE</value>
-                </componentInstanceProperties>
-                <componentInstanceProperties>
-                    <name>rowsToDisplay</name>
-                    <value>10</value>
-                </componentInstanceProperties>
-                <componentInstanceProperties>
-                    <name>showActionBar</name>
-                    <value>false</value>
-                </componentInstanceProperties>
-                <componentName>force:relatedListSingleContainer</componentName>
-                <identifier>force_relatedListSingleContainer_FEC_CALog_details</identifier>
+                <componentName>fecCaseAssignmentLogDetailsList</componentName>
+                <identifier>c_fecCaseAssignmentLogDetailsList</identifier>
             </componentInstance>
         </itemInstances>
         <name>Facet_FEC_CALog_DetailTabBody</name>
