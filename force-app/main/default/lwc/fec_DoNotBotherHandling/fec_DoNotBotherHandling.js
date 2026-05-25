@@ -158,13 +158,13 @@ export default class fec_DoNotBotherHandling extends LightningElement {
     /*
      * Existing customer component
      */
-    const existingCmp = this.template.querySelector(
-      "c-fec_-do-not-bother-existing-customer",
-    );
+    // const existingCmp = this.template.querySelector(
+    //   "c-fec_-do-not-bother-existing-customer",
+    // );
 
-    if (existingCmp?.validate && !existingCmp.validate()) {
-      return false;
-    }
+    // if (existingCmp?.validate && !existingCmp.validate()) {
+    //   return false;
+    // }
 
     /*
      * Non existing customer component
