@@ -3,6 +3,7 @@ import Toast from "lightning/toast";
 import { NavigationMixin } from "lightning/navigation";
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import getByCase from "@salesforce/apex/FEC_CaseBusinessService.getByCase";
+import updateRoutingActionDisplayApex from "@salesforce/apex/FEC_CaseInitUpdateService.updateRoutingActionDisplay";
 import getTransferUsers from "@salesforce/apex/FEC_CaseBusinessService.getTransferUsers";
 import getTransferQueues from "@salesforce/apex/FEC_CaseBusinessService.getTransferQueues";
 import run from "@salesforce/apex/FEC_CaseBusinessService.run";
@@ -25,7 +26,6 @@ import getSubmittedSubProcesses from "@salesforce/apex/FEC_SubProcessService.get
 import USER_ID from "@salesforce/user/Id";
 import USER_GROUP_FIELD from "@salesforce/schema/User.FEC_User_Group__c";
 import ID_FIELD from "@salesforce/schema/Case.Id";
-import IS_ROUTING_ACTION_DISPLAY_FIELD from "@salesforce/schema/Case.FEC_Is_Routing_Action_Display__c";
 // PhuongNT add field FEC_Stage_Name__c
 import STAGE_NAME_FIELD from "@salesforce/schema/Case.FEC_Stage_Name__c";
 import {
@@ -972,12 +972,10 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
   }
 
   updateRoutingActionDisplay(field) {
-    let fields = {};
-    fields[ID_FIELD.fieldApiName] = this.recordId;
-    fields[IS_ROUTING_ACTION_DISPLAY_FIELD.fieldApiName] = field;
-    let recordInput = { fields };
-
-    updateRecord(recordInput)
+    updateRoutingActionDisplayApex({
+      caseId: this.recordId,
+      routingActionDisplay: field
+    })
       .then(() => {
         console.log("Record updated successfully");
       })
