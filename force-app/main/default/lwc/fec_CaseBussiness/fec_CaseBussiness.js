@@ -73,6 +73,7 @@ import {
   shouldActivateMrcReturnRouting,
   showMrcRl0502DupBanner,
   validateMrcReturnCase,
+  normalizeTeamUserGroupForDisplay,
 } from "c/fecMrcReturnCaseLogic";
 import FEC_MSG_Param_Maxlength from "@salesforce/label/c.FEC_MSG_Param_Maxlength";
 import FEC_Routing_Action_Label from "@salesforce/label/c.FEC_Routing_Action_Label";
@@ -1197,6 +1198,11 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
       return false;
     }
     return ACTION_ROUTE_TO === this._getCurrentActionCode();
+  }
+
+  /** Team Route to — mã ngắn CP/PM (không label Contract Processing từ Stage Change). */
+  get routeToTeamDisplayLabel() {
+    return normalizeTeamUserGroupForDisplay(this.business?.nextTeam);
   }
 
   //Thangtv
@@ -2499,6 +2505,12 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
             ? natureOfCaseIdFallback
             : (res.natureOfCase || natureOfCaseIdFallback);
         this.business = { ...res, natureOfCase };
+        if (isMrcRl05Branch(this.business) && this.business?.nextTeam) {
+          this.business = {
+            ...this.business,
+            nextTeam: normalizeTeamUserGroupForDisplay(this.business.nextTeam),
+          };
+        }
 
         //linhdev: Fix jira FECREDIT_CSM_2025_KH-1226
         this.activeMainSectionlst = [];
@@ -6012,9 +6024,10 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
 
     const routeToActionId = this._resolveRouteToActionId();
     const teamUserGroup = ctx.teamCode || ctx.team;
+    const displayTeam = normalizeTeamUserGroupForDisplay(ctx.teamCode || ctx.team);
     this.business = {
       ...this.business,
-      nextTeam: ctx.team,
+      nextTeam: displayTeam,
       nextQueue: priorQueue?.value ? priorQueue : this.business?.nextQueue,
     };
     this._setActionValueByCode(ACTION_ROUTE_TO);
@@ -6030,7 +6043,9 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
         if (res?.nextQueueId) {
           this.business = {
             ...this.business,
-            nextTeam: res.nextTeam || ctx.team,
+            nextTeam: normalizeTeamUserGroupForDisplay(
+              displayTeam || res.nextTeam,
+            ),
             nextQueue: {
               label: res.nextQueueLabel || STR_EMPTY,
               value: res.nextQueueId,
@@ -6041,12 +6056,14 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
           const fallbackQueue =
             priorQueue &&
             (priorQueue.value || priorQueue.label) &&
-            (!priorTeam || priorTeam === ctx.team)
+            (!priorTeam || priorTeam === displayTeam)
               ? priorQueue
               : null;
           this.business = {
             ...this.business,
-            nextTeam: ctx.team || res?.nextTeam || priorTeam,
+            nextTeam: normalizeTeamUserGroupForDisplay(
+              displayTeam || priorTeam,
+            ),
             nextQueue: fallbackQueue,
           };
           if (fallbackQueue) {
@@ -6067,7 +6084,9 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
         console.error("[MrcReturnStageChangeRouting]", JSON.stringify(err));
         this.business = {
           ...this.business,
-          nextTeam: ctx.team || priorTeam,
+          nextTeam: normalizeTeamUserGroupForDisplay(
+            displayTeam || priorTeam,
+          ),
           nextQueue: priorQueue?.value ? priorQueue : null,
         };
         this.business = { ...this.business };

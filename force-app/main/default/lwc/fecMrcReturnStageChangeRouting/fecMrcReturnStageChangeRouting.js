@@ -278,7 +278,7 @@ function resolveRl0502TeamFromInputs(
 
   if (rl05Scenario === "TH4") {
     if (deliveryTeam) {
-      return { teamCode: flowTeam || TEAM_CP, scenario: "TH4" };
+      return { teamCode: deliveryTeam || flowTeam || TEAM_CP, scenario: "TH4" };
     }
     return null;
   }
