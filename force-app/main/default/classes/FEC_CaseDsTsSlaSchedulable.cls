@@ -1,44 +1,83 @@
 /**
  * Schedulable: chạy FEC_CaseDsTsSlaBatch mỗi 15 phút.
- * Salesforce cron chỉ cho phép một số nguyên ở phút/giây — đăng ký 4 job (:00, :15, :30, :45).
+ * Một job tự schedule lần chạy kế tiếp (now + 15 phút) — không cần 4 Cron (:00, :15, :30, :45).
+ *
+ * Sau deploy, chạy một lần (Anonymous):
+ *   FEC_CaseDsTsSlaSchedulable.startFifteenMinuteChain();
  */
 public without sharing class FEC_CaseDsTsSlaSchedulable implements Schedulable {
 
     public static final String JOB_NAME_PREFIX = 'FEC Case DS/TS SLA Every 15m';
 
-    /** @deprecated Dùng JOB_NAME_PREFIX; giữ để tương thích abort tên job cũ. */
+    /** @deprecated Dùng JOB_NAME_PREFIX; giữ để abort tên job cũ. */
     public static final String JOB_NAME = JOB_NAME_PREFIX;
 
-    private static final List<Integer> RUN_MINUTES = new List<Integer>{ 0, 15, 30, 45 };
+    private static final Integer INTERVAL_MINUTES = 15;
 
-    public void execute(SchedulableContext sc) {
+    public void execute(SchedulableContext context) {
         Database.executeBatch(new FEC_CaseDsTsSlaBatch(), 200);
+
+        Id selfCronTriggerId = context != null ? context.getTriggerId() : null;
+        String chainLike = JOB_NAME_PREFIX + ':%';
+        for (CronTrigger cronJob : [
+            SELECT Id
+            FROM CronTrigger
+            WHERE CronJobDetail.Name LIKE :chainLike
+        ]) {
+            if (selfCronTriggerId != null && cronJob.Id == selfCronTriggerId) {
+                continue;
+            }
+            System.abortJob(cronJob.Id);
+        }
+
+        scheduleNextRun();
     }
 
-    public static List<String> scheduleEvery15Minutes() {
+    /** Khởi chạy chuỗi 15 phút: hủy job cũ (4 cron / chain lỗi), đăng ký lần chạy kế tiếp. */
+    public static void startFifteenMinuteChain() {
         abortAllJobs();
-        List<String> jobIds = new List<String>();
-        for (Integer minute : RUN_MINUTES) {
-            String jobName = buildJobName(minute);
-            String cron = '0 ' + String.valueOf(minute) + ' * * * ?';
-            jobIds.add(System.schedule(jobName, cron, new FEC_CaseDsTsSlaSchedulable()));
+        scheduleNextRun();
+    }
+
+    /**
+     * Lên lịch một lần tại now + 15 phút; tên job unique (prefix:timestamp).
+     */
+    public static void scheduleNextRun() {
+        if (Test.isRunningTest()) {
+            return;
         }
-        return jobIds;
+        DateTime nextRun = System.now().addMinutes(INTERVAL_MINUTES);
+        String uniqueName =
+            JOB_NAME_PREFIX +
+            ':' +
+            String.valueOf(nextRun.getTime());
+        String cronExpression = String.format(
+            '{0} {1} {2} {3} {4} ? {5}',
+            new List<String>{
+                String.valueOf(nextRun.second()),
+                String.valueOf(nextRun.minute()),
+                String.valueOf(nextRun.hour()),
+                String.valueOf(nextRun.day()),
+                String.valueOf(nextRun.month()),
+                String.valueOf(nextRun.year())
+            }
+        );
+        System.schedule(uniqueName, cronExpression, new FEC_CaseDsTsSlaSchedulable());
     }
 
     public static void ensureScheduled() {
         if (Test.isRunningTest()) {
             return;
         }
-        String nameLike = JOB_NAME_PREFIX + '%';
+        String chainLike = JOB_NAME_PREFIX + ':%';
         List<CronTrigger> existing = [
             SELECT Id
             FROM CronTrigger
-            WHERE CronJobDetail.Name LIKE :nameLike
+            WHERE CronJobDetail.Name LIKE :chainLike
             LIMIT 1
         ];
         if (existing.isEmpty()) {
-            scheduleEvery15Minutes();
+            startFifteenMinuteChain();
         }
     }
 
@@ -58,8 +97,11 @@ public without sharing class FEC_CaseDsTsSlaSchedulable implements Schedulable {
         }
     }
 
-    private static String buildJobName(Integer minute) {
-        String mm = minute < 10 ? '0' + String.valueOf(minute) : String.valueOf(minute);
-        return JOB_NAME_PREFIX + ' :' + mm;
+    /**
+     * @deprecated Dùng startFifteenMinuteChain().
+     */
+    public static List<String> scheduleEvery15Minutes() {
+        startFifteenMinuteChain();
+        return new List<String>();
     }
 }
