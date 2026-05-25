@@ -265,6 +265,7 @@
     <types>
         <members>Case.FEC_Service_Case_Owner__c</members>
         <members>Case.FEC_Assigment_Mode__c</members>
+        <members>Case.FEC_Case_Executor__c</members>
         <members>Case.FEC_Complain_Type__c</members>
         <members>Case.FEC_Original_Category__c</members>
         <members>Case.FEC_Original_Sub_Category__c</members>
