@@ -9,6 +9,7 @@
         <name>ApexClass</name>
     </types>
     <types>
+        <members>FEC_SLA_DS_TS_Use_Test_Thresholds</members>
         <members>FEC_SLA_DS_TS_Recipient_Telesales</members>
         <members>FEC_SLA_DS_TS_Recipient_LG</members>
         <members>FEC_SLA_DS_TS_Recipient_Direct_Sales</members>
