@@ -720,9 +720,9 @@ public without sharing class FEC_DNBHandler {
             ? caseRecord.FEC_Case_Email__c.trim()
             : '';
         
-        // ===== Update Case =====
-        caseRecord.FEC_National_ID_Passport_ID__c = req.nid;
-        update caseRecord;
+        // // ===== Update Case =====
+        // caseRecord.FEC_National_ID_Passport_ID__c = req.nid;
+        // update caseRecord;
         
         // ===== Call API =====
         FEC_GetDNBCalloutService.DNBResult res =
@@ -735,11 +735,17 @@ public without sharing class FEC_DNBHandler {
             
             res.success = false;
             res.errorMessage = 'Service returned null';
+            return res;
         }
         
+        
+        // ===== Update AFTER callout =====
+        caseRecord.FEC_National_ID_Passport_ID__c = req.nid;
+        
+        update caseRecord;
         return res;
     }
-   
+    
     
     public class DNBResultWrapper {
         @AuraEnabled public Id id;

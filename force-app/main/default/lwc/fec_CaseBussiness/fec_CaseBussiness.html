@@ -324,7 +324,11 @@
               <div key={section.holdCaseRowKey} class="slds-col slds-size_1-of-1 slds-m-top_medium">
                 <c-fec_hold-case-auto
                   record-id={recordId}
-                  result-override={holdCaseResultOverride}>
+                  result-override={holdCaseResultOverride}
+                  stage2-display-mode={holdCaseStage2DisplayMode}
+                  stage2-info-message={holdCaseStage2InfoMessage}
+                  stage2-error-message={holdCaseStage2ErrorMessage}
+                  stage2-show-manual-hold-button={holdCaseStage2ShowManualButton}>
                 </c-fec_hold-case-auto>
               </div>
             </template>
