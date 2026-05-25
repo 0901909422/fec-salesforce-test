@@ -129,13 +129,13 @@ export default class Fec_CaseEditNOC extends LightningElement {
     return (this._currentStageName || '').includes('Stage 1');
   }
 
-  /** GSR (Actual NOC) + Revert Stage 2 → Stage 1: cho phép sửa Updated NOC khi bật mode edit Case. */
-  _isGsrStage2ToStage1RevertEditable() {
+  /** GSR (Actual NOC) + Revert về Stage 1: cho phép sửa Updated NOC khi bật mode edit Case. */
+  _isGsrStage1RevertEditable() {
     const actualBp = (this._actualBusinessProcessCode || '').toUpperCase();
     if (!actualBp.includes('GSR') || !this._isStage1) {
       return false;
     }
-    return this._caseBusinessContextFlags?.isGsrStage2ToStage1Revert === true;
+    return this._caseBusinessContextFlags?.isGsrStage1Revert === true;
   }
 
   // Sau submit (Submitted + Updated section): chỉ cho sửa khi user bật lại mode edit Case.
@@ -149,8 +149,8 @@ export default class Fec_CaseEditNOC extends LightningElement {
     if (this.isNocNatureLocked) {
       return false;
     }
-    // GSR Revert Stage 2 → Stage 1: cho phép edit Updated NOC (Actual NOC chứa GSR).
-    if (this._isGsrStage2ToStage1RevertEditable()) {
+    // GSR Revert về Stage 1: cho phép edit Updated NOC (Actual NOC chứa GSR).
+    if (this._isGsrStage1RevertEditable()) {
       return this.modeEditCase === true;
     }
     // Stage 1 → readonly Updated NOC (COF / GSR revert từ stage khác)

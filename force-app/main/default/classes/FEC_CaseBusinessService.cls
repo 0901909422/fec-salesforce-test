@@ -789,7 +789,8 @@ public without sharing class FEC_CaseBusinessService {
       result.stageName = selectedStage.Name;
       Boolean isLatestRevertToCurrentStage = isLatestRevertToCurrentStage(
         selectedCase.Id,
-        selectedStage.Id
+        selectedStage.Id,
+        selectedStage.Name
       );
 
       // ============================= GET MASTET DATA SETTING ===========================
@@ -853,14 +854,14 @@ public without sharing class FEC_CaseBusinessService {
           FEC_CaseMasterDataHelper.isGsrRevertFromPreviousStageName(
             selectedCase.Id,
             selectedStage.Id,
-            FEC_ConstantCommon.STAGE_TWO
+            FEC_ConstantCommon.STAGE_TWO,
+            selectedStage.Name
           );
         result.contextFlags.put(
           'isGsrStage2ToStage1Revert',
           isGsrStage2ToStage1Revert
         );
-        Boolean isGsrStage1RevertMasterReadonly =
-          isGsrStage1Revert && !isGsrStage2ToStage1Revert;
+        Boolean isGsrStage1RevertMasterReadonly = false;
         result.contextFlags.put(
           'isGsrStage1RevertMasterReadonly',
           isGsrStage1RevertMasterReadonly
@@ -877,17 +878,6 @@ public without sharing class FEC_CaseBusinessService {
           'isGsrStage3PropertyInfoReadonly',
           isGsrStage3PropertyInfoReadonly
         );
-        // Chỉ chèn LWC Original Info (Stage 2) khi Updated NOC trùng Original (so với flow history).
-        if (isGsrStage1Revert && !isUpdatedNocDifferentFromCurrent) {
-          FEC_GsrStage1RevertMasterDataHelper.appendStage2OriginalInfoLwc(
-            masterDatalst,
-            masterDataSettingObj,
-            natureOfCaseObj,
-            selectedNatureOfCaseId,
-            templateNatureIdForCaseStages
-          );
-        }
-
         FEC_MrcReturnCaseService.applyRl05CodeFallbacks(
           result,
           selectedCase,
@@ -1011,8 +1001,11 @@ public without sharing class FEC_CaseBusinessService {
                 continue;
               }
             } else {
-              //Không khác: nếu property info thì không hiển thị
-              if ('Property Info'.equals(subSectionNameTemp)) {
+              // Không khác: ẩn Property Info — trừ GSR Stage 1 revert (hiện Property Info để sửa)
+              if (
+                'Property Info'.equals(subSectionNameTemp) &&
+                !(isGsrStage1Revert && !isUpdatedNocDifferentFromCurrent)
+              ) {
                 continue;
               }
             }
@@ -3892,7 +3885,11 @@ public without sharing class FEC_CaseBusinessService {
     return out;
   }
 
-  private static Boolean isLatestRevertToCurrentStage(Id caseId, Id currentStageId) {
+  private static Boolean isLatestRevertToCurrentStage(
+    Id caseId,
+    Id currentStageId,
+    String currentStageName
+  ) {
     if (caseId == null || currentStageId == null) {
       return false;
     }
@@ -3907,7 +3904,30 @@ public without sharing class FEC_CaseBusinessService {
       ORDER BY LastModifiedDate DESC
       LIMIT 1
     ];
-    return !latestRevertHist.isEmpty();
+    if (!latestRevertHist.isEmpty()) {
+      return true;
+    }
+    Integer currentStageNum = extractStageNumberFromStageName(currentStageName);
+    if (currentStageNum == null) {
+      return false;
+    }
+    List<FEC_Routing_Action_History__c> latestRevertByCase = [
+      SELECT FEC_Next_Stage__r.Name
+      FROM FEC_Routing_Action_History__c
+      WHERE
+        FEC_Case__c = :caseId
+        AND FEC_IsReverted__c = true
+        AND FEC_Next_Stage__c != NULL
+      ORDER BY LastModifiedDate DESC
+      LIMIT 1
+    ];
+    if (latestRevertByCase.isEmpty()) {
+      return false;
+    }
+    Integer revertNextStageNum = extractStageNumberFromStageName(
+      latestRevertByCase[0].FEC_Next_Stage__r?.Name
+    );
+    return revertNextStageNum != null && revertNextStageNum == currentStageNum;
   }
 
   private static Field transform(

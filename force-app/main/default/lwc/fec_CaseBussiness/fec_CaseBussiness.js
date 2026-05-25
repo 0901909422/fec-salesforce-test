@@ -1770,14 +1770,13 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
     return this._persistCasePicklistField(FIELD_RD_PAYMENT_CONTRACT_ASSESSMENT);
   }
 
-  /** COF Stage 1 sau Revert, hoặc GSR Stage 1 revert (trừ Stage 2 → Stage 1): master data read-only. */
+  /** COF Stage 1 sau Revert, hoặc GSR Stage 1 revert (Apex isGsrStage1RevertMasterReadonly): master data read-only. */
   _isStage1RevertMasterReadonly() {
     const flags = this.business?.contextFlags;
-    const gsrReadonly =
-      flags?.isGsrStage1RevertMasterReadonly === true ||
-      (flags?.isGsrStage1Revert === true &&
-        flags?.isGsrStage2ToStage1Revert !== true);
-    return flags?.isCOFStage1Revert === true || gsrReadonly;
+    return (
+      flags?.isCOFStage1Revert === true ||
+      flags?.isGsrStage1RevertMasterReadonly === true
+    );
   }
 
   /** GSR Stage 3 (đã có Assignment): subsection Property Info read-only. */

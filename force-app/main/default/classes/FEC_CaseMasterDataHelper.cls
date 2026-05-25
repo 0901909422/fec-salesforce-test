@@ -23,25 +23,25 @@ public without sharing class FEC_CaseMasterDataHelper {
     ) {
       return masterDatalst;
     }
-    Set<String> hiddenFieldApis = new Set<String>();
+    Set<String> hiddenAssignmentFieldApis = new Set<String>();
     for (SObject mdsRow : masterDatalst) {
       if (
         TYPE_ASSIGNMENT.equals((String) mdsRow.get('FEC_Type__c')) &&
-        mdsRow.get('FEC_Hidden__c') == true
+        (Boolean) mdsRow.get('FEC_Hidden__c') == true
       ) {
-        String fieldApi = (String) mdsRow.get('FEC_Field_API_Name__c');
-        if (String.isNotBlank(fieldApi)) {
-          hiddenFieldApis.add(fieldApi);
+        String api = (String) mdsRow.get('FEC_Field_API_Name__c');
+        if (String.isNotBlank(api)) {
+          hiddenAssignmentFieldApis.add(api);
         }
       }
     }
-    if (hiddenFieldApis.isEmpty()) {
+    if (hiddenAssignmentFieldApis.isEmpty()) {
       return masterDatalst;
     }
     List<SObject> filtered = new List<SObject>();
     for (SObject mdsRow : masterDatalst) {
-      String fieldApi = (String) mdsRow.get('FEC_Field_API_Name__c');
-      if (String.isNotBlank(fieldApi) && hiddenFieldApis.contains(fieldApi)) {
+      String api = (String) mdsRow.get('FEC_Field_API_Name__c');
+      if (String.isNotBlank(api) && hiddenAssignmentFieldApis.contains(api)) {
         continue;
       }
       filtered.add(mdsRow);
@@ -53,7 +53,8 @@ public without sharing class FEC_CaseMasterDataHelper {
   public static Boolean isGsrRevertFromPreviousStageName(
     Id caseId,
     Id currentStageId,
-    String previousStageNameToken
+    String previousStageNameToken,
+    String currentStageName
   ) {
     if (
       caseId == null ||
@@ -73,13 +74,51 @@ public without sharing class FEC_CaseMasterDataHelper {
       ORDER BY LastModifiedDate DESC
       LIMIT 1
     ];
-    if (latestRevertHist.isEmpty()) {
+    if (!latestRevertHist.isEmpty()) {
+      return stageNameContains(
+        latestRevertHist[0].FEC_Previous_Stage__r?.Name,
+        previousStageNameToken
+      );
+    }
+    Integer currentStageNum = extractStageNumberFromStageName(currentStageName);
+    if (currentStageNum == null) {
+      return false;
+    }
+    List<FEC_Routing_Action_History__c> latestRevertByCase = [
+      SELECT FEC_Next_Stage__r.Name, FEC_Previous_Stage__r.Name
+      FROM FEC_Routing_Action_History__c
+      WHERE
+        FEC_Case__c = :caseId
+        AND FEC_IsReverted__c = true
+        AND FEC_Next_Stage__c != NULL
+      ORDER BY LastModifiedDate DESC
+      LIMIT 1
+    ];
+    if (latestRevertByCase.isEmpty()) {
+      return false;
+    }
+    Integer revertNextStageNum = extractStageNumberFromStageName(
+      latestRevertByCase[0].FEC_Next_Stage__r?.Name
+    );
+    if (revertNextStageNum == null || revertNextStageNum != currentStageNum) {
       return false;
     }
     return stageNameContains(
-      latestRevertHist[0].FEC_Previous_Stage__r?.Name,
+      latestRevertByCase[0].FEC_Previous_Stage__r?.Name,
       previousStageNameToken
     );
+  }
+
+  @TestVisible
+  private static Integer extractStageNumberFromStageName(String stageName) {
+    if (String.isBlank(stageName)) {
+      return null;
+    }
+    Matcher m = FEC_ConstantCommon.PAT_STAGE_NAME_WITH_NUMBER.matcher(stageName);
+    if (m.find()) {
+      return Integer.valueOf(m.group(1));
+    }
+    return null;
   }
 
   private static Boolean stageNameContains(
