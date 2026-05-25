@@ -218,7 +218,8 @@ public without sharing class FEC_CaseBusinessService {
           FEC_SubCode__r.Name,
           FEC_Assignment_Count__c,
           FEC_SubCode__r.FEC_Code__c, //linhdev fix jira FECREDIT_CSM_2025_KH-1393-1394
-          FEC_Actual_Nature_of_Case__r.FEC_Business_Process__r.FEC_Code__c
+          FEC_Actual_Nature_of_Case__r.FEC_Business_Process__r.FEC_Code__c,
+          CreatedDate
         FROM Case
         WHERE Id = :caseId
       ];
@@ -227,6 +228,7 @@ public without sharing class FEC_CaseBusinessService {
         return result;
 
       Case selectedCase = caselst.get(0);
+      Case caseBaseline = selectedCase.clone(true, true, true, true);
       // Giữ stage đọc từ DB trước khi draft null field — dùng map sang stage tương đương khi đổi bộ NOC.
       Id caseStageIdPreservedAtLoad = selectedCase.FEC_Current_Case_Stage__c;
 
@@ -516,9 +518,7 @@ public without sharing class FEC_CaseBusinessService {
         if (caseStageIdPreservedAtLoad != null) {
           selectedCase.FEC_Current_Case_Stage__c = caseStageIdPreservedAtLoad;
         }
-        try { update selectedCase; } catch (DmlException e) {
-          System.debug('Update case failed (no NOC): ' + e.getMessage());
-        }
+        FEC_CaseInitUpdateService.runSystemCaseUpdateIfChanged(selectedCase, caseBaseline);
         return result;
       }
 
@@ -613,30 +613,40 @@ public without sharing class FEC_CaseBusinessService {
           when else {
           }
         }
-        // MRC Return (Batch 7): tạm tắt validate Case Information trên fec_CaseBussiness — xử lý qua subprocess/LWC riêng.
-        // if (
-        //   err.errorlst.isEmpty() &&
-        //   String.isNotBlank(result.subCategoryCode) &&
-        //   result.subCategoryCode.toUpperCase().contains('RL05')
-        // ) {
-        //   Error mrcErr = mrcReturnCaseInformationValidate(
-        //     selectedCase,
-        //     result.subCategoryCode,
-        //     result.subCodeCode
-        //   );
-        //   if (!mrcErr.errorlst.isEmpty()) {
-        //     Section caseInfoMrc = result.findSection('Case Information');
-        //     if (caseInfoMrc == null) {
-        //       caseInfoMrc = new Section('Case Information', mrcErr);
-        //       result.sectionlst.add(caseInfoMrc);
-        //     } else {
-        //       caseInfoMrc.error = mrcErr;
-        //     }
-        //     if (!isRl0503DpdOnlyValidation(mrcErr, result.subCodeCode)) {
-        //       err = mrcErr;
-        //     }
-        //   }
-        // }
+        // MRC Return (RL05): validate Case Information — Product Code TW (chặn như Phone Update); RL05.03 DPD chỉ cảnh báo.
+        if (
+          err.errorlst.isEmpty() &&
+          FEC_MrcReturnCaseService.isRl05Branch(
+            result.subCategoryCode,
+            result.subCodeCode
+          )
+        ) {
+          Error mrcErr = mrcReturnCaseInformationValidate(
+            selectedCase,
+            result.subCategoryCode,
+            result.subCodeCode
+          );
+          if (!mrcErr.errorlst.isEmpty()) {
+            Section caseInfoMrc = result.findSection(
+              FEC_ConstantCommon.SECTION_CASE_INFORMATION
+            );
+            if (caseInfoMrc == null) {
+              caseInfoMrc = new Section(
+                FEC_ConstantCommon.SECTION_CASE_INFORMATION,
+                mrcErr
+              );
+              result.sectionlst.add(caseInfoMrc);
+            } else {
+              caseInfoMrc.error = mrcErr;
+            }
+            if (isRl0503DpdOnlyValidation(mrcErr, result.subCodeCode)) {
+              result.mrcRl05CaseInfoWarningOnly = true;
+            } else {
+              err = mrcErr;
+              result.mrcRl05CaseInfoBlocked = true;
+            }
+          }
+        }
       } catch (DmlException e) {
       }
 
@@ -753,10 +763,14 @@ public without sharing class FEC_CaseBusinessService {
         if (caseStageIdPreservedAtLoad != null) {
           selectedCase.FEC_Current_Case_Stage__c = caseStageIdPreservedAtLoad;
         }
-        try { update selectedCase; } catch (DmlException e) {
-          System.debug('Update case failed (no stage): ' + e.getMessage());
-        }
+        FEC_CaseInitUpdateService.runSystemCaseUpdateIfChanged(selectedCase, caseBaseline);
         // RL05.01 / RL05.03: vẫn hiển thị Delivery khi chưa resolve stage (giống luồng 01).
+        FEC_MrcReturnCaseService.supplementStage1RoutingActionsIfEmpty(
+          result,
+          FEC_ConstantCommon.STAGE_ONE,
+          rolelst,
+          latestRoutingHistoryIsReverted
+        );
         FEC_MrcReturnCaseService.supplementMrcRl05CaseInformationWhenStageMissing(
           result,
           selectedCase
@@ -902,6 +916,14 @@ public without sharing class FEC_CaseBusinessService {
             mrcDupEarly != null
           );
           result.mrcRl05Ui = mrcRl05UiCtx;
+          if (mrcRl05UiCtx != null) {
+            FEC_MrcReturnCaseService.enrichRl05PicklistOptions(
+              result,
+              mrcRl05UiCtx
+            );
+          }
+          result.mrcCustomerConfirmationSaved = selectedCase.FEC_Customer_Confirmation__c;
+          result.mrcHandlingOptionSaved = selectedCase.FEC_MRC_Request_Handling_Option__c;
         } catch (Exception mrcCtxEx) {
           System.debug(
             LoggingLevel.WARN,
@@ -951,31 +973,30 @@ public without sharing class FEC_CaseBusinessService {
             continue;
           }
 
-          // MRC Return RL05: tạm tắt filter master data / field theo RL05 context.
-          // if (
-          //   FEC_MrcReturnCaseService.shouldSkipMasterDataRow(
-          //     sectionNameTemp,
-          //     subSectionNameTemp,
-          //     TYPE_LWC.equals(itemType) ? (String) item.get('FEC_LWC_Name__c') : null,
-          //     fieldApiNameTemp,
-          //     mrcRl05UiCtx
-          //   )
-          // ) {
-          //   continue;
-          // }
+          if (
+            FEC_MrcReturnCaseService.shouldSkipMasterDataRow(
+              sectionNameTemp,
+              subSectionNameTemp,
+              TYPE_LWC.equals(itemType) ? (String) item.get('FEC_LWC_Name__c') : null,
+              fieldApiNameTemp,
+              mrcRl05UiCtx
+            )
+          ) {
+            continue;
+          }
 
-          // if (
-          //   FEC_MrcReturnCaseService.shouldSkipStage1Field(
-          //     businessProcessCode,
-          //     result.subCategoryCode,
-          //     result.subCodeCode,
-          //     selectedStage.Name,
-          //     fieldApiNameTemp,
-          //     mrcRl05UiCtx
-          //   )
-          // ) {
-          //   continue;
-          // }
+          if (
+            FEC_MrcReturnCaseService.shouldSkipStage1Field(
+              businessProcessCode,
+              result.subCategoryCode,
+              result.subCodeCode,
+              selectedStage.Name,
+              fieldApiNameTemp,
+              mrcRl05UiCtx
+            )
+          ) {
+            continue;
+          }
 
           // GSR handling: điều chỉnh field hiển thị theo việc bộ NOC updated có đổi hay không.
           if (isGsrNocOnlyDisplayMode) {
@@ -1157,16 +1178,14 @@ public without sharing class FEC_CaseBusinessService {
           sectionItem.sort();
         }
 
-        // MRC Return (RL05): tạm tắt inject fec_MrcReturnPanel / field MRC Return trên Case Information.
-        // FEC_MrcReturnCaseService.ensureDeliveryLwcOnCaseInformation(
-        //   result,
-        //   mrcRl05UiCtx
-        // );
-        // FEC_MrcReturnCaseService.finalizeCaseInformationForRl05(
-        //   result,
-        //   mrcRl05UiCtx,
-        //   selectedCase
-        // );
+        // MRC Return (RL05): inject field ẩn + picklist; panel LWC do client ensureMrcReturnCaseFormInBusiness.
+        if (mrcRl05UiCtx != null) {
+          FEC_MrcReturnCaseService.finalizeCaseInformationForRl05(
+            result,
+            mrcRl05UiCtx,
+            selectedCase
+          );
+        }
 
         result.removeEmptySections();
       }
@@ -1244,6 +1263,13 @@ public without sharing class FEC_CaseBusinessService {
           );
         }
       }
+
+      FEC_MrcReturnCaseService.supplementStage1RoutingActionsIfEmpty(
+        result,
+        selectedStage.Name,
+        rolelst,
+        isRevert
+      );
 
       // Hiển thị Team/Queue Route to theo nhánh Stage Change (không ảnh hưởng logic submit route()).
       RouteToDisplayInfo routeToDisplayInfo = resolveRouteToDisplayInfo(
@@ -1362,14 +1388,7 @@ public without sharing class FEC_CaseBusinessService {
 
       // RL05 duplicate + UI context đã resolve trước vòng master data (mrcRl05Ui / mrcRl0502Duplicate*).
 
-      if (Schema.sObjectType.Case.isUpdateable()) {
-        try {
-          FEC_CaseTriggerHandler.isSystemUpdate = true;
-          update selectedCase;
-        } catch (DmlException e) {
-          // User có thể không có quyền sửa Case (vd: Case đã assign Queue). Vẫn trả result để hiển thị section.
-        }
-      }
+      FEC_CaseInitUpdateService.runSystemCaseUpdateIfChanged(selectedCase, caseBaseline);
 
       return result;
     } catch (CaseBusinessServiceException e) {
@@ -4128,6 +4147,21 @@ public without sharing class FEC_CaseBusinessService {
     @AuraEnabled
     public FEC_MrcReturnCaseService.MrcRl05UiContext mrcRl05Ui;
 
+    /** RL05.03 DPD ≥ 15: chỉ cảnh báo Case Information, không chặn routing. */
+    @AuraEnabled
+    public Boolean mrcRl05CaseInfoWarningOnly;
+
+    /** RL05 — chặn nhập Case Information (Product Code ≠ TW): ẩn panel LWC + routing Stage 1. */
+    @AuraEnabled
+    public Boolean mrcRl05CaseInfoBlocked;
+
+    /** Giá trị đã lưu trên Case — dùng khôi phục panel sau submit/reload. */
+    @AuraEnabled
+    public String mrcCustomerConfirmationSaved;
+
+    @AuraEnabled
+    public String mrcHandlingOptionSaved;
+
     @AuraEnabled
     public Map<String, Map<String, List<PicklistOptionDto>>> picklistOptionsMap;
 
@@ -4813,7 +4847,7 @@ public without sharing class FEC_CaseBusinessService {
       mrcErr.errorlst == null ||
       mrcErr.errorlst.isEmpty() ||
       String.isBlank(subCodeCode) ||
-      !subCodeCode.toUpperCase().contains('RL05.03')
+      !subCodeCode.toUpperCase().contains(FEC_ConstantCommon.SUB_CODE_RL0503)
     ) {
       return false;
     }
@@ -4862,7 +4896,16 @@ public without sharing class FEC_CaseBusinessService {
       }
     }
 
-    // RL05.03: DPD validate tại NOC picker; getByCase luôn load Delivery giống RL05.01.
+    if (
+      errorlst.isEmpty() &&
+      String.isNotBlank(subCodeCode) &&
+      subCodeCode.toUpperCase().contains(FEC_ConstantCommon.SUB_CODE_RL0503)
+    ) {
+      Decimal daysPastDue = selectedCase.FEC_Account_or_Contract__r.FEC_Days_Past_Due__c;
+      if (daysPastDue != null && daysPastDue >= 15) {
+        errorlst.add(System.Label.FEC_MRC_Return_Msg_DPD_RL0503);
+      }
+    }
 
     if (errorlst.isEmpty()) {
       return new Error();
@@ -4955,7 +4998,6 @@ public without sharing class FEC_CaseBusinessService {
     ) {
       selectedCase.FEC_Updated_Info_Phone_Number__c = selectedCase.FEC_Original_Info_Phone_Number__c;
     }
-    update selectedCase;
   }
 
   /**
@@ -4990,7 +5032,6 @@ public without sharing class FEC_CaseBusinessService {
         selectedCase.FEC_Updated_Info_Last_Name__c = selectedCase.FEC_Original_Info_Last_Name__c;
       }
     }
-    update selectedCase;
   }
 
   /**
@@ -5014,7 +5055,6 @@ public without sharing class FEC_CaseBusinessService {
     ) {
       selectedCase.FEC_Updated_Info_Email__c = selectedCase.FEC_Original_Info_Email__c;
     }
-    update selectedCase;
   }
 
   /**
@@ -5038,7 +5078,6 @@ public without sharing class FEC_CaseBusinessService {
     ) {
       selectedCase.FEC_Updated_Info_Date_of_Birth__c = selectedCase.FEC_Original_Info_Date_of_Birth__c;
     }
-    update selectedCase;
   }
 
   /**
@@ -5062,7 +5101,6 @@ public without sharing class FEC_CaseBusinessService {
     ) {
       selectedCase.FEC_Updated_Info_Gender__c = selectedCase.FEC_Original_Info_Gender__c;
     }
-    update selectedCase;
   }
 
   /**
@@ -5097,7 +5135,6 @@ public without sharing class FEC_CaseBusinessService {
         selectedCase.FEC_Updated_Info_Place_of_Issue__c = selectedCase.FEC_Original_Info_Place_of_Issue__c;
       }
     }
-    update selectedCase;
   }
 
   private static void undeliveriedCardUpdate(Case selectedCase) {
@@ -5108,7 +5145,6 @@ public without sharing class FEC_CaseBusinessService {
     if (cardDeliveryInfo != null) {
       selectedCase.FEC_Delivery_Status__c = cardDeliveryInfo.status;
       selectedCase.FEC_Delay_Note__c = cardDeliveryInfo.deliveryNotes;
-      update selectedCase;
     }
   }
 

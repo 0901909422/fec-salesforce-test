@@ -52,7 +52,7 @@ public without sharing class FEC_DownloadReportService {
     // =========================================================
     // FUTURE METHOD
     // =========================================================
-    @future(callout=true)
+    @future
     public static void processReportAsync(
         String reportName,
         String uniqueName,
@@ -62,127 +62,22 @@ public without sharing class FEC_DownloadReportService {
     ) {
         try {
 
-            String endpoint = String.format(
-                FEC_ConstantCommon.REPORT_EXPORT_ENDPOINT,
-                new List<String>{
-                    baseUrl,
-                    FEC_ConstantCommon.API_VERSION,
-                    reportId
-                }
-            );
+            Reports.ReportResults results =
+                Reports.ReportManager.runReport((Id) reportId, true);
 
-            Map<String,String> headers = new Map<String,String>{
-                'Authorization' => 'Bearer ' + UserInfo.getSessionId(),
-                'Content-Type'  => FEC_ConstantCommon.API_CONTENT_TYPE_JSON
-            };
+            List<String> excelHeaders = buildExcelHeaders(results);
 
-            HttpResponse res = FEC_CommonUltils.calloutApiWithHeaders(
-                endpoint,
-                'GET',
-                headers,
-                null
-            );
+            List<String> xmlParts = new List<String>();
+            xmlParts.add(buildExcelXmlStart(excelHeaders));
+            appendReportRowsXml(results, xmlParts);
+            xmlParts.add(buildExcelXmlEnd());
 
-            if (res.getStatusCode() != 200) {
-                throw new CalloutException(
-                    'Export failed [' + res.getStatusCode() + '] => ' + res.getBody()
-                );
-            }
+            results = null;
 
-            Map<String, Object> reportData =
-                (Map<String, Object>) JSON.deserializeUntyped(res.getBody());
+            String excelContent = String.join(xmlParts, '');
+            xmlParts = null;
 
-            Map<String, Object> extMeta =
-                (Map<String, Object>) reportData.get('reportExtendedMetadata');
-
-            Map<String, Object> columnMeta =
-                (Map<String, Object>) extMeta.get('detailColumnInfo');
-
-            Map<String, Object> reportMetadata =
-                (Map<String, Object>) reportData.get('reportMetadata');
-
-            List<Object> detailColumns =
-                (List<Object>) reportMetadata.get('detailColumns');
-
-            List<String> excelHeaders = new List<String>();
-
-            for (Object col : detailColumns) {
-
-                String colName = String.valueOf(col);
-
-                if (columnMeta.containsKey(colName)) {
-                    Map<String, Object> colInfo =
-                        (Map<String, Object>) columnMeta.get(colName);
-                    excelHeaders.add(String.valueOf(colInfo.get('label')));
-                } else {
-                    excelHeaders.add(colName);
-                }
-            }
-
-            Map<String, Object> factMap =
-                (Map<String, Object>) reportData.get('factMap');
-
-            List<String> factKeys = new List<String>(factMap.keySet());
-            factKeys.sort();
-
-            List<List<String>> dataRows = new List<List<String>>();
-
-            for (String key : factKeys) {
-
-                if (!key.endsWith('!T')) continue;
-
-                Map<String, Object> section =
-                    (Map<String, Object>) factMap.get(key);
-
-                if (!section.containsKey('rows')) continue;
-
-                List<Object> rows = (List<Object>) section.get('rows');
-
-                if (rows == null || rows.isEmpty()) continue;
-
-                for (Object rowObj : rows) {
-
-                    Map<String, Object> row =
-                        (Map<String, Object>) rowObj;
-
-                    List<Object> dataCells =
-                        (List<Object>) row.get('dataCells');
-
-                    if (dataCells == null) continue;
-
-                    List<String> rowValues = new List<String>();
-
-                    for (Object cellObj : dataCells) {
-
-                        Map<String, Object> cell =
-                            (Map<String, Object>) cellObj;
-
-                        String label = '';
-
-                        if (
-                            cell.get('label') != null &&
-                            !String.valueOf(cell.get('label')).equals('null') &&
-                            !String.valueOf(cell.get('label')).equals('')
-                        ) {
-                            label = String.valueOf(cell.get('label'));
-
-                        } else if (
-                            cell.get('value') != null &&
-                            !String.valueOf(cell.get('value')).equals('null')
-                        ) {
-                            label = String.valueOf(cell.get('value'));
-                        }
-
-                        label = stripHtml(label);
-                        rowValues.add(label);
-                    }
-
-                    dataRows.add(rowValues);
-                }
-            }
-
-            String excelContent = buildExcelXml(excelHeaders, dataRows);
-            String fileName     = today.replace('/', '') + '_' + uniqueName + '.xls';
+            String fileName = today.replace('/', '') + '_' + uniqueName + '.xls';
 
             ContentVersion cv = new ContentVersion();
             cv.Title          = today + ' - ' + reportName;
@@ -191,6 +86,8 @@ public without sharing class FEC_DownloadReportService {
             cv.IsMajorVersion = true;
 
             insert cv;
+
+            excelContent = null;
 
             cv = [
                 SELECT ContentDocumentId
@@ -236,34 +133,127 @@ public without sharing class FEC_DownloadReportService {
     }
 
     // =========================================================
+    // REPORT DATA
+    // =========================================================
+    private static List<String> buildExcelHeaders(Reports.ReportResults results) {
+
+        List<String> excelHeaders = new List<String>();
+        List<String> detailColumns =
+            results.getReportMetadata().getDetailColumns();
+
+        Map<String, Reports.DetailColumn> columnMeta =
+            results.getReportExtendedMetadata().getDetailColumnInfo();
+
+        for (String colName : detailColumns) {
+
+            if (columnMeta != null && columnMeta.containsKey(colName)) {
+                excelHeaders.add(columnMeta.get(colName).getLabel());
+            } else {
+                excelHeaders.add(colName);
+            }
+        }
+
+        return excelHeaders;
+    }
+
+    private static void appendReportRowsXml(
+        Reports.ReportResults results,
+        List<String> xmlParts
+    ) {
+        Map<String, Reports.ReportFact> factMap = results.getFactMap();
+        List<String> factKeys = new List<String>(factMap.keySet());
+        factKeys.sort();
+
+        for (String key : factKeys) {
+
+            if (!key.endsWith('!T')) {
+                continue;
+            }
+
+            Reports.ReportFact fact = factMap.get(key);
+
+            if (!(fact instanceof Reports.ReportFactWithDetails)) {
+                continue;
+            }
+
+            Reports.ReportFactWithDetails section =
+                (Reports.ReportFactWithDetails) fact;
+
+            if (section.getRows() == null || section.getRows().isEmpty()) {
+                continue;
+            }
+
+            for (Reports.ReportDetailRow row : section.getRows()) {
+                xmlParts.add(buildExcelRowXml(row));
+            }
+        }
+    }
+
+    private static String resolveCellLabel(Reports.ReportDataCell cell) {
+
+        String label = '';
+
+        if (
+            cell.getLabel() != null &&
+            String.isNotBlank(String.valueOf(cell.getLabel())) &&
+            !String.valueOf(cell.getLabel()).equals('null')
+        ) {
+            label = String.valueOf(cell.getLabel());
+
+        } else if (
+            cell.getValue() != null &&
+            !String.valueOf(cell.getValue()).equals('null')
+        ) {
+            label = String.valueOf(cell.getValue());
+        }
+
+        return stripHtml(label);
+    }
+
+    // =========================================================
     // BUILD EXCEL
     // =========================================================
-    private static String buildExcelXml(List<String> headers, List<List<String>> rows) {
+    private static String buildExcelXmlStart(List<String> headers) {
 
         String xml = '<?xml version="1.0" encoding="UTF-8"?>';
-        xml += '<?mso-application progid="Excel.Sheet"?>'; // <-- thêm dòng này
+        xml += '<?mso-application progid="Excel.Sheet"?>';
         xml += '<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"';
         xml += ' xmlns:o="urn:schemas-microsoft-com:office:office"';
         xml += ' xmlns:x="urn:schemas-microsoft-com:office:excel"';
         xml += ' xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">';
         xml += '<Worksheet ss:Name="Report"><Table>';
-
         xml += '<Row>';
+
         for (String h : headers) {
             xml += '<Cell><Data ss:Type="String">' + escapeXml(h) + '</Data></Cell>';
         }
-        xml += '</Row>';
 
-        for (List<String> row : rows) {
-            xml += '<Row>';
-            for (String val : row) {
-                xml += '<Cell><Data ss:Type="String">' + escapeXml(val) + '</Data></Cell>';
-            }
-            xml += '</Row>';
+        xml += '</Row>';
+        return xml;
+    }
+
+    private static String buildExcelRowXml(Reports.ReportDetailRow row) {
+
+        List<Reports.ReportDataCell> dataCells = row.getDataCells();
+
+        if (dataCells == null || dataCells.isEmpty()) {
+            return '';
         }
 
-        xml += '</Table></Worksheet></Workbook>';
+        String xml = '<Row>';
+
+        for (Reports.ReportDataCell cell : dataCells) {
+            xml += '<Cell><Data ss:Type="String">' +
+                escapeXml(resolveCellLabel(cell)) +
+                '</Data></Cell>';
+        }
+
+        xml += '</Row>';
         return xml;
+    }
+
+    private static String buildExcelXmlEnd() {
+        return '</Table></Worksheet></Workbook>';
     }
 
     // =========================================================

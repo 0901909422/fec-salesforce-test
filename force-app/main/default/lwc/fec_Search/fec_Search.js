@@ -1691,7 +1691,12 @@ hasAnySearchCriteria(params) {
           applicationId: row?.ApplicationID,
           isListView: isListViewActual,
           policyNumber: row?.PolicyNumber || '', // Only for Insurance
-          buyerNID: this._resolveSearchNationalIdFromRow(row),
+          buyerNID:
+            (row?.NationalID1 && String(row.NationalID1).trim()) ||
+            (row?.BuyerNID && String(row.BuyerNID).trim()) ||
+            "",
+          searchNationalId2:
+            (row?.NationalID2 && String(row.NationalID2).trim()) || "",
         })
           .then(async (res) => {
             this.showToast("Success", "History created successfully", "success");

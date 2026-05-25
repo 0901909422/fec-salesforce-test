@@ -8707,14 +8707,14 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>MRC Return — tiêu đề khi không hiển thị Case Information</shortDescription>
-        <value>Yêu cầu MRC Return không thể nhập Case Information trong trường hợp này.</value>
+        <value>Không thể tạo yêu cầu liên quan MRC</value>
     </labels>
     <labels>
         <fullName>FEC_MRC_Return_Msg_Product_Not_TW</fullName>
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>MRC Return — sản phẩm không phải TW</shortDescription>
-        <value>Yêu cầu liên quan MRC (RL05) chỉ áp dụng khi Product Code của hợp đồng là TW.</value>
+        <value>Product Code ≠ &apos;TW&apos;</value>
     </labels>
     <labels>
         <fullName>FEC_MRC_Return_Msg_DPD_RL0503</fullName>
@@ -18260,5 +18260,12 @@
         <shortDescription>Other case account contract must not contain dash</shortDescription>
         <value>Account/ Contract Number không đúng định dạng.</value>
     </labels>
-
+    <labels>
+        <fullName>FEC_Gender_Buyer_Label</fullName>
+        <categories>Customer Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Gender Label</shortDescription>
+        <value>Buyer Gender</value>
+    </labels>
 </CustomLabels>

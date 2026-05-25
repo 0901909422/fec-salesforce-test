@@ -8,6 +8,8 @@ public without sharing class FEC_CaseTriggerHandler {
     // Trigger guard để tránh recursive
     public static Boolean isExecuting = false;
     public static Boolean isSystemUpdate = false;
+    /** Case Id đã system-update trong transaction — chặn Flow/Process follow-up ghi Last Updated By View. */
+    public static Set<Id> systemUpdatedCaseIds = new Set<Id>();
     
     /**
      * Method Description: Main entry point được gọi từ trigger
@@ -214,7 +216,16 @@ public without sharing class FEC_CaseTriggerHandler {
 
         // 6. Update the child records safely
         if (!casesToUpdate.isEmpty()) {
-            update casesToUpdate;
+            for (Case childCase : casesToUpdate) {
+                systemUpdatedCaseIds.add(childCase.Id);
+            }
+            Boolean priorFlag = isSystemUpdate;
+            isSystemUpdate = true;
+            try {
+                update casesToUpdate;
+            } finally {
+                isSystemUpdate = priorFlag;
+            }
         }
     }
 
@@ -1033,7 +1044,7 @@ public without sharing class FEC_CaseTriggerHandler {
     private static void updateLastModified(List<Case> newCases, Map<Id, Case> oldMap) {
         List<Case> caseUpdates = new List<Case>();
         for (Case c : newCases) {
-            if (isSystemUpdate) {
+            if (isSystemUpdate || (c.Id != null && systemUpdatedCaseIds.contains(c.Id))) {
                 continue;
             }
             if (oldMap != null) {

@@ -379,7 +379,7 @@ public without sharing class FEC_AssignmentExecuteService {
          */
         List<FEC_Assignment__c> assignments = [
     SELECT Id, Name, FEC_Assignment_Name__c, FEC_OwnerID__c,
-    FEC_Assignment_Owner__c,
+    FEC_Assignment_Owner__c,FEC_Assignment_Owner_Text__c,
     FEC_Assignment_Status__c FROM FEC_Assignment__c WHERE FEC_Case__c = : caseId
         AND FEC_Assignment_Status__c NOT IN : CLOSED_STATUSES
   ];
@@ -685,7 +685,7 @@ public without sharing class FEC_AssignmentExecuteService {
             /*
              * Original queue/user owner
              */
-            history.FEC_Original_User_Queue__c = assignment.FEC_OwnerID__c;
+            history.FEC_Original_User_Queue__c = assignment.FEC_Assignment_Owner_Text__c;
             
             /*
              * Updated owner email

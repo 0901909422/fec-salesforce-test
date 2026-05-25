@@ -28,6 +28,19 @@ public without sharing class FEC_CaseAssignmentAutoDistributeService {
      */
     private static Map<String, Set<Id>> queueRecipientUserIdsMemo;
 
+    private class DistributionTarget {
+        Case caseRecord;
+        Boolean updateCaseOwner;
+        Id assignmentRecordId;
+        Id assignedUserId;
+
+        DistributionTarget(Case caseRecord, Boolean updateCaseOwner, Id assignmentRecordId) {
+            this.caseRecord = caseRecord;
+            this.updateCaseOwner = updateCaseOwner;
+            this.assignmentRecordId = assignmentRecordId;
+        }
+    }
+
     public static void executeNow() {
         DateTime nowTime = System.now();
 
@@ -329,43 +342,17 @@ public without sharing class FEC_CaseAssignmentAutoDistributeService {
             }
         }
 
-        List<Case> candidateCases = [
-            SELECT
-                Id,
-                FEC_Product_Type__c,
-                FEC_Product_Type__r.Name,
-                FEC_Category__c,
-                FEC_Category__r.Name,
-                FEC_SubCategory__c,
-                FEC_SubCategory__r.Name,
-                FEC_SubCode__c,
-                FEC_SubCode__r.Name
-            FROM Case
-            WHERE OwnerId IN :queueById.keySet() AND IsClosed = FALSE
-        ];
-        lines.add('[4] Case mở trong queue: ' + candidateCases.size());
-
-        Integer targetCaseCount = 0;
-        for (Case c : candidateCases) {
-            String baseKey = buildKey(
-                c.FEC_Product_Type__c,
-                c.FEC_Product_Type__r == null ? null : c.FEC_Product_Type__r.Name,
-                c.FEC_Category__c,
-                c.FEC_Category__r == null ? null : c.FEC_Category__r.Name,
-                c.FEC_SubCategory__c,
-                c.FEC_SubCategory__r == null ? null : c.FEC_SubCategory__r.Name
-            );
-            String exactKey = baseKey + '|' + normalizeKeyPart(
-                c.FEC_SubCode__c,
-                c.FEC_SubCode__r == null ? null : c.FEC_SubCode__r.Name
-            );
-            if (nocExactKeys.contains(exactKey) || nocWithoutSubCodeKeys.contains(baseKey)) {
-                targetCaseCount++;
-            }
-        }
-        lines.add('[5] Case khớp NOC (cùng buildKey với execute): ' + targetCaseCount);
-        if (targetCaseCount == 0) {
-            lines.add('STOP: không Case nào khớp NOC — đối chiếu lookup/diễn giải Tier trên Case vs NOC.');
+        List<DistributionTarget> distributionTargets = collectDistributionTargets(
+            queueNames,
+            queueById,
+            nocExactKeys,
+            nocWithoutSubCodeKeys
+        );
+        lines.add('[4] Case đủ điều kiện phân bổ (Pending + NOC + queue/assignment rule): ' +
+            distributionTargets.size());
+        if (distributionTargets.isEmpty()) {
+            lines.add('STOP: không Case nào khớp rule 2.1/2.2 — kiểm tra Pending, Assignment Count, queue và NOC.');
+            lines.add('HINT 2.1: Owner=queue, FEC_Assignment_Count__c=0. 2.2: Count>0 + Assignment mở trên queue (query FEC_Assignment__c, không chỉ FEC_Assignment_Users__c).');
             return lines;
         }
 
@@ -715,6 +702,365 @@ public without sharing class FEC_CaseAssignmentAutoDistributeService {
         return kept;
     }
 
+    private static Boolean isPendingCaseStatus(String status) {
+        if (String.isBlank(status)) {
+            return false;
+        }
+        if (status == FEC_ConstantCommon.CASE_STATUS_PENDING) {
+            return true;
+        }
+        return status.startsWith(FEC_ConstantCommon.CASE_STATUS_PENDING_PREFIX);
+    }
+
+    private static Boolean assignmentUsersContainsAnyQueue(
+        String assignmentUsersRaw,
+        Set<String> queueNames,
+        Map<Id, Group> queueById
+    ) {
+        if (String.isBlank(assignmentUsersRaw) || queueNames == null || queueNames.isEmpty()) {
+            return false;
+        }
+        Set<String> tokens = new Set<String>();
+        for (String part : assignmentUsersRaw.split(',')) {
+            if (String.isNotBlank(part)) {
+                tokens.add(part.trim());
+            }
+        }
+        for (String queueName : queueNames) {
+            if (tokens.contains(queueName)) {
+                return true;
+            }
+            if (queueById != null) {
+                for (Group queueRow : queueById.values()) {
+                    if (queueRow.Name == queueName && tokens.contains(String.valueOf(queueRow.Id))) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+    /** Tên queue + Id queue — FEC_OwnerID__c trên Assignment có thể lưu một trong hai. */
+    private static Set<String> buildQueueOwnerMatchTokens(
+        Set<String> queueNames,
+        Map<Id, Group> queueById
+    ) {
+        Set<String> tokens = new Set<String>();
+        if (queueNames != null) {
+            for (String queueName : queueNames) {
+                if (String.isNotBlank(queueName)) {
+                    tokens.add(queueName.trim());
+                }
+            }
+        }
+        if (queueById != null) {
+            for (Group queueRow : queueById.values()) {
+                if (queueRow != null && queueRow.Id != null) {
+                    tokens.add(String.valueOf(queueRow.Id));
+                }
+            }
+        }
+        return tokens;
+    }
+
+    private static Boolean assignmentOwnerMatchesSelectedQueues(
+        String assignmentOwnerRaw,
+        Set<String> queueOwnerTokens
+    ) {
+        if (String.isBlank(assignmentOwnerRaw) || queueOwnerTokens == null || queueOwnerTokens.isEmpty()) {
+            return false;
+        }
+        return queueOwnerTokens.contains(assignmentOwnerRaw.trim());
+    }
+
+    private static Boolean caseMatchesNoc(
+        Case caseRecord,
+        Set<String> nocExactKeys,
+        Set<String> nocWithoutSubCodeKeys
+    ) {
+        if (caseRecord == null) {
+            return false;
+        }
+        String baseKey = buildKey(
+            caseRecord.FEC_Product_Type__c,
+            caseRecord.FEC_Product_Type__r == null ? null : caseRecord.FEC_Product_Type__r.Name,
+            caseRecord.FEC_Category__c,
+            caseRecord.FEC_Category__r == null ? null : caseRecord.FEC_Category__r.Name,
+            caseRecord.FEC_SubCategory__c,
+            caseRecord.FEC_SubCategory__r == null ? null : caseRecord.FEC_SubCategory__r.Name
+        );
+        String exactKey = baseKey + '|' + normalizeKeyPart(
+            caseRecord.FEC_SubCode__c,
+            caseRecord.FEC_SubCode__r == null ? null : caseRecord.FEC_SubCode__r.Name
+        );
+        return nocExactKeys.contains(exactKey) || nocWithoutSubCodeKeys.contains(baseKey);
+    }
+
+    private static Map<Id, FEC_Assignment__c> preloadOldestQueueAssignmentByCaseId(
+        Set<Id> caseIds,
+        Set<String> queueOwnerTokens
+    ) {
+        Map<Id, FEC_Assignment__c> oldestByCaseId = new Map<Id, FEC_Assignment__c>();
+        if (caseIds == null || caseIds.isEmpty() || queueOwnerTokens == null || queueOwnerTokens.isEmpty()) {
+            return oldestByCaseId;
+        }
+        for (FEC_Assignment__c assignmentRow : [
+            SELECT Id, FEC_Case__c, FEC_OwnerID__c, CreatedDate
+            FROM FEC_Assignment__c
+            WHERE
+                FEC_Case__c IN :caseIds
+                AND FEC_Assignment_Owner__c = NULL
+                AND FEC_OwnerID__c IN :queueOwnerTokens
+                AND (
+                    FEC_Assignment_Status__c = NULL
+                    OR FEC_Assignment_Status__c NOT IN :FEC_ConstantCommon.CLOSED_ASSIGNMENT_STATUSES
+                )
+            ORDER BY CreatedDate ASC
+        ]) {
+            if (!oldestByCaseId.containsKey(assignmentRow.FEC_Case__c)) {
+                oldestByCaseId.put(assignmentRow.FEC_Case__c, assignmentRow);
+            }
+        }
+        return oldestByCaseId;
+    }
+
+    private static List<DistributionTarget> collectDistributionTargets(
+        Set<String> queueNames,
+        Map<Id, Group> queueById,
+        Set<String> nocExactKeys,
+        Set<String> nocWithoutSubCodeKeys
+    ) {
+        List<DistributionTarget> targets = new List<DistributionTarget>();
+        Set<Id> seenCaseIds = new Set<Id>();
+        Set<String> queueOwnerTokens = buildQueueOwnerMatchTokens(queueNames, queueById);
+
+        List<Case> noAssignmentCases = [
+            SELECT
+                Id,
+                OwnerId,
+                Status,
+                CreatedDate,
+                FEC_Assignment_Count__c,
+                FEC_Assignment_Users__c,
+                FEC_Product_Type__c,
+                FEC_Product_Type__r.Name,
+                FEC_Category__c,
+                FEC_Category__r.Name,
+                FEC_SubCategory__c,
+                FEC_SubCategory__r.Name,
+                FEC_SubCode__c,
+                FEC_SubCode__r.Name
+            FROM Case
+            WHERE
+                OwnerId IN :queueById.keySet()
+                AND IsClosed = FALSE
+                AND FEC_Assignment_Count__c = 0
+            ORDER BY CreatedDate ASC
+        ];
+        for (Case caseRow : noAssignmentCases) {
+            if (!isPendingCaseStatus(caseRow.Status)) {
+                continue;
+            }
+            if (!caseMatchesNoc(caseRow, nocExactKeys, nocWithoutSubCodeKeys)) {
+                continue;
+            }
+            targets.add(new DistributionTarget(caseRow, true, null));
+            seenCaseIds.add(caseRow.Id);
+        }
+
+        Map<Id, Case> assignmentCaseCandidatesById = new Map<Id, Case>();
+        Map<Id, FEC_Assignment__c> oldestAssignmentByCaseId = new Map<Id, FEC_Assignment__c>();
+        for (FEC_Assignment__c assignmentRow : [
+            SELECT
+                Id,
+                FEC_Case__c,
+                FEC_OwnerID__c,
+                CreatedDate,
+                FEC_Case__r.Id,
+                FEC_Case__r.OwnerId,
+                FEC_Case__r.Status,
+                FEC_Case__r.CreatedDate,
+                FEC_Case__r.FEC_Assignment_Count__c,
+                FEC_Case__r.FEC_Assignment_Users__c,
+                FEC_Case__r.FEC_Product_Type__c,
+                FEC_Case__r.FEC_Product_Type__r.Name,
+                FEC_Case__r.FEC_Category__c,
+                FEC_Case__r.FEC_Category__r.Name,
+                FEC_Case__r.FEC_SubCategory__c,
+                FEC_Case__r.FEC_SubCategory__r.Name,
+                FEC_Case__r.FEC_SubCode__c,
+                FEC_Case__r.FEC_SubCode__r.Name
+            FROM FEC_Assignment__c
+            WHERE
+                FEC_Assignment_Owner__c = NULL
+                AND FEC_OwnerID__c IN :queueOwnerTokens
+                AND (
+                    FEC_Assignment_Status__c = NULL
+                    OR FEC_Assignment_Status__c NOT IN :FEC_ConstantCommon.CLOSED_ASSIGNMENT_STATUSES
+                )
+                AND FEC_Case__r.IsClosed = FALSE
+                AND FEC_Case__r.FEC_Assignment_Count__c > 0
+            ORDER BY CreatedDate ASC
+        ]) {
+            if (
+                assignmentRow.FEC_Case__c == null ||
+                assignmentRow.FEC_Case__r == null ||
+                seenCaseIds.contains(assignmentRow.FEC_Case__c) ||
+                oldestAssignmentByCaseId.containsKey(assignmentRow.FEC_Case__c)
+            ) {
+                continue;
+            }
+            if (!assignmentOwnerMatchesSelectedQueues(assignmentRow.FEC_OwnerID__c, queueOwnerTokens)) {
+                continue;
+            }
+            Case caseRow = assignmentRow.FEC_Case__r;
+            if (!isPendingCaseStatus(caseRow.Status)) {
+                continue;
+            }
+            if (!caseMatchesNoc(caseRow, nocExactKeys, nocWithoutSubCodeKeys)) {
+                continue;
+            }
+            oldestAssignmentByCaseId.put(assignmentRow.FEC_Case__c, assignmentRow);
+            assignmentCaseCandidatesById.put(assignmentRow.FEC_Case__c, caseRow);
+        }
+
+        for (Id caseId : oldestAssignmentByCaseId.keySet()) {
+            FEC_Assignment__c assignmentRow = oldestAssignmentByCaseId.get(caseId);
+            Case caseRow = assignmentCaseCandidatesById.get(caseId);
+            if (assignmentRow == null || caseRow == null) {
+                continue;
+            }
+            targets.add(new DistributionTarget(caseRow, false, assignmentRow.Id));
+            seenCaseIds.add(caseId);
+        }
+
+        return targets;
+    }
+
+    private static void rebuildAssignmentUsersForCases(Set<Id> caseIds) {
+        if (caseIds == null || caseIds.isEmpty()) {
+            return;
+        }
+        Map<Id, List<FEC_Assignment__c>> assignmentsByCaseId = new Map<Id, List<FEC_Assignment__c>>();
+        for (FEC_Assignment__c assignmentRow : [
+            SELECT Id, FEC_Case__c, FEC_Assignment_Owner__c, FEC_OwnerID__c
+            FROM FEC_Assignment__c
+            WHERE
+                FEC_Case__c IN :caseIds
+                AND (
+                    FEC_Assignment_Status__c = NULL
+                    OR FEC_Assignment_Status__c NOT IN :FEC_ConstantCommon.CLOSED_ASSIGNMENT_STATUSES
+                )
+        ]) {
+            if (!assignmentsByCaseId.containsKey(assignmentRow.FEC_Case__c)) {
+                assignmentsByCaseId.put(assignmentRow.FEC_Case__c, new List<FEC_Assignment__c>());
+            }
+            assignmentsByCaseId.get(assignmentRow.FEC_Case__c).add(assignmentRow);
+        }
+
+        List<Case> caseUpdates = new List<Case>();
+        for (Id caseId : caseIds) {
+            List<String> userValues = new List<String>();
+            for (FEC_Assignment__c assignmentRow : assignmentsByCaseId.get(caseId)) {
+                if (assignmentRow.FEC_Assignment_Owner__c != null) {
+                    userValues.add(String.valueOf(assignmentRow.FEC_Assignment_Owner__c));
+                } else if (String.isNotBlank(assignmentRow.FEC_OwnerID__c)) {
+                    userValues.add(assignmentRow.FEC_OwnerID__c.trim());
+                }
+            }
+            caseUpdates.add(
+                new Case(
+                    Id = caseId,
+                    FEC_Assignment_Users__c = userValues.isEmpty() ? null : String.join(userValues, ',')
+                )
+            );
+        }
+        if (!caseUpdates.isEmpty()) {
+            update caseUpdates;
+        }
+    }
+
+    private static Integer applyDistributionResults(
+        Id configAssignmentId,
+        List<DistributionTarget> targets
+    ) {
+        if (targets == null || targets.isEmpty()) {
+            return 0;
+        }
+
+        Map<Id, Case> caseUpdatesById = new Map<Id, Case>();
+        List<FEC_Assignment__c> assignmentUpdates = new List<FEC_Assignment__c>();
+        Set<Id> casesForUserSync = new Set<Id>();
+        Integer appliedCount = 0;
+
+        for (DistributionTarget target : targets) {
+            if (
+                target == null ||
+                target.caseRecord == null ||
+                target.caseRecord.Id == null ||
+                target.assignedUserId == null
+            ) {
+                continue;
+            }
+
+            Case caseUpdate = caseUpdatesById.get(target.caseRecord.Id);
+            if (caseUpdate == null) {
+                caseUpdate = new Case(Id = target.caseRecord.Id);
+                caseUpdatesById.put(target.caseRecord.Id, caseUpdate);
+            }
+            caseUpdate.FEC_Recently_Auto_Case_Assignment__c = configAssignmentId;
+
+            if (target.updateCaseOwner == true) {
+                caseUpdate.OwnerId = target.assignedUserId;
+                FEC_CaseBusinessService.registerSkipOwnerChangeRoutingHistory(target.caseRecord.Id);
+            } else if (target.assignmentRecordId != null) {
+                assignmentUpdates.add(
+                    new FEC_Assignment__c(
+                        Id = target.assignmentRecordId,
+                        FEC_Assignment_Owner__c = target.assignedUserId
+                    )
+                );
+                casesForUserSync.add(target.caseRecord.Id);
+            } else {
+                continue;
+            }
+            appliedCount++;
+        }
+
+        if (!assignmentUpdates.isEmpty()) {
+            update assignmentUpdates;
+        }
+        if (!caseUpdatesById.isEmpty()) {
+            update caseUpdatesById.values();
+        }
+        rebuildAssignmentUsersForCases(casesForUserSync);
+        return appliedCount;
+    }
+
+    public static void applyDistributionResultsFromBatch(
+        Id configAssignmentId,
+        List<FEC_CaseAssignmentApplyOwnerBatch.DistributionTargetStub> batchTargets
+    ) {
+        if (batchTargets == null || batchTargets.isEmpty()) {
+            return;
+        }
+        List<DistributionTarget> targets = new List<DistributionTarget>();
+        for (FEC_CaseAssignmentApplyOwnerBatch.DistributionTargetStub stub : batchTargets) {
+            if (stub == null || stub.caseId == null || stub.assignedUserId == null) {
+                continue;
+            }
+            DistributionTarget target = new DistributionTarget(
+                new Case(Id = stub.caseId),
+                stub.updateCaseOwner == true,
+                stub.assignmentRecordId
+            );
+            target.assignedUserId = stub.assignedUserId;
+            targets.add(target);
+        }
+        applyDistributionResults(configAssignmentId, targets);
+    }
+
     private static Integer executeSingleAssignment(FEC_Case_Assignment__c assignmentRecord, Integer runNumber) {
         Set<String> queueNames = splitToSet(assignmentRecord.FEC_Select_Queues__c);
         if (queueNames.isEmpty()) {
@@ -768,43 +1114,13 @@ public without sharing class FEC_CaseAssignmentAutoDistributeService {
             }
         }
 
-        List<Case> candidateCases = [
-            SELECT
-                Id,
-                OwnerId,
-                CreatedDate,
-                FEC_Product_Type__c,
-                FEC_Product_Type__r.Name,
-                FEC_Category__c,
-                FEC_Category__r.Name,
-                FEC_SubCategory__c,
-                FEC_SubCategory__r.Name,
-                FEC_SubCode__c,
-                FEC_SubCode__r.Name
-            FROM Case
-            WHERE OwnerId IN :queueById.keySet() AND IsClosed = false
-            ORDER BY CreatedDate ASC
-        ];
-
-        List<Case> targetCases = new List<Case>();
-        for (Case c : candidateCases) {
-            String baseKey = buildKey(
-                c.FEC_Product_Type__c,
-                c.FEC_Product_Type__r == null ? null : c.FEC_Product_Type__r.Name,
-                c.FEC_Category__c,
-                c.FEC_Category__r == null ? null : c.FEC_Category__r.Name,
-                c.FEC_SubCategory__c,
-                c.FEC_SubCategory__r == null ? null : c.FEC_SubCategory__r.Name
-            );
-            String exactKey = baseKey + '|' + normalizeKeyPart(
-                c.FEC_SubCode__c,
-                c.FEC_SubCode__r == null ? null : c.FEC_SubCode__r.Name
-            );
-            if (nocExactKeys.contains(exactKey) || nocWithoutSubCodeKeys.contains(baseKey)) {
-                targetCases.add(c);
-            }
-        }
-        if (targetCases.isEmpty()) {
+        List<DistributionTarget> distributionTargets = collectDistributionTargets(
+            queueNames,
+            queueById,
+            nocExactKeys,
+            nocWithoutSubCodeKeys
+        );
+        if (distributionTargets.isEmpty()) {
             return 0;
         }
 
@@ -846,7 +1162,7 @@ public without sharing class FEC_CaseAssignmentAutoDistributeService {
         String allocationMethod = normalizedAssignmentMethod(assignmentRecord);
         if (allocationMethod == METHOD_CONTINUOUS) {
             distributeWeightedLeastLoaded(
-                targetCases,
+                distributionTargets,
                 eligibleUsers,
                 roleScaleMap,
                 historicalCountByUser,
@@ -855,7 +1171,7 @@ public without sharing class FEC_CaseAssignmentAutoDistributeService {
             );
         } else {
             distributeWeightedSequentialFromHistory(
-                targetCases,
+                distributionTargets,
                 eligibleUsers,
                 roleScaleMap,
                 historicalCountByUser,
@@ -867,26 +1183,35 @@ public without sharing class FEC_CaseAssignmentAutoDistributeService {
             return 0;
         }
 
-        Integer totalTargets = targetCases.size();
+        Integer totalTargets = distributionTargets.size();
         if (totalTargets <= ASSIGNMENT_CASE_DML_CHUNK_SIZE) {
-            registerSkipOwnerChangeRoutingHistoryForCases(targetCases);
-            update targetCases;
+            Integer appliedCount = applyDistributionResults(assignmentRecord.Id, distributionTargets);
+            if (appliedCount <= 0) {
+                return 0;
+            }
             insertAssignmentRunLog(
                 assignmentRecord.Id,
                 assignmentRecord.Name,
                 runNumber,
-                totalTargets,
+                appliedCount,
                 numberByUser,
                 usersInAssignmentOrder
             );
-            return totalTargets;
+            return appliedCount;
         }
 
         List<Id> caseIdsOrdered = new List<Id>();
-        List<Id> newOwnerIdsOrdered = new List<Id>();
-        for (Case tc : targetCases) {
-            caseIdsOrdered.add(tc.Id);
-            newOwnerIdsOrdered.add(tc.OwnerId);
+        List<Id> assignedUserIdsOrdered = new List<Id>();
+        List<Boolean> updateCaseOwnerFlags = new List<Boolean>();
+        List<Id> assignmentIdsOrdered = new List<Id>();
+        for (DistributionTarget target : distributionTargets) {
+            if (target.assignedUserId == null || target.caseRecord == null) {
+                continue;
+            }
+            caseIdsOrdered.add(target.caseRecord.Id);
+            assignedUserIdsOrdered.add(target.assignedUserId);
+            updateCaseOwnerFlags.add(target.updateCaseOwner == true);
+            assignmentIdsOrdered.add(target.assignmentRecordId);
         }
 
         List<Id> summaryUserIds = new List<Id>();
@@ -899,7 +1224,9 @@ public without sharing class FEC_CaseAssignmentAutoDistributeService {
                 assignmentRecord.Name,
                 runNumber,
                 caseIdsOrdered,
-                newOwnerIdsOrdered,
+                assignedUserIdsOrdered,
+                updateCaseOwnerFlags,
+                assignmentIdsOrdered,
                 summaryUserIds,
                 summaryCounts
             ),
@@ -1346,7 +1673,7 @@ public without sharing class FEC_CaseAssignmentAutoDistributeService {
         Id assignmentId,
         List<User> eligibleUsers
     ) {
-        Map<String, Id> userIdByEmail = new Map<String, Id>();
+        Map<String, List<Id>> userIdsByEmail = new Map<String, List<Id>>();
         Map<Id, Integer> countByUser = new Map<Id, Integer>();
         Set<String> emails = new Set<String>();
 
@@ -1354,7 +1681,10 @@ public without sharing class FEC_CaseAssignmentAutoDistributeService {
             countByUser.put(userRecord.Id, 0);
             if (String.isNotBlank(userRecord.Email)) {
                 String normalizedEmail = userRecord.Email.trim().toLowerCase();
-                userIdByEmail.put(normalizedEmail, userRecord.Id);
+                if (!userIdsByEmail.containsKey(normalizedEmail)) {
+                    userIdsByEmail.put(normalizedEmail, new List<Id>());
+                }
+                userIdsByEmail.get(normalizedEmail).add(userRecord.Id);
                 emails.add(normalizedEmail);
             }
         }
@@ -1374,12 +1704,19 @@ public without sharing class FEC_CaseAssignmentAutoDistributeService {
             if (String.isBlank(emailValue)) {
                 continue;
             }
-            Id userId = userIdByEmail.get(emailValue.trim().toLowerCase());
-            if (userId == null) {
+            List<Id> matchedUserIds = userIdsByEmail.get(emailValue.trim().toLowerCase());
+            if (matchedUserIds == null || matchedUserIds.isEmpty()) {
                 continue;
             }
             Decimal totalAssigned = (Decimal) ar.get('totalCase');
-            countByUser.put(userId, totalAssigned == null ? 0 : Integer.valueOf(totalAssigned));
+            Integer totalCount = totalAssigned == null ? 0 : Integer.valueOf(totalAssigned);
+            Integer perUserCount = totalCount / matchedUserIds.size();
+            Integer remainder = Math.mod(totalCount, matchedUserIds.size());
+            for (Integer idx = 0; idx < matchedUserIds.size(); idx++) {
+                Id userId = matchedUserIds[idx];
+                Integer assignedCount = perUserCount + (idx < remainder ? 1 : 0);
+                countByUser.put(userId, assignedCount);
+            }
         }
         return countByUser;
     }
@@ -1416,18 +1753,17 @@ public without sharing class FEC_CaseAssignmentAutoDistributeService {
      * (cnt1/sc1 và cnt2/sc2 so sanh bang tích nguyen cnt1*sc2 vs cnt2*sc1). Trong một lần chạy, cnt trên map tăng dần.
      */
     private static void distributeWeightedLeastLoaded(
-        List<Case> targetCases,
+        List<DistributionTarget> distributionTargets,
         List<User> eligibleUsers,
         Map<String, Integer> roleScaleMap,
         Map<Id, Integer> historicalCountByUser,
         Map<Id, Integer> numberByUser,
         List<Id> usersInAssignmentOrder
     ) {
-        if (targetCases == null || eligibleUsers == null || eligibleUsers.isEmpty()) {
+        if (distributionTargets == null || eligibleUsers == null || eligibleUsers.isEmpty()) {
             return;
         }
         Integer eligibleCount = eligibleUsers.size();
-        /* Tiền tính scale + count vào List — không lookup scale/map lặp lại trong vòng Case×User */
         List<Integer> scaleByIndex = new List<Integer>();
         List<Integer> runCountByIndex = new List<Integer>();
         for (Integer idx = 0; idx < eligibleCount; idx++) {
@@ -1436,7 +1772,7 @@ public without sharing class FEC_CaseAssignmentAutoDistributeService {
             runCountByIndex.add(getCountValue(historicalCountByUser, candidateUser.Id));
         }
 
-        for (Case targetCaseRecord : targetCases) {
+        for (DistributionTarget target : distributionTargets) {
             Integer bestIdx = -1;
             Integer bestCnt = 0;
             Integer bestScale = 1;
@@ -1462,7 +1798,7 @@ public without sharing class FEC_CaseAssignmentAutoDistributeService {
             }
             User chosenUser = eligibleUsers[bestIdx];
             Id chosenId = chosenUser.Id;
-            targetCaseRecord.OwnerId = chosenId;
+            target.assignedUserId = chosenId;
             Integer newCnt = bestCnt + 1;
             runCountByIndex[bestIdx] = newCnt;
             historicalCountByUser.put(chosenId, newCnt);
@@ -1479,7 +1815,7 @@ public without sharing class FEC_CaseAssignmentAutoDistributeService {
      * Time-Based và default: một vòng lặp RR có trong số slot = tổng scale; offsets theo log lịch sử để run sau nối tiếp run trước.
      */
     private static void distributeWeightedSequentialFromHistory(
-        List<Case> targetCases,
+        List<DistributionTarget> distributionTargets,
         List<User> eligibleUsers,
         Map<String, Integer> roleScaleMap,
         Map<Id, Integer> historicalCountByUser,
@@ -1488,7 +1824,7 @@ public without sharing class FEC_CaseAssignmentAutoDistributeService {
     ) {
         List<Id> weightedSlots = buildWeightedUserSlots(eligibleUsers, roleScaleMap);
         if (
-            targetCases == null ||
+            distributionTargets == null ||
             weightedSlots.isEmpty()
         ) {
             return;
@@ -1500,9 +1836,9 @@ public without sharing class FEC_CaseAssignmentAutoDistributeService {
             }
         }
         Integer pointer = Math.mod(totalPriorAcrossEligible, weightedSlots.size());
-        for (Case targetCaseRecord : targetCases) {
+        for (DistributionTarget target : distributionTargets) {
             Id newOwnerId = weightedSlots[pointer];
-            targetCaseRecord.OwnerId = newOwnerId;
+            target.assignedUserId = newOwnerId;
             historicalCountByUser.put(
                 newOwnerId,
                 getCountValue(historicalCountByUser, newOwnerId) + 1
@@ -1543,20 +1879,5 @@ public without sharing class FEC_CaseAssignmentAutoDistributeService {
             return String.valueOf(idValue).toLowerCase();
         }
         return '';
-    }
-
-    /**
-     * Auto distribute đổi Owner hàng loạt — không tạo Routing Action History / notification
-     * trong cùng transaction (tránh chiếm quota enqueue của xích AutoDistQueueJob).
-     */
-    private static void registerSkipOwnerChangeRoutingHistoryForCases(List<Case> cases) {
-        if (cases == null) {
-            return;
-        }
-        for (Case c : cases) {
-            if (c != null && c.Id != null) {
-                FEC_CaseBusinessService.registerSkipOwnerChangeRoutingHistory(c.Id);
-            }
-        }
     }
 }
