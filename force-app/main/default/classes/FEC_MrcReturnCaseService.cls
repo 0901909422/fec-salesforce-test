@@ -542,7 +542,7 @@ public without sharing class FEC_MrcReturnCaseService {
                 false
             );
         }
-        if (ctx.showMrcDupBanner == true) {
+        if (ctx.isReturnSubCode == true) {
             injectCaseInformationField(
                 caseInfo,
                 selectedCase,
@@ -903,5 +903,88 @@ public without sharing class FEC_MrcReturnCaseService {
                 result.routingActionlst.add(act);
             }
         }
+    }
+
+    /**
+     * MRC Return (Batch 7): chặn nhập Case Information khi không đủ điều kiện (giống pattern Phone Update).
+     * Áp khi FEC_SubCategory__r.FEC_Code__c chứa RL05; kiểm tra Product Code TW và DPD cho RL05.03.
+     */
+    public static FEC_CaseBusinessService.Error mrcReturnCaseInformationValidate(
+        Case selectedCase,
+        String subCategoryCode,
+        String subCodeCode
+    ) {
+        List<String> errorlst = new List<String>();
+
+        if (String.isBlank(subCategoryCode)) {
+            return new FEC_CaseBusinessService.Error();
+        }
+        Boolean isMrcRl05Branch = subCategoryCode.toUpperCase().contains('RL05');
+        if (!isMrcRl05Branch) {
+            return new FEC_CaseBusinessService.Error();
+        }
+
+        if (
+            selectedCase == null ||
+            selectedCase.FEC_Account_or_Contract__c == null ||
+            selectedCase.FEC_Account_or_Contract__r == null
+        ) {
+            return new FEC_CaseBusinessService.Error();
+        }
+
+        String productCode = selectedCase.FEC_Account_or_Contract__r.FEC_Product_Code__c;
+        if (String.isNotBlank(productCode)) {
+            if (!'TW'.equalsIgnoreCase(productCode.trim())) {
+                errorlst.add(System.Label.FEC_MRC_Return_Msg_Product_Not_TW);
+            }
+        }
+
+        if (
+            errorlst.isEmpty() &&
+            String.isNotBlank(subCodeCode) &&
+            subCodeCode.toUpperCase().contains(FEC_ConstantCommon.SUB_CODE_RL0503)
+        ) {
+            Decimal daysPastDue = selectedCase.FEC_Account_or_Contract__r.FEC_Days_Past_Due__c;
+            if (daysPastDue != null && daysPastDue >= 15) {
+                errorlst.add(System.Label.FEC_MRC_Return_Msg_DPD_RL0503);
+            }
+        }
+
+        if (errorlst.isEmpty()) {
+            return new FEC_CaseBusinessService.Error();
+        }
+        return new FEC_CaseBusinessService.Error(
+            System.Label.FEC_MRC_Return_Case_Info_Block_Title,
+            errorlst
+        );
+    }
+
+    /** Chỉ cảnh báo DPD RL05.03 — không chặn master data / fec_ContractClosureForm. */
+    public static Boolean isRl0503DpdOnlyValidation(
+        FEC_CaseBusinessService.Error mrcErr,
+        String subCodeCode
+    ) {
+        if (
+            mrcErr == null ||
+            mrcErr.errorlst == null ||
+            mrcErr.errorlst.isEmpty() ||
+            String.isBlank(subCodeCode) ||
+            !subCodeCode.toUpperCase().contains(FEC_ConstantCommon.SUB_CODE_RL0503)
+        ) {
+            return false;
+        }
+        String dpdMsg = System.Label.FEC_MRC_Return_Msg_DPD_RL0503;
+        Boolean hasDpd = false;
+        for (String line : mrcErr.errorlst) {
+            if (String.isBlank(line)) {
+                continue;
+            }
+            if (line == dpdMsg) {
+                hasDpd = true;
+            } else {
+                return false;
+            }
+        }
+        return hasDpd;
     }
 }

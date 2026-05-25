@@ -621,7 +621,7 @@ public without sharing class FEC_CaseBusinessService {
             result.subCodeCode
           )
         ) {
-          Error mrcErr = mrcReturnCaseInformationValidate(
+          Error mrcErr = FEC_MrcReturnCaseService.mrcReturnCaseInformationValidate(
             selectedCase,
             result.subCategoryCode,
             result.subCodeCode
@@ -639,7 +639,7 @@ public without sharing class FEC_CaseBusinessService {
             } else {
               caseInfoMrc.error = mrcErr;
             }
-            if (isRl0503DpdOnlyValidation(mrcErr, result.subCodeCode)) {
+            if (FEC_MrcReturnCaseService.isRl0503DpdOnlyValidation(mrcErr, result.subCodeCode)) {
               result.mrcRl05CaseInfoWarningOnly = true;
             } else {
               err = mrcErr;
@@ -2265,6 +2265,7 @@ public without sharing class FEC_CaseBusinessService {
             createCaseFlowHistory(caseId, natureOfCaseId, fieldListJson);
           }
           route(caseId, queueId, natureOfCaseId, actionId, finalStatusBeforeSubmit);
+          FEC_MrcDuplicateCaseService.applyNotReceivedHandlingOptionOnSubmit(caseId);
           return null;
         }
         // tungnm37 thêm: COF/GSR - không đổi owner, chỉ tạo Assignment + Case Remarks + Routing Action History
@@ -2298,6 +2299,9 @@ public without sharing class FEC_CaseBusinessService {
           markCaseSubmittedAndClearDrafts(caseId);
           cancel(caseId);
           createRoutingActionHis('Cancel', '', oldOwnerName, oldOwnerId, caseId, stageName, finalStatusBeforeSubmit, currentStageId);
+          FEC_MrcDuplicateCaseService.applyReceivedConfirmationDuplicateCancel(
+            caseId
+          );
           return null;
         }
         when REOPEN {
@@ -2791,7 +2795,7 @@ public without sharing class FEC_CaseBusinessService {
     }
   }
 
-  private static void createRoutingActionHis(
+  public static void createRoutingActionHis(
     String routingAction,
     String decision,
     String oldOwnerName,
@@ -4775,88 +4779,6 @@ public without sharing class FEC_CaseBusinessService {
     } catch (DmlException e) {
       throw new AuraHandledException(e.getMessage());
     }
-  }
-
-  /**
-   * MRC Return (Batch 7): chặn nhập Case Information khi không đủ điều kiện (giống pattern Phone Update).
-   * Áp khi FEC_SubCategory__r.FEC_Code__c chứa RL05; kiểm tra Product Code TW và DPD cho RL05.03.
-   */
-  /**
-   * Chỉ cảnh báo DPD RL05.03 — không chặn master data / fec_ContractClosureForm.
-   */
-  private static Boolean isRl0503DpdOnlyValidation(
-    Error mrcErr,
-    String subCodeCode
-  ) {
-    if (
-      mrcErr == null ||
-      mrcErr.errorlst == null ||
-      mrcErr.errorlst.isEmpty() ||
-      String.isBlank(subCodeCode) ||
-      !subCodeCode.toUpperCase().contains(FEC_ConstantCommon.SUB_CODE_RL0503)
-    ) {
-      return false;
-    }
-    String dpdMsg = System.Label.FEC_MRC_Return_Msg_DPD_RL0503;
-    Boolean hasDpd = false;
-    for (String line : mrcErr.errorlst) {
-      if (String.isBlank(line)) {
-        continue;
-      }
-      if (line == dpdMsg) {
-        hasDpd = true;
-      } else {
-        return false;
-      }
-    }
-    return hasDpd;
-  }
-
-  public static Error mrcReturnCaseInformationValidate(
-    Case selectedCase,
-    String subCategoryCode,
-    String subCodeCode
-  ) {
-    List<String> errorlst = new List<String>();
-
-    if (String.isBlank(subCategoryCode)) {
-      return new Error();
-    }
-    Boolean isMrcRl05Branch = subCategoryCode.toUpperCase().contains('RL05');
-    if (!isMrcRl05Branch) {
-      return new Error();
-    }
-
-    if (
-      selectedCase == null ||
-      selectedCase.FEC_Account_or_Contract__c == null ||
-      selectedCase.FEC_Account_or_Contract__r == null
-    ) {
-      return new Error();
-    }
-
-    String productCode = selectedCase.FEC_Account_or_Contract__r.FEC_Product_Code__c;
-    if (String.isNotBlank(productCode)) {
-      if (!'TW'.equalsIgnoreCase(productCode.trim())) {
-        errorlst.add(System.Label.FEC_MRC_Return_Msg_Product_Not_TW);
-      }
-    }
-
-    if (
-      errorlst.isEmpty() &&
-      String.isNotBlank(subCodeCode) &&
-      subCodeCode.toUpperCase().contains(FEC_ConstantCommon.SUB_CODE_RL0503)
-    ) {
-      Decimal daysPastDue = selectedCase.FEC_Account_or_Contract__r.FEC_Days_Past_Due__c;
-      if (daysPastDue != null && daysPastDue >= 15) {
-        errorlst.add(System.Label.FEC_MRC_Return_Msg_DPD_RL0503);
-      }
-    }
-
-    if (errorlst.isEmpty()) {
-      return new Error();
-    }
-    return new Error(System.Label.FEC_MRC_Return_Case_Info_Block_Title, errorlst);
   }
 
   public static Error phoneUpdateValidate(Id cHistoryId) {

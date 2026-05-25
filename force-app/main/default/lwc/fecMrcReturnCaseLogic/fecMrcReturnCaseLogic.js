@@ -570,12 +570,6 @@ export function getMrcReturnAutoRoutingActionCode(
   if (!ctx?.isReturnSubCode || !isEdit) {
     return null;
   }
-  if (ctx.autoRouteReject === true) {
-    return ACTION_REJECT;
-  }
-  if (ctx.autoRoutePayment === true || ctx.autoRouteCp === true) {
-    return ACTION_ROUTE_TO;
-  }
   const draft =
     typeof business?.mrcCustomerConfirmationDraft === "string"
       ? business.mrcCustomerConfirmationDraft.trim()
@@ -588,6 +582,12 @@ export function getMrcReturnAutoRoutingActionCode(
     getCaseFieldValue(business, FIELD_MRC_CUSTOMER_CONFIRMATION);
   if (isMrcReceivedConfirmation(conf)) {
     return ACTION_CANCEL;
+  }
+  if (ctx.autoRouteReject === true) {
+    return ACTION_REJECT;
+  }
+  if (ctx.autoRoutePayment === true || ctx.autoRouteCp === true) {
+    return ACTION_ROUTE_TO;
   }
   return null;
 }

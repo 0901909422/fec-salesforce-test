@@ -128,6 +128,10 @@
         <members>FEC_BatchCaseHandlingZipResult</members>
         <members>FEC_BatchCaseHandlingZipService</members>
         <members>FEC_CaseTatFullProcessSvc</members>
+        <members>FEC_CaseDsTsSlaBatch</members>
+        <members>FEC_CaseDsTsSlaNotificationSender</members>
+        <members>FEC_CaseDsTsSlaSchedulable</members>
+        <members>FEC_CaseDsTsSlaService</members>
         <members>FEC_CaseSlaNotificationService</members>
         <members>FEC_CaseAssignmentTriggerHandler</members>
         <members>FEC_ScopedStageChangeRoutingService</members>
@@ -412,6 +416,7 @@
         <members>FEC_MRC_RL0502_Dup_Opt_Cancel_Prev</members>
         <members>FEC_MRC_Dup_Remark_Cancel_Prev</members>
         <members>FEC_MRC_Dup_Remark_Cancel_New</members>
+        <members>FEC_MRC_Dup_Remark_Received_Confirm</members>
         <members>FEC_MRC_RL0502_Dup_Open_Case_Btn</members>
 		<members>FEC_Transfer_Err_Remark_Null</members>
         <members>FEC_BCH_AddFilterRow</members>
@@ -434,6 +439,11 @@
         <members>FEC_BCH_PropertyPlaceholder</members>
         <members>FEC_Points_Redeem_Fail_After_Max</members>
         <members>FEC_Points_Redeem_Fail_Retry</members>
+        <members>FEC_SLA_DS_TS_Recipient_Direct_Sales</members>
+        <members>FEC_SLA_DS_TS_Recipient_LG</members>
+        <members>FEC_SLA_DS_TS_Recipient_Pos_Sales</members>
+        <members>FEC_SLA_DS_TS_Recipient_Telesales</members>
+        <members>FEC_SLA_DS_TS_Use_Test_Thresholds</members>
         <members>FEC_MSG_SLA_Notif_Body_Approaching</members>
         <members>FEC_MSG_SLA_Notif_Body_Exceeded</members>
         <members>FEC_MSG_SLA_Notif_Title_Approaching</members>

@@ -124,6 +124,12 @@ public without sharing class FEC_CaseTriggerHandler {
      */
     private void onAfterUpdate(List<Case> newCases, Map<Id, Case> oldMap) {
         isExecuting = true;
+        // Batch/system chỉ patch vài field — tránh handler đọc field chưa có trên Trigger.new
+        if (isSystemUpdate) {
+            FEC_CaseDsTsSlaNotificationSender.sendAfterCaseUpdate(newCases, oldMap);
+            isExecuting = false;
+            return;
+        }
         updateLastModified(newCases, oldMap);
         handleFollowUpOnResolved(newCases, oldMap);
         handleAutoFollowUpOnUpdate(newCases, oldMap);
@@ -170,24 +176,45 @@ public without sharing class FEC_CaseTriggerHandler {
     }
 
     private void syncGlobalSearch(List<Case> newCases, Map<Id, Case> oldMap) {
+        if (isSystemUpdate) {
+            return;
+        }
         // 1. Dynamically get the 'Interaction' Record Type ID
         Id interactionRtId = Schema.SObjectType.Case.getRecordTypeInfosByName().get('Interaction').getRecordTypeId();
-        
-        // Map to hold the Interaction Case Id -> the new FEC_ID_Search__c value
-        Map<Id, String> interactionIdToSearchKey = new Map<Id, String>();
 
-        // 2. Identify which 'Interaction' Cases meet the criteria
+        Set<Id> interactionCaseIds = new Set<Id>();
         for (Case c : newCases) {
             if (c.RecordTypeId == interactionRtId) {
-                // Check Insert Condition: oldMap is null AND FEC_ID_Search__c has a value
-                Boolean isInsertCriteriaMet = (oldMap == null && c.FEC_ID_Search__c != null);
-                
-                // Check Update Condition: oldMap exists AND FEC_ID_Search__c has changed
-                Boolean isUpdateCriteriaMet = (oldMap != null && c.FEC_ID_Search__c != oldMap.get(c.Id).FEC_ID_Search__c);
+                interactionCaseIds.add(c.Id);
+            }
+        }
+        if (interactionCaseIds.isEmpty()) {
+            return;
+        }
 
-                if (isInsertCriteriaMet || isUpdateCriteriaMet) {
-                    interactionIdToSearchKey.put(c.Id, c.FEC_ID_Search__c);
-                }
+        Map<Id, Case> currentById = new Map<Id, Case>([
+            SELECT Id, FEC_ID_Search__c
+            FROM Case
+            WHERE Id IN :interactionCaseIds
+        ]);
+
+        // Map Interaction Case Id -> FEC_ID_Search__c (query DB, không đọc Trigger.new thiếu field)
+        Map<Id, String> interactionIdToSearchKey = new Map<Id, String>();
+
+        for (Id caseId : interactionCaseIds) {
+            Case current = currentById.get(caseId);
+            if (current == null) {
+                continue;
+            }
+            Boolean isInsertCriteriaMet =
+                oldMap == null && String.isNotBlank(current.FEC_ID_Search__c);
+            Boolean isUpdateCriteriaMet = false;
+            if (oldMap != null && oldMap.containsKey(caseId)) {
+                isUpdateCriteriaMet =
+                    current.FEC_ID_Search__c != oldMap.get(caseId).FEC_ID_Search__c;
+            }
+            if (isInsertCriteriaMet || isUpdateCriteriaMet) {
+                interactionIdToSearchKey.put(caseId, current.FEC_ID_Search__c);
             }
         }
 
@@ -1117,8 +1144,8 @@ public without sharing class FEC_CaseTriggerHandler {
 
     /**
      * II. Hình thức gửi thông báo SLA (bell) — theo Category/Sub-Category và lịch sử xử lý Case.
-     * - Trường hợp 1: Case còn lại (không thuộc Request/Internal Task + ISL01/ISC01 hủy yêu cầu).
-     * - Trường hợp 2: Category Request hoặc Internal Task, Sub-Code ISL01 / ISC01 (Hủy yêu cầu).
+     * - Trường hợp 1: Case còn lại (Category khác Request / Internal Task).
+     * - Trường hợp 2: Category Request hoặc Internal Task.
      * Lần 1 (vàng): FEC_SLA_Warning__c đổi — nội dung "Sắp vượt quá thời gian xử lý".
      * Lần 2 (đỏ): FEC_SLA_Violating_Warning__c đổi — nội dung "Đã vượt quá thời gian xử lý".
      */
@@ -1152,7 +1179,7 @@ public without sharing class FEC_CaseTriggerHandler {
             Map<Id, Case> slaCaseById = new Map<Id, Case>([
                 SELECT
                     Id,
-                    CaseNumber,
+                    FEC_ID_Search__c,
                     FEC_Category__r.Name,
                     FEC_SubCategory__r.FEC_Code__c
                 FROM Case
@@ -1179,28 +1206,28 @@ public without sharing class FEC_CaseTriggerHandler {
 
                 Boolean isCancelRequestCase =
                     FEC_CaseSlaNotificationService.isSlaCancelRequestInternalTaskCase(slaCase);
-                List<String> caseNumberArgs = new List<String>{ slaCase.CaseNumber };
+                List<String> fecIdSearchArgs = new List<String>{ slaCase.FEC_ID_Search__c };
                 String title;
                 String body;
                 if (isViolating && isCancelRequestCase) {
                     // Lần 2 (đỏ) — Trường hợp 2: Đã vượt quá thời gian xử lý
                     title = String.format(
                         System.Label.FEC_MSG_SLA_Notif_Title_Exceeded,
-                        caseNumberArgs
+                        fecIdSearchArgs
                     );
                     body = String.format(
                         System.Label.FEC_MSG_SLA_Notif_Body_Exceeded,
-                        caseNumberArgs
+                        fecIdSearchArgs
                     );
                 } else {
                     // Lần 1 (vàng) hoặc Lần 2 (đỏ) Trường hợp 1: Sắp vượt quá thời gian xử lý
                     title = String.format(
                         System.Label.FEC_MSG_SLA_Notif_Title_Approaching,
-                        caseNumberArgs
+                        fecIdSearchArgs
                     );
                     body = String.format(
                         System.Label.FEC_MSG_SLA_Notif_Body_Approaching,
-                        caseNumberArgs
+                        fecIdSearchArgs
                     );
                 }
 
