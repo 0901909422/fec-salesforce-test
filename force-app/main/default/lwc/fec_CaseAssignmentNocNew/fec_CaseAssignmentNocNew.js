@@ -1,7 +1,6 @@
 import { LightningElement, api, wire, track } from "lwc";
 import { CurrentPageReference, NavigationMixin } from "lightning/navigation";
 import { ShowToastEvent } from "lightning/platformShowToastEvent";
-import { RefreshEvent } from "lightning/refresh";
 import USER_ID from "@salesforce/user/Id";
 import { getRecord, getFieldValue, getRecordNotifyChange } from "lightning/uiRecordApi";
 import NAME_FIELD from "@salesforce/schema/User.Name";
@@ -800,18 +799,6 @@ export default class Fec_CaseAssignmentNocNew extends NavigationMixin(LightningE
       this.showToast("Success", "Case Assignment NOC saved.", "success");
       if (this.assignmentRecordId) {
         getRecordNotifyChange([{ recordId: this.assignmentRecordId }]);
-        this.dispatchEvent(new RefreshEvent());
-      }
-      if (this.assignmentRecordId && !this.isEditMode) {
-        this[NavigationMixin.Navigate]({
-          type: "standard__recordPage",
-          attributes: {
-            recordId: this.assignmentRecordId,
-            objectApiName: "FEC_Case_Assignment__c",
-            actionName: "view",
-          },
-        });
-        return;
       }
       await this.navigateAfterSave(nocId);
     } catch (e) {

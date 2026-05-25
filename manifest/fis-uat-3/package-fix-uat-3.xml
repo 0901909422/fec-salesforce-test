@@ -99,8 +99,6 @@
 		<members>FEC_CaseAssignmentFieldHistorySyncTest</members>
 		<members>FEC_CaseAssignmentNOCTriggerHandler</members>
 		<members>FEC_CaseAssignmentNocController</members>
-		<members>FEC_CaseAssignmentLogController</members>
-		<members>FEC_CaseAssignmentLogDetailGuard</members>
 		<members>FEC_CaseManagerListService</members>
 		<members>FEC_AutoHoldCaseApi</members>
 		<members>FEC_AutoHoldCaseExpireBatch</members>
@@ -156,7 +154,6 @@
     <types>
         <members>FEC_AssignmentTrigger</members>
         <members>FEC_CaseAssignmentNOCTrigger</members>
-        <members>FEC_CaseAssignmentLogDetailTrigger</members>
         <members>FEC_CaseAssignmentTrigger</members>
         <name>ApexTrigger</name>
     </types>
@@ -239,8 +236,6 @@
         <members>fec_CaseAssignmentDetailSummary</members>
         <members>fec_CaseAssignmentNocConfig</members>
         <members>fec_CaseAssignmentNocNew</members>
-        <members>fecCaseAssignmentLogsList</members>
-        <members>fecCaseAssignmentLogDetailsList</members>
         <members>fec_IPPDetails</members>
         <members>fecCaseAssignmentNewForm</members>
         <members>fec_ContractClosureForm</members>
@@ -658,7 +653,6 @@
 	</types>
     <types>
         <members>FEC_Case_Assignment_Logs__c-Case Assignment Log Layout</members>
-        <members>FEC_Case_Assignment_Log_Detail__c-Case Assignment Log Detail Layout</members>
         <members>FEC_Currency_Code__c-Currency Code Layout</members>
         <members>FEC_Case_Assignment__c-Case Assignment Layout</members>
 		<name>Layout</name>

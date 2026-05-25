@@ -33,8 +33,28 @@
     <flexiPageRegions>
         <itemInstances>
             <componentInstance>
-                <componentName>fecCaseAssignmentLogsList</componentName>
-                <identifier>c_fecCaseAssignmentLogsList</identifier>
+                <componentInstanceProperties>
+                    <name>parentFieldApiName</name>
+                    <value>FEC_Case_Assignment__c.Id</value>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>relatedListApiName</name>
+                    <value>FEC_CaseAssignmentLogs__r</value>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>relatedListComponentOverride</name>
+                    <value>NONE</value>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>rowsToDisplay</name>
+                    <value>10</value>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>showActionBar</name>
+                    <value>false</value>
+                </componentInstanceProperties>
+                <componentName>force:relatedListSingleContainer</componentName>
+                <identifier>force_relatedListSingleContainer_relatedTab_logs</identifier>
             </componentInstance>
         </itemInstances>
         <itemInstances>
@@ -189,8 +209,28 @@
         </itemInstances>
         <itemInstances>
             <componentInstance>
-                <componentName>fec_CaseAssignmentNocConfig</componentName>
-                <identifier>c_fec_CaseAssignmentNocConfig</identifier>
+                <componentInstanceProperties>
+                    <name>parentFieldApiName</name>
+                    <value>FEC_Case_Assignment__c.Id</value>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>relatedListApiName</name>
+                    <value>Case_Assignment_NOC__r</value>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>relatedListComponentOverride</name>
+                    <value>NONE</value>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>rowsToDisplay</name>
+                    <value>10</value>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>showActionBar</name>
+                    <value>true</value>
+                </componentInstanceProperties>
+                <componentName>force:relatedListSingleContainer</componentName>
+                <identifier>force_relatedListSingleContainer_caseAssignmentNoc</identifier>
             </componentInstance>
         </itemInstances>
         <name>sidebar</name>
