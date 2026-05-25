@@ -601,6 +601,7 @@
 		<members>FEC_Sub_Code__c.FEC_Do_Not_Bother__c</members>
 		<members>Case.FEC_Can_Execute__c</members>
         <members>Case.FEC_Can_Execute_Assignment__c</members>
+        <members>Case.FEC_Case_Executor__c</members>
 		<members>FEC_Customer_History__c.FEC_Available_Credit_Limit__c</members>
 		<members>FEC_Customer_History__c.FEC_Description__c</members>
 		<members>FEC_Customer_History__c.FEC_Error_Code__c</members>

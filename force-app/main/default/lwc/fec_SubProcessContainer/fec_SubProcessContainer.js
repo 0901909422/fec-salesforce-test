@@ -103,10 +103,7 @@ export default class Fec_SubProcessContainer extends LightningElement {
   }
 
   _findRemovePhoneFormEl() {
-    const selectors = [
-      "c-fec_-remove-phone-form",
-      "c-fec-remove-phone-form",
-    ];
+    const selectors = ["c-fec_-remove-phone-form", "c-fec-remove-phone-form"];
     for (let i = 0; i < selectors.length; i++) {
       const el = this.template.querySelector(selectors[i]);
       if (el) {
@@ -151,16 +148,25 @@ export default class Fec_SubProcessContainer extends LightningElement {
     }
   }
 
+  //HieuTT fix jira FECREDIT_CSM_2025_KH-1561
+  _findDNBHandlingEl() {
+    const selectors = ["c-fec_-do-not-bother-handling"];
+    for (let i = 0; i < selectors.length; i++) {
+      const el = this.template.querySelector(selectors[i]);
+      if (el) {
+        return el;
+      }
+    }
+    return null;
+  }
 
-  //Hieutt Fix jira 1561
+  //HieuTT fix jira FECREDIT_CSM_2025_KH-1561
   @api
   validateDNBForSubmit() {
-    const dnbHandling = this.template.querySelector(
-      "c-fec_-do-not-bother-handling",
-    );
+    const el = this._findDNBHandlingEl();
 
-    if (dnbHandling && typeof dnbHandling.validate === "function") {
-      return dnbHandling.validate();
+    if (el && typeof el.validateForSubmit === "function") {
+      return el.validateForSubmit();
     }
 
     return true;
