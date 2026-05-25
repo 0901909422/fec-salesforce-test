@@ -786,6 +786,8 @@
         <members>fec_DoNotBotherHandling</members>
         <members>fec_DoNotBotherInformationView</members>
         <members>fec_DoNotBotherNonExistingCustomer</members>
+        <members>fec_CreateCaseNonExistingCustomer</members>
+        <members>fec_InteractionCreateCase</members>
         <members>fec_ReusableDNBCustomTable</members>
         <members>fec_CaseEditNOC</members>
         <members>fec_CaseNocUpdatedSection</members>
