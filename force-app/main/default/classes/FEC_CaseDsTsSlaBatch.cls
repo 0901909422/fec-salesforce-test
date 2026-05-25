@@ -22,8 +22,8 @@ public without sharing class FEC_CaseDsTsSlaBatch implements Database.Batchable<
                 OR FEC_Case_Status__c LIKE :FEC_ConstantCommon.CASE_STATUS_PENDING_PREFIX
                 OR FEC_Case_Status__c LIKE 'Pending -%'
             )
-            AND (FEC_Team__c LIKE '%DS%' OR FEC_Team__c LIKE '%TS%')
             AND FEC_Category__r.Name IN ('Complaint', 'Feedback')
+            /* Team DS/TS: lọc trong execute (teamContainsDsOrTs), không LIKE %DS%/%TS% — Telesales/LG không khớp LIKE */
             AND (
                 (
                     (FEC_Assignment_Count__c = 0 OR FEC_Assignment_Count__c = NULL)
@@ -54,7 +54,9 @@ public without sharing class FEC_CaseDsTsSlaBatch implements Database.Batchable<
         for (Case row : scope) {
             FEC_CaseDsTsSlaService.SlaEligibilityContext ctx =
                 FEC_CaseDsTsSlaService.evaluateEligibility(row);
-            contextsByCaseId.put(row.Id, ctx);
+            if (ctx.isEligible) {
+                contextsByCaseId.put(row.Id, ctx);
+            }
         }
 
         FEC_CaseDsTsSlaService.bulkResolveAnchors(contextsByCaseId);
@@ -69,6 +71,9 @@ public without sharing class FEC_CaseDsTsSlaBatch implements Database.Batchable<
         }
 
         if (!patches.isEmpty()) {
+            for (Case patch : patches) {
+                FEC_CaseInitUpdateService.registerSystemCaseUpdate(patch.Id);
+            }
             FEC_CaseTriggerHandler.isSystemUpdate = true;
             try {
                 update patches;

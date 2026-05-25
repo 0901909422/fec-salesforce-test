@@ -1,5 +1,5 @@
 /**
- * SLA cảnh báo DS/TS: eligibility, anchor RAH, business hours, recipients, stamp notification fields.
+ * SLA cảnh báo DS/TS: eligibility, anchor RAH, elapsed wall-clock, recipients, stamp notification fields.
  */
 public without sharing class FEC_CaseDsTsSlaService {
 
@@ -13,8 +13,6 @@ public without sharing class FEC_CaseDsTsSlaService {
 
     private static final String ROUTE_TO = FEC_CaseBusinessService.ROUTE_TO;
     private static final String RAH_TYPE_CASE = 'Case';
-    private static final String FEC_BUSINESS_HOURS_NAME = 'FEC Business Hours';
-
     private static final Long MS_1MIN = 60L * 1000L;
     private static final Long MS_2MIN = 2L * MS_1MIN;
     private static final Long MS_3MIN = 3L * MS_1MIN;
@@ -25,9 +23,8 @@ public without sharing class FEC_CaseDsTsSlaService {
     private static final Long MS_8H = 8L * 60L * 60L * 1000L;
 
     /**
-     * Ngưỡng production: giờ làm việc (2h/4h hoặc 4h/6h/8h).
-     * Ngưỡng UAT: 1/2/3 phút (bước tương ứng mỗi 2h).
-     * Bật UAT: Custom Label FEC_SLA_DS_TS_Use_Test_Thresholds = true (hoặc setUseOneMinuteTestThresholds trong Anonymous).
+     * Ngưỡng production: 2h/4h (Telesales/LG) hoặc 4h/6h/8h (DS/POS) — elapsed = now − anchor (đồng hồ thực).
+     * Ngưỡng UAT: 1/2/3 phút. Label FEC_SLA_DS_TS_Use_Test_Thresholds = true.
      */
     @TestVisible
     private static Boolean useOneMinuteTestThresholdsOverride;
@@ -67,8 +64,6 @@ public without sharing class FEC_CaseDsTsSlaService {
     private static Map<String, Id> slaQueueIdByDevName;
     private static Map<String, Id> slaQueueIdByLabel;
     private static Set<Id> allQueueOwnerIds;
-    private static Id cachedBusinessHoursId;
-    private static Boolean businessHoursLookupDone = false;
 
     public class SlaEligibilityContext {
         public Boolean isEligible = false;
@@ -110,14 +105,22 @@ public without sharing class FEC_CaseDsTsSlaService {
         if (!isPendingStatus(c.FEC_Case_Status__c)) {
             return false;
         }
-        if (!isQueueOwner(c.OwnerId)) {
-            return false;
-        }
         if (!teamContainsDsOrTs(c.FEC_Team__c)) {
             return false;
         }
         String categoryName = c.FEC_Category__r != null ? c.FEC_Category__r.Name : null;
-        return String.isNotBlank(categoryName) && CATEGORY_NAMES.contains(categoryName);
+        if (String.isBlank(categoryName) || !CATEGORY_NAMES.contains(categoryName)) {
+            return false;
+        }
+        // TH1: owner phải là một trong 4 queue DS/TS
+        if (matchesTh1(c)) {
+            return isQueueOwner(c.OwnerId) && getSlaOwnerQueueIds().contains(c.OwnerId);
+        }
+        // TH2: đã có assignment tới queue DS/TS (owner có thể là User)
+        if (matchesTh2(c)) {
+            return true;
+        }
+        return false;
     }
 
     public static Boolean matchesTh1(Case c) {
@@ -139,6 +142,19 @@ public without sharing class FEC_CaseDsTsSlaService {
     public static Boolean teamContainsDsOrTs(String fecTeam) {
         if (String.isBlank(fecTeam)) {
             return false;
+        }
+        String norm = fecTeam.replace('_', ' ').trim().toUpperCase();
+        if (norm == 'DS' || norm == 'TS' || norm == 'LG') {
+            return true;
+        }
+        if (norm.contains('TELESALE')) {
+            return true;
+        }
+        if (norm.contains('DIRECT') && norm.contains('SALE')) {
+            return true;
+        }
+        if (norm.contains('POS') && norm.contains('SALE')) {
+            return true;
         }
         for (String part : fecTeam.split('_')) {
             String token = part != null ? part.trim().toUpperCase() : '';
@@ -183,7 +199,8 @@ public without sharing class FEC_CaseDsTsSlaService {
 
         List<FEC_Routing_Action_History__c> histories = [
             SELECT Id, FEC_Case__c, CreatedDate, FEC_Routing_Action_Type__c,
-                   FEC_Routing_Action__c, FEC_Assignment__c, FEC_Updated_User_Queue__c
+                   FEC_Routing_Action__c, FEC_Assignment__c,
+                   FEC_Updated_User_Queue__c, FEC_Updated_User_Queue_ID__c
             FROM FEC_Routing_Action_History__c
             WHERE FEC_Case__c IN :caseIds
               AND FEC_Routing_Action__c = :ROUTE_TO
@@ -227,15 +244,12 @@ public without sharing class FEC_CaseDsTsSlaService {
         );
     }
 
-    public static Long getElapsedBusinessMs(Datetime anchorCreatedDate, Datetime nowDt) {
+    /** Thời gian trôi (ms) = now − anchor, không dùng Business Hours. */
+    public static Long getElapsedMs(Datetime anchorCreatedDate, Datetime nowDt) {
         if (anchorCreatedDate == null || nowDt == null) {
             return null;
         }
-        Id bhId = resolveBusinessHoursId();
-        if (bhId == null) {
-            return null;
-        }
-        return BusinessHours.diff(bhId, anchorCreatedDate, nowDt);
+        return nowDt.getTime() - anchorCreatedDate.getTime();
     }
 
     public static Integer getDueNotificationSlot(Case c, Long elapsedMs, String queueProfile) {
@@ -243,28 +257,28 @@ public without sharing class FEC_CaseDsTsSlaService {
             return null;
         }
         if (queueProfile == PROFILE_TELESALES || queueProfile == PROFILE_LG) {
-            if (elapsedMs >= thresholdMsForSlot(2, queueProfile)
-                && c.FEC_SLA_Notification_2__c == null) {
-                return 2;
-            }
             if (elapsedMs >= thresholdMsForSlot(1, queueProfile)
                 && c.FEC_SLA_Notification_1__c == null) {
                 return 1;
+            }
+            if (elapsedMs >= thresholdMsForSlot(2, queueProfile)
+                && c.FEC_SLA_Notification_2__c == null) {
+                return 2;
             }
             return null;
         }
         if (queueProfile == PROFILE_DIRECT_SALES || queueProfile == PROFILE_POS_SALES) {
-            if (elapsedMs >= thresholdMsForSlot(3, queueProfile)
-                && c.FEC_SLA_Notification_3__c == null) {
-                return 3;
+            if (elapsedMs >= thresholdMsForSlot(1, queueProfile)
+                && c.FEC_SLA_Notification_1__c == null) {
+                return 1;
             }
             if (elapsedMs >= thresholdMsForSlot(2, queueProfile)
                 && c.FEC_SLA_Notification_2__c == null) {
                 return 2;
             }
-            if (elapsedMs >= thresholdMsForSlot(1, queueProfile)
-                && c.FEC_SLA_Notification_1__c == null) {
-                return 1;
+            if (elapsedMs >= thresholdMsForSlot(3, queueProfile)
+                && c.FEC_SLA_Notification_3__c == null) {
+                return 3;
             }
             return null;
         }
@@ -332,7 +346,7 @@ public without sharing class FEC_CaseDsTsSlaService {
             return null;
         }
 
-        Long elapsedMs = getElapsedBusinessMs(ctx.anchorDatetime, nowDt);
+        Long elapsedMs = getElapsedMs(ctx.anchorDatetime, nowDt);
         Integer slot = getDueNotificationSlot(row, elapsedMs, ctx.queueProfile);
         if (slot == null) {
             return null;
@@ -415,17 +429,42 @@ public without sharing class FEC_CaseDsTsSlaService {
         return userIds;
     }
 
+    public static String resolveCaseDisplayId(Case c) {
+        if (c == null) {
+            return '';
+        }
+        try {
+            if (String.isNotBlank(c.FEC_ID_Search__c)) {
+                return c.FEC_ID_Search__c;
+            }
+        } catch (SObjectException e) {
+            // Trigger.new từ partial update không query field này
+        }
+        if (c.Id == null) {
+            return '';
+        }
+        List<Case> rows = [
+            SELECT FEC_ID_Search__c
+            FROM Case
+            WHERE Id = :c.Id
+            LIMIT 1
+        ];
+        return rows.isEmpty() || String.isBlank(rows[0].FEC_ID_Search__c)
+            ? ''
+            : rows[0].FEC_ID_Search__c;
+    }
+
     public static String getApproachingTitle(Case c) {
         return String.format(
             Label.FEC_MSG_SLA_Notif_Title_Approaching,
-            new List<String>{ c.FEC_ID_Search__c }
+            new List<String>{ resolveCaseDisplayId(c) }
         );
     }
 
     public static String getApproachingBody(Case c) {
         return String.format(
             Label.FEC_MSG_SLA_Notif_Body_Approaching,
-            new List<String>{ c.FEC_ID_Search__c }
+            new List<String>{ resolveCaseDisplayId(c) }
         );
     }
 
@@ -433,14 +472,33 @@ public without sharing class FEC_CaseDsTsSlaService {
         if (rah == null || ctx == null || String.isBlank(ctx.matchedQueueLabel)) {
             return false;
         }
-        if (!queueTextMatches(rah.FEC_Updated_User_Queue__c, ctx.matchedQueueLabel)) {
+        if (!queueMatchesRoutingHistory(rah, ctx)) {
             return false;
         }
         if (ctx.scenario == SCENARIO_TH1) {
-            return rah.FEC_Routing_Action_Type__c == RAH_TYPE_CASE
-                && rah.FEC_Assignment__c == null;
+            if (rah.FEC_Assignment__c != null) {
+                return false;
+            }
+            if ('Assignment'.equalsIgnoreCase(rah.FEC_Routing_Action_Type__c)) {
+                return false;
+            }
+            // Route to Case-level: Type = Case hoặc null (nhiều RAH Route to không gán Type)
+            return String.isBlank(rah.FEC_Routing_Action_Type__c)
+                || RAH_TYPE_CASE.equalsIgnoreCase(rah.FEC_Routing_Action_Type__c);
         }
         return rah.FEC_Assignment__c != null;
+    }
+
+    private static Boolean queueMatchesRoutingHistory(
+        FEC_Routing_Action_History__c rah,
+        SlaEligibilityContext ctx
+    ) {
+        if (ctx.notifyQueueId != null && String.isNotBlank(rah.FEC_Updated_User_Queue_ID__c)) {
+            if (rah.FEC_Updated_User_Queue_ID__c == String.valueOf(ctx.notifyQueueId)) {
+                return true;
+            }
+        }
+        return queueTextMatches(rah.FEC_Updated_User_Queue__c, ctx.matchedQueueLabel);
     }
 
     private static Boolean queueTextMatches(String queueText, String queueLabel) {
@@ -527,27 +585,60 @@ public without sharing class FEC_CaseDsTsSlaService {
         }
     }
 
-    private static Id resolveBusinessHoursId() {
-        if (businessHoursLookupDone) {
-            return cachedBusinessHoursId;
+    /**
+     * UAT: chẩn đoán vì sao Case chưa stamp FEC_SLA_Notification_* (chạy Anonymous).
+     */
+    public static String diagnoseCase(Id caseId) {
+        if (caseId == null) {
+            return 'caseId null';
         }
-        businessHoursLookupDone = true;
-        List<BusinessHours> named = [
-            SELECT Id
-            FROM BusinessHours
-            WHERE Name = :FEC_BUSINESS_HOURS_NAME AND IsActive = TRUE
+        List<Case> rows = [
+            SELECT Id, OwnerId, FEC_Case_Status__c, FEC_Team__c,
+                   FEC_Assignment_Count__c, FEC_Assignment_Users__c,
+                   FEC_SLA_Notification_1__c, FEC_SLA_Notification_2__c, FEC_SLA_Notification_3__c,
+                   FEC_Category__r.Name
+            FROM Case
+            WHERE Id = :caseId
             LIMIT 1
         ];
-        if (!named.isEmpty()) {
-            cachedBusinessHoursId = named[0].Id;
-            return cachedBusinessHoursId;
+        if (rows.isEmpty()) {
+            return 'Case not found: ' + caseId;
         }
-        List<BusinessHours> def = [
-            SELECT Id FROM BusinessHours WHERE IsActive = TRUE AND IsDefault = TRUE LIMIT 1
+        Case c = rows[0];
+        List<String> lines = new List<String>();
+        lines.add('CaseId=' + c.Id);
+        lines.add('FEC_Case_Status__c=' + c.FEC_Case_Status__c);
+        lines.add('FEC_Team__c=' + c.FEC_Team__c + ' teamOk=' + teamContainsDsOrTs(c.FEC_Team__c));
+        lines.add('OwnerId=' + c.OwnerId + ' isQueue=' + isQueueOwner(c.OwnerId));
+        lines.add('Category=' + (c.FEC_Category__r != null ? c.FEC_Category__r.Name : null));
+        lines.add('AssignmentCount=' + c.FEC_Assignment_Count__c);
+        lines.add('AssignmentUsers=' + c.FEC_Assignment_Users__c);
+        lines.add('SlaQueueIdsLoaded=' + getSlaOwnerQueueIds().size());
+        lines.add('matchesTh1=' + matchesTh1(c) + ' matchesTh2=' + matchesTh2(c));
+        lines.add('meetsCommon=' + meetsCommonCriteria(c));
+        lines.add('testThresholds=' + isOneMinuteTestThresholdsEnabled());
+
+        SlaEligibilityContext ctx = evaluateEligibility(c);
+        lines.add('eligible=' + ctx.isEligible + ' scenario=' + ctx.scenario
+            + ' profile=' + ctx.queueProfile + ' queueLabel=' + ctx.matchedQueueLabel);
+
+        Map<Id, SlaEligibilityContext> mapCtx = new Map<Id, SlaEligibilityContext>{ caseId => ctx };
+        bulkResolveAnchors(mapCtx);
+        lines.add('anchorDatetime=' + ctx.anchorDatetime);
+
+        if (ctx.anchorDatetime != null) {
+            Long elapsed = getElapsedMs(ctx.anchorDatetime, System.now());
+            lines.add('elapsedMs=' + elapsed);
+            lines.add('dueSlot=' + getDueNotificationSlot(c, elapsed, ctx.queueProfile));
+        }
+
+        Integer rahCount = [
+            SELECT COUNT()
+            FROM FEC_Routing_Action_History__c
+            WHERE FEC_Case__c = :caseId AND FEC_Routing_Action__c = :ROUTE_TO
         ];
-        if (!def.isEmpty()) {
-            cachedBusinessHoursId = def[0].Id;
-        }
-        return cachedBusinessHoursId;
+        lines.add('rahRouteToCount=' + rahCount);
+        return String.join(lines, '\n');
     }
+
 }
