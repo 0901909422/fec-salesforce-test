@@ -17,15 +17,27 @@ public with sharing class FEC_DocumentRequestRoutingActionService {
     }
 
     List<Case> cases = [
-      SELECT FEC_Current_Case_Stage__c
+      SELECT
+        FEC_Current_Case_Stage__c,
+        FEC_Product_Type__c,
+        FEC_Category__c,
+        FEC_SubCategory__c,
+        FEC_SubCode__c,
+        FEC_Customer_Type__c
       FROM Case
       WHERE Id = :caseId
       LIMIT 1
     ];
-    if (cases.isEmpty() || cases[0].FEC_Current_Case_Stage__c == null) {
+    if (cases.isEmpty()) {
       return actions;
     }
     Id stageId = cases[0].FEC_Current_Case_Stage__c;
+    if (stageId == null) {
+      stageId = defaultStageIdForDocumentRequestCase(cases[0]);
+    }
+    if (stageId == null) {
+      return actions;
+    }
 
     List<User> users = [
       SELECT FEC_User_Group__c
@@ -100,6 +112,49 @@ public with sharing class FEC_DocumentRequestRoutingActionService {
       }
     }
     return actions;
+  }
+
+  /** Fallback khi FEC_Current_Case_Stage__c null — default stage của NOC trên Case (giống getByCase). */
+  private static Id defaultStageIdForDocumentRequestCase(Case c) {
+    if (
+      c == null ||
+      c.FEC_Product_Type__c == null ||
+      c.FEC_Category__c == null ||
+      c.FEC_SubCategory__c == null ||
+      c.FEC_SubCode__c == null
+    ) {
+      return null;
+    }
+    List<String> customerTypelst = new List<String>{ 'All' };
+    if (String.isNotBlank(c.FEC_Customer_Type__c)) {
+      customerTypelst.add(c.FEC_Customer_Type__c);
+    }
+    List<FEC_Nature_of_Case__c> noclst = [
+      SELECT Id
+      FROM FEC_Nature_of_Case__c
+      WHERE
+        FEC_Product_Type__c = :c.FEC_Product_Type__c
+        AND FEC_Category__c = :c.FEC_Category__c
+        AND FEC_Sub_Category__c = :c.FEC_SubCategory__c
+        AND FEC_Sub_Code__c = :c.FEC_SubCode__c
+        AND FEC_Customer_Type__c IN :customerTypelst
+        AND FEC_Active__c = TRUE
+        AND FEC_Business_Process__r.FEC_Active__c = TRUE
+      LIMIT 1
+    ];
+    if (noclst.isEmpty()) {
+      return null;
+    }
+    List<FEC_Case_Stage__c> stagelst = [
+      SELECT Id
+      FROM FEC_Case_Stage__c
+      WHERE
+        FEC_Nature_of_Cases__c = :noclst[0].Id
+        AND FEC_Active__c = TRUE
+        AND FEC_Default_Stage__c = TRUE
+      LIMIT 1
+    ];
+    return stagelst.isEmpty() ? null : stagelst[0].Id;
   }
 
   public static Boolean isRl0402OrRl0403SubCode(String subCodeCode) {
