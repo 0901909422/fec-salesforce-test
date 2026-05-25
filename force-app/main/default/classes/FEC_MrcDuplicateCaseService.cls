@@ -297,7 +297,7 @@ public without sharing class FEC_MrcDuplicateCaseService {
 
         for (CancelPreviousDupContext ctx : cancelPreviousContexts) {
             try {
-                FEC_CaseBusinessService.recordRoutingActionHistoryForCase(
+                recordRoutingActionHistoryForCase(
                     ctx.dupCaseId,
                     'Cancel',
                     dupStatusBefore.get(ctx.dupCaseId)
@@ -472,7 +472,7 @@ public without sharing class FEC_MrcDuplicateCaseService {
         }
 
         try {
-            FEC_CaseBusinessService.recordRoutingActionHistoryForCase(
+            recordRoutingActionHistoryForCase(
                 olderDupId,
                 'Cancel',
                 dupStatusBefore
@@ -543,5 +543,43 @@ public without sharing class FEC_MrcDuplicateCaseService {
             !normalized.contains('not received')) ||
             normalized.contains('đã nhận') ||
             normalized.contains('đã xác nhận');
+    }
+
+    /**
+     * RL05 / MRC — ghi Routing Action History cho Case (vd. auto-cancel Case trùng TH1).
+     */
+    public static void recordRoutingActionHistoryForCase(
+        Id caseId,
+        String routingAction,
+        String finalStatusBeforeSubmit
+    ) {
+        if (caseId == null || String.isBlank(routingAction)) {
+            return;
+        }
+        List<Case> rows = [
+            SELECT
+                Id,
+                OwnerId,
+                Owner.Name,
+                FEC_Stage_Name__c,
+                FEC_Current_Case_Stage__c
+            FROM Case
+            WHERE Id = :caseId
+            LIMIT 1
+        ];
+        if (rows.isEmpty()) {
+            return;
+        }
+        Case c = rows[0];
+        FEC_CaseBusinessService.createRoutingActionHistoryForCase(
+            routingAction,
+            '',
+            FEC_CaseBusinessService.resolveRoutingHistoryOwnerLabel(c.OwnerId, c.Owner?.Name),
+            c.OwnerId,
+            String.valueOf(caseId),
+            c.FEC_Stage_Name__c,
+            finalStatusBeforeSubmit,
+            c.FEC_Current_Case_Stage__c
+        );
     }
 }
