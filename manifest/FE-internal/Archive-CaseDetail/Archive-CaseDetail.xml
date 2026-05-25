@@ -77,6 +77,8 @@
         <members>TECH_LIST_SPECIAL_ARCHIVE_FIELD_AND_OBJECT</members>
         <members>TECH_LIST_OBJ_IS_ARCHIVE_TEMP</members>
         <members>TECH_LIST_OBJ_IS_MASTER_DETAIL</members>
+        <members>TECH_LIST_FIELD_PARENT_OF_CASE</members>
+        <members>TECH_LIST_OBJ_DEL_ARCHIVE_CASE</members>
         <name>CustomLabel</name>
     </types>
 
