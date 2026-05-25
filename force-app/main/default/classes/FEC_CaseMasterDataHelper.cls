@@ -3,6 +3,7 @@
  */
 public without sharing class FEC_CaseMasterDataHelper {
   private static final String TYPE_ASSIGNMENT = 'Assignment';
+  private static final String ROUTING_ACTION_RECALL = 'Recall';
 
   private FEC_CaseMasterDataHelper() {
   }
@@ -47,6 +48,24 @@ public without sharing class FEC_CaseMasterDataHelper {
       filtered.add(mdsRow);
     }
     return filtered;
+  }
+
+  /** History mới nhất trên Case có FEC_Routing_Action__c = Recall. */
+  public static Boolean isLatestRoutingActionRecall(Id caseId) {
+    if (caseId == null) {
+      return false;
+    }
+    List<FEC_Routing_Action_History__c> latestHist = [
+      SELECT FEC_Routing_Action__c
+      FROM FEC_Routing_Action_History__c
+      WHERE FEC_Case__c = :caseId
+      ORDER BY CreatedDate DESC, Id DESC
+      LIMIT 1
+    ];
+    return (
+      !latestHist.isEmpty() &&
+      ROUTING_ACTION_RECALL.equals(latestHist[0].FEC_Routing_Action__c)
+    );
   }
 
   /** GSR revert về currentStage: stage trước revert (FEC_Previous_Stage) khớp previousStageNameToken (vd Stage 2). */

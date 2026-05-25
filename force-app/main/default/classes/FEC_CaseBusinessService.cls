@@ -861,6 +861,11 @@ public without sharing class FEC_CaseBusinessService {
           'isGsrStage2ToStage1Revert',
           isGsrStage2ToStage1Revert
         );
+        Boolean isGsrStage1Recall =
+          isGsrBusinessProcess &&
+          checkStageName(selectedStage.Name, FEC_ConstantCommon.STAGE_ONE) &&
+          FEC_CaseMasterDataHelper.isLatestRoutingActionRecall(selectedCase.Id);
+        result.contextFlags.put('isGsrStage1Recall', isGsrStage1Recall);
         Boolean isGsrStage1RevertMasterReadonly = false;
         result.contextFlags.put(
           'isGsrStage1RevertMasterReadonly',
@@ -996,15 +1001,19 @@ public without sharing class FEC_CaseBusinessService {
               if (
                 'Original Info'.equals(subSectionNameTemp) &&
                 TYPE_LWC.equals(itemType) &&
-                !isGsrStage1Revert
+                !isGsrStage1Revert &&
+                !isGsrStage1Recall
               ) {
                 continue;
               }
             } else {
-              // Không khác: ẩn Property Info — trừ GSR Stage 1 revert (hiện Property Info để sửa)
+              Boolean gsrStage1ShowPropertyInfoWhenNocUnchanged =
+                !isUpdatedNocDifferentFromCurrent &&
+                (isGsrStage1Revert || isGsrStage1Recall);
+              // Không khác: ẩn Property Info — trừ GSR Stage 1 revert/recall (hiện Property Info để sửa)
               if (
                 'Property Info'.equals(subSectionNameTemp) &&
-                !(isGsrStage1Revert && !isUpdatedNocDifferentFromCurrent)
+                !gsrStage1ShowPropertyInfoWhenNocUnchanged
               ) {
                 continue;
               }
