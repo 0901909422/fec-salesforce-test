@@ -11,6 +11,7 @@ import {
   closeTab,
   openSubtab,
   openTab,
+  refreshTab,
 } from "lightning/platformWorkspaceApi";
 
 import getProductTypeOptions from "@salesforce/apex/FEC_CaseAssignmentNocController.getProductTypeOptions";
@@ -739,6 +740,69 @@ export default class Fec_CaseAssignmentNocNew extends NavigationMixin(LightningE
     this[NavigationMixin.Navigate](pageReference);
   }
 
+  /**
+   * Sau tạo NOC: invalidate LDS + refresh record page Case Assignment (related list NOC).
+   * RefreshEvent trên màn New không refresh tab detail — console dùng refreshTab.
+   */
+  async navigateToAssignmentDetailAfterCreate() {
+    if (!this.assignmentRecordId) {
+      return;
+    }
+
+    getRecordNotifyChange([{ recordId: this.assignmentRecordId }]);
+
+    let tabToClose = this.currentTabId;
+    let parentTabId = null;
+    try {
+      const focused = await getFocusedTabInfo();
+      tabToClose = tabToClose || focused.tabId;
+      if (focused.isSubtab && focused.parentTabId) {
+        parentTabId = focused.parentTabId;
+      }
+    } catch (e) {
+      /* ignore */
+    }
+
+    this[NavigationMixin.Navigate]({
+      type: "standard__recordPage",
+      attributes: {
+        recordId: this.assignmentRecordId,
+        objectApiName: "FEC_Case_Assignment__c",
+        actionName: "view",
+      },
+    });
+
+    window.setTimeout(async () => {
+      try {
+        if (this.isConsoleNavigation?.data === true) {
+          let refreshTabId = parentTabId;
+          if (!refreshTabId) {
+            const focusedAfterNav = await getFocusedTabInfo();
+            refreshTabId = focusedAfterNav.tabId;
+          }
+          if (refreshTabId) {
+            await refreshTab(refreshTabId, { includeAllSubtabs: true });
+          }
+        } else {
+          this.dispatchEvent(new RefreshEvent());
+        }
+      } catch (refreshErr) {
+        this.dispatchEvent(new RefreshEvent());
+      }
+
+      try {
+        if (tabToClose) {
+          const focusedNow = await getFocusedTabInfo();
+          if (focusedNow.tabId !== tabToClose) {
+            await closeTab(tabToClose);
+          }
+        }
+      } catch (closeErr) {
+        /* ignore */
+      }
+    }, 400);
+  }
+
   handleCancel() {
     if (this.isEditMode && this.nocRecordId) {
       this[NavigationMixin.Navigate]({
@@ -798,20 +862,13 @@ export default class Fec_CaseAssignmentNocNew extends NavigationMixin(LightningE
             subCodeId: this.selectedSubCodeId || null,
           });
       this.showToast("Success", "Case Assignment NOC saved.", "success");
+      if (this.assignmentRecordId && !this.isEditMode) {
+        await this.navigateToAssignmentDetailAfterCreate();
+        return;
+      }
       if (this.assignmentRecordId) {
         getRecordNotifyChange([{ recordId: this.assignmentRecordId }]);
         this.dispatchEvent(new RefreshEvent());
-      }
-      if (this.assignmentRecordId && !this.isEditMode) {
-        this[NavigationMixin.Navigate]({
-          type: "standard__recordPage",
-          attributes: {
-            recordId: this.assignmentRecordId,
-            objectApiName: "FEC_Case_Assignment__c",
-            actionName: "view",
-          },
-        });
-        return;
       }
       await this.navigateAfterSave(nocId);
     } catch (e) {
