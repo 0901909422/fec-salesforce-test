@@ -14,6 +14,7 @@ import markCaseSubmittedWithoutRouting from "@salesforce/apex/FEC_CaseBusinessSe
 import markCaseSubmittedWithoutRoutingWithHistory from "@salesforce/apex/FEC_CaseBusinessService.markCaseSubmittedWithoutRoutingWithHistory";
 //PhongBT: query FEC_Case_Flow_History__c sau khi đổi bộ noc khác để lấy lại giá trị đã nhập lên
 import getPropertyFieldsFromFlowHistory from "@salesforce/apex/FEC_CaseEditNOCController.getPropertyFieldsFromFlowHistory";
+import saveRl0502PropertyInfo from "@salesforce/apex/FEC_MrcReturnCaseService.saveRl0502PropertyInfo";
 import logSensitiveAccess from "@salesforce/apex/FEC_InteractionHighlightController.logSensitiveAccess";
 import getCardStatus from "@salesforce/apex/FEC_CardLockUnLockController.getCardStatus";
 import checkProcessActionCardBlock from "@salesforce/apex/FEC_CardLockUnLockController.checkProcessActionCardBlock";
@@ -1519,6 +1520,7 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
       this.business,
       this.mrcReturnHandlingOptionValue,
       this.mrcReturnCustomerConfirmationValue,
+      this._isEdit,
     );
     this.mrcReturnHandlingOptionValue = result.handlingOptionValue;
     this.business = result.business;
@@ -2302,19 +2304,114 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
   // Field có apiName trùng → restore value; field không có → giữ nguyên trống từ getData.
   _mergePropertyFieldSnapshot(snapshot) {
     if (!snapshot || !this.business?.sectionlst) return;
-    this.business.sectionlst.forEach(section => {
-      section.subSectionlst?.forEach(sub => {
-        sub.objlst?.forEach(obj => {
-          obj.fieldlst?.forEach(field => {
-            if (field?.apiName && Object.prototype.hasOwnProperty.call(snapshot, field.apiName)) {
-              field.value = snapshot[field.apiName];
+    this.business.sectionlst.forEach((section) => {
+      section.subSectionlst?.forEach((sub) => {
+        sub.objlst?.forEach((obj) => {
+          obj.fieldlst?.forEach((field) => {
+            if (
+              field?.apiName &&
+              Object.prototype.hasOwnProperty.call(snapshot, field.apiName)
+            ) {
+              const snapVal = snapshot[field.apiName];
+              if (snapVal == null || String(snapVal).trim() === STR_EMPTY) {
+                return;
+              }
+              field.value = snapVal;
               field.original = field.value;
+              const opts =
+                this.business.picklistOptionsMap?.[obj.name]?.[field.apiName];
+              if (opts?.length) {
+                const opt = findPicklistOptionByRaw(opts, field.value);
+                if (opt) {
+                  field.value = opt.value;
+                  field.displayValue = opt.label;
+                  field.readonlyDisplayValue = opt.label;
+                } else {
+                  field.displayValue = field.value;
+                  field.readonlyDisplayValue = field.value;
+                }
+              } else {
+                field.displayValue = field.value;
+                field.readonlyDisplayValue = field.value;
+              }
             }
           });
         });
       });
     });
     this.business = { ...this.business };
+  }
+
+  /** RL05.02 Property Info: Additional_Info__c thường null sau Submit — hydrate từ FEC_Case_Flow_History__c. */
+  _hydratePropertyInfoFromFlowHistoryAfterLoad() {
+    if (!this.recordId || !this.business?.sectionlst) {
+      return Promise.resolve();
+    }
+    const propertyFields = [];
+    this.business.sectionlst.forEach((section) => {
+      section.subSectionlst?.forEach((sub) => {
+        if (sub.name !== SUBSECTION_NAME_PROPERTY_INFO) {
+          return;
+        }
+        sub.objlst?.forEach((obj) => {
+          obj.fieldlst?.forEach((field) => {
+            if (
+              field?.apiName === "FEC_Verify_Information__c" ||
+              field?.apiName === "FEC_Callback__c"
+            ) {
+              propertyFields.push(field);
+            }
+          });
+        });
+      });
+    });
+    if (!propertyFields.length) {
+      return Promise.resolve();
+    }
+    const allEmpty = propertyFields.every(
+      (f) => f.value == null || String(f.value).trim() === STR_EMPTY,
+    );
+    if (!allEmpty && !this.business?.isSubmited) {
+      return Promise.resolve();
+    }
+    return getPropertyFieldsFromFlowHistory({ caseId: this.recordId })
+      .then((fieldListJson) => {
+        if (!fieldListJson) {
+          return;
+        }
+        let snapshot = {};
+        try {
+          const fieldList = JSON.parse(fieldListJson);
+          if (Array.isArray(fieldList)) {
+            fieldList.forEach((item) => {
+              if (item?.apiName && item.value != null && String(item.value).trim()) {
+                snapshot[item.apiName] = item.value;
+              }
+            });
+          }
+        } catch (e) {
+          console.error("[PropertyInfo] parse flow history error:", e);
+          return;
+        }
+        if (!Object.keys(snapshot).length) {
+          return;
+        }
+        this._mergePropertyFieldSnapshot(snapshot);
+        if (isMrcRl05Branch(this.business)) {
+          const layoutResult = applyMrcRl0502DupFieldLayout(
+            this.business,
+            this.mrcReturnHandlingOptionValue,
+            this.mrcReturnCustomerConfirmationValue,
+            this._isEdit,
+          );
+          this.mrcReturnHandlingOptionValue = layoutResult.handlingOptionValue;
+          this.business = layoutResult.business;
+        }
+        this._rebuildAllSectionSortedRows();
+      })
+      .catch((err) => {
+        console.error("[PropertyInfo] getPropertyFieldsFromFlowHistory error:", err);
+      });
   }
 
   // ─────────────────────────────────────────────────────────────────────────
@@ -2661,6 +2758,7 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
             this.business,
             this.mrcReturnHandlingOptionValue,
             this.mrcReturnCustomerConfirmationValue,
+            this._isEdit,
           );
           this.mrcReturnHandlingOptionValue = layoutResult.handlingOptionValue;
           this.business = layoutResult.business;
@@ -2701,6 +2799,8 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
         if (this._pendingPropertySnapshot) {
           this._mergePropertyFieldSnapshot(this._pendingPropertySnapshot);
           this._pendingPropertySnapshot = null;
+        } else {
+          void this._hydratePropertyInfoFromFlowHistoryAfterLoad();
         }
         //PhongBT 18/05/26: Document Request sử dụng cục routing action mới
         void this._supplementRl0402Rl0403RoutingActionsIfNeeded()
@@ -3983,6 +4083,54 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
     return Promise.resolve({ valid: true, messages: [] });
   }
 
+  /** RL05.02: lưu Xác minh thông tin / Gọi lại lên FEC_Additional_Info__c (Submit + Review). */
+  _saveRl0502PropertyInfoIfApplicable() {
+    if (!isMrcRl05Branch(this.business) || !this.recordId) {
+      return Promise.resolve();
+    }
+    const propertyApis = [
+      "FEC_Verify_Information__c",
+      "FEC_Callback__c",
+    ];
+    let additionalInfoId = null;
+    const fields = {};
+    this.business?.sectionlst?.forEach((section) => {
+      if (section.name !== SECTION_NAME_CASE_INFORMATION) {
+        return;
+      }
+      section.subSectionlst?.forEach((sub) => {
+        if (sub.name !== SUBSECTION_NAME_PROPERTY_INFO) {
+          return;
+        }
+        sub.objlst?.forEach((obj) => {
+          if (obj.name !== OBJ_FEC_ADDITIONAL_INFO) {
+            return;
+          }
+          if (obj.id) {
+            additionalInfoId = obj.id;
+          }
+          obj.fieldlst?.forEach((field) => {
+            if (!propertyApis.includes(field?.apiName)) {
+              return;
+            }
+            const val = String(field.value ?? STR_EMPTY).trim();
+            if (val) {
+              fields[field.apiName] = val;
+            }
+          });
+        });
+      });
+    });
+    if (!additionalInfoId || !Object.keys(fields).length) {
+      return Promise.resolve();
+    }
+    return saveRl0502PropertyInfo({
+      additionalInfoId,
+      verifyInformation: fields.FEC_Verify_Information__c ?? null,
+      callback: fields.FEC_Callback__c ?? null,
+    });
+  }
+
   //linhdev: Persist child data before case record form submit
   _persistChildDataBeforeCaseRecordFormSubmit() {
     //linhdev fix jira FECREDIT_CSM_2025_KH-1469-1474 — gap 2: lưu Redeemed Points trước record form submit
@@ -3994,7 +4142,10 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
       this._savePointsRedemptionDraftIfApplicable(),
     ];
     if (isMrcRl05Branch(this.business)) {
-      persistTasks.push(this._saveMrcReturnDeliveryIfApplicable());
+      persistTasks.push(
+        this._saveRl0502PropertyInfoIfApplicable(),
+        this._saveMrcReturnDeliveryIfApplicable(),
+      );
     }
     return Promise.all(persistTasks).then((results) => {
       if (!isMrcRl05Branch(this.business)) {
@@ -4553,8 +4704,20 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
           for (const obj of sub.objlst ?? []) {
             const objectName = obj.name;
             for (const field of obj.fieldlst ?? []) {
-              if (field.isHidden) continue;
+              const isRl0502Property =
+                sub.name === SUBSECTION_NAME_PROPERTY_INFO &&
+                (field.apiName === "FEC_Verify_Information__c" ||
+                  field.apiName === "FEC_Callback__c");
+              if (field.isHidden && !isRl0502Property) {
+                continue;
+              }
               const val = this._fieldValueForFlowHistoryJson(objectName, field);
+              if (
+                isRl0502Property &&
+                (val == null || String(val).trim() === STR_EMPTY)
+              ) {
+                continue;
+              }
               fields.push({
                 apiName: field.apiName,
                 label: field.label,
