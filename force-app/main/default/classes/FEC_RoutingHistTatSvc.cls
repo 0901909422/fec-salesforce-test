@@ -138,7 +138,11 @@ public without sharing class FEC_RoutingHistTatSvc {
             return;
         }
 
-        Long diffMs = BusinessHours.diff(bhId, assignedOn, h.FEC_Submitted_On__c);
+        Long diffMs = FEC_BusinessHoursTatUtil.diffMsExcludingWeekends(
+            bhId,
+            assignedOn,
+            h.FEC_Submitted_On__c
+        );
         if (diffMs == null || diffMs < 0) {
             h.FEC_TAT_by_Assignment__c = null;
             return;
@@ -312,7 +316,7 @@ public without sharing class FEC_RoutingHistTatSvc {
     }
 
     /**
-     * Hiển thị duration (diffMs từ BusinessHours.diff) dạng HH:mm (vd 08:30).
+     * Hiển thị duration (diffMs từ FEC_BusinessHoursTatUtil, trừ T7/CN) dạng HH:mm (vd 08:30).
      * Tổng giờ làm việc và phút; giờ có thể > 23 nếu TAT dài hơn một ngày làm việc.
      * Code duoi nay cua hoangnm107
      */
