@@ -59,6 +59,7 @@
         <members>FEC_GetCSCaseStatusService</members>
 		<members>Fec_HoldCaseConfigurationController</members>
 		<members>FEC_HoldCaseInheritanceService</members>
+		<members>FEC_HoldCaseStage2DisplayService</members>
 		<members>FEC_NocRemovePhoneInheritanceHandler</members>
 		<members>FEC_NocRemovePhoneInheritanceHandlerTest</members>
 		<members>FEC_PaymentHistoryController</members>
@@ -260,6 +261,7 @@
     <types>
         <members>Case.FEC_Service_Case_Owner__c</members>
         <members>Case.FEC_Assigment_Mode__c</members>
+        <members>Case.FEC_Case_Executor__c</members>
         <members>Case.FEC_Complain_Type__c</members>
         <members>Case.FEC_Original_Category__c</members>
         <members>Case.FEC_Original_Sub_Category__c</members>
@@ -397,6 +399,9 @@
         <members>FEC_TransferCall_Field_CollAgent</members>
         <members>FEC_STOP_IMPACT_ALREADY_MARKED_MSG</members>
         <members>FEC_MSG_SUCCESS</members>
+        <members>FEC_MSG_HOLD_CASE_AUTO_FAIL_RETRY</members>
+        <members>FEC_MSG_HOLD_CASE_NOC_HAS_AUTO</members>
+        <members>FEC_MSG_HOLD_CASE_NOC_NO_AUTO</members>
         <members>FEC_MSG_ERROR</members>
         <members>FEC_Account_Contract_Status</members>
 		<members>FEC_MRC_Return_Case_Info_Block_Title</members>
@@ -473,6 +478,7 @@
 	    <members>FEC_API_Config.FEC_MFASOUTSTANDINGAUTHINQ</members>
 		<members>FEC_API_Config.FEC_VMX_AUTH_DETAIL_INQ</members>
 		<members>FEC_API_Config.FEC_Vmx_Acct_Blkcd_Upd_Emea</members>
+		<members>FEC_API_Config.FEC_Get_Customer_List</members>
 		<name>CustomMetadata</name>
 	</types>
     <types>

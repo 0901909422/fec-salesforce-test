@@ -530,7 +530,8 @@ public without sharing class FEC_RoutingActionHistoryTriggerHandler {
     //   ));
     // }
   }
-  
+
+  /** Gom Id owner từ nhiều routing history — dùng trước getTeamsFromIds khi xử lý bulk. */
   public static Set<Id> collectOwnerIdsFromRouteHistory(
     Iterable<FEC_Routing_Action_History__c> histories
   ) {
