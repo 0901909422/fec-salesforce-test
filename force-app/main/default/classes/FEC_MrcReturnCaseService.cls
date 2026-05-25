@@ -440,12 +440,35 @@ public without sharing class FEC_MrcReturnCaseService {
         String fieldApiName,
         MrcRl05UiContext ctx
     ) {
+        return shouldSkipMasterDataRow(
+            sectionName,
+            subSectionName,
+            lwcName,
+            fieldApiName,
+            ctx,
+            null
+        );
+    }
+
+    public static Boolean shouldSkipMasterDataRow(
+        String sectionName,
+        String subSectionName,
+        String lwcName,
+        String fieldApiName,
+        MrcRl05UiContext ctx,
+        Case selectedCase
+    ) {
         if (ctx == null || ctx.isRl05Branch != true) {
             return false;
         }
         if (TYPE_LWC.equals(getRowType(lwcName, fieldApiName)) &&
             'fec_MRC'.equalsIgnoreCase(lwcName) &&
             ctx.hideMrcInfoLwc == true) {
+            return true;
+        }
+        if (TYPE_LWC.equals(getRowType(lwcName, fieldApiName)) &&
+            'fec_MrcDeliveryForm'.equalsIgnoreCase(lwcName) &&
+            shouldHideMrcDeliveryLwc(ctx, selectedCase)) {
             return true;
         }
         if (TYPE_LWC.equals(getRowType(lwcName, fieldApiName)) &&
@@ -468,6 +491,46 @@ public without sharing class FEC_MrcReturnCaseService {
 
     public static Boolean needsDeliveryLwc(MrcRl05UiContext ctx) {
         return ctx != null && ctx.showDeliveryForm == true;
+    }
+
+    /** RL05.02: Đã xác nhận MRC → không hiện fec_MrcDeliveryForm trên MDM (trừ khi Case đã lưu Delivery). */
+    public static Boolean shouldHideMrcDeliveryLwc(
+        MrcRl05UiContext ctx,
+        Case selectedCase
+    ) {
+        if (ctx == null || ctx.isRl05Branch != true) {
+            return true;
+        }
+        if (ctx.isReturnSubCode == true) {
+            if (selectedCase != null &&
+                isCustomerReceivedMrcConfirmation(
+                    selectedCase.FEC_Customer_Confirmation__c
+                )) {
+                return String.isBlank(selectedCase.FEC_Delivery_Option_2__c);
+            }
+            if (ctx.showDeliveryForm != true) {
+                return true;
+            }
+            return false;
+        }
+        return !needsDeliveryLwc(ctx);
+    }
+
+    public static Boolean isCustomerReceivedMrcConfirmation(String conf) {
+        if (String.isBlank(conf)) {
+            return false;
+        }
+        String normalized = conf.trim().toLowerCase();
+        if (normalized.contains('not received') ||
+            normalized.contains('chưa nhận') ||
+            normalized.contains('chưa xác nhận')) {
+            return false;
+        }
+        return normalized == CONF_RECEIVED.toLowerCase() ||
+            (normalized.contains('received') &&
+            !normalized.contains('not received')) ||
+            normalized.contains('đã nhận') ||
+            normalized.contains('đã xác nhận');
     }
 
     public static final String RL05_CASE_INFO_SUBSECTION = 'MRC Return';
@@ -545,7 +608,7 @@ public without sharing class FEC_MrcReturnCaseService {
         }
 
         // RL05.02: Property Info (Additional Info) — giữ trên mọi stage sau Submit (MDM stage 2+ thường không có subsection này).
-        ensurePropertyInfoForRl0502(caseInfo, selectedCase);
+        ensurePropertyInfoForRl0502(caseInfo, selectedCase, result);
         ensureRl0502PropertyPicklistOptions(result);
         hydratePropertyInfoFromFlowHistory(caseInfo, selectedCase.Id, result);
         // RL05.02: Xác nhận KH + Noti-11 + Delivery — chỉ fec_MrcReturnPanel (mọi stage, kể cả Review).
@@ -559,7 +622,8 @@ public without sharing class FEC_MrcReturnCaseService {
      */
     private static void ensurePropertyInfoForRl0502(
         FEC_CaseBusinessService.Section caseInfo,
-        Case selectedCase
+        Case selectedCase,
+        FEC_CaseBusinessService.Business result
     ) {
         if (caseInfo == null || selectedCase == null) {
             return;
@@ -583,7 +647,14 @@ public without sharing class FEC_MrcReturnCaseService {
             : null;
         Decimal order = 1;
         for (String fieldApi : RL0502_PROPERTY_FIELD_APIS) {
-            injectAdditionalInfoPropertyField(propSub, aiRec, fieldApi, order++, true);
+            injectAdditionalInfoPropertyField(
+                propSub,
+                aiRec,
+                fieldApi,
+                order++,
+                true,
+                result
+            );
         }
     }
 
@@ -609,7 +680,8 @@ public without sharing class FEC_MrcReturnCaseService {
         FEC_Additional_Info__c aiRec,
         String fieldApiName,
         Decimal displayOrder,
-        Boolean mandatory
+        Boolean mandatory,
+        FEC_CaseBusinessService.Business result
     ) {
         if (propSub == null || String.isBlank(fieldApiName)) {
             return;
@@ -625,10 +697,16 @@ public without sharing class FEC_MrcReturnCaseService {
         }
 
         String rawVal = aiRec == null ? null : (String) aiRec.get(fieldApiName);
+        Map<String, Map<String, List<FEC_CaseBusinessService.PicklistOptionDto>>> pickMap =
+            result != null ? result.picklistOptionsMap : null;
         FEC_CaseBusinessService.Field existing = aiObj.findField(fieldApiName);
         if (existing != null) {
             if (String.isNotBlank(rawVal)) {
-                existing.value = rawVal;
+                existing.value = resolvePropertyPicklistStoredValue(
+                    fieldApiName,
+                    rawVal,
+                    pickMap
+                );
             }
             existing.hidden = false;
             return;
@@ -641,10 +719,13 @@ public without sharing class FEC_MrcReturnCaseService {
             return;
         }
 
+        String resolvedVal = String.isNotBlank(rawVal)
+            ? resolvePropertyPicklistStoredValue(fieldApiName, rawVal, pickMap)
+            : rawVal;
         FEC_CaseBusinessService.Field injected = new FEC_CaseBusinessService.Field(
             fieldApiName,
             dfr.getLabel(),
-            rawVal,
+            resolvedVal,
             false,
             true,
             mandatory,
@@ -1273,5 +1354,36 @@ public without sharing class FEC_MrcReturnCaseService {
             }
         }
         return hasDpd;
+    }
+
+    /**
+     * RL05.02 Submit: lưu Property Info lên FEC_Additional_Info__c (client gọi trước Route to).
+     */
+    @AuraEnabled
+    public static void saveRl0502PropertyInfo(
+        Id additionalInfoId,
+        String verifyInformation,
+        String callback
+    ) {
+        if (additionalInfoId == null) {
+            return;
+        }
+        if (!Schema.sObjectType.FEC_Additional_Info__c.isUpdateable()) {
+            throw new AuraHandledException('No permission to update Additional Info');
+        }
+        FEC_Additional_Info__c rec = new FEC_Additional_Info__c(Id = additionalInfoId);
+        if (String.isNotBlank(verifyInformation)) {
+            rec.FEC_Verify_Information__c = verifyInformation.trim();
+        }
+        if (String.isNotBlank(callback)) {
+            rec.FEC_Callback__c = callback.trim();
+        }
+        if (
+            String.isBlank(rec.FEC_Verify_Information__c) &&
+            String.isBlank(rec.FEC_Callback__c)
+        ) {
+            return;
+        }
+        update as user rec;
     }
 }

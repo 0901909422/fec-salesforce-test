@@ -6,6 +6,7 @@ import {
   MRC_CONF_NOT_RECEIVED,
   MRC_CONF_RECEIVED,
   isMrcCancelPreviousHandlingOption,
+  isMrcReceivedConfirmation,
   isMrcNotReceivedConfirmation,
   getCaseFieldValue,
   FIELD_DELIVERY_OPTION,
@@ -202,6 +203,14 @@ export default class Fec_MrcReturnPanel extends LightningElement {
       return false;
     }
     if (this.isReadOnly || this.isCaseSubmited === true) {
+      if (isMrcReceivedConfirmation(this._confirmationValue)) {
+        const savedDelivery = String(
+          this.mrcDeliveryOptionSaved ||
+            getCaseFieldValue(this._businessSnapshot, FIELD_DELIVERY_OPTION) ||
+            STR_EMPTY,
+        ).trim();
+        return savedDelivery.length > 0;
+      }
       const handling = String(
         this.handlingOptionValue || this.mrcHandlingOptionSaved || STR_EMPTY,
       ).trim();

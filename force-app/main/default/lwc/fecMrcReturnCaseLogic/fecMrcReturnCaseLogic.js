@@ -254,6 +254,21 @@ function isMrcRl0502ReturnBusiness(business) {
   return String(subCode ?? STR_EMPTY).toUpperCase().includes("RL05.02");
 }
 
+/** RL05.02: giữ subsection Property Info trên UI kể cả sau Submit (field có thể tạm isHidden từ MDM stage 2). */
+export function shouldForceRl0502PropertySubsectionVisible(business, sub) {
+  if (sub?.name !== SUBSECTION_NAME_PROPERTY_INFO) {
+    return false;
+  }
+  if (!isMrcRl0502ReturnBusiness(business)) {
+    return false;
+  }
+  return (sub?.objlst || []).some((obj) =>
+    (obj?.fieldlst || []).some((field) =>
+      RL0502_PROPERTY_FIELD_APIS.has(field?.apiName),
+    ),
+  );
+}
+
 /** Hiện Noti-11 + radio: RL05.02 + đã chọn "chưa xác nhận MRC". */
 export function shouldShowMrcHandlingRadio(
   business,
@@ -310,6 +325,11 @@ function shouldShowMrcDeliveryForm(
   ).trim();
 
   if (isReviewMode === true && isMrcRl0502ReturnBusiness(business)) {
+    // Đã xác nhận MRC (TH1/TH3/TH4): không Delivery sau Submit trừ khi đã lưu giá trị.
+    if (isMrcReceivedConfirmation(confVal)) {
+      const savedDelivery = getCaseFieldValue(business, FIELD_DELIVERY_OPTION);
+      return String(savedDelivery ?? STR_EMPTY).trim().length > 0;
+    }
     if (isMrcCancelPreviousHandlingOption(effectiveHandling)) {
       return true;
     }
@@ -545,12 +565,17 @@ export function applyMrcRl0502DupFieldLayout(
           if (field.apiName === FIELD_DELIVERY_OPTION) {
             if (isReview && ctx?.isReturnSubCode === true) {
               const displayVal = String(field.value ?? STR_EMPTY).trim();
-              field.isHidden = !displayVal;
-              field.readonlyDisplayValue = resolvePicklistDisplayLabel(
-                business,
-                FIELD_DELIVERY_OPTION,
-                displayVal,
-              );
+              if (isMrcReceivedConfirmation(confVal)) {
+                field.isHidden = true;
+                field.readonlyDisplayValue = STR_EMPTY;
+              } else {
+                field.isHidden = !displayVal;
+                field.readonlyDisplayValue = resolvePicklistDisplayLabel(
+                  business,
+                  FIELD_DELIVERY_OPTION,
+                  displayVal,
+                );
+              }
             }
           }
           if (field.apiName === "FEC_Contract_Processing_Assessment_Type__c") {
@@ -684,7 +709,10 @@ export function applyMrcRl05SectionVisibility(
           ctx?.hideMrcInfoLwc === true ||
           ctx?.isRl05Branch === true ||
           isMrcRl05Branch(business);
-      } else if (name === LWC_MRC_DELIVERY || name === LWC_CONTRACT_CLOSURE) {
+      } else if (name === LWC_MRC_DELIVERY) {
+        // Ẩn LWC Delivery MDM khi không được hiện (đã xác nhận MRC) hoặc panel đã gánh Delivery.
+        hide = !showDelivery || panelShowsDelivery === true;
+      } else if (name === LWC_CONTRACT_CLOSURE) {
         hide = panelShowsDelivery === true;
       } else if (
         name === MRC_RETURN_PANEL ||
@@ -704,10 +732,9 @@ export function applyMrcRl05SectionVisibility(
           ctx?.hideMrcInfoLwc === true ||
           ctx?.isRl05Branch === true ||
           isMrcRl05Branch(business);
-      } else if (
-        dyn.componentName === LWC_MRC_DELIVERY ||
-        dyn.componentName === LWC_CONTRACT_CLOSURE
-      ) {
+      } else if (dyn.componentName === LWC_MRC_DELIVERY) {
+        hide = !showDelivery || panelShowsDelivery === true;
+      } else if (dyn.componentName === LWC_CONTRACT_CLOSURE) {
         hide = panelShowsDelivery === true;
       } else if (
         dyn.componentName === MRC_RETURN_PANEL ||
