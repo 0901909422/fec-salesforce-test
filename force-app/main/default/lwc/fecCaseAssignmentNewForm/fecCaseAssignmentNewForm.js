@@ -721,4 +721,3 @@ export default class FecCaseAssignmentNewForm extends NavigationMixin(LightningE
     );
   }
 }
-}
