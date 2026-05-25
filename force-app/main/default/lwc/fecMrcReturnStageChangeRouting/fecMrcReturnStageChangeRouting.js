@@ -258,7 +258,8 @@ export function getMrcReturnRoutingContext(
   }
 
   if (rl05Scenario === "TH2") {
-    if (option2Selected && flowTeam) {
+    // TH2: Option 2 | Chưa nhận MRC | cả hai → auto Team/Queue theo luồng Payment/CP.
+    if (flowTeam && (option2Selected || notReceived)) {
       return buildEligible(flowTeam, "IV-2");
     }
     return buildIneligible();

@@ -66,6 +66,7 @@ import {
   getMrcReturnAutoRoutingActionCode,
   isMrcReturnTrackedField,
   isMrcRl05Branch,
+  isMrcRl05CaseInformationBlocked,
   shouldActivateMrcReturnRouting,
   showMrcRl0502DupBanner,
   validateMrcReturnCase,
@@ -1438,7 +1439,11 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
   }
 
   _applyMrcReturnCaseIntegration() {
-    if (!this.business?.sectionlst || !isMrcRl05Branch(this.business)) {
+    if (
+      !this.business?.sectionlst ||
+      !isMrcRl05Branch(this.business) ||
+      isMrcRl05CaseInformationBlocked(this.business)
+    ) {
       return;
     }
     const result = applyMrcRl0502DupFieldLayout(
@@ -1783,7 +1788,8 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
       isCofGsr ||
       hasOptions ||
       docReqRoutingCtx.subCodeSupported ||
-      shouldActivateMrcReturnRouting(this.business);
+      (shouldActivateMrcReturnRouting(this.business) &&
+        !isMrcRl05CaseInformationBlocked(this.business));
     this.business = { ...this.business };
   }
 
@@ -1858,7 +1864,8 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
   async _supplementMrcRl05RoutingActionsIfNeeded() {
     if (
       !isMrcRl05Branch(this.business) ||
-      !shouldActivateMrcReturnRouting(this.business)
+      !shouldActivateMrcReturnRouting(this.business) ||
+      isMrcRl05CaseInformationBlocked(this.business)
     ) {
       return;
     }
@@ -1957,12 +1964,7 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
   }
 
   _hasMrcBlockingCaseInformationError() {
-    return !!this.business?.sectionlst?.some(
-      (section) =>
-        section.name === SECTION_NAME_CASE_INFORMATION &&
-        (section.hasError || section.error?.label) &&
-        this.business?.mrcRl05CaseInfoWarningOnly !== true,
-    );
+    return isMrcRl05CaseInformationBlocked(this.business);
   }
 
   //linhdev: Fix jira FECREDIT_CSM_2025_KH-1162
@@ -2554,7 +2556,10 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
         //linhdev fix jira FECREDIT_CSM_2025_KH-1469-1474 — C360/Property: LWC Points Redemption quyết định sau initData (đủ điều kiện mới ẩn)
         this._setPointsRedemptionHideFlag(false);
         ensureMrcReturnCaseFormInBusiness(this.business);
-        if (isMrcRl05Branch(this.business)) {
+        if (
+          isMrcRl05Branch(this.business) &&
+          !isMrcRl05CaseInformationBlocked(this.business)
+        ) {
           this._initMrcReturnFieldsFromBusiness();
           const layoutResult = applyMrcRl0502DupFieldLayout(
             this.business,
@@ -4987,7 +4992,10 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
       this._scheduleRefreshFileUploadCards();
       //linhdev fix section Account Info + Case Info
       this._ensureAccountCaseSectionsExpanded();
-      if (isMrcRl05Branch(this.business)) {
+      if (
+        isMrcRl05Branch(this.business) &&
+        !isMrcRl05CaseInformationBlocked(this.business)
+      ) {
         this._applyMrcReturnCaseIntegration();
       }
     });
@@ -5408,7 +5416,10 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
       return Promise.resolve();
     }
 
-    if (!isMrcRl05Branch(this.business)) {
+    if (
+      !isMrcRl05Branch(this.business) ||
+      isMrcRl05CaseInformationBlocked(this.business)
+    ) {
       this._mrcReturnStageChangeRoutingActive = false;
       return Promise.resolve();
     }

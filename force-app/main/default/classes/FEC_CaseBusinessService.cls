@@ -644,6 +644,7 @@ public without sharing class FEC_CaseBusinessService {
               result.mrcRl05CaseInfoWarningOnly = true;
             } else {
               err = mrcErr;
+              result.mrcRl05CaseInfoBlocked = true;
             }
           }
         }
@@ -4139,6 +4140,10 @@ public without sharing class FEC_CaseBusinessService {
     /** RL05.03 DPD ≥ 15: chỉ cảnh báo Case Information, không chặn routing. */
     @AuraEnabled
     public Boolean mrcRl05CaseInfoWarningOnly;
+
+    /** RL05 — chặn nhập Case Information (Product Code ≠ TW): ẩn panel LWC + routing Stage 1. */
+    @AuraEnabled
+    public Boolean mrcRl05CaseInfoBlocked;
 
     /** Giá trị đã lưu trên Case — dùng khôi phục panel sau submit/reload. */
     @AuraEnabled
