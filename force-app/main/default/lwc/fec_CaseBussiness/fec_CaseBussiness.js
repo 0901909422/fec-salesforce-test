@@ -697,6 +697,8 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
   @api recordId;
 
   _isEdit = true;
+  _isCaseInformationEdit = false;
+
   @api get isEdit() {
     return this._isEdit;
   }
@@ -706,7 +708,28 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
     console.log(`[DEBUG][fec_CaseBussiness] set isEdit — rawValue=${JSON.stringify(value)} (type=${typeof value}), _isEdit=${this._isEdit}, prev=${prev}, businessReady=${!!this.business?.sectionlst}`);
     if (prev !== this._isEdit && this.business?.sectionlst) {
       this._applyEditModeToBusiness();
+      this._updateDynCmpIsEditFlags();
     }
+  }
+
+  @api get isCaseInformationEdit() {
+    return this._isCaseInformationEdit;
+  }
+  set isCaseInformationEdit(value) {
+    const prev = this._isCaseInformationEdit;
+    this._isCaseInformationEdit = value === true || value === "true";
+    if (prev !== this._isCaseInformationEdit && this.business?.sectionlst) {
+      this._applyEditModeToBusiness();
+      this._updateDynCmpIsEditFlags();
+    }
+  }
+
+  /** Case Information section fields/LWC editable (full edit or partial after Execute Assignment). */
+  _isSectionFieldsEditable(sectionName) {
+    if (sectionName === SECTION_NAME_CASE_INFORMATION) {
+      return this._isEdit || this._isCaseInformationEdit;
+    }
+    return this._isEdit;
   }
 
   @track business = {};
@@ -1820,6 +1843,7 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
     if (!this.business?.sectionlst) return;
     const stage1RevertReadonly = this._isStage1RevertMasterReadonly();
     this.business.sectionlst.forEach((section) => {
+      const sectionEditable = this._isSectionFieldsEditable(section.name);
       section.subSectionlst?.forEach((sub) => {
         const gsrPropertyInfoReadonly = this._isGsrStage3PropertyInfoFieldReadonly(
           sub.name
@@ -1827,12 +1851,13 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
         sub.objlst?.forEach((obj) => {
           obj.fieldlst?.forEach((field) => {
             const forceReadonly = stage1RevertReadonly || gsrPropertyInfoReadonly;
-            field.readonly = forceReadonly ? true : !this._isEdit;
-            field.editable = forceReadonly ? false : this._isEdit;
+            field.readonly = forceReadonly ? true : !sectionEditable;
+            field.editable = forceReadonly ? false : sectionEditable;
           });
         });
       });
     });
+    this.business = { ...this.business };
     this._syncHasRoutingAction();
   }
 
@@ -2007,16 +2032,18 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
   _updateDynCmpIsEditFlags() {
     if (!this.business?.sectionlst) return;
     this.business.sectionlst.forEach((section) => {
+      const sectionEditable = this._isSectionFieldsEditable(section.name);
       section.resolvedComponentlst?.forEach((d) => {
         if (!d) return;
         const master = this._resolveDynCmpMasterIsEdit(
           d.componentName,
           d.fecMasterDataSettingIsEdit,
         );
-        d.isEdit = this._isEdit && master;
-        console.log(`[DEBUG][fec_CaseBussiness] _updateDynCmpIsEditFlags — component="${d.componentName}", _isEdit=${this._isEdit}, master=${master}, finalIsEdit=${d.isEdit}`);
+        d.isEdit = sectionEditable && master;
+        console.log(`[DEBUG][fec_CaseBussiness] _updateDynCmpIsEditFlags — component="${d.componentName}", sectionEditable=${sectionEditable}, master=${master}, finalIsEdit=${d.isEdit}`);
       });
     });
+    this.business = { ...this.business };
   }
 
   connectedCallback() {
@@ -2436,7 +2463,7 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
                 // }
 
                 if (
-                  !this.isEdit ||
+                  !this._isSectionFieldsEditable(section.name) ||
                   this._isStage1RevertMasterReadonly() ||
                   this._isGsrStage3PropertyInfoFieldReadonly(sub.name)
                 ) {
@@ -4989,7 +5016,7 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
               isMrcReturnCaseForm:
                 name === "fec_MrcReturnPanel" || name === "fec_MrcReturnCaseForm",
               fecMasterDataSettingIsEdit,
-              isEdit: this._isEdit && masterResolved,
+              isEdit: this._isSectionFieldsEditable(section.name) && masterResolved,
               /** Thứ tự merge: cùng nguồn FEC_Sub_Section_Order__c (Apex → meta.order). */
               sortOrder: fecSubSectionOrder,
               fecSubSectionOrder,

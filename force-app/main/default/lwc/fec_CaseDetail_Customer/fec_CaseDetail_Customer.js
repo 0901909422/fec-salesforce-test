@@ -7,6 +7,7 @@ import {
   MessageContext,
 } from "lightning/messageService";
 import IS_MODE_EDIT from "@salesforce/messageChannel/FEC_Case_Mode__c";
+import CASE_INFORMATION_EDIT from "@salesforce/messageChannel/FEC_Case_Information_Edit__c";
 import CASE_NOC from "@salesforce/messageChannel/FEC_Case_NOC__c";
 //HieuTT74: [UPDATE - 5/5/2026]: Tạo message channel cho button save/submit
 import CASE_ACTION from "@salesforce/messageChannel/FEC_CaseAction__c";
@@ -154,7 +155,10 @@ export default class Fec_CaseDetail_Customer extends LightningElement {
   isConsoleNavigation;
 
   subscription = null;
+  caseInformationEditSubscription = null;
   nocSubscription = null;
+
+  @track isCaseInformationEdit = false;
 
   @track activeSections = ["case-remark-history"];
 
@@ -279,6 +283,18 @@ export default class Fec_CaseDetail_Customer extends LightningElement {
       clearTimeout(this._nocReloadSyncTimer);
       this._nocReloadSyncTimer = null;
     }
+    if (this.subscription) {
+      unsubscribe(this.subscription);
+      this.subscription = null;
+    }
+    if (this.caseInformationEditSubscription) {
+      unsubscribe(this.caseInformationEditSubscription);
+      this.caseInformationEditSubscription = null;
+    }
+    if (this.nocSubscription) {
+      unsubscribe(this.nocSubscription);
+      this.nocSubscription = null;
+    }
   }
 
   _isDraftCaseForNocReload(caseRecord) {
@@ -343,6 +359,27 @@ export default class Fec_CaseDetail_Customer extends LightningElement {
       (message) => this.handleNOCMsg(message),
       { scope: APPLICATION_SCOPE },
     );
+
+    this.caseInformationEditSubscription = subscribe(
+      this.messageContext,
+      CASE_INFORMATION_EDIT,
+      (message) => this.handleCaseInformationEditMessage(message),
+      { scope: APPLICATION_SCOPE },
+    );
+  }
+
+  handleCaseInformationEditMessage(message) {
+    if (message == null || typeof message.isCaseInformationEdit === STR_UNDEFINED) {
+      return;
+    }
+    if (message.caseId != null && message.caseId !== this.recordId) {
+      return;
+    }
+    const next = message.isCaseInformationEdit === true;
+    if (this.isCaseInformationEdit === next) {
+      return;
+    }
+    this.isCaseInformationEdit = next;
   }
 
   handleMessage(message) {
@@ -363,6 +400,9 @@ export default class Fec_CaseDetail_Customer extends LightningElement {
     if (prevModeEdit === nextModeEdit) return;
 
     this.modeEditCase = nextModeEdit;
+    if (nextModeEdit) {
+      this.isCaseInformationEdit = false;
+    }
 
     resetViewMode({
       recordId: this.recordId,
