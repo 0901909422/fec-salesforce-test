@@ -34,6 +34,7 @@ public without sharing class FEC_NotificationService {
             SELECT Id,
                    Name,
                    FEC_Receivers__c,
+                   FEC_Assigned_to_Queue__c,
                    FEC_Product_Type__c,
                    FEC_Category__c,
                    FEC_SubCategory__c,
@@ -64,9 +65,14 @@ public without sharing class FEC_NotificationService {
         if (eligibleNotifications.isEmpty()) return;
 
         Set<Id> routedCaseIds = new Set<Id>();
+        Set<Id> routedQueueIds = new Set<Id>();
         for (Case rc : routedCases) {
             routedCaseIds.add(rc.Id);
+            if (rc.OwnerId != null && rc.OwnerId.getSObjectType() == Group.SObjectType) {
+                routedQueueIds.add(rc.OwnerId);
+            }
         }
+        Map<String, Id> queueLookup = buildQueueLookupMap(routedQueueIds);
 
         Map<Id, Case> caseStageById = routedCaseIds.isEmpty()
             ? new Map<Id, Case>()
@@ -120,10 +126,13 @@ public without sharing class FEC_NotificationService {
         for (Case c : routedCases) {
             System.debug('--- case=' + c.Id + ' OwnerId=' + c.OwnerId + ' candidates=' + eligibleNotifications.size());
             for (FEC_Notification__c n : eligibleNotifications) {
+                String assignedQueueVal = String.isNotBlank(n.FEC_Assigned_to_Queue__c) ? n.FEC_Assigned_to_Queue__c.trim() : null;
+                Boolean queueOk = assignedQueueVal != null && queueLookup.containsKey(assignedQueueVal) && queueLookup.get(assignedQueueVal) == c.OwnerId;
                 Case cNature = caseStageById.get(c.Id);
                 Boolean natureOk = matchesNatureOfCase(cNature != null ? cNature : c, n);
                 Boolean scheduleOk = FEC_CommonUltils.isWithinSchedule(nowTime, n.FEC_Schedule_Start_Time__c, n.FEC_Schedule_End_Time__c);
-                System.debug('--- notif=' + n.Id + ' natureOk=' + natureOk + ' scheduleOk=' + scheduleOk);
+                System.debug('--- notif=' + n.Id + ' queueOk=' + queueOk + ' natureOk=' + natureOk + ' scheduleOk=' + scheduleOk);
+                if (!queueOk) continue;
                 if (!natureOk) continue;
                 if (!scheduleOk) continue;
 
@@ -226,6 +235,7 @@ public without sharing class FEC_NotificationService {
             SELECT Id,
                    Name,
                    FEC_Receivers__c,
+                   FEC_Assigned_to_Queue__c,
                    FEC_Product_Type__c,
                    FEC_Category__c,
                    FEC_SubCategory__c,
@@ -254,9 +264,14 @@ public without sharing class FEC_NotificationService {
         if (eligibleNotifications.isEmpty()) return;
 
         Set<Id> routedCaseIdsSf = new Set<Id>();
+        Set<Id> routedQueueIdsSf = new Set<Id>();
         for (Case rc2 : routedCases) {
             routedCaseIdsSf.add(rc2.Id);
+            if (rc2.OwnerId != null && rc2.OwnerId.getSObjectType() == Group.SObjectType) {
+                routedQueueIdsSf.add(rc2.OwnerId);
+            }
         }
+        Map<String, Id> queueLookupSf = buildQueueLookupMap(routedQueueIdsSf);
 
         Map<Id, Case> caseStageByIdSf = routedCaseIdsSf.isEmpty()
             ? new Map<Id, Case>()
@@ -304,7 +319,10 @@ public without sharing class FEC_NotificationService {
 
         for (Case c : routedCases) {
             for (FEC_Notification__c n : eligibleNotifications) {
+                String assignedQueueValSf = String.isNotBlank(n.FEC_Assigned_to_Queue__c) ? n.FEC_Assigned_to_Queue__c.trim() : null;
+                Boolean queueOkSf = assignedQueueValSf != null && queueLookupSf.containsKey(assignedQueueValSf) && queueLookupSf.get(assignedQueueValSf) == c.OwnerId;
                 Case cNatureSf = caseStageByIdSf.get(c.Id);
+                if (!queueOkSf) continue;
                 if (!matchesNatureOfCase(cNatureSf != null ? cNatureSf : c, n)) continue;
                 if (!FEC_CommonUltils.isWithinSchedule(nowTime, n.FEC_Schedule_Start_Time__c, n.FEC_Schedule_End_Time__c)) continue;
 
