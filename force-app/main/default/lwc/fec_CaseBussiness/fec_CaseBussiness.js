@@ -3,6 +3,7 @@ import Toast from "lightning/toast";
 import { NavigationMixin } from "lightning/navigation";
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import getByCase from "@salesforce/apex/FEC_CaseBusinessService.getByCase";
+import updateRoutingActionDisplayApex from "@salesforce/apex/FEC_CaseInitUpdateService.updateRoutingActionDisplay";
 import getTransferUsers from "@salesforce/apex/FEC_CaseBusinessService.getTransferUsers";
 import getTransferQueues from "@salesforce/apex/FEC_CaseBusinessService.getTransferQueues";
 import run from "@salesforce/apex/FEC_CaseBusinessService.run";
@@ -25,7 +26,6 @@ import getSubmittedSubProcesses from "@salesforce/apex/FEC_SubProcessService.get
 import USER_ID from "@salesforce/user/Id";
 import USER_GROUP_FIELD from "@salesforce/schema/User.FEC_User_Group__c";
 import ID_FIELD from "@salesforce/schema/Case.Id";
-import IS_ROUTING_ACTION_DISPLAY_FIELD from "@salesforce/schema/Case.FEC_Is_Routing_Action_Display__c";
 // PhuongNT add field FEC_Stage_Name__c
 import STAGE_NAME_FIELD from "@salesforce/schema/Case.FEC_Stage_Name__c";
 import {
@@ -972,12 +972,10 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
   }
 
   updateRoutingActionDisplay(field) {
-    let fields = {};
-    fields[ID_FIELD.fieldApiName] = this.recordId;
-    fields[IS_ROUTING_ACTION_DISPLAY_FIELD.fieldApiName] = field;
-    let recordInput = { fields };
-
-    updateRecord(recordInput)
+    updateRoutingActionDisplayApex({
+      caseId: this.recordId,
+      routingActionDisplay: field
+    })
       .then(() => {
         console.log("Record updated successfully");
       })
@@ -1050,7 +1048,9 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
 
   /** Áp dụng routing (Team/Queue + action) dựa trên giá trị đã lưu của FEC_RD_Payment_Contract_Assessment__c khi load form. */
   _applyRdPaymentContractAssessmentRouting() {
-    if (!this.isEdit) return;
+    if (!this.isEdit || !this._isRdPaymentSubCode || isMrcRl05Branch(this.business)) {
+      return;
+    }
     const assessmentVal = this._getCaseFieldValue(FIELD_RD_PAYMENT_CONTRACT_ASSESSMENT);
     if (!assessmentVal || assessmentVal === STR_EMPTY) {
       return;
@@ -1406,6 +1406,26 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
     if (saved && !String(this._mrcDeliveryOptionDraft ?? STR_EMPTY).trim()) {
       this._mrcDeliveryOptionDraft = saved;
     }
+  }
+
+  _resolveMrcDeliveryOptionForRouting() {
+    const draft = String(this._mrcDeliveryOptionDraft ?? STR_EMPTY).trim();
+    if (draft) {
+      return draft;
+    }
+    const panel = this._getMrcReturnPanelEl();
+    const deliveryForm = panel?.getDeliveryForm?.();
+    if (deliveryForm && typeof deliveryForm.buildPayload === "function") {
+      try {
+        const combined = deliveryForm.buildPayload()?.deliveryOptionCombined;
+        if (combined && String(combined).trim()) {
+          return String(combined).trim();
+        }
+      } catch (ignore) {
+        /* panel chưa mount */
+      }
+    }
+    return this._getCaseFieldValue(Fec_CaseBussiness.DOC_REQ_FIELD_DELIVERY);
   }
 
   handleMrcReturnHandlingOptionChange(event) {
@@ -1947,7 +1967,7 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
         this.business,
         this.mrcReturnHandlingOptionValue,
         this.mrcReturnCustomerConfirmationValue,
-        this._mrcDeliveryOptionDraft,
+        this._resolveMrcDeliveryOptionForRouting(),
       );
       if (ctx.eligible && hasAction(ACTION_ROUTE_TO)) {
         this._setActionValueByCode(ACTION_ROUTE_TO);
@@ -2319,8 +2339,7 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
         );
         this._documentRequestDeliveryEligible = docReqRoutingCtx.deliveryEligible;
         this._syncHasRoutingAction();
-        this._mrcReturnStageChangeRoutingActive =
-          shouldActivateMrcReturnRouting(this.business);
+        this._mrcReturnStageChangeRoutingActive = false;
 
         // Ưu tiên draft đã lưu, nếu không có hoặc không hợp lệ thì dùng option đầu tiên
         const draftCode = this.business.draftRoutingActionCode;
@@ -2977,7 +2996,9 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
     if (
       fieldName === FIELD_RD_PAYMENT_CONTRACT_ASSESSMENT &&
       value &&
-      value !== STR_EMPTY
+      value !== STR_EMPTY &&
+      this._isRdPaymentSubCode &&
+      !isMrcRl05Branch(this.business)
     ) {
       applyRdPaymentAssessmentRoutingImmediate(this, value);
       void this._applyRdPaymentRoutingByAssessment(value);
@@ -3349,6 +3370,12 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
       isAllValid = false;
     }
 
+
+    //hieuTT fix jira 1561
+    if(!this._validateDNBForSubmit()){
+      isAllValid = false;
+    }
+    
     const mrcPanel = this._getMrcReturnPanelEl();
     if (mrcPanel && typeof mrcPanel.validateForSubmit === "function") {
       if (!mrcPanel.validateForSubmit()) {
@@ -3711,6 +3738,17 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
       return true;
     }
     return host.validateRemovePhoneForSubmit();
+  }
+
+  //HieuTT fix jira 1561
+  _validateDNBForSubmit() {
+    const host = this._getSubProcessContainerEl();
+
+    if (!host || typeof host.validateDNBForSubmit !== "function") {
+      return true;
+    }
+
+    return host.validateDNBForSubmit();
   }
 
   //linhdev fix jira FECREDIT_CSM_2025_KH-1368
@@ -5437,7 +5475,7 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
       this.business,
       this.mrcReturnHandlingOptionValue,
       this.mrcReturnCustomerConfirmationValue,
-      this._mrcDeliveryOptionDraft,
+      this._resolveMrcDeliveryOptionForRouting(),
     );
 
     if (!ctx.eligible || !ctx.team) {

@@ -58,6 +58,10 @@ public without sharing class FEC_CaseTatFullProcessSvc {
             return;
         }
 
+        for (Case row : updates) {
+            FEC_CaseInitUpdateService.registerSystemCaseUpdate(row.Id);
+        }
+
         Boolean priorFlag = FEC_CaseTriggerHandler.isSystemUpdate;
         FEC_CaseTriggerHandler.isSystemUpdate = true;
         try {
@@ -108,6 +112,10 @@ public without sharing class FEC_CaseTatFullProcessSvc {
 
         if (updates.isEmpty()) {
             return;
+        }
+
+        for (Case row : updates) {
+            FEC_CaseInitUpdateService.registerSystemCaseUpdate(row.Id);
         }
 
         Boolean priorFlag = FEC_CaseTriggerHandler.isSystemUpdate;
