@@ -114,7 +114,6 @@ export default class fec_DoNotBotherHandling extends LightningElement {
       });
 
       console.log("[APEX] Raw result:", result);
-      
 
       if (result === true) {
         this.handleDNBTrue();
@@ -152,5 +151,32 @@ export default class fec_DoNotBotherHandling extends LightningElement {
 
   get isCustormerExisting() {
     return this.customerType === "Existing";
+  }
+
+  @api
+  validate() {
+    /*
+     * Existing customer component
+     */
+    const existingCmp = this.template.querySelector(
+      "c-fec_-do-not-bother-existing-customer",
+    );
+
+    if (existingCmp?.validate && !existingCmp.validate()) {
+      return false;
+    }
+
+    /*
+     * Non existing customer component
+     */
+    const nonExistingCmp = this.template.querySelector(
+      "c-fec_-do-not-bother-non-existing-customer",
+    );
+
+    if (nonExistingCmp?.validate && !nonExistingCmp.validate()) {
+      return false;
+    }
+
+    return true;
   }
 }
