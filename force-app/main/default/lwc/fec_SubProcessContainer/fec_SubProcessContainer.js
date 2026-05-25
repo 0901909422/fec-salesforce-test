@@ -151,6 +151,21 @@ export default class Fec_SubProcessContainer extends LightningElement {
     }
   }
 
+
+  //Hieutt Fix jira 1561
+  @api
+  validateDNBForSubmit() {
+    const dnbHandling = this.template.querySelector(
+      "c-fec_-do-not-bother-handling",
+    );
+
+    if (dnbHandling && typeof dnbHandling.validate === "function") {
+      return dnbHandling.validate();
+    }
+
+    return true;
+  }
+
   async initializeCase() {
     try {
       const result = await getSubmittedSubProcesses({
