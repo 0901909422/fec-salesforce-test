@@ -20,13 +20,15 @@
               </lightning-combobox>
             </div>
             <div class="slds-col slds-size_1-of-2">
-              <lightning-input
-                type="text"
+              <lightning-combobox
+                name="notificationChannel"
                 label={label.LBL_SFT_Notification_Channel}
                 value={selectedChannel}
-                readonly
+                options={channelOptions}
+                onchange={handleChannelChange}
+                required
               >
-              </lightning-input>
+              </lightning-combobox>
             </div>
           </div>
 
@@ -94,7 +96,7 @@
                               </div>
                             </li>
                           </template>
-                          <template if:true="{noResults}">
+                          <template if:true={noResults}>
                             <li role="presentation" class="slds-listbox__item">
                               <div
                                 class="slds-media slds-listbox__option slds-listbox__option_entity"

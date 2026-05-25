@@ -633,6 +633,7 @@ public with sharing class FEC_ConstantCommon {
     public static final String ACTION_ROUTE_TO = 'Route_to';
     public static final String ACTION_ROUTE_TO_DISPLAY = 'Route to';
     public static final String ACTION_UPDATE = 'Update';
+    public static final String ACTION_RECALL = 'Recall';
     
     // ================= DECISION =================
     public static final String DECISION_USER = 'USER';
@@ -940,4 +941,6 @@ public with sharing class FEC_ConstantCommon {
         
         new Map<String, String>{ 'label' => 'Route to', 'value' => 'Route_to' }
     };
+    public static final String FEC_SUB_CATEGORY = 'FEC_Sub_Category__c';
+    public static final String FEC_SUB_CODE = 'FEC_Sub_Code__c';
 }

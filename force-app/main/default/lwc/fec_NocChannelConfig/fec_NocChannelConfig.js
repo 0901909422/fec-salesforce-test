@@ -14,6 +14,7 @@ import FEC_Search_Channel_Placeholder from '@salesforce/label/c.FEC_Search_Chann
 import FEC_No_Results from '@salesforce/label/c.FEC_No_Results';
 import FEC_Button_Cancel from '@salesforce/label/c.FEC_Button_Cancel';
 import FEC_Button_Save from '@salesforce/label/c.FEC_Button_Save';
+import FEC_Channel_Config_Invalid_Selection from '@salesforce/label/c.FEC_Channel_Config_Invalid_Selection';
 
 export default class Fec_NocChannelConfig extends LightningElement {
     @api recordId;
@@ -130,6 +131,15 @@ export default class Fec_NocChannelConfig extends LightningElement {
     }
 
     async handleSave() {
+        if (this.searchTerm && this.searchTerm.trim().length > 0) {
+            this.dispatchEvent(new ShowToastEvent({
+                title: FEC_Toast_Error,
+                message: FEC_Channel_Config_Invalid_Selection,
+                variant: 'error'
+            }));
+            return;
+        }
+
         this.isSaving = true;
         try {
             const ids = this.selectedChannels.map(c => c.id).join(',');
