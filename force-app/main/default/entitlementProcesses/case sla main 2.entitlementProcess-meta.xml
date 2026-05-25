@@ -38,7 +38,7 @@
         </timeTriggers>
         <timeTriggers>
             <actions>
-                <name>SLA_Warning_76h</name>
+                <name>SLA_Violation_Warning_76h</name>
                 <type>FieldUpdate</type>
             </actions>
             <timeLength>-76</timeLength>
@@ -86,6 +86,22 @@ FEC_SubCategory__r.FEC_Code__c=&quot;RL10&quot;
 )</milestoneCriteriaFormula>
         <milestoneName>Case Time TAT</milestoneName>
         <minutesToComplete>7560</minutesToComplete>
+        <timeTriggers>
+            <actions>
+                <name>SLA_Warning_126h</name>
+                <type>FieldUpdate</type>
+            </actions>
+            <timeLength>0</timeLength>
+            <workflowTimeTriggerUnit>Hours</workflowTimeTriggerUnit>
+        </timeTriggers>
+        <timeTriggers>
+            <actions>
+                <name>SLA_Warning_125h</name>
+                <type>FieldUpdate</type>
+            </actions>
+            <timeLength>-1</timeLength>
+            <workflowTimeTriggerUnit>Hours</workflowTimeTriggerUnit>
+        </timeTriggers>
         <useCriteriaStartTime>true</useCriteriaStartTime>
     </milestones>
     <milestones>
@@ -118,7 +134,7 @@ FEC_SubCategory__r.FEC_Code__c=&quot;RL10&quot;
         </timeTriggers>
         <timeTriggers>
             <actions>
-                <name>SLA_Warning_124h</name>
+                <name>SLA_Violation_Warning_124h</name>
                 <type>FieldUpdate</type>
             </actions>
             <timeLength>-124</timeLength>
@@ -166,7 +182,7 @@ FEC_SubCategory__r.FEC_Code__c=&quot;FU01&quot;
         <minutesToComplete>10080</minutesToComplete>
         <timeTriggers>
             <actions>
-                <name>SLA_Warning_164h</name>
+                <name>SLA_Violation_Warning_164h</name>
                 <type>FieldUpdate</type>
             </actions>
             <timeLength>-4</timeLength>
