@@ -20,6 +20,166 @@
         <reevaluateOnChange>false</reevaluateOnChange>
     </fieldUpdates>
     <fieldUpdates>
+        <fullName>SLA_Violating_Warning_44h</fullName>
+        <field>FEC_SLA_Violating_Warning__c</field>
+        <formula>&apos;SLA Warning 44h&apos;</formula>
+        <name>SLA Violating Warning 44h</name>
+        <notifyAssignee>false</notifyAssignee>
+        <operation>Formula</operation>
+        <protected>false</protected>
+        <reevaluateOnChange>false</reevaluateOnChange>
+    </fieldUpdates>
+    <fieldUpdates>
+        <fullName>SLA_Violation_Warning_124h</fullName>
+        <field>FEC_SLA_Warning__c</field>
+        <formula>&apos;SLA Violation Warning 124h&apos;</formula>
+        <name>SLA Violation Warning 124h</name>
+        <notifyAssignee>false</notifyAssignee>
+        <operation>Formula</operation>
+        <protected>false</protected>
+        <reevaluateOnChange>false</reevaluateOnChange>
+    </fieldUpdates>
+    <fieldUpdates>
+        <fullName>SLA_Violation_Warning_164h</fullName>
+        <field>FEC_SLA_Warning__c</field>
+        <formula>&apos;SLA Violation Warning 164h&apos;</formula>
+        <name>SLA Violation Warning 164h</name>
+        <notifyAssignee>false</notifyAssignee>
+        <operation>Formula</operation>
+        <protected>false</protected>
+        <reevaluateOnChange>false</reevaluateOnChange>
+    </fieldUpdates>
+    <fieldUpdates>
+        <fullName>SLA_Violation_Warning_76h</fullName>
+        <field>FEC_SLA_Warning__c</field>
+        <formula>&apos;SLA Violation Warning 76h&apos;</formula>
+        <name>SLA Violation Warning 76h</name>
+        <notifyAssignee>false</notifyAssignee>
+        <operation>Formula</operation>
+        <protected>false</protected>
+        <reevaluateOnChange>false</reevaluateOnChange>
+    </fieldUpdates>
+    <fieldUpdates>
+        <fullName>SLA_Warning_0h</fullName>
+        <field>FEC_SLA_Violating_Warning__c</field>
+        <formula>&apos;SLA Warning 144h&apos;</formula>
+        <name>SLA Warning 0h</name>
+        <notifyAssignee>false</notifyAssignee>
+        <operation>Formula</operation>
+        <protected>false</protected>
+        <reevaluateOnChange>false</reevaluateOnChange>
+    </fieldUpdates>
+    <fieldUpdates>
+        <fullName>SLA_Warning_119h</fullName>
+        <field>FEC_SLA_Warning__c</field>
+        <formula>&apos;SLA Warning 119h&apos;</formula>
+        <name>SLA Warning 119h</name>
+        <notifyAssignee>false</notifyAssignee>
+        <operation>Formula</operation>
+        <protected>false</protected>
+        <reevaluateOnChange>false</reevaluateOnChange>
+    </fieldUpdates>
+    <fieldUpdates>
+        <fullName>SLA_Warning_120h</fullName>
+        <field>FEC_SLA_Violating_Warning__c</field>
+        <formula>&apos;SLA Warning 120h&apos;</formula>
+        <name>SLA Warning 120h</name>
+        <notifyAssignee>false</notifyAssignee>
+        <operation>Formula</operation>
+        <protected>false</protected>
+        <reevaluateOnChange>false</reevaluateOnChange>
+    </fieldUpdates>
+    <fieldUpdates>
+        <fullName>SLA_Warning_125h</fullName>
+        <field>FEC_SLA_Warning__c</field>
+        <formula>&apos;SLA Warning 125h&apos;</formula>
+        <name>SLA Warning 125h</name>
+        <notifyAssignee>false</notifyAssignee>
+        <operation>Formula</operation>
+        <protected>false</protected>
+        <reevaluateOnChange>false</reevaluateOnChange>
+    </fieldUpdates>
+    <fieldUpdates>
+        <fullName>SLA_Warning_126h</fullName>
+        <field>FEC_SLA_Violating_Warning__c</field>
+        <formula>&apos;SLA Warning 126h&apos;</formula>
+        <name>SLA Warning 126h</name>
+        <notifyAssignee>false</notifyAssignee>
+        <operation>Formula</operation>
+        <protected>false</protected>
+        <reevaluateOnChange>false</reevaluateOnChange>
+    </fieldUpdates>
+    <fieldUpdates>
+        <fullName>SLA_Warning_128h</fullName>
+        <field>FEC_SLA_Warning__c</field>
+        <formula>&apos;SLA Warning 128h&apos;</formula>
+        <name>SLA Warning 128h</name>
+        <notifyAssignee>false</notifyAssignee>
+        <operation>Formula</operation>
+        <protected>false</protected>
+        <reevaluateOnChange>false</reevaluateOnChange>
+    </fieldUpdates>
+    <fieldUpdates>
+        <fullName>SLA_Warning_143h</fullName>
+        <field>FEC_SLA_Warning__c</field>
+        <formula>&apos;SLA Warning 143h&apos;</formula>
+        <name>SLA Warning 143h</name>
+        <notifyAssignee>false</notifyAssignee>
+        <operation>Formula</operation>
+        <protected>false</protected>
+        <reevaluateOnChange>false</reevaluateOnChange>
+    </fieldUpdates>
+    <fieldUpdates>
+        <fullName>SLA_Warning_144h</fullName>
+        <field>FEC_SLA_Warning__c</field>
+        <formula>&apos;SLA Warning 144h&apos;</formula>
+        <name>SLA Warning 144h</name>
+        <notifyAssignee>false</notifyAssignee>
+        <operation>Formula</operation>
+        <protected>false</protected>
+        <reevaluateOnChange>false</reevaluateOnChange>
+    </fieldUpdates>
+    <fieldUpdates>
+        <fullName>SLA_Warning_167h</fullName>
+        <field>FEC_SLA_Warning__c</field>
+        <formula>&apos;SLA Warning 167h&apos;</formula>
+        <name>SLA Warning 167h</name>
+        <notifyAssignee>false</notifyAssignee>
+        <operation>Formula</operation>
+        <protected>false</protected>
+        <reevaluateOnChange>false</reevaluateOnChange>
+    </fieldUpdates>
+    <fieldUpdates>
+        <fullName>SLA_Warning_168h</fullName>
+        <field>FEC_SLA_Violating_Warning__c</field>
+        <formula>&apos;SLA_Warning_168h&apos;</formula>
+        <name>SLA Warning 168h</name>
+        <notifyAssignee>false</notifyAssignee>
+        <operation>Formula</operation>
+        <protected>false</protected>
+        <reevaluateOnChange>false</reevaluateOnChange>
+    </fieldUpdates>
+    <fieldUpdates>
+        <fullName>SLA_Warning_48h</fullName>
+        <field>FEC_SLA_Warning__c</field>
+        <formula>&apos;SLA Warning 48h&apos;</formula>
+        <name>SLA Warning 48h</name>
+        <notifyAssignee>false</notifyAssignee>
+        <operation>Formula</operation>
+        <protected>false</protected>
+        <reevaluateOnChange>false</reevaluateOnChange>
+    </fieldUpdates>
+    <fieldUpdates>
+        <fullName>SLA_Warning_80h</fullName>
+        <field>FEC_SLA_Warning__c</field>
+        <formula>&apos;SLA Warning 80&apos;</formula>
+        <name>SLA Warning 80h</name>
+        <notifyAssignee>false</notifyAssignee>
+        <operation>Formula</operation>
+        <protected>false</protected>
+        <reevaluateOnChange>false</reevaluateOnChange>
+    </fieldUpdates>
+    <fieldUpdates>
         <fullName>Update_Case_1104h_Violating</fullName>
         <field>FEC_SLA_Violating_Warning__c</field>
         <formula>&quot;Case 1104h Violating&quot;</formula>

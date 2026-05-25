@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <PermissionSet xmlns="http://soap.sforce.com/2006/04/metadata">
     <fieldPermissions>
         <editable>true</editable>
@@ -93,6 +93,11 @@
     <fieldPermissions>
         <editable>true</editable>
         <field>FEC_Actual_Master_Data_Setting__c.FEC_Field_Status__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Actual_Master_Data_Setting__c.FEC_Hidden__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
@@ -1023,6 +1028,11 @@
     <fieldPermissions>
         <editable>true</editable>
         <field>FEC_Master_Data_Setting__c.FEC_Field_Status__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Master_Data_Setting__c.FEC_Hidden__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
@@ -2393,6 +2403,10 @@
     </tabSettings>
     <tabSettings>
         <tab>FEC_Notification_Channel__c</tab>
+        <visibility>Visible</visibility>
+    </tabSettings>
+    <tabSettings>
+        <tab>FEC_Notification_Template_Channel__c</tab>
         <visibility>Visible</visibility>
     </tabSettings>
     <tabSettings>

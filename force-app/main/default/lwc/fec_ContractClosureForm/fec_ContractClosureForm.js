@@ -343,20 +343,34 @@ export default class Fec_ContractClosureForm extends LightningElement {
             );
         }
         if (kind === 'ADDRESS') {
-            return opts.find(
-                (o) =>
-                    /địa\s*chỉ|dia\s*chi/i.test((o.label || STR_EMPTY).toLowerCase()) ||
-                    /địa\s*chỉ|dia\s*chi/i.test((o.value || STR_EMPTY).toLowerCase())
-            );
+            return opts.find((o) => this.isDeliveryAddressOption(o));
         }
         if (kind === 'OFFICE') {
-            return opts.find(
-                (o) =>
-                    /văn\s*phòng|van\s*phong/i.test((o.label || STR_EMPTY).toLowerCase()) ||
-                    /văn\s*phòng|van\s*phong/i.test((o.value || STR_EMPTY).toLowerCase())
-            );
+            return opts.find((o) => this.isDeliveryOfficeOption(o));
         }
         return undefined;
+    }
+
+    isDeliveryAddressOption(o) {
+        const lbl = (o.label || STR_EMPTY).toLowerCase();
+        const val = (o.value || STR_EMPTY).toLowerCase();
+        return (
+            /^address$/i.test((o.value || STR_EMPTY).trim()) ||
+            /địa\s*chỉ|dia\s*chi/i.test(lbl) ||
+            /địa\s*chỉ|dia\s*chi/i.test(val) ||
+            /\baddress\b/i.test(lbl)
+        );
+    }
+
+    isDeliveryOfficeOption(o) {
+        const lbl = (o.label || STR_EMPTY).toLowerCase();
+        const val = (o.value || STR_EMPTY).toLowerCase();
+        return (
+            /^office$/i.test((o.value || STR_EMPTY).trim()) ||
+            /văn\s*phòng|van\s*phong/i.test(lbl) ||
+            /văn\s*phòng|van\s*phong/i.test(val) ||
+            /\boffice\b/i.test(lbl)
+        );
     }
 
     applySavedDelivery() {
@@ -434,6 +448,15 @@ export default class Fec_ContractClosureForm extends LightningElement {
         this.deliveryEmailSelected = !!(ev && ids.includes(ev));
         this.deliveryAddressSelected = !!(av && ids.includes(av));
         this.deliveryOfficeSelected = !!(ov && ids.includes(ov));
+        this.dispatchEvent(
+            new CustomEvent('deliveryoptionchange', {
+                bubbles: true,
+                composed: true,
+                detail: {
+                    deliveryOptionCombined: this.buildPayload().deliveryOptionCombined
+                }
+            })
+        );
     }
 
     get labelEmail() {
@@ -1114,6 +1137,12 @@ export default class Fec_ContractClosureForm extends LightningElement {
             this.addrRenderKey++;
         }
         await this.refreshAddresses();
+    }
+
+    /** Giá trị delivery hiện tại (multiselect Case.FEC_Delivery_Option_2__c) cho routing Document Request. */
+    @api
+    getDeliveryOptionForRouting() {
+        return this.buildPayload().deliveryOptionCombined || STR_EMPTY;
     }
 
     buildPayload() {

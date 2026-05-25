@@ -4,7 +4,7 @@
         <customLabel>true</customLabel>
         <detailHeading>true</detailHeading>
         <editHeading>true</editHeading>
-        <label>User Information</label>
+        <label>Case Assignment Log Details</label>
         <layoutColumns>
             <layoutItems>
                 <behavior>Required</behavior>
@@ -36,10 +36,18 @@
         </layoutColumns>
         <style>TwoColumnsTopToBottom</style>
     </layoutSections>
+    <layoutSections>
+        <customLabel>false</customLabel>
+        <detailHeading>false</detailHeading>
+        <editHeading>false</editHeading>
+        <layoutColumns/>
+        <style>CustomLinks</style>
+    </layoutSections>
     <relatedLists>
         <excludeButtons>New</excludeButtons>
         <fields>NAME</fields>
         <fields>FEC_Number_of_Case__c</fields>
+        <fields>CREATED_DATE</fields>
         <relatedList>FEC_Case_Assignment_Log_Detail__c.FEC_Case_Assignment_log_Name__c</relatedList>
     </relatedLists>
     <showEmailCheckbox>false</showEmailCheckbox>

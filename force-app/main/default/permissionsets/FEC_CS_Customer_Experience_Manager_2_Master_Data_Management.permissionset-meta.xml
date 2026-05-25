@@ -97,6 +97,11 @@
     </fieldPermissions>
     <fieldPermissions>
         <editable>false</editable>
+        <field>FEC_Actual_Master_Data_Setting__c.FEC_Hidden__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
         <field>FEC_Actual_Master_Data_Setting__c.FEC_LWC_Name__c</field>
         <readable>true</readable>
     </fieldPermissions>
@@ -458,6 +463,11 @@
     <fieldPermissions>
         <editable>false</editable>
         <field>FEC_Master_Data_Setting__c.FEC_Field_Status__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
+        <field>FEC_Master_Data_Setting__c.FEC_Hidden__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
@@ -1079,9 +1089,9 @@
         <viewAllRecords>false</viewAllRecords>
     </objectPermissions>
     <objectPermissions>
-        <allowCreate>true</allowCreate>
+        <allowCreate>false</allowCreate>
         <allowDelete>false</allowDelete>
-        <allowEdit>true</allowEdit>
+        <allowEdit>false</allowEdit>
         <allowRead>true</allowRead>
         <modifyAllRecords>false</modifyAllRecords>
         <object>FEC_Hold_Case_Config__c</object>

@@ -235,7 +235,8 @@ public without sharing class FEC_CaseEditNOCController {
           RecordType.DeveloperName,
           FEC_Is_Call_API_Success__c,
           //PhongBT: update bộ noc chọn ở updated khi revert về
-          FEC_Current_Case_Stage__r.Name
+          FEC_Current_Case_Stage__r.Name,
+          FEC_Actual_Nature_of_Case__r.FEC_Business_Process__r.FEC_Code__c
         FROM Case
         WHERE Id = :recordId
       ];
@@ -536,7 +537,14 @@ public without sharing class FEC_CaseEditNOCController {
     }
 
     List<Case> caselst = [
-      SELECT Id, FEC_Is_Submited__c, FEC_Is_Call_API_Success__c
+      SELECT
+        Id,
+        FEC_Is_Submited__c,
+        FEC_Is_Call_API_Success__c,
+        FEC_Category__c,
+        FEC_SubCategory__c,
+        FEC_SubCode__c,
+        FEC_Actual_Nature_of_Case__c
       FROM Case
       WHERE Id = :recordId
       LIMIT 1
@@ -549,14 +557,24 @@ public without sharing class FEC_CaseEditNOCController {
     if (c.FEC_Is_Submited__c == true || c.FEC_Is_Call_API_Success__c == true) {
       return;
     }
+    if (
+      c.FEC_Category__c == null &&
+      c.FEC_SubCategory__c == null &&
+      c.FEC_SubCode__c == null &&
+      c.FEC_Actual_Nature_of_Case__c == null
+    ) {
+      return;
+    }
 
     try {
-      update new Case(
-        Id = recordId,
-        FEC_Category__c = null,
-        FEC_SubCategory__c = null,
-        FEC_SubCode__c = null,
-        FEC_Actual_Nature_of_Case__c = null
+      FEC_CaseInitUpdateService.runSystemCaseUpdate(
+        new Case(
+          Id = recordId,
+          FEC_Category__c = null,
+          FEC_SubCategory__c = null,
+          FEC_SubCode__c = null,
+          FEC_Actual_Nature_of_Case__c = null
+        )
       );
     } catch (Exception e) {
       throw new AuraHandledException('Clear NOC failed: ' + e.getMessage());

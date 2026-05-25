@@ -11,8 +11,10 @@
  
 ****************************************************************************************/
 
-import { LightningElement, api, track } from 'lwc';
+import { LightningElement, api, track, wire } from 'lwc';
+import { getObjectInfo } from 'lightning/uiObjectInfoApi';
 import { loadStyle } from 'lightning/platformResourceLoader';
+import HOLD_CASE_CONFIG_OBJECT from '@salesforce/schema/FEC_Hold_Case_Config__c';
 import { NavigationMixin } from 'lightning/navigation';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 
@@ -61,6 +63,14 @@ export default class Fec_HoldCaseConfiguration extends NavigationMixin(Lightning
     @track isShowNfuModal = false;
 
     isLoading = false;
+    canCreate = false;
+
+    @wire(getObjectInfo, { objectApiName: HOLD_CASE_CONFIG_OBJECT })
+    wiredHoldCaseConfigObjectInfo({ data }) {
+        if (data) {
+            this.canCreate = data.createable;
+        }
+    }
 
     // ================= LOOKUP DATA =================
 
@@ -267,6 +277,9 @@ export default class Fec_HoldCaseConfiguration extends NavigationMixin(Lightning
     // ================= MAIN MODAL =================
 
     handleNew() {
+        if (!this.canCreate) {
+            return;
+        }
         this.isShowModal = true;
     }
 
@@ -621,6 +634,10 @@ export default class Fec_HoldCaseConfiguration extends NavigationMixin(Lightning
     // ================= SAVE =================
 
     handleSave() {
+        if (!this.canCreate) {
+            return;
+        }
+
         const isValid = this.validateForm();
         if (!isValid) return;
 

@@ -1,5 +1,5 @@
 /**
- * RL05.02 — phát hiện Case RL05 đang xử lý trùng hợp đồng (case cũ hơn, cùng Customer History),
+ * RL05.02 — phát hiện Case RL05 đang xử lý trùng hợp đồng (case cũ hơn, cùng số HĐ),
  * banner trên Case Business, và áp Cancel theo FEC_MRC_Request_Handling_Option__c.
  */
 public without sharing class FEC_MrcDuplicateCaseService {
@@ -17,6 +17,7 @@ public without sharing class FEC_MrcDuplicateCaseService {
     public static OpenDupInfo findOlderOpenRl05DuplicateInfo(
         Id currentCaseId,
         Id customerHistoryId,
+        String contractNumberText,
         Datetime currentCreatedDate,
         String subCategoryCode,
         String subCodeCode
@@ -24,6 +25,7 @@ public without sharing class FEC_MrcDuplicateCaseService {
         Id dupId = findOlderOpenRl05DuplicateId(
             currentCaseId,
             customerHistoryId,
+            contractNumberText,
             currentCreatedDate,
             subCategoryCode,
             subCodeCode
@@ -32,7 +34,7 @@ public without sharing class FEC_MrcDuplicateCaseService {
             return null;
         }
         List<Case> rows = [
-            SELECT CaseNumber
+            SELECT FEC_ID_Search__c, CaseNumber
             FROM Case
             WHERE Id = :dupId
             LIMIT 1
@@ -42,20 +44,31 @@ public without sharing class FEC_MrcDuplicateCaseService {
         }
         OpenDupInfo out = new OpenDupInfo();
         out.caseIdStr = String.valueOf(dupId);
-        out.caseNumber = rows[0].CaseNumber;
+        out.caseNumber = resolveCaseIdForBanner(rows[0]);
         return out;
+    }
+
+    /** Case ID hiển thị Noti-11 — FEC_Case_ID__c (formula) dùng FEC_ID_Search__c làm text. */
+    private static String resolveCaseIdForBanner(Case c) {
+        if (c == null) {
+            return null;
+        }
+        if (String.isNotBlank(c.FEC_ID_Search__c)) {
+            return c.FEC_ID_Search__c.trim();
+        }
+        return c.CaseNumber;
     }
 
     public static Id findOlderOpenRl05DuplicateId(
         Id currentCaseId,
         Id customerHistoryId,
+        String contractNumberText,
         Datetime currentCreatedDate,
         String subCategoryCode,
         String subCodeCode
     ) {
         if (
             currentCaseId == null ||
-            customerHistoryId == null ||
             currentCreatedDate == null ||
             String.isBlank(subCodeCode) ||
             !subCodeCode.toUpperCase().contains('RL05.02')
@@ -65,20 +78,51 @@ public without sharing class FEC_MrcDuplicateCaseService {
         if (String.isBlank(subCategoryCode) || !subCategoryCode.toUpperCase().contains('RL05')) {
             return null;
         }
-        List<Case> dups = [
-            SELECT Id
-            FROM Case
-            WHERE
-                FEC_Account_or_Contract__c = :customerHistoryId
-                AND Id != :currentCaseId
-                AND IsClosed = FALSE
-                AND FEC_SubCategory__r.FEC_Code__c LIKE '%RL05%'
-                AND FEC_SubCode__r.FEC_Code__c LIKE '%RL05.02%'
-                AND FEC_Final_Status__c LIKE 'Pending%'
-                AND CreatedDate < :currentCreatedDate
-            ORDER BY CreatedDate DESC
-            LIMIT 1
-        ];
+        if (customerHistoryId == null && String.isBlank(contractNumberText)) {
+            return null;
+        }
+
+        String contractNum = String.isBlank(contractNumberText)
+            ? null
+            : contractNumberText.trim();
+        List<Case> dups;
+        if (String.isNotBlank(contractNum)) {
+            dups = [
+                SELECT Id
+                FROM Case
+                WHERE
+                    FEC_Account_Contract_Number_Text__c = :contractNum
+                    AND Id != :currentCaseId
+                    AND IsClosed = FALSE
+                    AND FEC_SubCategory__r.FEC_Code__c LIKE '%RL05%'
+                    AND (
+                        FEC_SubCode__r.FEC_Code__c LIKE '%RL05.02%'
+                        OR FEC_SubCode__r.Name LIKE '%RL05.02%'
+                    )
+                    AND FEC_Final_Status__c LIKE 'Pending%'
+                    AND CreatedDate < :currentCreatedDate
+                ORDER BY CreatedDate DESC
+                LIMIT 1
+            ];
+        } else {
+            dups = [
+                SELECT Id
+                FROM Case
+                WHERE
+                    FEC_Account_or_Contract__c = :customerHistoryId
+                    AND Id != :currentCaseId
+                    AND IsClosed = FALSE
+                    AND FEC_SubCategory__r.FEC_Code__c LIKE '%RL05%'
+                    AND (
+                        FEC_SubCode__r.FEC_Code__c LIKE '%RL05.02%'
+                        OR FEC_SubCode__r.Name LIKE '%RL05.02%'
+                    )
+                    AND FEC_Final_Status__c LIKE 'Pending%'
+                    AND CreatedDate < :currentCreatedDate
+                ORDER BY CreatedDate DESC
+                LIMIT 1
+            ];
+        }
         return dups.isEmpty() ? null : dups[0].Id;
     }
 
@@ -110,9 +154,11 @@ public without sharing class FEC_MrcDuplicateCaseService {
             SELECT
                 Id,
                 CaseNumber,
+                FEC_ID_Search__c,
                 CreatedDate,
                 FEC_MRC_Request_Handling_Option__c,
                 FEC_Account_or_Contract__c,
+                FEC_Account_Contract_Number_Text__c,
                 FEC_SubCategory__r.FEC_Code__c,
                 FEC_SubCode__r.FEC_Code__c
             FROM Case
@@ -133,6 +179,7 @@ public without sharing class FEC_MrcDuplicateCaseService {
             Id olderDupId = findOlderOpenRl05DuplicateId(
                 c.Id,
                 c.FEC_Account_or_Contract__c,
+                c.FEC_Account_Contract_Number_Text__c,
                 c.CreatedDate,
                 subCat,
                 subCod
@@ -164,7 +211,7 @@ public without sharing class FEC_MrcDuplicateCaseService {
                         olderDupId,
                         String.format(
                             System.Label.FEC_MRC_Dup_Remark_Cancel_Prev,
-                            new List<String>{ c.CaseNumber }
+                            new List<String>{ resolveCaseIdForBanner(c) }
                         ),
                         emailLocal,
                         roleName
@@ -174,14 +221,16 @@ public without sharing class FEC_MrcDuplicateCaseService {
                 String olderNum = FEC_ConstantCommon.STR_EMPTY;
                 if (olderDupId != null) {
                     List<Case> peerLst = [
-                        SELECT CaseNumber
+                        SELECT FEC_ID_Search__c, CaseNumber
                         FROM Case
                         WHERE Id = :olderDupId
                         LIMIT 1
                     ];
                     if (!peerLst.isEmpty()) {
-                        olderNum =
-                            peerLst[0].CaseNumber == null ? '' : peerLst[0].CaseNumber;
+                        olderNum = resolveCaseIdForBanner(peerLst[0]);
+                        if (olderNum == null) {
+                            olderNum = FEC_ConstantCommon.STR_EMPTY;
+                        }
                     }
                 }
                 toCancelStatus.add(

@@ -1,5 +1,6 @@
 public without sharing class FEC_CaseBusinessService {
   public static final String TYPE_LWC = 'LWC';
+  public static final String TYPE_ASSIGNMENT = 'Assignment';
   public static final String LWC_INCORRECT_PAYMENT_FORM = 'fec_IncorrectPaymentForm';
 
   public static final String ROUTE_TO = 'Route to';
@@ -137,7 +138,11 @@ public without sharing class FEC_CaseBusinessService {
         return result;
 
       User currentUser = userlst.get(0);
-      List<String> rolelst = FEC_NatureOfCaseUserGroupService.buildRoleListForIncludes(
+      List<String> rolelst = new List<String>();
+      if (String.isNotBlank(currentUser.FEC_User_Group__c)) {
+        rolelst.add(currentUser.FEC_User_Group__c);
+      }
+      List<String> additionalRolelst = FEC_NatureOfCaseUserGroupService.buildRoleListForIncludes(
         currentUser.FEC_User_Group__c
       );
 
@@ -213,7 +218,8 @@ public without sharing class FEC_CaseBusinessService {
           FEC_SubCode__r.Name,
           FEC_Assignment_Count__c,
           FEC_SubCode__r.FEC_Code__c, //linhdev fix jira FECREDIT_CSM_2025_KH-1393-1394
-          FEC_Actual_Nature_of_Case__r.FEC_Business_Process__r.FEC_Code__c
+          FEC_Actual_Nature_of_Case__r.FEC_Business_Process__r.FEC_Code__c,
+          CreatedDate
         FROM Case
         WHERE Id = :caseId
       ];
@@ -222,6 +228,7 @@ public without sharing class FEC_CaseBusinessService {
         return result;
 
       Case selectedCase = caselst.get(0);
+      Case caseBaseline = selectedCase.clone(true, true, true, true);
       // Giữ stage đọc từ DB trước khi draft null field — dùng map sang stage tương đương khi đổi bộ NOC.
       Id caseStageIdPreservedAtLoad = selectedCase.FEC_Current_Case_Stage__c;
 
@@ -492,9 +499,10 @@ public without sharing class FEC_CaseBusinessService {
           'AND FEC_Customer_Type__c = :customerType ' +
           'AND FEC_Business_Process__r.FEC_Active__c = TRUE ' +
           'AND FEC_Active__c = TRUE ' +
-          'AND FEC_User_Group__c INCLUDES (\'' +
-          String.join(new List<String>(rolelst), '\',\'') +
-          '\')';
+          FEC_NatureOfCaseUserGroupService.buildNatureOfCaseUserGroupFilterClause(
+            rolelst,
+            additionalRolelst
+          );
       } else {
         natureOfCaseQuery = 'SELECT Id, FEC_Category__r.FEC_Code__c, FEC_Business_Process__c, FEC_Business_Process__r.FEC_Code__c, FEC_User_Group__c FROM FEC_Actual_Nature_of_Case__c WHERE Id = :selectedNatureOfCaseId ';
       }
@@ -510,9 +518,7 @@ public without sharing class FEC_CaseBusinessService {
         if (caseStageIdPreservedAtLoad != null) {
           selectedCase.FEC_Current_Case_Stage__c = caseStageIdPreservedAtLoad;
         }
-        try { update selectedCase; } catch (DmlException e) {
-          System.debug('Update case failed (no NOC): ' + e.getMessage());
-        }
+        FEC_CaseInitUpdateService.runSystemCaseUpdateIfChanged(selectedCase, caseBaseline);
         return result;
       }
 
@@ -607,11 +613,13 @@ public without sharing class FEC_CaseBusinessService {
           when else {
           }
         }
-        // MRC Return (Batch 7): SubCategory có mã RL05 — chặn Case Information theo Product TW / DPD (không phụ thuộc map Business Process).
+        // MRC Return (RL05): validate Case Information — Product Code TW (chặn như Phone Update); RL05.03 DPD chỉ cảnh báo.
         if (
           err.errorlst.isEmpty() &&
-          String.isNotBlank(result.subCategoryCode) &&
-          result.subCategoryCode.toUpperCase().contains('RL05')
+          FEC_MrcReturnCaseService.isRl05Branch(
+            result.subCategoryCode,
+            result.subCodeCode
+          )
         ) {
           Error mrcErr = mrcReturnCaseInformationValidate(
             selectedCase,
@@ -619,16 +627,23 @@ public without sharing class FEC_CaseBusinessService {
             result.subCodeCode
           );
           if (!mrcErr.errorlst.isEmpty()) {
-            Section caseInfoMrc = result.findSection('Case Information');
+            Section caseInfoMrc = result.findSection(
+              FEC_ConstantCommon.SECTION_CASE_INFORMATION
+            );
             if (caseInfoMrc == null) {
-              caseInfoMrc = new Section('Case Information', mrcErr);
+              caseInfoMrc = new Section(
+                FEC_ConstantCommon.SECTION_CASE_INFORMATION,
+                mrcErr
+              );
               result.sectionlst.add(caseInfoMrc);
             } else {
               caseInfoMrc.error = mrcErr;
             }
-            // RL05.03 + DPD≥15: hiển thị cảnh báo nhưng vẫn load Delivery (giống RL05.01 + thêm Email).
-            if (!isRl0503DpdOnlyValidation(mrcErr, result.subCodeCode)) {
+            if (isRl0503DpdOnlyValidation(mrcErr, result.subCodeCode)) {
+              result.mrcRl05CaseInfoWarningOnly = true;
+            } else {
               err = mrcErr;
+              result.mrcRl05CaseInfoBlocked = true;
             }
           }
         }
@@ -644,7 +659,8 @@ public without sharing class FEC_CaseBusinessService {
         useActualNatureAndSettingObj,
         selectedNatureOfCase,
         caseBindMap,
-        rolelst
+        rolelst,
+        additionalRolelst
       );
 
       // ================================= GET CASE STAGE ===========================
@@ -747,10 +763,14 @@ public without sharing class FEC_CaseBusinessService {
         if (caseStageIdPreservedAtLoad != null) {
           selectedCase.FEC_Current_Case_Stage__c = caseStageIdPreservedAtLoad;
         }
-        try { update selectedCase; } catch (DmlException e) {
-          System.debug('Update case failed (no stage): ' + e.getMessage());
-        }
+        FEC_CaseInitUpdateService.runSystemCaseUpdateIfChanged(selectedCase, caseBaseline);
         // RL05.01 / RL05.03: vẫn hiển thị Delivery khi chưa resolve stage (giống luồng 01).
+        FEC_MrcReturnCaseService.supplementStage1RoutingActionsIfEmpty(
+          result,
+          FEC_ConstantCommon.STAGE_ONE,
+          rolelst,
+          latestRoutingHistoryIsReverted
+        );
         FEC_MrcReturnCaseService.supplementMrcRl05CaseInformationWhenStageMissing(
           result,
           selectedCase
@@ -780,7 +800,7 @@ public without sharing class FEC_CaseBusinessService {
           'FEC_Field_ReadOnly__c, FEC_Section__c, FEC_Field_Order_Display__c,' +
           'FEC_Field_Label_Name__c, FEC_Editable_User_Group__c, FEC_Field_Masking__c, FEC_Masking_Type__c, ' +
           'FEC_Sub_Section__c, FEC_Sub_Section_Order__c, FEC_Sub_Section_Layout__c, FEC_Field_Reverted__c, FEC_Sub_Section_Field_Layout__c, ' +
-          'FEC_LWC_Name__c, FEC_Type__c ' +
+          'FEC_LWC_Name__c, FEC_Type__c, FEC_Hidden__c ' +
           'FROM ' +
           masterDataSettingObj +
           ' ' +
@@ -828,11 +848,31 @@ public without sharing class FEC_CaseBusinessService {
           isGsrBusinessProcess &&
           checkStageName(selectedStage.Name, FEC_ConstantCommon.STAGE_ONE);
         result.contextFlags.put('isGsrStage1Revert', isGsrStage1Revert);
-        // GSR Stage 3 (code Stage 2 + đã có Assignment): Property Info chỉ khi Updated NOC khác Original → read-only.
+        Boolean isGsrStage2ToStage1Revert =
+          isGsrStage1Revert &&
+          FEC_CaseMasterDataHelper.isGsrRevertFromPreviousStageName(
+            selectedCase.Id,
+            selectedStage.Id,
+            FEC_ConstantCommon.STAGE_TWO
+          );
+        result.contextFlags.put(
+          'isGsrStage2ToStage1Revert',
+          isGsrStage2ToStage1Revert
+        );
+        Boolean isGsrStage1RevertMasterReadonly =
+          isGsrStage1Revert && !isGsrStage2ToStage1Revert;
+        result.contextFlags.put(
+          'isGsrStage1RevertMasterReadonly',
+          isGsrStage1RevertMasterReadonly
+        );
+        Boolean hasCaseAssignment = getCaseAssignmentCountByCaseId(selectedCase) > 0;
+        result.contextFlags.put('hasCaseAssignment', hasCaseAssignment);
+        // GSR Stage 3 (code Stage 2 + đã có Assignment): Property Info chỉ khi Updated NOC khác Original → read-only (không áp Stage 1).
         Boolean isGsrStage3PropertyInfoReadonly =
           isActualNatureGsrOnly &&
           isUpdatedNocDifferentFromCurrent &&
-          getCaseAssignmentCountByCaseId(selectedCase) > 0;
+          hasCaseAssignment &&
+          !checkStageName(selectedStage.Name, FEC_ConstantCommon.STAGE_ONE);
         result.contextFlags.put(
           'isGsrStage3PropertyInfoReadonly',
           isGsrStage3PropertyInfoReadonly
@@ -848,11 +888,18 @@ public without sharing class FEC_CaseBusinessService {
           );
         }
 
+        FEC_MrcReturnCaseService.applyRl05CodeFallbacks(
+          result,
+          selectedCase,
+          result.stageName
+        );
+
         FEC_MrcReturnCaseService.MrcRl05UiContext mrcRl05UiCtx = null;
         try {
           FEC_MrcDuplicateCaseService.OpenDupInfo mrcDupEarly = FEC_MrcDuplicateCaseService.findOlderOpenRl05DuplicateInfo(
             selectedCase.Id,
             selectedCase.FEC_Account_or_Contract__c,
+            selectedCase.FEC_Account_Contract_Number_Text__c,
             selectedCase.CreatedDate,
             result.subCategoryCode,
             result.subCodeCode
@@ -869,12 +916,25 @@ public without sharing class FEC_CaseBusinessService {
             mrcDupEarly != null
           );
           result.mrcRl05Ui = mrcRl05UiCtx;
+          if (mrcRl05UiCtx != null) {
+            FEC_MrcReturnCaseService.enrichRl05PicklistOptions(
+              result,
+              mrcRl05UiCtx
+            );
+          }
+          result.mrcCustomerConfirmationSaved = selectedCase.FEC_Customer_Confirmation__c;
+          result.mrcHandlingOptionSaved = selectedCase.FEC_MRC_Request_Handling_Option__c;
         } catch (Exception mrcCtxEx) {
           System.debug(
             LoggingLevel.WARN,
             'getByCase MRC RL05 UI context: ' + mrcCtxEx.getMessage()
           );
         }
+
+        masterDatalst = FEC_CaseMasterDataHelper.removeMasterDataRowsByHiddenAssignmentFieldApis(
+          masterDatalst,
+          hasCaseAssignment
+        );
 
         for (SObject item : masterDatalst) {
           sectionNameTemp = (String) item.get('FEC_Section__c');
@@ -886,6 +946,11 @@ public without sharing class FEC_CaseBusinessService {
             'FEC_Sub_Section_Layout__c'
           );
           String itemType = (String) item.get('FEC_Type__c');
+          if (TYPE_ASSIGNMENT.equals(itemType)) {
+            if (!hasCaseAssignment) {
+              continue;
+            }
+          }
           //PhongBT 14/05/26: Document Request
           //Ẩn Case Info (trừ Property Info), chỉ khi sub-code RL04.02/RL04.03/RC04.04 trả về message
           if(
@@ -908,7 +973,6 @@ public without sharing class FEC_CaseBusinessService {
             continue;
           }
 
-          // MRC Return RL05: ẩn Property Info / fec_MRC; Assessment & Customer Confirmation theo context.
           if (
             FEC_MrcReturnCaseService.shouldSkipMasterDataRow(
               sectionNameTemp,
@@ -986,7 +1050,7 @@ public without sharing class FEC_CaseBusinessService {
                 currentUser.FEC_User_Group__c,
                 selectedStage.Name
               );
-              if (isGsrStage1Revert) {
+              if (isGsrStage1RevertMasterReadonly) {
                 lwcSlot.fecMasterDataSettingIsEdit = false;
               }
               if (
@@ -1086,7 +1150,8 @@ public without sharing class FEC_CaseBusinessService {
                     objTemp,
                     currentUser.FEC_User_Group__c,
                     isRevert,
-                    isGsrStage1Revert || forceGsrPropertyInfoReadonly
+                    isGsrStage1RevertMasterReadonly || forceGsrPropertyInfoReadonly,
+                    hasCaseAssignment
                   );
 
                   if (fieldTemp == null)
@@ -1113,15 +1178,14 @@ public without sharing class FEC_CaseBusinessService {
           sectionItem.sort();
         }
 
-        FEC_MrcReturnCaseService.ensureDeliveryLwcOnCaseInformation(
-          result,
-          mrcRl05UiCtx
-        );
-        FEC_MrcReturnCaseService.finalizeCaseInformationForRl05(
-          result,
-          mrcRl05UiCtx,
-          selectedCase
-        );
+        // MRC Return (RL05): inject field ẩn + picklist; panel LWC do client ensureMrcReturnCaseFormInBusiness.
+        if (mrcRl05UiCtx != null) {
+          FEC_MrcReturnCaseService.finalizeCaseInformationForRl05(
+            result,
+            mrcRl05UiCtx,
+            selectedCase
+          );
+        }
 
         result.removeEmptySections();
       }
@@ -1199,6 +1263,13 @@ public without sharing class FEC_CaseBusinessService {
           );
         }
       }
+
+      FEC_MrcReturnCaseService.supplementStage1RoutingActionsIfEmpty(
+        result,
+        selectedStage.Name,
+        rolelst,
+        isRevert
+      );
 
       // Hiển thị Team/Queue Route to theo nhánh Stage Change (không ảnh hưởng logic submit route()).
       RouteToDisplayInfo routeToDisplayInfo = resolveRouteToDisplayInfo(
@@ -1317,14 +1388,7 @@ public without sharing class FEC_CaseBusinessService {
 
       // RL05 duplicate + UI context đã resolve trước vòng master data (mrcRl05Ui / mrcRl0502Duplicate*).
 
-      if (Schema.sObjectType.Case.isUpdateable()) {
-        try {
-          FEC_CaseTriggerHandler.isSystemUpdate = true;
-          update selectedCase;
-        } catch (DmlException e) {
-          // User có thể không có quyền sửa Case (vd: Case đã assign Queue). Vẫn trả result để hiển thị section.
-        }
-      }
+      FEC_CaseInitUpdateService.runSystemCaseUpdateIfChanged(selectedCase, caseBaseline);
 
       return result;
     } catch (CaseBusinessServiceException e) {
@@ -2045,6 +2109,11 @@ public without sharing class FEC_CaseBusinessService {
    * Dùng cho trigger Change Owner khi cần snapshot từ Status + FEC_Team__c.
    * Author: ToanND61 (10/04/2026)
    */
+  @TestVisible
+  public static String routingHistoryStatusSnapshot(Case k) {
+    return routingHistoryFinalStatusSnapshot(k);
+  }
+
   private static String routingHistoryFinalStatusSnapshot(Case k) {
     if (k == null) {
       return null;
@@ -2054,6 +2123,32 @@ public without sharing class FEC_CaseBusinessService {
       return 'Pending - ' + team;
     }
     return k.Status;
+  }
+
+  /** Chỉ ghi FEC_Changed_Status__c — tránh update full history (re-validate lookup Stage / FLS field khác). */
+  public static void patchRoutingHistoryChangedStatus(
+    Id historyId,
+    String changedStatus
+  ) {
+    if (historyId == null) {
+      return;
+    }
+    Database.update(
+      new FEC_Routing_Action_History__c(
+        Id = historyId,
+        FEC_Changed_Status__c = changedStatus
+      ),
+      AccessLevel.SYSTEM_MODE
+    );
+  }
+
+  /**
+   * Snapshot Status Case cho FEC_Routing_Action_History__c.FEC_Current_Status__c.
+   * Gọi trước markCaseSubmittedAndClearDrafts (method đó set Status = Pending).
+   * Stage 1 thường Status = Open → Current Status trên history = "Open".
+   */
+  public static String readRoutingHistoryCurrentStatus(String caseId) {
+    return readCaseFinalStatusBeforeSubmit(caseId);
   }
 
 
@@ -2102,12 +2197,12 @@ public without sharing class FEC_CaseBusinessService {
       return null;
     }
     List<Case> rows = [
-      SELECT FEC_Final_Status__c
+      SELECT Status, FEC_Team__c
       FROM Case
       WHERE Id = :caseId
       LIMIT 1
     ];
-    return rows.isEmpty() ? null : rows[0].FEC_Final_Status__c;
+    return rows.isEmpty() ? null : routingHistoryFinalStatusSnapshot(rows[0]);
   }
   //PhongBT: tạo FEC_Case_Flow_History__c khi submit case lần đầu.
   /**
@@ -2167,7 +2262,6 @@ public without sharing class FEC_CaseBusinessService {
             Owner.Name,
             FEC_Current_Case_Stage__c,
             FEC_Stage_Name__c,
-            FEC_Final_Status__c,
             FEC_Actual_Nature_of_Case__c,
             FEC_Customer_Type__c,
             FEC_Account_Contract_Number_PL__c
@@ -2182,7 +2276,6 @@ public without sharing class FEC_CaseBusinessService {
         oldOwnerName = resolveRoutingHistoryOwnerLabel(c.OwnerId, c.Owner?.Name);
         stageName = c.FEC_Stage_Name__c;
         currentStageId = c.FEC_Current_Case_Stage__c;
-        finalStatusBeforeSubmit = c.FEC_Final_Status__c;
       }
 
       String blockCode = (String)params.get('blockCode');
@@ -2208,6 +2301,7 @@ public without sharing class FEC_CaseBusinessService {
           //PhongBT: tạo FEC_Case_Flow_History__c khi submit case lần đầu.
           // Kiểm tra creation stage trước khi mark submitted
           Boolean isCreationStage = !([SELECT FEC_Is_Submited__c FROM Case WHERE Id = :caseId LIMIT 1].FEC_Is_Submited__c == true);
+          finalStatusBeforeSubmit = readCaseFinalStatusBeforeSubmit(caseId);
           markCaseSubmittedAndClearDrafts(caseId);
           //PhongBT: tạo FEC_Case_Flow_History__c khi submit case lần đầu.
           if (isCreationStage) {
@@ -2230,47 +2324,57 @@ public without sharing class FEC_CaseBusinessService {
           //PhongBT: update bộ noc chọn ở updated khi revert về
           String revertNocId = (String) params.get('natureOfCaseId');
           FEC_CofGsrRoutePrepareService.updateCaseNocFromSelection(caseId, revertNocId);
+          finalStatusBeforeSubmit = readCaseFinalStatusBeforeSubmit(caseId);
           markCaseSubmittedAndClearDrafts(caseId);
           revert(caseId, revertActionId, finalStatusBeforeSubmit, routingActionValue);
           return null;
         }
         when RECALL {
+          finalStatusBeforeSubmit = readCaseFinalStatusBeforeSubmit(caseId);
           markCaseSubmittedAndClearDrafts(caseId);
           recall(caseId);
           createRoutingActionHis('Recall', '', oldOwnerName, oldOwnerId, caseId, stageName, finalStatusBeforeSubmit, currentStageId);
           return null;
         }
         when CANCEL {
+          finalStatusBeforeSubmit = readCaseFinalStatusBeforeSubmit(caseId);
           markCaseSubmittedAndClearDrafts(caseId);
           cancel(caseId);
           createRoutingActionHis('Cancel', '', oldOwnerName, oldOwnerId, caseId, stageName, finalStatusBeforeSubmit, currentStageId);
           return null;
         }
         when REOPEN {
+          finalStatusBeforeSubmit = readCaseFinalStatusBeforeSubmit(caseId);
           markCaseSubmittedAndClearDrafts(caseId);
           reopen(caseId);
           createRoutingActionHis('Reopen', '', oldOwnerName, oldOwnerId, caseId, stageName, finalStatusBeforeSubmit, currentStageId);
           return null;
         }
         when ESCALATE {
+          finalStatusBeforeSubmit = readCaseFinalStatusBeforeSubmit(caseId);
           markCaseSubmittedAndClearDrafts(caseId);
           escalate(caseId);
           createRoutingActionHis('Escalate', '', oldOwnerName, oldOwnerId, caseId, stageName, finalStatusBeforeSubmit, currentStageId);
           return null;
         }
         when REJECT {
+          finalStatusBeforeSubmit = readCaseFinalStatusBeforeSubmit(caseId);
           markCaseSubmittedAndClearDrafts(caseId);
           reject(caseId);
+          FEC_AssignmentRoutingActionHandler.resolveAllAssignments(caseId);
           createRoutingActionHis('Reject', '', oldOwnerName, oldOwnerId, caseId, stageName, finalStatusBeforeSubmit, currentStageId);
           return null;
         }
         when RESOLVE {
+          finalStatusBeforeSubmit = readCaseFinalStatusBeforeSubmit(caseId);
           markCaseSubmittedAndClearDrafts(caseId);
           resolve(caseId);
+          FEC_AssignmentRoutingActionHandler.resolveAllAssignments(caseId);
           createRoutingActionHis('Resolve', '', oldOwnerName, oldOwnerId, caseId, stageName, finalStatusBeforeSubmit, currentStageId);
           return null;
         }
         when TRANSFER {
+          finalStatusBeforeSubmit = readCaseFinalStatusBeforeSubmit(caseId);
           markCaseSubmittedAndClearDrafts(caseId);
           String userOrQueueId = (String) params.get('userOrQueueId');
           // Đổi owner trước (transfer đã registerSkip), rồi ghi history — tránh 2 bản; Updated = owner sau transfer
@@ -2281,6 +2385,7 @@ public without sharing class FEC_CaseBusinessService {
         when UPDATEACTION {
           String decision = (String) params.get('decision');
           updateCaseTeamAndOwner(caseId, decision);
+          finalStatusBeforeSubmit = readCaseFinalStatusBeforeSubmit(caseId);
           markCaseSubmittedAndClearDrafts(caseId);
           createRoutingActionHis('Update', decision, oldOwnerName, oldOwnerId, caseId, stageName, finalStatusBeforeSubmit, currentStageId);
           return null;
@@ -2372,7 +2477,11 @@ public without sharing class FEC_CaseBusinessService {
 
       User currentUser = userlst.get(0);
 
-      List<String> rolelst = FEC_NatureOfCaseUserGroupService.buildRoleListForIncludes(
+      List<String> rolelst = new List<String>();
+      if (String.isNotBlank(currentUser.FEC_User_Group__c)) {
+        rolelst.add(currentUser.FEC_User_Group__c);
+      }
+      List<String> additionalRolelst = FEC_NatureOfCaseUserGroupService.buildRoleListForIncludes(
         currentUser.FEC_User_Group__c
       );
 
@@ -2441,9 +2550,7 @@ public without sharing class FEC_CaseBusinessService {
             'WHERE FEC_Nature_of_Cases__c = :natureOfCaseId ' +
             'AND FEC_Active__c = TRUE ' +
             'AND FEC_Default_Stage__c = TRUE ' +
-            'AND FEC_User_Group__c INCLUDES (\'' +
-            String.join(new List<String>(rolelst), '\',\'') +
-            '\')';
+            FEC_NatureOfCaseUserGroupService.buildUserGroupIncludesWhereClause(rolelst);
 
           Map<String, Object> bindVars = new Map<String, Object>{
             'natureOfCaseId' => natureOfCaselst.get(0)
@@ -2727,13 +2834,15 @@ public without sharing class FEC_CaseBusinessService {
       Database.update(updatedCase, AccessLevel.SYSTEM_MODE);
 
       Case endCase = [
-        SELECT FEC_Final_Status__c
+        SELECT Status, FEC_Team__c
         FROM Case
         WHERE Id = :caseId
         LIMIT 1
       ];
-      history.FEC_Changed_Status__c = endCase.FEC_Final_Status__c;
-      Database.update(history, AccessLevel.SYSTEM_MODE);
+      patchRoutingHistoryChangedStatus(
+        history.Id,
+        routingHistoryFinalStatusSnapshot(endCase)
+      );
       FEC_AutoHoldCaseService.enqueueAfterRoutingHistory(history.Id);
     } catch (Exception e) {
       throw new CaseBusinessServiceException(e.getMessage());
@@ -2803,13 +2912,13 @@ public without sharing class FEC_CaseBusinessService {
       new FEC_CaseBusinessWithoutSharing().doInsert(new List<FEC_Routing_Action_History__c>{ history });
 
       Case endCase = [
-        SELECT FEC_Final_Status__c
+        SELECT Status, FEC_Team__c
         FROM Case
         WHERE Id = :caseId
         LIMIT 1
       ];
-      history.FEC_Changed_Status__c = endCase.FEC_Final_Status__c;
-      Database.update(history, AccessLevel.SYSTEM_MODE);
+      String changedStatus = routingHistoryFinalStatusSnapshot(endCase);
+      patchRoutingHistoryChangedStatus(history.Id, changedStatus);
 
       FEC_AutoHoldCaseService.enqueueAfterRoutingHistory(history.Id);
       System.debug(
@@ -2817,7 +2926,7 @@ public without sharing class FEC_CaseBusinessService {
         ' inserted historyId=' + history.Id +
         ' routingAction=' + history.FEC_Routing_Action__c +
         ' currentStatus=' + history.FEC_Current_Status__c +
-        ' changedStatus=' + history.FEC_Changed_Status__c +
+        ' changedStatus=' + changedStatus +
         ' originalQueue=' + history.FEC_Original_User_Queue__c +
         ' updatedQueue=' + history.FEC_Updated_User_Queue__c +
         ' description=' + history.FEC_Description__c
@@ -3427,13 +3536,15 @@ public without sharing class FEC_CaseBusinessService {
           update updatedCase;
 
           Case endCase = [
-            SELECT FEC_Final_Status__c
+            SELECT Status, FEC_Team__c
             FROM Case
             WHERE Id = :caseId
             LIMIT 1
           ];
-          newHistory.FEC_Changed_Status__c = endCase.FEC_Final_Status__c;
-          update newHistory;
+          patchRoutingHistoryChangedStatus(
+            newHistory.Id,
+            routingHistoryFinalStatusSnapshot(endCase)
+          );
     } catch (Exception e) {
       throw new CaseBusinessServiceException(e.getMessage());
     }
@@ -3557,6 +3668,7 @@ public without sharing class FEC_CaseBusinessService {
         FEC_Field_Reverted__c,
         FEC_Sub_Section_Field_Layout__c, 
         FEC_LWC_Name__c, 
+        FEC_Hidden__c,
         FEC_Type__c
       FROM FEC_Master_Data_Setting__c
       WHERE FEC_Nature_of_Case__c = :natureOfCaseId
@@ -3596,6 +3708,7 @@ public without sharing class FEC_CaseBusinessService {
       tgt.FEC_Sub_Section_Field_Layout__c = src.FEC_Sub_Section_Field_Layout__c;
       tgt.FEC_LWC_Name__c = src.FEC_LWC_Name__c;
       tgt.FEC_Type__c = src.FEC_Type__c;
+      tgt.FEC_Hidden__c = src.FEC_Hidden__c;
 
       targetlst.add(tgt);
     }
@@ -3802,7 +3915,8 @@ public without sharing class FEC_CaseBusinessService {
     SObject objTemp,
     String userGr,
     Boolean isStageRevert,
-    Boolean forceMasterDataReadOnly
+    Boolean forceMasterDataReadOnly,
+    Boolean hasCaseAssignment
   ) {
     String maskingTypeTemp = (String) masterDataItem.get('FEC_Masking_Type__c');
     String editableGr = (String) masterDataItem.get(
@@ -3858,6 +3972,16 @@ public without sharing class FEC_CaseBusinessService {
     Boolean outEditable =
       isEditable ||
       (String.isNotBlank(editableGr) && editableGr.contains(userGr));
+    String mdsType = (String) masterDataItem.get('FEC_Type__c');
+    if (
+      hasCaseAssignment == true &&
+      TYPE_ASSIGNMENT.equals(mdsType) &&
+      isEditable == true &&
+      forceMasterDataReadOnly != true
+    ) {
+      outReadOnly = false;
+      outEditable = true;
+    }
     if (forceMasterDataReadOnly == true) {
       outReadOnly = true;
       outEditable = false;
@@ -4022,6 +4146,21 @@ public without sharing class FEC_CaseBusinessService {
     /** RL05 — cờ hiển thị Delivery / Customer Confirmation / routing (Batch 7). */
     @AuraEnabled
     public FEC_MrcReturnCaseService.MrcRl05UiContext mrcRl05Ui;
+
+    /** RL05.03 DPD ≥ 15: chỉ cảnh báo Case Information, không chặn routing. */
+    @AuraEnabled
+    public Boolean mrcRl05CaseInfoWarningOnly;
+
+    /** RL05 — chặn nhập Case Information (Product Code ≠ TW): ẩn panel LWC + routing Stage 1. */
+    @AuraEnabled
+    public Boolean mrcRl05CaseInfoBlocked;
+
+    /** Giá trị đã lưu trên Case — dùng khôi phục panel sau submit/reload. */
+    @AuraEnabled
+    public String mrcCustomerConfirmationSaved;
+
+    @AuraEnabled
+    public String mrcHandlingOptionSaved;
 
     @AuraEnabled
     public Map<String, Map<String, List<PicklistOptionDto>>> picklistOptionsMap;
@@ -4537,7 +4676,8 @@ public without sharing class FEC_CaseBusinessService {
         Id,
         FEC_Perform_User__c,
         FEC_Updated_User_Queue__c,
-        FEC_Updated_User_Queue_ID__c
+        FEC_Updated_User_Queue_ID__c,
+        FEC_Stage_Name__c
       FROM FEC_Routing_Action_History__c
       WHERE
         FEC_Case__c = :caseId
@@ -4570,6 +4710,17 @@ public without sharing class FEC_CaseBusinessService {
         currentUserId == lastAction.FEC_Perform_User__c &&
         lastAction.FEC_Updated_User_Queue_ID__c == c.OwnerId
       ) {
+        if (String.isNotBlank(lastAction.FEC_Stage_Name__c)) {
+          List<FEC_Case_Stage__c> caseStageList = [
+            SELECT Id, Name
+            FROM FEC_Case_Stage__c
+            WHERE Name = :lastAction.FEC_Stage_Name__c
+            LIMIT 1
+          ];
+          if (!caseStageList.isEmpty()) {
+            c.FEC_Current_Case_Stage__c = caseStageList[0].Id;
+          }
+        }
         c.OwnerId = currentUserId;
         c.Status = FEC_ConstantCommon.CASE_STATUS_PENDING;
         registerSkipOwnerChangeRoutingHistory(c.Id);
@@ -4696,7 +4847,7 @@ public without sharing class FEC_CaseBusinessService {
       mrcErr.errorlst == null ||
       mrcErr.errorlst.isEmpty() ||
       String.isBlank(subCodeCode) ||
-      !subCodeCode.toUpperCase().contains('RL05.03')
+      !subCodeCode.toUpperCase().contains(FEC_ConstantCommon.SUB_CODE_RL0503)
     ) {
       return false;
     }
@@ -4745,7 +4896,16 @@ public without sharing class FEC_CaseBusinessService {
       }
     }
 
-    // RL05.03: DPD validate tại NOC picker; getByCase luôn load Delivery giống RL05.01.
+    if (
+      errorlst.isEmpty() &&
+      String.isNotBlank(subCodeCode) &&
+      subCodeCode.toUpperCase().contains(FEC_ConstantCommon.SUB_CODE_RL0503)
+    ) {
+      Decimal daysPastDue = selectedCase.FEC_Account_or_Contract__r.FEC_Days_Past_Due__c;
+      if (daysPastDue != null && daysPastDue >= 15) {
+        errorlst.add(System.Label.FEC_MRC_Return_Msg_DPD_RL0503);
+      }
+    }
 
     if (errorlst.isEmpty()) {
       return new Error();
@@ -4838,7 +4998,6 @@ public without sharing class FEC_CaseBusinessService {
     ) {
       selectedCase.FEC_Updated_Info_Phone_Number__c = selectedCase.FEC_Original_Info_Phone_Number__c;
     }
-    update selectedCase;
   }
 
   /**
@@ -4873,7 +5032,6 @@ public without sharing class FEC_CaseBusinessService {
         selectedCase.FEC_Updated_Info_Last_Name__c = selectedCase.FEC_Original_Info_Last_Name__c;
       }
     }
-    update selectedCase;
   }
 
   /**
@@ -4897,7 +5055,6 @@ public without sharing class FEC_CaseBusinessService {
     ) {
       selectedCase.FEC_Updated_Info_Email__c = selectedCase.FEC_Original_Info_Email__c;
     }
-    update selectedCase;
   }
 
   /**
@@ -4921,7 +5078,6 @@ public without sharing class FEC_CaseBusinessService {
     ) {
       selectedCase.FEC_Updated_Info_Date_of_Birth__c = selectedCase.FEC_Original_Info_Date_of_Birth__c;
     }
-    update selectedCase;
   }
 
   /**
@@ -4945,7 +5101,6 @@ public without sharing class FEC_CaseBusinessService {
     ) {
       selectedCase.FEC_Updated_Info_Gender__c = selectedCase.FEC_Original_Info_Gender__c;
     }
-    update selectedCase;
   }
 
   /**
@@ -4980,7 +5135,6 @@ public without sharing class FEC_CaseBusinessService {
         selectedCase.FEC_Updated_Info_Place_of_Issue__c = selectedCase.FEC_Original_Info_Place_of_Issue__c;
       }
     }
-    update selectedCase;
   }
 
   private static void undeliveriedCardUpdate(Case selectedCase) {
@@ -4991,7 +5145,6 @@ public without sharing class FEC_CaseBusinessService {
     if (cardDeliveryInfo != null) {
       selectedCase.FEC_Delivery_Status__c = cardDeliveryInfo.status;
       selectedCase.FEC_Delay_Note__c = cardDeliveryInfo.deliveryNotes;
-      update selectedCase;
     }
   }
 
@@ -5295,7 +5448,8 @@ public without sharing class FEC_CaseBusinessService {
     Boolean useActualNatureAndSettingObj,
     SObject selectedNatureOfCase,
     Map<String, Object> caseBindMap,
-    List<String> rolelst
+    List<String> rolelst,
+    List<String> additionalRolelst
   ) {
     if (selectedNatureOfCase == null) {
       return null;
@@ -5312,9 +5466,10 @@ public without sharing class FEC_CaseBusinessService {
       'AND FEC_Customer_Type__c = :customerType ' +
       'AND FEC_Business_Process__r.FEC_Active__c = TRUE ' +
       'AND FEC_Active__c = TRUE ' +
-      'AND FEC_User_Group__c INCLUDES (\'' +
-      String.join(new List<String>(rolelst), '\',\'') +
-      '\')';
+      FEC_NatureOfCaseUserGroupService.buildNatureOfCaseUserGroupFilterClause(
+        rolelst,
+        additionalRolelst
+      );
     List<SObject> templateRows = Database.queryWithBinds(
       templateNocQuery,
       caseBindMap,

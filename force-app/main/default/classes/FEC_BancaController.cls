@@ -10,7 +10,7 @@
  * 1.0      2025-01-17                         Create
 ****************************************************************************************/
 
-public with sharing class FEC_BancaController {
+public without sharing class FEC_BancaController {
 
     /* =====================================================
      * DTO
@@ -67,17 +67,18 @@ public with sharing class FEC_BancaController {
             SELECT
                 Id,
                 FEC_Account_or_Contract__c,
-                FEC_Account_or_Contract__r.FEC_National_ID_Passport_ID__c,
+                FEC_Account_or_Contract__r.FEC_Search_Result_National_ID__c,
                 FEC_Account_or_Contract__r.FEC_Primary_Phone__c
             FROM Case
             WHERE Id = :caseId
             LIMIT 1
         ];
 
-        String nationalId =
+        List<String> nationalIds = parseCommaSeparatedNationalIds(
             cs.FEC_Account_or_Contract__r != null
-            ? cs.FEC_Account_or_Contract__r.FEC_National_ID_Passport_ID__c
-            : null;
+            ? cs.FEC_Account_or_Contract__r.FEC_Search_Result_National_ID__c
+            : null
+        );
 
         String phone =
             cs.FEC_Account_or_Contract__r != null
@@ -93,7 +94,7 @@ public with sharing class FEC_BancaController {
         /* =====================================================
          * SEARCH BY NID
          * ===================================================== */
-        if (!String.isBlank(nationalId)) {
+        for (String nationalId : nationalIds) {
 
             try {
 
@@ -102,11 +103,18 @@ public with sharing class FEC_BancaController {
                         new List<String>{ nationalId }
                     );
 
-                processNIDResponse(
-                    nidResp,
-                    caseId,
-                    mapData
-                );
+                if (
+                    nidResp != null &&
+                    nidResp.result != null &&
+                    !nidResp.result.isEmpty()
+                ) {
+                    processNIDResponse(
+                        nidResp,
+                        caseId,
+                        mapData
+                    );
+                    break;
+                }
 
             } catch (Exception e) {
 
@@ -561,5 +569,28 @@ public with sharing class FEC_BancaController {
         }
 
         return upsertList;
+    }
+
+    /* =====================================================
+     * PARSE COMMA-SEPARATED NATIONAL IDs
+     * ===================================================== */
+    private static List<String> parseCommaSeparatedNationalIds(String raw) {
+
+        List<String> nationalIds = new List<String>();
+
+        if (String.isBlank(raw)) {
+            return nationalIds;
+        }
+
+        for (String part : raw.split(',')) {
+
+            String trimmed = part != null ? part.trim() : null;
+
+            if (!String.isBlank(trimmed)) {
+                nationalIds.add(trimmed);
+            }
+        }
+
+        return nationalIds;
     }
 }

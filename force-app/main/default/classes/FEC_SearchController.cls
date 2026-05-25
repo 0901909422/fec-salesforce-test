@@ -67,7 +67,7 @@ public with sharing class FEC_SearchController {
 
     @AuraEnabled
     public static Id createHistory(String value, String fieldName, Id caseId, String searchProducts, String selectedType, String cifNumber, String phone, 
-                String customerName, String applicationId, Boolean isListView, String policyNumber, String buyerNID ) {
+                String customerName, String applicationId, Boolean isListView, String policyNumber, String buyerNID, String searchNationalId2 ) {
     // 1. Validation
     if (String.isBlank(value) || String.isBlank(fieldName)) {
         throw new AuraHandledException(System.Label.FEC_MSG_Create_Customer_History_Field_Null);
@@ -127,9 +127,13 @@ public with sharing class FEC_SearchController {
             objCase.FEC_Contract_Number__c = value;
         }
 
-        // [CHANGE][Author : LongNH76] Đồng bộ tiêu chí search vào Case từ khung search.
-        objCase.FEC_Search_Phone_Number__c = phone;
-        objCase.FEC_Search_National_ID__c = buyerNID;
+        // [CHANGE][Author : LongNH76] Đồng bộ tiêu chí search vào Case trước khi tạo History
+        if (String.isNotBlank(phone)) {objCase.FEC_Search_Phone_Number__c = phone;}
+        String mergedSearchNationalIdEarly =
+            resolveSearchNationalIds(buyerNID, searchNationalId2, null);
+        if (String.isNotBlank(mergedSearchNationalIdEarly)) {
+            objCase.FEC_Search_National_ID__c = mergedSearchNationalIdEarly;
+        }
 
         upsert objCase;
 
@@ -178,6 +182,12 @@ public with sharing class FEC_SearchController {
                 ? sourceCase.FEC_Search_National_ID__c
                 : buyerNID
             );
+            
+        String resolvedSearchNationalId = resolveSearchNationalIds(
+            buyerNID,
+            searchNationalId2,
+            resolvedNationalId
+        );
 
         FEC_Customer_History__c rec = new FEC_Customer_History__c();
         if (fieldName == 'AccountNumber') {
@@ -200,7 +210,8 @@ public with sharing class FEC_SearchController {
             //     String.isNotBlank(searchPhoneFromCase) ? searchPhoneFromCase : phone;
             // rec.FEC_National_ID_Passport_ID__c =
             //     String.isNotBlank(searchNidFromCase) ? searchNidFromCase : buyerNID;
-            rec.FEC_Buyer_NID__c = buyerNID;
+            rec.FEC_Buyer_NID__c = resolvedSearchNationalId;
+            rec.FEC_Search_Result_National_ID__c = resolvedSearchNationalId;
 
             if (caseId == null && isListView == true) {
                 rec.FEC_Contract_Number__c = policyNumber;
@@ -216,8 +227,9 @@ public with sharing class FEC_SearchController {
         // rec.FEC_Customer_Name__c = customerName;
         rec.FEC_Work_Phone__c = resolvedPrimaryPhone;
         rec.FEC_Primary_Phone__c = resolvedPrimaryPhone;
-        rec.FEC_National_ID_Passport_ID__c = resolvedNationalId;
+        //rec.FEC_National_ID_Passport_ID__c = resolvedNationalId;
         rec.FEC_Customer_Name__c = resolvedCustomerName;
+        rec.FEC_Search_Result_National_ID__c = resolvedSearchNationalId;
         // Old behavior (kept for reference):
         // - rec.FEC_Primary_Phone__c, rec.FEC_National_ID_Passport_ID__c chỉ được set trong nhánh UserId.
         // - Card/Loan không được đồng bộ 2 field này từ Case.
@@ -242,8 +254,8 @@ public with sharing class FEC_SearchController {
         if (String.isNotBlank(phone)) {
             objCase.FEC_Search_Phone_Number__c = phone;
         }
-        if (String.isNotBlank(buyerNID)) {
-            objCase.FEC_Search_National_ID__c = buyerNID;
+        if (String.isNotBlank(resolvedSearchNationalId)) {
+            objCase.FEC_Search_National_ID__c = resolvedSearchNationalId;
         }
 
         update objCase;
@@ -473,7 +485,7 @@ public with sharing class FEC_SearchController {
             FEC_Customer_History__c hist = [
                 SELECT Id,
                     FEC_Customer_Name__c,
-                    FEC_National_ID_Passport_ID__c,
+                    FEC_Search_Result_National_ID__c,
                     FEC_Gender__c,
                     FEC_Date_of_Birth__c,
                     FEC_Primary_Phone__c,
@@ -489,13 +501,11 @@ public with sharing class FEC_SearchController {
                     || String.isNotBlank(hist.FEC_Primary_Phone__c)
                     || hist.FEC_Date_of_Birth__c != null
                     || String.isNotBlank(hist.FEC_Gender__c)
-                    || hist.FEC_National_ID_Passport_ID__c != null
                     || String.isNotBlank(hist.FEC_Email__c)
                     || String.isNotBlank(hist.FEC_Plastic_ID__c);
             return new Map<String, Object>{
                 'isReady'      => isReady,
                 'customerName' => hist.FEC_Customer_Name__c,
-                'nationalId'   => hist.FEC_National_ID_Passport_ID__c,
                 'gender'       => hist.FEC_Gender__c,
                 'dateOfBirth'  => hist.FEC_Date_of_Birth__c,
                 'primaryPhone' => hist.FEC_Primary_Phone__c,
@@ -513,5 +523,22 @@ public with sharing class FEC_SearchController {
     @AuraEnabled(cacheable=true)
     public static String getCurrentUserProfileName() {
         return FEC_CommonUltils.getCurrentUserProfileName();
+    }
+
+    private static String resolveSearchNationalIds(String id1, String id2, String fallback) {
+        List<String> parts = new List<String>();
+        String trimmed1 = String.isNotBlank(id1) ? id1.trim() : null;
+        String trimmed2 = String.isNotBlank(id2) ? id2.trim() : null;
+
+        if (trimmed1 != null) {
+            parts.add(trimmed1);
+        }
+        if (trimmed2 != null && (trimmed1 == null || !trimmed2.equalsIgnoreCase(trimmed1))) {
+            parts.add(trimmed2);
+        }
+        if (!parts.isEmpty()) {
+            return String.join(parts, ',');
+        }
+        return fallback;
     }
 }
