@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Package xmlns="http://soap.sforce.com/2006/04/metadata">
+    <types>
+        <members>FEC_CaseDsTsSlaService</members>
+        <members>FEC_CaseDsTsSlaNotificationSender</members>
+        <members>FEC_CaseDsTsSlaBatch</members>
+        <members>FEC_CaseDsTsSlaSchedulable</members>
+        <members>FEC_CaseTriggerHandler</members>
+        <name>ApexClass</name>
+    </types>
+    <types>
+        <members>FEC_SLA_DS_TS_Recipient_Telesales</members>
+        <members>FEC_SLA_DS_TS_Recipient_LG</members>
+        <members>FEC_SLA_DS_TS_Recipient_Direct_Sales</members>
+        <members>FEC_SLA_DS_TS_Recipient_Pos_Sales</members>
+        <name>CustomLabel</name>
+    </types>
+    <version>65.0</version>
+</Package>

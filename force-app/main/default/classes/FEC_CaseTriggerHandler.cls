@@ -132,6 +132,7 @@ public without sharing class FEC_CaseTriggerHandler {
         FEC_CaseTatFullProcessSvc.syncAfterSave(newCases, oldMap);
         FEC_NotificationService.sendSFAppNotifications(newCases, oldMap);
         sendSLANotifications(newCases, oldMap);
+        FEC_CaseDsTsSlaNotificationSender.sendAfterCaseUpdate(newCases, oldMap);
         FEC_CaseAssignmentAutoDistributeService.handleQueueCasesAfterSave(newCases, oldMap);
         // tungnm37 fix: comment out syncAssignmentUsersOnOwnerChange vì đã được xử lý trong FEC_AssignmentTriggerHandler
         // tungnm37 fix: logic cũ set FEC_Assignment_Users__c = OwnerId mà không check assignment type
@@ -1055,8 +1056,8 @@ public without sharing class FEC_CaseTriggerHandler {
 
     /**
      * II. Hình thức gửi thông báo SLA (bell) — theo Category/Sub-Category và lịch sử xử lý Case.
-     * - Trường hợp 1: Case còn lại (không thuộc Request/Internal Task + ISL01/ISC01 hủy yêu cầu).
-     * - Trường hợp 2: Category Request hoặc Internal Task, Sub-Code ISL01 / ISC01 (Hủy yêu cầu).
+     * - Trường hợp 1: Case còn lại (Category khác Request / Internal Task).
+     * - Trường hợp 2: Category Request hoặc Internal Task.
      * Lần 1 (vàng): FEC_SLA_Warning__c đổi — nội dung "Sắp vượt quá thời gian xử lý".
      * Lần 2 (đỏ): FEC_SLA_Violating_Warning__c đổi — nội dung "Đã vượt quá thời gian xử lý".
      */
