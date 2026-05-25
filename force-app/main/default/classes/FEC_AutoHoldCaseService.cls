@@ -94,14 +94,6 @@ public without sharing class FEC_AutoHoldCaseService {
     @AuraEnabled
     public static void enqueueAutoHoldRetryForCase(
         Id caseId,
-        Integer attemptNumber
-    ) {
-        enqueueAutoHoldRetryForCase(caseId, attemptNumber, null, null, null, null);
-    }
-
-    @AuraEnabled
-    public static void enqueueAutoHoldRetryForCase(
-        Id caseId,
         Integer attemptNumber,
         Id stage1ProductTypeId,
         Id stage1CategoryId,
