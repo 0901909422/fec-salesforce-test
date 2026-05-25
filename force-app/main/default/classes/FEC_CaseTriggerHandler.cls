@@ -1102,7 +1102,7 @@ public without sharing class FEC_CaseTriggerHandler {
             Map<Id, Case> slaCaseById = new Map<Id, Case>([
                 SELECT
                     Id,
-                    CaseNumber,
+                    FEC_ID_Search__c,
                     FEC_Category__r.Name,
                     FEC_SubCategory__r.FEC_Code__c
                 FROM Case
@@ -1129,28 +1129,28 @@ public without sharing class FEC_CaseTriggerHandler {
 
                 Boolean isCancelRequestCase =
                     FEC_CaseSlaNotificationService.isSlaCancelRequestInternalTaskCase(slaCase);
-                List<String> caseNumberArgs = new List<String>{ slaCase.CaseNumber };
+                List<String> fecIdSearchArgs = new List<String>{ slaCase.FEC_ID_Search__c };
                 String title;
                 String body;
                 if (isViolating && isCancelRequestCase) {
                     // Lần 2 (đỏ) — Trường hợp 2: Đã vượt quá thời gian xử lý
                     title = String.format(
                         System.Label.FEC_MSG_SLA_Notif_Title_Exceeded,
-                        caseNumberArgs
+                        fecIdSearchArgs
                     );
                     body = String.format(
                         System.Label.FEC_MSG_SLA_Notif_Body_Exceeded,
-                        caseNumberArgs
+                        fecIdSearchArgs
                     );
                 } else {
                     // Lần 1 (vàng) hoặc Lần 2 (đỏ) Trường hợp 1: Sắp vượt quá thời gian xử lý
                     title = String.format(
                         System.Label.FEC_MSG_SLA_Notif_Title_Approaching,
-                        caseNumberArgs
+                        fecIdSearchArgs
                     );
                     body = String.format(
                         System.Label.FEC_MSG_SLA_Notif_Body_Approaching,
-                        caseNumberArgs
+                        fecIdSearchArgs
                     );
                 }
 

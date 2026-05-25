@@ -418,14 +418,14 @@ public without sharing class FEC_CaseDsTsSlaService {
     public static String getApproachingTitle(Case c) {
         return String.format(
             Label.FEC_MSG_SLA_Notif_Title_Approaching,
-            new List<String>{ c.CaseNumber }
+            new List<String>{ c.FEC_ID_Search__c }
         );
     }
 
     public static String getApproachingBody(Case c) {
         return String.format(
             Label.FEC_MSG_SLA_Notif_Body_Approaching,
-            new List<String>{ c.CaseNumber }
+            new List<String>{ c.FEC_ID_Search__c }
         );
     }
 

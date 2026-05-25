@@ -45,7 +45,7 @@ public without sharing class FEC_CaseDsTsSlaNotificationSender {
         }
 
         Map<Id, Case> enriched = new Map<Id, Case>([
-            SELECT Id, CaseNumber, OwnerId, FEC_Case_Status__c, FEC_Team__c,
+            SELECT Id, FEC_ID_Search__c, OwnerId, FEC_Case_Status__c, FEC_Team__c,
                    FEC_Assignment_Count__c, FEC_Assignment_Users__c,
                    FEC_SLA_Notification_1__c, FEC_SLA_Notification_2__c, FEC_SLA_Notification_3__c,
                    FEC_Category__r.Name
