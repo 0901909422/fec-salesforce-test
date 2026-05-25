@@ -7,8 +7,20 @@ private class FEC_MrcReturnCaseServiceTest {
             FEC_MrcReturnCaseService.resolveProcessingFlow('CN', 'ACTIVE')
         );
         System.assertEquals(
+            FEC_MrcReturnCaseService.FLOW_NOT_ELIGIBLE,
+            FEC_MrcReturnCaseService.resolveProcessingFlow('TLCN', 'ACTIVE')
+        );
+        System.assertEquals(
             FEC_MrcReturnCaseService.FLOW_CP_SUPPORT,
             FEC_MrcReturnCaseService.resolveProcessingFlow('TLDN', 'ACTIVE')
+        );
+        System.assertEquals(
+            FEC_MrcReturnCaseService.FLOW_CP_SUPPORT,
+            FEC_MrcReturnCaseService.resolveProcessingFlow('TLDN', 'CHARGE-OFF')
+        );
+        System.assertEquals(
+            FEC_MrcReturnCaseService.FLOW_PAYMENT_SUPPORT,
+            FEC_MrcReturnCaseService.resolveProcessingFlow('TLDN', 'N/A')
         );
         System.assertEquals(
             FEC_MrcReturnCaseService.FLOW_PAYMENT_SUPPORT,
@@ -18,6 +30,75 @@ private class FEC_MrcReturnCaseServiceTest {
             FEC_MrcReturnCaseService.FLOW_CP_SUPPORT,
             FEC_MrcReturnCaseService.resolveProcessingFlow('LK', 'CLOSED')
         );
+        System.assertEquals(
+            FEC_MrcReturnCaseService.FLOW_PAYMENT_SUPPORT,
+            FEC_MrcReturnCaseService.resolveProcessingFlow('HT', 'N/A')
+        );
+    }
+
+    @IsTest
+    static void buildUiContext_returnSubCode_notEligible_autoReject() {
+        FEC_Customer_History__c ch = new FEC_Customer_History__c(
+            FEC_MRC_Status__c = 'CN',
+            FEC_Contract_Status__c = 'ACTIVE'
+        );
+        Case c = new Case(FEC_Account_or_Contract__r = ch);
+        FEC_MrcReturnCaseService.MrcRl05UiContext ctx = FEC_MrcReturnCaseService.buildUiContext(
+            c,
+            'RL05',
+            'RL05.02',
+            null,
+            false
+        );
+        System.assertEquals(
+            FEC_MrcReturnCaseService.FLOW_NOT_ELIGIBLE,
+            ctx.processingFlow
+        );
+        System.assertEquals(true, ctx.autoRouteReject);
+        System.assertEquals(false, ctx.showCustomerConfirmation);
+    }
+
+    @IsTest
+    static void buildUiContext_returnSubCode_paymentFlow_autoRoutePayment() {
+        FEC_Customer_History__c ch = new FEC_Customer_History__c(
+            FEC_MRC_Status__c = 'LK',
+            FEC_Contract_Status__c = 'ACTIVE'
+        );
+        Case c = new Case(FEC_Account_or_Contract__r = ch);
+        FEC_MrcReturnCaseService.MrcRl05UiContext ctx = FEC_MrcReturnCaseService.buildUiContext(
+            c,
+            'RL05',
+            'RL05.02',
+            null,
+            false
+        );
+        System.assertEquals(
+            FEC_MrcReturnCaseService.FLOW_PAYMENT_SUPPORT,
+            ctx.processingFlow
+        );
+        System.assertEquals(true, ctx.autoRoutePayment);
+        System.assertEquals('TH4', ctx.rl05Scenario);
+    }
+
+    @IsTest
+    static void buildUiContext_returnSubCode_cpFlow_autoRouteCp() {
+        FEC_Customer_History__c ch = new FEC_Customer_History__c(
+            FEC_MRC_Status__c = 'TLDN',
+            FEC_Contract_Status__c = 'CLOSED'
+        );
+        Case c = new Case(FEC_Account_or_Contract__r = ch);
+        FEC_MrcReturnCaseService.MrcRl05UiContext ctx = FEC_MrcReturnCaseService.buildUiContext(
+            c,
+            'RL05',
+            'RL05.02',
+            null,
+            false
+        );
+        System.assertEquals(
+            FEC_MrcReturnCaseService.FLOW_CP_SUPPORT,
+            ctx.processingFlow
+        );
+        System.assertEquals(true, ctx.autoRouteCp);
     }
 
     @IsTest
@@ -60,7 +141,42 @@ private class FEC_MrcReturnCaseServiceTest {
     }
 
     @IsTest
-    static void buildUiContext_returnSubCode_hidesMrcLwc_dupCaseOnlyIsTh2() {
+    static void finalizeCaseInformationForRl0502_injectsPropertyInfoFields() {
+        FEC_CaseBusinessService.Business biz = new FEC_CaseBusinessService.Business();
+        biz.sectionlst = new List<FEC_CaseBusinessService.Section>();
+        FEC_CaseBusinessService.Section caseInfo = new FEC_CaseBusinessService.Section(
+            'Case Information'
+        );
+        biz.sectionlst.add(caseInfo);
+
+        Case c = new Case();
+        FEC_MrcReturnCaseService.MrcRl05UiContext ctx = FEC_MrcReturnCaseService.buildUiContext(
+            c,
+            'RL05',
+            'RL05.02',
+            null,
+            false
+        );
+
+        FEC_MrcReturnCaseService.finalizeCaseInformationForRl05(biz, ctx, c);
+
+        FEC_CaseBusinessService.Section prop = caseInfo.findSubSection('Property Info');
+        System.assertNotEquals(null, prop, 'Property Info subsection');
+        System.assertNotEquals(true, prop.hideForMrcRl05);
+        FEC_CaseBusinessService.CObject ai = prop.findObj('FEC_Additional_Info__c');
+        System.assertNotEquals(null, ai);
+        System.assertNotEquals(
+            null,
+            ai.findField('FEC_Verify_Information__c')
+        );
+        System.assertNotEquals(null, ai.findField('FEC_Callback__c'));
+        System.assert(
+            biz.picklistOptionsMap.containsKey('FEC_Additional_Info__c')
+        );
+    }
+
+    @IsTest
+    static void buildUiContext_returnSubCode_hidesMrcLwc_showsProperty_dupCaseOnlyIsTh2() {
         Case c = new Case();
         FEC_MrcReturnCaseService.MrcRl05UiContext ctx = FEC_MrcReturnCaseService.buildUiContext(
             c,
@@ -71,6 +187,7 @@ private class FEC_MrcReturnCaseServiceTest {
         );
         System.assertEquals(true, ctx.isReturnSubCode);
         System.assertEquals(true, ctx.hideMrcInfoLwc);
+        System.assertEquals(false, ctx.hidePropertyInfo);
         System.assertEquals(true, ctx.showCustomerConfirmation);
         System.assertEquals(true, ctx.showMrcDupBanner);
         System.assertEquals(true, ctx.dupCaseOnly);

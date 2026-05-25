@@ -44,7 +44,16 @@ export default class Fec_DoNotBotherResultView extends LightningElement {
   goToPageValue = 1;
 
   columns = [
-    { label: "DNB Channel", fieldName: "channel", sortable: true },
+    {
+      label: "DNB Channel",
+      fieldName: "recordUrl",
+      type: "url",
+      sortable: true,
+      typeAttributes: {
+        label: { fieldName: "channel" },
+        target: "_self",
+      },
+    },
 
     { label: "Type", fieldName: "type", sortable: true },
 
@@ -268,7 +277,7 @@ export default class Fec_DoNotBotherResultView extends LightningElement {
   mapData(data) {
     this.dnbData = data.map((item) => ({
       id: item.id,
-
+      recordUrl: `/lightning/r/FEC_Do_Not_Bother__c/${item.id}/view`,
       channel: item.channel || "",
 
       type: item.type || "",

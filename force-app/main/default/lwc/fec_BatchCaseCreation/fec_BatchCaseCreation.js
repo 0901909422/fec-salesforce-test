@@ -16,6 +16,7 @@ import FEC_Batch_Msg_CannotReadExcelContent from "@salesforce/label/c.FEC_Batch_
 import FEC_Batch_Msg_Select_Template from "@salesforce/label/c.FEC_Batch_Msg_Select_Template";
 import FEC_Batch_Import_Missing_Excel_Column from "@salesforce/label/c.FEC_Batch_Import_Missing_Excel_Column";
 import FEC_Msg_Process_End_Of_Day from "@salesforce/label/c.FEC_Msg_Process_End_Of_Day";
+import FEC_Batch_Import_Contract_Header_Ambiguous from "@salesforce/label/c.FEC_Batch_Import_Contract_Header_Ambiguous";
 import FEC_SheetJS from "@salesforce/resourceUrl/FEC_SheetJS";
 import {
   normalizeHeaderCell,
@@ -38,12 +39,14 @@ const MAX_UPLOAD_SIZE_BYTES = 150 * 1024 * 1024;
 const IMPORT_TIMEOUT_MS = 60 * 1000;
 const IMPORT_TIMEOUT_MESSAGE = FEC_Batch_RequestTimeout;
 /** Hai layout: simple (8 cột) và extended (thêm channel / sub channel / email). */
-const HEADER_CONTRACT = [
-  "contract number",
+const HEADER_WELCOME_CONTRACT = ["contract number"];
+const HEADER_OTHER_CONTRACT = [
   "account/ contract number",
   "account/contract number",
   "account contract number"
 ];
+const IMPORT_FILE_TYPE_WELCOME = "welcome";
+const IMPORT_FILE_TYPE_OTHER = "other";
 const HEADER_INTERACTION_PHONE = [
   "interaction phone",
   "interection phone",
@@ -51,7 +54,7 @@ const HEADER_INTERACTION_PHONE = [
   "interaction phone number",
   "phone"
 ];
-const RESULT_APPEND_HEADERS = ["ID", "Status", "Errors"];
+const RESULT_APPEND_HEADERS = ["__Status", "__Interaction ID", "__Case ID", "__Errors"];
 
 const isResultExportCutoffHeader = (header) => {
   const norm = normalizeHeaderCell(header);
@@ -356,7 +359,23 @@ export default class Fec_BatchCaseCreation extends LightningElement {
     const idxChannel = findColumnIndex(headersNorm, ["interaction channel"]);
     const extended = idxChannel >= 0;
 
-    const idxContract = findColumnIndex(headersNorm, HEADER_CONTRACT);
+    const idxWelcomeContract = findColumnIndex(headersNorm, HEADER_WELCOME_CONTRACT);
+    const idxOtherContract = findColumnIndex(headersNorm, HEADER_OTHER_CONTRACT);
+    let fileType = "";
+    let idxContract = -1;
+    if (idxWelcomeContract >= 0 && idxOtherContract >= 0) {
+      return {
+        ok: false,
+        message: FEC_Batch_Import_Contract_Header_Ambiguous
+      };
+    }
+    if (idxWelcomeContract >= 0) {
+      fileType = IMPORT_FILE_TYPE_WELCOME;
+      idxContract = idxWelcomeContract;
+    } else if (idxOtherContract >= 0) {
+      fileType = IMPORT_FILE_TYPE_OTHER;
+      idxContract = idxOtherContract;
+    }
     const idxPhone = findColumnIndex(headersNorm, HEADER_INTERACTION_PHONE);
     const idxProduct = findColumnIndex(headersNorm, ["product type"]);
     const idxCategory = findColumnIndex(headersNorm, ["category"]);
@@ -371,7 +390,7 @@ export default class Fec_BatchCaseCreation extends LightningElement {
 
     const missing = [];
     if (idxContract < 0) {
-      missing.push("Contract Number (hoặc Account/ Contract Number)");
+      missing.push("Contract Number hoặc Account/ Contract Number");
     }
     if (idxPhone < 0) {
       missing.push("Interaction Phone");
@@ -388,7 +407,7 @@ export default class Fec_BatchCaseCreation extends LightningElement {
     if (idxSubCode < 0) {
       missing.push("Sub Code");
     }
-    if (idxCaseStatus < 0) {
+    if (idxCaseStatus < 0 && fileType !== IMPORT_FILE_TYPE_WELCOME) {
       missing.push("Case Status");
     }
     if (extended) {
@@ -456,6 +475,7 @@ export default class Fec_BatchCaseCreation extends LightningElement {
         })
       );
       importRows.push({
+        fileType,
         layout: extended ? "extended" : "simple",
         contractNumber,
         interactionPhone,
@@ -476,6 +496,7 @@ export default class Fec_BatchCaseCreation extends LightningElement {
     return {
       ok: true,
       message: "",
+      fileType,
       headers: originalHeaders,
       sourceRows,
       rows: importRows
@@ -620,7 +641,7 @@ export default class Fec_BatchCaseCreation extends LightningElement {
       }
     } finally {
       try {
-        await this.refreshRows(false);
+        await this.refreshRows(false, true);
       } catch (refreshErr) {
         // eslint-disable-next-line no-console
         console.warn("refreshRows", refreshErr);
@@ -629,7 +650,7 @@ export default class Fec_BatchCaseCreation extends LightningElement {
     }
   }
 
-  async refreshRows(showLoading = true) {
+  async refreshRows(showLoading = true, resetToFirstPage = false) {
     if (showLoading) {
       this.isLoading = true;
     }
@@ -637,7 +658,10 @@ export default class Fec_BatchCaseCreation extends LightningElement {
       const data = await getRecentRows();
       this.rows = Array.isArray(data) ? data.map((row) => this.normalizeRow(row)) : [];
       this.sortRows();
-      if (this.currentPage > this.totalPages) {
+      if (resetToFirstPage) {
+        this.currentPage = 1;
+        this.goToPageInput = "1";
+      } else if (this.currentPage > this.totalPages) {
         this.currentPage = this.totalPages;
       }
       this.rebuildPageRows();
@@ -686,14 +710,18 @@ export default class Fec_BatchCaseCreation extends LightningElement {
     const exportRows = Array.isArray(parsedRows)
       ? parsedRows.map((r, index) => {
           const rowStatus = String(r?.status || "");
-          const exportId =
-            rowStatus.toLowerCase() === "succeeded"
-              ? String(r?.fecIdSearch || r?.recordId || "")
-              : "";
+          const isSucceeded = rowStatus.toLowerCase() === "succeeded";
+          const interactionId = isSucceeded
+            ? String(r?.interactionId || "")
+            : "";
+          const caseId = isSucceeded
+            ? String(r?.fecIdSearch || r?.caseBusinessId || r?.recordId || "")
+            : "";
           return [
             ...(exportSourceRows[index] || exportHeaders.map(() => "")),
-            exportId,
             rowStatus,
+            interactionId,
+            caseId,
             formatErrorsForExport(r?.errors)
           ];
         })
@@ -871,7 +899,7 @@ export default class Fec_BatchCaseCreation extends LightningElement {
         templateName: templateName || "",
         reason: reason || "Import failed."
       });
-      await this.refreshRows();
+      await this.refreshRows(false, true);
     } catch (e) {
       // Do not block UI flow if fail-log cannot be saved.
     }

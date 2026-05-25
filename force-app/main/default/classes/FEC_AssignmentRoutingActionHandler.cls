@@ -83,7 +83,6 @@ public without sharing class FEC_AssignmentRoutingActionHandler {
         a.FEC_Assignment_Owner__c = managerId;
         a.FEC_OwnerID__c = managerId;
         
-        a.FEC_Assignment_Status__c = FEC_ConstantCommon.STATUS_CS_REVIEW;
         
         update a;
         syncAssignmentUsersToCase(caseId, assignmentId);
@@ -102,9 +101,9 @@ public without sharing class FEC_AssignmentRoutingActionHandler {
         //Chưa có trường FEC_Assignment_Owner__c(formular)
         FEC_Assignment__c assignmentToUpdate = new FEC_Assignment__c(
             Id = assignmentId,
-        FEC_Assignment_Status__c = FEC_ConstantCommon.ASSIGNMENT_STATUS_COMPLETED,
-        FEC_OwnerID__c = null // unassigned
-            );
+        FEC_Assignment_Status__c = FEC_ConstantCommon.ASSIGNMENT_STATUS_COMPLETED
+        // FEC_OwnerID__c = null // unassigned
+        );
         
         update assignmentToUpdate;
         syncAssignmentUsersToCase(caseId, assignmentId);
@@ -123,7 +122,7 @@ public without sharing class FEC_AssignmentRoutingActionHandler {
         update new FEC_Assignment__c(
             Id = assignmentId,
         FEC_Assignment_Status__c = FEC_ConstantCommon.ASSIGNMENT_STATUS_COMPLETED,
-        FEC_Assignment_Owner__c = null,
+        // FEC_Assignment_Owner__c = null,
         FEC_OwnerID__c = null
             );
         
@@ -278,7 +277,7 @@ public without sharing class FEC_AssignmentRoutingActionHandler {
         else if (userDepart == FEC_ConstantCommon.TEAM_CS_SUPPORT || userDepart == FEC_ConstantCommon.TEAM_CS_CUSTOMER_CARE) {
             System.debug('Test routing CS');
             assignment.FEC_OwnerID__c = queue.Name;
-            assignment.FEC_Assignment_Status__c = FEC_ConstantCommon.STATUS_CS_REVIEW;
+            assignment.FEC_Assignment_Status__c = FEC_ConstantCommon.STATUS_CS_BACKOFFICE;
         }else if(userDepart == FEC_ConstantCommon.TEAM_CS_OTHER){
             assignment.FEC_OwnerID__c = queue.Name;
             assignment.FEC_Assignment_Status__c = FEC_ConstantCommon.STATUS_CS_BACKOFFICE;
@@ -1230,7 +1229,7 @@ public without sharing class FEC_AssignmentRoutingActionHandler {
     
     
     public static Boolean isCurrentUserInQueue(
-        String queueDeveloperName
+        Set<String> queueDeveloperNames
     ) {
         
         Id userId = UserInfo.getUserId();
@@ -1247,16 +1246,22 @@ public without sharing class FEC_AssignmentRoutingActionHandler {
         /*
          * Queue
          */
-        Group queueGroup = [
+        List<Group> queueGroup = [
         SELECT
             Id,
             Name
         FROM Group
         WHERE
             Type = :FEC_ConstantCommon.GROUP_TYPE_QUEUE
-            AND DeveloperName = :queueDeveloperName
-        LIMIT 1
-    ];
+            AND DeveloperName IN :queueDeveloperNames
+        ];
+        
+        Set<Id> queueGroupIds = new Set<Id>();
+        
+        for (Group g : queueGroup) {
+            queueGroupIds.add(g.Id);
+        }
+        
         
         /*
          * Queue members
@@ -1265,7 +1270,7 @@ public without sharing class FEC_AssignmentRoutingActionHandler {
         SELECT
             UserOrGroupId
         FROM GroupMember
-        WHERE GroupId = :queueGroup.Id
+        WHERE GroupId IN :queueGroupIds
     ];
         
         Set<Id> memberIds = new Set<Id>();
@@ -1336,15 +1341,21 @@ public without sharing class FEC_AssignmentRoutingActionHandler {
     }
     
     public static Boolean isCSSupport() {
+        
         return isCurrentUserInQueue(
+        new Set<String>{
             FEC_ConstantCommon.QUEUE_DQ_CS_SUPPORT_NAME
-            );
+        }
+        );
     }
     
     public static Boolean isCSCustomerCare() {
+        
         return isCurrentUserInQueue(
-            FEC_ConstantCommon.QUEUE_DQ_CS_CUSTOMER_CARE_NAME
-            );
+        new Set<String>{
+            FEC_ConstantCommon.QUEUE_DQ_CS_CUSTOMER_CARE_NAME,  FEC_ConstantCommon.QUEUE_DQ_CS_CUSTOMER_CARE_DEPT_NAME
+        }
+        );
     }
     
     public static Boolean isOtherCS(Id userID) {
@@ -1423,6 +1434,8 @@ public without sharing class FEC_AssignmentRoutingActionHandler {
                 &&
                 devName !=
                 FEC_ConstantCommon.QUEUE_DQ_CS_CUSTOMER_CARE_NAME
+                &&
+                devName !=FEC_ConstantCommon.QUEUE_DQ_CS_CUSTOMER_CARE_DEPT_NAME
             ) {
                 
                 return true;
@@ -1443,7 +1456,7 @@ public without sharing class FEC_AssignmentRoutingActionHandler {
                  * Get assignments
                  */
                 List<FEC_Assignment__c> assignments = [
-                SELECT Id, Name, FEC_Assignment_Status__c, FEC_Assignment_Owner__c,
+                SELECT Id, Name, FEC_Assignment_Status__c, FEC_Assignment_Owner__c, FEC_Assignment_Owner_Text__c,
                 FEC_OwnerID__c FROM FEC_Assignment__c WHERE FEC_Case__c = : caseId
             ];
                 
@@ -1547,15 +1560,47 @@ public without sharing class FEC_AssignmentRoutingActionHandler {
                     
                     /*
                      * Status mapping
+                     *
+                     *
                      */
-                    if (ass.FEC_Assignment_Status__c
-                    == FEC_ConstantCommon.STATUS_CS_BACKOFFICE) {
+                    
+                    /* Determine target status
+                     * + routing action
+                     */
+                    String oldStatus = ass.FEC_Assignment_Status__c;
+                    
+                    String routingAction;
+                    
+                    
+                    if (oldStatus == FEC_ConstantCommon.ASSIGNMENT_STATUS_COMPLETED) {
+                        System.debug('KEEP COMPLETED STATUS');
+                        
+                        routingAction = FEC_ConstantCommon.ACTION_RESOLVE;
+                    }
+                    
+                    /*
+                     * REVERTING CREATOR
+                     * => AUTO RECALLED
+                     */
+                    else if (oldStatus
+                    == FEC_ConstantCommon.ASSIGNMENT_STATUS_REVERTING_CREATOR) {
+                        ass.FEC_Assignment_Status__c =
+                            FEC_ConstantCommon.ASSIGNMENT_AUTORECALLED_STATUS;
+                        
+                        routingAction = FEC_ConstantCommon.ACTION_RECALL;
+                    }else if (oldStatus == FEC_ConstantCommon.STATUS_CS_BACKOFFICE) {
+                        ass.FEC_Assignment_Status__c = FEC_ConstantCommon.ASSIGNMENT_AUTOCOMPLETE_STATUS;
+                        routingAction = FEC_ConstantCommon.ACTION_RESOLVE;
+                    }
+                    /*
+                     * OTHER STATUS
+                     * => AUTO COMPLETE
+                     */
+                    else {
                         ass.FEC_Assignment_Status__c =
                             FEC_ConstantCommon.ASSIGNMENT_AUTOCOMPLETE_STATUS;
                         
-                    } else {
-                        ass.FEC_Assignment_Status__c =
-                            FEC_ConstantCommon.ASSIGNMENT_AUTORECALLED_STATUS;
+                        routingAction = FEC_ConstantCommon.ACTION_RESOLVE;
                     }
                     
                     System.debug('NEW STATUS = ' + ass.FEC_Assignment_Status__c);
@@ -1572,19 +1617,19 @@ public without sharing class FEC_AssignmentRoutingActionHandler {
                     
                     FEC_Assignment__c = ass.Id,
                     
-                    FEC_Routing_Action__c = FEC_ConstantCommon.ACTION_RESOLVE,
+                    FEC_Routing_Action__c = routingAction,
                     
-                    FEC_Original_User_Queue__c = ownerValue,
+                    FEC_Original_User_Queue__c = ass.FEC_Assignment_Owner_Text__c,
                     
                     FEC_Original_User_Queue_ID__c = ass.FEC_OwnerID__c,
                     
-                    FEC_Updated_User_Queue__c = ownerValue,
+                    FEC_Updated_User_Queue__c = ass.FEC_Assignment_Owner_Text__c,
                     
                     FEC_Updated_User_Queue_ID__c = ass.FEC_OwnerID__c,
                     
                     FEC_Stage_Name__c = c.FEC_Current_Case_Stage__r.FEC_Code__c,
                     
-                    FEC_User__c = currentUser.Id,
+                    FEC_User__c = emailLocalPart(currentUser.Email),
                     
                     FEC_User_Role__c = currentUser.UserRole != null
                         ? currentUser.UserRole.Name
@@ -1597,7 +1642,10 @@ public without sharing class FEC_AssignmentRoutingActionHandler {
                         
                     FEC_Remark_Type__c = FEC_ConstantCommon.ROUTING_TYPE_ASSIGNMENT,
                     
-                    FEC_Case_Remarks__c = FEC_ConstantCommon.ASSIGNMENT_AUTO_COMPLETED_REMARK,
+                    // FEC_Case_Remarks__c = FEC_ConstantCommon.ASSIGNMENT_AUTO_COMPLETED_REMARK,
+                    FEC_Case_Remarks__c = routingAction == FEC_ConstantCommon.ACTION_RECALL
+                        ? 'Assignment auto recalled'
+                        : FEC_ConstantCommon.ASSIGNMENT_AUTO_COMPLETED_REMARK,
                     FEC_Stage_Name__c   = c.FEC_Current_Case_Stage__r.FEC_Code__c,
                     FEC_Case__c = caseId,
                     

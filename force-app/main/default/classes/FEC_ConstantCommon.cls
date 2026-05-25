@@ -486,6 +486,8 @@ public with sharing class FEC_ConstantCommon {
     public static final String QUEUE_QUALITY_CONTROL_MAILBOX_NAME = 'FEC_Quality_Control_Mailbox';
     public static final String QUEUE_DQ_CS_SUPPORT_NAME = 'FEC_DQ_CS_Support';
     public static final String QUEUE_DQ_CS_CUSTOMER_CARE_NAME = 'FEC_DQ_CS_Customer_Care';
+    public static final String QUEUE_DQ_CS_CUSTOMER_CARE_DEPT_NAME = 'FEC_DQ_CS_Customer_Care_Dept';
+    public static final String QUEUE_DQ_CONTRACT_PROCESSING_NAME = 'FEC_DQ_Contract_Processing';
     public static final String PRODUCT_TYPE_CARD_CASE = 'Card';
     public static final String PRODUCT_TYPE_LOAN_CASE = 'Loan';
     public static final String PRODUCT_TYPE_INSURANCE_CASE = 'Insurance';
@@ -590,7 +592,15 @@ public with sharing class FEC_ConstantCommon {
     public static final String SUB_CODE_PROCESS_UPDATE_ADDRESS = 'RC09.02';
     public static final String SUB_CODE_RD_PAYMENT_ASSESSMENT_1 = 'RL16.02';
     public static final String SUB_CODE_RD_PAYMENT_ASSESSMENT_2 = 'RL16.03';
-    
+    public static final String FEC_SUB_CATEGORY_CODE_RL05 = 'RL05';
+    public static final String SUB_CODE_RL0503 = 'RL05.03';
+
+    /** FEC_Action_Button__c.FEC_Type__c */
+    public static final String ACTION_BUTTON_TYPE_ROUTING_ACTION = 'Routing Action';
+    /** FEC_Stage_Screen__c.FEC_Field_Type__c */
+    public static final String STAGE_SCREEN_FIELD_TYPE_ALL = 'All';
+    public static final String STAGE_SCREEN_FIELD_TYPE_NEW = 'New';
+
     // RD Payment Contract Assessment — picklist API values & routing keys
     public static final String RD_ASSESSMENT_CANNOT_CLOSE            = 'Cannot close contract';
     public static final String RD_ASSESSMENT_CLOSE_WITH_STATEMENT    = 'Contract can be closed with statement';
@@ -623,6 +633,7 @@ public with sharing class FEC_ConstantCommon {
     public static final String ACTION_ROUTE_TO = 'Route_to';
     public static final String ACTION_ROUTE_TO_DISPLAY = 'Route to';
     public static final String ACTION_UPDATE = 'Update';
+    public static final String ACTION_RECALL = 'Recall';
     
     // ================= DECISION =================
     public static final String DECISION_USER = 'USER';
@@ -639,6 +650,19 @@ public with sharing class FEC_ConstantCommon {
     // ================= TEAM =================
     public static final String TEAM_CS_SUPPORT = 'CS Support';
     public static final String TEAM_CS_CUSTOMER_CARE = 'CS Customer Care';
+
+    // RD Payment — FEC_Team_User_Group__c / FEC_Next_Queue__c (scoped Stage 2+ filter → query Stage Change)
+    /** assessment "không thể đóng" → FEC_Team_User_Group__c = SP; FEC_Next_Queue__c = FEC_DQ_CS_Support. */
+    public static final String RD_ASSESSMENT_TEAM_CS_SUPPORT = RD_ASSESSMENT_TEAM_SP;
+    /** assessment "đóng với tờ trình" → FEC_Team_User_Group__c = CC; FEC_Next_Queue__c = FEC_DQ_CS_Customer_Care. */
+    public static final String RD_ASSESSMENT_TEAM_CS_CUSTOMER_CARE = RD_ASSESSMENT_TEAM_CC;
+    /** FEC_Team_User_Group__c trên FEC_Stage_Change__c (vd assessment "đóng không cần tờ trình" → CP). */
+    public static final String RD_ASSESSMENT_TEAM_CP = 'CP';
+    public static final String RD_ASSESSMENT_TEAM_CONTRACT_PROCESSING = RD_ASSESSMENT_TEAM_CP;
+    public static final String RD_ASSESSMENT_QUEUE_CS_SUPPORT = QUEUE_DQ_CS_SUPPORT_NAME;
+    public static final String RD_ASSESSMENT_QUEUE_CS_CUSTOMER_CARE = QUEUE_DQ_CS_CUSTOMER_CARE_NAME;
+    /** FEC_Next_Queue__c kỳ vọng cùng team CP (đóng không cần tờ trình). */
+    public static final String RD_ASSESSMENT_QUEUE_CONTRACT_PROCESSING = QUEUE_DQ_CONTRACT_PROCESSING_NAME;
     
     public static final String TEAM_CS_OTHER = 'Other CS';
     public static final String TEAM_OTHER = 'OTHER';
@@ -917,4 +941,6 @@ public with sharing class FEC_ConstantCommon {
         
         new Map<String, String>{ 'label' => 'Route to', 'value' => 'Route_to' }
     };
+    public static final String FEC_SUB_CATEGORY = 'FEC_Sub_Category__c';
+    public static final String FEC_SUB_CODE = 'FEC_Sub_Code__c';
 }

@@ -37,7 +37,7 @@ import saveCaseNOC from "@salesforce/apex/FEC_CaseBusinessService.saveCaseNOC";
 //Toannd61
 import clearCaseNOC from "@salesforce/apex/FEC_CaseEditNOCController.clearCaseNOC";
 import getByCase from "@salesforce/apex/FEC_CaseBusinessService.getByCase";
-import { updateRecord } from "lightning/uiRecordApi";
+import updateRoutingActionDisplayApex from "@salesforce/apex/FEC_CaseInitUpdateService.updateRoutingActionDisplay";
 import { ShowToastEvent } from "lightning/platformShowToastEvent";
 import FEC_Tab_Nature_Of_Case from "@salesforce/label/c.FEC_Tab_Nature_Of_Case";
 
@@ -63,8 +63,6 @@ import {
   FEC_POINTS_REDEMPTION_STORAGE_MODAL_CONFIRMED_PREFIX,
   FEC_POINTS_REDEMPTION_STORAGE_NOC_SELECTION_PREFIX
 } from "c/fec_CommonConst";
-import ID_FIELD from "@salesforce/schema/Case.Id";
-import IS_ROUTING_ACTION_DISPLAY_FIELD from "@salesforce/schema/Case.FEC_Is_Routing_Action_Display__c";
 import resetViewMode from "@salesforce/apex/FEC_InteractionInforHandler.resetViewMode";
 
 export default class Fec_CaseEditNOC extends LightningElement {
@@ -931,12 +929,10 @@ export default class Fec_CaseEditNOC extends LightningElement {
   }
 
   updateRoutingActionDisplay(field) {
-    let fields = {};
-    fields[ID_FIELD.fieldApiName] = this.recordId;
-    fields[IS_ROUTING_ACTION_DISPLAY_FIELD.fieldApiName] = field;
-    let recordInput = { fields };
-
-    updateRecord(recordInput)
+    updateRoutingActionDisplayApex({
+      caseId: this.recordId,
+      routingActionDisplay: field
+    })
       .then(() => {
         console.log("Record updated successfully");
       })

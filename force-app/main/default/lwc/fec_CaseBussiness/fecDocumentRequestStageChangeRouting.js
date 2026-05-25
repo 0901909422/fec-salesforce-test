@@ -34,7 +34,7 @@ function normalizeText(value) {
     .replace(/[\u0300-\u036f]/g, "");
 }
 
-/** Multiselect picklist: "Email;Văn phòng" */
+/** Multiselect picklist: "Email;Văn phòng" hoặc "Email;Office" (fullName EN/VN). */
 function deliveryTokens(deliveryOptionRaw) {
   const raw = normalizeText(deliveryOptionRaw);
   if (!raw) return [];
@@ -44,22 +44,35 @@ function deliveryTokens(deliveryOptionRaw) {
     .filter(Boolean);
 }
 
+function includesAddress(tokens) {
+  return tokens.some(
+    (t) => t.includes("dia chi") || t === "address" || t.includes("address"),
+  );
+}
+
+function includesOffice(tokens) {
+  return tokens.some(
+    (t) => t.includes("van phong") || t === "office" || t.includes("office"),
+  );
+}
+
+function includesEmail(tokens) {
+  return tokens.some((t) => t === "email" || t.includes("email"));
+}
+
 /**
- * RL04.02 / RL04.03: Văn phòng | Địa chỉ OR (Email + Có mộc).
+ * RL04.02 / RL04.03: Văn phòng|Office | Địa chỉ|Address OR (Email + Có mộc).
  */
 export function matchesDocumentRequestDeliveryCondition(
   deliveryOptionRaw,
   documentTypeRaw
 ) {
   const tokens = deliveryTokens(deliveryOptionRaw);
-  if (
-    tokens.some((t) => t === "van phong" || t === "dia chi") ||
-    tokens.some((t) => t.includes("van phong") || t.includes("dia chi"))
-  ) {
+  if (includesOffice(tokens) || includesAddress(tokens)) {
     return true;
   }
   const docType = normalizeText(documentTypeRaw);
-  if (tokens.some((t) => t === "email") && docType === "co moc") {
+  if (includesEmail(tokens) && docType === "co moc") {
     return true;
   }
   return false;

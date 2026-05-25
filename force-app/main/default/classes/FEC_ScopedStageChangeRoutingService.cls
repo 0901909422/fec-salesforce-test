@@ -20,12 +20,15 @@ public without sharing class FEC_ScopedStageChangeRoutingService {
   public class RouteToTeamOption {
     @AuraEnabled
     public String stageChangeId { get; set; }
+    /** FEC_Stage_Change__c.FEC_Team_User_Group__c */
     @AuraEnabled
     public String team { get; set; }
+    /** Group.Name — resolve từ FEC_Next_Queue__c (DeveloperName). */
     @AuraEnabled
     public String queueLabel { get; set; }
     @AuraEnabled
     public String queueValue { get; set; }
+    /** FEC_Stage_Change__c.FEC_Next_Queue__c (Queue DeveloperName). */
     @AuraEnabled
     public String queueDeveloperName { get; set; }
   }
@@ -121,6 +124,99 @@ public without sharing class FEC_ScopedStageChangeRoutingService {
       result.add(opt);
     }
     return result;
+  }
+
+  /**
+   * Stage 2+ Scoped — RD Payment Assessment "đóng không cần tờ trình":
+   * tra FEC_Stage_Change__c theo stage hiện tại của Case và FEC_Team_User_Group__c.
+   */
+  @AuraEnabled(cacheable=true)
+  public static RouteToTeamOption getRouteToOptionForTeam(
+    Id caseId,
+    String teamUserGroup,
+    String routeToActionId
+  ) {
+    if (caseId == null || String.isBlank(teamUserGroup)) {
+      return null;
+    }
+    String teamTrim = teamUserGroup.trim();
+
+    List<Case> cases = [
+      SELECT Id, FEC_Current_Case_Stage__c
+      FROM Case
+      WHERE Id = :caseId
+      LIMIT 1
+    ];
+    if (cases.isEmpty() || cases[0].FEC_Current_Case_Stage__c == null) {
+      return null;
+    }
+
+    Id currentStageId = cases[0].FEC_Current_Case_Stage__c;
+    Id actionButtonId;
+    try {
+      actionButtonId = String.isNotBlank(routeToActionId)
+        ? Id.valueOf(routeToActionId.trim())
+        : null;
+    } catch (Exception e) {
+      actionButtonId = null;
+    }
+
+    List<FEC_Stage_Change__c> rows;
+    if (actionButtonId != null) {
+      rows = [
+        SELECT Id, FEC_Team_User_Group__c, FEC_Next_Queue__c
+        FROM FEC_Stage_Change__c
+        WHERE
+          FEC_Previous_Stage__c = :currentStageId
+          AND FEC_Team_User_Group__c = :teamTrim
+          AND FEC_Active__c = TRUE
+          AND FEC_IsReverted__c = FALSE
+          AND FEC_Action_Button__c = :actionButtonId
+        ORDER BY FEC_Next_Queue__c ASC
+        LIMIT 1
+      ];
+    } else {
+      rows = [
+        SELECT Id, FEC_Team_User_Group__c, FEC_Next_Queue__c
+        FROM FEC_Stage_Change__c
+        WHERE
+          FEC_Previous_Stage__c = :currentStageId
+          AND FEC_Team_User_Group__c = :teamTrim
+          AND FEC_Active__c = TRUE
+          AND FEC_IsReverted__c = FALSE
+        ORDER BY FEC_Next_Queue__c ASC
+        LIMIT 1
+      ];
+    }
+
+    if (rows.isEmpty()) {
+      return null;
+    }
+
+    FEC_Stage_Change__c row = rows[0];
+    RouteToTeamOption opt = new RouteToTeamOption();
+    opt.stageChangeId = row.Id;
+    opt.team = row.FEC_Team_User_Group__c;
+    opt.queueDeveloperName = row.FEC_Next_Queue__c;
+
+    if (String.isNotBlank(row.FEC_Next_Queue__c)) {
+      List<Group> qs = [
+        SELECT Id, Name, DeveloperName
+        FROM Group
+        WHERE
+          Type = :FEC_ConstantCommon.GROUP_TYPE_QUEUE
+          AND DeveloperName = :row.FEC_Next_Queue__c
+        LIMIT 1
+      ];
+      if (!qs.isEmpty()) {
+        opt.queueLabel = qs[0].Name;
+        opt.queueValue = (String) qs[0].Id;
+      } else {
+        opt.queueLabel = row.FEC_Next_Queue__c;
+        opt.queueValue = row.FEC_Next_Queue__c;
+      }
+    }
+    return opt;
   }
 
   /**
@@ -554,10 +650,10 @@ public without sharing class FEC_ScopedStageChangeRoutingService {
       WHERE Id = :caseId
       LIMIT 1
     ];
-    history.FEC_Changed_Status__c = FEC_CaseBusinessService.routingHistoryStatusSnapshot(
-      endCase
+    FEC_CaseBusinessService.patchRoutingHistoryChangedStatus(
+      history.Id,
+      FEC_CaseBusinessService.routingHistoryStatusSnapshot(endCase)
     );
-    Database.update(history, AccessLevel.SYSTEM_MODE);
     FEC_AutoHoldCaseService.enqueueAfterRoutingHistory(history.Id);
   }
 

@@ -3,8 +3,14 @@ import { STR_EMPTY } from "c/fec_CommonConst";
 import {
   FIELD_MRC_CUSTOMER_CONFIRMATION,
   FIELD_MRC_HANDLING_OPTION,
+  MRC_CONF_NOT_RECEIVED,
+  MRC_CONF_RECEIVED,
+  isMrcCancelPreviousHandlingOption,
+  isMrcReceivedConfirmation,
   isMrcNotReceivedConfirmation,
-  showMrcRl0502DupBanner,
+  getCaseFieldValue,
+  FIELD_DELIVERY_OPTION,
+  shouldShowMrcHandlingRadio,
   shouldShowMrcReturnDelivery,
 } from "c/fecMrcReturnCaseLogic";
 
@@ -23,6 +29,11 @@ export default class Fec_MrcReturnPanel extends LightningElement {
   @api handlingOptionValue = STR_EMPTY;
   @api customerConfirmationOptions;
   @api handlingOptionOptions;
+  @api mrcHandlingOptionSaved = STR_EMPTY;
+  @api mrcCustomerConfirmationSaved = STR_EMPTY;
+  @api mrcDeliveryOptionSaved = STR_EMPTY;
+  @api businessSectionlst;
+  @api isCaseSubmited = false;
 
   customerConfirmationField = FIELD_MRC_CUSTOMER_CONFIRMATION;
   handlingOptionField = FIELD_MRC_HANDLING_OPTION;
@@ -37,7 +48,7 @@ export default class Fec_MrcReturnPanel extends LightningElement {
   }
 
   get isReadOnly() {
-    return this.isEdit === false;
+    return this.isEdit !== true;
   }
 
   get isRl0502() {
@@ -68,6 +79,16 @@ export default class Fec_MrcReturnPanel extends LightningElement {
     if (this.mrcRl05Ui?.autoRouteReject === true) {
       return false;
     }
+    if (this.isReadOnly) {
+      const saved = String(
+        this.customerConfirmationValue ||
+          this.mrcCustomerConfirmationSaved ||
+          STR_EMPTY,
+      ).trim();
+      if (saved) {
+        return true;
+      }
+    }
     if (!this.mrcRl05Ui) {
       return true;
     }
@@ -78,18 +99,30 @@ export default class Fec_MrcReturnPanel extends LightningElement {
     const labels = this.mrcRl05Ui?.caseFieldLabels;
     return (
       labels?.[FIELD_MRC_CUSTOMER_CONFIRMATION] ||
-      FIELD_MRC_CUSTOMER_CONFIRMATION
+      "Xác nhận khách hàng"
+    );
+  }
+
+  get handlingOptionFieldLabel() {
+    const labels = this.mrcRl05Ui?.caseFieldLabels;
+    return (
+      labels?.[FIELD_MRC_HANDLING_OPTION] ||
+      "Phương án xử lý yêu cầu MRC"
     );
   }
 
   get confirmationPicklistOptions() {
-    const fromBusiness = Array.isArray(this.customerConfirmationOptions)
-      ? this.customerConfirmationOptions
-      : [];
-    return fromBusiness.map((o) => ({
-      label: o.label || o.value,
-      value: o.value,
-    }));
+    // Luôn dùng map label/value chuẩn — tránh bản dịch org bị đảo label↔value.
+    return [
+      {
+        label: "Khách hàng đã xác nhận MRC",
+        value: MRC_CONF_RECEIVED,
+      },
+      {
+        label: "Khách hàng chưa xác nhận MRC",
+        value: MRC_CONF_NOT_RECEIVED,
+      },
+    ];
   }
 
   get handlingOptionPicklistOptions() {
@@ -103,13 +136,7 @@ export default class Fec_MrcReturnPanel extends LightningElement {
   }
 
   get showStandaloneDupBanner() {
-    if (this.showCustomerConfirmation) {
-      return false;
-    }
-    if (this.mrcRl05Ui?.showMrcDupBanner !== true) {
-      return false;
-    }
-    return showMrcRl0502DupBanner(this._businessSnapshot);
+    return false;
   }
 
   get customerConfirmationRequired() {
@@ -121,32 +148,51 @@ export default class Fec_MrcReturnPanel extends LightningElement {
     return id.length >= 15;
   }
 
-  get showDupBanner() {
-    if (!this.showCustomerConfirmation) {
+  get showMrcHandlingRadioBlock() {
+    if (!this.isRl0502 || this.mrcRl05Ui?.autoRouteReject === true) {
       return false;
     }
-    if (!isMrcNotReceivedConfirmation(this._confirmationValue)) {
-      return false;
+    if (this.isReadOnly || this.isCaseSubmited === true) {
+      const handling = String(
+        this.handlingOptionValue || this.mrcHandlingOptionSaved || STR_EMPTY,
+      ).trim();
+      if (handling) {
+        return true;
+      }
+      return shouldShowMrcHandlingRadio(
+        this._businessSnapshot,
+        this._confirmationValue,
+        true,
+      );
     }
-    return this.hasDuplicateCase || showMrcRl0502DupBanner(this._businessSnapshot);
+    return (
+      isMrcNotReceivedConfirmation(this._confirmationValue) ||
+      shouldShowMrcHandlingRadio(
+        this._businessSnapshot,
+        this._confirmationValue,
+        false,
+      )
+    );
   }
 
-  /** TH3: Cond2, Chưa nhận MRC — Noti-11 radio (không có Case trùng). */
+  get hideMrcDupMessageForRadio() {
+    if (!this.hasDuplicateCase) {
+      return true;
+    }
+    return !isMrcNotReceivedConfirmation(this._confirmationValue);
+  }
+
+  get showDupBanner() {
+    return false;
+  }
+
+  /** @deprecated use showMrcHandlingRadioBlock */
   get showHandlingRadioInline() {
-    if (!this.showCustomerConfirmation) {
-      return false;
-    }
-    if (this.showDupBanner) {
-      return false;
-    }
-    if (this.mrcRl05Ui?.showHandlingRadioOnNotReceived !== true) {
-      return false;
-    }
-    return isMrcNotReceivedConfirmation(this._confirmationValue);
+    return false;
   }
 
   get showHandlingRadioBlock() {
-    return this.showDupBanner || this.showStandaloneDupBanner || this.showHandlingRadioInline;
+    return this.showMrcHandlingRadioBlock;
   }
 
   get showDelivery() {
@@ -156,11 +202,36 @@ export default class Fec_MrcReturnPanel extends LightningElement {
     if (!this.isRl0502 && !this.isRl05PhotoSubCode) {
       return false;
     }
+    if (this.isReadOnly || this.isCaseSubmited === true) {
+      if (isMrcReceivedConfirmation(this._confirmationValue)) {
+        const savedDelivery = String(
+          this.mrcDeliveryOptionSaved ||
+            getCaseFieldValue(this._businessSnapshot, FIELD_DELIVERY_OPTION) ||
+            STR_EMPTY,
+        ).trim();
+        return savedDelivery.length > 0;
+      }
+      const handling = String(
+        this.handlingOptionValue || this.mrcHandlingOptionSaved || STR_EMPTY,
+      ).trim();
+      const savedDelivery = String(
+        this.mrcDeliveryOptionSaved ||
+          getCaseFieldValue(this._businessSnapshot, FIELD_DELIVERY_OPTION) ||
+          STR_EMPTY,
+      ).trim();
+      if (savedDelivery) {
+        return true;
+      }
+      if (isMrcCancelPreviousHandlingOption(handling)) {
+        return true;
+      }
+    }
     return shouldShowMrcReturnDelivery(
       this.mrcRl05Ui,
       this._businessSnapshot,
       this.handlingOptionValue,
       this._confirmationValue,
+      this.isReadOnly || this.isCaseSubmited === true,
     );
   }
 
@@ -168,9 +239,14 @@ export default class Fec_MrcReturnPanel extends LightningElement {
     return {
       subCodeCode: this.subCodeCode,
       subCategoryCode: this.subCategoryCode,
+      stageName: this.stageName,
       mrcRl05Ui: this.mrcRl05Ui,
       mrcRl0502DuplicateOpenCaseId: this.duplicateCaseId,
       mrcRl0502DuplicateCaseNumber: this.duplicateCaseNumber,
+      mrcHandlingOptionSaved: this.mrcHandlingOptionSaved,
+      mrcCustomerConfirmationSaved: this.mrcCustomerConfirmationSaved,
+      isSubmited: this.isCaseSubmited === true,
+      sectionlst: this.businessSectionlst,
     };
   }
 

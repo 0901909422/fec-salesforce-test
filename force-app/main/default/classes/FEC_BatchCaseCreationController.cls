@@ -5,8 +5,8 @@ public without sharing class FEC_BatchCaseCreationController {
     private static final Integer MAX_ROWS = 200;
 
     /** Template import có chứa chuỗi này → luồng Welcome Call (Interaction + Customer Case). */
-    private static final String WELCOME_CALL_TEMPLATE_TOKEN = 'welcome call';
-    private static final String WELCOME_CALL_TEMPLATE_TOKEN_COMPACT = 'welcomecall';
+    private static final String IMPORT_FILE_TYPE_WELCOME = 'welcome';
+    private static final String IMPORT_FILE_TYPE_OTHER = 'other';
 
     public class TemplateOption {
         @AuraEnabled public String label;
@@ -39,6 +39,8 @@ public without sharing class FEC_BatchCaseCreationController {
     }
 
     private class ParsedCaseRow {
+        /** welcome | other — từ header Excel (Contract Number vs Account/ Contract Number). */
+        String fileType;
         String layout;
         String contractNumber;
         String interactionPhone;
@@ -63,6 +65,8 @@ public without sharing class FEC_BatchCaseCreationController {
     /** Bộ NOC (FEC_Nature_of_Case__c) active — validate phân cấp Product → Category → Sub Category → Sub Code (theo text import). */
     private class NatureOfCaseHierarchyMaps {
         Set<String> fullTextKeys = new Set<String>();
+        /** Triple product|category|subCategory khi NOC FEC_Sub_Code__c = null (Sub Code không bắt buộc). */
+        Set<String> tripleKeysWithoutSubCode = new Set<String>();
         Map<String, Set<String>> categoryTextKeysByProductId = new Map<String, Set<String>>();
         Map<String, Set<String>> subCategoryTextKeysByProductId = new Map<String, Set<String>>();
         Map<String, Set<String>> subCategoryTextKeysByProductCategory = new Map<String, Set<String>>();
@@ -132,6 +136,13 @@ public without sharing class FEC_BatchCaseCreationController {
         return output;
     }
 
+  /** @deprecated Dùng getRecentRows; giữ tương thích LWC/org cũ gọi getRecentData. */
+    @AuraEnabled
+    public static List<FEC_BatchDataCreationController.BatchRow> getRecentData() {
+        return getRecentRows();
+    }
+
+    /** Không cacheable — LWC gọi lại sau import để bảng lịch sử luôn có bản ghi mới. */
     @AuraEnabled
     public static List<FEC_BatchDataCreationController.BatchRow> getRecentRows() {
         Schema.SObjectType sObjType = Schema.getGlobalDescribe().get(OBJECT_API_NAME);
@@ -328,7 +339,7 @@ public without sharing class FEC_BatchCaseCreationController {
             );
 
             List<ParsedCaseRow> parsed = parseInputRows(inputRows);
-            Boolean isWelcomeFlow = isWelcomeCallInput(templateName, parsed);
+            Boolean isWelcomeFlow = isWelcomeCallInput(parsed);
             List<CaseRowResult> rowResults = validateAndBuildCases(parsed, isWelcomeFlow);
             Integer totalCount = rowResults.size();
             Integer failedCount = countFailedRowResults(rowResults);
@@ -591,6 +602,7 @@ public without sharing class FEC_BatchCaseCreationController {
         for (Object rowObj : inputRows) {
             Map<String, Object> m = (Map<String, Object>) rowObj;
             ParsedCaseRow r = new ParsedCaseRow();
+            r.fileType = FEC_BatchImportCommon.normalizeText(m.get('fileType'));
             r.layout = FEC_BatchImportCommon.normalizeText(m.get('layout'));
             r.contractNumber = FEC_BatchImportCommon.normalizeText(m.get('contractNumber'));
             r.interactionPhone = FEC_BatchImportCommon.normalizeText(m.get('interactionPhone'));
@@ -608,7 +620,10 @@ public without sharing class FEC_BatchCaseCreationController {
         return out;
     }
 
-    private static List<CaseRowResult> validateAndBuildCases(List<ParsedCaseRow> parsed, Boolean welcome) {
+    private static List<CaseRowResult> validateAndBuildCases(
+        List<ParsedCaseRow> parsed,
+        Boolean welcome
+    ) {
         LookupMaps maps = loadLookupMaps(parsed);
 
         Schema.DescribeFieldResult channelDfr = Case.FEC_Channel__c.getDescribe();
@@ -637,7 +652,13 @@ public without sharing class FEC_BatchCaseCreationController {
             }
 
             if (String.isBlank(r.contractNumber)) {
-                errs.add(System.Label.FEC_Batch_Import_Required_Account_Contract_Number);
+                errs.add(
+                    welcome
+                        ? System.Label.FEC_Batch_Import_Required_Contract_Number
+                        : System.Label.FEC_Batch_Import_Required_Account_Contract_Number
+                );
+            } else {
+                appendContractNumberFormatRules(r.contractNumber, welcome, errs);
             }
             if (String.isBlank(r.interactionPhone)) {
                 errs.add(System.Label.FEC_Batch_Import_Required_Interaction_Phone);
@@ -653,14 +674,14 @@ public without sharing class FEC_BatchCaseCreationController {
             if (String.isBlank(r.subCategory)) {
                 errs.add(System.Label.FEC_Batch_Import_Required_Sub_Category);
             }
-            if (String.isBlank(r.subCode)) {
-                errs.add(System.Label.FEC_Batch_Import_Required_Sub_Code);
-            }
             if (String.isBlank(r.caseRemarks)) {
                 errs.add(System.Label.FEC_Batch_Import_Required_Case_Remarks);
             }
             if (!welcome && String.isBlank(r.caseStatus)) {
                 errs.add(System.Label.FEC_Batch_Import_Required_Case_Status);
+            }
+            if (welcome) {
+                appendWelcomeCaseStatusRules(r, statusDfr, errs);
             }
 
             if (extended) {
@@ -719,13 +740,12 @@ public without sharing class FEC_BatchCaseCreationController {
                 errs.add(System.Label.FEC_Batch_Import_Invalid_Interaction_Email);
             }
 
-            // NOC: chạy khi đủ Product/Category/Sub Category/Sub Code (kể cả dòng còn lỗi Contract, Channel...)
+            // NOC: chạy khi đủ Product/Category/Sub Category (Sub Code chỉ bắt buộc nếu NOC có Sub Code)
             if (
                 productId != null &&
                 String.isNotBlank(r.productType) &&
                 String.isNotBlank(r.category) &&
-                String.isNotBlank(r.subCategory) &&
-                String.isNotBlank(r.subCode)
+                String.isNotBlank(r.subCategory)
             ) {
                 appendNatureOfCaseValidationErrors(r, productId, nocMaps, errs);
             }
@@ -812,43 +832,60 @@ public without sharing class FEC_BatchCaseCreationController {
         }
     }
 
-    private static Boolean isWelcomeCallTemplate(String templateName) {
-        if (String.isBlank(templateName)) {
-            return false;
-        }
-        String lowered = templateName.toLowerCase();
-        if (lowered.contains(WELCOME_CALL_TEMPLATE_TOKEN)) {
-            return true;
-        }
-        String compact = lowered.replaceAll('[^a-z0-9]', '');
-        return compact.contains(WELCOME_CALL_TEMPLATE_TOKEN_COMPACT);
+    /** Welcome vs Other: chỉ theo header Excel (Contract Number / Account/ Contract Number) gửi qua fileType. */
+    private static Boolean isWelcomeCallInput(List<ParsedCaseRow> parsed) {
+        return IMPORT_FILE_TYPE_WELCOME.equalsIgnoreCase(resolveConsistentImportFileType(parsed));
     }
 
-    private static Boolean isWelcomeCallInput(String templateName, List<ParsedCaseRow> parsed) {
-        if (isWelcomeCallTemplate(templateName)) {
-            return true;
-        }
+    private static String resolveConsistentImportFileType(List<ParsedCaseRow> parsed) {
         if (parsed == null || parsed.isEmpty()) {
-            return false;
+            return null;
         }
+        String resolved = null;
         for (ParsedCaseRow r : parsed) {
-            if (looksLikeWelcomeValue(r.category) || looksLikeWelcomeValue(r.subCategory) || looksLikeWelcomeValue(r.subCode)) {
-                return true;
+            if (r == null || String.isBlank(r.fileType)) {
+                continue;
+            }
+            String ft = r.fileType.trim().toLowerCase();
+            if (resolved == null) {
+                resolved = ft;
+            } else if (!resolved.equals(ft)) {
+                return null;
             }
         }
-        return false;
+        return resolved;
     }
 
-    private static Boolean looksLikeWelcomeValue(String raw) {
-        if (String.isBlank(raw)) {
-            return false;
+    /** Welcome: Contract Number có dấu - (vd 20140807-103046-0001). Other: Account/ Contract Number không có - (vd 1500010000000260). */
+    private static void appendContractNumberFormatRules(
+        String contractNumber,
+        Boolean welcome,
+        List<String> errs
+    ) {
+        if (String.isBlank(contractNumber) || errs == null) {
+            return;
         }
-        String lowered = raw.toLowerCase();
-        if (lowered.contains('welcome') || lowered.contains('wc_')) {
-            return true;
+        Boolean dashed = contractNumber.contains('-');
+        if (welcome && !dashed) {
+            errs.add(System.Label.FEC_Batch_Import_Welcome_Contract_Number_Requires_Dash);
+        } else if (!welcome && dashed) {
+            errs.add(System.Label.FEC_Batch_Import_Other_Contract_Number_No_Dash);
         }
-        String compact = lowered.replaceAll('[^a-z0-9]', '');
-        return compact.contains('welcomecall') || compact.startsWith('wc');
+    }
+
+    /** Welcome Call: Case Status trên file (nếu có) chỉ được Resolved-Completed; trống → default khi insert. */
+    private static void appendWelcomeCaseStatusRules(
+        ParsedCaseRow r,
+        Schema.DescribeFieldResult statusDfr,
+        List<String> errs
+    ) {
+        if (r == null || errs == null || String.isBlank(r.caseStatus)) {
+            return;
+        }
+        String statusApi = matchBatchImportCaseStatus(statusDfr, r.caseStatus);
+        if (statusApi != FEC_ConstantCommon.CASE_STATUS_RESOLVED_COMPLETED) {
+            errs.add(System.Label.FEC_Batch_Import_Welcome_Case_Status_Only_Resolved_Completed);
+        }
     }
 
     private static String formatSaveResultErrors(Database.SaveResult sr) {
@@ -1383,13 +1420,15 @@ public without sharing class FEC_BatchCaseCreationController {
                                 out.subCodeTextKeysByProductCategorySubCategory.get(tripleKey),
                                 subCodeAliases
                             );
-                        }
-                        if (!subCodeAliases.isEmpty()) {
                             for (String subCodeAlias : subCodeAliases) {
                                 out.fullTextKeys.add(
                                     productIdKey + '|' + categoryAlias + '|' + subCategoryAlias + '|' + subCodeAlias
                                 );
                             }
+                        } else {
+                            out.tripleKeysWithoutSubCode.add(
+                                productIdKey + '|' + categoryAlias + '|' + subCategoryAlias
+                            );
                         }
                     }
                 }
@@ -1398,8 +1437,46 @@ public without sharing class FEC_BatchCaseCreationController {
         return out;
     }
 
+    private static Boolean tripleWithoutSubCodeMatches(
+        NatureOfCaseHierarchyMaps nocMaps,
+        String productIdKey,
+        String categoryRaw,
+        String subCategoryRaw
+    ) {
+        if (
+            nocMaps == null ||
+            nocMaps.tripleKeysWithoutSubCode == null ||
+            nocMaps.tripleKeysWithoutSubCode.isEmpty() ||
+            String.isBlank(productIdKey) ||
+            String.isBlank(categoryRaw) ||
+            String.isBlank(subCategoryRaw)
+        ) {
+            return false;
+        }
+        String categoryNorm = categoryRaw.trim().toLowerCase();
+        String subCategoryNorm = subCategoryRaw.trim().toLowerCase();
+        String directKey = productIdKey + '|' + categoryNorm + '|' + subCategoryNorm;
+        if (nocMaps.tripleKeysWithoutSubCode.contains(directKey)) {
+            return true;
+        }
+        for (String mapKey : nocMaps.tripleKeysWithoutSubCode) {
+            if (!mapKey.startsWith(productIdKey + '|')) {
+                continue;
+            }
+            List<String> parts = mapKey.split('\\|');
+            if (parts.size() < 3) {
+                continue;
+            }
+            if (parts[1].equals(categoryNorm) && parts[2].equals(subCategoryNorm)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     /**
      * Validate NOC theo thứ tự Product Type → Category → Sub Category → Sub Code.
+     * Sub Code bắt buộc chỉ khi NOC có Sub Code cho triple; NOC không có Sub Code thì để trống được.
      * Dừng ở mức lỗi đầu tiên; so khớp text import với Name/Code trên NOC (không dùng Id lookup chéo).
      */
     private static void appendNatureOfCaseValidationErrors(
@@ -1411,17 +1488,10 @@ public without sharing class FEC_BatchCaseCreationController {
         if (productId == null || r == null || nocMaps == null) {
             return;
         }
-        if (String.isBlank(r.category) || String.isBlank(r.subCategory) || String.isBlank(r.subCode)) {
+        if (String.isBlank(r.category) || String.isBlank(r.subCategory)) {
             return;
         }
         String productIdKey = String.valueOf(productId);
-        String categoryNorm = r.category.trim().toLowerCase();
-        String subCategoryNorm = r.subCategory.trim().toLowerCase();
-        String subCodeNorm = r.subCode.trim().toLowerCase();
-        String fullKey = productIdKey + '|' + categoryNorm + '|' + subCategoryNorm + '|' + subCodeNorm;
-        if (nocMaps.fullTextKeys.contains(fullKey)) {
-            return;
-        }
 
         Set<String> categoriesForProduct = nocMaps.categoryTextKeysByProductId.get(productIdKey);
         if (!natureInputMatches(categoriesForProduct, r.category)) {
@@ -1441,6 +1511,27 @@ public without sharing class FEC_BatchCaseCreationController {
             r.category,
             r.subCategory
         );
+
+        if (String.isBlank(r.subCode)) {
+            if (subCodesForTriple != null && !subCodesForTriple.isEmpty()) {
+                errs.add(System.Label.FEC_Batch_Import_Required_Sub_Code);
+                return;
+            }
+            if (tripleWithoutSubCodeMatches(nocMaps, productIdKey, r.category, r.subCategory)) {
+                return;
+            }
+            errs.add(System.Label.FEC_Batch_Import_Invalid_Sub_Category_For_Category);
+            return;
+        }
+
+        String categoryNorm = r.category.trim().toLowerCase();
+        String subCategoryNorm = r.subCategory.trim().toLowerCase();
+        String subCodeNorm = r.subCode.trim().toLowerCase();
+        String fullKey = productIdKey + '|' + categoryNorm + '|' + subCategoryNorm + '|' + subCodeNorm;
+        if (nocMaps.fullTextKeys.contains(fullKey)) {
+            return;
+        }
+
         if (subCodesForTriple == null || subCodesForTriple.isEmpty()) {
             errs.add(System.Label.FEC_Batch_Import_Invalid_Sub_Code_For_Sub_Category);
             return;
@@ -1674,7 +1765,7 @@ public without sharing class FEC_BatchCaseCreationController {
         try {
             List<String> lines = new List<String>();
             lines.add(
-                '"Row","Contract","Phone","Product","Category","Sub Category","Sub Code","Case Status","Remarks","Channel","Sub Channel","Email","Import Status","Errors"'
+                '"Row","Contract","Phone","Product","Category","Sub Category","Sub Code","Case Status","Remarks","Channel","Sub Channel","Email","Status","Interaction ID","Case ID","Errors"'
             );
             Integer rowNum = 0;
             for (CaseRowResult rr : rowResults) {
@@ -1695,6 +1786,8 @@ public without sharing class FEC_BatchCaseCreationController {
                             csvEscape(rr.interactionSubChannel),
                             csvEscape(rr.interactionEmail),
                             csvEscape(rr.status),
+                            csvEscape(resolveExportInteractionId(rr)),
+                            csvEscape(resolveExportCaseId(rr)),
                             csvEscape(rr.errors)
                         },
                         ','
@@ -1771,9 +1864,12 @@ public without sharing class FEC_BatchCaseCreationController {
                     Id,
                     Status,
                     FEC_ID_Search__c,
+                    FEC_Global_Search__c,
                     FEC_Interaction_ID__c,
                     FEC_Case_ID__c,
                     FEC_Interaction__c,
+                    FEC_Interaction__r.FEC_ID_Search__c,
+                    FEC_Interaction__r.FEC_Global_Search__c,
                     FEC_Interaction__r.FEC_Interaction_ID__c,
                     FEC_Interaction__r.FEC_Case_ID__c,
                     FEC_Interaction__r.Id
@@ -1785,21 +1881,12 @@ public without sharing class FEC_BatchCaseCreationController {
             if ('Succeeded'.equals(rr.status) && String.isNotBlank(rr.recordId)) {
                 Case c = finalById.get((Id) rr.recordId);
                 rr.finalStatus = c == null ? '' : c.Status;
-                rr.fecIdSearch = c == null || c.FEC_ID_Search__c == null ? '' : String.valueOf(c.FEC_ID_Search__c);
-                rr.interactionId = '';
-                if (c != null) {
-                    rr.interactionId = normalizeCaseBusinessId(c.FEC_Interaction_ID__c);
-                    if (String.isBlank(rr.interactionId) && c.FEC_Interaction__r != null) {
-                        rr.interactionId = normalizeCaseBusinessId(c.FEC_Interaction__r.FEC_Interaction_ID__c);
-                    }
-                    if (String.isBlank(rr.interactionId) && c.FEC_Interaction__r != null) {
-                        rr.interactionId = normalizeCaseBusinessId(c.FEC_Interaction__r.FEC_Case_ID__c);
-                    }
-                    if (String.isBlank(rr.interactionId) && c.FEC_Interaction__r != null) {
-                        rr.interactionId = String.valueOf(c.FEC_Interaction__r.Id);
-                    }
-                }
+                rr.fecIdSearch = caseFecIdSearchValue(c);
+                rr.interactionId = resolveInteractionIdFromCase(c);
                 rr.caseBusinessId = c == null ? '' : normalizeCaseBusinessId(c.FEC_Case_ID__c);
+                if (String.isBlank(rr.caseBusinessId)) {
+                    rr.caseBusinessId = rr.fecIdSearch;
+                }
             } else {
                 rr.finalStatus = '';
                 rr.fecIdSearch = '';
@@ -1814,6 +1901,46 @@ public without sharing class FEC_BatchCaseCreationController {
             return '';
         }
         return String.valueOf(c.FEC_ID_Search__c).trim();
+    }
+
+    /** Interaction ID trên file result — ưu tiên FEC_Global_Search__c (sync từ Interaction FEC_ID_Search__c). */
+    private static String resolveInteractionIdFromCase(Case c) {
+        if (c == null) {
+            return '';
+        }
+        if (String.isNotBlank(c.FEC_Global_Search__c)) {
+            return c.FEC_Global_Search__c.trim();
+        }
+        if (c.FEC_Interaction__r != null) {
+            if (String.isNotBlank(c.FEC_Interaction__r.FEC_Global_Search__c)) {
+                return c.FEC_Interaction__r.FEC_Global_Search__c.trim();
+            }
+            String interactionSearch = caseFecIdSearchValue(c.FEC_Interaction__r);
+            if (String.isNotBlank(interactionSearch)) {
+                return interactionSearch;
+            }
+        }
+        return normalizeCaseBusinessId(c.FEC_Interaction_ID__c);
+    }
+
+    private static String resolveExportInteractionId(CaseRowResult rr) {
+        if (rr == null || !'Succeeded'.equals(rr.status)) {
+            return '';
+        }
+        return rr.interactionId == null ? '' : rr.interactionId;
+    }
+
+    private static String resolveExportCaseId(CaseRowResult rr) {
+        if (rr == null || !'Succeeded'.equals(rr.status)) {
+            return '';
+        }
+        if (String.isNotBlank(rr.fecIdSearch)) {
+            return rr.fecIdSearch;
+        }
+        if (String.isNotBlank(rr.caseBusinessId)) {
+            return rr.caseBusinessId;
+        }
+        return rr.recordId == null ? '' : rr.recordId;
     }
 
     private static void applyCustomerCaseSuccessResult(CaseRowResult rr, Case insertedCustomer, Id insertedId) {

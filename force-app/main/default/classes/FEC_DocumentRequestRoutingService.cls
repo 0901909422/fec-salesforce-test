@@ -14,7 +14,8 @@ public without sharing class FEC_DocumentRequestRoutingService {
   public static StageRoutingResult getStageChangeRouting(
     Id caseId,
     String teamUserGroup,
-    Id routeToActionId
+    Id routeToActionId,
+    Id previousStageId
   ) {
     StageRoutingResult result = new StageRoutingResult();
     if (caseId == null) {
@@ -24,17 +25,20 @@ public without sharing class FEC_DocumentRequestRoutingService {
       return result;
     }
 
-    List<Case> cases = [
-      SELECT Id, FEC_Current_Case_Stage__c
-      FROM Case
-      WHERE Id = :caseId
-      LIMIT 1
-    ];
-    if (cases.isEmpty() || cases[0].FEC_Current_Case_Stage__c == null) {
-      return result;
+    Id currentStageId = previousStageId;
+    if (currentStageId == null) {
+      List<Case> cases = [
+        SELECT Id, FEC_Current_Case_Stage__c
+        FROM Case
+        WHERE Id = :caseId
+        LIMIT 1
+      ];
+      if (cases.isEmpty() || cases[0].FEC_Current_Case_Stage__c == null) {
+        return result;
+      }
+      currentStageId = cases[0].FEC_Current_Case_Stage__c;
     }
 
-    Id currentStageId = cases[0].FEC_Current_Case_Stage__c;
     FEC_Stage_Change__c sc = findStageChangeRecord(
       currentStageId,
       teamUserGroup,
@@ -45,8 +49,8 @@ public without sharing class FEC_DocumentRequestRoutingService {
     }
 
     result.nextTeam = String.isNotBlank(sc.FEC_Team_User_Group__c)
-      ? sc.FEC_Team_User_Group__c
-      : teamUserGroup;
+      ? sc.FEC_Team_User_Group__c.trim().toUpperCase()
+      : String.isNotBlank(teamUserGroup) ? teamUserGroup.trim().toUpperCase() : teamUserGroup;
     Group nextQueue = resolveQueueFromStageChangeValue(sc.FEC_Next_Queue__c);
     if (nextQueue != null) {
       result.nextQueueLabel = nextQueue.Name;
@@ -60,13 +64,29 @@ public without sharing class FEC_DocumentRequestRoutingService {
     String teamUserGroup,
     Id routeToActionId
   ) {
-    if (String.isNotBlank(teamUserGroup) && routeToActionId != null) {
+    if (routeToActionId != null && String.isNotBlank(teamUserGroup)) {
       List<FEC_Stage_Change__c> rows = [
         SELECT FEC_Next_Queue__c, FEC_Team_User_Group__c
         FROM FEC_Stage_Change__c
         WHERE
           FEC_Previous_Stage__c = :previousStageId
           AND FEC_Team_User_Group__c = :teamUserGroup
+          AND FEC_Action_Button__c = :routeToActionId
+          AND FEC_Active__c = TRUE
+          AND FEC_IsReverted__c = FALSE
+        LIMIT 1
+      ];
+      if (!rows.isEmpty()) {
+        return rows[0];
+      }
+    }
+
+    if (routeToActionId != null) {
+      List<FEC_Stage_Change__c> rows = [
+        SELECT FEC_Next_Queue__c, FEC_Team_User_Group__c
+        FROM FEC_Stage_Change__c
+        WHERE
+          FEC_Previous_Stage__c = :previousStageId
           AND FEC_Action_Button__c = :routeToActionId
           AND FEC_Active__c = TRUE
           AND FEC_IsReverted__c = FALSE
@@ -101,7 +121,6 @@ public without sharing class FEC_DocumentRequestRoutingService {
           FEC_Previous_Stage__c = :previousStageId
           AND FEC_Action_Button__c = :routeToActionId
           AND FEC_Active__c = TRUE
-          AND FEC_IsReverted__c = FALSE
         LIMIT 1
       ];
       if (!rows.isEmpty()) {
@@ -109,7 +128,17 @@ public without sharing class FEC_DocumentRequestRoutingService {
       }
     }
 
-    return null;
+    List<FEC_Stage_Change__c> fallbackRows = [
+      SELECT FEC_Next_Queue__c, FEC_Team_User_Group__c
+      FROM FEC_Stage_Change__c
+      WHERE
+        FEC_Previous_Stage__c = :previousStageId
+        AND FEC_Active__c = TRUE
+        AND FEC_IsReverted__c = FALSE
+      ORDER BY LastModifiedDate DESC
+      LIMIT 1
+    ];
+    return fallbackRows.isEmpty() ? null : fallbackRows[0];
   }
 
   private static Group resolveQueueFromStageChangeValue(String nextQueueValue) {

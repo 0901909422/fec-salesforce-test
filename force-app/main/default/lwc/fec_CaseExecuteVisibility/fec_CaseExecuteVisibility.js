@@ -20,6 +20,7 @@ export default class Fec_CaseExecuteVisibility extends LightningElement {
   messageContext;
 
   canExecute = false;
+  executeMessage = "";
 
   loaded = false;
   subscription = null;
@@ -77,10 +78,21 @@ export default class Fec_CaseExecuteVisibility extends LightningElement {
       .then((result) => {
         console.log("canExecute RESULT = ", result);
         this.canExecute = result?.value === true;
+
+        this.executeMessage = result?.message || "";
+
+        /*
+         * Debug business reason
+         */
+        if (!this.canExecute) {
+          console.warn("Execute hidden reason = ", this.executeMessage);
+        }
       })
       .catch((error) => {
         console.error("canExecute ERROR = ", error);
         this.canExecute = false;
+
+        this.executeMessage = "Unexpected error";
       });
   }
 }
