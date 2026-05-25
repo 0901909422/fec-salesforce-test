@@ -969,6 +969,10 @@
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
+        <apexClass>FEC_OwnerTeamLookupSvc</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
         <apexClass>FEC_PDFTemplateSelector</apexClass>
         <enabled>true</enabled>
     </classAccesses>
