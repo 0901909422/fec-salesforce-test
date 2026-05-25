@@ -313,7 +313,7 @@ public without sharing class FEC_CofGsrAssignmentService {
                 ));
             }
             if (!histories.isEmpty()) {
-                Database.insert(histories);
+                Database.insert(histories, AccessLevel.SYSTEM_MODE);
             }
         } catch (Exception e) {
             System.debug('FEC_DEBUG createAssignmentsOnRoute error: ' + e.getMessage() + ' | ' + e.getStackTraceString());
@@ -476,7 +476,7 @@ public without sharing class FEC_CofGsrAssignmentService {
                 ));
             }
             if (!histories.isEmpty()) {
-                Database.insert(histories);
+                Database.insert(histories, AccessLevel.SYSTEM_MODE);
             }
         } catch (Exception e) {
             System.debug('createAssignmentsFromManualItems error: ' + e.getMessage() + ' | ' + e.getStackTraceString());
@@ -680,6 +680,10 @@ public without sharing class FEC_CofGsrAssignmentService {
         String manualItemsJson = (String) params.get('manualItemsJson');
         String remarkContent = (String) params.get('remarkContent');
 
+        String currentStatusBeforeSubmit = FEC_CaseBusinessService.readRoutingHistoryCurrentStatus(
+            caseId
+        );
+
         try { FEC_CaseBusinessService.markCaseSubmittedAndClearDrafts(caseId); } catch (Exception e1) {
             System.debug('markCaseSubmitted error: ' + e1.getMessage());
         }
@@ -716,7 +720,7 @@ public without sharing class FEC_CofGsrAssignmentService {
             if (!targetQueues.isEmpty()) {
                 // tungnm37 fix: query Case TRƯỚC khi đổi owner để lấy đúng originalOwner
                 Case caseBeforeUpdate = [
-                    SELECT Id, OwnerId, Owner.Name, Owner.Type, FEC_Final_Status__c, FEC_Current_Case_Stage__c
+                    SELECT Id, OwnerId, Owner.Name, Owner.Type, FEC_Current_Case_Stage__c
                     FROM Case WHERE Id = :caseId LIMIT 1
                 ];
                 // tungnm37 fix: Stage 1 → Original = currentUser (người submit), không phải Case owner
@@ -747,25 +751,11 @@ public without sharing class FEC_CofGsrAssignmentService {
                         FEC_Original_User_Queue_ID__c = originalOwnerIdStr,
                         FEC_Updated_User_Queue__c = targetQueueName,
                         FEC_Updated_User_Queue_ID__c = String.valueOf(targetQueues[0].Id),
-                        FEC_Current_Status__c = caseBeforeUpdate.FEC_Final_Status__c,
+                        FEC_Current_Status__c = currentStatusBeforeSubmit,
                         FEC_Submitted_On__c = DateTime.now()
                     );
                     Database.insert(gsrHistory, AccessLevel.SYSTEM_MODE);
                     gsrRoutingHistoryId = gsrHistory.Id;
-                    // tungnm37 fix: tạo Case Remark cho CC/SP team path
-                    if (String.isNotBlank(remarkContent)) {
-                        try {
-                            insert new FEC_Case_Remarks__c(
-                                FEC_Case__c = caseId,
-                                FEC_Remark_Type__c = FEC_ConstantCommon.REMARK_TYPE_ASSIGNMENT,
-                                FEC_Case_Remarks__c = remarkContent,
-                                FEC_User__c = emailLocalPart(currentUser.Email),
-                                FEC_Stage_Name__c = stageName
-                            );
-                        } catch (Exception er) {
-                            System.debug('FEC_DEBUG createRemark CC/SP error: ' + er.getMessage());
-                        }
-                    }
                 } catch (Exception eh) {
                     System.debug('FEC_DEBUG createRoutingHistory CC/SP error: ' + eh.getMessage());
                 }

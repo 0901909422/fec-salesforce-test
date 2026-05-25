@@ -14,3 +14,7 @@
   text-decoration: underline;
   cursor: pointer;
 }
+
+.mrc-handling-radio {
+  margin-top: 0.5rem;
+}

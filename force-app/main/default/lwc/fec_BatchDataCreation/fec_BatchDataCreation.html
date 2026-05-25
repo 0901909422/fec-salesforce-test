@@ -279,22 +279,6 @@
                       <button
                         type="button"
                         class="fec-sort-button"
-                        data-field="failureReason"
-                        onclick={handleSort}
-                      >
-                        Failure Reason
-                        <lightning-icon
-                          icon-name={failureReasonSortIcon}
-                          size="xx-small"
-                          class="fec-sort-icon"
-                          alternative-text=""
-                        ></lightning-icon>
-                      </button>
-                    </th>
-                    <th>
-                      <button
-                        type="button"
-                        class="fec-sort-button"
                         data-field="result"
                         onclick={handleSort}
                       >
@@ -334,7 +318,6 @@
                         <td>{row.totalSuccessRecords}</td>
                         <td>{row.totalFailedRecords}</td>
                         <td>{row.status}</td>
-                        <td>{row.failureReason}</td>
                         <td>
                           <template if:true={row.resultDownloadUrl}>
                             <a
@@ -354,7 +337,7 @@
                   </template>
                   <template if:false={hasRows}>
                     <tr>
-                      <td colspan="10" class="fec-empty">No records found.</td>
+                      <td colspan="9" class="fec-empty">No records found.</td>
                     </tr>
                   </template>
                 </tbody>

@@ -4,7 +4,7 @@ import { ShowToastEvent } from "lightning/platformShowToastEvent";
 import { createRecord, getRecord } from "lightning/uiRecordApi";
 import { getObjectInfo, getPicklistValues } from "lightning/uiObjectInfoApi";
 import {
-  IsConsoleNavigation,
+  EnclosingTabId,
   getFocusedTabInfo,
   closeTab,
   openTab,
@@ -21,6 +21,8 @@ import TIME_SLOTS_FIELD from "@salesforce/schema/FEC_Case_Assignment__c.FEC_Time
 import getActiveCaseQueues from "@salesforce/apex/FEC_CaseAssignmentConfigController.getActiveCaseQueues";
 import getRoleOptions from "@salesforce/apex/FEC_CaseAssignmentConfigController.getRoleOptions";
 import getBusinessHourOptions from "@salesforce/apex/FEC_CaseAssignmentConfigController.getBusinessHourOptions";
+import isCaseAssignmentNameTaken from "@salesforce/apex/FEC_CaseAssignmentConfigController.isCaseAssignmentNameTaken";
+import findQueuesMissingRoleCoverage from "@salesforce/apex/FEC_CaseAssignmentConfigController.findQueuesMissingRoleCoverage";
 
 const OBJECT_API_NAME = "FEC_Case_Assignment__c";
 const STATUS_DRAFT = "Draft";
@@ -32,8 +34,10 @@ const STATUS_OPTIONS_CANONICAL = [
   { label: STATUS_ACTIVE, value: STATUS_ACTIVE },
   { label: STATUS_ARCHIVED, value: STATUS_ARCHIVED },
 ];
-const MSG_NAME_BLANK = "Case Assignment can't be blank";
+const MSG_NAME_BLANK = "Case Assignment Name can't be blank";
 const MSG_ROLE_REQUIRED_WITH_QUEUE = "Role is required when Select Queues is specified.";
+const MSG_ROLE_REQUIRED_PER_QUEUE =
+  "Phải thêm Role cho mỗi queue đã chọn trong Select Queues.";
 const MSG_DUPLICATE_NAME = "Case Assignment Name đã tồn tại.";
 const MSG_CANNOT_ACTIVE_WITHOUT_NOC =
   "Không thể Active khi chưa thêm Case Assignment NOC.";
@@ -58,12 +62,11 @@ export default class FecCaseAssignmentNewForm extends NavigationMixin(LightningE
   ownerName = "";
   isSaving = false;
   pageErrors = [];
-  showErrorModal = false;
   queueHasError = false;
   roleHasError = false;
   currentTabId;
 
-  @wire(IsConsoleNavigation) isConsoleNavigation;
+  @wire(EnclosingTabId) enclosingTabId;
 
   @wire(getObjectInfo, { objectApiName: CASE_ASSIGNMENT_OBJECT })
   objectInfo;
@@ -122,21 +125,13 @@ export default class FecCaseAssignmentNewForm extends NavigationMixin(LightningE
     this.loadBusinessHours();
   }
 
-  get canSelectActiveStatus() {
-    return false;
-  }
-
   get statusOptions() {
     const wiredByValue = new Map(
       (this._wiredStatusOptions || []).map((option) => [option.value, option])
     );
-    const options = STATUS_OPTIONS_CANONICAL.map(
+    return STATUS_OPTIONS_CANONICAL.map(
       (canonical) => wiredByValue.get(canonical.value) || canonical
     );
-    if (this.canSelectActiveStatus) {
-      return options;
-    }
-    return options.filter((option) => option.value !== STATUS_ACTIVE);
   }
 
   get assignmentMethodOptions() {
@@ -144,10 +139,6 @@ export default class FecCaseAssignmentNewForm extends NavigationMixin(LightningE
   }
   set assignmentMethodOptions(value) {
     this._assignmentMethodOptions = value;
-  }
-
-  get hasPageErrors() {
-    return (this.pageErrors || []).length > 0;
   }
 
   get isContinuousMethod() {
@@ -268,13 +259,7 @@ export default class FecCaseAssignmentNewForm extends NavigationMixin(LightningE
   }
 
   handleStatusChange(event) {
-    const nextStatus = event.detail.value || "";
-    if (nextStatus === STATUS_ACTIVE && !this.canSelectActiveStatus) {
-      this.status = STATUS_DRAFT;
-      this.presentPageErrors([MSG_CANNOT_ACTIVE_WITHOUT_NOC]);
-      return;
-    }
-    this.status = nextStatus;
+    this.status = event.detail.value || "";
     this.clearPageErrors();
   }
 
@@ -390,26 +375,45 @@ export default class FecCaseAssignmentNewForm extends NavigationMixin(LightningE
       return;
     }
 
-    this.isSaving = true;
     const trimmedName = (this.assignmentName || "").trim();
-    const fields = {
-      Name: trimmedName,
-      FEC_Status__c: this.status,
-      FEC_Assignment_Method__c: this.assignmentMethod,
-      FEC_Select_Queues__c: this.selectedQueues.join(";"),
-      FEC_Role__c: this.roleRows.map((row) => `${row.role}|${row.scale}`).join(";"),
-      FEC_Business_Hours__c: this.businessHoursId,
-    };
 
-    fields.FEC_Scale__c = this.roleRows.length === 1 ? this.roleRows[0].scale : null;
-    if (this.isContinuousMethod && this.scheduledTime !== "") {
-      fields.FEC_Scheduled_Time__c = Number(this.scheduledTime);
-    }
-    if (this.isTimeBasedMethod && this.selectedTimeSlots.length) {
-      fields.FEC_Time_Slots__c = this.selectedTimeSlots.join(";");
-    }
-
+    this.isSaving = true;
     try {
+      const nameTaken = await isCaseAssignmentNameTaken({
+        assignmentName: trimmedName,
+        excludeRecordId: null,
+      });
+      if (nameTaken) {
+        this.presentPageErrors([MSG_DUPLICATE_NAME]);
+        return;
+      }
+
+      const missingQueues = await findQueuesMissingRoleCoverage({
+        queueNames: this.selectedQueues,
+        assignedRoleNames: this.roleRows.map((row) => row.role),
+      });
+      if (missingQueues?.length) {
+        this.presentPageErrors([MSG_ROLE_REQUIRED_PER_QUEUE]);
+        return;
+      }
+
+      const fields = {
+        Name: trimmedName,
+        FEC_Status__c: this.status,
+        FEC_Assignment_Method__c: this.assignmentMethod,
+        FEC_Select_Queues__c: this.selectedQueues.join(";"),
+        FEC_Role__c: this.roleRows.map((row) => `${row.role}|${row.scale}`).join(";"),
+        FEC_Business_Hours__c: this.businessHoursId,
+      };
+
+      fields.FEC_Scale__c = this.roleRows.length === 1 ? this.roleRows[0].scale : null;
+      if (this.isContinuousMethod && this.scheduledTime !== "") {
+        fields.FEC_Scheduled_Time__c = Number(this.scheduledTime);
+      }
+      if (this.isTimeBasedMethod && this.selectedTimeSlots.length) {
+        fields.FEC_Time_Slots__c = this.selectedTimeSlots.join(";");
+      }
+
       const result = await createRecord({
         apiName: OBJECT_API_NAME,
         fields,
@@ -441,63 +445,48 @@ export default class FecCaseAssignmentNewForm extends NavigationMixin(LightningE
       },
     };
 
-    let tabToClose = this.currentTabId;
+    const resolveCreateTabId = async () => {
+      if (this.enclosingTabId) {
+        return this.enclosingTabId;
+      }
+      if (this.currentTabId) {
+        return this.currentTabId;
+      }
+      try {
+        const { tabId } = await getFocusedTabInfo();
+        return tabId;
+      } catch (e) {
+        return null;
+      }
+    };
+
     try {
       const focusedTab = await getFocusedTabInfo();
-      if (!tabToClose) {
-        tabToClose = focusedTab.tabId;
+      const tabToClose = await resolveCreateTabId();
+
+      if (focusedTab?.isSubtab && focusedTab.parentTabId) {
+        await openSubtab(focusedTab.parentTabId, {
+          pageReference,
+          focus: true,
+        });
+      } else {
+        await openTab({
+          recordId,
+          focus: true,
+        });
       }
-      const parentTabId = focusedTab.isSubtab
-        ? focusedTab.parentTabId
-        : focusedTab.tabId;
 
-      await openSubtab(parentTabId, {
-        pageReference,
-        focus: true,
-      });
-
-      setTimeout(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      if (tabToClose) {
         try {
-          if (tabToClose) {
-            await closeTab(tabToClose);
-          }
+          await closeTab(tabToClose);
         } catch (e) {
           // ignore tab close failures
         }
-      }, 500);
-      return;
-    } catch (e) {
-      // fall through to console / standard navigation
-    }
-
-    if (this.isConsoleNavigation?.data === true) {
-      if (!tabToClose) {
-        try {
-          const { tabId } = await getFocusedTabInfo();
-          tabToClose = tabId;
-        } catch (err) {
-          tabToClose = null;
-        }
       }
-
-      await openTab({
-        recordId,
-        focus: true,
-      });
-
-      setTimeout(async () => {
-        try {
-          if (tabToClose) {
-            await closeTab(tabToClose);
-          }
-        } catch (err) {
-          // ignore tab close failures
-        }
-      }, 500);
-      return;
+    } catch (e) {
+      this[NavigationMixin.Navigate](pageReference, true);
     }
-
-    this[NavigationMixin.Navigate](pageReference);
   }
 
   handleCancel() {
@@ -610,21 +599,18 @@ export default class FecCaseAssignmentNewForm extends NavigationMixin(LightningE
 
   presentPageErrors(messages) {
     this.pageErrors = this.normalizePageErrors(messages);
-    this.showErrorModal = this.pageErrors.length > 0;
     this.reportFieldValidity(this.pageErrors);
+    if (this.pageErrors.length) {
+      this.showToast("Error", this.pageErrors.join(" "), "error");
+    }
     requestAnimationFrame(() => {
       const anchor = this.template.querySelector('[data-id="page-error-anchor"]');
       anchor?.scrollIntoView?.({ behavior: "smooth", block: "start" });
     });
   }
 
-  closeErrorModal() {
-    this.showErrorModal = false;
-  }
-
   clearPageErrors() {
     this.pageErrors = [];
-    this.showErrorModal = false;
     this.queueHasError = false;
     this.roleHasError = false;
     this.template.querySelectorAll("[data-field]").forEach((field) => {
@@ -688,7 +674,9 @@ export default class FecCaseAssignmentNewForm extends NavigationMixin(LightningE
     });
 
     this.queueHasError = messages.includes("Select Queues can't be blank");
-    this.roleHasError = messages.includes(MSG_ROLE_REQUIRED_WITH_QUEUE);
+    this.roleHasError =
+      messages.includes(MSG_ROLE_REQUIRED_WITH_QUEUE) ||
+      messages.includes(MSG_ROLE_REQUIRED_PER_QUEUE);
   }
 
   handleAddRole() {

@@ -17,12 +17,16 @@ export default class Fec_MrcReturnDupBanner extends NavigationMixin(
   @api duplicateCaseId;
   @api duplicateCaseNumber;
   @api handlingOptionValue = STR_EMPTY;
+  @api handlingOptionOptions;
   @api isEdit = false;
   @api sectionId;
   @api subSectionName;
   @api objId;
   /** standalone | inline */
   @api displayMode = "inline";
+  /** TH3: chỉ hiện radio Noti-11, không hiện banner Case trùng. */
+  @api hideDupMessage = false;
+  @api handlingOptionLabel = "Phương án xử lý yêu cầu MRC";
 
   get isReadOnly() {
     return this.isEdit === false;
@@ -40,6 +44,10 @@ export default class Fec_MrcReturnDupBanner extends NavigationMixin(
       : `mrcRl0502DupInline-${this.objId || this.recordId}`;
   }
 
+  get showDupMessage() {
+    return this.hideDupMessage !== true;
+  }
+
   get mrcDupCaseNumber() {
     return String(this.duplicateCaseNumber ?? STR_EMPTY);
   }
@@ -55,16 +63,31 @@ export default class Fec_MrcReturnDupBanner extends NavigationMixin(
   }
 
   get mrcHandlingRadioOptions() {
-    return [
-      {
-        label: FEC_MRC_RL0502_Dup_Opt_Cancel_New,
-        value: MRC_OPT_CANCEL_NEW,
-      },
+    const defaults = [
       {
         label: FEC_MRC_RL0502_Dup_Opt_Cancel_Prev,
         value: MRC_OPT_CANCEL_PREVIOUS,
       },
+      {
+        label: FEC_MRC_RL0502_Dup_Opt_Cancel_New,
+        value: MRC_OPT_CANCEL_NEW,
+      },
     ];
+    const fromBusiness = Array.isArray(this.handlingOptionOptions)
+      ? this.handlingOptionOptions
+      : [];
+    if (!fromBusiness.length) {
+      return defaults;
+    }
+    const labelByValue = new Map(defaults.map((o) => [o.value, o.label]));
+    return fromBusiness.map((o) => ({
+      label: labelByValue.get(o.value) || o.label || o.value,
+      value: o.value,
+    }));
+  }
+
+  get showHandlingRadio() {
+    return this.mrcHandlingRadioOptions.length > 0;
   }
 
   handleOpenMrcDupCase(event) {
