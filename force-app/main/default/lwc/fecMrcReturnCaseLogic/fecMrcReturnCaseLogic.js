@@ -10,6 +10,23 @@ export const MRC_OPT_CANCEL_PREVIOUS =
   "Cancel previous request, create new request";
 export const MRC_OPT_CANCEL_NEW =
   "Cancel new request, continue previous request handling";
+
+/** Khớp giá trị picklist / label tiếng Việt (Review + Submit). */
+export function isMrcCancelPreviousHandlingOption(value) {
+  if (value == null || String(value).trim() === STR_EMPTY) {
+    return false;
+  }
+  const trimmed = String(value).trim();
+  if (trimmed === MRC_OPT_CANCEL_PREVIOUS) {
+    return true;
+  }
+  const normalized = trimmed.toLowerCase();
+  return (
+    normalized.includes("cancel previous") ||
+    normalized.includes("hủy yêu cầu cũ") ||
+    normalized.includes("huy yeu cau cu")
+  );
+}
 export const MRC_CONF_NOT_RECEIVED = "Customer has not received MRC";
 export const MRC_CONF_RECEIVED = "Customer received MRC";
 
@@ -19,6 +36,13 @@ const LWC_CONTRACT_CLOSURE = "fec_ContractClosureForm";
 const FIELD_DELIVERY_OPTION = "FEC_Delivery_Option_2__c";
 const SECTION_NAME_CASE_INFORMATION = "Case Information";
 const SUBSECTION_NAME_PROPERTY_INFO = "Property Info";
+const OBJ_ADDITIONAL_INFO = "FEC_Additional_Info__c";
+const FIELD_VERIFY_INFORMATION = "FEC_Verify_Information__c";
+const FIELD_CALLBACK = "FEC_Callback__c";
+const RL0502_PROPERTY_FIELD_APIS = new Set([
+  FIELD_VERIFY_INFORMATION,
+  FIELD_CALLBACK,
+]);
 const MRC_RETURN_PANEL = "fec_MrcReturnPanel";
 
 const ACTION_ROUTE_TO = "Route to";
@@ -231,7 +255,11 @@ function isMrcRl0502ReturnBusiness(business) {
 }
 
 /** Hiện Noti-11 + radio: RL05.02 + đã chọn "chưa xác nhận MRC". */
-export function shouldShowMrcHandlingRadio(business, confirmationOverride) {
+export function shouldShowMrcHandlingRadio(
+  business,
+  confirmationOverride,
+  isReviewMode = false,
+) {
   if (!isMrcRl0502ReturnBusiness(business)) {
     return false;
   }
@@ -240,6 +268,12 @@ export function shouldShowMrcHandlingRadio(business, confirmationOverride) {
     return false;
   }
   const confVal = resolveMrcCustomerConfirmation(business, confirmationOverride);
+  if (isReviewMode === true) {
+    const savedHandling = String(
+      business?.mrcHandlingOptionSaved ?? STR_EMPTY,
+    ).trim();
+    return isMrcNotReceivedConfirmation(confVal) || savedHandling.length > 0;
+  }
   return isMrcNotReceivedConfirmation(confVal);
 }
 
@@ -253,6 +287,7 @@ function shouldShowMrcDeliveryForm(
   business,
   handlingOptionValue,
   customerConfirmationOverride,
+  isReviewMode = false,
 ) {
   if (isMrcRl05PhotoSubCodeFromBusiness(business)) {
     return true;
@@ -268,6 +303,26 @@ function shouldShowMrcDeliveryForm(
       ? String(customerConfirmationOverride).trim()
       : getCaseFieldValue(business, FIELD_MRC_CUSTOMER_CONFIRMATION);
 
+  const effectiveHandling = String(
+    handlingOptionValue ||
+      business?.mrcHandlingOptionSaved ||
+      STR_EMPTY,
+  ).trim();
+
+  if (isReviewMode === true && isMrcRl0502ReturnBusiness(business)) {
+    if (isMrcCancelPreviousHandlingOption(effectiveHandling)) {
+      return true;
+    }
+    const savedDelivery = getCaseFieldValue(business, FIELD_DELIVERY_OPTION);
+    if (String(savedDelivery ?? STR_EMPTY).trim()) {
+      return true;
+    }
+    if (ctx?.showDeliveryForm === true) {
+      return true;
+    }
+    return false;
+  }
+
   if (
     ctx?.showCustomerConfirmation === true &&
     isMrcReceivedConfirmation(confVal)
@@ -275,10 +330,8 @@ function shouldShowMrcDeliveryForm(
     return false;
   }
 
-  if (
-    requiresHandlingOptionBeforeDelivery(ctx, business, confVal)
-  ) {
-    return handlingOptionValue === MRC_OPT_CANCEL_PREVIOUS;
+  if (requiresHandlingOptionBeforeDelivery(ctx, business, confVal)) {
+    return isMrcCancelPreviousHandlingOption(effectiveHandling);
   }
 
   if (ctx?.showDeliveryForm !== true) {
@@ -292,12 +345,14 @@ export function shouldShowMrcReturnDelivery(
   business,
   handlingOptionValue,
   customerConfirmationValue,
+  isReviewMode = false,
 ) {
   return shouldShowMrcDeliveryForm(
     ctx,
     business,
     handlingOptionValue,
     customerConfirmationValue,
+    isReviewMode,
   );
 }
 
@@ -390,10 +445,33 @@ export function ensureMrcReturnCaseFormInBusiness(business) {
   return business;
 }
 
+export function isMrcRl05ReviewMode(business, isEditFlag) {
+  if (business?.isSubmited === true) {
+    return true;
+  }
+  return isEditFlag === false;
+}
+
+function resolvePicklistDisplayLabel(business, apiName, value) {
+  const raw = String(value ?? STR_EMPTY).trim();
+  if (!raw) {
+    return STR_EMPTY;
+  }
+  const opts = business?.picklistOptionsMap?.Case?.[apiName];
+  if (!Array.isArray(opts)) {
+    return raw;
+  }
+  const match = opts.find(
+    (o) => o.value === raw || o.label === raw,
+  );
+  return match?.label || raw;
+}
+
 export function applyMrcRl0502DupFieldLayout(
   business,
   handlingOptionValue,
   customerConfirmation,
+  isEditFlag,
 ) {
   if (!business?.sectionlst) {
     return { business, handlingOptionValue, rebuildSections: false };
@@ -402,10 +480,21 @@ export function applyMrcRl0502DupFieldLayout(
   const ctx = getMrcRl05Ui(business);
   const confVal = resolveMrcCustomerConfirmation(business, customerConfirmation);
   const showDup = showMrcRl0502DupBanner(business);
-  const showDupInline = false;
+  const isReview = isMrcRl05ReviewMode(business, isEditFlag);
+  const showDupInline =
+    isReview === true &&
+    showDup === true &&
+    isMrcNotReceivedConfirmation(confVal);
   const showDupStandalone = false;
   const usePanel = isMrcRl05Branch(business);
   let nextHandling = handlingOptionValue;
+  const savedHandling = String(
+    business?.mrcHandlingOptionSaved ?? STR_EMPTY,
+  ).trim();
+  const savedConf = String(
+    business?.mrcCustomerConfirmationSaved ?? STR_EMPTY,
+  ).trim();
+  const panelMounted = hasMrcReturnPanelInBusiness(business);
 
   business.sectionlst.forEach((section) => {
     if (section.name === SECTION_NAME_CASE_INFORMATION) {
@@ -415,20 +504,54 @@ export function applyMrcRl0502DupFieldLayout(
       sub.objlst?.forEach((obj) => {
         obj.fieldlst?.forEach((field) => {
           if (field.apiName === FIELD_MRC_HANDLING_OPTION) {
-            field.isHidden = ctx?.isReturnSubCode === true;
-            if (ctx?.isReturnSubCode !== true) {
-              field.isHidden = true;
+            if (isReview && ctx?.isReturnSubCode === true) {
+              const displayVal = savedHandling || field.value || nextHandling;
+              field.isHidden = panelMounted || !displayVal;
+              field.readonlyDisplayValue = resolvePicklistDisplayLabel(
+                business,
+                FIELD_MRC_HANDLING_OPTION,
+                displayVal,
+              );
+              if (displayVal && !nextHandling) {
+                nextHandling = displayVal;
+              }
+            } else {
+              field.isHidden = ctx?.isReturnSubCode === true;
+              if (ctx?.isReturnSubCode !== true) {
+                field.isHidden = true;
+              }
             }
             if (showDup && !nextHandling && field.value) {
               nextHandling = field.value;
             }
           }
           if (field.apiName === FIELD_MRC_CUSTOMER_CONFIRMATION) {
-            field.showMrcDupInline = showDupInline;
-            field.isHidden =
-              ctx?.isReturnSubCode !== true ||
-              usePanel === true ||
-              ctx?.showCustomerConfirmation !== true;
+            field.showMrcDupInline = showDupInline && !panelMounted;
+            if (isReview && ctx?.isReturnSubCode === true) {
+              const displayVal = savedConf || field.value || confVal;
+              field.isHidden = panelMounted || !displayVal;
+              field.readonlyDisplayValue = resolvePicklistDisplayLabel(
+                business,
+                FIELD_MRC_CUSTOMER_CONFIRMATION,
+                displayVal,
+              );
+            } else {
+              field.isHidden =
+                ctx?.isReturnSubCode === true ||
+                usePanel === true ||
+                ctx?.showCustomerConfirmation !== true;
+            }
+          }
+          if (field.apiName === FIELD_DELIVERY_OPTION) {
+            if (isReview && ctx?.isReturnSubCode === true) {
+              const displayVal = String(field.value ?? STR_EMPTY).trim();
+              field.isHidden = !displayVal;
+              field.readonlyDisplayValue = resolvePicklistDisplayLabel(
+                business,
+                FIELD_DELIVERY_OPTION,
+                displayVal,
+              );
+            }
           }
           if (field.apiName === "FEC_Contract_Processing_Assessment_Type__c") {
             if (ctx?.isReturnSubCode) {
@@ -437,17 +560,36 @@ export function applyMrcRl0502DupFieldLayout(
           }
         });
       });
+      if (
+        ctx?.isReturnSubCode === true &&
+        sub.name === SUBSECTION_NAME_PROPERTY_INFO
+      ) {
+        sub.objlst?.forEach((obj) => {
+          if (obj.name !== OBJ_ADDITIONAL_INFO) {
+            return;
+          }
+          obj.fieldlst?.forEach((field) => {
+            if (RL0502_PROPERTY_FIELD_APIS.has(field.apiName)) {
+              field.isHidden = false;
+              field.hidden = false;
+            }
+          });
+        });
+      }
     });
   });
 
-  const needsHandlingRadio = shouldShowMrcHandlingRadio(business, confVal);
+  const needsHandlingRadio = shouldShowMrcHandlingRadio(
+    business,
+    confVal,
+    isReview,
+  );
 
-  if (!needsHandlingRadio) {
+  if (!needsHandlingRadio && !isReview) {
     nextHandling = STR_EMPTY;
   } else if (!nextHandling) {
-    const saved = String(business?.mrcHandlingOptionSaved ?? STR_EMPTY).trim();
-    if (saved) {
-      nextHandling = saved;
+    if (savedHandling) {
+      nextHandling = savedHandling;
     }
   }
 
@@ -455,6 +597,7 @@ export function applyMrcRl0502DupFieldLayout(
     business,
     nextHandling,
     confVal,
+    isEditFlag,
   );
   return {
     business: { ...visibility.business },
@@ -467,24 +610,35 @@ export function applyMrcRl05SectionVisibility(
   business,
   handlingOptionValue,
   customerConfirmation,
+  isEditFlag,
 ) {
   const ctx = getMrcRl05Ui(business);
   if ((!ctx?.isRl05Branch && !isMrcRl05Branch(business)) || !business?.sectionlst) {
     return { business, rebuildSections: false };
   }
 
+  const isReview = isMrcRl05ReviewMode(business, isEditFlag);
   const confVal = resolveMrcCustomerConfirmation(business, customerConfirmation);
   const showDelivery = shouldShowMrcDeliveryForm(
     ctx,
     business,
     handlingOptionValue,
     confVal,
+    isReview,
   );
-  const hidePropertyInfo = ctx?.hidePropertyInfo === true;
+  // RL05.02: luôn hiện subsection Property Info (Xác minh thông tin, Gọi lại, …) — không ẩn.
+  const hidePropertyInfo =
+    ctx?.isReturnSubCode === true ? false : ctx?.hidePropertyInfo === true;
   const panelMounted = hasMrcReturnPanelInBusiness(business);
   const panelShowsDelivery =
     panelMounted &&
-    shouldShowMrcDeliveryForm(ctx, business, handlingOptionValue, confVal);
+    shouldShowMrcDeliveryForm(
+      ctx,
+      business,
+      handlingOptionValue,
+      confVal,
+      isReview,
+    );
   let changed = false;
 
   business.sectionlst.forEach((section) => {
@@ -499,6 +653,16 @@ export function applyMrcRl05SectionVisibility(
         sub._hideForMrcRl05 = hideSub;
         sub.hideForMrcRl05 = hideSub;
         changed = true;
+      }
+      if (
+        ctx?.isReturnSubCode === true &&
+        sub.name === SUBSECTION_NAME_PROPERTY_INFO
+      ) {
+        if (sub._hideForMrcRl05 || sub.hideForMrcRl05) {
+          sub._hideForMrcRl05 = false;
+          sub.hideForMrcRl05 = false;
+          changed = true;
+        }
       }
       if (hideSub) {
         sub.objlst?.forEach((obj) => {
@@ -608,4 +772,26 @@ export function isMrcReturnTrackedField(fieldName) {
     fieldName === FIELD_MRC_CUSTOMER_CONFIRMATION ||
     fieldName === FIELD_MRC_HANDLING_OPTION
   );
+}
+
+/** Hiển thị Team ngắn (CP/PM/SP/F2F) — map label từ Stage Change / FEC_Team_User_Group__c. */
+export function normalizeTeamUserGroupForDisplay(team) {
+  const raw = String(team ?? STR_EMPTY).trim();
+  if (!raw) {
+    return STR_EMPTY;
+  }
+  const upper = raw.toUpperCase().replace(/\s+/g, " ");
+  if (upper === "CP" || upper.includes("CONTRACT PROCESS")) {
+    return "CP";
+  }
+  if (upper === "PM" || upper === "PAYMENT") {
+    return "PM";
+  }
+  if (upper === "SP" || upper.includes("CS SUPPORT")) {
+    return "SP";
+  }
+  if (upper === "F2F" || upper.includes("OFFICE BASED")) {
+    return "F2F";
+  }
+  return raw;
 }
