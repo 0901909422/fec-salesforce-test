@@ -28,7 +28,10 @@ export default class Fec_CreateCaseNonExistingCustomer extends NavigationMixin(
     this.identityNo = event.target.value;
   }
 
-  handleCreateCase() {
+  handleCreateCase(message) {
+    if (message.caseId !== this.recordId) {
+      return;
+    }
     // demo validate
     if (!this.customerName || !this.identityNo) {
       this.showError = true;

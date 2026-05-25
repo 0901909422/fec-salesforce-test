@@ -118,6 +118,7 @@
         <members>FEC_CustomerAdditionalDataController</members>
         <members>FEC_ConstantCommon</members>
         <members>FEC_NotificationHistoryController</members>
+        <members>FEC_Notification</members>
         <members>FEC_CheckEligibleController</members>
         <members>FEC_CardEligibilityController</members>
         <members>FEC_CommonUltils</members>
@@ -127,12 +128,15 @@
         <members>FEC_AssignmentController</members>
         <members>FEC_CofGsrAssignmentService</members>
         <members>FEC_CaseEditNOCController</members>
+        <members>FEC_CaseEditNOCControllerTest</members>
         <members>FEC_CloseInterationSchedulerBatch</members>
         <members>FEC_AssignmentListHandler</members>
         <members>FEC_AssignmentRoutingActionHandler</members>
 		<members>FEC_AssignmentExecuteService</members>
         <members>FEC_AssignmentCaseShareService</members>
         <members>FEC_CaseExecuteService</members>
+        <members>FEC_CaseInitUpdateService</members>
+        <members>FEC_CaseInitUpdateServiceTest</members>
         <members>FEC_RoutingActionHistoryTriggerHandler</members>
         <members>FEC_RelevantTicketTriggerHandler</members>
         <members>FEC_PointsRedemptionCaseController</members>
@@ -231,6 +235,8 @@
         <members>FEC_VMXAUTHDETAILINQ</members>
         <members>FEC_UpdateCustomerAddress</members>
 		<members>FEC_NatureOfCaseUserGroupService</members>
+        <members>FEC_CustomerIntegrationService</members>
+        <members>FEC_LookupController</members>
         <name>ApexClass</name>
     </types>
 	<types>
@@ -247,6 +253,7 @@
 		<members>Case.FEC_Max_Amount__c</members>
 		<members>Case.FEC_Requested_Amount__c</members>
         <members>Case.FEC_Assignment_Count__c</members>
+        <members>Case.FEC_Recently_Auto_Case_Assignment__c</members>
         <members>Case.FEC_Disbursement_Date__c</members>
         <members>Case.FEC_Disbursement_Status__c</members>
         <members>Case.FEC_CS_Check_Classification_by_CS__c</members>
@@ -755,6 +762,7 @@
 		<members>FEC_Case_Assignment_Record_Page</members>
         <members>FEC_Notification_Record_Page_Auto</members>
         <members>FEC_Notification_Record_Page_Manual</members>
+        <members>FEC_Do_Not_Bother_Record_Page</members>
         <name>FlexiPage</name>
     </types>
     <types>
@@ -784,8 +792,11 @@
         <members>fec_DoNotBotherHandling</members>
         <members>fec_DoNotBotherInformationView</members>
         <members>fec_DoNotBotherNonExistingCustomer</members>
+        <members>fec_CreateCaseNonExistingCustomer</members>
+        <members>fec_InteractionCreateCase</members>
         <members>fec_ReusableDNBCustomTable</members>
         <members>fec_CaseEditNOC</members>
+        <members>fec_CaseModePublisher</members>
         <members>fec_CaseNocUpdatedSection</members>
         <members>fec_AssignmentList</members>
         <members>fec_AssignmentRemarkHistoryTable</members>
@@ -839,6 +850,7 @@
         <members>fec_MrcReturnDupBanner</members>
         <members>fecMrcReturnCaseLogic</members>
         <members>fec_MainInfoLoanAccount</members>
+        <members>fec_ManualNotification</members>
         <members>fec_NotificationOverride</members>
         <members>fec_PaymentHistoryAcount</members>
         <members>fec_PinResetView</members>
@@ -1042,6 +1054,7 @@
 		<members>FEC_Buyer_Name</members>
 		<members>FEC_Buyer_DOB</members>
 		<members>FEC_Buyer_NID</members>
+		<members>FEC_Gender_Buyer_Label</members>
 		<members>FEC_Product_Name</members>
 		<members>FEC_Sales_Channel</members>
 		<members>FEC_Insurance_Company</members>
@@ -1584,16 +1597,20 @@
         <members>Case.Update_Case_96h_Violating</members>
         <members>Case.Update_Case_96h_Warning</members>
         <members>Case.SLA_Violating_Warning_44h</members>
+        <members>Case.SLA_Violation_Warning_124h</members>
+        <members>Case.SLA_Violation_Warning_164h</members>
+        <members>Case.SLA_Violation_Warning_76h</members>
+        <members>Case.SLA_Warning_0h</members>
         <members>Case.SLA_Warning_119h</members>
         <members>Case.SLA_Warning_120h</members>
-        <members>Case.SLA_Warning_124h</members>
+        <members>Case.SLA_Warning_125h</members>
+        <members>Case.SLA_Warning_126h</members>
         <members>Case.SLA_Warning_128h</members>
+        <members>Case.SLA_Warning_143h</members>
         <members>Case.SLA_Warning_144h</members>
-        <members>Case.SLA_Warning_164h</members>
         <members>Case.SLA_Warning_167h</members>
         <members>Case.SLA_Warning_168h</members>
         <members>Case.SLA_Warning_48h</members>
-        <members>Case.SLA_Warning_76h</members>
         <members>Case.SLA_Warning_80h</members>
         <name>WorkflowFieldUpdate</name>
     </types>
@@ -2002,6 +2019,7 @@
         <members>FEC_General_Assignment_Config__c</members>
         <members>FEC_General_Assignment__c</members>
         <members>FEC_Download_Report__c</members>
+        <members>FEC_Notification_Template_Channel__c</members>
         <name>CustomTab</name>
     </types>
     <types>

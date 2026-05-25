@@ -277,7 +277,7 @@ public without sharing class FEC_AssignmentRoutingActionHandler {
         else if (userDepart == FEC_ConstantCommon.TEAM_CS_SUPPORT || userDepart == FEC_ConstantCommon.TEAM_CS_CUSTOMER_CARE) {
             System.debug('Test routing CS');
             assignment.FEC_OwnerID__c = queue.Name;
-            assignment.FEC_Assignment_Status__c = FEC_ConstantCommon.STATUS_CS_REVIEW;
+            assignment.FEC_Assignment_Status__c = FEC_ConstantCommon.STATUS_CS_BACKOFFICE;
         }else if(userDepart == FEC_ConstantCommon.TEAM_CS_OTHER){
             assignment.FEC_OwnerID__c = queue.Name;
             assignment.FEC_Assignment_Status__c = FEC_ConstantCommon.STATUS_CS_BACKOFFICE;

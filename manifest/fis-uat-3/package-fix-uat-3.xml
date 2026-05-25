@@ -5,6 +5,7 @@
 	    <members>FEC_AssignmentListHandler</members>
 	    <members>FEC_CaseBusinessService</members>
 	    <members>FEC_CaseEditNOCController</members>
+	    <members>FEC_CaseEditNOCControllerTest</members>
 	    <members>FEC_CofGsrRoutePrepareService</members>
 	    <members>FEC_ContractClosureController</members>
 	    <members>FEC_CheckEligibilityIPPCallout</members>
@@ -23,6 +24,7 @@
 	    <members>FEC_PinResetHandler</members>
 	    <members>FEC_GetSMSInfoFromITTelcoCallout</members>
 	    <members>FEC_NotificationHistoryController</members>
+	    <members>FEC_Notification</members>
 	    <members>FEC_NatureOfCaseTriggerHandler</members>
 	    <members>FEC_NocChannelConfigController</members>
 	    <members>FEC_GetCardSecInfo</members>
@@ -36,6 +38,8 @@
 	    <members>FEC_AssignmentExecuteService</members>
         <members>FEC_AssignmentCaseShareService</members>
 	    <members>FEC_CaseExecuteService</members>
+	    <members>FEC_CaseInitUpdateService</members>
+	    <members>FEC_CaseInitUpdateServiceTest</members>
 	    <members>FEC_SubProcessService</members>
 	    <members>FEC_CheckEligibleController</members>
 	    <members>FEC_CardClosureRefundController</members>
@@ -58,8 +62,9 @@
 		<members>FEC_NocRemovePhoneInheritanceHandler</members>
 		<members>FEC_NocRemovePhoneInheritanceHandlerTest</members>
 		<members>FEC_PaymentHistoryController</members>
-		<members>FEC_IPPConversionController</members>
-		<members>FEC_AssignmentRoutingActionHandler</members>
+	    <members>FEC_IPPConversionController</members>
+	    <members>FEC_LookupController</members>
+	    <members>FEC_AssignmentRoutingActionHandler</members>
 		<members>FEC_CurrencyCodeLookup</members>
 		<members>FEC_GetCardBasicInfo</members>
 		<members>FEC_GetCardFinancialTransactions</members>
@@ -143,6 +148,9 @@
 		<members>FEC_CaseAssignmentConfigController</members>
         <members>FEC_RoutingHistTatSvc</members>
         <members>FEC_PsDNBServiceCallout</members>
+        <members>FEC_FullCustomerIntegrationJob</members>
+        <members>FEC_RDPaymentContractAssessmentService</members>
+        <members>FEC_CustomerIntegrationService</members>
 		<name>Apexclass</name>
 	</types>
     <types>
@@ -155,6 +163,7 @@
 	    <members>fec_CaseBussiness</members>
 	    <members>fec_CaseDetail_Customer</members>
 	    <members>fec_CaseEditNOC</members>
+	    <members>fec_CaseModePublisher</members>
 	    <members>fec_CaseRemarks</members>
 	    <members>fec_IPPClosureForm</members>
 	    <members>fec_AssignmentExecuteAction</members>
@@ -181,12 +190,14 @@
 	    <members>fec_AssignmentRemarkHistoryTable</members>
 	    <members>fec_AssignmentViewAll</members>
 	    <members>fec_CustomDoNotBotherViewDatatable</members>
+	    <members>fec_CreateCaseNonExistingCustomer</members>
 	    <members>fec_CustomerCaseExecuteAction</members>
 	    <members>fec_DoNotBotherHandling</members>
 	    <members>fec_DoNotBotherNonExistingCustomer</members>
 	    <members>fec_SubProcessContainer</members>
 	    <members>fec_DoNotBotherExistingCustomer</members>
 	    <members>fec_DoNotBotherInformationView</members>
+	    <members>fec_InteractionCreateCase</members>
 	    <members>fec_ReusableDNBCustomTable</members>
 	    <members>fec_AssignmentExecuteVisibility</members>
         <members>fec_communicationHistory</members>
@@ -221,6 +232,7 @@
         <members>fecMrcReturnCaseLogic</members>
         <members>fec_DoNotBotherResultView</members>
         <members>fec_Banca</members>
+        <members>fec_BancaTabView</members>
         <members>fec_CommonDetailView</members>
         <members>fec_CaseAssignmentConfig</members>
         <members>fec_CaseAssignmentDetailSummary</members>
@@ -229,10 +241,12 @@
         <members>fec_IPPDetails</members>
         <members>fecCaseAssignmentNewForm</members>
         <members>fec_ContractClosureForm</members>
+        <members>fec_ManualNotification</members>
         <members>fec_NotificationOverride</members>
         <members>fec_CaseBussinessScopedRoutingIntegration</members>
         <members>fec_ScopedStageChangeRouting</members>
         <members>fec_ScopedStageChangeRoutingAction</members>
+        <members>fec_RdPaymentRoutingUtils</members>
 		<members>fecRoutingAssignmentEditForm</members>
 		<members>fec_DownloadReports</members>
 		<members>fec_BatchDataCreation</members>
@@ -248,6 +262,7 @@
         <members>Case.FEC_Original_Category__c</members>
         <members>Case.FEC_Original_Sub_Category__c</members>
         <members>Case.FEC_Original_Sub_Code__c</members>
+        <members>Case.FEC_Recently_Auto_Case_Assignment__c</members>
         <members>Case.FEC_NFU_Description_Result__c</members>
         <members>Case.FEC_Collections_Response__c</members>
         <members>Case.FEC_Delivery_Option_2__c</members>
@@ -316,6 +331,7 @@
 		<members>FEC_Download_Report__c</members>
 		<members>FEC_Case_Assignment_Log_Detail__c</members>
 		<members>FEC_Case_Assignment_Logs__c</members>
+		<members>FEC_Do_Not_Bother__c</members>
 		<name>CustomObject</name>
 	</types>
     <types>
@@ -337,6 +353,7 @@
 		<members>FEC_Download_Report_Record_Page</members>
 		<members>FEC_General_Assignment_Record_Page</members>
 		<members>FEC_Routing_Assignment_Record_Page</members>
+        <members>FEC_Do_Not_Bother_Record_Page</members>
         <name>FlexiPage</name>
     </types>
 	<types>
@@ -438,7 +455,8 @@
 		<members>FEC_Export_Detail</members>
 		<members>FEC_Export_View</members>
 		<members>FEC_Format</members>
-		<members>FEC_Format_Excel</members>
+        <members>FEC_Format_Excel</members>
+        <members>FEC_Gender_Buyer_Label</members>
 		<members>FEC_Formatted_Report</members>
 		<members>FEC_Title_Context_Report</members>
 		<members>FEC_BCH_ResultHdr_Errors</members>
@@ -687,6 +705,7 @@
 	<types>
 		<members>Batch_Case_Handling</members>
 		<members>FEC_Download_Report__c</members>
+		<members>FEC_Notification_Template_Channel__c</members>
         <name>CustomTab</name>
     </types>
 	<types>
@@ -726,16 +745,20 @@
 	</types>
 	<types>
 	    <members>Case.SLA_Violating_Warning_44h</members>
+	    <members>Case.SLA_Violation_Warning_124h</members>
+	    <members>Case.SLA_Violation_Warning_164h</members>
+	    <members>Case.SLA_Violation_Warning_76h</members>
+	    <members>Case.SLA_Warning_0h</members>
 	    <members>Case.SLA_Warning_119h</members>
 	    <members>Case.SLA_Warning_120h</members>
-	    <members>Case.SLA_Warning_124h</members>
+	    <members>Case.SLA_Warning_125h</members>
+	    <members>Case.SLA_Warning_126h</members>
 	    <members>Case.SLA_Warning_128h</members>
+	    <members>Case.SLA_Warning_143h</members>
 	    <members>Case.SLA_Warning_144h</members>
-	    <members>Case.SLA_Warning_164h</members>
 	    <members>Case.SLA_Warning_167h</members>
 	    <members>Case.SLA_Warning_168h</members>
 	    <members>Case.SLA_Warning_48h</members>
-	    <members>Case.SLA_Warning_76h</members>
 	    <members>Case.SLA_Warning_80h</members>
 	    <name>WorkflowFieldUpdate</name>
 	</types>

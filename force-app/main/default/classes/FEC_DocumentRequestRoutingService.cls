@@ -14,7 +14,8 @@ public without sharing class FEC_DocumentRequestRoutingService {
   public static StageRoutingResult getStageChangeRouting(
     Id caseId,
     String teamUserGroup,
-    Id routeToActionId
+    Id routeToActionId,
+    Id previousStageId
   ) {
     StageRoutingResult result = new StageRoutingResult();
     if (caseId == null) {
@@ -24,17 +25,20 @@ public without sharing class FEC_DocumentRequestRoutingService {
       return result;
     }
 
-    List<Case> cases = [
-      SELECT Id, FEC_Current_Case_Stage__c
-      FROM Case
-      WHERE Id = :caseId
-      LIMIT 1
-    ];
-    if (cases.isEmpty() || cases[0].FEC_Current_Case_Stage__c == null) {
-      return result;
+    Id currentStageId = previousStageId;
+    if (currentStageId == null) {
+      List<Case> cases = [
+        SELECT Id, FEC_Current_Case_Stage__c
+        FROM Case
+        WHERE Id = :caseId
+        LIMIT 1
+      ];
+      if (cases.isEmpty() || cases[0].FEC_Current_Case_Stage__c == null) {
+        return result;
+      }
+      currentStageId = cases[0].FEC_Current_Case_Stage__c;
     }
 
-    Id currentStageId = cases[0].FEC_Current_Case_Stage__c;
     FEC_Stage_Change__c sc = findStageChangeRecord(
       currentStageId,
       teamUserGroup,
@@ -45,8 +49,8 @@ public without sharing class FEC_DocumentRequestRoutingService {
     }
 
     result.nextTeam = String.isNotBlank(sc.FEC_Team_User_Group__c)
-      ? sc.FEC_Team_User_Group__c
-      : teamUserGroup;
+      ? mapTeamDisplayLabel(sc.FEC_Team_User_Group__c)
+      : mapTeamDisplayLabel(teamUserGroup);
     Group nextQueue = resolveQueueFromStageChangeValue(sc.FEC_Next_Queue__c);
     if (nextQueue != null) {
       result.nextQueueLabel = nextQueue.Name;
@@ -135,6 +139,26 @@ public without sharing class FEC_DocumentRequestRoutingService {
       LIMIT 1
     ];
     return fallbackRows.isEmpty() ? null : fallbackRows[0];
+  }
+
+  private static String mapTeamDisplayLabel(String teamCode) {
+    if (String.isBlank(teamCode)) {
+      return teamCode;
+    }
+    String normalized = teamCode.trim().toUpperCase();
+    if (normalized == 'CP') {
+      return 'Contract Processing';
+    }
+    if (normalized == 'PM') {
+      return 'Payment';
+    }
+    if (normalized == 'SP') {
+      return 'CS Support';
+    }
+    if (normalized == 'F2F') {
+      return 'CS Office Based';
+    }
+    return teamCode;
   }
 
   private static Group resolveQueueFromStageChangeValue(String nextQueueValue) {
