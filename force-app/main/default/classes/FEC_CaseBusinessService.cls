@@ -211,6 +211,8 @@ public without sharing class FEC_CaseBusinessService {
           FEC_Account_or_Contract__r.FEC_MRC_Status__c,
           FEC_Account_or_Contract__r.FEC_Contract_Status__c,
           FEC_Customer_Confirmation__c,
+          FEC_MRC_Request_Handling_Option__c,
+          FEC_Delivery_Option_2__c,
           FEC_Interaction__c,
           FEC_Category__r.Name,
           FEC_SubCategory__r.Name,
@@ -924,6 +926,7 @@ public without sharing class FEC_CaseBusinessService {
           }
           result.mrcCustomerConfirmationSaved = selectedCase.FEC_Customer_Confirmation__c;
           result.mrcHandlingOptionSaved = selectedCase.FEC_MRC_Request_Handling_Option__c;
+          result.mrcDeliveryOptionSaved = selectedCase.FEC_Delivery_Option_2__c;
         } catch (Exception mrcCtxEx) {
           System.debug(
             LoggingLevel.WARN,
@@ -979,7 +982,8 @@ public without sharing class FEC_CaseBusinessService {
               subSectionNameTemp,
               TYPE_LWC.equals(itemType) ? (String) item.get('FEC_LWC_Name__c') : null,
               fieldApiNameTemp,
-              mrcRl05UiCtx
+              mrcRl05UiCtx,
+              selectedCase
             )
           ) {
             continue;
@@ -1145,31 +1149,45 @@ public without sharing class FEC_CaseBusinessService {
                   Boolean forceGsrPropertyInfoReadonly =
                     isGsrStage3PropertyInfoReadonly &&
                     'Property Info'.equals(subSectionItem.name);
-                  fieldTemp = transform(
-                    masterDataItem,
-                    objTemp,
-                    currentUser.FEC_User_Group__c,
-                    isRevert,
-                    isGsrStage1RevertMasterReadonly || forceGsrPropertyInfoReadonly,
-                    hasCaseAssignment
-                  );
+                  try {
+                    fieldTemp = transform(
+                      masterDataItem,
+                      objTemp,
+                      currentUser.FEC_User_Group__c,
+                      isRevert,
+                      isGsrStage1RevertMasterReadonly ||
+                        forceGsrPropertyInfoReadonly,
+                      hasCaseAssignment
+                    );
 
-                  if (fieldTemp == null)
-                    continue;
+                    if (fieldTemp == null) {
+                      continue;
+                    }
 
-                  // add help text
-                  if (
-                    objToFieldToHelpTextMap.containsKey(cObjectItem.name) &&
-                    objToFieldToHelpTextMap.get(cObjectItem.name)
-                      .containsKey(fieldTemp.apiName)
-                  ) {
-                    fieldTemp.helpText = objToFieldToHelpTextMap.get(
-                        cObjectItem.name
-                      )
-                      .get(fieldTemp.apiName);
+                    // add help text
+                    if (
+                      objToFieldToHelpTextMap.containsKey(cObjectItem.name) &&
+                      objToFieldToHelpTextMap.get(cObjectItem.name)
+                        .containsKey(fieldTemp.apiName)
+                    ) {
+                      fieldTemp.helpText = objToFieldToHelpTextMap.get(
+                          cObjectItem.name
+                        )
+                        .get(fieldTemp.apiName);
+                    }
+
+                    cObjectItem.fieldlst.add(fieldTemp);
+                  } catch (Exception fieldTransformEx) {
+                    System.debug(
+                      LoggingLevel.WARN,
+                      'getByCase transform skip ' +
+                        cObjectItem.name +
+                        '.' +
+                        masterDataItem.get('FEC_Field_API_Name__c') +
+                        ': ' +
+                        fieldTransformEx.getMessage()
+                    );
                   }
-
-                  cObjectItem.fieldlst.add(fieldTemp);
                 }
               }
             }
@@ -1178,7 +1196,7 @@ public without sharing class FEC_CaseBusinessService {
           sectionItem.sort();
         }
 
-        // MRC Return (RL05): inject field ẩn + picklist; panel LWC do client ensureMrcReturnCaseFormInBusiness.
+        // MRC Return (RL05): finalize trước removeEmpty — Property Info RL05.02 (inject field nếu MDM/transform thiếu).
         if (mrcRl05UiCtx != null) {
           FEC_MrcReturnCaseService.finalizeCaseInformationForRl05(
             result,
@@ -4107,6 +4125,9 @@ public without sharing class FEC_CaseBusinessService {
 
     @AuraEnabled
     public String mrcHandlingOptionSaved;
+
+    @AuraEnabled
+    public String mrcDeliveryOptionSaved;
 
     @AuraEnabled
     public Map<String, Map<String, List<PicklistOptionDto>>> picklistOptionsMap;
