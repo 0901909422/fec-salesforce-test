@@ -1616,6 +1616,13 @@
                 </componentInstanceProperties>
                 <componentName>support:milestones</componentName>
                 <identifier>support_milestones</identifier>
+                <visibilityRule>
+                    <criteria>
+                        <leftValue>{!Record.FEC_Interaction_View_Mode__c}</leftValue>
+                        <operator>EQUAL</operator>
+                        <rightValue>handling</rightValue>
+                    </criteria>
+                </visibilityRule>
             </componentInstance>
         </itemInstances>
         <itemInstances>
