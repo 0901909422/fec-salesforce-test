@@ -72,31 +72,32 @@ public without sharing class FEC_ImportedInteractionBatch
         }
 
         List<Case> casesToUpdate = new List<Case>();
-        Integer queueableJobs = Limits.getQueueableJobs();
+        List<FEC_FullCustomerIntegrationJob.SyncRequest> syncRequests =
+            new List<FEC_FullCustomerIntegrationJob.SyncRequest>();
 
         for (Case item : scope) {
             FEC_Customer_History__c history = historyById.get(item.FEC_Account_or_Contract__c);
-            if (
-                history != null &&
-                queueableJobs < Limits.getLimitQueueableJobs()
-            ) {
+            if (history != null) {
                 String accountNumber = String.isNotBlank(history.FEC_Account_Number__c)
                     ? history.FEC_Account_Number__c
                     : history.FEC_Contract_Number__c;
 
-                System.enqueueJob(
-                    new FEC_FullCustomerIntegrationJob(
+                syncRequests.add(
+                    new FEC_FullCustomerIntegrationJob.SyncRequest(
                         history.Id,
                         history.FEC_CIF_Number__c,
                         history.FEC_Primary_Phone__c,
                         accountNumber
                     )
                 );
-                queueableJobs++;
             }
 
             item.FEC_IsImported__c = false;
             casesToUpdate.add(item);
+        }
+
+        if (!syncRequests.isEmpty()) {
+            System.enqueueJob(new FEC_FullCustomerIntegrationJob(syncRequests));
         }
 
         if (!casesToUpdate.isEmpty()) {
