@@ -3347,6 +3347,12 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
       isAllValid = false;
     }
 
+
+    //hieuTT fix jira 1561
+    if(!this._validateDNBForSubmit()){
+      isAllValid = false;
+    }
+    
     const mrcPanel = this._getMrcReturnPanelEl();
     if (mrcPanel && typeof mrcPanel.validateForSubmit === "function") {
       if (!mrcPanel.validateForSubmit()) {
@@ -3709,6 +3715,17 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
       return true;
     }
     return host.validateRemovePhoneForSubmit();
+  }
+
+  //HieuTT fix jira 1561
+  _validateDNBForSubmit() {
+    const host = this._getSubProcessContainerEl();
+
+    if (!host || typeof host.validateDNBForSubmit !== "function") {
+      return true;
+    }
+
+    return host.validateDNBForSubmit();
   }
 
   //linhdev fix jira FECREDIT_CSM_2025_KH-1368
