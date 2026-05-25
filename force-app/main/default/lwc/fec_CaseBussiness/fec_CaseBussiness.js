@@ -65,6 +65,7 @@ import {
   FIELD_MRC_HANDLING_OPTION,
   getCaseFieldValue,
   getMrcReturnAutoRoutingActionCode,
+  isMrcReceivedConfirmation,
   isMrcReturnTrackedField,
   isMrcRl05Branch,
   isMrcRl05CaseInformationBlocked,
@@ -2011,6 +2012,13 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
     }
 
     if (this._mrcReturnStageChangeRoutingActive) {
+      if (
+        isMrcReceivedConfirmation(this.mrcReturnCustomerConfirmationValue) &&
+        hasAction(ACTION_CANCEL)
+      ) {
+        this._setActionValueByCode(ACTION_CANCEL);
+        return;
+      }
       const ctx = getMrcReturnRoutingContext(
         this.business,
         this.mrcReturnHandlingOptionValue,
@@ -3922,16 +3930,39 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
     });
   }
 
+  _resolveMrcReturnFieldsForSubmit() {
+    let confirmation = this.mrcReturnCustomerConfirmationValue;
+    let handlingOption = this.mrcReturnHandlingOptionValue;
+    const panel = this._getMrcReturnPanelEl();
+    if (panel) {
+      if (typeof panel.getHandlingOptionValue === "function") {
+        const fromPanel = String(panel.getHandlingOptionValue() ?? STR_EMPTY).trim();
+        if (fromPanel) {
+          handlingOption = fromPanel;
+          this.mrcReturnHandlingOptionValue = fromPanel;
+        }
+      }
+      const fromConf = String(panel.customerConfirmationValue ?? STR_EMPTY).trim();
+      if (fromConf) {
+        confirmation = fromConf;
+        if (this.business) {
+          this.business.mrcCustomerConfirmationDraft = fromConf;
+        }
+      }
+    }
+    return { confirmation, handlingOption };
+  }
+
   _syncMrcReturnCaseFieldsBeforeSubmit() {
     if (!isMrcRl05Branch(this.business)) {
       return Promise.resolve();
     }
+    const { confirmation, handlingOption } = this._resolveMrcReturnFieldsForSubmit();
+    this._syncMrcReturnFieldsToRecordForm();
     const fields = { [ID_FIELD.fieldApiName]: this.recordId };
-    const confirmation = this.mrcReturnCustomerConfirmationValue;
     if (confirmation) {
       fields[FIELD_MRC_CUSTOMER_CONFIRMATION] = confirmation;
     }
-    const handlingOption = this.mrcReturnHandlingOptionValue;
     if (handlingOption) {
       fields[FIELD_MRC_HANDLING_OPTION] = handlingOption;
     }
@@ -3957,11 +3988,24 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
     //linhdev fix jira FECREDIT_CSM_2025_KH-1469-1474 — gap 2: lưu Redeemed Points trước record form submit
     this._syncPointsRedemptionFieldToRecordForm();
     this._syncMrcReturnFieldsToRecordForm();
-    return Promise.all([
+    const persistTasks = [
       this._syncMrcReturnCaseFieldsBeforeSubmit(),
       this._saveRemovePhoneDraftIfApplicable(),
       this._savePointsRedemptionDraftIfApplicable(),
-    ]);
+    ];
+    if (isMrcRl05Branch(this.business)) {
+      persistTasks.push(this._saveMrcReturnDeliveryIfApplicable());
+    }
+    return Promise.all(persistTasks).then((results) => {
+      if (!isMrcRl05Branch(this.business)) {
+        return results;
+      }
+      const deliveryResult = results[results.length - 1];
+      if (deliveryResult?.valid === false) {
+        return Promise.reject(deliveryResult);
+      }
+      return results;
+    });
   }
 
   /*Lấy element của form IPP Closure*/
@@ -4186,7 +4230,17 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
     // Dữ liệu địa chỉ đã được lưu vào Case DB khi User A nhấn Save.
     // Không gọi API tại đây — API sẽ được user xử lý gọi qua Process Action "Address Update".
 
-    await this._persistChildDataBeforeCaseRecordFormSubmit();
+    try {
+      await this._persistChildDataBeforeCaseRecordFormSubmit();
+    } catch (mrcPersistErr) {
+      const msgs = mrcPersistErr?.messages;
+      const message =
+        Array.isArray(msgs) && msgs.length > 0
+          ? msgs.join(", ")
+          : FEC_Error_Title;
+      this.showToast(FEC_Error_Title, message, "error");
+      return false;
+    }
     await this._submitFormsPromise();
     // DungLT — flush upload file trước các bước lưu khác khi Submit
     await this._uploadFecFileUploadCardsIfApplicable();
@@ -4218,6 +4272,9 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
     const closureSaveRes = await this._saveContractClosureIfApplicable();
     if (closureSaveRes && closureSaveRes.valid === false) {
       return false;
+    }
+    if (isMrcRl05Branch(this.business)) {
+      await this._syncMrcReturnCaseFieldsBeforeSubmit();
     }
     this._syncMrcDeliveryDraftFromCase();
     if (isMrcRl05Branch(this.business)) {
@@ -5491,6 +5548,9 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
   /** Refresh Auto Hold Case sau Submit (poll khi Queueable Mark NFU hoàn tất). */
   @api
   refreshAutoHoldCase() {
+    // void this._refreshHoldCaseAutoDisplay();
+    // const subprocess = this._getSubProcessContainerEl();
+    // subprocess?.refreshAutoHoldCase?.();
     const delays = [1500, 4000, 8000, 12000, 20000];
     delays.forEach((delayMs) => {
       // eslint-disable-next-line @lwc/lwc/no-async-operation
@@ -5741,6 +5801,21 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
 
     if (!shouldActivateMrcReturnRouting(this.business)) {
       this._mrcReturnStageChangeRoutingActive = false;
+      return Promise.resolve();
+    }
+
+    if (
+      isMrcReceivedConfirmation(this.mrcReturnCustomerConfirmationValue) &&
+      this.business?.routingActionlst?.length
+    ) {
+      this._mrcReturnStageChangeRoutingActive = false;
+      this._setActionValueByCode(ACTION_CANCEL);
+      this.business = {
+        ...this.business,
+        nextTeam: null,
+        nextQueue: null,
+      };
+      this.business = { ...this.business };
       return Promise.resolve();
     }
 
