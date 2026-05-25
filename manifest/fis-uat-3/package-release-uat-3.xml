@@ -118,6 +118,7 @@
         <members>FEC_CustomerAdditionalDataController</members>
         <members>FEC_ConstantCommon</members>
         <members>FEC_NotificationHistoryController</members>
+        <members>FEC_Notification</members>
         <members>FEC_CheckEligibleController</members>
         <members>FEC_CardEligibilityController</members>
         <members>FEC_CommonUltils</members>
@@ -188,6 +189,7 @@
 		<members>FEC_CaseAssignmentQueueRoleResolver</members>
         <members>FEC_CurrencyCodeLookup</members>
 		<members>FEC_HoldCaseInheritanceService</members>
+		<members>FEC_HoldCaseStage2DisplayService</members>
 		<members>FEC_UpdateTransferInfoRestService</members>
 		<members>FEC_NewAssignmentController</members>
 		<members>FEC_AutoHoldCaseQueueable</members>
@@ -203,6 +205,7 @@
         <members>FEC_CardClosureRefundController</members>
         <members>FEC_CardInfoController</members>
         <members>FEC_CaseManagerListService</members>
+        <members>FEC_CaseMasterDataHelper</members>
         <members>FEC_ContractClosureController</members>
         <members>FEC_CreateCSCaseService</members>
         <members>FEC_GetCSCaseStatusService</members>
@@ -234,6 +237,8 @@
         <members>FEC_VMXAUTHDETAILINQ</members>
         <members>FEC_UpdateCustomerAddress</members>
 		<members>FEC_NatureOfCaseUserGroupService</members>
+        <members>FEC_CustomerIntegrationService</members>
+        <members>FEC_LookupController</members>
         <name>ApexClass</name>
     </types>
 	<types>
@@ -847,6 +852,7 @@
         <members>fec_MrcReturnDupBanner</members>
         <members>fecMrcReturnCaseLogic</members>
         <members>fec_MainInfoLoanAccount</members>
+        <members>fec_ManualNotification</members>
         <members>fec_NotificationOverride</members>
         <members>fec_PaymentHistoryAcount</members>
         <members>fec_PinResetView</members>
@@ -1072,6 +1078,7 @@
 		<members>FEC_Points_Redemption_Confirm_Message</members>
 		<members>FEC_Points_Redemption_Confirm_Title</members>
 		<members>FEC_Confirm_Before_Submit</members>
+		<members>FEC_Channel_Config_Invalid_Selection</members>
 		<members>FEC_Channel_Config_Save_Success</members>
 		<members>FEC_Channel_Config_Save_Error</members>
 		<members>FEC_Search_Channel_Placeholder</members>
@@ -1266,6 +1273,9 @@
         <members>FEC_TransferCall_Field_CollAgent</members>
         <members>FEC_STOP_IMPACT_ALREADY_MARKED_MSG</members>
         <members>FEC_MSG_SUCCESS</members>
+        <members>FEC_MSG_HOLD_CASE_AUTO_FAIL_RETRY</members>
+        <members>FEC_MSG_HOLD_CASE_NOC_HAS_AUTO</members>
+        <members>FEC_MSG_HOLD_CASE_NOC_NO_AUTO</members>
         <members>FEC_MSG_ERROR</members>
         <members>FEC_Account_Contract_Status</members>
         <members>FEC_MRC_Return_Case_Info_Block_Title</members>
@@ -2015,6 +2025,7 @@
         <members>FEC_General_Assignment_Config__c</members>
         <members>FEC_General_Assignment__c</members>
         <members>FEC_Download_Report__c</members>
+        <members>FEC_Notification_Template_Channel__c</members>
         <name>CustomTab</name>
     </types>
     <types>
