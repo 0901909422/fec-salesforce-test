@@ -24,6 +24,7 @@
 	    <members>FEC_PinResetHandler</members>
 	    <members>FEC_GetSMSInfoFromITTelcoCallout</members>
 	    <members>FEC_NotificationHistoryController</members>
+	    <members>FEC_Notification</members>
 	    <members>FEC_NatureOfCaseTriggerHandler</members>
 	    <members>FEC_NocChannelConfigController</members>
 	    <members>FEC_GetCardSecInfo</members>
@@ -61,8 +62,9 @@
 		<members>FEC_NocRemovePhoneInheritanceHandler</members>
 		<members>FEC_NocRemovePhoneInheritanceHandlerTest</members>
 		<members>FEC_PaymentHistoryController</members>
-		<members>FEC_IPPConversionController</members>
-		<members>FEC_AssignmentRoutingActionHandler</members>
+	    <members>FEC_IPPConversionController</members>
+	    <members>FEC_LookupController</members>
+	    <members>FEC_AssignmentRoutingActionHandler</members>
 		<members>FEC_CurrencyCodeLookup</members>
 		<members>FEC_GetCardBasicInfo</members>
 		<members>FEC_GetCardFinancialTransactions</members>
@@ -239,6 +241,7 @@
         <members>fec_IPPDetails</members>
         <members>fecCaseAssignmentNewForm</members>
         <members>fec_ContractClosureForm</members>
+        <members>fec_ManualNotification</members>
         <members>fec_NotificationOverride</members>
         <members>fec_CaseBussinessScopedRoutingIntegration</members>
         <members>fec_ScopedStageChangeRouting</members>
@@ -702,6 +705,7 @@
 	<types>
 		<members>Batch_Case_Handling</members>
 		<members>FEC_Download_Report__c</members>
+		<members>FEC_Notification_Template_Channel__c</members>
         <name>CustomTab</name>
     </types>
 	<types>
