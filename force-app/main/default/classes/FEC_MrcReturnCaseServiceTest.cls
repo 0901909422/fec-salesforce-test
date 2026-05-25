@@ -60,7 +60,7 @@ private class FEC_MrcReturnCaseServiceTest {
     }
 
     @IsTest
-    static void buildUiContext_returnSubCode_hidesMrcLwc_showsConfirmationOnlyWhenCond2() {
+    static void buildUiContext_returnSubCode_hidesMrcLwc_dupCaseOnlyIsTh2() {
         Case c = new Case();
         FEC_MrcReturnCaseService.MrcRl05UiContext ctx = FEC_MrcReturnCaseService.buildUiContext(
             c,
@@ -74,6 +74,28 @@ private class FEC_MrcReturnCaseServiceTest {
         System.assertEquals(false, ctx.showCustomerConfirmation);
         System.assertEquals(true, ctx.showMrcDupBanner);
         System.assertEquals(true, ctx.dupCaseOnly);
+        System.assertEquals(false, ctx.meetsCondition2);
+        System.assertEquals(false, ctx.showDeliveryForm);
+    }
+
+    @IsTest
+    static void buildUiContext_returnSubCode_th1_cond1AndCond2() {
+        FEC_Customer_History__c ch = new FEC_Customer_History__c(
+            FEC_MRC_Status__c = 'TLDN',
+            FEC_Contract_Status__c = 'ACTIVE'
+        );
+        Case c = new Case(FEC_Account_or_Contract__r = ch);
+        FEC_MrcReturnCaseService.MrcRl05UiContext ctx = FEC_MrcReturnCaseService.buildUiContext(
+            c,
+            'RL05',
+            'RL05.02',
+            null,
+            true
+        );
+        System.assertEquals(true, ctx.showCustomerConfirmation);
+        System.assertEquals(true, ctx.showMrcDupBanner);
+        System.assertEquals(true, ctx.meetsCondition2);
+        System.assertEquals(false, ctx.dupCaseOnly);
     }
 
     @IsTest
@@ -92,5 +114,24 @@ private class FEC_MrcReturnCaseServiceTest {
         );
         System.assertEquals(true, ctx.showCustomerConfirmation);
         System.assertEquals(false, ctx.showMrcDupBanner);
+        System.assertEquals(true, ctx.meetsCondition2);
+        System.assertEquals(false, ctx.dupCaseOnly);
+    }
+
+    @IsTest
+    static void buildUiContext_returnSubCode_th4_noConditions() {
+        Case c = new Case();
+        FEC_MrcReturnCaseService.MrcRl05UiContext ctx = FEC_MrcReturnCaseService.buildUiContext(
+            c,
+            'RL05',
+            'RL05.02',
+            null,
+            false
+        );
+        System.assertEquals(false, ctx.showCustomerConfirmation);
+        System.assertEquals(false, ctx.showMrcDupBanner);
+        System.assertEquals(false, ctx.meetsCondition2);
+        System.assertEquals(false, ctx.dupCaseOnly);
+        System.assertEquals(true, ctx.showDeliveryForm);
     }
 }

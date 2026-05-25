@@ -9,6 +9,7 @@ import searchBulkCasesForExport from "@salesforce/apex/FEC_BatchCaseHandlingCont
 import getAttachmentCaseSetOptions from "@salesforce/apex/FEC_BatchCaseHandlingController.getAttachmentCaseSetOptions";
 import downloadAttachmentsZip from "@salesforce/apex/FEC_BatchCaseHandlingController.downloadAttachmentsZip";
 import getBusinessProcessExportRows from "@salesforce/apex/FEC_BatchCaseHandlingController.getBusinessProcessExportRows";
+import resolveExportTemplateMeta from "@salesforce/apex/FEC_BatchCaseHandlingController.resolveExportTemplateMeta";
 import getBulkExportAllowedBusinessProcessNames from "@salesforce/apex/FEC_BatchCaseHandlingController.getBulkExportAllowedBusinessProcessNames";
 import getBulkExportAllowedBusinessProcessCodes from "@salesforce/apex/FEC_BatchCaseHandlingController.getBulkExportAllowedBusinessProcessCodes";
 import getTemplateFileBase64 from "@salesforce/apex/FEC_BatchCaseHandlingController.getTemplateFileBase64";
@@ -1859,17 +1860,11 @@ export default class Fec_BatchCaseHandling extends LightningElement {
     }
     this.isLoading = false;
 
-    const templateMetaByCode = {};
+    this.bpTemplateMetaByCode = {};
     (Array.isArray(bpInfo) ? bpInfo : []).forEach((b) => {
-      if (b?.businessProcessCode) {
-        templateMetaByCode[b.businessProcessCode] = {
-          templateName: b.templateName || STR_EMPTY,
-          templateDownloadUrl: b.templateDownloadUrl || STR_EMPTY,
-          templateContentVersionId: b.templateContentVersionId || null
-        };
-      }
+      this.registerTemplateMeta(b);
     });
-    this.bpTemplateMetaByCode = templateMetaByCode;
+    await this.ensureExportTemplateMetaForRows(sourceRows);
 
     const keysFromSource = new Map();
     sourceRows.forEach((r) => {
@@ -1895,7 +1890,7 @@ export default class Fec_BatchCaseHandling extends LightningElement {
           rowKey: `bp-${code}`,
           businessProcessCode: code,
           businessProcessName: name,
-          templateName: (templateMetaByCode[code] || {}).templateName || STR_EMPTY,
+          templateName: (this.lookupBpTemplateMeta(code) || {}).templateName || STR_EMPTY,
           selected: true
         };
       });
@@ -1908,7 +1903,7 @@ export default class Fec_BatchCaseHandling extends LightningElement {
           rowKey: `bp-${code}`,
           businessProcessCode: code,
           businessProcessName: code,
-          templateName: (templateMetaByCode[code] || {}).templateName || code,
+          templateName: (this.lookupBpTemplateMeta(code) || {}).templateName || code,
           selected: true
         }));
     }
@@ -2067,8 +2062,112 @@ export default class Fec_BatchCaseHandling extends LightningElement {
     this.bpSubmitLoading = false;
   }
 
+  registerTemplateMeta(bpRow) {
+    if (!bpRow) {
+      return;
+    }
+    const meta = {
+      templateName: bpRow.templateName || STR_EMPTY,
+      templateDownloadUrl: bpRow.templateDownloadUrl || STR_EMPTY,
+      templateContentVersionId: bpRow.templateContentVersionId || null
+    };
+    if (!this.bpTemplateMetaByCode) {
+      this.bpTemplateMetaByCode = {};
+    }
+    const code = String(bpRow.businessProcessCode || STR_EMPTY).trim();
+    const name = String(bpRow.businessProcessName || STR_EMPTY).trim();
+    if (code) {
+      this.bpTemplateMetaByCode[code] = meta;
+      this.bpTemplateMetaByCode[code.toLowerCase()] = meta;
+    }
+    if (name) {
+      this.bpTemplateMetaByCode[name] = meta;
+      this.bpTemplateMetaByCode[name.toLowerCase()] = meta;
+    }
+  }
+
+  lookupBpTemplateMeta(bpKey) {
+    const map = this.bpTemplateMetaByCode || {};
+    if (!bpKey) {
+      return {};
+    }
+    const direct = map[bpKey];
+    if (direct) {
+      return direct;
+    }
+    const lower = String(bpKey).trim().toLowerCase();
+    return lower ? map[lower] || {} : {};
+  }
+
+  async ensureExportTemplateMetaForRows(sourceRows) {
+    const keys = new Map();
+    (Array.isArray(sourceRows) ? sourceRows : []).forEach((r) => {
+      const bpKey = this.rowBusinessProcessKey(r);
+      if (!bpKey) {
+        return;
+      }
+      if (!keys.has(bpKey)) {
+        const code = String(r.businessProcessCode || STR_EMPTY).trim();
+        const name = String(r.businessProcessName || STR_EMPTY).trim();
+        keys.set(bpKey, {
+          businessProcessCode: code || bpKey,
+          businessProcessName: name || bpKey
+        });
+      }
+    });
+    const entries = Array.from(keys.entries());
+    for (let i = 0; i < entries.length; i += 1) {
+      const bpKey = entries[i][0];
+      const pair = entries[i][1];
+      const existing = this.lookupBpTemplateMeta(bpKey);
+      if (this.resolveTemplateContentVersionId(existing)) {
+        continue;
+      }
+      try {
+        const resolved = await resolveExportTemplateMeta({
+          businessProcessCode: pair.businessProcessCode,
+          businessProcessName: pair.businessProcessName
+        });
+        this.registerTemplateMeta(resolved);
+        this.registerTemplateMeta({
+          businessProcessCode: bpKey,
+          businessProcessName: pair.businessProcessName,
+          templateName: resolved?.templateName,
+          templateDownloadUrl: resolved?.templateDownloadUrl,
+          templateContentVersionId: resolved?.templateContentVersionId
+        });
+      } catch (error) {
+        // keep export error path in buildExcelFileFromTemplate
+      }
+    }
+  }
+
+  resolveTemplateContentVersionId(templateMeta) {
+    if (!templateMeta) {
+      return null;
+    }
+    const direct = templateMeta.templateContentVersionId;
+    if (direct) {
+      return direct;
+    }
+    const url = String(templateMeta.templateDownloadUrl || STR_EMPTY).trim();
+    if (!url) {
+      return null;
+    }
+    const prefix = "/sfc/servlet.shepherd/version/download/";
+    const idx = url.indexOf(prefix);
+    if (idx < 0) {
+      return null;
+    }
+    const tail = url.substring(idx + prefix.length);
+    const id = tail.split(/[?&#]/)[0].trim();
+    return /^[a-zA-Z0-9]{15,18}$/.test(id) ? id : null;
+  }
+
   resolveTemplateGroupKey(templateMeta, businessProcessCode) {
-    const versionId = String(templateMeta?.templateContentVersionId || STR_EMPTY).trim();
+    const versionId = String(
+      this.resolveTemplateContentVersionId(templateMeta) || STR_EMPTY
+    ).trim();
     if (versionId) {
       return `cv:${versionId}`;
     }
@@ -2091,9 +2190,15 @@ export default class Fec_BatchCaseHandling extends LightningElement {
       this.showError(FEC_BCH_ExportToastTitle, MSG_BP_REQUIRED);
       return;
     }
-    const selectedSet = new Set(selectedBpCodes);
+    const selectedSet = new Set(
+      selectedBpCodes.map((c) => String(c || STR_EMPTY).trim().toLowerCase())
+    );
     const rows = (this.bpExportSourceRows || []).filter((r) =>
-      selectedSet.has(this.rowBusinessProcessKey(r))
+      selectedSet.has(
+        String(this.rowBusinessProcessKey(r) || STR_EMPTY)
+          .trim()
+          .toLowerCase()
+      )
     );
     if (!rows.length) {
       this.showInfo(FEC_BCH_ExportToastTitle, MSG_NO_DATA_EXPORT);
@@ -2103,7 +2208,7 @@ export default class Fec_BatchCaseHandling extends LightningElement {
     const groups = {};
     rows.forEach((r) => {
       const bp = this.rowBusinessProcessKey(r) || "Other";
-      const tmplMeta = this.bpTemplateMetaByCode[bp] || {};
+      const tmplMeta = this.lookupBpTemplateMeta(bp);
       const groupKey = this.resolveTemplateGroupKey(tmplMeta, bp);
       if (!groups[groupKey]) {
         groups[groupKey] = {
@@ -2118,6 +2223,7 @@ export default class Fec_BatchCaseHandling extends LightningElement {
     this.bpSubmitLoading = true;
     this.isLoading = true;
     try {
+      await this.ensureExportTemplateMetaForRows(rows);
       await this.ensureSheetJsLoaded();
       const filesPayload = [];
       const groupKeys = Object.keys(groups);
@@ -2129,11 +2235,13 @@ export default class Fec_BatchCaseHandling extends LightningElement {
           tmplMeta.templateName,
           fallbackBp
         );
+        const contentVersionId = this.resolveTemplateContentVersionId(tmplMeta);
         const file = await this.withTimeout(
           this.buildExcelFileFromTemplate(
             groupItem?.rows || [],
             fileName,
-            tmplMeta.templateContentVersionId
+            contentVersionId,
+            tmplMeta
           ),
           EXCEL_FILE_TIMEOUT_MS,
           EXCEL_FILE_TIMEOUT_MESSAGE
@@ -2806,14 +2914,22 @@ export default class Fec_BatchCaseHandling extends LightningElement {
     return bytes.buffer;
   }
 
-  async buildExcelFileFromTemplate(rows, fileName, contentVersionId) {
+  async buildExcelFileFromTemplate(rows, fileName, contentVersionId, templateMeta) {
     if (!contentVersionId) {
-      throw new Error(FEC_BCH_CannotCreateExportFile);
+      const templateName = String(templateMeta?.templateName || STR_EMPTY).trim();
+      const hasUrl = !!String(templateMeta?.templateDownloadUrl || STR_EMPTY).trim();
+      throw new Error(
+        `[NO_TEMPLATE_CV] Missing template ContentVersion Id` +
+          (templateName ? ` (template=${templateName})` : STR_EMPTY) +
+          (hasUrl ? "" : "; no template file on FEC_Template_Import__c")
+      );
     }
     await this.ensureSheetJsLoaded();
     const base64 = await getTemplateFileBase64({ contentVersionId });
     if (!base64) {
-      throw new Error(FEC_BCH_CannotCreateExportFile);
+      throw new Error(
+        `[TEMPLATE_READ_FAILED] contentVersionId=${contentVersionId}`
+      );
     }
     const templateWorkbook = window.XLSX.read(this.base64ToArrayBuffer(base64), {
       type: "array",
@@ -2859,7 +2975,7 @@ export default class Fec_BatchCaseHandling extends LightningElement {
         mappedColumnIndexes.push(i);
       }
     }
-    const outBase64 = await exportTemplateWorkbook({
+    const exportResult = await exportTemplateWorkbook({
       requestJson: JSON.stringify({
         contentVersionId,
         headerRowIndex,
@@ -2867,10 +2983,13 @@ export default class Fec_BatchCaseHandling extends LightningElement {
         dataRows
       })
     });
-    if (!outBase64) {
-      throw new Error(FEC_BCH_CannotCreateExportFile);
+    if (!exportResult?.success || !exportResult?.base64Body) {
+      const code = exportResult?.errorCode || "EXPORT_FAILED";
+      const detail =
+        exportResult?.errorMessage || FEC_BCH_CannotCreateExportFile;
+      throw new Error(`[${code}] ${detail}`);
     }
-    return { fileName, base64Body: outBase64 };
+    return { fileName, base64Body: exportResult.base64Body };
   }
 
   async refreshRows() {

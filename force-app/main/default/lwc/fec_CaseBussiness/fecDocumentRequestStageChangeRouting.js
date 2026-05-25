@@ -69,13 +69,20 @@ export function resolveDocumentRequestStageChangeTeam(subCodeCode) {
   return SUB_CODE_TEAM_MAP[subCodeCode] ?? null;
 }
 
-export function isDocumentRequestStageChangeRoutingSubCode(
+/** Sub-code có mapping team (dùng để hiện section Routing Action). */
+export function isDocumentRequestRoutingSubCode(subCodeCode) {
+  return resolveDocumentRequestStageChangeTeam(subCodeCode) != null;
+}
+
+/** RL04.02/RL04.03: Route To chỉ khi delivery + hình thức văn bản đúng điều kiện. */
+export function isDocumentRequestDeliveryEligible(
   subCodeCode,
   deliveryOptionRaw,
   documentTypeRaw
 ) {
-  const team = resolveDocumentRequestStageChangeTeam(subCodeCode);
-  if (!team) return false;
+  if (!isDocumentRequestRoutingSubCode(subCodeCode)) {
+    return false;
+  }
   if (CONDITIONAL_DELIVERY_SUB_CODES.has(subCodeCode)) {
     return matchesDocumentRequestDeliveryCondition(
       deliveryOptionRaw,
@@ -83,6 +90,18 @@ export function isDocumentRequestStageChangeRoutingSubCode(
     );
   }
   return true;
+}
+
+export function isDocumentRequestStageChangeRoutingSubCode(
+  subCodeCode,
+  deliveryOptionRaw,
+  documentTypeRaw
+) {
+  return isDocumentRequestDeliveryEligible(
+    subCodeCode,
+    deliveryOptionRaw,
+    documentTypeRaw
+  );
 }
 
 /**
@@ -114,7 +133,8 @@ export function getDocumentRequestRoutingContext(business) {
     getBusinessFieldValue(business, OBJ_CASE, FIELD_DOCUMENT_TYPE);
 
   const team = resolveDocumentRequestStageChangeTeam(subCodeCode);
-  const eligible = isDocumentRequestStageChangeRoutingSubCode(
+  const subCodeSupported = isDocumentRequestRoutingSubCode(subCodeCode);
+  const deliveryEligible = isDocumentRequestDeliveryEligible(
     subCodeCode,
     deliveryOption,
     documentType
@@ -125,6 +145,8 @@ export function getDocumentRequestRoutingContext(business) {
     deliveryOption,
     documentType,
     team,
-    eligible,
+    subCodeSupported,
+    deliveryEligible,
+    eligible: deliveryEligible,
   };
 }

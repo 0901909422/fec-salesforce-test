@@ -20,6 +20,17 @@ public without sharing class FEC_BatchCaseHandlingImportQueueable implements Que
     public void execute(QueueableContext context) {
         List<FEC_BatchCaseHandlingImportRow> allRows = parseRows(rowsJson);
         try {
+            if (
+                batchRecordId != null &&
+                FEC_BatchCaseHandlingImportService.isBatchImportProcessingExpired(batchRecordId)
+            ) {
+                FEC_BatchCaseHandlingImportService.failBatchImportRecord(
+                    batchRecordId,
+                    FEC_BatchCaseHandlingImportService.resolveImportProcessingTimeoutReason(),
+                    allRows
+                );
+                return;
+            }
             if (batchRecordId == null || allRows == null || allRows.isEmpty()) {
                 FEC_BatchCaseHandlingImportService.finalizeBatchImportRecord(batchRecordId, allRows);
                 return;
