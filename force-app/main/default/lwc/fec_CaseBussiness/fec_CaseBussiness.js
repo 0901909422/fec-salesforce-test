@@ -791,7 +791,7 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
   }
 
   get isStage1() {
-    return (this.currentStageName || '').includes('Stage 1');
+    return !this.currentStageName || this.currentStageName.includes('Stage 1');
   }
 
   @wire(MessageContext)
