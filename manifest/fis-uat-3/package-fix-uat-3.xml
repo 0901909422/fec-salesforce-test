@@ -91,6 +91,7 @@
 		<members>FEC_MrcReturnCaseService</members>
 		<members>FEC_MrcReturnCaseServiceTest</members>
 		<members>FEC_CreateCSCaseService</members>
+		<members>FEC_CreateInteractionGenesys</members>
 		<members>FEC_GsrStage1RevertMasterDataHelper</members>
 		<members>FEC_AssignAutoDistribSched</members>
 		<members>FEC_CaseAssignmentApplyOwnerBatch</members>
@@ -462,6 +463,7 @@
 		<members>FEC_Title_Context_Report</members>
 		<members>FEC_BCH_ResultHdr_Errors</members>
 		<members>FEC_BCH_ResultHdr_Status</members>
+		<members>FEC_Channel_Config_Invalid_Selection</members>
 		<name>CustomLabel</name>
 	</types>
     <types>
