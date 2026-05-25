@@ -3844,16 +3844,39 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
     });
   }
 
+  _resolveMrcReturnFieldsForSubmit() {
+    let confirmation = this.mrcReturnCustomerConfirmationValue;
+    let handlingOption = this.mrcReturnHandlingOptionValue;
+    const panel = this._getMrcReturnPanelEl();
+    if (panel) {
+      if (typeof panel.getHandlingOptionValue === "function") {
+        const fromPanel = String(panel.getHandlingOptionValue() ?? STR_EMPTY).trim();
+        if (fromPanel) {
+          handlingOption = fromPanel;
+          this.mrcReturnHandlingOptionValue = fromPanel;
+        }
+      }
+      const fromConf = String(panel.customerConfirmationValue ?? STR_EMPTY).trim();
+      if (fromConf) {
+        confirmation = fromConf;
+        if (this.business) {
+          this.business.mrcCustomerConfirmationDraft = fromConf;
+        }
+      }
+    }
+    return { confirmation, handlingOption };
+  }
+
   _syncMrcReturnCaseFieldsBeforeSubmit() {
     if (!isMrcRl05Branch(this.business)) {
       return Promise.resolve();
     }
+    const { confirmation, handlingOption } = this._resolveMrcReturnFieldsForSubmit();
+    this._syncMrcReturnFieldsToRecordForm();
     const fields = { [ID_FIELD.fieldApiName]: this.recordId };
-    const confirmation = this.mrcReturnCustomerConfirmationValue;
     if (confirmation) {
       fields[FIELD_MRC_CUSTOMER_CONFIRMATION] = confirmation;
     }
-    const handlingOption = this.mrcReturnHandlingOptionValue;
     if (handlingOption) {
       fields[FIELD_MRC_HANDLING_OPTION] = handlingOption;
     }
@@ -3879,11 +3902,24 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
     //linhdev fix jira FECREDIT_CSM_2025_KH-1469-1474 — gap 2: lưu Redeemed Points trước record form submit
     this._syncPointsRedemptionFieldToRecordForm();
     this._syncMrcReturnFieldsToRecordForm();
-    return Promise.all([
+    const persistTasks = [
       this._syncMrcReturnCaseFieldsBeforeSubmit(),
       this._saveRemovePhoneDraftIfApplicable(),
       this._savePointsRedemptionDraftIfApplicable(),
-    ]);
+    ];
+    if (isMrcRl05Branch(this.business)) {
+      persistTasks.push(this._saveMrcReturnDeliveryIfApplicable());
+    }
+    return Promise.all(persistTasks).then((results) => {
+      if (!isMrcRl05Branch(this.business)) {
+        return results;
+      }
+      const deliveryResult = results[results.length - 1];
+      if (deliveryResult?.valid === false) {
+        return Promise.reject(deliveryResult);
+      }
+      return results;
+    });
   }
 
   /*Lấy element của form IPP Closure*/
@@ -4108,7 +4144,17 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
     // Dữ liệu địa chỉ đã được lưu vào Case DB khi User A nhấn Save.
     // Không gọi API tại đây — API sẽ được user xử lý gọi qua Process Action "Address Update".
 
-    await this._persistChildDataBeforeCaseRecordFormSubmit();
+    try {
+      await this._persistChildDataBeforeCaseRecordFormSubmit();
+    } catch (mrcPersistErr) {
+      const msgs = mrcPersistErr?.messages;
+      const message =
+        Array.isArray(msgs) && msgs.length > 0
+          ? msgs.join(", ")
+          : FEC_Error_Title;
+      this.showToast(FEC_Error_Title, message, "error");
+      return false;
+    }
     await this._submitFormsPromise();
     // DungLT — flush upload file trước các bước lưu khác khi Submit
     await this._uploadFecFileUploadCardsIfApplicable();
@@ -4140,6 +4186,9 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
     const closureSaveRes = await this._saveContractClosureIfApplicable();
     if (closureSaveRes && closureSaveRes.valid === false) {
       return false;
+    }
+    if (isMrcRl05Branch(this.business)) {
+      await this._syncMrcReturnCaseFieldsBeforeSubmit();
     }
     this._syncMrcDeliveryDraftFromCase();
     if (isMrcRl05Branch(this.business)) {
@@ -5497,9 +5546,10 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
 
     const routeToActionId = this._resolveRouteToActionId();
     const teamUserGroup = ctx.teamCode || ctx.team;
+    const teamDisplay = ctx.teamCode || ctx.team;
     this.business = {
       ...this.business,
-      nextTeam: ctx.team,
+      nextTeam: teamDisplay,
       nextQueue: priorQueue?.value ? priorQueue : this.business?.nextQueue,
     };
     this._setActionValueByCode(ACTION_ROUTE_TO);
@@ -5515,7 +5565,7 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
         if (res?.nextQueueId) {
           this.business = {
             ...this.business,
-            nextTeam: res.nextTeam || ctx.team,
+            nextTeam: res.nextTeam || teamDisplay,
             nextQueue: {
               label: res.nextQueueLabel || STR_EMPTY,
               value: res.nextQueueId,
@@ -5526,12 +5576,12 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
           const fallbackQueue =
             priorQueue &&
             (priorQueue.value || priorQueue.label) &&
-            (!priorTeam || priorTeam === ctx.team)
+            (!priorTeam || priorTeam === teamDisplay)
               ? priorQueue
               : null;
           this.business = {
             ...this.business,
-            nextTeam: ctx.team || res?.nextTeam || priorTeam,
+            nextTeam: teamDisplay || res?.nextTeam || priorTeam,
             nextQueue: fallbackQueue,
           };
           if (fallbackQueue) {
@@ -5552,7 +5602,7 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
         console.error("[MrcReturnStageChangeRouting]", JSON.stringify(err));
         this.business = {
           ...this.business,
-          nextTeam: ctx.team || priorTeam,
+          nextTeam: teamDisplay || priorTeam,
           nextQueue: priorQueue?.value ? priorQueue : null,
         };
         this.business = { ...this.business };

@@ -49,8 +49,8 @@ public without sharing class FEC_DocumentRequestRoutingService {
     }
 
     result.nextTeam = String.isNotBlank(sc.FEC_Team_User_Group__c)
-      ? mapTeamDisplayLabel(sc.FEC_Team_User_Group__c)
-      : mapTeamDisplayLabel(teamUserGroup);
+      ? sc.FEC_Team_User_Group__c.trim()
+      : String.isNotBlank(teamUserGroup) ? teamUserGroup.trim() : null;
     Group nextQueue = resolveQueueFromStageChangeValue(sc.FEC_Next_Queue__c);
     if (nextQueue != null) {
       result.nextQueueLabel = nextQueue.Name;
@@ -139,26 +139,6 @@ public without sharing class FEC_DocumentRequestRoutingService {
       LIMIT 1
     ];
     return fallbackRows.isEmpty() ? null : fallbackRows[0];
-  }
-
-  private static String mapTeamDisplayLabel(String teamCode) {
-    if (String.isBlank(teamCode)) {
-      return teamCode;
-    }
-    String normalized = teamCode.trim().toUpperCase();
-    if (normalized == 'CP') {
-      return 'Contract Processing';
-    }
-    if (normalized == 'PM') {
-      return 'Payment';
-    }
-    if (normalized == 'SP') {
-      return 'CS Support';
-    }
-    if (normalized == 'F2F') {
-      return 'CS Office Based';
-    }
-    return teamCode;
   }
 
   private static Group resolveQueueFromStageChangeValue(String nextQueueValue) {

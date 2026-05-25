@@ -542,7 +542,7 @@ public without sharing class FEC_MrcReturnCaseService {
                 false
             );
         }
-        if (ctx.showMrcDupBanner == true) {
+        if (ctx.isReturnSubCode == true) {
             injectCaseInformationField(
                 caseInfo,
                 selectedCase,
