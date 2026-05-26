@@ -255,11 +255,10 @@ export default class Fec_holdCaseAuto extends LightningElement {
   get hasStage2InfoMessage() {
     return (
       this._isStage2Override &&
-      !!this.stage2InfoMessage &&
       (this.stage2DisplayMode === MODE_ERROR_RETRY_INFO_NO_AUTO ||
         this.stage2DisplayMode === MODE_INFO_NO_AUTO_ONLY ||
-        this.stage2DisplayMode === MODE_INFO_HAS_AUTO_BUTTON ||
-        this.stage2DisplayMode === MODE_ERROR_RETRY)
+        this.stage2DisplayMode === MODE_INFO_HAS_AUTO_BUTTON) &&
+      !!this.stage2InfoMessage
     );
   }
 
@@ -410,10 +409,7 @@ export default class Fec_holdCaseAuto extends LightningElement {
     if (this.isCaseClosed || this.isMaxHoldCaseRetriesReached) {
       return false;
     }
-    if (
-      this.stage2DisplayMode === MODE_INFO_NO_AUTO_ONLY ||
-      this.stage2DisplayMode === MODE_ERROR_RETRY_INFO_NO_AUTO
-    ) {
+    if (this.stage2DisplayMode === MODE_INFO_NO_AUTO_ONLY) {
       return false;
     }
     if (this._inHoldCaseRetryFlow) {
@@ -421,7 +417,8 @@ export default class Fec_holdCaseAuto extends LightningElement {
     }
     if (
       this.stage2DisplayMode === MODE_INFO_HAS_AUTO_BUTTON ||
-      this.stage2DisplayMode === MODE_ERROR_RETRY
+      this.stage2DisplayMode === MODE_ERROR_RETRY ||
+      this.stage2DisplayMode === MODE_ERROR_RETRY_INFO_NO_AUTO
     ) {
       return true;
     }
