@@ -79,7 +79,7 @@ public with sharing class FEC_CheckEligibleController {
     }
 
     private static String resolveNationalIdFromSearchResult(String searchResultNationalId) {
-        List<String> parts = parseSearchResultNationalIds(searchResultNationalId);
+        List<String> parts = FEC_CommonUltils.parseSearchResultNationalIds(searchResultNationalId);
         if (parts.isEmpty()) {
             return null;
         }
@@ -89,8 +89,8 @@ public with sharing class FEC_CheckEligibleController {
 
         String nationalId1 = parts[0];
         String nationalId2 = parts[1];
-        String format1 = getNationalIdFormat(nationalId1);
-        String format2 = getNationalIdFormat(nationalId2);
+        String format1 = FEC_CommonUltils.getNationalIdFormat(nationalId1);
+        String format2 = FEC_CommonUltils.getNationalIdFormat(nationalId2);
 
         if (format1 != format2) {
             if (isCccd(nationalId1)) {
@@ -102,37 +102,6 @@ public with sharing class FEC_CheckEligibleController {
             return nationalId1;
         }
         return nationalId1;
-    }
-
-    private static List<String> parseSearchResultNationalIds(String raw) {
-        List<String> nationalIds = new List<String>();
-        if (String.isBlank(raw)) {
-            return nationalIds;
-        }
-        for (String part : raw.split('[,;\\n\\r]+')) {
-            String trimmed = part != null ? part.trim() : null;
-            if (String.isNotBlank(trimmed)) {
-                nationalIds.add(trimmed);
-            }
-        }
-        return nationalIds;
-    }
-
-    private static String getNationalIdFormat(String value) {
-        if (String.isBlank(value)) {
-            return 'OTHER';
-        }
-        String t = value.trim();
-        if (Pattern.matches('^\\d{12}$', t)) {
-            return 'CCCD';
-        }
-        if (Pattern.matches('^\\d{9}$', t)) {
-            return 'CMND';
-        }
-        if (Pattern.matches('^[A-Z]\\d{7}$', t)) {
-            return 'PASSPORT';
-        }
-        return 'OTHER';
     }
 
     private static Boolean isCccd(String value) {

@@ -943,4 +943,9 @@ public with sharing class FEC_ConstantCommon {
     };
     public static final String FEC_SUB_CATEGORY = 'FEC_Sub_Category__c';
     public static final String FEC_SUB_CODE = 'FEC_Sub_Code__c';
+    public static final String INPUT_SEPARATOR_REGEX ='[,;\\n\\r]+';
+    public static final String CC_CD ='CCCD';
+    public static final String CM_ND ='CMND';
+    public static final String PASS_PORT ='PASSPORT';
+    
 }

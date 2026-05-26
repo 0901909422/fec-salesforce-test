@@ -1503,4 +1503,35 @@ public with sharing class FEC_CommonUltils {
     }
     return input.replaceAll('\\W+', '').trim();
   }
+
+  public static String getNationalIdFormat(String value) {
+    if (String.isBlank(value)) {
+        return FEC_ConstantCommon.TEAM_OTHER;
+    }
+    String t = value.trim();
+    if (Pattern.matches('^\\d{12}$', t)) {
+        return FEC_ConstantCommon.CC_CD;
+    }
+    if (Pattern.matches('^\\d{9}$', t)) {
+        return FEC_ConstantCommon.CM_ND;
+    }
+    if (Pattern.matches('^[A-Z]\\d{7}$', t)) {
+        return FEC_ConstantCommon.PASS_PORT;
+    }
+    return FEC_ConstantCommon.TEAM_OTHER;
+  }
+
+  public static List<String> parseSearchResultNationalIds(String raw) {
+        List<String> nationalIds = new List<String>();
+        if (String.isBlank(raw)) {
+            return nationalIds;
+        }
+        for (String part : raw.split(FEC_ConstantCommon.INPUT_SEPARATOR_REGEX)) {
+            String trimmed = part != null ? part.trim() : null;
+            if (String.isNotBlank(trimmed)) {
+                nationalIds.add(trimmed);
+            }
+        }
+        return nationalIds;
+    }
 }
