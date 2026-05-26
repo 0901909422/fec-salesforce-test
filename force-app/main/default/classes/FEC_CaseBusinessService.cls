@@ -4667,6 +4667,10 @@ public without sharing class FEC_CaseBusinessService {
         c.Status = FEC_ConstantCommon.CASE_STATUS_PENDING;
         registerSkipOwnerChangeRoutingHistory(c.Id);
         update c;
+      } else {
+          throw new CaseBusinessServiceException(
+            System.Label.FEC_MSG_Recall_Action_Not_Allowed
+          );
       }
     } catch (Exception e) {
       // Log lỗi hệ thống
