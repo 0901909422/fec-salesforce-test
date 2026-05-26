@@ -6,6 +6,9 @@
  * FEC_User_Role__c, thời điểm CreatedDate — nối bằng khoảng trắng giữa các phần.
  */
 public without sharing class FEC_CaseRemarksRollupService {
+  // SOQL 101: cache/dedupe theo transaction, tránh query lặp khi submit NOC bulk.
+  private static Set<Id> txnRemarkRollupDoneCaseIds = new Set<Id>();
+
   @TestVisible
   private static final Integer BUCKET_1_MAX = 256;
   @TestVisible
@@ -29,6 +32,17 @@ public without sharing class FEC_CaseRemarksRollupService {
       return;
     }
 
+    Set<Id> pendingCaseIds = new Set<Id>();
+    for (Id caseId : caseIds) {
+      if (caseId != null && !txnRemarkRollupDoneCaseIds.contains(caseId)) {
+        pendingCaseIds.add(caseId);
+      }
+    }
+    // SOQL 101: cache/dedupe theo transaction, tránh query lặp khi submit NOC bulk.
+    if (pendingCaseIds.isEmpty()) {
+      return;
+    }
+
     List<FEC_Case_Remarks__c> remarks = [
       SELECT
         Id,
@@ -40,18 +54,18 @@ public without sharing class FEC_CaseRemarksRollupService {
         CreatedBy.Email,
         CreatedBy.Username
       FROM FEC_Case_Remarks__c
-      WHERE FEC_Case__c IN :caseIds
+      WHERE FEC_Case__c IN :pendingCaseIds
       ORDER BY CreatedDate ASC, Id ASC
     ];
 
     Map<Id, Case> caseMap = new Map<Id, Case>([
       SELECT Id, FEC_Case_Status_History__c
       FROM Case
-      WHERE Id IN :caseIds
+      WHERE Id IN :pendingCaseIds
     ]);
 
     Map<Id, List<FEC_Case_Remarks__c>> byCase = new Map<Id, List<FEC_Case_Remarks__c>>();
-    for (Id cid : caseIds) {
+    for (Id cid : pendingCaseIds) {
       byCase.put(cid, new List<FEC_Case_Remarks__c>());
     }
     for (FEC_Case_Remarks__c r : remarks) {
@@ -61,7 +75,7 @@ public without sharing class FEC_CaseRemarksRollupService {
     }
 
     List<Case> toUpdate = new List<Case>();
-    for (Id caseId : caseIds) {
+    for (Id caseId : pendingCaseIds) {
       List<FEC_Case_Remarks__c> rowsForCase = byCase.get(caseId);
       List<String> lines = formatNumberedLines(rowsForCase);
       BucketPack pack = packLines(lines);
@@ -104,6 +118,8 @@ public without sharing class FEC_CaseRemarksRollupService {
       } finally {
         FEC_CaseTriggerHandler.isExecuting = false;
       }
+      // SOQL 101: cache/dedupe theo transaction, tránh query lặp khi submit NOC bulk.
+      txnRemarkRollupDoneCaseIds.addAll(pendingCaseIds);
     }
   }
 
