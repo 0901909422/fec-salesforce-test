@@ -1522,4 +1522,11 @@ public with sharing class FEC_CommonUltils {
     Double rounded = Math.ceil(doubledVal) * 1000.0;
     return Decimal.valueOf(rounded);
   }
+
+  public static String cleanNonWordCharacters(String input) {
+    if (String.isBlank(input)) {
+      return input;
+    }
+    return input.replaceAll('\\W+', '').trim();
+  }
 }
