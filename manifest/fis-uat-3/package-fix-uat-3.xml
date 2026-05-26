@@ -686,6 +686,7 @@
 		<name>Layout</name>
 	</types>
     <types>
+		<members>FEC_Case_Information_Edit</members>
 		<members>FEC_Case_NOC</members>
 		<members>FEC_DoNotBother</members>
         <name>LightningMessageChannel</name>
