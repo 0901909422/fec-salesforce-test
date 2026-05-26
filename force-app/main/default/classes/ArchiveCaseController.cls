@@ -140,7 +140,7 @@ public without sharing class ArchiveCaseController {
         String resStatusCode = '';
         String serviceName = label.TECH_API_GET_ARCHIVE_DETAIL_CASE;
         String attrString = 'attributes';
-        String s3PatchPrefix = 'fec-integration-s3/';
+        String s3PatchPrefix = label.TECH_ARCHIVE_S3_PATCH;
         String s3Patch = archiveCaseIns.s3_path__c.containsIgnoreCase(s3PatchPrefix) 
                             ? archiveCaseIns.s3_path__c.substringAfter(s3PatchPrefix) 
                             : archiveCaseIns.s3_path__c;
