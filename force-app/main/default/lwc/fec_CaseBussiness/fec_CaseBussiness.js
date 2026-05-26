@@ -30,6 +30,7 @@ import USER_GROUP_FIELD from "@salesforce/schema/User.FEC_User_Group__c";
 import ID_FIELD from "@salesforce/schema/Case.Id";
 // PhuongNT add field FEC_Stage_Name__c
 import STAGE_NAME_FIELD from "@salesforce/schema/Case.FEC_Stage_Name__c";
+import CASE_CURRENT_STAGE_USER_GROUP_FIELD from "@salesforce/schema/Case.FEC_Current_Case_Stage__r.FEC_User_Group__c";
 import {
   mask,
   maskValue,
@@ -138,6 +139,7 @@ import {
   resolveRoutingActionSelectEl,
   validateScopedRoutingSection,
   trySubmitScopedRouteTo,
+  computeRdPaymentScopedRouteToLocked,
 } from "c/fec_CaseBussinessScopedRoutingIntegration";
 //PhongBT 14/05/26: Document Request — save PDF to Case
 import savePdfToCase from "@salesforce/apex/FEC_ClientPDFService.savePdfToCase";
@@ -817,6 +819,8 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
   last4Digit;
   isHiddenLwc = false;
   currentStageName;
+  /** FEC_Case_Stage__c.FEC_User_Group__c — dùng khóa Route to Team chỉ khi stage = PM. */
+  _currentStageUserGroup;
 
   @wire(getRecord, { recordId: USER_ID, fields: [USER_GROUP_FIELD] })
   wiredUser({ error, data }) {
@@ -827,11 +831,18 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
     }
   }
 
-  // PhuongNT add get Case data
-  @wire(getRecord, { recordId: '$recordId', fields: [STAGE_NAME_FIELD] })
+  // PhuongNT add get Case data + User Group stage hiện tại (khóa Route to Team khi PM)
+  @wire(getRecord, {
+    recordId: "$recordId",
+    fields: [STAGE_NAME_FIELD, CASE_CURRENT_STAGE_USER_GROUP_FIELD],
+  })
   wiredCase({ error, data }) {
     if (data) {
       this.currentStageName = getFieldValue(data, STAGE_NAME_FIELD);
+      this._currentStageUserGroup = getFieldValue(
+        data,
+        CASE_CURRENT_STAGE_USER_GROUP_FIELD,
+      );
     } else if (error) {
       console.error("Get Case record error:", error);
     }
@@ -6514,24 +6525,12 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
     return this.business?.code;
   }
 
-  /** RD Payment Stage 2+: assessment đã chọn → khóa combobox Team (read-only từ DB hoặc 'default'). */
+  /** RD Payment Stage 2+: khóa combobox Team chỉ khi stage hiện tại = PM. */
   get rdPaymentScopedRouteToLocked() {
     if (isRl0502RdPaymentRouteToLocked(this)) {
       return true;
     }
-    if (!shouldPreferScopedRoutingFromStage2(this)) {
-      return false;
-    }
-    const assessmentVal = this._getCaseFieldValue(FIELD_RD_PAYMENT_CONTRACT_ASSESSMENT);
-    if (!assessmentVal || assessmentVal === STR_EMPTY) {
-      return false;
-    }
-    const picklistOptions =
-      this.business?.picklistOptionsMap?.Case?.[FIELD_RD_PAYMENT_CONTRACT_ASSESSMENT];
-    return (
-      !!getRdPaymentScopedStageTeam(assessmentVal, picklistOptions) ||
-      !!this.business?.nextTeam
-    );
+    return computeRdPaymentScopedRouteToLocked(this);
   }
 
   get showScopedStageChangeRoutingSection() {
