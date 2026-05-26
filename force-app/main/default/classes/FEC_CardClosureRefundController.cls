@@ -341,16 +341,20 @@ public without sharing class FEC_CardClosureRefundController {
             FEC_CardLockUnLockCallout.logApiResponse();
 
             dto.transId = transId;
-            dto.success = FEC_CardLockUnLockCallout.isSuccess(response);
+            Boolean lockApiSuccess = FEC_CardLockUnLockCallout.isSuccess(response);
             dto.code = response != null && response.Sys != null ? response.Sys.Code : null;
             dto.description = response != null && response.Sys != null ? response.Sys.Description : null;
             dto.errorMessage = response != null ? response.errorMessage : null;
+            if (!lockApiSuccess && String.isBlank(dto.errorMessage) && String.isNotBlank(dto.description)) {
+                dto.errorMessage = dto.description;
+            }
 
-            // Scenario 1 & 2: after API 57 success, call API 91 VMX_ACCT_BLKCD_UPD_EMEA
-            if (dto.success && funcCode == FUNC_BLOCK && callAccountBlkcdApi) {
+            // Scenario 1 & 2: API 91 VMX_ACCT_BLKCD_UPD_EMEA (always invoked for Block; not gated on API 57 success)
+            Boolean vmxApiSuccess = true;
+            if (funcCode == FUNC_BLOCK && callAccountBlkcdApi) {
                 String vmxCardNbr = resolveVmxCardNbr(customerHistory, accountNumber);
                 if (String.isBlank(vmxCardNbr)) {
-                    dto.success = false;
+                    vmxApiSuccess = false;
                     dto.errorMessage = String.format(System.Label.FEC_MSG_Param_Required, new List<String>{ 'CARD_NBR' });
                 } else {
                     try {
@@ -358,19 +362,25 @@ public without sharing class FEC_CardClosureRefundController {
                             FEC_VmxAcctBlkcdUpdEmeaCallout.buildDefaultInput(vmxCardNbr);
                         FEC_VmxAcctBlkcdUpdEmeaCallout.BlkcdUpdResult vmxResult =
                             FEC_VmxAcctBlkcdUpdEmeaCallout.executeUpdateAccountBlockCode(vmxInput);
-                        if (!FEC_VmxAcctBlkcdUpdEmeaCallout.isBlkcdUpdSuccess(vmxResult)) {
-                            dto.success = false;
+                        vmxApiSuccess = FEC_VmxAcctBlkcdUpdEmeaCallout.isBlkcdUpdSuccess(vmxResult);
+                        if (!vmxApiSuccess) {
                             dto.errorMessage = String.isNotBlank(vmxResult?.responseDesc)
                                 ? vmxResult.responseDesc
                                 : System.Label.FEC_MSG_Card_Block_Failed;
                         }
                     } catch (Exception vmxEx) {
-                        dto.success = false;
+                        vmxApiSuccess = false;
                         dto.errorMessage = System.Label.FEC_MSG_Card_Block_Failed;
                     } finally {
                         FEC_VmxAcctBlkcdUpdEmeaCallout.logApiResponse();
                     }
                 }
+            }
+
+            if (funcCode == FUNC_BLOCK && callAccountBlkcdApi) {
+                dto.success = lockApiSuccess && vmxApiSuccess;
+            } else {
+                dto.success = lockApiSuccess;
             }
 
             if (dto.success && funcCode == FUNC_BLOCK) {
