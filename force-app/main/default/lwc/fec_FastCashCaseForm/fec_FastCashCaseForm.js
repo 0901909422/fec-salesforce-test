@@ -11,6 +11,7 @@ import getCaseFastCashState from "@salesforce/apex/FEC_FastCashCaseController.ge
 import checkFastCashEligibility from "@salesforce/apex/FEC_FastCashCaseController.checkFastCashEligibility";
 import saveFastCashCaseAmounts from "@salesforce/apex/FEC_FastCashCaseController.saveFastCashCaseAmounts";
 import finalizeFastCashOnSubmit from "@salesforce/apex/FEC_FastCashCaseController.finalizeFastCashOnSubmit";
+import prepareFastCashBlockContext from "@salesforce/apex/FEC_FastCashCaseController.prepareFastCashBlockContext";
 import executeFastCashBlock from "@salesforce/apex/FEC_FastCashCaseController.executeFastCashBlock";
 
 import FEC_LBL_Fast_Cash_Error_Code from "@salesforce/label/c.FEC_LBL_Fast_Cash_Error_Code";
@@ -829,8 +830,24 @@ export default class Fec_FastCashCaseForm extends NavigationMixin(LightningEleme
         this.blockLoading = true;
         this.clearBlockMessages();
         this._saveRequestedAmountToStorage();
-        executeFastCashBlock({ caseId: this.recordId, blockAmount: n })
+        prepareFastCashBlockContext({ caseId: this.recordId })
+            .then((ctx) => {
+                if (!ctx || !ctx.success) {
+                    return null;
+                }
+                return executeFastCashBlock({
+                    caseId: this.recordId,
+                    blockAmount: n,
+                    crmId: ctx.crmId,
+                    disbChannel: ctx.disbChannel
+                });
+            })
             .then((res) => {
+                if (res === null) {
+                    this.blockLoading = false;
+                    this._handleBlockFailure();
+                    return;
+                }
                 this.blockLoading = false;
                 if (res && res.success) {
                     this.blockSucceeded = true;

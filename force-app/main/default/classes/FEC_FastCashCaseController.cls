@@ -32,6 +32,13 @@ public without sharing class FEC_FastCashCaseController {
         @AuraEnabled public String errorMessage;
     }
 
+    public class FastCashBlockContextDTO {
+        @AuraEnabled public Boolean success;
+        @AuraEnabled public String crmId;
+        @AuraEnabled public String disbChannel;
+        @AuraEnabled public String errorMessage;
+    }
+
     @AuraEnabled(cacheable=false)
     public static CaseFastCashStateDTO getCaseFastCashState(Id caseId) {
         CaseFastCashStateDTO dto = new CaseFastCashStateDTO();
@@ -168,11 +175,61 @@ public without sharing class FEC_FastCashCaseController {
     }
 
     @AuraEnabled
-    public static BlockResultDTO executeFastCashBlock(Id caseId, Decimal blockAmount) {
+    public static FastCashBlockContextDTO prepareFastCashBlockContext(Id caseId) {
+        FastCashBlockContextDTO ctx = new FastCashBlockContextDTO();
+        ctx.success = false;
+        if (caseId == null) {
+            ctx.errorMessage = String.format(System.Label.FEC_MSG_Param_Required, new List<String>{ 'Case Id' });
+            return ctx;
+        }
+        List<Case> caseRows = queryCaseForFastCash(caseId);
+        if (caseRows.isEmpty()) {
+            ctx.errorMessage = String.format(System.Label.FEC_MSG_Not_Found, new List<String>{ 'Case' });
+            return ctx;
+        }
+        Case c = caseRows[0];
+        String accountNumber = resolveAccountNumberForCase(c);
+        if (String.isBlank(accountNumber)) {
+            ctx.errorMessage = System.Label.FEC_MSG_AccountNumber_Invalid;
+            return ctx;
+        }
+        FEC_CommonUltils.beginDeferredApiLogging();
+        try {
+            String crmId = resolveApplicationIdForCase(c, accountNumber);
+            if (String.isBlank(crmId)) {
+                ctx.errorMessage = String.format(System.Label.FEC_MSG_Param_Required, new List<String>{ 'Application Id' });
+                return ctx;
+            }
+            String disbChannel = resolveDisbursementChannel(crmId);
+            if (String.isBlank(disbChannel)) {
+                disbChannel = FEC_ConstantCommon.PRODUCT_TYPE_CARD;
+            }
+            ctx.crmId = crmId;
+            ctx.disbChannel = disbChannel;
+            ctx.success = true;
+        } catch (Exception e) {
+            ctx.errorMessage = System.Label.FEC_Unknown_Error;
+        } finally {
+            FEC_CommonUltils.flushDeferredApiLogs();
+        }
+        return ctx;
+    }
+
+    @AuraEnabled
+    public static BlockResultDTO executeFastCashBlock(
+        Id caseId,
+        Decimal blockAmount,
+        String crmId,
+        String disbChannel
+    ) {
         BlockResultDTO res = new BlockResultDTO();
         res.success = false;
         if (caseId == null || blockAmount == null) {
             res.errorMessage = String.format(System.Label.FEC_MSG_Param_Required, new List<String>{ 'Case / Amount' });
+            return res;
+        }
+        if (String.isBlank(crmId) || String.isBlank(disbChannel)) {
+            res.errorMessage = String.format(System.Label.FEC_MSG_Param_Required, new List<String>{ 'Application Id / Disb Channel' });
             return res;
         }
         List<Case> caseRows = queryCaseForFastCash(caseId);
@@ -186,19 +243,8 @@ public without sharing class FEC_FastCashCaseController {
             res.errorMessage = System.Label.FEC_MSG_AccountNumber_Invalid;
             return res;
         }
-        String crmId = resolveApplicationIdForCase(c, accountNumber);
-        if (String.isBlank(crmId)) {
-            res.errorMessage = String.format(System.Label.FEC_MSG_Param_Required, new List<String>{ 'Application Id' });
-            return res;
-        }
-        FEC_CommonUltils.beginDeferredApiLogging();
-        String disbChannel;
         FEC_CMSIPPBlockWS.ResponseWrapper apiRes;
         try {
-            disbChannel = resolveDisbursementChannel(crmId);
-            if (String.isBlank(disbChannel)) {
-                disbChannel = FEC_ConstantCommon.PRODUCT_TYPE_CARD;
-            }
             apiRes = FEC_CMSIPPBlockWS.cmsIPPBlockWS(
                 FEC_ConstantCommon.REQUESTOR_CRM,
                 crmId,
@@ -225,11 +271,9 @@ public without sharing class FEC_FastCashCaseController {
                 null,
                 e.getMessage()
             );
-            FEC_CommonUltils.flushDeferredApiLogs();
             res.errorMessage = System.Label.FEC_Unknown_Error;
             return res;
         }
-        FEC_CommonUltils.flushDeferredApiLogs();
         if (apiRes == null || apiRes.Sys == null) {
             res.errorMessage = System.Label.FEC_MSG_Response_Null;
             return res;
