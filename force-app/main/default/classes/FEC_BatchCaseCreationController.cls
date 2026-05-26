@@ -542,7 +542,6 @@ public without sharing class FEC_BatchCaseCreationController {
             exportPayload.sourceRows,
             rowResults
         );
-        runImportedInteractionBatchAfterCaseImport();
     }
 
     public static void markBatchImportSystemFailure(Id batchRecordId, String reason) {
@@ -936,14 +935,6 @@ public without sharing class FEC_BatchCaseCreationController {
             return;
         }
         interactionCase.FEC_IsImported__c = true;
-    }
-
-    private static void runImportedInteractionBatchAfterCaseImport() {
-        try {
-            FEC_ImportedInteractionBatch.run();
-        } catch (Exception ex) {
-            // Không rollback import batch case nếu job sync không enqueue được.
-        }
     }
 
     /**

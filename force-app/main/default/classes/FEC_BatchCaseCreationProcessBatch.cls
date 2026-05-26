@@ -27,5 +27,10 @@ public without sharing class FEC_BatchCaseCreationProcessBatch implements Databa
   }
 
   public void finish(Database.BatchableContext context) {
+    try {
+      FEC_ImportedInteractionBatch.run();
+    } catch (Exception ex) {
+      // Không rollback import batch case nếu job sync không enqueue được.
+    }
   }
 }
