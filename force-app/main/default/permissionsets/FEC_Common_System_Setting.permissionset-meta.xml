@@ -369,6 +369,10 @@
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
+        <apexClass>FEC_CaseFullProcessTatQueueJob</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
         <apexClass>FEC_CaseInitUpdateService</apexClass>
         <enabled>true</enabled>
     </classAccesses>
@@ -1018,6 +1022,10 @@
     </classAccesses>
     <classAccesses>
         <apexClass>FEC_NotificationService</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_OwnerTeamLookupSvc</apexClass>
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>

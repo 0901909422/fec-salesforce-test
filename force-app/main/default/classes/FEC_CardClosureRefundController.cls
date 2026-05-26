@@ -302,6 +302,10 @@ public without sharing class FEC_CardClosureRefundController {
             return dto;
         }
 
+        // Block API selection (FEC_Account_or_Contract__r / Customer History):
+        // Scenario 1: FEC_Block_Code__c, FEC_Block_Code_1__c, FEC_Block_Code_2__c all NULL -> API 57 + 91
+        // Scenario 2: FEC_Block_Code_1__c != F and != N (_c, _2__c NULL or any value) -> API 57 + 91
+        // Scenario 3: FEC_Block_Code_1__c = F or N -> API 57 only
         Boolean cardOnlyLock = false;
         Boolean callAccountBlkcdApi = false;
         if (funcCode == FUNC_BLOCK) {
@@ -324,6 +328,7 @@ public without sharing class FEC_CardClosureRefundController {
         }
 
         try {
+            // All scenarios: API 57 CardLockUnLock (block/unblock card level C)
             FEC_CardLockUnLockCallout.LockUnlockResponse response = FEC_CardLockUnLockCallout.callLockUnlockCard(
                 transId,
                 FEC_ConstantCommon.REQUESTOR_CRM,
@@ -341,6 +346,7 @@ public without sharing class FEC_CardClosureRefundController {
             dto.description = response != null && response.Sys != null ? response.Sys.Description : null;
             dto.errorMessage = response != null ? response.errorMessage : null;
 
+            // Scenario 1 & 2: after API 57 success, call API 91 VMX_ACCT_BLKCD_UPD_EMEA
             if (dto.success && funcCode == FUNC_BLOCK && callAccountBlkcdApi) {
                 String vmxCardNbr = resolveVmxCardNbr(customerHistory, accountNumber);
                 if (String.isBlank(vmxCardNbr)) {
@@ -393,10 +399,13 @@ public without sharing class FEC_CardClosureRefundController {
     }
 
     /**
-     * Block Code 1 (Account level) = F hoặc N → chỉ khóa Card level (API 57).
-     * Các trường hợp còn lại → khóa Account + Card (API 57 + 91).
+     * Design: check FEC_Block_Code_1__c on FEC_Customer_History__c (Case.FEC_Account_or_Contract__r).
+     * FEC_Block_Code__c and FEC_Block_Code_2__c do not affect API count.
+     * Scenario 3: FEC_Block_Code_1__c = F or N -> card only (API 57 CardLockUnLock).
+     * Scenario 1 (all block codes NULL) and Scenario 2 (_1__c not F/N) -> API 57 + API 91.
      */
     private static Boolean isCardOnlyLockByAccountBlockCode1(String blockCode1) {
+        // Scenario 1 & 2: blank _1__c is not F/N -> not card-only
         if (String.isBlank(blockCode1)) {
             return false;
         }
@@ -464,6 +473,7 @@ public without sharing class FEC_CardClosureRefundController {
             Id = customerHistoryId,
             FEC_Block_Code__c = BLOCK_CODE_CARD
         );
+        // Scenario 1 & 2: persist account block code C; Scenario 3: leave FEC_Block_Code_1__c unchanged
         if (!cardOnlyLock) {
             recordToUpdate.FEC_Block_Code_1__c = BLOCK_CODE_CARD;
         }

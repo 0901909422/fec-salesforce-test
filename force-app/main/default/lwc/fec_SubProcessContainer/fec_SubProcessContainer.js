@@ -148,9 +148,12 @@ export default class Fec_SubProcessContainer extends LightningElement {
     }
   }
 
-  //HieuTT fix jira FECREDIT_CSM_2025_KH-1561
+  //FECREDIT_CSM_2025_KH-1561
   _findDNBHandlingEl() {
-    const selectors = ["c-fec_-do-not-bother-handling"];
+    const selectors = [
+      "c-fec_-do-not-bother-handling",
+      "c-fec-do-not-bother-handling",
+    ];
     for (let i = 0; i < selectors.length; i++) {
       const el = this.template.querySelector(selectors[i]);
       if (el) {
@@ -160,7 +163,7 @@ export default class Fec_SubProcessContainer extends LightningElement {
     return null;
   }
 
-  //HieuTT fix jira FECREDIT_CSM_2025_KH-1561
+  //FECREDIT_CSM_2025_KH-1561
   @api
   validateDNBForSubmit() {
     const el = this._findDNBHandlingEl();
