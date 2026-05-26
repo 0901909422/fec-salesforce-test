@@ -30,7 +30,7 @@ import USER_GROUP_FIELD from "@salesforce/schema/User.FEC_User_Group__c";
 import ID_FIELD from "@salesforce/schema/Case.Id";
 // PhuongNT add field FEC_Stage_Name__c
 import STAGE_NAME_FIELD from "@salesforce/schema/Case.FEC_Stage_Name__c";
-import CASE_CURRENT_STAGE_USER_GROUP_FIELD from "@salesforce/schema/Case.FEC_Current_Case_Stage__r.FEC_User_Group__c";
+import CASE_CURRENT_STAGE_NAME_FIELD from "@salesforce/schema/Case.FEC_Current_Case_Stage__r.Name";
 import {
   mask,
   maskValue,
@@ -819,8 +819,8 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
   last4Digit;
   isHiddenLwc = false;
   currentStageName;
-  /** FEC_Case_Stage__c.FEC_User_Group__c — dùng khóa Route to Team chỉ khi stage = PM. */
-  _currentStageUserGroup;
+  /** FEC_Current_Case_Stage__r.Name — áp dụng/khóa RD Payment assessment → Team khi tên stage chứa PM. */
+  _currentCaseStageName;
 
   @wire(getRecord, { recordId: USER_ID, fields: [USER_GROUP_FIELD] })
   wiredUser({ error, data }) {
@@ -831,17 +831,17 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
     }
   }
 
-  // PhuongNT add get Case data + User Group stage hiện tại (khóa Route to Team khi PM)
+  // PhuongNT add get Case data + tên stage hiện tại (RD Payment assessment → Team khi Name chứa PM)
   @wire(getRecord, {
     recordId: "$recordId",
-    fields: [STAGE_NAME_FIELD, CASE_CURRENT_STAGE_USER_GROUP_FIELD],
+    fields: [STAGE_NAME_FIELD, CASE_CURRENT_STAGE_NAME_FIELD],
   })
   wiredCase({ error, data }) {
     if (data) {
       this.currentStageName = getFieldValue(data, STAGE_NAME_FIELD);
-      this._currentStageUserGroup = getFieldValue(
+      this._currentCaseStageName = getFieldValue(
         data,
-        CASE_CURRENT_STAGE_USER_GROUP_FIELD,
+        CASE_CURRENT_STAGE_NAME_FIELD,
       );
     } else if (error) {
       console.error("Get Case record error:", error);
@@ -6525,7 +6525,7 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
     return this.business?.code;
   }
 
-  /** RD Payment Stage 2+: khóa combobox Team chỉ khi stage hiện tại = PM. */
+  /** RD Payment Stage 2+: khóa combobox Team khi FEC_Current_Case_Stage__r.Name chứa PM. */
   get rdPaymentScopedRouteToLocked() {
     if (isRl0502RdPaymentRouteToLocked(this)) {
       return true;

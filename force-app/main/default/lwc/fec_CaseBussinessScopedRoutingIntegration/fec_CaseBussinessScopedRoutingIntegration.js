@@ -72,36 +72,22 @@ export function setRdPaymentScopedStageTeamMapSafe(map) {
   }
 }
 
-const TEAM_PM = "PM";
-
 /**
- * Stage hiện tại (FEC_Case_Stage__c.FEC_User_Group__c) có Team PM.
- * host._currentStageUserGroup ← wire Case.FEC_Current_Case_Stage__r.FEC_User_Group__c
+ * Stage hiện tại là stage PM: FEC_Current_Case_Stage__r.Name chứa "PM".
+ * host._currentCaseStageName ← wire Case.FEC_Current_Case_Stage__r.Name
+ * Fallback: business.stageName (FEC_Case_Stage__c.Name từ Apex load).
  */
 export function isCurrentCaseStageTeamPm(host) {
-  const raw =
-    host?._currentStageUserGroup ??
-    host?.business?.currentStageUserGroup ??
-    "";
-  const text = String(raw ?? "").trim();
+  const stageName =
+    host?._currentCaseStageName ?? host?.business?.stageName ?? "";
+  const text = String(stageName ?? "").trim();
   if (!text) {
     return false;
   }
-  const groups = text
-    .split(";")
-    .map((part) => part.trim().toUpperCase())
-    .filter(Boolean);
-  if (!groups.length) {
-    return false;
-  }
-  // Stage có nhiều user group (vd CC;SP;PM) thì không xem là stage PM thuần.
-  if (groups.length > 1) {
-    return false;
-  }
-  return groups[0] === TEAM_PM || groups[0] === "PAYMENT";
+  return text.toUpperCase().includes("PM");
 }
 
-/** RD Payment Stage 2+: assessment đã chọn → khóa combobox Team (chỉ khi stage = PM). */
+/** RD Payment Stage 2+: assessment đã chọn → khóa combobox Team (khi FEC_Current_Case_Stage__r.Name chứa PM). */
 export function computeRdPaymentScopedRouteToLocked(host) {
   if (!shouldPreferScopedRoutingFromStage2(host)) {
     return false;

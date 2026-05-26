@@ -140,6 +140,18 @@ export default class Fec_ScopedStageChangeRoutingAction extends LightningElement
     );
   }
 
+  /** Team label — ưu tiên selection ép (RL05.02 / RD Payment) rồi mới parent readOnlyTeam. */
+  get effectiveRouteToTeamDisplayLabel() {
+    const forced = this._pendingForcedSelection;
+    if (forced?.team) {
+      return forced.team;
+    }
+    if (this.selectedTeam) {
+      return this.selectedTeam;
+    }
+    return this.readOnlyTeam || "";
+  }
+
   /** Queue label — ưu tiên FEC_Stage_Change__c.FEC_Next_Queue__c (Group.Name) từ selection ép. */
   get effectiveRouteToQueueDisplayLabel() {
     const forced = this._pendingForcedSelection;
