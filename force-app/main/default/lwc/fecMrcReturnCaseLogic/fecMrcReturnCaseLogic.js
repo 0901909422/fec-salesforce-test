@@ -115,6 +115,55 @@ export function shouldActivateMrcReturnRouting(business) {
   );
 }
 
+/** Sau Submit RL05.01–03: khóa Case Information, không khóa Routing Action. */
+export function isMrcRl05CaseInformationLockedAfterSubmit(business) {
+  return (
+    shouldActivateMrcReturnRouting(business) &&
+    business?.isSubmited === true
+  );
+}
+
+function applyMrcRl05CaseInformationReadonlyLock(business) {
+  if (
+    !isMrcRl05CaseInformationLockedAfterSubmit(business) ||
+    !business?.sectionlst
+  ) {
+    return business;
+  }
+  business.sectionlst.forEach((section) => {
+    if (section.name !== SECTION_NAME_CASE_INFORMATION) {
+      return;
+    }
+    section.subSectionlst?.forEach((sub) => {
+      sub.objlst?.forEach((obj) => {
+        obj.fieldlst?.forEach((field) => {
+          field.readonly = true;
+          field.editable = false;
+        });
+      });
+    });
+    (section.componentlst || []).forEach((entry) => {
+      const meta = normalizeMasterDataLwcEntry(entry);
+      if (
+        meta.componentName === MRC_RETURN_PANEL ||
+        meta.componentName === "fec_MrcReturnCaseForm"
+      ) {
+        entry.fecMasterDataSettingIsEdit = false;
+      }
+    });
+    (section.resolvedComponentlst || []).forEach((dyn) => {
+      if (
+        dyn?.componentName === MRC_RETURN_PANEL ||
+        dyn?.componentName === "fec_MrcReturnCaseForm"
+      ) {
+        dyn.fecMasterDataSettingIsEdit = false;
+        dyn.isEdit = false;
+      }
+    });
+  });
+  return business;
+}
+
 /** Case Information bị chặn (Product Code ≠ TW) — chỉ hiện banner lỗi, không panel/routing. */
 export function isMrcRl05CaseInformationBlocked(business) {
   if (business?.mrcRl05CaseInfoBlocked === true) {
@@ -459,7 +508,9 @@ export function ensureMrcReturnCaseFormInBusiness(business) {
       order: 0,
       fieldLayout: 12,
       subSectionName: null,
-      fecMasterDataSettingIsEdit: true,
+      fecMasterDataSettingIsEdit: !isMrcRl05CaseInformationLockedAfterSubmit(
+        business,
+      ),
     });
   }
   return business;
@@ -644,6 +695,7 @@ export function applyMrcRl0502DupFieldLayout(
     confVal,
     isEditFlag,
   );
+  applyMrcRl05CaseInformationReadonlyLock(visibility.business);
   return {
     business: { ...visibility.business },
     handlingOptionValue: nextHandling,

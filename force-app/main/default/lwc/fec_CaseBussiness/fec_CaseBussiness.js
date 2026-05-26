@@ -70,6 +70,7 @@ import {
   isMrcReturnTrackedField,
   isMrcRl05Branch,
   isMrcRl05CaseInformationBlocked,
+  isMrcRl05CaseInformationLockedAfterSubmit,
   shouldActivateMrcReturnRouting,
   showMrcRl0502DupBanner,
   validateMrcReturnCase,
@@ -737,6 +738,9 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
   /** Case Information section fields/LWC editable (full edit or partial after Execute Assignment). */
   _isSectionFieldsEditable(sectionName) {
     if (sectionName === SECTION_NAME_CASE_INFORMATION) {
+      if (isMrcRl05CaseInformationLockedAfterSubmit(this.business)) {
+        return false;
+      }
       return this._isEdit || this._isCaseInformationEdit;
     }
     return this._isEdit;
@@ -2109,6 +2113,13 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
   _resolveDynCmpMasterIsEdit(componentName, fecMasterDataSettingIsEdit) {
     const master =
       typeof fecMasterDataSettingIsEdit === "boolean" ? fecMasterDataSettingIsEdit : true;
+    if (
+      isMrcRl05CaseInformationLockedAfterSubmit(this.business) &&
+      (componentName === "fec_MrcReturnPanel" ||
+        componentName === "fec_MrcReturnCaseForm")
+    ) {
+      return false;
+    }
     if (this._isStage1RevertMasterReadonly()) {
       return false;
     }
