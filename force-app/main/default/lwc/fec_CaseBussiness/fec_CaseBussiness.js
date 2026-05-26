@@ -14,6 +14,7 @@ import markCaseSubmittedWithoutRouting from "@salesforce/apex/FEC_CaseBusinessSe
 import markCaseSubmittedWithoutRoutingWithHistory from "@salesforce/apex/FEC_CaseBusinessService.markCaseSubmittedWithoutRoutingWithHistory";
 //PhongBT: query FEC_Case_Flow_History__c sau khi đổi bộ noc khác để lấy lại giá trị đã nhập lên
 import getPropertyFieldsFromFlowHistory from "@salesforce/apex/FEC_CaseEditNOCController.getPropertyFieldsFromFlowHistory";
+import saveRl0502PropertyInfo from "@salesforce/apex/FEC_MrcReturnCaseService.saveRl0502PropertyInfo";
 import logSensitiveAccess from "@salesforce/apex/FEC_InteractionHighlightController.logSensitiveAccess";
 import getCardStatus from "@salesforce/apex/FEC_CardLockUnLockController.getCardStatus";
 import checkProcessActionCardBlock from "@salesforce/apex/FEC_CardLockUnLockController.checkProcessActionCardBlock";
@@ -23,6 +24,7 @@ import { refreshApex } from "@salesforce/apex";
 import FEC_NFU_DESCRIPTION_RESULT from "@salesforce/schema/Case.FEC_NFU_Description_Result__c";
 import getSubProcesses from "@salesforce/apex/FEC_SubProcessService.getSubProcesses";
 import getSubmittedSubProcesses from "@salesforce/apex/FEC_SubProcessService.getSubmittedSubProcesses";
+import evaluateHoldCaseStage2Display from "@salesforce/apex/FEC_HoldCaseStage2DisplayService.evaluate";
 import USER_ID from "@salesforce/user/Id";
 import USER_GROUP_FIELD from "@salesforce/schema/User.FEC_User_Group__c";
 import ID_FIELD from "@salesforce/schema/Case.Id";
@@ -64,12 +66,14 @@ import {
   FIELD_MRC_HANDLING_OPTION,
   getCaseFieldValue,
   getMrcReturnAutoRoutingActionCode,
+  isMrcReceivedConfirmation,
   isMrcReturnTrackedField,
   isMrcRl05Branch,
   isMrcRl05CaseInformationBlocked,
   shouldActivateMrcReturnRouting,
   showMrcRl0502DupBanner,
   validateMrcReturnCase,
+  normalizeTeamUserGroupForDisplay,
 } from "c/fecMrcReturnCaseLogic";
 import FEC_MSG_Param_Maxlength from "@salesforce/label/c.FEC_MSG_Param_Maxlength";
 import FEC_Routing_Action_Label from "@salesforce/label/c.FEC_Routing_Action_Label";
@@ -717,6 +721,9 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
 
   /** Auto Hold Case — hiển thị trong accordion Case Information. */
   holdCaseNocParams = { recordId: null };
+  /** Bộ NOC gốc trên Case khi load (trước persist từ Updated Information). */
+  holdCaseNocBaseline = null;
+  _holdCaseNocBaselineCaptured = false;
   wiredCaseHoldResultWire;
   // wiredHoldCaseSubProcessesWire;
   holdCaseResultOnCase = false;
@@ -724,6 +731,7 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
   showHoldCase = false;
   showHoldCaseManual = false;
   showHoldCaseAuto = false;
+  @track holdCaseStage2Display = null;
 
   //linhdev: Fix jira FECREDIT_CSM_2025_KH-1226 — tách active name theo từng lightning-accordion
   // (tránh trộn "routing-action" với UUID section: active-section-name có tên lạ có thể làm co section).
@@ -791,7 +799,7 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
   }
 
   get isStage1() {
-    return (this.currentStageName || '').includes('Stage 1');
+    return !this.currentStageName || this.currentStageName.includes('Stage 1');
   }
 
   @wire(MessageContext)
@@ -805,14 +813,15 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
     if (resultVal) {
       this.showHoldCase = true;
       this.showHoldCaseAuto = true;
-      if (!this.holdCaseResultOverride) {
-        this.holdCaseResultOverride = resultVal;
+      if (this.holdCaseResultOverride === "PENDING") {
+        this.holdCaseResultOverride = null;
       }
       this._ensureCaseInformationHoldCaseFlags();
       this.business = { ...this.business };
     } else if (result.error) {
       console.error("[fec_CaseBussiness] wiredCaseHoldResult error", result.error);
     }
+    void this._refreshHoldCaseStage2Display();
   }
 
   @wire(getSubProcesses, {
@@ -824,11 +833,16 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
   })
   wiredHoldCaseSubProcesses({ data, error }) {
     if (data) {
-      this.showHoldCase = !!data.showHoldCase || this.holdCaseResultOnCase;
+      const stage2HoldVisible =
+        this.holdCaseStage2Display?.showHoldCaseSection === true;
+      this.showHoldCase =
+        !!data.showHoldCase || this.holdCaseResultOnCase || stage2HoldVisible;
       this.showHoldCaseManual = !!data.showHoldCaseManual;
       if (!this.holdCaseResultOnCase) {
-        this.showHoldCaseAuto = !!data.showHoldCaseAuto;
+        this.showHoldCaseAuto =
+          stage2HoldVisible || !!data.showHoldCaseAuto;
       }
+      void this._refreshHoldCaseStage2Display();
     }
     if (error) {
       console.error("[fec_CaseBussiness] hold case subprocess wire error", error);
@@ -844,12 +858,48 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
   // }
 
   get showHoldCaseSection() {
+    if (this.holdCaseStage2Display?.showHoldCaseSection) {
+      return true;
+    }
     return (
       this.showHoldCaseAuto ||
       this.showHoldCaseManual ||
       this.holdCaseResultOnCase ||
       !!this.holdCaseResultOverride
     );
+  }
+
+  get holdCaseStage2DisplayMode() {
+    return this.holdCaseStage2Display?.displayMode ?? "DEFAULT";
+  }
+
+  get holdCaseStage2InfoMessage() {
+    return this.holdCaseStage2Display?.infoMessage ?? null;
+  }
+
+  get holdCaseStage2ErrorMessage() {
+    return this.holdCaseStage2Display?.errorMessage ?? null;
+  }
+
+  get holdCaseStage2ShowManualButton() {
+    return this.holdCaseStage2Display?.showManualHoldCaseButton === true;
+  }
+
+  /** NOC Stage 1 (baseline) — truyền sang Hold Case Auto, không đổi theo draft NOC UI. */
+  get holdCaseStage1ProductTypeId() {
+    return this.holdCaseNocBaseline?.productTypeId ?? null;
+  }
+
+  get holdCaseStage1CategoryId() {
+    return this.holdCaseNocBaseline?.categoryId ?? null;
+  }
+
+  get holdCaseStage1SubCategoryId() {
+    return this.holdCaseNocBaseline?.subCategoryId ?? null;
+  }
+
+  get holdCaseStage1SubCodeId() {
+    return this.holdCaseNocBaseline?.subCodeId ?? null;
   }
 
   get iconHideConst() {
@@ -886,6 +936,7 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
       { label: "Pending Product", value: "Pending Product" },
       { label: "Pending RCP&A", value: "Pending RCP&A" },
       { label: "Pending Security", value: "Pending Security" },
+      { label: "Cannot Contact Customer", value: "Cannot Contact Customer" },
     ];
 
     const vendorOption = { label: "Pending Vendor", value: "Pending Vendor" };
@@ -1147,6 +1198,11 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
       return false;
     }
     return ACTION_ROUTE_TO === this._getCurrentActionCode();
+  }
+
+  /** Team Route to — mã ngắn CP/PM (không label Contract Processing từ Stage Change). */
+  get routeToTeamDisplayLabel() {
+    return normalizeTeamUserGroupForDisplay(this.business?.nextTeam);
   }
 
   //Thangtv
@@ -1470,6 +1526,7 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
       this.business,
       this.mrcReturnHandlingOptionValue,
       this.mrcReturnCustomerConfirmationValue,
+      this._isEdit,
     );
     this.mrcReturnHandlingOptionValue = result.handlingOptionValue;
     this.business = result.business;
@@ -1963,6 +2020,13 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
     }
 
     if (this._mrcReturnStageChangeRoutingActive) {
+      if (
+        isMrcReceivedConfirmation(this.mrcReturnCustomerConfirmationValue) &&
+        hasAction(ACTION_CANCEL)
+      ) {
+        this._setActionValueByCode(ACTION_CANCEL);
+        return;
+      }
       const ctx = getMrcReturnRoutingContext(
         this.business,
         this.mrcReturnHandlingOptionValue,
@@ -2041,6 +2105,8 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
       { scope: APPLICATION_SCOPE }
     );
     this.holdCaseNocParams = { recordId: this.recordId };
+    this.holdCaseNocBaseline = null;
+    this._holdCaseNocBaselineCaptured = false;
     this._boundCheckHoldCaseRefresh = this._checkHoldCaseRefreshFlag.bind(this);
     window.addEventListener("focus", this._boundCheckHoldCaseRefresh);
     this._checkHoldCaseRefreshFlag();
@@ -2154,6 +2220,24 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
     if (hasNocSelectionPayload) {
       // NOC update từ Updated Information section.
       // Lưu ý: bộ NOC không có Sub-Code sẽ publish subCodeId = null, vẫn phải reload.
+      this._applyHoldCaseNocBaselineFromMessage(message);
+      const prevParams = this.holdCaseNocParams || {};
+      if (
+        !this._holdCaseNocBaselineCaptured &&
+        (prevParams.productTypeId ||
+          prevParams.categoryId ||
+          prevParams.subCategoryId)
+      ) {
+        this._captureHoldCaseNocBaseline(
+          prevParams.productTypeId,
+          prevParams.categoryId,
+          prevParams.subCategoryId,
+          prevParams.subCodeId,
+        );
+      }
+      if (!this._holdCaseNocBaselineCaptured) {
+        this._captureHoldCaseNocBaselineFromBusinessIfNeeded();
+      }
       this.holdCaseNocParams = {
         recordId: this.recordId,
         productTypeId: message.productTypeId,
@@ -2212,6 +2296,7 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
         );
       })
       .then(() => {
+        void this._refreshHoldCaseStage2Display();
         //PhongBT 18/05/26: fix Document Request
         // PhongBT: Document Request — gen PDF sau khi chọn sub-code (chỉ trên luồng CASE_NOC)
         if (message.subCodeId != null) {
@@ -2225,19 +2310,114 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
   // Field có apiName trùng → restore value; field không có → giữ nguyên trống từ getData.
   _mergePropertyFieldSnapshot(snapshot) {
     if (!snapshot || !this.business?.sectionlst) return;
-    this.business.sectionlst.forEach(section => {
-      section.subSectionlst?.forEach(sub => {
-        sub.objlst?.forEach(obj => {
-          obj.fieldlst?.forEach(field => {
-            if (field?.apiName && Object.prototype.hasOwnProperty.call(snapshot, field.apiName)) {
-              field.value = snapshot[field.apiName];
+    this.business.sectionlst.forEach((section) => {
+      section.subSectionlst?.forEach((sub) => {
+        sub.objlst?.forEach((obj) => {
+          obj.fieldlst?.forEach((field) => {
+            if (
+              field?.apiName &&
+              Object.prototype.hasOwnProperty.call(snapshot, field.apiName)
+            ) {
+              const snapVal = snapshot[field.apiName];
+              if (snapVal == null || String(snapVal).trim() === STR_EMPTY) {
+                return;
+              }
+              field.value = snapVal;
               field.original = field.value;
+              const opts =
+                this.business.picklistOptionsMap?.[obj.name]?.[field.apiName];
+              if (opts?.length) {
+                const opt = findPicklistOptionByRaw(opts, field.value);
+                if (opt) {
+                  field.value = opt.value;
+                  field.displayValue = opt.label;
+                  field.readonlyDisplayValue = opt.label;
+                } else {
+                  field.displayValue = field.value;
+                  field.readonlyDisplayValue = field.value;
+                }
+              } else {
+                field.displayValue = field.value;
+                field.readonlyDisplayValue = field.value;
+              }
             }
           });
         });
       });
     });
     this.business = { ...this.business };
+  }
+
+  /** RL05.02 Property Info: Additional_Info__c thường null sau Submit — hydrate từ FEC_Case_Flow_History__c. */
+  _hydratePropertyInfoFromFlowHistoryAfterLoad() {
+    if (!this.recordId || !this.business?.sectionlst) {
+      return Promise.resolve();
+    }
+    const propertyFields = [];
+    this.business.sectionlst.forEach((section) => {
+      section.subSectionlst?.forEach((sub) => {
+        if (sub.name !== SUBSECTION_NAME_PROPERTY_INFO) {
+          return;
+        }
+        sub.objlst?.forEach((obj) => {
+          obj.fieldlst?.forEach((field) => {
+            if (
+              field?.apiName === "FEC_Verify_Information__c" ||
+              field?.apiName === "FEC_Callback__c"
+            ) {
+              propertyFields.push(field);
+            }
+          });
+        });
+      });
+    });
+    if (!propertyFields.length) {
+      return Promise.resolve();
+    }
+    const allEmpty = propertyFields.every(
+      (f) => f.value == null || String(f.value).trim() === STR_EMPTY,
+    );
+    if (!allEmpty && !this.business?.isSubmited) {
+      return Promise.resolve();
+    }
+    return getPropertyFieldsFromFlowHistory({ caseId: this.recordId })
+      .then((fieldListJson) => {
+        if (!fieldListJson) {
+          return;
+        }
+        let snapshot = {};
+        try {
+          const fieldList = JSON.parse(fieldListJson);
+          if (Array.isArray(fieldList)) {
+            fieldList.forEach((item) => {
+              if (item?.apiName && item.value != null && String(item.value).trim()) {
+                snapshot[item.apiName] = item.value;
+              }
+            });
+          }
+        } catch (e) {
+          console.error("[PropertyInfo] parse flow history error:", e);
+          return;
+        }
+        if (!Object.keys(snapshot).length) {
+          return;
+        }
+        this._mergePropertyFieldSnapshot(snapshot);
+        if (isMrcRl05Branch(this.business)) {
+          const layoutResult = applyMrcRl0502DupFieldLayout(
+            this.business,
+            this.mrcReturnHandlingOptionValue,
+            this.mrcReturnCustomerConfirmationValue,
+            this._isEdit,
+          );
+          this.mrcReturnHandlingOptionValue = layoutResult.handlingOptionValue;
+          this.business = layoutResult.business;
+        }
+        this._rebuildAllSectionSortedRows();
+      })
+      .catch((err) => {
+        console.error("[PropertyInfo] getPropertyFieldsFromFlowHistory error:", err);
+      });
   }
 
   // ─────────────────────────────────────────────────────────────────────────
@@ -2325,6 +2505,12 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
             ? natureOfCaseIdFallback
             : (res.natureOfCase || natureOfCaseIdFallback);
         this.business = { ...res, natureOfCase };
+        if (isMrcRl05Branch(this.business) && this.business?.nextTeam) {
+          this.business = {
+            ...this.business,
+            nextTeam: normalizeTeamUserGroupForDisplay(this.business.nextTeam),
+          };
+        }
 
         //linhdev: Fix jira FECREDIT_CSM_2025_KH-1226
         this.activeMainSectionlst = [];
@@ -2584,6 +2770,7 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
             this.business,
             this.mrcReturnHandlingOptionValue,
             this.mrcReturnCustomerConfirmationValue,
+            this._isEdit,
           );
           this.mrcReturnHandlingOptionValue = layoutResult.handlingOptionValue;
           this.business = layoutResult.business;
@@ -2594,6 +2781,15 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
         this._prepareRoutingSectionForDisplay();
         this._syncActiveRoutingSection();
         this.businessLoaded = true;
+        if (
+          productTypeId == null &&
+          categoryId == null &&
+          subCategoryId == null &&
+          subCodeId == null
+        ) {
+          this._syncHoldCaseNocParamsFromBusiness();
+        }
+        void this._refreshHoldCaseStage2Display();
         this._syncRemovePhoneLockAfterRevert();
         //linhdev: Fix jira FECREDIT_CSM_2025_KH-1226 — mỗi accordion chỉ nhận đúng tên section của nó.
         this.activeMainSectionlst = [...sectionlst];
@@ -2615,6 +2811,8 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
         if (this._pendingPropertySnapshot) {
           this._mergePropertyFieldSnapshot(this._pendingPropertySnapshot);
           this._pendingPropertySnapshot = null;
+        } else {
+          void this._hydratePropertyInfoFromFlowHistoryAfterLoad();
         }
         //PhongBT 18/05/26: Document Request sử dụng cục routing action mới
         void this._supplementRl0402Rl0403RoutingActionsIfNeeded()
@@ -3844,16 +4042,39 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
     });
   }
 
+  _resolveMrcReturnFieldsForSubmit() {
+    let confirmation = this.mrcReturnCustomerConfirmationValue;
+    let handlingOption = this.mrcReturnHandlingOptionValue;
+    const panel = this._getMrcReturnPanelEl();
+    if (panel) {
+      if (typeof panel.getHandlingOptionValue === "function") {
+        const fromPanel = String(panel.getHandlingOptionValue() ?? STR_EMPTY).trim();
+        if (fromPanel) {
+          handlingOption = fromPanel;
+          this.mrcReturnHandlingOptionValue = fromPanel;
+        }
+      }
+      const fromConf = String(panel.customerConfirmationValue ?? STR_EMPTY).trim();
+      if (fromConf) {
+        confirmation = fromConf;
+        if (this.business) {
+          this.business.mrcCustomerConfirmationDraft = fromConf;
+        }
+      }
+    }
+    return { confirmation, handlingOption };
+  }
+
   _syncMrcReturnCaseFieldsBeforeSubmit() {
     if (!isMrcRl05Branch(this.business)) {
       return Promise.resolve();
     }
+    const { confirmation, handlingOption } = this._resolveMrcReturnFieldsForSubmit();
+    this._syncMrcReturnFieldsToRecordForm();
     const fields = { [ID_FIELD.fieldApiName]: this.recordId };
-    const confirmation = this.mrcReturnCustomerConfirmationValue;
     if (confirmation) {
       fields[FIELD_MRC_CUSTOMER_CONFIRMATION] = confirmation;
     }
-    const handlingOption = this.mrcReturnHandlingOptionValue;
     if (handlingOption) {
       fields[FIELD_MRC_HANDLING_OPTION] = handlingOption;
     }
@@ -3874,16 +4095,80 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
     return Promise.resolve({ valid: true, messages: [] });
   }
 
+  /** RL05.02: lưu Xác minh thông tin / Gọi lại lên FEC_Additional_Info__c (Submit + Review). */
+  _saveRl0502PropertyInfoIfApplicable() {
+    if (!isMrcRl05Branch(this.business) || !this.recordId) {
+      return Promise.resolve();
+    }
+    const propertyApis = [
+      "FEC_Verify_Information__c",
+      "FEC_Callback__c",
+    ];
+    let additionalInfoId = null;
+    const fields = {};
+    this.business?.sectionlst?.forEach((section) => {
+      if (section.name !== SECTION_NAME_CASE_INFORMATION) {
+        return;
+      }
+      section.subSectionlst?.forEach((sub) => {
+        if (sub.name !== SUBSECTION_NAME_PROPERTY_INFO) {
+          return;
+        }
+        sub.objlst?.forEach((obj) => {
+          if (obj.name !== OBJ_FEC_ADDITIONAL_INFO) {
+            return;
+          }
+          if (obj.id) {
+            additionalInfoId = obj.id;
+          }
+          obj.fieldlst?.forEach((field) => {
+            if (!propertyApis.includes(field?.apiName)) {
+              return;
+            }
+            const val = String(field.value ?? STR_EMPTY).trim();
+            if (val) {
+              fields[field.apiName] = val;
+            }
+          });
+        });
+      });
+    });
+    if (!additionalInfoId || !Object.keys(fields).length) {
+      return Promise.resolve();
+    }
+    return saveRl0502PropertyInfo({
+      additionalInfoId,
+      verifyInformation: fields.FEC_Verify_Information__c ?? null,
+      callback: fields.FEC_Callback__c ?? null,
+    });
+  }
+
   //linhdev: Persist child data before case record form submit
   _persistChildDataBeforeCaseRecordFormSubmit() {
     //linhdev fix jira FECREDIT_CSM_2025_KH-1469-1474 — gap 2: lưu Redeemed Points trước record form submit
     this._syncPointsRedemptionFieldToRecordForm();
     this._syncMrcReturnFieldsToRecordForm();
-    return Promise.all([
+    const persistTasks = [
       this._syncMrcReturnCaseFieldsBeforeSubmit(),
       this._saveRemovePhoneDraftIfApplicable(),
       this._savePointsRedemptionDraftIfApplicable(),
-    ]);
+    ];
+    if (isMrcRl05Branch(this.business)) {
+      persistTasks.push(
+        this._saveRl0502PropertyInfoIfApplicable(),
+        this._saveMrcReturnDeliveryIfApplicable(),
+      );
+    }
+    return Promise.all(persistTasks).then((results) => {
+      if (!isMrcRl05Branch(this.business)) {
+        return results;
+      }
+      const deliveryResult = results[results.length - 1];
+      if (deliveryResult?.valid === false) {
+        return Promise.reject(deliveryResult);
+      }
+      return results;
+    });
   }
 
   /*Lấy element của form IPP Closure*/
@@ -4108,7 +4393,17 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
     // Dữ liệu địa chỉ đã được lưu vào Case DB khi User A nhấn Save.
     // Không gọi API tại đây — API sẽ được user xử lý gọi qua Process Action "Address Update".
 
-    await this._persistChildDataBeforeCaseRecordFormSubmit();
+    try {
+      await this._persistChildDataBeforeCaseRecordFormSubmit();
+    } catch (mrcPersistErr) {
+      const msgs = mrcPersistErr?.messages;
+      const message =
+        Array.isArray(msgs) && msgs.length > 0
+          ? msgs.join(", ")
+          : FEC_Error_Title;
+      this.showToast(FEC_Error_Title, message, "error");
+      return false;
+    }
     await this._submitFormsPromise();
     // DungLT — flush upload file trước các bước lưu khác khi Submit
     await this._uploadFecFileUploadCardsIfApplicable();
@@ -4140,6 +4435,9 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
     const closureSaveRes = await this._saveContractClosureIfApplicable();
     if (closureSaveRes && closureSaveRes.valid === false) {
       return false;
+    }
+    if (isMrcRl05Branch(this.business)) {
+      await this._syncMrcReturnCaseFieldsBeforeSubmit();
     }
     this._syncMrcDeliveryDraftFromCase();
     if (isMrcRl05Branch(this.business)) {
@@ -4418,8 +4716,20 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
           for (const obj of sub.objlst ?? []) {
             const objectName = obj.name;
             for (const field of obj.fieldlst ?? []) {
-              if (field.isHidden) continue;
+              const isRl0502Property =
+                sub.name === SUBSECTION_NAME_PROPERTY_INFO &&
+                (field.apiName === "FEC_Verify_Information__c" ||
+                  field.apiName === "FEC_Callback__c");
+              if (field.isHidden && !isRl0502Property) {
+                continue;
+              }
               const val = this._fieldValueForFlowHistoryJson(objectName, field);
+              if (
+                isRl0502Property &&
+                (val == null || String(val).trim() === STR_EMPTY)
+              ) {
+                continue;
+              }
               fields.push({
                 apiName: field.apiName,
                 label: field.label,
@@ -5119,6 +5429,172 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
     this._scheduleRefreshFileUploadCards();
   }
 
+  _captureHoldCaseNocBaseline(productTypeId, categoryId, subCategoryId, subCodeId) {
+    if (this._holdCaseNocBaselineCaptured) {
+      return;
+    }
+    if (!productTypeId && !categoryId && !subCategoryId) {
+      return;
+    }
+    this.holdCaseNocBaseline = {
+      productTypeId: productTypeId || null,
+      categoryId: categoryId || null,
+      subCategoryId: subCategoryId || null,
+      subCodeId: subCodeId ?? null,
+    };
+    this._holdCaseNocBaselineCaptured = true;
+  }
+
+  /** Baseline từ Original Information (fec_CaseEditNOC) — trước khi saveCaseNOC ghi Case. */
+  _applyHoldCaseNocBaselineFromMessage(message) {
+    if (
+      !message ||
+      (message.baselineProductTypeId == null &&
+        message.baselineCategoryId == null &&
+        message.baselineSubCategoryId == null)
+    ) {
+      return;
+    }
+    this.holdCaseNocBaseline = {
+      productTypeId: message.baselineProductTypeId || null,
+      categoryId: message.baselineCategoryId || null,
+      subCategoryId: message.baselineSubCategoryId || null,
+      subCodeId: message.baselineSubCodeId ?? null,
+    };
+    this._holdCaseNocBaselineCaptured = true;
+  }
+
+  _captureHoldCaseNocBaselineFromBusinessIfNeeded() {
+    if (this._holdCaseNocBaselineCaptured || !this.business?.sectionlst) {
+      return;
+    }
+    let productTypeId;
+    let categoryId;
+    let subCategoryId;
+    let subCodeId;
+    for (const section of this.business.sectionlst) {
+      const fields = section?.fieldlst;
+      if (!Array.isArray(fields)) {
+        continue;
+      }
+      for (const field of fields) {
+        const api = field?.apiName;
+        const val = field?.value;
+        if (!val) {
+          continue;
+        }
+        if (api === "FEC_Product_Type__c") {
+          productTypeId = val;
+        } else if (api === "FEC_Category__c") {
+          categoryId = val;
+        } else if (api === "FEC_SubCategory__c") {
+          subCategoryId = val;
+        } else if (api === "FEC_SubCode__c") {
+          subCodeId = val;
+        }
+      }
+    }
+    this._captureHoldCaseNocBaseline(
+      productTypeId,
+      categoryId,
+      subCategoryId,
+      subCodeId,
+    );
+  }
+
+  /** Đồng bộ holdCaseNocParams từ business sau getData (fallback khi chưa có CASE_NOC message). */
+  _syncHoldCaseNocParamsFromBusiness() {
+    if (!this.recordId || !this.business) {
+      return;
+    }
+    const sections = this.business.sectionlst;
+    if (!Array.isArray(sections)) {
+      return;
+    }
+    let productTypeId;
+    let categoryId;
+    let subCategoryId;
+    let subCodeId;
+    for (const section of sections) {
+      const fields = section?.fieldlst;
+      if (!Array.isArray(fields)) {
+        continue;
+      }
+      for (const field of fields) {
+        const api = field?.apiName;
+        const val = field?.value;
+        if (!val) {
+          continue;
+        }
+        if (api === "FEC_Product_Type__c") {
+          productTypeId = val;
+        } else if (api === "FEC_Category__c") {
+          categoryId = val;
+        } else if (api === "FEC_SubCategory__c") {
+          subCategoryId = val;
+        } else if (api === "FEC_SubCode__c") {
+          subCodeId = val;
+        }
+      }
+    }
+    if (!productTypeId && !categoryId && !subCategoryId) {
+      return;
+    }
+    this._captureHoldCaseNocBaseline(
+      productTypeId,
+      categoryId,
+      subCategoryId,
+      subCodeId,
+    );
+    this.holdCaseNocParams = {
+      recordId: this.recordId,
+      productTypeId: productTypeId || null,
+      categoryId: categoryId || null,
+      subCategoryId: subCategoryId || null,
+      subCodeId: subCodeId ?? null,
+    };
+  }
+
+  /**
+   * Stage 2+ (CS Support / CS Customer Care): đánh giá hiển thị Hold Case khi đổi NOC.
+   */
+  async _refreshHoldCaseStage2Display() {
+    if (!this.recordId) {
+      this.holdCaseStage2Display = null;
+      return;
+    }
+    // Apex kiểm tra FEC_Is_Submited__c; chỉ bỏ qua khi business đã load và chắc chắn Stage 1
+    if (this.business && this.business.isSubmited !== true) {
+      this.holdCaseStage2Display = null;
+      return;
+    }
+    const p = this.holdCaseNocParams || {};
+    const b = this.holdCaseNocBaseline || {};
+    try {
+      const result = await evaluateHoldCaseStage2Display({
+        caseId: this.recordId,
+        productTypeId: p.productTypeId || null,
+        categoryId: p.categoryId || null,
+        subCategoryId: p.subCategoryId || null,
+        subCodeId: p.subCodeId ?? null,
+        baselineProductTypeId: b.productTypeId || null,
+        baselineCategoryId: b.categoryId || null,
+        baselineSubCategoryId: b.subCategoryId || null,
+        baselineSubCodeId: b.subCodeId ?? null,
+      });
+      this.holdCaseStage2Display = result;
+      if (result?.showHoldCaseSection) {
+        this.showHoldCase = true;
+        this.showHoldCaseAuto = true;
+        this._ensureCaseInformationHoldCaseFlags();
+        this.business = { ...this.business };
+      }
+    } catch (error) {
+      console.error("[fec_CaseBussiness] _refreshHoldCaseStage2Display", error);
+      this.holdCaseStage2Display = null;
+    }
+  }
+
   /** Manual Hold Case (Quick Action) báo refresh qua sessionStorage sau TH1/TH2/TH3. */
   _checkHoldCaseRefreshFlag() {
     if (!this.recordId) {
@@ -5161,7 +5637,7 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
   _refreshHoldCaseAutoDisplay() {
     this._checkHoldCaseRefreshFlag();
     const initPromise = this._initializeHoldCaseVisibility();
-    const promises = [initPromise];
+    const promises = [initPromise, this._refreshHoldCaseStage2Display()];
     // if (this.wiredHoldCaseSubProcessesWire) {
     //   promises.push(
     //     refreshApex(this.wiredHoldCaseSubProcessesWire).then(() => {
@@ -5183,11 +5659,13 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
           if (resultVal) {
             this.showHoldCase = true;
             this.showHoldCaseAuto = true;
-            if (!this.holdCaseResultOverride) {
-              this.holdCaseResultOverride = resultVal;
+            if (this.holdCaseResultOverride === "PENDING") {
+              this.holdCaseResultOverride = null;
             }
             this._ensureCaseInformationHoldCaseFlags();
             this.business = { ...this.business };
+          } else if (this.holdCaseResultOverride === "PENDING") {
+            this.holdCaseResultOverride = null;
           }
         }),
       );
@@ -5207,12 +5685,39 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
         this._ensureCaseInformationHoldCaseFlags();
         this.business = { ...this.business };
       }
-      const autoCmp = this.template.querySelector("c-fec_hold-case-auto");
-      if (autoCmp?.refresh) {
-        return autoCmp.refresh();
-      }
-      return undefined;
+      return this._refreshHoldCaseStage2Display().then(() => {
+        const autoCmp = this.template.querySelector("c-fec_hold-case-auto");
+        if (autoCmp?.refresh) {
+          return autoCmp.refresh();
+        }
+        return undefined;
+      });
     });
+  }
+
+  /** Stage 2+ — user bấm Hold Case: enqueue Auto Hold giống Submit Stage 1. */
+  handleAutoHoldRetryRequested(event) {
+    // eslint-disable-next-line no-console
+    console.log("[fec_CaseBussiness] handleAutoHoldRetryRequested", {
+      attemptNumber: event?.detail?.attemptNumber,
+      recordId: this.recordId,
+      holdCaseResultOverride: this.holdCaseResultOverride,
+      holdCaseStage2Display: this.holdCaseStage2Display,
+      holdCaseStage2DisplayMode: this.holdCaseStage2DisplayMode,
+      holdCaseStage2ShowManualButton: this.holdCaseStage2ShowManualButton,
+    });
+    this.holdCaseResultOverride = "PENDING";
+    this.showHoldCase = true;
+    this.showHoldCaseAuto = true;
+    this._ensureCaseInformationHoldCaseFlags();
+    this.business = { ...this.business };
+    // eslint-disable-next-line no-console
+    console.log("[fec_CaseBussiness] handleAutoHoldRetryRequested after PENDING", {
+      holdCaseResultOverride: this.holdCaseResultOverride,
+      showHoldCase: this.showHoldCase,
+      showHoldCaseAuto: this.showHoldCaseAuto,
+    });
+    this.refreshAutoHoldCase();
   }
 
   /** Refresh Auto Hold Case sau Submit (poll khi Queueable Mark NFU hoàn tất). */
@@ -5230,6 +5735,13 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
         subprocess?.refreshAutoHoldCase?.();
       }, delayMs);
     });
+    // eslint-disable-next-line @lwc/lwc/no-async-operation
+    setTimeout(() => {
+      if (this.holdCaseResultOverride === "PENDING") {
+        this.holdCaseResultOverride = null;
+        void this._refreshHoldCaseAutoDisplay();
+      }
+    }, 3000);
   }
 
   applyDraft() {
@@ -5467,6 +5979,21 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
       return Promise.resolve();
     }
 
+    if (
+      isMrcReceivedConfirmation(this.mrcReturnCustomerConfirmationValue) &&
+      this.business?.routingActionlst?.length
+    ) {
+      this._mrcReturnStageChangeRoutingActive = false;
+      this._setActionValueByCode(ACTION_CANCEL);
+      this.business = {
+        ...this.business,
+        nextTeam: null,
+        nextQueue: null,
+      };
+      this.business = { ...this.business };
+      return Promise.resolve();
+    }
+
     this._mrcReturnStageChangeRoutingActive = true;
 
     const priorQueue = this.business?.nextQueue;
@@ -5497,9 +6024,10 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
 
     const routeToActionId = this._resolveRouteToActionId();
     const teamUserGroup = ctx.teamCode || ctx.team;
+    const displayTeam = normalizeTeamUserGroupForDisplay(ctx.teamCode || ctx.team);
     this.business = {
       ...this.business,
-      nextTeam: ctx.team,
+      nextTeam: displayTeam,
       nextQueue: priorQueue?.value ? priorQueue : this.business?.nextQueue,
     };
     this._setActionValueByCode(ACTION_ROUTE_TO);
@@ -5515,7 +6043,9 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
         if (res?.nextQueueId) {
           this.business = {
             ...this.business,
-            nextTeam: res.nextTeam || ctx.team,
+            nextTeam: normalizeTeamUserGroupForDisplay(
+              displayTeam || res.nextTeam,
+            ),
             nextQueue: {
               label: res.nextQueueLabel || STR_EMPTY,
               value: res.nextQueueId,
@@ -5526,12 +6056,14 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
           const fallbackQueue =
             priorQueue &&
             (priorQueue.value || priorQueue.label) &&
-            (!priorTeam || priorTeam === ctx.team)
+            (!priorTeam || priorTeam === displayTeam)
               ? priorQueue
               : null;
           this.business = {
             ...this.business,
-            nextTeam: ctx.team || res?.nextTeam || priorTeam,
+            nextTeam: normalizeTeamUserGroupForDisplay(
+              displayTeam || priorTeam,
+            ),
             nextQueue: fallbackQueue,
           };
           if (fallbackQueue) {
@@ -5552,7 +6084,9 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
         console.error("[MrcReturnStageChangeRouting]", JSON.stringify(err));
         this.business = {
           ...this.business,
-          nextTeam: ctx.team || priorTeam,
+          nextTeam: normalizeTeamUserGroupForDisplay(
+            displayTeam || priorTeam,
+          ),
           nextQueue: priorQueue?.value ? priorQueue : null,
         };
         this.business = { ...this.business };

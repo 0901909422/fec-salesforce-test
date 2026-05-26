@@ -20,11 +20,13 @@
 	    <members>FEC_MainInfoLoanAccountController</members>
 	    <members>FEC_TerminationLoanController</members>
 	    <members>FEC_CaseRemarkController</members>
+	    <members>FEC_CaseRemarksRollupService</members>
 	    <members>FEC_CaseTriggerHandler</members>
 	    <members>FEC_PinResetHandler</members>
 	    <members>FEC_GetSMSInfoFromITTelcoCallout</members>
 	    <members>FEC_NotificationHistoryController</members>
 	    <members>FEC_Notification</members>
+	    <members>FEC_OwnerTeamLookupSvc</members>
 	    <members>FEC_NatureOfCaseTriggerHandler</members>
 	    <members>FEC_NocChannelConfigController</members>
 	    <members>FEC_GetCardSecInfo</members>
@@ -38,6 +40,7 @@
 	    <members>FEC_AssignmentExecuteService</members>
         <members>FEC_AssignmentCaseShareService</members>
 	    <members>FEC_CaseExecuteService</members>
+	    <members>FEC_CaseFullProcessTatQueueJob</members>
 	    <members>FEC_CaseInitUpdateService</members>
 	    <members>FEC_CaseInitUpdateServiceTest</members>
 	    <members>FEC_SubProcessService</members>
@@ -59,6 +62,7 @@
         <members>FEC_GetCSCaseStatusService</members>
 		<members>Fec_HoldCaseConfigurationController</members>
 		<members>FEC_HoldCaseInheritanceService</members>
+		<members>FEC_HoldCaseStage2DisplayService</members>
 		<members>FEC_NocRemovePhoneInheritanceHandler</members>
 		<members>FEC_NocRemovePhoneInheritanceHandlerTest</members>
 		<members>FEC_PaymentHistoryController</members>
@@ -91,6 +95,7 @@
 		<members>FEC_MrcReturnCaseService</members>
 		<members>FEC_MrcReturnCaseServiceTest</members>
 		<members>FEC_CreateCSCaseService</members>
+		<members>FEC_CreateInteractionGenesys</members>
 		<members>FEC_GsrStage1RevertMasterDataHelper</members>
 		<members>FEC_AssignAutoDistribSched</members>
 		<members>FEC_CaseAssignmentApplyOwnerBatch</members>
@@ -102,6 +107,7 @@
 		<members>FEC_CaseAssignmentNOCTriggerHandler</members>
 		<members>FEC_CaseAssignmentNocController</members>
 		<members>FEC_CaseManagerListService</members>
+		<members>FEC_CaseMasterDataHelper</members>
 		<members>FEC_AutoHoldCaseApi</members>
 		<members>FEC_AutoHoldCaseExpireBatch</members>
 		<members>FEC_AutoHoldCaseExpireSchedulable</members>
@@ -125,6 +131,11 @@
         <members>FEC_BatchCaseHandlingZipResult</members>
         <members>FEC_BatchCaseHandlingZipService</members>
         <members>FEC_CaseTatFullProcessSvc</members>
+        <members>FEC_CaseFullProcessTatQueueJob</members>
+        <members>FEC_CaseDsTsSlaBatch</members>
+        <members>FEC_CaseDsTsSlaNotificationSender</members>
+        <members>FEC_CaseDsTsSlaSchedulable</members>
+        <members>FEC_CaseDsTsSlaService</members>
         <members>FEC_CaseSlaNotificationService</members>
         <members>FEC_CaseAssignmentTriggerHandler</members>
         <members>FEC_ScopedStageChangeRoutingService</members>
@@ -258,6 +269,7 @@
     <types>
         <members>Case.FEC_Service_Case_Owner__c</members>
         <members>Case.FEC_Assigment_Mode__c</members>
+        <members>Case.FEC_Case_Executor__c</members>
         <members>Case.FEC_Complain_Type__c</members>
         <members>Case.FEC_Original_Category__c</members>
         <members>Case.FEC_Original_Sub_Category__c</members>
@@ -395,6 +407,9 @@
         <members>FEC_TransferCall_Field_CollAgent</members>
         <members>FEC_STOP_IMPACT_ALREADY_MARKED_MSG</members>
         <members>FEC_MSG_SUCCESS</members>
+        <members>FEC_MSG_HOLD_CASE_AUTO_FAIL_RETRY</members>
+        <members>FEC_MSG_HOLD_CASE_NOC_HAS_AUTO</members>
+        <members>FEC_MSG_HOLD_CASE_NOC_NO_AUTO</members>
         <members>FEC_MSG_ERROR</members>
         <members>FEC_Account_Contract_Status</members>
 		<members>FEC_MRC_Return_Case_Info_Block_Title</members>
@@ -405,6 +420,7 @@
         <members>FEC_MRC_RL0502_Dup_Opt_Cancel_Prev</members>
         <members>FEC_MRC_Dup_Remark_Cancel_Prev</members>
         <members>FEC_MRC_Dup_Remark_Cancel_New</members>
+        <members>FEC_MRC_Dup_Remark_Received_Confirm</members>
         <members>FEC_MRC_RL0502_Dup_Open_Case_Btn</members>
 		<members>FEC_Transfer_Err_Remark_Null</members>
         <members>FEC_BCH_AddFilterRow</members>
@@ -427,6 +443,11 @@
         <members>FEC_BCH_PropertyPlaceholder</members>
         <members>FEC_Points_Redeem_Fail_After_Max</members>
         <members>FEC_Points_Redeem_Fail_Retry</members>
+        <members>FEC_SLA_DS_TS_Recipient_Direct_Sales</members>
+        <members>FEC_SLA_DS_TS_Recipient_LG</members>
+        <members>FEC_SLA_DS_TS_Recipient_Pos_Sales</members>
+        <members>FEC_SLA_DS_TS_Recipient_Telesales</members>
+        <members>FEC_SLA_DS_TS_Use_Test_Thresholds</members>
         <members>FEC_MSG_SLA_Notif_Body_Approaching</members>
         <members>FEC_MSG_SLA_Notif_Body_Exceeded</members>
         <members>FEC_MSG_SLA_Notif_Title_Approaching</members>
@@ -461,6 +482,7 @@
 		<members>FEC_Title_Context_Report</members>
 		<members>FEC_BCH_ResultHdr_Errors</members>
 		<members>FEC_BCH_ResultHdr_Status</members>
+		<members>FEC_Channel_Config_Invalid_Selection</members>
 		<name>CustomLabel</name>
 	</types>
     <types>
@@ -470,6 +492,7 @@
 	    <members>FEC_API_Config.FEC_MFASOUTSTANDINGAUTHINQ</members>
 		<members>FEC_API_Config.FEC_VMX_AUTH_DETAIL_INQ</members>
 		<members>FEC_API_Config.FEC_Vmx_Acct_Blkcd_Upd_Emea</members>
+		<members>FEC_API_Config.FEC_Get_Customer_List</members>
 		<name>CustomMetadata</name>
 	</types>
     <types>
@@ -745,16 +768,20 @@
 	</types>
 	<types>
 	    <members>Case.SLA_Violating_Warning_44h</members>
+	    <members>Case.SLA_Violation_Warning_124h</members>
+	    <members>Case.SLA_Violation_Warning_164h</members>
+	    <members>Case.SLA_Violation_Warning_76h</members>
+	    <members>Case.SLA_Warning_0h</members>
 	    <members>Case.SLA_Warning_119h</members>
 	    <members>Case.SLA_Warning_120h</members>
-	    <members>Case.SLA_Warning_124h</members>
+	    <members>Case.SLA_Warning_125h</members>
+	    <members>Case.SLA_Warning_126h</members>
 	    <members>Case.SLA_Warning_128h</members>
+	    <members>Case.SLA_Warning_143h</members>
 	    <members>Case.SLA_Warning_144h</members>
-	    <members>Case.SLA_Warning_164h</members>
 	    <members>Case.SLA_Warning_167h</members>
 	    <members>Case.SLA_Warning_168h</members>
 	    <members>Case.SLA_Warning_48h</members>
-	    <members>Case.SLA_Warning_76h</members>
 	    <members>Case.SLA_Warning_80h</members>
 	    <name>WorkflowFieldUpdate</name>
 	</types>
