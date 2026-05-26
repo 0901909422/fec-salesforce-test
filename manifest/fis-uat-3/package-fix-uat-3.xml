@@ -154,7 +154,13 @@
 		<members>FEC_DownloadReportJob</members>
 		<members>FEC_DownloadReportScheduler</members>
 		<members>FEC_DownloadReportService</members>
+		<members>FEC_BatchCaseChainQueueable</members>
 		<members>FEC_BatchCaseCreationController</members>
+		<members>FEC_BatchCaseCreationPendingService</members>
+		<members>FEC_BatchCaseCreationProcessBatch</members>
+		<members>FEC_BatchCaseCreationProcessQueueable</members>
+		<members>FEC_BatchCaseCreationScheduler</members>
+		<members>FEC_BatchCaseCreationSchedulerTest</members>
 		<members>FEC_BatchCaseCreationService</members>
 		<members>FEC_BatchDataCreationController</members>
 		<members>FEC_BatchImportCommon</members>
