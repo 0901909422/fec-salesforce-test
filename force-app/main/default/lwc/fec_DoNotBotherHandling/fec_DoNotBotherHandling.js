@@ -153,26 +153,37 @@ export default class fec_DoNotBotherHandling extends LightningElement {
     return this.customerType === "Existing";
   }
 
-  _findDNBNonExistingEl() {
-    const selectors = ["c-fec_-do-not-bother-non-existing-customer"];
-
-    for (let i = 0; i < selectors.length; i++) {
-      const el = this.template.querySelector(selectors[i]);
-
-      if (el) {
-        return el;
-      }
-    }
-
-    return null;
+  //FECREDIT_CSM_2025_KH-1561
+  _findNonExistingCustomerEl() {
+    return this.template.querySelector(
+      "c-fec_-do-not-bother-non-existing-customer",
+    );
   }
 
+  //FECREDIT_CSM_2025_KH-1561
+  _findExistingCustomerEl() {
+    return this.template.querySelector(
+      "c-fec_-do-not-bother-existing-customer",
+    );
+  }
+
+  //FECREDIT_CSM_2025_KH-1561
   @api
   validateForSubmit() {
-    const dnbEl = this._findDNBNonExistingEl();
+    if (this.isCustormerExisting) {
+      const existingCmp = this._findExistingCustomerEl();
+      if (existingCmp && typeof existingCmp.validateForSubmit === "function") {
+        return existingCmp.validateForSubmit();
+      }
+      return true;
+    }
 
-    if (dnbEl && typeof dnbEl.validateForSubmit === "function") {
-      return dnbEl.validateForSubmit();
+    const nonExistingCmp = this._findNonExistingCustomerEl();
+    if (
+      nonExistingCmp &&
+      typeof nonExistingCmp.validateForSubmit === "function"
+    ) {
+      return nonExistingCmp.validateForSubmit();
     }
 
     return true;

@@ -16525,7 +16525,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC_BCH_ActionImportUpdate</shortDescription>
-        <value>Import Update Data</value>
+        <value>Import Data</value>
     </labels>
     <labels>
         <fullName>FEC_BCH_ResultHdr_RoutingAction</fullName>
@@ -17786,7 +17786,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>New NOC has no Auto Hold Case process</shortDescription>
-        <value>Giá trị Nature of Case mới không có thiết lập quy trình Hold Case tự động</value>
+        <value>Giá trị Nature of Case mới không thiết lập quy trình Hold Case tự động</value>
     </labels>
     <labels>
         <fullName>FEC_MSG_HOLD_CASE_NOC_HAS_AUTO</fullName>

@@ -38,6 +38,27 @@ public without sharing class FEC_CardClosureRefundController {
         @AuraEnabled public String pendingDisbursementStatus;
         @AuraEnabled public String pendingCsDecision;
         @AuraEnabled public Boolean cardBlocked;
+        @AuraEnabled public Boolean callAccountBlkcdApi;
+    }
+
+    public class LockUnlockApiResultDTO {
+        @AuraEnabled public Boolean success;
+        @AuraEnabled public Boolean skipped;
+        @AuraEnabled public String code;
+        @AuraEnabled public String description;
+        @AuraEnabled public String transId;
+        @AuraEnabled public String errorMessage;
+    }
+
+    private class BlockExecutionContext {
+        Id caseId;
+        Case caseRecord;
+        FEC_Customer_History__c customerHistory;
+        String accountNumber;
+        String last4Digit;
+        Boolean cardOnlyLock;
+        Boolean callAccountBlkcdApi;
+        String errorMessage;
     }
 
     @AuraEnabled
@@ -48,6 +69,7 @@ public without sharing class FEC_CardClosureRefundController {
         dto.attemptsExhausted = false;
         dto.cardBlockServiceAttempts = 0;
         dto.cardBlocked = false;
+        dto.callAccountBlkcdApi = false;
         if (caseId == null || !Schema.sObjectType.Case.isAccessible() || !Schema.sObjectType.FEC_Customer_History__c.isAccessible()) {
             return dto;
         }
@@ -77,7 +99,7 @@ public without sharing class FEC_CardClosureRefundController {
         String accountNumberForDisb = c.FEC_Account_Number__c;
         if (c.FEC_Account_or_Contract__c != null) {
             List<FEC_Customer_History__c> histories = [
-                SELECT Id, FEC_Block_Code__c, FEC_Account_Number__c
+                SELECT Id, FEC_Block_Code__c, FEC_Account_Number__c, FEC_Block_Code_1__c
                 FROM FEC_Customer_History__c
                 WHERE Id = :c.FEC_Account_or_Contract__c
                 LIMIT 1
@@ -86,6 +108,7 @@ public without sharing class FEC_CardClosureRefundController {
             if (!histories.isEmpty()) {
                 FEC_Customer_History__c h = histories[0];
                 cardBlock = h.FEC_Block_Code__c;
+                dto.callAccountBlkcdApi = !isCardOnlyLockByAccountBlockCode1(h.FEC_Block_Code_1__c);
                 if (String.isBlank(accountNumberForDisb)) {
                     accountNumberForDisb = h.FEC_Account_Number__c;
                 }
@@ -205,7 +228,83 @@ public without sharing class FEC_CardClosureRefundController {
 
     @AuraEnabled
     public static LockUnlockResultDTO blockCard(Id caseId) {
-        return executeLockUnlock(caseId, FUNC_BLOCK);
+        LockUnlockApiResultDTO lockApiResult = blockCardLockApi(caseId);
+        LockUnlockApiResultDTO vmxApiResult = blockCardAccountBlkcdApi(caseId);
+        Boolean callAccountBlkcd = vmxApiResult?.skipped != true;
+        Boolean vmxSuccess = callAccountBlkcd ? (vmxApiResult?.success == true) : true;
+        return finalizeBlockCard(caseId, lockApiResult?.success == true, vmxSuccess, callAccountBlkcd);
+    }
+
+    @AuraEnabled
+    public static LockUnlockApiResultDTO blockCardLockApi(Id caseId) {
+        LockUnlockApiResultDTO dto = newLockUnlockApiResultDTO();
+        BlockExecutionContext ctx = prepareBlockExecutionContext(caseId);
+        if (String.isNotBlank(ctx.errorMessage)) {
+            dto.errorMessage = ctx.errorMessage;
+            return dto;
+        }
+        return executeBlockCardLockApi(ctx);
+    }
+
+    @AuraEnabled
+    public static LockUnlockApiResultDTO blockCardAccountBlkcdApi(Id caseId) {
+        LockUnlockApiResultDTO dto = newLockUnlockApiResultDTO();
+        BlockExecutionContext ctx = prepareBlockExecutionContext(caseId);
+        if (String.isNotBlank(ctx.errorMessage)) {
+            dto.errorMessage = ctx.errorMessage;
+            return dto;
+        }
+        if (!ctx.callAccountBlkcdApi) {
+            dto.success = true;
+            dto.skipped = true;
+            return dto;
+        }
+        return executeBlockCardAccountBlkcdApi(ctx);
+    }
+
+    @AuraEnabled
+    public static LockUnlockResultDTO finalizeBlockCard(
+        Id caseId,
+        Boolean lockApiSuccess,
+        Boolean vmxApiSuccess,
+        Boolean callAccountBlkcdApi
+    ) {
+        LockUnlockResultDTO dto = newLockUnlockResultDTO();
+        dto.success = false;
+        dto.hideBlockCardAfterAction = false;
+
+        if (caseId == null) {
+            dto.errorMessage = String.format(System.Label.FEC_MSG_Param_Required, new List<String>{ 'Case Id' });
+            return dto;
+        }
+
+        BlockExecutionContext ctx = prepareBlockExecutionContext(caseId);
+        if (String.isNotBlank(ctx.errorMessage)) {
+            dto.errorMessage = ctx.errorMessage;
+            return dto;
+        }
+
+        Boolean lockOk = lockApiSuccess == true;
+        Boolean vmxOk = vmxApiSuccess == true;
+        Boolean requireVmx = callAccountBlkcdApi == true && ctx.callAccountBlkcdApi;
+        if (requireVmx) {
+            dto.success = lockOk && vmxOk;
+        } else {
+            dto.success = lockOk;
+        }
+
+        if (dto.success) {
+            updateCustomerHistoryAfterBlock(ctx.customerHistory.Id, ctx.cardOnlyLock);
+            resetCaseBlockServiceAttempts(caseId);
+            dto.cardBlockServiceAttemptsAfter = 0;
+            dto.hideBlockCardAfterAction = true;
+        } else {
+            Integer after = incrementCaseBlockServiceAttempts(caseId);
+            dto.cardBlockServiceAttemptsAfter = after;
+            dto.hideBlockCardAfterAction = after >= MAX_BLOCK_SERVICE_ATTEMPTS;
+        }
+
+        return dto;
     }
 
     @AuraEnabled
@@ -213,7 +312,7 @@ public without sharing class FEC_CardClosureRefundController {
         return executeLockUnlock(caseId, FUNC_UNBLOCK);
     }
 
-    private static LockUnlockResultDTO executeLockUnlock(Id caseId, String funcCode) {
+    private static LockUnlockResultDTO newLockUnlockResultDTO() {
         LockUnlockResultDTO dto = new LockUnlockResultDTO();
         dto.success = false;
         dto.code = null;
@@ -222,24 +321,38 @@ public without sharing class FEC_CardClosureRefundController {
         dto.errorMessage = null;
         dto.cardBlockServiceAttemptsAfter = null;
         dto.hideBlockCardAfterAction = false;
+        return dto;
+    }
+
+    private static LockUnlockApiResultDTO newLockUnlockApiResultDTO() {
+        LockUnlockApiResultDTO dto = new LockUnlockApiResultDTO();
+        dto.success = false;
+        dto.skipped = false;
+        dto.code = null;
+        dto.description = null;
+        dto.transId = null;
+        dto.errorMessage = null;
+        return dto;
+    }
+
+    private static BlockExecutionContext prepareBlockExecutionContext(Id caseId) {
+        BlockExecutionContext ctx = new BlockExecutionContext();
+        ctx.caseId = caseId;
+        ctx.cardOnlyLock = false;
+        ctx.callAccountBlkcdApi = false;
 
         if (caseId == null) {
-            dto.errorMessage = String.format(System.Label.FEC_MSG_Param_Required, new List<String>{ 'Case Id' });
-            return dto;
-        }
-
-        if (String.isBlank(funcCode) || (funcCode != FUNC_BLOCK && funcCode != FUNC_UNBLOCK)) {
-            dto.errorMessage = String.format(System.Label.FEC_MSG_Invalid, new List<String>{ 'Func' });
-            return dto;
+            ctx.errorMessage = String.format(System.Label.FEC_MSG_Param_Required, new List<String>{ 'Case Id' });
+            return ctx;
         }
 
         if (!Schema.sObjectType.Case.isAccessible()) {
-            dto.errorMessage = System.Label.FEC_MSG_Card_LockUnlock_Case_Access_Denied;
-            return dto;
+            ctx.errorMessage = System.Label.FEC_MSG_Card_LockUnlock_Case_Access_Denied;
+            return ctx;
         }
         if (!Schema.sObjectType.FEC_Customer_History__c.isAccessible()) {
-            dto.errorMessage = System.Label.FEC_MSG_Card_LockUnlock_Customer_History_Access_Denied;
-            return dto;
+            ctx.errorMessage = System.Label.FEC_MSG_Card_LockUnlock_Customer_History_Access_Denied;
+            return ctx;
         }
 
         List<Case> caseRows = [
@@ -247,7 +360,6 @@ public without sharing class FEC_CardClosureRefundController {
                 FEC_Account_Number__c,
                 FEC_Account_or_Contract__c,
                 FEC_SubCode__r.FEC_Code__c,
-                FEC_Card_Block_Service_Attempts__c,
                 FEC_Is_Test_API__c
             FROM Case
             WHERE Id = :caseId
@@ -255,20 +367,20 @@ public without sharing class FEC_CardClosureRefundController {
         ];
         caseRows = (List<Case>) Security.stripInaccessible(AccessType.READABLE, caseRows).getRecords();
         if (caseRows.isEmpty()) {
-            dto.errorMessage = String.format(System.Label.FEC_MSG_Not_Found, new List<String>{ 'Case' });
-            return dto;
+            ctx.errorMessage = String.format(System.Label.FEC_MSG_Not_Found, new List<String>{ 'Case' });
+            return ctx;
         }
 
-        Case c = caseRows[0];
-        String subCode = c.FEC_SubCode__r != null ? c.FEC_SubCode__r.FEC_Code__c : null;
-        if (funcCode == FUNC_BLOCK && SUB_CODE_RC16_01.equals(subCode)) {
-            dto.errorMessage = String.format(System.Label.FEC_MSG_Invalid, new List<String>{ 'Sub Code for Block Card' });
-            return dto;
+        ctx.caseRecord = caseRows[0];
+        String subCode = ctx.caseRecord.FEC_SubCode__r != null ? ctx.caseRecord.FEC_SubCode__r.FEC_Code__c : null;
+        if (SUB_CODE_RC16_01.equals(subCode)) {
+            ctx.errorMessage = String.format(System.Label.FEC_MSG_Invalid, new List<String>{ 'Sub Code for Block Card' });
+            return ctx;
         }
 
-        if (c.FEC_Account_or_Contract__c == null) {
-            dto.errorMessage = String.format(System.Label.FEC_MSG_Not_Found, new List<String>{ 'Customer History' });
-            return dto;
+        if (ctx.caseRecord.FEC_Account_or_Contract__c == null) {
+            ctx.errorMessage = String.format(System.Label.FEC_MSG_Not_Found, new List<String>{ 'Customer History' });
+            return ctx;
         }
 
         List<FEC_Customer_History__c> historyRows = [
@@ -276,51 +388,47 @@ public without sharing class FEC_CardClosureRefundController {
                 Name,
                 FEC_Account_Number__c,
                 FEC_Card_Number__c,
-                FEC_Block_Code__c,
-                FEC_Block_Code_1__c,
-                FEC_Block_Code_2__c
+                FEC_Block_Code_1__c
             FROM FEC_Customer_History__c
-            WHERE Id = :c.FEC_Account_or_Contract__c
+            WHERE Id = :ctx.caseRecord.FEC_Account_or_Contract__c
             LIMIT 1
         ];
         historyRows = (List<FEC_Customer_History__c>) Security.stripInaccessible(AccessType.READABLE, historyRows).getRecords();
         if (historyRows.isEmpty()) {
-            dto.errorMessage = String.format(System.Label.FEC_MSG_Not_Found, new List<String>{ 'Customer History' });
-            return dto;
+            ctx.errorMessage = String.format(System.Label.FEC_MSG_Not_Found, new List<String>{ 'Customer History' });
+            return ctx;
         }
 
-        FEC_Customer_History__c customerHistory = historyRows[0];
-        String accountNumber = String.isNotBlank(customerHistory.FEC_Account_Number__c) ? customerHistory.FEC_Account_Number__c : c.FEC_Account_Number__c;
-        if (String.isBlank(accountNumber)) {
-            dto.errorMessage = String.format(System.Label.FEC_MSG_Param_Required, new List<String>{ 'Account Number' });
-            return dto;
+        ctx.customerHistory = historyRows[0];
+        ctx.accountNumber = String.isNotBlank(ctx.customerHistory.FEC_Account_Number__c)
+            ? ctx.customerHistory.FEC_Account_Number__c
+            : ctx.caseRecord.FEC_Account_Number__c;
+        if (String.isBlank(ctx.accountNumber)) {
+            ctx.errorMessage = String.format(System.Label.FEC_MSG_Param_Required, new List<String>{ 'Account Number' });
+            return ctx;
         }
 
-        String last4Digit = getLast4Digit(customerHistory.FEC_Card_Number__c);
-        if (String.isBlank(last4Digit)) {
-            dto.errorMessage = String.format(System.Label.FEC_MSG_Param_Required, new List<String>{ 'Card Number' });
-            return dto;
+        ctx.last4Digit = getLast4Digit(ctx.customerHistory.FEC_Card_Number__c);
+        if (String.isBlank(ctx.last4Digit)) {
+            ctx.errorMessage = String.format(System.Label.FEC_MSG_Param_Required, new List<String>{ 'Card Number' });
+            return ctx;
         }
 
-        // Block API selection (FEC_Account_or_Contract__r / Customer History):
-        // Scenario 1: FEC_Block_Code__c, FEC_Block_Code_1__c, FEC_Block_Code_2__c all NULL -> API 57 + 91
-        // Scenario 2: FEC_Block_Code_1__c != F and != N (_c, _2__c NULL or any value) -> API 57 + 91
-        // Scenario 3: FEC_Block_Code_1__c = F or N -> API 57 only
-        Boolean cardOnlyLock = false;
-        Boolean callAccountBlkcdApi = false;
-        if (funcCode == FUNC_BLOCK) {
-            cardOnlyLock = isCardOnlyLockByAccountBlockCode1(customerHistory.FEC_Block_Code_1__c);
-            callAccountBlkcdApi = !cardOnlyLock;
-        }
+        ctx.cardOnlyLock = isCardOnlyLockByAccountBlockCode1(ctx.customerHistory.FEC_Block_Code_1__c);
+        ctx.callAccountBlkcdApi = !ctx.cardOnlyLock;
+        return ctx;
+    }
 
+    private static LockUnlockApiResultDTO executeBlockCardLockApi(BlockExecutionContext ctx) {
+        LockUnlockApiResultDTO dto = newLockUnlockApiResultDTO();
         String transId = UUID.randomUUID().toString();
         FEC_CardLockUnLockCallout.ValidationResult validation = FEC_CardLockUnLockCallout.validateRequest(
             transId,
             FEC_ConstantCommon.REQUESTOR_CRM,
             BLOCK_CODE_CARD,
-            funcCode,
-            last4Digit,
-            accountNumber
+            FUNC_BLOCK,
+            ctx.last4Digit,
+            ctx.accountNumber
         );
         if (validation == null || !validation.isValid) {
             dto.errorMessage = validation != null ? validation.errorMessage : System.Label.FEC_MSG_Card_LockUnlock_Validation_Failed;
@@ -328,15 +436,14 @@ public without sharing class FEC_CardClosureRefundController {
         }
 
         try {
-            // All scenarios: API 57 CardLockUnLock (block/unblock card level C)
             FEC_CardLockUnLockCallout.LockUnlockResponse response = FEC_CardLockUnLockCallout.callLockUnlockCard(
                 transId,
                 FEC_ConstantCommon.REQUESTOR_CRM,
                 BLOCK_CODE_CARD,
-                funcCode,
-                last4Digit,
-                accountNumber,
-                c.FEC_Is_Test_API__c
+                FUNC_BLOCK,
+                ctx.last4Digit,
+                ctx.accountNumber,
+                ctx.caseRecord.FEC_Is_Test_API__c
             );
             FEC_CardLockUnLockCallout.logApiResponse();
 
@@ -345,54 +452,99 @@ public without sharing class FEC_CardClosureRefundController {
             dto.code = response != null && response.Sys != null ? response.Sys.Code : null;
             dto.description = response != null && response.Sys != null ? response.Sys.Description : null;
             dto.errorMessage = response != null ? response.errorMessage : null;
-
-            // Scenario 1 & 2: after API 57 success, call API 91 VMX_ACCT_BLKCD_UPD_EMEA
-            if (dto.success && funcCode == FUNC_BLOCK && callAccountBlkcdApi) {
-                String vmxCardNbr = resolveVmxCardNbr(customerHistory, accountNumber);
-                if (String.isBlank(vmxCardNbr)) {
-                    dto.success = false;
-                    dto.errorMessage = String.format(System.Label.FEC_MSG_Param_Required, new List<String>{ 'CARD_NBR' });
-                } else {
-                    try {
-                        FEC_VmxAcctBlkcdUpdEmeaCallout.BlkcdUpdInput vmxInput =
-                            FEC_VmxAcctBlkcdUpdEmeaCallout.buildDefaultInput(vmxCardNbr);
-                        FEC_VmxAcctBlkcdUpdEmeaCallout.BlkcdUpdResult vmxResult =
-                            FEC_VmxAcctBlkcdUpdEmeaCallout.executeUpdateAccountBlockCode(vmxInput);
-                        if (!FEC_VmxAcctBlkcdUpdEmeaCallout.isBlkcdUpdSuccess(vmxResult)) {
-                            dto.success = false;
-                            dto.errorMessage = String.isNotBlank(vmxResult?.responseDesc)
-                                ? vmxResult.responseDesc
-                                : System.Label.FEC_MSG_Card_Block_Failed;
-                        }
-                    } catch (Exception vmxEx) {
-                        dto.success = false;
-                        dto.errorMessage = System.Label.FEC_MSG_Card_Block_Failed;
-                    } finally {
-                        FEC_VmxAcctBlkcdUpdEmeaCallout.logApiResponse();
-                    }
-                }
-            }
-
-            if (dto.success && funcCode == FUNC_BLOCK) {
-                updateCustomerHistoryAfterBlock(customerHistory.Id, cardOnlyLock);
-                resetCaseBlockServiceAttempts(caseId);
-                dto.cardBlockServiceAttemptsAfter = 0;
-                dto.hideBlockCardAfterAction = true;
-            } else if (!dto.success && funcCode == FUNC_BLOCK) {
-                Integer after = incrementCaseBlockServiceAttempts(caseId);
-                dto.cardBlockServiceAttemptsAfter = after;
-                dto.hideBlockCardAfterAction = after >= MAX_BLOCK_SERVICE_ATTEMPTS;
+            if (!dto.success && String.isBlank(dto.errorMessage) && String.isNotBlank(dto.description)) {
+                dto.errorMessage = dto.description;
             }
         } catch (Exception ex) {
             dto.success = false;
-            dto.errorMessage = funcCode == FUNC_UNBLOCK
-                ? System.Label.FEC_MSG_Card_Unlock_Failed
-                : System.Label.FEC_MSG_Card_Block_Failed;
-            if (funcCode == FUNC_BLOCK) {
-                Integer after = incrementCaseBlockServiceAttempts(caseId);
-                dto.cardBlockServiceAttemptsAfter = after;
-                dto.hideBlockCardAfterAction = after >= MAX_BLOCK_SERVICE_ATTEMPTS;
+            dto.errorMessage = System.Label.FEC_MSG_Card_Block_Failed;
+        }
+
+        return dto;
+    }
+
+    private static LockUnlockApiResultDTO executeBlockCardAccountBlkcdApi(BlockExecutionContext ctx) {
+        LockUnlockApiResultDTO dto = newLockUnlockApiResultDTO();
+        String vmxCardNbr = resolveVmxCardNbr(ctx.customerHistory, ctx.accountNumber);
+        if (String.isBlank(vmxCardNbr)) {
+            dto.errorMessage = String.format(System.Label.FEC_MSG_Param_Required, new List<String>{ 'CARD_NBR' });
+            return dto;
+        }
+
+        try {
+            FEC_VmxAcctBlkcdUpdEmeaCallout.BlkcdUpdInput vmxInput =
+                FEC_VmxAcctBlkcdUpdEmeaCallout.buildDefaultInput(vmxCardNbr);
+            FEC_VmxAcctBlkcdUpdEmeaCallout.BlkcdUpdResult vmxResult =
+                FEC_VmxAcctBlkcdUpdEmeaCallout.executeUpdateAccountBlockCode(vmxInput);
+            dto.success = FEC_VmxAcctBlkcdUpdEmeaCallout.isBlkcdUpdSuccess(vmxResult);
+            if (!dto.success) {
+                dto.errorMessage = String.isNotBlank(vmxResult?.responseDesc)
+                    ? vmxResult.responseDesc
+                    : System.Label.FEC_MSG_Card_Block_Failed;
             }
+        } catch (Exception ex) {
+            dto.success = false;
+            dto.errorMessage = System.Label.FEC_MSG_Card_Block_Failed;
+        } finally {
+            FEC_VmxAcctBlkcdUpdEmeaCallout.logApiResponse();
+        }
+
+        return dto;
+    }
+
+    private static LockUnlockResultDTO executeLockUnlock(Id caseId, String funcCode) {
+        LockUnlockResultDTO dto = newLockUnlockResultDTO();
+
+        if (caseId == null) {
+            dto.errorMessage = String.format(System.Label.FEC_MSG_Param_Required, new List<String>{ 'Case Id' });
+            return dto;
+        }
+
+        if (funcCode != FUNC_UNBLOCK) {
+            dto.errorMessage = String.format(System.Label.FEC_MSG_Invalid, new List<String>{ 'Func' });
+            return dto;
+        }
+
+        BlockExecutionContext ctx = prepareBlockExecutionContext(caseId);
+        if (String.isNotBlank(ctx.errorMessage)) {
+            dto.errorMessage = ctx.errorMessage;
+            return dto;
+        }
+
+        String transId = UUID.randomUUID().toString();
+        FEC_CardLockUnLockCallout.ValidationResult validation = FEC_CardLockUnLockCallout.validateRequest(
+            transId,
+            FEC_ConstantCommon.REQUESTOR_CRM,
+            BLOCK_CODE_CARD,
+            FUNC_UNBLOCK,
+            ctx.last4Digit,
+            ctx.accountNumber
+        );
+        if (validation == null || !validation.isValid) {
+            dto.errorMessage = validation != null ? validation.errorMessage : System.Label.FEC_MSG_Card_LockUnlock_Validation_Failed;
+            return dto;
+        }
+
+        try {
+            FEC_CardLockUnLockCallout.LockUnlockResponse response = FEC_CardLockUnLockCallout.callLockUnlockCard(
+                transId,
+                FEC_ConstantCommon.REQUESTOR_CRM,
+                BLOCK_CODE_CARD,
+                FUNC_UNBLOCK,
+                ctx.last4Digit,
+                ctx.accountNumber,
+                ctx.caseRecord.FEC_Is_Test_API__c
+            );
+            FEC_CardLockUnLockCallout.logApiResponse();
+
+            dto.transId = transId;
+            dto.success = FEC_CardLockUnLockCallout.isSuccess(response);
+            dto.code = response != null && response.Sys != null ? response.Sys.Code : null;
+            dto.description = response != null && response.Sys != null ? response.Sys.Description : null;
+            dto.errorMessage = response != null ? response.errorMessage : null;
+        } catch (Exception ex) {
+            dto.success = false;
+            dto.errorMessage = System.Label.FEC_MSG_Card_Unlock_Failed;
         }
 
         return dto;
