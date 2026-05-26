@@ -7,12 +7,24 @@ public without sharing class FEC_BatchCaseCreationPendingService {
   public class ImportPayload {
     public String templateName;
     public List<Object> rows;
+    public List<String> sourceHeaders;
+    public List<List<String>> sourceRows;
   }
 
   public static void attachPendingImportPayload(
     Id batchId,
     String templateName,
     String rowsJson
+  ) {
+    attachPendingImportPayload(batchId, templateName, rowsJson, null, null);
+  }
+
+  public static void attachPendingImportPayload(
+    Id batchId,
+    String templateName,
+    String rowsJson,
+    String sourceHeadersJson,
+    String sourceRowsJson
   ) {
     if (batchId == null || String.isBlank(rowsJson)) {
       return;
@@ -21,6 +33,12 @@ public without sharing class FEC_BatchCaseCreationPendingService {
       'templateName' => templateName,
       'rows' => JSON.deserializeUntyped(rowsJson)
     };
+    if (String.isNotBlank(sourceHeadersJson)) {
+      payload.put('sourceHeaders', JSON.deserializeUntyped(sourceHeadersJson));
+    }
+    if (String.isNotBlank(sourceRowsJson)) {
+      payload.put('sourceRows', JSON.deserializeUntyped(sourceRowsJson));
+    }
     ContentVersion cv = new ContentVersion();
     cv.Title = PAYLOAD_CONTENT_TITLE;
     cv.PathOnClient = PAYLOAD_CONTENT_TITLE + '.json';
@@ -97,6 +115,34 @@ public without sharing class FEC_BatchCaseCreationPendingService {
     Object rowsObj = parsed.get('rows');
     if (rowsObj instanceof List<Object>) {
       out.rows = (List<Object>) rowsObj;
+    }
+    Object headersObj = parsed.get('sourceHeaders');
+    if (headersObj instanceof List<Object>) {
+      out.sourceHeaders = new List<String>();
+      for (Object headerObj : (List<Object>) headersObj) {
+        out.sourceHeaders.add(headerObj == null ? '' : String.valueOf(headerObj));
+      }
+    }
+    Object sourceRowsObj = parsed.get('sourceRows');
+    if (sourceRowsObj instanceof List<Object>) {
+      out.sourceRows = parseSourceRows((List<Object>) sourceRowsObj);
+    }
+    return out;
+  }
+
+  private static List<List<String>> parseSourceRows(List<Object> rawRows) {
+    List<List<String>> out = new List<List<String>>();
+    if (rawRows == null) {
+      return out;
+    }
+    for (Object rowObj : rawRows) {
+      List<String> row = new List<String>();
+      if (rowObj instanceof List<Object>) {
+        for (Object cellObj : (List<Object>) rowObj) {
+          row.add(cellObj == null ? '' : String.valueOf(cellObj));
+        }
+      }
+      out.add(row);
     }
     return out;
   }

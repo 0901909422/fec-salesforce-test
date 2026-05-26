@@ -38,7 +38,9 @@ private class FEC_BatchCaseCreationSchedulerTest {
     FEC_BatchCaseCreationPendingService.attachPendingImportPayload(
       batchRow.Id,
       'Welcome Call',
-      JSON.serialize(rows)
+      JSON.serialize(rows),
+      null,
+      null
     );
 
     FEC_BatchCaseCreationPendingService.ImportPayload payload = FEC_BatchCaseCreationPendingService.loadPendingImportPayload(

@@ -271,12 +271,21 @@ public without sharing class FEC_BatchCaseCreationController {
         return output;
     }
 
+    private static final List<String> RESULT_APPEND_HEADERS = new List<String>{
+        '__Status',
+        '__Interaction ID',
+        '__Case ID',
+        '__Errors'
+    };
+
     @AuraEnabled
     public static FEC_BatchDataCreationController.ImportResult importBatchData(
         String fileName,
         String fileBodyBase64,
         String templateName,
-        String rowsJson
+        String rowsJson,
+        String sourceHeadersJson,
+        String sourceRowsJson
     ) {
         FEC_BatchDataCreationController.ImportResult out = new FEC_BatchDataCreationController.ImportResult();
         out.success = false;
@@ -335,7 +344,9 @@ public without sharing class FEC_BatchCaseCreationController {
             FEC_BatchCaseCreationPendingService.attachPendingImportPayload(
                 batchId,
                 templateName,
-                rowsJson
+                rowsJson,
+                sourceHeadersJson,
+                sourceRowsJson
             );
 
             List<ParsedCaseRow> parsed = parseInputRows(inputRows);
@@ -521,7 +532,16 @@ public without sharing class FEC_BatchCaseCreationController {
         FEC_BatchImportCommon.putIfFieldExists(batchFieldMap, batchRow, new List<String>{ 'FEC_Total_Failed_Records__c' }, 0);
         FEC_BatchImportCommon.putIfFieldExists(batchFieldMap, batchRow, new List<String>{ 'FEC_Failure_Reason__c' }, '');
         update batchRow;
-        saveCaseImportResultCsv(batchRecordId, fileName, rowResults);
+        FEC_BatchCaseCreationPendingService.ImportPayload exportPayload = FEC_BatchCaseCreationPendingService.loadPendingImportPayload(
+            batchRecordId
+        );
+        saveCaseImportResultCsv(
+            batchRecordId,
+            fileName,
+            exportPayload.sourceHeaders,
+            exportPayload.sourceRows,
+            rowResults
+        );
     }
 
     public static void markBatchImportSystemFailure(Id batchRecordId, String reason) {
@@ -1747,7 +1767,16 @@ public without sharing class FEC_BatchCaseCreationController {
         String sourceFileName,
         List<CaseRowResult> rowResults
     ) {
-        saveCaseImportResultCsv((Id) batchRow.get('Id'), sourceFileName, rowResults);
+        FEC_BatchCaseCreationPendingService.ImportPayload exportPayload = FEC_BatchCaseCreationPendingService.loadPendingImportPayload(
+            (Id) batchRow.get('Id')
+        );
+        saveCaseImportResultCsv(
+            (Id) batchRow.get('Id'),
+            sourceFileName,
+            exportPayload.sourceHeaders,
+            exportPayload.sourceRows,
+            rowResults
+        );
         FEC_BatchImportCommon.putIfFieldExists(batchFieldMap, batchRow, new List<String>{ 'FEC_Status__c' }, 'Failure');
         FEC_BatchImportCommon.putIfFieldExists(batchFieldMap, batchRow, new List<String>{ 'FEC_Result__c' }, 'Result');
         FEC_BatchImportCommon.putIfFieldExists(batchFieldMap, batchRow, new List<String>{ 'FEC_Total_Records__c', 'FEC_Total_Records_Count__c' }, totalCount);
@@ -1757,42 +1786,49 @@ public without sharing class FEC_BatchCaseCreationController {
         update batchRow;
     }
 
-    /** File result CSV trên server — luôn có link tải khi validation/DML fail (không phụ thuộc SheetJS client). */
-    private static void saveCaseImportResultCsv(Id batchRecordId, String sourceFileName, List<CaseRowResult> rowResults) {
+    /** File result = file import (header + dòng gốc) + 4 cột __Status / __Interaction ID / __Case ID / __Errors. */
+    private static void saveCaseImportResultCsv(
+        Id batchRecordId,
+        String sourceFileName,
+        List<String> sourceHeaders,
+        List<List<String>> sourceRows,
+        List<CaseRowResult> rowResults
+    ) {
         if (batchRecordId == null || rowResults == null || rowResults.isEmpty()) {
+            return;
+        }
+        List<String> exportHeaders = trimResultSourceHeaders(sourceHeaders);
+        if (exportHeaders.isEmpty()) {
             return;
         }
         try {
             List<String> lines = new List<String>();
-            lines.add(
-                '"Row","Contract","Phone","Product","Category","Sub Category","Sub Code","Case Status","Remarks","Channel","Sub Channel","Email","Status","Interaction ID","Case ID","Errors"'
-            );
-            Integer rowNum = 0;
-            for (CaseRowResult rr : rowResults) {
-                rowNum += 1;
-                lines.add(
-                    String.join(
-                        new List<String>{
-                            csvEscape(String.valueOf(rowNum)),
-                            csvEscape(rr.contractNumber),
-                            csvEscape(rr.interactionPhone),
-                            csvEscape(rr.productType),
-                            csvEscape(rr.category),
-                            csvEscape(rr.subCategory),
-                            csvEscape(rr.subCode),
-                            csvEscape(rr.caseStatus),
-                            csvEscape(rr.caseRemarks),
-                            csvEscape(rr.interactionChannel),
-                            csvEscape(rr.interactionSubChannel),
-                            csvEscape(rr.interactionEmail),
-                            csvEscape(rr.status),
-                            csvEscape(resolveExportInteractionId(rr)),
-                            csvEscape(resolveExportCaseId(rr)),
-                            csvEscape(rr.errors)
-                        },
-                        ','
-                    )
-                );
+            List<String> headerCells = new List<String>();
+            for (String header : exportHeaders) {
+                headerCells.add(csvEscape(header));
+            }
+            for (String appendHeader : RESULT_APPEND_HEADERS) {
+                headerCells.add(csvEscape(appendHeader));
+            }
+            lines.add(String.join(headerCells, ','));
+
+            for (Integer i = 0; i < rowResults.size(); i++) {
+                CaseRowResult rr = rowResults[i];
+                List<String> cells = new List<String>();
+                List<String> sourceRow = new List<String>();
+                if (sourceRows != null && i < sourceRows.size() && sourceRows[i] != null) {
+                    sourceRow = sourceRows[i];
+                }
+                for (Integer col = 0; col < exportHeaders.size(); col++) {
+                    String cell = col < sourceRow.size() ? sourceRow[col] : '';
+                    cells.add(csvEscape(cell));
+                }
+                Boolean succeeded = 'Succeeded'.equalsIgnoreCase(rr.status);
+                cells.add(csvEscape(rr.status));
+                cells.add(csvEscape(succeeded ? rr.interactionId : ''));
+                cells.add(csvEscape(succeeded ? resolveCaseIdForResultExport(rr) : ''));
+                cells.add(csvEscape(rr.errors));
+                lines.add(String.join(cells, ','));
             }
             String resultTitle = FEC_BatchImportCommon.buildResultContentTitle(sourceFileName);
             ContentVersion cv = new ContentVersion();
@@ -1804,6 +1840,39 @@ public without sharing class FEC_BatchCaseCreationController {
         } catch (Exception ex) {
             // Không chặn cập nhật batch Failure nếu không ghi được file result.
         }
+    }
+
+    private static List<String> trimResultSourceHeaders(List<String> headers) {
+        List<String> output = new List<String>();
+        if (headers == null || headers.isEmpty()) {
+            return output;
+        }
+        Integer cutoff = headers.size();
+        for (Integer i = 0; i < headers.size(); i++) {
+            if (isResultExportCutoffHeader(headers[i])) {
+                cutoff = Math.min(cutoff, i);
+            }
+        }
+        for (Integer i = 0; i < cutoff; i++) {
+            output.add(headers[i]);
+        }
+        return output;
+    }
+
+    private static Boolean isResultExportCutoffHeader(String header) {
+        if (String.isBlank(header)) {
+            return false;
+        }
+        String normalized = header.trim().toLowerCase();
+        if (normalized == 'note' || normalized == 'id' || normalized == 'status' || normalized == 'errors') {
+            return true;
+        }
+        return normalized.startsWith('__');
+    }
+
+  /** __Case ID file result — Customer Case.FEC_ID_Search__c. */
+    private static String resolveCaseIdForResultExport(CaseRowResult rr) {
+        return rr == null || String.isBlank(rr.fecIdSearch) ? '' : rr.fecIdSearch.trim();
     }
 
     private static String csvEscape(String value) {
@@ -1866,12 +1935,10 @@ public without sharing class FEC_BatchCaseCreationController {
                     FEC_ID_Search__c,
                     FEC_Global_Search__c,
                     FEC_Interaction_ID__c,
-                    FEC_Case_ID__c,
                     FEC_Interaction__c,
                     FEC_Interaction__r.FEC_ID_Search__c,
                     FEC_Interaction__r.FEC_Global_Search__c,
                     FEC_Interaction__r.FEC_Interaction_ID__c,
-                    FEC_Interaction__r.FEC_Case_ID__c,
                     FEC_Interaction__r.Id
                 FROM Case
                 WHERE Id IN :insertedCaseIds
@@ -1883,10 +1950,7 @@ public without sharing class FEC_BatchCaseCreationController {
                 rr.finalStatus = c == null ? '' : c.Status;
                 rr.fecIdSearch = caseFecIdSearchValue(c);
                 rr.interactionId = resolveInteractionIdFromCase(c);
-                rr.caseBusinessId = c == null ? '' : normalizeCaseBusinessId(c.FEC_Case_ID__c);
-                if (String.isBlank(rr.caseBusinessId)) {
-                    rr.caseBusinessId = rr.fecIdSearch;
-                }
+                rr.caseBusinessId = '';
             } else {
                 rr.finalStatus = '';
                 rr.fecIdSearch = '';
@@ -1903,7 +1967,7 @@ public without sharing class FEC_BatchCaseCreationController {
         return String.valueOf(c.FEC_ID_Search__c).trim();
     }
 
-    /** Interaction ID trên file result — ưu tiên FEC_Global_Search__c (sync từ Interaction FEC_ID_Search__c). */
+    /** __Interaction ID — ưu tiên Customer Case.FEC_Global_Search__c. */
     private static String resolveInteractionIdFromCase(Case c) {
         if (c == null) {
             return '';
@@ -1921,26 +1985,6 @@ public without sharing class FEC_BatchCaseCreationController {
             }
         }
         return normalizeCaseBusinessId(c.FEC_Interaction_ID__c);
-    }
-
-    private static String resolveExportInteractionId(CaseRowResult rr) {
-        if (rr == null || !'Succeeded'.equals(rr.status)) {
-            return '';
-        }
-        return rr.interactionId == null ? '' : rr.interactionId;
-    }
-
-    private static String resolveExportCaseId(CaseRowResult rr) {
-        if (rr == null || !'Succeeded'.equals(rr.status)) {
-            return '';
-        }
-        if (String.isNotBlank(rr.fecIdSearch)) {
-            return rr.fecIdSearch;
-        }
-        if (String.isNotBlank(rr.caseBusinessId)) {
-            return rr.caseBusinessId;
-        }
-        return rr.recordId == null ? '' : rr.recordId;
     }
 
     private static void applyCustomerCaseSuccessResult(CaseRowResult rr, Case insertedCustomer, Id insertedId) {

@@ -54,7 +54,25 @@ const HEADER_INTERACTION_PHONE = [
   "interaction phone number",
   "phone"
 ];
-const RESULT_APPEND_HEADERS = ["__Status", "__Interaction ID", "__Case ID", "__Errors"];
+const RESULT_APPEND_HEADERS = [
+  "__Status",
+  "__Interaction ID",
+  "__Case ID",
+  "__Errors"
+];
+
+const cellValueForSourceRow = (value) => {
+  if (value == null || value === "") {
+    return "";
+  }
+  if (typeof value === "number") {
+    if (Number.isFinite(value) && Number.isInteger(value)) {
+      return String(Math.trunc(value));
+    }
+    return String(value);
+  }
+  return String(value);
+};
 
 const isResultExportCutoffHeader = (header) => {
   const norm = normalizeHeaderCell(header);
@@ -471,7 +489,7 @@ export default class Fec_BatchCaseCreation extends LightningElement {
       sourceRows.push(
         originalHeaders.map((_, idx) => {
           const value = Array.isArray(rowArr) ? rowArr[idx] : "";
-          return value == null ? "" : value;
+          return cellValueForSourceRow(value);
         })
       );
       importRows.push({
@@ -589,7 +607,9 @@ export default class Fec_BatchCaseCreation extends LightningElement {
           fileName: fileToUpload.name,
           fileBodyBase64: base64,
           templateName: key,
-          rowsJson: JSON.stringify(this.pendingImportRows || [])
+          rowsJson: JSON.stringify(this.pendingImportRows || []),
+          sourceHeadersJson: JSON.stringify(this.pendingImportHeaders || []),
+          sourceRowsJson: JSON.stringify(this.pendingImportSourceRows || [])
         }),
         IMPORT_TIMEOUT_MS,
         IMPORT_TIMEOUT_MESSAGE
@@ -711,12 +731,8 @@ export default class Fec_BatchCaseCreation extends LightningElement {
       ? parsedRows.map((r, index) => {
           const rowStatus = String(r?.status || "");
           const isSucceeded = rowStatus.toLowerCase() === "succeeded";
-          const interactionId = isSucceeded
-            ? String(r?.interactionId || "")
-            : "";
-          const caseId = isSucceeded
-            ? String(r?.fecIdSearch || r?.caseBusinessId || r?.recordId || "")
-            : "";
+          const interactionId = isSucceeded ? String(r?.interactionId || "") : "";
+          const caseId = isSucceeded ? String(r?.fecIdSearch || "") : "";
           return [
             ...(exportSourceRows[index] || exportHeaders.map(() => "")),
             rowStatus,
