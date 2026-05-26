@@ -37,15 +37,10 @@ global without sharing class FEC_UpdateDisbursementStatusRestService {
 
     // ─── Constants ──────────────────────────────────────────────────────────
 
-    // tungnm37: dùng constants từ FEC_ConstantCommon cho Case status
-    private static final String DISB_STATUS_WITHDRAWN          = 'Withdrawn';
-    private static final String DISB_STATUS_CANCELLED_CUSTOMER = 'Cancelled_By_Customer';
-    private static final String DISB_STATUS_AUTO_CANCELLED     = 'Auto_Cancelled';
-
     private static final Set<String> VALID_DISB_STATUSES = new Set<String>{
-        DISB_STATUS_WITHDRAWN,
-        DISB_STATUS_CANCELLED_CUSTOMER,
-        DISB_STATUS_AUTO_CANCELLED
+        FEC_ConstantCommon.DISB_API_STATUS_WITHDRAWN,
+        FEC_ConstantCommon.DISB_API_STATUS_CANCELLED_BY_CUSTOMER,
+        FEC_ConstantCommon.DISB_API_STATUS_AUTO_CANCELLED
     };
 
     private static final String CODE_SUCCESS          = '200';
@@ -135,7 +130,7 @@ global without sharing class FEC_UpdateDisbursementStatusRestService {
                 mappedDisbStatus,
                 c.FEC_Application_ID__c
             );
-            if (DISB_STATUS_WITHDRAWN.equals(reqBody.DISB_STATUS)
+            if (FEC_ConstantCommon.DISB_API_STATUS_WITHDRAWN.equals(reqBody.DISB_STATUS)
                 && c.FEC_Account_or_Contract__c != null
                 && String.isNotBlank(reqBody.DISB_DT)) {
                 try {
@@ -152,11 +147,11 @@ global without sharing class FEC_UpdateDisbursementStatusRestService {
             }
 
             // Update status based on DISB_STATUS - tungnm37: dùng FEC_ConstantCommon
-            if (DISB_STATUS_WITHDRAWN.equals(reqBody.DISB_STATUS)) {
+            if (FEC_ConstantCommon.DISB_API_STATUS_WITHDRAWN.equals(reqBody.DISB_STATUS)) {
                 c.Status = FEC_ConstantCommon.CASE_STATUS_RESOLVED_COMPLETED;
-            } else if (DISB_STATUS_CANCELLED_CUSTOMER.equals(reqBody.DISB_STATUS)) {
+            } else if (FEC_ConstantCommon.DISB_API_STATUS_CANCELLED_BY_CUSTOMER.equals(reqBody.DISB_STATUS)) {
                 c.Status = FEC_ConstantCommon.CASE_STATUS_RESOLVED_CANCELLED;
-            } else if (DISB_STATUS_AUTO_CANCELLED.equals(reqBody.DISB_STATUS)) {
+            } else if (FEC_ConstantCommon.DISB_API_STATUS_AUTO_CANCELLED.equals(reqBody.DISB_STATUS)) {
                 c.Status = FEC_ConstantCommon.CASE_STATUS_AUTO_CANCELLED;
             }
 

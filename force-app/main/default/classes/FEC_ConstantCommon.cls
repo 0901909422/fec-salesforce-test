@@ -282,6 +282,9 @@ public with sharing class FEC_ConstantCommon {
     public static final String FAST_CASH_DISB_STATUS_SUCCESS = 'Success';
     public static final String FAST_CASH_DISB_STATUS_RESOLVED_CUSTOMER_CANCELLED = 'Resolved-CustomerCancelled';
     public static final String FAST_CASH_DISB_STATUS_RESOLVED_WITHDRAWAL_EXPIRED = 'Resolved-WithdrawalExpired';
+    public static final String DISB_API_STATUS_WITHDRAWN = 'Withdrawn';
+    public static final String DISB_API_STATUS_CANCELLED_BY_CUSTOMER = 'Cancelled_By_Customer';
+    public static final String DISB_API_STATUS_AUTO_CANCELLED = 'Auto_Cancelled';
     
     public static final String CASE_NON_EXISTING_CUSTOMER = 'Non-Existing';
     public static final String CASE_EXISTING_CUSTOMER = 'Existing';

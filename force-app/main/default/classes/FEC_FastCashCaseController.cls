@@ -527,32 +527,19 @@ public without sharing class FEC_FastCashCaseController {
             return storedStatus;
         }
         String s = storedStatus.trim();
-        if ('Withdrawn'.equalsIgnoreCase(s)) {
+        if (FEC_ConstantCommon.DISB_API_STATUS_WITHDRAWN.equalsIgnoreCase(s)) {
             return FEC_ConstantCommon.FAST_CASH_DISB_STATUS_SUCCESS;
         }
-        if ('Cancelled_By_Customer'.equalsIgnoreCase(s)) {
+        if (FEC_ConstantCommon.DISB_API_STATUS_CANCELLED_BY_CUSTOMER.equalsIgnoreCase(s)) {
             return FEC_ConstantCommon.FAST_CASH_DISB_STATUS_RESOLVED_CUSTOMER_CANCELLED;
         }
-        if ('Auto_Cancelled'.equalsIgnoreCase(s)) {
+        if (FEC_ConstantCommon.DISB_API_STATUS_AUTO_CANCELLED.equalsIgnoreCase(s)) {
             return FEC_ConstantCommon.FAST_CASH_DISB_STATUS_RESOLVED_WITHDRAWAL_EXPIRED;
         }
         return s;
     }
 
     public static String mapApiDisbursementStatusToCaseValue(String apiStatus) {
-        if (String.isBlank(apiStatus)) {
-            return apiStatus;
-        }
-        String s = apiStatus.trim();
-        if ('Withdrawn'.equalsIgnoreCase(s)) {
-            return FEC_ConstantCommon.FAST_CASH_DISB_STATUS_SUCCESS;
-        }
-        if ('Cancelled_By_Customer'.equalsIgnoreCase(s)) {
-            return FEC_ConstantCommon.FAST_CASH_DISB_STATUS_RESOLVED_CUSTOMER_CANCELLED;
-        }
-        if ('Auto_Cancelled'.equalsIgnoreCase(s)) {
-            return FEC_ConstantCommon.FAST_CASH_DISB_STATUS_RESOLVED_WITHDRAWAL_EXPIRED;
-        }
-        return s;
+        return mapDisbursementStatusForDisplay(apiStatus);
     }
 }
