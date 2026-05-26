@@ -1357,6 +1357,84 @@ public without sharing class FEC_MrcReturnCaseService {
     }
 
     /**
+     * RL05 Stage 1 có nhiều FEC_Stage_Change__c (vd CP + PM): chọn dòng khớp team/queue LWC đã resolve.
+     */
+    public static FEC_Stage_Change__c selectStageChangeForRoute(
+        List<FEC_Stage_Change__c> changelst,
+        String teamUserGroup,
+        String queueId
+    ) {
+        if (changelst == null || changelst.isEmpty()) {
+            return null;
+        }
+        if (changelst.size() == 1) {
+            return changelst[0];
+        }
+
+        String team = FEC_CommonUltils.normalizeTeamUserGroupParam(teamUserGroup);
+        if (String.isNotBlank(team)) {
+            for (FEC_Stage_Change__c sc : changelst) {
+                String scTeam = sc.FEC_Team_User_Group__c;
+                if (String.isNotBlank(scTeam) && team.equalsIgnoreCase(scTeam.trim())) {
+                    return sc;
+                }
+            }
+        }
+
+        if (String.isNotBlank(queueId)) {
+            String targetQueueId = queueId.trim();
+            for (FEC_Stage_Change__c sc : changelst) {
+                if (sc.FEC_Next_Queue__c == null) {
+                    continue;
+                }
+                String resolved = resolveQueueOwnerIdFromStageChangeValue(
+                    String.valueOf(sc.FEC_Next_Queue__c)
+                );
+                if (targetQueueId == resolved) {
+                    return sc;
+                }
+            }
+        }
+
+        return changelst[0];
+    }
+
+    private static String resolveQueueOwnerIdFromStageChangeValue(String nextQueueValue) {
+        if (String.isBlank(nextQueueValue)) {
+            return nextQueueValue;
+        }
+        String normalized = nextQueueValue.trim();
+        try {
+            Id qid = Id.valueOf(normalized);
+            if (qid.getSobjectType() == Group.SObjectType) {
+                List<Group> grp = [
+                    SELECT Id, Type
+                    FROM Group
+                    WHERE Id = :qid
+                    LIMIT 1
+                ];
+                if (
+                    !grp.isEmpty() &&
+                    FEC_ConstantCommon.GROUP_TYPE_QUEUE.equals(grp[0].Type)
+                ) {
+                    return String.valueOf(grp[0].Id);
+                }
+            }
+            return normalized;
+        } catch (Exception e) {
+            List<Group> q = [
+                SELECT Id
+                FROM Group
+                WHERE
+                    Type = :FEC_ConstantCommon.GROUP_TYPE_QUEUE
+                    AND DeveloperName = :normalized
+                LIMIT 1
+            ];
+            return q.isEmpty() ? normalized : String.valueOf(q[0].Id);
+        }
+    }
+
+    /**
      * RL05.02 Submit: lưu Property Info lên FEC_Additional_Info__c (client gọi trước Route to).
      */
     @AuraEnabled

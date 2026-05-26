@@ -1487,69 +1487,6 @@ public without sharing class FEC_CaseBusinessService {
     return String.isNotBlank(s) ? s.trim() : null;
   }
 
-  /** Chuẩn hóa team từ LWC (CP/PM/SP/F2F) để khớp FEC_Stage_Change__c.FEC_Team_User_Group__c. */
-  private static String normalizeTeamUserGroupParam(String teamUserGroup) {
-    if (String.isBlank(teamUserGroup)) {
-      return null;
-    }
-    String upper = teamUserGroup.trim().toUpperCase();
-    if (upper == 'CP' || upper.contains('CONTRACT PROCESS')) {
-      return 'CP';
-    }
-    if (upper == 'PM' || upper == 'PAYMENT') {
-      return 'PM';
-    }
-    if (upper == 'SP' || upper.contains('CS SUPPORT')) {
-      return 'SP';
-    }
-    if (upper == 'F2F' || upper.contains('OFFICE BASED')) {
-      return 'F2F';
-    }
-    return upper;
-  }
-
-  /**
-   * Khi Stage 1 có nhiều FEC_Stage_Change__c (vd RL05.02 CP + PM), chọn đúng dòng theo team/queue LWC đã resolve.
-   */
-  private static FEC_Stage_Change__c selectStageChangeForRoute(
-    List<FEC_Stage_Change__c> changelst,
-    String teamUserGroup,
-    String queueId
-  ) {
-    if (changelst == null || changelst.isEmpty()) {
-      return null;
-    }
-    if (changelst.size() == 1) {
-      return changelst[0];
-    }
-
-    String team = normalizeTeamUserGroupParam(teamUserGroup);
-    if (String.isNotBlank(team)) {
-      for (FEC_Stage_Change__c sc : changelst) {
-        if (team.equalsIgnoreCase(trimToNull(sc.FEC_Team_User_Group__c))) {
-          return sc;
-        }
-      }
-    }
-
-    if (String.isNotBlank(queueId)) {
-      String targetQueueId = queueId.trim();
-      for (FEC_Stage_Change__c sc : changelst) {
-        if (sc.FEC_Next_Queue__c == null) {
-          continue;
-        }
-        String resolved = resolveQueueOwnerIdFromStageChangeValue(
-          String.valueOf(sc.FEC_Next_Queue__c)
-        );
-        if (targetQueueId == resolved) {
-          return sc;
-        }
-      }
-    }
-
-    return changelst[0];
-  }
-
   /**
    * Nhãn cho FEC_Original_User_Queue__c / FEC_Updated_User_Queue__c:
    * Owner là User → phần email trước @; Owner là Queue → Name queue.
@@ -2686,11 +2623,12 @@ public without sharing class FEC_CaseBusinessService {
         );
       }
 
-      FEC_Stage_Change__c selectedChange = selectStageChangeForRoute(
-        changelst,
-        teamUserGroup,
-        queueId
-      );
+      FEC_Stage_Change__c selectedChange =
+        FEC_MrcReturnCaseService.selectStageChangeForRoute(
+          changelst,
+          teamUserGroup,
+          queueId
+        );
       if (FEC_BlockCodeRoutingService.isRc27DefaultOmDay2Routing(updatedCase)) {
         FEC_Stage_Change__c rc27OmDay2 =
           FEC_BlockCodeRoutingService.selectRc27DefaultOmDay2FromList(changelst);
