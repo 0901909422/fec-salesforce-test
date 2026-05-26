@@ -49,7 +49,7 @@ public without sharing class FEC_BusinessHoursTatUtil {
     }
 
     private static Date toLocalDate(Datetime dt) {
-        return Date.valueOf(dt.format('yyyy-MM-dd', TAT_TIMEZONE));
+        return Date.valueOf(dt.format(FEC_ConstantCommon.DATE_FORMAT, TAT_TIMEZONE));
     }
 
     private static Datetime localDayStart(Date localDate) {
