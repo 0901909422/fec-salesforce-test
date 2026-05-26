@@ -276,6 +276,7 @@
         <members>fec_ScopedStageChangeRouting</members>
         <members>fec_ScopedStageChangeRoutingAction</members>
         <members>fec_RdPaymentRoutingUtils</members>
+        <members>fec_Rl0502RdPaymentRouting</members>
 		<members>fecRoutingAssignmentEditForm</members>
 		<members>fec_DownloadReports</members>
 		<members>fec_BatchDataCreation</members>
@@ -710,6 +711,7 @@
 		<members>FEC_Case_Information_Edit</members>
 		<members>FEC_Case_NOC</members>
 		<members>FEC_DoNotBother</members>
+        <members>FEC_Route_To_Team_Selection</members>
         <name>LightningMessageChannel</name>
     </types>
 	<types>
