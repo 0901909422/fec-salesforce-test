@@ -178,17 +178,22 @@
 		<members>FEC_CMSRewardRedeemServiceTest</members>
 		<members>FEC_AssignAutoDistribSched</members>
 		<members>FEC_CaseAssignmentAutoDistributeService</members>
+		<members>FEC_CaseAssigAutoDistributeService_Test</members>
 		<members>FEC_CaseAssignmentAutoDistQueueJob</members>
 		<members>FEC_CaseAssignmentApplyOwnerBatch</members>
 		<members>FEC_CaseAssignmentMutationGuard</members>
+		<members>FEC_CaseAssignmentMutationGuardTest</members>
 		<members>FEC_CaseAssignmentFieldHistorySync</members>
 		<members>FEC_CaseAssignmentFieldHistorySyncTest</members>
 		<members>FEC_CaseAssignmentConfigController</members>
 		<members>FEC_CaseAssignmentConflictService</members>
 		<members>FEC_CaseAssignmentConflictServiceTest</members>
+		<members>FEC_CaseAssignmentConflictService_Test</members>
 		<members>FEC_CaseAssignmentNOCDraftTest</members>
 		<members>FEC_CaseAssignmentNOCTriggerHandler</members>
+		<members>FEC_CaseAssignmentNOCTriggerHandler_Test</members>
 		<members>FEC_CaseAssignmentNocController</members>
+		<members>FEC_CaseAssignmentNocController_Test</members>
 		<members>FEC_CaseAssignmentQueueRoleResolver</members>
         <members>FEC_CurrencyCodeLookup</members>
 		<members>FEC_HoldCaseInheritanceService</members>
@@ -691,6 +696,7 @@
         <members>Case.FEC_Delivery_Option_2__c</members>
         <members>FEC_Action_Button__c.FEC_Code__c</members>
         <members>FEC_Case_Assignment_Logs__c.FEC_Case_Assignment_Name__c</members>
+        <members>FEC_Case_Assignment_NOC__c.FEC_Category__c</members>
         <members>FEC_Stage_Change__c.FEC_Code__c</members>
         <members>FEC_Stage_Screen__c.FEC_Code__c</members>
         <name>CustomField</name>

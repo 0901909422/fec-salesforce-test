@@ -740,19 +740,39 @@ export default class Fec_CaseAssignmentNocNew extends NavigationMixin(LightningE
     this[NavigationMixin.Navigate](pageReference);
   }
 
+  /** Invalidate LDS parent; gọi lại sau ~700ms vì rollup NOC count có thể cập nhật trễ. */
+  notifyParentAssignmentRecordChanged() {
+    if (!this.assignmentRecordId) {
+      return;
+    }
+    getRecordNotifyChange([{ recordId: this.assignmentRecordId }]);
+    window.setTimeout(() => {
+      getRecordNotifyChange([{ recordId: this.assignmentRecordId }]);
+    }, 700);
+  }
+
   /**
-   * Sau tạo NOC: invalidate LDS + refresh record page Case Assignment (related list NOC).
-   * RefreshEvent trên màn New không refresh tab detail — console dùng refreshTab.
+   * Sau tạo NOC: quay detail + notify LDS để fec_CaseAssignmentDetailSummary refresh related list.
    */
   async navigateToAssignmentDetailAfterCreate() {
     if (!this.assignmentRecordId) {
       return;
     }
 
-    getRecordNotifyChange([{ recordId: this.assignmentRecordId }]);
+    this.notifyParentAssignmentRecordChanged();
+
+    const assignmentPageRef = {
+      type: "standard__recordPage",
+      attributes: {
+        recordId: this.assignmentRecordId,
+        objectApiName: "FEC_Case_Assignment__c",
+        actionName: "view",
+      },
+    };
 
     let tabToClose = this.currentTabId;
     let parentTabId = null;
+    const isConsole = this.isConsoleNavigation?.data === true;
     try {
       const focused = await getFocusedTabInfo();
       tabToClose = tabToClose || focused.tabId;
@@ -763,18 +783,24 @@ export default class Fec_CaseAssignmentNocNew extends NavigationMixin(LightningE
       /* ignore */
     }
 
-    this[NavigationMixin.Navigate]({
-      type: "standard__recordPage",
-      attributes: {
-        recordId: this.assignmentRecordId,
-        objectApiName: "FEC_Case_Assignment__c",
-        actionName: "view",
-      },
-    });
+    if (isConsole && parentTabId) {
+      try {
+        await openSubtab(parentTabId, {
+          pageReference: assignmentPageRef,
+          focus: true,
+        });
+      } catch (e) {
+        this[NavigationMixin.Navigate](assignmentPageRef);
+      }
+    } else {
+      this[NavigationMixin.Navigate](assignmentPageRef);
+    }
 
     window.setTimeout(async () => {
+      this.notifyParentAssignmentRecordChanged();
+
       try {
-        if (this.isConsoleNavigation?.data === true) {
+        if (isConsole) {
           let refreshTabId = parentTabId;
           if (!refreshTabId) {
             const focusedAfterNav = await getFocusedTabInfo();
@@ -800,7 +826,7 @@ export default class Fec_CaseAssignmentNocNew extends NavigationMixin(LightningE
       } catch (closeErr) {
         /* ignore */
       }
-    }, 400);
+    }, 600);
   }
 
   handleCancel() {
@@ -867,7 +893,7 @@ export default class Fec_CaseAssignmentNocNew extends NavigationMixin(LightningE
         return;
       }
       if (this.assignmentRecordId) {
-        getRecordNotifyChange([{ recordId: this.assignmentRecordId }]);
+        this.notifyParentAssignmentRecordChanged();
         this.dispatchEvent(new RefreshEvent());
       }
       await this.navigateAfterSave(nocId);
