@@ -192,7 +192,7 @@ public with sharing class FEC_CaseAssignmentNocController {
             );
         }
 
-        Id categoryId = resolveProductCategoryId(categoryKey);
+        Id categoryId = resolveFecCategoryId(categoryKey);
 
         FEC_Case_Assignment_NOC__c noc = new FEC_Case_Assignment_NOC__c(
             FEC_Case_Assignment_Name__c = assignmentId,
@@ -237,7 +237,7 @@ public with sharing class FEC_CaseAssignmentNocController {
             );
         }
 
-        Id categoryId = resolveProductCategoryId(categoryKey);
+        Id categoryId = resolveFecCategoryId(categoryKey);
         FEC_Case_Assignment_NOC__c noc = new FEC_Case_Assignment_NOC__c(
             Id = nocId,
             FEC_Product_Type__c = productTypeId,
@@ -249,46 +249,23 @@ public with sharing class FEC_CaseAssignmentNocController {
         return noc.Id;
     }
 
-    private static final String DEFAULT_CATALOG_NAME = 'FEC Default Catalog';
-
-    private static Id resolveProductCategoryId(String categoryKey) {
+    private static Id resolveFecCategoryId(String categoryKey) {
         if (String.isBlank(categoryKey)) {
             return null;
         }
 
-        List<ProductCategory> existing = [
+        List<FEC_Category__c> existing = [
             SELECT Id, Name
-            FROM ProductCategory
-            WHERE Name = :categoryKey
+            FROM FEC_Category__c
+            WHERE Name = :categoryKey AND FEC_Active__c = TRUE
             LIMIT 1
         ];
         if (!existing.isEmpty()) {
             return existing[0].Id;
         }
 
-        Id catalogId = resolveDefaultCatalogId();
-        ProductCategory created = new ProductCategory(
-            Name = categoryKey,
-            CatalogId = catalogId,
-            IsNavigational = false
+        throw new AuraHandledException(
+            'Category "' + categoryKey + '" was not found in master data.'
         );
-        insert created;
-        return created.Id;
-    }
-
-    private static Id resolveDefaultCatalogId() {
-        List<ProductCatalog> catalogs = [
-            SELECT Id, Name
-            FROM ProductCatalog
-            ORDER BY LastModifiedDate DESC
-            LIMIT 1
-        ];
-        if (!catalogs.isEmpty()) {
-            return catalogs[0].Id;
-        }
-
-        ProductCatalog catalog = new ProductCatalog(Name = DEFAULT_CATALOG_NAME);
-        insert catalog;
-        return catalog.Id;
     }
 }
