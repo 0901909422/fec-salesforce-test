@@ -121,7 +121,7 @@ public without sharing class FEC_AssignmentRoutingActionHandler {
         // tungnm37: clear cả FEC_OwnerID__c để syncAssignmentUsersToCase không đọc nhầm User cũ
         update new FEC_Assignment__c(
             Id = assignmentId,
-        FEC_Assignment_Status__c = FEC_ConstantCommon.ASSIGNMENT_STATUS_COMPLETED,
+        FEC_Assignment_Status__c = FEC_ConstantCommon.ASSIGNMENT_STATUS_COMPLETED
         // FEC_Assignment_Owner__c = null,
         // FEC_OwnerID__c = null
             );
