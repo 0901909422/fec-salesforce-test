@@ -1,6 +1,9 @@
 /** tungnm37: Service xu ly COF/GSR Assignment, Routing Action History, Case Remarks. Tach ra tu FEC_CaseBusinessService theo yeu cau review */
 public without sharing class FEC_CofGsrAssignmentService {
 
+    // SOQL 101: cache/dedupe theo transaction, tránh query lặp khi submit NOC bulk.
+    private static Map<Id, String> txnTeamByQueueIdCache = new Map<Id, String>();
+    private static Map<Id, String> txnTeamByUserIdCache = new Map<Id, String>();
 
     private static String emailLocalPart(String email) {
         if (String.isBlank(email)) return null;
@@ -518,9 +521,16 @@ public without sharing class FEC_CofGsrAssignmentService {
     @TestVisible
     private static String resolveTeamFromQueueId(Id queueId) {
         if (queueId == null) return null;
+        // SOQL 101: cache/dedupe theo transaction, tránh query lặp khi submit NOC bulk.
+        if (txnTeamByQueueIdCache.containsKey(queueId)) {
+            return txnTeamByQueueIdCache.get(queueId);
+        }
         // Lay DeveloperName cua Queue
         List<Group> groups = [SELECT DeveloperName FROM Group WHERE Id = :queueId AND Type = 'Queue' LIMIT 1];
-        if (groups.isEmpty()) return null;
+        if (groups.isEmpty()) {
+            txnTeamByQueueIdCache.put(queueId, null);
+            return null;
+        }
         String devName = groups[0].DeveloperName;
         // Lookup team tu FEC_Team_Queue__c
         List<FEC_Team_Queue__c> tqs = [
@@ -529,15 +539,24 @@ public without sharing class FEC_CofGsrAssignmentService {
             WHERE FEC_Queue_Name__c = :devName
             LIMIT 1
         ];
-        return tqs.isEmpty() ? null : tqs[0].FEC_Select_Team__r?.Name;
+        String team = tqs.isEmpty() ? null : tqs[0].FEC_Select_Team__r?.Name;
+        txnTeamByQueueIdCache.put(queueId, team);
+        return team;
     }
 
     //tungnm37: Resolve team code tu User ID (Case Owner) bang cach lookup FEC_Team_Queue__c qua FEC_Main_Queue__c
     @TestVisible
     private static String resolveTeamFromUserId(Id userId) {
         if (userId == null) return null;
+        // SOQL 101: cache/dedupe theo transaction, tránh query lặp khi submit NOC bulk.
+        if (txnTeamByUserIdCache.containsKey(userId)) {
+            return txnTeamByUserIdCache.get(userId);
+        }
         List<User> users = [SELECT FEC_Main_Queue__c, UserRoleId FROM User WHERE Id = :userId LIMIT 1];
-        if (users.isEmpty()) return null;
+        if (users.isEmpty()) {
+            txnTeamByUserIdCache.put(userId, null);
+            return null;
+        }
         
         String mainQueue = users[0].FEC_Main_Queue__c;
         if (String.isNotBlank(mainQueue) && mainQueue != 'default value') {
@@ -548,7 +567,9 @@ public without sharing class FEC_CofGsrAssignmentService {
                 LIMIT 1
             ];
             if (!tqs.isEmpty()) {
-                return tqs[0].FEC_Select_Team__r?.Name;
+                String team = tqs[0].FEC_Select_Team__r?.Name;
+                txnTeamByUserIdCache.put(userId, team);
+                return team;
             }
         }
         
@@ -584,13 +605,17 @@ public without sharing class FEC_CofGsrAssignmentService {
             for (FEC_Team_Queue__c tq : tqs) {
                 String teamName = tq.FEC_Select_Team__r?.Name;
                 if (String.isNotBlank(teamName) && FEC_ConstantCommon.CS_BACKOFFICE_TEAMS.contains(teamName)) {
+                    txnTeamByUserIdCache.put(userId, teamName);
                     return teamName;
                 }
             }
             if (!tqs.isEmpty()) {
-                return tqs[0].FEC_Select_Team__r?.Name;
+                String team = tqs[0].FEC_Select_Team__r?.Name;
+                txnTeamByUserIdCache.put(userId, team);
+                return team;
             }
         }
+        txnTeamByUserIdCache.put(userId, null);
         return null;
     }
 
@@ -734,7 +759,13 @@ public without sharing class FEC_CofGsrAssignmentService {
 
                 FEC_CaseBusinessService.registerSkipOwnerChangeRoutingHistory(caseId);
                 // tungnm37 fix: không set FEC_Assignment_Users__c cho CC/SP team để Service Case Owner vẫn hiển thị
-                Database.update(new Case(Id = caseId, OwnerId = targetQueues[0].Id), AccessLevel.SYSTEM_MODE);
+                Boolean priorSystemOwner = FEC_CaseTriggerHandler.isSystemUpdate;
+                FEC_CaseTriggerHandler.isSystemUpdate = true;
+                try {
+                    Database.update(new Case(Id = caseId, OwnerId = targetQueues[0].Id), AccessLevel.SYSTEM_MODE);
+                } finally {
+                    FEC_CaseTriggerHandler.isSystemUpdate = priorSystemOwner;
+                }
 
                 // tungnm37: tạo Routing Action History cho luồng CC/SP
                 try {
@@ -769,7 +800,13 @@ public without sharing class FEC_CofGsrAssignmentService {
                     ORDER BY Name ASC LIMIT 1
                 ];
                 if (!nextStages.isEmpty()) {
-                    Database.update(new Case(Id = caseId, FEC_Current_Case_Stage__c = nextStages[0].Id), AccessLevel.SYSTEM_MODE);
+                    Boolean priorSystemStage = FEC_CaseTriggerHandler.isSystemUpdate;
+                    FEC_CaseTriggerHandler.isSystemUpdate = true;
+                    try {
+                        Database.update(new Case(Id = caseId, FEC_Current_Case_Stage__c = nextStages[0].Id), AccessLevel.SYSTEM_MODE);
+                    } finally {
+                        FEC_CaseTriggerHandler.isSystemUpdate = priorSystemStage;
+                    }
                 }
             }
 
