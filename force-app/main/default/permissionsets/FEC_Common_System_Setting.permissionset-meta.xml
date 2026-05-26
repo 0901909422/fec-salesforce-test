@@ -309,7 +309,27 @@
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
+        <apexClass>FEC_CaseDsTsSlaBatch</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_CaseDsTsSlaNotificationSender</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_CaseDsTsSlaSchedulable</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_CaseDsTsSlaService</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
         <apexClass>FEC_CaseExecuteService</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_CaseFullProcessTatQueueJob</apexClass>
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
@@ -785,6 +805,10 @@
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
+        <apexClass>FEC_HoldCaseStage2DisplayService</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
         <apexClass>FEC_IPPClosureController</apexClass>
         <enabled>true</enabled>
     </classAccesses>
@@ -798,6 +822,10 @@
     </classAccesses>
     <classAccesses>
         <apexClass>FEC_IPPScheduleController</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_ImportedInteractionBatch</apexClass>
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
@@ -942,6 +970,10 @@
     </classAccesses>
     <classAccesses>
         <apexClass>FEC_NotificationService</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_OwnerTeamLookupSvc</apexClass>
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>

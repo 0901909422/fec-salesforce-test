@@ -267,6 +267,11 @@
                         duplicate-case-id={business.mrcRl0502DuplicateOpenCaseId}
                         duplicate-case-number={business.mrcRl0502DuplicateCaseNumber}
                         handling-option-value={mrcReturnHandlingOptionValue}
+                        mrc-handling-option-saved={business.mrcHandlingOptionSaved}
+                        mrc-customer-confirmation-saved={business.mrcCustomerConfirmationSaved}
+                        mrc-delivery-option-saved={business.mrcDeliveryOptionSaved}
+                        is-case-submited={business.isSubmited}
+                        business-sectionlst={business.sectionlst}
                         customer-confirmation-value={mrcReturnCustomerConfirmationValue}
                         customer-confirmation-options={mrcCustomerConfirmationOptions}
                         handling-option-options={mrcHandlingOptionOptions}
@@ -298,6 +303,11 @@
                             duplicate-case-id={business.mrcRl0502DuplicateOpenCaseId}
                             duplicate-case-number={business.mrcRl0502DuplicateCaseNumber}
                             handling-option-value={mrcReturnHandlingOptionValue}
+                            mrc-handling-option-saved={business.mrcHandlingOptionSaved}
+                            mrc-customer-confirmation-saved={business.mrcCustomerConfirmationSaved}
+                            mrc-delivery-option-saved={business.mrcDeliveryOptionSaved}
+                            is-case-submited={business.isSubmited}
+                            business-sectionlst={business.sectionlst}
                             customer-confirmation-value={mrcReturnCustomerConfirmationValue}
                             customer-confirmation-options={mrcCustomerConfirmationOptions}
                             handling-option-options={mrcHandlingOptionOptions}
@@ -379,7 +389,7 @@
           <template if:false={isRoutingAssignmentMode}>
             <div class="route-to-info__item read slds-border--bottom slds-m-around--small slds-p-around--x-small">
               <p class="label">{customLabel.teamLabel}</p>
-              <p class="value">{business.nextTeam}</p>
+              <p class="value">{routeToTeamDisplayLabel}</p>
             </div>
             <div class="route-to-info__item read slds-border--bottom slds-m-around--small slds-p-around--x-small">
               <p class="label">{customLabel.queueLabel}</p>
@@ -449,7 +459,7 @@
         route-to-action-id={routeToActionButtonId}
         show-route-to={showRouteTo}
         lock-route-to-team-selection={rdPaymentScopedRouteToLocked}
-        read-only-team={business.nextTeam}
+        read-only-team={routeToTeamDisplayLabel}
         route-to-queue-display-label={routeToQueueDisplayLabel}
         show-revert={showRevert}
         revert-decision-display-label={revertDecisionDisplayLabel}
@@ -473,7 +483,7 @@
       <c-fec_-document-request-routing-action is-edit={isEdit}
         action-value={actionValue} routing-action-options={business.routingActionlst}
         is-routing-action-disabled={isRoutingActionDisabled} show-route-to={showRouteTo}
-        next-team={business.nextTeam} route-to-queue-display-label={routeToQueueDisplayLabel}
+        next-team={routeToTeamDisplayLabel} route-to-queue-display-label={routeToQueueDisplayLabel}
         show-revert={showRevert} revert-decision-display-label={revertDecisionDisplayLabel}
         show-transfer={showTransfer} show-update={showUpdate} decision-value={decisionValue}
         sub-decision-value={subDecisionValue} decision-options={decisionOptions}

@@ -29,6 +29,8 @@ import FEC_Case_Remark_Label from "@salesforce/label/c.FEC_Case_Remark_Label";
 import FEC_Tab_Nature_Of_Case from "@salesforce/label/c.FEC_Tab_Nature_Of_Case";
 import FEC_MSG_CARD_REPLACEMENT_ADDRESS_SELECT from "@salesforce/label/c.FEC_MSG_CARD_REPLACEMENT_ADDRESS_SELECT";
 import getCase from "@salesforce/apex/FEC_CaseEditNOCController.getCase";
+//FECREDIT_CSM_2025_KH-1390
+import removeExecutorAfterSubmit from "@salesforce/apex/FEC_CaseExecuteService.removeExecutorAfterSubmit";
 
 import { RefreshEvent } from "lightning/refresh";
 import { updateRecord, getRecordNotifyChange } from "lightning/uiRecordApi";
@@ -734,6 +736,18 @@ export default class Fec_CaseDetail_Customer extends LightningElement {
         };
         let recordInput = { fields };
         updateRecord(recordInput);
+      }
+      
+      //HieuTT74 - 26/5/2026 - FECREDIT_CSM_2025_KH-1390
+      try {
+        await removeExecutorAfterSubmit({
+          caseId: this.recordId,
+        });
+      } catch (executorError) {
+        console.error(
+          "removeExecutorAfterSubmit failed:",
+          executorError,
+        );
       }
 
       //linhdev: Fix jira FECREDIT_CSM_2025_KH-1226
