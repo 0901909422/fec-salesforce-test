@@ -160,6 +160,7 @@
         <members>FEC_RoutingHistTatSvc</members>
         <members>FEC_PsDNBServiceCallout</members>
         <members>FEC_FullCustomerIntegrationJob</members>
+        <members>FEC_ImportedInteractionBatch</members>
         <members>FEC_RDPaymentContractAssessmentService</members>
         <members>FEC_CustomerIntegrationService</members>
 		<name>Apexclass</name>
@@ -281,6 +282,7 @@
 		<members>Case.FEC_Customer_Confirmation__c</members>
 		<members>Case.FEC_MRC_Request_Handling_Option__c</members>
 		<members>Case.FEC_Is_DNB__c</members>
+        <members>Case.FEC_IsImported__c</members>
 		<members>FEC_Assignment__c.FEC_Submitted_On__c</members>
 		<members>FEC_Assignment__c.FEC_Assignment_Name__c</members>
         <members>FEC_Address_Info__c.FEC_Parent_Address__c</members>

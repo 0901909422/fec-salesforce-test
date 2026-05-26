@@ -825,6 +825,10 @@
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
+        <apexClass>FEC_ImportedInteractionBatch</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
         <apexClass>FEC_IncorrectPaymentController</apexClass>
         <enabled>true</enabled>
     </classAccesses>
