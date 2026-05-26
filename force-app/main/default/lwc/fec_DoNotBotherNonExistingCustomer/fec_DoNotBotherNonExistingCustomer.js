@@ -1038,15 +1038,14 @@ export default class Fec_DoNotBotherNonExistingCustomer extends LightningElement
   //FECREDIT_CSM_2025_KH-1561
   _syncNationalIdFromInput() {
     const nidInput = this._getNationalIdInputEl();
+    if (!nidInput) {
+      return;
+    }
 
     const fromInput =
-      nidInput && nidInput.value != null
-        ? String(nidInput.value).trim()
-        : STR_EMPTY;
+      nidInput.value != null ? String(nidInput.value).trim() : STR_EMPTY;
 
-    const fromTrack = (this.nationalId || STR_EMPTY).trim();
-
-    this.nationalId = fromInput || fromTrack;
+    this.nationalId = fromInput;
   }
 
   //FECREDIT_CSM_2025_KH-1561
@@ -1114,14 +1113,14 @@ export default class Fec_DoNotBotherNonExistingCustomer extends LightningElement
   //FECREDIT_CSM_2025_KH-1561
   @api
   validateForSubmit() {
-    const nidInput = this._getNationalIdInputEl();
-    if (!nidInput) {
+    if (!this.isHandlingMode) {
       return true;
     }
 
-    this._syncNationalIdFromInput();
-    this._applyNationalIdValidity(true);
+    if (!this._getNationalIdInputEl()) {
+      return false;
+    }
 
-    return nidInput.checkValidity();
+    return this._validateNationalId();
   }
 }
