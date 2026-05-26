@@ -8,6 +8,8 @@
 public without sharing class FEC_CaseManagerListService {
   private static final String CSV_DELIMITER = ',';
   private static final Integer MAX_ROLE_HIERARCHY_DEPTH = 100;
+  // SOQL 101: cache/dedupe theo transaction, tránh query lặp khi submit NOC bulk.
+  private static Set<Id> txnManagerListSyncedCaseIds = new Set<Id>();
 
   /**
    * @param newCases Trigger.new
@@ -48,7 +50,13 @@ public without sharing class FEC_CaseManagerListService {
     }
 
     if (!toUpdate.isEmpty()) {
-      Database.update(toUpdate, AccessLevel.SYSTEM_MODE);
+      Boolean priorSystem = FEC_CaseTriggerHandler.isSystemUpdate;
+      FEC_CaseTriggerHandler.isSystemUpdate = true;
+      try {
+        Database.update(toUpdate, AccessLevel.SYSTEM_MODE);
+      } finally {
+        FEC_CaseTriggerHandler.isSystemUpdate = priorSystem;
+      }
     }
   }
 
@@ -84,12 +92,24 @@ public without sharing class FEC_CaseManagerListService {
     if (caseIds.isEmpty()) {
       return;
     }
+    // SOQL 101: cache/dedupe theo transaction, tránh query lặp khi submit NOC bulk.
+    Set<Id> pendingCaseIds = new Set<Id>();
+    for (Id caseId : caseIds) {
+      if (!txnManagerListSyncedCaseIds.contains(caseId)) {
+        pendingCaseIds.add(caseId);
+      }
+    }
+    if (pendingCaseIds.isEmpty()) {
+      return;
+    }
     List<Case> cases = [
       SELECT Id, OwnerId
       FROM Case
-      WHERE Id IN :caseIds
+      WHERE Id IN :pendingCaseIds
     ];
     syncFromOwnerCases(cases, null);
+    // SOQL 101: cache/dedupe theo transaction, tránh query lặp khi submit NOC bulk.
+    txnManagerListSyncedCaseIds.addAll(pendingCaseIds);
   }
 
   /**
