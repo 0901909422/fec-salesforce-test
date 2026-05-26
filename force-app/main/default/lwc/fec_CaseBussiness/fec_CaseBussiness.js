@@ -71,6 +71,7 @@ import {
   isMrcRl05Branch,
   isMrcRl05CaseInformationBlocked,
   isMrcRl05CaseInformationLockedAfterSubmit,
+  isMrcRl05FieldLockedAfterSubmit,
   shouldActivateMrcReturnRouting,
   showMrcRl0502DupBanner,
   validateMrcReturnCase,
@@ -738,12 +739,17 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
   /** Case Information section fields/LWC editable (full edit or partial after Execute Assignment). */
   _isSectionFieldsEditable(sectionName) {
     if (sectionName === SECTION_NAME_CASE_INFORMATION) {
-      if (isMrcRl05CaseInformationLockedAfterSubmit(this.business)) {
-        return false;
-      }
       return this._isEdit || this._isCaseInformationEdit;
     }
     return this._isEdit;
+  }
+
+  _isMrcRl05MasterDataFieldLocked(fieldApiName, subSectionName) {
+    return isMrcRl05FieldLockedAfterSubmit(
+      this.business,
+      fieldApiName,
+      subSectionName,
+    );
   }
 
   @track business = {};
@@ -1941,7 +1947,14 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
         );
         sub.objlst?.forEach((obj) => {
           obj.fieldlst?.forEach((field) => {
-            const forceReadonly = stage1RevertReadonly || gsrPropertyInfoReadonly;
+            const mrcFieldLocked = this._isMrcRl05MasterDataFieldLocked(
+              field.apiName,
+              sub.name,
+            );
+            const forceReadonly =
+              stage1RevertReadonly ||
+              gsrPropertyInfoReadonly ||
+              mrcFieldLocked;
             field.readonly = forceReadonly ? true : !sectionEditable;
             field.editable = forceReadonly ? false : sectionEditable;
           });
@@ -2116,7 +2129,8 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
     if (
       isMrcRl05CaseInformationLockedAfterSubmit(this.business) &&
       (componentName === "fec_MrcReturnPanel" ||
-        componentName === "fec_MrcReturnCaseForm")
+        componentName === "fec_MrcReturnCaseForm" ||
+        componentName === "fec_MrcDeliveryForm")
     ) {
       return false;
     }
@@ -2692,7 +2706,11 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
                 if (
                   !this._isSectionFieldsEditable(section.name) ||
                   this._isStage1RevertMasterReadonly() ||
-                  this._isGsrStage3PropertyInfoFieldReadonly(sub.name)
+                  this._isGsrStage3PropertyInfoFieldReadonly(sub.name) ||
+                  this._isMrcRl05MasterDataFieldLocked(
+                    field.apiName,
+                    sub.name,
+                  )
                 ) {
                   field.readonly = true;
                   field.editable = false;

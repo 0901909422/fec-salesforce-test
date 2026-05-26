@@ -115,11 +115,31 @@ export function shouldActivateMrcReturnRouting(business) {
   );
 }
 
-/** Sau Submit RL05.01–03: khóa Case Information, không khóa Routing Action. */
+/** Sau Submit RL05.01–03: khóa nhóm field MRC trên Case Information, không khóa Routing / assessment khác. */
 export function isMrcRl05CaseInformationLockedAfterSubmit(business) {
   return (
     shouldActivateMrcReturnRouting(business) &&
     business?.isSubmited === true
+  );
+}
+
+/** Chỉ khóa: Xác nhận KH, Handling, Delivery + toàn bộ Property Info — không khóa assessment/master data khác. */
+export function isMrcRl05FieldLockedAfterSubmit(
+  business,
+  fieldApiName,
+  subSectionName,
+) {
+  if (!isMrcRl05CaseInformationLockedAfterSubmit(business)) {
+    return false;
+  }
+  if (subSectionName === SUBSECTION_NAME_PROPERTY_INFO) {
+    return true;
+  }
+  const api = String(fieldApiName ?? STR_EMPTY).trim();
+  return (
+    api === FIELD_MRC_CUSTOMER_CONFIRMATION ||
+    api === FIELD_MRC_HANDLING_OPTION ||
+    api === FIELD_DELIVERY_OPTION
   );
 }
 
@@ -137,6 +157,15 @@ function applyMrcRl05CaseInformationReadonlyLock(business) {
     section.subSectionlst?.forEach((sub) => {
       sub.objlst?.forEach((obj) => {
         obj.fieldlst?.forEach((field) => {
+          if (
+            !isMrcRl05FieldLockedAfterSubmit(
+              business,
+              field.apiName,
+              sub.name,
+            )
+          ) {
+            return;
+          }
           field.readonly = true;
           field.editable = false;
         });
