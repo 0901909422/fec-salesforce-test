@@ -52,7 +52,7 @@ const MrcFields = {
 
 const CASE_SUB_FIELDS = [FEC_SUBCODE_ID];
 
-/** Chỉ ẩn khi parent/master data ép (isHiddenLwc). RL05 vẫn hiển thị Properties/MRC Info. */
+/** Chỉ ẩn khi parent/master data ép (isHiddenLwc). RL05.02 dùng subsection Property Info, không LWC này. */
 function normalizeSubCodeUpper(value) {
     if (value == null || value === STR_EMPTY) {
         return STR_EMPTY;
