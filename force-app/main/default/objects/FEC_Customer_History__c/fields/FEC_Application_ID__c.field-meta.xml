@@ -3,7 +3,7 @@
     <fullName>FEC_Application_ID__c</fullName>
     <description>Mã hồ sơ</description>
     <externalId>false</externalId>
-    <label>Application ID</label>
+    <label>App ID</label>
     <length>255</length>
     <required>false</required>
     <trackHistory>false</trackHistory>

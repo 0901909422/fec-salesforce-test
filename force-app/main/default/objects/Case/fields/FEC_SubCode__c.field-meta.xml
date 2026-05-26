@@ -3,7 +3,7 @@
     <fullName>FEC_SubCode__c</fullName>
     <deleteConstraint>SetNull</deleteConstraint>
     <description>Thông tin danh mục con</description>
-    <label>Sub Code</label>
+    <label>Updated Sub Code</label>
     <referenceTo>FEC_Sub_Code__c</referenceTo>
     <relationshipLabel>Cases</relationshipLabel>
     <relationshipName>Cases</relationshipName>
