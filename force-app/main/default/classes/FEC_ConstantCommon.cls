@@ -958,5 +958,7 @@ public with sharing class FEC_ConstantCommon {
     public static final String CC_CD ='CCCD';
     public static final String CM_ND ='CMND';
     public static final String PASS_PORT ='PASSPORT';
-    
+    public static final String INPUT_SEPARATOR_REGEX_12 =  '^\\d{12}$';
+    public static final String INPUT_SEPARATOR_REGEX_9 =  '^\\d{9}$';
+    public static final String INPUT_SEPARATOR_REGEX_7 = '^[A-Z]\\d{7}$'; 
 }

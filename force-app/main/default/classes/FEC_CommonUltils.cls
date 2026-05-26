@@ -1509,13 +1509,13 @@ public with sharing class FEC_CommonUltils {
         return FEC_ConstantCommon.TEAM_OTHER;
     }
     String t = value.trim();
-    if (Pattern.matches('^\\d{12}$', t)) {
+    if (Pattern.matches(FEC_ConstantCommon.INPUT_SEPARATOR_REGEX_12, t)) {
         return FEC_ConstantCommon.CC_CD;
     }
-    if (Pattern.matches('^\\d{9}$', t)) {
+    if (Pattern.matches(FEC_ConstantCommon.INPUT_SEPARATOR_REGEX_9, t)) {
         return FEC_ConstantCommon.CM_ND;
     }
-    if (Pattern.matches('^[A-Z]\\d{7}$', t)) {
+    if (Pattern.matches(FEC_ConstantCommon.INPUT_SEPARATOR_REGEX_7, t)) {
         return FEC_ConstantCommon.PASS_PORT;
     }
     return FEC_ConstantCommon.TEAM_OTHER;
@@ -1568,4 +1568,8 @@ public with sharing class FEC_CommonUltils {
     }
     return upper;
   }
+  public static Boolean isCccd(String value) {
+      return String.isNotBlank(value) && Pattern.matches(FEC_ConstantCommon.INPUT_SEPARATOR_REGEX_12, value.trim());
+    }
+
 }

@@ -93,19 +93,15 @@ public with sharing class FEC_CheckEligibleController {
         String format2 = FEC_CommonUltils.getNationalIdFormat(nationalId2);
 
         if (format1 != format2) {
-            if (isCccd(nationalId1)) {
+            if (FEC_CommonUltils.isCccd(nationalId1)) {
                 return nationalId1;
             }
-            if (isCccd(nationalId2)) {
+            if (FEC_CommonUltils.isCccd(nationalId2)) {
                 return nationalId2;
             }
             return nationalId1;
         }
         return nationalId1;
-    }
-
-    private static Boolean isCccd(String value) {
-        return String.isNotBlank(value) && Pattern.matches('^\\d{12}$', value.trim());
     }
 
     /**
