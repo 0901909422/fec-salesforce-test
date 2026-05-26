@@ -138,7 +138,7 @@ private class FEC_CaseAssigAutoDistributeService_Test {
 
     /**
      * Kịch bản 1: Thực thi luồng xử lý phân phối đều Continuous (distributeEvenly).
-     * Điều kiện: Hệ thống so khớp thời gian chia hết choScheduled_Time, bóc tách danh sách Case và điều phối đều cho Users.
+     * Điều kiện: Continuous căn lịch theo mốc start (log đầu) và bước Scheduled_Time; bóc tách Case và điều phối đều cho Users.
      */
     @IsTest
     static void testExecuteNow_ContinuousEvenDistribution() {
@@ -254,6 +254,43 @@ private class FEC_CaseAssigAutoDistributeService_Test {
             logCountBefore,
             logCountAfter,
             'executeNow phải bỏ qua khi đã có log trong cùng phút.'
+        );
+    }
+
+    /**
+     * Continuous: lịch chạy theo mốc start (log đầu căn slot), không cộng dồn từ log gần nhất.
+     * Ví dụ log đầu 08:02, step 5 phút → due 08:05, không phải 08:07.
+     */
+    @IsTest
+    static void testContinuousScheduleAlignedFromStartAnchor() {
+        FEC_Case_Assignment__c rule = [
+            SELECT
+                Id,
+                FEC_Assignment_Method__c,
+                FEC_Scheduled_Time__c,
+                FEC_Business_Hours__c,
+                FEC_Business_Hours__r.TimeZoneSidKey
+            FROM FEC_Case_Assignment__c
+            WHERE Name = 'Continuous Rule'
+            LIMIT 1
+        ];
+        rule.FEC_Scheduled_Time__c = 5;
+        rule.FEC_Status__c = FEC_ConstantCommon.FEC_CASE_ASSIGNMENT_STATUS_ACTIVE;
+        update rule;
+
+        Datetime firstLogUtc = Datetime.newInstanceGmt(2026, 5, 26, 1, 2, 0);
+        Datetime at805Utc = Datetime.newInstanceGmt(2026, 5, 26, 1, 5, 0);
+        Datetime at803Utc = Datetime.newInstanceGmt(2026, 5, 26, 1, 3, 0);
+
+        System.assertEquals(
+            true,
+            FEC_CaseAssignmentAutoDistributeService.isDueToRun(rule, at805Utc, firstLogUtc),
+            '08:05 phải due khi start căn 08:00 và step 5 phút.'
+        );
+        System.assertEquals(
+            false,
+            FEC_CaseAssignmentAutoDistributeService.isDueToRun(rule, at803Utc, firstLogUtc),
+            '08:03 không phải slot 5 phút kể từ mốc 08:00.'
         );
     }
 
