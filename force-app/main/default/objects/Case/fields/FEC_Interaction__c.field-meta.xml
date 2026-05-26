@@ -3,7 +3,7 @@
     <fullName>FEC_Interaction__c</fullName>
     <deleteConstraint>SetNull</deleteConstraint>
     <description>Trường lookup hiển thị Interaction sinh ra Case</description>
-    <label>Interaction ID</label>
+    <label>Interaction</label>
     <referenceTo>Case</referenceTo>
     <relationshipLabel>Cases (Interaction)</relationshipLabel>
     <relationshipName>Cases1</relationshipName>
