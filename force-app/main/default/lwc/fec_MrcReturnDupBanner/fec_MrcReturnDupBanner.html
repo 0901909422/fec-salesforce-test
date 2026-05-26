@@ -24,5 +24,15 @@
         </lightning-radio-group>
       </template>
     </template>
+    <template if:true={isReadOnly}>
+      <template if:true={showHandlingReadonly}>
+        <div class="slds-form-element slds-m-top_x-small">
+          <span class="slds-form-element__label">{handlingOptionLabel}</span>
+          <div class="slds-form-element__control">
+            <span class="mrc-handling-readonly-value">{handlingOptionDisplayLabel}</span>
+          </div>
+        </div>
+      </template>
+    </template>
   </div>
 </template>

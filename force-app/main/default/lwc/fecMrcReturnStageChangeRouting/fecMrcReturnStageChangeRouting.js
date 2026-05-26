@@ -13,19 +13,6 @@ const TEAM_SP = "SP";
 const TEAM_F2F = "F2F";
 const TEAM_PM = "PM";
 
-/** Hiển thị Team theo spec RL05 (I–IV). */
-const TEAM_DISPLAY_BY_CODE = {
-  CP: "Contract Processing",
-  PM: "Payment",
-  SP: "CS Support",
-  F2F: "CS Office Based",
-};
-
-export function formatMrcReturnTeamDisplay(teamCode) {
-  const code = String(teamCode ?? "").trim().toUpperCase();
-  return TEAM_DISPLAY_BY_CODE[code] || teamCode || "";
-}
-
 const FIELD_DELIVERY_OPTION = "FEC_Delivery_Option_2__c";
 const FIELD_CUSTOMER_CONFIRMATION = "FEC_Customer_Confirmation__c";
 const FIELD_HANDLING_OPTION = "FEC_MRC_Request_Handling_Option__c";
@@ -269,6 +256,9 @@ function resolveRl0502TeamFromInputs(
 
   if (rl05Scenario === "TH2") {
     if (option2Selected || notReceived) {
+      if (option2Selected && deliveryTeam) {
+        return { teamCode: deliveryTeam, scenario: "IV-2-DELIVERY" };
+      }
       if (flowTeam) {
         return { teamCode: flowTeam, scenario: "IV-2" };
       }
@@ -291,7 +281,7 @@ function resolveRl0502TeamFromInputs(
 
   if (rl05Scenario === "TH4") {
     if (deliveryTeam) {
-      return { teamCode: flowTeam || TEAM_CP, scenario: "TH4" };
+      return { teamCode: deliveryTeam || flowTeam || TEAM_CP, scenario: "TH4" };
     }
     return null;
   }
@@ -326,10 +316,11 @@ export function getMrcReturnRoutingContext(
   const notReceived = isMrcNotReceivedConfirmation(confirmation);
 
   function buildEligible(teamCode, scenario) {
+    const code = String(teamCode ?? "").trim().toUpperCase();
     return {
       eligible: true,
-      team: formatMrcReturnTeamDisplay(teamCode),
-      teamCode,
+      team: code,
+      teamCode: code,
       scenario,
       deliveryOption,
     };

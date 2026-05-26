@@ -141,7 +141,42 @@ private class FEC_MrcReturnCaseServiceTest {
     }
 
     @IsTest
-    static void buildUiContext_returnSubCode_hidesMrcLwc_dupCaseOnlyIsTh2() {
+    static void finalizeCaseInformationForRl0502_injectsPropertyInfoFields() {
+        FEC_CaseBusinessService.Business biz = new FEC_CaseBusinessService.Business();
+        biz.sectionlst = new List<FEC_CaseBusinessService.Section>();
+        FEC_CaseBusinessService.Section caseInfo = new FEC_CaseBusinessService.Section(
+            'Case Information'
+        );
+        biz.sectionlst.add(caseInfo);
+
+        Case c = new Case();
+        FEC_MrcReturnCaseService.MrcRl05UiContext ctx = FEC_MrcReturnCaseService.buildUiContext(
+            c,
+            'RL05',
+            'RL05.02',
+            null,
+            false
+        );
+
+        FEC_MrcReturnCaseService.finalizeCaseInformationForRl05(biz, ctx, c);
+
+        FEC_CaseBusinessService.Section prop = caseInfo.findSubSection('Property Info');
+        System.assertNotEquals(null, prop, 'Property Info subsection');
+        System.assertNotEquals(true, prop.hideForMrcRl05);
+        FEC_CaseBusinessService.CObject ai = prop.findObj('FEC_Additional_Info__c');
+        System.assertNotEquals(null, ai);
+        System.assertNotEquals(
+            null,
+            ai.findField('FEC_Verify_Information__c')
+        );
+        System.assertNotEquals(null, ai.findField('FEC_Callback__c'));
+        System.assert(
+            biz.picklistOptionsMap.containsKey('FEC_Additional_Info__c')
+        );
+    }
+
+    @IsTest
+    static void buildUiContext_returnSubCode_hidesMrcLwc_showsProperty_dupCaseOnlyIsTh2() {
         Case c = new Case();
         FEC_MrcReturnCaseService.MrcRl05UiContext ctx = FEC_MrcReturnCaseService.buildUiContext(
             c,
@@ -152,6 +187,7 @@ private class FEC_MrcReturnCaseServiceTest {
         );
         System.assertEquals(true, ctx.isReturnSubCode);
         System.assertEquals(true, ctx.hideMrcInfoLwc);
+        System.assertEquals(false, ctx.hidePropertyInfo);
         System.assertEquals(true, ctx.showCustomerConfirmation);
         System.assertEquals(true, ctx.showMrcDupBanner);
         System.assertEquals(true, ctx.dupCaseOnly);
@@ -247,5 +283,54 @@ private class FEC_MrcReturnCaseServiceTest {
         System.assertEquals(true, ctx.isRl05Branch);
         System.assertEquals(true, ctx.isReturnSubCode);
         System.assertEquals(true, ctx.showCustomerConfirmation);
+    }
+
+    @IsTest
+    static void normalizeTeamUserGroupParam_mapsDisplayLabels() {
+        System.assertEquals(
+            FEC_ConstantCommon.STAGE_CHANGE_TEAM_USER_GROUP_CP,
+            FEC_CommonUltils.normalizeTeamUserGroupParam('Contract Processing')
+        );
+        System.assertEquals(
+            FEC_ConstantCommon.STAGE_CHANGE_TEAM_USER_GROUP_PM,
+            FEC_CommonUltils.normalizeTeamUserGroupParam('Payment')
+        );
+        System.assertEquals(null, FEC_CommonUltils.normalizeTeamUserGroupParam(null));
+    }
+
+    @IsTest
+    static void selectStageChangeForRoute_prefersTeamWhenMultipleRows() {
+        FEC_Stage_Change__c cpRow = new FEC_Stage_Change__c(
+            FEC_Team_User_Group__c = FEC_ConstantCommon.STAGE_CHANGE_TEAM_USER_GROUP_CP,
+            FEC_Next_Queue__c = 'FEC_DQ_Contract_Processing'
+        );
+        FEC_Stage_Change__c pmRow = new FEC_Stage_Change__c(
+            FEC_Team_User_Group__c = FEC_ConstantCommon.STAGE_CHANGE_TEAM_USER_GROUP_PM,
+            FEC_Next_Queue__c = 'FEC_DQ_Payment'
+        );
+        FEC_Stage_Change__c picked = FEC_MrcReturnCaseService.selectStageChangeForRoute(
+            new List<FEC_Stage_Change__c>{ cpRow, pmRow },
+            FEC_ConstantCommon.STAGE_CHANGE_TEAM_USER_GROUP_CP,
+            null
+        );
+        System.assertEquals(
+            FEC_ConstantCommon.STAGE_CHANGE_TEAM_USER_GROUP_CP,
+            picked.FEC_Team_User_Group__c
+        );
+    }
+
+    @IsTest
+    static void selectStageChangeForRoute_singleRowReturnsIt() {
+        FEC_Stage_Change__c only = new FEC_Stage_Change__c(
+            FEC_Team_User_Group__c = FEC_ConstantCommon.STAGE_CHANGE_TEAM_USER_GROUP_PM
+        );
+        System.assertEquals(
+            only,
+            FEC_MrcReturnCaseService.selectStageChangeForRoute(
+                new List<FEC_Stage_Change__c>{ only },
+                null,
+                null
+            )
+        );
     }
 }
