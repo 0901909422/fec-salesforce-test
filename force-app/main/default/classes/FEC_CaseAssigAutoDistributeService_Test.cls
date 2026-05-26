@@ -281,16 +281,37 @@ private class FEC_CaseAssigAutoDistributeService_Test {
         Datetime firstLogUtc = Datetime.newInstanceGmt(2026, 5, 26, 1, 2, 0);
         Datetime at805Utc = Datetime.newInstanceGmt(2026, 5, 26, 1, 5, 0);
         Datetime at803Utc = Datetime.newInstanceGmt(2026, 5, 26, 1, 3, 0);
+        Datetime at807Utc = Datetime.newInstanceGmt(2026, 5, 26, 1, 7, 0);
 
         System.assertEquals(
             true,
-            FEC_CaseAssignmentAutoDistributeService.isDueToRun(rule, at805Utc, firstLogUtc),
+            FEC_CaseAssignmentAutoDistributeService.isDueToRun(
+                rule,
+                at805Utc,
+                firstLogUtc,
+                firstLogUtc
+            ),
             '08:05 phải due khi start căn 08:00 và step 5 phút.'
         );
         System.assertEquals(
             false,
-            FEC_CaseAssignmentAutoDistributeService.isDueToRun(rule, at803Utc, firstLogUtc),
-            '08:03 không phải slot 5 phút kể từ mốc 08:00.'
+            FEC_CaseAssignmentAutoDistributeService.isDueToRun(
+                rule,
+                at803Utc,
+                firstLogUtc,
+                firstLogUtc
+            ),
+            '08:03 vẫn cùng slot với log 08:02 — không due.'
+        );
+        System.assertEquals(
+            true,
+            FEC_CaseAssignmentAutoDistributeService.isDueToRun(
+                rule,
+                at807Utc,
+                firstLogUtc,
+                firstLogUtc
+            ),
+            '08:07 (scheduler lệch mốc) vẫn due slot kế sau log 08:02.'
         );
     }
 

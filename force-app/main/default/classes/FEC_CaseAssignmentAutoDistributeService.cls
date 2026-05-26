@@ -63,13 +63,19 @@ public without sharing class FEC_CaseAssignmentAutoDistributeService {
         for (FEC_Case_Assignment__c row : activeAssignments) {
             assignmentIdsActive.add(row.Id);
         }
-        Map<Id, Datetime> firstLogUtcByAssignmentId =
-            fetchFirstAssignmentLogCreatedDateByAssignments(assignmentIdsActive);
+        Map<Id, Datetime> firstLogUtcByAssignmentId = new Map<Id, Datetime>();
+        Map<Id, Datetime> latestLogUtcByAssignmentId = new Map<Id, Datetime>();
+        populateAssignmentLogBounds(
+            assignmentIdsActive,
+            firstLogUtcByAssignmentId,
+            latestLogUtcByAssignmentId
+        );
 
         List<Id> dueAssignmentIds = new List<Id>();
         for (FEC_Case_Assignment__c assignmentRecord : activeAssignments) {
             Datetime firstLogUtc = firstLogUtcByAssignmentId.get(assignmentRecord.Id);
-            if (!isDueToRun(assignmentRecord, nowTime, firstLogUtc)) {
+            Datetime latestLogUtc = latestLogUtcByAssignmentId.get(assignmentRecord.Id);
+            if (!isDueToRun(assignmentRecord, nowTime, firstLogUtc, latestLogUtc)) {
                 continue;
             }
             if (hasLogInCurrentMinute(assignmentRecord, nowTime)) {
@@ -206,8 +212,13 @@ public without sharing class FEC_CaseAssignmentAutoDistributeService {
             return;
         }
 
-        Map<Id, Datetime> firstLogUtcByAssignmentId =
-            fetchFirstAssignmentLogCreatedDateByAssignments(candidateAssignmentIds);
+        Map<Id, Datetime> firstLogUtcByAssignmentId = new Map<Id, Datetime>();
+        Map<Id, Datetime> latestLogUtcByAssignmentId = new Map<Id, Datetime>();
+        populateAssignmentLogBounds(
+            candidateAssignmentIds,
+            firstLogUtcByAssignmentId,
+            latestLogUtcByAssignmentId
+        );
 
         List<Id> dueAssignmentIds = new List<Id>();
         for (FEC_Case_Assignment__c assignmentRecord : continuousAssignments) {
@@ -215,7 +226,8 @@ public without sharing class FEC_CaseAssignmentAutoDistributeService {
                 continue;
             }
             Datetime firstLogUtc = firstLogUtcByAssignmentId.get(assignmentRecord.Id);
-            if (!isDueToRun(assignmentRecord, nowTime, firstLogUtc)) {
+            Datetime latestLogUtc = latestLogUtcByAssignmentId.get(assignmentRecord.Id);
+            if (!isDueToRun(assignmentRecord, nowTime, firstLogUtc, latestLogUtc)) {
                 continue;
             }
             if (hasLogInCurrentMinute(assignmentRecord, nowTime)) {
@@ -456,18 +468,26 @@ public without sharing class FEC_CaseAssignmentAutoDistributeService {
     }
 
     /**
-     * Một Aggregate query cho toàn Active assignment — tránh N lần subquery trong vòng executeNow.
-     * MIN(CreatedDate): mốc start của lịch Continuous (không dùng log gần nhất).
+     * MIN/MAX CreatedDate mỗi assignment — anchor từ log đầu, slot đã chạy từ log gần nhất.
      */
-    private static Map<Id, Datetime> fetchFirstAssignmentLogCreatedDateByAssignments(
-        Set<Id> assignmentIds
+    private static void populateAssignmentLogBounds(
+        Set<Id> assignmentIds,
+        Map<Id, Datetime> firstLogUtcByAssignmentId,
+        Map<Id, Datetime> latestLogUtcByAssignmentId
     ) {
-        Map<Id, Datetime> out = new Map<Id, Datetime>();
-        if (assignmentIds == null || assignmentIds.isEmpty()) {
-            return out;
+        if (
+            assignmentIds == null ||
+            assignmentIds.isEmpty() ||
+            firstLogUtcByAssignmentId == null ||
+            latestLogUtcByAssignmentId == null
+        ) {
+            return;
         }
         for (AggregateResult ar : [
-            SELECT FEC_Case_Assignment_Name__c aidKey, MIN(CreatedDate) firstCreatedUtc
+            SELECT
+                FEC_Case_Assignment_Name__c aidKey,
+                MIN(CreatedDate) firstCreatedUtc,
+                MAX(CreatedDate) lastCreatedUtc
             FROM FEC_Case_Assignment_Logs__c
             WHERE
                 FEC_Case_Assignment_Name__c IN :assignmentIds
@@ -475,12 +495,36 @@ public without sharing class FEC_CaseAssignmentAutoDistributeService {
             GROUP BY FEC_Case_Assignment_Name__c
         ]) {
             Id aid = (Id) ar.get('aidKey');
-            Datetime fc = (Datetime) ar.get('firstCreatedUtc');
-            if (aid != null && fc != null) {
-                out.put(aid, fc);
+            Datetime firstUtc = (Datetime) ar.get('firstCreatedUtc');
+            Datetime lastUtc = (Datetime) ar.get('lastCreatedUtc');
+            if (aid == null) {
+                continue;
+            }
+            if (firstUtc != null) {
+                firstLogUtcByAssignmentId.put(aid, firstUtc);
+            }
+            if (lastUtc != null) {
+                latestLogUtcByAssignmentId.put(aid, lastUtc);
             }
         }
-        return out;
+    }
+
+    @TestVisible
+    private static Integer continuousSlotIndex(
+        Datetime instantUtc,
+        Datetime anchorUtc,
+        Integer intervalMinutes
+    ) {
+        if (instantUtc == null || anchorUtc == null) {
+            return -1;
+        }
+        Integer interval = intervalMinutes == null || intervalMinutes <= 0 ? 30 : intervalMinutes;
+        Long elapsedMs = instantUtc.getTime() - anchorUtc.getTime();
+        if (elapsedMs < 0) {
+            return -1;
+        }
+        Long intervalMs = interval * 60L * 1000L;
+        return (Integer) (elapsedMs / intervalMs);
     }
 
     /**
@@ -503,14 +547,15 @@ public without sharing class FEC_CaseAssignmentAutoDistributeService {
     }
 
     /**
-     * Continuous: FEC_Scheduled_Time__c = bước phút giữa các lần chạy, tính từ mốc start (log thành công đầu tiên, căn slot).
-     * Execute Immediately không gọi hàm này (chạy ngay được).
+     * Continuous: lịch slot từ mốc start (log đầu, căn bước phút); mỗi slot chỉ chạy thêm khi chưa có log trong slot đó.
+     * So chỉ số slot (không dùng modulo phút == 0) để khớp scheduler polling ~5 phút lệch mốc.
      */
     @TestVisible
     private static Boolean isDueToRun(
         FEC_Case_Assignment__c assignmentRecord,
         DateTime nowTime,
-        Datetime firstSuccessfulLogUtc
+        Datetime firstSuccessfulLogUtc,
+        Datetime latestSuccessfulLogUtc
     ) {
         String method = normalizedAssignmentMethod(assignmentRecord);
         String tz = assignmentTimezoneSid(assignmentRecord);
@@ -532,12 +577,12 @@ public without sharing class FEC_CaseAssignmentAutoDistributeService {
                 scheduledMinutes,
                 tz
             );
-            Long elapsedMs = nowTime.getTime() - anchorUtc.getTime();
-            if (elapsedMs < 0) {
-                return false;
-            }
-            Long elapsedMinutes = elapsedMs / (60L * 1000L);
-            return Math.mod(elapsedMinutes.intValue(), scheduledMinutes) == 0;
+            Datetime lastRunUtc = latestSuccessfulLogUtc != null
+                ? latestSuccessfulLogUtc
+                : firstSuccessfulLogUtc;
+            Integer currentSlot = continuousSlotIndex(nowTime, anchorUtc, scheduledMinutes);
+            Integer lastRunSlot = continuousSlotIndex(lastRunUtc, anchorUtc, scheduledMinutes);
+            return currentSlot > lastRunSlot;
         }
 
         if (method == METHOD_TIME_BASED) {
