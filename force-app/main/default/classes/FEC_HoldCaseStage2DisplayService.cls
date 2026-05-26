@@ -9,6 +9,8 @@ public with sharing class FEC_HoldCaseStage2DisplayService {
     public static final String MODE_INFO_NO_AUTO_ONLY = 'INFO_NO_AUTO_ONLY';
     /** Stage 1 SUCCESS + Stage 2+ đổi NOC không Auto: giữ UI success, thêm info xanh. */
     public static final String MODE_SUCCESS_WITH_INFO_NO_AUTO = 'SUCCESS_WITH_INFO_NO_AUTO';
+    /** Stage 1 SUCCESS + Stage 2+ đổi NOC có Auto: giữ UI success, thêm info xanh có Auto. */
+    public static final String MODE_SUCCESS_WITH_INFO_HAS_AUTO = 'SUCCESS_WITH_INFO_HAS_AUTO';
     public static final String MODE_INFO_HAS_AUTO_BUTTON = 'INFO_HAS_AUTO_BUTTON';
 
     private static final String HOLD_TYPE_AUTO = 'Auto';
@@ -155,12 +157,15 @@ public with sharing class FEC_HoldCaseStage2DisplayService {
             return out;
         }
 
-        // TH2: Stage 1 Hold Case thành công — luôn hiện UI success; đổi NOC không Auto → thêm info xanh (không thay thế success)
+        // TH2: Stage 1 Hold Case thành công — luôn hiện UI success; đổi NOC → thêm info xanh (có/không Auto)
         if (stage1Result == RESULT_SUCCESS || stage1Result == RESULT_ALREADY_MARKED) {
             out.showHoldCaseSection = true;
             if (nocChanged && !newHasAuto) {
                 out.displayMode = MODE_SUCCESS_WITH_INFO_NO_AUTO;
                 out.infoMessage = System.Label.FEC_MSG_HOLD_CASE_NOC_NO_AUTO;
+            } else if (nocChanged && newHasAuto) {
+                out.displayMode = MODE_SUCCESS_WITH_INFO_HAS_AUTO;
+                out.infoMessage = System.Label.FEC_MSG_HOLD_CASE_NOC_HAS_AUTO;
             }
             return out;
         }

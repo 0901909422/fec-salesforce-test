@@ -696,6 +696,7 @@
         <members>FEC_Case_Assignment_Logs__c-Case Assignment Log Layout</members>
         <members>FEC_Currency_Code__c-Currency Code Layout</members>
         <members>FEC_Case_Assignment__c-Case Assignment Layout</members>
+        <members>FEC_Notification_Template_Channel__c-Notification Template Channel Layout</members>
 		<name>Layout</name>
 	</types>
     <types>
