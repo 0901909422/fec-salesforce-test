@@ -37,10 +37,15 @@ global without sharing class FEC_UpdateDisbursementStatusRestService {
 
     // ─── Constants ──────────────────────────────────────────────────────────
 
+    // tungnm37: dùng constants từ FEC_ConstantCommon cho Case status
+    private static final String DISB_STATUS_WITHDRAWN          = 'Withdrawn';
+    private static final String DISB_STATUS_CANCELLED_CUSTOMER = 'Cancelled_By_Customer';
+    private static final String DISB_STATUS_AUTO_CANCELLED     = 'Auto_Cancelled';
+
     private static final Set<String> VALID_DISB_STATUSES = new Set<String>{
-        FEC_ConstantCommon.DISB_API_STATUS_WITHDRAWN,
-        FEC_ConstantCommon.DISB_API_STATUS_CANCELLED_BY_CUSTOMER,
-        FEC_ConstantCommon.DISB_API_STATUS_AUTO_CANCELLED
+        DISB_STATUS_WITHDRAWN,
+        DISB_STATUS_CANCELLED_CUSTOMER,
+        DISB_STATUS_AUTO_CANCELLED
     };
 
     private static final String CODE_SUCCESS          = '200';
@@ -87,8 +92,8 @@ global without sharing class FEC_UpdateDisbursementStatusRestService {
 
             // Query Case by CRMID
             List<Case> cases = [
-                SELECT Id, FEC_ID_Search__c, FEC_Remarks__c,
-                       FEC_Account_or_Contract__c, FEC_Application_ID__c,
+                SELECT Id, FEC_ID_Search__c, FEC_Disbursement_Status__c,
+                       FEC_Disbursement_Date__c, FEC_Remarks__c,
                        Status, FEC_Final_Status__c
                 FROM Case
                 WHERE FEC_ID_Search__c = :reqBody.CRMID
@@ -124,20 +129,11 @@ global without sharing class FEC_UpdateDisbursementStatusRestService {
                 return;
             }
 
-            String mappedDisbStatus = FEC_FastCashCaseController.mapApiDisbursementStatusToCaseValue(reqBody.DISB_STATUS);
-            FEC_FastCashCaseController.upsertPendingDisbursementStatus(
-                c.Id,
-                mappedDisbStatus,
-                c.FEC_Application_ID__c
-            );
-            if (FEC_ConstantCommon.DISB_API_STATUS_WITHDRAWN.equals(reqBody.DISB_STATUS)
-                && c.FEC_Account_or_Contract__c != null
-                && String.isNotBlank(reqBody.DISB_DT)) {
+            // Update Case
+            c.FEC_Disbursement_Status__c = reqBody.DISB_STATUS;
+            if (String.isNotBlank(reqBody.DISB_DT)) {
                 try {
-                    FEC_FastCashCaseController.updateCustomerHistoryDisbursementDate(
-                        c.FEC_Account_or_Contract__c,
-                        Date.valueOf(reqBody.DISB_DT)
-                    );
+                    c.FEC_Disbursement_Date__c = Date.valueOf(reqBody.DISB_DT);
                 } catch (Exception e) {
                     System.debug('FEC_DEBUG DISB_DT parse error: ' + e.getMessage());
                 }
@@ -147,11 +143,11 @@ global without sharing class FEC_UpdateDisbursementStatusRestService {
             }
 
             // Update status based on DISB_STATUS - tungnm37: dùng FEC_ConstantCommon
-            if (FEC_ConstantCommon.DISB_API_STATUS_WITHDRAWN.equals(reqBody.DISB_STATUS)) {
+            if (DISB_STATUS_WITHDRAWN.equals(reqBody.DISB_STATUS)) {
                 c.Status = FEC_ConstantCommon.CASE_STATUS_RESOLVED_COMPLETED;
-            } else if (FEC_ConstantCommon.DISB_API_STATUS_CANCELLED_BY_CUSTOMER.equals(reqBody.DISB_STATUS)) {
+            } else if (DISB_STATUS_CANCELLED_CUSTOMER.equals(reqBody.DISB_STATUS)) {
                 c.Status = FEC_ConstantCommon.CASE_STATUS_RESOLVED_CANCELLED;
-            } else if (FEC_ConstantCommon.DISB_API_STATUS_AUTO_CANCELLED.equals(reqBody.DISB_STATUS)) {
+            } else if (DISB_STATUS_AUTO_CANCELLED.equals(reqBody.DISB_STATUS)) {
                 c.Status = FEC_ConstantCommon.CASE_STATUS_AUTO_CANCELLED;
             }
 
