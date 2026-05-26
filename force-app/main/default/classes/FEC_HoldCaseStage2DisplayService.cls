@@ -119,8 +119,13 @@ public with sharing class FEC_HoldCaseStage2DisplayService {
         );
 
         Boolean newHasAuto = hasHoldConfig(HOLD_TYPE_AUTO, newNocId);
+        Boolean newHasAutoAtCurrentStage = hasHoldConfigForStage(
+            HOLD_TYPE_AUTO,
+            newNocId,
+            currentStageId
+        );
         Boolean savedHadAutoAtStage1 = baselineNocId != null &&
-            hasHoldConfigAtStage1(HOLD_TYPE_AUTO, baselineNocId);
+            hasHoldConfigAtStage1(HOLD_TYPE_AUTO, baselineNocId, currentStageId);
         Boolean nocChanged = isNatureOfCaseChanged(
             newPt,
             newCat,
@@ -163,12 +168,11 @@ public with sharing class FEC_HoldCaseStage2DisplayService {
             return out;
         }
 
-        // TH3: Stage 1 chọn NOC không có Auto (không có kết quả NFU + baseline không có config Auto),
-        // Stage 2+ đổi sang NOC có Auto → thông báo xanh + nút Hold Case Auto.
+        // TH3: Stage 1 không Auto; Stage 2+ đổi NOC có Auto tại stage hiện tại → info xanh + nút Hold Case.
         if (
             stage1Result == null &&
             nocChanged &&
-            newHasAuto &&
+            newHasAutoAtCurrentStage &&
             !savedHadAutoAtStage1
         ) {
             out.showHoldCaseSection = true;
@@ -265,7 +269,7 @@ public with sharing class FEC_HoldCaseStage2DisplayService {
         return false;
     }
 
-    /** Có config Hold (Auto/Manual) cho NOC — không lọc FEC_Case_Stage__c (config thường khai báo Stage 1). */
+    /** Có config Hold (Auto/Manual) cho NOC — không lọc stage (TH1/TH2). */
     @TestVisible
     private static Boolean hasHoldConfig(String holdType, Id nocId) {
         if (nocId == null) {
@@ -283,9 +287,64 @@ public with sharing class FEC_HoldCaseStage2DisplayService {
         return !rows.isEmpty();
     }
 
+    /** Có config Hold tại đúng FEC_Case_Stage__c (TH3 — stage Case hiện tại). */
     @TestVisible
-    private static Boolean hasHoldConfigAtStage1(String holdType, Id nocId) {
-        return hasHoldConfig(holdType, nocId);
+    private static Boolean hasHoldConfigForStage(
+        String holdType,
+        Id nocId,
+        Id stageId
+    ) {
+        if (nocId == null || stageId == null) {
+            return false;
+        }
+        List<FEC_Hold_Case_Config__c> rows = [
+            SELECT Id
+            FROM FEC_Hold_Case_Config__c
+            WHERE Hold_Case_Type__c = :holdType
+              AND FEC_Active__c = TRUE
+              AND FEC_Case_Stage__c = :stageId
+              AND (FEC_Nature_of_Cases__c = :nocId OR FEC_Nature_of_Cases__c = NULL)
+            WITH SECURITY_ENFORCED
+            LIMIT 1
+        ];
+        return !rows.isEmpty();
+    }
+
+    @TestVisible
+    private static Boolean hasHoldConfigAtStage1(
+        String holdType,
+        Id nocId,
+        Id currentStageId
+    ) {
+        Id stage1Id = resolveStage1IdForNature(nocId, currentStageId);
+        return hasHoldConfigForStage(holdType, nocId, stage1Id);
+    }
+
+    @TestVisible
+    private static Id resolveStage1IdForNature(Id nocId, Id currentStageId) {
+        if (nocId == null) {
+            return null;
+        }
+        List<FEC_Case_Stage__c> byDefault = [
+            SELECT Id
+            FROM FEC_Case_Stage__c
+            WHERE FEC_Nature_of_Cases__c = :nocId
+              AND FEC_Default_Stage__c = TRUE
+            WITH SECURITY_ENFORCED
+            LIMIT 1
+        ];
+        if (!byDefault.isEmpty()) {
+            return byDefault[0].Id;
+        }
+        List<FEC_Case_Stage__c> byName = [
+            SELECT Id
+            FROM FEC_Case_Stage__c
+            WHERE FEC_Nature_of_Cases__c = :nocId
+              AND Name LIKE '%Stage 1%'
+            WITH SECURITY_ENFORCED
+            LIMIT 1
+        ];
+        return byName.isEmpty() ? null : byName[0].Id;
     }
 
     @TestVisible
@@ -336,6 +395,7 @@ public with sharing class FEC_HoldCaseStage2DisplayService {
             WHERE FEC_Nature_of_Cases__c IN :nocIds
               AND Hold_Case_Type__c = :HOLD_TYPE_AUTO
               AND FEC_Active__c = TRUE
+              AND FEC_Case_Stage__c = :stageId
             WITH SECURITY_ENFORCED
             LIMIT 1
         ];
