@@ -86,6 +86,7 @@
                                 <div class="slds-form-element__control">
                                     <div class="slds-combobox_container">
                                         <div class={channelWrapperClass} role="combobox">
+                                            <div class="fec-hcc-lookup-anchor">
                                             <div class="slds-combobox__form-element slds-input-has-icon slds-input-has-icon_right">
                                                 <input
                                                     data-id="channel"
@@ -102,7 +103,7 @@
                                                 </lightning-icon>
                                             </div>
                                             <template if:true={showDropdown}>
-                                                <div class="slds-dropdown slds-dropdown_length-5 slds-dropdown_fluid">
+                                                <div class="fec-hcc-lookup-dropdown slds-dropdown slds-dropdown_length-5 slds-dropdown_fluid" role="listbox">
                                                     <ul class="slds-listbox slds-listbox_vertical">
                                                         <template for:each={channelOptions} for:item="item">
                                                             <li key={item.Id} class="slds-listbox__item">
@@ -120,6 +121,7 @@
                                                     </ul>
                                                 </div>
                                             </template>
+                                            </div>
                                         </div>
                                     </div>
                                     <div class="pill-container">
@@ -187,6 +189,7 @@
                                 <div class="slds-form-element__control">
                                     <div class="slds-combobox_container">
                                         <div class={currentStatusWrapperClass} role="combobox">
+                                            <div class="fec-hcc-lookup-anchor">
                                             <div class="slds-combobox__form-element slds-input-has-icon slds-input-has-icon_right">
                                                 <input
                                                     data-id="currentStatus"
@@ -203,7 +206,7 @@
                                                 </lightning-icon>
                                             </div>
                                             <template if:true={showCurrentStatusLookup}>
-                                                <div class="slds-dropdown slds-dropdown_length-5 slds-dropdown_fluid">
+                                                <div class="fec-hcc-lookup-dropdown slds-dropdown slds-dropdown_length-5 slds-dropdown_fluid" role="listbox">
                                                     <ul class="slds-listbox slds-listbox_vertical">
                                                         <template for:each={currentStatusOptions} for:item="item">
                                                             <li key={item.Id} class="slds-listbox__item">
@@ -221,6 +224,7 @@
                                                     </ul>
                                                 </div>
                                             </template>
+                                            </div>
                                         </div>
                                     </div>
                                      <div class="pill-container">
@@ -249,6 +253,7 @@
                                 <div class="slds-form-element__control">
                                     <div class="slds-combobox_container">
                                         <div class={changedStatusWrapperClass} role="combobox">
+                                            <div class="fec-hcc-lookup-anchor">
                                             <div class="slds-combobox__form-element slds-input-has-icon slds-input-has-icon_right">
                                                 <input
                                                     data-id="changedStatus"
@@ -265,7 +270,7 @@
                                                 </lightning-icon>
                                             </div>
                                             <template if:true={showChangedStatusLookup}>
-                                                <div class="slds-dropdown slds-dropdown_length-5 slds-dropdown_fluid">
+                                                <div class="fec-hcc-lookup-dropdown slds-dropdown slds-dropdown_length-5 slds-dropdown_fluid" role="listbox">
                                                     <ul class="slds-listbox slds-listbox_vertical">
                                                         <template for:each={changedStatusOptions} for:item="item">
                                                             <li key={item.Id} class="slds-listbox__item">
@@ -283,6 +288,7 @@
                                                     </ul>
                                                 </div>
                                             </template>
+                                            </div>
                                         </div>
                                     </div>
                                     <div class="pill-container">
@@ -323,6 +329,7 @@
                                 <div class="slds-form-element__control">
                                     <div class="slds-combobox_container">
                                         <div class={channelWrapperClass} role="combobox">
+                                            <div class="fec-hcc-lookup-anchor">
                                             <div class="slds-combobox__form-element slds-input-has-icon slds-input-has-icon_right">
                                                 <input
                                                     type="text"
@@ -338,7 +345,7 @@
                                                 </lightning-icon>
                                             </div>
                                             <template if:true={showDropdown}>
-                                                <div class="slds-dropdown slds-dropdown_length-5 slds-dropdown_fluid">
+                                                <div class="fec-hcc-lookup-dropdown slds-dropdown slds-dropdown_length-5 slds-dropdown_fluid" role="listbox">
                                                     <ul class="slds-listbox slds-listbox_vertical">
                                                         <template for:each={channelOptions} for:item="item">
                                                             <li key={item.Id} class="slds-listbox__item">
@@ -356,6 +363,7 @@
                                                     </ul>
                                                 </div>
                                             </template>
+                                            </div>
                                         </div>
                                     </div>
                                     <div class="pill-container">
