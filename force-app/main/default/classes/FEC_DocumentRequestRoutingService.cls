@@ -13,54 +13,171 @@ public without sharing class FEC_DocumentRequestRoutingService {
   @AuraEnabled
   public static StageRoutingResult getStageChangeRouting(
     Id caseId,
-    String teamUserGroup
+    String teamUserGroup,
+    Id routeToActionId,
+    Id previousStageId
   ) {
     StageRoutingResult result = new StageRoutingResult();
-    if (caseId == null || String.isBlank(teamUserGroup)) {
+    if (caseId == null) {
+      return result;
+    }
+    if (String.isBlank(teamUserGroup) && routeToActionId == null) {
       return result;
     }
 
-    List<Case> cases = [
-      SELECT Id, FEC_Current_Case_Stage__c
-      FROM Case
-      WHERE Id = :caseId
-      LIMIT 1
-    ];
-    if (cases.isEmpty() || cases[0].FEC_Current_Case_Stage__c == null) {
+    Id currentStageId = previousStageId;
+    if (currentStageId == null) {
+      List<Case> cases = [
+        SELECT Id, FEC_Current_Case_Stage__c
+        FROM Case
+        WHERE Id = :caseId
+        LIMIT 1
+      ];
+      if (cases.isEmpty() || cases[0].FEC_Current_Case_Stage__c == null) {
+        return result;
+      }
+      currentStageId = cases[0].FEC_Current_Case_Stage__c;
+    }
+
+    FEC_Stage_Change__c sc = findStageChangeRecord(
+      currentStageId,
+      teamUserGroup,
+      routeToActionId
+    );
+    if (sc == null) {
       return result;
     }
 
-    Id currentStageId = cases[0].FEC_Current_Case_Stage__c;
-    List<FEC_Stage_Change__c> changelst = [
+    result.nextTeam = String.isNotBlank(sc.FEC_Team_User_Group__c)
+      ? sc.FEC_Team_User_Group__c.trim().toUpperCase()
+      : String.isNotBlank(teamUserGroup) ? teamUserGroup.trim().toUpperCase() : teamUserGroup;
+    Group nextQueue = resolveQueueFromStageChangeValue(sc.FEC_Next_Queue__c);
+    if (nextQueue != null) {
+      result.nextQueueLabel = nextQueue.Name;
+      result.nextQueueId = (String) nextQueue.Id;
+    }
+    return result;
+  }
+
+  private static FEC_Stage_Change__c findStageChangeRecord(
+    Id previousStageId,
+    String teamUserGroup,
+    Id routeToActionId
+  ) {
+    if (routeToActionId != null && String.isNotBlank(teamUserGroup)) {
+      List<FEC_Stage_Change__c> rows = [
+        SELECT FEC_Next_Queue__c, FEC_Team_User_Group__c
+        FROM FEC_Stage_Change__c
+        WHERE
+          FEC_Previous_Stage__c = :previousStageId
+          AND FEC_Team_User_Group__c = :teamUserGroup
+          AND FEC_Action_Button__c = :routeToActionId
+          AND FEC_Active__c = TRUE
+          AND FEC_IsReverted__c = FALSE
+        LIMIT 1
+      ];
+      if (!rows.isEmpty()) {
+        return rows[0];
+      }
+    }
+
+    if (routeToActionId != null) {
+      List<FEC_Stage_Change__c> rows = [
+        SELECT FEC_Next_Queue__c, FEC_Team_User_Group__c
+        FROM FEC_Stage_Change__c
+        WHERE
+          FEC_Previous_Stage__c = :previousStageId
+          AND FEC_Action_Button__c = :routeToActionId
+          AND FEC_Active__c = TRUE
+          AND FEC_IsReverted__c = FALSE
+        LIMIT 1
+      ];
+      if (!rows.isEmpty()) {
+        return rows[0];
+      }
+    }
+
+    if (String.isNotBlank(teamUserGroup)) {
+      List<FEC_Stage_Change__c> rows = [
+        SELECT FEC_Next_Queue__c, FEC_Team_User_Group__c
+        FROM FEC_Stage_Change__c
+        WHERE
+          FEC_Previous_Stage__c = :previousStageId
+          AND FEC_Team_User_Group__c = :teamUserGroup
+          AND FEC_Active__c = TRUE
+          AND FEC_IsReverted__c = FALSE
+        LIMIT 1
+      ];
+      if (!rows.isEmpty()) {
+        return rows[0];
+      }
+    }
+
+    if (routeToActionId != null) {
+      List<FEC_Stage_Change__c> rows = [
+        SELECT FEC_Next_Queue__c, FEC_Team_User_Group__c
+        FROM FEC_Stage_Change__c
+        WHERE
+          FEC_Previous_Stage__c = :previousStageId
+          AND FEC_Action_Button__c = :routeToActionId
+          AND FEC_Active__c = TRUE
+        LIMIT 1
+      ];
+      if (!rows.isEmpty()) {
+        return rows[0];
+      }
+    }
+
+    List<FEC_Stage_Change__c> fallbackRows = [
       SELECT FEC_Next_Queue__c, FEC_Team_User_Group__c
       FROM FEC_Stage_Change__c
       WHERE
-        FEC_Previous_Stage__c = :currentStageId
-        AND FEC_Team_User_Group__c = :teamUserGroup
+        FEC_Previous_Stage__c = :previousStageId
         AND FEC_Active__c = TRUE
         AND FEC_IsReverted__c = FALSE
+      ORDER BY LastModifiedDate DESC
       LIMIT 1
     ];
-    if (changelst.isEmpty()) {
-      return result;
-    }
+    return fallbackRows.isEmpty() ? null : fallbackRows[0];
+  }
 
-    FEC_Stage_Change__c sc = changelst[0];
-    result.nextTeam = sc.FEC_Team_User_Group__c;
-    if (String.isNotBlank(sc.FEC_Next_Queue__c)) {
-      List<Group> queues = [
-        SELECT Id, Name
+  private static Group resolveQueueFromStageChangeValue(String nextQueueValue) {
+    if (String.isBlank(nextQueueValue)) {
+      return null;
+    }
+    String normalized = nextQueueValue.trim();
+    try {
+      Id queueId = Id.valueOf(normalized);
+      List<Group> queuesById = [
+        SELECT Id, Name, DeveloperName
         FROM Group
-        WHERE
-          Type = :FEC_ConstantCommon.GROUP_TYPE_QUEUE
-          AND DeveloperName = :sc.FEC_Next_Queue__c
+        WHERE Id = :queueId AND Type = :FEC_ConstantCommon.GROUP_TYPE_QUEUE
         LIMIT 1
       ];
-      if (!queues.isEmpty()) {
-        result.nextQueueLabel = queues[0].Name;
-        result.nextQueueId = (String) queues[0].Id;
+      if (!queuesById.isEmpty()) {
+        return queuesById[0];
       }
+    } catch (Exception ignore) {
     }
-    return result;
+
+    List<Group> queuesByDeveloperName = [
+      SELECT Id, Name, DeveloperName
+      FROM Group
+      WHERE
+        Type = :FEC_ConstantCommon.GROUP_TYPE_QUEUE
+        AND DeveloperName = :normalized
+      LIMIT 1
+    ];
+    if (!queuesByDeveloperName.isEmpty()) {
+      return queuesByDeveloperName[0];
+    }
+
+    List<Group> queuesByName = [
+      SELECT Id, Name, DeveloperName
+      FROM Group
+      WHERE Type = :FEC_ConstantCommon.GROUP_TYPE_QUEUE AND Name = :normalized
+      LIMIT 1
+    ];
+    return queuesByName.isEmpty() ? null : queuesByName[0];
   }
 }

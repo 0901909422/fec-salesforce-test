@@ -3,9 +3,19 @@
     <types>
         <members>FEC_RoutingActionHistoryTriggerHandler</members>
         <members>FEC_RoutingHistTatSvc</members>
+        <members>FEC_RoutingHistTatSvcTest</members>
+        <members>FEC_BusinessHoursTatUtil</members>
+        <members>FEC_BusinessHoursTatUtilTest</members>
         <members>FEC_CaseTatFullProcessSvc</members>
         <members>FEC_CaseTriggerHandler</members>
+        <members>FEC_CaseRemarksRollupService</members>
+        <members>FEC_CaseRemarksTriggerHandler</members>
+        <members>FEC_CaseRemarksRollupServiceTest</members>
         <name>ApexClass</name>
+    </types>
+    <types>
+        <members>FEC_CaseRemarksTrigger</members>
+        <name>ApexTrigger</name>
     </types>
     <types>
         <members>Case.FEC_Case_Remarks_Entered_By_1__c</members>
@@ -35,6 +45,7 @@
         <members>FEC_Routing_Action_History__c.FEC_Submitted_On__c</members>
         <members>FEC_Routing_Action_History__c.FEC_TAT_by_Assignment_Hrs__c</members>
         <members>FEC_Routing_Action_History__c.FEC_TAT_by_Assignment__c</members>
+        <members>FEC_Customer_History__c.FEC_Loan_Amount__c</members>
         <name>CustomField</name>
     </types>
     <types>
@@ -94,6 +105,8 @@
         <!-- Report -->
         <members>RD_IT_User_Report_Dashboard</members>
         <members>FEC_Manage_Report</members>
+        <members>FEC_Common_System_Setting</members>
+        <members>RD_IT_User_System_Management</members>
         <name>PermissionSet</name>
     </types>
     <types>

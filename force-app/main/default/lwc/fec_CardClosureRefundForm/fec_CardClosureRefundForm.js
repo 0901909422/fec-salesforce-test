@@ -1,7 +1,9 @@
 import { LightningElement, api, track } from 'lwc';
 import { NavigationMixin } from 'lightning/navigation';
 import getCardLockUnlockUiContext from '@salesforce/apex/FEC_CardClosureRefundController.getCardLockUnlockUiContext';
-import blockCard from '@salesforce/apex/FEC_CardClosureRefundController.blockCard';
+import blockCardLockApi from '@salesforce/apex/FEC_CardClosureRefundController.blockCardLockApi';
+import blockCardAccountBlkcdApi from '@salesforce/apex/FEC_CardClosureRefundController.blockCardAccountBlkcdApi';
+import finalizeBlockCard from '@salesforce/apex/FEC_CardClosureRefundController.finalizeBlockCard';
 import FEC_MSG_Card_Block_Success from '@salesforce/label/c.FEC_MSG_Card_Block_Success';
 import FEC_MSG_Card_Block_Fail_Disable from '@salesforce/label/c.FEC_MSG_Card_Block_Fail_Disable';
 import FEC_MSG_Card_Block_Fail_Retry from '@salesforce/label/c.FEC_MSG_Card_Block_Fail_Retry';
@@ -113,7 +115,10 @@ export default class Fec_CardClosureRefundForm extends NavigationMixin(Lightning
             ? SUB_CODE_RC16_01 === parentCode
             : ctx.hideBlockCardBySubCode === true;
         const cardBlocked = ctx.cardBlocked === true;
-        return !hideBySubCode && ctx.attemptsExhausted !== true && !cardBlocked && this.hasPendingDisbursementData;
+        return !hideBySubCode
+            && !this.formLocked
+            && ctx.attemptsExhausted !== true
+            && !cardBlocked;
     }
 
     get blockCardLocked() {
@@ -233,31 +238,23 @@ export default class Fec_CardClosureRefundForm extends NavigationMixin(Lightning
             return;
         }
         this.isSubmitting = true;
-        blockCard({ caseId: this.recordId })
-            .then((res) => {
-                if (res && res.success) {
-                    this.formLocked = true;
-                    this.resultMessage = FEC_MSG_Card_Block_Success;
-                    this.resultClass = RESULT_SUCCESS;
-                    window.setTimeout(() => {
-                        this.navigateToCaseView();
-                    }, 500);
-                    return;
-                }
-                if (res && res.hideBlockCardAfterAction === true) {
-                    this.resultMessage = FEC_MSG_Card_Block_Fail_Disable;
-                    this.resultClass = RESULT_ERROR;
-                    window.setTimeout(() => {
-                        this.navigateToCaseView();
-                    }, 500);
-                    return;
-                }
-                if (res && res.errorMessage) {
-                    this.resultMessage = res.errorMessage;
-                } else {
-                    this.resultMessage = FEC_MSG_Card_Block_Fail_Retry;
-                }
-                this.resultClass = RESULT_ERROR;
+        const needVmx = this.uiContext && this.uiContext.callAccountBlkcdApi === true;
+        const apiPromises = [blockCardLockApi({ caseId: this.recordId })];
+        if (needVmx) {
+            apiPromises.push(blockCardAccountBlkcdApi({ caseId: this.recordId }));
+        }
+        Promise.all(apiPromises)
+            .then((apiResults) => {
+                const lockRes = apiResults[0];
+                const vmxRes = needVmx ? apiResults[1] : { success: true, skipped: true };
+                return finalizeBlockCard({
+                    caseId: this.recordId,
+                    lockApiSuccess: lockRes && lockRes.success === true,
+                    vmxApiSuccess: vmxRes && vmxRes.success === true,
+                    callAccountBlkcdApi: needVmx
+                }).then((finalizeRes) => {
+                    this.applyBlockCardResult(finalizeRes, lockRes, vmxRes, needVmx);
+                });
             })
             .catch(() => {
                 this.resultMessage = FEC_MSG_Card_Block_Fail_Retry;
@@ -267,5 +264,41 @@ export default class Fec_CardClosureRefundForm extends NavigationMixin(Lightning
                 this.isSubmitting = false;
                 this.loadUiContext();
             });
+    }
+
+    applyBlockCardResult(res, lockRes, vmxRes, needVmx) {
+        if (res && res.success) {
+            this.formLocked = true;
+            this.resultMessage = FEC_MSG_Card_Block_Success;
+            this.resultClass = RESULT_SUCCESS;
+            window.setTimeout(() => {
+                this.navigateToCaseView();
+            }, 500);
+            return;
+        }
+        if (res && res.hideBlockCardAfterAction === true) {
+            this.resultMessage = FEC_MSG_Card_Block_Fail_Disable;
+            this.resultClass = RESULT_ERROR;
+            window.setTimeout(() => {
+                this.navigateToCaseView();
+            }, 500);
+            return;
+        }
+        const errMsg = this.resolveBlockErrorMessage(lockRes, vmxRes, needVmx, res);
+        this.resultMessage = errMsg;
+        this.resultClass = RESULT_ERROR;
+    }
+
+    resolveBlockErrorMessage(lockRes, vmxRes, needVmx, finalizeRes) {
+        if (finalizeRes && finalizeRes.errorMessage) {
+            return finalizeRes.errorMessage;
+        }
+        if (lockRes && lockRes.errorMessage) {
+            return lockRes.errorMessage;
+        }
+        if (needVmx && vmxRes && vmxRes.errorMessage) {
+            return vmxRes.errorMessage;
+        }
+        return FEC_MSG_Card_Block_Fail_Retry;
     }
 }

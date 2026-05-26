@@ -11,8 +11,10 @@
  
 ****************************************************************************************/
 
-import { LightningElement, api, track } from 'lwc';
+import { LightningElement, api, track, wire } from 'lwc';
+import { getObjectInfo } from 'lightning/uiObjectInfoApi';
 import { loadStyle } from 'lightning/platformResourceLoader';
+import HOLD_CASE_CONFIG_OBJECT from '@salesforce/schema/FEC_Hold_Case_Config__c';
 import { NavigationMixin } from 'lightning/navigation';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 
@@ -61,6 +63,14 @@ export default class Fec_HoldCaseConfiguration extends NavigationMixin(Lightning
     @track isShowNfuModal = false;
 
     isLoading = false;
+    canCreate = false;
+
+    @wire(getObjectInfo, { objectApiName: HOLD_CASE_CONFIG_OBJECT })
+    wiredHoldCaseConfigObjectInfo({ data }) {
+        if (data) {
+            this.canCreate = data.createable;
+        }
+    }
 
     // ================= LOOKUP DATA =================
 
@@ -200,21 +210,36 @@ export default class Fec_HoldCaseConfiguration extends NavigationMixin(Lightning
     }
 
     get channelWrapperClass() {
-        return this.errors.channel
-            ? 'slds-combobox_container slds-has-error'
-            : 'slds-combobox_container';
+        let cls = 'slds-combobox slds-dropdown-trigger';
+        if (this.showDropdown) {
+            cls += ' slds-is-open';
+        }
+        if (this.errors.channel) {
+            cls += ' slds-has-error';
+        }
+        return cls;
     }
 
     get currentStatusWrapperClass() {
-        return this.errors.currentStatus
-            ? 'slds-combobox_container slds-has-error'
-            : 'slds-combobox_container';
+        let cls = 'slds-combobox slds-dropdown-trigger';
+        if (this.showCurrentStatusLookup) {
+            cls += ' slds-is-open';
+        }
+        if (this.errors.currentStatus) {
+            cls += ' slds-has-error';
+        }
+        return cls;
     }
 
     get changedStatusWrapperClass() {
-        return this.errors.changedStatus
-            ? 'slds-combobox_container slds-has-error'
-            : 'slds-combobox_container';
+        let cls = 'slds-combobox slds-dropdown-trigger';
+        if (this.showChangedStatusLookup) {
+            cls += ' slds-is-open';
+        }
+        if (this.errors.changedStatus) {
+            cls += ' slds-has-error';
+        }
+        return cls;
     }
 
     get nfuWrapperClass() {
@@ -267,6 +292,9 @@ export default class Fec_HoldCaseConfiguration extends NavigationMixin(Lightning
     // ================= MAIN MODAL =================
 
     handleNew() {
+        if (!this.canCreate) {
+            return;
+        }
         this.isShowModal = true;
     }
 
@@ -621,6 +649,10 @@ export default class Fec_HoldCaseConfiguration extends NavigationMixin(Lightning
     // ================= SAVE =================
 
     handleSave() {
+        if (!this.canCreate) {
+            return;
+        }
+
         const isValid = this.validateForm();
         if (!isValid) return;
 

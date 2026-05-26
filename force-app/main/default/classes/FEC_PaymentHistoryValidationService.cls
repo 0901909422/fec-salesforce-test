@@ -19,8 +19,9 @@ public with sharing class FEC_PaymentHistoryValidationService {
   private static final String CARD_BLOCK_CODE_C = 'C';
 
   /**
-   * RC04.04 — Giấy xác nhận đóng thẻ: gợi ý infoMessage khi
-   * Account Status (T-1) in (8,9) OR (not in (8,9) AND ít nhất một: Block Code = C, IPP Principal T-1 = 0, OTB >= Credit Limit).
+   * RC04.04 — Giấy xác nhận đóng thẻ: trả infoMessage khi không đủ điều kiện;
+   * đủ điều kiện thì không trả message (null).
+   * Điều kiện đủ: Account Status (T-1) in (8,9) OR (not in (8,9) AND đồng thời: Block Code = C, IPP Principal T-1 = 0, OTB >= Credit Limit).
    *
    * Field mapping:
    *   Account Status : FEC_Customer_History__c.FEC_Account_Status__c
@@ -31,7 +32,7 @@ public with sharing class FEC_PaymentHistoryValidationService {
    */
   private static String buildRc0404InfoMessageIfEligible(Id customerHistoryId) {
     if (customerHistoryId == null) {
-      return null;
+      return System.Label.FEC_MSG_Cannot_Create_Card_Close_Certificate;
     }
     List<FEC_Customer_History__c> rows = [
       SELECT
@@ -44,7 +45,7 @@ public with sharing class FEC_PaymentHistoryValidationService {
       LIMIT 1
     ];
     if (rows.isEmpty()) {
-      return null;
+      return System.Label.FEC_MSG_Cannot_Create_Card_Close_Certificate;
     }
     FEC_Customer_History__c h = rows[0];
 
@@ -78,16 +79,20 @@ public with sharing class FEC_PaymentHistoryValidationService {
       ippPrincipalZero = stmtRows[0].FEC_IPP_Principal__c == 0;
     }
 
-    if (statusEightOrNine || (!statusEightOrNine && (blockCodeC || ippPrincipalZero || otbGteLimit))) {
-      return System.Label.FEC_MSG_Can_Create_Card_Close_Certificate;
+    if (
+      statusEightOrNine ||
+      (!statusEightOrNine && blockCodeC && ippPrincipalZero && otbGteLimit)
+    ) {
+      return null;
     }
-    return null;
+    return System.Label.FEC_MSG_Cannot_Create_Card_Close_Certificate;
   }
 
   /**
    * RL04.02: chặn chỉ khi Contract Status = Closed (thông báo lịch trả nợ).
-   * RL04.03: Closed hoặc Active với COUNT FEC_Payment_History__c theo Customer History below 7 (thông báo lịch sử thanh toán).
-   * RC04.04: không chặn; trả infoMessage khi đủ điều kiện gợi ý giấy xác nhận đóng thẻ.
+   * RL04.03: Closed hoặc Active với COUNT FEC_Payment_History__c below 7 (thông báo lịch sử thanh toán).
+   * Active + COUNT = 0: gọi FEC_RepaySchedPayHistController.syncPaymentHistoryFromApis rồi đếm lại.
+   * RC04.04: không chặn; trả infoMessage khi không đủ điều kiện phát hành giấy xác nhận đóng thẻ.
    */
   @AuraEnabled
   public static PaymentHistoryRequestValidationResult validatePaymentHistoryRequestForSubCode(
@@ -185,11 +190,28 @@ public with sharing class FEC_PaymentHistoryValidationService {
     }
 
     if (CONTRACT_STATUS_ACTIVE.equals(contractStatus)) {
+      Id customerHistoryIdForCount = histories[0].Id;
       Integer paymentCount = [
         SELECT COUNT()
         FROM FEC_Payment_History__c
-        WHERE FEC_Customer_History__c = :histories[0].Id
+        WHERE FEC_Customer_History__c = :customerHistoryIdForCount
       ];
+      if (paymentCount == 0) {
+        try {
+          paymentCount = FEC_RepaySchedPayHistController.syncPaymentHistoryFromApis(
+            caseId,
+            customerHistoryIdForCount
+          );
+        } catch (Exception e) {
+          System.debug(
+            LoggingLevel.WARN,
+            'RL04.03 payment history API sync skipped, case=' +
+              caseId +
+              ': ' +
+              e.getMessage()
+          );
+        }
+      }
       if (paymentCount < 7) {
         result.allowed = false;
         result.message = System.Label.FEC_MSG_Cannot_Request_Payment_History;

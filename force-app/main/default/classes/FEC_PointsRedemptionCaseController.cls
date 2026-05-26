@@ -20,6 +20,16 @@ public without sharing class FEC_PointsRedemptionCaseController {
         return resolveSubCodeFromNatureOfCase(c);
     }
 
+    private static String resolveEffectiveSubCategory(Case c, String paramSubCategoryCode) {
+        if (String.isNotBlank(paramSubCategoryCode)) {
+            return paramSubCategoryCode.trim();
+        }
+        if (c.FEC_SubCategory__r != null && String.isNotBlank(c.FEC_SubCategory__r.FEC_Code__c)) {
+            return c.FEC_SubCategory__r.FEC_Code__c.trim();
+        }
+        return FEC_ConstantCommon.STR_EMPTY;
+    }
+
     private static Case loadCase(Id caseId) {
         if (caseId == null) {
             return null;
@@ -27,8 +37,9 @@ public without sharing class FEC_PointsRedemptionCaseController {
         List<Case> cases = [
             SELECT Id, CaseNumber,
                 FEC_Product_Type__c, FEC_Product_Type__r.Name,
-                FEC_Category__c, FEC_SubCategory__c, FEC_SubCode__c,
+                FEC_Category__c, FEC_SubCategory__c,                 FEC_SubCode__c,
                 FEC_SubCode__r.FEC_Code__c,
+                FEC_SubCategory__r.FEC_Code__c,
                 FEC_Account_or_Contract__c,
                 FEC_Account_or_Contract__r.FEC_Account_Number__c,
                 FEC_Account_or_Contract__r.FEC_Contract_Number__c,
@@ -163,16 +174,80 @@ public without sharing class FEC_PointsRedemptionCaseController {
         return null;
     }
 
-    /** Nhánh đổi điểm thưởng (SRS RC33): sau khi chọn NOC cần gọi GetRewardEligibility để lấy AvailablePoints. */
-    private static Boolean isPointsRedemptionNoc(String subCode) {
-        return String.isNotBlank(subCode) && subCode.contains('RC33');
+    /** Nhánh đổi điểm thưởng (SRS RC33): Sub Category RC33 hoặc Sub Code RC33.x. */
+    private static Boolean isPointsRedemptionRc33Branch(String subCategoryCode, String subCodeCode) {
+        if (String.isNotBlank(subCategoryCode) && subCategoryCode.toUpperCase().contains('RC33')) {
+            return true;
+        }
+        return String.isNotBlank(subCodeCode) && subCodeCode.toUpperCase().contains('RC33');
     }
 
-    //linhdev fix jira FECREDIT_CSM_2025_KH-1393-1394
+    //linhdev fix jira FECREDIT_CSM_2025_KH-1393-1394 — mọi trường hợp không đủ điều kiện: chỉ 1 reason UI
     private static void applyNotEligibleBelowMinPoints(InitResult r, Decimal points) {
         r.availablePoints = points;
         r.notEligibleMessage = MSG_NOT_ELIGIBLE;
         r.notEligibleReason = System.Label.FEC_Points_Redemption_Available_Points_Below_Min;
+    }
+
+    //linhdev fix jira FECREDIT_CSM_2025_KH-1393-1394 — API lỗi: fallback Available Points từ Case.FEC_Redeemed_Points__c
+    private static Decimal parseCaseRedeemedPointsField(Case c) {
+        if (c == null || String.isBlank(c.FEC_Redeemed_Points__c)) {
+            return null;
+        }
+        String raw = c.FEC_Redeemed_Points__c.trim();
+        Integer semiIdx = raw.indexOf(';');
+        if (semiIdx > 0) {
+            raw = raw.substring(0, semiIdx).trim();
+        }
+        raw = raw.replace(',', '');
+        if (String.isBlank(raw)) {
+            return null;
+        }
+        try {
+            return Decimal.valueOf(raw);
+        } catch (Exception ignore) {
+            return null;
+        }
+    }
+
+    private static void applyApiFailureNotEligible(InitResult r, Case c, EligibilityParse el) {
+        Decimal fallbackPoints = parseCaseRedeemedPointsField(c);
+        Decimal displayPoints = el != null && el.availablePoints != null ? el.availablePoints : fallbackPoints;
+        applyNotEligibleBelowMinPoints(r, displayPoints);
+    }
+
+    /** RC33.01–03: hiển thị form Redeem Points; RC33.04 và NOC chưa có Sub Code redeem thì không. */
+    private static Boolean isPointsRedemptionRedeemSubCode(String subCodeCode) {
+        if (String.isBlank(subCodeCode)) {
+            return false;
+        }
+        String s = subCodeCode.trim().toUpperCase();
+        return s.contains('RC33.01') || s.contains('RC33.02') || s.contains('RC33.03');
+    }
+
+    private static Boolean parseEligibleFlag(String raw) {
+        if (String.isBlank(raw)) {
+            return true;
+        }
+        String v = raw.trim();
+        return 'true'.equalsIgnoreCase(v) || '1'.equals(v);
+    }
+
+    private static String normalizeProductType(String productType) {
+        if (String.isBlank(productType)) {
+            return null;
+        }
+        String t = productType.trim();
+        if (t.equalsIgnoreCase(FEC_ConstantCommon.PRODUCT_TYPE_CASHBACK)) {
+            return FEC_ConstantCommon.PRODUCT_TYPE_CASHBACK;
+        }
+        if (t.equalsIgnoreCase(FEC_ConstantCommon.PRODUCT_TYPE_EVOUCHER)) {
+            return FEC_ConstantCommon.PRODUCT_TYPE_EVOUCHER;
+        }
+        if (t.equalsIgnoreCase(FEC_ConstantCommon.PRODUCT_TYPE_MVOUCHER)) {
+            return FEC_ConstantCommon.PRODUCT_TYPE_MVOUCHER;
+        }
+        return t;
     }
 
     private static Boolean isBelowMinAvailablePoints(Decimal points) {
@@ -194,6 +269,7 @@ public without sharing class FEC_PointsRedemptionCaseController {
         @AuraEnabled public String subCodeCode;
         @AuraEnabled public String expectedProductType;
         @AuraEnabled public Decimal availablePoints;
+        @AuraEnabled public String subCategoryCode;
         //linhdev fix jira FECREDIT_CSM_2025_KH-1469-1474
         @AuraEnabled public String savedRedeemedPoints;
     }
@@ -209,7 +285,7 @@ public without sharing class FEC_PointsRedemptionCaseController {
     }
 
     @AuraEnabled
-    public static InitResult initData(Id caseId, String subCodeCode) {
+    public static InitResult initData(Id caseId, String subCodeCode, String subCategoryCode) {
         InitResult r = new InitResult();
         r.showRedemptionUi = false;
         r.tierOptions = new List<TierOption>();
@@ -222,54 +298,49 @@ public without sharing class FEC_PointsRedemptionCaseController {
             throw new AuraHandledException(String.format(System.Label.FEC_MSG_Param_Required, new List<String>{ 'Case' }));
         }
         String effectiveSub = resolveEffectiveSubCode(c, subCodeCode);
+        String effectiveSubCat = resolveEffectiveSubCategory(c, subCategoryCode);
         r.subCodeCode = effectiveSub;
-        if (!isPointsRedemptionNoc(effectiveSub)) {
+        r.subCategoryCode = effectiveSubCat;
+        if (!isPointsRedemptionRc33Branch(effectiveSubCat, effectiveSub)) {
             return r;
         }
         FEC_Customer_History__c customerHistory = resolveCustomerHistoryForCase(c);
         String accountNumber = resolveAccountNumberForCase(c, customerHistory);
         if (String.isBlank(accountNumber)) {
-            r.notEligibleMessage = MSG_NOT_ELIGIBLE;
-            return r;
-        }
-        //linhdev fix jira FECREDIT_CSM_2025_KH-1393-1394 — SRS: Available Points từ Customer History (C360)
-        Decimal c360AvailablePoints = resolveC360AvailablePointsFromCustomerHistory(
-            accountNumber,
-            customerHistory
-        );
-        if (isBelowMinAvailablePoints(c360AvailablePoints)) {
-            applyNotEligibleBelowMinPoints(r, c360AvailablePoints);
+            applyNotEligibleBelowMinPoints(r, null);
             return r;
         }
         EligibilityParse el = callAndParseEligibility(accountNumber);
         if (el == null || el.sysCode == null || el.sysCode != 0) {
-            r.notEligibleMessage = MSG_NOT_ELIGIBLE;
+            applyApiFailureNotEligible(r, c, el);
             return r;
         }
         if (isBelowMinAvailablePoints(el.availablePoints)) {
             applyNotEligibleBelowMinPoints(r, el.availablePoints);
             return r;
         }
+        if (!isPointsRedemptionRedeemSubCode(effectiveSub)) {
+            return r;
+        }
         r.expectedProductType = resolveProductType(effectiveSub);
         if (String.isBlank(r.expectedProductType)) {
-            r.cmsPhone = el.customerMobile;
-            applyCmsPhoneToCase(caseId, el.customerMobile);
+            applyNotEligibleBelowMinPoints(r, el.availablePoints);
             return r;
         }
         if (!isTypeEligible(r.expectedProductType, el)) {
-            r.notEligibleMessage = MSG_NOT_ELIGIBLE;
+            applyNotEligibleBelowMinPoints(r, el.availablePoints);
             return r;
         }
         r.cmsPhone = el.customerMobile;
         applyCmsPhoneToCase(caseId, el.customerMobile);
         for (ProductTier t : el.tiers) {
-            if (t == null || t.productType != r.expectedProductType) {
+            if (t == null || normalizeProductType(t.productType) != r.expectedProductType) {
                 continue;
             }
             TierPayload p = new TierPayload();
             p.productId = t.productId;
             p.productName = t.productName;
-            p.productType = t.productType;
+            p.productType = normalizeProductType(t.productType);
             p.priceId = t.priceId;
             p.price = t.price;
             p.cashback = t.cashback != null ? t.cashback : 0;
@@ -279,10 +350,12 @@ public without sharing class FEC_PointsRedemptionCaseController {
             o.label = formatTierLabel(t);
             r.tierOptions.add(o);
         }
-        r.showRedemptionUi = !r.tierOptions.isEmpty();
-        if (!r.showRedemptionUi) {
-            r.notEligibleMessage = MSG_NOT_ELIGIBLE;
+        if (r.tierOptions.isEmpty()) {
+            applyNotEligibleBelowMinPoints(r, el.availablePoints);
+            return r;
         }
+        r.showRedemptionUi = true;
+        r.availablePoints = el.availablePoints;
         //linhdev fix jira FECREDIT_CSM_2025_KH-1469-1474
         if (c != null && String.isNotBlank(c.FEC_Redeemed_Points__c)) {
             r.savedRedeemedPoints = c.FEC_Redeemed_Points__c.trim();
@@ -465,6 +538,7 @@ public without sharing class FEC_PointsRedemptionCaseController {
 
     private class EligibilityParse {
         Integer sysCode;
+        String sysDescription;
         Decimal availablePoints;
         String customerMobile;
         String customerName;
@@ -535,6 +609,7 @@ public without sharing class FEC_PointsRedemptionCaseController {
             Dom.XmlNode sysNode = FEC_CommonUltils.findChildByName(resp, 'SysResponse');
             if (sysNode != null) {
                 out.sysCode = FEC_CommonUltils.toInt(FEC_CommonUltils.getValueSafe(sysNode, 'Status'));
+                out.sysDescription = FEC_CommonUltils.getValueSafe(sysNode, 'Description');
             }
             out.availablePoints = FEC_CommonUltils.xmlValToDecimal(resp, 'AvailablePoints');
             out.customerMobile = FEC_CommonUltils.getXmlValue(resp, 'CustomerMobile');
@@ -545,9 +620,9 @@ public without sharing class FEC_PointsRedemptionCaseController {
                 String ev = FEC_CommonUltils.getValueSafe(redNode, 'EvoucherEligible');
                 String cb = FEC_CommonUltils.getValueSafe(redNode, 'CashbackEligible');
                 String mv = FEC_CommonUltils.getValueSafe(redNode, 'MvoucherEligible');
-                out.redemptionOptions.evoucherEligible = String.isBlank(ev) ? true : Boolean.valueOf(ev);
-                out.redemptionOptions.cashbackEligible = String.isBlank(cb) ? true : Boolean.valueOf(cb);
-                out.redemptionOptions.mvoucherEligible = String.isBlank(mv) ? true : Boolean.valueOf(mv);
+                out.redemptionOptions.evoucherEligible = parseEligibleFlag(ev);
+                out.redemptionOptions.cashbackEligible = parseEligibleFlag(cb);
+                out.redemptionOptions.mvoucherEligible = parseEligibleFlag(mv);
             }
             Dom.XmlNode productsNode = FEC_CommonUltils.findChildByName(resp, 'Products');
             if (productsNode == null) {
@@ -564,7 +639,7 @@ public without sharing class FEC_PointsRedemptionCaseController {
                 ProductTier t = new ProductTier();
                 t.productId = firstVal(ch, new List<String>{ 'ID', 'ProductCode', 'Id' });
                 t.productName = firstVal(ch, new List<String>{ 'Name', 'ProductName' });
-                t.productType = FEC_CommonUltils.getValueSafe(ch, 'Type');
+                t.productType = normalizeProductType(FEC_CommonUltils.getValueSafe(ch, 'Type'));
                 t.priceId = FEC_CommonUltils.getValueSafe(ch, 'PriceID');
                 String priceStr = FEC_CommonUltils.getValueSafe(ch, 'Price');
                 t.price = String.isBlank(priceStr) ? null : Decimal.valueOf(priceStr.trim());

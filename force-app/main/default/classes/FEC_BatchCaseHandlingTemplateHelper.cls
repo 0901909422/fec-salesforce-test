@@ -378,7 +378,7 @@ public without sharing class FEC_BatchCaseHandlingTemplateHelper {
         return null;
     }
 
-    private static String mapBusinessProcessToTemplatePrefix(String businessProcessCode) {
+    public static String mapBusinessProcessToTemplatePrefix(String businessProcessCode) {
         if (String.isBlank(businessProcessCode)) {
             return null;
         }
@@ -401,6 +401,7 @@ public without sharing class FEC_BatchCaseHandlingTemplateHelper {
             'IPP CLOSURE' => 'IPPClosure',
             'IPP CONVERSION' => 'IPPConversion',
             'CARD UNBLOCK' => 'CardUnblock',
+            'CARD BLOCK' => 'CardUnblock',
             'CONTRACT CLOSURE' => 'ContractClosure',
             'CARD CLOSURE & REFUND REQUEST (CARD)' => 'CardClosure',
             'CARD REPLACEMENT' => 'CardReplacement',
@@ -421,7 +422,7 @@ public without sharing class FEC_BatchCaseHandlingTemplateHelper {
         return null;
     }
 
-    private static List<String> mapUserGroupToTemplateSuffixes(String businessProcessCode, String userGroup) {
+    public static List<String> mapUserGroupToTemplateSuffixes(String businessProcessCode, String userGroup) {
         String bp = String.isBlank(businessProcessCode) ? FEC_ConstantCommon.STR_EMPTY : businessProcessCode.trim().toUpperCase();
         String ug = String.isBlank(userGroup) ? FEC_ConstantCommon.STR_EMPTY : userGroup.trim().toUpperCase();
         List<String> out = new List<String>();
@@ -459,5 +460,272 @@ public without sharing class FEC_BatchCaseHandlingTemplateHelper {
             }
         }
         return out;
+    }
+
+    public class TemplateExportBinding {
+        public String templateName;
+        public Id templateContentVersionId;
+        public String templateDownloadUrl;
+    }
+
+    public static TemplateExportBinding resolveExportTemplateBinding(
+        String businessProcessCode,
+        String businessProcessName,
+        String userGroup,
+        List<SObject> activeTemplates,
+        Map<Id, Id> versionIdByTemplateId,
+        Map<Id, String> urlByTemplateId
+    ) {
+        TemplateExportBinding out = new TemplateExportBinding();
+        out.templateName = FEC_ConstantCommon.STR_EMPTY;
+        out.templateDownloadUrl = FEC_ConstantCommon.STR_EMPTY;
+        out.templateContentVersionId = null;
+        if (activeTemplates == null || activeTemplates.isEmpty()) {
+            return out;
+        }
+        SObject matched = resolveTemplateByBusinessProcessAndUserGroup(
+            businessProcessCode,
+            businessProcessName,
+            userGroup,
+            activeTemplates
+        );
+        if (matched != null && hasTemplateFile(matched, versionIdByTemplateId)) {
+            return fillTemplateExportBinding(out, matched, versionIdByTemplateId, urlByTemplateId);
+        }
+        SObject withFile = findFirstTemplateWithFileForBusinessProcess(
+            businessProcessCode,
+            businessProcessName,
+            activeTemplates,
+            versionIdByTemplateId
+        );
+        if (withFile != null) {
+            return fillTemplateExportBinding(out, withFile, versionIdByTemplateId, urlByTemplateId);
+        }
+        if (matched != null) {
+            out.templateName = matched.get('Name') == null
+                ? FEC_ConstantCommon.STR_EMPTY
+                : String.valueOf(matched.get('Name'));
+        }
+        return out;
+    }
+
+    private static Boolean hasTemplateFile(SObject templateRow, Map<Id, Id> versionIdByTemplateId) {
+        if (templateRow == null || versionIdByTemplateId == null || versionIdByTemplateId.isEmpty()) {
+            return false;
+        }
+        return versionIdByTemplateId.containsKey((Id) templateRow.get('Id'));
+    }
+
+    private static SObject findFirstTemplateWithFileForBusinessProcess(
+        String businessProcessCode,
+        String businessProcessName,
+        List<SObject> activeTemplates,
+        Map<Id, Id> versionIdByTemplateId
+    ) {
+        if (activeTemplates == null || activeTemplates.isEmpty() || versionIdByTemplateId == null || versionIdByTemplateId.isEmpty()) {
+            return null;
+        }
+        for (SObject tr : activeTemplates) {
+            if (!businessProcessFieldMatches(tr, businessProcessCode, businessProcessName)) {
+                continue;
+            }
+            if (versionIdByTemplateId.containsKey((Id) tr.get('Id'))) {
+                return tr;
+            }
+        }
+        return null;
+    }
+
+    private static TemplateExportBinding fillTemplateExportBinding(
+        TemplateExportBinding out,
+        SObject templateRow,
+        Map<Id, Id> versionIdByTemplateId,
+        Map<Id, String> urlByTemplateId
+    ) {
+        Id templateId = (Id) templateRow.get('Id');
+        out.templateName = templateRow.get('Name') == null
+            ? FEC_ConstantCommon.STR_EMPTY
+            : String.valueOf(templateRow.get('Name'));
+        out.templateContentVersionId = versionIdByTemplateId == null ? null : versionIdByTemplateId.get(templateId);
+        out.templateDownloadUrl = urlByTemplateId == null ? FEC_ConstantCommon.STR_EMPTY : urlByTemplateId.get(templateId);
+        if (out.templateDownloadUrl == null) {
+            out.templateDownloadUrl = FEC_ConstantCommon.STR_EMPTY;
+        }
+        return out;
+    }
+
+    public static void populateTemplateContentVersionMaps(
+        Set<Id> templateIds,
+        Map<Id, Id> versionIdByTemplateId,
+        Map<Id, String> urlByTemplateId
+    ) {
+        if (templateIds == null || templateIds.isEmpty()) {
+            return;
+        }
+        Map<Id, Id> versionMap = versionIdByTemplateId == null ? new Map<Id, Id>() : versionIdByTemplateId;
+        Map<Id, String> urlMap = urlByTemplateId == null ? new Map<Id, String>() : urlByTemplateId;
+        Set<Id> unresolved = new Set<Id>();
+        for (Id templateId : templateIds) {
+            if (!versionMap.containsKey(templateId)) {
+                unresolved.add(templateId);
+            }
+        }
+        if (unresolved.isEmpty()) {
+            return;
+        }
+        for (ContentVersion cv : [
+            SELECT Id, FirstPublishLocationId, FileExtension, PathOnClient, Title
+            FROM ContentVersion
+            WHERE FirstPublishLocationId IN :unresolved
+            AND IsLatest = true
+            ORDER BY FirstPublishLocationId, CreatedDate DESC
+        ]) {
+            Id templateId = cv.FirstPublishLocationId;
+            if (templateId == null || versionMap.containsKey(templateId)) {
+                continue;
+            }
+            if (!isTemplateXlsxContentVersion(cv)) {
+                continue;
+            }
+            versionMap.put(templateId, cv.Id);
+            urlMap.put(templateId, FEC_ConstantCommon.CONTENT_VERSION_DOWNLOAD_URL_PREFIX + String.valueOf(cv.Id));
+            unresolved.remove(templateId);
+        }
+        if (unresolved.isEmpty()) {
+            return;
+        }
+        for (ContentDocumentLink link : [
+            SELECT LinkedEntityId, ContentDocument.LatestPublishedVersionId, ContentDocument.FileExtension, ContentDocument.Title
+            FROM ContentDocumentLink
+            WHERE LinkedEntityId IN :unresolved
+            ORDER BY LinkedEntityId, SystemModstamp DESC
+        ]) {
+            Id templateId = link.LinkedEntityId;
+            if (templateId == null || versionMap.containsKey(templateId)) {
+                continue;
+            }
+            if (link.ContentDocument == null) {
+                continue;
+            }
+            if (!isTemplateXlsxContentDocument(link.ContentDocument)) {
+                continue;
+            }
+            Id versionId = link.ContentDocument.LatestPublishedVersionId;
+            if (versionId == null) {
+                continue;
+            }
+            versionMap.put(templateId, versionId);
+            urlMap.put(templateId, FEC_ConstantCommon.CONTENT_VERSION_DOWNLOAD_URL_PREFIX + String.valueOf(versionId));
+            unresolved.remove(templateId);
+        }
+    }
+
+    private static Boolean isTemplateXlsxContentVersion(ContentVersion cv) {
+        if (cv == null) {
+            return false;
+        }
+        String fileExt = cv.FileExtension == null
+            ? FEC_ConstantCommon.STR_EMPTY
+            : String.valueOf(cv.FileExtension).trim().toLowerCase();
+        if (fileExt == 'xlsx') {
+            return true;
+        }
+        if (String.isNotBlank(fileExt) && fileExt != 'xlsx') {
+            return false;
+        }
+        return hasXlsxPathExtension(cv.PathOnClient == null ? cv.Title : cv.PathOnClient);
+    }
+
+    private static Boolean isTemplateXlsxContentDocument(ContentDocument doc) {
+        if (doc == null) {
+            return false;
+        }
+        String fileExt = doc.FileExtension == null
+            ? FEC_ConstantCommon.STR_EMPTY
+            : String.valueOf(doc.FileExtension).trim().toLowerCase();
+        if (fileExt == 'xlsx') {
+            return true;
+        }
+        if (String.isNotBlank(fileExt) && fileExt != 'xlsx') {
+            return false;
+        }
+        return hasXlsxPathExtension(doc.Title);
+    }
+
+    private static Boolean hasXlsxPathExtension(String pathOrTitle) {
+        if (String.isBlank(pathOrTitle)) {
+            return false;
+        }
+        return pathOrTitle.trim().toLowerCase().endsWith('.xlsx');
+    }
+
+    public static String resolveTemplateNameFromUploadedFileName(
+        String fileName,
+        String userGroup,
+        List<SObject> activeTemplates
+    ) {
+        if (String.isBlank(fileName) || activeTemplates == null || activeTemplates.isEmpty()) {
+            return null;
+        }
+        String bestName;
+        Integer bestScore = -1;
+        for (SObject tr : activeTemplates) {
+            String name = tr.get('Name') == null
+                ? FEC_ConstantCommon.STR_EMPTY
+                : String.valueOf(tr.get('Name')).trim();
+            if (String.isBlank(name) || validateUploadedTemplateFileName(fileName, name) != null) {
+                continue;
+            }
+            Integer score = scoreTemplateFileNameMatch(fileName, name);
+            if (templateRowMatchesUserGroup(tr, userGroup)) {
+                score += 10000;
+            }
+            if (bestName == null || score > bestScore) {
+                bestName = name;
+                bestScore = score;
+            }
+        }
+        return bestName;
+    }
+
+    private static Integer scoreTemplateFileNameMatch(String fileName, String templateName) {
+        String fileCore = fileName.trim().toLowerCase().replace('.xlsx', FEC_ConstantCommon.STR_EMPTY);
+        String expectedCore = templateName.trim().toLowerCase().replace('.xlsx', FEC_ConstantCommon.STR_EMPTY);
+        if (fileCore == expectedCore) {
+            return 100 + expectedCore.length();
+        }
+        if (fileCore.contains(expectedCore)) {
+            return expectedCore.length();
+        }
+        return 0;
+    }
+
+    private static Boolean templateRowMatchesUserGroup(SObject templateRow, String userGroup) {
+        if (String.isBlank(userGroup)) {
+            return true;
+        }
+        SObject bpRel = templateRow.getSObject('FEC_Business_Process__r');
+        String bpCode = bpRel == null || bpRel.get('FEC_Code__c') == null
+            ? FEC_ConstantCommon.STR_EMPTY
+            : String.valueOf(bpRel.get('FEC_Code__c')).trim();
+        String bpName = bpRel == null || bpRel.get('Name') == null
+            ? FEC_ConstantCommon.STR_EMPTY
+            : String.valueOf(bpRel.get('Name')).trim();
+        return userGroupFieldMatches(templateRow, bpCode, bpName, userGroup);
+    }
+
+    public static String validateUploadedTemplateFileName(String fileName, String expectedTemplateName) {
+        if (String.isBlank(expectedTemplateName)) {
+            return null;
+        }
+        if (String.isBlank(fileName)) {
+            return FEC_ConstantCommon.STR_EMPTY;
+        }
+        String expectedCore = expectedTemplateName.trim().toLowerCase().replace('.xlsx', FEC_ConstantCommon.STR_EMPTY);
+        String fileCore = fileName.trim().toLowerCase().replace('.xlsx', FEC_ConstantCommon.STR_EMPTY);
+        if (fileCore == expectedCore || fileCore.contains(expectedCore)) {
+            return null;
+        }
+        return 'TEMPLATE_MISMATCH';
     }
 }

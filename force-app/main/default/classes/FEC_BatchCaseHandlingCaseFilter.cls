@@ -1,14 +1,5 @@
 public without sharing class FEC_BatchCaseHandlingCaseFilter {
 
-    private static final List<String> RESOLVED_SERVICE_CASE_STATUSES = new List<String>{
-        FEC_ConstantCommon.CASE_STATUS_RESOLVED,
-        FEC_ConstantCommon.CASE_STATUS_RESOLVED_COMPLETED,
-        FEC_ConstantCommon.CASE_STATUS_RESOLVED_CANCELLED,
-        FEC_ConstantCommon.CASE_STATUS_RESOLVED_REJECTED,
-        FEC_ConstantCommon.CASE_STATUS_AUTO_CANCELLED,
-        FEC_ConstantCommon.CASE_STATUS_RESOLVED_CANNOT_CONTACT_CUSTOMER
-    };
-
     public static List<Map<String, Object>> parseFilterMaps(String filtersJson) {
         List<Object> rawFilters = String.isBlank(filtersJson)
             ? new List<Object>()
@@ -37,21 +28,8 @@ public without sharing class FEC_BatchCaseHandlingCaseFilter {
             '\''
         );
         parts.add('IsClosed = false');
-        parts.add(
-            '(FEC_Case_Status__c = null OR FEC_Case_Status__c NOT IN (\'' +
-            String.join(escapeStatusList(RESOLVED_SERVICE_CASE_STATUSES), '\',\'') +
-            '\'))'
-        );
-        parts.add('(FEC_Final_Status__c LIKE \'Pending-%\' OR FEC_Final_Status__c = \'Open\')');
+        parts.add('(FEC_Final_Status__c LIKE \'Pending - %\' OR FEC_Final_Status__c = \'Open\')');
         return parts;
-    }
-
-    private static List<String> escapeStatusList(List<String> src) {
-        List<String> out = new List<String>();
-        for (String s : src) {
-            out.add(String.escapeSingleQuotes(s));
-        }
-        return out;
     }
 
     public static List<String> buildCompleteWhere(List<Map<String, Object>> filterMaps) {
@@ -124,17 +102,13 @@ public without sharing class FEC_BatchCaseHandlingCaseFilter {
             return FEC_ConstantCommon.STR_EMPTY;
         }
         String scopeWhere = String.join(scopeWhereParts, ' AND ');
-        Set<Id> caseIdsWithAttachment = new Set<Id>();
-        String linkSoql =
-            'SELECT LinkedEntityId FROM ContentDocumentLink ' +
-            'WHERE LinkedEntityId IN (SELECT Id FROM Case WHERE ' +
-            scopeWhere +
-            ')';
-        for (ContentDocumentLink cdl : (List<ContentDocumentLink>) Database.query(linkSoql)) {
-            if (cdl.LinkedEntityId != null) {
-                caseIdsWithAttachment.add(cdl.LinkedEntityId);
+        Set<Id> scopeCaseIds = new Set<Id>();
+        for (Case scopeCase : (List<Case>) Database.query('SELECT Id FROM Case WHERE ' + scopeWhere)) {
+            if (scopeCase.Id != null) {
+                scopeCaseIds.add(scopeCase.Id);
             }
         }
+        Set<Id> caseIdsWithAttachment = FEC_BatchCaseHandlingExportService.resolveVisibleCaseIdsWithAttachments(scopeCaseIds);
         if (wantHas) {
             if (caseIdsWithAttachment.isEmpty()) {
                 return 'Id = null';

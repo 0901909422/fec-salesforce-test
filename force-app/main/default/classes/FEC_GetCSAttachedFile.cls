@@ -1,7 +1,10 @@
+/**
+ * SOAP webservice GetCSAttachedFile.
+ * REST (raw SOAP XML): FEC_GetCSAttachedFileRestService → FEC_MyCaseSoapXml.
+ */
 global with sharing class FEC_GetCSAttachedFile {
 
-    webservice static GetCSAttachedFileResponseType GetCSAttachedFileRequest(
-        SysType Sys,
+    webservice static GetCSAttachedFileResponseType GetCSAttachedFileRequest(        SysType Sys,
         RequestInfoType RequestInfo
     ) {
         GetCSAttachedFileResponseType response = new GetCSAttachedFileResponseType();

@@ -583,6 +583,8 @@
     <tabs>FEC_Enhanced_Letterhead__c</tabs>
     <tabs>Templates</tabs>
     <tabs>FEC_Clear_Session__c</tabs>
+    <tabs>FEC_Notification_Template_Channel__c</tabs>
+    <tabs>FEC_Download_Report__c</tabs>
     <uiType>Lightning</uiType>
     <utilityBar>FEC_Service_UtilityBar</utilityBar>
     <workspaceConfig>
@@ -620,6 +622,9 @@
             <tab>FEC_Customer_Search</tab>
         </mappings>
         <mappings>
+            <tab>FEC_Download_Report__c</tab>
+        </mappings>
+        <mappings>
             <tab>FEC_Enhanced_Letterhead__c</tab>
         </mappings>
         <mappings>
@@ -639,6 +644,9 @@
         </mappings>
         <mappings>
             <tab>FEC_Notification_Channel__c</tab>
+        </mappings>
+        <mappings>
+            <tab>FEC_Notification_Template_Channel__c</tab>
         </mappings>
         <mappings>
             <tab>FEC_Notification__c</tab>

@@ -4,7 +4,7 @@
     <protected>false</protected>
     <values>
         <field>FEC_Endpoint__c</field>
-        <value xsi:type="xsd:string">/esb/cif/soap/cif-customer-search</value>
+        <value xsi:type="xsd:string">/esb/soap/cif-customer-search</value>
     </values>
     <values>
         <field>FEC_SOAP_Action__c</field>

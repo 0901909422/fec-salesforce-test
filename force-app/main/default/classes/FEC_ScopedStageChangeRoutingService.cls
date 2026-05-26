@@ -20,12 +20,15 @@ public without sharing class FEC_ScopedStageChangeRoutingService {
   public class RouteToTeamOption {
     @AuraEnabled
     public String stageChangeId { get; set; }
+    /** FEC_Stage_Change__c.FEC_Team_User_Group__c */
     @AuraEnabled
     public String team { get; set; }
+    /** Group.Name — resolve từ FEC_Next_Queue__c (DeveloperName). */
     @AuraEnabled
     public String queueLabel { get; set; }
     @AuraEnabled
     public String queueValue { get; set; }
+    /** FEC_Stage_Change__c.FEC_Next_Queue__c (Queue DeveloperName). */
     @AuraEnabled
     public String queueDeveloperName { get; set; }
   }
@@ -124,6 +127,99 @@ public without sharing class FEC_ScopedStageChangeRoutingService {
   }
 
   /**
+   * Stage 2+ Scoped — RD Payment Assessment "đóng không cần tờ trình":
+   * tra FEC_Stage_Change__c theo stage hiện tại của Case và FEC_Team_User_Group__c.
+   */
+  @AuraEnabled(cacheable=true)
+  public static RouteToTeamOption getRouteToOptionForTeam(
+    Id caseId,
+    String teamUserGroup,
+    String routeToActionId
+  ) {
+    if (caseId == null || String.isBlank(teamUserGroup)) {
+      return null;
+    }
+    String teamTrim = teamUserGroup.trim();
+
+    List<Case> cases = [
+      SELECT Id, FEC_Current_Case_Stage__c
+      FROM Case
+      WHERE Id = :caseId
+      LIMIT 1
+    ];
+    if (cases.isEmpty() || cases[0].FEC_Current_Case_Stage__c == null) {
+      return null;
+    }
+
+    Id currentStageId = cases[0].FEC_Current_Case_Stage__c;
+    Id actionButtonId;
+    try {
+      actionButtonId = String.isNotBlank(routeToActionId)
+        ? Id.valueOf(routeToActionId.trim())
+        : null;
+    } catch (Exception e) {
+      actionButtonId = null;
+    }
+
+    List<FEC_Stage_Change__c> rows;
+    if (actionButtonId != null) {
+      rows = [
+        SELECT Id, FEC_Team_User_Group__c, FEC_Next_Queue__c
+        FROM FEC_Stage_Change__c
+        WHERE
+          FEC_Previous_Stage__c = :currentStageId
+          AND FEC_Team_User_Group__c = :teamTrim
+          AND FEC_Active__c = TRUE
+          AND FEC_IsReverted__c = FALSE
+          AND FEC_Action_Button__c = :actionButtonId
+        ORDER BY FEC_Next_Queue__c ASC
+        LIMIT 1
+      ];
+    } else {
+      rows = [
+        SELECT Id, FEC_Team_User_Group__c, FEC_Next_Queue__c
+        FROM FEC_Stage_Change__c
+        WHERE
+          FEC_Previous_Stage__c = :currentStageId
+          AND FEC_Team_User_Group__c = :teamTrim
+          AND FEC_Active__c = TRUE
+          AND FEC_IsReverted__c = FALSE
+        ORDER BY FEC_Next_Queue__c ASC
+        LIMIT 1
+      ];
+    }
+
+    if (rows.isEmpty()) {
+      return null;
+    }
+
+    FEC_Stage_Change__c row = rows[0];
+    RouteToTeamOption opt = new RouteToTeamOption();
+    opt.stageChangeId = row.Id;
+    opt.team = row.FEC_Team_User_Group__c;
+    opt.queueDeveloperName = row.FEC_Next_Queue__c;
+
+    if (String.isNotBlank(row.FEC_Next_Queue__c)) {
+      List<Group> qs = [
+        SELECT Id, Name, DeveloperName
+        FROM Group
+        WHERE
+          Type = :FEC_ConstantCommon.GROUP_TYPE_QUEUE
+          AND DeveloperName = :row.FEC_Next_Queue__c
+        LIMIT 1
+      ];
+      if (!qs.isEmpty()) {
+        opt.queueLabel = qs[0].Name;
+        opt.queueValue = (String) qs[0].Id;
+      } else {
+        opt.queueLabel = row.FEC_Next_Queue__c;
+        opt.queueValue = row.FEC_Next_Queue__c;
+      }
+    }
+    return opt;
+  }
+
+  /**
    * Route to cho Document Request / Original MRC Return — dùng đúng dòng FEC_Stage_Change__c user chọn (Stage 2+).
    */
   @AuraEnabled
@@ -147,7 +243,8 @@ public without sharing class FEC_ScopedStageChangeRoutingService {
         OwnerId,
         Owner.Name,
         FEC_Current_Case_Stage__c,
-        FEC_Final_Status__c,
+        Status,
+        FEC_Team__c,
         FEC_Is_Submited__c,
         FEC_Actual_Nature_of_Case__c
       FROM Case
@@ -165,7 +262,9 @@ public without sharing class FEC_ScopedStageChangeRoutingService {
         String.format(System.Label.FEC_MSG_Invalid, new List<String>{ 'Case submit status' })
       );
     }
-    String finalStatusBeforeSubmit = updatedCase.FEC_Final_Status__c;
+    String finalStatusBeforeSubmit = FEC_CaseBusinessService.routingHistoryStatusSnapshot(
+      updatedCase
+    );
 
     List<FEC_Stage_Change__c> changelst = [
       SELECT
@@ -405,31 +504,77 @@ public without sharing class FEC_ScopedStageChangeRoutingService {
     if (String.isBlank(stageChangeNextQueueValue)) {
       return null;
     }
-    return applyFrontlineMainQueueScoped(
+    return applyPriorCaseOwnerFromHistory(
       resolveQueueOwnerIdFromStageChangeValue(stageChangeNextQueueValue)
     );
   }
 
   /**
-   * Owner khi revisit / resolve từ history: ưu tiên FEC_Updated_User_Queue_ID__c
-   * (owner hoặc queue sau Route to), rồi FEC_Perform_User__c, rồi FEC_Next_Queue__c Stage Change.
+   * Owner khi revisit stage: lấy owner/queue sau action từ FEC_Updated_User_Queue_ID__c,
+   * rồi fallback FEC_Next_Queue__c Stage Change. Không dùng FEC_Perform_User__c (user thao tác, không phải owner cũ).
    */
   private static String resolveOwnerIdFromRouteHistory(
     FEC_Routing_Action_History__c hist,
     String stageChangeNextQueueValue
   ) {
     if (hist != null && String.isNotBlank(hist.FEC_Updated_User_Queue_ID__c)) {
-      return applyFrontlineMainQueueScoped(hist.FEC_Updated_User_Queue_ID__c);
-    }
-    if (hist != null && String.isNotBlank(hist.FEC_Perform_User__c)) {
-      return applyFrontlineMainQueueScoped(hist.FEC_Perform_User__c);
+      return applyPriorCaseOwnerFromHistory(hist.FEC_Updated_User_Queue_ID__c);
     }
     if (String.isNotBlank(stageChangeNextQueueValue)) {
-      return applyFrontlineMainQueueScoped(
+      return applyPriorCaseOwnerFromHistory(
         resolveQueueOwnerIdFromStageChangeValue(stageChangeNextQueueValue)
       );
     }
     return null;
+  }
+
+  /**
+   * User/queue cũ từ history: nếu là User CS Frontline → Owner = Main Queue (FEC_Main_Queue__c);
+   * không thuộc Frontline → giữ đúng User; đã là Queue → giữ Queue.
+   */
+  private static String applyPriorCaseOwnerFromHistory(String ownerIdStr) {
+    if (String.isBlank(ownerIdStr)) {
+      return ownerIdStr;
+    }
+    try {
+      Id ownerId = Id.valueOf(ownerIdStr.trim());
+      if (ownerId.getSobjectType() == Group.SObjectType) {
+        return ownerIdStr;
+      }
+      if (ownerId.getSobjectType() != User.SObjectType) {
+        return ownerIdStr;
+      }
+      // SYSTEM_MODE: submit có thể do user khác (vd ducnm148) — FLS thường che FEC_User_Division_Group__c / FEC_Main_Queue__c của owner cũ.
+      List<User> users = [
+        SELECT FEC_User_Division_Group__c, FEC_Main_Queue__c
+        FROM User
+        WHERE Id = :ownerId
+        WITH SYSTEM_MODE
+        LIMIT 1
+      ];
+      if (users.isEmpty()) {
+        return ownerIdStr;
+      }
+      User u = users[0];
+      if (
+        !FEC_CaseBusinessService.FRONT_LINE.equals(u.FEC_User_Division_Group__c) ||
+        String.isBlank(u.FEC_Main_Queue__c)
+      ) {
+        return ownerIdStr;
+      }
+      List<Group> qs = [
+        SELECT Id
+        FROM Group
+        WHERE
+          Type = :FEC_ConstantCommon.GROUP_TYPE_QUEUE
+          AND DeveloperName = :u.FEC_Main_Queue__c
+        WITH SYSTEM_MODE
+        LIMIT 1
+      ];
+      return qs.isEmpty() ? ownerIdStr : String.valueOf(qs[0].Id);
+    } catch (Exception e) {
+      return ownerIdStr;
+    }
   }
 
   private static void applyScopedRouteCaseUpdate(
@@ -500,52 +645,16 @@ public without sharing class FEC_ScopedStageChangeRoutingService {
     Database.update(updatedCase, AccessLevel.SYSTEM_MODE);
 
     Case endCase = [
-      SELECT FEC_Final_Status__c
+      SELECT Status, FEC_Team__c
       FROM Case
       WHERE Id = :caseId
       LIMIT 1
     ];
-    history.FEC_Changed_Status__c = endCase.FEC_Final_Status__c;
-    Database.update(history, AccessLevel.SYSTEM_MODE);
+    FEC_CaseBusinessService.patchRoutingHistoryChangedStatus(
+      history.Id,
+      FEC_CaseBusinessService.routingHistoryStatusSnapshot(endCase)
+    );
     FEC_AutoHoldCaseService.enqueueAfterRoutingHistory(history.Id);
-  }
-
-  private static String applyFrontlineMainQueueScoped(String ownerIdStr) {
-    if (String.isBlank(ownerIdStr)) {
-      return ownerIdStr;
-    }
-    try {
-      Id ownerId = Id.valueOf(ownerIdStr.trim());
-      if (ownerId.getSobjectType() == Group.SObjectType) {
-        return ownerIdStr;
-      }
-      if (ownerId.getSobjectType() != User.SObjectType) {
-        return ownerIdStr;
-      }
-      User u = [
-        SELECT FEC_User_Division_Group__c, FEC_Main_Queue__c
-        FROM User
-        WHERE Id = :ownerId
-        LIMIT 1
-      ];
-      if (
-        !FEC_CaseBusinessService.FRONT_LINE.equals(u.FEC_User_Division_Group__c) ||
-        String.isBlank(u.FEC_Main_Queue__c)
-      ) {
-        return ownerIdStr;
-      }
-      List<Group> qs = [
-        SELECT Id
-        FROM Group
-        WHERE
-          Type = :FEC_ConstantCommon.GROUP_TYPE_QUEUE
-          AND DeveloperName = :u.FEC_Main_Queue__c
-        LIMIT 1
-      ];
-      return qs.isEmpty() ? ownerIdStr : String.valueOf(qs[0].Id);
-    } catch (Exception e) {
-      return ownerIdStr;
-    }
   }
 
   private static String resolveQueueOwnerIdFromStageChangeValue(String nextQueueValue) {

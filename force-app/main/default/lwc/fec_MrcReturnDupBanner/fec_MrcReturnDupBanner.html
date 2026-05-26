@@ -1,0 +1,38 @@
+<template>
+  <div class={wrapperClass}>
+    <template if:true={showDupMessage}>
+      <p class="mrc-dup-message">
+        {mrcDupMessageBeforeLink}
+        <a href="#" class="mrc-dup-case-link" onclick={handleOpenMrcDupCase}>{mrcDupCaseNumber}</a>
+        {mrcDupMessageAfterLink}
+      </p>
+    </template>
+    <template if:false={isReadOnly}>
+      <template if:true={showHandlingRadio}>
+        <lightning-radio-group
+          class="mrc-handling-radio"
+          name={radioName}
+          label={handlingOptionLabel}
+          options={mrcHandlingRadioOptions}
+          value={handlingOptionValue}
+          type="radio"
+          variant="label-stacked"
+          required
+          data-obj={objId}
+          data-obj-name="Case"
+          onchange={handleMrcHandlingOptionChange}>
+        </lightning-radio-group>
+      </template>
+    </template>
+    <template if:true={isReadOnly}>
+      <template if:true={showHandlingReadonly}>
+        <div class="slds-form-element slds-m-top_x-small">
+          <span class="slds-form-element__label">{handlingOptionLabel}</span>
+          <div class="slds-form-element__control">
+            <span class="mrc-handling-readonly-value">{handlingOptionDisplayLabel}</span>
+          </div>
+        </div>
+      </template>
+    </template>
+  </div>
+</template>

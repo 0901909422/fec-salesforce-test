@@ -2,8 +2,10 @@ import { LightningElement, api, wire, track } from "lwc";
 import { getRecord, getFieldValue } from "lightning/uiRecordApi";
 import { loadStyle } from "lightning/platformResourceLoader";
 import COMMON_STYLES from "@salesforce/resourceUrl/FEC_CommonCss";
-import getAssignments from "@salesforce/apex/FEC_AssignmentListHandler.getAssignments";
+// import getAssignments from "@salesforce/apex/FEC_AssignmentListHandler.getAssignments";
+import getAssignmentsNEW from "@salesforce/apex/FEC_AssignmentListHandler.getAssignmentsNEW";
 import getQueueNames from "@salesforce/apex/FEC_AssignmentListHandler.getQueueNames"; // tungnm37 thêm
+import getAction from "@salesforce/apex/FEC_AssignmentListHandler.getAction";
 import getUserDepartment from "@salesforce/apex/FEC_AssignmentListHandler.getUserDepartment";
 import getUsersInGroup from "@salesforce/apex/FEC_AssignmentListHandler.getUsersInGroup";
 import getQueuesForUser from "@salesforce/apex/FEC_AssignmentListHandler.getQueuesForUser";
@@ -37,7 +39,7 @@ import FEC_Assignment_Status from "@salesforce/label/c.FEC_Assignment_Status";
 import FEC_Assignment_Owner from "@salesforce/label/c.FEC_Assignment_Owner";
 
 import FEC_Assignment_Remarks_History from "@salesforce/label/c.FEC_Assignment_Remarks_History";
-
+import saveAssignmentDraft from "@salesforce/apex/FEC_AssignmentListHandler.saveAssignmentDraft";
 import {
   PAGE_SIZE_OPTIONS,
   ACTION_OPTIONS_CS_SUPPORT,
@@ -51,6 +53,9 @@ import {
   NEW_STATUS,
 } from "c/fec_CommonConst";
 import { getUsernameBeforeAt } from "c/fec_CommonUtils";
+import isCSSupport from "@salesforce/apex/FEC_AssignmentListHandler.isCSSupport";
+
+import isCSCustomerCare from "@salesforce/apex/FEC_AssignmentListHandler.isCSCustomerCare";
 export default class Fec_AssignmentList extends LightningElement {
   label = {
     FEC_Assignment_List,
@@ -71,7 +76,20 @@ export default class Fec_AssignmentList extends LightningElement {
 
       console.log("After getUserDepartment:", JSON.stringify(this.userDept));
 
+      /*
+       * Load department flags
+       */
+      this.isCSSupportUser = await isCSSupport();
+
+      this.isCSCustomerCareUser = await isCSCustomerCare();
+
+      console.log("isCSSupportUser:", this.isCSSupportUser);
+
+      console.log("isCSCustomerCareUser:", this.isCSCustomerCareUser);
+
       this.initSubscription();
+
+      this.loadActions();
     } catch (error) {
       console.error("getUserDepartment error:", JSON.stringify(error));
     }
@@ -97,7 +115,7 @@ export default class Fec_AssignmentList extends LightningElement {
   @track currentPage = 1;
 
   @track assignments = [];
-
+  @track actionOptions = [];
   @track userOptions = [];
   @track queueOptions = [];
 
@@ -105,7 +123,9 @@ export default class Fec_AssignmentList extends LightningElement {
   @track queueOptionsByTeam = [];
 
   subscription = null;
+  isCSSupportUser = false;
 
+  isCSCustomerCareUser = false;
   initSubscription() {
     if (this.subscription) return;
 
@@ -193,7 +213,7 @@ export default class Fec_AssignmentList extends LightningElement {
 
   async initData() {
     try {
-      const result = await getAssignments({
+      const result = await getAssignmentsNEW({
         caseId: this.recordId,
       });
       console.log("getAssignments result:", JSON.stringify(result));
@@ -209,7 +229,7 @@ export default class Fec_AssignmentList extends LightningElement {
           (item.FEC_Assignment_Owner__c?.startsWith("00G")
             ? item.FEC_Assignment_Owner__r?.Name
             : getUsernameBeforeAt(item.FEC_Assignment_Owner__r?.Email) || ""),
-
+        remark: item.FEC_Draft_Assignment_Remark__c,
         isOwner: item.FEC_Assignment_Owner__c ? this.isOwner(item) : false,
         status:
           // tungnm37 sửa: COF/GSR (Routing type) hiện 'Open', các loại khác giữ nguyên 'New'
@@ -223,7 +243,6 @@ export default class Fec_AssignmentList extends LightningElement {
         isOpen: false,
 
         action: null,
-        remark: null,
         decision: null,
         subDecision: null,
         userInGroup: null,
@@ -264,45 +283,21 @@ export default class Fec_AssignmentList extends LightningElement {
     return this.userDept === "CS";
   }
 
-  get getActionOptions() {
-    console.log("userDept:", this.userDept);
-    console.log("isCSSupport:", this.isCSSupport);
-    console.log(
-      "ACTION_OPTIONS_CS_SUPPORT:",
-      JSON.stringify(ACTION_OPTIONS_CS_SUPPORT),
-    );
-    console.log("ACTION_OPTIONS_OTHER:", JSON.stringify(ACTION_OPTIONS_OTHER));
+  async loadActions() {
+    try {
+      const result = await getAction({
+        caseId: this.recordId,
+      });
 
-    return this.isCSSupport ? ACTION_OPTIONS_CS_SUPPORT : ACTION_OPTIONS_OTHER;
+      this.actionOptions = result;
+
+      console.log("actionOptions:", JSON.stringify(result));
+    } catch (e) {
+      console.error("getAction error", e);
+
+      this.error = e;
+    }
   }
-
-  // handleActionChange(event) {
-  //   const id = event.target.dataset.id;
-  //   const value = event.detail.value;
-
-  //   this.assignments = this.assignments.map((item) => {
-  //     if (item.id !== id) return item;
-
-  //     return {
-  //       ...item,
-  //       action: value,
-  //       decision: null,
-  //       subDecision: null,
-
-  //       decisionOptions: DECISION_OPTIONS_MAP[value] || [],
-
-  //       showDecision: ACTIONS_REQUIRE_DECISION.includes(value),
-
-  //       showSubDecision: false,
-  //       isUserDecision: false,
-  //       isQueueDecision: false,
-
-  //       showTeam: item.action == 'Route_to' ? true: false,
-  //       showQueueByTeam: false,
-  //     };
-  //   });
-  //   this.updatePagedData();
-  // }
 
   handleActionChange(event) {
     const id = event.target.dataset.id;
@@ -321,7 +316,7 @@ export default class Fec_AssignmentList extends LightningElement {
         decision: null,
         subDecision: null,
 
-        decisionOptions: DECISION_OPTIONS_MAP[value] || [],
+        decisionOptions: this.getDecisionOptions(value),
 
         showDecision: ACTIONS_REQUIRE_DECISION.includes(value),
 
@@ -358,6 +353,34 @@ export default class Fec_AssignmentList extends LightningElement {
         );
       }
     }
+  }
+
+  getDecisionOptions(action) {
+    /*
+     * UPDATE
+     */
+    if (action === "Update") {
+      /*
+       * CS Support
+       */
+      if (this.isCSSupportUser) {
+        return DECISION_OPTIONS_MAP.UpdateSP || [];
+      }
+
+      /*
+       * CS Customer Care
+       */
+      if (this.isCSCustomerCareUser) {
+        return DECISION_OPTIONS_MAP.UpdateCC || [];
+      }
+
+      return [];
+    }
+
+    /*
+     * Default
+     */
+    return DECISION_OPTIONS_MAP[action] || [];
   }
 
   handleDecisionChange(event) {
@@ -649,10 +672,53 @@ export default class Fec_AssignmentList extends LightningElement {
     }
   }
 
-  handleClose() {
-    this.pagedData = this.pagedData.map((item) => {
-      return { ...item, isOpen: false };
-    });
+  async handleSaveClose() {
+    const selected = this.assignments.find((a) => a.isOpen);
+
+    if (!selected) {
+      return;
+    }
+
+    try {
+      await saveAssignmentDraft({
+        assignmentId: selected.id,
+        remark: selected.remark,
+      });
+
+      // collapse row
+      this.assignments = this.assignments.map((item) => {
+        if (item.id === selected.id) {
+          return {
+            ...item,
+            isOpen: false,
+            // isReviewMode: true,
+          };
+        }
+
+        return item;
+      });
+
+      // this.updatePagedData();
+
+      this.dispatchEvent(
+        new ShowToastEvent({
+          title: "Success",
+          message: "Save success",
+          variant: "success",
+        }),
+      );
+
+      // reload data
+      // await this.initData();
+
+      // 👇 QUAN TRỌNG: chuyển mode view
+      setTimeout(() => {
+        this.modeEditCase = false;
+        this.handlePublishMode(false);
+      }, 0);
+    } catch (e) {
+      console.error(e);
+    }
   }
 
   async handlePublishMode(isEdit) {

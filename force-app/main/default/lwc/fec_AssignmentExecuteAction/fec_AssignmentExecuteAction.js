@@ -12,8 +12,7 @@ import resetViewMode from "@salesforce/apex/FEC_AssignmentExecuteService.setAssi
 import executeAssignment from "@salesforce/apex/FEC_AssignmentExecuteService.executeAssignment";
 
 import ASSIGNMENT_MODE from "@salesforce/messageChannel/FEC_Assignment_Mode__c";
-
-import { setMode } from "c/fec_CustomerCaseModeStore";
+import CASE_INFORMATION_EDIT from "@salesforce/messageChannel/FEC_Case_Information_Edit__c";
 
 export default class Fec_AssignmentExecuteAction extends LightningElement {
   _recordId;
@@ -100,18 +99,25 @@ export default class Fec_AssignmentExecuteAction extends LightningElement {
 
       /*
        * STEP 4
-       * Publish LMS
+       * Publish LMS — Assignment list + partial Case Information edit (not full FEC_Case_Mode)
        */
-      const payload = {
+      const assignmentPayload = {
         caseId: this.recordId,
         isEditMode: true,
       };
+      const caseInformationEditPayload = {
+        caseId: this.recordId,
+        isCaseInformationEdit: true,
+      };
 
-      console.log("Publishing payload:", JSON.stringify(payload));
+      console.log("Publishing assignment payload:", JSON.stringify(assignmentPayload));
 
-      setMode(true);
-
-      publish(this.messageContext, ASSIGNMENT_MODE, payload);
+      publish(this.messageContext, ASSIGNMENT_MODE, assignmentPayload);
+      publish(
+        this.messageContext,
+        CASE_INFORMATION_EDIT,
+        caseInformationEditPayload
+      );
     } catch (error) {
       this.isPublished = false;
       console.error("ERROR:", JSON.stringify(error));

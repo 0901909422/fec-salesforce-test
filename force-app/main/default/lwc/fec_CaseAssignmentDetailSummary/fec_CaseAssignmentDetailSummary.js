@@ -1,9 +1,12 @@
 import { LightningElement, api, wire, track } from "lwc";
 import { NavigationMixin } from "lightning/navigation";
-import { getRecord, getRecordNotifyChange, updateRecord } from "lightning/uiRecordApi";
+import { getRecord, getRecordNotifyChange, updateRecord, getFieldValue } from "lightning/uiRecordApi";
+import { getObjectInfo, getPicklistValues } from "lightning/uiObjectInfoApi";
 import { ShowToastEvent } from "lightning/platformShowToastEvent";
+import { RefreshEvent } from "lightning/refresh";
 import getBusinessHourOptions from "@salesforce/apex/FEC_CaseAssignmentConfigController.getBusinessHourOptions";
 import getActiveCaseQueues from "@salesforce/apex/FEC_CaseAssignmentConfigController.getActiveCaseQueues";
+import isCaseAssignmentNameTaken from "@salesforce/apex/FEC_CaseAssignmentConfigController.isCaseAssignmentNameTaken";
 
 import BUSINESS_HOURS_FIELD from "@salesforce/schema/FEC_Case_Assignment__c.FEC_Business_Hours__c";
 import NAME_FIELD from "@salesforce/schema/FEC_Case_Assignment__c.Name";
@@ -16,14 +19,16 @@ import QUEUES_FIELD from "@salesforce/schema/FEC_Case_Assignment__c.FEC_Select_Q
 import ROLE_FIELD from "@salesforce/schema/FEC_Case_Assignment__c.FEC_Role__c";
 import SCALE_FIELD from "@salesforce/schema/FEC_Case_Assignment__c.FEC_Scale__c";
 import NOC_COUNT_FIELD from "@salesforce/schema/FEC_Case_Assignment__c.FEC_Case_Assignmetn_NOC_Count__c";
+import CASE_ASSIGNMENT_OBJECT from "@salesforce/schema/FEC_Case_Assignment__c";
 
 const OBJECT_API_NAME = "FEC_Case_Assignment__c";
 
 const MSG_CANNOT_ACTIVE_WITHOUT_NOC =
   "Không thể Active khi chưa thêm Case Assignment NOC.";
+const MSG_DUPLICATE_NAME = "Case Assignment Name đã tồn tại.";
 
 const FIELD_EDIT_LABELS = {
-  Name: "Name",
+  Name: "Case Assignment Name",
   FEC_Status__c: "Status",
   FEC_Business_Hours__c: "Business Hours",
   FEC_Assignment_Method__c: "Assignment Method",
@@ -55,8 +60,15 @@ const FIELDS = [
 export default class Fec_CaseAssignmentDetailSummary extends NavigationMixin(LightningElement) {
   @api recordId;
 
-  @wire(getRecord, { recordId: "$recordId", fields: FIELDS })
   record;
+
+  _previousNocCount;
+
+  @wire(getRecord, { recordId: "$recordId", fields: FIELDS })
+  wiredAssignmentRecord(result) {
+    this.record = result;
+    this.refreshRelatedListIfNocCountChanged(result);
+  }
 
   @wire(getBusinessHourOptions)
   wiredBusinessHourOptions(result) {
@@ -82,7 +94,39 @@ export default class Fec_CaseAssignmentDetailSummary extends NavigationMixin(Lig
   @track modalSelectedQueues = [];
   @track isQueuesSaving = false;
   @track queueOptions = [];
+  @track modalTimeSlotsValue = [];
+  @track isTimeSlotsSaving = false;
+  @track timeSlotOptions = [];
+  @track modalAssignmentMethodValue = "";
+  @track modalMethodTimeSlotsValue = [];
+  @track modalScheduledTimeValue = "";
+  @track isAssignmentMethodSaving = false;
+  @track isScheduledTimeSaving = false;
+  @track assignmentMethodOptions = [];
   businessHourOptionsWire;
+
+  @wire(getObjectInfo, { objectApiName: CASE_ASSIGNMENT_OBJECT })
+  objectInfo;
+
+  @wire(getPicklistValues, {
+    recordTypeId: "$objectInfo.data.defaultRecordTypeId",
+    fieldApiName: TIME_SLOTS_FIELD,
+  })
+  wiredTimeSlotOptions({ data }) {
+    if (data) {
+      this.timeSlotOptions = data.values;
+    }
+  }
+
+  @wire(getPicklistValues, {
+    recordTypeId: "$objectInfo.data.defaultRecordTypeId",
+    fieldApiName: METHOD_FIELD,
+  })
+  wiredAssignmentMethodOptions({ data }) {
+    if (data) {
+      this.assignmentMethodOptions = data.values || [];
+    }
+  }
 
   get assignmentName() {
     return this.getFieldValue("Name");
@@ -277,15 +321,11 @@ export default class Fec_CaseAssignmentDetailSummary extends NavigationMixin(Lig
   }
 
   get draftStatusEditOptions() {
-    const options = [
+    return [
       { label: STATUS_DRAFT, value: STATUS_DRAFT },
       { label: STATUS_ACTIVE, value: STATUS_ACTIVE },
       { label: STATUS_ARCHIVED, value: STATUS_ARCHIVED },
     ];
-    if (this.canSelectActiveStatus) {
-      return options;
-    }
-    return options.filter((option) => option.value !== STATUS_ACTIVE);
   }
 
   get isEditingDraftStatus() {
@@ -309,6 +349,34 @@ export default class Fec_CaseAssignmentDetailSummary extends NavigationMixin(Lig
     return (
       this.editingFieldName === "FEC_Select_Queues__c" && this.canEditSelectQueues
     );
+  }
+
+  get isEditingTimeSlots() {
+    return this.editingFieldName === "FEC_Time_Slots__c";
+  }
+
+  get isEditingAssignmentMethod() {
+    return this.editingFieldName === "FEC_Assignment_Method__c";
+  }
+
+  get isEditingScheduledTime() {
+    return this.editingFieldName === "FEC_Scheduled_Time__c";
+  }
+
+  get modalIsContinuousMethod() {
+    return this.normalizeMethodKey(this.modalAssignmentMethodValue) === "continuous";
+  }
+
+  get modalIsTimeBasedMethod() {
+    const method = this.normalizeMethodKey(this.modalAssignmentMethodValue);
+    return method === "time-based";
+  }
+
+  get timeSlotDualListboxOptions() {
+    return (this.timeSlotOptions || []).map((item) => ({
+      label: item.label,
+      value: item.value,
+    }));
   }
 
   get queueDualListboxOptions() {
@@ -342,14 +410,7 @@ export default class Fec_CaseAssignmentDetailSummary extends NavigationMixin(Lig
   }
 
   get showGenericFieldEditForm() {
-    return (
-      Boolean(this.editingFieldName) &&
-      !this.isEditingBusinessHours &&
-      !this.isEditingActiveToArchive &&
-      !this.isEditingDraftStatus &&
-      !this.isEditingName &&
-      !this.isEditingQueues
-    );
+    return false;
   }
 
   toggleCaseSection() {
@@ -389,10 +450,32 @@ export default class Fec_CaseAssignmentDetailSummary extends NavigationMixin(Lig
       this.modalBusinessHoursValue = this.businessHoursId || "";
     }
     if (fieldApiName === "FEC_Status__c" && this.canEditDraftDetailFields) {
+      getRecordNotifyChange([{ recordId: this.recordId }]);
       this.modalStatusValue = this.assignmentStatusKey || STATUS_DRAFT;
     }
     if (fieldApiName === "Name") {
       this.modalNameValue = this.assignmentName || "";
+    }
+    if (fieldApiName === "FEC_Time_Slots__c") {
+      this.modalTimeSlotsValue = this.parseSemicolonList(this.timeSlots);
+    }
+    if (fieldApiName === "FEC_Assignment_Method__c") {
+      this.modalAssignmentMethodValue = this.assignmentMethod || "";
+      this.modalScheduledTimeValue =
+        this.scheduledTime !== null &&
+        this.scheduledTime !== undefined &&
+        this.scheduledTime !== ""
+          ? String(this.scheduledTime)
+          : "";
+      this.modalMethodTimeSlotsValue = this.parseSemicolonList(this.timeSlots);
+    }
+    if (fieldApiName === "FEC_Scheduled_Time__c") {
+      this.modalScheduledTimeValue =
+        this.scheduledTime !== null &&
+        this.scheduledTime !== undefined &&
+        this.scheduledTime !== ""
+          ? String(this.scheduledTime)
+          : "";
     }
     this.modalFormRenderKey += 1;
     this.isEditModalOpen = true;
@@ -417,6 +500,202 @@ export default class Fec_CaseAssignmentDetailSummary extends NavigationMixin(Lig
     this.isNameSaving = false;
     this.modalSelectedQueues = [];
     this.isQueuesSaving = false;
+    this.modalTimeSlotsValue = [];
+    this.isTimeSlotsSaving = false;
+    this.modalAssignmentMethodValue = "";
+    this.modalMethodTimeSlotsValue = [];
+    this.modalScheduledTimeValue = "";
+    this.isAssignmentMethodSaving = false;
+    this.isScheduledTimeSaving = false;
+  }
+
+  handleModalAssignmentMethodChange(event) {
+    this.modalAssignmentMethodValue = event.detail.value || "";
+    if (this.modalIsContinuousMethod) {
+      this.modalMethodTimeSlotsValue = [];
+    } else if (this.modalIsTimeBasedMethod) {
+      this.modalScheduledTimeValue = "";
+    } else {
+      this.modalScheduledTimeValue = "";
+      this.modalMethodTimeSlotsValue = [];
+    }
+  }
+
+  handleModalMethodTimeSlotsChange(event) {
+    this.modalMethodTimeSlotsValue = event.detail.value || [];
+  }
+
+  handleModalScheduledTimeChange(event) {
+    this.modalScheduledTimeValue = event.detail.value ?? "";
+  }
+
+  normalizeMethodKey(value) {
+    const normalized = String(value || "")
+      .trim()
+      .toLowerCase();
+    if (normalized === "continous") {
+      return "continuous";
+    }
+    if (normalized === "time based" || normalized === "time_based") {
+      return "time-based";
+    }
+    return normalized;
+  }
+
+  sortTimeSlotValues(values) {
+    const unique = [...new Set((values || []).map((item) => String(item).trim()).filter(Boolean))];
+    return unique.sort((a, b) => this.timeSlotSortKey(a) - this.timeSlotSortKey(b));
+  }
+
+  timeSlotSortKey(value) {
+    const parts = String(value).split(":");
+    if (parts.length < 2) {
+      return 0;
+    }
+    const hour = Number(parts[0]);
+    const minute = Number(parts[1]);
+    if (!Number.isFinite(hour) || !Number.isFinite(minute)) {
+      return 0;
+    }
+    return hour * 60 + minute;
+  }
+
+  formatTimeSlotsForSave(values) {
+    return this.sortTimeSlotValues(values).join(";");
+  }
+
+  async handleSaveAssignmentMethod() {
+    if (!this.recordId || !this.canEditDraftDetailFields) {
+      return;
+    }
+    if (!this.modalAssignmentMethodValue) {
+      this.dispatchEvent(
+        new ShowToastEvent({
+          title: "Error",
+          message: "Assignment Method can't be blank",
+          variant: "error",
+        })
+      );
+      return;
+    }
+    if (this.modalIsContinuousMethod) {
+      const scheduledNum = Number(this.modalScheduledTimeValue);
+      if (!Number.isFinite(scheduledNum) || scheduledNum < 1) {
+        this.dispatchEvent(
+          new ShowToastEvent({
+            title: "Error",
+            message: "Scheduled Time is required when Assignment Method is Continuous.",
+            variant: "error",
+          })
+        );
+        return;
+      }
+    }
+    if (this.modalIsTimeBasedMethod && !this.modalMethodTimeSlotsValue.length) {
+      this.dispatchEvent(
+        new ShowToastEvent({
+          title: "Error",
+          message: "Time Slots are required when Assignment Method is Time-Based.",
+          variant: "error",
+        })
+      );
+      return;
+    }
+
+    this.isAssignmentMethodSaving = true;
+    try {
+      const fields = {
+        Id: this.recordId,
+        [METHOD_FIELD.fieldApiName]: this.modalAssignmentMethodValue,
+      };
+      if (this.modalIsContinuousMethod) {
+        fields[SCHEDULED_TIME_FIELD.fieldApiName] = Number(this.modalScheduledTimeValue);
+        fields[TIME_SLOTS_FIELD.fieldApiName] = null;
+      } else if (this.modalIsTimeBasedMethod) {
+        fields[TIME_SLOTS_FIELD.fieldApiName] = this.formatTimeSlotsForSave(
+          this.modalMethodTimeSlotsValue
+        );
+        fields[SCHEDULED_TIME_FIELD.fieldApiName] = null;
+      } else {
+        fields[SCHEDULED_TIME_FIELD.fieldApiName] = null;
+        fields[TIME_SLOTS_FIELD.fieldApiName] = null;
+      }
+      await updateRecord({ fields });
+      getRecordNotifyChange([{ recordId: this.recordId }]);
+      this.closeEditModal();
+      this.dispatchEvent(
+        new ShowToastEvent({
+          title: "Saved",
+          message: "Record updated.",
+          variant: "success",
+        })
+      );
+    } catch (e) {
+      const msg =
+        e?.body?.output?.errors?.[0]?.message ||
+        e?.body?.message ||
+        e?.message ||
+        "Could not update Assignment Method.";
+      this.dispatchEvent(
+        new ShowToastEvent({
+          title: "Error",
+          message: msg,
+          variant: "error",
+        })
+      );
+    } finally {
+      this.isAssignmentMethodSaving = false;
+    }
+  }
+
+  async handleSaveScheduledTime() {
+    if (!this.recordId || !this.canEditDraftDetailFields || !this.isContinuousMethod) {
+      return;
+    }
+    const scheduledNum = Number(this.modalScheduledTimeValue);
+    if (!Number.isFinite(scheduledNum) || scheduledNum < 1) {
+      this.dispatchEvent(
+        new ShowToastEvent({
+          title: "Error",
+          message: "Scheduled Time is required when Assignment Method is Continuous.",
+          variant: "error",
+        })
+      );
+      return;
+    }
+    this.isScheduledTimeSaving = true;
+    try {
+      await updateRecord({
+        fields: {
+          Id: this.recordId,
+          [SCHEDULED_TIME_FIELD.fieldApiName]: scheduledNum,
+        },
+      });
+      getRecordNotifyChange([{ recordId: this.recordId }]);
+      this.closeEditModal();
+      this.dispatchEvent(
+        new ShowToastEvent({
+          title: "Saved",
+          message: "Record updated.",
+          variant: "success",
+        })
+      );
+    } catch (e) {
+      const msg =
+        e?.body?.output?.errors?.[0]?.message ||
+        e?.body?.message ||
+        e?.message ||
+        "Could not update Scheduled Time.";
+      this.dispatchEvent(
+        new ShowToastEvent({
+          title: "Error",
+          message: msg,
+          variant: "error",
+        })
+      );
+    } finally {
+      this.isScheduledTimeSaving = false;
+    }
   }
 
   handleModalNameChange(event) {
@@ -425,6 +704,59 @@ export default class Fec_CaseAssignmentDetailSummary extends NavigationMixin(Lig
 
   handleModalQueuesChange(event) {
     this.modalSelectedQueues = event.detail.value || [];
+  }
+
+  handleModalTimeSlotsChange(event) {
+    this.modalTimeSlotsValue = event.detail.value || [];
+  }
+
+  async handleSaveTimeSlots() {
+    if (!this.recordId || !this.canEditDraftDetailFields) {
+      return;
+    }
+    if (!this.modalTimeSlotsValue.length) {
+      this.dispatchEvent(
+        new ShowToastEvent({
+          title: "Error",
+          message: "Time Slots can't be blank",
+          variant: "error",
+        })
+      );
+      return;
+    }
+    this.isTimeSlotsSaving = true;
+    try {
+      await updateRecord({
+        fields: {
+          Id: this.recordId,
+          [TIME_SLOTS_FIELD.fieldApiName]: this.formatTimeSlotsForSave(this.modalTimeSlotsValue),
+        },
+      });
+      getRecordNotifyChange([{ recordId: this.recordId }]);
+      this.closeEditModal();
+      this.dispatchEvent(
+        new ShowToastEvent({
+          title: "Saved",
+          message: "Record updated.",
+          variant: "success",
+        })
+      );
+    } catch (e) {
+      const msg =
+        e?.body?.output?.errors?.[0]?.message ||
+        e?.body?.message ||
+        e?.message ||
+        "Could not update Time Slots.";
+      this.dispatchEvent(
+        new ShowToastEvent({
+          title: "Error",
+          message: msg,
+          variant: "error",
+        })
+      );
+    } finally {
+      this.isTimeSlotsSaving = false;
+    }
   }
 
   async ensureQueueOptionsLoaded() {
@@ -454,7 +786,7 @@ export default class Fec_CaseAssignmentDetailSummary extends NavigationMixin(Lig
       this.dispatchEvent(
         new ShowToastEvent({
           title: "Error",
-          message: "Name can't be blank",
+          message: "Case Assignment Name can't be blank",
           variant: "error",
         })
       );
@@ -462,6 +794,21 @@ export default class Fec_CaseAssignmentDetailSummary extends NavigationMixin(Lig
     }
     this.isNameSaving = true;
     try {
+      const nameTaken = await isCaseAssignmentNameTaken({
+        assignmentName: trimmedName,
+        excludeRecordId: this.recordId,
+      });
+      if (nameTaken) {
+        this.dispatchEvent(
+          new ShowToastEvent({
+            title: "Error",
+            message: MSG_DUPLICATE_NAME,
+            variant: "error",
+          })
+        );
+        return;
+      }
+
       await updateRecord({
         fields: {
           Id: this.recordId,
@@ -555,19 +902,31 @@ export default class Fec_CaseAssignmentDetailSummary extends NavigationMixin(Lig
   }
 
   handleModalStatusChange(event) {
-    const nextStatus = event.detail.value || STATUS_DRAFT;
-    if (nextStatus === STATUS_ACTIVE && !this.canSelectActiveStatus) {
-      this.modalStatusValue = this.assignmentStatusKey || STATUS_DRAFT;
-      this.dispatchEvent(
-        new ShowToastEvent({
-          title: "Error",
-          message: MSG_CANNOT_ACTIVE_WITHOUT_NOC,
-          variant: "error",
-        })
-      );
-      return;
+    this.modalStatusValue = event.detail.value || STATUS_DRAFT;
+    this.clearModalStatusError();
+  }
+
+  reportModalStatusError() {
+    this.dispatchEvent(
+      new ShowToastEvent({
+        title: "Error",
+        message: MSG_CANNOT_ACTIVE_WITHOUT_NOC,
+        variant: "error",
+      })
+    );
+    const statusField = this.template.querySelector('[data-field="modalStatus"]');
+    if (statusField?.setCustomValidity) {
+      statusField.setCustomValidity(MSG_CANNOT_ACTIVE_WITHOUT_NOC);
+      statusField.reportValidity();
     }
-    this.modalStatusValue = nextStatus;
+  }
+
+  clearModalStatusError() {
+    const statusField = this.template.querySelector('[data-field="modalStatus"]');
+    if (statusField?.setCustomValidity) {
+      statusField.setCustomValidity("");
+      statusField.reportValidity();
+    }
   }
 
   async handleSaveDraftStatus() {
@@ -575,13 +934,7 @@ export default class Fec_CaseAssignmentDetailSummary extends NavigationMixin(Lig
       return;
     }
     if (this.modalStatusValue === STATUS_ACTIVE && !this.canSelectActiveStatus) {
-      this.dispatchEvent(
-        new ShowToastEvent({
-          title: "Error",
-          message: MSG_CANNOT_ACTIVE_WITHOUT_NOC,
-          variant: "error",
-        })
-      );
+      this.reportModalStatusError();
       return;
     }
     this.isStatusSaving = true;
@@ -828,5 +1181,20 @@ export default class Fec_CaseAssignmentDetailSummary extends NavigationMixin(Lig
 
   get objectApiName() {
     return OBJECT_API_NAME;
+  }
+
+  /**
+   * Rollup FEC_Case_Assignmetn_NOC_Count__c đổi sau khi thêm NOC → refresh related list (cùng record page).
+   */
+  refreshRelatedListIfNocCountChanged(wireResult) {
+    if (!wireResult?.data) {
+      return;
+    }
+    const raw = getFieldValue(wireResult.data, NOC_COUNT_FIELD);
+    const newCount = Number.isFinite(Number(raw)) ? Number(raw) : 0;
+    if (this._previousNocCount !== undefined && newCount !== this._previousNocCount) {
+      this.dispatchEvent(new RefreshEvent());
+    }
+    this._previousNocCount = newCount;
   }
 }

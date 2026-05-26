@@ -3,8 +3,16 @@ public without sharing class FEC_CaseTatFullProcessSvc {
 
     private static Id cachedBusinessHoursId;
     private static Boolean businessHoursLookupDone = false;
+    // SOQL 101: cache/dedupe theo transaction, tránh query lặp khi submit NOC bulk.
+    private static Boolean routingHistoryCaseSyncInProgress = false;
+    private static Set<Id> fullTatSyncedCaseIdsThisTransaction = new Set<Id>();
+
     public static void applyBeforeSave(List<Case> cases, Map<Id, Case> oldMap) {
         if (cases == null || cases.isEmpty()) {
+            return;
+        }
+        if (oldMap != null && FEC_CaseTriggerHandler.isSystemUpdate) {
+            // SOQL 101: cache/dedupe theo transaction, tránh query lặp khi submit NOC bulk.
             return;
         }
 
@@ -19,14 +27,31 @@ public without sharing class FEC_CaseTatFullProcessSvc {
         }
     }
 
-    /**
-     * Tính lại TAT Full Process cho Case liên kết RAH (report đọc qua FEC_Case__c).
-     */
+    // SOQL 101: cache/dedupe theo transaction, tránh query lặp khi submit NOC bulk.
     public static void syncCasesFromRoutingHistory(Set<Id> caseIds) {
-        if (caseIds == null || caseIds.isEmpty()) {
+        if (caseIds == null || caseIds.isEmpty() || routingHistoryCaseSyncInProgress) {
             return;
         }
+        // SOQL 101: cache/dedupe theo transaction, tránh query lặp khi submit NOC bulk.
+        Set<Id> toSync = new Set<Id>();
+        for (Id caseId : caseIds) {
+            if (caseId != null && !fullTatSyncedCaseIdsThisTransaction.contains(caseId)) {
+                toSync.add(caseId);
+            }
+        }
+        if (toSync.isEmpty()) {
+            return;
+        }
+        routingHistoryCaseSyncInProgress = true;
+        try {
+            syncCasesFromRoutingHistoryInternal(toSync);
+            fullTatSyncedCaseIdsThisTransaction.addAll(toSync);
+        } finally {
+            routingHistoryCaseSyncInProgress = false;
+        }
+    }
 
+    private static void syncCasesFromRoutingHistoryInternal(Set<Id> caseIds) {
         List<Case> rows = [
             SELECT
                 Id,
@@ -58,10 +83,15 @@ public without sharing class FEC_CaseTatFullProcessSvc {
             return;
         }
 
+        for (Case row : updates) {
+            FEC_CaseInitUpdateService.registerSystemCaseUpdate(row.Id);
+        }
+
+        // SOQL 101: cache/dedupe theo transaction, tránh query lặp khi submit NOC bulk.
         Boolean priorFlag = FEC_CaseTriggerHandler.isSystemUpdate;
         FEC_CaseTriggerHandler.isSystemUpdate = true;
         try {
-            update updates;
+            Database.update(updates, AccessLevel.SYSTEM_MODE);
         } finally {
             FEC_CaseTriggerHandler.isSystemUpdate = priorFlag;
         }
@@ -69,6 +99,10 @@ public without sharing class FEC_CaseTatFullProcessSvc {
 
     public static void syncAfterSave(List<Case> triggerCases, Map<Id, Case> oldMap) {
         if (triggerCases == null || triggerCases.isEmpty()) {
+            return;
+        }
+        if (FEC_CaseTriggerHandler.isSystemUpdate) {
+            // SOQL 101: cache/dedupe theo transaction, tránh query lặp khi submit NOC bulk.
             return;
         }
 
@@ -108,6 +142,10 @@ public without sharing class FEC_CaseTatFullProcessSvc {
 
         if (updates.isEmpty()) {
             return;
+        }
+
+        for (Case row : updates) {
+            FEC_CaseInitUpdateService.registerSystemCaseUpdate(row.Id);
         }
 
         Boolean priorFlag = FEC_CaseTriggerHandler.isSystemUpdate;
@@ -178,7 +216,11 @@ public without sharing class FEC_CaseTatFullProcessSvc {
             return;
         }
 
-        Long diffMs = BusinessHours.diff(bhId, anchorStart, anchorEnd);
+        Long diffMs = FEC_BusinessHoursTatUtil.diffMsExcludingWeekends(
+            bhId,
+            anchorStart,
+            anchorEnd
+        );
         if (diffMs == null || diffMs < 0) {
             target.FEC_TAT_Full_Process_Hrs__c = null;
             return;

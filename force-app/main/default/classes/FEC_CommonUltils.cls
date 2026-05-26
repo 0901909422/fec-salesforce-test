@@ -431,21 +431,7 @@ public with sharing class FEC_CommonUltils {
   }
 
   public static Decimal xmlValToDecimal(Dom.XmlNode n, String name) {
-    String v = getXmlValue(n, name);
-    if (String.isBlank(v)) {
-      return null;
-    }
-
-    v = v.trim(); 
-    if (v == '') {
-        return null;
-    }
-    try {
-        return Decimal.valueOf(v);
-    } catch (Exception e) {
-      System.debug('Invalid decimal for tag ' + name + ': [' + v + ']');
-      return null; 
-    }
+    return parseAmountSafe(getXmlValue(n, name));
   }
 
   /** BaseRate API dạng packed (vd 1000000): 4 ký tự đầu / 100 = % (1000 → 10%). */
@@ -573,6 +559,28 @@ public with sharing class FEC_CommonUltils {
       );
       return null;
     }
+  }
+
+  /**
+   * Ghép base (vd callout:FECredit_Service) + path CMDT, luôn có '/' giữa hai phần.
+   * Tránh lỗi callout:FECredit_Serviceesb/... khi path CMDT thiếu dấu / đầu.
+   */
+  public static String buildCalloutEndpoint(String baseEndpoint, String pathSuffix) {
+    if (String.isBlank(baseEndpoint)) {
+      return pathSuffix;
+    }
+    if (String.isBlank(pathSuffix)) {
+      return baseEndpoint;
+    }
+    String base = baseEndpoint.trim();
+    String path = pathSuffix.trim();
+    while (path.startsWith('/')) {
+      path = path.substring(1);
+    }
+    if (base.endsWith('/')) {
+      return base + path;
+    }
+    return base + '/' + path;
   }
 
   public static HttpResponse calloutApi(
@@ -971,6 +979,37 @@ public with sharing class FEC_CommonUltils {
       .addTextNode(value == null ? '' : value);
   }
 
+  @TestVisible
+  private static Integer deferredApiLogDepth = 0;
+  private static List<FEC_API_Log__c> deferredApiLogs = new List<FEC_API_Log__c>();
+
+  /**
+   * Hoãn insert FEC_API_Log__c cho tới flushDeferredApiLogs — dùng khi nhiều callout trong một transaction.
+   */
+  public static void beginDeferredApiLogging() {
+    deferredApiLogDepth++;
+  }
+
+  public static void flushDeferredApiLogs() {
+    if (deferredApiLogDepth <= 0) {
+      return;
+    }
+    deferredApiLogDepth--;
+    if (deferredApiLogDepth > 0) {
+      return;
+    }
+    List<FEC_API_Log__c> toInsert = deferredApiLogs;
+    deferredApiLogs = new List<FEC_API_Log__c>();
+    if (toInsert.isEmpty()) {
+      return;
+    }
+    try {
+      insert toInsert;
+    } catch (Exception e) {
+      System.debug('FEC_CommonUltils.flushDeferredApiLogs: ' + e.getMessage());
+    }
+  }
+
   public static void logApi(
     String apiName,
     String endpoint,
@@ -993,6 +1032,11 @@ public with sharing class FEC_CommonUltils {
       log.FEC_Response_String__c = responseBody;
       log.FEC_Is_Success__c = isSuccess;
       log.FEC_Error_Message__c = errorMessage;
+
+      if (deferredApiLogDepth > 0) {
+        deferredApiLogs.add(log);
+        return;
+      }
 
       insert log;
 
@@ -1431,18 +1475,60 @@ public with sharing class FEC_CommonUltils {
     }
   }
 
+  /**
+   * Parses amount strings from ESB/XML (US thousands: 2,400 / 1,200,000; EU: 1.234,56).
+   */
   public static Decimal parseAmountSafe(String val) {
-    if (String.isBlank(val)) return null;
+    if (String.isBlank(val)) {
+      return null;
+    }
 
-    val = val.replace(',', '').trim();
+    String normalized = normalizeAmountString(val);
+    if (String.isBlank(normalized)) {
+      return null;
+    }
 
     try {
-        return Decimal.valueOf(val);
+      return Decimal.valueOf(normalized);
     } catch (Exception e) {
-        System.debug('Invalid decimal for tag Amount: [' + val + ']');
-        return null;
+      System.debug(
+        'Invalid decimal for tag Amount: [' + val + '] normalized=[' + normalized + ']'
+      );
+      return null;
     }
-}
+  }
+
+  private static String normalizeAmountString(String raw) {
+    if (String.isBlank(raw)) {
+      return null;
+    }
+
+    String val = raw.trim();
+    val = val.replace('[', '').replace(']', '');
+    val = val.replaceAll('\\s+', '');
+
+    Integer lastComma = val.lastIndexOf(',');
+    Integer lastDot = val.lastIndexOf('.');
+
+    if (lastComma >= 0 && lastDot >= 0) {
+      if (lastComma > lastDot) {
+        return val.replace('.', '').replace(',', '.');
+      }
+      return val.replace(',', '');
+    }
+
+    if (lastComma >= 0) {
+      String afterComma = val.substring(lastComma + 1);
+      Boolean thousandsComma =
+        val.indexOf(',') != lastComma || afterComma.length() == 3;
+      if (thousandsComma) {
+        return val.replace(',', '');
+      }
+      return val.replace(',', '.');
+    }
+
+    return val;
+  }
 
   public static Decimal calculateReducingEMI(Decimal principal, Integer tenure, Decimal monthlyInterestRate) {
     if (principal == null || principal <= 0 || tenure == null || tenure <= 0 || monthlyInterestRate == null) {
@@ -1468,4 +1554,80 @@ public with sharing class FEC_CommonUltils {
     Double rounded = Math.ceil(doubledVal) * 1000.0;
     return Decimal.valueOf(rounded);
   }
+
+  public static String cleanNonWordCharacters(String input) {
+    if (String.isBlank(input)) {
+      return input;
+    }
+    return input.replaceAll('\\W+', '').trim();
+  }
+
+  public static String getNationalIdFormat(String value) {
+    if (String.isBlank(value)) {
+        return FEC_ConstantCommon.TEAM_OTHER;
+    }
+    String t = value.trim();
+    if (Pattern.matches(FEC_ConstantCommon.INPUT_SEPARATOR_REGEX_12, t)) {
+        return FEC_ConstantCommon.CC_CD;
+    }
+    if (Pattern.matches(FEC_ConstantCommon.INPUT_SEPARATOR_REGEX_9, t)) {
+        return FEC_ConstantCommon.CM_ND;
+    }
+    if (Pattern.matches(FEC_ConstantCommon.INPUT_SEPARATOR_REGEX_7, t)) {
+        return FEC_ConstantCommon.PASS_PORT;
+    }
+    return FEC_ConstantCommon.TEAM_OTHER;
+  }
+
+  public static List<String> parseSearchResultNationalIds(String raw) {
+        List<String> nationalIds = new List<String>();
+        if (String.isBlank(raw)) {
+            return nationalIds;
+        }
+        for (String part : raw.split(FEC_ConstantCommon.INPUT_SEPARATOR_REGEX)) {
+            String trimmed = part != null ? part.trim() : null;
+            if (String.isNotBlank(trimmed)) {
+                nationalIds.add(trimmed);
+            }
+        }
+        return nationalIds;
+    }
+  /**
+   * Chuẩn hóa FEC_Team_User_Group__c từ LWC/label (CP/PM/SP/F2F) → mã Stage Change.
+   */
+  public static String normalizeTeamUserGroupParam(String teamUserGroup) {
+    if (String.isBlank(teamUserGroup)) {
+      return null;
+    }
+    String upper = teamUserGroup.trim().toUpperCase();
+    if (
+      upper == FEC_ConstantCommon.STAGE_CHANGE_TEAM_USER_GROUP_CP ||
+      upper.contains(FEC_ConstantCommon.STAGE_CHANGE_TEAM_LABEL_CONTRACT_PROCESS)
+    ) {
+      return FEC_ConstantCommon.STAGE_CHANGE_TEAM_USER_GROUP_CP;
+    }
+    if (
+      upper == FEC_ConstantCommon.STAGE_CHANGE_TEAM_USER_GROUP_PM ||
+      upper == FEC_ConstantCommon.STAGE_CHANGE_TEAM_LABEL_PAYMENT
+    ) {
+      return FEC_ConstantCommon.STAGE_CHANGE_TEAM_USER_GROUP_PM;
+    }
+    if (
+      upper == FEC_ConstantCommon.STAGE_CHANGE_TEAM_USER_GROUP_SP ||
+      upper.contains(FEC_ConstantCommon.STAGE_CHANGE_TEAM_LABEL_CS_SUPPORT)
+    ) {
+      return FEC_ConstantCommon.STAGE_CHANGE_TEAM_USER_GROUP_SP;
+    }
+    if (
+      upper == FEC_ConstantCommon.STAGE_CHANGE_TEAM_USER_GROUP_F2F ||
+      upper.contains(FEC_ConstantCommon.STAGE_CHANGE_TEAM_LABEL_OFFICE_BASED)
+    ) {
+      return FEC_ConstantCommon.STAGE_CHANGE_TEAM_USER_GROUP_F2F;
+    }
+    return upper;
+  }
+  public static Boolean isCccd(String value) {
+    return String.isNotBlank(value) && Pattern.matches(FEC_ConstantCommon.INPUT_SEPARATOR_REGEX_12, value.trim());
+  }
+
 }

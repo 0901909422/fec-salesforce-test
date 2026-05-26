@@ -46,7 +46,7 @@
                                                                     <div class="slds-p-around_medium">
                                                                         <lightning-combobox label="Action"
                                                                             value={item.action}
-                                                                            options={getActionOptions} data-id={item.id}
+                                                                            options={actionOptions} data-id={item.id}
                                                                             required onchange={handleActionChange}>
                                                                         </lightning-combobox>
 
@@ -110,7 +110,7 @@
 
                                                                             <lightning-button variant="neutral"
                                                                                 label="Save & Close"
-                                                                                onclick={handleClose}>
+                                                                                onclick={handleSaveClose}>
                                                                             </lightning-button>
                                                                         </div>
                                                                     </div>

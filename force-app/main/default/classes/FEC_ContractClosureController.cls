@@ -642,6 +642,9 @@ public without sharing class FEC_ContractClosureController {
         if (hasAddr && hasOffice) {
             r.addFail(MSG_NOTI_02);
         }
+        if ((hasAddr && hasPos) || (hasOffice && hasPos)) {
+            r.addFail(MSG_NOTI_02);
+        }
         if (cnt > 2) {
             r.addFail(MSG_NOTI_02);
         }

@@ -453,6 +453,97 @@ public with sharing class FEC_RepaySchedPayHistController {
         return result;
     }
 
+    //PhongBT 26/05/26: gọi api để document request check được điều kiện cho rl04.03
+    /**
+     * RL04.03 — gọi 3 API (giống tab Repayment Schedule & Payment History) và ghi FEC_Payment_History__c.
+     * Trả số dòng sau sync; 0 nếu bỏ qua hoặc lỗi.
+     */
+    public static Integer syncPaymentHistoryFromApis(Id caseId, Id customerHistoryId) {
+        if (caseId == null || customerHistoryId == null) {
+            return 0;
+        }
+        String contractNumber = getContractNumber(caseId);
+        if (String.isBlank(contractNumber)) {
+            return 0;
+        }
+
+        Case caseInfo = getCaseInfo(caseId);
+        Boolean isTestApi = caseInfo?.FEC_Is_Test_API__c == true;
+        String transId = FEC_CommonUltils.generateTransactionUUID();
+        String dateTimeStr = Datetime.now().formatGMT(FEC_ConstantCommon.DATETIME_FORMAT);
+        String requestorId = FEC_ConstantCommon.REQUESTOR_CRM;
+
+        FEC_GetLoanBasicInfo.ResponseWrapper basicRes = null;
+        FEC_GetLoanSecInfo.ResponseWrapper secRes = null;
+        FEC_GetPaymentInfo.ResponseWrapper paymentRes = null;
+
+        try {
+            basicRes = FEC_GetLoanBasicInfo.callGetLoanBasicInfo(
+                transId,
+                requestorId,
+                dateTimeStr,
+                contractNumber,
+                isTestApi
+            );
+        } catch (Exception e) {
+            System.debug(
+                LoggingLevel.WARN,
+                'syncPaymentHistoryFromApis GetLoanBasicInfo failed, case=' +
+                    caseId +
+                    ': ' +
+                    e.getMessage()
+            );
+        }
+        try {
+            secRes = FEC_GetLoanSecInfo.callGetLoanSecInfo(
+                transId,
+                requestorId,
+                dateTimeStr,
+                contractNumber
+            );
+        } catch (Exception e) {
+            System.debug(
+                LoggingLevel.WARN,
+                'syncPaymentHistoryFromApis GetLoanSecInfo failed, case=' +
+                    caseId +
+                    ': ' +
+                    e.getMessage()
+            );
+        }
+        try {
+            paymentRes = FEC_GetPaymentInfo.callGetPaymentInfo(
+                transId,
+                requestorId,
+                dateTimeStr,
+                contractNumber
+            );
+        } catch (Exception e) {
+            System.debug(
+                LoggingLevel.WARN,
+                'syncPaymentHistoryFromApis GetPaymentInfo failed, case=' +
+                    caseId +
+                    ': ' +
+                    e.getMessage()
+            );
+        }
+
+        try {
+            savePaymentHistoryToObject(customerHistoryId, basicRes, secRes, paymentRes);
+        } catch (Exception e) {
+            System.debug(
+                LoggingLevel.WARN,
+                'syncPaymentHistoryFromApis save failed, case=' + caseId + ': ' + e.getMessage()
+            );
+            return 0;
+        }
+
+        return [
+            SELECT COUNT()
+            FROM FEC_Payment_History__c
+            WHERE FEC_Customer_History__c = :customerHistoryId
+        ];
+    }
+
     /**
      * Chỉ gọi GetPaymentInfo + map Real-Time (giống pattern fec_PaymentHistoryAcount.syncRealtimePayment).
      * Lỗi API không nuốt im — LWC hiển thị toast; khác getSectionData đang try/catch GetPaymentInfo.
