@@ -470,6 +470,7 @@ public without sharing class FEC_RoutingActionHistoryTriggerHandler {
 
       FEC_Routing_Action_History__c clonedHistory = history.clone(false, true, false, false);
       clonedHistory.FEC_Routing_Action__c = FEC_CaseBusinessService.RESOLVE;
+      clonedHistory.FEC_Decision__c = null;
       insert clonedHistory;
     }
   }
