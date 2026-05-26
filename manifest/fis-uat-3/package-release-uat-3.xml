@@ -173,7 +173,7 @@
 	    <members>FEC_NocRemovePhoneInheritanceHandler</members>
 	    <members>FEC_NocRemovePhoneInheritanceHandlerTest</members>
         <members>FEC_SalesChannelFromApplicationService</members>
-        <members>FEC_ApplicationListTriggerHandler</members>
+        <members>FEC_CustomerHistoryTriggerHandler</members>
         <members>FEC_CMSRewardRedeemService</members>
 		<members>FEC_CMSRewardRedeemServiceTest</members>
 		<members>FEC_AssignAutoDistribSched</members>
@@ -254,7 +254,7 @@
 		<members>FEC_RelevantTicketTrigger</members>
 		<members>FEC_AssignmentTrigger</members>
 		<members>FEC_NatureOfCaseTrigger</members>
-        <members>FEC_ApplicationListTrigger</members>
+        <members>FEC_CustomerHistoryTrigger</members>
 		<members>FEC_CaseAssignmentNOCTrigger</members>
 		<members>FEC_CaseAssignmentTrigger</members>
 		<name>ApexTrigger</name>
