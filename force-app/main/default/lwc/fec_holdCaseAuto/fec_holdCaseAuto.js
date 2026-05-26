@@ -270,7 +270,6 @@ export default class Fec_holdCaseAuto extends LightningElement {
     }
     return (
       this.stage2DisplayMode === MODE_SUCCESS_WITH_INFO_NO_AUTO ||
-      this.stage2DisplayMode === MODE_ERROR_RETRY ||
       this.stage2DisplayMode === MODE_ERROR_RETRY_INFO_NO_AUTO ||
       this.stage2DisplayMode === MODE_INFO_NO_AUTO_ONLY ||
       this.stage2DisplayMode === MODE_INFO_HAS_AUTO_BUTTON
@@ -433,12 +432,14 @@ export default class Fec_holdCaseAuto extends LightningElement {
     ) {
       return false;
     }
+    if (this.stage2DisplayMode === MODE_ERROR_RETRY) {
+      return this.stage2ShowManualHoldButton === true;
+    }
     if (this._inHoldCaseRetryFlow) {
       return true;
     }
     if (
       this.stage2DisplayMode === MODE_INFO_HAS_AUTO_BUTTON ||
-      this.stage2DisplayMode === MODE_ERROR_RETRY ||
       this.stage2DisplayMode === MODE_ERROR_RETRY_INFO_NO_AUTO
     ) {
       return true;
