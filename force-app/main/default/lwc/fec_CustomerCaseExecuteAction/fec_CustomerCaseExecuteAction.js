@@ -89,7 +89,6 @@ export default class Fec_CustomerCaseExecuteAction extends LightningElement {
           title: "Warning",
           message,
           variant: "warning",
-          mode: "sticky",
         }),
       );
     } finally {
