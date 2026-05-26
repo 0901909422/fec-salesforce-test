@@ -1375,6 +1375,116 @@ public without sharing class FEC_MrcReturnCaseService {
     }
 
     /**
+     * Chọn một FEC_Stage_Change__c khi query trả nhiều dòng (ưu tiên Team, sau đó Queue).
+     */
+    public static FEC_Stage_Change__c selectStageChangeForRoute(
+        List<FEC_Stage_Change__c> changelst,
+        String teamUserGroup,
+        String queueId
+    ) {
+        if (changelst == null || changelst.isEmpty()) {
+            return null;
+        }
+        if (changelst.size() == 1) {
+            return changelst[0];
+        }
+
+        String team = normalizeTeamUserGroupForStageChange(teamUserGroup);
+        if (String.isNotBlank(team)) {
+            for (FEC_Stage_Change__c sc : changelst) {
+                String scTeam = sc.FEC_Team_User_Group__c;
+                if (String.isNotBlank(scTeam) && team.equalsIgnoreCase(scTeam.trim())) {
+                    return sc;
+                }
+            }
+        }
+
+        if (String.isNotBlank(queueId)) {
+            String targetQueueId = queueId.trim();
+            for (FEC_Stage_Change__c sc : changelst) {
+                if (sc.FEC_Next_Queue__c == null) {
+                    continue;
+                }
+                String resolved = resolveQueueOwnerIdFromStageChangeValue(
+                    String.valueOf(sc.FEC_Next_Queue__c)
+                );
+                if (targetQueueId == resolved) {
+                    return sc;
+                }
+            }
+        }
+
+        return changelst[0];
+    }
+
+    private static String normalizeTeamUserGroupForStageChange(String teamUserGroup) {
+        if (String.isBlank(teamUserGroup)) {
+            return null;
+        }
+        String upper = teamUserGroup.trim().toUpperCase();
+        if (
+            upper == FEC_ConstantCommon.STAGE_CHANGE_TEAM_USER_GROUP_CP ||
+            upper.contains(FEC_ConstantCommon.STAGE_CHANGE_TEAM_LABEL_CONTRACT_PROCESS)
+        ) {
+            return FEC_ConstantCommon.STAGE_CHANGE_TEAM_USER_GROUP_CP;
+        }
+        if (
+            upper == FEC_ConstantCommon.STAGE_CHANGE_TEAM_USER_GROUP_PM ||
+            upper == FEC_ConstantCommon.STAGE_CHANGE_TEAM_LABEL_PAYMENT
+        ) {
+            return FEC_ConstantCommon.STAGE_CHANGE_TEAM_USER_GROUP_PM;
+        }
+        if (
+            upper == FEC_ConstantCommon.STAGE_CHANGE_TEAM_USER_GROUP_SP ||
+            upper.contains(FEC_ConstantCommon.STAGE_CHANGE_TEAM_LABEL_CS_SUPPORT)
+        ) {
+            return FEC_ConstantCommon.STAGE_CHANGE_TEAM_USER_GROUP_SP;
+        }
+        if (
+            upper == FEC_ConstantCommon.STAGE_CHANGE_TEAM_USER_GROUP_F2F ||
+            upper.contains(FEC_ConstantCommon.STAGE_CHANGE_TEAM_LABEL_OFFICE_BASED)
+        ) {
+            return FEC_ConstantCommon.STAGE_CHANGE_TEAM_USER_GROUP_F2F;
+        }
+        return teamUserGroup.trim();
+    }
+
+    private static String resolveQueueOwnerIdFromStageChangeValue(String nextQueueValue) {
+        if (String.isBlank(nextQueueValue)) {
+            return nextQueueValue;
+        }
+        String normalized = nextQueueValue.trim();
+        try {
+            Id qid = Id.valueOf(normalized);
+            if (qid.getSobjectType() == Group.SObjectType) {
+                List<Group> grp = [
+                    SELECT Id, Type
+                    FROM Group
+                    WHERE Id = :qid
+                    LIMIT 1
+                ];
+                if (
+                    !grp.isEmpty() &&
+                    FEC_ConstantCommon.GROUP_TYPE_QUEUE.equals(grp[0].Type)
+                ) {
+                    return String.valueOf(grp[0].Id);
+                }
+            }
+            return normalized;
+        } catch (Exception e) {
+            List<Group> q = [
+                SELECT Id
+                FROM Group
+                WHERE
+                    Type = :FEC_ConstantCommon.GROUP_TYPE_QUEUE
+                    AND DeveloperName = :normalized
+                LIMIT 1
+            ];
+            return q.isEmpty() ? normalized : String.valueOf(q[0].Id);
+        }
+    }
+
+    /**
      * RL05.02 Submit: lưu Property Info lên FEC_Additional_Info__c (client gọi trước Route to).
      */
     @AuraEnabled
