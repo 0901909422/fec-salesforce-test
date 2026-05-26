@@ -13,16 +13,41 @@
  
 ****************************************************************************************/
 
-public without sharing class FEC_FullCustomerIntegrationJob 
-implements Queueable, Database.AllowsCallouts {
+public without sharing class FEC_FullCustomerIntegrationJob
+    implements Queueable, Database.AllowsCallouts {
+
+    private static final Integer MAX_SYNCS_PER_RUN = 200;
+
+    public class SyncRequest {
+        public Id historyId;
+        public String cifNumber;
+        public String phone;
+        public String accountNumber;
+
+        public SyncRequest(
+            Id historyId,
+            String cifNumber,
+            String phone,
+            String accountNumber
+        ) {
+            this.historyId = historyId;
+            this.cifNumber = cifNumber;
+            this.phone = phone;
+            this.accountNumber = accountNumber;
+        }
+    }
 
     private Id historyId;
     private String cifNumber;
     private String phone;
     private String accountNumber;
+    private List<SyncRequest> syncRequests;
 
     public FEC_FullCustomerIntegrationJob(
-        Id historyId, String cifNumber, String phone, String accountNumber
+        Id historyId,
+        String cifNumber,
+        String phone,
+        String accountNumber
     ) {
         this.historyId = historyId;
         this.cifNumber = cifNumber;
@@ -30,13 +55,54 @@ implements Queueable, Database.AllowsCallouts {
         this.accountNumber = accountNumber;
     }
 
+    public FEC_FullCustomerIntegrationJob(List<SyncRequest> syncRequests) {
+        this.syncRequests = syncRequests;
+    }
+
     public void execute(QueueableContext context) {
+        if (syncRequests != null && !syncRequests.isEmpty()) {
+            Map<Id, SyncRequest> uniqueByHistoryId = new Map<Id, SyncRequest>();
+            for (SyncRequest req : syncRequests) {
+                if (req != null && req.historyId != null) {
+                    uniqueByHistoryId.put(req.historyId, req);
+                }
+            }
+
+            List<SyncRequest> toProcess = uniqueByHistoryId.values();
+            List<SyncRequest> deferred = new List<SyncRequest>();
+            for (Integer i = 0; i < toProcess.size(); i++) {
+                if (i < MAX_SYNCS_PER_RUN) {
+                    syncOne(toProcess[i]);
+                } else {
+                    deferred.add(toProcess[i]);
+                }
+            }
+            if (!deferred.isEmpty()) {
+                System.enqueueJob(new FEC_FullCustomerIntegrationJob(deferred));
+            }
+            return;
+        }
+
+        syncOne(
+            new SyncRequest(historyId, cifNumber, phone, accountNumber)
+        );
+    }
+
+    private void syncOne(SyncRequest req) {
+        if (req == null || req.historyId == null) {
+            return;
+        }
 
         FEC_Customer_History__c hist =
-            FEC_CustomerIntegrationService.queryHistoryForSync(historyId);
+            FEC_CustomerIntegrationService.queryHistoryForSync(req.historyId);
 
         FEC_CustomerIntegrationService.ResultDTO result =
-            FEC_CustomerIntegrationService.syncCustomer(hist, cifNumber, phone, accountNumber);
+            FEC_CustomerIntegrationService.syncCustomer(
+                hist,
+                req.cifNumber,
+                req.phone,
+                req.accountNumber
+            );
 
         if (result != null) {
             if (String.isNotBlank(result.customerName)) {
