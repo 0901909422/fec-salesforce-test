@@ -444,6 +444,11 @@ export function applyMrcRl0502DupFieldLayout(
 
   if (!needsHandlingRadio) {
     nextHandling = STR_EMPTY;
+  } else if (!nextHandling) {
+    const saved = String(business?.mrcHandlingOptionSaved ?? STR_EMPTY).trim();
+    if (saved) {
+      nextHandling = saved;
+    }
   }
 
   const visibility = applyMrcRl05SectionVisibility(
