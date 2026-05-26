@@ -130,6 +130,8 @@
         <members>FEC_BatchCaseHandlingTemplateHelper</members>
         <members>FEC_BatchCaseHandlingZipResult</members>
         <members>FEC_BatchCaseHandlingZipService</members>
+        <members>FEC_BusinessHoursTatUtil</members>
+        <members>FEC_BusinessHoursTatUtilTest</members>
         <members>FEC_CaseTatFullProcessSvc</members>
         <members>FEC_CaseFullProcessTatQueueJob</members>
         <members>FEC_CaseDsTsSlaBatch</members>
@@ -158,6 +160,7 @@
 		<members>FEC_NotificationService</members>
 		<members>FEC_CaseAssignmentConfigController</members>
         <members>FEC_RoutingHistTatSvc</members>
+        <members>FEC_RoutingHistTatSvcTest</members>
         <members>FEC_PsDNBServiceCallout</members>
         <members>FEC_FullCustomerIntegrationJob</members>
         <members>FEC_ImportedInteractionBatch</members>

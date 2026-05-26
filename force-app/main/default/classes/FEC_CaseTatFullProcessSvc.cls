@@ -216,7 +216,11 @@ public without sharing class FEC_CaseTatFullProcessSvc {
             return;
         }
 
-        Long diffMs = BusinessHours.diff(bhId, anchorStart, anchorEnd);
+        Long diffMs = FEC_BusinessHoursTatUtil.diffMsExcludingWeekends(
+            bhId,
+            anchorStart,
+            anchorEnd
+        );
         if (diffMs == null || diffMs < 0) {
             target.FEC_TAT_Full_Process_Hrs__c = null;
             return;
