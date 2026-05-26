@@ -275,6 +275,13 @@ public with sharing class FEC_ConstantCommon {
     public static final String DISB_LOG_CRMID    = 'CRMID=';
     public static final String DISB_LOG_STATUS   = ' DISB_STATUS=';
     public static final String DISB_LOG_RESPONSE = ' Response=';
+
+    // Fast Cash RC35 — Disbursement Status on Case
+    public static final String FAST_CASH_SUB_CATEGORY_CODE_RC35 = 'RC35';
+    public static final String FAST_CASH_DISB_STATUS_PENDING_CUSTOMER_WITHDRAWAL = 'Pending-CustomerWithdrawal';
+    public static final String FAST_CASH_DISB_STATUS_SUCCESS = 'Success';
+    public static final String FAST_CASH_DISB_STATUS_RESOLVED_CUSTOMER_CANCELLED = 'Resolved-CustomerCancelled';
+    public static final String FAST_CASH_DISB_STATUS_RESOLVED_WITHDRAWAL_EXPIRED = 'Resolved-WithdrawalExpired';
     
     public static final String CASE_NON_EXISTING_CUSTOMER = 'Non-Existing';
     public static final String CASE_EXISTING_CUSTOMER = 'Existing';

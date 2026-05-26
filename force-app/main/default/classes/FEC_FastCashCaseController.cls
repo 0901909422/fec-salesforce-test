@@ -7,6 +7,8 @@ public without sharing class FEC_FastCashCaseController {
         @AuraEnabled public Decimal requestedAmount;
         @AuraEnabled public Decimal maxAmount;
         @AuraEnabled public String applicationId;
+        @AuraEnabled public String disbursementStatus;
+        @AuraEnabled public Date disbursementDate;
     }
 
     public class FastCashEligibilityDTO {
@@ -40,7 +42,15 @@ public without sharing class FEC_FastCashCaseController {
             SELECT FEC_Actual_Nature_of_Case__c,
                 FEC_Requested_Amount__c,
                 FEC_Max_Amount__c,
-                FEC_Application_ID__c
+                FEC_Application_ID__c,
+                FEC_Disbursement_Status__c,
+                FEC_Disbursement_Date__c,
+                FEC_Account_or_Contract__r.FEC_Disbursement_Date__c,
+                (
+                    SELECT FEC_PD_Disbursement_Status__c
+                    FROM Pending_Disbursements__r
+                    LIMIT 1
+                )
             FROM Case
             WHERE Id = :caseId
             LIMIT 1
@@ -53,6 +63,8 @@ public without sharing class FEC_FastCashCaseController {
         dto.requestedAmount = c.FEC_Requested_Amount__c;
         dto.maxAmount = c.FEC_Max_Amount__c;
         dto.applicationId = c.FEC_Application_ID__c;
+        dto.disbursementStatus = resolveDisbursementStatusForCase(c);
+        dto.disbursementDate = resolveDisbursementDateForCase(c);
         return dto;
     }
 
@@ -114,6 +126,44 @@ public without sharing class FEC_FastCashCaseController {
             return res;
         }
         res.success = true;
+        return res;
+    }
+
+    @AuraEnabled
+    public static SaveFastCashResultDTO finalizeFastCashOnSubmit(Id caseId, Decimal requestedAmount, Decimal maxAmount) {
+        SaveFastCashResultDTO res = saveFastCashCaseAmounts(caseId, requestedAmount, maxAmount);
+        if (!res.success) {
+            return res;
+        }
+        if (caseId == null) {
+            return res;
+        }
+        List<Case> rows = [
+            SELECT Id,
+                FEC_Application_ID__c,
+                FEC_SubCategory__r.FEC_Code__c,
+                (
+                    SELECT Id, FEC_PD_Disbursement_Status__c
+                    FROM Pending_Disbursements__r
+                    LIMIT 1
+                )
+            FROM Case
+            WHERE Id = :caseId
+            LIMIT 1
+        ];
+        if (rows.isEmpty()) {
+            return res;
+        }
+        Case c = rows[0];
+        if (!isFastCashRc35Case(c)) {
+            return res;
+        }
+        try {
+            applyDefaultPendingDisbursementStatusOnSubmit(c);
+        } catch (Exception e) {
+            res.success = false;
+            res.errorMessage = System.Label.FEC_Unknown_Error;
+        }
         return res;
     }
 
@@ -351,5 +401,158 @@ public without sharing class FEC_FastCashCaseController {
         }
         String c = w.Sys.Code.trim();
         return '0'.equals(c) || '1'.equals(c);
+    }
+
+    private static Boolean isFastCashRc35Case(Case c) {
+        if (c == null || c.FEC_SubCategory__r == null) {
+            return false;
+        }
+        String code = c.FEC_SubCategory__r.FEC_Code__c;
+        return FEC_ConstantCommon.FAST_CASH_SUB_CATEGORY_CODE_RC35.equalsIgnoreCase(
+            String.isBlank(code) ? '' : code.trim()
+        );
+    }
+
+    private static String resolveDisbursementStatusForCase(Case c) {
+        if (c == null) {
+            return null;
+        }
+        if (c.Pending_Disbursements__r != null && !c.Pending_Disbursements__r.isEmpty()) {
+            String fromPending = c.Pending_Disbursements__r[0].FEC_PD_Disbursement_Status__c;
+            if (String.isNotBlank(fromPending)) {
+                return mapDisbursementStatusForDisplay(fromPending);
+            }
+        }
+        return mapDisbursementStatusForDisplay(c.FEC_Disbursement_Status__c);
+    }
+
+    private static Date resolveDisbursementDateForCase(Case c) {
+        if (c == null) {
+            return null;
+        }
+        if (c.FEC_Account_or_Contract__r != null
+            && c.FEC_Account_or_Contract__r.FEC_Disbursement_Date__c != null) {
+            return c.FEC_Account_or_Contract__r.FEC_Disbursement_Date__c;
+        }
+        return c.FEC_Disbursement_Date__c;
+    }
+
+    private static void applyDefaultPendingDisbursementStatusOnSubmit(Case c) {
+        if (c == null || c.Id == null) {
+            return;
+        }
+        if (c.Pending_Disbursements__r != null
+            && !c.Pending_Disbursements__r.isEmpty()
+            && String.isNotBlank(c.Pending_Disbursements__r[0].FEC_PD_Disbursement_Status__c)) {
+            return;
+        }
+        upsertPendingDisbursementStatus(
+            c.Id,
+            FEC_ConstantCommon.FAST_CASH_DISB_STATUS_PENDING_CUSTOMER_WITHDRAWAL,
+            c.FEC_Application_ID__c
+        );
+    }
+
+    public static void upsertPendingDisbursementStatus(Id caseId, String status, String applicationId) {
+        if (caseId == null || String.isBlank(status)) {
+            return;
+        }
+        if (!Schema.sObjectType.FEC_Pending_Disbursement__c.isAccessible()) {
+            return;
+        }
+        List<FEC_Pending_Disbursement__c> rows = [
+            SELECT Id, FEC_PD_Disbursement_Status__c
+            FROM FEC_Pending_Disbursement__c
+            WHERE FEC_Case__c = :caseId
+            LIMIT 1
+        ];
+        if (!rows.isEmpty()) {
+            if (!Schema.sObjectType.FEC_Pending_Disbursement__c.isUpdateable()) {
+                return;
+            }
+            FEC_Pending_Disbursement__c upd = new FEC_Pending_Disbursement__c(
+                Id = rows[0].Id,
+                FEC_PD_Disbursement_Status__c = status
+            );
+            List<FEC_Pending_Disbursement__c> safeUpd = (List<FEC_Pending_Disbursement__c>) Security.stripInaccessible(
+                AccessType.UPDATABLE,
+                new List<FEC_Pending_Disbursement__c>{ upd }
+            ).getRecords();
+            if (!safeUpd.isEmpty()) {
+                update safeUpd;
+            }
+            return;
+        }
+        if (!Schema.sObjectType.FEC_Pending_Disbursement__c.isCreateable()) {
+            return;
+        }
+        FEC_Pending_Disbursement__c ins = new FEC_Pending_Disbursement__c(
+            FEC_Case__c = caseId,
+            FEC_PD_Disbursement_Status__c = status
+        );
+        if (String.isNotBlank(applicationId)) {
+            ins.FEC_PD_Application_ID__c = applicationId;
+        }
+        List<FEC_Pending_Disbursement__c> safeIns = (List<FEC_Pending_Disbursement__c>) Security.stripInaccessible(
+            AccessType.CREATABLE,
+            new List<FEC_Pending_Disbursement__c>{ ins }
+        ).getRecords();
+        if (!safeIns.isEmpty()) {
+            insert safeIns;
+        }
+    }
+
+    public static void updateCustomerHistoryDisbursementDate(Id historyId, Date disbDate) {
+        if (historyId == null || disbDate == null) {
+            return;
+        }
+        if (!Schema.sObjectType.FEC_Customer_History__c.isUpdateable()) {
+            return;
+        }
+        FEC_Customer_History__c upd = new FEC_Customer_History__c(
+            Id = historyId,
+            FEC_Disbursement_Date__c = disbDate
+        );
+        List<FEC_Customer_History__c> safeUpd = (List<FEC_Customer_History__c>) Security.stripInaccessible(
+            AccessType.UPDATABLE,
+            new List<FEC_Customer_History__c>{ upd }
+        ).getRecords();
+        if (!safeUpd.isEmpty()) {
+            update safeUpd;
+        }
+    }
+
+    public static String mapDisbursementStatusForDisplay(String storedStatus) {
+        if (String.isBlank(storedStatus)) {
+            return storedStatus;
+        }
+        String s = storedStatus.trim();
+        if ('Withdrawn'.equalsIgnoreCase(s)) {
+            return FEC_ConstantCommon.FAST_CASH_DISB_STATUS_SUCCESS;
+        }
+        if ('Cancelled_By_Customer'.equalsIgnoreCase(s)) {
+            return FEC_ConstantCommon.FAST_CASH_DISB_STATUS_RESOLVED_CUSTOMER_CANCELLED;
+        }
+        if ('Auto_Cancelled'.equalsIgnoreCase(s)) {
+            return FEC_ConstantCommon.FAST_CASH_DISB_STATUS_RESOLVED_WITHDRAWAL_EXPIRED;
+        }
+        return s;
+    }
+
+    public static String mapApiDisbursementStatusToCaseValue(String apiStatus) {
+        if (String.isBlank(apiStatus)) {
+            return apiStatus;
+        }
+        String s = apiStatus.trim();
+        if ('Withdrawn'.equalsIgnoreCase(s)) {
+            return FEC_ConstantCommon.FAST_CASH_DISB_STATUS_SUCCESS;
+        }
+        if ('Cancelled_By_Customer'.equalsIgnoreCase(s)) {
+            return FEC_ConstantCommon.FAST_CASH_DISB_STATUS_RESOLVED_CUSTOMER_CANCELLED;
+        }
+        if ('Auto_Cancelled'.equalsIgnoreCase(s)) {
+            return FEC_ConstantCommon.FAST_CASH_DISB_STATUS_RESOLVED_WITHDRAWAL_EXPIRED;
+        }
+        return s;
     }
 }

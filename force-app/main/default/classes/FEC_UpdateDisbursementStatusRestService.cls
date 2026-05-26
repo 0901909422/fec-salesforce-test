@@ -92,8 +92,8 @@ global without sharing class FEC_UpdateDisbursementStatusRestService {
 
             // Query Case by CRMID
             List<Case> cases = [
-                SELECT Id, FEC_ID_Search__c, FEC_Disbursement_Status__c,
-                       FEC_Disbursement_Date__c, FEC_Remarks__c,
+                SELECT Id, FEC_ID_Search__c, FEC_Remarks__c,
+                       FEC_Account_or_Contract__c, FEC_Application_ID__c,
                        Status, FEC_Final_Status__c
                 FROM Case
                 WHERE FEC_ID_Search__c = :reqBody.CRMID
@@ -129,11 +129,20 @@ global without sharing class FEC_UpdateDisbursementStatusRestService {
                 return;
             }
 
-            // Update Case
-            c.FEC_Disbursement_Status__c = reqBody.DISB_STATUS;
-            if (String.isNotBlank(reqBody.DISB_DT)) {
+            String mappedDisbStatus = FEC_FastCashCaseController.mapApiDisbursementStatusToCaseValue(reqBody.DISB_STATUS);
+            FEC_FastCashCaseController.upsertPendingDisbursementStatus(
+                c.Id,
+                mappedDisbStatus,
+                c.FEC_Application_ID__c
+            );
+            if (DISB_STATUS_WITHDRAWN.equals(reqBody.DISB_STATUS)
+                && c.FEC_Account_or_Contract__c != null
+                && String.isNotBlank(reqBody.DISB_DT)) {
                 try {
-                    c.FEC_Disbursement_Date__c = Date.valueOf(reqBody.DISB_DT);
+                    FEC_FastCashCaseController.updateCustomerHistoryDisbursementDate(
+                        c.FEC_Account_or_Contract__c,
+                        Date.valueOf(reqBody.DISB_DT)
+                    );
                 } catch (Exception e) {
                     System.debug('FEC_DEBUG DISB_DT parse error: ' + e.getMessage());
                 }

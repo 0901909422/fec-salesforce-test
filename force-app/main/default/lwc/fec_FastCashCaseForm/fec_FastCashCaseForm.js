@@ -10,6 +10,7 @@ import CASE_ACTUAL_NOC from "@salesforce/schema/Case.FEC_Actual_Nature_of_Case__
 import getCaseFastCashState from "@salesforce/apex/FEC_FastCashCaseController.getCaseFastCashState";
 import checkFastCashEligibility from "@salesforce/apex/FEC_FastCashCaseController.checkFastCashEligibility";
 import saveFastCashCaseAmounts from "@salesforce/apex/FEC_FastCashCaseController.saveFastCashCaseAmounts";
+import finalizeFastCashOnSubmit from "@salesforce/apex/FEC_FastCashCaseController.finalizeFastCashOnSubmit";
 import executeFastCashBlock from "@salesforce/apex/FEC_FastCashCaseController.executeFastCashBlock";
 
 import FEC_LBL_Fast_Cash_Error_Code from "@salesforce/label/c.FEC_LBL_Fast_Cash_Error_Code";
@@ -32,6 +33,8 @@ import FEC_MSG_Fast_Cash_Noti_10 from "@salesforce/label/c.FEC_MSG_Fast_Cash_Not
 import FEC_MSG_Fast_Cash_Noti_12 from "@salesforce/label/c.FEC_MSG_Fast_Cash_Noti_12";
 import FEC_MSG_Fast_Cash_Noti_15 from "@salesforce/label/c.FEC_MSG_Fast_Cash_Noti_15";
 import FEC_Button_Close from "@salesforce/label/c.FEC_Button_Close";
+import FEC_LBL_Pending_Disbursement_Disbursement_Status from "@salesforce/label/c.FEC_LBL_Pending_Disbursement_Disbursement_Status";
+import FEC_SecondaryInfo_Disbursement_Date_Label from "@salesforce/label/c.FEC_SecondaryInfo_Disbursement_Date_Label";
 
 import {
     STR_EMPTY,
@@ -46,9 +49,11 @@ import {
     FEC_FAST_CASH_STORAGE_NOC_SELECTION_PREFIX,
     FEC_FAST_CASH_STORAGE_REQUESTED_AMOUNT_PREFIX
 } from "c/fec_CommonConst";
-import { formatThousandsFromDigits, stripToIntString } from "c/fec_CommonUtils";
+import { formatThousandsFromDigits, stripToIntString, formatDateVNI } from "c/fec_CommonUtils";
 
 const FAST_CASH_SUB_CATEGORY_CODE = "RC35";
+const DISBURSEMENT_STATUS_SUCCESS = "Success";
+const DISBURSEMENT_STATUS_PENDING_CUSTOMER_WITHDRAWAL = "Pending-CustomerWithdrawal";
 
 export default class Fec_FastCashCaseForm extends NavigationMixin(LightningElement) {
     @api recordId;
@@ -67,12 +72,12 @@ export default class Fec_FastCashCaseForm extends NavigationMixin(LightningEleme
         this._isEdit = value === true || value === "true";
     }
 
-    _subCategoryCode = "";
+    _subCategoryCode = STR_EMPTY;
     @api get subCategoryCode() {
         return this._subCategoryCode;
     }
     set subCategoryCode(value) {
-        const newCode = value == null ? "" : String(value);
+        const newCode = value == null ? STR_EMPTY : String(value);
         if (this._subCategoryCode === newCode) {
             return;
         }
@@ -96,12 +101,12 @@ export default class Fec_FastCashCaseForm extends NavigationMixin(LightningEleme
         }
     }
 
-    _subCodeCode = "";
+    _subCodeCode = STR_EMPTY;
     @api get subCodeCode() {
         return this._subCodeCode;
     }
     set subCodeCode(value) {
-        this._subCodeCode = value == null ? "" : String(value);
+        this._subCodeCode = value == null ? STR_EMPTY : String(value);
     }
 
     customLabel = {
@@ -125,7 +130,9 @@ export default class Fec_FastCashCaseForm extends NavigationMixin(LightningEleme
         msgNoti10: FEC_MSG_Fast_Cash_Noti_10,
         msgNoti12: FEC_MSG_Fast_Cash_Noti_12,
         msgNoti15: FEC_MSG_Fast_Cash_Noti_15,
-        statusEligible: FEC_LBL_Fast_Cash_Status_Eligible
+        statusEligible: FEC_LBL_Fast_Cash_Status_Eligible,
+        lblDisbursementStatus: FEC_LBL_Pending_Disbursement_Disbursement_Status,
+        lblDisbursementDate: FEC_SecondaryInfo_Disbursement_Date_Label
     };
 
     @track eligibilityLoading = false;
@@ -151,6 +158,9 @@ export default class Fec_FastCashCaseForm extends NavigationMixin(LightningEleme
     @track showNoti08 = false;
     @track showNoti09 = false;
     @track showNoti10 = false;
+
+    @track disbursementStatusDisplay = STR_EMPTY;
+    @track disbursementDateDisplay = STR_EMPTY;
 
     nocLockedAfterBlockModal = false;
     _lastNocId = null;
@@ -206,6 +216,9 @@ export default class Fec_FastCashCaseForm extends NavigationMixin(LightningEleme
             this._syncLocksWithStorage();
             this._maybeHydrateForFastCashScope();
             this._subscribeModeEditChannel();
+            if (this.isReadOnly && this._isFastCashScope) {
+                this._reloadReadonlyCaseSnapshot();
+            }
         }
     }
 
@@ -234,9 +247,32 @@ export default class Fec_FastCashCaseForm extends NavigationMixin(LightningEleme
                 this._clearFastCashSessionStorage();
                 this._resetBlockStateFlagsInMemory();
                 this._isEdit = false;
+                if (this._isFastCashScope && this.recordId) {
+                    this._reloadReadonlyCaseSnapshot();
+                }
             },
             { scope: APPLICATION_SCOPE }
         );
+    }
+
+    _reloadReadonlyCaseSnapshot() {
+        getCaseFastCashState({ caseId: this.recordId })
+            .then((st) => {
+                this._applyDisbursementFromState(st);
+                if (st && st.maxAmount != null) {
+                    this.maxAmountDecimal = Number(st.maxAmount);
+                }
+                if (st && st.requestedAmount != null) {
+                    const d = stripToIntString(st.requestedAmount);
+                    this.requestedAmountDigits = d;
+                    this.requestedAmountDisplay = formatThousandsFromDigits(d);
+                }
+                if (st && (st.requestedAmount != null || st.maxAmount != null)) {
+                    this.eligible = true;
+                    this.notEligible = false;
+                }
+            })
+            .catch(() => undefined);
     }
 
     //linhdev fix jira FECREDIT_CSM_2025_KH-1366 — guard chung cho wiredCase & connectedCallback
@@ -430,6 +466,16 @@ export default class Fec_FastCashCaseForm extends NavigationMixin(LightningEleme
         this.clearBlockMessages();
     }
 
+    _applyDisbursementFromState(st) {
+        if (!st) {
+            this.disbursementStatusDisplay = STR_EMPTY;
+            this.disbursementDateDisplay = STR_EMPTY;
+            return;
+        }
+        this.disbursementStatusDisplay = st.disbursementStatus ? String(st.disbursementStatus) : STR_EMPTY;
+        this.disbursementDateDisplay = st.disbursementDate ? formatDateVNI(String(st.disbursementDate)) : STR_EMPTY;
+    }
+
     loadLockedSnapshot() {
         const preservedDigits = this.requestedAmountDigits;
         const preservedDisplay = this.requestedAmountDisplay;
@@ -440,6 +486,7 @@ export default class Fec_FastCashCaseForm extends NavigationMixin(LightningEleme
         }
         getCaseFastCashState({ caseId: this.recordId })
             .then((st) => {
+                this._applyDisbursementFromState(st);
                 if (st && st.maxAmount != null && Number(st.maxAmount) > 0) {
                     this.eligible = true;
                     this.notEligible = false;
@@ -494,6 +541,7 @@ export default class Fec_FastCashCaseForm extends NavigationMixin(LightningEleme
         this.clearBlockMessages();
         getCaseFastCashState({ caseId: this.recordId })
             .then((st) => {
+                this._applyDisbursementFromState(st);
                 if (st && st.requestedAmount != null) {
                     const d = stripToIntString(st.requestedAmount);
                     this.requestedAmountDigits = d;
@@ -714,6 +762,18 @@ export default class Fec_FastCashCaseForm extends NavigationMixin(LightningEleme
         return this.showNoti10;
     }
 
+    get showDisbursementFields() {
+        return this.isReadOnly || !!this.disbursementStatusDisplay;
+    }
+
+    get showDisbursementDate() {
+        return (
+            this.showDisbursementFields &&
+            this.disbursementStatusDisplay === DISBURSEMENT_STATUS_SUCCESS &&
+            !!this.disbursementDateDisplay
+        );
+    }
+
     handleRequestedFocus() {
         this.requestedFieldFocused = true;
     }
@@ -842,7 +902,7 @@ export default class Fec_FastCashCaseForm extends NavigationMixin(LightningEleme
         }
         const inp = root.querySelector('lightning-input[data-input="requestedAmount"]');
         if (inp && typeof inp.setCustomValidity === "function") {
-            inp.setCustomValidity("");
+            inp.setCustomValidity(STR_EMPTY);
         }
         if (!this.eligible) {
             return true;
@@ -893,6 +953,22 @@ export default class Fec_FastCashCaseForm extends NavigationMixin(LightningEleme
 
     @api
     saveForSubmitIfApplicable() {
-        return this.saveFastCashDataIfVisible();
+        if (this.isReadOnly || !this.recordId || !this.eligible) {
+            return Promise.resolve();
+        }
+        const n = this.requestedAmountDigits ? parseInt(this.requestedAmountDigits, 10) : null;
+        if (n == null || isNaN(n)) {
+            return Promise.resolve();
+        }
+        return finalizeFastCashOnSubmit({
+            caseId: this.recordId,
+            requestedAmount: n,
+            maxAmount: this.maxAmountDecimal
+        }).then((res) => {
+            if (res && res.success) {
+                this.disbursementStatusDisplay = DISBURSEMENT_STATUS_PENDING_CUSTOMER_WITHDRAWAL;
+            }
+            return Promise.resolve();
+        });
     }
 }

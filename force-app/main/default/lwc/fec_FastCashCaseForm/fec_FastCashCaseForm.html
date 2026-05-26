@@ -62,6 +62,22 @@
               <div class="fec-fc-readonly-line slds-text-body_regular">{maxAmountDisplay}</div>
             </div>
           </lightning-layout-item>
+          <template if:true={showDisbursementFields}>
+            <lightning-layout-item size="6" padding="around-small">
+              <div class="slds-form-element">
+                <label class="slds-form-element__label slds-text-color_weak">{customLabel.lblDisbursementStatus}</label>
+                <div class="fec-fc-readonly-line slds-text-body_regular">{disbursementStatusDisplay}</div>
+              </div>
+            </lightning-layout-item>
+            <template if:true={showDisbursementDate}>
+              <lightning-layout-item size="6" padding="around-small">
+                <div class="slds-form-element">
+                  <label class="slds-form-element__label slds-text-color_weak">{customLabel.lblDisbursementDate}</label>
+                  <div class="fec-fc-readonly-line slds-text-body_regular">{disbursementDateDisplay}</div>
+                </div>
+              </lightning-layout-item>
+            </template>
+          </template>
           <lightning-layout-item size="12" padding="around-small">
             <template if:true={showBlockButton}>
               <lightning-button variant="brand" label={customLabel.lblBlockAmount} onclick={handleOpenBlockModal} disabled={blockAmountButtonDisabled}>
