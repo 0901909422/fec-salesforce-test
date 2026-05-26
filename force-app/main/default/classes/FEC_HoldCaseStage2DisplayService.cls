@@ -9,6 +9,8 @@ public with sharing class FEC_HoldCaseStage2DisplayService {
     public static final String MODE_INFO_NO_AUTO_ONLY = 'INFO_NO_AUTO_ONLY';
     /** Stage 1 SUCCESS + Stage 2+ đổi NOC không Auto: giữ UI success, thêm info xanh. */
     public static final String MODE_SUCCESS_WITH_INFO_NO_AUTO = 'SUCCESS_WITH_INFO_NO_AUTO';
+    /** Stage 1 SUCCESS + Stage 2+ đổi NOC có Auto: giữ UI success, thêm info xanh có Auto. */
+    public static final String MODE_SUCCESS_WITH_INFO_HAS_AUTO = 'SUCCESS_WITH_INFO_HAS_AUTO';
     public static final String MODE_INFO_HAS_AUTO_BUTTON = 'INFO_HAS_AUTO_BUTTON';
 
     private static final String HOLD_TYPE_AUTO = 'Auto';
@@ -141,7 +143,7 @@ public with sharing class FEC_HoldCaseStage2DisplayService {
             ? null
             : c.FEC_NFU_Description_Result__c.trim();
 
-        // TH1: Stage 1 Auto Hold thất bại — không đổi NOC: đỏ + nút retry; đã đổi NOC: chỉ đỏ
+        // TH1: Stage 1 Auto Hold thất bại — đỏ + nút retry (đến max 3 lần); đổi NOC Stage 2+ không ảnh hưởng (retry NOC Stage 1)
         if (stage1Result == RESULT_ERROR) {
             Integer userRetryCount = FEC_AutoHoldCaseService.getHoldCaseUserRetryCount(
                 caseId
@@ -150,18 +152,20 @@ public with sharing class FEC_HoldCaseStage2DisplayService {
             out.showHoldCaseSection = true;
             out.displayMode = MODE_ERROR_RETRY;
             out.errorMessage = System.Label.FEC_MSG_HOLD_CASE_AUTO_FAIL_RETRY;
-            out.showManualHoldCaseButton =
-                !nocChanged && !c.IsClosed && !maxRetryReached;
+            out.showManualHoldCaseButton = !c.IsClosed && !maxRetryReached;
             debugStage2Evaluate(caseId, 'TH1', nocChanged, newHasAuto, out);
             return out;
         }
 
-        // TH2: Stage 1 Hold Case thành công — luôn hiện UI success; đổi NOC không Auto → thêm info xanh (không thay thế success)
+        // TH2: Stage 1 Hold Case thành công — luôn hiện UI success; đổi NOC → thêm info xanh (có/không Auto)
         if (stage1Result == RESULT_SUCCESS || stage1Result == RESULT_ALREADY_MARKED) {
             out.showHoldCaseSection = true;
             if (nocChanged && !newHasAuto) {
                 out.displayMode = MODE_SUCCESS_WITH_INFO_NO_AUTO;
                 out.infoMessage = System.Label.FEC_MSG_HOLD_CASE_NOC_NO_AUTO;
+            } else if (nocChanged && newHasAuto) {
+                out.displayMode = MODE_SUCCESS_WITH_INFO_HAS_AUTO;
+                out.infoMessage = System.Label.FEC_MSG_HOLD_CASE_NOC_HAS_AUTO;
             }
             return out;
         }
