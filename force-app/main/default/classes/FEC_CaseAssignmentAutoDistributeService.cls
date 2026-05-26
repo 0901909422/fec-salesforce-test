@@ -582,7 +582,11 @@ public without sharing class FEC_CaseAssignmentAutoDistributeService {
                 : firstSuccessfulLogUtc;
             Integer currentSlot = continuousSlotIndex(nowTime, anchorUtc, scheduledMinutes);
             Integer lastRunSlot = continuousSlotIndex(lastRunUtc, anchorUtc, scheduledMinutes);
-            return currentSlot > lastRunSlot;
+            if (currentSlot > lastRunSlot) {
+                return true;
+            }
+            /* Dự phòng khi scheduler lệch mốc slot: vẫn chạy sau đủ Scheduled Time kể từ log gần nhất. */
+            return nowTime >= lastRunUtc.addMinutes(scheduledMinutes);
         }
 
         if (method == METHOD_TIME_BASED) {
