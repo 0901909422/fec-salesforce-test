@@ -191,12 +191,14 @@ public without sharing class FEC_FastCashCaseController {
             res.errorMessage = String.format(System.Label.FEC_MSG_Param_Required, new List<String>{ 'Application Id' });
             return res;
         }
-        String disbChannel = resolveDisbursementChannel(crmId);
-        if (String.isBlank(disbChannel)) {
-            disbChannel = FEC_ConstantCommon.PRODUCT_TYPE_CARD;
-        }
+        FEC_CommonUltils.beginDeferredApiLogging();
+        String disbChannel;
         FEC_CMSIPPBlockWS.ResponseWrapper apiRes;
         try {
+            disbChannel = resolveDisbursementChannel(crmId);
+            if (String.isBlank(disbChannel)) {
+                disbChannel = FEC_ConstantCommon.PRODUCT_TYPE_CARD;
+            }
             apiRes = FEC_CMSIPPBlockWS.cmsIPPBlockWS(
                 FEC_ConstantCommon.REQUESTOR_CRM,
                 crmId,
@@ -215,9 +217,19 @@ public without sharing class FEC_FastCashCaseController {
                 ''
             );
         } catch (Exception e) {
+            FEC_CommonUltils.logApi(
+                'FEC_CMS_IPP_BlockWS',
+                null,
+                FEC_ConstantCommon.API_METHOD_POST,
+                null,
+                null,
+                e.getMessage()
+            );
+            FEC_CommonUltils.flushDeferredApiLogs();
             res.errorMessage = System.Label.FEC_Unknown_Error;
             return res;
         }
+        FEC_CommonUltils.flushDeferredApiLogs();
         if (apiRes == null || apiRes.Sys == null) {
             res.errorMessage = System.Label.FEC_MSG_Response_Null;
             return res;

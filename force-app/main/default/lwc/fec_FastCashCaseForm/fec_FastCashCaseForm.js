@@ -438,15 +438,6 @@ export default class Fec_FastCashCaseForm extends NavigationMixin(LightningEleme
         }
     }
 
-    _persistRequestedAmountBeforeBlock(blockAmount) {
-        this._saveRequestedAmountToStorage();
-        return saveFastCashCaseAmounts({
-            caseId: this.recordId,
-            requestedAmount: blockAmount,
-            maxAmount: this.maxAmountDecimal
-        }).catch(() => undefined);
-    }
-
     //linhdev fix jira FECREDIT_CSM_2025_KH-1366 — Có/Không & block fail: giữ handling (Save/Submit, remark, routing)
     _ensureHandlingModeAfterBlockModal() {
         if (!this.messageContext || !this.recordId) {
@@ -837,8 +828,8 @@ export default class Fec_FastCashCaseForm extends NavigationMixin(LightningEleme
         }
         this.blockLoading = true;
         this.clearBlockMessages();
-        this._persistRequestedAmountBeforeBlock(n)
-            .then(() => executeFastCashBlock({ caseId: this.recordId, blockAmount: n }))
+        this._saveRequestedAmountToStorage();
+        executeFastCashBlock({ caseId: this.recordId, blockAmount: n })
             .then((res) => {
                 this.blockLoading = false;
                 if (res && res.success) {
