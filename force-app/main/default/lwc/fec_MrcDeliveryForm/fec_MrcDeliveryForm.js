@@ -1375,6 +1375,7 @@ export default class Fec_MrcDeliveryForm extends LightningElement {
                 this.deliveryEmailSelected = payload.deliveryEmailSelected === true;
                 this.deliveryAddressSelected = payload.deliveryAddressSelected === true;
                 this.deliveryOfficeSelected = payload.deliveryOfficeSelected === true;
+                this.deliveryPosSelected = payload.deliveryPosSelected === true;
                 try {
                     if (this.wiredInitResult) {
                         await refreshApex(this.wiredInitResult);

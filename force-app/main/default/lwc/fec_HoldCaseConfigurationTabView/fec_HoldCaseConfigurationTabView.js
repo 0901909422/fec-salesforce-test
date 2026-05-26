@@ -203,21 +203,36 @@ export default class Fec_HoldCaseConfigurationTabView extends NavigationMixin(Li
     }
 
     get channelWrapperClass() {
-        return this.errors.channel
-            ? 'slds-combobox_container slds-has-error'
-            : 'slds-combobox_container';
+        let cls = 'slds-combobox slds-dropdown-trigger';
+        if (this.showDropdown) {
+            cls += ' slds-is-open';
+        }
+        if (this.errors.channel) {
+            cls += ' slds-has-error';
+        }
+        return cls;
     }
 
     get currentStatusWrapperClass() {
-        return this.errors.currentStatus
-            ? 'slds-combobox_container slds-has-error'
-            : 'slds-combobox_container';
+        let cls = 'slds-combobox slds-dropdown-trigger';
+        if (this.showCurrentStatusLookup) {
+            cls += ' slds-is-open';
+        }
+        if (this.errors.currentStatus) {
+            cls += ' slds-has-error';
+        }
+        return cls;
     }
 
     get changedStatusWrapperClass() {
-        return this.errors.changedStatus
-            ? 'slds-combobox_container slds-has-error'
-            : 'slds-combobox_container';
+        let cls = 'slds-combobox slds-dropdown-trigger';
+        if (this.showChangedStatusLookup) {
+            cls += ' slds-is-open';
+        }
+        if (this.errors.changedStatus) {
+            cls += ' slds-has-error';
+        }
+        return cls;
     }
 
     get nfuWrapperClass() {

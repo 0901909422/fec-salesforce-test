@@ -659,6 +659,61 @@ public without sharing class FEC_BatchCaseHandlingTemplateHelper {
         return pathOrTitle.trim().toLowerCase().endsWith('.xlsx');
     }
 
+    public static String resolveTemplateNameFromUploadedFileName(
+        String fileName,
+        String userGroup,
+        List<SObject> activeTemplates
+    ) {
+        if (String.isBlank(fileName) || activeTemplates == null || activeTemplates.isEmpty()) {
+            return null;
+        }
+        String bestName;
+        Integer bestScore = -1;
+        for (SObject tr : activeTemplates) {
+            String name = tr.get('Name') == null
+                ? FEC_ConstantCommon.STR_EMPTY
+                : String.valueOf(tr.get('Name')).trim();
+            if (String.isBlank(name) || validateUploadedTemplateFileName(fileName, name) != null) {
+                continue;
+            }
+            Integer score = scoreTemplateFileNameMatch(fileName, name);
+            if (templateRowMatchesUserGroup(tr, userGroup)) {
+                score += 10000;
+            }
+            if (bestName == null || score > bestScore) {
+                bestName = name;
+                bestScore = score;
+            }
+        }
+        return bestName;
+    }
+
+    private static Integer scoreTemplateFileNameMatch(String fileName, String templateName) {
+        String fileCore = fileName.trim().toLowerCase().replace('.xlsx', FEC_ConstantCommon.STR_EMPTY);
+        String expectedCore = templateName.trim().toLowerCase().replace('.xlsx', FEC_ConstantCommon.STR_EMPTY);
+        if (fileCore == expectedCore) {
+            return 100 + expectedCore.length();
+        }
+        if (fileCore.contains(expectedCore)) {
+            return expectedCore.length();
+        }
+        return 0;
+    }
+
+    private static Boolean templateRowMatchesUserGroup(SObject templateRow, String userGroup) {
+        if (String.isBlank(userGroup)) {
+            return true;
+        }
+        SObject bpRel = templateRow.getSObject('FEC_Business_Process__r');
+        String bpCode = bpRel == null || bpRel.get('FEC_Code__c') == null
+            ? FEC_ConstantCommon.STR_EMPTY
+            : String.valueOf(bpRel.get('FEC_Code__c')).trim();
+        String bpName = bpRel == null || bpRel.get('Name') == null
+            ? FEC_ConstantCommon.STR_EMPTY
+            : String.valueOf(bpRel.get('Name')).trim();
+        return userGroupFieldMatches(templateRow, bpCode, bpName, userGroup);
+    }
+
     public static String validateUploadedTemplateFileName(String fileName, String expectedTemplateName) {
         if (String.isBlank(expectedTemplateName)) {
             return null;
