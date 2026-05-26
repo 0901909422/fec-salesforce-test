@@ -883,6 +883,17 @@ public without sharing class FEC_CaseBusinessService {
           'isGsrStage3PropertyInfoReadonly',
           isGsrStage3PropertyInfoReadonly
         );
+        // Chỉ chèn LWC Original Info (Stage 2) khi Updated NOC trùng Original (so với flow history).
+        if (isGsrStage1Revert && !isUpdatedNocDifferentFromCurrent) {
+          FEC_GsrStage1RevertMasterDataHelper.appendStage2OriginalInfoLwc(
+            masterDatalst,
+            masterDataSettingObj,
+            natureOfCaseObj,
+            selectedNatureOfCaseId,
+            templateNatureIdForCaseStages
+          );
+        }
+
         FEC_MrcReturnCaseService.applyRl05CodeFallbacks(
           result,
           selectedCase,
