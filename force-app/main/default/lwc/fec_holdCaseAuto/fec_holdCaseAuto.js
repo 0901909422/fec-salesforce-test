@@ -65,6 +65,7 @@ const MODE_ERROR_RETRY = "ERROR_RETRY";
 const MODE_ERROR_RETRY_INFO_NO_AUTO = "ERROR_RETRY_INFO_NO_AUTO";
 const MODE_INFO_NO_AUTO_ONLY = "INFO_NO_AUTO_ONLY";
 const MODE_SUCCESS_WITH_INFO_NO_AUTO = "SUCCESS_WITH_INFO_NO_AUTO";
+const MODE_SUCCESS_WITH_INFO_HAS_AUTO = "SUCCESS_WITH_INFO_HAS_AUTO";
 const MODE_INFO_HAS_AUTO_BUTTON = "INFO_HAS_AUTO_BUTTON";
 
 export default class Fec_holdCaseAuto extends LightningElement {
@@ -270,6 +271,7 @@ export default class Fec_holdCaseAuto extends LightningElement {
     }
     return (
       this.stage2DisplayMode === MODE_SUCCESS_WITH_INFO_NO_AUTO ||
+      this.stage2DisplayMode === MODE_SUCCESS_WITH_INFO_HAS_AUTO ||
       this.stage2DisplayMode === MODE_ERROR_RETRY_INFO_NO_AUTO ||
       this.stage2DisplayMode === MODE_INFO_NO_AUTO_ONLY ||
       this.stage2DisplayMode === MODE_INFO_HAS_AUTO_BUTTON
@@ -428,7 +430,8 @@ export default class Fec_holdCaseAuto extends LightningElement {
     }
     if (
       this.stage2DisplayMode === MODE_INFO_NO_AUTO_ONLY ||
-      this.stage2DisplayMode === MODE_SUCCESS_WITH_INFO_NO_AUTO
+      this.stage2DisplayMode === MODE_SUCCESS_WITH_INFO_NO_AUTO ||
+      this.stage2DisplayMode === MODE_SUCCESS_WITH_INFO_HAS_AUTO
     ) {
       return false;
     }
