@@ -32,8 +32,9 @@
         <div class="hold-case-auto-manual-action">
           <lightning-button
             variant="brand"
-            label={customLabel.manualHoldCaseAction}
+            label={customLabel.holdCaseRetryAction}
             onclick={handleManualHoldCaseClick}
+            disabled={isHoldCaseRetryDisabled}
           ></lightning-button>
         </div>
       </template>

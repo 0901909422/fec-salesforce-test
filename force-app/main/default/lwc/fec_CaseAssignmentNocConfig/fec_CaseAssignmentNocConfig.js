@@ -1,6 +1,7 @@
 import { LightningElement, api, wire, track } from "lwc";
 import { ShowToastEvent } from "lightning/platformShowToastEvent";
-import { getRecord } from "lightning/uiRecordApi";
+import { RefreshEvent } from "lightning/refresh";
+import { getRecord, getRecordNotifyChange } from "lightning/uiRecordApi";
 import STATUS_FIELD from "@salesforce/schema/FEC_Case_Assignment__c.FEC_Status__c";
 
 import getNocItems from "@salesforce/apex/FEC_CaseAssignmentNocController.getNocItems";
@@ -334,6 +335,11 @@ export default class Fec_CaseAssignmentNocConfig extends LightningElement {
       });
       this.showToast("Success", "Case Assignment NOC saved.", "success");
       this.closeModal();
+      getRecordNotifyChange([{ recordId: this.recordId }]);
+      window.setTimeout(() => {
+        getRecordNotifyChange([{ recordId: this.recordId }]);
+      }, 700);
+      this.dispatchEvent(new RefreshEvent());
       await this.loadItems();
     } catch (e) {
       const msg = e?.body?.message || e?.message || "Could not save Case Assignment NOC.";

@@ -1,6 +1,7 @@
 import { LightningElement, api, wire, track } from "lwc";
 import { CurrentPageReference, NavigationMixin } from "lightning/navigation";
 import { ShowToastEvent } from "lightning/platformShowToastEvent";
+import { RefreshEvent } from "lightning/refresh";
 import USER_ID from "@salesforce/user/Id";
 import { getRecord, getFieldValue, getRecordNotifyChange } from "lightning/uiRecordApi";
 import NAME_FIELD from "@salesforce/schema/User.Name";
@@ -10,6 +11,7 @@ import {
   closeTab,
   openSubtab,
   openTab,
+  refreshTab,
 } from "lightning/platformWorkspaceApi";
 
 import getProductTypeOptions from "@salesforce/apex/FEC_CaseAssignmentNocController.getProductTypeOptions";
@@ -738,6 +740,95 @@ export default class Fec_CaseAssignmentNocNew extends NavigationMixin(LightningE
     this[NavigationMixin.Navigate](pageReference);
   }
 
+  /** Invalidate LDS parent; gọi lại sau ~700ms vì rollup NOC count có thể cập nhật trễ. */
+  notifyParentAssignmentRecordChanged() {
+    if (!this.assignmentRecordId) {
+      return;
+    }
+    getRecordNotifyChange([{ recordId: this.assignmentRecordId }]);
+    window.setTimeout(() => {
+      getRecordNotifyChange([{ recordId: this.assignmentRecordId }]);
+    }, 700);
+  }
+
+  /**
+   * Sau tạo NOC: quay detail + notify LDS để fec_CaseAssignmentDetailSummary refresh related list.
+   */
+  async navigateToAssignmentDetailAfterCreate() {
+    if (!this.assignmentRecordId) {
+      return;
+    }
+
+    this.notifyParentAssignmentRecordChanged();
+
+    const assignmentPageRef = {
+      type: "standard__recordPage",
+      attributes: {
+        recordId: this.assignmentRecordId,
+        objectApiName: "FEC_Case_Assignment__c",
+        actionName: "view",
+      },
+    };
+
+    let tabToClose = this.currentTabId;
+    let parentTabId = null;
+    const isConsole = this.isConsoleNavigation?.data === true;
+    try {
+      const focused = await getFocusedTabInfo();
+      tabToClose = tabToClose || focused.tabId;
+      if (focused.isSubtab && focused.parentTabId) {
+        parentTabId = focused.parentTabId;
+      }
+    } catch (e) {
+      /* ignore */
+    }
+
+    if (isConsole && parentTabId) {
+      try {
+        await openSubtab(parentTabId, {
+          pageReference: assignmentPageRef,
+          focus: true,
+        });
+      } catch (e) {
+        this[NavigationMixin.Navigate](assignmentPageRef);
+      }
+    } else {
+      this[NavigationMixin.Navigate](assignmentPageRef);
+    }
+
+    window.setTimeout(async () => {
+      this.notifyParentAssignmentRecordChanged();
+
+      try {
+        if (isConsole) {
+          let refreshTabId = parentTabId;
+          if (!refreshTabId) {
+            const focusedAfterNav = await getFocusedTabInfo();
+            refreshTabId = focusedAfterNav.tabId;
+          }
+          if (refreshTabId) {
+            await refreshTab(refreshTabId, { includeAllSubtabs: true });
+          }
+        } else {
+          this.dispatchEvent(new RefreshEvent());
+        }
+      } catch (refreshErr) {
+        this.dispatchEvent(new RefreshEvent());
+      }
+
+      try {
+        if (tabToClose) {
+          const focusedNow = await getFocusedTabInfo();
+          if (focusedNow.tabId !== tabToClose) {
+            await closeTab(tabToClose);
+          }
+        }
+      } catch (closeErr) {
+        /* ignore */
+      }
+    }, 600);
+  }
+
   handleCancel() {
     if (this.isEditMode && this.nocRecordId) {
       this[NavigationMixin.Navigate]({
@@ -797,8 +888,13 @@ export default class Fec_CaseAssignmentNocNew extends NavigationMixin(LightningE
             subCodeId: this.selectedSubCodeId || null,
           });
       this.showToast("Success", "Case Assignment NOC saved.", "success");
+      if (this.assignmentRecordId && !this.isEditMode) {
+        await this.navigateToAssignmentDetailAfterCreate();
+        return;
+      }
       if (this.assignmentRecordId) {
-        getRecordNotifyChange([{ recordId: this.assignmentRecordId }]);
+        this.notifyParentAssignmentRecordChanged();
+        this.dispatchEvent(new RefreshEvent());
       }
       await this.navigateAfterSave(nocId);
     } catch (e) {
