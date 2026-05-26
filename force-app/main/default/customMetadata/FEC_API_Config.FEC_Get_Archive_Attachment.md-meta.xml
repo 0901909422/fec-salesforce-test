@@ -3,10 +3,6 @@
     <label>Get Archive Attachment</label>
     <protected>false</protected>
     <values>
-        <field>EndpointV2__c</field>
-        <value xsi:nil="true"/>
-    </values>
-    <values>
         <field>FEC_API_Key__c</field>
         <value xsi:nil="true"/>
     </values>
@@ -48,10 +44,6 @@
     </values>
     <values>
         <field>FEC_Use_Named_Credential__c</field>
-        <value xsi:type="xsd:boolean">false</value>
-    </values>
-    <values>
-        <field>UseV2__c</field>
         <value xsi:type="xsd:boolean">false</value>
     </values>
 </CustomMetadata>
