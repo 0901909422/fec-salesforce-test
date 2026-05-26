@@ -495,10 +495,6 @@ public without sharing class FEC_MrcReturnCaseService {
             needsDeliveryLwc(ctx)) {
             return true;
         }
-        if (String.isNotBlank(subSectionName) &&
-            subSectionName.toLowerCase().contains('rd payment')) {
-            return true;
-        }
         return false;
     }
 

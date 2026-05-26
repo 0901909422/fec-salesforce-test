@@ -25,7 +25,7 @@
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
-        <apexClass>FEC_ApplicationListTriggerHandler</apexClass>
+        <apexClass>FEC_CustomerHistoryTriggerHandler</apexClass>
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
@@ -109,7 +109,27 @@
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
+        <apexClass>FEC_BatchCaseChainQueueable</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
         <apexClass>FEC_BatchCaseCreationController</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_BatchCaseCreationPendingService</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_BatchCaseCreationProcessBatch</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_BatchCaseCreationProcessQueueable</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_BatchCaseCreationScheduler</apexClass>
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
@@ -218,6 +238,10 @@
     </classAccesses>
     <classAccesses>
         <apexClass>FEC_COFFraudRelatedHandler</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_CancelCSCaseRestService</apexClass>
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
@@ -493,6 +517,10 @@
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
+        <apexClass>FEC_CreateCSCaseRestService</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
         <apexClass>FEC_CreateCSCaseService</apexClass>
         <enabled>true</enabled>
     </classAccesses>
@@ -665,11 +693,27 @@
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
+        <apexClass>FEC_GetCSAttachedFileRestService</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_GetCSCaseStatusRestService</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
         <apexClass>FEC_GetCSCaseStatusService</apexClass>
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
+        <apexClass>FEC_GetCSMasterDataByCodeRestService</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
         <apexClass>FEC_GetCSMasterDataByCodeService</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_GetCSMasterDataRestService</apexClass>
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
@@ -922,6 +966,10 @@
     </classAccesses>
     <classAccesses>
         <apexClass>FEC_MrcReturnCaseServiceTest</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_MyCaseSoapXml</apexClass>
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>

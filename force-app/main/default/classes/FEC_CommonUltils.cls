@@ -561,6 +561,28 @@ public with sharing class FEC_CommonUltils {
     }
   }
 
+  /**
+   * Ghép base (vd callout:FECredit_Service) + path CMDT, luôn có '/' giữa hai phần.
+   * Tránh lỗi callout:FECredit_Serviceesb/... khi path CMDT thiếu dấu / đầu.
+   */
+  public static String buildCalloutEndpoint(String baseEndpoint, String pathSuffix) {
+    if (String.isBlank(baseEndpoint)) {
+      return pathSuffix;
+    }
+    if (String.isBlank(pathSuffix)) {
+      return baseEndpoint;
+    }
+    String base = baseEndpoint.trim();
+    String path = pathSuffix.trim();
+    while (path.startsWith('/')) {
+      path = path.substring(1);
+    }
+    if (base.endsWith('/')) {
+      return base + path;
+    }
+    return base + '/' + path;
+  }
+
   public static HttpResponse calloutApi(
     String endpoint,
     String method,
@@ -957,6 +979,37 @@ public with sharing class FEC_CommonUltils {
       .addTextNode(value == null ? '' : value);
   }
 
+  @TestVisible
+  private static Integer deferredApiLogDepth = 0;
+  private static List<FEC_API_Log__c> deferredApiLogs = new List<FEC_API_Log__c>();
+
+  /**
+   * Hoãn insert FEC_API_Log__c cho tới flushDeferredApiLogs — dùng khi nhiều callout trong một transaction.
+   */
+  public static void beginDeferredApiLogging() {
+    deferredApiLogDepth++;
+  }
+
+  public static void flushDeferredApiLogs() {
+    if (deferredApiLogDepth <= 0) {
+      return;
+    }
+    deferredApiLogDepth--;
+    if (deferredApiLogDepth > 0) {
+      return;
+    }
+    List<FEC_API_Log__c> toInsert = deferredApiLogs;
+    deferredApiLogs = new List<FEC_API_Log__c>();
+    if (toInsert.isEmpty()) {
+      return;
+    }
+    try {
+      insert toInsert;
+    } catch (Exception e) {
+      System.debug('FEC_CommonUltils.flushDeferredApiLogs: ' + e.getMessage());
+    }
+  }
+
   public static void logApi(
     String apiName,
     String endpoint,
@@ -979,6 +1032,11 @@ public with sharing class FEC_CommonUltils {
       log.FEC_Response_String__c = responseBody;
       log.FEC_Is_Success__c = isSuccess;
       log.FEC_Error_Message__c = errorMessage;
+
+      if (deferredApiLogDepth > 0) {
+        deferredApiLogs.add(log);
+        return;
+      }
 
       insert log;
 
@@ -1569,7 +1627,7 @@ public with sharing class FEC_CommonUltils {
     return upper;
   }
   public static Boolean isCccd(String value) {
-      return String.isNotBlank(value) && Pattern.matches(FEC_ConstantCommon.INPUT_SEPARATOR_REGEX_12, value.trim());
-    }
+    return String.isNotBlank(value) && Pattern.matches(FEC_ConstantCommon.INPUT_SEPARATOR_REGEX_12, value.trim());
+  }
 
 }

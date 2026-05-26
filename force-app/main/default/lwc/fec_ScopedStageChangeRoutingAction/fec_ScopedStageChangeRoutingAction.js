@@ -1,4 +1,11 @@
-import { LightningElement, api, track } from "lwc";
+import { LightningElement, api, track, wire } from "lwc";
+import {
+  subscribe,
+  unsubscribe,
+  MessageContext,
+  APPLICATION_SCOPE,
+} from "lightning/messageService";
+import ROUTE_TO_TEAM_SELECTION from "@salesforce/messageChannel/FEC_Route_To_Team_Selection__c";
 import getRouteToTeamOptions from "@salesforce/apex/FEC_ScopedStageChangeRoutingService.getRouteToTeamOptions";
 import FEC_Action_Label from "@salesforce/label/c.FEC_Action_Label";
 import FEC_Team_Label from "@salesforce/label/c.FEC_Team_Label";
@@ -20,6 +27,16 @@ function extractStageNumber(stageName) {
 function scopedActionDebug(label, payload) {
   console.log(`[RD-Payment-Scoped][ScopedAction] ${label}`, payload ?? "");
 }
+
+function normalizeTeamCode(value) {
+  return String(value ?? "")
+    .trim()
+    .toUpperCase();
+}
+
+const ACTION_ROUTE_TO = "Route to";
+/** Chỉ message / API từ fec_Rl0502RdPaymentRouting mới được auto-chọn Team. */
+const ROUTE_TO_TEAM_SOURCE_RL0502 = "RL05.02";
 
 /**
  * Routing Action cho Document Request / Original MRC Return — Stage 2+ chọn Team từ FEC_Stage_Change__c.
@@ -59,6 +76,13 @@ export default class Fec_ScopedStageChangeRoutingAction extends LightningElement
   @track _teamOptionsResolved = false;
   /** Selection ép từ parent (vd RD Payment assessment) — giữ sau khi reload options. */
   _pendingForcedSelection = null;
+  /** Team chờ apply sau khi getRouteToTeamOptions load — chỉ RL05.02. */
+  _pendingRouteToTeamCode = null;
+  _pendingRouteToTeamSource = null;
+  _routeToTeamSubscription = null;
+
+  @wire(MessageContext)
+  messageContext;
 
   labels = {
     actionLabel: FEC_Action_Label,
@@ -251,6 +275,125 @@ export default class Fec_ScopedStageChangeRoutingAction extends LightningElement
     this._logUiState("after-applyRoutingSelection");
   }
 
+  /**
+   * RL05.02 only — auto-chọn Team trên Route to (không dùng cho RL16 / Document Request).
+   * @returns {boolean}
+   */
+  @api
+  selectRouteToTeamForRl0502(teamCode) {
+    const code = normalizeTeamCode(teamCode);
+    if (!code) {
+      return false;
+    }
+    scopedActionDebug("selectRouteToTeamForRl0502", { teamCode: code });
+    return this._applyRl0502TeamSelection({ team: code });
+  }
+
+  _findOptionForTeam(teamCode) {
+    const code = normalizeTeamCode(teamCode);
+    if (!code || !Array.isArray(this.allOptions) || !this.allOptions.length) {
+      return null;
+    }
+    return (
+      this.allOptions.find((o) => normalizeTeamCode(o.team) === code) ||
+      null
+    );
+  }
+
+  _applyRl0502TeamSelection(opt) {
+    const teamCode = normalizeTeamCode(opt?.team);
+    if (!teamCode) {
+      return false;
+    }
+    let match = null;
+    if (opt?.stageChangeId) {
+      match =
+        this.allOptions.find((o) => o.stageChangeId === opt.stageChangeId) ||
+        opt;
+    }
+    if (!match?.stageChangeId) {
+      match = this._findOptionForTeam(teamCode);
+    }
+    if (!match?.stageChangeId) {
+      this._pendingRouteToTeamCode = teamCode;
+      this._pendingRouteToTeamSource = ROUTE_TO_TEAM_SOURCE_RL0502;
+      return false;
+    }
+    const merged = {
+      ...match,
+      team: match.team || teamCode,
+      queueLabel: opt?.queueLabel || match.queueLabel,
+      queueDeveloperName:
+        opt?.queueDeveloperName || match.queueDeveloperName,
+      queueValue: opt?.queueValue ?? match.queueValue,
+    };
+    this._pendingRouteToTeamCode = null;
+    this._pendingRouteToTeamSource = null;
+    this._pendingForcedSelection = merged;
+    this._mergeForcedOptionIntoAllOptions(merged);
+    this._applySelection(merged);
+    return true;
+  }
+
+  _applyPendingRouteToTeamIfAny() {
+    if (
+      !this._pendingRouteToTeamCode ||
+      this._pendingRouteToTeamSource !== ROUTE_TO_TEAM_SOURCE_RL0502
+    ) {
+      return;
+    }
+    const code = this._pendingRouteToTeamCode;
+    if (this._applyRl0502TeamSelection({ team: code })) {
+      this._notifySelectionChange();
+      this._logUiState("after-pending-rl0502-route-to-team");
+    }
+  }
+
+  _handleRouteToTeamSelectionMessage(message) {
+    const payload = message ?? {};
+    if (payload.source !== ROUTE_TO_TEAM_SOURCE_RL0502) {
+      return;
+    }
+    if (
+      payload.caseId &&
+      this.recordId &&
+      payload.caseId !== this.recordId
+    ) {
+      return;
+    }
+    const actionCode = String(payload.actionCode ?? ACTION_ROUTE_TO).trim();
+    if (actionCode && actionCode !== ACTION_ROUTE_TO) {
+      return;
+    }
+    const team = payload.team;
+    if (!team) {
+      return;
+    }
+    scopedActionDebug("rl0502-route-to-team-message:received", payload);
+    this._applyRl0502TeamSelection({
+      team,
+      queueLabel: payload.queueLabel,
+      queueDeveloperName: payload.queueDeveloperName,
+      queueValue: payload.queueValue,
+      stageChangeId: payload.stageChangeId,
+    });
+    if (this.selectedTeam) {
+      this._notifySelectionChange();
+    }
+  }
+
+  _subscribeRouteToTeamSelection() {
+    if (this._routeToTeamSubscription || !this.messageContext) {
+      return;
+    }
+    this._routeToTeamSubscription = subscribe(
+      this.messageContext,
+      ROUTE_TO_TEAM_SELECTION,
+      (message) => this._handleRouteToTeamSelectionMessage(message),
+      { scope: APPLICATION_SCOPE },
+    );
+  }
+
   _logUiState(trigger) {
     scopedActionDebug(`ui-state:${trigger}`, {
       lockRouteToTeamSelection: this.lockRouteToTeamSelection,
@@ -288,10 +431,19 @@ export default class Fec_ScopedStageChangeRoutingAction extends LightningElement
   }
 
   connectedCallback() {
+    this._subscribeRouteToTeamSelection();
     this._maybeLoadTeamOptions();
   }
 
+  disconnectedCallback() {
+    if (this._routeToTeamSubscription) {
+      unsubscribe(this._routeToTeamSubscription);
+      this._routeToTeamSubscription = null;
+    }
+  }
+
   renderedCallback() {
+    this._subscribeRouteToTeamSelection();
     this._maybeLoadTeamOptions();
   }
 
@@ -326,6 +478,11 @@ export default class Fec_ScopedStageChangeRoutingAction extends LightningElement
         this.allOptions = data || [];
         if (this._pendingForcedSelection) {
           this._applyPendingForcedSelectionIfAny();
+        } else if (
+          this._pendingRouteToTeamCode &&
+          this._pendingRouteToTeamSource === ROUTE_TO_TEAM_SOURCE_RL0502
+        ) {
+          this._applyPendingRouteToTeamIfAny();
         } else if (this.allOptions.length === 1) {
           this._applySelection(this.allOptions[0]);
         }

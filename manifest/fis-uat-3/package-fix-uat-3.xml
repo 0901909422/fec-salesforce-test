@@ -89,6 +89,7 @@
 		<members>FEC_BatchCaseHandlingExportRow</members>
 		<members>FEC_BatchCaseHandlingExportService</members>
 		<members>FEC_SalesChannelFromApplicationService</members>
+		<members>FEC_CustomerHistoryTriggerHandler</members>
 		<members>FEC_AutoHoldCaseQueueable</members>
 		<members>FEC_AutoHoldCaseService</members>
 		<members>FEC_MrcDuplicateCaseService</members>
@@ -153,7 +154,13 @@
 		<members>FEC_DownloadReportJob</members>
 		<members>FEC_DownloadReportScheduler</members>
 		<members>FEC_DownloadReportService</members>
+		<members>FEC_BatchCaseChainQueueable</members>
 		<members>FEC_BatchCaseCreationController</members>
+		<members>FEC_BatchCaseCreationPendingService</members>
+		<members>FEC_BatchCaseCreationProcessBatch</members>
+		<members>FEC_BatchCaseCreationProcessQueueable</members>
+		<members>FEC_BatchCaseCreationScheduler</members>
+		<members>FEC_BatchCaseCreationSchedulerTest</members>
 		<members>FEC_BatchCaseCreationService</members>
 		<members>FEC_BatchDataCreationController</members>
 		<members>FEC_BatchImportCommon</members>
@@ -171,12 +178,14 @@
         <members>FEC_ImportedInteractionBatch</members>
         <members>FEC_RDPaymentContractAssessmentService</members>
         <members>FEC_CustomerIntegrationService</members>
+        <members>FEC_CardLockUnLockController</members>
 		<name>Apexclass</name>
 	</types>
     <types>
         <members>FEC_AssignmentTrigger</members>
         <members>FEC_CaseAssignmentNOCTrigger</members>
         <members>FEC_CaseAssignmentTrigger</members>
+        <members>FEC_CustomerHistoryTrigger</members>
         <name>ApexTrigger</name>
     </types>
     <types>
@@ -267,6 +276,7 @@
         <members>fec_ScopedStageChangeRouting</members>
         <members>fec_ScopedStageChangeRoutingAction</members>
         <members>fec_RdPaymentRoutingUtils</members>
+        <members>fec_Rl0502RdPaymentRouting</members>
 		<members>fecRoutingAssignmentEditForm</members>
 		<members>fec_DownloadReports</members>
 		<members>fec_BatchDataCreation</members>
@@ -293,6 +303,7 @@
         <members>Case.FEC_IsImported__c</members>
 		<members>FEC_Assignment__c.FEC_Submitted_On__c</members>
 		<members>FEC_Assignment__c.FEC_Assignment_Name__c</members>
+        <members>FEC_Assignment__c.FEC_Draft_Assignment_Remark__c</members>
         <members>FEC_Address_Info__c.FEC_Parent_Address__c</members>
         <members>FEC_Additional_Info__c.FEC_Customer_Service_Staff_Type__c</members>
 		<members>FEC_Action_Button__c.FEC_Code__c</members>
@@ -435,6 +446,7 @@
         <members>FEC_MRC_RL0502_Dup_Open_Case_Btn</members>
 		<members>FEC_Transfer_Err_Remark_Null</members>
         <members>FEC_BCH_AddFilterRow</members>
+        <members>FEC_BCH_ActionImportUpdate</members>
         <members>FEC_BCH_AttachHas</members>
         <members>FEC_BCH_AttachNo</members>
         <members>FEC_BCH_FilterColCondition</members>
@@ -692,12 +704,14 @@
         <members>FEC_Case_Assignment_Logs__c-Case Assignment Log Layout</members>
         <members>FEC_Currency_Code__c-Currency Code Layout</members>
         <members>FEC_Case_Assignment__c-Case Assignment Layout</members>
+        <members>FEC_Notification_Template_Channel__c-Notification Template Channel Layout</members>
 		<name>Layout</name>
 	</types>
     <types>
 		<members>FEC_Case_Information_Edit</members>
 		<members>FEC_Case_NOC</members>
 		<members>FEC_DoNotBother</members>
+        <members>FEC_Route_To_Team_Selection</members>
         <name>LightningMessageChannel</name>
     </types>
 	<types>

@@ -102,17 +102,13 @@ public without sharing class FEC_BatchCaseHandlingCaseFilter {
             return FEC_ConstantCommon.STR_EMPTY;
         }
         String scopeWhere = String.join(scopeWhereParts, ' AND ');
-        Set<Id> caseIdsWithAttachment = new Set<Id>();
-        String linkSoql =
-            'SELECT LinkedEntityId FROM ContentDocumentLink ' +
-            'WHERE LinkedEntityId IN (SELECT Id FROM Case WHERE ' +
-            scopeWhere +
-            ')';
-        for (ContentDocumentLink cdl : (List<ContentDocumentLink>) Database.query(linkSoql)) {
-            if (cdl.LinkedEntityId != null) {
-                caseIdsWithAttachment.add(cdl.LinkedEntityId);
+        Set<Id> scopeCaseIds = new Set<Id>();
+        for (Case scopeCase : (List<Case>) Database.query('SELECT Id FROM Case WHERE ' + scopeWhere)) {
+            if (scopeCase.Id != null) {
+                scopeCaseIds.add(scopeCase.Id);
             }
         }
+        Set<Id> caseIdsWithAttachment = FEC_BatchCaseHandlingExportService.resolveVisibleCaseIdsWithAttachments(scopeCaseIds);
         if (wantHas) {
             if (caseIdsWithAttachment.isEmpty()) {
                 return 'Id = null';
