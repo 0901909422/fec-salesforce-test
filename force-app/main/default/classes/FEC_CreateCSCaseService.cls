@@ -4,6 +4,7 @@ global with sharing class FEC_CreateCSCaseService {
     
     // =================================================
     // SOAP ENTRY POINT (WSDL COMPATIBLE)
+    // REST/XML: FEC_CreateCSCaseRestService → FEC_MyCaseSoapXml.parseCreateCSCaseRequest → CreateCSCaseRequest
     // =================================================
      webService  static CreateCSCaseResponse CreateCSCaseRequest(
         CaseRequestType req
@@ -33,22 +34,13 @@ global with sharing class FEC_CreateCSCaseService {
             CustomerResponse customerResp = getCustomerInfo(req.CustomerInfo.ContractOrAccountNumber);
             // -------------------------
             // CREATE INTERACTION CASE
+            // //Thangtv: MyCase API — channel/review/submitted qua createInteractionCaseMyCaseAPI
             // -------------------------
             FEC_CreateCaseHandler.FEC_InteractionCaseDTO interactionDTO =
-                new FEC_CreateCaseHandler.FEC_InteractionCaseDTO();
-            
-            String subChannel = String.isNotBlank(req.Sys.SubChannel)? req.Sys.SubChannel.trim(): null;
-            
-            if (internalSystems.contains(subChannel)) {
-                interactionDTO.channel = FEC_ConstantCommon.CHANNEL_INTERNAL;
-                interactionDTO.subChannel = subChannel;
-            } else if (externalSystems.contains(subChannel)) {
-                interactionDTO.channel = FEC_ConstantCommon.CHANNEL_EXTERNAL;
-                interactionDTO.subChannel = subChannel;
-            } 
-            interactionDTO.phoneNumber = req.CustomerInfo.PhoneNumber;
-            interactionDTO.email = req.CustomerInfo.EmailAddress;
-            
+                FEC_MyCaseSoapXml.buildInteractionCaseDto(req);
+            Id creatorOwnerId = resolveOwnerIdByCreatorEmail(req);
+            interactionDTO.ownerUserId = creatorOwnerId;
+
             FEC_CreateCaseHandler.FEC_InteractionCaseResponse interactionResp =
                 FEC_CreateCaseHandler.createInteractionCaseMyCaseAPI(interactionDTO);
             
@@ -95,12 +87,18 @@ global with sharing class FEC_CreateCSCaseService {
                 customerDTO.customerHistoryId = custHistoryRec.Id;
             }
             customerDTO.remarks     = req.RequestInfo.Remarks;
-            
-            Case customerCase = FEC_CreateCaseHandler.createCustomerCase(
+            customerDTO.ownerUserId = creatorOwnerId; //Thangtv: CreatorEmail
+
+            //Thangtv: Customer Case MyCase API — submitted + review mode + FEC_Channel__c từ Sys.Channel
+            String channelFromXml = req.Sys != null && String.isNotBlank(req.Sys.Channel)
+                ? req.Sys.Channel.trim()
+                : null;
+            Case customerCase = FEC_CreateCaseHandler.createCustomerCaseMyCaseAPI(
                 customerDTO,
-            interactionResp.caseId
-                );
-            
+                interactionResp.caseId,
+                channelFromXml
+            );
+
             // Reload to get Link ID
             customerCase = [
                 SELECT Id, FEC_Link_ID__c
@@ -214,19 +212,28 @@ global with sharing class FEC_CreateCSCaseService {
             }
         }
         
-        ctx.businessProcessId = validateCaseType(request.CaseType, sys.TransactionID).Id;
-        ctx.productTypeId    = validateProductType(request.ProductType, sys.TransactionID).Id;
-        ctx.categoryId       = validateCategory(request.Category, sys.TransactionID).Id;
-        ctx.subCategoryId    = validateSubCategory(request.SubCategory, sys.TransactionID).Id;
+        FEC_Business_Process__c businessProcess = validateCaseType(
+            request.CaseType,
+            sys.TransactionID
+        );
+        FEC_Product_Type__c productTypeRec = validateProductType(
+            request.ProductType,
+            sys.TransactionID
+        );
+        FEC_Category__c categoryRec = validateCategory(
+            request.Category,
+            sys.TransactionID
+        );
+
+        ctx.businessProcessId = businessProcess.Id;
+        ctx.productTypeId = productTypeRec.Id;
+        ctx.categoryId = categoryRec.Id;
+        ctx.subCategoryId = validateSubCategory(request.SubCategory, sys.TransactionID).Id;
         
         if (!String.isBlank(request.SubCode)) {
             ctx.subCodeId = validateSubCode(request.SubCode, sys.TransactionID).Id;
         }
-        
-        if(String.isBlank(request.SubCode)){
-            throw new ValidationException(sys.TransactionID,System.Label.FEC_CS_CASE_ERROR_CODE, System.Label.FEC_CS_CASE_SUBCODE_REQUIRED_MSG);
-        }
-        
+
         if(String.isBlank(request.Remarks)){
             throw new ValidationException(sys.TransactionID,System.Label.FEC_CS_CASE_ERROR_CODE, System.Label.FEC_CS_CASE_REMARKS_REQUIRED_MSG);
         }
@@ -241,7 +248,79 @@ global with sharing class FEC_CreateCSCaseService {
                     throw new ValidationException(sys.TransactionID,System.Label.FEC_CS_CASE_ERROR_CODE, System.Label.FEC_CS_CASE_ADDITIONAL_INFO_VALUE_REQUIRED_MSG);
             }
         }
+
+        //Thangtv: kiểm tra tồn tại Nature of Case (Channel + BP/Product/Category code + SubCategory/SubCode)
+        validateNatureOfCase(
+            sys.Channel,
+            businessProcess.FEC_Code__c,
+            productTypeRec.FEC_Code__c,
+            categoryRec.FEC_Code__c,
+            request.SubCategory,
+            request.SubCode,
+            sys.TransactionID
+        );
+
         return ctx;
+    }
+
+    //Thangtv — SubCode optional: khi null thì match NOC có FEC_Sub_Code__c = null
+    private static void validateNatureOfCase(
+        String channel,
+        String caseTypeCode,
+        String productTypeCode,
+        String categoryCode,
+        String subCategory,
+        String subCode,
+        String transactionId
+    ) {
+        if (
+            String.isBlank(channel) ||
+            String.isBlank(caseTypeCode) ||
+            String.isBlank(productTypeCode) ||
+            String.isBlank(categoryCode) ||
+            String.isBlank(subCategory)
+        ) {
+            return;
+        }
+
+        String channelPattern = '%' + channel.trim() + '%';
+        List<FEC_Nature_of_Case__c> natureOfCases;
+
+        if (String.isNotBlank(subCode)) {
+            natureOfCases = [
+                SELECT Id, Name, FEC_Channel__c, FEC_Active__c
+                FROM FEC_Nature_of_Case__c
+                WHERE FEC_Channel__c LIKE :channelPattern
+                AND FEC_Business_Process__r.FEC_Code__c = :caseTypeCode
+                AND FEC_Product_Type__r.FEC_Code__c = :productTypeCode
+                AND FEC_Category__r.FEC_Code__c = :categoryCode
+                AND FEC_Sub_Category__r.FEC_Name_VN__c = :subCategory
+                AND FEC_Sub_Code__r.FEC_Name_VN__c = :subCode
+                AND FEC_Active__c = TRUE
+                LIMIT 1
+            ];
+        } else {
+            natureOfCases = [
+                SELECT Id, Name, FEC_Channel__c, FEC_Active__c
+                FROM FEC_Nature_of_Case__c
+                WHERE FEC_Channel__c LIKE :channelPattern
+                AND FEC_Business_Process__r.FEC_Code__c = :caseTypeCode
+                AND FEC_Product_Type__r.FEC_Code__c = :productTypeCode
+                AND FEC_Category__r.FEC_Code__c = :categoryCode
+                AND FEC_Sub_Category__r.FEC_Name_VN__c = :subCategory
+                AND FEC_Sub_Code__c = NULL
+                AND FEC_Active__c = TRUE
+                LIMIT 1
+            ];
+        }
+
+        if (natureOfCases.isEmpty()) {
+            throw new ValidationException(
+                transactionId,
+                System.Label.FEC_CS_CASE_ERROR_CODE,
+                System.Label.FEC_MSG_Nature_Of_Case_Id_Invalid
+            );
+        }
     }
     
     //==================================================
@@ -286,6 +365,37 @@ global with sharing class FEC_CreateCSCaseService {
     }
     
     
+    /**
+     * CreatorInfo.CreatorEmail → User.Id làm Case Owner (Interaction + Customer).
+     * //Thangtv
+     */
+    private static Id resolveOwnerIdByCreatorEmail(CaseRequestType req) {
+        if (req == null || req.CreatorInfo == null || String.isBlank(req.CreatorInfo.CreatorEmail)) {
+            return null;
+        }
+
+        String email = req.CreatorInfo.CreatorEmail.trim();
+        String txnId = req.Sys != null ? req.Sys.TransactionID : null;
+
+        List<User> users = [
+            SELECT Id
+            FROM User
+            WHERE IsActive = TRUE
+            AND Email = :email
+            LIMIT 1
+        ];
+
+        if (users.isEmpty()) {
+            throw new ValidationException(
+                txnId,
+                System.Label.FEC_CS_CASE_ERROR_CODE,
+                System.Label.FEC_CS_CASE_INVALID_CREATOR_EMAIL_MSG
+            );
+        }
+
+        return users[0].Id;
+    }
+
     // =================================================
     // CUSTOMER VALIDATION
     // =================================================
@@ -353,11 +463,11 @@ global with sharing class FEC_CreateCSCaseService {
         }
         
         List<FEC_Business_Process__c> processes = [
-        SELECT Id, Name, FEC_Active__c
-        FROM FEC_Business_Process__c
-        WHERE Name = :caseType
-        LIMIT 1
-    ];
+            SELECT Id, Name, FEC_Code__c, FEC_Active__c
+            FROM FEC_Business_Process__c
+            WHERE FEC_Code__c = :caseType
+            LIMIT 1
+        ];
         
         if (processes.isEmpty() || processes[0].FEC_Active__c != true) {
             throw new ValidationException(
@@ -386,11 +496,11 @@ global with sharing class FEC_CreateCSCaseService {
         }
         
         List<FEC_Product_Type__c> productTypes = [
-        SELECT Id, FEC_Name_VN__c, FEC_Active__c
-        FROM FEC_Product_Type__c
-        WHERE FEC_Name_VN__c = :productType
-        LIMIT 1
-    ];
+            SELECT Id, FEC_Name_VN__c, FEC_Code__c, FEC_Active__c
+            FROM FEC_Product_Type__c
+            WHERE FEC_Code__c = :productType
+            LIMIT 1
+        ];
         
         if (productTypes.isEmpty() || productTypes[0].FEC_Active__c != true) {
             throw new ValidationException(
@@ -419,11 +529,11 @@ global with sharing class FEC_CreateCSCaseService {
         }
         
         List<FEC_Category__c> categories = [
-        SELECT Id, Name,FEC_Name_VN__c, FEC_Active__c
-        FROM FEC_Category__c
-        WHERE Name = :category
-        LIMIT 1
-    ];
+            SELECT Id, Name, FEC_Name_VN__c, FEC_Code__c, FEC_Active__c
+            FROM FEC_Category__c
+            WHERE FEC_Code__c = :category
+            LIMIT 1
+        ];
         
         if (categories.isEmpty() || categories[0].FEC_Active__c != true) {
             throw new ValidationException(

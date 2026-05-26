@@ -320,15 +320,17 @@ public without sharing class FEC_AutoHoldCaseService {
         if (ROUTING_ACTION_RESOLVE.equalsIgnoreCase(history.FEC_Routing_Action__c)) {
             config = findMatchingAutoConfigForResolve(
                 nocId,
+                stageIdForConfig,
                 history.FEC_Changed_Status__c
             );
             if (config == null) {
-                config = findFirstAutoHoldConfigForStage(nocId);
+                config = findFirstAutoHoldConfigForStage(nocId, stageIdForConfig);
             }
         }
         if (config == null) {
             config = findMatchingAutoConfig(
                 nocId,
+                stageIdForConfig,
                 configCurrentStatus,
                 configChangedStatus
             );
@@ -337,7 +339,7 @@ public without sharing class FEC_AutoHoldCaseService {
             config == null &&
             ROUTING_ACTION_HOLD_CASE.equalsIgnoreCase(history.FEC_Routing_Action__c)
         ) {
-            config = findFirstAutoHoldConfigForStage(nocId);
+            config = findFirstAutoHoldConfigForStage(nocId, stageIdForConfig);
         }
         if (config == null || String.isBlank(config.FEC_NFU_Code__c)) {
             completeHoldCaseRetryFailure(history, caseId);
@@ -475,6 +477,7 @@ public without sharing class FEC_AutoHoldCaseService {
             WHERE FEC_Nature_of_Cases__c IN :nocIds
               AND Hold_Case_Type__c = :HOLD_CASE_TYPE_AUTO
               AND FEC_Active__c = TRUE
+              AND FEC_Case_Stage__c = :stageIdForConfig
             LIMIT 1
         ];
         if (!configs.isEmpty() && configs[0].FEC_Nature_of_Cases__c != null) {
@@ -490,13 +493,14 @@ public without sharing class FEC_AutoHoldCaseService {
     @TestVisible
     private static FEC_Hold_Case_Config__c findMatchingAutoConfigForResolve(
         Id nocId,
+        Id caseStageId,
         String changedStatus
     ) {
-        if (nocId == null) {
+        if (nocId == null || caseStageId == null) {
             return null;
         }
 
-        for (FEC_Hold_Case_Config__c cfg : queryAutoHoldConfigs(nocId)) {
+        for (FEC_Hold_Case_Config__c cfg : queryAutoHoldConfigs(nocId, caseStageId)) {
             if (statusConfigContains(cfg.FEC_Changed_Status__c, changedStatus)) {
                 return cfg;
             }
@@ -504,10 +508,13 @@ public without sharing class FEC_AutoHoldCaseService {
         return null;
     }
 
-    /** Resolve: NFU code Auto Hold đầu tiên theo NOC (config thường khai báo Stage 1) khi không khớp Changed = Resolved. */
+    /** Resolve: NFU code Auto Hold đầu tiên theo NOC + stage khi không khớp Changed = Resolved. */
     @TestVisible
-    private static FEC_Hold_Case_Config__c findFirstAutoHoldConfigForStage(Id nocId) {
-        if (nocId == null) {
+    private static FEC_Hold_Case_Config__c findFirstAutoHoldConfigForStage(
+        Id nocId,
+        Id caseStageId
+    ) {
+        if (nocId == null || caseStageId == null) {
             return null;
         }
         List<FEC_Hold_Case_Config__c> configs = [
@@ -523,6 +530,7 @@ public without sharing class FEC_AutoHoldCaseService {
             WHERE (FEC_Nature_of_Cases__c = :nocId OR FEC_Nature_of_Cases__c = NULL)
               AND Hold_Case_Type__c = :HOLD_CASE_TYPE_AUTO
               AND FEC_Active__c = TRUE
+              AND FEC_Case_Stage__c = :caseStageId
               AND FEC_NFU_Code__c != NULL
             LIMIT 1
         ];
@@ -532,14 +540,15 @@ public without sharing class FEC_AutoHoldCaseService {
     @TestVisible
     private static FEC_Hold_Case_Config__c findMatchingAutoConfig(
         Id nocId,
+        Id caseStageId,
         String currentStatus,
         String changedStatus
     ) {
-        if (nocId == null) {
+        if (nocId == null || caseStageId == null) {
             return null;
         }
 
-        List<FEC_Hold_Case_Config__c> configs = queryAutoHoldConfigs(nocId);
+        List<FEC_Hold_Case_Config__c> configs = queryAutoHoldConfigs(nocId, caseStageId);
 
         for (FEC_Hold_Case_Config__c cfg : configs) {
             if (
@@ -552,8 +561,11 @@ public without sharing class FEC_AutoHoldCaseService {
         return null;
     }
 
-    /** Config Auto cho NOC — không lọc FEC_Case_Stage__c (đồng bộ FEC_HoldCaseStage2DisplayService). */
-    private static List<FEC_Hold_Case_Config__c> queryAutoHoldConfigs(Id nocId) {
+    /** Config Auto cho NOC tại đúng stage Case (TH3 / retry Stage 2+ dùng FEC_Current_Case_Stage__c). */
+    private static List<FEC_Hold_Case_Config__c> queryAutoHoldConfigs(
+        Id nocId,
+        Id caseStageId
+    ) {
         return [
             SELECT
                 Id,
@@ -567,6 +579,7 @@ public without sharing class FEC_AutoHoldCaseService {
             WHERE (FEC_Nature_of_Cases__c = :nocId OR FEC_Nature_of_Cases__c = NULL)
               AND Hold_Case_Type__c = :HOLD_CASE_TYPE_AUTO
               AND FEC_Active__c = TRUE
+              AND FEC_Case_Stage__c = :caseStageId
         ];
     }
 
@@ -811,6 +824,7 @@ public without sharing class FEC_AutoHoldCaseService {
             WHERE FEC_Nature_of_Cases__c IN :nocIds
               AND Hold_Case_Type__c = :HOLD_CASE_TYPE_AUTO
               AND FEC_Active__c = TRUE
+              AND FEC_Case_Stage__c = :stageId
             LIMIT 1
         ];
         if (!configs.isEmpty() && configs[0].FEC_Nature_of_Cases__c != null) {

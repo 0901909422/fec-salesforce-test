@@ -101,11 +101,16 @@
 		<members>FEC_CaseAssignmentApplyOwnerBatch</members>
 		<members>FEC_CaseAssignmentAutoDistQueueJob</members>
 		<members>FEC_CaseAssignmentAutoDistributeService</members>
+		<members>FEC_CaseAssigAutoDistributeService_Test</members>
 		<members>FEC_CaseAssignmentMutationGuard</members>
+		<members>FEC_CaseAssignmentMutationGuardTest</members>
 		<members>FEC_CaseAssignmentFieldHistorySync</members>
 		<members>FEC_CaseAssignmentFieldHistorySyncTest</members>
 		<members>FEC_CaseAssignmentNOCTriggerHandler</members>
+		<members>FEC_CaseAssignmentNOCTriggerHandler_Test</members>
 		<members>FEC_CaseAssignmentNocController</members>
+		<members>FEC_CaseAssignmentNocController_Test</members>
+		<members>FEC_CaseAssignmentConflictService_Test</members>
 		<members>FEC_CaseManagerListService</members>
 		<members>FEC_CaseMasterDataHelper</members>
 		<members>FEC_AutoHoldCaseApi</members>
@@ -166,6 +171,7 @@
         <members>FEC_ImportedInteractionBatch</members>
         <members>FEC_RDPaymentContractAssessmentService</members>
         <members>FEC_CustomerIntegrationService</members>
+        <members>FEC_CardLockUnLockController</members>
 		<name>Apexclass</name>
 	</types>
     <types>
@@ -322,6 +328,7 @@
         <members>FEC_Template_Import__c.FEC_Business_Process__c</members>
         <members>FEC_Template_Import__c.FEC_User_Group__c</members>
         <members>FEC_Case_Assignment_Logs__c.FEC_Case_Assignment_Name__c</members>
+        <members>FEC_Case_Assignment_NOC__c.FEC_Category__c</members>
         <members>FEC_Case_Assignment__c.FEC_Case_Assignmetn_NOC_Count__c</members>
         <members>FEC_Case_Assignment__c.FEC_Time_Slots__c</members>
         <members>FEC_Case_Assignment__c.FEC_Time_Slots_Tracked__c</members>

@@ -1002,7 +1002,8 @@ public without sharing class FEC_CaseBusinessService {
               result.subCodeCode,
               selectedStage.Name,
               fieldApiNameTemp,
-              mrcRl05UiCtx
+              mrcRl05UiCtx,
+              selectedCase
             )
           ) {
             continue;
