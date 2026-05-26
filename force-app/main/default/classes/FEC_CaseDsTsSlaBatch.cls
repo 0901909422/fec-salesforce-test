@@ -59,7 +59,7 @@ public without sharing class FEC_CaseDsTsSlaBatch implements Database.Batchable<
             }
         }
 
-        FEC_CaseDsTsSlaService.bulkResolveAnchors(contextsByCaseId);
+        FEC_CaseDsTsSlaService.bulkResolveAnchorsPerProfile(contextsByCaseId);
 
         List<Case> patches = new List<Case>();
         for (Case row : scope) {
