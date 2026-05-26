@@ -7,6 +7,8 @@ public with sharing class FEC_HoldCaseStage2DisplayService {
     public static final String MODE_ERROR_RETRY = 'ERROR_RETRY';
     public static final String MODE_ERROR_RETRY_INFO_NO_AUTO = 'ERROR_RETRY_INFO_NO_AUTO';
     public static final String MODE_INFO_NO_AUTO_ONLY = 'INFO_NO_AUTO_ONLY';
+    /** Stage 1 SUCCESS + Stage 2+ đổi NOC không Auto: giữ UI success, thêm info xanh. */
+    public static final String MODE_SUCCESS_WITH_INFO_NO_AUTO = 'SUCCESS_WITH_INFO_NO_AUTO';
     public static final String MODE_INFO_HAS_AUTO_BUTTON = 'INFO_HAS_AUTO_BUTTON';
 
     private static final String HOLD_TYPE_AUTO = 'Auto';
@@ -116,13 +118,9 @@ public with sharing class FEC_HoldCaseStage2DisplayService {
             currentStageId
         );
 
-        Boolean newHasAuto = hasHoldConfig(
-            HOLD_TYPE_AUTO,
-            newNocId,
-            currentStageId
-        );
+        Boolean newHasAuto = hasHoldConfig(HOLD_TYPE_AUTO, newNocId);
         Boolean savedHadAutoAtStage1 = baselineNocId != null &&
-            hasHoldConfigAtStage1(HOLD_TYPE_AUTO, baselineNocId, currentStageId);
+            hasHoldConfigAtStage1(HOLD_TYPE_AUTO, baselineNocId);
         Boolean nocChanged = isNatureOfCaseChanged(
             newPt,
             newCat,
@@ -138,44 +136,35 @@ public with sharing class FEC_HoldCaseStage2DisplayService {
             ? null
             : c.FEC_NFU_Description_Result__c.trim();
 
-        // TH1: Stage 1 Auto Hold thất bại — hiện kết quả lỗi; có nút retry trừ khi đổi NOC không có Auto (TH3 spec)
+        // TH1: Stage 1 Auto Hold thất bại — luôn hiện nút Hold Case (đến khi count >= 3); đổi NOC chỉ thêm info
         if (stage1Result == RESULT_ERROR) {
             Integer userRetryCount = FEC_AutoHoldCaseService.getHoldCaseUserRetryCount(
                 caseId
             );
             Boolean maxRetryReached = userRetryCount >= 3;
             out.showHoldCaseSection = true;
+            out.displayMode = MODE_ERROR_RETRY;
             out.errorMessage = System.Label.FEC_MSG_HOLD_CASE_AUTO_FAIL_RETRY;
+            out.showManualHoldCaseButton = !c.IsClosed && !maxRetryReached;
             if (nocChanged && !newHasAuto) {
-                out.displayMode = MODE_ERROR_RETRY_INFO_NO_AUTO;
                 out.infoMessage = System.Label.FEC_MSG_HOLD_CASE_NOC_NO_AUTO;
-                out.showManualHoldCaseButton = false;
-            } else {
-                out.displayMode = MODE_ERROR_RETRY;
-                out.showManualHoldCaseButton = !c.IsClosed && !maxRetryReached;
             }
-            debugStage2Evaluate(
-                caseId,
-                nocChanged && !newHasAuto ? 'TH1+TH3-NO-AUTO' : 'TH1',
-                nocChanged,
-                newHasAuto,
-                out
-            );
+            debugStage2Evaluate(caseId, 'TH1', nocChanged, newHasAuto, out);
             return out;
         }
 
-        // TH2: Stage 1 thành công — chỉ thông báo xanh khi user đổi NOC sang bộ không Auto tại stage hiện tại
+        // TH2: Stage 1 Hold Case thành công — luôn hiện UI success; đổi NOC không Auto → thêm info xanh (không thay thế success)
         if (stage1Result == RESULT_SUCCESS || stage1Result == RESULT_ALREADY_MARKED) {
+            out.showHoldCaseSection = true;
             if (nocChanged && !newHasAuto) {
-                out.showHoldCaseSection = true;
-                out.displayMode = MODE_INFO_NO_AUTO_ONLY;
+                out.displayMode = MODE_SUCCESS_WITH_INFO_NO_AUTO;
                 out.infoMessage = System.Label.FEC_MSG_HOLD_CASE_NOC_NO_AUTO;
             }
             return out;
         }
 
-        // TH3: Stage 1 chọn NOC không có Auto (không có kết quả NFU + baseline không có config Auto Stage 1),
-        // Stage 2 đổi sang NOC có Auto tại stage hiện tại → thông báo xanh + nút Hold Case Auto.
+        // TH3: Stage 1 chọn NOC không có Auto (không có kết quả NFU + baseline không có config Auto),
+        // Stage 2+ đổi sang NOC có Auto → thông báo xanh + nút Hold Case Auto.
         if (
             stage1Result == null &&
             nocChanged &&
@@ -276,9 +265,10 @@ public with sharing class FEC_HoldCaseStage2DisplayService {
         return false;
     }
 
+    /** Có config Hold (Auto/Manual) cho NOC — không lọc FEC_Case_Stage__c (config thường khai báo Stage 1). */
     @TestVisible
-    private static Boolean hasHoldConfig(String holdType, Id nocId, Id stageId) {
-        if (nocId == null || stageId == null) {
+    private static Boolean hasHoldConfig(String holdType, Id nocId) {
+        if (nocId == null) {
             return false;
         }
         List<FEC_Hold_Case_Config__c> rows = [
@@ -286,7 +276,6 @@ public with sharing class FEC_HoldCaseStage2DisplayService {
             FROM FEC_Hold_Case_Config__c
             WHERE Hold_Case_Type__c = :holdType
               AND FEC_Active__c = TRUE
-              AND FEC_Case_Stage__c = :stageId
               AND (FEC_Nature_of_Cases__c = :nocId OR FEC_Nature_of_Cases__c = NULL)
             WITH SECURITY_ENFORCED
             LIMIT 1
@@ -295,40 +284,8 @@ public with sharing class FEC_HoldCaseStage2DisplayService {
     }
 
     @TestVisible
-    private static Boolean hasHoldConfigAtStage1(
-        String holdType,
-        Id nocId,
-        Id currentStageId
-    ) {
-        Id stage1Id = resolveStage1IdForNature(nocId, currentStageId);
-        return hasHoldConfig(holdType, nocId, stage1Id);
-    }
-
-    @TestVisible
-    private static Id resolveStage1IdForNature(Id nocId, Id currentStageId) {
-        if (nocId == null) {
-            return null;
-        }
-        List<FEC_Case_Stage__c> byDefault = [
-            SELECT Id
-            FROM FEC_Case_Stage__c
-            WHERE FEC_Nature_of_Cases__c = :nocId
-              AND FEC_Default_Stage__c = TRUE
-            WITH SECURITY_ENFORCED
-            LIMIT 1
-        ];
-        if (!byDefault.isEmpty()) {
-            return byDefault[0].Id;
-        }
-        List<FEC_Case_Stage__c> byName = [
-            SELECT Id
-            FROM FEC_Case_Stage__c
-            WHERE FEC_Nature_of_Cases__c = :nocId
-              AND Name LIKE '%Stage 1%'
-            WITH SECURITY_ENFORCED
-            LIMIT 1
-        ];
-        return byName.isEmpty() ? null : byName[0].Id;
+    private static Boolean hasHoldConfigAtStage1(String holdType, Id nocId) {
+        return hasHoldConfig(holdType, nocId);
     }
 
     @TestVisible
@@ -379,7 +336,6 @@ public with sharing class FEC_HoldCaseStage2DisplayService {
             WHERE FEC_Nature_of_Cases__c IN :nocIds
               AND Hold_Case_Type__c = :HOLD_TYPE_AUTO
               AND FEC_Active__c = TRUE
-              AND FEC_Case_Stage__c = :stageId
             WITH SECURITY_ENFORCED
             LIMIT 1
         ];

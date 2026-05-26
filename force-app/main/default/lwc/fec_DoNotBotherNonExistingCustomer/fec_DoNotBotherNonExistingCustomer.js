@@ -38,6 +38,10 @@ import {
   MessageContext,
   publish,
 } from "lightning/messageService";
+
+//FECREDIT_CSM_2025_KH-1561
+const STR_EMPTY = "";
+
 export default class Fec_DoNotBotherNonExistingCustomer extends LightningElement {
   @wire(MessageContext)
   messageContext;
@@ -1023,23 +1027,28 @@ export default class Fec_DoNotBotherNonExistingCustomer extends LightningElement
     );
   }
 
-  //HieuTT fix jira FECREDIT_CSM_2025_KH-1561
-  _syncNationalIdFromInput() {
-    const nidInput = this.template.querySelector(
-      'lightning-input[name="nationalId"]',
+  //FECREDIT_CSM_2025_KH-1561
+  _getNationalIdInputEl() {
+    return (
+      this.template.querySelector("[data-national-id-dnb]") ||
+      this.template.querySelector('lightning-input[name="nationalId"]')
     );
-
-    const fromInput =
-      nidInput && nidInput.value != null
-        ? String(nidInput.value).trim()
-        : STR_EMPTY;
-
-    const fromTrack = (this.nationalId || STR_EMPTY).trim();
-
-    this.nationalId = fromInput || fromTrack;
   }
 
-  //HieuTT fix jira FECREDIT_CSM_2025_KH-1561
+  //FECREDIT_CSM_2025_KH-1561
+  _syncNationalIdFromInput() {
+    const nidInput = this._getNationalIdInputEl();
+    if (!nidInput) {
+      return;
+    }
+
+    const fromInput =
+      nidInput.value != null ? String(nidInput.value).trim() : STR_EMPTY;
+
+    this.nationalId = fromInput;
+  }
+
+  //FECREDIT_CSM_2025_KH-1561
   _getNationalIdValidationError(nidValue) {
     const nid = (
       nidValue != null ? String(nidValue) : this.nationalId || STR_EMPTY
@@ -1069,18 +1078,15 @@ export default class Fec_DoNotBotherNonExistingCustomer extends LightningElement
     return null;
   }
 
-  //HieuTT fix jira FECREDIT_CSM_2025_KH-1561
+  //FECREDIT_CSM_2025_KH-1561
   _applyNationalIdValidity(reportNow) {
-    const nidInput = this.template.querySelector(
-      'lightning-input[name="nationalId"]',
-    );
+    const nidInput = this._getNationalIdInputEl();
     if (!nidInput) {
       return;
     }
-    /* * IMPORTANT: * Let native required validation work */ if (
-      !this.nationalId
-    ) {
-      nidInput.setCustomValidity("");
+    const nid = (this.nationalId || STR_EMPTY).trim();
+    if (!nid) {
+      nidInput.setCustomValidity("Vui lòng nhập National ID");
     } else {
       const err = this._getNationalIdValidationError(this.nationalId);
       nidInput.setCustomValidity(err || "");
@@ -1090,40 +1096,31 @@ export default class Fec_DoNotBotherNonExistingCustomer extends LightningElement
     }
   }
 
-  //HieuTT fix jira FECREDIT_CSM_2025_KH-1561
+  //FECREDIT_CSM_2025_KH-1561
   _validateNationalId() {
     this._syncNationalIdFromInput();
-
-    const err = this._getNationalIdValidationError(this.nationalId);
-
     this._applyNationalIdValidity(true);
 
+    const nid = (this.nationalId || STR_EMPTY).trim();
+    if (!nid) {
+      return false;
+    }
+
+    const err = this._getNationalIdValidationError(this.nationalId);
     return !err;
   }
 
-  /*
-   * Validate before case submit
-   */
+  //FECREDIT_CSM_2025_KH-1561
   @api
   validateForSubmit() {
-    const nidInput = this.template.querySelector(
-      'lightning-input[name="nationalId"]',
-    );
-
-    if (!nidInput) {
+    if (!this.isHandlingMode) {
       return true;
     }
 
-    /*
-     * Trigger native validation:
-     * - required
-     * - custom validity
-     */
-    nidInput.reportValidity();
+    if (!this._getNationalIdInputEl()) {
+      return false;
+    }
 
-    /*
-     * Block submit if invalid
-     */
-    return nidInput.checkValidity();
+    return this._validateNationalId();
   }
 }

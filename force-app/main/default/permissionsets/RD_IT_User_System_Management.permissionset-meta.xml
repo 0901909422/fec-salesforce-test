@@ -185,6 +185,14 @@
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
+        <apexClass>FEC_BusinessHoursTatUtil</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_BusinessHoursTatUtilTest</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
         <apexClass>FEC_BlockCodeRoutingService</apexClass>
         <enabled>true</enabled>
     </classAccesses>
@@ -825,6 +833,10 @@
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
+        <apexClass>FEC_ImportedInteractionBatch</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
         <apexClass>FEC_IncorrectPaymentController</apexClass>
         <enabled>true</enabled>
     </classAccesses>
@@ -1046,6 +1058,10 @@
     </classAccesses>
     <classAccesses>
         <apexClass>FEC_RoutingHistTatSvc</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_RoutingHistTatSvcTest</apexClass>
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>

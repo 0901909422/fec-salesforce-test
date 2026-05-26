@@ -224,6 +224,7 @@
         <members>FEC_IPPClosureController</members>
         <members>FEC_IPPController</members>
         <members>FEC_IPPConversionController</members>
+        <members>FEC_ImportedInteractionBatch</members>
         <members>FEC_IncorrectPaymentController</members>
         <members>FEC_MFASOUTSTANDINGAUTHINQ</members>
         <members>FEC_MainInfoAccountController</members>
@@ -881,6 +882,7 @@
         <members>FEC_Collection_Date_Filter</members>
         <members>FEC_Assignment_Mode</members>
         <members>FEC_CaseAction</members>
+		<members>FEC_Case_Information_Edit</members>
 		<members>FEC_Case_NOC</members>
 		<members>FEC_DoNotBother</members>
         <name>LightningMessageChannel</name>
@@ -2027,6 +2029,7 @@
         <members>FEC_Routing_Assignment__c.FEC_Nature_of_Cases__c</members>
         <members>FEC_Routing_Assignment__c.FEC_Queue__c</members>
         <members>FEC_Routing_Assignment__c.FEC_Team__c</members>
+        <members>Case.FEC_IsImported__c</members>
         <name>CustomField</name>
     </types>
     <types>
@@ -2178,7 +2181,10 @@
         <members>FEC_OwnerTeamLookupSvc</members>
         <members>FEC_RoutingActionHistoryTriggerHandler</members>
         <members>FEC_RoutingHistTatSvc</members>
+        <members>FEC_RoutingHistTatSvcTest</members>
         <members>FEC_CaseTatFullProcessSvc</members>
+        <members>FEC_BusinessHoursTatUtil</members>
+        <members>FEC_BusinessHoursTatUtilTest</members>
         <members>FEC_CaseFullProcessTatQueueJob</members>
         <members>FEC_CaseTriggerHandler</members>
         <members>FEC_CaseRemarksRollupService</members>
