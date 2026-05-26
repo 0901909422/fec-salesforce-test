@@ -166,7 +166,7 @@ public without sharing class FEC_CaseExecuteService {
     Boolean currentValue = c.FEC_Can_Execute__c == true;
     
     result.shouldUpdate = currentValue != canExecute;
-
+    
     result.message = message;
     
     System.debug('----------------------');
@@ -175,7 +175,7 @@ public without sharing class FEC_CaseExecuteService {
     System.debug('newValue = ' + canExecute);
     
     System.debug('shouldUpdate = ' + result.shouldUpdate);
-
+    
     System.debug( 'message = ' + message );
     System.debug('----------------------');
     
@@ -187,10 +187,10 @@ public without sharing class FEC_CaseExecuteService {
     if (result.shouldUpdate) {
       try {
         System.debug('START UPDATE CASE');
-
+        
         FEC_CaseInitUpdateService.registerSystemCaseUpdate(c.Id);
         FEC_CaseTriggerHandler.isSystemUpdate = true;
-
+        
         //thangtv: SYSTEM_MODE — reset flag khi user không có FLS edit trên Case
         updateCaseExecuteFlag(c.Id, canExecute);
         
@@ -614,6 +614,30 @@ public without sharing class FEC_CaseExecuteService {
       }
       
       return queueRoleIds.contains(userRecord.UserRoleId);
+    }
+  }
+  
+  @AuraEnabled
+  public static void removeExecutorAfterSubmit(String caseId) {
+    if (String.isBlank(caseId)) {
+      return;
+    }
+    
+    List<Case> executors = [
+        SELECT Id, FEC_Case_Executor__c
+        FROM Case
+        WHERE Id = :caseId
+        LIMIT 1
+    ];
+    
+    if (!executors.isEmpty()) {
+      Case c = executors[0];
+      
+      // tránh DML không cần thiết
+      if (c.FEC_Case_Executor__c != null) {
+        c.FEC_Case_Executor__c = null;
+        update c;
+      }
     }
   }
 }
