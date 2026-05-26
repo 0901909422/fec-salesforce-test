@@ -20,11 +20,13 @@
 	    <members>FEC_MainInfoLoanAccountController</members>
 	    <members>FEC_TerminationLoanController</members>
 	    <members>FEC_CaseRemarkController</members>
+	    <members>FEC_CaseRemarksRollupService</members>
 	    <members>FEC_CaseTriggerHandler</members>
 	    <members>FEC_PinResetHandler</members>
 	    <members>FEC_GetSMSInfoFromITTelcoCallout</members>
 	    <members>FEC_NotificationHistoryController</members>
 	    <members>FEC_Notification</members>
+	    <members>FEC_OwnerTeamLookupSvc</members>
 	    <members>FEC_NatureOfCaseTriggerHandler</members>
 	    <members>FEC_NocChannelConfigController</members>
 	    <members>FEC_GetCardSecInfo</members>
@@ -38,6 +40,7 @@
 	    <members>FEC_AssignmentExecuteService</members>
         <members>FEC_AssignmentCaseShareService</members>
 	    <members>FEC_CaseExecuteService</members>
+	    <members>FEC_CaseFullProcessTatQueueJob</members>
 	    <members>FEC_CaseInitUpdateService</members>
 	    <members>FEC_CaseInitUpdateServiceTest</members>
 	    <members>FEC_SubProcessService</members>
@@ -98,11 +101,16 @@
 		<members>FEC_CaseAssignmentApplyOwnerBatch</members>
 		<members>FEC_CaseAssignmentAutoDistQueueJob</members>
 		<members>FEC_CaseAssignmentAutoDistributeService</members>
+		<members>FEC_CaseAssigAutoDistributeService_Test</members>
 		<members>FEC_CaseAssignmentMutationGuard</members>
+		<members>FEC_CaseAssignmentMutationGuardTest</members>
 		<members>FEC_CaseAssignmentFieldHistorySync</members>
 		<members>FEC_CaseAssignmentFieldHistorySyncTest</members>
 		<members>FEC_CaseAssignmentNOCTriggerHandler</members>
+		<members>FEC_CaseAssignmentNOCTriggerHandler_Test</members>
 		<members>FEC_CaseAssignmentNocController</members>
+		<members>FEC_CaseAssignmentNocController_Test</members>
+		<members>FEC_CaseAssignmentConflictService_Test</members>
 		<members>FEC_CaseManagerListService</members>
 		<members>FEC_CaseMasterDataHelper</members>
 		<members>FEC_AutoHoldCaseApi</members>
@@ -127,7 +135,14 @@
         <members>FEC_BatchCaseHandlingTemplateHelper</members>
         <members>FEC_BatchCaseHandlingZipResult</members>
         <members>FEC_BatchCaseHandlingZipService</members>
+        <members>FEC_BusinessHoursTatUtil</members>
+        <members>FEC_BusinessHoursTatUtilTest</members>
         <members>FEC_CaseTatFullProcessSvc</members>
+        <members>FEC_CaseFullProcessTatQueueJob</members>
+        <members>FEC_CaseDsTsSlaBatch</members>
+        <members>FEC_CaseDsTsSlaNotificationSender</members>
+        <members>FEC_CaseDsTsSlaSchedulable</members>
+        <members>FEC_CaseDsTsSlaService</members>
         <members>FEC_CaseSlaNotificationService</members>
         <members>FEC_CaseAssignmentTriggerHandler</members>
         <members>FEC_ScopedStageChangeRoutingService</members>
@@ -150,8 +165,10 @@
 		<members>FEC_NotificationService</members>
 		<members>FEC_CaseAssignmentConfigController</members>
         <members>FEC_RoutingHistTatSvc</members>
+        <members>FEC_RoutingHistTatSvcTest</members>
         <members>FEC_PsDNBServiceCallout</members>
         <members>FEC_FullCustomerIntegrationJob</members>
+        <members>FEC_ImportedInteractionBatch</members>
         <members>FEC_RDPaymentContractAssessmentService</members>
         <members>FEC_CustomerIntegrationService</members>
 		<name>Apexclass</name>
@@ -261,6 +278,7 @@
     <types>
         <members>Case.FEC_Service_Case_Owner__c</members>
         <members>Case.FEC_Assigment_Mode__c</members>
+        <members>Case.FEC_Case_Executor__c</members>
         <members>Case.FEC_Complain_Type__c</members>
         <members>Case.FEC_Original_Category__c</members>
         <members>Case.FEC_Original_Sub_Category__c</members>
@@ -272,6 +290,7 @@
 		<members>Case.FEC_Customer_Confirmation__c</members>
 		<members>Case.FEC_MRC_Request_Handling_Option__c</members>
 		<members>Case.FEC_Is_DNB__c</members>
+        <members>Case.FEC_IsImported__c</members>
 		<members>FEC_Assignment__c.FEC_Submitted_On__c</members>
 		<members>FEC_Assignment__c.FEC_Assignment_Name__c</members>
         <members>FEC_Address_Info__c.FEC_Parent_Address__c</members>
@@ -308,6 +327,7 @@
         <members>FEC_Template_Import__c.FEC_Business_Process__c</members>
         <members>FEC_Template_Import__c.FEC_User_Group__c</members>
         <members>FEC_Case_Assignment_Logs__c.FEC_Case_Assignment_Name__c</members>
+        <members>FEC_Case_Assignment_NOC__c.FEC_Category__c</members>
         <members>FEC_Case_Assignment__c.FEC_Case_Assignmetn_NOC_Count__c</members>
         <members>FEC_Case_Assignment__c.FEC_Time_Slots__c</members>
         <members>FEC_Case_Assignment__c.FEC_Time_Slots_Tracked__c</members>
@@ -411,6 +431,7 @@
         <members>FEC_MRC_RL0502_Dup_Opt_Cancel_Prev</members>
         <members>FEC_MRC_Dup_Remark_Cancel_Prev</members>
         <members>FEC_MRC_Dup_Remark_Cancel_New</members>
+        <members>FEC_MRC_Dup_Remark_Received_Confirm</members>
         <members>FEC_MRC_RL0502_Dup_Open_Case_Btn</members>
 		<members>FEC_Transfer_Err_Remark_Null</members>
         <members>FEC_BCH_AddFilterRow</members>
@@ -433,6 +454,11 @@
         <members>FEC_BCH_PropertyPlaceholder</members>
         <members>FEC_Points_Redeem_Fail_After_Max</members>
         <members>FEC_Points_Redeem_Fail_Retry</members>
+        <members>FEC_SLA_DS_TS_Recipient_Direct_Sales</members>
+        <members>FEC_SLA_DS_TS_Recipient_LG</members>
+        <members>FEC_SLA_DS_TS_Recipient_Pos_Sales</members>
+        <members>FEC_SLA_DS_TS_Recipient_Telesales</members>
+        <members>FEC_SLA_DS_TS_Use_Test_Thresholds</members>
         <members>FEC_MSG_SLA_Notif_Body_Approaching</members>
         <members>FEC_MSG_SLA_Notif_Body_Exceeded</members>
         <members>FEC_MSG_SLA_Notif_Title_Approaching</members>
@@ -477,6 +503,7 @@
 	    <members>FEC_API_Config.FEC_MFASOUTSTANDINGAUTHINQ</members>
 		<members>FEC_API_Config.FEC_VMX_AUTH_DETAIL_INQ</members>
 		<members>FEC_API_Config.FEC_Vmx_Acct_Blkcd_Upd_Emea</members>
+		<members>FEC_API_Config.FEC_Get_Customer_List</members>
 		<name>CustomMetadata</name>
 	</types>
     <types>
@@ -668,6 +695,7 @@
 		<name>Layout</name>
 	</types>
     <types>
+		<members>FEC_Case_Information_Edit</members>
 		<members>FEC_Case_NOC</members>
 		<members>FEC_DoNotBother</members>
         <name>LightningMessageChannel</name>

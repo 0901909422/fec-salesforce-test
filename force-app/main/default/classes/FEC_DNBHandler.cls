@@ -865,98 +865,277 @@ public without sharing class FEC_DNBHandler {
     
     //------------------------------------------------------------------------------------
     
+    // @AuraEnabled
+    // public static FEC_GetDNBCalloutService.DNBResult getDNBResultC360(
+    // String caseId) {
+        //     FEC_GetDNBCalloutService.DNBResult finalRes;
+        
+        //     // ===== Check existing =====
+        //     List<FEC_Do_Not_Bother__c> existingDNB = [
+        //   SELECT Id FROM FEC_Do_Not_Bother__c WHERE FEC_Case__c = : caseId LIMIT 1
+        // ];
+        
+        //     // ===== Get Case =====
+        //     Case caseRecord = [
+        //   SELECT Id, FEC_Phone_Number__c,
+        //   FEC_Interaction__r.FEC_Interaction_Email__c,
+        //   FEC_Account_or_Contract__c,
+        //   FEC_Account_or_Contract__r.FEC_Search_Result_National_ID__c FROM Case WHERE
+        //       Id = : caseId LIMIT 1
+        // ];
+        
+        //     // ===== Build request =====
+        //     FEC_GetDNBCalloutService.DNBRequest req =
+        //         new FEC_GetDNBCalloutService.DNBRequest();
+        
+        //     req.phone = String.isNotBlank(caseRecord.FEC_Phone_Number__c)
+        //         ? caseRecord.FEC_Phone_Number__c
+        //         : '';
+        
+        //     req.nid = (caseRecord.FEC_Account_or_Contract__r != null
+        //         && String.isNotBlank(caseRecord.FEC_Account_or_Contract__r
+        //         .FEC_Search_Result_National_ID__c))
+        //         ? caseRecord.FEC_Account_or_Contract__r.FEC_Search_Result_National_ID__c
+        //         : '';
+        
+        //     req.email = (caseRecord.FEC_Interaction__r != null
+        //         && String.isNotBlank(
+        //         caseRecord.FEC_Interaction__r.FEC_Interaction_Email__c))
+        //         ? caseRecord.FEC_Interaction__r.FEC_Interaction_Email__c
+        //         : '';
+        
+        //     // ===== Call API =====
+        //     FEC_GetDNBCalloutService.DNBResult res =
+        //         FEC_GetDNBCalloutService.getDNB(req);
+        
+        //     // ===== Ensure NOT NULL =====
+        //     if (res == null) {
+            //         finalRes = new FEC_GetDNBCalloutService.DNBResult();
+            //         finalRes.success = false;
+            //         finalRes.errorMessage = 'Service returned null';
+            //         return finalRes;
+        //     }
+        
+        //     // ===== FORCE VISIBILITY =====
+        //     System.debug('===== RAW RESPONSE =====');
+        //     System.debug(res.rawResponse);
+        //     System.debug('===== PARSED RESULT =====');
+        //     System.debug(JSON.serializePretty(res));
+        
+        //     // ===== If API FAIL → RETURN FULL RESPONSE (NO INSERT) =====
+        //     if (!res.success) {
+            //         return res; // 🔥 IMPORTANT: return as-is
+        //     }
+        
+        //     // ===== Skip insert if already exists =====
+        //     if (!existingDNB.isEmpty()) {
+            //         res.errorMessage = 'DNB already exists';
+            //         return res;
+        //     }
+        
+        //     // ===== Business layer =====
+        //     if (res.result != null && !res.result.isEmpty()) {
+            //         List<FEC_Do_Not_Bother__c> dnbToInsert = new List<FEC_Do_Not_Bother__c>();
+            
+            //         for (FEC_GetDNBCalloutService.ResultItem item : res.result) {
+                //             FEC_Do_Not_Bother__c dnbRecord = new FEC_Do_Not_Bother__c();
+                //             dnbRecord.FEC_Case__c = caseId;
+                
+                //             // safer boolean check
+                //             Boolean isActive = item.do_not_bother;
+                
+                //             dnbRecord.FEC_Current_Status__c = isActive
+                //                 ? FEC_ConstantCommon.DNB_STATUS_ACTIVE
+                //                 : FEC_ConstantCommon.DNB_STATUS_INACTIVE;
+                //             dnbRecord.FEC_Original_Reason__c = item.reason;
+                //             dnbRecord.FEC_DNB_Channel__c = item.source;
+                //             dnbRecord.FEC_Type__c = item.type;
+                //             dnbRecord.FEC_Phone_Email__c = item.type_value;
+                //             dnbRecord.FEC_Customer_History__c =caseRecord.FEC_Account_or_Contract__c;
+                //             if (String.isNotBlank(item.expected_exclude_time)
+                //             && item.expected_exclude_time != 'N/A') {
+                    //                 try {
+                        //                     dnbRecord.FEC_Expiry_Date__c =
+                        //                         FEC_CommonUltils.parseDate(item.expected_exclude_time);
+                    //                 } catch (Exception e) {
+                        //                     System.debug('Date parse error: ' + e.getMessage());
+                    //                 }
+                //             }
+                
+                //             dnbToInsert.add(dnbRecord);
+            //         }
+            
+            //         if (!dnbToInsert.isEmpty()) {
+                //             try {
+                    //                 insert dnbToInsert;
+                //             } catch (Exception e) {
+                    //                 res.errorMessage = 'Insert failed: ' + e.getMessage();
+                    //                 res.success = false;
+                //             }
+            //         }
+        //     } else {
+            //         res.errorMessage = 'No data returned from API';
+        //     }
+        
+        //     return res;
+    // }
+    
+    
     @AuraEnabled
     public static FEC_GetDNBCalloutService.DNBResult getDNBResultC360(
     String caseId) {
-        FEC_GetDNBCalloutService.DNBResult finalRes;
+        FEC_GetDNBCalloutService.DNBResult finalRes =
+            new FEC_GetDNBCalloutService.DNBResult();
         
         // ===== Check existing =====
         List<FEC_Do_Not_Bother__c> existingDNB = [
-      SELECT Id FROM FEC_Do_Not_Bother__c WHERE FEC_Case__c = : caseId LIMIT 1
-    ];
+    SELECT Id FROM FEC_Do_Not_Bother__c WHERE FEC_Case__c = : caseId LIMIT 1
+  ];
         
         // ===== Get Case =====
         Case caseRecord = [
-      SELECT Id, FEC_Phone_Number__c,
-      FEC_Interaction__r.FEC_Interaction_Email__c,
-      FEC_Account_or_Contract__c,
-      FEC_Account_or_Contract__r.FEC_Search_Result_National_ID__c FROM Case WHERE
-          Id = : caseId LIMIT 1
-    ];
+    SELECT Id, FEC_Phone_Number__c, FEC_Interaction__r.FEC_Interaction_Email__c,
+    FEC_Account_or_Contract__c,
+    FEC_Account_or_Contract__r.FEC_Search_Result_National_ID__c FROM Case WHERE
+        Id = : caseId LIMIT 1
+  ];
         
-        // ===== Build request =====
-        FEC_GetDNBCalloutService.DNBRequest req =
-            new FEC_GetDNBCalloutService.DNBRequest();
+        // ===== Collect NID =====
+        Set<String> nidSet = new Set<String>();
         
-        req.phone = String.isNotBlank(caseRecord.FEC_Phone_Number__c)
+        if (caseRecord.FEC_Account_or_Contract__r != null
+            && String.isNotBlank(caseRecord.FEC_Account_or_Contract__r
+        .FEC_Search_Result_National_ID__c)) {
+            String rawNids =
+                caseRecord.FEC_Account_or_Contract__r.FEC_Search_Result_National_ID__c;
+            
+            List<String> nidList = rawNids.split(',');
+            
+            for (String nid : nidList) {
+                String cleanNid = nid != null ? nid.trim() : '';
+                
+                if (String.isNotBlank(cleanNid)) {
+                    nidSet.add(cleanNid);
+                }
+            }
+        }
+        
+        // ===== No NID =====
+        if (nidSet.isEmpty()) {
+            finalRes.success = false;
+            finalRes.errorMessage = 'No National ID found';
+            return finalRes;
+        }
+        
+        // ===== Shared request data =====
+        String phone = String.isNotBlank(caseRecord.FEC_Phone_Number__c)
             ? caseRecord.FEC_Phone_Number__c
             : '';
         
-        req.nid = (caseRecord.FEC_Account_or_Contract__r != null
-            && String.isNotBlank(caseRecord.FEC_Account_or_Contract__r
-            .FEC_Search_Result_National_ID__c))
-            ? caseRecord.FEC_Account_or_Contract__r.FEC_Search_Result_National_ID__c
-            : '';
-        
-        req.email = (caseRecord.FEC_Interaction__r != null
+        String email =
+            (caseRecord.FEC_Interaction__r != null
             && String.isNotBlank(
             caseRecord.FEC_Interaction__r.FEC_Interaction_Email__c))
             ? caseRecord.FEC_Interaction__r.FEC_Interaction_Email__c
             : '';
         
-        // ===== Call API =====
-        FEC_GetDNBCalloutService.DNBResult res =
-            FEC_GetDNBCalloutService.getDNB(req);
+        // ===== Merge result =====
+        Map<String, FEC_GetDNBCalloutService.ResultItem> dedupMap =
+            new Map<String, FEC_GetDNBCalloutService.ResultItem>();
         
-        // ===== Ensure NOT NULL =====
-        if (res == null) {
-            finalRes = new FEC_GetDNBCalloutService.DNBResult();
-            finalRes.success = false;
-            finalRes.errorMessage = 'Service returned null';
-            return finalRes;
+        Boolean hasSuccess = false;
+        
+        // ===== Call API by each NID =====
+        for (String nid : nidSet) {
+            FEC_GetDNBCalloutService.DNBRequest req =
+                new FEC_GetDNBCalloutService.DNBRequest();
+            
+            req.phone = phone;
+            req.email = email;
+            req.nid = nid;
+            
+            FEC_GetDNBCalloutService.DNBResult res =
+                FEC_GetDNBCalloutService.getDNB(req);
+            
+            // ===== Ensure NOT NULL =====
+            if (res == null) {
+                continue;
+            }
+            
+            System.debug('===== RAW RESPONSE =====');
+            System.debug(res.rawResponse);
+            
+            System.debug('===== PARSED RESULT =====');
+            System.debug(JSON.serializePretty(res));
+            
+            // ===== Skip failed call =====
+            if (!res.success || res.result == null) {
+                continue;
+            }
+            
+            hasSuccess = true;
+            
+            // ===== Deduplicate =====
+            for (FEC_GetDNBCalloutService.ResultItem item : res.result) {
+                String dedupKey = String.valueOf(item.type) + '|'
+                    + String.valueOf(item.type_value) + '|' + String.valueOf(item.source)
+                    + '|' + String.valueOf(item.reason);
+                
+                if (!dedupMap.containsKey(dedupKey)) {
+                    dedupMap.put(dedupKey, item);
+                }
+            }
         }
         
-        // ===== FORCE VISIBILITY =====
-        System.debug('===== RAW RESPONSE =====');
-        System.debug(res.rawResponse);
-        System.debug('===== PARSED RESULT =====');
-        System.debug(JSON.serializePretty(res));
+        // ===== Final merged result =====
+        List<FEC_GetDNBCalloutService.ResultItem> mergedResult =
+            new List<FEC_GetDNBCalloutService.ResultItem>();
         
-        // ===== If API FAIL → RETURN FULL RESPONSE (NO INSERT) =====
-        if (!res.success) {
-            return res; // 🔥 IMPORTANT: return as-is
+        mergedResult.addAll(dedupMap.values());
+        
+        finalRes.success = hasSuccess;
+        finalRes.result = mergedResult;
+        
+        // ===== All API failed =====
+        if (!hasSuccess) {
+            finalRes.errorMessage = 'No successful response from API';
+            return finalRes;
         }
         
         // ===== Skip insert if already exists =====
         if (!existingDNB.isEmpty()) {
-            res.errorMessage = 'DNB already exists';
-            return res;
+            finalRes.errorMessage = 'DNB already exists';
+            return finalRes;
         }
         
-        // ===== Business layer =====
-        if (res.result != null && !res.result.isEmpty()) {
+        // ===== Insert DNB =====
+        if (!mergedResult.isEmpty()) {
             List<FEC_Do_Not_Bother__c> dnbToInsert = new List<FEC_Do_Not_Bother__c>();
             
-            for (FEC_GetDNBCalloutService.ResultItem item : res.result) {
+            for (FEC_GetDNBCalloutService.ResultItem item : mergedResult) {
                 FEC_Do_Not_Bother__c dnbRecord = new FEC_Do_Not_Bother__c();
+                
                 dnbRecord.FEC_Case__c = caseId;
                 
-                // safer boolean check
                 Boolean isActive = item.do_not_bother;
                 
                 dnbRecord.FEC_Current_Status__c = isActive
                     ? FEC_ConstantCommon.DNB_STATUS_ACTIVE
                     : FEC_ConstantCommon.DNB_STATUS_INACTIVE;
+                
                 dnbRecord.FEC_Original_Reason__c = item.reason;
                 dnbRecord.FEC_DNB_Channel__c = item.source;
                 dnbRecord.FEC_Type__c = item.type;
                 dnbRecord.FEC_Phone_Email__c = item.type_value;
-                dnbRecord.FEC_Customer_History__c =caseRecord.FEC_Account_or_Contract__c;
+                
+                dnbRecord.FEC_Customer_History__c = caseRecord.FEC_Account_or_Contract__c;
+                
                 if (String.isNotBlank(item.expected_exclude_time)
                 && item.expected_exclude_time != 'N/A') {
                     try {
                         dnbRecord.FEC_Expiry_Date__c =
                             FEC_CommonUltils.parseDate(item.expected_exclude_time);
+                        
                     } catch (Exception e) {
                         System.debug('Date parse error: ' + e.getMessage());
                     }
@@ -968,17 +1147,19 @@ public without sharing class FEC_DNBHandler {
             if (!dnbToInsert.isEmpty()) {
                 try {
                     insert dnbToInsert;
+                    
                 } catch (Exception e) {
-                    res.errorMessage = 'Insert failed: ' + e.getMessage();
-                    res.success = false;
+                    finalRes.success = false;
+                    finalRes.errorMessage = 'Insert failed: ' + e.getMessage();
                 }
             }
         } else {
-            res.errorMessage = 'No data returned from API';
+            finalRes.errorMessage = 'No data returned from API';
         }
         
-        return res;
+        return finalRes;
     }
+    
     
     @AuraEnabled
     public static List<DNBResponseItem> getListDNBs(String caseId) {

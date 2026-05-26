@@ -211,6 +211,11 @@
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
+        <editable>true</editable>
+        <field>Case.FEC_Case_Executor__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
         <editable>false</editable>
         <field>Case.FEC_Case_ID__c</field>
         <readable>true</readable>
@@ -548,6 +553,11 @@
     <fieldPermissions>
         <editable>true</editable>
         <field>Case.FEC_Interaction__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>Case.FEC_IsImported__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
