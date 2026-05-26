@@ -885,16 +885,6 @@ public without sharing class FEC_CaseBusinessService {
           'isGsrStage3PropertyInfoReadonly',
           isGsrStage3PropertyInfoReadonly
         );
-        // Chỉ chèn LWC Original Info (Stage 2) khi Updated NOC trùng Original (so với flow history).
-        if (isGsrStage1Revert && !isUpdatedNocDifferentFromCurrent) {
-          FEC_GsrStage1RevertMasterDataHelper.appendStage2OriginalInfoLwc(
-            masterDatalst,
-            masterDataSettingObj,
-            natureOfCaseObj,
-            selectedNatureOfCaseId,
-            templateNatureIdForCaseStages
-          );
-        }
 
         FEC_MrcReturnCaseService.applyRl05CodeFallbacks(
           result,
@@ -943,6 +933,23 @@ public without sharing class FEC_CaseBusinessService {
         masterDatalst = FEC_CaseMasterDataHelper.removeMasterDataRowsByHiddenAssignmentFieldApis(
           masterDatalst,
           hasCaseAssignment
+        );
+
+        System.debug(
+          'FEC_DEBUG GSR NOC before master loop caseId=' +
+          selectedCase.Id +
+          ' isGsrNocOnlyDisplayMode=' +
+          isGsrNocOnlyDisplayMode +
+          ' isActualNatureGsrOnly=' +
+          isActualNatureGsrOnly +
+          ' actualBp=' +
+          actualBusinessProcessCode +
+          ' masterDataRowCount=' +
+          (masterDatalst == null ? 0 : masterDatalst.size()) +
+          ' isUpdatedNocDifferentFromCurrent=' +
+          isUpdatedNocDifferentFromCurrent +
+          ' isGsrStage1Revert=' +
+          isGsrStage1Revert
         );
 
         for (SObject item : masterDatalst) {
@@ -1020,6 +1027,12 @@ public without sharing class FEC_CaseBusinessService {
                 !isGsrStage1Revert &&
                 !isGsrStage1Recall
               ) {
+                System.debug(
+                  'FEC_DEBUG GSR NOC skip Original Info LWC (NOC khác history) caseId=' +
+                  selectedCase.Id +
+                  ' lwc=' +
+                  item.get('FEC_LWC_Name__c')
+                );
                 continue;
               }
             } else {
@@ -1027,10 +1040,28 @@ public without sharing class FEC_CaseBusinessService {
                 !isUpdatedNocDifferentFromCurrent &&
                 (isGsrStage1Revert || isGsrStage1Recall);
               // Không khác: ẩn Property Info — trừ GSR Stage 1 revert/recall (hiện Property Info để sửa)
+              if ('Property Info'.equals(subSectionNameTemp)) {
+                System.debug(
+                  'FEC_DEBUG GSR NOC Property Info row (NOC trùng history) caseId=' +
+                  selectedCase.Id +
+                  ' gsrStage1ShowPropertyInfoWhenNocUnchanged=' +
+                  gsrStage1ShowPropertyInfoWhenNocUnchanged +
+                  ' willSkip=' +
+                  (!gsrStage1ShowPropertyInfoWhenNocUnchanged) +
+                  ' itemType=' +
+                  itemType +
+                  ' field=' +
+                  fieldApiNameTemp
+                );
+              }
               if (
                 'Property Info'.equals(subSectionNameTemp) &&
                 !gsrStage1ShowPropertyInfoWhenNocUnchanged
               ) {
+                System.debug(
+                  'FEC_DEBUG GSR NOC skip Property Info (NOC trùng history, không revert/recall) caseId=' +
+                  selectedCase.Id
+                );
                 continue;
               }
             }
@@ -2320,10 +2351,17 @@ public without sharing class FEC_CaseBusinessService {
             : null;
           //PhongBT: update bộ noc chọn ở updated khi revert về
           String revertNocId = (String) params.get('natureOfCaseId');
-          FEC_CofGsrRoutePrepareService.updateCaseNocFromSelection(caseId, revertNocId);
           finalStatusBeforeSubmit = readCaseFinalStatusBeforeSubmit(caseId);
           markCaseSubmittedAndClearDrafts(caseId);
           revert(caseId, revertActionId, finalStatusBeforeSubmit, routingActionValue);
+          // Sau revert: Stage = Stage 1 NOC gốc — đồng bộ Actual theo template stage (và NOC UI nếu có).
+          if (String.isNotBlank(revertNocId)) {
+            FEC_CofGsrRoutePrepareService.updateCaseNocFromSelection(
+              caseId,
+              revertNocId
+            );
+          }
+          FEC_CofGsrRoutePrepareService.syncActualNatureToMatchCurrentCaseStage(caseId);
           return null;
         }
         when RECALL {
