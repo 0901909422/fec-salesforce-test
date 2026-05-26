@@ -73,6 +73,16 @@ public with sharing class FEC_BatchCaseCreationController {
         Map<String, Set<String>> subCodeTextKeysByProductCategorySubCategory = new Map<String, Set<String>>();
     }
 
+    /** OtherCases: NOC Id + default Case Stage theo FEC_Nature_of_Case__c. */
+    private class NatureOfCaseResolveMaps {
+        Map<String, Id> nocIdByCompositeKey = new Map<String, Id>();
+        /** productId|categoryText|subCategoryText|subCodeText (lowercase) — khớp validation NOC. */
+        Map<String, Id> nocIdByFullTextKey = new Map<String, Id>();
+        /** productId|categoryText|subCategoryText khi NOC không có Sub Code. */
+        Map<String, Id> nocIdByTripleTextKey = new Map<String, Id>();
+        Map<Id, Id> defaultCaseStageIdByNocId = new Map<Id, Id>();
+    }
+
     @AuraEnabled(cacheable=true)
     public static List<TemplateOption> getTemplateOptions() {
         List<TemplateOption> output = new List<TemplateOption>();
@@ -1299,6 +1309,7 @@ public with sharing class FEC_BatchCaseCreationController {
         }
 
         LookupMaps maps = loadLookupMaps(parsed);
+        NatureOfCaseResolveMaps nocResolveMaps = loadNatureOfCaseResolveMaps(parsed, maps);
         Schema.DescribeFieldResult channelDfr = Case.FEC_Channel__c.getDescribe();
         Schema.DescribeFieldResult subChannelDfr = Case.FEC_Interaction_Subchannel__c.getDescribe();
         Schema.DescribeFieldResult statusDfr = Case.Status.getDescribe();
@@ -1364,6 +1375,7 @@ public with sharing class FEC_BatchCaseCreationController {
             applyOtherCustomerCaseDefaults(cc);
             applyNatureFields(cc, r, maps, channelDfr, subChannelDfr, false);
             applyOtherAccountOrContractNumber(cc, r.contractNumber);
+            applyOtherDefaultCaseStageFromNature(cc, r, maps, nocResolveMaps);
             applyBatchImportedCaseFlag(cc);
             customerCases.add(cc);
             customerOrigRowIndex.add(origIdx);
@@ -1727,6 +1739,228 @@ public with sharing class FEC_BatchCaseCreationController {
             }
         }
         return out;
+    }
+
+    private static String buildNatureOfCaseCompositeKey(
+        Id productTypeId,
+        Id categoryId,
+        Id subCategoryId,
+        Id subCodeId
+    ) {
+        return String.valueOf(productTypeId) +
+            '|' +
+            String.valueOf(categoryId) +
+            '|' +
+            String.valueOf(subCategoryId) +
+            '|' +
+            (subCodeId == null ? '' : String.valueOf(subCodeId));
+    }
+
+    private static NatureOfCaseResolveMaps loadNatureOfCaseResolveMaps(
+        List<ParsedCaseRow> parsed,
+        LookupMaps maps
+    ) {
+        NatureOfCaseResolveMaps out = new NatureOfCaseResolveMaps();
+        if (parsed == null || parsed.isEmpty() || maps == null) {
+            return out;
+        }
+
+        Set<Id> productIds = new Set<Id>();
+        for (ParsedCaseRow row : parsed) {
+            Id productId = lookupFromMap(row.productType, maps.productMap);
+            if (productId != null) {
+                productIds.add(productId);
+            }
+        }
+        if (productIds.isEmpty()) {
+            return out;
+        }
+
+        Set<Id> nocIds = new Set<Id>();
+        for (FEC_Nature_of_Case__c noc : [
+            SELECT
+                Id,
+                FEC_Product_Type__c,
+                FEC_Category__c,
+                FEC_Sub_Category__c,
+                FEC_Sub_Code__c,
+                FEC_Category__r.Name,
+                FEC_Category__r.FEC_Code__c,
+                FEC_Sub_Category__r.Name,
+                FEC_Sub_Category__r.FEC_Code__c,
+                FEC_Sub_Code__r.Name,
+                FEC_Sub_Code__r.FEC_Code__c
+            FROM FEC_Nature_of_Case__c
+            WHERE FEC_Active__c = true AND FEC_Product_Type__c IN :productIds
+        ]) {
+            registerNatureOfCaseLookupKeys(out, noc);
+            nocIds.add(noc.Id);
+        }
+
+        if (!nocIds.isEmpty()) {
+            for (FEC_Case_Stage__c stage : [
+                SELECT Id, FEC_Nature_of_Cases__c, FEC_Active__c
+                FROM FEC_Case_Stage__c
+                WHERE FEC_Nature_of_Cases__c IN :nocIds AND FEC_Default_Stage__c = true
+            ]) {
+                if (stage.FEC_Nature_of_Cases__c == null) {
+                    continue;
+                }
+                Id nocId = stage.FEC_Nature_of_Cases__c;
+                if (!out.defaultCaseStageIdByNocId.containsKey(nocId)) {
+                    out.defaultCaseStageIdByNocId.put(nocId, stage.Id);
+                } else if (stage.FEC_Active__c == true) {
+                    out.defaultCaseStageIdByNocId.put(nocId, stage.Id);
+                }
+            }
+        }
+        return out;
+    }
+
+    private static void registerNatureOfCaseLookupKeys(
+        NatureOfCaseResolveMaps out,
+        FEC_Nature_of_Case__c noc
+    ) {
+        if (out == null || noc == null || noc.FEC_Product_Type__c == null || noc.FEC_Category__c == null) {
+            return;
+        }
+        String compositeKey = buildNatureOfCaseCompositeKey(
+            noc.FEC_Product_Type__c,
+            noc.FEC_Category__c,
+            noc.FEC_Sub_Category__c,
+            noc.FEC_Sub_Code__c
+        );
+        out.nocIdByCompositeKey.put(compositeKey, noc.Id);
+
+        String productIdKey = String.valueOf(noc.FEC_Product_Type__c);
+        Set<String> categoryAliases = natureTextAliases(
+            noc.FEC_Category__r == null ? null : noc.FEC_Category__r.Name,
+            noc.FEC_Category__r == null ? null : noc.FEC_Category__r.FEC_Code__c
+        );
+        Set<String> subCategoryAliases = natureTextAliases(
+            noc.FEC_Sub_Category__r == null ? null : noc.FEC_Sub_Category__r.Name,
+            noc.FEC_Sub_Category__r == null ? null : noc.FEC_Sub_Category__r.FEC_Code__c
+        );
+        Set<String> subCodeAliases = natureTextAliases(
+            noc.FEC_Sub_Code__r == null ? null : noc.FEC_Sub_Code__r.Name,
+            noc.FEC_Sub_Code__r == null ? null : noc.FEC_Sub_Code__r.FEC_Code__c
+        );
+
+        for (String categoryAlias : categoryAliases) {
+            for (String subCategoryAlias : subCategoryAliases) {
+                if (noc.FEC_Sub_Code__c == null || subCodeAliases.isEmpty()) {
+                    out.nocIdByTripleTextKey.put(
+                        productIdKey + '|' + categoryAlias + '|' + subCategoryAlias,
+                        noc.Id
+                    );
+                } else {
+                    for (String subCodeAlias : subCodeAliases) {
+                        out.nocIdByFullTextKey.put(
+                            productIdKey +
+                                '|' +
+                                categoryAlias +
+                                '|' +
+                                subCategoryAlias +
+                                '|' +
+                                subCodeAlias,
+                            noc.Id
+                        );
+                    }
+                }
+            }
+        }
+    }
+
+    private static Id resolveNatureOfCaseIdForImportRow(
+        ParsedCaseRow r,
+        LookupMaps maps,
+        NatureOfCaseResolveMaps nocResolveMaps
+    ) {
+        if (r == null || maps == null || nocResolveMaps == null) {
+            return null;
+        }
+        Id productId = lookupFromMap(r.productType, maps.productMap);
+        if (productId == null || String.isBlank(r.category) || String.isBlank(r.subCategory)) {
+            return null;
+        }
+        String productIdKey = String.valueOf(productId);
+
+        Id categoryId = lookupFromMap(r.category, maps.categoryMap);
+        Id subCategoryId = lookupFromMap(r.subCategory, maps.subCategoryMap);
+        Id subCodeId = lookupFromMap(r.subCode, maps.subCodeMap);
+        if (categoryId != null && subCategoryId != null) {
+            Id nocFromIds = nocResolveMaps.nocIdByCompositeKey.get(
+                buildNatureOfCaseCompositeKey(productId, categoryId, subCategoryId, subCodeId)
+            );
+            if (nocFromIds != null) {
+                return nocFromIds;
+            }
+        }
+
+        List<String> categoryCandidates = importNatureTextCandidates(r.category);
+        List<String> subCategoryCandidates = importNatureTextCandidates(r.subCategory);
+        List<String> subCodeCandidates = String.isBlank(r.subCode)
+            ? new List<String>()
+            : importNatureTextCandidates(r.subCode);
+
+        for (String categoryAlias : categoryCandidates) {
+            for (String subCategoryAlias : subCategoryCandidates) {
+                if (!subCodeCandidates.isEmpty()) {
+                    for (String subCodeAlias : subCodeCandidates) {
+                        Id nocId = nocResolveMaps.nocIdByFullTextKey.get(
+                            productIdKey + '|' + categoryAlias + '|' + subCategoryAlias + '|' + subCodeAlias
+                        );
+                        if (nocId != null) {
+                            return nocId;
+                        }
+                    }
+                } else {
+                    Id nocId = nocResolveMaps.nocIdByTripleTextKey.get(
+                        productIdKey + '|' + categoryAlias + '|' + subCategoryAlias
+                    );
+                    if (nocId != null) {
+                        return nocId;
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
+    private static List<String> importNatureTextCandidates(String raw) {
+        List<String> candidates = new List<String>();
+        if (String.isBlank(raw)) {
+            return candidates;
+        }
+        String trimmed = raw.trim().toLowerCase();
+        candidates.add(trimmed);
+        String codeKey = extractCodeKey(raw);
+        if (String.isNotBlank(codeKey)) {
+            String codeLower = codeKey.toLowerCase();
+            if (!candidates.contains(codeLower)) {
+                candidates.add(codeLower);
+            }
+        }
+        return candidates;
+    }
+
+    private static void applyOtherDefaultCaseStageFromNature(
+        Case customerCase,
+        ParsedCaseRow r,
+        LookupMaps maps,
+        NatureOfCaseResolveMaps nocResolveMaps
+    ) {
+        if (customerCase == null || r == null || maps == null || nocResolveMaps == null) {
+            return;
+        }
+        Id nocId = resolveNatureOfCaseIdForImportRow(r, maps, nocResolveMaps);
+        if (nocId == null) {
+            return;
+        }
+        Id defaultStageId = nocResolveMaps.defaultCaseStageIdByNocId.get(nocId);
+        if (defaultStageId != null) {
+            customerCase.FEC_Current_Case_Stage__c = defaultStageId;
+        }
     }
 
     private static Boolean tripleWithoutSubCodeMatches(
