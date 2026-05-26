@@ -343,7 +343,7 @@ public without sharing class FEC_CaseBusinessService {
             LIMIT 1
           ];
           if (!subCoderlst.isEmpty() && subCoderlst[0].FEC_Code__c != null) {
-            result.subCodeCode = subCoderlst[0].FEC_Code__c;
+            result.subCodeCode = subCoderlst[0].FEC_Code__c.trim();
           }
         } catch (Exception e) {
           System.debug('getByCase subCodeCode: ' + e.getMessage());
