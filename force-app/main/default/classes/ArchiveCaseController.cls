@@ -12,6 +12,7 @@ public without sharing class ArchiveCaseController {
     @TestVisible private static List<AthenaCases__x> mockExternalRecords;
     public String errorMessage { get; set; }
     public Boolean hasError { get; set; }
+    public static Boolean isCasePega = false;
     public AthenaCases__x athenaCaseRecord;
 
     // Lookup relationships to Case: FEC_IPP__c, FEC_Card_Payment__c, FEC_Process_Action__c, FEC_Integration_Case__c
@@ -130,6 +131,7 @@ public without sharing class ArchiveCaseController {
                 migrationSourceStr = Label.TECH_PEGA_SOURCE_S3;
 
             migrationSourceStr = migrationSourceStr.toUpperCase();
+            isCasePega = migrationSourceStr.containsIgnoreCase(label.TECH_PEGA_SOURCE) ? true : false;
         }
         String migrationSource = String.isNotBlank(migrationSourceStr) ? migrationSourceStr : '';
         List<String> listOfAttIgnored = label.TECH_LIST_ATT_IGNORED.split(',');
@@ -138,7 +140,7 @@ public without sharing class ArchiveCaseController {
         String resStatusCode = '';
         String serviceName = label.TECH_API_GET_ARCHIVE_DETAIL_CASE;
         String attrString = 'attributes';
-        String s3PatchPrefix = 'fec-integration-s3/';
+        String s3PatchPrefix = label.TECH_ARCHIVE_S3_PATCH;
         String s3Patch = archiveCaseIns.s3_path__c.containsIgnoreCase(s3PatchPrefix) 
                             ? archiveCaseIns.s3_path__c.substringAfter(s3PatchPrefix) 
                             : archiveCaseIns.s3_path__c;
@@ -266,6 +268,7 @@ public without sharing class ArchiveCaseController {
             Map<String, Schema.SObjectField> fieldMap = Case.sObjectType.getDescribe().fields.getMap();
             Set<String> setPotentialIds = new Set<String>();
             Map<String, UserRecordAccess> mapIdCanAccess;
+            List<BusinessHours> businessHours = [SELECT Id FROM BusinessHours WHERE IsActive = TRUE AND IsDefault = TRUE];
 
             Case caseIns = new Case();
 
@@ -282,6 +285,7 @@ public without sharing class ArchiveCaseController {
             caseIns.RecordTypeId = recTypeIdOfThisRecord;
             caseIns.ArchiveAttachment__c = attachmentStr;
             caseIns.ArchiveMigrationSource__c = migrationSource;
+            if (!businessHours.isEmpty()) caseIns.BusinessHoursId = businessHours[0].Id;
             processSpecialValueForCase(caseIns);
             caseId = saveCaseRecord(caseIns);
 
@@ -1033,7 +1037,7 @@ public without sharing class ArchiveCaseController {
         List<Case> listCaseUpdated = new List<Case>();
         Map<String, String> mapIdRecOfSpecialObj = new Map<String, String>();
         getIdRecOfSpecialObject(mapSpecialArchiveFieldAndValue, mapSpecialArchiveField, 
-                                mapIdRecOfSpecialObj);
+                                mapIdRecOfSpecialObj, caseId);
         for (Case caseIns : [SELECT Id, FEC_Interaction__c, RecordTypeId, 
                             FEC_Account_or_Contract__c, FEC_Selected_Address__c 
                             FROM Case 
@@ -1117,7 +1121,8 @@ public without sharing class ArchiveCaseController {
     ------------------------------------------------------------*/
     public static void getIdRecOfSpecialObject(Map<String, String> mapSpecialArchiveFieldAndValue, 
                                             Map<String, String> mapSpecialArchiveField, 
-                                            Map<String, String> mapIdRecOfSpecialObj) {
+                                            Map<String, String> mapIdRecOfSpecialObj, 
+                                            Id caseId) {
 
         for (String archiveField : mapSpecialArchiveFieldAndValue.keySet()) {
             String valueOfArchiveFiled = mapSpecialArchiveFieldAndValue.get(archiveField);
@@ -1133,6 +1138,20 @@ public without sharing class ArchiveCaseController {
                 List<SObject> recOfspecialObjs = Database.query(queryStr);
 
                 if (!recOfspecialObjs.isEmpty()) mapIdRecOfSpecialObj.put(archiveField, recOfspecialObjs[0].Id);
+            }
+        }
+
+        // If case is from Pega. We just need to query the child record and link it to special archive field
+        if (isCasePega) {
+            for (String archiveFieldIns : mapSpecialArchiveField.keySet()) {
+                String specialObjIns = mapSpecialArchiveField.get(archiveFieldIns);
+
+                String queryStr = 'SELECT Id FROM ' + specialObjIns 
+                                + ' WHERE FEC_Case__c =' 
+                                + ' :caseId LIMIT 1';
+                List<SObject> recOfspecialObjs = Database.query(queryStr);
+
+                if (!recOfspecialObjs.isEmpty()) mapIdRecOfSpecialObj.put(archiveFieldIns, recOfspecialObjs[0].Id);
             }
         }
     }

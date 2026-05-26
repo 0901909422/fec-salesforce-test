@@ -27,6 +27,11 @@ import evaluateHoldCaseStage2Display from "@salesforce/apex/FEC_HoldCaseStage2Di
 import USER_ID from "@salesforce/user/Id";
 import USER_GROUP_FIELD from "@salesforce/schema/User.FEC_User_Group__c";
 import ID_FIELD from "@salesforce/schema/Case.Id";
+
+//******************Start merge with Fraud********************* */
+import getCaseToFraudFieldMap from "@salesforce/apex/FEC_IntegrationManageFraudCaseCtrl.getCaseToFraudFieldMap";
+import FRAUD_FIELD_SYNC from "@salesforce/messageChannel/FEC_Fraud_Field_Sync__c";
+//******************End merge with Fraud********************* */
 // PhuongNT add field FEC_Stage_Name__c
 import STAGE_NAME_FIELD from "@salesforce/schema/Case.FEC_Stage_Name__c";
 import {
@@ -320,6 +325,12 @@ const SECTION_NAME_ACCOUNT_INFORMATION = 'Account Information';
 const SECTION_NAME_CASE_INFORMATION = 'Case Information';
 const SUBSECTION_NAME_PROPERTY_INFO = 'Property Info';
 const SUBSECTION_NAME_C360_INFO = 'C360 Info';
+
+//******************Start merge with Fraud********************* */
+// Field mapping: Case field → Fraud additional prop field (loaded from Apex)
+let CASE_TO_FRAUD_FIELD_MAP = {};
+let FRAUD_TO_CASE_FIELD_MAP = {};
+//******************End merge with Fraud********************* */
 
 //linhdev fix jira FECREDIT_CSM_2025_KH-1393-1394
 function pointsRedemptionHideTargetForSection(sectionName, hide) {
@@ -2045,6 +2056,24 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
 
   connectedCallback() {
     console.log("🚀 ~ Fec_CaseBussiness ~ connectedCallback ~ this.business:", JSON.stringify(this.business))
+     //******************Start merge with Fraud********************* */
+     // Subscribe to fraud field sync (fraud → case)
+     this._subscriptionFraudSync = subscribe(
+      this.messageContext,
+      FRAUD_FIELD_SYNC,
+      (message) => {
+        console.log('Fec_CaseBussiness-_subscriptionFraudSync: ', message);
+        if (message.source === 'fraud') {
+          const caseFieldName = FRAUD_TO_CASE_FIELD_MAP[message.fieldId];
+          console.log('[Sync] fraud→case — fraudField:', message.fieldId, '| caseField:', caseFieldName, '| value:', message.value);
+          if (caseFieldName) {
+            this._updateCaseFieldValue(caseFieldName, message.value);
+          }
+        }
+      }
+    );
+
+    //******************End merge with Fraud********************* */
     this._boundHandleIppClosureLoad = this.handleIppClosureLoad.bind(this);
     this._boundHandleIppClosureSelection = this.handleIppClosureSelection.bind(this);
     this.template.addEventListener(
@@ -2627,6 +2656,25 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
         }
         void this._refreshHoldCaseStage2Display();
         this._syncRemovePhoneLockAfterRevert();
+        //******************Start merge with Fraud********************* */
+        // Load Case-to-Fraud field mapping from Apex (after business data is ready)
+        const nocId = typeof this.business?.natureOfCase === 'string' 
+        ? this.business.natureOfCase.trim() 
+        : String(this.business?.natureOfCase || '');
+        console.log('[getCaseToFraudFieldMap] nocId:', nocId, '| type:', typeof nocId, '| length:', nocId.length);
+        if (nocId) {
+        getCaseToFraudFieldMap({ natureOfCaseId: nocId })
+          .then(res => {
+            CASE_TO_FRAUD_FIELD_MAP = res || {};
+            FRAUD_TO_CASE_FIELD_MAP = Object.fromEntries(
+              Object.entries(CASE_TO_FRAUD_FIELD_MAP).map(([k, v]) => [v, k])
+            );
+            console.log('[CASE_TO_FRAUD_FIELD_MAP]:', CASE_TO_FRAUD_FIELD_MAP);
+          })
+          .catch(err => { console.error('getCaseToFraudFieldMap error', err); });
+        }
+
+        //******************End merge with Fraud********************* */
         //linhdev: Fix jira FECREDIT_CSM_2025_KH-1226 — mỗi accordion chỉ nhận đúng tên section của nó.
         this.activeMainSectionlst = [...sectionlst];
         //linhdev fix section Account Info + Case Info
@@ -5972,4 +6020,61 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
   handleScopedRoutingSelectionChange(event) {
     this._scopedRoutingSelection = event.detail || {};
   }
+
+   //******************Start merge with Fraud********************* */
+   @api validateFraudForm() {
+    const fraudEl = this.template.querySelector('c-fec-integration-manage-fraud-case');
+    console.log('[fec_CaseBussiness] validateFraudForm — fraudEl found:', !!fraudEl);
+    if (fraudEl && typeof fraudEl.validateFraudForm === 'function') {
+      return fraudEl.validateFraudForm();
+    }
+    return true;
+  }
+
+  @api async submitFraudCase() {
+    const fraudEl = this.template.querySelector('c-fec-integration-manage-fraud-case');
+    if (fraudEl && typeof fraudEl.submitFraudCase === 'function') {
+      await fraudEl.submitFraudCase();
+    }
+  }
+
+  @api async submitFraudWithoutCallout() {
+    const fraudEl = this.template.querySelector('c-fec-integration-manage-fraud-case');
+    if (fraudEl && typeof fraudEl.submitFraudWithoutCallout === 'function') {
+      await fraudEl.submitFraudWithoutCallout();
+    }
+  }
+  
+
+  handleChildInputChange(event) {
+    event.stopPropagation();
+    const el = event.currentTarget || event.target;
+    const fieldApiName = el.dataset?.field || el.fieldName;
+    const objName = el.dataset?.objName;
+    const value = event.detail?.value ?? el.value;
+    
+    console.log('handleChildInputChange:', fieldApiName, value);
+
+    // Sync to fraud component via LMS if field is in mapping
+    if (fieldApiName && CASE_TO_FRAUD_FIELD_MAP[fieldApiName]) {
+      const fraudFieldId = CASE_TO_FRAUD_FIELD_MAP[fieldApiName];
+      console.log('[Sync] publish case→fraud — fieldApiName:', fieldApiName, '| fraudFieldId:', fraudFieldId);
+      publish(this.messageContext, FRAUD_FIELD_SYNC, {
+        fieldId: fraudFieldId,
+        value: value,
+        source: 'case',
+        caseId: this.recordId
+      });
+    }
+  }
+
+  _updateCaseFieldValue(caseFieldName, value) {
+    // Update static inputs by data-field attribute
+    const inputEl = this.template.querySelector(`[data-field="${caseFieldName}"]`);
+    if (inputEl) {
+      inputEl.value = value;
+      console.log('[Sync] updated static input:', caseFieldName, '=', value);
+    }
+  }
+  //******************End merge with Fraud********************* */
 }
