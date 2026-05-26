@@ -561,6 +561,28 @@ public with sharing class FEC_CommonUltils {
     }
   }
 
+  /**
+   * Ghép base (vd callout:FECredit_Service) + path CMDT, luôn có '/' giữa hai phần.
+   * Tránh lỗi callout:FECredit_Serviceesb/... khi path CMDT thiếu dấu / đầu.
+   */
+  public static String buildCalloutEndpoint(String baseEndpoint, String pathSuffix) {
+    if (String.isBlank(baseEndpoint)) {
+      return pathSuffix;
+    }
+    if (String.isBlank(pathSuffix)) {
+      return baseEndpoint;
+    }
+    String base = baseEndpoint.trim();
+    String path = pathSuffix.trim();
+    while (path.startsWith('/')) {
+      path = path.substring(1);
+    }
+    if (base.endsWith('/')) {
+      return base + path;
+    }
+    return base + '/' + path;
+  }
+
   public static HttpResponse calloutApi(
     String endpoint,
     String method,
@@ -1605,7 +1627,7 @@ public with sharing class FEC_CommonUltils {
     return upper;
   }
   public static Boolean isCccd(String value) {
-      return String.isNotBlank(value) && Pattern.matches(FEC_ConstantCommon.INPUT_SEPARATOR_REGEX_12, value.trim());
-    }
+    return String.isNotBlank(value) && Pattern.matches(FEC_ConstantCommon.INPUT_SEPARATOR_REGEX_12, value.trim());
+  }
 
 }

@@ -1,5 +1,9 @@
+/**
+ * SOAP webservice GetCSCaseStatus.
+ * REST (raw SOAP XML): FEC_GetCSCaseStatusRestService → FEC_MyCaseSoapXml.
+ */
 global with sharing class FEC_GetCSCaseStatusService {
-    
+
     // -------------------------------------------------
     // MAIN SERVICE METHOD
     // -------------------------------------------------
