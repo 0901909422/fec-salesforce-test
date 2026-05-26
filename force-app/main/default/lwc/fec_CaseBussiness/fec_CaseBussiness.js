@@ -3569,8 +3569,8 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
     }
 
 
-    //hieuTT fix jira 1561
-    if(!this._validateDNBForSubmit()){
+    //FECREDIT_CSM_2025_KH-1561
+    if (!this._validateDNBForSubmit()) {
       isAllValid = false;
     }
     
@@ -3938,15 +3938,47 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
     return host.validateRemovePhoneForSubmit();
   }
 
-  //HieuTT fix jira 1561
+  //FECREDIT_CSM_2025_KH-1561
+  _getDnbNonExistingCustomerEl() {
+    const subprocess = this._getSubProcessContainerEl();
+    if (!subprocess || !subprocess.template) {
+      return null;
+    }
+    const handling =
+      subprocess.template.querySelector("c-fec_-do-not-bother-handling") ||
+      subprocess.template.querySelector("c-fec-do-not-bother-handling");
+    if (!handling || !handling.template) {
+      return (
+        subprocess.template.querySelector(
+          "c-fec_-do-not-bother-non-existing-customer",
+        ) ||
+        subprocess.template.querySelector(
+          "c-fec-do-not-bother-non-existing-customer",
+        )
+      );
+    }
+    return (
+      handling.template.querySelector(
+        "c-fec_-do-not-bother-non-existing-customer",
+      ) ||
+      handling.template.querySelector("c-fec-do-not-bother-non-existing-customer")
+    );
+  }
+
+  //FECREDIT_CSM_2025_KH-1561
   _validateDNBForSubmit() {
     const host = this._getSubProcessContainerEl();
 
-    if (!host || typeof host.validateDNBForSubmit !== "function") {
-      return true;
+    if (host && typeof host.validateDNBForSubmit === "function") {
+      return host.validateDNBForSubmit();
     }
 
-    return host.validateDNBForSubmit();
+    const dnbCmp = this._getDnbNonExistingCustomerEl();
+    if (dnbCmp && typeof dnbCmp.validateForSubmit === "function") {
+      return dnbCmp.validateForSubmit();
+    }
+
+    return true;
   }
 
   //linhdev fix jira FECREDIT_CSM_2025_KH-1368
