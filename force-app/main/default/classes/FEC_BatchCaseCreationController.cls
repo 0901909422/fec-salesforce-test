@@ -467,7 +467,7 @@ public without sharing class FEC_BatchCaseCreationController {
 
         String templateName = payload.templateName;
         List<ParsedCaseRow> parsed = parseInputRows(payload.rows);
-        Boolean isWelcomeFlow = isWelcomeCallInput(templateName, parsed);
+        Boolean isWelcomeFlow = isWelcomeCallInput(parsed);
         List<CaseRowResult> rowResults = validateAndBuildCases(parsed, isWelcomeFlow);
         Integer totalCount = rowResults.size();
         Integer failedCount = countFailedRowResults(rowResults);
