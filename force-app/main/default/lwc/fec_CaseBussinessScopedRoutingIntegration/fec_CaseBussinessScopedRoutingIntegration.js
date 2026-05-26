@@ -87,10 +87,18 @@ export function isCurrentCaseStageTeamPm(host) {
   if (!text) {
     return false;
   }
-  return text
+  const groups = text
     .split(";")
     .map((part) => part.trim().toUpperCase())
-    .some((part) => part === TEAM_PM || part === "PAYMENT");
+    .filter(Boolean);
+  if (!groups.length) {
+    return false;
+  }
+  // Stage có nhiều user group (vd CC;SP;PM) thì không xem là stage PM thuần.
+  if (groups.length > 1) {
+    return false;
+  }
+  return groups[0] === TEAM_PM || groups[0] === "PAYMENT";
 }
 
 /** RD Payment Stage 2+: assessment đã chọn → khóa combobox Team (chỉ khi stage = PM). */
