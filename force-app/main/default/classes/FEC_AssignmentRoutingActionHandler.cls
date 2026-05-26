@@ -123,7 +123,7 @@ public without sharing class FEC_AssignmentRoutingActionHandler {
             Id = assignmentId,
         FEC_Assignment_Status__c = FEC_ConstantCommon.ASSIGNMENT_STATUS_COMPLETED,
         // FEC_Assignment_Owner__c = null,
-        FEC_OwnerID__c = null
+        // FEC_OwnerID__c = null
             );
         
         // tungnm37: sync lại Case.FEC_Assignment_Users__c → clear về null sau khi resolve
@@ -1591,6 +1591,9 @@ public without sharing class FEC_AssignmentRoutingActionHandler {
                     }else if (oldStatus == FEC_ConstantCommon.STATUS_CS_BACKOFFICE) {
                         ass.FEC_Assignment_Status__c = FEC_ConstantCommon.ASSIGNMENT_AUTOCOMPLETE_STATUS;
                         routingAction = FEC_ConstantCommon.ACTION_RESOLVE;
+                    }else if(oldStatus == FEC_ConstantCommon.STATUS_CS_REVIEW || oldStatus == FEC_ConstantCommon.STATUS_OTHER_DEPT){
+                        ass.FEC_Assignment_Status__c = FEC_ConstantCommon.ASSIGNMENT_AUTORECALLED_STATUS;
+                        routingAction = FEC_ConstantCommon.ACTION_RECALL;
                     }
                     /*
                      * OTHER STATUS
