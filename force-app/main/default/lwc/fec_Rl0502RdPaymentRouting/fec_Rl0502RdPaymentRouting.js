@@ -9,7 +9,10 @@ import {
   resolveRdPaymentAssessmentApiValue,
 } from "c/fec_RdPaymentRoutingUtils";
 import { findRouteToActionId } from "c/fec_ScopedStageChangeRouting";
-import { shouldPreferScopedRoutingFromStage2 } from "c/fec_CaseBussinessScopedRoutingIntegration";
+import {
+  isCurrentCaseStageTeamPm,
+  shouldPreferScopedRoutingFromStage2,
+} from "c/fec_CaseBussinessScopedRoutingIntegration";
 import getRouteToOptionForTeam from "@salesforce/apex/FEC_ScopedStageChangeRoutingService.getRouteToOptionForTeam";
 import getRouteToTeamOptions from "@salesforce/apex/FEC_ScopedStageChangeRoutingService.getRouteToTeamOptions";
 
@@ -126,9 +129,12 @@ export function isRl0502RdPaymentRoutingEligible(host) {
   return shouldPreferScopedRoutingFromStage2(host) === true;
 }
 
-/** Khóa combobox Team khi assessment thuộc ma trận RL05.02. */
+/** Khóa combobox Team khi stage hiện tại = PM và assessment thuộc ma trận RL05.02. */
 export function isRl0502RdPaymentRouteToLocked(host) {
   if (!isRl0502RdPaymentRoutingEligible(host)) {
+    return false;
+  }
+  if (!isCurrentCaseStageTeamPm(host)) {
     return false;
   }
   const assessmentVal = host._getCaseFieldValue?.(FIELD_ASSESSMENT);
@@ -202,7 +208,7 @@ function publishRl0502RouteToTeamMessage(host, routingOpt) {
     queueLabel: routingOpt.queueLabel,
     queueDeveloperName: routingOpt.queueDeveloperName,
     stageChangeId: routingOpt.stageChangeId || null,
-    lockSelection: true,
+    lockSelection: isRl0502RdPaymentRouteToLocked(host),
   });
 }
 

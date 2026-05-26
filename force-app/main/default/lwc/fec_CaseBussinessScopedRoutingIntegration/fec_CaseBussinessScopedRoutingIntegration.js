@@ -72,9 +72,33 @@ export function setRdPaymentScopedStageTeamMapSafe(map) {
   }
 }
 
-/** RD Payment Stage 2+: assessment đã chọn → khóa combobox Team. */
+const TEAM_PM = "PM";
+
+/**
+ * Stage hiện tại (FEC_Case_Stage__c.FEC_User_Group__c) có Team PM.
+ * host._currentStageUserGroup ← wire Case.FEC_Current_Case_Stage__r.FEC_User_Group__c
+ */
+export function isCurrentCaseStageTeamPm(host) {
+  const raw =
+    host?._currentStageUserGroup ??
+    host?.business?.currentStageUserGroup ??
+    "";
+  const text = String(raw ?? "").trim();
+  if (!text) {
+    return false;
+  }
+  return text
+    .split(";")
+    .map((part) => part.trim().toUpperCase())
+    .some((part) => part === TEAM_PM || part === "PAYMENT");
+}
+
+/** RD Payment Stage 2+: assessment đã chọn → khóa combobox Team (chỉ khi stage = PM). */
 export function computeRdPaymentScopedRouteToLocked(host) {
   if (!shouldPreferScopedRoutingFromStage2(host)) {
+    return false;
+  }
+  if (!isCurrentCaseStageTeamPm(host)) {
     return false;
   }
   const assessmentVal = host._getCaseFieldValue?.(
