@@ -268,6 +268,7 @@ public without sharing class ArchiveCaseController {
             Map<String, Schema.SObjectField> fieldMap = Case.sObjectType.getDescribe().fields.getMap();
             Set<String> setPotentialIds = new Set<String>();
             Map<String, UserRecordAccess> mapIdCanAccess;
+            List<BusinessHours> businessHours = [SELECT Id FROM BusinessHours WHERE IsActive = TRUE AND IsDefault = TRUE];
 
             Case caseIns = new Case();
 
@@ -284,6 +285,7 @@ public without sharing class ArchiveCaseController {
             caseIns.RecordTypeId = recTypeIdOfThisRecord;
             caseIns.ArchiveAttachment__c = attachmentStr;
             caseIns.ArchiveMigrationSource__c = migrationSource;
+            if (!businessHours.isEmpty()) caseIns.BusinessHoursId = businessHours[0].Id;
             processSpecialValueForCase(caseIns);
             caseId = saveCaseRecord(caseIns);
 
