@@ -957,6 +957,37 @@ public with sharing class FEC_CommonUltils {
       .addTextNode(value == null ? '' : value);
   }
 
+  @TestVisible
+  private static Integer deferredApiLogDepth = 0;
+  private static List<FEC_API_Log__c> deferredApiLogs = new List<FEC_API_Log__c>();
+
+  /**
+   * Hoãn insert FEC_API_Log__c cho tới flushDeferredApiLogs — dùng khi nhiều callout trong một transaction.
+   */
+  public static void beginDeferredApiLogging() {
+    deferredApiLogDepth++;
+  }
+
+  public static void flushDeferredApiLogs() {
+    if (deferredApiLogDepth <= 0) {
+      return;
+    }
+    deferredApiLogDepth--;
+    if (deferredApiLogDepth > 0) {
+      return;
+    }
+    List<FEC_API_Log__c> toInsert = deferredApiLogs;
+    deferredApiLogs = new List<FEC_API_Log__c>();
+    if (toInsert.isEmpty()) {
+      return;
+    }
+    try {
+      insert toInsert;
+    } catch (Exception e) {
+      System.debug('FEC_CommonUltils.flushDeferredApiLogs: ' + e.getMessage());
+    }
+  }
+
   public static void logApi(
     String apiName,
     String endpoint,
@@ -979,6 +1010,11 @@ public with sharing class FEC_CommonUltils {
       log.FEC_Response_String__c = responseBody;
       log.FEC_Is_Success__c = isSuccess;
       log.FEC_Error_Message__c = errorMessage;
+
+      if (deferredApiLogDepth > 0) {
+        deferredApiLogs.add(log);
+        return;
+      }
 
       insert log;
 
