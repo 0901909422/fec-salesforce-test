@@ -378,7 +378,7 @@ public without sharing class FEC_AssignmentExecuteService {
          * Query assignments
          */
         List<FEC_Assignment__c> assignments = [
-    SELECT Id, Name, FEC_Assignment_Name__c, FEC_OwnerID__c,
+    SELECT Id, Name, FEC_Case__c, FEC_Assignment_Name__c, FEC_OwnerID__c,
     FEC_Assignment_Owner__c,FEC_Assignment_Owner_Text__c,
     FEC_Assignment_Status__c FROM FEC_Assignment__c WHERE FEC_Case__c = : caseId
         AND FEC_Assignment_Status__c NOT IN : CLOSED_STATUSES
@@ -478,6 +478,7 @@ public without sharing class FEC_AssignmentExecuteService {
                 
                 //thangtv: SYSTEM_MODE — claim owner khi user chưa có share edit trên Assignment
                 Database.update(assignmentsToUpdate, AccessLevel.SYSTEM_MODE);
+                FEC_AssignmentCaseShareService.shareCasesForAssignments(assignmentsToUpdate);
                 
                 System.debug('Assignments updated successfully');
                 executeResult.claimedCount = assignmentsToUpdate.size();
