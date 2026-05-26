@@ -2,7 +2,15 @@ public without sharing class FEC_RoutingHistTatSvc {
     private static final String FEC_BUSINESS_HOURS_NAME = 'FEC Business Hours';
     private static Id cachedBusinessHoursId;
     private static Boolean businessHoursLookupDone = false;
+    // SOQL 101: cache/dedupe theo transaction, tránh query lặp khi submit NOC bulk.
+    private static Set<Id> pendingFullTatCaseIds = new Set<Id>();
+    private static Map<Id, Case> txnCaseById = new Map<Id, Case>();
+    private static Map<Id, FEC_Assignment__c> txnAssignmentById = new Map<Id, FEC_Assignment__c>();
+    private static List<FEC_Routing_Action_History__c> txnRahPoolFromDb = new List<FEC_Routing_Action_History__c>();
+    private static Set<Id> txnRahPoolLoadedCaseIds = new Set<Id>();
+    private static List<FEC_Routing_Action_History__c> txnStagedRahBeforeInsert = new List<FEC_Routing_Action_History__c>();
 
+    // SOQL 101: cache/dedupe theo transaction, tránh query lặp khi submit NOC bulk.
     public static void applyBeforeSave(
         List<FEC_Routing_Action_History__c> newRows,
         Map<Id, FEC_Routing_Action_History__c> oldMap
@@ -11,51 +19,57 @@ public without sharing class FEC_RoutingHistTatSvc {
             return;
         }
 
+        if (oldMap != null) {
+            // SOQL 101: cache/dedupe theo transaction, tránh query lặp khi submit NOC bulk.
+            Boolean anyNeedsRecalc = false;
+            for (FEC_Routing_Action_History__c h : newRows) {
+                FEC_Routing_Action_History__c prior = oldMap.get(h.Id);
+                if (prior == null || needsRecalc(h, prior)) {
+                    anyNeedsRecalc = true;
+                    break;
+                }
+            }
+            if (!anyNeedsRecalc) {
+                return;
+            }
+        }
+
         Set<Id> caseIds = new Set<Id>();
-        Set<Id> caseIdsForFullTat = new Set<Id>();
         Set<Id> assignmentIds = new Set<Id>();
         for (FEC_Routing_Action_History__c h : newRows) {
             if (h.FEC_Case__c != null) {
                 caseIds.add(h.FEC_Case__c);
-                caseIdsForFullTat.add(h.FEC_Case__c);
             }
             if (h.FEC_Assignment__c != null) {
                 assignmentIds.add(h.FEC_Assignment__c);
             }
         }
 
-        Map<Id, Case> caseById = caseIds.isEmpty()
-            ? new Map<Id, Case>()
-            : new Map<Id, Case>([
-                  SELECT Id, FEC_Case_Created_On__c, CreatedDate
-                  FROM Case
-                  WHERE Id IN :caseIds
-              ]);
+        ensureTxnCaseCache(caseIds);
+        Map<Id, Case> caseById = new Map<Id, Case>();
+        for (Id cid : caseIds) {
+            if (txnCaseById.containsKey(cid)) {
+                caseById.put(cid, txnCaseById.get(cid));
+            }
+        }
 
-        Map<Id, FEC_Assignment__c> assignmentById = assignmentIds.isEmpty()
-            ? new Map<Id, FEC_Assignment__c>()
-            : new Map<Id, FEC_Assignment__c>([
-                  SELECT Id, FEC_Manual__c
-                  FROM FEC_Assignment__c
-                  WHERE Id IN :assignmentIds
-              ]);
+        ensureTxnAssignmentCache(assignmentIds);
+        Map<Id, FEC_Assignment__c> assignmentById = new Map<Id, FEC_Assignment__c>();
+        for (Id aid : assignmentIds) {
+            if (txnAssignmentById.containsKey(aid)) {
+                assignmentById.put(aid, txnAssignmentById.get(aid));
+            }
+        }
 
         applySubmittedOn(newRows, oldMap);
 
         Set<Id> updatingIds = oldMap != null ? oldMap.keySet() : new Set<Id>();
-        List<FEC_Routing_Action_History__c> poolFromDb = caseIds.isEmpty()
-            ? new List<FEC_Routing_Action_History__c>()
-            : [
-                  SELECT Id, FEC_Case__c, FEC_Assignment__c, FEC_Submitted_On__c, CreatedDate
-                  FROM FEC_Routing_Action_History__c
-                  WHERE FEC_Case__c IN :caseIds
-                      AND FEC_Submitted_On__c != NULL
-                      AND (Id NOT IN :updatingIds)
-                  // bản đang update thay bằng bản trong newRows
-              ];
+        ensureTxnRahPoolFromDb(caseIds, updatingIds);
 
+        // SOQL 101: cache/dedupe theo transaction, tránh query lặp khi submit NOC bulk.
         List<FEC_Routing_Action_History__c> pool = new List<FEC_Routing_Action_History__c>();
-        pool.addAll(poolFromDb);
+        pool.addAll(getTxnRahPoolRowsForCases(caseIds));
+        pool.addAll(txnStagedRahBeforeInsert);
         pool.addAll(newRows);
 
         Id bhId = resolveBusinessHoursId();
@@ -78,9 +92,149 @@ public without sharing class FEC_RoutingHistTatSvc {
             applyTatField(h, bhId, assignedOn);
         }
 
-        if (!caseIdsForFullTat.isEmpty()) {
-            FEC_CaseTatFullProcessSvc.syncCasesFromRoutingHistory(caseIdsForFullTat);
+        if (oldMap == null) {
+            // SOQL 101: cache/dedupe theo transaction, tránh query lặp khi submit NOC bulk.
+            txnStagedRahBeforeInsert.addAll(newRows);
         }
+    }
+
+    // SOQL 101: cache/dedupe theo transaction, tránh query lặp khi submit NOC bulk.
+    private static void ensureTxnCaseCache(Set<Id> caseIds) {
+        Set<Id> missing = new Set<Id>();
+        for (Id cid : caseIds) {
+            if (cid != null && !txnCaseById.containsKey(cid)) {
+                missing.add(cid);
+            }
+        }
+        if (missing.isEmpty()) {
+            return;
+        }
+        for (Case row : [
+            SELECT Id, FEC_Case_Created_On__c, CreatedDate
+            FROM Case
+            WHERE Id IN :missing
+        ]) {
+            txnCaseById.put(row.Id, row);
+        }
+    }
+
+    // SOQL 101: cache/dedupe theo transaction, tránh query lặp khi submit NOC bulk.
+    private static void ensureTxnAssignmentCache(Set<Id> assignmentIds) {
+        Set<Id> missing = new Set<Id>();
+        for (Id aid : assignmentIds) {
+            if (aid != null && !txnAssignmentById.containsKey(aid)) {
+                missing.add(aid);
+            }
+        }
+        if (missing.isEmpty()) {
+            return;
+        }
+        for (FEC_Assignment__c row : [
+            SELECT Id, FEC_Manual__c
+            FROM FEC_Assignment__c
+            WHERE Id IN :missing
+        ]) {
+            txnAssignmentById.put(row.Id, row);
+        }
+    }
+
+    // SOQL 101: cache/dedupe theo transaction, tránh query lặp khi submit NOC bulk.
+    private static void ensureTxnRahPoolFromDb(Set<Id> caseIds, Set<Id> excludeIds) {
+        Set<Id> missing = new Set<Id>();
+        for (Id cid : caseIds) {
+            if (cid != null && !txnRahPoolLoadedCaseIds.contains(cid)) {
+                missing.add(cid);
+            }
+        }
+        if (missing.isEmpty()) {
+            return;
+        }
+        Set<Id> excludeFilter = excludeIds != null ? excludeIds : new Set<Id>();
+        List<FEC_Routing_Action_History__c> rows = [
+            SELECT Id, FEC_Case__c, FEC_Assignment__c, FEC_Submitted_On__c, CreatedDate
+            FROM FEC_Routing_Action_History__c
+            WHERE FEC_Case__c IN :missing
+                AND FEC_Submitted_On__c != NULL
+                AND (Id NOT IN :excludeFilter)
+        ];
+        txnRahPoolFromDb.addAll(rows);
+        txnRahPoolLoadedCaseIds.addAll(missing);
+    }
+
+    private static List<FEC_Routing_Action_History__c> getTxnRahPoolRowsForCases(Set<Id> caseIds) {
+        List<FEC_Routing_Action_History__c> rows = new List<FEC_Routing_Action_History__c>();
+        if (caseIds == null || caseIds.isEmpty()) {
+            return rows;
+        }
+        for (FEC_Routing_Action_History__c row : txnRahPoolFromDb) {
+            if (caseIds.contains(row.FEC_Case__c)) {
+                rows.add(row);
+            }
+        }
+        return rows;
+    }
+
+    // SOQL 101: cache/dedupe theo transaction, tránh query lặp khi submit NOC bulk.
+    public static void queueCaseFullProcessTatAfterSave(List<FEC_Routing_Action_History__c> rows) {
+        queueCaseFullProcessTatAfterSave(rows, null);
+    }
+
+    public static void queueCaseFullProcessTatAfterSave(
+        List<FEC_Routing_Action_History__c> rows,
+        Map<Id, FEC_Routing_Action_History__c> oldMap
+    ) {
+        if (rows == null || rows.isEmpty()) {
+            return;
+        }
+        if (FEC_CaseTriggerHandler.isSystemUpdate) {
+            // SOQL 101: cache/dedupe theo transaction, tránh query lặp khi submit NOC bulk.
+            return;
+        }
+        for (FEC_Routing_Action_History__c h : rows) {
+            if (h.FEC_Case__c == null) {
+                continue;
+            }
+            if (oldMap != null) {
+                FEC_Routing_Action_History__c prior = oldMap.get(h.Id);
+                if (prior != null && !needsRecalc(h, prior)) {
+                    continue;
+                }
+            }
+            pendingFullTatCaseIds.add(h.FEC_Case__c);
+        }
+    }
+
+    public static void commitPendingCaseFullProcessTatSync() {
+        if (pendingFullTatCaseIds.isEmpty()) {
+            return;
+        }
+        Set<Id> batch = pendingFullTatCaseIds.clone();
+        pendingFullTatCaseIds.clear();
+        if (batch.isEmpty()) {
+            return;
+        }
+        // SOQL 101: cache/dedupe theo transaction, tránh query lặp khi submit NOC bulk.
+        if (System.isBatch() || System.isQueueable()) {
+            FEC_CaseTatFullProcessSvc.syncCasesFromRoutingHistory(batch);
+            return;
+        }
+        if (Limits.getQueueableJobs() < Limits.getLimitQueueableJobs()) {
+            System.enqueueJob(new FEC_CaseFullProcessTatQueueJob(batch));
+        }
+    }
+
+    // SOQL 101: cache/dedupe theo transaction, tránh query lặp khi submit NOC bulk.
+    public static void syncCaseFullProcessTatAfterSave(List<FEC_Routing_Action_History__c> rows) {
+        queueCaseFullProcessTatAfterSave(rows, null);
+        commitPendingCaseFullProcessTatSync();
+    }
+
+    public static void syncCaseFullProcessTatAfterSave(
+        List<FEC_Routing_Action_History__c> rows,
+        Map<Id, FEC_Routing_Action_History__c> oldMap
+    ) {
+        queueCaseFullProcessTatAfterSave(rows, oldMap);
+        commitPendingCaseFullProcessTatSync();
     }
 
     /**
@@ -138,7 +292,11 @@ public without sharing class FEC_RoutingHistTatSvc {
             return;
         }
 
-        Long diffMs = BusinessHours.diff(bhId, assignedOn, h.FEC_Submitted_On__c);
+        Long diffMs = FEC_BusinessHoursTatUtil.diffMsExcludingWeekends(
+            bhId,
+            assignedOn,
+            h.FEC_Submitted_On__c
+        );
         if (diffMs == null || diffMs < 0) {
             h.FEC_TAT_by_Assignment__c = null;
             return;
@@ -179,7 +337,8 @@ public without sharing class FEC_RoutingHistTatSvc {
             h.FEC_Case__c,
             null,
             h.FEC_Submitted_On__c,
-            true
+            true,
+            false
         );
         if (prior != null && prior.FEC_Submitted_On__c != null) {
             return prior.FEC_Submitted_On__c;
@@ -188,7 +347,7 @@ public without sharing class FEC_RoutingHistTatSvc {
     }
 
     /**
-     * TH2: bản ghi gắn Assignment — ưu tiên prior cùng Assignment; manual fallback prior cùng Case (không lọc Assignment = null).
+     * TH2: ưu tiên prior cùng Assignment; TH2.2.2 Manual fallback prior cùng Case (không lọc FEC_Assignment__c = null).
      */
     private static Datetime resolveTh2AssignedOn(
         FEC_Routing_Action_History__c h,
@@ -205,7 +364,8 @@ public without sharing class FEC_RoutingHistTatSvc {
             h.FEC_Case__c,
             h.FEC_Assignment__c,
             h.FEC_Submitted_On__c,
-            true
+            true,
+            false
         );
         if (priorSameAssign != null && priorSameAssign.FEC_Submitted_On__c != null) {
             return priorSameAssign.FEC_Submitted_On__c;
@@ -219,6 +379,7 @@ public without sharing class FEC_RoutingHistTatSvc {
                 h.FEC_Case__c,
                 null,
                 h.FEC_Submitted_On__c,
+                false,
                 false
             );
             if (priorOnCase != null && priorOnCase.FEC_Submitted_On__c != null) {
@@ -230,26 +391,35 @@ public without sharing class FEC_RoutingHistTatSvc {
     }
 
     /**
-     * @param assignmentIdFilter null = mọi RAH cùng Case; non-null = cùng FEC_Assignment__c.
+     * @param assignmentIdFilter non-null = cùng FEC_Assignment__c; null = không lọc theo Id Assignment.
+     * @param assignmentMustBeNullOnly giữ tham số cho tương lai; TH2.2.2 luôn false (bỏ lọc Assignment = null).
      * @param strictLessSubmitted true: Submitted &lt; current; false: Submitted &lt;= current (TH2.2.2).
      */
+    @TestVisible
     private static FEC_Routing_Action_History__c findBestPrior(
         List<FEC_Routing_Action_History__c> pool,
         FEC_Routing_Action_History__c current,
         Id caseId,
         Id assignmentIdFilter,
         Datetime currentSubmitted,
-        Boolean strictLessSubmitted
+        Boolean strictLessSubmitted,
+        Boolean assignmentMustBeNullOnly
     ) {
         FEC_Routing_Action_History__c best = null;
         for (FEC_Routing_Action_History__c cand : pool) {
             if (cand == current) {
                 continue;
             }
+            if (current.Id != null && cand.Id == current.Id) {
+                continue;
+            }
             if (cand.FEC_Case__c != caseId) {
                 continue;
             }
             if (assignmentIdFilter != null && cand.FEC_Assignment__c != assignmentIdFilter) {
+                continue;
+            }
+            if (assignmentMustBeNullOnly == true && cand.FEC_Assignment__c != null) {
                 continue;
             }
             if (cand.FEC_Submitted_On__c == null) {
@@ -312,7 +482,7 @@ public without sharing class FEC_RoutingHistTatSvc {
     }
 
     /**
-     * Hiển thị duration (diffMs từ BusinessHours.diff) dạng HH:mm (vd 08:30).
+     * Hiển thị duration (diffMs từ FEC_BusinessHoursTatUtil, trừ T7/CN) dạng HH:mm (vd 08:30).
      * Tổng giờ làm việc và phút; giờ có thể > 23 nếu TAT dài hơn một ngày làm việc.
      * Code duoi nay cua hoangnm107
      */

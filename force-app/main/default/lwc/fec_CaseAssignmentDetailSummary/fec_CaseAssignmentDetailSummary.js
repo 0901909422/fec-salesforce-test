@@ -1,8 +1,9 @@
 import { LightningElement, api, wire, track } from "lwc";
 import { NavigationMixin } from "lightning/navigation";
-import { getRecord, getRecordNotifyChange, updateRecord } from "lightning/uiRecordApi";
+import { getRecord, getRecordNotifyChange, updateRecord, getFieldValue } from "lightning/uiRecordApi";
 import { getObjectInfo, getPicklistValues } from "lightning/uiObjectInfoApi";
 import { ShowToastEvent } from "lightning/platformShowToastEvent";
+import { RefreshEvent } from "lightning/refresh";
 import getBusinessHourOptions from "@salesforce/apex/FEC_CaseAssignmentConfigController.getBusinessHourOptions";
 import getActiveCaseQueues from "@salesforce/apex/FEC_CaseAssignmentConfigController.getActiveCaseQueues";
 import isCaseAssignmentNameTaken from "@salesforce/apex/FEC_CaseAssignmentConfigController.isCaseAssignmentNameTaken";
@@ -59,8 +60,15 @@ const FIELDS = [
 export default class Fec_CaseAssignmentDetailSummary extends NavigationMixin(LightningElement) {
   @api recordId;
 
-  @wire(getRecord, { recordId: "$recordId", fields: FIELDS })
   record;
+
+  _previousNocCount;
+
+  @wire(getRecord, { recordId: "$recordId", fields: FIELDS })
+  wiredAssignmentRecord(result) {
+    this.record = result;
+    this.refreshRelatedListIfNocCountChanged(result);
+  }
 
   @wire(getBusinessHourOptions)
   wiredBusinessHourOptions(result) {
@@ -1173,5 +1181,20 @@ export default class Fec_CaseAssignmentDetailSummary extends NavigationMixin(Lig
 
   get objectApiName() {
     return OBJECT_API_NAME;
+  }
+
+  /**
+   * Rollup FEC_Case_Assignmetn_NOC_Count__c đổi sau khi thêm NOC → refresh related list (cùng record page).
+   */
+  refreshRelatedListIfNocCountChanged(wireResult) {
+    if (!wireResult?.data) {
+      return;
+    }
+    const raw = getFieldValue(wireResult.data, NOC_COUNT_FIELD);
+    const newCount = Number.isFinite(Number(raw)) ? Number(raw) : 0;
+    if (this._previousNocCount !== undefined && newCount !== this._previousNocCount) {
+      this.dispatchEvent(new RefreshEvent());
+    }
+    this._previousNocCount = newCount;
   }
 }

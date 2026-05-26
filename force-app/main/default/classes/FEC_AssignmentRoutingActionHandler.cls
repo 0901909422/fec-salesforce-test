@@ -101,9 +101,9 @@ public without sharing class FEC_AssignmentRoutingActionHandler {
         //Chưa có trường FEC_Assignment_Owner__c(formular)
         FEC_Assignment__c assignmentToUpdate = new FEC_Assignment__c(
             Id = assignmentId,
-        FEC_Assignment_Status__c = FEC_ConstantCommon.ASSIGNMENT_STATUS_COMPLETED,
-        FEC_OwnerID__c = null // unassigned
-            );
+        FEC_Assignment_Status__c = FEC_ConstantCommon.ASSIGNMENT_STATUS_COMPLETED
+        // FEC_OwnerID__c = null // unassigned
+        );
         
         update assignmentToUpdate;
         syncAssignmentUsersToCase(caseId, assignmentId);
@@ -121,9 +121,9 @@ public without sharing class FEC_AssignmentRoutingActionHandler {
         // tungnm37: clear cả FEC_OwnerID__c để syncAssignmentUsersToCase không đọc nhầm User cũ
         update new FEC_Assignment__c(
             Id = assignmentId,
-        FEC_Assignment_Status__c = FEC_ConstantCommon.ASSIGNMENT_STATUS_COMPLETED,
-        FEC_Assignment_Owner__c = null,
-        FEC_OwnerID__c = null
+        FEC_Assignment_Status__c = FEC_ConstantCommon.ASSIGNMENT_STATUS_COMPLETED
+        // FEC_Assignment_Owner__c = null,
+        // FEC_OwnerID__c = null
             );
         
         // tungnm37: sync lại Case.FEC_Assignment_Users__c → clear về null sau khi resolve
@@ -1560,15 +1560,50 @@ public without sharing class FEC_AssignmentRoutingActionHandler {
                     
                     /*
                      * Status mapping
+                     *
+                     *
                      */
-                    if (ass.FEC_Assignment_Status__c
-                    == FEC_ConstantCommon.STATUS_CS_BACKOFFICE) {
+                    
+                    /* Determine target status
+                     * + routing action
+                     */
+                    String oldStatus = ass.FEC_Assignment_Status__c;
+                    
+                    String routingAction;
+                    
+                    
+                    if (oldStatus == FEC_ConstantCommon.ASSIGNMENT_STATUS_COMPLETED) {
+                        System.debug('KEEP COMPLETED STATUS');
+                        
+                        routingAction = FEC_ConstantCommon.ACTION_RESOLVE;
+                    }
+                    
+                    /*
+                     * REVERTING CREATOR
+                     * => AUTO RECALLED
+                     */
+                    else if (oldStatus
+                    == FEC_ConstantCommon.ASSIGNMENT_STATUS_REVERTING_CREATOR) {
+                        ass.FEC_Assignment_Status__c =
+                            FEC_ConstantCommon.ASSIGNMENT_AUTORECALLED_STATUS;
+                        
+                        routingAction = FEC_ConstantCommon.ACTION_RECALL;
+                    }else if (oldStatus == FEC_ConstantCommon.STATUS_CS_BACKOFFICE) {
+                        ass.FEC_Assignment_Status__c = FEC_ConstantCommon.ASSIGNMENT_AUTOCOMPLETE_STATUS;
+                        routingAction = FEC_ConstantCommon.ACTION_RESOLVE;
+                    }else if(oldStatus == FEC_ConstantCommon.STATUS_CS_REVIEW || oldStatus == FEC_ConstantCommon.STATUS_OTHER_DEPT){
+                        ass.FEC_Assignment_Status__c = FEC_ConstantCommon.ASSIGNMENT_AUTORECALLED_STATUS;
+                        routingAction = FEC_ConstantCommon.ACTION_RECALL;
+                    }
+                    /*
+                     * OTHER STATUS
+                     * => AUTO COMPLETE
+                     */
+                    else {
                         ass.FEC_Assignment_Status__c =
                             FEC_ConstantCommon.ASSIGNMENT_AUTOCOMPLETE_STATUS;
                         
-                    } else {
-                        ass.FEC_Assignment_Status__c =
-                            FEC_ConstantCommon.ASSIGNMENT_AUTORECALLED_STATUS;
+                        routingAction = FEC_ConstantCommon.ACTION_RESOLVE;
                     }
                     
                     System.debug('NEW STATUS = ' + ass.FEC_Assignment_Status__c);
@@ -1585,7 +1620,7 @@ public without sharing class FEC_AssignmentRoutingActionHandler {
                     
                     FEC_Assignment__c = ass.Id,
                     
-                    FEC_Routing_Action__c = FEC_ConstantCommon.ACTION_RESOLVE,
+                    FEC_Routing_Action__c = routingAction,
                     
                     FEC_Original_User_Queue__c = ass.FEC_Assignment_Owner_Text__c,
                     
@@ -1610,7 +1645,10 @@ public without sharing class FEC_AssignmentRoutingActionHandler {
                         
                     FEC_Remark_Type__c = FEC_ConstantCommon.ROUTING_TYPE_ASSIGNMENT,
                     
-                    FEC_Case_Remarks__c = FEC_ConstantCommon.ASSIGNMENT_AUTO_COMPLETED_REMARK,
+                    // FEC_Case_Remarks__c = FEC_ConstantCommon.ASSIGNMENT_AUTO_COMPLETED_REMARK,
+                    FEC_Case_Remarks__c = routingAction == FEC_ConstantCommon.ACTION_RECALL
+                        ? 'Assignment auto recalled'
+                        : FEC_ConstantCommon.ASSIGNMENT_AUTO_COMPLETED_REMARK,
                     FEC_Stage_Name__c   = c.FEC_Current_Case_Stage__r.FEC_Code__c,
                     FEC_Case__c = caseId,
                     
