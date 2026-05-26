@@ -171,6 +171,7 @@
         <members>FEC_ImportedInteractionBatch</members>
         <members>FEC_RDPaymentContractAssessmentService</members>
         <members>FEC_CustomerIntegrationService</members>
+        <members>FEC_CardLockUnLockController</members>
 		<name>Apexclass</name>
 	</types>
     <types>
