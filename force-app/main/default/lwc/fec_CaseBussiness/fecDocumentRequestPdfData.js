@@ -129,7 +129,8 @@ export function getPdfConfigForSubCode(subCodeCode) {
  * @returns {{ templateCode: string, data: Object } | null}
  */
 export function buildPdfDataForSubCode(subCodeCode, headerData, paymentRows, repaymentRows) {
-  const config = PDF_CONFIG_MAP[subCodeCode];
+  const code = subCodeCode == null ? '' : String(subCodeCode).trim();
+  const config = PDF_CONFIG_MAP[code];
   if (!config) return null;
   return {
     templateCode: config.templateCode,

@@ -2474,7 +2474,7 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
     this._ippClosureHasEligibleRows = false;
     this._fetchRdPaymentQueues(); // Toannd61
 
-    getByCase({
+    return getByCase({
       caseId: this.recordId,
       productTypeId,
       categoryId,
@@ -4607,7 +4607,15 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
    */
   async _generateAndSavePdfIfApplicable(subCodeId) {
     const config = getPdfConfigForSubCode(this.business?.subCodeCode);
-    if (!config || subCodeId == null) return;
+    if (!config || subCodeId == null) {
+      if (subCodeId != null && !config) {
+        console.warn(
+          '[PDF] no template config, subCodeCode=',
+          this.business?.subCodeCode
+        );
+      }
+      return;
+    }
     if (this._pdfGenerateInFlight) return;
 
     try {
@@ -4616,6 +4624,14 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
         subCodeId
       });
       if (!validation?.allowed) {
+        console.warn(
+          '[PDF] validation blocked, subCodeId=',
+          subCodeId,
+          'subCodeCode=',
+          this.business?.subCodeCode,
+          'message=',
+          validation?.message
+        );
         return;
       }
 
