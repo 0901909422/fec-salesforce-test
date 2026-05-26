@@ -65,13 +65,24 @@ public without sharing class FEC_CaseDsTsSlaService {
     private static Map<String, Id> slaQueueIdByLabel;
     private static Set<Id> allQueueOwnerIds;
 
+    private static final Map<String, String> PROFILE_TO_LABEL = new Map<String, String>{
+        PROFILE_TELESALES => 'DQ - Telesales',
+        PROFILE_LG => 'LG',
+        PROFILE_DIRECT_SALES => 'DQ - Direct Sales',
+        PROFILE_POS_SALES => 'DQ - POS Sales'
+    };
+
     public class SlaEligibilityContext {
         public Boolean isEligible = false;
         public String scenario;
         public Id notifyQueueId;
+        /** @deprecated dùng activeProfiles; giữ profile đầu tiên trong danh sách */
         public String queueProfile;
         public Datetime anchorDatetime;
+        /** @deprecated dùng activeProfiles */
         public String matchedQueueLabel;
+        public List<String> activeProfiles = new List<String>();
+        public Map<String, Datetime> profileToAnchor = new Map<String, Datetime>();
     }
 
     public static SlaEligibilityContext evaluateEligibility(Case c) {
@@ -79,23 +90,43 @@ public without sharing class FEC_CaseDsTsSlaService {
         if (c == null || !meetsCommonCriteria(c)) {
             return ctx;
         }
+        ctx.activeProfiles = resolveActiveProfiles(c);
+        if (ctx.activeProfiles.isEmpty()) {
+            return ctx;
+        }
+        ctx.isEligible = true;
+        ctx.queueProfile = ctx.activeProfiles[0];
         if (matchesTh1(c)) {
-            ctx.isEligible = true;
             ctx.scenario = SCENARIO_TH1;
             ctx.notifyQueueId = c.OwnerId;
-            ctx.queueProfile = resolveProfileFromOwnerId(c.OwnerId);
-            ctx.matchedQueueLabel = resolveQueueLabelFromOwnerId(c.OwnerId);
-            return ctx;
-        }
-        if (matchesTh2(c)) {
-            ctx.isEligible = true;
+            ctx.matchedQueueLabel = resolveQueueLabelForProfile(ctx.queueProfile);
+        } else {
             ctx.scenario = SCENARIO_TH2;
-            ctx.matchedQueueLabel = resolveMatchedQueueLabel(c.FEC_Assignment_Users__c);
-            ctx.queueProfile = LABEL_TO_PROFILE.get(ctx.matchedQueueLabel);
+            ctx.matchedQueueLabel = resolveQueueLabelForProfile(ctx.queueProfile);
             ctx.notifyQueueId = resolveQueueIdByLabel(ctx.matchedQueueLabel);
-            return ctx;
         }
         return ctx;
+    }
+
+    public static List<String> resolveActiveProfiles(Case c) {
+        List<String> profiles = new List<String>();
+        if (c == null) {
+            return profiles;
+        }
+        if (matchesTh1(c)) {
+            String profile = resolveProfileFromOwnerId(c.OwnerId);
+            if (String.isNotBlank(profile)) {
+                profiles.add(profile);
+            }
+            return profiles;
+        }
+        for (String label : resolveAllMatchedQueueLabels(c.FEC_Assignment_Users__c)) {
+            String profile = LABEL_TO_PROFILE.get(label);
+            if (String.isNotBlank(profile) && !profiles.contains(profile)) {
+                profiles.add(profile);
+            }
+        }
+        return profiles;
     }
 
     public static Boolean meetsCommonCriteria(Case c) {
@@ -136,7 +167,7 @@ public without sharing class FEC_CaseDsTsSlaService {
         if (count <= 0) {
             return false;
         }
-        return String.isNotBlank(resolveMatchedQueueLabel(c.FEC_Assignment_Users__c));
+        return !resolveAllMatchedQueueLabels(c.FEC_Assignment_Users__c).isEmpty();
     }
 
     public static Boolean teamContainsDsOrTs(String fecTeam) {
@@ -170,19 +201,32 @@ public without sharing class FEC_CaseDsTsSlaService {
         return slaOwnerQueueIds;
     }
 
-    public static String resolveMatchedQueueLabel(String assignmentUsers) {
+    public static List<String> resolveAllMatchedQueueLabels(String assignmentUsers) {
+        List<String> labels = new List<String>();
         if (String.isBlank(assignmentUsers)) {
-            return null;
+            return labels;
         }
         for (String label : QUEUE_LABELS_ORDERED) {
             if (assignmentUsers.contains(label)) {
-                return label;
+                labels.add(label);
             }
         }
-        return null;
+        return labels;
+    }
+
+    /** Giữ tương thích: label đầu tiên khớp (theo thứ tự QUEUE_LABELS_ORDERED). */
+    public static String resolveMatchedQueueLabel(String assignmentUsers) {
+        List<String> labels = resolveAllMatchedQueueLabels(assignmentUsers);
+        return labels.isEmpty() ? null : labels[0];
     }
 
     public static void bulkResolveAnchors(Map<Id, SlaEligibilityContext> contextsByCaseId) {
+        bulkResolveAnchorsPerProfile(contextsByCaseId);
+    }
+
+    public static void bulkResolveAnchorsPerProfile(
+        Map<Id, SlaEligibilityContext> contextsByCaseId
+    ) {
         if (contextsByCaseId == null || contextsByCaseId.isEmpty()) {
             return;
         }
@@ -207,22 +251,28 @@ public without sharing class FEC_CaseDsTsSlaService {
             ORDER BY CreatedDate ASC
         ];
 
-        Map<Id, Datetime> anchorByCase = new Map<Id, Datetime>();
-        for (FEC_Routing_Action_History__c rah : histories) {
-            SlaEligibilityContext ctx = contextsByCaseId.get(rah.FEC_Case__c);
-            if (ctx == null || !ctx.isEligible || !rahMatchesScenario(rah, ctx)) {
+        for (Id caseId : contextsByCaseId.keySet()) {
+            SlaEligibilityContext ctx = contextsByCaseId.get(caseId);
+            if (ctx == null || !ctx.isEligible) {
                 continue;
             }
-            if (!anchorByCase.containsKey(rah.FEC_Case__c)) {
-                anchorByCase.put(rah.FEC_Case__c, rah.CreatedDate);
+            ctx.profileToAnchor = new Map<String, Datetime>();
+            for (String profile : ctx.activeProfiles) {
+                String queueLabel = resolveQueueLabelForProfile(profile);
+                Id queueId = resolveQueueIdByLabel(queueLabel);
+                for (FEC_Routing_Action_History__c rah : histories) {
+                    if (rah.FEC_Case__c != caseId) {
+                        continue;
+                    }
+                    if (!rahMatchesProfile(rah, ctx, profile, queueLabel, queueId)) {
+                        continue;
+                    }
+                    if (!ctx.profileToAnchor.containsKey(profile)) {
+                        ctx.profileToAnchor.put(profile, rah.CreatedDate);
+                    }
+                }
             }
-        }
-
-        for (Id caseId : anchorByCase.keySet()) {
-            SlaEligibilityContext ctx = contextsByCaseId.get(caseId);
-            if (ctx != null) {
-                ctx.anchorDatetime = anchorByCase.get(caseId);
-            }
+            ctx.anchorDatetime = resolvePrimaryAnchorDatetime(ctx);
         }
     }
 
@@ -250,6 +300,49 @@ public without sharing class FEC_CaseDsTsSlaService {
             return null;
         }
         return nowDt.getTime() - anchorCreatedDate.getTime();
+    }
+
+    public static Integer resolveNextCaseSlotToStamp(
+        Case c,
+        List<String> activeProfiles,
+        Map<String, Datetime> profileToAnchor,
+        Datetime nowDt
+    ) {
+        if (c == null || activeProfiles == null || activeProfiles.isEmpty()
+            || profileToAnchor == null || nowDt == null) {
+            return null;
+        }
+        for (Integer slot = 1; slot <= 3; slot++) {
+            if (!isCaseNotificationSlotEmpty(c, slot)) {
+                continue;
+            }
+            if (slot > 1 && isCaseNotificationSlotEmpty(c, slot - 1)) {
+                break;
+            }
+            for (String profile : activeProfiles) {
+                Datetime anchor = profileToAnchor.get(profile);
+                if (anchor == null) {
+                    continue;
+                }
+                Long elapsedMs = getElapsedMs(anchor, nowDt);
+                if (elapsedMs != null
+                    && elapsedMs >= thresholdMsForSlot(slot, profile)) {
+                    return slot;
+                }
+            }
+        }
+        return null;
+    }
+
+    public static Set<String> resolveRecipientUserIdsUnion(List<String> activeProfiles) {
+        Set<String> userIds = new Set<String>();
+        if (activeProfiles == null) {
+            return userIds;
+        }
+        for (String profile : activeProfiles) {
+            userIds.addAll(resolveRecipientUserIdsByProfile(profile));
+        }
+        return userIds;
     }
 
     public static Integer getDueNotificationSlot(Case c, Long elapsedMs, String queueProfile) {
@@ -335,7 +428,7 @@ public without sharing class FEC_CaseDsTsSlaService {
     }
 
     public static Case buildNotificationPatch(Case row, SlaEligibilityContext ctx, Datetime nowDt) {
-        if (ctx == null || !ctx.isEligible || ctx.anchorDatetime == null) {
+        if (ctx == null || !ctx.isEligible) {
             if (needsClearNotifications(row)) {
                 Case clearPatch = new Case(Id = row.Id);
                 clearPatch.FEC_SLA_Notification_1__c = null;
@@ -345,9 +438,16 @@ public without sharing class FEC_CaseDsTsSlaService {
             }
             return null;
         }
+        if (ctx.profileToAnchor == null || ctx.profileToAnchor.isEmpty()) {
+            ctx.profileToAnchor = new Map<String, Datetime>();
+        }
 
-        Long elapsedMs = getElapsedMs(ctx.anchorDatetime, nowDt);
-        Integer slot = getDueNotificationSlot(row, elapsedMs, ctx.queueProfile);
+        Integer slot = resolveNextCaseSlotToStamp(
+            row,
+            ctx.activeProfiles,
+            ctx.profileToAnchor,
+            nowDt
+        );
         if (slot == null) {
             return null;
         }
@@ -423,7 +523,13 @@ public without sharing class FEC_CaseDsTsSlaService {
     }
 
     public static Set<String> resolveRecipientUserIds(SlaEligibilityContext ctx) {
-        if (ctx == null || String.isBlank(ctx.queueProfile)) {
+        if (ctx == null) {
+            return new Set<String>();
+        }
+        if (ctx.activeProfiles != null && !ctx.activeProfiles.isEmpty()) {
+            return resolveRecipientUserIdsUnion(ctx.activeProfiles);
+        }
+        if (String.isBlank(ctx.queueProfile)) {
             return new Set<String>();
         }
         return resolveRecipientUserIdsByProfile(ctx.queueProfile);
@@ -485,11 +591,17 @@ public without sharing class FEC_CaseDsTsSlaService {
         );
     }
 
-    private static Boolean rahMatchesScenario(FEC_Routing_Action_History__c rah, SlaEligibilityContext ctx) {
-        if (rah == null || ctx == null || String.isBlank(ctx.matchedQueueLabel)) {
+    private static Boolean rahMatchesProfile(
+        FEC_Routing_Action_History__c rah,
+        SlaEligibilityContext ctx,
+        String profile,
+        String queueLabel,
+        Id queueId
+    ) {
+        if (rah == null || ctx == null || String.isBlank(queueLabel)) {
             return false;
         }
-        if (!queueMatchesRoutingHistory(rah, ctx)) {
+        if (!queueMatchesRoutingHistory(rah, queueLabel, queueId)) {
             return false;
         }
         if (ctx.scenario == SCENARIO_TH1) {
@@ -499,7 +611,6 @@ public without sharing class FEC_CaseDsTsSlaService {
             if ('Assignment'.equalsIgnoreCase(rah.FEC_Routing_Action_Type__c)) {
                 return false;
             }
-            // Route to Case-level: Type = Case hoặc null (nhiều RAH Route to không gán Type)
             return String.isBlank(rah.FEC_Routing_Action_Type__c)
                 || RAH_TYPE_CASE.equalsIgnoreCase(rah.FEC_Routing_Action_Type__c);
         }
@@ -508,14 +619,52 @@ public without sharing class FEC_CaseDsTsSlaService {
 
     private static Boolean queueMatchesRoutingHistory(
         FEC_Routing_Action_History__c rah,
-        SlaEligibilityContext ctx
+        String queueLabel,
+        Id queueId
     ) {
-        if (ctx.notifyQueueId != null && String.isNotBlank(rah.FEC_Updated_User_Queue_ID__c)) {
-            if (rah.FEC_Updated_User_Queue_ID__c == String.valueOf(ctx.notifyQueueId)) {
+        if (queueId != null && String.isNotBlank(rah.FEC_Updated_User_Queue_ID__c)) {
+            if (rah.FEC_Updated_User_Queue_ID__c == String.valueOf(queueId)) {
                 return true;
             }
         }
-        return queueTextMatches(rah.FEC_Updated_User_Queue__c, ctx.matchedQueueLabel);
+        return queueTextMatches(rah.FEC_Updated_User_Queue__c, queueLabel);
+    }
+
+    private static String resolveQueueLabelForProfile(String profile) {
+        return PROFILE_TO_LABEL.get(profile);
+    }
+
+    private static Datetime resolvePrimaryAnchorDatetime(SlaEligibilityContext ctx) {
+        Datetime primary = null;
+        if (ctx.profileToAnchor == null) {
+            return null;
+        }
+        for (String profile : ctx.activeProfiles) {
+            Datetime anchor = ctx.profileToAnchor.get(profile);
+            if (anchor == null) {
+                continue;
+            }
+            if (primary == null || anchor < primary) {
+                primary = anchor;
+            }
+        }
+        return primary;
+    }
+
+    private static Boolean isCaseNotificationSlotEmpty(Case c, Integer slot) {
+        if (c == null || slot == null) {
+            return true;
+        }
+        if (slot == 1) {
+            return c.FEC_SLA_Notification_1__c == null;
+        }
+        if (slot == 2) {
+            return c.FEC_SLA_Notification_2__c == null;
+        }
+        if (slot == 3) {
+            return c.FEC_SLA_Notification_3__c == null;
+        }
+        return true;
     }
 
     private static Boolean queueTextMatches(String queueText, String queueLabel) {
@@ -636,18 +785,38 @@ public without sharing class FEC_CaseDsTsSlaService {
         lines.add('testThresholds=' + isOneMinuteTestThresholdsEnabled());
 
         SlaEligibilityContext ctx = evaluateEligibility(c);
-        lines.add('eligible=' + ctx.isEligible + ' scenario=' + ctx.scenario
-            + ' profile=' + ctx.queueProfile + ' queueLabel=' + ctx.matchedQueueLabel);
+        lines.add('eligible=' + ctx.isEligible + ' scenario=' + ctx.scenario);
+        lines.add('activeProfiles=' + String.join(ctx.activeProfiles, ';'));
 
         Map<Id, SlaEligibilityContext> mapCtx = new Map<Id, SlaEligibilityContext>{ caseId => ctx };
-        bulkResolveAnchors(mapCtx);
+        bulkResolveAnchorsPerProfile(mapCtx);
         lines.add('anchorDatetime=' + ctx.anchorDatetime);
+        lines.add(
+            'unionRecipientCount=' + resolveRecipientUserIdsUnion(ctx.activeProfiles).size()
+        );
 
-        if (ctx.anchorDatetime != null) {
-            Long elapsed = getElapsedMs(ctx.anchorDatetime, System.now());
-            lines.add('elapsedMs=' + elapsed);
-            lines.add('dueSlot=' + getDueNotificationSlot(c, elapsed, ctx.queueProfile));
+        Datetime nowDt = System.now();
+        for (String profile : ctx.activeProfiles) {
+            Datetime anchor = ctx.profileToAnchor != null
+                ? ctx.profileToAnchor.get(profile)
+                : null;
+            Long elapsed = anchor != null ? getElapsedMs(anchor, nowDt) : null;
+            lines.add(
+                'profile=' + profile
+                    + ' anchor=' + anchor
+                    + ' elapsedMs=' + elapsed
+                    + ' profileDueSlot='
+                    + (elapsed != null ? String.valueOf(getProfileDueSlot(elapsed, profile)) : 'null')
+            );
         }
+
+        Integer nextSlot = resolveNextCaseSlotToStamp(
+            c,
+            ctx.activeProfiles,
+            ctx.profileToAnchor,
+            nowDt
+        );
+        lines.add('nextCaseSlotToStamp=' + nextSlot);
 
         Integer rahCount = [
             SELECT COUNT()
@@ -656,6 +825,34 @@ public without sharing class FEC_CaseDsTsSlaService {
         ];
         lines.add('rahRouteToCount=' + rahCount);
         return String.join(lines, '\n');
+    }
+
+    private static Integer getProfileDueSlot(Long elapsedMs, String queueProfile) {
+        if (elapsedMs == null || String.isBlank(queueProfile)) {
+            return null;
+        }
+        if (queueProfile == PROFILE_TELESALES || queueProfile == PROFILE_LG) {
+            if (elapsedMs >= thresholdMsForSlot(2, queueProfile)) {
+                return 2;
+            }
+            if (elapsedMs >= thresholdMsForSlot(1, queueProfile)) {
+                return 1;
+            }
+            return null;
+        }
+        if (queueProfile == PROFILE_DIRECT_SALES || queueProfile == PROFILE_POS_SALES) {
+            if (elapsedMs >= thresholdMsForSlot(3, queueProfile)) {
+                return 3;
+            }
+            if (elapsedMs >= thresholdMsForSlot(2, queueProfile)) {
+                return 2;
+            }
+            if (elapsedMs >= thresholdMsForSlot(1, queueProfile)) {
+                return 1;
+            }
+            return null;
+        }
+        return null;
     }
 
 }
