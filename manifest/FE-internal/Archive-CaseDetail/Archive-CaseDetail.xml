@@ -81,6 +81,7 @@
         <members>TECH_LIST_OBJ_DEL_ARCHIVE_CASE</members>
         <members>TECH_PEGA_SOURCE</members>
         <members>TECH_PEGA_SOURCE_S3</members>
+        <members>TECH_ARCHIVE_S3_PATCH</members>
         <name>CustomLabel</name>
     </types>
 
