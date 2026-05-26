@@ -10,6 +10,9 @@ public without sharing class FEC_CaseTriggerHandler {
     public static Boolean isSystemUpdate = false;
     /** Case Id đã system-update trong transaction — chặn Flow/Process follow-up ghi Last Updated By View. */
     public static Set<Id> systemUpdatedCaseIds = new Set<Id>();
+    // SOQL 101: cache RecordType / Interaction Case channel — submit NOC update Case nhiều lần.
+    private static Map<Id, String> txnCaseRecordTypeDevName = new Map<Id, String>();
+    private static Map<Id, String> txnInteractionCaseChannel = new Map<Id, String>();
     
     /**
      * Method Description: Main entry point được gọi từ trigger
@@ -57,7 +60,7 @@ public without sharing class FEC_CaseTriggerHandler {
      */
     private void onBeforeInsert(List<Case> newCases) {
         setEmail2CaseChannelBeforeInsert(newCases);
-        syncChannelFromInteractionForCustomerCase(newCases);
+        syncChannelFromInteractionForCustomerCase(newCases, null);
         generateFECIdSearch(newCases);
         updateCaseParticipantsOnInsert(newCases);
         assignEntitlement(newCases);
@@ -79,7 +82,7 @@ public without sharing class FEC_CaseTriggerHandler {
      */
     private void onBeforeUpdate(List<Case> newCases, Map<Id, Case> oldMap) {
         updateCaseParticipantsOnUpdate(newCases, oldMap);
-        syncChannelFromInteractionForCustomerCase(newCases);
+        syncChannelFromInteractionForCustomerCase(newCases, oldMap);
                 
         // Delegate: Check duplicate External Interaction ID (Story 4)
         new CaseTriggerHandler().onBeforeUpdate(newCases, oldMap);
@@ -742,12 +745,8 @@ public without sharing class FEC_CaseTriggerHandler {
             return;
         }
         
-        // Query RecordType để lấy DeveloperName
-        Map<Id, String> recordTypeDeveloperNameMap = new Map<Id, String>();
-        for (RecordType rt : [SELECT Id, DeveloperName FROM RecordType 
-                              WHERE Id IN :recordTypeIds AND SObjectType = 'Case']) {
-            recordTypeDeveloperNameMap.put(rt.Id, rt.DeveloperName);
-        }
+        ensureCaseRecordTypeDevNames(recordTypeIds);
+        Map<Id, String> recordTypeDeveloperNameMap = txnCaseRecordTypeDevName;
         
         // Định nghĩa các Record Type được phép
         Set<String> allowedRecordTypes = new Set<String>{'Customer_Case', 'Internal_Case'};
@@ -798,12 +797,8 @@ public without sharing class FEC_CaseTriggerHandler {
             return;
         }
         
-        // Query RecordType để lấy DeveloperName
-        Map<Id, String> recordTypeDeveloperNameMap = new Map<Id, String>();
-        for (RecordType rt : [SELECT Id, DeveloperName FROM RecordType 
-                              WHERE Id IN :recordTypeIds AND SObjectType = 'Case']) {
-            recordTypeDeveloperNameMap.put(rt.Id, rt.DeveloperName);
-        }
+        ensureCaseRecordTypeDevNames(recordTypeIds);
+        Map<Id, String> recordTypeDeveloperNameMap = txnCaseRecordTypeDevName;
         
         // Định nghĩa các Record Type được phép
         Set<String> allowedRecordTypes = new Set<String>{'Customer_Case', 'Internal_Case'};
@@ -827,43 +822,98 @@ public without sharing class FEC_CaseTriggerHandler {
      * @return void
      * @created: 2026/02/05
      */
-    private void syncChannelFromInteractionForCustomerCase(List<Case> newCases) {
+    private void syncChannelFromInteractionForCustomerCase(
+        List<Case> newCases,
+        Map<Id, Case> oldMap
+    ) {
+        if (isSystemUpdate) {
+            return;
+        }
         Set<Id> recordTypeIds = new Set<Id>();
         Set<Id> interactionCaseIds = new Set<Id>();
         for (Case c : newCases) {
-            if (c.RecordTypeId != null && c.FEC_Interaction__c != null) {
-                recordTypeIds.add(c.RecordTypeId);
-                interactionCaseIds.add(c.FEC_Interaction__c);
+            if (c.RecordTypeId == null || c.FEC_Interaction__c == null) {
+                continue;
             }
+            if (oldMap != null) {
+                Case oldC = oldMap.get(c.Id);
+                if (oldC != null
+                    && c.FEC_Interaction__c == oldC.FEC_Interaction__c
+                    && String.isNotBlank(c.FEC_Channel__c)) {
+                    continue;
+                }
+            }
+            recordTypeIds.add(c.RecordTypeId);
+            interactionCaseIds.add(c.FEC_Interaction__c);
         }
         if (interactionCaseIds.isEmpty()) {
             return;
         }
-        Map<Id, String> recordTypeDeveloperNameMap = new Map<Id, String>();
-        for (RecordType rt : [SELECT Id, DeveloperName FROM RecordType
-                              WHERE Id IN :recordTypeIds AND SObjectType = 'Case']) {
-            recordTypeDeveloperNameMap.put(rt.Id, rt.DeveloperName);
-        }
-        if (recordTypeDeveloperNameMap.isEmpty()) {
-            return;
-        }
-        Map<Id, String> interactionIdToChannel = new Map<Id, String>();
-        for (Case interactionCase : [SELECT Id, FEC_Channel__c FROM Case WHERE Id IN :interactionCaseIds]) {
-            if (String.isNotBlank(interactionCase.FEC_Channel__c)) {
-                interactionIdToChannel.put(interactionCase.Id, interactionCase.FEC_Channel__c);
-            }
-        }
-        if (interactionIdToChannel.isEmpty()) {
-            return;
-        }
+        ensureCaseRecordTypeDevNames(recordTypeIds);
+        ensureInteractionCaseChannels(interactionCaseIds);
         String customerCaseDevName = FEC_ConstantCommon.CASE_CUSTOMER_RECORD_TYPE_DEV_NAME;
         for (Case c : newCases) {
-            String rtName = recordTypeDeveloperNameMap.get(c.RecordTypeId);
-            if (customerCaseDevName.equals(rtName) && c.FEC_Interaction__c != null) {
-                String channel = interactionIdToChannel.get(c.FEC_Interaction__c);
-                if (String.isNotBlank(channel)) {
-                    c.FEC_Channel__c = channel;
-                }
+            if (c.RecordTypeId == null || c.FEC_Interaction__c == null) {
+                continue;
+            }
+            String rtName = txnCaseRecordTypeDevName.get(c.RecordTypeId);
+            if (!customerCaseDevName.equals(rtName)) {
+                continue;
+            }
+            String channel = txnInteractionCaseChannel.get(c.FEC_Interaction__c);
+            if (String.isNotBlank(channel)) {
+                c.FEC_Channel__c = channel;
+            }
+        }
+    }
+
+    private static void ensureCaseRecordTypeDevNames(Set<Id> recordTypeIds) {
+        Set<Id> missing = new Set<Id>();
+        for (Id rtId : recordTypeIds) {
+            if (rtId != null && !txnCaseRecordTypeDevName.containsKey(rtId)) {
+                missing.add(rtId);
+            }
+        }
+        if (missing.isEmpty()) {
+            return;
+        }
+        for (RecordType rt : [
+            SELECT Id, DeveloperName
+            FROM RecordType
+            WHERE Id IN :missing AND SObjectType = 'Case'
+        ]) {
+            txnCaseRecordTypeDevName.put(rt.Id, rt.DeveloperName);
+        }
+        for (Id rtId : missing) {
+            if (!txnCaseRecordTypeDevName.containsKey(rtId)) {
+                txnCaseRecordTypeDevName.put(rtId, null);
+            }
+        }
+    }
+
+    private static void ensureInteractionCaseChannels(Set<Id> interactionCaseIds) {
+        Set<Id> missing = new Set<Id>();
+        for (Id caseId : interactionCaseIds) {
+            if (caseId != null && !txnInteractionCaseChannel.containsKey(caseId)) {
+                missing.add(caseId);
+            }
+        }
+        if (missing.isEmpty()) {
+            return;
+        }
+        for (Case interactionCase : [
+            SELECT Id, FEC_Channel__c
+            FROM Case
+            WHERE Id IN :missing
+        ]) {
+            txnInteractionCaseChannel.put(
+                interactionCase.Id,
+                interactionCase.FEC_Channel__c
+            );
+        }
+        for (Id caseId : missing) {
+            if (!txnInteractionCaseChannel.containsKey(caseId)) {
+                txnInteractionCaseChannel.put(caseId, null);
             }
         }
     }
