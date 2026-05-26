@@ -935,23 +935,6 @@ public without sharing class FEC_CaseBusinessService {
           hasCaseAssignment
         );
 
-        System.debug(
-          'FEC_DEBUG GSR NOC before master loop caseId=' +
-          selectedCase.Id +
-          ' isGsrNocOnlyDisplayMode=' +
-          isGsrNocOnlyDisplayMode +
-          ' isActualNatureGsrOnly=' +
-          isActualNatureGsrOnly +
-          ' actualBp=' +
-          actualBusinessProcessCode +
-          ' masterDataRowCount=' +
-          (masterDatalst == null ? 0 : masterDatalst.size()) +
-          ' isUpdatedNocDifferentFromCurrent=' +
-          isUpdatedNocDifferentFromCurrent +
-          ' isGsrStage1Revert=' +
-          isGsrStage1Revert
-        );
-
         for (SObject item : masterDatalst) {
           sectionNameTemp = (String) item.get('FEC_Section__c');
           subSectionNameTemp = (String) item.get('FEC_Sub_Section__c');
@@ -1027,12 +1010,6 @@ public without sharing class FEC_CaseBusinessService {
                 !isGsrStage1Revert &&
                 !isGsrStage1Recall
               ) {
-                System.debug(
-                  'FEC_DEBUG GSR NOC skip Original Info LWC (NOC khác history) caseId=' +
-                  selectedCase.Id +
-                  ' lwc=' +
-                  item.get('FEC_LWC_Name__c')
-                );
                 continue;
               }
             } else {
@@ -1040,28 +1017,10 @@ public without sharing class FEC_CaseBusinessService {
                 !isUpdatedNocDifferentFromCurrent &&
                 (isGsrStage1Revert || isGsrStage1Recall);
               // Không khác: ẩn Property Info — trừ GSR Stage 1 revert/recall (hiện Property Info để sửa)
-              if ('Property Info'.equals(subSectionNameTemp)) {
-                System.debug(
-                  'FEC_DEBUG GSR NOC Property Info row (NOC trùng history) caseId=' +
-                  selectedCase.Id +
-                  ' gsrStage1ShowPropertyInfoWhenNocUnchanged=' +
-                  gsrStage1ShowPropertyInfoWhenNocUnchanged +
-                  ' willSkip=' +
-                  (!gsrStage1ShowPropertyInfoWhenNocUnchanged) +
-                  ' itemType=' +
-                  itemType +
-                  ' field=' +
-                  fieldApiNameTemp
-                );
-              }
               if (
                 'Property Info'.equals(subSectionNameTemp) &&
                 !gsrStage1ShowPropertyInfoWhenNocUnchanged
               ) {
-                System.debug(
-                  'FEC_DEBUG GSR NOC skip Property Info (NOC trùng history, không revert/recall) caseId=' +
-                  selectedCase.Id
-                );
                 continue;
               }
             }
