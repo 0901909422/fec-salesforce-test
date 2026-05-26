@@ -49,6 +49,7 @@
 		<members>FEC_API_Config.FEC_MFASOUTSTANDINGAUTHINQ</members>
 		<members>FEC_API_Config.FEC_Vmx_Acct_Blkcd_Upd_Emea</members>
 		<members>FEC_API_Config.FEC_VMX_AUTH_DETAIL_INQ</members>
+		<members>FEC_API_Config.FEC_Get_Customer_List</members>
 		<name>CustomMetadata</name>
 	</types>
 	<types>
@@ -119,6 +120,7 @@
         <members>FEC_ConstantCommon</members>
         <members>FEC_NotificationHistoryController</members>
         <members>FEC_Notification</members>
+        <members>FEC_OwnerTeamLookupSvc</members>
         <members>FEC_CheckEligibleController</members>
         <members>FEC_CardEligibilityController</members>
         <members>FEC_CommonUltils</members>
@@ -137,6 +139,7 @@
         <members>FEC_CaseExecuteService</members>
         <members>FEC_CaseInitUpdateService</members>
         <members>FEC_CaseInitUpdateServiceTest</members>
+        <members>FEC_CaseFullProcessTatQueueJob</members>
         <members>FEC_RoutingActionHistoryTriggerHandler</members>
         <members>FEC_RelevantTicketTriggerHandler</members>
         <members>FEC_PointsRedemptionCaseController</members>
@@ -175,17 +178,22 @@
 		<members>FEC_CMSRewardRedeemServiceTest</members>
 		<members>FEC_AssignAutoDistribSched</members>
 		<members>FEC_CaseAssignmentAutoDistributeService</members>
+		<members>FEC_CaseAssigAutoDistributeService_Test</members>
 		<members>FEC_CaseAssignmentAutoDistQueueJob</members>
 		<members>FEC_CaseAssignmentApplyOwnerBatch</members>
 		<members>FEC_CaseAssignmentMutationGuard</members>
+		<members>FEC_CaseAssignmentMutationGuardTest</members>
 		<members>FEC_CaseAssignmentFieldHistorySync</members>
 		<members>FEC_CaseAssignmentFieldHistorySyncTest</members>
 		<members>FEC_CaseAssignmentConfigController</members>
 		<members>FEC_CaseAssignmentConflictService</members>
 		<members>FEC_CaseAssignmentConflictServiceTest</members>
+		<members>FEC_CaseAssignmentConflictService_Test</members>
 		<members>FEC_CaseAssignmentNOCDraftTest</members>
 		<members>FEC_CaseAssignmentNOCTriggerHandler</members>
+		<members>FEC_CaseAssignmentNOCTriggerHandler_Test</members>
 		<members>FEC_CaseAssignmentNocController</members>
+		<members>FEC_CaseAssignmentNocController_Test</members>
 		<members>FEC_CaseAssignmentQueueRoleResolver</members>
         <members>FEC_CurrencyCodeLookup</members>
 		<members>FEC_HoldCaseInheritanceService</members>
@@ -200,6 +208,10 @@
 		<members>FEC_GsrStage1RevertMasterDataHelper</members>
         <members>FEC_BCH_FilterPropertyService</members>
         <members>FEC_CaseAssignmentTriggerHandler</members>
+        <members>FEC_CaseDsTsSlaBatch</members>
+        <members>FEC_CaseDsTsSlaNotificationSender</members>
+        <members>FEC_CaseDsTsSlaSchedulable</members>
+        <members>FEC_CaseDsTsSlaService</members>
         <members>FEC_CaseSlaNotificationService</members>
         <members>FEC_BlockCodeRoutingService</members>
         <members>FEC_CardClosureRefundController</members>
@@ -217,6 +229,7 @@
         <members>FEC_IPPClosureController</members>
         <members>FEC_IPPController</members>
         <members>FEC_IPPConversionController</members>
+        <members>FEC_ImportedInteractionBatch</members>
         <members>FEC_IncorrectPaymentController</members>
         <members>FEC_MFASOUTSTANDINGAUTHINQ</members>
         <members>FEC_MainInfoAccountController</members>
@@ -601,6 +614,7 @@
 		<members>FEC_Sub_Code__c.FEC_Do_Not_Bother__c</members>
 		<members>Case.FEC_Can_Execute__c</members>
         <members>Case.FEC_Can_Execute_Assignment__c</members>
+        <members>Case.FEC_Case_Executor__c</members>
 		<members>FEC_Customer_History__c.FEC_Available_Credit_Limit__c</members>
 		<members>FEC_Customer_History__c.FEC_Description__c</members>
 		<members>FEC_Customer_History__c.FEC_Error_Code__c</members>
@@ -682,6 +696,7 @@
         <members>Case.FEC_Delivery_Option_2__c</members>
         <members>FEC_Action_Button__c.FEC_Code__c</members>
         <members>FEC_Case_Assignment_Logs__c.FEC_Case_Assignment_Name__c</members>
+        <members>FEC_Case_Assignment_NOC__c.FEC_Category__c</members>
         <members>FEC_Stage_Change__c.FEC_Code__c</members>
         <members>FEC_Stage_Screen__c.FEC_Code__c</members>
         <name>CustomField</name>
@@ -872,6 +887,7 @@
         <members>FEC_Collection_Date_Filter</members>
         <members>FEC_Assignment_Mode</members>
         <members>FEC_CaseAction</members>
+		<members>FEC_Case_Information_Edit</members>
 		<members>FEC_Case_NOC</members>
 		<members>FEC_DoNotBother</members>
         <name>LightningMessageChannel</name>
@@ -1283,6 +1299,7 @@
         <members>FEC_MRC_RL0502_Dup_Banner</members>
         <members>FEC_MRC_Dup_Remark_Cancel_Prev</members>
         <members>FEC_MRC_Dup_Remark_Cancel_New</members>
+        <members>FEC_MRC_Dup_Remark_Received_Confirm</members>
         <members>FEC_MRC_RL0502_Dup_Open_Case_Btn</members>
 		<members>FEC_Transfer_Err_Remark_Null</members>
         <members>FEC_MRC_RL0502_Dup_Opt_Cancel_New</members>
@@ -1296,6 +1313,11 @@
         <members>FEC_BCH_FilterScopePreDefine</members>
         <members>FEC_BCH_Import_Rows_Invalid</members>
         <members>FEC_BCH_Import_Submitted</members>
+        <members>FEC_SLA_DS_TS_Recipient_Direct_Sales</members>
+        <members>FEC_SLA_DS_TS_Recipient_LG</members>
+        <members>FEC_SLA_DS_TS_Recipient_Pos_Sales</members>
+        <members>FEC_SLA_DS_TS_Recipient_Telesales</members>
+        <members>FEC_SLA_DS_TS_Use_Test_Thresholds</members>
         <members>FEC_MSG_SLA_Notif_Body_Approaching</members>
         <members>FEC_MSG_SLA_Notif_Body_Exceeded</members>
         <members>FEC_MSG_SLA_Notif_Title_Approaching</members>
@@ -2012,6 +2034,7 @@
         <members>FEC_Routing_Assignment__c.FEC_Nature_of_Cases__c</members>
         <members>FEC_Routing_Assignment__c.FEC_Queue__c</members>
         <members>FEC_Routing_Assignment__c.FEC_Team__c</members>
+        <members>Case.FEC_IsImported__c</members>
         <name>CustomField</name>
     </types>
     <types>
@@ -2160,9 +2183,14 @@
 
     <!-- Report -->
     <types>
+        <members>FEC_OwnerTeamLookupSvc</members>
         <members>FEC_RoutingActionHistoryTriggerHandler</members>
         <members>FEC_RoutingHistTatSvc</members>
+        <members>FEC_RoutingHistTatSvcTest</members>
         <members>FEC_CaseTatFullProcessSvc</members>
+        <members>FEC_BusinessHoursTatUtil</members>
+        <members>FEC_BusinessHoursTatUtilTest</members>
+        <members>FEC_CaseFullProcessTatQueueJob</members>
         <members>FEC_CaseTriggerHandler</members>
         <members>FEC_CaseRemarksRollupService</members>
         <members>FEC_CaseRemarksTriggerHandler</members>

@@ -13,6 +13,7 @@ global with sharing class FEC_CancelCSCaseService {
     
     
     // 2. MAIN SERVICE METHOD
+    // REST/XML: FEC_CancelCSCaseRestService → FEC_MyCaseSoapXml.parseCancelCSCaseRequest → CancelCSCaseRequest
     webservice static CancelCSCaseResponseType CancelCSCaseRequest(
         SysType Sys, 
         CaseInfoType CaseInfo

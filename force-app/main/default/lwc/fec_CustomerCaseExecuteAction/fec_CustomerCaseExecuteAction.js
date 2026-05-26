@@ -6,12 +6,13 @@ import { CloseActionScreenEvent } from "lightning/actions";
 
 import { RefreshEvent } from "lightning/refresh";
 
+import { ShowToastEvent } from "lightning/platformShowToastEvent";
+
 import IS_MODE_EDIT from "@salesforce/messageChannel/FEC_Case_Mode__c";
 
 import { setMode } from "c/fec_CustomerCaseModeStore";
 
 import executeCase from "@salesforce/apex/FEC_CaseExecuteService.executeCase";
-
 export default class Fec_CustomerCaseExecuteAction extends LightningElement {
   _recordId;
 
@@ -63,7 +64,7 @@ export default class Fec_CustomerCaseExecuteAction extends LightningElement {
       /*
        * Enable edit mode
        */
-    
+
       await this.handlePublishMessageChanel();
 
       /*
@@ -72,6 +73,24 @@ export default class Fec_CustomerCaseExecuteAction extends LightningElement {
       this.dispatchEvent(new RefreshEvent());
     } catch (e) {
       console.error("ERROR = ", e);
+
+      const message = e?.body?.message || "Execute case failed";
+
+      /*
+       * Force refresh visibility component
+       */
+      this.dispatchEvent(new RefreshEvent());
+
+      /*
+       * Show warning
+       */
+      this.dispatchEvent(
+        new ShowToastEvent({
+          title: "Warning",
+          message,
+          variant: "warning",
+        }),
+      );
     } finally {
       this.dispatchEvent(new CloseActionScreenEvent());
     }

@@ -138,7 +138,7 @@
                     <value>readonly</value>
                 </fieldInstanceProperties>
                 <fieldItem>Record.FEC_SubCategory__c</fieldItem>
-                <identifier>RecordFEC_SubCategory_cField</identifier>
+                <identifier>RecordFEC_Sub_Category__cField</identifier>
             </fieldInstance>
         </itemInstances>
         <name>Facet-0ce2c175-6805-4cb3-b1a3-42df57ff607a</name>
@@ -162,7 +162,7 @@
                     <value>readonly</value>
                 </fieldInstanceProperties>
                 <fieldItem>Record.FEC_SubCode__c</fieldItem>
-                <identifier>RecordFEC_SubCode_cField</identifier>
+                <identifier>RecordFEC_Sub_Code__cField</identifier>
             </fieldInstance>
         </itemInstances>
         <name>Facet-4f5ff439-f75a-4bcf-815f-2026327e92f3</name>
@@ -209,16 +209,6 @@
                     <name>uiBehavior</name>
                     <value>readonly</value>
                 </fieldInstanceProperties>
-                <fieldItem>Record.FEC_Case_Stage__c</fieldItem>
-                <identifier>RecordFEC_Case_Stage_cField</identifier>
-            </fieldInstance>
-        </itemInstances>
-        <itemInstances>
-            <fieldInstance>
-                <fieldInstanceProperties>
-                    <name>uiBehavior</name>
-                    <value>readonly</value>
-                </fieldInstanceProperties>
                 <fieldItem>Record.FEC_Notification_Status__c</fieldItem>
                 <identifier>RecordFEC_Notification_Status_cField2</identifier>
             </fieldInstance>
@@ -231,20 +221,10 @@
             <fieldInstance>
                 <fieldInstanceProperties>
                     <name>uiBehavior</name>
-                    <value>readonly</value>
+                    <value>none</value>
                 </fieldInstanceProperties>
-                <fieldItem>Record.FEC_Notification_Channel__c</fieldItem>
-                <identifier>RecordFEC_Notification_Channel_cField2</identifier>
-            </fieldInstance>
-        </itemInstances>
-        <itemInstances>
-            <fieldInstance>
-                <fieldInstanceProperties>
-                    <name>uiBehavior</name>
-                    <value>readonly</value>
-                </fieldInstanceProperties>
-                <fieldItem>Record.FEC_Notification_Template__c</fieldItem>
-                <identifier>RecordFEC_Notification_Template_cField2</identifier>
+                <fieldItem>Record.FEC_Case_Stage__c</fieldItem>
+                <identifier>RecordFEC_Case_Stage_cField</identifier>
             </fieldInstance>
         </itemInstances>
         <name>Facet-1d2728b9-4dd3-44e3-8449-3f2fc901cf0e</name>
@@ -291,16 +271,6 @@
                     <name>uiBehavior</name>
                     <value>readonly</value>
                 </fieldInstanceProperties>
-                <fieldItem>Record.FEC_Case_Stage__c</fieldItem>
-                <identifier>RecordFEC_Case_Stage_cField2</identifier>
-            </fieldInstance>
-        </itemInstances>
-        <itemInstances>
-            <fieldInstance>
-                <fieldInstanceProperties>
-                    <name>uiBehavior</name>
-                    <value>readonly</value>
-                </fieldInstanceProperties>
                 <fieldItem>Record.FEC_Receivers__c</fieldItem>
                 <identifier>RecordFEC_Receivers_cField</identifier>
             </fieldInstance>
@@ -313,30 +283,20 @@
             <fieldInstance>
                 <fieldInstanceProperties>
                     <name>uiBehavior</name>
+                    <value>none</value>
+                </fieldInstanceProperties>
+                <fieldItem>Record.FEC_Case_Stage__c</fieldItem>
+                <identifier>RecordFEC_Case_Stage_cField2</identifier>
+            </fieldInstance>
+        </itemInstances>
+        <itemInstances>
+            <fieldInstance>
+                <fieldInstanceProperties>
+                    <name>uiBehavior</name>
                     <value>readonly</value>
                 </fieldInstanceProperties>
                 <fieldItem>Record.FEC_Notification_Status__c</fieldItem>
                 <identifier>RecordFEC_Notification_Status_cField</identifier>
-            </fieldInstance>
-        </itemInstances>
-        <itemInstances>
-            <fieldInstance>
-                <fieldInstanceProperties>
-                    <name>uiBehavior</name>
-                    <value>readonly</value>
-                </fieldInstanceProperties>
-                <fieldItem>Record.FEC_Notification_Channel__c</fieldItem>
-                <identifier>RecordFEC_Notification_Channel_cField</identifier>
-            </fieldInstance>
-        </itemInstances>
-        <itemInstances>
-            <fieldInstance>
-                <fieldInstanceProperties>
-                    <name>uiBehavior</name>
-                    <value>readonly</value>
-                </fieldInstanceProperties>
-                <fieldItem>Record.FEC_Notification_Template__c</fieldItem>
-                <identifier>RecordFEC_Notification_Template_cField</identifier>
             </fieldInstance>
         </itemInstances>
         <name>Facet-4c9fstfyop</name>
@@ -523,6 +483,63 @@
                 <identifier>flexipage_fieldSection2</identifier>
             </componentInstance>
         </itemInstances>
+        <itemInstances>
+            <componentInstance>
+                <componentInstanceProperties>
+                    <name>actionNames</name>
+                    <valueList>
+                        <valueListItems>
+                            <value>New</value>
+                        </valueListItems>
+                    </valueList>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>maxRecordsToDisplay</name>
+                    <value>10</value>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>parentFieldApiName</name>
+                    <value>FEC_Notification__c.Id</value>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>relatedListApiName</name>
+                    <value>Notification_Template_Channel__r</value>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>relatedListDisplayType</name>
+                    <value>ADVGRID</value>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>relatedListFieldAliases</name>
+                    <valueList>
+                        <valueListItems>
+                            <value>FEC_Notification_Template__c</value>
+                        </valueListItems>
+                        <valueListItems>
+                            <value>FEC_Notification_Channel__c</value>
+                        </valueListItems>
+                    </valueList>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>relatedListLabel</name>
+                    <value>Notification Template Channel</value>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>showActionBar</name>
+                    <value>true</value>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>sortFieldAlias</name>
+                    <value>__DEFAULT__</value>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>sortFieldOrder</name>
+                    <value>Default</value>
+                </componentInstanceProperties>
+                <componentName>lst:dynamicRelatedList</componentName>
+                <identifier>lst_dynamicRelatedList</identifier>
+            </componentInstance>
+        </itemInstances>
         <name>detailTabContent</name>
         <type>Facet</type>
     </flexiPageRegions>
@@ -593,7 +610,7 @@
         <type>Facet</type>
     </flexiPageRegions>
     <flexiPageRegions>
-        <itemInstances>
+        <!-- <itemInstances>
             <componentInstance>
                 <componentInstanceProperties>
                     <name>decorate</name>
@@ -604,15 +621,16 @@
                     <value>&lt;p&gt;&lt;span style=&quot;font-size: 16px; color: rgb(250, 0, 0);&quot;&gt;🚫 {!$Label.FEC_Notification_Channel_Disabled_Msg}&lt;/span&gt;&lt;/p&gt;</value>
                 </componentInstanceProperties>
                 <componentName>flexipage:richText</componentName>
-                <identifier>richTextWarning</identifier> <visibilityRule>
+                <identifier>richTextWarning</identifier>
+                <visibilityRule>
                     <criteria>
-                        <leftValue>{!Record.FEC_Notification_Channel__r.FEC_Noti_Channel_Status__c}</leftValue>
+                        <leftValue>{!Record.FEC_Channel__c}</leftValue>
                         <operator>EQUAL</operator>
-                        <rightValue>false</rightValue>
+                        <rightValue>aaaaaaaaaaa</rightValue>
                     </criteria>
                 </visibilityRule>
             </componentInstance>
-        </itemInstances>
+        </itemInstances> -->
         <itemInstances>
             <componentInstance>
                 <componentInstanceProperties>

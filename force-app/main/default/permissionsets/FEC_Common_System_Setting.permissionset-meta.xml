@@ -225,6 +225,14 @@
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
+        <apexClass>FEC_BusinessHoursTatUtil</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_BusinessHoursTatUtilTest</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
         <apexClass>FEC_BlockCodeRoutingService</apexClass>
         <enabled>true</enabled>
     </classAccesses>
@@ -250,6 +258,10 @@
     </classAccesses>
     <classAccesses>
         <apexClass>FEC_COFFraudRelatedHandler</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_CancelCSCaseRestService</apexClass>
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
@@ -349,7 +361,27 @@
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
+        <apexClass>FEC_CaseDsTsSlaBatch</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_CaseDsTsSlaNotificationSender</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_CaseDsTsSlaSchedulable</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_CaseDsTsSlaService</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
         <apexClass>FEC_CaseExecuteService</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_CaseFullProcessTatQueueJob</apexClass>
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
@@ -502,6 +534,10 @@
     </classAccesses>
     <classAccesses>
         <apexClass>FEC_ContractClosureController</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_CreateCSCaseRestService</apexClass>
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
@@ -693,11 +729,27 @@
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
+        <apexClass>FEC_GetCSAttachedFileRestService</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_GetCSCaseStatusRestService</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
         <apexClass>FEC_GetCSCaseStatusService</apexClass>
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
+        <apexClass>FEC_GetCSMasterDataByCodeRestService</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
         <apexClass>FEC_GetCSMasterDataByCodeService</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_GetCSMasterDataRestService</apexClass>
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
@@ -861,6 +913,10 @@
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
+        <apexClass>FEC_ImportedInteractionBatch</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
         <apexClass>FEC_IncorrectPaymentController</apexClass>
         <enabled>true</enabled>
     </classAccesses>
@@ -949,6 +1005,10 @@
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
+        <apexClass>FEC_MyCaseSoapXml</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
         <apexClass>FEC_NatureOfCaseTriggerHandler</apexClass>
         <enabled>true</enabled>
     </classAccesses>
@@ -1002,6 +1062,10 @@
     </classAccesses>
     <classAccesses>
         <apexClass>FEC_NotificationService</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_OwnerTeamLookupSvc</apexClass>
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
@@ -1086,6 +1150,10 @@
     </classAccesses>
     <classAccesses>
         <apexClass>FEC_RoutingHistTatSvc</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_RoutingHistTatSvcTest</apexClass>
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
