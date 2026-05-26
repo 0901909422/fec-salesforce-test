@@ -24,7 +24,7 @@ public with sharing class FEC_CheckEligibleController {
         }
 
         List<FEC_Customer_History__c> chList = [
-            SELECT FEC_National_ID_Passport_ID__c, FEC_Primary_Phone__c
+            SELECT FEC_Search_Result_National_ID__c, FEC_Primary_Phone__c
             FROM FEC_Customer_History__c
             WHERE Id = :chId
             LIMIT 1
@@ -35,7 +35,7 @@ public with sharing class FEC_CheckEligibleController {
         }
 
         FEC_Customer_History__c ch = chList[0];
-        String nationalId = ch.FEC_National_ID_Passport_ID__c != null ? ch.FEC_National_ID_Passport_ID__c.trim() : null;
+        String nationalId = resolveNationalIdFromSearchResult(ch.FEC_Search_Result_National_ID__c);
         if (String.isBlank(nationalId)) {
             return errMessageResponse(System.Label.FEC_MSG_Error_API_Label);
         }
@@ -76,6 +76,32 @@ public with sharing class FEC_CheckEligibleController {
 
     private static FEC_CheckEligibleCallout.CheckEligibleResponse errMessageResponse(String userMessage) {
         return errResponse('CASE_RESOLUTION', userMessage);
+    }
+
+    private static String resolveNationalIdFromSearchResult(String searchResultNationalId) {
+        List<String> parts = FEC_CommonUltils.parseSearchResultNationalIds(searchResultNationalId);
+        if (parts.isEmpty()) {
+            return null;
+        }
+        if (parts.size() == 1) {
+            return parts[0];
+        }
+
+        String nationalId1 = parts[0];
+        String nationalId2 = parts[1];
+        String format1 = FEC_CommonUltils.getNationalIdFormat(nationalId1);
+        String format2 = FEC_CommonUltils.getNationalIdFormat(nationalId2);
+
+        if (format1 != format2) {
+            if (FEC_CommonUltils.isCccd(nationalId1)) {
+                return nationalId1;
+            }
+            if (FEC_CommonUltils.isCccd(nationalId2)) {
+                return nationalId2;
+            }
+            return nationalId1;
+        }
+        return nationalId1;
     }
 
     /**

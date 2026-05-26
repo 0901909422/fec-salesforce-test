@@ -3,6 +3,7 @@
  * Author       : Quangdv7
  * Date         : 2025-12-11
  * Description  : Get data for API service
+ * REST (raw SOAP XML): FEC_GetCSMasterDataByCodeRestService → FEC_MyCaseSoapXml
  * ===============================================================
  * Ver      Date           Author              Modification
  * ===============================================================

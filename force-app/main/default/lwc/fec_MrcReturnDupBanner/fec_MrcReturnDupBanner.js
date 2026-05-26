@@ -90,6 +90,19 @@ export default class Fec_MrcReturnDupBanner extends NavigationMixin(
     return this.mrcHandlingRadioOptions.length > 0;
   }
 
+  get showHandlingReadonly() {
+    return String(this.handlingOptionValue ?? STR_EMPTY).trim().length > 0;
+  }
+
+  get handlingOptionDisplayLabel() {
+    const value = String(this.handlingOptionValue ?? STR_EMPTY).trim();
+    if (!value) {
+      return STR_EMPTY;
+    }
+    const match = this.mrcHandlingRadioOptions.find((o) => o.value === value);
+    return match?.label || value;
+  }
+
   handleOpenMrcDupCase(event) {
     event?.preventDefault?.();
     const rid = this.duplicateCaseId;
