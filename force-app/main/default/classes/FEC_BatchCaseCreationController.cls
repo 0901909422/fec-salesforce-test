@@ -443,6 +443,25 @@ public with sharing class FEC_BatchCaseCreationController {
         upsertFailedBatch(fileName, templateName, reason);
     }
 
+    /**
+     * Entry point cho queueable/API — logic nằm tại FEC_BatchCaseCreationService.
+     */
+    public static List<CaseRowResult> importParsedRows(List<Object> inputRows) {
+        return FEC_BatchCaseCreationService.processImportRows(inputRows, null);
+    }
+
+    private static Boolean hasAnySucceededRowResult(List<CaseRowResult> rowResults) {
+        if (rowResults == null || rowResults.isEmpty()) {
+            return false;
+        }
+        for (CaseRowResult rr : rowResults) {
+            if (rr != null && 'Succeeded'.equals(rr.status)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     private static List<ParsedCaseRow> parseInputRows(List<Object> inputRows) {
         List<ParsedCaseRow> out = new List<ParsedCaseRow>();
         for (Object rowObj : inputRows) {
@@ -506,9 +525,16 @@ public with sharing class FEC_BatchCaseCreationController {
             } else {
                 appendContractNumberFormatRules(r.contractNumber, welcome, errs);
             }
-            if (String.isBlank(r.interactionPhone)) {
-                errs.add(System.Label.FEC_Batch_Import_Required_Interaction_Phone);
-            } else if (!Pattern.matches(FEC_ConstantCommon.PATTERN_PHONE_NUMBER, r.interactionPhone)) {
+            if (welcome) {
+                if (String.isBlank(r.interactionPhone)) {
+                    errs.add(System.Label.FEC_Batch_Import_Required_Interaction_Phone);
+                } else if (!Pattern.matches(FEC_ConstantCommon.PATTERN_PHONE_NUMBER, r.interactionPhone)) {
+                    errs.add(System.Label.FEC_Batch_Import_Invalid_Interaction_Phone_Format);
+                }
+            } else if (
+                String.isNotBlank(r.interactionPhone) &&
+                !Pattern.matches(FEC_ConstantCommon.PATTERN_PHONE_NUMBER, r.interactionPhone)
+            ) {
                 errs.add(System.Label.FEC_Batch_Import_Invalid_Interaction_Phone_Format);
             }
             if (String.isBlank(r.productType)) {
@@ -529,7 +555,7 @@ public with sharing class FEC_BatchCaseCreationController {
                 appendWelcomeCaseStatusRules(r, statusDfr, errs);
             }
 
-            if (extended) {
+            if (extended && welcome) {
                 if (String.isBlank(r.interactionChannel)) {
                     errs.add(System.Label.FEC_Batch_Import_Required_Interaction_Channel);
                 }
@@ -557,13 +583,21 @@ public with sharing class FEC_BatchCaseCreationController {
             }
 
             if (!welcome) {
-                String statusApi = matchBatchImportCaseStatus(statusDfr, r.caseStatus);
-                if (String.isBlank(statusApi)) {
+                String otherImportStatusApi = matchBatchImportCaseStatus(statusDfr, r.caseStatus);
+                if (String.isBlank(otherImportStatusApi)) {
+                    errs.add(System.Label.FEC_Batch_Import_Invalid_Case_Status);
+                } else if (String.isBlank(resolveOtherInteractionStatusApi(statusDfr, r.caseStatus))) {
                     errs.add(System.Label.FEC_Batch_Import_Invalid_Case_Status);
                 }
-            }
-
-            if (extended) {
+                appendOtherInteractionChannelValidation(
+                    r,
+                    extended,
+                    channelDfr,
+                    subChannelDfr,
+                    subChannelsByChannel,
+                    errs
+                );
+            } else if (extended) {
                 String channelApi = matchPicklist(channelDfr, r.interactionChannel);
                 String subChannelApi = matchPicklist(subChannelDfr, r.interactionSubChannel);
                 if (String.isNotBlank(r.interactionChannel) && channelApi == null) {
@@ -714,20 +748,17 @@ public with sharing class FEC_BatchCaseCreationController {
         return resolved;
     }
 
-    /** Welcome: Contract Number có dấu - (vd 20140807-103046-0001). Other: Account/ Contract Number không có - (vd 1500010000000260). */
+    /** Welcome: Contract Number bắt buộc có dấu - (vd 20140807-103046-0001). */
     private static void appendContractNumberFormatRules(
         String contractNumber,
         Boolean welcome,
         List<String> errs
     ) {
-        if (String.isBlank(contractNumber) || errs == null) {
+        if (String.isBlank(contractNumber) || errs == null || !welcome) {
             return;
         }
-        Boolean dashed = contractNumber.contains('-');
-        if (welcome && !dashed) {
+        if (!contractNumber.contains('-')) {
             errs.add(System.Label.FEC_Batch_Import_Welcome_Contract_Number_Requires_Dash);
-        } else if (!welcome && dashed) {
-            errs.add(System.Label.FEC_Batch_Import_Other_Contract_Number_No_Dash);
         }
     }
 
@@ -762,9 +793,148 @@ public with sharing class FEC_BatchCaseCreationController {
         return base;
     }
 
-    /** Interaction: Status = Closed → FEC_Interaction_Status__c (formula) = Closed. */
-    private static void applyBatchInteractionCaseDefaults(Case interactionCase) {
-        interactionCase.Status = FEC_ConstantCommon.CASE_STATUS_CLOSED;
+    private static Boolean contractNumberContainsLetter(String contractNumber) {
+        if (String.isBlank(contractNumber)) {
+            return false;
+        }
+        return Pattern.compile('[A-Za-z]').matcher(contractNumber).find();
+    }
+
+    /**
+     * OtherCases: Contract nếu có chữ hoặc có dấu - (vd 20140807-103046-0001);
+     * Account nếu chỉ là số (vd 1500010000000260).
+     */
+    private static Boolean isOtherCasesContractNumber(String contractNumber) {
+        if (String.isBlank(contractNumber)) {
+            return false;
+        }
+        return contractNumberContainsLetter(contractNumber) || contractNumber.contains('-');
+    }
+
+    private static void applyOtherAccountOrContractNumber(Case c, String contractNumber) {
+        if (c == null || String.isBlank(contractNumber)) {
+            return;
+        }
+        if (isOtherCasesContractNumber(contractNumber)) {
+            c.FEC_Contract_Number__c = contractNumber;
+            c.FEC_Account_Number__c = null;
+        } else {
+            c.FEC_Account_Number__c = contractNumber;
+            c.FEC_Contract_Number__c = null;
+        }
+    }
+
+    /**
+     * OtherCases Interaction: chỉ Product Type, phone, account/contract, channel, email (không NOC/remarks).
+     */
+    private static void applyOtherInteractionFields(
+        Case c,
+        ParsedCaseRow r,
+        LookupMaps maps,
+        Schema.DescribeFieldResult channelDfr,
+        Schema.DescribeFieldResult subChannelDfr
+    ) {
+        if (c == null || r == null) {
+            return;
+        }
+        applyOtherAccountOrContractNumber(c, r.contractNumber);
+        if (String.isNotBlank(r.interactionPhone)) {
+            c.FEC_Phone_Number__c = r.interactionPhone;
+        }
+        c.FEC_Product_Type__c = lookupFromMap(r.productType, maps.productMap);
+        Boolean extended = 'extended'.equalsIgnoreCase(r.layout);
+        if (extended) {
+            c.FEC_Channel__c = matchPicklist(channelDfr, r.interactionChannel);
+            c.FEC_Interaction_Subchannel__c = matchPicklist(subChannelDfr, r.interactionSubChannel);
+        } else {
+            applyOutboundChannelDefaults(c, channelDfr, subChannelDfr);
+        }
+        if (String.isNotBlank(r.interactionEmail)) {
+            c.FEC_Interaction_Email__c = r.interactionEmail;
+        }
+    }
+
+    private static void applyOutboundChannelDefaults(
+        Case caseToFill,
+        Schema.DescribeFieldResult channelDfr,
+        Schema.DescribeFieldResult subChannelDfr
+    ) {
+        applyWelcomeChannelDefaults(caseToFill, channelDfr, subChannelDfr);
+    }
+
+    /**
+     * OtherCases Interaction: Excel Open → Open; Resolved-Completed → Closed.
+     */
+    private static String resolveOtherInteractionStatusApi(
+        Schema.DescribeFieldResult statusDfr,
+        String rawCaseStatus
+    ) {
+        String importStatusApi = matchBatchImportCaseStatus(statusDfr, rawCaseStatus);
+        if (String.isBlank(importStatusApi)) {
+            return null;
+        }
+        if (importStatusApi.equalsIgnoreCase(FEC_ConstantCommon.CASE_STATUS_OPEN)) {
+            String openApi = matchPicklist(statusDfr, FEC_ConstantCommon.CASE_STATUS_OPEN);
+            return String.isNotBlank(openApi) ? openApi : FEC_ConstantCommon.CASE_STATUS_OPEN;
+        }
+        if (importStatusApi.equalsIgnoreCase(FEC_ConstantCommon.CASE_STATUS_RESOLVED_COMPLETED)) {
+            String closedApi = matchPicklist(statusDfr, FEC_ConstantCommon.CASE_STATUS_CLOSED);
+            return String.isNotBlank(closedApi) ? closedApi : FEC_ConstantCommon.CASE_STATUS_CLOSED;
+        }
+        return null;
+    }
+
+    private static void applyOtherInteractionCaseDefaults(Case interactionCase, String interactionStatusApi) {
+        if (interactionCase == null) {
+            return;
+        }
+        interactionCase.Status = interactionStatusApi;
+        interactionCase.FEC_Customer_Type__c = FEC_ConstantCommon.CASE_EXISTING_CUSTOMER;
+        interactionCase.FEC_Assigment_Mode__c = FEC_ConstantCommon.INTERACTION_REVIEW_MODE;
+        interactionCase.FEC_Interaction_View_Mode__c = FEC_ConstantCommon.INTERACTION_REVIEW_MODE;
+    }
+
+    private static void applyOtherCustomerCaseDefaults(Case customerCase) {
+        if (customerCase == null) {
+            return;
+        }
+        customerCase.FEC_Assigment_Mode__c = FEC_ConstantCommon.INTERACTION_REVIEW_MODE;
+        customerCase.FEC_Interaction_View_Mode__c = FEC_ConstantCommon.INTERACTION_REVIEW_MODE;
+    }
+
+    private static void appendOtherInteractionChannelValidation(
+        ParsedCaseRow r,
+        Boolean extended,
+        Schema.DescribeFieldResult channelDfr,
+        Schema.DescribeFieldResult subChannelDfr,
+        Map<String, Set<String>> subChannelsByChannel,
+        List<String> errs
+    ) {
+        if (r == null || errs == null) {
+            return;
+        }
+        if (!extended) {
+            return;
+        }
+        if (String.isBlank(r.interactionChannel)) {
+            errs.add(System.Label.FEC_Batch_Import_Required_Interaction_Channel);
+        } else if (matchPicklist(channelDfr, r.interactionChannel) == null) {
+            errs.add(System.Label.FEC_Batch_Import_Invalid_Interaction_Channel);
+        }
+        if (String.isBlank(r.interactionSubChannel)) {
+            errs.add(System.Label.FEC_Batch_Import_Required_Interaction_Sub_Channel);
+        } else if (matchPicklist(subChannelDfr, r.interactionSubChannel) == null) {
+            errs.add(System.Label.FEC_Batch_Import_Invalid_Interaction_Sub_Channel);
+        }
+        String channelApi = matchPicklist(channelDfr, r.interactionChannel);
+        String subChannelApi = matchPicklist(subChannelDfr, r.interactionSubChannel);
+        if (
+            String.isNotBlank(channelApi) &&
+            String.isNotBlank(subChannelApi) &&
+            !isSubChannelValidForChannel(channelApi, subChannelApi, subChannelsByChannel)
+        ) {
+            errs.add(System.Label.FEC_Batch_Import_Invalid_Sub_Channel_For_Channel);
+        }
     }
 
     /** Welcome Interaction: Closed, Existing, review modes. */
@@ -802,7 +972,7 @@ public with sharing class FEC_BatchCaseCreationController {
         }
     }
 
-    private static String insertWelcomeCaseRemark(Id customerCaseId, String remarksText) {
+    private static String insertBatchCaseRemark(Id customerCaseId, String remarksText) {
         if (customerCaseId == null || String.isBlank(remarksText)) {
             return null;
         }
@@ -871,6 +1041,57 @@ public with sharing class FEC_BatchCaseCreationController {
         ParsedCaseRow r,
         Id productTypeId
     ) {
+        return linkImportedCustomerHistory(interactionCaseId, r, productTypeId, false);
+    }
+
+    private static WelcomeHistoryLinkResult linkOtherCustomerHistory(
+        Id interactionCaseId,
+        ParsedCaseRow r,
+        Id productTypeId
+    ) {
+        return linkImportedCustomerHistory(interactionCaseId, r, productTypeId, true);
+    }
+
+    private static void applyHistoryAccountOrContractFromImport(
+        FEC_Customer_History__c history,
+        String contractNumber,
+        String productCodeLower,
+        Boolean otherCasesFlow
+    ) {
+        if (history == null || String.isBlank(contractNumber)) {
+            return;
+        }
+        if (otherCasesFlow) {
+            if (isOtherCasesContractNumber(contractNumber)) {
+                history.FEC_Contract_Number__c = contractNumber;
+            } else {
+                history.FEC_Account_Number__c = contractNumber;
+            }
+            return;
+        }
+        if (
+            productCodeLower == FEC_ConstantCommon.PRODUCT_TYPE_LOAN.toLowerCase() ||
+            productCodeLower == FEC_ConstantCommon.PRODUCT_TYPE_INSURANCE.toLowerCase() ||
+            productCodeLower == FEC_ConstantCommon.PRODUCT_TYPE_LOAN_CASE.toLowerCase() ||
+            productCodeLower == FEC_ConstantCommon.PRODUCT_TYPE_INSURANCE_CASE.toLowerCase()
+        ) {
+            history.FEC_Contract_Number__c = contractNumber;
+        } else if (
+            productCodeLower == FEC_ConstantCommon.PRODUCT_TYPE_CARD.toLowerCase() ||
+            productCodeLower == FEC_ConstantCommon.PRODUCT_TYPE_CARD_CASE.toLowerCase()
+        ) {
+            history.FEC_Account_Number__c = contractNumber;
+        } else {
+            history.FEC_Contract_Number__c = contractNumber;
+        }
+    }
+
+    private static WelcomeHistoryLinkResult linkImportedCustomerHistory(
+        Id interactionCaseId,
+        ParsedCaseRow r,
+        Id productTypeId,
+        Boolean otherCasesFlow
+    ) {
         WelcomeHistoryLinkResult out = new WelcomeHistoryLinkResult();
         if (interactionCaseId == null || r == null) {
             out.errorMessage = 'Interaction case is required to link customer history.';
@@ -888,21 +1109,12 @@ public with sharing class FEC_BatchCaseCreationController {
             if (String.isNotBlank(r.interactionPhone)) {
                 history.FEC_Primary_Phone__c = r.interactionPhone;
             }
-            if (
-                productCodeLower == FEC_ConstantCommon.PRODUCT_TYPE_LOAN.toLowerCase() ||
-                productCodeLower == FEC_ConstantCommon.PRODUCT_TYPE_INSURANCE.toLowerCase() ||
-                productCodeLower == FEC_ConstantCommon.PRODUCT_TYPE_LOAN_CASE.toLowerCase() ||
-                productCodeLower == FEC_ConstantCommon.PRODUCT_TYPE_INSURANCE_CASE.toLowerCase()
-            ) {
-                history.FEC_Contract_Number__c = r.contractNumber;
-            } else if (
-                productCodeLower == FEC_ConstantCommon.PRODUCT_TYPE_CARD.toLowerCase() ||
-                productCodeLower == FEC_ConstantCommon.PRODUCT_TYPE_CARD_CASE.toLowerCase()
-            ) {
-                history.FEC_Account_Number__c = r.contractNumber;
-            } else {
-                history.FEC_Contract_Number__c = r.contractNumber;
-            }
+            applyHistoryAccountOrContractFromImport(
+                history,
+                r.contractNumber,
+                productCodeLower,
+                otherCasesFlow
+            );
             insert history;
 
             FEC_CaseTriggerHandler.isExecuting = true;
@@ -1055,7 +1267,7 @@ public with sharing class FEC_BatchCaseCreationController {
                     Id customerCaseId = srCust[k].getId();
                     applyCustomerCaseSuccessResult(rr, customerCases[k], customerCaseId);
                     insertWelcomeAdditionalInfo(customerCaseId);
-                    String remarkError = insertWelcomeCaseRemark(customerCaseId, r.caseRemarks);
+                    String remarkError = insertBatchCaseRemark(customerCaseId, r.caseRemarks);
                     if (String.isNotBlank(remarkError)) {
                         rr.status = 'Failed';
                         rr.recordId = '';
@@ -1100,10 +1312,11 @@ public with sharing class FEC_BatchCaseCreationController {
             ParsedCaseRow r = parsed[i];
             Case ic = new Case();
             ic.RecordTypeId = intRt;
-            applyBatchInteractionCaseDefaults(ic);
+            String interactionStatusApi = resolveOtherInteractionStatusApi(statusDfr, r.caseStatus);
+            applyOtherInteractionCaseDefaults(ic, interactionStatusApi);
             applyBatchImportedCaseFlag(ic);
             ic.Subject = truncateWelcomeSubject('Batch Interaction - ', r.contractNumber);
-            applyNatureFields(ic, r, maps, channelDfr, subChannelDfr);
+            applyOtherInteractionFields(ic, r, maps, channelDfr, subChannelDfr);
             interactionCases.add(ic);
             interactionOrigRowIndex.add(i);
         }
@@ -1126,13 +1339,31 @@ public with sharing class FEC_BatchCaseCreationController {
                 continue;
             }
             ParsedCaseRow r = parsed[origIdx];
+            Id productTypeId = lookupFromMap(r.productType, maps.productMap);
+            WelcomeHistoryLinkResult historyLink = linkOtherCustomerHistory(
+                srInt[k].getId(),
+                r,
+                productTypeId
+            );
+            if (historyLink.historyId == null) {
+                CaseRowResult rr = rowResults[origIdx];
+                rr.status = 'Failed';
+                rr.recordId = '';
+                rr.errors = String.isNotBlank(historyLink.errorMessage)
+                    ? historyLink.errorMessage
+                    : 'Không thể liên kết Customer History.';
+                continue;
+            }
             String statusApi = matchBatchImportCaseStatus(statusDfr, r.caseStatus);
             Case cc = new Case();
             cc.RecordTypeId = custRt;
             cc.FEC_Interaction__c = srInt[k].getId();
+            cc.FEC_Account_or_Contract__c = historyLink.historyId;
             cc.Subject = buildSubject(r.contractNumber);
             cc.Status = statusApi;
-            applyNatureFields(cc, r, maps, channelDfr, subChannelDfr);
+            applyOtherCustomerCaseDefaults(cc);
+            applyNatureFields(cc, r, maps, channelDfr, subChannelDfr, false);
+            applyOtherAccountOrContractNumber(cc, r.contractNumber);
             applyBatchImportedCaseFlag(cc);
             customerCases.add(cc);
             customerOrigRowIndex.add(origIdx);
@@ -1145,8 +1376,17 @@ public with sharing class FEC_BatchCaseCreationController {
             for (Integer k = 0; k < srCust.size(); k++) {
                 Integer origIdx = customerOrigRowIndex[k];
                 CaseRowResult rr = rowResults[origIdx];
+                ParsedCaseRow r = parsed[origIdx];
                 if (srCust[k].isSuccess()) {
-                    applyCustomerCaseSuccessResult(rr, customerCases[k], srCust[k].getId());
+                    Id customerCaseId = srCust[k].getId();
+                    applyCustomerCaseSuccessResult(rr, customerCases[k], customerCaseId);
+                    String remarkError = insertBatchCaseRemark(customerCaseId, r.caseRemarks);
+                    if (String.isNotBlank(remarkError)) {
+                        rr.status = 'Failed';
+                        rr.recordId = '';
+                        rr.fecIdSearch = '';
+                        rr.errors = remarkError;
+                    }
                 } else {
                     rr.status = 'Failed';
                     rr.recordId = '';
@@ -1720,6 +1960,9 @@ public with sharing class FEC_BatchCaseCreationController {
         return allowed.contains(subChannelApi.trim().toLowerCase());
     }
 
+    /**
+     * OtherCases Excel Case Status: chỉ Open hoặc Resolved-Completed (label hoặc API).
+     */
     private static String matchBatchImportCaseStatus(Schema.DescribeFieldResult statusDfr, String raw) {
         if (String.isBlank(raw)) {
             return null;
@@ -1727,8 +1970,8 @@ public with sharing class FEC_BatchCaseCreationController {
         String direct = matchPicklist(statusDfr, raw);
         if (String.isNotBlank(direct)) {
             if (
-                direct == FEC_ConstantCommon.CASE_STATUS_OPEN ||
-                direct == FEC_ConstantCommon.CASE_STATUS_RESOLVED_COMPLETED
+                direct.equalsIgnoreCase(FEC_ConstantCommon.CASE_STATUS_OPEN) ||
+                direct.equalsIgnoreCase(FEC_ConstantCommon.CASE_STATUS_RESOLVED_COMPLETED)
             ) {
                 return direct;
             }
@@ -1736,10 +1979,14 @@ public with sharing class FEC_BatchCaseCreationController {
         }
         String trimmed = raw.trim();
         if (trimmed.equalsIgnoreCase(FEC_ConstantCommon.CASE_STATUS_OPEN)) {
-            return FEC_ConstantCommon.CASE_STATUS_OPEN;
+            String openApi = matchPicklist(statusDfr, FEC_ConstantCommon.CASE_STATUS_OPEN);
+            return String.isNotBlank(openApi) ? openApi : FEC_ConstantCommon.CASE_STATUS_OPEN;
         }
         if (trimmed.equalsIgnoreCase(FEC_ConstantCommon.CASE_STATUS_RESOLVED_COMPLETED)) {
-            return FEC_ConstantCommon.CASE_STATUS_RESOLVED_COMPLETED;
+            String resolvedApi = matchPicklist(statusDfr, FEC_ConstantCommon.CASE_STATUS_RESOLVED_COMPLETED);
+            return String.isNotBlank(resolvedApi)
+                ? resolvedApi
+                : FEC_ConstantCommon.CASE_STATUS_RESOLVED_COMPLETED;
         }
         return null;
     }

@@ -17474,7 +17474,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC_Batch_Import_Lookup_Product_Type_Not_Found</shortDescription>
-        <value>Không tìm thấy Product Type.</value>
+        <value>Không tồn tại giá trị Product Type</value>
     </labels>
     <labels>
         <fullName>FEC_Batch_Import_Lookup_Category_Not_Found</fullName>
@@ -17506,7 +17506,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC_Batch_Import_Invalid_Case_Status</shortDescription>
-        <value>Case Status không hợp lệ.</value>
+        <value>Không tồn tại giá trị Case Status</value>
     </labels>
     <labels>
         <fullName>FEC_Batch_Import_Invalid_Interaction_Channel</fullName>
@@ -17514,7 +17514,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC_Batch_Import_Invalid_Interaction_Channel</shortDescription>
-        <value>Interaction Channel không hợp lệ.</value>
+        <value>Không tồn tại giá trị Interaction Channel</value>
     </labels>
     <labels>
         <fullName>FEC_Batch_Import_Invalid_Interaction_Sub_Channel</fullName>
@@ -17522,7 +17522,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC_Batch_Import_Invalid_Interaction_Sub_Channel</shortDescription>
-        <value>Interaction Sub Channel không hợp lệ.</value>
+        <value>Không tồn tại giá trị Interaction Sub Channel</value>
     </labels>
     <labels>
         <fullName>FEC_Batch_Import_Invalid_Interaction_Email</fullName>

@@ -42,7 +42,8 @@ public with sharing class FEC_BatchCaseCreationService {
         }
         return rowResults;
     }
-private static List<ParsedCaseRow> parseInputRows(List<Object> inputRows) {
+
+    private static List<ParsedCaseRow> parseInputRows(List<Object> inputRows) {
         List<ParsedCaseRow> out = new List<ParsedCaseRow>();
         for (Object rowObj : inputRows) {
             Map<String, Object> m = (Map<String, Object>) rowObj;
@@ -74,6 +75,7 @@ private static List<ParsedCaseRow> parseInputRows(List<Object> inputRows) {
         Schema.DescribeFieldResult channelDfr = Case.FEC_Channel__c.getDescribe();
         Schema.DescribeFieldResult subChannelDfr = Case.FEC_Interaction_Subchannel__c.getDescribe();
         Schema.DescribeFieldResult statusDfr = Case.Status.getDescribe();
+        Map<String, Set<String>> subChannelsByChannel = buildSubChannelsByChannelMap(channelDfr, subChannelDfr);
 
         List<FEC_BatchCaseCreationController.CaseRowResult> rowResults = new List<FEC_BatchCaseCreationController.CaseRowResult>();
 
@@ -95,8 +97,17 @@ private static List<ParsedCaseRow> parseInputRows(List<Object> inputRows) {
             } else {
                 appendContractNumberFormatRules(r.contractNumber, welcome, errs);
             }
-            if (String.isBlank(r.interactionPhone)) {
-                errs.add(System.Label.FEC_Batch_Import_Required_Interaction_Phone);
+            if (welcome) {
+                if (String.isBlank(r.interactionPhone)) {
+                    errs.add(System.Label.FEC_Batch_Import_Required_Interaction_Phone);
+                } else if (!Pattern.matches(FEC_ConstantCommon.PATTERN_PHONE_NUMBER, r.interactionPhone)) {
+                    errs.add(System.Label.FEC_Batch_Import_Invalid_Interaction_Phone_Format);
+                }
+            } else if (
+                String.isNotBlank(r.interactionPhone) &&
+                !Pattern.matches(FEC_ConstantCommon.PATTERN_PHONE_NUMBER, r.interactionPhone)
+            ) {
+                errs.add(System.Label.FEC_Batch_Import_Invalid_Interaction_Phone_Format);
             }
             if (String.isBlank(r.productType)) {
                 errs.add(System.Label.FEC_Batch_Import_Required_Product_Type);
@@ -107,13 +118,16 @@ private static List<ParsedCaseRow> parseInputRows(List<Object> inputRows) {
             if (String.isBlank(r.subCategory)) {
                 errs.add(System.Label.FEC_Batch_Import_Required_Sub_Category);
             }
+            if (String.isBlank(r.caseRemarks)) {
+                errs.add(System.Label.FEC_Batch_Import_Required_Case_Remarks);
+            }
             if (String.isBlank(r.caseStatus)) {
                 errs.add(System.Label.FEC_Batch_Import_Required_Case_Status);
             } else if (welcome) {
                 appendWelcomeCaseStatusRules(r, statusDfr, errs);
             }
 
-            if (extended) {
+            if (extended && welcome) {
                 if (String.isBlank(r.interactionChannel)) {
                     errs.add(System.Label.FEC_Batch_Import_Required_Interaction_Channel);
                 }
@@ -141,13 +155,21 @@ private static List<ParsedCaseRow> parseInputRows(List<Object> inputRows) {
             }
 
             if (!welcome) {
-                String statusApi = matchCaseStatus(statusDfr, r.caseStatus);
-                if (String.isBlank(statusApi)) {
+                String otherImportStatusApi = matchBatchImportCaseStatus(statusDfr, r.caseStatus);
+                if (String.isBlank(otherImportStatusApi)) {
+                    errs.add(System.Label.FEC_Batch_Import_Invalid_Case_Status);
+                } else if (String.isBlank(resolveOtherInteractionStatusApi(statusDfr, r.caseStatus))) {
                     errs.add(System.Label.FEC_Batch_Import_Invalid_Case_Status);
                 }
-            }
-
-            if (extended) {
+                appendOtherInteractionChannelValidation(
+                    r,
+                    extended,
+                    channelDfr,
+                    subChannelDfr,
+                    subChannelsByChannel,
+                    errs
+                );
+            } else if (extended) {
                 String channelApi = matchPicklist(channelDfr, r.interactionChannel);
                 String subChannelApi = matchPicklist(subChannelDfr, r.interactionSubChannel);
                 if (String.isNotBlank(r.interactionChannel) && channelApi == null) {
@@ -156,6 +178,13 @@ private static List<ParsedCaseRow> parseInputRows(List<Object> inputRows) {
                 if (String.isNotBlank(r.interactionSubChannel) && subChannelApi == null) {
                     errs.add(System.Label.FEC_Batch_Import_Invalid_Interaction_Sub_Channel);
                 }
+                if (
+                    String.isNotBlank(channelApi) &&
+                    String.isNotBlank(subChannelApi) &&
+                    !isSubChannelValidForChannel(channelApi, subChannelApi, subChannelsByChannel)
+                ) {
+                    errs.add(System.Label.FEC_Batch_Import_Invalid_Sub_Channel_For_Channel);
+                }
             }
 
             if (String.isNotBlank(r.interactionEmail) && !Pattern.matches(FEC_ConstantCommon.PATTERN_EMAIL, r.interactionEmail)) {
@@ -163,7 +192,7 @@ private static List<ParsedCaseRow> parseInputRows(List<Object> inputRows) {
             }
 
             rr.status = errs.isEmpty() ? 'Succeeded' : 'Failed';
-            rr.errors = errs.isEmpty() ? '' : String.join(errs, ' ');
+            rr.errors = errs.isEmpty() ? '' : FEC_BatchImportCommon.joinRowErrors(errs);
             rowResults.add(rr);
         }
 
@@ -285,14 +314,11 @@ private static List<ParsedCaseRow> parseInputRows(List<Object> inputRows) {
         Boolean welcome,
         List<String> errs
     ) {
-        if (String.isBlank(contractNumber) || errs == null) {
+        if (String.isBlank(contractNumber) || errs == null || !welcome) {
             return;
         }
-        Boolean dashed = contractNumber.contains('-');
-        if (welcome && !dashed) {
+        if (!contractNumber.contains('-')) {
             errs.add(System.Label.FEC_Batch_Import_Welcome_Contract_Number_Requires_Dash);
-        } else if (!welcome && dashed) {
-            errs.add(System.Label.FEC_Batch_Import_Other_Contract_Number_No_Dash);
         }
     }
 
@@ -324,6 +350,137 @@ private static List<ParsedCaseRow> parseInputRows(List<Object> inputRows) {
             return base.substring(0, 255);
         }
         return base;
+    }
+
+    private static Boolean contractNumberContainsLetter(String contractNumber) {
+        if (String.isBlank(contractNumber)) {
+            return false;
+        }
+        return Pattern.compile('[A-Za-z]').matcher(contractNumber).find();
+    }
+
+    private static Boolean isOtherCasesContractNumber(String contractNumber) {
+        if (String.isBlank(contractNumber)) {
+            return false;
+        }
+        return contractNumberContainsLetter(contractNumber) || contractNumber.contains('-');
+    }
+
+    private static void applyOtherAccountOrContractNumber(Case c, String contractNumber) {
+        if (c == null || String.isBlank(contractNumber)) {
+            return;
+        }
+        if (isOtherCasesContractNumber(contractNumber)) {
+            c.FEC_Contract_Number__c = contractNumber;
+            c.FEC_Account_Number__c = null;
+        } else {
+            c.FEC_Account_Number__c = contractNumber;
+            c.FEC_Contract_Number__c = null;
+        }
+    }
+
+    private static void applyOtherInteractionFields(
+        Case c,
+        ParsedCaseRow r,
+        LookupMaps maps,
+        Schema.DescribeFieldResult channelDfr,
+        Schema.DescribeFieldResult subChannelDfr
+    ) {
+        if (c == null || r == null) {
+            return;
+        }
+        applyOtherAccountOrContractNumber(c, r.contractNumber);
+        if (String.isNotBlank(r.interactionPhone)) {
+            c.FEC_Phone_Number__c = r.interactionPhone;
+        }
+        c.FEC_Product_Type__c = lookupFromMap(r.productType, maps.productMap);
+        Boolean extended = 'extended'.equalsIgnoreCase(r.layout);
+        if (extended) {
+            c.FEC_Channel__c = matchPicklist(channelDfr, r.interactionChannel);
+            c.FEC_Interaction_Subchannel__c = matchPicklist(subChannelDfr, r.interactionSubChannel);
+        } else {
+            applyOutboundChannelDefaults(c, channelDfr, subChannelDfr);
+        }
+        if (String.isNotBlank(r.interactionEmail)) {
+            c.FEC_Interaction_Email__c = r.interactionEmail;
+        }
+    }
+
+    private static void applyOutboundChannelDefaults(
+        Case caseToFill,
+        Schema.DescribeFieldResult channelDfr,
+        Schema.DescribeFieldResult subChannelDfr
+    ) {
+        applyWelcomeChannelDefaults(caseToFill, channelDfr, subChannelDfr);
+    }
+
+    private static String resolveOtherInteractionStatusApi(
+        Schema.DescribeFieldResult statusDfr,
+        String rawCaseStatus
+    ) {
+        String importStatusApi = matchBatchImportCaseStatus(statusDfr, rawCaseStatus);
+        if (String.isBlank(importStatusApi)) {
+            return null;
+        }
+        if (importStatusApi.equalsIgnoreCase(FEC_ConstantCommon.CASE_STATUS_OPEN)) {
+            String openApi = matchPicklist(statusDfr, FEC_ConstantCommon.CASE_STATUS_OPEN);
+            return String.isNotBlank(openApi) ? openApi : FEC_ConstantCommon.CASE_STATUS_OPEN;
+        }
+        if (importStatusApi.equalsIgnoreCase(FEC_ConstantCommon.CASE_STATUS_RESOLVED_COMPLETED)) {
+            String closedApi = matchPicklist(statusDfr, FEC_ConstantCommon.CASE_STATUS_CLOSED);
+            return String.isNotBlank(closedApi) ? closedApi : FEC_ConstantCommon.CASE_STATUS_CLOSED;
+        }
+        return null;
+    }
+
+    private static void applyOtherInteractionCaseDefaults(Case interactionCase, String interactionStatusApi) {
+        if (interactionCase == null) {
+            return;
+        }
+        interactionCase.Status = interactionStatusApi;
+        interactionCase.FEC_Customer_Type__c = FEC_ConstantCommon.CASE_EXISTING_CUSTOMER;
+        interactionCase.FEC_Assigment_Mode__c = FEC_ConstantCommon.INTERACTION_REVIEW_MODE;
+        interactionCase.FEC_Interaction_View_Mode__c = FEC_ConstantCommon.INTERACTION_REVIEW_MODE;
+    }
+
+    private static void applyOtherCustomerCaseDefaults(Case customerCase) {
+        if (customerCase == null) {
+            return;
+        }
+        customerCase.FEC_Assigment_Mode__c = FEC_ConstantCommon.INTERACTION_REVIEW_MODE;
+        customerCase.FEC_Interaction_View_Mode__c = FEC_ConstantCommon.INTERACTION_REVIEW_MODE;
+    }
+
+    private static void appendOtherInteractionChannelValidation(
+        ParsedCaseRow r,
+        Boolean extended,
+        Schema.DescribeFieldResult channelDfr,
+        Schema.DescribeFieldResult subChannelDfr,
+        Map<String, Set<String>> subChannelsByChannel,
+        List<String> errs
+    ) {
+        if (r == null || errs == null || !extended) {
+            return;
+        }
+        if (String.isBlank(r.interactionChannel)) {
+            errs.add(System.Label.FEC_Batch_Import_Required_Interaction_Channel);
+        } else if (matchPicklist(channelDfr, r.interactionChannel) == null) {
+            errs.add(System.Label.FEC_Batch_Import_Invalid_Interaction_Channel);
+        }
+        if (String.isBlank(r.interactionSubChannel)) {
+            errs.add(System.Label.FEC_Batch_Import_Required_Interaction_Sub_Channel);
+        } else if (matchPicklist(subChannelDfr, r.interactionSubChannel) == null) {
+            errs.add(System.Label.FEC_Batch_Import_Invalid_Interaction_Sub_Channel);
+        }
+        String channelApi = matchPicklist(channelDfr, r.interactionChannel);
+        String subChannelApi = matchPicklist(subChannelDfr, r.interactionSubChannel);
+        if (
+            String.isNotBlank(channelApi) &&
+            String.isNotBlank(subChannelApi) &&
+            !isSubChannelValidForChannel(channelApi, subChannelApi, subChannelsByChannel)
+        ) {
+            errs.add(System.Label.FEC_Batch_Import_Invalid_Sub_Channel_For_Channel);
+        }
     }
 
     private static void applyWelcomeInteractionDefaults(Case interactionCase) {
@@ -416,6 +573,57 @@ private static List<ParsedCaseRow> parseInputRows(List<Object> inputRows) {
         ParsedCaseRow r,
         Id productTypeId
     ) {
+        return linkImportedCustomerHistory(interactionCaseId, r, productTypeId, false);
+    }
+
+    private static WelcomeHistoryLinkResult linkOtherCustomerHistory(
+        Id interactionCaseId,
+        ParsedCaseRow r,
+        Id productTypeId
+    ) {
+        return linkImportedCustomerHistory(interactionCaseId, r, productTypeId, true);
+    }
+
+    private static void applyHistoryAccountOrContractFromImport(
+        FEC_Customer_History__c history,
+        String contractNumber,
+        String productCodeLower,
+        Boolean otherCasesFlow
+    ) {
+        if (history == null || String.isBlank(contractNumber)) {
+            return;
+        }
+        if (otherCasesFlow) {
+            if (isOtherCasesContractNumber(contractNumber)) {
+                history.FEC_Contract_Number__c = contractNumber;
+            } else {
+                history.FEC_Account_Number__c = contractNumber;
+            }
+            return;
+        }
+        if (
+            productCodeLower == FEC_ConstantCommon.PRODUCT_TYPE_LOAN.toLowerCase() ||
+            productCodeLower == FEC_ConstantCommon.PRODUCT_TYPE_INSURANCE.toLowerCase() ||
+            productCodeLower == FEC_ConstantCommon.PRODUCT_TYPE_LOAN_CASE.toLowerCase() ||
+            productCodeLower == FEC_ConstantCommon.PRODUCT_TYPE_INSURANCE_CASE.toLowerCase()
+        ) {
+            history.FEC_Contract_Number__c = contractNumber;
+        } else if (
+            productCodeLower == FEC_ConstantCommon.PRODUCT_TYPE_CARD.toLowerCase() ||
+            productCodeLower == FEC_ConstantCommon.PRODUCT_TYPE_CARD_CASE.toLowerCase()
+        ) {
+            history.FEC_Account_Number__c = contractNumber;
+        } else {
+            history.FEC_Contract_Number__c = contractNumber;
+        }
+    }
+
+    private static WelcomeHistoryLinkResult linkImportedCustomerHistory(
+        Id interactionCaseId,
+        ParsedCaseRow r,
+        Id productTypeId,
+        Boolean otherCasesFlow
+    ) {
         WelcomeHistoryLinkResult out = new WelcomeHistoryLinkResult();
         if (interactionCaseId == null || r == null) {
             out.errorMessage = 'Interaction case is required to link customer history.';
@@ -433,21 +641,12 @@ private static List<ParsedCaseRow> parseInputRows(List<Object> inputRows) {
             if (String.isNotBlank(r.interactionPhone)) {
                 history.FEC_Primary_Phone__c = r.interactionPhone;
             }
-            if (
-                productCodeLower == FEC_ConstantCommon.PRODUCT_TYPE_LOAN.toLowerCase() ||
-                productCodeLower == FEC_ConstantCommon.PRODUCT_TYPE_INSURANCE.toLowerCase() ||
-                productCodeLower == FEC_ConstantCommon.PRODUCT_TYPE_LOAN_CASE.toLowerCase() ||
-                productCodeLower == FEC_ConstantCommon.PRODUCT_TYPE_INSURANCE_CASE.toLowerCase()
-            ) {
-                history.FEC_Contract_Number__c = r.contractNumber;
-            } else if (
-                productCodeLower == FEC_ConstantCommon.PRODUCT_TYPE_CARD.toLowerCase() ||
-                productCodeLower == FEC_ConstantCommon.PRODUCT_TYPE_CARD_CASE.toLowerCase()
-            ) {
-                history.FEC_Account_Number__c = r.contractNumber;
-            } else {
-                history.FEC_Contract_Number__c = r.contractNumber;
-            }
+            applyHistoryAccountOrContractFromImport(
+                history,
+                r.contractNumber,
+                productCodeLower,
+                otherCasesFlow
+            );
             insert history;
 
             FEC_CaseTriggerHandler.isExecuting = true;
@@ -651,9 +850,11 @@ private static List<ParsedCaseRow> parseInputRows(List<Object> inputRows) {
             ParsedCaseRow r = parsed[i];
             Case ic = new Case();
             ic.RecordTypeId = intRt;
+            String interactionStatusApi = resolveOtherInteractionStatusApi(statusDfr, r.caseStatus);
+            applyOtherInteractionCaseDefaults(ic, interactionStatusApi);
             applyBatchImportedCaseFlag(ic);
             ic.Subject = truncateWelcomeSubject('Batch Interaction - ', r.contractNumber);
-            applyNatureFields(ic, r, maps, channelDfr, subChannelDfr);
+            applyOtherInteractionFields(ic, r, maps, channelDfr, subChannelDfr);
             interactionCases.add(ic);
             interactionOrigRowIndex.add(i);
         }
@@ -662,7 +863,7 @@ private static List<ParsedCaseRow> parseInputRows(List<Object> inputRows) {
             return;
         }
 
-        Database.SaveResult[] srInt = Database.insert(interactionCases, false);
+        Database.SaveResult[] srInt = FEC_BatchImportCommon.insertImportCases(interactionCases, false);
         List<Case> customerCases = new List<Case>();
         List<Integer> customerOrigRowIndex = new List<Integer>();
 
@@ -676,27 +877,54 @@ private static List<ParsedCaseRow> parseInputRows(List<Object> inputRows) {
                 continue;
             }
             ParsedCaseRow r = parsed[origIdx];
-            String statusApi = matchCaseStatus(statusDfr, r.caseStatus);
+            Id productTypeId = lookupFromMap(r.productType, maps.productMap);
+            WelcomeHistoryLinkResult historyLink = linkOtherCustomerHistory(
+                srInt[k].getId(),
+                r,
+                productTypeId
+            );
+            if (historyLink.historyId == null) {
+                FEC_BatchCaseCreationController.CaseRowResult rr = rowResults[origIdx];
+                rr.status = 'Failed';
+                rr.recordId = '';
+                rr.errors = String.isNotBlank(historyLink.errorMessage)
+                    ? historyLink.errorMessage
+                    : 'Không thể liên kết Customer History.';
+                continue;
+            }
+            String statusApi = matchBatchImportCaseStatus(statusDfr, r.caseStatus);
             Case cc = new Case();
             cc.RecordTypeId = custRt;
             cc.FEC_Interaction__c = srInt[k].getId();
+            cc.FEC_Account_or_Contract__c = historyLink.historyId;
             cc.Subject = buildSubject(r.contractNumber);
             cc.Status = statusApi;
-            applyNatureFields(cc, r, maps, channelDfr, subChannelDfr);
+            applyOtherCustomerCaseDefaults(cc);
+            applyNatureFields(cc, r, maps, channelDfr, subChannelDfr, false);
+            applyOtherAccountOrContractNumber(cc, r.contractNumber);
             applyBatchImportedCaseFlag(cc);
             customerCases.add(cc);
             customerOrigRowIndex.add(origIdx);
         }
 
-        Database.SaveResult[] srCust = customerCases.isEmpty() ? null : Database.insert(customerCases, false);
+        Database.SaveResult[] srCust = customerCases.isEmpty()
+            ? null
+            : FEC_BatchImportCommon.insertImportCases(customerCases, false);
         if (srCust != null) {
             for (Integer k = 0; k < srCust.size(); k++) {
                 Integer origIdx = customerOrigRowIndex[k];
                 FEC_BatchCaseCreationController.CaseRowResult rr = rowResults[origIdx];
+                ParsedCaseRow r = parsed[origIdx];
                 if (srCust[k].isSuccess()) {
-                    rr.recordId = srCust[k].getId();
-                    rr.status = 'Succeeded';
-                    rr.errors = '';
+                    Id customerCaseId = srCust[k].getId();
+                    applyCustomerCaseSuccessResult(rr, customerCases[k], customerCaseId);
+                    String remarkError = insertWelcomeCaseRemark(customerCaseId, r.caseRemarks);
+                    if (String.isNotBlank(remarkError)) {
+                        rr.status = 'Failed';
+                        rr.recordId = '';
+                        rr.fecIdSearch = '';
+                        rr.errors = remarkError;
+                    }
                 } else {
                     rr.status = 'Failed';
                     rr.recordId = '';
@@ -914,6 +1142,172 @@ private static List<ParsedCaseRow> parseInputRows(List<Object> inputRows) {
             }
         }
         return null;
+    }
+
+    private static String matchBatchImportCaseStatus(Schema.DescribeFieldResult statusDfr, String raw) {
+        if (String.isBlank(raw)) {
+            return null;
+        }
+        String direct = matchPicklist(statusDfr, raw);
+        if (String.isNotBlank(direct)) {
+            if (
+                direct.equalsIgnoreCase(FEC_ConstantCommon.CASE_STATUS_OPEN) ||
+                direct.equalsIgnoreCase(FEC_ConstantCommon.CASE_STATUS_RESOLVED_COMPLETED)
+            ) {
+                return direct;
+            }
+            return null;
+        }
+        String trimmed = raw.trim();
+        if (trimmed.equalsIgnoreCase(FEC_ConstantCommon.CASE_STATUS_OPEN)) {
+            String openApi = matchPicklist(statusDfr, FEC_ConstantCommon.CASE_STATUS_OPEN);
+            return String.isNotBlank(openApi) ? openApi : FEC_ConstantCommon.CASE_STATUS_OPEN;
+        }
+        if (trimmed.equalsIgnoreCase(FEC_ConstantCommon.CASE_STATUS_RESOLVED_COMPLETED)) {
+            String resolvedApi = matchPicklist(statusDfr, FEC_ConstantCommon.CASE_STATUS_RESOLVED_COMPLETED);
+            return String.isNotBlank(resolvedApi)
+                ? resolvedApi
+                : FEC_ConstantCommon.CASE_STATUS_RESOLVED_COMPLETED;
+        }
+        return null;
+    }
+
+    private static Map<String, Set<String>> buildSubChannelsByChannelMap(
+        Schema.DescribeFieldResult channelDfr,
+        Schema.DescribeFieldResult subChannelDfr
+    ) {
+        Map<String, Set<String>> subChannelsByChannel = new Map<String, Set<String>>();
+        if (channelDfr == null || subChannelDfr == null) {
+            return subChannelsByChannel;
+        }
+        List<Schema.PicklistEntry> channelEntries = channelDfr.getPicklistValues();
+        List<Schema.PicklistEntry> subChannelEntries = subChannelDfr.getPicklistValues();
+        Schema.SObjectField controllerFieldRef = subChannelDfr.getController();
+        String controllerFieldApi =
+            controllerFieldRef == null ? null : controllerFieldRef.getDescribe().getName();
+        Boolean dependent =
+            String.isNotBlank(controllerFieldApi) &&
+            controllerFieldApi.equalsIgnoreCase(String.valueOf(channelDfr.getName()));
+        if (!dependent) {
+            return subChannelsByChannel;
+        }
+
+        for (Integer channelIndex = 0; channelIndex < channelEntries.size(); channelIndex++) {
+            Schema.PicklistEntry channelEntry = channelEntries[channelIndex];
+            if (channelEntry == null || !channelEntry.isActive()) {
+                continue;
+            }
+            registerChannelSubChannelKey(subChannelsByChannel, channelEntry.getValue());
+            registerChannelSubChannelKey(subChannelsByChannel, channelEntry.getLabel());
+
+            for (Schema.PicklistEntry subEntry : subChannelEntries) {
+                if (subEntry == null || !subEntry.isActive()) {
+                    continue;
+                }
+                if (dependent && !isPicklistEntryValidForControllerIndex(subEntry, channelIndex)) {
+                    continue;
+                }
+                addSubChannelForChannelKey(subChannelsByChannel, channelEntry.getValue(), subEntry.getValue());
+                addSubChannelForChannelKey(subChannelsByChannel, channelEntry.getValue(), subEntry.getLabel());
+                addSubChannelForChannelKey(subChannelsByChannel, channelEntry.getLabel(), subEntry.getValue());
+                addSubChannelForChannelKey(subChannelsByChannel, channelEntry.getLabel(), subEntry.getLabel());
+            }
+        }
+        return subChannelsByChannel;
+    }
+
+    private static void registerChannelSubChannelKey(Map<String, Set<String>> subChannelsByChannel, String channelKey) {
+        if (String.isBlank(channelKey)) {
+            return;
+        }
+        String normalized = channelKey.trim().toLowerCase();
+        if (!subChannelsByChannel.containsKey(normalized)) {
+            subChannelsByChannel.put(normalized, new Set<String>());
+        }
+    }
+
+    private static void addSubChannelForChannelKey(
+        Map<String, Set<String>> subChannelsByChannel,
+        String channelKey,
+        String subChannelKey
+    ) {
+        if (String.isBlank(channelKey) || String.isBlank(subChannelKey)) {
+            return;
+        }
+        registerChannelSubChannelKey(subChannelsByChannel, channelKey);
+        subChannelsByChannel.get(channelKey.trim().toLowerCase()).add(subChannelKey.trim().toLowerCase());
+    }
+
+    private static String readPicklistEntryValidFor(Schema.PicklistEntry entry) {
+        if (entry == null) {
+            return null;
+        }
+        Map<String, Object> entryMap = (Map<String, Object>) JSON.deserializeUntyped(JSON.serialize(entry));
+        Object validForObj = entryMap == null ? null : entryMap.get('validFor');
+        return validForObj == null ? null : String.valueOf(validForObj);
+    }
+
+    private static Boolean isPicklistEntryValidForControllerIndex(Schema.PicklistEntry entry, Integer controllerIndex) {
+        if (entry == null || controllerIndex == null || controllerIndex < 0) {
+            return false;
+        }
+        String validForBits = readPicklistEntryValidFor(entry);
+        if (String.isBlank(validForBits)) {
+            return true;
+        }
+        String hexString = EncodingUtil.convertToHex(EncodingUtil.base64Decode(validForBits));
+        Integer controlByteIndex = controllerIndex / 8;
+        Integer controlBitIndex = Math.mod(controllerIndex, 8);
+        Integer startChar = controlByteIndex * 2;
+        if (hexString.length() <= startChar + 1) {
+            return false;
+        }
+        Integer byteValue = hexStringToInt(hexString.substring(startChar, startChar + 2));
+        return (byteValue & (1 << controlBitIndex)) != 0;
+    }
+
+    private static Integer hexStringToInt(String hex) {
+        if (String.isBlank(hex)) {
+            return 0;
+        }
+        Integer result = 0;
+        String hexChars = '0123456789ABCDEF';
+        String normalized = hex.toUpperCase();
+        for (Integer i = 0; i < normalized.length(); i++) {
+            String ch = normalized.substring(i, i + 1);
+            Integer digit = hexChars.indexOf(ch);
+            if (digit < 0) {
+                continue;
+            }
+            result = (result << 4) + digit;
+        }
+        return result;
+    }
+
+    private static Boolean isSubChannelValidForChannel(
+        String channelApi,
+        String subChannelApi,
+        Map<String, Set<String>> subChannelsByChannel
+    ) {
+        if (String.isBlank(channelApi) || String.isBlank(subChannelApi) || subChannelsByChannel == null) {
+            return true;
+        }
+        Set<String> allowed = subChannelsByChannel.get(channelApi.trim().toLowerCase());
+        if (allowed == null || allowed.isEmpty()) {
+            return true;
+        }
+        return allowed.contains(subChannelApi.trim().toLowerCase());
+    }
+
+    private static void applyCustomerCaseSuccessResult(
+        FEC_BatchCaseCreationController.CaseRowResult rr,
+        Case insertedCustomer,
+        Id insertedId
+    ) {
+        rr.recordId = String.valueOf(insertedId);
+        rr.fecIdSearch = insertedCustomer == null ? '' : String.valueOf(insertedCustomer.FEC_ID_Search__c);
+        rr.status = 'Succeeded';
+        rr.errors = '';
     }
 
 }
