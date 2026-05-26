@@ -311,7 +311,8 @@ public without sharing class FEC_CaseAssignmentAutoDistributeService {
                 FEC_Sub_Category__c,
                 FEC_Sub_Category__r.Name,
                 FEC_Sub_Code__c,
-                FEC_Sub_Code__r.Name
+                FEC_Sub_Code__r.Name,
+                FEC_Sub_Code__r.FEC_Code__c
             FROM FEC_Case_Assignment_NOC__c
             WHERE FEC_Case_Assignment_Name__c = :assignmentRecord.Id
         ];
@@ -339,6 +340,13 @@ public without sharing class FEC_CaseAssignmentAutoDistributeService {
                     noc.FEC_Sub_Code__c,
                     noc.FEC_Sub_Code__r == null ? null : noc.FEC_Sub_Code__r.Name
                 ));
+                addSubCodeExactKeys(
+                    nocExactKeys,
+                    baseKey,
+                    noc.FEC_Sub_Code__c,
+                    noc.FEC_Sub_Code__r == null ? null : noc.FEC_Sub_Code__r.Name,
+                    noc.FEC_Sub_Code__r == null ? null : noc.FEC_Sub_Code__r.FEC_Code__c
+                );
             }
         }
 
@@ -348,10 +356,10 @@ public without sharing class FEC_CaseAssignmentAutoDistributeService {
             nocExactKeys,
             nocWithoutSubCodeKeys
         );
-        lines.add('[4] Case đủ điều kiện phân bổ (Pending + NOC + queue/assignment rule): ' +
+        lines.add('[4] Case đủ điều kiện phân bổ (Pending/Open + NOC + queue/assignment rule): ' +
             distributionTargets.size());
         if (distributionTargets.isEmpty()) {
-            lines.add('STOP: không Case nào khớp rule 2.1/2.2 — kiểm tra Pending, Assignment Count, queue và NOC.');
+            lines.add('STOP: không Case nào khớp rule 2.1/2.2 — kiểm tra Pending/Open, Assignment Count, queue và NOC.');
             lines.add('HINT 2.1: Owner=queue, FEC_Assignment_Count__c=0. 2.2: Count>0 + Assignment mở trên queue (query FEC_Assignment__c, không chỉ FEC_Assignment_Users__c).');
             return lines;
         }
@@ -709,6 +717,9 @@ public without sharing class FEC_CaseAssignmentAutoDistributeService {
         if (status == FEC_ConstantCommon.CASE_STATUS_PENDING) {
             return true;
         }
+        if (status == FEC_ConstantCommon.CASE_STATUS_OPEN) {
+            return true;
+        }
         return status.startsWith(FEC_ConstantCommon.CASE_STATUS_PENDING_PREFIX);
     }
 
@@ -794,7 +805,19 @@ public without sharing class FEC_CaseAssignmentAutoDistributeService {
             caseRecord.FEC_SubCode__c,
             caseRecord.FEC_SubCode__r == null ? null : caseRecord.FEC_SubCode__r.Name
         );
-        return nocExactKeys.contains(exactKey) || nocWithoutSubCodeKeys.contains(baseKey);
+        if (nocExactKeys.contains(exactKey) || nocWithoutSubCodeKeys.contains(baseKey)) {
+            return true;
+        }
+        for (String subCodeKey : subCodeKeyVariants(
+            caseRecord.FEC_SubCode__c,
+            caseRecord.FEC_SubCode__r == null ? null : caseRecord.FEC_SubCode__r.Name,
+            caseRecord.FEC_SubCode__r == null ? null : caseRecord.FEC_SubCode__r.FEC_Code__c
+        )) {
+            if (nocExactKeys.contains(baseKey + '|' + subCodeKey)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private static Map<Id, FEC_Assignment__c> preloadOldestQueueAssignmentByCaseId(
@@ -850,7 +873,8 @@ public without sharing class FEC_CaseAssignmentAutoDistributeService {
                 FEC_SubCategory__c,
                 FEC_SubCategory__r.Name,
                 FEC_SubCode__c,
-                FEC_SubCode__r.Name
+                FEC_SubCode__r.Name,
+                FEC_SubCode__r.FEC_Code__c
             FROM Case
             WHERE
                 OwnerId IN :queueById.keySet()
@@ -890,7 +914,8 @@ public without sharing class FEC_CaseAssignmentAutoDistributeService {
                 FEC_Case__r.FEC_SubCategory__c,
                 FEC_Case__r.FEC_SubCategory__r.Name,
                 FEC_Case__r.FEC_SubCode__c,
-                FEC_Case__r.FEC_SubCode__r.Name
+                FEC_Case__r.FEC_SubCode__r.Name,
+                FEC_Case__r.FEC_SubCode__r.FEC_Code__c
             FROM FEC_Assignment__c
             WHERE
                 FEC_Assignment_Owner__c = NULL
@@ -1085,7 +1110,8 @@ public without sharing class FEC_CaseAssignmentAutoDistributeService {
                 FEC_Sub_Category__c,
                 FEC_Sub_Category__r.Name,
                 FEC_Sub_Code__c,
-                FEC_Sub_Code__r.Name
+                FEC_Sub_Code__r.Name,
+                FEC_Sub_Code__r.FEC_Code__c
             FROM FEC_Case_Assignment_NOC__c
             WHERE FEC_Case_Assignment_Name__c = :assignmentRecord.Id
         ];
@@ -1111,6 +1137,13 @@ public without sharing class FEC_CaseAssignmentAutoDistributeService {
                     noc.FEC_Sub_Code__c,
                     noc.FEC_Sub_Code__r == null ? null : noc.FEC_Sub_Code__r.Name
                 ));
+                addSubCodeExactKeys(
+                    nocExactKeys,
+                    baseKey,
+                    noc.FEC_Sub_Code__c,
+                    noc.FEC_Sub_Code__r == null ? null : noc.FEC_Sub_Code__r.Name,
+                    noc.FEC_Sub_Code__r == null ? null : noc.FEC_Sub_Code__r.FEC_Code__c
+                );
             }
         }
 
@@ -1879,5 +1912,35 @@ public without sharing class FEC_CaseAssignmentAutoDistributeService {
             return String.valueOf(idValue).toLowerCase();
         }
         return '';
+    }
+
+    private static void addSubCodeExactKeys(
+        Set<String> nocExactKeys,
+        String baseKey,
+        Id subCodeId,
+        String subCodeName,
+        String subCodeApiCode
+    ) {
+        for (String subCodeKey : subCodeKeyVariants(subCodeId, subCodeName, subCodeApiCode)) {
+            nocExactKeys.add(baseKey + '|' + subCodeKey);
+        }
+    }
+
+    private static Set<String> subCodeKeyVariants(
+        Id subCodeId,
+        String subCodeName,
+        String subCodeApiCode
+    ) {
+        Set<String> keys = new Set<String>();
+        if (String.isNotBlank(subCodeApiCode)) {
+            keys.add(subCodeApiCode.trim().toLowerCase());
+        }
+        if (String.isNotBlank(subCodeName)) {
+            keys.add(subCodeName.trim().toLowerCase());
+        }
+        if (subCodeId != null) {
+            keys.add(String.valueOf(subCodeId).toLowerCase());
+        }
+        return keys;
     }
 }
