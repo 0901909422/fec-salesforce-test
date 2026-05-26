@@ -4577,7 +4577,11 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
                 queueId: this.business.nextQueue?.value,
                 natureOfCaseId: this.business.natureOfCase,
                 actionId: actionId,
-                fieldListJson: this._collectFieldListJson()
+                fieldListJson: this._collectFieldListJson(),
+                teamUserGroup:
+                  this.business.mrcRouteTeamCode ||
+                  normalizeTeamUserGroupForDisplay(this.business?.nextTeam) ||
+                  null,
               },
             };
           }
@@ -6085,6 +6089,7 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
     const displayTeam = normalizeTeamUserGroupForDisplay(ctx.teamCode || ctx.team);
     this.business = {
       ...this.business,
+      mrcRouteTeamCode: teamUserGroup,
       nextTeam: displayTeam,
       nextQueue: priorQueue?.value ? priorQueue : this.business?.nextQueue,
     };

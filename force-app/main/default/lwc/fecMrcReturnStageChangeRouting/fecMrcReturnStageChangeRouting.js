@@ -256,6 +256,9 @@ function resolveRl0502TeamFromInputs(
 
   if (rl05Scenario === "TH2") {
     if (option2Selected || notReceived) {
+      if (option2Selected && deliveryTeam) {
+        return { teamCode: deliveryTeam, scenario: "IV-2-DELIVERY" };
+      }
       if (flowTeam) {
         return { teamCode: flowTeam, scenario: "IV-2" };
       }

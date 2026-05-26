@@ -284,4 +284,53 @@ private class FEC_MrcReturnCaseServiceTest {
         System.assertEquals(true, ctx.isReturnSubCode);
         System.assertEquals(true, ctx.showCustomerConfirmation);
     }
+
+    @IsTest
+    static void normalizeTeamUserGroupParam_mapsDisplayLabels() {
+        System.assertEquals(
+            FEC_ConstantCommon.STAGE_CHANGE_TEAM_USER_GROUP_CP,
+            FEC_CommonUltils.normalizeTeamUserGroupParam('Contract Processing')
+        );
+        System.assertEquals(
+            FEC_ConstantCommon.STAGE_CHANGE_TEAM_USER_GROUP_PM,
+            FEC_CommonUltils.normalizeTeamUserGroupParam('Payment')
+        );
+        System.assertEquals(null, FEC_CommonUltils.normalizeTeamUserGroupParam(null));
+    }
+
+    @IsTest
+    static void selectStageChangeForRoute_prefersTeamWhenMultipleRows() {
+        FEC_Stage_Change__c cpRow = new FEC_Stage_Change__c(
+            FEC_Team_User_Group__c = FEC_ConstantCommon.STAGE_CHANGE_TEAM_USER_GROUP_CP,
+            FEC_Next_Queue__c = 'FEC_DQ_Contract_Processing'
+        );
+        FEC_Stage_Change__c pmRow = new FEC_Stage_Change__c(
+            FEC_Team_User_Group__c = FEC_ConstantCommon.STAGE_CHANGE_TEAM_USER_GROUP_PM,
+            FEC_Next_Queue__c = 'FEC_DQ_Payment'
+        );
+        FEC_Stage_Change__c picked = FEC_MrcReturnCaseService.selectStageChangeForRoute(
+            new List<FEC_Stage_Change__c>{ cpRow, pmRow },
+            FEC_ConstantCommon.STAGE_CHANGE_TEAM_USER_GROUP_CP,
+            null
+        );
+        System.assertEquals(
+            FEC_ConstantCommon.STAGE_CHANGE_TEAM_USER_GROUP_CP,
+            picked.FEC_Team_User_Group__c
+        );
+    }
+
+    @IsTest
+    static void selectStageChangeForRoute_singleRowReturnsIt() {
+        FEC_Stage_Change__c only = new FEC_Stage_Change__c(
+            FEC_Team_User_Group__c = FEC_ConstantCommon.STAGE_CHANGE_TEAM_USER_GROUP_PM
+        );
+        System.assertEquals(
+            only,
+            FEC_MrcReturnCaseService.selectStageChangeForRoute(
+                new List<FEC_Stage_Change__c>{ only },
+                null,
+                null
+            )
+        );
+    }
 }

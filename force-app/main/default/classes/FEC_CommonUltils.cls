@@ -1503,4 +1503,39 @@ public with sharing class FEC_CommonUltils {
     }
     return input.replaceAll('\\W+', '').trim();
   }
+
+  /**
+   * Chuẩn hóa FEC_Team_User_Group__c từ LWC/label (CP/PM/SP/F2F) → mã Stage Change.
+   */
+  public static String normalizeTeamUserGroupParam(String teamUserGroup) {
+    if (String.isBlank(teamUserGroup)) {
+      return null;
+    }
+    String upper = teamUserGroup.trim().toUpperCase();
+    if (
+      upper == FEC_ConstantCommon.STAGE_CHANGE_TEAM_USER_GROUP_CP ||
+      upper.contains(FEC_ConstantCommon.STAGE_CHANGE_TEAM_LABEL_CONTRACT_PROCESS)
+    ) {
+      return FEC_ConstantCommon.STAGE_CHANGE_TEAM_USER_GROUP_CP;
+    }
+    if (
+      upper == FEC_ConstantCommon.STAGE_CHANGE_TEAM_USER_GROUP_PM ||
+      upper == FEC_ConstantCommon.STAGE_CHANGE_TEAM_LABEL_PAYMENT
+    ) {
+      return FEC_ConstantCommon.STAGE_CHANGE_TEAM_USER_GROUP_PM;
+    }
+    if (
+      upper == FEC_ConstantCommon.STAGE_CHANGE_TEAM_USER_GROUP_SP ||
+      upper.contains(FEC_ConstantCommon.STAGE_CHANGE_TEAM_LABEL_CS_SUPPORT)
+    ) {
+      return FEC_ConstantCommon.STAGE_CHANGE_TEAM_USER_GROUP_SP;
+    }
+    if (
+      upper == FEC_ConstantCommon.STAGE_CHANGE_TEAM_USER_GROUP_F2F ||
+      upper.contains(FEC_ConstantCommon.STAGE_CHANGE_TEAM_LABEL_OFFICE_BASED)
+    ) {
+      return FEC_ConstantCommon.STAGE_CHANGE_TEAM_USER_GROUP_F2F;
+    }
+    return upper;
+  }
 }

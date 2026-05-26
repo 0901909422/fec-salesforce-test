@@ -2295,7 +2295,14 @@ public without sharing class FEC_CaseBusinessService {
           if (isCreationStage) {
             createCaseFlowHistory(caseId, natureOfCaseId, fieldListJson);
           }
-          route(caseId, queueId, natureOfCaseId, actionId, finalStatusBeforeSubmit);
+          route(
+            caseId,
+            queueId,
+            natureOfCaseId,
+            actionId,
+            finalStatusBeforeSubmit,
+            (String) params.get('teamUserGroup')
+          );
           FEC_MrcDuplicateCaseService.applyNotReceivedHandlingOptionOnSubmit(caseId);
           return null;
         }
@@ -2443,7 +2450,8 @@ public without sharing class FEC_CaseBusinessService {
     String queueId,
     String natureOfCaseId,
     String actionId,
-    String finalStatusBeforeSubmit
+    String finalStatusBeforeSubmit,
+    String teamUserGroup
   ) {
     try {
       Long corrId = DateTime.now().getTime();
@@ -2628,7 +2636,12 @@ public without sharing class FEC_CaseBusinessService {
         );
       }
 
-      FEC_Stage_Change__c selectedChange = changelst[0];
+      FEC_Stage_Change__c selectedChange =
+        FEC_MrcReturnCaseService.selectStageChangeForRoute(
+          changelst,
+          teamUserGroup,
+          queueId
+        );
       if (FEC_BlockCodeRoutingService.isRc27DefaultOmDay2Routing(updatedCase)) {
         FEC_Stage_Change__c rc27OmDay2 =
           FEC_BlockCodeRoutingService.selectRc27DefaultOmDay2FromList(changelst);
