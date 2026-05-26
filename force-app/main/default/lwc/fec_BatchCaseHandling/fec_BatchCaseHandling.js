@@ -2429,7 +2429,7 @@ export default class Fec_BatchCaseHandling extends LightningElement {
         );
         return;
       }
-      const importCtx = this.resolveImportTemplateContext(isCofOrGsr);
+      const importCtx = await this.resolveImportTemplateContext(isCofOrGsr, fileName);
       const result = await this.withTimeout(
         importBatchData({
           fileName,
@@ -2514,7 +2514,7 @@ export default class Fec_BatchCaseHandling extends LightningElement {
     }
   }
 
-  resolveImportTemplateContext(isCofOrGsr) {
+  async resolveImportTemplateContext(isCofOrGsr, fileName) {
     const selected = (this.bpRows || []).filter((r) => r && r.selected);
     if (selected.length === 1) {
       const code = String(selected[0].businessProcessCode || STR_EMPTY).trim();
@@ -2527,11 +2527,48 @@ export default class Fec_BatchCaseHandling extends LightningElement {
         businessProcessName: name
       };
     }
+    const normalizedFile = String(fileName || STR_EMPTY).trim();
+    if (normalizedFile) {
+      try {
+        const filtersJson = JSON.stringify(this.buildFiltersPayload());
+        const bpInfo = await getBusinessProcessExportRows({ filtersJson });
+        const matched = (Array.isArray(bpInfo) ? bpInfo : []).filter((b) =>
+          this.uploadedFileMatchesTemplateName(normalizedFile, b.templateName)
+        );
+        if (matched.length >= 1) {
+          const uniqueTemplateKeys = new Set(
+            matched.map((b) => String(b.templateName || STR_EMPTY).trim().toLowerCase())
+          );
+          if (uniqueTemplateKeys.size === 1) {
+            const row = matched[0];
+            return {
+              templateName: String(row.templateName || STR_EMPTY).trim(),
+              businessProcessCode: String(row.businessProcessCode || STR_EMPTY).trim(),
+              businessProcessName: String(row.businessProcessName || STR_EMPTY).trim()
+            };
+          }
+        }
+      } catch (e) {
+        // Apex resolveImportTemplateName still matches by file name + user group
+      }
+    }
     return {
       templateName: isCofOrGsr ? TEMPLATE_NAME_GSR : TEMPLATE_NAME_OTHER,
       businessProcessCode: STR_EMPTY,
       businessProcessName: STR_EMPTY
     };
+  }
+
+  uploadedFileMatchesTemplateName(fileName, templateName) {
+    if (!fileName || !templateName) {
+      return false;
+    }
+    const fileCore = String(fileName).trim().toLowerCase().replace(/\.xlsx$/i, STR_EMPTY);
+    const expectedCore = String(templateName).trim().toLowerCase().replace(/\.xlsx$/i, STR_EMPTY);
+    if (!fileCore || !expectedCore) {
+      return false;
+    }
+    return fileCore === expectedCore || fileCore.includes(expectedCore);
   }
 
   mapImportResultStatusLabel(status) {

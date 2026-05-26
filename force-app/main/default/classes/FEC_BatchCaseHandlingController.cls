@@ -753,18 +753,26 @@ public without sharing class FEC_BatchCaseHandlingController {
         return item;
     }
 
-    private static String resolveImportTemplateName(
-        String templateName,
+    private static Boolean isPlaceholderImportTemplateName(String templateName) {
+        if (String.isBlank(templateName)) {
+            return true;
+        }
+        String normalized = templateName.trim();
+        return 'Other'.equalsIgnoreCase(normalized) || 'GSR'.equalsIgnoreCase(normalized);
+    }
+
+    private static String resolveImportTemplateBindingName(
         String businessProcessCode,
-        String businessProcessName
+        String businessProcessName,
+        String userGroup,
+        List<SObject> templateRows
     ) {
-        if (String.isNotBlank(templateName) && !'Other'.equalsIgnoreCase(templateName.trim()) && !'GSR'.equalsIgnoreCase(templateName.trim())) {
-            return templateName.trim();
+        if (templateRows == null || templateRows.isEmpty()) {
+            return FEC_ConstantCommon.STR_EMPTY;
         }
         if (String.isBlank(businessProcessCode) && String.isBlank(businessProcessName)) {
-            return String.isBlank(templateName) ? FEC_ConstantCommon.STR_EMPTY : templateName.trim();
+            return FEC_ConstantCommon.STR_EMPTY;
         }
-        List<SObject> templateRows = FEC_BatchCaseHandlingTemplateHelper.queryActiveBatchCaseHandlingTemplates();
         Map<Id, String> urlByTemplateId = new Map<Id, String>();
         Map<Id, Id> versionIdByTemplateId = new Map<Id, Id>();
         Set<Id> templateIds = new Set<Id>();
@@ -782,15 +790,56 @@ public without sharing class FEC_BatchCaseHandlingController {
             FEC_BatchCaseHandlingTemplateHelper.resolveExportTemplateBinding(
                 businessProcessCode,
                 businessProcessName,
-                resolveCurrentUserGroup(),
+                userGroup,
                 templateRows,
                 versionIdByTemplateId,
                 urlByTemplateId
             );
-        if (binding != null && String.isNotBlank(binding.templateName)) {
-            return binding.templateName;
+        return binding == null || String.isBlank(binding.templateName)
+            ? FEC_ConstantCommon.STR_EMPTY
+            : binding.templateName;
+    }
+
+    private static String resolveImportTemplateName(
+        String fileName,
+        String templateName,
+        String businessProcessCode,
+        String businessProcessName
+    ) {
+        String userGroup = resolveCurrentUserGroup();
+        List<SObject> templateRows = FEC_BatchCaseHandlingTemplateHelper.queryActiveBatchCaseHandlingTemplates();
+        String fromBusinessProcess = resolveImportTemplateBindingName(
+            businessProcessCode,
+            businessProcessName,
+            userGroup,
+            templateRows
+        );
+        if (
+            String.isNotBlank(fromBusinessProcess) &&
+            FEC_BatchCaseHandlingTemplateHelper.validateUploadedTemplateFileName(fileName, fromBusinessProcess) == null
+        ) {
+            return fromBusinessProcess;
         }
-        return String.isBlank(templateName) ? FEC_ConstantCommon.STR_EMPTY : templateName.trim();
+        String fromFileName = FEC_BatchCaseHandlingTemplateHelper.resolveTemplateNameFromUploadedFileName(
+            fileName,
+            userGroup,
+            templateRows
+        );
+        if (String.isNotBlank(fromFileName)) {
+            return fromFileName;
+        }
+        if (String.isNotBlank(fromBusinessProcess)) {
+            return fromBusinessProcess;
+        }
+        if (
+            !isPlaceholderImportTemplateName(templateName) &&
+            FEC_BatchCaseHandlingTemplateHelper.validateUploadedTemplateFileName(fileName, templateName) == null
+        ) {
+            return templateName.trim();
+        }
+        return isPlaceholderImportTemplateName(templateName)
+            ? FEC_ConstantCommon.STR_EMPTY
+            : templateName.trim();
     }
 
     private static String resolveCurrentUserGroup() {
@@ -890,6 +939,7 @@ public without sharing class FEC_BatchCaseHandlingController {
             FEC_BatchCaseHandlingSObjectUtil.putIfFieldExists(fieldMap, batchRow, new List<String>{ 'FEC_Status__c' }, 'Uploaded');
             FEC_BatchCaseHandlingSObjectUtil.putIfFieldExists(fieldMap, batchRow, new List<String>{ 'FEC_Result__c' }, FEC_ConstantCommon.STR_EMPTY);
             String resolvedTemplateName = resolveImportTemplateName(
+                fileName,
                 templateName,
                 businessProcessCode,
                 businessProcessName
