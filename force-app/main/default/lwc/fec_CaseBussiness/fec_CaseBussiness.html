@@ -324,15 +324,19 @@
               <div key={section.holdCaseRowKey} class="slds-col slds-size_1-of-1 slds-m-top_medium">
                 <c-fec_hold-case-auto
                   record-id={recordId}
-                  result-override={holdCaseResultOverride}>
+                  result-override={holdCaseResultOverride}
+                  stage2-display-mode={holdCaseStage2DisplayMode}
+                  stage2-info-message={holdCaseStage2InfoMessage}
+                  stage2-error-message={holdCaseStage2ErrorMessage}
+                  stage2-show-manual-hold-button={holdCaseStage2ShowManualButton}>
                 </c-fec_hold-case-auto>
               </div>
             </template>
           </template>
         </div>
         </div>
-         <!-- Fraud Manage Component under Property Info -->
-         <template if:true={section.isCaseInformationSection}>
+        <!-- Fraud Manage Component under Property Info -->
+        <template if:true={section.isCaseInformationSection}>
           <div class="slds-m-top_medium">
             <c-fec-integration-manage-fraud-case
               record-id={recordId}
@@ -340,7 +344,6 @@
             </c-fec-integration-manage-fraud-case>
           </div>
         </template>
-        
         <!-- process action -->
         <template if:true={finalShowProcessAction}>
           <div class="process-action" if:true={section.isLastSection}>
@@ -458,6 +461,7 @@
         is-submited={business.isSubmited}
         route-to-action-id={routeToActionButtonId}
         show-route-to={showRouteTo}
+        lock-route-to-team-selection={rdPaymentScopedRouteToLocked}
         read-only-team={business.nextTeam}
         route-to-queue-display-label={routeToQueueDisplayLabel}
         show-revert={showRevert}

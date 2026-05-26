@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>FEC_Final_Status__c</fullName>
+    <description>Trường final status chung của case và interaction được cập nhật khi trạng thái status chung hoặc người phụ trách có thay đổi</description>
+    <externalId>false</externalId>
+    <formula>IF(
+    ISPICKVAL(Status, &quot;Pending&quot;),
+    &quot;Pending - &quot; &amp; FEC_Team__c,
+    TEXT(Status)
+)</formula>
+    <formulaTreatBlanksAs>BlankAsZero</formulaTreatBlanksAs>
+    <label>Status</label>
+    <required>false</required>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Text</type>
+    <unique>false</unique>
+</CustomField>

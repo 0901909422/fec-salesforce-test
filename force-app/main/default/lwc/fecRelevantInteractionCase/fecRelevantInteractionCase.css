@@ -1,0 +1,19 @@
+.accordion-card {
+  border: 1px solid #dddbda;
+  border-radius: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.accordion-header {
+  padding: 0.75rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.accordion-body {
+  padding: 0.75rem;
+  background: #f3f3f3;
+}

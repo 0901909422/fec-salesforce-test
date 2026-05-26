@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>FEC_Sales_Check_Evaluation_by_Sales__c</fullName>
+    <description>Đánh giá của bộ phận Sales về case</description>
+    <label>Sales Check - Evaluation by Sales</label>
+    <required>false</required>
+    <trackFeedHistory>false</trackFeedHistory>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>Khiếu nại đúng_Đã khắc phục</fullName>
+                <default>false</default>
+                <label>Khiếu nại đúng_Đã khắc phục</label>
+            </value>
+            <value>
+                <fullName>Khiếu nại đúng_Chưa khắc phục</fullName>
+                <default>false</default>
+                <label>Khiếu nại đúng_Chưa khắc phục</label>
+            </value>
+            <value>
+                <fullName>Khiếu nại sai</fullName>
+                <default>false</default>
+                <label>Khiếu nại sai</label>
+            </value>
+            <value>
+                <fullName>Không thuộc Sales</fullName>
+                <default>false</default>
+                <label>Không thuộc Sales</label>
+            </value>
+            <value>
+                <fullName>Không tra được Code Sale</fullName>
+                <default>false</default>
+                <label>Không tra được Code Sale</label>
+            </value>
+            <value>
+                <fullName>Không có record</fullName>
+                <default>false</default>
+                <label>Không có record</label>
+            </value>
+            <value>
+                <fullName>Không có record_Lỗi vận hành</fullName>
+                <default>false</default>
+                <label>Không có record_Lỗi vận hành</label>
+            </value>
+            <value>
+                <fullName>Xin dời deadline</fullName>
+                <default>false</default>
+                <label>Xin dời deadline</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>

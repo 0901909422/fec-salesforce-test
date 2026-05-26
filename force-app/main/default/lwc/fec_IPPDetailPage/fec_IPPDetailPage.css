@@ -1,0 +1,189 @@
+/* Icon tròn cam bên trái tiêu đề IPP (giống ảnh) */
+.ipp-header-icon-wrap {
+    margin-right: 0.5rem;
+}
+.ipp-header-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    min-width: 2rem;
+    min-height: 2rem;
+    border-radius: 50%;
+    background-color: #fe9339;
+    color: #fff;
+}
+.ipp-header-icon .ipp-header-icon-svg,
+.ipp-header-icon lightning-icon {
+    --slds-c-icon-color-foreground: #ffffff;
+    --slds-c-icon-color-background: transparent;
+}
+
+/* Header: IPP Details trên, tên IPP (IPP001) dưới - cỡ chữ lớn, in đậm */
+.ipp-header-title-block {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+}
+.ipp-header-title-block .ipp-header-label {
+    font-size: 1rem;
+    font-weight: 400;
+    margin-bottom: 0;
+    line-height: 1.25;
+}
+.ipp-header-plan-name {
+    font-size: 1.25rem;
+    font-weight: 700;
+    line-height: 1.25;
+    color: var(--slds-c-color-text-default, currentColor);
+}
+
+/* Tab Details dịch sang phải: dùng wrapper vì lightning-tabset (shadow DOM) không nhận padding trực tiếp */
+.ipp-detail-tabset-wrapper {
+    padding-left: 1rem;
+}
+
+/* IPP Schedule summary: grid 4 cột, format giống Card Payment */
+.ipp-schedule-summary {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0;
+    min-width: 0;
+}
+.ipp-schedule-summary-item {
+    display: flex;
+    padding: 10px 12px 0 12px;
+    align-items: flex-start;
+    min-width: 0;
+    min-height: 44px;
+    box-sizing: border-box;
+}
+.ipp-schedule-summary-item .ipp-detail-row-inner {
+    display: flex;
+    gap: 12px;
+    align-items: baseline;
+    width: 100%;
+    min-width: 0;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #dddbda;
+    box-sizing: border-box;
+}
+.ipp-schedule-summary-item .ipp-detail-label {
+    flex: 0 1 55%;
+    min-width: 0;
+    max-width: 55%;
+    margin-bottom: 0;
+    font-weight: 600;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    white-space: normal;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    line-height: 1.3;
+}
+.ipp-schedule-summary-item .ipp-help-icon {
+    display: inline-flex;
+    align-items: center;
+    flex-shrink: 0;
+    line-height: 0;
+    margin-top: -1px;
+}
+.ipp-schedule-summary-item .ipp-detail-value {
+    flex: 1 1 0%;
+    min-width: 0;
+    font-size: 13px;
+    font-weight: 400;
+    display: flex;
+    align-items: baseline;
+    justify-content: flex-start;
+    text-align: left;
+    color: #3e3e3c;
+    word-break: break-all;
+    overflow-wrap: anywhere;
+}
+.ipp-schedule-summary-item .ipp-detail-value span {
+    display: inline;
+}
+@media (max-width: 768px) {
+    .ipp-schedule-summary {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+/* Sales Info: tên trường và giá trị cùng một hàng ngang */
+.ipp-sales-info-field {
+    display: flex;
+    gap: 12px;
+    align-items: baseline;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid #dddbda;
+    min-width: 0;
+}
+.ipp-sales-info-label {
+    flex: 0 1 55%;
+    min-width: 0;
+    max-width: 55%;
+    margin-bottom: 0;
+    font-size: 13px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    white-space: normal;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+}
+.ipp-sales-info-value {
+    flex: 1 1 0%;
+    min-width: 0;
+    font-size: 13px;
+    font-weight: 400;
+    color: #3e3e3c;
+    word-break: break-all;
+    overflow-wrap: anywhere;
+}
+.ipp-detail-sales-info-grid .slds-col {
+    min-width: 0;
+}
+
+/* Màu đỏ cho các giá trị âm - cùng màu với Card Payment */
+.currency-negative,
+.slds-text-color_error,
+span.slds-text-color_error {
+    color: #ea001e !important;
+    font-weight: 600;
+}
+
+/* Màu đỏ cho label Total IPP Payment Amount - cùng màu với Full Payment Amount */
+.ipp-label-red {
+    color: #ea001e !important;
+}
+
+.ipp-empty-state {
+    min-height: 120px;
+    padding: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    color: #706e6b;
+}
+
+.ipp-empty-state p {
+    margin: 0;
+}
+
+.slds-section__title {
+    font-size: 1rem;
+    font-weight: 600;
+    padding: 0.5rem 0;
+}
+
+.slds-form-element__label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+}

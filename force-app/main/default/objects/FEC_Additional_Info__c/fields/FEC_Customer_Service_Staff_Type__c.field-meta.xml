@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>FEC_Customer_Service_Staff_Type__c</fullName>
+    <description>Loại nhân viên dịch vụ khách hàng tiếp nhận</description>
+    <label>Customer Service Staff Type</label>
+    <required>false</required>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>NV DVKH qua điện thoại</fullName>
+                <default>false</default>
+                <label>NV DVKH qua điện thoại</label>
+            </value>
+            <value>
+                <fullName>NV DVKH qua email/ chat</fullName>
+                <default>false</default>
+                <label>NV DVKH qua email/ chat</label>
+            </value>
+            <value>
+                <fullName>NV DVKH tại văn phòng</fullName>
+                <default>false</default>
+                <label>NV DVKH tại văn phòng</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>

@@ -1,0 +1,145 @@
+<template>
+  <div class="container">
+    <div class="slds-form-element">
+      <label class="slds-form-element__label">
+        <span class="required" if:true={required}> * </span>
+        {label}
+      </label>
+      <div class="slds-form-element__control">
+        <div class="slds-combobox_container">
+          <div
+            class="slds-combobox slds-dropdown-trigger slds-dropdown-trigger_click"
+            tabindex={comboboxTabIndex}
+            onblur={handleBlur}
+            onfocus={handleFocus}
+          >
+            <div
+              class="slds-combobox__form-element slds-input-has-icon slds-input-has-icon_right"
+            >
+              <div
+                if:false={isSearch}
+                class="slds-input_faux slds-combobox__input"
+              >
+                <span class="slds-truncate">{placeholder}</span>
+              </div>
+
+              <input
+                name="input"
+                type="text"
+                if:true={isSearch}
+                class="slds-input slds-combobox__input"
+                placeholder={placeholder}
+                disabled={readOnly}
+                readonly={readOnly}
+                onfocus={handleFocus}
+                onblur={handleBlur}
+                onkeyup={handleChange}
+              />
+
+              <span
+                class="slds-icon_container slds-icon-utility-down slds-input__icon slds-input__icon_right"
+              >
+                <lightning-icon
+                  class="slds-icon slds-icon slds-icon_x-small slds-icon-text-default"
+                  icon-name="utility:down"
+                  alternative-text="down"
+                  size="xx-small"
+                  title="down"
+                ></lightning-icon>
+              </span>
+            </div>
+            <div class="slds-dropdown slds-dropdown_length-5 slds-dropdown_fluid">
+              <ul
+                class="slds-listbox slds-listbox_vertical"
+                onmouseover={handleMouseOver}
+                onmouseleave={handleMouseLeave}
+              >
+                <li if:true={isAll} class="slds-listbox__item">
+                  <div
+                    class="slds-media slds-listbox__option slds-listbox__option_plain slds-media_small"
+                    onclick={handleSelectAllRow}
+                  >
+                    <span class="slds-media__figure slds-listbox__option-icon">
+                      <span class="slds-checkbox">
+                        <input
+                          type="checkbox"
+                          id={selectAllCheckboxId}
+                          checked={isSelectAll}
+                          disabled={readOnly}
+                          onchange={handleSelectAllChange}
+                        />
+                        <label class="slds-checkbox__label" for={selectAllCheckboxId}>
+                          <span class="slds-checkbox_faux"></span>
+                          <span class="slds-assistive-text">{allLabel}</span>
+                        </label>
+                      </span>
+                    </span>
+                    <span class="slds-media__body">
+                      <span class="slds-truncate">{allLabel}</span>
+                    </span>
+                  </div>
+                </li>
+
+                <template for:each={optionlst} for:item="item">
+                  <li
+                    key={item.id}
+                    class="slds-listbox__item"
+                    if:false={item.isHidden}
+                  >
+                    <div
+                      class="slds-media slds-listbox__option slds-listbox__option_plain slds-media_small"
+                      data-id={item.id}
+                      onclick={handleChooseOptionClick}
+                    >
+                      <span class="slds-media__figure slds-listbox__option-icon">
+                        <span class="slds-checkbox">
+                          <input
+                            type="checkbox"
+                            id={item.checkboxId}
+                            data-id={item.id}
+                            checked={item.isSelected}
+                            disabled={readOnly}
+                            onchange={handleChooseOptionChange}
+                          />
+                          <label class="slds-checkbox__label" for={item.checkboxId}>
+                            <span class="slds-checkbox_faux"></span>
+                            <span class="slds-assistive-text">{item.label}</span>
+                          </label>
+                        </span>
+                      </span>
+                      <span class="slds-media__body">
+                        <span class="slds-truncate" title={item.label}>{item.label}</span>
+                      </span>
+                    </div>
+                  </li>
+                </template>
+              </ul>
+            </div>
+          </div>
+
+          <div class="selected" if:true={isSelected}>
+            <template for:each={selectedlst} for:item="item">
+              <span class="slds-badge" key={item.id}>
+                <span class="badge__value">{item.label}</span>
+                <span class="badge__close" if:false={readOnly}>
+                  <lightning-icon
+                    data-id={item.id}
+                    icon-name="utility:close"
+                    alternative-text="close"
+                    size="x-small"
+                    title="close"
+                    onclick={handleDeleteOption}
+                  ></lightning-icon>
+                </span>
+              </span>
+            </template>
+          </div>
+        </div>
+      </div>
+
+      <div if:true={isError} class="error-msg">
+        <span>{errorMsg}</span>
+      </div>
+    </div>
+  </div>
+</template>

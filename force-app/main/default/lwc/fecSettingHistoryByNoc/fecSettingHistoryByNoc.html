@@ -1,0 +1,33 @@
+<template>
+    <template if:true={isLoading}>
+        <lightning-spinner alternative-text="Loading..." size="small"></lightning-spinner>
+    </template>
+    <template if:true={hasHistory}>
+        <template for:each={lstHistory} for:item="h">
+            <div key={h.historyId} class="slds-box slds-m-bottom_x-small slds-theme_default">
+                <div class="slds-grid slds-grid_align-spread">
+                    <div>
+                        <p class="slds-text-body_small"><strong>{h.actionText}</strong></p>
+                        <p class="slds-text-body_small">Field: <strong>{h.fieldName}</strong></p>
+                        <template if:true={h.oldValue}>
+                            <p class="slds-text-body_small">Cũ: {h.oldValue}</p>
+                        </template>
+                        <template if:true={h.newValue}>
+                            <p class="slds-text-body_small">Mới: <span class="slds-text-color_success">{h.newValue}</span></p>
+                        </template>
+                        <p class="slds-text-body_small slds-text-color_weak">👤 Bởi {h.modifiedByName}</p>
+                    </div>
+                    <div class="slds-text-align_right slds-text-body_small slds-text-color_weak" style="white-space:nowrap">
+                        <lightning-formatted-date-time value={h.modifiedDate} year="numeric" month="short"
+                            day="2-digit" hour="2-digit" minute="2-digit"></lightning-formatted-date-time>
+                    </div>
+                </div>
+            </div>
+        </template>
+    </template>
+    <template if:false={hasHistory}>
+        <template if:false={isLoading}>
+            <p class="slds-text-color_weak slds-text-align_center slds-p-around_small">No content available</p>
+        </template>
+    </template>
+</template>

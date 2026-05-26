@@ -23,17 +23,17 @@ import { refreshApex } from "@salesforce/apex";
 import FEC_NFU_DESCRIPTION_RESULT from "@salesforce/schema/Case.FEC_NFU_Description_Result__c";
 import getSubProcesses from "@salesforce/apex/FEC_SubProcessService.getSubProcesses";
 import getSubmittedSubProcesses from "@salesforce/apex/FEC_SubProcessService.getSubmittedSubProcesses";
+import evaluateHoldCaseStage2Display from "@salesforce/apex/FEC_HoldCaseStage2DisplayService.evaluate";
 import USER_ID from "@salesforce/user/Id";
 import USER_GROUP_FIELD from "@salesforce/schema/User.FEC_User_Group__c";
 import ID_FIELD from "@salesforce/schema/Case.Id";
-// PhuongNT add field FEC_Stage_Name__c
-import STAGE_NAME_FIELD from "@salesforce/schema/Case.FEC_Stage_Name__c";
 
 //******************Start merge with Fraud********************* */
 import getCaseToFraudFieldMap from "@salesforce/apex/FEC_IntegrationManageFraudCaseCtrl.getCaseToFraudFieldMap";
 import FRAUD_FIELD_SYNC from "@salesforce/messageChannel/FEC_Fraud_Field_Sync__c";
 //******************End merge with Fraud********************* */
-
+// PhuongNT add field FEC_Stage_Name__c
+import STAGE_NAME_FIELD from "@salesforce/schema/Case.FEC_Stage_Name__c";
 import {
   mask,
   maskValue,
@@ -72,6 +72,7 @@ import {
   getMrcReturnAutoRoutingActionCode,
   isMrcReturnTrackedField,
   isMrcRl05Branch,
+  isMrcRl05CaseInformationBlocked,
   shouldActivateMrcReturnRouting,
   showMrcRl0502DupBanner,
   validateMrcReturnCase,
@@ -132,6 +133,8 @@ import {
   computeShowLegacyRoutingSectionForDisplay,
   computeRouteToActionButtonId,
   shouldPreferScopedRoutingFromStage2,
+  applyRdPaymentStageChangeRoutingFromAssessment,
+  applyRdPaymentAssessmentRoutingImmediate,
   resolveRoutingActionSelectEl,
   validateScopedRoutingSection,
   trySubmitScopedRouteTo,
@@ -327,7 +330,6 @@ const SUBSECTION_NAME_C360_INFO = 'C360 Info';
 // Field mapping: Case field → Fraud additional prop field (loaded from Apex)
 let CASE_TO_FRAUD_FIELD_MAP = {};
 let FRAUD_TO_CASE_FIELD_MAP = {};
-
 //******************End merge with Fraud********************* */
 
 //linhdev fix jira FECREDIT_CSM_2025_KH-1393-1394
@@ -489,7 +491,8 @@ import {
   CASE_RD_PAYMENT_CONTRACT_ASSESSMENT,
   FIELD_RD_PAYMENT_CONTRACT_ASSESSMENT,
   isRdPaymentSubCode,
-  resolveRdPaymentRouting,
+  setRdPaymentScopedStageTeamMap,
+  getRdPaymentScopedStageTeam,
 } from "c/fec_RdPaymentRoutingUtils";
 
 const FIELD_CONTRACT_PROCESSING_ASSESSMENT_TYPE =
@@ -733,6 +736,7 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
   showHoldCase = false;
   showHoldCaseManual = false;
   showHoldCaseAuto = false;
+  @track holdCaseStage2Display = null;
 
   //linhdev: Fix jira FECREDIT_CSM_2025_KH-1226 — tách active name theo từng lightning-accordion
   // (tránh trộn "routing-action" với UUID section: active-section-name có tên lạ có thể làm co section).
@@ -800,7 +804,7 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
   }
 
   get isStage1() {
-    return (this.currentStageName || '').includes('Stage 1');
+    return !this.currentStageName || this.currentStageName.includes('Stage 1');
   }
 
   @wire(MessageContext)
@@ -822,6 +826,7 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
     } else if (result.error) {
       console.error("[fec_CaseBussiness] wiredCaseHoldResult error", result.error);
     }
+    void this._refreshHoldCaseStage2Display();
   }
 
   @wire(getSubProcesses, {
@@ -838,6 +843,7 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
       if (!this.holdCaseResultOnCase) {
         this.showHoldCaseAuto = !!data.showHoldCaseAuto;
       }
+      void this._refreshHoldCaseStage2Display();
     }
     if (error) {
       console.error("[fec_CaseBussiness] hold case subprocess wire error", error);
@@ -853,12 +859,31 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
   // }
 
   get showHoldCaseSection() {
+    if (this.holdCaseStage2Display?.showHoldCaseSection) {
+      return true;
+    }
     return (
       this.showHoldCaseAuto ||
       this.showHoldCaseManual ||
       this.holdCaseResultOnCase ||
       !!this.holdCaseResultOverride
     );
+  }
+
+  get holdCaseStage2DisplayMode() {
+    return this.holdCaseStage2Display?.displayMode ?? "DEFAULT";
+  }
+
+  get holdCaseStage2InfoMessage() {
+    return this.holdCaseStage2Display?.infoMessage ?? null;
+  }
+
+  get holdCaseStage2ErrorMessage() {
+    return this.holdCaseStage2Display?.errorMessage ?? null;
+  }
+
+  get holdCaseStage2ShowManualButton() {
+    return this.holdCaseStage2Display?.showManualHoldCaseButton === true;
   }
 
   get iconHideConst() {
@@ -1038,12 +1063,17 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
     this.showProcessAction = TYPE_QUALIFIED === assessmentVal;
   }
 
-  // Toannd61 — NOC Contract Closure RL16.02/RL16.03 — fetch routing config (routingMap + queueMap) từ Apex
+  // Toannd61 — load assessment → FEC_Team_User_Group__c filter map từ Apex (không hardcode Team/Queue UI)
   _fetchRdPaymentQueues() {
     return getRoutingConfig()
       .then((result) => {
-        this._rdPaymentQueueMap = result?.queueMap || {};
-        this._rdPaymentRoutingMap = result?.routingMap || {};
+        setRdPaymentScopedStageTeamMap(result?.scopedStageTeamByAssessment);
+        console.log(
+          "[RD-Payment-Scoped] _fetchRdPaymentQueues",
+          JSON.stringify({
+            scopedStageTeamByAssessment: result?.scopedStageTeamByAssessment,
+          }),
+        );
       })
       .catch((err) => {
         console.error("_fetchRdPaymentQueues error:", JSON.stringify(err));
@@ -1052,13 +1082,15 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
 
   /** Áp dụng routing (Team/Queue + action) dựa trên giá trị đã lưu của FEC_RD_Payment_Contract_Assessment__c khi load form. */
   _applyRdPaymentContractAssessmentRouting() {
-    if (!this._isRdPaymentSubCode || !this.isEdit) return;
+    if (!this.isEdit || !this._isRdPaymentSubCode || isMrcRl05Branch(this.business)) {
+      return;
+    }
     const assessmentVal = this._getCaseFieldValue(FIELD_RD_PAYMENT_CONTRACT_ASSESSMENT);
     if (!assessmentVal || assessmentVal === STR_EMPTY) {
       return;
     }
-    // Nếu routing config chưa load xong (race condition), fetch lại rồi mới apply
-    if (Object.keys(this._rdPaymentRoutingMap).length === 0) {
+    // Nếu filter map chưa load xong, fetch lại rồi mới apply
+    if (!getRdPaymentScopedStageTeam(assessmentVal, this.business?.picklistOptionsMap?.Case?.[FIELD_RD_PAYMENT_CONTRACT_ASSESSMENT])) {
       this._fetchRdPaymentQueues().then(() => {
         this._applyRdPaymentRoutingByAssessment(assessmentVal);
       });
@@ -1071,20 +1103,32 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
    * Tự động set Team và Queue theo giá trị FEC_RD_Payment_Contract_Assessment__c.
    * Mapping được lấy từ Apex (không hardcode trong LWC).
    */
-  _applyRdPaymentRoutingByAssessment(assessmentVal) {
-    const picklistOptions = this.business?.picklistOptionsMap?.Case?.[FIELD_RD_PAYMENT_CONTRACT_ASSESSMENT];
-    const { locked, nextTeam, nextQueue } = resolveRdPaymentRouting(
-      assessmentVal,
-      this._rdPaymentQueueMap,
-      this._rdPaymentRoutingMap,
-      picklistOptions,
+  async _applyRdPaymentRoutingByAssessment(assessmentVal) {
+    console.log(
+      "[RD-Payment-Scoped] _applyRdPaymentRoutingByAssessment",
+      JSON.stringify({
+        assessmentVal,
+        isScopedStage2: shouldPreferScopedRoutingFromStage2(this),
+        subCode: this.business?.subCodeCode,
+        stageName: this.business?.stageName,
+        scopedTeamFilterLoaded: !!getRdPaymentScopedStageTeam(
+          assessmentVal,
+          this.business?.picklistOptionsMap?.Case?.[FIELD_RD_PAYMENT_CONTRACT_ASSESSMENT],
+        ),
+        lockRouteTo: this.rdPaymentScopedRouteToLocked,
+      }),
     );
-    if (!locked) {
-      return;
-    }
-    this.business = { ...this.business, nextTeam, nextQueue };
-    this._setActionValueByCode(ACTION_ROUTE_TO);
-    this.business = { ...this.business };
+    await this._fetchRdPaymentQueues();
+    const applied = await applyRdPaymentStageChangeRoutingFromAssessment(
+      this,
+      assessmentVal,
+    );
+    console.log("[RD-Payment-Scoped] _applyRdPaymentRoutingByAssessment:result", {
+      applied,
+      nextTeam: this.business?.nextTeam,
+      nextQueue: this.business?.nextQueue,
+      actionCode: this._getCurrentActionCode?.(),
+    });
   }
 
   // Nghiệp vụ: Lấy Queue theo Team Queue và Group Member
@@ -1119,9 +1163,7 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
   header;
   content;
 
-  // Toannd61 — NOC Contract Closure RL16.02/RL16.03 — config từ Apex (không hardcode trong LWC)
-  _rdPaymentQueueMap = {};
-  _rdPaymentRoutingMap = {};
+  // Toannd61 — assessment → team filter map từ Apex (SCOPED_STAGE_TEAM_BY_ASSESSMENT)
 
   get _isRdPaymentSubCode() {
     return isRdPaymentSubCode(this.business?.subCodeCode);
@@ -1152,7 +1194,14 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
       return queue;
     }
     if (typeof queue === "object") {
-      return queue.label || queue.name || queue.value || this.business?.nextQueueLabel || STR_EMPTY;
+      return (
+        queue.label ||
+        queue.name ||
+        queue.developerName ||
+        queue.value ||
+        this.business?.nextQueueLabel ||
+        STR_EMPTY
+      );
     }
     return STR_EMPTY;
   }
@@ -1224,7 +1273,14 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
       return queue;
     }
     if (typeof queue === "object") {
-      return queue.label || queue.name || queue.value || this.business?.nextQueueLabel || STR_EMPTY;
+      return (
+        queue.label ||
+        queue.name ||
+        queue.developerName ||
+        queue.value ||
+        this.business?.nextQueueLabel ||
+        STR_EMPTY
+      );
     }
     return STR_EMPTY;
   }
@@ -1386,6 +1442,26 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
     }
   }
 
+  _resolveMrcDeliveryOptionForRouting() {
+    const draft = String(this._mrcDeliveryOptionDraft ?? STR_EMPTY).trim();
+    if (draft) {
+      return draft;
+    }
+    const panel = this._getMrcReturnPanelEl();
+    const deliveryForm = panel?.getDeliveryForm?.();
+    if (deliveryForm && typeof deliveryForm.buildPayload === "function") {
+      try {
+        const combined = deliveryForm.buildPayload()?.deliveryOptionCombined;
+        if (combined && String(combined).trim()) {
+          return String(combined).trim();
+        }
+      } catch (ignore) {
+        /* panel chưa mount */
+      }
+    }
+    return this._getCaseFieldValue(Fec_CaseBussiness.DOC_REQ_FIELD_DELIVERY);
+  }
+
   handleMrcReturnHandlingOptionChange(event) {
     const detail = event.detail || {};
     const value = detail.value ?? STR_EMPTY;
@@ -1417,7 +1493,11 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
   }
 
   _applyMrcReturnCaseIntegration() {
-    if (!this.business?.sectionlst || !isMrcRl05Branch(this.business)) {
+    if (
+      !this.business?.sectionlst ||
+      !isMrcRl05Branch(this.business) ||
+      isMrcRl05CaseInformationBlocked(this.business)
+    ) {
       return;
     }
     const result = applyMrcRl0502DupFieldLayout(
@@ -1762,7 +1842,8 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
       isCofGsr ||
       hasOptions ||
       docReqRoutingCtx.subCodeSupported ||
-      shouldActivateMrcReturnRouting(this.business);
+      (shouldActivateMrcReturnRouting(this.business) &&
+        !isMrcRl05CaseInformationBlocked(this.business));
     this.business = { ...this.business };
   }
 
@@ -1837,7 +1918,8 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
   async _supplementMrcRl05RoutingActionsIfNeeded() {
     if (
       !isMrcRl05Branch(this.business) ||
-      !shouldActivateMrcReturnRouting(this.business)
+      !shouldActivateMrcReturnRouting(this.business) ||
+      isMrcRl05CaseInformationBlocked(this.business)
     ) {
       return;
     }
@@ -1919,7 +2001,7 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
         this.business,
         this.mrcReturnHandlingOptionValue,
         this.mrcReturnCustomerConfirmationValue,
-        this._mrcDeliveryOptionDraft,
+        this._resolveMrcDeliveryOptionForRouting(),
       );
       if (ctx.eligible && hasAction(ACTION_ROUTE_TO)) {
         this._setActionValueByCode(ACTION_ROUTE_TO);
@@ -1936,12 +2018,7 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
   }
 
   _hasMrcBlockingCaseInformationError() {
-    return !!this.business?.sectionlst?.some(
-      (section) =>
-        section.name === SECTION_NAME_CASE_INFORMATION &&
-        (section.hasError || section.error?.label) &&
-        this.business?.mrcRl05CaseInfoWarningOnly !== true,
-    );
+    return isMrcRl05CaseInformationBlocked(this.business);
   }
 
   //linhdev: Fix jira FECREDIT_CSM_2025_KH-1162
@@ -1979,8 +2056,7 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
 
   connectedCallback() {
     console.log("🚀 ~ Fec_CaseBussiness ~ connectedCallback ~ this.business:", JSON.stringify(this.business))
-    
-    //******************Start merge with Fraud********************* */
+     //******************Start merge with Fraud********************* */
      // Subscribe to fraud field sync (fraud → case)
      this._subscriptionFraudSync = subscribe(
       this.messageContext,
@@ -1998,7 +2074,6 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
     );
 
     //******************End merge with Fraud********************* */
-    
     this._boundHandleIppClosureLoad = this.handleIppClosureLoad.bind(this);
     this._boundHandleIppClosureSelection = this.handleIppClosureSelection.bind(this);
     this.template.addEventListener(
@@ -2316,8 +2391,7 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
         );
         this._documentRequestDeliveryEligible = docReqRoutingCtx.deliveryEligible;
         this._syncHasRoutingAction();
-        this._mrcReturnStageChangeRoutingActive =
-          shouldActivateMrcReturnRouting(this.business);
+        this._mrcReturnStageChangeRoutingActive = false;
 
         // Ưu tiên draft đã lưu, nếu không có hoặc không hợp lệ thì dùng option đầu tiên
         const draftCode = this.business.draftRoutingActionCode;
@@ -2553,7 +2627,10 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
         //linhdev fix jira FECREDIT_CSM_2025_KH-1469-1474 — C360/Property: LWC Points Redemption quyết định sau initData (đủ điều kiện mới ẩn)
         this._setPointsRedemptionHideFlag(false);
         ensureMrcReturnCaseFormInBusiness(this.business);
-        if (isMrcRl05Branch(this.business)) {
+        if (
+          isMrcRl05Branch(this.business) &&
+          !isMrcRl05CaseInformationBlocked(this.business)
+        ) {
           this._initMrcReturnFieldsFromBusiness();
           const layoutResult = applyMrcRl0502DupFieldLayout(
             this.business,
@@ -2569,29 +2646,35 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
         this._prepareRoutingSectionForDisplay();
         this._syncActiveRoutingSection();
         this.businessLoaded = true;
+        if (
+          productTypeId == null &&
+          categoryId == null &&
+          subCategoryId == null &&
+          subCodeId == null
+        ) {
+          this._syncHoldCaseNocParamsFromBusiness();
+        }
+        void this._refreshHoldCaseStage2Display();
         this._syncRemovePhoneLockAfterRevert();
-
         //******************Start merge with Fraud********************* */
+        // Load Case-to-Fraud field mapping from Apex (after business data is ready)
+        const nocId = typeof this.business?.natureOfCase === 'string' 
+        ? this.business.natureOfCase.trim() 
+        : String(this.business?.natureOfCase || '');
+        console.log('[getCaseToFraudFieldMap] nocId:', nocId, '| type:', typeof nocId, '| length:', nocId.length);
+        if (nocId) {
+        getCaseToFraudFieldMap({ natureOfCaseId: nocId })
+          .then(res => {
+            CASE_TO_FRAUD_FIELD_MAP = res || {};
+            FRAUD_TO_CASE_FIELD_MAP = Object.fromEntries(
+              Object.entries(CASE_TO_FRAUD_FIELD_MAP).map(([k, v]) => [v, k])
+            );
+            console.log('[CASE_TO_FRAUD_FIELD_MAP]:', CASE_TO_FRAUD_FIELD_MAP);
+          })
+          .catch(err => { console.error('getCaseToFraudFieldMap error', err); });
+        }
 
-         // Load Case-to-Fraud field mapping from Apex (after business data is ready)
-         const nocId = typeof this.business?.natureOfCase === 'string' 
-         ? this.business.natureOfCase.trim() 
-         : String(this.business?.natureOfCase || '');
-       console.log('[getCaseToFraudFieldMap] nocId:', nocId, '| type:', typeof nocId, '| length:', nocId.length);
-       if (nocId) {
-         getCaseToFraudFieldMap({ natureOfCaseId: nocId })
-           .then(res => {
-             CASE_TO_FRAUD_FIELD_MAP = res || {};
-             FRAUD_TO_CASE_FIELD_MAP = Object.fromEntries(
-               Object.entries(CASE_TO_FRAUD_FIELD_MAP).map(([k, v]) => [v, k])
-             );
-             console.log('[CASE_TO_FRAUD_FIELD_MAP]:', CASE_TO_FRAUD_FIELD_MAP);
-           })
-           .catch(err => { console.error('getCaseToFraudFieldMap error', err); });
-       }
-
-       //******************End merge with Fraud********************* */
-
+        //******************End merge with Fraud********************* */
         //linhdev: Fix jira FECREDIT_CSM_2025_KH-1226 — mỗi accordion chỉ nhận đúng tên section của nó.
         this.activeMainSectionlst = [...sectionlst];
         //linhdev fix section Account Info + Case Info
@@ -2989,6 +3072,18 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
       this.business = { ...this.business };
     }
 
+    // RD Payment Assessment — Route to + Team ngay khi onChange (không phụ thuộc find field)
+    if (
+      fieldName === FIELD_RD_PAYMENT_CONTRACT_ASSESSMENT &&
+      value &&
+      value !== STR_EMPTY &&
+      this._isRdPaymentSubCode &&
+      !isMrcRl05Branch(this.business)
+    ) {
+      applyRdPaymentAssessmentRoutingImmediate(this, value);
+      void this._applyRdPaymentRoutingByAssessment(value);
+    }
+
     if (fieldName === FIELD_COMPLAIN_TYPE) {
       this._applyInternalFieldVisibility();
       this._rebuildAllSectionSortedRows();
@@ -3177,11 +3272,9 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
           toRouteTo = TYPE_DISAGREE == value;
           break;
 
-        // Toannd61
+        // Toannd61 — RD Payment Assessment (backup: adHocFieldlst switch)
         case CASE_RD_PAYMENT_CONTRACT_ASSESSMENT:
-          if (this._isRdPaymentSubCode) {
-            this._applyRdPaymentRoutingByAssessment(value);
-          }
+          toRouteTo = !!value && value !== STR_EMPTY;
           break;
 
         default:
@@ -5017,7 +5110,10 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
       this._scheduleRefreshFileUploadCards();
       //linhdev fix section Account Info + Case Info
       this._ensureAccountCaseSectionsExpanded();
-      if (isMrcRl05Branch(this.business)) {
+      if (
+        isMrcRl05Branch(this.business) &&
+        !isMrcRl05CaseInformationBlocked(this.business)
+      ) {
         this._applyMrcReturnCaseIntegration();
       }
     });
@@ -5101,6 +5197,88 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
   @api
   refreshFileUploadCards() {
     this._scheduleRefreshFileUploadCards();
+  }
+
+  /** Đồng bộ holdCaseNocParams từ business sau getData (fallback khi chưa có CASE_NOC message). */
+  _syncHoldCaseNocParamsFromBusiness() {
+    if (!this.recordId || !this.business) {
+      return;
+    }
+    const sections = this.business.sectionlst;
+    if (!Array.isArray(sections)) {
+      return;
+    }
+    let productTypeId;
+    let categoryId;
+    let subCategoryId;
+    let subCodeId;
+    for (const section of sections) {
+      const fields = section?.fieldlst;
+      if (!Array.isArray(fields)) {
+        continue;
+      }
+      for (const field of fields) {
+        const api = field?.apiName;
+        const val = field?.value;
+        if (!val) {
+          continue;
+        }
+        if (api === "FEC_Product_Type__c") {
+          productTypeId = val;
+        } else if (api === "FEC_Category__c") {
+          categoryId = val;
+        } else if (api === "FEC_SubCategory__c") {
+          subCategoryId = val;
+        } else if (api === "FEC_SubCode__c") {
+          subCodeId = val;
+        }
+      }
+    }
+    if (!productTypeId && !categoryId && !subCategoryId) {
+      return;
+    }
+    this.holdCaseNocParams = {
+      recordId: this.recordId,
+      productTypeId: productTypeId || null,
+      categoryId: categoryId || null,
+      subCategoryId: subCategoryId || null,
+      subCodeId: subCodeId ?? null,
+    };
+  }
+
+  /**
+   * Stage 2+ (CS Support / CS Customer Care): đánh giá hiển thị Hold Case khi đổi NOC.
+   */
+  async _refreshHoldCaseStage2Display() {
+    if (!this.recordId) {
+      this.holdCaseStage2Display = null;
+      return;
+    }
+    // Apex kiểm tra FEC_Is_Submited__c; chỉ bỏ qua khi business đã load và chắc chắn Stage 1
+    if (this.business && this.business.isSubmited !== true) {
+      this.holdCaseStage2Display = null;
+      return;
+    }
+    const p = this.holdCaseNocParams || {};
+    try {
+      const result = await evaluateHoldCaseStage2Display({
+        caseId: this.recordId,
+        productTypeId: p.productTypeId || null,
+        categoryId: p.categoryId || null,
+        subCategoryId: p.subCategoryId || null,
+        subCodeId: p.subCodeId ?? null,
+      });
+      this.holdCaseStage2Display = result;
+      if (result?.showHoldCaseSection) {
+        this.showHoldCase = true;
+        this.showHoldCaseAuto = true;
+        this._ensureCaseInformationHoldCaseFlags();
+        this.business = { ...this.business };
+      }
+    } catch (error) {
+      console.error("[fec_CaseBussiness] _refreshHoldCaseStage2Display", error);
+      this.holdCaseStage2Display = null;
+    }
   }
 
   /** Manual Hold Case (Quick Action) báo refresh qua sessionStorage sau TH1/TH2/TH3. */
@@ -5191,11 +5369,13 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
         this._ensureCaseInformationHoldCaseFlags();
         this.business = { ...this.business };
       }
-      const autoCmp = this.template.querySelector("c-fec_hold-case-auto");
-      if (autoCmp?.refresh) {
-        return autoCmp.refresh();
-      }
-      return undefined;
+      return this._refreshHoldCaseStage2Display().then(() => {
+        const autoCmp = this.template.querySelector("c-fec_hold-case-auto");
+        if (autoCmp?.refresh) {
+          return autoCmp.refresh();
+        }
+        return undefined;
+      });
     });
   }
 
@@ -5438,7 +5618,10 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
       return Promise.resolve();
     }
 
-    if (!isMrcRl05Branch(this.business)) {
+    if (
+      !isMrcRl05Branch(this.business) ||
+      isMrcRl05CaseInformationBlocked(this.business)
+    ) {
       this._mrcReturnStageChangeRoutingActive = false;
       return Promise.resolve();
     }
@@ -5456,7 +5639,7 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
       this.business,
       this.mrcReturnHandlingOptionValue,
       this.mrcReturnCustomerConfirmationValue,
-      this._mrcDeliveryOptionDraft,
+      this._resolveMrcDeliveryOptionForRouting(),
     );
 
     if (!ctx.eligible || !ctx.team) {
@@ -5797,6 +5980,23 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
     return this.business?.code;
   }
 
+  /** RD Payment Stage 2+: assessment đã chọn → khóa combobox Team (read-only từ DB hoặc 'default'). */
+  get rdPaymentScopedRouteToLocked() {
+    if (!shouldPreferScopedRoutingFromStage2(this)) {
+      return false;
+    }
+    const assessmentVal = this._getCaseFieldValue(FIELD_RD_PAYMENT_CONTRACT_ASSESSMENT);
+    if (!assessmentVal || assessmentVal === STR_EMPTY) {
+      return false;
+    }
+    const picklistOptions =
+      this.business?.picklistOptionsMap?.Case?.[FIELD_RD_PAYMENT_CONTRACT_ASSESSMENT];
+    return (
+      !!getRdPaymentScopedStageTeam(assessmentVal, picklistOptions) ||
+      !!this.business?.nextTeam
+    );
+  }
+
   get showScopedStageChangeRoutingSection() {
     return computeShowScopedStageChangeRoutingSection(this);
   }
@@ -5820,7 +6020,6 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
   handleScopedRoutingSelectionChange(event) {
     this._scopedRoutingSelection = event.detail || {};
   }
-
 
    //******************Start merge with Fraud********************* */
    @api validateFraudForm() {
@@ -5878,5 +6077,4 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
     }
   }
   //******************End merge with Fraud********************* */
-  
 }

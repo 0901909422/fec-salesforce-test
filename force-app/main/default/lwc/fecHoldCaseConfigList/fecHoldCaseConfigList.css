@@ -1,0 +1,15 @@
+/* NFU modal checkbox column spacing */
+.nfu-checkbox-col {
+    width: 50px;
+    min-width: 50px;
+    padding-right: 0 !important;
+}
+
+.nfu-checkbox-col lightning-input {
+    margin-left: 4px;
+}
+
+/* NFU modal code column — prevent overlap */
+.nfu-code-col {
+    padding-left: 12px !important;
+}

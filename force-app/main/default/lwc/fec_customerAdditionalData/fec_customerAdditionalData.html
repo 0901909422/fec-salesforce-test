@@ -1,0 +1,38 @@
+<template>
+    <lightning-card>
+        <template if:true={loading}>
+            <div class="slds-p-around_medium">
+                <lightning-spinner alternative-text="Loading" size="small"></lightning-spinner>
+            </div>
+        </template>
+        <template if:true={error}>
+            <div class="slds-p-around_medium slds-text-color_error">
+                {errorMessage}
+            </div>
+        </template>
+        <template if:true={hasRows}>
+            <div class="slds-p-horizontal_medium slds-p-bottom_medium">
+                <lightning-layout multiple-rows="false" pull-to-boundary="small">
+                    <template for:each={rows} for:item="r">
+                        <lightning-layout-item
+                            key={r.rowKey}
+                            padding="around-small"
+                            size="12"
+                            small-device-size="12"
+                            medium-device-size="4"
+                            large-device-size="4"
+                        >
+                            <div class="fec-addl-body">
+                                <span class="slds-text-title_bold">{r.fieldLabel}</span>
+                                <span class="slds-text-body_regular slds-text-color_weak">{r.fieldValue}</span>
+                            </div>
+                        </lightning-layout-item>
+                    </template>
+                </lightning-layout>
+            </div>
+        </template>
+        <template if:true={showEmpty}>
+            <div class="slds-p-around_medium slds-text-color_weak"></div>
+        </template>
+    </lightning-card>
+</template>

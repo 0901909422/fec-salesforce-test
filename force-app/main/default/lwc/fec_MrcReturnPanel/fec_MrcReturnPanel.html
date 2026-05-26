@@ -1,0 +1,46 @@
+<template>
+  <div class="mrc-return-panel">
+    <template if:true={showCustomerConfirmation}>
+      <div class="slds-form-element slds-m-bottom_small">
+        <label class="slds-form-element__label">
+          <abbr lwc:if={customerConfirmationRequired} class="slds-required" title="required">*</abbr>
+          {customerConfirmationFieldLabel}
+        </label>
+        <lightning-combobox
+          name="mrcCustomerConfirmation"
+          variant="label-hidden"
+          placeholder="--None--"
+          options={confirmationPicklistOptions}
+          value={customerConfirmationValue}
+          required={customerConfirmationRequired}
+          disabled={isReadOnly}
+          onchange={handleCustomerConfirmationChange}>
+        </lightning-combobox>
+      </div>
+    </template>
+
+    <template if:true={showMrcHandlingRadioBlock}>
+      <c-fec_-mrc-return-dup-banner
+        record-id={recordId}
+        duplicate-case-id={duplicateCaseId}
+        duplicate-case-number={duplicateCaseNumber}
+        handling-option-value={handlingOptionValue}
+        handling-option-options={handlingOptionPicklistOptions}
+        handling-option-label={handlingOptionFieldLabel}
+        is-edit={isEdit}
+        display-mode="inline"
+        hide-dup-message={hideMrcDupMessageForRadio}
+        onhandlingoptionchange={handleHandlingOptionChange}>
+      </c-fec_-mrc-return-dup-banner>
+    </template>
+
+    <template if:true={showDelivery}>
+      <c-fec_-mrc-delivery-form
+        record-id={recordId}
+        sub-code-code={subCodeCode}
+        is-edit={isEdit}
+        onmrcdeliverychange={handleMrcDeliveryChange}>
+      </c-fec_-mrc-delivery-form>
+    </template>
+  </div>
+</template>

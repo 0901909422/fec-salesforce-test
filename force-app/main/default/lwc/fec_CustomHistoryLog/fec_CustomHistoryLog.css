@@ -1,0 +1,5 @@
+.table-history-container {
+    max-height: 300px;
+    overflow-y: auto;
+    scroll-behavior: smooth;
+}

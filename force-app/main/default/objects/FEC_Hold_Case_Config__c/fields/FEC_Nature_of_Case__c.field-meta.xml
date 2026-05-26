@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>FEC_Nature_of_Case__c</fullName>
+    <deleteConstraint>SetNull</deleteConstraint>
+    <description>Hold Case được thiết lập ở bộ Nature of Case</description>
+    <label>Nature of Case</label>
+    <referenceTo>FEC_Nature_of_Case__c</referenceTo>
+    <relationshipLabel>Hold Case Configs</relationshipLabel>
+    <relationshipName>Hold_Case_Configs</relationshipName>
+    <required>false</required>
+    <trackTrending>false</trackTrending>
+    <type>Lookup</type>
+</CustomField>

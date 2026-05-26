@@ -1,0 +1,115 @@
+<template>
+  <div class="slds-grid slds-wrap">
+    <div class="slds-col slds-size_1-of-1 slds-medium-size_6-of-12 slds-p-around--x-small">
+      <lightning-select
+        data-id="routing-action"
+        label={labels.actionLabel}
+        value={actionValue}
+        options={routingActionOptions}
+        onchange={handleActionChange}
+        disabled={isRoutingActionDisabled}
+        required={isEdit}
+      ></lightning-select>
+    </div>
+
+    <template if:true={showRouteTo}>
+      <div class="route-to-info slds-col slds-size_1-of-1 slds-medium-size_6-of-12">
+        <template if:true={showTeamOptionsLoading}>
+          <div class="slds-p-around--x-small slds-is-relative route-to-loading">
+            <lightning-spinner alternative-text="Loading" size="small"></lightning-spinner>
+          </div>
+        </template>
+
+        <template if:true={showRouteToReadOnly}>
+          <div class="route-to-info__item read slds-border--bottom slds-m-around--small slds-p-around--x-small">
+            <p class="label">{labels.teamLabel}</p>
+            <p class="value">{readOnlyTeam}</p>
+          </div>
+          <div class="route-to-info__item read slds-border--bottom slds-m-around--small slds-p-around--x-small">
+            <p class="label">{labels.queueLabel}</p>
+            <p class="value">{effectiveRouteToQueueDisplayLabel}</p>
+          </div>
+        </template>
+
+        <template if:true={showTeamSelection}>
+          <div class="slds-p-around--x-small">
+            <lightning-combobox
+              data-id="route-team"
+              label={labels.teamLabel}
+              value={selectedTeam}
+              options={teamComboboxOptions}
+              placeholder={labels.chooseTeamPlaceholder}
+              onchange={handleTeamChange}
+              required
+            ></lightning-combobox>
+          </div>
+          <div class="route-to-info__item read slds-border--bottom slds-m-around--small slds-p-around--x-small">
+            <p class="label">
+              <template if:true={isEdit}>
+                <abbr class="slds-required" title="required">*</abbr>
+              </template>
+              {labels.queueLabel}
+            </p>
+            <p class="value">{selectedQueueDisplayLabel}</p>
+          </div>
+        </template>
+      </div>
+    </template>
+
+    <template if:true={showRevert}>
+      <div class="route-to-info slds-col slds-size_1-of-1 slds-medium-size_6-of-12">
+        <div class="route-to-info__item read slds-border--bottom slds-m-around--small slds-p-around--x-small">
+          <p class="label">{labels.decisionLabel}</p>
+          <p class="value">{revertDecisionDisplayLabel}</p>
+        </div>
+      </div>
+    </template>
+
+    <template if:true={showTransfer}>
+      <div class="route-to-info slds-col slds-size_1-of-1 slds-medium-size_6-of-12">
+        <div class="route-to-info__item read slds-border--bottom slds-m-around--small slds-p-around--x-small">
+          <lightning-combobox
+            name="decision"
+            label={labels.decisionLabel}
+            placeholder={labels.chooseDecisionLabel}
+            value={decisionValue}
+            onchange={handleFieldChange}
+            options={decisionOptions}
+            required
+          ></lightning-combobox>
+        </div>
+        <template if:true={decisionValue}>
+          <div class="route-to-info__item read slds-border--bottom slds-m-around--small slds-p-around--x-small">
+            <template if:true={isSubDecisionOptionsDisplay}>
+              <lightning-combobox
+                name="sub-decision"
+                label={labels.subDecisionLabel}
+                placeholder={labels.chooseSubDecisionLabel}
+                value={subDecisionValue}
+                onchange={handleFieldChange}
+                options={subDecisionOptions}
+                required
+              ></lightning-combobox>
+            </template>
+          </div>
+        </template>
+      </div>
+    </template>
+
+    <template if:true={showUpdate}>
+      <div class="route-to-info slds-col slds-size_1-of-1 slds-medium-size_6-of-12">
+        <div class="route-to-info__item read slds-border--bottom slds-m-around--small slds-p-around--x-small">
+          <lightning-combobox
+            name="decision"
+            label={labels.decisionLabel}
+            placeholder={labels.chooseDecisionLabel}
+            value={decisionValue}
+            onchange={handleFieldChange}
+            options={decisionUpdateOptions}
+            required
+          ></lightning-combobox>
+        </div>
+      </div>
+    </template>
+  </div>
+</template>

@@ -617,7 +617,6 @@ export default class Fec_CaseDetail_Customer extends LightningElement {
         this.errlst.push(REQUIRED_MSG.replace("{0}", FEC_Case_Remark_Label));
       }
     }
-
     //******************Start merge with Fraud********************* */
     if (!this._validateFraudForm(caseBusinessEle)) {
       isAllValid = false;
@@ -671,7 +670,6 @@ export default class Fec_CaseDetail_Customer extends LightningElement {
         return;
       }
       //******************End merge with Fraud********************* */
-
       const submitted = await caseBusinessEle.submit();
       if (submitted === false) {
         return;
@@ -735,9 +733,8 @@ export default class Fec_CaseDetail_Customer extends LightningElement {
     }
   }
 
-   //******************Start merge with Fraud********************* */
-
-   _validateFraudForm(caseBusinessEle) {
+  //******************Start merge with Fraud********************* */
+  _validateFraudForm(caseBusinessEle) {
     console.log('[DEBUG-Fraud] caseBusinessEle:', !!caseBusinessEle, '| validateFraudForm type:', typeof caseBusinessEle?.validateFraudForm);
     if (caseBusinessEle && typeof caseBusinessEle.validateFraudForm === 'function') {
       if (!caseBusinessEle.validateFraudForm()) {
@@ -766,6 +763,5 @@ export default class Fec_CaseDetail_Customer extends LightningElement {
       return false;
     }
   }
-
   //******************End merge with Fraud********************* */
 }

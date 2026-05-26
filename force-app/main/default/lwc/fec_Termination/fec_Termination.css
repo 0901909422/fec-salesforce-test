@@ -1,0 +1,75 @@
+/* Đồng bộ với fec_SecondaryInfoLoanAccount, fec_RepaymentSchedulePaymentHistory */
+.fec-section-spinner-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 120px;
+    padding: 1rem;
+}
+
+.termination-amount-negative {
+    color: #c23934;
+    font-weight: 400;
+}
+
+.sync-fail-text {
+    color: #c23934;
+    font-weight: 400;
+}
+
+/* Section Fee/Charge: đồng bộ chiều cao header với Early Termination, Overdue khi đóng */
+.fec-termination-fee-content {
+    min-height: 0;
+}
+
+/* Bỏ đường gạch ngang giữa Overdue và Fee/Charge */
+:host lightning-accordion-section.fec-termination-fee-section {
+    border-top: none !important;
+}
+
+/* Bảng Fee/Charge khi chưa có dữ liệu - luôn hiển thị cấu trúc bảng */
+.fec-fee-charge-table-wrapper {
+    border: 1px solid #dddbda;
+    border-radius: 0.5rem;
+    overflow: hidden;
+    background: #ffffff;
+}
+
+.fec-fee-charge-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.fec-fee-charge-table thead {
+    background: #f3f2f2;
+}
+
+.fec-fee-charge-th {
+    padding: 12px 16px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #3e3e3c;
+    border-bottom: 1px solid #d8dde6;
+}
+
+/* Empty state khi không có dữ liệu termination */
+.empty-state {
+    background: var(--slds-g-color-neutral-base-95, #f3f3f3);
+    border-radius: 0.5rem;
+    border: 1px solid var(--slds-g-color-border-base-1, #e5e5e5);
+}
+
+.empty-state__icon {
+    color: var(--slds-g-color-neutral-base-50, #706e6b);
+}
+
+.empty-state__icon-inner {
+    --slds-c-icon-color-foreground-default: #706e6b;
+}
+
+.empty-state__message {
+    max-width: 28rem;
+    margin-left: auto;
+    margin-right: auto;
+    line-height: 1.5;
+}

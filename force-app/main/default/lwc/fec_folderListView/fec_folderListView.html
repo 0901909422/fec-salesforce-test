@@ -1,0 +1,61 @@
+<template>
+
+    <!-- Breadcrumb navigation for folder drill-down -->
+    <template if:true={isInsideFolder}>
+        <div class="flv-breadcrumb slds-p-horizontal_medium slds-p-vertical_x-small">
+            <nav aria-label="Breadcrumb">
+                <ol class="slds-breadcrumb slds-list_horizontal slds-wrap">
+                    <li class="slds-breadcrumb__item">
+                        <a href="#" data-id="root" onclick={handleBreadcrumbClick}>All Folders</a>
+                    </li>
+                    <template for:each={breadcrumbs} for:item="crumb">
+                        <li class="slds-breadcrumb__item" key={crumb.id}>
+                            <a href="#" data-id={crumb.id} onclick={handleBreadcrumbClick}>{crumb.name}</a>
+                        </li>
+                    </template>
+                    <li class="slds-breadcrumb__item">
+                        <span class="slds-text-title_bold slds-p-left_x-small">{currentFolderName}</span>
+                    </li>
+                </ol>
+            </nav>
+        </div>
+    </template>
+
+    <!-- Loading spinner -->
+    <template if:true={isLoading}>
+        <lightning-spinner alternative-text="Loading" size="medium"></lightning-spinner>
+    </template>
+
+    <template if:false={isLoading}>
+        <template if:true={hasItems}>
+            <lightning-datatable
+                key-field="id"
+                data={folderData}
+                columns={columns}
+                hide-checkbox-column
+                show-row-number-column
+                sorted-by={sortedBy}
+                sorted-direction={sortedDirection}
+                onsort={handleSort}
+                onrowaction={handleRowAction}
+            ></lightning-datatable>
+        </template>
+        <template if:false={hasItems}>
+            <div class="slds-illustration slds-illustration_small slds-p-around_large">
+                <div class="slds-text-longform">
+                    <h3 class="slds-text-heading_medium">{label.FEC_No_Folders_Found}</h3>
+                </div>
+            </div>
+        </template>
+    </template>
+
+    <template if:true={isDeleteModalOpen}>
+       <c-fec_folder-delete-action 
+            record-id={currentSelectedId}
+            name={currentSelectedName}
+            type={currentSelectedRowType}
+            onclose={handleModalClose}
+            onsavesuccess={handleDeleteSuccess}>
+        </c-fec_folder-delete-action>
+    </template>
+</template>

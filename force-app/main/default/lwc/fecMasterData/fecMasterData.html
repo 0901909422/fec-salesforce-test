@@ -1,0 +1,60 @@
+<template>
+  <lightning-tabset variant="default">
+    <lightning-tab label="Config" icon-name="utility:settings">
+      <div class="master-data-layout">
+        <div class="tree-panel">
+          <c-fec-nature-of-case-tree onitemselect={handleItemSelect}></c-fec-nature-of-case-tree>
+        </div>
+        <div class="detail-panel">
+          <c-fec-master-data-container onrefreshall={handleRefreshTree}
+            item={selectedItem}></c-fec-master-data-container>
+        </div>
+      </div>
+    </lightning-tab>
+    <lightning-tab label="Channels" icon-name="standard:channel_programs">
+      <div class="slds-p-around_medium">
+        <c-fec-channel-session></c-fec-channel-session>
+      </div>
+    </lightning-tab>
+    <lightning-tab label="Properties" icon-name="standard:drafts">
+      <div class="slds-p-around_medium">
+        <c-fec-additional-field-list></c-fec-additional-field-list>
+      </div>
+    </lightning-tab>
+    <lightning-tab label="Additional Info" icon-name="standard:record">
+      <div class="slds-p-around_medium">
+        <c-fec-additional-info-list></c-fec-additional-info-list>
+      </div>
+    </lightning-tab>
+    <lightning-tab label="ServiceType's Property Mappings" icon-name="standard:drafts">
+      <div class="slds-p-around_medium">
+        <c-fec-service-type-mapping></c-fec-service-type-mapping>
+      </div>
+    </lightning-tab>
+    <lightning-tab label="Review" icon-name="standard:database">
+      <div class="slds-p-around_medium">
+        <c-fec-master-data-review></c-fec-master-data-review>
+      </div>
+    </lightning-tab>
+    <lightning-tab label="Data Gốc" icon-name="standard:database">
+      <div class="slds-p-around_medium">
+        <c-fec-all-master-data></c-fec-all-master-data>
+      </div>
+    </lightning-tab>
+    <lightning-tab label="Data Clone" icon-name="standard:database">
+      <div class="slds-p-around_medium">
+        <c-fec-all-master-data-mdm></c-fec-all-master-data-mdm>
+      </div>
+    </lightning-tab>
+    <lightning-tab label="NFU Codes" icon-name="standard:code_set">
+      <div class="slds-p-around_medium">
+        <c-fec-nfu-code-list></c-fec-nfu-code-list>
+      </div>
+    </lightning-tab>
+    <!-- <lightning-tab label="Decision Table" icon-name="utility:flow">
+      <div class="slds-p-around_medium">
+        <c-fec-decision-table-view></c-fec-decision-table-view>
+      </div>
+    </lightning-tab> -->
+  </lightning-tabset>
+</template>
