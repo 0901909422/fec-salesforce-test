@@ -2055,6 +2055,7 @@
         <members>FEC_General_Assignment_Config__c-General Assignment Config Layout</members>
         <members>FEC_General_Assignment__c-General Assignment Layout</members>
         <members>FEC_Routing_Assignment__c-Routing Assignment Layout</members>
+        <members>FEC_Notification_Template_Channel__c-Notification Template Channel Layout</members>
         <name>Layout</name>
     </types>
     <types>
