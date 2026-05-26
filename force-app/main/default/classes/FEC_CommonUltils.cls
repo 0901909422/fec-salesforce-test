@@ -431,21 +431,7 @@ public with sharing class FEC_CommonUltils {
   }
 
   public static Decimal xmlValToDecimal(Dom.XmlNode n, String name) {
-    String v = getXmlValue(n, name);
-    if (String.isBlank(v)) {
-      return null;
-    }
-
-    v = v.trim(); 
-    if (v == '') {
-        return null;
-    }
-    try {
-        return Decimal.valueOf(v);
-    } catch (Exception e) {
-      System.debug('Invalid decimal for tag ' + name + ': [' + v + ']');
-      return null; 
-    }
+    return parseAmountSafe(getXmlValue(n, name));
   }
 
   /** BaseRate API dạng packed (vd 1000000): 4 ký tự đầu / 100 = % (1000 → 10%). */
@@ -1431,18 +1417,60 @@ public with sharing class FEC_CommonUltils {
     }
   }
 
+  /**
+   * Parses amount strings from ESB/XML (US thousands: 2,400 / 1,200,000; EU: 1.234,56).
+   */
   public static Decimal parseAmountSafe(String val) {
-    if (String.isBlank(val)) return null;
+    if (String.isBlank(val)) {
+      return null;
+    }
 
-    val = val.replace(',', '').trim();
+    String normalized = normalizeAmountString(val);
+    if (String.isBlank(normalized)) {
+      return null;
+    }
 
     try {
-        return Decimal.valueOf(val);
+      return Decimal.valueOf(normalized);
     } catch (Exception e) {
-        System.debug('Invalid decimal for tag Amount: [' + val + ']');
-        return null;
+      System.debug(
+        'Invalid decimal for tag Amount: [' + val + '] normalized=[' + normalized + ']'
+      );
+      return null;
     }
-}
+  }
+
+  private static String normalizeAmountString(String raw) {
+    if (String.isBlank(raw)) {
+      return null;
+    }
+
+    String val = raw.trim();
+    val = val.replace('[', '').replace(']', '');
+    val = val.replaceAll('\\s+', '');
+
+    Integer lastComma = val.lastIndexOf(',');
+    Integer lastDot = val.lastIndexOf('.');
+
+    if (lastComma >= 0 && lastDot >= 0) {
+      if (lastComma > lastDot) {
+        return val.replace('.', '').replace(',', '.');
+      }
+      return val.replace(',', '');
+    }
+
+    if (lastComma >= 0) {
+      String afterComma = val.substring(lastComma + 1);
+      Boolean thousandsComma =
+        val.indexOf(',') != lastComma || afterComma.length() == 3;
+      if (thousandsComma) {
+        return val.replace(',', '');
+      }
+      return val.replace(',', '.');
+    }
+
+    return val;
+  }
 
   public static Decimal calculateReducingEMI(Decimal principal, Integer tenure, Decimal monthlyInterestRate) {
     if (principal == null || principal <= 0 || tenure == null || tenure <= 0 || monthlyInterestRate == null) {
@@ -1467,5 +1495,47 @@ public with sharing class FEC_CommonUltils {
     Double doubledVal = value.doubleValue() / 1000.0;
     Double rounded = Math.ceil(doubledVal) * 1000.0;
     return Decimal.valueOf(rounded);
+  }
+
+  public static String cleanNonWordCharacters(String input) {
+    if (String.isBlank(input)) {
+      return input;
+    }
+    return input.replaceAll('\\W+', '').trim();
+  }
+
+  /**
+   * Chuẩn hóa FEC_Team_User_Group__c từ LWC/label (CP/PM/SP/F2F) → mã Stage Change.
+   */
+  public static String normalizeTeamUserGroupParam(String teamUserGroup) {
+    if (String.isBlank(teamUserGroup)) {
+      return null;
+    }
+    String upper = teamUserGroup.trim().toUpperCase();
+    if (
+      upper == FEC_ConstantCommon.STAGE_CHANGE_TEAM_USER_GROUP_CP ||
+      upper.contains(FEC_ConstantCommon.STAGE_CHANGE_TEAM_LABEL_CONTRACT_PROCESS)
+    ) {
+      return FEC_ConstantCommon.STAGE_CHANGE_TEAM_USER_GROUP_CP;
+    }
+    if (
+      upper == FEC_ConstantCommon.STAGE_CHANGE_TEAM_USER_GROUP_PM ||
+      upper == FEC_ConstantCommon.STAGE_CHANGE_TEAM_LABEL_PAYMENT
+    ) {
+      return FEC_ConstantCommon.STAGE_CHANGE_TEAM_USER_GROUP_PM;
+    }
+    if (
+      upper == FEC_ConstantCommon.STAGE_CHANGE_TEAM_USER_GROUP_SP ||
+      upper.contains(FEC_ConstantCommon.STAGE_CHANGE_TEAM_LABEL_CS_SUPPORT)
+    ) {
+      return FEC_ConstantCommon.STAGE_CHANGE_TEAM_USER_GROUP_SP;
+    }
+    if (
+      upper == FEC_ConstantCommon.STAGE_CHANGE_TEAM_USER_GROUP_F2F ||
+      upper.contains(FEC_ConstantCommon.STAGE_CHANGE_TEAM_LABEL_OFFICE_BASED)
+    ) {
+      return FEC_ConstantCommon.STAGE_CHANGE_TEAM_USER_GROUP_F2F;
+    }
+    return upper;
   }
 }

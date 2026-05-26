@@ -8,8 +8,7 @@
 
                         <lightning-input type="text" name="nationalId" label="National ID" value={nationalId}
                             onchange={handleNidChange} maxlength="12" required
-                            message-when-value-missing="Vui lòng nhập National ID"
-                            message-when-pattern-mismatch="National ID không hợp lệ" pattern="[0-9]{9}|[0-9]{12}">
+                            message-when-value-missing="Vui lòng nhập National ID"> 
                         </lightning-input>
 
                     </div>
@@ -80,11 +79,11 @@
                 </template>
             </div>
         </template>
-        <template if:true={showResultSection}>
-            <div>
-                <c-fec_-do-not-bother-result-view record-id={recordId}></c-fec_-do-not-bother-result-view>
-            </div>
-        </template>
+        <!-- <template if:true={showResultSection}> -->
+        <div>
+            <c-fec_-do-not-bother-result-view record-id={recordId}></c-fec_-do-not-bother-result-view>
+        </div>
+        <!-- </template> -->
     </lightning-card>
     <!-- MODAL -->
     <template if:true={isOpen}>

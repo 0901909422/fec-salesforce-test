@@ -20,6 +20,10 @@ public with sharing class FEC_CaseAssignmentMutationGuard {
         'Không thể Active khi chưa thêm Case Assignment NOC.';
     public static final String MSG_DRAFT_SELECT_QUEUES_LOCKED =
         'Khi Status là Draft, không được chỉnh sửa Select Queues.';
+    public static final String MSG_ROLE_REQUIRED_WHEN_QUEUES =
+        'Role is required when Select Queues is specified.';
+    public static final String MSG_ROLE_REQUIRED_PER_QUEUE =
+        'Phải thêm Role cho mỗi queue đã chọn trong Select Queues.';
 
     private static final String RUNNING_TIMES_FIELD = 'FEC_Running_Times__c';
 
@@ -45,7 +49,74 @@ public with sharing class FEC_CaseAssignmentMutationGuard {
             if (row.FEC_Status__c == active) {
                 row.addError(MSG_CANNOT_ACTIVE_WITHOUT_NOC);
             }
+            enforceRoleRequiredWhenQueuesPresent(row, null);
         }
+    }
+
+    public static void enforceRoleRequiredWhenQueuesPresent(
+        FEC_Case_Assignment__c newRow,
+        FEC_Case_Assignment__c oldRow
+    ) {
+        if (newRow == null) {
+            return;
+        }
+        Map<String, Object> populated = newRow.getPopulatedFieldsAsMap();
+        String queues = populated.containsKey('FEC_Select_Queues__c')
+            ? newRow.FEC_Select_Queues__c
+            : (oldRow == null ? null : oldRow.FEC_Select_Queues__c);
+        String roles = populated.containsKey('FEC_Role__c')
+            ? newRow.FEC_Role__c
+            : (oldRow == null ? null : oldRow.FEC_Role__c);
+        if (String.isBlank(queues)) {
+            return;
+        }
+        if (String.isBlank(roles)) {
+            newRow.addError(FEC_Case_Assignment__c.FEC_Role__c, MSG_ROLE_REQUIRED_WHEN_QUEUES);
+            return;
+        }
+        List<String> queueNames = splitSemicolonValues(queues);
+        List<String> assignedRoleNames = parseRoleNamesFromAssignmentField(roles);
+        List<String> missingQueues = FEC_CaseAssignmentConfigController.findQueuesMissingRoleCoverage(
+            queueNames,
+            assignedRoleNames
+        );
+        if (!missingQueues.isEmpty()) {
+            newRow.addError(FEC_Case_Assignment__c.FEC_Role__c, MSG_ROLE_REQUIRED_PER_QUEUE);
+        }
+    }
+
+    private static List<String> splitSemicolonValues(String rawValue) {
+        List<String> values = new List<String>();
+        if (String.isBlank(rawValue)) {
+            return values;
+        }
+        for (String part : rawValue.split(';')) {
+            String trimmed = part.trim();
+            if (String.isNotBlank(trimmed)) {
+                values.add(trimmed);
+            }
+        }
+        return values;
+    }
+
+    private static List<String> parseRoleNamesFromAssignmentField(String rolesRaw) {
+        List<String> roleNames = new List<String>();
+        if (String.isBlank(rolesRaw)) {
+            return roleNames;
+        }
+        for (String part : rolesRaw.split(';')) {
+            String trimmed = part.trim();
+            if (String.isBlank(trimmed)) {
+                continue;
+            }
+            String roleName = trimmed.contains('|')
+                ? trimmed.substringBefore('|').trim()
+                : trimmed;
+            if (String.isNotBlank(roleName)) {
+                roleNames.add(roleName);
+            }
+        }
+        return roleNames;
     }
 
     public static void enforceActiveRequiresNocOnUpdate(
@@ -120,6 +191,7 @@ public with sharing class FEC_CaseAssignmentMutationGuard {
             if (oldRow == null) {
                 continue;
             }
+            enforceRoleRequiredWhenQueuesPresent(newRow, oldRow);
             String oldStatus = oldRow.FEC_Status__c;
             String newStatus = newRow.FEC_Status__c;
 

@@ -258,6 +258,7 @@ public without sharing class FEC_CreateInteractionGenesys {
         @AuraEnabled public String cardAccountNum   {get; set;}
         @AuraEnabled public String agentID          {get; set;}
         @AuraEnabled public String subject          {get; set;}
+        @AuraEnabled public String structuredText   {get; set;}
     }
     
     @AuraEnabled
@@ -316,12 +317,16 @@ public without sharing class FEC_CreateInteractionGenesys {
             // Tạo EmailMessage để hiển thị email thread trong Chatter Feed
             if (String.isNotBlank(request.fromEmail)) {
                 String emailSubject = String.isNotBlank(request.subject) ? request.subject : ('Email from ' + request.fromEmail);
+                String bodyContent = String.isNotBlank(request.structuredText)
+                    ? request.structuredText
+                    : (String.isNotBlank(request.subject) ? request.subject : ('Email from ' + request.fromEmail));
                 EmailMessage em = new EmailMessage(
                     ParentId     = created.Id,
                 FromAddress  = request.fromEmail,
                 ToAddress    = request.sendTo,
                 Subject      = emailSubject,
-                TextBody     = String.isNotBlank(request.subject) ? request.subject : ('Email from ' + request.fromEmail),
+                TextBody     = bodyContent,
+                HtmlBody     = bodyContent,
                 Incoming     = true,
                 Status       = FEC_ConstantCommon.SUCCESS_STATUS_CODE // New
                     );

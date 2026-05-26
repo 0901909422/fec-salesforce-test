@@ -6,7 +6,7 @@
       </lightning-layout-item>
     </template>
     <template if:false={loading}>
-      <template if:true={notEligibleMessage}>
+      <template if:true={showNotEligiblePanel}>
         <lightning-layout-item size="12" padding="around-small">
           <p class="fec-pr-not-eligible">{notEligibleMessage}</p>
           <template if:true={notEligibleReason}>
@@ -14,7 +14,7 @@
           </template>
         </lightning-layout-item>
       </template>
-      <template if:true={showPanel}>
+      <template if:true={showEligiblePanel}>
         <lightning-layout-item size="6" padding="around-small">
           <lightning-combobox
             name="redeemedPoints"
@@ -39,10 +39,13 @@
               disabled={redeemDisabled}
             >
             </lightning-button>
-            <!-- linhdev fix jira FECREDIT_CSM_2025_KH-1469-1474 — Noti-06/07 dưới nút Redeem Points -->
-            <template if:true={redeemFailMessage}>
-              <p class="slds-m-top_x-small fec-pr-redeem-fail">{redeemFailMessage}</p>
-            </template>
+          </template>
+          <!-- linhdev fix jira FECREDIT_CSM_2025_KH-1469-1474 — Noti-06/07 + success inline dưới nút Redeem Points -->
+          <template if:true={redeemFailMessage}>
+            <p class="slds-m-top_x-small fec-pr-redeem-fail">{redeemFailMessage}</p>
+          </template>
+          <template if:true={redeemSuccessMessage}>
+            <p class="slds-m-top_x-small fec-pr-redeem-success">{redeemSuccessMessage}</p>
           </template>
         </lightning-layout-item>
       </template>

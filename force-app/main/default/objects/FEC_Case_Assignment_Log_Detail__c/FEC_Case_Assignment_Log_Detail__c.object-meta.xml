@@ -156,7 +156,7 @@
     <externalSharingModel>Private</externalSharingModel>
     <label>Case Assignment Log Detail</label>
     <nameField>
-        <label>Case Assignment Log Name</label>
+        <label>Name</label>
         <type>Text</type>
     </nameField>
     <pluralLabel>Case Assignment Log Details</pluralLabel>

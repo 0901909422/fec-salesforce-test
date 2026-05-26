@@ -91,6 +91,11 @@
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
+        <editable>false</editable>
+        <field>Case.FEC_Recently_Auto_Case_Assignment__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
         <editable>true</editable>
         <field>Case.FEC_Bank_Branch_Name_Noaccent__c</field>
         <readable>true</readable>
@@ -208,6 +213,11 @@
     <fieldPermissions>
         <editable>true</editable>
         <field>Case.FEC_Case_Email__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>Case.FEC_Case_Executor__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
@@ -548,6 +558,11 @@
     <fieldPermissions>
         <editable>true</editable>
         <field>Case.FEC_Interaction__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>Case.FEC_IsImported__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>

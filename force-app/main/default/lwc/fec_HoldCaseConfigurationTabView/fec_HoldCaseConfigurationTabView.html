@@ -9,9 +9,8 @@
                 sub-title={record.Name}
                 icon-name="standard:orders"
                 sections={sections}
-                ontoggle={handleToggle}
                 columns="2"
-                show-edit-button
+                show-edit-button={canEdit}
                 onedit={handleEdit}>
             </c-fec_-common-detail-view>
             <div class="slds-m-top_medium">
@@ -35,5 +34,464 @@
                 </lightning-card>
             </div>
         </template>
+    </template>
+
+    <!-- ===================== EDIT MODAL ===================== -->
+    <template if:true={isShowModal}>
+        <section
+            role="dialog"
+            tabindex="-1"
+            class="slds-modal slds-fade-in-open">
+            <div class="slds-modal__container custom-modal">
+                <header class="slds-modal__header custom-header">
+                    <button
+                        class="slds-button slds-button_icon slds-modal__close"
+                        onclick={handleCloseModal}>
+                        <lightning-icon
+                            icon-name="utility:close"
+                            size="small">
+                        </lightning-icon>
+                    </button>
+                    <h2 class="modal-title">{customLabel.holdCaseConfig}</h2>
+                </header>
+
+                <div class="slds-modal__content modal-body">
+                    <div class="required-text">
+                        <span class="required">*</span>
+                        <span>= {customLabel.requiredInformation}</span>
+                    </div>
+                    <div class="section-header">{customLabel.information}</div>
+
+                    <div class="form-grid">
+
+                        <div class="field-wrapper">
+                            <lightning-combobox
+                                data-id="holdCaseType"
+                                label="Hold Case Type"
+                                value={formData.holdCaseType}
+                                options={holdCaseTypeOptions}
+                                placeholder="--None--"
+                                onchange={handleTypeChange}
+                                required>
+                            </lightning-combobox>
+                        </div>
+
+                        <template if:true={isAuto}>
+
+                            <div class="field-wrapper slds-form-element">
+                                <label class="slds-form-element__label">
+                                    <span class="required">*</span>
+                                   {customLabel.channel}
+                                </label>
+                                <div class="slds-form-element__control">
+                                    <div class="slds-combobox_container">
+                                        <div class={channelWrapperClass} role="combobox">
+                                            <div class="slds-combobox__form-element slds-input-has-icon slds-input-has-icon_right">
+                                                <input
+                                                    data-id="channel"
+                                                    type="text"
+                                                    class="slds-input slds-combobox__input"
+                                                    value={channelSearch}
+                                                    placeholder="Search Channel..."
+                                                    onkeyup={handleChannelSearch}
+                                                    onclick={handleFocus} />
+                                                <lightning-icon
+                                                    icon-name="utility:search"
+                                                    size="x-small"
+                                                    class="slds-input__icon slds-input__icon_right">
+                                                </lightning-icon>
+                                            </div>
+                                            <template if:true={showDropdown}>
+                                                <div class="slds-dropdown slds-dropdown_length-5 slds-dropdown_fluid">
+                                                    <ul class="slds-listbox slds-listbox_vertical">
+                                                        <template for:each={channelOptions} for:item="item">
+                                                            <li key={item.Id} class="slds-listbox__item">
+                                                                <div
+                                                                    class="slds-media slds-listbox__option slds-listbox__option_plain slds-media_small"
+                                                                    data-id={item.Id}
+                                                                    data-name={item.Name}
+                                                                    onclick={handleSelectChannel}>
+                                                                    <span class="slds-media__body">
+                                                                        <span class="slds-truncate">{item.Name}</span>
+                                                                    </span>
+                                                                </div>
+                                                            </li>
+                                                        </template>
+                                                    </ul>
+                                                </div>
+                                            </template>
+                                        </div>
+                                    </div>
+                                    <div class="pill-container">
+                                        <template for:each={channelSelected} for:item="item">
+                                            <span key={item.id} class="slds-pill">
+                                                <span class="slds-pill__label">{item.name}</span>
+                                                <button class="slds-pill__remove"
+                                                    data-id={item.id}
+                                                    onclick={handleRemoveChannel}>
+                                                    <lightning-icon icon-name="utility:close" size="x-small"></lightning-icon>
+                                                </button>
+                                            </span>
+                                        </template>
+                                    </div>
+                                    <template if:true={channelError}>
+                                        <div class="slds-form-element__help custom-error">{channelError}</div>
+                                    </template>
+                                </div>
+                            </div>
+
+                            <div class="field-wrapper slds-form-element">
+                                <label class="slds-form-element__label">
+                                    <abbr class="slds-required" title="required">*</abbr>
+                                    {customLabel.nfuCode}
+                                </label>
+                                <div class="slds-form-element__control">
+                                    <div class="slds-combobox_container">
+                                        <div class={nfuWrapperClass} role="combobox">
+                                            <div class="slds-combobox__form-element slds-input-has-icon slds-input-has-icon_right">
+                                                <input
+                                                    type="text"
+                                                    class="slds-input slds-combobox__input"
+                                                    readonly
+                                                    value={nfuSearch}
+                                                    placeholder="Search NFU Code..."
+                                                    onclick={handleOpenNfuModal} />
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <template if:true={nfuError}>
+                                        <div class="slds-form-element__help custom-error">
+                                            {nfuError}
+                                        </div>
+                                    </template>
+                                </div>
+                            </div>
+
+                            <div class="field-wrapper">
+                                <lightning-record-picker
+                                    data-id="caseStage"
+                                    label="Case Stage"
+                                    placeholder="Search Case Stage..."
+                                    object-api-name="FEC_Case_Stage__c"
+                                    value={formData.caseStage}
+                                    onchange={handleStageChange}
+                                    required>
+                                </lightning-record-picker>
+                            </div>
+
+                            <div class="field-wrapper slds-form-element">
+                                <label class="slds-form-element__label">
+                                    <span class="required">*</span>
+                                        {customLabel.currentStatus}
+                                </label>
+                                <div class="slds-form-element__control">
+                                    <div class="slds-combobox_container">
+                                        <div class={currentStatusWrapperClass} role="combobox">
+                                            <div class="slds-combobox__form-element slds-input-has-icon slds-input-has-icon_right">
+                                                <input
+                                                    data-id="currentStatus"
+                                                    type="text"
+                                                    class="slds-input slds-combobox__input"
+                                                    value={currentStatusSearch}
+                                                    placeholder="Search Current Status..."
+                                                    onkeyup={handleCurrentStatusSearch}
+                                                    onclick={handleCurrentStatusFocus} />
+                                                <lightning-icon
+                                                    icon-name="utility:search"
+                                                    size="x-small"
+                                                    class="slds-input__icon slds-input__icon_right">
+                                                </lightning-icon>
+                                            </div>
+                                            <template if:true={showCurrentStatusLookup}>
+                                                <div class="slds-dropdown slds-dropdown_length-5 slds-dropdown_fluid">
+                                                    <ul class="slds-listbox slds-listbox_vertical">
+                                                        <template for:each={currentStatusOptions} for:item="item">
+                                                            <li key={item.Id} class="slds-listbox__item">
+                                                                <div
+                                                                    class="slds-media slds-listbox__option slds-listbox__option_plain slds-media_small"
+                                                                    data-id={item.Id}
+                                                                    data-name={item.Name}
+                                                                    onclick={handleSelectCurrentStatus}>
+                                                                    <span class="slds-media__body">
+                                                                        <span class="slds-truncate">{item.Name}</span>
+                                                                    </span>
+                                                                </div>
+                                                            </li>
+                                                        </template>
+                                                    </ul>
+                                                </div>
+                                            </template>
+                                        </div>
+                                    </div>
+                                     <div class="pill-container">
+                                        <template for:each={currentStatusSelected} for:item="item">
+                                            <span key={item.id} class="slds-pill">
+                                                <span class="slds-pill__label">{item.name}</span>
+                                                <button class="slds-pill__remove"
+                                                    data-id={item.id}
+                                                    onclick={handleRemoveCurrentStatus}>
+                                                    <lightning-icon icon-name="utility:close" size="x-small"></lightning-icon>
+                                                </button>
+                                            </span>
+                                        </template>
+                                    </div>
+                                    <template if:true={currentStatusError}>
+                                        <div class="slds-form-element__help custom-error">{currentStatusError}</div>
+                                    </template>
+                                </div>
+                            </div>
+
+                            <div class="field-wrapper slds-form-element">
+                                <label class="slds-form-element__label">
+                                    <span class="required">*</span>
+                                        {customLabel.changedStatus}
+                                </label>
+                                <div class="slds-form-element__control">
+                                    <div class="slds-combobox_container">
+                                        <div class={changedStatusWrapperClass} role="combobox">
+                                            <div class="slds-combobox__form-element slds-input-has-icon slds-input-has-icon_right">
+                                                <input
+                                                    data-id="changedStatus"
+                                                    type="text"
+                                                    class="slds-input slds-combobox__input"
+                                                    value={changedStatusSearch}
+                                                    placeholder="Search Changed Status..."
+                                                    onkeyup={handleChangedStatusSearch}
+                                                    onclick={handleChangedStatusFocus} />
+                                                <lightning-icon
+                                                    icon-name="utility:search"
+                                                    size="x-small"
+                                                    class="slds-input__icon slds-input__icon_right">
+                                                </lightning-icon>
+                                            </div>
+                                            <template if:true={showChangedStatusLookup}>
+                                                <div class="slds-dropdown slds-dropdown_length-5 slds-dropdown_fluid">
+                                                    <ul class="slds-listbox slds-listbox_vertical">
+                                                        <template for:each={changedStatusOptions} for:item="item">
+                                                            <li key={item.Id} class="slds-listbox__item">
+                                                                <div
+                                                                    class="slds-media slds-listbox__option slds-listbox__option_plain slds-media_small"
+                                                                    data-id={item.Id}
+                                                                    data-name={item.Name}
+                                                                    onclick={handleSelectChangedStatus}>
+                                                                    <span class="slds-media__body">
+                                                                        <span class="slds-truncate">{item.Name}</span>
+                                                                    </span>
+                                                                </div>
+                                                            </li>
+                                                        </template>
+                                                    </ul>
+                                                </div>
+                                            </template>
+                                        </div>
+                                    </div>
+                                    <div class="pill-container">
+                                        <template for:each={changedStatusSelected} for:item="item">
+                                            <span key={item.id} class="slds-pill">
+                                                <span class="slds-pill__label">{item.name}</span>
+                                                <button class="slds-pill__remove"
+                                                    data-id={item.id}
+                                                    onclick={handleRemoveChangedStatus}>
+                                                    <lightning-icon icon-name="utility:close" size="x-small"></lightning-icon>
+                                                </button>
+                                            </span>
+                                        </template>
+                                    </div>
+                                    <template if:true={changedStatusError}>
+                                        <div class="slds-form-element__help custom-error">{changedStatusError}</div>
+                                    </template>
+                                </div>
+                            </div>
+
+                            <div class="field-wrapper checkbox-wrapper">
+                                <lightning-input
+                                    type="checkbox"
+                                    label="Active"
+                                    checked={formData.active}
+                                    onchange={handleActiveChange}>
+                                </lightning-input>
+                            </div>
+
+                        </template>
+                        <template if:true={isManual}>
+
+                            <div class="field-wrapper slds-form-element">
+                                <label class="slds-form-element__label">
+                                    <span class="required">*</span>
+                                    {customLabel.channel}
+                                </label>
+                                <div class="slds-form-element__control">
+                                    <div class="slds-combobox_container">
+                                        <div class={channelWrapperClass} role="combobox">
+                                            <div class="slds-combobox__form-element slds-input-has-icon slds-input-has-icon_right">
+                                                <input
+                                                    type="text"
+                                                    class="slds-input slds-combobox__input"
+                                                    value={channelSearch}
+                                                    placeholder="Search Channel..."
+                                                    onkeyup={handleChannelSearch}
+                                                    onclick={handleFocus} />
+                                                <lightning-icon
+                                                    icon-name="utility:search"
+                                                    size="x-small"
+                                                    class="slds-input__icon slds-input__icon_right">
+                                                </lightning-icon>
+                                            </div>
+                                            <template if:true={showDropdown}>
+                                                <div class="slds-dropdown slds-dropdown_length-5 slds-dropdown_fluid">
+                                                    <ul class="slds-listbox slds-listbox_vertical">
+                                                        <template for:each={channelOptions} for:item="item">
+                                                            <li key={item.Id} class="slds-listbox__item">
+                                                                <div
+                                                                    class="slds-media slds-listbox__option slds-listbox__option_plain slds-media_small"
+                                                                    data-id={item.Id}
+                                                                    data-name={item.Name}
+                                                                    onclick={handleSelectChannel}>
+                                                                    <span class="slds-media__body">
+                                                                        <span class="slds-truncate">{item.Name}</span>
+                                                                    </span>
+                                                                </div>
+                                                            </li>
+                                                        </template>
+                                                    </ul>
+                                                </div>
+                                            </template>
+                                        </div>
+                                    </div>
+                                    <div class="pill-container">
+                                        <template for:each={channelSelected} for:item="item">
+                                            <span key={item.id} class="slds-pill">
+                                                <span class="slds-pill__label">{item.name}</span>
+                                                <button class="slds-pill__remove"
+                                                    data-id={item.id}
+                                                    onclick={handleRemoveChannel}>
+                                                    <lightning-icon icon-name="utility:close" size="x-small"></lightning-icon>
+                                                </button>
+                                            </span>
+                                        </template>
+                                    </div>
+                                    <template if:true={channelError}>
+                                        <div class="slds-form-element__help custom-error">{channelError}</div>
+                                    </template>
+                                </div>
+                            </div>
+
+                            <div class="field-wrapper slds-form-element">
+                                <label class="slds-form-element__label">
+                                    <abbr class="slds-required" title="required">*</abbr>
+                                    {customLabel.nfuCode}
+                                </label>
+                                <div class="slds-form-element__control">
+                                    <div class="slds-combobox_container">
+                                        <div class={nfuWrapperClass} role="combobox">
+                                            <div class="slds-combobox__form-element slds-input-has-icon slds-input-has-icon_right">
+                                                <input
+                                                    type="text"
+                                                    class="slds-input slds-combobox__input"
+                                                    readonly
+                                                    value={nfuSearchManual}
+                                                    placeholder="Search NFU Code..."
+                                                    onclick={handleOpenNfuModal} />
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <template if:true={nfuError}>
+                                        <div class="slds-form-element__help custom-error">
+                                            {nfuError}
+                                        </div>
+                                    </template>
+                                </div>
+                            </div>
+
+                            <div class="field-wrapper">
+                                <lightning-record-picker
+                                    data-id="caseStage"
+                                    label="Case Stage"
+                                    placeholder="Search Case Stage..."
+                                    object-api-name="FEC_Case_Stage__c"
+                                    value={formData.caseStage}
+                                    onchange={handleStageChange}
+                                    required>
+                                </lightning-record-picker>
+                            </div>
+
+                            <div class="field-wrapper checkbox-wrapper">
+                                <lightning-input
+                                    type="checkbox"
+                                    label="Active"
+                                    checked={formData.active}
+                                    onchange={handleActiveChange}>
+                                </lightning-input>
+                            </div>
+
+                        </template>
+                    </div>
+                </div>
+
+                <footer class="slds-modal__footer modal-footer">
+                    <lightning-button
+                        label="Cancel"
+                        onclick={handleCloseModal}>
+                    </lightning-button>
+                    <lightning-button
+                        variant="brand"
+                        label="Save"
+                        onclick={handleSave}>
+                    </lightning-button>
+                </footer>
+            </div>
+        </section>
+        <div class="slds-backdrop slds-backdrop_open"></div>
+    </template>
+
+    <!-- ===================== NFU CODE MODAL ===================== -->
+    <template if:true={isShowNfuModal}>
+        <section
+            role="dialog"
+            tabindex="-1"
+            class="slds-modal slds-fade-in-open">
+            <div class="slds-modal__container custom-modal">
+                <header class="slds-modal__header custom-header">
+                    <button
+                        class="slds-button slds-button_icon slds-modal__close"
+                        onclick={handleCloseNfuModal}>
+                        <lightning-icon
+                            icon-name="utility:close"
+                            size="small">
+                        </lightning-icon>
+                    </button>
+                    <h2 class="modal-title">{customLabel.listOfNFUCode}</h2>
+                </header>
+
+                <div class="slds-modal__content modal-body">
+                    <c-fec_-related-list-paging
+                        default-sorted-by="FEC_NFU_Code__c"
+                        enable-checkbox-column
+                        hide-row-number
+                        records={nfuOptions}
+                        columns={nfuCodeColumns}
+                        pre-selected-ids={currentNfuSelectedIds}
+                        onrowselectionchange={handleNfuSelection}>
+                    </c-fec_-related-list-paging>
+
+                    <template if:true={nfuModalError}>
+                        <p class="nfu-modal-error slds-m-top_small custom-error">{nfuModalError}</p>
+                    </template>
+                </div>
+
+                <footer class="slds-modal__footer modal-footer">
+                    <lightning-button
+                        label="Cancel"
+                        onclick={handleCloseNfuModal}>
+                    </lightning-button>
+                    <lightning-button
+                        variant="brand"
+                        label="Save"
+                        onclick={handleSaveNfuByType}>
+                    </lightning-button>
+                </footer>
+            </div>
+        </section>
+        <div class="slds-backdrop slds-backdrop_open"></div>
     </template>
 </template>

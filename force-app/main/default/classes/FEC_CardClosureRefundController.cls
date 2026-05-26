@@ -174,30 +174,8 @@ public without sharing class FEC_CardClosureRefundController {
                 }
             }
         }
-        dto.showBlockCardButton = !dto.hideBlockCardBySubCode && !dto.attemptsExhausted && !dto.cardBlocked && hasPendingDisbursementSnapshot(dto);
+        dto.showBlockCardButton = !dto.hideBlockCardBySubCode && !dto.attemptsExhausted && !dto.cardBlocked;
         return dto;
-    }
-
-    private static Boolean hasPendingDisbursementSnapshot(CardLockUiContextDTO dto) {
-        if (!String.isBlank(dto.pendingApplicationId)) {
-            return true;
-        }
-        if (!String.isBlank(dto.pendingApplicationStatus)) {
-            return true;
-        }
-        if (!String.isBlank(dto.pendingDisbursementStatus)) {
-            return true;
-        }
-        if (!String.isBlank(dto.pendingCsDecision)) {
-            return true;
-        }
-        if (dto.pendingDisbursementApprovalDate != null) {
-            return true;
-        }
-        if (dto.pendingDisbursedAmount != null) {
-            return true;
-        }
-        return false;
     }
 
     private static String resolvePendingDisbursementCsDecision(String disbStatusEsb, String appStatusLos) {
@@ -294,7 +272,13 @@ public without sharing class FEC_CardClosureRefundController {
         }
 
         List<FEC_Customer_History__c> historyRows = [
-            SELECT Id, FEC_Account_Number__c, FEC_Card_Number__c, FEC_Block_Code__c, FEC_Block_Code_1__c
+            SELECT Id,
+                Name,
+                FEC_Account_Number__c,
+                FEC_Card_Number__c,
+                FEC_Block_Code__c,
+                FEC_Block_Code_1__c,
+                FEC_Block_Code_2__c
             FROM FEC_Customer_History__c
             WHERE Id = :c.FEC_Account_or_Contract__c
             LIMIT 1
@@ -318,9 +302,15 @@ public without sharing class FEC_CardClosureRefundController {
             return dto;
         }
 
+        // Block API selection (FEC_Account_or_Contract__r / Customer History):
+        // Scenario 1: FEC_Block_Code__c, FEC_Block_Code_1__c, FEC_Block_Code_2__c all NULL -> API 57 + 91
+        // Scenario 2: FEC_Block_Code_1__c != F and != N (_c, _2__c NULL or any value) -> API 57 + 91
+        // Scenario 3: FEC_Block_Code_1__c = F or N -> API 57 only
         Boolean cardOnlyLock = false;
+        Boolean callAccountBlkcdApi = false;
         if (funcCode == FUNC_BLOCK) {
             cardOnlyLock = isCardOnlyLockByAccountBlockCode1(customerHistory.FEC_Block_Code_1__c);
+            callAccountBlkcdApi = !cardOnlyLock;
         }
 
         String transId = UUID.randomUUID().toString();
@@ -338,6 +328,7 @@ public without sharing class FEC_CardClosureRefundController {
         }
 
         try {
+            // All scenarios: API 57 CardLockUnLock (block/unblock card level C)
             FEC_CardLockUnLockCallout.LockUnlockResponse response = FEC_CardLockUnLockCallout.callLockUnlockCard(
                 transId,
                 FEC_ConstantCommon.REQUESTOR_CRM,
@@ -354,6 +345,33 @@ public without sharing class FEC_CardClosureRefundController {
             dto.code = response != null && response.Sys != null ? response.Sys.Code : null;
             dto.description = response != null && response.Sys != null ? response.Sys.Description : null;
             dto.errorMessage = response != null ? response.errorMessage : null;
+
+            // Scenario 1 & 2: after API 57 success, call API 91 VMX_ACCT_BLKCD_UPD_EMEA
+            if (dto.success && funcCode == FUNC_BLOCK && callAccountBlkcdApi) {
+                String vmxCardNbr = resolveVmxCardNbr(customerHistory, accountNumber);
+                if (String.isBlank(vmxCardNbr)) {
+                    dto.success = false;
+                    dto.errorMessage = String.format(System.Label.FEC_MSG_Param_Required, new List<String>{ 'CARD_NBR' });
+                } else {
+                    try {
+                        FEC_VmxAcctBlkcdUpdEmeaCallout.BlkcdUpdInput vmxInput =
+                            FEC_VmxAcctBlkcdUpdEmeaCallout.buildDefaultInput(vmxCardNbr);
+                        FEC_VmxAcctBlkcdUpdEmeaCallout.BlkcdUpdResult vmxResult =
+                            FEC_VmxAcctBlkcdUpdEmeaCallout.executeUpdateAccountBlockCode(vmxInput);
+                        if (!FEC_VmxAcctBlkcdUpdEmeaCallout.isBlkcdUpdSuccess(vmxResult)) {
+                            dto.success = false;
+                            dto.errorMessage = String.isNotBlank(vmxResult?.responseDesc)
+                                ? vmxResult.responseDesc
+                                : System.Label.FEC_MSG_Card_Block_Failed;
+                        }
+                    } catch (Exception vmxEx) {
+                        dto.success = false;
+                        dto.errorMessage = System.Label.FEC_MSG_Card_Block_Failed;
+                    } finally {
+                        FEC_VmxAcctBlkcdUpdEmeaCallout.logApiResponse();
+                    }
+                }
+            }
 
             if (dto.success && funcCode == FUNC_BLOCK) {
                 updateCustomerHistoryAfterBlock(customerHistory.Id, cardOnlyLock);
@@ -380,12 +398,29 @@ public without sharing class FEC_CardClosureRefundController {
         return dto;
     }
 
+    /**
+     * Design: check FEC_Block_Code_1__c on FEC_Customer_History__c (Case.FEC_Account_or_Contract__r).
+     * FEC_Block_Code__c and FEC_Block_Code_2__c do not affect API count.
+     * Scenario 3: FEC_Block_Code_1__c = F or N -> card only (API 57 CardLockUnLock).
+     * Scenario 1 (all block codes NULL) and Scenario 2 (_1__c not F/N) -> API 57 + API 91.
+     */
     private static Boolean isCardOnlyLockByAccountBlockCode1(String blockCode1) {
+        // Scenario 1 & 2: blank _1__c is not F/N -> not card-only
         if (String.isBlank(blockCode1)) {
             return false;
         }
         String v = blockCode1.trim().toUpperCase();
         return v == 'F' || v == 'N';
+    }
+
+    private static String resolveVmxCardNbr(FEC_Customer_History__c customerHistory, String accountNumber) {
+        if (customerHistory != null && String.isNotBlank(customerHistory.Name)) {
+            return customerHistory.Name.trim();
+        }
+        if (String.isNotBlank(accountNumber)) {
+            return accountNumber.trim();
+        }
+        return null;
     }
 
     private static Integer incrementCaseBlockServiceAttempts(Id caseId) {
@@ -438,6 +473,7 @@ public without sharing class FEC_CardClosureRefundController {
             Id = customerHistoryId,
             FEC_Block_Code__c = BLOCK_CODE_CARD
         );
+        // Scenario 1 & 2: persist account block code C; Scenario 3: leave FEC_Block_Code_1__c unchanged
         if (!cardOnlyLock) {
             recordToUpdate.FEC_Block_Code_1__c = BLOCK_CODE_CARD;
         }

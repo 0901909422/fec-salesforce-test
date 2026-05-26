@@ -38,6 +38,10 @@ import {
   MessageContext,
   publish,
 } from "lightning/messageService";
+
+//FECREDIT_CSM_2025_KH-1561
+const STR_EMPTY = "";
+
 export default class Fec_DoNotBotherNonExistingCustomer extends LightningElement {
   @wire(MessageContext)
   messageContext;
@@ -79,6 +83,7 @@ export default class Fec_DoNotBotherNonExistingCustomer extends LightningElement
 
   customerName = "";
   nationalId = "";
+  phoneNumber = "";
   contractId = "";
   radioOptions = [
     { label: "Không", value: "no" },
@@ -205,6 +210,7 @@ export default class Fec_DoNotBotherNonExistingCustomer extends LightningElement
 
       this.customerName = result.customerName;
       this.nationalId = result.nationalId;
+      this.phoneNumber = result.phoneNumber;
       this.contractId = result.contractId;
       this.retryCount = result.processActionCount || 0;
 
@@ -269,7 +275,76 @@ export default class Fec_DoNotBotherNonExistingCustomer extends LightningElement
     });
   }
 
+  // async handleCheckDNB() {
+  //   this.isCheckingDNB = true;
+
+  //   try {
+  //     /*
+  //      * CHECK API ONLY
+  //      */
+  //     const result = await this.checkDNB();
+
+  //     console.log("DNB RESULT:", JSON.stringify(result));
+
+  //     this.isDNBChecked = true;
+
+  //     /*
+  //      * API FAIL
+  //      */
+  //     if (!result?.success) {
+  //       this.showToast(
+  //         "Error",
+  //         result?.errorMessage || "Check DNB failed",
+  //         "error",
+  //       );
+
+  //       return;
+  //     }
+
+  //     /*
+  //      * HAS DATA
+  //      */
+  //     const hasData = result?.result && result.result.length > 0;
+
+  //     this.hasExistingDNB = hasData;
+
+  //     this.hasDNBData = hasData;
+
+  //     // /*
+  //     //  * default selection
+  //     //  */
+  //     // this.selectedOption = hasData ? "yes" : "no";
+
+  //     /*
+  //      * IMPORTANT:
+  //      * clear table
+  //      */
+  //     this.data = [];
+
+  //     this.currentPage = 1;
+
+  //     this.updatePagedData();
+  //   } catch (e) {
+  //     console.error("handleCheckDNB ERROR", e);
+
+  //     this.showToast(
+  //       "Error",
+  //       e?.body?.message || e?.message || "Unexpected error",
+  //       "error",
+  //     );
+  //   } finally {
+  //     this.isCheckingDNB = false;
+  //   }
+  // }
+
   async handleCheckDNB() {
+    /*
+     * Validate NID first
+     */
+    if (!this._validateNationalId()) {
+      return;
+    }
+
     this.isCheckingDNB = true;
 
     try {
@@ -303,11 +378,6 @@ export default class Fec_DoNotBotherNonExistingCustomer extends LightningElement
       this.hasExistingDNB = hasData;
 
       this.hasDNBData = hasData;
-
-      // /*
-      //  * default selection
-      //  */
-      // this.selectedOption = hasData ? "yes" : "no";
 
       /*
        * IMPORTANT:
@@ -740,16 +810,39 @@ export default class Fec_DoNotBotherNonExistingCustomer extends LightningElement
     this.close();
   }
 
+  // handleNidChange(event) {
+  //   const value = event.target.value || "";
+
+  //   this.nationalId = value.replace(/\D/g, "");
+
+  //   /*
+  //    * reset state
+  //    */
+  //   this.isDNBChecked = false;
+  //   this.hasExistingDNB = false;
+  //   this.data = [];
+  // }
+
   handleNidChange(event) {
     const value = event.target.value || "";
 
+    /*
+     * Only allow digits
+     */
     this.nationalId = value.replace(/\D/g, "");
 
     /*
-     * reset state
+     * Apply validation
+     */
+    this._applyNationalIdValidity(false);
+
+    /*
+     * Reset state
      */
     this.isDNBChecked = false;
+
     this.hasExistingDNB = false;
+
     this.data = [];
   }
 
@@ -932,5 +1025,103 @@ export default class Fec_DoNotBotherNonExistingCustomer extends LightningElement
     return (
       !this.isReadonlyMode && !this.isDNBUpdated && !this.isMaxRetryReached
     );
+  }
+
+  //FECREDIT_CSM_2025_KH-1561
+  _getNationalIdInputEl() {
+    return (
+      this.template.querySelector("[data-national-id-dnb]") ||
+      this.template.querySelector('lightning-input[name="nationalId"]')
+    );
+  }
+
+  //FECREDIT_CSM_2025_KH-1561
+  _syncNationalIdFromInput() {
+    const nidInput = this._getNationalIdInputEl();
+
+    const fromInput =
+      nidInput && nidInput.value != null
+        ? String(nidInput.value).trim()
+        : STR_EMPTY;
+
+    const fromTrack = (this.nationalId || STR_EMPTY).trim();
+
+    this.nationalId = fromInput || fromTrack;
+  }
+
+  //FECREDIT_CSM_2025_KH-1561
+  _getNationalIdValidationError(nidValue) {
+    const nid = (
+      nidValue != null ? String(nidValue) : this.nationalId || STR_EMPTY
+    ).trim();
+
+    /*
+     * Empty handled by required
+     */
+    if (!nid) {
+      return null;
+    }
+
+    /*
+     * Only digits
+     */
+    if (!/^\d+$/.test(nid)) {
+      return "National ID không hợp lệ";
+    }
+
+    /*
+     * Only 9 or 12 digits
+     */
+    if (nid.length !== 9 && nid.length !== 12) {
+      return "National ID không hợp lệ";
+    }
+
+    return null;
+  }
+
+  //FECREDIT_CSM_2025_KH-1561
+  _applyNationalIdValidity(reportNow) {
+    const nidInput = this._getNationalIdInputEl();
+    if (!nidInput) {
+      return;
+    }
+    const nid = (this.nationalId || STR_EMPTY).trim();
+    if (!nid) {
+      nidInput.setCustomValidity("Vui lòng nhập National ID");
+    } else {
+      const err = this._getNationalIdValidationError(this.nationalId);
+      nidInput.setCustomValidity(err || "");
+    }
+    if (reportNow) {
+      nidInput.reportValidity();
+    }
+  }
+
+  //FECREDIT_CSM_2025_KH-1561
+  _validateNationalId() {
+    this._syncNationalIdFromInput();
+    this._applyNationalIdValidity(true);
+
+    const nid = (this.nationalId || STR_EMPTY).trim();
+    if (!nid) {
+      return false;
+    }
+
+    const err = this._getNationalIdValidationError(this.nationalId);
+    return !err;
+  }
+
+  //FECREDIT_CSM_2025_KH-1561
+  @api
+  validateForSubmit() {
+    const nidInput = this._getNationalIdInputEl();
+    if (!nidInput) {
+      return true;
+    }
+
+    this._syncNationalIdFromInput();
+    this._applyNationalIdValidity(true);
+
+    return nidInput.checkValidity();
   }
 }
