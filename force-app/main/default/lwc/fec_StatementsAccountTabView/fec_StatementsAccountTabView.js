@@ -337,7 +337,7 @@ export default class Fec_StatementsAccountTabView extends NavigationMixin(Lightn
             c__transactionId: recordId,
             c__transactionCode: row.transactionCode,
             c__sectionType: 'billed',
-            uid: recordId + '_' + Date.now()
+            uid: recordId + '_'
         };
 
         try {
