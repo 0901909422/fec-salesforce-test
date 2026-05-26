@@ -209,7 +209,7 @@
     <recordTypeTrackHistory>true</recordTypeTrackHistory>
     <searchLayouts>
         <customTabListAdditionalFields>CASES.CASE_NUMBER</customTabListAdditionalFields>
-        <customTabListAdditionalFields>FEC_Interaction_ID__c</customTabListAdditionalFields>
+        <customTabListAdditionalFields>FEC_Interaction__c</customTabListAdditionalFields>
         <customTabListAdditionalFields>FEC_Interaction_Status__c</customTabListAdditionalFields>
         <customTabListAdditionalFields>FEC_Channel__c</customTabListAdditionalFields>
         <customTabListAdditionalFields>FEC_Case_ID__c</customTabListAdditionalFields>
@@ -235,7 +235,7 @@
         <listViewButtons>Create_Case</listViewButtons>
         <listViewButtons>Get_next_work</listViewButtons>
         <lookupDialogsAdditionalFields>CASES.CASE_NUMBER</lookupDialogsAdditionalFields>
-        <lookupDialogsAdditionalFields>FEC_Interaction_ID__c</lookupDialogsAdditionalFields>
+        <lookupDialogsAdditionalFields>FEC_Interaction__c</lookupDialogsAdditionalFields>
         <lookupDialogsAdditionalFields>FEC_Interaction_Status__c</lookupDialogsAdditionalFields>
         <lookupDialogsAdditionalFields>FEC_Channel__c</lookupDialogsAdditionalFields>
         <lookupDialogsAdditionalFields>FEC_Case_ID__c</lookupDialogsAdditionalFields>
@@ -245,7 +245,7 @@
         <lookupDialogsAdditionalFields>FEC_SubCode__c</lookupDialogsAdditionalFields>
         <lookupDialogsAdditionalFields>FEC_Case_Created_On__c</lookupDialogsAdditionalFields>
         <lookupPhoneDialogsAdditionalFields>CASES.CASE_NUMBER</lookupPhoneDialogsAdditionalFields>
-        <lookupPhoneDialogsAdditionalFields>FEC_Interaction_ID__c</lookupPhoneDialogsAdditionalFields>
+        <lookupPhoneDialogsAdditionalFields>FEC_Interaction__c</lookupPhoneDialogsAdditionalFields>
         <lookupPhoneDialogsAdditionalFields>FEC_Interaction_Status__c</lookupPhoneDialogsAdditionalFields>
         <lookupPhoneDialogsAdditionalFields>FEC_Channel__c</lookupPhoneDialogsAdditionalFields>
         <lookupPhoneDialogsAdditionalFields>FEC_Case_ID__c</lookupPhoneDialogsAdditionalFields>
@@ -254,7 +254,7 @@
         <lookupPhoneDialogsAdditionalFields>FEC_SubCategory__c</lookupPhoneDialogsAdditionalFields>
         <lookupPhoneDialogsAdditionalFields>FEC_SubCode__c</lookupPhoneDialogsAdditionalFields>
         <lookupPhoneDialogsAdditionalFields>FEC_Case_Created_On__c</lookupPhoneDialogsAdditionalFields>
-        <searchResultsAdditionalFields>FEC_Interaction_ID__c</searchResultsAdditionalFields>
+        <searchResultsAdditionalFields>FEC_Interaction__c</searchResultsAdditionalFields>
         <searchResultsAdditionalFields>FEC_Interaction_Status__c</searchResultsAdditionalFields>
         <searchResultsAdditionalFields>FEC_Channel__c</searchResultsAdditionalFields>
         <searchResultsAdditionalFields>FEC_Case_ID__c</searchResultsAdditionalFields>

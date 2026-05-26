@@ -405,7 +405,7 @@ export default class Fec_BatchCaseCreation extends LightningElement {
     if (idxSubCode < 0) {
       missing.push("Sub Code");
     }
-    if (idxCaseStatus < 0 && fileType !== IMPORT_FILE_TYPE_WELCOME) {
+    if (idxCaseStatus < 0) {
       missing.push("Case Status");
     }
     if (extended) {
