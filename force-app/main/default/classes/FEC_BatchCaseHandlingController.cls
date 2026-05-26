@@ -308,19 +308,16 @@ public without sharing class FEC_BatchCaseHandlingController {
         myPending.label = QUEUE_MY_PENDING;
         myPending.value = QUEUE_MY_PENDING;
         out.add(myPending);
-        Id currentUserId = UserInfo.getUserId();
-        for (GroupMember gm : [
-            SELECT Group.Name
-            FROM GroupMember
-            WHERE UserOrGroupId = :currentUserId AND Group.Type = :FEC_ConstantCommon.GROUP_TYPE_QUEUE
-            ORDER BY Group.Name
-        ]) {
-            if (gm.Group == null || String.isBlank(gm.Group.Name)) {
+        Set<String> queueNames = FEC_AssignmentListHandler.getCurrentUserQueues(UserInfo.getUserId());
+        List<String> sortedQueueNames = new List<String>(queueNames);
+        sortedQueueNames.sort();
+        for (String queueName : sortedQueueNames) {
+            if (String.isBlank(queueName)) {
                 continue;
             }
             FilterPicklistOption item = new FilterPicklistOption();
-            item.label = gm.Group.Name;
-            item.value = gm.Group.Name;
+            item.label = queueName;
+            item.value = queueName;
             out.add(item);
         }
         return out;
@@ -522,8 +519,7 @@ public without sharing class FEC_BatchCaseHandlingController {
             'FEC_Last_Updated_On__c',
             'FEC_Category__r.FEC_Code__c',
             'FEC_SubCategory__r.FEC_Code__c',
-            'FEC_SubCode__r.FEC_Code__c',
-            '(SELECT Id FROM ContentDocumentLinks LIMIT 1)'
+            'FEC_SubCode__r.FEC_Code__c'
         };
         selectFields.addAll(FEC_BatchCaseHandlingTemplateHelper.buildCaseStageBusinessProcessSelectFields());
         String dataSoql =
@@ -548,11 +544,11 @@ public without sharing class FEC_BatchCaseHandlingController {
             r.caseStatus = c.FEC_Final_Status__c;
             r.caseCreatedOn = c.FEC_Case_Created_On__c;
             r.lastUpdatedOn = c.FEC_Last_Updated_On__c;
-            r.hasAttachment = c.ContentDocumentLinks != null && !c.ContentDocumentLinks.isEmpty();
             r.caseReviewUrl = '/lightning/r/Case/' + String.valueOf(c.Id) + '/view';
             FEC_BatchCaseHandlingTemplateHelper.applyStageBusinessProcessToExportRow(r, c);
             out.rows.add(r);
         }
+        FEC_BatchCaseHandlingExportService.applyVisibleAttachmentFlags(out.rows);
         return out;
     }
 
@@ -597,6 +593,7 @@ public without sharing class FEC_BatchCaseHandlingController {
         for (Case c : cases) {
             out.rows.add(FEC_BatchCaseHandlingExportService.mapCaseToExportRow(c));
         }
+        FEC_BatchCaseHandlingExportService.applyVisibleAttachmentFlags(out.rows);
         FEC_BatchCaseHandlingExportService.enrichExportRows(out.rows);
         return out;
     }
