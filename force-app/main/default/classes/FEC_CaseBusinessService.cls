@@ -791,7 +791,8 @@ public without sharing class FEC_CaseBusinessService {
       result.stageName = selectedStage.Name;
       Boolean isLatestRevertToCurrentStage = isLatestRevertToCurrentStage(
         selectedCase.Id,
-        selectedStage.Id
+        selectedStage.Id,
+        selectedStage.Name
       );
 
       // ============================= GET MASTET DATA SETTING ===========================
@@ -855,14 +856,19 @@ public without sharing class FEC_CaseBusinessService {
           FEC_CaseMasterDataHelper.isGsrRevertFromPreviousStageName(
             selectedCase.Id,
             selectedStage.Id,
-            FEC_ConstantCommon.STAGE_TWO
+            FEC_ConstantCommon.STAGE_TWO,
+            selectedStage.Name
           );
         result.contextFlags.put(
           'isGsrStage2ToStage1Revert',
           isGsrStage2ToStage1Revert
         );
-        Boolean isGsrStage1RevertMasterReadonly =
-          isGsrStage1Revert && !isGsrStage2ToStage1Revert;
+        Boolean isGsrStage1Recall =
+          isGsrBusinessProcess &&
+          checkStageName(selectedStage.Name, FEC_ConstantCommon.STAGE_ONE) &&
+          FEC_CaseMasterDataHelper.isLatestRoutingActionRecall(selectedCase.Id);
+        result.contextFlags.put('isGsrStage1Recall', isGsrStage1Recall);
+        Boolean isGsrStage1RevertMasterReadonly = false;
         result.contextFlags.put(
           'isGsrStage1RevertMasterReadonly',
           isGsrStage1RevertMasterReadonly
@@ -996,7 +1002,8 @@ public without sharing class FEC_CaseBusinessService {
               result.subCodeCode,
               selectedStage.Name,
               fieldApiNameTemp,
-              mrcRl05UiCtx
+              mrcRl05UiCtx,
+              selectedCase
             )
           ) {
             continue;
@@ -1010,13 +1017,20 @@ public without sharing class FEC_CaseBusinessService {
               if (
                 'Original Info'.equals(subSectionNameTemp) &&
                 TYPE_LWC.equals(itemType) &&
-                !isGsrStage1Revert
+                !isGsrStage1Revert &&
+                !isGsrStage1Recall
               ) {
                 continue;
               }
             } else {
-              //Không khác: nếu property info thì không hiển thị
-              if ('Property Info'.equals(subSectionNameTemp)) {
+              Boolean gsrStage1ShowPropertyInfoWhenNocUnchanged =
+                !isUpdatedNocDifferentFromCurrent &&
+                (isGsrStage1Revert || isGsrStage1Recall);
+              // Không khác: ẩn Property Info — trừ GSR Stage 1 revert/recall (hiện Property Info để sửa)
+              if (
+                'Property Info'.equals(subSectionNameTemp) &&
+                !gsrStage1ShowPropertyInfoWhenNocUnchanged
+              ) {
                 continue;
               }
             }
@@ -2282,7 +2296,14 @@ public without sharing class FEC_CaseBusinessService {
           if (isCreationStage) {
             createCaseFlowHistory(caseId, natureOfCaseId, fieldListJson);
           }
-          route(caseId, queueId, natureOfCaseId, actionId, finalStatusBeforeSubmit);
+          route(
+            caseId,
+            queueId,
+            natureOfCaseId,
+            actionId,
+            finalStatusBeforeSubmit,
+            (String) params.get('teamUserGroup')
+          );
           FEC_MrcDuplicateCaseService.applyNotReceivedHandlingOptionOnSubmit(caseId);
           return null;
         }
@@ -2430,7 +2451,8 @@ public without sharing class FEC_CaseBusinessService {
     String queueId,
     String natureOfCaseId,
     String actionId,
-    String finalStatusBeforeSubmit
+    String finalStatusBeforeSubmit,
+    String teamUserGroup
   ) {
     try {
       Long corrId = DateTime.now().getTime();
@@ -2615,7 +2637,12 @@ public without sharing class FEC_CaseBusinessService {
         );
       }
 
-      FEC_Stage_Change__c selectedChange = changelst[0];
+      FEC_Stage_Change__c selectedChange =
+        FEC_MrcReturnCaseService.selectStageChangeForRoute(
+          changelst,
+          teamUserGroup,
+          queueId
+        );
       if (FEC_BlockCodeRoutingService.isRc27DefaultOmDay2Routing(updatedCase)) {
         FEC_Stage_Change__c rc27OmDay2 =
           FEC_BlockCodeRoutingService.selectRc27DefaultOmDay2FromList(changelst);
@@ -3856,7 +3883,11 @@ public without sharing class FEC_CaseBusinessService {
     return out;
   }
 
-  private static Boolean isLatestRevertToCurrentStage(Id caseId, Id currentStageId) {
+  private static Boolean isLatestRevertToCurrentStage(
+    Id caseId,
+    Id currentStageId,
+    String currentStageName
+  ) {
     if (caseId == null || currentStageId == null) {
       return false;
     }
@@ -3871,7 +3902,30 @@ public without sharing class FEC_CaseBusinessService {
       ORDER BY LastModifiedDate DESC
       LIMIT 1
     ];
-    return !latestRevertHist.isEmpty();
+    if (!latestRevertHist.isEmpty()) {
+      return true;
+    }
+    Integer currentStageNum = extractStageNumberFromStageName(currentStageName);
+    if (currentStageNum == null) {
+      return false;
+    }
+    List<FEC_Routing_Action_History__c> latestRevertByCase = [
+      SELECT FEC_Next_Stage__r.Name
+      FROM FEC_Routing_Action_History__c
+      WHERE
+        FEC_Case__c = :caseId
+        AND FEC_IsReverted__c = true
+        AND FEC_Next_Stage__c != NULL
+      ORDER BY LastModifiedDate DESC
+      LIMIT 1
+    ];
+    if (latestRevertByCase.isEmpty()) {
+      return false;
+    }
+    Integer revertNextStageNum = extractStageNumberFromStageName(
+      latestRevertByCase[0].FEC_Next_Stage__r?.Name
+    );
+    return revertNextStageNum != null && revertNextStageNum == currentStageNum;
   }
 
   private static Field transform(

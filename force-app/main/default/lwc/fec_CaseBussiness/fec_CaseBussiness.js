@@ -73,6 +73,7 @@ import {
   shouldActivateMrcReturnRouting,
   showMrcRl0502DupBanner,
   validateMrcReturnCase,
+  normalizeTeamUserGroupForDisplay,
 } from "c/fecMrcReturnCaseLogic";
 import FEC_MSG_Param_Maxlength from "@salesforce/label/c.FEC_MSG_Param_Maxlength";
 import FEC_Routing_Action_Label from "@salesforce/label/c.FEC_Routing_Action_Label";
@@ -700,6 +701,8 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
   @api recordId;
 
   _isEdit = true;
+  _isCaseInformationEdit = false;
+
   @api get isEdit() {
     return this._isEdit;
   }
@@ -709,7 +712,28 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
     console.log(`[DEBUG][fec_CaseBussiness] set isEdit — rawValue=${JSON.stringify(value)} (type=${typeof value}), _isEdit=${this._isEdit}, prev=${prev}, businessReady=${!!this.business?.sectionlst}`);
     if (prev !== this._isEdit && this.business?.sectionlst) {
       this._applyEditModeToBusiness();
+      this._updateDynCmpIsEditFlags();
     }
+  }
+
+  @api get isCaseInformationEdit() {
+    return this._isCaseInformationEdit;
+  }
+  set isCaseInformationEdit(value) {
+    const prev = this._isCaseInformationEdit;
+    this._isCaseInformationEdit = value === true || value === "true";
+    if (prev !== this._isCaseInformationEdit && this.business?.sectionlst) {
+      this._applyEditModeToBusiness();
+      this._updateDynCmpIsEditFlags();
+    }
+  }
+
+  /** Case Information section fields/LWC editable (full edit or partial after Execute Assignment). */
+  _isSectionFieldsEditable(sectionName) {
+    if (sectionName === SECTION_NAME_CASE_INFORMATION) {
+      return this._isEdit || this._isCaseInformationEdit;
+    }
+    return this._isEdit;
   }
 
   @track business = {};
@@ -1197,6 +1221,11 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
       return false;
     }
     return ACTION_ROUTE_TO === this._getCurrentActionCode();
+  }
+
+  /** Team Route to — mã ngắn CP/PM (không label Contract Processing từ Stage Change). */
+  get routeToTeamDisplayLabel() {
+    return normalizeTeamUserGroupForDisplay(this.business?.nextTeam);
   }
 
   //Thangtv
@@ -1821,14 +1850,13 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
     return this._persistCasePicklistField(FIELD_RD_PAYMENT_CONTRACT_ASSESSMENT);
   }
 
-  /** COF Stage 1 sau Revert, hoặc GSR Stage 1 revert (trừ Stage 2 → Stage 1): master data read-only. */
+  /** COF Stage 1 sau Revert, hoặc GSR Stage 1 revert (Apex isGsrStage1RevertMasterReadonly): master data read-only. */
   _isStage1RevertMasterReadonly() {
     const flags = this.business?.contextFlags;
-    const gsrReadonly =
-      flags?.isGsrStage1RevertMasterReadonly === true ||
-      (flags?.isGsrStage1Revert === true &&
-        flags?.isGsrStage2ToStage1Revert !== true);
-    return flags?.isCOFStage1Revert === true || gsrReadonly;
+    return (
+      flags?.isCOFStage1Revert === true ||
+      flags?.isGsrStage1RevertMasterReadonly === true
+    );
   }
 
   /** GSR Stage 3 (đã có Assignment): subsection Property Info read-only. */
@@ -1872,6 +1900,7 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
     if (!this.business?.sectionlst) return;
     const stage1RevertReadonly = this._isStage1RevertMasterReadonly();
     this.business.sectionlst.forEach((section) => {
+      const sectionEditable = this._isSectionFieldsEditable(section.name);
       section.subSectionlst?.forEach((sub) => {
         const gsrPropertyInfoReadonly = this._isGsrStage3PropertyInfoFieldReadonly(
           sub.name
@@ -1879,12 +1908,13 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
         sub.objlst?.forEach((obj) => {
           obj.fieldlst?.forEach((field) => {
             const forceReadonly = stage1RevertReadonly || gsrPropertyInfoReadonly;
-            field.readonly = forceReadonly ? true : !this._isEdit;
-            field.editable = forceReadonly ? false : this._isEdit;
+            field.readonly = forceReadonly ? true : !sectionEditable;
+            field.editable = forceReadonly ? false : sectionEditable;
           });
         });
       });
     });
+    this.business = { ...this.business };
     this._syncHasRoutingAction();
   }
 
@@ -2066,16 +2096,18 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
   _updateDynCmpIsEditFlags() {
     if (!this.business?.sectionlst) return;
     this.business.sectionlst.forEach((section) => {
+      const sectionEditable = this._isSectionFieldsEditable(section.name);
       section.resolvedComponentlst?.forEach((d) => {
         if (!d) return;
         const master = this._resolveDynCmpMasterIsEdit(
           d.componentName,
           d.fecMasterDataSettingIsEdit,
         );
-        d.isEdit = this._isEdit && master;
-        console.log(`[DEBUG][fec_CaseBussiness] _updateDynCmpIsEditFlags — component="${d.componentName}", _isEdit=${this._isEdit}, master=${master}, finalIsEdit=${d.isEdit}`);
+        d.isEdit = sectionEditable && master;
+        console.log(`[DEBUG][fec_CaseBussiness] _updateDynCmpIsEditFlags — component="${d.componentName}", sectionEditable=${sectionEditable}, master=${master}, finalIsEdit=${d.isEdit}`);
       });
     });
+    this.business = { ...this.business };
   }
 
   connectedCallback() {
@@ -2499,6 +2531,12 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
             ? natureOfCaseIdFallback
             : (res.natureOfCase || natureOfCaseIdFallback);
         this.business = { ...res, natureOfCase };
+        if (isMrcRl05Branch(this.business) && this.business?.nextTeam) {
+          this.business = {
+            ...this.business,
+            nextTeam: normalizeTeamUserGroupForDisplay(this.business.nextTeam),
+          };
+        }
 
         //linhdev: Fix jira FECREDIT_CSM_2025_KH-1226
         this.activeMainSectionlst = [];
@@ -2611,7 +2649,7 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
                 // }
 
                 if (
-                  !this.isEdit ||
+                  !this._isSectionFieldsEditable(section.name) ||
                   this._isStage1RevertMasterReadonly() ||
                   this._isGsrStage3PropertyInfoFieldReadonly(sub.name)
                 ) {
@@ -3557,8 +3595,8 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
     }
 
 
-    //hieuTT fix jira 1561
-    if(!this._validateDNBForSubmit()){
+    //FECREDIT_CSM_2025_KH-1561
+    if (!this._validateDNBForSubmit()) {
       isAllValid = false;
     }
     
@@ -3926,15 +3964,47 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
     return host.validateRemovePhoneForSubmit();
   }
 
-  //HieuTT fix jira 1561
+  //FECREDIT_CSM_2025_KH-1561
+  _getDnbNonExistingCustomerEl() {
+    const subprocess = this._getSubProcessContainerEl();
+    if (!subprocess || !subprocess.template) {
+      return null;
+    }
+    const handling =
+      subprocess.template.querySelector("c-fec_-do-not-bother-handling") ||
+      subprocess.template.querySelector("c-fec-do-not-bother-handling");
+    if (!handling || !handling.template) {
+      return (
+        subprocess.template.querySelector(
+          "c-fec_-do-not-bother-non-existing-customer",
+        ) ||
+        subprocess.template.querySelector(
+          "c-fec-do-not-bother-non-existing-customer",
+        )
+      );
+    }
+    return (
+      handling.template.querySelector(
+        "c-fec_-do-not-bother-non-existing-customer",
+      ) ||
+      handling.template.querySelector("c-fec-do-not-bother-non-existing-customer")
+    );
+  }
+
+  //FECREDIT_CSM_2025_KH-1561
   _validateDNBForSubmit() {
     const host = this._getSubProcessContainerEl();
 
-    if (!host || typeof host.validateDNBForSubmit !== "function") {
-      return true;
+    if (host && typeof host.validateDNBForSubmit === "function") {
+      return host.validateDNBForSubmit();
     }
 
-    return host.validateDNBForSubmit();
+    const dnbCmp = this._getDnbNonExistingCustomerEl();
+    if (dnbCmp && typeof dnbCmp.validateForSubmit === "function") {
+      return dnbCmp.validateForSubmit();
+    }
+
+    return true;
   }
 
   //linhdev fix jira FECREDIT_CSM_2025_KH-1368
@@ -4507,7 +4577,11 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
                 queueId: this.business.nextQueue?.value,
                 natureOfCaseId: this.business.natureOfCase,
                 actionId: actionId,
-                fieldListJson: this._collectFieldListJson()
+                fieldListJson: this._collectFieldListJson(),
+                teamUserGroup:
+                  this.business.mrcRouteTeamCode ||
+                  normalizeTeamUserGroupForDisplay(this.business?.nextTeam) ||
+                  null,
               },
             };
           }
@@ -5288,7 +5362,7 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
               isMrcReturnCaseForm:
                 name === "fec_MrcReturnPanel" || name === "fec_MrcReturnCaseForm",
               fecMasterDataSettingIsEdit,
-              isEdit: this._isEdit && masterResolved,
+              isEdit: this._isSectionFieldsEditable(section.name) && masterResolved,
               /** Thứ tự merge: cùng nguồn FEC_Sub_Section_Order__c (Apex → meta.order). */
               sortOrder: fecSubSectionOrder,
               fecSubSectionOrder,
@@ -6012,9 +6086,11 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
 
     const routeToActionId = this._resolveRouteToActionId();
     const teamUserGroup = ctx.teamCode || ctx.team;
+    const displayTeam = normalizeTeamUserGroupForDisplay(ctx.teamCode || ctx.team);
     this.business = {
       ...this.business,
-      nextTeam: ctx.team,
+      mrcRouteTeamCode: teamUserGroup,
+      nextTeam: displayTeam,
       nextQueue: priorQueue?.value ? priorQueue : this.business?.nextQueue,
     };
     this._setActionValueByCode(ACTION_ROUTE_TO);
@@ -6030,7 +6106,9 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
         if (res?.nextQueueId) {
           this.business = {
             ...this.business,
-            nextTeam: res.nextTeam || ctx.team,
+            nextTeam: normalizeTeamUserGroupForDisplay(
+              displayTeam || res.nextTeam,
+            ),
             nextQueue: {
               label: res.nextQueueLabel || STR_EMPTY,
               value: res.nextQueueId,
@@ -6041,12 +6119,14 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
           const fallbackQueue =
             priorQueue &&
             (priorQueue.value || priorQueue.label) &&
-            (!priorTeam || priorTeam === ctx.team)
+            (!priorTeam || priorTeam === displayTeam)
               ? priorQueue
               : null;
           this.business = {
             ...this.business,
-            nextTeam: ctx.team || res?.nextTeam || priorTeam,
+            nextTeam: normalizeTeamUserGroupForDisplay(
+              displayTeam || priorTeam,
+            ),
             nextQueue: fallbackQueue,
           };
           if (fallbackQueue) {
@@ -6067,7 +6147,9 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
         console.error("[MrcReturnStageChangeRouting]", JSON.stringify(err));
         this.business = {
           ...this.business,
-          nextTeam: ctx.team || priorTeam,
+          nextTeam: normalizeTeamUserGroupForDisplay(
+            displayTeam || priorTeam,
+          ),
           nextQueue: priorQueue?.value ? priorQueue : null,
         };
         this.business = { ...this.business };

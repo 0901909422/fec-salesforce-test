@@ -168,7 +168,8 @@ public without sharing class FEC_AssignmentController {
         );
 
         Map<Id, Case> caseMap = new Map<Id, Case>(
-            [SELECT Id, FEC_Team__c, Status
+            [SELECT Id, FEC_Team__c, Status, OwnerId, Owner.Name,
+                    FEC_Current_Case_Stage__r.FEC_Code__c
              FROM Case
              WHERE Id IN :getCaseIdsFromAssignments(assignmentMap)]
         );
@@ -321,10 +322,15 @@ public without sharing class FEC_AssignmentController {
             }
 
             // ===== REJECT / RESOLVE =====
-            else if (action == FEC_ConstantCommon.CASE_REJECT_ACTION
-                  || action == FEC_ConstantCommon.CASE_RESOLVE_ACTION) {
+            else if (
+                (action == FEC_ConstantCommon.CASE_REJECT_ACTION
+                    || action == FEC_ConstantCommon.CASE_RESOLVE_ACTION)
+                && h.FEC_Routing_Action_Type__c == FEC_ConstantCommon.REMARK_TYPE_ASSIGNMENT
+            ) {
 
                 if (activeCount == 0) {
+                    // TH1
+                    String statusBefore = c.Status;
 
                     c.FEC_Team__c = null;
                     c.Status = FEC_ConstantCommon.CASE_STATUS_RESOLVED_COMPLETED;
@@ -334,15 +340,14 @@ public without sharing class FEC_AssignmentController {
                         FEC_Team__c = null
                     ));
 
-                    historiesToInsert.add(new FEC_Routing_Action_History__c(
-                        FEC_Routing_Action__c = FEC_ConstantCommon.CASE_RESOLVE_ACTION,
-                        FEC_Routing_Action_Type__c = 'Case',
-                        FEC_Case__c = c.Id
+                    historiesToInsert.add(buildCaseResolveRoutingHistory(
+                        c,
+                        statusBefore,
+                        c.Status
                     ));
-                }
-                else {
-
-                    if (!hasOtherActiveAssignmentWithSameTeam(
+                } else {
+                    
+                    if (!isCurrentTeamOnOtherCaseAssignments(
                         caseAssignments.get(c.Id),
                         current.Id,
                         currentTeam
@@ -423,17 +428,18 @@ public without sharing class FEC_AssignmentController {
         return count;
     }
 
-    private static Boolean hasOtherActiveAssignmentWithSameTeam(
+    
+    private static Boolean isCurrentTeamOnOtherCaseAssignments(
         List<FEC_Assignment__c> caseAssignments,
         Id currentAssignmentId,
-        String team
+        String currentTeam
     ) {
-        if (caseAssignments == null || String.isBlank(team)) {
+        if (caseAssignments == null || String.isBlank(currentTeam)) {
             return false;
         }
 
-        String normalizedTarget = normalizeTeamToken(team);
-        if (String.isBlank(normalizedTarget)) {
+        String normalizedCurrent = normalizeTeamToken(currentTeam);
+        if (String.isBlank(normalizedCurrent)) {
             return false;
         }
 
@@ -444,12 +450,67 @@ public without sharing class FEC_AssignmentController {
             if (a.FEC_Assignment_Status__c == FEC_ConstantCommon.STATUS_COMPLETED) {
                 continue;
             }
-            if (normalizeTeamToken(a.FEC_Team__c).equalsIgnoreCase(normalizedTarget)) {
+            if (normalizeTeamToken(a.FEC_Team__c).equalsIgnoreCase(normalizedCurrent)) {
                 return true;
             }
         }
 
         return false;
+    }
+
+   
+    private static FEC_Routing_Action_History__c buildCaseResolveRoutingHistory(
+        Case c,
+        String statusBefore,
+        String statusAfter
+    ) {
+        String ownerLabel = resolveOwnerLabelForRoutingHistory(c.OwnerId, c.Owner?.Name);
+
+        return new FEC_Routing_Action_History__c(
+            FEC_Routing_Action__c = FEC_ConstantCommon.CASE_RESOLVE_ACTION,
+            FEC_Routing_Action_Type__c = 'Case',
+            FEC_Case__c = c.Id,
+            FEC_Assignment__c = null,
+            FEC_Decision__c = null,
+            FEC_Original_User_Queue__c = ownerLabel,
+            FEC_Updated_User_Queue__c = ownerLabel,
+            FEC_Original_User_Queue_ID__c = c.OwnerId != null
+                ? String.valueOf(c.OwnerId)
+                : null,
+            FEC_Stage_Name__c = c.FEC_Current_Case_Stage__r?.FEC_Code__c,
+            FEC_User__c = FEC_CommonUltils.getEmailPrefix(UserInfo.getUserEmail()),
+            FEC_Current_Status__c = statusBefore,
+            FEC_Changed_Status__c = statusAfter
+        );
+    }
+
+    private static String resolveOwnerLabelForRoutingHistory(Id ownerId, String fallbackName) {
+        if (ownerId == null) {
+            return fallbackName;
+        }
+        if (ownerId.getSObjectType() == User.SObjectType) {
+            List<User> users = [
+                SELECT Email, Name
+                FROM User
+                WHERE Id = :ownerId
+                LIMIT 1
+            ];
+            if (users.isEmpty()) {
+                return fallbackName;
+            }
+            String local = FEC_CommonUltils.getEmailPrefix(users[0].Email);
+            return String.isNotBlank(local) ? local : users[0].Name;
+        }
+        if (ownerId.getSObjectType() == Group.SObjectType) {
+            List<Group> groups = [
+                SELECT Name
+                FROM Group
+                WHERE Id = :ownerId AND Type = 'Queue'
+                LIMIT 1
+            ];
+            return !groups.isEmpty() ? groups[0].Name : fallbackName;
+        }
+        return fallbackName;
     }
 
     private static String normalizeTeamToken(String team) {

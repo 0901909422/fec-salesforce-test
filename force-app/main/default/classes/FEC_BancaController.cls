@@ -66,6 +66,7 @@ public without sharing class FEC_BancaController {
         Case cs = [
             SELECT
                 Id,
+                FEC_Search_National_ID__c,
                 FEC_Account_or_Contract__c,
                 FEC_Account_or_Contract__r.FEC_Search_Result_National_ID__c,
                 FEC_Account_or_Contract__r.FEC_Primary_Phone__c
@@ -74,10 +75,11 @@ public without sharing class FEC_BancaController {
             LIMIT 1
         ];
 
-        List<String> nationalIds = parseCommaSeparatedNationalIds(
+        List<String> nationalIds = collectNationalIdsForSearch(
             cs.FEC_Account_or_Contract__r != null
             ? cs.FEC_Account_or_Contract__r.FEC_Search_Result_National_ID__c
-            : null
+            : null,
+            cs.FEC_Search_National_ID__c
         );
 
         String phone =
@@ -92,15 +94,15 @@ public without sharing class FEC_BancaController {
             new Map<String, BancaDTO>();
 
         /* =====================================================
-         * SEARCH BY NID
+         * SEARCH BY NID 
          * ===================================================== */
-        for (String nationalId : nationalIds) {
+        if (!nationalIds.isEmpty()) {
 
             try {
 
                 FEC_SearchByListNIDsServiceCallout.NIDsResponse nidResp =
                     FEC_SearchByListNIDsServiceCallout.searchByListNIDs(
-                        new List<String>{ nationalId }
+                        nationalIds
                     );
 
                 if (
@@ -113,7 +115,6 @@ public without sharing class FEC_BancaController {
                         caseId,
                         mapData
                     );
-                    break;
                 }
 
             } catch (Exception e) {
@@ -136,11 +137,17 @@ public without sharing class FEC_BancaController {
                         new List<String>{ phone }
                     );
 
-                processPhoneResponse(
-                    phoneResp,
-                    caseId,
-                    mapData
-                );
+                if (
+                    phoneResp != null &&
+                    phoneResp.result != null &&
+                    !phoneResp.result.isEmpty()
+                ) {
+                    processPhoneResponse(
+                        phoneResp,
+                        caseId,
+                        mapData
+                    );
+                }
 
             } catch (Exception e) {
 
@@ -340,12 +347,18 @@ public without sharing class FEC_BancaController {
             response.result
         ) {
 
-            if (String.isBlank(item.userID)) {
+            String mapKey = insuranceMapKey(
+                item.userID,
+                item.policyNumber,
+                item.buyerNID
+            );
+
+            if (String.isBlank(mapKey)) {
                 continue;
             }
 
             mapData.put(
-                item.userID,
+                mapKey,
                 mapFromNID(item, caseId)
             );
         }
@@ -372,12 +385,18 @@ public without sharing class FEC_BancaController {
             response.result
         ) {
 
-            if (String.isBlank(item.userID)) {
+            String mapKey = insuranceMapKey(
+                item.userID,
+                item.policyNumber,
+                item.buyerNID
+            );
+
+            if (String.isBlank(mapKey)) {
                 continue;
             }
 
             mapData.put(
-                item.userID,
+                mapKey,
                 mapFromPhone(item, caseId)
             );
         }
@@ -487,17 +506,22 @@ public without sharing class FEC_BancaController {
             [
                 SELECT
                     Id,
-                    FEC_User_ID__c
+                    FEC_User_ID__c,
+                    FEC_Policy_Number__c,
+                    FEC_Buyer_NID__c
                 FROM FEC_Insurance_Info__c
                 WHERE FEC_Customer_History__c = :customerHistoryId
             ]
         ) {
 
-            if (!String.isBlank(oldRec.FEC_User_ID__c)) {
-                existingMap.put(
-                    oldRec.FEC_User_ID__c,
-                    oldRec
-                );
+            String existingKey = insuranceMapKey(
+                oldRec.FEC_User_ID__c,
+                oldRec.FEC_Policy_Number__c,
+                oldRec.FEC_Buyer_NID__c
+            );
+
+            if (!String.isBlank(existingKey)) {
+                existingMap.put(existingKey, oldRec);
             }
         }
 
@@ -508,11 +532,18 @@ public without sharing class FEC_BancaController {
 
             FEC_Insurance_Info__c rec;
 
+            String dtoKey = insuranceMapKey(
+                dto.userId,
+                dto.policyNumber,
+                dto.buyerNID
+            );
+
             if (
-                existingMap.containsKey(dto.userId)
+                !String.isBlank(dtoKey) &&
+                existingMap.containsKey(dtoKey)
             ) {
 
-                rec = existingMap.get(dto.userId);
+                rec = existingMap.get(dtoKey);
 
             } else {
 
@@ -572,6 +603,58 @@ public without sharing class FEC_BancaController {
     }
 
     /* =====================================================
+     * COLLECT NATIONAL IDs (History + Case search fields)
+     * ===================================================== */
+    private static List<String> collectNationalIdsForSearch(
+        String historyNationalIds,
+        String caseSearchNationalId
+    ) {
+        Set<String> seen = new Set<String>();
+        List<String> nationalIds = new List<String>();
+
+        for (String raw : new List<String>{
+            historyNationalIds,
+            caseSearchNationalId
+        }) {
+            for (String id : parseCommaSeparatedNationalIds(raw)) {
+                if (!seen.contains(id)) {
+                    seen.add(id);
+                    nationalIds.add(id);
+                }
+            }
+        }
+
+        return nationalIds;
+    }
+
+    /* =====================================================
+     * MAP KEY
+     * ===================================================== */
+    private static String insuranceMapKey(
+        String userId,
+        String policyNumber,
+        String buyerNid
+    ) {
+        if (!String.isBlank(policyNumber)) {
+            return 'POL:' + policyNumber.trim();
+        }
+
+        if (!String.isBlank(userId)) {
+            String key = 'UID:' + userId.trim();
+            if (!String.isBlank(buyerNid)) {
+                key += ':' + buyerNid.trim();
+            }
+            return key;
+        }
+
+        if (!String.isBlank(buyerNid)) {
+            return 'NID:' + buyerNid.trim();
+        }
+
+        return null;
+    }
+
+    /* =====================================================
      * PARSE COMMA-SEPARATED NATIONAL IDs
      * ===================================================== */
     private static List<String> parseCommaSeparatedNationalIds(String raw) {
@@ -582,7 +665,7 @@ public without sharing class FEC_BancaController {
             return nationalIds;
         }
 
-        for (String part : raw.split(',')) {
+        for (String part : raw.split('[,;\\n\\r]+')) {
 
             String trimmed = part != null ? part.trim() : null;
 

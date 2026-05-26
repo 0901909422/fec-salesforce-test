@@ -472,6 +472,26 @@ export function isMrcRl05ReviewMode(business, isEditFlag) {
   return isEditFlag === false;
 }
 
+/** Stage 1, chưa Submit — khớp Apex shouldHideAssessmentBeforeSubmit. */
+export function isMrcStage1BeforeSubmit(business, isEditFlag) {
+  const stageName = String(business?.stageName ?? STR_EMPTY);
+  if (!stageName.includes("Stage 1")) {
+    return false;
+  }
+  if (business?.isSubmited === true) {
+    return false;
+  }
+  if (isMrcRl05ReviewMode(business, isEditFlag)) {
+    return false;
+  }
+  return true;
+}
+
+const MRC_HIDDEN_ASSESSMENT_FIELD_APIS = new Set([
+  "FEC_Contract_Processing_Assessment_Type__c",
+  "FEC_RD_Payment_Contract_Assessment__c",
+]);
+
 function resolvePicklistDisplayLabel(business, apiName, value) {
   const raw = String(value ?? STR_EMPTY).trim();
   if (!raw) {
@@ -578,8 +598,8 @@ export function applyMrcRl0502DupFieldLayout(
               }
             }
           }
-          if (field.apiName === "FEC_Contract_Processing_Assessment_Type__c") {
-            if (ctx?.isReturnSubCode) {
+          if (MRC_HIDDEN_ASSESSMENT_FIELD_APIS.has(field.apiName)) {
+            if (isMrcStage1BeforeSubmit(business, isEditFlag)) {
               field.isHidden = true;
             }
           }
