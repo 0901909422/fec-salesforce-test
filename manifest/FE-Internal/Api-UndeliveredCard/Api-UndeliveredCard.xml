@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Package xmlns="http://soap.sforce.com/2006/04/metadata">
+
+    <types>
+        <members>FEC_Undelivered_Card__c</members>
+        <name>CustomObject</name>
+    </types>
+
+    <types>
+        <members>FEC_Undelivered_Card__c.FEC_Request_ID__c</members>
+        <members>FEC_Undelivered_Card__c.FEC_Source_System__c</members>
+        <members>FEC_Undelivered_Card__c.FEC_Received_DateTime__c</members>
+        <members>FEC_Undelivered_Card__c.FEC_Account_No__c</members>
+        <members>FEC_Undelivered_Card__c.FEC_Phone__c</members>
+        <members>FEC_Undelivered_Card__c.FEC_Delay_Code__c</members>
+        <members>FEC_Undelivered_Card__c.FEC_Delay_Notes__c</members>
+        <members>FEC_Undelivered_Card__c.FEC_Delivery_Notes__c</members>
+        <members>FEC_Undelivered_Card__c.FEC_Tracking_No__c</members>
+        <members>FEC_Undelivered_Card__c.FEC_Plastic_Id__c</members>
+        <name>CustomField</name>
+    </types>
+
+    <types>
+        <members>FEC_Undelivered_Card__c-Undelivered Card Layout</members>
+        <name>Layout</name>
+    </types>
+
+    <types>
+        <members>FEC_UndeliveredCardRestService</members>
+        <members>FEC_UndeliveredCardRestService_Test</members>
+        <name>ApexClass</name>
+    </types>
+
+    <types>
+        <members>FEC_Common_System_Setting</members>
+        <name>PermissionSet</name>
+    </types>
+
+    <version>65.0</version>
+</Package>
