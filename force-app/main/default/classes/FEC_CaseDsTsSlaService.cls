@@ -370,39 +370,56 @@ public without sharing class FEC_CaseDsTsSlaService {
                 || c.FEC_SLA_Notification_3__c != null);
     }
 
-    public static List<String> parseEmailsFromLabelValue(String labelValue) {
-        List<String> emails = new List<String>();
+    /** Custom Label: danh sách User Id phân tách bằng ; hoặc , */
+    public static List<Id> parseUserIdsFromLabelValue(String labelValue) {
+        List<Id> userIds = new List<Id>();
         if (String.isBlank(labelValue)) {
-            return emails;
+            return userIds;
         }
         String normalized = labelValue.replace(',', ';');
         for (String part : normalized.split(';')) {
-            String email = part != null ? part.trim() : '';
-            if (String.isNotBlank(email)) {
-                emails.add(email);
+            String token = part != null ? part.trim() : '';
+            Id userId = parseUserIdToken(token);
+            if (userId != null) {
+                userIds.add(userId);
             }
         }
-        return emails;
+        return userIds;
+    }
+
+    private static Id parseUserIdToken(String token) {
+        if (String.isBlank(token)) {
+            return null;
+        }
+        try {
+            Id recordId = Id.valueOf(token);
+            if (recordId.getSobjectType() == User.SObjectType) {
+                return recordId;
+            }
+        } catch (Exception e) {
+            // token không phải User Id hợp lệ
+        }
+        return null;
     }
 
     public static String getRecipientLabelApiName(String queueProfile) {
         return PROFILE_TO_RECIPIENT_LABEL.get(queueProfile);
     }
 
-    public static List<String> getRecipientEmailsForProfile(String queueProfile) {
+    public static List<Id> getRecipientUserIdsForProfile(String queueProfile) {
         if (queueProfile == PROFILE_TELESALES) {
-            return parseEmailsFromLabelValue(Label.FEC_SLA_DS_TS_Recipient_Telesales);
+            return parseUserIdsFromLabelValue(Label.FEC_SLA_DS_TS_Recipient_Telesales);
         }
         if (queueProfile == PROFILE_LG) {
-            return parseEmailsFromLabelValue(Label.FEC_SLA_DS_TS_Recipient_LG);
+            return parseUserIdsFromLabelValue(Label.FEC_SLA_DS_TS_Recipient_LG);
         }
         if (queueProfile == PROFILE_DIRECT_SALES) {
-            return parseEmailsFromLabelValue(Label.FEC_SLA_DS_TS_Recipient_Direct_Sales);
+            return parseUserIdsFromLabelValue(Label.FEC_SLA_DS_TS_Recipient_Direct_Sales);
         }
         if (queueProfile == PROFILE_POS_SALES) {
-            return parseEmailsFromLabelValue(Label.FEC_SLA_DS_TS_Recipient_Pos_Sales);
+            return parseUserIdsFromLabelValue(Label.FEC_SLA_DS_TS_Recipient_Pos_Sales);
         }
-        return new List<String>();
+        return new List<Id>();
     }
 
     public static Set<String> resolveRecipientUserIds(SlaEligibilityContext ctx) {
@@ -413,8 +430,8 @@ public without sharing class FEC_CaseDsTsSlaService {
     }
 
     public static Set<String> resolveRecipientUserIdsByProfile(String queueProfile) {
-        List<String> emails = getRecipientEmailsForProfile(queueProfile);
-        if (emails.isEmpty()) {
+        List<Id> configuredUserIds = getRecipientUserIdsForProfile(queueProfile);
+        if (configuredUserIds.isEmpty()) {
             return new Set<String>();
         }
         Set<String> userIds = new Set<String>();
@@ -422,7 +439,7 @@ public without sharing class FEC_CaseDsTsSlaService {
             SELECT Id
             FROM User
             WHERE IsActive = TRUE
-              AND Email IN :emails
+              AND Id IN :configuredUserIds
         ]) {
             userIds.add(u.Id);
         }
