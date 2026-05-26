@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<EntitlementProcess xmlns="http://soap.sforce.com/2006/04/metadata">
+    <SObjectType>Case</SObjectType>
+    <active>true</active>
+    <businessHours>FEC Business Hours</businessHours>
+    <entryStartDateField>Case.CreatedDate</entryStartDateField>
+    <exitCriteriaFilterItems>
+        <field>Case.Status</field>
+        <operation>equals</operation>
+        <value>Closed</value>
+    </exitCriteriaFilterItems>
+    <milestones>
+        <milestoneCriteriaFormula>OR(
+FEC_SubCode__r.FEC_Code__c=&quot;ITL01.03&quot;,
+FEC_SubCode__r.FEC_Code__c=&quot;ITC01.03&quot;
+)</milestoneCriteriaFormula>
+        <milestoneName>Case Time TAT</milestoneName>
+        <minutesToComplete>960000</minutesToComplete>
+        <timeTriggers>
+            <actions>
+                <name>SLA_Warning_15976h</name>
+                <type>FieldUpdate</type>
+            </actions>
+            <timeLength>-15976</timeLength>
+            <workflowTimeTriggerUnit>Hours</workflowTimeTriggerUnit>
+        </timeTriggers>
+        <timeTriggers>
+            <actions>
+                <name>SLA_Warning_15960h</name>
+                <type>FieldUpdate</type>
+            </actions>
+            <timeLength>-15960</timeLength>
+            <workflowTimeTriggerUnit>Hours</workflowTimeTriggerUnit>
+        </timeTriggers>
+        <useCriteriaStartTime>true</useCriteriaStartTime>
+    </milestones>
+    <milestones>
+        <milestoneCriteriaFormula>OR(
+FEC_SubCode__r.FEC_Code__c=&quot;ITL01.01&quot;,
+FEC_SubCode__r.FEC_Code__c=&quot;ITC01.01&quot;
+)</milestoneCriteriaFormula>
+        <milestoneName>Case Time TAT</milestoneName>
+        <minutesToComplete>960000</minutesToComplete>
+        <timeTriggers>
+            <actions>
+                <name>SLA_Warning_15932h</name>
+                <type>FieldUpdate</type>
+            </actions>
+            <timeLength>-15932</timeLength>
+            <workflowTimeTriggerUnit>Hours</workflowTimeTriggerUnit>
+        </timeTriggers>
+        <timeTriggers>
+            <actions>
+                <name>SLA_Warning_15940h</name>
+                <type>FieldUpdate</type>
+            </actions>
+            <timeLength>-15940</timeLength>
+            <workflowTimeTriggerUnit>Hours</workflowTimeTriggerUnit>
+        </timeTriggers>
+        <useCriteriaStartTime>true</useCriteriaStartTime>
+    </milestones>
+    <milestones>
+        <milestoneCriteriaFormula>OR(
+FEC_SubCode__r.FEC_Code__c=&quot;ITL01.04&quot;,
+FEC_SubCode__r.FEC_Code__c=&quot;ITC01.04&quot;
+)</milestoneCriteriaFormula>
+        <milestoneName>Case Time TAT</milestoneName>
+        <minutesToComplete>960000</minutesToComplete>
+        <timeTriggers>
+            <actions>
+                <name>SLA_Warning_15936h</name>
+                <type>FieldUpdate</type>
+            </actions>
+            <timeLength>-15936</timeLength>
+            <workflowTimeTriggerUnit>Hours</workflowTimeTriggerUnit>
+        </timeTriggers>
+        <timeTriggers>
+            <actions>
+                <name>SLA_Warning_15932_2h</name>
+                <type>FieldUpdate</type>
+            </actions>
+            <timeLength>-15932</timeLength>
+            <workflowTimeTriggerUnit>Hours</workflowTimeTriggerUnit>
+        </timeTriggers>
+        <useCriteriaStartTime>true</useCriteriaStartTime>
+    </milestones>
+    <milestones>
+        <milestoneCriteriaFormula>OR(
+FEC_SubCode__r.FEC_Code__c=&quot;ITL01.02&quot;,
+FEC_SubCode__r.FEC_Code__c=&quot;ITL02.01&quot;,
+FEC_SubCode__r.FEC_Code__c=&quot;ITL02.02&quot;,
+FEC_SubCode__r.FEC_Code__c=&quot;ITL02.03&quot;,
+FEC_SubCode__r.FEC_Code__c=&quot;ITC01.02&quot;,
+FEC_SubCode__r.FEC_Code__c=&quot;ITC02.01&quot;,
+FEC_SubCode__r.FEC_Code__c=&quot;ITC02.02&quot;,
+FEC_SubCode__r.FEC_Code__c=&quot;ITC02.03&quot;
+)</milestoneCriteriaFormula>
+        <milestoneName>Case Time TAT</milestoneName>
+        <minutesToComplete>960000</minutesToComplete>
+        <timeTriggers>
+            <actions>
+                <name>SLA_Warning_15880h</name>
+                <type>FieldUpdate</type>
+            </actions>
+            <timeLength>-15880</timeLength>
+            <workflowTimeTriggerUnit>Hours</workflowTimeTriggerUnit>
+        </timeTriggers>
+        <timeTriggers>
+            <actions>
+                <name>SLA_Warning_15840h</name>
+                <type>FieldUpdate</type>
+            </actions>
+            <timeLength>-15840</timeLength>
+            <workflowTimeTriggerUnit>Hours</workflowTimeTriggerUnit>
+        </timeTriggers>
+        <useCriteriaStartTime>true</useCriteriaStartTime>
+    </milestones>
+</EntitlementProcess>
