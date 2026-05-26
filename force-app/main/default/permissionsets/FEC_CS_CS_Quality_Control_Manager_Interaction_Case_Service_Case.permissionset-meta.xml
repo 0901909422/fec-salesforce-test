@@ -1676,6 +1676,11 @@
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Assignment__c.FEC_Draft_Assignment_Remark__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
         <editable>false</editable>
         <field>FEC_Assignment__c.FEC_Submitted_On__c</field>
         <readable>true</readable>
@@ -4206,11 +4211,6 @@
         <field>Case.FEC_Is_DNB__c</field>
         <readable>true</readable>
     </fieldPermissions>
-    <fieldPermissions>
-        <editable>true</editable>
-        <field>FEC_Assignment__c.FEC_Draft_Assignment_Remark__c</field>
-        <readable>true</readable>
-</fieldPermissions>
     <hasActivationRequired>false</hasActivationRequired>
     <label>CS - CS Quality Control Manager - Interaction Case &amp; Service Case</label>
     <license>Salesforce</license>
