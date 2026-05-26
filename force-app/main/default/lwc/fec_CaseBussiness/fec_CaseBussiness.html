@@ -16,7 +16,7 @@
           </template>
           </template>
         </div>
-
+        <div onchange={handleChildInputChange}>
         <div class="slds-grid slds-wrap slds-m-top--small">
           <template for:each={section.sortedSectionContentlst} for:item="row">
             <div key={row.rowKey} class={row.outerClass}>
@@ -334,7 +334,16 @@
             </template>
           </template>
         </div>
-
+        </div>
+        <!-- Fraud Manage Component under Property Info -->
+        <template if:true={section.isCaseInformationSection}>
+          <div class="slds-m-top_medium">
+            <c-fec-integration-manage-fraud-case
+              record-id={recordId}
+              nature-of-case-id={business.natureOfCase}>
+            </c-fec-integration-manage-fraud-case>
+          </div>
+        </template>
         <!-- process action -->
         <template if:true={finalShowProcessAction}>
           <div class="process-action" if:true={section.isLastSection}>

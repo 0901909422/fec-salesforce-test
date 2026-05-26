@@ -617,6 +617,14 @@ export default class Fec_CaseDetail_Customer extends LightningElement {
         this.errlst.push(REQUIRED_MSG.replace("{0}", FEC_Case_Remark_Label));
       }
     }
+    //******************Start merge with Fraud********************* */
+    if (!this._validateFraudForm(caseBusinessEle)) {
+      isAllValid = false;
+      this.isSubmitting = false;
+      this.isLoaded = true;
+      return;
+    }
+    //******************End merge with Fraud********************* */
 
     if (!isAllValid) {
       this.isSubmitting = false;
@@ -655,6 +663,13 @@ export default class Fec_CaseDetail_Customer extends LightningElement {
       // tungnm37 fix: skipSubmitRemark chỉ khi COF/GSR + Route to + Stage 2 (Apex đã xử lý remark)
       const skipSubmitRemark = isRoutingModeSubmit && isRouteToAction && !isStage1;
       console.log('[FEC_DEBUG] handleSubmit stageName=' + stageName + ' isRoutingMode=' + isRoutingModeSubmit + ' isStage1=' + isStage1 + ' action=' + currentAction + ' skipSubmitRemark=' + skipSubmitRemark);
+      
+      //******************Start merge with Fraud********************* */
+      const fraudSubmitResult = await this._submitFraudCase(caseBusinessEle, currentAction);
+      if (!fraudSubmitResult) {
+        return;
+      }
+      //******************End merge with Fraud********************* */
       const submitted = await caseBusinessEle.submit();
       if (submitted === false) {
         return;
@@ -717,4 +732,36 @@ export default class Fec_CaseDetail_Customer extends LightningElement {
       this.isSubmitting = false;
     }
   }
+
+  //******************Start merge with Fraud********************* */
+  _validateFraudForm(caseBusinessEle) {
+    console.log('[DEBUG-Fraud] caseBusinessEle:', !!caseBusinessEle, '| validateFraudForm type:', typeof caseBusinessEle?.validateFraudForm);
+    if (caseBusinessEle && typeof caseBusinessEle.validateFraudForm === 'function') {
+      if (!caseBusinessEle.validateFraudForm()) {
+        this.errlst.push('Please fill in all required Fraud Case fields.');
+        return false;
+      }
+    }
+    return true;
+  }
+
+  async _submitFraudCase(caseBusinessEle, currentAction) {
+    if (!caseBusinessEle) return true;
+    const isResolveAction = currentAction === 'Resolve' || currentAction === 'RESOLVE';
+    try {
+      if (isResolveAction && typeof caseBusinessEle.submitFraudCase === 'function') {
+        await caseBusinessEle.submitFraudCase();
+      } else if (!isResolveAction && typeof caseBusinessEle.submitFraudWithoutCallout === 'function') {
+        await caseBusinessEle.submitFraudWithoutCallout();
+      }
+      return true;
+    } catch (fraudError) {
+      console.error('[_submitFraudCase] Fraud submit error:', fraudError);
+      this.errlst.push(fraudError?.body?.message || fraudError?.message || 'Fraud case submission failed.');
+      this.isSubmitting = false;
+      this.isLoaded = true;
+      return false;
+    }
+  }
+  //******************End merge with Fraud********************* */
 }
