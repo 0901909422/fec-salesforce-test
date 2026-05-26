@@ -685,6 +685,7 @@
         <members>FEC_Case_Assignment_Logs__c.FEC_Case_Assignment_Name__c</members>
         <members>FEC_Stage_Change__c.FEC_Code__c</members>
         <members>FEC_Stage_Screen__c.FEC_Code__c</members>
+        <members>FEC_Assignment__c.FEC_Draft_Assignment_Remark__c</members>
         <name>CustomField</name>
     </types>
     <types>
