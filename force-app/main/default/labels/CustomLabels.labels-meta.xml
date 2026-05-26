@@ -7407,6 +7407,13 @@
         <value>Tự động hủy (Resolved-AutoCancelled): hủy Case mới — tiếp tục xử lý Case RL05 trước đó {0}.</value>
     </labels>
     <labels>
+        <fullName>FEC_MRC_Dup_Remark_Received_Confirm</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>RL05.02 TH1 — remark auto-cancel Case trùng khi KH đã nhận MRC</shortDescription>
+        <value>Yêu cầu được tự động hủy theo thông tin từ {0}.</value>
+    </labels>
+    <labels>
         <fullName>FEC_MRC_RL0502_Dup_Open_Case_Btn</fullName>
         <language>en_US</language>
         <protected>false</protected>
@@ -17692,7 +17699,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC MSG ERROR</shortDescription>
-        <value>Số hợp đồng/ tài khoản đã chuyển ngưng tác động thất bại</value>
+        <value>Số hợp đồng/ tài khoản đã chuyển ngưng tác động thất bại.</value>
     </labels>
     <labels>
         <fullName>FEC_Transfer_Err_Remark_Null</fullName>
