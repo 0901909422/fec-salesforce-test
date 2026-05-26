@@ -4,6 +4,8 @@
 		<members>FEC_BatchCaseCreationController</members>
 		<members>FEC_BatchCaseCreationPendingService</members>
 		<members>FEC_BatchCaseCreationScheduler</members>
+		<members>FEC_BatchCaseCreationProcessBatch</members>
+		<members>FEC_ImportedInteractionBatch</members>
 		<members>FEC_BatchCaseCreationService</members>
 		<members>FEC_BatchDataCreationController</members>
 		<members>FEC_BatchImportCommon</members>

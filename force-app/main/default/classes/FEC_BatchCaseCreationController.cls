@@ -542,6 +542,7 @@ public without sharing class FEC_BatchCaseCreationController {
             exportPayload.sourceRows,
             rowResults
         );
+        runImportedInteractionBatchAfterCaseImport();
     }
 
     public static void markBatchImportSystemFailure(Id batchRecordId, String reason) {
@@ -929,6 +930,22 @@ public without sharing class FEC_BatchCaseCreationController {
         interactionCase.Status = FEC_ConstantCommon.CASE_STATUS_CLOSED;
     }
 
+    /** Đánh dấu Interaction import — FEC_ImportedInteractionBatch xử lý sync customer sau. */
+    private static void applyBatchImportedInteractionFlag(Case interactionCase) {
+        if (interactionCase == null) {
+            return;
+        }
+        interactionCase.FEC_IsImported__c = true;
+    }
+
+    private static void runImportedInteractionBatchAfterCaseImport() {
+        try {
+            FEC_ImportedInteractionBatch.run();
+        } catch (Exception ex) {
+            // Không rollback import batch case nếu job sync không enqueue được.
+        }
+    }
+
     /**
      * Customer Case: Status từ Excel → FEC_Case_Status__c (formula) = FEC_Final_Status__c.
      * Welcome không có Case Status trên file → Resolved-Completed.
@@ -986,6 +1003,7 @@ public without sharing class FEC_BatchCaseCreationController {
             Case ic = new Case();
             ic.RecordTypeId = intRt;
             applyBatchInteractionCaseDefaults(ic);
+            applyBatchImportedInteractionFlag(ic);
             ic.Subject = truncateWelcomeSubject('Welcome Call Interaction - ', r.contractNumber);
             applyNatureFields(ic, r, maps, channelDfr, subChannelDfr);
             applyWelcomeChannelDefaults(ic, channelDfr, subChannelDfr);
@@ -1071,6 +1089,7 @@ public without sharing class FEC_BatchCaseCreationController {
             Case ic = new Case();
             ic.RecordTypeId = intRt;
             applyBatchInteractionCaseDefaults(ic);
+            applyBatchImportedInteractionFlag(ic);
             ic.Subject = truncateWelcomeSubject('Batch Interaction - ', r.contractNumber);
             applyNatureFields(ic, r, maps, channelDfr, subChannelDfr);
             interactionCases.add(ic);
