@@ -222,13 +222,24 @@ global with sharing class FEC_IntegrationSearchFraudCaseController {
         String sortField = normalizeSortBy(sortBy);
         String sortDir   = normalizeSortDirection(sortDirection);
     
+        Boolean isAccountNumberSort = (sortBy == 'AccountNumber');
+        String effectiveSortField = isAccountNumberSort ? 'CreatedDate' : sortField;
+
         List<FEC_Integration_Case__c> all =
-            executeParentQuery(parentWhere, sortField, sortDir);
+            executeParentQuery(parentWhere, effectiveSortField, isAccountNumberSort ? 'DESC' : sortDir);
+
+        // For AccountNumber sort, load all account numbers first, then sort in memory
+        if (isAccountNumberSort) {
+            Map<Id, String> allAccountMap = loadAccountNumbers(all);
+            all = sortByAccountNumber(all, allAccountMap, sortDir);
+        }
     
         List<FEC_Integration_Case__c> page =
             paginate(all, pageNum, pageSize);
     
-        Map<Id, String> accountMap = loadAccountNumbers(page);
+        Map<Id, String> accountMap = isAccountNumberSort 
+            ? loadAccountNumbers(page) 
+            : loadAccountNumbers(page);
         Map<String, Integer> childCountMap = buildChildCountMap(page);
     
         Map<String,Object> response =
@@ -444,7 +455,8 @@ global with sharing class FEC_IntegrationSearchFraudCaseController {
             'FEC_Case_Status__c',
             'FEC_Sys_Channel__c',
             'FEC_Creator_Email__c',
-            'CreatedDate'
+            'CreatedDate',
+            'AccountNumber'
         };
     
         return allowed.contains(sortBy) ? sortBy : 'CreatedDate';
@@ -579,6 +591,68 @@ global with sharing class FEC_IntegrationSearchFraudCaseController {
         }
 
         return accountNumberMap;
+    }
+
+    /**
+     * Sorts a list of fraud cases by their associated Account Number in memory.
+     *
+     * Since AccountNumber is stored in a related info record (not a direct field),
+     * it cannot be sorted via SOQL ORDER BY. This method performs an in-memory sort
+     * using a wrapper class that implements Comparable.
+     *
+     * Null account numbers are sorted to the end regardless of direction.
+     *
+     * @param cases         List of cases to sort
+     * @param accountMap    Map of Case Id → Account Number
+     * @param sortDirection ASC or DESC
+     * @return Sorted list of cases
+     */
+    private static List<FEC_Integration_Case__c> sortByAccountNumber(
+        List<FEC_Integration_Case__c> cases,
+        Map<Id, String> accountMap,
+        String sortDirection
+    ) {
+        List<AccountNumberSortWrapper> wrappers = new List<AccountNumberSortWrapper>();
+        for (FEC_Integration_Case__c c : cases) {
+            String acctNum = accountMap.containsKey(c.Id) ? accountMap.get(c.Id) : null;
+            wrappers.add(new AccountNumberSortWrapper(c, acctNum, sortDirection));
+        }
+        wrappers.sort();
+
+        List<FEC_Integration_Case__c> sorted = new List<FEC_Integration_Case__c>();
+        for (AccountNumberSortWrapper w : wrappers) {
+            sorted.add(w.record);
+        }
+        return sorted;
+    }
+
+    /**
+     * Wrapper class to enable sorting FEC_Integration_Case__c records
+     * by their associated Account Number value.
+     */
+    private class AccountNumberSortWrapper implements Comparable {
+        public FEC_Integration_Case__c record;
+        public String accountNumber;
+        public Integer directionMultiplier;
+
+        public AccountNumberSortWrapper(FEC_Integration_Case__c record, String accountNumber, String sortDirection) {
+            this.record = record;
+            this.accountNumber = accountNumber;
+            this.directionMultiplier = (sortDirection == 'ASC') ? 1 : -1;
+        }
+
+        public Integer compareTo(Object other) {
+            AccountNumberSortWrapper otherWrapper = (AccountNumberSortWrapper) other;
+            String a = this.accountNumber;
+            String b = otherWrapper.accountNumber;
+
+            // Nulls go to the end
+            if (a == null && b == null) return 0;
+            if (a == null) return 1;
+            if (b == null) return -1;
+
+            return a.compareTo(b) * directionMultiplier;
+        }
     }
       
         

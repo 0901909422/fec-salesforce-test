@@ -211,11 +211,15 @@ export default class IntegrationCreateFraudCase extends LightningElement {
             const type = p.type?.trim().toLowerCase();
             // Auto-populate value from propertyMappingValues if exists
             const mappedValue = mappingValues[p.property] || null;
+            // If property has a mapping value, mark as mapped (hidden from UI, skip validation)
+            const isMapped = mappedValue !== null && mappedValue !== '';
 
             return {
                 ...p,
                 type,
                 value: mappedValue,
+                isMapped,
+                isVisible: !isMapped,
 
                 // type flags
                 isString: type === this.fieldTypes.STRING,
@@ -414,6 +418,8 @@ export default class IntegrationCreateFraudCase extends LightningElement {
 
         const missingDynamic = this.additionalProps.filter(p => {
             if (!p.mandatory) return false;
+            // Skip validation for mapped (auto-populated) properties
+            if (p.isMapped) return false;
             if (p.isBoolean) return p.value !== true;
             if (p.isFile) return !p.fileName;
             return !p.value || p.value === '';
