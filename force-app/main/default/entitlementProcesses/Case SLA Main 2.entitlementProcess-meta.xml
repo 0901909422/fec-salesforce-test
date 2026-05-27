@@ -88,18 +88,18 @@ FEC_SubCategory__r.FEC_Code__c=&quot;RL10&quot;
         <minutesToComplete>7560</minutesToComplete>
         <timeTriggers>
             <actions>
-                <name>SLA_Warning_126h</name>
-                <type>FieldUpdate</type>
-            </actions>
-            <timeLength>0</timeLength>
-            <workflowTimeTriggerUnit>Hours</workflowTimeTriggerUnit>
-        </timeTriggers>
-        <timeTriggers>
-            <actions>
                 <name>SLA_Warning_125h</name>
                 <type>FieldUpdate</type>
             </actions>
             <timeLength>-1</timeLength>
+            <workflowTimeTriggerUnit>Hours</workflowTimeTriggerUnit>
+        </timeTriggers>
+        <timeTriggers>
+            <actions>
+                <name>SLA_Warning_126h</name>
+                <type>FieldUpdate</type>
+            </actions>
+            <timeLength>0</timeLength>
             <workflowTimeTriggerUnit>Hours</workflowTimeTriggerUnit>
         </timeTriggers>
         <useCriteriaStartTime>true</useCriteriaStartTime>
@@ -126,18 +126,18 @@ FEC_SubCategory__r.FEC_Code__c=&quot;RL10&quot;
         <minutesToComplete>10080</minutesToComplete>
         <timeTriggers>
             <actions>
-                <name>SLA_Warning_128h</name>
-                <type>FieldUpdate</type>
-            </actions>
-            <timeLength>-128</timeLength>
-            <workflowTimeTriggerUnit>Hours</workflowTimeTriggerUnit>
-        </timeTriggers>
-        <timeTriggers>
-            <actions>
                 <name>SLA_Violation_Warning_124h</name>
                 <type>FieldUpdate</type>
             </actions>
             <timeLength>-124</timeLength>
+            <workflowTimeTriggerUnit>Hours</workflowTimeTriggerUnit>
+        </timeTriggers>
+        <timeTriggers>
+            <actions>
+                <name>SLA_Warning_128h</name>
+                <type>FieldUpdate</type>
+            </actions>
+            <timeLength>-128</timeLength>
             <workflowTimeTriggerUnit>Hours</workflowTimeTriggerUnit>
         </timeTriggers>
         <useCriteriaStartTime>true</useCriteriaStartTime>
@@ -182,18 +182,18 @@ FEC_SubCategory__r.FEC_Code__c=&quot;FU01&quot;
         <minutesToComplete>10080</minutesToComplete>
         <timeTriggers>
             <actions>
-                <name>SLA_Violation_Warning_164h_2</name>
-                <type>FieldUpdate</type>
-            </actions>
-            <timeLength>-4</timeLength>
-            <workflowTimeTriggerUnit>Hours</workflowTimeTriggerUnit>
-        </timeTriggers>
-        <timeTriggers>
-            <actions>
                 <name>SLA_Warning_144h</name>
                 <type>FieldUpdate</type>
             </actions>
             <timeLength>-24</timeLength>
+            <workflowTimeTriggerUnit>Hours</workflowTimeTriggerUnit>
+        </timeTriggers>
+        <timeTriggers>
+            <actions>
+                <name>SLA_Violation_Warning_164h_2</name>
+                <type>FieldUpdate</type>
+            </actions>
+            <timeLength>-4</timeLength>
             <workflowTimeTriggerUnit>Hours</workflowTimeTriggerUnit>
         </timeTriggers>
         <useCriteriaStartTime>true</useCriteriaStartTime>
