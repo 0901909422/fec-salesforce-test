@@ -219,6 +219,7 @@
         <members>FEC_BlockCodeRoutingService</members>
         <members>FEC_CardClosureRefundController</members>
         <members>FEC_CardInfoController</members>
+        <members>FEC_CardReplacementAddressController</members>
         <members>FEC_CaseManagerListService</members>
         <members>FEC_CaseMasterDataHelper</members>
         <members>FEC_ContractClosureController</members>
@@ -865,6 +866,7 @@
         <members>fec_DownloadReport</members>
         <members>fec_AccountOrContractPicklistCustomerCase</members>
         <members>fec_CardClosureRefundForm</members>
+        <members>fec_CardReplacementAddress</members>
         <members>fec_CaseNote</members>
         <members>fec_ContractClosureForm</members>
         <members>fec_CustomerCaseExecuteAction</members>
