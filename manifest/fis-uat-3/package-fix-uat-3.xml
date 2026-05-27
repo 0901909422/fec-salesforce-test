@@ -522,6 +522,7 @@
 		<members>FEC_BCH_ResultHdr_Errors</members>
 		<members>FEC_BCH_ResultHdr_Status</members>
 		<members>FEC_Channel_Config_Invalid_Selection</members>
+		<members>FEC_Hold_Case_Edit_Succes</members>
 		<name>CustomLabel</name>
 	</types>
     <types>
