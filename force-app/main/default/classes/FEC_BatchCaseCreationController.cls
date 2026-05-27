@@ -389,48 +389,9 @@ public without sharing class FEC_BatchCaseCreationController {
                 return out;
             }
 
-            Savepoint importSavepoint = Database.setSavepoint();
-            if (isWelcomeFlow) {
-                insertWelcomeCallCases(parsed, rowResults);
-            } else {
-                insertStandardCasesWithInteraction(parsed, rowResults);
-            }
-
-            failedCount = countFailedRowResults(rowResults);
-            if (failedCount > 0) {
-                Database.rollback(importSavepoint);
-                markRowResultsNotImportedAfterRollback(rowResults);
-                markAllRowResultsFailedForBatchNoImport(rowResults);
-                batchFailureReason = String.format(
-                    System.Label.FEC_Batch_Import_Invalid_Row_Count,
-                    new List<String>{ String.valueOf(failedCount) }
-                );
-                applyBatchImportFailureOutcome(
-                    batchFieldMap,
-                    batchRow,
-                    totalCount,
-                    failedCount,
-                    batchFailureReason,
-                    fileName,
-                    rowResults
-                );
-                out.success = false;
-                out.message = batchFailureReason;
-                out.batchRecordId = (Id) batchRow.get('Id');
-                out.contentDocumentId = insertedCv.ContentDocumentId;
-                out.status = 'Failure';
-                out.resultRowsJson = JSON.serialize(rowResults);
-                return out;
-            }
-
-            enrichRowResultsFromInsertedCases(rowResults);
-            prepareCaseRowResultsForExport(rowResults);
-            runImportedInteractionBatchAfterCaseImport();
-
-            FEC_BatchImportCommon.putIfFieldExists(batchFieldMap, batchRow, new List<String>{ 'FEC_Status__c' }, 'Processed');
-            FEC_BatchImportCommon.putIfFieldExists(batchFieldMap, batchRow, new List<String>{ 'FEC_Result__c' }, 'Result');
+            // Validation OK — giữ Uploaded; tạo Case qua scheduler (00:00) hoặc Process Pending.
             FEC_BatchImportCommon.putIfFieldExists(batchFieldMap, batchRow, new List<String>{ 'FEC_Total_Records__c', 'FEC_Total_Records_Count__c' }, totalCount);
-            FEC_BatchImportCommon.putIfFieldExists(batchFieldMap, batchRow, new List<String>{ 'FEC_Total_Success_Records__c' }, totalCount);
+            FEC_BatchImportCommon.putIfFieldExists(batchFieldMap, batchRow, new List<String>{ 'FEC_Total_Success_Records__c' }, 0);
             FEC_BatchImportCommon.putIfFieldExists(batchFieldMap, batchRow, new List<String>{ 'FEC_Total_Failed_Records__c' }, 0);
             FEC_BatchImportCommon.putIfFieldExists(batchFieldMap, batchRow, new List<String>{ 'FEC_Failure_Reason__c' }, '');
             update batchRow;
@@ -439,8 +400,7 @@ public without sharing class FEC_BatchCaseCreationController {
             out.message = System.Label.FEC_Msg_Process_End_Of_Day;
             out.batchRecordId = batchId;
             out.contentDocumentId = insertedCv.ContentDocumentId;
-            out.status = 'Uploaded';
-            enqueuePendingImport(batchId);
+            out.status = FEC_ConstantCommon.UPLOADED_STATUS;
             return out;
         } catch (Exception ex) {
             if (batchRow != null && batchRow.get('Id') != null) {
@@ -575,6 +535,9 @@ public without sharing class FEC_BatchCaseCreationController {
 
         enrichRowResultsFromInsertedCases(rowResults);
         prepareCaseRowResultsForExport(rowResults);
+        runImportedInteractionBatchAfterCaseImport();
+
+        saveBatchImportResultFile(batchRecordId, fileName, null, null, rowResults);
 
         FEC_BatchImportCommon.putIfFieldExists(batchFieldMap, batchRow, new List<String>{ 'FEC_Status__c' }, 'Processed');
         FEC_BatchImportCommon.putIfFieldExists(batchFieldMap, batchRow, new List<String>{ 'FEC_Result__c' }, 'Result');
@@ -588,16 +551,6 @@ public without sharing class FEC_BatchCaseCreationController {
         FEC_BatchImportCommon.putIfFieldExists(batchFieldMap, batchRow, new List<String>{ 'FEC_Total_Failed_Records__c' }, 0);
         FEC_BatchImportCommon.putIfFieldExists(batchFieldMap, batchRow, new List<String>{ 'FEC_Failure_Reason__c' }, '');
         update batchRow;
-        FEC_BatchCaseCreationPendingService.ImportPayload exportPayload = FEC_BatchCaseCreationPendingService.loadPendingImportPayload(
-            batchRecordId
-        );
-        saveCaseImportResultCsv(
-            batchRecordId,
-            fileName,
-            exportPayload.sourceHeaders,
-            exportPayload.sourceRows,
-            rowResults
-        );
     }
 
     public static void markBatchImportSystemFailure(Id batchRecordId, String reason) {
@@ -2538,6 +2491,75 @@ public without sharing class FEC_BatchCaseCreationController {
         update batchRow;
     }
 
+    private static void saveBatchImportResultFile(
+        Id batchRecordId,
+        String sourceFileName,
+        String sourceHeadersJson,
+        String sourceRowsJson,
+        List<CaseRowResult> rowResults
+    ) {
+        if (batchRecordId == null || rowResults == null || rowResults.isEmpty()) {
+            return;
+        }
+        List<String> exportHeaders = new List<String>();
+        List<List<String>> exportSourceRows = new List<List<String>>();
+        FEC_BatchCaseCreationPendingService.ImportPayload exportPayload = FEC_BatchCaseCreationPendingService.loadPendingImportPayload(
+            batchRecordId
+        );
+        if (exportPayload != null && exportPayload.sourceHeaders != null && !exportPayload.sourceHeaders.isEmpty()) {
+            exportHeaders = exportPayload.sourceHeaders;
+            exportSourceRows = exportPayload.sourceRows != null
+                ? exportPayload.sourceRows
+                : new List<List<String>>();
+        } else {
+            exportHeaders = deserializeImportStringList(sourceHeadersJson);
+            exportSourceRows = deserializeImportSourceRows(sourceRowsJson);
+        }
+        saveCaseImportResultCsv(
+            batchRecordId,
+            sourceFileName,
+            exportHeaders,
+            exportSourceRows,
+            rowResults
+        );
+    }
+
+    private static List<String> deserializeImportStringList(String jsonText) {
+        List<String> output = new List<String>();
+        if (String.isBlank(jsonText)) {
+            return output;
+        }
+        Object parsed = JSON.deserializeUntyped(jsonText);
+        if (!(parsed instanceof List<Object>)) {
+            return output;
+        }
+        for (Object item : (List<Object>) parsed) {
+            output.add(item == null ? '' : String.valueOf(item));
+        }
+        return output;
+    }
+
+    private static List<List<String>> deserializeImportSourceRows(String jsonText) {
+        List<List<String>> output = new List<List<String>>();
+        if (String.isBlank(jsonText)) {
+            return output;
+        }
+        Object parsed = JSON.deserializeUntyped(jsonText);
+        if (!(parsed instanceof List<Object>)) {
+            return output;
+        }
+        for (Object rowObj : (List<Object>) parsed) {
+            List<String> row = new List<String>();
+            if (rowObj instanceof List<Object>) {
+                for (Object cell : (List<Object>) rowObj) {
+                    row.add(cell == null ? '' : String.valueOf(cell));
+                }
+            }
+            output.add(row);
+        }
+        return output;
+    }
+
     /** File result = file import (header + dòng gốc) + 4 cột __Status / __Interaction ID / __Case ID / __Errors. */
     private static void saveCaseImportResultCsv(
         Id batchRecordId,
@@ -2551,7 +2573,13 @@ public without sharing class FEC_BatchCaseCreationController {
         }
         List<String> exportHeaders = trimResultSourceHeaders(sourceHeaders);
         if (exportHeaders.isEmpty()) {
-            return;
+            exportHeaders = new List<String>{ 'Import Row' };
+            if (sourceRows == null || sourceRows.isEmpty()) {
+                sourceRows = new List<List<String>>();
+                for (Integer i = 0; i < rowResults.size(); i++) {
+                    sourceRows.add(new List<String>{ String.valueOf(i + 1) });
+                }
+            }
         }
         try {
             List<String> lines = new List<String>();

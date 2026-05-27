@@ -616,11 +616,8 @@ export default class Fec_BatchCaseCreation extends LightningElement {
       );
       const importStatus = (result?.status || "").trim();
       const isDeferredUpload = importStatus === "Uploaded";
-      if (
-        result?.batchRecordId &&
-        result?.resultRowsJson &&
-        !isDeferredUpload
-      ) {
+      // Server tạo CSV result; client xlsx là fallback khi có resultRowsJson (Processed/Failure).
+      if (result?.batchRecordId && result?.resultRowsJson) {
         try {
           await this.saveResultWorkbook(
             result.batchRecordId,
