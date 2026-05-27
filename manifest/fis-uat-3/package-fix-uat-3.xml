@@ -312,6 +312,7 @@
 		<members>FEC_Assignment__c.FEC_Submitted_On__c</members>
 		<members>FEC_Assignment__c.FEC_Assignment_Name__c</members>
         <members>FEC_Assignment__c.FEC_Draft_Assignment_Remark__c</members>
+        <members>FEC_Assignment__c.FEC_Recently_Auto_Case_Assignment__c</members>
         <members>FEC_Address_Info__c.FEC_Parent_Address__c</members>
         <members>FEC_Additional_Info__c.FEC_Customer_Service_Staff_Type__c</members>
 		<members>FEC_Action_Button__c.FEC_Code__c</members>
@@ -715,6 +716,7 @@
 		<members>FEC_Assignment_Set_User_Role</members>
 		<members>Assign_Entitlement_to_Case</members>
 		<members>FEC_DownloadReportFlow</members>
+        <members>FEC_Mark_Complete_for_Milestone</members>
 		<name>Flow</name>
 	</types>
     <types>
