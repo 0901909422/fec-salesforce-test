@@ -930,13 +930,16 @@ public without sharing class FEC_CaseBusinessService {
           );
         }
 
+        Map<String, String> assignmentFieldEditableGroups = FEC_CaseMasterDataHelper.collectAssignmentFieldEditableGroups(
+          masterDatalst
+        );
+        masterDatalst = FEC_CaseMasterDataHelper.deduplicateMasterDataRowsByFieldApiName(
+          masterDatalst
+        );
         masterDatalst = FEC_CaseMasterDataHelper.removeMasterDataRowsByHiddenAssignmentFieldApis(
           masterDatalst,
           hasCaseAssignment,
           currentUser.FEC_User_Group__c
-        );
-        Map<String, String> assignmentFieldEditableGroups = FEC_CaseMasterDataHelper.collectAssignmentFieldEditableGroups(
-          masterDatalst
         );
 
         for (SObject item : masterDatalst) {
