@@ -868,6 +868,7 @@
         <members>fec_CaseNote</members>
         <members>fec_ContractClosureForm</members>
         <members>fec_CustomerCaseExecuteAction</members>
+        <members>fec_Il10DeliveryForm</members>
         <members>fec_IPPClosureForm</members>
         <members>fec_IPPDetails</members>
         <members>fec_MRC</members>

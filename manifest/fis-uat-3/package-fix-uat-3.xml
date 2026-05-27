@@ -199,6 +199,7 @@
 	    <members>fec_CaseEditNOC</members>
 	    <members>fec_CaseModePublisher</members>
 	    <members>fec_CaseRemarks</members>
+	    <members>fec_Il10DeliveryForm</members>
 	    <members>fec_IPPClosureForm</members>
 	    <members>fec_AssignmentExecuteAction</members>
 	    <members>fec_AssignmentList</members>
