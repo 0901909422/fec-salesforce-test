@@ -15982,7 +15982,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>NFU Modal Save Error</shortDescription>
-        <value>Vui lòng chọn ít nhất 1 NFU Code.</value>
+        <value>Chỉ được chọn duy nhất 1 giá trị NFU Code</value>
     </labels>
     <labels>
         <fullName>FEC_NFU_Reason_VN</fullName>
