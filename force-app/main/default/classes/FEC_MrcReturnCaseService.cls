@@ -1335,13 +1335,17 @@ public without sharing class FEC_MrcReturnCaseService {
         if (errorlst.isEmpty()) {
             return new FEC_CaseBusinessService.Error();
         }
-        return new FEC_CaseBusinessService.Error(
+        FEC_CaseBusinessService.Error mrcErr = new FEC_CaseBusinessService.Error(
             System.Label.FEC_MRC_Return_Case_Info_Block_Title,
             errorlst
         );
+        if (isRl0503DpdOnlyValidation(mrcErr, subCodeCode)) {
+            mrcErr.label = System.Label.FEC_MRC_Return_RL0503_DPD_Block_Title;
+        }
+        return mrcErr;
     }
 
-    /** Chỉ cảnh báo DPD RL05.03 — không chặn master data / fec_ContractClosureForm. */
+    /** RL05.03 DPD ≥ 15 — chỉ một dòng lý do DPD (dùng tiêu đề block riêng). */
     public static Boolean isRl0503DpdOnlyValidation(
         FEC_CaseBusinessService.Error mrcErr,
         String subCodeCode

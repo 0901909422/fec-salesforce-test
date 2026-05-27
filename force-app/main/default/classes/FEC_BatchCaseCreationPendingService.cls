@@ -135,15 +135,35 @@ public without sharing class FEC_BatchCaseCreationPendingService {
     if (rawRows == null) {
       return out;
     }
-    for (Object rowObj : rawRows) {
-      List<String> row = new List<String>();
-      if (rowObj instanceof List<Object>) {
-        for (Object cellObj : (List<Object>) rowObj) {
-          row.add(cellObj == null ? '' : String.valueOf(cellObj));
+        for (Object rowObj : rawRows) {
+            List<String> row = new List<String>();
+            if (rowObj instanceof List<Object>) {
+                for (Object cellObj : (List<Object>) rowObj) {
+                    row.add(formatImportPayloadCellValue(cellObj));
+                }
+            }
+            out.add(row);
         }
-      }
-      out.add(row);
+        return out;
     }
-    return out;
-  }
+
+    /** JSON có thể deserialize số → tránh scientific notation khi export result. */
+    private static String formatImportPayloadCellValue(Object cellObj) {
+        if (cellObj == null) {
+            return '';
+        }
+        if (cellObj instanceof String) {
+            return (String) cellObj;
+        }
+        if (cellObj instanceof Long || cellObj instanceof Integer) {
+            return String.valueOf(cellObj);
+        }
+        if (cellObj instanceof Decimal) {
+            return ((Decimal) cellObj).toPlainString();
+        }
+        if (cellObj instanceof Double) {
+            return Decimal.valueOf((Double) cellObj).toPlainString();
+        }
+        return String.valueOf(cellObj);
+    }
 }

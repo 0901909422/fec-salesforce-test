@@ -73,6 +73,7 @@ public without sharing class FEC_NotificationService {
             }
         }
         Map<String, Id> queueLookup = buildQueueLookupMap(routedQueueIds);
+        Map<Id, Group> queueById = loadQueuesById(routedQueueIds);
 
         Map<Id, Case> caseStageById = routedCaseIds.isEmpty()
             ? new Map<Id, Case>()
@@ -127,7 +128,8 @@ public without sharing class FEC_NotificationService {
             System.debug('--- case=' + c.Id + ' OwnerId=' + c.OwnerId + ' candidates=' + eligibleNotifications.size());
             for (FEC_Notification__c n : eligibleNotifications) {
                 String assignedQueueVal = String.isNotBlank(n.FEC_Assigned_to_Queue__c) ? n.FEC_Assigned_to_Queue__c.trim() : null;
-                Boolean queueOk = assignedQueueVal != null && queueLookup.containsKey(assignedQueueVal) && queueLookup.get(assignedQueueVal) == c.OwnerId;
+                //tungnm37 2026-05-27 16:40 - Ưu tiên match queue theo OwnerId hiện tại, đồng thời fallback được khi Service Case Owner đang lưu queue Name thay vì DeveloperName
+                Boolean queueOk = matchesAssignedQueue(assignedQueueVal, c, queueLookup, queueById);
                 Case cNature = caseStageById.get(c.Id);
                 Boolean natureOk = matchesNatureOfCase(cNature != null ? cNature : c, n);
                 Boolean scheduleOk = FEC_CommonUltils.isWithinSchedule(nowTime, n.FEC_Schedule_Start_Time__c, n.FEC_Schedule_End_Time__c);
@@ -272,6 +274,7 @@ public without sharing class FEC_NotificationService {
             }
         }
         Map<String, Id> queueLookupSf = buildQueueLookupMap(routedQueueIdsSf);
+        Map<Id, Group> queueByIdSf = loadQueuesById(routedQueueIdsSf);
 
         Map<Id, Case> caseStageByIdSf = routedCaseIdsSf.isEmpty()
             ? new Map<Id, Case>()
@@ -320,7 +323,8 @@ public without sharing class FEC_NotificationService {
         for (Case c : routedCases) {
             for (FEC_Notification__c n : eligibleNotifications) {
                 String assignedQueueValSf = String.isNotBlank(n.FEC_Assigned_to_Queue__c) ? n.FEC_Assigned_to_Queue__c.trim() : null;
-                Boolean queueOkSf = assignedQueueValSf != null && queueLookupSf.containsKey(assignedQueueValSf) && queueLookupSf.get(assignedQueueValSf) == c.OwnerId;
+                //tungnm37 2026-05-27 16:40 - SF App dùng cùng rule match queue để hỗ trợ cả OwnerId và Service Case Owner đang lưu queue Name
+                Boolean queueOkSf = matchesAssignedQueue(assignedQueueValSf, c, queueLookupSf, queueByIdSf);
                 Case cNatureSf = caseStageByIdSf.get(c.Id);
                 if (!queueOkSf) continue;
                 if (!matchesNatureOfCase(cNatureSf != null ? cNatureSf : c, n)) continue;
@@ -402,21 +406,68 @@ public without sharing class FEC_NotificationService {
     }
 
     /**
-     * Build lookup map: cả Queue ID (15/18 char) và DeveloperName → Queue Id
+     * Build lookup map: cả Queue ID (15/18 char), DeveloperName và Name → Queue Id
      * Để match FEC_Assigned_to_Queue__c dù lưu dạng nào
      */
     private static Map<String, Id> buildQueueLookupMap(Set<Id> queueIds) {
         Map<String, Id> result = new Map<String, Id>();
         if (queueIds.isEmpty()) return result;
-        for (Group g : [SELECT Id, DeveloperName FROM Group WHERE Id IN :queueIds AND Type = :FEC_ConstantCommon.GROUP_TYPE_QUEUE]) {
-            // Match by DeveloperName
-            result.put(g.DeveloperName, g.Id);
-            // Match by Id (15 char)
+        for (Group g : [SELECT Id, DeveloperName, Name FROM Group WHERE Id IN :queueIds AND Type = :FEC_ConstantCommon.GROUP_TYPE_QUEUE]) {
+            if (String.isNotBlank(g.DeveloperName)) result.put(g.DeveloperName, g.Id);
+            if (String.isNotBlank(g.Name)) result.put(g.Name, g.Id);
             result.put(String.valueOf(g.Id).substring(0, 15), g.Id);
-            // Match by Id (18 char)
             result.put(String.valueOf(g.Id), g.Id);
         }
         return result;
+    }
+
+    //tungnm37 2026-05-27 16:40 - Load queue đầy đủ Name/DeveloperName để fallback khi Service Case Owner lưu khác format
+    private static Map<Id, Group> loadQueuesById(Set<Id> queueIds) {
+        if (queueIds.isEmpty()) return new Map<Id, Group>();
+        return new Map<Id, Group>([
+            SELECT Id, DeveloperName, Name
+            FROM Group
+            WHERE Id IN :queueIds
+              AND Type = :FEC_ConstantCommon.GROUP_TYPE_QUEUE
+        ]);
+    }
+
+    //tungnm37 2026-05-27 16:40 - Match queue cấu hình với queue hiện tại của Case theo OwnerId, Queue Name, DeveloperName và Service Case Owner
+    private static Boolean matchesAssignedQueue(String assignedQueueVal, Case c, Map<String, Id> queueLookup, Map<Id, Group> queueById) {
+        if (String.isBlank(assignedQueueVal) || c == null || c.OwnerId == null) return false;
+
+        String normalizedAssignedQueue = assignedQueueVal.trim().toLowerCase();
+        Id configuredQueueId = queueLookup != null ? queueLookup.get(assignedQueueVal.trim()) : null;
+        if (configuredQueueId != null && configuredQueueId == c.OwnerId) {
+            return true;
+        }
+
+        Group currentQueue = queueById != null ? queueById.get(c.OwnerId) : null;
+        if (currentQueue != null) {
+            if (String.isNotBlank(currentQueue.DeveloperName) && currentQueue.DeveloperName.trim().toLowerCase() == normalizedAssignedQueue) {
+                return true;
+            }
+            if (String.isNotBlank(currentQueue.Name) && currentQueue.Name.trim().toLowerCase() == normalizedAssignedQueue) {
+                return true;
+            }
+        }
+
+        String serviceOwner = (String) c.get('FEC_Service_Case_Owner__c');
+        if (String.isNotBlank(serviceOwner)) {
+            String normalizedServiceOwner = serviceOwner.trim().toLowerCase();
+            if (normalizedServiceOwner == normalizedAssignedQueue) {
+                return true;
+            }
+            if (currentQueue != null) {
+                if (String.isNotBlank(currentQueue.DeveloperName) && normalizedServiceOwner == currentQueue.DeveloperName.trim().toLowerCase()) {
+                    return true;
+                }
+                if (String.isNotBlank(currentQueue.Name) && normalizedServiceOwner == currentQueue.Name.trim().toLowerCase()) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     private static Map<Id, List<FEC_Notification_Template_Channel__c>> loadTemplateChannels(List<FEC_Notification__c> notifications) {

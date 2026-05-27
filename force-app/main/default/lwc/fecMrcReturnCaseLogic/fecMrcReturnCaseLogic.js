@@ -198,9 +198,6 @@ export function isMrcRl05CaseInformationBlocked(business) {
   if (business?.mrcRl05CaseInfoBlocked === true) {
     return true;
   }
-  if (business?.mrcRl05CaseInfoWarningOnly === true) {
-    return false;
-  }
   return !!business?.sectionlst?.some(
     (section) =>
       section.name === SECTION_NAME_CASE_INFORMATION &&
