@@ -673,6 +673,17 @@ public with sharing class FEC_ConstantCommon {
     public static final String RD_ASSESSMENT_QUEUE_CS_CUSTOMER_CARE = QUEUE_DQ_CS_CUSTOMER_CARE_NAME;
     /** FEC_Next_Queue__c kỳ vọng cùng team CP (đóng không cần tờ trình). */
     public static final String RD_ASSESSMENT_QUEUE_CONTRACT_PROCESSING = QUEUE_DQ_CONTRACT_PROCESSING_NAME;
+
+    /** MRC RL05 / Route to — FEC_Stage_Change__c.FEC_Team_User_Group__c */
+    public static final String STAGE_CHANGE_TEAM_USER_GROUP_CP = RD_ASSESSMENT_TEAM_CP;
+    public static final String STAGE_CHANGE_TEAM_USER_GROUP_PM = 'PM';
+    public static final String STAGE_CHANGE_TEAM_USER_GROUP_SP = RD_ASSESSMENT_TEAM_SP;
+    public static final String STAGE_CHANGE_TEAM_USER_GROUP_F2F = CHANNEL_F2F_NAME;
+    /** Fragment label (uppercase) khi map từ UI / picklist sang team code */
+    public static final String STAGE_CHANGE_TEAM_LABEL_CONTRACT_PROCESS = 'CONTRACT PROCESS';
+    public static final String STAGE_CHANGE_TEAM_LABEL_PAYMENT = 'PAYMENT';
+    public static final String STAGE_CHANGE_TEAM_LABEL_CS_SUPPORT = 'CS SUPPORT';
+    public static final String STAGE_CHANGE_TEAM_LABEL_OFFICE_BASED = 'OFFICE BASED';
     
     public static final String TEAM_CS_OTHER = 'Other CS';
     public static final String TEAM_OTHER = 'OTHER';
@@ -953,4 +964,11 @@ public with sharing class FEC_ConstantCommon {
     };
     public static final String FEC_SUB_CATEGORY = 'FEC_Sub_Category__c';
     public static final String FEC_SUB_CODE = 'FEC_Sub_Code__c';
+    public static final String INPUT_SEPARATOR_REGEX ='[,;\\n\\r]+';
+    public static final String CC_CD ='CCCD';
+    public static final String CM_ND ='CMND';
+    public static final String PASS_PORT ='PASSPORT';
+    public static final String INPUT_SEPARATOR_REGEX_12 =  '^\\d{12}$';
+    public static final String INPUT_SEPARATOR_REGEX_9 =  '^\\d{9}$';
+    public static final String INPUT_SEPARATOR_REGEX_7 = '^[A-Z]\\d{7}$'; 
 }
