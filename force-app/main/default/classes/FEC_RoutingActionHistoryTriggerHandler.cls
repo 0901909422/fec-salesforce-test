@@ -50,6 +50,9 @@ public without sharing class FEC_RoutingActionHistoryTriggerHandler {
 
     try {
       handleUpdateCaseTeamsOnInsert(newRecords);
+      if (FEC_MrcDuplicateCaseService.isSuppressRoutingHistoryTriggerSideEffects()) {
+        return;
+      }
       FEC_CaseManagerListService.applyAfterRoutingHistoryInsert(newRecords);
       // SOQL 101: TAT Full Process enqueue Queueable — không sync Case đồng bộ trong trigger.
       FEC_RoutingHistTatSvc.queueCaseFullProcessTatAfterSave(newRecords);
