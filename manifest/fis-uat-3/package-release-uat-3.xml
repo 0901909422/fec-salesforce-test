@@ -314,6 +314,7 @@
         <members>FEC_Sub_Category__c.FEC_Do_Not_Bother__c</members>
         <members>FEC_Sub_Code__c.FEC_Do_Not_Bother__c</members>
         <members>Case.FEC_Complaint_Source__c</members>
+        <members>Case.FEC_User_ID__c</members>
         <members>FEC_Additional_Info__c.FEC_Active_Loan_Or_Disbursed__c</members>
         <members>FEC_Additional_Info__c.FEC_Address_Or_Email__c</members>
         <members>FEC_Additional_Info__c.FEC_Adjustment_Method__c</members>
