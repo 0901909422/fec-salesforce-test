@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>FEC_Contract_Processing_MRC_Assessment__c</fullName>
+    <label>Contract Processing MRC Assessment</label>
+    <required>false</required>
+    <trackFeedHistory>false</trackFeedHistory>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>Can return MRC</fullName>
+                <default>false</default>
+                <label>Can return MRC</label>
+            </value>
+            <value>
+                <fullName>Cannot return MRC</fullName>
+                <default>false</default>
+                <label>Cannot return MRC</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>

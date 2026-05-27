@@ -166,6 +166,8 @@
         <members>FEC_BatchCaseHandlingExportService</members>
         <members>FEC_BatchCaseHandlingExportRow</members>
         <members>FEC_BCH_TemplateExportService</members>
+        <members>FEC_BCH_IncorrectPaymentTemplateWriter</members>
+        <members>FEC_BCH_ExportPropertyService</members>
         <members>FEC_SubProcessService</members>
         <members>Fec_HoldCaseConfigurationController</members>
         <members>FEC_ChannelFunctionService</members>
@@ -173,6 +175,7 @@
 	    <members>FEC_NocRemovePhoneInheritanceHandler</members>
 	    <members>FEC_NocRemovePhoneInheritanceHandlerTest</members>
         <members>FEC_SalesChannelFromApplicationService</members>
+        <members>FEC_SalesLogicSelector</members>
         <members>FEC_CustomerHistoryTriggerHandler</members>
         <members>FEC_CMSRewardRedeemService</members>
 		<members>FEC_CMSRewardRedeemServiceTest</members>
@@ -654,6 +657,7 @@
         <members>Case.FEC_Is_PIN_Reset_Success__c</members>
         <members>Case.FEC_CMS_Phone__c</members>
 		<members>Case.FEC_Contract_Processing_Assessment_Type__c</members>
+		<members>Case.FEC_Contract_Processing_MRC_Assessment__c</members>
 		<members>Case.FEC_Customer_Confirmation__c</members>
 		<members>Case.FEC_MRC_Request_Handling_Option__c</members>
 		<members>Case.FEC_Redeemed_Points__c</members>
@@ -672,6 +676,7 @@
         <members>FEC_Sales_Logic__c.FEC_CC_Code__c</members>
 		<members>FEC_Sales_Logic__c.FEC_DSA_Code__c</members>
 		<members>FEC_Sales_Logic__c.FEC_TSA_Code__c</members>
+		<members>FEC_Sales_Logic__c.FEC_Sequence__c</members>
 		<members>FEC_Assignment__c.FEC_Assignment_Name__c</members>
         <members>Case.FEC_NFU_Description_Result__c</members>
         <members>FEC_Nature_of_Case__c.FEC_Channel__c</members>
@@ -873,6 +878,7 @@
         <members>fec_PaymentHistoryAcount</members>
         <members>fec_PinResetView</members>
         <members>fec_RepaymentSchedulePaymentHistory</members>
+        <members>fec_StatementsAccount</members>
         <members>fec_StatementsAccountTabView</members>
         <members>fec_TransactionsAccount</members>
         <members>fec_TransactionsAccountTabView</members>
@@ -1591,6 +1597,7 @@
     <types>
         <members>Case SLA Main 1</members>
         <members>Case SLA Main 2</members>
+        <members>Case SLA Main 3</members>
         <name>EntitlementProcess</name>
     </types>
     <types>
@@ -1598,15 +1605,32 @@
         <name>Workflow</name>
     </types>
     <types>
-        <members>Case.Case24h</members>
-        <members>Case.ChangePriorityToHigh</members>
+        <members>Case.SLA_Violating_Warning_44h</members>
+        <members>Case.SLA_Violation_Warning_124h</members>
+        <members>Case.SLA_Violation_Warning_164h</members>
+        <members>Case.SLA_Violation_Warning_76h</members>
+        <members>Case.SLA_Warning_119h</members>
+        <members>Case.SLA_Warning_120h</members>
+        <members>Case.SLA_Warning_125h</members>
+        <members>Case.SLA_Warning_126h</members>
+        <members>Case.SLA_Warning_128h</members>
+        <members>Case.SLA_Warning_144h</members>
+        <members>Case.SLA_Warning_15840h</members>
+        <members>Case.SLA_Warning_15880h</members>
+        <members>Case.SLA_Warning_15932_2h</members>
+        <members>Case.SLA_Warning_15932h</members>
+        <members>Case.SLA_Warning_15936h</members>
+        <members>Case.SLA_Warning_15940h</members>
+        <members>Case.SLA_Warning_15960h</members>
+        <members>Case.SLA_Warning_15976h</members>
+        <members>Case.SLA_Warning_167h</members>
+        <members>Case.SLA_Warning_168h</members>
+        <members>Case.SLA_Warning_48h</members>
+        <members>Case.SLA_Warning_80h</members>
         <members>Case.Update_Case_1104h_Violating</members>
         <members>Case.Update_Case_1104h_Warning</members>
         <members>Case.Update_Case_1872h_Violating</members>
         <members>Case.Update_Case_1872h_Warning</members>
-        <members>Case.Update_Case_24h</members>
-        <members>Case.Update_Case_24h_SLA_Violating</members>
-        <members>Case.Update_Case_24h_SLA_Warning</members>
         <members>Case.Update_Case_24h_Violating</members>
         <members>Case.Update_Case_24h_Warning</members>
         <members>Case.Update_Case_336h_Violating</members>
@@ -1614,34 +1638,11 @@
         <members>Case.Update_Case_360h_Violating</members>
         <members>Case.Update_Case_360h_Warning</members>
         <members>Case.Update_Case_48h_1</members>
-        <members>Case.Update_Case_48h_1_SLA_Violating</members>
-        <members>Case.Update_Case_48h_1_SLA_Warning</members>
-        <members>Case.Update_Case_48h_1_SLA_Warning_1</members>
         <members>Case.Update_Case_48h_1_Violating</members>
-        <members>Case.Update_Case_48h_2_SLA_Violating_1</members>
-        <members>Case.Update_Case_48h_2_Violating</members>
-        <members>Case.Update_Case_48h_2_Violating_1</members>
-        <members>Case.Update_Case_48h_2_Warning</members>
         <members>Case.Update_Case_72h_Violating</members>
         <members>Case.Update_Case_72h_Warning</members>
         <members>Case.Update_Case_96h_Violating</members>
         <members>Case.Update_Case_96h_Warning</members>
-        <members>Case.SLA_Violating_Warning_44h</members>
-        <members>Case.SLA_Violation_Warning_124h</members>
-        <members>Case.SLA_Violation_Warning_164h</members>
-        <members>Case.SLA_Violation_Warning_76h</members>
-        <members>Case.SLA_Warning_0h</members>
-        <members>Case.SLA_Warning_119h</members>
-        <members>Case.SLA_Warning_120h</members>
-        <members>Case.SLA_Warning_125h</members>
-        <members>Case.SLA_Warning_126h</members>
-        <members>Case.SLA_Warning_128h</members>
-        <members>Case.SLA_Warning_143h</members>
-        <members>Case.SLA_Warning_144h</members>
-        <members>Case.SLA_Warning_167h</members>
-        <members>Case.SLA_Warning_168h</members>
-        <members>Case.SLA_Warning_48h</members>
-        <members>Case.SLA_Warning_80h</members>
         <name>WorkflowFieldUpdate</name>
     </types>
 	<types>

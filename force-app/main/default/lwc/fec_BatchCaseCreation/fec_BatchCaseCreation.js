@@ -410,7 +410,7 @@ export default class Fec_BatchCaseCreation extends LightningElement {
     if (idxContract < 0) {
       missing.push("Contract Number hoặc Account/ Contract Number");
     }
-    if (idxPhone < 0) {
+    if (idxPhone < 0 && fileType === IMPORT_FILE_TYPE_WELCOME) {
       missing.push("Interaction Phone");
     }
     if (idxProduct < 0) {
@@ -425,7 +425,7 @@ export default class Fec_BatchCaseCreation extends LightningElement {
     if (idxSubCode < 0) {
       missing.push("Sub Code");
     }
-    if (idxCaseStatus < 0 && fileType !== IMPORT_FILE_TYPE_WELCOME) {
+    if (idxCaseStatus < 0) {
       missing.push("Case Status");
     }
     if (extended) {

@@ -111,15 +111,7 @@ public without sharing class FEC_AssignmentCaseShareService {
             return;
         }
 
-        if (caseOwnerId == UserInfo.getUserId()) {
-            recordInsertResults(Database.insert(shares, false));
-            return;
-        }
-
-        User caseOwner = [SELECT Id FROM User WHERE Id = :caseOwnerId LIMIT 1];
-        System.runAs(caseOwner) {
-            recordInsertResults(Database.insert(shares, false));
-        }
+        recordInsertResults(Database.insert(shares, false));
     }
 
     private static void recordInsertResults(List<Database.SaveResult> results) {

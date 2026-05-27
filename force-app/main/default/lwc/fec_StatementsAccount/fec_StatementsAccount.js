@@ -211,7 +211,7 @@ export default class Fec_StatementsAccount extends NavigationMixin(LightningElem
                 },
                 state: {
                     c__statementId: statementId,
-                    uid: statementId + '_' + Date.now()
+                    uid: statementId + '_'
                 }
             },
             focus: true,
