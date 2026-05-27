@@ -116,7 +116,8 @@ const PDF_CONFIG_MAP = {
  * Trả null nếu sub-code không match RL04.02/RL04.03.
  */
 export function getPdfConfigForSubCode(subCodeCode) {
-  return PDF_CONFIG_MAP[subCodeCode] || null;
+  const code = subCodeCode == null ? '' : String(subCodeCode).trim();
+  return PDF_CONFIG_MAP[code] || null;
 }
 
 /**
@@ -129,7 +130,8 @@ export function getPdfConfigForSubCode(subCodeCode) {
  * @returns {{ templateCode: string, data: Object } | null}
  */
 export function buildPdfDataForSubCode(subCodeCode, headerData, paymentRows, repaymentRows) {
-  const config = PDF_CONFIG_MAP[subCodeCode];
+  const code = subCodeCode == null ? '' : String(subCodeCode).trim();
+  const config = PDF_CONFIG_MAP[code];
   if (!config) return null;
   return {
     templateCode: config.templateCode,

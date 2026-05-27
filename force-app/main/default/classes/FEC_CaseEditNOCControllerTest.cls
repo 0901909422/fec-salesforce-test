@@ -26,4 +26,29 @@ private class FEC_CaseEditNOCControllerTest {
 
         System.assert(true, 'No DML expected when NOC fields are already empty.');
     }
+
+    @IsTest
+    static void clearCaseNOC_skipsImportedCase() {
+        FEC_Product_Type__c productType = new FEC_Product_Type__c(Name = 'Card Import Test');
+        insert productType;
+
+        Case testCase = new Case(
+            Subject = 'Clear NOC Imported Test',
+            FEC_IsImported__c = true,
+            FEC_Product_Type__c = productType.Id
+        );
+        insert testCase;
+
+        Test.startTest();
+        FEC_CaseEditNOCController.clearCaseNOC(testCase.Id);
+        Test.stopTest();
+
+        Case refreshed = [
+            SELECT FEC_IsImported__c, FEC_Product_Type__c
+            FROM Case
+            WHERE Id = :testCase.Id
+        ];
+        System.assertEquals(true, refreshed.FEC_IsImported__c);
+        System.assertEquals(productType.Id, refreshed.FEC_Product_Type__c);
+    }
 }

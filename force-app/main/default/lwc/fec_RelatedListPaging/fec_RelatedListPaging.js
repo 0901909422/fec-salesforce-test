@@ -38,9 +38,21 @@ export default class Fec_RelatedListPaging extends LightningElement {
     @api enableCheckboxColumn = false;
     @api showRefreshWhenEmpty = false;
 
+    _preSelectedIds = [];
+
+    @api
+    get preSelectedIds() {
+        return this._preSelectedIds;
+    }
+    set preSelectedIds(value) {
+        this._preSelectedIds = Array.isArray(value)
+            ? value.filter(Boolean).map(String)
+            : [];
+        this.applyPreSelectedIds();
+    }
+
     /* ================= STATE ================= */
     _records = [];
-    _preSelectedIds = [];
     @track currentPage = 1;
     @track selectedRecordIds = new Set();
     _gotoPage;
@@ -72,17 +84,9 @@ export default class Fec_RelatedListPaging extends LightningElement {
     get records() {
         return this._records;
     }
-    @api
-    get preSelectedIds() {
-        return this._preSelectedIds;
-    }
     set records(value) {
         this._records = Array.isArray(value) ? [...value] : [];
         this.currentPage = 1;
-
-        if (this.preSelectedIds && this.preSelectedIds.length > 0) {
-            this.selectedRecordIds = new Set(this.preSelectedIds);
-        }
 
         // Re-apply existing sort if any
         if (this.sortedBy) {
@@ -90,14 +94,12 @@ export default class Fec_RelatedListPaging extends LightningElement {
         }
 
         this.eyeStates = {};
+        this.applyPreSelectedIds();
     }
 
-    set preSelectedIds(value) {
-        this._preSelectedIds = Array.isArray(value) ? value : [];
-        if (this._preSelectedIds.length > 0) {
+    applyPreSelectedIds() {
+        if (this._preSelectedIds.length) {
             this.selectedRecordIds = new Set(this._preSelectedIds);
-        } else {
-            this.selectedRecordIds = new Set();
         }
     }
 
@@ -731,7 +733,13 @@ export default class Fec_RelatedListPaging extends LightningElement {
 
 
         if (this.selectionMode === 'single') {
-            this.selectedRecordIds = checked ? new Set([id]) : new Set();
+            if (checked) {
+                this.selectedRecordIds = new Set([id]);
+            } else {
+                const newSet = new Set(this.selectedRecordIds);
+                newSet.delete(id);
+                this.selectedRecordIds = newSet;
+            }
         } else {
             const newSet = new Set(this.selectedRecordIds);
 
