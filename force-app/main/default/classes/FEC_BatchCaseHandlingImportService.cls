@@ -1075,6 +1075,8 @@ public without sharing class FEC_BatchCaseHandlingImportService {
             Map<Id, List<FEC_BatchCaseHandlingImportRow>> rowsByCaseId = new Map<Id, List<FEC_BatchCaseHandlingImportRow>>();
             Map<Id, List<FEC_Case_Remarks__c>> remarksByCaseId = new Map<Id, List<FEC_Case_Remarks__c>>();
             List<Case> caseRowsToUpdate = new List<Case>();
+            List<FEC_Case_Remarks__c> caseRemarksToInsert = new List<FEC_Case_Remarks__c>();
+            List<FEC_BatchCaseHandlingImportRow> caseRemarkRows = new List<FEC_BatchCaseHandlingImportRow>();
 
             for (RemarkDraftUpdateItem item : remarkDraftItems) {
                 if (item == null || item.caseId == null || item.row == null || String.isBlank(item.inputtedRemarks)) {
@@ -1103,6 +1105,30 @@ public without sharing class FEC_BatchCaseHandlingImportService {
                 caseRemark.FEC_Stage_Name__c = c.FEC_Stage_Name__c;
                 caseRemark.FEC_Case__c = item.caseId;
                 existingRemarks.add(caseRemark);
+                // 27/05/2026 10:00 linhdev - Import Input Remark: tạo Case Remarks History record khi import
+                caseRemarksToInsert.add(new FEC_Case_Remarks__c(
+                    FEC_Case_Remarks__c = item.inputtedRemarks,
+                    FEC_User__c = emailId,
+                    FEC_User_Role__c = roleName,
+                    FEC_Stage_Name__c = c.FEC_Stage_Name__c,
+                    FEC_Case__c = item.caseId
+                ));
+                caseRemarkRows.add(item.row);
+            }
+
+            if (!caseRemarksToInsert.isEmpty()) {
+                Database.SaveResult[] caseRemarkResults = Database.insert(caseRemarksToInsert, false);
+                for (Integer i = 0; i < caseRemarkResults.size(); i++) {
+                    if (caseRemarkResults[i].isSuccess()) {
+                        continue;
+                    }
+                    String message = caseRemarkResults[i].getErrors().isEmpty() ? null : caseRemarkResults[i].getErrors()[0].getMessage();
+                    FEC_BatchCaseHandlingImportRow rr = i < caseRemarkRows.size() ? caseRemarkRows[i] : null;
+                    if (rr != null) {
+                        rr.status = System.Label.FEC_Batch_Case_Handling_Import_Row_Status_Failed;
+                        rr.errors = appendError(rr.errors, message);
+                    }
+                }
             }
 
             for (Case c : caseRowsToUpdate) {

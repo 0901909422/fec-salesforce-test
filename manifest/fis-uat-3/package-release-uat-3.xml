@@ -166,6 +166,8 @@
         <members>FEC_BatchCaseHandlingExportService</members>
         <members>FEC_BatchCaseHandlingExportRow</members>
         <members>FEC_BCH_TemplateExportService</members>
+        <members>FEC_BCH_IncorrectPaymentTemplateWriter</members>
+        <members>FEC_BCH_ExportPropertyService</members>
         <members>FEC_SubProcessService</members>
         <members>Fec_HoldCaseConfigurationController</members>
         <members>FEC_ChannelFunctionService</members>
@@ -173,6 +175,7 @@
 	    <members>FEC_NocRemovePhoneInheritanceHandler</members>
 	    <members>FEC_NocRemovePhoneInheritanceHandlerTest</members>
         <members>FEC_SalesChannelFromApplicationService</members>
+        <members>FEC_SalesLogicSelector</members>
         <members>FEC_CustomerHistoryTriggerHandler</members>
         <members>FEC_CMSRewardRedeemService</members>
 		<members>FEC_CMSRewardRedeemServiceTest</members>
@@ -654,6 +657,7 @@
         <members>Case.FEC_Is_PIN_Reset_Success__c</members>
         <members>Case.FEC_CMS_Phone__c</members>
 		<members>Case.FEC_Contract_Processing_Assessment_Type__c</members>
+		<members>Case.FEC_Contract_Processing_MRC_Assessment__c</members>
 		<members>Case.FEC_Customer_Confirmation__c</members>
 		<members>Case.FEC_MRC_Request_Handling_Option__c</members>
 		<members>Case.FEC_Redeemed_Points__c</members>
@@ -672,6 +676,7 @@
         <members>FEC_Sales_Logic__c.FEC_CC_Code__c</members>
 		<members>FEC_Sales_Logic__c.FEC_DSA_Code__c</members>
 		<members>FEC_Sales_Logic__c.FEC_TSA_Code__c</members>
+		<members>FEC_Sales_Logic__c.FEC_Sequence__c</members>
 		<members>FEC_Assignment__c.FEC_Assignment_Name__c</members>
         <members>Case.FEC_NFU_Description_Result__c</members>
         <members>FEC_Nature_of_Case__c.FEC_Channel__c</members>
