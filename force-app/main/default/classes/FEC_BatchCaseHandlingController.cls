@@ -995,8 +995,7 @@ public without sharing class FEC_BatchCaseHandlingController {
         String templateName,
         String rowsJson,
         String businessProcessCode,
-        String businessProcessName,
-        String importHeadersJson
+        String businessProcessName
     ) {
         ImportResult out = new ImportResult();
         out.success = false;
@@ -1092,12 +1091,36 @@ public without sharing class FEC_BatchCaseHandlingController {
             update batchRow;
 
             Boolean cofOrGsr = FEC_BatchCaseHandlingImportService.isCofOrGsrTemplate(resolvedTemplateName);
-            List<FEC_BatchCaseHandlingImportRow> rowResults = FEC_BatchCaseHandlingImportService.validateCaseHandlingImportRows(
-                inputRows,
-                cofOrGsr,
-                FEC_BatchCaseHandlingImportService.parseImportHeadersJson(importHeadersJson)
-            );
+            List<FEC_BatchCaseHandlingImportRow> rowResults = FEC_BatchCaseHandlingImportService.validateCaseHandlingImportRows(inputRows, cofOrGsr);
             if (FEC_BatchCaseHandlingImportService.hasApplicableImportRows(rowResults)) {
+                // 27/05/2026 22:15 linhdev - Card Replacement 1 case: xử lý sync thay vì queueable để tránh Processing timeout 1 giờ
+                if (FEC_BatchCaseHandlingImportService.shouldProcessImportSynchronously(rowResults)) {
+                    FEC_BatchCaseHandlingImportService.processApplicableImportRowsSync(
+                        (Id) batchRow.get('Id'),
+                        rowResults,
+                        cofOrGsr
+                    );
+                    Integer failedCount = FEC_BatchCaseHandlingImportService.countFailedImportRows(rowResults);
+                    Integer totalCount = rowResults.size();
+                    String finalStatus;
+                    String failureReason = FEC_ConstantCommon.STR_EMPTY;
+                    if (totalCount == 0) {
+                        finalStatus = 'Failure';
+                        failureReason = System.Label.FEC_BCH_RequireFile;
+                    } else if (failedCount == totalCount) {
+                        finalStatus = 'Failure';
+                        failureReason = System.Label.FEC_BCH_Import_Rows_Invalid;
+                    } else {
+                        finalStatus = 'Processed';
+                    }
+                    out.success = true;
+                    out.message = System.Label.FEC_BCH_Import_Submitted;
+                    out.batchRecordId = (Id) batchRow.get('Id');
+                    out.contentDocumentId = insertedCv.ContentDocumentId;
+                    out.status = finalStatus;
+                    out.resultRowsJson = JSON.serialize(rowResults);
+                    return out;
+                }
                 System.enqueueJob(
                     new FEC_BatchCaseHandlingImportQueueable(
                         (Id) batchRow.get('Id'),

@@ -68,6 +68,11 @@ public without sharing class FEC_BatchCaseHandlingImportQueueable implements Que
                     enqueueFollowUpJob(batchRecordId, allRows, cofOrGsr, idx);
                     return;
                 }
+                // 27/05/2026 22:15 linhdev - không còn slot queueable nhưng không còn row applicable thì finalize thay vì fail/timeout
+                if (!FEC_BatchCaseHandlingImportService.hasRemainingApplicableImportRows(allRows, idx)) {
+                    FEC_BatchCaseHandlingImportService.finalizeBatchImportRecord(batchRecordId, allRows);
+                    return;
+                }
                 FEC_BatchCaseHandlingImportService.failBatchImportRecord(
                     batchRecordId,
                     System.Label.FEC_BCH_ImportFailed,
@@ -82,8 +87,9 @@ public without sharing class FEC_BatchCaseHandlingImportQueueable implements Que
         }
     }
 
+    // 27/05/2026 22:15 linhdev - sửa điều kiện chain queueable (trước đó == 0 chặn follow-up job không đúng)
     private static Boolean canEnqueueFollowUpJob() {
-        return Limits.getQueueableJobs() == 0;
+        return Limits.getQueueableJobs() < Limits.getLimitQueueableJobs();
     }
 
     private static void enqueueFollowUpJob(
