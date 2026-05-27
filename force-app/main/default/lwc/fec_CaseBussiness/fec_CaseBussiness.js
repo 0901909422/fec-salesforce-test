@@ -6067,6 +6067,11 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
     this._syncDocumentRequestRoutingFromBusinessFields();
   }
 
+  /** Sau Revert: giữ Team/Queue từ getByCase (resolveRouteToDisplayInfo), không ghi đè RL05/Document Request. */
+  _shouldKeepRevertRouteToDisplay() {
+    return this.business?.routeByLatestRevertHistory === true;
+  }
+
   //PhongBT 18/05/26: Document Request sử dụng cục routing action mới
   _loadDocumentRequestStageChangeRouting() {
     if (isMrcRl05Branch(this.business)) {
@@ -6078,6 +6083,16 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
     if (shouldPreferScopedRoutingFromStage2(this)) {
       this._documentRequestStageChangeRoutingActive = false;
       this._documentRequestDeliveryEligible = false;
+      this.business = { ...this.business };
+      return Promise.resolve();
+    }
+
+    if (this._shouldKeepRevertRouteToDisplay()) {
+      this._documentRequestStageChangeRoutingActive = true;
+      this._documentRequestDeliveryEligible = true;
+      if (this.business?.routingActionlst?.length) {
+        this._setActionValueByCode(ACTION_ROUTE_TO);
+      }
       this.business = { ...this.business };
       return Promise.resolve();
     }
@@ -6181,6 +6196,15 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
         nextTeam: null,
         nextQueue: null,
       };
+      this.business = { ...this.business };
+      return Promise.resolve();
+    }
+
+    if (this._shouldKeepRevertRouteToDisplay()) {
+      this._mrcReturnStageChangeRoutingActive = true;
+      if (this.business?.routingActionlst?.length) {
+        this._setActionValueByCode(ACTION_ROUTE_TO);
+      }
       this.business = { ...this.business };
       return Promise.resolve();
     }
