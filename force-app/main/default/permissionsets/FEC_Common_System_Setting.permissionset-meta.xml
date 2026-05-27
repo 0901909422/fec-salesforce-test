@@ -70,5 +70,9 @@
         <object>FEC_Undelivered_Card__c</object>
         <viewAllFields>true</viewAllFields>
         <viewAllRecords>true</viewAllRecords>
-    </objectPermissions>
+    </objectPermissions> 
+    <tabSettings>
+        <tab>FEC_Undelivered_Card__c</tab>
+        <visibility>Visible</visibility>
+    </tabSettings>
 </PermissionSet>
