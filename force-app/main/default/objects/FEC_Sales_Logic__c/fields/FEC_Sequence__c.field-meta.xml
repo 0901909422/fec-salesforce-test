@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
     <fullName>FEC_Sequence__c</fullName>
-    <description>STT ưu tiên trên bảng II (1–35). Số nhỏ được xét trước.</description>
+    <description>STT ưu tiên trên bảng II (1-35). Số nhỏ được xét trước.</description>
     <externalId>false</externalId>
     <label>Sequence</label>
     <precision>3</precision>
