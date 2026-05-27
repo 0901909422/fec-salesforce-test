@@ -316,19 +316,17 @@ public with sharing class FEC_MainInfoLoanAccountController {
         if (String.isBlank(apiStatus)) {
             return null;
         }
-        String normalized = apiStatus.trim().toUpperCase().replaceAll('[^A-Z0-9]', '');
-        Map<String, String> known = new Map<String, String>{
-            'CHARGEOFF' => 'Charge-Off',
-            'ACTIVE'    => 'Active',
-            'CLOSED'    => 'Closed'
-        };
-        if (known.containsKey(normalized)) {
-            return known.get(normalized);
+        String normalized = apiStatus.trim().toUpperCase()
+            .replaceAll(FEC_ConstantCommon.PATTERN_NON_ALNUM_UPPER, FEC_ConstantCommon.STR_EMPTY);
+        if (FEC_ConstantCommon.API_CONTRACT_STATUS_TO_PICKLIST.containsKey(normalized)) {
+            return FEC_ConstantCommon.API_CONTRACT_STATUS_TO_PICKLIST.get(normalized);
         }
         for (Schema.PicklistEntry entry :
             FEC_Customer_History__c.FEC_Contract_Status__c.getDescribe().getPicklistValues()) {
-            String valueKey = entry.getValue().toUpperCase().replaceAll('[^A-Z0-9]', '');
-            String labelKey = entry.getLabel().toUpperCase().replaceAll('[^A-Z0-9]', '');
+            String valueKey = entry.getValue().toUpperCase()
+                .replaceAll(FEC_ConstantCommon.PATTERN_NON_ALNUM_UPPER, FEC_ConstantCommon.STR_EMPTY);
+            String labelKey = entry.getLabel().toUpperCase()
+                .replaceAll(FEC_ConstantCommon.PATTERN_NON_ALNUM_UPPER, FEC_ConstantCommon.STR_EMPTY);
             if (valueKey == normalized || labelKey == normalized) {
                 return entry.getValue();
             }
