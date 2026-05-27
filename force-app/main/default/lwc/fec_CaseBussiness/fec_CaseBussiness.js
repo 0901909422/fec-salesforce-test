@@ -4677,6 +4677,9 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
               },
             };
           } else {
+            const mrcSubmitFields = isMrcRl05Branch(this.business)
+              ? this._resolveMrcReturnFieldsForSubmit()
+              : { confirmation: null, handlingOption: null };
             params = {
               ...params,
               params: {
@@ -4689,6 +4692,8 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
                   this.business.mrcRouteTeamCode ||
                   normalizeTeamUserGroupForDisplay(this.business?.nextTeam) ||
                   null,
+                mrcCustomerConfirmation: mrcSubmitFields.confirmation || null,
+                mrcHandlingOption: mrcSubmitFields.handlingOption || null,
               },
             };
           }
