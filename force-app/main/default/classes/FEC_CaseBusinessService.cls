@@ -615,7 +615,7 @@ public without sharing class FEC_CaseBusinessService {
           when else {
           }
         }
-        // MRC Return (RL05): validate Case Information — Product Code TW (chặn như Phone Update); RL05.03 DPD chỉ cảnh báo.
+        // MRC Return (RL05): validate Case Information — Product Code TW / RL05.03 DPD (chặn như Phone Update).
         if (
           err.errorlst.isEmpty() &&
           FEC_MrcReturnCaseService.isRl05Branch(
@@ -641,12 +641,8 @@ public without sharing class FEC_CaseBusinessService {
             } else {
               caseInfoMrc.error = mrcErr;
             }
-            if (FEC_MrcReturnCaseService.isRl0503DpdOnlyValidation(mrcErr, result.subCodeCode)) {
-              result.mrcRl05CaseInfoWarningOnly = true;
-            } else {
-              err = mrcErr;
-              result.mrcRl05CaseInfoBlocked = true;
-            }
+            err = mrcErr;
+            result.mrcRl05CaseInfoBlocked = true;
           }
         }
       } catch (DmlException e) {

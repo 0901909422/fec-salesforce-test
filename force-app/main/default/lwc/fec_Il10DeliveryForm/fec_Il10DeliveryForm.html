@@ -1,0 +1,40 @@
+<template>
+  <div class="fec-il10-delivery-form">
+    <template if:true={loading}>
+      <lightning-spinner
+        alternative-text={customLabel.loadingAlt}
+      ></lightning-spinner>
+    </template>
+    <template if:false={loading}>
+      <template if:true={loadError}>
+        <p class="msg-error">{loadError}</p>
+      </template>
+      <template if:false={loadError}>
+        <lightning-layout multiple-rows>
+          <lightning-layout-item size="12" padding="around-small">
+            <div class="fec-delivery-field-slot">
+              <c-fec_-multi-picklist-input
+                data-fec-field="deliveryPicklist"
+                label={customLabel.deliveryOption}
+                placeholder={customLabel.placeholderDelivery}
+                options={deliveryPicklistOptions}
+                value={selectedDeliveryValues}
+                required={closureFieldRequired}
+                read-only={closureFieldsReadonly}
+                is-search
+                onchange={handlePicklistChange}
+              ></c-fec_-multi-picklist-input>
+            </div>
+          </lightning-layout-item>
+          <lightning-layout-item size="12" padding="around-small">
+            <template if:true={showValidateBanner}>
+              <template for:each={validationMessageItems} for:item="row">
+                <span key={row.key} class="msg-error">{row.text}</span>
+              </template>
+            </template>
+          </lightning-layout-item>
+        </lightning-layout>
+      </template>
+    </template>
+  </div>
+</template>

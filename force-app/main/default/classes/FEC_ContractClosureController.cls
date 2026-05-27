@@ -421,24 +421,14 @@ public without sharing class FEC_ContractClosureController {
         if (existingTempId != null) {
             return updateExistingTemporaryAddress(existingTempId, caseId, histId, line, t);
         }
-        if (!Schema.sObjectType.FEC_Address_Info__c.isCreateable()) {
-            throw new AuraHandledException(System.Label.FEC_MSG_Insufficient_Access);
-        }
         SObject addr = Schema.getGlobalDescribe().get(OBJ_ADDRESS).newSObject(null);
         addr.put('FEC_Customer_History__c', histId);
-        putIfCreateable(addr, 'Name', 'Temporary-' + String.valueOf(Crypto.getRandomInteger()));
-        putIfCreateable(addr, 'FEC_Case__c', caseId);
-        putIfCreateable(addr, 'FEC_Country__c', resolveCountryIdByCode(COUNTRY_CODE_VN));
+        addr.put('Name', 'Temporary-' + String.valueOf(Crypto.getRandomInteger()));
+        addr.put('FEC_Case__c', caseId);
+        addr.put('FEC_Country__c', resolveCountryIdByCode(COUNTRY_CODE_VN));
         applyAddressLineAndComponents(addr, line, t, true);
-        SObjectAccessDecision dec = Security.stripInaccessible(
-            AccessType.CREATABLE,
-            new List<SObject>{ addr }
-        );
-        List<SObject> toIns = dec.getRecords();
-        if (toIns.isEmpty()) {
-            throw new AuraHandledException(System.Label.FEC_MSG_Insufficient_Access);
-        }
-        insert as user toIns;
+        List<SObject> toIns = new List<SObject>{ addr };
+        insert toIns;
         return toIns[0].Id;
     }
 
@@ -497,9 +487,6 @@ public without sharing class FEC_ContractClosureController {
     }
 
     private static Id updateExistingTemporaryAddress(Id rowId, Id caseId, Id histId, String line, TempAddressPartsDTO t) {
-        if (!Schema.sObjectType.FEC_Address_Info__c.isUpdateable()) {
-            throw new AuraHandledException(System.Label.FEC_Error_No_Update_Permission);
-        }
         FEC_Address_Info__c row = [
             SELECT Id, FEC_Customer_History__c, FEC_Case__c, FEC_Address_Type__c
             FROM FEC_Address_Info__c
@@ -516,50 +503,43 @@ public without sharing class FEC_ContractClosureController {
             throw new AuraHandledException(String.format(System.Label.FEC_MSG_Invalid, new List<String>{'Address'}));
         }
         SObject addr = row;
-        putIfUpdateable(addr, 'FEC_Case__c', caseId);
-        putIfUpdateable(addr, 'FEC_Country__c', resolveCountryIdByCode(COUNTRY_CODE_VN));
+        addr.put('FEC_Case__c', caseId);
+        addr.put('FEC_Country__c', resolveCountryIdByCode(COUNTRY_CODE_VN));
         applyAddressLineAndComponents(addr, line, t, false);
-        SObjectAccessDecision dec = Security.stripInaccessible(
-            AccessType.UPDATABLE,
-            new List<SObject>{ addr }
-        );
-        if (dec.getRecords().isEmpty()) {
-            throw new AuraHandledException(System.Label.FEC_Error_No_Field_Update_Permission);
-        }
-        update as user dec.getRecords();
+        update addr;
         return rowId;
     }
 
     private static void applyAddressLineAndComponents(SObject addr, String line, TempAddressPartsDTO t, Boolean forInsert) {
         if (forInsert) {
-            putIfCreateable(addr, 'FEC_Address_Type__c', FEC_ConstantCommon.CONTRACT_CLOSURE_ADDRESS_TYPE_TEMPORARY);
+            addr.put('FEC_Address_Type__c', FEC_ConstantCommon.CONTRACT_CLOSURE_ADDRESS_TYPE_TEMPORARY);
         } else {
-            putIfUpdateable(addr, 'FEC_Address_Type__c', FEC_ConstantCommon.CONTRACT_CLOSURE_ADDRESS_TYPE_TEMPORARY);
+            addr.put('FEC_Address_Type__c', FEC_ConstantCommon.CONTRACT_CLOSURE_ADDRESS_TYPE_TEMPORARY);
         }
         if (forInsert) {
-            putIfCreateable(addr, 'FEC_Building__c', t.building.trim());
-            putIfCreateable(addr, 'FEC_Number__c', t.streetNumber.trim());
-            putIfCreateable(addr, 'FEC_Street__c', t.street.trim());
-            putIfCreateable(addr, 'FEC_Ward_Text__c', t.wardLabel.trim());
-            putIfCreateable(addr, 'FEC_Province_Text__c', t.provinceLabel.trim());
+            addr.put('FEC_Building__c', t.building.trim());
+            addr.put('FEC_Number__c', t.streetNumber.trim());
+            addr.put('FEC_Street__c', t.street.trim());
+            addr.put('FEC_Ward_Text__c', t.wardLabel.trim());
+            addr.put('FEC_Province_Text__c', t.provinceLabel.trim());
         } else {
-            putIfUpdateable(addr, 'FEC_Building__c', t.building.trim());
-            putIfUpdateable(addr, 'FEC_Number__c', t.streetNumber.trim());
-            putIfUpdateable(addr, 'FEC_Street__c', t.street.trim());
-            putIfUpdateable(addr, 'FEC_Ward_Text__c', t.wardLabel.trim());
-            putIfUpdateable(addr, 'FEC_Province_Text__c', t.provinceLabel.trim());
+            addr.put('FEC_Building__c', t.building.trim());
+            addr.put('FEC_Number__c', t.streetNumber.trim());
+            addr.put('FEC_Street__c', t.street.trim());
+            addr.put('FEC_Ward_Text__c', t.wardLabel.trim());
+            addr.put('FEC_Province_Text__c', t.provinceLabel.trim());
         }
         if (forInsert) {
-            putIfCreateable(addr, 'FEC_District__c', null);
+            addr.put('FEC_District__c', null);
         } else {
-            putIfUpdateable(addr, 'FEC_District__c', null);
+            addr.put('FEC_District__c', null);
         }
         if (String.isNotBlank(t.provinceRecordId)) {
             try {
                 if (forInsert) {
-                    putIfCreateable(addr, 'FEC_Province__c', (Id) t.provinceRecordId);
+                    addr.put('FEC_Province__c', (Id) t.provinceRecordId);
                 } else {
-                    putIfUpdateable(addr, 'FEC_Province__c', (Id) t.provinceRecordId);
+                    addr.put('FEC_Province__c', (Id) t.provinceRecordId);
                 }
             } catch (Exception ignore) {
             }

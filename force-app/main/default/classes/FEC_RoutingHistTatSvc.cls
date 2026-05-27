@@ -347,7 +347,7 @@ public without sharing class FEC_RoutingHistTatSvc {
     }
 
     /**
-     * TH2: ưu tiên prior cùng Assignment; TH2.2.2 Manual fallback prior cùng Case (không lọc FEC_Assignment__c = null).
+     * TH2: ưu tiên prior cùng Assignment; TH2.2.2 Manual fallback prior cùng Case, FEC_Assignment__c = null.
      */
     private static Datetime resolveTh2AssignedOn(
         FEC_Routing_Action_History__c h,
@@ -380,7 +380,7 @@ public without sharing class FEC_RoutingHistTatSvc {
                 null,
                 h.FEC_Submitted_On__c,
                 false,
-                false
+                true
             );
             if (priorOnCase != null && priorOnCase.FEC_Submitted_On__c != null) {
                 return priorOnCase.FEC_Submitted_On__c;
@@ -392,7 +392,7 @@ public without sharing class FEC_RoutingHistTatSvc {
 
     /**
      * @param assignmentIdFilter non-null = cùng FEC_Assignment__c; null = không lọc theo Id Assignment.
-     * @param assignmentMustBeNullOnly giữ tham số cho tương lai; TH2.2.2 luôn false (bỏ lọc Assignment = null).
+     * @param assignmentMustBeNullOnly true: chỉ RAH có FEC_Assignment__c = null (TH2.2.2).
      * @param strictLessSubmitted true: Submitted &lt; current; false: Submitted &lt;= current (TH2.2.2).
      */
     @TestVisible
