@@ -41,7 +41,6 @@
         <members>ArchiveCaseController_Test</members>
         <members>DeleteArchiveCaseBatch</members>
         <members>DeleteArchiveCaseBatch_Test</members>
-        <members>FEC_MockupEndpoint</members>
         <members>ArchiveInteractionCaseController</members>
         <members>ArchiveInteractionCaseRedirectCtrl_Test</members>
         <members>FEC_CaseTriggerHandler</members>
@@ -82,6 +81,7 @@
         <members>TECH_PEGA_SOURCE</members>
         <members>TECH_PEGA_SOURCE_S3</members>
         <members>TECH_ARCHIVE_S3_PATCH</members>
+        <members>TECH_GET_CASE_ARCHIVE_ENDPOINT_MOCKUP</members>
         <name>CustomLabel</name>
     </types>
 

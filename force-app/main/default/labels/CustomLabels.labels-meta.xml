@@ -18287,4 +18287,11 @@
         <shortDescription>TECH_ARCHIVE_S3_PATCH</shortDescription>
         <value>fec-integration-s3/</value>
     </labels>
+    <labels>
+        <fullName>TECH_GET_CASE_ARCHIVE_ENDPOINT_MOCKUP</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>TECH_GET_CASE_ARCHIVE_ENDPOINT_MOCKUP</shortDescription>
+        <value>https://sf-csm-service-dev.fecredit.cloud/dispatcher/api/v1/cases/case-archive?s3Key=</value>
+    </labels>
 </CustomLabels>
