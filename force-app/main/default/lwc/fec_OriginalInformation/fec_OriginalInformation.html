@@ -1,0 +1,29 @@
+<template>
+    <template if:true={error}>
+        <div class="slds-text-color_error slds-p-around_small">
+            {label.FEC_ERROR_LOADING_ORIGINAL_INFORMATION}
+        </div>
+    </template>
+    
+    <div class="slds-grid slds-wrap">
+        <template for:each={fieldList} for:item="field">
+            <!-- 
+              Since layout is configured as 3 in the master data (3-of-12), 
+              we apply the corresponding SLDS medium size class to mimic the standard layout. 
+            -->
+            <div key={field.id} class="value slds-col slds-size_1-of-1 slds-medium-size_3-of-12 slds-p-horizontal_x-small">
+                <div class="read slds-border_bottom slds-m-around_x-small">
+                    <p class="label slds-text-color_weak slds-m-bottom_xx-small">{field.label}</p>
+                    <p class="value slds-text-body_regular">{field.value}</p>
+                </div>
+            </div>
+        </template>
+    </div>
+    <div class="slds-col slds-size_1-of-1 slds-m-top_medium">
+        <c-fec-integration-manage-fraud-case
+            record-id={recordId}
+            nature-of-case-id={natureOfCaseId}
+            action-view="ViewOriginal">
+        </c-fec-integration-manage-fraud-case>
+    </div>
+</template>

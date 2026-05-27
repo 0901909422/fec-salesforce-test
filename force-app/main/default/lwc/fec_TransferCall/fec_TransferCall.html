@@ -1,0 +1,192 @@
+<template>
+    <!-- Transfer Call — không accordion header -->
+    <template if:false={showTransferSuccessView}>
+        <div class="fec-transfer-call slds-p-around_small">
+                    <h3 class="fec-transfer-call__subtitle slds-m-bottom_small">
+                        {labelSubtitle}
+                    </h3>
+                    <button
+                        type="button"
+                        class={transferButtonClass}
+                        onclick={handleOpenConfirmModal}
+                        disabled={transferButtonDisabled}>
+                        {labelTransferToCollection}
+                    </button>
+                    <template if:true={hasTransferError}>
+                        <p class="fec-transfer-call__error-summary slds-m-top_small">{currentTransferFailSummary}</p>
+                        <p class="fec-transfer-call__error-reason">{transferErrorReasonLine}</p>
+                    </template>
+                </div>
+
+        <!-- Call Transfer Details — chỉ hiện khi thất bại -->
+                <template if:true={showCallTransferDetails}>
+                    <div class="fec-transfer-details slds-p-around_small slds-m-top_small">
+                        <h3 class="fec-transfer-details__title slds-m-bottom_x-small">{labelDetailsTitle}</h3>
+                        <div class="fec-transfer-details__grid">
+                            <div class="fec-transfer-details__row">
+                                <div class="fec-transfer-details__cell">
+                                    <p class="fec-td-label">{labelFieldTransferDataToCollections}</p>
+                                    <p class="fec-td-value">{detailTransferDataToCollections}</p>
+                                </div>
+                                <div class="fec-transfer-details__cell">
+                                    <p class="fec-td-label">{labelFieldRemarkForCollections}</p>
+                                    <p class="fec-td-value">{detailRemarkForCollections}</p>
+                                </div>
+                                <div class="fec-transfer-details__cell">
+                                    <p class="fec-td-label">{labelFieldTransferTime}</p>
+                                    <p class="fec-td-value">{detailTransferTime}</p>
+                                </div>
+                            </div>
+                            <div class="fec-transfer-details__row">
+                                <div class="fec-transfer-details__cell">
+                                    <p class="fec-td-label">{labelFieldTransferStatus}</p>
+                                    <p class="fec-td-value">{detailTransferStatus}</p>
+                                </div>
+                                <div class="fec-transfer-details__cell">
+                                    <p class="fec-td-label">{labelFieldFailureReason}</p>
+                                    <p class="fec-td-value">{detailFailureReason}</p>
+                                </div>
+                                <div class="fec-transfer-details__cell">
+                                    <p class="fec-td-label">{labelFieldCollActionCode}</p>
+                                    <p class="fec-td-value">{detailCollActionCode}</p>
+                                </div>
+                            </div>
+                            <div class="fec-transfer-details__row">
+                                <div class="fec-transfer-details__cell">
+                                    <p class="fec-td-label">{labelFieldCollSubActionCode}</p>
+                                    <p class="fec-td-value">{detailCollSubActionCode}</p>
+                                </div>
+                                <div class="fec-transfer-details__cell">
+                                    <p class="fec-td-label">{labelFieldCollRemarks}</p>
+                                    <p class="fec-td-value">{detailCollRemarks}</p>
+                                </div>
+                                <div class="fec-transfer-details__cell">
+                                    <p class="fec-td-label">{labelFieldCollActionDate}</p>
+                                    <p class="fec-td-value">{detailCollActionDate}</p>
+                                </div>
+                            </div>
+                            <div class="fec-transfer-details__row">
+                                <div class="fec-transfer-details__cell">
+                                    <p class="fec-td-label">{labelFieldCollAgent}</p>
+                                    <p class="fec-td-value">{detailCollAgent}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+        </template>
+    </template>
+
+    <!-- Call Transfer Details — chỉ hiện sau khi transfer thành công, không có accordion header -->
+    <template if:true={showTransferSuccessView}>
+        <div class="fec-transfer-details slds-p-around_small slds-m-top_small">
+            <h3 class="fec-transfer-details__title slds-m-bottom_x-small">{labelDetailsTitle}</h3>
+            <p class="fec-transfer-call__success-noti16 slds-m-bottom_medium">{labelNoti16}</p>
+            <div class="fec-transfer-details__grid">
+                <div class="fec-transfer-details__row">
+                    <div class="fec-transfer-details__cell">
+                        <p class="fec-td-label">{labelFieldTransferDataToCollections}</p>
+                        <p class="fec-td-value">{detailTransferDataToCollections}</p>
+                    </div>
+                    <div class="fec-transfer-details__cell">
+                        <p class="fec-td-label">{labelFieldRemarkForCollections}</p>
+                        <p class="fec-td-value">{detailRemarkForCollections}</p>
+                    </div>
+                    <div class="fec-transfer-details__cell">
+                        <p class="fec-td-label">{labelFieldTransferTime}</p>
+                        <p class="fec-td-value">{detailTransferTime}</p>
+                    </div>
+                </div>
+                <div class="fec-transfer-details__row">
+                    <div class="fec-transfer-details__cell">
+                        <p class="fec-td-label">{labelFieldTransferStatus}</p>
+                        <p class="fec-td-value">{detailTransferStatus}</p>
+                    </div>
+                    <div class="fec-transfer-details__cell">
+                        <p class="fec-td-label">{labelFieldFailureReason}</p>
+                        <p class="fec-td-value">{detailFailureReason}</p>
+                    </div>
+                    <div class="fec-transfer-details__cell">
+                        <p class="fec-td-label">{labelFieldCollActionCode}</p>
+                        <p class="fec-td-value">{detailCollActionCode}</p>
+                    </div>
+                </div>
+                <div class="fec-transfer-details__row">
+                    <div class="fec-transfer-details__cell">
+                        <p class="fec-td-label">{labelFieldCollSubActionCode}</p>
+                        <p class="fec-td-value">{detailCollSubActionCode}</p>
+                    </div>
+                    <div class="fec-transfer-details__cell">
+                        <p class="fec-td-label">{labelFieldCollRemarks}</p>
+                        <p class="fec-td-value">{detailCollRemarks}</p>
+                    </div>
+                    <div class="fec-transfer-details__cell">
+                        <p class="fec-td-label">{labelFieldCollActionDate}</p>
+                        <p class="fec-td-value">{detailCollActionDate}</p>
+                    </div>
+                </div>
+                <div class="fec-transfer-details__row">
+                    <div class="fec-transfer-details__cell">
+                        <p class="fec-td-label">{labelFieldCollAgent}</p>
+                        <p class="fec-td-value">{detailCollAgent}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <template if:true={showConfirmModal}>
+        <div class="slds-backdrop slds-backdrop_open" onclick={handleCancelModal}></div>
+        <section
+            role="dialog"
+            tabindex="-1"
+            class="slds-modal slds-fade-in-open fec-transfer-modal"
+            aria-modal="true"
+            aria-labelledby="fec-transfer-modal-heading">
+            <div class="slds-modal__container">
+                <header class="slds-modal__header fec-transfer-modal__header">
+                    <h2 id="fec-transfer-modal-heading" class="slds-modal__title slds-hyphenate fec-transfer-modal__title">
+                        {labelTransferToCollection}
+                    </h2>
+                </header>
+                <div class="slds-modal__content slds-p-around_medium" id="fec-transfer-modal-content">
+                    <p class="fec-transfer-modal__message slds-m-bottom_medium">
+                        {labelModalConfirmMessage}
+                    </p>
+                    <lightning-textarea
+                        class="fec-transfer-modal__textarea"
+                        name="collectionsRemark"
+                        label={labelRemarkLabel}
+                        value={remarkValue}
+                        onchange={handleRemarkChange}
+                        required
+                        message-when-value-missing={labelRemarkRequired}>
+                    </lightning-textarea>
+                </div>
+                <footer class="slds-modal__footer">
+                    <div class="slds-grid slds-grid_align-end slds-grid_vertical-align-center">
+                        <lightning-button
+                            class="slds-m-right_x-small"
+                            label={labelCancel}
+                            onclick={handleCancelModal}
+                            disabled={isTransferring}>
+                        </lightning-button>
+                        <button
+                            type="button"
+                            class="slds-button slds-button_brand fec-transfer-call__btn-transfer"
+                            onclick={handleConfirmTransfer}
+                            disabled={isTransferring}>
+                            {labelConfirmTransfer}
+                        </button>
+                        <template if:true={isTransferring}>
+                            <lightning-spinner
+                                alternative-text={labelLoading}
+                                size="small"
+                                class="slds-m-left_x-small">
+                            </lightning-spinner>
+                        </template>
+                    </div>
+                </footer>
+            </div>
+        </section>
+    </template>
+</template>

@@ -1,0 +1,78 @@
+<template>
+  <template if:true={hasVisibleContent}>
+    <div class="hold-case-auto-wrapper">
+      <div class="hold-case-auto-label">{customLabel.holdCase}</div>
+
+      <template if:true={isPending}>
+        <div class="hold-case-auto-message hold-case-auto-message--pending">
+          <lightning-spinner alternative-text="Loading" size="small"></lightning-spinner>
+          <span class="hold-case-auto-pending-text">{customLabel.messageProcessing}</span>
+        </div>
+      </template>
+
+      <template if:true={isSuccessMessage}>
+        <div class="hold-case-auto-message hold-case-auto-message--success">
+          {responseMessage}
+        </div>
+      </template>
+
+      <template if:true={isErrorMessage}>
+        <div class="hold-case-auto-message hold-case-auto-message--error">
+          {responseMessage}
+        </div>
+      </template>
+
+      <template if:true={hasStage2InfoMessage}>
+        <div class="hold-case-auto-message hold-case-auto-message--info">
+          {stage2InfoMessage}
+        </div>
+      </template>
+
+      <template if:true={showManualHoldCaseButton}>
+        <div class="hold-case-auto-manual-action">
+          <lightning-button
+            variant="brand"
+            label={customLabel.holdCaseRetryAction}
+            onclick={handleManualHoldCaseClick}
+            disabled={isHoldCaseRetryDisabled}
+          ></lightning-button>
+        </div>
+      </template>
+
+      <template if:true={showNfuDetails}>
+        <div class="hold-case-auto-details">
+          <h3 class="hold-case-auto-details-title">{customLabel.nfuDetails}</h3>
+
+          <div class="hold-case-auto-row">
+            <div class="hold-case-auto-field">
+              <span class="hold-case-auto-field-label">{customLabel.nfuStatus}</span>
+              <span class="hold-case-auto-field-value">{nfuStatus}</span>
+            </div>
+            <div class="hold-case-auto-field">
+              <span class="hold-case-auto-field-label">{customLabel.nfuCode}</span>
+              <span class="hold-case-auto-field-value">{nfuCode}</span>
+            </div>
+          </div>
+
+          <div class="hold-case-auto-row">
+            <div class="hold-case-auto-field">
+              <span class="hold-case-auto-field-label">{customLabel.nfuStartedDate}</span>
+              <span class="hold-case-auto-field-value">{nfuStartedDateDisplay}</span>
+            </div>
+            <div class="hold-case-auto-field">
+              <span class="hold-case-auto-field-label">{customLabel.nfuExpiryDate}</span>
+              <span class="hold-case-auto-field-value">{nfuExpiryDateDisplay}</span>
+            </div>
+          </div>
+
+          <div class="hold-case-auto-row hold-case-auto-row--last">
+            <div class="hold-case-auto-field hold-case-auto-field--full">
+              <span class="hold-case-auto-field-label">{customLabel.nfuReason}</span>
+              <span class="hold-case-auto-field-value">{nfuReason}</span>
+            </div>
+          </div>
+        </div>
+      </template>
+    </div>
+  </template>
+</template>

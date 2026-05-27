@@ -1,0 +1,32 @@
+<template>
+    <lightning-card title={labelTitle} icon-name="standard:settings">
+        <div slot="actions">
+            <lightning-button variant="brand" label={saveButtonLabel} icon-name="utility:save" onclick={handleSaveAll}
+                disabled={isSaveDisabled} class="slds-m-right_x-small">
+            </lightning-button>
+        </div>
+
+        <div class="slds-m-around_medium slds-is-relative">
+            <template if:true={loading}>
+                <lightning-spinner alternative-text={labelSpinnerSaving} size="medium"></lightning-spinner>
+            </template>
+
+            <lightning-tabset variant="scoped">
+                <lightning-tab label={labelTabNodeDetails} value="nodeDetail">
+                    <c-fec-master-data-item-detail 
+                        data-id="detailComponent" 
+                        item={displayItem} 
+                        onsave={handleItemSave}
+                        is-dirty={currentItemIsDirty} 
+                        onnodebufferreset={handleNodeBufferReset}
+                        onnodebufferchange={handleNodeBufferChange}>
+                    </c-fec-master-data-item-detail>
+                </lightning-tab>
+
+                <lightning-tab label={labelTabMasterDataSettings} value="masterDataSettings">
+                    <c-fec-master-data-setting item={item}></c-fec-master-data-setting>
+                </lightning-tab>
+            </lightning-tabset>
+        </div>
+    </lightning-card>
+</template>

@@ -1,0 +1,204 @@
+<template>
+    <div class="detail-container">
+        
+        <template if:true={editedItem.name}>
+
+            <div class="slds-page-header slds-p-around_medium slds-clearfix">
+                <div class="slds-page-header__row">
+                    <div class="slds-page-header__col-title">
+                        <div class="slds-media">
+                            <div class="slds-media__figure">
+                                <lightning-icon icon-name={nodeIcon} size="small"></lightning-icon>
+                            </div>
+                            <div class="slds-media__body">
+                                <p class="slds-page-header__name-meta">{nodeTypeLabel}</p>
+                                <h1 class="slds-page-header__title slds-truncate slds-align-middle">
+                                    {targetObjectType}
+                                </h1>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="slds-page-header__col-actions">
+                        <div class="slds-page-header__actions">
+                            <button class="slds-button slds-button_neutral slds-m-left_x-small"
+                                onclick={handleRefresh} disabled={isUndoDisabled}>
+                                <lightning-icon icon-name="utility:refresh" size="x-small"
+                                    class="slds-button__icon slds-button__icon_left"></lightning-icon>
+                                {labelUndo}
+                            </button>
+
+                            <lightning-button
+                                label={labelSaveNodeDetails}
+                                icon-name="utility:save"
+                                variant="brand"
+                                class="slds-m-left_x-small"
+                                disabled={isSaveDisabled}
+                                onclick={handleSaveNodeDetails}>
+                            </lightning-button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <lightning-tabset variant="scoped" class="slds-p-horizontal_medium">
+
+                <!-- Tab 1: Node Information (PT/BP/CAT/SCAT/SC) -->
+                <lightning-tab label={labelSectionNodeInfo}>
+                    <div class="slds-grid slds-wrap slds-gutters_small slds-p-around_small">
+                        <lightning-layout-item size="12" medium-device-size="6"
+                            class="slds-p-horizontal_small slds-m-bottom_small">
+                            <lightning-input type="text" name="Alias" label={labelAlias}
+                                value={editedItem.Alias} onchange={handleInputChange}
+                                required></lightning-input>
+                        </lightning-layout-item>
+                        <lightning-layout-item size="12" medium-device-size="6"
+                            class="slds-p-horizontal_small slds-m-bottom_small">
+                            <lightning-input type="text" name="NameEN" label={labelNameEN}
+                                value={editedItem.NameEN} onchange={handleInputChange}
+                                required></lightning-input>
+                        </lightning-layout-item>
+                        <lightning-layout-item size="12" medium-device-size="6"
+                            class="slds-p-horizontal_small slds-m-bottom_small">
+                            <lightning-input type="text" name="nameVN" label={labelNameVN}
+                                value={editedItem.nameVN} onchange={handleInputChange}
+                                required></lightning-input>
+                        </lightning-layout-item>
+                        <lightning-layout-item size="12" medium-device-size="6"
+                            class="slds-p-horizontal_small slds-m-bottom_small">
+                            <lightning-input type="number" name="PosOrder" label={labelOrder}
+                                value={editedItem.PosOrder} onchange={handleInputChange}
+                                required></lightning-input>
+                        </lightning-layout-item>
+                        <lightning-layout-item size="12" medium-device-size="6"
+                            class="slds-p-horizontal_small slds-m-bottom_small">
+                            <lightning-input type="checkbox" name="Status" label={labelStatus}
+                                checked={editedItem.Status}
+                                onchange={handleInputChange}></lightning-input>
+                        </lightning-layout-item>
+                    </div>
+
+                    <!-- Node History (collapsible) -->
+                    <template if:true={nodeId}>
+                        <details class="slds-m-top_medium slds-m-horizontal_small slds-box slds-theme_default">
+                            <summary class="slds-p-around_small" style="cursor:pointer; font-weight:600">
+                                History
+                            </summary>
+                            <div class="slds-p-horizontal_small slds-p-bottom_small">
+                                <c-fec-config-history
+                                    data-id="historyComponent"
+                                    object-api-name={historyObjectApiName}
+                                    record-id={nodeId}>
+                                </c-fec-config-history>
+                            </div>
+                        </details>
+                    </template>
+                </lightning-tab>
+
+                <!-- Tab 2: Nature of Case -->
+                <lightning-tab label={labelSectionNoc}>
+                    <template if:true={nocLoading}>
+                        <div class="slds-align_absolute-center slds-p-around_medium">
+                            <lightning-spinner alternative-text="Loading NOC..." size="small"></lightning-spinner>
+                        </div>
+                    </template>
+
+                    <template if:true={hasNocData}>
+                        <div class="slds-grid slds-wrap slds-gutters_small slds-p-around_small">
+                            <lightning-layout-item size="12" medium-device-size="6"
+                                class="slds-p-horizontal_small slds-m-bottom_small">
+                                <lightning-input type="text" label={labelNocCode}
+                                    value={nocData.code} read-only
+                                    variant="standard"></lightning-input>
+                            </lightning-layout-item>
+                            <template if:false={isCustomerTypeDisabled}>
+                            <lightning-layout-item size="12" medium-device-size="6"
+                                class="slds-p-horizontal_small slds-m-bottom_small">
+                                <lightning-combobox name="customerType" label={labelCustomerType}
+                                    value={nocData.customerType} options={customerTypeOptions}
+                                    data-noc-field="customerType"
+                                    onchange={handleNocInputChange}></lightning-combobox>
+                            </lightning-layout-item>
+                            </template>
+                            <lightning-layout-item size="12" medium-device-size="6"
+                                class="slds-p-horizontal_small slds-m-bottom_small">
+                                <lightning-input type="checkbox" label={labelStatus}
+                                    checked={nocData.active} data-noc-field="active"
+                                    onchange={handleNocInputChange}></lightning-input>
+                            </lightning-layout-item>
+                            <!-- Sub-Processes -->
+                            <lightning-layout-item size="12"
+                                class="slds-p-horizontal_small sub-processes-header">
+                                <p class="slds-text-title_caps slds-text-color_weak slds-m-bottom_x-small">{labelSubProcesses}</p>
+                                <div class="checkbox-row">
+                                    <lightning-input type="checkbox" label={labelDoNotBother}
+                                        checked={nocData.doNotBother} data-noc-field="doNotBother"
+                                        onchange={handleNocInputChange}></lightning-input>
+                                    <lightning-input type="checkbox" label={labelTransferCall}
+                                        checked={nocData.transferCallToCollection} data-noc-field="transferCallToCollection"
+                                        onchange={handleNocInputChange}></lightning-input>
+                                    <lightning-input type="checkbox" label={labelRemovePhone}
+                                        checked={nocData.removePhone} data-noc-field="removePhone"
+                                        onchange={handleNocInputChange}></lightning-input>
+                                </div>
+                            </lightning-layout-item>
+                            <!-- User Group -->
+                            <lightning-layout-item size="12"
+                                class="slds-p-horizontal_small slds-m-top_small">
+                                <lightning-dual-listbox label={labelUserGroup}
+                                    source-label="Available" selected-label="Selected"
+                                    options={userGroupOptions} value={selectedUserGroups}
+                                    data-noc-field="userGroup"
+                                    onchange={handleNocInputChange}></lightning-dual-listbox>
+                            </lightning-layout-item>
+                        </div>
+
+                        <!-- NOC History (collapsible) -->
+                        <template if:true={nocRecordId}>
+                            <details class="slds-m-top_medium slds-m-horizontal_small slds-box slds-theme_default">
+                                <summary class="slds-p-around_small" style="cursor:pointer; font-weight:600">
+                                    History
+                                </summary>
+                                <div class="slds-p-horizontal_small slds-p-bottom_small">
+                                    <c-fec-config-history
+                                        data-id="nocHistoryComponent"
+                                        object-api-name={nocHistoryObjectApiName}
+                                        record-id={nocRecordId}>
+                                    </c-fec-config-history>
+                                </div>
+                            </details>
+                        </template>
+                    </template>
+
+                    <template if:false={hasNocData}>
+                        <template if:false={nocLoading}>
+                            <p class="slds-text-body_small slds-text-color_weak slds-p-around_medium slds-text-align_center">
+                                No Nature of Case data available for this node.
+                            </p>
+                        </template>
+                    </template>
+                </lightning-tab>
+
+            </lightning-tabset>
+
+            <template if:true={loading}>
+                <div class="loading-container">
+                    <lightning-spinner alternative-text={labelSpinnerLoading} size="medium"></lightning-spinner>
+                </div>
+            </template>
+            <template if:true={hasError}>
+                <div class="error-container">
+                    <lightning-icon icon-name="utility:error" size="small"></lightning-icon>
+                    <span class="error-message">{labelError}: {errorMessage}</span>
+                </div>
+            </template>
+
+        </template>
+
+        <template if:false={editedItem.name}>
+            <div class="empty-state-container">
+                <p class="slds-text-color_weak slds-p-around_medium">{labelPromptSelectNode}</p>
+            </div>
+        </template>
+
+    </div>
+</template>

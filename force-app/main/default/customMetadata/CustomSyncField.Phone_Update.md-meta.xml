@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomMetadata xmlns="http://soap.sforce.com/2006/04/metadata" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+    <label>Phone Update</label>
+    <protected>false</protected>
+    <values>
+        <field>Fields__c</field>
+        <value xsi:type="xsd:string">Id, CaseNumber, Status, CreatedById, LastModifiedById, OwnerId, ParentId,
+FEC_External_Interaction_ID__c, FEC_Channel__c, FEC_Case_Channel__c,
+FEC_Created_by__c, FEC_Created_On__c, FEC_Interaction_Start_On__c,
+FEC_Interaction_End_On__c, FEC_Interaction_Duration__c, FEC_Interaction_Resolved_By__c,
+FEC_Phone_Number__c, FEC_Transcription__c, FEC_KYC_Method__c,
+FEC_Interaction_Subchannel__c, FEC_Other_Subchannel__c, FEC_Customer_Name__c,
+FEC_Genesys_Campaign_Name__c, FEC_Routing_Action__c, FEC_Interaction__c,
+FEC_Interaction_Remarks__c, FEC_Customer_Type__c, FEC_Phone_Type__c,
+FEC_Updated_Info_Phone_Type__c, FEC_Interaction_Email__c, FEC_Account_Number__c,
+FEC_Contract_Number__c, FEC_National_ID_Passport_ID__c, FEC_Email_From__c,
+FEC_Email_CC__c, FEC_Account_or_Contract__c, FEC_CIF_Number__c, FEC_Case_Email__c,
+FEC_Product_Type__c, FEC_Category__c, FEC_SubCategory__c, FEC_SubCode__c,
+FEC_New_Category__c, FEC_New_SubCategory__c, FEC_New_SubCode__c,
+FEC_Stage_Name__c, FEC_Complain_Type__c, FEC_Original_Info_Phone_Type__c,
+FEC_Actual_Nature_of_Case__c, FEC_Service_Case_Owner__c, FEC_Final_Status__c,
+FEC_Task__c, FEC_Remarks__c, FEC_Team__c, FEC_Completed_User__c,
+FEC_Follow_Up_User__c, FEC_Is_My_Follow_Up__c, FEC_Is_Submited__c,
+FEC_Is_Save_Closed__c, FEC_Draft_Remarks__c, FEC_SLA_Notification_1__c,
+FEC_SLA_Notification_2__c, FEC_SLA_Notification_3__c, FEC_FCR__c,
+FEC_Case_Created_On__c, FEC_Case_Created_By__c, FEC_Last_Updated_On__c,
+FEC_Last_Updated_By__c, CreatedDate, LastModifiedDate, ClosedDate,
+FEC_Link_ID__c, FEC_Interaction_Status__c, FEC_Case_ID__c, FEC_Interaction_ID__c,
+FEC_Customer_Username__c, FEC_Interaction_Owner__c, FEC_Original_Info_Phone_Number__c,
+FEC_Updated_Info_Phone_Number__c, FEC_Correct_Contract_Number__c,
+FEC_User_Email_ID__c, FEC_Is_In_Create_new_mode__c, FEC_Show_Action__c,
+FEC_Has_Account_or_Contract__c, EntitlementId, FEC_Business_Process__c,
+FEC_SLA_Violating_Warning__c, FEC_SLA_Warning__c, FEC_Genesys_Campaign__c,
+FEC_CS_D2C_Assessment_Type__c, FEC_CS_D2C_Risk_Level__c, FEC_Outcome_Code__c,
+FEC_Application_ID__c, FEC_ID_Search__c, FEC_Interaction_Masked_Phone__c,
+FEC_Case_Phone_Number__c, FEC_Account_Contract_Number_Text__c, RecordTypeId,
+FEC_Account_or_Contract__r.Name,
+FEC_Account_or_Contract__r.FEC_Account_Number__c,
+FEC_Account_or_Contract__r.FEC_Account_Status__c,
+FEC_Account_or_Contract__r.FEC_Customer_Type__c,
+FEC_Product_Type__r.Name,
+FEC_Product_Type__r.FEC_Code__c,
+FEC_Category__r.Name,
+FEC_Category__r.FEC_Code__c,
+FEC_SubCategory__r.Name,
+FEC_SubCode__r.Name,
+RecordType.Name,
+RecordType.DeveloperName,
+FEC_Actual_Nature_of_Case__r.Name,
+FEC_Actual_Nature_of_Case__r.FEC_Business_Process__r.Name,
+FEC_Actual_Nature_of_Case__r.FEC_Product_Type__r.Name,
+FEC_Actual_Nature_of_Case__r.FEC_Category__r.Name,
+FEC_Actual_Nature_of_Case__r.FEC_Sub_Category__r.Name,
+FEC_Actual_Nature_of_Case__r.FEC_Sub_Code__r.Name</value>
+    </values>
+    <values>
+        <field>TargetObject__c</field>
+        <value xsi:type="xsd:string">Case</value>
+    </values>
+</CustomMetadata>

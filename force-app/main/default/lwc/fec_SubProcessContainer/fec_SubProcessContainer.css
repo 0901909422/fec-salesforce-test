@@ -1,0 +1,10 @@
+.section-visible {
+  display: block !important;
+  border: 2px solid red;
+  padding: 20px;
+  background: yellow;
+}
+
+.section-hidden {
+  display: none !important;
+}

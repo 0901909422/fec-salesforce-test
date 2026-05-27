@@ -1,0 +1,116 @@
+<template>
+  <lightning-layout multiple-rows>
+    <template if:true={showBody}>
+      <template if:true={eligibilityLoading}>
+        <lightning-layout-item size="12" padding="around-small">
+          <lightning-spinner alternative-text={customLabel.spinnerLoading} size="small"></lightning-spinner>
+        </lightning-layout-item>
+      </template>
+      <template if:false={eligibilityLoading}>
+        <template if:true={showNotEligible}>
+          <lightning-layout-item size="12" padding="around-small">
+            <p class="fec-fc-noti fec-fc-noti-below-title validation-msg validation-msg-red">{customLabel.msgNoti15}</p>
+          </lightning-layout-item>
+          <lightning-layout-item size="12" padding="around-small">
+            <div class="slds-form-element">
+              <label class="slds-form-element__label slds-text-color_weak">{customLabel.lblFastCashStatus}</label>
+              <div class="fec-fc-readonly-line slds-text-body_regular">{displayFastCashStatus}</div>
+            </div>
+          </lightning-layout-item>
+          <lightning-layout-item size="6" padding="around-small">
+            <div class="slds-form-element">
+              <label class="slds-form-element__label slds-text-color_weak">{customLabel.lblErrorCode}</label>
+              <div class="fec-fc-readonly-line slds-text-body_regular">{displayErrorCode}</div>
+            </div>
+          </lightning-layout-item>
+          <lightning-layout-item size="6" padding="around-small">
+            <div class="slds-form-element">
+              <label class="slds-form-element__label slds-text-color_weak">{customLabel.lblErrorDescription}</label>
+              <div class="fec-fc-readonly-line slds-text-body_regular">{displayErrorDescription}</div>
+            </div>
+          </lightning-layout-item>
+        </template>
+        <template if:true={showEligible}>
+          <lightning-layout-item size="6" padding="around-small">
+            <lightning-input
+              type="text"
+              label={customLabel.lblRequestedAmount}
+              value={requestedAmountDisplay}
+              data-input="requestedAmount"
+              required
+              disabled={amountFieldsDisabled}
+              onchange={handleRequestedAmountChange}
+              onfocus={handleRequestedFocus}
+            >
+            </lightning-input>
+            <template if:true={showNoti12}>
+              <p class="slds-m-top_x-small validation-msg validation-msg-blue">{customLabel.msgNoti12}</p>
+            </template>
+            <template if:true={showNoti02}>
+              <p class="slds-m-top_x-small validation-msg validation-msg-red">{customLabel.msgNoti02}</p>
+            </template>
+            <template if:true={showNoti08}>
+              <p class="slds-m-top_x-small validation-msg validation-msg-green">{customLabel.msgNoti08}</p>
+            </template>
+            <template if:true={showNoti10UnderInput}>
+              <p class="slds-m-top_x-small validation-msg validation-msg-red">{customLabel.msgNoti10}</p>
+            </template>
+          </lightning-layout-item>
+          <lightning-layout-item size="6" padding="around-small">
+            <div class="slds-form-element">
+              <label class="slds-form-element__label slds-text-color_weak">{customLabel.lblMaxAmount}</label>
+              <div class="fec-fc-readonly-line slds-text-body_regular">{maxAmountDisplay}</div>
+            </div>
+          </lightning-layout-item>
+          <template if:true={showDisbursementFields}>
+            <lightning-layout-item size="6" padding="around-small">
+              <div class="slds-form-element">
+                <label class="slds-form-element__label slds-text-color_weak">{customLabel.lblDisbursementStatus}</label>
+                <div class="fec-fc-readonly-line slds-text-body_regular">{disbursementStatusDisplay}</div>
+              </div>
+            </lightning-layout-item>
+            <template if:true={showDisbursementDate}>
+              <lightning-layout-item size="6" padding="around-small">
+                <div class="slds-form-element">
+                  <label class="slds-form-element__label slds-text-color_weak">{customLabel.lblDisbursementDate}</label>
+                  <div class="fec-fc-readonly-line slds-text-body_regular">{disbursementDateDisplay}</div>
+                </div>
+              </lightning-layout-item>
+            </template>
+          </template>
+          <lightning-layout-item size="12" padding="around-small">
+            <template if:true={showBlockButton}>
+              <lightning-button variant="brand" label={customLabel.lblBlockAmount} onclick={handleOpenBlockModal} disabled={blockAmountButtonDisabled}>
+              </lightning-button>
+            </template>
+            <template if:true={showNoti09BelowButton}>
+              <p class="slds-m-top_x-small validation-msg validation-msg-red">{customLabel.msgNoti09}</p>
+            </template>
+          </lightning-layout-item>
+        </template>
+      </template>
+    </template>
+  </lightning-layout>
+  <template if:true={blockLoading}>
+    <lightning-spinner alternative-text={customLabel.spinnerProcessing} size="medium"></lightning-spinner>
+  </template>
+  <template if:true={showConfirmModal}>
+    <section role="dialog" tabindex="-1" class="slds-modal slds-fade-in-open">
+      <div class="slds-modal__container">
+        <header class="slds-modal__header">
+          <h2 class="slds-modal__title slds-hyphenate fec-fc-modal-title">{customLabel.lblModalTitle}</h2>
+          <button class="slds-button slds-modal__close slds-button_icon-inverse" title={customLabel.btnClose} onclick={handleConfirmNo}></button>
+        </header>
+        <div class="slds-modal__content slds-p-around_medium fec-fc-modal-body">
+          <p>{customLabel.modalBody}</p>
+        </div>
+        <footer class="slds-modal__footer">
+          <lightning-button label={customLabel.btnModalNo} onclick={handleConfirmNo} class="slds-m-right_x-small" variant="neutral">
+          </lightning-button>
+          <lightning-button label={customLabel.btnModalYes} onclick={handleConfirmYes} variant="brand"></lightning-button>
+        </footer>
+      </div>
+    </section>
+    <div class="slds-backdrop slds-backdrop_open"></div>
+  </template>
+</template>

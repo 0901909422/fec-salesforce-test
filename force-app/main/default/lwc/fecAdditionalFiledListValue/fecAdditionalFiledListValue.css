@@ -1,0 +1,39 @@
+/* Tạo vùng chứa có thanh cuộn cho bảng nếu dữ liệu vượt quá 350px */
+.datatable-container {
+    height: 350px;
+    border: 1px solid #dddbda;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+/* Tùy chỉnh căn lề cho các nút */
+.button-group {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+:host .slds-table th,
+:host .slds-table td {
+    border-right: 1px solid #dddbda;
+    padding: 8px 12px;
+}
+
+:host .slds-table thead th {
+    background-color: #f3f3f3;
+    font-weight: bold;
+    color: #3e3e3c;
+    border-bottom: 2px solid #c9c9c9;
+}
+
+:host .slds-table tbody tr:nth-child(odd) {
+    background-color: #ffffff;
+}
+
+:host .slds-table tbody tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+
+:host .slds-table tbody tr:hover {
+    background-color: #eaf5fe;
+}

@@ -1,0 +1,71 @@
+﻿<template>
+    <article class="transaction-detail-card">
+
+        <template if:true={isLoading}>
+            <div class="slds-is-relative slds-p-around_large">
+                <lightning-spinner alternative-text="Loading" size="medium"></lightning-spinner>
+            </div>
+        </template>
+
+        <template if:true={hasData}>
+            <div class="slds-page-header slds-page-header_record-home">
+                <div class="slds-page-header__row">
+                    <div class="slds-page-header__col-title">
+                        <div class="slds-media">
+                            <div class="slds-media__figure">
+                                <span class="slds-icon_container slds-icon-standard-orders slds-icon_container_circle">
+                                    <lightning-icon icon-name="standard:orders" size="small" alternative-text="Transaction"></lightning-icon>
+                                </span>
+                            </div>
+                            <div class="slds-media__body">
+                                <div class="slds-page-header__name">
+                                    <span class="slds-page-header__title slds-truncate">{customLabel.transactionLabel}</span>
+                                </div>
+                                <p class="slds-text-heading_large slds-text-color_brand">{transactionSubTitle}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="detail-tab-wrapper">
+                <lightning-tabset variant="scoped">
+                    <lightning-tab label="Details">
+                        <lightning-accordion allow-multiple-sections-open active-section-name={activeSectionName}>
+                            <lightning-accordion-section name="detail" label={sectionLabel}>
+                                <div class="field-grid-4col slds-p-horizontal_medium slds-p-vertical_small">
+                                    <template for:each={fieldColumns} for:item="column">
+                                        <div key={column.key} class="field-column">
+                                            <template for:each={column.fields} for:item="field">
+                                                <div key={field.key} class="slds-grid slds-border_bottom slds-p-vertical_x-small slds-grid_vertical-align-center">
+                                                    <div class="slds-col slds-size_1-of-2 slds-text-color_weak">
+                                                        <span class="slds-form-element__label slds-truncate">{field.label}</span>
+                                                        <template if:true={field.hasHelpText}>
+                                                            <lightning-helptext content={field.helpText}></lightning-helptext>
+                                                        </template>
+                                                    </div>
+                                                    <div class="slds-col slds-size_1-of-2">
+                                                        <span class={field.valueClass}>{field.value}</span>
+                                                    </div>
+                                                </div>
+                                            </template>
+                                        </div>
+                                    </template>
+                                </div>
+                            </lightning-accordion-section>
+                        </lightning-accordion>
+                    </lightning-tab>
+                </lightning-tabset>
+            </div>
+        </template>
+
+        <template if:false={hasData}>
+            <template if:false={isLoading}>
+                <div class="slds-text-color_weak slds-p-around_medium">
+                    {customLabel.msgNoTransactionSelected}
+                </div>
+            </template>
+        </template>
+
+    </article>
+</template>

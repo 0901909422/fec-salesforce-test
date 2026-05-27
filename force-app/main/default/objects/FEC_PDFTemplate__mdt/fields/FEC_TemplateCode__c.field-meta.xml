@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>FEC_TemplateCode__c</fullName>
+    <caseSensitive>false</caseSensitive>
+    <description>Mã unique để identify template. VD: XNTL_HDTD, XNTL_THE, GIAY_XN_DU_NO</description>
+    <externalId>true</externalId>
+    <fieldManageability>DeveloperControlled</fieldManageability>
+    <label>Template Code</label>
+    <length>100</length>
+    <required>true</required>
+    <type>Text</type>
+    <unique>true</unique>
+</CustomField>

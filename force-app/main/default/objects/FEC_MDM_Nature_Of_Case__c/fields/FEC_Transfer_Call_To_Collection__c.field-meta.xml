@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>FEC_Transfer_Call_To_Collection__c</fullName>
+    <defaultValue>false</defaultValue>
+    <description>Quy trình Transfer Call to Collection được áp dụng</description>
+    <label>Transfer Call To Collection</label>
+    <trackHistory>true</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Checkbox</type>
+</CustomField>

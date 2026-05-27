@@ -1,0 +1,2024 @@
+public without sharing class FEC_CaseAssignmentAutoDistributeService {
+    private static final String METHOD_CONTINUOUS = 'Continuous';
+    private static final String METHOD_TIME_BASED = 'Time-Based';
+
+    /** Khớp FEC_AssignAutoDistribSched polling (~5 phút) — Time-Based chạy trong cửa sổ slot. */
+    private static final Integer SCHEDULER_POLL_WINDOW_MINUTES = 5;
+
+    /** Giới hạn vòng lặp Bung Public Group / sub-group trong queue. */
+    private static final Integer MAX_PUBLIC_GROUP_EXPAND_ITERATIONS = 25;
+
+    /** Giới hạn bậc Bung UserRole con (khớp UX queue: role + các role phía dưới trong cây). */
+    private static final Integer MAX_USER_ROLE_DESCENDANTS_DEPTH = 80;
+
+    /**
+     * Số Case/update mỗi lần DML batch; nếu vượt sẽ chạy Database.Batchable (FEC_CaseAssignmentApplyOwnerBatch)
+     * để mỗi transaction có governor SOQL/trigger riêng — tránh Too many SOQL khi bulk update Case.
+     */
+    public static final Integer ASSIGNMENT_CASE_DML_CHUNK_SIZE = 8;
+
+    /**
+     * Trong một transaction Apex, map ParentRoleId -> danh sách UserRole.Id con.
+     * Lazy-load một lần để tránh vòng lặp SOQL/trừ vào chỉ được 101 query (đặt biệt executeNow nhiều assignment).
+     */
+    private static Map<Id, List<Id>> userRoleChildrenByParentMemo;
+
+    /**
+     * Theo transaction: kết quả bung queue — tránh repeat SOQL khi executeNow xử lý nhiều assignment cùng tập queue.
+     */
+    private static Map<String, Set<Id>> queueRecipientUserIdsMemo;
+
+    private class DistributionTarget {
+        Case caseRecord;
+        Boolean updateCaseOwner;
+        Id assignmentRecordId;
+        Id assignedUserId;
+
+        DistributionTarget(Case caseRecord, Boolean updateCaseOwner, Id assignmentRecordId) {
+            this.caseRecord = caseRecord;
+            this.updateCaseOwner = updateCaseOwner;
+            this.assignmentRecordId = assignmentRecordId;
+        }
+    }
+
+    public static void executeNow() {
+        DateTime nowTime = System.now();
+
+        List<FEC_Case_Assignment__c> activeAssignments = [
+            SELECT
+                Id,
+                FEC_Assignment_Method__c,
+                FEC_Scheduled_Time__c,
+                FEC_Time_Slots__c,
+                FEC_Business_Hours__c,
+                FEC_Business_Hours__r.TimeZoneSidKey
+            FROM FEC_Case_Assignment__c
+            WHERE FEC_Status__c = :FEC_ConstantCommon.FEC_CASE_ASSIGNMENT_STATUS_ACTIVE
+        ];
+        if (activeAssignments.isEmpty()) {
+            return;
+        }
+
+        Set<Id> assignmentIdsActive = new Set<Id>();
+        for (FEC_Case_Assignment__c row : activeAssignments) {
+            assignmentIdsActive.add(row.Id);
+        }
+        Map<Id, Datetime> firstLogUtcByAssignmentId = new Map<Id, Datetime>();
+        Map<Id, Datetime> latestLogUtcByAssignmentId = new Map<Id, Datetime>();
+        populateAssignmentLogBounds(
+            assignmentIdsActive,
+            firstLogUtcByAssignmentId,
+            latestLogUtcByAssignmentId
+        );
+
+        List<Id> dueAssignmentIds = new List<Id>();
+        for (FEC_Case_Assignment__c assignmentRecord : activeAssignments) {
+            Datetime firstLogUtc = firstLogUtcByAssignmentId.get(assignmentRecord.Id);
+            Datetime latestLogUtc = latestLogUtcByAssignmentId.get(assignmentRecord.Id);
+            if (!isDueToRun(assignmentRecord, nowTime, firstLogUtc, latestLogUtc)) {
+                continue;
+            }
+            if (hasLogInCurrentMinute(assignmentRecord, nowTime)) {
+                continue;
+            }
+            dueAssignmentIds.add(assignmentRecord.Id);
+        }
+
+        /*
+         * Một synchronous transaction chỉ được enqueue tối đa ~50 Queueable — không được gọi
+         * enqueueJob trong loop theo số assignment. Một queue job duy nhất nhận full list và
+         * chain từng assignment (FEC_CaseAssignmentAutoDistQueueJob).
+         */
+        if (!dueAssignmentIds.isEmpty()) {
+            System.enqueueJob(new FEC_CaseAssignmentAutoDistQueueJob(dueAssignmentIds));
+        }
+    }
+
+    /**
+     * Phân bổ ngay cho một Case Assignment (không chờ scheduled job): bỏ qua cửa Continuous / Time-Based
+     * và bỏ qua giới hạn “một lần trong cùng phút”. Chỉ chạy khi FEC_Status__c = Active.
+     * Trả về số Case đã gán (logic giữ nguyên executeSingleAssignment).
+     */
+    public static Integer executeImmediatelyForAssignmentId(Id assignmentId) {
+        if (assignmentId == null) {
+            return 0;
+        }
+        List<FEC_Case_Assignment__c> assignmentRows = [
+            SELECT
+                Id,
+                Name,
+                FEC_Assignment_Method__c,
+                FEC_Scheduled_Time__c,
+                FEC_Time_Slots__c,
+                FEC_Select_Queues__c,
+                FEC_Role__c,
+                FEC_Scale__c,
+                FEC_Status__c,
+                FEC_Business_Hours__c,
+                FEC_Business_Hours__r.TimeZoneSidKey
+            FROM FEC_Case_Assignment__c
+            WHERE Id = :assignmentId
+            LIMIT 1
+        ];
+        if (assignmentRows.isEmpty()) {
+            return 0;
+        }
+        FEC_Case_Assignment__c assignmentRecord = assignmentRows[0];
+        if (assignmentRecord.FEC_Status__c != FEC_ConstantCommon.FEC_CASE_ASSIGNMENT_STATUS_ACTIVE) {
+            return 0;
+        }
+        Integer logCount = [
+            SELECT COUNT()
+            FROM FEC_Case_Assignment_Logs__c
+            WHERE FEC_Case_Assignment_Name__c = :assignmentId AND FEC_Number_of_Case__c > 0
+        ];
+        Integer runNumber = logCount + 1;
+        return executeSingleAssignment(assignmentRecord, runNumber);
+    }
+
+    /**
+     * Continuous: khi Case mới vào queue khớp assignment Active, chạy phân bổ nếu đã đến kỳ Scheduled Time
+     * (không chờ tick scheduler). Time-Based không gọi từ đây — chỉ chạy theo Time Slot.
+     */
+    public static void handleQueueCasesAfterSave(List<Case> cases, Map<Id, Case> oldMap) {
+        if (cases == null || cases.isEmpty()) {
+            return;
+        }
+
+        Set<Id> queueOwnerIds = new Set<Id>();
+        for (Case caseRow : cases) {
+            if (caseRow == null || caseRow.IsClosed == true || caseRow.OwnerId == null) {
+                continue;
+            }
+            if (caseRow.OwnerId.getSObjectType() != Group.SObjectType) {
+                continue;
+            }
+            if (oldMap != null) {
+                Case oldRow = oldMap.get(caseRow.Id);
+                if (oldRow != null && oldRow.OwnerId == caseRow.OwnerId) {
+                    continue;
+                }
+            }
+            queueOwnerIds.add(caseRow.OwnerId);
+        }
+        if (queueOwnerIds.isEmpty()) {
+            return;
+        }
+
+        Map<Id, String> queueNameById = new Map<Id, String>();
+        for (Group queueRow : [SELECT Id, Name FROM Group WHERE Id IN :queueOwnerIds AND Type = 'Queue']) {
+            queueNameById.put(queueRow.Id, queueRow.Name);
+        }
+        if (queueNameById.isEmpty()) {
+            return;
+        }
+        Set<String> queueNames = new Set<String>(queueNameById.values());
+
+        List<FEC_Case_Assignment__c> activeContinuous = [
+            SELECT
+                Id,
+                FEC_Assignment_Method__c,
+                FEC_Scheduled_Time__c,
+                FEC_Time_Slots__c,
+                FEC_Business_Hours__c,
+                FEC_Business_Hours__r.TimeZoneSidKey,
+                FEC_Select_Queues__c
+            FROM FEC_Case_Assignment__c
+            WHERE FEC_Status__c = :FEC_ConstantCommon.FEC_CASE_ASSIGNMENT_STATUS_ACTIVE
+        ];
+        if (activeContinuous.isEmpty()) {
+            return;
+        }
+
+        List<FEC_Case_Assignment__c> continuousAssignments = new List<FEC_Case_Assignment__c>();
+        for (FEC_Case_Assignment__c assignmentRecord : activeContinuous) {
+            if (normalizedAssignmentMethod(assignmentRecord) == METHOD_CONTINUOUS) {
+                continuousAssignments.add(assignmentRecord);
+            }
+        }
+        if (continuousAssignments.isEmpty()) {
+            return;
+        }
+
+        DateTime nowTime = System.now();
+        Set<Id> candidateAssignmentIds = new Set<Id>();
+        for (FEC_Case_Assignment__c assignmentRecord : continuousAssignments) {
+            if (!assignmentQueueNamesOverlap(assignmentRecord.FEC_Select_Queues__c, queueNames)) {
+                continue;
+            }
+            candidateAssignmentIds.add(assignmentRecord.Id);
+        }
+        if (candidateAssignmentIds.isEmpty()) {
+            return;
+        }
+
+        Map<Id, Datetime> firstLogUtcByAssignmentId = new Map<Id, Datetime>();
+        Map<Id, Datetime> latestLogUtcByAssignmentId = new Map<Id, Datetime>();
+        populateAssignmentLogBounds(
+            candidateAssignmentIds,
+            firstLogUtcByAssignmentId,
+            latestLogUtcByAssignmentId
+        );
+
+        List<Id> dueAssignmentIds = new List<Id>();
+        for (FEC_Case_Assignment__c assignmentRecord : continuousAssignments) {
+            if (!candidateAssignmentIds.contains(assignmentRecord.Id)) {
+                continue;
+            }
+            Datetime firstLogUtc = firstLogUtcByAssignmentId.get(assignmentRecord.Id);
+            Datetime latestLogUtc = latestLogUtcByAssignmentId.get(assignmentRecord.Id);
+            if (!isDueToRun(assignmentRecord, nowTime, firstLogUtc, latestLogUtc)) {
+                continue;
+            }
+            if (hasLogInCurrentMinute(assignmentRecord, nowTime)) {
+                continue;
+            }
+            dueAssignmentIds.add(assignmentRecord.Id);
+        }
+
+        if (!dueAssignmentIds.isEmpty() && Limits.getQueueableJobs() < Limits.getLimitQueueableJobs()) {
+            System.enqueueJob(new FEC_CaseAssignmentAutoDistQueueJob(dueAssignmentIds));
+        }
+    }
+
+    /** Chỉ Continuous được phân ngay khi Active; Time-Based chờ Time Slot. */
+    public static Set<Id> filterAssignmentIdsForImmediateActivation(Set<Id> assignmentIds) {
+        Set<Id> eligible = new Set<Id>();
+        if (assignmentIds == null || assignmentIds.isEmpty()) {
+            return eligible;
+        }
+        for (FEC_Case_Assignment__c row : [
+            SELECT Id, FEC_Assignment_Method__c
+            FROM FEC_Case_Assignment__c
+            WHERE Id IN :assignmentIds
+        ]) {
+            if (normalizedAssignmentMethod(row) == METHOD_CONTINUOUS) {
+                eligible.add(row.Id);
+            }
+        }
+        return eligible;
+    }
+
+    /**
+     * Chẩn đoán từng bước vì executeImmediately/job trả 0 không có log chi tiết.
+     * Sandbox / Execute Anonymous:
+     *   for (String s : FEC_CaseAssignmentAutoDistributeService.diagnoseAssignment(Id.valueOf('a1YAf000...'))) System.debug(s);
+     */
+    public static List<String> diagnoseAssignment(Id assignmentId) {
+        List<String> lines = new List<String>();
+        if (assignmentId == null) {
+            lines.add('STOP: assignmentId null');
+            return lines;
+        }
+        List<FEC_Case_Assignment__c> assignmentRows = [
+            SELECT
+                Id,
+                Name,
+                FEC_Assignment_Method__c,
+                FEC_Select_Queues__c,
+                FEC_Role__c,
+                FEC_Scale__c,
+                FEC_Status__c
+            FROM FEC_Case_Assignment__c
+            WHERE Id = :assignmentId
+            LIMIT 1
+        ];
+        if (assignmentRows.isEmpty()) {
+            lines.add('STOP: không tìm thấy FEC_Case_Assignment__c');
+            return lines;
+        }
+        FEC_Case_Assignment__c assignmentRecord = assignmentRows[0];
+        lines.add('Header.Name=' + assignmentRecord.Name + ' Status=' + assignmentRecord.FEC_Status__c +
+            ' Method=' + assignmentRecord.FEC_Assignment_Method__c);
+
+        if (assignmentRecord.FEC_Status__c != FEC_ConstantCommon.FEC_CASE_ASSIGNMENT_STATUS_ACTIVE) {
+            lines.add('STOP: chỉ phân khi FEC_Status__c = Active (executeImmediately cũng return 0).');
+            return lines;
+        }
+
+        Set<String> queueNames = splitToSet(assignmentRecord.FEC_Select_Queues__c);
+        lines.add('[1] tên queue (sau split): ' + queueNames.size() + ' -> ' + String.join(new List<String>(queueNames), ', '));
+        if (queueNames.isEmpty()) {
+            lines.add('STOP: FEC_Select_Queues__c trống');
+            return lines;
+        }
+
+        Map<Id, Group> queueById = new Map<Id, Group>([
+            SELECT Id, Name
+            FROM Group
+            WHERE Type = 'Queue' AND Name IN :queueNames
+        ]);
+        lines.add('[2] Group Type=Queue khớp tên: ' + queueById.size());
+        if (queueById.isEmpty()) {
+            lines.add('STOP: không có queue với đúng Name (kiểm tra khoảng trắng / chính tả).');
+            return lines;
+        }
+
+        List<FEC_Case_Assignment_NOC__c> nocList = [
+            SELECT
+                FEC_Product_Type__c,
+                FEC_Product_Type__r.Name,
+                FEC_Category__c,
+                FEC_Category__r.Name,
+                FEC_Sub_Category__c,
+                FEC_Sub_Category__r.Name,
+                FEC_Sub_Code__c,
+                FEC_Sub_Code__r.Name,
+                FEC_Sub_Code__r.FEC_Code__c
+            FROM FEC_Case_Assignment_NOC__c
+            WHERE FEC_Case_Assignment_Name__c = :assignmentRecord.Id
+        ];
+        lines.add('[3] NOC rows: ' + nocList.size());
+        if (nocList.isEmpty()) {
+            lines.add('STOP: không có NOC — executeSingleAssignment return 0');
+            return lines;
+        }
+
+        Set<String> nocExactKeys = new Set<String>();
+        Set<String> nocWithoutSubCodeKeys = new Set<String>();
+        for (FEC_Case_Assignment_NOC__c noc : nocList) {
+            String baseKey = buildKey(
+                noc.FEC_Product_Type__c,
+                noc.FEC_Product_Type__r == null ? null : noc.FEC_Product_Type__r.Name,
+                noc.FEC_Category__c,
+                noc.FEC_Category__r == null ? null : noc.FEC_Category__r.Name,
+                noc.FEC_Sub_Category__c,
+                noc.FEC_Sub_Category__r == null ? null : noc.FEC_Sub_Category__r.Name
+            );
+            if (noc.FEC_Sub_Code__c == null) {
+                nocWithoutSubCodeKeys.add(baseKey);
+            } else {
+                nocExactKeys.add(baseKey + '|' + normalizeKeyPart(
+                    noc.FEC_Sub_Code__c,
+                    noc.FEC_Sub_Code__r == null ? null : noc.FEC_Sub_Code__r.Name
+                ));
+                addSubCodeExactKeys(
+                    nocExactKeys,
+                    baseKey,
+                    noc.FEC_Sub_Code__c,
+                    noc.FEC_Sub_Code__r == null ? null : noc.FEC_Sub_Code__r.Name,
+                    noc.FEC_Sub_Code__r == null ? null : noc.FEC_Sub_Code__r.FEC_Code__c
+                );
+            }
+        }
+
+        List<DistributionTarget> distributionTargets = collectDistributionTargets(
+            queueNames,
+            queueById,
+            nocExactKeys,
+            nocWithoutSubCodeKeys
+        );
+        lines.add('[4] Case đủ điều kiện phân bổ (Pending/Open + NOC + queue/assignment rule): ' +
+            distributionTargets.size());
+        if (distributionTargets.isEmpty()) {
+            lines.add('STOP: không Case nào khớp rule 2.1/2.2 — kiểm tra Pending/Open, Assignment Count, queue và NOC.');
+            lines.add('HINT 2.1: Owner=queue, FEC_Assignment_Count__c=0. 2.2: Count>0 + Assignment mở trên queue (query FEC_Assignment__c, không chỉ FEC_Assignment_Users__c).');
+            return lines;
+        }
+
+        Map<String, Integer> roleScaleMap = parseRoleScale(
+            assignmentRecord.FEC_Role__c,
+            assignmentRecord.FEC_Scale__c
+        );
+        lines.add('[6] roleScaleMap keys normalized (trim + collapse space + lowercase), count=' +
+            roleScaleMap.size() + ': ' +
+            String.join(new List<String>(roleScaleMap.keySet()), ' | '));
+        if (roleScaleMap.isEmpty()) {
+            lines.add('STOP: FEC_Role__c parse không ra role');
+            return lines;
+        }
+
+        Set<Id> queueUserIds = resolveQueueMembersToUserIds(queueById.keySet());
+        lines.add('[7] user Id từ queue (bung): ' + queueUserIds.size());
+        if (queueUserIds.isEmpty()) {
+            lines.add('STOP: queue không ra user — thêm User / Role / Public Group.');
+            return lines;
+        }
+
+        List<User> candidateRoleUsers = [
+            SELECT Id, Name, Email, UserRole.Name
+            FROM User
+            WHERE Id IN :queueUserIds AND IsActive = TRUE AND UserRoleId != NULL
+            ORDER BY Name
+        ];
+        List<User> eligibleUsers = filterUsersMatchingRoleScale(candidateRoleUsers, roleScaleMap);
+        lines.add('[8] eligible (UserRole.Name sau normalize khớp key [6]): ' + eligibleUsers.size());
+        if (eligibleUsers.isEmpty()) {
+            Set<String> roleNamesSeen = new Set<String>();
+            for (User uSample : candidateRoleUsers) {
+                roleNamesSeen.add(
+                    uSample.UserRole == null ? '(null)' : uSample.UserRole.Name
+                );
+            }
+            lines.add('HINT UserRole.Name (user có role trong queue): ' +
+                String.join(new List<String>(roleNamesSeen), ' | '));
+            lines.add('Không khớp key [6] — chỉnh FEC_Role__c (đúng tên Role, khoảng trắng) hoặc UserRole.');
+            return lines;
+        }
+
+        Set<Id> onVacationUserIds = getUserIdsWithActiveResourceAbsence(System.now());
+        lines.add('[8a] User có nghỉ phép hiệu lực (Absence, RelatedRecordId): ' + onVacationUserIds.size());
+        Integer eligibleBeforeVacation = eligibleUsers.size();
+        eligibleUsers = removeUsersWhoseIdInSet(eligibleUsers, onVacationUserIds);
+        lines.add(
+            '[8b] eligible sau loại trừ nghỉ phép: ' + eligibleUsers.size() +
+                ' (trước đó ' + eligibleBeforeVacation + ')'
+        );
+        if (eligibleUsers.isEmpty()) {
+            lines.add('STOP: không còn user eligible sau khi loại người đang nghỉ phép.');
+            return lines;
+        }
+
+        lines.add('OK: đủ Case target + eligible user; nếu execute vẫn 0 → xem validation/DML khi update Case.');
+        return lines;
+    }
+
+    private static final String DEFAULT_ASSIGNMENT_TIMEZONE_SID = 'Asia/Ho_Chi_Minh';
+
+    private static String assignmentTimezoneSid(FEC_Case_Assignment__c assignmentRecord) {
+        if (
+            assignmentRecord != null &&
+            assignmentRecord.FEC_Business_Hours__r != null &&
+            String.isNotBlank(assignmentRecord.FEC_Business_Hours__r.TimeZoneSidKey)
+        ) {
+            return assignmentRecord.FEC_Business_Hours__r.TimeZoneSidKey;
+        }
+        return DEFAULT_ASSIGNMENT_TIMEZONE_SID;
+    }
+
+    private static String formatAssignmentRunLogName(String assignmentName, Integer runNumber) {
+        String baseName = String.isBlank(assignmentName) ? 'Assignment' : assignmentName.trim();
+        Integer run = runNumber == null || runNumber < 1 ? 1 : runNumber;
+        return baseName + ' - ' + String.valueOf(run);
+    }
+
+    /**
+     * Picklist từng gõ nhầm \"Continous\"; bản ghi cũ có thể vẫn giữ giá trị đó.
+     */
+    private static String normalizedAssignmentMethod(FEC_Case_Assignment__c assignmentRecord) {
+        String raw = assignmentRecord == null ? null : assignmentRecord.FEC_Assignment_Method__c;
+        if (String.isBlank(raw)) {
+            return METHOD_CONTINUOUS;
+        }
+        String trimmed = raw.trim();
+        if (trimmed.equalsIgnoreCase('Continous')) {
+            return METHOD_CONTINUOUS;
+        }
+        return trimmed;
+    }
+
+    /**
+     * MIN/MAX CreatedDate mỗi assignment — anchor từ log đầu, slot đã chạy từ log gần nhất.
+     */
+    private static void populateAssignmentLogBounds(
+        Set<Id> assignmentIds,
+        Map<Id, Datetime> firstLogUtcByAssignmentId,
+        Map<Id, Datetime> latestLogUtcByAssignmentId
+    ) {
+        if (
+            assignmentIds == null ||
+            assignmentIds.isEmpty() ||
+            firstLogUtcByAssignmentId == null ||
+            latestLogUtcByAssignmentId == null
+        ) {
+            return;
+        }
+        for (AggregateResult ar : [
+            SELECT
+                FEC_Case_Assignment_Name__c aidKey,
+                MIN(CreatedDate) firstCreatedUtc,
+                MAX(CreatedDate) lastCreatedUtc
+            FROM FEC_Case_Assignment_Logs__c
+            WHERE
+                FEC_Case_Assignment_Name__c IN :assignmentIds
+                AND FEC_Number_of_Case__c > 0
+            GROUP BY FEC_Case_Assignment_Name__c
+        ]) {
+            Id aid = (Id) ar.get('aidKey');
+            Datetime firstUtc = (Datetime) ar.get('firstCreatedUtc');
+            Datetime lastUtc = (Datetime) ar.get('lastCreatedUtc');
+            if (aid == null) {
+                continue;
+            }
+            if (firstUtc != null) {
+                firstLogUtcByAssignmentId.put(aid, firstUtc);
+            }
+            if (lastUtc != null) {
+                latestLogUtcByAssignmentId.put(aid, lastUtc);
+            }
+        }
+    }
+
+    @TestVisible
+    private static Integer continuousSlotIndex(
+        Datetime instantUtc,
+        Datetime anchorUtc,
+        Integer intervalMinutes
+    ) {
+        if (instantUtc == null || anchorUtc == null) {
+            return -1;
+        }
+        Integer interval = intervalMinutes == null || intervalMinutes <= 0 ? 30 : intervalMinutes;
+        Long elapsedMs = instantUtc.getTime() - anchorUtc.getTime();
+        if (elapsedMs < 0) {
+            return -1;
+        }
+        Long intervalMs = interval * 60L * 1000L;
+        return (Integer) (elapsedMs / intervalMs);
+    }
+
+    /**
+     * Căn mốc start Continuous về slot đầu tiên theo FEC_Scheduled_Time__c (timezone assignment).
+     * Ví dụ log đầu 08:02, step 5 phút → anchor 08:00; lần kế 08:05, 08:10, ...
+     */
+    @TestVisible
+    private static Datetime continuousScheduleAnchorUtc(
+        Datetime firstSuccessLogUtc,
+        Integer intervalMinutes,
+        String timezoneSid
+    ) {
+        if (firstSuccessLogUtc == null) {
+            return null;
+        }
+        Integer interval = intervalMinutes == null || intervalMinutes <= 0 ? 30 : intervalMinutes;
+        Integer logMinutes = getMinutesSinceMidnight(firstSuccessLogUtc, timezoneSid);
+        Integer snapBackMinutes = Math.mod(logMinutes, interval);
+        return firstSuccessLogUtc.addMinutes(-snapBackMinutes);
+    }
+
+    /**
+     * Continuous: lịch slot từ mốc start (log đầu, căn bước phút); mỗi slot chỉ chạy thêm khi chưa có log trong slot đó.
+     * So chỉ số slot (không dùng modulo phút == 0) để khớp scheduler polling ~5 phút lệch mốc.
+     */
+    @TestVisible
+    private static Boolean isDueToRun(
+        FEC_Case_Assignment__c assignmentRecord,
+        DateTime nowTime,
+        Datetime firstSuccessfulLogUtc,
+        Datetime latestSuccessfulLogUtc
+    ) {
+        String method = normalizedAssignmentMethod(assignmentRecord);
+        String tz = assignmentTimezoneSid(assignmentRecord);
+
+        if (method == METHOD_CONTINUOUS) {
+            Integer scheduledMinutes =
+                assignmentRecord.FEC_Scheduled_Time__c == null
+                    ? 30
+                    : assignmentRecord.FEC_Scheduled_Time__c.intValue();
+            if (scheduledMinutes <= 0) {
+                scheduledMinutes = 30;
+            }
+
+            if (firstSuccessfulLogUtc == null) {
+                return true;
+            }
+            Datetime anchorUtc = continuousScheduleAnchorUtc(
+                firstSuccessfulLogUtc,
+                scheduledMinutes,
+                tz
+            );
+            Datetime lastRunUtc = latestSuccessfulLogUtc != null
+                ? latestSuccessfulLogUtc
+                : firstSuccessfulLogUtc;
+            Integer currentSlot = continuousSlotIndex(nowTime, anchorUtc, scheduledMinutes);
+            Integer lastRunSlot = continuousSlotIndex(lastRunUtc, anchorUtc, scheduledMinutes);
+            if (currentSlot > lastRunSlot) {
+                return true;
+            }
+            /* Dự phòng khi scheduler lệch mốc slot: vẫn chạy sau đủ Scheduled Time kể từ log gần nhất. */
+            return nowTime >= lastRunUtc.addMinutes(scheduledMinutes);
+        }
+
+        if (method == METHOD_TIME_BASED) {
+            if (String.isBlank(assignmentRecord.FEC_Time_Slots__c)) {
+                return false;
+            }
+            for (String slot : assignmentRecord.FEC_Time_Slots__c.split(';')) {
+                if (String.isBlank(slot)) {
+                    continue;
+                }
+                String slotHm = slot.trim();
+                if (!isWithinTimeSlotExecutionWindow(nowTime, tz, slotHm)) {
+                    continue;
+                }
+                if (hasLogForTimeSlotToday(assignmentRecord.Id, nowTime, tz, slotHm)) {
+                    continue;
+                }
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static Boolean assignmentQueueNamesOverlap(String assignmentQueuesRaw, Set<String> queueNames) {
+        if (queueNames == null || queueNames.isEmpty()) {
+            return false;
+        }
+        Set<String> configured = splitToSet(assignmentQueuesRaw);
+        for (String queueName : configured) {
+            if (queueNames.contains(queueName)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /** Slot HH:mm đã qua và vẫn trong cửa sổ polling scheduler (mặc định 5 phút). */
+    private static Boolean isWithinTimeSlotExecutionWindow(
+        DateTime nowTime,
+        String timezoneSid,
+        String slotHm
+    ) {
+        Integer slotMinutes = parseSlotHmToMinutes(slotHm);
+        if (slotMinutes == null) {
+            return false;
+        }
+        Integer currentMinutes = getMinutesSinceMidnight(nowTime, timezoneSid);
+        return currentMinutes >= slotMinutes &&
+            currentMinutes < slotMinutes + SCHEDULER_POLL_WINDOW_MINUTES;
+    }
+
+    private static Integer parseSlotHmToMinutes(String slotHm) {
+        if (String.isBlank(slotHm) || !slotHm.contains(':')) {
+            return null;
+        }
+        List<String> parts = slotHm.trim().split(':');
+        if (parts.size() < 2) {
+            return null;
+        }
+        try {
+            Integer hour = Integer.valueOf(parts[0].trim());
+            Integer minute = Integer.valueOf(parts[1].trim());
+            if (hour < 0 || hour > 23 || minute < 0 || minute > 59) {
+                return null;
+            }
+            return hour * 60 + minute;
+        } catch (Exception ex) {
+            return null;
+        }
+    }
+
+    private static Integer getMinutesSinceMidnight(DateTime value, String timezoneSid) {
+        if (value == null) {
+            return 0;
+        }
+        String tz = String.isBlank(timezoneSid) ? DEFAULT_ASSIGNMENT_TIMEZONE_SID : timezoneSid;
+        List<String> parts = value.format('HH:mm', tz).split(':');
+        Integer hour = Integer.valueOf(parts[0]);
+        Integer minute = Integer.valueOf(parts[1]);
+        return hour * 60 + minute;
+    }
+
+    /** Một slot Time-Based chỉ ghi log một lần mỗi ngày (theo timezone assignment). */
+    private static Boolean hasLogForTimeSlotToday(
+        Id assignmentId,
+        DateTime nowTime,
+        String timezoneSid,
+        String slotHm
+    ) {
+        if (assignmentId == null || nowTime == null || String.isBlank(slotHm)) {
+            return false;
+        }
+        Integer slotMinutes = parseSlotHmToMinutes(slotHm);
+        if (slotMinutes == null) {
+            return false;
+        }
+        String dayKey = nowTime.format('yyyy-MM-dd', timezoneSid);
+        DateTime probeStart = nowTime.addHours(-36);
+        for (FEC_Case_Assignment_Logs__c logRow : [
+            SELECT CreatedDate, FEC_Number_of_Case__c
+            FROM FEC_Case_Assignment_Logs__c
+            WHERE
+                FEC_Case_Assignment_Name__c = :assignmentId
+                AND CreatedDate >= :probeStart
+                AND FEC_Number_of_Case__c > 0
+            ORDER BY CreatedDate DESC
+            LIMIT 30
+        ]) {
+            if (logRow.CreatedDate.format('yyyy-MM-dd', timezoneSid) != dayKey) {
+                continue;
+            }
+            Integer logMinutes = getMinutesSinceMidnight(logRow.CreatedDate, timezoneSid);
+            if (logMinutes >= slotMinutes && logMinutes < slotMinutes + SCHEDULER_POLL_WINDOW_MINUTES) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Tránh DateTime.newInstance(y,m,d,h,mi,0) gây canh phút theo GMT sai lệch timezone:
+     * đối chiếu yyyy-MM-dd HH:mm theo múi của user chạy Apex (Scheduled Job = user submit schedule).
+     */
+    private static Boolean hasLogInCurrentMinute(
+        FEC_Case_Assignment__c assignmentRecord,
+        DateTime nowTime
+    ) {
+        if (assignmentRecord == null || assignmentRecord.Id == null || nowTime == null) {
+            return false;
+        }
+        String tz = assignmentTimezoneSid(assignmentRecord);
+        Id assignmentId = assignmentRecord.Id;
+        String minuteKey = nowTime.format('yyyy-MM-dd HH:mm', tz);
+        DateTime probeStart = nowTime.addMinutes(-3);
+        List<FEC_Case_Assignment_Logs__c> recentLogs = [
+            SELECT CreatedDate, FEC_Number_of_Case__c
+            FROM FEC_Case_Assignment_Logs__c
+            WHERE
+                FEC_Case_Assignment_Name__c = :assignmentId
+                AND CreatedDate >= :probeStart
+                AND FEC_Number_of_Case__c > 0
+            ORDER BY CreatedDate DESC
+            LIMIT 10
+        ];
+        for (FEC_Case_Assignment_Logs__c logRow : recentLogs) {
+            if (logRow.CreatedDate.format('yyyy-MM-dd HH:mm', tz) == minuteKey) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * User có bản ghi nghỉ phép đang hiệu lực: FEC_Start_Date__c < atTime < FEC_End_Date__c,
+     * map sang User qua FEC_Service_Resource__r.RelatedRecordId (Service Resource gắn agent).
+     */
+    private static Set<Id> getUserIdsWithActiveResourceAbsence(DateTime atTime) {
+        Set<Id> userIds = new Set<Id>();
+        if (atTime == null) {
+            atTime = System.now();
+        }
+        try {
+            for (FEC_Service_Resource_Absence__c absenceRow : [
+                SELECT FEC_Service_Resource__r.RelatedRecordId
+                FROM FEC_Service_Resource_Absence__c
+                WHERE
+                    FEC_Service_Resource__c != NULL
+                    AND FEC_Start_Date__c != NULL
+                    AND FEC_End_Date__c != NULL
+                    AND FEC_Start_Date__c < :atTime
+                    AND FEC_End_Date__c > :atTime
+            ]) {
+                if (
+                    absenceRow.FEC_Service_Resource__r != null &&
+                    absenceRow.FEC_Service_Resource__r.RelatedRecordId != null
+                ) {
+                    userIds.add(absenceRow.FEC_Service_Resource__r.RelatedRecordId);
+                }
+            }
+        } catch (Exception ex) {
+            // User chạy Scheduled/Queueable thiếu quyền FS hoặc metadata chưa SB: không chặn phân bổ.
+        }
+        return userIds;
+    }
+
+    private static List<User> removeUsersWhoseIdInSet(List<User> users, Set<Id> excludedUserIds) {
+        if (users == null || users.isEmpty()) {
+            return users == null ? new List<User>() : users;
+        }
+        if (excludedUserIds == null || excludedUserIds.isEmpty()) {
+            return users;
+        }
+        List<User> kept = new List<User>();
+        for (User u : users) {
+            if (!excludedUserIds.contains(u.Id)) {
+                kept.add(u);
+            }
+        }
+        return kept;
+    }
+
+    private static Boolean isPendingCaseStatus(String status) {
+        if (String.isBlank(status)) {
+            return false;
+        }
+        if (status == FEC_ConstantCommon.CASE_STATUS_PENDING) {
+            return true;
+        }
+        if (status == FEC_ConstantCommon.CASE_STATUS_OPEN) {
+            return true;
+        }
+        return status.startsWith(FEC_ConstantCommon.CASE_STATUS_PENDING_PREFIX);
+    }
+
+    private static Boolean assignmentUsersContainsAnyQueue(
+        String assignmentUsersRaw,
+        Set<String> queueNames,
+        Map<Id, Group> queueById
+    ) {
+        if (String.isBlank(assignmentUsersRaw) || queueNames == null || queueNames.isEmpty()) {
+            return false;
+        }
+        Set<String> tokens = new Set<String>();
+        for (String part : assignmentUsersRaw.split(',')) {
+            if (String.isNotBlank(part)) {
+                tokens.add(part.trim());
+            }
+        }
+        for (String queueName : queueNames) {
+            if (tokens.contains(queueName)) {
+                return true;
+            }
+            if (queueById != null) {
+                for (Group queueRow : queueById.values()) {
+                    if (queueRow.Name == queueName && tokens.contains(String.valueOf(queueRow.Id))) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+    /** Tên queue + Id queue — FEC_OwnerID__c trên Assignment có thể lưu một trong hai. */
+    private static Set<String> buildQueueOwnerMatchTokens(
+        Set<String> queueNames,
+        Map<Id, Group> queueById
+    ) {
+        Set<String> tokens = new Set<String>();
+        if (queueNames != null) {
+            for (String queueName : queueNames) {
+                if (String.isNotBlank(queueName)) {
+                    tokens.add(queueName.trim());
+                }
+            }
+        }
+        if (queueById != null) {
+            for (Group queueRow : queueById.values()) {
+                if (queueRow != null && queueRow.Id != null) {
+                    tokens.add(String.valueOf(queueRow.Id));
+                }
+            }
+        }
+        return tokens;
+    }
+
+    private static Boolean assignmentOwnerMatchesSelectedQueues(
+        String assignmentOwnerRaw,
+        Set<String> queueOwnerTokens
+    ) {
+        if (String.isBlank(assignmentOwnerRaw) || queueOwnerTokens == null || queueOwnerTokens.isEmpty()) {
+            return false;
+        }
+        return queueOwnerTokens.contains(assignmentOwnerRaw.trim());
+    }
+
+    private static Boolean caseMatchesNoc(
+        Case caseRecord,
+        Set<String> nocExactKeys,
+        Set<String> nocWithoutSubCodeKeys
+    ) {
+        if (caseRecord == null) {
+            return false;
+        }
+        String baseKey = buildKey(
+            caseRecord.FEC_Product_Type__c,
+            caseRecord.FEC_Product_Type__r == null ? null : caseRecord.FEC_Product_Type__r.Name,
+            caseRecord.FEC_Category__c,
+            caseRecord.FEC_Category__r == null ? null : caseRecord.FEC_Category__r.Name,
+            caseRecord.FEC_SubCategory__c,
+            caseRecord.FEC_SubCategory__r == null ? null : caseRecord.FEC_SubCategory__r.Name
+        );
+        String exactKey = baseKey + '|' + normalizeKeyPart(
+            caseRecord.FEC_SubCode__c,
+            caseRecord.FEC_SubCode__r == null ? null : caseRecord.FEC_SubCode__r.Name
+        );
+        if (nocExactKeys.contains(exactKey) || nocWithoutSubCodeKeys.contains(baseKey)) {
+            return true;
+        }
+        for (String subCodeKey : subCodeKeyVariants(
+            caseRecord.FEC_SubCode__c,
+            caseRecord.FEC_SubCode__r == null ? null : caseRecord.FEC_SubCode__r.Name,
+            caseRecord.FEC_SubCode__r == null ? null : caseRecord.FEC_SubCode__r.FEC_Code__c
+        )) {
+            if (nocExactKeys.contains(baseKey + '|' + subCodeKey)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static Map<Id, FEC_Assignment__c> preloadOldestQueueAssignmentByCaseId(
+        Set<Id> caseIds,
+        Set<String> queueOwnerTokens
+    ) {
+        Map<Id, FEC_Assignment__c> oldestByCaseId = new Map<Id, FEC_Assignment__c>();
+        if (caseIds == null || caseIds.isEmpty() || queueOwnerTokens == null || queueOwnerTokens.isEmpty()) {
+            return oldestByCaseId;
+        }
+        for (FEC_Assignment__c assignmentRow : [
+            SELECT Id, FEC_Case__c, FEC_OwnerID__c, CreatedDate
+            FROM FEC_Assignment__c
+            WHERE
+                FEC_Case__c IN :caseIds
+                AND FEC_Assignment_Owner__c = NULL
+                AND FEC_OwnerID__c IN :queueOwnerTokens
+                AND (
+                    FEC_Assignment_Status__c = NULL
+                    OR FEC_Assignment_Status__c NOT IN :FEC_ConstantCommon.CLOSED_ASSIGNMENT_STATUSES
+                )
+            ORDER BY CreatedDate ASC
+        ]) {
+            if (!oldestByCaseId.containsKey(assignmentRow.FEC_Case__c)) {
+                oldestByCaseId.put(assignmentRow.FEC_Case__c, assignmentRow);
+            }
+        }
+        return oldestByCaseId;
+    }
+
+    private static List<DistributionTarget> collectDistributionTargets(
+        Set<String> queueNames,
+        Map<Id, Group> queueById,
+        Set<String> nocExactKeys,
+        Set<String> nocWithoutSubCodeKeys
+    ) {
+        List<DistributionTarget> targets = new List<DistributionTarget>();
+        Set<Id> seenCaseIds = new Set<Id>();
+        Set<String> queueOwnerTokens = buildQueueOwnerMatchTokens(queueNames, queueById);
+
+        List<Case> noAssignmentCases = [
+            SELECT
+                Id,
+                OwnerId,
+                Status,
+                CreatedDate,
+                FEC_Assignment_Count__c,
+                FEC_Assignment_Users__c,
+                FEC_Product_Type__c,
+                FEC_Product_Type__r.Name,
+                FEC_Category__c,
+                FEC_Category__r.Name,
+                FEC_SubCategory__c,
+                FEC_SubCategory__r.Name,
+                FEC_SubCode__c,
+                FEC_SubCode__r.Name,
+                FEC_SubCode__r.FEC_Code__c
+            FROM Case
+            WHERE
+                OwnerId IN :queueById.keySet()
+                AND IsClosed = FALSE
+                AND FEC_Assignment_Count__c = 0
+            ORDER BY CreatedDate ASC
+        ];
+        for (Case caseRow : noAssignmentCases) {
+            if (!isPendingCaseStatus(caseRow.Status)) {
+                continue;
+            }
+            if (!caseMatchesNoc(caseRow, nocExactKeys, nocWithoutSubCodeKeys)) {
+                continue;
+            }
+            targets.add(new DistributionTarget(caseRow, true, null));
+            seenCaseIds.add(caseRow.Id);
+        }
+
+        Map<Id, Case> assignmentCaseCandidatesById = new Map<Id, Case>();
+        Map<Id, FEC_Assignment__c> oldestAssignmentByCaseId = new Map<Id, FEC_Assignment__c>();
+        for (FEC_Assignment__c assignmentRow : [
+            SELECT
+                Id,
+                FEC_Case__c,
+                FEC_OwnerID__c,
+                CreatedDate,
+                FEC_Case__r.Id,
+                FEC_Case__r.OwnerId,
+                FEC_Case__r.Status,
+                FEC_Case__r.CreatedDate,
+                FEC_Case__r.FEC_Assignment_Count__c,
+                FEC_Case__r.FEC_Assignment_Users__c,
+                FEC_Case__r.FEC_Product_Type__c,
+                FEC_Case__r.FEC_Product_Type__r.Name,
+                FEC_Case__r.FEC_Category__c,
+                FEC_Case__r.FEC_Category__r.Name,
+                FEC_Case__r.FEC_SubCategory__c,
+                FEC_Case__r.FEC_SubCategory__r.Name,
+                FEC_Case__r.FEC_SubCode__c,
+                FEC_Case__r.FEC_SubCode__r.Name,
+                FEC_Case__r.FEC_SubCode__r.FEC_Code__c
+            FROM FEC_Assignment__c
+            WHERE
+                FEC_Assignment_Owner__c = NULL
+                AND FEC_OwnerID__c IN :queueOwnerTokens
+                AND (
+                    FEC_Assignment_Status__c = NULL
+                    OR FEC_Assignment_Status__c NOT IN :FEC_ConstantCommon.CLOSED_ASSIGNMENT_STATUSES
+                )
+                AND FEC_Case__r.IsClosed = FALSE
+                AND FEC_Case__r.FEC_Assignment_Count__c > 0
+            ORDER BY CreatedDate ASC
+        ]) {
+            if (
+                assignmentRow.FEC_Case__c == null ||
+                assignmentRow.FEC_Case__r == null ||
+                seenCaseIds.contains(assignmentRow.FEC_Case__c) ||
+                oldestAssignmentByCaseId.containsKey(assignmentRow.FEC_Case__c)
+            ) {
+                continue;
+            }
+            if (!assignmentOwnerMatchesSelectedQueues(assignmentRow.FEC_OwnerID__c, queueOwnerTokens)) {
+                continue;
+            }
+            Case caseRow = assignmentRow.FEC_Case__r;
+            if (!isPendingCaseStatus(caseRow.Status)) {
+                continue;
+            }
+            if (!caseMatchesNoc(caseRow, nocExactKeys, nocWithoutSubCodeKeys)) {
+                continue;
+            }
+            oldestAssignmentByCaseId.put(assignmentRow.FEC_Case__c, assignmentRow);
+            assignmentCaseCandidatesById.put(assignmentRow.FEC_Case__c, caseRow);
+        }
+
+        for (Id caseId : oldestAssignmentByCaseId.keySet()) {
+            FEC_Assignment__c assignmentRow = oldestAssignmentByCaseId.get(caseId);
+            Case caseRow = assignmentCaseCandidatesById.get(caseId);
+            if (assignmentRow == null || caseRow == null) {
+                continue;
+            }
+            targets.add(new DistributionTarget(caseRow, false, assignmentRow.Id));
+            seenCaseIds.add(caseId);
+        }
+
+        return targets;
+    }
+
+    private static void rebuildAssignmentUsersForCases(Set<Id> caseIds) {
+        if (caseIds == null || caseIds.isEmpty()) {
+            return;
+        }
+        Map<Id, List<FEC_Assignment__c>> assignmentsByCaseId = new Map<Id, List<FEC_Assignment__c>>();
+        for (FEC_Assignment__c assignmentRow : [
+            SELECT Id, FEC_Case__c, FEC_Assignment_Owner__c, FEC_OwnerID__c
+            FROM FEC_Assignment__c
+            WHERE
+                FEC_Case__c IN :caseIds
+                AND (
+                    FEC_Assignment_Status__c = NULL
+                    OR FEC_Assignment_Status__c NOT IN :FEC_ConstantCommon.CLOSED_ASSIGNMENT_STATUSES
+                )
+        ]) {
+            if (!assignmentsByCaseId.containsKey(assignmentRow.FEC_Case__c)) {
+                assignmentsByCaseId.put(assignmentRow.FEC_Case__c, new List<FEC_Assignment__c>());
+            }
+            assignmentsByCaseId.get(assignmentRow.FEC_Case__c).add(assignmentRow);
+        }
+
+        List<Case> caseUpdates = new List<Case>();
+        for (Id caseId : caseIds) {
+            List<String> userValues = new List<String>();
+            for (FEC_Assignment__c assignmentRow : assignmentsByCaseId.get(caseId)) {
+                if (assignmentRow.FEC_Assignment_Owner__c != null) {
+                    userValues.add(String.valueOf(assignmentRow.FEC_Assignment_Owner__c));
+                } else if (String.isNotBlank(assignmentRow.FEC_OwnerID__c)) {
+                    userValues.add(assignmentRow.FEC_OwnerID__c.trim());
+                }
+            }
+            caseUpdates.add(
+                new Case(
+                    Id = caseId,
+                    FEC_Assignment_Users__c = userValues.isEmpty() ? null : String.join(userValues, ',')
+                )
+            );
+        }
+        if (!caseUpdates.isEmpty()) {
+            update caseUpdates;
+        }
+    }
+
+    private static Integer applyDistributionResults(
+        Id configAssignmentId,
+        List<DistributionTarget> targets
+    ) {
+        if (targets == null || targets.isEmpty()) {
+            return 0;
+        }
+
+        Map<Id, Case> caseUpdatesById = new Map<Id, Case>();
+        List<FEC_Assignment__c> assignmentUpdates = new List<FEC_Assignment__c>();
+        Set<Id> casesForUserSync = new Set<Id>();
+        Integer appliedCount = 0;
+
+        for (DistributionTarget target : targets) {
+            if (
+                target == null ||
+                target.caseRecord == null ||
+                target.caseRecord.Id == null ||
+                target.assignedUserId == null
+            ) {
+                continue;
+            }
+
+            Case caseUpdate = caseUpdatesById.get(target.caseRecord.Id);
+            if (caseUpdate == null) {
+                caseUpdate = new Case(Id = target.caseRecord.Id);
+                caseUpdatesById.put(target.caseRecord.Id, caseUpdate);
+            }
+            caseUpdate.FEC_Recently_Auto_Case_Assignment__c = configAssignmentId;
+
+            if (target.updateCaseOwner == true) {
+                caseUpdate.OwnerId = target.assignedUserId;
+                FEC_CaseBusinessService.registerSkipOwnerChangeRoutingHistory(target.caseRecord.Id);
+            } else if (target.assignmentRecordId != null) {
+                assignmentUpdates.add(
+                    new FEC_Assignment__c(
+                        Id = target.assignmentRecordId,
+                        FEC_Assignment_Owner__c = target.assignedUserId
+                    )
+                );
+                casesForUserSync.add(target.caseRecord.Id);
+            } else {
+                continue;
+            }
+            appliedCount++;
+        }
+
+        if (!assignmentUpdates.isEmpty()) {
+            update assignmentUpdates;
+        }
+        if (!caseUpdatesById.isEmpty()) {
+            update caseUpdatesById.values();
+        }
+        rebuildAssignmentUsersForCases(casesForUserSync);
+        return appliedCount;
+    }
+
+    public static void applyDistributionResultsFromBatch(
+        Id configAssignmentId,
+        List<FEC_CaseAssignmentApplyOwnerBatch.DistributionTargetStub> batchTargets
+    ) {
+        if (batchTargets == null || batchTargets.isEmpty()) {
+            return;
+        }
+        List<DistributionTarget> targets = new List<DistributionTarget>();
+        for (FEC_CaseAssignmentApplyOwnerBatch.DistributionTargetStub stub : batchTargets) {
+            if (stub == null || stub.caseId == null || stub.assignedUserId == null) {
+                continue;
+            }
+            DistributionTarget target = new DistributionTarget(
+                new Case(Id = stub.caseId),
+                stub.updateCaseOwner == true,
+                stub.assignmentRecordId
+            );
+            target.assignedUserId = stub.assignedUserId;
+            targets.add(target);
+        }
+        applyDistributionResults(configAssignmentId, targets);
+    }
+
+    private static Integer executeSingleAssignment(FEC_Case_Assignment__c assignmentRecord, Integer runNumber) {
+        Set<String> queueNames = splitToSet(assignmentRecord.FEC_Select_Queues__c);
+        if (queueNames.isEmpty()) {
+            return 0;
+        }
+
+        Map<Id, Group> queueById = new Map<Id, Group>([
+            SELECT Id, Name
+            FROM Group
+            WHERE Type = 'Queue' AND Name IN :queueNames
+        ]);
+        if (queueById.isEmpty()) {
+            return 0;
+        }
+
+        List<FEC_Case_Assignment_NOC__c> nocList = [
+            SELECT
+                FEC_Product_Type__c,
+                FEC_Product_Type__r.Name,
+                FEC_Category__c,
+                FEC_Category__r.Name,
+                FEC_Sub_Category__c,
+                FEC_Sub_Category__r.Name,
+                FEC_Sub_Code__c,
+                FEC_Sub_Code__r.Name,
+                FEC_Sub_Code__r.FEC_Code__c
+            FROM FEC_Case_Assignment_NOC__c
+            WHERE FEC_Case_Assignment_Name__c = :assignmentRecord.Id
+        ];
+        if (nocList.isEmpty()) {
+            return 0;
+        }
+
+        Set<String> nocExactKeys = new Set<String>();
+        Set<String> nocWithoutSubCodeKeys = new Set<String>();
+        for (FEC_Case_Assignment_NOC__c noc : nocList) {
+            String baseKey = buildKey(
+                noc.FEC_Product_Type__c,
+                noc.FEC_Product_Type__r == null ? null : noc.FEC_Product_Type__r.Name,
+                noc.FEC_Category__c,
+                noc.FEC_Category__r == null ? null : noc.FEC_Category__r.Name,
+                noc.FEC_Sub_Category__c,
+                noc.FEC_Sub_Category__r == null ? null : noc.FEC_Sub_Category__r.Name
+            );
+            if (noc.FEC_Sub_Code__c == null) {
+                nocWithoutSubCodeKeys.add(baseKey);
+            } else {
+                nocExactKeys.add(baseKey + '|' + normalizeKeyPart(
+                    noc.FEC_Sub_Code__c,
+                    noc.FEC_Sub_Code__r == null ? null : noc.FEC_Sub_Code__r.Name
+                ));
+                addSubCodeExactKeys(
+                    nocExactKeys,
+                    baseKey,
+                    noc.FEC_Sub_Code__c,
+                    noc.FEC_Sub_Code__r == null ? null : noc.FEC_Sub_Code__r.Name,
+                    noc.FEC_Sub_Code__r == null ? null : noc.FEC_Sub_Code__r.FEC_Code__c
+                );
+            }
+        }
+
+        List<DistributionTarget> distributionTargets = collectDistributionTargets(
+            queueNames,
+            queueById,
+            nocExactKeys,
+            nocWithoutSubCodeKeys
+        );
+        if (distributionTargets.isEmpty()) {
+            return 0;
+        }
+
+        Map<String, Integer> roleScaleMap = parseRoleScale(assignmentRecord.FEC_Role__c, assignmentRecord.FEC_Scale__c);
+        if (roleScaleMap.isEmpty()) {
+            return 0;
+        }
+
+        Set<Id> queueUserIds = resolveQueueMembersToUserIds(queueById.keySet());
+        if (queueUserIds.isEmpty()) {
+            return 0;
+        }
+
+        List<User> candidateRoleUsers = [
+            SELECT Id, Email, UserRole.Name
+            FROM User
+            WHERE Id IN :queueUserIds AND IsActive = true AND UserRoleId != null
+            ORDER BY Name
+        ];
+        List<User> eligibleUsers = filterUsersMatchingRoleScale(candidateRoleUsers, roleScaleMap);
+        if (eligibleUsers.isEmpty()) {
+            return 0;
+        }
+
+        eligibleUsers = removeUsersWhoseIdInSet(
+            eligibleUsers,
+            getUserIdsWithActiveResourceAbsence(System.now())
+        );
+        if (eligibleUsers.isEmpty()) {
+            return 0;
+        }
+
+        Map<Id, Integer> historicalCountByUser = getHistoricalAssignedCountByUser(
+            assignmentRecord.Id,
+            eligibleUsers
+        );
+        Map<Id, Integer> numberByUser = new Map<Id, Integer>();
+        List<Id> usersInAssignmentOrder = new List<Id>();
+        String allocationMethod = normalizedAssignmentMethod(assignmentRecord);
+        if (allocationMethod == METHOD_CONTINUOUS) {
+            distributeWeightedLeastLoaded(
+                distributionTargets,
+                eligibleUsers,
+                roleScaleMap,
+                historicalCountByUser,
+                numberByUser,
+                usersInAssignmentOrder
+            );
+        } else {
+            distributeWeightedSequentialFromHistory(
+                distributionTargets,
+                eligibleUsers,
+                roleScaleMap,
+                historicalCountByUser,
+                numberByUser,
+                usersInAssignmentOrder
+            );
+        }
+        if (numberByUser.isEmpty()) {
+            return 0;
+        }
+
+        Integer totalTargets = distributionTargets.size();
+        if (totalTargets <= ASSIGNMENT_CASE_DML_CHUNK_SIZE) {
+            Integer appliedCount = applyDistributionResults(assignmentRecord.Id, distributionTargets);
+            if (appliedCount <= 0) {
+                return 0;
+            }
+            insertAssignmentRunLog(
+                assignmentRecord.Id,
+                assignmentRecord.Name,
+                runNumber,
+                appliedCount,
+                numberByUser,
+                usersInAssignmentOrder
+            );
+            return appliedCount;
+        }
+
+        List<Id> caseIdsOrdered = new List<Id>();
+        List<Id> assignedUserIdsOrdered = new List<Id>();
+        List<Boolean> updateCaseOwnerFlags = new List<Boolean>();
+        List<Id> assignmentIdsOrdered = new List<Id>();
+        for (DistributionTarget target : distributionTargets) {
+            if (target.assignedUserId == null || target.caseRecord == null) {
+                continue;
+            }
+            caseIdsOrdered.add(target.caseRecord.Id);
+            assignedUserIdsOrdered.add(target.assignedUserId);
+            updateCaseOwnerFlags.add(target.updateCaseOwner == true);
+            assignmentIdsOrdered.add(target.assignmentRecordId);
+        }
+
+        List<Id> summaryUserIds = new List<Id>();
+        List<Integer> summaryCounts = new List<Integer>();
+        appendSummaryFromAssignmentOrder(usersInAssignmentOrder, numberByUser, summaryUserIds, summaryCounts);
+
+        Database.executeBatch(
+            new FEC_CaseAssignmentApplyOwnerBatch(
+                assignmentRecord.Id,
+                assignmentRecord.Name,
+                runNumber,
+                caseIdsOrdered,
+                assignedUserIdsOrdered,
+                updateCaseOwnerFlags,
+                assignmentIdsOrdered,
+                summaryUserIds,
+                summaryCounts
+            ),
+            ASSIGNMENT_CASE_DML_CHUNK_SIZE
+        );
+        return totalTargets;
+    }
+
+    /** Gọi sau khi mọi Case đã được gán Owner — dùng chung path sync và path Batch (apply owner). */
+    public static void insertAssignmentRunLog(
+        Id assignmentId,
+        String assignmentName,
+        Integer runNumber,
+        Integer totalCasesAssigned,
+        Map<Id, Integer> countsByAssignedUserId
+    ) {
+        insertAssignmentRunLog(
+            assignmentId,
+            assignmentName,
+            runNumber,
+            totalCasesAssigned,
+            countsByAssignedUserId,
+            null
+        );
+    }
+
+    public static void insertAssignmentRunLog(
+        Id assignmentId,
+        String assignmentName,
+        Integer runNumber,
+        Integer totalCasesAssigned,
+        Map<Id, Integer> countsByAssignedUserId,
+        List<Id> userIdsInAssignmentOrder
+    ) {
+        if (assignmentId == null || totalCasesAssigned == null || totalCasesAssigned <= 0) {
+            return;
+        }
+        FEC_Case_Assignment_Logs__c logRecord = new FEC_Case_Assignment_Logs__c(
+            Name = formatAssignmentRunLogName(assignmentName, runNumber),
+            FEC_Case_Assignment_Name__c = assignmentId,
+            FEC_Number_of_Case__c = totalCasesAssigned
+        );
+        insert logRecord;
+
+        if (countsByAssignedUserId == null || countsByAssignedUserId.isEmpty()) {
+            return;
+        }
+
+        Map<Id, User> userRows = new Map<Id, User>(
+            [SELECT Id, Email FROM User WHERE Id IN :countsByAssignedUserId.keySet()]
+        );
+
+        List<Id> orderedUserIds = buildOrderedUserIdsForLogDetails(
+            userIdsInAssignmentOrder,
+            countsByAssignedUserId
+        );
+
+        List<FEC_Case_Assignment_Log_Detail__c> detailList = new List<FEC_Case_Assignment_Log_Detail__c>();
+        for (Id userId : orderedUserIds) {
+            User u = userRows.get(userId);
+            String emailValue = u != null ? u.Email : null;
+            detailList.add(
+                new FEC_Case_Assignment_Log_Detail__c(
+                    Name = String.isNotBlank(emailValue) ? emailValue : String.valueOf(userId),
+                    FEC_Case_Assignment_log_Name__c = logRecord.Id,
+                    FEC_Name_User__c = emailValue,
+                    FEC_Number_of_Case__c = countsByAssignedUserId.get(userId)
+                )
+            );
+        }
+        if (!detailList.isEmpty()) {
+            insert detailList;
+        }
+    }
+
+    /**
+     * Bung thành viên queue sang tập Id User có thể nhận phân bổ:
+     * - User add trực tiếp
+     * - UserRole → user Active có UserRoleId thuộc role đó + các role con (subordinate subtree)
+     * - Group (Public Group / subgroup) → BFS GroupMember (tránh nhúng lại đúng Id queue).
+     * - Group Salesforce kiểu Role / Role và cấp dưới: GroupMember thường rỗng; lấy UserRole từ Group.RelatedId
+     *   (đồng bộ FEC_CaseAssignmentQueueRoleResolver.walkQueueMembership).
+     */
+    private static Set<Id> resolveQueueMembersToUserIds(Set<Id> queueGroupIds) {
+        Set<Id> recipientUserIds = new Set<Id>();
+        Set<Id> queueRoleIdsFromMember = new Set<Id>();
+        Set<Id> groupFrontier = new Set<Id>();
+        Set<Id> visitedNestedGroups = new Set<Id>();
+
+        if (queueGroupIds == null || queueGroupIds.isEmpty()) {
+            return recipientUserIds;
+        }
+
+        String queueSetCacheKey = buildSortedIdSetKey(queueGroupIds);
+        if (
+            queueRecipientUserIdsMemo != null &&
+            queueRecipientUserIdsMemo.containsKey(queueSetCacheKey)
+        ) {
+            return new Set<Id>(queueRecipientUserIdsMemo.get(queueSetCacheKey));
+        }
+
+        for (GroupMember gm : [
+            SELECT UserOrGroupId
+            FROM GroupMember
+            WHERE GroupId IN :queueGroupIds
+        ]) {
+            partitionQueueMembershipRef(
+                gm.UserOrGroupId,
+                recipientUserIds,
+                queueRoleIdsFromMember,
+                groupFrontier,
+                visitedNestedGroups,
+                queueGroupIds
+            );
+        }
+
+        Integer groupIterations = 0;
+        while (!groupFrontier.isEmpty() && groupIterations < MAX_PUBLIC_GROUP_EXPAND_ITERATIONS) {
+            groupIterations++;
+            Set<Id> toProcess = new Set<Id>();
+            for (Id nestedGid : groupFrontier) {
+                if (!visitedNestedGroups.contains(nestedGid)) {
+                    toProcess.add(nestedGid);
+                }
+            }
+            groupFrontier.clear();
+            if (toProcess.isEmpty()) {
+                break;
+            }
+            visitedNestedGroups.addAll(toProcess);
+
+            /* Một SOQL: Type/RelatedId (nhóm Role) + membership — tránh 2 SOQL/lượt BFS. */
+            for (Group grp : [
+                SELECT Id, Type, RelatedId,
+                    (SELECT Id, UserOrGroupId FROM GroupMembers)
+                FROM Group
+                WHERE Id IN :toProcess
+            ]) {
+                if (grp.RelatedId != null && grp.RelatedId.getSobjectType() == UserRole.SObjectType) {
+                    if ('Role'.equals(grp.Type)) {
+                        queueRoleIdsFromMember.add(grp.RelatedId);
+                    } else if (grp.Type != null && grp.Type.startsWith('RoleAnd')) {
+                        queueRoleIdsFromMember.add(grp.RelatedId);
+                    }
+                }
+                if (grp.GroupMembers != null) {
+                    for (GroupMember gm : grp.GroupMembers) {
+                        partitionQueueMembershipRef(
+                            gm.UserOrGroupId,
+                            recipientUserIds,
+                            queueRoleIdsFromMember,
+                            groupFrontier,
+                            visitedNestedGroups,
+                            queueGroupIds
+                        );
+                    }
+                }
+            }
+        }
+
+        Set<Id> resolvedRoleIds = expandUserRoleSubtreeForQueue(queueRoleIdsFromMember);
+        if (!resolvedRoleIds.isEmpty()) {
+            for (User uRoleUser : [
+                SELECT Id
+                FROM User
+                WHERE UserRoleId IN :resolvedRoleIds AND IsActive = TRUE
+            ]) {
+                recipientUserIds.add(uRoleUser.Id);
+            }
+        }
+
+        if (queueRecipientUserIdsMemo == null) {
+            queueRecipientUserIdsMemo = new Map<String, Set<Id>>();
+        }
+        queueRecipientUserIdsMemo.put(queueSetCacheKey, new Set<Id>(recipientUserIds));
+
+        return recipientUserIds;
+    }
+
+    private static String buildSortedIdSetKey(Set<Id> idValues) {
+        List<Id> sorted = new List<Id>(idValues);
+        sorted.sort();
+        List<String> parts = new List<String>();
+        for (Id oneId : sorted) {
+            parts.add(String.valueOf(oneId));
+        }
+        return String.join(parts, '|');
+    }
+
+
+
+    private static void partitionQueueMembershipRef(
+        Id userOrGroupId,
+        Set<Id> recipientUserIds,
+        Set<Id> queueRoleIdsFromMember,
+        Set<Id> groupFrontier,
+        Set<Id> visitedNestedGroups,
+        Set<Id> queueGroupIds
+    ) {
+        if (userOrGroupId == null) {
+            return;
+        }
+        Schema.SObjectType st = userOrGroupId.getSObjectType();
+        if (st == User.SObjectType) {
+            recipientUserIds.add(userOrGroupId);
+        } else if (st == UserRole.SObjectType) {
+            queueRoleIdsFromMember.add(userOrGroupId);
+        } else if (st == Group.SObjectType) {
+            if (queueGroupIds.contains(userOrGroupId)) {
+                return;
+            }
+            if (!visitedNestedGroups.contains(userOrGroupId)) {
+                groupFrontier.add(userOrGroupId);
+            }
+        }
+    }
+
+    /** Role gán trên queue: chính role + mọi UserRole có ParentRoleId dẫn xuống subtree. */
+    private static Set<Id> expandUserRoleSubtreeForQueue(Set<Id> seedRoleIds) {
+        Set<Id> allRoleIds = new Set<Id>();
+        if (seedRoleIds == null || seedRoleIds.isEmpty()) {
+            return allRoleIds;
+        }
+        ensureUserRoleChildrenByParentLoaded();
+        Set<Id> frontier = new Set<Id>(seedRoleIds);
+        Integer depth = 0;
+        while (!frontier.isEmpty() && depth < MAX_USER_ROLE_DESCENDANTS_DEPTH) {
+            depth++;
+            allRoleIds.addAll(frontier);
+            Set<Id> next = new Set<Id>();
+            for (Id parentRoleId : frontier) {
+                List<Id> children = userRoleChildrenByParentMemo.get(parentRoleId);
+                if (children == null || children.isEmpty()) {
+                    continue;
+                }
+                for (Id childId : children) {
+                    if (!allRoleIds.contains(childId)) {
+                        next.add(childId);
+                    }
+                }
+            }
+            frontier = next;
+        }
+        return allRoleIds;
+    }
+
+    private static void ensureUserRoleChildrenByParentLoaded() {
+        if (userRoleChildrenByParentMemo != null) {
+            return;
+        }
+        userRoleChildrenByParentMemo = new Map<Id, List<Id>>();
+        for (UserRole ur : [SELECT Id, ParentRoleId FROM UserRole]) {
+            if (ur.ParentRoleId == null) {
+                continue;
+            }
+            if (!userRoleChildrenByParentMemo.containsKey(ur.ParentRoleId)) {
+                userRoleChildrenByParentMemo.put(ur.ParentRoleId, new List<Id>());
+            }
+            userRoleChildrenByParentMemo.get(ur.ParentRoleId).add(ur.Id);
+        }
+    }
+
+    private static Set<String> splitToSet(String rawValue) {
+        Set<String> result = new Set<String>();
+        if (String.isBlank(rawValue)) {
+            return result;
+        }
+        for (String item : rawValue.split('[;,\n]')) {
+            if (String.isNotBlank(item)) {
+                result.add(item.trim());
+            }
+        }
+        return result;
+    }
+
+    private static Map<String, Integer> parseRoleScale(String roleRawValue, Decimal fallbackScale) {
+        Map<String, Integer> roleScaleMap = new Map<String, Integer>();
+        if (String.isBlank(roleRawValue)) {
+            return roleScaleMap;
+        }
+
+        Integer fallback = fallbackScale == null ? 1 : Integer.valueOf(fallbackScale);
+        if (fallback <= 0) {
+            fallback = 1;
+        }
+
+        for (String item : roleRawValue.split(';')) {
+            if (String.isBlank(item)) {
+                continue;
+            }
+            String normalized = item.trim();
+            /* Bỏ qua đoạn thừa kiểu "RoleName|scale;0" — token chỉ là số không phải tên Role. */
+            if (!normalized.contains('|')) {
+                try {
+                    Integer.valueOf(normalized);
+                    continue;
+                } catch (Exception eIgnored) {
+                }
+            }
+            if (normalized.contains('|')) {
+                List<String> parts = normalized.split('\\|');
+                String roleName = parts.size() > 0 ? parts[0].trim() : null;
+                Integer scale = fallback;
+                if (parts.size() > 1 && String.isNotBlank(parts[1])) {
+                    try {
+                        scale = Integer.valueOf(parts[1].trim());
+                    } catch (Exception e) {
+                        scale = fallback;
+                    }
+                }
+                if (String.isNotBlank(roleName)) {
+                    String rk = normalizeRoleKey(roleName);
+                    if (String.isNotBlank(rk)) {
+                        roleScaleMap.put(rk, scale <= 0 ? 1 : scale);
+                    }
+                }
+            } else {
+                String rk = normalizeRoleKey(normalized);
+                if (String.isNotBlank(rk)) {
+                    roleScaleMap.put(rk, fallback);
+                }
+            }
+        }
+        return roleScaleMap;
+    }
+
+    /**
+     * Khớp FEC_Role__c với UserRole.Name: trim, gom khoảng trắng, lowercase.
+     * Tránh trả 0 khi SOQL IN phân biệt hoa/thường hoặc lệch khoảng trắng so với cấu hình.
+     */
+    private static String normalizeRoleKey(String roleNameOrLabel) {
+        if (String.isBlank(roleNameOrLabel)) {
+            return '';
+        }
+        return roleNameOrLabel.trim().replaceAll('\\s+', ' ').toLowerCase();
+    }
+
+    private static List<User> filterUsersMatchingRoleScale(
+        List<User> candidates,
+        Map<String, Integer> roleScaleMap
+    ) {
+        List<User> eligible = new List<User>();
+        if (candidates == null || roleScaleMap == null || roleScaleMap.isEmpty()) {
+            return eligible;
+        }
+        Set<Id> configuredRoleIds = resolveConfiguredUserRoleIds(roleScaleMap);
+        for (User u : candidates) {
+            if (u.UserRoleId == null) {
+                continue;
+            }
+            String rn = u.UserRole == null ? null : u.UserRole.Name;
+            if (
+                roleScaleMap.containsKey(normalizeRoleKey(rn)) &&
+                configuredRoleIds.contains(u.UserRoleId)
+            ) {
+                eligible.add(u);
+            }
+        }
+        return eligible;
+    }
+
+    private static Set<Id> resolveConfiguredUserRoleIds(Map<String, Integer> roleScaleMap) {
+        Set<Id> roleIds = new Set<Id>();
+        if (roleScaleMap == null || roleScaleMap.isEmpty()) {
+            return roleIds;
+        }
+        Set<String> normalizedRoleKeys = roleScaleMap.keySet();
+        for (UserRole roleRecord : [SELECT Id, Name FROM UserRole]) {
+            if (
+                String.isNotBlank(roleRecord.Name) &&
+                normalizedRoleKeys.contains(normalizeRoleKey(roleRecord.Name))
+            ) {
+                roleIds.add(roleRecord.Id);
+            }
+        }
+        return roleIds;
+    }
+
+    private static void trackUserInAssignmentOrder(List<Id> usersInAssignmentOrder, Id userId) {
+        if (usersInAssignmentOrder == null || userId == null) {
+            return;
+        }
+        if (!usersInAssignmentOrder.contains(userId)) {
+            usersInAssignmentOrder.add(userId);
+        }
+    }
+
+    private static void appendSummaryFromAssignmentOrder(
+        List<Id> usersInAssignmentOrder,
+        Map<Id, Integer> numberByUser,
+        List<Id> summaryUserIds,
+        List<Integer> summaryCounts
+    ) {
+        if (numberByUser == null || numberByUser.isEmpty()) {
+            return;
+        }
+        Set<Id> seen = new Set<Id>();
+        if (usersInAssignmentOrder != null) {
+            for (Id userId : usersInAssignmentOrder) {
+                if (userId == null || seen.contains(userId) || !numberByUser.containsKey(userId)) {
+                    continue;
+                }
+                seen.add(userId);
+                summaryUserIds.add(userId);
+                summaryCounts.add(numberByUser.get(userId));
+            }
+        }
+        for (Id userId : numberByUser.keySet()) {
+            if (seen.contains(userId)) {
+                continue;
+            }
+            summaryUserIds.add(userId);
+            summaryCounts.add(numberByUser.get(userId));
+        }
+    }
+
+    private static List<Id> buildOrderedUserIdsForLogDetails(
+        List<Id> userIdsInAssignmentOrder,
+        Map<Id, Integer> countsByAssignedUserId
+    ) {
+        List<Id> ordered = new List<Id>();
+        if (countsByAssignedUserId == null || countsByAssignedUserId.isEmpty()) {
+            return ordered;
+        }
+        Set<Id> seen = new Set<Id>();
+        if (userIdsInAssignmentOrder != null) {
+            for (Id userId : userIdsInAssignmentOrder) {
+                if (userId == null || seen.contains(userId) || !countsByAssignedUserId.containsKey(userId)) {
+                    continue;
+                }
+                seen.add(userId);
+                ordered.add(userId);
+            }
+        }
+        for (Id userId : countsByAssignedUserId.keySet()) {
+            if (!seen.contains(userId)) {
+                ordered.add(userId);
+            }
+        }
+        return ordered;
+    }
+
+    private static Map<Id, Integer> getHistoricalAssignedCountByUser(
+        Id assignmentId,
+        List<User> eligibleUsers
+    ) {
+        Map<String, List<Id>> userIdsByEmail = new Map<String, List<Id>>();
+        Map<Id, Integer> countByUser = new Map<Id, Integer>();
+        Set<String> emails = new Set<String>();
+
+        for (User userRecord : eligibleUsers) {
+            countByUser.put(userRecord.Id, 0);
+            if (String.isNotBlank(userRecord.Email)) {
+                String normalizedEmail = userRecord.Email.trim().toLowerCase();
+                if (!userIdsByEmail.containsKey(normalizedEmail)) {
+                    userIdsByEmail.put(normalizedEmail, new List<Id>());
+                }
+                userIdsByEmail.get(normalizedEmail).add(userRecord.Id);
+                emails.add(normalizedEmail);
+            }
+        }
+        if (emails.isEmpty()) {
+            return countByUser;
+        }
+
+        for (AggregateResult ar : [
+            SELECT FEC_Name_User__c userEmail, SUM(FEC_Number_of_Case__c) totalCase
+            FROM FEC_Case_Assignment_Log_Detail__c
+            WHERE
+                FEC_Case_Assignment_log_Name__r.FEC_Case_Assignment_Name__c = :assignmentId
+                AND FEC_Name_User__c IN :emails
+            GROUP BY FEC_Name_User__c
+        ]) {
+            String emailValue = (String) ar.get('userEmail');
+            if (String.isBlank(emailValue)) {
+                continue;
+            }
+            List<Id> matchedUserIds = userIdsByEmail.get(emailValue.trim().toLowerCase());
+            if (matchedUserIds == null || matchedUserIds.isEmpty()) {
+                continue;
+            }
+            Decimal totalAssigned = (Decimal) ar.get('totalCase');
+            Integer totalCount = totalAssigned == null ? 0 : Integer.valueOf(totalAssigned);
+            Integer perUserCount = totalCount / matchedUserIds.size();
+            Integer remainder = Math.mod(totalCount, matchedUserIds.size());
+            for (Integer idx = 0; idx < matchedUserIds.size(); idx++) {
+                Id userId = matchedUserIds[idx];
+                Integer assignedCount = perUserCount + (idx < remainder ? 1 : 0);
+                countByUser.put(userId, assignedCount);
+            }
+        }
+        return countByUser;
+    }
+
+    private static Integer scaleForUser(User userRecord, Map<String, Integer> roleScaleMap) {
+        String rn = userRecord.UserRole == null ? null : userRecord.UserRole.Name;
+        Integer s = roleScaleMap.get(normalizeRoleKey(rn));
+        if (s == null || s <= 0) {
+            return 1;
+        }
+        return s;
+    }
+
+    /** Lặp User Id theo tỉ trọng scale trên FEC_Role__c — thứ tự = thứ tự eligible (Name) trên queue. */
+    private static List<Id> buildWeightedUserSlots(
+        List<User> eligibleUsers,
+        Map<String, Integer> roleScaleMap
+    ) {
+        List<Id> weightedIds = new List<Id>();
+        if (eligibleUsers == null || roleScaleMap == null) {
+            return weightedIds;
+        }
+        for (User userRecord : eligibleUsers) {
+            Integer scale = scaleForUser(userRecord, roleScaleMap);
+            for (Integer slot = 0; slot < scale; slot++) {
+                weightedIds.add(userRecord.Id);
+            }
+        }
+        return weightedIds;
+    }
+
+    /**
+     * Continuous: cân đối lâu dài theo scale — mỗi Case gán cho user có tỉ số đã-gán/scale nhỏ nhất
+     * (cnt1/sc1 và cnt2/sc2 so sanh bang tích nguyen cnt1*sc2 vs cnt2*sc1). Trong một lần chạy, cnt trên map tăng dần.
+     */
+    private static void distributeWeightedLeastLoaded(
+        List<DistributionTarget> distributionTargets,
+        List<User> eligibleUsers,
+        Map<String, Integer> roleScaleMap,
+        Map<Id, Integer> historicalCountByUser,
+        Map<Id, Integer> numberByUser,
+        List<Id> usersInAssignmentOrder
+    ) {
+        if (distributionTargets == null || eligibleUsers == null || eligibleUsers.isEmpty()) {
+            return;
+        }
+        Integer eligibleCount = eligibleUsers.size();
+        List<Integer> scaleByIndex = new List<Integer>();
+        List<Integer> runCountByIndex = new List<Integer>();
+        for (Integer idx = 0; idx < eligibleCount; idx++) {
+            User candidateUser = eligibleUsers[idx];
+            scaleByIndex.add(scaleForUser(candidateUser, roleScaleMap));
+            runCountByIndex.add(getCountValue(historicalCountByUser, candidateUser.Id));
+        }
+
+        for (DistributionTarget target : distributionTargets) {
+            Integer bestIdx = -1;
+            Integer bestCnt = 0;
+            Integer bestScale = 1;
+            for (Integer idx = 0; idx < eligibleCount; idx++) {
+                Integer sc = scaleByIndex[idx];
+                Integer cnt = runCountByIndex[idx];
+                if (bestIdx < 0) {
+                    bestIdx = idx;
+                    bestCnt = cnt;
+                    bestScale = sc;
+                    continue;
+                }
+                Long lhs = (Long) cnt * bestScale;
+                Long rhs = (Long) bestCnt * sc;
+                if (lhs < rhs || (lhs == rhs && idx < bestIdx)) {
+                    bestIdx = idx;
+                    bestCnt = cnt;
+                    bestScale = sc;
+                }
+            }
+            if (bestIdx < 0) {
+                continue;
+            }
+            User chosenUser = eligibleUsers[bestIdx];
+            Id chosenId = chosenUser.Id;
+            target.assignedUserId = chosenId;
+            Integer newCnt = bestCnt + 1;
+            runCountByIndex[bestIdx] = newCnt;
+            historicalCountByUser.put(chosenId, newCnt);
+            Integer nextCount =
+                numberByUser.containsKey(chosenId) ? numberByUser.get(chosenId) + 1 : 1;
+            numberByUser.put(chosenId, nextCount);
+            if (nextCount == 1) {
+                trackUserInAssignmentOrder(usersInAssignmentOrder, chosenId);
+            }
+        }
+    }
+
+    /**
+     * Time-Based và default: một vòng lặp RR có trong số slot = tổng scale; offsets theo log lịch sử để run sau nối tiếp run trước.
+     */
+    private static void distributeWeightedSequentialFromHistory(
+        List<DistributionTarget> distributionTargets,
+        List<User> eligibleUsers,
+        Map<String, Integer> roleScaleMap,
+        Map<Id, Integer> historicalCountByUser,
+        Map<Id, Integer> numberByUser,
+        List<Id> usersInAssignmentOrder
+    ) {
+        List<Id> weightedSlots = buildWeightedUserSlots(eligibleUsers, roleScaleMap);
+        if (
+            distributionTargets == null ||
+            weightedSlots.isEmpty()
+        ) {
+            return;
+        }
+        Integer totalPriorAcrossEligible = 0;
+        if (eligibleUsers != null) {
+            for (User u : eligibleUsers) {
+                totalPriorAcrossEligible += getCountValue(historicalCountByUser, u.Id);
+            }
+        }
+        Integer pointer = Math.mod(totalPriorAcrossEligible, weightedSlots.size());
+        for (DistributionTarget target : distributionTargets) {
+            Id newOwnerId = weightedSlots[pointer];
+            target.assignedUserId = newOwnerId;
+            historicalCountByUser.put(
+                newOwnerId,
+                getCountValue(historicalCountByUser, newOwnerId) + 1
+            );
+            Integer nextCount =
+                numberByUser.containsKey(newOwnerId) ? numberByUser.get(newOwnerId) + 1 : 1;
+            numberByUser.put(newOwnerId, nextCount);
+            if (nextCount == 1) {
+                trackUserInAssignmentOrder(usersInAssignmentOrder, newOwnerId);
+            }
+            pointer = Math.mod(pointer + 1, weightedSlots.size());
+        }
+    }
+
+    private static Integer getCountValue(Map<Id, Integer> countByUser, Id userId) {
+        Integer currentValue = countByUser.get(userId);
+        return currentValue == null ? 0 : currentValue;
+    }
+
+    private static String buildKey(
+        Id productTypeId,
+        String productTypeName,
+        Id categoryId,
+        String categoryName,
+        Id subCategoryId,
+        String subCategoryName
+    ) {
+        return normalizeKeyPart(productTypeId, productTypeName) + '|' +
+            normalizeKeyPart(categoryId, categoryName) + '|' +
+            normalizeKeyPart(subCategoryId, subCategoryName);
+    }
+
+    private static String normalizeKeyPart(Id idValue, String nameValue) {
+        if (String.isNotBlank(nameValue)) {
+            return nameValue.trim().toLowerCase();
+        }
+        if (idValue != null) {
+            return String.valueOf(idValue).toLowerCase();
+        }
+        return '';
+    }
+
+    private static void addSubCodeExactKeys(
+        Set<String> nocExactKeys,
+        String baseKey,
+        Id subCodeId,
+        String subCodeName,
+        String subCodeApiCode
+    ) {
+        for (String subCodeKey : subCodeKeyVariants(subCodeId, subCodeName, subCodeApiCode)) {
+            nocExactKeys.add(baseKey + '|' + subCodeKey);
+        }
+    }
+
+    private static Set<String> subCodeKeyVariants(
+        Id subCodeId,
+        String subCodeName,
+        String subCodeApiCode
+    ) {
+        Set<String> keys = new Set<String>();
+        if (String.isNotBlank(subCodeApiCode)) {
+            keys.add(subCodeApiCode.trim().toLowerCase());
+        }
+        if (String.isNotBlank(subCodeName)) {
+            keys.add(subCodeName.trim().toLowerCase());
+        }
+        if (subCodeId != null) {
+            keys.add(String.valueOf(subCodeId).toLowerCase());
+        }
+        return keys;
+    }
+}

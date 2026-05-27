@@ -1,0 +1,88 @@
+<template>
+    <c-fec-generic-modal title={title} size="medium" onclose={handleClose}>
+        <div class="slds-p-around_small" style="max-height: 70vh; overflow-y: auto;">
+            <div if:true={isLoading} class="slds-is-relative">
+                <lightning-spinner alternative-text="Loading" size="medium"></lightning-spinner>
+            </div>
+
+            <lightning-layout vertical-align="start" multiple-rows>
+                <lightning-layout-item size="6" padding="around-small">
+                    <lightning-combobox data-id="keyId" name="FEC_KeyIdentifier__c" label={label.lblDataLinkage} options={accountLinkageOptions} value={localData.FEC_KeyIdentifier__c} disabled={isEditting} required onchange={handleInputChange}></lightning-combobox>
+                </lightning-layout-item>
+                <lightning-layout-item size="6" padding="around-small">
+                    <lightning-input data-id="fieldId" type="text" label={label.lblFieldId} value={localData.FEC_FieldID__c} onchange={handleInputChange} onblur={handleFieldIdBlur} name="FEC_FieldID__c" disabled={isEditting} required></lightning-input>
+                </lightning-layout-item>
+                <lightning-layout-item size="6" padding="around-small">
+                    <lightning-input type="text" label={label.lblFieldName} value={localData.FEC_FieldName__c} onchange={handleInputChange} name="FEC_FieldName__c" required></lightning-input>
+                </lightning-layout-item>
+                <lightning-layout-item size="6" padding="around-small" class="slds-p-top_large">
+                    <lightning-input type="checkbox" label={label.lblIsActive} checked={localData.FEC_IsActive__c} onchange={handleInputChange} name="FEC_IsActive__c"></lightning-input>
+                </lightning-layout-item>
+                <lightning-layout-item size="6" padding="around-small">
+                    <lightning-input type="date" label={label.lblStartDate} value={localData.FEC_StartDate__c} onchange={handleInputChange} name="FEC_StartDate__c" required></lightning-input>
+                </lightning-layout-item>
+                <lightning-layout-item size="6" padding="around-small">
+                    <lightning-input type="date" label={label.lblEndDate} value={localData.FEC_EndDate__c} onchange={handleInputChange} name="FEC_EndDate__c"></lightning-input>
+                </lightning-layout-item>
+            </lightning-layout>
+
+            <hr class="slds-m-vertical_medium" />
+            
+            <div class="slds-grid slds-grid_vertical-align-center">
+                <div class="slds-col slds-size_1-of-3">
+                    <p class="slds-text-body_regular slds-text-color_success">
+                        <lightning-icon icon-name="utility:info" size="x-small" class="slds-m-right_x-small"></lightning-icon>
+                        {label.msgProcessEOD}
+                    </p>
+                </div>
+            </div>
+
+            <lightning-layout vertical-align="start">
+                <lightning-layout-item size="6" padding="around-small">
+                    <lightning-input type="file" label={label.lblChooseFile} variant="label-hidden" onchange={handleFileChange} accept={fileAccept}></lightning-input>
+                    <div class="slds-text-body_small slds-m-top_x-small">{fileName}</div>
+                </lightning-layout-item>
+                <lightning-layout-item size="3" padding="around-small" class="slds-col_bump-left">
+                    <lightning-button label={label.btnDownloadTemplate} variant="brand" onclick={handleDownloadTemplate}></lightning-button>
+                </lightning-layout-item>
+            </lightning-layout>
+            
+            <hr class="slds-m-vertical_medium" />
+
+            <lightning-layout horizontal-align="space">
+                <lightning-layout-item size="3"><p class="slds-text-title_bold">{label.lblFileName}</p></lightning-layout-item>
+                <lightning-layout-item size="2"><p class="slds-text-title_bold">{label.lblStatus}</p></lightning-layout-item>
+                <lightning-layout-item size="3"><p class="slds-text-title_bold">{label.lblUploadedBy}</p></lightning-layout-item>
+                <lightning-layout-item size="2"><p class="slds-text-title_bold">{label.lblUploadedAt}</p></lightning-layout-item>
+                <lightning-layout-item size="2"><p class="slds-text-title_bold"></p></lightning-layout-item>
+            </lightning-layout>
+            
+            <template if:true={existingFiles.length}>
+                <template for:each={processedExistingFiles} for:item="file">
+                    <div key={file.id} class="slds-border_top slds-p-vertical_x-small">
+                        <lightning-layout horizontal-align="space">
+                            <lightning-layout-item size="3"><a href={file.downloadUrl} target="_blank">{file.name}</a></lightning-layout-item>
+                            <lightning-layout-item size="2"><span>{file.status}</span></lightning-layout-item>
+                            <lightning-layout-item size="3"><span>{file.uploadedBy}</span></lightning-layout-item>
+                            <lightning-layout-item size="2"><span>{file.uploadedTime}</span></lightning-layout-item>
+                            <lightning-layout-item size="2">
+                                <lightning-button-icon if:true={file.isProcessing} icon-name="utility:delete" variant="bare" data-id={file.id} onclick={handleDeleteFile}></lightning-button-icon>
+                            </lightning-layout-item>
+                        </lightning-layout>
+                    </div>
+                </template>
+            </template>
+            <template if:false={existingFiles.length}>
+                <div class="slds-p-around_small slds-border_top">
+                    <p class="slds-text-body_medium slds-text-align_center">
+                        {label.msgNoContent}
+                    </p>
+                </div>
+            </template>
+        </div>
+        <div slot="footer">
+            <lightning-button label={label.btnCancel} variant="neutral" onclick={handleClose} class="slds-m-right_small"></lightning-button>
+            <lightning-button label={label.btnFinish} variant="success" onclick={handleSave} disabled={isLoading}></lightning-button>
+        </div>
+    </c-fec-generic-modal>
+</template>

@@ -1,0 +1,127 @@
+<template>
+  <template lwc:if={isHiddenLwc}></template>
+  <template lwc:else>
+    <lightning-spinner lwc:if={isLoading} size="medium" variant="brand"></lightning-spinner>
+    <div class="slds-card slds-p-around--small">
+      <lightning-accordion
+        allow-multiple-sections-open
+        active-section-name="addressList"
+      >
+        <lightning-accordion-section name="addressList" label="Address List">
+          <div class="slds-p-top_x-small" lwc:if={addressInfos}>
+            <lightning-datatable
+              key-field="Id"
+              data={addressInfos}
+              columns={columns}
+              max-row-selection="1"
+              disabled-rows={disabledRows}
+              selected-rows={selectedRows}
+              onrowselection={handleRowSelect}
+            >
+            </lightning-datatable>
+          </div>
+          <div class="slds-p-top_x-small" lwc:if={isEdit}>
+            <lightning-button 
+              variant="brand"
+              label={customLabel.btnAddTempAddress}
+              onclick={handleAddTempAddress} 
+              disabled={isDisableBtnAddTempAddress}
+            ></lightning-button>
+          </div>
+          <div class="slds-p-top_x-small slds-list_horizontal" lwc:if={isDisableBtnAddTempAddress}>
+            <lightning-radio-group
+              name="radioGroup"
+              label={customLabel.newTempAddress}
+              options={newTempAddressOptions}
+              value={addressInfoValue}
+              type="radio"
+              disabled
+            ></lightning-radio-group>
+            <template lwc:if={isEdit}>
+              <lightning-button-icon icon-name="utility:edit" class="slds-m-left_xx-small slds-p-top_x-small" onclick={handleEditTempAddress}></lightning-button-icon>
+              <lightning-button-icon icon-name="utility:close" class="slds-m-left_xx-small slds-p-top_x-small" onclick={handleDeleteTempAddress}></lightning-button-icon>
+            </template>
+          </div>
+        </lightning-accordion-section>
+      </lightning-accordion>
+    </div>
+    <c-fec_-modal
+      header={customLabel.modalHeader}
+      onclose={handleCloseModal}
+      is-loading={isLoading}
+      if:true={isModalOpen}
+    >
+      <div slot="content" class="case-info__new-address-form">
+        <lightning-layout multiple-rows>
+          <lightning-layout-item padding="around-small" size="6">
+            <lightning-combobox
+              label={customLabel.addressType}
+              value={addressType}
+              options={addressTypeOptions}
+              disabled
+              required
+            ></lightning-combobox>
+          </lightning-layout-item>
+          <lightning-layout-item padding="around-small" size="6"></lightning-layout-item>
+          <lightning-layout-item padding="around-small" size="6">
+            <lightning-input 
+              data-id="building"
+              type="text"
+              label={customLabel.building}
+              value={building}
+              required
+            ></lightning-input>
+          </lightning-layout-item>
+          <lightning-layout-item padding="around-small" size="6">
+            <c-fec_searchable-combobox
+              label={customLabel.provinceCity}
+              value={mailingCity}
+              options={provinceOptions}
+              onchange={handleMailingProvinceChange}
+              required
+            ></c-fec_searchable-combobox>
+          </lightning-layout-item><lightning-layout-item padding="around-small" size="6">
+            <lightning-input 
+              data-id="number"
+              type="text"
+              label={customLabel.number}
+              value={numberValue}
+              required
+            ></lightning-input>
+          </lightning-layout-item>
+          <lightning-layout-item padding="around-small" size="6">
+            <c-fec_searchable-combobox
+              label={customLabel.ward}
+              value={mailingWard}
+              options={wardOptions}
+              onchange={handleMailingWardChange}
+              required
+            ></c-fec_searchable-combobox>
+          </lightning-layout-item>
+          </lightning-layout-item><lightning-layout-item padding="around-small" size="6">
+            <lightning-input 
+              data-id="street"
+              type="text"
+              label={customLabel.street}
+              value={street}
+              required
+            ></lightning-input>
+          </lightning-layout-item>
+        </lightning-layout>
+      </div>
+      <div slot="footer">
+        <lightning-button
+          label={customLabel.btnCancel}
+          onclick={handleCloseModal}
+        ></lightning-button>
+  
+        <lightning-button
+          variant="brand"
+          label={customLabel.btnSave}
+          onclick={handleSave}
+          class="slds-m-left_x-small"
+        ></lightning-button>
+      </div>
+    </c-fec_-modal>
+  </template>
+</template>
