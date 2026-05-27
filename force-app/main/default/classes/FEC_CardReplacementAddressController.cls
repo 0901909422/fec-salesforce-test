@@ -71,8 +71,9 @@ public without sharing class FEC_CardReplacementAddressController {
     @AuraEnabled
     public static Id createAddressInfo(AddressInfoInput input) {
         try {
+            Id customerHistoryId = resolveCustomerHistoryId(input);
             FEC_Address_Info__c rec = buildAddressInfo(input);
-            rec.FEC_Customer_History__c = input.customerHistoryId;
+            rec.FEC_Customer_History__c = customerHistoryId;
             Database.SaveResult sr = Database.insert(rec, AccessLevel.SYSTEM_MODE);
             if (!sr.isSuccess()) {
                 throw new AuraHandledException(formatDmlErrors(sr.getErrors()));
@@ -87,7 +88,7 @@ public without sharing class FEC_CardReplacementAddressController {
     public static void updateAddressInfo(AddressInfoInput input) {
         try {
             FEC_Address_Info__c rec = buildAddressInfo(input);
-            rec.Id = input.addressInfoId;
+            rec.Id = Id.valueOf(input.addressInfoId);
             Database.SaveResult sr = Database.update(rec, AccessLevel.SYSTEM_MODE);
             if (!sr.isSuccess()) {
                 throw new AuraHandledException(formatDmlErrors(sr.getErrors()));
@@ -114,17 +115,31 @@ public without sharing class FEC_CardReplacementAddressController {
 
     private static FEC_Address_Info__c buildAddressInfo(AddressInfoInput input) {
         return new FEC_Address_Info__c(
-            FEC_Case__c = input.caseId,
+            FEC_Case__c = String.isNotBlank(input.caseId) ? Id.valueOf(input.caseId) : null,
             FEC_Address_Type__c = input.addressType,
             FEC_Address__c = input.address,
             FEC_Mailing_Address__c = true,
-            FEC_Country__c = input.countryId,
-            FEC_Province__c = input.provinceId,
-            FEC_District__c = input.districtId,
+            FEC_Country__c = String.isNotBlank(input.countryId) ? Id.valueOf(input.countryId) : null,
+            FEC_Province__c = String.isNotBlank(input.provinceId) ? Id.valueOf(input.provinceId) : null,
+            FEC_District__c = String.isNotBlank(input.districtId) ? Id.valueOf(input.districtId) : null,
             FEC_Building__c = input.building,
             FEC_Number__c = input.numberValue,
             FEC_Street__c = input.street
         );
+    }
+
+    private static Id resolveCustomerHistoryId(AddressInfoInput input) {
+        if (String.isNotBlank(input.customerHistoryId)) {
+            return Id.valueOf(input.customerHistoryId);
+        }
+        Id caseId = Id.valueOf(input.caseId);
+        Case objCase = [
+            SELECT FEC_Account_or_Contract__c
+            FROM Case
+            WHERE Id = :caseId
+            LIMIT 1
+        ];
+        return objCase.FEC_Account_or_Contract__c;
     }
 
     private static String formatDmlErrors(List<Database.Error> errors) {
@@ -283,16 +298,16 @@ public without sharing class FEC_CardReplacementAddressController {
     }
 
     public class AddressInfoInput {
-        @AuraEnabled public Id addressInfoId;
-        @AuraEnabled public Id caseId;
-        @AuraEnabled public Id customerHistoryId;
-        @AuraEnabled public String addressType;
-        @AuraEnabled public String address;
-        @AuraEnabled public Id countryId;
-        @AuraEnabled public Id provinceId;
-        @AuraEnabled public Id districtId;
-        @AuraEnabled public String building;
-        @AuraEnabled public String numberValue;
-        @AuraEnabled public String street;
+        @AuraEnabled public String addressInfoId { get; set; }
+        @AuraEnabled public String caseId { get; set; }
+        @AuraEnabled public String customerHistoryId { get; set; }
+        @AuraEnabled public String addressType { get; set; }
+        @AuraEnabled public String address { get; set; }
+        @AuraEnabled public String countryId { get; set; }
+        @AuraEnabled public String provinceId { get; set; }
+        @AuraEnabled public String districtId { get; set; }
+        @AuraEnabled public String building { get; set; }
+        @AuraEnabled public String numberValue { get; set; }
+        @AuraEnabled public String street { get; set; }
     }
 }
