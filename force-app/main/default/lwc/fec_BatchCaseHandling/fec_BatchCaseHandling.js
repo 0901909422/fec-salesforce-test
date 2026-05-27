@@ -567,6 +567,59 @@ export default class Fec_BatchCaseHandling extends LightningElement {
     return v;
   }
 
+  registerBusinessProcessKeysFromRow(keysFromSource, row) {
+    if (!keysFromSource || !row) {
+      return;
+    }
+    const code = String(row.businessProcessCode || STR_EMPTY).trim();
+    const name = String(row.businessProcessName || STR_EMPTY).trim();
+    const key = String(this.rowBusinessProcessKey(row) || STR_EMPTY).trim();
+    [code, name, key].forEach((token) => {
+      if (!token || !this.isAllowedBulkExportBusinessProcess(token)) {
+        return;
+      }
+      keysFromSource.set(token.toLowerCase(), token);
+    });
+  }
+
+  rowMatchesSelectedBusinessProcess(row, selectedBpCodes) {
+    const selected = new Set(
+      (Array.isArray(selectedBpCodes) ? selectedBpCodes : []).map((c) =>
+        String(c || STR_EMPTY).trim().toLowerCase()
+      )
+    );
+    if (!selected.size) {
+      return false;
+    }
+    const code = String(row?.businessProcessCode || STR_EMPTY)
+      .trim()
+      .toLowerCase();
+    const name = String(row?.businessProcessName || STR_EMPTY)
+      .trim()
+      .toLowerCase();
+    const key = String(this.rowBusinessProcessKey(row) || STR_EMPTY)
+      .trim()
+      .toLowerCase();
+    return (
+      (code && selected.has(code)) ||
+      (name && selected.has(name)) ||
+      (key && selected.has(key))
+    );
+  }
+
+  businessProcessInfoMatchesSourceKeys(bpInfo, keysFromSource) {
+    const code = String(bpInfo?.businessProcessCode || STR_EMPTY)
+      .trim()
+      .toLowerCase();
+    const name = String(bpInfo?.businessProcessName || STR_EMPTY)
+      .trim()
+      .toLowerCase();
+    return (
+      (code && keysFromSource.has(code)) ||
+      (name && keysFromSource.has(name))
+    );
+  }
+
   buildAllowedBulkExportBpSet(names, codes) {
     const set = new Set();
     const nameList =
@@ -1706,7 +1759,7 @@ export default class Fec_BatchCaseHandling extends LightningElement {
 
     const all = [];
     let afterCaseId = STR_EMPTY;
-    while (all.length < total && all.length < EXPORT_MAX_ROWS) {
+    while (all.length < EXPORT_MAX_ROWS) {
       const res = await searchBulkCasesForExport({
         filtersJson,
         afterCaseId,
@@ -1729,7 +1782,7 @@ export default class Fec_BatchCaseHandling extends LightningElement {
         });
       });
       afterCaseId = String(raw[raw.length - 1]?.caseId || STR_EMPTY);
-      if (!afterCaseId) {
+      if (!afterCaseId || raw.length < EXPORT_FETCH_PAGE_SIZE) {
         break;
       }
     }
@@ -1852,10 +1905,7 @@ export default class Fec_BatchCaseHandling extends LightningElement {
 
     const keysFromSource = new Map();
     sourceRows.forEach((r) => {
-      const k = this.rowBusinessProcessKey(r);
-      if (k && this.isAllowedBulkExportBusinessProcess(k)) {
-        keysFromSource.set(k.toLowerCase(), k);
-      }
+      this.registerBusinessProcessKeysFromRow(keysFromSource, r);
     });
 
     let list = (Array.isArray(bpInfo) ? bpInfo : [])
@@ -1864,7 +1914,7 @@ export default class Fec_BatchCaseHandling extends LightningElement {
         return (
           n &&
           this.isAllowedBulkExportBusinessProcess(n) &&
-          keysFromSource.has(n.toLowerCase())
+          this.businessProcessInfoMatchesSourceKeys(b, keysFromSource)
         );
       })
       .map((b) => {
@@ -2167,22 +2217,25 @@ export default class Fec_BatchCaseHandling extends LightningElement {
     if (this.bpSubmitLoading) {
       return;
     }
-    const selectedBpCodes = this.bpRows
+    const selectedBpTokens = [];
+    this.bpRows
       .filter((r) => r.selected)
-      .map((r) => r.businessProcessCode);
-    if (!selectedBpCodes.length) {
+      .forEach((r) => {
+        const code = String(r.businessProcessCode || STR_EMPTY).trim();
+        const name = String(r.businessProcessName || STR_EMPTY).trim();
+        if (code) {
+          selectedBpTokens.push(code);
+        }
+        if (name) {
+          selectedBpTokens.push(name);
+        }
+      });
+    if (!selectedBpTokens.length) {
       this.showError(FEC_BCH_ExportToastTitle, MSG_BP_REQUIRED);
       return;
     }
-    const selectedSet = new Set(
-      selectedBpCodes.map((c) => String(c || STR_EMPTY).trim().toLowerCase())
-    );
     const rows = (this.bpExportSourceRows || []).filter((r) =>
-      selectedSet.has(
-        String(this.rowBusinessProcessKey(r) || STR_EMPTY)
-          .trim()
-          .toLowerCase()
-      )
+      this.rowMatchesSelectedBusinessProcess(r, selectedBpTokens)
     );
     if (!rows.length) {
       this.showInfo(FEC_BCH_ExportToastTitle, MSG_NO_DATA_EXPORT);
@@ -2376,7 +2429,7 @@ export default class Fec_BatchCaseHandling extends LightningElement {
         );
         return;
       }
-      const importCtx = this.resolveImportTemplateContext(isCofOrGsr);
+      const importCtx = await this.resolveImportTemplateContext(isCofOrGsr, fileName);
       const result = await this.withTimeout(
         importBatchData({
           fileName,
@@ -2461,7 +2514,7 @@ export default class Fec_BatchCaseHandling extends LightningElement {
     }
   }
 
-  resolveImportTemplateContext(isCofOrGsr) {
+  async resolveImportTemplateContext(isCofOrGsr, fileName) {
     const selected = (this.bpRows || []).filter((r) => r && r.selected);
     if (selected.length === 1) {
       const code = String(selected[0].businessProcessCode || STR_EMPTY).trim();
@@ -2474,11 +2527,48 @@ export default class Fec_BatchCaseHandling extends LightningElement {
         businessProcessName: name
       };
     }
+    const normalizedFile = String(fileName || STR_EMPTY).trim();
+    if (normalizedFile) {
+      try {
+        const filtersJson = JSON.stringify(this.buildFiltersPayload());
+        const bpInfo = await getBusinessProcessExportRows({ filtersJson });
+        const matched = (Array.isArray(bpInfo) ? bpInfo : []).filter((b) =>
+          this.uploadedFileMatchesTemplateName(normalizedFile, b.templateName)
+        );
+        if (matched.length >= 1) {
+          const uniqueTemplateKeys = new Set(
+            matched.map((b) => String(b.templateName || STR_EMPTY).trim().toLowerCase())
+          );
+          if (uniqueTemplateKeys.size === 1) {
+            const row = matched[0];
+            return {
+              templateName: String(row.templateName || STR_EMPTY).trim(),
+              businessProcessCode: String(row.businessProcessCode || STR_EMPTY).trim(),
+              businessProcessName: String(row.businessProcessName || STR_EMPTY).trim()
+            };
+          }
+        }
+      } catch (e) {
+        // Apex resolveImportTemplateName still matches by file name + user group
+      }
+    }
     return {
       templateName: isCofOrGsr ? TEMPLATE_NAME_GSR : TEMPLATE_NAME_OTHER,
       businessProcessCode: STR_EMPTY,
       businessProcessName: STR_EMPTY
     };
+  }
+
+  uploadedFileMatchesTemplateName(fileName, templateName) {
+    if (!fileName || !templateName) {
+      return false;
+    }
+    const fileCore = String(fileName).trim().toLowerCase().replace(/\.xlsx$/i, STR_EMPTY);
+    const expectedCore = String(templateName).trim().toLowerCase().replace(/\.xlsx$/i, STR_EMPTY);
+    if (!fileCore || !expectedCore) {
+      return false;
+    }
+    return fileCore === expectedCore || fileCore.includes(expectedCore);
   }
 
   mapImportResultStatusLabel(status) {

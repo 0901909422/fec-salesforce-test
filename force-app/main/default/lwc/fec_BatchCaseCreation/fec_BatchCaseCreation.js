@@ -6,6 +6,7 @@ import importBatchData from "@salesforce/apex/FEC_BatchCaseCreationController.im
 import saveResultFile from "@salesforce/apex/FEC_BatchCaseCreationController.saveResultFile";
 import logFailedImport from "@salesforce/apex/FEC_BatchCaseCreationController.logFailedImport";
 import getTemplateOptions from "@salesforce/apex/FEC_BatchCaseCreationController.getTemplateOptions";
+import runPendingImportBatch from "@salesforce/apex/FEC_BatchCaseCreationController.runPendingImportBatch";
 import FEC_Batch_RequestTimeout from "@salesforce/label/c.FEC_Batch_RequestTimeout";
 import FEC_Batch_FileExcelXlsxOnly from "@salesforce/label/c.FEC_Batch_FileExcelXlsxOnly";
 import FEC_Batch_FileMaxSize150MB from "@salesforce/label/c.FEC_Batch_FileMaxSize150MB";
@@ -14,6 +15,7 @@ import FEC_Batch_Msg_InvalidImportData from "@salesforce/label/c.FEC_Batch_Msg_I
 import FEC_Batch_Msg_CannotReadExcelContent from "@salesforce/label/c.FEC_Batch_Msg_CannotReadExcelContent";
 import FEC_Batch_Msg_Select_Template from "@salesforce/label/c.FEC_Batch_Msg_Select_Template";
 import FEC_Batch_Import_Missing_Excel_Column from "@salesforce/label/c.FEC_Batch_Import_Missing_Excel_Column";
+import FEC_Msg_Process_End_Of_Day from "@salesforce/label/c.FEC_Msg_Process_End_Of_Day";
 import FEC_Batch_Import_Contract_Header_Ambiguous from "@salesforce/label/c.FEC_Batch_Import_Contract_Header_Ambiguous";
 import FEC_SheetJS from "@salesforce/resourceUrl/FEC_SheetJS";
 import {
@@ -52,7 +54,25 @@ const HEADER_INTERACTION_PHONE = [
   "interaction phone number",
   "phone"
 ];
-const RESULT_APPEND_HEADERS = ["__Status", "__Interaction ID", "__Case ID", "__Errors"];
+const RESULT_APPEND_HEADERS = [
+  "__Status",
+  "__Interaction ID",
+  "__Case ID",
+  "__Errors"
+];
+
+const cellValueForSourceRow = (value) => {
+  if (value == null || value === "") {
+    return "";
+  }
+  if (typeof value === "number") {
+    if (Number.isFinite(value) && Number.isInteger(value)) {
+      return String(Math.trunc(value));
+    }
+    return String(value);
+  }
+  return String(value);
+};
 
 const isResultExportCutoffHeader = (header) => {
   const norm = normalizeHeaderCell(header);
@@ -469,7 +489,7 @@ export default class Fec_BatchCaseCreation extends LightningElement {
       sourceRows.push(
         originalHeaders.map((_, idx) => {
           const value = Array.isArray(rowArr) ? rowArr[idx] : "";
-          return value == null ? "" : value;
+          return cellValueForSourceRow(value);
         })
       );
       importRows.push({
@@ -587,12 +607,20 @@ export default class Fec_BatchCaseCreation extends LightningElement {
           fileName: fileToUpload.name,
           fileBodyBase64: base64,
           templateName: key,
-          rowsJson: JSON.stringify(this.pendingImportRows || [])
+          rowsJson: JSON.stringify(this.pendingImportRows || []),
+          sourceHeadersJson: JSON.stringify(this.pendingImportHeaders || []),
+          sourceRowsJson: JSON.stringify(this.pendingImportSourceRows || [])
         }),
         IMPORT_TIMEOUT_MS,
         IMPORT_TIMEOUT_MESSAGE
       );
-      if (result?.batchRecordId && result?.resultRowsJson) {
+      const importStatus = (result?.status || "").trim();
+      const isDeferredUpload = importStatus === "Uploaded";
+      if (
+        result?.batchRecordId &&
+        result?.resultRowsJson &&
+        !isDeferredUpload
+      ) {
         try {
           await this.saveResultWorkbook(
             result.batchRecordId,
@@ -608,7 +636,10 @@ export default class Fec_BatchCaseCreation extends LightningElement {
         }
       }
       if (result?.success) {
-        this.showSuccess("Success", result.message || "Import started.");
+        const successMessage = isDeferredUpload
+          ? result.message || FEC_Msg_Process_End_Of_Day
+          : result.message || "Import started.";
+        this.showSuccess("Success", successMessage);
         this.selectedFile = null;
         this.selectedFileName = "";
         this.pendingImportHeaders = [];
@@ -668,9 +699,9 @@ export default class Fec_BatchCaseCreation extends LightningElement {
   normalizeRow(row) {
     const status = row.status || "";
     const resultLabel =
-      status === "Processed" || status === "Failure" || row.resultDownloadUrl
-        ? "Result"
-        : "";
+      status === "Processed" || status === "Failure" ? "Result" : "";
+    const showResultDownload =
+      status === "Processed" || status === "Failure";
     return {
       ...row,
       fileDownloadUrl: row.fileDownloadUrl || "",
@@ -679,7 +710,7 @@ export default class Fec_BatchCaseCreation extends LightningElement {
       totalSuccessRecords: row.totalSuccessRecords ?? 0,
       totalFailedRecords: row.totalFailedRecords ?? 0,
       result: resultLabel,
-      resultDownloadUrl: row.resultDownloadUrl || ""
+      resultDownloadUrl: showResultDownload ? row.resultDownloadUrl || "" : ""
     };
   }
 
@@ -700,12 +731,8 @@ export default class Fec_BatchCaseCreation extends LightningElement {
       ? parsedRows.map((r, index) => {
           const rowStatus = String(r?.status || "");
           const isSucceeded = rowStatus.toLowerCase() === "succeeded";
-          const interactionId = isSucceeded
-            ? String(r?.interactionId || "")
-            : "";
-          const caseId = isSucceeded
-            ? String(r?.fecIdSearch || r?.caseBusinessId || r?.recordId || "")
-            : "";
+          const interactionId = isSucceeded ? String(r?.interactionId || "") : "";
+          const caseId = isSucceeded ? String(r?.fecIdSearch || "") : "";
           return [
             ...(exportSourceRows[index] || exportHeaders.map(() => "")),
             rowStatus,
@@ -845,6 +872,27 @@ export default class Fec_BatchCaseCreation extends LightningElement {
 
   async handleRefresh() {
     await this.refreshRows();
+  }
+
+  async handleProcessPending() {
+    this.isLoading = true;
+    try {
+      const count = await runPendingImportBatch();
+      const processed = Number(count) || 0;
+      this.showSuccess(
+        processed > 1 ? "Processing started" : "Processing completed",
+        processed > 1
+          ? `Đang xử lý ${processed} file Uploaded (từng file một). Refresh sau 1–2 phút.`
+          : processed > 0
+            ? "Đã xử lý file Uploaded. Vui lòng Refresh để xem kết quả."
+            : "Không có file Uploaded nào cần xử lý."
+      );
+      await this.refreshRows(false);
+    } catch (error) {
+      this.showError("Process failed", extractErrorMessage(error));
+    } finally {
+      this.isLoading = false;
+    }
   }
 
   readFileAsBase64(file) {

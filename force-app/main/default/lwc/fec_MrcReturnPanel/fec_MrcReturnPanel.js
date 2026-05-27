@@ -48,7 +48,11 @@ export default class Fec_MrcReturnPanel extends LightningElement {
   }
 
   get isReadOnly() {
-    return this.isEdit !== true;
+    return this.isEdit !== true || this.isCaseSubmited === true;
+  }
+
+  get panelIsEdit() {
+    return this.isEdit === true && this.isCaseSubmited !== true;
   }
 
   get isRl0502() {
