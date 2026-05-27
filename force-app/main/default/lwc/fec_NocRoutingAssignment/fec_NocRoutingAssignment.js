@@ -288,27 +288,33 @@ export default class Fec_NocRoutingAssignment extends NavigationMixin(LightningE
 
             if (this.isConsoleNavigation) {
                 let currentTabId;
+                let parentTabId;
                 try {
                     const focusedTab = await getFocusedTabInfo();
                     currentTabId = focusedTab?.tabId;
+                    //tungnm37 2026-05-27 14:32 - Nếu đang đứng trong subtab của NOC thì phải mở record mới dưới parent tab của NOC
+                    parentTabId = focusedTab?.parentTabId || focusedTab?.tabId;
                 } catch (e) {
                     currentTabId = null;
+                    parentTabId = null;
                 }
 
-                const newTabId = await openTab({
-                    pageReference,
-                    focus: true
-                });
+                const newTabId = parentTabId
+                    ? await openTab({
+                        parentTabId,
+                        pageReference,
+                        focus: true
+                    })
+                    : await openTab({
+                        pageReference,
+                        focus: true
+                    });
 
                 if (newTabId) {
                     await focusTab(newTabId);
                 }
 
-                if (currentTabId) {
-                    setTimeout(() => {
-                        closeTab(currentTabId).catch(() => {});
-                    }, 500);
-                }
+                //tungnm37 2026-05-27 14:36 - Giữ nguyên tab NOC hiện tại, không đóng tab sau khi tạo mới
                 return;
             }
 
