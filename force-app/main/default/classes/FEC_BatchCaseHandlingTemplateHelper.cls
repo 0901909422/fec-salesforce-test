@@ -261,8 +261,9 @@ public without sharing class FEC_BatchCaseHandlingTemplateHelper {
     }
 
     private static Boolean businessProcessFieldMatches(SObject templateRow, String businessProcessCode, String businessProcessName) {
+        // 27/05/2026 13:15 linhdev - template không gán BP không được match mọi case (tránh lấy nhầm Address/Phone)
         if (templateRow.get('FEC_Business_Process__c') == null) {
-            return true;
+            return false;
         }
         if (String.isBlank(businessProcessCode) && String.isBlank(businessProcessName)) {
             return false;
@@ -492,7 +493,8 @@ public without sharing class FEC_BatchCaseHandlingTemplateHelper {
         if (matched != null && hasTemplateFile(matched, versionIdByTemplateId)) {
             return fillTemplateExportBinding(out, matched, versionIdByTemplateId, urlByTemplateId);
         }
-        SObject withFile = findFirstTemplateWithFileForBusinessProcess(
+        // 27/05/2026 13:15 linhdev - fallback chỉ khi match BP chặt (prefix/code), không lấy template đầu tiên trong list
+        SObject withFile = findBestTemplateWithFileForBusinessProcess(
             businessProcessCode,
             businessProcessName,
             activeTemplates,
@@ -516,7 +518,9 @@ public without sharing class FEC_BatchCaseHandlingTemplateHelper {
         return versionIdByTemplateId.containsKey((Id) templateRow.get('Id'));
     }
 
-    private static SObject findFirstTemplateWithFileForBusinessProcess(
+    private static final Integer TEMPLATE_BP_MATCH_MIN_SCORE = 70;
+
+    private static SObject findBestTemplateWithFileForBusinessProcess(
         String businessProcessCode,
         String businessProcessName,
         List<SObject> activeTemplates,
@@ -525,15 +529,72 @@ public without sharing class FEC_BatchCaseHandlingTemplateHelper {
         if (activeTemplates == null || activeTemplates.isEmpty() || versionIdByTemplateId == null || versionIdByTemplateId.isEmpty()) {
             return null;
         }
+        SObject bestMatch;
+        Integer bestScore = -1;
         for (SObject tr : activeTemplates) {
             if (!businessProcessFieldMatches(tr, businessProcessCode, businessProcessName)) {
                 continue;
             }
-            if (versionIdByTemplateId.containsKey((Id) tr.get('Id'))) {
-                return tr;
+            if (!versionIdByTemplateId.containsKey((Id) tr.get('Id'))) {
+                continue;
+            }
+            Integer score = scoreTemplateBusinessProcessMatch(tr, businessProcessCode, businessProcessName);
+            if (score > bestScore) {
+                bestScore = score;
+                bestMatch = tr;
             }
         }
-        return null;
+        return bestScore >= TEMPLATE_BP_MATCH_MIN_SCORE ? bestMatch : null;
+    }
+
+    private static Integer scoreTemplateBusinessProcessMatch(
+        SObject templateRow,
+        String businessProcessCode,
+        String businessProcessName
+    ) {
+        if (templateRow == null) {
+            return 0;
+        }
+        SObject bpRel = templateRow.getSObject('FEC_Business_Process__r');
+        if (bpRel != null) {
+            String templateBpCode = bpRel.get('FEC_Code__c') == null
+                ? FEC_ConstantCommon.STR_EMPTY
+                : String.valueOf(bpRel.get('FEC_Code__c')).trim();
+            String templateBpName = bpRel.get('Name') == null
+                ? FEC_ConstantCommon.STR_EMPTY
+                : String.valueOf(bpRel.get('Name')).trim();
+            if (String.isNotBlank(businessProcessCode) && String.isNotBlank(templateBpCode)
+                && businessProcessCode.trim().equalsIgnoreCase(templateBpCode)) {
+                return 100;
+            }
+            if (String.isNotBlank(businessProcessName) && String.isNotBlank(templateBpName)
+                && businessProcessName.trim().equalsIgnoreCase(templateBpName)) {
+                return 90;
+            }
+            String casePrefix = mapBusinessProcessToTemplatePrefix(
+                String.isNotBlank(businessProcessCode) ? businessProcessCode : businessProcessName
+            );
+            String templatePrefix = mapBusinessProcessToTemplatePrefix(
+                String.isNotBlank(templateBpCode) ? templateBpCode : templateBpName
+            );
+            if (String.isNotBlank(casePrefix) && String.isNotBlank(templatePrefix)
+                && casePrefix.equalsIgnoreCase(templatePrefix)) {
+                return 80;
+            }
+        }
+        String bpKey = String.isNotBlank(businessProcessCode) ? businessProcessCode : businessProcessName;
+        String namePrefix = mapBusinessProcessToTemplatePrefix(bpKey);
+        if (String.isBlank(namePrefix)) {
+            return 0;
+        }
+        String templateName = templateRow.get('Name') == null
+            ? FEC_ConstantCommon.STR_EMPTY
+            : String.valueOf(templateRow.get('Name'));
+        if (String.isNotBlank(templateName)
+            && templateName.toLowerCase().startsWith(namePrefix.toLowerCase() + 'temp')) {
+            return 70;
+        }
+        return 0;
     }
 
     private static TemplateExportBinding fillTemplateExportBinding(
