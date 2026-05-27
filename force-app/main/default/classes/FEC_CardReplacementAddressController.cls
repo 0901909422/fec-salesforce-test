@@ -1,4 +1,4 @@
-public with sharing class FEC_CardReplacementAddressController {
+public without sharing class FEC_CardReplacementAddressController {
     @AuraEnabled
     public static List<FEC_Address_Info__c> getAddressInfos(String caseId) {
         try {
@@ -66,6 +66,88 @@ public with sharing class FEC_CardReplacementAddressController {
     public static String getCountryId() {
         List<FEC_Country__c> countries = [SELECT Id FROM FEC_Country__c WHERE FEC_Code__c = '2' LIMIT 1];
         return !countries.isEmpty() ? countries.get(0).Id : null;
+    }
+
+    @AuraEnabled
+    public static Id createAddressInfo(AddressInfoInput input) {
+        try {
+            Id customerHistoryId = resolveCustomerHistoryId(input);
+            FEC_Address_Info__c rec = buildAddressInfo(input);
+            rec.FEC_Customer_History__c = customerHistoryId;
+            Database.SaveResult sr = Database.insert(rec, AccessLevel.SYSTEM_MODE);
+            if (!sr.isSuccess()) {
+                throw new AuraHandledException(formatDmlErrors(sr.getErrors()));
+            }
+            return sr.getId();
+        } catch (Exception e) {
+            throw new AuraHandledException(e.getMessage());
+        }
+    }
+
+    @AuraEnabled
+    public static void updateAddressInfo(AddressInfoInput input) {
+        try {
+            FEC_Address_Info__c rec = buildAddressInfo(input);
+            rec.Id = Id.valueOf(input.addressInfoId);
+            Database.SaveResult sr = Database.update(rec, AccessLevel.SYSTEM_MODE);
+            if (!sr.isSuccess()) {
+                throw new AuraHandledException(formatDmlErrors(sr.getErrors()));
+            }
+        } catch (Exception e) {
+            throw new AuraHandledException(e.getMessage());
+        }
+    }
+
+    @AuraEnabled
+    public static void deleteAddressInfo(Id addressInfoId) {
+        try {
+            Database.DeleteResult dr = Database.delete(
+                new FEC_Address_Info__c(Id = addressInfoId),
+                AccessLevel.SYSTEM_MODE
+            );
+            if (!dr.isSuccess()) {
+                throw new AuraHandledException(formatDmlErrors(dr.getErrors()));
+            }
+        } catch (Exception e) {
+            throw new AuraHandledException(e.getMessage());
+        }
+    }
+
+    private static FEC_Address_Info__c buildAddressInfo(AddressInfoInput input) {
+        return new FEC_Address_Info__c(
+            FEC_Case__c = String.isNotBlank(input.caseId) ? Id.valueOf(input.caseId) : null,
+            FEC_Address_Type__c = input.addressType,
+            FEC_Address__c = input.address,
+            FEC_Mailing_Address__c = true,
+            FEC_Country__c = String.isNotBlank(input.countryId) ? Id.valueOf(input.countryId) : null,
+            FEC_Province__c = String.isNotBlank(input.provinceId) ? Id.valueOf(input.provinceId) : null,
+            FEC_District__c = String.isNotBlank(input.districtId) ? Id.valueOf(input.districtId) : null,
+            FEC_Building__c = input.building,
+            FEC_Number__c = input.numberValue,
+            FEC_Street__c = input.street
+        );
+    }
+
+    private static Id resolveCustomerHistoryId(AddressInfoInput input) {
+        if (String.isNotBlank(input.customerHistoryId)) {
+            return Id.valueOf(input.customerHistoryId);
+        }
+        Id caseId = Id.valueOf(input.caseId);
+        Case objCase = [
+            SELECT FEC_Account_or_Contract__c
+            FROM Case
+            WHERE Id = :caseId
+            LIMIT 1
+        ];
+        return objCase.FEC_Account_or_Contract__c;
+    }
+
+    private static String formatDmlErrors(List<Database.Error> errors) {
+        List<String> messages = new List<String>();
+        for (Database.Error err : errors) {
+            messages.add(err.getMessage());
+        }
+        return String.join(messages, ', ');
     }
 
     @AuraEnabled
@@ -213,5 +295,19 @@ public with sharing class FEC_CardReplacementAddressController {
     public class PicklistOptionDTO {
         @AuraEnabled public String label;
         @AuraEnabled public String value;
+    }
+
+    public class AddressInfoInput {
+        @AuraEnabled public String addressInfoId { get; set; }
+        @AuraEnabled public String caseId { get; set; }
+        @AuraEnabled public String customerHistoryId { get; set; }
+        @AuraEnabled public String addressType { get; set; }
+        @AuraEnabled public String address { get; set; }
+        @AuraEnabled public String countryId { get; set; }
+        @AuraEnabled public String provinceId { get; set; }
+        @AuraEnabled public String districtId { get; set; }
+        @AuraEnabled public String building { get; set; }
+        @AuraEnabled public String numberValue { get; set; }
+        @AuraEnabled public String street { get; set; }
     }
 }
