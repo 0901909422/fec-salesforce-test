@@ -1853,6 +1853,7 @@ export default class Fec_BatchCaseHandling extends LightningElement {
   async openBusinessProcessPopup(useSelected) {
     let sourceRows = [];
     if (useSelected) {
+      //tungnm37 2026-05-27 12:11 - Không dùng trực tiếp grid rows vì grid chỉ có dữ liệu tối thiểu, thiếu field export/enrich
       const selectedCaseIds = this.caseRows
         .filter((r) => r.selected)
         .map((r) => r.caseId)
@@ -1863,6 +1864,7 @@ export default class Fec_BatchCaseHandling extends LightningElement {
       }
       this.isLoading = true;
       try {
+        //tungnm37 2026-05-27 12:11 - Query lại từ Apex để Export Selected đi cùng nguồn dữ liệu với Export All
         const res = await getSelectedCasesForExport({ caseIds: selectedCaseIds });
         const raw = Array.isArray(res?.rows) ? res.rows : [];
         sourceRows = raw.map((r) => ({
@@ -3350,7 +3352,14 @@ export default class Fec_BatchCaseHandling extends LightningElement {
       }
     }
     const propertyInsert = this.buildPropertyInsertPayload(headerRow, list, propertyBundle);
-    const exportRequest = { contentVersionId, headerRowIndex, mappedColumnIndexes, dataRows };
+    // 27/05/2026 13:15 linhdev - gửi sheet name cho Apex patch đúng worksheet đã map header
+    const exportRequest = {
+      contentVersionId,
+      headerRowIndex,
+      mappedColumnIndexes,
+      dataRows,
+      templateSheetName
+    };
     // 27/05/2026 10:00 linhdev - chỉ khi Export with all Properties = Yes và có cột MDS
     if (propertyInsert) {
       exportRequest.insertColumnsBeforeIndex = propertyInsert.insertColumnsBeforeIndex;

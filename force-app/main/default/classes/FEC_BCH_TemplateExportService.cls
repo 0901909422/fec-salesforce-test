@@ -8,6 +8,10 @@ public without sharing class FEC_BCH_TemplateExportService {
         @AuraEnabled public Integer headerRowIndex;
         @AuraEnabled public List<Integer> mappedColumnIndexes;
         @AuraEnabled public List<List<String>> dataRows;
+        @AuraEnabled public Integer insertColumnsBeforeIndex;
+        @AuraEnabled public List<String> insertColumnHeaders;
+        @AuraEnabled public List<List<String>> insertColumnValues;
+        @AuraEnabled public String templateSheetName;
     }
 
     public class ExportWorkbookResponse {
@@ -49,7 +53,12 @@ public without sharing class FEC_BCH_TemplateExportService {
             dbg('ZIP', 'entries=' + entryByPath.size());
             String workbookXml = blobToUtf8(entryByPath.get('xl/workbook.xml'));
             String workbookRelsXml = blobToUtf8(entryByPath.get('xl/_rels/workbook.xml.rels'));
-            String worksheetPath = resolveMainWorksheetPath(workbookXml, workbookRelsXml);
+            // 27/05/2026 13:15 linhdev - patch đúng sheet LWC đã map header (tránh ghi nhầm sheet lookup)
+            String worksheetPath = resolveWorksheetPath(
+                workbookXml,
+                workbookRelsXml,
+                req.templateSheetName
+            );
             if (String.isBlank(worksheetPath) || !entryByPath.containsKey(worksheetPath)) {
                 return fail(
                     out,
@@ -82,6 +91,28 @@ public without sharing class FEC_BCH_TemplateExportService {
             if (String.isBlank(extractRowXml(worksheetXml, templateDataRow1))) {
                 return fail(out, 'TEMPLATE_ROW_MISSING', 'headerRow=' + headerRowIndex);
             }
+            Integer insertBefore = req.insertColumnsBeforeIndex;
+            List<String> insertHeaders = req.insertColumnHeaders == null
+                ? new List<String>()
+                : req.insertColumnHeaders;
+            List<List<String>> insertValues = req.insertColumnValues == null
+                ? new List<List<String>>()
+                : req.insertColumnValues;
+            if (insertBefore != null && insertBefore >= 0 && !insertHeaders.isEmpty()) {
+                worksheetXml = insertPropertyColumnsInWorksheet(
+                    worksheetXml,
+                    headerRowIndex + 1,
+                    templateDataRow1,
+                    insertBefore,
+                    insertHeaders
+                );
+                mappedCols = shiftMappedColumnIndexes(mappedCols, insertBefore, insertHeaders.size());
+                dataRows = mergeInsertColumnValues(
+                    dataRows,
+                    insertValues,
+                    insertHeaders.size()
+                );
+            }
             dbg('PATCH', 'sheet=' + worksheetPath + ';rows=' + dataRows.size() + ';dataRow=' + templateDataRow1);
             String patchedXml = patchWorksheetXml(
                 worksheetXml,
@@ -90,7 +121,9 @@ public without sharing class FEC_BCH_TemplateExportService {
                 dataRows,
                 entryByPath,
                 workbookXml,
-                workbookRelsXml
+                workbookRelsXml,
+                insertBefore,
+                insertHeaders.size()
             );
             entryByPath.put(worksheetPath, Blob.valueOf(patchedXml));
             Blob outBlob = writeZipEntries(entryByPath, sourceBlob);
@@ -188,6 +221,81 @@ public without sharing class FEC_BCH_TemplateExportService {
         return body.toString();
     }
 
+    // 27/05/2026 13:15 linhdev - ưu tiên sheet name từ LWC; fallback sheet có Case ID header
+    private static String resolveWorksheetPath(
+        String workbookXml,
+        String workbookRelsXml,
+        String preferredSheetName
+    ) {
+        if (String.isNotBlank(preferredSheetName)) {
+            String byName = resolveWorksheetPathBySheetName(
+                workbookXml,
+                workbookRelsXml,
+                preferredSheetName
+            );
+            if (String.isNotBlank(byName)) {
+                return byName;
+            }
+        }
+        return resolveMainWorksheetPath(workbookXml, workbookRelsXml);
+    }
+
+    private static String resolveWorksheetPathBySheetName(
+        String workbookXml,
+        String workbookRelsXml,
+        String sheetName
+    ) {
+        if (String.isBlank(workbookXml) || String.isBlank(workbookRelsXml) || String.isBlank(sheetName)) {
+            return null;
+        }
+        String want = sheetName.trim();
+        String chosenRid = findSheetRelationshipId(workbookXml, want);
+        return worksheetPathFromRelationshipId(workbookRelsXml, chosenRid);
+    }
+
+    private static String findSheetRelationshipId(String workbookXml, String sheetName) {
+        if (String.isBlank(workbookXml) || String.isBlank(sheetName)) {
+            return null;
+        }
+        String want = sheetName.trim();
+        Pattern nameFirst = Pattern.compile('<sheet[^>]+name="([^"]+)"[^>]+r:id="([^"]+)"');
+        Matcher nameFirstMat = nameFirst.matcher(workbookXml);
+        while (nameFirstMat.find()) {
+            if (want.equalsIgnoreCase(nameFirstMat.group(1).trim())) {
+                return nameFirstMat.group(2);
+            }
+        }
+        Pattern idFirst = Pattern.compile('<sheet[^>]+r:id="([^"]+)"[^>]+name="([^"]+)"');
+        Matcher idFirstMat = idFirst.matcher(workbookXml);
+        while (idFirstMat.find()) {
+            if (want.equalsIgnoreCase(idFirstMat.group(2).trim())) {
+                return idFirstMat.group(1);
+            }
+        }
+        return null;
+    }
+
+    private static String worksheetPathFromRelationshipId(String workbookRelsXml, String relationshipId) {
+        if (String.isBlank(workbookRelsXml) || String.isBlank(relationshipId)) {
+            return null;
+        }
+        Pattern relPat = Pattern.compile(
+            'Id="' + Pattern.quote(relationshipId) + '"[^>]+Target="([^"]+)"'
+        );
+        Matcher relMat = relPat.matcher(workbookRelsXml);
+        if (!relMat.find()) {
+            return null;
+        }
+        String target = relMat.group(1);
+        if (target.startsWith('/')) {
+            target = target.substring(1);
+        }
+        if (!target.startsWith('xl/')) {
+            target = 'xl/' + target;
+        }
+        return target;
+    }
+
     private static String resolveMainWorksheetPath(String workbookXml, String workbookRelsXml) {
         if (String.isBlank(workbookXml) || String.isBlank(workbookRelsXml)) {
             return 'xl/worksheets/sheet1.xml';
@@ -209,24 +317,8 @@ public without sharing class FEC_BCH_TemplateExportService {
                 chosenRid = sheetMat.group(2);
             }
         }
-        if (String.isBlank(chosenRid)) {
-            return 'xl/worksheets/sheet1.xml';
-        }
-        Pattern relPat = Pattern.compile(
-            'Id="' + Pattern.quote(chosenRid) + '"[^>]+Target="([^"]+)"'
-        );
-        Matcher relMat = relPat.matcher(workbookRelsXml);
-        if (relMat.find()) {
-            String target = relMat.group(1);
-            if (target.startsWith('/')) {
-                target = target.substring(1);
-            }
-            if (!target.startsWith('xl/')) {
-                target = 'xl/' + target;
-            }
-            return target;
-        }
-        return 'xl/worksheets/sheet1.xml';
+        String path = worksheetPathFromRelationshipId(workbookRelsXml, chosenRid);
+        return String.isNotBlank(path) ? path : 'xl/worksheets/sheet1.xml';
     }
 
     private class ValidationHeaderPair {
@@ -244,7 +336,9 @@ public without sharing class FEC_BCH_TemplateExportService {
         List<List<String>> dataRows,
         Map<String, Blob> entryByPath,
         String workbookXml,
-        String workbookRelsXml
+        String workbookRelsXml,
+        Integer insertBeforeColIndex,
+        Integer insertedColumnCount
     ) {
         if (String.isBlank(xml)) {
             return xml;
@@ -289,7 +383,9 @@ public without sharing class FEC_BCH_TemplateExportService {
             workbookRelsXml,
             headerRowIndex,
             templateDataRow1,
-            lastRow1
+            lastRow1,
+            insertBeforeColIndex,
+            insertedColumnCount
         );
         return out;
     }
@@ -709,7 +805,9 @@ public without sharing class FEC_BCH_TemplateExportService {
         String workbookRelsXml,
         Integer headerRowIndex,
         Integer templateDataRow1,
-        Integer lastDataRow1
+        Integer lastDataRow1,
+        Integer insertBeforeColIndex,
+        Integer insertedColumnCount
     ) {
         if (String.isBlank(mainWorksheetXml) || entryByPath == null || entryByPath.isEmpty()) {
             return mainWorksheetXml;
@@ -913,23 +1011,248 @@ public without sharing class FEC_BCH_TemplateExportService {
         String rowXml = templateRowXml;
         rowXml = rowXml.replace('r="' + templateRowNum1 + '"', 'r="' + targetRowNum1 + '"');
         rowXml = remapRowCellReferences(rowXml, templateRowNum1, targetRowNum1);
-        Set<Integer> mapped = new Set<Integer>();
-        if (mappedCols != null) {
-            for (Integer c : mappedCols) {
-                if (c != null && c >= 0) {
-                    mapped.add(c);
-                }
+        Integer valueIdx = 0;
+        // 27/05/2026 13:15 linhdev - giữ thứ tự mappedColumnIndexes khớp dataRows (không dùng Set)
+        List<Integer> orderedCols = mappedCols == null ? new List<Integer>() : mappedCols;
+        for (Integer colIdx : orderedCols) {
+            if (colIdx == null || colIdx < 0) {
+                continue;
             }
-        }
-        for (Integer colIdx : mapped) {
             String colLetter = columnIndexToLetter(colIdx);
             String val = FEC_ConstantCommon.STR_EMPTY;
-            if (values != null && colIdx < values.size() && values[colIdx] != null) {
-                val = String.valueOf(values[colIdx]);
+            if (values != null && valueIdx < values.size() && values[valueIdx] != null) {
+                val = String.valueOf(values[valueIdx]);
             }
+            valueIdx += 1;
             rowXml = upsertCellInline(rowXml, colLetter, targetRowNum1, val);
         }
         return rowXml;
+    }
+
+    private static List<Integer> shiftMappedColumnIndexes(
+        List<Integer> mappedCols,
+        Integer insertBefore,
+        Integer insertCount
+    ) {
+        List<Integer> out = new List<Integer>();
+        if (mappedCols == null) {
+            return out;
+        }
+        for (Integer colIdx : mappedCols) {
+            if (colIdx == null || colIdx < 0) {
+                continue;
+            }
+            if (colIdx >= insertBefore) {
+                out.add(colIdx + insertCount);
+            } else {
+                out.add(colIdx);
+            }
+        }
+        for (Integer i = 0; i < insertCount; i++) {
+            out.add(insertBefore + i);
+        }
+        return out;
+    }
+
+    private static List<List<String>> mergeInsertColumnValues(
+        List<List<String>> dataRows,
+        List<List<String>> insertValues,
+        Integer insertCount
+    ) {
+        List<List<String>> out = new List<List<String>>();
+        if (dataRows == null) {
+            return out;
+        }
+        for (Integer rowIdx = 0; rowIdx < dataRows.size(); rowIdx++) {
+            List<String> base = dataRows[rowIdx] == null ? new List<String>() : dataRows[rowIdx];
+            List<String> inserts = insertValues != null && rowIdx < insertValues.size()
+                ? insertValues[rowIdx]
+                : new List<String>();
+            List<String> merged = new List<String>();
+            merged.addAll(base);
+            for (Integer i = 0; i < insertCount; i++) {
+                merged.add(
+                    i < inserts.size() && inserts[i] != null
+                        ? inserts[i]
+                        : FEC_ConstantCommon.STR_EMPTY
+                );
+            }
+            out.add(merged);
+        }
+        return out;
+    }
+
+    private static String insertPropertyColumnsInWorksheet(
+        String xml,
+        Integer headerRowNum1,
+        Integer templateDataRowNum1,
+        Integer insertBeforeColIndex,
+        List<String> headers
+    ) {
+        if (String.isBlank(xml) || headers == null || headers.isEmpty()) {
+            return xml;
+        }
+        Integer shift = headers.size();
+        String headerRowXml = extractRowXml(xml, headerRowNum1);
+        if (String.isNotBlank(headerRowXml)) {
+            headerRowXml = shiftRowCellsRight(headerRowXml, headerRowNum1, insertBeforeColIndex, shift);
+            for (Integer i = 0; i < headers.size(); i++) {
+                headerRowXml = upsertCellInline(
+                    headerRowXml,
+                    columnIndexToLetter(insertBeforeColIndex + i),
+                    headerRowNum1,
+                    headers[i]
+                );
+            }
+            xml = replaceRowXml(xml, headerRowNum1, headerRowXml);
+        }
+        String templateRowXml = extractRowXml(xml, templateDataRowNum1);
+        if (String.isNotBlank(templateRowXml)) {
+            templateRowXml = shiftRowCellsRight(
+                templateRowXml,
+                templateDataRowNum1,
+                insertBeforeColIndex,
+                shift
+            );
+            xml = replaceRowXml(xml, templateDataRowNum1, templateRowXml);
+        }
+        return shiftWorksheetValidations(xml, insertBeforeColIndex, shift);
+    }
+
+    private static String replaceRowXml(String xml, Integer rowNum1, String rowXml) {
+        Pattern p = Pattern.compile('(?s)<row r="' + rowNum1 + '"[^>]*>.*?</row>');
+        Matcher m = p.matcher(xml);
+        if (!m.find()) {
+            return xml;
+        }
+        return m.replaceFirst(Matcher.quoteReplacement(rowXml));
+    }
+
+    private static String shiftRowCellsRight(
+        String rowXml,
+        Integer rowNum1,
+        Integer insertBeforeColIndex,
+        Integer shift
+    ) {
+        if (String.isBlank(rowXml) || shift == null || shift < 1) {
+            return rowXml;
+        }
+        Pattern cellPat = Pattern.compile('(?s)<c r="([A-Z]{1,3})' + rowNum1 + '"([^>]*)(?:>(.*?)</c>|/>)');
+        Matcher cellMat = cellPat.matcher(rowXml);
+        List<CellFragment> cells = new List<CellFragment>();
+        while (cellMat.find()) {
+            CellFragment frag = new CellFragment();
+            frag.colLetter = cellMat.group(1);
+            frag.colIndex = columnLetterToIndex(frag.colLetter);
+            frag.fullXml = cellMat.group(0);
+            cells.add(frag);
+        }
+        if (cells.isEmpty()) {
+            return rowXml;
+        }
+        cells.sort(new CellIndexComparator());
+        String out = rowXml;
+        for (Integer i = cells.size() - 1; i >= 0; i--) {
+            CellFragment frag = cells[i];
+            if (frag.colIndex < insertBeforeColIndex) {
+                continue;
+            }
+            String newLetter = columnIndexToLetter(frag.colIndex + shift);
+            String newAddr = newLetter + String.valueOf(rowNum1);
+            String updated = frag.fullXml.replace(
+                'r="' + frag.colLetter + rowNum1 + '"',
+                'r="' + newAddr + '"'
+            );
+            out = out.replace(frag.fullXml, updated);
+        }
+        return out;
+    }
+
+    private static String shiftWorksheetValidations(
+        String xml,
+        Integer insertBeforeColIndex,
+        Integer shift
+    ) {
+        if (String.isBlank(xml) || shift == null || shift < 1) {
+            return xml;
+        }
+        Pattern sqrefPat = Pattern.compile('sqref="([A-Z]{1,3})(\\d+):([A-Z]{1,3})(\\d+)"');
+        Matcher m = sqrefPat.matcher(xml);
+        List<SqrefReplacement> replacements = new List<SqrefReplacement>();
+        while (m.find()) {
+            String startCol = m.group(1);
+            String startRow = m.group(2);
+            String endCol = m.group(3);
+            String endRow = m.group(4);
+            Integer startIdx = columnLetterToIndex(startCol);
+            Integer endIdx = columnLetterToIndex(endCol);
+            if (startIdx >= insertBeforeColIndex) {
+                startCol = columnIndexToLetter(startIdx + shift);
+            }
+            if (endIdx >= insertBeforeColIndex) {
+                endCol = columnIndexToLetter(endIdx + shift);
+            }
+            SqrefReplacement rep = new SqrefReplacement();
+            rep.startPos = m.start();
+            rep.endPos = m.end();
+            rep.replacementText =
+                'sqref="' + startCol + startRow + ':' + endCol + endRow + '"';
+            replacements.add(rep);
+        }
+        if (replacements.isEmpty()) {
+            return xml;
+        }
+        String out = xml;
+        for (Integer i = replacements.size() - 1; i >= 0; i--) {
+            SqrefReplacement rep = replacements[i];
+            out =
+                out.substring(0, rep.startPos) +
+                rep.replacementText +
+                out.substring(rep.endPos);
+        }
+        return out;
+    }
+
+    private class SqrefReplacement {
+        Integer startPos;
+        Integer endPos;
+        String replacementText;
+    }
+
+    private static Integer columnLetterToIndex(String colLetter) {
+        if (String.isBlank(colLetter)) {
+            return 0;
+        }
+        Integer result = 0;
+        String upper = colLetter.toUpperCase();
+        for (Integer i = 0; i < upper.length(); i++) {
+            result = result * 26 + (upper.charAt(i) - 64);
+        }
+        return result - 1;
+    }
+
+    private class CellFragment {
+        String colLetter;
+        Integer colIndex;
+        String fullXml;
+    }
+
+    private class CellIndexComparator implements System.Comparator<CellFragment> {
+        public Integer compare(CellFragment a, CellFragment b) {
+            if (a == null && b == null) {
+                return 0;
+            }
+            if (a == null) {
+                return 1;
+            }
+            if (b == null) {
+                return -1;
+            }
+            if (a.colIndex == b.colIndex) {
+                return 0;
+            }
+            return a.colIndex > b.colIndex ? 1 : -1;
+        }
     }
 
     private static String remapRowCellReferences(String rowXml, Integer fromRow1, Integer toRow1) {

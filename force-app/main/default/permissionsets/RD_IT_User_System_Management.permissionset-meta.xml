@@ -97,6 +97,10 @@
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
+        <apexClass>FEC_BCH_IncorrectPaymentTemplateWriter</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
         <apexClass>FEC_BCH_ImportRoutingResolver</apexClass>
         <enabled>true</enabled>
     </classAccesses>
@@ -1118,6 +1122,10 @@
     </classAccesses>
     <classAccesses>
         <apexClass>FEC_SalesChannelFromApplicationService</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_SalesLogicSelector</apexClass>
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
