@@ -1160,6 +1160,9 @@ public without sharing class FEC_CaseBusinessService {
                   Boolean forceGsrPropertyInfoReadonly =
                     isGsrStage3PropertyInfoReadonly &&
                     'Property Info'.equals(subSectionItem.name);
+                  Boolean forceUpdatedInfoReadonly =
+                    hasCaseAssignment &&
+                    FEC_ConstantCommon.UPDATED_INFO.equals(subSectionItem.name);
                   try {
                     fieldTemp = transform(
                       masterDataItem,
@@ -1167,7 +1170,8 @@ public without sharing class FEC_CaseBusinessService {
                       currentUser.FEC_User_Group__c,
                       isRevert,
                       isGsrStage1RevertMasterReadonly ||
-                        forceGsrPropertyInfoReadonly,
+                        forceGsrPropertyInfoReadonly ||
+                        forceUpdatedInfoReadonly,
                       hasCaseAssignment,
                       assignmentFieldEditableGroups
                     );
