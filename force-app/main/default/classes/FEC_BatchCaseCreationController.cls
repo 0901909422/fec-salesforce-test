@@ -1147,6 +1147,7 @@ public without sharing class FEC_BatchCaseCreationController {
         caseRecord.FEC_IsImported__c = true;
     }
 
+    /** Welcome Call Interaction only — OtherCases dùng resolveOtherInteractionStatusApi. */
     private static void applyBatchInteractionCaseDefaults(Case interactionCase) {
         if (interactionCase == null) {
             return;
@@ -1516,7 +1517,6 @@ public without sharing class FEC_BatchCaseCreationController {
             String interactionStatusApi = resolveOtherInteractionStatusApi(statusDfr, r.caseStatus);
             applyOtherInteractionCaseDefaults(ic, interactionStatusApi);
             applyBatchImportedCaseFlag(ic);
-            applyBatchInteractionCaseDefaults(ic);
             applyBatchImportedInteractionFlag(ic);
             ic.Subject = truncateWelcomeSubject('Batch Interaction - ', r.contractNumber);
             applyOtherInteractionFields(ic, r, maps, channelDfr, subChannelDfr);
@@ -2475,7 +2475,7 @@ public without sharing class FEC_BatchCaseCreationController {
         FEC_BatchCaseCreationPendingService.ImportPayload exportPayload = FEC_BatchCaseCreationPendingService.loadPendingImportPayload(
             (Id) batchRow.get('Id')
         );
-        saveCaseImportResultCsv(
+        saveCaseImportResultXlsx(
             (Id) batchRow.get('Id'),
             sourceFileName,
             exportPayload.sourceHeaders,
@@ -2515,7 +2515,7 @@ public without sharing class FEC_BatchCaseCreationController {
             exportHeaders = deserializeImportStringList(sourceHeadersJson);
             exportSourceRows = deserializeImportSourceRows(sourceRowsJson);
         }
-        saveCaseImportResultCsv(
+        saveCaseImportResultXlsx(
             batchRecordId,
             sourceFileName,
             exportHeaders,
@@ -2560,8 +2560,8 @@ public without sharing class FEC_BatchCaseCreationController {
         return output;
     }
 
-    /** File result = file import (header + dòng gốc) + 4 cột __Status / __Interaction ID / __Case ID / __Errors. */
-    private static void saveCaseImportResultCsv(
+    /** File result (.xlsx) = file import (header + dòng gốc) + 4 cột __Status / __Interaction ID / __Case ID / __Errors. */
+    private static void saveCaseImportResultXlsx(
         Id batchRecordId,
         String sourceFileName,
         List<String> sourceHeaders,
@@ -2582,44 +2582,94 @@ public without sharing class FEC_BatchCaseCreationController {
             }
         }
         try {
-            List<String> lines = new List<String>();
-            List<String> headerCells = new List<String>();
-            for (String header : exportHeaders) {
-                headerCells.add(csvEscape(header));
-            }
-            for (String appendHeader : RESULT_APPEND_HEADERS) {
-                headerCells.add(csvEscape(appendHeader));
-            }
-            lines.add(String.join(headerCells, ','));
+            List<List<String>> sheetRows = new List<List<String>>();
+            List<String> headerRow = new List<String>();
+            headerRow.addAll(exportHeaders);
+            headerRow.addAll(RESULT_APPEND_HEADERS);
+            sheetRows.add(headerRow);
 
             for (Integer i = 0; i < rowResults.size(); i++) {
                 CaseRowResult rr = rowResults[i];
-                List<String> cells = new List<String>();
+                List<String> dataRow = new List<String>();
                 List<String> sourceRow = new List<String>();
                 if (sourceRows != null && i < sourceRows.size() && sourceRows[i] != null) {
                     sourceRow = sourceRows[i];
                 }
                 for (Integer col = 0; col < exportHeaders.size(); col++) {
                     String cell = col < sourceRow.size() ? sourceRow[col] : '';
-                    cells.add(csvEscape(cell));
+                    dataRow.add(formatResultExportCellValue(cell));
                 }
                 Boolean succeeded = 'Succeeded'.equalsIgnoreCase(rr.status);
-                cells.add(csvEscape(rr.status));
-                cells.add(csvEscape(succeeded ? rr.interactionId : ''));
-                cells.add(csvEscape(succeeded ? resolveCaseIdForResultExport(rr) : ''));
-                cells.add(csvEscape(rr.errors));
-                lines.add(String.join(cells, ','));
+                dataRow.add(rr.status == null ? '' : rr.status);
+                dataRow.add(succeeded ? (rr.interactionId == null ? '' : rr.interactionId) : '');
+                dataRow.add(succeeded ? resolveCaseIdForResultExport(rr) : '');
+                dataRow.add(rr.errors == null ? '' : rr.errors);
+                sheetRows.add(dataRow);
+            }
+
+            Set<Integer> textColumnIndices = resolveTextColumnIndicesForResultExport(exportHeaders);
+            Blob workbookBlob = FEC_BatchCaseHandlingResultXlsxBuilder.buildWorkbookBlob(
+                sheetRows,
+                textColumnIndices
+            );
+            if (workbookBlob == null) {
+                return;
             }
             String resultTitle = FEC_BatchImportCommon.buildResultContentTitle(sourceFileName);
             ContentVersion cv = new ContentVersion();
             cv.Title = resultTitle;
-            cv.PathOnClient = '/' + resultTitle + '.csv';
-            cv.VersionData = Blob.valueOf('\uFEFF' + String.join(lines, '\r\n'));
+            cv.PathOnClient = '/' + resultTitle + '.xlsx';
+            cv.VersionData = workbookBlob;
             cv.FirstPublishLocationId = batchRecordId;
             insert cv;
         } catch (Exception ex) {
             // Không chặn cập nhật batch Failure nếu không ghi được file result.
         }
+    }
+
+    private static String formatResultExportCellValue(String raw) {
+        if (String.isBlank(raw)) {
+            return '';
+        }
+        String trimmed = raw.trim();
+        if (trimmed.containsIgnoreCase('E+') || trimmed.containsIgnoreCase('E-')) {
+            try {
+                return Decimal.valueOf(trimmed).toPlainString();
+            } catch (Exception ignore) {
+                return trimmed;
+            }
+        }
+        return trimmed;
+    }
+
+    private static Set<Integer> resolveTextColumnIndicesForResultExport(List<String> headers) {
+        Set<Integer> indices = new Set<Integer>();
+        if (headers == null) {
+            return indices;
+        }
+        for (Integer i = 0; i < headers.size(); i++) {
+            if (isTextPreserveResultExportHeader(headers[i])) {
+                indices.add(i);
+            }
+        }
+        return indices;
+    }
+
+    private static Boolean isTextPreserveResultExportHeader(String header) {
+        if (String.isBlank(header)) {
+            return false;
+        }
+        String norm = header.trim().toLowerCase().replaceAll('\\s+', ' ');
+        if (norm.contains('account') && norm.contains('contract')) {
+            return true;
+        }
+        if (norm.contains('contract number')) {
+            return true;
+        }
+        if (norm.contains('interaction phone') || norm == 'phone') {
+            return true;
+        }
+        return false;
     }
 
     private static List<String> trimResultSourceHeaders(List<String> headers) {
@@ -2653,14 +2703,6 @@ public without sharing class FEC_BatchCaseCreationController {
   /** __Case ID file result — Customer Case.FEC_ID_Search__c. */
     private static String resolveCaseIdForResultExport(CaseRowResult rr) {
         return rr == null || String.isBlank(rr.fecIdSearch) ? '' : rr.fecIdSearch.trim();
-    }
-
-    private static String csvEscape(String value) {
-        String v = value == null ? '' : value;
-        if (v.contains('"') || v.contains(',') || v.contains('\n') || v.contains('\r')) {
-            return '"' + v.replace('"', '""') + '"';
-        }
-        return '"' + v + '"';
     }
 
     /** Cả file không import — mọi dòng Failed, không có ID/Interaction/Case ID. */

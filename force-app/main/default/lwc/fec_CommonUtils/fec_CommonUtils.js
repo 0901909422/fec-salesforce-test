@@ -1015,6 +1015,62 @@ const arrayBufferToBase64Safe = (buffer) => {
   return btoa(binary);
 };
 
+/**
+ * Giữ số dài / SĐT dạng text (không scientific notation) khi đọc/ghi Excel.
+ */
+const formatSpreadsheetCellValueAsText = (value) => {
+  if (value == null || value === "") {
+    return "";
+  }
+  if (typeof value === "number") {
+    if (!Number.isFinite(value)) {
+      return String(value);
+    }
+    const rounded = Math.round(value);
+    const isWholeNumber = Math.abs(value - rounded) < 1e-9;
+    if (isWholeNumber) {
+      if (Math.abs(rounded) <= Number.MAX_SAFE_INTEGER) {
+        return String(rounded);
+      }
+      try {
+        return BigInt(rounded).toString();
+      } catch {
+        return rounded.toLocaleString("en-US", {
+          useGrouping: false,
+          maximumFractionDigits: 0
+        });
+      }
+    }
+    return value.toLocaleString("en-US", {
+      useGrouping: false,
+      maximumFractionDigits: 15
+    });
+  }
+  return String(value).trim();
+};
+
+/**
+ * Ưu tiên chuỗi hiển thị Excel (cell.w) để giữ leading zero / format custom.
+ */
+const getSheetJsCellDisplayText = (sheet, rowIndex, colIndex) => {
+  if (!sheet || rowIndex < 0 || colIndex < 0) {
+    return "";
+  }
+  const xlsx = typeof window !== "undefined" ? window.XLSX : null;
+  if (!xlsx?.utils?.encode_cell) {
+    return "";
+  }
+  const ref = xlsx.utils.encode_cell({ r: rowIndex, c: colIndex });
+  const cell = sheet[ref];
+  if (!cell) {
+    return "";
+  }
+  if (cell.w != null && String(cell.w).trim() !== "") {
+    return String(cell.w).trim();
+  }
+  return formatSpreadsheetCellValueAsText(cell.v);
+};
+
 const removeFileExtensionSafe = (fileName) => {
   const name = String(fileName ?? "");
   const dotIdx = name.lastIndexOf(".");
@@ -1115,6 +1171,8 @@ export {
   getUsernameBeforeAt,
   normalizeHeaderCell,
   findColumnIndex,
+  formatSpreadsheetCellValueAsText,
+  getSheetJsCellDisplayText,
   normalizeNoteTextSafe,
   promiseWithTimeoutSafe,
   arrayBufferToBase64Safe,
