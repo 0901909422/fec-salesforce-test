@@ -284,6 +284,7 @@
 		<members>fecMrcReturnStageChangeRouting</members>
 		<members>fec_BatchCaseCreation</members>
 		<members>fec_CardReplacementAddress</members>
+		<members>fec_NocRoutingAssignment</members>
 		<name>LightningComponentBundle</name>
 	</types>
     <types>
