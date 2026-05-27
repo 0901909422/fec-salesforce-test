@@ -874,6 +874,7 @@
         <members>fec_PaymentHistoryAcount</members>
         <members>fec_PinResetView</members>
         <members>fec_RepaymentSchedulePaymentHistory</members>
+        <members>fec_StatementsAccount</members>
         <members>fec_StatementsAccountTabView</members>
         <members>fec_TransactionsAccount</members>
         <members>fec_TransactionsAccountTabView</members>
