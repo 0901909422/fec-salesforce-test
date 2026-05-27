@@ -111,12 +111,13 @@
         <name>PermissionSet</name>
     </types>
     <types>
+        <members>FEC_Case_With_Customer_Histories</members>
         <members>Routing_Action_History_with_Case_and_Assignment</members>
         <name>ReportType</name>
     </types>
     <types>
         <members>FECReport/</members>
-        <members>FECReport/FEC_RP_01</members>
+        <members>FECReport/Interaction_Service_Case_Summary1_Umr</members>
         <members>FECReport/FEC_RP_02</members>
         <name>Report</name>
     </types>
