@@ -2376,10 +2376,11 @@ public without sharing class FEC_CaseBusinessService {
         when TRANSFER {
           finalStatusBeforeSubmit = readCaseFinalStatusBeforeSubmit(caseId);
           markCaseSubmittedAndClearDrafts(caseId);
+          String decision = (String) params.get('decision');
           String userOrQueueId = (String) params.get('userOrQueueId');
           // Đổi owner trước (transfer đã registerSkip), rồi ghi history — tránh 2 bản; Updated = owner sau transfer
           transfer(caseId, userOrQueueId);
-          createRoutingActionHis('Transfer', '', oldOwnerName, oldOwnerId, caseId, stageName, finalStatusBeforeSubmit, currentStageId);
+          createRoutingActionHis('Transfer', decision, oldOwnerName, oldOwnerId, caseId, stageName, finalStatusBeforeSubmit, currentStageId);
           return null;
         }
         when UPDATEACTION {
