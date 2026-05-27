@@ -491,24 +491,48 @@ public without sharing class FEC_BatchCaseHandlingTemplateHelper {
             activeTemplates
         );
         if (matched != null && hasTemplateFile(matched, versionIdByTemplateId)) {
-            return fillTemplateExportBinding(out, matched, versionIdByTemplateId, urlByTemplateId);
+            fillTemplateExportBinding(out, matched, versionIdByTemplateId, urlByTemplateId);
+            return applyExportUserGroupGuard(out, businessProcessCode, userGroup);
         }
-        // 27/05/2026 13:15 linhdev - fallback chỉ khi match BP chặt (prefix/code), không lấy template đầu tiên trong list
-        SObject withFile = findBestTemplateWithFileForBusinessProcess(
+        // 27/05/2026 20:15 linhdev - export fallback chỉ template khớp user group (tránh CC export AddressUpdate CSSupport)
+        SObject withFile = findBestTemplateWithFileForBusinessProcessAndUserGroup(
             businessProcessCode,
             businessProcessName,
+            userGroup,
             activeTemplates,
             versionIdByTemplateId
         );
         if (withFile != null) {
-            return fillTemplateExportBinding(out, withFile, versionIdByTemplateId, urlByTemplateId);
+            fillTemplateExportBinding(out, withFile, versionIdByTemplateId, urlByTemplateId);
+            return applyExportUserGroupGuard(out, businessProcessCode, userGroup);
         }
         if (matched != null) {
             out.templateName = matched.get('Name') == null
                 ? FEC_ConstantCommon.STR_EMPTY
                 : String.valueOf(matched.get('Name'));
         }
-        return out;
+        return applyExportUserGroupGuard(out, businessProcessCode, userGroup);
+    }
+
+    // 27/05/2026 20:15 linhdev - clear export binding khi template suffix không khớp role/user group
+    private static TemplateExportBinding applyExportUserGroupGuard(
+        TemplateExportBinding binding,
+        String businessProcessCode,
+        String userGroup
+    ) {
+        if (binding == null || String.isBlank(binding.templateName)) {
+            return binding;
+        }
+        if (String.isNotBlank(
+            validateUploadedTemplateForUserGroup(binding.templateName, businessProcessCode, userGroup)
+        )) {
+            TemplateExportBinding empty = new TemplateExportBinding();
+            empty.templateName = FEC_ConstantCommon.STR_EMPTY;
+            empty.templateDownloadUrl = FEC_ConstantCommon.STR_EMPTY;
+            empty.templateContentVersionId = null;
+            return empty;
+        }
+        return binding;
     }
 
     private static Boolean hasTemplateFile(SObject templateRow, Map<Id, Id> versionIdByTemplateId) {
@@ -526,6 +550,22 @@ public without sharing class FEC_BatchCaseHandlingTemplateHelper {
         List<SObject> activeTemplates,
         Map<Id, Id> versionIdByTemplateId
     ) {
+        return findBestTemplateWithFileForBusinessProcessAndUserGroup(
+            businessProcessCode,
+            businessProcessName,
+            null,
+            activeTemplates,
+            versionIdByTemplateId
+        );
+    }
+
+    private static SObject findBestTemplateWithFileForBusinessProcessAndUserGroup(
+        String businessProcessCode,
+        String businessProcessName,
+        String userGroup,
+        List<SObject> activeTemplates,
+        Map<Id, Id> versionIdByTemplateId
+    ) {
         if (activeTemplates == null || activeTemplates.isEmpty() || versionIdByTemplateId == null || versionIdByTemplateId.isEmpty()) {
             return null;
         }
@@ -538,6 +578,10 @@ public without sharing class FEC_BatchCaseHandlingTemplateHelper {
             if (!versionIdByTemplateId.containsKey((Id) tr.get('Id'))) {
                 continue;
             }
+            // 27/05/2026 20:15 linhdev - export fallback theo user group, không trả template team khác (vd. _CSSupport cho CC)
+            if (String.isNotBlank(userGroup) && !templateRowMatchesUserGroup(tr, userGroup)) {
+                continue;
+            }
             Integer score = scoreTemplateBusinessProcessMatch(tr, businessProcessCode, businessProcessName);
             if (score > bestScore) {
                 bestScore = score;
@@ -545,6 +589,55 @@ public without sharing class FEC_BatchCaseHandlingTemplateHelper {
             }
         }
         return bestScore >= TEMPLATE_BP_MATCH_MIN_SCORE ? bestMatch : null;
+    }
+
+    // 27/05/2026 20:15 linhdev - chặn export workbook khi template không khớp role/user group
+    public static String validateExportTemplateContentVersion(Id contentVersionId, String userGroup) {
+        if (contentVersionId == null) {
+            return null;
+        }
+        List<ContentVersion> versions = [
+            SELECT FirstPublishLocationId, Title
+            FROM ContentVersion
+            WHERE Id = :contentVersionId
+            LIMIT 1
+        ];
+        if (versions.isEmpty()) {
+            return null;
+        }
+        Id templateId = versions[0].FirstPublishLocationId;
+        String templateName = versions[0].Title;
+        String businessProcessCode = FEC_ConstantCommon.STR_EMPTY;
+        if (templateId != null) {
+            Schema.SObjectType templateType = Schema.getGlobalDescribe().get(TEMPLATE_OBJECT_API_NAME);
+            if (templateType != null) {
+                Map<String, Schema.SObjectField> templateFields = templateType.getDescribe().fields.getMap();
+                List<String> selectParts = new List<String>{ 'Name' };
+                if (templateFields.containsKey('FEC_Business_Process__c')) {
+                    selectParts.add('FEC_Business_Process__r.FEC_Code__c');
+                }
+                List<SObject> rows = Database.query(
+                    'SELECT ' +
+                        String.join(selectParts, ', ') +
+                        ' FROM ' +
+                        TEMPLATE_OBJECT_API_NAME +
+                        ' WHERE Id = :templateId LIMIT 1'
+                );
+                if (!rows.isEmpty()) {
+                    templateName = rows[0].get('Name') == null
+                        ? templateName
+                        : String.valueOf(rows[0].get('Name'));
+                    SObject bpRel = rows[0].getSObject('FEC_Business_Process__r');
+                    if (bpRel != null && bpRel.get('FEC_Code__c') != null) {
+                        businessProcessCode = String.valueOf(bpRel.get('FEC_Code__c')).trim();
+                    }
+                }
+            }
+        }
+        if (String.isBlank(templateName)) {
+            return null;
+        }
+        return validateUploadedTemplateForUserGroup(templateName, businessProcessCode, userGroup);
     }
 
     private static Integer scoreTemplateBusinessProcessMatch(

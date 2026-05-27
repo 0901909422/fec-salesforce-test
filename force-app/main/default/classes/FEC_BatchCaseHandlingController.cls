@@ -962,6 +962,21 @@ public without sharing class FEC_BatchCaseHandlingController {
                     requestJson,
                     FEC_BCH_TemplateExportService.ExportRequest.class
                 );
+            if (req != null && req.contentVersionId != null) {
+                // 27/05/2026 20:15 linhdev - chặn export template không khớp role/user group (vd. Address Update chỉ SP)
+                String roleTemplateError = FEC_BatchCaseHandlingTemplateHelper.validateExportTemplateContentVersion(
+                    req.contentVersionId,
+                    resolveCurrentUserGroup()
+                );
+                if (String.isNotBlank(roleTemplateError)) {
+                    FEC_BCH_TemplateExportService.ExportWorkbookResponse denied =
+                        new FEC_BCH_TemplateExportService.ExportWorkbookResponse();
+                    denied.success = false;
+                    denied.errorCode = 'ROLE_TEMPLATE_MISMATCH';
+                    denied.errorMessage = roleTemplateError;
+                    return denied;
+                }
+            }
             if (
                 req != null &&
                 req.contentVersionId != null &&
