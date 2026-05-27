@@ -110,6 +110,33 @@ private class FEC_MrcReturnCaseServiceTest {
     }
 
     @IsTest
+    static void mrcReturnCaseInformationValidate_rl0503_dpdBlocksWithDedicatedTitle() {
+        FEC_Customer_History__c ch = new FEC_Customer_History__c(
+            FEC_Product_Code__c = 'TW',
+            FEC_Days_Past_Due__c = 15
+        );
+        Case c = new Case(FEC_Account_or_Contract__r = ch);
+        FEC_CaseBusinessService.Error err = FEC_MrcReturnCaseService.mrcReturnCaseInformationValidate(
+            c,
+            'RL05',
+            'RL05.03'
+        );
+        System.assertEquals(1, err.errorlst.size());
+        System.assertEquals(
+            System.Label.FEC_MRC_Return_Msg_DPD_RL0503,
+            err.errorlst[0]
+        );
+        System.assertEquals(
+            System.Label.FEC_MRC_Return_RL0503_DPD_Block_Title,
+            err.label
+        );
+        System.assertEquals(
+            true,
+            FEC_MrcReturnCaseService.isRl0503DpdOnlyValidation(err, 'RL05.03')
+        );
+    }
+
+    @IsTest
     static void buildUiContext_rl0503_showsDeliveryWithEmail() {
         Case c = new Case();
         FEC_MrcReturnCaseService.MrcRl05UiContext ctx = FEC_MrcReturnCaseService.buildUiContext(
