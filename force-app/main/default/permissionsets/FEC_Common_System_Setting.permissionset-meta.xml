@@ -46,72 +46,72 @@
     </classAccesses>
     <fieldPermissions>
         <editable>true</editable>
-        <field>CustomSync__c.StartAt__c</field>
+        <field>FEC_Custom_Sync__c.StartAt__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
-        <field>CustomSync__c.EndAt__c</field>
+        <field>FEC_Custom_Sync__c.EndAt__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
-        <field>CustomSync__c.Active__c</field>
+        <field>FEC_Custom_Sync__c.Active__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
-        <field>CustomSync__c.TotalRecordSync__c</field>
+        <field>FEC_Custom_Sync__c.TotalRecordSync__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
-        <field>CustomSync__c.SyncTo__c</field>
+        <field>FEC_Custom_Sync__c.SyncTo__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
-        <field>CustomSync__c.SyncSuccessFully__c</field>
+        <field>FEC_Custom_Sync__c.SyncSuccessFully__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
-        <field>CustomSync__c.SyncFailed__c</field>
+        <field>FEC_Custom_Sync__c.SyncFailed__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
-        <field>CustomSync__c.ProcessingQuantity__c</field>
+        <field>FEC_Custom_Sync__c.ProcessingQuantity__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
-        <field>CustomSync__c.CaseBusinessCode__c</field>
+        <field>FEC_Custom_Sync__c.CaseBusinessCode__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
-        <field>CustomSync__c.TargetObject__c</field>
+        <field>FEC_Custom_Sync__c.TargetObject__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
-        <field>CustomSync__c.RequestBodyMapping__c</field>
+        <field>FEC_Custom_Sync__c.RequestBodyMapping__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
-        <field>CustomSync__c.TableName__c</field>
+        <field>FEC_Custom_Sync__c.TableName__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
-        <field>CustomSync__c.MappingDataType__c</field>
+        <field>FEC_Custom_Sync__c.MappingDataType__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
-        <field>CustomSync__c.PkColumn__c</field>
+        <field>FEC_Custom_Sync__c.PkColumn__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
@@ -193,7 +193,7 @@
         <allowEdit>true</allowEdit>
         <allowRead>true</allowRead>
         <modifyAllRecords>true</modifyAllRecords>
-        <object>CustomSync__c</object>
+        <object>FEC_Custom_Sync__c</object>
         <viewAllFields>true</viewAllFields>
         <viewAllRecords>true</viewAllRecords>
     </objectPermissions>
@@ -208,7 +208,7 @@
         <viewAllRecords>true</viewAllRecords>
     </objectPermissions>
     <tabSettings>
-        <tab>CustomSync__c</tab>
+        <tab>FEC_Custom_Sync__c</tab>
         <visibility>Visible</visibility>
     </tabSettings>
 </PermissionSet>
