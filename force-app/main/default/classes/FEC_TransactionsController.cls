@@ -183,7 +183,7 @@ public without sharing class FEC_TransactionsController {
                 FEC_CommonUltils.generateTransactionId(),
                 FEC_ConstantCommon.REQUESTOR_CRM,
                 Datetime.now().formatGMT(FEC_ConstantCommon.DATETIME_FORMAT),
-                FEC_ConstantCommon.VMX_VERSION_DEFAULT,
+                'E8V6',
                 FEC_ConstantCommon.REQUESTOR_VMX_CONTEXT,
                 FEC_ConstantCommon.REQUESTOR_VMX_CONTEXT, 
                 accNumber,                                 

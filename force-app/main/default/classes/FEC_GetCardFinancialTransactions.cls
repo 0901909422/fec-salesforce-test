@@ -294,8 +294,13 @@ public with sharing class FEC_GetCardFinancialTransactions {
     if (txnsNode != null) {
  
         for (Dom.XmlNode txnNode : txnsNode.getChildElements()) {
- 
-            if (txnNode.getName() != 'Transaction') continue;
+            String nodeName = txnNode.getName();
+            if (nodeName != null && nodeName.contains(':')) {
+                nodeName = nodeName.substring(nodeName.indexOf(':') + 1);
+            }
+            if (nodeName != 'FinancialTransactions' && nodeName != 'Transaction') {
+                continue;
+            }
  
             FinancialTransaction ft = new FinancialTransaction();
             ft.TRNXDateAndTime = FEC_CommonUltils.getXmlValue(txnNode, 'TRNXDateAndTime');
