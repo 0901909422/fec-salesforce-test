@@ -1276,6 +1276,7 @@
 		<members>FEC_Field</members>
 		<members>FEC_HCC_Name</members>
 		<members>FEC_Hold_Case_Config</members>
+		<members>FEC_Hold_Case_Edit_Succes</members>
 		<members>FEC_Hold_Case_Save_Success</members>
 		<members>FEC_Hold_Case_Type</members>
 		<members>FEC_List_Of_NFU_Code</members>
