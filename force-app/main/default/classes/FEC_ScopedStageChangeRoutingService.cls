@@ -412,8 +412,10 @@ public without sharing class FEC_ScopedStageChangeRoutingService {
   }
 
   /**
-   * Owner khi revisit stage đích: Change Owner tại stage (assign user/queue thủ công),
-   * rồi Route to vào stage, rồi Route to rời stage, rồi FEC_Next_Queue__c Stage Change.
+   * Owner khi revisit stage đích: Change Owner tại stage,
+   * rồi Route to rời stage (Original = owner đang giữ case khi rời — thường là User BackOffice),
+   * rồi Route to vào stage (Updated = queue/user lúc vào lần đầu),
+   * rồi FEC_Next_Queue__c Stage Change.
    */
   private static String resolveOwnerForTargetStage(
     Id caseId,
@@ -449,6 +451,28 @@ public without sharing class FEC_ScopedStageChangeRoutingService {
     }
 
     if (targetStageId != null) {
+      List<FEC_Routing_Action_History__c> routeFromStage = [
+        SELECT
+          FEC_Perform_User__c,
+          FEC_Original_User_Queue_ID__c,
+          FEC_Updated_User_Queue_ID__c
+        FROM FEC_Routing_Action_History__c
+        WHERE
+          FEC_Case__c = :caseId
+          AND FEC_Routing_Action__c = :FEC_CaseBusinessService.ROUTE_TO
+          AND FEC_Previous_Stage__c = :targetStageId
+        ORDER BY CreatedDate DESC, Id DESC
+        LIMIT 1
+      ];  
+      if (!routeFromStage.isEmpty()) {
+        String fromDeparture = resolveOwnerIdFromRouteDepartureHistory(
+          routeFromStage[0]
+        );
+        if (String.isNotBlank(fromDeparture)) {
+          return fromDeparture;
+        }
+      }
+
       List<FEC_Routing_Action_History__c> routeToArrival = [
         SELECT FEC_Perform_User__c, FEC_Updated_User_Queue_ID__c
         FROM FEC_Routing_Action_History__c
@@ -463,23 +487,6 @@ public without sharing class FEC_ScopedStageChangeRoutingService {
         String fromArrival = resolveOwnerIdFromRouteHistory(routeToArrival[0], null);
         if (String.isNotBlank(fromArrival)) {
           return fromArrival;
-        }
-      }
-
-      List<FEC_Routing_Action_History__c> routeFromStage = [
-        SELECT FEC_Perform_User__c, FEC_Updated_User_Queue_ID__c
-        FROM FEC_Routing_Action_History__c
-        WHERE
-          FEC_Case__c = :caseId
-          AND FEC_Routing_Action__c = :FEC_CaseBusinessService.ROUTE_TO
-          AND FEC_Previous_Stage__c = :targetStageId
-        ORDER BY CreatedDate DESC, Id DESC
-        LIMIT 1
-      ];
-      if (!routeFromStage.isEmpty()) {
-        String fromDeparture = resolveOwnerIdFromRouteHistory(routeFromStage[0], null);
-        if (String.isNotBlank(fromDeparture)) {
-          return fromDeparture;
         }
       }
     }
@@ -510,8 +517,32 @@ public without sharing class FEC_ScopedStageChangeRoutingService {
   }
 
   /**
-   * Owner khi revisit stage: lấy owner/queue sau action từ FEC_Updated_User_Queue_ID__c,
-   * rồi fallback FEC_Next_Queue__c Stage Change. Không dùng FEC_Perform_User__c (user thao tác, không phải owner cũ).
+   * Route to rời stage: Original = Case Owner trước khi route (User BackOffice đang xử lý);
+   * Updated = owner stage đích (queue team kế tiếp). Ưu tiên Original khi revisit.
+   */
+  private static String resolveOwnerIdFromRouteDepartureHistory(
+    FEC_Routing_Action_History__c hist
+  ) {
+    if (hist == null) {
+      return null;
+    }
+    if (String.isNotBlank(hist.FEC_Original_User_Queue_ID__c)) {
+      String fromOriginal = applyPriorCaseOwnerFromHistory(
+        hist.FEC_Original_User_Queue_ID__c
+      );
+      if (String.isNotBlank(fromOriginal)) {
+        return fromOriginal;
+      }
+    }
+    if (String.isNotBlank(hist.FEC_Updated_User_Queue_ID__c)) {
+      return applyPriorCaseOwnerFromHistory(hist.FEC_Updated_User_Queue_ID__c);
+    }
+    return null;
+  }
+
+  /**
+   * Route to vào stage / Change Owner: lấy FEC_Updated_User_Queue_ID__c.
+   * Không dùng FEC_Perform_User__c (user thao tác, không phải owner cũ).
    */
   private static String resolveOwnerIdFromRouteHistory(
     FEC_Routing_Action_History__c hist,

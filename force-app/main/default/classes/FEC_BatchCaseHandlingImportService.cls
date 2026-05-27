@@ -1075,6 +1075,8 @@ public without sharing class FEC_BatchCaseHandlingImportService {
             Map<Id, List<FEC_BatchCaseHandlingImportRow>> rowsByCaseId = new Map<Id, List<FEC_BatchCaseHandlingImportRow>>();
             Map<Id, List<FEC_Case_Remarks__c>> remarksByCaseId = new Map<Id, List<FEC_Case_Remarks__c>>();
             List<Case> caseRowsToUpdate = new List<Case>();
+            List<FEC_Case_Remarks__c> caseRemarksToInsert = new List<FEC_Case_Remarks__c>();
+            List<FEC_BatchCaseHandlingImportRow> caseRemarkRows = new List<FEC_BatchCaseHandlingImportRow>();
 
             for (RemarkDraftUpdateItem item : remarkDraftItems) {
                 if (item == null || item.caseId == null || item.row == null || String.isBlank(item.inputtedRemarks)) {
@@ -1103,6 +1105,30 @@ public without sharing class FEC_BatchCaseHandlingImportService {
                 caseRemark.FEC_Stage_Name__c = c.FEC_Stage_Name__c;
                 caseRemark.FEC_Case__c = item.caseId;
                 existingRemarks.add(caseRemark);
+                // 27/05/2026 10:00 linhdev - Import Input Remark: tạo Case Remarks History record khi import
+                caseRemarksToInsert.add(new FEC_Case_Remarks__c(
+                    FEC_Case_Remarks__c = item.inputtedRemarks,
+                    FEC_User__c = emailId,
+                    FEC_User_Role__c = roleName,
+                    FEC_Stage_Name__c = c.FEC_Stage_Name__c,
+                    FEC_Case__c = item.caseId
+                ));
+                caseRemarkRows.add(item.row);
+            }
+
+            if (!caseRemarksToInsert.isEmpty()) {
+                Database.SaveResult[] caseRemarkResults = Database.insert(caseRemarksToInsert, false);
+                for (Integer i = 0; i < caseRemarkResults.size(); i++) {
+                    if (caseRemarkResults[i].isSuccess()) {
+                        continue;
+                    }
+                    String message = caseRemarkResults[i].getErrors().isEmpty() ? null : caseRemarkResults[i].getErrors()[0].getMessage();
+                    FEC_BatchCaseHandlingImportRow rr = i < caseRemarkRows.size() ? caseRemarkRows[i] : null;
+                    if (rr != null) {
+                        rr.status = System.Label.FEC_Batch_Case_Handling_Import_Row_Status_Failed;
+                        rr.errors = appendError(rr.errors, message);
+                    }
+                }
             }
 
             for (Case c : caseRowsToUpdate) {
@@ -1575,6 +1601,7 @@ public without sharing class FEC_BatchCaseHandlingImportService {
     private static List<String> importPicklistFieldApis() {
         return new List<String>{
             'FEC_CS_D2C_Assessment_Type__c',
+            'FEC_CS_Support_Assessment_Type__c',
             'FEC_CS_D2C_Required_Corrective_Action__c',
             'FEC_CS_D2C_Risk_Level__c',
             'FEC_CS_Check_Classification_by_CS__c',
@@ -1712,7 +1739,7 @@ public without sharing class FEC_BatchCaseHandlingImportService {
                 LABEL_RISK_LEVEL,
                 ERR_MISSING_RISK_LEVEL,
                 ERR_INVALID_RISK_LEVEL,
-                'FEC_CS_D2C_Required_Corrective_Action__c',
+                'FEC_CS_D2C_Risk_Level__c',
                 configuredLabels,
                 picklistValueByNormByField,
                 errs,
@@ -1724,7 +1751,7 @@ public without sharing class FEC_BatchCaseHandlingImportService {
                 LABEL_REQUIRED_ACTION,
                 ERR_MISSING_REQUIRED_ACTION,
                 ERR_INVALID_REQUIRED_ACTION,
-                'FEC_CS_D2C_Risk_Level__c',
+                'FEC_CS_D2C_Required_Corrective_Action__c',
                 configuredLabels,
                 picklistValueByNormByField,
                 errs,
@@ -1763,20 +1790,29 @@ public without sharing class FEC_BatchCaseHandlingImportService {
             return errs;
         }
         if (profile == FEC_BatchCaseHandlingImportProfile.FIELD_PROFILE_CS_SUPPORT) {
-            String csSupportValue = String.isNotBlank(rr.csSupportAssessment)
-                ? rr.csSupportAssessment
-                : rr.classificationByCS;
             validateD2CField(
                 rr,
-                csSupportValue,
+                rr.csSupportAssessment,
                 LABEL_CS_SUPPORT_ASSESSMENT,
                 'Thiếu giá trị CS Support đánh giá yêu cầu',
                 'Giá trị CS Support đánh giá yêu cầu không tồn tại trong Datagroup.',
-                'FEC_CS_Check_Classification_by_CS__c',
+                'FEC_CS_Support_Assessment_Type__c',
                 configuredLabels,
                 picklistValueByNormByField,
                 errs,
                 true
+            );
+            validateD2CField(
+                rr,
+                rr.classificationByCS,
+                LABEL_CS_SUPPORT_ASSESSMENT,
+                'Thiếu giá trị Classification by CS',
+                'Giá trị Classification by CS không tồn tại trong Datagroup.',
+                'FEC_CS_Check_Classification_by_CS__c',
+                configuredLabels,
+                picklistValueByNormByField,
+                errs,
+                false
             );
             validateD2CField(
                 rr,
@@ -1827,7 +1863,7 @@ public without sharing class FEC_BatchCaseHandlingImportService {
                 LABEL_RISK_LEVEL,
                 ERR_MISSING_RISK_LEVEL,
                 ERR_INVALID_RISK_LEVEL,
-                'FEC_CS_D2C_Required_Corrective_Action__c',
+                'FEC_CS_D2C_Risk_Level__c',
                 configuredLabels,
                 picklistValueByNormByField,
                 errs,
@@ -1839,7 +1875,7 @@ public without sharing class FEC_BatchCaseHandlingImportService {
                 LABEL_REQUIRED_ACTION,
                 ERR_MISSING_REQUIRED_ACTION,
                 ERR_INVALID_REQUIRED_ACTION,
-                'FEC_CS_D2C_Risk_Level__c',
+                'FEC_CS_D2C_Required_Corrective_Action__c',
                 configuredLabels,
                 picklistValueByNormByField,
                 errs,
@@ -1889,10 +1925,12 @@ public without sharing class FEC_BatchCaseHandlingImportService {
         }
         if (caseFieldApi == 'FEC_CS_D2C_Assessment_Type__c') {
             rr.csD2CAssessmentTypeApiValue = apiValue;
+        } else if (caseFieldApi == 'FEC_CS_Support_Assessment_Type__c') {
+            rr.csSupportAssessmentApiValue = apiValue;
         } else if (caseFieldApi == 'FEC_CS_D2C_Required_Corrective_Action__c') {
-            rr.riskLevelApiValue = apiValue;
-        } else if (caseFieldApi == 'FEC_CS_D2C_Risk_Level__c') {
             rr.requiredActionApiValue = apiValue;
+        } else if (caseFieldApi == 'FEC_CS_D2C_Risk_Level__c') {
+            rr.riskLevelApiValue = apiValue;
         } else if (caseFieldApi == 'FEC_CS_Check_Classification_by_CS__c') {
             rr.classificationByCSApiValue = apiValue;
         } else if (caseFieldApi == 'FEC_CS_Check_Evaluation_by_CS__c') {
@@ -1916,11 +1954,14 @@ public without sharing class FEC_BatchCaseHandlingImportService {
         if (caseFieldApi == 'FEC_CS_D2C_Assessment_Type__c') {
             return rr.csD2CAssessmentTypeApiValue;
         }
+        if (caseFieldApi == 'FEC_CS_Support_Assessment_Type__c') {
+            return rr.csSupportAssessmentApiValue;
+        }
         if (caseFieldApi == 'FEC_CS_D2C_Required_Corrective_Action__c') {
-            return rr.riskLevelApiValue;
+            return rr.requiredActionApiValue;
         }
         if (caseFieldApi == 'FEC_CS_D2C_Risk_Level__c') {
-            return rr.requiredActionApiValue;
+            return rr.riskLevelApiValue;
         }
         if (caseFieldApi == 'FEC_CS_Check_Classification_by_CS__c') {
             return rr.classificationByCSApiValue;
@@ -1959,23 +2000,26 @@ public without sharing class FEC_BatchCaseHandlingImportService {
         );
         String riskValue = resolvePicklistValueForApply(
             rr,
-            'FEC_CS_D2C_Required_Corrective_Action__c',
+            'FEC_CS_D2C_Risk_Level__c',
             rr.riskLevel,
             picklistValueByNormByField
         );
         String requiredActionValue = resolvePicklistValueForApply(
             rr,
-            'FEC_CS_D2C_Risk_Level__c',
+            'FEC_CS_D2C_Required_Corrective_Action__c',
             rr.requiredAction,
             picklistValueByNormByField
         );
-        String csSupportInput = String.isNotBlank(rr.csSupportAssessment)
-            ? rr.csSupportAssessment
-            : rr.classificationByCS;
+        String csSupportAssessmentValue = resolvePicklistValueForApply(
+            rr,
+            'FEC_CS_Support_Assessment_Type__c',
+            rr.csSupportAssessment,
+            picklistValueByNormByField
+        );
         String classificationByCSValue = resolvePicklistValueForApply(
             rr,
             'FEC_CS_Check_Classification_by_CS__c',
-            csSupportInput,
+            rr.classificationByCS,
             picklistValueByNormByField
         );
         String evaluationByCSValue = resolvePicklistValueForApply(
@@ -1994,12 +2038,16 @@ public without sharing class FEC_BatchCaseHandlingImportService {
             c.put('FEC_CS_D2C_Assessment_Type__c', assessmentValue);
             hasAny = true;
         }
-        if (String.isNotBlank(riskValue) && caseFieldMap.containsKey('FEC_CS_D2C_Required_Corrective_Action__c')) {
-            c.put('FEC_CS_D2C_Required_Corrective_Action__c', riskValue);
+        if (String.isNotBlank(csSupportAssessmentValue) && caseFieldMap.containsKey('FEC_CS_Support_Assessment_Type__c')) {
+            c.put('FEC_CS_Support_Assessment_Type__c', csSupportAssessmentValue);
             hasAny = true;
         }
-        if (String.isNotBlank(requiredActionValue) && caseFieldMap.containsKey('FEC_CS_D2C_Risk_Level__c')) {
-            c.put('FEC_CS_D2C_Risk_Level__c', requiredActionValue);
+        if (String.isNotBlank(riskValue) && caseFieldMap.containsKey('FEC_CS_D2C_Risk_Level__c')) {
+            c.put('FEC_CS_D2C_Risk_Level__c', riskValue);
+            hasAny = true;
+        }
+        if (String.isNotBlank(requiredActionValue) && caseFieldMap.containsKey('FEC_CS_D2C_Required_Corrective_Action__c')) {
+            c.put('FEC_CS_D2C_Required_Corrective_Action__c', requiredActionValue);
             hasAny = true;
         }
         if (String.isNotBlank(classificationByCSValue) && caseFieldMap.containsKey('FEC_CS_Check_Classification_by_CS__c')) {

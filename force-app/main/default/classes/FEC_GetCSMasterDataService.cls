@@ -3,13 +3,13 @@
  * Author       : Quangdv7
  * Date         : 2025-12-11
  * Description  : Get data for API service
+ * REST (raw SOAP XML): FEC_GetCSMasterDataRestService → FEC_MyCaseSoapXml
  * ===============================================================
  * Ver      Date           Author              Modification
  * ===============================================================
    1.0      2025-12-11     Quangdv7             Create
  
 ****************************************************************************************/
-
 global with sharing class FEC_GetCSMasterDataService {
     private static final Integer MAX_TRANSACTION_ID = 36;
 
@@ -322,8 +322,11 @@ global with sharing class FEC_GetCSMasterDataService {
 
         return result;
     }
-    
-    private static GetCSMasterDataResponse initResponse(SysRequestType Sys) { 
+
+    // ==========================================================
+    // RESPONSE INIT
+    // ==========================================================
+    private static GetCSMasterDataResponse initResponse(SysRequestType Sys) {
         GetCSMasterDataResponse r = new GetCSMasterDataResponse();
         r.Sys = new SysResponseType();
         r.Sys.TransactionID = Sys != null ? Sys.TransactionID : null;
@@ -340,19 +343,19 @@ global with sharing class FEC_GetCSMasterDataService {
         webservice String Channel;
         webservice Datetime DateTime_x;
     }
-    
+
     global class GetCSMasterDataResponse {
         webservice SysResponseType Sys;
         webservice List<MasterDataItemType> MasterDataItems;
     }
-    
+
     global class SysResponseType {
         webservice String TransactionID;
         webservice Datetime DateTime_x;
         webservice String Code;
         webservice String Description;
     }
-    
+
     global class MasterDataItemType {
         webservice String ID;
         webservice String Name;
@@ -363,7 +366,7 @@ global with sharing class FEC_GetCSMasterDataService {
         webservice List<ChildItemType> Children;
         webservice List<AdditionalPropertyType> AdditionalProperties;
     }
-    
+
     global class ChildItemType {
         webservice String ID;
         webservice String Name;
@@ -374,7 +377,7 @@ global with sharing class FEC_GetCSMasterDataService {
         webservice List<ChildItemType> Children;
         webservice List<AdditionalPropertyType> AdditionalProperties;
     }
-    
+
     global class AdditionalPropertyType {
         webservice String ID;
         webservice String Name;

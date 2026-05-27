@@ -4,6 +4,9 @@
         <field>Case.FEC_Customer_Name__c</field>
     </columns>
     <columns>
+        <field>Case.FEC_User_ID__c</field>
+    </columns>
+    <columns>
         <field>Case.FEC_Account_Number__c</field>
     </columns>
     <columns>
