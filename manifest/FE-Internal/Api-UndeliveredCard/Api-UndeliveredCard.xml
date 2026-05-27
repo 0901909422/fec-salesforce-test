@@ -32,9 +32,15 @@
     </types>
 
     <types>
+        <members>FEC_Undelivered_Card__c</members>
+        <name>CustomTab</name>
+    </types>
+    
+    <types>
         <members>FEC_Common_System_Setting</members>
         <name>PermissionSet</name>
     </types>
+
 
     <version>65.0</version>
 </Package>
