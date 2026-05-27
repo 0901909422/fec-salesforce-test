@@ -51,6 +51,7 @@ public with sharing class FEC_BatchCaseHandlingImportProfile {
         } else if (suffixNorm == 'CSSUPPORT' || suffixNorm == 'CSCUSTOMERCARE') {
             scope.fieldProfile = FIELD_PROFILE_CS_SUPPORT;
         }
+        // 28/05/2026 01:35 linhdev - PM + RefundLoanTemp1_PM / IncorrectPaymentTemp1_PM: bắt buộc cột Payment đánh giá (không dùng CS Support)
         if (suffixNorm == 'PM' && isPaymentAssessmentBusinessProcess(bpNorm)) {
             scope.fieldProfile = FIELD_PROFILE_PM_PAYMENT;
         } else if (suffixNorm == 'CP' && isCpAssessmentBusinessProcess(bpNorm)) {
@@ -100,6 +101,7 @@ public with sharing class FEC_BatchCaseHandlingImportProfile {
         return value.trim().toLowerCase().replaceAll('\\s+', FEC_ConstantCommon.STR_EMPTY);
     }
 
+    // 28/05/2026 01:35 linhdev - map BP Refund Request (Loan), Incorrect Payment... cho RefundLoanTemp1_PM (design Bulk Actions)
     private static Boolean isPaymentAssessmentBusinessProcess(String bpNorm) {
         if (String.isBlank(bpNorm)) {
             return false;
