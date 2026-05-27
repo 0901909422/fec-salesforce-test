@@ -90,7 +90,8 @@ public with sharing class FEC_PaymentHistoryValidationService {
 
   /**
    * RL04.02: chặn chỉ khi Contract Status = Closed (thông báo lịch trả nợ).
-   * RL04.03: Closed hoặc Active với COUNT FEC_Payment_History__c theo Customer History below 7 (thông báo lịch sử thanh toán).
+   * RL04.03: Closed hoặc Active với COUNT FEC_Payment_History__c below 7 (thông báo lịch sử thanh toán).
+   * Active + COUNT = 0: gọi FEC_RepaySchedPayHistController.syncPaymentHistoryFromApis rồi đếm lại.
    * RC04.04: không chặn; trả infoMessage khi không đủ điều kiện phát hành giấy xác nhận đóng thẻ.
    */
   @AuraEnabled
@@ -189,11 +190,28 @@ public with sharing class FEC_PaymentHistoryValidationService {
     }
 
     if (CONTRACT_STATUS_ACTIVE.equals(contractStatus)) {
+      Id customerHistoryIdForCount = histories[0].Id;
       Integer paymentCount = [
         SELECT COUNT()
         FROM FEC_Payment_History__c
-        WHERE FEC_Customer_History__c = :histories[0].Id
+        WHERE FEC_Customer_History__c = :customerHistoryIdForCount
       ];
+      if (paymentCount == 0) {
+        try {
+          paymentCount = FEC_RepaySchedPayHistController.syncPaymentHistoryFromApis(
+            caseId,
+            customerHistoryIdForCount
+          );
+        } catch (Exception e) {
+          System.debug(
+            LoggingLevel.WARN,
+            'RL04.03 payment history API sync skipped, case=' +
+              caseId +
+              ': ' +
+              e.getMessage()
+          );
+        }
+      }
       if (paymentCount < 7) {
         result.allowed = false;
         result.message = System.Label.FEC_MSG_Cannot_Request_Payment_History;

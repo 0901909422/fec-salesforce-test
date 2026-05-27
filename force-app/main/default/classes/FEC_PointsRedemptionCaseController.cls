@@ -8,10 +8,6 @@ public without sharing class FEC_PointsRedemptionCaseController {
     private static final Decimal MIN_AVAILABLE_POINTS = 100000;
     private static final String NS = 'http://esbservice.fecredit.org/CMS_RewardWS/';
     private static final String MSG_NOT_ELIGIBLE = 'Không đủ điều kiện đổi điểm thưởng.';
-    private static final String REASON_ELIGIBILITY_API = 'Không lấy được thông tin điểm thưởng từ hệ thống.';
-    private static final String REASON_MISSING_ACCOUNT = 'Thiếu số tài khoản/hợp đồng.';
-    private static final String REASON_REDEEM_TYPE_NOT_ELIGIBLE = 'Loại đổi điểm không đủ điều kiện.';
-    private static final String REASON_NO_REDEEM_TIER = 'Không có mệnh giá đổi điểm cho loại yêu cầu này.';
 
     //linhdev fix jira FECREDIT_CSM_2025_KH-1393-1394 — Sub Code: param UI → Case → FEC_Nature_of_Case__c
     private static String resolveEffectiveSubCode(Case c, String paramSubCode) {
@@ -186,22 +182,11 @@ public without sharing class FEC_PointsRedemptionCaseController {
         return String.isNotBlank(subCodeCode) && subCodeCode.toUpperCase().contains('RC33');
     }
 
-    private static void applyNotEligibleWithReason(InitResult r, Decimal points, String reason) {
+    //linhdev fix jira FECREDIT_CSM_2025_KH-1393-1394 — mọi trường hợp không đủ điều kiện: chỉ 1 reason UI
+    private static void applyNotEligibleBelowMinPoints(InitResult r, Decimal points) {
         r.availablePoints = points;
         r.notEligibleMessage = MSG_NOT_ELIGIBLE;
-        r.notEligibleReason = reason;
-    }
-
-    //linhdev fix jira FECREDIT_CSM_2025_KH-1393-1394
-    private static void applyNotEligibleBelowMinPoints(InitResult r, Decimal points) {
-        applyNotEligibleWithReason(r, points, System.Label.FEC_Points_Redemption_Available_Points_Below_Min);
-    }
-
-    private static String resolveApiNotEligibleReason(EligibilityParse el) {
-        if (el != null && String.isNotBlank(el.sysDescription)) {
-            return el.sysDescription.trim();
-        }
-        return REASON_ELIGIBILITY_API;
+        r.notEligibleReason = System.Label.FEC_Points_Redemption_Available_Points_Below_Min;
     }
 
     //linhdev fix jira FECREDIT_CSM_2025_KH-1393-1394 — API lỗi: fallback Available Points từ Case.FEC_Redeemed_Points__c
@@ -227,12 +212,8 @@ public without sharing class FEC_PointsRedemptionCaseController {
 
     private static void applyApiFailureNotEligible(InitResult r, Case c, EligibilityParse el) {
         Decimal fallbackPoints = parseCaseRedeemedPointsField(c);
-        if (fallbackPoints != null && isBelowMinAvailablePoints(fallbackPoints)) {
-            applyNotEligibleBelowMinPoints(r, fallbackPoints);
-            return;
-        }
         Decimal displayPoints = el != null && el.availablePoints != null ? el.availablePoints : fallbackPoints;
-        applyNotEligibleWithReason(r, displayPoints, resolveApiNotEligibleReason(el));
+        applyNotEligibleBelowMinPoints(r, displayPoints);
     }
 
     /** RC33.01–03: hiển thị form Redeem Points; RC33.04 và NOC chưa có Sub Code redeem thì không. */
@@ -326,7 +307,7 @@ public without sharing class FEC_PointsRedemptionCaseController {
         FEC_Customer_History__c customerHistory = resolveCustomerHistoryForCase(c);
         String accountNumber = resolveAccountNumberForCase(c, customerHistory);
         if (String.isBlank(accountNumber)) {
-            applyNotEligibleWithReason(r, null, REASON_MISSING_ACCOUNT);
+            applyNotEligibleBelowMinPoints(r, null);
             return r;
         }
         EligibilityParse el = callAndParseEligibility(accountNumber);
@@ -343,11 +324,11 @@ public without sharing class FEC_PointsRedemptionCaseController {
         }
         r.expectedProductType = resolveProductType(effectiveSub);
         if (String.isBlank(r.expectedProductType)) {
-            applyNotEligibleWithReason(r, el.availablePoints, REASON_NO_REDEEM_TIER);
+            applyNotEligibleBelowMinPoints(r, el.availablePoints);
             return r;
         }
         if (!isTypeEligible(r.expectedProductType, el)) {
-            applyNotEligibleWithReason(r, el.availablePoints, REASON_REDEEM_TYPE_NOT_ELIGIBLE);
+            applyNotEligibleBelowMinPoints(r, el.availablePoints);
             return r;
         }
         r.cmsPhone = el.customerMobile;
@@ -370,7 +351,7 @@ public without sharing class FEC_PointsRedemptionCaseController {
             r.tierOptions.add(o);
         }
         if (r.tierOptions.isEmpty()) {
-            applyNotEligibleWithReason(r, el.availablePoints, REASON_NO_REDEEM_TIER);
+            applyNotEligibleBelowMinPoints(r, el.availablePoints);
             return r;
         }
         r.showRedemptionUi = true;

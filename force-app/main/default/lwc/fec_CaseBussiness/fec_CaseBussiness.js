@@ -30,6 +30,7 @@ import USER_GROUP_FIELD from "@salesforce/schema/User.FEC_User_Group__c";
 import ID_FIELD from "@salesforce/schema/Case.Id";
 // PhuongNT add field FEC_Stage_Name__c
 import STAGE_NAME_FIELD from "@salesforce/schema/Case.FEC_Stage_Name__c";
+import CASE_CURRENT_STAGE_NAME_FIELD from "@salesforce/schema/Case.FEC_Current_Case_Stage__r.Name";
 import {
   mask,
   maskValue,
@@ -70,6 +71,8 @@ import {
   isMrcReturnTrackedField,
   isMrcRl05Branch,
   isMrcRl05CaseInformationBlocked,
+  isMrcRl05CaseInformationLockedAfterSubmit,
+  isMrcRl05FieldLockedAfterSubmit,
   shouldActivateMrcReturnRouting,
   showMrcRl0502DupBanner,
   validateMrcReturnCase,
@@ -136,6 +139,7 @@ import {
   resolveRoutingActionSelectEl,
   validateScopedRoutingSection,
   trySubmitScopedRouteTo,
+  computeRdPaymentScopedRouteToLocked,
 } from "c/fec_CaseBussinessScopedRoutingIntegration";
 //PhongBT 14/05/26: Document Request — save PDF to Case
 import savePdfToCase from "@salesforce/apex/FEC_ClientPDFService.savePdfToCase";
@@ -150,6 +154,7 @@ import CASE_NOC from "@salesforce/messageChannel/FEC_Case_NOC__c";
 import CASE_NOTIFICATION from "@salesforce/messageChannel/FEC_Case_Notification__c";
 import PIN_REISSUE_MESSAGE_CHANNEL from "@salesforce/messageChannel/FEC_PinReissue__c";
 import PROCESS_ACTION_MESSAGE_CHANNEL from "@salesforce/messageChannel/FEC_ProcessAction__c";
+import ROUTE_TO_TEAM_SELECTION from "@salesforce/messageChannel/FEC_Route_To_Team_Selection__c";
 // [NOC-HANDLING-STAGE-UPDATE]: Import subscribe/unsubscribe để lắng nghe CASE_NOC channel
 import { subscribe, unsubscribe, APPLICATION_SCOPE } from "lightning/messageService";
 
@@ -486,6 +491,11 @@ import {
   setRdPaymentScopedStageTeamMap,
   getRdPaymentScopedStageTeam,
 } from "c/fec_RdPaymentRoutingUtils";
+import {
+  applyRl0502RdPaymentAssessmentRouting,
+  isRl0502RdPaymentRouteToLocked,
+  isRl0502RdPaymentRoutingEligible,
+} from "c/fec_Rl0502RdPaymentRouting";
 
 const FIELD_CONTRACT_PROCESSING_ASSESSMENT_TYPE =
   'FEC_Contract_Processing_Assessment_Type__c';
@@ -736,6 +746,14 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
     return this._isEdit;
   }
 
+  _isMrcRl05MasterDataFieldLocked(fieldApiName, subSectionName) {
+    return isMrcRl05FieldLockedAfterSubmit(
+      this.business,
+      fieldApiName,
+      subSectionName,
+    );
+  }
+
   @track business = {};
 
   isLoaded = true;
@@ -801,6 +819,8 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
   last4Digit;
   isHiddenLwc = false;
   currentStageName;
+  /** FEC_Current_Case_Stage__r.Name — áp dụng/khóa RD Payment assessment → Team khi tên stage chứa PM. */
+  _currentCaseStageName;
 
   @wire(getRecord, { recordId: USER_ID, fields: [USER_GROUP_FIELD] })
   wiredUser({ error, data }) {
@@ -811,11 +831,18 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
     }
   }
 
-  // PhuongNT add get Case data
-  @wire(getRecord, { recordId: '$recordId', fields: [STAGE_NAME_FIELD] })
+  // PhuongNT add get Case data + tên stage hiện tại (RD Payment assessment → Team khi Name chứa PM)
+  @wire(getRecord, {
+    recordId: "$recordId",
+    fields: [STAGE_NAME_FIELD, CASE_CURRENT_STAGE_NAME_FIELD],
+  })
   wiredCase({ error, data }) {
     if (data) {
       this.currentStageName = getFieldValue(data, STAGE_NAME_FIELD);
+      this._currentCaseStageName = getFieldValue(
+        data,
+        CASE_CURRENT_STAGE_NAME_FIELD,
+      );
     } else if (error) {
       console.error("Get Case record error:", error);
     }
@@ -1122,21 +1149,45 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
 
   /** Áp dụng routing (Team/Queue + action) dựa trên giá trị đã lưu của FEC_RD_Payment_Contract_Assessment__c khi load form. */
   _applyRdPaymentContractAssessmentRouting() {
-    if (!this.isEdit || !this._isRdPaymentSubCode || isMrcRl05Branch(this.business)) {
+    if (!this.isEdit) {
       return;
     }
-    const assessmentVal = this._getCaseFieldValue(FIELD_RD_PAYMENT_CONTRACT_ASSESSMENT);
+    if (this._isRdPaymentSubCode && !isMrcRl05Branch(this.business)) {
+      const assessmentVal = this._getCaseFieldValue(
+        FIELD_RD_PAYMENT_CONTRACT_ASSESSMENT,
+      );
+      if (assessmentVal && assessmentVal !== STR_EMPTY) {
+        if (
+          !getRdPaymentScopedStageTeam(
+            assessmentVal,
+            this.business?.picklistOptionsMap?.Case?.[
+              FIELD_RD_PAYMENT_CONTRACT_ASSESSMENT
+            ],
+          )
+        ) {
+          this._fetchRdPaymentQueues().then(() => {
+            this._applyRdPaymentRoutingByAssessment(assessmentVal);
+          });
+        } else {
+          this._applyRdPaymentRoutingByAssessment(assessmentVal);
+        }
+      }
+    }
+    this._applyRl0502RdPaymentAssessmentRouting();
+  }
+
+  /** RL05.02 Stage 2+ — RD Payment assessment → Route to / Team / Queue (module riêng). */
+  _applyRl0502RdPaymentAssessmentRouting() {
+    if (!isRl0502RdPaymentRoutingEligible(this)) {
+      return;
+    }
+    const assessmentVal = this._getCaseFieldValue(
+      FIELD_RD_PAYMENT_CONTRACT_ASSESSMENT,
+    );
     if (!assessmentVal || assessmentVal === STR_EMPTY) {
       return;
     }
-    // Nếu filter map chưa load xong, fetch lại rồi mới apply
-    if (!getRdPaymentScopedStageTeam(assessmentVal, this.business?.picklistOptionsMap?.Case?.[FIELD_RD_PAYMENT_CONTRACT_ASSESSMENT])) {
-      this._fetchRdPaymentQueues().then(() => {
-        this._applyRdPaymentRoutingByAssessment(assessmentVal);
-      });
-    } else {
-      this._applyRdPaymentRoutingByAssessment(assessmentVal);
-    }
+    void applyRl0502RdPaymentAssessmentRouting(this, assessmentVal);
   }
 
   /**
@@ -1907,7 +1958,14 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
         );
         sub.objlst?.forEach((obj) => {
           obj.fieldlst?.forEach((field) => {
-            const forceReadonly = stage1RevertReadonly || gsrPropertyInfoReadonly;
+            const mrcFieldLocked = this._isMrcRl05MasterDataFieldLocked(
+              field.apiName,
+              sub.name,
+            );
+            const forceReadonly =
+              stage1RevertReadonly ||
+              gsrPropertyInfoReadonly ||
+              mrcFieldLocked;
             field.readonly = forceReadonly ? true : !sectionEditable;
             field.editable = forceReadonly ? false : sectionEditable;
           });
@@ -2079,6 +2137,14 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
   _resolveDynCmpMasterIsEdit(componentName, fecMasterDataSettingIsEdit) {
     const master =
       typeof fecMasterDataSettingIsEdit === "boolean" ? fecMasterDataSettingIsEdit : true;
+    if (
+      isMrcRl05CaseInformationLockedAfterSubmit(this.business) &&
+      (componentName === "fec_MrcReturnPanel" ||
+        componentName === "fec_MrcReturnCaseForm" ||
+        componentName === "fec_MrcDeliveryForm")
+    ) {
+      return false;
+    }
     if (this._isStage1RevertMasterReadonly()) {
       return false;
     }
@@ -2651,7 +2717,11 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
                 if (
                   !this._isSectionFieldsEditable(section.name) ||
                   this._isStage1RevertMasterReadonly() ||
-                  this._isGsrStage3PropertyInfoFieldReadonly(sub.name)
+                  this._isGsrStage3PropertyInfoFieldReadonly(sub.name) ||
+                  this._isMrcRl05MasterDataFieldLocked(
+                    field.apiName,
+                    sub.name,
+                  )
                 ) {
                   field.readonly = true;
                   field.editable = false;
@@ -3226,6 +3296,15 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
     ) {
       applyRdPaymentAssessmentRoutingImmediate(this, value);
       void this._applyRdPaymentRoutingByAssessment(value);
+    }
+
+    if (
+      fieldName === FIELD_RD_PAYMENT_CONTRACT_ASSESSMENT &&
+      value &&
+      value !== STR_EMPTY &&
+      isRl0502RdPaymentRoutingEligible(this)
+    ) {
+      void applyRl0502RdPaymentAssessmentRouting(this, value);
     }
 
     if (fieldName === FIELD_COMPLAIN_TYPE) {
@@ -6352,6 +6431,39 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
     publish(this.messageContext, PROCESS_ACTION_MESSAGE_CHANNEL, payload);
   }
 
+  /**
+   * RL05.02 only — LMS tới fec_ScopedStageChangeRoutingAction (source = RL05.02).
+   */
+  _publishRl0502RouteToTeamSelection({
+    team,
+    queueLabel,
+    queueDeveloperName,
+    stageChangeId,
+    lockSelection,
+  }) {
+    if (!this.messageContext || !this.recordId || !team) {
+      return;
+    }
+    if (!isRl0502RdPaymentRoutingEligible(this)) {
+      return;
+    }
+    publish(
+      this.messageContext,
+      ROUTE_TO_TEAM_SELECTION,
+      {
+        source: "RL05.02",
+        caseId: this.recordId,
+        actionCode: ACTION_ROUTE_TO,
+        team,
+        queueLabel: queueLabel || null,
+        queueDeveloperName: queueDeveloperName || null,
+        stageChangeId: stageChangeId || null,
+        lockSelection: lockSelection === true,
+      },
+      { scope: APPLICATION_SCOPE },
+    );
+  }
+
   // Linhdev add handle find routing action by value or code (FEC_Custom_Action_Button_Label__c or FEC_Action_Button__r.FEC_Code__c)
   _findRoutingActionByValueOrCode(valueOrCode) {
     if (!valueOrCode || !this.business?.routingActionlst?.length) {
@@ -6413,21 +6525,12 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
     return this.business?.code;
   }
 
-  /** RD Payment Stage 2+: assessment đã chọn → khóa combobox Team (read-only từ DB hoặc 'default'). */
+  /** RD Payment Stage 2+: khóa combobox Team khi FEC_Current_Case_Stage__r.Name chứa PM. */
   get rdPaymentScopedRouteToLocked() {
-    if (!shouldPreferScopedRoutingFromStage2(this)) {
-      return false;
+    if (isRl0502RdPaymentRouteToLocked(this)) {
+      return true;
     }
-    const assessmentVal = this._getCaseFieldValue(FIELD_RD_PAYMENT_CONTRACT_ASSESSMENT);
-    if (!assessmentVal || assessmentVal === STR_EMPTY) {
-      return false;
-    }
-    const picklistOptions =
-      this.business?.picklistOptionsMap?.Case?.[FIELD_RD_PAYMENT_CONTRACT_ASSESSMENT];
-    return (
-      !!getRdPaymentScopedStageTeam(assessmentVal, picklistOptions) ||
-      !!this.business?.nextTeam
-    );
+    return computeRdPaymentScopedRouteToLocked(this);
   }
 
   get showScopedStageChangeRoutingSection() {
