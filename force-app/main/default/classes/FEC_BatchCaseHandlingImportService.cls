@@ -403,6 +403,10 @@ public without sharing class FEC_BatchCaseHandlingImportService {
         String batchFailureReason,
         Boolean cofOrGsr
     ) {
+        List<String> sourceHeaders = resolveImportResultSourceHeaders(rowResults);
+        if (!sourceHeaders.isEmpty()) {
+            return buildBatchResultSheetRowsFromSourceLayout(rowResults, sourceHeaders, batchFailureReason);
+        }
         List<List<String>> sheetRows = new List<List<String>>();
         if (cofOrGsr) {
             sheetRows.add(
@@ -458,6 +462,169 @@ public without sharing class FEC_BatchCaseHandlingImportService {
         return sheetRows;
     }
 
+    // 27/05/2026 21:30 linhdev - file Result = header/cột file upload + __Status + __Errors
+    @TestVisible
+    private static List<List<String>> buildBatchResultSheetRowsFromSourceLayout(
+        List<FEC_BatchCaseHandlingImportRow> rowResults,
+        List<String> sourceHeaders,
+        String batchFailureReason
+    ) {
+        List<List<String>> sheetRows = new List<List<String>>();
+        List<String> headerRow = new List<String>();
+        headerRow.addAll(sourceHeaders);
+        headerRow.add(RESULT_COL_STATUS);
+        headerRow.add(RESULT_COL_ERRORS);
+        sheetRows.add(headerRow);
+        if (rowResults != null && !rowResults.isEmpty()) {
+            for (FEC_BatchCaseHandlingImportRow row : rowResults) {
+                if (row == null) {
+                    continue;
+                }
+                List<String> dataRow = buildImportResultSourceDataRow(row, sourceHeaders);
+                dataRow.add(rowValue(resolveImportResultStatusLabel(row.status)));
+                dataRow.add(rowValue(row.errors));
+                sheetRows.add(dataRow);
+            }
+        } else if (String.isNotBlank(batchFailureReason)) {
+            List<String> failureRow = new List<String>{ rowValue(batchFailureReason) };
+            for (Integer i = 1; i < headerRow.size(); i++) {
+                failureRow.add(FEC_ConstantCommon.STR_EMPTY);
+            }
+            sheetRows.add(failureRow);
+        } else {
+            return null;
+        }
+        return sheetRows;
+    }
+
+    @TestVisible
+    private static List<String> buildImportResultSourceDataRow(
+        FEC_BatchCaseHandlingImportRow row,
+        List<String> sourceHeaders
+    ) {
+        List<String> dataRow = new List<String>();
+        if (row != null && row.originalCells != null && !row.originalCells.isEmpty()) {
+            for (Integer col = 0; col < sourceHeaders.size(); col++) {
+                dataRow.add(
+                    col < row.originalCells.size()
+                        ? rowValue(row.originalCells[col])
+                        : FEC_ConstantCommon.STR_EMPTY
+                );
+            }
+            return dataRow;
+        }
+        Map<String, String> valuesByHeader = buildImportResultFieldMapByHeader(row);
+        for (String header : sourceHeaders) {
+            String normalized = normalizeImportResultHeaderKey(header);
+            dataRow.add(valuesByHeader.containsKey(normalized) ? valuesByHeader.get(normalized) : FEC_ConstantCommon.STR_EMPTY);
+        }
+        return dataRow;
+    }
+
+    private static Map<String, String> buildImportResultFieldMapByHeader(FEC_BatchCaseHandlingImportRow row) {
+        Map<String, String> out = new Map<String, String>();
+        if (row == null) {
+            return out;
+        }
+        out.put('caseidsearch', rowValue(row.caseIdSearch));
+        out.put('caseid', rowValue(row.caseIdSearch));
+        out.put('routingaction', rowValue(row.routingAction));
+        out.put('inputtedremarks', rowValue(row.inputtedRemarks));
+        out.put('remark', rowValue(row.inputtedRemarks));
+        out.put('remarks', rowValue(row.inputtedRemarks));
+        out.put('assignmentid', rowValue(row.assignmentId));
+        out.put('assignmentroutingaction', rowValue(row.assignmentRoutingAction));
+        out.put('csd2cdanhgiayeucau', rowValue(row.csD2CAssessmentType));
+        out.put('cssupportdanhgiayeucau', rowValue(row.csSupportAssessment));
+        out.put('mucdoruiro', rowValue(row.riskLevel));
+        out.put('hanhdongcanthiet', rowValue(row.requiredAction));
+        out.put('classificationbycs', rowValue(row.classificationByCS));
+        out.put('evaluationbycs', rowValue(row.evaluationByCS));
+        out.put('finalproduct', rowValue(row.finalProduct));
+        out.put('paymentdanhgiayeucaudonghopdong', rowValue(row.paymentContractAssessment));
+        out.put('cpdanhgiayeucau', rowValue(row.cpAssessment));
+        return out;
+    }
+
+    @TestVisible
+    private static List<String> resolveImportResultSourceHeaders(List<FEC_BatchCaseHandlingImportRow> rowResults) {
+        if (rowResults == null || rowResults.isEmpty()) {
+            return new List<String>();
+        }
+        for (FEC_BatchCaseHandlingImportRow row : rowResults) {
+            if (row != null && row.importHeaders != null && !row.importHeaders.isEmpty()) {
+                return trimImportResultSourceHeaders(row.importHeaders);
+            }
+        }
+        return new List<String>();
+    }
+
+    public static List<String> parseImportHeadersJson(String importHeadersJson) {
+        if (String.isBlank(importHeadersJson)) {
+            return new List<String>();
+        }
+        try {
+            Object parsed = JSON.deserializeUntyped(importHeadersJson);
+            return parseStringListFromJson(parsed);
+        } catch (Exception ex) {
+            return new List<String>();
+        }
+    }
+
+    @TestVisible
+    private static List<String> parseStringListFromJson(Object raw) {
+        List<String> out = new List<String>();
+        if (!(raw instanceof List<Object>)) {
+            return out;
+        }
+        for (Object item : (List<Object>) raw) {
+            out.add(item == null ? FEC_ConstantCommon.STR_EMPTY : String.valueOf(item));
+        }
+        return out;
+    }
+
+    @TestVisible
+    private static List<String> trimImportResultSourceHeaders(List<String> headers) {
+        List<String> output = new List<String>();
+        if (headers == null || headers.isEmpty()) {
+            return output;
+        }
+        Integer cutoff = headers.size();
+        for (Integer i = 0; i < headers.size(); i++) {
+            if (isImportResultCutoffHeader(headers[i])) {
+                cutoff = Math.min(cutoff, i);
+            }
+        }
+        for (Integer i = 0; i < cutoff; i++) {
+            output.add(headers[i]);
+        }
+        return output;
+    }
+
+    @TestVisible
+    private static Boolean isImportResultCutoffHeader(String header) {
+        if (String.isBlank(header)) {
+            return false;
+        }
+        String normalized = normalizeImportResultHeaderKey(header);
+        if (
+            normalized == 'status' ||
+            normalized == 'errors' ||
+            normalized == 'note' ||
+            normalized == 'id'
+        ) {
+            return true;
+        }
+        return normalized.startsWith('__');
+    }
+
+    @TestVisible
+    private static String normalizeImportResultHeaderKey(String header) {
+        return String.isBlank(header)
+            ? FEC_ConstantCommon.STR_EMPTY
+            : header.replaceAll('\\s+', FEC_ConstantCommon.STR_EMPTY).toLowerCase();
+    }
+
     private static String rowValue(String value) {
         return value == null ? FEC_ConstantCommon.STR_EMPTY : String.valueOf(value);
     }
@@ -473,7 +640,16 @@ public without sharing class FEC_BatchCaseHandlingImportService {
     }
 
     public static List<FEC_BatchCaseHandlingImportRow> validateCaseHandlingImportRows(List<Object> inputRows, Boolean cofOrGsr) {
+        return validateCaseHandlingImportRows(inputRows, cofOrGsr, null);
+    }
+
+    public static List<FEC_BatchCaseHandlingImportRow> validateCaseHandlingImportRows(
+        List<Object> inputRows,
+        Boolean cofOrGsr,
+        List<String> importHeaders
+    ) {
         List<FEC_BatchCaseHandlingImportRow> output = new List<FEC_BatchCaseHandlingImportRow>();
+        List<String> headersForResult = trimImportResultSourceHeaders(importHeaders);
         List<String> searchKeys = new List<String>();
         for (Object rowObj : inputRows) {
             if (!(rowObj instanceof Map<String, Object>)) {
@@ -538,6 +714,11 @@ public without sharing class FEC_BatchCaseHandlingImportService {
                     'contractprocessingassessment'
                 }
             );
+            // 27/05/2026 21:30 linhdev - giữ layout dòng import gốc để file Result có đủ cột như file upload
+            rr.originalCells = parseStringListFromJson(row.get('originalCells'));
+            if (!headersForResult.isEmpty()) {
+                rr.importHeaders = headersForResult;
+            }
             Boolean rowEmpty =
                 String.isBlank(rr.caseIdSearch) &&
                 String.isBlank(rr.routingAction) &&

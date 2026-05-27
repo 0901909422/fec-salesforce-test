@@ -995,7 +995,8 @@ public without sharing class FEC_BatchCaseHandlingController {
         String templateName,
         String rowsJson,
         String businessProcessCode,
-        String businessProcessName
+        String businessProcessName,
+        String importHeadersJson
     ) {
         ImportResult out = new ImportResult();
         out.success = false;
@@ -1091,7 +1092,11 @@ public without sharing class FEC_BatchCaseHandlingController {
             update batchRow;
 
             Boolean cofOrGsr = FEC_BatchCaseHandlingImportService.isCofOrGsrTemplate(resolvedTemplateName);
-            List<FEC_BatchCaseHandlingImportRow> rowResults = FEC_BatchCaseHandlingImportService.validateCaseHandlingImportRows(inputRows, cofOrGsr);
+            List<FEC_BatchCaseHandlingImportRow> rowResults = FEC_BatchCaseHandlingImportService.validateCaseHandlingImportRows(
+                inputRows,
+                cofOrGsr,
+                FEC_BatchCaseHandlingImportService.parseImportHeadersJson(importHeadersJson)
+            );
             if (FEC_BatchCaseHandlingImportService.hasApplicableImportRows(rowResults)) {
                 System.enqueueJob(
                     new FEC_BatchCaseHandlingImportQueueable(

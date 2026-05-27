@@ -2458,7 +2458,8 @@ export default class Fec_BatchCaseHandling extends LightningElement {
           templateName: importCtx.templateName,
           rowsJson: JSON.stringify(rows),
           businessProcessCode: importCtx.businessProcessCode,
-          businessProcessName: importCtx.businessProcessName
+          businessProcessName: importCtx.businessProcessName,
+          importHeadersJson: JSON.stringify(originalHeaders || [])
         }),
         IMPORT_TIMEOUT_MS,
         IMPORT_TIMEOUT_MESSAGE
