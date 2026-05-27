@@ -423,6 +423,7 @@ public without sharing class FEC_AssignmentExecuteService {
          * Find executable assignments
          */
         List<FEC_Assignment__c> assignmentsToUpdate = new List<FEC_Assignment__c>();
+        List<FEC_Assignment__c> historyAssignments =  new List<FEC_Assignment__c>();
         
         for (FEC_Assignment__c assignment : assignments) {
             Boolean matched = false;
@@ -462,18 +463,22 @@ public without sharing class FEC_AssignmentExecuteService {
              */
             if (matched) {
                 
-                
                 /*
-                 * Skip if owner unchanged
+                 * Keep history only when owner changed
                  */
-                if (assignment.FEC_Assignment_Owner__c == userId) {
-                    System.debug('SKIP SAME OWNER => ' + assignment.Id);
-                    continue;
-                }
-                System.debug('TAKE ASSIGNMENT => ' + assignment.Id);
+                Boolean ownerChanged =
+                    assignment.FEC_Assignment_Owner__c != userId;
                 
                 assignment.FEC_Assignment_Owner__c = userId;
+                
                 assignmentsToUpdate.add(assignment);
+                
+                /*
+                 * Only create history when changed
+                 */
+                if (ownerChanged) {
+                    historyAssignments.add(assignment);
+                }
             }
         }
         
@@ -490,11 +495,13 @@ public without sharing class FEC_AssignmentExecuteService {
                 
                 System.debug('Assignments updated successfully');
                 executeResult.claimedCount = assignmentsToUpdate.size();
-                createRoutingActionHistory(
-                    assignmentsToUpdate,
-                userId,
-                caseId
-                    );
+                if (!historyAssignments.isEmpty()) {
+                    createRoutingActionHistory(
+                        historyAssignments,
+                    userId,
+                    caseId
+                        );
+                }
                 
             } catch (Exception e) {
                 System.debug('executeAssignment ERROR = ' + e.getMessage());
