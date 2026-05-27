@@ -101,9 +101,25 @@ public with sharing class FEC_BatchCaseHandlingImportProfile {
     }
 
     private static Boolean isPaymentAssessmentBusinessProcess(String bpNorm) {
-        return bpNorm == 'CONTRACTCLOSURE' ||
-            bpNorm == 'ORIGINALMRCRETURN' ||
-            bpNorm == 'MRCRETURN';
+        if (String.isBlank(bpNorm)) {
+            return false;
+        }
+        String key = bpNorm.trim().toUpperCase();
+        String keyNoSpace = key.replaceAll('\\s+', '').replace('(', '').replace(')', '');
+        return key == 'CONTRACT CLOSURE' ||
+            key == 'CONTRACTCLOSURE' ||
+            key == 'ORIGINAL MRC RETURN' ||
+            key == 'ORIGINALMRCRETURN' ||
+            key == 'MRC RETURN' ||
+            key == 'MRCRETURN' ||
+            key == 'REFUND REQUEST (LOAN)' ||
+            keyNoSpace == 'REFUNDREQUESTLOAN' ||
+            key == 'REFUND REQUEST (LOAN) - GENERAL FLOW' ||
+            keyNoSpace == 'REFUNDREQUESTLOANGENERALFLOW' ||
+            key == 'INCORRECT PAYMENT HANDLING' ||
+            key == 'INCORRECT PAYMENT HANDLING (LOAN)' ||
+            keyNoSpace == 'INCORRECTPAYMENTHANDLING' ||
+            keyNoSpace == 'INCORRECTPAYMENTHANDLINGLOAN';
     }
 
     private static Boolean isCpAssessmentBusinessProcess(String bpNorm) {
