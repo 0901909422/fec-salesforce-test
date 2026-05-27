@@ -182,6 +182,7 @@ public without sharing class FEC_AssignmentController {
         List<FEC_Assignment__c> assignmentsToUpdate = new List<FEC_Assignment__c>();
         Map<Id, Case> caseUpdateMap = new Map<Id, Case>();
         List<FEC_Routing_Action_History__c> historiesToInsert = new List<FEC_Routing_Action_History__c>();
+        User currentUser = getCurrentUserForRoutingHistory();
 
         for (FEC_Routing_Action_History__c h : histories) {
 
@@ -283,6 +284,8 @@ public without sharing class FEC_AssignmentController {
 
                     if (activeCount == 0) {
 
+                        String statusBefore = c.Status;
+
                         // a. clear Case
                         c.FEC_Team__c = null;
                         c.Status = FEC_ConstantCommon.CASE_STATUS_RESOLVED_CANNOT_CONTACT_CUSTOMER;
@@ -294,10 +297,11 @@ public without sharing class FEC_AssignmentController {
                         ));
 
                         // c. tạo history
-                        historiesToInsert.add(new FEC_Routing_Action_History__c(
-                            FEC_Routing_Action__c = FEC_ConstantCommon.CASE_RESOLVE_ACTION,
-                            FEC_Routing_Action_Type__c = 'Case',
-                            FEC_Case__c = c.Id
+                        historiesToInsert.add(buildCaseResolveRoutingHistory(
+                            c,
+                            statusBefore,
+                            c.Status,
+                            currentUser
                         ));
                     }
                     else {
@@ -343,7 +347,8 @@ public without sharing class FEC_AssignmentController {
                     historiesToInsert.add(buildCaseResolveRoutingHistory(
                         c,
                         statusBefore,
-                        c.Status
+                        c.Status,
+                        currentUser
                     ));
                 } else {
                     
@@ -458,13 +463,27 @@ public without sharing class FEC_AssignmentController {
         return false;
     }
 
-   
+    private static User getCurrentUserForRoutingHistory() {
+        List<User> users = [
+            SELECT Id, Email, UserRole.Name
+            FROM User
+            WHERE Id = :UserInfo.getUserId()
+            LIMIT 1
+        ];
+        return users.isEmpty() ? null : users[0];
+    }
+
     private static FEC_Routing_Action_History__c buildCaseResolveRoutingHistory(
         Case c,
         String statusBefore,
-        String statusAfter
+        String statusAfter,
+        User performingUser
     ) {
         String ownerLabel = resolveOwnerLabelForRoutingHistory(c.OwnerId, c.Owner?.Name);
+        String userPrefix = performingUser != null
+            ? FEC_CommonUltils.getEmailPrefix(performingUser.Email)
+            : FEC_CommonUltils.getEmailPrefix(UserInfo.getUserEmail());
+        String userRole = performingUser?.UserRole?.Name;
 
         return new FEC_Routing_Action_History__c(
             FEC_Routing_Action__c = FEC_ConstantCommon.CASE_RESOLVE_ACTION,
@@ -472,13 +491,18 @@ public without sharing class FEC_AssignmentController {
             FEC_Case__c = c.Id,
             FEC_Assignment__c = null,
             FEC_Decision__c = null,
+            FEC_Perform_User__c = performingUser?.Id,
             FEC_Original_User_Queue__c = ownerLabel,
             FEC_Updated_User_Queue__c = ownerLabel,
             FEC_Original_User_Queue_ID__c = c.OwnerId != null
                 ? String.valueOf(c.OwnerId)
                 : null,
+            FEC_Updated_User_Queue_ID__c = c.OwnerId != null
+                ? String.valueOf(c.OwnerId)
+                : null,
             FEC_Stage_Name__c = c.FEC_Current_Case_Stage__r?.FEC_Code__c,
-            FEC_User__c = FEC_CommonUltils.getEmailPrefix(UserInfo.getUserEmail()),
+            FEC_User__c = userPrefix,
+            FEC_User_Role__c = userRole,
             FEC_Current_Status__c = statusBefore,
             FEC_Changed_Status__c = statusAfter
         );

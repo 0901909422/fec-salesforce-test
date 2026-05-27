@@ -266,13 +266,17 @@ export default class Fec_StatementsAccountTabView extends NavigationMixin(Lightn
     formatBilledTransactions(records) {
         if (!Array.isArray(records)) return [];
 
-        return records.map((tx) => ({
-            ...tx,
-            effectiveDate: this.formatDate(tx.effectiveDate),
-            postDate: this.formatDate(tx.postDate),
-            postingDate: this.formatDate(tx.postDate),
-            transactionAmount: this.formatNumber(tx.transactionAmount)
-        }));
+        return records.map((tx) => {
+            const effEpoch = tx.effectiveDate ? new Date(tx.effectiveDate).getTime() : 0;
+            return {
+                ...tx,
+                effectiveSortEpoch: Number.isNaN(effEpoch) ? 0 : effEpoch,
+                effectiveDate: this.formatDate(tx.effectiveDate),
+                postDate: this.formatDate(tx.postDate),
+                postingDate: this.formatDate(tx.postDate),
+                transactionAmount: this.formatNumber(tx.transactionAmount)
+            };
+        });
     }
 
     // ==============================
@@ -337,7 +341,7 @@ export default class Fec_StatementsAccountTabView extends NavigationMixin(Lightn
             c__transactionId: recordId,
             c__transactionCode: row.transactionCode,
             c__sectionType: 'billed',
-            uid: recordId + '_' + Date.now()
+            uid: recordId + '_'
         };
 
         try {
