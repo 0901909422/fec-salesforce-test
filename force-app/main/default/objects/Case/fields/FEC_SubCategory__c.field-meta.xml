@@ -3,7 +3,7 @@
     <fullName>FEC_SubCategory__c</fullName>
     <deleteConstraint>SetNull</deleteConstraint>
     <description>Thông tin danh mục phụ</description>
-    <label>Updated Sub Category</label>
+    <label>Sub Category</label>
     <referenceTo>FEC_Sub_Category__c</referenceTo>
     <relationshipLabel>Cases</relationshipLabel>
     <relationshipName>Cases</relationshipName>
