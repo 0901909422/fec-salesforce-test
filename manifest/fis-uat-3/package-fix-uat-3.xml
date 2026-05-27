@@ -242,6 +242,7 @@
         <members>fec_AccountOrContractPicklistCustomerCase</members>
         <members>fec_CaseNote</members>
         <members>fec_HoldCaseConfigurationTabView</members>
+        <members>fec_StatementsAccount</members>
         <members>fec_StatementsAccountTabView</members>
         <members>fec_TransactionsAccount</members>
         <members>fec_TransactionsAccountTabView</members>
