@@ -565,7 +565,7 @@ export function isMrcStage1BeforeSubmit(business, isEditFlag) {
 }
 
 const MRC_HIDDEN_ASSESSMENT_FIELD_APIS = new Set([
-  "FEC_Contract_Processing_Assessment_Type__c",
+  "FEC_Contract_Processing_MRC_Assessment__c",
   "FEC_RD_Payment_Contract_Assessment__c",
 ]);
 
