@@ -29,6 +29,4 @@ public without sharing class FEC_BatchCaseHandlingImportRow {
     @AuraEnabled public String recordId;
     @AuraEnabled public String status;
     @AuraEnabled public String errors;
-    @AuraEnabled public List<String> originalCells;
-    @AuraEnabled public List<String> importHeaders;
 }
