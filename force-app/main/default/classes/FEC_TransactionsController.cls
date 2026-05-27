@@ -75,16 +75,16 @@ public without sharing class FEC_TransactionsController {
         /* ===============================
            HISTORY - CALL OUT
            =============================== */
-        List<FEC_GetUnbilledTransactions.TransactionRecord> unbilled =
-            callUnbilledSafe(accNumber);
-
-        List<FEC_GetCardFinancialTransactions.FinancialTransaction> financial =
-            callFinancialSafe(accNumber);
-
-        /* ===============================
-           PENDING - CALL OUT
-           =============================== */
-        res.pendingTransactions = loadPendingRealtime(accNumber,ch.Id);
+        FEC_CommonUltils.beginDeferredApiLogging();
+        List<FEC_GetUnbilledTransactions.TransactionRecord> unbilled;
+        List<FEC_GetCardFinancialTransactions.FinancialTransaction> financial;
+        try {
+            unbilled = callUnbilledSafe(accNumber);
+            financial = callFinancialSafe(accNumber);
+            res.pendingTransactions = loadPendingRealtime(accNumber, ch.Id);
+        } finally {
+            FEC_CommonUltils.flushDeferredApiLogs();
+        }
 
         /* ===============================
            HISTORY
@@ -183,7 +183,7 @@ public without sharing class FEC_TransactionsController {
                 FEC_CommonUltils.generateTransactionId(),
                 FEC_ConstantCommon.REQUESTOR_CRM,
                 Datetime.now().formatGMT(FEC_ConstantCommon.DATETIME_FORMAT),
-                'E8V6',
+                FEC_ConstantCommon.VMX_VERSION_DEFAULT,
                 FEC_ConstantCommon.REQUESTOR_VMX_CONTEXT,
                 FEC_ConstantCommon.REQUESTOR_VMX_CONTEXT, 
                 accNumber,                                 

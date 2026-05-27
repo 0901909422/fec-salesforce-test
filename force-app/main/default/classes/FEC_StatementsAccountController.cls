@@ -92,10 +92,10 @@ public without sharing class FEC_StatementsAccountController {
                 ch.FEC_Contract_Number__c
             );
 
-        /* ================= 1.CALL API GetCardBasicInfo ================= */
+        FEC_CommonUltils.beginDeferredApiLogging();
         FEC_GetCardBasicInfo.ResponseWrapper resCard;
-
-        try {   
+        FEC_GetCardSecInfo.ResponseWrapper cardSecRes;
+        try {
             resCard = FEC_GetCardBasicInfo.callGetCardBasicInfo(
                 FEC_CommonUltils.generateTransactionId(),
                 FEC_ConstantCommon.REQUESTOR_CRM,
@@ -103,23 +103,19 @@ public without sharing class FEC_StatementsAccountController {
                 accountNumber
             );
 
+            cardSecRes = FEC_GetCardSecInfo.callGetCardSecInfo(
+                FEC_CommonUltils.generateTransactionId(),
+                FEC_ConstantCommon.REQUESTOR_CRM,
+                Datetime.now().formatGMT(FEC_ConstantCommon.DATETIME_FORMAT),
+                accountNumber,
+                c.FEC_Is_Test_API__c
+            );
         } catch (Exception e) {
-            throw new AuraHandledException(String.format(System.Label.FEC_MSG_API_Error, new List<String>{e.getMessage()}));
-        }
-        
-        /* ================= 2.CALL API GetCardSecInfo ================= */
-        FEC_GetCardSecInfo.ResponseWrapper cardSecRes;
-
-        try {
-           cardSecRes =  FEC_GetCardSecInfo.callGetCardSecInfo(
-                    FEC_CommonUltils.generateTransactionId(),
-                    FEC_ConstantCommon.REQUESTOR_CRM,
-                    Datetime.now().formatGMT(FEC_ConstantCommon.DATETIME_FORMAT),
-                    accountNumber,
-                    c.FEC_Is_Test_API__c
-                );
-        } catch (Exception e) {
-            throw new AuraHandledException(String.format(System.Label.FEC_MSG_API_Error, new List<String>{e.getMessage()}));
+            throw new AuraHandledException(
+                String.format(System.Label.FEC_MSG_API_Error, new List<String>{ e.getMessage() })
+            );
+        } finally {
+            FEC_CommonUltils.flushDeferredApiLogs();
         }
 
         FEC_GetCardBasicInfo.CardBasicInfo info = resCard.CardBasicInfo;
@@ -338,14 +334,73 @@ public without sharing class FEC_StatementsAccountController {
         return result;
     }
 
-    /* =====================================================
-     BILLED TRANSACTIONS — GetCardFinancialTransactions
-     ===================================================== */
+    @AuraEnabled
+    public static void syncBilledTransactionsFromAPI(Id statementId) {
+        BilledSyncContext ctx = buildBilledSyncContext(statementId);
+        if (ctx == null) {
+            return;
+        }
+
+        FEC_GetCardFinancialTransactions.ResponseWrapper apiRes;
+        try {
+            apiRes = FEC_GetCardFinancialTransactions.callGetCardFinancialTransactions(
+                FEC_CommonUltils.generateTransactionId(),
+                FEC_ConstantCommon.REQUESTOR_CRM,
+                Datetime.now().formatGMT(FEC_ConstantCommon.DATETIME_FORMAT),
+                ctx.accountNumber,
+                ctx.apiFromDate,
+                ctx.apiToDate
+            );
+        } catch (Exception e) {
+            System.debug('### BILLED API sync skipped: ' + e.getMessage());
+            return;
+        }
+
+        if (apiRes == null || apiRes.Transactions == null || apiRes.Transactions.isEmpty()) {
+            return;
+        }
+
+        List<FEC_GetCardFinancialTransactions.FinancialTransaction> billedRows =
+            filterBilledTransactionsForStatement(
+                apiRes.Transactions,
+                ctx.prevStmtDate,
+                ctx.stmtEnd
+            );
+
+        if (billedRows.isEmpty()) {
+            billedRows = filterBilledTransactionsWithValidPostDate(apiRes.Transactions);
+        }
+
+        if (!billedRows.isEmpty()) {
+            upsertBilledFromFinancial(
+                ctx.customerHistoryId,
+                ctx.statementId,
+                billedRows
+            );
+        }
+    }
+
     @AuraEnabled(cacheable=false)
     public static List<BilledTransactionDTO> getBilledTransactions(Id statementId) {
-
         if (statementId == null) {
             return new List<BilledTransactionDTO>();
+        }
+        return loadBilledTransactionsFromDb(statementId);
+    }
+
+    private class BilledSyncContext {
+        Id statementId;
+        Id customerHistoryId;
+        Date stmtEnd;
+        Date prevStmtDate;
+        Date apiFromDate;
+        Date apiToDate;
+        String accountNumber;
+    }
+
+    private static BilledSyncContext buildBilledSyncContext(Id statementId) {
+        if (statementId == null) {
+            return null;
         }
 
         FEC_Statement__c stmt = [
@@ -361,7 +416,7 @@ public without sharing class FEC_StatementsAccountController {
 
         Date stmtEnd = stmt.FEC_Statement_Date__c;
         if (stmtEnd == null) {
-            return new List<BilledTransactionDTO>();
+            return null;
         }
 
         Date prevStmtDate;
@@ -388,9 +443,6 @@ public without sharing class FEC_StatementsAccountController {
                 : headerRows[0].FEC_Last_Statement_Date__c;
         }
 
-        Date apiFromDate = prevStmtDate != null ? prevStmtDate : stmtEnd;
-        Date apiToDate = stmtEnd;
-
         String accountNumber = FEC_CommonUltils.resolveAccountNumber(
             null,
             stmt.FEC_Customer_History__r.FEC_Account_Number__c,
@@ -405,62 +457,15 @@ public without sharing class FEC_StatementsAccountController {
             );
         }
 
-        FEC_GetCardFinancialTransactions.ResponseWrapper apiRes;
-        try {
-            apiRes = FEC_GetCardFinancialTransactions.callGetCardFinancialTransactions(
-                FEC_CommonUltils.generateTransactionId(),
-                FEC_ConstantCommon.REQUESTOR_CRM,
-                Datetime.now().formatGMT(FEC_ConstantCommon.DATETIME_FORMAT),
-                accountNumber,
-                apiFromDate,
-                apiToDate
-            );
-        } catch (Exception e) {
-            System.debug('### BILLED API fallback DB: ' + e.getMessage());
-            return loadBilledTransactionsFromDb(statementId);
-        }
-
-        if (apiRes == null || apiRes.Transactions == null || apiRes.Transactions.isEmpty()) {
-            return loadBilledTransactionsFromDb(statementId);
-        }
-
-        List<FEC_GetCardFinancialTransactions.FinancialTransaction> billedRows =
-            filterBilledTransactionsForStatement(
-                apiRes.Transactions,
-                prevStmtDate,
-                stmtEnd
-            );
-
-        // UAT: API hard-code date (vd 2024-06) khác kỳ statement trên CRM → vẫn map row API hợp lệ
-        if (billedRows.isEmpty()) {
-            billedRows = filterBilledTransactionsWithValidPostDate(apiRes.Transactions);
-        }
-
-        if (billedRows.isEmpty()) {
-            return loadBilledTransactionsFromDb(statementId);
-        }
-
-        Map<String, Id> idsByKey = upsertBilledFromFinancial(
-            stmt.FEC_Customer_History__c,
-            statementId,
-            billedRows
-        );
-
-        Map<String, String> helpTexts =
-            FEC_CommonUltils.buildHelpTextMap(FEC_Transaction__c.SObjectType);
-        List<BilledTransactionDTO> result = new List<BilledTransactionDTO>();
-
-        for (FEC_GetCardFinancialTransactions.FinancialTransaction ft : billedRows) {
-            BilledTransactionDTO dto = toBilledDto(ft);
-            dto.helpTexts = helpTexts;
-            String key = billedTxnKey(ft);
-            if (key != null && idsByKey.containsKey(key)) {
-                dto.Id = idsByKey.get(key);
-            }
-            result.add(dto);
-        }
-
-        return result;
+        BilledSyncContext ctx = new BilledSyncContext();
+        ctx.statementId = stmt.Id;
+        ctx.customerHistoryId = stmt.FEC_Customer_History__c;
+        ctx.stmtEnd = stmtEnd;
+        ctx.prevStmtDate = prevStmtDate;
+        ctx.apiFromDate = prevStmtDate != null ? prevStmtDate : stmtEnd;
+        ctx.apiToDate = stmtEnd;
+        ctx.accountNumber = accountNumber;
+        return ctx;
     }
 
     private static List<FEC_GetCardFinancialTransactions.FinancialTransaction> filterBilledTransactionsForStatement(
@@ -512,7 +517,6 @@ public without sharing class FEC_StatementsAccountController {
         return rows;
     }
 
-    /** UAT / API empty: read FEC_Transaction__c already linked to this statement. */
     private static List<BilledTransactionDTO> loadBilledTransactionsFromDb(Id statementId) {
         Map<String, String> helpTexts =
             FEC_CommonUltils.buildHelpTextMap(FEC_Transaction__c.SObjectType);
