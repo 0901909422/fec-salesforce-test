@@ -183,6 +183,7 @@
         <members>FEC_CustomerIntegrationService</members>
         <members>FEC_CaseRemarksTriggerHandler</members>
         <members>FEC_CardLockUnLockController</members>
+        <members>FEC_CardReplacementAddressController</members>
 		<name>ApexClass</name>
 	</types>
     <types>
