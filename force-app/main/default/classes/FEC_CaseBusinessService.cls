@@ -2288,21 +2288,7 @@ public without sharing class FEC_CaseBusinessService {
           String mrcHandlingOption = params != null
             ? (String) params.get('mrcHandlingOption')
             : null;
-          // RL05.02: hủy dup sync (Case/Remark) trước route; RAH dup ghi Queueable sau route.
-          FEC_MrcDuplicateCaseService.setDeferDupRoutingHistoryInsert(true);
-          try {
-            FEC_MrcDuplicateCaseService.applyNotReceivedHandlingOptionOnSubmit(
-              caseId,
-              mrcCustomerConfirmation,
-              mrcHandlingOption
-            );
-            FEC_MrcDuplicateCaseService.applyReceivedConfirmationDuplicateCancelOnSubmit(
-              caseId,
-              mrcCustomerConfirmation
-            );
-          } finally {
-            FEC_MrcDuplicateCaseService.setDeferDupRoutingHistoryInsert(false);
-          }
+          // RL05.02: hủy dup chỉ trong Queueable sau route — tránh SOQL 101 trên transaction Submit.
           markCaseSubmittedAndClearDrafts(caseId);
           //PhongBT: tạo FEC_Case_Flow_History__c khi submit case lần đầu.
           if (isCreationStage) {
