@@ -657,6 +657,7 @@
         <members>Case.FEC_Is_PIN_Reset_Success__c</members>
         <members>Case.FEC_CMS_Phone__c</members>
 		<members>Case.FEC_Contract_Processing_Assessment_Type__c</members>
+		<members>Case.FEC_Contract_Processing_MRC_Assessment__c</members>
 		<members>Case.FEC_Customer_Confirmation__c</members>
 		<members>Case.FEC_MRC_Request_Handling_Option__c</members>
 		<members>Case.FEC_Redeemed_Points__c</members>
