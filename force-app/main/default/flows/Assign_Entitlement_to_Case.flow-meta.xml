@@ -16,21 +16,8 @@
         </assignmentItems>
     </assignments>
     <assignments>
-        <name>Copy_1_of_Assign_Entitlement_to_Case</name>
+        <name>Assign_Entitlement_to_Case_1</name>
         <label>Assign Entitlement to Case</label>
-        <locationX>0</locationX>
-        <locationY>0</locationY>
-        <assignmentItems>
-            <assignToReference>$Record.EntitlementId</assignToReference>
-            <operator>Assign</operator>
-            <value>
-                <elementReference>Copy_1_of_Get_Active_Entitlement.Id</elementReference>
-            </value>
-        </assignmentItems>
-    </assignments>
-    <assignments>
-        <name>Copy_2_of_Assign_Entitlement_to_Case</name>
-        <label>Copy 2 of Assign Entitlement to Case</label>
         <locationX>0</locationX>
         <locationY>0</locationY>
         <assignmentItems>
@@ -42,7 +29,7 @@
         </assignmentItems>
     </assignments>
     <assignments>
-        <name>Copy_3_of_Assign_Entitlement_to_Case</name>
+        <name>Assign_Entitlement_to_Case_2</name>
         <label>Assign Entitlement to Case</label>
         <locationX>0</locationX>
         <locationY>0</locationY>
@@ -50,7 +37,7 @@
             <assignToReference>$Record.EntitlementId</assignToReference>
             <operator>Assign</operator>
             <value>
-                <elementReference>Get_NOC_Case_Entitlement.SlaProcessId</elementReference>
+                <elementReference>Get_SLA_Case_Entitlement.Id</elementReference>
             </value>
         </assignmentItems>
     </assignments>
@@ -77,34 +64,12 @@
         </rules>
     </decisions>
     <decisions>
-        <name>Check_if_Entitlement_Founded</name>
-        <label>Check if Entitlement Founded</label>
-        <locationX>0</locationX>
-        <locationY>0</locationY>
-        <defaultConnectorLabel>Default Outcome</defaultConnectorLabel>
-        <rules>
-            <name>Copy_2_of_Yes</name>
-            <conditionLogic>and</conditionLogic>
-            <conditions>
-                <leftValueReference>Get_NOC_Case_Entitlement.Id</leftValueReference>
-                <operator>IsNull</operator>
-                <rightValue>
-                    <booleanValue>false</booleanValue>
-                </rightValue>
-            </conditions>
-            <connector>
-                <targetReference>Copy_3_of_Assign_Entitlement_to_Case</targetReference>
-            </connector>
-            <label>Yes</label>
-        </rules>
-    </decisions>
-    <decisions>
         <name>Config</name>
         <label>Is Config</label>
         <locationX>0</locationX>
         <locationY>0</locationY>
         <defaultConnector>
-            <targetReference>Is_Config</targetReference>
+            <targetReference>Get_SLA_Case_Entitlement</targetReference>
         </defaultConnector>
         <defaultConnectorLabel>false</defaultConnectorLabel>
         <rules>
@@ -121,28 +86,6 @@
                 <targetReference>Get_Main_Case_Entitlement</targetReference>
             </connector>
             <label>true</label>
-        </rules>
-    </decisions>
-    <decisions>
-        <name>Copy_1_of_Check_if_Entitlement_Found</name>
-        <label>Check if Entitlement Found</label>
-        <locationX>0</locationX>
-        <locationY>0</locationY>
-        <defaultConnectorLabel>Default Outcome</defaultConnectorLabel>
-        <rules>
-            <name>Copy_1_of_Yes</name>
-            <conditionLogic>and</conditionLogic>
-            <conditions>
-                <leftValueReference>Copy_1_of_Get_Active_Entitlement.Id</leftValueReference>
-                <operator>IsNull</operator>
-                <rightValue>
-                    <booleanValue>false</booleanValue>
-                </rightValue>
-            </conditions>
-            <connector>
-                <targetReference>Copy_1_of_Assign_Entitlement_to_Case</targetReference>
-            </connector>
-            <label>Yes</label>
         </rules>
     </decisions>
     <decisions>
@@ -187,34 +130,31 @@
                 </rightValue>
             </conditions>
             <connector>
-                <targetReference>Copy_2_of_Assign_Entitlement_to_Case</targetReference>
+                <targetReference>Assign_Entitlement_to_Case_1</targetReference>
             </connector>
             <label>Yes</label>
         </rules>
     </decisions>
     <decisions>
-        <name>Is_Config</name>
-        <label>Is Config</label>
+        <name>Entitlement_Founded</name>
+        <label>Entitlement Found</label>
         <locationX>0</locationX>
         <locationY>0</locationY>
-        <defaultConnector>
-            <targetReference>Copy_1_of_Get_Active_Entitlement</targetReference>
-        </defaultConnector>
-        <defaultConnectorLabel>false</defaultConnectorLabel>
+        <defaultConnectorLabel>Default Outcome</defaultConnectorLabel>
         <rules>
-            <name>true</name>
+            <name>Yes_2</name>
             <conditionLogic>and</conditionLogic>
             <conditions>
-                <leftValueReference>SLAConfigV3</leftValueReference>
-                <operator>EqualTo</operator>
+                <leftValueReference>Get_SLA_Case_Entitlement.Id</leftValueReference>
+                <operator>IsNull</operator>
                 <rightValue>
-                    <booleanValue>true</booleanValue>
+                    <booleanValue>false</booleanValue>
                 </rightValue>
             </conditions>
             <connector>
-                <targetReference>Get_NOC_Case_Entitlement</targetReference>
+                <targetReference>Assign_Entitlement_to_Case_2</targetReference>
             </connector>
-            <label>true</label>
+            <label>Yes</label>
         </rules>
     </decisions>
     <environments>Default</environments>
@@ -276,80 +216,20 @@
         <name>SLAConfigV2</name>
         <dataType>Boolean</dataType>
         <expression>OR(
-  {!varSubCode.FEC_Code__c} = &quot;ITL01.03&quot;,
-  {!varSubCode.FEC_Code__c} = &quot;ITC01.03&quot;,
-  {!varSubCode.FEC_Code__c} = &quot;ITL01.01&quot;,
-  {!varSubCode.FEC_Code__c} = &quot;ITC01.01&quot;,
-  {!varSubCode.FEC_Code__c} = &quot;ITL01.04&quot;,
-  {!varSubCode.FEC_Code__c} = &quot;ITC01.04&quot;,
-  {!varSubCode.FEC_Code__c} = &quot;ITL01.02&quot;,
-  {!varSubCode.FEC_Code__c} = &quot;ITL02.01&quot;,
-  {!varSubCode.FEC_Code__c} = &quot;ITL02.02&quot;,
-  {!varSubCode.FEC_Code__c} = &quot;ITL02.03&quot;,
-  {!varSubCode.FEC_Code__c} = &quot;ITC01.02&quot;,
-  {!varSubCode.FEC_Code__c} = &quot;ITC02.01&quot;,
-  {!varSubCode.FEC_Code__c} = &quot;ITC02.02&quot;,
-  {!varSubCode.FEC_Code__c} = &quot;ITC02.03&quot;,
-  {!varSubCode.FEC_Code__c} = &quot;FL02.01&quot;,
-  {!varSubCode.FEC_Code__c} = &quot;FL02.02&quot;,
-  {!varSubCode.FEC_Code__c} = &quot;FL02.03&quot;,
-  {!varSubCode.FEC_Code__c} = &quot;FL02.04&quot;,
-  {!varSubCode.FEC_Code__c} = &quot;FL02.05&quot;,
-  {!varSubCode.FEC_Code__c} = &quot;FL03.02&quot;,
-  {!varSubCode.FEC_Code__c} = &quot;FL04.01&quot;,
-  {!varSubCode.FEC_Code__c} = &quot;FL04.02&quot;,
-  {!varSubCode.FEC_Code__c} = &quot;FL05.03&quot;,
-  {!varSubCode.FEC_Code__c} = &quot;FL07.01&quot;,
-  {!varSubCode.FEC_Code__c} = &quot;FL07.02&quot;,
-  {!varSubCode.FEC_Code__c} = &quot;FL08.01&quot;,
-  {!varSubCode.FEC_Code__c} = &quot;FL08.02&quot;,
-  {!varSubCode.FEC_Code__c} = &quot;FL09.01&quot;,
-  {!varSubCode.FEC_Code__c} = &quot;FL09.02&quot;,
-  {!varSubCode.FEC_Code__c} = &quot;FL10.01&quot;,
-  {!varSubCode.FEC_Code__c} = &quot;FL10.02&quot;,
-  {!varSubCode.FEC_Code__c} = &quot;FL10.03&quot;,
-  {!varSubCategory.FEC_Code__c} = &quot;FL11&quot;,
-  {!varSubCode.FEC_Code__c} = &quot;CL02.01&quot;,
-  {!varSubCode.FEC_Code__c} = &quot;CL02.02&quot;,
-  {!varSubCode.FEC_Code__c} = &quot;CL02.03&quot;,
-  {!varSubCode.FEC_Code__c} = &quot;CL02.04&quot;,
-  {!varSubCode.FEC_Code__c} = &quot;CL02.05&quot;,
-  {!varSubCode.FEC_Code__c} = &quot;CL03.02&quot;,
-  {!varSubCode.FEC_Code__c} = &quot;CL04.01&quot;,
-  {!varSubCode.FEC_Code__c} = &quot;CL04.02&quot;,
-  {!varSubCode.FEC_Code__c} = &quot;CL05.03&quot;,
-  {!varSubCode.FEC_Code__c} = &quot;FC02.01&quot;,
-  {!varSubCode.FEC_Code__c} = &quot;FC02.02&quot;,
-  {!varSubCode.FEC_Code__c} = &quot;FC02.03&quot;,
-  {!varSubCode.FEC_Code__c} = &quot;FC02.04&quot;,
-  {!varSubCode.FEC_Code__c} = &quot;FC02.05&quot;,
-  {!varSubCode.FEC_Code__c} = &quot;FC03.02&quot;,
-  {!varSubCode.FEC_Code__c} = &quot;FC04.01&quot;,
-  {!varSubCode.FEC_Code__c} = &quot;FC04.02&quot;,
-  {!varSubCode.FEC_Code__c} = &quot;FC05.03&quot;,
-  {!varSubCode.FEC_Code__c} = &quot;FC07.01&quot;,
-  {!varSubCode.FEC_Code__c} = &quot;FC07.02&quot;,
-  {!varSubCode.FEC_Code__c} = &quot;FC08.01&quot;,
-  {!varSubCode.FEC_Code__c} = &quot;FC08.02&quot;,
-  {!varSubCode.FEC_Code__c} = &quot;FC09.01&quot;,
-  {!varSubCode.FEC_Code__c} = &quot;FC09.02&quot;,
-  {!varSubCode.FEC_Code__c} = &quot;FC10.01&quot;,
-  {!varSubCode.FEC_Code__c} = &quot;FC10.02&quot;,
-  {!varSubCode.FEC_Code__c} = &quot;FC10.03&quot;,
-  {!varSubCategory.FEC_Code__c} = &quot;FC11&quot;,
-  {!varSubCode.FEC_Code__c} = &quot;CC02.01&quot;,
-  {!varSubCode.FEC_Code__c} = &quot;CC02.02&quot;,
-  {!varSubCode.FEC_Code__c} = &quot;CC02.03&quot;,
-  {!varSubCode.FEC_Code__c} = &quot;CC02.04&quot;,
-  {!varSubCode.FEC_Code__c} = &quot;CC02.05&quot;,
-  {!varSubCode.FEC_Code__c} = &quot;CC03.02&quot;,
-  {!varSubCode.FEC_Code__c} = &quot;CC04.01&quot;,
-  {!varSubCode.FEC_Code__c} = &quot;CC04.02&quot;,
-  {!varSubCode.FEC_Code__c} = &quot;CC05.03&quot;,
-  {!varSubCategory.FEC_Code__c} = &quot;FU02&quot;,
-  {!varSubCategory.FEC_Code__c} = &quot;FU03&quot;,
-  {!varSubCategory.FEC_Code__c} = &quot;CU02&quot;,
-  {!varSubCategory.FEC_Code__c} = &quot;CU03&quot;
+{!varSubCode.FEC_Code__c} = &quot;ITL01.03&quot;,
+{!varSubCode.FEC_Code__c} = &quot;ITC01.03&quot;,
+{!varSubCode.FEC_Code__c} = &quot;ITL01.01&quot;,
+{!varSubCode.FEC_Code__c} = &quot;ITC01.01&quot;,
+{!varSubCode.FEC_Code__c} = &quot;ITL01.04&quot;,
+{!varSubCode.FEC_Code__c} = &quot;ITC01.04&quot;,
+{!varSubCode.FEC_Code__c} = &quot;ITL01.02&quot;,
+{!varSubCode.FEC_Code__c} = &quot;ITL02.01&quot;,
+{!varSubCode.FEC_Code__c} = &quot;ITL02.02&quot;,
+{!varSubCode.FEC_Code__c} = &quot;ITL02.03&quot;,
+{!varSubCode.FEC_Code__c} = &quot;ITC01.02&quot;,
+{!varSubCode.FEC_Code__c} = &quot;ITC02.01&quot;,
+{!varSubCode.FEC_Code__c} = &quot;ITC02.02&quot;,
+{!varSubCode.FEC_Code__c} = &quot;ITC02.03&quot;
 )</expression>
     </formulas>
     <formulas>
@@ -455,36 +335,6 @@
     </processMetadataValues>
     <processType>AutoLaunchedFlow</processType>
     <recordLookups>
-        <name>Copy_1_of_Get_Active_Entitlement</name>
-        <label>Get Main Case Entitlement</label>
-        <locationX>0</locationX>
-        <locationY>0</locationY>
-        <assignNullValuesIfNoRecordsFound>false</assignNullValuesIfNoRecordsFound>
-        <connector>
-            <targetReference>Copy_1_of_Check_if_Entitlement_Found</targetReference>
-        </connector>
-        <filterLogic>and</filterLogic>
-        <filters>
-            <field>Status</field>
-            <operator>EqualTo</operator>
-            <value>
-                <stringValue>Active</stringValue>
-            </value>
-        </filters>
-        <filters>
-            <field>Name</field>
-            <operator>EqualTo</operator>
-            <value>
-                <stringValue>Case SLA Main</stringValue>
-            </value>
-        </filters>
-        <getFirstRecordOnly>true</getFirstRecordOnly>
-        <object>Entitlement</object>
-        <sortField>CreatedDate</sortField>
-        <sortOrder>Desc</sortOrder>
-        <storeOutputAutomatically>true</storeOutputAutomatically>
-    </recordLookups>
-    <recordLookups>
         <name>Get_Active_Entitlement</name>
         <label>Get Case NOC Entitlement</label>
         <locationX>0</locationX>
@@ -535,7 +385,7 @@
             <field>Name</field>
             <operator>EqualTo</operator>
             <value>
-                <stringValue>No Time Config 2</stringValue>
+                <stringValue>No Time Config 1</stringValue>
             </value>
         </filters>
         <getFirstRecordOnly>true</getFirstRecordOnly>
@@ -545,13 +395,13 @@
         <storeOutputAutomatically>true</storeOutputAutomatically>
     </recordLookups>
     <recordLookups>
-        <name>Get_NOC_Case_Entitlement</name>
-        <label>Get NOC Case Entitlement</label>
+        <name>Get_SLA_Case_Entitlement</name>
+        <label>Get SLA Case Entitlement</label>
         <locationX>0</locationX>
         <locationY>0</locationY>
         <assignNullValuesIfNoRecordsFound>false</assignNullValuesIfNoRecordsFound>
         <connector>
-            <targetReference>Check_if_Entitlement_Founded</targetReference>
+            <targetReference>Entitlement_Founded</targetReference>
         </connector>
         <filterLogic>and</filterLogic>
         <filters>
@@ -565,7 +415,7 @@
             <field>Name</field>
             <operator>EqualTo</operator>
             <value>
-                <stringValue>No Time Config 1</stringValue>
+                <stringValue>Case SLA Main</stringValue>
             </value>
         </filters>
         <getFirstRecordOnly>true</getFirstRecordOnly>
