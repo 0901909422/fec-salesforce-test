@@ -15982,7 +15982,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>NFU Modal Save Error</shortDescription>
-        <value>Vui lòng chọn ít nhất 1 NFU Code.</value>
+        <value>Chỉ được chọn duy nhất 1 giá trị NFU Code</value>
     </labels>
     <labels>
         <fullName>FEC_NFU_Reason_VN</fullName>
@@ -18305,5 +18305,13 @@
         <protected>false</protected>
         <shortDescription>Channel Config invalid selection message</shortDescription>
         <value>Vui lòng chọn một Channel hợp lệ từ danh sách kết quả tìm kiếm trước khi lưu.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Hold_Case_Edit_Succes</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Hold Case Edit Success</shortDescription>
+        <value>Hold Case Config was saved</value>
     </labels>
 </CustomLabels>
