@@ -1608,7 +1608,7 @@ public without sharing class FEC_BatchCaseHandlingImportService {
             'FEC_CS_Check_Evaluation_by_CS__c',
             'FEC_CS_Check_Final_product__c',
             'FEC_RD_Payment_Contract_Assessment__c',
-            'FEC_Contract_Processing_Assessment_Type__c'
+            'FEC_Contract_Processing_MRC_Assessment__c'
         };
     }
 
@@ -1781,7 +1781,7 @@ public without sharing class FEC_BatchCaseHandlingImportService {
                 LABEL_CP_ASSESSMENT,
                 ERR_MISSING_CP_ASSESSMENT,
                 ERR_INVALID_CP_ASSESSMENT,
-                'FEC_Contract_Processing_Assessment_Type__c',
+                'FEC_Contract_Processing_MRC_Assessment__c',
                 configuredLabels,
                 picklistValueByNormByField,
                 errs,
@@ -1939,7 +1939,7 @@ public without sharing class FEC_BatchCaseHandlingImportService {
             rr.finalProductApiValue = apiValue;
         } else if (caseFieldApi == 'FEC_RD_Payment_Contract_Assessment__c') {
             rr.paymentContractAssessmentApiValue = apiValue;
-        } else if (caseFieldApi == 'FEC_Contract_Processing_Assessment_Type__c') {
+        } else if (caseFieldApi == 'FEC_Contract_Processing_MRC_Assessment__c') {
             rr.cpAssessmentApiValue = apiValue;
         }
     }
@@ -1975,7 +1975,7 @@ public without sharing class FEC_BatchCaseHandlingImportService {
         if (caseFieldApi == 'FEC_RD_Payment_Contract_Assessment__c') {
             return rr.paymentContractAssessmentApiValue;
         }
-        if (caseFieldApi == 'FEC_Contract_Processing_Assessment_Type__c') {
+        if (caseFieldApi == 'FEC_Contract_Processing_MRC_Assessment__c') {
             return rr.cpAssessmentApiValue;
         }
         return null;
@@ -2070,7 +2070,7 @@ public without sharing class FEC_BatchCaseHandlingImportService {
         );
         String cpValue = resolvePicklistValueForApply(
             rr,
-            'FEC_Contract_Processing_Assessment_Type__c',
+            'FEC_Contract_Processing_MRC_Assessment__c',
             rr.cpAssessment,
             picklistValueByNormByField
         );
@@ -2078,8 +2078,8 @@ public without sharing class FEC_BatchCaseHandlingImportService {
             c.put('FEC_RD_Payment_Contract_Assessment__c', paymentValue);
             hasAny = true;
         }
-        if (String.isNotBlank(cpValue) && caseFieldMap.containsKey('FEC_Contract_Processing_Assessment_Type__c')) {
-            c.put('FEC_Contract_Processing_Assessment_Type__c', cpValue);
+        if (String.isNotBlank(cpValue) && caseFieldMap.containsKey('FEC_Contract_Processing_MRC_Assessment__c')) {
+            c.put('FEC_Contract_Processing_MRC_Assessment__c', cpValue);
             hasAny = true;
         }
         return hasAny ? c : null;
