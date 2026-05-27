@@ -1100,6 +1100,45 @@
     <flexiPageRegions>
         <itemInstances>
             <componentInstance>
+                <componentName>fec_Banca</componentName>
+                <identifier>c_fec_Banca</identifier>
+            </componentInstance>
+        </itemInstances>
+        <name>Facet-56ea2e0f-a56c-443d-b442-3bdc95404681</name>
+        <type>Facet</type>
+    </flexiPageRegions>
+    <flexiPageRegions>
+        <itemInstances>
+            <componentInstance>
+                <componentName>fecEmailSection</componentName>
+                <identifier>c_fecEmailSection2</identifier>
+                <visibilityRule>
+                    <booleanFilter>(1 OR (2 AND 3))  AND 4</booleanFilter>
+                    <criteria>
+                        <leftValue>{!Record.FEC_Channel__c}</leftValue>
+                        <operator>EQUAL</operator>
+                        <rightValue>Email</rightValue>
+                    </criteria>
+                    <criteria>
+                        <leftValue>{!Record.FEC_Channel__c}</leftValue>
+                        <operator>EQUAL</operator>
+                        <rightValue>Internal</rightValue>
+                    </criteria>
+                    <criteria>
+                        <leftValue>{!Record.FEC_Interaction_Subchannel__c}</leftValue>
+                        <operator>EQUAL</operator>
+                        <rightValue>Internal Email</rightValue>
+                    </criteria>
+                    <criteria>
+                        <leftValue>{!Record.FEC_Interaction_View_Mode__c}</leftValue>
+                        <operator>EQUAL</operator>
+                        <rightValue>review</rightValue>
+                    </criteria>
+                </visibilityRule>
+            </componentInstance>
+        </itemInstances>
+        <itemInstances>
+            <componentInstance>
                 <componentName>fecInteractionChatConversations</componentName>
                 <identifier>c_fecInteractionChatConversations</identifier>
                 <visibilityRule>
@@ -1112,16 +1151,6 @@
             </componentInstance>
         </itemInstances>
         <name>Facet-i9z6432zuwn</name>
-        <type>Facet</type>
-    </flexiPageRegions>
-    <flexiPageRegions>
-        <itemInstances>
-            <componentInstance>
-                <componentName>fec_Banca</componentName>
-                <identifier>c_fec_Banca</identifier>
-            </componentInstance>
-        </itemInstances>
-        <name>Facet-56ea2e0f-a56c-443d-b442-3bdc95404681</name>
         <type>Facet</type>
     </flexiPageRegions>
     <flexiPageRegions>
@@ -1333,27 +1362,6 @@
             <componentInstance>
                 <componentInstanceProperties>
                     <name>body</name>
-                    <value>Facet-i9z6432zuwn</value>
-                </componentInstanceProperties>
-                <componentInstanceProperties>
-                    <name>title</name>
-                    <value>Conversations</value>
-                </componentInstanceProperties>
-                <componentName>flexipage:tab</componentName>
-                <identifier>flexipage_tab30</identifier>
-                <visibilityRule>
-                    <criteria>
-                        <leftValue>{!Record.FEC_Channel__c}</leftValue>
-                        <operator>EQUAL</operator>
-                        <rightValue>Chat</rightValue>
-                    </criteria>
-                </visibilityRule>
-            </componentInstance>
-        </itemInstances>
-        <itemInstances>
-            <componentInstance>
-                <componentInstanceProperties>
-                    <name>body</name>
                     <value>Facet-56ea2e0f-a56c-443d-b442-3bdc95404681</value>
                 </componentInstanceProperties>
                 <componentInstanceProperties>
@@ -1371,16 +1379,25 @@
                 </visibilityRule>
             </componentInstance>
         </itemInstances>
-        <name>Facet-51e81dc4-03cd-49ef-9915-964748bf0442</name>
-        <type>Facet</type>
-    </flexiPageRegions>
-    <flexiPageRegions>
         <itemInstances>
             <componentInstance>
-                <componentName>fecEmailSection</componentName>
-                <identifier>c_fecEmailSection</identifier>
+                <componentInstanceProperties>
+                    <name>body</name>
+                    <value>Facet-i9z6432zuwn</value>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>title</name>
+                    <value>Conversations</value>
+                </componentInstanceProperties>
+                <componentName>flexipage:tab</componentName>
+                <identifier>flexipage_tab30</identifier>
                 <visibilityRule>
-                    <booleanFilter>1 OR (2 AND 3)</booleanFilter>
+                    <booleanFilter>1 OR  2 OR (3 AND 4)</booleanFilter>
+                    <criteria>
+                        <leftValue>{!Record.FEC_Channel__c}</leftValue>
+                        <operator>EQUAL</operator>
+                        <rightValue>Chat</rightValue>
+                    </criteria>
                     <criteria>
                         <leftValue>{!Record.FEC_Channel__c}</leftValue>
                         <operator>EQUAL</operator>
@@ -1395,6 +1412,39 @@
                         <leftValue>{!Record.FEC_Interaction_Subchannel__c}</leftValue>
                         <operator>EQUAL</operator>
                         <rightValue>Internal Email</rightValue>
+                    </criteria>
+                </visibilityRule>
+            </componentInstance>
+        </itemInstances>
+        <name>Facet-51e81dc4-03cd-49ef-9915-964748bf0442</name>
+        <type>Facet</type>
+    </flexiPageRegions>
+    <flexiPageRegions>
+        <itemInstances>
+            <componentInstance>
+                <componentName>fecEmailSection</componentName>
+                <identifier>c_fecEmailSection</identifier>
+                <visibilityRule>
+                    <booleanFilter>(1 OR (2 AND 3))  AND  4</booleanFilter>
+                    <criteria>
+                        <leftValue>{!Record.FEC_Channel__c}</leftValue>
+                        <operator>EQUAL</operator>
+                        <rightValue>Email</rightValue>
+                    </criteria>
+                    <criteria>
+                        <leftValue>{!Record.FEC_Channel__c}</leftValue>
+                        <operator>EQUAL</operator>
+                        <rightValue>Internal</rightValue>
+                    </criteria>
+                    <criteria>
+                        <leftValue>{!Record.FEC_Interaction_Subchannel__c}</leftValue>
+                        <operator>EQUAL</operator>
+                        <rightValue>Internal Email</rightValue>
+                    </criteria>
+                    <criteria>
+                        <leftValue>{!Record.FEC_Interaction_View_Mode__c}</leftValue>
+                        <operator>EQUAL</operator>
+                        <rightValue>handling</rightValue>
                     </criteria>
                 </visibilityRule>
             </componentInstance>
