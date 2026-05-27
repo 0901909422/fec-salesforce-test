@@ -7,7 +7,7 @@ private class FEC_RoutingHistTatSvcTest {
     private static final Datetime T2 = Datetime.newInstance(2026, 5, 20, 12, 0, 0);
 
     @isTest
-    static void th222DoesNotRequireNullAssignmentOnCase() {
+    static void th222RequiresNullAssignmentOnCase() {
         Id caseId = nextId(Case.SObjectType);
         Id assignmentId = nextId(FEC_Assignment__c.SObjectType);
 
@@ -37,13 +37,13 @@ private class FEC_RoutingHistTatSvcTest {
             null,
             T2,
             false,
-            false
+            true
         );
 
         System.assertEquals(
-            withAssignment,
+            withoutAssignment,
             best,
-            'TH2.2.2 không lọc FEC_Assignment__c = null — lấy prior Submitted mới nhất.'
+            'TH2.2.2 chỉ lấy prior FEC_Assignment__c = null, Submitted <= current.'
         );
     }
 

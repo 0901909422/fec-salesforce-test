@@ -1,0 +1,8 @@
+.fec-il10-delivery-form .msg-error {
+  font-weight: bold;
+  color: #ff0000;
+}
+
+.fec-il10-delivery-form .fec-delivery-field-slot {
+  max-width: 24rem;
+}

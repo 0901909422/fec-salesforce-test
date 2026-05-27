@@ -576,10 +576,21 @@ export default class Fec_DoNotBotherExistingCustomer extends LightningElement {
     this.updatePagedData();
   }
 
+  // get isUpdateDisabled() {
+  //   return (
+  //     !this.data.some((row) => row.active) || // chưa tick gì
+  //     this.data.some((row) => row.active && !row.updateReason)
+  //   );
+  // }
+
   get isUpdateDisabled() {
     return (
-      !this.data.some((row) => row.active) || // chưa tick gì
-      this.data.some((row) => row.active && !row.updateReason)
+      !this.data.some((row) => row.active) ||
+      this.data.some(
+        (row) =>
+          row.active &&
+          (!row.updateReason || !row.remarks || !row.remarks.trim()),
+      )
     );
   }
 

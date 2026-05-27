@@ -4236,6 +4236,12 @@
         <field>Case.FEC_Full_Remarks__c</field>
         <readable>true</readable>
     </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
+        <field>Case.FEC_User_ID__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+
     <hasActivationRequired>false</hasActivationRequired>
     <label>CS - Card Risk Monitoring Specialist - Interaction Case &amp; Service Case</label>
     <license>Salesforce</license>

@@ -645,7 +645,16 @@ export default class Fec_AssignmentList extends LightningElement {
       );
       // reload data
       await this.initData();
+      const remarkHistoryCmp = this.template.querySelector(
+        "c-fec_-assignment-remark-history-table, c-fec_-assignment-remark-history-table",
+      );
 
+      if (
+        remarkHistoryCmp &&
+        typeof remarkHistoryCmp.refreshData === "function"
+      ) {
+        await remarkHistoryCmp.refreshData();
+      }
       //thangtv: cập nhật FEC_Can_Execute_Assignment__c khi assignment đã Completed
       await refreshExecuteVisibility({ caseId: this.recordId });
 
@@ -710,6 +719,8 @@ export default class Fec_AssignmentList extends LightningElement {
 
       // reload data
       // await this.initData();
+
+      await refreshExecuteVisibility({ caseId: this.recordId });
 
       // 👇 QUAN TRỌNG: chuyển mode view
       setTimeout(() => {

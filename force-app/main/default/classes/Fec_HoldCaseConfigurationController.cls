@@ -15,7 +15,7 @@ public with sharing class Fec_HoldCaseConfigurationController {
 
     // ================= GET LIST =================
 
-    @AuraEnabled(cacheable=true)
+    @AuraEnabled
     public static List<HoldCaseWrapper> getHoldCaseConfigurations(Id recordId) {
 
         if(recordId == null){
@@ -57,7 +57,6 @@ public with sharing class Fec_HoldCaseConfigurationController {
             item.nfuCode        = hc.FEC_NFU_Code__c;
             item.active         = hc.FEC_Active__c ? 'Yes' : 'No';
             item.lastModifiedDate = FEC_CommonUltils.formatTimestamp(hc.LastModifiedDate, 'dd/MM/yyyy, HH:mm');
-            item.userId = hc.LastModifiedBy.Id;
             item.lastModifiedBy = hc.LastModifiedBy.Name;
 
             results.add(item);
@@ -194,7 +193,7 @@ public with sharing class Fec_HoldCaseConfigurationController {
     /* =====================================================
     * LOAD HOLD CASE DETAIL
     * ===================================================== */
-    @AuraEnabled(cacheable=true)
+    @AuraEnabled
     public static FEC_Hold_Case_Config__c getHoldCaseConfigurationDetail(Id recordId) {
 
         if(recordId == null){
@@ -225,7 +224,7 @@ public with sharing class Fec_HoldCaseConfigurationController {
     /* =====================================================
     * HOLD CASE CONFIG HISTORY
     * ===================================================== */
-    @AuraEnabled(cacheable=true)
+    @AuraEnabled
     public static List<HoldCaseConfigHistoryWrapper> getHoldCaseConfigHistory(Id recordId) {
 
         if(recordId == null){
