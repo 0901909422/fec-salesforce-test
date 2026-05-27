@@ -1732,6 +1732,10 @@
         <visibility>Visible</visibility>
     </tabSettings>
     <tabSettings>
+        <tab>FEC_Undelivered_Card__c</tab>
+        <visibility>Visible</visibility>
+    </tabSettings>
+    <tabSettings>
         <tab>FE_Department_Admin</tab>
         <visibility>Visible</visibility>
     </tabSettings>
