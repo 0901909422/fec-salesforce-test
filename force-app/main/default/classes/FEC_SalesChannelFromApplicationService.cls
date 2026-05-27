@@ -333,6 +333,9 @@ public with sharing class FEC_SalesChannelFromApplicationService {
         if (!cu.startsWith('TSA')) {
             return false;
         }
+        if (rule34Tsa37Excluded(code)) {
+            return false;
+        }
         for (String p : SGO_TSA_EXCLUDE_PREFIXES) {
             String pu = p.toUpperCase();
             if (cu.equals(pu) || cu.startsWith(pu)) {
