@@ -4206,6 +4206,12 @@
         <field>Case.FEC_Is_DNB__c</field>
         <readable>true</readable>
     </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
+        <field>Case.FEC_User_ID__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+
     <hasActivationRequired>false</hasActivationRequired>
     <label>CS - Customer Experience Manager 2 - Interaction Case &amp; Service Case</label>
     <license>Salesforce</license>

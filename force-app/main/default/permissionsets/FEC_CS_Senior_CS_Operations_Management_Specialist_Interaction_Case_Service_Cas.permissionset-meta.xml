@@ -4093,6 +4093,12 @@
         <field>Case.FEC_Is_DNB__c</field>
         <readable>true</readable>
     </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
+        <field>Case.FEC_User_ID__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+
     <hasActivationRequired>false</hasActivationRequired>
     <label>CS - Senior CS Operations Management Specialist - Interaction Case &amp; Service Cas</label>
     <license>Salesforce</license>
