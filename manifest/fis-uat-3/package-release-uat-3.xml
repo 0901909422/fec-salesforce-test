@@ -1748,6 +1748,7 @@
 		<members>FEC_Assignment_Set_User_Role</members>
 		<members>Assign_Entitlement_to_Case</members>
         <members>FEC_DownloadReportFlow</members>
+        <members>FEC_Mark_Complete_for_Milestone</members>
 		<name>Flow</name>
 	</types>
     <types>
