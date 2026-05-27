@@ -385,7 +385,7 @@
             <field>Name</field>
             <operator>EqualTo</operator>
             <value>
-                <stringValue>No Time Config1</stringValue>
+                <stringValue>No Time Config 1</stringValue>
             </value>
         </filters>
         <getFirstRecordOnly>true</getFirstRecordOnly>
