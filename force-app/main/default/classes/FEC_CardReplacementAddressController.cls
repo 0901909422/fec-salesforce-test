@@ -113,6 +113,22 @@ public without sharing class FEC_CardReplacementAddressController {
         }
     }
 
+    @AuraEnabled
+    public static void updateCaseSelectedAddress(Id caseId, Id selectedAddressId) {
+        try {
+            Case rec = new Case(
+                Id = caseId,
+                FEC_Selected_Address__c = selectedAddressId
+            );
+            Database.SaveResult sr = Database.update(rec, AccessLevel.SYSTEM_MODE);
+            if (!sr.isSuccess()) {
+                throw new AuraHandledException(formatDmlErrors(sr.getErrors()));
+            }
+        } catch (Exception e) {
+            throw new AuraHandledException(e.getMessage());
+        }
+    }
+
     private static FEC_Address_Info__c buildAddressInfo(AddressInfoInput input) {
         return new FEC_Address_Info__c(
             FEC_Case__c = String.isNotBlank(input.caseId) ? Id.valueOf(input.caseId) : null,
