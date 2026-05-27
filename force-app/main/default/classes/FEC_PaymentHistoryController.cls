@@ -34,22 +34,31 @@ public without sharing class FEC_PaymentHistoryController {
     /* =====================================================
        GET CUSTOMER HISTORY ID FROM CASE
        ===================================================== */
-    private static String getCustomerAccountNumber(Id caseId) {
-        Case c = [
+    private static Case getCaseWithCustomerHistory(Id caseId) {
+        return [
             SELECT FEC_Account_or_Contract__c, FEC_Product_Type__r.Name
             FROM Case
             WHERE Id = :caseId
             LIMIT 1
         ];
+    }
 
+    private static Id getCustomerHistoryId(Id caseId) {
+        Case c = getCaseWithCustomerHistory(caseId);
         if (c.FEC_Account_or_Contract__c == null) {
-            throw new AuraHandledException(
-                System.Label.FEC_MSG_Not_Account_Linked
-            );
+            throw new AuraHandledException(System.Label.FEC_MSG_Not_Account_Linked);
+        }
+        return c.FEC_Account_or_Contract__c;
+    }
+
+    private static String getCustomerAccountNumber(Id caseId) {
+        Case c = getCaseWithCustomerHistory(caseId);
+        if (c.FEC_Account_or_Contract__c == null) {
+            throw new AuraHandledException(System.Label.FEC_MSG_Not_Account_Linked);
         }
 
         FEC_Customer_History__c ch = [
-            SELECT FEC_Account_Number__c,FEC_Contract_Number__c
+            SELECT FEC_Account_Number__c, FEC_Contract_Number__c
             FROM FEC_Customer_History__c
             WHERE Id = :c.FEC_Account_or_Contract__c
             LIMIT 1
@@ -160,12 +169,19 @@ public without sharing class FEC_PaymentHistoryController {
     /* =====================================================
        LOAD BILLING PAYMENT – UI
        ===================================================== */
-    @AuraEnabled(cacheable=true)
+    @AuraEnabled(cacheable=false)
     public static List<PaymentHistoryDTO> loadPaymentHistory(Id caseId) {
 
         Id customerHistoryId;
         try {
-            customerHistoryId = getCustomerAccountNumber(caseId);
+            Case c = [
+                SELECT FEC_Account_or_Contract__c
+                FROM Case
+                WHERE Id = :caseId
+                LIMIT 1
+            ];
+            customerHistoryId = c.FEC_Account_or_Contract__c;
+            if (customerHistoryId == null) return new List<PaymentHistoryDTO>();
         } catch (Exception e) {
             return new List<PaymentHistoryDTO>();
         }
@@ -182,7 +198,7 @@ public without sharing class FEC_PaymentHistoryController {
                 FEC_Total_Payment_Amount__c
             FROM FEC_Payment_History__c
             WHERE FEC_Customer_History__c = :customerHistoryId
-              AND FEC_Payment_Channel__c = NULL
+            AND FEC_Payment_Channel__c = NULL
             ORDER BY FEC_Payment_Date__c DESC
         ]) {
             PaymentHistoryDTO dto = new PaymentHistoryDTO();
@@ -205,8 +221,10 @@ public without sharing class FEC_PaymentHistoryController {
     public static void syncRealtimePayment(Id caseId) {
 
         Id customerHistoryId;
+        String contractOrAccountNo;
         try {
-            customerHistoryId = getCustomerAccountNumber(caseId);
+            customerHistoryId = getCustomerHistoryId(caseId);
+            contractOrAccountNo = getCustomerAccountNumber(caseId);
         } catch (Exception e) {
             return;
         }
@@ -217,7 +235,7 @@ public without sharing class FEC_PaymentHistoryController {
                 String.valueOf(UUID.randomUUID()),
                 FEC_ConstantCommon.REQUESTOR_CRM,
                 Datetime.now().formatGMT(FEC_ConstantCommon.DATETIME_FORMAT),
-                String.valueOf(customerHistoryId)
+                contractOrAccountNo
             );
         } catch (Exception e) {
             apiRes = null;
@@ -268,12 +286,19 @@ public without sharing class FEC_PaymentHistoryController {
     /* =====================================================
        LOAD REALTIME PAYMENT 
        ===================================================== */
-    @AuraEnabled(cacheable=true)
+    @AuraEnabled(cacheable=false)
     public static List<RealtimePaymentDTO> loadRealtimePayment(Id caseId) {
 
         Id customerHistoryId;
         try {
-            customerHistoryId = getCustomerAccountNumber(caseId);
+            Case c = [
+                SELECT FEC_Account_or_Contract__c
+                FROM Case
+                WHERE Id = :caseId
+                LIMIT 1
+            ];
+            customerHistoryId = c.FEC_Account_or_Contract__c;
+            if (customerHistoryId == null) return new List<RealtimePaymentDTO>();
         } catch (Exception e) {
             return new List<RealtimePaymentDTO>();
         }
@@ -287,7 +312,7 @@ public without sharing class FEC_PaymentHistoryController {
                 FEC_Payment_Channel__c
             FROM FEC_Payment_History__c
             WHERE FEC_Customer_History__c = :customerHistoryId
-              AND FEC_Payment_Channel__c != NULL
+            AND FEC_Payment_Channel__c != NULL
             ORDER BY FEC_Payment_Date__c DESC
         ]) {
             RealtimePaymentDTO dto = new RealtimePaymentDTO();

@@ -8,7 +8,108 @@ import {
   buildRdPaymentRoutingDisplayDefault,
   getRdPaymentScopedStageTeamMapForDebug,
   RD_PAYMENT_ROUTING_DISPLAY_DEFAULT,
+  setRdPaymentScopedStageTeamMap,
+  FIELD_RD_PAYMENT_CONTRACT_ASSESSMENT,
 } from "c/fec_RdPaymentRoutingUtils";
+
+/** Fallback khi org chưa deploy fec_RdPaymentRoutingUtils mới (không có getRdPaymentScopedStageTeam). */
+const FALLBACK_TEAM_FILTER_BY_ASSESSMENT = {
+  "Cannot close contract": "SP",
+  "Contract can be closed with statement": "CC",
+  "Contract can be closed without statement": "CP",
+};
+
+const VN_ASSESSMENT_LABEL_TO_API = {
+  "Hợp đồng không thể đóng": "Cannot close contract",
+  "Hợp đồng có thể đóng với tờ trình": "Contract can be closed with statement",
+  "Hợp đồng có thể đóng không cần tờ trình":
+    "Contract can be closed without statement",
+};
+
+function resolveRdPaymentAssessmentApiValueFallback(assessmentVal, picklistOptions) {
+  if (!assessmentVal) {
+    return null;
+  }
+  const knownApiValues = Object.keys(FALLBACK_TEAM_FILTER_BY_ASSESSMENT);
+  if (knownApiValues.includes(assessmentVal)) {
+    return assessmentVal;
+  }
+  const trimmed = String(assessmentVal).trim();
+  if (VN_ASSESSMENT_LABEL_TO_API[trimmed]) {
+    return VN_ASSESSMENT_LABEL_TO_API[trimmed];
+  }
+  if (!Array.isArray(picklistOptions) || !picklistOptions.length) {
+    return assessmentVal;
+  }
+  const byValue = picklistOptions.find((o) => o.value === assessmentVal);
+  if (byValue) {
+    return byValue.value;
+  }
+  const byLabel = picklistOptions.find(
+    (o) => o.label === assessmentVal || o.label?.trim() === trimmed,
+  );
+  return byLabel?.value ?? assessmentVal;
+}
+
+/** Tương thích org còn bản cũ của fec_RdPaymentRoutingUtils. */
+export function getRdPaymentScopedStageTeamSafe(assessmentVal, picklistOptions) {
+  if (typeof getRdPaymentScopedStageTeam === "function") {
+    return getRdPaymentScopedStageTeam(assessmentVal, picklistOptions);
+  }
+  const apiVal =
+    typeof resolveRdPaymentAssessmentApiValue === "function"
+      ? resolveRdPaymentAssessmentApiValue(assessmentVal, picklistOptions)
+      : resolveRdPaymentAssessmentApiValueFallback(assessmentVal, picklistOptions);
+  if (!apiVal) {
+    return null;
+  }
+  return FALLBACK_TEAM_FILTER_BY_ASSESSMENT[apiVal] ?? null;
+}
+
+export function setRdPaymentScopedStageTeamMapSafe(map) {
+  if (typeof setRdPaymentScopedStageTeamMap === "function") {
+    setRdPaymentScopedStageTeamMap(map);
+  }
+}
+
+/**
+ * Stage hiện tại là stage PM: FEC_Current_Case_Stage__r.Name chứa "PM".
+ * host._currentCaseStageName ← wire Case.FEC_Current_Case_Stage__r.Name
+ * Fallback: business.stageName (FEC_Case_Stage__c.Name từ Apex load).
+ */
+export function isCurrentCaseStageTeamPm(host) {
+  const stageName =
+    host?._currentCaseStageName ?? host?.business?.stageName ?? "";
+  const text = String(stageName ?? "").trim();
+  if (!text) {
+    return false;
+  }
+  return text.toUpperCase().includes("PM");
+}
+
+/** RD Payment Stage 2+: assessment đã chọn → khóa combobox Team (khi FEC_Current_Case_Stage__r.Name chứa PM). */
+export function computeRdPaymentScopedRouteToLocked(host) {
+  if (!shouldPreferScopedRoutingFromStage2(host)) {
+    return false;
+  }
+  if (!isCurrentCaseStageTeamPm(host)) {
+    return false;
+  }
+  const assessmentVal = host._getCaseFieldValue?.(
+    FIELD_RD_PAYMENT_CONTRACT_ASSESSMENT,
+  );
+  if (!assessmentVal) {
+    return false;
+  }
+  const picklistOptions =
+    host.business?.picklistOptionsMap?.Case?.[
+      FIELD_RD_PAYMENT_CONTRACT_ASSESSMENT
+    ];
+  return (
+    !!getRdPaymentScopedStageTeamSafe(assessmentVal, picklistOptions) ||
+    !!host.business?.nextTeam
+  );
+}
 import FEC_MSG_Can_Not_Find_Next_Stage from "@salesforce/label/c.FEC_MSG_Can_Not_Find_Next_Stage";
 import FEC_MSG_UPDATED_INFO_NOT_UPDATED from "@salesforce/label/c.FEC_MSG_UPDATED_INFO_NOT_UPDATED";
 import FEC_Error_Title from "@salesforce/label/c.FEC_Error_Title";
@@ -128,7 +229,10 @@ export function applyRdPaymentAssessmentRoutingImmediate(host, assessmentVal) {
     assessmentVal,
     picklistOptions,
   );
-  const teamUserGroupFilter = getRdPaymentScopedStageTeam(assessmentVal, picklistOptions);
+  const teamUserGroupFilter = getRdPaymentScopedStageTeamSafe(
+    assessmentVal,
+    picklistOptions,
+  );
   const routeToActionId = computeRouteToActionButtonId(host);
 
   const debugPayload = {
@@ -212,7 +316,7 @@ async function fetchRdPaymentStageChangeOption(host, assessmentVal) {
     assessmentVal,
     picklistOptions,
   );
-  const teamUserGroupFilter = getRdPaymentScopedStageTeam(
+  const teamUserGroupFilter = getRdPaymentScopedStageTeamSafe(
     assessmentVal,
     picklistOptions,
   );

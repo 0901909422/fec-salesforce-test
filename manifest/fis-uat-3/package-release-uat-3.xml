@@ -173,7 +173,7 @@
 	    <members>FEC_NocRemovePhoneInheritanceHandler</members>
 	    <members>FEC_NocRemovePhoneInheritanceHandlerTest</members>
         <members>FEC_SalesChannelFromApplicationService</members>
-        <members>FEC_ApplicationListTriggerHandler</members>
+        <members>FEC_CustomerHistoryTriggerHandler</members>
         <members>FEC_CMSRewardRedeemService</members>
 		<members>FEC_CMSRewardRedeemServiceTest</members>
 		<members>FEC_AssignAutoDistribSched</members>
@@ -259,7 +259,7 @@
 		<members>FEC_RelevantTicketTrigger</members>
 		<members>FEC_AssignmentTrigger</members>
 		<members>FEC_NatureOfCaseTrigger</members>
-        <members>FEC_ApplicationListTrigger</members>
+        <members>FEC_CustomerHistoryTrigger</members>
 		<members>FEC_CaseAssignmentNOCTrigger</members>
 		<members>FEC_CaseAssignmentTrigger</members>
 		<name>ApexTrigger</name>
@@ -699,6 +699,7 @@
         <members>FEC_Case_Assignment_NOC__c.FEC_Category__c</members>
         <members>FEC_Stage_Change__c.FEC_Code__c</members>
         <members>FEC_Stage_Screen__c.FEC_Code__c</members>
+        <members>FEC_Assignment__c.FEC_Draft_Assignment_Remark__c</members>
         <name>CustomField</name>
     </types>
     <types>
@@ -827,6 +828,7 @@
         <members>fec_Banca</members>
 		<members>fec_BancaTabView</members>
         <members>fec_RdPaymentRoutingUtils</members>
+        <members>fec_Rl0502RdPaymentRouting</members>
 		<members>fec_PointsRedemptionCaseForm</members>
 		<members>fec_ChannelConfig</members>
 		<members>fec_NocChannelConfig</members>
@@ -891,6 +893,7 @@
 		<members>FEC_Case_Information_Edit</members>
 		<members>FEC_Case_NOC</members>
 		<members>FEC_DoNotBother</members>
+        <members>FEC_Route_To_Team_Selection</members>
         <name>LightningMessageChannel</name>
     </types>
     <types>
@@ -1830,7 +1833,13 @@
 
     <!-- Batch Creation -->
     <types>
+		<members>FEC_BatchCaseChainQueueable</members>
 		<members>FEC_BatchCaseCreationController</members>
+		<members>FEC_BatchCaseCreationPendingService</members>
+		<members>FEC_BatchCaseCreationProcessBatch</members>
+		<members>FEC_BatchCaseCreationProcessQueueable</members>
+		<members>FEC_BatchCaseCreationScheduler</members>
+		<members>FEC_BatchCaseCreationSchedulerTest</members>
 		<members>FEC_BatchCaseCreationService</members>
 		<members>FEC_BatchDataCreationController</members>
 		<members>FEC_BatchImportCommon</members>
@@ -2055,6 +2064,7 @@
         <members>FEC_General_Assignment_Config__c-General Assignment Config Layout</members>
         <members>FEC_General_Assignment__c-General Assignment Layout</members>
         <members>FEC_Routing_Assignment__c-Routing Assignment Layout</members>
+        <members>FEC_Notification_Template_Channel__c-Notification Template Channel Layout</members>
         <name>Layout</name>
     </types>
     <types>

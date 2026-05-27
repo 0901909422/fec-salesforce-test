@@ -1,6 +1,6 @@
 /**
  * Đồng bộ FEC_Sales_Channel__c / FEC_Sales_Sub_Channel__c trên FEC_Customer_History__c
- * theo FEC_CC_Code__c, FEC_DSA_Code__c, FEC_TSA_Code__c của FEC_Application_List__c
+ * theo FEC_Sales_Logic__c (mã CC/DSA/TSA) hoặc rule legacy cho export batch.
  */
 public with sharing class FEC_SalesChannelFromApplicationService {
 
@@ -25,10 +25,11 @@ public with sharing class FEC_SalesChannelFromApplicationService {
     }
 
     /**
-     * Cập nhật Customer History theo Application List mới nhất (CreatedDate DESC) cho từng parent.
+     * Cập nhật FEC_Sales_Channel__c / FEC_Sales_Sub_Channel__c trên Customer History
+     * bằng cách so khớp FEC_CC_Code__c, FEC_DSA_Code__c, FEC_TSA_Code__c với FEC_Sales_Logic__c.
      */
-    public static void syncCustomerHistoryFromApplicationListParents(Set<Id> customerHistoryIds) {
-        if (customerHistoryIds == null || customerHistoryIds.isEmpty()) {
+    public static void syncCustomerHistoryFromSalesLogic(List<FEC_Customer_History__c> customerHistoryRows) {
+        if (customerHistoryRows == null || customerHistoryRows.isEmpty()) {
             return;
         }
         if (!Schema.sObjectType.FEC_Customer_History__c.isUpdateable()) {
@@ -38,36 +39,22 @@ public with sharing class FEC_SalesChannelFromApplicationService {
             || !FEC_Customer_History__c.FEC_Sales_Sub_Channel__c.getDescribe().isUpdateable()) {
             return;
         }
-
-        Map<Id, FEC_Application_List__c> latestByCh = new Map<Id, FEC_Application_List__c>();
-        for (FEC_Application_List__c al : [
-            SELECT Id, FEC_Customer_History__c, FEC_CC_Code__c, FEC_DSA_Code__c, FEC_TSA_Code__c, CreatedDate
-            FROM FEC_Application_List__c
-            WHERE FEC_Customer_History__c IN :customerHistoryIds
-            ORDER BY FEC_Customer_History__c, CreatedDate DESC
-        ]) {
-            if (al.FEC_Customer_History__c != null && !latestByCh.containsKey(al.FEC_Customer_History__c)) {
-                latestByCh.put(al.FEC_Customer_History__c, al);
-            }
+        if (!Schema.sObjectType.FEC_Sales_Logic__c.isAccessible()) {
+            return;
         }
 
+        Map<String, FEC_Sales_Logic__c> logicByKey = buildSalesLogicByCodeKey();
         List<FEC_Customer_History__c> toUpdate = new List<FEC_Customer_History__c>();
-        for (Id chId : customerHistoryIds) {
-            FEC_Application_List__c al = latestByCh.get(chId);
-            SalesChannelResult r;
-            if (al == null) {
-                r = new SalesChannelResult();
-                r.channel = null;
-                r.subChannel = null;
-            } else {
-                r = resolve(al.FEC_CC_Code__c, al.FEC_DSA_Code__c, al.FEC_TSA_Code__c);
+        for (FEC_Customer_History__c ch : customerHistoryRows) {
+            if (ch == null || ch.Id == null) {
+                continue;
             }
-            FEC_Customer_History__c ch = new FEC_Customer_History__c(
-                Id = chId,
-                FEC_Sales_Channel__c = r.channel,
-                FEC_Sales_Sub_Channel__c = r.subChannel
-            );
-            toUpdate.add(ch);
+            FEC_Sales_Logic__c logic = logicByKey.get(salesLogicKey(ch.FEC_CC_Code__c, ch.FEC_DSA_Code__c, ch.FEC_TSA_Code__c));
+            toUpdate.add(new FEC_Customer_History__c(
+                Id = ch.Id,
+                FEC_Sales_Channel__c = logic != null ? logic.FEC_Sales_Channel__c : null,
+                FEC_Sales_Sub_Channel__c = logic != null ? logic.FEC_Sales_Sub_Channel__c : null
+            ));
         }
 
         if (!toUpdate.isEmpty()) {
@@ -77,6 +64,24 @@ public with sharing class FEC_SalesChannelFromApplicationService {
                 throw e;
             }
         }
+    }
+
+    private static Map<String, FEC_Sales_Logic__c> buildSalesLogicByCodeKey() {
+        Map<String, FEC_Sales_Logic__c> logicByKey = new Map<String, FEC_Sales_Logic__c>();
+        for (FEC_Sales_Logic__c logic : [
+            SELECT FEC_CC_Code__c, FEC_DSA_Code__c, FEC_TSA_Code__c, FEC_Sales_Channel__c, FEC_Sales_Sub_Channel__c
+            FROM FEC_Sales_Logic__c
+        ]) {
+            String key = salesLogicKey(logic.FEC_CC_Code__c, logic.FEC_DSA_Code__c, logic.FEC_TSA_Code__c);
+            if (!logicByKey.containsKey(key)) {
+                logicByKey.put(key, logic);
+            }
+        }
+        return logicByKey;
+    }
+
+    private static String salesLogicKey(String cc, String dsa, String tsa) {
+        return norm(cc) + '\u0001' + norm(dsa) + '\u0001' + norm(tsa);
     }
 
     @TestVisible
