@@ -123,8 +123,8 @@ public without sharing class FEC_AssignmentListHandler {
                 FEC_Assignment_Status__c,
                 FEC_OwnerID__c,
                 FEC_Assignment_Type__c,
-                FEC_Assignment_Owner_Text__c
-
+                FEC_Assignment_Owner_Text__c,
+                FEC_Draft_Assignment_Remark__c
             FROM FEC_Assignment__c
 
             WHERE FEC_Case__c = :caseId
@@ -2163,5 +2163,28 @@ public without sharing class FEC_AssignmentListHandler {
         }
         
         return queueOptions;
+    }
+    
+    
+    @AuraEnabled
+    public static void saveAssignmentDraft(
+        Id assignmentId,
+        String remark
+    ) {
+        if (assignmentId == null) {
+            return;
+        }
+        
+        FEC_Assignment__c assignmentRecord = [
+        SELECT Id,
+               FEC_Draft_Assignment_Remark__c
+        FROM FEC_Assignment__c
+        WHERE Id = :assignmentId
+        LIMIT 1
+    ];
+        
+        assignmentRecord.FEC_Draft_Assignment_Remark__c = remark;
+        
+        update assignmentRecord;
     }
 }
