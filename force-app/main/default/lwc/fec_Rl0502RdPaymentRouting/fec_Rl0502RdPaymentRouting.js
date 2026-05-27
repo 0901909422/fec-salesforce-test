@@ -5,7 +5,9 @@
 import {
   isRdPaymentCloseWithoutStatement,
   isRdPaymentCannotClose,
+  RD_ASSESSMENT_CANNOT_CLOSE,
   RD_ASSESSMENT_CLOSE_WITH_STATEMENT,
+  RD_ASSESSMENT_CLOSE_WITHOUT_STATEMENT,
   resolveRdPaymentAssessmentApiValue,
 } from "c/fec_RdPaymentRoutingUtils";
 import { findRouteToActionId } from "c/fec_ScopedStageChangeRouting";
@@ -43,6 +45,13 @@ const RL0502_RD_PAYMENT_ROUTING_RULES = [
     queueLabel: "DQ - CS Customer Care",
   },
 ];
+
+/** Ưu tiên API value — tránh fuzzy match chọn nhầm rule (vd Cannot close → CP). */
+const RL0502_RULE_ID_BY_API = {
+  [RD_ASSESSMENT_CANNOT_CLOSE]: "CANNOT_CLOSE",
+  [RD_ASSESSMENT_CLOSE_WITH_STATEMENT]: "CLOSE_WITH_STATEMENT",
+  [RD_ASSESSMENT_CLOSE_WITHOUT_STATEMENT]: "CLOSE_WITHOUT_STATEMENT",
+};
 
 function isRl0502SubCode(business) {
   if (business?.mrcRl05Ui?.isReturnSubCode === true) {
@@ -111,11 +120,28 @@ function resolveRl0502RoutingRule(assessmentVal, picklistOptions) {
   if (!assessmentVal) {
     return null;
   }
+  const apiVal = resolveRdPaymentAssessmentApiValue(
+    assessmentVal,
+    picklistOptions,
+  );
+  const ruleId = apiVal ? RL0502_RULE_ID_BY_API[apiVal] : null;
+  if (ruleId) {
+    const byApi = RL0502_RD_PAYMENT_ROUTING_RULES.find((r) => r.id === ruleId);
+    if (byApi) {
+      return byApi;
+    }
+  }
   return (
     RL0502_RD_PAYMENT_ROUTING_RULES.find((rule) =>
       rule.matches(assessmentVal, picklistOptions),
     ) || null
   );
+}
+
+function clearRl0502ScopedForcedSelection(host) {
+  host.template
+    ?.querySelector("c-fec_-scoped-stage-change-routing-action")
+    ?.clearForcedRoutingSelection?.();
 }
 
 /** RL05.02 + Stage 2+ (Scoped routing). */
@@ -129,7 +155,7 @@ export function isRl0502RdPaymentRoutingEligible(host) {
   return shouldPreferScopedRoutingFromStage2(host) === true;
 }
 
-/** Khóa combobox Team khi stage hiện tại = PM và assessment thuộc ma trận RL05.02. */
+/** Khóa combobox Team khi FEC_Current_Case_Stage__r.Name chứa PM và assessment thuộc ma trận RL05.02. */
 export function isRl0502RdPaymentRouteToLocked(host) {
   if (!isRl0502RdPaymentRoutingEligible(host)) {
     return false;
@@ -225,6 +251,15 @@ async function syncRl0502ScopedRoutingChild(host, routingOpt) {
     const cmp = host.template?.querySelector(
       "c-fec_-scoped-stage-change-routing-action",
     );
+    if (cmp?.applyRoutingSelection && routingOpt.stageChangeId) {
+      cmp.applyRoutingSelection(routingOpt);
+      host._scopedRoutingSelection = cmp.getSubmitParams?.() || {
+        selectedStageChangeId: routingOpt.stageChangeId || null,
+        team: routingOpt.team,
+        queueId: routingOpt.queueValue || null,
+      };
+      return;
+    }
     if (cmp?.selectRouteToTeamForRl0502) {
       const applied = cmp.selectRouteToTeamForRl0502(routingOpt.team);
       if (applied) {
@@ -243,11 +278,15 @@ async function syncRl0502ScopedRoutingChild(host, routingOpt) {
 }
 
 /**
- * RL05.02 Stage 2+: assessment → Route to + Team/Queue theo ma trận rule.
+ * RL05.02 Stage 2+ và FEC_Current_Case_Stage__r.Name chứa PM:
+ * assessment → Route to + Team/Queue theo ma trận rule.
  * @returns {Promise<boolean>}
  */
 export async function applyRl0502RdPaymentAssessmentRouting(host, assessmentVal) {
   if (!isRl0502RdPaymentRoutingEligible(host)) {
+    return false;
+  }
+  if (!isCurrentCaseStageTeamPm(host)) {
     return false;
   }
   const picklistOptions = getAssessmentPicklistOptions(host);
@@ -256,6 +295,8 @@ export async function applyRl0502RdPaymentAssessmentRouting(host, assessmentVal)
     return false;
   }
 
+  clearRl0502ScopedForcedSelection(host);
+  applyRl0502HardcodedTeamQueue(host, rule, null);
   host._setActionValueByCode?.(ACTION_ROUTE_TO);
 
   const apexOpt = await resolveStageChangeOptForTeam(host, rule.team);
