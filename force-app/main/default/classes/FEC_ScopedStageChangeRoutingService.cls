@@ -17,6 +17,14 @@ public without sharing class FEC_ScopedStageChangeRoutingService {
     String ownerId;
   }
 
+  //Thangtv: context khi history mới nhất = Revert + FEC_IsReverted__c = true
+  private class RevertRouteContext {
+    Boolean routeByLatestRevertHistory = false;
+    Boolean latestRoutingHistoryIsReverted = false;
+    Id targetNextStageId;
+    Id performUserId;
+  }
+
   public class RouteToTeamOption {
     @AuraEnabled
     public String stageChangeId { get; set; }
@@ -72,16 +80,42 @@ public without sharing class FEC_ScopedStageChangeRoutingService {
     }
 
     Id currentStageId = cases[0].FEC_Current_Case_Stage__c;
-    List<FEC_Stage_Change__c> rows = [
-      SELECT Id, FEC_Team_User_Group__c, FEC_Next_Queue__c
-      FROM FEC_Stage_Change__c
-      WHERE
-        FEC_Previous_Stage__c = :currentStageId
-        AND FEC_Active__c = TRUE
-        AND FEC_Action_Button__c = :routeToActionId
-        AND FEC_IsReverted__c = FALSE
-      ORDER BY FEC_Team_User_Group__c ASC, FEC_Next_Queue__c ASC
-    ];
+    RevertRouteContext revertCtx = resolveRevertRouteContext(caseId);
+    List<FEC_Stage_Change__c> rows;
+    if (revertCtx.routeByLatestRevertHistory) {
+      rows = [
+        SELECT Id, FEC_Team_User_Group__c, FEC_Next_Queue__c
+        FROM FEC_Stage_Change__c
+        WHERE
+          FEC_Previous_Stage__c = :currentStageId
+          AND FEC_Active__c = TRUE
+          AND FEC_Action_Button__c = :routeToActionId
+          AND FEC_Next_Stage__c = :revertCtx.targetNextStageId
+        ORDER BY FEC_Team_User_Group__c ASC, FEC_Next_Queue__c ASC
+      ];
+    } else if (revertCtx.latestRoutingHistoryIsReverted) {
+      rows = [
+        SELECT Id, FEC_Team_User_Group__c, FEC_Next_Queue__c
+        FROM FEC_Stage_Change__c
+        WHERE
+          FEC_Previous_Stage__c = :currentStageId
+          AND FEC_Active__c = TRUE
+          AND FEC_Action_Button__c = :routeToActionId
+          AND FEC_IsReverted__c = TRUE
+        ORDER BY FEC_Team_User_Group__c ASC, FEC_Next_Queue__c ASC
+      ];
+    } else {
+      rows = [
+        SELECT Id, FEC_Team_User_Group__c, FEC_Next_Queue__c
+        FROM FEC_Stage_Change__c
+        WHERE
+          FEC_Previous_Stage__c = :currentStageId
+          AND FEC_Active__c = TRUE
+          AND FEC_Action_Button__c = :routeToActionId
+          AND FEC_IsReverted__c = FALSE
+        ORDER BY FEC_Team_User_Group__c ASC, FEC_Next_Queue__c ASC
+      ];
+    }
     if (rows.isEmpty()) {
       return result;
     }
@@ -152,6 +186,7 @@ public without sharing class FEC_ScopedStageChangeRoutingService {
     }
 
     Id currentStageId = cases[0].FEC_Current_Case_Stage__c;
+    RevertRouteContext revertCtx = resolveRevertRouteContext(caseId);
     Id actionButtonId;
     try {
       actionButtonId = String.isNotBlank(routeToActionId)
@@ -162,7 +197,61 @@ public without sharing class FEC_ScopedStageChangeRoutingService {
     }
 
     List<FEC_Stage_Change__c> rows;
-    if (actionButtonId != null) {
+    if (revertCtx.routeByLatestRevertHistory) {
+      if (actionButtonId != null) {
+        rows = [
+          SELECT Id, FEC_Team_User_Group__c, FEC_Next_Queue__c
+          FROM FEC_Stage_Change__c
+          WHERE
+            FEC_Previous_Stage__c = :currentStageId
+            AND FEC_Team_User_Group__c = :teamTrim
+            AND FEC_Active__c = TRUE
+            AND FEC_Action_Button__c = :actionButtonId
+            AND FEC_Next_Stage__c = :revertCtx.targetNextStageId
+          ORDER BY FEC_Next_Queue__c ASC
+          LIMIT 1
+        ];
+      } else {
+        rows = [
+          SELECT Id, FEC_Team_User_Group__c, FEC_Next_Queue__c
+          FROM FEC_Stage_Change__c
+          WHERE
+            FEC_Previous_Stage__c = :currentStageId
+            AND FEC_Team_User_Group__c = :teamTrim
+            AND FEC_Active__c = TRUE
+            AND FEC_Next_Stage__c = :revertCtx.targetNextStageId
+          ORDER BY FEC_Next_Queue__c ASC
+          LIMIT 1
+        ];
+      }
+    } else if (revertCtx.latestRoutingHistoryIsReverted) {
+      if (actionButtonId != null) {
+        rows = [
+          SELECT Id, FEC_Team_User_Group__c, FEC_Next_Queue__c
+          FROM FEC_Stage_Change__c
+          WHERE
+            FEC_Previous_Stage__c = :currentStageId
+            AND FEC_Team_User_Group__c = :teamTrim
+            AND FEC_Active__c = TRUE
+            AND FEC_IsReverted__c = TRUE
+            AND FEC_Action_Button__c = :actionButtonId
+          ORDER BY FEC_Next_Queue__c ASC
+          LIMIT 1
+        ];
+      } else {
+        rows = [
+          SELECT Id, FEC_Team_User_Group__c, FEC_Next_Queue__c
+          FROM FEC_Stage_Change__c
+          WHERE
+            FEC_Previous_Stage__c = :currentStageId
+            AND FEC_Team_User_Group__c = :teamTrim
+            AND FEC_Active__c = TRUE
+            AND FEC_IsReverted__c = TRUE
+          ORDER BY FEC_Next_Queue__c ASC
+          LIMIT 1
+        ];
+      }
+    } else if (actionButtonId != null) {
       rows = [
         SELECT Id, FEC_Team_User_Group__c, FEC_Next_Queue__c
         FROM FEC_Stage_Change__c
@@ -266,22 +355,60 @@ public without sharing class FEC_ScopedStageChangeRoutingService {
       updatedCase
     );
 
-    List<FEC_Stage_Change__c> changelst = [
-      SELECT
-        Id,
-        FEC_Previous_Stage__c,
-        FEC_Previous_Stage__r.FEC_Code__c,
-        FEC_Next_Stage__c,
-        FEC_Next_Queue__c,
-        FEC_Team_User_Group__c,
-        FEC_Action_Button__c
-      FROM FEC_Stage_Change__c
-      WHERE
-        Id = :selectedStageChangeId
-        AND FEC_Active__c = TRUE
-        AND FEC_IsReverted__c = FALSE
-      LIMIT 1
-    ];
+    RevertRouteContext revertCtx = resolveRevertRouteContext(caseId);
+    List<FEC_Stage_Change__c> changelst;
+    if (revertCtx.routeByLatestRevertHistory) {
+      changelst = [
+        SELECT
+          Id,
+          FEC_Previous_Stage__c,
+          FEC_Previous_Stage__r.FEC_Code__c,
+          FEC_Next_Stage__c,
+          FEC_Next_Queue__c,
+          FEC_Team_User_Group__c,
+          FEC_Action_Button__c
+        FROM FEC_Stage_Change__c
+        WHERE
+          Id = :selectedStageChangeId
+          AND FEC_Active__c = TRUE
+          AND FEC_Next_Stage__c = :revertCtx.targetNextStageId
+        LIMIT 1
+      ];
+    } else if (revertCtx.latestRoutingHistoryIsReverted) {
+      changelst = [
+        SELECT
+          Id,
+          FEC_Previous_Stage__c,
+          FEC_Previous_Stage__r.FEC_Code__c,
+          FEC_Next_Stage__c,
+          FEC_Next_Queue__c,
+          FEC_Team_User_Group__c,
+          FEC_Action_Button__c
+        FROM FEC_Stage_Change__c
+        WHERE
+          Id = :selectedStageChangeId
+          AND FEC_Active__c = TRUE
+          AND FEC_IsReverted__c = TRUE
+        LIMIT 1
+      ];
+    } else {
+      changelst = [
+        SELECT
+          Id,
+          FEC_Previous_Stage__c,
+          FEC_Previous_Stage__r.FEC_Code__c,
+          FEC_Next_Stage__c,
+          FEC_Next_Queue__c,
+          FEC_Team_User_Group__c,
+          FEC_Action_Button__c
+        FROM FEC_Stage_Change__c
+        WHERE
+          Id = :selectedStageChangeId
+          AND FEC_Active__c = TRUE
+          AND FEC_IsReverted__c = FALSE
+        LIMIT 1
+      ];
+    }
     if (changelst.isEmpty()) {
       throw new AuraHandledException(
         String.format(System.Label.FEC_MSG_Not_Found, new List<String>{ 'Stage Change' })
@@ -311,11 +438,18 @@ public without sharing class FEC_ScopedStageChangeRoutingService {
       resolvedNextStageId = priorMatch.revisitStageId;
     }
 
-    queueId = resolveOwnerForTargetStage(
-      caseId,
-      resolvedNextStageId,
-      selectedChange.FEC_Next_Queue__c
-    );
+    if (
+      revertCtx.routeByLatestRevertHistory &&
+      revertCtx.performUserId != null
+    ) {
+      queueId = String.valueOf(revertCtx.performUserId);
+    } else {
+      queueId = resolveOwnerForTargetStage(
+        caseId,
+        resolvedNextStageId,
+        selectedChange.FEC_Next_Queue__c
+      );
+    }
     if (String.isBlank(queueId)) {
       throw new AuraHandledException(System.Label.FEC_MSG_Can_Not_Find_Next_Stage);
     }
@@ -338,6 +472,46 @@ public without sharing class FEC_ScopedStageChangeRoutingService {
       queueId,
       finalStatusBeforeSubmit
     );
+  }
+
+  //thangtv: đọc history mới nhất (Route to / Revert) để chọn nhánh Stage Change và owner khi Revert
+  private static RevertRouteContext resolveRevertRouteContext(Id caseId) {
+    RevertRouteContext ctx = new RevertRouteContext();
+    if (caseId == null) {
+      return ctx;
+    }
+
+    List<FEC_Routing_Action_History__c> latestHist = [
+      SELECT
+        FEC_Routing_Action__c,
+        FEC_IsReverted__c,
+        FEC_Previous_Stage__c,
+        FEC_Perform_User__c
+      FROM FEC_Routing_Action_History__c
+      WHERE
+        FEC_Case__c = :caseId
+        AND FEC_Routing_Action__c IN :new List<String>{
+          FEC_CaseBusinessService.ROUTE_TO,
+          FEC_CaseBusinessService.REVERT
+        }
+      ORDER BY CreatedDate DESC, Id DESC
+      LIMIT 1
+    ];
+    if (latestHist.isEmpty()) {
+      return ctx;
+    }
+
+    FEC_Routing_Action_History__c hist = latestHist[0];
+    ctx.latestRoutingHistoryIsReverted = hist.FEC_IsReverted__c == true;
+    ctx.routeByLatestRevertHistory =
+      FEC_CaseBusinessService.REVERT.equals(hist.FEC_Routing_Action__c) &&
+      hist.FEC_IsReverted__c == true &&
+      hist.FEC_Previous_Stage__c != null;
+    if (ctx.routeByLatestRevertHistory) {
+      ctx.targetNextStageId = hist.FEC_Previous_Stage__c;
+      ctx.performUserId = hist.FEC_Perform_User__c;
+    }
+    return ctx;
   }
 
   /**
