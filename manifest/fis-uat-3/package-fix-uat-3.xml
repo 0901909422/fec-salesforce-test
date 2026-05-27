@@ -89,6 +89,7 @@
 		<members>FEC_BatchCaseHandlingExportRow</members>
 		<members>FEC_BatchCaseHandlingExportService</members>
 		<members>FEC_SalesChannelFromApplicationService</members>
+		<members>FEC_SalesLogicSelector</members>
 		<members>FEC_CustomerHistoryTriggerHandler</members>
 		<members>FEC_AutoHoldCaseQueueable</members>
 		<members>FEC_AutoHoldCaseService</members>
@@ -165,6 +166,7 @@
 		<members>FEC_BatchCaseCreationService</members>
 		<members>FEC_BatchDataCreationController</members>
 		<members>FEC_BatchImportCommon</members>
+		<members>FEC_BCH_IncorrectPaymentTemplateWriter</members>
 		<members>FEC_BCH_ImportRoutingResolver</members>
 		<members>FEC_BCH_PicklistTranslationCtrl</members>
 		<members>FEC_BatchCaseHandlingImportProfile</members>
@@ -318,7 +320,8 @@
         <members>FEC_Hold_Case_Config__c.FEC_Changed_Status__c</members>
 		<members>FEC_Hold_Case_Config__c.FEC_Current_Status__c</members>
         <members>FEC_Sales_Logic__c.FEC_CC_Code__c</members>
-		<members>FEC_Sales_Logic__c.FEC_DSA_Code__c</members>
+        <members>FEC_Sales_Logic__c.FEC_DSA_Code__c</members>
+		<members>FEC_Sales_Logic__c.FEC_Sequence__c</members>
 		<members>FEC_Sales_Logic__c.FEC_TSA_Code__c</members>
         <members>FEC_Do_Not_Bother__c.FEC_Case__c</members>
 		<members>FEC_Do_Not_Bother__c.FEC_Customer_History__c</members>
