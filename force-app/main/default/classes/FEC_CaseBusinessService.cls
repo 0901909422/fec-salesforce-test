@@ -343,7 +343,7 @@ public without sharing class FEC_CaseBusinessService {
             LIMIT 1
           ];
           if (!subCoderlst.isEmpty() && subCoderlst[0].FEC_Code__c != null) {
-            result.subCodeCode = subCoderlst[0].FEC_Code__c;
+            result.subCodeCode = subCoderlst[0].FEC_Code__c.trim();
           }
         } catch (Exception e) {
           System.debug('getByCase subCodeCode: ' + e.getMessage());
@@ -885,16 +885,6 @@ public without sharing class FEC_CaseBusinessService {
           'isGsrStage3PropertyInfoReadonly',
           isGsrStage3PropertyInfoReadonly
         );
-        // Chỉ chèn LWC Original Info (Stage 2) khi Updated NOC trùng Original (so với flow history).
-        if (isGsrStage1Revert && !isUpdatedNocDifferentFromCurrent) {
-          FEC_GsrStage1RevertMasterDataHelper.appendStage2OriginalInfoLwc(
-            masterDatalst,
-            masterDataSettingObj,
-            natureOfCaseObj,
-            selectedNatureOfCaseId,
-            templateNatureIdForCaseStages
-          );
-        }
 
         FEC_MrcReturnCaseService.applyRl05CodeFallbacks(
           result,
@@ -2320,10 +2310,17 @@ public without sharing class FEC_CaseBusinessService {
             : null;
           //PhongBT: update bộ noc chọn ở updated khi revert về
           String revertNocId = (String) params.get('natureOfCaseId');
-          FEC_CofGsrRoutePrepareService.updateCaseNocFromSelection(caseId, revertNocId);
           finalStatusBeforeSubmit = readCaseFinalStatusBeforeSubmit(caseId);
           markCaseSubmittedAndClearDrafts(caseId);
           revert(caseId, revertActionId, finalStatusBeforeSubmit, routingActionValue);
+          // Sau revert: Stage = Stage 1 NOC gốc — đồng bộ Actual theo template stage (và NOC UI nếu có).
+          if (String.isNotBlank(revertNocId)) {
+            FEC_CofGsrRoutePrepareService.updateCaseNocFromSelection(
+              caseId,
+              revertNocId
+            );
+          }
+          FEC_CofGsrRoutePrepareService.syncActualNatureToMatchCurrentCaseStage(caseId);
           return null;
         }
         when RECALL {
