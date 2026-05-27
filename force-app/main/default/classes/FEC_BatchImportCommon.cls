@@ -2,6 +2,7 @@
  * Shared helpers for batch import controllers (Case / Data creation).
  */
 public with sharing class FEC_BatchImportCommon {
+    public static final String BATCH_CASE_CREATION_PAYLOAD_TITLE = 'BatchCaseCreation_ImportPayload';
     public static Id getCustomerCaseRecordTypeId() {
         return FEC_CommonUltils.getRecordTypeIdByDev(FEC_ConstantCommon.CASE_CUSTOMER_RECORD_TYPE_DEV_NAME);
     }
@@ -43,6 +44,10 @@ public with sharing class FEC_BatchImportCommon {
         }
         String lower = title.toLowerCase();
         return lower.endsWith('_importresult') || lower.endsWith('_result');
+    }
+
+    public static Boolean isPendingImportPayloadTitle(String title) {
+        return BATCH_CASE_CREATION_PAYLOAD_TITLE.equalsIgnoreCase(title);
     }
 
     public static void addIfNotBlank(List<String> selectParts, String fieldApiName) {
