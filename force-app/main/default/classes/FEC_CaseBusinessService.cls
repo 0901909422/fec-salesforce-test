@@ -418,6 +418,13 @@ public without sharing class FEC_CaseBusinessService {
         !historylst.isEmpty() &&
         historylst.get(0).FEC_IsReverted__c == true;
 
+      //thangtv: LWC Stage 1 giữ nextTeam/nextQueue từ resolveRouteToDisplayInfo — không ghi đè RL05/Document Request
+      result.routeByLatestRevertHistory =
+        !historylst.isEmpty() &&
+        REVERT.equals(historylst.get(0).FEC_Routing_Action__c) &&
+        historylst.get(0).FEC_IsReverted__c == true &&
+        historylst.get(0).FEC_Previous_Stage__c != null;
+
       List<Group> queuelst;
       // Lưu riêng REVERT record trước khi selectedHistory bị override bởi routeToHistorylst.
       // routeToHistorylst không SELECT FEC_Perform_User__r.Name nên không thể dùng selectedHistory
@@ -4144,6 +4151,10 @@ public without sharing class FEC_CaseBusinessService {
     /** LWC fec_CaseBussiness: khóa fec_IPPConversionRetailForm / fec_CardClosureRefundForm sau Revert về default stage. */
     @AuraEnabled
     public Boolean lockApiLwcsAfterRevertToDefaultStage;
+
+    /** true = history mới nhất Revert + IsReverted; LWC giữ nextTeam/nextQueue từ resolveRouteToDisplayInfo. */
+    @AuraEnabled
+    public Boolean routeByLatestRevertHistory;
 
     @AuraEnabled
     public String draftRoutingActionCode;
