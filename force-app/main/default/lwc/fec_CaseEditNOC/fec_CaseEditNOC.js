@@ -173,7 +173,7 @@ export default class Fec_CaseEditNOC extends LightningElement {
     if (this._isGsrStage2ToStage1RevertEditable()) {
       return this.modeEditCase === true;
     }
-    // GSR Revert/Recall về Stage 1: cho phép edit Updated NOC (Actual NOC chứa GSR).
+    // GSR Revert về Stage 1: cho phép edit Updated NOC (Actual NOC chứa GSR).
     if (this._isGsrStage1RevertEditable()) {
       return this._canEditCaseInformationNoc;
     }
@@ -276,7 +276,6 @@ export default class Fec_CaseEditNOC extends LightningElement {
   subscription = null;
   subscriptionNOC = null;
   _nocResolveEpoch = 0;
-  subscriptionCaseInformationEdit = null;
   subscriptionResetPin = null;
   subscriptionPinReissue = null;
   subscriptionDoNotBother = null;
@@ -447,7 +446,7 @@ export default class Fec_CaseEditNOC extends LightningElement {
     });
   }
 
-  /** Case draft: reload trang → xóa NOC DB + UI; đã submit / sau API success / batch import → giữ nguyên.
+  /** Case draft: reload trang → xóa NOC DB + UI; đã submit / sau API success → giữ nguyên. 
    * Toannd61
    */
   _shouldClearNocOnPageLoad(caseRecord) {
@@ -458,8 +457,7 @@ export default class Fec_CaseEditNOC extends LightningElement {
     return (
       caseRecord &&
       caseRecord.FEC_Is_Submited__c !== true &&
-      caseRecord.FEC_Is_Call_API_Success__c !== true &&
-      caseRecord.FEC_IsImported__c !== true
+      caseRecord.FEC_Is_Call_API_Success__c !== true
     );
   }
 
@@ -980,9 +978,6 @@ export default class Fec_CaseEditNOC extends LightningElement {
     //HieuTT74 Cập nhật ngày  17-4-2026: Bổ sung message channel để disable các combobox khi call api reset pin thành công
     unsubscribe(this.subscriptionResetPin);
     this.subscriptionResetPin = null;
-
-    unsubscribe(this.subscriptionPinReissue);
-    this.subscriptionPinReissue = null;
 
     //HieuTT74 Cập nhật ngày  17-5-2026: Bổ sung message channel để disable các combobox khi call api tạo DNB thành công
     unsubscribe(this.subscriptionDoNotBother);
