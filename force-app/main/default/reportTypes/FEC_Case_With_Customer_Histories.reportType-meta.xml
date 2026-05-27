@@ -218,16 +218,19 @@
         </columns>
         <columns>
             <checkedByDefault>false</checkedByDefault>
+            <displayNameOverride>Case Remarks History 1</displayNameOverride>
             <field>FEC_Case_Remarks_1__c</field>
             <table>Case</table>
         </columns>
         <columns>
             <checkedByDefault>false</checkedByDefault>
+            <displayNameOverride>Case Remarks History 2</displayNameOverride>
             <field>FEC_Case_Remarks_2__c</field>
             <table>Case</table>
         </columns>
         <columns>
             <checkedByDefault>false</checkedByDefault>
+            <displayNameOverride>Case Remarks History 3</displayNameOverride>
             <field>FEC_Case_Remarks_3__c</field>
             <table>Case</table>
         </columns>
@@ -318,6 +321,7 @@
         </columns>
         <columns>
             <checkedByDefault>false</checkedByDefault>
+            <displayNameOverride>Update Category</displayNameOverride>
             <field>FEC_Category__c</field>
             <table>Case</table>
         </columns>
@@ -424,6 +428,11 @@
         <columns>
             <checkedByDefault>false</checkedByDefault>
             <field>FEC_Contract_Processing_Assessment_Type__c</field>
+            <table>Case</table>
+        </columns>
+        <columns>
+            <checkedByDefault>false</checkedByDefault>
+            <field>FEC_Contract_Processing_MRC_Assessment__c</field>
             <table>Case</table>
         </columns>
         <columns>
@@ -1063,6 +1072,7 @@
         </columns>
         <columns>
             <checkedByDefault>false</checkedByDefault>
+            <displayNameOverride>Original Category</displayNameOverride>
             <field>FEC_Original_Category__c</field>
             <table>Case</table>
         </columns>
@@ -1123,11 +1133,13 @@
         </columns>
         <columns>
             <checkedByDefault>false</checkedByDefault>
+            <displayNameOverride>Original Sub Category</displayNameOverride>
             <field>FEC_Original_Sub_Category__c</field>
             <table>Case</table>
         </columns>
         <columns>
             <checkedByDefault>false</checkedByDefault>
+            <displayNameOverride>Original Sub Code</displayNameOverride>
             <field>FEC_Original_Sub_Code__c</field>
             <table>Case</table>
         </columns>
@@ -1463,11 +1475,13 @@
         </columns>
         <columns>
             <checkedByDefault>false</checkedByDefault>
+            <displayNameOverride>Update Sub Category</displayNameOverride>
             <field>FEC_SubCategory__c</field>
             <table>Case</table>
         </columns>
         <columns>
             <checkedByDefault>false</checkedByDefault>
+            <displayNameOverride>Update Sub Code</displayNameOverride>
             <field>FEC_SubCode__c</field>
             <table>Case</table>
         </columns>
@@ -1644,11 +1658,6 @@
         <columns>
             <checkedByDefault>false</checkedByDefault>
             <field>FEC_Zip_Code__c</field>
-            <table>Case</table>
-        </columns>
-        <columns>
-            <checkedByDefault>false</checkedByDefault>
-            <field>FEC_Contract_Processing_MRC_Assessment__c</field>
             <table>Case</table>
         </columns>
         <masterLabel>Cases</masterLabel>
