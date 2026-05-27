@@ -762,6 +762,8 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
 
   /** Auto Hold Case — hiển thị trong accordion Case Information. */
   holdCaseNocParams = { recordId: null };
+  /** Template FEC_Nature_of_Case__c từ CASE_NOC (Updated NOC) — dùng khi Revert. */
+  _lastCaseNocTemplateNatureId = null;
   /** Bộ NOC gốc trên Case khi load (trước persist từ Updated Information). */
   holdCaseNocBaseline = null;
   _holdCaseNocBaselineCaptured = false;
@@ -2337,6 +2339,9 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
         subCategoryId: message.subCategoryId,
         subCodeId: message.subCodeId,
       };
+      if (message.natureOfCaseId) {
+        this._lastCaseNocTemplateNatureId = message.natureOfCaseId;
+      }
       this._handleNOCUpdate(message);
     }
   }
@@ -2572,7 +2577,7 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
     this._ippClosureHasEligibleRows = false;
     this._fetchRdPaymentQueues(); // Toannd61
 
-    getByCase({
+    return getByCase({
       caseId: this.recordId,
       productTypeId,
       categoryId,
@@ -4702,8 +4707,9 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
               actionId: actionId,
               //Toannd61: action.value (label/value dropdown) cho Apex phân nhánh FEC_IsReverted__c + custom label history
               routingActionValue: selectedAction?.value ?? "",
-//PhongBT: update bộ noc chọn ở updated khi revert về
-              natureOfCaseId: this.business.natureOfCase,
+//PhongBT: update bộ noc chọn ở updated khi revert về (ưu tiên template từ Updated NOC)
+              natureOfCaseId:
+                this._lastCaseNocTemplateNatureId || this.business?.natureOfCase,
             },
           };
           break;
@@ -4789,7 +4795,15 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
    */
   async _generateAndSavePdfIfApplicable(subCodeId) {
     const config = getPdfConfigForSubCode(this.business?.subCodeCode);
-    if (!config || subCodeId == null) return;
+    if (!config || subCodeId == null) {
+      if (subCodeId != null && !config) {
+        console.warn(
+          '[PDF] no template config, subCodeCode=',
+          this.business?.subCodeCode
+        );
+      }
+      return;
+    }
     if (this._pdfGenerateInFlight) return;
 
     try {
@@ -4798,6 +4812,14 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
         subCodeId
       });
       if (!validation?.allowed) {
+        console.warn(
+          '[PDF] validation blocked, subCodeId=',
+          subCodeId,
+          'subCodeCode=',
+          this.business?.subCodeCode,
+          'message=',
+          validation?.message
+        );
         return;
       }
 
