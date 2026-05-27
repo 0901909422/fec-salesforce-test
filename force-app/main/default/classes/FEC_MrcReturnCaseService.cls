@@ -13,7 +13,7 @@ public without sharing class FEC_MrcReturnCaseService {
     public static final String CONF_NOT_RECEIVED = 'Customer has not received MRC';
 
     private static final Set<String> STAGE1_HIDDEN_ASSESSMENT = new Set<String>{
-        'FEC_Contract_Processing_Assessment_Type__c',
+        'FEC_Contract_Processing_MRC_Assessment__c',
         'FEC_RD_Payment_Contract_Assessment__c'
     };
 
