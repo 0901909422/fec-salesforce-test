@@ -1107,28 +1107,27 @@ public without sharing class FEC_CaseAssignmentAutoDistributeService {
                 continue;
             }
 
-            Case caseUpdate = caseUpdatesById.get(target.caseRecord.Id);
-            if (caseUpdate == null) {
-                caseUpdate = new Case(Id = target.caseRecord.Id);
-                caseUpdatesById.put(target.caseRecord.Id, caseUpdate);
-            }
-            caseUpdate.FEC_Recently_Auto_Case_Assignment__c = configAssignmentId;
-
             if (target.updateCaseOwner == true) {
+                Case caseUpdate = caseUpdatesById.get(target.caseRecord.Id);
+                if (caseUpdate == null) {
+                    caseUpdate = new Case(Id = target.caseRecord.Id);
+                    caseUpdatesById.put(target.caseRecord.Id, caseUpdate);
+                }
+                caseUpdate.FEC_Recently_Auto_Case_Assignment__c = configAssignmentId;
                 caseUpdate.OwnerId = target.assignedUserId;
                 FEC_CaseBusinessService.registerSkipOwnerChangeRoutingHistory(target.caseRecord.Id);
+                appliedCount++;
             } else if (target.assignmentRecordId != null) {
                 assignmentUpdates.add(
                     new FEC_Assignment__c(
                         Id = target.assignmentRecordId,
-                        FEC_Assignment_Owner__c = target.assignedUserId
+                        FEC_Assignment_Owner__c = target.assignedUserId,
+                        FEC_Recently_Auto_Case_Assignment__c = configAssignmentId
                     )
                 );
                 casesForUserSync.add(target.caseRecord.Id);
-            } else {
-                continue;
+                appliedCount++;
             }
-            appliedCount++;
         }
 
         if (!assignmentUpdates.isEmpty()) {
