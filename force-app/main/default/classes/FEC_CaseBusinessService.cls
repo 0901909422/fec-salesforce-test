@@ -932,7 +932,11 @@ public without sharing class FEC_CaseBusinessService {
 
         masterDatalst = FEC_CaseMasterDataHelper.removeMasterDataRowsByHiddenAssignmentFieldApis(
           masterDatalst,
-          hasCaseAssignment
+          hasCaseAssignment,
+          currentUser.FEC_User_Group__c
+        );
+        Map<String, String> assignmentFieldEditableGroups = FEC_CaseMasterDataHelper.collectAssignmentFieldEditableGroups(
+          masterDatalst
         );
 
         for (SObject item : masterDatalst) {
@@ -1161,7 +1165,8 @@ public without sharing class FEC_CaseBusinessService {
                       isRevert,
                       isGsrStage1RevertMasterReadonly ||
                         forceGsrPropertyInfoReadonly,
-                      hasCaseAssignment
+                      hasCaseAssignment,
+                      assignmentFieldEditableGroups
                     );
 
                     if (fieldTemp == null) {
@@ -3931,7 +3936,8 @@ public without sharing class FEC_CaseBusinessService {
     String userGr,
     Boolean isStageRevert,
     Boolean forceMasterDataReadOnly,
-    Boolean hasCaseAssignment
+    Boolean hasCaseAssignment,
+    Map<String, String> assignmentFieldEditableGroups
   ) {
     String maskingTypeTemp = (String) masterDataItem.get('FEC_Masking_Type__c');
     String editableGr = (String) masterDataItem.get(
@@ -3990,12 +3996,18 @@ public without sharing class FEC_CaseBusinessService {
     String mdsType = (String) masterDataItem.get('FEC_Type__c');
     if (
       hasCaseAssignment == true &&
-      TYPE_ASSIGNMENT.equals(mdsType) &&
-      isEditable == true &&
+      assignmentFieldEditableGroups != null &&
+      assignmentFieldEditableGroups.containsKey(apiName) &&
       forceMasterDataReadOnly != true
     ) {
-      outReadOnly = false;
-      outEditable = true;
+      String assignmentEditableGr = assignmentFieldEditableGroups.get(apiName);
+      Boolean canEditAssignment = FEC_CaseMasterDataHelper.isAssignmentFieldEditable(
+        isEditable,
+        assignmentEditableGr,
+        userGr
+      );
+      outReadOnly = !canEditAssignment;
+      outEditable = canEditAssignment;
     }
     if (forceMasterDataReadOnly == true) {
       outReadOnly = true;
