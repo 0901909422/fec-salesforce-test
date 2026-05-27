@@ -1048,6 +1048,17 @@ public without sharing class FEC_BatchCaseHandlingController {
                 upsertFailedBatchHandling(fileName, resolvedTemplateName, out.message);
                 return out;
             }
+            // 27/05/2026 18:45 linhdev - chặn import template không khớp role/user group (vd. AddressUpdateTemp1_CSSupport khi user khác CS SP)
+            String roleTemplateError = FEC_BatchCaseHandlingTemplateHelper.validateUploadedTemplateForUserGroup(
+                fileName,
+                businessProcessCode,
+                resolveCurrentUserGroup()
+            );
+            if (String.isNotBlank(roleTemplateError)) {
+                out.message = roleTemplateError;
+                upsertFailedBatchHandling(fileName, resolvedTemplateName, roleTemplateError);
+                return out;
+            }
             FEC_BatchCaseHandlingSObjectUtil.putIfFieldExists(
                 fieldMap,
                 batchRow,

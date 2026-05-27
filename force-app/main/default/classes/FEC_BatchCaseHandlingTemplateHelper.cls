@@ -720,6 +720,9 @@ public without sharing class FEC_BatchCaseHandlingTemplateHelper {
         return pathOrTitle.trim().toLowerCase().endsWith('.xlsx');
     }
 
+    // 27/05/2026 18:45 linhdev - lỗi khi user import template không thuộc role/user group
+    public static final String ERR_ROLE_TEMPLATE_MISMATCH = 'role/template không phù hợp';
+
     public static String resolveTemplateNameFromUploadedFileName(
         String fileName,
         String userGroup,
@@ -737,10 +740,11 @@ public without sharing class FEC_BatchCaseHandlingTemplateHelper {
             if (String.isBlank(name) || validateUploadedTemplateFileName(fileName, name) != null) {
                 continue;
             }
-            Integer score = scoreTemplateFileNameMatch(fileName, name);
-            if (templateRowMatchesUserGroup(tr, userGroup)) {
-                score += 10000;
+            // 27/05/2026 18:45 linhdev - chỉ resolve template khớp user group (tránh nhận nhầm CSSupport khi user khác CS SP)
+            if (!templateRowMatchesUserGroup(tr, userGroup)) {
+                continue;
             }
+            Integer score = scoreTemplateFileNameMatch(fileName, name);
             if (bestName == null || score > bestScore) {
                 bestName = name;
                 bestScore = score;
@@ -773,6 +777,49 @@ public without sharing class FEC_BatchCaseHandlingTemplateHelper {
             ? FEC_ConstantCommon.STR_EMPTY
             : String.valueOf(bpRel.get('Name')).trim();
         return userGroupFieldMatches(templateRow, bpCode, bpName, userGroup);
+    }
+
+    // 27/05/2026 18:45 linhdev - validate suffix template (vd. _CSSupport) khớp role/user group khi import
+    public static String validateUploadedTemplateForUserGroup(
+        String templateOrFileName,
+        String businessProcessCode,
+        String userGroup
+    ) {
+        if (String.isBlank(templateOrFileName)) {
+            return null;
+        }
+        if (String.isBlank(userGroup)) {
+            return ERR_ROLE_TEMPLATE_MISMATCH;
+        }
+        String templateSuffix = extractTemplateTeamSuffix(templateOrFileName);
+        if (String.isBlank(templateSuffix)) {
+            return null;
+        }
+        List<String> allowedSuffixes = mapUserGroupToTemplateSuffixes(
+            businessProcessCode,
+            userGroup
+        );
+        if (allowedSuffixes == null || allowedSuffixes.isEmpty()) {
+            return ERR_ROLE_TEMPLATE_MISMATCH;
+        }
+        for (String allowed : allowedSuffixes) {
+            if (String.isNotBlank(allowed) && allowed.trim().equalsIgnoreCase(templateSuffix)) {
+                return null;
+            }
+        }
+        return ERR_ROLE_TEMPLATE_MISMATCH;
+    }
+
+    public static String extractTemplateTeamSuffix(String templateOrFileName) {
+        if (String.isBlank(templateOrFileName)) {
+            return null;
+        }
+        String core = templateOrFileName.trim().toLowerCase().replace('.xlsx', FEC_ConstantCommon.STR_EMPTY);
+        Integer underscoreIdx = core.lastIndexOf('_');
+        if (underscoreIdx < 0 || underscoreIdx >= core.length() - 1) {
+            return null;
+        }
+        return core.substring(underscoreIdx + 1);
     }
 
     public static String validateUploadedTemplateFileName(String fileName, String expectedTemplateName) {
