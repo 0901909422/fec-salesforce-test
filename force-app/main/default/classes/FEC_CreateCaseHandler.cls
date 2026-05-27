@@ -27,6 +27,9 @@ public without sharing class FEC_CreateCaseHandler {
         public String transcription;
         public String kycMethod;
         public String kycResult;
+
+        /** MyCase API: Owner = User theo CreatorEmail (nếu resolve được). */
+        public Id ownerUserId;
     }
     
     
@@ -59,6 +62,9 @@ public without sharing class FEC_CreateCaseHandler {
         public String subCategoryId;
         public String subCodeId;
         public String remarks;
+
+        /** MyCase API: Owner = User theo CreatorEmail (nếu resolve được). */
+        public Id ownerUserId;
     }
     
     @AuraEnabled
@@ -132,6 +138,11 @@ public without sharing class FEC_CreateCaseHandler {
     }
     
     
+    /**
+     * Chỉ dùng cho MyCase CreateCSCase API (REST/SOAP).
+     * Set FEC_Is_Submited__c, FEC_Interaction_View_Mode__c = review, FEC_Channel__c từ DTO (Sys.Channel XML).
+     * //Thangtv
+     */
     @AuraEnabled
     public static FEC_InteractionCaseResponse createInteractionCaseMyCaseAPI(FEC_InteractionCaseDTO dto) {
         
@@ -159,7 +170,8 @@ public without sharing class FEC_CreateCaseHandler {
         
         interactionCase.FEC_External_Interaction_ID__c = dto.externalInteractionId;
         interactionCase.FEC_Genesys_campaign_Name__c = dto.campaignName;
-        interactionCase.FEC_Interaction_View_Mode__c  = FEC_ConstantCommon.INTERACTION_REVIEW_MODE;
+        interactionCase.FEC_Interaction_View_Mode__c  = FEC_ConstantCommon.INTERACTION_REVIEW_MODE; //Thangtv
+        interactionCase.FEC_Is_Submited__c = true; //Thangtv
         interactionCase.FEC_Is_MyCaseAPI_Interaction__c = true;
         interactionCase.FEC_Outcome_Code__c = FEC_ConstantCommon.OUTCOME_CODE_COMPLETED;
         // ---------------------------
@@ -176,6 +188,10 @@ public without sharing class FEC_CreateCaseHandler {
         // ---------------------------
         interactionCase.FEC_Transcription__c = dto.transcription;
         interactionCase.FEC_KYC_Method__c = dto.kycMethod;
+
+        if (dto.ownerUserId != null) {
+            interactionCase.OwnerId = dto.ownerUserId; //Thangtv: CreatorEmail
+        }
         
         insert interactionCase;
         
@@ -248,7 +264,7 @@ public without sharing class FEC_CreateCaseHandler {
         
         
         if (dto.channel == FEC_ConstantCommon.CHANNEL_CHAT) {
-            interactionCase.Status = FEC_ConstantCommon.CASE_STATUS_OPEN;
+            interactionCase.Status = FEC_ConstantCommon.CASE_STATUS_PENDING;
         } else {
             interactionCase.Status = FEC_ConstantCommon.CASE_STATUS_OPEN;
         }
@@ -331,46 +347,74 @@ public without sharing class FEC_CreateCaseHandler {
         FEC_CustomerCaseDTO dto,
     Id interactionCaseId
     ) {
-        // ===== RECORD TYPE =====
+        Case c = buildCustomerCaseRecord(dto, interactionCaseId); //Thangtv: refactor tách buildCustomerCaseRecord
+        insert c;
+        return c;
+    }
+
+    /**
+     * Chỉ dùng cho MyCase CreateCSCase API (REST/SOAP).
+     * Set FEC_Is_Submited__c = true, FEC_Interaction_View_Mode__c = review,
+     * FEC_Channel__c = channelFromXml (Sys.Channel trong XML).
+     * //Thangtv
+     */
+    public static Case createCustomerCaseMyCaseAPI(
+        FEC_CustomerCaseDTO dto,
+        Id interactionCaseId,
+        String channelFromXml
+    ) {
+        Case c = buildCustomerCaseRecord(dto, interactionCaseId);
+        c.FEC_Is_Submited__c = true; //Thangtv
+        c.FEC_Interaction_View_Mode__c = FEC_ConstantCommon.INTERACTION_REVIEW_MODE; //Thangtv
+        if (String.isNotBlank(channelFromXml)) {
+            c.FEC_Channel__c = channelFromXml.trim(); //Thangtv
+        }
+        insert c;
+        return c;
+    }
+
+    //Thangtv: logic tạo Customer Case dùng chung (createCustomerCase / createCustomerCaseMyCaseAPI)
+    private static Case buildCustomerCaseRecord(
+        FEC_CustomerCaseDTO dto,
+        Id interactionCaseId
+    ) {
         Id customerRecordTypeId = Schema.SObjectType.Case
             .getRecordTypeInfosByDeveloperName()
             .get(FEC_ConstantCommon.CASE_CUSTOMER_RECORD_TYPE_DEV_NAME)
             .getRecordTypeId();
-        
-        // ===== QUEUE MAP =====
+
         Map<String, Id> queueMap = getQueueMap();
         Id queueId;
-        
-        // ===== CATEGORY LOGIC =====
+
         String categoryName = getCategoryName(dto.categoryId);
-        System.debug('categoryName: ' + categoryName);
-        
+
         if (categoryName == FEC_ConstantCommon.FEC_CATEGORY_REQUEST) {
             queueId = queueMap.get(FEC_ConstantCommon.QUEUE_DQ_CS_SUPPORT_NAME);
-            
-        } else if (categoryName == FEC_ConstantCommon.FEC_CATEGORY_COMPLAINT || categoryName == FEC_ConstantCommon.FEC_CATEGORY_FEEDBACK) {
+        } else if (
+            categoryName == FEC_ConstantCommon.FEC_CATEGORY_COMPLAINT ||
+            categoryName == FEC_ConstantCommon.FEC_CATEGORY_FEEDBACK
+        ) {
             queueId = queueMap.get(FEC_ConstantCommon.QUEUE_DQ_CS_CUSTOMER_CARE_NAME);
         }
-        
-        // ===== CREATE CASE =====
+
         Case c = new Case();
         c.RecordTypeId = customerRecordTypeId;
-        
-        c.FEC_Customer_Name__c        = dto.customerName;
-        c.FEC_Phone_Number__c        = dto.phoneNumber;
-        c.FEC_Customer_Type__c       = dto.userType;
+        c.FEC_Customer_Name__c = dto.customerName;
+        c.FEC_Phone_Number__c = dto.phoneNumber;
+        c.FEC_Customer_Type__c = dto.userType;
         c.FEC_Account_or_Contract__c = dto.customerHistoryId;
-        c.FEC_Business_Process__c    = dto.businessProcessId;
-        c.FEC_Product_Type__c        = dto.productTypeId;
-        c.FEC_Category__c            = dto.categoryId;
-        c.FEC_SubCategory__c         = dto.subCategoryId;
-        c.FEC_SubCode__c             = dto.subCodeId;
-        c.FEC_Remarks__c             = dto.remarks;
-        
-        c.OwnerId = (queueId != null) ? queueId : UserInfo.getUserId();
+        c.FEC_Business_Process__c = dto.businessProcessId;
+        c.FEC_Product_Type__c = dto.productTypeId;
+        c.FEC_Category__c = dto.categoryId;
+        c.FEC_SubCategory__c = dto.subCategoryId;
+        c.FEC_SubCode__c = dto.subCodeId;
+        c.FEC_Remarks__c = dto.remarks;
+        if (dto.ownerUserId != null) {
+            c.OwnerId = dto.ownerUserId; //Thangtv: CreatorEmail
+        } else {
+            c.OwnerId = (queueId != null) ? queueId : UserInfo.getUserId();
+        }
         c.FEC_Interaction__c = interactionCaseId;
-        
-        insert c;
         return c;
     }
     

@@ -71,6 +71,16 @@ public without sharing class FEC_BatchCaseHandlingController {
         @AuraEnabled public List<FilterPropertyMeta> allCaseProperties;
     }
 
+    public class BulkExportPropertyColumn {
+        @AuraEnabled public String label; // tungnm37
+        @AuraEnabled public String columnKey; // tungnm37
+    }
+
+    public class BulkExportPropertyBundle {
+        @AuraEnabled public List<BulkExportPropertyColumn> columns; // tungnm37
+        @AuraEnabled public Map<String, Map<String, String>> valuesByCaseId; // tungnm37
+    }
+
     @AuraEnabled(cacheable=true)
     public static List<FilterPropertyMeta> getCaseFilterPropertyMetadata(String filterScope) {
         List<FilterPropertyMeta> out = FEC_BCH_FilterPropertyService.getMetadata(filterScope);
@@ -308,19 +318,16 @@ public without sharing class FEC_BatchCaseHandlingController {
         myPending.label = QUEUE_MY_PENDING;
         myPending.value = QUEUE_MY_PENDING;
         out.add(myPending);
-        Id currentUserId = UserInfo.getUserId();
-        for (GroupMember gm : [
-            SELECT Group.Name
-            FROM GroupMember
-            WHERE UserOrGroupId = :currentUserId AND Group.Type = :FEC_ConstantCommon.GROUP_TYPE_QUEUE
-            ORDER BY Group.Name
-        ]) {
-            if (gm.Group == null || String.isBlank(gm.Group.Name)) {
+        Set<String> queueNames = FEC_AssignmentListHandler.getCurrentUserQueues(UserInfo.getUserId());
+        List<String> sortedQueueNames = new List<String>(queueNames);
+        sortedQueueNames.sort();
+        for (String queueName : sortedQueueNames) {
+            if (String.isBlank(queueName)) {
                 continue;
             }
             FilterPicklistOption item = new FilterPicklistOption();
-            item.label = gm.Group.Name;
-            item.value = gm.Group.Name;
+            item.label = queueName;
+            item.value = queueName;
             out.add(item);
         }
         return out;
@@ -522,8 +529,7 @@ public without sharing class FEC_BatchCaseHandlingController {
             'FEC_Last_Updated_On__c',
             'FEC_Category__r.FEC_Code__c',
             'FEC_SubCategory__r.FEC_Code__c',
-            'FEC_SubCode__r.FEC_Code__c',
-            '(SELECT Id FROM ContentDocumentLinks LIMIT 1)'
+            'FEC_SubCode__r.FEC_Code__c'
         };
         selectFields.addAll(FEC_BatchCaseHandlingTemplateHelper.buildCaseStageBusinessProcessSelectFields());
         String dataSoql =
@@ -548,11 +554,11 @@ public without sharing class FEC_BatchCaseHandlingController {
             r.caseStatus = c.FEC_Final_Status__c;
             r.caseCreatedOn = c.FEC_Case_Created_On__c;
             r.lastUpdatedOn = c.FEC_Last_Updated_On__c;
-            r.hasAttachment = c.ContentDocumentLinks != null && !c.ContentDocumentLinks.isEmpty();
             r.caseReviewUrl = '/lightning/r/Case/' + String.valueOf(c.Id) + '/view';
             FEC_BatchCaseHandlingTemplateHelper.applyStageBusinessProcessToExportRow(r, c);
             out.rows.add(r);
         }
+        FEC_BatchCaseHandlingExportService.applyVisibleAttachmentFlags(out.rows);
         return out;
     }
 
@@ -597,7 +603,34 @@ public without sharing class FEC_BatchCaseHandlingController {
         for (Case c : cases) {
             out.rows.add(FEC_BatchCaseHandlingExportService.mapCaseToExportRow(c));
         }
+        FEC_BatchCaseHandlingExportService.applyVisibleAttachmentFlags(out.rows);
         FEC_BatchCaseHandlingExportService.enrichExportRows(out.rows);
+        return out;
+    }
+
+    @AuraEnabled
+    public static BulkCaseSearchResult getSelectedCasesForExport(List<Id> caseIds) {
+        BulkCaseSearchResult out = new BulkCaseSearchResult();
+        out.rows = new List<FEC_BatchCaseHandlingExportRow>();
+        out.totalCount = 0;
+        if (caseIds == null || caseIds.isEmpty()) {
+            return out;
+        }
+
+        List<String> selectFields = FEC_BatchCaseHandlingExportService.buildCaseExportSelectFields();
+        List<Case> cases = Database.query(
+            'SELECT ' + String.join(selectFields, ', ') +
+            ' FROM Case WHERE Id IN :caseIds'
+        );
+        SObjectAccessDecision decision = Security.stripInaccessible(AccessType.READABLE, cases);
+        cases = (List<Case>) decision.getRecords();
+
+        for (Case c : cases) {
+            out.rows.add(FEC_BatchCaseHandlingExportService.mapCaseToExportRow(c));
+        }
+        FEC_BatchCaseHandlingExportService.applyVisibleAttachmentFlags(out.rows);
+        FEC_BatchCaseHandlingExportService.enrichExportRows(out.rows);
+        out.totalCount = out.rows.size();
         return out;
     }
 
@@ -756,18 +789,69 @@ public without sharing class FEC_BatchCaseHandlingController {
         return item;
     }
 
-    private static String resolveImportTemplateName(
-        String templateName,
-        String businessProcessCode,
-        String businessProcessName
+    // 27/05/2026 10:00 linhdev - Export with all Properties: query MDS Property theo BP + giá trị Case (FLS)
+    @AuraEnabled
+    public static BulkExportPropertyBundle getBulkExportPropertyBundle(
+        List<String> businessProcessCodes,
+        List<Id> caseIds,
+        Boolean includeAllProperties
     ) {
-        if (String.isNotBlank(templateName) && !'Other'.equalsIgnoreCase(templateName.trim()) && !'GSR'.equalsIgnoreCase(templateName.trim())) {
-            return templateName.trim();
+        BulkExportPropertyBundle out = new BulkExportPropertyBundle();
+        out.columns = new List<BulkExportPropertyColumn>();
+        out.valuesByCaseId = new Map<String, Map<String, String>>();
+        FEC_BCH_ExportPropertyService.BulkExportPropertyBundle serviceBundle =
+            FEC_BCH_ExportPropertyService.buildBundle(
+                businessProcessCodes,
+                caseIds,
+                includeAllProperties
+            );
+        if (serviceBundle == null || serviceBundle.columns == null || serviceBundle.columns.isEmpty()) {
+            return out;
+        }
+        for (FEC_BCH_ExportPropertyService.ExportPropertyColumn srcCol : serviceBundle.columns) {
+            if (srcCol == null || String.isBlank(srcCol.columnKey)) {
+                continue;
+            }
+            BulkExportPropertyColumn col = new BulkExportPropertyColumn();
+            col.columnKey = srcCol.columnKey;
+            col.label = String.isBlank(srcCol.label) ? srcCol.columnKey : srcCol.label;
+            out.columns.add(col);
+        }
+        if (serviceBundle.valuesByCaseId != null) {
+            for (Id caseId : serviceBundle.valuesByCaseId.keySet()) {
+                if (caseId == null) {
+                    continue;
+                }
+                Map<String, String> rowValues = serviceBundle.valuesByCaseId.get(caseId);
+                if (rowValues == null || rowValues.isEmpty()) {
+                    continue;
+                }
+                out.valuesByCaseId.put(String.valueOf(caseId), new Map<String, String>(rowValues));
+            }
+        }
+        return out;
+    }
+
+    private static Boolean isPlaceholderImportTemplateName(String templateName) {
+        if (String.isBlank(templateName)) {
+            return true;
+        }
+        String normalized = templateName.trim();
+        return 'Other'.equalsIgnoreCase(normalized) || 'GSR'.equalsIgnoreCase(normalized);
+    }
+
+    private static String resolveImportTemplateBindingName(
+        String businessProcessCode,
+        String businessProcessName,
+        String userGroup,
+        List<SObject> templateRows
+    ) {
+        if (templateRows == null || templateRows.isEmpty()) {
+            return FEC_ConstantCommon.STR_EMPTY;
         }
         if (String.isBlank(businessProcessCode) && String.isBlank(businessProcessName)) {
-            return String.isBlank(templateName) ? FEC_ConstantCommon.STR_EMPTY : templateName.trim();
+            return FEC_ConstantCommon.STR_EMPTY;
         }
-        List<SObject> templateRows = FEC_BatchCaseHandlingTemplateHelper.queryActiveBatchCaseHandlingTemplates();
         Map<Id, String> urlByTemplateId = new Map<Id, String>();
         Map<Id, Id> versionIdByTemplateId = new Map<Id, Id>();
         Set<Id> templateIds = new Set<Id>();
@@ -785,15 +869,56 @@ public without sharing class FEC_BatchCaseHandlingController {
             FEC_BatchCaseHandlingTemplateHelper.resolveExportTemplateBinding(
                 businessProcessCode,
                 businessProcessName,
-                resolveCurrentUserGroup(),
+                userGroup,
                 templateRows,
                 versionIdByTemplateId,
                 urlByTemplateId
             );
-        if (binding != null && String.isNotBlank(binding.templateName)) {
-            return binding.templateName;
+        return binding == null || String.isBlank(binding.templateName)
+            ? FEC_ConstantCommon.STR_EMPTY
+            : binding.templateName;
+    }
+
+    private static String resolveImportTemplateName(
+        String fileName,
+        String templateName,
+        String businessProcessCode,
+        String businessProcessName
+    ) {
+        String userGroup = resolveCurrentUserGroup();
+        List<SObject> templateRows = FEC_BatchCaseHandlingTemplateHelper.queryActiveBatchCaseHandlingTemplates();
+        String fromBusinessProcess = resolveImportTemplateBindingName(
+            businessProcessCode,
+            businessProcessName,
+            userGroup,
+            templateRows
+        );
+        if (
+            String.isNotBlank(fromBusinessProcess) &&
+            FEC_BatchCaseHandlingTemplateHelper.validateUploadedTemplateFileName(fileName, fromBusinessProcess) == null
+        ) {
+            return fromBusinessProcess;
         }
-        return String.isBlank(templateName) ? FEC_ConstantCommon.STR_EMPTY : templateName.trim();
+        String fromFileName = FEC_BatchCaseHandlingTemplateHelper.resolveTemplateNameFromUploadedFileName(
+            fileName,
+            userGroup,
+            templateRows
+        );
+        if (String.isNotBlank(fromFileName)) {
+            return fromFileName;
+        }
+        if (String.isNotBlank(fromBusinessProcess)) {
+            return fromBusinessProcess;
+        }
+        if (
+            !isPlaceholderImportTemplateName(templateName) &&
+            FEC_BatchCaseHandlingTemplateHelper.validateUploadedTemplateFileName(fileName, templateName) == null
+        ) {
+            return templateName.trim();
+        }
+        return isPlaceholderImportTemplateName(templateName)
+            ? FEC_ConstantCommon.STR_EMPTY
+            : templateName.trim();
     }
 
     private static String resolveCurrentUserGroup() {
@@ -831,6 +956,21 @@ public without sharing class FEC_BatchCaseHandlingController {
     public static FEC_BCH_TemplateExportService.ExportWorkbookResponse exportTemplateWorkbook(
         String requestJson
     ) {
+        if (String.isNotBlank(requestJson)) {
+            FEC_BCH_TemplateExportService.ExportRequest req =
+                (FEC_BCH_TemplateExportService.ExportRequest) JSON.deserialize(
+                    requestJson,
+                    FEC_BCH_TemplateExportService.ExportRequest.class
+                );
+            if (
+                req != null &&
+                req.contentVersionId != null &&
+                FEC_BCH_IncorrectPaymentTemplateWriter.shouldHandle(req.contentVersionId)
+            ) {
+                // tungnm37 - route Incorrect Payment template export to dedicated writer path
+                return FEC_BCH_IncorrectPaymentTemplateWriter.exportWorkbook(requestJson);
+            }
+        }
         return FEC_BCH_TemplateExportService.exportWorkbook(requestJson);
     }
     @AuraEnabled
@@ -893,6 +1033,7 @@ public without sharing class FEC_BatchCaseHandlingController {
             FEC_BatchCaseHandlingSObjectUtil.putIfFieldExists(fieldMap, batchRow, new List<String>{ 'FEC_Status__c' }, 'Uploaded');
             FEC_BatchCaseHandlingSObjectUtil.putIfFieldExists(fieldMap, batchRow, new List<String>{ 'FEC_Result__c' }, FEC_ConstantCommon.STR_EMPTY);
             String resolvedTemplateName = resolveImportTemplateName(
+                fileName,
                 templateName,
                 businessProcessCode,
                 businessProcessName

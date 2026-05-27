@@ -52,13 +52,58 @@ public without sharing class FEC_BatchCaseHandlingExportService {
             'FEC_Account_or_Contract__r.FEC_TSA_Code__c',
             'FEC_Account_or_Contract__r.FEC_TSA_Name__c',
             'FEC_Account_or_Contract__r.FEC_Sales_Channel__c',
-            'FEC_Account_or_Contract__r.FEC_Sales_Sub_Channel__c',
-            '(SELECT Id FROM ContentDocumentLinks LIMIT 1)'
+            'FEC_Account_or_Contract__r.FEC_Sales_Sub_Channel__c'
         };
         selectFields.addAll(FEC_BatchCaseHandlingTemplateHelper.buildCaseStageBusinessProcessSelectFields());
         return selectFields;
     }
 
+
+    public static void applyVisibleAttachmentFlags(List<FEC_BatchCaseHandlingExportRow> rows) {
+        if (rows == null || rows.isEmpty()) {
+            return;
+        }
+        Set<Id> caseIds = new Set<Id>();
+        for (FEC_BatchCaseHandlingExportRow r : rows) {
+            if (r != null && r.caseId != null) {
+                caseIds.add(r.caseId);
+            }
+        }
+        if (caseIds.isEmpty()) {
+            return;
+        }
+        Set<Id> caseIdsWithAttachment = new CaseAttachmentVisibility().resolveCaseIdsWithAttachments(caseIds);
+        for (FEC_BatchCaseHandlingExportRow r : rows) {
+            if (r == null) {
+                continue;
+            }
+            r.hasAttachment = r.caseId != null && caseIdsWithAttachment.contains(r.caseId);
+            r.hasAttachmentLabel = r.hasAttachment ? 'Has attachment' : FEC_ConstantCommon.STR_EMPTY;
+        }
+    }
+
+    public static Set<Id> resolveVisibleCaseIdsWithAttachments(Set<Id> caseIds) {
+        return new CaseAttachmentVisibility().resolveCaseIdsWithAttachments(caseIds);
+    }
+
+    private with sharing class CaseAttachmentVisibility {
+        Set<Id> resolveCaseIdsWithAttachments(Set<Id> caseIds) {
+            Set<Id> out = new Set<Id>();
+            if (caseIds == null || caseIds.isEmpty()) {
+                return out;
+            }
+            for (ContentDocumentLink cdl : [
+                SELECT LinkedEntityId
+                FROM ContentDocumentLink
+                WHERE LinkedEntityId IN :caseIds
+            ]) {
+                if (cdl.LinkedEntityId != null) {
+                    out.add(cdl.LinkedEntityId);
+                }
+            }
+            return out;
+        }
+    }
 
     public static void enrichExportRows(List<FEC_BatchCaseHandlingExportRow> rows) {
         if (rows == null || rows.isEmpty()) {
@@ -136,8 +181,6 @@ public without sharing class FEC_BatchCaseHandlingExportService {
         r.originalCategoryDisplay = formatCategoryDisplay(c.FEC_Original_Category__r);
         r.originalSubCategoryDisplay = formatSubDisplay(c.FEC_Original_Sub_Category__r);
         r.originalSubCodeDisplay = formatSubDisplay(c.FEC_Original_Sub_Code__r);
-        r.hasAttachment = c.ContentDocumentLinks != null && !c.ContentDocumentLinks.isEmpty();
-        r.hasAttachmentLabel = r.hasAttachment ? 'Has attachment' : FEC_ConstantCommon.STR_EMPTY;
         r.caseReviewUrl = '/lightning/r/Case/' + String.valueOf(c.Id) + '/view';
         FEC_BatchCaseHandlingTemplateHelper.applyStageBusinessProcessToExportRow(r, c);
         r.blockLimitDateLabel = formatExportDate(c.FEC_CS_Check_Block_Limit_Date__c);

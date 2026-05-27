@@ -369,8 +369,8 @@ public without sharing class FEC_MrcReturnCaseService {
     }
 
     /**
-     * RL05 / MRC Return: ẩn Assessment trên master data (mọi stage); Xác nhận KH & Handling Option
-     * do fec_MrcReturnPanel quản lý (RL05.02 mọi stage sau Submit).
+     * RL05 / MRC Return: ẩn Assessment trên master data chỉ Stage 1 trước Submit;
+     * Xác nhận KH & Handling Option do fec_MrcReturnPanel quản lý (RL05.02 mọi stage sau Submit).
      */
     public static Boolean shouldSkipStage1Field(
         String businessProcessCode,
@@ -378,7 +378,8 @@ public without sharing class FEC_MrcReturnCaseService {
         String subCodeCode,
         String stageName,
         String fieldApiName,
-        MrcRl05UiContext ctx
+        MrcRl05UiContext ctx,
+        Case selectedCase
     ) {
         if (String.isBlank(fieldApiName) || String.isBlank(stageName)) {
             return false;
@@ -393,7 +394,7 @@ public without sharing class FEC_MrcReturnCaseService {
 
         Boolean onStage1 = stageName.contains(FEC_ConstantCommon.STAGE_ONE);
 
-        if (STAGE1_HIDDEN_ASSESSMENT.contains(fieldApiName)) {
+        if (shouldHideAssessmentBeforeSubmit(stageName, selectedCase, fieldApiName)) {
             return true;
         }
 
@@ -416,7 +417,7 @@ public without sharing class FEC_MrcReturnCaseService {
         return false;
     }
 
-    /** @deprecated — giữ chữ ký cũ; gọi shouldSkipStage1Field(..., null). */
+    /** @deprecated — giữ chữ ký cũ; gọi shouldSkipStage1Field(..., null, null). */
     public static Boolean shouldSkipStage1Field(
         String businessProcessCode,
         String subCategoryCode,
@@ -429,8 +430,26 @@ public without sharing class FEC_MrcReturnCaseService {
             null,
             stageName,
             fieldApiName,
+            null,
             null
         );
+    }
+
+    private static Boolean shouldHideAssessmentBeforeSubmit(
+        String stageName,
+        Case selectedCase,
+        String fieldApiName
+    ) {
+        if (String.isBlank(fieldApiName) || String.isBlank(stageName)) {
+            return false;
+        }
+        if (!stageName.contains(FEC_ConstantCommon.STAGE_ONE)) {
+            return false;
+        }
+        if (selectedCase != null && selectedCase.FEC_Is_Submited__c == true) {
+            return false;
+        }
+        return STAGE1_HIDDEN_ASSESSMENT.contains(fieldApiName);
     }
 
     public static Boolean shouldSkipMasterDataRow(
@@ -474,16 +493,6 @@ public without sharing class FEC_MrcReturnCaseService {
         if (TYPE_LWC.equals(getRowType(lwcName, fieldApiName)) &&
             'fec_ContractClosureForm'.equalsIgnoreCase(lwcName) &&
             needsDeliveryLwc(ctx)) {
-            return true;
-        }
-        if (String.isNotBlank(fieldApiName) &&
-            'FEC_RD_Payment_Contract_Assessment__c'.equalsIgnoreCase(
-                fieldApiName.trim()
-            )) {
-            return true;
-        }
-        if (String.isNotBlank(subSectionName) &&
-            subSectionName.toLowerCase().contains('rd payment')) {
             return true;
         }
         return false;
@@ -598,7 +607,7 @@ public without sharing class FEC_MrcReturnCaseService {
             result.sectionlst.add(caseInfo);
         }
 
-        applyRl05SubSectionVisibility(caseInfo, ctx);
+        applyRl05SubSectionVisibility(caseInfo, ctx, result.stageName, selectedCase);
         mergeInjectedPicklistOptions(result, ctx);
 
         if (ctx.isReturnSubCode != true) {
@@ -927,7 +936,9 @@ public without sharing class FEC_MrcReturnCaseService {
 
     private static void applyRl05SubSectionVisibility(
         FEC_CaseBusinessService.Section caseInfo,
-        MrcRl05UiContext ctx
+        MrcRl05UiContext ctx,
+        String stageName,
+        Case selectedCase
     ) {
         for (FEC_CaseBusinessService.Section sub : caseInfo.subSectionlst) {
             if (sub.objlst == null) {
@@ -938,9 +949,12 @@ public without sharing class FEC_MrcReturnCaseService {
                     continue;
                 }
                 for (Integer i = obj.fieldlst.size() - 1; i >= 0; i--) {
+                    String apiName = obj.fieldlst[i].apiName;
                     if (
-                        STAGE1_HIDDEN_ASSESSMENT.contains(
-                            obj.fieldlst[i].apiName
+                        shouldHideAssessmentBeforeSubmit(
+                            stageName,
+                            selectedCase,
+                            apiName
                         )
                     ) {
                         obj.fieldlst.remove(i);
@@ -1357,7 +1371,7 @@ public without sharing class FEC_MrcReturnCaseService {
     }
 
     /**
-     * RL05 Stage 1 có nhiều FEC_Stage_Change__c (vd CP + PM): chọn dòng khớp team/queue LWC đã resolve.
+     * Chọn một FEC_Stage_Change__c khi query trả nhiều dòng (ưu tiên Team, sau đó Queue).
      */
     public static FEC_Stage_Change__c selectStageChangeForRoute(
         List<FEC_Stage_Change__c> changelst,
@@ -1371,7 +1385,7 @@ public without sharing class FEC_MrcReturnCaseService {
             return changelst[0];
         }
 
-        String team = FEC_CommonUltils.normalizeTeamUserGroupParam(teamUserGroup);
+        String team = normalizeTeamUserGroupForStageChange(teamUserGroup);
         if (String.isNotBlank(team)) {
             for (FEC_Stage_Change__c sc : changelst) {
                 String scTeam = sc.FEC_Team_User_Group__c;
@@ -1397,6 +1411,38 @@ public without sharing class FEC_MrcReturnCaseService {
         }
 
         return changelst[0];
+    }
+
+    private static String normalizeTeamUserGroupForStageChange(String teamUserGroup) {
+        if (String.isBlank(teamUserGroup)) {
+            return null;
+        }
+        String upper = teamUserGroup.trim().toUpperCase();
+        if (
+            upper == FEC_ConstantCommon.STAGE_CHANGE_TEAM_USER_GROUP_CP ||
+            upper.contains(FEC_ConstantCommon.STAGE_CHANGE_TEAM_LABEL_CONTRACT_PROCESS)
+        ) {
+            return FEC_ConstantCommon.STAGE_CHANGE_TEAM_USER_GROUP_CP;
+        }
+        if (
+            upper == FEC_ConstantCommon.STAGE_CHANGE_TEAM_USER_GROUP_PM ||
+            upper == FEC_ConstantCommon.STAGE_CHANGE_TEAM_LABEL_PAYMENT
+        ) {
+            return FEC_ConstantCommon.STAGE_CHANGE_TEAM_USER_GROUP_PM;
+        }
+        if (
+            upper == FEC_ConstantCommon.STAGE_CHANGE_TEAM_USER_GROUP_SP ||
+            upper.contains(FEC_ConstantCommon.STAGE_CHANGE_TEAM_LABEL_CS_SUPPORT)
+        ) {
+            return FEC_ConstantCommon.STAGE_CHANGE_TEAM_USER_GROUP_SP;
+        }
+        if (
+            upper == FEC_ConstantCommon.STAGE_CHANGE_TEAM_USER_GROUP_F2F ||
+            upper.contains(FEC_ConstantCommon.STAGE_CHANGE_TEAM_LABEL_OFFICE_BASED)
+        ) {
+            return FEC_ConstantCommon.STAGE_CHANGE_TEAM_USER_GROUP_F2F;
+        }
+        return teamUserGroup.trim();
     }
 
     private static String resolveQueueOwnerIdFromStageChangeValue(String nextQueueValue) {

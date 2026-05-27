@@ -295,7 +295,7 @@ public without sharing class FEC_AutoHoldCaseService {
             nocId = resolveNatureOfCaseId(relatedCase, stageIdForConfig);
         }
 
-        if (stageIdForConfig == null || nocId == null) {
+        if (nocId == null) {
             completeHoldCaseRetryFailure(history, caseId);
             return;
         }
@@ -508,7 +508,7 @@ public without sharing class FEC_AutoHoldCaseService {
         return null;
     }
 
-    /** Resolve: dùng NFU code Auto Hold đầu tiên theo Stage + NOC khi không có dòng Changed = Resolved. */
+    /** Resolve: NFU code Auto Hold đầu tiên theo NOC + stage khi không khớp Changed = Resolved. */
     @TestVisible
     private static FEC_Hold_Case_Config__c findFirstAutoHoldConfigForStage(
         Id nocId,
@@ -561,6 +561,7 @@ public without sharing class FEC_AutoHoldCaseService {
         return null;
     }
 
+    /** Config Auto cho NOC tại đúng stage Case (TH3 / retry Stage 2+ dùng FEC_Current_Case_Stage__c). */
     private static List<FEC_Hold_Case_Config__c> queryAutoHoldConfigs(
         Id nocId,
         Id caseStageId

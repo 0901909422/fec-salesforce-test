@@ -85,7 +85,8 @@ public with sharing class FEC_CardLockUnLockController {
                 SELECT Id,
                     FEC_Account_Number__c,
                     FEC_Customer_Name__c,
-                    FEC_Current_Card_Status__c
+                    FEC_Current_Card_Status__c,
+                    FEC_Account_or_Contract__r.FEC_Card_Number__c
                 FROM Case
                 WHERE Id = :recordId
             ];
@@ -98,6 +99,8 @@ public with sharing class FEC_CardLockUnLockController {
             String org = FEC_ConstantCommon.REQUESTOR_ORG_EMEA_CARD;
             String accNumber = objCasse.FEC_Account_Number__c;
             String cusName = objCasse.FEC_Customer_Name__c;
+            String rawCard = objCasse.FEC_Account_or_Contract__r?.FEC_Card_Number__c;
+            String last4 = String.isNotBlank(rawCard) ? rawCard.trim().right(4) : null;
             FEC_MCMSCARDTOCARDINQEMEA.ResponseWrapper res = FEC_MCMSCARDTOCARDINQEMEA.callService(
                 transId,
                 requestorId,
@@ -109,13 +112,27 @@ public with sharing class FEC_CardLockUnLockController {
                 accNumber,
                 cusName
             );
-            if (res?.Sys?.Code == 1) {
+            if (res?.Sys?.Code == 1
+            && res.VMXMsgOut?.OUTPUT_AREA?.OUTPUT_DATA != null
+            && !res.VMXMsgOut.OUTPUT_AREA.OUTPUT_DATA.isEmpty()) {
                 for (FEC_MCMSCARDTOCARDINQEMEA.OutputData outputData : res?.VMXMsgOut?.OUTPUT_AREA?.OUTPUT_DATA) {
+                    if (String.isBlank(outputData.CARD_NBR)) {
+                        System.debug(FEC_ConstantCommon.SKIP_ITEM);
+                        continue;
+                    }
+                    String cardNbr = outputData.CARD_NBR.trim();
+                    String cardNbrLast4 = cardNbr.length() >= 4 ? cardNbr.right(4) : cardNbr;
+
+                    if (last4 != null && cardNbrLast4 != last4) {
+                        System.debug(FEC_ConstantCommon.NO_MATCH);
+                        continue;
+                    }
                     if (String.isNotBlank(outputData.BLK_CD)) {
                         result.isSuccess = true;
                         result.currentBlockCode = outputData.BLK_CD;
                         result.currentCardStatus = 'Blocked';
                     }
+                    break;
                 }
             }
             if (result.isSuccess == null || !result.isSuccess) {

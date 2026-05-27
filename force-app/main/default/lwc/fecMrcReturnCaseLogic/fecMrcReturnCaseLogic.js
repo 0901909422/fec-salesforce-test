@@ -115,6 +115,84 @@ export function shouldActivateMrcReturnRouting(business) {
   );
 }
 
+/** Sau Submit RL05.01–03: khóa nhóm field MRC trên Case Information, không khóa Routing / assessment khác. */
+export function isMrcRl05CaseInformationLockedAfterSubmit(business) {
+  return (
+    shouldActivateMrcReturnRouting(business) &&
+    business?.isSubmited === true
+  );
+}
+
+/** Chỉ khóa: Xác nhận KH, Handling, Delivery + toàn bộ Property Info — không khóa assessment/master data khác. */
+export function isMrcRl05FieldLockedAfterSubmit(
+  business,
+  fieldApiName,
+  subSectionName,
+) {
+  if (!isMrcRl05CaseInformationLockedAfterSubmit(business)) {
+    return false;
+  }
+  if (subSectionName === SUBSECTION_NAME_PROPERTY_INFO) {
+    return true;
+  }
+  const api = String(fieldApiName ?? STR_EMPTY).trim();
+  return (
+    api === FIELD_MRC_CUSTOMER_CONFIRMATION ||
+    api === FIELD_MRC_HANDLING_OPTION ||
+    api === FIELD_DELIVERY_OPTION
+  );
+}
+
+function applyMrcRl05CaseInformationReadonlyLock(business) {
+  if (
+    !isMrcRl05CaseInformationLockedAfterSubmit(business) ||
+    !business?.sectionlst
+  ) {
+    return business;
+  }
+  business.sectionlst.forEach((section) => {
+    if (section.name !== SECTION_NAME_CASE_INFORMATION) {
+      return;
+    }
+    section.subSectionlst?.forEach((sub) => {
+      sub.objlst?.forEach((obj) => {
+        obj.fieldlst?.forEach((field) => {
+          if (
+            !isMrcRl05FieldLockedAfterSubmit(
+              business,
+              field.apiName,
+              sub.name,
+            )
+          ) {
+            return;
+          }
+          field.readonly = true;
+          field.editable = false;
+        });
+      });
+    });
+    (section.componentlst || []).forEach((entry) => {
+      const meta = normalizeMasterDataLwcEntry(entry);
+      if (
+        meta.componentName === MRC_RETURN_PANEL ||
+        meta.componentName === "fec_MrcReturnCaseForm"
+      ) {
+        entry.fecMasterDataSettingIsEdit = false;
+      }
+    });
+    (section.resolvedComponentlst || []).forEach((dyn) => {
+      if (
+        dyn?.componentName === MRC_RETURN_PANEL ||
+        dyn?.componentName === "fec_MrcReturnCaseForm"
+      ) {
+        dyn.fecMasterDataSettingIsEdit = false;
+        dyn.isEdit = false;
+      }
+    });
+  });
+  return business;
+}
+
 /** Case Information bị chặn (Product Code ≠ TW) — chỉ hiện banner lỗi, không panel/routing. */
 export function isMrcRl05CaseInformationBlocked(business) {
   if (business?.mrcRl05CaseInfoBlocked === true) {
@@ -459,7 +537,9 @@ export function ensureMrcReturnCaseFormInBusiness(business) {
       order: 0,
       fieldLayout: 12,
       subSectionName: null,
-      fecMasterDataSettingIsEdit: true,
+      fecMasterDataSettingIsEdit: !isMrcRl05CaseInformationLockedAfterSubmit(
+        business,
+      ),
     });
   }
   return business;
@@ -471,6 +551,26 @@ export function isMrcRl05ReviewMode(business, isEditFlag) {
   }
   return isEditFlag === false;
 }
+
+/** Stage 1, chưa Submit — khớp Apex shouldHideAssessmentBeforeSubmit. */
+export function isMrcStage1BeforeSubmit(business, isEditFlag) {
+  const stageName = String(business?.stageName ?? STR_EMPTY);
+  if (!stageName.includes("Stage 1")) {
+    return false;
+  }
+  if (business?.isSubmited === true) {
+    return false;
+  }
+  if (isMrcRl05ReviewMode(business, isEditFlag)) {
+    return false;
+  }
+  return true;
+}
+
+const MRC_HIDDEN_ASSESSMENT_FIELD_APIS = new Set([
+  "FEC_Contract_Processing_Assessment_Type__c",
+  "FEC_RD_Payment_Contract_Assessment__c",
+]);
 
 function resolvePicklistDisplayLabel(business, apiName, value) {
   const raw = String(value ?? STR_EMPTY).trim();
@@ -578,8 +678,8 @@ export function applyMrcRl0502DupFieldLayout(
               }
             }
           }
-          if (field.apiName === "FEC_Contract_Processing_Assessment_Type__c") {
-            if (ctx?.isReturnSubCode) {
+          if (MRC_HIDDEN_ASSESSMENT_FIELD_APIS.has(field.apiName)) {
+            if (isMrcStage1BeforeSubmit(business, isEditFlag)) {
               field.isHidden = true;
             }
           }
@@ -624,6 +724,7 @@ export function applyMrcRl0502DupFieldLayout(
     confVal,
     isEditFlag,
   );
+  applyMrcRl05CaseInformationReadonlyLock(visibility.business);
   return {
     business: { ...visibility.business },
     handlingOptionValue: nextHandling,

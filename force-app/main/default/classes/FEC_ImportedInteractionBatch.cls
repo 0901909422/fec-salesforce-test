@@ -48,10 +48,31 @@ public without sharing class FEC_ImportedInteractionBatch
             return;
         }
 
+        Set<Id> interactionIds = new Set<Id>();
+        for (Case item : scope) {
+            interactionIds.add(item.Id);
+        }
+
+        Map<Id, Case> customerCaseByInteractionId = new Map<Id, Case>();
+        for (Case customerCase : [
+            SELECT Id, FEC_Interaction__c, FEC_Account_or_Contract__c
+            FROM Case
+            WHERE
+                FEC_Interaction__c IN :interactionIds
+                AND RecordType.DeveloperName = :FEC_ConstantCommon.CASE_CUSTOMER_RECORD_TYPE_DEV_NAME
+        ]) {
+            customerCaseByInteractionId.put(customerCase.FEC_Interaction__c, customerCase);
+        }
+
         Set<Id> historyIds = new Set<Id>();
         for (Case item : scope) {
-            if (item.FEC_Account_or_Contract__c != null) {
-                historyIds.add(item.FEC_Account_or_Contract__c);
+            Id historyId = item.FEC_Account_or_Contract__c;
+            Case customerCase = customerCaseByInteractionId.get(item.Id);
+            if (customerCase != null && customerCase.FEC_Account_or_Contract__c != null) {
+                historyId = customerCase.FEC_Account_or_Contract__c;
+            }
+            if (historyId != null) {
+                historyIds.add(historyId);
             }
         }
 
@@ -76,7 +97,12 @@ public without sharing class FEC_ImportedInteractionBatch
             new List<FEC_FullCustomerIntegrationJob.SyncRequest>();
 
         for (Case item : scope) {
-            FEC_Customer_History__c history = historyById.get(item.FEC_Account_or_Contract__c);
+            Id historyId = item.FEC_Account_or_Contract__c;
+            Case customerCase = customerCaseByInteractionId.get(item.Id);
+            if (customerCase != null && customerCase.FEC_Account_or_Contract__c != null) {
+                historyId = customerCase.FEC_Account_or_Contract__c;
+            }
+            FEC_Customer_History__c history = historyById.get(historyId);
             if (history != null) {
                 String accountNumber = String.isNotBlank(history.FEC_Account_Number__c)
                     ? history.FEC_Account_Number__c
