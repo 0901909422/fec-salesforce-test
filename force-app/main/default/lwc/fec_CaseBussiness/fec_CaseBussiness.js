@@ -4718,6 +4718,7 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
             ...params,
             params: {
               caseId: this.recordId,
+              decision: this.decisionValue,
               userOrQueueId: this.subDecisionValue,
             },
           };
