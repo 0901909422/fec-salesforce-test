@@ -181,14 +181,16 @@
         <members>FEC_ImportedInteractionBatch</members>
         <members>FEC_RDPaymentContractAssessmentService</members>
         <members>FEC_CustomerIntegrationService</members>
+        <members>FEC_CaseRemarksTriggerHandler</members>
         <members>FEC_CardLockUnLockController</members>
-		<name>Apexclass</name>
+		<name>ApexClass</name>
 	</types>
     <types>
         <members>FEC_AssignmentTrigger</members>
         <members>FEC_CaseAssignmentNOCTrigger</members>
         <members>FEC_CaseAssignmentTrigger</members>
         <members>FEC_CustomerHistoryTrigger</members>
+        <members>FEC_CaseRemarksTrigger</members>
         <name>ApexTrigger</name>
     </types>
     <types>
@@ -358,6 +360,9 @@
         <members>FEC_Actual_Master_Data_Setting__c.FEC_Type__c</members>
         <members>FEC_Master_Data_Setting__c.FEC_Hidden__c</members>
         <members>FEC_Master_Data_Setting__c.FEC_Type__c</members>
+        <members>Case.FEC_User_ID__c</members>
+        <members>FEC_Routing_Action_History__c.FEC_Assigned_On__c</members>
+        <members>FEC_Routing_Action_History__c.FEC_TAT_by_Assignment_Hrs__c</members>
         <name>CustomField</name>
     </types>
     <types>
@@ -860,6 +865,15 @@
     <types>
         <members>Case-en_US</members>
         <name>CustomObjectTranslation</name>
+    </types>
+    <types>
+        <members>Routing_Action_History_with_Case_and_Assignment</members>
+        <name>ReportType</name>
+    </types>
+    <types>
+        <members>FECReport/FEC_RP_01</members>
+        <members>FECReport/FEC_RP_02</members>
+        <name>Report</name>
     </types>
 	<version>66.0</version>
 </Package>

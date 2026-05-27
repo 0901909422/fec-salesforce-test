@@ -4166,6 +4166,12 @@
         <field>Case.FEC_Is_DNB__c</field>
         <readable>true</readable>
     </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
+        <field>Case.FEC_User_ID__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+
     <hasActivationRequired>false</hasActivationRequired>
     <label>RD - Telesales User 1 - Interaction Case &amp; Service Case</label>
     <license>Salesforce</license>
