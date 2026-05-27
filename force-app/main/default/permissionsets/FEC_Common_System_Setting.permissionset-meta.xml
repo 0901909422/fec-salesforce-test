@@ -89,6 +89,10 @@
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
+        <apexClass>FEC_BCH_ExportPropertyService</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
         <apexClass>FEC_BCH_FilterPropertyService</apexClass>
         <enabled>true</enabled>
     </classAccesses>
