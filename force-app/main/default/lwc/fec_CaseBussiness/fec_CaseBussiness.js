@@ -2096,7 +2096,6 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
 
     if (
       this._mrcReturnStageChangeRoutingActive &&
-      !this.business?.mrcRl05CaseInfoWarningOnly &&
       this._hasMrcBlockingCaseInformationError() &&
       hasAction(ACTION_REJECT)
     ) {
@@ -2655,12 +2654,7 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
             });
 
             if (section.error?.errorlst?.length > 0 || section.error?.label) {
-            const mrcWarningOnly =
-              section.name === SECTION_NAME_CASE_INFORMATION &&
-              this.business?.mrcRl05CaseInfoWarningOnly === true;
-            if (!mrcWarningOnly) {
               this._setActionValueByCode(ACTION_REJECT);
-            }
             }
           }
           section.id = crypto.randomUUID();
