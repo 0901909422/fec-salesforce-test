@@ -12,6 +12,16 @@ public without sharing class FEC_MrcDuplicateCaseService {
     private static String cachedUserRoleName;
     private static Boolean userRoleNameResolved = false;
 
+    /**
+     * SOQL 101 (RL05.02 submit): bulk Cancel RAH từ dup — bỏ CaseManagerList/TAT/AutoHold trong trigger.
+     */
+    @TestVisible
+    private static Boolean suppressRoutingHistoryTriggerSideEffects = false;
+
+    public static Boolean isSuppressRoutingHistoryTriggerSideEffects() {
+        return suppressRoutingHistoryTriggerSideEffects == true;
+    }
+
     public class OpenDupInfo {
         public String caseIdStr;
         public String caseNumber;
@@ -817,6 +827,7 @@ public without sharing class FEC_MrcDuplicateCaseService {
             FEC_CaseTriggerHandler.isSystemUpdate = false;
         }
 
+        suppressRoutingHistoryTriggerSideEffects = true;
         try {
             recordRoutingActionHistoryForCase(
                 olderDupId,
@@ -829,6 +840,8 @@ public without sharing class FEC_MrcDuplicateCaseService {
                 'FEC_MrcDuplicateCaseService.applyReceivedConfirmationDuplicateCancel: RAH failed — ' +
                 e.getMessage()
             );
+        } finally {
+            suppressRoutingHistoryTriggerSideEffects = false;
         }
 
         String emailLocal = emailLocalSafe(UserInfo.getUserEmail());
@@ -1000,19 +1013,17 @@ public without sharing class FEC_MrcDuplicateCaseService {
             return;
         }
 
+        suppressRoutingHistoryTriggerSideEffects = true;
         try {
             insert historiesToInsert;
-            for (FEC_Routing_Action_History__c historyRow : historiesToInsert) {
-                if (historyRow.Id != null) {
-                    FEC_AutoHoldCaseService.enqueueAfterRoutingHistory(historyRow.Id);
-                }
-            }
         } catch (Exception e) {
             System.debug(
                 LoggingLevel.ERROR,
                 'FEC_MrcDuplicateCaseService: bulk RAH insert failed — ' +
                 e.getMessage()
             );
+        } finally {
+            suppressRoutingHistoryTriggerSideEffects = false;
         }
     }
 
