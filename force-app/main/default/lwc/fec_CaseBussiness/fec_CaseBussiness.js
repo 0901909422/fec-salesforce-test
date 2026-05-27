@@ -48,7 +48,7 @@ import {
   formatCurrency2,
 } from "c/fec_CommonUtils";
 
-import { MASKING_TYPE_PHONE, MASKING_TYPE_PASSPORT, STR_EMPTY, ICON_HIDE, ICON_PREVIEW, INTERNAL_REQUEST, CASE_OBJECT_API_NAME, FIELD_CUSTOMER_PHONE_NUMBER, FIELD_RECEIVING_PHONE_NUMBER, FEC_FAST_CASH_STORAGE_MODAL_CONFIRMED_PREFIX, FEC_FAST_CASH_STORAGE_NOC_SELECTION_PREFIX, FEC_POINTS_REDEMPTION_STORAGE_NOC_SELECTION_PREFIX } from "c/fec_CommonConst";
+import { MASKING_TYPE_PHONE, MASKING_TYPE_PASSPORT, STR_EMPTY, ICON_HIDE, ICON_PREVIEW, INTERNAL_REQUEST, CASE_OBJECT_API_NAME, FIELD_CUSTOMER_PHONE_NUMBER, FIELD_RECEIVING_PHONE_NUMBER, FEC_FAST_CASH_STORAGE_MODAL_CONFIRMED_PREFIX, FEC_FAST_CASH_STORAGE_NOC_SELECTION_PREFIX, FEC_POINTS_REDEMPTION_STORAGE_NOC_SELECTION_PREFIX, isPointsRedemptionRedeemOkInStorage } from "c/fec_CommonConst";
 import FEC_MSG_UPDATED_INFO_NOT_UPDATED from "@salesforce/label/c.FEC_MSG_UPDATED_INFO_NOT_UPDATED";
 import FEC_MSG_Can_Not_Find_Next_Stage from "@salesforce/label/c.FEC_MSG_Can_Not_Find_Next_Stage";
 import FEC_Error_Title from "@salesforce/label/c.FEC_Error_Title";
@@ -2901,6 +2901,8 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
         console.log("🚀 ~ Fec_CaseBussiness ~ getData ~ this.business:", JSON.stringify(this.business))
         this.applyDraft();
         this._applyCsSupportAssessmentRoutingActionSync();
+        //linhdev fix jira FECREDIT_CSM_2025_KH-1603
+        this._applyPointsRedemptionRedeemSuccessRoutingIfNeeded();
         this._applyRdPaymentContractAssessmentRouting(); // Toannd61
         this._resolveComponentlst();
         Promise.resolve().then(() => {
@@ -3015,6 +3017,33 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
   //linhdev fix jira FECREDIT_CSM_2025_KH-1367
   handleFastCashBlockConfirmed() {
     this.removeRoutingActions([ACTION_REJECT, ACTION_CANCEL]);
+  }
+
+  //linhdev fix jira FECREDIT_CSM_2025_KH-1603
+  _applyPointsRedemptionRedeemSuccessRoutingIfNeeded() {
+    if (!this.recordId || !isPointsRedemptionRedeemOkInStorage(this.recordId)) {
+      return;
+    }
+    if (!(this.business?.routingActionlst && this.business.routingActionlst.length > 0)) {
+      return;
+    }
+    const stillHasCancelOrReject = this.business.routingActionlst.some((a) => {
+      const code = a.code || a.value;
+      return code === ACTION_REJECT || code === ACTION_CANCEL;
+    });
+    if (!stillHasCancelOrReject && this._getCurrentActionCode() === ACTION_RESOLVE) {
+      return;
+    }
+    this.removeRoutingActions([ACTION_REJECT, ACTION_CANCEL]);
+    this._setActionValueByCode(ACTION_RESOLVE);
+  }
+
+  //linhdev fix jira FECREDIT_CSM_2025_KH-1603
+  handlePointsRedemptionRedeemSuccess(event) {
+    if (event?.detail?.recordId && event.detail.recordId !== this.recordId) {
+      return;
+    }
+    this._applyPointsRedemptionRedeemSuccessRoutingIfNeeded();
   }
 
   //linhdev fix jira FECREDIT_CSM_2025_KH-1294
@@ -5509,6 +5538,8 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
       ) {
         this._applyMrcReturnCaseIntegration();
       }
+      //linhdev fix jira FECREDIT_CSM_2025_KH-1603
+      this._applyPointsRedemptionRedeemSuccessRoutingIfNeeded();
     });
   }
 

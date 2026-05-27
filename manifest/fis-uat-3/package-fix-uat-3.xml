@@ -126,6 +126,7 @@
         <members>FEC_CMSRewardRedeemService</members>
         <members>FEC_CMSRewardRedeemServiceTest</members>
         <members>FEC_GetMRCInfo</members>
+        <members>FEC_BCH_ExportPropertyService</members>
         <members>FEC_BCH_FilterPropertyService</members>
         <members>FEC_BatchCaseHandlingCaseFilter</members>
         <members>FEC_BatchCaseHandlingImportRow</members>
@@ -706,6 +707,7 @@
         <members>FEC_Case_Assignment_Logs__c-Case Assignment Log Layout</members>
         <members>FEC_Currency_Code__c-Currency Code Layout</members>
         <members>FEC_Case_Assignment__c-Case Assignment Layout</members>
+        <members>FEC_Sales_Logic__c-Sales Logic Layout</members>
         <members>FEC_Notification_Template_Channel__c-Notification Template Channel Layout</members>
 		<name>Layout</name>
 	</types>

@@ -6,6 +6,7 @@ import getRecentRows from "@salesforce/apex/FEC_BatchCaseHandlingController.getR
 import getCaseFilterPropertyMetadataBundle from "@salesforce/apex/FEC_BatchCaseHandlingController.getCaseFilterPropertyMetadataBundle";
 import searchBulkCases from "@salesforce/apex/FEC_BatchCaseHandlingController.searchBulkCases";
 import searchBulkCasesForExport from "@salesforce/apex/FEC_BatchCaseHandlingController.searchBulkCasesForExport";
+import getSelectedCasesForExport from "@salesforce/apex/FEC_BatchCaseHandlingController.getSelectedCasesForExport";
 import getAttachmentCaseSetOptions from "@salesforce/apex/FEC_BatchCaseHandlingController.getAttachmentCaseSetOptions";
 import downloadAttachmentsZip from "@salesforce/apex/FEC_BatchCaseHandlingController.downloadAttachmentsZip";
 import getBusinessProcessExportRows from "@salesforce/apex/FEC_BatchCaseHandlingController.getBusinessProcessExportRows";
@@ -14,6 +15,8 @@ import getBulkExportAllowedBusinessProcessNames from "@salesforce/apex/FEC_Batch
 import getBulkExportAllowedBusinessProcessCodes from "@salesforce/apex/FEC_BatchCaseHandlingController.getBulkExportAllowedBusinessProcessCodes";
 import getTemplateFileBase64 from "@salesforce/apex/FEC_BatchCaseHandlingController.getTemplateFileBase64";
 import exportTemplateWorkbook from "@salesforce/apex/FEC_BatchCaseHandlingController.exportTemplateWorkbook";
+// 27/05/2026 10:00 linhdev - Export with all Properties: Apex bundle MDS Property theo BP
+import getBulkExportPropertyBundle from "@salesforce/apex/FEC_BatchCaseHandlingController.getBulkExportPropertyBundle";
 import downloadCaseAttachmentsZip from "@salesforce/apex/FEC_BatchCaseHandlingController.downloadCaseAttachmentsZip";
 import zipExcelFiles from "@salesforce/apex/FEC_BatchCaseHandlingController.zipExcelFiles";
 import importBatchData from "@salesforce/apex/FEC_BatchCaseHandlingController.importBatchData";
@@ -295,15 +298,16 @@ const EXPORT_HEADER_FIELD_MAP = {
   complainttype: "complaintType",
   complaintsource: "complaintSource",
   producttype: "productType",
+  producttypecode: "productType",
   originalcategory: "originalCategoryDisplay",
   originalsubcategory: "originalSubCategoryDisplay",
   originalsubcode: "originalSubCodeDisplay",
-  updatedcategory: "categoryDisplay",
-  updatedsubcategory: "subCategoryDisplay",
-  updatedsubcode: "subCodeDisplay",
-  category: "categoryDisplay",
-  subcategory: "subCategoryDisplay",
-  subcode: "subCodeDisplay",
+  updatedcategory: "categoryCode",
+  updatedsubcategory: "subCategoryCode",
+  updatedsubcode: "subCodeCode",
+  category: "categoryCode",
+  subcategory: "subCategoryCode",
+  subcode: "subCodeCode",
   caseremarks: "caseRemarks",
   caseremarksenteredby: "caseRemarksEnteredBy",
   caseremarksenteredbyrole: "caseRemarksEnteredByRole",
@@ -349,23 +353,8 @@ const EXPORT_HEADER_FIELD_MAP = {
   correctcontractnumber: "correctContractNumber",
   correctaccountcontract: "correctAccountContract",
   correctaccountandcontract: "correctAccountContract",
-  adjustedamount: "adjustedAmount",
-  correctcontractamountlessthan1greaterthan: "adjustedAmount",
-  correctcontractamount1: "adjustedAmount",
-  adjustedamountlessthan1greaterthan: "adjustedAmount",
-  adjustedamount1: "adjustedAmount"
+  adjustedamount: "adjustedAmount"
 };
-const FILTERED_EXPORT_EXTRA_COLUMNS = [
-  { header: FEC_BCH_Col_CustomerType, field: "customerType" },
-  { header: FEC_BCH_Col_CaseId, field: "caseIdSearch" },
-  { header: FEC_BCH_Col_Category, field: "categoryCode" },
-  { header: FEC_BCH_Col_SubCategory, field: "subCategoryCode" },
-  { header: FEC_BCH_Col_SubCode, field: "subCodeCode" },
-  { header: FEC_BCH_Col_CaseStatus, field: "caseStatus" },
-  { header: FEC_BCH_Col_CaseCreatedOn, field: "caseCreatedOnLabel" },
-  { header: FEC_BCH_Col_LastUpdatedOn, field: "lastUpdatedOnLabel" },
-  { header: FEC_BCH_Col_Attachments, field: "hasAttachmentLabel" }
-];
 const RESULT_COL_STATUS = "__Status";
 const RESULT_COL_ERRORS = "__Errors";
 const RESULT_HEADERS_BASIC = [
@@ -1864,9 +1853,36 @@ export default class Fec_BatchCaseHandling extends LightningElement {
   async openBusinessProcessPopup(useSelected) {
     let sourceRows = [];
     if (useSelected) {
-      sourceRows = this.caseRows.filter((r) => r.selected);
-      if (!sourceRows.length) {
+      const selectedCaseIds = this.caseRows
+        .filter((r) => r.selected)
+        .map((r) => r.caseId)
+        .filter((id) => !!id);
+      if (!selectedCaseIds.length) {
         this.showInfo(FEC_BCH_ExportToastTitle, FEC_BCH_SelectAtLeastOneCase);
+        return;
+      }
+      this.isLoading = true;
+      try {
+        const res = await getSelectedCasesForExport({ caseIds: selectedCaseIds });
+        const raw = Array.isArray(res?.rows) ? res.rows : [];
+        sourceRows = raw.map((r) => ({
+          ...r,
+          caseCreatedOnLabel:
+            r.caseCreatedOnLabel || this.formatDateTimeSafe(r.caseCreatedOn),
+          lastUpdatedOnLabel:
+            r.lastUpdatedOnLabel || this.formatDateTimeSafe(r.lastUpdatedOn),
+          hasAttachmentLabel:
+            r.hasAttachmentLabel ||
+            (r.hasAttachment ? FEC_BCH_DocumentLinkLabel : STR_EMPTY)
+        }));
+      } catch (error) {
+        this.handleExportFailure(error);
+        this.isLoading = false;
+        return;
+      }
+      this.isLoading = false;
+      if (!sourceRows.length) {
+        this.showInfo(FEC_BCH_ExportToastTitle, MSG_NO_DATA_EXPORT);
         return;
       }
     } else {
@@ -2273,12 +2289,15 @@ export default class Fec_BatchCaseHandling extends LightningElement {
           fallbackBp
         );
         const contentVersionId = this.resolveTemplateContentVersionId(tmplMeta);
+        // 27/05/2026 10:00 linhdev - Export with all Properties: load MDS columns + values khi user chọn Yes
+        const propertyBundle = await this.loadExportPropertyBundleForRows(groupItem?.rows || []);
         const file = await this.withTimeout(
           this.buildExcelFileFromTemplate(
             groupItem?.rows || [],
             fileName,
             contentVersionId,
-            tmplMeta
+            tmplMeta,
+            propertyBundle
           ),
           EXCEL_FILE_TIMEOUT_MS,
           EXCEL_FILE_TIMEOUT_MESSAGE
@@ -3094,25 +3113,112 @@ export default class Fec_BatchCaseHandling extends LightningElement {
     return mappings;
   }
 
-  appendExtraExportColumns(headerRow, mappings) {
-    if (this.includeAllProperties !== EXPORT_PROPERTY_YES) {
-      return { headerRow, mappings };
-    }
-    const outHeader = Array.isArray(headerRow) ? [...headerRow] : [];
-    const outMappings = Array.isArray(mappings) ? [...mappings] : [];
-    const existing = new Set(
-      outHeader.map((h) => this.normalizeExportHeader(h))
-    );
-    FILTERED_EXPORT_EXTRA_COLUMNS.forEach((col) => {
-      const norm = this.normalizeExportHeader(col.header);
-      if (existing.has(norm)) {
-        return;
+  // 27/05/2026 10:00 linhdev - Export with all Properties (SRS): helpers chèn cột Property trước Routing Action
+  resolveRoutingActionInsertIndex(headerRow) {
+    const normalized = (headerRow || []).map((h) => this.normalizeExportHeader(h));
+    for (let i = 0; i < normalized.length; i += 1) {
+      const token = normalized[i];
+      if (!token) {
+        continue;
       }
-      outHeader.push(col.header);
-      outMappings.push(col.field);
-      existing.add(norm);
+      if (HEADERS_ASSIGNMENT_ROUTING_ACTION.indexOf(token) >= 0) {
+        continue;
+      }
+      if (HEADERS_ROUTING_ACTION.indexOf(token) >= 0) {
+        return i;
+      }
+    }
+    for (let i = 0; i < normalized.length; i += 1) {
+      if (EXPORT_USER_FILL_HEADERS.has(normalized[i])) {
+        return i;
+      }
+    }
+    return normalized.length;
+  }
+
+  collectBusinessProcessCodesFromRows(rows) {
+    const codes = new Set();
+    (Array.isArray(rows) ? rows : []).forEach((r) => {
+      const code = String(r?.businessProcessCode || STR_EMPTY).trim();
+      const name = String(r?.businessProcessName || STR_EMPTY).trim();
+      if (code) {
+        codes.add(code);
+      }
+      if (name) {
+        codes.add(name);
+      }
     });
-    return { headerRow: outHeader, mappings: outMappings };
+    return Array.from(codes);
+  }
+
+  collectCaseIdsFromRows(rows) {
+    const ids = [];
+    (Array.isArray(rows) ? rows : []).forEach((r) => {
+      const caseId = r?.caseId;
+      if (caseId) {
+        ids.push(caseId);
+      }
+    });
+    return ids;
+  }
+
+  async loadExportPropertyBundleForRows(rows) {
+    if (this.includeAllProperties !== EXPORT_PROPERTY_YES) {
+      return { columns: [], valuesByCaseId: {} };
+    }
+    const sourceRows = Array.isArray(rows) ? rows : [];
+    if (!sourceRows.length) {
+      return { columns: [], valuesByCaseId: {} };
+    }
+    try {
+      return await getBulkExportPropertyBundle({
+        businessProcessCodes: this.collectBusinessProcessCodesFromRows(sourceRows),
+        caseIds: this.collectCaseIdsFromRows(sourceRows),
+        includeAllProperties: true
+      });
+    } catch (error) {
+      this.showError(FEC_BCH_ExportToastTitle, this.extractError(error));
+      return { columns: [], valuesByCaseId: {} };
+    }
+  }
+
+  buildPropertyInsertPayload(headerRow, caseRows, propertyBundle) {
+    const columns = Array.isArray(propertyBundle?.columns) ? propertyBundle.columns : [];
+    if (!columns.length) {
+      return null;
+    }
+    const insertBefore = this.resolveRoutingActionInsertIndex(headerRow);
+    const insertColumnHeaders = columns.map((c) => String(c?.label || STR_EMPTY));
+    const valuesByCaseId = propertyBundle?.valuesByCaseId || {};
+    const insertColumnValues = (Array.isArray(caseRows) ? caseRows : []).map((row) => {
+      const caseValues = row?.caseId && valuesByCaseId[row.caseId] ? valuesByCaseId[row.caseId] : {};
+      return columns.map((col) => {
+        const key = col?.columnKey;
+        if (!key || caseValues[key] == null) {
+          return STR_EMPTY;
+        }
+        return String(caseValues[key]);
+      });
+    });
+    return { insertColumnsBeforeIndex: insertBefore, insertColumnHeaders, insertColumnValues };
+  }
+
+  // 27/05/2026 10:00 linhdev - nén dòng export cho Apex (mappedColumnIndexes + mergeInsertColumnValues)
+  compressExportDataRows(fullRows, mappings) {
+    const out = [];
+    const sourceRows = Array.isArray(fullRows) ? fullRows : [];
+    const sourceMappings = Array.isArray(mappings) ? mappings : [];
+    for (let i = 0; i < sourceRows.length; i += 1) {
+      const cells = sourceRows[i] || [];
+      const compressed = [];
+      for (let j = 0; j < sourceMappings.length; j += 1) {
+        if (sourceMappings[j]) {
+          compressed.push(cells[j]);
+        }
+      }
+      out.push(compressed);
+    }
+    return out;
   }
 
   buildMappedTemplateDataRows(caseRows, mappings) {
@@ -3120,14 +3226,8 @@ export default class Fec_BatchCaseHandling extends LightningElement {
     const sourceRows = Array.isArray(caseRows) ? caseRows : [];
     const sourceMappings = Array.isArray(mappings) ? mappings : [];
     for (let i = 0; i < sourceRows.length; i += 1) {
-      const cells = this.mapCaseRowToExportCells(sourceRows[i], sourceMappings);
-      const mappedCells = [];
-      for (let j = 0; j < sourceMappings.length; j += 1) {
-        if (sourceMappings[j]) {
-          mappedCells.push(cells[j]);
-        }
-      }
-      out.push(mappedCells);
+      // tungnm37 - keep full column alignment with template indexes; do not compress mapped cells
+      out.push(this.mapCaseRowToExportCells(sourceRows[i], sourceMappings));
     }
     return out;
   }
@@ -3188,7 +3288,8 @@ export default class Fec_BatchCaseHandling extends LightningElement {
     return bytes.buffer;
   }
 
-  async buildExcelFileFromTemplate(rows, fileName, contentVersionId, templateMeta) {
+  // 27/05/2026 10:00 linhdev - propertyBundle: insertColumnsBeforeIndex/Headers/Values gửi FEC_BCH_TemplateExportService
+  async buildExcelFileFromTemplate(rows, fileName, contentVersionId, templateMeta, propertyBundle) {
     if (!contentVersionId) {
       const templateName = String(templateMeta?.templateName || STR_EMPTY).trim();
       const hasUrl = !!String(templateMeta?.templateDownloadUrl || STR_EMPTY).trim();
@@ -3240,21 +3341,23 @@ export default class Fec_BatchCaseHandling extends LightningElement {
         : 0;
     const finalMappings = this.buildExportColumnMappings(headerRow);
     const list = Array.isArray(rows) ? rows : [];
-    const dataRows = this.buildMappedTemplateDataRows(list, finalMappings);
+    const fullRows = this.buildMappedTemplateDataRows(list, finalMappings);
+    const dataRows = this.compressExportDataRows(fullRows, finalMappings);
     const mappedColumnIndexes = [];
     for (let i = 0; i < finalMappings.length; i += 1) {
       if (finalMappings[i]) {
         mappedColumnIndexes.push(i);
       }
     }
-    const exportResult = await exportTemplateWorkbook({
-      requestJson: JSON.stringify({
-        contentVersionId,
-        headerRowIndex,
-        mappedColumnIndexes,
-        dataRows
-      })
-    });
+    const propertyInsert = this.buildPropertyInsertPayload(headerRow, list, propertyBundle);
+    const exportRequest = { contentVersionId, headerRowIndex, mappedColumnIndexes, dataRows };
+    // 27/05/2026 10:00 linhdev - chỉ khi Export with all Properties = Yes và có cột MDS
+    if (propertyInsert) {
+      exportRequest.insertColumnsBeforeIndex = propertyInsert.insertColumnsBeforeIndex;
+      exportRequest.insertColumnHeaders = propertyInsert.insertColumnHeaders;
+      exportRequest.insertColumnValues = propertyInsert.insertColumnValues;
+    }
+    const exportResult = await exportTemplateWorkbook({ requestJson: JSON.stringify(exportRequest) });
     if (!exportResult?.success || !exportResult?.base64Body) {
       const code = exportResult?.errorCode || "EXPORT_FAILED";
       const detail =
