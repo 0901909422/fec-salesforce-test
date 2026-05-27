@@ -42,7 +42,7 @@ import LBL_Search_RecordPerPage from '@salesforce/label/c.LBL_Search_RecordPerPa
 const SORT_FIELD_MAP = {
     'FraudCaseUrl': 'FEC_CaseID__c',
     'ServiceCaseLink': 'FEC_Service_Case_ID__c',
-    'AccountNumber': 'CreatedDate',
+    'AccountNumber': 'AccountNumber',
     'CreatedByEmail': 'FEC_Creator_Email__c',
     'FEC_Sys_Channel__c': 'FEC_Sys_Channel__c'
 };
