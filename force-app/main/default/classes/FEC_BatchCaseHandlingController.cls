@@ -71,6 +71,16 @@ public without sharing class FEC_BatchCaseHandlingController {
         @AuraEnabled public List<FilterPropertyMeta> allCaseProperties;
     }
 
+    public class BulkExportPropertyColumn {
+        @AuraEnabled public String label; // tungnm37
+        @AuraEnabled public String columnKey; // tungnm37
+    }
+
+    public class BulkExportPropertyBundle {
+        @AuraEnabled public List<BulkExportPropertyColumn> columns; // tungnm37
+        @AuraEnabled public Map<String, Map<String, String>> valuesByCaseId; // tungnm37
+    }
+
     @AuraEnabled(cacheable=true)
     public static List<FilterPropertyMeta> getCaseFilterPropertyMetadata(String filterScope) {
         List<FilterPropertyMeta> out = FEC_BCH_FilterPropertyService.getMetadata(filterScope);
@@ -599,6 +609,32 @@ public without sharing class FEC_BatchCaseHandlingController {
     }
 
     @AuraEnabled
+    public static BulkCaseSearchResult getSelectedCasesForExport(List<Id> caseIds) {
+        BulkCaseSearchResult out = new BulkCaseSearchResult();
+        out.rows = new List<FEC_BatchCaseHandlingExportRow>();
+        out.totalCount = 0;
+        if (caseIds == null || caseIds.isEmpty()) {
+            return out;
+        }
+
+        List<String> selectFields = FEC_BatchCaseHandlingExportService.buildCaseExportSelectFields();
+        List<Case> cases = Database.query(
+            'SELECT ' + String.join(selectFields, ', ') +
+            ' FROM Case WHERE Id IN :caseIds'
+        );
+        SObjectAccessDecision decision = Security.stripInaccessible(AccessType.READABLE, cases);
+        cases = (List<Case>) decision.getRecords();
+
+        for (Case c : cases) {
+            out.rows.add(FEC_BatchCaseHandlingExportService.mapCaseToExportRow(c));
+        }
+        FEC_BatchCaseHandlingExportService.applyVisibleAttachmentFlags(out.rows);
+        FEC_BatchCaseHandlingExportService.enrichExportRows(out.rows);
+        out.totalCount = out.rows.size();
+        return out;
+    }
+
+    @AuraEnabled
     public static List<CaseSetRangeOption> getAttachmentCaseSetOptions(String filtersJson) {
         List<CaseSetRangeOption> out = new List<CaseSetRangeOption>();
         Integer total = 0;
@@ -753,6 +789,49 @@ public without sharing class FEC_BatchCaseHandlingController {
         return item;
     }
 
+    // 27/05/2026 10:00 linhdev - Export with all Properties: query MDS Property theo BP + giá trị Case (FLS)
+    @AuraEnabled
+    public static BulkExportPropertyBundle getBulkExportPropertyBundle(
+        List<String> businessProcessCodes,
+        List<Id> caseIds,
+        Boolean includeAllProperties
+    ) {
+        BulkExportPropertyBundle out = new BulkExportPropertyBundle();
+        out.columns = new List<BulkExportPropertyColumn>();
+        out.valuesByCaseId = new Map<String, Map<String, String>>();
+        FEC_BCH_ExportPropertyService.BulkExportPropertyBundle serviceBundle =
+            FEC_BCH_ExportPropertyService.buildBundle(
+                businessProcessCodes,
+                caseIds,
+                includeAllProperties
+            );
+        if (serviceBundle == null || serviceBundle.columns == null || serviceBundle.columns.isEmpty()) {
+            return out;
+        }
+        for (FEC_BCH_ExportPropertyService.ExportPropertyColumn srcCol : serviceBundle.columns) {
+            if (srcCol == null || String.isBlank(srcCol.columnKey)) {
+                continue;
+            }
+            BulkExportPropertyColumn col = new BulkExportPropertyColumn();
+            col.columnKey = srcCol.columnKey;
+            col.label = String.isBlank(srcCol.label) ? srcCol.columnKey : srcCol.label;
+            out.columns.add(col);
+        }
+        if (serviceBundle.valuesByCaseId != null) {
+            for (Id caseId : serviceBundle.valuesByCaseId.keySet()) {
+                if (caseId == null) {
+                    continue;
+                }
+                Map<String, String> rowValues = serviceBundle.valuesByCaseId.get(caseId);
+                if (rowValues == null || rowValues.isEmpty()) {
+                    continue;
+                }
+                out.valuesByCaseId.put(String.valueOf(caseId), new Map<String, String>(rowValues));
+            }
+        }
+        return out;
+    }
+
     private static Boolean isPlaceholderImportTemplateName(String templateName) {
         if (String.isBlank(templateName)) {
             return true;
@@ -877,6 +956,21 @@ public without sharing class FEC_BatchCaseHandlingController {
     public static FEC_BCH_TemplateExportService.ExportWorkbookResponse exportTemplateWorkbook(
         String requestJson
     ) {
+        if (String.isNotBlank(requestJson)) {
+            FEC_BCH_TemplateExportService.ExportRequest req =
+                (FEC_BCH_TemplateExportService.ExportRequest) JSON.deserialize(
+                    requestJson,
+                    FEC_BCH_TemplateExportService.ExportRequest.class
+                );
+            if (
+                req != null &&
+                req.contentVersionId != null &&
+                FEC_BCH_IncorrectPaymentTemplateWriter.shouldHandle(req.contentVersionId)
+            ) {
+                // tungnm37 - route Incorrect Payment template export to dedicated writer path
+                return FEC_BCH_IncorrectPaymentTemplateWriter.exportWorkbook(requestJson);
+            }
+        }
         return FEC_BCH_TemplateExportService.exportWorkbook(requestJson);
     }
     @AuraEnabled

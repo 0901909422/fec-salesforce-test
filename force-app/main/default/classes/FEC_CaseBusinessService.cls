@@ -343,7 +343,7 @@ public without sharing class FEC_CaseBusinessService {
             LIMIT 1
           ];
           if (!subCoderlst.isEmpty() && subCoderlst[0].FEC_Code__c != null) {
-            result.subCodeCode = subCoderlst[0].FEC_Code__c;
+            result.subCodeCode = subCoderlst[0].FEC_Code__c.trim();
           }
         } catch (Exception e) {
           System.debug('getByCase subCodeCode: ' + e.getMessage());
@@ -885,16 +885,6 @@ public without sharing class FEC_CaseBusinessService {
           'isGsrStage3PropertyInfoReadonly',
           isGsrStage3PropertyInfoReadonly
         );
-        // Chỉ chèn LWC Original Info (Stage 2) khi Updated NOC trùng Original (so với flow history).
-        if (isGsrStage1Revert && !isUpdatedNocDifferentFromCurrent) {
-          FEC_GsrStage1RevertMasterDataHelper.appendStage2OriginalInfoLwc(
-            masterDatalst,
-            masterDataSettingObj,
-            natureOfCaseObj,
-            selectedNatureOfCaseId,
-            templateNatureIdForCaseStages
-          );
-        }
 
         FEC_MrcReturnCaseService.applyRl05CodeFallbacks(
           result,
@@ -942,7 +932,11 @@ public without sharing class FEC_CaseBusinessService {
 
         masterDatalst = FEC_CaseMasterDataHelper.removeMasterDataRowsByHiddenAssignmentFieldApis(
           masterDatalst,
-          hasCaseAssignment
+          hasCaseAssignment,
+          currentUser.FEC_User_Group__c
+        );
+        Map<String, String> assignmentFieldEditableGroups = FEC_CaseMasterDataHelper.collectAssignmentFieldEditableGroups(
+          masterDatalst
         );
 
         for (SObject item : masterDatalst) {
@@ -1171,7 +1165,8 @@ public without sharing class FEC_CaseBusinessService {
                       isRevert,
                       isGsrStage1RevertMasterReadonly ||
                         forceGsrPropertyInfoReadonly,
-                      hasCaseAssignment
+                      hasCaseAssignment,
+                      assignmentFieldEditableGroups
                     );
 
                     if (fieldTemp == null) {
@@ -2320,10 +2315,17 @@ public without sharing class FEC_CaseBusinessService {
             : null;
           //PhongBT: update bộ noc chọn ở updated khi revert về
           String revertNocId = (String) params.get('natureOfCaseId');
-          FEC_CofGsrRoutePrepareService.updateCaseNocFromSelection(caseId, revertNocId);
           finalStatusBeforeSubmit = readCaseFinalStatusBeforeSubmit(caseId);
           markCaseSubmittedAndClearDrafts(caseId);
           revert(caseId, revertActionId, finalStatusBeforeSubmit, routingActionValue);
+          // Sau revert: Stage = Stage 1 NOC gốc — đồng bộ Actual theo template stage (và NOC UI nếu có).
+          if (String.isNotBlank(revertNocId)) {
+            FEC_CofGsrRoutePrepareService.updateCaseNocFromSelection(
+              caseId,
+              revertNocId
+            );
+          }
+          FEC_CofGsrRoutePrepareService.syncActualNatureToMatchCurrentCaseStage(caseId);
           return null;
         }
         when RECALL {
@@ -3934,7 +3936,8 @@ public without sharing class FEC_CaseBusinessService {
     String userGr,
     Boolean isStageRevert,
     Boolean forceMasterDataReadOnly,
-    Boolean hasCaseAssignment
+    Boolean hasCaseAssignment,
+    Map<String, String> assignmentFieldEditableGroups
   ) {
     String maskingTypeTemp = (String) masterDataItem.get('FEC_Masking_Type__c');
     String editableGr = (String) masterDataItem.get(
@@ -3993,12 +3996,18 @@ public without sharing class FEC_CaseBusinessService {
     String mdsType = (String) masterDataItem.get('FEC_Type__c');
     if (
       hasCaseAssignment == true &&
-      TYPE_ASSIGNMENT.equals(mdsType) &&
-      isEditable == true &&
+      assignmentFieldEditableGroups != null &&
+      assignmentFieldEditableGroups.containsKey(apiName) &&
       forceMasterDataReadOnly != true
     ) {
-      outReadOnly = false;
-      outEditable = true;
+      String assignmentEditableGr = assignmentFieldEditableGroups.get(apiName);
+      Boolean canEditAssignment = FEC_CaseMasterDataHelper.isAssignmentFieldEditable(
+        isEditable,
+        assignmentEditableGr,
+        userGr
+      );
+      outReadOnly = !canEditAssignment;
+      outEditable = canEditAssignment;
     }
     if (forceMasterDataReadOnly == true) {
       outReadOnly = true;

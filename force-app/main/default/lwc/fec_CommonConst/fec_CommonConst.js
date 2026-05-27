@@ -137,6 +137,19 @@ const FEC_FAST_CASH_STORAGE_REQUESTED_AMOUNT_PREFIX = 'fec_fc_reqamt_';
 const FEC_POINTS_REDEMPTION_STORAGE_NOC_LOCK_PREFIX = 'fec_pr_noclock_';
 const FEC_POINTS_REDEMPTION_STORAGE_MODAL_CONFIRMED_PREFIX = 'fec_pr_rdmmodal_';
 const FEC_POINTS_REDEMPTION_STORAGE_NOC_SELECTION_PREFIX = 'fec_pr_nocsel_';
+//linhdev fix jira FECREDIT_CSM_2025_KH-1603
+const FEC_POINTS_REDEMPTION_STORAGE_REDEEM_OK_PREFIX = 'fec-pr-ok-';
+
+function isPointsRedemptionRedeemOkInStorage(caseId) {
+    if (!caseId) {
+        return false;
+    }
+    try {
+        return window.localStorage.getItem(FEC_POINTS_REDEMPTION_STORAGE_REDEEM_OK_PREFIX + caseId) === '1';
+    } catch (e) {
+        return false;
+    }
+}
 const ERROR_TILE_SHOWTOAST = 'Thất bại';
 const MSG_ENTER_EMAIL_CORRECTLY = 'Please enter the email correctly before sending.';
 const NOTIFICATION_CHANNEL_SF_APP = 'Salesforce App';
@@ -356,6 +369,8 @@ export {
     FEC_POINTS_REDEMPTION_STORAGE_NOC_LOCK_PREFIX,
     FEC_POINTS_REDEMPTION_STORAGE_MODAL_CONFIRMED_PREFIX,
     FEC_POINTS_REDEMPTION_STORAGE_NOC_SELECTION_PREFIX,
+    FEC_POINTS_REDEMPTION_STORAGE_REDEEM_OK_PREFIX,
+    isPointsRedemptionRedeemOkInStorage,
     ERROR_TILE_SHOWTOAST,
     RESPONE_MESSARE_ERROR,
     RESPONE_MESSARE_SUCCESS,

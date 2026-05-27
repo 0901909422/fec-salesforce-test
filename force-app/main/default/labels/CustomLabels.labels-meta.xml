@@ -17357,7 +17357,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC_Batch_Import_Lookup_Product_Type_Not_Found</shortDescription>
-        <value>Không tìm thấy Product Type.</value>
+        <value>Không tồn tại giá trị Product Type</value>
     </labels>
     <labels>
         <fullName>FEC_Batch_Import_Lookup_Category_Not_Found</fullName>
@@ -17389,7 +17389,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC_Batch_Import_Invalid_Case_Status</shortDescription>
-        <value>Case Status không hợp lệ.</value>
+        <value>Không tồn tại giá trị Case Status</value>
     </labels>
     <labels>
         <fullName>FEC_Batch_Import_Invalid_Interaction_Channel</fullName>
@@ -17397,7 +17397,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC_Batch_Import_Invalid_Interaction_Channel</shortDescription>
-        <value>Interaction Channel không hợp lệ.</value>
+        <value>Không tồn tại giá trị Interaction Channel</value>
     </labels>
     <labels>
         <fullName>FEC_Batch_Import_Invalid_Interaction_Sub_Channel</fullName>
@@ -17405,7 +17405,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC_Batch_Import_Invalid_Interaction_Sub_Channel</shortDescription>
-        <value>Interaction Sub Channel không hợp lệ.</value>
+        <value>Không tồn tại giá trị Interaction Sub Channel</value>
     </labels>
     <labels>
         <fullName>FEC_Batch_Import_Invalid_Interaction_Email</fullName>
@@ -18170,7 +18170,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>Welcome Call case status only Resolved-Completed</shortDescription>
-        <value>File Welcome Call: Case Status chỉ được phép Resolved-Completed.</value>
+        <value>Không tồn tại giá trị Case Status</value>
     </labels>
     <labels>
         <fullName>FEC_Batch_Import_Welcome_Contract_Number_Requires_Dash</fullName>
@@ -18286,5 +18286,12 @@
         <protected>false</protected>
         <shortDescription>TECH_ARCHIVE_S3_PATCH</shortDescription>
         <value>fec-integration-s3/</value>
+    </labels>
+    <labels>
+        <fullName>TECH_GET_CASE_ARCHIVE_ENDPOINT_MOCKUP</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>TECH_GET_CASE_ARCHIVE_ENDPOINT_MOCKUP</shortDescription>
+        <value>https://sf-csm-service-dev.fecredit.cloud/dispatcher/api/v1/cases/case-archive?s3Key=</value>
     </labels>
 </CustomLabels>

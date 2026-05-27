@@ -153,7 +153,7 @@ public without sharing class ArchiveCaseController {
 
         FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
         FEC_API_Config__mdt apiConfig = FEC_API_Config__mdt.getInstance(serviceName);
-        String endpoint = FEC_MockupEndpoint.GET_CASE_ARCHIVE_ENDPOINT_MOCKUP 
+        String endpoint = label.TECH_GET_CASE_ARCHIVE_ENDPOINT_MOCKUP 
                         + s3Patch + '&source=' + migrationSource;
         if (apiConfig != null && String.isNotBlank(apiConfig.FEC_Endpoint__c)) {
             endpoint = apiSetting?.FEC_Call_Mock__c ? endpoint 
