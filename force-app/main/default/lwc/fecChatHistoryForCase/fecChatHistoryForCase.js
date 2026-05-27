@@ -166,6 +166,8 @@ export default class ChatHistory extends LightningElement {
             this.isSaved = true;
             this.manualChatHistoryContent = this.manualMessage;
             this.manualMessage = '';
+            // Refresh wire cache so reopening the case shows saved content
+            await refreshApex(this.wiredMessagesResult);
         } catch (error) {
             console.error('Error saving chat history:', error);
             this.error = error;
