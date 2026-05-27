@@ -7365,11 +7365,18 @@
         <value>Product Code ≠ &apos;TW&apos;</value>
     </labels>
     <labels>
+        <fullName>FEC_MRC_Return_RL0503_DPD_Block_Title</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>MRC Return RL05.03 — tiêu đề khi DPD ≥ 15</shortDescription>
+        <value>Không đủ điều kiện gửi mẫu đơn cấp lại MRC photo &amp; biên nhận thế chấp.</value>
+    </labels>
+    <labels>
         <fullName>FEC_MRC_Return_Msg_DPD_RL0503</fullName>
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>MRC Return RL05.03 — DPD từ 15 ngày</shortDescription>
-        <value>Hợp đồng có số ngày quá hạn (DPD) từ 15 trở lên: không được tiếp tục với Sub Code gửi mẫu đơn RL05.03.</value>
+        <value>Days Past Due &gt;= 15</value>
     </labels>
     <labels>
         <fullName>FEC_MRC_RL0502_Dup_Banner</fullName>
@@ -14952,7 +14959,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>NFU Modal Save Error</shortDescription>
-        <value>Vui lòng chọn ít nhất 1 NFU Code.</value>
+        <value>Chỉ được chọn duy nhất 1 giá trị NFU Code</value>
     </labels>
     <labels>
         <fullName>FEC_NFU_Reason_VN</fullName>
@@ -17275,5 +17282,13 @@
         <protected>false</protected>
         <shortDescription>Channel Config invalid selection message</shortDescription>
         <value>Vui lòng chọn một Channel hợp lệ từ danh sách kết quả tìm kiếm trước khi lưu.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Hold_Case_Edit_Succes</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Hold Case Edit Success</shortDescription>
+        <value>Hold Case Config was saved</value>
     </labels>
 </CustomLabels>
