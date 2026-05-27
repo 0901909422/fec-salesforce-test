@@ -273,7 +273,10 @@ public with sharing class FEC_MainInfoLoanAccountController {
                 rec.FEC_Contract_Number__c = loan.ContractNumber;
             }
             rec.FEC_Contract_Type__c    = loan.ContractType;
-            rec.FEC_Contract_Status__c  = loan.ContractStatus;
+            String contractStatusValue = resolveContractStatusPicklistValue(loan.ContractStatus);
+            if (contractStatusValue != null) {
+                rec.FEC_Contract_Status__c = contractStatusValue;
+            }
             rec.FEC_Agreement_Date__c   = loan.AgreementDate;
             rec.FEC_Application_ID__c   = loan.ApplicationID;
             rec.FEC_Company_Name__c     = loan.CompanyName;
@@ -306,6 +309,31 @@ public with sharing class FEC_MainInfoLoanAccountController {
         rec.FEC_Installments_Remaining__c = installmentsRemaining;
 
         update rec;
+    }
+
+    /** CIF trả CHARGE OFF; picklist Closed_Active_Charge_Off dùng Charge-Off / Active / Closed. */
+    private static String resolveContractStatusPicklistValue(String apiStatus) {
+        if (String.isBlank(apiStatus)) {
+            return null;
+        }
+        String normalized = apiStatus.trim().toUpperCase().replaceAll('[^A-Z0-9]', '');
+        Map<String, String> known = new Map<String, String>{
+            'CHARGEOFF' => 'Charge-Off',
+            'ACTIVE'    => 'Active',
+            'CLOSED'    => 'Closed'
+        };
+        if (known.containsKey(normalized)) {
+            return known.get(normalized);
+        }
+        for (Schema.PicklistEntry entry :
+            FEC_Customer_History__c.FEC_Contract_Status__c.getDescribe().getPicklistValues()) {
+            String valueKey = entry.getValue().toUpperCase().replaceAll('[^A-Z0-9]', '');
+            String labelKey = entry.getLabel().toUpperCase().replaceAll('[^A-Z0-9]', '');
+            if (valueKey == normalized || labelKey == normalized) {
+                return entry.getValue();
+            }
+        }
+        return null;
     }
 
     /* Extract schemeID/schemeDesc from GetCustomerList by contractNumber */
