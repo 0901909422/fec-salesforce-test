@@ -643,6 +643,8 @@ public without sharing class FEC_BatchCaseCreationController {
             }
         }
         return false;
+    }
+
     /** Xử lý đồng bộ mọi batch Uploaded (không phụ thuộc Database.executeBatch / permission batch). */
     @AuraEnabled
     public static Integer runPendingImportBatch() {
@@ -1190,6 +1192,13 @@ public without sharing class FEC_BatchCaseCreationController {
             return;
         }
         caseRecord.FEC_IsImported__c = true;
+    }
+
+    private static void applyBatchInteractionCaseDefaults(Case interactionCase) {
+        if (interactionCase == null) {
+            return;
+        }
+        interactionCase.Status = FEC_ConstantCommon.CASE_STATUS_CLOSED;
     }
 
     private static void runImportedInteractionBatchAfterCaseImport() {
