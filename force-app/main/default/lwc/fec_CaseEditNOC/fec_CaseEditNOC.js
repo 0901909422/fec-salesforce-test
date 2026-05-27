@@ -279,7 +279,6 @@ export default class Fec_CaseEditNOC extends LightningElement {
   subscriptionCaseInformationEdit = null;
   subscriptionResetPin = null;
   subscriptionPinReissue = null;
-  subscriptionProcessAction = null;
   subscriptionDoNotBother = null;
   activeSection = ["noc"];
   productTypeSelectedId;
@@ -985,9 +984,6 @@ export default class Fec_CaseEditNOC extends LightningElement {
     unsubscribe(this.subscriptionPinReissue);
     this.subscriptionPinReissue = null;
 
-    unsubscribe(this.subscriptionProcessAction);
-    this.subscriptionProcessAction = null;
-
     //HieuTT74 Cập nhật ngày  17-5-2026: Bổ sung message channel để disable các combobox khi call api tạo DNB thành công
     unsubscribe(this.subscriptionDoNotBother);
     this.subscriptionDoNotBother = null;
@@ -1032,7 +1028,7 @@ export default class Fec_CaseEditNOC extends LightningElement {
       { scope: APPLICATION_SCOPE },
     );
     // PhuongNT disable NOC after process action call api success
-    this.subscriptionProcessAction = subscribe(
+    this.subscriptionPinReissue = subscribe(
       this.messageContext,
       PROCESS_ACTION_MESSAGE_CHANNEL,
       (message) => this.handleMessageResetPin(message),
