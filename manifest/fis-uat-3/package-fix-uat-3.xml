@@ -301,6 +301,7 @@
         <members>Case.FEC_Recently_Auto_Case_Assignment__c</members>
         <members>Case.FEC_NFU_Description_Result__c</members>
         <members>Case.FEC_Collections_Response__c</members>
+        <members>Case.FEC_Contract_Processing_MRC_Assessment__c</members>
         <members>Case.FEC_Delivery_Option_2__c</members>
 		<members>Case.FEC_Customer_Confirmation__c</members>
 		<members>Case.FEC_MRC_Request_Handling_Option__c</members>
