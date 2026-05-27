@@ -508,12 +508,12 @@ import {
   isRl0502RdPaymentRoutingEligible,
 } from "c/fec_Rl0502RdPaymentRouting";
 
-const FIELD_CONTRACT_PROCESSING_ASSESSMENT_TYPE =
-  'FEC_Contract_Processing_Assessment_Type__c';
+const FIELD_CONTRACT_PROCESSING_MRC_ASSESSMENT =
+  'FEC_Contract_Processing_MRC_Assessment__c';
 
 /** Picklist Case persist trước submit / Scoped Route to (no-op nếu field không trên form). */
 const CASE_SUBMIT_PICKLIST_FIELD_API_NAMES = [
-  FIELD_CONTRACT_PROCESSING_ASSESSMENT_TYPE,
+  FIELD_CONTRACT_PROCESSING_MRC_ASSESSMENT,
   FIELD_RD_PAYMENT_CONTRACT_ASSESSMENT,
 ];
 
@@ -1894,14 +1894,14 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
 
   hasContractProcessingAssessmentTypeChanged() {
     return this.hasCasePicklistFieldChanged(
-      FIELD_CONTRACT_PROCESSING_ASSESSMENT_TYPE,
+      FIELD_CONTRACT_PROCESSING_MRC_ASSESSMENT,
     );
   }
 
   /** Scoped Route to Stage 2+ */
   async persistContractProcessingAssessmentTypeBeforeScopedRouteTo() {
     return this._persistCasePicklistField(
-      FIELD_CONTRACT_PROCESSING_ASSESSMENT_TYPE,
+      FIELD_CONTRACT_PROCESSING_MRC_ASSESSMENT,
     );
   }
 
@@ -3308,7 +3308,7 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
       if (
         objName === 'Case' &&
         (fieldName === FIELD_RD_PAYMENT_CONTRACT_ASSESSMENT ||
-          fieldName === FIELD_CONTRACT_PROCESSING_ASSESSMENT_TYPE)
+          fieldName === FIELD_CONTRACT_PROCESSING_MRC_ASSESSMENT)
       ) {
         const apiVal = this._casePicklistRawToApi(fieldName, value);
         if (apiVal != null) {
@@ -6115,6 +6115,11 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
     this._syncDocumentRequestRoutingFromBusinessFields();
   }
 
+  /** Sau Revert: giữ Team/Queue từ getByCase (resolveRouteToDisplayInfo), không ghi đè RL05/Document Request. */
+  _shouldKeepRevertRouteToDisplay() {
+    return this.business?.routeByLatestRevertHistory === true;
+  }
+
   //PhongBT 18/05/26: Document Request sử dụng cục routing action mới
   _loadDocumentRequestStageChangeRouting() {
     if (isMrcRl05Branch(this.business)) {
@@ -6126,6 +6131,16 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
     if (shouldPreferScopedRoutingFromStage2(this)) {
       this._documentRequestStageChangeRoutingActive = false;
       this._documentRequestDeliveryEligible = false;
+      this.business = { ...this.business };
+      return Promise.resolve();
+    }
+
+    if (this._shouldKeepRevertRouteToDisplay()) {
+      this._documentRequestStageChangeRoutingActive = true;
+      this._documentRequestDeliveryEligible = true;
+      if (this.business?.routingActionlst?.length) {
+        this._setActionValueByCode(ACTION_ROUTE_TO);
+      }
       this.business = { ...this.business };
       return Promise.resolve();
     }
@@ -6229,6 +6244,15 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
         nextTeam: null,
         nextQueue: null,
       };
+      this.business = { ...this.business };
+      return Promise.resolve();
+    }
+
+    if (this._shouldKeepRevertRouteToDisplay()) {
+      this._mrcReturnStageChangeRoutingActive = true;
+      if (this.business?.routingActionlst?.length) {
+        this._setActionValueByCode(ACTION_ROUTE_TO);
+      }
       this.business = { ...this.business };
       return Promise.resolve();
     }
