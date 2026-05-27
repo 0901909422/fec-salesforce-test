@@ -147,6 +147,12 @@
         >
           <div class="fec-session-body">
             <div class="fec-section2-toolbar">
+              <lightning-button
+                label="Process Pending"
+                variant="brand-outline"
+                title="Xử lý ngay các file đang Uploaded"
+                onclick={handleProcessPending}
+              ></lightning-button>
               <span class="fec-section2-toolbar__spacer"></span>
               <lightning-button-icon
                 icon-name="utility:refresh"
