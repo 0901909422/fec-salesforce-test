@@ -7,6 +7,7 @@ import {
   publish
 } from "lightning/messageService";
 import IS_MODE_EDIT from "@salesforce/messageChannel/FEC_Case_Mode__c";
+import CASE_INFORMATION_EDIT from "@salesforce/messageChannel/FEC_Case_Information_Edit__c";
 import CASE_NOC from "@salesforce/messageChannel/FEC_Case_NOC__c";
 import getCase from "@salesforce/apex/FEC_CaseEditNOCController.getCase";
 //PhongBT: Original Information của NOC lấy từ FEC_Case_Flow_History__c
@@ -97,6 +98,9 @@ export default class Fec_CaseEditNOC extends LightningElement {
   /** contextFlags từ FEC_CaseBusinessService.getByCase (đồng bộ qua CASE_NOC). */
   _caseBusinessContextFlags = {};
 
+  /** Partial edit Case Information sau Execute Assignment (FEC_Case_Information_Edit__c). */
+  _isCaseInformationEdit = false;
+
   //PhongBT11 update jira KH-1084 bổ sung Updated Information cho NOC, GSR Handling Stage
   updatedCategoryId;       // Category đã chọn trong Updated section
   updatedSubCategoryId;    // Sub-Category đã chọn trong Updated section
@@ -129,6 +133,18 @@ export default class Fec_CaseEditNOC extends LightningElement {
     return (this._currentStageName || '').includes('Stage 1');
   }
 
+  /** GSR (Actual NOC) + Revert/Recall về Stage 1: cho phép sửa Updated NOC khi bật mode edit Case. */
+  _isGsrStage1RevertEditable() {
+    const actualBp = (this._actualBusinessProcessCode || '').toUpperCase();
+    if (!actualBp.includes('GSR') || !this._isStage1) {
+      return false;
+    }
+    const flags = this._caseBusinessContextFlags;
+    return (
+      flags?.isGsrStage1Revert === true || flags?.isGsrStage1Recall === true
+    );
+  }
+
   /** GSR (Actual NOC) + Revert Stage 2 → Stage 1: cho phép sửa Updated NOC khi bật mode edit Case. */
   _isGsrStage2ToStage1RevertEditable() {
     const actualBp = (this._actualBusinessProcessCode || '').toUpperCase();
@@ -141,6 +157,10 @@ export default class Fec_CaseEditNOC extends LightningElement {
   // Sau submit (Submitted + Updated section): chỉ cho sửa khi user bật lại mode edit Case.
   // Không dùng interactionViewMode === handling — sau submit field Case có thể chưa kịp review
   // nên vẫn là handling và Updated NOC bị editable tới khi reload; chỉ còn modeEditCase là đúng UX.
+  get _canEditCaseInformationNoc() {
+    return this.modeEditCase === true || this._isCaseInformationEdit === true;
+  }
+
   get isUpdatedSectionEditable() {
     if (!this.isSubmittedState) {
       return false;
@@ -153,11 +173,15 @@ export default class Fec_CaseEditNOC extends LightningElement {
     if (this._isGsrStage2ToStage1RevertEditable()) {
       return this.modeEditCase === true;
     }
+    // GSR Revert/Recall về Stage 1: cho phép edit Updated NOC (Actual NOC chứa GSR).
+    if (this._isGsrStage1RevertEditable()) {
+      return this._canEditCaseInformationNoc;
+    }
     // Stage 1 → readonly Updated NOC (COF / GSR revert từ stage khác)
     if (this._isStage1) return false;
     //PhongBT 15/06/26: Có Routing Assignment (hasAutoRoutingAssignment) → không cho edit Updated NOC
     if (this.hasAutoRoutingAssignment) return false;
-    return this.modeEditCase === true;
+    return this._canEditCaseInformationNoc;
   }
 
   get showUpdatedSection() {
@@ -252,8 +276,10 @@ export default class Fec_CaseEditNOC extends LightningElement {
   subscription = null;
   subscriptionNOC = null;
   _nocResolveEpoch = 0;
+  subscriptionCaseInformationEdit = null;
   subscriptionResetPin = null;
   subscriptionPinReissue = null;
+  subscriptionProcessAction = null;
   subscriptionDoNotBother = null;
   activeSection = ["noc"];
   productTypeSelectedId;
@@ -949,14 +975,18 @@ export default class Fec_CaseEditNOC extends LightningElement {
     unsubscribe(this.subscriptionNOC);
     this.subscriptionNOC = null;
 
-    //HieuTT74 Cập nhật ngày  17-4-2026: Bổ sung message channel để disable các combobox khi call api reset pin thành công
-    unsubscribe(this.subscriptionResetPin);
-    this.subscriptionResetPin = null;
-
+    unsubscribe(this.subscriptionCaseInformationEdit);
+    this.subscriptionCaseInformationEdit = null;
 
     //HieuTT74 Cập nhật ngày  17-4-2026: Bổ sung message channel để disable các combobox khi call api reset pin thành công
     unsubscribe(this.subscriptionResetPin);
     this.subscriptionResetPin = null;
+
+    unsubscribe(this.subscriptionPinReissue);
+    this.subscriptionPinReissue = null;
+
+    unsubscribe(this.subscriptionProcessAction);
+    this.subscriptionProcessAction = null;
 
     //HieuTT74 Cập nhật ngày  17-5-2026: Bổ sung message channel để disable các combobox khi call api tạo DNB thành công
     unsubscribe(this.subscriptionDoNotBother);
@@ -980,6 +1010,13 @@ export default class Fec_CaseEditNOC extends LightningElement {
       { scope: APPLICATION_SCOPE }
     );
 
+    this.subscriptionCaseInformationEdit = subscribe(
+      this.messageContext,
+      CASE_INFORMATION_EDIT,
+      (message) => this.handleCaseInformationEditMessage(message),
+      { scope: APPLICATION_SCOPE }
+    );
+
     //HieuTT74 Cập nhật ngày  17-4-2026: Bổ sung message channel để disable các combobox khi call api reset pin thành công
     this.subscriptionResetPin = subscribe(
       this.messageContext,
@@ -995,7 +1032,7 @@ export default class Fec_CaseEditNOC extends LightningElement {
       { scope: APPLICATION_SCOPE },
     );
     // PhuongNT disable NOC after process action call api success
-    this.subscriptionPinReissue = subscribe(
+    this.subscriptionProcessAction = subscribe(
       this.messageContext,
       PROCESS_ACTION_MESSAGE_CHANNEL,
       (message) => this.handleMessageResetPin(message),
@@ -1010,6 +1047,16 @@ export default class Fec_CaseEditNOC extends LightningElement {
       { scope: APPLICATION_SCOPE }
     );
     
+  }
+
+  handleCaseInformationEditMessage(message) {
+    if (message == null || typeof message.isCaseInformationEdit === "undefined") {
+      return;
+    }
+    if (message.caseId != null && message.caseId !== this.recordId) {
+      return;
+    }
+    this._isCaseInformationEdit = message.isCaseInformationEdit === true;
   }
 
   handleCaseNOCMessage(message) {
@@ -1213,6 +1260,9 @@ export default class Fec_CaseEditNOC extends LightningElement {
     const nextModeEdit = message.isModeEdit === true;
     const prevModeEdit = this.modeEditCase === true;
     this.modeEditCase = nextModeEdit;
+    if (nextModeEdit) {
+      this._isCaseInformationEdit = false;
+    }
     if (prevModeEdit !== nextModeEdit && !nextModeEdit) {
       this.reloadData();
     }
