@@ -130,47 +130,159 @@ public without sharing class FEC_CofGsrRoutePrepareService {
   /**
    * Cập nhật bộ NOC (Product Type, Category, Sub Category, Sub Code) trên Case
    * theo Nature of Case Id được chọn ở Updated NOC trên UI.
-   * Hỗ trợ cả Actual NOC (FEC_Actual_Nature_of_Case__c) và Template NOC (FEC_Nature_of_Case__c).
+   * Template NOC → gán FEC_Actual_Nature_of_Case__c (tìm Actual cũ hoặc clone + MD).
+   * Actual NOC → gán trực tiếp lên Case.
    */
   public static void updateCaseNocFromSelection(String caseId, String natureOfCaseId) {
     if (String.isBlank(caseId) || String.isBlank(natureOfCaseId)) {
       return;
     }
 
-    List<FEC_Actual_Nature_of_Case__c> actualLst = [
-      SELECT Id, FEC_Product_Type__c, FEC_Category__c, FEC_Sub_Category__c, FEC_Sub_Code__c
-      FROM FEC_Actual_Nature_of_Case__c
-      WHERE Id = :natureOfCaseId
+    Id nocId;
+    try {
+      nocId = (Id) natureOfCaseId;
+    } catch (Exception e) {
+      return;
+    }
+
+    if (nocId.getSObjectType() == FEC_Actual_Nature_of_Case__c.SObjectType) {
+      List<FEC_Actual_Nature_of_Case__c> actualLst = [
+        SELECT
+          Id,
+          FEC_Product_Type__c,
+          FEC_Category__c,
+          FEC_Sub_Category__c,
+          FEC_Sub_Code__c
+        FROM FEC_Actual_Nature_of_Case__c
+        WHERE Id = :nocId
+        LIMIT 1
+      ];
+      if (!actualLst.isEmpty()) {
+        applyActualNatureToCase(caseId, actualLst[0]);
+      }
+      return;
+    }
+
+    if (nocId.getSObjectType() == FEC_Nature_of_Case__c.SObjectType) {
+      syncCaseToActualNatureFromTemplate(caseId, nocId);
+    }
+  }
+
+  /**
+   * Sau Revert: Actual NOC trên Case phải khớp template của FEC_Current_Case_Stage__c
+   * (tránh Actual bộ Stage 2 + Stage Stage 1 NOC gốc → master data COUNT = 0).
+   */
+  public static void syncActualNatureToMatchCurrentCaseStage(String caseId) {
+    if (String.isBlank(caseId)) {
+      return;
+    }
+    List<Case> caseRows = [
+      SELECT FEC_Current_Case_Stage__c, FEC_Current_Case_Stage__r.FEC_Nature_of_Cases__c
+      FROM Case
+      WHERE Id = :caseId
       LIMIT 1
     ];
-    if (!actualLst.isEmpty()) {
-      FEC_Actual_Nature_of_Case__c noc = actualLst[0];
-      update new Case(
-        Id = caseId,
-        FEC_Actual_Nature_of_Case__c = noc.Id,
-        FEC_Product_Type__c = noc.FEC_Product_Type__c,
-        FEC_Category__c = noc.FEC_Category__c,
-        FEC_SubCategory__c = noc.FEC_Sub_Category__c,
-        FEC_SubCode__c = noc.FEC_Sub_Code__c
-      );
+    if (
+      caseRows.isEmpty() ||
+      caseRows[0].FEC_Current_Case_Stage__c == null ||
+      caseRows[0].FEC_Current_Case_Stage__r?.FEC_Nature_of_Cases__c == null
+    ) {
+      return;
+    }
+    syncCaseToActualNatureFromTemplate(
+      caseId,
+      caseRows[0].FEC_Current_Case_Stage__r.FEC_Nature_of_Cases__c
+    );
+  }
+
+  @TestVisible
+  private static void syncCaseToActualNatureFromTemplate(
+    String caseId,
+    Id templateNatureId
+  ) {
+    if (String.isBlank(caseId) || templateNatureId == null) {
       return;
     }
 
     List<FEC_Nature_of_Case__c> templateLst = [
-      SELECT Id, FEC_Product_Type__c, FEC_Category__c, FEC_Sub_Category__c, FEC_Sub_Code__c
+      SELECT
+        Id,
+        FEC_Product_Type__c,
+        FEC_Category__c,
+        FEC_Sub_Category__c,
+        FEC_Sub_Code__c
       FROM FEC_Nature_of_Case__c
-      WHERE Id = :natureOfCaseId
+      WHERE Id = :templateNatureId
       LIMIT 1
     ];
-    if (!templateLst.isEmpty()) {
-      FEC_Nature_of_Case__c noc = templateLst[0];
-      update new Case(
-        Id = caseId,
-        FEC_Product_Type__c = noc.FEC_Product_Type__c,
-        FEC_Category__c = noc.FEC_Category__c,
-        FEC_SubCategory__c = noc.FEC_Sub_Category__c,
-        FEC_SubCode__c = noc.FEC_Sub_Code__c
-      );
+    if (templateLst.isEmpty()) {
+      return;
     }
+    FEC_Nature_of_Case__c templateNoc = templateLst[0];
+
+    FEC_Actual_Nature_of_Case__c actualNoc = resolveOrCreateActualNatureForTemplate(
+      templateNoc
+    );
+    applyActualNatureToCase(caseId, actualNoc);
+  }
+
+  /**
+   * Ưu tiên Actual đã tạo sớm nhất (thường là bản Stage 1); nếu chưa có MD thì clone từ template.
+   */
+  @TestVisible
+  private static FEC_Actual_Nature_of_Case__c resolveOrCreateActualNatureForTemplate(
+    FEC_Nature_of_Case__c templateNoc
+  ) {
+    List<FEC_Actual_Nature_of_Case__c> existingActualLst = [
+      SELECT
+        Id,
+        FEC_Product_Type__c,
+        FEC_Category__c,
+        FEC_Sub_Category__c,
+        FEC_Sub_Code__c
+      FROM FEC_Actual_Nature_of_Case__c
+      WHERE
+        FEC_Product_Type__c = :templateNoc.FEC_Product_Type__c
+        AND FEC_Category__c = :templateNoc.FEC_Category__c
+        AND FEC_Sub_Category__c = :templateNoc.FEC_Sub_Category__c
+        AND FEC_Sub_Code__c = :templateNoc.FEC_Sub_Code__c
+      ORDER BY CreatedDate ASC
+      LIMIT 1
+    ];
+
+    FEC_Actual_Nature_of_Case__c actualNoc;
+    if (!existingActualLst.isEmpty()) {
+      actualNoc = existingActualLst[0];
+      Integer mdCount = [
+        SELECT COUNT()
+        FROM FEC_Actual_Master_Data_Setting__c
+        WHERE FEC_Actual_Nature_of_Case__c = :actualNoc.Id
+      ];
+      if (mdCount == 0) {
+        FEC_CaseBusinessService.cloneMasterDataSetting(
+          actualNoc.Id,
+          templateNoc.Id
+        );
+      }
+      return actualNoc;
+    }
+
+    actualNoc = FEC_CaseBusinessService.cloneActualNatureOfCase(templateNoc.Id);
+    FEC_CaseBusinessService.cloneMasterDataSetting(actualNoc.Id, templateNoc.Id);
+    return actualNoc;
+  }
+
+  private static void applyActualNatureToCase(
+    String caseId,
+    FEC_Actual_Nature_of_Case__c actualNoc
+  ) {
+    update new Case(
+      Id = caseId,
+      FEC_Actual_Nature_of_Case__c = actualNoc.Id,
+      FEC_Product_Type__c = actualNoc.FEC_Product_Type__c,
+      FEC_Category__c = actualNoc.FEC_Category__c,
+      FEC_SubCategory__c = actualNoc.FEC_Sub_Category__c,
+      FEC_SubCode__c = actualNoc.FEC_Sub_Code__c
+    );
   }
 }
