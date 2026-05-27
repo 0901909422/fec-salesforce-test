@@ -910,7 +910,7 @@ public with sharing class FEC_ConstantCommon {
         },
         new Map<String, String>{
             'name'       => 'Interactions & Service Cases Summary',
-            'uniqueName' => 'FEC_RP_01'
+            'uniqueName' => 'Interaction_Service_Case_Summary'
         }
     };
     

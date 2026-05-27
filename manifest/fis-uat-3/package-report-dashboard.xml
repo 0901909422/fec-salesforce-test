@@ -117,7 +117,7 @@
     </types>
     <types>
         <members>FECReport/</members>
-        <members>FECReport/Interaction_Service_Case_Summary1_Umr</members>
+        <members>FECReport/Interaction_Service_Case_Summary</members>
         <members>FECReport/FEC_RP_02</members>
         <name>Report</name>
     </types>
