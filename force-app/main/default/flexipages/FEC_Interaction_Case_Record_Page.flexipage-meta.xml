@@ -1371,10 +1371,26 @@
                 <componentName>flexipage:tab</componentName>
                 <identifier>flexipage_tab30</identifier>
                 <visibilityRule>
+                    <booleanFilter>1 OR  2 OR (3 AND 4)</booleanFilter>
                     <criteria>
                         <leftValue>{!Record.FEC_Channel__c}</leftValue>
                         <operator>EQUAL</operator>
                         <rightValue>Chat</rightValue>
+                    </criteria>
+                    <criteria>
+                        <leftValue>{!Record.FEC_Channel__c}</leftValue>
+                        <operator>EQUAL</operator>
+                        <rightValue>Email</rightValue>
+                    </criteria>
+                    <criteria>
+                        <leftValue>{!Record.FEC_Channel__c}</leftValue>
+                        <operator>EQUAL</operator>
+                        <rightValue>Internal</rightValue>
+                    </criteria>
+                    <criteria>
+                        <leftValue>{!Record.FEC_Interaction_Subchannel__c}</leftValue>
+                        <operator>EQUAL</operator>
+                        <rightValue>Internal Email</rightValue>
                     </criteria>
                 </visibilityRule>
             </componentInstance>
