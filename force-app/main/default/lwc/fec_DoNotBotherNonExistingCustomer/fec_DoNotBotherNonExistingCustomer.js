@@ -680,11 +680,22 @@ export default class Fec_DoNotBotherNonExistingCustomer extends LightningElement
     );
   }
 
+  // get isUpdateDisabled() {
+  //   return (
+  //     !this.isValidNationalId ||
+  //     !this.data.some((row) => row.active) ||
+  //     this.data.some((row) => row.active && !row.updateReason)
+  //   );
+  // }
+
   get isUpdateDisabled() {
     return (
-      !this.isValidNationalId ||
       !this.data.some((row) => row.active) ||
-      this.data.some((row) => row.active && !row.updateReason)
+      this.data.some(
+        (row) =>
+          row.active &&
+          (!row.updateReason || !row.remarks || !row.remarks.trim()),
+      )
     );
   }
 
