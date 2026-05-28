@@ -12,6 +12,10 @@
             <default>false</default>
         </values>
         <values>
+            <fullName>Insurance</fullName>
+            <default>false</default>
+        </values>
+        <values>
             <fullName>Non-Existing Customer</fullName>
             <default>false</default>
         </values>
