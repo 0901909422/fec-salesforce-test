@@ -168,8 +168,7 @@ public without sharing class FEC_CardReplacementAddressController {
             String blockCode1;
             FEC_CardLockUnLockController.ResponseResult cardStatus = FEC_CardLockUnLockController.getCardStatus(caseId);
             blockCode = cardStatus?.currentBlockCode;
-            if (String.isBlank(blockCode)) {
-                // getCardStatus exception
+            if (cardStatus == null) {
                 return result;
             }
 
