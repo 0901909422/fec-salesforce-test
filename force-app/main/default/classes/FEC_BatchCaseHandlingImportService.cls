@@ -465,6 +465,7 @@ public without sharing class FEC_BatchCaseHandlingImportService {
         }
     }
 
+    // 28/05/2026 17:45 linhdev - Result .xlsx = file import gốc + patch __Status/__Errors (FEC_BCH_TemplateExportService)
     private static Blob buildBatchResultWorkbookFromOriginalTemplate(
         Id batchRecordId,
         List<FEC_BatchCaseHandlingImportRow> rowResults
@@ -496,6 +497,10 @@ public without sharing class FEC_BatchCaseHandlingImportService {
             return null;
         }
         Id sourceContentVersionId = querySourceImportContentVersionId(batchRecordId);
+        // 28/05/2026 17:45 linhdev - fallback file import gốc từ ContentDocumentLink khi field batch trống
+        if (sourceContentVersionId == null) {
+            sourceContentVersionId = querySourceContentVersionFromBatchFileLinks(batchRecordId);
+        }
         if (sourceContentVersionId == null) {
             return null;
         }
@@ -600,6 +605,39 @@ public without sharing class FEC_BatchCaseHandlingImportService {
             return null;
         }
         String contentDocumentId = FEC_BatchCaseHandlingSObjectUtil.asString(batchRows[0].get(fileDocField));
+        if (String.isBlank(contentDocumentId)) {
+            return null;
+        }
+        return queryLatestContentVersionIdForDocument(contentDocumentId);
+    }
+
+    // 28/05/2026 17:45 linhdev - lấy ContentVersion file upload gốc (bỏ qua title *_Result), ASC = file link trước Result
+    private static Id querySourceContentVersionFromBatchFileLinks(Id batchRecordId) {
+        if (batchRecordId == null) {
+            return null;
+        }
+        for (ContentDocumentLink link : [
+            SELECT ContentDocument.Title, ContentDocument.LatestPublishedVersionId
+            FROM ContentDocumentLink
+            WHERE LinkedEntityId = :batchRecordId
+            ORDER BY SystemModstamp ASC
+        ]) {
+            if (link.ContentDocument == null) {
+                continue;
+            }
+            String title = link.ContentDocument.Title;
+            if (FEC_BatchImportCommon.isResultContentTitle(title)) {
+                continue;
+            }
+            Id versionId = link.ContentDocument.LatestPublishedVersionId;
+            if (versionId != null) {
+                return versionId;
+            }
+        }
+        return null;
+    }
+
+    private static Id queryLatestContentVersionIdForDocument(String contentDocumentId) {
         if (String.isBlank(contentDocumentId)) {
             return null;
         }
@@ -2481,6 +2519,17 @@ public without sharing class FEC_BatchCaseHandlingImportService {
             return out;
         }
         Object raw = row.get(keyName);
+        // 28/05/2026 17:45 linhdev - đọc originalHeaders/originalCells không phân biệt hoa thường key JSON
+        if (raw == null) {
+            String want = keyName.replaceAll('\\s+', '').toLowerCase();
+            for (String k : row.keySet()) {
+                String nk = k == null ? FEC_ConstantCommon.STR_EMPTY : k.replaceAll('\\s+', '').toLowerCase();
+                if (want.equals(nk)) {
+                    raw = row.get(k);
+                    break;
+                }
+            }
+        }
         if (raw == null || !(raw instanceof List<Object>)) {
             return out;
         }
@@ -2491,10 +2540,21 @@ public without sharing class FEC_BatchCaseHandlingImportService {
     }
 
     private static Integer pickRowInteger(Map<String, Object> row, String keyName) {
-        if (row == null || String.isBlank(keyName) || !row.containsKey(keyName)) {
+        if (row == null || String.isBlank(keyName)) {
             return null;
         }
         Object raw = row.get(keyName);
+        // 28/05/2026 17:45 linhdev - đọc originalHeaderRowIndex không phân biệt hoa thường key JSON
+        if (raw == null) {
+            String want = keyName.replaceAll('\\s+', '').toLowerCase();
+            for (String k : row.keySet()) {
+                String nk = k == null ? FEC_ConstantCommon.STR_EMPTY : k.replaceAll('\\s+', '').toLowerCase();
+                if (want.equals(nk)) {
+                    raw = row.get(k);
+                    break;
+                }
+            }
+        }
         if (raw == null) {
             return null;
         }
