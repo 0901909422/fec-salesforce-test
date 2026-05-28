@@ -209,6 +209,7 @@
 	    <members>fec_COFFraudRelatedView</members>
 	    <members>fec_CommonConst</members>
 	    <members>fec_Search</members>
+	    <members>fec_SensitiveDataTable</members>
 	    <members>fec_customerAdditionalData</members>
 	    <members>fec_RepaymentSchedulePaymentHistory</members>
 	    <members>fec_UpdateAddress</members>
@@ -226,6 +227,7 @@
         <members>fec_MaskedContactTemplate</members>
 	    <members>fec_AssigmentListView</members>
 	    <members>fec_AssignmentRemarkHistoryTable</members>
+	    <members>fecInteractionInfo</members>
 	    <members>fec_AssignmentViewAll</members>
 	    <members>fec_CustomDoNotBotherViewDatatable</members>
 	    <members>fec_CreateCaseNonExistingCustomer</members>
