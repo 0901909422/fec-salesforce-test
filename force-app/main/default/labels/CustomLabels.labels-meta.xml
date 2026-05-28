@@ -16499,7 +16499,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC_BCH_NoDataExport</shortDescription>
-        <value>Không có dữ liệu để export.</value>
+        <value>Không có Template tương ứng với Business Process</value>
     </labels>
     <labels>
         <fullName>FEC_BCH_NoDataFound</fullName>

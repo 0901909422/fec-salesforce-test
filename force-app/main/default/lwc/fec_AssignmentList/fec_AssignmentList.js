@@ -170,7 +170,7 @@ export default class Fec_AssignmentList extends LightningElement {
     if (!isEdit) {
       this.assignments = this.assignments.map((item) => ({
         ...item,
-        isOpen: false,
+        isOpen: item.isOpen,
       }));
     }
 
@@ -590,9 +590,7 @@ export default class Fec_AssignmentList extends LightningElement {
     }
 
     // ===== VALIDATION =====
-    const container = this.template
-      .querySelector(`[data-id="${selected.id}"]`)
-      ?.closest(".slds-box");
+    const container = this.template.querySelector(".assignment-form");
 
     const inputs =
       container?.querySelectorAll("lightning-combobox, lightning-textarea") ||
@@ -643,26 +641,24 @@ export default class Fec_AssignmentList extends LightningElement {
           variant: "success",
         }),
       );
-      // reload data
-      await this.initData();
-      const remarkHistoryCmp = this.template.querySelector(
-        "c-fec_-assignment-remark-history-table, c-fec_-assignment-remark-history-table",
-      );
 
-      if (
-        remarkHistoryCmp &&
-        typeof remarkHistoryCmp.refreshData === "function"
-      ) {
+      // refresh history table trước
+      const remarkHistoryCmp = [
+        ...this.template.querySelectorAll(
+          "c-fec_-assignment-remark-history-table",
+        ),
+      ].find((cmp) => cmp.assignmentId === selected.id);
+
+      if (remarkHistoryCmp?.refreshData) {
         await remarkHistoryCmp.refreshData();
       }
-      //thangtv: cập nhật FEC_Can_Execute_Assignment__c khi assignment đã Completed
-      await refreshExecuteVisibility({ caseId: this.recordId });
 
-      // 👇 QUAN TRỌNG: chuyển mode view
+      await refreshExecuteVisibility({ caseId: this.recordId });
       setTimeout(() => {
         this.modeEditCase = false;
         this.handlePublishMode(false);
       }, 0);
+      
     } catch (error) {
       console.error("FULL ERROR:", error);
 
@@ -700,7 +696,6 @@ export default class Fec_AssignmentList extends LightningElement {
           return {
             ...item,
             isOpen: false,
-            // isReviewMode: true,
           };
         }
 
@@ -716,13 +711,7 @@ export default class Fec_AssignmentList extends LightningElement {
           variant: "success",
         }),
       );
-
-      // reload data
-      // await this.initData();
-
       await refreshExecuteVisibility({ caseId: this.recordId });
-
-      // 👇 QUAN TRỌNG: chuyển mode view
       setTimeout(() => {
         this.modeEditCase = false;
         this.handlePublishMode(false);
