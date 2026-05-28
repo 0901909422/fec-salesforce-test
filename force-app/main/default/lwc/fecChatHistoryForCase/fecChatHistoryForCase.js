@@ -1,13 +1,17 @@
 import { LightningElement, api, wire } from 'lwc';
+import { getRecord, getFieldValue } from 'lightning/uiRecordApi';
+import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import getChatMessages from '@salesforce/apex/FEC_ChatHistoryController.getChatMessages';
 import saveManualChatHistory from '@salesforce/apex/FEC_ChatHistoryController.saveManualChatHistory';
 import { formatDatetimeLocal } from 'c/fecChathubUtils';
 import { refreshApex } from '@salesforce/apex';
 import { subscribe, unsubscribe, APPLICATION_SCOPE, MessageContext } from 'lightning/messageService';
 import FEC_CHAT_UPDATE from '@salesforce/messageChannel/FecChatUpdate__c';
-import labelChatHistory from '@salesforce/label/c.FEC_Label_ChatHistory';
+import IS_MODE_EDIT from '@salesforce/messageChannel/FEC_Case_Mode__c';
+import VIEW_MODE from '@salesforce/schema/Case.FEC_Interaction_View_Mode__c';
 import labelNoChatHistory from '@salesforce/label/c.FEC_Label_NoChatHistory';
 import labelFileNotFound from '@salesforce/label/c.FEC_Label_FileNotFound';
+import { VIEW_MODE_REVIEW, VIEW_MODE_HANDLING } from 'c/fec_CommonConst';
 
 /**
  * Chat history component for Case records.
@@ -22,21 +26,30 @@ export default class ChatHistory extends LightningElement {
     wiredMessagesResult;
     @wire(MessageContext) messageContext;
     subscription = null;
+    modeSubscription = null;
+    activeSections = ['chatHistory'];
 
     isChatAutomation = false;
     manualMessage = '';
     manualChatHistoryContent = '';
     isSaving = false;
-    isSaved = false;
+    viewMode;
 
     // Custom Labels
-    labelChatHistory = labelChatHistory;
+    labelChatHistory = 'Chat Conversation';
     labelNoChatHistory = labelNoChatHistory;
     labelFileNotFound = labelFileNotFound;
 
+    @wire(getRecord, { recordId: '$recordId', fields: [VIEW_MODE] })
+    wiredCase({ data }) {
+        if (data) {
+            this.viewMode = getFieldValue(data, VIEW_MODE);
+        }
+    }
+
     /**
      * Lifecycle hook: Register listener when component is connected
-     * Subscribe to message channel to listen for chat updates
+     * Subscribe to message channels
      */
     connectedCallback() {
         if (!this.subscription) {
@@ -44,6 +57,18 @@ export default class ChatHistory extends LightningElement {
                 this.messageContext,
                 FEC_CHAT_UPDATE,
                 (message) => this.handleMessage(message),
+                { scope: APPLICATION_SCOPE }
+            );
+        }
+        if (!this.modeSubscription) {
+            this.modeSubscription = subscribe(
+                this.messageContext,
+                IS_MODE_EDIT,
+                (msg) => {
+                    if (msg && typeof msg.isModeEdit !== 'undefined' && msg.caseId === this.recordId) {
+                        this.viewMode = msg.isModeEdit ? VIEW_MODE_HANDLING : VIEW_MODE_REVIEW;
+                    }
+                },
                 { scope: APPLICATION_SCOPE }
             );
         }
@@ -55,6 +80,8 @@ export default class ChatHistory extends LightningElement {
     disconnectedCallback() {
         unsubscribe(this.subscription);
         this.subscription = null;
+        unsubscribe(this.modeSubscription);
+        this.modeSubscription = null;
     }
 
     /**
@@ -64,6 +91,16 @@ export default class ChatHistory extends LightningElement {
     handleMessage(message) {
         if (message.recordId === this.recordId && this.wiredMessagesResult) {
             refreshApex(this.wiredMessagesResult);
+        }
+    }
+
+    /**
+     * Sync manual message value into textarea after render
+     */
+    renderedCallback() {
+        const ta = this.template.querySelector('.manual-textarea');
+        if (ta && ta.value !== this.manualMessage) {
+            ta.value = this.manualMessage;
         }
     }
 
@@ -105,10 +142,10 @@ export default class ChatHistory extends LightningElement {
                     };
                 });
             } else {
-                // Non-automation case: check if manual history already saved
+                // Non-automation case: load existing manual history content if any
                 if (data.hasManualChatHistory) {
-                    this.isSaved = true;
                     this.manualChatHistoryContent = data.manualChatHistoryContent;
+                    this.manualMessage = data.manualChatHistoryContent;
                 }
             }
         } else if (error) {
@@ -129,10 +166,24 @@ export default class ChatHistory extends LightningElement {
     }
 
     /**
-     * Show manual input area when case is NOT chat automation and not yet saved
+     * Check if there is manual content to display
+     */
+    get hasManualContent() {
+        return !!this.manualChatHistoryContent && this.manualChatHistoryContent.trim() !== '';
+    }
+
+    /**
+     * Whether the case is in review mode (read-only)
+     */
+    get isReview() {
+        return this.viewMode === VIEW_MODE_REVIEW;
+    }
+
+    /**
+     * Show manual input area when case is NOT chat automation
      */
     get showManualInput() {
-        return !this.isChatAutomation && !this.isSaved;
+        return !this.isChatAutomation;
     }
 
        /**
@@ -163,11 +214,16 @@ export default class ChatHistory extends LightningElement {
                 caseId: this.recordId,
                 message: this.manualMessage
             });
-            this.isSaved = true;
             this.manualChatHistoryContent = this.manualMessage;
-            this.manualMessage = '';
-            // Refresh wire cache so reopening the case shows saved content
+            // Refresh wire cache
             await refreshApex(this.wiredMessagesResult);
+            this.dispatchEvent(
+                new ShowToastEvent({
+                    title: 'Thành công',
+                    message: 'Lưu chat thành công',
+                    variant: 'success'
+                })
+            );
         } catch (error) {
             console.error('Error saving chat history:', error);
             this.error = error;
