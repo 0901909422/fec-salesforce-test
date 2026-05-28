@@ -6401,14 +6401,10 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
     this.showProcessAction = false;
     this.isProcessActionInfo = false;
     this.processActionMsg = '';
-    this.isProcessActionFailed = false;
     checkProcessAction({ caseId: this.recordId })
       .then((result) => {
         if (result.isShowAction) {
           this.showProcessAction = true;
-        } else if (result.isErrorAPI){
-          this.isProcessActionFailed = true;
-          this.processActionMsg = result.strMsg;
         } else {
           this.isProcessActionInfo = true;
           this.processActionMsg = result.strMsg;
