@@ -32,8 +32,6 @@ public without sharing class FEC_RoutingActionHistoryTriggerHandler {
 
   private void onBeforeInsert(List<FEC_Routing_Action_History__c> newRecords) {
     FEC_RoutingHistTatSvc.applyBeforeSave(newRecords, null);
-    FEC_RoutingHistCoTatFlagSvc.applyBeforeSave(newRecords);
-    FEC_RoutingHistClTatFlagSvc.applyBeforeSave(newRecords);
   }
 
   private void onBeforeUpdate(
@@ -41,8 +39,6 @@ public without sharing class FEC_RoutingActionHistoryTriggerHandler {
     Map<Id, FEC_Routing_Action_History__c> oldMap
   ) {
     FEC_RoutingHistTatSvc.applyBeforeSave(newRecords, oldMap);
-    FEC_RoutingHistCoTatFlagSvc.applyBeforeSave(newRecords);
-    FEC_RoutingHistClTatFlagSvc.applyBeforeSave(newRecords);
   }
 
   private void onAfterInsert(List<FEC_Routing_Action_History__c> newRecords) {
@@ -58,9 +54,6 @@ public without sharing class FEC_RoutingActionHistoryTriggerHandler {
       }
       handleUpdateCaseTeamsOnInsert(newRecords);
       FEC_CaseManagerListService.applyAfterRoutingHistoryInsert(newRecords);
-      Set<Id> affectedCaseIds = collectCaseIds(newRecords);
-      FEC_RoutingHistCoTatFlagSvc.recalcCaseExportFlags(affectedCaseIds);
-      FEC_RoutingHistClTatFlagSvc.recalcCaseExportFlags(affectedCaseIds);
       // SOQL 101: TAT Full Process enqueue Queueable — không sync Case đồng bộ trong trigger.
       FEC_RoutingHistTatSvc.queueCaseFullProcessTatAfterSave(newRecords);
       FEC_RoutingHistTatSvc.commitPendingCaseFullProcessTatSync();
@@ -336,28 +329,12 @@ public without sharing class FEC_RoutingActionHistoryTriggerHandler {
     isExecuting = true;
 
     try {
-      Set<Id> affectedCaseIds = collectCaseIds(newRecords);
-      FEC_RoutingHistCoTatFlagSvc.recalcCaseExportFlags(affectedCaseIds);
-      FEC_RoutingHistClTatFlagSvc.recalcCaseExportFlags(affectedCaseIds);
       FEC_RoutingHistTatSvc.queueCaseFullProcessTatAfterSave(newRecords, oldMap);
       FEC_RoutingHistTatSvc.commitPendingCaseFullProcessTatSync();
       sendNotificationEmails(newRecords);
     } finally {
       isExecuting = false;
     }
-  }
-
-  private static Set<Id> collectCaseIds(List<FEC_Routing_Action_History__c> records) {
-    Set<Id> caseIds = new Set<Id>();
-    if (records == null) {
-      return caseIds;
-    }
-    for (FEC_Routing_Action_History__c rec : records) {
-      if (rec.FEC_Case__c != null) {
-        caseIds.add(rec.FEC_Case__c);
-      }
-    }
-    return caseIds;
   }
 
   /**
@@ -496,6 +473,7 @@ public without sharing class FEC_RoutingActionHistoryTriggerHandler {
 
       FEC_Routing_Action_History__c clonedHistory = history.clone(false, true, false, false);
       clonedHistory.FEC_Routing_Action__c = FEC_CaseBusinessService.RESOLVE;
+      clonedHistory.FEC_Decision__c = null;
       insert clonedHistory;
     }
   }
