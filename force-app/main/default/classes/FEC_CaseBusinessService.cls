@@ -933,13 +933,16 @@ public without sharing class FEC_CaseBusinessService {
           );
         }
 
+        Map<String, String> assignmentFieldEditableGroups = FEC_CaseMasterDataHelper.collectAssignmentFieldEditableGroups(
+          masterDatalst
+        );
+        masterDatalst = FEC_CaseMasterDataHelper.deduplicateMasterDataRowsByFieldApiName(
+          masterDatalst
+        );
         masterDatalst = FEC_CaseMasterDataHelper.removeMasterDataRowsByHiddenAssignmentFieldApis(
           masterDatalst,
           hasCaseAssignment,
           currentUser.FEC_User_Group__c
-        );
-        Map<String, String> assignmentFieldEditableGroups = FEC_CaseMasterDataHelper.collectAssignmentFieldEditableGroups(
-          masterDatalst
         );
 
         for (SObject item : masterDatalst) {
@@ -1160,6 +1163,9 @@ public without sharing class FEC_CaseBusinessService {
                   Boolean forceGsrPropertyInfoReadonly =
                     isGsrStage3PropertyInfoReadonly &&
                     'Property Info'.equals(subSectionItem.name);
+                  Boolean forceUpdatedInfoReadonly =
+                    hasCaseAssignment &&
+                    FEC_ConstantCommon.UPDATED_INFO.equals(subSectionItem.name);
                   try {
                     fieldTemp = transform(
                       masterDataItem,
@@ -1167,7 +1173,8 @@ public without sharing class FEC_CaseBusinessService {
                       currentUser.FEC_User_Group__c,
                       isRevert,
                       isGsrStage1RevertMasterReadonly ||
-                        forceGsrPropertyInfoReadonly,
+                        forceGsrPropertyInfoReadonly ||
+                        forceUpdatedInfoReadonly,
                       hasCaseAssignment,
                       assignmentFieldEditableGroups
                     );
