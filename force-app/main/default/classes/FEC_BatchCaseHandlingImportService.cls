@@ -1905,6 +1905,7 @@ public without sharing class FEC_BatchCaseHandlingImportService {
             return errs;
         }
         if (profile == FEC_BatchCaseHandlingImportProfile.FIELD_PROFILE_CS_SUPPORT) {
+            // 28/05/2026 14:37 linhdev - CS Support Assessment không bắt buộc cho row chỉ nhập bộ D2C (theo template import thực tế).
             validateD2CField(
                 rr,
                 rr.csSupportAssessment,
@@ -1915,7 +1916,7 @@ public without sharing class FEC_BatchCaseHandlingImportService {
                 configuredLabels,
                 picklistValueByNormByField,
                 errs,
-                true
+                false
             );
             validateD2CField(
                 rr,
