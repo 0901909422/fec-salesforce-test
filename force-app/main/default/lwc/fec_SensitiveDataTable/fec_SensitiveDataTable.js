@@ -14,14 +14,6 @@ const COLUMNS = [
   { label: "Section", fieldName: "FEC_Section__c" },
   { label: "Field Name", fieldName: "Name" },
   {
-    label: "User",
-    fieldName: "FEC_User__c",
-  },
-  {
-    label: "User Role",
-    fieldName: "FEC_User_Role__c",
-  },
-  {
     label: "Case ID",
     fieldName: "caseUrl",
     type: "url",
@@ -29,6 +21,14 @@ const COLUMNS = [
       label: { fieldName: "caseIdText" },
       target: "_self",
     },
+  },
+  {
+    label: "User",
+    fieldName: "FEC_User__c",
+  },
+  {
+    label: "User Role",
+    fieldName: "FEC_User_Role__c",
   },
   {
     label: "Date Time",
