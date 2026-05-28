@@ -13473,7 +13473,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>Chat - Conversations section label</shortDescription>
-        <value>Conversations</value>
+        <value>Chat Conversations</value>
     </labels>
     <labels>
         <fullName>FEC_Chat_History_Label</fullName>
@@ -16403,7 +16403,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC_Batch_Case_Handling_Import_Err_Routing_Action_Invalid</shortDescription>
-        <value>Giá trị Routing Action không đúng format hoặc không tồn tại trong Datagroup đã define</value>
+        <value>Giá trị Routing Action không tồn tại trong Datagroup</value>
     </labels>
     <labels>
         <fullName>FEC_Batch_Case_Handling_Import_Err_Assignment_Routing_Resolve_Only</fullName>
@@ -16427,7 +16427,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC_Batch_Case_Handling_Import_Err_Missing_Routing_Action</shortDescription>
-        <value>Thiếu dữ liệu Routing Action</value>
+        <value>Thiếu giá trị Routing Action</value>
     </labels>
     <labels>
         <fullName>FEC_Batch_Case_Handling_Import_Err_Assignment_Routing_Without_Assignment_Id</fullName>
@@ -16459,7 +16459,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC_Batch_Case_Handling_Import_Err_Missing_Remark</shortDescription>
-        <value>Thiếu dữ liệu Remark</value>
+        <value>Thiếu giá trị Inputted Remarks</value>
     </labels>
     <labels>
         <fullName>FEC_Batch_Case_Handling_Import_Err_Remark_Too_Long</fullName>

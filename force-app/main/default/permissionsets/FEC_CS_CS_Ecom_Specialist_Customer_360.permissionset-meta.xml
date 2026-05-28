@@ -682,16 +682,6 @@
     </fieldPermissions>
     <fieldPermissions>
         <editable>false</editable>
-        <field>FEC_Customer_History__c.FEC_Agent_Code__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>false</editable>
-        <field>FEC_Customer_History__c.FEC_Agent_Name__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>false</editable>
         <field>FEC_Customer_History__c.FEC_Agreement_Date__c</field>
         <readable>true</readable>
     </fieldPermissions>
@@ -782,26 +772,6 @@
     </fieldPermissions>
     <fieldPermissions>
         <editable>false</editable>
-        <field>FEC_Customer_History__c.FEC_Buyer_DOB__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>false</editable>
-        <field>FEC_Customer_History__c.FEC_Buyer_Gender__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>false</editable>
-        <field>FEC_Customer_History__c.FEC_Buyer_NID__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>false</editable>
-        <field>FEC_Customer_History__c.FEC_Buyer_Name__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>false</editable>
         <field>FEC_Customer_History__c.FEC_CC_Code__c</field>
         <readable>true</readable>
     </fieldPermissions>
@@ -813,11 +783,6 @@
     <fieldPermissions>
         <editable>false</editable>
         <field>FEC_Customer_History__c.FEC_CIF_Number__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>false</editable>
-        <field>FEC_Customer_History__c.FEC_Cancel_Date__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
@@ -988,11 +953,6 @@
     <fieldPermissions>
         <editable>false</editable>
         <field>FEC_Customer_History__c.FEC_E_sign_Status__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>false</editable>
-        <field>FEC_Customer_History__c.FEC_Effective_Date__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
@@ -1242,11 +1202,6 @@
     </fieldPermissions>
     <fieldPermissions>
         <editable>false</editable>
-        <field>FEC_Customer_History__c.FEC_Payment_ID__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>false</editable>
         <field>FEC_Customer_History__c.FEC_Place_of_Issue__c</field>
         <readable>true</readable>
     </fieldPermissions>
@@ -1258,16 +1213,6 @@
     <fieldPermissions>
         <editable>false</editable>
         <field>FEC_Customer_History__c.FEC_Plastic_ID__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>false</editable>
-        <field>FEC_Customer_History__c.FEC_Policy_Number__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>false</editable>
-        <field>FEC_Customer_History__c.FEC_Premium_Fee__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
@@ -1327,11 +1272,6 @@
     </fieldPermissions>
     <fieldPermissions>
         <editable>false</editable>
-        <field>FEC_Customer_History__c.FEC_Sale_Channel__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>false</editable>
         <field>FEC_Customer_History__c.FEC_Scheme_Desc__c</field>
         <readable>true</readable>
     </fieldPermissions>
@@ -1363,16 +1303,6 @@
     <fieldPermissions>
         <editable>false</editable>
         <field>FEC_Customer_History__c.FEC_Statement_Notification_Type__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>false</editable>
-        <field>FEC_Customer_History__c.FEC_Status__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>false</editable>
-        <field>FEC_Customer_History__c.FEC_Sub_Channel__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
@@ -1463,11 +1393,6 @@
     <fieldPermissions>
         <editable>false</editable>
         <field>FEC_Customer_History__c.FEC_Total_Plan_Payment_Amount__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>false</editable>
-        <field>FEC_Customer_History__c.FEC_User_ID__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
