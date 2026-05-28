@@ -485,6 +485,7 @@
         <members>FEC_BCH_Import_Rows_Invalid</members>
         <members>FEC_BCH_Import_Submitted</members>
         <members>FEC_BCH_NoDataFound</members>
+        <members>FEC_BCH_NoDataExport</members>
         <members>FEC_BCH_PropertyPlaceholder</members>
         <members>FEC_Points_Redeem_Fail_After_Max</members>
         <members>FEC_Points_Redeem_Fail_Retry</members>
