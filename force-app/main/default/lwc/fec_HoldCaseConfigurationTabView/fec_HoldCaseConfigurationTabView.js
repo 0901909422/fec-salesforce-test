@@ -657,22 +657,23 @@ export default class Fec_HoldCaseConfigurationTabView extends NavigationMixin(Li
     }
 
     handleNfuRowSelect(event) {
-        let selectedIds = event.detail.selectedRecordIds || [];
-        selectedIds = Array.from(selectedIds);
+        const selectedIds = Array.from(event.detail.selectedRecordIds || []).map(String);
+        this.nfuModalSelectedIds = selectedIds;
 
-        if (selectedIds.length === 0) {
+        if (!selectedIds.length) {
             this.selectedNfuRow = null;
+            this.nfuModalError = STR_EMPTY;
             return;
         }
 
-        if (this.isAuto && selectedIds.length > 1) {
+        if (selectedIds.length > 1) {
             this.nfuModalError = this.customLabel.nfuModalError;
-            this.selectedNfuRow = null;
+            this.selectedNfuRow = null; 
             return;
         }
 
-        const selectedId = String(selectedIds[0]);
-        const selectedRow = this.nfuOptions.find(r => String(r.Id) === selectedId);
+        this.nfuModalError = STR_EMPTY;
+        const selectedRow = this.nfuOptions.find(r => String(r.Id) === selectedIds[0]);
         this.selectedNfuRow = selectedRow || null;
     }
 
@@ -685,6 +686,11 @@ export default class Fec_HoldCaseConfigurationTabView extends NavigationMixin(Li
     }
 
     handleSaveNfu() {
+        if (this.nfuModalSelectedIds.length > 1) { 
+            this.nfuModalError = this.customLabel.nfuModalError;
+            return;
+        }
+
         if (!this.selectedNfuRow) {
             this.nfuModalError = this.customLabel.nfuModalSaveError;
             return;
@@ -695,7 +701,6 @@ export default class Fec_HoldCaseConfigurationTabView extends NavigationMixin(Li
         this.setLookupError('nfuCode', false);
         this.isShowNfuModal = false;
         this.nfuModalError = STR_EMPTY;
-        this.selectedNfuRow = null;
     }
 
     handleNfuRowSelectManual(event) {
