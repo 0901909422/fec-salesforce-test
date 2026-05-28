@@ -3,6 +3,30 @@
   color: #ff0000;
 }
 
+.fec-il10-delivery-form .fec-table-wrap {
+  margin-top: 0.75rem;
+  border: 1px solid var(--lwc-colorBorder, #dddbda);
+  border-radius: 0.25rem;
+  padding: 0.75rem;
+}
+
+.fec-il10-delivery-form .fec-address-table-meta {
+  color: var(--lwc-colorTextWeak, #706e6b);
+}
+
+.fec-il10-delivery-form .fec-sortable-th {
+  cursor: pointer;
+}
+
+.fec-il10-delivery-form .fec-th-sort {
+  display: inline-flex;
+  align-items: center;
+}
+
+.fec-il10-delivery-form .fec-col-select {
+  width: 2.5rem;
+}
+
 .fec-il10-delivery-form .fec-delivery-field-slot {
   max-width: 24rem;
 }
