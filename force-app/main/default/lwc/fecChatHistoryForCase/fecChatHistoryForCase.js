@@ -22,6 +22,7 @@ export default class ChatHistory extends LightningElement {
     wiredMessagesResult;
     @wire(MessageContext) messageContext;
     subscription = null;
+    activeSections = ['chatHistory'];
 
     isChatAutomation = false;
     manualMessage = '';

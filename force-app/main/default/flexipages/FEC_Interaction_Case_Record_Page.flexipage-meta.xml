@@ -1139,6 +1139,25 @@
         </itemInstances>
         <itemInstances>
             <componentInstance>
+                <componentName>fecChatHistoryForCase</componentName>
+                <identifier>c_fecChatHistoryForCase2</identifier>
+                <visibilityRule>
+                    <booleanFilter>1 AND 2</booleanFilter>
+                    <criteria>
+                        <leftValue>{!Record.FEC_Channel__c}</leftValue>
+                        <operator>EQUAL</operator>
+                        <rightValue>Chat</rightValue>
+                    </criteria>
+                    <criteria>
+                        <leftValue>{!Record.FEC_Interaction_View_Mode__c}</leftValue>
+                        <operator>EQUAL</operator>
+                        <rightValue>review</rightValue>
+                    </criteria>
+                </visibilityRule>
+            </componentInstance>
+        </itemInstances>
+        <itemInstances>
+            <componentInstance>
                 <componentName>fecInteractionChatConversations</componentName>
                 <identifier>c_fecInteractionChatConversations</identifier>
                 <visibilityRule>
@@ -1488,10 +1507,16 @@
                 <componentName>fecChatHistoryForCase</componentName>
                 <identifier>c_fecChatHistoryForCase</identifier>
                 <visibilityRule>
+                    <booleanFilter>1 AND 2</booleanFilter>
                     <criteria>
                         <leftValue>{!Record.FEC_Channel__c}</leftValue>
                         <operator>EQUAL</operator>
                         <rightValue>Chat</rightValue>
+                    </criteria>
+                    <criteria>
+                        <leftValue>{!Record.FEC_Interaction_View_Mode__c}</leftValue>
+                        <operator>NE</operator>
+                        <rightValue>review</rightValue>
                     </criteria>
                 </visibilityRule>
             </componentInstance>
