@@ -326,7 +326,7 @@ export default class Fec_holdCaseManual extends LightningElement {
                     }
                     await this._notifyCaseRefresh('ERROR');
                 } else {
-                    this.responseMessage = response?.message || this.customLabel.errorMessageMaxretris;
+                    this.responseMessage = FEC_MSG_ERROR;
                 }
             }
 
@@ -343,7 +343,7 @@ export default class Fec_holdCaseManual extends LightningElement {
                 }
                 await this._notifyCaseRefresh('ERROR');
             } else {
-                this.responseMessage = msg;
+                this.responseMessage = FEC_MSG_ERROR;
             }
         } finally {
             this.isLoading = false;

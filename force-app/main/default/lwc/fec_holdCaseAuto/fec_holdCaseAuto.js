@@ -281,6 +281,10 @@ export default class Fec_holdCaseAuto extends LightningElement {
   }
 
   _errorResponseMessage() {
+    // Stage 1 submit auto-hold lỗi: chỉ hiển thị thông báo fail cuối, không kèm retry.
+    if (this.isStage1 === true || this.isStage1 === "true") {
+      return this.customLabel.messageErrorMaxFail;
+    }
     if (this.isThirdClickFailed) {
       return this.customLabel.messageErrorMaxFail;
     }
