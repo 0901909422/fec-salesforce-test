@@ -176,20 +176,25 @@ public with sharing class FEC_IntegrationCreateFraudController{
             new FEC_IntegrationFraudCaseUtil.CategoryMappingResponse();
         FEC_FraudConstantCommon.IntegrationMappingField integrationField = new FEC_FraudConstantCommon.IntegrationMappingField();
     
-        List<Map<String, Object>> categoryMock =
-            FEC_FraudCaseMockData.getCategoryMockupData() != null
-            ? FEC_FraudCaseMockData.getCategoryMockupData()
-            : new List<Map<String, Object>>();
+        List<Map<String, Object>> categoryMock = new List<Map<String, Object>>();
+        // List<Map<String, Object>> categoryMock =
+        //     FEC_FraudCaseMockData.getCategoryMockupData() != null
+        //     ? FEC_FraudCaseMockData.getCategoryMockupData()
+        //     : new List<Map<String, Object>>();
+
+        List<Map<String, Object>> subCategoryMock = new List<Map<String, Object>>();
     
-        List<Map<String, Object>> subCategoryMock =
-            FEC_FraudCaseMockData.getSubCategoryMockupData() != null
-            ? FEC_FraudCaseMockData.getSubCategoryMockupData()
-            : new List<Map<String, Object>>();
+        // List<Map<String, Object>> subCategoryMock =
+        //     FEC_FraudCaseMockData.getSubCategoryMockupData() != null
+        //     ? FEC_FraudCaseMockData.getSubCategoryMockupData()
+        //     : new List<Map<String, Object>>();
+
+        List<Map<String, Object>> subCodeMock = new List<Map<String, Object>>();
     
-        List<Map<String, Object>> subCodeMock =
-            FEC_FraudCaseMockData.getCategorySubCodeMockupData() != null
-            ? FEC_FraudCaseMockData.getCategorySubCodeMockupData()
-            : new List<Map<String, Object>>();
+        // List<Map<String, Object>> subCodeMock =
+        //     FEC_FraudCaseMockData.getCategorySubCodeMockupData() != null
+        //     ? FEC_FraudCaseMockData.getCategorySubCodeMockupData()
+        //     : new List<Map<String, Object>>();
     
         for (Map<String, Object> row : categoryMock) {
             log('categoryMock: '+ row);
