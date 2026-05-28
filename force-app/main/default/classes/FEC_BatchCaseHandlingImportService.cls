@@ -291,19 +291,31 @@ public without sharing class FEC_BatchCaseHandlingImportService {
             return;
         }
         String failureReason = String.isBlank(reason) ? System.Label.FEC_BCH_ImportFailed : reason;
-        putBatchStatusAndResult(fieldMap, batchRow, 'Failure');
         Integer totalCount = rowResults == null ? 0 : rowResults.size();
         if (totalCount > 0) {
-            putBatchCountFields(fieldMap, batchRow, totalCount, 0, totalCount);
+            // 28/05/2026 16:35 linhdev - nếu còn ít nhất 1 row success thì batch status phải là Processed để đồng bộ đúng với file Result
+            Integer failedCount = countFailedImportRows(rowResults);
+            Integer successCount = totalCount - failedCount < 0 ? 0 : totalCount - failedCount;
+            String finalStatus = failedCount < totalCount ? 'Processed' : 'Failure';
+            String finalFailureReason = finalStatus == 'Failure' ? failureReason : FEC_ConstantCommon.STR_EMPTY;
+            putBatchStatusAndResult(fieldMap, batchRow, finalStatus);
+            putBatchCountFields(fieldMap, batchRow, totalCount, successCount, failedCount);
+            FEC_BatchCaseHandlingSObjectUtil.putIfFieldExists(
+                fieldMap,
+                batchRow,
+                new List<String>{ 'FEC_Failure_Reason__c' },
+                finalFailureReason
+            );
         } else {
+            putBatchStatusAndResult(fieldMap, batchRow, 'Failure');
             applyExistingBatchFailCounts(fieldMap, batchRow, batchRecordId);
+            FEC_BatchCaseHandlingSObjectUtil.putIfFieldExists(
+                fieldMap,
+                batchRow,
+                new List<String>{ 'FEC_Failure_Reason__c' },
+                failureReason
+            );
         }
-        FEC_BatchCaseHandlingSObjectUtil.putIfFieldExists(
-            fieldMap,
-            batchRow,
-            new List<String>{ 'FEC_Failure_Reason__c' },
-            failureReason
-        );
         update batchRow;
         persistBatchResultArtifact(batchRecordId, rowResults, failureReason);
     }
@@ -576,7 +588,11 @@ public without sharing class FEC_BatchCaseHandlingImportService {
                 cells.add(FEC_ConstantCommon.STR_EMPTY);
             }
             if (cells.size() > headerSize) {
-                cells = cells.subList(0, headerSize);
+                List<String> normalizedCells = new List<String>();
+                for (Integer idx = 0; idx < headerSize; idx++) {
+                    normalizedCells.add(cells[idx]);
+                }
+                cells = normalizedCells;
             }
             cells.add(rowValue(resolveImportResultStatusLabel(row.status)));
             cells.add(rowValue(row.errors));
