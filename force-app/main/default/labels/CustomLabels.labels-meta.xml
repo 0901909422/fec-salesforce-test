@@ -18321,4 +18321,12 @@
         <shortDescription>Hold Case Edit Success</shortDescription>
         <value>Hold Case Config was saved</value>
     </labels>
+    <labels>
+        <fullName>FEC_ERROR_API_CMS_CARD_TO_CARD</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Error Call API CMS CARD TO CARD</shortDescription>
+        <value>Call API M_CMS_CARD_TO_CARD_INQ_EMEA thất bại</value>
+    </labels>
 </CustomLabels>

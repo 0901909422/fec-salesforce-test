@@ -186,6 +186,8 @@ public without sharing class FEC_CardReplacementAddressController {
             blockCode = cardStatus?.currentBlockCode;
             if (String.isBlank(blockCode)) {
                 // getCardStatus exception
+                result.isErrorAPI = true;
+                result.strMsg = System.Label.FEC_ERROR_API_CMS_CARD_TO_CARD;
                 return result;
             }
 
@@ -299,6 +301,8 @@ public without sharing class FEC_CardReplacementAddressController {
         public Boolean isShowAction { get; set; }
         @AuraEnabled
         public String strMsg { get; set; }
+         @AuraEnabled
+        public Boolean isErrorAPI { get; set; }
     }
 
     public class UpdateResult {

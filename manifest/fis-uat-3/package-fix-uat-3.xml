@@ -535,6 +535,7 @@
 		<members>FEC_Batch_Case_Handling_Import_Err_Missing_Routing_Action</members>
 		<members>FEC_Batch_Case_Handling_Import_Err_Missing_Remark</members>
 		<members>FEC_NFU_Modal_Save_Error</members>
+		<members>FEC_ERROR_API_CMS_CARD_TO_CARD</members>
 		<name>CustomLabel</name>
 	</types>
     <types>
