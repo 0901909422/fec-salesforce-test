@@ -897,6 +897,7 @@
         <members>fec_TransactionsAccountTabView</members>
         <members>fec_UpdateAddress</members>
         <members>maskedToggleDatatable</members>
+        <members>fec_InteractionInfoF2F_Letter</members>
 		<name>LightningComponentBundle</name>
     </types>
     <types>
