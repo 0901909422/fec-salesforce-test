@@ -287,6 +287,7 @@
         <members>fec_Rl0502RdPaymentRouting</members>
 		<members>fecRoutingAssignmentEditForm</members>
 		<members>fec_DownloadReports</members>
+		<members>fec_GenesysSoftphone</members>
 		<members>fec_BatchDataCreation</members>
 		<members>fecMrcReturnStageChangeRouting</members>
 		<members>fec_BatchCaseCreation</members>

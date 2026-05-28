@@ -865,6 +865,7 @@
         <members>fec_holdCaseAuto</members>
         <members>fec_DoNotBotherResultView</members>
         <members>fec_DownloadReport</members>
+        <members>fec_GenesysSoftphone</members>
         <members>fec_AccountOrContractPicklistCustomerCase</members>
         <members>fec_CardClosureRefundForm</members>
         <members>fec_CardReplacementAddress</members>
