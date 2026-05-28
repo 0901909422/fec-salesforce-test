@@ -1,6 +1,5 @@
 <template>
-  <lightning-accordion class="interaction-email-infor" allow-multiple-sections-open
-    active-section-name={activeSections}>
+  <lightning-accordion class="interaction-email-infor" allow-multiple-sections-open active-section-name={activeSections}>
     <lightning-accordion-section name="interactionEmailInfo" label={labels.interactionEmailInfo}>
       <template if:true={isInteractionCase}>
         <div class="slds-p-horizontal_medium slds-p-vertical_small">
@@ -14,27 +13,21 @@
                   </template>
                   <template if:false={isEmailReadOnly}>
                     <template if:true={isEditingEmail}>
-                      <lightning-input type="email" value={emailDraft} onchange={handleEmailChange}
-                        variant="label-hidden" placeholder={labels.inputPlaceholder}
-                        message-when-value-missing={labels.emailRequiredMsg}></lightning-input>
+                      <lightning-input type="email" value={emailDraft} onchange={handleEmailChange} variant="label-hidden" placeholder={labels.inputPlaceholder} message-when-value-missing={labels.emailRequiredMsg}></lightning-input>
                       <template if:true={emailError}>
                         <span class="error-text">{emailError}</span>
                       </template>
                     </template>
-                    <template if:false={isEditingEmail}>
-                    </template>
+                    <template if:false={isEditingEmail}></template>
                   </template>
                 </span>
                 <span>
                   <template if:true={showEmailEditIcon}>
-                    <lightning-icon icon-name="utility:edit" size="x-small" class="edit-icon"
-                      onclick={handleEditEmail}></lightning-icon>
+                    <lightning-icon icon-name="utility:edit" size="x-small" class="edit-icon" onclick={handleEditEmail}></lightning-icon>
                   </template>
                   <template if:true={isEditingEmail}>
-                    <lightning-icon icon-name="utility:check" size="x-small" class="edit-icon save-icon"
-                      onclick={handleSaveEmail}></lightning-icon>
-                    <lightning-icon icon-name="utility:close" size="x-small" class="edit-icon"
-                      onclick={handleCancelEditEmail}></lightning-icon>
+                    <lightning-icon icon-name="utility:check" size="x-small" class="edit-icon save-icon" onclick={handleSaveEmail}></lightning-icon>
+                    <lightning-icon icon-name="utility:close" size="x-small" class="edit-icon" onclick={handleCancelEditEmail}></lightning-icon>
                   </template>
                 </span>
               </div>
@@ -46,6 +39,11 @@
               <div class="row">
                 <span class="label">{labels.interactionCreatedBy}</span>
                 <span class="value">{createdBy}</span>
+                <span></span>
+              </div>
+              <div class="row">
+                <span class="label">{labels.outcomeCode}</span>
+                <span class="value">{outcomeCode}</span>
                 <span></span>
               </div>
             </div>
@@ -78,6 +76,11 @@
                 </span>
                 <span></span>
               </div>
+              <div class="row">
+                <span class="label">{labels.interactionRemark}</span>
+                <span class="value">{interactionRemark}</span>
+                <span></span>
+              </div>
             </div>
           </div>
         </div>
@@ -95,8 +98,7 @@
                   </template>
                   <template if:false={isEmailReadOnly}>
                     <template if:true={isEditingEmail}>
-                      <lightning-input type="email" value={emailDraft} onchange={handleEmailChange}
-                        variant="label-hidden" placeholder={labels.inputPlaceholder}></lightning-input>
+                      <lightning-input type="email" value={emailDraft} onchange={handleEmailChange} variant="label-hidden" placeholder={labels.inputPlaceholder}></lightning-input>
                       <template if:true={emailError}>
                         <span class="error-text">{emailError}</span>
                       </template>
@@ -108,14 +110,11 @@
                 </span>
                 <span>
                   <template if:true={showEmailEditIcon}>
-                    <lightning-icon icon-name="utility:edit" size="x-small" class="edit-icon"
-                      onclick={handleEditEmail}></lightning-icon>
+                    <lightning-icon icon-name="utility:edit" size="x-small" class="edit-icon" onclick={handleEditEmail}></lightning-icon>
                   </template>
                   <template if:true={isEditingEmail}>
-                    <lightning-icon icon-name="utility:check" size="x-small" class="edit-icon save-icon"
-                      onclick={handleSaveEmail}></lightning-icon>
-                    <lightning-icon icon-name="utility:close" size="x-small" class="edit-icon"
-                      onclick={handleCancelEditEmail}></lightning-icon>
+                    <lightning-icon icon-name="utility:check" size="x-small" class="edit-icon save-icon" onclick={handleSaveEmail}></lightning-icon>
+                    <lightning-icon icon-name="utility:close" size="x-small" class="edit-icon" onclick={handleCancelEditEmail}></lightning-icon>
                   </template>
                 </span>
               </div>
@@ -127,6 +126,11 @@
               <div class="row">
                 <span class="label">{labels.interactionCreatedBy}</span>
                 <span class="value">{createdBy}</span>
+                <span></span>
+              </div>
+              <div class="row">
+                <span class="label">{labels.outcomeCode}</span>
+                <span class="value">{outcomeCode}</span>
                 <span></span>
               </div>
             </div>
@@ -157,6 +161,11 @@
                     </a>
                   </template>
                 </span>
+                <span></span>
+              </div>
+              <div class="row">
+                <span class="label">{labels.interactionRemark}</span>
+                <span class="value">{interactionRemark}</span>
                 <span></span>
               </div>
             </div>

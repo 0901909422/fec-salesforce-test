@@ -320,12 +320,15 @@ public without sharing class FEC_CreateInteractionGenesys {
                 String bodyContent = String.isNotBlank(request.structuredText)
                     ? request.structuredText
                     : (String.isNotBlank(request.subject) ? request.subject : ('Email from ' + request.fromEmail));
+                String plainBodyContent = bodyContent != null
+                    ? bodyContent.replaceAll('<[^>]+>', '')
+                    : null;
                 EmailMessage em = new EmailMessage(
                     ParentId     = created.Id,
                 FromAddress  = request.fromEmail,
                 ToAddress    = request.sendTo,
                 Subject      = emailSubject,
-                TextBody     = bodyContent,
+                TextBody     = plainBodyContent,
                 HtmlBody     = bodyContent,
                 Incoming     = true,
                 Status       = FEC_ConstantCommon.SUCCESS_STATUS_CODE // New

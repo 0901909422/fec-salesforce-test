@@ -18,6 +18,8 @@ import FEC_Chat_Customer_Username_Label from '@salesforce/label/c.FEC_Chat_Custo
 import FEC_Chat_Interaction_Phone_Label from '@salesforce/label/c.FEC_Chat_Interaction_Phone_Label';
 import FEC_Chat_KYC_Status_Label from '@salesforce/label/c.FEC_Chat_KYC_Status_Label';
 import FEC_Chat_External_Interaction_ID_Label from '@salesforce/label/c.FEC_Chat_External_Interaction_ID_Label';
+import FEC_Outcome_Code_Label from '@salesforce/label/c.FEC_Outcome_Code_Label';
+import FEC_Interaction_Remark_Label from '@salesforce/label/c.FEC_Interaction_Remark_Label';
 import FEC_Chat_Username_Placeholder from '@salesforce/label/c.FEC_Chat_Username_Placeholder';
 import FEC_Chat_Phone_Placeholder from '@salesforce/label/c.FEC_Chat_Phone_Placeholder';
 import FEC_Chat_Username_Required from '@salesforce/label/c.FEC_Chat_Username_Required';
@@ -40,6 +42,8 @@ export default class FecInteractionChatInfo extends LightningElement {
         interactionPhone: FEC_Chat_Interaction_Phone_Label,
         kycStatus: FEC_Chat_KYC_Status_Label,
         externalInteractionId: FEC_Chat_External_Interaction_ID_Label,
+        outcomeCode: FEC_Outcome_Code_Label,
+        interactionRemark: FEC_Interaction_Remark_Label,
         usernamePlaceholder: FEC_Chat_Username_Placeholder,
         phonePlaceholder: FEC_Chat_Phone_Placeholder,
         usernameRequired: FEC_Chat_Username_Required,
@@ -120,6 +124,8 @@ export default class FecInteractionChatInfo extends LightningElement {
     get createdBy() { return this.record?.FEC_Created_by__c || STR_EMPTY; }
     get kycStatus() { return this.record?.FEC_KYC_Status__c || STR_EMPTY; }
     get externalInteractionId() { return this.record?.FEC_External_Interaction_ID__c || STR_EMPTY; }
+    get outcomeCode() { return this.record?.FEC_Outcome_Code__c || STR_EMPTY; }
+    get interactionRemark() { return this.record?.FEC_Interaction_Remarks__c || STR_EMPTY; }
 
     get isUsernameReadOnly() { return !!this.customerUsername && !this.isEditingUsername; }
     get showUsernameEditIcon() { return !this.isReview && !this.isEditingUsername; }
