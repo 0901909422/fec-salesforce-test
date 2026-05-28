@@ -197,37 +197,38 @@ public without sharing class FEC_TransactionsController {
             return result;
         }
 
+        Integer idx = 0;
         for (FEC_VMXAUTHDETAILINQ.AuthTableRow auth : res.VMXMsgOut.Auths) {
+            idx++;
+            String txCode = !String.isBlank(auth.AUTHORIZATION_CODE)
+                ? auth.AUTHORIZATION_CODE
+                : (!String.isBlank(auth.AUTH_CD)
+                    ? auth.AUTH_CD
+                    : 'PENDING_' + String.valueOf(idx) + '_' + String.valueOf(Datetime.now().getTime()));
 
             FEC_Transaction__c tx;
-
             List<FEC_Transaction__c> existed = [
                 SELECT Id
                 FROM FEC_Transaction__c
                 WHERE FEC_Customer_History__c = :historyId
-                  AND FEC_Transaction_Code__c = :auth.AUTHORIZATION_CODE
+                  AND FEC_Transaction_Code__c = :txCode
                 LIMIT 1
             ];
+            tx = !existed.isEmpty()
+                ? existed[0]
+                : new FEC_Transaction__c(FEC_Customer_History__c = historyId);
 
-            if (!existed.isEmpty()) {
-                tx = existed[0];
-            } else {
-                tx = new FEC_Transaction__c(
-                    FEC_Customer_History__c = historyId
-                );
-            }
-
-            tx.FEC_Transaction_Code__c = auth.AUTHORIZATION_CODE;
+            tx.FEC_Transaction_Code__c = txCode;
             upsert tx;
 
             TransactionDTO dto = new TransactionDTO();
             dto.Id                   = tx.Id;
-            dto.effectiveDate        = FEC_CommonUltils.toDate(auth.EFF_DATE);
-            //dto.transactionAmount    = auth.AUTH_AMOUNT;
+            dto.effectiveDate        = FEC_CommonUltils.toDateStr(auth.EFF_DATE);
+            dto.transactionAmount    = FEC_CommonUltils.parseAmountSafe(auth.AUTH_AMOUNT);
             dto.merchantDescription  = auth.Description;
             dto.transactionPlan      = auth.CREDIT_PLAN;
-            dto.transactionCode      = auth.AUTHORIZATION_CODE;
-            dto.authorizationCode    = auth.AUTHORIZATION_CODE;
+            dto.transactionCode      = txCode;
+            dto.authorizationCode    = txCode;
             dto.approvalCode         = auth.AUTH_CD;
             dto.authorizationResponse = auth.FINAL_ACTN;
             dto.declineDescription   = auth.ACTN_RSN_DESC;
@@ -239,6 +240,7 @@ public without sharing class FEC_TransactionsController {
         }
 
     } catch (Exception e) {
+        System.debug('### PENDING TXN ERROR: ' + e.getMessage());
         return new List<TransactionDTO>();
     }
 
