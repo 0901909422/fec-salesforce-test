@@ -34,7 +34,7 @@ import FEC_LBL_ContractClosure_Ward from '@salesforce/label/c.FEC_LBL_ContractCl
 import FEC_Placeholder_ContractClosure_Select_Delivery from '@salesforce/label/c.FEC_Placeholder_ContractClosure_Select_Delivery';
 import FEC_Placeholder_ContractClosure_Select_Admin from '@salesforce/label/c.FEC_Placeholder_ContractClosure_Select_Admin';
 
-import getInitData from '@salesforce/apex/FEC_ContractClosureController.getInitData';
+import getInitData from '@salesforce/apex/FEC_Il10DeliveryController.getInitData';
 import validateForComplete from '@salesforce/apex/FEC_ContractClosureController.validateForComplete';
 import saveForm from '@salesforce/apex/FEC_ContractClosureController.saveForm';
 import saveFormDraft from '@salesforce/apex/FEC_ContractClosureController.saveFormDraft';
@@ -105,6 +105,7 @@ export default class Fec_Il10DeliveryForm extends LightningElement {
     lastTempAddressParts;
     tempAddressModalIsEdit = false;
     pendingSelectTemporaryAddress = false;
+    caseTemporaryAddressRow;
     _modalListsLoadedOnce = false;
 
     wiredInitResult;
@@ -282,17 +283,19 @@ export default class Fec_Il10DeliveryForm extends LightningElement {
         this.loading = false;
         const { data, error } = result;
         if (data) {
-            if (!data.success) {
-                this.loadError = data.errorMessage || CC_MSG_LOAD_FAILED;
+            const init = data.initData;
+            if (!init || !init.success) {
+                this.loadError = (init && init.errorMessage) || CC_MSG_LOAD_FAILED;
                 return;
             }
             this.loadError = undefined;
-            this.demographicCustomerName = data.demographicCustomerName || STR_EMPTY;
-            this.demographicPrimaryPhone = data.demographicPrimaryPhone || STR_EMPTY;
-            this.deliveryOptions = data.deliveryOptions || [];
-            this.savedDeliveryOption = data.savedDeliveryOption || STR_EMPTY;
-            this.addresses = data.addresses || [];
-            const serverSelectedAddressId = data.savedSelectedAddressId || STR_EMPTY;
+            this.demographicCustomerName = init.demographicCustomerName || STR_EMPTY;
+            this.demographicPrimaryPhone = init.demographicPrimaryPhone || STR_EMPTY;
+            this.deliveryOptions = init.deliveryOptions || [];
+            this.savedDeliveryOption = init.savedDeliveryOption || STR_EMPTY;
+            this.addresses = init.addresses || [];
+            this.caseTemporaryAddressRow = data.caseTemporaryAddressRow || null;
+            const serverSelectedAddressId = init.savedSelectedAddressId || STR_EMPTY;
             if (serverSelectedAddressId) {
                 this.selectedAddressRowId = serverSelectedAddressId;
                 this.addrRenderKey++;
@@ -300,9 +303,9 @@ export default class Fec_Il10DeliveryForm extends LightningElement {
             this.resolveDeliveryMeta();
             this.applySavedDelivery();
             const serverRecipientName =
-                data.savedRecipientName || this.demographicCustomerName || STR_EMPTY;
+                init.savedRecipientName || this.demographicCustomerName || STR_EMPTY;
             const serverRecipientPhone =
-                data.savedRecipientPhone || this.demographicPrimaryPhone || STR_EMPTY;
+                init.savedRecipientPhone || this.demographicPrimaryPhone || STR_EMPTY;
             this.syncRecipientNameFromServer(serverRecipientName);
             this.syncRecipientPhoneFromServer(serverRecipientPhone);
             this.syncTemporaryAddressFromAddressRows();
@@ -390,7 +393,12 @@ export default class Fec_Il10DeliveryForm extends LightningElement {
 
     syncTemporaryAddressFromAddressRows() {
         const rows = this.addresses || [];
-        const hasSelectedRow = !!rows.find((r) => r && r.id === this.selectedAddressRowId);
+        const tempRow =
+            this.caseTemporaryAddressRow ||
+            rows.find((a) => /temporary/i.test((a && a.addressType) || STR_EMPTY));
+        const hasSelectedRow =
+            !!rows.find((r) => r && r.id === this.selectedAddressRowId) ||
+            (tempRow && tempRow.id === this.selectedAddressRowId);
         if (
             this.selectedAddressRowId &&
             !hasSelectedRow &&
@@ -399,7 +407,6 @@ export default class Fec_Il10DeliveryForm extends LightningElement {
             this.selectedAddressRowId = undefined;
             this.addrRenderKey++;
         }
-        const tempRow = rows.find((a) => /temporary/i.test(a.addressType || STR_EMPTY));
         if (!tempRow) {
             this.tempAddressRecordId = undefined;
             this.temporaryAddressDisplay = STR_EMPTY;
