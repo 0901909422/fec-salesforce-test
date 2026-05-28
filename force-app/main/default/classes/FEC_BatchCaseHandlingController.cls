@@ -962,6 +962,21 @@ public without sharing class FEC_BatchCaseHandlingController {
                     requestJson,
                     FEC_BCH_TemplateExportService.ExportRequest.class
                 );
+            if (req != null && req.contentVersionId != null) {
+                // 27/05/2026 20:15 linhdev - chặn export template không khớp role/user group (vd. Address Update chỉ SP)
+                String roleTemplateError = FEC_BatchCaseHandlingTemplateHelper.validateExportTemplateContentVersion(
+                    req.contentVersionId,
+                    resolveCurrentUserGroup()
+                );
+                if (String.isNotBlank(roleTemplateError)) {
+                    FEC_BCH_TemplateExportService.ExportWorkbookResponse denied =
+                        new FEC_BCH_TemplateExportService.ExportWorkbookResponse();
+                    denied.success = false;
+                    denied.errorCode = 'ROLE_TEMPLATE_MISMATCH';
+                    denied.errorMessage = roleTemplateError;
+                    return denied;
+                }
+            }
             if (
                 req != null &&
                 req.contentVersionId != null &&
@@ -1048,6 +1063,17 @@ public without sharing class FEC_BatchCaseHandlingController {
                 upsertFailedBatchHandling(fileName, resolvedTemplateName, out.message);
                 return out;
             }
+            // 27/05/2026 18:45 linhdev - chặn import template không khớp role/user group (vd. AddressUpdateTemp1_CSSupport khi user khác CS SP)
+            String roleTemplateError = FEC_BatchCaseHandlingTemplateHelper.validateUploadedTemplateForUserGroup(
+                fileName,
+                businessProcessCode,
+                resolveCurrentUserGroup()
+            );
+            if (String.isNotBlank(roleTemplateError)) {
+                out.message = roleTemplateError;
+                upsertFailedBatchHandling(fileName, resolvedTemplateName, roleTemplateError);
+                return out;
+            }
             FEC_BatchCaseHandlingSObjectUtil.putIfFieldExists(
                 fieldMap,
                 batchRow,
@@ -1067,6 +1093,34 @@ public without sharing class FEC_BatchCaseHandlingController {
             Boolean cofOrGsr = FEC_BatchCaseHandlingImportService.isCofOrGsrTemplate(resolvedTemplateName);
             List<FEC_BatchCaseHandlingImportRow> rowResults = FEC_BatchCaseHandlingImportService.validateCaseHandlingImportRows(inputRows, cofOrGsr);
             if (FEC_BatchCaseHandlingImportService.hasApplicableImportRows(rowResults)) {
+                // 27/05/2026 22:15 linhdev - Card Replacement 1 case: xử lý sync thay vì queueable để tránh Processing timeout 1 giờ
+                if (FEC_BatchCaseHandlingImportService.shouldProcessImportSynchronously(rowResults)) {
+                    FEC_BatchCaseHandlingImportService.processApplicableImportRowsSync(
+                        (Id) batchRow.get('Id'),
+                        rowResults,
+                        cofOrGsr
+                    );
+                    Integer failedCount = FEC_BatchCaseHandlingImportService.countFailedImportRows(rowResults);
+                    Integer totalCount = rowResults.size();
+                    String finalStatus;
+                    String failureReason = FEC_ConstantCommon.STR_EMPTY;
+                    if (totalCount == 0) {
+                        finalStatus = 'Failure';
+                        failureReason = System.Label.FEC_BCH_RequireFile;
+                    } else if (failedCount == totalCount) {
+                        finalStatus = 'Failure';
+                        failureReason = System.Label.FEC_BCH_Import_Rows_Invalid;
+                    } else {
+                        finalStatus = 'Processed';
+                    }
+                    out.success = true;
+                    out.message = System.Label.FEC_BCH_Import_Submitted;
+                    out.batchRecordId = (Id) batchRow.get('Id');
+                    out.contentDocumentId = insertedCv.ContentDocumentId;
+                    out.status = finalStatus;
+                    out.resultRowsJson = JSON.serialize(rowResults);
+                    return out;
+                }
                 System.enqueueJob(
                     new FEC_BatchCaseHandlingImportQueueable(
                         (Id) batchRow.get('Id'),

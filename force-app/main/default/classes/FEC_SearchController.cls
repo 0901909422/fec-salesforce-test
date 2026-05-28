@@ -210,7 +210,7 @@ public with sharing class FEC_SearchController {
             //     String.isNotBlank(searchPhoneFromCase) ? searchPhoneFromCase : phone;
             // rec.FEC_National_ID_Passport_ID__c =
             //     String.isNotBlank(searchNidFromCase) ? searchNidFromCase : buyerNID;
-            rec.FEC_Buyer_NID__c = resolvedSearchNationalId;
+            // rec.FEC_Buyer_NID__c = resolvedSearchNationalId;
             rec.FEC_Search_Result_National_ID__c = resolvedSearchNationalId;
 
             if (caseId == null && isListView == true) {

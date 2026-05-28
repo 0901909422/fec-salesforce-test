@@ -933,13 +933,16 @@ public without sharing class FEC_CaseBusinessService {
           );
         }
 
+        Map<String, String> assignmentFieldEditableGroups = FEC_CaseMasterDataHelper.collectAssignmentFieldEditableGroups(
+          masterDatalst
+        );
+        masterDatalst = FEC_CaseMasterDataHelper.deduplicateMasterDataRowsByFieldApiName(
+          masterDatalst
+        );
         masterDatalst = FEC_CaseMasterDataHelper.removeMasterDataRowsByHiddenAssignmentFieldApis(
           masterDatalst,
           hasCaseAssignment,
           currentUser.FEC_User_Group__c
-        );
-        Map<String, String> assignmentFieldEditableGroups = FEC_CaseMasterDataHelper.collectAssignmentFieldEditableGroups(
-          masterDatalst
         );
 
         for (SObject item : masterDatalst) {
@@ -1160,6 +1163,9 @@ public without sharing class FEC_CaseBusinessService {
                   Boolean forceGsrPropertyInfoReadonly =
                     isGsrStage3PropertyInfoReadonly &&
                     'Property Info'.equals(subSectionItem.name);
+                  Boolean forceUpdatedInfoReadonly =
+                    hasCaseAssignment &&
+                    FEC_ConstantCommon.UPDATED_INFO.equals(subSectionItem.name);
                   try {
                     fieldTemp = transform(
                       masterDataItem,
@@ -1167,7 +1173,8 @@ public without sharing class FEC_CaseBusinessService {
                       currentUser.FEC_User_Group__c,
                       isRevert,
                       isGsrStage1RevertMasterReadonly ||
-                        forceGsrPropertyInfoReadonly,
+                        forceGsrPropertyInfoReadonly ||
+                        forceUpdatedInfoReadonly,
                       hasCaseAssignment,
                       assignmentFieldEditableGroups
                     );
@@ -2289,6 +2296,13 @@ public without sharing class FEC_CaseBusinessService {
           // Kiểm tra creation stage trước khi mark submitted
           Boolean isCreationStage = !([SELECT FEC_Is_Submited__c FROM Case WHERE Id = :caseId LIMIT 1].FEC_Is_Submited__c == true);
           finalStatusBeforeSubmit = readCaseFinalStatusBeforeSubmit(caseId);
+          String mrcCustomerConfirmation = params != null
+            ? (String) params.get('mrcCustomerConfirmation')
+            : null;
+          String mrcHandlingOption = params != null
+            ? (String) params.get('mrcHandlingOption')
+            : null;
+          // RL05.02: hủy dup chỉ trong Queueable sau route — tránh SOQL 101 trên transaction Submit.
           markCaseSubmittedAndClearDrafts(caseId);
           //PhongBT: tạo FEC_Case_Flow_History__c khi submit case lần đầu.
           if (isCreationStage) {
@@ -2302,7 +2316,13 @@ public without sharing class FEC_CaseBusinessService {
             finalStatusBeforeSubmit,
             (String) params.get('teamUserGroup')
           );
-          FEC_MrcDuplicateCaseService.applyNotReceivedHandlingOptionOnSubmit(caseId);
+          System.enqueueJob(
+            new FEC_MrcDupCancelOnSubmitQueueJob(
+              caseId,
+              mrcCustomerConfirmation,
+              mrcHandlingOption
+            )
+          );
           return null;
         }
         // tungnm37 thêm: COF/GSR - không đổi owner, chỉ tạo Assignment + Case Remarks + Routing Action History
