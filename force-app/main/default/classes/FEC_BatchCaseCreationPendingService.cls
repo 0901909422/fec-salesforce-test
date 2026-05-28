@@ -6,6 +6,8 @@ public without sharing class FEC_BatchCaseCreationPendingService {
 
   public class ImportPayload {
     public String templateName;
+    /** User Id người upload file — dùng khi scheduled job tạo Case. */
+    public String importerUserId;
     public List<Object> rows;
     public List<String> sourceHeaders;
     public List<List<String>> sourceRows;
@@ -26,6 +28,24 @@ public without sharing class FEC_BatchCaseCreationPendingService {
     String sourceHeadersJson,
     String sourceRowsJson
   ) {
+    attachPendingImportPayload(
+      batchId,
+      templateName,
+      rowsJson,
+      sourceHeadersJson,
+      sourceRowsJson,
+      null
+    );
+  }
+
+  public static void attachPendingImportPayload(
+    Id batchId,
+    String templateName,
+    String rowsJson,
+    String sourceHeadersJson,
+    String sourceRowsJson,
+    Id importerUserId
+  ) {
     if (batchId == null || String.isBlank(rowsJson)) {
       return;
     }
@@ -33,6 +53,9 @@ public without sharing class FEC_BatchCaseCreationPendingService {
       'templateName' => templateName,
       'rows' => JSON.deserializeUntyped(rowsJson)
     };
+    if (importerUserId != null) {
+      payload.put('importerUserId', String.valueOf(importerUserId));
+    }
     if (String.isNotBlank(sourceHeadersJson)) {
       payload.put('sourceHeaders', JSON.deserializeUntyped(sourceHeadersJson));
     }
@@ -112,6 +135,8 @@ public without sharing class FEC_BatchCaseCreationPendingService {
     out.templateName = parsed.get('templateName') == null
       ? null
       : String.valueOf(parsed.get('templateName'));
+    Object importerObj = parsed.get('importerUserId');
+    out.importerUserId = importerObj == null ? null : String.valueOf(importerObj);
     Object rowsObj = parsed.get('rows');
     if (rowsObj instanceof List<Object>) {
       out.rows = (List<Object>) rowsObj;

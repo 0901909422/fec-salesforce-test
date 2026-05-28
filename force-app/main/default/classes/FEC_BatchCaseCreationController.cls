@@ -356,7 +356,8 @@ public without sharing class FEC_BatchCaseCreationController {
                 templateName,
                 rowsJson,
                 sourceHeadersJson,
-                sourceRowsJson
+                sourceRowsJson,
+                UserInfo.getUserId()
             );
 
             List<ParsedCaseRow> parsed = parseInputRows(inputRows);
@@ -440,7 +441,7 @@ public without sharing class FEC_BatchCaseCreationController {
             return;
         }
 
-        List<String> selectParts = new List<String>{ 'Id', 'Name', statusField };
+        List<String> selectParts = new List<String>{ 'Id', 'Name', 'CreatedById', statusField };
         FEC_BatchImportCommon.addIfNotBlank(selectParts, fileNameField);
         String queryText =
             'SELECT ' +
@@ -481,6 +482,7 @@ public without sharing class FEC_BatchCaseCreationController {
         FEC_BatchImportCommon.putIfFieldExists(batchFieldMap, batchRow, new List<String>{ 'FEC_Status__c' }, 'Processing');
         update batchRow;
 
+        Id importerUserId = resolveBatchImporterUserId(payload, batchRow);
         String templateName = payload.templateName;
         List<ParsedCaseRow> parsed = parseInputRows(payload.rows);
         Boolean isWelcomeFlow = isWelcomeCallInput(parsed);
@@ -507,9 +509,9 @@ public without sharing class FEC_BatchCaseCreationController {
 
         Savepoint importSavepoint = Database.setSavepoint();
         if (isWelcomeFlow) {
-            insertWelcomeCallCases(parsed, rowResults);
+            insertWelcomeCallCases(parsed, rowResults, importerUserId);
         } else {
-            insertStandardCasesWithInteraction(parsed, rowResults);
+            insertStandardCasesWithInteraction(parsed, rowResults, importerUserId);
         }
 
         failedCount = countFailedRowResults(rowResults);
@@ -1163,7 +1165,25 @@ public without sharing class FEC_BatchCaseCreationController {
         }
     }
 
-    private static String insertBatchCaseRemark(Id customerCaseId, String remarksText) {
+    private static Id resolveBatchImporterUserId(
+        FEC_BatchCaseCreationPendingService.ImportPayload payload,
+        SObject batchRow
+    ) {
+        if (payload != null && String.isNotBlank(payload.importerUserId)) {
+            try {
+                return Id.valueOf(payload.importerUserId);
+            } catch (Exception ex) {
+                // Fallback CreatedById nếu payload cũ hoặc Id không hợp lệ.
+            }
+        }
+        return batchRow == null ? null : (Id) batchRow.get('CreatedById');
+    }
+
+    private static String insertBatchCaseRemark(
+        Id customerCaseId,
+        String remarksText,
+        Id importerUserId
+    ) {
         if (customerCaseId == null || String.isBlank(remarksText)) {
             return null;
         }
@@ -1178,10 +1198,11 @@ public without sharing class FEC_BatchCaseCreationController {
         }
         String remarkUser;
         String remarkRole;
+        Id remarkUserId = importerUserId != null ? importerUserId : UserInfo.getUserId();
         List<User> importUsers = [
             SELECT Email, UserRole.Name
             FROM User
-            WHERE Id = :UserInfo.getUserId()
+            WHERE Id = :remarkUserId
             LIMIT 1
         ];
         if (!importUsers.isEmpty()) {
@@ -1373,7 +1394,11 @@ public without sharing class FEC_BatchCaseCreationController {
         caseToFill.FEC_Interaction_Subchannel__c = String.isNotBlank(subChannelApi) ? subChannelApi : FEC_ConstantCommon.CHANNEL_OUTBOUND_SUBCHANNEL_NAME;
     }
 
-    private static void insertWelcomeCallCases(List<ParsedCaseRow> parsed, List<CaseRowResult> rowResults) {
+    private static void insertWelcomeCallCases(
+        List<ParsedCaseRow> parsed,
+        List<CaseRowResult> rowResults,
+        Id importerUserId
+    ) {
         Id intRt = FEC_CommonUltils.getRecordTypeIdByDev(FEC_ConstantCommon.CASE_INTERACTION_RECORD_TYPE_DEV_NAME);
         Id custRt = FEC_BatchImportCommon.getCustomerCaseRecordTypeId();
         if (intRt == null) {
@@ -1398,6 +1423,7 @@ public without sharing class FEC_BatchCaseCreationController {
             ParsedCaseRow r = parsed[i];
             Case ic = new Case();
             ic.RecordTypeId = intRt;
+            ic.OwnerId = importerUserId;
             applyWelcomeInteractionDefaults(ic);
             applyBatchImportedCaseFlag(ic);
             applyBatchInteractionCaseDefaults(ic);
@@ -1445,6 +1471,7 @@ public without sharing class FEC_BatchCaseCreationController {
             String statusApi = matchBatchImportCaseStatus(statusDfr, r.caseStatus);
             Case cc = new Case();
             cc.RecordTypeId = custRt;
+            cc.OwnerId = importerUserId;
             cc.FEC_Interaction__c = srInt[k].getId();
             cc.FEC_Account_or_Contract__c = historyLink.historyId;
             cc.Status = statusApi;
@@ -1468,7 +1495,11 @@ public without sharing class FEC_BatchCaseCreationController {
                     Id customerCaseId = srCust[k].getId();
                     applyCustomerCaseSuccessResult(rr, customerCases[k], customerCaseId);
                     insertWelcomeAdditionalInfo(customerCaseId);
-                    String remarkError = insertBatchCaseRemark(customerCaseId, r.caseRemarks);
+                    String remarkError = insertBatchCaseRemark(
+                        customerCaseId,
+                        r.caseRemarks,
+                        importerUserId
+                    );
                     if (String.isNotBlank(remarkError)) {
                         rr.status = 'Failed';
                         rr.recordId = '';
@@ -1489,7 +1520,11 @@ public without sharing class FEC_BatchCaseCreationController {
         }
     }
 
-    private static void insertStandardCasesWithInteraction(List<ParsedCaseRow> parsed, List<CaseRowResult> rowResults) {
+    private static void insertStandardCasesWithInteraction(
+        List<ParsedCaseRow> parsed,
+        List<CaseRowResult> rowResults,
+        Id importerUserId
+    ) {
         Id intRt = FEC_CommonUltils.getRecordTypeIdByDev(FEC_ConstantCommon.CASE_INTERACTION_RECORD_TYPE_DEV_NAME);
         Id custRt = FEC_BatchImportCommon.getCustomerCaseRecordTypeId();
         if (intRt == null) {
@@ -1514,6 +1549,7 @@ public without sharing class FEC_BatchCaseCreationController {
             ParsedCaseRow r = parsed[i];
             Case ic = new Case();
             ic.RecordTypeId = intRt;
+            ic.OwnerId = importerUserId;
             String interactionStatusApi = resolveOtherInteractionStatusApi(statusDfr, r.caseStatus);
             applyOtherInteractionCaseDefaults(ic, interactionStatusApi);
             applyBatchImportedCaseFlag(ic);
@@ -1560,6 +1596,7 @@ public without sharing class FEC_BatchCaseCreationController {
             String statusApi = matchBatchImportCaseStatus(statusDfr, r.caseStatus);
             Case cc = new Case();
             cc.RecordTypeId = custRt;
+            cc.OwnerId = importerUserId;
             cc.FEC_Interaction__c = srInt[k].getId();
             cc.FEC_Account_or_Contract__c = historyLink.historyId;
             cc.Subject = buildSubject(r.contractNumber);
@@ -1584,7 +1621,11 @@ public without sharing class FEC_BatchCaseCreationController {
                 if (srCust[k].isSuccess()) {
                     Id customerCaseId = srCust[k].getId();
                     applyCustomerCaseSuccessResult(rr, customerCases[k], customerCaseId);
-                    String remarkError = insertBatchCaseRemark(customerCaseId, r.caseRemarks);
+                    String remarkError = insertBatchCaseRemark(
+                        customerCaseId,
+                        r.caseRemarks,
+                        importerUserId
+                    );
                     if (String.isNotBlank(remarkError)) {
                         rr.status = 'Failed';
                         rr.recordId = '';
