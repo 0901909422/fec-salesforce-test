@@ -2319,6 +2319,7 @@
         <name>PermissionSet</name>
     </types>
     <types>
+        <members>FEC_Case_With_Customer_Histories</members>
         <members>Routing_Action_History_with_Case_and_Assignment</members>
         <name>ReportType</name>
     </types>
