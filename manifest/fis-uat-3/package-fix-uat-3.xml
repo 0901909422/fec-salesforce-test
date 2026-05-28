@@ -820,28 +820,27 @@
 	    <name>ApexPage</name>
 	</types>
 	<types>
+	    <members>Case.SLA_Violating_Warning_15840h</members>
+	    <members>Case.SLA_Violating_Warning_15932</members>
+	    <members>Case.SLA_Violating_Warning_15932h</members>
 	    <members>Case.SLA_Violating_Warning_44h</members>
 	    <members>Case.SLA_Violation_Warning_124h</members>
-	    <members>Case.SLA_Violation_Warning_164h</members>
 	    <members>Case.SLA_Violation_Warning_76h</members>
+	    <members>Case.SLA_Violationg_Warning_15960h</members>
 	    <members>Case.SLA_Warning_119h</members>
 	    <members>Case.SLA_Warning_120h</members>
 	    <members>Case.SLA_Warning_125h</members>
 	    <members>Case.SLA_Warning_126h</members>
 	    <members>Case.SLA_Warning_128h</members>
 	    <members>Case.SLA_Warning_144h</members>
-	    <members>Case.SLA_Warning_15840h</members>
-	    <members>Case.SLA_Warning_15880h</members>
-	    <members>Case.SLA_Warning_15932_2h</members>
-	    <members>Case.SLA_Warning_15932h</members>
-	    <members>Case.SLA_Warning_15936h</members>
-	    <members>Case.SLA_Warning_15940h</members>
-	    <members>Case.SLA_Warning_15960h</members>
-	    <members>Case.SLA_Warning_15976h</members>
 	    <members>Case.SLA_Warning_167h</members>
 	    <members>Case.SLA_Warning_168h</members>
 	    <members>Case.SLA_Warning_48h</members>
 	    <members>Case.SLA_Warning_80h</members>
+	    <members>Case.SLA_Warning_15880h</members>
+	    <members>Case.SLA_Warning_15936h</members>
+	    <members>Case.SLA_Warning_15940h</members>
+	    <members>Case.SLA_Warning_15976h</members>
 	    <members>Case.Update_Case_1104h_Violating</members>
 	    <members>Case.Update_Case_1104h_Warning</members>
 	    <members>Case.Update_Case_1872h_Violating</members>
