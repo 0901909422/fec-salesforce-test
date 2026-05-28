@@ -134,12 +134,13 @@ public without sharing class FEC_MrcReturnCaseService {
 
         String mrcStatusId = null;
         if (selectedCase != null && selectedCase.FEC_Account_or_Contract__r != null) {
+            // Ưu tiên Status_ID (API code chuẩn: LK/MN/...) để tránh lệch theo label đã dịch.
             mrcStatusId = normalizeCode(
-                selectedCase.FEC_Account_or_Contract__r.FEC_MRC_Status__c
+                selectedCase.FEC_Account_or_Contract__r.FEC_Status_ID__c
             );
             if (String.isBlank(mrcStatusId)) {
                 mrcStatusId = normalizeCode(
-                    selectedCase.FEC_Account_or_Contract__r.FEC_Status_ID__c
+                    selectedCase.FEC_Account_or_Contract__r.FEC_MRC_Status__c
                 );
             }
         }

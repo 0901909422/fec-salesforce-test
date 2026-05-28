@@ -971,8 +971,7 @@ public without sharing class FEC_CaseAssignmentAutoDistributeService {
             seenCaseIds.add(caseRow.Id);
         }
 
-        Map<Id, Case> assignmentCaseCandidatesById = new Map<Id, Case>();
-        Map<Id, FEC_Assignment__c> oldestAssignmentByCaseId = new Map<Id, FEC_Assignment__c>();
+        List<DistributionTarget> assignmentTargets = new List<DistributionTarget>();
         for (FEC_Assignment__c assignmentRow : [
             SELECT
                 Id,
@@ -1009,8 +1008,7 @@ public without sharing class FEC_CaseAssignmentAutoDistributeService {
             if (
                 assignmentRow.FEC_Case__c == null ||
                 assignmentRow.FEC_Case__r == null ||
-                seenCaseIds.contains(assignmentRow.FEC_Case__c) ||
-                oldestAssignmentByCaseId.containsKey(assignmentRow.FEC_Case__c)
+                seenCaseIds.contains(assignmentRow.FEC_Case__c)
             ) {
                 continue;
             }
@@ -1024,18 +1022,11 @@ public without sharing class FEC_CaseAssignmentAutoDistributeService {
             if (!caseMatchesNoc(caseRow, nocExactKeys, nocWithoutSubCodeKeys)) {
                 continue;
             }
-            oldestAssignmentByCaseId.put(assignmentRow.FEC_Case__c, assignmentRow);
-            assignmentCaseCandidatesById.put(assignmentRow.FEC_Case__c, caseRow);
+            assignmentTargets.add(new DistributionTarget(caseRow, false, assignmentRow.Id));
         }
 
-        for (Id caseId : oldestAssignmentByCaseId.keySet()) {
-            FEC_Assignment__c assignmentRow = oldestAssignmentByCaseId.get(caseId);
-            Case caseRow = assignmentCaseCandidatesById.get(caseId);
-            if (assignmentRow == null || caseRow == null) {
-                continue;
-            }
-            targets.add(new DistributionTarget(caseRow, false, assignmentRow.Id));
-            seenCaseIds.add(caseId);
+        if (!assignmentTargets.isEmpty()) {
+            targets.addAll(assignmentTargets);
         }
 
         return targets;

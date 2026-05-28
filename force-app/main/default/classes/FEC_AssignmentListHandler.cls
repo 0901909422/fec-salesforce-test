@@ -928,7 +928,7 @@ public without sharing class FEC_AssignmentListHandler {
     
     //--------------------------[END]-----------------------------------------------------------------------
     
-    @AuraEnabled(cacheable=true)
+    @AuraEnabled
     public static List<FEC_Case_Remarks__c> getAssignmentRemarks(String caseId, String assignmentId) {
         
         if (caseId == null) {

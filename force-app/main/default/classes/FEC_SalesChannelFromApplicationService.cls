@@ -11,7 +11,7 @@ public with sharing class FEC_SalesChannelFromApplicationService {
     private static final String DEFAULT_SUB_CHANNEL = '-';
 
     private static final Set<String> SGO_TSA_EXCLUDE_PREFIXES = new Set<String>{
-        'TSA13', 'TSA20', 'TSA27', 'TSA38', 'TSA41', 'TSA48', 'TSA54', 'TSA55', 'TSA80', 'TSA90'
+        'TSA13', 'TSA20', 'TSA27', 'TSA38', 'TSA41', 'TSA48', 'TSA54', 'TSA55', 'TSA80', 'TSA90', 'TSA37'
     };
 
     private static final List<String> TP_DSA_PREFIXES = new List<String>{
