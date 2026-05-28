@@ -794,6 +794,7 @@
         <members>FEC_Notification_Record_Page_Auto</members>
         <members>FEC_Notification_Record_Page_Manual</members>
         <members>FEC_Do_Not_Bother_Record_Page</members>
+        <members>Service_Resource_Absence_Record_Page</members>
         <name>FlexiPage</name>
     </types>
     <types>
