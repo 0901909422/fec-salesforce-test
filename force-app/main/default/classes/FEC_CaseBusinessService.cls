@@ -936,13 +936,14 @@ public without sharing class FEC_CaseBusinessService {
         Map<String, String> assignmentFieldEditableGroups = FEC_CaseMasterDataHelper.collectAssignmentFieldEditableGroups(
           masterDatalst
         );
-        masterDatalst = FEC_CaseMasterDataHelper.deduplicateMasterDataRowsByFieldApiName(
-          masterDatalst
-        );
+        
         masterDatalst = FEC_CaseMasterDataHelper.removeMasterDataRowsByHiddenAssignmentFieldApis(
           masterDatalst,
           hasCaseAssignment,
           currentUser.FEC_User_Group__c
+        );
+        masterDatalst = FEC_CaseMasterDataHelper.deduplicateMasterDataRowsByFieldApiName(
+          masterDatalst
         );
 
         for (SObject item : masterDatalst) {
@@ -2316,13 +2317,16 @@ public without sharing class FEC_CaseBusinessService {
             finalStatusBeforeSubmit,
             (String) params.get('teamUserGroup')
           );
-          System.enqueueJob(
-            new FEC_MrcDupCancelOnSubmitQueueJob(
-              caseId,
-              mrcCustomerConfirmation,
-              mrcHandlingOption
-            )
-          );
+          // 28/05/2026 15:33 codex - tránh Too many queueable jobs khi import batch chain queueable
+          if (!FEC_BatchCaseHandlingImportService.isBatchImportApplyInProgress()) {
+            System.enqueueJob(
+              new FEC_MrcDupCancelOnSubmitQueueJob(
+                caseId,
+                mrcCustomerConfirmation,
+                mrcHandlingOption
+              )
+            );
+          }
           return null;
         }
         // tungnm37 thêm: COF/GSR - không đổi owner, chỉ tạo Assignment + Case Remarks + Routing Action History
@@ -4014,9 +4018,12 @@ public without sharing class FEC_CaseBusinessService {
     }
 
     Boolean outReadOnly = (Boolean) masterDataItem.get('FEC_Field_ReadOnly__c');
-    Boolean outEditable =
-      isEditable ||
-      (String.isNotBlank(editableGr) && editableGr.contains(userGr));
+    //PhongBT 28/05/26: Không nới rule editable ra nữa, phải trong editable group mới edit đc
+    Boolean outEditable = FEC_CaseMasterDataHelper.isAssignmentFieldEditable(
+      isEditable,
+      editableGr,
+      userGr
+    );
     String mdsType = (String) masterDataItem.get('FEC_Type__c');
     if (
       hasCaseAssignment == true &&

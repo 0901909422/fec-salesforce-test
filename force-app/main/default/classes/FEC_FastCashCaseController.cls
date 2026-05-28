@@ -456,7 +456,7 @@ public without sharing class FEC_FastCashCaseController {
             return false;
         }
         String c = w.Sys.Code.trim();
-        return '0'.equals(c) || '1'.equals(c);
+        return '0'.equals(c) || '1'.equals(c) || '4'.equals(c);
     }
 
     private static Boolean isFastCashRc35Case(Case c) {
