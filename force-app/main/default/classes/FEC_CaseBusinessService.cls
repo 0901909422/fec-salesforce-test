@@ -4015,9 +4015,12 @@ public without sharing class FEC_CaseBusinessService {
     }
 
     Boolean outReadOnly = (Boolean) masterDataItem.get('FEC_Field_ReadOnly__c');
-    Boolean outEditable =
-      isEditable ||
-      (String.isNotBlank(editableGr) && editableGr.contains(userGr));
+    //PhongBT 28/05/26: Không nới rule editable ra nữa, phải trong editable group mới edit đc
+    Boolean outEditable = FEC_CaseMasterDataHelper.isAssignmentFieldEditable(
+      isEditable,
+      editableGr,
+      userGr
+    );
     String mdsType = (String) masterDataItem.get('FEC_Type__c');
     if (
       hasCaseAssignment == true &&
