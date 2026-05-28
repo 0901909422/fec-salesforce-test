@@ -61,4 +61,14 @@ public without sharing class FEC_BatchCaseHandlingExportRow {
     @AuraEnabled public String teamLeader;
     @AuraEnabled public String supervisor;
     @AuraEnabled public String pendingCsSupportLabel;
+    @AuraEnabled public String incorrectContractNumber;
+    @AuraEnabled public String paymentMethod;
+    @AuraEnabled public String billDate;
+    @AuraEnabled public String billAmount;
+    @AuraEnabled public String paymentDate;
+    @AuraEnabled public String excessAmount;
+    @AuraEnabled public String selectedContractNumber;
+    @AuraEnabled public String correctContractNumber;
+    @AuraEnabled public String correctAccountContract;
+    @AuraEnabled public String adjustedAmount;
 }

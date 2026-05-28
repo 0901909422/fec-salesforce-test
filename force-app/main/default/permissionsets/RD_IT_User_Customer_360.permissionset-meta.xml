@@ -622,6 +622,11 @@
     </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
+        <field>FEC_Contact_List__c.FEC_Case__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
         <field>FEC_Contact_List__c.FEC_Channel__c</field>
         <readable>true</readable>
     </fieldPermissions>
