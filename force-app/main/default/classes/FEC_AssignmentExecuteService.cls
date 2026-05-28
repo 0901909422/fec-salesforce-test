@@ -702,12 +702,13 @@ public without sharing class FEC_AssignmentExecuteService {
              * Original queue/user owner
              */
             history.FEC_Original_User_Queue__c = assignment.FEC_Assignment_Owner_Text__c;
-            
+            history.FEC_Original_User_Queue_ID__c = assignment.FEC_OwnerID__c;
             /*
              * Updated owner email
              */
             if (updatedOwner != null) {
                 history.FEC_Updated_User_Queue__c = emailLocalPart(updatedOwner.Email);
+                history.FEC_Updated_User_Queue_ID__c = updatedOwner.Id;
             }
             
             /*
