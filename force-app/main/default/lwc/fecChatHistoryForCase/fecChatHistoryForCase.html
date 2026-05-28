@@ -51,15 +51,22 @@
 
                     <!-- NON-AUTOMATION CASE: manual input or display saved content -->
                     <template if:false={isChatAutomation}>
-                        <!-- Already saved: show read-only content -->
-                        <template if:true={isSaved}>
-                            <div class="slds-box slds-m-top_small manual-history-content">
-                                <lightning-formatted-rich-text value={formattedManualContent}></lightning-formatted-rich-text>
-                            </div>
+                        <!-- Review mode: show read-only content -->
+                        <template if:true={isReview}>
+                            <template if:true={hasManualContent}>
+                                <div class="slds-box slds-m-top_small manual-history-content">
+                                    <lightning-formatted-rich-text value={formattedManualContent}></lightning-formatted-rich-text>
+                                </div>
+                            </template>
+                            <template if:false={hasManualContent}>
+                                <div class="slds-align_absolute-center slds-m-top_large slds-m-bottom_large slds-text-color_weak">
+                                    {labelNoChatHistory}
+                                </div>
+                            </template>
                         </template>
 
-                        <!-- Not saved yet: show textarea input -->
-                        <template if:false={isSaved}>
+                        <!-- Non-review mode: show editable textarea -->
+                        <template if:false={isReview}>
                             <div class="slds-m-top_small manual-input-container">
                                 <label class="slds-form-element__label">Nhập nội dung chat</label>
                                 <textarea
