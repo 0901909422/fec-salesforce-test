@@ -229,6 +229,10 @@ export default class FecInteractionEmailInfo extends NavigationMixin(LightningEl
     return this.record?.FEC_Interaction_Remarks__c || STR_EMPTY;
   }
 
+  get showClosedOnlyFields() {
+    return this.record?.IsClosed === true;
+  }
+
   /**
    * Readonly: chỉ hiển thị text khi đã có dữ liệu và không đang edit.
    * Edit enable: khi đã có dữ liệu (click icon edit) hoặc khi trống (nhập mới).

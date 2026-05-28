@@ -195,6 +195,10 @@ export default class FecInteractionEmailInfoUbank extends NavigationMixin(Lightn
     return this.record?.FEC_Interaction_Remarks__c || STR_EMPTY;
   }
 
+  get showClosedOnlyFields() {
+    return this.record?.IsClosed === true;
+  }
+
   // ================= EMAIL ACTIONS =================
   handleEditEmail() {
     this.isEditingEmail = true;

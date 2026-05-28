@@ -41,11 +41,13 @@
                 <span class="value">{createdBy}</span>
                 <span></span>
               </div>
-              <div class="row">
-                <span class="label">{labels.outcomeCode}</span>
-                <span class="value">{outcomeCode}</span>
-                <span></span>
-              </div>
+              <template if:true={showClosedOnlyFields}>
+                <div class="row">
+                  <span class="label">{labels.outcomeCode}</span>
+                  <span class="value">{outcomeCode}</span>
+                  <span></span>
+                </div>
+              </template>
             </div>
             <div class="col">
               <div class="row">
@@ -76,11 +78,13 @@
                 </span>
                 <span></span>
               </div>
-              <div class="row">
-                <span class="label">{labels.interactionRemark}</span>
-                <span class="value">{interactionRemark}</span>
-                <span></span>
-              </div>
+              <template if:true={showClosedOnlyFields}>
+                <div class="row">
+                  <span class="label">{labels.interactionRemark}</span>
+                  <span class="value">{interactionRemark}</span>
+                  <span></span>
+                </div>
+              </template>
             </div>
           </div>
         </div>
@@ -128,11 +132,13 @@
                 <span class="value">{createdBy}</span>
                 <span></span>
               </div>
-              <div class="row">
-                <span class="label">{labels.outcomeCode}</span>
-                <span class="value">{outcomeCode}</span>
-                <span></span>
-              </div>
+              <template if:true={showClosedOnlyFields}>
+                <div class="row">
+                  <span class="label">{labels.outcomeCode}</span>
+                  <span class="value">{outcomeCode}</span>
+                  <span></span>
+                </div>
+              </template>
             </div>
             <div class="col">
               <div class="row">
@@ -163,11 +169,13 @@
                 </span>
                 <span></span>
               </div>
-              <div class="row">
-                <span class="label">{labels.interactionRemark}</span>
-                <span class="value">{interactionRemark}</span>
-                <span></span>
-              </div>
+              <template if:true={showClosedOnlyFields}>
+                <div class="row">
+                  <span class="label">{labels.interactionRemark}</span>
+                  <span class="value">{interactionRemark}</span>
+                  <span></span>
+                </div>
+              </template>
             </div>
           </div>
         </div>

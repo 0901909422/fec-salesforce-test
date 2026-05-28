@@ -126,6 +126,7 @@ export default class FecInteractionChatInfo extends LightningElement {
     get externalInteractionId() { return this.record?.FEC_External_Interaction_ID__c || STR_EMPTY; }
     get outcomeCode() { return this.record?.FEC_Outcome_Code__c || STR_EMPTY; }
     get interactionRemark() { return this.record?.FEC_Interaction_Remarks__c || STR_EMPTY; }
+    get showClosedOnlyFields() { return this.record?.IsClosed === true; }
 
     get isUsernameReadOnly() { return !!this.customerUsername && !this.isEditingUsername; }
     get showUsernameEditIcon() { return !this.isReview && !this.isEditingUsername; }
