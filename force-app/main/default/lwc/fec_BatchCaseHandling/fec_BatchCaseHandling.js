@@ -20,7 +20,6 @@ import getBulkExportPropertyBundle from "@salesforce/apex/FEC_BatchCaseHandlingC
 import downloadCaseAttachmentsZip from "@salesforce/apex/FEC_BatchCaseHandlingController.downloadCaseAttachmentsZip";
 import zipExcelFiles from "@salesforce/apex/FEC_BatchCaseHandlingController.zipExcelFiles";
 import importBatchData from "@salesforce/apex/FEC_BatchCaseHandlingController.importBatchData";
-import saveResultFile from "@salesforce/apex/FEC_BatchCaseHandlingController.saveResultFile";
 import logFailedImport from "@salesforce/apex/FEC_BatchCaseHandlingController.logFailedImport";
 import FEC_SheetJS from "@salesforce/resourceUrl/FEC_SheetJS";
 import { STR_EMPTY, DATE_PLACEHOLDER } from "c/fec_CommonConst";
@@ -58,12 +57,8 @@ import FEC_BCH_ActionDownload from "@salesforce/label/c.FEC_BCH_ActionDownload";
 import FEC_BCH_ActionExportAll from "@salesforce/label/c.FEC_BCH_ActionExportAll";
 import FEC_BCH_ActionExportSelected from "@salesforce/label/c.FEC_BCH_ActionExportSelected";
 import FEC_BCH_ActionImportUpdate from "@salesforce/label/c.FEC_BCH_ActionImportUpdate";
-import FEC_BCH_ResultHdr_RoutingAction from "@salesforce/label/c.FEC_BCH_ResultHdr_RoutingAction";
-import FEC_BCH_ResultHdr_Remarks from "@salesforce/label/c.FEC_BCH_ResultHdr_Remarks";
 import FEC_BCH_ResultHdr_Status from "@salesforce/label/c.FEC_BCH_ResultHdr_Status";
 import FEC_BCH_ResultHdr_Errors from "@salesforce/label/c.FEC_BCH_ResultHdr_Errors";
-import FEC_BCH_ResultHdr_AssignmentId from "@salesforce/label/c.FEC_BCH_ResultHdr_AssignmentId";
-import FEC_BCH_ResultHdr_AssignmentRouting from "@salesforce/label/c.FEC_BCH_ResultHdr_AssignmentRouting";
 import FEC_BCH_FilterPickProperty from "@salesforce/label/c.FEC_BCH_FilterPickProperty";
 import FEC_BCH_FilterPickOperator from "@salesforce/label/c.FEC_BCH_FilterPickOperator";
 import FEC_BCH_NoticeTitle from "@salesforce/label/c.FEC_BCH_NoticeTitle";
@@ -375,22 +370,6 @@ const EXPORT_HEADER_FIELD_MAP = {
 };
 const RESULT_COL_STATUS = "__Status";
 const RESULT_COL_ERRORS = "__Errors";
-const RESULT_HEADERS_BASIC = [
-  FEC_BCH_Col_CaseId,
-  FEC_BCH_ResultHdr_RoutingAction,
-  FEC_BCH_ResultHdr_Remarks,
-  FEC_BCH_ResultHdr_Status,
-  FEC_BCH_ResultHdr_Errors
-];
-const RESULT_HEADERS_GSR = [
-  FEC_BCH_Col_CaseId,
-  FEC_BCH_ResultHdr_RoutingAction,
-  FEC_BCH_ResultHdr_Remarks,
-  FEC_BCH_ResultHdr_AssignmentId,
-  FEC_BCH_ResultHdr_AssignmentRouting,
-  FEC_BCH_ResultHdr_Status,
-  FEC_BCH_ResultHdr_Errors
-];
 const TEMPLATE_NAME_GSR = "GSR";
 const TEMPLATE_NAME_OTHER = "Other";
 const MSG_BP_REQUIRED = FEC_BCH_BpRequired;
@@ -2490,21 +2469,7 @@ export default class Fec_BatchCaseHandling extends LightningElement {
         return;
       }
       const isProcessing = result.status === IMPORT_STATUS_PROCESSING;
-      if (!isProcessing) {
-        const resultRows = this.parseResultRows(result.resultRowsJson);
-        try {
-          await this.saveResultWorkbook(
-            result.batchRecordId,
-            fileName,
-            isCofOrGsr,
-            originalHeaders,
-            rows,
-            resultRows
-          );
-        } catch (saveErr) {
-          // Result file generation failure does not invalidate the import itself
-        }
-      }
+      // 28/05/2026 16:20 linhdev - Result file do Apex tạo trực tiếp từ layout import gốc + __Status/__Errors
       const successTitle = isProcessing ? MSG_IMPORT_SUBMITTED : MSG_IMPORT_SUCCESS;
       const successDetail = result.message || STR_EMPTY;
       this.importSuccessMessage = successTitle;
@@ -2608,29 +2573,6 @@ export default class Fec_BatchCaseHandling extends LightningElement {
       return false;
     }
     return fileCore === expectedCore || fileCore.includes(expectedCore);
-  }
-
-  mapImportResultStatusLabel(status) {
-    const normalized = String(status || STR_EMPTY).trim();
-    if (!normalized) {
-      return STR_EMPTY;
-    }
-    if (normalized.toLowerCase() === "failed") {
-      return "Failed";
-    }
-    return "Success";
-  }
-
-  parseResultRows(rowsJson) {
-    if (!rowsJson) {
-      return [];
-    }
-    try {
-      const arr = JSON.parse(rowsJson);
-      return Array.isArray(arr) ? arr : [];
-    } catch (e) {
-      return [];
-    }
   }
 
   parseImportWorkbook(arrayBuffer) {
@@ -2788,6 +2730,8 @@ export default class Fec_BatchCaseHandling extends LightningElement {
         finalProduct,
         paymentContractAssessment,
         cpAssessment,
+        // 28/05/2026 16:20 linhdev - gửi kèm header gốc để Apex build Result theo đúng layout file user import
+        originalHeaders: importHeaders,
         originalCells
       });
     }
@@ -2904,113 +2848,6 @@ export default class Fec_BatchCaseHandling extends LightningElement {
       reader.onload = () => resolve(reader.result);
       reader.onerror = () => reject(reader.error || new Error("read error"));
       reader.readAsArrayBuffer(file);
-    });
-  }
-
-  applyResultErrorsColumnFormat(sheet, headers, rowCount) {
-    if (!sheet || !Array.isArray(headers) || !rowCount) {
-      return;
-    }
-    const errorsColIdx = headers.indexOf(RESULT_COL_ERRORS);
-    if (errorsColIdx < 0) {
-      return;
-    }
-    if (!sheet["!cols"]) {
-      sheet["!cols"] = [];
-    }
-    sheet["!cols"][errorsColIdx] = { wch: 60 };
-    for (let rowIdx = 1; rowIdx < rowCount; rowIdx++) {
-      const cellRef = window.XLSX.utils.encode_cell({ c: errorsColIdx, r: rowIdx });
-      const cell = sheet[cellRef];
-      if (!cell) {
-        continue;
-      }
-      cell.s = {
-        alignment: {
-          wrapText: true,
-          vertical: "top"
-        }
-      };
-    }
-  }
-
-  async saveResultWorkbook(
-    batchRecordId,
-    originalFileName,
-    isCofOrGsr,
-    originalHeaders,
-    inputRows,
-    resultRows
-  ) {
-    if (!batchRecordId) {
-      return;
-    }
-    if (typeof window.XLSX === "undefined") {
-      return;
-    }
-    const hasOriginalHeaders =
-      Array.isArray(originalHeaders) && originalHeaders.length > 0;
-    const strippedHeaders = hasOriginalHeaders
-      ? this.stripResultColumnsFromImportLayout(originalHeaders)
-      : { headers: [], cells: [] };
-    const headersForExport = hasOriginalHeaders ? strippedHeaders.headers : [];
-    const headers = hasOriginalHeaders
-      ? [...headersForExport, RESULT_COL_STATUS, RESULT_COL_ERRORS]
-      : isCofOrGsr
-        ? RESULT_HEADERS_GSR
-        : RESULT_HEADERS_BASIC;
-    const sheetData = [headers];
-    const resultByIndex = Array.isArray(resultRows) ? resultRows : [];
-    for (let i = 0; i < inputRows.length; i++) {
-      const r = inputRows[i] || {};
-      const meta = resultByIndex[i] || {};
-      let baseRow;
-      if (
-        hasOriginalHeaders &&
-        Array.isArray(r.originalCells) &&
-        r.originalCells.length
-      ) {
-        const strippedCells = this.stripResultColumnsFromImportLayout(
-          originalHeaders,
-          r.originalCells
-        );
-        baseRow = [...strippedCells.cells];
-        while (baseRow.length < headersForExport.length) {
-          baseRow.push(STR_EMPTY);
-        }
-        if (baseRow.length > headersForExport.length) {
-          baseRow = baseRow.slice(0, headersForExport.length);
-        }
-      } else {
-        baseRow = [
-          r.caseIdSearch || STR_EMPTY,
-          r.routingAction || STR_EMPTY,
-          r.inputtedRemarks || STR_EMPTY
-        ];
-        if (isCofOrGsr) {
-          baseRow.push(r.assignmentId || STR_EMPTY);
-          baseRow.push(r.assignmentRoutingAction || STR_EMPTY);
-        }
-      }
-      baseRow.push(this.mapImportResultStatusLabel(meta.status));
-      baseRow.push(meta.errors || STR_EMPTY);
-      sheetData.push(baseRow);
-    }
-    const workbook = window.XLSX.utils.book_new();
-    const sheet = window.XLSX.utils.aoa_to_sheet(sheetData);
-    this.applyResultErrorsColumnFormat(sheet, headers, sheetData.length);
-    window.XLSX.utils.book_append_sheet(workbook, sheet, "Result");
-    const arrayBuffer = window.XLSX.write(workbook, {
-      bookType: "xlsx",
-      type: "array"
-    });
-    const base64 = arrayBufferToBase64(arrayBuffer);
-    const baseName = (originalFileName || "Import").replace(/\.[^.]+$/, STR_EMPTY);
-    const resultFileName = `${baseName}_Result.xlsx`;
-    await saveResultFile({
-      batchRecordId,
-      resultFileName,
-      fileBodyBase64: base64
     });
   }
 

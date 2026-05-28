@@ -477,6 +477,11 @@ public without sharing class FEC_BatchCaseHandlingImportService {
         String batchFailureReason,
         Boolean cofOrGsr
     ) {
+        // 28/05/2026 16:20 linhdev - ưu tiên xuất theo layout file import gốc + append __Status/__Errors
+        List<List<String>> originalLayoutRows = buildBatchResultFromOriginalLayout(rowResults);
+        if (originalLayoutRows != null) {
+            return originalLayoutRows;
+        }
         List<List<String>> sheetRows = new List<List<String>>();
         if (cofOrGsr) {
             sheetRows.add(
@@ -528,6 +533,54 @@ public without sharing class FEC_BatchCaseHandlingImportService {
             sheetRows.add(failureRow);
         } else {
             return null;
+        }
+        return sheetRows;
+    }
+
+    private static List<List<String>> buildBatchResultFromOriginalLayout(
+        List<FEC_BatchCaseHandlingImportRow> rowResults
+    ) {
+        if (rowResults == null || rowResults.isEmpty()) {
+            return null;
+        }
+        List<String> sourceHeaders = null;
+        for (FEC_BatchCaseHandlingImportRow row : rowResults) {
+            if (row != null && row.originalHeaders != null && !row.originalHeaders.isEmpty()) {
+                sourceHeaders = row.originalHeaders;
+                break;
+            }
+        }
+        if (sourceHeaders == null || sourceHeaders.isEmpty()) {
+            return null;
+        }
+        List<List<String>> sheetRows = new List<List<String>>();
+        List<String> headers = new List<String>();
+        for (String header : sourceHeaders) {
+            headers.add(rowValue(header));
+        }
+        headers.add(RESULT_COL_STATUS);
+        headers.add(RESULT_COL_ERRORS);
+        Integer headerSize = sourceHeaders.size();
+        sheetRows.add(headers);
+        for (FEC_BatchCaseHandlingImportRow row : rowResults) {
+            if (row == null) {
+                continue;
+            }
+            List<String> cells = new List<String>();
+            if (row.originalCells != null && !row.originalCells.isEmpty()) {
+                for (String cell : row.originalCells) {
+                    cells.add(rowValue(cell));
+                }
+            }
+            while (cells.size() < headerSize) {
+                cells.add(FEC_ConstantCommon.STR_EMPTY);
+            }
+            if (cells.size() > headerSize) {
+                cells = cells.subList(0, headerSize);
+            }
+            cells.add(rowValue(resolveImportResultStatusLabel(row.status)));
+            cells.add(rowValue(row.errors));
+            sheetRows.add(cells);
         }
         return sheetRows;
     }
@@ -612,6 +665,9 @@ public without sharing class FEC_BatchCaseHandlingImportService {
                     'contractprocessingassessment'
                 }
             );
+            // 28/05/2026 16:20 linhdev - giữ nguyên header/cell gốc để server tự xuất Result đúng file user import
+            rr.originalHeaders = pickRowStringList(row, 'originalHeaders');
+            rr.originalCells = pickRowStringList(row, 'originalCells');
             Boolean rowEmpty =
                 String.isBlank(rr.caseIdSearch) &&
                 String.isBlank(rr.routingAction) &&
@@ -1875,6 +1931,7 @@ public without sharing class FEC_BatchCaseHandlingImportService {
             return errs;
         }
         if (profile == FEC_BatchCaseHandlingImportProfile.FIELD_PROFILE_PM_PAYMENT) {
+            // 28/05/2026 15:47 tugnnm37 - Bỏ validate bắt buộc Payment Assessment cho profile PM vì template import thực tế có flow không chứa cột này.
             validateD2CField(
                 rr,
                 rr.paymentContractAssessment,
@@ -1885,7 +1942,7 @@ public without sharing class FEC_BatchCaseHandlingImportService {
                 configuredLabels,
                 picklistValueByNormByField,
                 errs,
-                true
+                false
             );
             return errs;
         }
@@ -2269,6 +2326,21 @@ public without sharing class FEC_BatchCaseHandlingImportService {
             }
         }
         return FEC_ConstantCommon.STR_EMPTY;
+    }
+
+    private static List<String> pickRowStringList(Map<String, Object> row, String keyName) {
+        List<String> out = new List<String>();
+        if (row == null || String.isBlank(keyName)) {
+            return out;
+        }
+        Object raw = row.get(keyName);
+        if (raw == null || !(raw instanceof List<Object>)) {
+            return out;
+        }
+        for (Object val : (List<Object>) raw) {
+            out.add(val == null ? FEC_ConstantCommon.STR_EMPTY : String.valueOf(val));
+        }
+        return out;
     }
 
     private static String remarksToJson(List<FEC_Case_Remarks__c> remarks) {
