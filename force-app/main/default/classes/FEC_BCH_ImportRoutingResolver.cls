@@ -27,9 +27,12 @@ public with sharing class FEC_BCH_ImportRoutingResolver {
     }
 
     private static Map<Id, List<StageScreenRow>> screensByStageId = new Map<Id, List<StageScreenRow>>();
+    //PhongBT 28/05/26: Cache Stage Screen không lọc FEC_User_Group__c — dùng cho assignmentRoutingAction (COF/GSR).
+    private static Map<Id, List<StageScreenRow>> screensByStageIdAllGroups = new Map<Id, List<StageScreenRow>>();
 
     public static void clearCache() {
         screensByStageId.clear();
+        screensByStageIdAllGroups.clear();
     }
 
     public static void preloadStageScreens(Set<Id> stageIds, String userGroup) {
@@ -58,28 +61,46 @@ public with sharing class FEC_BCH_ImportRoutingResolver {
             if (row == null || row.FEC_Case_Stage__c == null) {
                 continue;
             }
+            StageScreenRow itemAll = toStageScreenRow(row);
+            addStageScreenRow(screensByStageIdAllGroups, itemAll);
             if (String.isNotBlank(ug) && String.isNotBlank(row.FEC_User_Group__c) && !row.FEC_User_Group__c.contains(ug)) {
                 continue;
             }
-            StageScreenRow item = new StageScreenRow();
-            item.screenId = row.Id;
-            item.stageId = row.FEC_Case_Stage__c;
-            item.actionButtonId = row.FEC_Action_Button__c;
-            SObject actionButton = row.getSObject('FEC_Action_Button__r');
-            item.actionButtonCode = actionButton == null || actionButton.get('FEC_Code__c') == null
-                ? FEC_ConstantCommon.STR_EMPTY
-                : String.valueOf(actionButton.get('FEC_Code__c'));
-            item.screenCode = row.FEC_Code__c;
-            item.customLabel = row.FEC_Custom_Action_Button_Label__c;
-            item.fieldType = row.FEC_Field_Type__c;
-            if (!screensByStageId.containsKey(item.stageId)) {
-                screensByStageId.put(item.stageId, new List<StageScreenRow>());
-            }
-            screensByStageId.get(item.stageId).add(item);
+            addStageScreenRow(screensByStageId, itemAll);
         }
     }
 
+    private static StageScreenRow toStageScreenRow(FEC_Stage_Screen__c row) {
+        StageScreenRow item = new StageScreenRow();
+        item.screenId = row.Id;
+        item.stageId = row.FEC_Case_Stage__c;
+        item.actionButtonId = row.FEC_Action_Button__c;
+        SObject actionButton = row.getSObject('FEC_Action_Button__r');
+        item.actionButtonCode = actionButton == null || actionButton.get('FEC_Code__c') == null
+            ? FEC_ConstantCommon.STR_EMPTY
+            : String.valueOf(actionButton.get('FEC_Code__c'));
+        item.screenCode = row.FEC_Code__c;
+        item.customLabel = row.FEC_Custom_Action_Button_Label__c;
+        item.fieldType = row.FEC_Field_Type__c;
+        return item;
+    }
+
+    private static void addStageScreenRow(Map<Id, List<StageScreenRow>> target, StageScreenRow item) {
+        if (target == null || item == null || item.stageId == null) {
+            return;
+        }
+        if (!target.containsKey(item.stageId)) {
+            target.put(item.stageId, new List<StageScreenRow>());
+        }
+        target.get(item.stageId).add(item);
+    }
+
     public static ResolvedRouting resolve(Id stageId, String excelRoutingLabel) {
+        return resolve(stageId, excelRoutingLabel, false);
+    }
+
+    //PhongBT 28/05/26: ignoreUserGroupFilter=true → không lọc importer FEC_User_Group__c khi match Datagroup.
+    public static ResolvedRouting resolve(Id stageId, String excelRoutingLabel, Boolean ignoreUserGroupFilter) {
         ResolvedRouting out = new ResolvedRouting();
         out.matchedStageScreen = false;
         out.routeViaRevertButton = false;
@@ -106,7 +127,10 @@ public with sharing class FEC_BCH_ImportRoutingResolver {
         if (parsed.revertPreferRevertedChange == true) {
             out.revertPreferRevertedChange = true;
         }
-        List<StageScreenRow> screens = screensByStageId.get(stageId);
+        Boolean useAllGroups = ignoreUserGroupFilter == true;
+        List<StageScreenRow> screens = useAllGroups
+            ? screensByStageIdAllGroups.get(stageId)
+            : screensByStageId.get(stageId);
         if (screens == null || screens.isEmpty()) {
             return out;
         }

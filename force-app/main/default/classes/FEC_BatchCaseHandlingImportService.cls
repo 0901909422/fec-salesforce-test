@@ -808,6 +808,8 @@ public without sharing class FEC_BatchCaseHandlingImportService {
         Map<String, FEC_Assignment__c> assignmentByName = loadAssignmentsByName(assignmentNames);
         Map<Id, FEC_Assignment__c> assignmentByRecordId = loadAssignmentsByRecordId(assignmentRecordIds);
         List<RemarkDraftUpdateItem> remarkDraftItems = new List<RemarkDraftUpdateItem>();
+        //PhongBT 28/05/26: Hàng COF/GSR Route To + assignmentId — gom để cập nhật FEC_Assignment__c sau khi route Case.
+        List<AssignmentRouteToUpdateItem> assignmentRouteToItems = new List<AssignmentRouteToUpdateItem>();
         Map<Id, Case> pendingCaseFieldUpdatesById = new Map<Id, Case>();
         Map<Id, List<FEC_BatchCaseHandlingImportRow>> rowsByCaseForFieldUpdate = new Map<Id, List<FEC_BatchCaseHandlingImportRow>>();
         for (FEC_BatchCaseHandlingImportRow rr : rows) {
@@ -826,11 +828,12 @@ public without sharing class FEC_BatchCaseHandlingImportService {
             if (cofOrGsr && String.isBlank(actionLabel)) {
                 actionLabel = rr.assignmentRoutingAction;
             }
+            Boolean assignmentOnly = isAssignmentRoutingOnly(rr, cofOrGsr);
             Id stageIdForRow = caseLiteById.get(caseId) == null
                 ? null
                 : caseLiteById.get(caseId).FEC_Current_Case_Stage__c;
             FEC_BCH_ImportRoutingResolver.ResolvedRouting resolvedRouting =
-                FEC_BCH_ImportRoutingResolver.resolve(stageIdForRow, actionLabel);
+                FEC_BCH_ImportRoutingResolver.resolve(stageIdForRow, actionLabel, assignmentOnly == true);
             if (resolvedRouting != null && String.isBlank(rr.actionButtonId) && resolvedRouting.actionButtonId != null) {
                 applyResolvedRoutingToRow(rr, resolvedRouting);
             }
@@ -859,7 +862,9 @@ public without sharing class FEC_BatchCaseHandlingImportService {
                 );
                 continue;
             }
-            if (routingParsed != null && routingActionRequiresExtraParams(methodKey, routingParsed.decision)) {
+            if (assignmentOnly != true &&
+                routingParsed != null &&
+                routingActionRequiresExtraParams(methodKey, routingParsed.decision)) {
                 rr.status = System.Label.FEC_Batch_Case_Handling_Import_Row_Status_Failed;
                 rr.errors = appendError(
                     rr.errors,
@@ -882,7 +887,10 @@ public without sharing class FEC_BatchCaseHandlingImportService {
                             rr.actionButtonId,
                             rr.routeViaRevertButton == true
                         );
-                    if (routeParams == null || String.isBlank(routeParams.get('actionId')) || String.isBlank(routeParams.get('queueId'))) {
+                    Boolean routeParamsValid = routeParams != null &&
+                        String.isNotBlank(routeParams.get('actionId')) &&
+                        String.isNotBlank(routeParams.get('queueId'));
+                    if (assignmentOnly != true && !routeParamsValid) {
                         rr.status = System.Label.FEC_Batch_Case_Handling_Import_Row_Status_Failed;
                         rr.errors = appendError(
                             rr.errors,
@@ -890,8 +898,24 @@ public without sharing class FEC_BatchCaseHandlingImportService {
                         );
                         continue;
                     }
-                    runParams.put('actionId', routeParams.get('actionId'));
-                    runParams.put('queueId', routeParams.get('queueId'));
+                    if (routeParamsValid) {
+                        runParams.put('actionId', routeParams.get('actionId'));
+                        runParams.put('queueId', routeParams.get('queueId'));
+                    }
+                    //PhongBT 28/05/26: COF/GSR có assignmentId — queue team/queue từ Stage Change hoặc hint Excel.
+                    if (cofOrGsr == true && String.isNotBlank(rr.assignmentId)) {
+                        Id assignmentRecordId = parseAssignmentId(rr.assignmentId, assignmentByName, assignmentByRecordId);
+                        if (assignmentRecordId != null) {
+                            AssignmentRouteToUpdateItem routeToItem = new AssignmentRouteToUpdateItem();
+                            routeToItem.row = rr;
+                            routeToItem.assignmentId = assignmentRecordId;
+                            routeToItem.queueToken = routeParamsValid ? routeParams.get('queueToken') : null;
+                            routeToItem.routeTeamHint = routingParsed == null ? null : routingParsed.routeTeamHint;
+                            routeToItem.routeQueueHint = routingParsed == null ? null : routingParsed.routeQueueHint;
+                            routeToItem.submittedOn = System.now();
+                            assignmentRouteToItems.add(routeToItem);
+                        }
+                    }
                 }
                 if (methodKey == FEC_CaseBusinessService.REVERT) {
                     Case caseLite = caseLiteById.get(caseId);
@@ -902,7 +926,7 @@ public without sharing class FEC_BatchCaseHandlingImportService {
                             rr.actionButtonId,
                             rr.revertPreferRevertedChange == true
                         );
-                    if (String.isBlank(revertActionId)) {
+                    if (assignmentOnly != true && String.isBlank(revertActionId)) {
                         rr.status = System.Label.FEC_Batch_Case_Handling_Import_Row_Status_Failed;
                         rr.errors = appendError(
                             rr.errors,
@@ -910,12 +934,24 @@ public without sharing class FEC_BatchCaseHandlingImportService {
                         );
                         continue;
                     }
-                    runParams.put('actionId', revertActionId);
+                    if (String.isNotBlank(revertActionId)) {
+                        runParams.put('actionId', revertActionId);
+                    }
                 }
                 if (methodKey == FEC_CaseBusinessService.REVERT && String.isNotBlank(rr.routingActionValue)) {
                     runParams.put('routingActionValue', rr.routingActionValue);
                 }
-                FEC_CaseBusinessService.run(methodKey, runParams);
+                Boolean skipCaseRun = false;
+                if (assignmentOnly == true) {
+                    if (methodKey == FEC_CaseBusinessService.ROUTE_TO && !runParams.containsKey('queueId')) {
+                        skipCaseRun = true;
+                    } else if (methodKey == FEC_CaseBusinessService.REVERT && !runParams.containsKey('actionId')) {
+                        skipCaseRun = true;
+                    }
+                }
+                if (!skipCaseRun) {
+                    FEC_CaseBusinessService.run(methodKey, runParams);
+                }
             } catch (Exception ex) {
                 rr.status = System.Label.FEC_Batch_Case_Handling_Import_Row_Status_Failed;
                 rr.errors = appendError(rr.errors, ex.getMessage());
@@ -947,6 +983,16 @@ public without sharing class FEC_BatchCaseHandlingImportService {
                 validRemarkItems.add(item);
             }
         }
+        //PhongBT 28/05/26: Chỉ apply update Assignment cho dòng import chưa fail (sau FEC_CaseBusinessService.run Route To).
+        List<AssignmentRouteToUpdateItem> validAssignmentRouteToItems = new List<AssignmentRouteToUpdateItem>();
+        for (AssignmentRouteToUpdateItem item : assignmentRouteToItems) {
+            if (item != null &&
+                item.row != null &&
+                item.row.status != System.Label.FEC_Batch_Case_Handling_Import_Row_Status_Failed) {
+                validAssignmentRouteToItems.add(item);
+            }
+        }
+        applyAssignmentRouteToBulk(validAssignmentRouteToItems);
         applyDraftRemarksBulk(validRemarkItems, cofOrGsr);
     }
 
@@ -1289,6 +1335,17 @@ public without sharing class FEC_BatchCaseHandlingImportService {
         return methodKey == FEC_CaseBusinessService.RESOLVE || methodKey == FEC_CaseBusinessService.REJECT;
     }
 
+    //PhongBT 28/05/26: COF/GSR — chỉ cột Assignment Routing Action (routingAction trống).
+    private static Boolean isAssignmentRoutingOnly(
+        FEC_BatchCaseHandlingImportRow rr,
+        Boolean cofOrGsr
+    ) {
+        return cofOrGsr == true
+            && rr != null
+            && String.isNotBlank(rr.assignmentRoutingAction)
+            && String.isBlank(rr.routingAction);
+    }
+
     private static Map<String, String> resolveRouteToParams(
         Id currentStageId,
         RoutingParseResult parsed,
@@ -1399,10 +1456,73 @@ public without sharing class FEC_BatchCaseHandlingImportService {
         }
         Map<String, String> resolved = new Map<String, String>{
             'actionId' => String.valueOf(selected.FEC_Action_Button__c),
-            'queueId' => queueId
+            'queueId' => queueId,
+            //PhongBT 28/05/26: Developer name queue (FEC_Next_Queue__c) — dùng lookup FEC_Team_Queue__c khi update Assignment.
+            'queueToken' => selected.FEC_Next_Queue__c
         };
         routeParamsCacheByKey.put(cacheKey, resolved);
         return resolved;
+    }
+
+    //PhongBT 28/05/26: Delegate bulk cập nhật Assignment Route To sang FEC_BCH_AssignmentRouteToService (4 rule spec).
+    private static void applyAssignmentRouteToBulk(List<AssignmentRouteToUpdateItem> routeToItems) {
+        if (routeToItems == null || routeToItems.isEmpty()) {
+            return;
+        }
+        List<FEC_BCH_AssignmentRouteToService.RouteToContext> contexts =
+            new List<FEC_BCH_AssignmentRouteToService.RouteToContext>();
+        Map<Id, List<AssignmentRouteToUpdateItem>> rowsByAssignmentId =
+            new Map<Id, List<AssignmentRouteToUpdateItem>>();
+        for (AssignmentRouteToUpdateItem item : routeToItems) {
+            if (item == null || item.assignmentId == null || item.row == null) {
+                continue;
+            }
+            //PhongBT 28/05/26: Resolve queue developer name từ Stage Change token hoặc hint Excel.
+            String queueDevName = FEC_BCH_AssignmentRouteToService.resolveQueueDeveloperName(
+                item.queueToken,
+                item.routeTeamHint,
+                item.routeQueueHint
+            );
+            if (String.isBlank(queueDevName)) {
+                item.row.status = System.Label.FEC_Batch_Case_Handling_Import_Row_Status_Failed;
+                item.row.errors = appendError(
+                    item.row.errors,
+                    'Không xác định được queue đích để cập nhật Assignment Route To.'
+                );
+                continue;
+            }
+            FEC_BCH_AssignmentRouteToService.RouteToContext ctx =
+                new FEC_BCH_AssignmentRouteToService.RouteToContext();
+            ctx.assignmentId = item.assignmentId;
+            ctx.queueDeveloperName = queueDevName;
+            ctx.submittedOn = item.submittedOn == null ? System.now() : item.submittedOn;
+            contexts.add(ctx);
+            if (!rowsByAssignmentId.containsKey(item.assignmentId)) {
+                rowsByAssignmentId.put(item.assignmentId, new List<AssignmentRouteToUpdateItem>());
+            }
+            rowsByAssignmentId.get(item.assignmentId).add(item);
+        }
+        if (contexts.isEmpty()) {
+            return;
+        }
+        List<FEC_BCH_AssignmentRouteToService.ApplyResult> results =
+            FEC_BCH_AssignmentRouteToService.applyRouteToAssignmentsBulk(contexts);
+        //PhongBT 28/05/26: Gán lỗi update Assignment lên dòng import result.
+        for (FEC_BCH_AssignmentRouteToService.ApplyResult result : results) {
+            if (result == null || result.success == true || result.assignmentId == null) {
+                continue;
+            }
+            if (!rowsByAssignmentId.containsKey(result.assignmentId)) {
+                continue;
+            }
+            for (AssignmentRouteToUpdateItem item : rowsByAssignmentId.get(result.assignmentId)) {
+                if (item == null || item.row == null) {
+                    continue;
+                }
+                item.row.status = System.Label.FEC_Batch_Case_Handling_Import_Row_Status_Failed;
+                item.row.errors = appendError(item.row.errors, result.errorMessage);
+            }
+        }
     }
 
     private static String resolveRevertActionId(
@@ -1601,32 +1721,37 @@ public without sharing class FEC_BatchCaseHandlingImportService {
         if (String.isBlank(primaryLabel)) {
             return errs;
         }
+        Boolean assignmentOnly = isAssignmentRoutingOnly(rr, cofOrGsr);
         Id stageId = matched == null ? null : matched.FEC_Current_Case_Stage__c;
         FEC_BCH_ImportRoutingResolver.ResolvedRouting resolved =
-            FEC_BCH_ImportRoutingResolver.resolve(stageId, primaryLabel);
+            FEC_BCH_ImportRoutingResolver.resolve(stageId, primaryLabel, assignmentOnly == true);
+        String routingInvalidLabel = assignmentOnly == true
+            ? System.Label.FEC_Batch_Case_Handling_Import_Err_Assignment_Routing_Invalid
+            : System.Label.FEC_Batch_Case_Handling_Import_Err_Routing_Action_Invalid;
         if (resolved == null || String.isBlank(resolved.methodKey)) {
-            errs.add(System.Label.FEC_Batch_Case_Handling_Import_Err_Routing_Action_Invalid);
+            errs.add(routingInvalidLabel);
             return errs;
         }
         if (resolved.methodKey == FEC_CaseBusinessService.TRANSFER) {
-            errs.add(System.Label.FEC_Batch_Case_Handling_Import_Err_Routing_Action_Invalid);
+            errs.add(routingInvalidLabel);
             return errs;
         }
         if (FEC_BCH_ImportRoutingResolver.requiresStageScreenMatch(resolved.methodKey) &&
             stageId != null &&
             resolved.matchedStageScreen != true) {
-            errs.add(System.Label.FEC_Batch_Case_Handling_Import_Err_Routing_Action_Invalid);
+            errs.add(routingInvalidLabel);
             return errs;
         }
         applyResolvedRoutingToRow(rr, resolved);
         if (cofOrGsr == true && String.isNotBlank(rr.routingAction) && String.isNotBlank(rr.assignmentRoutingAction)) {
             errs.add(System.Label.FEC_Batch_Case_Handling_Import_Err_Both_Routing_Actions);
         }
-        if (cofOrGsr == true && String.isNotBlank(rr.routingAction)) {
+        if (cofOrGsr == true && String.isNotBlank(rr.routingAction) && String.isNotBlank(rr.assignmentId)) {
             FEC_BCH_ImportRoutingResolver.ResolvedRouting caseResolved =
                 FEC_BCH_ImportRoutingResolver.resolve(stageId, rr.routingAction);
-            if (caseResolved == null || String.isBlank(caseResolved.methodKey) ||
-                !isResolvedOrRejectCaseRouting(caseResolved.methodKey)) {
+            if (caseResolved == null || String.isBlank(caseResolved.methodKey)) {
+                errs.add(System.Label.FEC_Batch_Case_Handling_Import_Err_Routing_Action_Invalid);
+            } else if (!isResolvedOrRejectCaseRouting(caseResolved.methodKey)) {
                 errs.add(System.Label.FEC_Batch_Case_Handling_Import_Err_Assignment_Routing_Resolve_Only);
             }
         }
@@ -1634,7 +1759,7 @@ public without sharing class FEC_BatchCaseHandlingImportService {
             String.isNotBlank(rr.assignmentRoutingAction) &&
             String.isBlank(rr.routingAction)) {
             FEC_BCH_ImportRoutingResolver.ResolvedRouting asgResolved =
-                FEC_BCH_ImportRoutingResolver.resolve(stageId, rr.assignmentRoutingAction);
+                FEC_BCH_ImportRoutingResolver.resolve(stageId, rr.assignmentRoutingAction, true);
             if (asgResolved == null || String.isBlank(asgResolved.methodKey)) {
                 errs.add(System.Label.FEC_Batch_Case_Handling_Import_Err_Assignment_Routing_Invalid);
             } else {
@@ -2167,5 +2292,15 @@ public without sharing class FEC_BatchCaseHandlingImportService {
         public Id caseId;
         public Id assignmentId;
         public String inputtedRemarks;
+    }
+
+    //PhongBT 28/05/26: Payload 1 dòng import — Assignment Route To (vd Route to CS QC - Quality Control Mailbox).
+    private class AssignmentRouteToUpdateItem {
+        public FEC_BatchCaseHandlingImportRow row;
+        public Id assignmentId;
+        public String queueToken;
+        public String routeTeamHint;
+        public String routeQueueHint;
+        public Datetime submittedOn;
     }
 }
