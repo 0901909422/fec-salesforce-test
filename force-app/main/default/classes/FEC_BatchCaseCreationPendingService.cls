@@ -44,7 +44,7 @@ public without sharing class FEC_BatchCaseCreationPendingService {
     String rowsJson,
     String sourceHeadersJson,
     String sourceRowsJson,
-    Id importerUserId
+    String importerUserId
   ) {
     if (batchId == null || String.isBlank(rowsJson)) {
       return;
@@ -53,8 +53,8 @@ public without sharing class FEC_BatchCaseCreationPendingService {
       'templateName' => templateName,
       'rows' => JSON.deserializeUntyped(rowsJson)
     };
-    if (importerUserId != null) {
-      payload.put('importerUserId', String.valueOf(importerUserId));
+    if (String.isNotBlank(importerUserId)) {
+      payload.put('importerUserId', importerUserId);
     }
     if (String.isNotBlank(sourceHeadersJson)) {
       payload.put('sourceHeaders', JSON.deserializeUntyped(sourceHeadersJson));
