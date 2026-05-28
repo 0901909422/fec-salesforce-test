@@ -1291,7 +1291,6 @@
 		<members>FEC_List_Of_NFU_Code</members>
 		<members>FEC_Manual</members>
 		<members>FEC_NFU_Modal_Error</members>
-		<members>FEC_ERROR_API_CMS_CARD_TO_CARD</members>
 		<members>FEC_NFU_Modal_Save_Error</members>
 		<members>FEC_NFU_Reason_VN</members>
 		<members>FEC_New_Hold_Case_Config</members>
