@@ -744,7 +744,9 @@ public without sharing class FEC_BatchCaseHandlingImportService {
                 }
             }
 
-            errs.addAll(validateResolvedRoutingForRow(rr, matched, cofOrGsr));
+            // 28/05/2026 14:30 linhdev - resolve Routing Action vs Datagroup (tránh duplicate với block bên dưới)
+            List<String> resolvedRoutingErrs = validateResolvedRoutingForRow(rr, matched, cofOrGsr);
+            errs.addAll(resolvedRoutingErrs);
 
             if (cofOrGsr) {
                 Boolean hasAssignment = String.isNotBlank(rr.assignmentId);
@@ -767,8 +769,11 @@ public without sharing class FEC_BatchCaseHandlingImportService {
                     if (String.isNotBlank(rr.routingAction) && String.isBlank(rr.actionButtonId)) {
                         RoutingParseResult routingParsed = parseRoutingPattern(rr.routingAction);
                         String caseMethod = routingParsed == null ? null : routingParsed.methodKey;
+                        // 28/05/2026 14:30 linhdev - không add lại lỗi Datagroup nếu validateResolvedRoutingForRow đã báo
                         if (caseMethod == null) {
-                            errs.add(System.Label.FEC_Batch_Case_Handling_Import_Err_Routing_Action_Invalid);
+                            if (!resolvedRoutingErrs.contains(System.Label.FEC_Batch_Case_Handling_Import_Err_Routing_Action_Invalid)) {
+                                errs.add(System.Label.FEC_Batch_Case_Handling_Import_Err_Routing_Action_Invalid);
+                            }
                         } else if (!isResolvedOrRejectCaseRouting(caseMethod)) {
                             errs.add(System.Label.FEC_Batch_Case_Handling_Import_Err_Assignment_Routing_Resolve_Only);
                         }
@@ -779,8 +784,6 @@ public without sharing class FEC_BatchCaseHandlingImportService {
                 } else {
                     if (String.isBlank(rr.routingAction) && String.isBlank(rr.assignmentRoutingAction)) {
                         errs.add(System.Label.FEC_Batch_Case_Handling_Import_Err_Missing_Routing_Action);
-                    } else if (String.isNotBlank(rr.routingAction) && String.isBlank(rr.actionButtonId)) {
-                        errs.add(System.Label.FEC_Batch_Case_Handling_Import_Err_Routing_Action_Invalid);
                     } else if (
                         String.isBlank(rr.routingAction) &&
                         String.isNotBlank(rr.assignmentRoutingAction) &&
@@ -799,13 +802,13 @@ public without sharing class FEC_BatchCaseHandlingImportService {
                 if (String.isNotBlank(rr.assignmentId)) {
                     errs.add(System.Label.FEC_Batch_Case_Handling_Import_Err_No_Assignment_Id_For_Process);
                 }
+                // 28/05/2026 14:30 linhdev - thiếu Routing Action; lỗi Datagroup chỉ từ validateResolvedRoutingForRow (tránh double message)
                 if (String.isBlank(rr.routingAction)) {
                     errs.add(System.Label.FEC_Batch_Case_Handling_Import_Err_Missing_Routing_Action);
-                } else if (String.isBlank(rr.actionButtonId)) {
-                    errs.add(System.Label.FEC_Batch_Case_Handling_Import_Err_Routing_Action_Invalid);
                 }
             }
 
+            // 28/05/2026 14:30 linhdev - Thiếu giá trị Inputted Remarks (label FEC_Batch_Case_Handling_Import_Err_Missing_Remark)
             if (String.isBlank(rr.inputtedRemarks)) {
                 addImportError(errs, System.Label.FEC_Batch_Case_Handling_Import_Err_Missing_Remark);
             } else if (rr.inputtedRemarks.length() > REMARK_MAX_LEN) {
@@ -1742,6 +1745,7 @@ public without sharing class FEC_BatchCaseHandlingImportService {
         Id stageId = matched == null ? null : matched.FEC_Current_Case_Stage__c;
         FEC_BCH_ImportRoutingResolver.ResolvedRouting resolved =
             FEC_BCH_ImportRoutingResolver.resolve(stageId, primaryLabel);
+        // 28/05/2026 14:30 linhdev - Giá trị Routing Action không tồn tại trong Datagroup (không trùng Thiếu giá trị)
         if (resolved == null || String.isBlank(resolved.methodKey)) {
             errs.add(System.Label.FEC_Batch_Case_Handling_Import_Err_Routing_Action_Invalid);
             return errs;
