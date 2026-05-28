@@ -528,6 +528,7 @@
 		<members>FEC_Channel_Config_Invalid_Selection</members>
 		<members>FEC_Hold_Case_Edit_Succes</members>
 		<members>FEC_NFU_Modal_Save_Error</members>
+		<members>FEC_ERROR_API_CMS_CARD_TO_CARD</members>
 		<name>CustomLabel</name>
 	</types>
     <types>

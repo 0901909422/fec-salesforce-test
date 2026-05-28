@@ -168,7 +168,8 @@ public without sharing class FEC_CardReplacementAddressController {
             String blockCode1;
             FEC_CardLockUnLockController.ResponseResult cardStatus = FEC_CardLockUnLockController.getCardStatus(caseId);
             blockCode = cardStatus?.currentBlockCode;
-            if (cardStatus == null) {
+            if (String.isBlank(blockCode)) {
+                result.strMsg = System.Label.FEC_ERROR_API_CMS_CARD_TO_CARD;
                 return result;
             }
 
@@ -282,6 +283,8 @@ public without sharing class FEC_CardReplacementAddressController {
         public Boolean isShowAction { get; set; }
         @AuraEnabled
         public String strMsg { get; set; }
+         @AuraEnabled
+        public Boolean isErrorAPI { get; set; }
     }
 
     public class UpdateResult {
