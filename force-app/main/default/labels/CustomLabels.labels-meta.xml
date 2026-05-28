@@ -14101,7 +14101,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>Chat - Conversations section label</shortDescription>
-        <value>Conversations</value>
+        <value>Chat Conversations</value>
     </labels>
     <labels>
         <fullName>FEC_Chat_History_Label</fullName>
