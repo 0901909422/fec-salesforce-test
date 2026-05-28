@@ -67,7 +67,7 @@ public without sharing class FEC_CaseTriggerHandler {
         assignEntitlement(newCases);
                 
         // Delegate: Check duplicate External Interaction ID (Story 4)
-        // new CaseTriggerHandler().onBeforeInsert(newCases);
+        new CaseTriggerHandler().onBeforeInsert(newCases);
         syncGlobalSearchFromParent(newCases, null);
         setParentIdFromEmailThread(newCases);
         stripSubjectThreadToken(newCases);
@@ -86,7 +86,7 @@ public without sharing class FEC_CaseTriggerHandler {
         syncChannelFromInteractionForCustomerCase(newCases, oldMap);
                 
         // Delegate: Check duplicate External Interaction ID (Story 4)
-        // new CaseTriggerHandler().onBeforeUpdate(newCases, oldMap);
+        new CaseTriggerHandler().onBeforeUpdate(newCases, oldMap);
         syncGlobalSearchFromParent(newCases, oldMap);
         FEC_CaseTatFullProcessSvc.applyBeforeSave(newCases, oldMap);
     }
