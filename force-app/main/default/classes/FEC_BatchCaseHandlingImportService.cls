@@ -80,8 +80,8 @@ public without sharing class FEC_BatchCaseHandlingImportService {
     }
 
     public static Boolean shouldProcessImportSynchronously(List<FEC_BatchCaseHandlingImportRow> rows) {
-        Integer applicableCount = countApplicableImportRows(rows);
-        return applicableCount > 0 && applicableCount <= SYNC_IMPORT_MAX_APPLICABLE_ROWS;
+        // 28/05/2026 15:24 codex - production safety: always process via queueable to avoid sync SOQL 101
+        return false;
     }
 
     @TestVisible
