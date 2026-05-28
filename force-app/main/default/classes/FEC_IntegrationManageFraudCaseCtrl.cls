@@ -40,6 +40,7 @@ public with sharing class FEC_IntegrationManageFraudCaseCtrl {
         FEC_FraudConstantCommon.IntegrationField caseField = new FEC_FraudConstantCommon.IntegrationField();
         ManageFraudCaseDTO dto = new ManageFraudCaseDTO();        
         dto.natureOfCaseId = natureOfCaseId;
+        Boolean isConfigFraudIntegrate = false;
 
         if (String.isBlank(serviceCaseId)) {
             dto.actionMode = FEC_FraudConstantCommon.INTEGRATING_FRAUD_CREATE_MODE;
@@ -71,6 +72,7 @@ public with sharing class FEC_IntegrationManageFraudCaseCtrl {
             log('[initManageFraudCase] No fraud case found → CreateMode');
         } else {
             FEC_Integration_Case__c fraudCase = existing[0];
+            isConfigFraudIntegrate = true;
             dto.fraudCaseId = fraudCase.FEC_CaseID__c;
             dto.caseStatus = fraudCase.FEC_Case_Status__c;
             Boolean isNotAllow = (fraudCase.FEC_CaseID__c != null && fraudCase.FEC_CaseID__c.startsWith(caseField.CASEFH))
@@ -93,12 +95,15 @@ public with sharing class FEC_IntegrationManageFraudCaseCtrl {
         dto.caseData = getAllValueCaseInfoByCaseId(
             getCaseIdFromServiceCaseId(serviceCaseId)
         );
-
-        // Resolve Integration Mapping Id from Nature Of Case
-        dto.integrateMappingId = getIntegrateMappingIdByNatureOfCase(natureOfCaseId);
-        if(String.isBlank(dto.integrateMappingId)) {
-            dto.actionMode = FEC_FraudConstantCommon.INTEGRATING_FRAUD_NOTMAPPING_MODE;
+        //Check Not config Fraud Integration
+        if(!isConfigFraudIntegrate) {
+             // Resolve Integration Mapping Id from Nature Of Case
+            dto.integrateMappingId = getIntegrateMappingIdByNatureOfCase(natureOfCaseId);
+            if(String.isBlank(dto.integrateMappingId)) {
+                dto.actionMode = FEC_FraudConstantCommon.INTEGRATING_FRAUD_NOTMAPPING_MODE;
+            }
         }
+       
 
         return dto;
     }

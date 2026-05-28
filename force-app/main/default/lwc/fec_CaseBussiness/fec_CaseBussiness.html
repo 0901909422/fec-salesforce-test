@@ -337,7 +337,6 @@
                 <c-fec_hold-case-auto
                   record-id={recordId}
                   is-edit={isEdit}
-                  is-stage1={isStage1}
                   result-override={holdCaseResultOverride}
                   stage2-display-mode={holdCaseStage2DisplayMode}
                   stage2-info-message={holdCaseStage2InfoMessage}
@@ -359,6 +358,7 @@
           <div class="slds-m-top_medium">
             <c-fec-integration-manage-fraud-case
               record-id={recordId}
+              mode-edit-case={isCaseInformationEdit}
               nature-of-case-id={business.natureOfCase}>
             </c-fec-integration-manage-fraud-case>
           </div>

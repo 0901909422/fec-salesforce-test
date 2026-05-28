@@ -1,6 +1,8 @@
-import { LightningElement, api, track } from 'lwc';
+import { LightningElement, api, track, wire } from 'lwc';
 
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
+import { publish, MessageContext } from 'lightning/messageService';
+import FRAUD_FIELD_SYNC from '@salesforce/messageChannel/FEC_Fraud_Field_Sync__c';
 import loadMasterDataIntegrationMappingById from '@salesforce/apex/FEC_IntegrationCreateFraudController.loadMasterDataIntegrationMappingById';
 
 import getIntegrationFieldTypes 
@@ -59,6 +61,9 @@ export default class IntegrationCreateFraudCase extends LightningElement {
     @api mappingId;
     @api caseDataId;
 
+    @wire(MessageContext)
+    messageContext;
+
     @track loading = true;
     @track showPreview = false;
     @track previewJson = '';
@@ -105,9 +110,17 @@ export default class IntegrationCreateFraudCase extends LightningElement {
 
     // Other fields
     productType = '';
-    remarks = '';
+    _remarks = '';
     creatorEmail = '';
     fraudCase = '';
+
+    @api
+    get remarks() {
+        return this._remarks;
+    }
+    set remarks(value) {
+        this._remarks = value || '';
+    }
 
     actionType = this.createActionType; // create | update | cancel
     labels = {
@@ -253,8 +266,12 @@ export default class IntegrationCreateFraudCase extends LightningElement {
     onSimpleChange(event) {
         const field = event.target.dataset.field;
         if (field) {
-            this[field] = event.detail.value;
-            console.log(`[SET] ${field}:`, this[field]);
+            if (field === 'remarks') {
+                this._remarks = event.detail.value;
+            } else {
+                this[field] = event.detail.value;
+            }
+            console.log(`[SET] ${field}:`, field === 'remarks' ? this._remarks : this[field]);
         }
     }
 
@@ -274,6 +291,16 @@ export default class IntegrationCreateFraudCase extends LightningElement {
                 : p
         );
 
+        // Publish fraud→case sync via LMS
+        const prop = this.additionalProps.find(p => p.id === fieldId);
+        if (prop && prop.property) {
+            publish(this.messageContext, FRAUD_FIELD_SYNC, {
+                fieldId: prop.property,
+                value: value,
+                source: 'fraud'
+            });
+        }
+
         // Dispatch event for field mapping sync
         this.dispatchEvent(new CustomEvent('fraudfieldchange', {
             detail: { fieldId, value },
@@ -285,7 +312,7 @@ export default class IntegrationCreateFraudCase extends LightningElement {
     @api
     setFieldValue(fieldId, value) {
         this.additionalProps = this.additionalProps.map(p =>
-            p.id === fieldId
+            (p.id === fieldId || p.property === fieldId)
                 ? { ...p, value }
                 : p
         );
