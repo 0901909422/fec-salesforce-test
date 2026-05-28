@@ -181,14 +181,17 @@
         <members>FEC_ImportedInteractionBatch</members>
         <members>FEC_RDPaymentContractAssessmentService</members>
         <members>FEC_CustomerIntegrationService</members>
+        <members>FEC_CaseRemarksTriggerHandler</members>
         <members>FEC_CardLockUnLockController</members>
-		<name>Apexclass</name>
+        <members>FEC_CardReplacementAddressController</members>
+		<name>ApexClass</name>
 	</types>
     <types>
         <members>FEC_AssignmentTrigger</members>
         <members>FEC_CaseAssignmentNOCTrigger</members>
         <members>FEC_CaseAssignmentTrigger</members>
         <members>FEC_CustomerHistoryTrigger</members>
+        <members>FEC_CaseRemarksTrigger</members>
         <name>ApexTrigger</name>
     </types>
     <types>
@@ -197,6 +200,7 @@
 	    <members>fec_CaseEditNOC</members>
 	    <members>fec_CaseModePublisher</members>
 	    <members>fec_CaseRemarks</members>
+	    <members>fec_Il10DeliveryForm</members>
 	    <members>fec_IPPClosureForm</members>
 	    <members>fec_AssignmentExecuteAction</members>
 	    <members>fec_AssignmentList</members>
@@ -359,6 +363,9 @@
         <members>FEC_Actual_Master_Data_Setting__c.FEC_Type__c</members>
         <members>FEC_Master_Data_Setting__c.FEC_Hidden__c</members>
         <members>FEC_Master_Data_Setting__c.FEC_Type__c</members>
+        <members>Case.FEC_User_ID__c</members>
+        <members>FEC_Routing_Action_History__c.FEC_Assigned_On__c</members>
+        <members>FEC_Routing_Action_History__c.FEC_TAT_by_Assignment_Hrs__c</members>
         <name>CustomField</name>
     </types>
     <types>
@@ -445,6 +452,7 @@
 		<members>FEC_MRC_Return_Case_Info_Block_Title</members>
         <members>FEC_MRC_Return_Msg_Product_Not_TW</members>
         <members>FEC_MRC_Return_Msg_DPD_RL0503</members>
+        <members>FEC_MRC_Return_RL0503_DPD_Block_Title</members>
         <members>FEC_MRC_RL0502_Dup_Banner</members>
         <members>FEC_MRC_RL0502_Dup_Opt_Cancel_New</members>
         <members>FEC_MRC_RL0502_Dup_Opt_Cancel_Prev</members>
@@ -518,6 +526,8 @@
 		<members>FEC_BCH_ResultHdr_Errors</members>
 		<members>FEC_BCH_ResultHdr_Status</members>
 		<members>FEC_Channel_Config_Invalid_Selection</members>
+		<members>FEC_Hold_Case_Edit_Succes</members>
+		<members>FEC_NFU_Modal_Save_Error</members>
 		<name>CustomLabel</name>
 	</types>
     <types>
@@ -710,6 +720,7 @@
 		<members>FEC_Assignment_Set_User_Role</members>
 		<members>Assign_Entitlement_to_Case</members>
 		<members>FEC_DownloadReportFlow</members>
+        <members>FEC_Mark_Complete_for_Milestone</members>
 		<name>Flow</name>
 	</types>
     <types>
@@ -861,6 +872,15 @@
     <types>
         <members>Case-en_US</members>
         <name>CustomObjectTranslation</name>
+    </types>
+    <types>
+        <members>Routing_Action_History_with_Case_and_Assignment</members>
+        <name>ReportType</name>
+    </types>
+    <types>
+        <members>FECReport/FEC_RP_01</members>
+        <members>FECReport/FEC_RP_02</members>
+        <name>Report</name>
     </types>
 	<version>66.0</version>
 </Package>

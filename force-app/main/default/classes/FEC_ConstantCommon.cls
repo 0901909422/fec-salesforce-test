@@ -240,6 +240,22 @@ public with sharing class FEC_ConstantCommon {
     public static final String PRODUCT_TYPE_EVOUCHER = 'EVoucher';
     public static final String PRODUCT_TYPE_MVOUCHER = 'MVoucher';
     public static final String PRODUCT_NON_EXISTING_CUSTOMER = 'Non-Existing Customer';
+
+    /** FEC_Customer_History__c.FEC_Contract_Status__c — picklist Closed_Active_Charge_Off. */
+    public static final String CUSTOMER_HISTORY_CONTRACT_STATUS_ACTIVE = 'Active';
+    public static final String CUSTOMER_HISTORY_CONTRACT_STATUS_CLOSED = 'Closed';
+    public static final String CUSTOMER_HISTORY_CONTRACT_STATUS_CHARGE_OFF = 'Charge-Off';
+    /** Chuỗi API/CIF sau normalize (uppercase, bỏ ký tự không phải A-Z0-9) cho map Contract Status. */
+    public static final String API_CONTRACT_STATUS_KEY_CHARGE_OFF = 'CHARGEOFF';
+    public static final String API_CONTRACT_STATUS_KEY_ACTIVE = 'ACTIVE';
+    public static final String API_CONTRACT_STATUS_KEY_CLOSED = 'CLOSED';
+    /** Regex bỏ ký tự không phải A-Z0-9 khi normalize Contract Status từ API. */
+    public static final String PATTERN_NON_ALNUM_UPPER = '[^A-Z0-9]';
+    public static final Map<String, String> API_CONTRACT_STATUS_TO_PICKLIST = new Map<String, String>{
+        API_CONTRACT_STATUS_KEY_CHARGE_OFF => CUSTOMER_HISTORY_CONTRACT_STATUS_CHARGE_OFF,
+        API_CONTRACT_STATUS_KEY_ACTIVE     => CUSTOMER_HISTORY_CONTRACT_STATUS_ACTIVE,
+        API_CONTRACT_STATUS_KEY_CLOSED     => CUSTOMER_HISTORY_CONTRACT_STATUS_CLOSED
+    };
     
     public static final String CASE_STATUS_RESOLVED_CANCELLED = 'Resolved-Cancelled';
     public static final String CASE_STATUS_RESOLVED_REJECTED = 'Resolved-Rejected';
