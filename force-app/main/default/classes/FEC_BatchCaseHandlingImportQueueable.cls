@@ -41,14 +41,14 @@ public without sharing class FEC_BatchCaseHandlingImportQueueable implements Que
 
             Integer idx = nextIndex;
             Integer applicableRowsInRun = 0;
+            List<FEC_BatchCaseHandlingImportRow> rowsToApply = new List<FEC_BatchCaseHandlingImportRow>();
             while (idx < allRows.size()) {
                 FEC_BatchCaseHandlingImportRow row = allRows[idx];
                 idx++;
                 if (!FEC_BatchCaseHandlingImportService.shouldApplyImportRow(row)) {
                     continue;
                 }
-                List<FEC_BatchCaseHandlingImportRow> oneRow = new List<FEC_BatchCaseHandlingImportRow>{ row };
-                FEC_BatchCaseHandlingImportService.applyCaseHandlingUpdates(oneRow, cofOrGsr);
+                rowsToApply.add(row);
                 applicableRowsInRun++;
 
                 if (idx >= allRows.size()) {
@@ -57,10 +57,11 @@ public without sharing class FEC_BatchCaseHandlingImportQueueable implements Que
                 if (shouldYieldSameExecute() || applicableRowsInRun >= MAX_APPLICABLE_ROWS_PER_EXECUTE) {
                     break;
                 }
-                if (canEnqueueFollowUpJob()) {
-                    enqueueFollowUpJob(batchRecordId, allRows, cofOrGsr, idx);
-                    return;
-                }
+            }
+
+            if (!rowsToApply.isEmpty()) {
+                // 28/05/2026 10:53 linhdev - xử lý import theo lô + guard SOQL để tránh Too many SOQL queries: 101
+                FEC_BatchCaseHandlingImportService.applyCaseHandlingUpdates(rowsToApply, cofOrGsr);
             }
 
             if (idx < allRows.size()) {
@@ -111,6 +112,7 @@ public without sharing class FEC_BatchCaseHandlingImportQueueable implements Que
     private static Boolean shouldYieldSameExecute() {
         return Limits.getCpuTime() >= (Limits.getLimitCpuTime() * 85 / 100)
             || Limits.getDMLRows() >= (Limits.getLimitDMLRows() * 85 / 100)
+            || Limits.getQueries() >= (Limits.getLimitQueries() * 85 / 100)
             || Limits.getHeapSize() >= (Limits.getLimitHeapSize() * 85 / 100);
     }
 
