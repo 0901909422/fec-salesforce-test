@@ -332,6 +332,7 @@ const LABEL_ACCOUNT_CONTRACT_NUMBER = 'Account/ Contract Number';
 const SECTION_NAME_ACCOUNT_INFORMATION = 'Account Information';
 const SECTION_NAME_CASE_INFORMATION = 'Case Information';
 const SUBSECTION_NAME_PROPERTY_INFO = 'Property Info';
+const SUBSECTION_NAME_UPDATED_INFO = 'Updated Info';
 const SUBSECTION_NAME_C360_INFO = 'C360 Info';
 
 //******************Start merge with Fraud********************* */
@@ -1932,6 +1933,14 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
     );
   }
 
+  /** FEC_Assignment_Count__c > 0: subsection Updated Info read-only. */
+  _isUpdatedInfoReadonlyWhenHasAssignment(subSectionName) {
+    return (
+      this.business?.contextFlags?.hasCaseAssignment === true &&
+      subSectionName === SUBSECTION_NAME_UPDATED_INFO
+    );
+  }
+
   /** Chỉ hiện section Routing khi thực sự có option (tránh dropdown trống RL04.02/03). */
   _syncHasRoutingAction() {
     if (!this.business) {
@@ -1970,6 +1979,9 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
         const gsrPropertyInfoReadonly = this._isGsrStage3PropertyInfoFieldReadonly(
           sub.name
         );
+        const updatedInfoReadonly = this._isUpdatedInfoReadonlyWhenHasAssignment(
+          sub.name
+        );
         sub.objlst?.forEach((obj) => {
           obj.fieldlst?.forEach((field) => {
             const mrcFieldLocked = this._isMrcRl05MasterDataFieldLocked(
@@ -1979,6 +1991,7 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
             const forceReadonly =
               stage1RevertReadonly ||
               gsrPropertyInfoReadonly ||
+              updatedInfoReadonly ||
               mrcFieldLocked;
             field.readonly = forceReadonly ? true : !sectionEditable;
             field.editable = forceReadonly ? false : sectionEditable;
@@ -2115,20 +2128,17 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
     }
 
     if (this._mrcReturnStageChangeRoutingActive) {
-      if (
-        isMrcReceivedConfirmation(this.mrcReturnCustomerConfirmationValue) &&
-        hasAction(ACTION_CANCEL)
-      ) {
-        this._setActionValueByCode(ACTION_CANCEL);
-        return;
-      }
       const ctx = getMrcReturnRoutingContext(
         this.business,
         this.mrcReturnHandlingOptionValue,
         this.mrcReturnCustomerConfirmationValue,
         this._resolveMrcDeliveryOptionForRouting(),
       );
-      if (ctx.eligible && hasAction(ACTION_ROUTE_TO)) {
+      if (
+        ctx.eligible &&
+        hasAction(ACTION_ROUTE_TO) &&
+        this._canAutoSelectRouteTo()
+      ) {
         this._setActionValueByCode(ACTION_ROUTE_TO);
         return;
       }
@@ -2178,6 +2188,10 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
       const sectionEditable = this._isSectionFieldsEditable(section.name);
       section.resolvedComponentlst?.forEach((d) => {
         if (!d) return;
+        if (this._isUpdatedInfoReadonlyWhenHasAssignment(d.subSectionName)) {
+          d.isEdit = false;
+          return;
+        }
         const master = this._resolveDynCmpMasterIsEdit(
           d.componentName,
           d.fecMasterDataSettingIsEdit,
@@ -2747,6 +2761,7 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
                   !this._isSectionFieldsEditable(section.name) ||
                   this._isStage1RevertMasterReadonly() ||
                   this._isGsrStage3PropertyInfoFieldReadonly(sub.name) ||
+                  this._isUpdatedInfoReadonlyWhenHasAssignment(sub.name) ||
                   this._isMrcRl05MasterDataFieldLocked(
                     field.apiName,
                     sub.name,
@@ -4727,6 +4742,9 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
               },
             };
           } else {
+            const mrcSubmitFields = isMrcRl05Branch(this.business)
+              ? this._resolveMrcReturnFieldsForSubmit()
+              : { confirmation: null, handlingOption: null };
             params = {
               ...params,
               params: {
@@ -4739,6 +4757,8 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
                   this.business.mrcRouteTeamCode ||
                   normalizeTeamUserGroupForDisplay(this.business?.nextTeam) ||
                   null,
+                mrcCustomerConfirmation: mrcSubmitFields.confirmation || null,
+                mrcHandlingOption: mrcSubmitFields.handlingOption || null,
               },
             };
           }
@@ -5537,7 +5557,10 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
               isMrcReturnCaseForm:
                 name === "fec_MrcReturnPanel" || name === "fec_MrcReturnCaseForm",
               fecMasterDataSettingIsEdit,
-              isEdit: this._isSectionFieldsEditable(section.name) && masterResolved,
+              isEdit:
+                !this._isUpdatedInfoReadonlyWhenHasAssignment(meta.subSectionName) &&
+                this._isSectionFieldsEditable(section.name) &&
+                masterResolved,
               /** Thứ tự merge: cùng nguồn FEC_Sub_Section_Order__c (Apex → meta.order). */
               sortOrder: fecSubSectionOrder,
               fecSubSectionOrder,
@@ -6238,7 +6261,6 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
       this.business?.routingActionlst?.length
     ) {
       this._mrcReturnStageChangeRoutingActive = false;
-      this._setActionValueByCode(ACTION_CANCEL);
       this.business = {
         ...this.business,
         nextTeam: null,
@@ -6278,7 +6300,7 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
         nextTeam: null,
         nextQueue: null,
       };
-      if (this.business.routingActionlst?.length) {
+      if (this.business.routingActionlst?.length && this._canAutoSelectRouteTo()) {
         this._setActionValueByCode(ACTION_ROUTE_TO);
       }
       this.business = { ...this.business };
@@ -6294,7 +6316,9 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
       nextTeam: displayTeam,
       nextQueue: priorQueue?.value ? priorQueue : this.business?.nextQueue,
     };
-    this._setActionValueByCode(ACTION_ROUTE_TO);
+    if (this._canAutoSelectRouteTo()) {
+      this._setActionValueByCode(ACTION_ROUTE_TO);
+    }
     this.business = { ...this.business };
 
     return getDocumentRequestStageChangeRouting({
@@ -6315,7 +6339,9 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
               value: res.nextQueueId,
             },
           };
-          this._setActionValueByCode(ACTION_ROUTE_TO);
+          if (this._canAutoSelectRouteTo()) {
+            this._setActionValueByCode(ACTION_ROUTE_TO);
+          }
         } else {
           const fallbackQueue =
             priorQueue &&
@@ -6330,7 +6356,7 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
             ),
             nextQueue: fallbackQueue,
           };
-          if (fallbackQueue) {
+          if (fallbackQueue && this._canAutoSelectRouteTo()) {
             this._setActionValueByCode(ACTION_ROUTE_TO);
           } else if (showMissingQueueToast) {
             this.dispatchEvent(
@@ -6604,6 +6630,18 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
 
   _getCurrentActionCode() {
     return this._findRoutingActionByValueOrCode(this.actionValue)?.code || this.actionValue;
+  }
+
+  _hasValidCurrentActionSelection() {
+    if (!this.actionValue) {
+      return false;
+    }
+    return this._findRoutingActionByValueOrCode(this.actionValue) != null;
+  }
+
+  _canAutoSelectRouteTo() {
+    // Chỉ auto Route to khi chưa có lựa chọn hợp lệ của user (first load / invalid draft).
+    return !this._hasValidCurrentActionSelection();
   }
 
   //PhongBT 19/05/26: Fix mr chuyển routing action của document request sang lwc con

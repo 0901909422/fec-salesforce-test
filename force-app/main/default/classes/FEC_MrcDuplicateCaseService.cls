@@ -22,6 +22,16 @@ public without sharing class FEC_MrcDuplicateCaseService {
         return suppressRoutingHistoryTriggerSideEffects == true;
     }
 
+    /**
+     * RL05.02 submit trước route(): chỉ update Case/Remark sync; RAH dup ghi trong Queueable.
+     */
+    @TestVisible
+    private static Boolean deferDupRoutingHistoryInsert = false;
+
+    public static void setDeferDupRoutingHistoryInsert(Boolean defer) {
+        deferDupRoutingHistoryInsert = defer == true;
+    }
+
     public class OpenDupInfo {
         public String caseIdStr;
         public String caseNumber;
@@ -668,10 +678,12 @@ public without sharing class FEC_MrcDuplicateCaseService {
             FEC_CaseTriggerHandler.isSystemUpdate = false;
         }
 
-        recordRoutingActionHistoryForCasesBulk(
-            cancelPreviousContexts,
-            dupStatusBefore
-        );
+        if (!deferDupRoutingHistoryInsert) {
+            recordRoutingActionHistoryForCasesBulk(
+                cancelPreviousContexts,
+                dupStatusBefore
+            );
+        }
 
         if (!remarks.isEmpty()) {
             try {
@@ -827,21 +839,23 @@ public without sharing class FEC_MrcDuplicateCaseService {
             FEC_CaseTriggerHandler.isSystemUpdate = false;
         }
 
-        suppressRoutingHistoryTriggerSideEffects = true;
-        try {
-            recordRoutingActionHistoryForCase(
-                olderDupId,
-                'Cancel',
-                dupStatusBefore
-            );
-        } catch (Exception e) {
-            System.debug(
-                LoggingLevel.ERROR,
-                'FEC_MrcDuplicateCaseService.applyReceivedConfirmationDuplicateCancel: RAH failed — ' +
-                e.getMessage()
-            );
-        } finally {
-            suppressRoutingHistoryTriggerSideEffects = false;
+        if (!deferDupRoutingHistoryInsert) {
+            suppressRoutingHistoryTriggerSideEffects = true;
+            try {
+                recordRoutingActionHistoryForCase(
+                    olderDupId,
+                    'Cancel',
+                    dupStatusBefore
+                );
+            } catch (Exception e) {
+                System.debug(
+                    LoggingLevel.ERROR,
+                    'FEC_MrcDuplicateCaseService.applyReceivedConfirmationDuplicateCancel: RAH failed — ' +
+                    e.getMessage()
+                );
+            } finally {
+                suppressRoutingHistoryTriggerSideEffects = false;
+            }
         }
 
         String emailLocal = emailLocalSafe(UserInfo.getUserEmail());
