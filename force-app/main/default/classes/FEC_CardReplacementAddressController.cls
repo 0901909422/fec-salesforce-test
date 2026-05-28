@@ -195,7 +195,7 @@ public without sharing class FEC_CardReplacementAddressController {
             FEC_EmeaAccountInqService.EmeaResult emeaRes = FEC_EmeaAccountInqService.callAccountInquiry(input);
             blockCode1 = emeaRes?.blkCd1;
 
-            if ((inValidBlockCode.contains(blockCode) && String.isNotBlank(blockCode))|| (inValidBlockCode1.contains(blockCode1) && String.isNotBlank(blockCode1))) {
+            if ((String.isNotBlank(blockCode) && inValidBlockCode.contains(blockCode))|| (String.isNotBlank(blockCode1) && inValidBlockCode1.contains(blockCode1))) {
                 result.isShowAction = false;
                 result.strMsg = System.Label.FEC_MSG_CARD_REPLACEMENT_CS_D2C;
             } else {
