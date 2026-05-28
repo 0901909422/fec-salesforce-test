@@ -169,6 +169,8 @@ public without sharing class FEC_CardReplacementAddressController {
             FEC_CardLockUnLockController.ResponseResult cardStatus = FEC_CardLockUnLockController.getCardStatus(caseId);
             blockCode = cardStatus?.currentBlockCode;
             if (String.isBlank(blockCode)) {
+                // getCardStatus exception
+                result.isErrorAPI = true;
                 result.strMsg = System.Label.FEC_ERROR_API_CMS_CARD_TO_CARD;
                 return result;
             }
