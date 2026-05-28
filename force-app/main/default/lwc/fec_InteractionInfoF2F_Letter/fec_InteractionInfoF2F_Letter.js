@@ -154,7 +154,7 @@ export default class Fec_InteractionInfoF2F_Letter extends LightningElement {
   }
 
   get isInteractionClosed() {
-    if (this.record?.FEC_Interaction_Status__c === CLOSED_STATUS) return true;
+    if (this.record?.FEC_Interaction_Status__c === CLOSED_STATUS ||this.record?.FEC_Interaction_Status__c === 'Auto-Closed') return true;
     return false;
   }
 
