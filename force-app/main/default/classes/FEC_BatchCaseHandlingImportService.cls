@@ -37,9 +37,15 @@ public without sharing class FEC_BatchCaseHandlingImportService {
     private static final String BATCH_OBJECT_API_NAME = 'FEC_Batch_Case_Handling__c';
     @TestVisible
     private static final Integer IMPORT_PROCESSING_TIMEOUT_HOURS = 1;
-    // 27/05/2026 22:15 linhdev - import nhỏ (vd. Card Replacement 1 case) xử lý sync thay vì queueable để tránh Processing timeout 1 giờ
+    // 28/05/2026 11:20 linhdev - tối đa 5 case/transaction apply (FEC_CaseBusinessService.run ~8-12 SOQL/row) tránh 101
     @TestVisible
-    private static final Integer SYNC_IMPORT_MAX_APPLICABLE_ROWS = 10;
+    public static final Integer IMPORT_APPLY_MAX_ROWS_PER_CHUNK = 5;
+    // 28/05/2026 11:20 linhdev - import sync chỉ khi ≤5 applicable row; lớn hơn dùng queueable chain
+    @TestVisible
+    private static final Integer SYNC_IMPORT_MAX_APPLICABLE_ROWS = 5;
+    // 28/05/2026 11:20 linhdev - dừng apply sớm trước 101 SOQL (mỗi row run + trigger tốn thêm query)
+    @TestVisible
+    private static final Integer IMPORT_SOQL_SAFE_THRESHOLD_PERCENT = 72;
     private static Map<String, Map<String, String>> routeParamsCacheByKey = new Map<String, Map<String, String>>();
     private static Map<String, String> revertActionIdCacheByStage = new Map<String, String>();
     private static Map<String, String> queueIdCacheByToken = new Map<String, String>();
@@ -78,6 +84,14 @@ public without sharing class FEC_BatchCaseHandlingImportService {
         return applicableCount > 0 && applicableCount <= SYNC_IMPORT_MAX_APPLICABLE_ROWS;
     }
 
+    @TestVisible
+    public static Boolean shouldYieldImportGovernorLimits() {
+        return Limits.getQueries() >= (Limits.getLimitQueries() * IMPORT_SOQL_SAFE_THRESHOLD_PERCENT / 100)
+            || Limits.getCpuTime() >= (Limits.getLimitCpuTime() * IMPORT_SOQL_SAFE_THRESHOLD_PERCENT / 100)
+            || Limits.getDMLRows() >= (Limits.getLimitDMLRows() * IMPORT_SOQL_SAFE_THRESHOLD_PERCENT / 100)
+            || Limits.getHeapSize() >= (Limits.getLimitHeapSize() * IMPORT_SOQL_SAFE_THRESHOLD_PERCENT / 100);
+    }
+
     public static Boolean hasRemainingApplicableImportRows(
         List<FEC_BatchCaseHandlingImportRow> rows,
         Integer startIndex
@@ -109,7 +123,18 @@ public without sharing class FEC_BatchCaseHandlingImportService {
             }
         }
         if (!applicableRows.isEmpty()) {
-            applyCaseHandlingUpdates(applicableRows, cofOrGsr == true);
+            // 28/05/2026 11:20 linhdev - sync apply theo chunk 5 row để không vượt governor khi nhiều case
+            for (Integer startIdx = 0; startIdx < applicableRows.size(); startIdx += IMPORT_APPLY_MAX_ROWS_PER_CHUNK) {
+                Integer endIdx = Math.min(startIdx + IMPORT_APPLY_MAX_ROWS_PER_CHUNK, applicableRows.size());
+                List<FEC_BatchCaseHandlingImportRow> chunk = new List<FEC_BatchCaseHandlingImportRow>();
+                for (Integer idx = startIdx; idx < endIdx; idx++) {
+                    chunk.add(applicableRows[idx]);
+                }
+                applyCaseHandlingUpdates(chunk, cofOrGsr == true);
+                if (shouldYieldImportGovernorLimits() && endIdx < applicableRows.size()) {
+                    break;
+                }
+            }
         }
         finalizeBatchImportRecord(batchRecordId, rows);
     }
@@ -839,6 +864,8 @@ public without sharing class FEC_BatchCaseHandlingImportService {
                 FROM Case
                 WHERE Id IN :caseIds
             ]);
+        // 28/05/2026 11:20 linhdev - preload stage screen sau clearCache để resolve routing không query lặp / Route To
+        preloadImportStageScreensForApply(caseLiteById);
         Map<String, Schema.SObjectField> caseFieldMap = Case.SObjectType.getDescribe().fields.getMap();
         Map<String, Map<String, String>> picklistValueByNormByField =
             FEC_BatchCaseHandlingPicklistResolver.buildNormalizedToApiValueByField(
@@ -964,6 +991,12 @@ public without sharing class FEC_BatchCaseHandlingImportService {
                 if (methodKey == FEC_CaseBusinessService.REVERT && String.isNotBlank(rr.routingActionValue)) {
                     runParams.put('routingActionValue', rr.routingActionValue);
                 }
+                // 28/05/2026 11:20 linhdev - không gọi run khi gần 101 SOQL; row còn lại xử lý ở queueable chunk sau
+                if (shouldYieldImportGovernorLimits()) {
+                    rr.status = System.Label.FEC_Batch_Case_Handling_Import_Row_Status_Failed;
+                    rr.errors = appendError(rr.errors, System.Label.FEC_BCH_ImportFailed);
+                    continue;
+                }
                 FEC_CaseBusinessService.run(methodKey, runParams);
             } catch (Exception ex) {
                 rr.status = System.Label.FEC_Batch_Case_Handling_Import_Row_Status_Failed;
@@ -997,6 +1030,35 @@ public without sharing class FEC_BatchCaseHandlingImportService {
             }
         }
         applyDraftRemarksBulk(validRemarkItems, cofOrGsr);
+    }
+
+    private static void preloadImportStageScreensForApply(Map<Id, Case> caseLiteById) {
+        if (caseLiteById == null || caseLiteById.isEmpty()) {
+            return;
+        }
+        Set<Id> stageIds = new Set<Id>();
+        for (Case caseLite : caseLiteById.values()) {
+            if (caseLite != null && caseLite.FEC_Current_Case_Stage__c != null) {
+                stageIds.add(caseLite.FEC_Current_Case_Stage__c);
+            }
+        }
+        if (stageIds.isEmpty()) {
+            return;
+        }
+        FEC_BCH_ImportRoutingResolver.preloadStageScreens(stageIds, resolveImportUserGroup());
+    }
+
+    private static String resolveImportUserGroup() {
+        List<User> importUsers = [
+            SELECT FEC_User_Group__c
+            FROM User
+            WHERE Id = :UserInfo.getUserId()
+            LIMIT 1
+        ];
+        if (importUsers.isEmpty() || String.isBlank(importUsers[0].FEC_User_Group__c)) {
+            return FEC_ConstantCommon.STR_EMPTY;
+        }
+        return importUsers[0].FEC_User_Group__c;
     }
 
     private static void collectAssignmentLookupKeys(

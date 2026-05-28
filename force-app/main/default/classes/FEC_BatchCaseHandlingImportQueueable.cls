@@ -1,7 +1,9 @@
 public without sharing class FEC_BatchCaseHandlingImportQueueable implements Queueable {
 
+    // 28/05/2026 11:20 linhdev - đồng bộ chunk size với ImportService (tránh 101 SOQL khi apply nhiều case)
     @TestVisible
-    private static final Integer MAX_APPLICABLE_ROWS_PER_EXECUTE = 40;
+    private static final Integer MAX_APPLICABLE_ROWS_PER_EXECUTE =
+        FEC_BatchCaseHandlingImportService.IMPORT_APPLY_MAX_ROWS_PER_CHUNK;
 
     private final Id batchRecordId;
     private final String rowsJson;
@@ -109,11 +111,9 @@ public without sharing class FEC_BatchCaseHandlingImportQueueable implements Que
         );
     }
 
+    // 28/05/2026 11:20 linhdev - dùng ngưỡng governor chung với ImportService (72%)
     private static Boolean shouldYieldSameExecute() {
-        return Limits.getCpuTime() >= (Limits.getLimitCpuTime() * 85 / 100)
-            || Limits.getDMLRows() >= (Limits.getLimitDMLRows() * 85 / 100)
-            || Limits.getQueries() >= (Limits.getLimitQueries() * 85 / 100)
-            || Limits.getHeapSize() >= (Limits.getLimitHeapSize() * 85 / 100);
+        return FEC_BatchCaseHandlingImportService.shouldYieldImportGovernorLimits();
     }
 
     private static List<FEC_BatchCaseHandlingImportRow> parseRows(String jsonPayload) {
