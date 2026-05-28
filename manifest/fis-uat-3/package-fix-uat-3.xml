@@ -128,6 +128,7 @@
         <members>FEC_BlockCodeRoutingService</members>
         <members>FEC_CMSRewardRedeemService</members>
         <members>FEC_CMSRewardRedeemServiceTest</members>
+        <members>FEC_CMSIPPBlockWS</members>
         <members>FEC_GetMRCInfo</members>
         <members>FEC_BCH_ExportPropertyService</members>
         <members>FEC_BCH_FilterPropertyService</members>
@@ -325,6 +326,7 @@
         <members>FEC_Address_Info__c.FEC_Parent_Address__c</members>
         <members>FEC_Additional_Info__c.FEC_Customer_Service_Staff_Type__c</members>
 		<members>FEC_Action_Button__c.FEC_Code__c</members>
+		<members>FEC_API_Config__mdt.FEC_Campaign_Name__c</members>
 		<members>FEC_Stage_Change__c.FEC_Code__c</members>
 		<members>FEC_Stage_Screen__c.FEC_Code__c</members>
         <members>FEC_Template__c.FEC_Is_ZNS_Template__c</members>
@@ -337,6 +339,7 @@
 		<members>FEC_Sales_Logic__c.FEC_Sequence__c</members>
 		<members>FEC_Sales_Logic__c.FEC_TSA_Code__c</members>
         <members>FEC_Do_Not_Bother__c.FEC_Case__c</members>
+        <members>FEC_Contact_List__c.FEC_Case__c</members>
 		<members>FEC_Do_Not_Bother__c.FEC_Customer_History__c</members>
         <members>FEC_Channel__c.FEC_Cancel_Case__c</members>
         <members>FEC_Channel__c.FEC_Get_Nature_Of_Case__c</members>
@@ -410,6 +413,7 @@
 		<members>FEC_General_Assignment_Record_Page</members>
 		<members>FEC_Routing_Assignment_Record_Page</members>
         <members>FEC_Do_Not_Bother_Record_Page</members>
+        <members>Service_Resource_Absence_Record_Page</members>
         <name>FlexiPage</name>
     </types>
 	<types>
@@ -544,6 +548,7 @@
 	</types>
     <types>
         <members>FEC_API_Config.FEC_MCMSCARDTOCARDINQEMEA</members>
+        <members>FEC_API_Config.FEC_CMS_IPP_BlockWS</members>
 		<members>FEC_API_Config.FEC_Search_Test_Service_Error_Account</members>
 		<members>FEC_API_Config.FEC_Get_IPP_Detail</members>
 	    <members>FEC_API_Config.FEC_MFASOUTSTANDINGAUTHINQ</members>
