@@ -2117,20 +2117,17 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
     }
 
     if (this._mrcReturnStageChangeRoutingActive) {
-      if (
-        isMrcReceivedConfirmation(this.mrcReturnCustomerConfirmationValue) &&
-        hasAction(ACTION_CANCEL)
-      ) {
-        this._setActionValueByCode(ACTION_CANCEL);
-        return;
-      }
       const ctx = getMrcReturnRoutingContext(
         this.business,
         this.mrcReturnHandlingOptionValue,
         this.mrcReturnCustomerConfirmationValue,
         this._resolveMrcDeliveryOptionForRouting(),
       );
-      if (ctx.eligible && hasAction(ACTION_ROUTE_TO)) {
+      if (
+        ctx.eligible &&
+        hasAction(ACTION_ROUTE_TO) &&
+        this._canAutoSelectRouteTo()
+      ) {
         this._setActionValueByCode(ACTION_ROUTE_TO);
         return;
       }
@@ -4697,6 +4694,9 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
               },
             };
           } else {
+            const mrcSubmitFields = isMrcRl05Branch(this.business)
+              ? this._resolveMrcReturnFieldsForSubmit()
+              : { confirmation: null, handlingOption: null };
             params = {
               ...params,
               params: {
@@ -4709,6 +4709,8 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
                   this.business.mrcRouteTeamCode ||
                   normalizeTeamUserGroupForDisplay(this.business?.nextTeam) ||
                   null,
+                mrcCustomerConfirmation: mrcSubmitFields.confirmation || null,
+                mrcHandlingOption: mrcSubmitFields.handlingOption || null,
               },
             };
           }
@@ -6211,7 +6213,6 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
       this.business?.routingActionlst?.length
     ) {
       this._mrcReturnStageChangeRoutingActive = false;
-      this._setActionValueByCode(ACTION_CANCEL);
       this.business = {
         ...this.business,
         nextTeam: null,
@@ -6251,7 +6252,7 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
         nextTeam: null,
         nextQueue: null,
       };
-      if (this.business.routingActionlst?.length) {
+      if (this.business.routingActionlst?.length && this._canAutoSelectRouteTo()) {
         this._setActionValueByCode(ACTION_ROUTE_TO);
       }
       this.business = { ...this.business };
@@ -6267,7 +6268,9 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
       nextTeam: displayTeam,
       nextQueue: priorQueue?.value ? priorQueue : this.business?.nextQueue,
     };
-    this._setActionValueByCode(ACTION_ROUTE_TO);
+    if (this._canAutoSelectRouteTo()) {
+      this._setActionValueByCode(ACTION_ROUTE_TO);
+    }
     this.business = { ...this.business };
 
     return getDocumentRequestStageChangeRouting({
@@ -6288,7 +6291,9 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
               value: res.nextQueueId,
             },
           };
-          this._setActionValueByCode(ACTION_ROUTE_TO);
+          if (this._canAutoSelectRouteTo()) {
+            this._setActionValueByCode(ACTION_ROUTE_TO);
+          }
         } else {
           const fallbackQueue =
             priorQueue &&
@@ -6303,7 +6308,7 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
             ),
             nextQueue: fallbackQueue,
           };
-          if (fallbackQueue) {
+          if (fallbackQueue && this._canAutoSelectRouteTo()) {
             this._setActionValueByCode(ACTION_ROUTE_TO);
           } else if (showMissingQueueToast) {
             this.dispatchEvent(
@@ -6577,6 +6582,18 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
 
   _getCurrentActionCode() {
     return this._findRoutingActionByValueOrCode(this.actionValue)?.code || this.actionValue;
+  }
+
+  _hasValidCurrentActionSelection() {
+    if (!this.actionValue) {
+      return false;
+    }
+    return this._findRoutingActionByValueOrCode(this.actionValue) != null;
+  }
+
+  _canAutoSelectRouteTo() {
+    // Chỉ auto Route to khi chưa có lựa chọn hợp lệ của user (first load / invalid draft).
+    return !this._hasValidCurrentActionSelection();
   }
 
   //PhongBT 19/05/26: Fix mr chuyển routing action của document request sang lwc con

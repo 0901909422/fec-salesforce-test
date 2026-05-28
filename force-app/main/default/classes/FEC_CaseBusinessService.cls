@@ -2296,6 +2296,13 @@ public without sharing class FEC_CaseBusinessService {
           // Kiểm tra creation stage trước khi mark submitted
           Boolean isCreationStage = !([SELECT FEC_Is_Submited__c FROM Case WHERE Id = :caseId LIMIT 1].FEC_Is_Submited__c == true);
           finalStatusBeforeSubmit = readCaseFinalStatusBeforeSubmit(caseId);
+          String mrcCustomerConfirmation = params != null
+            ? (String) params.get('mrcCustomerConfirmation')
+            : null;
+          String mrcHandlingOption = params != null
+            ? (String) params.get('mrcHandlingOption')
+            : null;
+          // RL05.02: hủy dup chỉ trong Queueable sau route — tránh SOQL 101 trên transaction Submit.
           markCaseSubmittedAndClearDrafts(caseId);
           //PhongBT: tạo FEC_Case_Flow_History__c khi submit case lần đầu.
           if (isCreationStage) {
@@ -2309,7 +2316,13 @@ public without sharing class FEC_CaseBusinessService {
             finalStatusBeforeSubmit,
             (String) params.get('teamUserGroup')
           );
-          FEC_MrcDuplicateCaseService.applyNotReceivedHandlingOptionOnSubmit(caseId);
+          System.enqueueJob(
+            new FEC_MrcDupCancelOnSubmitQueueJob(
+              caseId,
+              mrcCustomerConfirmation,
+              mrcHandlingOption
+            )
+          );
           return null;
         }
         // tungnm37 thêm: COF/GSR - không đổi owner, chỉ tạo Assignment + Case Remarks + Routing Action History
