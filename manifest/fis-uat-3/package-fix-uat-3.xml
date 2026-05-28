@@ -528,6 +528,7 @@
 		<members>FEC_Title_Context_Report</members>
 		<members>FEC_BCH_ResultHdr_Errors</members>
 		<members>FEC_BCH_ResultHdr_Status</members>
+		<members>FEC_Chat_Conversations_Label</members>
 		<members>FEC_Channel_Config_Invalid_Selection</members>
 		<members>FEC_Hold_Case_Edit_Succes</members>
 		<members>FEC_Batch_Case_Handling_Import_Err_Routing_Action_Invalid</members>
