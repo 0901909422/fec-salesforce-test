@@ -2732,7 +2732,9 @@ export default class Fec_BatchCaseHandling extends LightningElement {
         cpAssessment,
         // 28/05/2026 16:20 linhdev - gửi kèm header gốc để Apex build Result theo đúng layout file user import
         originalHeaders: importHeaders,
-        originalCells
+        originalCells,
+        originalHeaderRowIndex: headerRowIndex,
+        originalSheetName: firstSheetName
       });
     }
     return { rows, isCofOrGsr, originalHeaders: importHeaders };

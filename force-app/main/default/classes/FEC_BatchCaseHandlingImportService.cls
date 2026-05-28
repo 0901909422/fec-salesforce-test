@@ -445,7 +445,13 @@ public without sharing class FEC_BatchCaseHandlingImportService {
                 batchFailureReason,
                 isCofOrGsrImportRows(rowResults)
             );
-            Blob workbookBlob = FEC_BatchCaseHandlingResultXlsxBuilder.buildWorkbookBlob(sheetRows);
+            Blob workbookBlob = buildBatchResultWorkbookFromOriginalTemplate(
+                batchRecordId,
+                rowResults
+            );
+            if (workbookBlob == null) {
+                workbookBlob = FEC_BatchCaseHandlingResultXlsxBuilder.buildWorkbookBlob(sheetRows);
+            }
             if (workbookBlob == null) {
                 return;
             }
@@ -456,6 +462,97 @@ public without sharing class FEC_BatchCaseHandlingImportService {
             cv.FirstPublishLocationId = batchRecordId;
             insert cv;
         } catch (Exception ex) {
+        }
+    }
+
+    private static Blob buildBatchResultWorkbookFromOriginalTemplate(
+        Id batchRecordId,
+        List<FEC_BatchCaseHandlingImportRow> rowResults
+    ) {
+        if (batchRecordId == null || rowResults == null || rowResults.isEmpty()) {
+            return null;
+        }
+        List<String> sourceHeaders = null;
+        Integer sourceHeaderRowIndex = null;
+        String sourceSheetName = null;
+        for (FEC_BatchCaseHandlingImportRow row : rowResults) {
+            if (row == null) {
+                continue;
+            }
+            if (sourceHeaders == null && row.originalHeaders != null && !row.originalHeaders.isEmpty()) {
+                sourceHeaders = row.originalHeaders;
+            }
+            if (sourceHeaderRowIndex == null && row.originalHeaderRowIndex != null && row.originalHeaderRowIndex >= 0) {
+                sourceHeaderRowIndex = row.originalHeaderRowIndex;
+            }
+            if (String.isBlank(sourceSheetName) && String.isNotBlank(row.originalSheetName)) {
+                sourceSheetName = row.originalSheetName;
+            }
+            if (sourceHeaders != null && sourceHeaderRowIndex != null && String.isNotBlank(sourceSheetName)) {
+                break;
+            }
+        }
+        if (sourceHeaders == null || sourceHeaders.isEmpty()) {
+            return null;
+        }
+        Id sourceContentVersionId = querySourceImportContentVersionId(batchRecordId);
+        if (sourceContentVersionId == null) {
+            return null;
+        }
+        List<Integer> mappedColumnIndexes = new List<Integer>();
+        for (Integer colIdx = 0; colIdx < sourceHeaders.size(); colIdx++) {
+            mappedColumnIndexes.add(colIdx);
+        }
+        List<List<String>> dataRows = new List<List<String>>();
+        List<List<String>> insertValues = new List<List<String>>();
+        for (FEC_BatchCaseHandlingImportRow row : rowResults) {
+            if (row == null) {
+                continue;
+            }
+            List<String> cells = new List<String>();
+            if (row.originalCells != null && !row.originalCells.isEmpty()) {
+                for (String cell : row.originalCells) {
+                    cells.add(rowValue(cell));
+                }
+            }
+            while (cells.size() < sourceHeaders.size()) {
+                cells.add(FEC_ConstantCommon.STR_EMPTY);
+            }
+            if (cells.size() > sourceHeaders.size()) {
+                List<String> normalizedCells = new List<String>();
+                for (Integer idx = 0; idx < sourceHeaders.size(); idx++) {
+                    normalizedCells.add(cells[idx]);
+                }
+                cells = normalizedCells;
+            }
+            dataRows.add(cells);
+            insertValues.add(
+                new List<String>{
+                    rowValue(resolveImportResultStatusLabel(row.status)),
+                    rowValue(row.errors)
+                }
+            );
+        }
+        if (dataRows.isEmpty()) {
+            return null;
+        }
+        FEC_BCH_TemplateExportService.ExportRequest req = new FEC_BCH_TemplateExportService.ExportRequest();
+        req.contentVersionId = sourceContentVersionId;
+        req.headerRowIndex = sourceHeaderRowIndex == null ? 0 : sourceHeaderRowIndex;
+        req.mappedColumnIndexes = mappedColumnIndexes;
+        req.dataRows = dataRows;
+        req.insertColumnsBeforeIndex = sourceHeaders.size();
+        req.insertColumnHeaders = new List<String>{ RESULT_COL_STATUS, RESULT_COL_ERRORS };
+        req.insertColumnValues = insertValues;
+        req.templateSheetName = sourceSheetName;
+        String outBase64 = FEC_BCH_TemplateExportService.exportWorkbookBase64(JSON.serialize(req));
+        if (String.isBlank(outBase64)) {
+            return null;
+        }
+        try {
+            return EncodingUtil.base64Decode(outBase64);
+        } catch (Exception ex) {
+            return null;
         }
     }
 
@@ -482,6 +579,38 @@ public without sharing class FEC_BatchCaseHandlingImportService {
             sourceName = FEC_BatchCaseHandlingSObjectUtil.asString(row.get(nameField));
         }
         return String.isBlank(sourceName) ? 'Import' : sourceName;
+    }
+
+    private static Id querySourceImportContentVersionId(Id batchRecordId) {
+        if (batchRecordId == null) {
+            return null;
+        }
+        Map<String, Schema.SObjectField> fieldMap = batchFieldMap();
+        String fileDocField = FEC_BatchCaseHandlingSObjectUtil.pickField(
+            fieldMap,
+            new List<String>{ 'FEC_File_Content_Document_Id__c' }
+        );
+        if (String.isBlank(fileDocField)) {
+            return null;
+        }
+        List<SObject> batchRows = Database.query(
+            'SELECT ' + fileDocField + ' FROM ' + BATCH_OBJECT_API_NAME + ' WHERE Id = :batchRecordId LIMIT 1'
+        );
+        if (batchRows.isEmpty()) {
+            return null;
+        }
+        String contentDocumentId = FEC_BatchCaseHandlingSObjectUtil.asString(batchRows[0].get(fileDocField));
+        if (String.isBlank(contentDocumentId)) {
+            return null;
+        }
+        List<ContentVersion> versions = [
+            SELECT Id
+            FROM ContentVersion
+            WHERE ContentDocumentId = :contentDocumentId
+            ORDER BY VersionNumber DESC
+            LIMIT 1
+        ];
+        return versions.isEmpty() ? null : versions[0].Id;
     }
 
     private static List<List<String>> buildBatchResultSheetRows(
@@ -684,6 +813,8 @@ public without sharing class FEC_BatchCaseHandlingImportService {
             // 28/05/2026 16:20 linhdev - giữ nguyên header/cell gốc để server tự xuất Result đúng file user import
             rr.originalHeaders = pickRowStringList(row, 'originalHeaders');
             rr.originalCells = pickRowStringList(row, 'originalCells');
+            rr.originalHeaderRowIndex = pickRowInteger(row, 'originalHeaderRowIndex');
+            rr.originalSheetName = pickRowString(row, new List<String>{ 'originalsheetname' });
             Boolean rowEmpty =
                 String.isBlank(rr.caseIdSearch) &&
                 String.isBlank(rr.routingAction) &&
@@ -2357,6 +2488,25 @@ public without sharing class FEC_BatchCaseHandlingImportService {
             out.add(val == null ? FEC_ConstantCommon.STR_EMPTY : String.valueOf(val));
         }
         return out;
+    }
+
+    private static Integer pickRowInteger(Map<String, Object> row, String keyName) {
+        if (row == null || String.isBlank(keyName) || !row.containsKey(keyName)) {
+            return null;
+        }
+        Object raw = row.get(keyName);
+        if (raw == null) {
+            return null;
+        }
+        String text = String.valueOf(raw).trim();
+        if (String.isBlank(text)) {
+            return null;
+        }
+        try {
+            return Integer.valueOf(text);
+        } catch (Exception ex) {
+            return null;
+        }
     }
 
     private static String remarksToJson(List<FEC_Case_Remarks__c> remarks) {
