@@ -71,6 +71,16 @@ public without sharing class FEC_BatchCaseHandlingController {
         @AuraEnabled public List<FilterPropertyMeta> allCaseProperties;
     }
 
+    public class BulkExportPropertyColumn {
+        @AuraEnabled public String label; // tungnm37
+        @AuraEnabled public String columnKey; // tungnm37
+    }
+
+    public class BulkExportPropertyBundle {
+        @AuraEnabled public List<BulkExportPropertyColumn> columns; // tungnm37
+        @AuraEnabled public Map<String, Map<String, String>> valuesByCaseId; // tungnm37
+    }
+
     @AuraEnabled(cacheable=true)
     public static List<FilterPropertyMeta> getCaseFilterPropertyMetadata(String filterScope) {
         List<FilterPropertyMeta> out = FEC_BCH_FilterPropertyService.getMetadata(filterScope);
@@ -599,6 +609,32 @@ public without sharing class FEC_BatchCaseHandlingController {
     }
 
     @AuraEnabled
+    public static BulkCaseSearchResult getSelectedCasesForExport(List<Id> caseIds) {
+        BulkCaseSearchResult out = new BulkCaseSearchResult();
+        out.rows = new List<FEC_BatchCaseHandlingExportRow>();
+        out.totalCount = 0;
+        if (caseIds == null || caseIds.isEmpty()) {
+            return out;
+        }
+
+        List<String> selectFields = FEC_BatchCaseHandlingExportService.buildCaseExportSelectFields();
+        List<Case> cases = Database.query(
+            'SELECT ' + String.join(selectFields, ', ') +
+            ' FROM Case WHERE Id IN :caseIds'
+        );
+        SObjectAccessDecision decision = Security.stripInaccessible(AccessType.READABLE, cases);
+        cases = (List<Case>) decision.getRecords();
+
+        for (Case c : cases) {
+            out.rows.add(FEC_BatchCaseHandlingExportService.mapCaseToExportRow(c));
+        }
+        FEC_BatchCaseHandlingExportService.applyVisibleAttachmentFlags(out.rows);
+        FEC_BatchCaseHandlingExportService.enrichExportRows(out.rows);
+        out.totalCount = out.rows.size();
+        return out;
+    }
+
+    @AuraEnabled
     public static List<CaseSetRangeOption> getAttachmentCaseSetOptions(String filtersJson) {
         List<CaseSetRangeOption> out = new List<CaseSetRangeOption>();
         Integer total = 0;
@@ -753,6 +789,49 @@ public without sharing class FEC_BatchCaseHandlingController {
         return item;
     }
 
+    // 27/05/2026 10:00 linhdev - Export with all Properties: query MDS Property theo BP + giá trị Case (FLS)
+    @AuraEnabled
+    public static BulkExportPropertyBundle getBulkExportPropertyBundle(
+        List<String> businessProcessCodes,
+        List<Id> caseIds,
+        Boolean includeAllProperties
+    ) {
+        BulkExportPropertyBundle out = new BulkExportPropertyBundle();
+        out.columns = new List<BulkExportPropertyColumn>();
+        out.valuesByCaseId = new Map<String, Map<String, String>>();
+        FEC_BCH_ExportPropertyService.BulkExportPropertyBundle serviceBundle =
+            FEC_BCH_ExportPropertyService.buildBundle(
+                businessProcessCodes,
+                caseIds,
+                includeAllProperties
+            );
+        if (serviceBundle == null || serviceBundle.columns == null || serviceBundle.columns.isEmpty()) {
+            return out;
+        }
+        for (FEC_BCH_ExportPropertyService.ExportPropertyColumn srcCol : serviceBundle.columns) {
+            if (srcCol == null || String.isBlank(srcCol.columnKey)) {
+                continue;
+            }
+            BulkExportPropertyColumn col = new BulkExportPropertyColumn();
+            col.columnKey = srcCol.columnKey;
+            col.label = String.isBlank(srcCol.label) ? srcCol.columnKey : srcCol.label;
+            out.columns.add(col);
+        }
+        if (serviceBundle.valuesByCaseId != null) {
+            for (Id caseId : serviceBundle.valuesByCaseId.keySet()) {
+                if (caseId == null) {
+                    continue;
+                }
+                Map<String, String> rowValues = serviceBundle.valuesByCaseId.get(caseId);
+                if (rowValues == null || rowValues.isEmpty()) {
+                    continue;
+                }
+                out.valuesByCaseId.put(String.valueOf(caseId), new Map<String, String>(rowValues));
+            }
+        }
+        return out;
+    }
+
     private static Boolean isPlaceholderImportTemplateName(String templateName) {
         if (String.isBlank(templateName)) {
             return true;
@@ -877,6 +956,36 @@ public without sharing class FEC_BatchCaseHandlingController {
     public static FEC_BCH_TemplateExportService.ExportWorkbookResponse exportTemplateWorkbook(
         String requestJson
     ) {
+        if (String.isNotBlank(requestJson)) {
+            FEC_BCH_TemplateExportService.ExportRequest req =
+                (FEC_BCH_TemplateExportService.ExportRequest) JSON.deserialize(
+                    requestJson,
+                    FEC_BCH_TemplateExportService.ExportRequest.class
+                );
+            if (req != null && req.contentVersionId != null) {
+                // 27/05/2026 20:15 linhdev - chặn export template không khớp role/user group (vd. Address Update chỉ SP)
+                String roleTemplateError = FEC_BatchCaseHandlingTemplateHelper.validateExportTemplateContentVersion(
+                    req.contentVersionId,
+                    resolveCurrentUserGroup()
+                );
+                if (String.isNotBlank(roleTemplateError)) {
+                    FEC_BCH_TemplateExportService.ExportWorkbookResponse denied =
+                        new FEC_BCH_TemplateExportService.ExportWorkbookResponse();
+                    denied.success = false;
+                    denied.errorCode = 'ROLE_TEMPLATE_MISMATCH';
+                    denied.errorMessage = roleTemplateError;
+                    return denied;
+                }
+            }
+            if (
+                req != null &&
+                req.contentVersionId != null &&
+                FEC_BCH_IncorrectPaymentTemplateWriter.shouldHandle(req.contentVersionId)
+            ) {
+                // tungnm37 - route Incorrect Payment template export to dedicated writer path
+                return FEC_BCH_IncorrectPaymentTemplateWriter.exportWorkbook(requestJson);
+            }
+        }
         return FEC_BCH_TemplateExportService.exportWorkbook(requestJson);
     }
     @AuraEnabled
@@ -954,6 +1063,17 @@ public without sharing class FEC_BatchCaseHandlingController {
                 upsertFailedBatchHandling(fileName, resolvedTemplateName, out.message);
                 return out;
             }
+            // 27/05/2026 18:45 linhdev - chặn import template không khớp role/user group (vd. AddressUpdateTemp1_CSSupport khi user khác CS SP)
+            String roleTemplateError = FEC_BatchCaseHandlingTemplateHelper.validateUploadedTemplateForUserGroup(
+                fileName,
+                businessProcessCode,
+                resolveCurrentUserGroup()
+            );
+            if (String.isNotBlank(roleTemplateError)) {
+                out.message = roleTemplateError;
+                upsertFailedBatchHandling(fileName, resolvedTemplateName, roleTemplateError);
+                return out;
+            }
             FEC_BatchCaseHandlingSObjectUtil.putIfFieldExists(
                 fieldMap,
                 batchRow,
@@ -973,6 +1093,34 @@ public without sharing class FEC_BatchCaseHandlingController {
             Boolean cofOrGsr = FEC_BatchCaseHandlingImportService.isCofOrGsrTemplate(resolvedTemplateName);
             List<FEC_BatchCaseHandlingImportRow> rowResults = FEC_BatchCaseHandlingImportService.validateCaseHandlingImportRows(inputRows, cofOrGsr);
             if (FEC_BatchCaseHandlingImportService.hasApplicableImportRows(rowResults)) {
+                // 27/05/2026 22:15 linhdev - Card Replacement 1 case: xử lý sync thay vì queueable để tránh Processing timeout 1 giờ
+                if (FEC_BatchCaseHandlingImportService.shouldProcessImportSynchronously(rowResults)) {
+                    FEC_BatchCaseHandlingImportService.processApplicableImportRowsSync(
+                        (Id) batchRow.get('Id'),
+                        rowResults,
+                        cofOrGsr
+                    );
+                    Integer failedCount = FEC_BatchCaseHandlingImportService.countFailedImportRows(rowResults);
+                    Integer totalCount = rowResults.size();
+                    String finalStatus;
+                    String failureReason = FEC_ConstantCommon.STR_EMPTY;
+                    if (totalCount == 0) {
+                        finalStatus = 'Failure';
+                        failureReason = System.Label.FEC_BCH_RequireFile;
+                    } else if (failedCount == totalCount) {
+                        finalStatus = 'Failure';
+                        failureReason = System.Label.FEC_BCH_Import_Rows_Invalid;
+                    } else {
+                        finalStatus = 'Processed';
+                    }
+                    out.success = true;
+                    out.message = System.Label.FEC_BCH_Import_Submitted;
+                    out.batchRecordId = (Id) batchRow.get('Id');
+                    out.contentDocumentId = insertedCv.ContentDocumentId;
+                    out.status = finalStatus;
+                    out.resultRowsJson = JSON.serialize(rowResults);
+                    return out;
+                }
                 System.enqueueJob(
                     new FEC_BatchCaseHandlingImportQueueable(
                         (Id) batchRow.get('Id'),

@@ -2,7 +2,10 @@ import { LightningElement, api, track } from "lwc";
 import getAssignmentRemarks from "@salesforce/apex/FEC_AssignmentListHandler.getAssignmentRemarks";
 const PAGE_SIZE_OPTIONS = [10, 20, 30, 40, 50];
 import { getUsernameBeforeAt, formatDateTime } from "c/fec_CommonUtils";
+
 export default class Fec_AssignmentRemarkHistoryTable extends LightningElement {
+  subscription = null;
+  messageContext;
   @api recordId;
   @api assignmentId;
   @track assignments = [];
@@ -49,6 +52,11 @@ export default class Fec_AssignmentRemarkHistoryTable extends LightningElement {
 
   connectedCallback() {
     this.loadData();
+  }
+
+  @api
+  async refreshData() {
+    await this.loadData();
   }
 
   async loadData() {

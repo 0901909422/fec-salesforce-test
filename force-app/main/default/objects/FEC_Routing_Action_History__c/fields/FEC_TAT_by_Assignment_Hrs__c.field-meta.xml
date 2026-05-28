@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
     <fullName>FEC_TAT_by_Assignment_Hrs__c</fullName>
-    <description>Giờ làm việc: FEC_Submitted_On__c - FEC_Assigned_On__c theo Business Hours FEC Business Hours (trừ ngày lễ, cuối tuần, khung giờ không làm việc). Gán bởi Apex.</description>
+    <description>Tổng số giờ làm việc (decimal) giữa Assigned On và Submitted On, theo Business Hours.</description>
     <externalId>false</externalId>
     <label>TAT by Assignment (Hrs)</label>
-    <precision>16</precision>
+    <precision>18</precision>
     <required>false</required>
-    <scale>2</scale>
+    <scale>4</scale>
     <trackHistory>false</trackHistory>
     <trackTrending>false</trackTrending>
     <type>Number</type>

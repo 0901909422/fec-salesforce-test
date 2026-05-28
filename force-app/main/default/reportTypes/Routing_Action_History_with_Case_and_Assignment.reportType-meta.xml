@@ -292,6 +292,7 @@
         </columns>
         <columns>
             <checkedByDefault>false</checkedByDefault>
+            <displayNameOverride>App ID</displayNameOverride>
             <field>FEC_Case__c.FEC_Application_ID__c</field>
             <table>FEC_Routing_Action_History__c</table>
         </columns>
@@ -603,6 +604,12 @@
             <checkedByDefault>false</checkedByDefault>
             <displayNameOverride>TAT Full Process (Hrs)</displayNameOverride>
             <field>FEC_Case__c.FEC_TAT_Full_Process_Hrs__c</field>
+            <table>FEC_Routing_Action_History__c</table>
+        </columns>
+        <columns>
+            <checkedByDefault>false</checkedByDefault>
+            <displayNameOverride>User ID</displayNameOverride>
+            <field>FEC_Case__c.FEC_User_ID__c</field>
             <table>FEC_Routing_Action_History__c</table>
         </columns>
         <masterLabel>Cases</masterLabel>

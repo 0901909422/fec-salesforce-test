@@ -240,6 +240,21 @@ function resolveRl0502TeamFromInputs(
   option2Selected,
   notReceived,
 ) {
+  if (flowTeam === TEAM_PM) {
+    if (rl05Scenario === "TH1" && notReceived && option2Selected) {
+      return { teamCode: TEAM_PM, scenario: "IV-1-PM-PRIORITY" };
+    }
+    if (rl05Scenario === "TH2" && (option2Selected || notReceived)) {
+      return { teamCode: TEAM_PM, scenario: "IV-2-PM-PRIORITY" };
+    }
+    if (rl05Scenario === "TH3" && (option2Selected || notReceived)) {
+      return { teamCode: TEAM_PM, scenario: "IV-3-PM-PRIORITY" };
+    }
+    if (rl05Scenario === "TH4") {
+      return { teamCode: TEAM_PM, scenario: "TH4-PM-PRIORITY" };
+    }
+  }
+
   const deliveryTeam = resolveRl0502DeliveryCpTeam(deliveryOption);
 
   if (rl05Scenario === "TH1") {
@@ -384,7 +399,7 @@ export function getMrcReturnRoutingContext(
     }
   }
 
-  if (option2Selected && resolveRl0502DeliveryCpTeam(deliveryOption)) {
+  if (flowTeam !== TEAM_PM && option2Selected && resolveRl0502DeliveryCpTeam(deliveryOption)) {
     return buildEligible(TEAM_CP, "OPTION2-DELIVERY-FALLBACK");
   }
 

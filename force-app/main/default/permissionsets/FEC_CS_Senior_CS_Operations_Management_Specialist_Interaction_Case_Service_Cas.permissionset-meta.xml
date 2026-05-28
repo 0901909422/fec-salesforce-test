@@ -292,6 +292,11 @@
     </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
+        <field>Case.FEC_Contract_Processing_MRC_Assessment__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
         <field>Case.FEC_Correct_Contract_Number__c</field>
         <readable>true</readable>
     </fieldPermissions>
@@ -1631,6 +1636,11 @@
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Assignment__c.FEC_Recently_Auto_Case_Assignment__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
         <editable>false</editable>
         <field>FEC_Assignment__c.FEC_Assignment_Remark__c</field>
         <readable>true</readable>
@@ -1648,6 +1658,11 @@
     <fieldPermissions>
         <editable>false</editable>
         <field>FEC_Assignment__c.FEC_Date_Time__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Assignment__c.FEC_Draft_Assignment_Remark__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
@@ -2128,6 +2143,11 @@
     <fieldPermissions>
         <editable>false</editable>
         <field>FEC_Sales_Logic__c.FEC_Sales_Sub_Channel__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Sales_Logic__c.FEC_Sequence__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
@@ -4093,6 +4113,12 @@
         <field>Case.FEC_Is_DNB__c</field>
         <readable>true</readable>
     </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
+        <field>Case.FEC_User_ID__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+
     <hasActivationRequired>false</hasActivationRequired>
     <label>CS - Senior CS Operations Management Specialist - Interaction Case &amp; Service Cas</label>
     <license>Salesforce</license>

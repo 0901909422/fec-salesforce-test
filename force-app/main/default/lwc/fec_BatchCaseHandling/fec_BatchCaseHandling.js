@@ -6,6 +6,7 @@ import getRecentRows from "@salesforce/apex/FEC_BatchCaseHandlingController.getR
 import getCaseFilterPropertyMetadataBundle from "@salesforce/apex/FEC_BatchCaseHandlingController.getCaseFilterPropertyMetadataBundle";
 import searchBulkCases from "@salesforce/apex/FEC_BatchCaseHandlingController.searchBulkCases";
 import searchBulkCasesForExport from "@salesforce/apex/FEC_BatchCaseHandlingController.searchBulkCasesForExport";
+import getSelectedCasesForExport from "@salesforce/apex/FEC_BatchCaseHandlingController.getSelectedCasesForExport";
 import getAttachmentCaseSetOptions from "@salesforce/apex/FEC_BatchCaseHandlingController.getAttachmentCaseSetOptions";
 import downloadAttachmentsZip from "@salesforce/apex/FEC_BatchCaseHandlingController.downloadAttachmentsZip";
 import getBusinessProcessExportRows from "@salesforce/apex/FEC_BatchCaseHandlingController.getBusinessProcessExportRows";
@@ -14,10 +15,11 @@ import getBulkExportAllowedBusinessProcessNames from "@salesforce/apex/FEC_Batch
 import getBulkExportAllowedBusinessProcessCodes from "@salesforce/apex/FEC_BatchCaseHandlingController.getBulkExportAllowedBusinessProcessCodes";
 import getTemplateFileBase64 from "@salesforce/apex/FEC_BatchCaseHandlingController.getTemplateFileBase64";
 import exportTemplateWorkbook from "@salesforce/apex/FEC_BatchCaseHandlingController.exportTemplateWorkbook";
+// 27/05/2026 10:00 linhdev - Export with all Properties: Apex bundle MDS Property theo BP
+import getBulkExportPropertyBundle from "@salesforce/apex/FEC_BatchCaseHandlingController.getBulkExportPropertyBundle";
 import downloadCaseAttachmentsZip from "@salesforce/apex/FEC_BatchCaseHandlingController.downloadCaseAttachmentsZip";
 import zipExcelFiles from "@salesforce/apex/FEC_BatchCaseHandlingController.zipExcelFiles";
 import importBatchData from "@salesforce/apex/FEC_BatchCaseHandlingController.importBatchData";
-import saveResultFile from "@salesforce/apex/FEC_BatchCaseHandlingController.saveResultFile";
 import logFailedImport from "@salesforce/apex/FEC_BatchCaseHandlingController.logFailedImport";
 import FEC_SheetJS from "@salesforce/resourceUrl/FEC_SheetJS";
 import { STR_EMPTY, DATE_PLACEHOLDER } from "c/fec_CommonConst";
@@ -55,12 +57,8 @@ import FEC_BCH_ActionDownload from "@salesforce/label/c.FEC_BCH_ActionDownload";
 import FEC_BCH_ActionExportAll from "@salesforce/label/c.FEC_BCH_ActionExportAll";
 import FEC_BCH_ActionExportSelected from "@salesforce/label/c.FEC_BCH_ActionExportSelected";
 import FEC_BCH_ActionImportUpdate from "@salesforce/label/c.FEC_BCH_ActionImportUpdate";
-import FEC_BCH_ResultHdr_RoutingAction from "@salesforce/label/c.FEC_BCH_ResultHdr_RoutingAction";
-import FEC_BCH_ResultHdr_Remarks from "@salesforce/label/c.FEC_BCH_ResultHdr_Remarks";
 import FEC_BCH_ResultHdr_Status from "@salesforce/label/c.FEC_BCH_ResultHdr_Status";
 import FEC_BCH_ResultHdr_Errors from "@salesforce/label/c.FEC_BCH_ResultHdr_Errors";
-import FEC_BCH_ResultHdr_AssignmentId from "@salesforce/label/c.FEC_BCH_ResultHdr_AssignmentId";
-import FEC_BCH_ResultHdr_AssignmentRouting from "@salesforce/label/c.FEC_BCH_ResultHdr_AssignmentRouting";
 import FEC_BCH_FilterPickProperty from "@salesforce/label/c.FEC_BCH_FilterPickProperty";
 import FEC_BCH_FilterPickOperator from "@salesforce/label/c.FEC_BCH_FilterPickOperator";
 import FEC_BCH_NoticeTitle from "@salesforce/label/c.FEC_BCH_NoticeTitle";
@@ -270,6 +268,19 @@ const HEADERS_REQUIRED_ACTION = [
 const HEADERS_CLASSIFICATION_BY_CS = ["classificationbycs"];
 const HEADERS_EVALUATION_BY_CS = ["evaluationbycs"];
 const HEADERS_FINAL_PRODUCT = ["finalproduct"];
+// 28/05/2026 14:00 linhdev - Payment/CP assessment columns (RefundLoan PM, MRC CP templates)
+const HEADERS_PAYMENT_CONTRACT_ASSESSMENT = [
+  "paymentđánhgiáyêucầuđónghợpđồng",
+  "paymentdanhgiayeucaudonghopdong",
+  "paymentcontractassessment",
+  "rdpaymentcontractassessment"
+];
+const HEADERS_CP_ASSESSMENT = [
+  "cpđánhgiáyêucầu",
+  "cpdanhgiayeucau",
+  "cpassessment",
+  "contractprocessingassessment"
+];
 const EXPORT_USER_FILL_HEADERS = new Set([
   ...HEADERS_ROUTING_ACTION,
   ...HEADERS_REMARKS,
@@ -277,7 +288,12 @@ const EXPORT_USER_FILL_HEADERS = new Set([
   ...HEADERS_CS_D2C_ASSESSMENT,
   ...HEADERS_CS_SUPPORT_ASSESSMENT,
   ...HEADERS_RISK_LEVEL,
-  ...HEADERS_REQUIRED_ACTION
+  ...HEADERS_REQUIRED_ACTION,
+  ...HEADERS_CLASSIFICATION_BY_CS,
+  ...HEADERS_EVALUATION_BY_CS,
+  ...HEADERS_FINAL_PRODUCT,
+  ...HEADERS_PAYMENT_CONTRACT_ASSESSMENT,
+  ...HEADERS_CP_ASSESSMENT
 ]);
 const EXPORT_HEADER_FIELD_MAP = {
   customername: "customerName",
@@ -295,15 +311,16 @@ const EXPORT_HEADER_FIELD_MAP = {
   complainttype: "complaintType",
   complaintsource: "complaintSource",
   producttype: "productType",
+  producttypecode: "productType",
   originalcategory: "originalCategoryDisplay",
   originalsubcategory: "originalSubCategoryDisplay",
   originalsubcode: "originalSubCodeDisplay",
-  updatedcategory: "categoryDisplay",
-  updatedsubcategory: "subCategoryDisplay",
-  updatedsubcode: "subCodeDisplay",
-  category: "categoryDisplay",
-  subcategory: "subCategoryDisplay",
-  subcode: "subCodeDisplay",
+  updatedcategory: "categoryCode",
+  updatedsubcategory: "subCategoryCode",
+  updatedsubcode: "subCodeCode",
+  category: "categoryCode",
+  subcategory: "subCategoryCode",
+  subcode: "subCodeCode",
   caseremarks: "caseRemarks",
   caseremarksenteredby: "caseRemarksEnteredBy",
   caseremarksenteredbyrole: "caseRemarksEnteredByRole",
@@ -349,41 +366,10 @@ const EXPORT_HEADER_FIELD_MAP = {
   correctcontractnumber: "correctContractNumber",
   correctaccountcontract: "correctAccountContract",
   correctaccountandcontract: "correctAccountContract",
-  adjustedamount: "adjustedAmount",
-  correctcontractamountlessthan1greaterthan: "adjustedAmount",
-  correctcontractamount1: "adjustedAmount",
-  adjustedamountlessthan1greaterthan: "adjustedAmount",
-  adjustedamount1: "adjustedAmount"
+  adjustedamount: "adjustedAmount"
 };
-const FILTERED_EXPORT_EXTRA_COLUMNS = [
-  { header: FEC_BCH_Col_CustomerType, field: "customerType" },
-  { header: FEC_BCH_Col_CaseId, field: "caseIdSearch" },
-  { header: FEC_BCH_Col_Category, field: "categoryCode" },
-  { header: FEC_BCH_Col_SubCategory, field: "subCategoryCode" },
-  { header: FEC_BCH_Col_SubCode, field: "subCodeCode" },
-  { header: FEC_BCH_Col_CaseStatus, field: "caseStatus" },
-  { header: FEC_BCH_Col_CaseCreatedOn, field: "caseCreatedOnLabel" },
-  { header: FEC_BCH_Col_LastUpdatedOn, field: "lastUpdatedOnLabel" },
-  { header: FEC_BCH_Col_Attachments, field: "hasAttachmentLabel" }
-];
 const RESULT_COL_STATUS = "__Status";
 const RESULT_COL_ERRORS = "__Errors";
-const RESULT_HEADERS_BASIC = [
-  FEC_BCH_Col_CaseId,
-  FEC_BCH_ResultHdr_RoutingAction,
-  FEC_BCH_ResultHdr_Remarks,
-  FEC_BCH_ResultHdr_Status,
-  FEC_BCH_ResultHdr_Errors
-];
-const RESULT_HEADERS_GSR = [
-  FEC_BCH_Col_CaseId,
-  FEC_BCH_ResultHdr_RoutingAction,
-  FEC_BCH_ResultHdr_Remarks,
-  FEC_BCH_ResultHdr_AssignmentId,
-  FEC_BCH_ResultHdr_AssignmentRouting,
-  FEC_BCH_ResultHdr_Status,
-  FEC_BCH_ResultHdr_Errors
-];
 const TEMPLATE_NAME_GSR = "GSR";
 const TEMPLATE_NAME_OTHER = "Other";
 const MSG_BP_REQUIRED = FEC_BCH_BpRequired;
@@ -1864,9 +1850,38 @@ export default class Fec_BatchCaseHandling extends LightningElement {
   async openBusinessProcessPopup(useSelected) {
     let sourceRows = [];
     if (useSelected) {
-      sourceRows = this.caseRows.filter((r) => r.selected);
-      if (!sourceRows.length) {
+      //tungnm37 2026-05-27 12:11 - Không dùng trực tiếp grid rows vì grid chỉ có dữ liệu tối thiểu, thiếu field export/enrich
+      const selectedCaseIds = this.caseRows
+        .filter((r) => r.selected)
+        .map((r) => r.caseId)
+        .filter((id) => !!id);
+      if (!selectedCaseIds.length) {
         this.showInfo(FEC_BCH_ExportToastTitle, FEC_BCH_SelectAtLeastOneCase);
+        return;
+      }
+      this.isLoading = true;
+      try {
+        //tungnm37 2026-05-27 12:11 - Query lại từ Apex để Export Selected đi cùng nguồn dữ liệu với Export All
+        const res = await getSelectedCasesForExport({ caseIds: selectedCaseIds });
+        const raw = Array.isArray(res?.rows) ? res.rows : [];
+        sourceRows = raw.map((r) => ({
+          ...r,
+          caseCreatedOnLabel:
+            r.caseCreatedOnLabel || this.formatDateTimeSafe(r.caseCreatedOn),
+          lastUpdatedOnLabel:
+            r.lastUpdatedOnLabel || this.formatDateTimeSafe(r.lastUpdatedOn),
+          hasAttachmentLabel:
+            r.hasAttachmentLabel ||
+            (r.hasAttachment ? FEC_BCH_DocumentLinkLabel : STR_EMPTY)
+        }));
+      } catch (error) {
+        this.handleExportFailure(error);
+        this.isLoading = false;
+        return;
+      }
+      this.isLoading = false;
+      if (!sourceRows.length) {
+        this.showInfo(FEC_BCH_ExportToastTitle, MSG_NO_DATA_EXPORT);
         return;
       }
     } else {
@@ -2273,12 +2288,15 @@ export default class Fec_BatchCaseHandling extends LightningElement {
           fallbackBp
         );
         const contentVersionId = this.resolveTemplateContentVersionId(tmplMeta);
+        // 27/05/2026 10:00 linhdev - Export with all Properties: load MDS columns + values khi user chọn Yes
+        const propertyBundle = await this.loadExportPropertyBundleForRows(groupItem?.rows || []);
         const file = await this.withTimeout(
           this.buildExcelFileFromTemplate(
             groupItem?.rows || [],
             fileName,
             contentVersionId,
-            tmplMeta
+            tmplMeta,
+            propertyBundle
           ),
           EXCEL_FILE_TIMEOUT_MS,
           EXCEL_FILE_TIMEOUT_MESSAGE
@@ -2451,21 +2469,7 @@ export default class Fec_BatchCaseHandling extends LightningElement {
         return;
       }
       const isProcessing = result.status === IMPORT_STATUS_PROCESSING;
-      if (!isProcessing) {
-        const resultRows = this.parseResultRows(result.resultRowsJson);
-        try {
-          await this.saveResultWorkbook(
-            result.batchRecordId,
-            fileName,
-            isCofOrGsr,
-            originalHeaders,
-            rows,
-            resultRows
-          );
-        } catch (saveErr) {
-          // Result file generation failure does not invalidate the import itself
-        }
-      }
+      // 28/05/2026 16:20 linhdev - Result file do Apex tạo trực tiếp từ layout import gốc + __Status/__Errors
       const successTitle = isProcessing ? MSG_IMPORT_SUBMITTED : MSG_IMPORT_SUCCESS;
       const successDetail = result.message || STR_EMPTY;
       this.importSuccessMessage = successTitle;
@@ -2571,29 +2575,6 @@ export default class Fec_BatchCaseHandling extends LightningElement {
     return fileCore === expectedCore || fileCore.includes(expectedCore);
   }
 
-  mapImportResultStatusLabel(status) {
-    const normalized = String(status || STR_EMPTY).trim();
-    if (!normalized) {
-      return STR_EMPTY;
-    }
-    if (normalized.toLowerCase() === "failed") {
-      return "Failed";
-    }
-    return "Success";
-  }
-
-  parseResultRows(rowsJson) {
-    if (!rowsJson) {
-      return [];
-    }
-    try {
-      const arr = JSON.parse(rowsJson);
-      return Array.isArray(arr) ? arr : [];
-    } catch (e) {
-      return [];
-    }
-  }
-
   parseImportWorkbook(arrayBuffer) {
     if (typeof window.XLSX === "undefined") {
       return null;
@@ -2655,6 +2636,14 @@ export default class Fec_BatchCaseHandling extends LightningElement {
       normalized,
       HEADERS_FINAL_PRODUCT
     );
+    const idxPaymentContractAssessment = this.findHeaderIndex(
+      normalized,
+      HEADERS_PAYMENT_CONTRACT_ASSESSMENT
+    );
+    const idxCpAssessment = this.findHeaderIndex(
+      normalized,
+      HEADERS_CP_ASSESSMENT
+    );
     const isCofOrGsr = idxAssignmentId >= 0 || idxAssignmentRouting >= 0;
     const rows = [];
     for (let i = headerRowIndex + 1; i < aoa.length; i++) {
@@ -2693,6 +2682,14 @@ export default class Fec_BatchCaseHandling extends LightningElement {
           : STR_EMPTY;
       const finalProduct =
         idxFinalProduct >= 0 ? this.cellAsString(r[idxFinalProduct]) : STR_EMPTY;
+      const paymentContractAssessment =
+        idxPaymentContractAssessment >= 0
+          ? this.cellAsString(r[idxPaymentContractAssessment])
+          : STR_EMPTY;
+      const cpAssessment =
+        idxCpAssessment >= 0
+          ? this.cellAsString(r[idxCpAssessment])
+          : STR_EMPTY;
       if (
         !caseIdSearch &&
         !routingAction &&
@@ -2705,7 +2702,9 @@ export default class Fec_BatchCaseHandling extends LightningElement {
         !requiredAction &&
         !classificationByCS &&
         !evaluationByCS &&
-        !finalProduct
+        !finalProduct &&
+        !paymentContractAssessment &&
+        !cpAssessment
       ) {
         continue;
       }
@@ -2729,6 +2728,10 @@ export default class Fec_BatchCaseHandling extends LightningElement {
         classificationByCS,
         evaluationByCS,
         finalProduct,
+        paymentContractAssessment,
+        cpAssessment,
+        // 28/05/2026 16:20 linhdev - gửi kèm header gốc để Apex build Result theo đúng layout file user import
+        originalHeaders: importHeaders,
         originalCells
       });
     }
@@ -2845,113 +2848,6 @@ export default class Fec_BatchCaseHandling extends LightningElement {
       reader.onload = () => resolve(reader.result);
       reader.onerror = () => reject(reader.error || new Error("read error"));
       reader.readAsArrayBuffer(file);
-    });
-  }
-
-  applyResultErrorsColumnFormat(sheet, headers, rowCount) {
-    if (!sheet || !Array.isArray(headers) || !rowCount) {
-      return;
-    }
-    const errorsColIdx = headers.indexOf(RESULT_COL_ERRORS);
-    if (errorsColIdx < 0) {
-      return;
-    }
-    if (!sheet["!cols"]) {
-      sheet["!cols"] = [];
-    }
-    sheet["!cols"][errorsColIdx] = { wch: 60 };
-    for (let rowIdx = 1; rowIdx < rowCount; rowIdx++) {
-      const cellRef = window.XLSX.utils.encode_cell({ c: errorsColIdx, r: rowIdx });
-      const cell = sheet[cellRef];
-      if (!cell) {
-        continue;
-      }
-      cell.s = {
-        alignment: {
-          wrapText: true,
-          vertical: "top"
-        }
-      };
-    }
-  }
-
-  async saveResultWorkbook(
-    batchRecordId,
-    originalFileName,
-    isCofOrGsr,
-    originalHeaders,
-    inputRows,
-    resultRows
-  ) {
-    if (!batchRecordId) {
-      return;
-    }
-    if (typeof window.XLSX === "undefined") {
-      return;
-    }
-    const hasOriginalHeaders =
-      Array.isArray(originalHeaders) && originalHeaders.length > 0;
-    const strippedHeaders = hasOriginalHeaders
-      ? this.stripResultColumnsFromImportLayout(originalHeaders)
-      : { headers: [], cells: [] };
-    const headersForExport = hasOriginalHeaders ? strippedHeaders.headers : [];
-    const headers = hasOriginalHeaders
-      ? [...headersForExport, RESULT_COL_STATUS, RESULT_COL_ERRORS]
-      : isCofOrGsr
-        ? RESULT_HEADERS_GSR
-        : RESULT_HEADERS_BASIC;
-    const sheetData = [headers];
-    const resultByIndex = Array.isArray(resultRows) ? resultRows : [];
-    for (let i = 0; i < inputRows.length; i++) {
-      const r = inputRows[i] || {};
-      const meta = resultByIndex[i] || {};
-      let baseRow;
-      if (
-        hasOriginalHeaders &&
-        Array.isArray(r.originalCells) &&
-        r.originalCells.length
-      ) {
-        const strippedCells = this.stripResultColumnsFromImportLayout(
-          originalHeaders,
-          r.originalCells
-        );
-        baseRow = [...strippedCells.cells];
-        while (baseRow.length < headersForExport.length) {
-          baseRow.push(STR_EMPTY);
-        }
-        if (baseRow.length > headersForExport.length) {
-          baseRow = baseRow.slice(0, headersForExport.length);
-        }
-      } else {
-        baseRow = [
-          r.caseIdSearch || STR_EMPTY,
-          r.routingAction || STR_EMPTY,
-          r.inputtedRemarks || STR_EMPTY
-        ];
-        if (isCofOrGsr) {
-          baseRow.push(r.assignmentId || STR_EMPTY);
-          baseRow.push(r.assignmentRoutingAction || STR_EMPTY);
-        }
-      }
-      baseRow.push(this.mapImportResultStatusLabel(meta.status));
-      baseRow.push(meta.errors || STR_EMPTY);
-      sheetData.push(baseRow);
-    }
-    const workbook = window.XLSX.utils.book_new();
-    const sheet = window.XLSX.utils.aoa_to_sheet(sheetData);
-    this.applyResultErrorsColumnFormat(sheet, headers, sheetData.length);
-    window.XLSX.utils.book_append_sheet(workbook, sheet, "Result");
-    const arrayBuffer = window.XLSX.write(workbook, {
-      bookType: "xlsx",
-      type: "array"
-    });
-    const base64 = arrayBufferToBase64(arrayBuffer);
-    const baseName = (originalFileName || "Import").replace(/\.[^.]+$/, STR_EMPTY);
-    const resultFileName = `${baseName}_Result.xlsx`;
-    await saveResultFile({
-      batchRecordId,
-      resultFileName,
-      fileBodyBase64: base64
     });
   }
 
@@ -3094,25 +2990,112 @@ export default class Fec_BatchCaseHandling extends LightningElement {
     return mappings;
   }
 
-  appendExtraExportColumns(headerRow, mappings) {
-    if (this.includeAllProperties !== EXPORT_PROPERTY_YES) {
-      return { headerRow, mappings };
-    }
-    const outHeader = Array.isArray(headerRow) ? [...headerRow] : [];
-    const outMappings = Array.isArray(mappings) ? [...mappings] : [];
-    const existing = new Set(
-      outHeader.map((h) => this.normalizeExportHeader(h))
-    );
-    FILTERED_EXPORT_EXTRA_COLUMNS.forEach((col) => {
-      const norm = this.normalizeExportHeader(col.header);
-      if (existing.has(norm)) {
-        return;
+  // 27/05/2026 10:00 linhdev - Export with all Properties (SRS): helpers chèn cột Property trước Routing Action
+  resolveRoutingActionInsertIndex(headerRow) {
+    const normalized = (headerRow || []).map((h) => this.normalizeExportHeader(h));
+    for (let i = 0; i < normalized.length; i += 1) {
+      const token = normalized[i];
+      if (!token) {
+        continue;
       }
-      outHeader.push(col.header);
-      outMappings.push(col.field);
-      existing.add(norm);
+      if (HEADERS_ASSIGNMENT_ROUTING_ACTION.indexOf(token) >= 0) {
+        continue;
+      }
+      if (HEADERS_ROUTING_ACTION.indexOf(token) >= 0) {
+        return i;
+      }
+    }
+    for (let i = 0; i < normalized.length; i += 1) {
+      if (EXPORT_USER_FILL_HEADERS.has(normalized[i])) {
+        return i;
+      }
+    }
+    return normalized.length;
+  }
+
+  collectBusinessProcessCodesFromRows(rows) {
+    const codes = new Set();
+    (Array.isArray(rows) ? rows : []).forEach((r) => {
+      const code = String(r?.businessProcessCode || STR_EMPTY).trim();
+      const name = String(r?.businessProcessName || STR_EMPTY).trim();
+      if (code) {
+        codes.add(code);
+      }
+      if (name) {
+        codes.add(name);
+      }
     });
-    return { headerRow: outHeader, mappings: outMappings };
+    return Array.from(codes);
+  }
+
+  collectCaseIdsFromRows(rows) {
+    const ids = [];
+    (Array.isArray(rows) ? rows : []).forEach((r) => {
+      const caseId = r?.caseId;
+      if (caseId) {
+        ids.push(caseId);
+      }
+    });
+    return ids;
+  }
+
+  async loadExportPropertyBundleForRows(rows) {
+    if (this.includeAllProperties !== EXPORT_PROPERTY_YES) {
+      return { columns: [], valuesByCaseId: {} };
+    }
+    const sourceRows = Array.isArray(rows) ? rows : [];
+    if (!sourceRows.length) {
+      return { columns: [], valuesByCaseId: {} };
+    }
+    try {
+      return await getBulkExportPropertyBundle({
+        businessProcessCodes: this.collectBusinessProcessCodesFromRows(sourceRows),
+        caseIds: this.collectCaseIdsFromRows(sourceRows),
+        includeAllProperties: true
+      });
+    } catch (error) {
+      this.showError(FEC_BCH_ExportToastTitle, this.extractError(error));
+      return { columns: [], valuesByCaseId: {} };
+    }
+  }
+
+  buildPropertyInsertPayload(headerRow, caseRows, propertyBundle) {
+    const columns = Array.isArray(propertyBundle?.columns) ? propertyBundle.columns : [];
+    if (!columns.length) {
+      return null;
+    }
+    const insertBefore = this.resolveRoutingActionInsertIndex(headerRow);
+    const insertColumnHeaders = columns.map((c) => String(c?.label || STR_EMPTY));
+    const valuesByCaseId = propertyBundle?.valuesByCaseId || {};
+    const insertColumnValues = (Array.isArray(caseRows) ? caseRows : []).map((row) => {
+      const caseValues = row?.caseId && valuesByCaseId[row.caseId] ? valuesByCaseId[row.caseId] : {};
+      return columns.map((col) => {
+        const key = col?.columnKey;
+        if (!key || caseValues[key] == null) {
+          return STR_EMPTY;
+        }
+        return String(caseValues[key]);
+      });
+    });
+    return { insertColumnsBeforeIndex: insertBefore, insertColumnHeaders, insertColumnValues };
+  }
+
+  // 27/05/2026 10:00 linhdev - nén dòng export cho Apex (mappedColumnIndexes + mergeInsertColumnValues)
+  compressExportDataRows(fullRows, mappings) {
+    const out = [];
+    const sourceRows = Array.isArray(fullRows) ? fullRows : [];
+    const sourceMappings = Array.isArray(mappings) ? mappings : [];
+    for (let i = 0; i < sourceRows.length; i += 1) {
+      const cells = sourceRows[i] || [];
+      const compressed = [];
+      for (let j = 0; j < sourceMappings.length; j += 1) {
+        if (sourceMappings[j]) {
+          compressed.push(cells[j]);
+        }
+      }
+      out.push(compressed);
+    }
+    return out;
   }
 
   buildMappedTemplateDataRows(caseRows, mappings) {
@@ -3120,14 +3103,8 @@ export default class Fec_BatchCaseHandling extends LightningElement {
     const sourceRows = Array.isArray(caseRows) ? caseRows : [];
     const sourceMappings = Array.isArray(mappings) ? mappings : [];
     for (let i = 0; i < sourceRows.length; i += 1) {
-      const cells = this.mapCaseRowToExportCells(sourceRows[i], sourceMappings);
-      const mappedCells = [];
-      for (let j = 0; j < sourceMappings.length; j += 1) {
-        if (sourceMappings[j]) {
-          mappedCells.push(cells[j]);
-        }
-      }
-      out.push(mappedCells);
+      // tungnm37 - keep full column alignment with template indexes; do not compress mapped cells
+      out.push(this.mapCaseRowToExportCells(sourceRows[i], sourceMappings));
     }
     return out;
   }
@@ -3188,7 +3165,8 @@ export default class Fec_BatchCaseHandling extends LightningElement {
     return bytes.buffer;
   }
 
-  async buildExcelFileFromTemplate(rows, fileName, contentVersionId, templateMeta) {
+  // 27/05/2026 10:00 linhdev - propertyBundle: insertColumnsBeforeIndex/Headers/Values gửi FEC_BCH_TemplateExportService
+  async buildExcelFileFromTemplate(rows, fileName, contentVersionId, templateMeta, propertyBundle) {
     if (!contentVersionId) {
       const templateName = String(templateMeta?.templateName || STR_EMPTY).trim();
       const hasUrl = !!String(templateMeta?.templateDownloadUrl || STR_EMPTY).trim();
@@ -3240,21 +3218,30 @@ export default class Fec_BatchCaseHandling extends LightningElement {
         : 0;
     const finalMappings = this.buildExportColumnMappings(headerRow);
     const list = Array.isArray(rows) ? rows : [];
-    const dataRows = this.buildMappedTemplateDataRows(list, finalMappings);
+    const fullRows = this.buildMappedTemplateDataRows(list, finalMappings);
+    const dataRows = this.compressExportDataRows(fullRows, finalMappings);
     const mappedColumnIndexes = [];
     for (let i = 0; i < finalMappings.length; i += 1) {
       if (finalMappings[i]) {
         mappedColumnIndexes.push(i);
       }
     }
-    const exportResult = await exportTemplateWorkbook({
-      requestJson: JSON.stringify({
-        contentVersionId,
-        headerRowIndex,
-        mappedColumnIndexes,
-        dataRows
-      })
-    });
+    const propertyInsert = this.buildPropertyInsertPayload(headerRow, list, propertyBundle);
+    // 27/05/2026 13:15 linhdev - gửi sheet name cho Apex patch đúng worksheet đã map header
+    const exportRequest = {
+      contentVersionId,
+      headerRowIndex,
+      mappedColumnIndexes,
+      dataRows,
+      templateSheetName
+    };
+    // 27/05/2026 10:00 linhdev - chỉ khi Export with all Properties = Yes và có cột MDS
+    if (propertyInsert) {
+      exportRequest.insertColumnsBeforeIndex = propertyInsert.insertColumnsBeforeIndex;
+      exportRequest.insertColumnHeaders = propertyInsert.insertColumnHeaders;
+      exportRequest.insertColumnValues = propertyInsert.insertColumnValues;
+    }
+    const exportResult = await exportTemplateWorkbook({ requestJson: JSON.stringify(exportRequest) });
     if (!exportResult?.success || !exportResult?.base64Body) {
       const code = exportResult?.errorCode || "EXPORT_FAILED";
       const detail =

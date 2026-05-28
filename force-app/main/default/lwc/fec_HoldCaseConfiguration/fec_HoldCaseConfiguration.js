@@ -519,21 +519,23 @@ export default class Fec_HoldCaseConfiguration extends NavigationMixin(Lightning
     }
 
     handleNfuRowSelect(event) {
-        let selectedIds = event.detail.selectedRecordIds || [];
-        selectedIds = Array.from(selectedIds);
+        const selectedIds = Array.from(event.detail.selectedRecordIds || []).map(String);
+        this.nfuModalSelectedIds = selectedIds;
 
-        if (selectedIds.length === 0) {
+        if (!selectedIds.length) {
+            this.selectedNfuRow = null;
+            this.nfuModalError = STR_EMPTY;
             return;
         }
 
         if (selectedIds.length > 1) {
             this.nfuModalError = this.customLabel.nfuModalError;
+            this.selectedNfuRow = null; 
             return;
         }
 
         this.nfuModalError = STR_EMPTY;
-        const selectedId = String(selectedIds[0]);
-        const selectedRow = this.nfuOptions.find(r => String(r.Id) === selectedId);
+        const selectedRow = this.nfuOptions.find(r => String(r.Id) === selectedIds[0]);
         this.selectedNfuRow = selectedRow || null;
     }
 
@@ -546,7 +548,8 @@ export default class Fec_HoldCaseConfiguration extends NavigationMixin(Lightning
     }
 
     handleSaveNfu() {
-        if (this.nfuModalError) {
+        if (this.nfuModalSelectedIds.length > 1) { 
+            this.nfuModalError = this.customLabel.nfuModalError;
             return;
         }
 
@@ -557,7 +560,6 @@ export default class Fec_HoldCaseConfiguration extends NavigationMixin(Lightning
 
         this.formData.nfuCode = this.selectedNfuRow.FEC_NFU_Code__c;
         this.nfuSearch = this.selectedNfuRow?.FEC_NFU_Code__c || STR_EMPTY;
-
         this.setLookupError('nfuCode', false);
         this.isShowNfuModal = false;
         this.nfuModalError = STR_EMPTY;

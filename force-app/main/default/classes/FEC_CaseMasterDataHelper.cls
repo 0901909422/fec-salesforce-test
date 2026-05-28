@@ -9,13 +9,63 @@ public without sharing class FEC_CaseMasterDataHelper {
   }
 
   /**
+   * Mỗi FEC_Field_API_Name__c chỉ giữ một dòng; trùng API thì bỏ Assignment, giữ Field/LWC/...
+   * Giữ thứ tự xuất hiện đầu tiên của API trong masterDatalst.
+   */
+  public static List<SObject> deduplicateMasterDataRowsByFieldApiName(
+    List<SObject> masterDatalst
+  ) {
+    if (masterDatalst == null || masterDatalst.isEmpty()) {
+      return masterDatalst;
+    }
+
+    Map<String, SObject> winnerByApi = new Map<String, SObject>();
+    for (SObject mdsRow : masterDatalst) {
+      String api = (String) mdsRow.get('FEC_Field_API_Name__c');
+      if (String.isBlank(api)) {
+        continue;
+      }
+      if (!winnerByApi.containsKey(api)) {
+        winnerByApi.put(api, mdsRow);
+        continue;
+      }
+      SObject currentWinner = winnerByApi.get(api);
+      if (isAssignmentRow(currentWinner) && !isAssignmentRow(mdsRow)) {
+        winnerByApi.put(api, mdsRow);
+      }
+    }
+
+    List<SObject> deduped = new List<SObject>();
+    Set<String> emittedApis = new Set<String>();
+    for (SObject mdsRow : masterDatalst) {
+      String api = (String) mdsRow.get('FEC_Field_API_Name__c');
+      if (String.isBlank(api)) {
+        deduped.add(mdsRow);
+        continue;
+      }
+      if (emittedApis.contains(api)) {
+        continue;
+      }
+      emittedApis.add(api);
+      deduped.add(winnerByApi.get(api));
+    }
+    return deduped;
+  }
+
+  private static Boolean isAssignmentRow(SObject mdsRow) {
+    return TYPE_ASSIGNMENT.equals((String) mdsRow.get('FEC_Type__c'));
+  }
+
+  /**
    * Assignment + FEC_Hidden__c: loại khỏi masterDatalst mọi dòng có cùng FEC_Field_API_Name__c
-   * (kể cả type Field/LWC khác Assignment).
+   * (kể cả type Field/LWC khác Assignment) — chỉ với user thuộc FEC_Editable_User_Group__c
+   * trên dòng Assignment đó (cùng quy tắc contains như isLwcDynamicMasterInEditMode).
    */
   @TestVisible
   public static List<SObject> removeMasterDataRowsByHiddenAssignmentFieldApis(
     List<SObject> masterDatalst,
-    Boolean hasCaseAssignment
+    Boolean hasCaseAssignment,
+    String currentUserGroup
   ) {
     if (
       masterDatalst == null ||
@@ -28,7 +78,11 @@ public without sharing class FEC_CaseMasterDataHelper {
     for (SObject mdsRow : masterDatalst) {
       if (
         TYPE_ASSIGNMENT.equals((String) mdsRow.get('FEC_Type__c')) &&
-        (Boolean) mdsRow.get('FEC_Hidden__c') == true
+        (Boolean) mdsRow.get('FEC_Hidden__c') == true &&
+        isUserInEditableGroup(
+          (String) mdsRow.get('FEC_Editable_User_Group__c'),
+          currentUserGroup
+        )
       ) {
         String api = (String) mdsRow.get('FEC_Field_API_Name__c');
         if (String.isNotBlank(api)) {
@@ -48,6 +102,45 @@ public without sharing class FEC_CaseMasterDataHelper {
       filtered.add(mdsRow);
     }
     return filtered;
+  }
+
+  /** Map FEC_Field_API_Name__c → FEC_Editable_User_Group__c từ các dòng TYPE Assignment. */
+  public static Map<String, String> collectAssignmentFieldEditableGroups(
+    List<SObject> masterDatalst
+  ) {
+    Map<String, String> result = new Map<String, String>();
+    if (masterDatalst == null) {
+      return result;
+    }
+    for (SObject mdsRow : masterDatalst) {
+      if (!TYPE_ASSIGNMENT.equals((String) mdsRow.get('FEC_Type__c'))) {
+        continue;
+      }
+      String api = (String) mdsRow.get('FEC_Field_API_Name__c');
+      if (String.isNotBlank(api)) {
+        result.put(api, (String) mdsRow.get('FEC_Editable_User_Group__c'));
+      }
+    }
+    return result;
+  }
+
+  /** Assignment field chỉ editable khi FEC_Field_Editable__c và user thuộc FEC_Editable_User_Group__c. */
+  public static Boolean isAssignmentFieldEditable(
+    Boolean fieldEditableFlag,
+    String editableUserGroup,
+    String currentUserGroup
+  ) {
+    return fieldEditableFlag == true &&
+      isUserInEditableGroup(editableUserGroup, currentUserGroup);
+  }
+
+  public static Boolean isUserInEditableGroup(
+    String editableUserGroup,
+    String currentUserGroup
+  ) {
+    return String.isNotBlank(editableUserGroup) &&
+      String.isNotBlank(currentUserGroup) &&
+      editableUserGroup.contains(currentUserGroup);
   }
 
   /** History mới nhất trên Case có FEC_Routing_Action__c = Recall. */

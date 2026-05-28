@@ -39,7 +39,7 @@ import FEC_Assignment_Status from "@salesforce/label/c.FEC_Assignment_Status";
 import FEC_Assignment_Owner from "@salesforce/label/c.FEC_Assignment_Owner";
 
 import FEC_Assignment_Remarks_History from "@salesforce/label/c.FEC_Assignment_Remarks_History";
-
+import saveAssignmentDraft from "@salesforce/apex/FEC_AssignmentListHandler.saveAssignmentDraft";
 import {
   PAGE_SIZE_OPTIONS,
   ACTION_OPTIONS_CS_SUPPORT,
@@ -170,7 +170,7 @@ export default class Fec_AssignmentList extends LightningElement {
     if (!isEdit) {
       this.assignments = this.assignments.map((item) => ({
         ...item,
-        isOpen: false,
+        isOpen: item.isOpen,
       }));
     }
 
@@ -229,7 +229,7 @@ export default class Fec_AssignmentList extends LightningElement {
           (item.FEC_Assignment_Owner__c?.startsWith("00G")
             ? item.FEC_Assignment_Owner__r?.Name
             : getUsernameBeforeAt(item.FEC_Assignment_Owner__r?.Email) || ""),
-
+        remark: item.FEC_Draft_Assignment_Remark__c,
         isOwner: item.FEC_Assignment_Owner__c ? this.isOwner(item) : false,
         status:
           // tungnm37 sửa: COF/GSR (Routing type) hiện 'Open', các loại khác giữ nguyên 'New'
@@ -243,7 +243,6 @@ export default class Fec_AssignmentList extends LightningElement {
         isOpen: false,
 
         action: null,
-        remark: null,
         decision: null,
         subDecision: null,
         userInGroup: null,
@@ -591,9 +590,7 @@ export default class Fec_AssignmentList extends LightningElement {
     }
 
     // ===== VALIDATION =====
-    const container = this.template
-      .querySelector(`[data-id="${selected.id}"]`)
-      ?.closest(".slds-box");
+    const container = this.template.querySelector(".assignment-form");
 
     const inputs =
       container?.querySelectorAll("lightning-combobox, lightning-textarea") ||
@@ -644,17 +641,24 @@ export default class Fec_AssignmentList extends LightningElement {
           variant: "success",
         }),
       );
-      // reload data
-      await this.initData();
 
-      //thangtv: cập nhật FEC_Can_Execute_Assignment__c khi assignment đã Completed
+      // refresh history table trước
+      const remarkHistoryCmp = [
+        ...this.template.querySelectorAll(
+          "c-fec_-assignment-remark-history-table",
+        ),
+      ].find((cmp) => cmp.assignmentId === selected.id);
+
+      if (remarkHistoryCmp?.refreshData) {
+        await remarkHistoryCmp.refreshData();
+      }
+
       await refreshExecuteVisibility({ caseId: this.recordId });
-
-      // 👇 QUAN TRỌNG: chuyển mode view
       setTimeout(() => {
         this.modeEditCase = false;
         this.handlePublishMode(false);
       }, 0);
+      
     } catch (error) {
       console.error("FULL ERROR:", error);
 
@@ -673,10 +677,48 @@ export default class Fec_AssignmentList extends LightningElement {
     }
   }
 
-  handleClose() {
-    this.pagedData = this.pagedData.map((item) => {
-      return { ...item, isOpen: false };
-    });
+  async handleSaveClose() {
+    const selected = this.assignments.find((a) => a.isOpen);
+
+    if (!selected) {
+      return;
+    }
+
+    try {
+      await saveAssignmentDraft({
+        assignmentId: selected.id,
+        remark: selected.remark,
+      });
+
+      // collapse row
+      this.assignments = this.assignments.map((item) => {
+        if (item.id === selected.id) {
+          return {
+            ...item,
+            isOpen: false,
+          };
+        }
+
+        return item;
+      });
+
+      // this.updatePagedData();
+
+      this.dispatchEvent(
+        new ShowToastEvent({
+          title: "Success",
+          message: "Save success",
+          variant: "success",
+        }),
+      );
+      await refreshExecuteVisibility({ caseId: this.recordId });
+      setTimeout(() => {
+        this.modeEditCase = false;
+        this.handlePublishMode(false);
+      }, 0);
+    } catch (e) {
+      console.error(e);
+    }
   }
 
   async handlePublishMode(isEdit) {

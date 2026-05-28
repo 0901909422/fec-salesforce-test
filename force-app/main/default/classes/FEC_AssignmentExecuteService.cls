@@ -1,10 +1,10 @@
 public without sharing class FEC_AssignmentExecuteService {
-
+    
     public class ExecuteVisibilityResult {
         @AuraEnabled public Boolean value;
         @AuraEnabled public Boolean shouldUpdate;
     }
-
+    
     public class ExecuteAssignmentResult {
         @AuraEnabled public Integer claimedCount;
     }
@@ -64,8 +64,8 @@ public without sharing class FEC_AssignmentExecuteService {
         //thangtv: ẩn nút khi user đã submit hết assignment liên quan (Status = Completed)
         Boolean hasPendingForUser = hasPendingRoutingAssignmentForUser(
             caseId,
-            currentUserId
-        );
+        currentUserId
+            );
         
         System.debug('hasPendingForUser = ' + hasPendingForUser);
         
@@ -167,9 +167,9 @@ public without sharing class FEC_AssignmentExecuteService {
     //thangtv: assignment thuộc owner user hoặc queue/user trong FEC_OwnerID__c
     private static Boolean isAssignmentRelevantToUser(
         FEC_Assignment__c assignment,
-        Id userId,
-        User currentUser,
-        Map<String, Group> queueByName
+    Id userId,
+    User currentUser,
+    Map<String, Group> queueByName
     ) {
         if (assignment.FEC_Assignment_Owner__c == userId) {
             return true;
@@ -283,14 +283,14 @@ public without sharing class FEC_AssignmentExecuteService {
         
         return values;
     }
-
+    
     private static final QueueMembershipAccess QUEUE_MEMBERSHIP_ACCESS =
         new QueueMembershipAccess();
     
     private static Boolean isUserInQueues(Id userId, Set<Id> queueIds) {
         return QUEUE_MEMBERSHIP_ACCESS.isUserInQueues(userId, queueIds);
     }
-
+    
     private static Boolean isUserRoleInQueues(Id userId, Set<Id> queueIds) {
         return QUEUE_MEMBERSHIP_ACCESS.isUserRoleInQueues(userId, queueIds);
     }
@@ -323,11 +323,11 @@ public without sharing class FEC_AssignmentExecuteService {
                 //thangtv: SYSTEM_MODE — CS user có thể không có FLS edit trên Case
                 Database.update(
                     new Case(
-                        Id = caseRecord.Id,
-                        FEC_Can_Execute_Assignment__c = canExecute
+                    Id = caseRecord.Id,
+                FEC_Can_Execute_Assignment__c = canExecute
                     ),
-                    AccessLevel.SYSTEM_MODE
-                );
+                AccessLevel.SYSTEM_MODE
+                    );
                 
                 System.debug('Case updated successfully');
                 
@@ -378,7 +378,7 @@ public without sharing class FEC_AssignmentExecuteService {
          * Query assignments
          */
         List<FEC_Assignment__c> assignments = [
-    SELECT Id, Name, FEC_Assignment_Name__c, FEC_OwnerID__c,
+    SELECT Id, Name, FEC_Case__c, FEC_Assignment_Name__c, FEC_OwnerID__c,
     FEC_Assignment_Owner__c,FEC_Assignment_Owner_Text__c,
     FEC_Assignment_Status__c FROM FEC_Assignment__c WHERE FEC_Case__c = : caseId
         AND FEC_Assignment_Status__c NOT IN : CLOSED_STATUSES
@@ -423,6 +423,7 @@ public without sharing class FEC_AssignmentExecuteService {
          * Find executable assignments
          */
         List<FEC_Assignment__c> assignmentsToUpdate = new List<FEC_Assignment__c>();
+        List<FEC_Assignment__c> historyAssignments =  new List<FEC_Assignment__c>();
         
         for (FEC_Assignment__c assignment : assignments) {
             Boolean matched = false;
@@ -448,9 +449,9 @@ public without sharing class FEC_AssignmentExecuteService {
                     //thangtv: without sharing — with sharing không đọc được GroupMember role trong queue
                     matched = QUEUE_MEMBERSHIP_ACCESS.canUserClaimFromQueue(
                         userId,
-                        currentUser.UserRoleId,
-                        queueGroup.Id
-                    );
+                    currentUser.UserRoleId,
+                    queueGroup.Id
+                        );
                     if (matched) {
                         System.debug('MATCH QUEUE MEMBERSHIP');
                     }
@@ -461,10 +462,23 @@ public without sharing class FEC_AssignmentExecuteService {
              * TAKE OWNERSHIP
              */
             if (matched) {
-                System.debug('TAKE ASSIGNMENT => ' + assignment.Id);
+                
+                /*
+                 * Keep history only when owner changed
+                 */
+                Boolean ownerChanged =
+                    assignment.FEC_Assignment_Owner__c != userId;
                 
                 assignment.FEC_Assignment_Owner__c = userId;
+                
                 assignmentsToUpdate.add(assignment);
+                
+                /*
+                 * Only create history when changed
+                 */
+                if (ownerChanged) {
+                    historyAssignments.add(assignment);
+                }
             }
         }
         
@@ -478,14 +492,17 @@ public without sharing class FEC_AssignmentExecuteService {
                 
                 //thangtv: SYSTEM_MODE — claim owner khi user chưa có share edit trên Assignment
                 Database.update(assignmentsToUpdate, AccessLevel.SYSTEM_MODE);
+                FEC_AssignmentCaseShareService.shareCasesForAssignments(assignmentsToUpdate);
                 
                 System.debug('Assignments updated successfully');
                 executeResult.claimedCount = assignmentsToUpdate.size();
-                createRoutingActionHistory(
-                    assignmentsToUpdate,
-                userId,
-                caseId
-                    );
+                if (!historyAssignments.isEmpty()) {
+                    createRoutingActionHistory(
+                        historyAssignments,
+                    userId,
+                    caseId
+                        );
+                }
                 
             } catch (Exception e) {
                 System.debug('executeAssignment ERROR = ' + e.getMessage());
@@ -496,21 +513,21 @@ public without sharing class FEC_AssignmentExecuteService {
                 FEC_CaseTriggerHandler.isSystemUpdate = false;
             }
         }
-
+        
         return executeResult;
     }
-
+    
     //thangtv: truy vấn GroupMember phải without sharing (CS user không thấy role member của queue)
     private without sharing class QueueMembershipAccess {
         Boolean canUserClaimFromQueue(
             Id userId,
-            Id userRoleId,
-            Id queueId
+        Id userRoleId,
+        Id queueId
         ) {
             if (userId == null || queueId == null) {
                 return false;
             }
-
+            
             if ([
                     SELECT COUNT()
                     FROM GroupMember
@@ -518,11 +535,11 @@ public without sharing class FEC_AssignmentExecuteService {
                 ] > 0) {
                 return true;
             }
-
+            
             if (userRoleId == null) {
                 return false;
             }
-
+            
             return [
                     SELECT COUNT()
                     FROM GroupMember
@@ -539,35 +556,35 @@ public without sharing class FEC_AssignmentExecuteService {
                     )
                 ] > 0;
         }
-
+        
         Boolean isUserInQueues(Id userId, Set<Id> queueIds) {
             if (userId == null || queueIds == null || queueIds.isEmpty()) {
                 return false;
             }
-
+            
             List<Group> queueGroups = [
                 SELECT Id
                 FROM Group
                 WHERE Id IN :queueIds AND Type = 'Queue'
             ];
-
+            
             if (queueGroups.isEmpty()) {
                 return false;
             }
-
+            
             Set<Id> validQueueIds = new Set<Id>();
             for (Group g : queueGroups) {
                 validQueueIds.add(g.Id);
             }
-
+            
             Set<Id> visitedGroupIds = new Set<Id>();
             Set<Id> groupsToProcess = new Set<Id>(validQueueIds);
-
+            
             while (!groupsToProcess.isEmpty()) {
                 Set<Id> currentBatch = new Set<Id>(groupsToProcess);
                 groupsToProcess.clear();
                 visitedGroupIds.addAll(currentBatch);
-
+                
                 for (GroupMember gm : [
                     SELECT GroupId, UserOrGroupId
                     FROM GroupMember
@@ -579,31 +596,31 @@ public without sharing class FEC_AssignmentExecuteService {
                     }
                     if (memberId.getSObjectType() == Group.SObjectType
                         && !visitedGroupIds.contains(memberId)
-                        && !groupsToProcess.contains(memberId)) {
+                    && !groupsToProcess.contains(memberId)) {
                         groupsToProcess.add(memberId);
                     }
                 }
             }
-
+            
             return false;
         }
-
+        
         Boolean isUserRoleInQueues(Id userId, Set<Id> queueIds) {
             if (userId == null || queueIds == null || queueIds.isEmpty()) {
                 return false;
             }
-
+            
             User userRecord = [
                 SELECT Id, UserRoleId
                 FROM User
                 WHERE Id = :userId
                 LIMIT 1
             ];
-
+            
             if (userRecord.UserRoleId == null) {
                 return false;
             }
-
+            
             Set<Id> queueRoleIds = new Set<Id>();
             for (Group g : [
                 SELECT RelatedId
@@ -619,7 +636,7 @@ public without sharing class FEC_AssignmentExecuteService {
                     queueRoleIds.add(g.RelatedId);
                 }
             }
-
+            
             return queueRoleIds.contains(userRecord.UserRoleId);
         }
     }
@@ -686,12 +703,13 @@ public without sharing class FEC_AssignmentExecuteService {
              * Original queue/user owner
              */
             history.FEC_Original_User_Queue__c = assignment.FEC_Assignment_Owner_Text__c;
-            
+            history.FEC_Original_User_Queue_ID__c = assignment.FEC_OwnerID__c;
             /*
              * Updated owner email
              */
             if (updatedOwner != null) {
                 history.FEC_Updated_User_Queue__c = emailLocalPart(updatedOwner.Email);
+                history.FEC_Updated_User_Queue_ID__c = updatedOwner.Id;
             }
             
             /*
@@ -752,8 +770,8 @@ public without sharing class FEC_AssignmentExecuteService {
         try {
             Database.update(
                 new Case(Id = recordId, FEC_Assigment_Mode__c = viewMode),
-                AccessLevel.SYSTEM_MODE
-            );
+            AccessLevel.SYSTEM_MODE
+                );
             return viewMode;
         } finally {
             FEC_CaseTriggerHandler.isSystemUpdate = false;
@@ -776,8 +794,8 @@ public without sharing class FEC_AssignmentExecuteService {
             
             Database.update(
                 new Case(Id = caseId, FEC_Can_Execute_Assignment__c = true),
-                AccessLevel.SYSTEM_MODE
-            );
+            AccessLevel.SYSTEM_MODE
+                );
             
             System.debug('FEC_Can_Execute_Assignment__c = true');
             
@@ -790,8 +808,8 @@ public without sharing class FEC_AssignmentExecuteService {
             FEC_CaseTriggerHandler.isSystemUpdate = false;
         }
     }
-
-     private static String emailLocalPart(String email) {
+    
+    private static String emailLocalPart(String email) {
         
         if (String.isBlank(email)) {
             return null;

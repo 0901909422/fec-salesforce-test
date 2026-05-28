@@ -33,7 +33,7 @@
                                     <template if:true={item.isOpen}>
                                         <tr key={item.detailKey}>
                                             <td colspan="100%">
-                                                <div class="slds-box">
+                                                <div class="assignment-form slds-box">
                                                     <p class="slds-text-heading_small slds-m-bottom_small slds-bold">
                                                         {label.FEC_Assignment_Id}: {item.assignmentId}
                                                     </p>
@@ -41,13 +41,14 @@
                                                         <template if:true={item.isOwner}>
                                                             <lightning-accordion allow-multiple-sections-open
                                                                 active-section-name="assignment-routing-action">
-                                                                <lightning-accordion-section name="assignment-routing-action"
+                                                                <lightning-accordion-section
+                                                                    name="assignment-routing-action"
                                                                     label="Assignment Routing Action">
                                                                     <div class="slds-p-around_medium">
                                                                         <lightning-combobox label="Action"
-                                                                            value={item.action}
-                                                                            options={actionOptions} data-id={item.id}
-                                                                            required onchange={handleActionChange}>
+                                                                            value={item.action} options={actionOptions}
+                                                                            data-id={item.id} required
+                                                                            onchange={handleActionChange}>
                                                                         </lightning-combobox>
 
                                                                         <template if:true={item.showDecision}>
@@ -97,6 +98,7 @@
                                                                         <lightning-textarea label="Assignment Remark"
                                                                             class="slds-m-top_small" value={item.remark}
                                                                             data-id={item.id} required
+                                                                            message-when-value-missing="Vui lòng nhập"
                                                                             onchange={handleRemarkChange}>
                                                                         </lightning-textarea>
 
@@ -110,7 +112,7 @@
 
                                                                             <lightning-button variant="neutral"
                                                                                 label="Save & Close"
-                                                                                onclick={handleClose}>
+                                                                                onclick={handleSaveClose}>
                                                                             </lightning-button>
                                                                         </div>
                                                                     </div>
@@ -119,7 +121,8 @@
                                                         </template>
                                                     </template>
                                                     <div>
-                                                        <p class="slds-text-heading_small slds-m-bottom_small slds-bold">
+                                                        <p
+                                                            class="slds-text-heading_small slds-m-bottom_small slds-bold">
                                                             {label.FEC_Assignment_Remarks_History}
                                                         </p>
                                                         <c-fec_-assignment-remark-history-table record-id={recordId}
