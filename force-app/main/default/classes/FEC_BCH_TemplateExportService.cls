@@ -334,9 +334,10 @@ public without sharing class FEC_BCH_TemplateExportService {
         Boolean lookupMatchAny;
     }
 
-    // 28/05/2026 18:30 linhdev - style __Status/__Errors: border từ cột kề + wrap text cho __Errors
-    // 28/05/2026 19:00 linhdev - nền đỏ nhạt (FFFFC7CE) cho __Status/__Errors
-    private static final String RESULT_COL_LIGHT_RED_RGB = 'FFFFC7CE';
+    // 28/05/2026 18:30 linhdev - style __Status/__Errors: border + wrap __Errors
+    // 28/05/2026 19:15 linhdev - header nền đỏ chữ đen; data nền trắng chữ đen + border
+    private static final String RESULT_COL_HEADER_FILL_RGB = 'FFFF0000';
+    private static final String RESULT_COL_DATA_FILL_RGB = 'FFFFFFFF';
 
     private class ResultInsertColumnStyles {
         String headerCellStyleAttr;
@@ -1442,7 +1443,7 @@ public without sharing class FEC_BCH_TemplateExportService {
         return '<c r="' + addr + '"' + safeStyle + ' t="inlineStr"><is>' + tOpen + safeVal + '</t></is></c>';
     }
 
-    // 28/05/2026 18:30 linhdev - clone style cột kề + nền đỏ nhạt; __Errors thêm wrap text
+    // 28/05/2026 19:15 linhdev - header đỏ/chữ đen; data trắng/chữ đen/border; __Errors wrap
     private static ResultInsertColumnStyles buildResultInsertColumnStyles(
         Map<String, Blob> entryByPath,
         String worksheetXml,
@@ -1459,20 +1460,33 @@ public without sharing class FEC_BCH_TemplateExportService {
         String templateRowXml = extractRowXml(worksheetXml, templateDataRowNum1);
         Integer headerStyleIdx = extractStyleIndexFromRow(headerRowXml, neighborColIndex, headerRowNum1);
         Integer dataStyleIdx = extractStyleIndexFromRow(templateRowXml, neighborColIndex, templateDataRowNum1);
-        if (headerStyleIdx == null && dataStyleIdx != null) {
-            headerStyleIdx = dataStyleIdx;
-        }
-        if (dataStyleIdx == null && headerStyleIdx != null) {
-            dataStyleIdx = headerStyleIdx;
-        }
+        Integer borderBaseIdx = dataStyleIdx != null ? dataStyleIdx : headerStyleIdx;
         out.headerCellStyleAttr = styleIndexToAttr(
-            ensureResultColumnStyleIndex(entryByPath, headerStyleIdx, false)
+            buildResultColumnCellStyle(
+                entryByPath,
+                borderBaseIdx,
+                RESULT_COL_HEADER_FILL_RGB,
+                false,
+                true
+            )
         );
         out.dataStatusStyleAttr = styleIndexToAttr(
-            ensureResultColumnStyleIndex(entryByPath, dataStyleIdx, false)
+            buildResultColumnCellStyle(
+                entryByPath,
+                borderBaseIdx,
+                RESULT_COL_DATA_FILL_RGB,
+                false,
+                false
+            )
         );
         out.dataErrorsWrapStyleAttr = styleIndexToAttr(
-            ensureResultColumnStyleIndex(entryByPath, dataStyleIdx, true)
+            buildResultColumnCellStyle(
+                entryByPath,
+                borderBaseIdx,
+                RESULT_COL_DATA_FILL_RGB,
+                true,
+                false
+            )
         );
         return out;
     }
@@ -1512,32 +1526,152 @@ public without sharing class FEC_BCH_TemplateExportService {
         return styleIndex == null ? FEC_ConstantCommon.STR_EMPTY : ' s="' + String.valueOf(styleIndex) + '"';
     }
 
-    // 28/05/2026 19:00 linhdev - style Result: giữ border/font cột kề + fill đỏ nhạt; __Errors có wrap
-    private static Integer ensureResultColumnStyleIndex(
+    // 28/05/2026 19:15 linhdev - tạo cellXf riêng: fill tùy loại + chữ đen + border cột kề
+    private static Integer buildResultColumnCellStyle(
         Map<String, Blob> entryByPath,
-        Integer baseStyleIndex,
-        Boolean wrapText
+        Integer borderBaseStyleIndex,
+        String fillRgb,
+        Boolean wrapText,
+        Boolean boldFont
     ) {
-        if (baseStyleIndex == null || baseStyleIndex < 0 || entryByPath == null) {
-            return baseStyleIndex;
+        if (entryByPath == null) {
+            return borderBaseStyleIndex;
         }
         String stylesPath = 'xl/styles.xml';
         if (!entryByPath.containsKey(stylesPath)) {
-            return baseStyleIndex;
+            return borderBaseStyleIndex;
+        }
+        Integer fillId = ensureSolidFillRgbInStyles(entryByPath, fillRgb);
+        if (fillId == null) {
+            return borderBaseStyleIndex;
+        }
+        String stylesXml = blobToUtf8(entryByPath.get(stylesPath));
+        Integer borderId = extractXfBorderId(stylesXml, borderBaseStyleIndex);
+        Integer fontId = boldFont == true
+            ? resolveBoldBlackFontId(stylesXml)
+            : resolveBlackFontId(stylesXml);
+        if (fontId == null) {
+            fontId = 0;
+        }
+        if (borderId == null) {
+            borderId = 1;
+        }
+        String newXf = composeResultCellXf(fontId, fillId, borderId, wrapText == true);
+        return appendNewCellXf(entryByPath, newXf);
+    }
+
+    private static Integer extractXfBorderId(String stylesXml, Integer styleIndex) {
+        if (String.isBlank(stylesXml) || styleIndex == null || styleIndex < 0) {
+            return 1;
+        }
+        String xfXml = extractCellXfByIndex(stylesXml, styleIndex);
+        if (String.isBlank(xfXml)) {
+            return 1;
+        }
+        Pattern p = Pattern.compile('borderId="(\\d+)"');
+        Matcher m = p.matcher(xfXml);
+        if (m.find()) {
+            try {
+                return Integer.valueOf(m.group(1));
+            } catch (Exception ex) {
+                return 1;
+            }
+        }
+        return 1;
+    }
+
+    private static String extractCellXfByIndex(String stylesXml, Integer styleIndex) {
+        if (String.isBlank(stylesXml) || styleIndex == null || styleIndex < 0) {
+            return FEC_ConstantCommon.STR_EMPTY;
+        }
+        Pattern xfsBlockPat = Pattern.compile('(?s)<cellXfs count="(\\d+)">(.*?)</cellXfs>');
+        Matcher xfsBlockMat = xfsBlockPat.matcher(stylesXml);
+        if (!xfsBlockMat.find()) {
+            return FEC_ConstantCommon.STR_EMPTY;
+        }
+        Pattern xfPat = Pattern.compile('(?s)<xf[^>]*(?:>.*?</xf>|/>)');
+        Matcher xfMat = xfPat.matcher(xfsBlockMat.group(2));
+        Integer idx = 0;
+        while (xfMat.find()) {
+            if (idx == styleIndex) {
+                return xfMat.group(0);
+            }
+            idx += 1;
+        }
+        return FEC_ConstantCommon.STR_EMPTY;
+    }
+
+    private static Integer resolveBlackFontId(String stylesXml) {
+        return resolveFontIdByRules(stylesXml, false);
+    }
+
+    private static Integer resolveBoldBlackFontId(String stylesXml) {
+        Integer boldId = resolveFontIdByRules(stylesXml, true);
+        return boldId != null ? boldId : resolveBlackFontId(stylesXml);
+    }
+
+    private static Integer resolveFontIdByRules(String stylesXml, Boolean wantBold) {
+        if (String.isBlank(stylesXml)) {
+            return 0;
+        }
+        Pattern fontPat = Pattern.compile('(?s)<font>(.*?)</font>');
+        Matcher fontMat = fontPat.matcher(stylesXml);
+        Integer idx = 0;
+        while (fontMat.find()) {
+            String block = fontMat.group(1) == null ? FEC_ConstantCommon.STR_EMPTY : fontMat.group(1);
+            Boolean isBold = block.contains('<b') || block.contains('<b/>');
+            if (!isRedFontBlock(block) && wantBold == isBold) {
+                return idx;
+            }
+            idx += 1;
+        }
+        return 0;
+    }
+
+    private static Boolean isRedFontBlock(String fontBlock) {
+        if (String.isBlank(fontBlock)) {
+            return false;
+        }
+        String upper = fontBlock.toUpperCase();
+        return upper.contains('FFFF0000') || upper.contains('RGB="FF0000"');
+    }
+
+    private static String composeResultCellXf(
+        Integer fontId,
+        Integer fillId,
+        Integer borderId,
+        Boolean wrapText
+    ) {
+        String alignment = wrapText == true
+            ? '<alignment horizontal="left" vertical="center" wrapText="1"/>'
+            : '<alignment horizontal="left" vertical="center"/>';
+        return '<xf numFmtId="0" fontId="' +
+            String.valueOf(fontId) +
+            '" fillId="' +
+            String.valueOf(fillId) +
+            '" borderId="' +
+            String.valueOf(borderId) +
+            '" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1">' +
+            alignment +
+            '</xf>';
+    }
+
+    private static Integer appendNewCellXf(Map<String, Blob> entryByPath, String newXfXml) {
+        if (entryByPath == null || String.isBlank(newXfXml)) {
+            return null;
+        }
+        String stylesPath = 'xl/styles.xml';
+        if (!entryByPath.containsKey(stylesPath)) {
+            return null;
         }
         String xml = blobToUtf8(entryByPath.get(stylesPath));
         if (String.isBlank(xml)) {
-            return baseStyleIndex;
+            return null;
         }
-        Integer lightRedFillId = ensureSolidFillRgbInStyles(entryByPath, RESULT_COL_LIGHT_RED_RGB);
-        if (lightRedFillId == null) {
-            return baseStyleIndex;
-        }
-        xml = blobToUtf8(entryByPath.get(stylesPath));
         Pattern xfsBlockPat = Pattern.compile('(?s)<cellXfs count="(\\d+)">(.*?)</cellXfs>');
         Matcher xfsBlockMat = xfsBlockPat.matcher(xml);
         if (!xfsBlockMat.find()) {
-            return baseStyleIndex;
+            return null;
         }
         String xfsInner = xfsBlockMat.group(2);
         Pattern xfPat = Pattern.compile('(?s)<xf[^>]*(?:>.*?</xf>|/>)');
@@ -1546,15 +1680,8 @@ public without sharing class FEC_BCH_TemplateExportService {
         while (xfMat.find()) {
             xfs.add(xfMat.group(0));
         }
-        if (baseStyleIndex >= xfs.size()) {
-            return baseStyleIndex;
-        }
-        String styledXf = applyFillIdToXf(xfs[baseStyleIndex], lightRedFillId);
-        if (wrapText == true) {
-            styledXf = addWrapTextToXf(styledXf);
-        }
         Integer newIdx = xfs.size();
-        xfs.add(styledXf);
+        xfs.add(newXfXml);
         String newInner = String.join(xfs, FEC_ConstantCommon.STR_EMPTY);
         String newBlock =
             '<cellXfs count="' +
