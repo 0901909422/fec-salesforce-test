@@ -72,6 +72,8 @@ export default class Fec_holdCaseAuto extends LightningElement {
   @api recordId;
   /** Từ fec_CaseBussiness — chỉ hiện nút Hold Case khi case ở chế độ edit (sau Execute). */
   @api isEdit;
+  /** Stage hiện tại của Case; Stage 1 không hiển thị nút Hold Case Auto retry. */
+  @api isStage1 = false;
   /** Fallback từ Manual Hold (sessionStorage) hoặc PENDING khi đang chạy Auto Hold retry. */
   @api resultOverride;
 
@@ -419,6 +421,9 @@ export default class Fec_holdCaseAuto extends LightningElement {
    * PENDING chỉ disable, không ẩn.
    */
   get showManualHoldCaseButton() {
+    if (this.isStage1 === true || this.isStage1 === "true") {
+      return false;
+    }
     if (!this.isCaseEditMode) {
       return false;
     }

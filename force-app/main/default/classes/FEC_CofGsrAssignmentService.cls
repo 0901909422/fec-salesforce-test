@@ -4,6 +4,7 @@ public without sharing class FEC_CofGsrAssignmentService {
     // SOQL 101: cache/dedupe theo transaction, tránh query lặp khi submit NOC bulk.
     private static Map<Id, String> txnTeamByQueueIdCache = new Map<Id, String>();
     private static Map<Id, String> txnTeamByUserIdCache = new Map<Id, String>();
+    private static Set<String> txnCreatedAssignmentKeys = new Set<String>();
 
     private static String emailLocalPart(String email) {
         if (String.isBlank(email)) return null;
@@ -160,6 +161,47 @@ public without sharing class FEC_CofGsrAssignmentService {
         return false;
     }
 
+    private static String normalizeAssignmentKeyPart(String value) {
+        return String.isBlank(value) ? '' : value.trim().toLowerCase();
+    }
+
+    private static String buildAssignmentDedupKey(
+        String caseId,
+        String teamName,
+        String queueName,
+        String stageName,
+        Boolean isManual
+    ) {
+        return String.join(new List<String>{
+            normalizeAssignmentKeyPart(caseId),
+            normalizeAssignmentKeyPart(teamName),
+            normalizeAssignmentKeyPart(queueName),
+            normalizeAssignmentKeyPart(stageName),
+            String.valueOf(isManual == true)
+        }, '|');
+    }
+
+    private static Set<String> loadExistingAssignmentDedupKeys(String caseId) {
+        Set<String> keys = new Set<String>();
+        if (String.isBlank(caseId)) {
+            return keys;
+        }
+        for (FEC_Assignment__c row : [
+            SELECT FEC_Case__c, FEC_Team__c, FEC_OwnerID__c, FEC_Assignment_Routing_Action__c, FEC_Manual__c
+            FROM FEC_Assignment__c
+            WHERE FEC_Case__c = :caseId
+        ]) {
+            keys.add(buildAssignmentDedupKey(
+                String.valueOf(row.FEC_Case__c),
+                row.FEC_Team__c,
+                row.FEC_OwnerID__c,
+                row.FEC_Assignment_Routing_Action__c,
+                row.FEC_Manual__c
+            ));
+        }
+        return keys;
+    }
+ 
     public static void createAssignmentsOnRoute(
         String caseId, Set<Id> nocIds, User currentUser, Id historyId,
         String stageName, String remarkContentParam
@@ -220,10 +262,14 @@ public without sharing class FEC_CofGsrAssignmentService {
             }
             //tungnm37 end
 
+            Set<String> existingAssignmentKeys = loadExistingAssignmentDedupKeys(caseId);
             List<FEC_Assignment__c> assignments = new List<FEC_Assignment__c>();
             for (FEC_Routing_Assignment__c ra : routingAssignments) {
-                String queueId = queueNameToId.containsKey(ra.FEC_Queue__c)
-                    ? String.valueOf(queueNameToId.get(ra.FEC_Queue__c)) : null;
+                String dedupKey = buildAssignmentDedupKey(caseId, ra.FEC_Team__c, ra.FEC_Queue__c, stageName, false);
+                if (existingAssignmentKeys.contains(dedupKey) || txnCreatedAssignmentKeys.contains(dedupKey)) {
+                    System.debug('FEC_DEBUG skip duplicate auto assignment key=' + dedupKey);
+                    continue;
+                }
                 assignments.add(new FEC_Assignment__c(
                     FEC_Case__c = caseId,
                     FEC_Assignment_Name__c = FEC_ConstantCommon.ASSIGNMENT_NAME_ROUTING,
@@ -238,7 +284,10 @@ public without sharing class FEC_CofGsrAssignmentService {
                     FEC_Assignment_Routing_Action__c = stageName,
                     FEC_Manual__c = false
                 ));
+                existingAssignmentKeys.add(dedupKey);
+                txnCreatedAssignmentKeys.add(dedupKey);
             }
+            if (assignments.isEmpty()) return;
             insert assignments;
 
             Datetime assignmentSubmitTs = System.now();
@@ -292,31 +341,39 @@ public without sharing class FEC_CofGsrAssignmentService {
             }
             if (!remarksToInsert.isEmpty()) insert remarksToInsert;
 
-            List<FEC_Routing_Action_History__c> histories = new List<FEC_Routing_Action_History__c>();
-            for (FEC_Assignment__c a : assignments) {
-                // tungnm37 fix: FEC_OwnerID__c lưu Queue Name, cần lookup trực tiếp từ queueNameToId
-                String queueName = a.FEC_OwnerID__c; // đây là Queue Name
-                String queueId = queueNameToId.containsKey(queueName) 
-                    ? String.valueOf(queueNameToId.get(queueName)) : null;
-                histories.add(new FEC_Routing_Action_History__c(
-                    FEC_Routing_Action__c = FEC_CaseBusinessService.ROUTE_TO,
-                    FEC_Case__c = caseId,
-                    FEC_Assignment__c = a.Id,
-                    FEC_Perform_User__c = currentUser.Id,
-                    FEC_User__c = emailLocalPart(currentUser.Email),
-                    FEC_User_Role__c = userRoleName,
-                    FEC_Stage_Name__c = stageName,
-                    FEC_Previous_Stage__c = currentCase.FEC_Current_Case_Stage__c,
-                    FEC_Original_User_Queue__c = originalOwnerLabel,
-                    FEC_Original_User_Queue_ID__c = currentCase.OwnerId != null ? String.valueOf(currentCase.OwnerId) : null,
-                    FEC_Updated_User_Queue__c = queueName,
-                    FEC_Updated_User_Queue_ID__c = queueId,
-                    FEC_Current_Status__c = currentCase.FEC_Final_Status__c,
-                    FEC_Submitted_On__c = DateTime.now()
-                ));
-            }
-            if (!histories.isEmpty()) {
-                Database.insert(histories, AccessLevel.SYSTEM_MODE);
+            if (historyId == null) {
+                Boolean isStage1Auto = stageName != null && Pattern.matches('(?i).*stage\\s*1.*', stageName);
+                List<FEC_Routing_Action_History__c> histories = new List<FEC_Routing_Action_History__c>();
+                for (FEC_Assignment__c a : assignments) {
+                    // Stage 1 COF/GSR auto cho CC/SP đã có case-level Route to history ở luồng owner change,
+                    // nên không tạo thêm assignment-level Route to history cho đúng kỳ vọng chỉ còn 2 dòng history.
+                    if (isStage1Auto && ('CC'.equals(a.FEC_Team__c) || 'SP'.equals(a.FEC_Team__c))) {
+                        continue;
+                    }
+                    // tungnm37 fix: FEC_OwnerID__c lưu Queue Name, cần lookup trực tiếp từ queueNameToId
+                    String queueName = a.FEC_OwnerID__c; // đây là Queue Name
+                    String queueId = queueNameToId.containsKey(queueName)
+                        ? String.valueOf(queueNameToId.get(queueName)) : null;
+                    histories.add(new FEC_Routing_Action_History__c(
+                        FEC_Routing_Action__c = FEC_CaseBusinessService.ROUTE_TO,
+                        FEC_Case__c = caseId,
+                        FEC_Assignment__c = a.Id,
+                        FEC_Perform_User__c = currentUser.Id,
+                        FEC_User__c = emailLocalPart(currentUser.Email),
+                        FEC_User_Role__c = userRoleName,
+                        FEC_Stage_Name__c = stageName,
+                        FEC_Previous_Stage__c = currentCase.FEC_Current_Case_Stage__c,
+                        FEC_Original_User_Queue__c = emailLocalPart(currentUser.Email),
+                        FEC_Original_User_Queue_ID__c = String.valueOf(currentUser.Id),
+                        FEC_Updated_User_Queue__c = queueName,
+                        FEC_Updated_User_Queue_ID__c = queueId,
+                        FEC_Current_Status__c = currentCase.FEC_Final_Status__c,
+                        FEC_Submitted_On__c = DateTime.now()
+                    ));
+                }
+                if (!histories.isEmpty()) {
+                    Database.insert(histories, AccessLevel.SYSTEM_MODE);
+                }
             }
         } catch (Exception e) {
             System.debug('FEC_DEBUG createAssignmentsOnRoute error: ' + e.getMessage() + ' | ' + e.getStackTraceString());
@@ -373,6 +430,7 @@ public without sharing class FEC_CofGsrAssignmentService {
             }
             //tungnm37 end
 
+            Set<String> existingAssignmentKeys = loadExistingAssignmentDedupKeys(caseId);
             List<FEC_Assignment__c> assignments = new List<FEC_Assignment__c>();
             List<String> remarkList = new List<String>();
             List<String> queueNameList = new List<String>(); // tungnm37: lưu queueName để dùng cho history
@@ -381,15 +439,19 @@ public without sharing class FEC_CofGsrAssignmentService {
                 String teamName = (String) item.get('teamName');
                 String queueName = (String) item.get('queueName');
                 String remark = (String) item.get('remark');
-                String queueId = queueNameToId.containsKey(queueName)
-                    ? String.valueOf(queueNameToId.get(queueName)) : null;
+                String displayQueueName = queueDevNameToDisplayName.containsKey(queueName) ? queueDevNameToDisplayName.get(queueName) : queueName;
+                String dedupKey = buildAssignmentDedupKey(caseId, teamName, displayQueueName, stageName, true);
+                if (existingAssignmentKeys.contains(dedupKey) || txnCreatedAssignmentKeys.contains(dedupKey)) {
+                    System.debug('FEC_DEBUG skip duplicate manual assignment key=' + dedupKey);
+                    continue;
+                }
                 assignments.add(new FEC_Assignment__c(
                     FEC_Case__c = caseId,
                     FEC_Assignment_Name__c = FEC_ConstantCommon.ASSIGNMENT_NAME_ROUTING,
                     FEC_Assignment_Type__c = FEC_ConstantCommon.ASSIGNMENT_TYPE_ROUTING,
                     //tungnm37: set status theo team + caseOwnerTeam (tu Case Owner Queue)
                     FEC_Assignment_Status__c = resolveAssignmentStatusWithOwner(teamName, caseOwnerTeamManual),
-                    FEC_OwnerID__c = queueDevNameToDisplayName.containsKey(queueName) ? queueDevNameToDisplayName.get(queueName) : queueName, // tungnm37 sửa: lưu Queue Name
+                    FEC_OwnerID__c = displayQueueName, // tungnm37 sửa: lưu Queue Name
                     FEC_Assignment_Owner__c = null,
                     FEC_Team__c = teamName,
                     FEC_Assignment_Remark__c = remark,
@@ -398,8 +460,11 @@ public without sharing class FEC_CofGsrAssignmentService {
                     FEC_Manual__c = true
                 ));
                 remarkList.add(remark);
-                queueNameList.add(queueDevNameToDisplayName.containsKey(queueName) ? queueDevNameToDisplayName.get(queueName) : queueName); // tungnm37: lưu display name cho history
+                queueNameList.add(displayQueueName); // tungnm37: lưu display name cho history
+                existingAssignmentKeys.add(dedupKey);
+                txnCreatedAssignmentKeys.add(dedupKey);
             }
+            if (assignments.isEmpty()) return;
             insert assignments;
 
             Datetime manualSubmitTs = System.now();
@@ -810,9 +875,24 @@ public without sharing class FEC_CofGsrAssignmentService {
                 }
             }
 
-            // tungnm37 fix: nếu có team khác CC/SP → tạo assignment tự động cho tất cả team
+            // Chỉ tạo thêm assignment/history tự động cho các team KHÁC CC/SP.
+            // Nếu truyền toàn bộ nocIds vào đây thì team CC/SP sẽ bị tạo thêm 1 Route to history ngoài history owner-change ở trên.
             if (hasNonCcSpTeam(nocIds)) {
-                createAssignmentsOnRoute(caseId, nocIds, currentUser, null, stageName, remarkContent);
+                Set<Id> nonCcSpNocIds = new Set<Id>();
+                for (FEC_Routing_Assignment__c ra : [
+                    SELECT FEC_Nature_of_Cases__c, FEC_Team__c
+                    FROM FEC_Routing_Assignment__c
+                    WHERE FEC_Nature_of_Cases__c IN :nocIds
+                      AND FEC_Team__c != null
+                      AND FEC_Active__c = true
+                ]) {
+                    if (ra.FEC_Team__c != 'CC' && ra.FEC_Team__c != 'SP') {
+                        nonCcSpNocIds.add(ra.FEC_Nature_of_Cases__c);
+                    }
+                }
+                if (!nonCcSpNocIds.isEmpty()) {
+                    createAssignmentsOnRoute(caseId, nonCcSpNocIds, currentUser, null, stageName, remarkContent);
+                }
                 // tungnm37 15/05/2026: chuyển sang stage tiếp theo sau khi tạo assignment tự động
                 moveToNextStage(caseId, nocIds);
             }
