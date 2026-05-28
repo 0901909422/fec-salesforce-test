@@ -205,6 +205,7 @@
 		<members>FEC_NewAssignmentController</members>
 		<members>FEC_AutoHoldCaseQueueable</members>
 		<members>FEC_AutoHoldCaseService</members>
+		<members>FEC_MCMSCARDTOCARDINQEMEA</members>
 		<members>FEC_MrcDuplicateCaseService</members>
 		<members>FEC_MrcDupCancelOnSubmitQueueJob</members>
 		<members>FEC_MrcReturnCaseService</members>
@@ -1288,6 +1289,7 @@
 		<members>FEC_List_Of_NFU_Code</members>
 		<members>FEC_Manual</members>
 		<members>FEC_NFU_Modal_Error</members>
+		<members>FEC_ERROR_API_CMS_CARD_TO_CARD</members>
 		<members>FEC_NFU_Modal_Save_Error</members>
 		<members>FEC_NFU_Reason_VN</members>
 		<members>FEC_New_Hold_Case_Config</members>
