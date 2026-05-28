@@ -37,6 +37,9 @@ public without sharing class FEC_BatchCaseHandlingImportService {
     private static final String BATCH_OBJECT_API_NAME = 'FEC_Batch_Case_Handling__c';
     @TestVisible
     private static final Integer IMPORT_PROCESSING_TIMEOUT_HOURS = 1;
+    // 27/05/2026 22:15 linhdev - import nhỏ (vd. Card Replacement 1 case) xử lý sync thay vì queueable để tránh Processing timeout 1 giờ
+    @TestVisible
+    private static final Integer SYNC_IMPORT_MAX_APPLICABLE_ROWS = 10;
     private static Map<String, Map<String, String>> routeParamsCacheByKey = new Map<String, Map<String, String>>();
     private static Map<String, String> revertActionIdCacheByStage = new Map<String, String>();
     private static Map<String, String> queueIdCacheByToken = new Map<String, String>();
@@ -54,15 +57,61 @@ public without sharing class FEC_BatchCaseHandlingImportService {
     }
 
     public static Boolean hasApplicableImportRows(List<FEC_BatchCaseHandlingImportRow> rows) {
+        return countApplicableImportRows(rows) > 0;
+    }
+
+    public static Integer countApplicableImportRows(List<FEC_BatchCaseHandlingImportRow> rows) {
         if (rows == null || rows.isEmpty()) {
-            return false;
+            return 0;
         }
+        Integer applicableCount = 0;
         for (FEC_BatchCaseHandlingImportRow row : rows) {
             if (shouldApplyImportRow(row)) {
+                applicableCount++;
+            }
+        }
+        return applicableCount;
+    }
+
+    public static Boolean shouldProcessImportSynchronously(List<FEC_BatchCaseHandlingImportRow> rows) {
+        Integer applicableCount = countApplicableImportRows(rows);
+        return applicableCount > 0 && applicableCount <= SYNC_IMPORT_MAX_APPLICABLE_ROWS;
+    }
+
+    public static Boolean hasRemainingApplicableImportRows(
+        List<FEC_BatchCaseHandlingImportRow> rows,
+        Integer startIndex
+    ) {
+        if (rows == null || startIndex == null || startIndex < 0 || startIndex >= rows.size()) {
+            return false;
+        }
+        for (Integer idx = startIndex; idx < rows.size(); idx++) {
+            if (shouldApplyImportRow(rows[idx])) {
                 return true;
             }
         }
         return false;
+    }
+
+    public static void processApplicableImportRowsSync(
+        Id batchRecordId,
+        List<FEC_BatchCaseHandlingImportRow> rows,
+        Boolean cofOrGsr
+    ) {
+        if (rows == null || rows.isEmpty()) {
+            finalizeBatchImportRecord(batchRecordId, rows);
+            return;
+        }
+        List<FEC_BatchCaseHandlingImportRow> applicableRows = new List<FEC_BatchCaseHandlingImportRow>();
+        for (FEC_BatchCaseHandlingImportRow row : rows) {
+            if (shouldApplyImportRow(row)) {
+                applicableRows.add(row);
+            }
+        }
+        if (!applicableRows.isEmpty()) {
+            applyCaseHandlingUpdates(applicableRows, cofOrGsr == true);
+        }
+        finalizeBatchImportRecord(batchRecordId, rows);
     }
 
     public static void finalizeBatchImportRecord(
