@@ -4715,20 +4715,22 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
             };
           }
           break;
-        case ACTION_REVERT:
-          params = {
-            ...params,
-            params: {
-              caseId: this.recordId,
-              actionId: actionId,
-              //Toannd61: action.value (label/value dropdown) cho Apex phân nhánh FEC_IsReverted__c + custom label history
-              routingActionValue: selectedAction?.value ?? "",
-//PhongBT: update bộ noc chọn ở updated khi revert về (ưu tiên template từ Updated NOC)
-              natureOfCaseId:
-                this._lastCaseNocTemplateNatureId || this.business?.natureOfCase,
-            },
+        case ACTION_REVERT: {
+          const revertParams = {
+            caseId: this.recordId,
+            actionId: actionId,
+            //Toannd61: action.value (label/value dropdown) cho Apex phân nhánh FEC_IsReverted__c + custom label history
+            routingActionValue: selectedAction?.value ?? "",
           };
+          // GSR: không gửi NOC Stage 2 — Apex sync Actual theo template Stage 1 sau revert
+          const bpCode = (this.business?.code || "").toUpperCase();
+          if (!bpCode.includes("GSR")) {
+            revertParams.natureOfCaseId =
+              this._lastCaseNocTemplateNatureId || this.business?.natureOfCase;
+          }
+          params = { ...params, params: revertParams };
           break;
+        }
         case ACTION_TRANSFER:
           params = {
             ...params,
