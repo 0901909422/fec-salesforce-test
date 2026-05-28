@@ -861,12 +861,13 @@ public without sharing class FEC_ContractClosureController {
         ) {
             return null;
         }
+        Id caseIdRef = caseRow.Id;
         List<SObject> teRows = Database.query(
             'SELECT Id, ' +
                 FLD_CL_CONTACT_STRING +
                 ' FROM ' +
                 OBJ_CONTACT_LIST +
-                ' WHERE ' + caseFieldApi + ' = :caseRow.Id' +
+                ' WHERE ' + caseFieldApi + ' = :caseIdRef' +
                 ' AND ' + FLD_CL_COMM_TYPE + ' = :FEC_ConstantCommon.EMAIL' +
                 ' ORDER BY LastModifiedDate DESC LIMIT 1'
         );
@@ -902,10 +903,11 @@ public without sharing class FEC_ContractClosureController {
         if (String.isBlank(te)) {
             te = null;
         }
+        Id caseIdRef = caseRec.Id;
         List<SObject> matches = Database.query(
             'SELECT Id, ' + FLD_CL_CONTACT_STRING +
             ' FROM ' + OBJ_CONTACT_LIST +
-            ' WHERE ' + caseFieldApi + ' = :caseRec.Id' +
+            ' WHERE ' + caseFieldApi + ' = :caseIdRef' +
             ' AND ' + FLD_CL_COMM_TYPE + ' = :FEC_ConstantCommon.EMAIL' +
             ' ORDER BY LastModifiedDate DESC LIMIT 1'
         );
