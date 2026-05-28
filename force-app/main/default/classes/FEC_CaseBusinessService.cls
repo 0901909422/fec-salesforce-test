@@ -418,6 +418,13 @@ public without sharing class FEC_CaseBusinessService {
         !historylst.isEmpty() &&
         historylst.get(0).FEC_IsReverted__c == true;
 
+      //thangtv: LWC Stage 1 giữ nextTeam/nextQueue từ resolveRouteToDisplayInfo — không ghi đè RL05/Document Request
+      result.routeByLatestRevertHistory =
+        !historylst.isEmpty() &&
+        REVERT.equals(historylst.get(0).FEC_Routing_Action__c) &&
+        historylst.get(0).FEC_IsReverted__c == true &&
+        historylst.get(0).FEC_Previous_Stage__c != null;
+
       List<Group> queuelst;
       // Lưu riêng REVERT record trước khi selectedHistory bị override bởi routeToHistorylst.
       // routeToHistorylst không SELECT FEC_Perform_User__r.Name nên không thể dùng selectedHistory
@@ -615,7 +622,7 @@ public without sharing class FEC_CaseBusinessService {
           when else {
           }
         }
-        // MRC Return (RL05): validate Case Information — Product Code TW (chặn như Phone Update); RL05.03 DPD chỉ cảnh báo.
+        // MRC Return (RL05): validate Case Information — Product Code TW / RL05.03 DPD (chặn như Phone Update).
         if (
           err.errorlst.isEmpty() &&
           FEC_MrcReturnCaseService.isRl05Branch(
@@ -641,12 +648,8 @@ public without sharing class FEC_CaseBusinessService {
             } else {
               caseInfoMrc.error = mrcErr;
             }
-            if (FEC_MrcReturnCaseService.isRl0503DpdOnlyValidation(mrcErr, result.subCodeCode)) {
-              result.mrcRl05CaseInfoWarningOnly = true;
-            } else {
-              err = mrcErr;
-              result.mrcRl05CaseInfoBlocked = true;
-            }
+            err = mrcErr;
+            result.mrcRl05CaseInfoBlocked = true;
           }
         }
       } catch (DmlException e) {
@@ -2293,6 +2296,13 @@ public without sharing class FEC_CaseBusinessService {
           // Kiểm tra creation stage trước khi mark submitted
           Boolean isCreationStage = !([SELECT FEC_Is_Submited__c FROM Case WHERE Id = :caseId LIMIT 1].FEC_Is_Submited__c == true);
           finalStatusBeforeSubmit = readCaseFinalStatusBeforeSubmit(caseId);
+          String mrcCustomerConfirmation = params != null
+            ? (String) params.get('mrcCustomerConfirmation')
+            : null;
+          String mrcHandlingOption = params != null
+            ? (String) params.get('mrcHandlingOption')
+            : null;
+          // RL05.02: hủy dup chỉ trong Queueable sau route — tránh SOQL 101 trên transaction Submit.
           markCaseSubmittedAndClearDrafts(caseId);
           //PhongBT: tạo FEC_Case_Flow_History__c khi submit case lần đầu.
           if (isCreationStage) {
@@ -2306,7 +2316,13 @@ public without sharing class FEC_CaseBusinessService {
             finalStatusBeforeSubmit,
             (String) params.get('teamUserGroup')
           );
-          FEC_MrcDuplicateCaseService.applyNotReceivedHandlingOptionOnSubmit(caseId);
+          System.enqueueJob(
+            new FEC_MrcDupCancelOnSubmitQueueJob(
+              caseId,
+              mrcCustomerConfirmation,
+              mrcHandlingOption
+            )
+          );
           return null;
         }
         // tungnm37 thêm: COF/GSR - không đổi owner, chỉ tạo Assignment + Case Remarks + Routing Action History
@@ -2385,10 +2401,11 @@ public without sharing class FEC_CaseBusinessService {
         when TRANSFER {
           finalStatusBeforeSubmit = readCaseFinalStatusBeforeSubmit(caseId);
           markCaseSubmittedAndClearDrafts(caseId);
+          String decision = (String) params.get('decision');
           String userOrQueueId = (String) params.get('userOrQueueId');
           // Đổi owner trước (transfer đã registerSkip), rồi ghi history — tránh 2 bản; Updated = owner sau transfer
           transfer(caseId, userOrQueueId);
-          createRoutingActionHis('Transfer', '', oldOwnerName, oldOwnerId, caseId, stageName, finalStatusBeforeSubmit, currentStageId);
+          createRoutingActionHis('Transfer', decision, oldOwnerName, oldOwnerId, caseId, stageName, finalStatusBeforeSubmit, currentStageId);
           return null;
         }
         when UPDATEACTION {
@@ -4154,6 +4171,10 @@ public without sharing class FEC_CaseBusinessService {
     /** LWC fec_CaseBussiness: khóa fec_IPPConversionRetailForm / fec_CardClosureRefundForm sau Revert về default stage. */
     @AuraEnabled
     public Boolean lockApiLwcsAfterRevertToDefaultStage;
+
+    /** true = history mới nhất Revert + IsReverted; LWC giữ nextTeam/nextQueue từ resolveRouteToDisplayInfo. */
+    @AuraEnabled
+    public Boolean routeByLatestRevertHistory;
 
     @AuraEnabled
     public String draftRoutingActionCode;

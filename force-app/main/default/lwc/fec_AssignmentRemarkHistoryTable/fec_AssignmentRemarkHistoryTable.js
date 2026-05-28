@@ -51,6 +51,11 @@ export default class Fec_AssignmentRemarkHistoryTable extends LightningElement {
     this.loadData();
   }
 
+  @api
+  async refreshData() {
+    await this.loadData();
+  }
+
   async loadData() {
     try {
       const result = await getAssignmentRemarks({

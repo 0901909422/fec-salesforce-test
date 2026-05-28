@@ -6,6 +6,21 @@
     <compactLayoutAssignment>Customer_Case_Compact</compactLayoutAssignment>
     <label>Customer Case</label>
     <picklistValues>
+        <picklist>FEC_Account_Contract_Number_PL__c</picklist>
+        <values>
+            <fullName>Insurance</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>Non-Existing Customer</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>Ubank</fullName>
+            <default>false</default>
+        </values>
+    </picklistValues>
+    <picklistValues>
         <picklist>FEC_Complain_Type__c</picklist>
         <values>
             <fullName>High risk</fullName>

@@ -21,6 +21,8 @@ import FEC_SheetJS from "@salesforce/resourceUrl/FEC_SheetJS";
 import {
   normalizeHeaderCell,
   findColumnIndex,
+  formatSpreadsheetCellValueAsText,
+  getSheetJsCellDisplayText,
   normalizeNoteTextSafe,
   promiseWithTimeoutSafe,
   arrayBufferToBase64Safe,
@@ -61,17 +63,44 @@ const RESULT_APPEND_HEADERS = [
   "__Errors"
 ];
 
-const cellValueForSourceRow = (value) => {
-  if (value == null || value === "") {
-    return "";
+const cellValueForSourceRow = (value) => formatSpreadsheetCellValueAsText(value);
+
+/** Cột cần giữ dạng text trong file result (account/contract, phone). */
+const isTextPreserveResultColumn = (header) => {
+  const norm = normalizeHeaderCell(header);
+  if (!norm) {
+    return false;
   }
-  if (typeof value === "number") {
-    if (Number.isFinite(value) && Number.isInteger(value)) {
-      return String(Math.trunc(value));
+  if (norm.includes("account") && norm.includes("contract")) {
+    return true;
+  }
+  if (norm.includes("contract number")) {
+    return true;
+  }
+  if (norm.includes("interaction phone") || norm === "phone") {
+    return true;
+  }
+  return false;
+};
+
+const applyTextFormatToWorksheetColumns = (worksheet, headers, rowCount) => {
+  if (!worksheet || !Array.isArray(headers) || rowCount < 2 || !window.XLSX) {
+    return;
+  }
+  headers.forEach((header, colIdx) => {
+    if (!isTextPreserveResultColumn(header)) {
+      return;
     }
-    return String(value);
-  }
-  return String(value);
+    for (let rowIdx = 1; rowIdx < rowCount; rowIdx += 1) {
+      const cellRef = window.XLSX.utils.encode_cell({ c: colIdx, r: rowIdx });
+      const cell = worksheet[cellRef];
+      if (!cell) {
+        continue;
+      }
+      const text = formatSpreadsheetCellValueAsText(cell.v ?? cell.w ?? "");
+      worksheet[cellRef] = { t: "s", v: text, w: text };
+    }
+  });
 };
 
 const isResultExportCutoffHeader = (header) => {
@@ -97,7 +126,7 @@ const trimSourceForResultExport = (headers, rows) => {
   const exportRows = (Array.isArray(rows) ? rows : []).map((row) =>
     exportHeaders.map((_, colIdx) => {
       const value = Array.isArray(row) ? row[colIdx] : "";
-      return value == null ? "" : value;
+      return formatSpreadsheetCellValueAsText(value);
     })
   );
   return { headers: exportHeaders, rows: exportRows };
@@ -345,7 +374,11 @@ export default class Fec_BatchCaseCreation extends LightningElement {
   async validateCaseBatchExcel(file) {
     await this.ensureSheetJsLoaded();
     const data = await this.readFileAsArrayBuffer(file);
-    const workbook = window.XLSX.read(data, { type: "array", cellText: false });
+    const workbook = window.XLSX.read(data, {
+      type: "array",
+      cellText: true,
+      cellNF: true
+    });
     const firstSheetName =
       Array.isArray(workbook.SheetNames) && workbook.SheetNames.length > 0
         ? workbook.SheetNames[0]
@@ -410,7 +443,7 @@ export default class Fec_BatchCaseCreation extends LightningElement {
     if (idxContract < 0) {
       missing.push("Contract Number hoặc Account/ Contract Number");
     }
-    if (idxPhone < 0) {
+    if (idxPhone < 0 && fileType === IMPORT_FILE_TYPE_WELCOME) {
       missing.push("Interaction Phone");
     }
     if (idxProduct < 0) {
@@ -425,7 +458,7 @@ export default class Fec_BatchCaseCreation extends LightningElement {
     if (idxSubCode < 0) {
       missing.push("Sub Code");
     }
-    if (idxCaseStatus < 0 && fileType !== IMPORT_FILE_TYPE_WELCOME) {
+    if (idxCaseStatus < 0) {
       missing.push("Case Status");
     }
     if (extended) {
@@ -443,15 +476,17 @@ export default class Fec_BatchCaseCreation extends LightningElement {
       };
     }
 
-    const cellAt = (rowArr, colIdx) => {
-      if (!Array.isArray(rowArr) || colIdx < 0) {
+    const cellAt = (rowArr, colIdx, rowIndex) => {
+      if (colIdx < 0) {
         return "";
       }
-      const v = rowArr[colIdx];
-      if (v == null || v === "") {
+      if (sheet && Number.isInteger(rowIndex) && rowIndex >= 0) {
+        return getSheetJsCellDisplayText(sheet, rowIndex, colIdx);
+      }
+      if (!Array.isArray(rowArr)) {
         return "";
       }
-      return String(v).trim();
+      return cellValueForSourceRow(rowArr[colIdx]);
     };
 
     let dataRowCount = 0;
@@ -459,20 +494,21 @@ export default class Fec_BatchCaseCreation extends LightningElement {
     const importRows = [];
     for (let i = 1; i < rowsAoA.length; i += 1) {
       const rowArr = rowsAoA[i];
-      const contractNumber = cellAt(rowArr, idxContract);
-      const interactionPhone = cellAt(rowArr, idxPhone);
-      const productType = cellAt(rowArr, idxProduct);
-      const category = cellAt(rowArr, idxCategory);
-      const subCategory = cellAt(rowArr, idxSubCat);
-      const subCode = cellAt(rowArr, idxSubCode);
-      const caseStatus = cellAt(rowArr, idxCaseStatus);
-      const rawCaseRemarks = idxRemarks >= 0 ? cellAt(rowArr, idxRemarks) : "";
+      const contractNumber = cellAt(rowArr, idxContract, i);
+      const interactionPhone = cellAt(rowArr, idxPhone, i);
+      const productType = cellAt(rowArr, idxProduct, i);
+      const category = cellAt(rowArr, idxCategory, i);
+      const subCategory = cellAt(rowArr, idxSubCat, i);
+      const subCode = cellAt(rowArr, idxSubCode, i);
+      const caseStatus = cellAt(rowArr, idxCaseStatus, i);
+      const rawCaseRemarks =
+        idxRemarks >= 0 ? cellAt(rowArr, idxRemarks, i) : "";
       const caseRemarks = normalizeNoteTextSafe(rawCaseRemarks);
-      const interactionChannel = extended ? cellAt(rowArr, idxChannel) : "";
+      const interactionChannel = extended ? cellAt(rowArr, idxChannel, i) : "";
       const interactionSubChannel = extended
-        ? cellAt(rowArr, idxSubChannel)
+        ? cellAt(rowArr, idxSubChannel, i)
         : "";
-      const interactionEmail = extended ? cellAt(rowArr, idxEmail) : "";
+      const interactionEmail = extended ? cellAt(rowArr, idxEmail, i) : "";
 
       if (
         !contractNumber &&
@@ -487,10 +523,7 @@ export default class Fec_BatchCaseCreation extends LightningElement {
       }
       dataRowCount += 1;
       sourceRows.push(
-        originalHeaders.map((_, idx) => {
-          const value = Array.isArray(rowArr) ? rowArr[idx] : "";
-          return cellValueForSourceRow(value);
-        })
+        originalHeaders.map((_, idx) => getSheetJsCellDisplayText(sheet, i, idx))
       );
       importRows.push({
         fileType,
@@ -616,11 +649,8 @@ export default class Fec_BatchCaseCreation extends LightningElement {
       );
       const importStatus = (result?.status || "").trim();
       const isDeferredUpload = importStatus === "Uploaded";
-      if (
-        result?.batchRecordId &&
-        result?.resultRowsJson &&
-        !isDeferredUpload
-      ) {
+      // Server tạo xlsx result (EOD); client xlsx khi có resultRowsJson (import đồng bộ).
+      if (result?.batchRecordId && result?.resultRowsJson) {
         try {
           await this.saveResultWorkbook(
             result.batchRecordId,
@@ -630,7 +660,7 @@ export default class Fec_BatchCaseCreation extends LightningElement {
             this.pendingImportSourceRows
           );
         } catch (saveErr) {
-          // Batch row + server CSV result still allow download; do not block table refresh.
+          // Batch row + server xlsx result still allow download; do not block table refresh.
           // eslint-disable-next-line no-console
           console.warn("saveResultWorkbook", saveErr);
         }
@@ -742,10 +772,13 @@ export default class Fec_BatchCaseCreation extends LightningElement {
           ];
         })
       : [];
-    const worksheet = window.XLSX.utils.aoa_to_sheet([
+    const sheetAoA = [[...exportHeaders, ...RESULT_APPEND_HEADERS], ...exportRows];
+    const worksheet = window.XLSX.utils.aoa_to_sheet(sheetAoA);
+    applyTextFormatToWorksheetColumns(
+      worksheet,
       [...exportHeaders, ...RESULT_APPEND_HEADERS],
-      ...exportRows
-    ]);
+      sheetAoA.length
+    );
     const workbook = window.XLSX.utils.book_new();
     window.XLSX.utils.book_append_sheet(workbook, worksheet, "Result");
     const wbout = window.XLSX.write(workbook, {

@@ -20,6 +20,13 @@ public with sharing class FEC_BatchCaseHandlingResultXlsxBuilder {
     private static final String CT_STYLES = 'application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml';
 
     public static Blob buildWorkbookBlob(List<List<String>> sheetRows) {
+        return buildWorkbookBlob(sheetRows, null);
+    }
+
+    /**
+     * @param textColumnIndices Cột zero-based format Text (@) — account/contract, phone.
+     */
+    public static Blob buildWorkbookBlob(List<List<String>> sheetRows, Set<Integer> textColumnIndices) {
         if (sheetRows == null || sheetRows.isEmpty()) {
             return null;
         }
@@ -37,7 +44,7 @@ public with sharing class FEC_BatchCaseHandlingResultXlsxBuilder {
         String dimensionRef = 'A1:' + lastCol + String.valueOf(rowCount);
         List<String> rowXmlParts = new List<String>();
         for (Integer rowIdx = 0; rowIdx < sheetRows.size(); rowIdx++) {
-            rowXmlParts.add(buildRowXml(rowIdx + 1, sheetRows[rowIdx], maxCols));
+            rowXmlParts.add(buildRowXml(rowIdx + 1, sheetRows[rowIdx], maxCols, textColumnIndices));
         }
         String sheetXml =
             XML_DECL_STANDALONE +
@@ -132,11 +139,12 @@ public with sharing class FEC_BatchCaseHandlingResultXlsxBuilder {
                     '<fills count="1"><fill><patternFill patternType="none"/></fill></fills>' +
                     '<borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders>' +
                     '<cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>' +
-                    '<cellXfs count="2">' +
+                    '<cellXfs count="3">' +
                     '<xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/>' +
                     '<xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0" applyAlignment="1">' +
                     '<alignment wrapText="1" vertical="top"/>' +
                     '</xf>' +
+                    '<xf numFmtId="49" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1"/>' +
                     '</cellXfs>' +
                     '</styleSheet>'
             )
@@ -145,7 +153,12 @@ public with sharing class FEC_BatchCaseHandlingResultXlsxBuilder {
         return writer.getArchive();
     }
 
-    private static String buildRowXml(Integer rowNumber, List<String> values, Integer maxCols) {
+    private static String buildRowXml(
+        Integer rowNumber,
+        List<String> values,
+        Integer maxCols,
+        Set<Integer> textColumnIndices
+    ) {
         List<String> cellParts = new List<String>();
         for (Integer colIdx = 0; colIdx < maxCols; colIdx++) {
             String cellValue = FEC_ConstantCommon.STR_EMPTY;
@@ -153,7 +166,12 @@ public with sharing class FEC_BatchCaseHandlingResultXlsxBuilder {
                 cellValue = values[colIdx];
             }
             Boolean isErrorsCol = colIdx == maxCols - 1;
-            String styleAttr = isErrorsCol ? ' s="1"' : FEC_ConstantCommon.STR_EMPTY;
+            String styleAttr = FEC_ConstantCommon.STR_EMPTY;
+            if (isErrorsCol) {
+                styleAttr = ' s="1"';
+            } else if (textColumnIndices != null && textColumnIndices.contains(colIdx)) {
+                styleAttr = ' s="2"';
+            }
             String tTagOpen =
                 cellValue.contains('\n') || cellValue.contains('\r')
                     ? '<t xml:space="preserve">'

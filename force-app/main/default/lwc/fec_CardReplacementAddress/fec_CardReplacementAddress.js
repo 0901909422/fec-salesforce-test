@@ -1,5 +1,5 @@
 import { LightningElement, api, track, wire } from 'lwc';
-import { getRecord, getFieldValue, createRecord, updateRecord, deleteRecord } from "lightning/uiRecordApi";
+import { getRecord, getFieldValue } from "lightning/uiRecordApi";
 import { ShowToastEvent } from "lightning/platformShowToastEvent";
 
 import ACCOUNT_OR_CONTRACT_FIELD from "@salesforce/schema/Case.FEC_Account_or_Contract__c";
@@ -21,6 +21,9 @@ import getWardOptionsForProvinceCode from '@salesforce/apex/FEC_CardReplacementA
 import getAddressInfos from '@salesforce/apex/FEC_CardReplacementAddressController.getAddressInfos';
 import getCountryId from '@salesforce/apex/FEC_CardReplacementAddressController.getCountryId';
 import getAddressInfo from '@salesforce/apex/FEC_CardReplacementAddressController.getAddressInfo';
+import createAddressInfo from '@salesforce/apex/FEC_CardReplacementAddressController.createAddressInfo';
+import updateAddressInfo from '@salesforce/apex/FEC_CardReplacementAddressController.updateAddressInfo';
+import deleteAddressInfo from '@salesforce/apex/FEC_CardReplacementAddressController.deleteAddressInfo';
 
 export default class Fec_CardReplacementAddress extends LightningElement {
     @api recordId;
@@ -207,29 +210,28 @@ export default class Fec_CardReplacementAddress extends LightningElement {
         const province = this.provinceOptions.find(p => p.value === this.mailingCity)?.label;
         const address = this.building + ', ' + this.numberValue + ' ' + this.street + ', ' + ward + ', ' + province;
         const countryId = await getCountryId();
-        const fields = {
-            'FEC_Case__c': this.recordId,
-            'FEC_Customer_History__c': this.customerHistoryId,
-            'FEC_Address_Type__c': this.addressType,
-            'FEC_Address__c': address,
-            'FEC_Mailing_Address__c': true,
-            'FEC_Country__c': countryId,
-            'FEC_Province__c': this.mailingCity,
-            'FEC_District__c': this.mailingWard,
-            'FEC_Building__c': this.building,
-            'FEC_Number__c': this.numberValue,
-            'FEC_Street__c': this.street,
+        const addressInput = {
+            caseId: this.recordId,
+            customerHistoryId: this.customerHistoryId,
+            addressType: this.addressType,
+            address,
+            countryId,
+            provinceId: this.mailingCity,
+            districtId: this.mailingWard,
+            building: this.building,
+            numberValue: this.numberValue,
+            street: this.street
         };
         try {
             if (this.newAddressInfoId) {
-                delete fields['FEC_Customer_History__c'];
-                fields['Id'] = this.newAddressInfoId;
-                const recordUpdate = { fields };
-                await updateRecord(recordUpdate);
+                await updateAddressInfo({
+                    input: {
+                        ...addressInput,
+                        addressInfoId: this.newAddressInfoId
+                    }
+                });
             } else {
-                const recordInput = { apiName: 'FEC_Address_Info__c', fields };
-                const addressInfo = await createRecord(recordInput);
-                this.newAddressInfoId = addressInfo.id;
+                this.newAddressInfoId = await createAddressInfo({ input: addressInput });
             }
             this.isModalOpen = false;
             this.isDisableBtnAddTempAddress = true;
@@ -254,7 +256,7 @@ export default class Fec_CardReplacementAddress extends LightningElement {
     async handleDeleteTempAddress() {
         this.isLoading = true;
         try {
-            await deleteRecord(this.newAddressInfoId);
+            await deleteAddressInfo({ addressInfoId: this.newAddressInfoId });
             this.isDisableBtnAddTempAddress = false;
             this.newAddressInfoId = '';
             this.newSelectedAddressId = '';

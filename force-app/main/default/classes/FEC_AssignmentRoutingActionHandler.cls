@@ -1646,9 +1646,7 @@ public without sharing class FEC_AssignmentRoutingActionHandler {
                     FEC_Remark_Type__c = FEC_ConstantCommon.ROUTING_TYPE_ASSIGNMENT,
                     
                     // FEC_Case_Remarks__c = FEC_ConstantCommon.ASSIGNMENT_AUTO_COMPLETED_REMARK,
-                    FEC_Case_Remarks__c = routingAction == FEC_ConstantCommon.ACTION_RECALL
-                        ? 'Assignment auto recalled'
-                        : FEC_ConstantCommon.ASSIGNMENT_AUTO_COMPLETED_REMARK,
+                    FEC_Case_Remarks__c = FEC_ConstantCommon.ASSIGNMENT_AUTO_COMPLETED_REMARK,
                     FEC_Stage_Name__c   = c.FEC_Current_Case_Stage__r.FEC_Code__c,
                     FEC_Case__c = caseId,
                     

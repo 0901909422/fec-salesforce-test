@@ -273,6 +273,19 @@ const HEADERS_REQUIRED_ACTION = [
 const HEADERS_CLASSIFICATION_BY_CS = ["classificationbycs"];
 const HEADERS_EVALUATION_BY_CS = ["evaluationbycs"];
 const HEADERS_FINAL_PRODUCT = ["finalproduct"];
+// 28/05/2026 14:00 linhdev - Payment/CP assessment columns (RefundLoan PM, MRC CP templates)
+const HEADERS_PAYMENT_CONTRACT_ASSESSMENT = [
+  "paymentđánhgiáyêucầuđónghợpđồng",
+  "paymentdanhgiayeucaudonghopdong",
+  "paymentcontractassessment",
+  "rdpaymentcontractassessment"
+];
+const HEADERS_CP_ASSESSMENT = [
+  "cpđánhgiáyêucầu",
+  "cpdanhgiayeucau",
+  "cpassessment",
+  "contractprocessingassessment"
+];
 const EXPORT_USER_FILL_HEADERS = new Set([
   ...HEADERS_ROUTING_ACTION,
   ...HEADERS_REMARKS,
@@ -280,7 +293,12 @@ const EXPORT_USER_FILL_HEADERS = new Set([
   ...HEADERS_CS_D2C_ASSESSMENT,
   ...HEADERS_CS_SUPPORT_ASSESSMENT,
   ...HEADERS_RISK_LEVEL,
-  ...HEADERS_REQUIRED_ACTION
+  ...HEADERS_REQUIRED_ACTION,
+  ...HEADERS_CLASSIFICATION_BY_CS,
+  ...HEADERS_EVALUATION_BY_CS,
+  ...HEADERS_FINAL_PRODUCT,
+  ...HEADERS_PAYMENT_CONTRACT_ASSESSMENT,
+  ...HEADERS_CP_ASSESSMENT
 ]);
 const EXPORT_HEADER_FIELD_MAP = {
   customername: "customerName",
@@ -1853,6 +1871,7 @@ export default class Fec_BatchCaseHandling extends LightningElement {
   async openBusinessProcessPopup(useSelected) {
     let sourceRows = [];
     if (useSelected) {
+      //tungnm37 2026-05-27 12:11 - Không dùng trực tiếp grid rows vì grid chỉ có dữ liệu tối thiểu, thiếu field export/enrich
       const selectedCaseIds = this.caseRows
         .filter((r) => r.selected)
         .map((r) => r.caseId)
@@ -1863,6 +1882,7 @@ export default class Fec_BatchCaseHandling extends LightningElement {
       }
       this.isLoading = true;
       try {
+        //tungnm37 2026-05-27 12:11 - Query lại từ Apex để Export Selected đi cùng nguồn dữ liệu với Export All
         const res = await getSelectedCasesForExport({ caseIds: selectedCaseIds });
         const raw = Array.isArray(res?.rows) ? res.rows : [];
         sourceRows = raw.map((r) => ({
@@ -2674,6 +2694,14 @@ export default class Fec_BatchCaseHandling extends LightningElement {
       normalized,
       HEADERS_FINAL_PRODUCT
     );
+    const idxPaymentContractAssessment = this.findHeaderIndex(
+      normalized,
+      HEADERS_PAYMENT_CONTRACT_ASSESSMENT
+    );
+    const idxCpAssessment = this.findHeaderIndex(
+      normalized,
+      HEADERS_CP_ASSESSMENT
+    );
     const isCofOrGsr = idxAssignmentId >= 0 || idxAssignmentRouting >= 0;
     const rows = [];
     for (let i = headerRowIndex + 1; i < aoa.length; i++) {
@@ -2712,6 +2740,14 @@ export default class Fec_BatchCaseHandling extends LightningElement {
           : STR_EMPTY;
       const finalProduct =
         idxFinalProduct >= 0 ? this.cellAsString(r[idxFinalProduct]) : STR_EMPTY;
+      const paymentContractAssessment =
+        idxPaymentContractAssessment >= 0
+          ? this.cellAsString(r[idxPaymentContractAssessment])
+          : STR_EMPTY;
+      const cpAssessment =
+        idxCpAssessment >= 0
+          ? this.cellAsString(r[idxCpAssessment])
+          : STR_EMPTY;
       if (
         !caseIdSearch &&
         !routingAction &&
@@ -2724,7 +2760,9 @@ export default class Fec_BatchCaseHandling extends LightningElement {
         !requiredAction &&
         !classificationByCS &&
         !evaluationByCS &&
-        !finalProduct
+        !finalProduct &&
+        !paymentContractAssessment &&
+        !cpAssessment
       ) {
         continue;
       }
@@ -2748,6 +2786,8 @@ export default class Fec_BatchCaseHandling extends LightningElement {
         classificationByCS,
         evaluationByCS,
         finalProduct,
+        paymentContractAssessment,
+        cpAssessment,
         originalCells
       });
     }
@@ -3350,7 +3390,14 @@ export default class Fec_BatchCaseHandling extends LightningElement {
       }
     }
     const propertyInsert = this.buildPropertyInsertPayload(headerRow, list, propertyBundle);
-    const exportRequest = { contentVersionId, headerRowIndex, mappedColumnIndexes, dataRows };
+    // 27/05/2026 13:15 linhdev - gửi sheet name cho Apex patch đúng worksheet đã map header
+    const exportRequest = {
+      contentVersionId,
+      headerRowIndex,
+      mappedColumnIndexes,
+      dataRows,
+      templateSheetName
+    };
     // 27/05/2026 10:00 linhdev - chỉ khi Export with all Properties = Yes và có cột MDS
     if (propertyInsert) {
       exportRequest.insertColumnsBeforeIndex = propertyInsert.insertColumnsBeforeIndex;

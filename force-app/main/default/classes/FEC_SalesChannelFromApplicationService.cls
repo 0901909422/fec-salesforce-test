@@ -18,7 +18,8 @@ public with sharing class FEC_SalesChannelFromApplicationService {
         'TSA13', 'TSA20', 'TSA27', 'TSA38', 'TSA41', 'TSA48', 'TSA54', 'TSA55', 'TSA80', 'TSA90', 'TSA37'
     };
 
-    private static final Set<String> TP_TSA_EXCLUDE_EXACT = new Set<String>{
+    // Bảng II STT 34: prefix TSA37 trừ các mã sau (không map rule 34 / TSA chung)
+    private static final Set<String> TSA37_BLOCKED_CODES = new Set<String>{
         'TSA37009', 'TSA37010', 'TSA37011', 'TSA37015'
     };
 
@@ -291,13 +292,7 @@ public with sharing class FEC_SalesChannelFromApplicationService {
         if (!dsaHit || String.isBlank(tsa)) {
             return false;
         }
-        String tu = tsa.toUpperCase();
-        for (String ex : TP_TSA_EXCLUDE_EXACT) {
-            if (tu.equals(ex) || tu.startsWith(ex)) {
-                return true;
-            }
-        }
-        return false;
+        return isBlockedTsa37Code(tsa);
     }
 
     private static Boolean arRule34Match(String d, String t) {
@@ -305,19 +300,19 @@ public with sharing class FEC_SalesChannelFromApplicationService {
         if (!listMatch(code, RULE34_TSA_TOKENS)) {
             return false;
         }
-        if (listMatch(code, 'TSA37') && rule34Tsa37Excluded(code)) {
+        if (listMatch(code, 'TSA37') && isBlockedTsa37Code(code)) {
             return false;
         }
         return true;
     }
 
-    private static Boolean rule34Tsa37Excluded(String code) {
+    private static Boolean isBlockedTsa37Code(String code) {
         if (String.isBlank(code)) {
             return false;
         }
         String cu = code.toUpperCase();
-        for (String ex : TP_TSA_EXCLUDE_EXACT) {
-            if (cu.equals(ex) || cu.startsWith(ex)) {
+        for (String blocked : TSA37_BLOCKED_CODES) {
+            if (cu.equals(blocked) || cu.startsWith(blocked)) {
                 return true;
             }
         }
@@ -331,6 +326,9 @@ public with sharing class FEC_SalesChannelFromApplicationService {
         }
         String cu = code.toUpperCase();
         if (!cu.startsWith('TSA')) {
+            return false;
+        }
+        if (isBlockedTsa37Code(code)) {
             return false;
         }
         for (String p : SGO_TSA_EXCLUDE_PREFIXES) {

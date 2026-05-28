@@ -498,12 +498,12 @@ import {
   isRl0502RdPaymentRoutingEligible,
 } from "c/fec_Rl0502RdPaymentRouting";
 
-const FIELD_CONTRACT_PROCESSING_ASSESSMENT_TYPE =
-  'FEC_Contract_Processing_Assessment_Type__c';
+const FIELD_CONTRACT_PROCESSING_MRC_ASSESSMENT =
+  'FEC_Contract_Processing_MRC_Assessment__c';
 
 /** Picklist Case persist trước submit / Scoped Route to (no-op nếu field không trên form). */
 const CASE_SUBMIT_PICKLIST_FIELD_API_NAMES = [
-  FIELD_CONTRACT_PROCESSING_ASSESSMENT_TYPE,
+  FIELD_CONTRACT_PROCESSING_MRC_ASSESSMENT,
   FIELD_RD_PAYMENT_CONTRACT_ASSESSMENT,
 ];
 
@@ -1884,14 +1884,14 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
 
   hasContractProcessingAssessmentTypeChanged() {
     return this.hasCasePicklistFieldChanged(
-      FIELD_CONTRACT_PROCESSING_ASSESSMENT_TYPE,
+      FIELD_CONTRACT_PROCESSING_MRC_ASSESSMENT,
     );
   }
 
   /** Scoped Route to Stage 2+ */
   async persistContractProcessingAssessmentTypeBeforeScopedRouteTo() {
     return this._persistCasePicklistField(
-      FIELD_CONTRACT_PROCESSING_ASSESSMENT_TYPE,
+      FIELD_CONTRACT_PROCESSING_MRC_ASSESSMENT,
     );
   }
 
@@ -2109,7 +2109,6 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
 
     if (
       this._mrcReturnStageChangeRoutingActive &&
-      !this.business?.mrcRl05CaseInfoWarningOnly &&
       this._hasMrcBlockingCaseInformationError() &&
       hasAction(ACTION_REJECT)
     ) {
@@ -2118,20 +2117,17 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
     }
 
     if (this._mrcReturnStageChangeRoutingActive) {
-      if (
-        isMrcReceivedConfirmation(this.mrcReturnCustomerConfirmationValue) &&
-        hasAction(ACTION_CANCEL)
-      ) {
-        this._setActionValueByCode(ACTION_CANCEL);
-        return;
-      }
       const ctx = getMrcReturnRoutingContext(
         this.business,
         this.mrcReturnHandlingOptionValue,
         this.mrcReturnCustomerConfirmationValue,
         this._resolveMrcDeliveryOptionForRouting(),
       );
-      if (ctx.eligible && hasAction(ACTION_ROUTE_TO)) {
+      if (
+        ctx.eligible &&
+        hasAction(ACTION_ROUTE_TO) &&
+        this._canAutoSelectRouteTo()
+      ) {
         this._setActionValueByCode(ACTION_ROUTE_TO);
         return;
       }
@@ -2672,12 +2668,7 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
             });
 
             if (section.error?.errorlst?.length > 0 || section.error?.label) {
-            const mrcWarningOnly =
-              section.name === SECTION_NAME_CASE_INFORMATION &&
-              this.business?.mrcRl05CaseInfoWarningOnly === true;
-            if (!mrcWarningOnly) {
               this._setActionValueByCode(ACTION_REJECT);
-            }
             }
           }
           section.id = crypto.randomUUID();
@@ -3284,7 +3275,7 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
       if (
         objName === 'Case' &&
         (fieldName === FIELD_RD_PAYMENT_CONTRACT_ASSESSMENT ||
-          fieldName === FIELD_CONTRACT_PROCESSING_ASSESSMENT_TYPE)
+          fieldName === FIELD_CONTRACT_PROCESSING_MRC_ASSESSMENT)
       ) {
         const apiVal = this._casePicklistRawToApi(fieldName, value);
         if (apiVal != null) {
@@ -4703,6 +4694,9 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
               },
             };
           } else {
+            const mrcSubmitFields = isMrcRl05Branch(this.business)
+              ? this._resolveMrcReturnFieldsForSubmit()
+              : { confirmation: null, handlingOption: null };
             params = {
               ...params,
               params: {
@@ -4715,6 +4709,8 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
                   this.business.mrcRouteTeamCode ||
                   normalizeTeamUserGroupForDisplay(this.business?.nextTeam) ||
                   null,
+                mrcCustomerConfirmation: mrcSubmitFields.confirmation || null,
+                mrcHandlingOption: mrcSubmitFields.handlingOption || null,
               },
             };
           }
@@ -4738,6 +4734,7 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
             ...params,
             params: {
               caseId: this.recordId,
+              decision: this.decisionValue,
               userOrQueueId: this.subDecisionValue,
             },
           };
@@ -6093,6 +6090,11 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
     this._syncDocumentRequestRoutingFromBusinessFields();
   }
 
+  /** Sau Revert: giữ Team/Queue từ getByCase (resolveRouteToDisplayInfo), không ghi đè RL05/Document Request. */
+  _shouldKeepRevertRouteToDisplay() {
+    return this.business?.routeByLatestRevertHistory === true;
+  }
+
   //PhongBT 18/05/26: Document Request sử dụng cục routing action mới
   _loadDocumentRequestStageChangeRouting() {
     if (isMrcRl05Branch(this.business)) {
@@ -6104,6 +6106,16 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
     if (shouldPreferScopedRoutingFromStage2(this)) {
       this._documentRequestStageChangeRoutingActive = false;
       this._documentRequestDeliveryEligible = false;
+      this.business = { ...this.business };
+      return Promise.resolve();
+    }
+
+    if (this._shouldKeepRevertRouteToDisplay()) {
+      this._documentRequestStageChangeRoutingActive = true;
+      this._documentRequestDeliveryEligible = true;
+      if (this.business?.routingActionlst?.length) {
+        this._setActionValueByCode(ACTION_ROUTE_TO);
+      }
       this.business = { ...this.business };
       return Promise.resolve();
     }
@@ -6201,12 +6213,20 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
       this.business?.routingActionlst?.length
     ) {
       this._mrcReturnStageChangeRoutingActive = false;
-      this._setActionValueByCode(ACTION_CANCEL);
       this.business = {
         ...this.business,
         nextTeam: null,
         nextQueue: null,
       };
+      this.business = { ...this.business };
+      return Promise.resolve();
+    }
+
+    if (this._shouldKeepRevertRouteToDisplay()) {
+      this._mrcReturnStageChangeRoutingActive = true;
+      if (this.business?.routingActionlst?.length) {
+        this._setActionValueByCode(ACTION_ROUTE_TO);
+      }
       this.business = { ...this.business };
       return Promise.resolve();
     }
@@ -6232,7 +6252,7 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
         nextTeam: null,
         nextQueue: null,
       };
-      if (this.business.routingActionlst?.length) {
+      if (this.business.routingActionlst?.length && this._canAutoSelectRouteTo()) {
         this._setActionValueByCode(ACTION_ROUTE_TO);
       }
       this.business = { ...this.business };
@@ -6248,7 +6268,9 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
       nextTeam: displayTeam,
       nextQueue: priorQueue?.value ? priorQueue : this.business?.nextQueue,
     };
-    this._setActionValueByCode(ACTION_ROUTE_TO);
+    if (this._canAutoSelectRouteTo()) {
+      this._setActionValueByCode(ACTION_ROUTE_TO);
+    }
     this.business = { ...this.business };
 
     return getDocumentRequestStageChangeRouting({
@@ -6269,7 +6291,9 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
               value: res.nextQueueId,
             },
           };
-          this._setActionValueByCode(ACTION_ROUTE_TO);
+          if (this._canAutoSelectRouteTo()) {
+            this._setActionValueByCode(ACTION_ROUTE_TO);
+          }
         } else {
           const fallbackQueue =
             priorQueue &&
@@ -6284,7 +6308,7 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
             ),
             nextQueue: fallbackQueue,
           };
-          if (fallbackQueue) {
+          if (fallbackQueue && this._canAutoSelectRouteTo()) {
             this._setActionValueByCode(ACTION_ROUTE_TO);
           } else if (showMissingQueueToast) {
             this.dispatchEvent(
@@ -6558,6 +6582,18 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
 
   _getCurrentActionCode() {
     return this._findRoutingActionByValueOrCode(this.actionValue)?.code || this.actionValue;
+  }
+
+  _hasValidCurrentActionSelection() {
+    if (!this.actionValue) {
+      return false;
+    }
+    return this._findRoutingActionByValueOrCode(this.actionValue) != null;
+  }
+
+  _canAutoSelectRouteTo() {
+    // Chỉ auto Route to khi chưa có lựa chọn hợp lệ của user (first load / invalid draft).
+    return !this._hasValidCurrentActionSelection();
   }
 
   //PhongBT 19/05/26: Fix mr chuyển routing action của document request sang lwc con

@@ -37,6 +37,15 @@ public without sharing class FEC_BatchCaseHandlingImportService {
     private static final String BATCH_OBJECT_API_NAME = 'FEC_Batch_Case_Handling__c';
     @TestVisible
     private static final Integer IMPORT_PROCESSING_TIMEOUT_HOURS = 1;
+    // 28/05/2026 11:20 linhdev - tối đa 5 case/transaction apply (FEC_CaseBusinessService.run ~8-12 SOQL/row) tránh 101
+    @TestVisible
+    public static final Integer IMPORT_APPLY_MAX_ROWS_PER_CHUNK = 5;
+    // 28/05/2026 11:20 linhdev - import sync chỉ khi ≤5 applicable row; lớn hơn dùng queueable chain
+    @TestVisible
+    private static final Integer SYNC_IMPORT_MAX_APPLICABLE_ROWS = 5;
+    // 28/05/2026 11:20 linhdev - dừng apply sớm trước 101 SOQL (mỗi row run + trigger tốn thêm query)
+    @TestVisible
+    private static final Integer IMPORT_SOQL_SAFE_THRESHOLD_PERCENT = 72;
     private static Map<String, Map<String, String>> routeParamsCacheByKey = new Map<String, Map<String, String>>();
     private static Map<String, String> revertActionIdCacheByStage = new Map<String, String>();
     private static Map<String, String> queueIdCacheByToken = new Map<String, String>();
@@ -54,15 +63,80 @@ public without sharing class FEC_BatchCaseHandlingImportService {
     }
 
     public static Boolean hasApplicableImportRows(List<FEC_BatchCaseHandlingImportRow> rows) {
+        return countApplicableImportRows(rows) > 0;
+    }
+
+    public static Integer countApplicableImportRows(List<FEC_BatchCaseHandlingImportRow> rows) {
         if (rows == null || rows.isEmpty()) {
-            return false;
+            return 0;
         }
+        Integer applicableCount = 0;
         for (FEC_BatchCaseHandlingImportRow row : rows) {
             if (shouldApplyImportRow(row)) {
+                applicableCount++;
+            }
+        }
+        return applicableCount;
+    }
+
+    public static Boolean shouldProcessImportSynchronously(List<FEC_BatchCaseHandlingImportRow> rows) {
+        Integer applicableCount = countApplicableImportRows(rows);
+        return applicableCount > 0 && applicableCount <= SYNC_IMPORT_MAX_APPLICABLE_ROWS;
+    }
+
+    @TestVisible
+    public static Boolean shouldYieldImportGovernorLimits() {
+        return Limits.getQueries() >= (Limits.getLimitQueries() * IMPORT_SOQL_SAFE_THRESHOLD_PERCENT / 100)
+            || Limits.getCpuTime() >= (Limits.getLimitCpuTime() * IMPORT_SOQL_SAFE_THRESHOLD_PERCENT / 100)
+            || Limits.getDMLRows() >= (Limits.getLimitDMLRows() * IMPORT_SOQL_SAFE_THRESHOLD_PERCENT / 100)
+            || Limits.getHeapSize() >= (Limits.getLimitHeapSize() * IMPORT_SOQL_SAFE_THRESHOLD_PERCENT / 100);
+    }
+
+    public static Boolean hasRemainingApplicableImportRows(
+        List<FEC_BatchCaseHandlingImportRow> rows,
+        Integer startIndex
+    ) {
+        if (rows == null || startIndex == null || startIndex < 0 || startIndex >= rows.size()) {
+            return false;
+        }
+        for (Integer idx = startIndex; idx < rows.size(); idx++) {
+            if (shouldApplyImportRow(rows[idx])) {
                 return true;
             }
         }
         return false;
+    }
+
+    public static void processApplicableImportRowsSync(
+        Id batchRecordId,
+        List<FEC_BatchCaseHandlingImportRow> rows,
+        Boolean cofOrGsr
+    ) {
+        if (rows == null || rows.isEmpty()) {
+            finalizeBatchImportRecord(batchRecordId, rows);
+            return;
+        }
+        List<FEC_BatchCaseHandlingImportRow> applicableRows = new List<FEC_BatchCaseHandlingImportRow>();
+        for (FEC_BatchCaseHandlingImportRow row : rows) {
+            if (shouldApplyImportRow(row)) {
+                applicableRows.add(row);
+            }
+        }
+        if (!applicableRows.isEmpty()) {
+            // 28/05/2026 11:20 linhdev - sync apply theo chunk 5 row để không vượt governor khi nhiều case
+            for (Integer startIdx = 0; startIdx < applicableRows.size(); startIdx += IMPORT_APPLY_MAX_ROWS_PER_CHUNK) {
+                Integer endIdx = Math.min(startIdx + IMPORT_APPLY_MAX_ROWS_PER_CHUNK, applicableRows.size());
+                List<FEC_BatchCaseHandlingImportRow> chunk = new List<FEC_BatchCaseHandlingImportRow>();
+                for (Integer idx = startIdx; idx < endIdx; idx++) {
+                    chunk.add(applicableRows[idx]);
+                }
+                applyCaseHandlingUpdates(chunk, cofOrGsr == true);
+                if (shouldYieldImportGovernorLimits() && endIdx < applicableRows.size()) {
+                    break;
+                }
+            }
+        }
+        finalizeBatchImportRecord(batchRecordId, rows);
     }
 
     public static void finalizeBatchImportRecord(
@@ -670,7 +744,9 @@ public without sharing class FEC_BatchCaseHandlingImportService {
                 }
             }
 
-            errs.addAll(validateResolvedRoutingForRow(rr, matched, cofOrGsr));
+            // 28/05/2026 14:30 linhdev - resolve Routing Action vs Datagroup (tránh duplicate với block bên dưới)
+            List<String> resolvedRoutingErrs = validateResolvedRoutingForRow(rr, matched, cofOrGsr);
+            errs.addAll(resolvedRoutingErrs);
 
             if (cofOrGsr) {
                 Boolean hasAssignment = String.isNotBlank(rr.assignmentId);
@@ -693,8 +769,11 @@ public without sharing class FEC_BatchCaseHandlingImportService {
                     if (String.isNotBlank(rr.routingAction) && String.isBlank(rr.actionButtonId)) {
                         RoutingParseResult routingParsed = parseRoutingPattern(rr.routingAction);
                         String caseMethod = routingParsed == null ? null : routingParsed.methodKey;
+                        // 28/05/2026 14:30 linhdev - không add lại lỗi Datagroup nếu validateResolvedRoutingForRow đã báo
                         if (caseMethod == null) {
-                            errs.add(System.Label.FEC_Batch_Case_Handling_Import_Err_Routing_Action_Invalid);
+                            if (!resolvedRoutingErrs.contains(System.Label.FEC_Batch_Case_Handling_Import_Err_Routing_Action_Invalid)) {
+                                errs.add(System.Label.FEC_Batch_Case_Handling_Import_Err_Routing_Action_Invalid);
+                            }
                         } else if (!isResolvedOrRejectCaseRouting(caseMethod)) {
                             errs.add(System.Label.FEC_Batch_Case_Handling_Import_Err_Assignment_Routing_Resolve_Only);
                         }
@@ -705,8 +784,6 @@ public without sharing class FEC_BatchCaseHandlingImportService {
                 } else {
                     if (String.isBlank(rr.routingAction) && String.isBlank(rr.assignmentRoutingAction)) {
                         errs.add(System.Label.FEC_Batch_Case_Handling_Import_Err_Missing_Routing_Action);
-                    } else if (String.isNotBlank(rr.routingAction) && String.isBlank(rr.actionButtonId)) {
-                        errs.add(System.Label.FEC_Batch_Case_Handling_Import_Err_Routing_Action_Invalid);
                     } else if (
                         String.isBlank(rr.routingAction) &&
                         String.isNotBlank(rr.assignmentRoutingAction) &&
@@ -725,13 +802,13 @@ public without sharing class FEC_BatchCaseHandlingImportService {
                 if (String.isNotBlank(rr.assignmentId)) {
                     errs.add(System.Label.FEC_Batch_Case_Handling_Import_Err_No_Assignment_Id_For_Process);
                 }
+                // 28/05/2026 14:30 linhdev - thiếu Routing Action; lỗi Datagroup chỉ từ validateResolvedRoutingForRow (tránh double message)
                 if (String.isBlank(rr.routingAction)) {
                     errs.add(System.Label.FEC_Batch_Case_Handling_Import_Err_Missing_Routing_Action);
-                } else if (String.isBlank(rr.actionButtonId)) {
-                    errs.add(System.Label.FEC_Batch_Case_Handling_Import_Err_Routing_Action_Invalid);
                 }
             }
 
+            // 28/05/2026 14:30 linhdev - Thiếu giá trị Inputted Remarks (label FEC_Batch_Case_Handling_Import_Err_Missing_Remark)
             if (String.isBlank(rr.inputtedRemarks)) {
                 addImportError(errs, System.Label.FEC_Batch_Case_Handling_Import_Err_Missing_Remark);
             } else if (rr.inputtedRemarks.length() > REMARK_MAX_LEN) {
@@ -790,6 +867,8 @@ public without sharing class FEC_BatchCaseHandlingImportService {
                 FROM Case
                 WHERE Id IN :caseIds
             ]);
+        // 28/05/2026 11:20 linhdev - preload stage screen sau clearCache để resolve routing không query lặp / Route To
+        preloadImportStageScreensForApply(caseLiteById);
         Map<String, Schema.SObjectField> caseFieldMap = Case.SObjectType.getDescribe().fields.getMap();
         Map<String, Map<String, String>> picklistValueByNormByField =
             FEC_BatchCaseHandlingPicklistResolver.buildNormalizedToApiValueByField(
@@ -915,6 +994,12 @@ public without sharing class FEC_BatchCaseHandlingImportService {
                 if (methodKey == FEC_CaseBusinessService.REVERT && String.isNotBlank(rr.routingActionValue)) {
                     runParams.put('routingActionValue', rr.routingActionValue);
                 }
+                // 28/05/2026 11:20 linhdev - không gọi run khi gần 101 SOQL; row còn lại xử lý ở queueable chunk sau
+                if (shouldYieldImportGovernorLimits()) {
+                    rr.status = System.Label.FEC_Batch_Case_Handling_Import_Row_Status_Failed;
+                    rr.errors = appendError(rr.errors, System.Label.FEC_BCH_ImportFailed);
+                    continue;
+                }
                 FEC_CaseBusinessService.run(methodKey, runParams);
             } catch (Exception ex) {
                 rr.status = System.Label.FEC_Batch_Case_Handling_Import_Row_Status_Failed;
@@ -948,6 +1033,35 @@ public without sharing class FEC_BatchCaseHandlingImportService {
             }
         }
         applyDraftRemarksBulk(validRemarkItems, cofOrGsr);
+    }
+
+    private static void preloadImportStageScreensForApply(Map<Id, Case> caseLiteById) {
+        if (caseLiteById == null || caseLiteById.isEmpty()) {
+            return;
+        }
+        Set<Id> stageIds = new Set<Id>();
+        for (Case caseLite : caseLiteById.values()) {
+            if (caseLite != null && caseLite.FEC_Current_Case_Stage__c != null) {
+                stageIds.add(caseLite.FEC_Current_Case_Stage__c);
+            }
+        }
+        if (stageIds.isEmpty()) {
+            return;
+        }
+        FEC_BCH_ImportRoutingResolver.preloadStageScreens(stageIds, resolveImportUserGroup());
+    }
+
+    private static String resolveImportUserGroup() {
+        List<User> importUsers = [
+            SELECT FEC_User_Group__c
+            FROM User
+            WHERE Id = :UserInfo.getUserId()
+            LIMIT 1
+        ];
+        if (importUsers.isEmpty() || String.isBlank(importUsers[0].FEC_User_Group__c)) {
+            return FEC_ConstantCommon.STR_EMPTY;
+        }
+        return importUsers[0].FEC_User_Group__c;
     }
 
     private static void collectAssignmentLookupKeys(
@@ -1601,13 +1715,14 @@ public without sharing class FEC_BatchCaseHandlingImportService {
     private static List<String> importPicklistFieldApis() {
         return new List<String>{
             'FEC_CS_D2C_Assessment_Type__c',
+            'FEC_CS_Support_Assessment_Type__c',
             'FEC_CS_D2C_Required_Corrective_Action__c',
             'FEC_CS_D2C_Risk_Level__c',
             'FEC_CS_Check_Classification_by_CS__c',
             'FEC_CS_Check_Evaluation_by_CS__c',
             'FEC_CS_Check_Final_product__c',
             'FEC_RD_Payment_Contract_Assessment__c',
-            'FEC_Contract_Processing_Assessment_Type__c'
+            'FEC_Contract_Processing_MRC_Assessment__c'
         };
     }
 
@@ -1630,6 +1745,7 @@ public without sharing class FEC_BatchCaseHandlingImportService {
         Id stageId = matched == null ? null : matched.FEC_Current_Case_Stage__c;
         FEC_BCH_ImportRoutingResolver.ResolvedRouting resolved =
             FEC_BCH_ImportRoutingResolver.resolve(stageId, primaryLabel);
+        // 28/05/2026 14:30 linhdev - Giá trị Routing Action không tồn tại trong Datagroup (không trùng Thiếu giá trị)
         if (resolved == null || String.isBlank(resolved.methodKey)) {
             errs.add(System.Label.FEC_Batch_Case_Handling_Import_Err_Routing_Action_Invalid);
             return errs;
@@ -1738,7 +1854,7 @@ public without sharing class FEC_BatchCaseHandlingImportService {
                 LABEL_RISK_LEVEL,
                 ERR_MISSING_RISK_LEVEL,
                 ERR_INVALID_RISK_LEVEL,
-                'FEC_CS_D2C_Required_Corrective_Action__c',
+                'FEC_CS_D2C_Risk_Level__c',
                 configuredLabels,
                 picklistValueByNormByField,
                 errs,
@@ -1750,7 +1866,7 @@ public without sharing class FEC_BatchCaseHandlingImportService {
                 LABEL_REQUIRED_ACTION,
                 ERR_MISSING_REQUIRED_ACTION,
                 ERR_INVALID_REQUIRED_ACTION,
-                'FEC_CS_D2C_Risk_Level__c',
+                'FEC_CS_D2C_Required_Corrective_Action__c',
                 configuredLabels,
                 picklistValueByNormByField,
                 errs,
@@ -1780,7 +1896,7 @@ public without sharing class FEC_BatchCaseHandlingImportService {
                 LABEL_CP_ASSESSMENT,
                 ERR_MISSING_CP_ASSESSMENT,
                 ERR_INVALID_CP_ASSESSMENT,
-                'FEC_Contract_Processing_Assessment_Type__c',
+                'FEC_Contract_Processing_MRC_Assessment__c',
                 configuredLabels,
                 picklistValueByNormByField,
                 errs,
@@ -1789,20 +1905,30 @@ public without sharing class FEC_BatchCaseHandlingImportService {
             return errs;
         }
         if (profile == FEC_BatchCaseHandlingImportProfile.FIELD_PROFILE_CS_SUPPORT) {
-            String csSupportValue = String.isNotBlank(rr.csSupportAssessment)
-                ? rr.csSupportAssessment
-                : rr.classificationByCS;
+            // 28/05/2026 14:37 linhdev - CS Support Assessment không bắt buộc cho row chỉ nhập bộ D2C (theo template import thực tế).
             validateD2CField(
                 rr,
-                csSupportValue,
+                rr.csSupportAssessment,
                 LABEL_CS_SUPPORT_ASSESSMENT,
                 'Thiếu giá trị CS Support đánh giá yêu cầu',
                 'Giá trị CS Support đánh giá yêu cầu không tồn tại trong Datagroup.',
+                'FEC_CS_Support_Assessment_Type__c',
+                configuredLabels,
+                picklistValueByNormByField,
+                errs,
+                false
+            );
+            validateD2CField(
+                rr,
+                rr.classificationByCS,
+                LABEL_CS_SUPPORT_ASSESSMENT,
+                'Thiếu giá trị Classification by CS',
+                'Giá trị Classification by CS không tồn tại trong Datagroup.',
                 'FEC_CS_Check_Classification_by_CS__c',
                 configuredLabels,
                 picklistValueByNormByField,
                 errs,
-                true
+                false
             );
             validateD2CField(
                 rr,
@@ -1853,7 +1979,7 @@ public without sharing class FEC_BatchCaseHandlingImportService {
                 LABEL_RISK_LEVEL,
                 ERR_MISSING_RISK_LEVEL,
                 ERR_INVALID_RISK_LEVEL,
-                'FEC_CS_D2C_Required_Corrective_Action__c',
+                'FEC_CS_D2C_Risk_Level__c',
                 configuredLabels,
                 picklistValueByNormByField,
                 errs,
@@ -1865,7 +1991,7 @@ public without sharing class FEC_BatchCaseHandlingImportService {
                 LABEL_REQUIRED_ACTION,
                 ERR_MISSING_REQUIRED_ACTION,
                 ERR_INVALID_REQUIRED_ACTION,
-                'FEC_CS_D2C_Risk_Level__c',
+                'FEC_CS_D2C_Required_Corrective_Action__c',
                 configuredLabels,
                 picklistValueByNormByField,
                 errs,
@@ -1915,10 +2041,12 @@ public without sharing class FEC_BatchCaseHandlingImportService {
         }
         if (caseFieldApi == 'FEC_CS_D2C_Assessment_Type__c') {
             rr.csD2CAssessmentTypeApiValue = apiValue;
+        } else if (caseFieldApi == 'FEC_CS_Support_Assessment_Type__c') {
+            rr.csSupportAssessmentApiValue = apiValue;
         } else if (caseFieldApi == 'FEC_CS_D2C_Required_Corrective_Action__c') {
-            rr.riskLevelApiValue = apiValue;
-        } else if (caseFieldApi == 'FEC_CS_D2C_Risk_Level__c') {
             rr.requiredActionApiValue = apiValue;
+        } else if (caseFieldApi == 'FEC_CS_D2C_Risk_Level__c') {
+            rr.riskLevelApiValue = apiValue;
         } else if (caseFieldApi == 'FEC_CS_Check_Classification_by_CS__c') {
             rr.classificationByCSApiValue = apiValue;
         } else if (caseFieldApi == 'FEC_CS_Check_Evaluation_by_CS__c') {
@@ -1927,7 +2055,7 @@ public without sharing class FEC_BatchCaseHandlingImportService {
             rr.finalProductApiValue = apiValue;
         } else if (caseFieldApi == 'FEC_RD_Payment_Contract_Assessment__c') {
             rr.paymentContractAssessmentApiValue = apiValue;
-        } else if (caseFieldApi == 'FEC_Contract_Processing_Assessment_Type__c') {
+        } else if (caseFieldApi == 'FEC_Contract_Processing_MRC_Assessment__c') {
             rr.cpAssessmentApiValue = apiValue;
         }
     }
@@ -1942,11 +2070,14 @@ public without sharing class FEC_BatchCaseHandlingImportService {
         if (caseFieldApi == 'FEC_CS_D2C_Assessment_Type__c') {
             return rr.csD2CAssessmentTypeApiValue;
         }
+        if (caseFieldApi == 'FEC_CS_Support_Assessment_Type__c') {
+            return rr.csSupportAssessmentApiValue;
+        }
         if (caseFieldApi == 'FEC_CS_D2C_Required_Corrective_Action__c') {
-            return rr.riskLevelApiValue;
+            return rr.requiredActionApiValue;
         }
         if (caseFieldApi == 'FEC_CS_D2C_Risk_Level__c') {
-            return rr.requiredActionApiValue;
+            return rr.riskLevelApiValue;
         }
         if (caseFieldApi == 'FEC_CS_Check_Classification_by_CS__c') {
             return rr.classificationByCSApiValue;
@@ -1960,7 +2091,7 @@ public without sharing class FEC_BatchCaseHandlingImportService {
         if (caseFieldApi == 'FEC_RD_Payment_Contract_Assessment__c') {
             return rr.paymentContractAssessmentApiValue;
         }
-        if (caseFieldApi == 'FEC_Contract_Processing_Assessment_Type__c') {
+        if (caseFieldApi == 'FEC_Contract_Processing_MRC_Assessment__c') {
             return rr.cpAssessmentApiValue;
         }
         return null;
@@ -1985,23 +2116,26 @@ public without sharing class FEC_BatchCaseHandlingImportService {
         );
         String riskValue = resolvePicklistValueForApply(
             rr,
-            'FEC_CS_D2C_Required_Corrective_Action__c',
+            'FEC_CS_D2C_Risk_Level__c',
             rr.riskLevel,
             picklistValueByNormByField
         );
         String requiredActionValue = resolvePicklistValueForApply(
             rr,
-            'FEC_CS_D2C_Risk_Level__c',
+            'FEC_CS_D2C_Required_Corrective_Action__c',
             rr.requiredAction,
             picklistValueByNormByField
         );
-        String csSupportInput = String.isNotBlank(rr.csSupportAssessment)
-            ? rr.csSupportAssessment
-            : rr.classificationByCS;
+        String csSupportAssessmentValue = resolvePicklistValueForApply(
+            rr,
+            'FEC_CS_Support_Assessment_Type__c',
+            rr.csSupportAssessment,
+            picklistValueByNormByField
+        );
         String classificationByCSValue = resolvePicklistValueForApply(
             rr,
             'FEC_CS_Check_Classification_by_CS__c',
-            csSupportInput,
+            rr.classificationByCS,
             picklistValueByNormByField
         );
         String evaluationByCSValue = resolvePicklistValueForApply(
@@ -2020,12 +2154,16 @@ public without sharing class FEC_BatchCaseHandlingImportService {
             c.put('FEC_CS_D2C_Assessment_Type__c', assessmentValue);
             hasAny = true;
         }
-        if (String.isNotBlank(riskValue) && caseFieldMap.containsKey('FEC_CS_D2C_Required_Corrective_Action__c')) {
-            c.put('FEC_CS_D2C_Required_Corrective_Action__c', riskValue);
+        if (String.isNotBlank(csSupportAssessmentValue) && caseFieldMap.containsKey('FEC_CS_Support_Assessment_Type__c')) {
+            c.put('FEC_CS_Support_Assessment_Type__c', csSupportAssessmentValue);
             hasAny = true;
         }
-        if (String.isNotBlank(requiredActionValue) && caseFieldMap.containsKey('FEC_CS_D2C_Risk_Level__c')) {
-            c.put('FEC_CS_D2C_Risk_Level__c', requiredActionValue);
+        if (String.isNotBlank(riskValue) && caseFieldMap.containsKey('FEC_CS_D2C_Risk_Level__c')) {
+            c.put('FEC_CS_D2C_Risk_Level__c', riskValue);
+            hasAny = true;
+        }
+        if (String.isNotBlank(requiredActionValue) && caseFieldMap.containsKey('FEC_CS_D2C_Required_Corrective_Action__c')) {
+            c.put('FEC_CS_D2C_Required_Corrective_Action__c', requiredActionValue);
             hasAny = true;
         }
         if (String.isNotBlank(classificationByCSValue) && caseFieldMap.containsKey('FEC_CS_Check_Classification_by_CS__c')) {
@@ -2048,7 +2186,7 @@ public without sharing class FEC_BatchCaseHandlingImportService {
         );
         String cpValue = resolvePicklistValueForApply(
             rr,
-            'FEC_Contract_Processing_Assessment_Type__c',
+            'FEC_Contract_Processing_MRC_Assessment__c',
             rr.cpAssessment,
             picklistValueByNormByField
         );
@@ -2056,8 +2194,8 @@ public without sharing class FEC_BatchCaseHandlingImportService {
             c.put('FEC_RD_Payment_Contract_Assessment__c', paymentValue);
             hasAny = true;
         }
-        if (String.isNotBlank(cpValue) && caseFieldMap.containsKey('FEC_Contract_Processing_Assessment_Type__c')) {
-            c.put('FEC_Contract_Processing_Assessment_Type__c', cpValue);
+        if (String.isNotBlank(cpValue) && caseFieldMap.containsKey('FEC_Contract_Processing_MRC_Assessment__c')) {
+            c.put('FEC_Contract_Processing_MRC_Assessment__c', cpValue);
             hasAny = true;
         }
         return hasAny ? c : null;
