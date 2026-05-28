@@ -31,9 +31,10 @@ import FEC_MSG_CARD_REPLACEMENT_ADDRESS_SELECT from "@salesforce/label/c.FEC_MSG
 import getCase from "@salesforce/apex/FEC_CaseEditNOCController.getCase";
 //FECREDIT_CSM_2025_KH-1390
 import removeExecutorAfterSubmit from "@salesforce/apex/FEC_CaseExecuteService.removeExecutorAfterSubmit";
+import updateCaseSelectedAddress from "@salesforce/apex/FEC_CardReplacementAddressController.updateCaseSelectedAddress";
 
 import { RefreshEvent } from "lightning/refresh";
-import { updateRecord, getRecordNotifyChange } from "lightning/uiRecordApi";
+import { getRecordNotifyChange } from "lightning/uiRecordApi";
 
 import getRemarklst from "@salesforce/apex/FEC_CaseRemarkController.getRemarklst";
 
@@ -730,12 +731,11 @@ export default class Fec_CaseDetail_Customer extends LightningElement {
 
       // PhuongNT add update select address for Case
       if (addressInfoId) {
-        let fields = {
-          'Id': this.recordId,
-          'FEC_Selected_Address__c': addressInfoId,
-        };
-        let recordInput = { fields };
-        updateRecord(recordInput);
+        await updateCaseSelectedAddress({
+          caseId: this.recordId,
+          selectedAddressId: addressInfoId
+        });
+        getRecordNotifyChange([{ recordId: this.recordId }]);
       }
       
       //HieuTT74 - 26/5/2026 - FECREDIT_CSM_2025_KH-1390

@@ -219,6 +219,7 @@
         <members>FEC_BlockCodeRoutingService</members>
         <members>FEC_CardClosureRefundController</members>
         <members>FEC_CardInfoController</members>
+        <members>FEC_CardReplacementAddressController</members>
         <members>FEC_CaseManagerListService</members>
         <members>FEC_CaseMasterDataHelper</members>
         <members>FEC_ContractClosureController</members>
@@ -315,6 +316,7 @@
         <members>FEC_Sub_Category__c.FEC_Do_Not_Bother__c</members>
         <members>FEC_Sub_Code__c.FEC_Do_Not_Bother__c</members>
         <members>Case.FEC_Complaint_Source__c</members>
+        <members>Case.FEC_User_ID__c</members>
         <members>FEC_Additional_Info__c.FEC_Active_Loan_Or_Disbursed__c</members>
         <members>FEC_Additional_Info__c.FEC_Address_Or_Email__c</members>
         <members>FEC_Additional_Info__c.FEC_Adjustment_Method__c</members>
@@ -864,9 +866,11 @@
         <members>fec_DownloadReport</members>
         <members>fec_AccountOrContractPicklistCustomerCase</members>
         <members>fec_CardClosureRefundForm</members>
+        <members>fec_CardReplacementAddress</members>
         <members>fec_CaseNote</members>
         <members>fec_ContractClosureForm</members>
         <members>fec_CustomerCaseExecuteAction</members>
+        <members>fec_Il10DeliveryForm</members>
         <members>fec_IPPClosureForm</members>
         <members>fec_IPPDetails</members>
         <members>fec_MRC</members>
@@ -1275,6 +1279,7 @@
 		<members>FEC_Field</members>
 		<members>FEC_HCC_Name</members>
 		<members>FEC_Hold_Case_Config</members>
+		<members>FEC_Hold_Case_Edit_Succes</members>
 		<members>FEC_Hold_Case_Save_Success</members>
 		<members>FEC_Hold_Case_Type</members>
 		<members>FEC_List_Of_NFU_Code</members>
@@ -1308,6 +1313,7 @@
         <members>FEC_MRC_Return_Case_Info_Block_Title</members>
         <members>FEC_MRC_Return_Msg_Product_Not_TW</members>
         <members>FEC_MRC_Return_Msg_DPD_RL0503</members>
+        <members>FEC_MRC_Return_RL0503_DPD_Block_Title</members>
         <members>FEC_MRC_RL0502_Dup_Banner</members>
         <members>FEC_MRC_Dup_Remark_Cancel_Prev</members>
         <members>FEC_MRC_Dup_Remark_Cancel_New</members>
@@ -1749,6 +1755,7 @@
 		<members>FEC_Assignment_Set_User_Role</members>
 		<members>Assign_Entitlement_to_Case</members>
         <members>FEC_DownloadReportFlow</members>
+        <members>FEC_Mark_Complete_for_Milestone</members>
 		<name>Flow</name>
 	</types>
     <types>
