@@ -392,19 +392,19 @@
         </columns>
         <columns>
             <checkedByDefault>false</checkedByDefault>
-            <displayNameOverride>Case Remarks 1</displayNameOverride>
+            <displayNameOverride>Case Remarks History 1</displayNameOverride>
             <field>FEC_Case__c.FEC_Case_Remarks_1__c</field>
             <table>FEC_Routing_Action_History__c</table>
         </columns>
         <columns>
             <checkedByDefault>false</checkedByDefault>
-            <displayNameOverride>Case Remarks 2</displayNameOverride>
+            <displayNameOverride>Case Remarks History 2</displayNameOverride>
             <field>FEC_Case__c.FEC_Case_Remarks_2__c</field>
             <table>FEC_Routing_Action_History__c</table>
         </columns>
         <columns>
             <checkedByDefault>false</checkedByDefault>
-            <displayNameOverride>Case Remarks 3</displayNameOverride>
+            <displayNameOverride>Case Remarks History 3</displayNameOverride>
             <field>FEC_Case__c.FEC_Case_Remarks_3__c</field>
             <table>FEC_Routing_Action_History__c</table>
         </columns>
