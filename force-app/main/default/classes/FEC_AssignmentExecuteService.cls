@@ -378,7 +378,7 @@ public without sharing class FEC_AssignmentExecuteService {
          * Query assignments
          */
         List<FEC_Assignment__c> assignments = [
-    SELECT Id, Name, FEC_Assignment_Name__c, FEC_OwnerID__c,
+    SELECT Id, Name, FEC_Case__c, FEC_Assignment_Name__c, FEC_OwnerID__c,
     FEC_Assignment_Owner__c,FEC_Assignment_Owner_Text__c,
     FEC_Assignment_Status__c FROM FEC_Assignment__c WHERE FEC_Case__c = : caseId
         AND FEC_Assignment_Status__c NOT IN : CLOSED_STATUSES
@@ -423,6 +423,7 @@ public without sharing class FEC_AssignmentExecuteService {
          * Find executable assignments
          */
         List<FEC_Assignment__c> assignmentsToUpdate = new List<FEC_Assignment__c>();
+        List<FEC_Assignment__c> historyAssignments =  new List<FEC_Assignment__c>();
         
         for (FEC_Assignment__c assignment : assignments) {
             Boolean matched = false;
@@ -462,18 +463,22 @@ public without sharing class FEC_AssignmentExecuteService {
              */
             if (matched) {
                 
-                
                 /*
-                 * Skip if owner unchanged
+                 * Keep history only when owner changed
                  */
-                if (assignment.FEC_Assignment_Owner__c == userId) {
-                    System.debug('SKIP SAME OWNER => ' + assignment.Id);
-                    continue;
-                }
-                System.debug('TAKE ASSIGNMENT => ' + assignment.Id);
+                Boolean ownerChanged =
+                    assignment.FEC_Assignment_Owner__c != userId;
                 
                 assignment.FEC_Assignment_Owner__c = userId;
+                
                 assignmentsToUpdate.add(assignment);
+                
+                /*
+                 * Only create history when changed
+                 */
+                if (ownerChanged) {
+                    historyAssignments.add(assignment);
+                }
             }
         }
         
@@ -487,14 +492,17 @@ public without sharing class FEC_AssignmentExecuteService {
                 
                 //thangtv: SYSTEM_MODE — claim owner khi user chưa có share edit trên Assignment
                 Database.update(assignmentsToUpdate, AccessLevel.SYSTEM_MODE);
+                FEC_AssignmentCaseShareService.shareCasesForAssignments(assignmentsToUpdate);
                 
                 System.debug('Assignments updated successfully');
                 executeResult.claimedCount = assignmentsToUpdate.size();
-                createRoutingActionHistory(
-                    assignmentsToUpdate,
-                userId,
-                caseId
-                    );
+                if (!historyAssignments.isEmpty()) {
+                    createRoutingActionHistory(
+                        historyAssignments,
+                    userId,
+                    caseId
+                        );
+                }
                 
             } catch (Exception e) {
                 System.debug('executeAssignment ERROR = ' + e.getMessage());
@@ -695,12 +703,13 @@ public without sharing class FEC_AssignmentExecuteService {
              * Original queue/user owner
              */
             history.FEC_Original_User_Queue__c = assignment.FEC_Assignment_Owner_Text__c;
-            
+            history.FEC_Original_User_Queue_ID__c = assignment.FEC_OwnerID__c;
             /*
              * Updated owner email
              */
             if (updatedOwner != null) {
                 history.FEC_Updated_User_Queue__c = emailLocalPart(updatedOwner.Email);
+                history.FEC_Updated_User_Queue_ID__c = updatedOwner.Id;
             }
             
             /*

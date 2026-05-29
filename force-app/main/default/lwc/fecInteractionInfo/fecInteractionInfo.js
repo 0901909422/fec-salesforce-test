@@ -2,6 +2,9 @@ import { LightningElement, api, track, wire } from "lwc";
 import { getRecord, getFieldValue } from "lightning/uiRecordApi";
 import { loadStyle } from "lightning/platformResourceLoader";
 import COMMON_STYLES from "@salesforce/resourceUrl/FEC_CommonCss";
+import {
+  notifyRecordUpdateAvailable,
+} from "lightning/uiRecordApi";
 
 // ================= APEX =================
 import getInteraction from "@salesforce/apex/FEC_InteractionInforHandler.getInteraction";
@@ -148,7 +151,7 @@ export default class FecInteractionInfo extends LightningElement {
   }
 
   // ================= GETTERS =================
-  get isInteractionCase() {
+   get isInteractionCase() {
     return this.recordTypeDevName === RECORD_TYPES.INTERACTION;
   }
 
@@ -156,11 +159,13 @@ export default class FecInteractionInfo extends LightningElement {
     return this.recordTypeDevName === RECORD_TYPES.CUSTOMER_CASE;
   }
 
+
   get isInteractionClosed() {
-    if (this.record?.FEC_Interaction_Status__c === "Closed") return true;
+    if (this.record?.FEC_Interaction_Status__c === "Closed"|| this.record?.FEC_Interaction_Status__c === "Auto-Closed") return true;
     return false;
   }
 
+  
   get isReview() {
     return this.viewMode === VIEW_MODE_REVIEW;
   }
@@ -295,6 +300,8 @@ export default class FecInteractionInfo extends LightningElement {
       this.isMasked = true;
       this.phoneDraft = null;
 
+      // 🔥 refresh LDS
+      await notifyRecordUpdateAvailable([{ recordId: this.recordId }]);
     } catch (error) {
       console.error("updateInteractionPhone error", error);
     }
@@ -310,6 +317,12 @@ export default class FecInteractionInfo extends LightningElement {
 
       this.revealedPhone = result;
       this.isMasked = false;
+
+      // 🔥 refresh LDS nếu cần
+      await notifyRecordUpdateAvailable([
+        { recordId: this.recordId },
+        { recordId: this.interactionId },
+      ]);
     } catch (e) {
       console.error("revealPhone error", e);
     }

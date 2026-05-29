@@ -231,6 +231,7 @@ public without sharing class FEC_CaseEditNOCController {
           FEC_SubCode__c,
           FEC_SubCode__r.Name,
           FEC_Is_Submited__c,
+          FEC_IsImported__c,
           FEC_Interaction_View_Mode__c,
           RecordType.DeveloperName,
           FEC_Is_Call_API_Success__c,
@@ -526,7 +527,7 @@ public without sharing class FEC_CaseEditNOCController {
   }
   
   /**
-   * Xóa bộ NOC trên Case khi reload màn (chỉ Case chưa submit).
+   * Xóa bộ NOC trên Case khi reload màn (chỉ Case chưa submit, không phải batch import).
    * Mọi user mở trang đều clear — không giới hạn Owner (tránh non-owner vẫn thấy NOC draft).
    * Toannd61
    */
@@ -540,6 +541,7 @@ public without sharing class FEC_CaseEditNOCController {
       SELECT
         Id,
         FEC_Is_Submited__c,
+        FEC_IsImported__c,
         FEC_Is_Call_API_Success__c,
         FEC_Category__c,
         FEC_SubCategory__c,
@@ -554,7 +556,11 @@ public without sharing class FEC_CaseEditNOCController {
     }
 
     Case c = caselst[0];
-    if (c.FEC_Is_Submited__c == true || c.FEC_Is_Call_API_Success__c == true) {
+    if (
+      c.FEC_Is_Submited__c == true ||
+      c.FEC_Is_Call_API_Success__c == true ||
+      c.FEC_IsImported__c == true
+    ) {
       return;
     }
     if (

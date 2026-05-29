@@ -13,7 +13,7 @@
  
 ****************************************************************************************/
 
-public without sharing class FEC_FullCustomerIntegrationJob
+public with sharing class FEC_FullCustomerIntegrationJob
     implements Queueable, Database.AllowsCallouts {
 
     private static final Integer MAX_SYNCS_PER_RUN = 200;
@@ -109,7 +109,7 @@ public without sharing class FEC_FullCustomerIntegrationJob
                 hist.FEC_Customer_Name__c = result.customerName;
             }
             if (String.isNotBlank(result.nationalId)) {
-                 hist.FEC_National_ID_Passport_ID__c = result.nationalId;
+                hist.FEC_National_ID_Passport_ID__c = result.nationalId;
             }
             if (String.isNotBlank(result.gender)) {
                 hist.FEC_Gender__c = result.gender;
@@ -130,7 +130,11 @@ public without sharing class FEC_FullCustomerIntegrationJob
         update hist;
 
         // 15/04/2026 PhuongNT add
-        List<Case> cases = [SELECT Id FROM Case WHERE FEC_Account_or_Contract__c = :historyId];
+        List<Case> cases = [
+            SELECT Id
+            FROM Case
+            WHERE FEC_Account_or_Contract__c = :req.historyId
+        ];
         if (!cases.isEmpty()) {
             for (Case c : cases) {
                 if (result != null && String.isNotBlank(result.customerName)) {
