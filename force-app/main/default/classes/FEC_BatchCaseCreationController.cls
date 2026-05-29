@@ -1083,6 +1083,7 @@ public without sharing class FEC_BatchCaseCreationController {
         if (customerCase == null) {
             return;
         }
+        customerCase.FEC_Customer_Type__c = FEC_ConstantCommon.CASE_EXISTING_CUSTOMER;
         customerCase.FEC_Assigment_Mode__c = FEC_ConstantCommon.INTERACTION_REVIEW_MODE;
         customerCase.FEC_Interaction_View_Mode__c = FEC_ConstantCommon.INTERACTION_REVIEW_MODE;
     }
@@ -2612,7 +2613,11 @@ public without sharing class FEC_BatchCaseCreationController {
         if (batchRecordId == null || rowResults == null || rowResults.isEmpty()) {
             return;
         }
-        List<String> exportHeaders = trimResultSourceHeaders(sourceHeaders);
+        List<Integer> sourceColumnIndices = resolveResultSourceColumnIndices(sourceHeaders, sourceRows);
+        List<String> exportHeaders = new List<String>();
+        for (Integer columnIndex : sourceColumnIndices) {
+            exportHeaders.add(sourceHeaders[columnIndex]);
+        }
         if (exportHeaders.isEmpty()) {
             exportHeaders = new List<String>{ 'Import Row' };
             if (sourceRows == null || sourceRows.isEmpty()) {
@@ -2636,8 +2641,9 @@ public without sharing class FEC_BatchCaseCreationController {
                 if (sourceRows != null && i < sourceRows.size() && sourceRows[i] != null) {
                     sourceRow = sourceRows[i];
                 }
-                for (Integer col = 0; col < exportHeaders.size(); col++) {
-                    String cell = col < sourceRow.size() ? sourceRow[col] : '';
+                for (Integer col = 0; col < sourceColumnIndices.size(); col++) {
+                    Integer sourceCol = sourceColumnIndices[col];
+                    String cell = sourceCol < sourceRow.size() ? sourceRow[sourceCol] : '';
                     dataRow.add(formatResultExportCellValue(cell));
                 }
                 Boolean succeeded = 'Succeeded'.equalsIgnoreCase(rr.status);
@@ -2728,6 +2734,51 @@ public without sharing class FEC_BatchCaseCreationController {
             output.add(headers[i]);
         }
         return output;
+    }
+
+    private static List<Integer> resolveResultSourceColumnIndices(
+        List<String> headers,
+        List<List<String>> sourceRows
+    ) {
+        List<Integer> output = new List<Integer>();
+        if (headers == null || headers.isEmpty()) {
+            return output;
+        }
+        Integer cutoff = headers.size();
+        for (Integer i = 0; i < headers.size(); i++) {
+            if (isResultExportCutoffHeader(headers[i])) {
+                cutoff = Math.min(cutoff, i);
+            }
+        }
+        for (Integer i = 0; i < cutoff; i++) {
+            if (shouldSkipResultSourceColumn(headers[i], i, sourceRows)) {
+                continue;
+            }
+            output.add(i);
+        }
+        return output;
+    }
+
+    private static Boolean shouldSkipResultSourceColumn(
+        String header,
+        Integer columnIndex,
+        List<List<String>> sourceRows
+    ) {
+        if (String.isNotBlank(header)) {
+            return false;
+        }
+        if (columnIndex == null || sourceRows == null || sourceRows.isEmpty()) {
+            return true;
+        }
+        for (List<String> sourceRow : sourceRows) {
+            if (sourceRow == null || columnIndex >= sourceRow.size()) {
+                continue;
+            }
+            if (String.isNotBlank(sourceRow[columnIndex])) {
+                return false;
+            }
+        }
+        return true;
     }
 
     private static Boolean isResultExportCutoffHeader(String header) {

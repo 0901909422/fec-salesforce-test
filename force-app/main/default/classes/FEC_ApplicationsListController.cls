@@ -114,13 +114,22 @@ public without sharing class FEC_ApplicationsListController {
 
             String cif = cus.CIFNumber;
 
-            Map<String, FEC_GetCustomerList.Application> appMap = new Map<String, FEC_GetCustomerList.Application>();
+            Map<String, FEC_GetProductListCallout.ProductInfo> productMap =
+                new Map<String, FEC_GetProductListCallout.ProductInfo>();
 
-            if (cus.Applications != null) {
+            try {
+                FEC_GetProductListCallout.CIF_GetProductsListResponse productRes =
+                    FEC_GetProductListCallout.callService(cif);
 
-                for (FEC_GetCustomerList.Application a : cus.Applications) {
-                    appMap.put(a.ApplicationID, a);
+                if (productRes != null && productRes.products != null) {
+                    for (FEC_GetProductListCallout.ProductInfo p : productRes.products) {
+                        if (String.isNotBlank(p.applicationId)) {
+                            productMap.put(p.applicationId, p);
+                        }
+                    }
                 }
+            } catch (Exception e) {
+                System.debug('GetProductList API failed: ' + e.getMessage());
             }
 
             /* =================================================
@@ -184,11 +193,13 @@ public without sharing class FEC_ApplicationsListController {
                     row.put('registrationEmail', cus.Emails[0].Email);
                 }
 
-                if (appMap.containsKey(st.ApplicationID)) {
-
-                    FEC_GetCustomerList.Application ca = appMap.get(st.ApplicationID);
-                        accountNumbers = String.isBlank(ca.AccountNumber) ? FEC_ConstantCommon.STR_NA : ca.AccountNumber;
-                        row.put('contractNumber', ca.ContractNumber);
+                if (productMap.containsKey(st.ApplicationID)) {
+                    FEC_GetProductListCallout.ProductInfo prod =
+                        productMap.get(st.ApplicationID);
+                    accountNumbers = String.isBlank(prod.accountNumber)
+                        ? FEC_ConstantCommon.STR_NA
+                        : prod.accountNumber;
+                    row.put('contractNumber', prod.dealId);
                 }
                 row.put('accountNumber', accountNumbers);
 

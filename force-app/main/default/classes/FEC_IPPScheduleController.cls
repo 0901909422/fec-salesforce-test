@@ -35,10 +35,9 @@ public with sharing class FEC_IPPScheduleController {
 
         try {
             ippRecord = [
-                SELECT Id, FEC_Application_ID__c, FEC_Customer_History__c,
+                SELECT Id, FEC_Customer_History__c,
                        FEC_CC_Code__c, FEC_CC_Name__c, FEC_DSA_Code__c, FEC_DSA_Name__c,
                        FEC_TSA_Code__c, FEC_TSA_Name__c,
-                       FEC_Origination_Channel__c, FEC_Disbursement_Channel__c,
                        FEC_Sales_Mode__c, FEC_ESign_Source__c,
                        FEC_Total_IPP_Payment_Amount__c, FEC_Total_IPP_Monthly_Principal__c, FEC_Total_IPP_Monthly_Interest__c,
                        FEC_IPP_Record_No__c, FEC_IPP_Plan__c
@@ -54,10 +53,9 @@ public with sharing class FEC_IPPScheduleController {
 
         try {
             ippRecord = [
-                SELECT Id, FEC_Application_ID__c, FEC_Customer_History__c,
+                SELECT Id, FEC_Customer_History__c,
                        FEC_CC_Code__c, FEC_CC_Name__c, FEC_DSA_Code__c, FEC_DSA_Name__c,
                        FEC_TSA_Code__c, FEC_TSA_Name__c,
-                       FEC_Origination_Channel__c, FEC_Disbursement_Channel__c,
                        FEC_Sales_Mode__c, FEC_ESign_Source__c,
                        FEC_Total_IPP_Payment_Amount__c, FEC_Total_IPP_Monthly_Principal__c, FEC_Total_IPP_Monthly_Interest__c,
                        FEC_IPP_Record_No__c, FEC_IPP_Plan__c
@@ -130,9 +128,6 @@ public with sharing class FEC_IPPScheduleController {
             FEC_SalesInfoController.SalesInfoResult salesInfo = FEC_SalesInfoController.getSalesInfoByIPPRecord(ippRecord.Id);
             if (salesInfo == null || !salesInfo.isSuccess) return false;
             Boolean hasUpdate = false;
-            if (String.isNotBlank(salesInfo.applicationId)) { ippRecord.FEC_Application_ID__c = salesInfo.applicationId; hasUpdate = true; }
-            if (String.isNotBlank(salesInfo.originationChannel)) { ippRecord.FEC_Origination_Channel__c = salesInfo.originationChannel; hasUpdate = true; }
-            if (String.isNotBlank(salesInfo.disbursementChannel)) { ippRecord.FEC_Disbursement_Channel__c = salesInfo.disbursementChannel; hasUpdate = true; }
             if (String.isNotBlank(salesInfo.ccCode)) { ippRecord.FEC_CC_Code__c = salesInfo.ccCode; hasUpdate = true; }
             if (String.isNotBlank(salesInfo.ccName)) { ippRecord.FEC_CC_Name__c = salesInfo.ccName; hasUpdate = true; }
             if (String.isNotBlank(salesInfo.dsaCode)) { ippRecord.FEC_DSA_Code__c = salesInfo.dsaCode; hasUpdate = true; }
@@ -146,15 +141,14 @@ public with sharing class FEC_IPPScheduleController {
         }
     }
 
-    /** Có Sales Info nếu có ít nhất CC_Code, DSA_Code, TSA_Code hoặc Application_ID. */
+    /** Có Sales Info nếu có ít nhất CC_Code, DSA_Code hoặc TSA_Code. */
     private static Boolean hasSalesInfo(FEC_IPP__c ipp) {
         if (ipp == null) {
             return false;
         }
         return String.isNotBlank(ipp.FEC_CC_Code__c) 
             || String.isNotBlank(ipp.FEC_DSA_Code__c) 
-            || String.isNotBlank(ipp.FEC_TSA_Code__c)
-            || String.isNotBlank(ipp.FEC_Application_ID__c);
+            || String.isNotBlank(ipp.FEC_TSA_Code__c);
     }
 
     /** Update IPP từ kết quả Sales Info API (chỉ DML). */
@@ -164,18 +158,6 @@ public with sharing class FEC_IPPScheduleController {
         }
         FEC_IPP__c toUpdate = new FEC_IPP__c(Id = ippId);
         Boolean hasUpdate = false;
-        if (String.isNotBlank(salesInfo.applicationId)) {
-            toUpdate.FEC_Application_ID__c = salesInfo.applicationId;
-            hasUpdate = true;
-        }
-        if (String.isNotBlank(salesInfo.originationChannel)) {
-            toUpdate.FEC_Origination_Channel__c = salesInfo.originationChannel;
-            hasUpdate = true;
-        }
-        if (String.isNotBlank(salesInfo.disbursementChannel)) {
-            toUpdate.FEC_Disbursement_Channel__c = salesInfo.disbursementChannel;
-            hasUpdate = true;
-        }
         if (String.isNotBlank(salesInfo.ccCode)) {
             toUpdate.FEC_CC_Code__c = salesInfo.ccCode;
             hasUpdate = true;
