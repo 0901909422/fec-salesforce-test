@@ -5,6 +5,7 @@ public without sharing class FEC_BatchCaseHandlingImportService {
     private static final String BUSINESS_PROCESS_PHONE_UPDATE = 'Phone Update';
     private static final String LABEL_CS_D2C_ASSESSMENT = 'CS D2C đánh giá yêu cầu';
     private static final String LABEL_CS_SUPPORT_ASSESSMENT = 'CS Support đánh giá yêu cầu';
+    private static final String API_CS_SUPPORT_ASSESSMENT = 'FEC_CS_Support_Assessment_Type__c';
     private static final String LABEL_RISK_LEVEL = 'Mức độ rủi ro';
     private static final String LABEL_REQUIRED_ACTION = 'Hành động cần thiết';
     private static final String RESULT_COL_STATUS = '__Status';
@@ -2230,25 +2231,39 @@ public without sharing class FEC_BatchCaseHandlingImportService {
             return out;
         }
         for (FEC_Master_Data_Setting__c row : [
-            SELECT FEC_Stage_Name__c, FEC_Field_Label_Name__c
+            SELECT FEC_Stage_Name__c, FEC_Field_Label_Name__c, FEC_Field_API_Name__c
             FROM FEC_Master_Data_Setting__c
             WHERE FEC_Stage_Name__c IN :stageIds
-            AND FEC_Field_Label_Name__c IN :new List<String>{
-                LABEL_CS_D2C_ASSESSMENT,
-                LABEL_CS_SUPPORT_ASSESSMENT,
-                LABEL_RISK_LEVEL,
-                LABEL_REQUIRED_ACTION,
-                LABEL_PAYMENT_CONTRACT_ASSESSMENT,
-                LABEL_CP_ASSESSMENT
-            }
+            AND (
+                FEC_Field_Label_Name__c IN :new List<String>{
+                    LABEL_CS_D2C_ASSESSMENT,
+                    LABEL_CS_SUPPORT_ASSESSMENT,
+                    LABEL_RISK_LEVEL,
+                    LABEL_REQUIRED_ACTION,
+                    LABEL_PAYMENT_CONTRACT_ASSESSMENT,
+                    LABEL_CP_ASSESSMENT
+                }
+                OR FEC_Field_API_Name__c = :API_CS_SUPPORT_ASSESSMENT
+            )
         ]) {
-            if (row.FEC_Stage_Name__c == null || String.isBlank(row.FEC_Field_Label_Name__c)) {
+            if (row.FEC_Stage_Name__c == null) {
+                continue;
+            }
+            Boolean isCsSupportByApi =
+                API_CS_SUPPORT_ASSESSMENT.equalsIgnoreCase(row.FEC_Field_API_Name__c);
+            if (String.isBlank(row.FEC_Field_Label_Name__c) && isCsSupportByApi != true) {
                 continue;
             }
             if (!out.containsKey(row.FEC_Stage_Name__c)) {
                 out.put(row.FEC_Stage_Name__c, new Set<String>());
             }
-            out.get(row.FEC_Stage_Name__c).add(normalizeToken(row.FEC_Field_Label_Name__c));
+            if (String.isNotBlank(row.FEC_Field_Label_Name__c)) {
+                out.get(row.FEC_Stage_Name__c).add(normalizeToken(row.FEC_Field_Label_Name__c));
+            }
+            // MDM label EN (CS Support Assessment Type) vs template VN (CS Support đánh giá yêu cầu)
+            if (isCsSupportByApi) {
+                out.get(row.FEC_Stage_Name__c).add(normalizeToken(LABEL_CS_SUPPORT_ASSESSMENT));
+            }
         }
         return out;
     }
