@@ -175,75 +175,111 @@ public without sharing class FEC_TransactionsController {
        ===================================================== */
     private static List<TransactionDTO> loadPendingRealtime(String accNumber, Id historyId) {
 
-    List<TransactionDTO> result = new List<TransactionDTO>();
+        List<TransactionDTO> result = new List<TransactionDTO>();
 
-    try {
-        FEC_VMXAUTHDETAILINQ.ResponseWrapper res =
-            FEC_VMXAUTHDETAILINQ.callService(
-                FEC_CommonUltils.generateTransactionId(),
-                FEC_ConstantCommon.REQUESTOR_CRM,
-                Datetime.now().formatGMT(FEC_ConstantCommon.DATETIME_FORMAT),
-                FEC_ConstantCommon.VMX_VERSION_DEFAULT,
-                FEC_ConstantCommon.REQUESTOR_VMX_CONTEXT,
-                FEC_ConstantCommon.REQUESTOR_VMX_CONTEXT, 
-                accNumber,                                 
-                FEC_ConstantCommon.STR_EMPTY               
-            );
-
-        if (res == null
-            || res.VMXMsgOut == null
-            || res.VMXMsgOut.Auths == null
-            || res.VMXMsgOut.Auths.isEmpty()) {
-            return result;
-        }
-
-        for (FEC_VMXAUTHDETAILINQ.AuthTableRow auth : res.VMXMsgOut.Auths) {
-
-            FEC_Transaction__c tx;
-
-            List<FEC_Transaction__c> existed = [
-                SELECT Id
-                FROM FEC_Transaction__c
-                WHERE FEC_Customer_History__c = :historyId
-                  AND FEC_Transaction_Code__c = :auth.AUTHORIZATION_CODE
-                LIMIT 1
-            ];
-
-            if (!existed.isEmpty()) {
-                tx = existed[0];
-            } else {
-                tx = new FEC_Transaction__c(
-                    FEC_Customer_History__c = historyId
+        try {
+            FEC_VMXAUTHDETAILINQ.ResponseWrapper res =
+                FEC_VMXAUTHDETAILINQ.callService(
+                    FEC_CommonUltils.generateTransactionId(),
+                    FEC_ConstantCommon.REQUESTOR_CRM,
+                    Datetime.now().formatGMT(FEC_ConstantCommon.DATETIME_FORMAT),
+                    FEC_ConstantCommon.VMX_VERSION_DEFAULT,
+                    FEC_ConstantCommon.REQUESTOR_VMX_CONTEXT,
+                    FEC_ConstantCommon.REQUESTOR_VMX_CONTEXT,
+                    accNumber,
+                    FEC_ConstantCommon.STR_EMPTY
                 );
+
+            if (res == null
+                || res.VMXMsgOut == null
+                || res.VMXMsgOut.Auths == null
+                || res.VMXMsgOut.Auths.isEmpty()) {
+                return result;
             }
 
-            tx.FEC_Transaction_Code__c = auth.AUTHORIZATION_CODE;
-            upsert tx;
+            List<FEC_VMXAUTHDETAILINQ.AuthTableRow> auths = res.VMXMsgOut.Auths;
+            List<String> txCodes = new List<String>();
+            Long pendingKeySuffix = Datetime.now().getTime();
 
-            TransactionDTO dto = new TransactionDTO();
-            dto.Id                   = tx.Id;
-            dto.effectiveDate        = FEC_CommonUltils.toDate(auth.EFF_DATE);
-            //dto.transactionAmount    = auth.AUTH_AMOUNT;
-            dto.merchantDescription  = auth.Description;
-            dto.transactionPlan      = auth.CREDIT_PLAN;
-            dto.transactionCode      = auth.AUTHORIZATION_CODE;
-            dto.authorizationCode    = auth.AUTHORIZATION_CODE;
-            dto.approvalCode         = auth.AUTH_CD;
-            dto.authorizationResponse = auth.FINAL_ACTN;
-            dto.declineDescription   = auth.ACTN_RSN_DESC;
-            dto.merchantCategoryCode = auth.MERCH_CAT;
-            dto.currencyCode         = auth.TXN_CURR_CODE;
+            Integer idx = 0;
+            for (FEC_VMXAUTHDETAILINQ.AuthTableRow auth : auths) {
+                idx++;
+                txCodes.add(resolvePendingTxCode(auth, idx, pendingKeySuffix));
+            }
 
-            dto.helpTexts = FEC_CommonUltils.buildHelpTextMap(FEC_Transaction__c.SObjectType);
-            result.add(dto);
+            Map<String, FEC_Transaction__c> existedByCode = new Map<String, FEC_Transaction__c>();
+            for (FEC_Transaction__c tx : [
+                SELECT Id, FEC_Transaction_Code__c
+                FROM FEC_Transaction__c
+                WHERE FEC_Customer_History__c = :historyId
+                  AND FEC_Transaction_Code__c IN :txCodes
+            ]) {
+                existedByCode.put(tx.FEC_Transaction_Code__c, tx);
+            }
+
+            List<FEC_Transaction__c> toUpsert = new List<FEC_Transaction__c>();
+            idx = 0;
+            for (FEC_VMXAUTHDETAILINQ.AuthTableRow auth : auths) {
+                idx++;
+                String txCode = txCodes[idx - 1];
+                FEC_Transaction__c tx = existedByCode.containsKey(txCode)
+                    ? existedByCode.get(txCode)
+                    : new FEC_Transaction__c(FEC_Customer_History__c = historyId);
+                tx.FEC_Transaction_Code__c = txCode;
+                toUpsert.add(tx);
+            }
+
+            if (!toUpsert.isEmpty()) {
+                upsert toUpsert;
+            }
+
+            Map<String, String> helpTexts =
+                FEC_CommonUltils.buildHelpTextMap(FEC_Transaction__c.SObjectType);
+
+            idx = 0;
+            for (FEC_VMXAUTHDETAILINQ.AuthTableRow auth : auths) {
+                idx++;
+                String txCode = txCodes[idx - 1];
+                FEC_Transaction__c tx = toUpsert[idx - 1];
+
+                TransactionDTO dto = new TransactionDTO();
+                dto.Id                    = tx.Id;
+                dto.effectiveDate         = FEC_CommonUltils.toDateStr(auth.EFF_DATE);
+                dto.transactionAmount     = FEC_CommonUltils.parseAmountSafe(auth.AUTH_AMOUNT);
+                dto.merchantDescription   = auth.Description;
+                dto.transactionPlan       = auth.CREDIT_PLAN;
+                dto.transactionCode       = txCode;
+                dto.authorizationCode     = txCode;
+                dto.approvalCode          = auth.AUTH_CD;
+                dto.authorizationResponse = auth.FINAL_ACTN;
+                dto.declineDescription    = auth.ACTN_RSN_DESC;
+                dto.merchantCategoryCode  = auth.MERCH_CAT;
+                dto.currencyCode          = auth.TXN_CURR_CODE;
+                dto.helpTexts             = helpTexts;
+                result.add(dto);
+            }
+
+        } catch (Exception e) {
+            System.debug('### PENDING TXN ERROR: ' + e.getMessage());
+            return new List<TransactionDTO>();
         }
 
-    } catch (Exception e) {
-        return new List<TransactionDTO>();
+        return result;
     }
 
-    return result;
-}
+    private static String resolvePendingTxCode(
+        FEC_VMXAUTHDETAILINQ.AuthTableRow auth,
+        Integer idx,
+        Long pendingKeySuffix
+    ) {
+        if (String.isNotBlank(auth.AUTHORIZATION_CODE)) {
+            return auth.AUTHORIZATION_CODE;
+        }
+        if (String.isNotBlank(auth.AUTH_CD)) {
+            return auth.AUTH_CD;
+        }
+        return 'PENDING_' + String.valueOf(idx) + '_' + String.valueOf(pendingKeySuffix);
+    }
 
     /* =====================================================
        UPSERT HISTORY
