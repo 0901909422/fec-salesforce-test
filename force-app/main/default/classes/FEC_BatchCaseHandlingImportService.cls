@@ -843,7 +843,7 @@ public without sharing class FEC_BatchCaseHandlingImportService {
         if (sourceHeaders == null || sourceHeaders.isEmpty()) {
             return 0;
         }
-        // __Status / __Errors luôn chèn cuối sheet (bất kể số cột template)
+        // 29/05/2026 18:45 linhdev - gợi ý vị trí chèn; FEC_BCH_TemplateExportService căn theo cột cuối trên file Excel
         return sourceHeaders.size();
     }
 
@@ -1249,6 +1249,8 @@ public without sharing class FEC_BatchCaseHandlingImportService {
         List<RemarkDraftUpdateItem> remarkDraftItems = new List<RemarkDraftUpdateItem>();
         //PhongBT 28/05/26: Hàng COF/GSR Route To + assignmentId — gom để cập nhật FEC_Assignment__c sau khi route Case.
         List<AssignmentRouteToUpdateItem> assignmentRouteToItems = new List<AssignmentRouteToUpdateItem>();
+        List<FEC_BCH_AssignmentUpdateService.ImportUpdateItem> assignmentUpdateItems =
+            new List<FEC_BCH_AssignmentUpdateService.ImportUpdateItem>();
         Map<Id, Case> pendingCaseFieldUpdatesById = new Map<Id, Case>();
         Map<Id, List<FEC_BatchCaseHandlingImportRow>> rowsByCaseForFieldUpdate = new Map<Id, List<FEC_BatchCaseHandlingImportRow>>();
         for (FEC_BatchCaseHandlingImportRow rr : rows) {
@@ -1315,6 +1317,21 @@ public without sharing class FEC_BatchCaseHandlingImportService {
                 Map<String, String> runParams = new Map<String, String>{ 'caseId' => String.valueOf(caseId) };
                 if (routingParsed != null && methodKey == FEC_CaseBusinessService.UPDATEACTION && String.isNotBlank(routingParsed.decision)) {
                     runParams.put('decision', routingParsed.decision);
+                }
+                if (cofOrGsr == true && String.isNotBlank(rr.assignmentId)) {
+                    Id assignmentRecordIdForUpdate = parseAssignmentId(
+                        rr.assignmentId,
+                        assignmentByName,
+                        assignmentByRecordId
+                    );
+                    FEC_BCH_AssignmentUpdateService.collectFromImportRow(
+                        rr,
+                        cofOrGsr,
+                        caseId,
+                        stageIdForRow,
+                        assignmentRecordIdForUpdate,
+                        assignmentUpdateItems
+                    );
                 }
                 if (routingParsed != null && methodKey == FEC_CaseBusinessService.ROUTE_TO) {
                     Case caseLite = caseLiteById.get(caseId);
@@ -1386,6 +1403,8 @@ public without sharing class FEC_BatchCaseHandlingImportService {
                         skipCaseRun = true;
                     } else if (methodKey == FEC_CaseBusinessService.REVERT && !runParams.containsKey('actionId')) {
                         skipCaseRun = true;
+                    } else if (methodKey == FEC_CaseBusinessService.UPDATEACTION) {
+                        skipCaseRun = true;
                     }
                 }
                 // 28/05/2026 11:20 linhdev - không gọi run khi gần 101 SOQL; row còn lại xử lý ở queueable chunk sau
@@ -1438,6 +1457,16 @@ public without sharing class FEC_BatchCaseHandlingImportService {
             }
         }
         applyAssignmentRouteToBulk(validAssignmentRouteToItems);
+        List<FEC_BCH_AssignmentUpdateService.ImportUpdateItem> validAssignmentUpdateItems =
+            new List<FEC_BCH_AssignmentUpdateService.ImportUpdateItem>();
+        for (FEC_BCH_AssignmentUpdateService.ImportUpdateItem item : assignmentUpdateItems) {
+            if (item != null &&
+                item.row != null &&
+                item.row.status != System.Label.FEC_Batch_Case_Handling_Import_Row_Status_Failed) {
+                validAssignmentUpdateItems.add(item);
+            }
+        }
+        FEC_BCH_AssignmentUpdateService.applyImportBulk(validAssignmentUpdateItems);
         applyDraftRemarksBulk(validRemarkItems, cofOrGsr);
     }
 

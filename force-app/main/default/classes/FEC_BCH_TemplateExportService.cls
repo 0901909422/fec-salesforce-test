@@ -94,6 +94,17 @@ public without sharing class FEC_BCH_TemplateExportService {
             List<List<String>> insertValues = req.insertColumnValues == null
                 ? new List<List<String>>()
                 : req.insertColumnValues;
+            // 29/05/2026 18:45 linhdev - __Status/__Errors luôn sau cột cuối trên sheet Excel (không chỉ originalHeaders.size)
+            if (isResultStatusErrorsInsert(insertHeaders)) {
+                insertBefore = alignResultExportInsertBeforeSheetEnd(
+                    worksheetXml,
+                    headerRowIndex + 1,
+                    templateDataRow1,
+                    insertBefore,
+                    mappedCols,
+                    dataRows
+                );
+            }
             ResultInsertColumnStyles resultColStyles = null;
             if (insertBefore != null && insertBefore >= 0 && !insertHeaders.isEmpty()) {
                 resultColStyles = buildResultInsertColumnStyles(
@@ -1044,6 +1055,93 @@ public without sharing class FEC_BCH_TemplateExportService {
         Pattern p = Pattern.compile('(?s)(<row r="' + rowNum1 + '"[^>]*>.*?</row>)');
         Matcher m = p.matcher(xml);
         return m.find() ? m.group(1) : FEC_ConstantCommon.STR_EMPTY;
+    }
+
+    // 29/05/2026 18:45 linhdev - nhận diện chèn cột result import (__Status + __Errors)
+    private static Boolean isResultStatusErrorsInsert(List<String> insertHeaders) {
+        if (insertHeaders == null || insertHeaders.size() != 2) {
+            return false;
+        }
+        String first = insertHeaders[0] == null ? FEC_ConstantCommon.STR_EMPTY : insertHeaders[0].trim();
+        String second = insertHeaders[1] == null ? FEC_ConstantCommon.STR_EMPTY : insertHeaders[1].trim();
+        return '__Status'.equals(first) && '__Errors'.equals(second);
+    }
+
+    // 29/05/2026 18:45 linhdev - cột cuối có ô trên header row / dòng data mẫu (tránh chèn giữa khi LWC thiếu cột cuối)
+    private static Integer resolveWorksheetMaxColumnIndex(
+        String worksheetXml,
+        Integer headerRowNum1,
+        Integer templateDataRowNum1
+    ) {
+        Integer maxIdx = -1;
+        if (String.isBlank(worksheetXml)) {
+            return maxIdx;
+        }
+        List<Integer> rowNums = new List<Integer>();
+        if (headerRowNum1 != null && headerRowNum1 > 0) {
+            rowNums.add(headerRowNum1);
+        }
+        if (templateDataRowNum1 != null && templateDataRowNum1 > 0 && templateDataRowNum1 != headerRowNum1) {
+            rowNums.add(templateDataRowNum1);
+        }
+        for (Integer rowNum1 : rowNums) {
+            String rowXml = extractRowXml(worksheetXml, rowNum1);
+            if (String.isBlank(rowXml)) {
+                continue;
+            }
+            Pattern cellPat = Pattern.compile('<c r="([A-Z]{1,3})' + rowNum1 + '"');
+            Matcher cellMat = cellPat.matcher(rowXml);
+            while (cellMat.find()) {
+                Integer colIdx = columnLetterToIndex(cellMat.group(1));
+                if (colIdx > maxIdx) {
+                    maxIdx = colIdx;
+                }
+            }
+        }
+        return maxIdx;
+    }
+
+    // 29/05/2026 18:45 linhdev - pad mappedCols/dataRows tới hết cột sheet; insertBefore = sau cột cuối
+    private static Integer alignResultExportInsertBeforeSheetEnd(
+        String worksheetXml,
+        Integer headerRowNum1,
+        Integer templateDataRowNum1,
+        Integer requestedInsertBefore,
+        List<Integer> mappedCols,
+        List<List<String>> dataRows
+    ) {
+        Integer sheetMaxCol = resolveWorksheetMaxColumnIndex(
+            worksheetXml,
+            headerRowNum1,
+            templateDataRowNum1
+        );
+        if (sheetMaxCol < 0) {
+            return requestedInsertBefore;
+        }
+        Integer insertAt = sheetMaxCol + 1;
+        if (requestedInsertBefore != null && requestedInsertBefore > insertAt) {
+            insertAt = requestedInsertBefore;
+        }
+        if (mappedCols != null) {
+            mappedCols.clear();
+            for (Integer colIdx = 0; colIdx <= sheetMaxCol; colIdx++) {
+                mappedCols.add(colIdx);
+            }
+        }
+        if (dataRows != null) {
+            Integer targetWidth = sheetMaxCol + 1;
+            for (Integer rowIdx = 0; rowIdx < dataRows.size(); rowIdx++) {
+                List<String> row = dataRows[rowIdx];
+                if (row == null) {
+                    row = new List<String>();
+                    dataRows[rowIdx] = row;
+                }
+                while (row.size() < targetWidth) {
+                    row.add(FEC_ConstantCommon.STR_EMPTY);
+                }
+            }
+        }
+        return insertAt;
     }
 
     private static String rebuildSheetData(String xml, Integer lastHeaderRow1, List<String> dataRowXmlList) {
