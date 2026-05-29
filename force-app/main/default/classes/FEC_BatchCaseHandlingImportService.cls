@@ -525,10 +525,10 @@ public without sharing class FEC_BatchCaseHandlingImportService {
         }
         Integer inputtedRemarksIndex = findHeaderIndex(sourceHeaders, LABEL_INPUTTED_REMARKS);
         Integer cpAssessmentIndex = findHeaderIndex(sourceHeaders, LABEL_CP_ASSESSMENT);
-        List<Integer> mappedColumnIndexes = new List<Integer>();
-        for (Integer colIdx = 0; colIdx < sourceHeaders.size(); colIdx++) {
-            mappedColumnIndexes.add(colIdx);
-        }
+        List<Integer> mappedColumnIndexes = buildResultMappedColumnIndexes(
+            sourceHeaders,
+            rowResults
+        );
         Integer resultInsertIndex = resolveResultInsertIndex(
             sourceHeaders,
             inputtedRemarksIndex,
@@ -835,6 +835,37 @@ public without sharing class FEC_BatchCaseHandlingImportService {
         return value == null ? FEC_ConstantCommon.STR_EMPTY : String.valueOf(value);
     }
 
+    private static List<Integer> buildResultMappedColumnIndexes(
+        List<String> sourceHeaders,
+        List<FEC_BatchCaseHandlingImportRow> rowResults
+    ) {
+        List<Integer> mapped = new List<Integer>();
+        if (sourceHeaders == null || sourceHeaders.isEmpty()) {
+            return mapped;
+        }
+        List<Integer> worksheetCols = null;
+        if (rowResults != null) {
+            for (FEC_BatchCaseHandlingImportRow row : rowResults) {
+                if (
+                    row != null &&
+                    row.originalColumnIndexes != null &&
+                    !row.originalColumnIndexes.isEmpty()
+                ) {
+                    worksheetCols = row.originalColumnIndexes;
+                    break;
+                }
+            }
+        }
+        for (Integer idx = 0; idx < sourceHeaders.size(); idx++) {
+            Integer colIdx = idx;
+            if (worksheetCols != null && idx < worksheetCols.size() && worksheetCols[idx] != null) {
+                colIdx = worksheetCols[idx];
+            }
+            mapped.add(colIdx);
+        }
+        return mapped;
+    }
+
     private static Integer resolveResultInsertIndex(
         List<String> sourceHeaders,
         Integer inputtedRemarksIndex,
@@ -843,7 +874,7 @@ public without sharing class FEC_BatchCaseHandlingImportService {
         if (sourceHeaders == null || sourceHeaders.isEmpty()) {
             return 0;
         }
-        // 29/05/2026 18:45 linhdev - gợi ý vị trí chèn; FEC_BCH_TemplateExportService căn theo cột cuối trên file Excel
+        // 29/05/2026 19:15 linhdev - gợi ý vị trí chèn; FEC_BCH_TemplateExportService căn theo cột cuối trên file Excel
         return sourceHeaders.size();
     }
 
@@ -974,6 +1005,7 @@ public without sharing class FEC_BatchCaseHandlingImportService {
             // 28/05/2026 16:20 linhdev - giữ nguyên header/cell gốc để server tự xuất Result đúng file user import
             rr.originalHeaders = pickRowStringList(row, 'originalHeaders');
             rr.originalCells = pickRowStringList(row, 'originalCells');
+            rr.originalColumnIndexes = pickRowIntegerList(row, 'originalColumnIndexes');
             rr.originalHeaderRowIndex = pickRowInteger(row, 'originalHeaderRowIndex');
             rr.originalSheetName = pickRowString(row, new List<String>{ 'originalsheetname' });
             Boolean rowEmpty =
@@ -2807,6 +2839,39 @@ public without sharing class FEC_BatchCaseHandlingImportService {
         }
         for (Object val : (List<Object>) raw) {
             out.add(val == null ? FEC_ConstantCommon.STR_EMPTY : String.valueOf(val));
+        }
+        return out;
+    }
+
+    private static List<Integer> pickRowIntegerList(Map<String, Object> row, String keyName) {
+        List<Integer> out = new List<Integer>();
+        if (row == null || String.isBlank(keyName)) {
+            return out;
+        }
+        Object raw = row.get(keyName);
+        if (raw == null) {
+            String want = keyName.replaceAll('\\s+', '').toLowerCase();
+            for (String k : row.keySet()) {
+                String nk = k == null ? FEC_ConstantCommon.STR_EMPTY : k.replaceAll('\\s+', '').toLowerCase();
+                if (want.equals(nk)) {
+                    raw = row.get(k);
+                    break;
+                }
+            }
+        }
+        if (raw == null || !(raw instanceof List<Object>)) {
+            return out;
+        }
+        for (Object val : (List<Object>) raw) {
+            if (val == null) {
+                out.add(null);
+                continue;
+            }
+            try {
+                out.add(Integer.valueOf(String.valueOf(val).trim()));
+            } catch (Exception ex) {
+                out.add(null);
+            }
         }
         return out;
     }

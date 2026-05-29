@@ -2618,6 +2618,11 @@ export default class Fec_BatchCaseHandling extends LightningElement {
       headerRowIndex,
       headerRow
     );
+    // 29/05/2026 20:30 linhdev - chỉ số cột Excel khớp importHeaders (đã bỏ __Status/__Errors)
+    const importColumnIndexes = this.stripResultColumnsFromImportLayout(
+      headerRow,
+      headerColumnIndexes
+    ).headers;
     const idxCaseId = this.findHeaderIndex(normalized, HEADERS_CASE_ID);
     const idxRouting = this.findHeaderIndex(normalized, HEADERS_ROUTING_ACTION);
     const idxRemark = this.findHeaderIndex(normalized, HEADERS_REMARKS);
@@ -2781,6 +2786,7 @@ export default class Fec_BatchCaseHandling extends LightningElement {
         // 28/05/2026 16:20 linhdev - gửi kèm header gốc để Apex build Result theo đúng layout file user import
         originalHeaders: importHeaders,
         originalCells,
+        originalColumnIndexes: importColumnIndexes,
         originalHeaderRowIndex: headerRowIndex,
         originalSheetName: firstSheetName
       });
