@@ -300,6 +300,10 @@ const EXPORT_HEADER_FIELD_MAP = {
   accountcontractnumber: "accountContractNumber",
   accountandcontractnumber: "accountContractNumber",
   appid: "appId",
+  contractstatus: "contractStatus", // Toannd 28/5/2026
+  productcode: "productCode", // Toannd 28/5/2026
+  loanamount: "loanAmount", // Toannd 28/5/2026
+  tenure: "tenure", // Toannd 28/5/2026
   interactionid: "interactionId",
   interactionchannel: "interactionChannel",
   interactionsubchannel: "interactionSubChannel",
@@ -316,11 +320,11 @@ const EXPORT_HEADER_FIELD_MAP = {
   originalsubcategory: "originalSubCategoryDisplay",
   originalsubcode: "originalSubCodeDisplay",
   updatedcategory: "categoryCode",
-  updatedsubcategory: "subCategoryCode",
-  updatedsubcode: "subCodeCode",
+  updatedsubcategory: "subCategoryDisplay", // Toannd 28/5/2026
+  updatedsubcode: "subCodeDisplay", // Toannd 28/5/2026
   category: "categoryCode",
-  subcategory: "subCategoryCode",
-  subcode: "subCodeCode",
+  subcategory: "subCategoryDisplay", // Toannd 28/5/2026
+  subcode: "subCodeDisplay", // Toannd 28/5/2026
   caseremarks: "caseRemarks",
   caseremarksenteredby: "caseRemarksEnteredBy",
   caseremarksenteredbyrole: "caseRemarksEnteredByRole",
@@ -350,6 +354,8 @@ const EXPORT_HEADER_FIELD_MAP = {
   classificationbycs: "classificationByCs",
   evaluationbycs: "evaluationByCs",
   finalproduct: "finalProduct",
+  paymentcontractassessment: "paymentContractAssessment", // Toannd 28/5/2026
+  rdpaymentcontractassessment: "paymentContractAssessment", // Toannd 28/5/2026
   evaluationbysales: "evaluationBySales",
   disciplineresult: "disciplineResult",
   contactpoint: "contactPoint",
@@ -2580,7 +2586,8 @@ export default class Fec_BatchCaseHandling extends LightningElement {
       return null;
     }
     const workbook = window.XLSX.read(arrayBuffer, { type: "array" });
-    const firstSheetName = workbook.SheetNames?.[0];
+    // 28/05/2026 17:45 linhdev - import đúng sheet chính (vd. PointsRedemptionTemp1), không lấy Sheet1 đầu tiên
+    const firstSheetName = this.resolveMainTemplateSheetName(workbook);
     if (!firstSheetName) {
       return null;
     }
@@ -2732,14 +2739,17 @@ export default class Fec_BatchCaseHandling extends LightningElement {
         cpAssessment,
         // 28/05/2026 16:20 linhdev - gửi kèm header gốc để Apex build Result theo đúng layout file user import
         originalHeaders: importHeaders,
-        originalCells
+        originalCells,
+        originalHeaderRowIndex: headerRowIndex,
+        originalSheetName: firstSheetName
       });
     }
     return { rows, isCofOrGsr, originalHeaders: importHeaders };
   }
 
   detectImportHeaderRow(aoa) {
-    const scanLimit = Math.min(aoa.length, 10);
+    // 28/05/2026 17:45 linhdev - quét header tới 25 dòng (template có header sâu hơn 10 dòng)
+    const scanLimit = Math.min(aoa.length, 25);
     for (let i = 0; i < scanLimit; i++) {
       const row = aoa[i] || [];
       const normalized = row.map((h) =>
