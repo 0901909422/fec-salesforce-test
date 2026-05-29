@@ -3143,8 +3143,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>SLA bell notification body — approaching deadline</shortDescription>
-        <value>- Case ID: {0}
-- Sap vuot qua thoi gian xu ly</value>
+        <value>- Case ID: {0} - Sắp vượt quá thời gian xử lý</value>
     </labels>
     <labels>
         <fullName>FEC_MSG_SLA_Notif_Title_Exceeded</fullName>
@@ -3152,7 +3151,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>SLA bell notification title — exceeded deadline</shortDescription>
-        <value>Case {0} - Da vuot qua thoi gian xu ly</value>
+        <value>Case {0} - Đã vượt quá thời gian xử lý</value>
     </labels>
     <labels>
         <fullName>FEC_MSG_SLA_Notif_Body_Exceeded</fullName>
@@ -3160,8 +3159,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>SLA bell notification body — exceeded deadline</shortDescription>
-        <value>- Case ID: {0}
-- Da vuot qua thoi gian xu ly</value>
+        <value>- Case ID: {0} - Đã vượt quá thời gian xử lý</value>
     </labels>
     <labels>
         <fullName>FEC_MSG_Close_Interaction_Complete_Case_Warning</fullName>
