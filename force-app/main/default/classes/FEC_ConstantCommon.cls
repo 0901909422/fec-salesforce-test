@@ -937,6 +937,34 @@ public with sharing class FEC_ConstantCommon {
         new Map<String, String>{
             'name'       => 'Interaction & Service Case Summary',
             'uniqueName' => 'FEC_RP_01'
+        },
+        new Map<String, String>{
+            'name'       => 'Interactions & Service Cases TAT – CO',
+            'uniqueName' => 'Interactions_Service_Cases_TAT_CO'
+        },
+        new Map<String, String>{
+            'name'       => 'Interactions & Service Cases TAT – CL',
+            'uniqueName' => 'Interactions_Service_Cases_TAT_CL'
+        },
+        new Map<String, String>{
+            'name'       => 'Interactions & Service Cases TAT – CP',
+            'uniqueName' => 'Interactions_Service_Cases_TAT_CP'
+        },
+        new Map<String, String>{
+            'name'       => 'Interactions & Service Cases TAT – CA',
+            'uniqueName' => 'Interactions_Service_Cases_TAT_CA'
+        },
+        new Map<String, String>{
+            'name'       => 'Interactions & Service Cases TAT – PM',
+            'uniqueName' => 'Interactions_Service_Cases_TAT_PM'
+        },
+        new Map<String, String>{
+            'name'       => 'Interactions & Service Cases TAT – DS',
+            'uniqueName' => 'Interactions_Service_Cases_TAT_DS'
+        },
+        new Map<String, String>{
+            'name'       => 'Interactions & Service Cases TAT – TS',
+            'uniqueName' => 'Interactions_Service_Cases_TAT_TS'
         }
     };
     

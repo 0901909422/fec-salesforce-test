@@ -47,6 +47,7 @@
 	    <members>FEC_CheckEligibleController</members>
 	    <members>FEC_CardClosureRefundController</members>
 	    <members>FEC_FastCashCaseController</members>
+        <members>FEC_FetchWelcomeCallDetailsRestService</members>
         <members>FEC_RelevantTicketController</members>
         <members>FEC_RelevantTicketTriggerHandler</members>
         <members>FEC_COFFraudRelatedHandler</members>
@@ -124,6 +125,7 @@
 		<members>FEC_MarkNFU</members>
 		<members>FEC_CardInfoController</members>
         <members>FEC_IPPController</members>
+        <members>FEC_Il10DeliveryController</members>
         <members>FEC_MockData</members>
         <members>FEC_BlockCodeRoutingService</members>
         <members>FEC_CMSRewardRedeemService</members>
@@ -260,6 +262,9 @@
         <members>fec_TransactionsAccount</members>
         <members>fec_TransactionsAccountTabView</members>
         <members>fecInteractionChatConversations</members>
+        <members>fecInteractionChatInfo</members>
+        <members>fecInteractionEmailInfo</members>
+        <members>fecInteractionEmailInfoUbank</members>
         <members>fec_PointsRedemptionCaseForm</members>
         <members>fec_TransferCall</members>
         <members>fec_CaseNocUpdatedSection</members>
@@ -320,6 +325,18 @@
 		<members>Case.FEC_MRC_Request_Handling_Option__c</members>
 		<members>Case.FEC_Is_DNB__c</members>
         <members>Case.FEC_IsImported__c</members>
+        <members>Case.FEC_CA_TAT_Export_Case__c</members>
+        <members>Case.FEC_CL_TAT_Export_Case__c</members>
+        <members>Case.FEC_CO_TAT_Export_Case__c</members>
+        <members>Case.FEC_DS_TAT_Export_Case__c</members>
+        <members>Case.FEC_PM_TAT_Export_Case__c</members>
+        <members>Case.FEC_TS_TAT_Export_Case__c</members>
+        <members>FEC_Routing_Action_History__c.FEC_Is_CA_Queue_User__c</members>
+        <members>FEC_Routing_Action_History__c.FEC_Is_CL_Queue_User__c</members>
+        <members>FEC_Routing_Action_History__c.FEC_Is_CO_Queue_User__c</members>
+        <members>FEC_Routing_Action_History__c.FEC_Is_DS_Queue_User__c</members>
+        <members>FEC_Routing_Action_History__c.FEC_Is_PM_Queue_User__c</members>
+        <members>FEC_Routing_Action_History__c.FEC_Is_TS_Queue_User__c</members>
 		<members>FEC_Assignment__c.FEC_Submitted_On__c</members>
 		<members>FEC_Assignment__c.FEC_Assignment_Name__c</members>
         <members>FEC_Assignment__c.FEC_Draft_Assignment_Remark__c</members>
@@ -398,6 +415,7 @@
         <members>fec_CaseAssignmentNocNewOverride</members>
         <members>fecRoutingAssignmentEditOverride</members>
         <members>fec_CaseAssignmentNocEditOverride</members>
+        <members>fecEmailSection</members>
         <name>AuraDefinitionBundle</name>
     </types>
 	<types>
@@ -670,6 +688,7 @@
         <members>FEC_RD_Telesales_User_1_Interaction_Case_Service_Case</members>
         <members>FEC_RD_Telesales_User_2_Interaction_Case_Service_Case</members>
         <members>RD_IT_User_Interaction_Case_Service_Case</members>
+        <members>RD_IT_User_Report_Dashboard</members>
 		<!-- Master Data Management -->
 		<members>FEC_CS_CS_Ecom_Officer_Master_Data_Management</members>
 		<members>FEC_CS_CS_Ecom_Specialist_Master_Data_Management</members>
@@ -943,6 +962,20 @@
     <types>
         <members>FECReport/FEC_RP_01</members>
         <members>FECReport/FEC_RP_02</members>
+        <members>FECReportSummaryTATCA/</members>
+        <members>FECReportSummaryTATCA/Interactions_Service_Cases_TAT_CA</members>
+        <members>FECReportSummaryTATCP/</members>
+        <members>FECReportSummaryTATCP/Interactions_Service_Cases_TAT_CP</members>
+        <members>FECReportSummaryTATDS/</members>
+        <members>FECReportSummaryTATDS/Interactions_Service_Cases_TAT_DS</members>
+        <members>FECReportSummaryTATPM/</members>
+        <members>FECReportSummaryTATPM/Interactions_Service_Cases_TAT_PM</members>
+        <members>FECReportSummaryTATTS/</members>
+        <members>FECReportSummaryTATTS/Interactions_Service_Cases_TAT_TS</members>
+        <members>FEC_Report_Summary_TAT_CL/</members>
+        <members>FEC_Report_Summary_TAT_CL/Interactions_Service_Cases_TAT_CL</members>
+        <members>FEC_Report_Summary_TAT_CO/</members>
+        <members>FEC_Report_Summary_TAT_CO/Interactions_Service_Cases_TAT_CO</members>
         <name>Report</name>
     </types>
 	<version>66.0</version>
