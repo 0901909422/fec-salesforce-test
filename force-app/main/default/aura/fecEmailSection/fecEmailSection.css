@@ -273,12 +273,13 @@
     margin-bottom: var(--lwc-spacingXxxSmall, 0.125rem); 
 }
 .THIS .feed-to-text { font-size: var(--lwc-fontSize2, 0.75rem); color: var(--lwc-colorTextPlaceholder, #706e6b); }
-.THIS .feed-preview-line { 
+.THIS .feed-preview-line {
     font-size: var(--lwc-fontSize2, 0.75rem);
-    color: var(--lwc-colorTextLabel, #3e3e3c); 
-    overflow: hidden; text-overflow: ellipsis; white-space: nowrap; 
-    max-width: 20rem; 
-    display: inline-block; vertical-align: middle; 
+    color: var(--lwc-colorTextLabel, #3e3e3c);
+    white-space: normal;
+    word-break: break-word;
+    display: block;
+    vertical-align: middle;
 }
 .THIS .feed-body-full { 
     font-size: var(--lwc-fontSize2, 0.75rem);
