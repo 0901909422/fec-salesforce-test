@@ -861,13 +861,15 @@ public without sharing class FEC_ContractClosureController {
         ) {
             return null;
         }
+        Id caseIdRef = caseRow.Id;
+        String emailCommType = FEC_ConstantCommon.EMAIL;
         List<SObject> teRows = Database.query(
             'SELECT Id, ' +
                 FLD_CL_CONTACT_STRING +
                 ' FROM ' +
                 OBJ_CONTACT_LIST +
-                ' WHERE ' + caseFieldApi + ' = :caseRow.Id' +
-                ' AND ' + FLD_CL_COMM_TYPE + ' = :FEC_ConstantCommon.EMAIL' +
+                ' WHERE ' + caseFieldApi + ' = :caseIdRef' +
+                ' AND ' + FLD_CL_COMM_TYPE + ' = :emailCommType' +
                 ' ORDER BY LastModifiedDate DESC LIMIT 1'
         );
         if (teRows.isEmpty()) {
@@ -902,11 +904,13 @@ public without sharing class FEC_ContractClosureController {
         if (String.isBlank(te)) {
             te = null;
         }
+        Id caseIdRef = caseRec.Id;
+        String emailCommType = FEC_ConstantCommon.EMAIL;
         List<SObject> matches = Database.query(
             'SELECT Id, ' + FLD_CL_CONTACT_STRING +
             ' FROM ' + OBJ_CONTACT_LIST +
-            ' WHERE ' + caseFieldApi + ' = :caseRec.Id' +
-            ' AND ' + FLD_CL_COMM_TYPE + ' = :FEC_ConstantCommon.EMAIL' +
+            ' WHERE ' + caseFieldApi + ' = :caseIdRef' +
+            ' AND ' + FLD_CL_COMM_TYPE + ' = :emailCommType' +
             ' ORDER BY LastModifiedDate DESC LIMIT 1'
         );
         if (!matches.isEmpty()) {
