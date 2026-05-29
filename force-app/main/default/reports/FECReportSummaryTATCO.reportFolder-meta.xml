@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<ReportFolder xmlns="http://soap.sforce.com/2006/04/metadata">
-    <folderShares>
-        <accessLevel>Manage</accessLevel>
-        <sharedTo>hoangnm107@fpt.com</sharedTo>
-        <sharedToType>User</sharedToType>
-    </folderShares>
-    <name>FEC Report Summary TAT - CO</name>
-</ReportFolder>
