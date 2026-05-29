@@ -196,13 +196,13 @@
         </columns>
         <columns>
             <checkedByDefault>false</checkedByDefault>
-            <displayNameOverride>Last Update By</displayNameOverride>
+            <displayNameOverride>Last Updated By</displayNameOverride>
             <field>FEC_Interaction__c.FEC_Last_Updated_By__c</field>
             <table>Case</table>
         </columns>
         <columns>
             <checkedByDefault>false</checkedByDefault>
-            <displayNameOverride>Last Update On</displayNameOverride>
+            <displayNameOverride>Last Updated On</displayNameOverride>
             <field>FEC_Interaction__c.FEC_Last_Updated_On__c</field>
             <table>Case</table>
         </columns>
