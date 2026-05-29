@@ -843,12 +843,7 @@ public without sharing class FEC_BatchCaseHandlingImportService {
         if (sourceHeaders == null || sourceHeaders.isEmpty()) {
             return 0;
         }
-        if (inputtedRemarksIndex >= 0) {
-            return inputtedRemarksIndex;
-        }
-        if (cpAssessmentIndex >= 0) {
-            return cpAssessmentIndex;
-        }
+        // __Status / __Errors luôn chèn cuối sheet (bất kể số cột template)
         return sourceHeaders.size();
     }
 

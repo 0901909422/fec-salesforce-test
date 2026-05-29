@@ -9,6 +9,7 @@ public without sharing class FEC_BCH_TemplateExportService {
         @AuraEnabled public List<Integer> mappedColumnIndexes;
         @AuraEnabled public List<List<String>> dataRows;
         @AuraEnabled public Integer insertColumnsBeforeIndex;
+
         @AuraEnabled public List<String> insertColumnHeaders;
         @AuraEnabled public List<List<String>> insertColumnValues;
         @AuraEnabled public String templateSheetName;
@@ -53,7 +54,7 @@ public without sharing class FEC_BCH_TemplateExportService {
             dbg('ZIP', 'entries=' + entryByPath.size());
             String workbookXml = blobToUtf8(entryByPath.get('xl/workbook.xml'));
             String workbookRelsXml = blobToUtf8(entryByPath.get('xl/_rels/workbook.xml.rels'));
-            // 27/05/2026 13:15 linhdev - patch đúng sheet LWC đã map header (tránh ghi nhầm sheet lookup)
+            //tungnm37 - patch đúng sheet LWC đã map header (tránh ghi nhầm sheet lookup)
             String worksheetPath = resolveWorksheetPath(
                 workbookXml,
                 workbookRelsXml,
@@ -81,7 +82,7 @@ public without sharing class FEC_BCH_TemplateExportService {
                 return fail(out, 'ROW_LIMIT', String.valueOf(dataRows.size()));
             }
             String worksheetXml = blobToUtf8(entryByPath.get(worksheetPath));
-            // 28/05/2026 17:45 linhdev - tìm dòng data mẫu linh hoạt (tránh TEMPLATE_ROW_MISSING → mất format Result)
+            //tungnm37 - tìm dòng data mẫu linh hoạt (tránh TEMPLATE_ROW_MISSING → mất format Result)
             Integer templateDataRow1 = resolveTemplateDataRowNum(worksheetXml, headerRowIndex);
             if (templateDataRow1 == null || templateDataRow1 < 1) {
                 return fail(out, 'TEMPLATE_ROW_MISSING', 'headerRow=' + headerRowIndex);
@@ -226,7 +227,7 @@ public without sharing class FEC_BCH_TemplateExportService {
         return body.toString();
     }
 
-    // 27/05/2026 13:15 linhdev - ưu tiên sheet name từ LWC; fallback sheet có Case ID header
+    //tungnm37 - ưu tiên sheet name từ LWC; fallback sheet có Case ID header
     private static String resolveWorksheetPath(
         String workbookXml,
         String workbookRelsXml,
@@ -392,7 +393,8 @@ public without sharing class FEC_BCH_TemplateExportService {
             '<sheetData>' + sheetDataInner + '</sheetData>'
         );
         Integer lastRow1 = templateDataRow1 + rowCount - 1;
-        out = updateDimensionRef(out, lastRow1);
+        Integer lastColIndex = resolveLastPatchedColumnIndex(mappedCols);
+        out = updateDimensionRef(out, lastRow1, lastColIndex);
         // 28/05/2026 17:45 linhdev - lỗi rebuild validation không được làm fail export (vẫn giữ format + data)
         try {
             out = applyHeaderBasedListValidations(
@@ -1228,7 +1230,9 @@ public without sharing class FEC_BCH_TemplateExportService {
             xml = replaceRowXml(xml, templateDataRowNum1, templateRowXml);
         }
         xml = shiftWorksheetMergeCells(xml, insertBeforeColIndex, shift);
-        return shiftWorksheetValidations(xml, insertBeforeColIndex, shift);
+        xml = shiftWorksheetValidations(xml, insertBeforeColIndex, shift);
+        xml = shiftWorksheetX14Sqrefs(xml, insertBeforeColIndex, shift);
+        return shiftWorksheetRowSpans(xml, insertBeforeColIndex, shift);
     }
 
     private static String replaceRowXml(String xml, Integer rowNum1, String rowXml) {
@@ -1285,30 +1289,27 @@ public without sharing class FEC_BCH_TemplateExportService {
         Integer insertBeforeColIndex,
         Integer shift
     ) {
-        if (String.isBlank(xml) || shift == null || shift < 1) {
+        if (
+            String.isBlank(xml) ||
+            shift == null ||
+            shift < 1 ||
+            insertBeforeColIndex == null ||
+            insertBeforeColIndex < 0
+        ) {
             return xml;
         }
-        Pattern sqrefPat = Pattern.compile('sqref="([A-Z]{1,3})(\\d+):([A-Z]{1,3})(\\d+)"');
+        Pattern sqrefPat = Pattern.compile('sqref="([^"]+)"');
         Matcher m = sqrefPat.matcher(xml);
         List<SqrefReplacement> replacements = new List<SqrefReplacement>();
         while (m.find()) {
-            String startCol = m.group(1);
-            String startRow = m.group(2);
-            String endCol = m.group(3);
-            String endRow = m.group(4);
-            Integer startIdx = columnLetterToIndex(startCol);
-            Integer endIdx = columnLetterToIndex(endCol);
-            if (startIdx >= insertBeforeColIndex) {
-                startCol = columnIndexToLetter(startIdx + shift);
-            }
-            if (endIdx >= insertBeforeColIndex) {
-                endCol = columnIndexToLetter(endIdx + shift);
+            String shiftedSqref = shiftSqrefReferences(m.group(1), insertBeforeColIndex, shift);
+            if (shiftedSqref == m.group(1)) {
+                continue;
             }
             SqrefReplacement rep = new SqrefReplacement();
             rep.startPos = m.start();
             rep.endPos = m.end();
-            rep.replacementText =
-                'sqref="' + startCol + startRow + ':' + endCol + endRow + '"';
+            rep.replacementText = 'sqref="' + shiftedSqref + '"';
             replacements.add(rep);
         }
         if (replacements.isEmpty()) {
@@ -1323,6 +1324,161 @@ public without sharing class FEC_BCH_TemplateExportService {
                 out.substring(rep.endPos);
         }
         return out;
+    }
+
+    // 29/05/2026 - Phone Update Result: dịch xm:sqref (x14 dataValidation) khi chèn __Status/__Errors
+    @TestVisible
+    private static String shiftWorksheetX14Sqrefs(
+        String xml,
+        Integer insertBeforeColIndex,
+        Integer shift
+    ) {
+        if (
+            String.isBlank(xml) ||
+            shift == null ||
+            shift < 1 ||
+            insertBeforeColIndex == null ||
+            insertBeforeColIndex < 0
+        ) {
+            return xml;
+        }
+        Pattern sqrefPat = Pattern.compile('<xm:sqref>([^<]+)</xm:sqref>');
+        Matcher m = sqrefPat.matcher(xml);
+        List<SqrefReplacement> replacements = new List<SqrefReplacement>();
+        while (m.find()) {
+            String shiftedSqref = shiftSqrefReferences(m.group(1), insertBeforeColIndex, shift);
+            if (shiftedSqref == m.group(1)) {
+                continue;
+            }
+            SqrefReplacement rep = new SqrefReplacement();
+            rep.startPos = m.start();
+            rep.endPos = m.end();
+            rep.replacementText = '<xm:sqref>' + shiftedSqref + '</xm:sqref>';
+            replacements.add(rep);
+        }
+        if (replacements.isEmpty()) {
+            return xml;
+        }
+        String out = xml;
+        for (Integer i = replacements.size() - 1; i >= 0; i--) {
+            SqrefReplacement rep = replacements[i];
+            out =
+                out.substring(0, rep.startPos) +
+                rep.replacementText +
+                out.substring(rep.endPos);
+        }
+        return out;
+    }
+
+    @TestVisible
+    private static String shiftWorksheetRowSpans(
+        String xml,
+        Integer insertBeforeColIndex,
+        Integer shift
+    ) {
+        if (
+            String.isBlank(xml) ||
+            shift == null ||
+            shift < 1 ||
+            insertBeforeColIndex == null ||
+            insertBeforeColIndex < 0
+        ) {
+            return xml;
+        }
+        Pattern spansPat = Pattern.compile('spans="(\\d+):(\\d+)"');
+        Matcher m = spansPat.matcher(xml);
+        List<SqrefReplacement> replacements = new List<SqrefReplacement>();
+        while (m.find()) {
+            Integer spanMin = Integer.valueOf(m.group(1));
+            Integer spanMax = Integer.valueOf(m.group(2));
+            Integer newMin = spanMin;
+            Integer newMax = spanMax;
+            if (spanMin - 1 >= insertBeforeColIndex) {
+                newMin = spanMin + shift;
+            }
+            if (spanMax - 1 >= insertBeforeColIndex) {
+                newMax = spanMax + shift;
+            }
+            if (newMin.equals(spanMin) && newMax.equals(spanMax)) {
+                continue;
+            }
+            SqrefReplacement rep = new SqrefReplacement();
+            rep.startPos = m.start();
+            rep.endPos = m.end();
+            rep.replacementText = 'spans="' + String.valueOf(newMin) + ':' + String.valueOf(newMax) + '"';
+            replacements.add(rep);
+        }
+        if (replacements.isEmpty()) {
+            return xml;
+        }
+        String out = xml;
+        for (Integer i = replacements.size() - 1; i >= 0; i--) {
+            SqrefReplacement rep = replacements[i];
+            out =
+                out.substring(0, rep.startPos) +
+                rep.replacementText +
+                out.substring(rep.endPos);
+        }
+        return out;
+    }
+
+    private static String shiftSqrefReferences(
+        String sqref,
+        Integer insertBeforeColIndex,
+        Integer shift
+    ) {
+        if (String.isBlank(sqref)) {
+            return sqref;
+        }
+        List<String> refs = sqref.split('\\s+');
+        List<String> shiftedRefs = new List<String>();
+        for (String refToken : refs) {
+            if (String.isBlank(refToken)) {
+                continue;
+            }
+            shiftedRefs.add(shiftRangeReference(refToken, insertBeforeColIndex, shift));
+        }
+        return shiftedRefs.isEmpty() ? sqref : String.join(shiftedRefs, ' ');
+    }
+
+    private static String shiftRangeReference(
+        String refToken,
+        Integer insertBeforeColIndex,
+        Integer shift
+    ) {
+        if (String.isBlank(refToken)) {
+            return refToken;
+        }
+        List<String> bounds = refToken.split(':');
+        if (bounds.isEmpty()) {
+            return refToken;
+        }
+        if (bounds.size() == 1) {
+            return shiftCellReference(bounds[0], insertBeforeColIndex, shift);
+        }
+        String startRef = shiftCellReference(bounds[0], insertBeforeColIndex, shift);
+        String endRef = shiftCellReference(bounds[1], insertBeforeColIndex, shift);
+        return startRef + ':' + endRef;
+    }
+
+    private static String shiftCellReference(
+        String cellRef,
+        Integer insertBeforeColIndex,
+        Integer shift
+    ) {
+        if (String.isBlank(cellRef)) {
+            return cellRef;
+        }
+        Pattern cellRefPat = Pattern.compile('^([A-Z]{1,3})(\\d+)$');
+        Matcher cellRefMat = cellRefPat.matcher(cellRef);
+        if (!cellRefMat.find()) {
+            return cellRef;
+        }
+        Integer colIdx = columnLetterToIndex(cellRefMat.group(1));
+        if (colIdx < insertBeforeColIndex) {
+            return cellRef;
+        }
+        return columnIndexToLetter(colIdx + shift) + cellRefMat.group(2);
     }
 
     private class SqrefReplacement {
@@ -1426,7 +1582,31 @@ public without sharing class FEC_BCH_TemplateExportService {
             ? forcedStyleAttr
             : FEC_ConstantCommon.STR_EMPTY;
         String newCell = buildInlineCell(addr, styleAttr, escaped);
-        return rowXml.substring(0, closeIdx) + newCell + rowXml.substring(closeIdx);
+        return insertCellInRowOrder(rowXml, newCell, colLetter, rowNum1, closeIdx);
+    }
+
+    private static String insertCellInRowOrder(
+        String rowXml,
+        String newCell,
+        String colLetter,
+        Integer rowNum1,
+        Integer closeIdx
+    ) {
+        if (String.isBlank(rowXml) || String.isBlank(newCell) || closeIdx == null || closeIdx < 0) {
+            return rowXml;
+        }
+        Integer targetColIdx = columnLetterToIndex(colLetter);
+        Pattern cellPat = Pattern.compile('(?s)<c r="([A-Z]{1,3})' + rowNum1 + '"[^>]*(?:/>|>.*?</c>)');
+        Matcher cellMat = cellPat.matcher(rowXml);
+        Integer insertPos = closeIdx;
+        while (cellMat.find()) {
+            Integer existingColIdx = columnLetterToIndex(cellMat.group(1));
+            if (existingColIdx > targetColIdx) {
+                insertPos = cellMat.start();
+                break;
+            }
+        }
+        return rowXml.substring(0, insertPos) + newCell + rowXml.substring(insertPos);
     }
 
     private static String extractStyleAttr(String cellFragment) {
@@ -1752,13 +1932,37 @@ public without sharing class FEC_BCH_TemplateExportService {
             .replace('"', '&quot;');
     }
 
-    private static String updateDimensionRef(String xml, Integer lastRow1) {
-        Pattern p = Pattern.compile('(<dimension ref=")([A-Z]+\\d+):([A-Z]+)(\\d+)(")');
-        Matcher m = p.matcher(xml);
-        if (m.find()) {
-            return m.replaceFirst('$1$2:$3' + String.valueOf(lastRow1) + '$5');
+    private static Integer resolveLastPatchedColumnIndex(List<Integer> mappedCols) {
+        Integer maxColIdx = null;
+        if (mappedCols == null) {
+            return null;
         }
-        return xml;
+        for (Integer colIdx : mappedCols) {
+            if (colIdx == null || colIdx < 0) {
+                continue;
+            }
+            if (maxColIdx == null || colIdx > maxColIdx) {
+                maxColIdx = colIdx;
+            }
+        }
+        return maxColIdx;
+    }
+
+    private static String updateDimensionRef(String xml, Integer lastRow1, Integer lastColIndex) {
+        Pattern p = Pattern.compile('(<dimension ref=")([A-Z]+)(\\d+):([A-Z]+)(\\d+)(")');
+        Matcher m = p.matcher(xml);
+        if (!m.find()) {
+            return xml;
+        }
+        String startCol = m.group(2);
+        String startRow = m.group(3);
+        String endCol = lastColIndex == null || lastColIndex < 0
+            ? m.group(4)
+            : columnIndexToLetter(lastColIndex);
+        String endRow = lastRow1 == null || lastRow1 < 1
+            ? m.group(5)
+            : String.valueOf(lastRow1);
+        return m.replaceFirst('$1' + startCol + startRow + ':' + endCol + endRow + '$6');
     }
 
 }
