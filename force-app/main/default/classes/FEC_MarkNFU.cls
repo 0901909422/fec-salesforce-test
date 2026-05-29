@@ -103,12 +103,13 @@ public with sharing class FEC_MarkNFU {
         result.nfuStartDate = FEC_CommonUltils.getXmlValue(responseNode, 'NFUFromDate');
       }
       result.nfuTillDate = FEC_CommonUltils.getXmlValue(responseNode, 'NFUTillDate');
-      
-      result.success = (result.code == FEC_ConstantCommon.SUCCESS_CODE_1 || 
-                        result.code == FEC_ConstantCommon.SUCCESS_STATUS_CODE || 
-                        result.code == FEC_ConstantCommon.SUCCESS_CODE_200 || 
-                        result.code == FEC_ConstantCommon.SUCCESS_CODE_203); 
-      
+
+      // Mark NFU API: Code 0 = success, Code 1 (and others) = failure. Code 203 handled separately in Hold Case flow.
+      result.success = (result.code == FEC_ConstantCommon.SUCCESS_STATUS_CODE);
+      if (!result.success && String.isNotBlank(result.description)) {
+        result.errorMessage = result.description;
+      }
+
     } catch (Exception ex) {
       result.errorMessage = ex.getMessage();
       result.success = false;

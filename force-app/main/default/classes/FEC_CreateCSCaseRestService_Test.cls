@@ -34,6 +34,22 @@ private class FEC_CreateCSCaseRestService_Test {
         '</soap:Body>' +
         '</soap:Envelope>';
 
+    private static final String SAMPLE_REQUEST_MULTI_ADDITIONAL_INFO =
+        '<?xml version="1.0" encoding="utf-8"?>' +
+        '<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">' +
+        '<soap:Body>' +
+        '<CreateCSCaseRequest xmlns="urn:PegaRULES:SOAP:MyCase:Services">' +
+        '<Sys><Channel>Inbound</Channel><TransactionID>TXN-MULTI-ADD-001</TransactionID><DateTime>2026-05-25T06:52:33Z</DateTime></Sys>' +
+        '<CustomerInfo><Name>Nguyen Van A</Name><PhoneNumber>0901234567</PhoneNumber><UserType>Existing</UserType><NationalID>123456789</NationalID><ContractOrAccountNumber>1234567890123456</ContractOrAccountNumber><EmailAddress>test@fecredit.com.vn</EmailAddress></CustomerInfo>' +
+        '<RequestInfo>' +
+        '<CaseType>Complaint</CaseType><RequestType>REQ</RequestType><ProductType>CARD</ProductType><Category>Request</Category><SubCategory>SubCat</SubCategory><SubCode>SubCode</SubCode><Remarks>Test Remarks</Remarks>' +
+        '<AdditionalInfo><ID>FieldA</ID><Value>ValueA</Value><ID>FieldB</ID><Value>ValueB</Value></AdditionalInfo>' +
+        '</RequestInfo>' +
+        '<CreatorInfo><CreatorEmail>' + UserInfo.getUserEmail() + '</CreatorEmail></CreatorInfo>' +
+        '</CreateCSCaseRequest>' +
+        '</soap:Body>' +
+        '</soap:Envelope>';
+
     private class MockGetCustomerListCallout implements HttpCalloutMock {
         public HTTPResponse respond(HTTPRequest req) {
             HttpResponse res = new HttpResponse();
@@ -131,6 +147,20 @@ private class FEC_CreateCSCaseRestService_Test {
     }
 
     @IsTest
+    static void testParseCreateCSCaseRequest_multipleAdditionalInfoPairsInOneNode() {
+        FEC_CreateCSCaseService.CaseRequestType req =
+            FEC_MyCaseSoapXml.parseCreateCSCaseRequest(SAMPLE_REQUEST_MULTI_ADDITIONAL_INFO);
+
+        System.assertNotEquals(null, req.RequestInfo);
+        System.assertNotEquals(null, req.RequestInfo.AdditionalInfo);
+        System.assertEquals(2, req.RequestInfo.AdditionalInfo.size());
+        System.assertEquals('FieldA', req.RequestInfo.AdditionalInfo[0].ID);
+        System.assertEquals('ValueA', req.RequestInfo.AdditionalInfo[0].Value);
+        System.assertEquals('FieldB', req.RequestInfo.AdditionalInfo[1].ID);
+        System.assertEquals('ValueB', req.RequestInfo.AdditionalInfo[1].Value);
+    }
+
+    @IsTest
     static void testRestPost_success() {
         RestRequest req = new RestRequest();
         RestResponse res = new RestResponse();
@@ -176,7 +206,12 @@ private class FEC_CreateCSCaseRestService_Test {
         RestResponse res = new RestResponse();
         req.requestUri = '/services/apexrest/MyCase/v1/CreateCSCase';
         req.httpMethod = 'POST';
-        req.requestBody = Blob.valueOf('<not-valid');
+        req.requestBody = Blob.valueOf(
+            '<?xml version="1.0" encoding="utf-8"?>' +
+            '<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">' +
+            '<soap:Body></soap:Body>' +
+            '</soap:Envelope>'
+        );
         RestContext.request = req;
         RestContext.response = res;
 

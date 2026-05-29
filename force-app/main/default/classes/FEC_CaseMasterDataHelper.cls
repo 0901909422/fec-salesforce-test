@@ -221,6 +221,41 @@ public without sharing class FEC_CaseMasterDataHelper {
     );
   }
 
+  /**
+   * GSR revert về Stage 1 từ Stage 2 — dùng để skip updateCaseNocFromSelection theo NOC Stage 2.
+   */
+  public static Boolean isGsrRevertStage2ToStage1(String caseId) {
+    if (String.isBlank(caseId)) {
+      return false;
+    }
+    List<Case> caseRows = [
+      SELECT
+        FEC_Current_Case_Stage__c,
+        FEC_Current_Case_Stage__r.Name,
+        FEC_Actual_Nature_of_Case__r.FEC_Business_Process__r.FEC_Code__c
+      FROM Case
+      WHERE Id = :caseId
+      LIMIT 1
+    ];
+    if (caseRows.isEmpty()) {
+      return false;
+    }
+    Case c = caseRows[0];
+    String bpCode = c.FEC_Actual_Nature_of_Case__r?.FEC_Business_Process__r?.FEC_Code__c;
+    if (String.isBlank(bpCode) || !bpCode.toUpperCase().contains('GSR')) {
+      return false;
+    }
+    if (!stageNameContains(c.FEC_Current_Case_Stage__r?.Name, FEC_ConstantCommon.STAGE_ONE)) {
+      return false;
+    }
+    return isGsrRevertFromPreviousStageName(
+      caseId,
+      c.FEC_Current_Case_Stage__c,
+      FEC_ConstantCommon.STAGE_TWO,
+      c.FEC_Current_Case_Stage__r.Name
+    );
+  }
+
   @TestVisible
   private static Integer extractStageNumberFromStageName(String stageName) {
     if (String.isBlank(stageName)) {
