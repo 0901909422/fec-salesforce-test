@@ -93,6 +93,7 @@
 		<members>FEC_CustomerHistoryTriggerHandler</members>
 		<members>FEC_AutoHoldCaseQueueable</members>
 		<members>FEC_AutoHoldCaseService</members>
+		<members>FEC_MCMSCARDTOCARDINQEMEA</members>
 		<members>FEC_MrcDuplicateCaseService</members>
 		<members>FEC_MrcDupCancelOnSubmitQueueJob</members>
 		<members>FEC_MrcReturnCaseService</members>
@@ -127,6 +128,7 @@
         <members>FEC_BlockCodeRoutingService</members>
         <members>FEC_CMSRewardRedeemService</members>
         <members>FEC_CMSRewardRedeemServiceTest</members>
+        <members>FEC_CMSIPPBlockWS</members>
         <members>FEC_GetMRCInfo</members>
         <members>FEC_BCH_ExportPropertyService</members>
         <members>FEC_BCH_FilterPropertyService</members>
@@ -185,6 +187,7 @@
         <members>FEC_CaseRemarksTriggerHandler</members>
         <members>FEC_CardLockUnLockController</members>
         <members>FEC_CardReplacementAddressController</members>
+        <members>FEC_CloseInterationSchedulerBatch</members>
 		<name>ApexClass</name>
 	</types>
     <types>
@@ -208,6 +211,7 @@
 	    <members>fec_COFFraudRelatedView</members>
 	    <members>fec_CommonConst</members>
 	    <members>fec_Search</members>
+	    <members>fec_SensitiveDataTable</members>
 	    <members>fec_customerAdditionalData</members>
 	    <members>fec_RepaymentSchedulePaymentHistory</members>
 	    <members>fec_UpdateAddress</members>
@@ -225,6 +229,7 @@
         <members>fec_MaskedContactTemplate</members>
 	    <members>fec_AssigmentListView</members>
 	    <members>fec_AssignmentRemarkHistoryTable</members>
+	    <members>fecInteractionInfo</members>
 	    <members>fec_AssignmentViewAll</members>
 	    <members>fec_CustomDoNotBotherViewDatatable</members>
 	    <members>fec_CreateCaseNonExistingCustomer</members>
@@ -294,6 +299,7 @@
 		<members>fec_BatchCaseCreation</members>
 		<members>fec_CardReplacementAddress</members>
 		<members>fec_NocRoutingAssignment</members>
+		<members>fec_InteractionInfoF2F_Letter</members>
 		<name>LightningComponentBundle</name>
 	</types>
     <types>
@@ -321,6 +327,7 @@
         <members>FEC_Address_Info__c.FEC_Parent_Address__c</members>
         <members>FEC_Additional_Info__c.FEC_Customer_Service_Staff_Type__c</members>
 		<members>FEC_Action_Button__c.FEC_Code__c</members>
+		<members>FEC_API_Config__mdt.FEC_Campaign_Name__c</members>
 		<members>FEC_Stage_Change__c.FEC_Code__c</members>
 		<members>FEC_Stage_Screen__c.FEC_Code__c</members>
         <members>FEC_Template__c.FEC_Is_ZNS_Template__c</members>
@@ -333,6 +340,7 @@
 		<members>FEC_Sales_Logic__c.FEC_Sequence__c</members>
 		<members>FEC_Sales_Logic__c.FEC_TSA_Code__c</members>
         <members>FEC_Do_Not_Bother__c.FEC_Case__c</members>
+        <members>FEC_Contact_List__c.FEC_Case__c</members>
 		<members>FEC_Do_Not_Bother__c.FEC_Customer_History__c</members>
         <members>FEC_Channel__c.FEC_Cancel_Case__c</members>
         <members>FEC_Channel__c.FEC_Get_Nature_Of_Case__c</members>
@@ -406,6 +414,7 @@
 		<members>FEC_General_Assignment_Record_Page</members>
 		<members>FEC_Routing_Assignment_Record_Page</members>
         <members>FEC_Do_Not_Bother_Record_Page</members>
+        <members>Service_Resource_Absence_Record_Page</members>
         <name>FlexiPage</name>
     </types>
 	<types>
@@ -482,6 +491,7 @@
         <members>FEC_BCH_Import_Rows_Invalid</members>
         <members>FEC_BCH_Import_Submitted</members>
         <members>FEC_BCH_NoDataFound</members>
+        <members>FEC_BCH_NoDataExport</members>
         <members>FEC_BCH_PropertyPlaceholder</members>
         <members>FEC_Points_Redeem_Fail_After_Max</members>
         <members>FEC_Points_Redeem_Fail_Retry</members>
@@ -539,6 +549,7 @@
 	</types>
     <types>
         <members>FEC_API_Config.FEC_MCMSCARDTOCARDINQEMEA</members>
+        <members>FEC_API_Config.FEC_CMS_IPP_BlockWS</members>
 		<members>FEC_API_Config.FEC_Search_Test_Service_Error_Account</members>
 		<members>FEC_API_Config.FEC_Get_IPP_Detail</members>
 	    <members>FEC_API_Config.FEC_MFASOUTSTANDINGAUTHINQ</members>

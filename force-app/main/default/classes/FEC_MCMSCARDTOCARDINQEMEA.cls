@@ -219,7 +219,8 @@ public with sharing class FEC_MCMSCARDTOCARDINQEMEA {
     msgIn.addChildElement('CARD_NBR', null, null).addTextNode(cardNbr);
 
     if (!String.isBlank(name)) {
-        msgIn.addChildElement('NAME', null, null).addTextNode(name);
+        String safeName = name.length() > 17 ? name.left(17) : name;
+        msgIn.addChildElement('NAME', null, null).addTextNode(safeName);
     }
 
     return doc.toXmlString();

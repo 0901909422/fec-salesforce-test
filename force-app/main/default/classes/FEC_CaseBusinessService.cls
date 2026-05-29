@@ -2317,13 +2317,16 @@ public without sharing class FEC_CaseBusinessService {
             finalStatusBeforeSubmit,
             (String) params.get('teamUserGroup')
           );
-          System.enqueueJob(
-            new FEC_MrcDupCancelOnSubmitQueueJob(
-              caseId,
-              mrcCustomerConfirmation,
-              mrcHandlingOption
-            )
-          );
+          // 28/05/2026 15:33 codex - tránh Too many queueable jobs khi import batch chain queueable
+          if (!FEC_BatchCaseHandlingImportService.isBatchImportApplyInProgress()) {
+            System.enqueueJob(
+              new FEC_MrcDupCancelOnSubmitQueueJob(
+                caseId,
+                mrcCustomerConfirmation,
+                mrcHandlingOption
+              )
+            );
+          }
           return null;
         }
         // tungnm37 thêm: COF/GSR - không đổi owner, chỉ tạo Assignment + Case Remarks + Routing Action History

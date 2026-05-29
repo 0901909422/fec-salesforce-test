@@ -7,7 +7,7 @@ public without sharing class FEC_BatchCaseCreationScheduler implements Schedulab
 
   public void execute(SchedulableContext context) {
     FEC_BatchCaseCreationController.processAllPendingImports();
-  }
+  } 
 
   /** Legacy: batch job (cần class trong permission set). Ưu tiên processAllPendingImports. */
   public static Id runProcessBatchNow() {

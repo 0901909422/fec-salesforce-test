@@ -13,13 +13,13 @@ public without sharing class FEC_ContractClosureController {
     private static final String FLD_DELIVERY = 'FEC_Delivery_Option_2__c';
     private static final String FLD_RECIPIENT_NAME = 'FEC_Recipient_Name__c';
     private static final String FLD_RECIPIENT_PHONE = 'FEC_Recipient_Phone_Number__c';
-    private static final String FLD_TEMP_EMAIL = 'FEC_Temporary_Email__c';
     private static final String OBJ_CONTACT_LIST = 'FEC_Contact_List__c';
     private static final String FLD_CL_HISTORY = 'FEC_Customer_History__c';
     private static final String FLD_CL_COMM_TYPE = 'FEC_Communication_Type__c';
     private static final String FLD_CL_CHANNEL = 'FEC_Channel__c';
     private static final String FLD_CL_CONTACT_STRING = 'FEC_Contact_String__c';
     private static final String FLD_CASE_CHANNEL = 'FEC_Channel__c';
+    private static String contactListCaseFieldApiCache;
 
     private static final String OBJ_ADDITIONAL_INFO = 'FEC_Additional_Info__c';
     private static final String FLD_AI_VERIFY = 'FEC_Verify_Information__c';
@@ -838,6 +838,7 @@ public without sharing class FEC_ContractClosureController {
         }
     }
 
+    // 2026-05-28 14:59 UTC+7 - linhdev: Đọc email snapshot theo từng Case từ FEC_Contact_List__c.
     private static String loadTemporaryEmailFromContactList(Case caseRow) {
         if (caseRow == null) {
             return null;
@@ -845,40 +846,51 @@ public without sharing class FEC_ContractClosureController {
         if (!Schema.sObjectType.FEC_Contact_List__c.isAccessible()) {
             return null;
         }
+        String caseFieldApi = resolveContactListCaseFieldApi();
+        if (String.isBlank(caseFieldApi)) {
+            return null;
+        }
         Map<String, Schema.SObjectField> clf = Schema.SObjectType.FEC_Contact_List__c.fields.getMap();
-        String fk = flc(FLD_TEMP_EMAIL);
-        if (!clf.containsKey(fk) || !clf.get(fk).getDescribe().isAccessible()) {
+        String fk = flc(FLD_CL_CONTACT_STRING);
+        String caseFk = flc(caseFieldApi);
+        if (
+            !clf.containsKey(fk) ||
+            !clf.get(fk).getDescribe().isAccessible() ||
+            !clf.containsKey(caseFk) ||
+            !clf.get(caseFk).getDescribe().isAccessible()
+        ) {
             return null;
         }
-        List<FEC_Contact_List__c> matches = FEC_UpdateCustomerContact.getMatchingContactList(
-            caseRow,
-            FEC_UpdateCustomerContact.EMAIL_UPDATE
-        );
-        if (matches.isEmpty()) {
-            return null;
-        }
-        Id clId = matches[0].Id;
         List<SObject> teRows = Database.query(
             'SELECT Id, ' +
-                FLD_TEMP_EMAIL +
+                FLD_CL_CONTACT_STRING +
                 ' FROM ' +
                 OBJ_CONTACT_LIST +
-                ' WHERE Id = :clId LIMIT 1'
+                ' WHERE ' + caseFieldApi + ' = :caseRow.Id' +
+                ' AND ' + FLD_CL_COMM_TYPE + ' = :FEC_ConstantCommon.EMAIL' +
+                ' ORDER BY LastModifiedDate DESC LIMIT 1'
         );
         if (teRows.isEmpty()) {
             return null;
         }
-        return (String) teRows[0].get(FLD_TEMP_EMAIL);
+        return (String) teRows[0].get(FLD_CL_CONTACT_STRING);
     }
 
     @TestVisible
+    // 2026-05-28 14:59 UTC+7 - linhdev: Upsert email snapshot theo từng Case, không fallback logic cũ.
     private static void persistTemporaryEmailToContactList(Id caseId, SavePayloadDTO p) {
+        String caseFieldApi = resolveContactListCaseFieldApi();
+        if (String.isBlank(caseFieldApi)) {
+            return;
+        }
         Map<String, Schema.SObjectField> clf = Schema.SObjectType.FEC_Contact_List__c.fields.getMap();
-        String fk = flc(FLD_TEMP_EMAIL);
-        if (!clf.containsKey(fk)) {
+        String fk = flc(FLD_CL_CONTACT_STRING);
+        String caseFk = flc(caseFieldApi);
+        if (!clf.containsKey(fk) || !clf.containsKey(caseFk)) {
             return;
         }
         Schema.DescribeFieldResult fdTe = clf.get(fk).getDescribe();
+        Schema.DescribeFieldResult fdCase = clf.get(caseFk).getDescribe();
         List<SObject> caseRows = Database.query(
             'SELECT Id, FEC_Account_or_Contract__c, FEC_Channel__c FROM Case WHERE Id = :caseId LIMIT 1'
         );
@@ -890,16 +902,19 @@ public without sharing class FEC_ContractClosureController {
         if (String.isBlank(te)) {
             te = null;
         }
-        List<FEC_Contact_List__c> matches = FEC_UpdateCustomerContact.getMatchingContactList(
-            caseRec,
-            FEC_UpdateCustomerContact.EMAIL_UPDATE
+        List<SObject> matches = Database.query(
+            'SELECT Id, ' + FLD_CL_CONTACT_STRING +
+            ' FROM ' + OBJ_CONTACT_LIST +
+            ' WHERE ' + caseFieldApi + ' = :caseRec.Id' +
+            ' AND ' + FLD_CL_COMM_TYPE + ' = :FEC_ConstantCommon.EMAIL' +
+            ' ORDER BY LastModifiedDate DESC LIMIT 1'
         );
         if (!matches.isEmpty()) {
             if (!Schema.sObjectType.FEC_Contact_List__c.isUpdateable() || !fdTe.isUpdateable()) {
                 return;
             }
             SObject row = matches[0];
-            row.put(FLD_TEMP_EMAIL, te);
+            row.put(FLD_CL_CONTACT_STRING, te);
             SObjectAccessDecision dec = Security.stripInaccessible(
                 AccessType.UPDATABLE,
                 new List<SObject>{ row }
@@ -909,7 +924,11 @@ public without sharing class FEC_ContractClosureController {
                 update as user safe;
             }
         } else if (te != null) {
-            if (!Schema.sObjectType.FEC_Contact_List__c.isCreateable() || !fdTe.isCreateable()) {
+            if (
+                !Schema.sObjectType.FEC_Contact_List__c.isCreateable() ||
+                !fdTe.isCreateable() ||
+                !fdCase.isCreateable()
+            ) {
                 return;
             }
             Id histId = caseRec.FEC_Account_or_Contract__c;
@@ -920,27 +939,8 @@ public without sharing class FEC_ContractClosureController {
             n.put(FLD_CL_HISTORY, histId);
             n.put(FLD_CL_CHANNEL, caseRec.FEC_Channel__c);
             n.put(FLD_CL_COMM_TYPE, FEC_ConstantCommon.EMAIL);
-            Map<String, Schema.SObjectField> clfAll = Schema.SObjectType.FEC_Contact_List__c.fields.getMap();
-            if (
-                clfAll.containsKey(flc(FLD_CL_CONTACT_STRING)) &&
-                clfAll.get(flc(FLD_CL_CONTACT_STRING)).getDescribe().isCreateable()
-            ) {
-                if (
-                    Schema.sObjectType.FEC_Customer_History__c.isAccessible() &&
-                    Schema.SObjectType.FEC_Customer_History__c.fields.FEC_Email__c.isAccessible()
-                ) {
-                    List<FEC_Customer_History__c> hrs = [
-                        SELECT FEC_Email__c
-                        FROM FEC_Customer_History__c
-                        WHERE Id = :histId
-                        LIMIT 1
-                    ];
-                    if (!hrs.isEmpty() && String.isNotBlank(hrs[0].FEC_Email__c)) {
-                        n.put(FLD_CL_CONTACT_STRING, hrs[0].FEC_Email__c);
-                    }
-                }
-            }
-            n.put(FLD_TEMP_EMAIL, te);
+            n.put(caseFieldApi, caseRec.Id);
+            n.put(FLD_CL_CONTACT_STRING, te);
             SObjectAccessDecision decIns = Security.stripInaccessible(
                 AccessType.CREATABLE,
                 new List<SObject>{ n }
@@ -950,6 +950,45 @@ public without sharing class FEC_ContractClosureController {
                 insert as user toIns;
             }
         }
+    }
+
+    // 2026-05-28 14:59 UTC+7 - linhdev: Resolve field lookup từ FEC_Contact_List__c sang Case.
+    private static String resolveContactListCaseFieldApi() {
+        if (String.isNotBlank(contactListCaseFieldApiCache)) {
+            return contactListCaseFieldApiCache;
+        }
+        Map<String, Schema.SObjectField> fm = Schema.SObjectType.FEC_Contact_List__c.fields.getMap();
+        for (String api : new List<String>{ 'FEC_Case__c', 'Case__c', 'FEC_Interaction__c' }) {
+            Schema.SObjectField sf = fm.get(flc(api));
+            if (sf == null) {
+                continue;
+            }
+            Schema.DescribeFieldResult d = sf.getDescribe();
+            if (!d.isAccessible()) {
+                continue;
+            }
+            if (d.getType() == DisplayType.REFERENCE) {
+                for (Schema.SObjectType refType : d.getReferenceTo()) {
+                    if (refType.getDescribe().getName() == OBJ_CASE) {
+                        contactListCaseFieldApiCache = d.getName();
+                        return contactListCaseFieldApiCache;
+                    }
+                }
+            }
+        }
+        for (String apiLower : fm.keySet()) {
+            Schema.DescribeFieldResult d = fm.get(apiLower).getDescribe();
+            if (!d.isAccessible() || d.getType() != DisplayType.REFERENCE) {
+                continue;
+            }
+            for (Schema.SObjectType refType : d.getReferenceTo()) {
+                if (refType.getDescribe().getName() == OBJ_CASE) {
+                    contactListCaseFieldApiCache = d.getName();
+                    return contactListCaseFieldApiCache;
+                }
+            }
+        }
+        return null;
     }
 
     private static void persistAdditionalInfoRow(Id caseId, Id rowId, String verify, String callback) {
