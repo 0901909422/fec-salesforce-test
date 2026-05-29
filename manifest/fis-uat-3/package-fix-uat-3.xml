@@ -172,6 +172,8 @@
 		<members>FEC_BatchDataCreationController</members>
 		<members>FEC_BatchImportCommon</members>
 		<members>FEC_BCH_IncorrectPaymentTemplateWriter</members>
+		<members>FEC_BCH_AssignmentRouteToService</members>
+		<members>FEC_BCH_AssignmentUpdateService</members>
 		<members>FEC_BCH_ImportRoutingResolver</members>
 		<members>FEC_BCH_PicklistTranslationCtrl</members>
 		<members>FEC_BatchCaseHandlingImportProfile</members>
