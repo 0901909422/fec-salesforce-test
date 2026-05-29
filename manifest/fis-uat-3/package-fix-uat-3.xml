@@ -191,6 +191,7 @@
         <members>FEC_CardReplacementAddressController</members>
         <members>FEC_CloseInterationSchedulerBatch</members>
         <members>FEC_IPPScheduleController</members>
+        <members>FEC_ApplicationsListController</members>
 		<name>ApexClass</name>
 	</types>
     <types>

@@ -262,6 +262,7 @@
         <members>FEC_CustomerIntegrationService</members>
         <members>FEC_LookupController</members>
         <members>FEC_IPPScheduleController</members>
+        <members>FEC_ApplicationsListController</members>
         <name>ApexClass</name>
     </types>
 	<types>
