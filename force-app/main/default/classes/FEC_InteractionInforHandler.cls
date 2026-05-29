@@ -1,8 +1,9 @@
 public without sharing class FEC_InteractionInforHandler {
-    @AuraEnabled(cacheable=true)
+    @AuraEnabled(cacheable=false)
     public static Case getInteraction(Id recordId) {
         List<Case> caseList = [
         SELECT FEC_Interaction_Masked_Phone__c,
+               FEC_Phone_Number__c,
                FEC_Channel__c,
                FEC_Interaction_Subchannel__c,
                FEC_Created_On__c,
@@ -24,7 +25,7 @@ public without sharing class FEC_InteractionInforHandler {
         FROM Case
         WHERE Id = :recordId
     ];
-        
+
         return caseList.isEmpty() ? null : caseList[0];
     }
     
