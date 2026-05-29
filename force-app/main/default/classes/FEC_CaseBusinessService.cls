@@ -539,6 +539,7 @@ public without sharing class FEC_CaseBusinessService {
       String businessProcessId = (String) selectedNatureOfCase.get(
         'FEC_Business_Process__c'
       );
+      selectedCase.FEC_Business_Process__c = businessProcessId;
 
       SObject businessObj = selectedNatureOfCase.getSObject(
         'FEC_Business_Process__r'
