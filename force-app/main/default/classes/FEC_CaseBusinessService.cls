@@ -2364,7 +2364,15 @@ public without sharing class FEC_CaseBusinessService {
               revertNocId
             );
           }
-          FEC_CofGsrRoutePrepareService.syncActualNatureToMatchCurrentCaseStage(caseId);
+          if (isGsrStage2ToStage1Revert) {
+            FEC_CofGsrRoutePrepareService.restoreGsrStage1BaselineAfterStage2Revert(
+              caseId
+            );
+          } else {
+            FEC_CofGsrRoutePrepareService.syncActualNatureToMatchCurrentCaseStage(
+              caseId
+            );
+          }
           return null;
         }
         when RECALL {
