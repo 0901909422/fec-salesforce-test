@@ -2101,6 +2101,72 @@ public without sharing class FEC_CaseBusinessService {
   }
 
   /**
+   * Route to lần 2+ tới cùng queue đích: gán {@code FEC_Perform_User__c} của bản ghi history
+   * Route to / Revert mới nhất đã chuyển case về Owner hiện tại (queue/user nguồn).
+   * Lần 1 tới queue đích vẫn giữ queue từ Stage Change.
+   */
+  private static String applyRepeatRouteToUserOwner(
+    String caseId,
+    Id currentOwnerId,
+    String targetOwnerIdStr
+  ) {
+    if (String.isBlank(caseId) || String.isBlank(targetOwnerIdStr) || currentOwnerId == null) {
+      return targetOwnerIdStr;
+    }
+    Id targetOwnerId;
+    try {
+      targetOwnerId = Id.valueOf(targetOwnerIdStr.trim());
+    } catch (Exception e) {
+      return targetOwnerIdStr;
+    }
+    if (!isQueueOwnerId(targetOwnerId)) {
+      return targetOwnerIdStr;
+    }
+    if (!hasPriorRouteToDestinationQueue(caseId, targetOwnerId)) {
+      return targetOwnerIdStr;
+    }
+    Id performerId = findLatestPerformerWhoRoutedToOwner(caseId, currentOwnerId);
+    return performerId != null ? String.valueOf(performerId) : targetOwnerIdStr;
+  }
+
+  private static Boolean hasPriorRouteToDestinationQueue(
+    String caseId,
+    Id destinationQueueId
+  ) {
+    if (String.isBlank(caseId) || destinationQueueId == null) {
+      return false;
+    }
+    List<FEC_Routing_Action_History__c> prior = [
+      SELECT Id
+      FROM FEC_Routing_Action_History__c
+      WHERE
+        FEC_Case__c = :caseId
+        AND FEC_Routing_Action__c IN :new List<String>{ ROUTE_TO, REVERT }
+        AND FEC_Updated_User_Queue_ID__c = :String.valueOf(destinationQueueId)
+      LIMIT 1
+    ];
+    return !prior.isEmpty();
+  }
+
+  private static Id findLatestPerformerWhoRoutedToOwner(String caseId, Id ownerId) {
+    if (String.isBlank(caseId) || ownerId == null) {
+      return null;
+    }
+    List<FEC_Routing_Action_History__c> hist = [
+      SELECT FEC_Perform_User__c
+      FROM FEC_Routing_Action_History__c
+      WHERE
+        FEC_Case__c = :caseId
+        AND FEC_Routing_Action__c IN :new List<String>{ ROUTE_TO, REVERT }
+        AND FEC_Updated_User_Queue_ID__c = :String.valueOf(ownerId)
+        AND FEC_Perform_User__c != NULL
+      ORDER BY CreatedDate DESC, Id DESC
+      LIMIT 1
+    ];
+    return hist.isEmpty() ? null : hist[0].FEC_Perform_User__c;
+  }
+
+  /**
    * Khớp công thức Case.FEC_Final_Status__c (Pending → "Pending - " + FEC_Team__c, không Pending → Status).
    * Dùng cho trigger Change Owner khi cần snapshot từ Status + FEC_Team__c.
    * Author: ToanND61 (10/04/2026)
@@ -2766,6 +2832,8 @@ public without sharing class FEC_CaseBusinessService {
       queueId = applyFrontlineMainQueueIfUserOwner(queueId);
       //thangtv: fallback Queue->latest history updated user mapping
       queueId = applyUserOwnerFromHistoryWhenCurrentOwnerIsQueue(caseId, queueId);
+      // Route to lần 2+ cùng queue đích: gán user đã route về owner hiện tại
+      queueId = applyRepeatRouteToUserOwner(caseId, currentOwnerId, queueId);
 
       queueId = FEC_BlockCodeRoutingService.applyRouteQueueOverrideIfApplicable(
         updatedCase,
