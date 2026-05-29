@@ -537,9 +537,11 @@ public without sharing class FEC_CaseEditNOCController {
       return;
     }
 
+    Id currentUserId = UserInfo.getUserId();
     List<Case> caselst = [
       SELECT
         Id,
+        OwnerId,
         FEC_Is_Submited__c,
         FEC_IsImported__c,
         FEC_Is_Call_API_Success__c,
@@ -556,6 +558,9 @@ public without sharing class FEC_CaseEditNOCController {
     }
 
     Case c = caselst[0];
+    if (c.OwnerId != currentUserId) {
+      throw new AuraHandledException(System.Label.FEC_MSG_Edit_Owner_Only);
+    }
     if (
       c.FEC_Is_Submited__c == true ||
       c.FEC_Is_Call_API_Success__c == true ||
