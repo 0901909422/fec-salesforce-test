@@ -2282,8 +2282,14 @@ export default class Fec_BatchCaseHandling extends LightningElement {
       const groupKeys = Object.keys(groups);
       for (let i = 0; i < groupKeys.length; i += 1) {
         const groupItem = groups[groupKeys[i]];
-        const tmplMeta = groupItem?.templateMeta || {};
         const fallbackBp = groupItem?.fallbackBusinessProcessCode || "Other";
+        // 29/05/2026 11:30 linhdev - re-lookup template meta sau ensureExportTemplateMetaForRows (tránh snapshot rỗng NO_TEMPLATE_CV)
+        const snapshotMeta = groupItem?.templateMeta || {};
+        const refreshedMeta = this.lookupBpTemplateMeta(fallbackBp);
+        const tmplMeta = {
+          ...snapshotMeta,
+          ...refreshedMeta
+        };
         const fileName = this.resolveExportFileName(
           tmplMeta.templateName,
           fallbackBp
