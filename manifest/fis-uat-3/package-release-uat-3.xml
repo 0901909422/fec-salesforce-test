@@ -1169,6 +1169,7 @@
         <members>FEC_Batch_Case_Handling_Import_Err_Both_Routing_Actions</members>
         <members>FEC_Batch_Case_Handling_Import_Err_Missing_Routing_Or_Assignment_Routing</members>
         <members>FEC_Batch_Case_Handling_Import_Err_Routing_Action_Invalid</members>
+        <members>FEC_Batch_Case_Handling_Import_Err_Routing_Action_Unavailable_Assignment</members>
         <members>FEC_Batch_Case_Handling_Import_Err_Assignment_Routing_Resolve_Only</members>
         <members>FEC_Batch_Case_Handling_Import_Err_Assignment_Routing_Invalid</members>
         <members>FEC_Batch_Case_Handling_Import_Err_Missing_Routing_Action</members>
