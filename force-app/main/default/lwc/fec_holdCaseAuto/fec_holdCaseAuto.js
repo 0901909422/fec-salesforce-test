@@ -30,9 +30,6 @@ import FEC_MSG_HOLD_CASE_AUTO_FAIL_RETRY from "@salesforce/label/c.FEC_MSG_HOLD_
 import FEC_MSG_ERROR from "@salesforce/label/c.FEC_MSG_ERROR";
 import { formatDateTimeVN } from "c/fec_CommonUtils";
 import { STR_EMPTY } from "c/fec_CommonConst";
-import USER_ID from "@salesforce/user/Id";
-import CREATED_BY_ID from "@salesforce/schema/Case.CreatedById";
-import FEC_IS_SUBMITED from "@salesforce/schema/Case.FEC_Is_Submited__c";
 
 /** Giới hạn retry — đọc Case.FEC_Process_Action_Count__c (giống Pin Reset). */
 const MAX_HOLD_CASE_CLICKS = 3;
@@ -46,8 +43,6 @@ const CASE_FIELDS = [
   FEC_NFU_EXPIRY_DATE,
   FEC_NFU_REASON,
   FEC_TEAM,
-  CREATED_BY_ID,
-  FEC_IS_SUBMITED,
   CASE_STATUS,
   CASE_IS_CLOSED,
 ];
@@ -411,13 +406,9 @@ export default class Fec_holdCaseAuto extends LightningElement {
     return this.isEdit === true || this.isEdit === "true";
   }
 
-  /** User tạo Case — sau Submit không hiện nút Hold Case (CS Support owner vẫn thấy). */
+  /** User tạo Case có thể retry Hold Case ở Stage 2 khi còn đủ điều kiện. */
   get isCaseCreatorAfterSubmit() {
-    if (getFieldValue(this.wiredCaseResult?.data, FEC_IS_SUBMITED) !== true) {
-      return false;
-    }
-    const createdById = getFieldValue(this.wiredCaseResult?.data, CREATED_BY_ID);
-    return !!createdById && !!USER_ID && createdById === USER_ID;
+    return false;
   }
 
   /**
