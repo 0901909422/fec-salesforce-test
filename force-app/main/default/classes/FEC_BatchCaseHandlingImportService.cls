@@ -526,6 +526,9 @@ public without sharing class FEC_BatchCaseHandlingImportService {
         Integer inputtedRemarksIndex = findHeaderIndex(sourceHeaders, LABEL_INPUTTED_REMARKS);
         Integer cpAssessmentIndex = findHeaderIndex(sourceHeaders, LABEL_CP_ASSESSMENT);
         List<Integer> mappedColumnIndexes = buildResultMappedColumnIndexes(
+            sourceContentVersionId,
+            sourceHeaderRowIndex,
+            sourceSheetName,
             sourceHeaders,
             rowResults
         );
@@ -836,6 +839,9 @@ public without sharing class FEC_BatchCaseHandlingImportService {
     }
 
     private static List<Integer> buildResultMappedColumnIndexes(
+        Id sourceContentVersionId,
+        Integer sourceHeaderRowIndex,
+        String sourceSheetName,
         List<String> sourceHeaders,
         List<FEC_BatchCaseHandlingImportRow> rowResults
     ) {
@@ -843,6 +849,19 @@ public without sharing class FEC_BatchCaseHandlingImportService {
         if (sourceHeaders == null || sourceHeaders.isEmpty()) {
             return mapped;
         }
+        // 30/05/2026 11:30 linhdev - ưu tiên map từ file import gốc (tránh lệch cột khi LWC gửi sai index)
+        if (sourceContentVersionId != null) {
+            mapped = FEC_BCH_TemplateExportService.resolveMappedColumnIndexesForHeaders(
+                sourceContentVersionId,
+                sourceHeaderRowIndex == null ? 0 : sourceHeaderRowIndex,
+                sourceSheetName,
+                sourceHeaders
+            );
+        }
+        if (!mapped.isEmpty() && mapped.size() == sourceHeaders.size()) {
+            return mapped;
+        }
+        mapped = new List<Integer>();
         List<Integer> worksheetCols = null;
         if (rowResults != null) {
             for (FEC_BatchCaseHandlingImportRow row : rowResults) {
@@ -1172,20 +1191,29 @@ public without sharing class FEC_BatchCaseHandlingImportService {
                             if (!resolvedRoutingErrs.contains(System.Label.FEC_Batch_Case_Handling_Import_Err_Routing_Action_Invalid)) {
                                 errs.add(System.Label.FEC_Batch_Case_Handling_Import_Err_Routing_Action_Invalid);
                             }
-                        } else if (!isResolvedOrRejectCaseRouting(caseMethod)) {
+                        //PhongBT 29/05/26: thêm update vào datagroup cho Assignment Routing Action
+                        } else if (
+                            !isResolvedOrRejectCaseRouting(caseMethod) &&
+                            !isCofGsrImportUpdateAction(true, rr.routingAction)
+                        ) {
                             errs.add(System.Label.FEC_Batch_Case_Handling_Import_Err_Assignment_Routing_Resolve_Only);
                         }
                     }
+                    //PhongBT 29/05/26: thêm update vào datagroup cho Assignment Routing Action
                     if (String.isNotBlank(rr.assignmentRoutingAction) && String.isBlank(rr.actionButtonId)) {
-                        errs.add(System.Label.FEC_Batch_Case_Handling_Import_Err_Assignment_Routing_Invalid);
+                        if (!isCofGsrImportUpdateAction(true, rr.assignmentRoutingAction)) {
+                            errs.add(System.Label.FEC_Batch_Case_Handling_Import_Err_Assignment_Routing_Invalid);
+                        }
                     }
                 } else {
                     if (String.isBlank(rr.routingAction) && String.isBlank(rr.assignmentRoutingAction)) {
                         errs.add(System.Label.FEC_Batch_Case_Handling_Import_Err_Missing_Routing_Action);
+                    //PhongBT 29/05/26: thêm update vào datagroup cho Assignment Routing Action
                     } else if (
                         String.isBlank(rr.routingAction) &&
                         String.isNotBlank(rr.assignmentRoutingAction) &&
-                        String.isBlank(rr.actionButtonId)
+                        String.isBlank(rr.actionButtonId) &&
+                        !isCofGsrImportUpdateAction(true, rr.assignmentRoutingAction)
                     ) {
                         errs.add(System.Label.FEC_Batch_Case_Handling_Import_Err_Assignment_Routing_Invalid);
                     }
@@ -1907,6 +1935,15 @@ public without sharing class FEC_BatchCaseHandlingImportService {
             && String.isBlank(rr.routingAction);
     }
 
+    //PhongBT 29/05/26: thêm update vào datagroup cho Assignment Routing Action
+    private static Boolean isCofGsrImportUpdateAction(Boolean cofOrGsr, String routingLabel) {
+        if (cofOrGsr != true || String.isBlank(routingLabel)) {
+            return false;
+        }
+        RoutingParseResult parsed = parseRoutingPattern(routingLabel.trim());
+        return parsed != null && parsed.methodKey == FEC_CaseBusinessService.UPDATEACTION;
+    }
+
     private static Map<String, String> resolveRouteToParams(
         Id currentStageId,
         RoutingParseResult parsed,
@@ -2298,7 +2335,10 @@ public without sharing class FEC_BatchCaseHandlingImportService {
             errs.add(routingInvalidLabel);
             return errs;
         }
-        if (FEC_BCH_ImportRoutingResolver.requiresStageScreenMatch(resolved.methodKey) &&
+        //PhongBT 29/05/26: thêm update vào datagroup cho Assignment Routing Action
+        Boolean skipDatagroupForUpdate = isCofGsrImportUpdateAction(cofOrGsr, primaryLabel);
+        if (!skipDatagroupForUpdate &&
+            FEC_BCH_ImportRoutingResolver.requiresStageScreenMatch(resolved.methodKey) &&
             stageId != null &&
             resolved.matchedStageScreen != true) {
             errs.add(routingInvalidLabel);
@@ -2311,9 +2351,15 @@ public without sharing class FEC_BatchCaseHandlingImportService {
         if (cofOrGsr == true && String.isNotBlank(rr.routingAction) && String.isNotBlank(rr.assignmentId)) {
             FEC_BCH_ImportRoutingResolver.ResolvedRouting caseResolved =
                 FEC_BCH_ImportRoutingResolver.resolve(stageId, rr.routingAction);
+            //PhongBT 29/05/26: thêm update vào datagroup cho Assignment Routing Action
             if (caseResolved == null || String.isBlank(caseResolved.methodKey)) {
-                errs.add(System.Label.FEC_Batch_Case_Handling_Import_Err_Routing_Action_Invalid);
-            } else if (!isResolvedOrRejectCaseRouting(caseResolved.methodKey)) {
+                if (!isCofGsrImportUpdateAction(cofOrGsr, rr.routingAction)) {
+                    errs.add(System.Label.FEC_Batch_Case_Handling_Import_Err_Routing_Action_Invalid);
+                }
+            } else if (
+                !isResolvedOrRejectCaseRouting(caseResolved.methodKey) &&
+                !isCofGsrImportUpdateAction(cofOrGsr, rr.routingAction)
+            ) {
                 errs.add(System.Label.FEC_Batch_Case_Handling_Import_Err_Assignment_Routing_Resolve_Only);
             }
         }
@@ -2322,9 +2368,11 @@ public without sharing class FEC_BatchCaseHandlingImportService {
             String.isBlank(rr.routingAction)) {
             FEC_BCH_ImportRoutingResolver.ResolvedRouting asgResolved =
                 FEC_BCH_ImportRoutingResolver.resolve(stageId, rr.assignmentRoutingAction, true);
-            if (asgResolved == null || String.isBlank(asgResolved.methodKey)) {
+            //PhongBT 29/05/26: thêm update vào datagroup cho Assignment Routing Action
+            if ((asgResolved == null || String.isBlank(asgResolved.methodKey)) &&
+                !isCofGsrImportUpdateAction(cofOrGsr, rr.assignmentRoutingAction)) {
                 errs.add(System.Label.FEC_Batch_Case_Handling_Import_Err_Assignment_Routing_Invalid);
-            } else {
+            } else if (asgResolved != null) {
                 applyResolvedRoutingToRow(rr, asgResolved);
             }
         }
