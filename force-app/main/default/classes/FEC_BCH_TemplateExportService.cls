@@ -81,14 +81,9 @@ public without sharing class FEC_BCH_TemplateExportService {
                 return fail(out, 'ROW_LIMIT', String.valueOf(dataRows.size()));
             }
             String worksheetXml = blobToUtf8(entryByPath.get(worksheetPath));
-            Integer templateDataRow1 = resolveTemplateDataRowFromValidations(worksheetXml);
+            // 28/05/2026 17:45 linhdev - tìm dòng data mẫu linh hoạt (tránh TEMPLATE_ROW_MISSING → mất format Result)
+            Integer templateDataRow1 = resolveTemplateDataRowNum(worksheetXml, headerRowIndex);
             if (templateDataRow1 == null || templateDataRow1 < 1) {
-                templateDataRow1 = headerRowIndex + 2;
-            }
-            if (String.isBlank(extractRowXml(worksheetXml, templateDataRow1))) {
-                templateDataRow1 = headerRowIndex + 1;
-            }
-            if (String.isBlank(extractRowXml(worksheetXml, templateDataRow1))) {
                 return fail(out, 'TEMPLATE_ROW_MISSING', 'headerRow=' + headerRowIndex);
             }
             Integer insertBefore = req.insertColumnsBeforeIndex;
@@ -98,13 +93,22 @@ public without sharing class FEC_BCH_TemplateExportService {
             List<List<String>> insertValues = req.insertColumnValues == null
                 ? new List<List<String>>()
                 : req.insertColumnValues;
+            ResultInsertColumnStyles resultColStyles = null;
             if (insertBefore != null && insertBefore >= 0 && !insertHeaders.isEmpty()) {
+                resultColStyles = buildResultInsertColumnStyles(
+                    entryByPath,
+                    worksheetXml,
+                    headerRowIndex + 1,
+                    templateDataRow1,
+                    insertBefore
+                );
                 worksheetXml = insertPropertyColumnsInWorksheet(
                     worksheetXml,
                     headerRowIndex + 1,
                     templateDataRow1,
                     insertBefore,
-                    insertHeaders
+                    insertHeaders,
+                    resultColStyles
                 );
                 mappedCols = shiftMappedColumnIndexes(mappedCols, insertBefore, insertHeaders.size());
                 dataRows = mergeInsertColumnValues(
@@ -123,7 +127,8 @@ public without sharing class FEC_BCH_TemplateExportService {
                 workbookXml,
                 workbookRelsXml,
                 insertBefore,
-                insertHeaders.size()
+                insertHeaders.size(),
+                resultColStyles
             );
             entryByPath.put(worksheetPath, Blob.valueOf(patchedXml));
             Blob outBlob = writeZipEntries(entryByPath, sourceBlob);
@@ -329,6 +334,12 @@ public without sharing class FEC_BCH_TemplateExportService {
         Boolean lookupMatchAny;
     }
 
+    private class ResultInsertColumnStyles {
+        String headerCellStyleAttr;
+        String dataStatusStyleAttr;
+        String dataErrorsWrapStyleAttr;
+    }
+
     private static String patchWorksheetXml(
         String xml,
         Integer headerRowIndex,
@@ -338,24 +349,19 @@ public without sharing class FEC_BCH_TemplateExportService {
         String workbookXml,
         String workbookRelsXml,
         Integer insertBeforeColIndex,
-        Integer insertedColumnCount
+        Integer insertedColumnCount,
+        ResultInsertColumnStyles resultColStyles
     ) {
         if (String.isBlank(xml)) {
             return xml;
         }
-        Integer templateDataRow1 = resolveTemplateDataRowFromValidations(xml);
-        if (templateDataRow1 == null || templateDataRow1 < 1) {
-            templateDataRow1 = headerRowIndex + 2;
-        }
+        // 28/05/2026 17:45 linhdev - đồng bộ logic resolve dòng data với exportWorkbook (giữ format sheet)
+        Integer templateDataRow1 = resolveTemplateDataRowNum(xml, headerRowIndex);
         Integer rowCount = dataRows == null ? 0 : dataRows.size();
-        if (rowCount < 1) {
+        if (rowCount < 1 || templateDataRow1 == null || templateDataRow1 < 1) {
             return xml;
         }
         String templateRowXml = extractRowXml(xml, templateDataRow1);
-        if (String.isBlank(templateRowXml)) {
-            templateDataRow1 = headerRowIndex + 1;
-            templateRowXml = extractRowXml(xml, templateDataRow1);
-        }
         if (String.isBlank(templateRowXml)) {
             return xml;
         }
@@ -363,7 +369,18 @@ public without sharing class FEC_BCH_TemplateExportService {
         for (Integer i = 0; i < rowCount; i++) {
             Integer rowNum1 = templateDataRow1 + i;
             List<String> values = dataRows[i];
-            builtRows.add(buildDataRowXml(templateRowXml, templateDataRow1, rowNum1, mappedCols, values));
+            builtRows.add(
+                buildDataRowXml(
+                    templateRowXml,
+                    templateDataRow1,
+                    rowNum1,
+                    mappedCols,
+                    values,
+                    resultColStyles,
+                    insertBeforeColIndex,
+                    insertedColumnCount
+                )
+            );
         }
         Integer keepRowsUntil = headerRowIndex + 1;
         if (templateDataRow1 != null && templateDataRow1 > 1 && templateDataRow1 - 1 > keepRowsUntil) {
@@ -376,17 +393,22 @@ public without sharing class FEC_BCH_TemplateExportService {
         );
         Integer lastRow1 = templateDataRow1 + rowCount - 1;
         out = updateDimensionRef(out, lastRow1);
-        out = applyHeaderBasedListValidations(
-            out,
-            entryByPath,
-            workbookXml,
-            workbookRelsXml,
-            headerRowIndex,
-            templateDataRow1,
-            lastRow1,
-            insertBeforeColIndex,
-            insertedColumnCount
-        );
+        // 28/05/2026 17:45 linhdev - lỗi rebuild validation không được làm fail export (vẫn giữ format + data)
+        try {
+            out = applyHeaderBasedListValidations(
+                out,
+                entryByPath,
+                workbookXml,
+                workbookRelsXml,
+                headerRowIndex,
+                templateDataRow1,
+                lastRow1,
+                insertBeforeColIndex,
+                insertedColumnCount
+            );
+        } catch (Exception validationEx) {
+            dbg('VALIDATION_SKIP', validationEx.getMessage());
+        }
         return out;
     }
 
@@ -707,6 +729,49 @@ public without sharing class FEC_BCH_TemplateExportService {
             '</xm:sqref></x14:dataValidation>';
     }
 
+    // 28/05/2026 17:45 linhdev - resolve dòng data template (validation / sau header / fallback header) cho Result export
+    @TestVisible
+    private static Integer resolveTemplateDataRowNum(String worksheetXml, Integer headerRowIndex) {
+        if (String.isBlank(worksheetXml)) {
+            return null;
+        }
+        Integer headerRow1 = headerRowIndex == null || headerRowIndex < 0 ? 1 : headerRowIndex + 1;
+        List<Integer> candidates = new List<Integer>();
+        Integer fromValidations = resolveTemplateDataRowFromValidations(worksheetXml);
+        if (fromValidations != null && fromValidations > headerRow1) {
+            candidates.add(fromValidations);
+        }
+        candidates.add(headerRow1 + 1);
+        candidates.add(headerRow1 + 2);
+        candidates.add(headerRow1);
+        Set<Integer> tried = new Set<Integer>();
+        for (Integer cand : candidates) {
+            if (cand == null || cand < 1 || tried.contains(cand)) {
+                continue;
+            }
+            tried.add(cand);
+            if (String.isNotBlank(extractRowXml(worksheetXml, cand))) {
+                return cand;
+            }
+        }
+        Pattern rowPat = Pattern.compile('<row r="(\\d+)"');
+        Matcher rowMat = rowPat.matcher(worksheetXml);
+        Integer bestAfterHeader = null;
+        while (rowMat.find()) {
+            Integer rowNum = Integer.valueOf(rowMat.group(1));
+            if (rowNum <= headerRow1) {
+                continue;
+            }
+            if (bestAfterHeader == null || rowNum < bestAfterHeader) {
+                bestAfterHeader = rowNum;
+            }
+        }
+        if (bestAfterHeader != null) {
+            return bestAfterHeader;
+        }
+        return String.isNotBlank(extractRowXml(worksheetXml, headerRow1)) ? headerRow1 : null;
+    }
+
     private static Integer resolveTemplateDataRowFromValidations(String worksheetXml) {
         Integer minRow = null;
         for (String node : parseExistingDataValidationNodes(worksheetXml)) {
@@ -1006,7 +1071,10 @@ public without sharing class FEC_BCH_TemplateExportService {
         Integer templateRowNum1,
         Integer targetRowNum1,
         List<Integer> mappedCols,
-        List<String> values
+        List<String> values,
+        ResultInsertColumnStyles resultColStyles,
+        Integer insertBeforeColIndex,
+        Integer insertedColumnCount
     ) {
         String rowXml = templateRowXml;
         rowXml = rowXml.replace('r="' + templateRowNum1 + '"', 'r="' + targetRowNum1 + '"');
@@ -1024,9 +1092,42 @@ public without sharing class FEC_BCH_TemplateExportService {
                 val = String.valueOf(values[valueIdx]);
             }
             valueIdx += 1;
-            rowXml = upsertCellInline(rowXml, colLetter, targetRowNum1, val);
+            String styleAttr = resolveResultDataCellStyleAttr(
+                resultColStyles,
+                insertBeforeColIndex,
+                insertedColumnCount,
+                colIdx
+            );
+            if (String.isNotBlank(styleAttr)) {
+                rowXml = removeCellAtAddress(rowXml, colLetter + String.valueOf(targetRowNum1));
+            }
+            rowXml = upsertCellInline(rowXml, colLetter, targetRowNum1, val, styleAttr);
         }
-        return rowXml;
+        return clearFixedRowHeight(rowXml);
+    }
+
+    private static String resolveResultDataCellStyleAttr(
+        ResultInsertColumnStyles resultColStyles,
+        Integer insertBeforeColIndex,
+        Integer insertedColumnCount,
+        Integer colIdx
+    ) {
+        if (
+            resultColStyles == null ||
+            insertBeforeColIndex == null ||
+            insertedColumnCount == null ||
+            insertedColumnCount < 2 ||
+            colIdx == null
+        ) {
+            return null;
+        }
+        if (colIdx == insertBeforeColIndex) {
+            return resultColStyles.dataStatusStyleAttr;
+        }
+        if (colIdx == insertBeforeColIndex + 1) {
+            return resultColStyles.dataErrorsWrapStyleAttr;
+        }
+        return null;
     }
 
     private static List<Integer> shiftMappedColumnIndexes(
@@ -1087,7 +1188,8 @@ public without sharing class FEC_BCH_TemplateExportService {
         Integer headerRowNum1,
         Integer templateDataRowNum1,
         Integer insertBeforeColIndex,
-        List<String> headers
+        List<String> headers,
+        ResultInsertColumnStyles resultColStyles
     ) {
         if (String.isBlank(xml) || headers == null || headers.isEmpty()) {
             return xml;
@@ -1096,12 +1198,21 @@ public without sharing class FEC_BCH_TemplateExportService {
         String headerRowXml = extractRowXml(xml, headerRowNum1);
         if (String.isNotBlank(headerRowXml)) {
             headerRowXml = shiftRowCellsRight(headerRowXml, headerRowNum1, insertBeforeColIndex, shift);
+            String headerStyleAttr = resultColStyles == null
+                ? null
+                : resultColStyles.headerCellStyleAttr;
             for (Integer i = 0; i < headers.size(); i++) {
+                String hdrCol = columnIndexToLetter(insertBeforeColIndex + i);
+                String hdrAddr = hdrCol + String.valueOf(headerRowNum1);
+                if (String.isNotBlank(headerStyleAttr)) {
+                    headerRowXml = removeCellAtAddress(headerRowXml, hdrAddr);
+                }
                 headerRowXml = upsertCellInline(
                     headerRowXml,
-                    columnIndexToLetter(insertBeforeColIndex + i),
+                    hdrCol,
                     headerRowNum1,
-                    headers[i]
+                    headers[i],
+                    headerStyleAttr
                 );
             }
             xml = replaceRowXml(xml, headerRowNum1, headerRowXml);
@@ -1116,6 +1227,7 @@ public without sharing class FEC_BCH_TemplateExportService {
             );
             xml = replaceRowXml(xml, templateDataRowNum1, templateRowXml);
         }
+        xml = shiftWorksheetMergeCells(xml, insertBeforeColIndex, shift);
         return shiftWorksheetValidations(xml, insertBeforeColIndex, shift);
     }
 
@@ -1276,19 +1388,33 @@ public without sharing class FEC_BCH_TemplateExportService {
         Integer rowNum1,
         String value
     ) {
+        return upsertCellInline(rowXml, colLetter, rowNum1, value, null);
+    }
+
+    private static String upsertCellInline(
+        String rowXml,
+        String colLetter,
+        Integer rowNum1,
+        String value,
+        String forcedStyleAttr
+    ) {
         String addr = colLetter + String.valueOf(rowNum1);
         String escaped = escapeXml(value);
-        Pattern selfClosing = Pattern.compile('<c r="' + addr + '"([^/>]*)/>');
+        Pattern selfClosing = Pattern.compile('<c r="' + Pattern.quote(addr) + '"([^/>]*)/>');
         Matcher mClose = selfClosing.matcher(rowXml);
         if (mClose.find()) {
-            String styleAttr = extractStyleAttr(mClose.group(1));
+            String styleAttr = String.isNotBlank(forcedStyleAttr)
+                ? forcedStyleAttr
+                : extractStyleAttr(mClose.group(1));
             String newCell = buildInlineCell(addr, styleAttr, escaped);
             return replaceFirstMatch(rowXml, selfClosing, newCell);
         }
-        Pattern fullCell = Pattern.compile('<c r="' + addr + '"[^>]*>.*?</c>');
+        Pattern fullCell = Pattern.compile('<c r="' + Pattern.quote(addr) + '"[^>]*>.*?</c>');
         Matcher mFull = fullCell.matcher(rowXml);
         if (mFull.find()) {
-            String styleAttr = extractStyleAttr(mFull.group(0));
+            String styleAttr = String.isNotBlank(forcedStyleAttr)
+                ? forcedStyleAttr
+                : extractStyleAttr(mFull.group(0));
             String newCell = buildInlineCell(addr, styleAttr, escaped);
             return replaceFirstMatch(rowXml, fullCell, newCell);
         }
@@ -1296,7 +1422,10 @@ public without sharing class FEC_BCH_TemplateExportService {
         if (closeIdx < 0) {
             return rowXml;
         }
-        String newCell = buildInlineCell(addr, FEC_ConstantCommon.STR_EMPTY, escaped);
+        String styleAttr = String.isNotBlank(forcedStyleAttr)
+            ? forcedStyleAttr
+            : FEC_ConstantCommon.STR_EMPTY;
+        String newCell = buildInlineCell(addr, styleAttr, escaped);
         return rowXml.substring(0, closeIdx) + newCell + rowXml.substring(closeIdx);
     }
 
@@ -1310,7 +1439,288 @@ public without sharing class FEC_BCH_TemplateExportService {
     }
 
     private static String buildInlineCell(String addr, String styleAttr, String escapedValue) {
-        return '<c r="' + addr + '"' + styleAttr + ' t="inlineStr"><is><t>' + escapedValue + '</t></is></c>';
+        String safeStyle = styleAttr == null ? FEC_ConstantCommon.STR_EMPTY : styleAttr;
+        String safeVal = escapedValue == null ? FEC_ConstantCommon.STR_EMPTY : escapedValue;
+        Boolean preserve =
+            safeVal.contains('\n') || safeVal.contains('\r') || safeVal.length() > 40;
+        String tOpen = preserve ? '<t xml:space="preserve">' : '<t>';
+        return '<c r="' + addr + '"' + safeStyle + ' t="inlineStr"><is>' + tOpen + safeVal + '</t></is></c>';
+    }
+
+    // 28/05/2026 22:00 linhdev - __Status/__Errors: style cột kề (header vàng); __Errors thêm wrap
+    private static ResultInsertColumnStyles buildResultInsertColumnStyles(
+        Map<String, Blob> entryByPath,
+        String worksheetXml,
+        Integer headerRowNum1,
+        Integer templateDataRowNum1,
+        Integer insertBeforeColIndex
+    ) {
+        ResultInsertColumnStyles out = new ResultInsertColumnStyles();
+        if (String.isBlank(worksheetXml) || insertBeforeColIndex == null || insertBeforeColIndex < 0) {
+            return out;
+        }
+        Integer neighborColIndex = insertBeforeColIndex > 0 ? insertBeforeColIndex - 1 : 0;
+        Integer headerStyleIdx = extractStyleIndexFromRow(
+            extractRowXml(worksheetXml, headerRowNum1),
+            neighborColIndex,
+            headerRowNum1
+        );
+        Integer dataStyleIdx = extractStyleIndexFromRow(
+            extractRowXml(worksheetXml, templateDataRowNum1),
+            neighborColIndex,
+            templateDataRowNum1
+        );
+        if (dataStyleIdx == null) {
+            dataStyleIdx = headerStyleIdx;
+        }
+        if (headerStyleIdx == null) {
+            headerStyleIdx = dataStyleIdx;
+        }
+        out.headerCellStyleAttr = styleIndexToAttr(headerStyleIdx);
+        out.dataStatusStyleAttr = styleIndexToAttr(dataStyleIdx);
+        out.dataErrorsWrapStyleAttr = styleIndexToAttr(
+            ensureDataWrapStyleIndex(entryByPath, dataStyleIdx)
+        );
+        return out;
+    }
+
+    private static Integer ensureDataWrapStyleIndex(
+        Map<String, Blob> entryByPath,
+        Integer baseStyleIndex
+    ) {
+        if (entryByPath == null || baseStyleIndex == null || baseStyleIndex < 0) {
+            return baseStyleIndex;
+        }
+        if (!entryByPath.containsKey('xl/styles.xml')) {
+            return baseStyleIndex;
+        }
+        String baseXf = extractCellXfByIndex(
+            blobToUtf8(entryByPath.get('xl/styles.xml')),
+            baseStyleIndex
+        );
+        if (String.isBlank(baseXf) || baseXf.contains('wrapText="1"')) {
+            return baseStyleIndex;
+        }
+        Integer wrapIdx = appendNewCellXf(
+            entryByPath,
+            composeResultCellXf(
+                extractXfIntAttribute(baseXf, 'fontId', 0),
+                extractXfIntAttribute(baseXf, 'fillId', 0),
+                extractXfIntAttribute(baseXf, 'borderId', 1),
+                true
+            )
+        );
+        return wrapIdx != null ? wrapIdx : baseStyleIndex;
+    }
+
+    private static Integer extractXfIntAttribute(String xfXml, String attrName, Integer defaultVal) {
+        if (String.isBlank(xfXml) || String.isBlank(attrName)) {
+            return defaultVal;
+        }
+        Pattern p = Pattern.compile(attrName + '="(\\d+)"');
+        Matcher m = p.matcher(xfXml);
+        if (m.find()) {
+            try {
+                return Integer.valueOf(m.group(1));
+            } catch (Exception ex) {
+                return defaultVal;
+            }
+        }
+        return defaultVal;
+    }
+
+    private static String removeCellAtAddress(String rowXml, String addr) {
+        if (String.isBlank(rowXml) || String.isBlank(addr)) {
+            return rowXml;
+        }
+        Pattern cellPat = Pattern.compile(
+            '(?s)<c r="' + Pattern.quote(addr) + '"[^>]*(?:/>|>.*?</c>)'
+        );
+        Matcher cellMat = cellPat.matcher(rowXml);
+        if (!cellMat.find()) {
+            return rowXml;
+        }
+        return cellMat.replaceFirst(FEC_ConstantCommon.STR_EMPTY);
+    }
+
+    private static Integer extractStyleIndexFromRow(
+        String rowXml,
+        Integer colIndex,
+        Integer rowNum1
+    ) {
+        if (String.isBlank(rowXml) || colIndex == null || colIndex < 0 || rowNum1 == null || rowNum1 < 1) {
+            return null;
+        }
+        String colLetter = columnIndexToLetter(colIndex);
+        String addr = colLetter + String.valueOf(rowNum1);
+        Pattern cellPat = Pattern.compile(
+            '<c r="' + Pattern.quote(addr) + '"([^>]*)(?:>(.*?)</c>|/>)'
+        );
+        Matcher cellMat = cellPat.matcher(rowXml);
+        if (!cellMat.find()) {
+            return null;
+        }
+        String attrs = cellMat.group(1) == null ? FEC_ConstantCommon.STR_EMPTY : cellMat.group(1);
+        String body = cellMat.group(2) == null ? FEC_ConstantCommon.STR_EMPTY : cellMat.group(2);
+        Pattern stylePat = Pattern.compile(' s="(\\d+)"');
+        Matcher styleMat = stylePat.matcher(attrs + body);
+        if (!styleMat.find()) {
+            return null;
+        }
+        try {
+            return Integer.valueOf(styleMat.group(1));
+        } catch (Exception ex) {
+            return null;
+        }
+    }
+
+    private static String styleIndexToAttr(Integer styleIndex) {
+        return styleIndex == null ? FEC_ConstantCommon.STR_EMPTY : ' s="' + String.valueOf(styleIndex) + '"';
+    }
+
+    private static String clearFixedRowHeight(String rowXml) {
+        if (String.isBlank(rowXml)) {
+            return rowXml;
+        }
+        String out = rowXml;
+        out = out.replace(' customHeight="1"', FEC_ConstantCommon.STR_EMPTY);
+        out = out.replace(' customHeight="true"', FEC_ConstantCommon.STR_EMPTY);
+        Pattern htPat = Pattern.compile(' ht="[0-9\\.]+"');
+        Matcher htMat = htPat.matcher(out);
+        out = htMat.replaceAll(FEC_ConstantCommon.STR_EMPTY);
+        return out;
+    }
+
+    private static String shiftWorksheetMergeCells(
+        String xml,
+        Integer insertBeforeColIndex,
+        Integer shift
+    ) {
+        if (String.isBlank(xml) || shift == null || shift < 1 || insertBeforeColIndex == null) {
+            return xml;
+        }
+        Pattern mergePat = Pattern.compile(
+            '(?s)(<mergeCell ref=")([A-Z]{1,3})(\\d+):([A-Z]{1,3})(\\d+)(")'
+        );
+        Matcher mergeMat = mergePat.matcher(xml);
+        List<MergeRefReplacement> replacements = new List<MergeRefReplacement>();
+        while (mergeMat.find()) {
+            String startCol = mergeMat.group(2);
+            String startRow = mergeMat.group(3);
+            String endCol = mergeMat.group(4);
+            String endRow = mergeMat.group(5);
+            Integer startIdx = columnLetterToIndex(startCol);
+            Integer endIdx = columnLetterToIndex(endCol);
+            if (startIdx >= insertBeforeColIndex) {
+                startCol = columnIndexToLetter(startIdx + shift);
+            }
+            if (endIdx >= insertBeforeColIndex) {
+                endCol = columnIndexToLetter(endIdx + shift);
+            }
+            MergeRefReplacement rep = new MergeRefReplacement();
+            rep.startPos = mergeMat.start();
+            rep.endPos = mergeMat.end();
+            rep.replacementText =
+                mergeMat.group(1) + startCol + startRow + ':' + endCol + endRow + mergeMat.group(6);
+            replacements.add(rep);
+        }
+        if (replacements.isEmpty()) {
+            return xml;
+        }
+        String out = xml;
+        for (Integer i = replacements.size() - 1; i >= 0; i--) {
+            MergeRefReplacement rep = replacements[i];
+            out =
+                out.substring(0, rep.startPos) +
+                rep.replacementText +
+                out.substring(rep.endPos);
+        }
+        return out;
+    }
+
+    private class MergeRefReplacement {
+        Integer startPos;
+        Integer endPos;
+        String replacementText;
+    }
+
+    private static String extractCellXfByIndex(String stylesXml, Integer styleIndex) {
+        if (String.isBlank(stylesXml) || styleIndex == null || styleIndex < 0) {
+            return FEC_ConstantCommon.STR_EMPTY;
+        }
+        Pattern xfsBlockPat = Pattern.compile('(?s)<cellXfs count="(\\d+)">(.*?)</cellXfs>');
+        Matcher xfsBlockMat = xfsBlockPat.matcher(stylesXml);
+        if (!xfsBlockMat.find()) {
+            return FEC_ConstantCommon.STR_EMPTY;
+        }
+        Pattern xfPat = Pattern.compile('(?s)<xf[^>]*(?:>.*?</xf>|/>)');
+        Matcher xfMat = xfPat.matcher(xfsBlockMat.group(2));
+        Integer idx = 0;
+        while (xfMat.find()) {
+            if (idx == styleIndex) {
+                return xfMat.group(0);
+            }
+            idx += 1;
+        }
+        return FEC_ConstantCommon.STR_EMPTY;
+    }
+
+    private static String composeResultCellXf(
+        Integer fontId,
+        Integer fillId,
+        Integer borderId,
+        Boolean wrapText
+    ) {
+        String alignment = wrapText == true
+            ? '<alignment horizontal="left" vertical="center" wrapText="1"/>'
+            : '<alignment horizontal="left" vertical="center"/>';
+        return '<xf numFmtId="0" fontId="' +
+            String.valueOf(fontId) +
+            '" fillId="' +
+            String.valueOf(fillId) +
+            '" borderId="' +
+            String.valueOf(borderId) +
+            '" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1">' +
+            alignment +
+            '</xf>';
+    }
+
+    private static Integer appendNewCellXf(Map<String, Blob> entryByPath, String newXfXml) {
+        if (entryByPath == null || String.isBlank(newXfXml)) {
+            return null;
+        }
+        String stylesPath = 'xl/styles.xml';
+        if (!entryByPath.containsKey(stylesPath)) {
+            return null;
+        }
+        String xml = blobToUtf8(entryByPath.get(stylesPath));
+        if (String.isBlank(xml)) {
+            return null;
+        }
+        Pattern xfsBlockPat = Pattern.compile('(?s)<cellXfs count="(\\d+)">(.*?)</cellXfs>');
+        Matcher xfsBlockMat = xfsBlockPat.matcher(xml);
+        if (!xfsBlockMat.find()) {
+            return null;
+        }
+        String xfsInner = xfsBlockMat.group(2);
+        Pattern xfPat = Pattern.compile('(?s)<xf[^>]*(?:>.*?</xf>|/>)');
+        Matcher xfMat = xfPat.matcher(xfsInner);
+        List<String> xfs = new List<String>();
+        while (xfMat.find()) {
+            xfs.add(xfMat.group(0));
+        }
+        Integer newIdx = xfs.size();
+        xfs.add(newXfXml);
+        String newInner = String.join(xfs, FEC_ConstantCommon.STR_EMPTY);
+        String newBlock =
+            '<cellXfs count="' +
+            String.valueOf(xfs.size()) +
+            '">' +
+            newInner +
+            '</cellXfs>';
+        String newXml = xfsBlockMat.replaceFirst(Matcher.quoteReplacement(newBlock));
+        entryByPath.put(stylesPath, Blob.valueOf(newXml));
+        return newIdx;
     }
 
     private static String columnIndexToLetter(Integer colIndex) {
