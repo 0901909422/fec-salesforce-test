@@ -261,6 +261,9 @@
         <members>fec_TransactionsAccount</members>
         <members>fec_TransactionsAccountTabView</members>
         <members>fecInteractionChatConversations</members>
+        <members>fecInteractionChatInfo</members>
+        <members>fecInteractionEmailInfo</members>
+        <members>fecInteractionEmailInfoUbank</members>
         <members>fec_PointsRedemptionCaseForm</members>
         <members>fec_TransferCall</members>
         <members>fec_CaseNocUpdatedSection</members>
@@ -399,6 +402,7 @@
         <members>fec_CaseAssignmentNocNewOverride</members>
         <members>fecRoutingAssignmentEditOverride</members>
         <members>fec_CaseAssignmentNocEditOverride</members>
+        <members>fecEmailSection</members>
         <name>AuraDefinitionBundle</name>
     </types>
 	<types>

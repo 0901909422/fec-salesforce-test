@@ -765,6 +765,7 @@
         <members>fecNewRelevantTicketAction</members>
 		<members>fecCaseAssignmentNewOverride</members>
 		<members>fec_CaseAssignmentNocNewOverride</members>
+        <members>fecEmailSection</members>
         <name>AuraDefinitionBundle</name>
     </types>
     <types>
@@ -801,6 +802,8 @@
     <types>
         <members>fecInteractionChatConversations</members>
         <members>fecInteractionChatInfo</members>
+        <members>fecInteractionEmailInfo</members>
+        <members>fecInteractionEmailInfoUbank</members>
         <members>fec_CaseBussiness</members>
         <members>fec_CaseBussinessScopedRoutingIntegration</members>
         <members>fec_ScopedStageChangeRouting</members>
