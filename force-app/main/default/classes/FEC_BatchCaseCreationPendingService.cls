@@ -6,6 +6,8 @@ public without sharing class FEC_BatchCaseCreationPendingService {
 
   public class ImportPayload {
     public String templateName;
+    /** User Id người upload file — dùng khi scheduled job tạo Case. */
+    public String importerUserId;
     public List<Object> rows;
     public List<String> sourceHeaders;
     public List<List<String>> sourceRows;
@@ -26,6 +28,24 @@ public without sharing class FEC_BatchCaseCreationPendingService {
     String sourceHeadersJson,
     String sourceRowsJson
   ) {
+    attachPendingImportPayload(
+      batchId,
+      templateName,
+      rowsJson,
+      sourceHeadersJson,
+      sourceRowsJson,
+      null
+    );
+  }
+
+  public static void attachPendingImportPayload(
+    Id batchId,
+    String templateName,
+    String rowsJson,
+    String sourceHeadersJson,
+    String sourceRowsJson,
+    String importerUserId
+  ) {
     if (batchId == null || String.isBlank(rowsJson)) {
       return;
     }
@@ -33,6 +53,9 @@ public without sharing class FEC_BatchCaseCreationPendingService {
       'templateName' => templateName,
       'rows' => JSON.deserializeUntyped(rowsJson)
     };
+    if (String.isNotBlank(importerUserId)) {
+      payload.put('importerUserId', importerUserId);
+    }
     if (String.isNotBlank(sourceHeadersJson)) {
       payload.put('sourceHeaders', JSON.deserializeUntyped(sourceHeadersJson));
     }
@@ -112,6 +135,8 @@ public without sharing class FEC_BatchCaseCreationPendingService {
     out.templateName = parsed.get('templateName') == null
       ? null
       : String.valueOf(parsed.get('templateName'));
+    Object importerObj = parsed.get('importerUserId');
+    out.importerUserId = importerObj == null ? null : String.valueOf(importerObj);
     Object rowsObj = parsed.get('rows');
     if (rowsObj instanceof List<Object>) {
       out.rows = (List<Object>) rowsObj;
@@ -135,15 +160,35 @@ public without sharing class FEC_BatchCaseCreationPendingService {
     if (rawRows == null) {
       return out;
     }
-    for (Object rowObj : rawRows) {
-      List<String> row = new List<String>();
-      if (rowObj instanceof List<Object>) {
-        for (Object cellObj : (List<Object>) rowObj) {
-          row.add(cellObj == null ? '' : String.valueOf(cellObj));
+        for (Object rowObj : rawRows) {
+            List<String> row = new List<String>();
+            if (rowObj instanceof List<Object>) {
+                for (Object cellObj : (List<Object>) rowObj) {
+                    row.add(formatImportPayloadCellValue(cellObj));
+                }
+            }
+            out.add(row);
         }
-      }
-      out.add(row);
+        return out;
     }
-    return out;
-  }
+
+    /** JSON có thể deserialize số → tránh scientific notation khi export result. */
+    private static String formatImportPayloadCellValue(Object cellObj) {
+        if (cellObj == null) {
+            return '';
+        }
+        if (cellObj instanceof String) {
+            return (String) cellObj;
+        }
+        if (cellObj instanceof Long || cellObj instanceof Integer) {
+            return String.valueOf(cellObj);
+        }
+        if (cellObj instanceof Decimal) {
+            return ((Decimal) cellObj).toPlainString();
+        }
+        if (cellObj instanceof Double) {
+            return Decimal.valueOf((Double) cellObj).toPlainString();
+        }
+        return String.valueOf(cellObj);
+    }
 }

@@ -26,7 +26,7 @@ FEC_SubCode__r.FEC_Code__c=&quot;ITC01.03&quot;
         </timeTriggers>
         <timeTriggers>
             <actions>
-                <name>SLA_Warning_15960h</name>
+                <name>SLA_Violationg_Warning_15960h</name>
                 <type>FieldUpdate</type>
             </actions>
             <timeLength>-15960</timeLength>
@@ -43,7 +43,7 @@ FEC_SubCode__r.FEC_Code__c=&quot;ITC01.01&quot;
         <minutesToComplete>960000</minutesToComplete>
         <timeTriggers>
             <actions>
-                <name>SLA_Warning_15932h</name>
+                <name>SLA_Violating_Warning_15932h</name>
                 <type>FieldUpdate</type>
             </actions>
             <timeLength>-15932</timeLength>
@@ -76,7 +76,7 @@ FEC_SubCode__r.FEC_Code__c=&quot;ITC01.04&quot;
         </timeTriggers>
         <timeTriggers>
             <actions>
-                <name>SLA_Warning_15932_2h</name>
+                <name>SLA_Violating_Warning_15932</name>
                 <type>FieldUpdate</type>
             </actions>
             <timeLength>-15932</timeLength>
@@ -107,7 +107,7 @@ FEC_SubCode__r.FEC_Code__c=&quot;ITC02.03&quot;
         </timeTriggers>
         <timeTriggers>
             <actions>
-                <name>SLA_Warning_15840h</name>
+                <name>SLA_Violating_Warning_15840h</name>
                 <type>FieldUpdate</type>
             </actions>
             <timeLength>-15840</timeLength>

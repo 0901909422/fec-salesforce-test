@@ -454,6 +454,7 @@ public with sharing class FEC_BatchCaseCreationService {
         if (customerCase == null) {
             return;
         }
+        customerCase.FEC_Customer_Type__c = FEC_ConstantCommon.CASE_EXISTING_CUSTOMER;
         customerCase.FEC_Assigment_Mode__c = FEC_ConstantCommon.INTERACTION_REVIEW_MODE;
         customerCase.FEC_Interaction_View_Mode__c = FEC_ConstantCommon.INTERACTION_REVIEW_MODE;
     }

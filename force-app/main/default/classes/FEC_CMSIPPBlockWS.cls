@@ -1,4 +1,9 @@
 public with sharing class FEC_CMSIPPBlockWS {
+
+    //Thangtv: API Log sau callout (ResponseLog + logApiResponse)
+    public static final String API_CONFIG_NAME = 'FEC_CMS_IPP_BlockWS';
+    private static ResponseLog responseLog;
+
     /* ================================
      * RESPONSE MODELS
      * ================================ */
@@ -12,6 +17,24 @@ public with sharing class FEC_CMSIPPBlockWS {
         @AuraEnabled public Datetime DateTime_x;
         @AuraEnabled public String Code;
         @AuraEnabled public String Description;
+    }
+
+    public class ResponseLog {
+        public String apiName;
+        public String endpoint;
+        public String method;
+        public String requestBody;
+        public HttpResponse response;
+        public String errorMessage;
+
+        public ResponseLog(String apiName, String endpoint, String method, String requestBody, HttpResponse response, String errorMessage) {
+            this.apiName = apiName;
+            this.endpoint = endpoint;
+            this.method = method;
+            this.requestBody = requestBody;
+            this.response = response;
+            this.errorMessage = errorMessage;
+        }
     }
 
     /* ================================
@@ -36,60 +59,105 @@ public with sharing class FEC_CMSIPPBlockWS {
         String highRisk
     ) {
         String transId = String.valueOf(UUID.randomUUID());
-        String dateTimeStr = Datetime.now().format(FEC_ConstantCommon.STR_DATETIME_FORMAT);
-
-        validate(
-            transId,
-            requestorId,
-            dateTimeStr,
-            crmID,
-            disbChannel,
-            accountNumber,
-            amount,
-            tenure
+        String dateTimeStr = FEC_CommonUltils.formatTimestamp(
+            Datetime.now(),
+            FEC_ConstantCommon.STR_DATETIME_FORMAT_Z
         );
-        
-        String soapBody = buildSoapBody(
-            transId,
-            requestorId,
-            dateTimeStr,
-            crmID,
-            disbChannel,
-            accountNumber,
-            amount,
-            tenure,
-            noIPP,
-            campaignName,
-            flatRate,
-            custAccount,
-            bankName,
-            bankBranch,
-            smsRate,
-            insuranceAmount,
-            highRisk
+
+        try { //Thangtv
+            FEC_API_Config__mdt apiConfig = FEC_API_Config__mdt.getInstance(API_CONFIG_NAME);
+
+            validate(
+                transId,
+                requestorId,
+                dateTimeStr,
+                crmID,
+                disbChannel,
+                accountNumber,
+                amount,
+                tenure
             );
 
-        FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
-        FEC_API_Config__mdt apiConfig = FEC_API_Config__mdt.getInstance('FEC_CMS_IPP_BlockWS');
+            campaignName = (apiConfig != null && String.isNotBlank(apiConfig.FEC_Campaign_Name__c))
+                ? apiConfig.FEC_Campaign_Name__c
+                : campaignName;
 
-        String endpoint = (String.isNotBlank(apiSetting?.FEC_Endpoint__c) ? apiSetting.FEC_Endpoint__c : '')
-            + (String.isNotBlank(apiConfig?.FEC_Endpoint__c) ? apiConfig.FEC_Endpoint__c : '');
+            String soapBody = buildSoapBody(
+                transId,
+                requestorId,
+                dateTimeStr,
+                crmID,
+                disbChannel,
+                accountNumber,
+                amount,
+                tenure,
+                noIPP,
+                campaignName,
+                flatRate,
+                custAccount,
+                bankName,
+                bankBranch,
+                smsRate,
+                insuranceAmount,
+                highRisk
+            );
 
-        HttpResponse res = FEC_CommonUltils.calloutApi(endpoint, FEC_ConstantCommon.API_METHOD_POST, FEC_ConstantCommon.API_CONTENT_TYPE, apiConfig?.FEC_SOAP_Action__c, null, soapBody);
-        FEC_CommonUltils.logApi(
-            'FEC_CMS_IPP_BlockWS',
-            endpoint,
-            'POST',
-            soapBody,
-            res,
-            null
-        );
-        System.debug('res: ' + res.getBody());
-        if (res.getStatusCode() == 200 && String.isNotBlank(res.getBody())) {
+            FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
 
-            return parseResponse(res.getBody());
+            String baseEndpoint = (apiSetting != null && String.isNotBlank(apiSetting.FEC_Endpoint__c))
+                ? apiSetting.FEC_Endpoint__c
+                : '';
+            String configEndpoint = (apiConfig != null && String.isNotBlank(apiConfig.FEC_Endpoint__c))
+                ? apiConfig.FEC_Endpoint__c
+                : '';
+            String endpoint = FEC_CommonUltils.buildCalloutEndpoint(baseEndpoint, configEndpoint); //Thangtv
+
+            responseLog = new ResponseLog(
+                API_CONFIG_NAME,
+                endpoint,
+                FEC_ConstantCommon.API_METHOD_POST,
+                soapBody,
+                null,
+                null
+            );
+
+            HttpResponse res = FEC_CommonUltils.calloutApi(
+                endpoint,
+                FEC_ConstantCommon.API_METHOD_POST,
+                FEC_ConstantCommon.API_CONTENT_TYPE,
+                apiConfig?.FEC_SOAP_Action__c,
+                null,
+                soapBody
+            );
+            responseLog.response = res;
+
+            System.debug('res: ' + res.getBody());
+            if (res.getStatusCode() == 200 && String.isNotBlank(res.getBody())) {
+                return parseResponse(res.getBody());
+            }
+            return null;
+        } catch (Exception e) {
+            if (responseLog != null) {
+                responseLog.errorMessage = e.getMessage();
+            }
+            throw e;
+        } finally {
+            logApiResponse(); //Thangtv: ghi FEC_API_Log__c
         }
-        return null;
+    }
+
+    //Thangtv
+    public static void logApiResponse() {
+        if (responseLog != null) {
+            FEC_CommonUltils.logApi(
+                responseLog.apiName,
+                responseLog.endpoint,
+                responseLog.method,
+                responseLog.requestBody,
+                responseLog.response,
+                responseLog.errorMessage
+            );
+        }
     }
     
     /* ================================

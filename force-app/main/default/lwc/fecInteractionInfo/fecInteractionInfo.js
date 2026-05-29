@@ -2,6 +2,9 @@ import { LightningElement, api, track, wire } from "lwc";
 import { getRecord, getFieldValue } from "lightning/uiRecordApi";
 import { loadStyle } from "lightning/platformResourceLoader";
 import COMMON_STYLES from "@salesforce/resourceUrl/FEC_CommonCss";
+import {
+  notifyRecordUpdateAvailable,
+} from "lightning/uiRecordApi";
 
 // ================= APEX =================
 import getInteraction from "@salesforce/apex/FEC_InteractionInforHandler.getInteraction";
@@ -14,6 +17,7 @@ import getInteractionIdFromCustomerCase from "@salesforce/apex/FEC_InteractionIn
 import ISCLOSED from "@salesforce/schema/Case.IsClosed";
 import VIEW_MODE from "@salesforce/schema/Case.FEC_Interaction_View_Mode__c";
 import RECORDTYPE_ID from "@salesforce/schema/Case.RecordTypeId";
+import PHONE_NUMBER from "@salesforce/schema/Case.FEC_Phone_Number__c";
 
 //==================== LABELED CONSTANTS ====================
 import FEC_INTERACTION_PHONE_LABEL from "@salesforce/label/c.FEC_Interaction_Phone_Label";
@@ -31,7 +35,11 @@ import FEC_PHONE_IS_INVALID_FORMAT_1_MSG from "@salesforce/label/c.FEC_PHONE_IS_
 import FEC_PHONE_IS_INVALID_FORMAT_2_MSG from "@salesforce/label/c.FEC_PHONE_IS_INVALID_FORMAT_2_MSG";
 import FEC_PHONE_IS_INVALID_FORMAT_3_MSG from "@salesforce/label/c.FEC_PHONE_IS_INVALID_FORMAT_3_MSG";
 
-import { formatDateTime } from "c/fec_CommonUtils";
+import {
+  formatDateTime,
+  maskValue,
+  normalizeInteractionResult,
+} from "c/fec_CommonUtils";
 
 import {
   RECORD_TYPES,
@@ -70,7 +78,7 @@ export default class FecInteractionInfo extends LightningElement {
   recordTypeId;
   recordTypeDevName;
 
-  interactionId; // 🔥 ID dùng thực sự để load Interaction
+  interactionId;
 
   activeSections = ["interactionInfo"];
 
@@ -97,6 +105,21 @@ export default class FecInteractionInfo extends LightningElement {
   // ================= LIFECYCLE =================
   connectedCallback() {
     this.loadStyles();
+  }
+
+  @wire(getRecord, {
+    recordId: "$interactionId",
+    fields: [PHONE_NUMBER],
+  })
+  wiredInteractionPhone({ data }) {
+    if (!data || !this.interactionId) {
+      return;
+    }
+
+    const phone = getFieldValue(data, PHONE_NUMBER);
+    if (phone && phone !== this.record?.FEC_Phone_Number__c) {
+      this.loadInteraction();
+    }
   }
 
   loadStyles() {
@@ -139,7 +162,7 @@ export default class FecInteractionInfo extends LightningElement {
 
     getInteraction({ recordId: this.interactionId })
       .then((result) => {
-        this.record = result;
+        this.record = normalizeInteractionResult(result);
         this.isLoaded = true;
       })
       .catch((error) => {
@@ -148,7 +171,7 @@ export default class FecInteractionInfo extends LightningElement {
   }
 
   // ================= GETTERS =================
-  get isInteractionCase() {
+   get isInteractionCase() {
     return this.recordTypeDevName === RECORD_TYPES.INTERACTION;
   }
 
@@ -156,11 +179,13 @@ export default class FecInteractionInfo extends LightningElement {
     return this.recordTypeDevName === RECORD_TYPES.CUSTOMER_CASE;
   }
 
+
   get isInteractionClosed() {
-    if (this.record?.FEC_Interaction_Status__c === "Closed") return true;
+    if (this.record?.FEC_Interaction_Status__c === "Closed"|| this.record?.FEC_Interaction_Status__c === "Auto-Closed") return true;
     return false;
   }
 
+  
   get isReview() {
     return this.viewMode === VIEW_MODE_REVIEW;
   }
@@ -179,9 +204,14 @@ export default class FecInteractionInfo extends LightningElement {
   get displayPhone() {
     if (!this.hasPhone) return null;
 
-    return this.isMasked
-      ? this.record?.FEC_Interaction_Masked_Phone__c
-      : this.revealedPhone;
+    if (!this.isMasked) {
+      return this.revealedPhone;
+    }
+
+    return (
+      this.record?.FEC_Interaction_Masked_Phone__c ||
+      maskValue(this.record?.FEC_Phone_Number__c, false)
+    );
   }
 
   get eyeIcon() {
@@ -295,6 +325,8 @@ export default class FecInteractionInfo extends LightningElement {
       this.isMasked = true;
       this.phoneDraft = null;
 
+      // 🔥 refresh LDS
+      await notifyRecordUpdateAvailable([{ recordId: this.recordId }]);
     } catch (error) {
       console.error("updateInteractionPhone error", error);
     }
@@ -310,6 +342,12 @@ export default class FecInteractionInfo extends LightningElement {
 
       this.revealedPhone = result;
       this.isMasked = false;
+
+      // 🔥 refresh LDS nếu cần
+      await notifyRecordUpdateAvailable([
+        { recordId: this.recordId },
+        { recordId: this.interactionId },
+      ]);
     } catch (e) {
       console.error("revealPhone error", e);
     }

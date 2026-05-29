@@ -198,9 +198,6 @@ export function isMrcRl05CaseInformationBlocked(business) {
   if (business?.mrcRl05CaseInfoBlocked === true) {
     return true;
   }
-  if (business?.mrcRl05CaseInfoWarningOnly === true) {
-    return false;
-  }
   return !!business?.sectionlst?.some(
     (section) =>
       section.name === SECTION_NAME_CASE_INFORMATION &&
@@ -568,7 +565,7 @@ export function isMrcStage1BeforeSubmit(business, isEditFlag) {
 }
 
 const MRC_HIDDEN_ASSESSMENT_FIELD_APIS = new Set([
-  "FEC_Contract_Processing_Assessment_Type__c",
+  "FEC_Contract_Processing_MRC_Assessment__c",
   "FEC_RD_Payment_Contract_Assessment__c",
 ]);
 

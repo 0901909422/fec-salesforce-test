@@ -69,13 +69,15 @@ public with sharing class FEC_FullCustomerIntegrationJob
             }
 
             List<SyncRequest> toProcess = uniqueByHistoryId.values();
+            if (toProcess.isEmpty()) {
+                return;
+            }
+
+            syncOne(toProcess[0]);
+
             List<SyncRequest> deferred = new List<SyncRequest>();
-            for (Integer i = 0; i < toProcess.size(); i++) {
-                if (i < MAX_SYNCS_PER_RUN) {
-                    syncOne(toProcess[i]);
-                } else {
-                    deferred.add(toProcess[i]);
-                }
+            for (Integer i = 1; i < toProcess.size(); i++) {
+                deferred.add(toProcess[i]);
             }
             if (!deferred.isEmpty()) {
                 System.enqueueJob(new FEC_FullCustomerIntegrationJob(deferred));
