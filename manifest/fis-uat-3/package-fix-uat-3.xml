@@ -124,6 +124,7 @@
 		<members>FEC_MarkNFU</members>
 		<members>FEC_CardInfoController</members>
         <members>FEC_IPPController</members>
+        <members>FEC_Il10DeliveryController</members>
         <members>FEC_MockData</members>
         <members>FEC_BlockCodeRoutingService</members>
         <members>FEC_CMSRewardRedeemService</members>
