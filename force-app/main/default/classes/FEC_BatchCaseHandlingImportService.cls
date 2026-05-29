@@ -23,6 +23,7 @@ public without sharing class FEC_BatchCaseHandlingImportService {
     private static final String ERR_TEMPLATE_FILE_MISMATCH = 'Tên file không khớp template Bulk Actions của quy trình và nhóm người dùng.';
     private static final String LABEL_PAYMENT_CONTRACT_ASSESSMENT = 'Payment đánh giá yêu cầu đóng hợp đồng';
     private static final String LABEL_CP_ASSESSMENT = 'CP đánh giá yêu cầu';
+    private static final String LABEL_INPUTTED_REMARKS = 'Inputted Remarks';
     private static final String ERR_MISSING_PAYMENT_ASSESSMENT = 'Thiếu giá trị Payment đánh giá yêu cầu đóng hợp đồng';
     private static final String ERR_INVALID_PAYMENT_ASSESSMENT = 'Giá trị Payment đánh giá yêu cầu đóng hợp đồng không tồn tại trong Datagroup.';
     private static final String ERR_MISSING_CP_ASSESSMENT = 'Thiếu giá trị CP đánh giá yêu cầu';
@@ -440,17 +441,35 @@ public without sharing class FEC_BatchCaseHandlingImportService {
         }
         try {
             String fileName = resolveBatchResultFileName(batchRecordId);
-            List<List<String>> sheetRows = buildBatchResultSheetRows(
-                rowResults,
-                batchFailureReason,
-                isCofOrGsrImportRows(rowResults)
-            );
-            Blob workbookBlob = buildBatchResultWorkbookFromOriginalTemplate(
-                batchRecordId,
-                rowResults
-            );
-            if (workbookBlob == null) {
+            Boolean cofOrGsr = isCofOrGsrImportRows(rowResults);
+            List<List<String>> sheetRows = null;
+            try {
+                sheetRows = buildBatchResultSheetRows(
+                    rowResults,
+                    batchFailureReason,
+                    cofOrGsr
+                );
+            } catch (Exception sheetRowsEx) {
+                // 29/05/2026 14:21 codex - if normal result rows fail, continue with emergency result workbook
+                sheetRows = null;
+            }
+            Blob workbookBlob = null;
+            try {
+                workbookBlob = buildBatchResultWorkbookFromOriginalTemplate(
+                    batchRecordId,
+                    rowResults
+                );
+            } catch (Exception templateEx) {
+                // 29/05/2026 14:07 codex - fallback to basic result workbook if original-layout patching fails
+                workbookBlob = null;
+            }
+            if (workbookBlob == null && sheetRows != null && !sheetRows.isEmpty()) {
                 workbookBlob = FEC_BatchCaseHandlingResultXlsxBuilder.buildWorkbookBlob(sheetRows);
+            }
+            if (workbookBlob == null) {
+                workbookBlob = FEC_BatchCaseHandlingResultXlsxBuilder.buildWorkbookBlob(
+                    buildEmergencyBatchResultSheetRows(batchFailureReason, cofOrGsr)
+                );
             }
             if (workbookBlob == null) {
                 return;
@@ -504,10 +523,17 @@ public without sharing class FEC_BatchCaseHandlingImportService {
         if (sourceContentVersionId == null) {
             return null;
         }
-        List<Integer> mappedColumnIndexes = new List<Integer>();
-        for (Integer colIdx = 0; colIdx < sourceHeaders.size(); colIdx++) {
-            mappedColumnIndexes.add(colIdx);
-        }
+        Integer inputtedRemarksIndex = findHeaderIndex(sourceHeaders, LABEL_INPUTTED_REMARKS);
+        Integer cpAssessmentIndex = findHeaderIndex(sourceHeaders, LABEL_CP_ASSESSMENT);
+        List<Integer> mappedColumnIndexes = buildResultMappedColumnIndexes(
+            sourceHeaders,
+            rowResults
+        );
+        Integer resultInsertIndex = resolveResultInsertIndex(
+            sourceHeaders,
+            inputtedRemarksIndex,
+            cpAssessmentIndex
+        );
         List<List<String>> dataRows = new List<List<String>>();
         List<List<String>> insertValues = new List<List<String>>();
         for (FEC_BatchCaseHandlingImportRow row : rowResults) {
@@ -546,7 +572,7 @@ public without sharing class FEC_BatchCaseHandlingImportService {
         req.headerRowIndex = sourceHeaderRowIndex == null ? 0 : sourceHeaderRowIndex;
         req.mappedColumnIndexes = mappedColumnIndexes;
         req.dataRows = dataRows;
-        req.insertColumnsBeforeIndex = sourceHeaders.size();
+        req.insertColumnsBeforeIndex = resultInsertIndex;
         req.insertColumnHeaders = new List<String>{ RESULT_COL_STATUS, RESULT_COL_ERRORS };
         req.insertColumnValues = insertValues;
         req.templateSheetName = sourceSheetName;
@@ -716,6 +742,30 @@ public without sharing class FEC_BatchCaseHandlingImportService {
         return sheetRows;
     }
 
+    private static List<List<String>> buildEmergencyBatchResultSheetRows(
+        String batchFailureReason,
+        Boolean cofOrGsr
+    ) {
+        List<List<String>> sheetRows = new List<List<String>>();
+        List<String> headers = new List<String>{ 'Case ID Search', 'Routing Action', 'Inputted Remarks' };
+        if (cofOrGsr) {
+            headers.add('Assignment ID');
+            headers.add('Assignment Routing Action');
+        }
+        headers.add(RESULT_COL_STATUS);
+        headers.add(RESULT_COL_ERRORS);
+        sheetRows.add(headers);
+
+        List<String> failureRow = new List<String>();
+        for (Integer i = 0; i < headers.size() - 2; i++) {
+            failureRow.add(FEC_ConstantCommon.STR_EMPTY);
+        }
+        failureRow.add('Failed');
+        failureRow.add(String.isBlank(batchFailureReason) ? System.Label.FEC_BCH_ImportFailed : batchFailureReason);
+        sheetRows.add(failureRow);
+        return sheetRows;
+    }
+
     private static List<List<String>> buildBatchResultFromOriginalLayout(
         List<FEC_BatchCaseHandlingImportRow> rowResults
     ) {
@@ -732,14 +782,20 @@ public without sharing class FEC_BatchCaseHandlingImportService {
         if (sourceHeaders == null || sourceHeaders.isEmpty()) {
             return null;
         }
+        Integer inputtedRemarksIndex = findHeaderIndex(sourceHeaders, LABEL_INPUTTED_REMARKS);
+        Integer cpAssessmentIndex = findHeaderIndex(sourceHeaders, LABEL_CP_ASSESSMENT);
+        Integer resultInsertIndex = resolveResultInsertIndex(
+            sourceHeaders,
+            inputtedRemarksIndex,
+            cpAssessmentIndex
+        );
         List<List<String>> sheetRows = new List<List<String>>();
         List<String> headers = new List<String>();
-        for (String header : sourceHeaders) {
-            headers.add(rowValue(header));
+        for (Integer idx = 0; idx < sourceHeaders.size(); idx++) {
+            headers.add(rowValue(sourceHeaders[idx]));
         }
-        headers.add(RESULT_COL_STATUS);
-        headers.add(RESULT_COL_ERRORS);
-        Integer headerSize = sourceHeaders.size();
+        Integer headerSize = headers.size();
+        insertResultColumns(headers, resultInsertIndex);
         sheetRows.add(headers);
         for (FEC_BatchCaseHandlingImportRow row : rowResults) {
             if (row == null) {
@@ -754,15 +810,22 @@ public without sharing class FEC_BatchCaseHandlingImportService {
             while (cells.size() < headerSize) {
                 cells.add(FEC_ConstantCommon.STR_EMPTY);
             }
-            if (cells.size() > headerSize) {
+            if (cells.size() > sourceHeaders.size()) {
                 List<String> normalizedCells = new List<String>();
-                for (Integer idx = 0; idx < headerSize; idx++) {
+                for (Integer idx = 0; idx < sourceHeaders.size(); idx++) {
                     normalizedCells.add(cells[idx]);
                 }
                 cells = normalizedCells;
             }
-            cells.add(rowValue(resolveImportResultStatusLabel(row.status)));
-            cells.add(rowValue(row.errors));
+            while (cells.size() < headerSize) {
+                cells.add(FEC_ConstantCommon.STR_EMPTY);
+            }
+            insertResultColumns(
+                cells,
+                resultInsertIndex,
+                rowValue(resolveImportResultStatusLabel(row.status)),
+                rowValue(row.errors)
+            );
             sheetRows.add(cells);
         }
         return sheetRows;
@@ -770,6 +833,94 @@ public without sharing class FEC_BatchCaseHandlingImportService {
 
     private static String rowValue(String value) {
         return value == null ? FEC_ConstantCommon.STR_EMPTY : String.valueOf(value);
+    }
+
+    private static List<Integer> buildResultMappedColumnIndexes(
+        List<String> sourceHeaders,
+        List<FEC_BatchCaseHandlingImportRow> rowResults
+    ) {
+        List<Integer> mapped = new List<Integer>();
+        if (sourceHeaders == null || sourceHeaders.isEmpty()) {
+            return mapped;
+        }
+        List<Integer> worksheetCols = null;
+        if (rowResults != null) {
+            for (FEC_BatchCaseHandlingImportRow row : rowResults) {
+                if (
+                    row != null &&
+                    row.originalColumnIndexes != null &&
+                    !row.originalColumnIndexes.isEmpty()
+                ) {
+                    worksheetCols = row.originalColumnIndexes;
+                    break;
+                }
+            }
+        }
+        for (Integer idx = 0; idx < sourceHeaders.size(); idx++) {
+            Integer colIdx = idx;
+            if (worksheetCols != null && idx < worksheetCols.size() && worksheetCols[idx] != null) {
+                colIdx = worksheetCols[idx];
+            }
+            mapped.add(colIdx);
+        }
+        return mapped;
+    }
+
+    private static Integer resolveResultInsertIndex(
+        List<String> sourceHeaders,
+        Integer inputtedRemarksIndex,
+        Integer cpAssessmentIndex
+    ) {
+        if (sourceHeaders == null || sourceHeaders.isEmpty()) {
+            return 0;
+        }
+        // 29/05/2026 19:15 linhdev - gợi ý vị trí chèn; FEC_BCH_TemplateExportService căn theo cột cuối trên file Excel
+        return sourceHeaders.size();
+    }
+
+    private static void insertResultColumns(List<String> cells, Integer insertIndex) {
+        insertResultColumns(cells, insertIndex, RESULT_COL_STATUS, RESULT_COL_ERRORS);
+    }
+
+    private static void insertResultColumns(List<String> cells, Integer insertIndex, String statusValue, String errorsValue) {
+        if (cells == null) {
+            return;
+        }
+        Integer safeInsertIndex = insertIndex == null ? cells.size() : insertIndex;
+        if (safeInsertIndex < 0) {
+            safeInsertIndex = 0;
+        }
+        if (safeInsertIndex > cells.size()) {
+            safeInsertIndex = cells.size();
+        }
+        cells.add(safeInsertIndex, rowValue(statusValue));
+        cells.add(safeInsertIndex + 1, rowValue(errorsValue));
+    }
+
+    private static Integer findHeaderIndex(List<String> headers, String targetHeader) {
+        if (headers == null || headers.isEmpty() || String.isBlank(targetHeader)) {
+            return -1;
+        }
+        String normalizedTarget = normalizeHeaderKey(targetHeader);
+        for (Integer idx = 0; idx < headers.size(); idx++) {
+            if (normalizeHeaderKey(headers[idx]) == normalizedTarget) {
+                return idx;
+            }
+        }
+        return -1;
+    }
+
+    private static String normalizeHeaderKey(String value) {
+        if (String.isBlank(value)) {
+            return FEC_ConstantCommon.STR_EMPTY;
+        }
+        String normalized = value.replaceAll('\\s+', FEC_ConstantCommon.STR_EMPTY).toLowerCase();
+        normalized = normalized.replace('(', FEC_ConstantCommon.STR_EMPTY);
+        normalized = normalized.replace(')', FEC_ConstantCommon.STR_EMPTY);
+        normalized = normalized.replace('.', FEC_ConstantCommon.STR_EMPTY);
+        normalized = normalized.replace('-', FEC_ConstantCommon.STR_EMPTY);
+        normalized = normalized.replace('/', FEC_ConstantCommon.STR_EMPTY);
+        return normalized;
     }
 
     public static Integer countFailedImportRows(List<FEC_BatchCaseHandlingImportRow> rows) {
@@ -793,7 +944,10 @@ public without sharing class FEC_BatchCaseHandlingImportService {
             FEC_BatchCaseHandlingImportRow rr = new FEC_BatchCaseHandlingImportRow();
             rr.caseIdSearch = pickRowString(row, new List<String>{ 'caseidsearch', 'caseid' });
             rr.routingAction = pickRowString(row, new List<String>{ 'routingaction' });
-            rr.inputtedRemarks = pickRowString(row, new List<String>{ 'inputtedremarks', 'remark', 'remarks' });
+            rr.inputtedRemarks = pickRowString(
+                row,
+                new List<String>{ 'inputtedremarks', 'inputtedremark', 'inputremarks', 'inputremark' }
+            );
             rr.assignmentId = pickRowString(row, new List<String>{ 'assignmentid' });
             rr.assignmentRoutingAction = pickRowString(row, new List<String>{ 'assignmentroutingaction' });
             rr.csD2CAssessmentType = pickRowString(
@@ -851,6 +1005,7 @@ public without sharing class FEC_BatchCaseHandlingImportService {
             // 28/05/2026 16:20 linhdev - giữ nguyên header/cell gốc để server tự xuất Result đúng file user import
             rr.originalHeaders = pickRowStringList(row, 'originalHeaders');
             rr.originalCells = pickRowStringList(row, 'originalCells');
+            rr.originalColumnIndexes = pickRowIntegerList(row, 'originalColumnIndexes');
             rr.originalHeaderRowIndex = pickRowInteger(row, 'originalHeaderRowIndex');
             rr.originalSheetName = pickRowString(row, new List<String>{ 'originalsheetname' });
             Boolean rowEmpty =
@@ -937,6 +1092,8 @@ public without sharing class FEC_BatchCaseHandlingImportService {
             List<String> errs = new List<String>();
             Case matched = null;
             try {
+            // 29/05/2026 19:30 linhdev - validate Inputted Remarks trước routing/scope (đúng message; remark > 32,768 không làm vỡ validate sau)
+            addInputtedRemarksValidationErrors(errs, rr.inputtedRemarks);
             if (String.isBlank(rr.caseIdSearch)) {
                 addImportError(errs, System.Label.FEC_Batch_Case_Handling_Import_Err_Missing_Case_Id);
             }
@@ -1049,12 +1206,6 @@ public without sharing class FEC_BatchCaseHandlingImportService {
                 }
             }
 
-            // 28/05/2026 14:30 linhdev - Thiếu giá trị Inputted Remarks (label FEC_Batch_Case_Handling_Import_Err_Missing_Remark)
-            if (String.isBlank(rr.inputtedRemarks)) {
-                addImportError(errs, System.Label.FEC_Batch_Case_Handling_Import_Err_Missing_Remark);
-            } else if (rr.inputtedRemarks.length() > REMARK_MAX_LEN) {
-                addImportError(errs, System.Label.FEC_Batch_Case_Handling_Import_Err_Remark_Too_Long);
-            }
             } catch (Exception rowEx) {
                 addImportError(
                     errs,
@@ -1128,6 +1279,10 @@ public without sharing class FEC_BatchCaseHandlingImportService {
         Map<String, FEC_Assignment__c> assignmentByName = loadAssignmentsByName(assignmentNames);
         Map<Id, FEC_Assignment__c> assignmentByRecordId = loadAssignmentsByRecordId(assignmentRecordIds);
         List<RemarkDraftUpdateItem> remarkDraftItems = new List<RemarkDraftUpdateItem>();
+        //PhongBT 28/05/26: Hàng COF/GSR Route To + assignmentId — gom để cập nhật FEC_Assignment__c sau khi route Case.
+        List<AssignmentRouteToUpdateItem> assignmentRouteToItems = new List<AssignmentRouteToUpdateItem>();
+        List<FEC_BCH_AssignmentUpdateService.ImportUpdateItem> assignmentUpdateItems =
+            new List<FEC_BCH_AssignmentUpdateService.ImportUpdateItem>();
         Map<Id, Case> pendingCaseFieldUpdatesById = new Map<Id, Case>();
         Map<Id, List<FEC_BatchCaseHandlingImportRow>> rowsByCaseForFieldUpdate = new Map<Id, List<FEC_BatchCaseHandlingImportRow>>();
         for (FEC_BatchCaseHandlingImportRow rr : rows) {
@@ -1146,11 +1301,12 @@ public without sharing class FEC_BatchCaseHandlingImportService {
             if (cofOrGsr && String.isBlank(actionLabel)) {
                 actionLabel = rr.assignmentRoutingAction;
             }
+            Boolean assignmentOnly = isAssignmentRoutingOnly(rr, cofOrGsr);
             Id stageIdForRow = caseLiteById.get(caseId) == null
                 ? null
                 : caseLiteById.get(caseId).FEC_Current_Case_Stage__c;
             FEC_BCH_ImportRoutingResolver.ResolvedRouting resolvedRouting =
-                FEC_BCH_ImportRoutingResolver.resolve(stageIdForRow, actionLabel);
+                FEC_BCH_ImportRoutingResolver.resolve(stageIdForRow, actionLabel, assignmentOnly == true);
             if (resolvedRouting != null && String.isBlank(rr.actionButtonId) && resolvedRouting.actionButtonId != null) {
                 applyResolvedRoutingToRow(rr, resolvedRouting);
             }
@@ -1179,7 +1335,9 @@ public without sharing class FEC_BatchCaseHandlingImportService {
                 );
                 continue;
             }
-            if (routingParsed != null && routingActionRequiresExtraParams(methodKey, routingParsed.decision)) {
+            if (assignmentOnly != true &&
+                routingParsed != null &&
+                routingActionRequiresExtraParams(methodKey, routingParsed.decision)) {
                 rr.status = System.Label.FEC_Batch_Case_Handling_Import_Row_Status_Failed;
                 rr.errors = appendError(
                     rr.errors,
@@ -1192,6 +1350,21 @@ public without sharing class FEC_BatchCaseHandlingImportService {
                 if (routingParsed != null && methodKey == FEC_CaseBusinessService.UPDATEACTION && String.isNotBlank(routingParsed.decision)) {
                     runParams.put('decision', routingParsed.decision);
                 }
+                if (cofOrGsr == true && String.isNotBlank(rr.assignmentId)) {
+                    Id assignmentRecordIdForUpdate = parseAssignmentId(
+                        rr.assignmentId,
+                        assignmentByName,
+                        assignmentByRecordId
+                    );
+                    FEC_BCH_AssignmentUpdateService.collectFromImportRow(
+                        rr,
+                        cofOrGsr,
+                        caseId,
+                        stageIdForRow,
+                        assignmentRecordIdForUpdate,
+                        assignmentUpdateItems
+                    );
+                }
                 if (routingParsed != null && methodKey == FEC_CaseBusinessService.ROUTE_TO) {
                     Case caseLite = caseLiteById.get(caseId);
                     Map<String, String> routeParams = caseLite == null
@@ -1202,7 +1375,10 @@ public without sharing class FEC_BatchCaseHandlingImportService {
                             rr.actionButtonId,
                             rr.routeViaRevertButton == true
                         );
-                    if (routeParams == null || String.isBlank(routeParams.get('actionId')) || String.isBlank(routeParams.get('queueId'))) {
+                    Boolean routeParamsValid = routeParams != null &&
+                        String.isNotBlank(routeParams.get('actionId')) &&
+                        String.isNotBlank(routeParams.get('queueId'));
+                    if (assignmentOnly != true && !routeParamsValid) {
                         rr.status = System.Label.FEC_Batch_Case_Handling_Import_Row_Status_Failed;
                         rr.errors = appendError(
                             rr.errors,
@@ -1210,8 +1386,24 @@ public without sharing class FEC_BatchCaseHandlingImportService {
                         );
                         continue;
                     }
-                    runParams.put('actionId', routeParams.get('actionId'));
-                    runParams.put('queueId', routeParams.get('queueId'));
+                    if (routeParamsValid) {
+                        runParams.put('actionId', routeParams.get('actionId'));
+                        runParams.put('queueId', routeParams.get('queueId'));
+                    }
+                    //PhongBT 28/05/26: COF/GSR có assignmentId — queue team/queue từ Stage Change hoặc hint Excel.
+                    if (cofOrGsr == true && String.isNotBlank(rr.assignmentId)) {
+                        Id assignmentRecordId = parseAssignmentId(rr.assignmentId, assignmentByName, assignmentByRecordId);
+                        if (assignmentRecordId != null) {
+                            AssignmentRouteToUpdateItem routeToItem = new AssignmentRouteToUpdateItem();
+                            routeToItem.row = rr;
+                            routeToItem.assignmentId = assignmentRecordId;
+                            routeToItem.queueToken = routeParamsValid ? routeParams.get('queueToken') : null;
+                            routeToItem.routeTeamHint = routingParsed == null ? null : routingParsed.routeTeamHint;
+                            routeToItem.routeQueueHint = routingParsed == null ? null : routingParsed.routeQueueHint;
+                            routeToItem.submittedOn = System.now();
+                            assignmentRouteToItems.add(routeToItem);
+                        }
+                    }
                 }
                 if (methodKey == FEC_CaseBusinessService.REVERT) {
                     Case caseLite = caseLiteById.get(caseId);
@@ -1222,7 +1414,7 @@ public without sharing class FEC_BatchCaseHandlingImportService {
                             rr.actionButtonId,
                             rr.revertPreferRevertedChange == true
                         );
-                    if (String.isBlank(revertActionId)) {
+                    if (assignmentOnly != true && String.isBlank(revertActionId)) {
                         rr.status = System.Label.FEC_Batch_Case_Handling_Import_Row_Status_Failed;
                         rr.errors = appendError(
                             rr.errors,
@@ -1230,10 +1422,22 @@ public without sharing class FEC_BatchCaseHandlingImportService {
                         );
                         continue;
                     }
-                    runParams.put('actionId', revertActionId);
+                    if (String.isNotBlank(revertActionId)) {
+                        runParams.put('actionId', revertActionId);
+                    }
                 }
                 if (methodKey == FEC_CaseBusinessService.REVERT && String.isNotBlank(rr.routingActionValue)) {
                     runParams.put('routingActionValue', rr.routingActionValue);
+                }
+                Boolean skipCaseRun = false;
+                if (assignmentOnly == true) {
+                    if (methodKey == FEC_CaseBusinessService.ROUTE_TO && !runParams.containsKey('queueId')) {
+                        skipCaseRun = true;
+                    } else if (methodKey == FEC_CaseBusinessService.REVERT && !runParams.containsKey('actionId')) {
+                        skipCaseRun = true;
+                    } else if (methodKey == FEC_CaseBusinessService.UPDATEACTION) {
+                        skipCaseRun = true;
+                    }
                 }
                 // 28/05/2026 11:20 linhdev - không gọi run khi gần 101 SOQL; row còn lại xử lý ở queueable chunk sau
                 if (shouldYieldImportGovernorLimits()) {
@@ -1241,7 +1445,9 @@ public without sharing class FEC_BatchCaseHandlingImportService {
                     rr.errors = appendError(rr.errors, System.Label.FEC_BCH_ImportFailed);
                     continue;
                 }
-                FEC_CaseBusinessService.runInternal(methodKey, runParams);
+                if (!skipCaseRun) {
+                    FEC_CaseBusinessService.run(methodKey, runParams);
+                }
             } catch (Exception ex) {
                 rr.status = System.Label.FEC_Batch_Case_Handling_Import_Row_Status_Failed;
                 rr.errors = appendError(rr.errors, ex.getMessage());
@@ -1273,6 +1479,26 @@ public without sharing class FEC_BatchCaseHandlingImportService {
                 validRemarkItems.add(item);
             }
         }
+        //PhongBT 28/05/26: Chỉ apply update Assignment cho dòng import chưa fail (sau FEC_CaseBusinessService.run Route To).
+        List<AssignmentRouteToUpdateItem> validAssignmentRouteToItems = new List<AssignmentRouteToUpdateItem>();
+        for (AssignmentRouteToUpdateItem item : assignmentRouteToItems) {
+            if (item != null &&
+                item.row != null &&
+                item.row.status != System.Label.FEC_Batch_Case_Handling_Import_Row_Status_Failed) {
+                validAssignmentRouteToItems.add(item);
+            }
+        }
+        applyAssignmentRouteToBulk(validAssignmentRouteToItems);
+        List<FEC_BCH_AssignmentUpdateService.ImportUpdateItem> validAssignmentUpdateItems =
+            new List<FEC_BCH_AssignmentUpdateService.ImportUpdateItem>();
+        for (FEC_BCH_AssignmentUpdateService.ImportUpdateItem item : assignmentUpdateItems) {
+            if (item != null &&
+                item.row != null &&
+                item.row.status != System.Label.FEC_Batch_Case_Handling_Import_Row_Status_Failed) {
+                validAssignmentUpdateItems.add(item);
+            }
+        }
+        FEC_BCH_AssignmentUpdateService.applyImportBulk(validAssignmentUpdateItems);
         applyDraftRemarksBulk(validRemarkItems, cofOrGsr);
     }
 
@@ -1670,6 +1896,17 @@ public without sharing class FEC_BatchCaseHandlingImportService {
         return methodKey == FEC_CaseBusinessService.RESOLVE || methodKey == FEC_CaseBusinessService.REJECT;
     }
 
+    //PhongBT 28/05/26: COF/GSR — chỉ cột Assignment Routing Action (routingAction trống).
+    private static Boolean isAssignmentRoutingOnly(
+        FEC_BatchCaseHandlingImportRow rr,
+        Boolean cofOrGsr
+    ) {
+        return cofOrGsr == true
+            && rr != null
+            && String.isNotBlank(rr.assignmentRoutingAction)
+            && String.isBlank(rr.routingAction);
+    }
+
     private static Map<String, String> resolveRouteToParams(
         Id currentStageId,
         RoutingParseResult parsed,
@@ -1780,10 +2017,73 @@ public without sharing class FEC_BatchCaseHandlingImportService {
         }
         Map<String, String> resolved = new Map<String, String>{
             'actionId' => String.valueOf(selected.FEC_Action_Button__c),
-            'queueId' => queueId
+            'queueId' => queueId,
+            //PhongBT 28/05/26: Developer name queue (FEC_Next_Queue__c) — dùng lookup FEC_Team_Queue__c khi update Assignment.
+            'queueToken' => selected.FEC_Next_Queue__c
         };
         routeParamsCacheByKey.put(cacheKey, resolved);
         return resolved;
+    }
+
+    //PhongBT 28/05/26: Delegate bulk cập nhật Assignment Route To sang FEC_BCH_AssignmentRouteToService (4 rule spec).
+    private static void applyAssignmentRouteToBulk(List<AssignmentRouteToUpdateItem> routeToItems) {
+        if (routeToItems == null || routeToItems.isEmpty()) {
+            return;
+        }
+        List<FEC_BCH_AssignmentRouteToService.RouteToContext> contexts =
+            new List<FEC_BCH_AssignmentRouteToService.RouteToContext>();
+        Map<Id, List<AssignmentRouteToUpdateItem>> rowsByAssignmentId =
+            new Map<Id, List<AssignmentRouteToUpdateItem>>();
+        for (AssignmentRouteToUpdateItem item : routeToItems) {
+            if (item == null || item.assignmentId == null || item.row == null) {
+                continue;
+            }
+            //PhongBT 28/05/26: Resolve queue developer name từ Stage Change token hoặc hint Excel.
+            String queueDevName = FEC_BCH_AssignmentRouteToService.resolveQueueDeveloperName(
+                item.queueToken,
+                item.routeTeamHint,
+                item.routeQueueHint
+            );
+            if (String.isBlank(queueDevName)) {
+                item.row.status = System.Label.FEC_Batch_Case_Handling_Import_Row_Status_Failed;
+                item.row.errors = appendError(
+                    item.row.errors,
+                    'Không xác định được queue đích để cập nhật Assignment Route To.'
+                );
+                continue;
+            }
+            FEC_BCH_AssignmentRouteToService.RouteToContext ctx =
+                new FEC_BCH_AssignmentRouteToService.RouteToContext();
+            ctx.assignmentId = item.assignmentId;
+            ctx.queueDeveloperName = queueDevName;
+            ctx.submittedOn = item.submittedOn == null ? System.now() : item.submittedOn;
+            contexts.add(ctx);
+            if (!rowsByAssignmentId.containsKey(item.assignmentId)) {
+                rowsByAssignmentId.put(item.assignmentId, new List<AssignmentRouteToUpdateItem>());
+            }
+            rowsByAssignmentId.get(item.assignmentId).add(item);
+        }
+        if (contexts.isEmpty()) {
+            return;
+        }
+        List<FEC_BCH_AssignmentRouteToService.ApplyResult> results =
+            FEC_BCH_AssignmentRouteToService.applyRouteToAssignmentsBulk(contexts);
+        //PhongBT 28/05/26: Gán lỗi update Assignment lên dòng import result.
+        for (FEC_BCH_AssignmentRouteToService.ApplyResult result : results) {
+            if (result == null || result.success == true || result.assignmentId == null) {
+                continue;
+            }
+            if (!rowsByAssignmentId.containsKey(result.assignmentId)) {
+                continue;
+            }
+            for (AssignmentRouteToUpdateItem item : rowsByAssignmentId.get(result.assignmentId)) {
+                if (item == null || item.row == null) {
+                    continue;
+                }
+                item.row.status = System.Label.FEC_Batch_Case_Handling_Import_Row_Status_Failed;
+                item.row.errors = appendError(item.row.errors, result.errorMessage);
+            }
+        }
     }
 
     private static String resolveRevertActionId(
@@ -1983,33 +2283,37 @@ public without sharing class FEC_BatchCaseHandlingImportService {
         if (String.isBlank(primaryLabel)) {
             return errs;
         }
+        Boolean assignmentOnly = isAssignmentRoutingOnly(rr, cofOrGsr);
         Id stageId = matched == null ? null : matched.FEC_Current_Case_Stage__c;
         FEC_BCH_ImportRoutingResolver.ResolvedRouting resolved =
-            FEC_BCH_ImportRoutingResolver.resolve(stageId, primaryLabel);
-        // 28/05/2026 14:30 linhdev - Giá trị Routing Action không tồn tại trong Datagroup (không trùng Thiếu giá trị)
+            FEC_BCH_ImportRoutingResolver.resolve(stageId, primaryLabel, assignmentOnly == true);
+        String routingInvalidLabel = assignmentOnly == true
+            ? System.Label.FEC_Batch_Case_Handling_Import_Err_Assignment_Routing_Invalid
+            : System.Label.FEC_Batch_Case_Handling_Import_Err_Routing_Action_Invalid;
         if (resolved == null || String.isBlank(resolved.methodKey)) {
-            errs.add(System.Label.FEC_Batch_Case_Handling_Import_Err_Routing_Action_Invalid);
+            errs.add(routingInvalidLabel);
             return errs;
         }
         if (resolved.methodKey == FEC_CaseBusinessService.TRANSFER) {
-            errs.add(System.Label.FEC_Batch_Case_Handling_Import_Err_Routing_Action_Invalid);
+            errs.add(routingInvalidLabel);
             return errs;
         }
         if (FEC_BCH_ImportRoutingResolver.requiresStageScreenMatch(resolved.methodKey) &&
             stageId != null &&
             resolved.matchedStageScreen != true) {
-            errs.add(System.Label.FEC_Batch_Case_Handling_Import_Err_Routing_Action_Invalid);
+            errs.add(routingInvalidLabel);
             return errs;
         }
         applyResolvedRoutingToRow(rr, resolved);
         if (cofOrGsr == true && String.isNotBlank(rr.routingAction) && String.isNotBlank(rr.assignmentRoutingAction)) {
             errs.add(System.Label.FEC_Batch_Case_Handling_Import_Err_Both_Routing_Actions);
         }
-        if (cofOrGsr == true && String.isNotBlank(rr.routingAction)) {
+        if (cofOrGsr == true && String.isNotBlank(rr.routingAction) && String.isNotBlank(rr.assignmentId)) {
             FEC_BCH_ImportRoutingResolver.ResolvedRouting caseResolved =
                 FEC_BCH_ImportRoutingResolver.resolve(stageId, rr.routingAction);
-            if (caseResolved == null || String.isBlank(caseResolved.methodKey) ||
-                !isResolvedOrRejectCaseRouting(caseResolved.methodKey)) {
+            if (caseResolved == null || String.isBlank(caseResolved.methodKey)) {
+                errs.add(System.Label.FEC_Batch_Case_Handling_Import_Err_Routing_Action_Invalid);
+            } else if (!isResolvedOrRejectCaseRouting(caseResolved.methodKey)) {
                 errs.add(System.Label.FEC_Batch_Case_Handling_Import_Err_Assignment_Routing_Resolve_Only);
             }
         }
@@ -2017,7 +2321,7 @@ public without sharing class FEC_BatchCaseHandlingImportService {
             String.isNotBlank(rr.assignmentRoutingAction) &&
             String.isBlank(rr.routingAction)) {
             FEC_BCH_ImportRoutingResolver.ResolvedRouting asgResolved =
-                FEC_BCH_ImportRoutingResolver.resolve(stageId, rr.assignmentRoutingAction);
+                FEC_BCH_ImportRoutingResolver.resolve(stageId, rr.assignmentRoutingAction, true);
             if (asgResolved == null || String.isBlank(asgResolved.methodKey)) {
                 errs.add(System.Label.FEC_Batch_Case_Handling_Import_Err_Assignment_Routing_Invalid);
             } else {
@@ -2539,6 +2843,39 @@ public without sharing class FEC_BatchCaseHandlingImportService {
         return out;
     }
 
+    private static List<Integer> pickRowIntegerList(Map<String, Object> row, String keyName) {
+        List<Integer> out = new List<Integer>();
+        if (row == null || String.isBlank(keyName)) {
+            return out;
+        }
+        Object raw = row.get(keyName);
+        if (raw == null) {
+            String want = keyName.replaceAll('\\s+', '').toLowerCase();
+            for (String k : row.keySet()) {
+                String nk = k == null ? FEC_ConstantCommon.STR_EMPTY : k.replaceAll('\\s+', '').toLowerCase();
+                if (want.equals(nk)) {
+                    raw = row.get(k);
+                    break;
+                }
+            }
+        }
+        if (raw == null || !(raw instanceof List<Object>)) {
+            return out;
+        }
+        for (Object val : (List<Object>) raw) {
+            if (val == null) {
+                out.add(null);
+                continue;
+            }
+            try {
+                out.add(Integer.valueOf(String.valueOf(val).trim()));
+            } catch (Exception ex) {
+                out.add(null);
+            }
+        }
+        return out;
+    }
+
     private static Integer pickRowInteger(Map<String, Object> row, String keyName) {
         if (row == null || String.isBlank(keyName)) {
             return null;
@@ -2586,6 +2923,20 @@ public without sharing class FEC_BatchCaseHandlingImportService {
         );
     }
 
+    // 29/05/2026 19:30 linhdev - Thiếu / vượt quá 32,768 ký tự Inputted Remarks (label Custom Label)
+    private static void addInputtedRemarksValidationErrors(List<String> errs, String inputtedRemarks) {
+        if (errs == null) {
+            return;
+        }
+        if (String.isBlank(inputtedRemarks)) {
+            addImportError(errs, System.Label.FEC_Batch_Case_Handling_Import_Err_Missing_Remark);
+            return;
+        }
+        if (inputtedRemarks.length() > REMARK_MAX_LEN) {
+            addImportError(errs, System.Label.FEC_Batch_Case_Handling_Import_Err_Remark_Too_Long);
+        }
+    }
+
     private static void addImportError(List<String> errs, String message) {
         if (errs == null || String.isBlank(message)) {
             return;
@@ -2629,5 +2980,15 @@ public without sharing class FEC_BatchCaseHandlingImportService {
         public Id caseId;
         public Id assignmentId;
         public String inputtedRemarks;
+    }
+
+    //PhongBT 28/05/26: Payload 1 dòng import — Assignment Route To (vd Route to CS QC - Quality Control Mailbox).
+    private class AssignmentRouteToUpdateItem {
+        public FEC_BatchCaseHandlingImportRow row;
+        public Id assignmentId;
+        public String queueToken;
+        public String routeTeamHint;
+        public String routeQueueHint;
+        public Datetime submittedOn;
     }
 }
