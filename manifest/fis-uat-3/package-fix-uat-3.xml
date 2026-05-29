@@ -47,6 +47,7 @@
 	    <members>FEC_CheckEligibleController</members>
 	    <members>FEC_CardClosureRefundController</members>
 	    <members>FEC_FastCashCaseController</members>
+        <members>FEC_FetchWelcomeCallDetailsRestService</members>
         <members>FEC_RelevantTicketController</members>
         <members>FEC_RelevantTicketTriggerHandler</members>
         <members>FEC_COFFraudRelatedHandler</members>

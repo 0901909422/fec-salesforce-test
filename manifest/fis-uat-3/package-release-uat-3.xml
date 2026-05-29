@@ -113,6 +113,7 @@
         <members>FEC_FastCashCaseController</members>
         <members>FEC_FetchCollectionDataServiceCallout</members>
         <members>FEC_FetchCollectionDataService_Test</members>
+        <members>FEC_FetchWelcomeCallDetailsRestService</members>
         <members>FEC_CaseBusinessService</members>
         <members>FEC_ScopedStageChangeRoutingService</members>
         <members>FEC_CaseRemarkController</members>
