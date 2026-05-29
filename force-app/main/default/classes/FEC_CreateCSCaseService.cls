@@ -128,6 +128,11 @@ global with sharing class FEC_CreateCSCaseService {
             if (!filePayloads.isEmpty()) {
                 uploadFilesToCase(customerCase.Id, filePayloads);
             }
+
+            // -------------------------
+            // MAP ADDITIONAL INFO TO FEC_Additional_Info__c
+            // -------------------------
+            upsertAdditionalInfoByMasterSetting(customerCase.Id, req.RequestInfo);
             
             // -------------------------
             // SUCCESS RESPONSE
@@ -656,6 +661,93 @@ global with sharing class FEC_CreateCSCaseService {
         if (!versions.isEmpty()) {
             insert versions;
         }
+    }
+
+    private static void upsertAdditionalInfoByMasterSetting(
+        Id caseId,
+        RequestInfoType requestInfo
+    ) {
+        if (caseId == null || requestInfo == null || requestInfo.AdditionalInfo == null) {
+            return;
+        }
+
+        Map<String, String> additionalInfoMap = new Map<String, String>();
+        for (AdditionalInfoType info : requestInfo.AdditionalInfo) {
+            if (info == null || String.isBlank(info.ID) || String.isBlank(info.Value)) {
+                continue;
+            }
+            // Upload document xử lý ở flow khác, không map vào Additional Info object.
+            if (info.ID == FEC_ConstantCommon.UPLOAD_DOCUMENT) {
+                continue;
+            }
+            additionalInfoMap.put(info.ID.trim(), info.Value);
+        }
+        if (additionalInfoMap.isEmpty()) {
+            return;
+        }
+
+        List<FEC_Master_Data_Setting__c> mappings = queryAdditionalInfoMappings(requestInfo);
+        if (mappings.isEmpty()) {
+            return;
+        }
+
+        Set<String> allowedAdditionalInfoIds = new Set<String>();
+        for (FEC_Master_Data_Setting__c setting : mappings) {
+            if (String.isBlank(setting.FEC_Code__c)) {
+                continue;
+            }
+            allowedAdditionalInfoIds.add(setting.FEC_Code__c.trim());
+        }
+
+        Map<String, Schema.SObjectField> additionalInfoFieldMap =
+            Schema.SObjectType.FEC_Additional_Info__c.fields.getMap();
+        FEC_Additional_Info__c additionalInfoRecord = new FEC_Additional_Info__c(
+            FEC_Case__c = caseId
+        );
+        Boolean hasMappedValue = false;
+
+        for (String additionalInfoId : additionalInfoMap.keySet()) {
+            if (
+                !allowedAdditionalInfoIds.isEmpty() &&
+                !allowedAdditionalInfoIds.contains(additionalInfoId)
+            ) {
+                continue;
+            }
+            String targetFieldApi = additionalInfoId;
+            if (!additionalInfoFieldMap.containsKey(targetFieldApi)) {
+                continue;
+            }
+            additionalInfoRecord.put(targetFieldApi, additionalInfoMap.get(additionalInfoId));
+            hasMappedValue = true;
+        }
+
+        if (hasMappedValue) {
+            insert additionalInfoRecord;
+        }
+    }
+
+    private static List<FEC_Master_Data_Setting__c> queryAdditionalInfoMappings(
+        RequestInfoType requestInfo
+    ) {
+        if (requestInfo == null) {
+            return new List<FEC_Master_Data_Setting__c>();
+        }
+
+        return [
+            SELECT
+                Id,
+                FEC_Code__c,
+                FEC_Field_Object_Name__c,
+                FEC_Field_API_Name__c
+            FROM FEC_Master_Data_Setting__c
+            WHERE FEC_Field_Object_Name__c = :FEC_ConstantCommon.OBJ_ADDITIONAL_INFO
+                AND FEC_Field_API_Name__c = 'AdditionalInfo.ID'
+                AND FEC_Nature_Of_Case__r.FEC_Business_Process__r.FEC_Code__c = :requestInfo.CaseType
+                AND FEC_Nature_Of_Case__r.FEC_Product_Type__r.FEC_Code__c = :requestInfo.ProductType
+                AND FEC_Nature_Of_Case__r.FEC_Category__r.FEC_Code__c = :requestInfo.Category
+                AND FEC_Nature_Of_Case__r.FEC_Sub_Category__r.FEC_Code__c = :requestInfo.SubCategory
+                AND FEC_Nature_Of_Case__r.FEC_Sub_Code__r.FEC_Code__c = :requestInfo.SubCode
+        ];
     }
     
     private static CreateCSCaseResponse createCaseResponse(
