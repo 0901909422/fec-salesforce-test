@@ -13,7 +13,7 @@ public without sharing class FEC_MrcReturnCaseService {
     public static final String CONF_NOT_RECEIVED = 'Customer has not received MRC';
 
     private static final Set<String> STAGE1_HIDDEN_ASSESSMENT = new Set<String>{
-        'FEC_Contract_Processing_Assessment_Type__c',
+        'FEC_Contract_Processing_MRC_Assessment__c',
         'FEC_RD_Payment_Contract_Assessment__c'
     };
 
@@ -134,12 +134,13 @@ public without sharing class FEC_MrcReturnCaseService {
 
         String mrcStatusId = null;
         if (selectedCase != null && selectedCase.FEC_Account_or_Contract__r != null) {
+            // Ưu tiên Status_ID (API code chuẩn: LK/MN/...) để tránh lệch theo label đã dịch.
             mrcStatusId = normalizeCode(
-                selectedCase.FEC_Account_or_Contract__r.FEC_MRC_Status__c
+                selectedCase.FEC_Account_or_Contract__r.FEC_Status_ID__c
             );
             if (String.isBlank(mrcStatusId)) {
                 mrcStatusId = normalizeCode(
-                    selectedCase.FEC_Account_or_Contract__r.FEC_Status_ID__c
+                    selectedCase.FEC_Account_or_Contract__r.FEC_MRC_Status__c
                 );
             }
         }
@@ -1335,13 +1336,17 @@ public without sharing class FEC_MrcReturnCaseService {
         if (errorlst.isEmpty()) {
             return new FEC_CaseBusinessService.Error();
         }
-        return new FEC_CaseBusinessService.Error(
+        FEC_CaseBusinessService.Error mrcErr = new FEC_CaseBusinessService.Error(
             System.Label.FEC_MRC_Return_Case_Info_Block_Title,
             errorlst
         );
+        if (isRl0503DpdOnlyValidation(mrcErr, subCodeCode)) {
+            mrcErr.label = System.Label.FEC_MRC_Return_RL0503_DPD_Block_Title;
+        }
+        return mrcErr;
     }
 
-    /** Chỉ cảnh báo DPD RL05.03 — không chặn master data / fec_ContractClosureForm. */
+    /** RL05.03 DPD ≥ 15 — chỉ một dòng lý do DPD (dùng tiêu đề block riêng). */
     public static Boolean isRl0503DpdOnlyValidation(
         FEC_CaseBusinessService.Error mrcErr,
         String subCodeCode

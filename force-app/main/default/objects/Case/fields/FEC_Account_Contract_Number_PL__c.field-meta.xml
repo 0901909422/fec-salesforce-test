@@ -28,7 +28,18 @@
                 <default>false</default>
                 <label>Internal Request</label>
             </value>
+            <value>
+                <fullName>Insurance</fullName>
+                <default>false</default>
+                <label>Insurance</label>
+            </value>
         </valueSetDefinition>
+        <valueSettings>
+            <controllingFieldValue>Existing</controllingFieldValue>
+            <controllingFieldValue>Non-existing</controllingFieldValue>
+            <controllingFieldValue>All</controllingFieldValue>
+            <valueName>Insurance</valueName>
+        </valueSettings>
         <valueSettings>
             <controllingFieldValue>Non-existing</controllingFieldValue>
             <controllingFieldValue>All</controllingFieldValue>

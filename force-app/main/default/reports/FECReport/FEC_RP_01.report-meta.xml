@@ -1,192 +1,201 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Report xmlns="http://soap.sforce.com/2006/04/metadata">
     <columns>
-        <field>Case.FEC_Customer_Name__c</field>
+        <field>Case$FEC_Customer_Name__c</field>
     </columns>
     <columns>
-        <field>Case.FEC_Account_Number__c</field>
+        <field>Case$FEC_User_ID__c</field>
     </columns>
     <columns>
-        <field>FEC_Customer_History__c.FEC_Contract_Number__c</field>
+        <field>Case$FEC_Account_Number__c</field>
     </columns>
     <columns>
-        <field>FEC_Customer_History__c.FEC_Application_ID__c</field>
+        <field>Case$FEC_Contract_Number__c</field>
     </columns>
     <columns>
-        <field>FEC_Customer_History__c.FEC_Account_Status__c</field>
+        <field>Case.Customer_Histories__r$FEC_Application_ID__c</field>
     </columns>
     <columns>
-        <field>FEC_Customer_History__c.FEC_Plastic_ID__c</field>
+        <field>Case.Customer_Histories__r$FEC_Account_Status__c</field>
     </columns>
     <columns>
-        <aggregateTypes>Sum</aggregateTypes>
-        <field>FEC_Customer_History__c.FEC_Credit_Limit__c</field>
-    </columns>
-    <columns>
-        <field>FEC_Customer_History__c.FEC_Contract_Status__c</field>
-    </columns>
-    <columns>
-        <field>FEC_Customer_History__c.FEC_Product_Code__c</field>
+        <field>Case.Customer_Histories__r$FEC_Plastic_ID__c</field>
     </columns>
     <columns>
         <aggregateTypes>Sum</aggregateTypes>
-        <field>FEC_Customer_History__c.FEC_Loan_Amount__c</field>
+        <field>Case.Customer_Histories__r$FEC_Credit_Limit__c</field>
+    </columns>
+    <columns>
+        <field>Case.Customer_Histories__r$FEC_Contract_Status__c</field>
+    </columns>
+    <columns>
+        <field>Case.Customer_Histories__r$FEC_Product_Code__c</field>
     </columns>
     <columns>
         <aggregateTypes>Sum</aggregateTypes>
-        <field>FEC_Customer_History__c.FEC_Tenure__c</field>
+        <field>Case.Customer_Histories__r$FEC_Loan_Amount__c</field>
     </columns>
     <columns>
-        <field>Case.FEC_Interaction_ID__c</field>
+        <aggregateTypes>Sum</aggregateTypes>
+        <field>Case.Customer_Histories__r$FEC_Tenure__c</field>
     </columns>
     <columns>
-        <field>Case.FEC_Interaction_Status__c</field>
+        <field>Case$FEC_Interaction_ID__c</field>
     </columns>
     <columns>
-        <field>Case.FEC_Created_On__c</field>
+        <field>Case$FEC_Interaction_Status__c</field>
     </columns>
     <columns>
-        <field>Case.FEC_Created_by__c</field>
+        <field>Case$FEC_Created_On__c</field>
     </columns>
     <columns>
-        <field>Case.FEC_Last_Updated_On__c</field>
+        <field>Case$FEC_Created_by__c</field>
     </columns>
     <columns>
-        <field>Case.FEC_Last_Updated_By__c</field>
+        <field>Case$FEC_Interaction__c.FEC_Last_Updated_On__c</field>
     </columns>
     <columns>
-        <field>Case.FEC_Channel__c</field>
+        <field>Case$FEC_Interaction__c.FEC_Last_Updated_By__c</field>
     </columns>
     <columns>
-        <field>Case.FEC_Interaction_Subchannel__c</field>
+        <field>Case$FEC_Channel__c</field>
     </columns>
     <columns>
-        <field>Case.FEC_Phone_Number__c</field>
+        <field>Case$FEC_Interaction_Subchannel__c</field>
     </columns>
     <columns>
-        <field>Case.FEC_Interaction_Email__c</field>
+        <field>Case$FEC_Phone_Number__c</field>
     </columns>
     <columns>
-        <field>Case.FEC_Customer_Username__c</field>
+        <field>Case$FEC_Interaction_Email__c</field>
     </columns>
     <columns>
-        <field>Case.FEC_External_Interaction_ID__c</field>
+        <field>Case$FEC_Customer_Username__c</field>
     </columns>
     <columns>
-        <field>SUBJECT</field>
+        <field>Case$FEC_External_Interaction_ID__c</field>
     </columns>
     <columns>
-        <field>Case.FEC_Send_To__c</field>
+        <field>Case$Subject</field>
     </columns>
     <columns>
-        <field>Case.FEC_Case_ID__c</field>
+        <field>Case$FEC_Send_To__c</field>
     </columns>
     <columns>
-        <field>Case.FEC_Case_Status__c</field>
+        <field>Case$FEC_Case_ID__c</field>
     </columns>
     <columns>
-        <field>Case.FEC_Service_Case_Owner__c</field>
+        <field>Case$FEC_Case_Status__c</field>
     </columns>
     <columns>
-        <field>Case.FEC_Case_Created_On__c</field>
+        <field>Case$FEC_Service_Case_Owner__c</field>
     </columns>
     <columns>
-        <field>Case.FEC_Case_Created_By__c</field>
+        <field>Case$FEC_Case_Created_On__c</field>
     </columns>
     <columns>
-        <field>Case.FEC_Complain_Type__c</field>
+        <field>Case$FEC_Case_Created_By__c</field>
     </columns>
     <columns>
-        <field>Case.FEC_Complaint_Source__c</field>
+        <field>Case$FEC_Last_Updated_On__c</field>
     </columns>
     <columns>
-        <field>Case.FEC_Original_Category__c</field>
+        <field>Case$FEC_Last_Updated_By__c</field>
     </columns>
     <columns>
-        <field>Case.FEC_Original_Sub_Category__c</field>
+        <field>Case$FEC_Complain_Type__c</field>
     </columns>
     <columns>
-        <field>Case.FEC_Original_Sub_Code__c</field>
+        <field>Case$FEC_Complaint_Source__c</field>
     </columns>
     <columns>
-        <field>Case.FEC_Category__c</field>
+        <field>Case$FEC_Original_Category__c</field>
     </columns>
     <columns>
-        <field>Case.FEC_SubCategory__c</field>
+        <field>Case$FEC_Original_Sub_Category__c</field>
     </columns>
     <columns>
-        <field>Case.FEC_SubCode__c</field>
+        <field>Case$FEC_Original_Sub_Code__c</field>
     </columns>
     <columns>
-        <field>Case.FEC_Case_Status_History_1__c</field>
+        <field>Case$FEC_Category__c</field>
     </columns>
     <columns>
-        <field>Case.FEC_Case_Status_History_2__c</field>
+        <field>Case$FEC_SubCategory__c</field>
     </columns>
     <columns>
-        <field>Case.FEC_Case_Status_History_3__c</field>
+        <field>Case$FEC_SubCode__c</field>
     </columns>
     <columns>
-        <field>Case.FEC_Case_Remarks_1__c</field>
+        <field>Case$FEC_Case_Status_History_1__c</field>
     </columns>
     <columns>
-        <field>Case.FEC_Case_Remarks_2__c</field>
+        <field>Case$FEC_Case_Status_History_2__c</field>
     </columns>
     <columns>
-        <field>Case.FEC_Case_Remarks_3__c</field>
+        <field>Case$FEC_Case_Status_History_3__c</field>
     </columns>
     <columns>
-        <field>Case.FEC_Case_Remarks_Entered_By_1__c</field>
+        <field>Case$FEC_Case_Remarks_1__c</field>
     </columns>
     <columns>
-        <field>Case.FEC_Case_Remarks_Entered_By_2__c</field>
+        <field>Case$FEC_Case_Remarks_2__c</field>
     </columns>
     <columns>
-        <field>Case.FEC_Case_Remarks_Entered_By_3__c</field>
+        <field>Case$FEC_Case_Remarks_3__c</field>
     </columns>
     <columns>
-        <field>Case.FEC_Case_Remarks_Entered_By_Role_1__c</field>
+        <field>Case$FEC_Case_Remarks_Entered_By_1__c</field>
     </columns>
     <columns>
-        <field>Case.FEC_Case_Remarks_Entered_By_Role_2__c</field>
+        <field>Case$FEC_Case_Remarks_Entered_By_2__c</field>
     </columns>
     <columns>
-        <field>Case.FEC_Case_Remarks_Entered_By_Role_3__c</field>
+        <field>Case$FEC_Case_Remarks_Entered_By_3__c</field>
     </columns>
     <columns>
-        <field>Case.FEC_Case_Remarks_Entered_On_1__c</field>
+        <field>Case$FEC_Case_Remarks_Entered_By_Role_1__c</field>
     </columns>
     <columns>
-        <field>Case.FEC_Case_Remarks_Entered_On_2__c</field>
+        <field>Case$FEC_Case_Remarks_Entered_By_Role_2__c</field>
     </columns>
     <columns>
-        <field>Case.FEC_Case_Remarks_Entered_On_3__c</field>
+        <field>Case$FEC_Case_Remarks_Entered_By_Role_3__c</field>
+    </columns>
+    <columns>
+        <field>Case$FEC_Case_Remarks_Entered_On_1__c</field>
+    </columns>
+    <columns>
+        <field>Case$FEC_Case_Remarks_Entered_On_2__c</field>
+    </columns>
+    <columns>
+        <field>Case$FEC_Case_Remarks_Entered_On_3__c</field>
     </columns>
     <filter>
         <booleanFilter>(1 OR 2 OR 3) AND 4</booleanFilter>
         <criteriaItems>
-            <column>Case.FEC_Case_Created_On__c</column>
+            <column>Case$FEC_Case_Created_On__c</column>
             <columnToColumn>false</columnToColumn>
             <isUnlocked>true</isUnlocked>
             <operator>equals</operator>
             <value>YESTERDAY</value>
         </criteriaItems>
         <criteriaItems>
-            <column>Case.FEC_Created_On__c</column>
+            <column>Case$FEC_Created_On__c</column>
             <columnToColumn>false</columnToColumn>
             <isUnlocked>true</isUnlocked>
             <operator>equals</operator>
             <value>YESTERDAY</value>
         </criteriaItems>
         <criteriaItems>
-            <column>Case.FEC_Last_Updated_On__c</column>
+            <column>Case$FEC_Last_Updated_On__c</column>
             <columnToColumn>false</columnToColumn>
             <isUnlocked>true</isUnlocked>
             <operator>equals</operator>
             <value>YESTERDAY</value>
         </criteriaItems>
         <criteriaItems>
-            <column>RECORDTYPE</column>
+            <column>Case$RecordType</column>
             <columnToColumn>false</columnToColumn>
             <isUnlocked>true</isUnlocked>
             <operator>equals</operator>
@@ -195,22 +204,18 @@
         <language>en_US</language>
     </filter>
     <format>Tabular</format>
-    <name>Interactions &amp; Service Cases Summary</name>
-    <params>
-        <name>units</name>
-        <value>h</value>
-    </params>
+    <name>Interaction &amp; Service Case Summary</name>
     <params>
         <name>co</name>
         <value>1</value>
     </params>
-    <reportType>CaseCustomEntity$FEC_Customer_History__c</reportType>
+    <reportType>FEC_Case_With_Customer_Histories__c</reportType>
     <scope>organization</scope>
     <showDetails>true</showDetails>
     <showGrandTotal>true</showGrandTotal>
     <showSubTotals>true</showSubTotals>
     <timeFrameFilter>
-        <dateColumn>CREATED_DATEONLY</dateColumn>
+        <dateColumn>Case$CreatedDate</dateColumn>
         <interval>INTERVAL_CUSTOM</interval>
     </timeFrameFilter>
 </Report>

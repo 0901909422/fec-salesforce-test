@@ -27,15 +27,18 @@
             </div>
         </div>
         <!-- Row 2: Assignment Name -->
-        <div class="slds-m-bottom_small">
-            <lightning-combobox
-                label="Assignment Name"
-                value={assignmentName}
-                options={assignmentNameOptions}
-                onchange={handleNameChange}
-                disabled={isNameDisabled}
-                required>
-            </lightning-combobox>
+        <div class="slds-grid slds-gutters slds-m-bottom_small">
+            <div class="slds-col slds-size_1-of-2">
+                <lightning-combobox
+                    label="Assignment Name"
+                    value={assignmentName}
+                    options={assignmentNameOptions}
+                    onchange={handleNameChange}
+                    disabled={isNameDisabled}
+                    required>
+                </lightning-combobox>
+            </div>
+            <div class="slds-col slds-size_1-of-2"></div>
         </div>
         <template if:true={errorMsg}>
             <div class="slds-text-color_error slds-m-top_small">{errorMsg}</div>

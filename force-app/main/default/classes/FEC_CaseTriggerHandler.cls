@@ -13,6 +13,7 @@ public without sharing class FEC_CaseTriggerHandler {
     // SOQL 101: cache RecordType / Interaction Case channel — submit NOC update Case nhiều lần.
     private static Map<Id, String> txnCaseRecordTypeDevName = new Map<Id, String>();
     private static Map<Id, String> txnInteractionCaseChannel = new Map<Id, String>();
+    private static Id slaNotificationTypeId;
     
     /**
      * Method Description: Main entry point được gọi từ trigger
@@ -71,6 +72,7 @@ public without sharing class FEC_CaseTriggerHandler {
         setParentIdFromEmailThread(newCases);
         stripSubjectThreadToken(newCases);
         FEC_CaseTatFullProcessSvc.applyBeforeSave(newCases, null);
+        appendCaseStatusHistoryOnBeforeSave(newCases, null);
     }
 
     /**
@@ -88,6 +90,108 @@ public without sharing class FEC_CaseTriggerHandler {
         new CaseTriggerHandler().onBeforeUpdate(newCases, oldMap);
         syncGlobalSearchFromParent(newCases, oldMap);
         FEC_CaseTatFullProcessSvc.applyBeforeSave(newCases, oldMap);
+        appendCaseStatusHistoryOnBeforeSave(newCases, oldMap);
+    }
+
+    @TestVisible
+    private static final Integer CASE_STATUS_HISTORY_MAX_LEN = 256;
+
+    /**
+     * Tự động append Case Status History theo snapshot giống công thức Final Status:
+     * Pending -> "Pending - " + team, ngược lại dùng Status.
+     */
+    private static void appendCaseStatusHistoryOnBeforeSave(List<Case> newCases, Map<Id, Case> oldMap) {
+        if (newCases == null || newCases.isEmpty()) {
+            return;
+        }
+        for (Case c : newCases) {
+            if (c == null) {
+                continue;
+            }
+            String newFinalStatus = resolveFinalStatusForHistory(c);
+            if (String.isBlank(newFinalStatus)) {
+                continue;
+            }
+
+            Boolean shouldAppend = oldMap == null;
+            if (oldMap != null) {
+                Case oldCase = oldMap.get(c.Id);
+                String oldFinalStatus = resolveFinalStatusForHistory(oldCase);
+                shouldAppend = newFinalStatus != oldFinalStatus;
+            }
+            if (!shouldAppend) {
+                continue;
+            }
+
+            c.FEC_Case_Status_History__c = appendStatusHistoryEntry(c.FEC_Case_Status_History__c, newFinalStatus);
+        }
+    }
+
+    private static String resolveFinalStatusForHistory(Case c) {
+        if (c == null || String.isBlank(c.Status)) {
+            return null;
+        }
+        if (FEC_ConstantCommon.CASE_STATUS_PENDING.equals(c.Status)) {
+            String team = String.isBlank(c.FEC_Team__c) ? '' : c.FEC_Team__c;
+            return 'Pending - ' + team;
+        }
+        return c.Status;
+    }
+
+    private static String appendStatusHistoryEntry(String currentHistory, String statusValue) {
+        List<String> entries = parseStatusHistoryEntries(currentHistory);
+        if (!entries.isEmpty()) {
+            String lastEntry = entries[entries.size() - 1];
+            String lastValue = lastEntry.replaceFirst('^#\\d+:\\s*', '').trim();
+            if (lastValue == statusValue) {
+                return currentHistory;
+            }
+        }
+
+        Integer nextSeq = entries.size() + 1;
+        entries.add('#' + String.valueOf(nextSeq) + ': ' + statusValue);
+        return normalizeStatusHistoryLength(entries);
+    }
+
+    private static String normalizeStatusHistoryLength(List<String> entries) {
+        if (entries == null || entries.isEmpty()) {
+            return null;
+        }
+        String joined = String.join(entries, '\n');
+        while (joined.length() > CASE_STATUS_HISTORY_MAX_LEN && entries.size() > 1) {
+            entries.remove(0);
+            // Đánh lại số thứ tự sau khi loại bớt entry cũ.
+            for (Integer i = 0; i < entries.size(); i++) {
+                String value = entries[i].replaceFirst('^#\\d+:\\s*', '');
+                entries[i] = '#' + String.valueOf(i + 1) + ': ' + value;
+            }
+            joined = String.join(entries, '\n');
+        }
+        if (joined.length() > CASE_STATUS_HISTORY_MAX_LEN) {
+            joined = joined.substring(0, CASE_STATUS_HISTORY_MAX_LEN);
+        }
+        return joined;
+    }
+
+    private static List<String> parseStatusHistoryEntries(String history) {
+        List<String> entries = new List<String>();
+        if (String.isBlank(history)) {
+            return entries;
+        }
+        Matcher matcher = Pattern.compile('#\\d+:\\s*').matcher(history);
+        List<Integer> starts = new List<Integer>();
+        while (matcher.find()) {
+            starts.add(matcher.start());
+        }
+        if (starts.isEmpty()) {
+            return entries;
+        }
+        for (Integer i = 0; i < starts.size(); i++) {
+            Integer startPos = starts[i];
+            Integer endPos = (i + 1 < starts.size()) ? starts[i + 1] : history.length();
+            entries.add(history.substring(startPos, endPos).trim());
+        }
+        return entries;
     }
 
     /**
@@ -1151,11 +1255,6 @@ public without sharing class FEC_CaseTriggerHandler {
      */
       private static void sendSLANotifications(List<Case> newCases, Map<Id, Case> oldMap) {
         try {
-            CustomNotificationType notifType = [
-                SELECT Id FROM CustomNotificationType
-                WHERE DeveloperName = 'Custom_Notification' LIMIT 1
-            ];
-
             List<Case> slaCases = new List<Case>();
             Set<Id> slaCaseIds = new Set<Id>();
             Map<Id, Boolean> caseIdToIsViolating = new Map<Id, Boolean>();
@@ -1175,6 +1274,15 @@ public without sharing class FEC_CaseTriggerHandler {
             if (slaCases.isEmpty()) {
                 return;
             }
+            // 28/05/2026 14:16 linhdev - Cache notification type theo transaction để tránh SOQL 101 khi import bulk.
+            if (slaNotificationTypeId == null) {
+                CustomNotificationType notifType = [
+                    SELECT Id FROM CustomNotificationType
+                    WHERE DeveloperName = 'Custom_Notification' LIMIT 1
+                ];
+                slaNotificationTypeId = notifType.Id;
+            }
+            CustomNotificationType notifType = new CustomNotificationType(Id = slaNotificationTypeId);
 
             Map<Id, Case> slaCaseById = new Map<Id, Case>([
                 SELECT

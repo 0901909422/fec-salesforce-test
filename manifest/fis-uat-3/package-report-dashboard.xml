@@ -46,6 +46,7 @@
         <members>FEC_Routing_Action_History__c.FEC_TAT_by_Assignment_Hrs__c</members>
         <members>FEC_Routing_Action_History__c.FEC_TAT_by_Assignment__c</members>
         <members>FEC_Customer_History__c.FEC_Loan_Amount__c</members>
+        <members>Case.FEC_User_ID__c</members>
         <name>CustomField</name>
     </types>
     <types>
@@ -110,6 +111,7 @@
         <name>PermissionSet</name>
     </types>
     <types>
+        <members>FEC_Case_With_Customer_Histories</members>
         <members>Routing_Action_History_with_Case_and_Assignment</members>
         <name>ReportType</name>
     </types>

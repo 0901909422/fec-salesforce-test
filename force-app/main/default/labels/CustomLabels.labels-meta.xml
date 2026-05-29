@@ -8717,11 +8717,18 @@
         <value>Product Code ≠ &apos;TW&apos;</value>
     </labels>
     <labels>
+        <fullName>FEC_MRC_Return_RL0503_DPD_Block_Title</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>MRC Return RL05.03 — tiêu đề khi DPD ≥ 15</shortDescription>
+        <value>Không đủ điều kiện gửi mẫu đơn cấp lại MRC photo &amp; biên nhận thế chấp.</value>
+    </labels>
+    <labels>
         <fullName>FEC_MRC_Return_Msg_DPD_RL0503</fullName>
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>MRC Return RL05.03 — DPD từ 15 ngày</shortDescription>
-        <value>Hợp đồng có số ngày quá hạn (DPD) từ 15 trở lên: không được tiếp tục với Sub Code gửi mẫu đơn RL05.03.</value>
+        <value>Days Past Due &gt;= 15</value>
     </labels>
     <labels>
         <fullName>FEC_MRC_RL0502_Dup_Banner</fullName>
@@ -14094,7 +14101,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>Chat - Conversations section label</shortDescription>
-        <value>Conversations</value>
+        <value>Chat Conversations</value>
     </labels>
     <labels>
         <fullName>FEC_Chat_History_Label</fullName>
@@ -15982,7 +15989,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>NFU Modal Save Error</shortDescription>
-        <value>Vui lòng chọn ít nhất 1 NFU Code.</value>
+        <value>Chỉ được chọn duy nhất 1 giá trị NFU Code</value>
     </labels>
     <labels>
         <fullName>FEC_NFU_Reason_VN</fullName>
@@ -16229,7 +16236,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC_Batch_Case_Handling_Import_Err_Missing_Routing_Or_Assignment_Routing</shortDescription>
-        <value>Thiếu dữ liệu Routing Action/Assignment Routing Action.</value>
+        <value>Thiếu giá trị Routing Action</value>
     </labels>
     <labels>
         <fullName>FEC_Batch_Case_Handling_Import_Err_Routing_Action_Invalid</fullName>
@@ -16237,7 +16244,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC_Batch_Case_Handling_Import_Err_Routing_Action_Invalid</shortDescription>
-        <value>Giá trị Routing Action không đúng format hoặc không tồn tại trong Datagroup đã define</value>
+        <value>Giá trị Routing Action không tồn tại trong Datagroup</value>
     </labels>
     <labels>
         <fullName>FEC_Batch_Case_Handling_Import_Err_Assignment_Routing_Resolve_Only</fullName>
@@ -16261,7 +16268,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC_Batch_Case_Handling_Import_Err_Missing_Routing_Action</shortDescription>
-        <value>Thiếu dữ liệu Routing Action</value>
+        <value>Thiếu giá trị Routing Action</value>
     </labels>
     <labels>
         <fullName>FEC_Batch_Case_Handling_Import_Err_Assignment_Routing_Without_Assignment_Id</fullName>
@@ -16293,7 +16300,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC_Batch_Case_Handling_Import_Err_Missing_Remark</shortDescription>
-        <value>Thiếu dữ liệu Remark</value>
+        <value>Thiếu giá trị Inputted Remarks</value>
     </labels>
     <labels>
         <fullName>FEC_Batch_Case_Handling_Import_Err_Remark_Too_Long</fullName>
@@ -16301,7 +16308,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC_Batch_Case_Handling_Import_Err_Remark_Too_Long</shortDescription>
-        <value>Giá trị Remark vượt quá số ký tự cho phép (32,768 ký tự)</value>
+        <value>Giá trị Inputted Remarks vượt quá số ký tự cho phép (32,768 ký tự)</value>
     </labels>
     <labels>
         <fullName>FEC_Batch_Case_Handling_Import_Err_Record_Id_Invalid</fullName>
@@ -16333,7 +16340,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC_BCH_NoDataExport</shortDescription>
-        <value>Không có dữ liệu để export.</value>
+        <value>Không có Template tương ứng với Business Process</value>
     </labels>
     <labels>
         <fullName>FEC_BCH_NoDataFound</fullName>
@@ -17474,7 +17481,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC_Batch_Import_Lookup_Product_Type_Not_Found</shortDescription>
-        <value>Không tìm thấy Product Type.</value>
+        <value>Không tồn tại giá trị Product Type</value>
     </labels>
     <labels>
         <fullName>FEC_Batch_Import_Lookup_Category_Not_Found</fullName>
@@ -17506,7 +17513,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC_Batch_Import_Invalid_Case_Status</shortDescription>
-        <value>Case Status không hợp lệ.</value>
+        <value>Không tồn tại giá trị Case Status</value>
     </labels>
     <labels>
         <fullName>FEC_Batch_Import_Invalid_Interaction_Channel</fullName>
@@ -17514,7 +17521,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC_Batch_Import_Invalid_Interaction_Channel</shortDescription>
-        <value>Interaction Channel không hợp lệ.</value>
+        <value>Không tồn tại giá trị Interaction Channel</value>
     </labels>
     <labels>
         <fullName>FEC_Batch_Import_Invalid_Interaction_Sub_Channel</fullName>
@@ -17522,7 +17529,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC_Batch_Import_Invalid_Interaction_Sub_Channel</shortDescription>
-        <value>Interaction Sub Channel không hợp lệ.</value>
+        <value>Không tồn tại giá trị Interaction Sub Channel</value>
     </labels>
     <labels>
         <fullName>FEC_Batch_Import_Invalid_Interaction_Email</fullName>
@@ -18273,7 +18280,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>Welcome Call case status only Resolved-Completed</shortDescription>
-        <value>File Welcome Call: Case Status chỉ được phép Resolved-Completed.</value>
+        <value>Không tồn tại giá trị Case Status</value>
     </labels>
     <labels>
         <fullName>FEC_Batch_Import_Welcome_Contract_Number_Requires_Dash</fullName>
@@ -18305,5 +18312,13 @@
         <protected>false</protected>
         <shortDescription>Channel Config invalid selection message</shortDescription>
         <value>Vui lòng chọn một Channel hợp lệ từ danh sách kết quả tìm kiếm trước khi lưu.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Hold_Case_Edit_Succes</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Hold Case Edit Success</shortDescription>
+        <value>Hold Case Config was saved</value>
     </labels>
 </CustomLabels>

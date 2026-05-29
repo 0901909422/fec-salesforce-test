@@ -1,7 +1,9 @@
 public without sharing class FEC_BatchCaseHandlingImportQueueable implements Queueable {
 
+    // 28/05/2026 15:30 codex - production safety: queueable execute chỉ xử lý 1 row
+    // để tránh vượt giới hạn enqueue khi FEC_CaseBusinessService.run tự enqueue job theo routing action.
     @TestVisible
-    private static final Integer MAX_APPLICABLE_ROWS_PER_EXECUTE = 40;
+    private static final Integer MAX_APPLICABLE_ROWS_PER_EXECUTE = 1;
 
     private final Id batchRecordId;
     private final String rowsJson;
@@ -41,14 +43,14 @@ public without sharing class FEC_BatchCaseHandlingImportQueueable implements Que
 
             Integer idx = nextIndex;
             Integer applicableRowsInRun = 0;
+            List<FEC_BatchCaseHandlingImportRow> rowsToApply = new List<FEC_BatchCaseHandlingImportRow>();
             while (idx < allRows.size()) {
                 FEC_BatchCaseHandlingImportRow row = allRows[idx];
                 idx++;
                 if (!FEC_BatchCaseHandlingImportService.shouldApplyImportRow(row)) {
                     continue;
                 }
-                List<FEC_BatchCaseHandlingImportRow> oneRow = new List<FEC_BatchCaseHandlingImportRow>{ row };
-                FEC_BatchCaseHandlingImportService.applyCaseHandlingUpdates(oneRow, cofOrGsr);
+                rowsToApply.add(row);
                 applicableRowsInRun++;
 
                 if (idx >= allRows.size()) {
@@ -57,15 +59,21 @@ public without sharing class FEC_BatchCaseHandlingImportQueueable implements Que
                 if (shouldYieldSameExecute() || applicableRowsInRun >= MAX_APPLICABLE_ROWS_PER_EXECUTE) {
                     break;
                 }
-                if (canEnqueueFollowUpJob()) {
-                    enqueueFollowUpJob(batchRecordId, allRows, cofOrGsr, idx);
-                    return;
-                }
+            }
+
+            if (!rowsToApply.isEmpty()) {
+                // 28/05/2026 10:53 linhdev - xử lý import theo lô + guard SOQL để tránh Too many SOQL queries: 101
+                FEC_BatchCaseHandlingImportService.applyCaseHandlingUpdates(rowsToApply, cofOrGsr);
             }
 
             if (idx < allRows.size()) {
                 if (canEnqueueFollowUpJob()) {
                     enqueueFollowUpJob(batchRecordId, allRows, cofOrGsr, idx);
+                    return;
+                }
+                // 27/05/2026 22:15 linhdev - không còn slot queueable nhưng không còn row applicable thì finalize thay vì fail/timeout
+                if (!FEC_BatchCaseHandlingImportService.hasRemainingApplicableImportRows(allRows, idx)) {
+                    FEC_BatchCaseHandlingImportService.finalizeBatchImportRecord(batchRecordId, allRows);
                     return;
                 }
                 FEC_BatchCaseHandlingImportService.failBatchImportRecord(
@@ -82,8 +90,9 @@ public without sharing class FEC_BatchCaseHandlingImportQueueable implements Que
         }
     }
 
+    // 27/05/2026 22:15 linhdev - sửa điều kiện chain queueable (trước đó == 0 chặn follow-up job không đúng)
     private static Boolean canEnqueueFollowUpJob() {
-        return Limits.getQueueableJobs() == 0;
+        return Limits.getQueueableJobs() < Limits.getLimitQueueableJobs();
     }
 
     private static void enqueueFollowUpJob(
@@ -102,10 +111,9 @@ public without sharing class FEC_BatchCaseHandlingImportQueueable implements Que
         );
     }
 
+    // 28/05/2026 11:20 linhdev - dùng ngưỡng governor chung với ImportService (72%)
     private static Boolean shouldYieldSameExecute() {
-        return Limits.getCpuTime() >= (Limits.getLimitCpuTime() * 85 / 100)
-            || Limits.getDMLRows() >= (Limits.getLimitDMLRows() * 85 / 100)
-            || Limits.getHeapSize() >= (Limits.getLimitHeapSize() * 85 / 100);
+        return FEC_BatchCaseHandlingImportService.shouldYieldImportGovernorLimits();
     }
 
     private static List<FEC_BatchCaseHandlingImportRow> parseRows(String jsonPayload) {

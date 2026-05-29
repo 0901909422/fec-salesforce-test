@@ -18,6 +18,7 @@ public without sharing class FEC_BatchCaseHandlingExportService {
             'FEC_Interaction_Masked_Phone__c',
             'FEC_Interaction_Masked_Email__c',
             'FEC_Product_Type__r.Name',
+            'FEC_Product_Type__r.FEC_Code__c',
             'FEC_Category__r.Name',
             'FEC_Category__r.FEC_Code__c',
             'FEC_SubCategory__r.FEC_Code__c',
@@ -35,6 +36,10 @@ public without sharing class FEC_BatchCaseHandlingExportService {
             'FEC_Original_Sub_Code__r.FEC_Name_VN__c',
             'FEC_Original_Sub_Code__r.Name',
             'FEC_Interaction__r.FEC_ID_Search__c',
+            'FEC_Interaction__r.FEC_Channel__c',
+            'FEC_Interaction__r.FEC_Interaction_Subchannel__c',
+            'FEC_Interaction__r.FEC_Phone_Number__c',
+            'FEC_Interaction__r.FEC_Interaction_Email__c',
             'FEC_CS_Check_Block_Limit_Date__c',
             'FEC_CS_Check_Block_Limit_Amount__c',
             'FEC_CS_Check_Classification_by_CS__c',
@@ -52,7 +57,15 @@ public without sharing class FEC_BatchCaseHandlingExportService {
             'FEC_Account_or_Contract__r.FEC_TSA_Code__c',
             'FEC_Account_or_Contract__r.FEC_TSA_Name__c',
             'FEC_Account_or_Contract__r.FEC_Sales_Channel__c',
-            'FEC_Account_or_Contract__r.FEC_Sales_Sub_Channel__c'
+            'FEC_Account_or_Contract__r.FEC_Sales_Sub_Channel__c',
+            'FEC_Account_or_Contract__r.FEC_Customer_Name__c',
+            'FEC_Account_or_Contract__r.Name',
+            'FEC_Account_or_Contract__r.FEC_Application_ID__c',
+            'FEC_Incorrect_Contract_Number__c',
+            'FEC_Payment_Method__c',
+            'FEC_Bill_Date__c',
+            'FEC_Bill_Amount__c',
+            'FEC_Selected_Contract_Number__c'
         };
         selectFields.addAll(FEC_BatchCaseHandlingTemplateHelper.buildCaseStageBusinessProcessSelectFields());
         return selectFields;
@@ -122,6 +135,8 @@ public without sharing class FEC_BatchCaseHandlingExportService {
         Map<Id, RemarkBlocks> caseRemarkBlocksByCaseId = loadCaseRemarkBlocks(caseIds);
         Map<Id, AssignmentExportData> assignmentByCaseId = loadPrimaryAssignmentExportData(caseIds);
         Map<Id, RemarkBlocks> assignmentRemarkBlocksByAssignmentId = loadAssignmentRemarkBlocks(assignmentByCaseId);
+        Map<Id, IncorrectPaymentAdjustmentBundle> incorrectPaymentAdjustmentsByCaseId =
+            loadIncorrectPaymentAdjustmentBundles(caseIds); // tungnm37
 
         for (FEC_BatchCaseHandlingExportRow r : rows) {
             if (r == null || r.caseId == null) {
@@ -146,6 +161,11 @@ public without sharing class FEC_BatchCaseHandlingExportService {
                     r.assignmentRemarksEnteredOn = asgRemarks.enteredOn;
                 }
             }
+            IncorrectPaymentAdjustmentBundle incorrectPaymentBundle = incorrectPaymentAdjustmentsByCaseId.get(r.caseId); // tungnm37
+            if (incorrectPaymentBundle != null) {
+                r.correctAccountContract = incorrectPaymentBundle.firstCorrectAccountContract;
+                r.adjustedAmount = incorrectPaymentBundle.firstAdjustedAmount;
+            }
         }
         enrichApplicationListExportFields(rows);
         enrichPendingCsSupportLabels(rows);
@@ -155,9 +175,16 @@ public without sharing class FEC_BatchCaseHandlingExportService {
         FEC_BatchCaseHandlingExportRow r = new FEC_BatchCaseHandlingExportRow();
         r.caseId = c.Id;
         r.customerType = c.FEC_Customer_Type__c;
-        r.customerName = c.FEC_Customer_Name__c;
-        r.accountContractNumber = c.FEC_Account_Contract_Number_Text__c;
-        r.appId = c.FEC_Application_ID__c;
+        SObject ch = c.getSObject('FEC_Account_or_Contract__r');
+        r.customerName = ch != null && String.isNotBlank((String) ch.get('FEC_Customer_Name__c'))
+            ? (String) ch.get('FEC_Customer_Name__c')
+            : c.FEC_Customer_Name__c;
+        r.accountContractNumber = ch != null && String.isNotBlank((String) ch.get('Name'))
+            ? (String) ch.get('Name')
+            : c.FEC_Account_Contract_Number_Text__c;
+        r.appId = ch != null && String.isNotBlank((String) ch.get('FEC_Application_ID__c'))
+            ? (String) ch.get('FEC_Application_ID__c')
+            : c.FEC_Application_ID__c;
         r.caseIdSearch = c.FEC_ID_Search__c;
         r.caseStatus = c.FEC_Final_Status__c;
         r.caseCreatedOn = c.FEC_Case_Created_On__c;
@@ -171,7 +198,11 @@ public without sharing class FEC_BatchCaseHandlingExportService {
         r.interactionPhone = c.FEC_Interaction_Masked_Phone__c;
         r.interactionEmail = c.FEC_Interaction_Masked_Email__c;
         r.interactionId = c.FEC_Interaction__r == null ? FEC_ConstantCommon.STR_EMPTY : c.FEC_Interaction__r.FEC_ID_Search__c;
-        r.productType = c.FEC_Product_Type__r == null ? FEC_ConstantCommon.STR_EMPTY : c.FEC_Product_Type__r.Name;
+        r.productType = c.FEC_Product_Type__r == null
+            ? FEC_ConstantCommon.STR_EMPTY
+            : String.isNotBlank(c.FEC_Product_Type__r.FEC_Code__c)
+                ? c.FEC_Product_Type__r.FEC_Code__c
+                : c.FEC_Product_Type__r.Name;
         r.categoryCode = c.FEC_Category__r == null ? null : c.FEC_Category__r.FEC_Code__c;
         r.subCategoryCode = c.FEC_SubCategory__r == null ? null : c.FEC_SubCategory__r.FEC_Code__c;
         r.subCodeCode = c.FEC_SubCode__r == null ? null : c.FEC_SubCode__r.FEC_Code__c;
@@ -193,7 +224,16 @@ public without sharing class FEC_BatchCaseHandlingExportService {
         r.contactPoint = c.FEC_Sales_Check_Contact_Point__c;
         r.teamLeader = c.FEC_Sales_Check_Team_Leader__c;
         r.supervisor = c.FEC_Sales_Check_Supervisor__c;
-        SObject ch = c.getSObject('FEC_Account_or_Contract__r');
+        r.incorrectContractNumber = c.FEC_Incorrect_Contract_Number__c;
+        r.paymentMethod = c.FEC_Payment_Method__c;
+        r.billDate = formatExportDate(c.FEC_Bill_Date__c);
+        r.billAmount = formatExportCurrency(c.FEC_Bill_Amount__c);
+        r.paymentDate = r.billDate;
+        r.excessAmount = r.billAmount;
+        r.selectedContractNumber = c.FEC_Selected_Contract_Number__c; // tungnm37
+        r.correctContractNumber = FEC_ConstantCommon.STR_EMPTY; // tungnm37
+        r.correctAccountContract = FEC_ConstantCommon.STR_EMPTY; // tungnm37
+        r.adjustedAmount = FEC_ConstantCommon.STR_EMPTY; // tungnm37
         if (ch != null) {
             r.ccCode = (String) ch.get('FEC_CC_Code__c');
             r.ccName = (String) ch.get('FEC_CC_Name__c');
@@ -510,6 +550,48 @@ public without sharing class FEC_BatchCaseHandlingExportService {
         public Id assignmentRecordId;
         public String assignmentId;
         public String assignmentOwner;
+    }
+
+    // tungnm37 - first incorrect payment detail row is used for base columns, repeated columns handled by dedicated writer
+    private class IncorrectPaymentAdjustmentBundle {
+        public String firstCorrectAccountContract = FEC_ConstantCommon.STR_EMPTY;
+        public String firstAdjustedAmount = FEC_ConstantCommon.STR_EMPTY;
+    }
+
+    private static Map<Id, IncorrectPaymentAdjustmentBundle> loadIncorrectPaymentAdjustmentBundles(Set<Id> caseIds) {
+        Map<Id, IncorrectPaymentAdjustmentBundle> out = new Map<Id, IncorrectPaymentAdjustmentBundle>();
+        if (caseIds == null || caseIds.isEmpty()) {
+            return out;
+        }
+        Schema.SObjectType infoType = Schema.getGlobalDescribe().get('FEC_Incorrect_Payment_Info__c');
+        if (infoType == null) {
+            return out;
+        }
+        Map<String, Schema.SObjectField> fieldMap = infoType.getDescribe().fields.getMap();
+        String correctFieldApi = null;
+        if (fieldMap.containsKey('fec_correct_account_contract__c')) {
+            correctFieldApi = 'FEC_Correct_Account_Contract__c';
+        } else if (fieldMap.containsKey('fec_correct_contract_number__c')) {
+            correctFieldApi = 'FEC_Correct_Contract_Number__c';
+        }
+        String soql = 'SELECT FEC_Case__c, FEC_Adjusted_Amount__c';
+        if (String.isNotBlank(correctFieldApi)) {
+            soql += ', ' + correctFieldApi;
+        }
+        soql += ' FROM FEC_Incorrect_Payment_Info__c WHERE FEC_Case__c IN :caseIds ORDER BY CreatedDate ASC, Id ASC';
+        for (SObject row : Database.query(soql)) {
+            Id caseId = (Id) row.get('FEC_Case__c');
+            if (caseId == null || out.containsKey(caseId)) {
+                continue;
+            }
+            IncorrectPaymentAdjustmentBundle bundle = new IncorrectPaymentAdjustmentBundle();
+            bundle.firstCorrectAccountContract = String.isNotBlank(correctFieldApi)
+                ? String.valueOf(row.get(correctFieldApi))
+                : FEC_ConstantCommon.STR_EMPTY;
+            bundle.firstAdjustedAmount = formatExportCurrency((Decimal) row.get('FEC_Adjusted_Amount__c'));
+            out.put(caseId, bundle);
+        }
+        return out;
     }
 
     private class RemarkBlocks {

@@ -18,6 +18,7 @@ public without sharing class FEC_BatchCaseHandlingImportRow {
     @AuraEnabled public Boolean routeViaRevertButton;
     @AuraEnabled public Boolean revertPreferRevertedChange;
     @AuraEnabled public String csD2CAssessmentTypeApiValue;
+    @AuraEnabled public String csSupportAssessmentApiValue;
     @AuraEnabled public String riskLevelApiValue;
     @AuraEnabled public String requiredActionApiValue;
     @AuraEnabled public String classificationByCSApiValue;
@@ -28,4 +29,9 @@ public without sharing class FEC_BatchCaseHandlingImportRow {
     @AuraEnabled public String recordId;
     @AuraEnabled public String status;
     @AuraEnabled public String errors;
+    @AuraEnabled public List<String> originalHeaders;
+    @AuraEnabled public List<String> originalCells;
+    @AuraEnabled public List<Integer> originalColumnIndexes;
+    @AuraEnabled public Integer originalHeaderRowIndex;
+    @AuraEnabled public String originalSheetName;
 }
