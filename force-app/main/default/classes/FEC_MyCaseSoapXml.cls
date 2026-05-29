@@ -813,17 +813,27 @@ public without sharing class FEC_MyCaseSoapXml {
             '</Sys>';
     }
 
+    private static String joinXmlParts(List<String> parts) {
+        if (parts == null || parts.isEmpty()) {
+            return '';
+        }
+        return String.join(parts, '');
+    }
+
     private static String buildMasterDataItemsListXml(
         List<FEC_GetCSMasterDataService.MasterDataItemType> items
     ) {
         if (items == null || items.isEmpty()) {
             return '';
         }
-        String xml = '';
+        List<String> parts = new List<String>();
         for (FEC_GetCSMasterDataService.MasterDataItemType item : items) {
-            xml += buildMasterDataItemXml(item);
+            String itemXml = buildMasterDataItemXml(item);
+            if (String.isNotBlank(itemXml)) {
+                parts.add(itemXml);
+            }
         }
-        return xml;
+        return joinXmlParts(parts);
     }
 
     private static String buildMasterDataItemXml(
@@ -850,11 +860,14 @@ public without sharing class FEC_MyCaseSoapXml {
         if (children == null || children.isEmpty()) {
             return '';
         }
-        String xml = '';
+        List<String> parts = new List<String>();
         for (FEC_GetCSMasterDataService.ChildItemType child : children) {
-            xml += buildMasterDataChildXml(child);
+            String childXml = buildMasterDataChildXml(child);
+            if (String.isNotBlank(childXml)) {
+                parts.add(childXml);
+            }
         }
-        return xml;
+        return joinXmlParts(parts);
     }
 
     private static String buildMasterDataChildXml(
@@ -870,7 +883,6 @@ public without sharing class FEC_MyCaseSoapXml {
             buildXmlIntegerElement('PosOrder', child.PosOrder) +
             buildXmlElement('ApplyTo', child.ApplyTo) +
             buildXmlElement('Type', child.Type) +
-            buildMasterDataAdditionalPropertiesXml(child.AdditionalProperties) +
             buildMasterDataChildrenXml(child.Children) +
             '</Children>';
     }
@@ -881,11 +893,14 @@ public without sharing class FEC_MyCaseSoapXml {
         if (properties == null || properties.isEmpty()) {
             return '';
         }
-        String xml = '';
+        List<String> parts = new List<String>();
         for (FEC_GetCSMasterDataService.AdditionalPropertyType property : properties) {
-            xml += buildMasterDataAdditionalPropertyXml(property);
+            String propertyXml = buildMasterDataAdditionalPropertyXml(property);
+            if (String.isNotBlank(propertyXml)) {
+                parts.add(propertyXml);
+            }
         }
-        return xml;
+        return joinXmlParts(parts);
     }
 
     private static String buildMasterDataAdditionalPropertyXml(
@@ -912,18 +927,20 @@ public without sharing class FEC_MyCaseSoapXml {
         if (values == null || values.isEmpty()) {
             return '';
         }
-        String xml = '';
+        List<String> parts = new List<String>();
         for (FEC_GetCSMasterDataService.AvailableValueType value : values) {
             if (value == null) {
                 continue;
             }
-            xml += '<AvailableValues>' +
-                buildXmlElement('ID', value.ID) +
-                buildXmlElement('Name', value.Name) +
-                buildXmlElement('NameVN', value.NameVN) +
-                '</AvailableValues>';
+            parts.add(
+                '<AvailableValues>' +
+                    buildXmlElement('ID', value.ID) +
+                    buildXmlElement('Name', value.Name) +
+                    buildXmlElement('NameVN', value.NameVN) +
+                    '</AvailableValues>'
+            );
         }
-        return xml;
+        return joinXmlParts(parts);
     }
 
     private static String buildXmlIntegerElement(String tag, Integer value) {
