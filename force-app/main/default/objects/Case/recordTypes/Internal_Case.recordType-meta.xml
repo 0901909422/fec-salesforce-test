@@ -17,7 +17,7 @@
         </values>
         <values>
             <fullName>Non-Existing Customer</fullName>
-            <default>false</default>
+            <default>true</default>
         </values>
         <values>
             <fullName>Ubank</fullName>
