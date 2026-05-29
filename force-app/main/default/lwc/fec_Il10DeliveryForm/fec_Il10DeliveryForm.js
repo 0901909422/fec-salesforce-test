@@ -620,6 +620,41 @@ export default class Fec_Il10DeliveryForm extends LightningElement {
         });
     }
 
+    isTemporaryAddressSelection(selId) {
+        if (!selId) {
+            return false;
+        }
+        if (this.tempAddressRecordId && selId === this.tempAddressRecordId) {
+            return true;
+        }
+        const caseTemp = this.caseTemporaryAddressRow;
+        if (caseTemp && caseTemp.id === selId) {
+            return true;
+        }
+        const rows = this.addresses || [];
+        return rows.some(
+            (r) =>
+                r &&
+                r.id === selId &&
+                /temporary/i.test((r.addressType || STR_EMPTY))
+        );
+    }
+
+    resolveSelectedAddressLine(selId) {
+        const rows = this.addresses || [];
+        const row = rows.find((r) => r && r.id === selId);
+        if (row) {
+            const fromRow = (row.address || STR_EMPTY).trim();
+            if (fromRow) {
+                return fromRow;
+            }
+        }
+        if (this.isTemporaryAddressSelection(selId)) {
+            return (this.temporaryAddressDisplay || STR_EMPTY).trim();
+        }
+        return STR_EMPTY;
+    }
+
     assertClosureAddressRowLineValid() {
         if (!this.isClosureEditable) {
             return true;
@@ -631,9 +666,7 @@ export default class Fec_Il10DeliveryForm extends LightningElement {
         if (!selId) {
             return true;
         }
-        const rows = this.addresses || [];
-        const row = rows.find((r) => r && r.id === selId);
-        const line = row ? (row.address || STR_EMPTY).trim() : STR_EMPTY;
+        const line = this.resolveSelectedAddressLine(selId);
         if (!line) {
             this.showToast(
                 this.customLabel.errorTitle,
