@@ -249,7 +249,6 @@ const HEADERS_REMARKS = [
   "inputremarks",
   "inputremark"
 ];
-const INPUTTED_REMARKS_MAX_LEN = 32768;
 const HEADERS_ASSIGNMENT_ID = ["assignmentid"];
 const HEADERS_ASSIGNMENT_ROUTING_ACTION = ["assignmentroutingaction"];
 const HEADERS_CS_D2C_ASSESSMENT = [
@@ -1926,11 +1925,8 @@ export default class Fec_BatchCaseHandling extends LightningElement {
     this.isLoading = false;
 
     this.bpTemplateMetaByCode = {};
-    // 29/05/2026 18:00 linhdev - chỉ cache meta BP đã có ContentVersion (khớp user group)
     (Array.isArray(bpInfo) ? bpInfo : []).forEach((b) => {
-      if (this.rowHasResolvableExportTemplate(b)) {
-        this.registerTemplateMeta(b);
-      }
+      this.registerTemplateMeta(b);
     });
     await this.ensureExportTemplateMetaForRows(sourceRows);
 
@@ -1939,32 +1935,39 @@ export default class Fec_BatchCaseHandling extends LightningElement {
       this.registerBusinessProcessKeysFromRow(keysFromSource, r);
     });
 
-    // 29/05/2026 18:00 linhdev - popup chỉ BP có template + file khớp user group (Apex đã lọc; giữ lọc client)
     let list = (Array.isArray(bpInfo) ? bpInfo : [])
       .filter((b) => {
         const n = String(b.businessProcessCode || STR_EMPTY).trim();
         return (
           n &&
           this.isAllowedBulkExportBusinessProcess(n) &&
-          this.businessProcessInfoMatchesSourceKeys(b, keysFromSource) &&
-          this.rowHasResolvableExportTemplate(b)
+          this.businessProcessInfoMatchesSourceKeys(b, keysFromSource)
         );
       })
       .map((b) => {
         const code = String(b.businessProcessCode || STR_EMPTY).trim();
         const name = String(b.businessProcessName || code || STR_EMPTY).trim();
-        const meta = this.lookupBpTemplateMeta(code) || {};
         return {
           rowKey: `bp-${code}`,
           businessProcessCode: code,
           businessProcessName: name,
-          templateName: meta.templateName || b.templateName || STR_EMPTY,
-          templateDownloadUrl: meta.templateDownloadUrl || b.templateDownloadUrl || STR_EMPTY,
-          templateContentVersionId:
-            meta.templateContentVersionId || b.templateContentVersionId || null,
+          templateName: (this.lookupBpTemplateMeta(code) || {}).templateName || STR_EMPTY,
           selected: true
         };
       });
+
+    if (!list.length && keysFromSource.size) {
+      list = Array.from(keysFromSource.values())
+        .filter((code) => this.isAllowedBulkExportBusinessProcess(code))
+        .sort((a, b) => String(a).localeCompare(String(b)))
+        .map((code) => ({
+          rowKey: `bp-${code}`,
+          businessProcessCode: code,
+          businessProcessName: code,
+          templateName: (this.lookupBpTemplateMeta(code) || {}).templateName || code,
+          selected: true
+        }));
+    }
 
     if (!list.length) {
       this.showInfo(FEC_BCH_ExportToastTitle, MSG_NO_DATA_EXPORT);
@@ -2118,18 +2121,6 @@ export default class Fec_BatchCaseHandling extends LightningElement {
     this.bpTemplateMetaByCode = {};
     this.templateFileCache = {};
     this.bpSubmitLoading = false;
-  }
-
-  // 29/05/2026 18:00 linhdev - BP export popup: có template ContentVersion (file FEC_Template_Import__c)
-  rowHasResolvableExportTemplate(bpRow) {
-    if (!bpRow) {
-      return false;
-    }
-    return !!this.resolveTemplateContentVersionId({
-      templateName: bpRow.templateName,
-      templateDownloadUrl: bpRow.templateDownloadUrl,
-      templateContentVersionId: bpRow.templateContentVersionId
-    });
   }
 
   registerTemplateMeta(bpRow) {
@@ -2622,6 +2613,11 @@ export default class Fec_BatchCaseHandling extends LightningElement {
     const { headerRowIndex, headerRow, normalized } = headerMeta;
     const importHeaders = this.stripResultColumnsFromImportLayout(headerRow).headers;
     const resultColExclude = this.getResultColumnExcludeIndices(headerRow);
+    const headerColumnIndexes = this.resolveWorksheetHeaderColumnIndexes(
+      sheet,
+      headerRowIndex,
+      headerRow
+    );
     const idxCaseId = this.findHeaderIndex(normalized, HEADERS_CASE_ID);
     const idxRouting = this.findHeaderIndex(normalized, HEADERS_ROUTING_ACTION);
     const idxRemark = this.findHeaderIndex(normalized, HEADERS_REMARKS);
@@ -2670,10 +2666,33 @@ export default class Fec_BatchCaseHandling extends LightningElement {
     const rows = [];
     for (let i = headerRowIndex + 1; i < aoa.length; i++) {
       const r = aoa[i] || [];
-      const caseIdSearch = this.cellAsString(r[idxCaseId]);
+      const caseIdSearch = this.readImportCellValue(
+        sheet,
+        i,
+        idxCaseId,
+        headerColumnIndexes,
+        r
+      );
       const routingAction =
-        idxRouting >= 0 ? this.cellAsString(r[idxRouting]) : STR_EMPTY;
-      const inputtedRemarks = this.cellAsString(r[idxRemark]);
+        idxRouting >= 0
+          ? this.readImportCellValue(
+              sheet,
+              i,
+              idxRouting,
+              headerColumnIndexes,
+              r
+            )
+          : STR_EMPTY;
+      const inputtedRemarks =
+        idxRemark >= 0
+          ? this.readImportCellValue(
+              sheet,
+              i,
+              idxRemark,
+              headerColumnIndexes,
+              r
+            )
+          : STR_EMPTY;
       const assignmentId =
         idxAssignmentId >= 0 ? this.cellAsString(r[idxAssignmentId]) : STR_EMPTY;
       const assignmentRoutingAction =
@@ -2735,7 +2754,14 @@ export default class Fec_BatchCaseHandling extends LightningElement {
         if (resultColExclude.has(col)) {
           continue;
         }
-        originalCells.push(this.cellAsString(r[col]));
+        const worksheetCol =
+          Array.isArray(headerColumnIndexes) && col < headerColumnIndexes.length
+            ? headerColumnIndexes[col]
+            : col;
+        const cellRef = window.XLSX.utils.encode_cell({ r: i, c: worksheetCol });
+        const cell = sheet[cellRef];
+        const cellValue = cell && cell.v !== undefined ? cell.v : STR_EMPTY;
+        originalCells.push(this.cellAsString(cellValue));
       }
       rows.push({
         caseIdSearch,
@@ -2800,20 +2826,84 @@ export default class Fec_BatchCaseHandling extends LightningElement {
     return -1;
   }
 
+  resolveWorksheetHeaderColumnIndexes(sheet, headerRowIndex, headerRow) {
+    if (
+      !sheet ||
+      !Array.isArray(headerRow) ||
+      headerRow.length === 0 ||
+      typeof window.XLSX === "undefined"
+    ) {
+      return Array.isArray(headerRow)
+        ? headerRow.map((_, idx) => idx)
+        : [];
+    }
+    const ref = sheet["!ref"];
+    if (!ref) {
+      return headerRow.map((_, idx) => idx);
+    }
+    const range = window.XLSX.utils.decode_range(ref);
+    const absoluteRow = headerRowIndex;
+    const indexes = [];
+    let searchCol = range.s.c;
+    for (let i = 0; i < headerRow.length; i += 1) {
+      const expected = this.cellAsString(headerRow[i]);
+      let matchedCol = null;
+      for (let col = searchCol; col <= range.e.c; col += 1) {
+        const cellRef = window.XLSX.utils.encode_cell({ r: absoluteRow, c: col });
+        const cell = sheet[cellRef];
+        const cellValue = cell && cell.v !== undefined ? this.cellAsString(cell.v) : STR_EMPTY;
+        if (cellValue === expected) {
+          matchedCol = col;
+          searchCol = col + 1;
+          break;
+        }
+      }
+      if (matchedCol === null) {
+        matchedCol = indexes.length > 0 ? indexes[indexes.length - 1] + 1 : i;
+      }
+      indexes.push(matchedCol);
+    }
+    return indexes;
+  }
+
   cellAsString(value) {
     if (value === null || value === undefined) {
       return STR_EMPTY;
     }
-    const text = String(value);
-    // 29/05/2026 19:30 linhdev - giữ nguyên độ dài remark (không trim làm mất khoảng trắng hợp lệ); chỉ bỏ khoảng trắng đầu/cuối
-    return text.trim();
+    return String(value).trim();
   }
 
-  isInputtedRemarksTooLong(remarks) {
-    return (
-      remarks != null &&
-      String(remarks).length > INPUTTED_REMARKS_MAX_LEN
-    );
+  // 29/05/2026 19:30 linhdev - đọc ô import từ worksheet (đúng cột khi template có cột trống/merge); giữ đủ remark cho validate Apex
+  readImportCellValue(sheet, rowIndex, headerColIndex, headerColumnIndexes, aoaRow) {
+    if (headerColIndex < 0) {
+      return STR_EMPTY;
+    }
+    if (
+      sheet &&
+      typeof window.XLSX !== "undefined" &&
+      Array.isArray(headerColumnIndexes) &&
+      headerColIndex < headerColumnIndexes.length
+    ) {
+      const worksheetCol = headerColumnIndexes[headerColIndex];
+      const cellRef = window.XLSX.utils.encode_cell({
+        r: rowIndex,
+        c: worksheetCol
+      });
+      const cell = sheet[cellRef];
+      if (cell) {
+        if (cell.w !== undefined && cell.w !== null) {
+          return this.cellAsString(cell.w);
+        }
+        if (cell.v !== undefined && cell.v !== null) {
+          return this.cellAsString(cell.v);
+        }
+      }
+      return STR_EMPTY;
+    }
+    if (aoaRow && headerColIndex < aoaRow.length) {
+      return this.cellAsString(aoaRow[headerColIndex]);
+    }
+    return STR_EMPTY;
   }
 
   normalizeResultHeaderKey(header) {
