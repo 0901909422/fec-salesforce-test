@@ -131,7 +131,9 @@ export default class fec_genesysSoftphone extends NavigationMixin(
       contractNum: emailData.ContractNum,
       cardAccountNum: emailData.CardAccountNum,
       agentID: emailData.AgentID,
-      subject: emailData.Subject || emailData.subject || ''
+      subject: emailData.Subject || emailData.subject || '',
+      //tungnm37 2026-05-27 23:16 - Forward body email từ Genesys sang Apex để EmailMessage ưu tiên dùng StructuredText thực tế
+      structuredText: emailData.StructuredText || emailData.structuredText || ''
     };
 
     createEmailInteraction({ request })

@@ -9,6 +9,54 @@ public without sharing class FEC_CaseMasterDataHelper {
   }
 
   /**
+   * Mỗi FEC_Field_API_Name__c chỉ giữ một dòng; trùng API thì bỏ Assignment, giữ Field/LWC/...
+   * Giữ thứ tự xuất hiện đầu tiên của API trong masterDatalst.
+   */
+  public static List<SObject> deduplicateMasterDataRowsByFieldApiName(
+    List<SObject> masterDatalst
+  ) {
+    if (masterDatalst == null || masterDatalst.isEmpty()) {
+      return masterDatalst;
+    }
+
+    Map<String, SObject> winnerByApi = new Map<String, SObject>();
+    for (SObject mdsRow : masterDatalst) {
+      String api = (String) mdsRow.get('FEC_Field_API_Name__c');
+      if (String.isBlank(api)) {
+        continue;
+      }
+      if (!winnerByApi.containsKey(api)) {
+        winnerByApi.put(api, mdsRow);
+        continue;
+      }
+      SObject currentWinner = winnerByApi.get(api);
+      if (isAssignmentRow(currentWinner) && !isAssignmentRow(mdsRow)) {
+        winnerByApi.put(api, mdsRow);
+      }
+    }
+
+    List<SObject> deduped = new List<SObject>();
+    Set<String> emittedApis = new Set<String>();
+    for (SObject mdsRow : masterDatalst) {
+      String api = (String) mdsRow.get('FEC_Field_API_Name__c');
+      if (String.isBlank(api)) {
+        deduped.add(mdsRow);
+        continue;
+      }
+      if (emittedApis.contains(api)) {
+        continue;
+      }
+      emittedApis.add(api);
+      deduped.add(winnerByApi.get(api));
+    }
+    return deduped;
+  }
+
+  private static Boolean isAssignmentRow(SObject mdsRow) {
+    return TYPE_ASSIGNMENT.equals((String) mdsRow.get('FEC_Type__c'));
+  }
+
+  /**
    * Assignment + FEC_Hidden__c: loại khỏi masterDatalst mọi dòng có cùng FEC_Field_API_Name__c
    * (kể cả type Field/LWC khác Assignment) — chỉ với user thuộc FEC_Editable_User_Group__c
    * trên dòng Assignment đó (cùng quy tắc contains như isLwcDynamicMasterInEditMode).
@@ -170,6 +218,41 @@ public without sharing class FEC_CaseMasterDataHelper {
     return stageNameContains(
       latestRevertByCase[0].FEC_Previous_Stage__r?.Name,
       previousStageNameToken
+    );
+  }
+
+  /**
+   * GSR revert về Stage 1 từ Stage 2 — dùng để skip updateCaseNocFromSelection theo NOC Stage 2.
+   */
+  public static Boolean isGsrRevertStage2ToStage1(String caseId) {
+    if (String.isBlank(caseId)) {
+      return false;
+    }
+    List<Case> caseRows = [
+      SELECT
+        FEC_Current_Case_Stage__c,
+        FEC_Current_Case_Stage__r.Name,
+        FEC_Actual_Nature_of_Case__r.FEC_Business_Process__r.FEC_Code__c
+      FROM Case
+      WHERE Id = :caseId
+      LIMIT 1
+    ];
+    if (caseRows.isEmpty()) {
+      return false;
+    }
+    Case c = caseRows[0];
+    String bpCode = c.FEC_Actual_Nature_of_Case__r?.FEC_Business_Process__r?.FEC_Code__c;
+    if (String.isBlank(bpCode) || !bpCode.toUpperCase().contains('GSR')) {
+      return false;
+    }
+    if (!stageNameContains(c.FEC_Current_Case_Stage__r?.Name, FEC_ConstantCommon.STAGE_ONE)) {
+      return false;
+    }
+    return isGsrRevertFromPreviousStageName(
+      caseId,
+      c.FEC_Current_Case_Stage__c,
+      FEC_ConstantCommon.STAGE_TWO,
+      c.FEC_Current_Case_Stage__r.Name
     );
   }
 

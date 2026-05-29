@@ -49,6 +49,9 @@ public without sharing class FEC_RoutingActionHistoryTriggerHandler {
     isExecuting = true;
 
     try {
+      if (FEC_MrcDuplicateCaseService.isSuppressRoutingHistoryTriggerSideEffects()) {
+        return;
+      }
       handleUpdateCaseTeamsOnInsert(newRecords);
       FEC_CaseManagerListService.applyAfterRoutingHistoryInsert(newRecords);
       // SOQL 101: TAT Full Process enqueue Queueable — không sync Case đồng bộ trong trigger.
@@ -82,12 +85,16 @@ public without sharing class FEC_RoutingActionHistoryTriggerHandler {
     }
     if (caseIds.isEmpty()) return;
 
-    // 1. Lấy Sender Email từ Metadata
+    // 1. Lấy Sender Email từ OrgWideEmailAddress giống FEC_NotificationService
     String senderEmail = '';
-    FEC_System_Config__c systemConfig = FEC_System_Config__c.getOrgDefaults();
-    if (String.isNotBlank(systemConfig?.FEC_Sender_Email__c)) {
-        senderEmail = systemConfig.FEC_Sender_Email__c;
+    Id orgWideId = FEC_CommonUltils.getOrgWideEmailIdForNotification();
+    if (orgWideId != null) {
+        List<OrgWideEmailAddress> orgEmails = [SELECT Address FROM OrgWideEmailAddress WHERE Id = :orgWideId LIMIT 1];
+        if (!orgEmails.isEmpty()) {
+            senderEmail = orgEmails[0].Address;
+        }
     }
+    System.debug('--- [processNotificationEmails] senderEmail: ' + senderEmail);
 
     // 2. Query thông tin Case
     Map<Id, Case> caseMap = new Map<Id, Case>([
@@ -104,7 +111,7 @@ public without sharing class FEC_RoutingActionHistoryTriggerHandler {
 
     // 3. Query các Notification đang active và lấy thêm trường Template ID
     List<FEC_Notification_Template_Channel__c> activeChannels = [
-        SELECT FEC_Notification_Template__c,
+        SELECT FEC_Notification_Template__c, FEC_Notification_Channel__c, FEC_Notification_Channel__r.Name,
                FEC_Notification__r.Id, FEC_Notification__r.Name, FEC_Notification__r.FEC_Current_Status__c, 
                FEC_Notification__r.FEC_Changed_Status__c, FEC_Notification__r.FEC_Target_Group__c, 
                FEC_Notification__r.FEC_Customer_Type__c, FEC_Notification__r.FEC_Product_Type__c, 
@@ -129,8 +136,8 @@ public without sharing class FEC_RoutingActionHistoryTriggerHandler {
         for (FEC_Notification_Template_Channel__c channel : activeChannels) {
             FEC_Notification__c notif = channel.FEC_Notification__r;
             // Logic so khớp điều kiện (Giữ nguyên logic cũ của bạn)
-            Boolean isMatch = (String.isNotBlank(history.FEC_Current_Status__c) && notif.FEC_Current_Status__c?.contains(history.FEC_Current_Status__c?.replaceAll(FEC_ConstantCommon.PATTERN_CLEAN_TEXT, '')) == true)
-                && (String.isNotBlank(history.FEC_Changed_Status__c) && notif.FEC_Changed_Status__c?.contains(history.FEC_Changed_Status__c?.replaceAll(FEC_ConstantCommon.PATTERN_CLEAN_TEXT, '')) == true)
+            Boolean isMatch = (String.isNotBlank(history.FEC_Current_Status__c) && notif.FEC_Current_Status__c?.contains(history.FEC_Current_Status__c) == true)
+                && (String.isNotBlank(history.FEC_Changed_Status__c) && notif.FEC_Changed_Status__c?.contains(history.FEC_Changed_Status__c) == true)
                 && FEC_CommonUltils.notificationCustomerTypeMatchesCase(notif.FEC_Customer_Type__c, relatedCase.FEC_Customer_Type__c)
                 && (notif.FEC_Product_Type__c == relatedCase.FEC_Product_Type__c)
                 && (notif.FEC_Category__c == relatedCase.FEC_Category__c)

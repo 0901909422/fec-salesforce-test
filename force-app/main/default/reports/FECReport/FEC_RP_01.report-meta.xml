@@ -13,7 +13,6 @@
         <field>Case$FEC_Contract_Number__c</field>
     </columns>
     <columns>
-        <displayNameOverride>App ID</displayNameOverride>
         <field>Case.Customer_Histories__r$FEC_Application_ID__c</field>
     </columns>
     <columns>
@@ -119,15 +118,12 @@
         <field>Case$FEC_Original_Sub_Code__c</field>
     </columns>
     <columns>
-        <displayNameOverride>Updated Category</displayNameOverride>
         <field>Case$FEC_Category__c</field>
     </columns>
     <columns>
-        <displayNameOverride>Updated Sub Category</displayNameOverride>
         <field>Case$FEC_SubCategory__c</field>
     </columns>
     <columns>
-        <displayNameOverride>Updated Sub Code</displayNameOverride>
         <field>Case$FEC_SubCode__c</field>
     </columns>
     <columns>
@@ -140,15 +136,12 @@
         <field>Case$FEC_Case_Status_History_3__c</field>
     </columns>
     <columns>
-        <displayNameOverride>Case Remarks History 1</displayNameOverride>
         <field>Case$FEC_Case_Remarks_1__c</field>
     </columns>
     <columns>
-        <displayNameOverride>Case Remarks History 2</displayNameOverride>
         <field>Case$FEC_Case_Remarks_2__c</field>
     </columns>
     <columns>
-        <displayNameOverride>Case Remarks History 3</displayNameOverride>
         <field>Case$FEC_Case_Remarks_3__c</field>
     </columns>
     <columns>

@@ -13,6 +13,7 @@ public without sharing class FEC_CaseTriggerHandler {
     // SOQL 101: cache RecordType / Interaction Case channel — submit NOC update Case nhiều lần.
     private static Map<Id, String> txnCaseRecordTypeDevName = new Map<Id, String>();
     private static Map<Id, String> txnInteractionCaseChannel = new Map<Id, String>();
+    private static Id slaNotificationTypeId;
     
     /**
      * Method Description: Main entry point được gọi từ trigger
@@ -1254,11 +1255,6 @@ public without sharing class FEC_CaseTriggerHandler {
      */
       private static void sendSLANotifications(List<Case> newCases, Map<Id, Case> oldMap) {
         try {
-            CustomNotificationType notifType = [
-                SELECT Id FROM CustomNotificationType
-                WHERE DeveloperName = 'Custom_Notification' LIMIT 1
-            ];
-
             List<Case> slaCases = new List<Case>();
             Set<Id> slaCaseIds = new Set<Id>();
             Map<Id, Boolean> caseIdToIsViolating = new Map<Id, Boolean>();
@@ -1278,6 +1274,15 @@ public without sharing class FEC_CaseTriggerHandler {
             if (slaCases.isEmpty()) {
                 return;
             }
+            // 28/05/2026 14:16 linhdev - Cache notification type theo transaction để tránh SOQL 101 khi import bulk.
+            if (slaNotificationTypeId == null) {
+                CustomNotificationType notifType = [
+                    SELECT Id FROM CustomNotificationType
+                    WHERE DeveloperName = 'Custom_Notification' LIMIT 1
+                ];
+                slaNotificationTypeId = notifType.Id;
+            }
+            CustomNotificationType notifType = new CustomNotificationType(Id = slaNotificationTypeId);
 
             Map<Id, Case> slaCaseById = new Map<Id, Case>([
                 SELECT
