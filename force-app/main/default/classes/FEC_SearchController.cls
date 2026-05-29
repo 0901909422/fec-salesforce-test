@@ -105,6 +105,9 @@ public with sharing class FEC_SearchController {
         objCase.FEC_CIF_Number__c = cifNumber;
         objCase.FEC_First_Access__c = true;
         objCase.FEC_Search_Products__c = searchProducts;
+        if (searchProducts == FEC_ConstantCommon.PRODUCT_TYPE_INSURANCE_CASE || searchProducts == FEC_ConstantCommon.PRODUCT_TYPE_INSURANCE) {
+            objCase.FEC_Account_Contract_Number_PL__c = FEC_ConstantCommon.PRODUCT_TYPE_INSURANCE_CASE;
+        }
         objCase.FEC_Product_Type__c = productTypeId;
         objCase.FEC_Customer_Name__c = customerName;
         objCase.FEC_Customer_Type__c = FEC_ConstantCommon.CASE_EXISTING_CUSTOMER;
