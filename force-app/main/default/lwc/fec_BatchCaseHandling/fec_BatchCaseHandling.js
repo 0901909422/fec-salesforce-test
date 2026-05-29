@@ -2035,8 +2035,8 @@ export default class Fec_BatchCaseHandling extends LightningElement {
 
   get allBpRowsSelected() {
     return (
-      this.bpPagedRows.length > 0 &&
-      this.bpPagedRows.every((r) => r.selected)
+      this.bpRows.length > 0 &&
+      this.bpRows.every((r) => r.selected)
     );
   }
 
@@ -2058,12 +2058,7 @@ export default class Fec_BatchCaseHandling extends LightningElement {
 
   handleBpSelectAll(event) {
     const checked = !!event.detail?.checked;
-    const visibleCodes = new Set(
-      this.bpPagedRows.map((r) => r.businessProcessCode)
-    );
-    this.bpRows = this.bpRows.map((r) =>
-      visibleCodes.has(r.businessProcessCode) ? { ...r, selected: checked } : r
-    );
+    this.bpRows = this.bpRows.map((r) => ({ ...r, selected: checked }));
     this.rebuildBpPagedRows();
   }
 
