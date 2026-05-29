@@ -31,6 +31,8 @@ import FEC_Interaction_Created_On_Label from "@salesforce/label/c.FEC_Interactio
 import FEC_Interaction_Created_By_Label from "@salesforce/label/c.FEC_Interaction_Created_By_Label";
 import FEC_Send_To_Label from "@salesforce/label/c.FEC_Send_To_Label";
 import FEC_Parent_ID_Label from "@salesforce/label/c.FEC_Parent_ID_Label";
+import FEC_Outcome_Code_Label from "@salesforce/label/c.FEC_Outcome_Code_Label";
+import FEC_Interaction_Remark_Label from "@salesforce/label/c.FEC_Interaction_Remark_Label";
 import FEC_Interaction_Email_Input_Placeholder from "@salesforce/label/c.FEC_Interaction_Email_Input_Placeholder";
 import FEC_Interaction_Email_Required_Msg from "@salesforce/label/c.FEC_Interaction_Email_Required_Msg";
 import FEC_Interaction_Email_Invalid_Msg from "@salesforce/label/c.FEC_Interaction_Email_Invalid_Msg";
@@ -49,6 +51,8 @@ export default class FecInteractionEmailInfoUbank extends NavigationMixin(Lightn
     interactionCreatedBy: FEC_Interaction_Created_By_Label,
     sendTo: FEC_Send_To_Label,
     parentId: FEC_Parent_ID_Label,
+    outcomeCode: FEC_Outcome_Code_Label,
+    interactionRemark: FEC_Interaction_Remark_Label,
     externalInteractionId: FEC_External_Interaction_ID_Label,
     inputPlaceholder: FEC_Interaction_Email_Input_Placeholder,
     emailRequiredMsg: FEC_Interaction_Email_Required_Msg,
@@ -181,6 +185,18 @@ export default class FecInteractionEmailInfoUbank extends NavigationMixin(Lightn
 
   get externalInteractionId() {
     return this.record?.[EXTERNAL_INTERACTION_ID_FIELD.fieldApiName] || STR_EMPTY;
+  }
+
+  get outcomeCode() {
+    return this.record?.FEC_Outcome_Code__c || STR_EMPTY;
+  }
+
+  get interactionRemark() {
+    return this.record?.FEC_Interaction_Remarks__c || STR_EMPTY;
+  }
+
+  get showClosedOnlyFields() {
+    return this.record?.IsClosed === true;
   }
 
   // ================= EMAIL ACTIONS =================
