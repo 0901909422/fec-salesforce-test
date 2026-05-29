@@ -1385,82 +1385,62 @@
     </fieldPermissions>
         <fieldPermissions>
         <editable>true</editable>
-        <field>FEC_Custom_Sync__c.Active__c</field>
+        <field>FEC_Custom_Sync__c.FEC_Active__c</field>
         <readable>true</readable>
     </fieldPermissions>
         <fieldPermissions>
         <editable>true</editable>
-        <field>FEC_Custom_Sync__c.CaseBusinessCode__c</field>
+        <field>FEC_Custom_Sync__c.FEC_Case_Business_Code__c</field>
         <readable>true</readable>
     </fieldPermissions>
         <fieldPermissions>
         <editable>true</editable>
-        <field>FEC_Custom_Sync__c.EndAt__c</field>
+        <field>FEC_Custom_Sync__c.FEC_End_At__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Custom_Sync__c.FEC_Mapping_Data_Type__c</field>
+        <readable>true</readable> 
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Custom_Sync__c.FEC_Processing_Quantity__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Custom_Sync__c.FEC_Request_Body_Mapping__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Custom_Sync__c.FEC_Start_At__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Custom_Sync__c.FEC_Sync_Failed__c</field>
         <readable>true</readable>
     </fieldPermissions>
         <fieldPermissions>
         <editable>true</editable>
-        <field>FEC_Custom_Sync__c.MappingDataType__c</field>
+        <field>FEC_Custom_Sync__c.FEC_Sync_Successfully__c</field>
         <readable>true</readable>
     </fieldPermissions>
         <fieldPermissions>
         <editable>true</editable>
-        <field>FEC_Custom_Sync__c.PkColumn__c</field>
+        <field>FEC_Custom_Sync__c.FEC_Sync_To__c</field>
         <readable>true</readable>
-    </fieldPermissions>
+    </fieldPermissions>  
         <fieldPermissions>
         <editable>true</editable>
-        <field>FEC_Custom_Sync__c.ProcessingQuantity__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-        <fieldPermissions>
-        <editable>true</editable>
-        <field>FEC_Custom_Sync__c.RequestBodyMapping__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-        <fieldPermissions>
-        <editable>true</editable>
-        <field>FEC_Custom_Sync__c.StartAt__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-        <fieldPermissions>
-        <editable>true</editable>
-        <field>FEC_Custom_Sync__c.SyncFailed__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-        <fieldPermissions>
-        <editable>true</editable>
-        <field>FEC_Custom_Sync__c.SyncSuccessFully__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-        <fieldPermissions>
-        <editable>true</editable>
-        <field>FEC_Custom_Sync__c.SyncTo__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-        <fieldPermissions>
-        <editable>true</editable>
-        <field>FEC_Custom_Sync__c.TableName__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-        <fieldPermissions>
-        <editable>true</editable>
-        <field>FEC_Custom_Sync__c.TargetObject__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-        <fieldPermissions>
-        <editable>true</editable>
-        <field>FEC_Custom_Sync__c.TotalRecordSync__c</field>
+        <field>FEC_Custom_Sync__c.FEC_Total_Record_Sync__c</field>
         <readable>true</readable>
     </fieldPermissions>
         <fieldPermissions>
         <editable>true</editable>
         <field>CustomSyncSetting__c.ApiKey__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-        <fieldPermissions>
-        <editable>true</editable>
-        <field>CustomSyncSetting__c.EmailReport__c</field>
         <readable>true</readable>
     </fieldPermissions>
         <fieldPermissions>
