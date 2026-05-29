@@ -394,6 +394,7 @@
         <members>Case.FEC_User_ID__c</members>
         <members>FEC_Routing_Action_History__c.FEC_Assigned_On__c</members>
         <members>FEC_Routing_Action_History__c.FEC_TAT_by_Assignment_Hrs__c</members>
+		<members>Case.FEC_Hidden_SLA_Fomular__c</members>
         <name>CustomField</name>
     </types>
     <types>

@@ -716,6 +716,7 @@
         <members>FEC_Stage_Screen__c.FEC_Code__c</members>
         <members>FEC_Assignment__c.FEC_Draft_Assignment_Remark__c</members>
         <members>FEC_API_Config__mdt.FEC_Campaign_Name__c</members>
+		<members>Case.FEC_Hidden_SLA_Fomular__c</members>
         <name>CustomField</name>
     </types>
     <types>
