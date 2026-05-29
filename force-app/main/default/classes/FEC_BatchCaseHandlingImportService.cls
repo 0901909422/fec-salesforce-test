@@ -1241,7 +1241,7 @@ public without sharing class FEC_BatchCaseHandlingImportService {
                     rr.errors = appendError(rr.errors, System.Label.FEC_BCH_ImportFailed);
                     continue;
                 }
-                FEC_CaseBusinessService.run(methodKey, runParams);
+                FEC_CaseBusinessService.runInternal(methodKey, runParams);
             } catch (Exception ex) {
                 rr.status = System.Label.FEC_Batch_Case_Handling_Import_Row_Status_Failed;
                 rr.errors = appendError(rr.errors, ex.getMessage());

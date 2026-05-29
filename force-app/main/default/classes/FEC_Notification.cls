@@ -299,12 +299,12 @@ public without sharing class FEC_Notification {
                        'WHERE FEC_Notification_Status__c = true ';
         
         String stageName = stageId;
-        // if (String.isNotBlank(stageId)) {
-        //     List<FEC_Case_Stage__c> stages = [SELECT Name FROM FEC_Case_Stage__c WHERE Id = :stageId LIMIT 1];
-        //     if (!stages.isEmpty()) {
-        //         stageName = stages[0].Name;
-        //     }
-        // }
+        if (String.isNotBlank(stageId)) {
+            List<FEC_Case_Stage__c> stages = [SELECT Name FROM FEC_Case_Stage__c WHERE Id = :stageId LIMIT 1];
+            if (!stages.isEmpty()) {
+                stageName = stages[0].Name;
+            }
+        }
 
         String subCategoryCode = '';
         if (String.isNotBlank(subCategoryId)) {
