@@ -16236,7 +16236,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC_Batch_Case_Handling_Import_Err_Missing_Routing_Or_Assignment_Routing</shortDescription>
-        <value>Thiếu dữ liệu Routing Action/Assignment Routing Action.</value>
+        <value>Thiếu giá trị Routing Action</value>
     </labels>
     <labels>
         <fullName>FEC_Batch_Case_Handling_Import_Err_Routing_Action_Invalid</fullName>
