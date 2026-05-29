@@ -227,7 +227,8 @@ public without sharing class FEC_CloseInterationSchedulerBatch implements Schedu
       existedHistoryCaseIds.add(h.FEC_Case__c);
     }
     
-    
+    Datetime dtNow = Datetime.now();
+
     for (Case item : interationlst) {
       if (interationToServiceCaseMap.containsKey(item.Id)) {
         for (Case child : interationToServiceCaseMap.get(item.Id)) {
@@ -296,6 +297,8 @@ public without sharing class FEC_CloseInterationSchedulerBatch implements Schedu
       item.Status = FEC_ConstantCommon.CASE_STATUS_AUTO_CLOSED;
       item.FEC_Outcome_Code__c = FEC_ConstantCommon.OUTCOME_CODE_COMPLETED;
       item.FEC_Interaction_Remarks__c = null;
+      item.FEC_Last_Updated_By_View__c = 'system';
+      item.FEC_Last_Updated_On_View__c = dtNow;
       
       updatedlst.add(item);
     }
