@@ -240,27 +240,14 @@ function resolveRl0502TeamFromInputs(
   option2Selected,
   notReceived,
 ) {
-  if (flowTeam === TEAM_PM) {
-    if (rl05Scenario === "TH1" && notReceived && option2Selected) {
-      return { teamCode: TEAM_PM, scenario: "IV-1-PM-PRIORITY" };
-    }
-    if (rl05Scenario === "TH2" && (option2Selected || notReceived)) {
-      return { teamCode: TEAM_PM, scenario: "IV-2-PM-PRIORITY" };
-    }
-    if (rl05Scenario === "TH3" && (option2Selected || notReceived)) {
-      return { teamCode: TEAM_PM, scenario: "IV-3-PM-PRIORITY" };
-    }
-    if (rl05Scenario === "TH4") {
-      return { teamCode: TEAM_PM, scenario: "TH4-PM-PRIORITY" };
-    }
-  }
-
   const deliveryTeam = resolveRl0502DeliveryCpTeam(deliveryOption);
+  const preferredDeliveryTeam =
+    flowTeam === TEAM_PM && deliveryTeam === TEAM_CP ? TEAM_PM : deliveryTeam;
 
   if (rl05Scenario === "TH1") {
     if (notReceived && option2Selected) {
-      if (deliveryTeam) {
-        return { teamCode: deliveryTeam, scenario: "IV-1-DELIVERY" };
+      if (preferredDeliveryTeam) {
+        return { teamCode: preferredDeliveryTeam, scenario: "IV-1-DELIVERY" };
       }
       if (flowTeam) {
         return { teamCode: flowTeam, scenario: "IV-1" };
@@ -271,22 +258,22 @@ function resolveRl0502TeamFromInputs(
 
   if (rl05Scenario === "TH2") {
     if (option2Selected || notReceived) {
-      if (option2Selected && deliveryTeam) {
-        return { teamCode: deliveryTeam, scenario: "IV-2-DELIVERY" };
+      if (option2Selected && preferredDeliveryTeam) {
+        return { teamCode: preferredDeliveryTeam, scenario: "IV-2-DELIVERY" };
       }
       if (flowTeam) {
         return { teamCode: flowTeam, scenario: "IV-2" };
       }
-      if (deliveryTeam) {
-        return { teamCode: deliveryTeam, scenario: "IV-2-DELIVERY" };
+      if (preferredDeliveryTeam) {
+        return { teamCode: preferredDeliveryTeam, scenario: "IV-2-DELIVERY" };
       }
     }
     return null;
   }
 
   if (rl05Scenario === "TH3") {
-    if (option2Selected && deliveryTeam) {
-      return { teamCode: deliveryTeam, scenario: "IV-3-DELIVERY" };
+    if (option2Selected && preferredDeliveryTeam) {
+      return { teamCode: preferredDeliveryTeam, scenario: "IV-3-DELIVERY" };
     }
     if (notReceived && flowTeam) {
       return { teamCode: flowTeam, scenario: "IV-3" };
@@ -295,8 +282,8 @@ function resolveRl0502TeamFromInputs(
   }
 
   if (rl05Scenario === "TH4") {
-    if (deliveryTeam) {
-      return { teamCode: deliveryTeam || flowTeam || TEAM_CP, scenario: "TH4" };
+    if (preferredDeliveryTeam) {
+      return { teamCode: preferredDeliveryTeam || flowTeam || TEAM_CP, scenario: "TH4" };
     }
     return null;
   }
