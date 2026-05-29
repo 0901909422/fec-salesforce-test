@@ -190,6 +190,7 @@
         <members>FEC_CardLockUnLockController</members>
         <members>FEC_CardReplacementAddressController</members>
         <members>FEC_CloseInterationSchedulerBatch</members>
+        <members>FEC_IPPScheduleController</members>
 		<name>ApexClass</name>
 	</types>
     <types>
@@ -305,6 +306,7 @@
 		<members>fec_CardReplacementAddress</members>
 		<members>fec_NocRoutingAssignment</members>
 		<members>fec_InteractionInfoF2F_Letter</members>
+		<members>fec_IPPDetailPage</members>
 		<name>LightningComponentBundle</name>
 	</types>
     <types>
