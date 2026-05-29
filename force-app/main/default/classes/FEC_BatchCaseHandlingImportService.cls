@@ -1123,7 +1123,12 @@ public without sharing class FEC_BatchCaseHandlingImportService {
         Map<Id, Case> caseLiteById = caseIds.isEmpty()
             ? new Map<Id, Case>()
             : new Map<Id, Case>([
-                SELECT Id, FEC_Current_Case_Stage__c, FEC_Assignment_Count__c
+                SELECT
+                    Id,
+                    FEC_Current_Case_Stage__c,
+                    FEC_Assignment_Count__c,
+                    FEC_Final_Status__c,
+                    FEC_Current_Case_Stage__r.FEC_Code__c
                 FROM Case
                 WHERE Id IN :caseIds
             ]);
@@ -1151,6 +1156,8 @@ public without sharing class FEC_BatchCaseHandlingImportService {
         List<AssignmentRouteToUpdateItem> assignmentRouteToItems = new List<AssignmentRouteToUpdateItem>();
         List<FEC_BCH_AssignmentUpdateService.ImportUpdateItem> assignmentUpdateItems =
             new List<FEC_BCH_AssignmentUpdateService.ImportUpdateItem>();
+        List<FEC_BCH_ImportRoutingHistoryService.ImportHistoryItem> importHistoryItems =
+            new List<FEC_BCH_ImportRoutingHistoryService.ImportHistoryItem>();
         Map<Id, Case> pendingCaseFieldUpdatesById = new Map<Id, Case>();
         Map<Id, List<FEC_BatchCaseHandlingImportRow>> rowsByCaseForFieldUpdate = new Map<Id, List<FEC_BatchCaseHandlingImportRow>>();
         for (FEC_BatchCaseHandlingImportRow rr : rows) {
@@ -1244,6 +1251,27 @@ public without sharing class FEC_BatchCaseHandlingImportService {
                         assignmentRecordIdForUpdate,
                         assignmentUpdateItems
                     );
+                    if (assignmentOnly == true &&
+                        methodKey == FEC_CaseBusinessService.UPDATEACTION &&
+                        assignmentRecordIdForUpdate != null &&
+                        isCofGsrImportUpdateAction(true, rr.assignmentRoutingAction)) {
+                        Case caseLiteForHistory = caseLiteById.get(caseId);
+                        FEC_BCH_ImportRoutingHistoryService.collectItem(
+                            importHistoryItems,
+                            rr,
+                            caseId,
+                            assignmentRecordIdForUpdate,
+                            methodKey,
+                            routingParsed == null ? null : routingParsed.decision,
+                            stageIdForRow,
+                            caseLiteForHistory == null ? null : caseLiteForHistory.FEC_Current_Case_Stage__r?.FEC_Code__c,
+                            caseLiteForHistory == null ? null : caseLiteForHistory.FEC_Final_Status__c,
+                            routingParsed == null ? null : routingParsed.routeTeamHint,
+                            routingParsed == null ? null : routingParsed.routeQueueHint,
+                            null,
+                            rr.routeViaRevertButton == true
+                        );
+                    }
                 }
                 if (routingParsed != null && methodKey == FEC_CaseBusinessService.ROUTE_TO) {
                     Case caseLite = caseLiteById.get(caseId);
@@ -1282,6 +1310,24 @@ public without sharing class FEC_BatchCaseHandlingImportService {
                             routeToItem.routeQueueHint = routingParsed == null ? null : routingParsed.routeQueueHint;
                             routeToItem.submittedOn = System.now();
                             assignmentRouteToItems.add(routeToItem);
+                            if (assignmentOnly == true) {
+                                Case caseLiteForHistory = caseLiteById.get(caseId);
+                                FEC_BCH_ImportRoutingHistoryService.collectItem(
+                                    importHistoryItems,
+                                    rr,
+                                    caseId,
+                                    assignmentRecordId,
+                                    methodKey,
+                                    null,
+                                    stageIdForRow,
+                                    caseLiteForHistory == null ? null : caseLiteForHistory.FEC_Current_Case_Stage__r?.FEC_Code__c,
+                                    caseLiteForHistory == null ? null : caseLiteForHistory.FEC_Final_Status__c,
+                                    routingParsed == null ? null : routingParsed.routeTeamHint,
+                                    routingParsed == null ? null : routingParsed.routeQueueHint,
+                                    routeParamsValid ? routeParams.get('queueToken') : null,
+                                    rr.routeViaRevertButton == true
+                                );
+                            }
                         }
                     }
                 }
@@ -1379,6 +1425,7 @@ public without sharing class FEC_BatchCaseHandlingImportService {
             }
         }
         FEC_BCH_AssignmentUpdateService.applyImportBulk(validAssignmentUpdateItems);
+        FEC_BCH_ImportRoutingHistoryService.applyAfterAssignmentBulk(importHistoryItems);
         applyDraftRemarksBulk(validRemarkItems, cofOrGsr);
     }
 
