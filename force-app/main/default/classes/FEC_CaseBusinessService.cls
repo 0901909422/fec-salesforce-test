@@ -539,6 +539,7 @@ public without sharing class FEC_CaseBusinessService {
       String businessProcessId = (String) selectedNatureOfCase.get(
         'FEC_Business_Process__c'
       );
+      selectedCase.FEC_Business_Process__c = businessProcessId;
 
       SObject businessObj = selectedNatureOfCase.getSObject(
         'FEC_Business_Process__r'
@@ -2354,14 +2355,24 @@ public without sharing class FEC_CaseBusinessService {
           finalStatusBeforeSubmit = readCaseFinalStatusBeforeSubmit(caseId);
           markCaseSubmittedAndClearDrafts(caseId);
           revert(caseId, revertActionId, finalStatusBeforeSubmit, routingActionValue);
-          // Sau revert: Stage = Stage 1 NOC gốc — đồng bộ Actual theo template stage (và NOC UI nếu có).
-          if (String.isNotBlank(revertNocId)) {
+          // GSR Revert Stage 2→1 (NOC Stage 2 khác Original): không áp NOC Stage 2 từ UI.
+          Boolean isGsrStage2ToStage1Revert =
+            FEC_CaseMasterDataHelper.isGsrRevertStage2ToStage1(caseId);
+          if (String.isNotBlank(revertNocId) && !isGsrStage2ToStage1Revert) {
             FEC_CofGsrRoutePrepareService.updateCaseNocFromSelection(
               caseId,
               revertNocId
             );
           }
-          FEC_CofGsrRoutePrepareService.syncActualNatureToMatchCurrentCaseStage(caseId);
+          if (isGsrStage2ToStage1Revert) {
+            FEC_CofGsrRoutePrepareService.restoreGsrStage1BaselineAfterStage2Revert(
+              caseId
+            );
+          } else {
+            FEC_CofGsrRoutePrepareService.syncActualNatureToMatchCurrentCaseStage(
+              caseId
+            );
+          }
           return null;
         }
         when RECALL {
