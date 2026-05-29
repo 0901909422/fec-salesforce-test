@@ -18,7 +18,7 @@ global class FEC_BatchReCallCustomSync  implements Database.Batchable<sObject>, 
     global Database.QueryLocator start(Database.BatchableContext bc) {   
         CustomSyncSetting__c apiSetting = CustomSyncSetting__c.getOrgDefaults(); 
         return Database.getQueryLocator([
-            Select id,Records__c,FEC_Custom_Sync__c,FEC_Quantity_Call__c
+            Select id,Records__c,FEC_Custom_Sync__c,FEC_Quantity_Call__c,FEC_Bix_Is_Success__c
             from FEC_integration_service_log__c
             where FEC_Bix_Is_Success__c = false 
             and ( FEC_Quantity_Call__c < :apiSetting.LimitQuanitySync__c OR FEC_Quantity_Call__c = NULL)
