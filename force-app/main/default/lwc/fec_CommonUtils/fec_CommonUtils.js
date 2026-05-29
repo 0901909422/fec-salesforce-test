@@ -1124,6 +1124,26 @@ const arrayBufferToBase64 = (buffer) => {
   return btoa(binary);
 };
 
+const normalizeInteractionResult = (data) => {
+  if (!data) {
+    return null;
+  }
+
+  const record = data.interaction ?? data;
+  const masked =
+    data.maskedPhoneDisplay ??
+    record?.FEC_Interaction_Masked_Phone__c ??
+    (record?.FEC_Phone_Number__c
+      ? maskValue(record.FEC_Phone_Number__c, false)
+      : null);
+
+  if (!masked) {
+    return record;
+  }
+
+  return { ...record, FEC_Interaction_Masked_Phone__c: masked };
+};
+
 export {
   formatDate,
   formatDateTime,
@@ -1180,5 +1200,6 @@ export {
   buildResultXlsxFileName,
   formatDateTimeEnGb,
   extractErrorMessage,
-  arrayBufferToBase64
+  arrayBufferToBase64,
+  normalizeInteractionResult
 };
