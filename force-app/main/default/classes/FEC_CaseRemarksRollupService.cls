@@ -14,7 +14,7 @@ public without sharing class FEC_CaseRemarksRollupService {
   @TestVisible
   private static final Integer BUCKET_2_MAX = 256;
   @TestVisible
-  private static final Integer BUCKET_3_MAX = 131072;
+  private static final Integer BUCKET_3_MAX = 256;
   @TestVisible
   private static final Integer META_ROLLUP_MAX = 255;
   private static final String META_SEGMENT_SEP = ' ';
@@ -24,7 +24,7 @@ public without sharing class FEC_CaseRemarksRollupService {
   @TestVisible
   private static final Integer STATUS_BUCKET_2_MAX = 255;
   @TestVisible
-  private static final Integer STATUS_BUCKET_3_MAX = 131072;
+  private static final Integer STATUS_BUCKET_3_MAX = 256;
   private static final String STATUS_ENTRY_SEP = '\n';
 
   public static void rollup(Set<Id> caseIds) {
@@ -201,7 +201,7 @@ public without sharing class FEC_CaseRemarksRollupService {
   @TestVisible
   private static final Integer ENTERED_BY_BUCKET_2_MAX = 255;
   @TestVisible
-  private static final Integer ENTERED_BY_BUCKET_3_MAX = 131072;
+  private static final Integer ENTERED_BY_BUCKET_3_MAX = 256;
 
   @TestVisible
   private class MetaRollup {
