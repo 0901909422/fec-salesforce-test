@@ -2,6 +2,10 @@ public with sharing class FEC_CMSIPPBlockWS {
 
     //Thangtv: API Log sau callout (ResponseLog + logApiResponse)
     public static final String API_CONFIG_NAME = 'FEC_CMS_IPP_BlockWS';
+    // 29/05/2026 14:00 linhdev - default payload CMSIPPBlockWS theo integration spec
+    public static final String DEFAULT_DISB_CHANNEL = 'PC';
+    public static final Integer DEFAULT_TENURE = 0;
+    public static final String DEFAULT_CAMPAIGN_NAME = 'TMN';
     private static ResponseLog responseLog;
 
     /* ================================
@@ -67,6 +71,15 @@ public with sharing class FEC_CMSIPPBlockWS {
         try { //Thangtv
             FEC_API_Config__mdt apiConfig = FEC_API_Config__mdt.getInstance(API_CONFIG_NAME);
 
+            // 29/05/2026 14:00 linhdev - áp default spec khi caller truyền blank/null
+            disbChannel = String.isNotBlank(disbChannel) ? disbChannel : DEFAULT_DISB_CHANNEL;
+            tenure = tenure != null ? tenure : DEFAULT_TENURE;
+            noIPP = noIPP != null ? noIPP : true;
+            flatRate = flatRate != null ? flatRate : 0;
+            campaignName = (apiConfig != null && String.isNotBlank(apiConfig.FEC_Campaign_Name__c))
+                ? apiConfig.FEC_Campaign_Name__c
+                : (String.isNotBlank(campaignName) ? campaignName : DEFAULT_CAMPAIGN_NAME);
+
             validate(
                 transId,
                 requestorId,
@@ -77,10 +90,6 @@ public with sharing class FEC_CMSIPPBlockWS {
                 amount,
                 tenure
             );
-
-            campaignName = (apiConfig != null && String.isNotBlank(apiConfig.FEC_Campaign_Name__c))
-                ? apiConfig.FEC_Campaign_Name__c
-                : campaignName;
 
             String soapBody = buildSoapBody(
                 transId,
