@@ -130,6 +130,11 @@
         </columns>
         <columns>
             <checkedByDefault>false</checkedByDefault>
+            <field>FEC_Case_ID__c</field>
+            <table>Case</table>
+        </columns>
+        <columns>
+            <checkedByDefault>false</checkedByDefault>
             <displayNameOverride>Updated Category</displayNameOverride>
             <field>FEC_Category__c</field>
             <table>Case</table>
@@ -191,6 +196,18 @@
         </columns>
         <columns>
             <checkedByDefault>false</checkedByDefault>
+            <displayNameOverride>Last Update By</displayNameOverride>
+            <field>FEC_Interaction__c.FEC_Last_Updated_By__c</field>
+            <table>Case</table>
+        </columns>
+        <columns>
+            <checkedByDefault>false</checkedByDefault>
+            <displayNameOverride>Last Update On</displayNameOverride>
+            <field>FEC_Interaction__c.FEC_Last_Updated_On__c</field>
+            <table>Case</table>
+        </columns>
+        <columns>
+            <checkedByDefault>false</checkedByDefault>
             <field>FEC_Interaction_Status__c</field>
             <table>Case</table>
         </columns>
@@ -211,16 +228,19 @@
         </columns>
         <columns>
             <checkedByDefault>false</checkedByDefault>
+            <displayNameOverride>Original Category</displayNameOverride>
             <field>FEC_Original_Category__c</field>
             <table>Case</table>
         </columns>
         <columns>
             <checkedByDefault>false</checkedByDefault>
+            <displayNameOverride>Original Sub Category</displayNameOverride>
             <field>FEC_Original_Sub_Category__c</field>
             <table>Case</table>
         </columns>
         <columns>
             <checkedByDefault>false</checkedByDefault>
+            <displayNameOverride>Original Sub Code</displayNameOverride>
             <field>FEC_Original_Sub_Code__c</field>
             <table>Case</table>
         </columns>

@@ -959,6 +959,14 @@
         <name>CustomObjectTranslation</name>
     </types>
     <types>
+        <members>Case.FEC_Case_Remarks_3__c</members>
+        <members>Case.FEC_Case_Remarks_Entered_By_3__c</members>
+        <members>Case.FEC_Case_Remarks_Entered_By_Role_3__c</members>
+        <members>Case.FEC_Case_Remarks_Entered_On_3__c</members>
+        <members>Case.FEC_Case_Status_History_3__c</members>
+        <name>CustomField</name>
+    </types>
+    <types>
         <members>FEC_Case_With_Customer_Histories</members>
         <members>Routing_Action_History_with_Case_and_Assignment</members>
         <name>ReportType</name>

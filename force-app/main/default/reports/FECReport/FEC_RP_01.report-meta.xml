@@ -52,6 +52,12 @@
         <field>Case$FEC_Created_by__c</field>
     </columns>
     <columns>
+        <field>Case$FEC_Interaction__c.FEC_Last_Updated_On__c</field>
+    </columns>
+    <columns>
+        <field>Case$FEC_Interaction__c.FEC_Last_Updated_By__c</field>
+    </columns>
+    <columns>
         <field>Case$FEC_Channel__c</field>
     </columns>
     <columns>
@@ -76,7 +82,7 @@
         <field>Case$FEC_Send_To__c</field>
     </columns>
     <columns>
-        <field>Case$Id</field>
+        <field>Case$FEC_Case_ID__c</field>
     </columns>
     <columns>
         <field>Case$FEC_Case_Status__c</field>
