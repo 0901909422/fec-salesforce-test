@@ -747,6 +747,10 @@ public without sharing class FEC_BatchCaseHandlingController {
                 templateRows.size(),
                 versionIdByTemplateId.size()
             );
+            // 29/05/2026 18:00 linhdev - bỏ BP không có template/file khớp user group (tránh NO_TEMPLATE_CV trên popup)
+            if (!FEC_BatchCaseHandlingTemplateHelper.hasExportTemplateBinding(binding)) {
+                continue;
+            }
             out.add(item);
         }
         return out;

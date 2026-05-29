@@ -299,12 +299,12 @@ public without sharing class FEC_Notification {
                        'WHERE FEC_Notification_Status__c = true ';
         
         String stageName = stageId;
-        // if (String.isNotBlank(stageId)) {
-        //     List<FEC_Case_Stage__c> stages = [SELECT Name FROM FEC_Case_Stage__c WHERE Id = :stageId LIMIT 1];
-        //     if (!stages.isEmpty()) {
-        //         stageName = stages[0].Name;
-        //     }
-        // }
+        if (String.isNotBlank(stageId)) {
+            List<FEC_Case_Stage__c> stages = [SELECT Name FROM FEC_Case_Stage__c WHERE Id = :stageId LIMIT 1];
+            if (!stages.isEmpty()) {
+                stageName = stages[0].Name;
+            }
+        }
 
         String subCategoryCode = '';
         if (String.isNotBlank(subCategoryId)) {
@@ -533,9 +533,12 @@ public without sharing class FEC_Notification {
         }
 
         String senderEmail = '';
-        FEC_System_Config__c systemConfig = FEC_System_Config__c.getOrgDefaults();
-        if (String.isNotBlank(systemConfig?.FEC_Sender_Email__c)) {
-            senderEmail = systemConfig.FEC_Sender_Email__c;
+        Id orgWideId = FEC_CommonUltils.getOrgWideEmailIdForNotification();
+        if (orgWideId != null) {
+            List<OrgWideEmailAddress> orgEmails = [SELECT Address FROM OrgWideEmailAddress WHERE Id = :orgWideId LIMIT 1];
+            if (!orgEmails.isEmpty()) {
+                senderEmail = orgEmails[0].Address;
+            }
         }
 
         String subject = String.isNotBlank(template.FEC_Subject_Line__c)
