@@ -1624,7 +1624,7 @@
                         <rightValue>handling</rightValue>
                     </criteria>
                     <criteria>
-                        <leftValue>{!Record.Hidden_SLA_Fomular__c}</leftValue>
+                        <leftValue>{!Record.FEC_Hidden_SLA_Fomular__c}</leftValue>
                         <operator>EQUAL</operator>
                         <rightValue>false</rightValue>
                     </criteria>
