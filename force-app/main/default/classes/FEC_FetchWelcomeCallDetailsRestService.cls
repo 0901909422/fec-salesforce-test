@@ -197,7 +197,7 @@ global without sharing class FEC_FetchWelcomeCallDetailsRestService {
             details.PrimaryPhone = c.FEC_Phone_Number__c;
             details.CreateOperator = c.CreatedBy != null ? c.CreatedBy.Email : null;
             details.UpdateDateTime = c.LastModifiedDate != null
-                ? c.LastModifiedDate.format('yyyy-MM-dd')
+                ? c.LastModifiedDate.format(FEC_ConstantCommon.DATE_FORMAT)
                 : null;
             details.StatusWork = String.isNotBlank(c.FEC_Case_Status__c)
                 ? c.FEC_Case_Status__c
@@ -271,7 +271,7 @@ global without sharing class FEC_FetchWelcomeCallDetailsRestService {
         if (String.isBlank(requestorId)) {
             return requestorId;
         }
-        return requestorId.replace('-', '');
+        return requestorId.replace(FEC_ConstantCommon.STR_DASH, FEC_ConstantCommon.STR_EMPTY);
     }
 
     @TestVisible
@@ -279,15 +279,7 @@ global without sharing class FEC_FetchWelcomeCallDetailsRestService {
         if (String.isNotBlank(requestDateTime)) {
             return requestDateTime.trim();
         }
-        return formatPegaDateTime(System.now());
-    }
-
-    @TestVisible
-    private static String formatPegaDateTime(Datetime dt) {
-        if (dt == null) {
-            return null;
-        }
-        return dt.formatGmt('yyyyMMdd\'T\'HHmmss.SSS') + ' GMT';
+        return FEC_CommonUltils.formatTransferCallRequestDateTime(System.now());
     }
 
     private static void writeResponse(
@@ -314,7 +306,7 @@ global without sharing class FEC_FetchWelcomeCallDetailsRestService {
             FEC_CommonUltils.logApi(
                 SERVICE_NAME,
                 SERVICE_NAME,
-                'POST',
+                FEC_ConstantCommon.API_METHOD_POST,
                 requestBodyStr,
                 apiResponse,
                 response != null ? response.Sys.Description : null
