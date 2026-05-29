@@ -2237,16 +2237,17 @@ public without sharing class FEC_CaseBusinessService {
     }
   }
 
-  // 29/05/2026 - batch import queueable: không được throw AuraHandledException ngoài Aura/VF
-  private static void throwRunContextException(String message) {
-    if (FEC_BatchCaseHandlingImportService.isBatchImportApplyInProgress()) {
-      throw new CaseBusinessServiceException(message);
-    }
-    throw new AuraHandledException(message);
-  }
-
   @AuraEnabled
   public static Object run(String method, Map<String, String> params) {
+    try {
+      return runInternal(method, params);
+    } catch (Exception e) {
+      throw new AuraHandledException(e.getMessage());
+    }
+  }
+
+  // 29/05/2026 - service core: Queueable/batch gọi runInternal; không throw AuraHandledException
+  public static Object runInternal(String method, Map<String, String> params) {
     try {
       Method selectedMethod = METHOD_MAP.get(method);
       String caseId;
@@ -2299,7 +2300,7 @@ public without sharing class FEC_CaseBusinessService {
           //PhongBT: tạo FEC_Case_Flow_History__c khi submit case lần đầu.
           String fieldListJson = (String) params.get('fieldListJson');
           if (String.isBlank(queueId)) {
-            throwRunContextException(System.Label.FEC_MSG_Can_Not_Find_Next_Stage);
+            throw new CaseBusinessServiceException(System.Label.FEC_MSG_Can_Not_Find_Next_Stage);
           }
           //PhongBT: tạo FEC_Case_Flow_History__c khi submit case lần đầu.
           // Kiểm tra creation stage trước khi mark submitted
@@ -2475,15 +2476,8 @@ public without sharing class FEC_CaseBusinessService {
 
       markCaseSubmittedAndClearDrafts(caseId);
       return null;
-    } catch (CaseBusinessServiceException e) {
-      if (FEC_BatchCaseHandlingImportService.isBatchImportApplyInProgress()) {
-        throw e;
-      }
-      throw new AuraHandledException(e.getMessage());
-    } catch (FEC_APIServiceException e) {
-      throwRunContextException(e.getMessage());
-    } catch (Exception e) {
-      throwRunContextException(e.getMessage());
+    } catch (AuraHandledException e) {
+      throw new CaseBusinessServiceException(e.getMessage());
     }
   }
 
@@ -4842,7 +4836,7 @@ public without sharing class FEC_CaseBusinessService {
     }
     
     if (!isOwner && !isParticipant) {
-      throwRunContextException(
+      throw new CaseBusinessServiceException(
         System.Label.FEC_MSG_Update_Team_Permission_Denied
       );
     }
@@ -4882,7 +4876,7 @@ public without sharing class FEC_CaseBusinessService {
         newOwnerId = targetQueue[0].Id;
       } else {
         // Ném lỗi nếu không tìm thấy Queue cấu hình trong hệ thống
-        throwRunContextException(
+        throw new CaseBusinessServiceException(
           String.format(System.Label.FEC_MSG_Not_Found, new List<String>{ 'Queue' })
         );
       }
@@ -4907,7 +4901,7 @@ public without sharing class FEC_CaseBusinessService {
     try {
       update c;
     } catch (DmlException e) {
-      throwRunContextException(e.getMessage());
+      throw new CaseBusinessServiceException(e.getMessage());
     }
   }
 
