@@ -172,6 +172,8 @@
         <picklist>FEC_Complain_Type__c</picklist>
         <values>
             <fullName>Urgent</fullName>
+            <fullName>High risk</fullName>
+            <fullName>Normal</fullName>
             <default>false</default>
         </values>
     </picklistValues>
