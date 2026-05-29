@@ -224,9 +224,7 @@ public with sharing class FEC_BCH_AssignmentUpdateService {
             String decision = ctx.decision;
             FEC_Assignment__c assignmentRow = new FEC_Assignment__c(Id = assignmentId);
 
-            if (decision == FEC_ConstantCommon.DECISION_CANNOT_CONTACT) {
-                assignmentRow.FEC_Assignment_Status__c = FEC_ConstantCommon.ASSIGNMENT_STATUS_COMPLETED;
-            } else if (QUEUE_DECISIONS.contains(decision)) {
+            if (QUEUE_DECISIONS.contains(decision)) {
                 String queueName = FEC_ConstantCommon.DECISION_QUEUE_MAP.get(decision);
                 Id queueId = String.isBlank(queueName) ? null : queueIdByName.get(queueName);
                 if (queueId == null) {
@@ -240,9 +238,19 @@ public with sharing class FEC_BCH_AssignmentUpdateService {
                 assignmentRow.FEC_OwnerID__c = currentUserId;
             }
 
+            //PhongBT 29/05/26: Update to … → FEC_Assignment_Status__c (vd Pending Product → Pending-PBDOutOfSystem).
+            String assignmentStatus = resolveAssignmentStatusForUpdateDecision(decision);
+            if (String.isNotBlank(assignmentStatus)) {
+                assignmentRow.FEC_Assignment_Status__c = assignmentStatus;
+            }
+            String teamCode = FEC_ConstantCommon.decisionToTeamMap.get(decision);
+            if (String.isNotBlank(teamCode)) {
+                assignmentRow.FEC_Team__c = teamCode;
+            }
+
             assignmentUpdates.add(assignmentRow);
 
-            String caseStatus = resolveCaseStatusForDecision(decision);
+            String caseStatus = resolveAssignmentStatusForUpdateDecision(decision);
             if (String.isNotBlank(caseStatus)) {
                 caseUpdatesById.put(
                     ctx.caseId,
@@ -280,7 +288,14 @@ public with sharing class FEC_BCH_AssignmentUpdateService {
         return results;
     }
 
-    private static String resolveCaseStatusForDecision(String decision) {
+    //PhongBT 29/05/26: Map label Update to (Pending Product, Pending Contract Processing, …) → status picklist.
+    private static String resolveAssignmentStatusForUpdateDecision(String decision) {
+        if (String.isBlank(decision)) {
+            return null;
+        }
+        if (decision == FEC_ConstantCommon.DECISION_CANNOT_CONTACT) {
+            return FEC_ConstantCommon.ASSIGNMENT_STATUS_COMPLETED;
+        }
         String fromLegacyMap = FEC_ConstantCommon.CASE_STATUS_MAP.get(decision);
         if (String.isNotBlank(fromLegacyMap)) {
             return fromLegacyMap;
