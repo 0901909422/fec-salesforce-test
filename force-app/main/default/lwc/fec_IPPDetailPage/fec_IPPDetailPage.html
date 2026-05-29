@@ -151,18 +151,8 @@
                                     <template if:true={hasSalesInfoData}>
                                         <div class="slds-p-around_small">
                                             <div class="slds-grid slds-wrap slds-gutters_small ipp-detail-sales-info-grid">
-                                        <!-- Row 1: Application ID, CC Code, DSA Code, TSA Code - label và giá trị cùng hàng -->
-                                        <div class="slds-col slds-size_1-of-4 slds-p-bottom_small">
-                                            <div class="ipp-sales-info-field">
-                                                <label class="ipp-sales-info-label slds-text-color_weak">{customLabel.applicationIdLabel}
-                                                    <template if:true={helpTextMap.FEC_Application_ID__c}>
-                                                        <lightning-helptext content={helpTextMap.FEC_Application_ID__c}></lightning-helptext>
-                                                    </template>
-                                                </label>
-                                                <span class="ipp-sales-info-value">{applicationId}</span>
-                                            </div>
-                                        </div>
-                                        <div class="slds-col slds-size_1-of-4 slds-p-bottom_small">
+                                        <!-- Cột 1: CC Code, CC Name -->
+                                        <div class="slds-col slds-size_1-of-4 slds-p-bottom_small ipp-sales-info-column">
                                             <div class="ipp-sales-info-field">
                                                 <label class="ipp-sales-info-label slds-text-color_weak">{customLabel.ccCodeLabel}
                                                     <template if:true={helpTextMap.FEC_CC_Code__c}>
@@ -171,40 +161,6 @@
                                                 </label>
                                                 <span class="ipp-sales-info-value">{ccCode}</span>
                                             </div>
-                                        </div>
-                                        <div class="slds-col slds-size_1-of-4 slds-p-bottom_small">
-                                            <div class="ipp-sales-info-field">
-                                                <label class="ipp-sales-info-label slds-text-color_weak">{customLabel.dsaCodeLabel}
-                                                    <template if:true={helpTextMap.FEC_DSA_Code__c}>
-                                                        <lightning-helptext content={helpTextMap.FEC_DSA_Code__c}></lightning-helptext>
-                                                    </template>
-                                                </label>
-                                                <span class="ipp-sales-info-value">{dsaCode}</span>
-                                            </div>
-                                        </div>
-                                        <div class="slds-col slds-size_1-of-4 slds-p-bottom_small">
-                                            <div class="ipp-sales-info-field">
-                                                <label class="ipp-sales-info-label slds-text-color_weak">{customLabel.tsaCodeLabel}
-                                                    <template if:true={helpTextMap.FEC_TSA_Code__c}>
-                                                        <lightning-helptext content={helpTextMap.FEC_TSA_Code__c}></lightning-helptext>
-                                                    </template>
-                                                </label>
-                                                <span class="ipp-sales-info-value">{tsaCode}</span>
-                                            </div>
-                                        </div>
-                                        
-                                        <!-- Row 2: Disbursement Channel, CC Name, DSA Name, TSA Name -->
-                                        <div class="slds-col slds-size_1-of-4 slds-p-bottom_small">
-                                            <div class="ipp-sales-info-field">
-                                                <label class="ipp-sales-info-label slds-text-color_weak">{customLabel.disbursementChannelLabel}
-                                                    <template if:true={helpTextMap.FEC_Disbursement_Channel__c}>
-                                                        <lightning-helptext content={helpTextMap.FEC_Disbursement_Channel__c}></lightning-helptext>
-                                                    </template>
-                                                </label>
-                                                <span class="ipp-sales-info-value">{disbursementChannel}</span>
-                                            </div>
-                                        </div>
-                                        <div class="slds-col slds-size_1-of-4 slds-p-bottom_small">
                                             <div class="ipp-sales-info-field">
                                                 <label class="ipp-sales-info-label slds-text-color_weak">{customLabel.ccNameLabel}
                                                     <template if:true={helpTextMap.FEC_CC_Name__c}>
@@ -214,7 +170,16 @@
                                                 <span class="ipp-sales-info-value">{ccName}</span>
                                             </div>
                                         </div>
-                                        <div class="slds-col slds-size_1-of-4 slds-p-bottom_small">
+                                        <!-- Cột 2: DSA Code, DSA Name -->
+                                        <div class="slds-col slds-size_1-of-4 slds-p-bottom_small ipp-sales-info-column">
+                                            <div class="ipp-sales-info-field">
+                                                <label class="ipp-sales-info-label slds-text-color_weak">{customLabel.dsaCodeLabel}
+                                                    <template if:true={helpTextMap.FEC_DSA_Code__c}>
+                                                        <lightning-helptext content={helpTextMap.FEC_DSA_Code__c}></lightning-helptext>
+                                                    </template>
+                                                </label>
+                                                <span class="ipp-sales-info-value">{dsaCode}</span>
+                                            </div>
                                             <div class="ipp-sales-info-field">
                                                 <label class="ipp-sales-info-label slds-text-color_weak">{customLabel.dsaNameLabel}
                                                     <template if:true={helpTextMap.FEC_DSA_Name__c}>
@@ -224,7 +189,16 @@
                                                 <span class="ipp-sales-info-value">{dsaName}</span>
                                             </div>
                                         </div>
-                                        <div class="slds-col slds-size_1-of-4 slds-p-bottom_small">
+                                        <!-- Cột 3: TSA Code, TSA Name -->
+                                        <div class="slds-col slds-size_1-of-4 slds-p-bottom_small ipp-sales-info-column">
+                                            <div class="ipp-sales-info-field">
+                                                <label class="ipp-sales-info-label slds-text-color_weak">{customLabel.tsaCodeLabel}
+                                                    <template if:true={helpTextMap.FEC_TSA_Code__c}>
+                                                        <lightning-helptext content={helpTextMap.FEC_TSA_Code__c}></lightning-helptext>
+                                                    </template>
+                                                </label>
+                                                <span class="ipp-sales-info-value">{tsaCode}</span>
+                                            </div>
                                             <div class="ipp-sales-info-field">
                                                 <label class="ipp-sales-info-label slds-text-color_weak">{customLabel.tsaNameLabel}
                                                     <template if:true={helpTextMap.FEC_TSA_Name__c}>
@@ -234,18 +208,8 @@
                                                 <span class="ipp-sales-info-value">{tsaName}</span>
                                             </div>
                                         </div>
-                                        
-                                        <!-- Row 3: Origination Channel - cùng độ rộng 1 cột như các trường khác -->
-                                        <div class="slds-col slds-size_1-of-4 slds-p-bottom_small">
-                                            <div class="ipp-sales-info-field">
-                                                <label class="ipp-sales-info-label slds-text-color_weak">{customLabel.originationChannelLabel}
-                                                    <template if:true={helpTextMap.FEC_Origination_Channel__c}>
-                                                        <lightning-helptext content={helpTextMap.FEC_Origination_Channel__c}></lightning-helptext>
-                                                    </template>
-                                                </label>
-                                                <span class="ipp-sales-info-value">{originationChannel}</span>
-                                            </div>
-                                        </div>
+                                        <!-- Cột 4: trống -->
+                                        <div class="slds-col slds-size_1-of-4 slds-p-bottom_small ipp-sales-info-column ipp-sales-info-column--empty" aria-hidden="true"></div>
                                     </div>
                                         </div>
                                     </template>

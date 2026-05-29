@@ -3,7 +3,7 @@
  * REST (raw SOAP XML): FEC_GetCSCaseStatusRestService → FEC_MyCaseSoapXml.
  */
 global with sharing class FEC_GetCSCaseStatusService {
-
+    
     // -------------------------------------------------
     // MAIN SERVICE METHOD
     // -------------------------------------------------
@@ -56,8 +56,6 @@ global with sharing class FEC_GetCSCaseStatusService {
             
             
             
-            //     đang thiếu AdditionalInfo;
-            
             
             originalRequest.RequestInfo = new RequestInfoType();
             FEC_Business_Process__c caseType = getCaseType(resultCase.FEC_Business_Process__c);
@@ -76,9 +74,7 @@ global with sharing class FEC_GetCSCaseStatusService {
             originalRequest.RequestInfo.SubCode = subCode != null ? subCode.FEC_Name_VN__c : null;
             originalRequest.RequestInfo.Remarks = resultCase.FEC_Remarks__c;
             
-            originalRequest.RequestInfo.AdditionalInfo = new AdditionalInfor();
-            originalRequest.RequestInfo.AdditionalInfo.ID = '';
-            originalRequest.RequestInfo.AdditionalInfo.Value = '';
+            originalRequest.RequestInfo.AdditionalInfo =  getAdditionalInfo(resultCase.Id);
             
             
             originalRequest.CreatorInfo = new CreatorInfoType();
@@ -326,6 +322,62 @@ global with sharing class FEC_GetCSCaseStatusService {
         }
     }
     
+    //----Get Addition Info-----//
+    private static List<AdditionalInfor> getAdditionalInfo(Id caseId) {
+        
+        List<AdditionalInfor> result = new List<AdditionalInfor>();
+        
+        Map<String, Schema.SObjectField> fields =
+            FEC_Additional_Info__c.SObjectType.getDescribe().fields.getMap();
+        
+        String soql =
+            'SELECT ' + String.join(new List<String>(fields.keySet()), ',') +
+            ' FROM FEC_Additional_Info__c' +
+            ' WHERE FEC_Case__c = :caseId' +
+            ' LIMIT 1';
+        
+        List<SObject> records = Database.query(soql);
+        
+        if (records.isEmpty()) {
+            return result;
+        }
+        
+        FEC_Additional_Info__c info =
+            (FEC_Additional_Info__c)records[0];
+        
+        Map<String, Object> populatedFields =
+            info.getPopulatedFieldsAsMap();
+        
+        Set<String> excludeFields = new Set<String>{
+            'Id',
+            'OwnerId',
+            'CreatedDate',
+            'CreatedById',
+            'LastModifiedDate',
+            'LastModifiedById',
+            'SystemModstamp',
+            'FEC_Case__c'
+        };
+        
+        for (String fieldName : populatedFields.keySet()) {
+            
+            if (excludeFields.contains(fieldName)) {
+                continue;
+            }
+            
+            AdditionalInfor item = new AdditionalInfor();
+            item.ID = fieldName;
+            item.Value = String.valueOf(populatedFields.get(fieldName));
+            
+            result.add(item);
+        }
+        
+        return result;
+    }
+    
+    
+    //-------------------------//
+    
     private static void logApiFull(
         String endpoint,
     String method,
@@ -434,7 +486,7 @@ global with sharing class FEC_GetCSCaseStatusService {
         webservice  String SubCategory;
         webservice  String SubCode;
         webservice  String Remarks;
-        webservice  AdditionalInfor AdditionalInfo;
+        webservice List<AdditionalInfor> AdditionalInfo;
     }
     
     

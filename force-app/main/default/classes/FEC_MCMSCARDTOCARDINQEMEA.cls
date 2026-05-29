@@ -12,6 +12,8 @@
 
 public with sharing class FEC_MCMSCARDTOCARDINQEMEA {
 
+    public static FEC_ResponseLog responseLog;
+
     /* =====================================================
        RESPONSE MODELS
        ===================================================== */
@@ -131,11 +133,21 @@ public with sharing class FEC_MCMSCARDTOCARDINQEMEA {
                 + (String.isNotBlank(apiConfig?.FEC_Endpoint__c) ? apiConfig.FEC_Endpoint__c : '');
 
         HttpResponse res = FEC_CommonUltils.calloutApi(
-            endpoint, 'POST',
+            endpoint,
+            FEC_ConstantCommon.API_METHOD_POST,
             FEC_ConstantCommon.API_CONTENT_TYPE,
             apiConfig?.FEC_SOAP_Action__c,
             null,
             soapBody
+        );
+        // Log Api
+        responseLog = new FEC_ResponseLog(
+            'FEC_MCMSCARDTOCARDINQEMEA',
+            endpoint,
+            FEC_ConstantCommon.API_METHOD_POST,
+            soapBody,
+            res,
+            null
         );
 
         if (res.getStatusCode() != 200 || String.isBlank(res.getBody())) {

@@ -99,7 +99,8 @@ export default class Fec_AssignmentExecuteAction extends LightningElement {
 
       /*
        * STEP 4
-       * Publish LMS — Assignment list + partial Case Information edit (not full FEC_Case_Mode)
+       * Publish LMS — Assignment list + partial Case Information edit (not full FEC_Case_Mode).
+       * fec_CaseBussiness reload getByCase và chỉ mở field editable theo master data / assignment rules.
        */
       const assignmentPayload = {
         caseId: this.recordId,

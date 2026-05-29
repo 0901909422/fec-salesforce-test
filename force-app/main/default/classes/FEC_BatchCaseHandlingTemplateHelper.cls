@@ -469,6 +469,17 @@ public without sharing class FEC_BatchCaseHandlingTemplateHelper {
         public String templateDownloadUrl;
     }
 
+    // 29/05/2026 18:00 linhdev - export popup chỉ hiện BP có templateName + ContentVersion khớp user group
+    public static Boolean hasExportTemplateBinding(TemplateExportBinding binding) {
+        if (binding == null) {
+            return false;
+        }
+        if (String.isBlank(binding.templateName)) {
+            return false;
+        }
+        return binding.templateContentVersionId != null;
+    }
+
     public static TemplateExportBinding resolveExportTemplateBinding(
         String businessProcessCode,
         String businessProcessName,
