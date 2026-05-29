@@ -169,6 +169,82 @@ public without sharing class FEC_CofGsrRoutePrepareService {
   }
 
   /**
+   * GSR Revert Stage 2 → Stage 1: khôi phục Actual NOC + Case Stage theo bộ NOC gốc
+   * trên FEC_Case_Flow_History__c (submit lần đầu), không theo Updated NOC Stage 2.
+   */
+  public static void restoreGsrStage1BaselineAfterStage2Revert(String caseId) {
+    if (String.isBlank(caseId)) {
+      return;
+    }
+    Id baselineTemplateId = resolveBaselineTemplateNatureIdFromFlowHistory(caseId);
+    if (baselineTemplateId == null) {
+      return;
+    }
+    List<FEC_Nature_of_Case__c> templateLst = [
+      SELECT
+        Id,
+        FEC_Product_Type__c,
+        FEC_Category__c,
+        FEC_Sub_Category__c,
+        FEC_Sub_Code__c,
+        FEC_Business_Process__r.FEC_Code__c
+      FROM FEC_Nature_of_Case__c
+      WHERE Id = :baselineTemplateId
+      LIMIT 1
+    ];
+    if (templateLst.isEmpty()) {
+      return;
+    }
+    FEC_Nature_of_Case__c templateNoc = templateLst[0];
+    String bpCode = templateNoc.FEC_Business_Process__r?.FEC_Code__c;
+    if (String.isBlank(bpCode) || !bpCode.toUpperCase().contains('GSR')) {
+      return;
+    }
+    Id stage1Id = resolveCaseStageIdForTemplateByStageFragment(
+      baselineTemplateId,
+      FEC_ConstantCommon.STAGE_ONE
+    );
+    FEC_Actual_Nature_of_Case__c actualNoc = resolveOrCreateActualNatureForTemplate(
+      templateNoc
+    );
+    applyActualNatureAndStageToCase(caseId, actualNoc, stage1Id);
+  }
+
+  @TestVisible
+  private static Id resolveBaselineTemplateNatureIdFromFlowHistory(String caseId) {
+    List<FEC_Case_Flow_History__c> flowHistories = [
+      SELECT FEC_Nature_of_Cases__c
+      FROM FEC_Case_Flow_History__c
+      WHERE FEC_Case__c = :caseId AND FEC_Nature_of_Cases__c != NULL
+      ORDER BY CreatedDate ASC
+      LIMIT 1
+    ];
+    return flowHistories.isEmpty() ? null : flowHistories[0].FEC_Nature_of_Cases__c;
+  }
+
+  @TestVisible
+  private static Id resolveCaseStageIdForTemplateByStageFragment(
+    Id templateNatureId,
+    String stageNameFragment
+  ) {
+    if (templateNatureId == null || String.isBlank(stageNameFragment)) {
+      return null;
+    }
+    String stageNamePattern = '%' + stageNameFragment + '%';
+    List<FEC_Case_Stage__c> stageLst = [
+      SELECT Id
+      FROM FEC_Case_Stage__c
+      WHERE
+        FEC_Nature_of_Cases__c = :templateNatureId
+        AND FEC_Active__c = TRUE
+        AND Name LIKE :stageNamePattern
+      ORDER BY Name
+      LIMIT 1
+    ];
+    return stageLst.isEmpty() ? null : stageLst[0].Id;
+  }
+
+  /**
    * Sau Revert: Actual NOC trên Case phải khớp template của FEC_Current_Case_Stage__c
    * (tránh Actual bộ Stage 2 + Stage Stage 1 NOC gốc → master data COUNT = 0).
    */
@@ -276,7 +352,15 @@ public without sharing class FEC_CofGsrRoutePrepareService {
     String caseId,
     FEC_Actual_Nature_of_Case__c actualNoc
   ) {
-    update new Case(
+    applyActualNatureAndStageToCase(caseId, actualNoc, null);
+  }
+
+  private static void applyActualNatureAndStageToCase(
+    String caseId,
+    FEC_Actual_Nature_of_Case__c actualNoc,
+    Id caseStageId
+  ) {
+    Case c = new Case(
       Id = caseId,
       FEC_Actual_Nature_of_Case__c = actualNoc.Id,
       FEC_Product_Type__c = actualNoc.FEC_Product_Type__c,
@@ -284,5 +368,9 @@ public without sharing class FEC_CofGsrRoutePrepareService {
       FEC_SubCategory__c = actualNoc.FEC_Sub_Category__c,
       FEC_SubCode__c = actualNoc.FEC_Sub_Code__c
     );
+    if (caseStageId != null) {
+      c.FEC_Current_Case_Stage__c = caseStageId;
+    }
+    update c;
   }
 }
