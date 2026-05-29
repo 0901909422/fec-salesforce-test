@@ -525,11 +525,16 @@ public without sharing class FEC_MyCaseSoapXml {
             buildXmlElement('SubCategory', requestInfo.SubCategory) +
             buildXmlElement('SubCode', requestInfo.SubCode) +
             buildXmlElement('Remarks', requestInfo.Remarks);
-        if (requestInfo.AdditionalInfo != null) {
-            xml += '<AdditionalInfo>' +
-                buildXmlElement('ID', requestInfo.AdditionalInfo.ID) +
-                buildXmlElement('Value', requestInfo.AdditionalInfo.Value) +
-                '</AdditionalInfo>';
+        if (requestInfo.AdditionalInfo != null && !requestInfo.AdditionalInfo.isEmpty()) {
+            for (FEC_GetCSCaseStatusService.AdditionalInfor addInfo : requestInfo.AdditionalInfo) {
+                if (addInfo == null) {
+                    continue;
+                }
+                xml += '<AdditionalInfo>' +
+                    buildXmlElement('ID', addInfo.ID) +
+                    buildXmlElement('Value', addInfo.Value) +
+                    '</AdditionalInfo>';
+            }
         }
         xml += '</RequestInfo>';
         return xml;
