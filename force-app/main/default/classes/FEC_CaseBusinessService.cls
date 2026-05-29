@@ -2300,6 +2300,7 @@ public without sharing class FEC_CaseBusinessService {
           String fieldListJson = (String) params.get('fieldListJson');
           if (String.isBlank(queueId)) {
             throwRunContextException(System.Label.FEC_MSG_Can_Not_Find_Next_Stage);
+            return null;
           }
           //PhongBT: tạo FEC_Case_Flow_History__c khi submit case lần đầu.
           // Kiểm tra creation stage trước khi mark submitted
@@ -2482,8 +2483,10 @@ public without sharing class FEC_CaseBusinessService {
       throw new AuraHandledException(e.getMessage());
     } catch (FEC_APIServiceException e) {
       throwRunContextException(e.getMessage());
+      return null;
     } catch (Exception e) {
       throwRunContextException(e.getMessage());
+      return null;
     }
   }
 
