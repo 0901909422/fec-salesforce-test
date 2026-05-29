@@ -1,6 +1,6 @@
 /**
  * Gộp toàn bộ FEC_Case_Remarks__c của Case lên 3 trường Long Text trên Case:
- * mỗi remark một dòng "#<n>: <nội dung>", đầy 256 ký tự ở bucket 1 rồi bucket 2, phần còn lại bucket 3.
+ * mỗi remark một dòng "#<n>: <nội dung>", đầy 256 ký tự ở bucket 1 rồi bucket 2, phần còn lại bucket 3 (Text 255).
  *
  * Đồng thời rollup 3 trường meta (#n: ...) tối đa 255 ký tự mỗi trường: người tạo (email),
  * FEC_User_Role__c, thời điểm CreatedDate — nối bằng khoảng trắng giữa các phần.
@@ -14,7 +14,7 @@ public without sharing class FEC_CaseRemarksRollupService {
   @TestVisible
   private static final Integer BUCKET_2_MAX = 256;
   @TestVisible
-  private static final Integer BUCKET_3_MAX = 256;
+  private static final Integer BUCKET_3_MAX = 255;
   @TestVisible
   private static final Integer META_ROLLUP_MAX = 255;
   private static final String META_SEGMENT_SEP = ' ';
@@ -24,7 +24,7 @@ public without sharing class FEC_CaseRemarksRollupService {
   @TestVisible
   private static final Integer STATUS_BUCKET_2_MAX = 255;
   @TestVisible
-  private static final Integer STATUS_BUCKET_3_MAX = 256;
+  private static final Integer STATUS_BUCKET_3_MAX = 255;
   private static final String STATUS_ENTRY_SEP = '\n';
 
   public static void rollup(Set<Id> caseIds) {
@@ -201,7 +201,7 @@ public without sharing class FEC_CaseRemarksRollupService {
   @TestVisible
   private static final Integer ENTERED_BY_BUCKET_2_MAX = 255;
   @TestVisible
-  private static final Integer ENTERED_BY_BUCKET_3_MAX = 256;
+  private static final Integer ENTERED_BY_BUCKET_3_MAX = 255;
 
   @TestVisible
   private class MetaRollup {
