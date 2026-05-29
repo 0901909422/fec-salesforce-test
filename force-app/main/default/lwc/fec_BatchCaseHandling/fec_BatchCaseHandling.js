@@ -2858,7 +2858,8 @@ export default class Fec_BatchCaseHandling extends LightningElement {
         const cellRef = window.XLSX.utils.encode_cell({ r: absoluteRow, c: col });
         const cell = sheet[cellRef];
         const cellValue = cell && cell.v !== undefined ? this.cellAsString(cell.v) : STR_EMPTY;
-        if (cellValue === expected) {
+        // 30/05/2026 11:30 linhdev - header rỗng không match ô trống (tránh lệch Temporary Email / Case ID)
+        if (expected !== STR_EMPTY && cellValue === expected) {
           matchedCol = col;
           searchCol = col + 1;
           break;

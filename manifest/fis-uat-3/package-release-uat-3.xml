@@ -164,6 +164,8 @@
         <members>FEC_BatchCaseHandlingZipService</members>
         <members>FEC_BatchCaseHandlingImportRow</members>
         <members>FEC_BatchCaseHandlingImportService</members>
+        <members>FEC_BCH_AssignmentRouteToService</members>
+        <members>FEC_BCH_AssignmentUpdateService</members>
         <members>FEC_BatchCaseHandlingImportQueueable</members>
         <members>FEC_BatchCaseHandlingExportService</members>
         <members>FEC_BatchCaseHandlingExportRow</members>
@@ -2281,6 +2283,8 @@
         <members>FEC_CaseRemarksTriggerHandler</members>
         <members>FEC_CaseRemarksRollupServiceTest</members>
         <members>FEC_BCH_ImportRoutingResolver</members>
+        <members>FEC_BCH_AssignmentRouteToService</members>
+        <members>FEC_BCH_AssignmentUpdateService</members>
         <members>FEC_BCH_PicklistTranslationCtrl</members>
         <members>FEC_BatchCaseHandlingImportProfile</members>
         <members>FEC_BatchCaseHandlingPicklistResolver</members>
