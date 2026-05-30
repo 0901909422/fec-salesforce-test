@@ -562,9 +562,27 @@ public without sharing class FEC_BatchCaseHandlingImportService {
                 }
                 cells = normalizedCells;
             }
-            // 30/05/2026 18:30 linhdev - đồng bộ cột Inputted Remarks từ giá trị validate (tránh giữ text mẫu template)
+            // 30/05/2026 19:15 linhdev - giữ lại remark gốc trong Result khi payload validate bị rỗng do vượt giới hạn
             if (inputtedRemarksIndex >= 0 && inputtedRemarksIndex < cells.size()) {
-                cells[inputtedRemarksIndex] = rowValue(row.inputtedRemarks);
+                String remarkForResult = rowValue(row.inputtedRemarks);
+                if (String.isBlank(remarkForResult)) {
+                    remarkForResult = rowValue(cells[inputtedRemarksIndex]);
+                }
+                if (
+                    String.isBlank(remarkForResult) &&
+                    row.originalDataRowIndex != null &&
+                    inputtedRemarksIndex < mappedColumnIndexes.size()
+                ) {
+                    remarkForResult = FEC_BCH_TemplateExportService.readImportCellText(
+                        sourceContentVersionId,
+                        sourceSheetName,
+                        row.originalDataRowIndex,
+                        mappedColumnIndexes[inputtedRemarksIndex]
+                    );
+                }
+                if (String.isNotBlank(remarkForResult)) {
+                    cells[inputtedRemarksIndex] = remarkForResult;
+                }
             }
             dataRows.add(cells);
             insertValues.add(
@@ -1082,6 +1100,7 @@ public without sharing class FEC_BatchCaseHandlingImportService {
             rr.originalCells = pickRowStringList(row, 'originalCells');
             rr.originalColumnIndexes = pickRowIntegerList(row, 'originalColumnIndexes');
             rr.originalHeaderRowIndex = pickRowInteger(row, 'originalHeaderRowIndex');
+            rr.originalDataRowIndex = pickRowInteger(row, 'originalDataRowIndex');
             rr.originalSheetName = pickRowString(row, new List<String>{ 'originalsheetname' });
             // 30/05/2026 18:30 linhdev - đồng bộ remark từ field/originalCells/charLength (tránh truncate 32,768 che lỗi quá dài)
             rr.inputtedRemarks = resolveInputtedRemarksValue(row, rr);

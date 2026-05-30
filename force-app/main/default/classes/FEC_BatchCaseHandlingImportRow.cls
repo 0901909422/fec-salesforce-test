@@ -34,5 +34,6 @@ public without sharing class FEC_BatchCaseHandlingImportRow {
     @AuraEnabled public List<String> originalCells;
     @AuraEnabled public List<Integer> originalColumnIndexes;
     @AuraEnabled public Integer originalHeaderRowIndex;
+    @AuraEnabled public Integer originalDataRowIndex;
     @AuraEnabled public String originalSheetName;
 }
