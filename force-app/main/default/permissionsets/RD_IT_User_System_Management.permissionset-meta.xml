@@ -1117,6 +1117,10 @@
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
+        <apexClass>FEC_RepeatRouteToOwnerHelper</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
         <apexClass>FEC_RemovePhoneController</apexClass>
         <enabled>true</enabled>
     </classAccesses>

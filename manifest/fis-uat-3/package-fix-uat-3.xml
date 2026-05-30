@@ -50,6 +50,7 @@
         <members>FEC_FetchWelcomeCallDetailsRestService</members>
         <members>FEC_RelevantTicketController</members>
         <members>FEC_RelevantTicketTriggerHandler</members>
+        <members>FEC_RepeatRouteToOwnerHelper</members>
         <members>FEC_COFFraudRelatedHandler</members>
         <members>FEC_RemovePhoneController</members>
         <members>FEC_GetIPPDetailsCallout</members>
