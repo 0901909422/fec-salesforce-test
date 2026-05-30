@@ -394,6 +394,8 @@ public with sharing class FEC_HoldCaseController {
                 resp.isSuccess = true;
                 resp.recordId  = c.Id;
                 populateResponseFromCase(resp, c.Id);
+                //tungnm37
+                FEC_CommonUltils.createProcessActionHistory('Hold Case', c, true);
                 return resp;
             }
 
@@ -417,6 +419,8 @@ public with sharing class FEC_HoldCaseController {
                 resp.isSuccess = true;
                 resp.recordId  = c.Id;
                 populateResponseFromCase(resp, c.Id);
+                //tungnm37
+                FEC_CommonUltils.createProcessActionHistory('Hold Case', c, true);
                 return resp;
             }
 
@@ -434,13 +438,15 @@ public with sharing class FEC_HoldCaseController {
                 updateCaseAfterManualHold(
                     c.Id,
                     RESULT_ERROR,
-                    null,
-                    null,
+                    model.nfuCode,
+                    nfuReasonLabel,
                     null,
                     null,
                     System.Label.FEC_MSG_ERROR,
                     null
                 );
+                //tungnm37
+                FEC_CommonUltils.createProcessActionHistory('Hold Case', c, false);
             }
 
             return resp;
@@ -526,6 +532,12 @@ public with sharing class FEC_HoldCaseController {
                 Id = caseId,
                 FEC_NFU_Description_Result__c = resultType
             );
+            if (String.isNotBlank(nfuCode)) {
+                errorPatch.FEC_NFU_Code__c = nfuCode;
+            }
+            if (String.isNotBlank(nfuReasonLabel)) {
+                errorPatch.FEC_NFU_Reason__c = nfuReasonLabel;
+            }
             if (String.isNotBlank(collectionsResponse)) {
                 errorPatch.FEC_Collections_Response__c = collectionsResponse;
             }
