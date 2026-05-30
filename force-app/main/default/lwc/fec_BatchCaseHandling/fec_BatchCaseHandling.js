@@ -240,6 +240,7 @@ const IMPORT_TIMEOUT_MS = 60 * 1000;
 const IMPORT_TIMEOUT_MESSAGE = FEC_BCH_RequestTimeout;
 const MAX_UPLOAD_SIZE_BYTES = 150 * 1024 * 1024;
 const VALID_FILE_EXTENSION = ".xlsx";
+const INPUTTED_REMARKS_MAX_LEN = 32768;
 const HEADERS_CASE_ID = ["caseid", "caseidsearch"];
 const HEADERS_ROUTING_ACTION = ["routingaction"];
 // 29/05/2026 19:30 linhdev - nhận diện cột Inputted Remarks / Input Remark trên template import
@@ -2880,7 +2881,12 @@ export default class Fec_BatchCaseHandling extends LightningElement {
         const cellRef = window.XLSX.utils.encode_cell({ r: i, c: worksheetCol });
         const cell = sheet[cellRef];
         const cellValue = cell && cell.v !== undefined ? cell.v : STR_EMPTY;
-        originalCells.push(this.cellAsString(cellValue));
+        let cellStr = this.cellAsString(cellValue);
+        // 30/05/2026 16:15 linhdev - truncate remark trong originalCells khi quá dài (giảm payload JSON, vẫn validate đủ qua inputtedRemarks)
+        if (col === idxRemark && cellStr.length > INPUTTED_REMARKS_MAX_LEN) {
+          cellStr = cellStr.substring(0, INPUTTED_REMARKS_MAX_LEN);
+        }
+        originalCells.push(cellStr);
       }
       rows.push({
         caseIdSearch,
@@ -2972,7 +2978,8 @@ export default class Fec_BatchCaseHandling extends LightningElement {
         const cellRef = window.XLSX.utils.encode_cell({ r: absoluteRow, c: col });
         const cell = sheet[cellRef];
         const cellValue = cell && cell.v !== undefined ? this.cellAsString(cell.v) : STR_EMPTY;
-        if (cellValue === expected) {
+        // 30/05/2026 11:30 linhdev - header rỗng không match ô trống (tránh lệch Temporary Email / Case ID)
+        if (expected !== STR_EMPTY && cellValue === expected) {
           matchedCol = col;
           searchCol = col + 1;
           break;
@@ -3011,11 +3018,12 @@ export default class Fec_BatchCaseHandling extends LightningElement {
       });
       const cell = sheet[cellRef];
       if (cell) {
-        if (cell.w !== undefined && cell.w !== null) {
-          return this.cellAsString(cell.w);
-        }
+        // 30/05/2026 16:15 linhdev - ưu tiên cell.v (raw) thay vì cell.w để không mất ký tự khi remark > 32,768
         if (cell.v !== undefined && cell.v !== null) {
           return this.cellAsString(cell.v);
+        }
+        if (cell.w !== undefined && cell.w !== null) {
+          return this.cellAsString(cell.w);
         }
       }
       return STR_EMPTY;
@@ -3207,7 +3215,7 @@ export default class Fec_BatchCaseHandling extends LightningElement {
     return { sectionRow, headerRow, headerRowIndex };
   }
 
-  resolveExportFieldKey(normalizedHeader) {
+  resolveExportFieldKey(normalizedHeader, isCofOrGsr) {
     if (!normalizedHeader) {
       return null;
     }
@@ -3217,19 +3225,64 @@ export default class Fec_BatchCaseHandling extends LightningElement {
     if (HEADERS_CASE_ID.indexOf(normalizedHeader) >= 0) {
       return "caseIdSearch";
     }
+    // Toannd 29/5/2026 - map cột original category/subcategory/subcode
+    if (isCofOrGsr === true) {
+      if (normalizedHeader === "category") {
+        return "originalCategoryCode";
+      }
+      if (normalizedHeader === "subcategory") {
+        return "originalSubCategoryCode";
+      }
+      if (normalizedHeader === "subcode") {
+        return "originalSubCodeCode";
+      }
+    } else {
+      if (normalizedHeader === "category") {
+        return "categoryCode";
+      }
+      if (normalizedHeader === "subcategory") {
+        return "subCategoryCode";
+      }
+      if (normalizedHeader === "subcode") {
+        return "subCodeCode";
+      }
+    }
     if (EXPORT_HEADER_FIELD_MAP[normalizedHeader]) {
       return EXPORT_HEADER_FIELD_MAP[normalizedHeader];
     }
     return null;
   }
 
-  buildExportColumnMappings(headerRow) {
+  // Toannd 29/5/2026 - nhận diện context COF/GSR export (cột assignment routing action)
+  isCofOrGsrExportContext(templateMeta, headerRow, businessProcessCode) {
+    const templateName = String(templateMeta?.templateName || STR_EMPTY)
+      .trim()
+      .toLowerCase();
+    if (templateName.includes("cof") || templateName.includes("gsr")) {
+      return true;
+    }
+    const bp = String(businessProcessCode || STR_EMPTY).trim().toLowerCase();
+    if (bp.startsWith("cof") || bp.startsWith("gsr")) {
+      return true;
+    }
+    const normalized = (headerRow || []).map((h) => this.normalizeExportHeader(h));
+    if (
+      this.findHeaderIndex(normalized, HEADERS_ASSIGNMENT_ID) >= 0 ||
+      this.findHeaderIndex(normalized, HEADERS_ASSIGNMENT_ROUTING_ACTION) >= 0
+    ) {
+      return true;
+    }
+    return false;
+  }
+
+  buildExportColumnMappings(headerRow, isCofOrGsr) {
     const mappings = [];
     const normalized = (headerRow || []).map((h) =>
       this.normalizeExportHeader(h)
     );
     for (let i = 0; i < normalized.length; i++) {
-      mappings.push(this.resolveExportFieldKey(normalized[i]));
+      // Toannd 29/5/2026 - map cột original category/subcategory/subcode
+      mappings.push(this.resolveExportFieldKey(normalized[i], isCofOrGsr));
     }
     return mappings;
   }
@@ -3473,8 +3526,16 @@ export default class Fec_BatchCaseHandling extends LightningElement {
       Number.isInteger(layout.headerRowIndex) && layout.headerRowIndex >= 0
         ? layout.headerRowIndex
         : 0;
-    const finalMappings = this.buildExportColumnMappings(headerRow);
     const list = Array.isArray(rows) ? rows : [];
+    // Toannd 29/5/2026 - nhận diện context COF/GSR export (cột assignment routing action)
+    const businessProcessCode =
+      list[0]?.businessProcessCode || list[0]?.businessProcessName || STR_EMPTY;
+    const isCofOrGsr = this.isCofOrGsrExportContext(
+      templateMeta,
+      headerRow,
+      businessProcessCode
+    );
+    const finalMappings = this.buildExportColumnMappings(headerRow, isCofOrGsr);
     const fullRows = this.buildMappedTemplateDataRows(list, finalMappings);
     const dataRows = this.compressExportDataRows(fullRows, finalMappings);
     const mappedColumnIndexes = [];

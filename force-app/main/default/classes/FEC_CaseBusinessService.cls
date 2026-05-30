@@ -2766,6 +2766,12 @@ public without sharing class FEC_CaseBusinessService {
       queueId = applyFrontlineMainQueueIfUserOwner(queueId);
       //thangtv: fallback Queue->latest history updated user mapping
       queueId = applyUserOwnerFromHistoryWhenCurrentOwnerIsQueue(caseId, queueId);
+      // Route to lần 2+ cùng queue đích: gán user đã route về owner hiện tại
+      queueId = FEC_RepeatRouteToOwnerHelper.applyRepeatRouteToUserOwner(
+        caseId,
+        currentOwnerId,
+        queueId
+      );
 
       queueId = FEC_BlockCodeRoutingService.applyRouteQueueOverrideIfApplicable(
         updatedCase,
