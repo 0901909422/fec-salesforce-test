@@ -351,7 +351,11 @@ public with sharing class FEC_HoldCaseController {
         try {
             // tungnm37: query Case lấy ContractNumber
             Case c = [
-                SELECT Id, Status, FEC_Account_Contract_Number_Text__c
+                SELECT Id,
+                    Status,
+                    FEC_Account_Contract_Number_Text__c,
+                    FEC_Current_Case_Stage__c,
+                    FEC_Current_Case_Stage__r.Name
                 FROM Case
                 WHERE Id = :model.caseId
                 WITH SECURITY_ENFORCED
@@ -438,8 +442,8 @@ public with sharing class FEC_HoldCaseController {
                 updateCaseAfterManualHold(
                     c.Id,
                     RESULT_ERROR,
-                    model.nfuCode,
-                    nfuReasonLabel,
+                    null,
+                    null,
                     null,
                     null,
                     System.Label.FEC_MSG_ERROR,
@@ -462,6 +466,15 @@ public with sharing class FEC_HoldCaseController {
         if (caseId == null) {
             return;
         }
+        Case c = [
+            SELECT Id,
+                FEC_Current_Case_Stage__c,
+                FEC_Current_Case_Stage__r.Name
+            FROM Case
+            WHERE Id = :caseId
+            WITH SECURITY_ENFORCED
+            LIMIT 1
+        ];
         updateCaseAfterManualHold(
             caseId,
             RESULT_ERROR,
@@ -472,6 +485,8 @@ public with sharing class FEC_HoldCaseController {
             System.Label.FEC_MSG_ERROR,
             null
         );
+        //tungnm37
+        FEC_CommonUltils.createProcessActionHistory('Hold Case', c, false);
     }
 
     @TestVisible
@@ -532,12 +547,6 @@ public with sharing class FEC_HoldCaseController {
                 Id = caseId,
                 FEC_NFU_Description_Result__c = resultType
             );
-            if (String.isNotBlank(nfuCode)) {
-                errorPatch.FEC_NFU_Code__c = nfuCode;
-            }
-            if (String.isNotBlank(nfuReasonLabel)) {
-                errorPatch.FEC_NFU_Reason__c = nfuReasonLabel;
-            }
             if (String.isNotBlank(collectionsResponse)) {
                 errorPatch.FEC_Collections_Response__c = collectionsResponse;
             }
