@@ -8,7 +8,7 @@ public with sharing class FEC_CMSIPPBlockWS_Test {
         Test.startTest();
         FEC_CMSIPPBlockWS.ResponseWrapper result = FEC_CMSIPPBlockWS.cmsIPPBlockWS(
             FEC_ConstantCommon.REQUESTOR_CRM,
-            '1651',
+            '72166729',
             null,
             '1500040000569722',
             2000001,
@@ -34,11 +34,11 @@ public with sharing class FEC_CMSIPPBlockWS_Test {
 
         Test.startTest();
         FEC_CMSIPPBlockWS.ResponseWrapper result = FEC_CMSIPPBlockWS.cmsIPPBlockWS(
-            FEC_ConstantCommon.REQUESTOR_CRM,
-            '1651',
+            FEC_ConstantCommon.REQUESTOR_PEGA_CSM_LEGACY,
+            '72166729',
             FEC_CMSIPPBlockWS.DEFAULT_DISB_CHANNEL,
-            '1500040000569722',
-            2000001,
+            '0001500020005413937',
+            5000000,
             FEC_CMSIPPBlockWS.DEFAULT_TENURE,
             true,
             FEC_CMSIPPBlockWS.DEFAULT_CAMPAIGN_NAME,
