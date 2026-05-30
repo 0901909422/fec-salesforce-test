@@ -16261,14 +16261,6 @@
         <value>Khi có Assignment ID, chỉ cho phép Routing Action level Case là Resolve/Reject.</value>
     </labels>
     <labels>
-        <fullName>FEC_Batch_Case_Handling_Import_Err_Routing_Action_Unavailable_Assignment</fullName>
-        <categories>Batch Case Handling</categories>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>FEC_Batch_Case_Handling_Import_Err_Routing_Action_Unavailable_Assignment</shortDescription>
-        <value>Routing Action không khả dụng do tồn tại Assignment</value>
-    </labels>
-    <labels>
         <fullName>FEC_Batch_Case_Handling_Import_Err_Assignment_Routing_Invalid</fullName>
         <categories>Batch Case Handling</categories>
         <language>en_US</language>
