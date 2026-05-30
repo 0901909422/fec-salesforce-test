@@ -14,9 +14,19 @@ public without sharing class FEC_BatchCaseHandlingExportService {
             'FEC_Complain_Type__c',
             'FEC_Complaint_Source__c',
             'FEC_Channel__c',
-            'FEC_Interaction_Subchannel__c',
             'FEC_Interaction_Masked_Phone__c',
             'FEC_Interaction_Masked_Email__c',
+            'FEC_IPP_To_Close__r.FEC_IPP_Record_No__c', // Toannd 28/5/2026
+            'FEC_IPP_To_Close__r.FEC_IPP_Plan__c', // Toannd 28/5/2026
+            'FEC_IPP_To_Close__r.FEC_IPP_Open_Date__c', // Toannd 28/5/2026
+            'FEC_IPP_To_Close__r.FEC_IPP_First_Due_Date__c', // Toannd 28/5/2026
+            'FEC_IPP_To_Close__r.FEC_IPP_Mature_Date__c', // Toannd 28/5/2026
+            'FEC_IPP_To_Close__r.FEC_IPP_Balance__c', // Toannd 28/5/2026
+            'FEC_IPP_To_Close__r.FEC_IPP_Current_Balance__c', // Toannd 28/5/2026
+            'FEC_IPP_To_Close__r.FEC_IPP_Interest_Rate__c', // Toannd 28/5/2026
+            'FEC_IPP_To_Close__r.FEC_IPP_Term__c', // Toannd 28/5/2026
+            'FEC_IPP_To_Close__r.FEC_IPP_Insurance__c', // Toannd 28/5/2026
+            'FEC_IPP_To_Close__r.FEC_IPP_Current_Term__c', // Toannd 28/5/2026
             'FEC_Product_Type__r.Name',
             'FEC_Product_Type__r.FEC_Code__c',
             'FEC_Category__r.Name',
@@ -45,6 +55,7 @@ public without sharing class FEC_BatchCaseHandlingExportService {
             'FEC_CS_Check_Classification_by_CS__c',
             'FEC_CS_Check_Evaluation_by_CS__c',
             'FEC_CS_Check_Final_Product__c',
+            'FEC_RD_Payment_Contract_Assessment__c', // Toannd 28/5/2026
             'FEC_Sales_Check_Evaluation_by_Sales__c',
             'FEC_Sales_Check_Discipline_Result__c',
             'FEC_Sales_Check_Contact_Point__c',
@@ -56,6 +67,10 @@ public without sharing class FEC_BatchCaseHandlingExportService {
             'FEC_Account_or_Contract__r.FEC_DSA_Name__c',
             'FEC_Account_or_Contract__r.FEC_TSA_Code__c',
             'FEC_Account_or_Contract__r.FEC_TSA_Name__c',
+            'FEC_Account_or_Contract__r.FEC_Contract_Status__c', // Toannd 28/5/2026
+            'FEC_Account_or_Contract__r.FEC_Product_Code__c', // Toannd 28/5/2026
+            'FEC_Account_or_Contract__r.FEC_Loan_Amount__c', // Toannd 28/5/2026
+            'FEC_Account_or_Contract__r.FEC_Tenure__c', // Toannd 28/5/2026
             'FEC_Account_or_Contract__r.FEC_Sales_Channel__c',
             'FEC_Account_or_Contract__r.FEC_Sales_Sub_Channel__c',
             'FEC_Account_or_Contract__r.FEC_Customer_Name__c',
@@ -194,9 +209,37 @@ public without sharing class FEC_BatchCaseHandlingExportService {
         r.complaintType = c.FEC_Complain_Type__c;
         r.complaintSource = c.FEC_Complaint_Source__c;
         r.interactionChannel = c.FEC_Channel__c;
-        r.interactionSubChannel = c.FEC_Interaction_Subchannel__c;
+        r.interactionSubChannel = c.FEC_Interaction__r == null
+            ? FEC_ConstantCommon.STR_EMPTY
+            : c.FEC_Interaction__r.FEC_Interaction_Subchannel__c;
         r.interactionPhone = c.FEC_Interaction_Masked_Phone__c;
         r.interactionEmail = c.FEC_Interaction_Masked_Email__c;
+        SObject ipp = c.getSObject('FEC_IPP_To_Close__r'); // Toannd 28/5/2026
+        if (ipp != null) { // Toannd 28/5/2026
+            r.ippRecordNo = (String) ipp.get('FEC_IPP_Record_No__c'); // Toannd 28/5/2026
+            r.ippPlan = (String) ipp.get('FEC_IPP_Plan__c'); // Toannd 28/5/2026
+            r.ippOpenDate = ipp.get('FEC_IPP_Open_Date__c') == null // Toannd 28/5/2026
+                ? FEC_ConstantCommon.STR_EMPTY
+                : String.valueOf(ipp.get('FEC_IPP_Open_Date__c'));
+            r.ippFirstDueDate = ipp.get('FEC_IPP_First_Due_Date__c') == null // Toannd 28/5/2026
+                ? FEC_ConstantCommon.STR_EMPTY
+                : String.valueOf(ipp.get('FEC_IPP_First_Due_Date__c'));
+            r.ippMatureDate = ipp.get('FEC_IPP_Mature_Date__c') == null // Toannd 28/5/2026
+                ? FEC_ConstantCommon.STR_EMPTY
+                : String.valueOf(ipp.get('FEC_IPP_Mature_Date__c'));
+            r.ippBalance = ipp.get('FEC_IPP_Balance__c') == null // Toannd 28/5/2026
+                ? FEC_ConstantCommon.STR_EMPTY
+                : String.valueOf(ipp.get('FEC_IPP_Balance__c'));
+            r.ippCurrentBalance = ipp.get('FEC_IPP_Current_Balance__c') == null // Toannd 28/5/2026
+                ? FEC_ConstantCommon.STR_EMPTY
+                : String.valueOf(ipp.get('FEC_IPP_Current_Balance__c'));
+            r.ippInterestRate = ipp.get('FEC_IPP_Interest_Rate__c') == null // Toannd 28/5/2026
+                ? FEC_ConstantCommon.STR_EMPTY
+                : String.valueOf(ipp.get('FEC_IPP_Interest_Rate__c'));
+            r.ippTerm = (String) ipp.get('FEC_IPP_Term__c'); // Toannd 28/5/2026
+            r.ippInsurance = (String) ipp.get('FEC_IPP_Insurance__c'); // Toannd 28/5/2026
+            r.ippCurrentTerm = (String) ipp.get('FEC_IPP_Current_Term__c'); // Toannd 28/5/2026
+        }
         r.interactionId = c.FEC_Interaction__r == null ? FEC_ConstantCommon.STR_EMPTY : c.FEC_Interaction__r.FEC_ID_Search__c;
         r.productType = c.FEC_Product_Type__r == null
             ? FEC_ConstantCommon.STR_EMPTY
@@ -219,6 +262,7 @@ public without sharing class FEC_BatchCaseHandlingExportService {
         r.classificationByCs = c.FEC_CS_Check_Classification_by_CS__c;
         r.evaluationByCs = c.FEC_CS_Check_Evaluation_by_CS__c;
         r.finalProduct = c.FEC_CS_Check_Final_Product__c;
+        r.paymentContractAssessment = c.FEC_RD_Payment_Contract_Assessment__c; // Toannd 28/5/2026
         r.evaluationBySales = c.FEC_Sales_Check_Evaluation_by_Sales__c;
         r.disciplineResult = c.FEC_Sales_Check_Discipline_Result__c;
         r.contactPoint = c.FEC_Sales_Check_Contact_Point__c;
@@ -241,6 +285,14 @@ public without sharing class FEC_BatchCaseHandlingExportService {
             r.dsaName = (String) ch.get('FEC_DSA_Name__c');
             r.tsaCode = (String) ch.get('FEC_TSA_Code__c');
             r.tsaName = (String) ch.get('FEC_TSA_Name__c');
+            r.contractStatus = (String) ch.get('FEC_Contract_Status__c'); // Toannd 28/5/2026
+            r.productCode = (String) ch.get('FEC_Product_Code__c'); // Toannd 28/5/2026
+            r.loanAmount = ch.get('FEC_Loan_Amount__c') == null // Toannd 28/5/2026
+                ? FEC_ConstantCommon.STR_EMPTY
+                : String.valueOf(ch.get('FEC_Loan_Amount__c'));
+            r.tenure = ch.get('FEC_Tenure__c') == null // Toannd 28/5/2026
+                ? FEC_ConstantCommon.STR_EMPTY
+                : String.valueOf(ch.get('FEC_Tenure__c'));
             r.salesChannel = (String) ch.get('FEC_Sales_Channel__c');
             r.salesSubChannel = (String) ch.get('FEC_Sales_Sub_Channel__c');
         }

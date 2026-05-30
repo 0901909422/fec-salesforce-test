@@ -16,6 +16,7 @@ global with sharing class FEC_GetCSMasterDataService {
     // Cache
     private static Map<String, List<AdditionalPropertyType>> cacheByApplyTo = new Map<String, List<AdditionalPropertyType>>();
     private static List<FEC_Master_Data_Setting__c> cachedSettings;
+    private static Map<String, Schema.DescribeFieldResult> additionalFieldDescribeByApi;
 
     // ==========================================================
     // MAIN
@@ -128,8 +129,6 @@ global with sharing class FEC_GetCSMasterDataService {
                 applyTo,
                 FEC_ConstantCommon.KEY_CASETYPE
             );
-            setAdditionalIfNull(caseType, applyTo);
-
             // ================= CATEGORY =================
             ChildItemType category = findOrCreateChild(
                 caseType.Children,
@@ -140,7 +139,6 @@ global with sharing class FEC_GetCSMasterDataService {
                 applyTo,
                 FEC_ConstantCommon.KEY_CATEGORY
             );
-            setAdditionalIfNull(category, applyTo);
 
             // ================= SUB CATEGORY =================
             ChildItemType subCategory = findOrCreateChild(
@@ -152,10 +150,9 @@ global with sharing class FEC_GetCSMasterDataService {
                 applyTo,
                 FEC_ConstantCommon.KEY_SUBCATEGORY
             );
-            setAdditionalIfNull(subCategory, applyTo);
 
             // ================= SUB CODE =================
-            ChildItemType subCode = findOrCreateChild(
+            findOrCreateChild(
                 subCategory.Children,
                 n.FEC_Sub_Code__r.FEC_Code__c,
                 n.FEC_Sub_Code__r.Name,
@@ -164,7 +161,6 @@ global with sharing class FEC_GetCSMasterDataService {
                 applyTo,
                 FEC_ConstantCommon.KEY_SUBCODE
             );
-            setAdditionalIfNull(subCode, applyTo);
         }
 
         res.MasterDataItems = productMap.values();
@@ -207,17 +203,13 @@ global with sharing class FEC_GetCSMasterDataService {
         return c;
     }
 
-    private static void setAdditionalIfNull(ChildItemType c, String applyTo) {
-        if (c.AdditionalProperties == null) {
-            c.AdditionalProperties = getAdditionalProperties(applyTo);
-        }
-    }
-
     // ==========================================================
     // SETTINGS CACHE
     // ==========================================================
     private static void loadSettings() {
-        if (cachedSettings != null) return;
+        if (cachedSettings != null) {
+            return;
+        }
 
         cachedSettings = [
             SELECT
@@ -228,6 +220,45 @@ global with sharing class FEC_GetCSMasterDataService {
             FROM FEC_Master_Data_Setting__c
             WHERE FEC_Field_Object_Name__c = :FEC_ConstantCommon.OBJ_ADDITIONAL_INFO
         ];
+
+        ensureAdditionalFieldDescribeCache();
+        warmAdditionalPropertiesCache();
+    }
+
+    private static void ensureAdditionalFieldDescribeCache() {
+        if (additionalFieldDescribeByApi != null) {
+            return;
+        }
+
+        additionalFieldDescribeByApi = new Map<String, Schema.DescribeFieldResult>();
+        Map<String, Schema.SObjectField> fieldMap =
+            FEC_Additional_Info__c.SObjectType.getDescribe().fields.getMap();
+
+        for (Schema.SObjectField fieldToken : fieldMap.values()) {
+            Schema.DescribeFieldResult fieldDescribe = fieldToken.getDescribe();
+            additionalFieldDescribeByApi.put(
+                fieldDescribe.getName().toLowerCase(),
+                fieldDescribe
+            );
+        }
+    }
+
+    private static void warmAdditionalPropertiesCache() {
+        Set<String> applyTos = new Set<String>();
+        applyTos.add(null);
+
+        for (FEC_Master_Data_Setting__c setting : cachedSettings) {
+            String settingApplyTo = setting.FEC_Nature_Of_Case__r != null
+                ? setting.FEC_Nature_Of_Case__r.FEC_Customer_Type__c
+                : null;
+            applyTos.add(settingApplyTo);
+        }
+
+        for (String applyTo : applyTos) {
+            if (!cacheByApplyTo.containsKey(applyTo)) {
+                getAdditionalProperties(applyTo);
+            }
+        }
     }
 
     // ==========================================================
@@ -236,7 +267,7 @@ global with sharing class FEC_GetCSMasterDataService {
     private static List<AdditionalPropertyType> getAdditionalProperties(String applyTo) {
 
         if (cacheByApplyTo.containsKey(applyTo)) {
-            return new List<AdditionalPropertyType>(cacheByApplyTo.get(applyTo));
+            return cacheByApplyTo.get(applyTo);
         }
 
         List<AdditionalPropertyType> result = new List<AdditionalPropertyType>();
@@ -259,34 +290,14 @@ global with sharing class FEC_GetCSMasterDataService {
             p.ApplyTo = settingApplyTo;
             p.Mandatory = m.FEC_Field_Mandatory__c;
 
-            p.Name = FEC_CommonUltils.getFieldLabel(
-                FEC_ConstantCommon.OBJ_ADDITIONAL_INFO,
-                p.ID
-            );
-            p.NameVN = p.Name;
-
-            p.Type = mapFieldType(
-                FEC_CommonUltils.getFieldType(
-                    FEC_ConstantCommon.OBJ_ADDITIONAL_INFO,
-                    p.ID
-                )
-            );
-
-            if (p.Type == 'list') {
-                p.AvailableValues = mapAvailableValues(
-                    FEC_CommonUltils.getPicklistOptions(
-                        FEC_ConstantCommon.OBJ_ADDITIONAL_INFO,
-                        p.ID
-                    )
-                );
-            }
+            populateAdditionalPropertyMetadata(p);
 
             result.add(p);
         }
 
         cacheByApplyTo.put(applyTo, result);
 
-        return new List<AdditionalPropertyType>(result);
+        return result;
     }
 
     private static Boolean matchApplyTo(String req, String setting) {
@@ -296,13 +307,100 @@ global with sharing class FEC_GetCSMasterDataService {
         return setting == req;
     }
 
+    private static void populateAdditionalPropertyMetadata(AdditionalPropertyType p) {
+        if (p == null || String.isBlank(p.ID)) {
+            return;
+        }
+
+        ensureAdditionalFieldDescribeCache();
+
+        Schema.DescribeFieldResult fieldDescribe = additionalFieldDescribeByApi.get(
+            p.ID.toLowerCase()
+        );
+
+        if (fieldDescribe == null) {
+            p.Name = p.ID;
+            p.NameVN = p.ID;
+            p.Type = 'string';
+            return;
+        }
+
+        p.Name = fieldDescribe.getLabel();
+        p.NameVN = p.Name;
+        p.Type = mapFieldTypeFromDisplayType(fieldDescribe.getType());
+
+        if (p.Type == 'list') {
+            p.AvailableValues = mapPicklistEntries(fieldDescribe.getPicklistValues());
+        }
+    }
+
     private static String mapFieldType(String t) {
-        if (t == FEC_ConstantCommon.KEY_PICKLIST) return 'list';
-        if (t == FEC_ConstantCommon.KEY_CHECKBOX) return 'boolean';
-        if (t == FEC_ConstantCommon.KEY_DATE) return 'date';
-        if (t == FEC_ConstantCommon.KEY_DATETIME) return 'datetime';
-        if (t == FEC_ConstantCommon.KEY_NUMBER) return 'number';
+        if (t == FEC_ConstantCommon.KEY_PICKLIST) {
+            return 'list';
+        }
+        if (t == FEC_ConstantCommon.KEY_CHECKBOX) {
+            return 'boolean';
+        }
+        if (t == FEC_ConstantCommon.KEY_DATE) {
+            return 'date';
+        }
+        if (t == FEC_ConstantCommon.KEY_DATETIME) {
+            return 'datetime';
+        }
+        if (t == FEC_ConstantCommon.KEY_NUMBER) {
+            return 'number';
+        }
         return 'string';
+    }
+
+    private static String mapFieldTypeFromDisplayType(Schema.DisplayType fieldType) {
+        return mapFieldType(displayTypeToFieldTypeKey(fieldType));
+    }
+
+    private static String displayTypeToFieldTypeKey(Schema.DisplayType fieldType) {
+        switch on fieldType {
+            when Picklist {
+                return FEC_ConstantCommon.KEY_PICKLIST;
+            }
+            when Boolean {
+                return FEC_ConstantCommon.KEY_CHECKBOX;
+            }
+            when Date {
+                return FEC_ConstantCommon.KEY_DATE;
+            }
+            when DateTime {
+                return FEC_ConstantCommon.KEY_DATETIME;
+            }
+            when Integer, Double, Currency, Percent {
+                return FEC_ConstantCommon.KEY_NUMBER;
+            }
+            when else {
+                return 'string';
+            }
+        }
+    }
+
+    private static List<AvailableValueType> mapPicklistEntries(
+        List<Schema.PicklistEntry> picklistEntries
+    ) {
+        List<AvailableValueType> result = new List<AvailableValueType>();
+
+        if (picklistEntries == null) {
+            return result;
+        }
+
+        for (Schema.PicklistEntry entry : picklistEntries) {
+            if (entry == null || !entry.isActive()) {
+                continue;
+            }
+            AvailableValueType value = new AvailableValueType();
+            value.ID = entry.getValue();
+            value.Name = entry.getLabel();
+            value.NameVN = entry.getLabel();
+            result.add(value);
+        }
+
+        return result;
     }
 
     private static List<AvailableValueType> mapAvailableValues(
@@ -310,7 +408,9 @@ global with sharing class FEC_GetCSMasterDataService {
     ) {
         List<AvailableValueType> result = new List<AvailableValueType>();
 
-        if (options == null) return result;
+        if (options == null) {
+            return result;
+        }
 
         for (FEC_CommonUltils.PicklistOption opt : options) {
             AvailableValueType v = new AvailableValueType();
