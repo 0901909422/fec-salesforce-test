@@ -248,15 +248,20 @@ public without sharing class FEC_BCH_TemplateExportService {
             List<String> sharedStrings = parseSharedStrings(
                 blobToUtf8(entryByPath.get('xl/sharedStrings.xml'))
             );
-            Map<Integer, String> colTexts = parseRowColumnTextsByIndex(
-                worksheetXml,
-                dataRowIndex0 + 1,
-                sharedStrings
-            );
-            if (!colTexts.containsKey(worksheetColIndex0)) {
+            // 30/05/2026 19:30 linhdev - đọc đúng cell ref; tránh regex row ăn nhầm cell self-closing trước cột remark
+            String cellRef = columnIndexToLetter(worksheetColIndex0) + String.valueOf(dataRowIndex0 + 1);
+            Pattern cellPat = Pattern.compile('(?s)<c r="' + cellRef + '"([^/>]*)(?:>(.*?)</c>|/>)');
+            Matcher cellMat = cellPat.matcher(worksheetXml);
+            if (!cellMat.find()) {
                 return FEC_ConstantCommon.STR_EMPTY;
             }
-            String text = colTexts.get(worksheetColIndex0);
+            String attrs = cellMat.group(1) == null ? FEC_ConstantCommon.STR_EMPTY : cellMat.group(1);
+            String cellBody = cellMat.group(2) == null ? FEC_ConstantCommon.STR_EMPTY : cellMat.group(2);
+            String text = resolveCellDisplayText(attrs + cellBody, sharedStrings);
+            // 30/05/2026 19:50 linhdev - giữ Result trong giới hạn cell Excel khi đọc lại remark từ file gốc
+            if (text != null && text.length() > 32767) {
+                text = text.substring(0, 32767);
+            }
             return text == null ? FEC_ConstantCommon.STR_EMPTY : text;
         } catch (Exception ex) {
             dbg('READ_IMPORT_CELL_FAIL', ex.getMessage());
@@ -569,7 +574,8 @@ public without sharing class FEC_BCH_TemplateExportService {
         while (siMat.find()) {
             String block = siMat.group(1);
             String text = FEC_ConstantCommon.STR_EMPTY;
-            Pattern tPat = Pattern.compile('<t[^>]*>([^<]*)</t>');
+            // 30/05/2026 19:45 linhdev - chỉ match tag <t>, không match nhầm <theme> trong rich text
+            Pattern tPat = Pattern.compile('<t(?:\\s[^>]*)?>([^<]*)</t>');
             Matcher tMat = tPat.matcher(block);
             while (tMat.find()) {
                 text += tMat.group(1);
@@ -660,7 +666,7 @@ public without sharing class FEC_BCH_TemplateExportService {
         // 30/05/2026 18:30 linhdev - ghép mọi <t> trong inlineStr (remark dài có thể tách nhiều phần)
         if (cellXml.contains('<is>')) {
             String inlineText = FEC_ConstantCommon.STR_EMPTY;
-            Pattern inlineTPat = Pattern.compile('<t[^>]*>([^<]*)</t>');
+            Pattern inlineTPat = Pattern.compile('<t(?:\\s[^>]*)?>([^<]*)</t>');
             Matcher inlineTMat = inlineTPat.matcher(cellXml);
             while (inlineTMat.find()) {
                 inlineText += inlineTMat.group(1);
