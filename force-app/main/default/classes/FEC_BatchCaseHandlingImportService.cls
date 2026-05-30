@@ -562,6 +562,10 @@ public without sharing class FEC_BatchCaseHandlingImportService {
                 }
                 cells = normalizedCells;
             }
+            // 30/05/2026 18:30 linhdev - đồng bộ cột Inputted Remarks từ giá trị validate (tránh giữ text mẫu template)
+            if (inputtedRemarksIndex >= 0 && inputtedRemarksIndex < cells.size()) {
+                cells[inputtedRemarksIndex] = rowValue(row.inputtedRemarks);
+            }
             dataRows.add(cells);
             insertValues.add(
                 new List<String>{
@@ -955,6 +959,55 @@ public without sharing class FEC_BatchCaseHandlingImportService {
         return n;
     }
 
+    // 30/05/2026 18:30 linhdev - đọc remark từ file upload gốc trước validate (LWC/JSON có thể thiếu chuỗi dài)
+    public static void enrichInputtedRemarksFromImportFile(Id contentVersionId, List<Object> inputRows) {
+        if (contentVersionId == null || inputRows == null || inputRows.isEmpty()) {
+            return;
+        }
+        for (Object rowObj : inputRows) {
+            if (!(rowObj instanceof Map<String, Object>)) {
+                continue;
+            }
+            Map<String, Object> row = (Map<String, Object>) rowObj;
+            Integer dataRowIndex = pickRowInteger(row, 'originalDataRowIndex');
+            List<String> headers = pickRowStringList(row, 'originalHeaders');
+            List<Integer> columnIndexes = pickRowIntegerList(row, 'originalColumnIndexes');
+            if (dataRowIndex == null || headers == null || headers.isEmpty()) {
+                continue;
+            }
+            Integer remarkHeaderIdx = findHeaderIndex(headers, LABEL_INPUTTED_REMARKS);
+            if (remarkHeaderIdx < 0) {
+                continue;
+            }
+            Integer worksheetCol = remarkHeaderIdx;
+            if (columnIndexes != null && remarkHeaderIdx < columnIndexes.size() && columnIndexes[remarkHeaderIdx] != null) {
+                worksheetCol = columnIndexes[remarkHeaderIdx];
+            }
+            String sheetName = pickRowString(row, new List<String>{ 'originalsheetname' });
+            String fileRemark = FEC_BCH_TemplateExportService.readImportCellText(
+                contentVersionId,
+                sheetName,
+                dataRowIndex,
+                worksheetCol
+            );
+            if (String.isBlank(fileRemark)) {
+                continue;
+            }
+            String currentRemark = pickRowString(
+                row,
+                new List<String>{ 'inputtedremarks', 'inputtedremark', 'inputremarks', 'inputremark' }
+            );
+            Integer currentCharLength = pickRowInteger(row, 'inputtedRemarksCharLength');
+            Integer fileLen = fileRemark.length();
+            if (String.isBlank(currentRemark) || fileLen > currentRemark.length()) {
+                row.put('inputtedRemarks', fileRemark);
+            }
+            if (currentCharLength == null || fileLen > currentCharLength) {
+                row.put('inputtedRemarksCharLength', fileLen);
+            }
+        }
+    }
+
     public static List<FEC_BatchCaseHandlingImportRow> validateCaseHandlingImportRows(List<Object> inputRows, Boolean cofOrGsr) {
         List<FEC_BatchCaseHandlingImportRow> output = new List<FEC_BatchCaseHandlingImportRow>();
         List<String> searchKeys = new List<String>();
@@ -1030,10 +1083,14 @@ public without sharing class FEC_BatchCaseHandlingImportService {
             rr.originalColumnIndexes = pickRowIntegerList(row, 'originalColumnIndexes');
             rr.originalHeaderRowIndex = pickRowInteger(row, 'originalHeaderRowIndex');
             rr.originalSheetName = pickRowString(row, new List<String>{ 'originalsheetname' });
+            // 30/05/2026 18:30 linhdev - đồng bộ remark từ field/originalCells/charLength (tránh truncate 32,768 che lỗi quá dài)
+            rr.inputtedRemarks = resolveInputtedRemarksValue(row, rr);
+            rr.inputtedRemarksCharLength = resolveInputtedRemarksCharLength(row, rr);
             Boolean rowEmpty =
                 String.isBlank(rr.caseIdSearch) &&
                 String.isBlank(rr.routingAction) &&
                 String.isBlank(rr.inputtedRemarks) &&
+                (rr.inputtedRemarksCharLength == null || rr.inputtedRemarksCharLength == 0) &&
                 String.isBlank(rr.assignmentId) &&
                 String.isBlank(rr.assignmentRoutingAction) &&
                 String.isBlank(rr.csD2CAssessmentType) &&
@@ -1117,9 +1174,9 @@ public without sharing class FEC_BatchCaseHandlingImportService {
             Case matched = null;
             try {
             // 29/05/2026 19:30 linhdev - validate Inputted Remarks trước routing/scope (đúng message; remark > 32,768 không làm vỡ validate sau)
-            addInputtedRemarksValidationErrors(errs, rr.inputtedRemarks);
+            addInputtedRemarksValidationErrors(errs, rr.inputtedRemarks, rr.inputtedRemarksCharLength);
             // 30/05/2026 16:15 linhdev - remark > 32,768: chỉ giữ lỗi remark + Case ID (tránh exception/heap che mất message)
-            Boolean remarkOverMax = isInputtedRemarksOverMaxLength(rr.inputtedRemarks);
+            Boolean remarkOverMax = isInputtedRemarksOverMaxLength(rr.inputtedRemarksCharLength);
             if (String.isBlank(rr.caseIdSearch)) {
                 addImportError(errs, System.Label.FEC_Batch_Case_Handling_Import_Err_Missing_Case_Id);
             }
@@ -3131,23 +3188,102 @@ public without sharing class FEC_BatchCaseHandlingImportService {
 
     // 29/05/2026 19:30 linhdev - Thiếu / vượt quá 32,768 ký tự Inputted Remarks (label Custom Label)
     @TestVisible
-    private static void addInputtedRemarksValidationErrors(List<String> errs, String inputtedRemarks) {
+    private static void addInputtedRemarksValidationErrors(
+        List<String> errs,
+        String inputtedRemarks,
+        Integer charLength
+    ) {
         if (errs == null) {
             return;
         }
-        if (String.isBlank(inputtedRemarks)) {
-            addImportError(errs, System.Label.FEC_Batch_Case_Handling_Import_Err_Missing_Remark);
+        Integer effectiveLen = resolveEffectiveInputtedRemarksLength(inputtedRemarks, charLength);
+        if (isInputtedRemarksOverMaxLength(effectiveLen)) {
+            addImportError(errs, System.Label.FEC_Batch_Case_Handling_Import_Err_Remark_Too_Long);
             return;
         }
-        if (isInputtedRemarksOverMaxLength(inputtedRemarks)) {
-            addImportError(errs, System.Label.FEC_Batch_Case_Handling_Import_Err_Remark_Too_Long);
+        if (String.isBlank(inputtedRemarks) && (effectiveLen == null || effectiveLen == 0)) {
+            addImportError(errs, System.Label.FEC_Batch_Case_Handling_Import_Err_Missing_Remark);
         }
+    }
+
+    // 30/05/2026 18:30 linhdev - đồng bộ remark từ field JSON + originalCells (payload LWC có thể thiếu chuỗi dài)
+    @TestVisible
+    private static String resolveInputtedRemarksValue(Map<String, Object> row, FEC_BatchCaseHandlingImportRow rr) {
+        String fromField = pickRowString(
+            row,
+            new List<String>{ 'inputtedremarks', 'inputtedremark', 'inputremarks', 'inputremark' }
+        );
+        String fromOriginal = extractRemarkFromOriginalCells(rr);
+        return pickLongerRemarkText(fromField, fromOriginal);
+    }
+
+    @TestVisible
+    private static Integer resolveInputtedRemarksCharLength(
+        Map<String, Object> row,
+        FEC_BatchCaseHandlingImportRow rr
+    ) {
+        Integer reportedLen = pickRowInteger(row, 'inputtedRemarksCharLength');
+        String fromField = pickRowString(
+            row,
+            new List<String>{ 'inputtedremarks', 'inputtedremark', 'inputremarks', 'inputremark' }
+        );
+        String fromOriginal = extractRemarkFromOriginalCells(rr);
+        Integer maxLen = String.isBlank(fromField) ? 0 : fromField.length();
+        Integer originalLen = String.isBlank(fromOriginal) ? 0 : fromOriginal.length();
+        if (originalLen > maxLen) {
+            maxLen = originalLen;
+        }
+        if (reportedLen != null && reportedLen > maxLen) {
+            maxLen = reportedLen;
+        }
+        return maxLen == 0 ? null : maxLen;
+    }
+
+    @TestVisible
+    private static String extractRemarkFromOriginalCells(FEC_BatchCaseHandlingImportRow rr) {
+        if (rr == null || rr.originalHeaders == null || rr.originalCells == null || rr.originalCells.isEmpty()) {
+            return FEC_ConstantCommon.STR_EMPTY;
+        }
+        Integer remarkIdx = findHeaderIndex(rr.originalHeaders, LABEL_INPUTTED_REMARKS);
+        if (remarkIdx < 0 || remarkIdx >= rr.originalCells.size()) {
+            return FEC_ConstantCommon.STR_EMPTY;
+        }
+        String cell = rr.originalCells[remarkIdx];
+        return cell == null ? FEC_ConstantCommon.STR_EMPTY : cell;
+    }
+
+    private static String pickLongerRemarkText(String first, String second) {
+        String a = first == null ? FEC_ConstantCommon.STR_EMPTY : first;
+        String b = second == null ? FEC_ConstantCommon.STR_EMPTY : second;
+        if (String.isBlank(a)) {
+            return b;
+        }
+        if (String.isBlank(b)) {
+            return a;
+        }
+        return b.length() > a.length() ? b : a;
+    }
+
+    private static Integer resolveEffectiveInputtedRemarksLength(String inputtedRemarks, Integer charLength) {
+        Integer textLen = String.isBlank(inputtedRemarks) ? 0 : inputtedRemarks.length();
+        if (charLength == null || charLength < textLen) {
+            return textLen == 0 ? charLength : textLen;
+        }
+        return charLength;
     }
 
     // 30/05/2026 16:15 linhdev - giới hạn Inputted Remarks 32,768 ký tự (Long Text Area)
     @TestVisible
     private static Boolean isInputtedRemarksOverMaxLength(String inputtedRemarks) {
-        return String.isNotBlank(inputtedRemarks) && inputtedRemarks.length() > REMARK_MAX_LEN;
+        return isInputtedRemarksOverMaxLength(
+            String.isBlank(inputtedRemarks) ? null : inputtedRemarks.length()
+        );
+    }
+
+    // 30/05/2026 18:30 linhdev - giới hạn Inputted Remarks 32,768 ký tự (dùng charLength khi payload thiếu chuỗi)
+    @TestVisible
+    private static Boolean isInputtedRemarksOverMaxLength(Integer charLength) {
+        return charLength != null && charLength > REMARK_MAX_LEN;
     }
 
     private static void addImportError(List<String> errs, String message) {

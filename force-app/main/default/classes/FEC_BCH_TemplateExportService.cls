@@ -208,6 +208,62 @@ public without sharing class FEC_BCH_TemplateExportService {
         }
     }
 
+    // 30/05/2026 18:30 linhdev - đọc remark trực tiếp từ file import (SheetJS/LWC có thể không gửi đủ chuỗi dài)
+    public static String readImportCellText(
+        Id contentVersionId,
+        String sheetName,
+        Integer dataRowIndex0,
+        Integer worksheetColIndex0
+    ) {
+        if (
+            contentVersionId == null ||
+            dataRowIndex0 == null ||
+            dataRowIndex0 < 0 ||
+            worksheetColIndex0 == null ||
+            worksheetColIndex0 < 0
+        ) {
+            return FEC_ConstantCommon.STR_EMPTY;
+        }
+        try {
+            List<ContentVersion> versions = [
+                SELECT VersionData
+                FROM ContentVersion
+                WHERE Id = :contentVersionId
+                LIMIT 1
+            ];
+            if (versions.isEmpty() || versions[0].VersionData == null) {
+                return FEC_ConstantCommon.STR_EMPTY;
+            }
+            Map<String, Blob> entryByPath = readZipEntries(versions[0].VersionData);
+            if (entryByPath.isEmpty()) {
+                return FEC_ConstantCommon.STR_EMPTY;
+            }
+            String workbookXml = blobToUtf8(entryByPath.get('xl/workbook.xml'));
+            String workbookRelsXml = blobToUtf8(entryByPath.get('xl/_rels/workbook.xml.rels'));
+            String worksheetPath = resolveWorksheetPath(workbookXml, workbookRelsXml, sheetName);
+            if (String.isBlank(worksheetPath) || !entryByPath.containsKey(worksheetPath)) {
+                return FEC_ConstantCommon.STR_EMPTY;
+            }
+            String worksheetXml = blobToUtf8(entryByPath.get(worksheetPath));
+            List<String> sharedStrings = parseSharedStrings(
+                blobToUtf8(entryByPath.get('xl/sharedStrings.xml'))
+            );
+            Map<Integer, String> colTexts = parseRowColumnTextsByIndex(
+                worksheetXml,
+                dataRowIndex0 + 1,
+                sharedStrings
+            );
+            if (!colTexts.containsKey(worksheetColIndex0)) {
+                return FEC_ConstantCommon.STR_EMPTY;
+            }
+            String text = colTexts.get(worksheetColIndex0);
+            return text == null ? FEC_ConstantCommon.STR_EMPTY : text;
+        } catch (Exception ex) {
+            dbg('READ_IMPORT_CELL_FAIL', ex.getMessage());
+            return FEC_ConstantCommon.STR_EMPTY;
+        }
+    }
+
     private static ExportWorkbookResponse fail(
         ExportWorkbookResponse out,
         String code,
@@ -601,10 +657,17 @@ public without sharing class FEC_BCH_TemplateExportService {
         if (String.isBlank(cellXml)) {
             return FEC_ConstantCommon.STR_EMPTY;
         }
-        Pattern inlinePat = Pattern.compile('(?s)<is>.*?<t[^>]*>([^<]*)</t>');
-        Matcher inlineMat = inlinePat.matcher(cellXml);
-        if (inlineMat.find()) {
-            return inlineMat.group(1);
+        // 30/05/2026 18:30 linhdev - ghép mọi <t> trong inlineStr (remark dài có thể tách nhiều phần)
+        if (cellXml.contains('<is>')) {
+            String inlineText = FEC_ConstantCommon.STR_EMPTY;
+            Pattern inlineTPat = Pattern.compile('<t[^>]*>([^<]*)</t>');
+            Matcher inlineTMat = inlineTPat.matcher(cellXml);
+            while (inlineTMat.find()) {
+                inlineText += inlineTMat.group(1);
+            }
+            if (String.isNotBlank(inlineText)) {
+                return inlineText;
+            }
         }
         Pattern sharedPat = Pattern.compile('<v>(\\d+)</v>');
         Matcher sharedMat = sharedPat.matcher(cellXml);

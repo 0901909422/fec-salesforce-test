@@ -2,6 +2,7 @@ public without sharing class FEC_BatchCaseHandlingImportRow {
     @AuraEnabled public String caseIdSearch;
     @AuraEnabled public String routingAction;
     @AuraEnabled public String inputtedRemarks;
+    @AuraEnabled public Integer inputtedRemarksCharLength;
     @AuraEnabled public String assignmentId;
     @AuraEnabled public String assignmentRoutingAction;
     @AuraEnabled public String csD2CAssessmentType;
