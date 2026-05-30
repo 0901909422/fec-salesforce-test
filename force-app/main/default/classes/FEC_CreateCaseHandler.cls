@@ -264,7 +264,7 @@ public without sharing class FEC_CreateCaseHandler {
         
         
         if (dto.channel == FEC_ConstantCommon.CHANNEL_CHAT) {
-            interactionCase.Status = FEC_ConstantCommon.CASE_STATUS_PENDING;
+            interactionCase.Status = FEC_ConstantCommon.CASE_STATUS_OPEN;
         } else {
             interactionCase.Status = FEC_ConstantCommon.CASE_STATUS_OPEN;
         }
@@ -464,7 +464,7 @@ public without sharing class FEC_CreateCaseHandler {
             .get(FEC_ConstantCommon.CASE_INTERNAL_RECORD_TYPE_DEV_NAME)
             .getRecordTypeId();
         c.OwnerId = UserInfo.getUserId();
-        c.Status = FEC_ConstantCommon.CASE_STATUS_NEW;
+        c.Status = FEC_ConstantCommon.CASE_STATUS_OPEN;
         c.Origin = FEC_ConstantCommon.CASE_WEB_ORIGIN;
         c.FEC_Customer_Type__c = FEC_ConstantCommon.CASE_NON_EXISTING_CUSTOMER;
         c.FEC_Customer_Name__c = customerName;

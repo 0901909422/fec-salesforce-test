@@ -123,6 +123,7 @@ import {
   getDocumentRequestRoutingContext,
   setBusinessFieldValue,
 } from "./fecDocumentRequestStageChangeRouting";
+import { resolveCaseFieldEditFlags } from "./fecCaseFieldEditFlags";
 import {
   getMrcReturnRoutingContext,
 } from "c/fecMrcReturnStageChangeRouting";
@@ -733,8 +734,19 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
   }
   set isCaseInformationEdit(value) {
     const prev = this._isCaseInformationEdit;
-    this._isCaseInformationEdit = value === true || value === "true";
-    if (prev !== this._isCaseInformationEdit && this.business?.sectionlst) {
+    const next = value === true || value === "true";
+    if (prev === next) {
+      return;
+    }
+    this._isCaseInformationEdit = next;
+    // Execute Assignment: reload master data (hasCaseAssignment, assignment groups) rồi áp rule từng field.
+    if (next) {
+      this.getData().then(() => {
+        this._updateDynCmpIsEditFlags();
+      });
+      return;
+    }
+    if (this.business?.sectionlst) {
       this._applyEditModeToBusiness();
       this._updateDynCmpIsEditFlags();
     }
@@ -1956,34 +1968,23 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
   }
 
   /**
-   * Cập nhật readonly/editable cho toàn bộ field khi isEdit đổi.
-   * Không gọi Apex, chỉ sửa dữ liệu đã có trong memory.
+   * Cập nhật readonly/editable cho toàn bộ field khi isEdit / isCaseInformationEdit đổi.
+   * Giữ rule master data (field.masterDataEditable từ Apex), không bật edit hàng loạt.
    */
   _applyEditModeToBusiness() {
     if (!this.business?.sectionlst) return;
-    const stage1RevertReadonly = this._isStage1RevertMasterReadonly();
     this.business.sectionlst.forEach((section) => {
-      const sectionEditable = this._isSectionFieldsEditable(section.name);
       section.subSectionlst?.forEach((sub) => {
-        const gsrPropertyInfoReadonly = this._isGsrStage3PropertyInfoFieldReadonly(
-          sub.name
-        );
-        const updatedInfoReadonly = this._isUpdatedInfoReadonlyWhenHasAssignment(
-          sub.name
-        );
         sub.objlst?.forEach((obj) => {
           obj.fieldlst?.forEach((field) => {
-            const mrcFieldLocked = this._isMrcRl05MasterDataFieldLocked(
-              field.apiName,
+            const flags = resolveCaseFieldEditFlags(
+              this,
+              field,
+              section.name,
               sub.name,
             );
-            const forceReadonly =
-              stage1RevertReadonly ||
-              gsrPropertyInfoReadonly ||
-              updatedInfoReadonly ||
-              mrcFieldLocked;
-            field.readonly = forceReadonly ? true : !sectionEditable;
-            field.editable = forceReadonly ? false : sectionEditable;
+            field.editable = flags.editable;
+            field.readonly = flags.readonly;
           });
         });
       });
@@ -2728,19 +2729,15 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
                 }
                 // }
 
-                if (
-                  !this._isSectionFieldsEditable(section.name) ||
-                  this._isStage1RevertMasterReadonly() ||
-                  this._isGsrStage3PropertyInfoFieldReadonly(sub.name) ||
-                  this._isUpdatedInfoReadonlyWhenHasAssignment(sub.name) ||
-                  this._isMrcRl05MasterDataFieldLocked(
-                    field.apiName,
-                    sub.name,
-                  )
-                ) {
-                  field.readonly = true;
-                  field.editable = false;
-                }
+                field.masterDataEditable = field.editable === true;
+                const editFlags = resolveCaseFieldEditFlags(
+                  this,
+                  field,
+                  section.name,
+                  sub.name,
+                );
+                field.editable = editFlags.editable;
+                field.readonly = editFlags.readonly;
 
                 field.original = field.value;
 

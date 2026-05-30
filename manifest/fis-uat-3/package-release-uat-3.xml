@@ -45,6 +45,7 @@
 		<members>FEC_API_Config.FEC_Search_By_List_Phones</members>
 		<members>FEC_API_Config.FEC_Search_Test_Service_Error_Account</members>
 		<members>FEC_API_Config.FEC_Get_IPP_Detail</members>
+		<members>FEC_API_Config.FEC_Get_MRC_Info</members>
 		<members>FEC_API_Config.FEC_MCMSCARDTOCARDINQEMEA</members>
 		<members>FEC_API_Config.FEC_MFASOUTSTANDINGAUTHINQ</members>
 		<members>FEC_API_Config.FEC_Vmx_Acct_Blkcd_Upd_Emea</members>
@@ -262,6 +263,8 @@
 		<members>FEC_NatureOfCaseUserGroupService</members>
         <members>FEC_CustomerIntegrationService</members>
         <members>FEC_LookupController</members>
+        <members>FEC_IPPScheduleController</members>
+        <members>FEC_ApplicationsListController</members>
         <name>ApexClass</name>
     </types>
 	<types>
@@ -718,6 +721,7 @@
         <members>FEC_Assignment__c.FEC_Draft_Assignment_Remark__c</members>
         <members>FEC_API_Config__mdt.FEC_Campaign_Name__c</members>
         <members>FEC_API_Config__mdt.FEC_Disb_Channel__c</members>
+		<members>Case.FEC_Hidden_SLA_Fomular__c</members>
         <name>CustomField</name>
     </types>
     <types>
@@ -908,6 +912,7 @@
         <members>fec_UpdateAddress</members>
         <members>maskedToggleDatatable</members>
         <members>fec_InteractionInfoF2F_Letter</members>
+		<members>fec_IPPDetailPage</members>
 		<name>LightningComponentBundle</name>
     </types>
     <types>

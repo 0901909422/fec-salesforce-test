@@ -172,6 +172,8 @@
 		<members>FEC_BatchDataCreationController</members>
 		<members>FEC_BatchImportCommon</members>
 		<members>FEC_BCH_IncorrectPaymentTemplateWriter</members>
+		<members>FEC_BCH_AssignmentRouteToService</members>
+		<members>FEC_BCH_AssignmentUpdateService</members>
 		<members>FEC_BCH_ImportRoutingResolver</members>
 		<members>FEC_BCH_PicklistTranslationCtrl</members>
 		<members>FEC_BatchCaseHandlingImportProfile</members>
@@ -190,6 +192,8 @@
         <members>FEC_CardLockUnLockController</members>
         <members>FEC_CardReplacementAddressController</members>
         <members>FEC_CloseInterationSchedulerBatch</members>
+        <members>FEC_IPPScheduleController</members>
+        <members>FEC_ApplicationsListController</members>
 		<name>ApexClass</name>
 	</types>
     <types>
@@ -305,6 +309,7 @@
 		<members>fec_CardReplacementAddress</members>
 		<members>fec_NocRoutingAssignment</members>
 		<members>fec_InteractionInfoF2F_Letter</members>
+		<members>fec_IPPDetailPage</members>
 		<name>LightningComponentBundle</name>
 	</types>
     <types>
@@ -394,6 +399,7 @@
         <members>Case.FEC_User_ID__c</members>
         <members>FEC_Routing_Action_History__c.FEC_Assigned_On__c</members>
         <members>FEC_Routing_Action_History__c.FEC_TAT_by_Assignment_Hrs__c</members>
+		<members>Case.FEC_Hidden_SLA_Fomular__c</members>
         <name>CustomField</name>
     </types>
     <types>
@@ -561,7 +567,9 @@
 		<members>FEC_Hold_Case_Edit_Succes</members>
 		<members>FEC_Batch_Case_Handling_Import_Err_Routing_Action_Invalid</members>
 		<members>FEC_Batch_Case_Handling_Import_Err_Missing_Routing_Action</members>
+		<members>FEC_Batch_Case_Handling_Import_Err_Missing_Routing_Or_Assignment_Routing</members>
 		<members>FEC_Batch_Case_Handling_Import_Err_Missing_Remark</members>
+		<members>FEC_Batch_Case_Handling_Import_Err_Remark_Too_Long</members>
 		<members>FEC_NFU_Modal_Save_Error</members>
 		<name>CustomLabel</name>
 	</types>
@@ -570,6 +578,7 @@
         <members>FEC_API_Config.FEC_CMS_IPP_BlockWS</members>
 		<members>FEC_API_Config.FEC_Search_Test_Service_Error_Account</members>
 		<members>FEC_API_Config.FEC_Get_IPP_Detail</members>
+		<members>FEC_API_Config.FEC_Get_MRC_Info</members>
 	    <members>FEC_API_Config.FEC_MFASOUTSTANDINGAUTHINQ</members>
 		<members>FEC_API_Config.FEC_VMX_AUTH_DETAIL_INQ</members>
 		<members>FEC_API_Config.FEC_Vmx_Acct_Blkcd_Upd_Emea</members>
@@ -953,6 +962,14 @@
     <types>
         <members>Case-en_US</members>
         <name>CustomObjectTranslation</name>
+    </types>
+    <types>
+        <members>Case.FEC_Case_Remarks_3__c</members>
+        <members>Case.FEC_Case_Remarks_Entered_By_3__c</members>
+        <members>Case.FEC_Case_Remarks_Entered_By_Role_3__c</members>
+        <members>Case.FEC_Case_Remarks_Entered_On_3__c</members>
+        <members>Case.FEC_Case_Status_History_3__c</members>
+        <name>CustomField</name>
     </types>
     <types>
         <members>FEC_Case_With_Customer_Histories</members>
