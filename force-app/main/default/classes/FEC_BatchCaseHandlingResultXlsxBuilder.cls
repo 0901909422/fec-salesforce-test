@@ -172,19 +172,15 @@ public with sharing class FEC_BatchCaseHandlingResultXlsxBuilder {
             } else if (textColumnIndices != null && textColumnIndices.contains(colIdx)) {
                 styleAttr = ' s="2"';
             }
-            String tTagOpen =
-                cellValue.contains('\n') || cellValue.contains('\r')
-                    ? '<t xml:space="preserve">'
-                    : '<t>';
+            // 30/05/2026 15:10 linhdev - tránh xml:space (Undeclared prefix xml); xuống dòng dùng &#10;
             cellParts.add(
                 '<c r="' +
                     columnLetter(colIdx) +
                     String.valueOf(rowNumber) +
                     '"' +
                     styleAttr +
-                    ' t="inlineStr"><is>' +
-                    tTagOpen +
-                    xmlEscape(cellValue) +
+                    ' t="inlineStr"><is><t>' +
+                    encodeInlineStrLineBreaks(xmlEscape(cellValue)) +
                     '</t></is></c>'
             );
         }
@@ -212,5 +208,18 @@ public with sharing class FEC_BatchCaseHandlingResultXlsxBuilder {
             .replace('<', '&lt;')
             .replace('>', '&gt;')
             .replace('"', '&quot;');
+    }
+
+    // 30/05/2026 15:10 linhdev - encode LF/CR sau xmlEscape để không cần xmlns:xml trên worksheet
+    @TestVisible
+    private static String encodeInlineStrLineBreaks(String escapedText) {
+        if (escapedText == null) {
+            return FEC_ConstantCommon.STR_EMPTY;
+        }
+        String out = escapedText.replace('\r\n', '\n').replace('\r', '\n');
+        while (out.contains('\n')) {
+            out = out.replace('\n', '&#10;');
+        }
+        return out;
     }
 }

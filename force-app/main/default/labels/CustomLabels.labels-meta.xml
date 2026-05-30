@@ -3173,7 +3173,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>SLA bell notification title — approaching deadline</shortDescription>
-        <value>Case {0} - Sap vuot qua thoi gian xu ly</value>
+        <value>Case {0} - Sắp vượt quá thời gian xử lý</value>
     </labels>
     <labels>
         <fullName>FEC_MSG_SLA_Notif_Body_Approaching</fullName>
@@ -3181,8 +3181,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>SLA bell notification body — approaching deadline</shortDescription>
-        <value>- Case ID: {0}
-- Sap vuot qua thoi gian xu ly</value>
+        <value>- Case ID: {0} - Sắp vượt quá thời gian xử lý</value>
     </labels>
     <labels>
         <fullName>FEC_MSG_SLA_Notif_Title_Exceeded</fullName>
@@ -3190,7 +3189,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>SLA bell notification title — exceeded deadline</shortDescription>
-        <value>Case {0} - Da vuot qua thoi gian xu ly</value>
+        <value>Case {0} - Đã vượt quá thời gian xử lý</value>
     </labels>
     <labels>
         <fullName>FEC_MSG_SLA_Notif_Body_Exceeded</fullName>
@@ -3198,8 +3197,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>SLA bell notification body — exceeded deadline</shortDescription>
-        <value>- Case ID: {0}
-- Da vuot qua thoi gian xu ly</value>
+        <value>- Case ID: {0} - Đã vượt quá thời gian xử lý</value>
     </labels>
     <labels>
         <fullName>FEC_MSG_Close_Interaction_Complete_Case_Warning</fullName>
@@ -16404,6 +16402,14 @@
         <protected>false</protected>
         <shortDescription>FEC_Batch_Case_Handling_Import_Err_Routing_Action_Invalid</shortDescription>
         <value>Giá trị Routing Action không tồn tại trong Datagroup</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Batch_Case_Handling_Import_Err_Routing_Action_Unavailable_Assignment</fullName>
+        <categories>Batch Case Handling</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Batch_Case_Handling_Import_Err_Routing_Action_Unavailable_Assignment</shortDescription>
+        <value>Routing Action không khả dụng do tồn tại Assignment</value>
     </labels>
     <labels>
         <fullName>FEC_Batch_Case_Handling_Import_Err_Assignment_Routing_Resolve_Only</fullName>
