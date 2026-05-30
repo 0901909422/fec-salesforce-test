@@ -3135,7 +3135,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>SLA bell notification title — approaching deadline</shortDescription>
-        <value>Case {0} - Sap vuot qua thoi gian xu ly</value>
+        <value>Case {0} - Sắp vượt quá thời gian xử lý</value>
     </labels>
     <labels>
         <fullName>FEC_MSG_SLA_Notif_Body_Approaching</fullName>
