@@ -115,7 +115,7 @@ public with sharing class FEC_BCH_ImportRoutingHistoryService {
                 FEC_Current_Status__c = item.finalStatusBefore,
                 FEC_Changed_Status__c = caseAfter.FEC_Final_Status__c,
                 FEC_Custom_Action_Button_Label__c = customLabel,
-                FEC_Routing_Action_Type__c = actionMeta == null ? null : actionMeta.actionType,
+                FEC_Routing_Action_Type__c = FEC_ConstantCommon.ROUTING_TYPE_ASSIGNMENT,
                 FEC_Submitted_On__c = submittedOn
             );
             if (stageChange != null && isStageChangeHistoryAction(item.methodKey)) {
@@ -223,7 +223,6 @@ public with sharing class FEC_BCH_ImportRoutingHistoryService {
 
     private class ActionButtonMeta {
         public String actionCode;
-        public String actionType;
     }
 
     private class StageChangeMeta {
@@ -248,7 +247,7 @@ public with sharing class FEC_BCH_ImportRoutingHistoryService {
             return out;
         }
         for (FEC_Action_Button__c btn : [
-            SELECT Id, FEC_Code__c, FEC_Type__c
+            SELECT Id, FEC_Code__c
             FROM FEC_Action_Button__c
             WHERE Id IN :actionButtonIds
         ]) {
@@ -257,7 +256,6 @@ public with sharing class FEC_BCH_ImportRoutingHistoryService {
             }
             ActionButtonMeta meta = new ActionButtonMeta();
             meta.actionCode = btn.FEC_Code__c;
-            meta.actionType = btn.FEC_Type__c;
             out.put(btn.Id, meta);
         }
         return out;
