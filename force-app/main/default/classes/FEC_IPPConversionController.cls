@@ -294,6 +294,8 @@ public without sharing class FEC_IPPConversionController {
         } catch (Exception e) {
             result.errorMessage = e.getMessage();
             updateCaseActionCountForConvertResult(c, false);
+        } finally {
+            logConvertIppProcessActionHistory(c, result.success == true);
         }
         result.actionCount = c != null ? c.FEC_Process_Action_Count__c : null;
         result.maxRetriesExceeded = (result.success != true && c != null && c.FEC_Process_Action_Count__c != null && c.FEC_Process_Action_Count__c >= MAX_RETRY_COUNT);
@@ -379,6 +381,8 @@ public without sharing class FEC_IPPConversionController {
         } catch (Exception e) {
             result.errorMessage = e.getMessage();
             updateCaseActionCountForConvertResult(c, false);
+        } finally {
+            logConvertIppProcessActionHistory(c, result.success == true);
         }
         result.actionCount = c != null ? c.FEC_Process_Action_Count__c : null;
         result.maxRetriesExceeded = (result.success != true && c != null && c.FEC_Process_Action_Count__c != null && c.FEC_Process_Action_Count__c >= MAX_RETRY_COUNT);
@@ -463,10 +467,18 @@ public without sharing class FEC_IPPConversionController {
         } catch (Exception e) {
             result.errorMessage = e.getMessage();
             updateCaseActionCountForConvertResult(c, false);
+        } finally {
+            logConvertIppProcessActionHistory(c, result.success == true);
         }
         result.actionCount = c != null ? c.FEC_Process_Action_Count__c : null;
         result.maxRetriesExceeded = (result.success != true && c != null && c.FEC_Process_Action_Count__c != null && c.FEC_Process_Action_Count__c >= MAX_RETRY_COUNT);
         return result;
+    }
+
+    private static void logConvertIppProcessActionHistory(Case c, Boolean isSuccess) {
+        if (c != null) {
+            FEC_CommonUltils.createProcessActionHistory(FEC_AddIPP.API_CONFIG_NAME, c, isSuccess == true);
+        }
     }
 
     private static String resolveCardNumberForAddIpp(FEC_Transaction__c tx, Case c) {
@@ -487,6 +499,7 @@ public without sharing class FEC_IPPConversionController {
         List<Case> cases = [
             SELECT Id, FEC_Account_Number__c, FEC_Account_Contract_Number_Text__c, FEC_Account_or_Contract__c,
                    FEC_Process_Action_Count__c, FEC_Is_Test_API__c,
+                   FEC_Current_Case_Stage__c, FEC_Current_Case_Stage__r.Name,
                    FEC_Account_or_Contract__r.FEC_Account_Number__c, FEC_Account_or_Contract__r.FEC_Card_Number__c
             FROM Case
             WHERE Id = :caseId
