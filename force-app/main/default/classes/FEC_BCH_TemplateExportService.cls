@@ -842,6 +842,7 @@ public without sharing class FEC_BCH_TemplateExportService {
         return '{384C5710-23BE-435C-862B-' + suffix.right(12) + '}';
     }
 
+    @TestVisible
     private static String buildDataValidationXml(String formula1, String sqref, String xrUid) {
         String uid = String.isNotBlank(xrUid) ? xrUid : buildValidationUid(1);
         return '<x14:dataValidation type="list" allowBlank="1" showInputMessage="1" showErrorMessage="1" xr:uid="' +
@@ -1110,10 +1111,11 @@ public without sharing class FEC_BCH_TemplateExportService {
         if (x14ValidationNodes == null || x14ValidationNodes.isEmpty()) {
             return xml;
         }
+        // 30/05/2026 15:10 linhdev - khai báo xmlns:xr cho xr:uid trong dataValidation (tránh Undeclared prefix)
         String x14Block =
             '<x14:dataValidations count="' +
             String.valueOf(x14ValidationNodes.size()) +
-            '" xmlns:xm="http://schemas.microsoft.com/office/excel/2006/main">' +
+            '" xmlns:xm="http://schemas.microsoft.com/office/excel/2006/main" xmlns:xr="http://schemas.microsoft.com/office/spreadsheetml/2014/revision">' +
             String.join(x14ValidationNodes, FEC_ConstantCommon.STR_EMPTY) +
             '</x14:dataValidations>';
         return upsertX14DataValidationsBlock(xml, x14Block);
@@ -1132,8 +1134,9 @@ public without sharing class FEC_BCH_TemplateExportService {
             '(?s)<ext uri="\\{CCE6A557-97BC-4b89-ADB6-D9C93CAAB3DF\\}"[^>]*>.*?</ext>'
         );
         Matcher extDvMat = extDvPat.matcher(xml);
+        // 30/05/2026 15:10 linhdev - xmlns:xr trên ext khi chèn/replace x14 dataValidations
         String extTag =
-            '<ext uri="{CCE6A557-97BC-4b89-ADB6-D9C93CAAB3DF}" xmlns:x14="http://schemas.microsoft.com/office/spreadsheetml/2009/9/main">' +
+            '<ext uri="{CCE6A557-97BC-4b89-ADB6-D9C93CAAB3DF}" xmlns:x14="http://schemas.microsoft.com/office/spreadsheetml/2009/9/main" xmlns:xr="http://schemas.microsoft.com/office/spreadsheetml/2014/revision">' +
             dataValidationsXml +
             '</ext>';
         if (extDvMat.find()) {
@@ -1847,13 +1850,25 @@ public without sharing class FEC_BCH_TemplateExportService {
         return m.find() ? ' s="' + m.group(1) + '"' : FEC_ConstantCommon.STR_EMPTY;
     }
 
+    // 30/05/2026 15:10 linhdev - tránh xml:space (Undeclared prefix xml) khi patch Result; xuống dòng dùng &#10;
+    @TestVisible
     private static String buildInlineCell(String addr, String styleAttr, String escapedValue) {
         String safeStyle = styleAttr == null ? FEC_ConstantCommon.STR_EMPTY : styleAttr;
-        String safeVal = escapedValue == null ? FEC_ConstantCommon.STR_EMPTY : escapedValue;
-        Boolean preserve =
-            safeVal.contains('\n') || safeVal.contains('\r') || safeVal.length() > 40;
-        String tOpen = preserve ? '<t xml:space="preserve">' : '<t>';
-        return '<c r="' + addr + '"' + safeStyle + ' t="inlineStr"><is>' + tOpen + safeVal + '</t></is></c>';
+        String safeVal = encodeInlineStrLineBreaks(escapedValue);
+        return '<c r="' + addr + '"' + safeStyle + ' t="inlineStr"><is><t>' + safeVal + '</t></is></c>';
+    }
+
+    // 30/05/2026 15:10 linhdev - encode LF/CR sau escapeXml để không cần xmlns:xml trên worksheet
+    @TestVisible
+    private static String encodeInlineStrLineBreaks(String escapedText) {
+        if (escapedText == null) {
+            return FEC_ConstantCommon.STR_EMPTY;
+        }
+        String out = escapedText.replace('\r\n', '\n').replace('\r', '\n');
+        while (out.contains('\n')) {
+            out = out.replace('\n', '&#10;');
+        }
+        return out;
     }
 
     // 28/05/2026 22:00 linhdev - __Status/__Errors: style cột kề (header vàng); __Errors thêm wrap

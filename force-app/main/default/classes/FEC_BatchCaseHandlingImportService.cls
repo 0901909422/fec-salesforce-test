@@ -1118,6 +1118,8 @@ public without sharing class FEC_BatchCaseHandlingImportService {
             try {
             // 29/05/2026 19:30 linhdev - validate Inputted Remarks trước routing/scope (đúng message; remark > 32,768 không làm vỡ validate sau)
             addInputtedRemarksValidationErrors(errs, rr.inputtedRemarks);
+            // 30/05/2026 16:15 linhdev - remark > 32,768: chỉ giữ lỗi remark + Case ID (tránh exception/heap che mất message)
+            Boolean remarkOverMax = isInputtedRemarksOverMaxLength(rr.inputtedRemarks);
             if (String.isBlank(rr.caseIdSearch)) {
                 addImportError(errs, System.Label.FEC_Batch_Case_Handling_Import_Err_Missing_Case_Id);
             }
@@ -1129,6 +1131,7 @@ public without sharing class FEC_BatchCaseHandlingImportService {
             } else if (matched != null && matched.OwnerId != currentUserId) {
                 errs.add(ERR_NOT_OWNER);
             }
+            if (!remarkOverMax) {
             if (String.isNotBlank(rr.caseIdSearch)) {
                 if (seenCaseSearch.contains(rr.caseIdSearch)) {
                     errs.add(System.Label.FEC_Batch_Case_Handling_Import_Err_Duplicate_Case_Id);
@@ -1245,6 +1248,8 @@ public without sharing class FEC_BatchCaseHandlingImportService {
                 if (String.isBlank(rr.routingAction)) {
                     errs.add(System.Label.FEC_Batch_Case_Handling_Import_Err_Missing_Routing_Action);
                 }
+            }
+
             }
 
             } catch (Exception rowEx) {
@@ -3125,6 +3130,7 @@ public without sharing class FEC_BatchCaseHandlingImportService {
     }
 
     // 29/05/2026 19:30 linhdev - Thiếu / vượt quá 32,768 ký tự Inputted Remarks (label Custom Label)
+    @TestVisible
     private static void addInputtedRemarksValidationErrors(List<String> errs, String inputtedRemarks) {
         if (errs == null) {
             return;
@@ -3133,9 +3139,15 @@ public without sharing class FEC_BatchCaseHandlingImportService {
             addImportError(errs, System.Label.FEC_Batch_Case_Handling_Import_Err_Missing_Remark);
             return;
         }
-        if (inputtedRemarks.length() > REMARK_MAX_LEN) {
+        if (isInputtedRemarksOverMaxLength(inputtedRemarks)) {
             addImportError(errs, System.Label.FEC_Batch_Case_Handling_Import_Err_Remark_Too_Long);
         }
+    }
+
+    // 30/05/2026 16:15 linhdev - giới hạn Inputted Remarks 32,768 ký tự (Long Text Area)
+    @TestVisible
+    private static Boolean isInputtedRemarksOverMaxLength(String inputtedRemarks) {
+        return String.isNotBlank(inputtedRemarks) && inputtedRemarks.length() > REMARK_MAX_LEN;
     }
 
     private static void addImportError(List<String> errs, String message) {
