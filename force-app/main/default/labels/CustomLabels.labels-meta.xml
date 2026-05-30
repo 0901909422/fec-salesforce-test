@@ -3143,8 +3143,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>SLA bell notification body — approaching deadline</shortDescription>
-        <value>- Case ID: {0}
-- Sap vuot qua thoi gian xu ly</value>
+        <value>- Case ID: {0} - Sắp vượt quá thời gian xử lý</value>
     </labels>
     <labels>
         <fullName>FEC_MSG_SLA_Notif_Title_Exceeded</fullName>
@@ -3152,7 +3151,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>SLA bell notification title — exceeded deadline</shortDescription>
-        <value>Case {0} - Da vuot qua thoi gian xu ly</value>
+        <value>Case {0} - Đã vượt quá thời gian xử lý</value>
     </labels>
     <labels>
         <fullName>FEC_MSG_SLA_Notif_Body_Exceeded</fullName>
@@ -3160,8 +3159,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>SLA bell notification body — exceeded deadline</shortDescription>
-        <value>- Case ID: {0}
-- Da vuot qua thoi gian xu ly</value>
+        <value>- Case ID: {0} - Đã vượt quá thời gian xử lý</value>
     </labels>
     <labels>
         <fullName>FEC_MSG_Close_Interaction_Complete_Case_Warning</fullName>
@@ -16236,7 +16234,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC_Batch_Case_Handling_Import_Err_Missing_Routing_Or_Assignment_Routing</shortDescription>
-        <value>Thiếu dữ liệu Routing Action/Assignment Routing Action.</value>
+        <value>Thiếu giá trị Routing Action</value>
     </labels>
     <labels>
         <fullName>FEC_Batch_Case_Handling_Import_Err_Routing_Action_Invalid</fullName>
@@ -16316,7 +16314,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC_Batch_Case_Handling_Import_Err_Remark_Too_Long</shortDescription>
-        <value>Giá trị Remark vượt quá số ký tự cho phép (32,768 ký tự)</value>
+        <value>Giá trị Inputted Remarks vượt quá số ký tự cho phép (32,768 ký tự)</value>
     </labels>
     <labels>
         <fullName>FEC_Batch_Case_Handling_Import_Err_Record_Id_Invalid</fullName>

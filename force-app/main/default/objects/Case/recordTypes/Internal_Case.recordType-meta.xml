@@ -17,7 +17,7 @@
         </values>
         <values>
             <fullName>Non-Existing Customer</fullName>
-            <default>false</default>
+            <default>true</default>
         </values>
         <values>
             <fullName>Ubank</fullName>
@@ -170,6 +170,14 @@
     </picklistValues>
     <picklistValues>
         <picklist>FEC_Complain_Type__c</picklist>
+        <values>
+            <fullName>High risk</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>Normal</fullName>
+            <default>false</default>
+        </values>
         <values>
             <fullName>Urgent</fullName>
             <default>false</default>

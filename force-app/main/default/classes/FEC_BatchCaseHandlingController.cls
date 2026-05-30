@@ -737,6 +737,20 @@ public without sharing class FEC_BatchCaseHandlingController {
                 ? FEC_ConstantCommon.STR_EMPTY
                 : binding.templateDownloadUrl;
             item.templateContentVersionId = binding == null ? null : binding.templateContentVersionId;
+            // 29/05/2026 15:00 linhdev - debug log export template binding (Dev Console)
+            FEC_BatchCaseHandlingTemplateHelper.logExportTemplateBindingDebug(
+                'getBusinessProcessExportRows',
+                bpCode,
+                bpName,
+                userGroup,
+                binding,
+                templateRows.size(),
+                versionIdByTemplateId.size()
+            );
+            // 29/05/2026 18:00 linhdev - bỏ BP không có template/file khớp user group (tránh NO_TEMPLATE_CV trên popup)
+            if (!FEC_BatchCaseHandlingTemplateHelper.hasExportTemplateBinding(binding)) {
+                continue;
+            }
             out.add(item);
         }
         return out;
@@ -786,6 +800,16 @@ public without sharing class FEC_BatchCaseHandlingController {
             ? FEC_ConstantCommon.STR_EMPTY
             : binding.templateDownloadUrl;
         item.templateContentVersionId = binding == null ? null : binding.templateContentVersionId;
+        // 29/05/2026 15:00 linhdev - debug log export template binding (Dev Console)
+        FEC_BatchCaseHandlingTemplateHelper.logExportTemplateBindingDebug(
+            'resolveExportTemplateMeta',
+            item.businessProcessCode,
+            item.businessProcessName,
+            userGroup,
+            binding,
+            templateRows.size(),
+            versionIdByTemplateId.size()
+        );
         return item;
     }
 
@@ -1002,6 +1026,15 @@ public without sharing class FEC_BatchCaseHandlingController {
 
         if (String.isBlank(fileName) || String.isBlank(fileBodyBase64) || String.isBlank(rowsJson)) {
             out.message = System.Label.FEC_BCH_RequireFile;
+            logImportBatchDebug(
+                'importBatchData',
+                fileName,
+                templateName,
+                businessProcessCode,
+                businessProcessName,
+                rowsJson,
+                out.message
+            );
             upsertFailedBatchHandling(fileName, templateName, out.message);
             return out;
         }
@@ -1009,6 +1042,15 @@ public without sharing class FEC_BatchCaseHandlingController {
         Schema.SObjectType batchType = Schema.getGlobalDescribe().get(OBJECT_API_NAME);
         if (batchType == null) {
             out.message = System.Label.FEC_BCH_ImportFailed;
+            logImportBatchDebug(
+                'importBatchData',
+                fileName,
+                templateName,
+                businessProcessCode,
+                businessProcessName,
+                rowsJson,
+                out.message
+            );
             upsertFailedBatchHandling(fileName, templateName, out.message);
             return out;
         }
@@ -1018,6 +1060,15 @@ public without sharing class FEC_BatchCaseHandlingController {
             List<Object> inputRows = (List<Object>) JSON.deserializeUntyped(rowsJson);
             if (inputRows == null || inputRows.isEmpty()) {
                 out.message = System.Label.FEC_BCH_RequireFile;
+                logImportBatchDebug(
+                    'importBatchData',
+                    fileName,
+                    templateName,
+                    businessProcessCode,
+                    businessProcessName,
+                    rowsJson,
+                    out.message
+                );
                 upsertFailedBatchHandling(fileName, templateName, out.message);
                 return out;
             }
@@ -1060,6 +1111,15 @@ public without sharing class FEC_BatchCaseHandlingController {
                 ) != null
             ) {
                 out.message = 'Tên file không khớp template Bulk Actions của quy trình và nhóm người dùng.';
+                logImportBatchDebug(
+                    'importBatchData',
+                    fileName,
+                    resolvedTemplateName,
+                    businessProcessCode,
+                    businessProcessName,
+                    rowsJson,
+                    out.message
+                );
                 upsertFailedBatchHandling(fileName, resolvedTemplateName, out.message);
                 return out;
             }
@@ -1071,6 +1131,15 @@ public without sharing class FEC_BatchCaseHandlingController {
             );
             if (String.isNotBlank(roleTemplateError)) {
                 out.message = roleTemplateError;
+                logImportBatchDebug(
+                    'importBatchData',
+                    fileName,
+                    resolvedTemplateName,
+                    businessProcessCode,
+                    businessProcessName,
+                    rowsJson,
+                    roleTemplateError
+                );
                 upsertFailedBatchHandling(fileName, resolvedTemplateName, roleTemplateError);
                 return out;
             }
@@ -1174,7 +1243,80 @@ public without sharing class FEC_BatchCaseHandlingController {
                 upsertFailedBatchHandling(fileName, templateName, ex.getMessage());
             }
             out.message = System.Label.FEC_BCH_ImportFailed;
+            logImportBatchDebug(
+                'importBatchData',
+                fileName,
+                templateName,
+                businessProcessCode,
+                businessProcessName,
+                rowsJson,
+                ex.getMessage()
+            );
             return out;
+        }
+    }
+
+    // 29/05/2026 15:00 linhdev - debug log import batch failure (Dev Console)
+    private static void logImportBatchDebug(
+        String event,
+        String fileName,
+        String templateName,
+        String businessProcessCode,
+        String businessProcessName,
+        String rowsJson,
+        String message
+    ) {
+        System.debug(
+            LoggingLevel.WARN,
+            '[FEC_BCH_DEBUG] event=' + event +
+            ' | file=' + fileName +
+            ' | template=' + templateName +
+            ' | bpCode=' + businessProcessCode +
+            ' | bpName=' + businessProcessName +
+            ' | rowCount=' + countImportRowsJson(rowsJson) +
+            ' | caseIdSample=' + sampleImportCaseIds(rowsJson, 8) +
+            ' | message=' + message
+        );
+    }
+
+    private static Integer countImportRowsJson(String rowsJson) {
+        if (String.isBlank(rowsJson)) {
+            return 0;
+        }
+        try {
+            List<Object> inputRows = (List<Object>) JSON.deserializeUntyped(rowsJson);
+            return inputRows == null ? 0 : inputRows.size();
+        } catch (Exception ex) {
+            return 0;
+        }
+    }
+
+    private static String sampleImportCaseIds(String rowsJson, Integer maxCount) {
+        if (String.isBlank(rowsJson) || maxCount == null || maxCount < 1) {
+            return FEC_ConstantCommon.STR_EMPTY;
+        }
+        try {
+            List<Object> inputRows = (List<Object>) JSON.deserializeUntyped(rowsJson);
+            if (inputRows == null || inputRows.isEmpty()) {
+                return FEC_ConstantCommon.STR_EMPTY;
+            }
+            List<String> samples = new List<String>();
+            Integer sampleLimit = Math.min(maxCount, inputRows.size());
+            for (Integer i = 0; i < sampleLimit; i += 1) {
+                if (!(inputRows[i] instanceof Map<String, Object>)) {
+                    continue;
+                }
+                Map<String, Object> rowMap = (Map<String, Object>) inputRows[i];
+                Object caseVal = rowMap.containsKey('caseIdSearch')
+                    ? rowMap.get('caseIdSearch')
+                    : rowMap.get('caseId');
+                if (caseVal != null && String.isNotBlank(String.valueOf(caseVal))) {
+                    samples.add(String.valueOf(caseVal).trim());
+                }
+            }
+            return samples.isEmpty() ? FEC_ConstantCommon.STR_EMPTY : String.join(samples, ',');
+        } catch (Exception ex) {
+            return FEC_ConstantCommon.STR_EMPTY;
         }
     }
 

@@ -469,6 +469,17 @@ public without sharing class FEC_BatchCaseHandlingTemplateHelper {
         public String templateDownloadUrl;
     }
 
+    // 29/05/2026 18:00 linhdev - export popup chỉ hiện BP có templateName + ContentVersion khớp user group
+    public static Boolean hasExportTemplateBinding(TemplateExportBinding binding) {
+        if (binding == null) {
+            return false;
+        }
+        if (String.isBlank(binding.templateName)) {
+            return false;
+        }
+        return binding.templateContentVersionId != null;
+    }
+
     public static TemplateExportBinding resolveExportTemplateBinding(
         String businessProcessCode,
         String businessProcessName,
@@ -772,6 +783,9 @@ public without sharing class FEC_BatchCaseHandlingTemplateHelper {
             urlMap.put(templateId, FEC_ConstantCommon.CONTENT_VERSION_DOWNLOAD_URL_PREFIX + String.valueOf(versionId));
             unresolved.remove(templateId);
         }
+        if (!unresolved.isEmpty()) {
+            logUnresolvedTemplateContentVersions(unresolved);
+        }
     }
 
     private static Boolean isTemplateXlsxContentVersion(ContentVersion cv) {
@@ -928,5 +942,46 @@ public without sharing class FEC_BatchCaseHandlingTemplateHelper {
             return null;
         }
         return 'TEMPLATE_MISMATCH';
+    }
+
+    // 29/05/2026 15:00 linhdev - debug log export template binding (Dev Console)
+    public static void logExportTemplateBindingDebug(
+        String source,
+        String businessProcessCode,
+        String businessProcessName,
+        String userGroup,
+        TemplateExportBinding binding,
+        Integer activeTemplateCount,
+        Integer mappedTemplateFileCount
+    ) {
+        String templateName = binding == null || binding.templateName == null
+            ? FEC_ConstantCommon.STR_EMPTY
+            : binding.templateName;
+        String cvId = binding == null || binding.templateContentVersionId == null
+            ? FEC_ConstantCommon.STR_EMPTY
+            : String.valueOf(binding.templateContentVersionId);
+        System.debug(
+            LoggingLevel.WARN,
+            '[FEC_BCH_DEBUG] source=' + source +
+            ' | bpCode=' + businessProcessCode +
+            ' | bpName=' + businessProcessName +
+            ' | userGroup=' + userGroup +
+            ' | activeTemplates=' + activeTemplateCount +
+            ' | mappedTemplateFiles=' + mappedTemplateFileCount +
+            ' | templateName=' + templateName +
+            ' | contentVersionId=' + cvId
+        );
+    }
+
+    // 29/05/2026 15:00 linhdev - debug log template chưa map được ContentVersion
+    public static void logUnresolvedTemplateContentVersions(Set<Id> unresolvedTemplateIds) {
+        if (unresolvedTemplateIds == null || unresolvedTemplateIds.isEmpty()) {
+            return;
+        }
+        System.debug(
+            LoggingLevel.WARN,
+            '[FEC_BCH_DEBUG] source=populateTemplateContentVersionMaps | unresolvedTemplateIds=' +
+            unresolvedTemplateIds
+        );
     }
 }

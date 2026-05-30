@@ -142,6 +142,9 @@ public with sharing class FEC_CardLockUnLockController {
                 result.currentCardStatus = objCasse.FEC_Current_Card_Status__c;
             }
         } catch (Exception ex) {
+            // Log Api
+            FEC_CommonUltils.logApiResponse(FEC_MCMSCARDTOCARDINQEMEA.responseLog);
+            // Log exception
             FEC_CommonUltils.logException(
                 'FEC_CardLockUnLockController', 
                 'getCardStatus', 

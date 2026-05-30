@@ -525,11 +525,16 @@ public without sharing class FEC_MyCaseSoapXml {
             buildXmlElement('SubCategory', requestInfo.SubCategory) +
             buildXmlElement('SubCode', requestInfo.SubCode) +
             buildXmlElement('Remarks', requestInfo.Remarks);
-        if (requestInfo.AdditionalInfo != null) {
-            xml += '<AdditionalInfo>' +
-                buildXmlElement('ID', requestInfo.AdditionalInfo.ID) +
-                buildXmlElement('Value', requestInfo.AdditionalInfo.Value) +
-                '</AdditionalInfo>';
+        if (requestInfo.AdditionalInfo != null && !requestInfo.AdditionalInfo.isEmpty()) {
+            for (FEC_GetCSCaseStatusService.AdditionalInfor addInfo : requestInfo.AdditionalInfo) {
+                if (addInfo == null) {
+                    continue;
+                }
+                xml += '<AdditionalInfo>' +
+                    buildXmlElement('ID', addInfo.ID) +
+                    buildXmlElement('Value', addInfo.Value) +
+                    '</AdditionalInfo>';
+            }
         }
         xml += '</RequestInfo>';
         return xml;
@@ -808,17 +813,27 @@ public without sharing class FEC_MyCaseSoapXml {
             '</Sys>';
     }
 
+    private static String joinXmlParts(List<String> parts) {
+        if (parts == null || parts.isEmpty()) {
+            return '';
+        }
+        return String.join(parts, '');
+    }
+
     private static String buildMasterDataItemsListXml(
         List<FEC_GetCSMasterDataService.MasterDataItemType> items
     ) {
         if (items == null || items.isEmpty()) {
             return '';
         }
-        String xml = '';
+        List<String> parts = new List<String>();
         for (FEC_GetCSMasterDataService.MasterDataItemType item : items) {
-            xml += buildMasterDataItemXml(item);
+            String itemXml = buildMasterDataItemXml(item);
+            if (String.isNotBlank(itemXml)) {
+                parts.add(itemXml);
+            }
         }
-        return xml;
+        return joinXmlParts(parts);
     }
 
     private static String buildMasterDataItemXml(
@@ -845,11 +860,14 @@ public without sharing class FEC_MyCaseSoapXml {
         if (children == null || children.isEmpty()) {
             return '';
         }
-        String xml = '';
+        List<String> parts = new List<String>();
         for (FEC_GetCSMasterDataService.ChildItemType child : children) {
-            xml += buildMasterDataChildXml(child);
+            String childXml = buildMasterDataChildXml(child);
+            if (String.isNotBlank(childXml)) {
+                parts.add(childXml);
+            }
         }
-        return xml;
+        return joinXmlParts(parts);
     }
 
     private static String buildMasterDataChildXml(
@@ -865,7 +883,6 @@ public without sharing class FEC_MyCaseSoapXml {
             buildXmlIntegerElement('PosOrder', child.PosOrder) +
             buildXmlElement('ApplyTo', child.ApplyTo) +
             buildXmlElement('Type', child.Type) +
-            buildMasterDataAdditionalPropertiesXml(child.AdditionalProperties) +
             buildMasterDataChildrenXml(child.Children) +
             '</Children>';
     }
@@ -876,11 +893,14 @@ public without sharing class FEC_MyCaseSoapXml {
         if (properties == null || properties.isEmpty()) {
             return '';
         }
-        String xml = '';
+        List<String> parts = new List<String>();
         for (FEC_GetCSMasterDataService.AdditionalPropertyType property : properties) {
-            xml += buildMasterDataAdditionalPropertyXml(property);
+            String propertyXml = buildMasterDataAdditionalPropertyXml(property);
+            if (String.isNotBlank(propertyXml)) {
+                parts.add(propertyXml);
+            }
         }
-        return xml;
+        return joinXmlParts(parts);
     }
 
     private static String buildMasterDataAdditionalPropertyXml(
@@ -907,18 +927,20 @@ public without sharing class FEC_MyCaseSoapXml {
         if (values == null || values.isEmpty()) {
             return '';
         }
-        String xml = '';
+        List<String> parts = new List<String>();
         for (FEC_GetCSMasterDataService.AvailableValueType value : values) {
             if (value == null) {
                 continue;
             }
-            xml += '<AvailableValues>' +
-                buildXmlElement('ID', value.ID) +
-                buildXmlElement('Name', value.Name) +
-                buildXmlElement('NameVN', value.NameVN) +
-                '</AvailableValues>';
+            parts.add(
+                '<AvailableValues>' +
+                    buildXmlElement('ID', value.ID) +
+                    buildXmlElement('Name', value.Name) +
+                    buildXmlElement('NameVN', value.NameVN) +
+                    '</AvailableValues>'
+            );
         }
-        return xml;
+        return joinXmlParts(parts);
     }
 
     private static String buildXmlIntegerElement(String tag, Integer value) {
@@ -1220,17 +1242,7 @@ public without sharing class FEC_MyCaseSoapXml {
             req.RequestInfo.Remarks = textOf(requestInfoNode, 'Remarks');
 
             List<FEC_CreateCSCaseService.AdditionalInfoType> additional =
-                new List<FEC_CreateCSCaseService.AdditionalInfoType>();
-            for (Dom.XmlNode child : requestInfoNode.getChildElements()) {
-                if (!'AdditionalInfo'.equalsIgnoreCase(localName(child))) {
-                    continue;
-                }
-                FEC_CreateCSCaseService.AdditionalInfoType info =
-                    new FEC_CreateCSCaseService.AdditionalInfoType();
-                info.ID = textOf(child, 'ID');
-                info.Value = textOf(child, 'Value');
-                additional.add(info);
-            }
+                mapCreateRequestAdditionalInfo(requestInfoNode);
             if (!additional.isEmpty()) {
                 req.RequestInfo.AdditionalInfo = additional;
             }
@@ -1250,6 +1262,55 @@ public without sharing class FEC_MyCaseSoapXml {
         }
 
         return req;
+    }
+
+    private static List<FEC_CreateCSCaseService.AdditionalInfoType> mapCreateRequestAdditionalInfo(
+        Dom.XmlNode requestInfoNode
+    ) {
+        List<FEC_CreateCSCaseService.AdditionalInfoType> additional =
+            new List<FEC_CreateCSCaseService.AdditionalInfoType>();
+        if (requestInfoNode == null) {
+            return additional;
+        }
+
+        for (Dom.XmlNode child : requestInfoNode.getChildElements()) {
+            if (!'AdditionalInfo'.equalsIgnoreCase(localName(child))) {
+                continue;
+            }
+
+            List<String> ids = new List<String>();
+            List<String> values = new List<String>();
+            for (Dom.XmlNode pairNode : child.getChildElements()) {
+                String pairLocalName = localName(pairNode);
+                if ('ID'.equalsIgnoreCase(pairLocalName)) {
+                    ids.add(pairNode.getText() != null ? pairNode.getText().trim() : null);
+                } else if ('Value'.equalsIgnoreCase(pairLocalName)) {
+                    values.add(pairNode.getText() != null ? pairNode.getText().trim() : null);
+                }
+            }
+
+            if (!ids.isEmpty() || !values.isEmpty()) {
+                Integer pairCount = Math.min(ids.size(), values.size());
+                for (Integer idx = 0; idx < pairCount; idx++) {
+                    FEC_CreateCSCaseService.AdditionalInfoType info =
+                        new FEC_CreateCSCaseService.AdditionalInfoType();
+                    info.ID = ids[idx];
+                    info.Value = values[idx];
+                    additional.add(info);
+                }
+                continue;
+            }
+
+            // Backward compatibility: cấu trúc 1 AdditionalInfo chỉ có 1 cặp ID/Value.
+            FEC_CreateCSCaseService.AdditionalInfoType info =
+                new FEC_CreateCSCaseService.AdditionalInfoType();
+            info.ID = textOf(child, 'ID');
+            info.Value = textOf(child, 'Value');
+            if (String.isNotBlank(info.ID) || String.isNotBlank(info.Value)) {
+                additional.add(info);
+            }
+        }
+        return additional;
     }
 
     /**

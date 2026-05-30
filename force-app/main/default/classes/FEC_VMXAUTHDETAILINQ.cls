@@ -406,8 +406,14 @@ public with sharing class FEC_VMXAUTHDETAILINQ {
         ar.Description          = merchDesc;
         ar.CREDIT_PLAN          = plan;
         ar.AUTHORIZATION_CODE   = firstNonBlankAuth(
-            pickXmlField(n, 'AUTHORIZATION_CODE'),
-            pickXmlField(n, 'AuthCode')
+            firstNonBlankAuth(
+                pickXmlField(n, 'AUTHORIZATION_CODE'),
+                pickXmlField(n, 'AuthCode')
+            ),
+            firstNonBlankAuth(
+                pickXmlField(n, 'AUTH_CD'),
+                msgAuthCd
+            )
         );
         ar.AUTH_CD              = pickXmlField(n, 'AUTH_CD');
         ar.MERCH_CAT            = pickXmlField(n, 'MERCH_CAT');

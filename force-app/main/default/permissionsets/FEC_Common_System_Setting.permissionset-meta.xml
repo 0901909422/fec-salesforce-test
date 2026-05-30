@@ -89,6 +89,14 @@
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
+        <apexClass>FEC_BCH_AssignmentRouteToService</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_BCH_AssignmentUpdateService</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
         <apexClass>FEC_BCH_ExportPropertyService</apexClass>
         <enabled>true</enabled>
     </classAccesses>
@@ -621,6 +629,10 @@
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
+        <apexClass>FEC_FetchWelcomeCallDetailsRestService</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
         <apexClass>FEC_FileActionOnReviewService</apexClass>
         <enabled>true</enabled>
     </classAccesses>
@@ -882,6 +894,10 @@
     </classAccesses>
     <classAccesses>
         <apexClass>FEC_IPPScheduleController</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_Il10DeliveryController</apexClass>
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
