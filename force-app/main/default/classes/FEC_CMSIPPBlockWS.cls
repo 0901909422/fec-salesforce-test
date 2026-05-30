@@ -71,14 +71,16 @@ public with sharing class FEC_CMSIPPBlockWS {
         try { //Thangtv
             FEC_API_Config__mdt apiConfig = FEC_API_Config__mdt.getInstance(API_CONFIG_NAME);
 
-            // 29/05/2026 14:00 linhdev - áp default spec khi caller truyền blank/null
-            disbChannel = String.isNotBlank(disbChannel) ? disbChannel : DEFAULT_DISB_CHANNEL;
+            // 29/05/2026 14:00 linhdev - default DisbChannel/CampaignName: ưu tiên FEC_API_Config__mdt, fallback constant
+            if (String.isBlank(disbChannel)) {
+                disbChannel = resolveDisbChannelDefault(apiConfig);
+            }
+            if (String.isBlank(campaignName)) {
+                campaignName = resolveCampaignNameDefault(apiConfig);
+            }
             tenure = tenure != null ? tenure : DEFAULT_TENURE;
             noIPP = noIPP != null ? noIPP : true;
             flatRate = flatRate != null ? flatRate : 0;
-            campaignName = (apiConfig != null && String.isNotBlank(apiConfig.FEC_Campaign_Name__c))
-                ? apiConfig.FEC_Campaign_Name__c
-                : (String.isNotBlank(campaignName) ? campaignName : DEFAULT_CAMPAIGN_NAME);
 
             validate(
                 transId,
@@ -387,6 +389,22 @@ public with sharing class FEC_CMSIPPBlockWS {
         }
 
 
+    }
+
+    // 29/05/2026 14:00 linhdev - DisbChannel default: FEC_API_Config.FEC_Disb_Channel__c hoặc DEFAULT_DISB_CHANNEL
+    private static String resolveDisbChannelDefault(FEC_API_Config__mdt apiConfig) {
+        if (apiConfig != null && String.isNotBlank(apiConfig.FEC_Disb_Channel__c)) {
+            return apiConfig.FEC_Disb_Channel__c.trim();
+        }
+        return DEFAULT_DISB_CHANNEL;
+    }
+
+    // 29/05/2026 14:00 linhdev - CampaignName default: FEC_API_Config.FEC_Campaign_Name__c hoặc DEFAULT_CAMPAIGN_NAME
+    private static String resolveCampaignNameDefault(FEC_API_Config__mdt apiConfig) {
+        if (apiConfig != null && String.isNotBlank(apiConfig.FEC_Campaign_Name__c)) {
+            return apiConfig.FEC_Campaign_Name__c.trim();
+        }
+        return DEFAULT_CAMPAIGN_NAME;
     }
     
 }
