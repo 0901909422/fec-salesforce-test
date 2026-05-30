@@ -302,30 +302,7 @@ public without sharing class FEC_CofGsrAssignmentService {
                 update submitStamp;
             }
 
-            // tungnm37: lưu Queue Id vào Case.FEC_Assignment_Users__c để FEC_AssignmentExecuteService check quyền
-            // tungnm37: User → lưu User Id; Queue → lưu Queue Id (lookup từ queueNameToId)
-            List<String> assignmentUsers = resolveAssignmentUsers(assignments, queueNameToId);
-            if (!assignmentUsers.isEmpty()) {
-                try {
-                    FEC_CaseTriggerHandler.isSystemUpdate = true; // tungnm37: đánh dấu đây là system update
-                    Database.SaveResult sr = Database.update(new Case(
-                        Id = caseId, 
-                        FEC_Assignment_Users__c = String.join(assignmentUsers, ',')
-                    ), AccessLevel.SYSTEM_MODE);
-                    if (!sr.isSuccess()) {
-                        for (Database.Error err : sr.getErrors()) {
-                            System.debug('FEC_DEBUG update Case error: ' + err.getStatusCode() + ' - ' + err.getMessage() + ' - Fields: ' + err.getFields());
-                        }
-                    } else {
-                        System.debug('FEC_DEBUG update Case success: FEC_Assignment_Users__c = ' + String.join(assignmentUsers, ','));
-                    }
-                } catch (Exception eu) {
-                    System.debug('FEC_DEBUG update FEC_Assignment_Users__c error: ' + eu.getMessage());
-                    System.debug('FEC_DEBUG Stack trace: ' + eu.getStackTraceString());
-                } finally {
-                    FEC_CaseTriggerHandler.isSystemUpdate = false;
-                }
-            }
+            rebuildAssignmentUsersForCase(caseId);
 
             List<FEC_Case_Remarks__c> remarksToInsert = new List<FEC_Case_Remarks__c>();
             for (FEC_Assignment__c a : assignments) {
@@ -479,33 +456,10 @@ public without sharing class FEC_CofGsrAssignmentService {
                 update manualSubmitStamp;
             }
 
-            // tungnm37: lưu owner ids vào Case.FEC_Assignment_Users__c, queue thì lưu Queue Id, user thì lưu User Id
-            // tungnm37: KHÔNG set OwnerId = null vì Salesforce không cho phép (INVALID_CROSS_REFERENCE_KEY)
-            // tungnm37: Chỉ dùng FEC_Assignment_Users__c để track assignments
-            // tungnm37: FEC_Service_Case_Owner__c sẽ tự động ẩn giá trị khi có assignment (formula field)
             // tungnm37: Chỉ set FEC_Assignment_Users__c từ Stage 2 trở đi (không set ở Stage 1 để Service Case Owner vẫn hiển thị)
             Boolean isStage1 = stageName != null && Pattern.matches('(?i).*stage\\s*1.*', stageName);
-            List<String> assignmentUsers = resolveAssignmentUsers(assignments, queueNameToId);
-            if (!assignmentUsers.isEmpty() && !isStage1) {
-                try {
-                    FEC_CaseTriggerHandler.isSystemUpdate = true; // tungnm37: đánh dấu đây là system update
-                    Database.SaveResult sr = Database.update(new Case(
-                        Id = caseId, 
-                        FEC_Assignment_Users__c = String.join(assignmentUsers, ',')
-                    ), AccessLevel.SYSTEM_MODE);
-                    if (!sr.isSuccess()) {
-                        for (Database.Error err : sr.getErrors()) {
-                            System.debug('FEC_DEBUG update Case (manual) error: ' + err.getStatusCode() + ' - ' + err.getMessage() + ' - Fields: ' + err.getFields());
-                        }
-                    } else {
-                        System.debug('FEC_DEBUG update Case (manual) success: FEC_Assignment_Users__c = ' + String.join(assignmentUsers, ','));
-                    }
-                } catch (Exception eu) {
-                    System.debug('FEC_DEBUG update FEC_Assignment_Users__c (manual) error: ' + eu.getMessage());
-                    System.debug('FEC_DEBUG Stack trace: ' + eu.getStackTraceString());
-                } finally {
-                    FEC_CaseTriggerHandler.isSystemUpdate = false;
-                }
+            if (!isStage1) {
+                rebuildAssignmentUsersForCase(caseId);
             }
 
             List<FEC_Case_Remarks__c> remarks = new List<FEC_Case_Remarks__c>();
@@ -701,6 +655,64 @@ public without sharing class FEC_CofGsrAssignmentService {
             }
         }
         return assignmentUsers;
+    }
+
+    @TestVisible
+    private static void rebuildAssignmentUsersForCase(String caseId) {
+        if (String.isBlank(caseId)) {
+            return;
+        }
+
+        List<FEC_Assignment__c> routingAssignments = [
+            SELECT FEC_Assignment_Owner__c, FEC_OwnerID__c
+            FROM FEC_Assignment__c
+            WHERE FEC_Case__c = :caseId
+              AND FEC_Assignment_Type__c = :FEC_ConstantCommon.ASSIGNMENT_TYPE_ROUTING
+        ];
+
+        List<String> assignmentUsers = resolveAssignmentUsers(
+            routingAssignments,
+            new Map<String, Id>()
+        );
+        String assignmentUsersValue = assignmentUsers.isEmpty()
+            ? null
+            : String.join(assignmentUsers, ',');
+
+        try {
+            FEC_CaseTriggerHandler.isSystemUpdate = true;
+            Database.SaveResult sr = Database.update(
+                new Case(
+                    Id = caseId,
+                    FEC_Assignment_Users__c = assignmentUsersValue
+                ),
+                AccessLevel.SYSTEM_MODE
+            );
+            if (!sr.isSuccess()) {
+                for (Database.Error err : sr.getErrors()) {
+                    System.debug(
+                        'FEC_DEBUG rebuild FEC_Assignment_Users__c error: ' +
+                        err.getStatusCode() +
+                        ' - ' +
+                        err.getMessage() +
+                        ' - Fields: ' +
+                        err.getFields()
+                    );
+                }
+            } else {
+                System.debug(
+                    'FEC_DEBUG rebuild FEC_Assignment_Users__c success: ' +
+                    assignmentUsersValue
+                );
+            }
+        } catch (Exception eu) {
+            System.debug(
+                'FEC_DEBUG rebuild FEC_Assignment_Users__c exception: ' +
+                eu.getMessage()
+            );
+            System.debug('FEC_DEBUG Stack trace: ' + eu.getStackTraceString());
+        } finally {
+            FEC_CaseTriggerHandler.isSystemUpdate = false;
+        }
     }
 
     public static Set<Id> resolveToNocIds(String inputId) {

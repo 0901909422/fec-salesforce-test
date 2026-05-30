@@ -129,6 +129,14 @@
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
+        <apexClass>FEC_BCH_AssignmentRouteToService</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_BCH_AssignmentUpdateService</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
         <apexClass>FEC_BCH_ExportPropertyService</apexClass>
         <enabled>true</enabled>
     </classAccesses>
@@ -138,6 +146,10 @@
     </classAccesses>
     <classAccesses>
         <apexClass>FEC_BCH_IncorrectPaymentTemplateWriter</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_BCH_ImportRoutingHistoryService</apexClass>
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
@@ -1166,6 +1178,10 @@
     </classAccesses>
     <classAccesses>
         <apexClass>FEC_RelevantTicketTriggerHandler</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_RepeatRouteToOwnerHelper</apexClass>
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
