@@ -223,6 +223,7 @@
         <members>FEC_CaseDsTsSlaService</members>
         <members>FEC_CaseSlaNotificationService</members>
         <members>FEC_BlockCodeRoutingService</members>
+        <members>FEC_RepeatRouteToOwnerHelper</members>
         <members>FEC_CardClosureRefundController</members>
         <members>FEC_CardInfoController</members>
         <members>FEC_CardReplacementAddressController</members>
@@ -1861,6 +1862,7 @@
     <!-- Document Request -->
     <types>
 		<members>FEC_CaseBusinessService</members>
+		<members>FEC_RepeatRouteToOwnerHelper</members>
 		<members>FEC_DocumentRequestRoutingService</members>
 		<members>FEC_DocumentRequestRoutingActionService</members>
 		<members>FEC_ClientPDFService</members>
