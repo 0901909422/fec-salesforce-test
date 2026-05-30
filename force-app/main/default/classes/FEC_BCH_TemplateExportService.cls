@@ -94,7 +94,7 @@ public without sharing class FEC_BCH_TemplateExportService {
             List<List<String>> insertValues = req.insertColumnValues == null
                 ? new List<List<String>>()
                 : req.insertColumnValues;
-            // 29/05/2026 19:15 linhdev - __Status/__Errors sau cột cuối sheet; giữ mappedCols = chỉ số cột Excel từ LWC
+            // 30/05/2026 11:30 linhdev - __Status/__Errors sau cột cuối sheet; giữ mappedCols từ file gốc
             if (isResultStatusErrorsInsert(insertHeaders)) {
                 insertBefore = alignResultExportInsertBeforeSheetEnd(
                     worksheetXml,
@@ -126,7 +126,8 @@ public without sharing class FEC_BCH_TemplateExportService {
                 dataRows = mergeInsertColumnValues(
                     dataRows,
                     insertValues,
-                    insertHeaders.size()
+                    insertHeaders.size(),
+                    insertBefore
                 );
             }
             dbg('PATCH', 'sheet=' + worksheetPath + ';rows=' + dataRows.size() + ';dataRow=' + templateDataRow1);
@@ -162,6 +163,49 @@ public without sharing class FEC_BCH_TemplateExportService {
     public static String exportWorkbookBase64(String requestJson) {
         ExportWorkbookResponse res = exportWorkbook(requestJson);
         return res != null && res.success == true ? res.base64Body : null;
+    }
+
+    // 30/05/2026 11:30 linhdev - map header import -> chỉ số cột Excel từ file gốc (không lệch Temporary Email / Case ID)
+    public static List<Integer> resolveMappedColumnIndexesForHeaders(
+        Id contentVersionId,
+        Integer headerRowIndex,
+        String sheetName,
+        List<String> headers
+    ) {
+        List<Integer> mapped = new List<Integer>();
+        if (contentVersionId == null || headers == null || headers.isEmpty()) {
+            return mapped;
+        }
+        try {
+            List<ContentVersion> versions = [
+                SELECT VersionData
+                FROM ContentVersion
+                WHERE Id = :contentVersionId
+                LIMIT 1
+            ];
+            if (versions.isEmpty() || versions[0].VersionData == null) {
+                return mapped;
+            }
+            Map<String, Blob> entryByPath = readZipEntries(versions[0].VersionData);
+            if (entryByPath.isEmpty()) {
+                return mapped;
+            }
+            String workbookXml = blobToUtf8(entryByPath.get('xl/workbook.xml'));
+            String workbookRelsXml = blobToUtf8(entryByPath.get('xl/_rels/workbook.xml.rels'));
+            String worksheetPath = resolveWorksheetPath(workbookXml, workbookRelsXml, sheetName);
+            if (String.isBlank(worksheetPath) || !entryByPath.containsKey(worksheetPath)) {
+                return mapped;
+            }
+            String worksheetXml = blobToUtf8(entryByPath.get(worksheetPath));
+            List<String> sharedStrings = parseSharedStrings(
+                blobToUtf8(entryByPath.get('xl/sharedStrings.xml'))
+            );
+            Integer headerRowNum1 = headerRowIndex == null || headerRowIndex < 0 ? 1 : headerRowIndex + 1;
+            return resolveMappedColumnIndexesFromHeaderRow(worksheetXml, headerRowNum1, sharedStrings, headers);
+        } catch (Exception ex) {
+            dbg('RESOLVE_MAP_FAIL', ex.getMessage());
+            return mapped;
+        }
     }
 
     private static ExportWorkbookResponse fail(
@@ -486,6 +530,73 @@ public without sharing class FEC_BCH_TemplateExportService {
         return value.trim().toLowerCase().replaceAll('[^a-z0-9]', FEC_ConstantCommon.STR_EMPTY);
     }
 
+    @TestVisible
+    private static List<Integer> resolveMappedColumnIndexesFromHeaderRow(
+        String worksheetXml,
+        Integer headerRowNum1,
+        List<String> sharedStrings,
+        List<String> headers
+    ) {
+        List<Integer> indexes = new List<Integer>();
+        if (String.isBlank(worksheetXml) || headers == null || headers.isEmpty()) {
+            return indexes;
+        }
+        Map<Integer, String> colTexts = parseRowColumnTextsByIndex(worksheetXml, headerRowNum1, sharedStrings);
+        if (colTexts.isEmpty()) {
+            return indexes;
+        }
+        List<Integer> sortedCols = new List<Integer>(colTexts.keySet());
+        sortedCols.sort();
+        Integer searchCol = 0;
+        for (String expectedHeader : headers) {
+            String expectedNorm = normalizeHeaderName(expectedHeader);
+            Integer matched = null;
+            if (String.isNotBlank(expectedNorm)) {
+                for (Integer col : sortedCols) {
+                    if (col < searchCol) {
+                        continue;
+                    }
+                    String cellText = colTexts.containsKey(col)
+                        ? colTexts.get(col)
+                        : FEC_ConstantCommon.STR_EMPTY;
+                    if (expectedNorm.equals(normalizeHeaderName(cellText))) {
+                        matched = col;
+                        searchCol = col + 1;
+                        break;
+                    }
+                }
+            }
+            if (matched == null) {
+                matched = indexes.isEmpty() ? 0 : indexes[indexes.size() - 1] + 1;
+            }
+            indexes.add(matched);
+        }
+        return indexes;
+    }
+
+    private static Map<Integer, String> parseRowColumnTextsByIndex(
+        String worksheetXml,
+        Integer rowNum1,
+        List<String> sharedStrings
+    ) {
+        Map<Integer, String> out = new Map<Integer, String>();
+        String rowXml = extractRowXml(worksheetXml, rowNum1);
+        if (String.isBlank(rowXml)) {
+            return out;
+        }
+        Pattern cellPat = Pattern.compile('(?s)<c r="([A-Z]{1,3})' + rowNum1 + '"([^>]*)(?:>(.*?)</c>|/>)');
+        Matcher cellMat = cellPat.matcher(rowXml);
+        while (cellMat.find()) {
+            String col = cellMat.group(1);
+            String attrs = cellMat.group(2) == null ? FEC_ConstantCommon.STR_EMPTY : cellMat.group(2);
+            String cellBody = cellMat.group(3) == null ? FEC_ConstantCommon.STR_EMPTY : cellMat.group(3);
+            Integer colIdx = columnLetterToIndex(col);
+            String text = resolveCellDisplayText(attrs + cellBody, sharedStrings);
+            out.put(colIdx, text == null ? FEC_ConstantCommon.STR_EMPTY : text);
+        }
+        return out;
+    }
+
     private static String resolveCellDisplayText(String cellXml, List<String> sharedStrings) {
         if (String.isBlank(cellXml)) {
             return FEC_ConstantCommon.STR_EMPTY;
@@ -731,6 +842,7 @@ public without sharing class FEC_BCH_TemplateExportService {
         return '{384C5710-23BE-435C-862B-' + suffix.right(12) + '}';
     }
 
+    @TestVisible
     private static String buildDataValidationXml(String formula1, String sqref, String xrUid) {
         String uid = String.isNotBlank(xrUid) ? xrUid : buildValidationUid(1);
         return '<x14:dataValidation type="list" allowBlank="1" showInputMessage="1" showErrorMessage="1" xr:uid="' +
@@ -999,10 +1111,11 @@ public without sharing class FEC_BCH_TemplateExportService {
         if (x14ValidationNodes == null || x14ValidationNodes.isEmpty()) {
             return xml;
         }
+        // 30/05/2026 15:10 linhdev - khai báo xmlns:xr cho xr:uid trong dataValidation (tránh Undeclared prefix)
         String x14Block =
             '<x14:dataValidations count="' +
             String.valueOf(x14ValidationNodes.size()) +
-            '" xmlns:xm="http://schemas.microsoft.com/office/excel/2006/main">' +
+            '" xmlns:xm="http://schemas.microsoft.com/office/excel/2006/main" xmlns:xr="http://schemas.microsoft.com/office/spreadsheetml/2014/revision">' +
             String.join(x14ValidationNodes, FEC_ConstantCommon.STR_EMPTY) +
             '</x14:dataValidations>';
         return upsertX14DataValidationsBlock(xml, x14Block);
@@ -1021,8 +1134,9 @@ public without sharing class FEC_BCH_TemplateExportService {
             '(?s)<ext uri="\\{CCE6A557-97BC-4b89-ADB6-D9C93CAAB3DF\\}"[^>]*>.*?</ext>'
         );
         Matcher extDvMat = extDvPat.matcher(xml);
+        // 30/05/2026 15:10 linhdev - xmlns:xr trên ext khi chèn/replace x14 dataValidations
         String extTag =
-            '<ext uri="{CCE6A557-97BC-4b89-ADB6-D9C93CAAB3DF}" xmlns:x14="http://schemas.microsoft.com/office/spreadsheetml/2009/9/main">' +
+            '<ext uri="{CCE6A557-97BC-4b89-ADB6-D9C93CAAB3DF}" xmlns:x14="http://schemas.microsoft.com/office/spreadsheetml/2009/9/main" xmlns:xr="http://schemas.microsoft.com/office/spreadsheetml/2014/revision">' +
             dataValidationsXml +
             '</ext>';
         if (extDvMat.find()) {
@@ -1057,51 +1171,14 @@ public without sharing class FEC_BCH_TemplateExportService {
         return m.find() ? m.group(1) : FEC_ConstantCommon.STR_EMPTY;
     }
 
-    // 29/05/2026 18:45 linhdev - nhận diện chèn cột result import (__Status + __Errors)
     private static Boolean isResultStatusErrorsInsert(List<String> insertHeaders) {
         if (insertHeaders == null || insertHeaders.size() != 2) {
             return false;
         }
-        String first = insertHeaders[0] == null ? FEC_ConstantCommon.STR_EMPTY : insertHeaders[0].trim();
-        String second = insertHeaders[1] == null ? FEC_ConstantCommon.STR_EMPTY : insertHeaders[1].trim();
-        return '__Status'.equals(first) && '__Errors'.equals(second);
+        return '__Status'.equals(insertHeaders[0]) && '__Errors'.equals(insertHeaders[1]);
     }
 
-    // 29/05/2026 18:45 linhdev - cột cuối có ô trên header row / dòng data mẫu (tránh chèn giữa khi LWC thiếu cột cuối)
-    private static Integer resolveWorksheetMaxColumnIndex(
-        String worksheetXml,
-        Integer headerRowNum1,
-        Integer templateDataRowNum1
-    ) {
-        Integer maxIdx = -1;
-        if (String.isBlank(worksheetXml)) {
-            return maxIdx;
-        }
-        List<Integer> rowNums = new List<Integer>();
-        if (headerRowNum1 != null && headerRowNum1 > 0) {
-            rowNums.add(headerRowNum1);
-        }
-        if (templateDataRowNum1 != null && templateDataRowNum1 > 0 && templateDataRowNum1 != headerRowNum1) {
-            rowNums.add(templateDataRowNum1);
-        }
-        for (Integer rowNum1 : rowNums) {
-            String rowXml = extractRowXml(worksheetXml, rowNum1);
-            if (String.isBlank(rowXml)) {
-                continue;
-            }
-            Pattern cellPat = Pattern.compile('<c r="([A-Z]{1,3})' + rowNum1 + '"');
-            Matcher cellMat = cellPat.matcher(rowXml);
-            while (cellMat.find()) {
-                Integer colIdx = columnLetterToIndex(cellMat.group(1));
-                if (colIdx > maxIdx) {
-                    maxIdx = colIdx;
-                }
-            }
-        }
-        return maxIdx;
-    }
-
-    // 29/05/2026 19:15 linhdev - insert sau cột cuối sheet; KHÔNG ghi đè mappedCols (phải là chỉ số cột Excel từ LWC)
+    // 30/05/2026 11:30 linhdev - insert sau cột cuối sheet; không ghi đè mappedCols
     private static Integer alignResultExportInsertBeforeSheetEnd(
         String worksheetXml,
         Integer headerRowNum1,
@@ -1137,6 +1214,36 @@ public without sharing class FEC_BCH_TemplateExportService {
             }
         }
         return insertAt;
+    }
+
+    private static Integer resolveWorksheetMaxColumnIndex(
+        String worksheetXml,
+        Integer headerRowNum1,
+        Integer templateDataRowNum1
+    ) {
+        Integer maxIdx = -1;
+        List<Integer> rowNums = new List<Integer>();
+        if (headerRowNum1 != null && headerRowNum1 > 0) {
+            rowNums.add(headerRowNum1);
+        }
+        if (templateDataRowNum1 != null && templateDataRowNum1 > 0 && templateDataRowNum1 != headerRowNum1) {
+            rowNums.add(templateDataRowNum1);
+        }
+        for (Integer rowNum1 : rowNums) {
+            String rowXml = extractRowXml(worksheetXml, rowNum1);
+            if (String.isBlank(rowXml)) {
+                continue;
+            }
+            Pattern cellPat = Pattern.compile('<c r="([A-Z]{1,3})' + rowNum1 + '"');
+            Matcher cellMat = cellPat.matcher(rowXml);
+            while (cellMat.find()) {
+                Integer colIdx = columnLetterToIndex(cellMat.group(1));
+                if (colIdx > maxIdx) {
+                    maxIdx = colIdx;
+                }
+            }
+        }
+        return maxIdx;
     }
 
     private static Integer resolveMappedColumnsMaxIndex(List<Integer> mappedCols) {
@@ -1247,44 +1354,63 @@ public without sharing class FEC_BCH_TemplateExportService {
         if (mappedCols == null) {
             return out;
         }
+        //tungnm37 - chèn cột result/property đúng ngay vị trí insertBefore để thứ tự cột khớp thứ tự values
+        List<Integer> beforeCols = new List<Integer>();
+        List<Integer> afterCols = new List<Integer>();
+        Integer safeInsertBefore = insertBefore == null ? 0 : insertBefore;
+        Integer safeInsertCount = insertCount == null || insertCount < 0 ? 0 : insertCount;
         for (Integer colIdx : mappedCols) {
             if (colIdx == null || colIdx < 0) {
                 continue;
             }
-            if (colIdx >= insertBefore) {
-                out.add(colIdx + insertCount);
+            if (safeInsertCount > 0 && colIdx >= safeInsertBefore) {
+                afterCols.add(colIdx + safeInsertCount);
             } else {
-                out.add(colIdx);
+                beforeCols.add(colIdx);
             }
         }
-        for (Integer i = 0; i < insertCount; i++) {
-            out.add(insertBefore + i);
+        out.addAll(beforeCols);
+        for (Integer i = 0; i < safeInsertCount; i++) {
+            out.add(safeInsertBefore + i);
         }
+        out.addAll(afterCols);
         return out;
     }
 
+    // 30/05/2026 11:30 linhdev - ghép __Status/__Errors đúng insertBefore (cuối sheet khi insertBefore == base.size())
     private static List<List<String>> mergeInsertColumnValues(
         List<List<String>> dataRows,
         List<List<String>> insertValues,
-        Integer insertCount
+        Integer insertCount,
+        Integer insertBefore
     ) {
         List<List<String>> out = new List<List<String>>();
         if (dataRows == null) {
             return out;
         }
+        Integer safeInsertCount = insertCount == null || insertCount < 0 ? 0 : insertCount;
         for (Integer rowIdx = 0; rowIdx < dataRows.size(); rowIdx++) {
             List<String> base = dataRows[rowIdx] == null ? new List<String>() : dataRows[rowIdx];
             List<String> inserts = insertValues != null && rowIdx < insertValues.size()
                 ? insertValues[rowIdx]
                 : new List<String>();
+            Integer splitIndex = base.size();
+            if (insertBefore != null && insertBefore >= 0 && insertBefore <= base.size()) {
+                splitIndex = insertBefore;
+            }
             List<String> merged = new List<String>();
-            merged.addAll(base);
-            for (Integer i = 0; i < insertCount; i++) {
+            for (Integer i = 0; i < splitIndex && i < base.size(); i++) {
+                merged.add(base[i]);
+            }
+            for (Integer i = 0; i < safeInsertCount; i++) {
                 merged.add(
                     i < inserts.size() && inserts[i] != null
                         ? inserts[i]
                         : FEC_ConstantCommon.STR_EMPTY
                 );
+            }
+            for (Integer i = splitIndex; i < base.size(); i++) {
+                merged.add(base[i]);
             }
             out.add(merged);
         }
@@ -1724,13 +1850,25 @@ public without sharing class FEC_BCH_TemplateExportService {
         return m.find() ? ' s="' + m.group(1) + '"' : FEC_ConstantCommon.STR_EMPTY;
     }
 
+    // 30/05/2026 15:10 linhdev - tránh xml:space (Undeclared prefix xml) khi patch Result; xuống dòng dùng &#10;
+    @TestVisible
     private static String buildInlineCell(String addr, String styleAttr, String escapedValue) {
         String safeStyle = styleAttr == null ? FEC_ConstantCommon.STR_EMPTY : styleAttr;
-        String safeVal = escapedValue == null ? FEC_ConstantCommon.STR_EMPTY : escapedValue;
-        Boolean preserve =
-            safeVal.contains('\n') || safeVal.contains('\r') || safeVal.length() > 40;
-        String tOpen = preserve ? '<t xml:space="preserve">' : '<t>';
-        return '<c r="' + addr + '"' + safeStyle + ' t="inlineStr"><is>' + tOpen + safeVal + '</t></is></c>';
+        String safeVal = encodeInlineStrLineBreaks(escapedValue);
+        return '<c r="' + addr + '"' + safeStyle + ' t="inlineStr"><is><t>' + safeVal + '</t></is></c>';
+    }
+
+    // 30/05/2026 15:10 linhdev - encode LF/CR sau escapeXml để không cần xmlns:xml trên worksheet
+    @TestVisible
+    private static String encodeInlineStrLineBreaks(String escapedText) {
+        if (escapedText == null) {
+            return FEC_ConstantCommon.STR_EMPTY;
+        }
+        String out = escapedText.replace('\r\n', '\n').replace('\r', '\n');
+        while (out.contains('\n')) {
+            out = out.replace('\n', '&#10;');
+        }
+        return out;
     }
 
     // 28/05/2026 22:00 linhdev - __Status/__Errors: style cột kề (header vàng); __Errors thêm wrap
