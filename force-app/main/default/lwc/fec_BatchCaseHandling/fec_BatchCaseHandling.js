@@ -240,6 +240,7 @@ const IMPORT_TIMEOUT_MS = 60 * 1000;
 const IMPORT_TIMEOUT_MESSAGE = FEC_BCH_RequestTimeout;
 const MAX_UPLOAD_SIZE_BYTES = 150 * 1024 * 1024;
 const VALID_FILE_EXTENSION = ".xlsx";
+const INPUTTED_REMARKS_MAX_LEN = 32768;
 const HEADERS_CASE_ID = ["caseid", "caseidsearch"];
 const HEADERS_ROUTING_ACTION = ["routingaction"];
 // 29/05/2026 19:30 linhdev - nhận diện cột Inputted Remarks / Input Remark trên template import
@@ -2766,7 +2767,12 @@ export default class Fec_BatchCaseHandling extends LightningElement {
         const cellRef = window.XLSX.utils.encode_cell({ r: i, c: worksheetCol });
         const cell = sheet[cellRef];
         const cellValue = cell && cell.v !== undefined ? cell.v : STR_EMPTY;
-        originalCells.push(this.cellAsString(cellValue));
+        let cellStr = this.cellAsString(cellValue);
+        // 30/05/2026 16:15 linhdev - truncate remark trong originalCells khi quá dài (giảm payload JSON, vẫn validate đủ qua inputtedRemarks)
+        if (col === idxRemark && cellStr.length > INPUTTED_REMARKS_MAX_LEN) {
+          cellStr = cellStr.substring(0, INPUTTED_REMARKS_MAX_LEN);
+        }
+        originalCells.push(cellStr);
       }
       rows.push({
         caseIdSearch,
@@ -2898,11 +2904,12 @@ export default class Fec_BatchCaseHandling extends LightningElement {
       });
       const cell = sheet[cellRef];
       if (cell) {
-        if (cell.w !== undefined && cell.w !== null) {
-          return this.cellAsString(cell.w);
-        }
+        // 30/05/2026 16:15 linhdev - ưu tiên cell.v (raw) thay vì cell.w để không mất ký tự khi remark > 32,768
         if (cell.v !== undefined && cell.v !== null) {
           return this.cellAsString(cell.v);
+        }
+        if (cell.w !== undefined && cell.w !== null) {
+          return this.cellAsString(cell.w);
         }
       }
       return STR_EMPTY;
