@@ -240,7 +240,8 @@ const IMPORT_TIMEOUT_MS = 60 * 1000;
 const IMPORT_TIMEOUT_MESSAGE = FEC_BCH_RequestTimeout;
 const MAX_UPLOAD_SIZE_BYTES = 150 * 1024 * 1024;
 const VALID_FILE_EXTENSION = ".xlsx";
-const INPUTTED_REMARKS_MAX_LEN = 32768;
+// 30/05/2026 21:00 linhdev - giới hạn Inputted Remarks khớp Excel (32,767 ký tự/ô)
+const INPUTTED_REMARKS_MAX_LEN = 32767;
 const HEADERS_CASE_ID = ["caseid", "caseidsearch"];
 const HEADERS_ROUTING_ACTION = ["routingaction"];
 // 29/05/2026 19:30 linhdev - nhận diện cột Inputted Remarks / Input Remark trên template import
@@ -2765,7 +2766,7 @@ export default class Fec_BatchCaseHandling extends LightningElement {
           )
           : STR_EMPTY;
       const inputtedRemarksCharLength = inputtedRemarksRaw ? inputtedRemarksRaw.length : 0;
-      // 30/05/2026 18:30 linhdev - không gửi full remark > 32,768 trong JSON (Apex validate qua charLength + file gốc)
+      // 30/05/2026 21:00 linhdev - không gửi full remark > 32,767 trong JSON (Apex validate qua charLength + file gốc)
       const inputtedRemarks =
         inputtedRemarksCharLength > INPUTTED_REMARKS_MAX_LEN
           ? STR_EMPTY
@@ -2839,9 +2840,9 @@ export default class Fec_BatchCaseHandling extends LightningElement {
         const cell = sheet[cellRef];
         const cellValue = cell && cell.v !== undefined ? cell.v : STR_EMPTY;
         let cellStr = this.cellAsString(cellValue);
-        // 30/05/2026 18:30 linhdev - không truncate remark xuống 32,768 (che lỗi quá dài trên Apex)
+        // 30/05/2026 21:00 linhdev - giữ tối đa 32,767 ký tự Excel trong originalCells
         if (col === idxRemark && cellStr.length > INPUTTED_REMARKS_MAX_LEN) {
-          cellStr = STR_EMPTY;
+          cellStr = cellStr.substring(0, INPUTTED_REMARKS_MAX_LEN);
         }
         originalCells.push(cellStr);
       }

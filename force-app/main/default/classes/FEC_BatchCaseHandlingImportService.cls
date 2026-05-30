@@ -1,6 +1,7 @@
 public without sharing class FEC_BatchCaseHandlingImportService {
 
-    private static final Integer REMARK_MAX_LEN = 32768;
+    // 30/05/2026 21:00 linhdev - giới hạn Inputted Remarks khớp Excel (32,767 ký tự/ô)
+    private static final Integer REMARK_MAX_LEN = 32767;
     private static final String USER_GROUP_OM = 'OM';
     private static final String BUSINESS_PROCESS_PHONE_UPDATE = 'Phone Update';
     private static final String LABEL_CS_D2C_ASSESSMENT = 'CS D2C đánh giá yêu cầu';
@@ -604,6 +605,15 @@ public without sharing class FEC_BatchCaseHandlingImportService {
         req.insertColumnHeaders = new List<String>{ RESULT_COL_STATUS, RESULT_COL_ERRORS };
         req.insertColumnValues = insertValues;
         req.templateSheetName = sourceSheetName;
+        // 30/05/2026 20:15 linhdev - copy cell remark gốc từ file import (không re-encode inlineStr)
+        if (inputtedRemarksIndex >= 0 && inputtedRemarksIndex < mappedColumnIndexes.size()) {
+            req.preserveSourceWorksheetColIndex = mappedColumnIndexes[inputtedRemarksIndex];
+        }
+        List<Integer> sourceDataRowIndexes = new List<Integer>();
+        for (FEC_BatchCaseHandlingImportRow row : rowResults) {
+            sourceDataRowIndexes.add(row == null ? null : row.originalDataRowIndex);
+        }
+        req.sourceDataRowIndexes = sourceDataRowIndexes;
         String outBase64 = FEC_BCH_TemplateExportService.exportWorkbookBase64(JSON.serialize(req));
         if (String.isBlank(outBase64)) {
             return null;
@@ -3205,7 +3215,7 @@ public without sharing class FEC_BatchCaseHandlingImportService {
         );
     }
 
-    // 29/05/2026 19:30 linhdev - Thiếu / vượt quá 32,768 ký tự Inputted Remarks (label Custom Label)
+    // 30/05/2026 21:00 linhdev - Thiếu / vượt quá 32,767 ký tự Inputted Remarks (giới hạn ô Excel)
     @TestVisible
     private static void addInputtedRemarksValidationErrors(
         List<String> errs,
@@ -3291,7 +3301,7 @@ public without sharing class FEC_BatchCaseHandlingImportService {
         return charLength;
     }
 
-    // 30/05/2026 16:15 linhdev - giới hạn Inputted Remarks 32,768 ký tự (Long Text Area)
+    // 30/05/2026 21:00 linhdev - giới hạn Inputted Remarks 32,767 ký tự (giới hạn ô Excel)
     @TestVisible
     private static Boolean isInputtedRemarksOverMaxLength(String inputtedRemarks) {
         return isInputtedRemarksOverMaxLength(
@@ -3299,7 +3309,7 @@ public without sharing class FEC_BatchCaseHandlingImportService {
         );
     }
 
-    // 30/05/2026 18:30 linhdev - giới hạn Inputted Remarks 32,768 ký tự (dùng charLength khi payload thiếu chuỗi)
+    // 30/05/2026 21:00 linhdev - giới hạn Inputted Remarks 32,767 ký tự (dùng charLength khi payload thiếu chuỗi)
     @TestVisible
     private static Boolean isInputtedRemarksOverMaxLength(Integer charLength) {
         return charLength != null && charLength > REMARK_MAX_LEN;
