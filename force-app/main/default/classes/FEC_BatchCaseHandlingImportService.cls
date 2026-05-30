@@ -3107,36 +3107,6 @@ public without sharing class FEC_BatchCaseHandlingImportService {
         }
     }
 
-    private static Integer pickRowInteger(Map<String, Object> row, String keyName) {
-        if (row == null || String.isBlank(keyName)) {
-            return null;
-        }
-        Object raw = row.get(keyName);
-        // 28/05/2026 17:45 linhdev - đọc originalHeaderRowIndex không phân biệt hoa thường key JSON
-        if (raw == null) {
-            String want = keyName.replaceAll('\\s+', '').toLowerCase();
-            for (String k : row.keySet()) {
-                String nk = k == null ? FEC_ConstantCommon.STR_EMPTY : k.replaceAll('\\s+', '').toLowerCase();
-                if (want.equals(nk)) {
-                    raw = row.get(k);
-                    break;
-                }
-            }
-        }
-        if (raw == null) {
-            return null;
-        }
-        String text = String.valueOf(raw).trim();
-        if (String.isBlank(text)) {
-            return null;
-        }
-        try {
-            return Integer.valueOf(text);
-        } catch (Exception ex) {
-            return null;
-        }
-    }
-
     private static String remarksToJson(List<FEC_Case_Remarks__c> remarks) {
         if (remarks == null || remarks.isEmpty()) {
             return null;
