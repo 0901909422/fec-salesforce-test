@@ -15,6 +15,8 @@ public without sharing class FEC_CardClosureRefundController {
     private static final String DISB_ESB_CANCELLED_AUTO = 'CANCELLED_AUTO';
     private static final String CS_DECISION_NOTI_17 = 'Không có khoản chờ giải ngân';
     private static final String CS_DECISION_NOTI_18 = 'Có khoản chờ giải ngân. Cần tư vấn khách hàng giữ thẻ';
+    private static final String PROCESS_ACTION_CARD_LOCK = 'FEC_CardLockUnLock';
+    private static final String PROCESS_ACTION_VMX_BLKCD = 'FEC_Vmx_Acct_Blkcd_Upd_Emea';
 
     public class LockUnlockResultDTO {
         @AuraEnabled public Boolean success;
@@ -360,7 +362,9 @@ public without sharing class FEC_CardClosureRefundController {
                 FEC_Account_Number__c,
                 FEC_Account_or_Contract__c,
                 FEC_SubCode__r.FEC_Code__c,
-                FEC_Is_Test_API__c
+                FEC_Is_Test_API__c,
+                FEC_Current_Case_Stage__c,
+                FEC_Current_Case_Stage__r.Name
             FROM Case
             WHERE Id = :caseId
             LIMIT 1
@@ -458,6 +462,8 @@ public without sharing class FEC_CardClosureRefundController {
         } catch (Exception ex) {
             dto.success = false;
             dto.errorMessage = System.Label.FEC_MSG_Card_Block_Failed;
+        } finally {
+            logBlockCardProcessActionHistory(ctx, PROCESS_ACTION_CARD_LOCK, dto.success == true);
         }
 
         return dto;
@@ -487,9 +493,16 @@ public without sharing class FEC_CardClosureRefundController {
             dto.errorMessage = System.Label.FEC_MSG_Card_Block_Failed;
         } finally {
             FEC_VmxAcctBlkcdUpdEmeaCallout.logApiResponse();
+            logBlockCardProcessActionHistory(ctx, PROCESS_ACTION_VMX_BLKCD, dto.success == true);
         }
 
         return dto;
+    }
+
+    private static void logBlockCardProcessActionHistory(BlockExecutionContext ctx, String apiName, Boolean isSuccess) {
+        if (ctx != null && ctx.caseRecord != null) {
+            FEC_CommonUltils.createProcessActionHistory(apiName, ctx.caseRecord, isSuccess == true);
+        }
     }
 
     private static LockUnlockResultDTO executeLockUnlock(Id caseId, String funcCode) {

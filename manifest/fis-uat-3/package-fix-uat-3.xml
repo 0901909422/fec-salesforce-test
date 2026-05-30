@@ -174,6 +174,7 @@
 		<members>FEC_BCH_IncorrectPaymentTemplateWriter</members>
 		<members>FEC_BCH_AssignmentRouteToService</members>
 		<members>FEC_BCH_AssignmentUpdateService</members>
+		<members>FEC_BCH_ImportRoutingHistoryService</members>
 		<members>FEC_BCH_ImportRoutingResolver</members>
 		<members>FEC_BCH_PicklistTranslationCtrl</members>
 		<members>FEC_BatchCaseHandlingImportProfile</members>
@@ -350,6 +351,7 @@
         <members>FEC_Additional_Info__c.FEC_Customer_Service_Staff_Type__c</members>
 		<members>FEC_Action_Button__c.FEC_Code__c</members>
 		<members>FEC_API_Config__mdt.FEC_Campaign_Name__c</members>
+		<members>FEC_API_Config__mdt.FEC_Disb_Channel__c</members>
 		<members>FEC_Stage_Change__c.FEC_Code__c</members>
 		<members>FEC_Stage_Screen__c.FEC_Code__c</members>
         <members>FEC_Template__c.FEC_Is_ZNS_Template__c</members>
@@ -566,6 +568,7 @@
 		<members>FEC_Channel_Config_Invalid_Selection</members>
 		<members>FEC_Hold_Case_Edit_Succes</members>
 		<members>FEC_Batch_Case_Handling_Import_Err_Routing_Action_Invalid</members>
+		<members>FEC_Batch_Case_Handling_Import_Err_Routing_Action_Unavailable_Assignment</members>
 		<members>FEC_Batch_Case_Handling_Import_Err_Missing_Routing_Action</members>
 		<members>FEC_Batch_Case_Handling_Import_Err_Missing_Routing_Or_Assignment_Routing</members>
 		<members>FEC_Batch_Case_Handling_Import_Err_Missing_Remark</members>
