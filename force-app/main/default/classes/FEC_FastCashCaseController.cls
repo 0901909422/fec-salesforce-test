@@ -191,15 +191,15 @@ public without sharing class FEC_FastCashCaseController {
             return ctx;
         }
         Case c = caseRows[0];
-        // 29/05/2026 14:00 linhdev - CrmID: số từ FEC_ID_Search__c (Case.FEC_Case_ID__c); Account: FEC_Account_Contract_Number_Text__c
-        String crmId = resolveCrmIdForCmsIppBlock(c);
-        if (String.isBlank(crmId)) {
-            ctx.errorMessage = String.format(System.Label.FEC_MSG_Param_Required, new List<String>{ 'Case ID' });
-            return ctx;
-        }
+        // 31/05/2026 linhdev - Account trước; CrmID = Application ID (FEC_Application_ID__c / GetCustomerList)
         String accountNumber = resolveAccountForCmsIppBlock(c);
         if (String.isBlank(accountNumber)) {
             ctx.errorMessage = System.Label.FEC_MSG_AccountNumber_Invalid;
+            return ctx;
+        }
+        String crmId = resolveCrmIdForCmsIppBlock(c, accountNumber);
+        if (String.isBlank(crmId)) {
+            ctx.errorMessage = String.format(System.Label.FEC_MSG_Param_Required, new List<String>{ System.Label.FEC_Application_ID_Label });
             return ctx;
         }
         ctx.crmId = crmId;
@@ -229,15 +229,15 @@ public without sharing class FEC_FastCashCaseController {
                 return res;
             }
             c = caseRows[0];
-            // 29/05/2026 14:00 linhdev - map payload CMSIPPBlockWS theo spec (Case fields + default PC/TMN/0)
-            String crmIdForApi = resolveCrmIdForCmsIppBlock(c);
-            if (String.isBlank(crmIdForApi)) {
-                res.errorMessage = String.format(System.Label.FEC_MSG_Param_Required, new List<String>{ 'Case ID' });
-                return res;
-            }
+            // 31/05/2026 linhdev - map payload CMSIPPBlockWS theo integration success (Application ID + account 16/19 số)
             String accountNumber = resolveAccountForCmsIppBlock(c);
             if (String.isBlank(accountNumber)) {
                 res.errorMessage = System.Label.FEC_MSG_AccountNumber_Invalid;
+                return res;
+            }
+            String crmIdForApi = resolveCrmIdForCmsIppBlock(c, accountNumber);
+            if (String.isBlank(crmIdForApi)) {
+                res.errorMessage = String.format(System.Label.FEC_MSG_Param_Required, new List<String>{ System.Label.FEC_Application_ID_Label });
                 return res;
             }
             Decimal amountForApi = resolveBlockAmountForCmsIppBlock(c, blockAmount);
@@ -385,31 +385,32 @@ public without sharing class FEC_FastCashCaseController {
         return accountNumber;
     }
 
-    // 29/05/2026 14:00 linhdev - CrmID: lấy phần số sau prefix trong FEC_ID_Search__c (vd S-1651 → 1651)
+    // 31/05/2026 linhdev - CrmID: Application ID (Case.FEC_Application_ID__c hoặc GetCustomerList theo account)
     @TestVisible
-    private static String resolveCrmIdForCmsIppBlock(Case c) {
-        if (c == null || String.isBlank(c.FEC_ID_Search__c)) {
-            return null;
-        }
-        String idSearch = c.FEC_ID_Search__c.trim();
-        if (idSearch.contains(FEC_ConstantCommon.FEC_ID_SEARCH_DELIMITER)) {
-            String numberPart = idSearch.substringAfterLast(FEC_ConstantCommon.FEC_ID_SEARCH_DELIMITER);
-            return String.isNotBlank(numberPart) ? numberPart.trim() : null;
-        }
-        return idSearch;
+    private static String resolveCrmIdForCmsIppBlock(Case c, String accountNumber) {
+        return resolveApplicationIdForCase(c, accountNumber);
     }
 
-    // 29/05/2026 14:00 linhdev - Account: Case.FEC_Account_Contract_Number_Text__c (16/19 số)
+    // 29/05/2026 14:00 linhdev - Account: FEC_Account_Contract_Number_Text__c, fallback account trên Case
     @TestVisible
     private static String resolveAccountForCmsIppBlock(Case c) {
-        if (c == null || String.isBlank(c.FEC_Account_Contract_Number_Text__c)) {
+        if (c == null) {
             return null;
         }
-        String raw = c.FEC_Account_Contract_Number_Text__c.trim();
-        if (!Pattern.matches(FEC_ConstantCommon.PATTERN_ACCOUNT_NUMBER, raw)) {
-            return null;
+        if (String.isNotBlank(c.FEC_Account_Contract_Number_Text__c)) {
+            String fromText = c.FEC_Account_Contract_Number_Text__c.trim();
+            if (Pattern.matches(FEC_ConstantCommon.PATTERN_ACCOUNT_NUMBER, fromText)) {
+                return fromText;
+            }
         }
-        return raw;
+        String fromCase = resolveAccountNumberForCase(c);
+        if (String.isNotBlank(fromCase)) {
+            String raw = fromCase.trim();
+            if (Pattern.matches(FEC_ConstantCommon.PATTERN_ACCOUNT_NUMBER, raw)) {
+                return raw;
+            }
+        }
+        return null;
     }
 
     // 29/05/2026 14:00 linhdev - Amount: Case.FEC_Requested_Amount__c (spec Fast Cash Requested Amount), fallback UI
