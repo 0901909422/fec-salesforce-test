@@ -254,24 +254,23 @@ public with sharing class FEC_CMSIPPBlockWS {
         // FlatRate
         Dom.XmlNode flatRateNode = action.addChildElement('FlatRate', null, null).addTextNode(String.valueOf(flatRate));
 
-        if (String.isNotBlank(custAccount)) {
-            action.addChildElement('CustAccount', null, null).addTextNode(custAccount);
-        }
-        if (String.isNotBlank(bankName)) {
-            action.addChildElement('BankName', null, null).addTextNode(bankName);
-        }
-        if (String.isNotBlank(bankBranch)) {
-            action.addChildElement('BankBranch', null, null).addTextNode(bankBranch);
-        }
-        if (smsRate != null && smsRate != 0) {
-            action.addChildElement('SMSRate', null, null).addTextNode(String.valueOf(smsRate));
-        }
-        if (insuranceAmount != null && insuranceAmount != 0) {
-            action.addChildElement('InsuranceAmount', null, null).addTextNode(String.valueOf(insuranceAmount));
-        }
-        if (String.isNotBlank(highRisk)) {
-            action.addChildElement('HighRisk', null, null).addTextNode(highRisk);
-        }
+        // CustAccount
+        Dom.XmlNode custAccountNode = action.addChildElement('CustAccount', null, null).addTextNode(custAccount);
+
+        // BankName
+        Dom.XmlNode bankNameNode = action.addChildElement('BankName', null, null).addTextNode(bankName);
+
+        // BankBranch
+        Dom.XmlNode bankBranchNode = action.addChildElement('BankBranch', null, null).addTextNode(bankBranch);
+
+        // SMSRate
+        Dom.XmlNode smsRateNode = action.addChildElement('SMSRate', null, null).addTextNode(String.valueOf(smsRate));
+
+        // InsuranceAmount
+        Dom.XmlNode insuranceAmountNode = action.addChildElement('InsuranceAmount', null, null).addTextNode(String.valueOf(insuranceAmount));
+
+        // HighRisk
+        Dom.XmlNode highRiskNode = action.addChildElement('HighRisk', null, null).addTextNode(highRisk);
 
         return doc.toXmlString();
     }
