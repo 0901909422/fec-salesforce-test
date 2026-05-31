@@ -104,6 +104,7 @@
         <members>FEC_Export_Detail</members>
         <members>FEC_Format</members>
         <members>FEC_Format_Excel</members>
+        <members>FEC_Send_Manual_Notification</members>
         <name>CustomLabel</name>
     </types>
 
