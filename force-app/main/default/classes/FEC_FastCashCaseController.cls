@@ -1,11 +1,9 @@
 public without sharing class FEC_FastCashCaseController {
 
     // 29/05/2026 14:00 linhdev - CMSIPPBlockWS spec: Tenure=0, DisbChannel=PC, NO_IPP=true, CampaignName=TMN, FlatRate=0
-    // 31/05/2026 linhdev - RequestorID PEGA-CSM theo payload integration CMSIPPBlock success
     private static final Integer DEFAULT_FAST_CASH_TENURE = 0;
     private static final String DEFAULT_CMS_IPP_DISB_CHANNEL = 'PC';
     private static final String DEFAULT_CMS_IPP_CAMPAIGN_NAME = 'TMN';
-    private static final String DEFAULT_CMS_IPP_REQUESTOR_ID = FEC_ConstantCommon.REQUESTOR_PEGA_CSM_LEGACY;
 
     public class CaseFastCashStateDTO {
         @AuraEnabled public Id actualNatureOfCaseId;
@@ -250,7 +248,7 @@ public without sharing class FEC_FastCashCaseController {
             FEC_CMSIPPBlockWS.ResponseWrapper apiRes;
             try {
                 apiRes = FEC_CMSIPPBlockWS.cmsIPPBlockWS(
-                    DEFAULT_CMS_IPP_REQUESTOR_ID,
+                    FEC_ConstantCommon.REQUESTOR_PEGA_CSM_LEGACY,
                     crmIdForApi,
                     DEFAULT_CMS_IPP_DISB_CHANNEL,
                     accountNumber,
