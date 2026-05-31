@@ -191,7 +191,7 @@ public without sharing class FEC_FastCashCaseController {
             return ctx;
         }
         Case c = caseRows[0];
-        // 29/05/2026 14:00 linhdev - CrmID: số từ FEC_ID_Search__c (Case.FEC_Case_ID__c); Account: FEC_Account_Contract_Number_Text__c
+        // CrmID: FEC_Application_ID__c → GetCustomerList ApplicationID → fallback FEC_ID_Search__c
         String crmId = resolveCrmIdForCmsIppBlock(c);
         if (String.isBlank(crmId)) {
             ctx.errorMessage = String.format(System.Label.FEC_MSG_Param_Required, new List<String>{ 'Case ID' });
@@ -257,12 +257,12 @@ public without sharing class FEC_FastCashCaseController {
                     true,
                     DEFAULT_CMS_IPP_CAMPAIGN_NAME,
                     0,
-                    '',
-                    '',
-                    '',
-                    0,
-                    0,
-                    ''
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null
                 );
             } catch (Exception e) {
                 FEC_CommonUltils.logApi(
@@ -385,9 +385,24 @@ public without sharing class FEC_FastCashCaseController {
         return accountNumber;
     }
 
-    // 29/05/2026 14:00 linhdev - CrmID: lấy phần số sau prefix trong FEC_ID_Search__c (vd S-1651 → 1651)
     @TestVisible
     private static String resolveCrmIdForCmsIppBlock(Case c) {
+        if (c == null) {
+            return null;
+        }
+        String accountNumber = resolveAccountForCmsIppBlock(c);
+        if (String.isBlank(accountNumber)) {
+            accountNumber = resolveAccountNumberForCase(c);
+        }
+        String appId = resolveApplicationIdForCase(c, accountNumber);
+        if (String.isNotBlank(appId)) {
+            return appId;
+        }
+        return resolveCrmIdFromIdSearch(c);
+    }
+
+    @TestVisible
+    private static String resolveCrmIdFromIdSearch(Case c) {
         if (c == null || String.isBlank(c.FEC_ID_Search__c)) {
             return null;
         }
