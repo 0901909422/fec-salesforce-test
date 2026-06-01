@@ -145,6 +145,14 @@ private class FEC_CustomSyncAllInOneTest {
         Test.stopTest();
     }
 
+    @isTest
+    static void testFEC_BatchReCallCustomSyncRun() {
+        Test.startTest();
+        FEC_Custom_Sync__c record = [select id from FEC_Custom_Sync__c limit 1];
+        FEC_BatchReCallCustomSync.run(record.id); 
+        Test.stopTest();
+    }
+
     // ─── FEC_BatchReCallCustomSync ────────────────────────────────────────────
 
     @isTest

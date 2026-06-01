@@ -753,22 +753,37 @@ FEC_BatchImportCommon.linkFileToBatch((Id) failedRow.get('Id'), contentDocumentI
         }
 
         if (!emails.isEmpty()) {
-            Map<String, Id> userByEmail = new Map<String, Id>();
-            for (User u : [SELECT Id, Email FROM User WHERE Email IN :emails]) {
+            Map<Id, String> emailByUserId = new Map<Id, String>();
+            Map<Id, Boolean> isActiveByUserId = new Map<Id, Boolean>();
+            for (User u : [SELECT Id, Email, IsActive FROM User WHERE Email IN :emails]) {
                 if (String.isNotBlank(u.Email)) {
-                    userByEmail.put(u.Email.toLowerCase(), u.Id);
+                    String normalizedEmail = u.Email.toLowerCase();
+                    emailByUserId.put(u.Id, normalizedEmail);
+                    isActiveByUserId.put(u.Id, u.IsActive);
                 }
             }
-            if (!userByEmail.isEmpty()) {
+            if (!emailByUserId.isEmpty()) {
+                Map<String, Boolean> pickedFromActiveUser = new Map<String, Boolean>();
                 for (ServiceResource srByUser : [
                     SELECT Id, RelatedRecordId
                     FROM ServiceResource
-                    WHERE RelatedRecordId IN :userByEmail.values()
+                    WHERE RelatedRecordId IN :emailByUserId.keySet()
                 ]) {
-                    for (String email : userByEmail.keySet()) {
-                        if (userByEmail.get(email) == srByUser.RelatedRecordId) {
-                            resolved.put(email, srByUser.Id);
-                        }
+                    if (srByUser.RelatedRecordId == null) {
+                        continue;
+                    }
+                    String email = emailByUserId.get(srByUser.RelatedRecordId);
+                    if (String.isBlank(email)) {
+                        continue;
+                    }
+                    Boolean isActiveUser = isActiveByUserId.get(srByUser.RelatedRecordId) == true;
+                    if (!resolved.containsKey(email)) {
+                        resolved.put(email, srByUser.Id);
+                        pickedFromActiveUser.put(email, isActiveUser);
+                    } else if (pickedFromActiveUser.get(email) != true && isActiveUser) {
+                        // If duplicate emails exist, prefer Service Resource linked to active user.
+                        resolved.put(email, srByUser.Id);
+                        pickedFromActiveUser.put(email, true);
                     }
                 }
             }
