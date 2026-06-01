@@ -33,12 +33,10 @@ global without sharing class FEC_GetCSMasterDataRestService {
 
             FEC_GetCSMasterDataService.SysRequestType sys =
                 FEC_MyCaseSoapXml.parseGetCSMasterDataRequest(rawXml);
-            FEC_GetCSMasterDataService.GetCSMasterDataResponse masterResp =
-                FEC_GetCSMasterDataService.GetCSMasterDataRequest(sys);
 
             res.statusCode = FEC_ConstantCommon.HTTP_STATUS_OK;
             res.responseBody = Blob.valueOf(
-                FEC_MyCaseSoapXml.buildGetCSMasterDataSoapResponse(masterResp)
+                FEC_GetCSMasterDataService.buildGetCSMasterDataSoapXml(sys)
             );
         } catch (FEC_MyCaseSoapXml.SoapParseException pe) {
             res.statusCode = FEC_ConstantCommon.HTTP_STATUS_BAD_REQUEST;
