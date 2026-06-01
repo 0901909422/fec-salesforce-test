@@ -68,7 +68,7 @@
                                     <operator>EQUAL</operator>
                                     <rightValue>review</rightValue>
                                 </criteria>
-                                  <criteria>
+                                <criteria>
                                     <leftValue>{!Record.FEC_Assignment_Count__c}</leftValue>
                                     <operator>EQUAL</operator>
                                     <rightValue>0</rightValue>
