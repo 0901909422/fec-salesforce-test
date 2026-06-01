@@ -57,7 +57,7 @@
                         <valueListItems>
                             <value>Case.Recall</value>
                             <visibilityRule>
-                                <booleanFilter>1 AND 2 AND 3</booleanFilter>
+                                <booleanFilter>1 AND 2</booleanFilter>
                                 <criteria>
                                     <leftValue>{!Record.FEC_Final_Status__c}</leftValue>
                                     <operator>CONTAINS</operator>
@@ -67,21 +67,6 @@
                                     <leftValue>{!Record.FEC_Interaction_View_Mode__c}</leftValue>
                                     <operator>EQUAL</operator>
                                     <rightValue>review</rightValue>
-                                </criteria>
-                                <criteria>
-                                    <leftValue>{!Record.FEC_Assignment_Count__c}</leftValue>
-                                    <operator>EQUAL</operator>
-                                    <rightValue>0</rightValue>
-                                </criteria>
-                            </visibilityRule>
-                        </valueListItems>
-                        <valueListItems>
-                            <value>Case.FEC_New_Assignment_LWC</value>
-                            <visibilityRule>
-                                <criteria>
-                                    <leftValue>{!Record.FEC_Interaction_View_Mode__c}</leftValue>
-                                    <operator>EQUAL</operator>
-                                    <rightValue>handling</rightValue>
                                 </criteria>
                             </visibilityRule>
                         </valueListItems>
@@ -201,6 +186,10 @@
                     <value>true</value>
                 </componentInstanceProperties>
                 <componentInstanceProperties>
+                    <name>hideSlackAction</name>
+                    <value>false</value>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
                     <name>numVisibleActions</name>
                     <value>6</value>
                 </componentInstanceProperties>
@@ -270,6 +259,16 @@
                 </fieldInstanceProperties>
                 <fieldItem>Record.FEC_MRC_Request_Handling_Option__c</fieldItem>
                 <identifier>RecordFEC_MRC_Request_Handling_Optin__cField</identifier>
+            </fieldInstance>
+        </itemInstances>
+        <itemInstances>
+            <fieldInstance>
+                <fieldInstanceProperties>
+                    <name>uiBehavior</name>
+                    <value>none</value>
+                </fieldInstanceProperties>
+                <fieldItem>Record.FEC_Contract_Processing_MRC_Assessment__c</fieldItem>
+                <identifier>RecordFEC_Contract_Processing_MRC_Assessment__cField</identifier>
             </fieldInstance>
         </itemInstances>
         <name>Facet-b98e8ce4-83d4-4be1-b3a1-1f08c8409b27</name>
@@ -1540,7 +1539,7 @@
                 </componentInstanceProperties>
                 <componentInstanceProperties>
                     <name>title</name>
-                    <value>Banca</value>
+                    <value>Insurance</value>
                 </componentInstanceProperties>
                 <componentName>flexipage:tab</componentName>
                 <identifier>flexipage_tab_banca</identifier>
@@ -1612,11 +1611,12 @@
             <componentInstance>
                 <componentInstanceProperties>
                     <name>hideMarkCompleteButton</name>
-                    <value>false</value>
+                    <value>true</value>
                 </componentInstanceProperties>
                 <componentName>support:milestones</componentName>
                 <identifier>support_milestones</identifier>
                 <visibilityRule>
+                    <booleanFilter>1 AND 2</booleanFilter>
                     <criteria>
                         <leftValue>{!Record.FEC_Interaction_View_Mode__c}</leftValue>
                         <operator>EQUAL</operator>
