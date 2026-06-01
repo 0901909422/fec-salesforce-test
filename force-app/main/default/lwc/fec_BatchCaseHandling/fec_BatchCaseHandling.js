@@ -2768,10 +2768,24 @@ export default class Fec_BatchCaseHandling extends LightningElement {
           ? STR_EMPTY
           : inputtedRemarksRaw;
       const assignmentId =
-        idxAssignmentId >= 0 ? this.cellAsString(r[idxAssignmentId]) : STR_EMPTY;
+        idxAssignmentId >= 0
+          ? this.readImportCellValue(
+            sheet,
+            i,
+            idxAssignmentId,
+            headerColumnIndexes,
+            r
+          )
+          : STR_EMPTY;
       const assignmentRoutingAction =
         idxAssignmentRouting >= 0
-          ? this.cellAsString(r[idxAssignmentRouting])
+          ? this.readImportCellValue(
+            sheet,
+            i,
+            idxAssignmentRouting,
+            headerColumnIndexes,
+            r
+          )
           : STR_EMPTY;
       const csD2CAssessmentType =
         idxCsD2CAssessment >= 0
