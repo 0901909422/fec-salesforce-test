@@ -1404,6 +1404,11 @@ public without sharing class FEC_BatchCaseHandlingImportService {
 
     // 30/05/2026 18:30 linhdev - đọc remark từ file upload gốc trước validate (LWC/JSON có thể thiếu chuỗi dài)
     public static void enrichInputtedRemarksFromImportFile(Id contentVersionId, List<Object> inputRows) {
+        enrichImportRowValidateFieldsFromImportFile(contentVersionId, inputRows);
+    }
+
+    // 01/06/2026 22:00 linhdev - đọc Case ID/Routing/Remark/D2C từ file Excel trước validate (LWC aoa hay lệch cột)
+    public static void enrichImportRowValidateFieldsFromImportFile(Id contentVersionId, List<Object> inputRows) {
         if (contentVersionId == null || inputRows == null || inputRows.isEmpty()) {
             return;
         }
@@ -1418,42 +1423,179 @@ public without sharing class FEC_BatchCaseHandlingImportService {
             if (dataRowIndex == null || headers == null || headers.isEmpty()) {
                 continue;
             }
-            Integer remarkHeaderIdx = findRemarkHeaderIndex(headers);
-            if (remarkHeaderIdx < 0) {
-                continue;
-            }
-            Integer worksheetCol = remarkHeaderIdx;
-            if (columnIndexes != null && remarkHeaderIdx < columnIndexes.size() && columnIndexes[remarkHeaderIdx] != null) {
-                worksheetCol = columnIndexes[remarkHeaderIdx];
-            }
             String sheetName = pickRowString(row, new List<String>{ 'originalsheetname' });
-            String fileRemark = FEC_BCH_TemplateExportService.readImportCellText(
-                contentVersionId,
-                sheetName,
-                dataRowIndex,
-                worksheetCol
-            );
-            if (String.isBlank(fileRemark)) {
-                continue;
-            }
-            String currentRemark = pickRowString(
+            putImportFieldIfBlank(
                 row,
-                new List<String>{ 'inputtedremarks', 'inputtedremark', 'inputremarks', 'inputremark' }
+                new List<String>{ 'caseidsearch', 'caseid' },
+                readImportValidateCell(contentVersionId, sheetName, dataRowIndex, headers, columnIndexes, findCaseIdHeaderIndex(headers))
             );
-            Integer currentCharLength = pickRowInteger(row, 'inputtedRemarksCharLength');
-            Integer fileLen = FEC_BCH_TemplateExportService.readImportCellTextLength(
-                contentVersionId,
-                sheetName,
-                dataRowIndex,
-                worksheetCol
+            putImportFieldIfBlank(
+                row,
+                new List<String>{ 'routingaction' },
+                readImportValidateCell(contentVersionId, sheetName, dataRowIndex, headers, columnIndexes, findHeaderIndex(headers, LABEL_ROUTING_ACTION))
             );
-            if (String.isBlank(currentRemark) || fileRemark.length() > currentRemark.length()) {
-                row.put('inputtedRemarks', fileRemark);
+            putImportFieldIfBlank(
+                row,
+                new List<String>{ 'assignmentroutingaction' },
+                readImportValidateCell(
+                    contentVersionId,
+                    sheetName,
+                    dataRowIndex,
+                    headers,
+                    columnIndexes,
+                    findAssignmentRoutingHeaderIndex(headers)
+                )
+            );
+            putImportFieldIfBlank(
+                row,
+                new List<String>{ 'assignmentid' },
+                readImportValidateCell(contentVersionId, sheetName, dataRowIndex, headers, columnIndexes, findHeaderIndex(headers, 'Assignment ID'))
+            );
+            Integer remarkHeaderIdx = findRemarkHeaderIndex(headers);
+            if (remarkHeaderIdx >= 0) {
+                Integer worksheetCol = remarkHeaderIdx;
+                if (columnIndexes != null && remarkHeaderIdx < columnIndexes.size() && columnIndexes[remarkHeaderIdx] != null) {
+                    worksheetCol = columnIndexes[remarkHeaderIdx];
+                }
+                String fileRemark = FEC_BCH_TemplateExportService.readImportCellText(
+                    contentVersionId,
+                    sheetName,
+                    dataRowIndex,
+                    worksheetCol
+                );
+                if (String.isNotBlank(fileRemark)) {
+                    String currentRemark = pickRowString(
+                        row,
+                        new List<String>{ 'inputtedremarks', 'inputtedremark', 'inputremarks', 'inputremark' }
+                    );
+                    Integer currentCharLength = pickRowInteger(row, 'inputtedRemarksCharLength');
+                    Integer fileLen = FEC_BCH_TemplateExportService.readImportCellTextLength(
+                        contentVersionId,
+                        sheetName,
+                        dataRowIndex,
+                        worksheetCol
+                    );
+                    if (String.isBlank(currentRemark) || fileRemark.length() > currentRemark.length()) {
+                        row.put('inputtedRemarks', fileRemark);
+                    }
+                    if (currentCharLength == null || fileLen > currentCharLength) {
+                        row.put('inputtedRemarksCharLength', fileLen);
+                    }
+                }
             }
-            if (currentCharLength == null || fileLen > currentCharLength) {
-                row.put('inputtedRemarksCharLength', fileLen);
-            }
+            putImportFieldIfBlank(
+                row,
+                new List<String>{ 'csd2cassessment', 'csd2cassessmenttype', 'csd2cdanhgiayeucau', 'csd2cđánhgiáyêucầu' },
+                readImportValidateCell(contentVersionId, sheetName, dataRowIndex, headers, columnIndexes, findHeaderIndex(headers, LABEL_CS_D2C_ASSESSMENT))
+            );
+            putImportFieldIfBlank(
+                row,
+                new List<String>{ 'risklevel', 'mucdoruiro', 'mứcđộrủiro' },
+                readImportValidateCell(contentVersionId, sheetName, dataRowIndex, headers, columnIndexes, findHeaderIndex(headers, LABEL_RISK_LEVEL))
+            );
+            putImportFieldIfBlank(
+                row,
+                new List<String>{ 'requiredaction', 'hanhdongcanthiet', 'hànhđộngcầnthiết', 'requiredcorrectiveaction' },
+                readImportValidateCell(contentVersionId, sheetName, dataRowIndex, headers, columnIndexes, findHeaderIndex(headers, LABEL_REQUIRED_ACTION))
+            );
+            putImportFieldIfBlank(
+                row,
+                new List<String>{ 'cssupportassessment', 'cssupportassessmenttype', 'cssupportdanhgiayeucau', 'cssupportđánhgiáyêucầu' },
+                readImportValidateCell(contentVersionId, sheetName, dataRowIndex, headers, columnIndexes, findHeaderIndex(headers, LABEL_CS_SUPPORT_ASSESSMENT))
+            );
+            putImportFieldIfBlank(
+                row,
+                new List<String>{ 'cpassessment', 'cpdanhgiayeucau', 'cpđánhgiáyêucầu' },
+                readImportValidateCell(contentVersionId, sheetName, dataRowIndex, headers, columnIndexes, findHeaderIndex(headers, LABEL_CP_ASSESSMENT))
+            );
         }
+    }
+
+    private static String readImportValidateCell(
+        Id contentVersionId,
+        String sheetName,
+        Integer dataRowIndex,
+        List<String> headers,
+        List<Integer> columnIndexes,
+        Integer headerIdx
+    ) {
+        if (contentVersionId == null || dataRowIndex == null || headers == null || headerIdx == null || headerIdx < 0) {
+            return FEC_ConstantCommon.STR_EMPTY;
+        }
+        Integer worksheetCol = headerIdx;
+        if (columnIndexes != null && headerIdx < columnIndexes.size() && columnIndexes[headerIdx] != null) {
+            worksheetCol = columnIndexes[headerIdx];
+        }
+        return FEC_BCH_TemplateExportService.readImportCellText(
+            contentVersionId,
+            sheetName,
+            dataRowIndex,
+            worksheetCol
+        );
+    }
+
+    private static void putImportFieldIfBlank(Map<String, Object> row, List<String> keys, String fileValue) {
+        if (row == null || keys == null || keys.isEmpty() || String.isBlank(fileValue)) {
+            return;
+        }
+        String current = pickRowString(row, keys);
+        if (String.isNotBlank(current)) {
+            return;
+        }
+        row.put(keys[0], fileValue);
+    }
+
+    // 01/06/2026 22:00 linhdev - bù field validate từ originalCells khi LWC gửi JSON trống/lệch cột
+    @TestVisible
+    private static void enrichImportRowValidateFieldsFromOriginalLayout(FEC_BatchCaseHandlingImportRow rr) {
+        if (rr == null || rr.originalHeaders == null || rr.originalCells == null || rr.originalCells.isEmpty()) {
+            return;
+        }
+        if (String.isBlank(rr.caseIdSearch)) {
+            Integer caseIdx = findCaseIdHeaderIndex(rr.originalHeaders);
+            rr.caseIdSearch = cellTextAtOriginalLayout(rr, caseIdx);
+        }
+        if (String.isBlank(rr.routingAction)) {
+            rr.routingAction = cellTextAtOriginalLayout(rr, findHeaderIndex(rr.originalHeaders, LABEL_ROUTING_ACTION));
+        }
+        if (String.isBlank(rr.inputtedRemarks)) {
+            rr.inputtedRemarks = cellTextAtOriginalLayout(rr, findRemarkHeaderIndex(rr.originalHeaders));
+        }
+        if (String.isBlank(rr.assignmentRoutingAction)) {
+            rr.assignmentRoutingAction = cellTextAtOriginalLayout(rr, findAssignmentRoutingHeaderIndex(rr.originalHeaders));
+        }
+        if (String.isBlank(rr.assignmentId)) {
+            rr.assignmentId = cellTextAtOriginalLayout(rr, findHeaderIndex(rr.originalHeaders, 'Assignment ID'));
+        }
+        if (String.isBlank(rr.csD2CAssessmentType)) {
+            rr.csD2CAssessmentType = cellTextAtOriginalLayout(rr, findHeaderIndex(rr.originalHeaders, LABEL_CS_D2C_ASSESSMENT));
+        }
+        if (String.isBlank(rr.csSupportAssessment)) {
+            rr.csSupportAssessment = cellTextAtOriginalLayout(rr, findHeaderIndex(rr.originalHeaders, LABEL_CS_SUPPORT_ASSESSMENT));
+        }
+        if (String.isBlank(rr.riskLevel)) {
+            rr.riskLevel = cellTextAtOriginalLayout(rr, findHeaderIndex(rr.originalHeaders, LABEL_RISK_LEVEL));
+        }
+        if (String.isBlank(rr.requiredAction)) {
+            rr.requiredAction = cellTextAtOriginalLayout(rr, findHeaderIndex(rr.originalHeaders, LABEL_REQUIRED_ACTION));
+        }
+        if (String.isBlank(rr.cpAssessment)) {
+            rr.cpAssessment = cellTextAtOriginalLayout(rr, findHeaderIndex(rr.originalHeaders, LABEL_CP_ASSESSMENT));
+        }
+        if (String.isBlank(rr.paymentContractAssessment)) {
+            rr.paymentContractAssessment = cellTextAtOriginalLayout(
+                rr,
+                findHeaderIndex(rr.originalHeaders, LABEL_PAYMENT_CONTRACT_ASSESSMENT)
+            );
+        }
+    }
+
+    private static String cellTextAtOriginalLayout(FEC_BatchCaseHandlingImportRow rr, Integer headerIdx) {
+        if (rr == null || headerIdx == null || headerIdx < 0 || rr.originalCells == null || headerIdx >= rr.originalCells.size()) {
+            return FEC_ConstantCommon.STR_EMPTY;
+        }
+        String val = rr.originalCells[headerIdx];
+        return val == null ? FEC_ConstantCommon.STR_EMPTY : String.valueOf(val).trim();
     }
 
     public static List<FEC_BatchCaseHandlingImportRow> validateCaseHandlingImportRows(List<Object> inputRows, Boolean cofOrGsr) {
@@ -1532,6 +1674,8 @@ public without sharing class FEC_BatchCaseHandlingImportService {
             rr.originalHeaderRowIndex = pickRowInteger(row, 'originalHeaderRowIndex');
             rr.originalDataRowIndex = pickRowInteger(row, 'originalDataRowIndex');
             rr.originalSheetName = pickRowString(row, new List<String>{ 'originalsheetname' });
+            // 01/06/2026 22:00 linhdev - bù Case ID/Routing/Remark/D2C từ originalCells khi JSON LWC trống
+            enrichImportRowValidateFieldsFromOriginalLayout(rr);
             // 30/05/2026 18:30 linhdev - đồng bộ remark từ field/originalCells/charLength (tránh truncate 32,768 che lỗi quá dài)
             rr.inputtedRemarks = resolveInputtedRemarksValue(row, rr);
             rr.inputtedRemarksCharLength = resolveInputtedRemarksCharLength(row, rr);
