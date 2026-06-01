@@ -2482,6 +2482,7 @@ export default class Fec_BatchCaseHandling extends LightningElement {
     }
   }
 
+  // 01/06/2026 12:00 linhdev - import: gửi file base64 + rowsJson rỗng; Apex parse/validate (không SheetJS)
   async handleImportData() {
     this.importSuccessMessage = STR_EMPTY;
     this.importErrorMessage = STR_EMPTY;
@@ -2492,47 +2493,21 @@ export default class Fec_BatchCaseHandling extends LightningElement {
     }
     const file = this.selectedImportFile;
     const fileName = this.selectedImportFileName;
-    if (!this.sheetJsReady) {
-      try {
-        await loadScript(this, FEC_SheetJS);
-        this.sheetJsReady = true;
-      } catch (e) {
-        this.handleImportFailure(e, fileName);
-        return;
-      }
-    }
     this.isImportSubmitting = true;
     this.isLoading = true;
     try {
       const arrayBuffer = await this.readFileAsArrayBuffer(file);
       const fileBodyBase64 = arrayBufferToBase64(arrayBuffer);
-      const parsed = this.parseImportWorkbook(arrayBuffer);
-      if (!parsed) {
-        this.handleImportFailure(MSG_HEADER_INVALID, fileName);
-        await this.safeLogFailedImport(
-          fileName,
-          TEMPLATE_NAME_OTHER,
-          MSG_HEADER_INVALID
-        );
-        return;
-      }
-      const { rows, isCofOrGsr, originalHeaders } = parsed;
-      if (!rows.length) {
-        this.handleImportFailure(MSG_FILE_NO_DATA, fileName);
-        await this.safeLogFailedImport(
-          fileName,
-          isCofOrGsr ? TEMPLATE_NAME_GSR : TEMPLATE_NAME_OTHER,
-          MSG_FILE_NO_DATA
-        );
-        return;
-      }
-      const importCtx = await this.resolveImportTemplateContext(isCofOrGsr, fileName);
+      const importCtx = await this.resolveImportTemplateContext(
+        this.inferCofOrGsrFromFileName(fileName),
+        fileName
+      );
       const result = await this.withTimeout(
         importBatchData({
           fileName,
           fileBodyBase64,
           templateName: importCtx.templateName,
-          rowsJson: JSON.stringify(rows),
+          rowsJson: "[]",
           businessProcessCode: importCtx.businessProcessCode,
           businessProcessName: importCtx.businessProcessName
         }),
@@ -2540,11 +2515,11 @@ export default class Fec_BatchCaseHandling extends LightningElement {
         IMPORT_TIMEOUT_MESSAGE
       );
       if (!result || result.success !== true) {
-        this.handleImportFailure(
-          result?.message || MSG_IMPORT_FAILED,
-          fileName
+        await this.recordImportFailureInBulkActions(
+          fileName,
+          importCtx.templateName,
+          result?.message || MSG_IMPORT_FAILED
         );
-        await this.refreshRows();
         return;
       }
       const isProcessing = result.status === IMPORT_STATUS_PROCESSING;
@@ -2557,16 +2532,37 @@ export default class Fec_BatchCaseHandling extends LightningElement {
       this.clearSelectedImportFile();
       await this.refreshRows();
     } catch (error) {
-      this.handleImportFailure(error, fileName);
-      await this.safeLogFailedImport(
+      await this.recordImportFailureInBulkActions(
         fileName,
         TEMPLATE_NAME_OTHER,
-        this.extractError(error)
+        this.extractError(error) || MSG_IMPORT_FAILED
       );
     } finally {
       this.isImportSubmitting = false;
       this.isLoading = false;
     }
+  }
+
+  // 01/06/2026 12:00 linhdev - suy COF/GSR từ tên file (gsrtemp/coftemp) cho resolve template
+  inferCofOrGsrFromFileName(fileName) {
+    const core = String(fileName || STR_EMPTY)
+      .trim()
+      .toLowerCase()
+      .replace(/\.xlsx$/i, STR_EMPTY);
+    return core.startsWith("gsrtemp") || core.startsWith("coftemp");
+  }
+
+  // 01/06/2026 12:00 linhdev - Lỗi import: ghi My Bulk Actions, không toast (parse/validate trên Apex)
+  async recordImportFailureInBulkActions(fileName, templateName, reason) {
+    this.importSuccessMessage = STR_EMPTY;
+    this.importErrorMessage = STR_EMPTY;
+    await this.safeLogFailedImport(
+      fileName,
+      templateName,
+      reason || MSG_IMPORT_FAILED
+    );
+    this.clearSelectedImportFile();
+    await this.refreshRows();
   }
 
   handleImportFailure(error, fileName) {
