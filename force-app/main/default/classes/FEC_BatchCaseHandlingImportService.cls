@@ -641,7 +641,13 @@ public without sharing class FEC_BatchCaseHandlingImportService {
                 assignmentRoutingActionIndex,
                 row
             );
-            clearRoutingCellIfRemarkBleed(cells, routingActionIndex, inputtedRemarksIndex);
+            clearRoutingCellIfRemarkBleed(
+                cells,
+                routingActionIndex,
+                inputtedRemarksIndex,
+                remarkForResult,
+                row.inputtedRemarksCharLength
+            );
             // 01/06/2026 18:00 linhdev - Case ID đúng cột header; xóa bản sao lệch cột khi originalCells/map lệch
             syncCaseIdIntoExportCells(cells, sourceHeaders, rowValue(row.caseIdSearch));
             dataRows.add(cells);
@@ -1335,6 +1341,15 @@ public without sharing class FEC_BatchCaseHandlingImportService {
     }
 
     // 01/06/2026 16:30 linhdev - xóa nội dung remark bị dính sang cột Routing Action khi build Result
+    @TestVisible
+    private static void clearRoutingCellIfRemarkBleed(
+        List<String> cells,
+        Integer routingActionIndex,
+        Integer inputtedRemarksIndex
+    ) {
+        clearRoutingCellIfRemarkBleed(cells, routingActionIndex, inputtedRemarksIndex, null, null);
+    }
+
     @TestVisible
     private static void clearRoutingCellIfRemarkBleed(
         List<String> cells,
