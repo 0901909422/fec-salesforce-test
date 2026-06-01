@@ -1183,8 +1183,8 @@ public without sharing class FEC_BatchCaseHandlingController {
 
             Boolean cofOrGsr = parseResult.cofOrGsr == true
                 || FEC_BatchCaseHandlingImportService.isCofOrGsrTemplate(resolvedTemplateName);
-            // 30/05/2026 18:30 linhdev - đọc remark dài trực tiếp từ file upload trước validate
-            FEC_BatchCaseHandlingImportService.enrichInputtedRemarksFromImportFile(cv.Id, inputRows);
+            // 01/06/2026 22:00 linhdev - đọc Case ID/Routing/Remark/D2C từ file upload trước validate (LWC aoa lệch cột)
+            FEC_BatchCaseHandlingImportService.enrichImportRowValidateFieldsFromImportFile(cv.Id, inputRows);
             List<FEC_BatchCaseHandlingImportRow> rowResults = FEC_BatchCaseHandlingImportService.validateCaseHandlingImportRows(inputRows, cofOrGsr);
             if (FEC_BatchCaseHandlingImportService.hasApplicableImportRows(rowResults)) {
                 // 27/05/2026 22:15 linhdev - Card Replacement 1 case: xử lý sync thay vì queueable để tránh Processing timeout 1 giờ
