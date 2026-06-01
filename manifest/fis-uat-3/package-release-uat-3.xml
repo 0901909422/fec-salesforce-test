@@ -153,6 +153,7 @@
         <members>FEC_COFFraudRelatedHandler</members>
         <members>FEC_BancaController</members>
         <members>FEC_RDPaymentContractAssessmentService</members>
+        <members>FEC_RdPaymentRoutingHelper</members>
 	    <members>FEC_CofGsrRoutePrepareService</members>
 	    <members>FEC_AssignmentTriggerHandler</members>
 	    <members>FEC_NatureOfCaseTriggerHandler</members>
@@ -226,6 +227,7 @@
         <members>FEC_CaseSlaNotificationService</members>
         <members>FEC_BlockCodeRoutingService</members>
         <members>FEC_RepeatRouteToOwnerHelper</members>
+        <members>FEC_RdPaymentRoutingHelper</members>
         <members>FEC_CardClosureRefundController</members>
         <members>FEC_CardInfoController</members>
         <members>FEC_CardReplacementAddressController</members>
@@ -1867,6 +1869,7 @@
     <types>
 		<members>FEC_CaseBusinessService</members>
 		<members>FEC_RepeatRouteToOwnerHelper</members>
+		<members>FEC_RdPaymentRoutingHelper</members>
 		<members>FEC_DocumentRequestRoutingService</members>
 		<members>FEC_DocumentRequestRoutingActionService</members>
 		<members>FEC_ClientPDFService</members>

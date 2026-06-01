@@ -1405,6 +1405,7 @@ public without sharing class FEC_CaseBusinessService {
   private static Boolean checkStageName(String selectedStageName, String stageName){
     return selectedStageName?.contains(stageName);
   }
+
   @AuraEnabled
   public static void saveCaseNOC(String caseId, String natureOfCaseId) {
     if (String.isBlank(caseId) || String.isBlank(natureOfCaseId))
@@ -2748,14 +2749,10 @@ public without sharing class FEC_CaseBusinessService {
         cloneMasterDataSetting(tgt.Id, natureOfCaseId);
       }
 
-      // Toannd61 — RL16.02/RL16.03: nếu RD Payment Assessment đã được chọn,
-      // dùng queueId từ LWC (đã resolve theo assessment) thay vì override từ Stage Change.
+      // Toannd61 — RL16.02/RL16.03: queue từ LWC theo assessment chỉ khi stage PM (payment).
+      // Stage sau (vd. Stage 3 - CC) → queue từ FEC_Stage_Change__c đã chọn.
       Boolean isRdPaymentAssessmentDriven =
-        String.isNotBlank(updatedCase.FEC_RD_Payment_Contract_Assessment__c) &&
-        (
-          FEC_ConstantCommon.SUB_CODE_RD_PAYMENT_ASSESSMENT_1.equals(updatedCase.FEC_SubCode__r?.FEC_Code__c) ||
-          FEC_ConstantCommon.SUB_CODE_RD_PAYMENT_ASSESSMENT_2.equals(updatedCase.FEC_SubCode__r?.FEC_Code__c)
-        );
+        FEC_RdPaymentRoutingHelper.isRdPaymentAssessmentDrivenAtPmStage(updatedCase);
 
       //thangtv
       if (routeByLatestRevertHistory && String.isNotBlank(latestHistForRoute.get(0).FEC_Perform_User__c)) {
