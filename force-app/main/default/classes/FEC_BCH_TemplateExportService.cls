@@ -2757,24 +2757,6 @@ public without sharing class FEC_BCH_TemplateExportService {
         String cpAssessment = headerDetect.idxCpAssessment >= 0
             ? cellTextAtWorksheetColumn(colTexts, headerDetect.idxCpAssessment)
             : FEC_ConstantCommon.STR_EMPTY;
-        if (
-            String.isBlank(caseIdSearch) &&
-            String.isBlank(routingAction) &&
-            String.isBlank(inputtedRemarks) &&
-            String.isBlank(assignmentId) &&
-            String.isBlank(assignmentRoutingAction) &&
-            String.isBlank(csD2CAssessmentType) &&
-            String.isBlank(csSupportAssessment) &&
-            String.isBlank(riskLevel) &&
-            String.isBlank(requiredAction) &&
-            String.isBlank(classificationByCS) &&
-            String.isBlank(evaluationByCS) &&
-            String.isBlank(finalProduct) &&
-            String.isBlank(paymentContractAssessment) &&
-            String.isBlank(cpAssessment)
-        ) {
-            return null;
-        }
         List<String> originalCells = new List<String>();
         for (Integer i = 0; i < importHeaders.size(); i++) {
             Integer worksheetCol = i < importColumnIndexes.size()
