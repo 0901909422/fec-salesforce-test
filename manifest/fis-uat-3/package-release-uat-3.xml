@@ -1803,6 +1803,7 @@
         <members>Case.FEC_Shared_Task_Case</members>
         <members>Case.FEC_Support_Mailbox_Case</members>
         <members>Case.FEC_WFM_Case</members>
+        <members>Case.FEC_Ubank_Email_Case</members>
         <members>Case.My_Pending_Cases</members>
         <members>Case.My_Team</members>
         <members>Case.X2_My_Follow_Up_Cases</members>
