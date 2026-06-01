@@ -344,6 +344,7 @@
         <members>FEC_Routing_Action_History__c.FEC_Is_DS_Queue_User__c</members>
         <members>FEC_Routing_Action_History__c.FEC_Is_PM_Queue_User__c</members>
         <members>FEC_Routing_Action_History__c.FEC_Is_TS_Queue_User__c</members>
+        <members>FEC_Routing_Action_History__c.FEC_Updated_Group__c</members>
 		<members>FEC_Assignment__c.FEC_Submitted_On__c</members>
 		<members>FEC_Assignment__c.FEC_Assignment_Name__c</members>
         <members>FEC_Assignment__c.FEC_Draft_Assignment_Remark__c</members>
@@ -575,6 +576,7 @@
 		<members>FEC_Batch_Case_Handling_Import_Err_Missing_Remark</members>
 		<members>FEC_Batch_Case_Handling_Import_Err_Remark_Too_Long</members>
 		<members>FEC_NFU_Modal_Save_Error</members>
+        <members>FEC_Send_Manual_Notification</members>
 		<name>CustomLabel</name>
 	</types>
     <types>

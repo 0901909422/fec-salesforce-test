@@ -2,6 +2,7 @@ public without sharing class FEC_BatchCaseHandlingImportRow {
     @AuraEnabled public String caseIdSearch;
     @AuraEnabled public String routingAction;
     @AuraEnabled public String inputtedRemarks;
+    @AuraEnabled public Integer inputtedRemarksCharLength;
     @AuraEnabled public String assignmentId;
     @AuraEnabled public String assignmentRoutingAction;
     @AuraEnabled public String csD2CAssessmentType;
@@ -33,5 +34,6 @@ public without sharing class FEC_BatchCaseHandlingImportRow {
     @AuraEnabled public List<String> originalCells;
     @AuraEnabled public List<Integer> originalColumnIndexes;
     @AuraEnabled public Integer originalHeaderRowIndex;
+    @AuraEnabled public Integer originalDataRowIndex;
     @AuraEnabled public String originalSheetName;
 }

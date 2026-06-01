@@ -110,6 +110,18 @@ public with sharing class FEC_CustomerIntegrationService {
             System.debug('### BASIC ERROR: ' + e.getMessage());
         }
 
+        // 1.5. CONTACTS LIST
+        try {
+            FEC_GetContactsList.ResponseWrapper contactsRes =
+                FEC_GetContactsList.callGetContactsList(requestId, requestor, timestampZ, effectiveCif);
+
+            if (contactsRes != null && contactsRes.Contacts != null) {
+                saveContactsListFromApi(hist, contactsRes.Contacts);
+            }
+        } catch (Exception e) {
+            System.debug('### CONTACTS LIST ERROR: ' + e.getMessage());
+        }
+
         // 2. DOCUMENT
         try {
             FEC_GetDocumentsList.ResponseWrapper docRes =
@@ -209,6 +221,65 @@ public with sharing class FEC_CustomerIntegrationService {
         }
 
         return customer.CIFNumber;
+    }
+
+    private static void saveContactsListFromApi(
+        FEC_Customer_History__c hist,
+        List<FEC_GetContactsList.ContactInfo> contacts
+    ) {
+        if (hist == null || contacts == null || contacts.isEmpty()) {
+            return;
+        }
+
+        List<FEC_Contact_List__c> contactsToInsert = new List<FEC_Contact_List__c>();
+
+        for (FEC_GetContactsList.ContactInfo c : contacts) {
+            if (!isPhoneOrEmailChannelContact(c)) {
+                continue;
+            }
+
+            contactsToInsert.add(new FEC_Contact_List__c(
+                FEC_Customer_History__c   = hist.Id,
+                FEC_Channel__c            = c.Channel,
+                FEC_Communication_Type__c = c.CommunicationType,
+                FEC_Contact_String__c     = c.ContactString,
+                FEC_Contact_ID__c         = c.ContactId
+            ));
+        }
+
+        if (contactsToInsert.isEmpty()) {
+            return;
+        }
+
+        deleteExistingPhoneEmailContacts(hist.Id);
+        insert contactsToInsert;
+    }
+
+    private static Boolean isPhoneOrEmailChannelContact(FEC_GetContactsList.ContactInfo c) {
+        return c != null
+            && String.isNotBlank(c.ContactString)
+            && (c.Channel == FEC_ConstantCommon.EMAIL
+                || c.Channel == FEC_ConstantCommon.PHONE);
+    }
+
+    private static void deleteExistingPhoneEmailContacts(Id customerHistoryId) {
+        if (customerHistoryId == null) {
+            return;
+        }
+
+        List<FEC_Contact_List__c> existing = [
+            SELECT Id
+            FROM FEC_Contact_List__c
+            WHERE FEC_Customer_History__c = :customerHistoryId
+              AND FEC_Channel__c IN (
+                  :FEC_ConstantCommon.EMAIL,
+                  :FEC_ConstantCommon.PHONE
+              )
+        ];
+
+        if (!existing.isEmpty()) {
+            delete existing;
+        }
     }
 
     private static FEC_GetCustomerList.ResponseWrapper callGetCustomerList(
