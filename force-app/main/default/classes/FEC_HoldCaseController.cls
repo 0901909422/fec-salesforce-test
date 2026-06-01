@@ -351,7 +351,11 @@ public with sharing class FEC_HoldCaseController {
         try {
             // tungnm37: query Case lấy ContractNumber
             Case c = [
-                SELECT Id, Status, FEC_Account_Contract_Number_Text__c
+                SELECT Id,
+                    Status,
+                    FEC_Account_Contract_Number_Text__c,
+                    FEC_Current_Case_Stage__c,
+                    FEC_Current_Case_Stage__r.Name
                 FROM Case
                 WHERE Id = :model.caseId
                 WITH SECURITY_ENFORCED
@@ -394,6 +398,8 @@ public with sharing class FEC_HoldCaseController {
                 resp.isSuccess = true;
                 resp.recordId  = c.Id;
                 populateResponseFromCase(resp, c.Id);
+                //tungnm37
+                FEC_CommonUltils.createProcessActionHistory('Hold Case', c, true);
                 return resp;
             }
 
@@ -417,6 +423,8 @@ public with sharing class FEC_HoldCaseController {
                 resp.isSuccess = true;
                 resp.recordId  = c.Id;
                 populateResponseFromCase(resp, c.Id);
+                //tungnm37
+                FEC_CommonUltils.createProcessActionHistory('Hold Case', c, true);
                 return resp;
             }
 
@@ -441,6 +449,8 @@ public with sharing class FEC_HoldCaseController {
                     System.Label.FEC_MSG_ERROR,
                     null
                 );
+                //tungnm37
+                FEC_CommonUltils.createProcessActionHistory('Hold Case', c, false);
             }
 
             return resp;
@@ -456,6 +466,15 @@ public with sharing class FEC_HoldCaseController {
         if (caseId == null) {
             return;
         }
+        Case c = [
+            SELECT Id,
+                FEC_Current_Case_Stage__c,
+                FEC_Current_Case_Stage__r.Name
+            FROM Case
+            WHERE Id = :caseId
+            WITH SECURITY_ENFORCED
+            LIMIT 1
+        ];
         updateCaseAfterManualHold(
             caseId,
             RESULT_ERROR,
@@ -466,6 +485,8 @@ public with sharing class FEC_HoldCaseController {
             System.Label.FEC_MSG_ERROR,
             null
         );
+        //tungnm37
+        FEC_CommonUltils.createProcessActionHistory('Hold Case', c, false);
     }
 
     @TestVisible
