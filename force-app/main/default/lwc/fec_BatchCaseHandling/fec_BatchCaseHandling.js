@@ -2764,7 +2764,7 @@ export default class Fec_BatchCaseHandling extends LightningElement {
       const inputtedRemarksCharLength = inputtedRemarksRaw ? inputtedRemarksRaw.length : 0;
       // 30/05/2026 21:00 linhdev - không gửi full remark > 32,767 trong JSON (Apex validate qua charLength + file gốc)
       const inputtedRemarks =
-        inputtedRemarksCharLength > INPUTTED_REMARKS_MAX_LEN
+        inputtedRemarksCharLength >= INPUTTED_REMARKS_MAX_LEN
           ? STR_EMPTY
           : inputtedRemarksRaw;
       const assignmentId =
@@ -2837,7 +2837,7 @@ export default class Fec_BatchCaseHandling extends LightningElement {
         const cellValue = cell && cell.v !== undefined ? cell.v : STR_EMPTY;
         let cellStr = this.cellAsString(cellValue);
         // 30/05/2026 21:00 linhdev - giữ tối đa 32,767 ký tự Excel trong originalCells
-        if (col === idxRemark && cellStr.length > INPUTTED_REMARKS_MAX_LEN) {
+        if (col === idxRemark && cellStr.length >= INPUTTED_REMARKS_MAX_LEN) {
           cellStr = cellStr.substring(0, INPUTTED_REMARKS_MAX_LEN);
         }
         originalCells.push(cellStr);

@@ -2685,7 +2685,7 @@ public without sharing class FEC_BCH_TemplateExportService {
             ? cellTextAtLogicalIndex(colTexts, headerDetect.idxRemark)
             : FEC_ConstantCommon.STR_EMPTY;
         Integer remarkCharLen = String.isBlank(inputtedRemarksRaw) ? 0 : inputtedRemarksRaw.length();
-        String inputtedRemarks = remarkCharLen > IMPORT_EXCEL_CELL_TEXT_MAX_LEN
+        String inputtedRemarks = remarkCharLen >= IMPORT_EXCEL_CELL_TEXT_MAX_LEN
             ? FEC_ConstantCommon.STR_EMPTY
             : inputtedRemarksRaw;
         String assignmentId = headerDetect.idxAssignmentId >= 0
