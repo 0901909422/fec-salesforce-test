@@ -126,11 +126,12 @@ public without sharing class FEC_BCH_TemplateExportService {
                     resultColStyles
                 );
                 mappedCols = shiftMappedColumnIndexes(mappedCols, insertBefore, insertHeaders.size());
+                // 01/06/2026 16:30 linhdev - __Status/__Errors chèn cuối mảng dataRows (insertBefore là cột worksheet, không cắt lệch remark/routing)
                 dataRows = mergeInsertColumnValues(
                     dataRows,
                     insertValues,
                     insertHeaders.size(),
-                    insertBefore
+                    resolveDataRowsLogicalWidth(dataRows)
                 );
             }
             Integer preserveSourceColIdx = req.preserveSourceWorksheetColIndex;
@@ -1431,6 +1432,14 @@ public without sharing class FEC_BCH_TemplateExportService {
                 val = String.valueOf(values[valueIdx]);
             }
             valueIdx += 1;
+            // 01/06/2026 16:30 linhdev - remark dài chỉ giữ ở cột preserve; không upsert sang Routing Action
+            if (
+                preserveTargetColIdx != null &&
+                colIdx != preserveTargetColIdx &&
+                val.length() >= IMPORT_EXCEL_CELL_TEXT_MAX_LEN
+            ) {
+                val = FEC_ConstantCommon.STR_EMPTY;
+            }
             String styleAttr = resolveResultDataCellStyleAttr(
                 resultColStyles,
                 insertBeforeColIndex,
@@ -1520,12 +1529,13 @@ public without sharing class FEC_BCH_TemplateExportService {
         return out;
     }
 
-    // 30/05/2026 11:30 linhdev - ghép __Status/__Errors đúng insertBefore (cuối sheet khi insertBefore == base.size())
+    // 01/06/2026 16:30 linhdev - ghép __Status/__Errors cuối mảng dataRows (logicalInsertBefore, không dùng chỉ số cột worksheet)
+    @TestVisible
     private static List<List<String>> mergeInsertColumnValues(
         List<List<String>> dataRows,
         List<List<String>> insertValues,
         Integer insertCount,
-        Integer insertBefore
+        Integer logicalInsertBefore
     ) {
         List<List<String>> out = new List<List<String>>();
         if (dataRows == null) {
@@ -1538,8 +1548,8 @@ public without sharing class FEC_BCH_TemplateExportService {
                 ? insertValues[rowIdx]
                 : new List<String>();
             Integer splitIndex = base.size();
-            if (insertBefore != null && insertBefore >= 0 && insertBefore <= base.size()) {
-                splitIndex = insertBefore;
+            if (logicalInsertBefore != null && logicalInsertBefore >= 0 && logicalInsertBefore <= base.size()) {
+                splitIndex = logicalInsertBefore;
             }
             List<String> merged = new List<String>();
             for (Integer i = 0; i < splitIndex && i < base.size(); i++) {
@@ -1558,6 +1568,20 @@ public without sharing class FEC_BCH_TemplateExportService {
             out.add(merged);
         }
         return out;
+    }
+
+    @TestVisible
+    private static Integer resolveDataRowsLogicalWidth(List<List<String>> dataRows) {
+        if (dataRows == null || dataRows.isEmpty()) {
+            return 0;
+        }
+        Integer maxWidth = 0;
+        for (List<String> row : dataRows) {
+            if (row != null && row.size() > maxWidth) {
+                maxWidth = row.size();
+            }
+        }
+        return maxWidth;
     }
 
     private static String insertPropertyColumnsInWorksheet(
