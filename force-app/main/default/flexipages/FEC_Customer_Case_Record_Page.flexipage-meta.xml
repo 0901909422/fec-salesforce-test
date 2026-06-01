@@ -272,6 +272,16 @@
                 <identifier>RecordFEC_MRC_Request_Handling_Optin__cField</identifier>
             </fieldInstance>
         </itemInstances>
+        <itemInstances>
+            <fieldInstance>
+                <fieldInstanceProperties>
+                    <name>uiBehavior</name>
+                    <value>none</value>
+                </fieldInstanceProperties>
+                <fieldItem>Record.FEC_Contract_Processing_MRC_Assessment__c</fieldItem>
+                <identifier>RecordFEC_Contract_Processing_MRC_Assessment__cField</identifier>
+            </fieldInstance>
+        </itemInstances>
         <name>Facet-b98e8ce4-83d4-4be1-b3a1-1f08c8409b27</name>
         <type>Facet</type>
     </flexiPageRegions>
@@ -1612,7 +1622,7 @@
             <componentInstance>
                 <componentInstanceProperties>
                     <name>hideMarkCompleteButton</name>
-                    <value>false</value>
+                    <value>true</value>
                 </componentInstanceProperties>
                 <componentName>support:milestones</componentName>
                 <identifier>support_milestones</identifier>

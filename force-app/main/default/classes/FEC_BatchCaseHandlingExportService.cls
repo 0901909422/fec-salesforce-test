@@ -14,6 +14,7 @@ public without sharing class FEC_BatchCaseHandlingExportService {
             'FEC_Complain_Type__c',
             'FEC_Complaint_Source__c',
             'FEC_Channel__c',
+            'FEC_Interaction_Subchannel__c',
             'FEC_Interaction_Masked_Phone__c',
             'FEC_Interaction_Masked_Email__c',
             'FEC_IPP_To_Close__r.FEC_IPP_Record_No__c', // Toannd 28/5/2026
@@ -186,11 +187,26 @@ public without sharing class FEC_BatchCaseHandlingExportService {
         enrichPendingCsSupportLabels(rows);
     }
 
+    // 01/06/2026 12:00 linhdev - stripInaccessible có thể bỏ relationship: không gọi getSObject khi chưa populated
+    private static SObject safeRelatedSObject(SObject row, String relationshipApiName) {
+        if (row == null || String.isBlank(relationshipApiName)) {
+            return null;
+        }
+        if (!row.getPopulatedFieldsAsMap().containsKey(relationshipApiName)) {
+            return null;
+        }
+        try {
+            return row.getSObject(relationshipApiName);
+        } catch (SObjectException ex) {
+            return null;
+        }
+    }
+
     public static FEC_BatchCaseHandlingExportRow mapCaseToExportRow(Case c) {
         FEC_BatchCaseHandlingExportRow r = new FEC_BatchCaseHandlingExportRow();
         r.caseId = c.Id;
         r.customerType = c.FEC_Customer_Type__c;
-        SObject ch = c.getSObject('FEC_Account_or_Contract__r');
+        SObject ch = safeRelatedSObject(c, 'FEC_Account_or_Contract__r');
         r.customerName = ch != null && String.isNotBlank((String) ch.get('FEC_Customer_Name__c'))
             ? (String) ch.get('FEC_Customer_Name__c')
             : c.FEC_Customer_Name__c;
@@ -209,12 +225,10 @@ public without sharing class FEC_BatchCaseHandlingExportService {
         r.complaintType = c.FEC_Complain_Type__c;
         r.complaintSource = c.FEC_Complaint_Source__c;
         r.interactionChannel = c.FEC_Channel__c;
-        r.interactionSubChannel = c.FEC_Interaction__r == null
-            ? FEC_ConstantCommon.STR_EMPTY
-            : c.FEC_Interaction__r.FEC_Interaction_Subchannel__c;
+        r.interactionSubChannel = c.FEC_Interaction_Subchannel__c;
         r.interactionPhone = c.FEC_Interaction_Masked_Phone__c;
         r.interactionEmail = c.FEC_Interaction_Masked_Email__c;
-        SObject ipp = c.getSObject('FEC_IPP_To_Close__r'); // Toannd 28/5/2026
+        SObject ipp = safeRelatedSObject(c, 'FEC_IPP_To_Close__r'); // Toannd 28/5/2026
         if (ipp != null) { // Toannd 28/5/2026
             r.ippRecordNo = (String) ipp.get('FEC_IPP_Record_No__c'); // Toannd 28/5/2026
             r.ippPlan = (String) ipp.get('FEC_IPP_Plan__c'); // Toannd 28/5/2026

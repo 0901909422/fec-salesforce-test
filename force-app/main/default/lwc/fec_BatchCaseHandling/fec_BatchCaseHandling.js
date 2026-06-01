@@ -2292,103 +2292,6 @@ export default class Fec_BatchCaseHandling extends LightningElement {
     return /^[a-zA-Z0-9]{15,18}$/.test(id) ? id : null;
   }
 
-  // 29/05/2026 14:00 linhdev - debug export/import: BP, template, case id (console.log only)
-  logBulkActionDebug(action, context) {
-    try {
-      // eslint-disable-next-line no-console
-      console.log("[FEC_BCH_DEBUG]", action, context || {});
-    } catch (e) {
-      // best-effort debug only
-    }
-  }
-
-  collectBulkActionDebugCaseIds(rows, maxCount) {
-    const limit = Number.isInteger(maxCount) && maxCount > 0 ? maxCount : 8;
-    const tokens = [];
-    const seen = new Set();
-    (Array.isArray(rows) ? rows : []).forEach((r) => {
-      if (tokens.length >= limit) {
-        return;
-      }
-      const token = String(r?.caseIdSearch || r?.caseId || STR_EMPTY).trim();
-      if (!token || seen.has(token)) {
-        return;
-      }
-      seen.add(token);
-      tokens.push(token);
-    });
-    if (!tokens.length) {
-      return STR_EMPTY;
-    }
-    const total = (Array.isArray(rows) ? rows : []).length;
-    const suffix = total > tokens.length ? `...(+${total - tokens.length})` : STR_EMPTY;
-    return tokens.join(",") + suffix;
-  }
-
-  extractRowBusinessProcessField(rows, fieldKey) {
-    const list = Array.isArray(rows) ? rows : [];
-    for (let i = 0; i < list.length; i += 1) {
-      const val = String(list[i]?.[fieldKey] || STR_EMPTY).trim();
-      if (val) {
-        return val;
-      }
-    }
-    return STR_EMPTY;
-  }
-
-  buildExportDebugContext(templateMeta, businessProcessKey, rows) {
-    const templateName = String(templateMeta?.templateName || STR_EMPTY).trim();
-    const hasUrl = !!String(templateMeta?.templateDownloadUrl || STR_EMPTY).trim();
-    const contentVersionId = this.resolveTemplateContentVersionId(templateMeta);
-    const bpCode =
-      this.extractRowBusinessProcessField(rows, "businessProcessCode") ||
-      String(businessProcessKey || STR_EMPTY).trim();
-    const bpName =
-      this.extractRowBusinessProcessField(rows, "businessProcessName") ||
-      String(businessProcessKey || STR_EMPTY).trim();
-    return {
-      errorCode: "NO_TEMPLATE_CV",
-      templateName: templateName || null,
-      hasTemplateDownloadUrl: hasUrl,
-      contentVersionId: contentVersionId || null,
-      businessProcessCode: bpCode || null,
-      businessProcessName: bpName || null,
-      caseCount: Array.isArray(rows) ? rows.length : 0,
-      caseIds: this.collectBulkActionDebugCaseIds(rows, 8) || null
-    };
-  }
-
-  buildExportNoTemplateCvUserMessage(templateMeta) {
-    const templateName = String(templateMeta?.templateName || STR_EMPTY).trim();
-    const hasUrl = !!String(templateMeta?.templateDownloadUrl || STR_EMPTY).trim();
-    return (
-      "[NO_TEMPLATE_CV] Missing template ContentVersion Id" +
-      (templateName ? ` (template=${templateName})` : STR_EMPTY) +
-      (hasUrl ? "" : "; no template file on FEC_Template_Import__c")
-    );
-  }
-
-  throwExportNoTemplateCvError(templateMeta, businessProcessKey, rows) {
-    this.logBulkActionDebug(
-      "EXPORT_NO_TEMPLATE_CV",
-      this.buildExportDebugContext(templateMeta, businessProcessKey, rows)
-    );
-    throw new Error(this.buildExportNoTemplateCvUserMessage(templateMeta));
-  }
-
-  buildImportDebugContext(detail, fileName, importCtx, rows) {
-    const ctx = importCtx || {};
-    return {
-      message: String(detail || STR_EMPTY).trim() || MSG_IMPORT_FAILED,
-      fileName: String(fileName || STR_EMPTY).trim() || null,
-      templateName: String(ctx.templateName || STR_EMPTY).trim() || null,
-      businessProcessCode: String(ctx.businessProcessCode || STR_EMPTY).trim() || null,
-      businessProcessName: String(ctx.businessProcessName || STR_EMPTY).trim() || null,
-      rowCount: Array.isArray(rows) ? rows.length : 0,
-      caseIds: this.collectBulkActionDebugCaseIds(rows, 8) || null
-    };
-  }
-
   resolveTemplateGroupKey(templateMeta, businessProcessCode) {
     const versionId = String(
       this.resolveTemplateContentVersionId(templateMeta) || STR_EMPTY
@@ -2457,33 +2360,22 @@ export default class Fec_BatchCaseHandling extends LightningElement {
       const groupKeys = Object.keys(groups);
       for (let i = 0; i < groupKeys.length; i += 1) {
         const groupItem = groups[groupKeys[i]];
+        const tmplMeta = groupItem?.templateMeta || {};
         const fallbackBp = groupItem?.fallbackBusinessProcessCode || "Other";
-        // 29/05/2026 14:00 linhdev - re-lookup template meta sau ensureExportTemplateMetaForRows (tránh snapshot rỗng NO_TEMPLATE_CV)
-        const snapshotMeta = groupItem?.templateMeta || {};
-        const refreshedMeta = this.lookupBpTemplateMeta(fallbackBp);
-        const tmplMeta = {
-          ...snapshotMeta,
-          ...refreshedMeta
-        };
         const fileName = this.resolveExportFileName(
           tmplMeta.templateName,
           fallbackBp
         );
         const contentVersionId = this.resolveTemplateContentVersionId(tmplMeta);
-        const groupRows = groupItem?.rows || [];
-        if (!contentVersionId) {
-          this.throwExportNoTemplateCvError(tmplMeta, fallbackBp, groupRows);
-        }
         // 27/05/2026 10:00 linhdev - Export with all Properties: load MDS columns + values khi user chọn Yes
-        const propertyBundle = await this.loadExportPropertyBundleForRows(groupRows);
+        const propertyBundle = await this.loadExportPropertyBundleForRows(groupItem?.rows || []);
         const file = await this.withTimeout(
           this.buildExcelFileFromTemplate(
-            groupRows,
+            groupItem?.rows || [],
             fileName,
             contentVersionId,
             tmplMeta,
-            propertyBundle,
-            fallbackBp
+            propertyBundle
           ),
           EXCEL_FILE_TIMEOUT_MS,
           EXCEL_FILE_TIMEOUT_MESSAGE
@@ -2532,10 +2424,11 @@ export default class Fec_BatchCaseHandling extends LightningElement {
       this.showError(FEC_BCH_ExportToastTitle, FEC_BCH_RequestTimeout);
       return;
     }
-    // 29/05/2026 15:00 linhdev - chi tiết debug chỉ console.log, toast giữ message ngắn
-    this.logBulkActionDebug("EXPORT_FAILED", { message: detail || MSG_EXPORT_FAILED });
     this.exportErrorMessage = MSG_EXPORT_FAILED;
-    this.showError(FEC_BCH_ExportToastTitle, MSG_EXPORT_FAILED);
+    this.showError(
+      MSG_EXPORT_FAILED,
+      detail || FEC_BCH_CannotCreateExportFile
+    );
   }
 
   handleImportFileChange(event) {
@@ -2589,6 +2482,7 @@ export default class Fec_BatchCaseHandling extends LightningElement {
     }
   }
 
+  // 01/06/2026 12:00 linhdev - import: gửi file base64 + rowsJson rỗng; Apex parse/validate (không SheetJS)
   async handleImportData() {
     this.importSuccessMessage = STR_EMPTY;
     this.importErrorMessage = STR_EMPTY;
@@ -2599,50 +2493,21 @@ export default class Fec_BatchCaseHandling extends LightningElement {
     }
     const file = this.selectedImportFile;
     const fileName = this.selectedImportFileName;
-    if (!this.sheetJsReady) {
-      try {
-        await loadScript(this, FEC_SheetJS);
-        this.sheetJsReady = true;
-      } catch (e) {
-        this.handleImportFailure(e, fileName);
-        return;
-      }
-    }
     this.isImportSubmitting = true;
     this.isLoading = true;
-    let importCtx = null;
-    let parsedRows = [];
     try {
       const arrayBuffer = await this.readFileAsArrayBuffer(file);
       const fileBodyBase64 = arrayBufferToBase64(arrayBuffer);
-      const parsed = this.parseImportWorkbook(arrayBuffer);
-      if (!parsed) {
-        this.handleImportFailure(MSG_HEADER_INVALID, fileName, importCtx, parsedRows);
-        await this.safeLogFailedImport(
-          fileName,
-          TEMPLATE_NAME_OTHER,
-          MSG_HEADER_INVALID
-        );
-        return;
-      }
-      const { rows, isCofOrGsr, originalHeaders } = parsed;
-      parsedRows = rows;
-      if (!rows.length) {
-        this.handleImportFailure(MSG_FILE_NO_DATA, fileName, importCtx, parsedRows);
-        await this.safeLogFailedImport(
-          fileName,
-          isCofOrGsr ? TEMPLATE_NAME_GSR : TEMPLATE_NAME_OTHER,
-          MSG_FILE_NO_DATA
-        );
-        return;
-      }
-      importCtx = await this.resolveImportTemplateContext(isCofOrGsr, fileName);
+      const importCtx = await this.resolveImportTemplateContext(
+        this.inferCofOrGsrFromFileName(fileName),
+        fileName
+      );
       const result = await this.withTimeout(
         importBatchData({
           fileName,
           fileBodyBase64,
           templateName: importCtx.templateName,
-          rowsJson: JSON.stringify(rows),
+          rowsJson: "[]",
           businessProcessCode: importCtx.businessProcessCode,
           businessProcessName: importCtx.businessProcessName
         }),
@@ -2650,13 +2515,11 @@ export default class Fec_BatchCaseHandling extends LightningElement {
         IMPORT_TIMEOUT_MESSAGE
       );
       if (!result || result.success !== true) {
-        this.handleImportFailure(
-          result?.message || MSG_IMPORT_FAILED,
+        await this.recordImportFailureInBulkActions(
           fileName,
-          importCtx,
-          parsedRows
+          importCtx.templateName,
+          result?.message || MSG_IMPORT_FAILED
         );
-        await this.refreshRows();
         return;
       }
       const isProcessing = result.status === IMPORT_STATUS_PROCESSING;
@@ -2669,11 +2532,10 @@ export default class Fec_BatchCaseHandling extends LightningElement {
       this.clearSelectedImportFile();
       await this.refreshRows();
     } catch (error) {
-      this.handleImportFailure(error, fileName, importCtx, parsedRows);
-      await this.safeLogFailedImport(
+      await this.recordImportFailureInBulkActions(
         fileName,
-        importCtx?.templateName || TEMPLATE_NAME_OTHER,
-        this.extractError(error)
+        TEMPLATE_NAME_OTHER,
+        this.extractError(error) || MSG_IMPORT_FAILED
       );
     } finally {
       this.isImportSubmitting = false;
@@ -2681,22 +2543,42 @@ export default class Fec_BatchCaseHandling extends LightningElement {
     }
   }
 
-  handleImportFailure(error, fileName, importCtx, rows) {
+  // 01/06/2026 12:00 linhdev - suy COF/GSR từ tên file (gsrtemp/coftemp) cho resolve template
+  inferCofOrGsrFromFileName(fileName) {
+    const core = String(fileName || STR_EMPTY)
+      .trim()
+      .toLowerCase()
+      .replace(/\.xlsx$/i, STR_EMPTY);
+    return core.startsWith("gsrtemp") || core.startsWith("coftemp");
+  }
+
+  // 01/06/2026 12:00 linhdev - Lỗi import: ghi My Bulk Actions, không toast (parse/validate trên Apex)
+  async recordImportFailureInBulkActions(fileName, templateName, reason) {
     this.importSuccessMessage = STR_EMPTY;
-    const baseDetail =
-      typeof error === "string" ? error : this.extractError(error);
-    // 29/05/2026 15:00 linhdev - chi tiết debug chỉ console.log, toast giữ message ngắn
-    this.logBulkActionDebug(
-      "IMPORT_FAILED",
-      this.buildImportDebugContext(baseDetail, fileName, importCtx, rows)
+    this.importErrorMessage = STR_EMPTY;
+    await this.safeLogFailedImport(
+      fileName,
+      templateName,
+      reason || MSG_IMPORT_FAILED
     );
-    if (this.isRequestTimeoutError(baseDetail)) {
+    this.clearSelectedImportFile();
+    await this.refreshRows();
+  }
+
+  handleImportFailure(error, fileName) {
+    this.importSuccessMessage = STR_EMPTY;
+    const detail =
+      typeof error === "string" ? error : this.extractError(error);
+    if (this.isRequestTimeoutError(detail)) {
       this.importErrorMessage = FEC_BCH_RequestTimeout;
       this.showError(MSG_IMPORT_FAILED, FEC_BCH_RequestTimeout);
       return;
     }
     this.importErrorMessage = MSG_IMPORT_FAILED;
-    this.showError(MSG_IMPORT_FAILED, MSG_IMPORT_FAILED);
+    this.showError(
+      MSG_IMPORT_FAILED,
+      detail || `${FEC_BCH_ImportUnablePrefix} ${fileName || FEC_BCH_DataFileFallback}.`
+    );
   }
 
   async safeLogFailedImport(fileName, templateName, reason) {
@@ -2882,7 +2764,7 @@ export default class Fec_BatchCaseHandling extends LightningElement {
       const inputtedRemarksCharLength = inputtedRemarksRaw ? inputtedRemarksRaw.length : 0;
       // 30/05/2026 21:00 linhdev - không gửi full remark > 32,767 trong JSON (Apex validate qua charLength + file gốc)
       const inputtedRemarks =
-        inputtedRemarksCharLength > INPUTTED_REMARKS_MAX_LEN
+        inputtedRemarksCharLength >= INPUTTED_REMARKS_MAX_LEN
           ? STR_EMPTY
           : inputtedRemarksRaw;
       const assignmentId =
@@ -2955,7 +2837,7 @@ export default class Fec_BatchCaseHandling extends LightningElement {
         const cellValue = cell && cell.v !== undefined ? cell.v : STR_EMPTY;
         let cellStr = this.cellAsString(cellValue);
         // 30/05/2026 21:00 linhdev - giữ tối đa 32,767 ký tự Excel trong originalCells
-        if (col === idxRemark && cellStr.length > INPUTTED_REMARKS_MAX_LEN) {
+        if (col === idxRemark && cellStr.length >= INPUTTED_REMARKS_MAX_LEN) {
           cellStr = cellStr.substring(0, INPUTTED_REMARKS_MAX_LEN);
         }
         originalCells.push(cellStr);
@@ -3537,32 +3419,19 @@ export default class Fec_BatchCaseHandling extends LightningElement {
   }
 
   // 27/05/2026 10:00 linhdev - propertyBundle: insertColumnsBeforeIndex/Headers/Values gửi FEC_BCH_TemplateExportService
-  async buildExcelFileFromTemplate(
-    rows,
-    fileName,
-    contentVersionId,
-    templateMeta,
-    propertyBundle,
-    businessProcessKey
-  ) {
+  async buildExcelFileFromTemplate(rows, fileName, contentVersionId, templateMeta, propertyBundle) {
     if (!contentVersionId) {
-      this.throwExportNoTemplateCvError(
-        templateMeta,
-        businessProcessKey || this.rowBusinessProcessKey(rows?.[0]),
-        rows
+      const templateName = String(templateMeta?.templateName || STR_EMPTY).trim();
+      const hasUrl = !!String(templateMeta?.templateDownloadUrl || STR_EMPTY).trim();
+      throw new Error(
+        `[NO_TEMPLATE_CV] Missing template ContentVersion Id` +
+        (templateName ? ` (template=${templateName})` : STR_EMPTY) +
+        (hasUrl ? "" : "; no template file on FEC_Template_Import__c")
       );
     }
     await this.ensureSheetJsLoaded();
     const base64 = await getTemplateFileBase64({ contentVersionId });
     if (!base64) {
-      this.logBulkActionDebug("EXPORT_TEMPLATE_READ_FAILED", {
-        contentVersionId,
-        templateName: String(templateMeta?.templateName || STR_EMPTY).trim() || null,
-        businessProcessCode:
-          businessProcessKey || this.rowBusinessProcessKey(rows?.[0]) || null,
-        caseCount: Array.isArray(rows) ? rows.length : 0,
-        caseIds: this.collectBulkActionDebugCaseIds(rows, 8) || null
-      });
       throw new Error(
         `[TEMPLATE_READ_FAILED] contentVersionId=${contentVersionId}`
       );

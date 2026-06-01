@@ -713,19 +713,44 @@ public without sharing class FEC_MyCaseSoapXml {
         return mapGetCSMasterDataSys(masterReq);
     }
 
+    private static final Integer MASTER_DATA_XML_BATCH_SIZE = 10;
+    private static final String MASTER_DATA_APPLY_TO_CACHE_NULL = '__NULL__';
+
     public static String buildGetCSMasterDataSoapResponse(
         FEC_GetCSMasterDataService.GetCSMasterDataResponse resp
     ) {
         FEC_GetCSMasterDataService.GetCSMasterDataResponse r = resp != null
             ? resp
             : new FEC_GetCSMasterDataService.GetCSMasterDataResponse();
+        return buildGetCSMasterDataSoapResponse(r.Sys, r.MasterDataItems);
+    }
 
+    public static String buildGetCSMasterDataSoapResponse(
+        FEC_GetCSMasterDataService.SysResponseType sys,
+        List<FEC_GetCSMasterDataService.MasterDataItemType> items
+    ) {
+        return buildGetCSMasterDataSoapResponse(
+            sys,
+            items,
+            new Map<String, String>()
+        );
+    }
+
+    public static String buildGetCSMasterDataSoapResponse(
+        FEC_GetCSMasterDataService.SysResponseType sys,
+        List<FEC_GetCSMasterDataService.MasterDataItemType> items,
+        Map<String, String> additionalPropsXmlCache
+    ) {
+        Map<String, String> cache = additionalPropsXmlCache != null
+            ? additionalPropsXmlCache
+            : new Map<String, String>();
+        String itemsXml = buildMasterDataItemsListXml(items, cache);
         return '<?xml version="1.0" encoding="utf-8"?>' +
             '<soap:Envelope xmlns:soap="' + SOAP_ENV + '">' +
             '<soap:Body>' +
             '<GetCSMasterDataResponse xmlns="' + MYCASE_NS + '">' +
-            buildGetCSMasterDataResponseSysXml(r.Sys) +
-            buildMasterDataItemsListXml(r.MasterDataItems) +
+            buildGetCSMasterDataResponseSysXml(sys) +
+            itemsXml +
             '</GetCSMasterDataResponse></soap:Body></soap:Envelope>';
     }
 
@@ -820,24 +845,62 @@ public without sharing class FEC_MyCaseSoapXml {
         return String.join(parts, '');
     }
 
+    private static String masterDataApplyToCacheKey(String applyTo) {
+        return applyTo == null ? MASTER_DATA_APPLY_TO_CACHE_NULL : applyTo;
+    }
+
+    private static String resolveMasterDataAdditionalPropertiesXml(
+        String applyTo,
+        List<FEC_GetCSMasterDataService.AdditionalPropertyType> properties,
+        Map<String, String> additionalPropsXmlCache
+    ) {
+        String cacheKey = masterDataApplyToCacheKey(applyTo);
+        if (additionalPropsXmlCache.containsKey(cacheKey)) {
+            return additionalPropsXmlCache.get(cacheKey);
+        }
+
+        if (properties == null || properties.isEmpty()) {
+            return '';
+        }
+
+        String xml = buildMasterDataAdditionalPropertiesXml(properties);
+        additionalPropsXmlCache.put(cacheKey, xml);
+        return xml;
+    }
+
+    private static String appendXmlBatch(String accumulated, List<String> batch) {
+        if (batch == null || batch.isEmpty()) {
+            return accumulated;
+        }
+        return accumulated + String.join(batch, '');
+    }
+
     private static String buildMasterDataItemsListXml(
-        List<FEC_GetCSMasterDataService.MasterDataItemType> items
+        List<FEC_GetCSMasterDataService.MasterDataItemType> items,
+        Map<String, String> additionalPropsXmlCache
     ) {
         if (items == null || items.isEmpty()) {
             return '';
         }
-        List<String> parts = new List<String>();
+
+        String result = '';
+        List<String> batch = new List<String>();
         for (FEC_GetCSMasterDataService.MasterDataItemType item : items) {
-            String itemXml = buildMasterDataItemXml(item);
+            String itemXml = buildMasterDataItemXml(item, additionalPropsXmlCache);
             if (String.isNotBlank(itemXml)) {
-                parts.add(itemXml);
+                batch.add(itemXml);
+                if (batch.size() >= MASTER_DATA_XML_BATCH_SIZE) {
+                    result = appendXmlBatch(result, batch);
+                    batch.clear();
+                }
             }
         }
-        return joinXmlParts(parts);
+        return appendXmlBatch(result, batch);
     }
 
     private static String buildMasterDataItemXml(
-        FEC_GetCSMasterDataService.MasterDataItemType item
+        FEC_GetCSMasterDataService.MasterDataItemType item,
+        Map<String, String> additionalPropsXmlCache
     ) {
         if (item == null) {
             return '';
@@ -849,7 +912,11 @@ public without sharing class FEC_MyCaseSoapXml {
             buildXmlIntegerElement('PosOrder', item.PosOrder) +
             buildXmlElement('ApplyTo', item.ApplyTo) +
             buildXmlElement('Type', item.Type) +
-            buildMasterDataAdditionalPropertiesXml(item.AdditionalProperties) +
+            resolveMasterDataAdditionalPropertiesXml(
+                item.ApplyTo,
+                item.AdditionalProperties,
+                additionalPropsXmlCache
+            ) +
             buildMasterDataChildrenXml(item.Children) +
             '</MasterDataItems>';
     }
@@ -860,14 +927,20 @@ public without sharing class FEC_MyCaseSoapXml {
         if (children == null || children.isEmpty()) {
             return '';
         }
-        List<String> parts = new List<String>();
+
+        String result = '';
+        List<String> batch = new List<String>();
         for (FEC_GetCSMasterDataService.ChildItemType child : children) {
             String childXml = buildMasterDataChildXml(child);
             if (String.isNotBlank(childXml)) {
-                parts.add(childXml);
+                batch.add(childXml);
+                if (batch.size() >= MASTER_DATA_XML_BATCH_SIZE) {
+                    result = appendXmlBatch(result, batch);
+                    batch.clear();
+                }
             }
         }
-        return joinXmlParts(parts);
+        return appendXmlBatch(result, batch);
     }
 
     private static String buildMasterDataChildXml(
@@ -887,7 +960,7 @@ public without sharing class FEC_MyCaseSoapXml {
             '</Children>';
     }
 
-    private static String buildMasterDataAdditionalPropertiesXml(
+    public static String buildMasterDataAdditionalPropertiesXml(
         List<FEC_GetCSMasterDataService.AdditionalPropertyType> properties
     ) {
         if (properties == null || properties.isEmpty()) {
