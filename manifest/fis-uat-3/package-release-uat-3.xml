@@ -265,6 +265,7 @@
         <members>FEC_UpdateCustomerAddress</members>
 		<members>FEC_NatureOfCaseUserGroupService</members>
         <members>FEC_CustomerIntegrationService</members>
+        <members>FEC_CustomEmailService</members>
         <members>FEC_LookupController</members>
         <members>FEC_IPPScheduleController</members>
         <members>FEC_ApplicationsListController</members>
@@ -2452,5 +2453,10 @@
 	    <members>FEC_BCH_PicklistTranslation</members>
 	    <name>ApexPage</name>
 	</types>
+    <types>
+        <members>FE_All_Subdomains</members>
+        <members>FE_Owa_Image</members>
+        <name>CspTrustedSite</name>
+    </types>
 	<version>66.0</version>
 </Package>

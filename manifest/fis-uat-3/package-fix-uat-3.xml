@@ -190,6 +190,7 @@
         <members>FEC_ImportedInteractionBatch</members>
         <members>FEC_RDPaymentContractAssessmentService</members>
         <members>FEC_CustomerIntegrationService</members>
+        <members>FEC_CustomEmailService</members>
         <members>FEC_CaseRemarksTriggerHandler</members>
         <members>FEC_CardLockUnLockController</members>
         <members>FEC_CardReplacementAddressController</members>
@@ -1010,6 +1011,11 @@
         <members>FEC_Report_Summary_TAT_CO/</members>
         <members>FEC_Report_Summary_TAT_CO/Interactions_Service_Cases_TAT_CO</members>
         <name>Report</name>
+    </types>
+    <types>
+        <members>FE_All_Subdomains</members>
+        <members>FE_Owa_Image</members>
+        <name>CspTrustedSite</name>
     </types>
 	<version>66.0</version>
 </Package>
