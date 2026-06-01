@@ -4,6 +4,10 @@
 public without sharing class FEC_CaseMasterDataHelper {
   private static final String TYPE_ASSIGNMENT = 'Assignment';
   private static final String ROUTING_ACTION_RECALL = 'Recall';
+  @TestVisible
+  private static final String API_CONFIRM_D2C_ASSESSMENT = 'FEC_Confirm_D2C_Assessment__c';
+  @TestVisible
+  private static final String API_CONFIRM_CS_SP_ASSESSMENT = 'FEC_Confirm_CS_SP_Assessment__c';
 
   private FEC_CaseMasterDataHelper() {
   }
@@ -190,6 +194,154 @@ public without sharing class FEC_CaseMasterDataHelper {
     );
   }
 
+  /**
+   * Stage nguồn (FEC_Previous_Stage) của lần revert mới nhất về currentStageId.
+   */
+  public static String getLatestRevertPreviousStageName(
+    Id caseId,
+    Id currentStageId,
+    String currentStageName
+  ) {
+    if (caseId == null || currentStageId == null) {
+      return null;
+    }
+    List<FEC_Routing_Action_History__c> latestRevertHist = [
+      SELECT FEC_Previous_Stage__r.Name
+      FROM FEC_Routing_Action_History__c
+      WHERE
+        FEC_Case__c = :caseId
+        AND FEC_Next_Stage__c = :currentStageId
+        AND FEC_Next_Stage__c != NULL
+        AND FEC_IsReverted__c = true
+      ORDER BY LastModifiedDate DESC
+      LIMIT 1
+    ];
+    if (!latestRevertHist.isEmpty()) {
+      return latestRevertHist[0].FEC_Previous_Stage__r?.Name;
+    }
+    Integer currentStageNum = extractStageNumberFromStageName(currentStageName);
+    if (currentStageNum == null) {
+      return null;
+    }
+    List<FEC_Routing_Action_History__c> latestRevertByCase = [
+      SELECT FEC_Next_Stage__r.Name, FEC_Previous_Stage__r.Name
+      FROM FEC_Routing_Action_History__c
+      WHERE
+        FEC_Case__c = :caseId
+        AND FEC_IsReverted__c = true
+        AND FEC_Next_Stage__c != NULL
+      ORDER BY LastModifiedDate DESC
+      LIMIT 1
+    ];
+    if (latestRevertByCase.isEmpty()) {
+      return null;
+    }
+    Integer revertNextStageNum = extractStageNumberFromStageName(
+      latestRevertByCase[0].FEC_Next_Stage__r?.Name
+    );
+    if (revertNextStageNum == null || revertNextStageNum != currentStageNum) {
+      return null;
+    }
+    return latestRevertByCase[0].FEC_Previous_Stage__r?.Name;
+  }
+
+  /**
+   * Revert về Stage 1: stage nguồn (2 hoặc 3) — chỉ hiện field xác nhận tương ứng.
+   * latestRoutingActionIsRevert = routing history mới nhất là Revert.
+   */
+  public static Integer resolveRevertConfirmAssessmentSourceStage(
+    Id caseId,
+    Id currentStageId,
+    String currentStageName,
+    Boolean latestRoutingActionIsRevert
+  ) {
+    if (
+      latestRoutingActionIsRevert != true ||
+      !stageNameContains(currentStageName, FEC_ConstantCommon.STAGE_ONE)
+    ) {
+      return null;
+    }
+    String previousStageName = getLatestRevertPreviousStageName(
+      caseId,
+      currentStageId,
+      currentStageName
+    );
+    Integer previousStageNum = extractStageNumberFromStageName(previousStageName);
+    if (previousStageNum == 2 || previousStageNum == 3) {
+      return previousStageNum;
+    }
+    return null;
+  }
+
+  /**
+   * Revert 2→1 / 3→1: ẩn cả subsection (vd "Confirm to D2C Assessment") — không chỉ field.
+   */
+  public static Boolean shouldHideRevertConfirmSubSection(
+    Integer revertSourceStageNumber,
+    String subSectionName
+  ) {
+    if (revertSourceStageNumber == null || String.isBlank(subSectionName)) {
+      return false;
+    }
+    String n = subSectionName.trim().toLowerCase();
+    if (revertSourceStageNumber == 3) {
+      return n.contains('confirm') && n.contains('d2c');
+    }
+    if (revertSourceStageNumber == 2) {
+      return n.contains('confirm') &&
+        (n.contains('cs sp') || n.contains('support'));
+    }
+    return false;
+  }
+
+  /**
+   * Revert 2→1 / 3→1: bỏ subsection xác nhận không thuộc stage nguồn (tránh header trống trên UI).
+   */
+  public static void pruneRevertConfirmAssessmentSubSections(
+    List<FEC_CaseBusinessService.Section> sectionlst,
+    Integer revertConfirmAssessmentSourceStage
+  ) {
+    if (
+      sectionlst == null ||
+      revertConfirmAssessmentSourceStage == null
+    ) {
+      return;
+    }
+    for (FEC_CaseBusinessService.Section section : sectionlst) {
+      if (section.subSectionlst == null || section.subSectionlst.isEmpty()) {
+        continue;
+      }
+      for (Integer i = section.subSectionlst.size() - 1; i >= 0; i--) {
+        FEC_CaseBusinessService.Section sub = section.subSectionlst[i];
+        if (
+          shouldHideRevertConfirmSubSection(
+            revertConfirmAssessmentSourceStage,
+            sub.name
+          )
+        ) {
+          section.subSectionlst.remove(i);
+        }
+      }
+    }
+  }
+
+  /** Ẩn field xác nhận không thuộc stage nguồn khi revert 2→1 hoặc 3→1. */
+  public static Boolean shouldSkipRevertConfirmAssessmentField(
+    Integer revertSourceStageNumber,
+    String fieldApiName
+  ) {
+    if (revertSourceStageNumber == null || String.isBlank(fieldApiName)) {
+      return false;
+    }
+    if (revertSourceStageNumber == 2) {
+      return API_CONFIRM_CS_SP_ASSESSMENT.equals(fieldApiName);
+    }
+    if (revertSourceStageNumber == 3) {
+      return API_CONFIRM_D2C_ASSESSMENT.equals(fieldApiName);
+    }
+    return false;
+  }
+
   /** GSR revert về currentStage: stage trước revert (FEC_Previous_Stage) khớp previousStageNameToken (vd Stage 2). */
   public static Boolean isGsrRevertFromPreviousStageName(
     Id caseId,
@@ -204,48 +356,8 @@ public without sharing class FEC_CaseMasterDataHelper {
     ) {
       return false;
     }
-    List<FEC_Routing_Action_History__c> latestRevertHist = [
-      SELECT FEC_Previous_Stage__r.Name
-      FROM FEC_Routing_Action_History__c
-      WHERE
-        FEC_Case__c = :caseId
-        AND FEC_Next_Stage__c = :currentStageId
-        AND FEC_Next_Stage__c != NULL
-        AND FEC_IsReverted__c = true
-      ORDER BY LastModifiedDate DESC
-      LIMIT 1
-    ];
-    if (!latestRevertHist.isEmpty()) {
-      return stageNameContains(
-        latestRevertHist[0].FEC_Previous_Stage__r?.Name,
-        previousStageNameToken
-      );
-    }
-    Integer currentStageNum = extractStageNumberFromStageName(currentStageName);
-    if (currentStageNum == null) {
-      return false;
-    }
-    List<FEC_Routing_Action_History__c> latestRevertByCase = [
-      SELECT FEC_Next_Stage__r.Name, FEC_Previous_Stage__r.Name
-      FROM FEC_Routing_Action_History__c
-      WHERE
-        FEC_Case__c = :caseId
-        AND FEC_IsReverted__c = true
-        AND FEC_Next_Stage__c != NULL
-      ORDER BY LastModifiedDate DESC
-      LIMIT 1
-    ];
-    if (latestRevertByCase.isEmpty()) {
-      return false;
-    }
-    Integer revertNextStageNum = extractStageNumberFromStageName(
-      latestRevertByCase[0].FEC_Next_Stage__r?.Name
-    );
-    if (revertNextStageNum == null || revertNextStageNum != currentStageNum) {
-      return false;
-    }
     return stageNameContains(
-      latestRevertByCase[0].FEC_Previous_Stage__r?.Name,
+      getLatestRevertPreviousStageName(caseId, currentStageId, currentStageName),
       previousStageNameToken
     );
   }
