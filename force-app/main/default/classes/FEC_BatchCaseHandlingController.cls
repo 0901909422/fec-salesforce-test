@@ -1035,7 +1035,7 @@ public without sharing class FEC_BatchCaseHandlingController {
                 rowsJson,
                 out.message
             );
-            upsertFailedBatchHandling(fileName, templateName, out.message);
+            Id failedBatchId = upsertFailedBatchHandling(fileName, templateName, out.message);
             return out;
         }
 
@@ -1051,7 +1051,7 @@ public without sharing class FEC_BatchCaseHandlingController {
                 rowsJson,
                 out.message
             );
-            upsertFailedBatchHandling(fileName, templateName, out.message);
+            Id failedBatchId = upsertFailedBatchHandling(fileName, templateName, out.message);
             return out;
         }
         Map<String, Schema.SObjectField> fieldMap = batchType.getDescribe().fields.getMap();
@@ -1087,7 +1087,12 @@ public without sharing class FEC_BatchCaseHandlingController {
                     rowsJson,
                     parseError
                 );
-                upsertFailedBatchHandling(fileName, templateName, parseError);
+                Id failedBatchId = upsertFailedBatchHandling(fileName, templateName, parseError);
+                if (failedBatchId != null) {
+                    linkFileToBatchHandling(failedBatchId, insertedCv.ContentDocumentId);
+                    //tugnnm37 - parse fail do file no-data vẫn có header; giữ layout template gốc và chỉ custom __Errors
+                    FEC_BatchCaseHandlingImportService.persistBatchResultArtifact(failedBatchId, buildNoDataFailureResultRows(parseResult, parseError), parseError);
+                }
                 return out;
             }
             List<Object> inputRows = parseResult.inputRows == null
@@ -1104,7 +1109,7 @@ public without sharing class FEC_BatchCaseHandlingController {
                     rowsJson,
                     out.message
                 );
-                upsertFailedBatchHandling(fileName, templateName, out.message);
+                Id failedBatchId = upsertFailedBatchHandling(fileName, templateName, out.message);
                 return out;
             }
 
@@ -1183,8 +1188,8 @@ public without sharing class FEC_BatchCaseHandlingController {
 
             Boolean cofOrGsr = parseResult.cofOrGsr == true
                 || FEC_BatchCaseHandlingImportService.isCofOrGsrTemplate(resolvedTemplateName);
-            // 30/05/2026 18:30 linhdev - đọc remark dài trực tiếp từ file upload trước validate
-            FEC_BatchCaseHandlingImportService.enrichInputtedRemarksFromImportFile(cv.Id, inputRows);
+            // 01/06/2026 22:00 linhdev - đọc Case ID/Routing/Remark/D2C từ file upload trước validate (LWC aoa lệch cột)
+            FEC_BatchCaseHandlingImportService.enrichImportRowValidateFieldsFromImportFile(cv.Id, inputRows);
             List<FEC_BatchCaseHandlingImportRow> rowResults = FEC_BatchCaseHandlingImportService.validateCaseHandlingImportRows(inputRows, cofOrGsr);
             if (FEC_BatchCaseHandlingImportService.hasApplicableImportRows(rowResults)) {
                 // 27/05/2026 22:15 linhdev - Card Replacement 1 case: xử lý sync thay vì queueable để tránh Processing timeout 1 giờ
@@ -1345,6 +1350,29 @@ public without sharing class FEC_BatchCaseHandlingController {
         }
     }
 
+    //tugnnm37 - tạo 1 dòng fail rỗng để Result giữ đúng template gốc khi file không có data row
+    private static List<FEC_BatchCaseHandlingImportRow> buildNoDataFailureResultRows(
+        FEC_BCH_TemplateExportService.ImportWorkbookParseResult parseResult,
+        String errorMessage
+    ) {
+        FEC_BatchCaseHandlingImportRow row = new FEC_BatchCaseHandlingImportRow();
+        row.originalHeaders = parseResult == null || parseResult.importHeaders == null
+            ? new List<String>()
+            : parseResult.importHeaders;
+        row.originalColumnIndexes = parseResult == null || parseResult.importColumnIndexes == null
+            ? new List<Integer>()
+            : parseResult.importColumnIndexes;
+        row.originalCells = new List<String>();
+        for (Integer i = 0; i < row.originalHeaders.size(); i++) {
+            row.originalCells.add(FEC_ConstantCommon.STR_EMPTY);
+        }
+        row.originalHeaderRowIndex = parseResult == null ? 0 : parseResult.headerRowIndex0;
+        row.originalDataRowIndex = row.originalHeaderRowIndex == null ? 1 : row.originalHeaderRowIndex + 1;
+        row.originalSheetName = parseResult == null ? FEC_ConstantCommon.STR_EMPTY : parseResult.sheetName;
+        row.status = System.Label.FEC_Batch_Case_Handling_Import_Row_Status_Failed;
+        row.errors = errorMessage;
+        return new List<FEC_BatchCaseHandlingImportRow>{ row };
+    }
     @AuraEnabled
     public static void saveResultFile(Id batchRecordId, String resultFileName, String fileBodyBase64) {
         if (batchRecordId == null || String.isBlank(resultFileName) || String.isBlank(fileBodyBase64)) {
@@ -1360,14 +1388,17 @@ public without sharing class FEC_BatchCaseHandlingController {
 
     @AuraEnabled
     public static void logFailedImport(String fileName, String templateName, String reason) {
-        upsertFailedBatchHandling(fileName, templateName, reason);
+        Id failedBatchId = upsertFailedBatchHandling(fileName, templateName, reason);
+        if (failedBatchId != null) {
+            FEC_BatchCaseHandlingImportService.persistBatchResultArtifact(failedBatchId, null, reason);
+        }
     }
 
-    private static void upsertFailedBatchHandling(String fileName, String templateName, String reason) {
+    private static Id upsertFailedBatchHandling(String fileName, String templateName, String reason) {
         try {
             Schema.SObjectType batchType = Schema.getGlobalDescribe().get(OBJECT_API_NAME);
             if (batchType == null) {
-                return;
+                return null;
             }
             Map<String, Schema.SObjectField> fieldMap = batchType.getDescribe().fields.getMap();
             SObject failedRow = findRecentFailedBatchHandling(fileName, fieldMap);
@@ -1387,7 +1418,11 @@ public without sharing class FEC_BatchCaseHandlingController {
             } else {
                 insert failedRow;
             }
+            insert failedRow;
+            //tugnnm37 - trả Id batch Failure để tạo Result file cho cả lỗi parse/file không có dữ liệu
+            return (Id) failedRow.get('Id');
         } catch (Exception ex) {
+            return null;
         }
     }
 

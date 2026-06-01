@@ -798,6 +798,12 @@ public without sharing class FEC_CaseBusinessService {
         selectedStage.Id,
         selectedStage.Name
       );
+      result.revertConfirmAssessmentSourceStage = FEC_CaseMasterDataHelper.resolveRevertConfirmAssessmentSourceStage(
+        selectedCase.Id,
+        selectedStage.Id,
+        selectedStage.Name,
+        isRevert
+      );
 
       // ============================= GET MASTET DATA SETTING ===========================
       if (err.errorlst.isEmpty()) {
@@ -1010,6 +1016,15 @@ public without sharing class FEC_CaseBusinessService {
               fieldApiNameTemp,
               mrcRl05UiCtx,
               selectedCase
+            )
+          ) {
+            continue;
+          }
+
+          if (
+            FEC_CaseMasterDataHelper.shouldSkipRevertConfirmAssessmentField(
+              result.revertConfirmAssessmentSourceStage,
+              fieldApiNameTemp
             )
           ) {
             continue;
@@ -1229,6 +1244,11 @@ public without sharing class FEC_CaseBusinessService {
             selectedCase
           );
         }
+
+        FEC_CaseMasterDataHelper.pruneRevertConfirmAssessmentSubSections(
+          result.sectionlst,
+          result.revertConfirmAssessmentSourceStage
+        );
 
         result.removeEmptySections();
       }
@@ -2749,10 +2769,14 @@ public without sharing class FEC_CaseBusinessService {
         cloneMasterDataSetting(tgt.Id, natureOfCaseId);
       }
 
-      // Toannd61 — RL16.02/RL16.03: queue từ LWC theo assessment chỉ khi stage PM (payment).
-      // Stage sau (vd. Stage 3 - CC) → queue từ FEC_Stage_Change__c đã chọn.
+      // Toannd61 — RL16.02/RL16.03: nếu RD Payment Assessment đã được chọn,
+      // dùng queueId từ LWC (đã resolve theo assessment) thay vì override từ Stage Change.
       Boolean isRdPaymentAssessmentDriven =
-        FEC_RdPaymentRoutingHelper.isRdPaymentAssessmentDrivenAtPmStage(updatedCase);
+        String.isNotBlank(updatedCase.FEC_RD_Payment_Contract_Assessment__c) &&
+        (
+          FEC_ConstantCommon.SUB_CODE_RD_PAYMENT_ASSESSMENT_1.equals(updatedCase.FEC_SubCode__r?.FEC_Code__c) ||
+          FEC_ConstantCommon.SUB_CODE_RD_PAYMENT_ASSESSMENT_2.equals(updatedCase.FEC_SubCode__r?.FEC_Code__c)
+        );
 
       //thangtv
       if (routeByLatestRevertHistory && String.isNotBlank(latestHistForRoute.get(0).FEC_Perform_User__c)) {
@@ -4205,6 +4229,10 @@ public without sharing class FEC_CaseBusinessService {
     /** true = history mới nhất Revert + IsReverted; LWC giữ nextTeam/nextQueue từ resolveRouteToDisplayInfo. */
     @AuraEnabled
     public Boolean routeByLatestRevertHistory;
+
+    /** Revert 2→1 hoặc 3→1: 2 = chỉ xác nhận D2C, 3 = chỉ xác nhận CS SP. */
+    @AuraEnabled
+    public Integer revertConfirmAssessmentSourceStage;
 
     @AuraEnabled
     public String draftRoutingActionCode;
