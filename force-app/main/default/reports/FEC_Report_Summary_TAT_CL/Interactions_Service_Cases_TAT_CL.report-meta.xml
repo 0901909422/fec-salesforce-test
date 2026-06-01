@@ -124,7 +124,7 @@
         <field>FEC_Routing_Action_History__c$FEC_TAT_by_Assignment__c</field>
     </columns>
     <filter>
-        <booleanFilter>(1 OR 2) AND 3 AND ((4 AND 5 AND 6 AND 9) OR (7 AND 8))</booleanFilter>
+        <booleanFilter>(1 OR 2) AND 3 AND 4</booleanFilter>
         <criteriaItems>
             <column>FEC_Routing_Action_History__c$FEC_Case__c.FEC_Case_Created_On__c</column>
             <columnToColumn>false</columnToColumn>
@@ -147,46 +147,11 @@
             <value>Case.Customer_Case,Case.Interaction,Case.Internal_Case</value>
         </criteriaItems>
         <criteriaItems>
-            <column>FEC_Routing_Action_History__c$FEC_Case__c.FEC_Assignment_Count__c</column>
-            <columnToColumn>false</columnToColumn>
-            <isUnlocked>true</isUnlocked>
-            <operator>greaterThan</operator>
-            <value>0</value>
-        </criteriaItems>
-        <criteriaItems>
-            <column>FEC_Routing_Action_History__c$FEC_Assignment__c</column>
-            <columnToColumn>false</columnToColumn>
-            <isUnlocked>true</isUnlocked>
-            <operator>notEqual</operator>
-            <value></value>
-        </criteriaItems>
-        <criteriaItems>
-            <column>FEC_Routing_Action_History__c$FEC_Is_CL_Queue_User__c</column>
+            <column>FEC_Routing_Action_History__c$FEC_Updated_Group__c</column>
             <columnToColumn>false</columnToColumn>
             <isUnlocked>true</isUnlocked>
             <operator>equals</operator>
-            <value>1</value>
-        </criteriaItems>
-        <criteriaItems>
-            <column>FEC_Routing_Action_History__c$FEC_Case__c.FEC_Assignment_Count__c</column>
-            <columnToColumn>false</columnToColumn>
-            <isUnlocked>true</isUnlocked>
-            <operator>equals</operator>
-            <value>0</value>
-        </criteriaItems>
-        <criteriaItems>
-            <column>FEC_Routing_Action_History__c$FEC_Case__c.FEC_CL_TAT_Export_Case__c</column>
-            <columnToColumn>false</columnToColumn>
-            <isUnlocked>true</isUnlocked>
-            <operator>equals</operator>
-            <value>1</value>
-        </criteriaItems>
-        <criteriaItems>
-            <column>FEC_Routing_Action_History__c$FEC_Assignment__c.FEC_Assignment_Type__c</column>
-            <columnToColumn>false</columnToColumn>
-            <isUnlocked>true</isUnlocked>
-            <operator>equals</operator>
-            <value>Routing</value>
+            <value>CL</value>
         </criteriaItems>
         <language>en_US</language>
     </filter>

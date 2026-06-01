@@ -13,6 +13,9 @@ public without sharing class FEC_BCH_TemplateExportService {
         @AuraEnabled public List<String> insertColumnHeaders;
         @AuraEnabled public List<List<String>> insertColumnValues;
         @AuraEnabled public String templateSheetName;
+        // 30/05/2026 20:15 linhdev - giữ nguyên cell remark từ file import (tránh mất ký tự khi re-encode inlineStr)
+        @AuraEnabled public Integer preserveSourceWorksheetColIndex;
+        @AuraEnabled public List<Integer> sourceDataRowIndexes;
     }
 
     public class ExportWorkbookResponse {
@@ -130,6 +133,12 @@ public without sharing class FEC_BCH_TemplateExportService {
                     insertBefore
                 );
             }
+            Integer preserveSourceColIdx = req.preserveSourceWorksheetColIndex;
+            Integer preserveTargetColIdx = shiftWorksheetColumnIndex(
+                preserveSourceColIdx,
+                insertBefore,
+                insertHeaders.size()
+            );
             dbg('PATCH', 'sheet=' + worksheetPath + ';rows=' + dataRows.size() + ';dataRow=' + templateDataRow1);
             String patchedXml = patchWorksheetXml(
                 worksheetXml,
@@ -141,7 +150,10 @@ public without sharing class FEC_BCH_TemplateExportService {
                 workbookRelsXml,
                 insertBefore,
                 insertHeaders.size(),
-                resultColStyles
+                resultColStyles,
+                preserveSourceColIdx,
+                preserveTargetColIdx,
+                req.sourceDataRowIndexes
             );
             entryByPath.put(worksheetPath, Blob.valueOf(patchedXml));
             Blob outBlob = writeZipEntries(entryByPath, sourceBlob);
@@ -205,6 +217,63 @@ public without sharing class FEC_BCH_TemplateExportService {
         } catch (Exception ex) {
             dbg('RESOLVE_MAP_FAIL', ex.getMessage());
             return mapped;
+        }
+    }
+
+    // 30/05/2026 18:30 linhdev - đọc remark trực tiếp từ file import (SheetJS/LWC có thể không gửi đủ chuỗi dài)
+    public static String readImportCellText(
+        Id contentVersionId,
+        String sheetName,
+        Integer dataRowIndex0,
+        Integer worksheetColIndex0
+    ) {
+        if (
+            contentVersionId == null ||
+            dataRowIndex0 == null ||
+            dataRowIndex0 < 0 ||
+            worksheetColIndex0 == null ||
+            worksheetColIndex0 < 0
+        ) {
+            return FEC_ConstantCommon.STR_EMPTY;
+        }
+        try {
+            List<ContentVersion> versions = [
+                SELECT VersionData
+                FROM ContentVersion
+                WHERE Id = :contentVersionId
+                LIMIT 1
+            ];
+            if (versions.isEmpty() || versions[0].VersionData == null) {
+                return FEC_ConstantCommon.STR_EMPTY;
+            }
+            Map<String, Blob> entryByPath = readZipEntries(versions[0].VersionData);
+            if (entryByPath.isEmpty()) {
+                return FEC_ConstantCommon.STR_EMPTY;
+            }
+            String workbookXml = blobToUtf8(entryByPath.get('xl/workbook.xml'));
+            String workbookRelsXml = blobToUtf8(entryByPath.get('xl/_rels/workbook.xml.rels'));
+            String worksheetPath = resolveWorksheetPath(workbookXml, workbookRelsXml, sheetName);
+            if (String.isBlank(worksheetPath) || !entryByPath.containsKey(worksheetPath)) {
+                return FEC_ConstantCommon.STR_EMPTY;
+            }
+            String worksheetXml = blobToUtf8(entryByPath.get(worksheetPath));
+            List<String> sharedStrings = parseSharedStrings(
+                blobToUtf8(entryByPath.get('xl/sharedStrings.xml'))
+            );
+            // 30/05/2026 19:30 linhdev - đọc đúng cell ref; tránh regex row ăn nhầm cell self-closing trước cột remark
+            String cellRef = columnIndexToLetter(worksheetColIndex0) + String.valueOf(dataRowIndex0 + 1);
+            Pattern cellPat = Pattern.compile('(?s)<c r="' + cellRef + '"([^/>]*)(?:>(.*?)</c>|/>)');
+            Matcher cellMat = cellPat.matcher(worksheetXml);
+            if (!cellMat.find()) {
+                return FEC_ConstantCommon.STR_EMPTY;
+            }
+            String attrs = cellMat.group(1) == null ? FEC_ConstantCommon.STR_EMPTY : cellMat.group(1);
+            String cellBody = cellMat.group(2) == null ? FEC_ConstantCommon.STR_EMPTY : cellMat.group(2);
+            String text = resolveCellDisplayText(attrs + cellBody, sharedStrings);
+            return capExcelCellText(text);
+        } catch (Exception ex) {
+            dbg('READ_IMPORT_CELL_FAIL', ex.getMessage());
+            return FEC_ConstantCommon.STR_EMPTY;
         }
     }
 
@@ -406,7 +475,10 @@ public without sharing class FEC_BCH_TemplateExportService {
         String workbookRelsXml,
         Integer insertBeforeColIndex,
         Integer insertedColumnCount,
-        ResultInsertColumnStyles resultColStyles
+        ResultInsertColumnStyles resultColStyles,
+        Integer preserveSourceColIdx,
+        Integer preserveTargetColIdx,
+        List<Integer> sourceDataRowIndexes
     ) {
         if (String.isBlank(xml)) {
             return xml;
@@ -425,6 +497,17 @@ public without sharing class FEC_BCH_TemplateExportService {
         for (Integer i = 0; i < rowCount; i++) {
             Integer rowNum1 = templateDataRow1 + i;
             List<String> values = dataRows[i];
+            String sourceRowXml = null;
+            Integer sourceRowNum1 = null;
+            if (
+                sourceDataRowIndexes != null &&
+                i < sourceDataRowIndexes.size() &&
+                sourceDataRowIndexes[i] != null &&
+                sourceDataRowIndexes[i] >= 0
+            ) {
+                sourceRowNum1 = sourceDataRowIndexes[i] + 1;
+                sourceRowXml = extractRowXml(xml, sourceRowNum1);
+            }
             builtRows.add(
                 buildDataRowXml(
                     templateRowXml,
@@ -434,7 +517,11 @@ public without sharing class FEC_BCH_TemplateExportService {
                     values,
                     resultColStyles,
                     insertBeforeColIndex,
-                    insertedColumnCount
+                    insertedColumnCount,
+                    sourceRowXml,
+                    sourceRowNum1,
+                    preserveSourceColIdx,
+                    preserveTargetColIdx
                 )
             );
         }
@@ -513,10 +600,11 @@ public without sharing class FEC_BCH_TemplateExportService {
         while (siMat.find()) {
             String block = siMat.group(1);
             String text = FEC_ConstantCommon.STR_EMPTY;
-            Pattern tPat = Pattern.compile('<t[^>]*>([^<]*)</t>');
+            // 30/05/2026 19:45 linhdev - chỉ match tag <t>, không match nhầm <theme> trong rich text
+            Pattern tPat = Pattern.compile('(?s)<t(?:\\s[^>]*)?>(.*?)</t>');
             Matcher tMat = tPat.matcher(block);
             while (tMat.find()) {
-                text += tMat.group(1);
+                text += decodeXlsxTextFragment(tMat.group(1));
             }
             out.add(text);
         }
@@ -601,10 +689,17 @@ public without sharing class FEC_BCH_TemplateExportService {
         if (String.isBlank(cellXml)) {
             return FEC_ConstantCommon.STR_EMPTY;
         }
-        Pattern inlinePat = Pattern.compile('(?s)<is>.*?<t[^>]*>([^<]*)</t>');
-        Matcher inlineMat = inlinePat.matcher(cellXml);
-        if (inlineMat.find()) {
-            return inlineMat.group(1);
+        // 30/05/2026 18:30 linhdev - ghép mọi <t> trong inlineStr (remark dài có thể tách nhiều phần)
+        if (cellXml.contains('<is>')) {
+            String inlineText = FEC_ConstantCommon.STR_EMPTY;
+            Pattern inlineTPat = Pattern.compile('(?s)<t(?:\\s[^>]*)?>(.*?)</t>');
+            Matcher inlineTMat = inlineTPat.matcher(cellXml);
+            while (inlineTMat.find()) {
+                inlineText += decodeXlsxTextFragment(inlineTMat.group(1));
+            }
+            if (String.isNotBlank(inlineText)) {
+                return inlineText;
+            }
         }
         Pattern sharedPat = Pattern.compile('<v>(\\d+)</v>');
         Matcher sharedMat = sharedPat.matcher(cellXml);
@@ -1289,7 +1384,11 @@ public without sharing class FEC_BCH_TemplateExportService {
         List<String> values,
         ResultInsertColumnStyles resultColStyles,
         Integer insertBeforeColIndex,
-        Integer insertedColumnCount
+        Integer insertedColumnCount,
+        String sourceRowXml,
+        Integer sourceRowNum1,
+        Integer preserveSourceColIdx,
+        Integer preserveTargetColIdx
     ) {
         String rowXml = templateRowXml;
         rowXml = rowXml.replace('r="' + templateRowNum1 + '"', 'r="' + targetRowNum1 + '"');
@@ -1316,7 +1415,26 @@ public without sharing class FEC_BCH_TemplateExportService {
             if (String.isNotBlank(styleAttr)) {
                 rowXml = removeCellAtAddress(rowXml, colLetter + String.valueOf(targetRowNum1));
             }
-            rowXml = upsertCellInline(rowXml, colLetter, targetRowNum1, val, styleAttr);
+            // 30/05/2026 20:15 linhdev - remark dài: copy cell XML gốc thay vì inlineStr (giữ đúng 32,767 ký tự Excel)
+            if (
+                preserveSourceColIdx != null &&
+                preserveTargetColIdx != null &&
+                colIdx == preserveTargetColIdx &&
+                String.isNotBlank(sourceRowXml) &&
+                sourceRowNum1 != null &&
+                sourceRowNum1 > 0
+            ) {
+                rowXml = copySourceCellToRow(
+                    rowXml,
+                    sourceRowXml,
+                    preserveSourceColIdx,
+                    preserveTargetColIdx,
+                    sourceRowNum1,
+                    targetRowNum1
+                );
+            } else {
+                rowXml = upsertCellInline(rowXml, colLetter, targetRowNum1, val, styleAttr);
+            }
         }
         return clearFixedRowHeight(rowXml);
     }
@@ -2156,6 +2274,92 @@ public without sharing class FEC_BCH_TemplateExportService {
             columnNumber = (columnNumber - 1) / 26;
         }
         return columnName;
+    }
+
+    private static Integer shiftWorksheetColumnIndex(
+        Integer colIdx,
+        Integer insertBefore,
+        Integer insertCount
+    ) {
+        if (colIdx == null || colIdx < 0) {
+            return colIdx;
+        }
+        Integer safeInsertBefore = insertBefore == null ? 0 : insertBefore;
+        Integer safeInsertCount = insertCount == null || insertCount < 0 ? 0 : insertCount;
+        if (safeInsertCount > 0 && colIdx >= safeInsertBefore) {
+            return colIdx + safeInsertCount;
+        }
+        return colIdx;
+    }
+
+    // 30/05/2026 20:15 linhdev - copy nguyên cell từ dòng import (sharedString/inlineStr) sang Result row
+    private static String copySourceCellToRow(
+        String targetRowXml,
+        String sourceRowXml,
+        Integer sourceColIdx,
+        Integer targetColIdx,
+        Integer sourceRowNum1,
+        Integer targetRowNum1
+    ) {
+        if (
+            String.isBlank(targetRowXml) ||
+            String.isBlank(sourceRowXml) ||
+            sourceColIdx == null ||
+            targetColIdx == null ||
+            sourceRowNum1 == null ||
+            targetRowNum1 == null
+        ) {
+            return targetRowXml;
+        }
+        String sourceAddr = columnIndexToLetter(sourceColIdx) + String.valueOf(sourceRowNum1);
+        String targetAddr = columnIndexToLetter(targetColIdx) + String.valueOf(targetRowNum1);
+        Pattern cellPat = Pattern.compile(
+            '(?s)<c r="' + Pattern.quote(sourceAddr) + '"([^>]*)(?:>(.*?)</c>|/>)'
+        );
+        Matcher cellMat = cellPat.matcher(sourceRowXml);
+        if (!cellMat.find()) {
+            return targetRowXml;
+        }
+        String cellXml = cellMat.group(0);
+        if (!sourceAddr.equals(targetAddr)) {
+            cellXml = cellXml.replace('r="' + sourceAddr + '"', 'r="' + targetAddr + '"');
+        }
+        targetRowXml = removeCellAtAddress(targetRowXml, targetAddr);
+        Integer closeIdx = targetRowXml.lastIndexOf('</row>');
+        if (closeIdx < 0) {
+            return targetRowXml;
+        }
+        return insertCellInRowOrder(
+            targetRowXml,
+            cellXml,
+            columnIndexToLetter(targetColIdx),
+            targetRowNum1,
+            closeIdx
+        );
+    }
+
+    // 30/05/2026 20:15 linhdev - decode entity + chuẩn hóa xuống dòng giống Excel khi đọc sharedString
+    @TestVisible
+    private static String decodeXlsxTextFragment(String raw) {
+        if (raw == null) {
+            return FEC_ConstantCommon.STR_EMPTY;
+        }
+        String out = raw.replace('_x000D_', '\r');
+        out = out.replace('&amp;', '&');
+        out = out.replace('&lt;', '<');
+        out = out.replace('&gt;', '>');
+        out = out.replace('&quot;', '"');
+        out = out.replace('&#10;', '\n');
+        out = out.replace('&#13;', '\r');
+        out = out.replace('\r\n', '\n').replace('\r', '\n');
+        return out;
+    }
+
+    private static String capExcelCellText(String text) {
+        if (text != null && text.length() > 32767) {
+            return text.substring(0, 32767);
+        }
+        return text == null ? FEC_ConstantCommon.STR_EMPTY : text;
     }
 
     private static String sanitizeXmlText(String value) {
