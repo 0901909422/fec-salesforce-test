@@ -97,6 +97,7 @@
         <members>FEC_BilledTx_Col_PostDate</members>
         <members>FEC_BilledTx_Col_TxnCode</members>
         <members>FEC_Download_Report</members>
+        <members>FEC_Email_Label_Title</members>
         <members>FEC_Export_View</members>
         <members>FEC_Formatted_Report</members>
         <members>FEC_Title_Context_Report</members>
@@ -264,6 +265,7 @@
         <members>FEC_UpdateCustomerAddress</members>
 		<members>FEC_NatureOfCaseUserGroupService</members>
         <members>FEC_CustomerIntegrationService</members>
+        <members>FEC_CustomEmailService</members>
         <members>FEC_LookupController</members>
         <members>FEC_IPPScheduleController</members>
         <members>FEC_ApplicationsListController</members>
@@ -1802,6 +1804,7 @@
         <members>Case.FEC_Shared_Task_Case</members>
         <members>Case.FEC_Support_Mailbox_Case</members>
         <members>Case.FEC_WFM_Case</members>
+        <members>Case.FEC_Ubank_Email_Case</members>
         <members>Case.My_Pending_Cases</members>
         <members>Case.My_Team</members>
         <members>Case.X2_My_Follow_Up_Cases</members>
@@ -2449,5 +2452,10 @@
 	    <members>FEC_BCH_PicklistTranslation</members>
 	    <name>ApexPage</name>
 	</types>
+    <types>
+        <members>FE_All_Subdomains</members>
+        <members>FE_Owa_Image</members>
+        <name>CspTrustedSite</name>
+    </types>
 	<version>66.0</version>
 </Package>
