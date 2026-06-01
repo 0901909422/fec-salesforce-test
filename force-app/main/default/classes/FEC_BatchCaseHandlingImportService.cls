@@ -3346,10 +3346,10 @@ public without sharing class FEC_BatchCaseHandlingImportService {
         );
     }
 
-    // 30/05/2026 21:00 linhdev - giới hạn Inputted Remarks 32,767 ký tự (dùng charLength khi payload thiếu chuỗi)
+    // 01/06/2026 14:00 linhdev - >= 32,767: Excel cắt ngầm nội dung dài hơn; ô đạt max = không hợp lệ
     @TestVisible
     private static Boolean isInputtedRemarksOverMaxLength(Integer charLength) {
-        return charLength != null && charLength > REMARK_MAX_LEN;
+        return charLength != null && charLength >= REMARK_MAX_LEN;
     }
 
     private static void addImportError(List<String> errs, String message) {
