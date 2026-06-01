@@ -178,6 +178,80 @@ public without sharing class FEC_CustomEmailService {
     }
 
     @AuraEnabled
+    public static Map<String, String> resolveEmailTemplate(String caseId, String subject, String body) {
+        Map<String, String> result = new Map<String, String>{
+            'subject' => subject == null ? '' : subject,
+            'body' => body == null ? '' : body
+        };
+        try {
+            Case c = loadCaseForTemplateResolve(caseId, new List<String>{ subject, body });
+            result.put('subject', resolveEmailTemplateText(subject, c));
+            result.put('body', resolveEmailTemplateText(body, c));
+        } catch (Exception ex) {
+            System.debug('resolveEmailTemplate failed: ' + ex.getMessage());
+        }
+        return result;
+    }
+
+    private static String resolveEmailTemplateText(String template, Case c) {
+        if (String.isBlank(template)) return template;
+        String resolved = template.replaceAll(FEC_ConstantCommon.PATTERN_TRIPLE_BRACE, '{{$1}}');
+        try {
+            Pattern userPat = Pattern.compile(FEC_ConstantCommon.PATTERN_USER_MERGE_FIELD);
+            Matcher userMat = userPat.matcher(resolved);
+            if (userMat.find()) {
+                User u = [SELECT Id, Name, FirstName, LastName, Email, Phone, Title, Department, AboutMe, MobilePhone FROM User WHERE Id = :UserInfo.getUserId() LIMIT 1];
+                Matcher userMat2 = userPat.matcher(resolved);
+                while (userMat2.find()) {
+                    String fieldName = userMat2.group(1);
+                    String val = '';
+                    try { Object rawVal = u.get(fieldName); val = rawVal == null ? '' : String.valueOf(rawVal); } catch (Exception ex) {}
+                    if (val == null || val == 'null') val = '';
+                    resolved = resolved.replace('{{User.' + fieldName + '}}', val);
+                }
+            }
+            resolved = normalizeCaseMergeFields(resolved);
+            if (c != null) resolved = FEC_CommonUltils.resolveTemplate(resolved, c);
+        } catch (Exception ex) {
+            System.debug('resolveEmailTemplateText failed: ' + ex.getMessage());
+        }
+        return resolved;
+    }
+
+    private static String normalizeCaseMergeFields(String template) {
+        if (String.isBlank(template)) return template;
+        Pattern casePat = Pattern.compile(FEC_ConstantCommon.PATTERN_CASE_MERGE_FIELD);
+        Matcher caseMat = casePat.matcher(template);
+        String result = template;
+        while (caseMat.find()) {
+            String fieldPath = caseMat.group(1);
+            result = result.replace('{{Case.' + fieldPath + '}}', '{{' + fieldPath + '}}');
+        }
+        return result;
+    }
+
+    private static Case loadCaseForTemplateResolve(String caseId, List<String> templates) {
+        if (String.isBlank(caseId)) return null;
+        Set<String> fieldApis = new Set<String>{ 'Id', 'CaseNumber', 'Subject', 'Status' };
+        Map<String, Schema.SObjectField> caseFields = Case.SObjectType.getDescribe().fields.getMap();
+        if (templates != null) {
+            for (String template : templates) {
+                if (String.isBlank(template)) continue;
+                String normalized = template.replaceAll(FEC_ConstantCommon.PATTERN_TRIPLE_BRACE, '{{$1}}');
+                Pattern p = Pattern.compile('\\{\\{([^}]+)\\}\\}');
+                Matcher m = p.matcher(normalized);
+                while (m.find()) {
+                    String fieldPath = m.group(1);
+                    if (String.isBlank(fieldPath) || fieldPath.startsWith('User.')) continue;
+                    if (fieldPath.startsWith('Case.')) fieldPath = fieldPath.substring(5);
+                    if (!fieldPath.contains('.') && caseFields.containsKey(fieldPath)) fieldApis.add(fieldPath);
+                }
+            }
+        }
+        String soql = 'SELECT ' + String.join(new List<String>(fieldApis), ',') + ' FROM Case WHERE Id = :caseId LIMIT 1';
+        return Database.query(soql);
+    }
+    @AuraEnabled
     public static String fetchImageAsBase64(String imageUrl) {
         try {
             Http http = new Http();
@@ -383,27 +457,7 @@ public without sharing class FEC_CustomEmailService {
 
             mail.setSubject(subjectWithThread);
             // Resolve merge fields {{{...}}} và {{...}} trong body trước khi gửi
-            String resolvedBody = body != null ? body : '';
-            try {
-                resolvedBody = resolvedBody.replaceAll(FEC_ConstantCommon.PATTERN_TRIPLE_BRACE, '{{$1}}');
-                // Resolve User.* fields
-                Pattern userPat = Pattern.compile(FEC_ConstantCommon.PATTERN_USER_MERGE_FIELD);
-                Matcher userMat = userPat.matcher(resolvedBody);
-                if (userMat.find()) {
-                    User u = [SELECT Id, Name, FirstName, LastName, Email, Phone, Title, Department, AboutMe, MobilePhone FROM User WHERE Id = :UserInfo.getUserId() LIMIT 1];
-                    Matcher userMat2 = userPat.matcher(resolvedBody);
-                    while (userMat2.find()) {
-                        String fieldName = userMat2.group(1);
-                        String val = '';
-                        try { val = String.valueOf(u.get(fieldName)); } catch(Exception ex) {}
-                        if (val == 'null') val = '';
-                        resolvedBody = resolvedBody.replace('{{User.' + fieldName + '}}', val);
-                    }
-                }
-                resolvedBody = FEC_CommonUltils.resolveTemplate(resolvedBody, c);
-            } catch (Exception resolveEx) {
-                System.debug('resolveTemplate failed: ' + resolveEx.getMessage());
-            }
+            String resolvedBody = resolveEmailTemplateText(body != null ? body : '', loadCaseForTemplateResolve(caseId, new List<String>{ body }));
             mail.setHtmlBody(resolvedBody.replace('\n', '<br/>'));
             mail.setSaveAsActivity(false);
 
