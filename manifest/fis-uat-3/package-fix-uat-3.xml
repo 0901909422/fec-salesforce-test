@@ -189,6 +189,7 @@
         <members>FEC_FullCustomerIntegrationJob</members>
         <members>FEC_ImportedInteractionBatch</members>
         <members>FEC_RDPaymentContractAssessmentService</members>
+        <members>FEC_RdPaymentRoutingHelper</members>
         <members>FEC_CustomerIntegrationService</members>
         <members>FEC_CustomEmailService</members>
         <members>FEC_CaseRemarksTriggerHandler</members>
