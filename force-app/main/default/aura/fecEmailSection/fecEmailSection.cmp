@@ -20,6 +20,7 @@
     <aura:attribute name="templateHeaders" type="Object" default="{}" />
     <aura:attribute name="templateFooters" type="Object" default="{}" />
     <aura:attribute name="templateAttachments" type="Object" default="{}" />
+    <aura:attribute name="titleBaseBody" type="String" default="" />
     <aura:attribute name="originalSubject" type="String" default="" />
     <aura:attribute name="emailList" type="List" default="[]" />
     <aura:attribute name="isLoading" type="Boolean" default="false" />

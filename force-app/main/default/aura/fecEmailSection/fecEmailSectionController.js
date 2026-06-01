@@ -68,6 +68,7 @@
             var renderResolvedTemplate = function(resolvedSubject, resolvedBody) {
                 component.set('v.body', resolvedBody);
                 component.set('v.rawBody', resolvedBody); // lưu HTML đã resolve để gửi email
+                component.set('v.titleBaseBody', resolvedBody);
                 if (window._fecQuill) {
                     var _q = window._fecQuill;
                     var _body = helper.cleanBody(resolvedBody);
