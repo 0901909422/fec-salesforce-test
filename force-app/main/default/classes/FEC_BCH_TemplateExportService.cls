@@ -2476,6 +2476,8 @@ public without sharing class FEC_BCH_TemplateExportService {
         public Integer headerRowIndex0;
         public Boolean cofOrGsr;
         public List<Object> inputRows;
+        public List<String> importHeaders;
+        public List<Integer> importColumnIndexes;
     }
 
     private static final Integer IMPORT_HEADER_SCAN_MAX_ROW = 25;
@@ -2530,6 +2532,9 @@ public without sharing class FEC_BCH_TemplateExportService {
         out.cofOrGsr = headerDetect.cofOrGsr;
         List<String> importHeaders = headerDetect.importHeaders;
         List<Integer> importColumnIndexes = headerDetect.importColumnIndexes;
+        //tugnnm37 - expose header layout để failure no-data vẫn build Result theo đúng template gốc
+        out.importHeaders = importHeaders;
+        out.importColumnIndexes = importColumnIndexes;
         Integer headerRowNum1 = headerDetect.headerRowIndex0 + 1;
         List<Integer> rowNums = listWorksheetRowNumbers(worksheetXml);
         for (Integer rowNum1 : rowNums) {
