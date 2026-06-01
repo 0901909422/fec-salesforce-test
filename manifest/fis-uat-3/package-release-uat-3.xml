@@ -104,6 +104,7 @@
         <members>FEC_Export_Detail</members>
         <members>FEC_Format</members>
         <members>FEC_Format_Excel</members>
+        <members>FEC_Send_Manual_Notification</members>
         <name>CustomLabel</name>
     </types>
 
@@ -2340,6 +2341,7 @@
         <members>FEC_Routing_Action_History__c.FEC_Is_DS_Queue_User__c</members>
         <members>FEC_Routing_Action_History__c.FEC_Is_PM_Queue_User__c</members>
         <members>FEC_Routing_Action_History__c.FEC_Is_TS_Queue_User__c</members>
+        <members>FEC_Routing_Action_History__c.FEC_Updated_Group__c</members>
         <members>FEC_Download_Report__c.FEC_Link__c</members>
         <members>FEC_Download_Report__c.FEC_Report_Unique_Name__c</members>
         <members>FEC_Actual_Master_Data_Setting__c.FEC_Hidden__c</members>
