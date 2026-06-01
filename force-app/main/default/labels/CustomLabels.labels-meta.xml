@@ -13015,7 +13015,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>Send Manual Notification</shortDescription>
-        <value>Send Notification</value>
+        <value>Send Notifications</value>
     </labels>
     <labels>
         <fullName>FEC_Target_Email</fullName>
