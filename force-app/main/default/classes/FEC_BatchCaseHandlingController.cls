@@ -1160,6 +1160,8 @@ public without sharing class FEC_BatchCaseHandlingController {
             update batchRow;
 
             Boolean cofOrGsr = FEC_BatchCaseHandlingImportService.isCofOrGsrTemplate(resolvedTemplateName);
+            // 30/05/2026 18:30 linhdev - đọc remark dài trực tiếp từ file upload trước validate
+            FEC_BatchCaseHandlingImportService.enrichInputtedRemarksFromImportFile(cv.Id, inputRows);
             List<FEC_BatchCaseHandlingImportRow> rowResults = FEC_BatchCaseHandlingImportService.validateCaseHandlingImportRows(inputRows, cofOrGsr);
             if (FEC_BatchCaseHandlingImportService.hasApplicableImportRows(rowResults)) {
                 // 27/05/2026 22:15 linhdev - Card Replacement 1 case: xử lý sync thay vì queueable để tránh Processing timeout 1 giờ

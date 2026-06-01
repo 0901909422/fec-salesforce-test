@@ -240,7 +240,8 @@ const IMPORT_TIMEOUT_MS = 60 * 1000;
 const IMPORT_TIMEOUT_MESSAGE = FEC_BCH_RequestTimeout;
 const MAX_UPLOAD_SIZE_BYTES = 150 * 1024 * 1024;
 const VALID_FILE_EXTENSION = ".xlsx";
-const INPUTTED_REMARKS_MAX_LEN = 32768;
+// 30/05/2026 21:00 linhdev - giới hạn Inputted Remarks khớp Excel (32,767 ký tự/ô)
+const INPUTTED_REMARKS_MAX_LEN = 32767;
 const HEADERS_CASE_ID = ["caseid", "caseidsearch"];
 const HEADERS_ROUTING_ACTION = ["routingaction"];
 // 29/05/2026 19:30 linhdev - nhận diện cột Inputted Remarks / Input Remark trên template import
@@ -486,6 +487,10 @@ export default class Fec_BatchCaseHandling extends LightningElement {
   @track caseSearchHasRun = false;
   @track filterResetHint = false;
   @track selectedAction = STR_EMPTY;
+  // 30/05/2026 15:33 linhdev - lưu selection theo toàn bộ kết quả filter, không chỉ page hiện tại
+  @track selectedCaseIds = [];
+  @track deselectedCaseIds = [];
+  @track caseSelectAllAcrossPages = false;
   @track caseSetOptions = [];
   @track selectedCaseSet = STR_EMPTY;
   @track actionRequiredError = false;
@@ -1369,12 +1374,46 @@ export default class Fec_BatchCaseHandling extends LightningElement {
     this.caseGoToPageInput = String(this.caseSearchPage);
   }
 
+  clearCaseSelection() {
+    this.selectedCaseIds = [];
+    this.deselectedCaseIds = [];
+    this.caseSelectAllAcrossPages = false;
+  }
+
+  // 30/05/2026 15:33 linhdev - dùng caseId dạng string để giữ selection ổn định khi chuyển page
+  caseIdKey(id) {
+    return String(id || STR_EMPTY);
+  }
+
+  updateCaseIdList(list, caseId, checked) {
+    const key = this.caseIdKey(caseId);
+    if (!key) {
+      return list;
+    }
+    if (checked) {
+      return list.includes(key) ? list : [...list, key];
+    }
+    return list.filter((id) => id !== key);
+  }
+
+  isCaseSelected(caseId) {
+    const key = this.caseIdKey(caseId);
+    if (!key) {
+      return false;
+    }
+    if (this.caseSelectAllAcrossPages) {
+      return !this.deselectedCaseIds.includes(key);
+    }
+    return this.selectedCaseIds.includes(key);
+  }
+
   async handleFilterData() {
     this.filterResetHint = false;
     this.caseSearchPage = 1;
     this.syncCaseGoToPageInput();
     this.exportSuccessMessage = STR_EMPTY;
     this.exportErrorMessage = STR_EMPTY;
+    this.clearCaseSelection();
     await this.runCaseSearch();
   }
 
@@ -1388,6 +1427,7 @@ export default class Fec_BatchCaseHandling extends LightningElement {
     this.caseTotalCount = 0;
     this.caseSearchPage = 1;
     this.syncCaseGoToPageInput();
+    this.clearCaseSelection();
     this.exportSuccessMessage = STR_EMPTY;
     this.exportErrorMessage = STR_EMPTY;
   }
@@ -1415,7 +1455,7 @@ export default class Fec_BatchCaseHandling extends LightningElement {
       this.caseRows = raw.map((r) => ({
         ...r,
         rowKey: String(r.caseId || STR_EMPTY),
-        selected: false,
+        selected: this.isCaseSelected(r.caseId),
         caseCreatedOnLabel: this.formatDateTimeSafe(r.caseCreatedOn),
         lastUpdatedOnLabel: this.formatDateTimeSafe(r.lastUpdatedOn),
         hasAttachmentLabel: r.hasAttachment ? FEC_BCH_DocumentLinkLabel : STR_EMPTY,
@@ -1579,7 +1619,10 @@ export default class Fec_BatchCaseHandling extends LightningElement {
   }
 
   get selectedCaseCount() {
-    return this.caseRows.filter((r) => r.selected).length;
+    if (this.caseSelectAllAcrossPages) {
+      return Math.max(0, this.caseTotalCount - this.deselectedCaseIds.length);
+    }
+    return this.selectedCaseIds.length;
   }
 
   get allCaseRowsSelected() {
@@ -1633,6 +1676,20 @@ export default class Fec_BatchCaseHandling extends LightningElement {
   handleCaseRowSelect(event) {
     const id = event.currentTarget?.dataset?.caseid;
     const checked = !!event.detail?.checked;
+    // 30/05/2026 15:33 linhdev - khi select all across pages, chỉ lưu các dòng bị bỏ chọn làm ngoại lệ
+    if (this.caseSelectAllAcrossPages) {
+      this.deselectedCaseIds = this.updateCaseIdList(
+        this.deselectedCaseIds,
+        id,
+        !checked
+      );
+    } else {
+      this.selectedCaseIds = this.updateCaseIdList(
+        this.selectedCaseIds,
+        id,
+        checked
+      );
+    }
     this.caseRows = this.caseRows.map((r) =>
       r.caseId === id ? { ...r, selected: checked } : r
     );
@@ -1640,6 +1697,10 @@ export default class Fec_BatchCaseHandling extends LightningElement {
 
   handleCaseSelectAll(event) {
     const checked = !!event.detail?.checked;
+    // 30/05/2026 15:33 linhdev - checkbox header áp dụng cho toàn bộ kết quả filter trên các page
+    this.caseSelectAllAcrossPages = checked;
+    this.selectedCaseIds = [];
+    this.deselectedCaseIds = [];
     this.caseRows = this.caseRows.map((r) => ({ ...r, selected: checked }));
   }
 
@@ -1864,19 +1925,24 @@ export default class Fec_BatchCaseHandling extends LightningElement {
     let sourceRows = [];
     if (useSelected) {
       //tungnm37 2026-05-27 12:11 - Không dùng trực tiếp grid rows vì grid chỉ có dữ liệu tối thiểu, thiếu field export/enrich
-      const selectedCaseIds = this.caseRows
-        .filter((r) => r.selected)
-        .map((r) => r.caseId)
-        .filter((id) => !!id);
-      if (!selectedCaseIds.length) {
+      const selectedCaseIds = this.selectedCaseIds.filter((id) => !!id);
+      if (!this.caseSelectAllAcrossPages && !selectedCaseIds.length) {
         this.showInfo(FEC_BCH_ExportToastTitle, FEC_BCH_SelectAtLeastOneCase);
         return;
       }
       this.isLoading = true;
       try {
         //tungnm37 2026-05-27 12:11 - Query lại từ Apex để Export Selected đi cùng nguồn dữ liệu với Export All
-        const res = await getSelectedCasesForExport({ caseIds: selectedCaseIds });
-        const raw = Array.isArray(res?.rows) ? res.rows : [];
+        let raw = [];
+        if (this.caseSelectAllAcrossPages) {
+          // 30/05/2026 15:33 linhdev - Export Selected khi tick header phải lấy tất cả case filtered, trừ ngoại lệ đã untick
+          raw = await this.fetchAllFilteredRowsForExport();
+          const deselectedSet = new Set(this.deselectedCaseIds);
+          raw = raw.filter((r) => !deselectedSet.has(this.caseIdKey(r.caseId)));
+        } else {
+          const res = await getSelectedCasesForExport({ caseIds: selectedCaseIds });
+          raw = Array.isArray(res?.rows) ? res.rows : [];
+        }
         sourceRows = raw.map((r) => ({
           ...r,
           caseCreatedOnLabel:
@@ -2682,23 +2748,29 @@ export default class Fec_BatchCaseHandling extends LightningElement {
       const routingAction =
         idxRouting >= 0
           ? this.readImportCellValue(
-              sheet,
-              i,
-              idxRouting,
-              headerColumnIndexes,
-              r
-            )
+            sheet,
+            i,
+            idxRouting,
+            headerColumnIndexes,
+            r
+          )
           : STR_EMPTY;
-      const inputtedRemarks =
+      const inputtedRemarksRaw =
         idxRemark >= 0
           ? this.readImportCellValue(
-              sheet,
-              i,
-              idxRemark,
-              headerColumnIndexes,
-              r
-            )
+            sheet,
+            i,
+            idxRemark,
+            headerColumnIndexes,
+            r
+          )
           : STR_EMPTY;
+      const inputtedRemarksCharLength = inputtedRemarksRaw ? inputtedRemarksRaw.length : 0;
+      // 30/05/2026 21:00 linhdev - không gửi full remark > 32,767 trong JSON (Apex validate qua charLength + file gốc)
+      const inputtedRemarks =
+        inputtedRemarksCharLength > INPUTTED_REMARKS_MAX_LEN
+          ? STR_EMPTY
+          : inputtedRemarksRaw;
       const assignmentId =
         idxAssignmentId >= 0 ? this.cellAsString(r[idxAssignmentId]) : STR_EMPTY;
       const assignmentRoutingAction =
@@ -2768,7 +2840,7 @@ export default class Fec_BatchCaseHandling extends LightningElement {
         const cell = sheet[cellRef];
         const cellValue = cell && cell.v !== undefined ? cell.v : STR_EMPTY;
         let cellStr = this.cellAsString(cellValue);
-        // 30/05/2026 16:15 linhdev - truncate remark trong originalCells khi quá dài (giảm payload JSON, vẫn validate đủ qua inputtedRemarks)
+        // 30/05/2026 21:00 linhdev - giữ tối đa 32,767 ký tự Excel trong originalCells
         if (col === idxRemark && cellStr.length > INPUTTED_REMARKS_MAX_LEN) {
           cellStr = cellStr.substring(0, INPUTTED_REMARKS_MAX_LEN);
         }
@@ -2778,6 +2850,7 @@ export default class Fec_BatchCaseHandling extends LightningElement {
         caseIdSearch,
         routingAction,
         inputtedRemarks,
+        inputtedRemarksCharLength,
         assignmentId,
         assignmentRoutingAction,
         csD2CAssessmentType,
@@ -2794,6 +2867,7 @@ export default class Fec_BatchCaseHandling extends LightningElement {
         originalCells,
         originalColumnIndexes: importColumnIndexes,
         originalHeaderRowIndex: headerRowIndex,
+        originalDataRowIndex: i,
         originalSheetName: firstSheetName
       });
     }
