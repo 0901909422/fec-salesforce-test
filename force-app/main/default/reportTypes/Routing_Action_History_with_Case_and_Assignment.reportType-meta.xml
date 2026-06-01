@@ -198,6 +198,11 @@
         </columns>
         <columns>
             <checkedByDefault>false</checkedByDefault>
+            <field>FEC_Updated_Group__c</field>
+            <table>FEC_Routing_Action_History__c</table>
+        </columns>
+        <columns>
+            <checkedByDefault>false</checkedByDefault>
             <field>FEC_Updated_User_Queue_ID__c</field>
             <table>FEC_Routing_Action_History__c</table>
         </columns>

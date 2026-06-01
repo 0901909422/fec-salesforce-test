@@ -111,6 +111,7 @@ public with sharing class FEC_SearchController {
         objCase.FEC_Product_Type__c = productTypeId;
         objCase.FEC_Customer_Name__c = customerName;
         objCase.FEC_Customer_Type__c = FEC_ConstantCommon.CASE_EXISTING_CUSTOMER;
+        objCase.FEC_Account_Contract_Number_PL__c = FEC_ConstantCommon.PRODUCT_TYPE_INSURANCE_CASE;
         // 15/04/2026 PhuongNT add
         objCase.FEC_Recipient_Name__c = customerName;
 

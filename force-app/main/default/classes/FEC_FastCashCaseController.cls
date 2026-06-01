@@ -52,7 +52,7 @@ public without sharing class FEC_FastCashCaseController {
             SELECT FEC_Actual_Nature_of_Case__c,
                 FEC_Requested_Amount__c,
                 FEC_Max_Amount__c,
-                FEC_Application_ID__c,
+                FEC_ID_Search__c,
                 FEC_Disbursement_Status__c,
                 FEC_Disbursement_Date__c,
                 FEC_Account_or_Contract__r.FEC_Disbursement_Date__c,
@@ -72,7 +72,7 @@ public without sharing class FEC_FastCashCaseController {
         dto.actualNatureOfCaseId = c.FEC_Actual_Nature_of_Case__c;
         dto.requestedAmount = c.FEC_Requested_Amount__c;
         dto.maxAmount = c.FEC_Max_Amount__c;
-        dto.applicationId = c.FEC_Application_ID__c;
+        dto.applicationId = c.FEC_ID_Search__c;
         dto.disbursementStatus = resolveDisbursementStatusForCase(c);
         dto.disbursementDate = resolveDisbursementDateForCase(c);
         return dto;
@@ -150,7 +150,7 @@ public without sharing class FEC_FastCashCaseController {
         }
         List<Case> rows = [
             SELECT Id,
-                FEC_Application_ID__c,
+                FEC_ID_Search__c,
                 FEC_SubCategory__r.FEC_Code__c,
                 (
                     SELECT Id, FEC_PD_Disbursement_Status__c
@@ -191,7 +191,7 @@ public without sharing class FEC_FastCashCaseController {
             return ctx;
         }
         Case c = caseRows[0];
-        // 29/05/2026 14:00 linhdev - CrmID: số từ FEC_ID_Search__c (Case.FEC_Case_ID__c); Account: FEC_Account_Contract_Number_Text__c
+        // CrmID: FEC_ID_Search__c
         String crmId = resolveCrmIdForCmsIppBlock(c);
         if (String.isBlank(crmId)) {
             ctx.errorMessage = String.format(System.Label.FEC_MSG_Param_Required, new List<String>{ 'Case ID' });
@@ -248,7 +248,7 @@ public without sharing class FEC_FastCashCaseController {
             FEC_CMSIPPBlockWS.ResponseWrapper apiRes;
             try {
                 apiRes = FEC_CMSIPPBlockWS.cmsIPPBlockWS(
-                    FEC_ConstantCommon.REQUESTOR_CRM,
+                    FEC_ConstantCommon.REQUESTOR_PEGA_CSM_LEGACY,
                     crmIdForApi,
                     DEFAULT_CMS_IPP_DISB_CHANNEL,
                     accountNumber,
@@ -257,12 +257,12 @@ public without sharing class FEC_FastCashCaseController {
                     true,
                     DEFAULT_CMS_IPP_CAMPAIGN_NAME,
                     0,
-                    '',
-                    '',
-                    '',
-                    0,
-                    0,
-                    ''
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null
                 );
             } catch (Exception e) {
                 FEC_CommonUltils.logApi(
@@ -385,9 +385,16 @@ public without sharing class FEC_FastCashCaseController {
         return accountNumber;
     }
 
-    // 29/05/2026 14:00 linhdev - CrmID: lấy phần số sau prefix trong FEC_ID_Search__c (vd S-1651 → 1651)
     @TestVisible
     private static String resolveCrmIdForCmsIppBlock(Case c) {
+        if (c == null) {
+            return null;
+        }
+        return resolveCrmIdFromIdSearch(c);
+    }
+
+    @TestVisible
+    private static String resolveCrmIdFromIdSearch(Case c) {
         if (c == null || String.isBlank(c.FEC_ID_Search__c)) {
             return null;
         }
@@ -425,7 +432,6 @@ public without sharing class FEC_FastCashCaseController {
         return [
             SELECT Id,
                 FEC_Account_Number__c,
-                FEC_Application_ID__c,
                 FEC_Max_Amount__c,
                 FEC_Requested_Amount__c,
                 FEC_ID_Search__c,
@@ -439,49 +445,6 @@ public without sharing class FEC_FastCashCaseController {
             WHERE Id = :caseId
             LIMIT 1
         ];
-    }
-
-    private static String resolveApplicationIdForCase(Case c, String accountNumber) {
-        if (c == null) {
-            return null;
-        }
-        if (String.isNotBlank(c.FEC_Application_ID__c)) {
-            return c.FEC_Application_ID__c.trim();
-        }
-        if (String.isBlank(accountNumber)) {
-            return null;
-        }
-        if (!Pattern.matches(FEC_ConstantCommon.PATTERN_ACCOUNT_NUMBER, accountNumber)) {
-            return null;
-        }
-        try {
-            FEC_GetCustomerList.ResponseWrapper response = FEC_GetCustomerList.getCustomerList(
-                FEC_ConstantCommon.REQUESTOR_CRM,
-                null,
-                false,
-                null,
-                null,
-                null,
-                null,
-                accountNumber,
-                null,
-                null,
-                null
-            );
-            if (response != null
-                && response.Sys != null
-                && '1'.equals(response.Sys.Code)
-                && response.Customers != null
-                && !response.Customers.isEmpty()) {
-                FEC_GetCustomerList.Customer customer = response.Customers[0];
-                if (customer.Applications != null && !customer.Applications.isEmpty()) {
-                    return customer.Applications[0].ApplicationID;
-                }
-            }
-        } catch (Exception e) {
-            return null;
-        }
-        return null;
     }
 
     private static String resolveDisbursementChannel(String applicationId) {
@@ -557,7 +520,7 @@ public without sharing class FEC_FastCashCaseController {
         upsertPendingDisbursementStatus(
             c.Id,
             FEC_ConstantCommon.FAST_CASH_DISB_STATUS_PENDING_CUSTOMER_WITHDRAWAL,
-            c.FEC_Application_ID__c
+            c.FEC_ID_Search__c
         );
     }
 
