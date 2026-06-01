@@ -51,6 +51,7 @@
     onTemplateChange: function(component, event, helper) {
         var templateId = event.getSource().get('v.value');
         component.set('v.replyTemplate', templateId);
+        component.set('v.titleReply', '');
         if (templateId) {
             var bodies = component.get('v.templateBodies');
             var subjects = component.get('v.templateSubjects');
@@ -60,18 +61,18 @@
             var header = headers[templateId] || '';
             var footer = footers[templateId] || '';
             var title = component.get('v.titleReply') || '';
-            var body = helper.replaceDanhXung(rawBody, title);
-            // Ghép header + body + footer
-            var fullBody = (header ? header : '') + body + (footer ? footer : '');
+            // Ghép header + body + footer từ template gốc, chưa map Title
+            var fullBody = (header ? header : '') + rawBody + (footer ? footer : '');
             var templateSubject = subjects && subjects[templateId] ? subjects[templateId] : '';
 
             var renderResolvedTemplate = function(resolvedSubject, resolvedBody) {
-                component.set('v.body', resolvedBody);
-                component.set('v.rawBody', resolvedBody); // lưu HTML đã resolve để gửi email
                 component.set('v.titleBaseBody', resolvedBody);
+                var displayBody = title ? helper.replaceDanhXung(resolvedBody, title) : resolvedBody;
+                component.set('v.body', displayBody);
+                component.set('v.rawBody', displayBody); // lưu HTML hiển thị để gửi email
                 if (window._fecQuill) {
                     var _q = window._fecQuill;
-                    var _body = helper.cleanBody(resolvedBody);
+                    var _body = helper.cleanBody(displayBody);
                     window.setTimeout(function() {
                         if (_q.scroll && _q.scroll.observer) {
                             _q.scroll.observer.disconnect();
