@@ -120,58 +120,25 @@ public without sharing class ArchiveCaseController {
     public static Id getCaseDetailAndCreateCaseTemp(AthenaCases__x archiveCaseIns) {
 
         Id caseId;
-        Map<String, Object> mapOfFieldAndValue = new Map<String, Object>();
-        String methodOfApi = FEC_ConstantCommon.API_METHOD_GET;
         String recTypeName = label.TECH_CASE_RECORDTYPE_NAME_CUSTOMER_CASE;
         String archieveExternalId = archiveCaseIns.case_id__c;
-        String migrationSourceStr = archiveCaseIns.migration_source__c;
-        if (String.isNotBlank(migrationSourceStr)) {
-            if (migrationSourceStr.containsIgnoreCase(label.TECH_PEGA_SOURCE) 
-                & !migrationSourceStr.equalsIgnoreCase(label.TECH_PEGA_SOURCE_S3))
-                migrationSourceStr = Label.TECH_PEGA_SOURCE_S3;
-
-            migrationSourceStr = migrationSourceStr.toUpperCase();
-            isCasePega = migrationSourceStr.containsIgnoreCase(label.TECH_PEGA_SOURCE) ? true : false;
-        }
-        String migrationSource = String.isNotBlank(migrationSourceStr) ? migrationSourceStr : '';
-        List<String> listOfAttIgnored = label.TECH_LIST_ATT_IGNORED.split(',');
+        String migrationSource = getMigrationSource(archiveCaseIns.migration_source__c);
         String attachmentStr = '';
-        String resBody = '';
-        String resStatusCode = '';
-        String serviceName = label.TECH_API_GET_ARCHIVE_DETAIL_CASE;
         String attrString = 'attributes';
-        String s3PatchPrefix = label.TECH_ARCHIVE_S3_PATCH;
-        String s3Patch = archiveCaseIns.s3_path__c.containsIgnoreCase(s3PatchPrefix) 
-                            ? archiveCaseIns.s3_path__c.substringAfter(s3PatchPrefix) 
-                            : archiveCaseIns.s3_path__c;
         String specialArchiveFieldSt = Label.TECH_LIST_SPECIAL_ARCHIVE_FIELD_AND_OBJECT;
+        Map<String, Object> mapOfFieldAndValue = new Map<String, Object>();
         Map<String, String> mapSpecialArchiveField = (Map<String, String>) JSON.deserialize(specialArchiveFieldSt, Map<String, String>.class);
         Map<String, String> mapSpecialArchiveFieldAndValue = new Map<String, String>();
         Map<String, Map<String, Object>> mapRelationshipObjects = new Map<String, Map<String, Object>>();
         Map<String, List<Map<String, Object>>> mapChildRecords = new Map<String, List<Map<String, Object>>>();
         List<Map<String, Object>> attachmentsList = new List<Map<String, Object>>();
-
-        FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
-        FEC_API_Config__mdt apiConfig = FEC_API_Config__mdt.getInstance(serviceName);
-        String endpoint = label.TECH_GET_CASE_ARCHIVE_ENDPOINT_MOCKUP 
-                        + s3Patch + '&source=' + migrationSource;
-        if (apiConfig != null && String.isNotBlank(apiConfig.FEC_Endpoint__c)) {
-            endpoint = apiSetting?.FEC_Call_Mock__c ? endpoint 
-                        : (apiSetting?.FEC_Endpoint__c + apiConfig.FEC_Endpoint__c) 
-                            + s3Patch + '&source=' + migrationSource;
-        }
-
-        Map<String,String> headers = new Map<String,String>{
-            'X-API-KEY' => 'RkVDX1NBTEVTRk9SQ0U='
-        };
-        HttpResponse resp = FEC_CommonUltils.calloutApiWithHeaders(endpoint, methodOfApi, headers, null);
-        resBody = resp.getBody();
-        resStatusCode = String.valueOf(resp.getStatusCode());
+        List<String> listOfAttIgnored = label.TECH_LIST_ATT_IGNORED.split(',');
+        
+        HttpResponse resp = callS3ToGetCaseDetail(archiveCaseIns, migrationSource);
+        String resBody = resp.getBody();
+        String resStatusCode = String.valueOf(resp.getStatusCode());
         System.debug('ArchiveCase.getStatusCode() ' + resStatusCode);
         System.debug('ArchiveCase.getBody() ' + resBody);
-
-        FEC_IntegrationFraudCaseUtil.logIntegrationService(serviceName, '', '', '', 
-                                                            endpoint, resBody, resStatusCode, '', '');
 
         if (resStatusCode.equals('200') || resStatusCode.equals('201')) {
             Map<String, Object> jsonResponse = (Map<String, Object>) JSON.deserializeUntyped(resBody);
@@ -190,62 +157,26 @@ public without sharing class ArchiveCaseController {
                 if (valObj == null) continue;
 
                 if (keyOfAtt == 'RecordType') {
-                    try {
-                        Map<String, Object> objChild = (Map<String, Object>) valObj;
-                        recTypeName = (String) objChild.get('Name');
-                    } catch (Exception ex) {
-                        recTypeName = String.valueOf(valObj);
-                    }
+                    recTypeName = getRecordTypeByNameInAtt(recTypeName, keyOfAtt, valObj);
                     continue;
                 }
-
+                
                 if (keyOfAtt == 'FEC_Case_Attachments') {
-                    try {
-                        List<Object> rawList = (List<Object>) valObj;
-                        if (rawList != null && !rawList.isEmpty()) attachmentStr = JSON.serialize(rawList);
-                    } catch (Exception ex) {
-                        System.debug('Could not parse Attachments array: ' + ex.getMessage());
-                    }
+                    attachmentStr = getAttachmentForCaseInAtt(attachmentStr, keyOfAtt, valObj);
                     continue;
                 }
 
                 // Child record arrays: value is a List (master-detail children)
                 if (valObj instanceof List<Object>) {
-                    List<Object> rawList = (List<Object>) valObj;
-                    List<Map<String, Object>> childList = new List<Map<String, Object>>();
-                    for (Object item : rawList) {
-                        if (item instanceof Map<String, Object>) {
-                            childList.add((Map<String, Object>) item);
-                        }
-                    }
-                    if (!childList.isEmpty()) {
-                        mapChildRecords.put(keyOfAtt, childList);
-                    }
+                    buildMapChildRecordsInAtt(mapChildRecords, keyOfAtt, valObj);
                     continue;
                 }
 
                 // Relationship objects or child records: value is a Map (single record)
                 // Distinguish by checking if the key matches a known child object name
                 if (valObj instanceof Map<String, Object>) {
-                    Map<String, Object> relMap = (Map<String, Object>) valObj;
-
-                    // Determine the SObject type: prefer attributes.type if available, fallback to key name
-                    String objType = keyOfAtt;
-                    if (relMap.containsKey(attrString)) {
-                        try {
-                            Map<String, Object> attrMap = (Map<String, Object>) relMap.get(attrString);
-                            String attrType = (String) attrMap.get('type');
-                            if (String.isNotBlank(attrType)) objType = attrType;
-                        } catch (Exception ex) {}
-                    }
-
-                    if (CHILD_OBJECT_CASE_FIELD.containsKey(objType) 
-                        || CHILD_OBJECT_CASE_FIELD.containsKey(keyOfAtt)) {
-                        // Single child record — wrap in list for uniform processing
-                        mapChildRecords.put(keyOfAtt, new List<Map<String, Object>>{ relMap });
-                    } else {
-                        mapRelationshipObjects.put(keyOfAtt, relMap);
-                    }
+                    buildMapChildAndRelationshipInAtt(mapChildRecords, mapRelationshipObjects, 
+                                                    keyOfAtt, valObj, attrString);
                     continue;
                 }
             }
@@ -258,7 +189,7 @@ public without sharing class ArchiveCaseController {
 
                 if (mapSpecialArchiveField.get(keyOfAtt) != null) mapSpecialArchiveFieldAndValue.put(keyOfAtt, (String) jsonDetailCase.get(keyOfAtt));
             }
-        }
+        } else throw new CalloutException(label.FEC_MSG_No_Response_From_Server);
 
         System.debug('mapOfFieldAndValue ' + mapOfFieldAndValue);
         System.debug('mapRelationshipObjects keys ' + mapRelationshipObjects.keySet());
@@ -1270,5 +1201,169 @@ public without sharing class ArchiveCaseController {
         }
 
         return result;
+    }
+
+    /*------------------------------------------------------------
+    Author:        Thanh Van
+    Company:       Amaris
+    Description:   Get RecordType By Name in Att
+    Returns:       String
+    History
+    <Date>          <Authors Name>      <Brief Description of Change>
+    2026/05/29      Thanh Van           Init
+    ------------------------------------------------------------*/
+    public static String getRecordTypeByNameInAtt(String recTypeName, String keyOfAtt, Object valObj) {
+        try {
+            Map<String, Object> objChild = (Map<String, Object>) valObj;
+            recTypeName = (String) objChild.get('Name');
+        } catch (Exception ex) {
+            recTypeName = String.valueOf(valObj);
+        }
+
+        return recTypeName;
+    }
+
+    /*------------------------------------------------------------
+    Author:        Thanh Van
+    Company:       Amaris
+    Description:   Get Attachment For Case in Att
+    Returns:       String
+    History
+    <Date>          <Authors Name>      <Brief Description of Change>
+    2026/05/29      Thanh Van           Init
+    ------------------------------------------------------------*/
+    public static String getAttachmentForCaseInAtt(String attachmentStr, String keyOfAtt, Object valObj) {
+        try {
+            List<Object> rawList = (List<Object>) valObj;
+            if (rawList != null && !rawList.isEmpty()) attachmentStr = JSON.serialize(rawList);
+        } catch (Exception ex) {
+            System.debug('Could not parse Attachments array: ' + ex.getMessage());
+        }
+
+        return attachmentStr;
+    }
+
+    /*------------------------------------------------------------
+    Author:        Thanh Van
+    Company:       Amaris
+    Description:   Build Map Child Records In Att
+    Returns:       String
+    History
+    <Date>          <Authors Name>      <Brief Description of Change>
+    2026/05/29      Thanh Van           Init
+    ------------------------------------------------------------*/
+    public static void buildMapChildRecordsInAtt(Map<String, List<Map<String, Object>>> mapChildRecords, 
+                                                String keyOfAtt, Object valObj) {
+
+        List<Object> rawList = (List<Object>) valObj;
+        List<Map<String, Object>> childList = new List<Map<String, Object>>();
+        for (Object item : rawList) {
+            if (item instanceof Map<String, Object>) {
+                childList.add((Map<String, Object>) item);
+            }
+        }
+
+        if (!childList.isEmpty()) {
+             mapChildRecords.put(keyOfAtt, childList);
+        }
+    }
+    
+    /*------------------------------------------------------------
+    Author:        Thanh Van
+    Company:       Amaris
+    Description:   Build Map Child And Relationship In Att
+    Returns:       String
+    History
+    <Date>          <Authors Name>      <Brief Description of Change>
+    2026/05/29      Thanh Van           Init
+    ------------------------------------------------------------*/
+    public static void buildMapChildAndRelationshipInAtt(Map<String, List<Map<String, Object>>> mapChildRecords, 
+                                                Map<String, Map<String, Object>> mapRelationshipObjects, 
+                                                String keyOfAtt, Object valObj, String attrString) {
+
+        Map<String, Object> relMap = (Map<String, Object>) valObj;
+
+        // Determine the SObject type: prefer attributes.type if available, fallback to key name
+        String objType = keyOfAtt;
+        if (relMap.containsKey(attrString)) {
+            try {
+                Map<String, Object> attrMap = (Map<String, Object>) relMap.get(attrString);
+                String attrType = (String) attrMap.get('type');
+                if (String.isNotBlank(attrType)) objType = attrType;
+            } catch (Exception ex) {}
+        }
+
+        if (CHILD_OBJECT_CASE_FIELD.containsKey(objType) 
+            || CHILD_OBJECT_CASE_FIELD.containsKey(keyOfAtt)) {
+            // Single child record — wrap in list for uniform processing
+            mapChildRecords.put(keyOfAtt, new List<Map<String, Object>>{ relMap });
+        } else {
+            mapRelationshipObjects.put(keyOfAtt, relMap);
+        }
+    }
+
+    /*------------------------------------------------------------
+    Author:        Thanh Van
+    Company:       Amaris
+    Description:   Call S3 To Get Case Detail
+    Returns:       HttpResponse
+    History
+    <Date>          <Authors Name>      <Brief Description of Change>
+    2026/05/29      Thanh Van           Init
+    ------------------------------------------------------------*/
+    public static HttpResponse callS3ToGetCaseDetail(AthenaCases__x archiveCaseIns, 
+                                                    String migrationSource) {
+
+        String s3PatchPrefix = label.TECH_ARCHIVE_S3_PATCH;
+        String s3Patch = archiveCaseIns.s3_path__c.containsIgnoreCase(s3PatchPrefix) 
+                            ? archiveCaseIns.s3_path__c.substringAfter(s3PatchPrefix) 
+                            : archiveCaseIns.s3_path__c;
+
+        String serviceName = label.TECH_API_GET_ARCHIVE_DETAIL_CASE;
+        FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
+        FEC_API_Config__mdt apiConfig = FEC_API_Config__mdt.getInstance(serviceName);
+        String endpoint = label.TECH_GET_CASE_ARCHIVE_ENDPOINT_MOCKUP 
+                        + s3Patch + '&source=' + migrationSource;
+        if (apiConfig != null && String.isNotBlank(apiConfig.FEC_Endpoint__c)) {
+            endpoint = apiSetting?.FEC_Call_Mock__c ? endpoint 
+                        : (apiSetting?.FEC_Endpoint__c + apiConfig.FEC_Endpoint__c) 
+                            + s3Patch + '&source=' + migrationSource;
+        }
+
+        Map<String,String> headers = new Map<String,String>{
+            'X-API-KEY' => 'RkVDX1NBTEVTRk9SQ0U='
+        };
+        
+        HttpResponse resp = FEC_CommonUltils.calloutApiWithHeaders(endpoint, 
+                                                    FEC_ConstantCommon.API_METHOD_GET, 
+                                                    headers, null);
+
+        FEC_IntegrationFraudCaseUtil.logIntegrationService(serviceName, '', '', '', 
+                                                            endpoint, resp.getBody(), 
+                                                            String.valueOf(resp.getStatusCode()), '', '');
+        return resp;
+    }
+
+    /*------------------------------------------------------------
+    Author:        Thanh Van
+    Company:       Amaris
+    Description:   Get Migration Source
+    Returns:       String
+    History
+    <Date>          <Authors Name>      <Brief Description of Change>
+    2026/05/29      Thanh Van           Init
+    ------------------------------------------------------------*/
+    public static String getMigrationSource(String migrationSourceStr) {
+
+        if (String.isNotBlank(migrationSourceStr)) {
+            if (migrationSourceStr.containsIgnoreCase(label.TECH_PEGA_SOURCE) 
+                & !migrationSourceStr.equalsIgnoreCase(label.TECH_PEGA_SOURCE_S3))
+                migrationSourceStr = Label.TECH_PEGA_SOURCE_S3;
+
+            migrationSourceStr = migrationSourceStr.toUpperCase();
+            isCasePega = migrationSourceStr.containsIgnoreCase(label.TECH_PEGA_SOURCE) ? true : false;
+        }
+
+        return String.isNotBlank(migrationSourceStr) ? migrationSourceStr : '';
     }
 }
