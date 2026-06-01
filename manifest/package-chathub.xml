@@ -9,7 +9,6 @@
         <members>FEC_Utils</members>
         <members>FEC_AttachmentControllerTest</members>
         <members>FEC_ChatHubInitControllerTest</members>
-        <members>FEC_CaseTriggerHandlerTest</members>
         <members>FEC_ChatHistoryControllerTest</members>
         <members>FEC_ChatHubCaseControllerTest</members>
         <members>CaseTriggerHandlerTest</members>
