@@ -187,6 +187,7 @@ public without sharing class FEC_BatchCaseHandlingExportService {
         enrichPendingCsSupportLabels(rows);
     }
 
+    // 01/06/2026 12:00 linhdev - stripInaccessible có thể bỏ relationship: không gọi getSObject khi chưa populated
     private static SObject safeRelatedSObject(SObject row, String relationshipApiName) {
         if (row == null || String.isBlank(relationshipApiName)) {
             return null;
