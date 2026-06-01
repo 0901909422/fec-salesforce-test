@@ -11185,7 +11185,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>Send Manual Notification</shortDescription>
-        <value>Send Notification</value>
+        <value>Send Notifications</value>
     </labels>
     <labels>
         <fullName>FEC_Target_Email</fullName>
@@ -15284,7 +15284,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC_Batch_Case_Handling_Import_Err_Remark_Too_Long</shortDescription>
-        <value>Giá trị Inputted Remarks vượt quá số ký tự cho phép (32,768 ký tự)</value>
+        <value>Giá trị Inputted Remarks vượt quá số ký tự cho phép (32,767 ký tự)</value>
     </labels>
     <labels>
         <fullName>FEC_Batch_Case_Handling_Import_Err_Record_Id_Invalid</fullName>
