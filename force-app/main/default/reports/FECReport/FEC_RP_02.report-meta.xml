@@ -4,6 +4,9 @@
         <field>FEC_Routing_Action_History__c$FEC_Case__c.FEC_Customer_Name__c</field>
     </columns>
     <columns>
+        <field>FEC_Routing_Action_History__c$FEC_Case__c.FEC_User_ID__c</field>
+    </columns>
+    <columns>
         <field>FEC_Routing_Action_History__c$FEC_Case__c.FEC_Account_Contract_Number_Text__c</field>
     </columns>
     <columns>

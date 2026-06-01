@@ -12,6 +12,10 @@
             <default>false</default>
         </values>
         <values>
+            <fullName>Insurance</fullName>
+            <default>false</default>
+        </values>
+        <values>
             <fullName>Non-Existing Customer</fullName>
             <default>false</default>
         </values>
@@ -166,6 +170,14 @@
     </picklistValues>
     <picklistValues>
         <picklist>FEC_Complain_Type__c</picklist>
+        <values>
+            <fullName>High risk</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>Normal</fullName>
+            <default>false</default>
+        </values>
         <values>
             <fullName>Urgent</fullName>
             <default>false</default>

@@ -28,11 +28,11 @@ import Loading from '@salesforce/label/c.Loading';
 import {
     STR_EMPTY,
     FEC_POINTS_REDEMPTION_STORAGE_NOC_LOCK_PREFIX,
-    FEC_POINTS_REDEMPTION_STORAGE_MODAL_CONFIRMED_PREFIX
+    FEC_POINTS_REDEMPTION_STORAGE_MODAL_CONFIRMED_PREFIX,
+    FEC_POINTS_REDEMPTION_STORAGE_REDEEM_OK_PREFIX
 } from 'c/fec_CommonConst';
 
 const LS_FAIL = 'fec-pr-fail-';
-const LS_OK = 'fec-pr-ok-';
 const MAX_FAIL = 3;
 const VARIANT = { ERROR: 'error', SUCCESS: 'success', WARNING: 'warning' };
 
@@ -116,7 +116,7 @@ export default class Fec_PointsRedemptionCaseForm extends NavigationMixin(Lightn
     }
 
     get lsOkKey() {
-        return this.recordId ? LS_OK + this.recordId : null;
+        return this.recordId ? FEC_POINTS_REDEMPTION_STORAGE_REDEEM_OK_PREFIX + this.recordId : null;
     }
 
     connectedCallback() {
@@ -159,11 +159,24 @@ export default class Fec_PointsRedemptionCaseForm extends NavigationMixin(Lightn
         );
     }
 
+    //linhdev fix jira FECREDIT_CSM_2025_KH-1603
+    _notifyPointsRedemptionRedeemSuccess() {
+        this.dispatchEvent(
+            new CustomEvent('fecpointsredemptionredeemsuccess', {
+                bubbles: true,
+                composed: true,
+                detail: { recordId: this.recordId }
+            })
+        );
+    }
+
     restoreLocalState() {
         try {
             if (this.lsOkKey && window.localStorage.getItem(this.lsOkKey) === '1') {
                 this.redeemDisabled = true;
                 this.redeemSuccessMessage = FEC_Points_Redeem_Success_Message;
+                //linhdev fix jira FECREDIT_CSM_2025_KH-1603
+                this._notifyPointsRedemptionRedeemSuccess();
             }
             if (this.lsFailKey) {
                 const n = parseInt(window.localStorage.getItem(this.lsFailKey) || '0', 10);
@@ -324,6 +337,8 @@ export default class Fec_PointsRedemptionCaseForm extends NavigationMixin(Lightn
                     this.persistOk();
                     this.redeemDisabled = true;
                     this.redeemSuccessMessage = FEC_Points_Redeem_Success_Message;
+                    //linhdev fix jira FECREDIT_CSM_2025_KH-1603
+                    this._notifyPointsRedemptionRedeemSuccess();
                     this.navigateCase();
                 } else {
                     this.onRedeemFail();

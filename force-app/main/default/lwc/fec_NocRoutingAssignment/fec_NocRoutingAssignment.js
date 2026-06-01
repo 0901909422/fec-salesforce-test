@@ -2,6 +2,7 @@ import { LightningElement, api, wire, track } from 'lwc';
 import { NavigationMixin } from 'lightning/navigation';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import { refreshApex } from '@salesforce/apex';
+import { IsConsoleNavigation, getFocusedTabInfo, openTab, closeTab, focusTab } from 'lightning/platformWorkspaceApi';
 import { loadStyle } from 'lightning/platformResourceLoader';
 import FEC_CommonCss from '@salesforce/resourceUrl/FEC_CommonCss';
 
@@ -47,6 +48,9 @@ const PAGE_SIZE = 10;
 
 export default class Fec_NocRoutingAssignment extends NavigationMixin(LightningElement) {
     @api recordId;
+
+    @wire(IsConsoleNavigation)
+    isConsoleNavigation;
 
     // list
     @track allRecords = [];
@@ -266,11 +270,60 @@ export default class Fec_NocRoutingAssignment extends NavigationMixin(LightningE
             queue: this.formQueue,
             active: this.formActive
         })
-        .then(() => {
+        .then(async (newRecordId) => {
             this.showModal = false;
             this._toast(LABEL_SUCCESS, LABEL_CREATE_SUCCESS, 'success');
             this.pageNumber = 1;
-            return refreshApex(this.wiredResult);
+
+            const pageReference = {
+                type: 'standard__recordPage',
+                attributes: {
+                    recordId: newRecordId,
+                    objectApiName: 'FEC_Routing_Assignment__c',
+                    actionName: 'view'
+                }
+            };
+
+            await refreshApex(this.wiredResult);
+
+            if (this.isConsoleNavigation) {
+                let currentTabId;
+                let parentTabId;
+                try {
+                    const focusedTab = await getFocusedTabInfo();
+                    currentTabId = focusedTab?.tabId;
+                    //tungnm37 2026-05-27 14:32 - Nếu đang đứng trong subtab của NOC thì phải mở record mới dưới parent tab của NOC
+                    parentTabId = focusedTab?.parentTabId || focusedTab?.tabId;
+                } catch (e) {
+                    currentTabId = null;
+                    parentTabId = null;
+                }
+
+                const newTabId = parentTabId
+                    ? await openTab({
+                        parentTabId,
+                        pageReference,
+                        focus: true
+                    })
+                    : await openTab({
+                        pageReference,
+                        focus: true
+                    });
+
+                if (newTabId) {
+                    await focusTab(newTabId);
+                }
+
+                //tungnm37 2026-05-27 14:36 - Giữ nguyên tab NOC hiện tại, không đóng tab sau khi tạo mới
+                return;
+            }
+
+            const url = await this[NavigationMixin.GenerateUrl](pageReference);
+            if (url) {
+                window.location.assign(url);
+                return;
+            }
+            this[NavigationMixin.Navigate](pageReference);
         })
         .catch(e => {
             this._toast(LABEL_ERROR, e?.body?.message || e?.message || LABEL_ERROR, 'error');

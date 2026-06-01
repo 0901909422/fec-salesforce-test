@@ -241,11 +241,13 @@ function resolveRl0502TeamFromInputs(
   notReceived,
 ) {
   const deliveryTeam = resolveRl0502DeliveryCpTeam(deliveryOption);
+  const preferredDeliveryTeam =
+    flowTeam === TEAM_PM && deliveryTeam === TEAM_CP ? TEAM_PM : deliveryTeam;
 
   if (rl05Scenario === "TH1") {
     if (notReceived && option2Selected) {
-      if (deliveryTeam) {
-        return { teamCode: deliveryTeam, scenario: "IV-1-DELIVERY" };
+      if (preferredDeliveryTeam) {
+        return { teamCode: preferredDeliveryTeam, scenario: "IV-1-DELIVERY" };
       }
       if (flowTeam) {
         return { teamCode: flowTeam, scenario: "IV-1" };
@@ -256,22 +258,22 @@ function resolveRl0502TeamFromInputs(
 
   if (rl05Scenario === "TH2") {
     if (option2Selected || notReceived) {
-      if (option2Selected && deliveryTeam) {
-        return { teamCode: deliveryTeam, scenario: "IV-2-DELIVERY" };
+      if (option2Selected && preferredDeliveryTeam) {
+        return { teamCode: preferredDeliveryTeam, scenario: "IV-2-DELIVERY" };
       }
       if (flowTeam) {
         return { teamCode: flowTeam, scenario: "IV-2" };
       }
-      if (deliveryTeam) {
-        return { teamCode: deliveryTeam, scenario: "IV-2-DELIVERY" };
+      if (preferredDeliveryTeam) {
+        return { teamCode: preferredDeliveryTeam, scenario: "IV-2-DELIVERY" };
       }
     }
     return null;
   }
 
   if (rl05Scenario === "TH3") {
-    if (option2Selected && deliveryTeam) {
-      return { teamCode: deliveryTeam, scenario: "IV-3-DELIVERY" };
+    if (option2Selected && preferredDeliveryTeam) {
+      return { teamCode: preferredDeliveryTeam, scenario: "IV-3-DELIVERY" };
     }
     if (notReceived && flowTeam) {
       return { teamCode: flowTeam, scenario: "IV-3" };
@@ -280,8 +282,8 @@ function resolveRl0502TeamFromInputs(
   }
 
   if (rl05Scenario === "TH4") {
-    if (deliveryTeam) {
-      return { teamCode: deliveryTeam || flowTeam || TEAM_CP, scenario: "TH4" };
+    if (preferredDeliveryTeam) {
+      return { teamCode: preferredDeliveryTeam || flowTeam || TEAM_CP, scenario: "TH4" };
     }
     return null;
   }
@@ -384,7 +386,7 @@ export function getMrcReturnRoutingContext(
     }
   }
 
-  if (option2Selected && resolveRl0502DeliveryCpTeam(deliveryOption)) {
+  if (flowTeam !== TEAM_PM && option2Selected && resolveRl0502DeliveryCpTeam(deliveryOption)) {
     return buildEligible(TEAM_CP, "OPTION2-DELIVERY-FALLBACK");
   }
 

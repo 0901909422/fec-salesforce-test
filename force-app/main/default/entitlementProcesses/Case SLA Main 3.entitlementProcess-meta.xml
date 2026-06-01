@@ -26,7 +26,7 @@ FEC_SubCode__r.FEC_Code__c=&quot;ITC01.03&quot;
         </timeTriggers>
         <timeTriggers>
             <actions>
-                <name>SLA_Warning_15960h</name>
+                <name>SLA_Violationg_Warning_15960h</name>
                 <type>FieldUpdate</type>
             </actions>
             <timeLength>-15960</timeLength>
@@ -43,18 +43,18 @@ FEC_SubCode__r.FEC_Code__c=&quot;ITC01.01&quot;
         <minutesToComplete>960000</minutesToComplete>
         <timeTriggers>
             <actions>
-                <name>SLA_Warning_15940h</name>
+                <name>SLA_Violating_Warning_15932h</name>
                 <type>FieldUpdate</type>
             </actions>
-            <timeLength>-15940</timeLength>
+            <timeLength>-15932</timeLength>
             <workflowTimeTriggerUnit>Hours</workflowTimeTriggerUnit>
         </timeTriggers>
         <timeTriggers>
             <actions>
-                <name>SLA_Warning_15932h</name>
+                <name>SLA_Warning_15940h</name>
                 <type>FieldUpdate</type>
             </actions>
-            <timeLength>-15932</timeLength>
+            <timeLength>-15940</timeLength>
             <workflowTimeTriggerUnit>Hours</workflowTimeTriggerUnit>
         </timeTriggers>
         <useCriteriaStartTime>true</useCriteriaStartTime>
@@ -76,7 +76,7 @@ FEC_SubCode__r.FEC_Code__c=&quot;ITC01.04&quot;
         </timeTriggers>
         <timeTriggers>
             <actions>
-                <name>SLA_Warning_15932_2h</name>
+                <name>SLA_Violating_Warning_15932</name>
                 <type>FieldUpdate</type>
             </actions>
             <timeLength>-15932</timeLength>
@@ -87,7 +87,6 @@ FEC_SubCode__r.FEC_Code__c=&quot;ITC01.04&quot;
     <milestones>
         <milestoneCriteriaFormula>OR(
 FEC_SubCode__r.FEC_Code__c=&quot;ITL01.02&quot;,
-FEC_SubCode__r.FEC_Code__c=&quot;ITL01.04&quot;,
 FEC_SubCode__r.FEC_Code__c=&quot;ITL02.01&quot;,
 FEC_SubCode__r.FEC_Code__c=&quot;ITL02.02&quot;,
 FEC_SubCode__r.FEC_Code__c=&quot;ITL02.03&quot;,
@@ -100,103 +99,20 @@ FEC_SubCode__r.FEC_Code__c=&quot;ITC02.03&quot;
         <minutesToComplete>960000</minutesToComplete>
         <timeTriggers>
             <actions>
-                <name>SLA_Warning_15840h</name>
-                <type>FieldUpdate</type>
-            </actions>
-            <timeLength>-15840</timeLength>
-            <workflowTimeTriggerUnit>Hours</workflowTimeTriggerUnit>
-        </timeTriggers>
-        <timeTriggers>
-            <actions>
                 <name>SLA_Warning_15880h</name>
                 <type>FieldUpdate</type>
             </actions>
             <timeLength>-15880</timeLength>
             <workflowTimeTriggerUnit>Hours</workflowTimeTriggerUnit>
         </timeTriggers>
+        <timeTriggers>
+            <actions>
+                <name>SLA_Violating_Warning_15840h</name>
+                <type>FieldUpdate</type>
+            </actions>
+            <timeLength>-15840</timeLength>
+            <workflowTimeTriggerUnit>Hours</workflowTimeTriggerUnit>
+        </timeTriggers>
         <useCriteriaStartTime>true</useCriteriaStartTime>
-    </milestones>
-    <milestones>
-        <milestoneCriteriaFormula>OR(
-FEC_SubCode__r.FEC_Code__c=&quot;FL02.01&quot;,
-FEC_SubCode__r.FEC_Code__c=&quot;FL02.02&quot;,
-FEC_SubCode__r.FEC_Code__c=&quot;FL02.03&quot;,
-FEC_SubCode__r.FEC_Code__c=&quot;FL02.04&quot;,
-FEC_SubCode__r.FEC_Code__c=&quot;FL02.05&quot;,
-FEC_SubCode__r.FEC_Code__c=&quot;FL03.02&quot;,
-FEC_SubCode__r.FEC_Code__c=&quot;FL04.01&quot;,
-FEC_SubCode__r.FEC_Code__c=&quot;FL04.02&quot;,
-FEC_SubCode__r.FEC_Code__c=&quot;FL05.03&quot;,
-FEC_SubCode__r.FEC_Code__c=&quot;FL07.01&quot;,
-FEC_SubCode__r.FEC_Code__c=&quot;FL07.02&quot;,
-FEC_SubCode__r.FEC_Code__c=&quot;FL08.01&quot;,
-FEC_SubCode__r.FEC_Code__c=&quot;FL08.02&quot;,
-FEC_SubCode__r.FEC_Code__c=&quot;FL09.01&quot;,
-FEC_SubCode__r.FEC_Code__c=&quot;FL09.02&quot;,
-FEC_SubCode__r.FEC_Code__c=&quot;FL10.01&quot;,
-FEC_SubCode__r.FEC_Code__c=&quot;FL10.02&quot;,
-FEC_SubCode__r.FEC_Code__c=&quot;FL10.03&quot;,
-FEC_SubCategory__r.FEC_Code__c=&quot;FL11&quot;,
-FEC_SubCode__r.FEC_Code__c=&quot;CL02.01&quot;,
-FEC_SubCode__r.FEC_Code__c=&quot;CL02.02&quot;,
-FEC_SubCode__r.FEC_Code__c=&quot;CL02.03&quot;,
-FEC_SubCode__r.FEC_Code__c=&quot;CL02.04&quot;,
-FEC_SubCode__r.FEC_Code__c=&quot;CL02.05&quot;,
-FEC_SubCode__r.FEC_Code__c=&quot;CL03.02&quot;,
-FEC_SubCode__r.FEC_Code__c=&quot;CL04.01&quot;,
-FEC_SubCode__r.FEC_Code__c=&quot;CL04.02&quot;,
-FEC_SubCode__r.FEC_Code__c=&quot;CL05.03&quot;,
-FEC_SubCode__r.FEC_Code__c=&quot;FC02.01&quot;,
-FEC_SubCode__r.FEC_Code__c=&quot;FC02.02&quot;,
-FEC_SubCode__r.FEC_Code__c=&quot;FC02.03&quot;,
-FEC_SubCode__r.FEC_Code__c=&quot;FC02.04&quot;,
-FEC_SubCode__r.FEC_Code__c=&quot;FC02.05&quot;,
-FEC_SubCode__r.FEC_Code__c=&quot;FC03.02&quot;,
-FEC_SubCode__r.FEC_Code__c=&quot;FC04.01&quot;,
-FEC_SubCode__r.FEC_Code__c=&quot;FC04.02&quot;,
-FEC_SubCode__r.FEC_Code__c=&quot;FC05.03&quot;,
-FEC_SubCode__r.FEC_Code__c=&quot;FC07.01&quot;,
-FEC_SubCode__r.FEC_Code__c=&quot;FC07.02&quot;,
-FEC_SubCode__r.FEC_Code__c=&quot;FC08.01&quot;,
-FEC_SubCode__r.FEC_Code__c=&quot;FC08.02&quot;,
-FEC_SubCode__r.FEC_Code__c=&quot;FC09.01&quot;,
-FEC_SubCode__r.FEC_Code__c=&quot;FC09.02&quot;,
-FEC_SubCode__r.FEC_Code__c=&quot;FC10.01&quot;,
-FEC_SubCode__r.FEC_Code__c=&quot;FC10.02&quot;,
-FEC_SubCode__r.FEC_Code__c=&quot;FC10.03&quot;,
-FEC_SubCategory__r.FEC_Code__c=&quot;FC11&quot;,
-FEC_SubCode__r.FEC_Code__c=&quot;CC02.01&quot;,
-FEC_SubCode__r.FEC_Code__c=&quot;CC02.02&quot;,
-FEC_SubCode__r.FEC_Code__c=&quot;CC02.03&quot;,
-FEC_SubCode__r.FEC_Code__c=&quot;CC02.04&quot;,
-FEC_SubCode__r.FEC_Code__c=&quot;CC02.05&quot;,
-FEC_SubCode__r.FEC_Code__c=&quot;CC03.02&quot;,
-FEC_SubCode__r.FEC_Code__c=&quot;CC04.01&quot;,
-FEC_SubCode__r.FEC_Code__c=&quot;CC04.02&quot;,
-FEC_SubCode__r.FEC_Code__c=&quot;CC05.03&quot;,
-FEC_SubCategory__r.FEC_Code__c=&quot;FU02&quot;,
-FEC_SubCategory__r.FEC_Code__c=&quot;FU03&quot;,
-FEC_SubCategory__r.FEC_Code__c=&quot;CU02&quot;,
-FEC_SubCategory__r.FEC_Code__c=&quot;CU03&quot;
-)</milestoneCriteriaFormula>
-        <milestoneName>Case Time TAT</milestoneName>
-        <minutesToComplete>2880</minutesToComplete>
-        <timeTriggers>
-            <actions>
-                <name>SLA_Warning_4h</name>
-                <type>FieldUpdate</type>
-            </actions>
-            <timeLength>-4</timeLength>
-            <workflowTimeTriggerUnit>Hours</workflowTimeTriggerUnit>
-        </timeTriggers>
-        <timeTriggers>
-            <actions>
-                <name>SLA_Warning_8h</name>
-                <type>FieldUpdate</type>
-            </actions>
-            <timeLength>-8</timeLength>
-            <workflowTimeTriggerUnit>Hours</workflowTimeTriggerUnit>
-        </timeTriggers>
-        <useCriteriaStartTime>false</useCriteriaStartTime>
     </milestones>
 </EntitlementProcess>

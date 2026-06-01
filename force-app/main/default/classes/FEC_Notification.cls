@@ -292,45 +292,66 @@ public without sharing class FEC_Notification {
         // 2. Use helper method to calculate Target Email
         String targetEmail = getTargetEmailFromCase(currentCase);
         String caseCustomerType = currentCase.FEC_Customer_Type__c;
-        // 3. Query Notification satisfying conditions
-        //String emailChannel = FEC_ConstantCommon.EMAIL;
         
-        // System.debug('--- [getAvailableNotifications] currentStage: ' + currentStage);
-        // System.debug('--- [getAvailableNotifications] emailChannel: ' + emailChannel);
-        String query = 'SELECT Id, Name, FEC_Customer_Type__c, ' +
-                       //'FEC_Notification_Template__r.Name, ' +
-                       'FEC_Target_Group__c ' +
+        String query = 'SELECT Id, Name, FEC_Customer_Type__c, FEC_Target_Group__c, ' +
+                       'FEC_Case_Stage__c, FEC_SubCategory__c, FEC_SubCode__c ' +
                        'FROM FEC_Notification__c ' +
                        'WHERE FEC_Notification_Status__c = true ';
         
-        String stageName = currentCase?.FEC_Current_Case_Stage__r?.Name;
-        String subCategoryCode = currentCase?.FEC_SubCategory__r?.FEC_Code__c;
-        String subCodeCode = currentCase?.FEC_SubCode__r?.FEC_Code__c;
-
-        String stagePattern = String.isNotBlank(stageName) ? '%' + stageName + '%' : '';
-        String subCategoryPattern = String.isNotBlank(subCategoryCode) ? '%' + subCategoryCode + '%' : '';
-        String subCodePattern = String.isNotBlank(subCodeCode) ? '%' + subCodeCode + '%' : '';
-
+        String stageName = stageId;
         if (String.isNotBlank(stageId)) {
-            query += ' AND FEC_Case_Stage__c LIKE :stagePattern';
-        }         
+            List<FEC_Case_Stage__c> stages = [SELECT Name FROM FEC_Case_Stage__c WHERE Id = :stageId LIMIT 1];
+            if (!stages.isEmpty()) {
+                stageName = stages[0].Name;
+            }
+        }
+
+        String subCategoryCode = '';
+        if (String.isNotBlank(subCategoryId)) {
+            List<FEC_Sub_Category__c> subCats = [SELECT FEC_Code__c FROM FEC_Sub_Category__c WHERE Id = :subCategoryId LIMIT 1];
+            if (!subCats.isEmpty()) {
+                subCategoryCode = subCats[0].FEC_Code__c;
+            }
+        }
+
+        String subCodeCode = '';
+        if (String.isNotBlank(subCodeId)) {
+            List<FEC_Sub_Code__c> subCodes = [SELECT FEC_Code__c FROM FEC_Sub_Code__c WHERE Id = :subCodeId LIMIT 1];
+            if (!subCodes.isEmpty()) {
+                subCodeCode = subCodes[0].FEC_Code__c;
+            }
+        }
+
         if (String.isNotBlank(productTypeId)) {
             query += ' AND FEC_Product_Type__c = :productTypeId';
         }
         if (String.isNotBlank(categoryId)) {
             query += ' AND FEC_Category__c = :categoryId';
         }
-        if (String.isNotBlank(subCategoryId)) {
-            query += ' AND FEC_SubCategory__c LIKE :subCategoryPattern';
-        }
-        if (String.isNotBlank(subCodeId)) {
-            query += ' AND FEC_SubCode__c LIKE :subCodePattern';
-        }
 
         List<FEC_Notification__c> queried = Database.query(query);
         System.debug('--- [getAvailableNotifications] queried: ' + queried);
         List<FEC_Notification__c> validNotifs = new List<FEC_Notification__c>();
         for (FEC_Notification__c notif : queried) {
+            // Filter by stageName in memory (Long Text Area)
+            if (String.isNotBlank(stageName)) {
+                if (String.isBlank(notif.FEC_Case_Stage__c) || !notif.FEC_Case_Stage__c.contains(stageName)) {
+                    continue;
+                }
+            }
+            // Filter by subCategoryCode in memory (Long Text Area)
+            if (String.isNotBlank(subCategoryCode)) {
+                if (String.isBlank(notif.FEC_SubCategory__c) || !notif.FEC_SubCategory__c.contains(subCategoryCode)) {
+                    continue;
+                }
+            }
+            // Filter by subCodeCode in memory (Long Text Area)
+            if (String.isNotBlank(subCodeCode)) {
+                if (String.isBlank(notif.FEC_SubCode__c) || !notif.FEC_SubCode__c.contains(subCodeCode)) {
+                    continue;
+                }
+            }
+
             if (notificationMatchesCaseCustomerType(notif.FEC_Customer_Type__c, caseCustomerType)) {
                 validNotifs.add(notif);
             }
@@ -512,9 +533,12 @@ public without sharing class FEC_Notification {
         }
 
         String senderEmail = '';
-        FEC_System_Config__c systemConfig = FEC_System_Config__c.getOrgDefaults();
-        if (String.isNotBlank(systemConfig?.FEC_Sender_Email__c)) {
-            senderEmail = systemConfig.FEC_Sender_Email__c;
+        Id orgWideId = FEC_CommonUltils.getOrgWideEmailIdForNotification();
+        if (orgWideId != null) {
+            List<OrgWideEmailAddress> orgEmails = [SELECT Address FROM OrgWideEmailAddress WHERE Id = :orgWideId LIMIT 1];
+            if (!orgEmails.isEmpty()) {
+                senderEmail = orgEmails[0].Address;
+            }
         }
 
         String subject = String.isNotBlank(template.FEC_Subject_Line__c)
