@@ -2515,10 +2515,12 @@ export default class Fec_BatchCaseHandling extends LightningElement {
         IMPORT_TIMEOUT_MESSAGE
       );
       if (!result || result.success !== true) {
+        // Apex importBatchData đã ghi Failure — không gọi logFailedImport tránh 2 dòng My Bulk Actions
         await this.recordImportFailureInBulkActions(
           fileName,
           importCtx.templateName,
-          result?.message || MSG_IMPORT_FAILED
+          result?.message || MSG_IMPORT_FAILED,
+          true
         );
         return;
       }
@@ -2552,15 +2554,22 @@ export default class Fec_BatchCaseHandling extends LightningElement {
     return core.startsWith("gsrtemp") || core.startsWith("coftemp");
   }
 
-  // 01/06/2026 12:00 linhdev - Lỗi import: ghi My Bulk Actions, không toast (parse/validate trên Apex)
-  async recordImportFailureInBulkActions(fileName, templateName, reason) {
+  // 01/06/2026 12:00 linhdev - Lỗi import: ghi My Bulk Actions (chỉ client-side; Apex đã ghi thì skipLog)
+  async recordImportFailureInBulkActions(
+    fileName,
+    templateName,
+    reason,
+    skipLog = false
+  ) {
     this.importSuccessMessage = STR_EMPTY;
     this.importErrorMessage = STR_EMPTY;
-    await this.safeLogFailedImport(
-      fileName,
-      templateName,
-      reason || MSG_IMPORT_FAILED
-    );
+    if (!skipLog) {
+      await this.safeLogFailedImport(
+        fileName,
+        templateName,
+        reason || MSG_IMPORT_FAILED
+      );
+    }
     this.clearSelectedImportFile();
     await this.refreshRows();
   }
