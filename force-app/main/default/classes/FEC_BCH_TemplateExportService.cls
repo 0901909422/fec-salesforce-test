@@ -727,13 +727,22 @@ public without sharing class FEC_BCH_TemplateExportService {
                 return inlineText;
             }
         }
-        Pattern sharedPat = Pattern.compile('<v>(\\d+)</v>');
-        Matcher sharedMat = sharedPat.matcher(cellXml);
-        if (sharedMat.find() && sharedStrings != null && !sharedStrings.isEmpty()) {
-            Integer idx = Integer.valueOf(sharedMat.group(1));
-            if (idx >= 0 && idx < sharedStrings.size()) {
-                return sharedStrings[idx];
+        Pattern valuePat = Pattern.compile('(?s)<v>(.*?)</v>');
+        Matcher valueMat = valuePat.matcher(cellXml);
+        if (valueMat.find()) {
+            String rawValue = decodeXlsxTextFragment(valueMat.group(1));
+            //tugnnm37 - chỉ lookup sharedStrings khi cell type là shared string; numeric/plain value như Inputted Remarks=111 phải trả raw <v>
+            if (cellXml.contains(' t="s"') && sharedStrings != null && !sharedStrings.isEmpty()) {
+                try {
+                    Integer idx = Integer.valueOf(rawValue);
+                    if (idx >= 0 && idx < sharedStrings.size()) {
+                        return sharedStrings[idx];
+                    }
+                } catch (Exception ex) {
+                    return FEC_ConstantCommon.STR_EMPTY;
+                }
             }
+            return rawValue == null ? FEC_ConstantCommon.STR_EMPTY : rawValue;
         }
         return FEC_ConstantCommon.STR_EMPTY;
     }
@@ -2698,50 +2707,50 @@ public without sharing class FEC_BCH_TemplateExportService {
         List<String> sharedStrings
     ) {
         Map<Integer, String> colTexts = parseRowColumnTextsByIndex(worksheetXml, dataRowNum1, sharedStrings);
-        // 01/06/2026 21:00 linhdev - colTexts key là cột worksheet; map qua importColumnIndexes (không dùng index header làm key)
-        String caseIdSearch = cellTextAtImportColumn(colTexts, importColumnIndexes, headerDetect.idxCaseId);
+        //tugnnm37 - headerDetect idx đã là worksheet column index thật; đọc trực tiếp colTexts, không map lại qua importColumnIndexes
+        String caseIdSearch = cellTextAtWorksheetColumn(colTexts, headerDetect.idxCaseId);
         String routingAction = headerDetect.idxRouting >= 0
-            ? cellTextAtImportColumn(colTexts, importColumnIndexes, headerDetect.idxRouting)
+            ? cellTextAtWorksheetColumn(colTexts, headerDetect.idxRouting)
             : FEC_ConstantCommon.STR_EMPTY;
         String inputtedRemarksRaw = headerDetect.idxRemark >= 0
-            ? cellTextAtImportColumn(colTexts, importColumnIndexes, headerDetect.idxRemark)
+            ? cellTextAtWorksheetColumn(colTexts, headerDetect.idxRemark)
             : FEC_ConstantCommon.STR_EMPTY;
         Integer remarkCharLen = String.isBlank(inputtedRemarksRaw) ? 0 : inputtedRemarksRaw.length();
         String inputtedRemarks = remarkCharLen >= IMPORT_EXCEL_CELL_TEXT_MAX_LEN
             ? FEC_ConstantCommon.STR_EMPTY
             : inputtedRemarksRaw;
         String assignmentId = headerDetect.idxAssignmentId >= 0
-            ? cellTextAtImportColumn(colTexts, importColumnIndexes, headerDetect.idxAssignmentId)
+            ? cellTextAtWorksheetColumn(colTexts, headerDetect.idxAssignmentId)
             : FEC_ConstantCommon.STR_EMPTY;
         String assignmentRoutingAction = headerDetect.idxAssignmentRouting >= 0
-            ? cellTextAtImportColumn(colTexts, importColumnIndexes, headerDetect.idxAssignmentRouting)
+            ? cellTextAtWorksheetColumn(colTexts, headerDetect.idxAssignmentRouting)
             : FEC_ConstantCommon.STR_EMPTY;
         String csD2CAssessmentType = headerDetect.idxCsD2CAssessment >= 0
-            ? cellTextAtImportColumn(colTexts, importColumnIndexes, headerDetect.idxCsD2CAssessment)
+            ? cellTextAtWorksheetColumn(colTexts, headerDetect.idxCsD2CAssessment)
             : FEC_ConstantCommon.STR_EMPTY;
         String csSupportAssessment = headerDetect.idxCsSupportAssessment >= 0
-            ? cellTextAtImportColumn(colTexts, importColumnIndexes, headerDetect.idxCsSupportAssessment)
+            ? cellTextAtWorksheetColumn(colTexts, headerDetect.idxCsSupportAssessment)
             : FEC_ConstantCommon.STR_EMPTY;
         String riskLevel = headerDetect.idxRiskLevel >= 0
-            ? cellTextAtImportColumn(colTexts, importColumnIndexes, headerDetect.idxRiskLevel)
+            ? cellTextAtWorksheetColumn(colTexts, headerDetect.idxRiskLevel)
             : FEC_ConstantCommon.STR_EMPTY;
         String requiredAction = headerDetect.idxRequiredAction >= 0
-            ? cellTextAtImportColumn(colTexts, importColumnIndexes, headerDetect.idxRequiredAction)
+            ? cellTextAtWorksheetColumn(colTexts, headerDetect.idxRequiredAction)
             : FEC_ConstantCommon.STR_EMPTY;
         String classificationByCS = headerDetect.idxClassificationByCS >= 0
-            ? cellTextAtImportColumn(colTexts, importColumnIndexes, headerDetect.idxClassificationByCS)
+            ? cellTextAtWorksheetColumn(colTexts, headerDetect.idxClassificationByCS)
             : FEC_ConstantCommon.STR_EMPTY;
         String evaluationByCS = headerDetect.idxEvaluationByCS >= 0
-            ? cellTextAtImportColumn(colTexts, importColumnIndexes, headerDetect.idxEvaluationByCS)
+            ? cellTextAtWorksheetColumn(colTexts, headerDetect.idxEvaluationByCS)
             : FEC_ConstantCommon.STR_EMPTY;
         String finalProduct = headerDetect.idxFinalProduct >= 0
-            ? cellTextAtImportColumn(colTexts, importColumnIndexes, headerDetect.idxFinalProduct)
+            ? cellTextAtWorksheetColumn(colTexts, headerDetect.idxFinalProduct)
             : FEC_ConstantCommon.STR_EMPTY;
         String paymentContractAssessment = headerDetect.idxPaymentContractAssessment >= 0
-            ? cellTextAtImportColumn(colTexts, importColumnIndexes, headerDetect.idxPaymentContractAssessment)
+            ? cellTextAtWorksheetColumn(colTexts, headerDetect.idxPaymentContractAssessment)
             : FEC_ConstantCommon.STR_EMPTY;
         String cpAssessment = headerDetect.idxCpAssessment >= 0
-            ? cellTextAtImportColumn(colTexts, importColumnIndexes, headerDetect.idxCpAssessment)
+            ? cellTextAtWorksheetColumn(colTexts, headerDetect.idxCpAssessment)
             : FEC_ConstantCommon.STR_EMPTY;
         if (
             String.isBlank(caseIdSearch) &&
@@ -2801,29 +2810,12 @@ public without sharing class FEC_BCH_TemplateExportService {
     }
 
     @TestVisible
-    private static String cellTextAtImportColumn(
-        Map<Integer, String> colTexts,
-        List<Integer> importColumnIndexes,
-        Integer logicalHeaderIndex
-    ) {
-        if (
-            colTexts == null ||
-            logicalHeaderIndex == null ||
-            logicalHeaderIndex < 0 ||
-            importColumnIndexes == null ||
-            logicalHeaderIndex >= importColumnIndexes.size()
-        ) {
+    private static String cellTextAtWorksheetColumn(Map<Integer, String> colTexts, Integer worksheetCol) {
+        if (colTexts == null || worksheetCol == null || worksheetCol < 0) {
             return FEC_ConstantCommon.STR_EMPTY;
         }
-        Integer wsCol = importColumnIndexes[logicalHeaderIndex];
-        if (wsCol == null || wsCol < 0) {
-            return FEC_ConstantCommon.STR_EMPTY;
-        }
-        if (colTexts.containsKey(wsCol)) {
-            String val = colTexts.get(wsCol);
-            return val == null ? FEC_ConstantCommon.STR_EMPTY : val;
-        }
-        return FEC_ConstantCommon.STR_EMPTY;
+        String val = colTexts.get(worksheetCol);
+        return val == null ? FEC_ConstantCommon.STR_EMPTY : val;
     }
 
     private static List<String> buildOrderedHeaderCells(Map<Integer, String> colTexts) {
