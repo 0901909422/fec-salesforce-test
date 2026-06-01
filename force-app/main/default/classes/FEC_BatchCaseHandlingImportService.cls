@@ -964,6 +964,31 @@ public without sharing class FEC_BatchCaseHandlingImportService {
         return -1;
     }
 
+    // 01/06/2026 12:30 linhdev - alias header remark khớp parse import (Input Remark / Inputted Remarks)
+    private static Integer findRemarkHeaderIndex(List<String> headers) {
+        if (headers == null || headers.isEmpty()) {
+            return -1;
+        }
+        List<String> aliases = new List<String>{
+            'inputtedremarks',
+            'inputtedremark',
+            'inputremarks',
+            'inputremark'
+        };
+        for (Integer idx = 0; idx < headers.size(); idx++) {
+            String norm = normalizeHeaderKey(headers[idx]);
+            if (String.isBlank(norm)) {
+                continue;
+            }
+            for (String alias : aliases) {
+                if (norm == alias) {
+                    return idx;
+                }
+            }
+        }
+        return -1;
+    }
+
     private static String normalizeHeaderKey(String value) {
         if (String.isBlank(value)) {
             return FEC_ConstantCommon.STR_EMPTY;
@@ -1003,7 +1028,7 @@ public without sharing class FEC_BatchCaseHandlingImportService {
             if (dataRowIndex == null || headers == null || headers.isEmpty()) {
                 continue;
             }
-            Integer remarkHeaderIdx = findHeaderIndex(headers, LABEL_INPUTTED_REMARKS);
+            Integer remarkHeaderIdx = findRemarkHeaderIndex(headers);
             if (remarkHeaderIdx < 0) {
                 continue;
             }
@@ -1026,8 +1051,13 @@ public without sharing class FEC_BatchCaseHandlingImportService {
                 new List<String>{ 'inputtedremarks', 'inputtedremark', 'inputremarks', 'inputremark' }
             );
             Integer currentCharLength = pickRowInteger(row, 'inputtedRemarksCharLength');
-            Integer fileLen = fileRemark.length();
-            if (String.isBlank(currentRemark) || fileLen > currentRemark.length()) {
+            Integer fileLen = FEC_BCH_TemplateExportService.readImportCellTextLength(
+                contentVersionId,
+                sheetName,
+                dataRowIndex,
+                worksheetCol
+            );
+            if (String.isBlank(currentRemark) || fileRemark.length() > currentRemark.length()) {
                 row.put('inputtedRemarks', fileRemark);
             }
             if (currentCharLength == null || fileLen > currentCharLength) {
@@ -1205,7 +1235,11 @@ public without sharing class FEC_BatchCaseHandlingImportService {
             // 29/05/2026 19:30 linhdev - validate Inputted Remarks trước routing/scope (đúng message; remark > 32,768 không làm vỡ validate sau)
             addInputtedRemarksValidationErrors(errs, rr.inputtedRemarks, rr.inputtedRemarksCharLength);
             // 30/05/2026 16:15 linhdev - remark > 32,768: chỉ giữ lỗi remark + Case ID (tránh exception/heap che mất message)
-            Boolean remarkOverMax = isInputtedRemarksOverMaxLength(rr.inputtedRemarksCharLength);
+            Integer effectiveRemarkLen = resolveEffectiveInputtedRemarksLength(
+                rr.inputtedRemarks,
+                rr.inputtedRemarksCharLength
+            );
+            Boolean remarkOverMax = isInputtedRemarksOverMaxLength(effectiveRemarkLen);
             if (String.isBlank(rr.caseIdSearch)) {
                 addImportError(errs, System.Label.FEC_Batch_Case_Handling_Import_Err_Missing_Case_Id);
             }
@@ -3276,7 +3310,7 @@ public without sharing class FEC_BatchCaseHandlingImportService {
         if (rr == null || rr.originalHeaders == null || rr.originalCells == null || rr.originalCells.isEmpty()) {
             return FEC_ConstantCommon.STR_EMPTY;
         }
-        Integer remarkIdx = findHeaderIndex(rr.originalHeaders, LABEL_INPUTTED_REMARKS);
+        Integer remarkIdx = findRemarkHeaderIndex(rr.originalHeaders);
         if (remarkIdx < 0 || remarkIdx >= rr.originalCells.size()) {
             return FEC_ConstantCommon.STR_EMPTY;
         }

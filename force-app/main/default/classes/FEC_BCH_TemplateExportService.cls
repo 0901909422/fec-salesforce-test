@@ -227,6 +227,27 @@ public without sharing class FEC_BCH_TemplateExportService {
         Integer dataRowIndex0,
         Integer worksheetColIndex0
     ) {
+        String text = readImportCellRawText(contentVersionId, sheetName, dataRowIndex0, worksheetColIndex0);
+        return capExcelCellText(text);
+    }
+
+    // 01/06/2026 12:30 linhdev - đo đúng độ dài remark trước khi cap (tránh mất lỗi quá 32,767 ký tự)
+    public static Integer readImportCellTextLength(
+        Id contentVersionId,
+        String sheetName,
+        Integer dataRowIndex0,
+        Integer worksheetColIndex0
+    ) {
+        String text = readImportCellRawText(contentVersionId, sheetName, dataRowIndex0, worksheetColIndex0);
+        return String.isBlank(text) ? 0 : text.length();
+    }
+
+    private static String readImportCellRawText(
+        Id contentVersionId,
+        String sheetName,
+        Integer dataRowIndex0,
+        Integer worksheetColIndex0
+    ) {
         if (
             contentVersionId == null ||
             dataRowIndex0 == null ||
@@ -269,8 +290,7 @@ public without sharing class FEC_BCH_TemplateExportService {
             }
             String attrs = cellMat.group(1) == null ? FEC_ConstantCommon.STR_EMPTY : cellMat.group(1);
             String cellBody = cellMat.group(2) == null ? FEC_ConstantCommon.STR_EMPTY : cellMat.group(2);
-            String text = resolveCellDisplayText(attrs + cellBody, sharedStrings);
-            return capExcelCellText(text);
+            return resolveCellDisplayText(attrs + cellBody, sharedStrings);
         } catch (Exception ex) {
             dbg('READ_IMPORT_CELL_FAIL', ex.getMessage());
             return FEC_ConstantCommon.STR_EMPTY;
