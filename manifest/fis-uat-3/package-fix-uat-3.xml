@@ -427,6 +427,7 @@
         <members>fecRoutingAssignmentEditOverride</members>
         <members>fec_CaseAssignmentNocEditOverride</members>
         <members>fecEmailSection</members>
+        <members>fecNewRelevantTicketAction</members>
         <name>AuraDefinitionBundle</name>
     </types>
 	<types>

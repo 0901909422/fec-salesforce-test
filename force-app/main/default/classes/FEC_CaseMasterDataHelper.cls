@@ -57,6 +57,35 @@ public without sharing class FEC_CaseMasterDataHelper {
   }
 
   /**
+   * Giữ Field/LWC; với Type Assignment chỉ giữ dòng có FEC_Editable_User_Group__c chứa user group hiện tại.
+   * Tránh nhiều dòng Assignment cùng API (DS;TS vs CL;CO) — map/dedupe chỉ còn bản khớp user.
+   */
+  public static List<SObject> filterAssignmentRowsByCurrentUserGroup(
+    List<SObject> masterDatalst,
+    String currentUserGroup
+  ) {
+    if (masterDatalst == null || masterDatalst.isEmpty()) {
+      return masterDatalst;
+    }
+    List<SObject> filtered = new List<SObject>();
+    for (SObject mdsRow : masterDatalst) {
+      if (!isAssignmentRow(mdsRow)) {
+        filtered.add(mdsRow);
+        continue;
+      }
+      if (
+        isUserInEditableGroup(
+          (String) mdsRow.get('FEC_Editable_User_Group__c'),
+          currentUserGroup
+        )
+      ) {
+        filtered.add(mdsRow);
+      }
+    }
+    return filtered;
+  }
+
+  /**
    * Assignment + FEC_Hidden__c: loại khỏi masterDatalst mọi dòng có cùng FEC_Field_API_Name__c
    * (kể cả type Field/LWC khác Assignment) — chỉ với user thuộc FEC_Editable_User_Group__c
    * trên dòng Assignment đó (cùng quy tắc contains như isLwcDynamicMasterInEditMode).
