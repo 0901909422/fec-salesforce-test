@@ -42,7 +42,7 @@
     <aura:attribute name="serviceCaseToError" type="String" default="" />
 
     <!-- Custom Labels -->
-    <aura:attribute name="lblDanhXung" type="String" default="{!$Label.c.FEC_Email_Label_Danh_Xung}" />
+    <aura:attribute name="lblTitle" type="String" default="{!$Label.c.FEC_Email_Label_Title}" />
     <aura:attribute name="lblAnhChi" type="String" default="{!$Label.c.FEC_Email_Option_Anh_Chi}" />
     <aura:attribute name="lblAnh" type="String" default="{!$Label.c.FEC_Email_Option_Anh}" />
     <aura:attribute name="lblChi" type="String" default="{!$Label.c.FEC_Email_Option_Chi}" />
@@ -94,7 +94,7 @@
             <!-- Row: Title (không bắt buộc) + Reply Template -->
             <div class="field-row">
                 <div class="field-col">
-                    <label class="field-label">{!$Label.c.FEC_Email_Label_Danh_Xung}</label>
+                    <label class="field-label">{!$Label.c.FEC_Email_Label_Title}</label>
                     <lightning:select name="titleReply" label="" value="{!v.titleReply}" onchange="{!c.onTitleChange}" class="field-select">
                         <option value="">{!$Label.c.FEC_Email_Option_None}</option>
                         <option value="{!$Label.c.FEC_Email_Option_Anh_Chi}">{!$Label.c.FEC_Email_Option_Anh_Chi}</option>
@@ -202,7 +202,7 @@
             <!-- ===== INTERACTION COMPOSE (không sửa) ===== -->
             <div class="field-row">
                 <div class="field-col">
-                    <label class="field-label">{!$Label.c.FEC_Email_Label_Danh_Xung}</label>
+                    <label class="field-label">{!$Label.c.FEC_Email_Label_Title}</label>
                     <lightning:select name="titleReply" label="" value="{!v.titleReply}" onchange="{!c.onTitleChange}" class="field-select">
                         <option value="">{!$Label.c.FEC_Email_Option_None}</option>
                         <option value="{!$Label.c.FEC_Email_Option_Anh_Chi}">{!$Label.c.FEC_Email_Option_Anh_Chi}</option>

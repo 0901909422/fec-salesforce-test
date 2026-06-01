@@ -18327,4 +18327,11 @@
         <shortDescription>Hold Case Edit Success</shortDescription>
         <value>Hold Case Config was saved</value>
     </labels>
+    <labels>
+        <fullName>FEC_Email_Label_Title</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Email Section - Title label</shortDescription>
+        <value>Title</value>
+    </labels>
 </CustomLabels>
