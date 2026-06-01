@@ -97,6 +97,7 @@
         <members>FEC_BilledTx_Col_PostDate</members>
         <members>FEC_BilledTx_Col_TxnCode</members>
         <members>FEC_Download_Report</members>
+        <members>FEC_Email_Label_Title</members>
         <members>FEC_Export_View</members>
         <members>FEC_Formatted_Report</members>
         <members>FEC_Title_Context_Report</members>

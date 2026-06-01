@@ -556,6 +556,7 @@
 		<members>FEC_RA_Error_Update</members>
 		<members>FEC_Details_Only</members>
 		<members>FEC_Download_Report</members>
+		<members>FEC_Email_Label_Title</members>
 		<members>FEC_Error_Download</members>
 		<members>FEC_Export_Detail</members>
 		<members>FEC_Export_View</members>
