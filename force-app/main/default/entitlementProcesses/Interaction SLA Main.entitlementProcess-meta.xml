@@ -17,7 +17,7 @@
             <operation>equals</operation>
             <value>Outbound</value>
         </milestoneCriteriaFilterItems>
-        <milestoneName>InteractionTime</milestoneName>
+        <milestoneName>Interaction Time</milestoneName>
         <minutesToComplete>5</minutesToComplete>
         <useCriteriaStartTime>false</useCriteriaStartTime>
     </milestones>
@@ -28,7 +28,7 @@
             <operation>equals</operation>
             <value>Inbound, Chat, Email, F2F, Letter, External, Internal</value>
         </milestoneCriteriaFilterItems>
-        <milestoneName>InteractionTime</milestoneName>
+        <milestoneName>Interaction Time</milestoneName>
         <minutesToComplete>10</minutesToComplete>
         <useCriteriaStartTime>false</useCriteriaStartTime>
     </milestones>

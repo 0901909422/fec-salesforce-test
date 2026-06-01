@@ -170,6 +170,63 @@ global with sharing class FEC_GetCSMasterDataService {
         return res;
     }
 
+    public static String buildGetCSMasterDataSoapXml(SysRequestType sys) {
+        GetCSMasterDataResponse res = GetCSMasterDataRequest(sys);
+        SysResponseType sysResp = res.Sys;
+        List<MasterDataItemType> items = res.MasterDataItems;
+        Map<String, String> additionalPropsXmlCache =
+            buildAdditionalPropertiesXmlCache(items);
+        detachAdditionalPropertiesForSoapXml(items);
+        return FEC_MyCaseSoapXml.buildGetCSMasterDataSoapResponse(
+            sysResp,
+            items,
+            additionalPropsXmlCache
+        );
+    }
+
+    private static Map<String, String> buildAdditionalPropertiesXmlCache(
+        List<MasterDataItemType> items
+    ) {
+        Map<String, String> cache = new Map<String, String>();
+        if (items == null || items.isEmpty()) {
+            return cache;
+        }
+
+        loadSettings();
+        Set<String> applyTos = new Set<String>();
+        for (MasterDataItemType item : items) {
+            if (item == null) {
+                continue;
+            }
+            applyTos.add(item.ApplyTo);
+        }
+
+        for (String applyTo : applyTos) {
+            String cacheKey = applyTo == null ? '__NULL__' : applyTo;
+            if (cache.containsKey(cacheKey)) {
+                continue;
+            }
+            cache.put(
+                cacheKey,
+                FEC_MyCaseSoapXml.buildMasterDataAdditionalPropertiesXml(
+                    getAdditionalProperties(applyTo)
+                )
+            );
+        }
+        return cache;
+    }
+
+    private static void detachAdditionalPropertiesForSoapXml(
+        List<MasterDataItemType> items
+    ) {
+        if (items == null) {
+            return;
+        }
+        for (MasterDataItemType item : items) {
+            item.AdditionalProperties = null;
+        }
+    }
+
     // ==========================================================
     // CHILD FACTORY
     // ==========================================================
