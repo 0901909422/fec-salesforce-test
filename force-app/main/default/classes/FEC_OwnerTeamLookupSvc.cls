@@ -1,6 +1,9 @@
 /**
- * Map Owner Id (User/Queue) → FEC_Team__c qua FEC_Main_Queue__c / Group.DeveloperName + FEC_Team_Queue__c.
- * Cache theo transaction — dùng chung RAH trigger, Assignment UI, export (tránh SOQL 101 submit NOC bulk).
+ * Map Owner Id (User/Queue) → mã team Case ({@code FEC_Team__c} / Pending-{team}) qua
+ * {@code FEC_Main_Queue__c} / Group.DeveloperName + {@code FEC_Team_Queue__c}.
+ * Ưu tiên {@code FEC_Team_Queue__c.FEC_Team__c} (vd CSSupport); {@code FEC_Select_Team__c} chỉ fallback
+ * khi FEC_Team__c trống — Stage Change vẫn dùng {@code FEC_Stage_Change__c.FEC_Team_User_Group__c} riêng.
+ * Cache theo transaction — dùng chung RAH trigger, TAT, export (tránh SOQL 101 submit NOC bulk).
  */
 public without sharing class FEC_OwnerTeamLookupSvc {
 
@@ -173,13 +176,31 @@ public without sharing class FEC_OwnerTeamLookupSvc {
             FROM FEC_Team_Queue__c
             WHERE FEC_Queue_Name__c != NULL
         ]) {
-            String teamCode = String.isNotBlank(row.FEC_Select_Team__r?.Name)
-                ? row.FEC_Select_Team__r.Name
-                : row.FEC_Team__c;
+            // Toannd 01/06/2026
+            String teamCode = resolveTeamCodeFromTeamQueueRow(row);
             if (String.isNotBlank(teamCode)) {
                 teamByQueueName.put(row.FEC_Queue_Name__c, teamCode);
             }
         }
         teamByQueueNameLoaded = true;
+    }
+
+    //Toannd 01/06/2026
+    /**
+     * Mã team trên Case / history: {@code FEC_Team__c} trên FEC_Team_Queue__c (vd CSSupport).
+     * {@code FEC_Select_Team__c} (vd SP) dùng cho Stage Change — chỉ fallback khi FEC_Team__c trống.
+     */
+    @TestVisible
+    private static String resolveTeamCodeFromTeamQueueRow(FEC_Team_Queue__c row) {
+        if (row == null) {
+            return null;
+        }
+        if (String.isNotBlank(row.FEC_Team__c)) {
+            return row.FEC_Team__c.trim();
+        }
+        return row.FEC_Select_Team__r != null &&
+            String.isNotBlank(row.FEC_Select_Team__r.Name)
+            ? row.FEC_Select_Team__r.Name.trim()
+            : null;
     }
 }
