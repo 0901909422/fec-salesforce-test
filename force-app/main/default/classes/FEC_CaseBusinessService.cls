@@ -802,6 +802,9 @@ public without sharing class FEC_CaseBusinessService {
         isRevert
       );
 
+      //01/06/2026 linhdev: persist Case (RL09 Original/Updated, stage, business process) trước getData — master data query đọc DB đúng ngay lần Execute.
+      FEC_CaseInitUpdateService.runSystemCaseUpdateIfChanged(selectedCase, caseBaseline);
+
       // ============================= GET MASTET DATA SETTING ===========================
       if (err.errorlst.isEmpty()) {
         String soql =
@@ -1404,8 +1407,6 @@ public without sharing class FEC_CaseBusinessService {
       result.customerType = selectedCase.FEC_Customer_Type__c;
 
       // RL05 duplicate + UI context đã resolve trước vòng master data (mrcRl05Ui / mrcRl0502Duplicate*).
-
-      FEC_CaseInitUpdateService.runSystemCaseUpdateIfChanged(selectedCase, caseBaseline);
 
       return result;
     } catch (CaseBusinessServiceException e) {
