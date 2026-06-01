@@ -2306,6 +2306,11 @@
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
+        <editable>false</editable>
+        <field>FEC_Routing_Action_History__c.FEC_Updated_Group__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
         <editable>true</editable>
         <field>FEC_Routing_Action_History__c.FEC_Updated_User_Queue_ID__c</field>
         <readable>true</readable>
@@ -2725,7 +2730,6 @@
         <field>FEC_Sub_Code__c.FEC_Do_Not_Bother__c</field>
         <readable>true</readable>
     </fieldPermissions>
-
     <fieldPermissions>
         <editable>true</editable>
         <field>FEC_Additional_Info__c.FEC_Active_Loan_Or_Disbursed__c</field>
@@ -4401,8 +4405,7 @@
         <field>Case.FEC_User_ID__c</field>
         <readable>true</readable>
     </fieldPermissions>
-
-        <fieldPermissions>
+    <fieldPermissions>
         <editable>false</editable>
         <field>FEC_Routing_Action_History__c.FEC_Is_CA_Queue_User__c</field>
         <readable>true</readable>
