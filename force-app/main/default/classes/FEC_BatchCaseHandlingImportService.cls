@@ -1903,6 +1903,8 @@ public without sharing class FEC_BatchCaseHandlingImportService {
                 }
             }
 
+            //PhongBT 01/06/26: Không update draft remark trên case do import không dùng đến
+            /*
             for (Case c : caseRowsToUpdate) {
                 c.FEC_Draft_Remarks__c = remarksToJson(remarksByCaseId.get(c.Id));
             }
@@ -1924,6 +1926,7 @@ public without sharing class FEC_BatchCaseHandlingImportService {
                     }
                 }
             }
+            */
             if (cofOrGsr == true) {
                 applyAssignmentRemarksBulk(remarkDraftItems);
             }
