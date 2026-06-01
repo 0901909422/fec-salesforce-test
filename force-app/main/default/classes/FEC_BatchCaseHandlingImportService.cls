@@ -7,6 +7,7 @@ public without sharing class FEC_BatchCaseHandlingImportService {
     private static final String LABEL_CS_D2C_ASSESSMENT = 'CS D2C đánh giá yêu cầu';
     private static final String LABEL_CS_SUPPORT_ASSESSMENT = 'CS Support đánh giá yêu cầu';
     private static final String API_CS_SUPPORT_ASSESSMENT = 'FEC_CS_Support_Assessment_Type__c';
+    private static final String API_RD_PAYMENT_CONTRACT_ASSESSMENT = 'FEC_RD_Payment_Contract_Assessment__c';
     private static final String LABEL_RISK_LEVEL = 'Mức độ rủi ro';
     private static final String LABEL_REQUIRED_ACTION = 'Hành động cần thiết';
     private static final String RESULT_COL_STATUS = '__Status';
@@ -26,6 +27,8 @@ public without sharing class FEC_BatchCaseHandlingImportService {
     private static final String LABEL_PAYMENT_CONTRACT_ASSESSMENT = 'Payment đánh giá yêu cầu đóng hợp đồng';
     //tungnm37 - hỗ trợ alias label master data PM đang tồn tại ở sb03 để không fail vì lệch tên hiển thị
     private static final String LABEL_PAYMENT_CONTRACT_ASSESSMENT_ALIAS = 'Đánh giá của RD Payment cho yêu cầu đóng HĐ';
+    // FECuat/UAT: FEC_Field_Label_Name__c trên MDS = label metadata EN của field Case
+    private static final String LABEL_PAYMENT_CONTRACT_ASSESSMENT_MDM_EN = 'RD Payment Contract Assessment';
     private static final String LABEL_CP_ASSESSMENT = 'CP đánh giá yêu cầu';
     private static final String LABEL_INPUTTED_REMARKS = 'Inputted Remarks';
     private static final String ERR_MISSING_PAYMENT_ASSESSMENT = 'Thiếu giá trị Payment đánh giá yêu cầu đóng hợp đồng';
@@ -2495,37 +2498,38 @@ public without sharing class FEC_BatchCaseHandlingImportService {
         if (stageIds == null || stageIds.isEmpty()) {
             return out;
         }
+        List<String> importFieldLabels = new List<String>{
+            LABEL_CS_D2C_ASSESSMENT,
+            LABEL_CS_SUPPORT_ASSESSMENT,
+            LABEL_RISK_LEVEL,
+            LABEL_REQUIRED_ACTION,
+            LABEL_PAYMENT_CONTRACT_ASSESSMENT,
+            LABEL_PAYMENT_CONTRACT_ASSESSMENT_ALIAS,
+            LABEL_PAYMENT_CONTRACT_ASSESSMENT_MDM_EN,
+            LABEL_CP_ASSESSMENT
+        };
         for (FEC_Master_Data_Setting__c row : [
             SELECT FEC_Stage_Name__c, FEC_Field_Label_Name__c, FEC_Field_API_Name__c
             FROM FEC_Master_Data_Setting__c
             WHERE FEC_Stage_Name__c IN :stageIds
             AND (
-                FEC_Field_Label_Name__c IN :new List<String>{
-                    LABEL_CS_D2C_ASSESSMENT,
-                    LABEL_CS_SUPPORT_ASSESSMENT,
-                    LABEL_RISK_LEVEL,
-                    LABEL_REQUIRED_ACTION,
-                    LABEL_PAYMENT_CONTRACT_ASSESSMENT,
-                    LABEL_CP_ASSESSMENT
+                FEC_Field_Label_Name__c IN :importFieldLabels
+                OR FEC_Field_API_Name__c IN :new List<String>{
+                    API_CS_SUPPORT_ASSESSMENT,
+                    API_RD_PAYMENT_CONTRACT_ASSESSMENT
                 }
-                OR FEC_Field_API_Name__c = :API_CS_SUPPORT_ASSESSMENT
             )
-            AND FEC_Field_Label_Name__c IN :new List<String>{
-                LABEL_CS_D2C_ASSESSMENT,
-                LABEL_CS_SUPPORT_ASSESSMENT,
-                LABEL_RISK_LEVEL,
-                LABEL_REQUIRED_ACTION,
-                LABEL_PAYMENT_CONTRACT_ASSESSMENT,
-                LABEL_PAYMENT_CONTRACT_ASSESSMENT_ALIAS,
-                LABEL_CP_ASSESSMENT
-            }
         ]) {
             if (row.FEC_Stage_Name__c == null) {
                 continue;
             }
             Boolean isCsSupportByApi =
                 API_CS_SUPPORT_ASSESSMENT.equalsIgnoreCase(row.FEC_Field_API_Name__c);
-            if (String.isBlank(row.FEC_Field_Label_Name__c) && isCsSupportByApi != true) {
+            Boolean isPaymentByApi =
+                API_RD_PAYMENT_CONTRACT_ASSESSMENT.equalsIgnoreCase(row.FEC_Field_API_Name__c);
+            if (String.isBlank(row.FEC_Field_Label_Name__c) &&
+                isCsSupportByApi != true &&
+                isPaymentByApi != true) {
                 continue;
             }
             if (!out.containsKey(row.FEC_Stage_Name__c)) {
@@ -2537,6 +2541,12 @@ public without sharing class FEC_BatchCaseHandlingImportService {
             // MDM label EN (CS Support Assessment Type) vs template VN (CS Support đánh giá yêu cầu)
             if (isCsSupportByApi) {
                 out.get(row.FEC_Stage_Name__c).add(normalizeToken(LABEL_CS_SUPPORT_ASSESSMENT));
+            }
+            // PM import template label vs MDM alias (Đánh giá của RD Payment cho yêu cầu đóng HĐ)
+            if (isPaymentByApi) {
+                out.get(row.FEC_Stage_Name__c).add(normalizeToken(LABEL_PAYMENT_CONTRACT_ASSESSMENT));
+                out.get(row.FEC_Stage_Name__c).add(normalizeToken(LABEL_PAYMENT_CONTRACT_ASSESSMENT_ALIAS));
+                out.get(row.FEC_Stage_Name__c).add(normalizeToken(LABEL_PAYMENT_CONTRACT_ASSESSMENT_MDM_EN));
             }
         }
         return out;
@@ -2730,7 +2740,8 @@ public without sharing class FEC_BatchCaseHandlingImportService {
                 LABEL_PAYMENT_CONTRACT_ASSESSMENT,
                 new Set<String>{
                     normalizeToken(LABEL_PAYMENT_CONTRACT_ASSESSMENT),
-                    normalizeToken(LABEL_PAYMENT_CONTRACT_ASSESSMENT_ALIAS)
+                    normalizeToken(LABEL_PAYMENT_CONTRACT_ASSESSMENT_ALIAS),
+                    normalizeToken(LABEL_PAYMENT_CONTRACT_ASSESSMENT_MDM_EN)
                 },
                 ERR_MISSING_PAYMENT_ASSESSMENT,
                 ERR_INVALID_PAYMENT_ASSESSMENT,
