@@ -528,6 +528,8 @@ public without sharing class FEC_BatchCaseHandlingImportService {
         if (sourceContentVersionId == null) {
             return null;
         }
+        // 01/06/2026 20:30 linhdev - layout Result đọc từ file import trên server (parse Apex), không dùng originalCells LWC lệch cột
+        rowResults = enrichImportRowsLayoutFromSourceFile(sourceContentVersionId, rowResults);
         // 01/06/2026 16:30 linhdev - alias remark header; tránh lệch cột khi export Result
         Integer inputtedRemarksIndex = findRemarkHeaderIndex(sourceHeaders);
         if (inputtedRemarksIndex < 0) {
@@ -554,7 +556,21 @@ public without sharing class FEC_BatchCaseHandlingImportService {
                 continue;
             }
             List<String> cells = new List<String>();
-            if (row.originalCells != null && !row.originalCells.isEmpty()) {
+            // 01/06/2026 21:00 linhdev - đọc từng ô từ file gốc theo mappedColumnIndexes (không tin originalCells LWC)
+            if (
+                sourceContentVersionId != null &&
+                row.originalDataRowIndex != null &&
+                mappedColumnIndexes != null &&
+                !mappedColumnIndexes.isEmpty()
+            ) {
+                cells = rebuildExportCellsFromSourceFile(
+                    sourceContentVersionId,
+                    sourceSheetName,
+                    row.originalDataRowIndex,
+                    mappedColumnIndexes,
+                    sourceHeaders.size()
+                );
+            } else if (row.originalCells != null && !row.originalCells.isEmpty()) {
                 for (String cell : row.originalCells) {
                     cells.add(rowValue(cell));
                 }
@@ -593,6 +609,8 @@ public without sharing class FEC_BatchCaseHandlingImportService {
             }
             // 01/06/2026 16:30 linhdev - không copy remark sang Routing Action trên file Result
             clearRoutingCellIfRemarkBleed(cells, routingActionIndex, inputtedRemarksIndex);
+            // 01/06/2026 18:00 linhdev - Case ID đúng cột header; xóa bản sao lệch cột khi originalCells/map lệch
+            syncCaseIdIntoExportCells(cells, sourceHeaders, rowValue(row.caseIdSearch));
             dataRows.add(cells);
             insertValues.add(
                 new List<String>{
@@ -881,6 +899,138 @@ public without sharing class FEC_BatchCaseHandlingImportService {
         return value == null ? FEC_ConstantCommon.STR_EMPTY : String.valueOf(value);
     }
 
+    // 01/06/2026 20:30 linhdev - thay layout row bằng parse server từ ContentVersion; giữ status/errors từ validate LWC
+    @TestVisible
+    private static List<FEC_BatchCaseHandlingImportRow> enrichImportRowsLayoutFromSourceFile(
+        Id sourceContentVersionId,
+        List<FEC_BatchCaseHandlingImportRow> rowResults
+    ) {
+        if (sourceContentVersionId == null || rowResults == null || rowResults.isEmpty()) {
+            return rowResults;
+        }
+        FEC_BCH_TemplateExportService.ImportWorkbookParseResult parsed =
+            FEC_BCH_TemplateExportService.parseBatchImportWorkbook(sourceContentVersionId);
+        if (parsed == null || parsed.parseSuccess != true || parsed.inputRows == null || parsed.inputRows.isEmpty()) {
+            return rowResults;
+        }
+        List<FEC_BatchCaseHandlingImportRow> parsedRows;
+        try {
+            parsedRows = (List<FEC_BatchCaseHandlingImportRow>) JSON.deserialize(
+                JSON.serialize(parsed.inputRows),
+                List<FEC_BatchCaseHandlingImportRow>.class
+            );
+        } catch (Exception ex) {
+            return rowResults;
+        }
+        if (parsedRows == null || parsedRows.isEmpty()) {
+            return rowResults;
+        }
+        Map<Integer, FEC_BatchCaseHandlingImportRow> lwcByDataRow = new Map<Integer, FEC_BatchCaseHandlingImportRow>();
+        Map<String, FEC_BatchCaseHandlingImportRow> lwcByCaseId = new Map<String, FEC_BatchCaseHandlingImportRow>();
+        for (FEC_BatchCaseHandlingImportRow lwcRow : rowResults) {
+            if (lwcRow == null) {
+                continue;
+            }
+            if (lwcRow.originalDataRowIndex != null) {
+                lwcByDataRow.put(lwcRow.originalDataRowIndex, lwcRow);
+            }
+            String caseKey = rowValue(lwcRow.caseIdSearch);
+            if (String.isNotBlank(caseKey)) {
+                lwcByCaseId.put(caseKey, lwcRow);
+            }
+        }
+        List<FEC_BatchCaseHandlingImportRow> merged = new List<FEC_BatchCaseHandlingImportRow>();
+        for (FEC_BatchCaseHandlingImportRow parsedRow : parsedRows) {
+            if (parsedRow == null) {
+                continue;
+            }
+            FEC_BatchCaseHandlingImportRow lwcMatch = null;
+            if (parsedRow.originalDataRowIndex != null) {
+                lwcMatch = lwcByDataRow.get(parsedRow.originalDataRowIndex);
+            }
+            if (lwcMatch == null) {
+                String caseKey = rowValue(parsedRow.caseIdSearch);
+                if (String.isNotBlank(caseKey)) {
+                    lwcMatch = lwcByCaseId.get(caseKey);
+                }
+            }
+            if (lwcMatch != null) {
+                mergeImportRowValidationFields(parsedRow, lwcMatch);
+            }
+            merged.add(parsedRow);
+        }
+        return merged.isEmpty() ? rowResults : merged;
+    }
+
+    @TestVisible
+    private static List<String> rebuildExportCellsFromSourceFile(
+        Id sourceContentVersionId,
+        String sourceSheetName,
+        Integer dataRowIndex0,
+        List<Integer> mappedColumnIndexes,
+        Integer headerSize
+    ) {
+        List<String> cells = new List<String>();
+        Integer safeHeaderSize = headerSize == null || headerSize < 0 ? 0 : headerSize;
+        for (Integer idx = 0; idx < safeHeaderSize; idx++) {
+            Integer wsCol = idx;
+            if (mappedColumnIndexes != null && idx < mappedColumnIndexes.size() && mappedColumnIndexes[idx] != null) {
+                wsCol = mappedColumnIndexes[idx];
+            }
+            cells.add(
+                FEC_BCH_TemplateExportService.readImportCellText(
+                    sourceContentVersionId,
+                    sourceSheetName,
+                    dataRowIndex0,
+                    wsCol
+                )
+            );
+        }
+        return cells;
+    }
+
+    private static void mergeImportRowValidationFields(
+        FEC_BatchCaseHandlingImportRow target,
+        FEC_BatchCaseHandlingImportRow source
+    ) {
+        if (target == null || source == null) {
+            return;
+        }
+        target.status = source.status;
+        target.errors = source.errors;
+        target.routingAction = source.routingAction;
+        target.inputtedRemarks = source.inputtedRemarks;
+        target.inputtedRemarksCharLength = source.inputtedRemarksCharLength;
+        target.assignmentId = source.assignmentId;
+        target.assignmentRoutingAction = source.assignmentRoutingAction;
+        target.csD2CAssessmentType = source.csD2CAssessmentType;
+        target.csSupportAssessment = source.csSupportAssessment;
+        target.riskLevel = source.riskLevel;
+        target.requiredAction = source.requiredAction;
+        target.classificationByCS = source.classificationByCS;
+        target.evaluationByCS = source.evaluationByCS;
+        target.finalProduct = source.finalProduct;
+        target.paymentContractAssessment = source.paymentContractAssessment;
+        target.cpAssessment = source.cpAssessment;
+        target.actionButtonId = source.actionButtonId;
+        target.routingActionValue = source.routingActionValue;
+        target.routeViaRevertButton = source.routeViaRevertButton;
+        target.revertPreferRevertedChange = source.revertPreferRevertedChange;
+        target.csD2CAssessmentTypeApiValue = source.csD2CAssessmentTypeApiValue;
+        target.csSupportAssessmentApiValue = source.csSupportAssessmentApiValue;
+        target.riskLevelApiValue = source.riskLevelApiValue;
+        target.requiredActionApiValue = source.requiredActionApiValue;
+        target.classificationByCSApiValue = source.classificationByCSApiValue;
+        target.evaluationByCSApiValue = source.evaluationByCSApiValue;
+        target.finalProductApiValue = source.finalProductApiValue;
+        target.paymentContractAssessmentApiValue = source.paymentContractAssessmentApiValue;
+        target.cpAssessmentApiValue = source.cpAssessmentApiValue;
+        target.recordId = source.recordId;
+        if (String.isNotBlank(source.caseIdSearch)) {
+            target.caseIdSearch = source.caseIdSearch;
+        }
+    }
+
     private static List<Integer> buildResultMappedColumnIndexes(
         Id sourceContentVersionId,
         Integer sourceHeaderRowIndex,
@@ -892,7 +1042,7 @@ public without sharing class FEC_BatchCaseHandlingImportService {
         if (sourceHeaders == null || sourceHeaders.isEmpty()) {
             return mapped;
         }
-        // 30/05/2026 11:30 linhdev - ưu tiên map từ file import gốc (tránh lệch cột khi LWC gửi sai index)
+        // 01/06/2026 20:30 linhdev - map cột từ file Excel gốc (đúng Case ID cột T); LWC originalColumnIndexes hay lệch
         if (sourceContentVersionId != null) {
             mapped = FEC_BCH_TemplateExportService.resolveMappedColumnIndexesForHeaders(
                 sourceContentVersionId,
@@ -904,7 +1054,6 @@ public without sharing class FEC_BatchCaseHandlingImportService {
         if (!mapped.isEmpty() && mapped.size() == sourceHeaders.size()) {
             return mapped;
         }
-        mapped = new List<Integer>();
         List<Integer> worksheetCols = null;
         if (rowResults != null) {
             for (FEC_BatchCaseHandlingImportRow row : rowResults) {
@@ -918,12 +1067,15 @@ public without sharing class FEC_BatchCaseHandlingImportService {
                 }
             }
         }
-        for (Integer idx = 0; idx < sourceHeaders.size(); idx++) {
-            Integer colIdx = idx;
-            if (worksheetCols != null && idx < worksheetCols.size() && worksheetCols[idx] != null) {
-                colIdx = worksheetCols[idx];
+        if (worksheetCols != null && worksheetCols.size() == sourceHeaders.size()) {
+            for (Integer colIdx : worksheetCols) {
+                mapped.add(colIdx);
             }
-            mapped.add(colIdx);
+            return mapped;
+        }
+        mapped = new List<Integer>();
+        for (Integer idx = 0; idx < sourceHeaders.size(); idx++) {
+            mapped.add(idx);
         }
         return mapped;
     }
@@ -982,6 +1134,50 @@ public without sharing class FEC_BatchCaseHandlingImportService {
             'inputtedremark',
             'inputremarks',
             'inputremark'
+        };
+        for (Integer idx = 0; idx < headers.size(); idx++) {
+            String norm = normalizeHeaderKey(headers[idx]);
+            if (String.isBlank(norm)) {
+                continue;
+            }
+            for (String alias : aliases) {
+                if (norm == alias) {
+                    return idx;
+                }
+            }
+        }
+        return -1;
+    }
+
+    // 01/06/2026 18:00 linhdev - ghi Case ID đúng cột Case ID trên Result; gỡ giá trị dính sai cột (vd. Plastic ID / cột I)
+    @TestVisible
+    private static void syncCaseIdIntoExportCells(
+        List<String> cells,
+        List<String> headers,
+        String caseIdSearch
+    ) {
+        if (cells == null || headers == null || String.isBlank(caseIdSearch)) {
+            return;
+        }
+        Integer caseHeaderIdx = findCaseIdHeaderIndex(headers);
+        if (caseHeaderIdx < 0 || caseHeaderIdx >= cells.size()) {
+            return;
+        }
+        for (Integer idx = 0; idx < cells.size(); idx++) {
+            if (idx != caseHeaderIdx && caseIdSearch.equals(rowValue(cells[idx]))) {
+                cells[idx] = FEC_ConstantCommon.STR_EMPTY;
+            }
+        }
+        cells[caseHeaderIdx] = caseIdSearch;
+    }
+
+    private static Integer findCaseIdHeaderIndex(List<String> headers) {
+        if (headers == null || headers.isEmpty()) {
+            return -1;
+        }
+        List<String> aliases = new List<String>{
+            'caseid',
+            'caseidsearch'
         };
         for (Integer idx = 0; idx < headers.size(); idx++) {
             String norm = normalizeHeaderKey(headers[idx]);
