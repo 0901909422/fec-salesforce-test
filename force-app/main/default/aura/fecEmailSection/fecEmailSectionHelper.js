@@ -940,6 +940,8 @@
             'Anh/ Ch\u1ECB', 'Anh/Ch\u1ECB', 'Anh / Ch\u1ECB',
             'Anh/ Chi', 'Anh/Chi', 'Anh / Chi',
             '{danh_xung}', '{DANH_XUNG}',
+            'Quý khách hàng', 'Quý Khách hàng', 'Quý Khách Hàng',
+            'Quý khách', 'Quý Khách',
             'Ch\u1ECB', 'Chi', 'Anh'
         ];
         var result = html;
@@ -976,9 +978,24 @@
     applyTitleToBody: function(component, title) {
         var body = component.get('v.body') || '';
         if (!body) return;
-        var updated = this.replaceDanhXung(body, title);
+        var updated = this.replaceDanhXung(body, title || '');
         component.set('v.body', updated);
-        if (window._fecQuill) window._fecQuill.clipboard.dangerouslyPasteHTML(this.cleanBody(updated));
+        component.set('v.rawBody', updated);
+        if (window._fecQuill) {
+            var q = window._fecQuill;
+            var cleaned = this.cleanBody(updated);
+            if (q.scroll && q.scroll.observer) {
+                q.scroll.observer.disconnect();
+            }
+            q.root.innerHTML = cleaned;
+            q.root.classList.remove('ql-blank');
+            this._makeTableCellsEditable(q.root);
+            window.setTimeout(function() {
+                if (q.scroll && q.scroll.observer) {
+                    q.scroll.observer.observe(q.root, q.scroll.observer._options || { childList: true, subtree: true, characterData: true });
+                }
+            }, 100);
+        }
     },
 
     doSendEmail: function(component, toEmail, subject, body, attachments) {

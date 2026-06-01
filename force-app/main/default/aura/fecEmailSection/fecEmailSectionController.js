@@ -63,31 +63,49 @@
             var body = helper.replaceDanhXung(rawBody, title);
             // Ghép header + body + footer
             var fullBody = (header ? header : '') + body + (footer ? footer : '');
-            component.set('v.body', fullBody);
-            component.set('v.rawBody', fullBody); // tungnm37: lưu raw HTML để gửi email
-            if (window._fecQuill) {
-                var _q = window._fecQuill;
-                var _body = helper.cleanBody(fullBody);
-                window.setTimeout(function() {
-                    if (_q.scroll && _q.scroll.observer) {
-                        _q.scroll.observer.disconnect();
-                    }
-                    _q.root.innerHTML = _body;
-                    _q.root.classList.remove('ql-blank');
-                    // tungnm37 thêm: đảm bảo td/th từ template có contenteditable
-                    helper._makeTableCellsEditable(_q.root);
+            var templateSubject = subjects && subjects[templateId] ? subjects[templateId] : '';
+
+            var renderResolvedTemplate = function(resolvedSubject, resolvedBody) {
+                component.set('v.body', resolvedBody);
+                component.set('v.rawBody', resolvedBody); // lưu HTML đã resolve để gửi email
+                if (window._fecQuill) {
+                    var _q = window._fecQuill;
+                    var _body = helper.cleanBody(resolvedBody);
                     window.setTimeout(function() {
                         if (_q.scroll && _q.scroll.observer) {
-                            _q.scroll.observer.observe(_q.root, _q.scroll.observer._options || { childList: true, subtree: true, characterData: true });
+                            _q.scroll.observer.disconnect();
                         }
-                    }, 100);
-                }, 50);
-            }
-            // Apply subject từ template, giữ prefix RE:/FW: nếu đang reply/forward
-            var templateSubject = subjects && subjects[templateId] ? subjects[templateId] : '';
-            if (templateSubject) {
-                component.set('v.subject', templateSubject);
-            }
+                        _q.root.innerHTML = _body;
+                        _q.root.classList.remove('ql-blank');
+                        // tungnm37 thêm: đảm bảo td/th từ template có contenteditable
+                        helper._makeTableCellsEditable(_q.root);
+                        window.setTimeout(function() {
+                            if (_q.scroll && _q.scroll.observer) {
+                                _q.scroll.observer.observe(_q.root, _q.scroll.observer._options || { childList: true, subtree: true, characterData: true });
+                            }
+                        }, 100);
+                    }, 50);
+                }
+                if (resolvedSubject) {
+                    component.set('v.subject', resolvedSubject);
+                }
+            };
+
+            var resolveAction = component.get('c.resolveEmailTemplate');
+            resolveAction.setParams({
+                caseId: component.get('v.recordId'),
+                subject: templateSubject,
+                body: fullBody
+            });
+            resolveAction.setCallback(this, function(resp) {
+                if (resp.getState() === 'SUCCESS') {
+                    var resolved = resp.getReturnValue() || {};
+                    renderResolvedTemplate(resolved.subject || templateSubject, resolved.body || fullBody);
+                } else {
+                    renderResolvedTemplate(templateSubject, fullBody);
+                }
+            });
+            $A.enqueueAction(resolveAction);
             // Load attachments từ template (pre-loaded in templateAttachments cache)
             var allAtts = component.get('v.templateAttachments') || {};
             var tmplAtts = allAtts[templateId] || [];
