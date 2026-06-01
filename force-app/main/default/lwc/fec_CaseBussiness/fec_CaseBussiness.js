@@ -307,7 +307,7 @@ const CS_D2C_RISK_LEVEL = "FEC_CS_D2C_Risk_Level__c";
 const CS_SUPPORT_ASSESMENT_TYPE = "FEC_CS_Support_Assessment_Type__c";
 const CONFIRM_D2C_ASSESMENT = "FEC_Confirm_D2C_Assessment__c";
 const ACTIONS_TAKEN_D2C_ASSESMENT = "FEC_Actions_Taken_D2C_Assessment__c";
-const CONFIRM_CS_SP_ASSESMENT = "Case.FEC_Confirm_CS_SP_Assessment__c";
+const CONFIRM_CS_SP_ASSESMENT = "FEC_Confirm_CS_SP_Assessment__c";
 const FIELD_COMPLAIN_TYPE = "FEC_Complain_Type__c";
 const FIELD_COMPLAINT_SOURCE = "FEC_Complaint_Source__c";
 const VALUE_COMPLAINT_SOURCE = ['High risk', 'Urgent'];
@@ -583,6 +583,21 @@ function normalizeSubSectionName(value) {
   return value.trim().toLowerCase();
 }
 
+/** Revert 2→1 / 3→1: ẩn subsection xác nhận (khớp logic Apex shouldHideRevertConfirmSubSection). */
+function shouldHideRevertConfirmSubSection(subSectionName, sourceStage) {
+  if (!subSectionName || (sourceStage !== 2 && sourceStage !== 3)) {
+    return false;
+  }
+  const n = normalizeSubSectionName(subSectionName);
+  if (sourceStage === 3) {
+    return n.includes("confirm") && n.includes("d2c");
+  }
+  if (sourceStage === 2) {
+    return n.includes("confirm") && (n.includes("cs sp") || n.includes("support"));
+  }
+  return false;
+}
+
 /**
  * Gộp subsection (field) + LWC đã resolve — sort theo FEC_Sub_Section_Order__c (thứ tự DOM).
  */
@@ -601,6 +616,9 @@ function mergeSectionSortedRows(section) {
       return;
     }
     if (sub._hideForMrcRl05 || sub.hideForMrcRl05) {
+      return;
+    }
+    if (sub._hideForRevertConfirmAssessment === true) {
       return;
     }
     const fecOrd = readFecSubSectionOrder(sub);
@@ -1102,6 +1120,49 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
   }
 
   /** Khi load màn: đồng bộ hiển thị nút process theo CS Support đánh giá (không gán Action Routing). */
+  /**
+   * Revert 2→1 / 3→1: chỉ hiện field xác nhận đánh giá của stage nguồn (Apex + fallback LWC).
+   */
+  _applyRevertConfirmAssessmentFieldVisibility() {
+    const sourceStage = this.business?.revertConfirmAssessmentSourceStage;
+    if (sourceStage !== 2 && sourceStage !== 3) {
+      return;
+    }
+    const hideApi =
+      sourceStage === 2 ? CONFIRM_CS_SP_ASSESMENT : CONFIRM_D2C_ASSESMENT;
+    let changed = false;
+    this.business.sectionlst?.forEach((section) => {
+      section.subSectionlst?.forEach((sub) => {
+        const hideSub = shouldHideRevertConfirmSubSection(sub.name, sourceStage);
+        if (sub._hideForRevertConfirmAssessment !== hideSub) {
+          sub._hideForRevertConfirmAssessment = hideSub;
+          changed = true;
+        }
+        if (hideSub) {
+          return;
+        }
+        sub.objlst?.forEach((obj) => {
+          obj.fieldlst?.forEach((field) => {
+            if (field.apiName !== hideApi) {
+              return;
+            }
+            field.isHidden = true;
+            field.hidden = true;
+            const baseClass =
+              "slds-col slds-size_1-of-1 " +
+              (SLDS_MEDIUM_SIZE_OF_12[field.layout] || SLDS_MEDIUM_SIZE_OF_12[12]);
+            field.className = baseClass + " slds-hide";
+            changed = true;
+          });
+        });
+      });
+    });
+    if (changed) {
+      this.business = { ...this.business };
+      this._rebuildAllSectionSortedRows();
+    }
+  }
+
   _applyCsSupportAssessmentRoutingActionSync() {
     if (
       !this.isEdit ||
@@ -2862,6 +2923,7 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
         if (foundActions.length > 0 && this.isEdit) {
           this.updateRoutingActionDisplay(foundActions.join(";"));
         }
+        this._applyRevertConfirmAssessmentFieldVisibility();
         this._applyCsSupportAssessmentRoutingActionSync();
         this._applyInternalFieldVisibility();
         //linhdev fix jira FECREDIT_CSM_2025_KH-1294
@@ -3518,6 +3580,9 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
           break;
 
         case CASE_CONFIRM_D2C_ASSESMENT:
+          if (this.business?.revertConfirmAssessmentSourceStage === 3) {
+            break;
+          }
           toReject = TYPE_AGREE == value;
           toRouteTo = TYPE_DISAGREE == value;
 
@@ -3532,6 +3597,9 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
           break;
 
         case CASE_CONFIRM_CS_SP_ASSESMENT:
+          if (this.business?.revertConfirmAssessmentSourceStage === 2) {
+            break;
+          }
           toReject = TYPE_AGREE == value;
           toRouteTo = TYPE_DISAGREE == value;
           break;
