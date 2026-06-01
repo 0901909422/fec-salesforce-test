@@ -126,11 +126,12 @@ public without sharing class FEC_BCH_TemplateExportService {
                     resultColStyles
                 );
                 mappedCols = shiftMappedColumnIndexes(mappedCols, insertBefore, insertHeaders.size());
+                // 01/06/2026 16:30 linhdev - __Status/__Errors chèn cuối mảng dataRows (insertBefore là cột worksheet, không cắt lệch remark/routing)
                 dataRows = mergeInsertColumnValues(
                     dataRows,
                     insertValues,
                     insertHeaders.size(),
-                    insertBefore
+                    resolveDataRowsLogicalWidth(dataRows)
                 );
             }
             Integer preserveSourceColIdx = req.preserveSourceWorksheetColIndex;
@@ -1431,6 +1432,14 @@ public without sharing class FEC_BCH_TemplateExportService {
                 val = String.valueOf(values[valueIdx]);
             }
             valueIdx += 1;
+            // 01/06/2026 16:30 linhdev - remark dài chỉ giữ ở cột preserve; không upsert sang Routing Action
+            if (
+                preserveTargetColIdx != null &&
+                colIdx != preserveTargetColIdx &&
+                val.length() >= IMPORT_EXCEL_CELL_TEXT_MAX_LEN
+            ) {
+                val = FEC_ConstantCommon.STR_EMPTY;
+            }
             String styleAttr = resolveResultDataCellStyleAttr(
                 resultColStyles,
                 insertBeforeColIndex,
@@ -1488,6 +1497,8 @@ public without sharing class FEC_BCH_TemplateExportService {
         return null;
     }
 
+    // 01/06/2026 18:00 linhdev - giữ mappedCols[i] khớp dataRows[i]; dịch chỉ số cột worksheet, append __Status/__Errors cuối list
+    @TestVisible
     private static List<Integer> shiftMappedColumnIndexes(
         List<Integer> mappedCols,
         Integer insertBefore,
@@ -1497,35 +1508,31 @@ public without sharing class FEC_BCH_TemplateExportService {
         if (mappedCols == null) {
             return out;
         }
-        //tungnm37 - chèn cột result/property đúng ngay vị trí insertBefore để thứ tự cột khớp thứ tự values
-        List<Integer> beforeCols = new List<Integer>();
-        List<Integer> afterCols = new List<Integer>();
-        Integer safeInsertBefore = insertBefore == null ? 0 : insertBefore;
+        Integer safeInsertBefore = insertBefore == null ? 2147483647 : insertBefore;
         Integer safeInsertCount = insertCount == null || insertCount < 0 ? 0 : insertCount;
         for (Integer colIdx : mappedCols) {
             if (colIdx == null || colIdx < 0) {
                 continue;
             }
-            if (safeInsertCount > 0 && colIdx >= safeInsertBefore) {
-                afterCols.add(colIdx + safeInsertCount);
-            } else {
-                beforeCols.add(colIdx);
+            Integer wsCol = colIdx;
+            if (safeInsertCount > 0 && wsCol >= safeInsertBefore) {
+                wsCol += safeInsertCount;
             }
+            out.add(wsCol);
         }
-        out.addAll(beforeCols);
         for (Integer i = 0; i < safeInsertCount; i++) {
             out.add(safeInsertBefore + i);
         }
-        out.addAll(afterCols);
         return out;
     }
 
-    // 30/05/2026 11:30 linhdev - ghép __Status/__Errors đúng insertBefore (cuối sheet khi insertBefore == base.size())
+    // 01/06/2026 16:30 linhdev - ghép __Status/__Errors cuối mảng dataRows (logicalInsertBefore, không dùng chỉ số cột worksheet)
+    @TestVisible
     private static List<List<String>> mergeInsertColumnValues(
         List<List<String>> dataRows,
         List<List<String>> insertValues,
         Integer insertCount,
-        Integer insertBefore
+        Integer logicalInsertBefore
     ) {
         List<List<String>> out = new List<List<String>>();
         if (dataRows == null) {
@@ -1538,8 +1545,8 @@ public without sharing class FEC_BCH_TemplateExportService {
                 ? insertValues[rowIdx]
                 : new List<String>();
             Integer splitIndex = base.size();
-            if (insertBefore != null && insertBefore >= 0 && insertBefore <= base.size()) {
-                splitIndex = insertBefore;
+            if (logicalInsertBefore != null && logicalInsertBefore >= 0 && logicalInsertBefore <= base.size()) {
+                splitIndex = logicalInsertBefore;
             }
             List<String> merged = new List<String>();
             for (Integer i = 0; i < splitIndex && i < base.size(); i++) {
@@ -1558,6 +1565,20 @@ public without sharing class FEC_BCH_TemplateExportService {
             out.add(merged);
         }
         return out;
+    }
+
+    @TestVisible
+    private static Integer resolveDataRowsLogicalWidth(List<List<String>> dataRows) {
+        if (dataRows == null || dataRows.isEmpty()) {
+            return 0;
+        }
+        Integer maxWidth = 0;
+        for (List<String> row : dataRows) {
+            if (row != null && row.size() > maxWidth) {
+                maxWidth = row.size();
+            }
+        }
+        return maxWidth;
     }
 
     private static String insertPropertyColumnsInWorksheet(
@@ -2677,49 +2698,50 @@ public without sharing class FEC_BCH_TemplateExportService {
         List<String> sharedStrings
     ) {
         Map<Integer, String> colTexts = parseRowColumnTextsByIndex(worksheetXml, dataRowNum1, sharedStrings);
-        String caseIdSearch = cellTextAtLogicalIndex(colTexts, headerDetect.idxCaseId);
+        // 01/06/2026 21:00 linhdev - colTexts key là cột worksheet; map qua importColumnIndexes (không dùng index header làm key)
+        String caseIdSearch = cellTextAtImportColumn(colTexts, importColumnIndexes, headerDetect.idxCaseId);
         String routingAction = headerDetect.idxRouting >= 0
-            ? cellTextAtLogicalIndex(colTexts, headerDetect.idxRouting)
+            ? cellTextAtImportColumn(colTexts, importColumnIndexes, headerDetect.idxRouting)
             : FEC_ConstantCommon.STR_EMPTY;
         String inputtedRemarksRaw = headerDetect.idxRemark >= 0
-            ? cellTextAtLogicalIndex(colTexts, headerDetect.idxRemark)
+            ? cellTextAtImportColumn(colTexts, importColumnIndexes, headerDetect.idxRemark)
             : FEC_ConstantCommon.STR_EMPTY;
         Integer remarkCharLen = String.isBlank(inputtedRemarksRaw) ? 0 : inputtedRemarksRaw.length();
         String inputtedRemarks = remarkCharLen >= IMPORT_EXCEL_CELL_TEXT_MAX_LEN
             ? FEC_ConstantCommon.STR_EMPTY
             : inputtedRemarksRaw;
         String assignmentId = headerDetect.idxAssignmentId >= 0
-            ? cellTextAtLogicalIndex(colTexts, headerDetect.idxAssignmentId)
+            ? cellTextAtImportColumn(colTexts, importColumnIndexes, headerDetect.idxAssignmentId)
             : FEC_ConstantCommon.STR_EMPTY;
         String assignmentRoutingAction = headerDetect.idxAssignmentRouting >= 0
-            ? cellTextAtLogicalIndex(colTexts, headerDetect.idxAssignmentRouting)
+            ? cellTextAtImportColumn(colTexts, importColumnIndexes, headerDetect.idxAssignmentRouting)
             : FEC_ConstantCommon.STR_EMPTY;
         String csD2CAssessmentType = headerDetect.idxCsD2CAssessment >= 0
-            ? cellTextAtLogicalIndex(colTexts, headerDetect.idxCsD2CAssessment)
+            ? cellTextAtImportColumn(colTexts, importColumnIndexes, headerDetect.idxCsD2CAssessment)
             : FEC_ConstantCommon.STR_EMPTY;
         String csSupportAssessment = headerDetect.idxCsSupportAssessment >= 0
-            ? cellTextAtLogicalIndex(colTexts, headerDetect.idxCsSupportAssessment)
+            ? cellTextAtImportColumn(colTexts, importColumnIndexes, headerDetect.idxCsSupportAssessment)
             : FEC_ConstantCommon.STR_EMPTY;
         String riskLevel = headerDetect.idxRiskLevel >= 0
-            ? cellTextAtLogicalIndex(colTexts, headerDetect.idxRiskLevel)
+            ? cellTextAtImportColumn(colTexts, importColumnIndexes, headerDetect.idxRiskLevel)
             : FEC_ConstantCommon.STR_EMPTY;
         String requiredAction = headerDetect.idxRequiredAction >= 0
-            ? cellTextAtLogicalIndex(colTexts, headerDetect.idxRequiredAction)
+            ? cellTextAtImportColumn(colTexts, importColumnIndexes, headerDetect.idxRequiredAction)
             : FEC_ConstantCommon.STR_EMPTY;
         String classificationByCS = headerDetect.idxClassificationByCS >= 0
-            ? cellTextAtLogicalIndex(colTexts, headerDetect.idxClassificationByCS)
+            ? cellTextAtImportColumn(colTexts, importColumnIndexes, headerDetect.idxClassificationByCS)
             : FEC_ConstantCommon.STR_EMPTY;
         String evaluationByCS = headerDetect.idxEvaluationByCS >= 0
-            ? cellTextAtLogicalIndex(colTexts, headerDetect.idxEvaluationByCS)
+            ? cellTextAtImportColumn(colTexts, importColumnIndexes, headerDetect.idxEvaluationByCS)
             : FEC_ConstantCommon.STR_EMPTY;
         String finalProduct = headerDetect.idxFinalProduct >= 0
-            ? cellTextAtLogicalIndex(colTexts, headerDetect.idxFinalProduct)
+            ? cellTextAtImportColumn(colTexts, importColumnIndexes, headerDetect.idxFinalProduct)
             : FEC_ConstantCommon.STR_EMPTY;
         String paymentContractAssessment = headerDetect.idxPaymentContractAssessment >= 0
-            ? cellTextAtLogicalIndex(colTexts, headerDetect.idxPaymentContractAssessment)
+            ? cellTextAtImportColumn(colTexts, importColumnIndexes, headerDetect.idxPaymentContractAssessment)
             : FEC_ConstantCommon.STR_EMPTY;
         String cpAssessment = headerDetect.idxCpAssessment >= 0
-            ? cellTextAtLogicalIndex(colTexts, headerDetect.idxCpAssessment)
+            ? cellTextAtImportColumn(colTexts, importColumnIndexes, headerDetect.idxCpAssessment)
             : FEC_ConstantCommon.STR_EMPTY;
         if (
             String.isBlank(caseIdSearch) &&
@@ -2778,12 +2800,27 @@ public without sharing class FEC_BCH_TemplateExportService {
         return rowMap;
     }
 
-    private static String cellTextAtLogicalIndex(Map<Integer, String> colTexts, Integer logicalIndex) {
-        if (colTexts == null || logicalIndex == null || logicalIndex < 0) {
+    @TestVisible
+    private static String cellTextAtImportColumn(
+        Map<Integer, String> colTexts,
+        List<Integer> importColumnIndexes,
+        Integer logicalHeaderIndex
+    ) {
+        if (
+            colTexts == null ||
+            logicalHeaderIndex == null ||
+            logicalHeaderIndex < 0 ||
+            importColumnIndexes == null ||
+            logicalHeaderIndex >= importColumnIndexes.size()
+        ) {
             return FEC_ConstantCommon.STR_EMPTY;
         }
-        if (colTexts.containsKey(logicalIndex)) {
-            String val = colTexts.get(logicalIndex);
+        Integer wsCol = importColumnIndexes[logicalHeaderIndex];
+        if (wsCol == null || wsCol < 0) {
+            return FEC_ConstantCommon.STR_EMPTY;
+        }
+        if (colTexts.containsKey(wsCol)) {
+            String val = colTexts.get(wsCol);
             return val == null ? FEC_ConstantCommon.STR_EMPTY : val;
         }
         return FEC_ConstantCommon.STR_EMPTY;

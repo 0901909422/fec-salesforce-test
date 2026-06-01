@@ -2686,6 +2686,23 @@ export default class Fec_BatchCaseHandling extends LightningElement {
       headerRow,
       headerColumnIndexes
     ).headers;
+    const importHeadersNormalized = importHeaders.map((h) =>
+      (h == null ? STR_EMPTY : String(h))
+        .replace(/\s+/g, STR_EMPTY)
+        .toLowerCase()
+    );
+    const idxCaseIdImport = this.findHeaderIndex(
+      importHeadersNormalized,
+      HEADERS_CASE_ID
+    );
+    const idxRemarkImport = this.findHeaderIndex(
+      importHeadersNormalized,
+      HEADERS_REMARKS
+    );
+    const idxRoutingImport = this.findHeaderIndex(
+      importHeadersNormalized,
+      HEADERS_ROUTING_ACTION
+    );
     const idxCaseId = this.findHeaderIndex(normalized, HEADERS_CASE_ID);
     const idxRouting = this.findHeaderIndex(normalized, HEADERS_ROUTING_ACTION);
     const idxRemark = this.findHeaderIndex(normalized, HEADERS_REMARKS);
@@ -2737,27 +2754,27 @@ export default class Fec_BatchCaseHandling extends LightningElement {
       const caseIdSearch = this.readImportCellValue(
         sheet,
         i,
-        idxCaseId,
-        headerColumnIndexes,
+        idxCaseIdImport >= 0 ? idxCaseIdImport : idxCaseId,
+        importColumnIndexes,
         r
       );
       const routingAction =
-        idxRouting >= 0
+        idxRoutingImport >= 0 || idxRouting >= 0
           ? this.readImportCellValue(
             sheet,
             i,
-            idxRouting,
-            headerColumnIndexes,
+            idxRoutingImport >= 0 ? idxRoutingImport : idxRouting,
+            importColumnIndexes,
             r
           )
           : STR_EMPTY;
       const inputtedRemarksRaw =
-        idxRemark >= 0
+        idxRemarkImport >= 0 || idxRemark >= 0
           ? this.readImportCellValue(
             sheet,
             i,
-            idxRemark,
-            headerColumnIndexes,
+            idxRemarkImport >= 0 ? idxRemarkImport : idxRemark,
+            importColumnIndexes,
             r
           )
           : STR_EMPTY;
@@ -2768,10 +2785,24 @@ export default class Fec_BatchCaseHandling extends LightningElement {
           ? STR_EMPTY
           : inputtedRemarksRaw;
       const assignmentId =
-        idxAssignmentId >= 0 ? this.cellAsString(r[idxAssignmentId]) : STR_EMPTY;
+        idxAssignmentId >= 0
+          ? this.readImportCellValue(
+            sheet,
+            i,
+            idxAssignmentId,
+            headerColumnIndexes,
+            r
+          )
+          : STR_EMPTY;
       const assignmentRoutingAction =
         idxAssignmentRouting >= 0
-          ? this.cellAsString(r[idxAssignmentRouting])
+          ? this.readImportCellValue(
+            sheet,
+            i,
+            idxAssignmentRouting,
+            headerColumnIndexes,
+            r
+          )
           : STR_EMPTY;
       const csD2CAssessmentType =
         idxCsD2CAssessment >= 0
@@ -2824,20 +2855,18 @@ export default class Fec_BatchCaseHandling extends LightningElement {
         continue;
       }
       const originalCells = [];
-      for (let col = 0; col < headerRow.length; col += 1) {
-        if (resultColExclude.has(col)) {
-          continue;
-        }
+      // 01/06/2026 18:00 linhdev - originalCells theo importColumnIndexes (không lệch khi resolveWorksheetHeaderColumnIndexes map sai cột)
+      for (let col = 0; col < importHeaders.length; col += 1) {
         const worksheetCol =
-          Array.isArray(headerColumnIndexes) && col < headerColumnIndexes.length
-            ? headerColumnIndexes[col]
+          Array.isArray(importColumnIndexes) && col < importColumnIndexes.length
+            ? importColumnIndexes[col]
             : col;
         const cellRef = window.XLSX.utils.encode_cell({ r: i, c: worksheetCol });
         const cell = sheet[cellRef];
         const cellValue = cell && cell.v !== undefined ? cell.v : STR_EMPTY;
         let cellStr = this.cellAsString(cellValue);
         // 30/05/2026 21:00 linhdev - giữ tối đa 32,767 ký tự Excel trong originalCells
-        if (col === idxRemark && cellStr.length >= INPUTTED_REMARKS_MAX_LEN) {
+        if (col === idxRemarkImport && cellStr.length >= INPUTTED_REMARKS_MAX_LEN) {
           cellStr = cellStr.substring(0, INPUTTED_REMARKS_MAX_LEN);
         }
         originalCells.push(cellStr);
