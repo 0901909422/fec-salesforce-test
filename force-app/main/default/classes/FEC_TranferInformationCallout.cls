@@ -289,6 +289,8 @@ public without sharing class FEC_TranferInformationCallout {
   /** LWC: Case Id + remark; RequestorID = CSM constant. */
   @AuraEnabled
   public static TransferCallResponse transferCallFromCase(Id caseId, String remark) {
+    Case historyCase = null;
+    TransferCallResponse result = null;
     try {
       if (caseId == null) {
         TransferCallResponse res = new TransferCallResponse();
@@ -342,7 +344,15 @@ public without sharing class FEC_TranferInformationCallout {
         res.Code = FEC_ConstantCommon.SUCCESS_CODE_E;
         return res;
       }
-      TransferCallResponse result = transferCallByCase(
+      List<Case> historyRows = [
+        SELECT Id, FEC_Current_Case_Stage__r.Name
+        FROM Case
+        WHERE Id = :caseId
+        WITH SECURITY_ENFORCED
+        LIMIT 1
+      ];
+      historyCase = historyRows.isEmpty() ? null : historyRows[0];
+      result = transferCallByCase(
         caseId,
         data.genesysId,
         FEC_ConstantCommon.TRANSFER_CALL_REQUESTOR_ID_CSM,
@@ -392,8 +402,25 @@ public without sharing class FEC_TranferInformationCallout {
       err.errorMessage = formatExceptionDetail(e);
       err.ResultOfClass = err.errorMessage;
       localizeTransferCallFailure(err);
+      result = err;
       return err;
+    } finally {
+      logTransferCallProcessActionHistory(historyCase, result);
     }
+  }
+
+  private static void logTransferCallProcessActionHistory(
+    Case c,
+    TransferCallResponse apiResult
+  ) {
+    if (c == null || apiResult == null) {
+      return;
+    }
+    FEC_CommonUltils.createProcessActionHistory(
+      FEC_ConstantCommon.API_CONFIG_NAME,
+      c,
+      apiResult.success == true
+    );
   }
 
   /**

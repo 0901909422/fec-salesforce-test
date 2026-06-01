@@ -1024,7 +1024,7 @@ public without sharing class FEC_BatchCaseHandlingController {
         ImportResult out = new ImportResult();
         out.success = false;
 
-        if (String.isBlank(fileName) || String.isBlank(fileBodyBase64) || String.isBlank(rowsJson)) {
+        if (String.isBlank(fileName) || String.isBlank(fileBodyBase64)) {
             out.message = System.Label.FEC_BCH_RequireFile;
             logImportBatchDebug(
                 'importBatchData',
@@ -1057,22 +1057,6 @@ public without sharing class FEC_BatchCaseHandlingController {
         Map<String, Schema.SObjectField> fieldMap = batchType.getDescribe().fields.getMap();
         SObject batchRow;
         try {
-            List<Object> inputRows = (List<Object>) JSON.deserializeUntyped(rowsJson);
-            if (inputRows == null || inputRows.isEmpty()) {
-                out.message = System.Label.FEC_BCH_RequireFile;
-                logImportBatchDebug(
-                    'importBatchData',
-                    fileName,
-                    templateName,
-                    businessProcessCode,
-                    businessProcessName,
-                    rowsJson,
-                    out.message
-                );
-                upsertFailedBatchHandling(fileName, templateName, out.message);
-                return out;
-            }
-
             ContentVersion cv = new ContentVersion();
             cv.Title = FEC_BatchCaseHandlingSObjectUtil.removeFileExtension(fileName);
             cv.PathOnClient = '/' + fileName;
@@ -1085,6 +1069,44 @@ public without sharing class FEC_BatchCaseHandlingController {
                 WHERE Id = :cv.Id
                 LIMIT 1
             ];
+
+            // 01/06/2026 12:00 linhdev - parse import file on Apex (không dùng SheetJS LWC)
+            FEC_BCH_TemplateExportService.ImportWorkbookParseResult parseResult =
+                FEC_BCH_TemplateExportService.parseBatchImportWorkbook(cv.Id);
+            if (parseResult == null || parseResult.parseSuccess != true) {
+                String parseError = parseResult == null || String.isBlank(parseResult.errorMessage)
+                    ? System.Label.FEC_BCH_HeaderInvalid
+                    : parseResult.errorMessage;
+                out.message = parseError;
+                logImportBatchDebug(
+                    'importBatchData',
+                    fileName,
+                    templateName,
+                    businessProcessCode,
+                    businessProcessName,
+                    rowsJson,
+                    parseError
+                );
+                upsertFailedBatchHandling(fileName, templateName, parseError);
+                return out;
+            }
+            List<Object> inputRows = parseResult.inputRows == null
+                ? new List<Object>()
+                : parseResult.inputRows;
+            if (inputRows.isEmpty()) {
+                out.message = System.Label.FEC_BCH_FileNoData;
+                logImportBatchDebug(
+                    'importBatchData',
+                    fileName,
+                    templateName,
+                    businessProcessCode,
+                    businessProcessName,
+                    rowsJson,
+                    out.message
+                );
+                upsertFailedBatchHandling(fileName, templateName, out.message);
+                return out;
+            }
 
             batchRow = batchType.newSObject();
             FEC_BatchCaseHandlingSObjectUtil.putIfFieldExists(fieldMap, batchRow, new List<String>{ 'FEC_File_Name__c' }, fileName);
@@ -1159,7 +1181,8 @@ public without sharing class FEC_BatchCaseHandlingController {
             FEC_BatchCaseHandlingSObjectUtil.putIfFieldExists(fieldMap, batchRow, new List<String>{ 'FEC_Status__c' }, 'Processing');
             update batchRow;
 
-            Boolean cofOrGsr = FEC_BatchCaseHandlingImportService.isCofOrGsrTemplate(resolvedTemplateName);
+            Boolean cofOrGsr = parseResult.cofOrGsr == true
+                || FEC_BatchCaseHandlingImportService.isCofOrGsrTemplate(resolvedTemplateName);
             // 30/05/2026 18:30 linhdev - đọc remark dài trực tiếp từ file upload trước validate
             FEC_BatchCaseHandlingImportService.enrichInputtedRemarksFromImportFile(cv.Id, inputRows);
             List<FEC_BatchCaseHandlingImportRow> rowResults = FEC_BatchCaseHandlingImportService.validateCaseHandlingImportRows(inputRows, cofOrGsr);
