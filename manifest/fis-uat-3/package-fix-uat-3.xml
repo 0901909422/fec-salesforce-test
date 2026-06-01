@@ -190,6 +190,7 @@
         <members>FEC_ImportedInteractionBatch</members>
         <members>FEC_RDPaymentContractAssessmentService</members>
         <members>FEC_CustomerIntegrationService</members>
+        <members>FEC_CustomEmailService</members>
         <members>FEC_CaseRemarksTriggerHandler</members>
         <members>FEC_CardLockUnLockController</members>
         <members>FEC_CardReplacementAddressController</members>
@@ -556,6 +557,7 @@
 		<members>FEC_RA_Error_Update</members>
 		<members>FEC_Details_Only</members>
 		<members>FEC_Download_Report</members>
+		<members>FEC_Email_Label_Title</members>
 		<members>FEC_Error_Download</members>
 		<members>FEC_Export_Detail</members>
 		<members>FEC_Export_View</members>
@@ -886,6 +888,15 @@
 	<types>
 	    <members>FEC_Download_Report__c.INTERACTIONS_SERVICE_CASES_SUMMARY_TAT</members>
 	    <members>FEC_Download_Report__c.Interaction_and_Service_Case_Summary</members>
+		<members>Case.FEC_CSM_Mailbox_Case</members>
+		<members>Case.FEC_Care_Mailbox_Case</members>
+		<members>Case.FEC_Day_2_Check_Case</members>
+		<members>Case.FEC_Ecom_Mailbox_Case</members>
+		<members>Case.FEC_OM_Mailbox_Case</members>
+		<members>Case.FEC_Office_Based_Mailbox_Case</members>
+		<members>Case.FEC_Quality_Control_Mailbox_Case</members>
+		<members>Case.FEC_Support_Mailbox_Case</members>
+		<members>Case.FEC_Ubank_Email_Case</members>
 	    <name>ListView</name>
 	</types>
 	<types>
@@ -1000,6 +1011,11 @@
         <members>FEC_Report_Summary_TAT_CO/</members>
         <members>FEC_Report_Summary_TAT_CO/Interactions_Service_Cases_TAT_CO</members>
         <name>Report</name>
+    </types>
+    <types>
+        <members>FE_All_Subdomains</members>
+        <members>FE_Owa_Image</members>
+        <name>CspTrustedSite</name>
     </types>
 	<version>66.0</version>
 </Package>
