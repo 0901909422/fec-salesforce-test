@@ -2686,7 +2686,7 @@ public without sharing class FEC_BatchCaseHandlingImportService {
             return errs;
         }
         if (profile == FEC_BatchCaseHandlingImportProfile.FIELD_PROFILE_PM_PAYMENT) {
-            // 28/05/2026 15:47 tugnnm37 - Bỏ validate bắt buộc Payment Assessment cho profile PM vì template import thực tế có flow không chứa cột này.
+            // 01/06/2026 - PM import: bắt buộc Payment đánh giá yêu cầu đóng hợp đồng khi template có field này.
             validateD2CField(
                 rr,
                 rr.paymentContractAssessment,
@@ -2701,7 +2701,7 @@ public without sharing class FEC_BatchCaseHandlingImportService {
                 configuredLabels,
                 picklistValueByNormByField,
                 errs,
-                false
+                true
             );
             return errs;
         }
