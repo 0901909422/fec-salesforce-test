@@ -991,6 +991,17 @@ private static FraudPropertyDTO getDataIntegrationMapping(String integrationMapp
                 if (result.success && String.isNotBlank(result.fraudCaseId)) {
                     createOriginalSnapshot(result.fraudCaseId, reqWrapper.caseDataId);
                 }
+                // Save Nature Of Case Id on the integration case record
+                if (String.isNotBlank(reqWrapper.natureOfCaseId)) {
+                    List<FEC_Integration_Case__c> recs = [
+                        SELECT Id FROM FEC_Integration_Case__c
+                        WHERE FEC_CaseID__c = :reqWrapper.caseId LIMIT 1
+                    ];
+                    if (!recs.isEmpty()) {
+                        recs[0].FEC_Nature_Of_Case_Id__c = reqWrapper.natureOfCaseId;
+                        update recs[0];
+                    }
+                }
             }
 
             log('========= SUBMIT WITHOUT CREATE FRAUD CASE END =========');
@@ -1091,6 +1102,19 @@ private static FraudPropertyDTO getDataIntegrationMapping(String integrationMapp
             result.responseCode = isUpsert ? 1 : 0;
             result.message = isUpsert ? MSG_CREATE_SUCCESS : MSG_CREATE_FAILED;
             result.fraudCaseId = w.caseId;
+            log('handleCreateResponse-Log: '+ JSON.serialize(w));
+
+            // Save Nature Of Case Id on the integration case record
+            if (isUpsert && String.isNotBlank(w.natureOfCaseId)) {
+                List<FEC_Integration_Case__c> recs = [
+                    SELECT Id FROM FEC_Integration_Case__c
+                    WHERE FEC_CaseID__c = :w.caseId LIMIT 1
+                ];
+                if (!recs.isEmpty()) {
+                    recs[0].FEC_Nature_Of_Case_Id__c = w.natureOfCaseId;
+                    update recs[0];
+                }
+            }
 
         } else {
 
@@ -1392,6 +1416,7 @@ private static FraudPropertyDTO getDataIntegrationMapping(String integrationMapp
 
         log('==================== UPSERT FRAUD CASE START ====================');
         log('LOG-upsertFraudCaseService CASEID: '+ caseId);
+        log('LOG-upsertFraudCaseService integrationCaseId: '+ integrationCaseId);
         String serviceCaseDataId = caseDataId;
         FEC_FraudConstantCommon.IntegrationFieldType caseFileType = new FEC_FraudConstantCommon.IntegrationFieldType();
         try {

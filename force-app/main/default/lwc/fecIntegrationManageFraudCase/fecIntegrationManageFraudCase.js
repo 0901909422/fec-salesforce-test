@@ -78,7 +78,9 @@ export default class FecIntegrationManageFraudCase extends LightningElement {
             FRAUD_FIELD_SYNC,
             (message) => {
                 if (message.source === 'case' && message.fieldId) {
-                    console.log('[fecIntegrationManageFraudCase] received sync:', message.fieldId, message.value);
+                    const createEl = this.template.querySelector('c-fec-integration-create-fraud-case');
+                    const updateEl = this.template.querySelector('c-fec-integration-update-fraud-case');
+                    console.log('[fecIntegrationManageFraudCase] received sync:', message.fieldId, message.value, '| createEl:', !!createEl, '| updateEl:', !!updateEl, '| actionMode:', this.actionMode);
                     this.setFraudFieldValue(message.fieldId, message.value);
                 }
             },
@@ -117,6 +119,7 @@ export default class FecIntegrationManageFraudCase extends LightningElement {
         return this.actionMode === this.actionModes.VIEW_MODE || this.actionMode === 'ViewOriginal';
     }
 
+
     get hasMapping() {
         return this.actionMode !== this.actionModes.NOT_MAPPING;
     }
@@ -145,9 +148,11 @@ export default class FecIntegrationManageFraudCase extends LightningElement {
         // Apply buffered field values once child is rendered
         if (this._pendingFieldValues) {
             const createEl = this.template.querySelector('c-fec-integration-create-fraud-case');
-            if (createEl && typeof createEl.setFieldValue === 'function') {
+            const updateEl = this.template.querySelector('c-fec-integration-update-fraud-case');
+            const targetEl = createEl || updateEl;
+            if (targetEl && typeof targetEl.setFieldValue === 'function') {
                 for (const [fieldId, value] of Object.entries(this._pendingFieldValues)) {
-                    createEl.setFieldValue(fieldId, value);
+                    targetEl.setFieldValue(fieldId, value);
                 }
                 this._pendingFieldValues = null;
             }
@@ -168,8 +173,12 @@ export default class FecIntegrationManageFraudCase extends LightningElement {
     @api
     setFraudFieldValue(fieldId, value) {
         const createEl = this.template.querySelector('c-fec-integration-create-fraud-case');
+        const updateEl = this.template.querySelector('c-fec-integration-update-fraud-case');
+        console.log('[fecIntegrationManageFraudCase] setFraudFieldValue:', fieldId, value, '| createEl:', !!createEl, '| updateEl:', !!updateEl, '| actionMode:', this.actionMode, '| modeEditCase:', this.modeEditCase);
         if (createEl && typeof createEl.setFieldValue === 'function') {
             createEl.setFieldValue(fieldId, value);
+        } else if (updateEl && typeof updateEl.setFieldValue === 'function') {
+            updateEl.setFieldValue(fieldId, value);
         } else {
             // Buffer value if child not rendered yet
             if (!this._pendingFieldValues) {

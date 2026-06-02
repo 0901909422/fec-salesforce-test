@@ -109,10 +109,24 @@ public with sharing class FEC_IntegrationManageFraudCaseCtrl {
     }
 
     @AuraEnabled
-    public static Map<String, String> getCaseToFraudFieldMap(String natureOfCaseId) {
+    public static Map<String, String> getCaseToFraudFieldMap(String natureOfCaseId, String serviceCaseId) {
         Map<String, String> result = new Map<String, String>();
         String integrateMappingId = getIntegrateMappingIdByNatureOfCase(natureOfCaseId);
-        if(String.isBlank(integrateMappingId)) {
+        
+        // Fallback: if no mapping found by natureOfCaseId, try from Case's Actual Nature of Case
+        if (String.isBlank(integrateMappingId) && String.isNotBlank(serviceCaseId)) {
+            List<Case> cases = [
+                SELECT FEC_Actual_Nature_of_Case__c
+                FROM Case
+                WHERE Id = :serviceCaseId
+                LIMIT 1
+            ];
+            if (!cases.isEmpty() && cases[0].FEC_Actual_Nature_of_Case__c != null) {
+                integrateMappingId = getIntegrateMappingIdByNatureOfCase(cases[0].FEC_Actual_Nature_of_Case__c);
+            }
+        }
+
+        if (String.isBlank(integrateMappingId)) {
             return result;
         }
 
