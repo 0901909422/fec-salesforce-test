@@ -9811,7 +9811,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>MSG Channel Validation</shortDescription>
-        <value>Channel id &quot;</value>
+        <value>Channel id </value>
     </labels>
     <labels>
         <fullName>FEC_MSG_Data_Request_Master_Data</fullName>
@@ -9819,7 +9819,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>MSG Data Request Master Data</shortDescription>
-        <value>&quot; is not supported.</value>
+        <value> is not supported.</value>
     </labels>
     <labels>
         <fullName>FEC_MSG_Limit_Character</fullName>
@@ -12295,7 +12295,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>Relevant Ticket interaction field label</shortDescription>
-        <value>Interaction</value>
+        <value>Interaction/ Case</value>
     </labels>
     <labels>
         <fullName>FEC_RelevantTicket_Search_Placeholder</fullName>
