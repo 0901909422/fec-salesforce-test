@@ -265,6 +265,7 @@
         <members>FEC_TransactionsController</members>
         <members>FEC_VMXAUTHDETAILINQ</members>
         <members>FEC_UpdateCustomerAddress</members>
+        <members>FEC_UpdateCustomerContact</members>
 		<members>FEC_NatureOfCaseUserGroupService</members>
         <members>FEC_CustomerIntegrationService</members>
         <members>FEC_CustomEmailService</members>
