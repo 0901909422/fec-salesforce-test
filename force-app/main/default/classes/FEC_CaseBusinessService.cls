@@ -795,6 +795,7 @@ public without sharing class FEC_CaseBusinessService {
         selectedStage.Id,
         selectedStage.Name
       );
+      Boolean isCurrentStageRevertedContext = isLatestRevertToCurrentStage;
       result.revertConfirmAssessmentSourceStage = FEC_CaseMasterDataHelper.resolveRevertConfirmAssessmentSourceStage(
         selectedCase.Id,
         selectedStage.Id,
@@ -829,6 +830,10 @@ public without sharing class FEC_CaseBusinessService {
           'ORDER BY FEC_Section__c, FEC_Sub_Section_Order__c NULLS LAST, FEC_Sub_Section__c, FEC_Field_Object_Name__c, FEC_Field_Order_Display__c';
 
         List<SObject> masterDatalst = Database.query(soql);
+        masterDatalst = FEC_CaseMasterDataHelper.filterRevertedAssignmentRowsByStageContext(
+          masterDatalst,
+          isCurrentStageRevertedContext
+        );
         masterDatalst = FEC_CaseMasterDataHelper.filterAssignmentRowsByCurrentUserGroup(
           masterDatalst,
           currentUser.FEC_User_Group__c
