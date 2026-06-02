@@ -466,7 +466,8 @@ public without sharing class FEC_BatchCaseHandlingImportService {
             try {
                 workbookBlob = buildBatchResultWorkbookFromOriginalTemplate(
                     batchRecordId,
-                    rowResults
+                    rowResults,
+                    batchFailureReason
                 );
             } catch (Exception templateEx) {
                 // 29/05/2026 14:07 codex - fallback to basic result workbook if original-layout patching fails
@@ -496,9 +497,17 @@ public without sharing class FEC_BatchCaseHandlingImportService {
     // 28/05/2026 17:45 linhdev - Result .xlsx = file import gốc + patch __Status/__Errors (FEC_BCH_TemplateExportService)
     private static Blob buildBatchResultWorkbookFromOriginalTemplate(
         Id batchRecordId,
-        List<FEC_BatchCaseHandlingImportRow> rowResults
+        List<FEC_BatchCaseHandlingImportRow> rowResults,
+        String batchFailureReason
     ) {
-        if (batchRecordId == null || rowResults == null || rowResults.isEmpty()) {
+        if (batchRecordId == null) {
+            return null;
+        }
+        // 02/06/2026 16:00 linhdev - khi fail batch (vd CPU limit) nhưng còn file import gốc, hydrate rowResults để vẫn export Result giữ format template
+        if (rowResults == null || rowResults.isEmpty()) {
+            rowResults = hydrateFailureRowsFromSourceImport(batchRecordId, batchFailureReason);
+        }
+        if (rowResults == null || rowResults.isEmpty()) {
             return null;
         }
         List<String> sourceHeaders = null;
@@ -699,6 +708,52 @@ public without sharing class FEC_BatchCaseHandlingImportService {
         }
     }
 
+    @TestVisible
+    private static List<FEC_BatchCaseHandlingImportRow> hydrateFailureRowsFromSourceImport(
+        Id batchRecordId,
+        String batchFailureReason
+    ) {
+        if (batchRecordId == null) {
+            return new List<FEC_BatchCaseHandlingImportRow>();
+        }
+        Id sourceContentVersionId = querySourceImportContentVersionId(batchRecordId);
+        if (sourceContentVersionId == null) {
+            sourceContentVersionId = querySourceContentVersionFromBatchFileLinks(batchRecordId);
+        }
+        if (sourceContentVersionId == null) {
+            return new List<FEC_BatchCaseHandlingImportRow>();
+        }
+        FEC_BCH_TemplateExportService.ImportWorkbookParseResult parsed =
+            FEC_BCH_TemplateExportService.parseBatchImportWorkbook(sourceContentVersionId);
+        if (parsed == null || parsed.parseSuccess != true || parsed.inputRows == null || parsed.inputRows.isEmpty()) {
+            return new List<FEC_BatchCaseHandlingImportRow>();
+        }
+        List<FEC_BatchCaseHandlingImportRow> parsedRows;
+        try {
+            parsedRows = (List<FEC_BatchCaseHandlingImportRow>) JSON.deserialize(
+                JSON.serialize(parsed.inputRows),
+                List<FEC_BatchCaseHandlingImportRow>.class
+            );
+        } catch (Exception ex) {
+            return new List<FEC_BatchCaseHandlingImportRow>();
+        }
+        if (parsedRows == null || parsedRows.isEmpty()) {
+            return new List<FEC_BatchCaseHandlingImportRow>();
+        }
+        String failureError = String.isBlank(batchFailureReason)
+            ? System.Label.FEC_BCH_ImportFailed
+            : batchFailureReason;
+        for (FEC_BatchCaseHandlingImportRow row : parsedRows) {
+            if (row == null) {
+                continue;
+            }
+            row.status = System.Label.FEC_Batch_Case_Handling_Import_Row_Status_Failed;
+            row.errors = failureError;
+            row.recordId = FEC_ConstantCommon.STR_EMPTY;
+        }
+        return parsedRows;
+    }
+
     private static String resolveBatchResultFileName(Id batchRecordId) {
         return FEC_BatchCaseHandlingSObjectUtil.removeFileExtension(queryBatchFileName(batchRecordId)) + '_Result.xlsx';
     }
@@ -855,11 +910,14 @@ public without sharing class FEC_BatchCaseHandlingImportService {
                 sheetRows.add(cols);
             }
         } else if (String.isNotBlank(batchFailureReason)) {
+            // 02/06/2026 15:50 linhdev - fallback row phải ghi lỗi vào __Status/__Errors, không đẩy message sang cột Case ID Search
             Integer totalCols = cofOrGsr ? 7 : 5;
-            List<String> failureRow = new List<String>{ rowValue(batchFailureReason) };
-            for (Integer i = 1; i < totalCols; i++) {
+            List<String> failureRow = new List<String>();
+            for (Integer i = 0; i < totalCols - 2; i++) {
                 failureRow.add(FEC_ConstantCommon.STR_EMPTY);
             }
+            failureRow.add('Failed');
+            failureRow.add(rowValue(batchFailureReason));
             sheetRows.add(failureRow);
         } else {
             return null;
