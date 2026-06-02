@@ -46,6 +46,7 @@
 		<members>FEC_API_Config.FEC_Search_Test_Service_Error_Account</members>
 		<members>FEC_API_Config.FEC_Get_IPP_Detail</members>
 		<members>FEC_API_Config.FEC_Get_MRC_Info</members>
+		<members>FEC_API_Config.FEC_Get_Repayment_Schedule_By_App_Id</members>
 		<members>FEC_API_Config.FEC_MCMSCARDTOCARDINQEMEA</members>
 		<members>FEC_API_Config.FEC_MFASOUTSTANDINGAUTHINQ</members>
 		<members>FEC_API_Config.FEC_Vmx_Acct_Blkcd_Upd_Emea</members>
@@ -271,6 +272,9 @@
         <members>FEC_CustomEmailService</members>
         <members>FEC_LookupController</members>
         <members>FEC_IPPScheduleController</members>
+        <members>FEC_GetCSMasterDataService</members>
+        <members>FEC_GetRepaymentScheduleByAppIdCallout</members>
+        <members>FEC_MyCaseSoapXml</members>
         <members>FEC_ApplicationsListController</members>
         <name>ApexClass</name>
     </types>
@@ -920,6 +924,7 @@
         <members>maskedToggleDatatable</members>
         <members>fec_InteractionInfoF2F_Letter</members>
 		<members>fec_IPPDetailPage</members>
+        <members>fec_SecondaryInfoAccount</members>
 		<name>LightningComponentBundle</name>
     </types>
     <types>
@@ -1086,6 +1091,7 @@
         <members>FEC_CC_Queue_Name</members>
         <members>FEC_Add_Item_Label</members>
         <members>FEC_Assignment_Remark_Label</members>
+        <members>FEC_Assignment_Duplicate_Queue_Error</members>
         <members>FEC_Confirm_Label</members>
         <members>FEC_Choose_Team_Placeholder</members>
         <members>FEC_Choose_Queue_Placeholder</members>
@@ -1193,6 +1199,7 @@
         <members>FEC_Batch_Case_Handling_Import_Err_Remark_Too_Long</members>
         <members>FEC_Batch_Case_Handling_Import_Err_Record_Id_Invalid</members>
         <members>FEC_Batch_Case_Handling_Import_Err_Routing_Requires_Params</members>
+        <members>FEC_Batch_Case_Handling_Success</members>
         <members>FEC_BCH_RequestTimeout</members>
         <members>FEC_BCH_NoDataExport</members>
         <members>FEC_BCH_NoDataFound</members>

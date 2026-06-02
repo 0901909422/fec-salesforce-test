@@ -146,10 +146,10 @@ import {
 import savePdfToCase from "@salesforce/apex/FEC_ClientPDFService.savePdfToCase";
 import { getPdfConfigForSubCode, buildPdfDataForSubCode } from "./fecDocumentRequestPdfData";
 import getPaymentHistoryRows from "@salesforce/apex/FEC_PaymentHistoryValidationService.getPaymentHistoryRows";
-import getRepaymentScheduleRows from "@salesforce/apex/FEC_PaymentHistoryValidationService.getRepaymentScheduleRows";
 //PhongBT 18/05/26: fix Document Request
 import validatePaymentHistoryRequestForSubCode from "@salesforce/apex/FEC_PaymentHistoryValidationService.validatePaymentHistoryRequestForSubCode";
 import getDocumentRequestPdfHeaderData from "@salesforce/apex/FEC_PaymentHistoryValidationService.getDocumentRequestPdfHeaderData";
+import getRl0402DocumentRequestPdfData from "@salesforce/apex/FEC_PaymentHistoryValidationService.getRl0402DocumentRequestPdfData";
 import { publish, MessageContext } from "lightning/messageService";
 import CASE_NOC from "@salesforce/messageChannel/FEC_Case_NOC__c";
 import CASE_NOTIFICATION from "@salesforce/messageChannel/FEC_Case_Notification__c";
@@ -4909,14 +4909,27 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
 
       this._pdfGenerateInFlight = true;
 
-      const headerData = await getDocumentRequestPdfHeaderData({ caseId: this.recordId });
+      let headerData = {};
       let paymentRows = [];
       let repaymentRows = [];
       if (config.needsPaymentRows) {
+        headerData = await getDocumentRequestPdfHeaderData({ caseId: this.recordId });
         paymentRows = await getPaymentHistoryRows({ caseId: this.recordId });
       }
       if (config.needsRepaymentRows) {
-        repaymentRows = await getRepaymentScheduleRows({ caseId: this.recordId });
+        const rl0402Payload = await getRl0402DocumentRequestPdfData({
+          caseId: this.recordId,
+          fecRequestor: null
+        });
+        if (rl0402Payload && rl0402Payload.success === false) {
+          console.warn(
+            '[PDF] RL04.02 data failed:',
+            rl0402Payload.errorMessage
+          );
+          return;
+        }
+        headerData = rl0402Payload?.headerData || {};
+        repaymentRows = rl0402Payload?.repaymentRows || [];
       }
       const pdfConfig = buildPdfDataForSubCode(this.business.subCodeCode, headerData, paymentRows, repaymentRows);
       if (!pdfConfig) {

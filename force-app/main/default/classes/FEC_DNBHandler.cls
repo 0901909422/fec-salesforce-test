@@ -809,7 +809,7 @@ public without sharing class FEC_DNBHandler {
         
         // ===== Update AFTER callout =====
         caseRecord.FEC_National_ID_Passport_ID__c = req.nid;
-        
+        caseRecord.FEC_Case_Phone_Number__c =       req.phone;
         update caseRecord;
         return res;
     }

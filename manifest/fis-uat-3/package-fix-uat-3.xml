@@ -134,6 +134,9 @@
         <members>FEC_CMSRewardRedeemServiceTest</members>
         <members>FEC_CMSIPPBlockWS</members>
         <members>FEC_GetMRCInfo</members>
+        <members>FEC_GetCSMasterDataService</members>
+        <members>FEC_GetRepaymentScheduleByAppIdCallout</members>
+        <members>FEC_MyCaseSoapXml</members>
         <members>FEC_BCH_ExportPropertyService</members>
         <members>FEC_BCH_FilterPropertyService</members>
         <members>FEC_BatchCaseHandlingCaseFilter</members>
@@ -307,6 +310,7 @@
         <members>fec_Rl0502RdPaymentRouting</members>
 		<members>fecRoutingAssignmentEditForm</members>
 		<members>fec_DownloadReports</members>
+		<members>fecPdfGenerator</members>
 		<members>fec_GenesysSoftphone</members>
 		<members>fec_BatchDataCreation</members>
 		<members>fecMrcReturnStageChangeRouting</members>
@@ -315,6 +319,7 @@
 		<members>fec_NocRoutingAssignment</members>
 		<members>fec_InteractionInfoF2F_Letter</members>
 		<members>fec_IPPDetailPage</members>
+        <members>fec_SecondaryInfoAccount</members>
 		<name>LightningComponentBundle</name>
 	</types>
     <types>
@@ -454,6 +459,7 @@
         <members>FEC_MSG_Service_Error_Label</members>
         <members>FEC_UpdateDisb_Msg_DisbDT_Required</members>
         <members>FEC_Assignment_Remark_Label</members>
+        <members>FEC_Assignment_Duplicate_Queue_Error</members>
 		<members>FEC_LABEL_Months</members>
         <members>FEC_LABEL_API_Code</members>
         <members>FEC_LABEL_Description</members>
@@ -580,6 +586,7 @@
 		<members>FEC_Batch_Case_Handling_Import_Err_Missing_Routing_Or_Assignment_Routing</members>
 		<members>FEC_Batch_Case_Handling_Import_Err_Missing_Remark</members>
 		<members>FEC_Batch_Case_Handling_Import_Err_Remark_Too_Long</members>
+		<members>FEC_Batch_Case_Handling_Success</members>
 		<members>FEC_NFU_Modal_Save_Error</members>
         <members>FEC_Send_Manual_Notification</members>
 		<name>CustomLabel</name>
@@ -590,6 +597,7 @@
 		<members>FEC_API_Config.FEC_Search_Test_Service_Error_Account</members>
 		<members>FEC_API_Config.FEC_Get_IPP_Detail</members>
 		<members>FEC_API_Config.FEC_Get_MRC_Info</members>
+		<members>FEC_API_Config.FEC_Get_Repayment_Schedule_By_App_Id</members>
 	    <members>FEC_API_Config.FEC_MFASOUTSTANDINGAUTHINQ</members>
 		<members>FEC_API_Config.FEC_VMX_AUTH_DETAIL_INQ</members>
 		<members>FEC_API_Config.FEC_Vmx_Acct_Blkcd_Upd_Emea</members>

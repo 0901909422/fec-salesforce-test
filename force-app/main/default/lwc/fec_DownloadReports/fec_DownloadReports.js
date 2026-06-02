@@ -16,7 +16,8 @@ import downloadReport from '@salesforce/apex/FEC_DownloadReportController.downlo
 import { EnclosingTabId, closeTab } from 'lightning/platformWorkspaceApi';
 import { NavigationMixin } from 'lightning/navigation';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
-
+import {DOWNLOAD_LOCK_KEY} from 'c/fec_CommonConst'
+ 
 import FEC_Error_Download from '@salesforce/label/c.FEC_Error_Download';
 
 export default class Fec_DownloadReports extends NavigationMixin(LightningElement) {
@@ -28,14 +29,22 @@ export default class Fec_DownloadReports extends NavigationMixin(LightningElemen
         errorDownload: FEC_Error_Download
     }
 
-    _hasRun = false;
-
     showError(message) {
         this.dispatchEvent(new ShowToastEvent({
             title: 'Error',
             message,
             variant: 'error'
         }));
+    }
+
+    getErrorMessage(error) {
+        if (error?.body?.message) {
+            return error.body.message;
+        }
+        if (error?.message) {
+            return error.message;
+        }
+        return this.customLabel.errorDownload;
     }
 
     async closeAndRefresh() {
@@ -48,8 +57,10 @@ export default class Fec_DownloadReports extends NavigationMixin(LightningElemen
                 },
                 state: { filterName: 'Recent' }
             });
-            await new Promise(resolve => setTimeout(resolve, 300));
-            await closeTab(this.tabId);
+            await new Promise(resolve => setTimeout(resolve, 500));
+            if (this.tabId) {
+                await closeTab(this.tabId);
+            }
         } catch (e) {
             console.error('closeAndRefresh error:', e);
         }
@@ -68,35 +79,31 @@ export default class Fec_DownloadReports extends NavigationMixin(LightningElemen
     }
 
     downloadFiles(urls) {
-        if (urls.length > 0) {
-            window.location.href = urls[0];
-        }
-       
-        urls.slice(1).forEach((url, i) => {
+        if (!urls || urls.length === 0) return;
+
+        urls.forEach((url, i) => {
             setTimeout(() => {
-                const iframe = document.createElement('iframe');
-                iframe.style.display = 'none';
-                iframe.style.width = '0';
-                iframe.style.height = '0';
-                iframe.src = url;
-                document.body.appendChild(iframe);
-                setTimeout(() => {
-                    if (document.body.contains(iframe)) {
-                        document.body.removeChild(iframe);
-                    }
-                }, 10000);
-            }, (i + 1) * 1000);
+                const anchor = document.createElement('a');
+                anchor.href = url;
+                anchor.target = '_blank';
+                anchor.rel = 'noopener';
+                anchor.style.display = 'none';
+                document.body.appendChild(anchor);
+                anchor.click();
+                document.body.removeChild(anchor);
+            }, i * 1000);
         });
     }
 
     async renderedCallback() {
-        if (this._hasRun) return;
-        this._hasRun = true;
+        if (sessionStorage.getItem(DOWNLOAD_LOCK_KEY)) return;
+        sessionStorage.setItem(DOWNLOAD_LOCK_KEY, '1');
 
         const ids = this.getIds();
 
         if (!ids.length) {
             this.showError(this.customLabel.errorDownload);
+            sessionStorage.removeItem(DOWNLOAD_LOCK_KEY);
             await this.closeAndRefresh();
             return;
         }
@@ -107,13 +114,18 @@ export default class Fec_DownloadReports extends NavigationMixin(LightningElemen
             this.downloadFiles(urls);
 
             setTimeout(async () => {
+                sessionStorage.removeItem(DOWNLOAD_LOCK_KEY);
                 await this.closeAndRefresh();
-            }, urls.length * 800 + 300);
+            }, urls.length * 1000 + 300);
 
         } catch (e) {
             console.error(e);
-            this.showError('Download failed.');
+            this.showError(this.getErrorMessage(e));
+            sessionStorage.removeItem(DOWNLOAD_LOCK_KEY);
             await this.closeAndRefresh();
         }
+    }
+
+    disconnectedCallback() {
     }
 }
