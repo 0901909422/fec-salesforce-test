@@ -55,6 +55,7 @@
         <members>FEC_RemovePhoneController</members>
         <members>FEC_GetIPPDetailsCallout</members>
         <members>FEC_UpdateCustomerAddress</members>
+        <members>FEC_UpdateCustomerContact</members>
         <members>FEC_CardEligibilityController</members>
         <members>FEC_AssignmentTriggerHandler</members>
         <members>FEC_BancaController</members>
@@ -189,6 +190,7 @@
         <members>FEC_FullCustomerIntegrationJob</members>
         <members>FEC_ImportedInteractionBatch</members>
         <members>FEC_RDPaymentContractAssessmentService</members>
+        <members>FEC_RdPaymentRoutingHelper</members>
         <members>FEC_CustomerIntegrationService</members>
         <members>FEC_CustomEmailService</members>
         <members>FEC_CaseRemarksTriggerHandler</members>
@@ -427,6 +429,7 @@
         <members>fecRoutingAssignmentEditOverride</members>
         <members>fec_CaseAssignmentNocEditOverride</members>
         <members>fecEmailSection</members>
+        <members>fecNewRelevantTicketAction</members>
         <name>AuraDefinitionBundle</name>
     </types>
 	<types>
