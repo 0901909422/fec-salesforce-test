@@ -76,6 +76,7 @@ export default class Fec_CaseEditNOC extends LightningElement {
   _isInternalRequest = false;
   _internalProductTypeId = null;
   _internalApplied = false;
+  _productTypeOptionlstFull = null;
   
   //HieuTT74-[UPDATE - 5/5/2026]: Lưu NOC sau khi call api Reset Pin,...
   isDisableNOC = false;
@@ -1088,7 +1089,7 @@ export default class Fec_CaseEditNOC extends LightningElement {
     if (this._incomingAccountType == null && hasExistingNOCSelection && !isInternalType) {
       this._incomingAccountType = accountType;
       this._accountContractPl = accountType;
-      this._syncProductTypeOptionsForInternalNonExisting();
+      this._refreshProductTypeOptionsForAccountContract(accountType);
       return;
     }
 
@@ -1121,8 +1122,9 @@ export default class Fec_CaseEditNOC extends LightningElement {
 
     if (isInternalType) {
       this._isInternalRequest = accountType === INTERNAL_REQUEST;
+      this._refreshProductTypeOptionsForAccountContract(accountType);
 
-      const option = this.productTypeOptionlst?.find(
+      const option = (this._productTypeOptionlstFull ?? this.productTypeOptionlst)?.find(
         (opt) => opt.label === accountType
       );
 
@@ -1140,7 +1142,7 @@ export default class Fec_CaseEditNOC extends LightningElement {
         }, 50);
       }
     } else {
-      this._syncProductTypeOptionsForInternalNonExisting();
+      this._refreshProductTypeOptionsForAccountContract(accountType);
       this.handleDisable('category');
       this.handleDisable('sub-category');
       this.handleDisable('sub-code');
@@ -1460,23 +1462,28 @@ export default class Fec_CaseEditNOC extends LightningElement {
     );
   }
 
-  _filterProductTypeForInternalNonExisting(options) {
-    if (!this._isInternalCaseWithNonExistingAccount()) {
+  _filterProductTypeForInternalNonExisting(options, accountType) {
+    if (!this._isInternalCaseWithNonExistingAccount(accountType)) {
       return options ?? [];
     }
     const hidden = new Set([INTERNAL_UBANK, INTERNAL_REQUEST, UBANK_PRODUCT_NAME]);
     return (options ?? []).filter((opt) => !hidden.has(opt.label));
   }
 
-  _syncProductTypeOptionsForInternalNonExisting() {
-    if (!this._isInternalCaseWithNonExistingAccount()) {
-      return;
-    }
+  _applyProductTypeOptionList(accountType) {
+    const full = this._productTypeOptionlstFull ?? [];
+    this.productTypeOptionlst = this._filterProductTypeForInternalNonExisting(
+      full,
+      accountType,
+    );
     if (this.productTypeOptionlst?.length) {
-      this.productTypeOptionlst = this._filterProductTypeForInternalNonExisting(
-        this.productTypeOptionlst,
-      );
       this.handleChangeOption('prod-type', this.productTypeOptionlst);
+    }
+  }
+
+  _refreshProductTypeOptionsForAccountContract(accountType) {
+    if (this._productTypeOptionlstFull?.length) {
+      this._applyProductTypeOptionList(accountType);
       return;
     }
     this.getProdType();
@@ -1488,9 +1495,12 @@ export default class Fec_CaseEditNOC extends LightningElement {
         "🚀 ~ Fec_CaseEditNOC ~ getProdType ~ res:",
         JSON.stringify(res)
       );
-      this.productTypeOptionlst = this._filterProductTypeForInternalNonExisting(res);
+      this._productTypeOptionlstFull = res ?? [];
+      this._applyProductTypeOptionList();
       if (this._isInternalRequest && !this.productTypeSelectedId) {
-        const internalOption = res?.find((opt) => opt.label === INTERNAL_REQUEST);
+        const internalOption = this._productTypeOptionlstFull?.find(
+          (opt) => opt.label === INTERNAL_REQUEST
+        );
 
         if (internalOption) {
           this.productTypeSelectedId = internalOption.value;
