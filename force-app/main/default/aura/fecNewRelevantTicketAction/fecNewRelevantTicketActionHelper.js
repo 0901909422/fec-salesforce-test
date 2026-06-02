@@ -1,26 +1,46 @@
 ({
     _timer: null,
 
-    closeOrNavigate: function(component, forceReload) {
+    closeOrNavigate: function(component) {
         var recordId = component.get('v.recordId');
-        // tugnnm37: navigate or hard reload back to Case detail page
+        // tugnnm37: navigate back to Case detail page without hard reload
         if (recordId) {
-            var caseUrl = '/lightning/r/Case/' + recordId + '/view';
-            if (forceReload) {
-                // tugnnm37: hard reload Case page after create so standard related list clears cache without manual F5
-                window.location.assign(caseUrl + '?refreshTs=' + new Date().getTime());
-                return;
-            }
             try {
                 var navEvt = $A.get('e.force:navigateToURL');
                 if (navEvt) {
-                    navEvt.setParams({ url: caseUrl });
+                    navEvt.setParams({ url: '/lightning/r/Case/' + recordId + '/view' });
                     navEvt.fire();
                     return;
                 }
             } catch(e) {}
         }
         window.history.back();
+    },
+    refreshParentCaseTab: function(component) {
+        // tugnnm37: refresh parent Case console tab so standard related list updates without manual F5
+        try {
+            var refreshEvt = $A.get('e.force:refreshView');
+            if (refreshEvt) {
+                refreshEvt.fire();
+            }
+        } catch(e) {}
+
+        try {
+            var workspaceAPI = component.find('workspace');
+            if (workspaceAPI) {
+                workspaceAPI.getFocusedTabInfo().then(function(tabInfo) {
+                    var tabId = tabInfo && (tabInfo.parentTabId || tabInfo.tabId);
+                    if (tabId) {
+                        workspaceAPI.refreshTab({
+                            tabId: tabId,
+                            includeAllSubtabs: true
+                        });
+                    }
+                }).catch(function(err) {
+                    // tugnnm37: fallback to force refresh only
+                });
+            }
+        } catch(e2) {}
     },
 
     searchDebounced: function(component, term) {
@@ -121,13 +141,8 @@
                         toast.fire();
                     }
                 } catch(te) {}
-                // Refresh parent record page/list immediately so newly linked ticket appears without manual reload
-                try {
-                    var refreshEvt = $A.get('e.force:refreshView');
-                    if (refreshEvt) {
-                        refreshEvt.fire();
-                    }
-                } catch(re) {}
+                // tugnnm37: refresh related list in parent Case tab
+                this.refreshParentCaseTab(component);
                 if (saveAndNew) {
                     component.set('v.selectedId', '');
                     component.set('v.selectedLabel', '');
@@ -135,22 +150,12 @@
                     component.set('v.results', []);
                     component.set('v.errorMsg', '');
                     window.setTimeout($A.getCallback(function() {
-                        try {
-                            var refreshEvt2 = $A.get('e.force:refreshView');
-                            if (refreshEvt2) {
-                                refreshEvt2.fire();
-                            }
-                        } catch(re2) {}
+                        this.refreshParentCaseTab(component);
                     }), 300);
                 } else {
                     window.setTimeout($A.getCallback(function() {
-                        try {
-                            var refreshEvt2 = $A.get('e.force:refreshView');
-                            if (refreshEvt2) {
-                                refreshEvt2.fire();
-                            }
-                        } catch(re2) {}
-                        this.closeOrNavigate(component, true);
+                        this.refreshParentCaseTab(component);
+                        this.closeOrNavigate(component);
                     }.bind(this)), 500);
                 }
             } else {
