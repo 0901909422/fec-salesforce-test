@@ -46,6 +46,7 @@
         <members>FEC_CaseTriggerHandler</members>
         <members>ArchiveCaseAttachmentController</members>
         <members>ArchiveCaseAttachmentController_Test</members>
+        <members>FEC_MockupEndpoint</members>
         <name>ApexClass</name>
     </types>
 
@@ -82,6 +83,7 @@
         <members>TECH_PEGA_SOURCE_S3</members>
         <members>TECH_ARCHIVE_S3_PATCH</members>
         <members>TECH_GET_CASE_ARCHIVE_ENDPOINT_MOCKUP</members>
+        <members>TECH_LIST_CHILD_OBJ_OF_CUST_HIST</members>
         <name>CustomLabel</name>
     </types>
 
