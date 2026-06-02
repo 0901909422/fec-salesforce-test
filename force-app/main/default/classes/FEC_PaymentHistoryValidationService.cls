@@ -18,6 +18,26 @@ public with sharing class FEC_PaymentHistoryValidationService {
   private static final String ACCOUNT_STATUS_T1_9 = '9';
   private static final String CARD_BLOCK_CODE_C = 'C';
 
+  /** Bật true: RL04.02 PDF lấy từ API; false: luồng DB (Customer History + FEC_Repayment_Schedule__c). */
+  private static final Boolean USE_API_FOR_RL0402_PDF = true;
+
+  public class Rl0402PdfDataResult {
+    @AuraEnabled
+    public Boolean success { get; set; }
+    @AuraEnabled
+    public String errorMessage { get; set; }
+    @AuraEnabled
+    public Map<String, Object> headerData { get; set; }
+    @AuraEnabled
+    public List<Map<String, Object>> repaymentRows { get; set; }
+
+    public Rl0402PdfDataResult() {
+      this.success = true;
+      this.headerData = new Map<String, Object>();
+      this.repaymentRows = new List<Map<String, Object>>();
+    }
+  }
+
   /**
    * RC04.04 — Giấy xác nhận đóng thẻ: trả infoMessage khi không đủ điều kiện;
    * đủ điều kiện thì không trả message (null).
@@ -325,6 +345,264 @@ public with sharing class FEC_PaymentHistoryValidationService {
       addrRows.isEmpty() ? FEC_ConstantCommon.STR_EMPTY : addrRows[0].FEC_Full_Address__c
     );
     return data;
+  }
+
+  /**
+   * RL04.02 — header + repayment rows cho PDF TBCV_LTN.
+   * Chuyển USE_API_FOR_RL0402_PDF để chọn nguồn API hoặc Salesforce.
+   */
+  @AuraEnabled
+  public static Rl0402PdfDataResult getRl0402DocumentRequestPdfData(
+    String caseId,
+    String fecRequestor
+  ) {
+    if (USE_API_FOR_RL0402_PDF) {
+      return buildRl0402PdfDataFromApi(caseId, fecRequestor);
+    }
+    Rl0402PdfDataResult result = new Rl0402PdfDataResult();
+    result.headerData = getDocumentRequestPdfHeaderData(caseId);
+    result.repaymentRows = getRepaymentScheduleRows(caseId);
+    return result;
+  }
+
+  @TestVisible
+  private static Rl0402PdfDataResult buildRl0402PdfDataFromApi(
+    String caseId,
+    String fecRequestor
+  ) {
+    Rl0402PdfDataResult result = new Rl0402PdfDataResult();
+    if (String.isBlank(caseId)) {
+      result.success = false;
+      result.errorMessage = String.format(
+        System.Label.FEC_MSG_Param_Required,
+        new List<String>{ 'CaseId' }
+      );
+      return result;
+    }
+
+    String applicationId = resolveApplicationIdForCase(caseId);
+    if (String.isBlank(applicationId)) {
+      result.success = false;
+      result.errorMessage = 'Application ID is required for repayment schedule API.';
+      return result;
+    }
+
+    FEC_GetRepaymentScheduleByAppIdCallout.GetRepaymentScheduleResponse apiRes = FEC_GetRepaymentScheduleByAppIdCallout.getRepaymentScheduleByAppId(
+      applicationId,
+      fecRequestor
+    );
+
+    if (apiRes == null) {
+      result.success = false;
+      result.errorMessage = System.Label.FEC_MSG_Response_Null;
+      return result;
+    }
+    if (String.isNotBlank(apiRes.errorCode) || String.isNotBlank(apiRes.errorMessage)) {
+      result.success = false;
+      result.errorMessage = String.isNotBlank(apiRes.errorMessage)
+        ? apiRes.errorMessage
+        : apiRes.errorCode;
+      return result;
+    }
+    if (!FEC_GetRepaymentScheduleByAppIdCallout.isSuccess(apiRes)) {
+      FEC_GetRepaymentScheduleByAppIdCallout.RepaymentScheduleResponseInfo info = FEC_GetRepaymentScheduleByAppIdCallout.getFirstResponseInfo(
+        apiRes
+      );
+      result.success = false;
+      result.errorMessage = info != null && String.isNotBlank(info.Message)
+        ? info.Message
+        : 'Repayment schedule API did not return SUCCESS.';
+      return result;
+    }
+
+    FEC_GetRepaymentScheduleByAppIdCallout.RepaymentScheduleResponseInfo responseInfo = FEC_GetRepaymentScheduleByAppIdCallout.getFirstResponseInfo(
+      apiRes
+    );
+    result.headerData = mapRl0402HeaderFromApi(responseInfo);
+    result.repaymentRows = mapRl0402RowsFromApi(responseInfo);
+    return result;
+  }
+
+  @TestVisible
+  private static String resolveApplicationIdForCase(String caseId) {
+    List<Case> cases = [
+      SELECT
+        FEC_Application_ID__c,
+        FEC_Search_Application_ID__c,
+        FEC_Account_or_Contract__r.FEC_Application_ID__c
+      FROM Case
+      WHERE Id = :caseId
+      LIMIT 1
+    ];
+    if (cases.isEmpty()) {
+      return null;
+    }
+    Case c = cases[0];
+    if (String.isNotBlank(c.FEC_Application_ID__c)) {
+      return c.FEC_Application_ID__c.trim();
+    }
+    if (String.isNotBlank(c.FEC_Search_Application_ID__c)) {
+      return c.FEC_Search_Application_ID__c.trim();
+    }
+    if (
+      c.FEC_Account_or_Contract__r != null &&
+      String.isNotBlank(c.FEC_Account_or_Contract__r.FEC_Application_ID__c)
+    ) {
+      return c.FEC_Account_or_Contract__r.FEC_Application_ID__c.trim();
+    }
+    return null;
+  }
+
+  @TestVisible
+  private static Map<String, Object> mapRl0402HeaderFromApi(
+    FEC_GetRepaymentScheduleByAppIdCallout.RepaymentScheduleResponseInfo info
+  ) {
+    Map<String, Object> data = new Map<String, Object>();
+    if (info == null) {
+      return data;
+    }
+    data.put(
+      'ContractNumber',
+      defaultEmpty(info.CONTRACT_NUMBER)
+    );
+    data.put('CustomerName', defaultEmpty(info.CUSTOMER_NAME));
+    data.put('CustomerAddress', defaultEmpty(info.ADDRESS));
+    data.put('NationalID', defaultEmpty(info.ID_NO));
+    data.put('PlaceOfIssue', defaultEmpty(info.IDCARD_ISSUEPLACE));
+    data.put(
+      'DateOfIssue',
+      formatApiDateForPdf(info.ID_DATE)
+    );
+    data.put(
+      'TotalLoanAmount',
+      info.TOTAL_LOAN_AMOUNT != null
+        ? FEC_CommonUltils.formatCurrency(info.TOTAL_LOAN_AMOUNT, 0)
+        : FEC_ConstantCommon.STR_EMPTY
+    );
+    data.put(
+      'LoanAmountInVNText',
+      defaultEmpty(info.TOTAL_LOAN_AMOUNT_WORDS)
+    );
+    data.put(
+      'MonthlyRate',
+      info.MONTHLY_RATE != null ? String.valueOf(info.MONTHLY_RATE) : FEC_ConstantCommon.STR_EMPTY
+    );
+    data.put(
+      'YearlyRate',
+      info.YEARLY_RATE != null ? String.valueOf(info.YEARLY_RATE) : FEC_ConstantCommon.STR_EMPTY
+    );
+    data.put('MaturityDate2', resolveMaturityDateForPdf(info));
+    return data;
+  }
+
+  @TestVisible
+  private static String resolveMaturityDateForPdf(
+    FEC_GetRepaymentScheduleByAppIdCallout.RepaymentScheduleResponseInfo info
+  ) {
+    if (
+      info != null &&
+      info.RepaymentScheduleItems != null &&
+      !info.RepaymentScheduleItems.isEmpty()
+    ) {
+      String lastDue = null;
+      Date lastDueDate;
+      for (
+        FEC_GetRepaymentScheduleByAppIdCallout.RepaymentScheduleItem item : info.RepaymentScheduleItems
+      ) {
+        Date d = parseApiDate(item.DUE_DATE);
+        if (d != null && (lastDueDate == null || d > lastDueDate)) {
+          lastDueDate = d;
+          lastDue = item.DUE_DATE;
+        }
+      }
+      if (String.isNotBlank(lastDue)) {
+        return formatApiDateForPdf(lastDue);
+      }
+    }
+    return formatApiDateForPdf(info != null ? info.FIRST_DATE_REPAYMENT : null);
+  }
+
+  @TestVisible
+  private static List<Map<String, Object>> mapRl0402RowsFromApi(
+    FEC_GetRepaymentScheduleByAppIdCallout.RepaymentScheduleResponseInfo info
+  ) {
+    List<Map<String, Object>> rows = new List<Map<String, Object>>();
+    if (info == null || info.RepaymentScheduleItems == null) {
+      return rows;
+    }
+    for (
+      FEC_GetRepaymentScheduleByAppIdCallout.RepaymentScheduleItem item : info.RepaymentScheduleItems
+    ) {
+      Map<String, Object> row = new Map<String, Object>();
+      row.put('InstallmentDueDate', formatApiDateForPdf(item.DUE_DATE));
+      row.put('Principal', item.PRINCIPAL_AMOUNT);
+      row.put('Interest', item.INTEREST_AMOUNT);
+      row.put('ClosingPrincipal', item.REMAINING_PRINCIPAL_AMOUNT);
+      row.put('RepaymentFees', item.REPAYMENT_FEE);
+      row.put(
+        'InstallmentAmount',
+        resolveInstallmentAmount(item)
+      );
+      rows.add(row);
+    }
+    return rows;
+  }
+
+  private static Decimal resolveInstallmentAmount(
+    FEC_GetRepaymentScheduleByAppIdCallout.RepaymentScheduleItem item
+  ) {
+    if (item == null) {
+      return null;
+    }
+    if (item.TOTAL_REPAYMENT_FEE != null) {
+      return item.TOTAL_REPAYMENT_FEE;
+    }
+    Decimal total = 0;
+    Boolean hasValue = false;
+    if (item.PRINCIPAL_AMOUNT != null) {
+      total += item.PRINCIPAL_AMOUNT;
+      hasValue = true;
+    }
+    if (item.INTEREST_AMOUNT != null) {
+      total += item.INTEREST_AMOUNT;
+      hasValue = true;
+    }
+    if (item.REPAYMENT_FEE != null) {
+      total += item.REPAYMENT_FEE;
+      hasValue = true;
+    }
+    return hasValue ? total : null;
+  }
+
+  private static String formatApiDateForPdf(String apiDateStr) {
+    Date d = parseApiDate(apiDateStr);
+    if (d == null) {
+      return FEC_ConstantCommon.STR_EMPTY;
+    }
+    return DateTime.newInstance(d.year(), d.month(), d.day()).format('dd/MM/yyyy');
+  }
+
+  private static Date parseApiDate(String apiDateStr) {
+    if (String.isBlank(apiDateStr)) {
+      return null;
+    }
+    Date fromCommon = FEC_CommonUltils.parseDate(apiDateStr);
+    if (fromCommon != null) {
+      return fromCommon;
+    }
+    try {
+      if (apiDateStr.contains('T')) {
+        Datetime dt = FEC_CommonUltils.parseDateTime(apiDateStr);
+        return dt == null ? null : dt.date();
+      }
+      return Date.valueOf(apiDateStr.substring(0, 10));
+    } catch (Exception e) {
+      return null;
+    }
+  }
+
+  private static String defaultEmpty(String value) {
+    return String.isBlank(value) ? FEC_ConstantCommon.STR_EMPTY : value;
   }
 
   @AuraEnabled
