@@ -267,11 +267,25 @@ export default class Fec_DoNotBotherNonExistingCustomer extends LightningElement
   }
 
   async checkDNB() {
+    const draftStorageKey = `fec_case_business_draft_${this.recordId}`;
+
+    const draft = JSON.parse(localStorage.getItem(draftStorageKey)) || {};
+
+    // tìm field phone trong draft
+    const phoneKey = Object.keys(draft).find(
+      (k) =>
+        k.toLowerCase().includes("phone") || k.toLowerCase().includes("mobile"),
+    );
+
+    const phoneNumber = phoneKey ? draft[phoneKey] : this.phoneNumber;
+
     console.log("Checking DNB for NID:", this.nationalId);
+    console.log("Checking DNB for Phone:", phoneNumber);
 
     return await checkDNBNonExisting({
       caseId: this.recordId,
       nid: this.nationalId,
+      phoneNumber: phoneNumber,
     });
   }
 
@@ -721,6 +735,7 @@ export default class Fec_DoNotBotherNonExistingCustomer extends LightningElement
 
       const result = await createDNB({
         payload: JSON.stringify(payload),
+        caseId: this.recordId,
       });
 
       console.log("DNB RESULT =", result);
