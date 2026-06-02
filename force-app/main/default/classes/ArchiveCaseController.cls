@@ -285,7 +285,7 @@ public without sharing class ArchiveCaseController {
     <Date>          <Authors Name>      <Brief Description of Change>
     2026/04/07      Thanh Van           Init
     ------------------------------------------------------------*/
-    private static void resolveByCode(
+    public static void resolveByCode(
         Map<String, Object> mapOfFieldAndValue,
         Map<String, Map<String, Object>> mapRelationshipObjects,
         String relKey,           // e.g. 'FEC_Product_Type__c' (key in mapRelationshipObjects)
@@ -321,7 +321,7 @@ public without sharing class ArchiveCaseController {
     <Date>          <Authors Name>      <Brief Description of Change>
     2026/04/07      Thanh Van           Init
     ------------------------------------------------------------*/
-    private static Id insertTempRecord(String sObjectApiName, Map<String, Object> relObj) {
+    public static Id insertTempRecord(String sObjectApiName, Map<String, Object> relObj) {
         try {
             SObject tempRec = (SObject) Type.forName(sObjectApiName).newInstance();
             tempRec.put('IsArchiveTemp__c', true);
@@ -364,7 +364,7 @@ public without sharing class ArchiveCaseController {
     2026/04/07      Thanh Van           Init
     2026/05/07      Thanh Van           Updated for new JSON format (no __r keys)
     ------------------------------------------------------------*/
-    private static void resolveActualNatureOfCase(
+    public static void resolveActualNatureOfCase(
         Map<String, Object> mapOfFieldAndValue,
         Map<String, Map<String, Object>> mapRelationshipObjects
     ) {
@@ -574,7 +574,7 @@ public without sharing class ArchiveCaseController {
     <Date>          <Authors Name>      <Brief Description of Change>
     2026/05/07      Thanh Van           Extracted generic version from Case-specific method
     ------------------------------------------------------------*/
-    private static void setPicklistValue(SObject record, String fieldName, Object rawValue,
+    public static void setPicklistValue(SObject record, String fieldName, Object rawValue,
                                          Schema.DescribeFieldResult fieldDetail, 
                                          Schema.DisplayType fieldType) {
         String strValue = String.valueOf(rawValue);
@@ -614,7 +614,7 @@ public without sharing class ArchiveCaseController {
     <Date>          <Authors Name>      <Brief Description of Change>
     2026/05/07      Thanh Van           Init
     ------------------------------------------------------------*/
-    private static Boolean castAndSetFieldValue(SObject record, String fieldName, Object rawValue,
+    public static Boolean castAndSetFieldValue(SObject record, String fieldName, Object rawValue,
                                                  Schema.DescribeFieldResult fieldDetail, 
                                                  Map<String, UserRecordAccess> mapIdCanAccess) {
         Schema.DisplayType ft = fieldDetail.getType();
@@ -691,12 +691,23 @@ public without sharing class ArchiveCaseController {
     <Date>          <Authors Name>      <Brief Description of Change>
     2026/05/07      Thanh Van           Init
     ------------------------------------------------------------*/
-    private static void insertChildRecords(Id caseId, Map<String, List<Map<String, Object>>> mapChildRecords, 
+    public static void insertChildRecords(Id caseId, Map<String, List<Map<String, Object>>> mapChildRecords, 
                                             Id recTypeIdOfThisRecord, Id interactionRtId, 
                                             List<String> listSpecialArchiveObject) {
 
+        List<String> custHistChild = Label.TECH_LIST_CHILD_OBJ_OF_CUST_HIST.split(',');
+
+        Map<String, List<Map<String, Object>>> custHistChildData = new Map<String, List<Map<String, Object>>>();
+        Map<String, String> custHistOldToNewId = new Map<String, String>();
+
         for (String childKey : mapChildRecords.keySet()) {
             String sObjectApiName = childKey;
+
+            // Collect child objects of FEC_Customer_History__c separately, skip inserting here
+            if (custHistChild.contains(sObjectApiName)) {
+                custHistChildData.put(sObjectApiName, mapChildRecords.get(childKey));
+                continue;
+            }
 
             String caseFieldName = CHILD_OBJECT_CASE_FIELD.get(sObjectApiName);
             if (String.isBlank(caseFieldName)) {
@@ -715,57 +726,94 @@ public without sharing class ArchiveCaseController {
                     insert recordsToInsert;
                     System.debug('insertChildRecords: Inserted ' + recordsToInsert.size() + ' records for ' + sObjectApiName);
 
+                    // Build oldId → newId mapping for FEC_Customer_History__c
                     if (sObjectApiName == 'FEC_Customer_History__c') {
-                        Map<Id, Object> custHistIdToDataMap = new Map<Id, Object>();
                         for (Integer i = 0; i < recordsToInsert.size(); i++) {
-                            custHistIdToDataMap.put(recordsToInsert[i].Id, childDataList[i]);
+                            String originalId = (String) childDataList[i].get('Id');
+                            if (String.isNotBlank(originalId)) {
+                                custHistOldToNewId.put(originalId, String.valueOf(recordsToInsert[i].Id));
+                            }
                         }
-                        insertNestedChildrenOfCustHist(JSON.serialize(custHistIdToDataMap), 
-                                                        JSON.serialize(listSpecialArchiveObject));
                     }
                 }
             } catch (Exception ex) {
                 System.debug('insertChildRecords failed for ' + sObjectApiName + ': ' + ex.getMessage());
             }
         }
+
+        // Insert children of FEC_Customer_History__c via @future
+        if (!custHistOldToNewId.isEmpty() && !custHistChildData.isEmpty()) {
+            insertNestedChildrenOfCustHist(JSON.serialize(custHistOldToNewId), 
+                                            JSON.serialize(custHistChildData), 
+                                            JSON.serialize(listSpecialArchiveObject));
+        }
     }
 
     /*------------------------------------------------------------
     Author:        Thanh Van
     Company:       Amaris
-    Description:   Insert all nested child records of FEC_Customer_History__c.
-                   After FEC_Customer_History__c records are inserted, extract nested
-                   child object arrays (e.g. FEC_Address_Info__c, FEC_Card_Payment__c,
-                   FEC_Statement__c, FEC_Transaction__c, etc.) and insert them with
-                   the correct parent Id. Reuses buildChildSObjects for field mapping.
+    Description:   Insert all child records of FEC_Customer_History__c.
+                   In the new JSON format, child objects (e.g. FEC_Address_Info__c,
+                   FEC_Card_Payment__c, etc.) are at root level, not nested inside
+                   FEC_Customer_History__c. This method receives:
+                   - custHistIdMappingJson: Map<oldId, newId> to map original CustHist Ids to inserted Ids
+                   - childRecordsJson: Map<childObjName, List<childData>> from root level JSON
+                   - listSpecialArchiveObjectJson: serialized list of special archive objects
+                   Uses getMasterDetailOrLookupFieldsToParent to resolve the correct field API name.
     Returns:       void
     History
     <Date>          <Authors Name>      <Brief Description of Change>
     2026/05/18      Thanh Van           Init
     ------------------------------------------------------------*/
     @future
-    public static void insertNestedChildrenOfCustHist(String custHistIdToDataJson, 
+    public static void insertNestedChildrenOfCustHist(String custHistIdMappingJson, 
+                                                        String childRecordsJson,
                                                         String listSpecialArchiveObjectJson) {
+
         List<String> CUST_HIST_CHILD_OBJECTS = Label.TECH_LIST_CHILD_OBJ_OF_CUST_HIST.split(',');
-        Map<String, Object> rawMap = (Map<String, Object>) JSON.deserializeUntyped(custHistIdToDataJson);
+        Map<String, String> rawIdMapping = (Map<String, String>) JSON.deserialize(custHistIdMappingJson, Map<String, String>.class);
+
+        // Map<childObjName, List<childData>>
+        Map<String, Object> rawChildRecords = (Map<String, Object>) JSON.deserializeUntyped(childRecordsJson);
         List<String> listSpecialArchiveObject = (List<String>) JSON.deserialize(listSpecialArchiveObjectJson, List<String>.class);
 
-        for (String custHistIdStr : rawMap.keySet()) {
-            Id custHistId = (Id) custHistIdStr;
-            Map<String, Object> custHistData = (Map<String, Object>) rawMap.get(custHistIdStr);
+        // Get field API names: child object → FEC_Customer_History__c field
+        Map<String, String> childFieldToCustHist = getMasterDetailOrLookupFieldsToParent(
+            CUST_HIST_CHILD_OBJECTS, true, FEC_Customer_History__c.SObjectType);
 
-            for (String childObjName : CUST_HIST_CHILD_OBJECTS) {
-                childObjName = childObjName.trim();
-                Object nestedObj = custHistData.get(childObjName);
-                if (nestedObj == null) continue;
+        for (String childObjName : CUST_HIST_CHILD_OBJECTS) {
+            childObjName = childObjName.trim();
+            String custHistFieldName = childFieldToCustHist.get(childObjName);
+            if (String.isBlank(custHistFieldName)) continue;
 
-                List<Map<String, Object>> nestedDataList = extractNestedDataList(nestedObj);
-                if (nestedDataList.isEmpty()) continue;
+            Object childDataObj = rawChildRecords.get(childObjName);
+            if (childDataObj == null) continue;
 
+            List<Map<String, Object>> childDataList = extractNestedDataList(childDataObj);
+            if (childDataList.isEmpty()) continue;
+
+            // Group child records by their original FEC_Customer_History__c Id
+            Map<Id, List<Map<String, Object>>> groupedByParent = new Map<Id, List<Map<String, Object>>>();
+            for (Map<String, Object> childData : childDataList) {
+                String origCustHistId = (String) childData.get(custHistFieldName);
+                if (String.isBlank(origCustHistId)) continue;
+
+                Id newCustHistId = rawIdMapping.get(origCustHistId);
+                if (newCustHistId == null) continue;
+
+                if (!groupedByParent.containsKey(newCustHistId)) {
+                    groupedByParent.put(newCustHistId, new List<Map<String, Object>>());
+                }
+                groupedByParent.get(newCustHistId).add(childData);
+            }
+
+            // Insert grouped child records per CustHist parent
+            for (Id custHistId : groupedByParent.keySet()) {
                 try {
                     List<SObject> childRecords = buildChildSObjects(childObjName, 
-                                                                     'FEC_Customer_History__c', 
-                                                                     custHistId, nestedDataList,
+                                                                     custHistFieldName, 
+                                                                     custHistId, 
+                                                                     groupedByParent.get(custHistId),
                                                                      listSpecialArchiveObject);
                     if (!childRecords.isEmpty()) insert childRecords;
                 } catch (Exception ex) {
@@ -811,7 +859,7 @@ public without sharing class ArchiveCaseController {
     <Date>          <Authors Name>      <Brief Description of Change>
     2026/05/07      Thanh Van           Init
     ------------------------------------------------------------*/
-    private static List<SObject> buildChildSObjects(String sObjectApiName, String caseFieldName, 
+    public static List<SObject> buildChildSObjects(String sObjectApiName, String caseFieldName, 
                                                      Id caseId, List<Map<String, Object>> childDataList, 
                                                      List<String> listSpecialArchiveObject) {
         List<SObject> records = new List<SObject>();
@@ -1180,14 +1228,29 @@ public without sharing class ArchiveCaseController {
     /*------------------------------------------------------------
     Author:        Thanh Van
     Company:       Amaris
-    Description:   Get Master-Detail / Lookup fields to Case for a list of child objects.
-    Returns:       Map<String, String>
+    Description:   Get Master-Detail / Lookup fields to Case object for a list of child objects.
+    Returns:       Map<String, String> - key: child object API name, value: field API name referencing parent
     History
     <Date>          <Authors Name>      <Brief Description of Change>
     2026/05/18      Thanh Van           Init
     ------------------------------------------------------------*/
     public static Map<String, String> getMasterDetailOrLookupFieldsToCase(List<String> objectApiNames, 
                                                                         Boolean checkMasterDetail) {
+        return getMasterDetailOrLookupFieldsToParent(objectApiNames, checkMasterDetail, Case.SObjectType);
+    }
+
+    /*------------------------------------------------------------
+    Author:        Thanh Van
+    Company:       Amaris
+    Description:   Get Master-Detail / Lookup fields to parent object for a list of child objects.
+    Returns:       Map<String, String> - key: child object API name, value: field API name referencing parent
+    History
+    <Date>          <Authors Name>      <Brief Description of Change>
+    2026/05/18      Thanh Van           Init
+    ------------------------------------------------------------*/
+    public static Map<String, String> getMasterDetailOrLookupFieldsToParent(List<String> objectApiNames, 
+                                                                            Boolean checkMasterDetail,
+                                                                            Schema.SObjectType parentType) {
         Map<String, String> result = new Map<String, String>();
 
         for (String objName : objectApiNames) {
@@ -1206,7 +1269,7 @@ public without sharing class ArchiveCaseController {
                 else if (!checkMasterDetail && !fieldRs.isNillable()) continue;
 
                 for (Schema.SObjectType refTo : fieldRs.getReferenceTo()) {
-                    if (refTo == Case.SObjectType) {
+                    if (refTo == parentType) {
                         result.put(trimmedName, fieldRs.getName());
                         break;
                     }
