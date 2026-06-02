@@ -1649,4 +1649,73 @@ public with sharing class FEC_CommonUltils {
     }
     return input.replaceAll('\\W+', '').trim();
   }
+
+  public static String getNationalIdFormat(String value) {
+    if (String.isBlank(value)) {
+        return FEC_ConstantCommon.TEAM_OTHER;
+    }
+    String t = value.trim();
+    if (Pattern.matches(FEC_ConstantCommon.INPUT_SEPARATOR_REGEX_12, t)) {
+        return FEC_ConstantCommon.CC_CD;
+    }
+    if (Pattern.matches(FEC_ConstantCommon.INPUT_SEPARATOR_REGEX_9, t)) {
+        return FEC_ConstantCommon.CM_ND;
+    }
+    if (Pattern.matches(FEC_ConstantCommon.INPUT_SEPARATOR_REGEX_7, t)) {
+        return FEC_ConstantCommon.PASS_PORT;
+    }
+    return FEC_ConstantCommon.TEAM_OTHER;
+  }
+
+  public static List<String> parseSearchResultNationalIds(String raw) {
+        List<String> nationalIds = new List<String>();
+        if (String.isBlank(raw)) {
+            return nationalIds;
+        }
+        for (String part : raw.split(FEC_ConstantCommon.INPUT_SEPARATOR_REGEX)) {
+            String trimmed = part != null ? part.trim() : null;
+            if (String.isNotBlank(trimmed)) {
+                nationalIds.add(trimmed);
+            }
+        }
+        return nationalIds;
+    }
+  /**
+   * Chuẩn hóa FEC_Team_User_Group__c từ LWC/label (CP/PM/SP/F2F) → mã Stage Change.
+   */
+  public static String normalizeTeamUserGroupParam(String teamUserGroup) {
+    if (String.isBlank(teamUserGroup)) {
+      return null;
+    }
+    String upper = teamUserGroup.trim().toUpperCase();
+    if (
+      upper == FEC_ConstantCommon.STAGE_CHANGE_TEAM_USER_GROUP_CP ||
+      upper.contains(FEC_ConstantCommon.STAGE_CHANGE_TEAM_LABEL_CONTRACT_PROCESS)
+    ) {
+      return FEC_ConstantCommon.STAGE_CHANGE_TEAM_USER_GROUP_CP;
+    }
+    if (
+      upper == FEC_ConstantCommon.STAGE_CHANGE_TEAM_USER_GROUP_PM ||
+      upper == FEC_ConstantCommon.STAGE_CHANGE_TEAM_LABEL_PAYMENT
+    ) {
+      return FEC_ConstantCommon.STAGE_CHANGE_TEAM_USER_GROUP_PM;
+    }
+    if (
+      upper == FEC_ConstantCommon.STAGE_CHANGE_TEAM_USER_GROUP_SP ||
+      upper.contains(FEC_ConstantCommon.STAGE_CHANGE_TEAM_LABEL_CS_SUPPORT)
+    ) {
+      return FEC_ConstantCommon.STAGE_CHANGE_TEAM_USER_GROUP_SP;
+    }
+    if (
+      upper == FEC_ConstantCommon.STAGE_CHANGE_TEAM_USER_GROUP_F2F ||
+      upper.contains(FEC_ConstantCommon.STAGE_CHANGE_TEAM_LABEL_OFFICE_BASED)
+    ) {
+      return FEC_ConstantCommon.STAGE_CHANGE_TEAM_USER_GROUP_F2F;
+    }
+    return upper;
+  }
+  public static Boolean isCccd(String value) {
+    return String.isNotBlank(value) && Pattern.matches(FEC_ConstantCommon.INPUT_SEPARATOR_REGEX_12, value.trim());
+  }
+
 }
