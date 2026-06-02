@@ -642,6 +642,7 @@ export default class Fec_DoNotBotherExistingCustomer extends LightningElement {
 
       const result = await createDNB({
         payload: JSON.stringify(payload),
+        caseId: this.recordId,
       });
 
       console.log("DNB RESULT =", result);

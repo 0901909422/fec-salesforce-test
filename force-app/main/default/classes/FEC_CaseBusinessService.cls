@@ -798,6 +798,12 @@ public without sharing class FEC_CaseBusinessService {
         selectedStage.Id,
         selectedStage.Name
       );
+      result.revertConfirmAssessmentSourceStage = FEC_CaseMasterDataHelper.resolveRevertConfirmAssessmentSourceStage(
+        selectedCase.Id,
+        selectedStage.Id,
+        selectedStage.Name,
+        isRevert
+      );
 
       // ============================= GET MASTET DATA SETTING ===========================
       if (err.errorlst.isEmpty()) {
@@ -823,6 +829,10 @@ public without sharing class FEC_CaseBusinessService {
           'ORDER BY FEC_Section__c, FEC_Sub_Section_Order__c NULLS LAST, FEC_Sub_Section__c, FEC_Field_Object_Name__c, FEC_Field_Order_Display__c';
 
         List<SObject> masterDatalst = Database.query(soql);
+        masterDatalst = FEC_CaseMasterDataHelper.filterAssignmentRowsByCurrentUserGroup(
+          masterDatalst,
+          currentUser.FEC_User_Group__c
+        );
 
         // ====================================== CREATE BUSINESS ============================
         // Retrieve Data
@@ -1006,6 +1016,15 @@ public without sharing class FEC_CaseBusinessService {
               fieldApiNameTemp,
               mrcRl05UiCtx,
               selectedCase
+            )
+          ) {
+            continue;
+          }
+
+          if (
+            FEC_CaseMasterDataHelper.shouldSkipRevertConfirmAssessmentField(
+              result.revertConfirmAssessmentSourceStage,
+              fieldApiNameTemp
             )
           ) {
             continue;
@@ -1226,6 +1245,11 @@ public without sharing class FEC_CaseBusinessService {
           );
         }
 
+        FEC_CaseMasterDataHelper.pruneRevertConfirmAssessmentSubSections(
+          result.sectionlst,
+          result.revertConfirmAssessmentSourceStage
+        );
+
         result.removeEmptySections();
       }
 
@@ -1401,6 +1425,7 @@ public without sharing class FEC_CaseBusinessService {
   private static Boolean checkStageName(String selectedStageName, String stageName){
     return selectedStageName?.contains(stageName);
   }
+
   @AuraEnabled
   public static void saveCaseNOC(String caseId, String natureOfCaseId) {
     if (String.isBlank(caseId) || String.isBlank(natureOfCaseId))
@@ -4204,6 +4229,10 @@ public without sharing class FEC_CaseBusinessService {
     /** true = history mới nhất Revert + IsReverted; LWC giữ nextTeam/nextQueue từ resolveRouteToDisplayInfo. */
     @AuraEnabled
     public Boolean routeByLatestRevertHistory;
+
+    /** Revert 2→1 hoặc 3→1: 2 = chỉ xác nhận D2C, 3 = chỉ xác nhận CS SP. */
+    @AuraEnabled
+    public Integer revertConfirmAssessmentSourceStage;
 
     @AuraEnabled
     public String draftRoutingActionCode;

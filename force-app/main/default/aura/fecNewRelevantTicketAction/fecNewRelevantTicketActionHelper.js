@@ -115,6 +115,13 @@
                         toast.fire();
                     }
                 } catch(te) {}
+                // Refresh parent record page/list immediately so newly linked ticket appears without manual reload
+                try {
+                    var refreshEvt = $A.get('e.force:refreshView');
+                    if (refreshEvt) {
+                        refreshEvt.fire();
+                    }
+                } catch(re) {}
                 if (saveAndNew) {
                     component.set('v.selectedId', '');
                     component.set('v.selectedLabel', '');
