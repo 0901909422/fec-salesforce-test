@@ -670,11 +670,6 @@
                     <value>ADVGRID</value>
                 </componentInstanceProperties>
                 <componentInstanceProperties>
-                    <name>hideCheckboxColumn</name>
-                    <value>true</value>
-                </componentInstanceProperties>
-                <!--tugnnm37 - hide selection checkbox for Relevant Tickets dynamic related list-->
-                <componentInstanceProperties>
                     <name>relatedListFieldAliases</name>
                     <valueList>
                         <valueListItems>
@@ -762,11 +757,6 @@
                     <name>relatedListDisplayType</name>
                     <value>ADVGRID</value>
                 </componentInstanceProperties>
-                <componentInstanceProperties>
-                    <name>hideCheckboxColumn</name>
-                    <value>true</value>
-                </componentInstanceProperties>
-                <!--tugnnm37 - hide selection checkbox for Relevant Tickets dynamic related list-->
                 <componentInstanceProperties>
                     <name>relatedListFieldAliases</name>
                     <valueList>

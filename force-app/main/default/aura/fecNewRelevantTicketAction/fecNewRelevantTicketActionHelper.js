@@ -128,8 +128,24 @@
                     component.set('v.searchTerm', '');
                     component.set('v.results', []);
                     component.set('v.errorMsg', '');
+                    window.setTimeout($A.getCallback(function() {
+                        try {
+                            var refreshEvt2 = $A.get('e.force:refreshView');
+                            if (refreshEvt2) {
+                                refreshEvt2.fire();
+                            }
+                        } catch(re2) {}
+                    }), 300);
                 } else {
-                    this.closeOrNavigate(component);
+                    window.setTimeout($A.getCallback(function() {
+                        try {
+                            var refreshEvt2 = $A.get('e.force:refreshView');
+                            if (refreshEvt2) {
+                                refreshEvt2.fire();
+                            }
+                        } catch(re2) {}
+                        this.closeOrNavigate(component);
+                    }.bind(this)), 500);
                 }
             } else {
                 var errors = res.getError();
