@@ -100,6 +100,58 @@ public without sharing class FEC_CaseMasterDataHelper {
   }
 
   /**
+   * Assignment + FEC_Field_Reverted__c: chỉ giữ khi đang revert context; revert 2↔3 chỉ giữ API xác nhận đúng stage.
+   */
+  public static List<SObject> filterRevertedAssignmentRowsByStageContext(
+    List<SObject> masterDatalst,
+    Boolean isCurrentStageRevertedContext
+  ) {
+    return filterRevertedAssignmentRowsByStageContext(
+      masterDatalst,
+      isCurrentStageRevertedContext,
+      null
+    );
+  }
+
+  public static List<SObject> filterRevertedAssignmentRowsByStageContext(
+    List<SObject> masterDatalst,
+    Boolean isCurrentStageRevertedContext,
+    Integer revertConfirmAssessmentSourceStage
+  ) {
+    if (masterDatalst == null || masterDatalst.isEmpty()) {
+      return masterDatalst;
+    }
+    List<SObject> filtered = new List<SObject>();
+    for (SObject mdsRow : masterDatalst) {
+      if (!isAssignmentRow(mdsRow)) {
+        filtered.add(mdsRow);
+        continue;
+      }
+      Boolean isRevertedAssignment =
+        (Boolean) mdsRow.get('FEC_Field_Reverted__c') == true;
+      if (!isRevertedAssignment) {
+        filtered.add(mdsRow);
+        continue;
+      }
+      if (isCurrentStageRevertedContext != true) {
+        continue;
+      }
+      String fieldApi = (String) mdsRow.get('FEC_Field_API_Name__c');
+      if (
+        revertConfirmAssessmentSourceStage != null &&
+        shouldSkipRevertConfirmAssessmentField(
+          revertConfirmAssessmentSourceStage,
+          fieldApi
+        )
+      ) {
+        continue;
+      }
+      filtered.add(mdsRow);
+    }
+    return filtered;
+  }
+
+  /**
    * Thu thập FEC_Field_API_Name__c từ các dòng Assignment có FEC_Hidden__c = true
    * mà user hiện tại thuộc FEC_Editable_User_Group__c (contains).
    * Dùng để biết API nào cần ẩn bản Assignment hidden=false tương ứng.

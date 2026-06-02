@@ -815,6 +815,7 @@ public without sharing class FEC_CaseBusinessService {
         selectedStage.Id,
         selectedStage.Name
       );
+      Boolean isCurrentStageRevertedContext = isLatestRevertToCurrentStage;
       result.revertConfirmAssessmentSourceStage = FEC_CaseMasterDataHelper.resolveRevertConfirmAssessmentSourceStage(
         selectedCase.Id,
         selectedStage.Id,
@@ -849,6 +850,11 @@ public without sharing class FEC_CaseBusinessService {
           'ORDER BY FEC_Section__c, FEC_Sub_Section_Order__c NULLS LAST, FEC_Sub_Section__c, FEC_Field_Object_Name__c, FEC_Field_Order_Display__c';
 
         List<SObject> masterDatalst = Database.query(soql);
+        masterDatalst = FEC_CaseMasterDataHelper.filterRevertedAssignmentRowsByStageContext(
+          masterDatalst,
+          isCurrentStageRevertedContext,
+          result.revertConfirmAssessmentSourceStage
+        );
         masterDatalst = FEC_CaseMasterDataHelper.filterAssignmentRowsByCurrentUserGroup(
           masterDatalst,
           currentUser.FEC_User_Group__c
@@ -2380,7 +2386,7 @@ public without sharing class FEC_CaseBusinessService {
             finalStatusBeforeSubmit,
             (String) params.get('teamUserGroup')
           );
-          // 28/05/2026 15:33 codex - tránh Too many queueable jobs khi import batch chain queueable
+          // 28/05/2026 15:33 linhdev - tránh Too many queueable jobs khi import batch chain queueable
           if (!FEC_BatchCaseHandlingImportService.isBatchImportApplyInProgress()) {
             System.enqueueJob(
               new FEC_MrcDupCancelOnSubmitQueueJob(
