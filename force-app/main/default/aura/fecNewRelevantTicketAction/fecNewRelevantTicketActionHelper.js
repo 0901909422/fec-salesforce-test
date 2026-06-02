@@ -3,7 +3,7 @@
 
     closeOrNavigate: function(component) {
         var recordId = component.get('v.recordId');
-        // tugnnm37: navigate back to Case detail page without hard reload
+        // Khi mở dạng tab (actionOverride), navigate về /lightning/r/Case/{id}/view
         if (recordId) {
             try {
                 var navEvt = $A.get('e.force:navigateToURL');
@@ -68,7 +68,7 @@
                     var ridMatch = url.match(new RegExp('[?&]recordId=([a-zA-Z0-9]{15,18})'));
                     if (ridMatch) recordId = ridMatch[1];
                 }
-                // tugnnm37: parse recordId from navigationContext
+                // tungnm37: thử parse từ navigationContext
                 if (!recordId) {
                     try {
                         var navCtx = url.match(new RegExp('navigationContext=([^&]+)'));
