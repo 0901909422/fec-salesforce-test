@@ -18335,6 +18335,13 @@
         <value>Title</value>
     </labels>
     <labels>
+        <fullName>FEC_Assignment_Duplicate_Queue_Error</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Duplicate assignment queue error</shortDescription>
+        <value>Assignment đến queue này đã tồn tại.</value>
+    </labels>
+    <labels>
         <fullName>FEC_Batch_Case_Handling_Success</fullName>
         <categories>Batch Case Handling</categories>
         <language>en_US</language>
