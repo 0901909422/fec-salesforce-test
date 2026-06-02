@@ -5198,6 +5198,13 @@ public without sharing class FEC_CaseBusinessService {
     return FEC_CofGsrAssignmentService.getRoutingAssignments(natureOfCaseId, customerType);
   }
 
+  
+  @AuraEnabled
+  public static List<String> getExistingAssignmentQueueNames(String caseId) {
+    //tugnnm37 - delegate sang FEC_CofGsrAssignmentService để LWC Add Item check Assignment List hiện hữu
+    return FEC_CofGsrAssignmentService.getExistingAssignmentQueueNames(caseId);
+  }
+
   @AuraEnabled(cacheable=true)
   public static List<User> getTransferUsers(String caseId) {
     Id currentUserId = UserInfo.getUserId();

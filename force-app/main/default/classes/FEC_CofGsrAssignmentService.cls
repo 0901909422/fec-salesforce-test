@@ -222,6 +222,25 @@ public without sharing class FEC_CofGsrAssignmentService {
         }
         return keys;
     }
+
+    @AuraEnabled
+    public static List<String> getExistingAssignmentQueueNames(String caseId) {
+        //tugnnm37 - trả queue đã tồn tại trong Assignment List để LWC chặn Add Item trùng ngay bằng toast
+        List<String> queues = new List<String>();
+        if (String.isBlank(caseId)) {
+            return queues;
+        }
+        for (FEC_Assignment__c row : [
+            SELECT FEC_OwnerID__c
+            FROM FEC_Assignment__c
+            WHERE FEC_Case__c = :caseId
+              AND FEC_Assignment_Type__c = :FEC_ConstantCommon.ASSIGNMENT_TYPE_ROUTING
+              AND FEC_OwnerID__c != null
+        ]) {
+            queues.add(row.FEC_OwnerID__c);
+        }
+        return queues;
+    }
     public static void createAssignmentsOnRoute(
         String caseId, Set<Id> nocIds, User currentUser, Id historyId,
         String stageName, String remarkContentParam
