@@ -18329,4 +18329,19 @@
         <shortDescription>TECH_LIST_CHILD_OBJ_OF_CUST_HIST</shortDescription>
         <value>FEC_Address_Info__c,FEC_Card_Payment__c,FEC_Collection_Interactions__c,FEC_Contact_List__c,FEC_Do_Not_Bother__c,FEC_Fast_Cash_Info__c,FEC_IPP__c,FEC_Insurance_Info__c,FEC_Other_Card__c,FEC_Payment_History__c,FEC_RePayment_Schedule__c,FEC_Reference_Info__c,FEC_Statement__c,FEC_Transaction__c</value>
     </labels>
+    <labels>
+        <fullName>FEC_Assignment_Duplicate_Queue_Error</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Duplicate assignment queue error</shortDescription>
+        <value>Assignment đến queue này đã tồn tại.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Batch_Case_Handling_Success</fullName>
+        <categories>Batch Case Handling</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Batch_Case_Handling_Success</shortDescription>
+        <value>Success</value>
+    </labels>
 </CustomLabels>

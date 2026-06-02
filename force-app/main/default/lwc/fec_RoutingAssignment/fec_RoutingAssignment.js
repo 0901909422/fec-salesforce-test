@@ -2,6 +2,7 @@
 import { LightningElement, api, track, wire } from 'lwc';
 import getRoutingAssignments from '@salesforce/apex/FEC_CaseBusinessService.getRoutingAssignments';
 import getTeamQueueOptions from '@salesforce/apex/FEC_CaseBusinessService.getTeamQueueOptions';
+import getExistingAssignmentQueueNames from '@salesforce/apex/FEC_CaseBusinessService.getExistingAssignmentQueueNames';
 import FEC_Team_Label from '@salesforce/label/c.FEC_Team_Label';
 import FEC_Queue_Label from '@salesforce/label/c.FEC_Queue_Label';
 import FEC_Add_Item_Label from '@salesforce/label/c.FEC_Add_Item_Label';
@@ -26,6 +27,7 @@ export default class Fec_RoutingAssignment extends LightningElement {
 
   @api businessCode;
   @api customerType;
+  @api caseId;
   @api isSubmited;
   @api userGroup;
   // tungnm37 fix: tên Queue của Case Owner để ẩn team tương ứng trong Add Item
@@ -35,6 +37,7 @@ export default class Fec_RoutingAssignment extends LightningElement {
   @track allTeamQueueOptions = [];
   @track showAddForm = false;
   @track manualItems = [];
+  @track existingAssignmentQueueNames = [];
   @track formTeam = '';
   @track formQueue = '';
 
@@ -120,6 +123,7 @@ export default class Fec_RoutingAssignment extends LightningElement {
   connectedCallback() {
     this._loadAssignments();
     this._loadTeamQueueOptions();
+    this._loadExistingAssignmentQueues();
   }
 
   _loadAssignments() {
@@ -150,6 +154,16 @@ export default class Fec_RoutingAssignment extends LightningElement {
     else if (error) console.error('[fec_RoutingAssignment] getTeamQueueOptions error', error);
   }
 
+
+  _loadExistingAssignmentQueues() {
+    if (!this.caseId) return Promise.resolve();
+    return getExistingAssignmentQueueNames({ caseId: this.caseId })
+      .then(data => { this.existingAssignmentQueueNames = data || []; })
+      .catch(error => {
+        console.error('[fec_RoutingAssignment] getExistingAssignmentQueueNames error', error);
+        this.existingAssignmentQueueNames = [];
+      });
+  }
   handleToggleForm() {
     if (this.showAddForm) {
       this.showAddForm = false;
@@ -186,7 +200,7 @@ export default class Fec_RoutingAssignment extends LightningElement {
     this.formRemark = e.target.value;
   }
 
-  handleConfirm() {
+  async handleConfirm() {
     this.showValidationError = false;
     const errors = [];
     if (!this.formTeam) errors.push('Team');
@@ -198,8 +212,15 @@ export default class Fec_RoutingAssignment extends LightningElement {
       this.validationErrorMsg = errors.join(', ') + ' là bắt buộc.';
       return;
     }
-    // tungnm37: check duplicate queue
-    const isDuplicateQueue = this.manualItems.some(i => i.queueName === this.formQueue);
+    //tugnnm37 - chặn ngay tại Confirm Add Item nếu queue đã có trong assignment gốc hoặc item manual, không chờ Submit tổng
+    const normalizeQueue = (value) => (value || '').toString().trim().toLowerCase();
+    const selectedQueue = normalizeQueue(this.formQueue);
+    if (this.caseId) {
+      await this._loadExistingAssignmentQueues();
+    }
+    const isDuplicateQueue = this.manualItems.some(i => normalizeQueue(i.queueName) === selectedQueue)
+      || this.assignments.some(i => normalizeQueue(i.queue) === selectedQueue || normalizeQueue(i.queueName) === selectedQueue)
+      || this.existingAssignmentQueueNames.some(q => normalizeQueue(q) === selectedQueue);
     if (isDuplicateQueue) {
       this.dispatchEvent(new CustomEvent('duplicatequeue', {
         detail: { message: FEC_Duplicate_Queue_Error }

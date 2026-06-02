@@ -435,7 +435,7 @@
           </template>
           <!-- tungnm37 thêm: Routing Assignment LWC nằm bên phải, cùng cột 6-of-12 với Team/Queue cũ -->
           <template if:true={isRoutingAssignmentMode}>
-            <c-fec_-routing-assignment nature-of-case-id={business.natureOfCase} business-code={business.code}
+            <c-fec_-routing-assignment case-id={recordId} nature-of-case-id={business.natureOfCase} business-code={business.code}
               customer-type={business.customerType} is-submited={business.isSubmited} user-group={userGroup}
               onassignmentsloaded={handleAssignmentsLoaded} onadditem={handleAddItem}
               onmanualitemschange={handleManualItemsChange} onduplicatequeue={handleDuplicateQueue}>

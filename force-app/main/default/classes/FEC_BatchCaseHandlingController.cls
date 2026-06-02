@@ -1401,20 +1401,58 @@ public without sharing class FEC_BatchCaseHandlingController {
                 return null;
             }
             Map<String, Schema.SObjectField> fieldMap = batchType.getDescribe().fields.getMap();
-            SObject failedRow = batchType.newSObject();
-            FEC_BatchCaseHandlingSObjectUtil.putIfFieldExists(fieldMap, failedRow, new List<String>{ 'FEC_File_Name__c' }, fileName);
+            SObject failedRow = findRecentFailedBatchHandling(fileName, fieldMap);
+            Boolean isUpdate = failedRow != null && failedRow.get('Id') != null;
+            if (!isUpdate) {
+                failedRow = batchType.newSObject();
+                FEC_BatchCaseHandlingSObjectUtil.putIfFieldExists(fieldMap, failedRow, new List<String>{ 'FEC_File_Name__c' }, fileName);
+            }
             FEC_BatchCaseHandlingSObjectUtil.putIfFieldExists(fieldMap, failedRow, new List<String>{ 'FEC_Uploaded_On__c' }, Datetime.now());
             FEC_BatchCaseHandlingSObjectUtil.putIfFieldExists(fieldMap, failedRow, new List<String>{ 'FEC_Uploaded_By__c' }, UserInfo.getUserEmail());
             FEC_BatchCaseHandlingSObjectUtil.putIfFieldExists(fieldMap, failedRow, new List<String>{ 'FEC_Status__c' }, 'Failure');
             FEC_BatchCaseHandlingSObjectUtil.putIfFieldExists(fieldMap, failedRow, new List<String>{ 'FEC_Result__c' }, 'Result');
             FEC_BatchCaseHandlingSObjectUtil.putIfFieldExists(fieldMap, failedRow, new List<String>{ 'FEC_Failure_Reason__c' }, reason);
             FEC_BatchCaseHandlingSObjectUtil.putIfFieldExists(fieldMap, failedRow, new List<String>{ 'FEC_Template_Name__c', 'FEC_Template__c' }, templateName);
+            if (isUpdate) {
+                update failedRow;
+            } else {
+                insert failedRow;
+            }
             insert failedRow;
             //tugnnm37 - trả Id batch Failure để tạo Result file cho cả lỗi parse/file không có dữ liệu
             return (Id) failedRow.get('Id');
         } catch (Exception ex) {
             return null;
         }
+    }
+
+    // 01/06/2026 - tránh 2 dòng Failure cùng file khi Apex + LWC đều ghi log
+    private static SObject findRecentFailedBatchHandling(String fileName, Map<String, Schema.SObjectField> fieldMap) {
+        if (String.isBlank(fileName) || fieldMap == null || fieldMap.isEmpty()) {
+            return null;
+        }
+        String fileField = FEC_BatchCaseHandlingSObjectUtil.pickField(fieldMap, new List<String>{ 'FEC_File_Name__c' });
+        String statusField = FEC_BatchCaseHandlingSObjectUtil.pickField(fieldMap, new List<String>{ 'FEC_Status__c' });
+        if (String.isBlank(fileField) || String.isBlank(statusField)) {
+            return null;
+        }
+        Id currentUserId = UserInfo.getUserId();
+        Datetime sinceDt = Datetime.now().addMinutes(-5);
+        List<SObject> rows = Database.query(
+            'SELECT Id FROM ' +
+                OBJECT_API_NAME +
+                ' WHERE CreatedById = :currentUserId' +
+                ' AND CreatedDate >= :sinceDt' +
+                ' AND ' +
+                fileField +
+                ' = :fileName' +
+                ' AND ' +
+                statusField +
+                ' = \'Failure\'' +
+                ' ORDER BY CreatedDate DESC' +
+                ' LIMIT 1'
+        );
+        return rows.isEmpty() ? null : rows[0];
     }
 
     private static String ensureResultContentTitle(String fileName) {

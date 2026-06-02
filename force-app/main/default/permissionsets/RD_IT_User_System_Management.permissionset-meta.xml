@@ -849,6 +849,10 @@
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
+        <apexClass>FEC_GetRepaymentScheduleByAppIdCallout</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
         <apexClass>FEC_GetRewardEligibility</apexClass>
         <enabled>true</enabled>
     </classAccesses>
