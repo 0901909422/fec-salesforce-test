@@ -415,4 +415,49 @@ public without sharing class FEC_CaseMasterDataHelper {
   ) {
     return selectedStageName?.contains(stageNameToken);
   }
+
+  //01/06/2026 linhdev: RL09/RC09 — resolve Customer History từ Case.FEC_Account_or_Contract__c khi __r chưa load (Stage 1/2, Execute).
+  public static FEC_Customer_History__c resolveCustomerHistoryForCase(Case selectedCase) {
+    if (selectedCase == null) {
+      return null;
+    }
+    if (
+      selectedCase.getPopulatedFieldsAsMap()
+        .containsKey('FEC_Account_or_Contract__r')
+    ) {
+      SObject accountOrContract = selectedCase.getSObject(
+        'FEC_Account_or_Contract__r'
+      );
+      if (accountOrContract != null) {
+        return (FEC_Customer_History__c) accountOrContract;
+      }
+    }
+    if (selectedCase.FEC_Account_or_Contract__c == null) {
+      return null;
+    }
+    if (!Schema.sObjectType.FEC_Customer_History__c.isAccessible()) {
+      return null;
+    }
+    List<FEC_Customer_History__c> historyRows = [
+      SELECT
+        Id,
+        FEC_Primary_Phone__c,
+        FEC_First_Name__c,
+        FEC_Middle_Name__c,
+        FEC_Last_Name__c,
+        FEC_Email__c,
+        FEC_Date_of_Birth__c,
+        FEC_Gender__c,
+        FEC_National_ID_Passport_ID__c,
+        FEC_Date_of_Issue__c,
+        FEC_Place_of_Issue__c
+      FROM FEC_Customer_History__c
+      WHERE Id = :selectedCase.FEC_Account_or_Contract__c
+      LIMIT 1
+    ];
+    if (historyRows.isEmpty()) {
+      return null;
+    }
+    return historyRows[0];
+  }
 }

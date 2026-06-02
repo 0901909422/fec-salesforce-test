@@ -5026,48 +5026,9 @@ public without sharing class FEC_CaseBusinessService {
     return true;
   }
 
-  //01/06/2026 19:31 linhdev: RL09/RC09 — resolve Customer History từ Case.FEC_Account_or_Contract__c khi __r chưa load (Stage 1/2, Execute).
-  private static FEC_Customer_History__c resolveCustomerHistoryForCase(Case selectedCase) {
-    if (
-      selectedCase.getPopulatedFieldsAsMap()
-        .containsKey('FEC_Account_or_Contract__r')
-    ) {
-      SObject accountOrContract = selectedCase.getSObject(
-        'FEC_Account_or_Contract__r'
-      );
-      if (accountOrContract != null) {
-        return (FEC_Customer_History__c) accountOrContract;
-      }
-    }
-    if (selectedCase.FEC_Account_or_Contract__c == null) {
-      return null;
-    }
-    List<FEC_Customer_History__c> historyRows = [
-      SELECT
-        Id,
-        FEC_Primary_Phone__c,
-        FEC_First_Name__c,
-        FEC_Middle_Name__c,
-        FEC_Last_Name__c,
-        FEC_Email__c,
-        FEC_Date_of_Birth__c,
-        FEC_Gender__c,
-        FEC_National_ID_Passport_ID__c,
-        FEC_Date_of_Issue__c,
-        FEC_Place_of_Issue__c
-      FROM FEC_Customer_History__c
-      WHERE Id = :selectedCase.FEC_Account_or_Contract__c
-      LIMIT 1
-    ];
-    if (historyRows.isEmpty()) {
-      return null;
-    }
-    return historyRows[0];
-  }
-
-  //01/06/2026 19:31 linhdev: RL09.01–07 — phone/fullName/email/dob/gender/identification Update dùng resolveCustomerHistoryForCase.
+  //01/06/2026 19:31 linhdev: RL09.01–07 — phone/fullName/email/dob/gender/identification Update dùng FEC_CaseMasterDataHelper.resolveCustomerHistoryForCase.
   private static void phoneUpdate(Case selectedCase) {
-    FEC_Customer_History__c customerHistory = resolveCustomerHistoryForCase(
+    FEC_Customer_History__c customerHistory = FEC_CaseMasterDataHelper.resolveCustomerHistoryForCase(
       selectedCase
     );
     if (customerHistory == null) {
@@ -5088,7 +5049,7 @@ public without sharing class FEC_CaseBusinessService {
    * Chỉ gán Updated = Original khi chưa có giá trị (giữ bản nháp sau Save & Close khi bấm Execute lại).
    */
   private static void fullNameUpdate(Case selectedCase) {
-    FEC_Customer_History__c customerHistory = resolveCustomerHistoryForCase(
+    FEC_Customer_History__c customerHistory = FEC_CaseMasterDataHelper.resolveCustomerHistoryForCase(
       selectedCase
     );
     if (customerHistory == null) {
@@ -5116,7 +5077,7 @@ public without sharing class FEC_CaseBusinessService {
    * Chỉ gán Updated = Original khi chưa có giá trị (giữ bản nháp sau Save & Close khi bấm Execute lại).
    */
   private static void emailUpdate(Case selectedCase) {
-    FEC_Customer_History__c customerHistory = resolveCustomerHistoryForCase(
+    FEC_Customer_History__c customerHistory = FEC_CaseMasterDataHelper.resolveCustomerHistoryForCase(
       selectedCase
     );
     if (customerHistory == null) {
@@ -5137,7 +5098,7 @@ public without sharing class FEC_CaseBusinessService {
    * Chỉ gán Updated = Original khi chưa có giá trị (giữ bản nháp sau Save & Close khi bấm Execute lại).
    */
   private static void dobUpdate(Case selectedCase) {
-    FEC_Customer_History__c customerHistory = resolveCustomerHistoryForCase(
+    FEC_Customer_History__c customerHistory = FEC_CaseMasterDataHelper.resolveCustomerHistoryForCase(
       selectedCase
     );
     if (customerHistory == null) {
@@ -5158,7 +5119,7 @@ public without sharing class FEC_CaseBusinessService {
    * Chỉ gán Updated = Original khi chưa có giá trị (giữ bản nháp sau Save & Close khi bấm Execute lại).
    */
   private static void genderUpdate(Case selectedCase) {
-    FEC_Customer_History__c customerHistory = resolveCustomerHistoryForCase(
+    FEC_Customer_History__c customerHistory = FEC_CaseMasterDataHelper.resolveCustomerHistoryForCase(
       selectedCase
     );
     if (customerHistory == null) {
@@ -5179,7 +5140,7 @@ public without sharing class FEC_CaseBusinessService {
    * FEC_Original_Info_National_ID__c, FEC_Original_Info_Date_of_Issue__c, FEC_Original_Info_Place_of_Issue__c trên Case.
    */
   private static void identificationUpdate(Case selectedCase) {
-    FEC_Customer_History__c customerHistory = resolveCustomerHistoryForCase(
+    FEC_Customer_History__c customerHistory = FEC_CaseMasterDataHelper.resolveCustomerHistoryForCase(
       selectedCase
     );
     if (customerHistory == null) {
