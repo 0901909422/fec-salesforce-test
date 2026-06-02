@@ -591,6 +591,7 @@
 		<members>FEC_Batch_Case_Handling_Success</members>
 		<members>FEC_NFU_Modal_Save_Error</members>
         <members>FEC_Send_Manual_Notification</members>
+        <members>FEC_RelevantTicket_Field_Interaction</members>
 		<name>CustomLabel</name>
 	</types>
     <types>
@@ -604,6 +605,7 @@
 		<members>FEC_API_Config.FEC_VMX_AUTH_DETAIL_INQ</members>
 		<members>FEC_API_Config.FEC_Vmx_Acct_Blkcd_Upd_Emea</members>
 		<members>FEC_API_Config.FEC_Get_Customer_List</members>
+		<members>FEC_API_Config.FEC_CheckEligible</members>
 		<name>CustomMetadata</name>
 	</types>
     <types>
