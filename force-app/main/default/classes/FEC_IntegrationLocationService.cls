@@ -98,62 +98,6 @@ public class FEC_IntegrationLocationService {
         log('[syncLocation] START');
         List<Map<String, Object>> records;
 
-<<<<<<< HEAD
-        if (useMock) {
-            log('[syncLocation] Using mock data');
-            records = FEC_FraudCaseMockData.getCifFeDictLocationVw();
-            log('[syncLocation] Mock records loaded: ' + records.size());
-        } else {
-            log('[syncLocation] Using external object CifFeDictLocationVw__x');
-            records = new List<Map<String, Object>>();
-
-            // External objects limit OFFSET to 2000 globally,
-            // so query per SCHEME and paginate within each using OFFSET up to 2000
-            List<String> schemes = new List<String>{FEC_FraudConstantCommon.LOCATION_SCHEME_COUNTRY, FEC_FraudConstantCommon.LOCATION_SCHEME_PROVINCE, FEC_FraudConstantCommon.LOCATION_SCHEME_CITY_DISTRICT, FEC_FraudConstantCommon.LOCATION_SCHEME_WARD};
-            Integer pageSize = FEC_FraudConstantCommon.LOCATION_PAGE_SIZE;
-
-            for (String scheme : schemes) {
-                Integer offset = 0;
-                Boolean hasMore = true;
-
-                while (hasMore) {
-                    log('[syncLocation] SCHEME=' + scheme + ' offset=' + offset);
-                    String soql = 'SELECT ExternalId, CODE__c, NAME__c, NAME_EN__c, '
-                                + 'PARENTCODE__c, ISACTIVE__c, SCHEME__c, EFFECTIVEDATE__c '
-                                + 'FROM CifFeDictLocationVw__x '
-                                + 'WHERE SCHEME__c = :scheme '
-                                + 'LIMIT ' + pageSize + ' OFFSET ' + offset;
-                    List<CifFeDictLocationVw__x> batch = Database.query(soql);
-                    log('[syncLocation] SCHEME=' + scheme + ' returned ' + batch.size() + ' records');
-
-                    for (CifFeDictLocationVw__x loc : batch) {
-                        records.add(new Map<String, Object>{
-                            'ExternalId' => loc.ExternalId,
-                            'CODE__c' => loc.CODE__c,
-                            'NAME__c' => loc.NAME__c,
-                            'NAME_EN__c' => loc.NAME_EN__c,
-                            'PARENTCODE__c' => loc.PARENTCODE__c,
-                            'ISACTIVE__c' => loc.ISACTIVE__c,
-                            'SCHEME__c' => loc.SCHEME__c,
-                            'EFFECTIVEDATE__c' => loc.EFFECTIVEDATE__c
-                        });
-                    }
-
-                    if (batch.size() < pageSize) {
-                        hasMore = false;
-                    } else {
-                        offset += pageSize;
-                        // External object OFFSET cap is 2000
-                        if (offset >= FEC_FraudConstantCommon.LOCATION_OFFSET) {
-                            log('[syncLocation] SCHEME=' + scheme + ' reached OFFSET limit 2000');
-                            hasMore = false;
-                        }
-                    }
-                }
-            }
-            log('[syncLocation] Total external records loaded: ' + records.size());
-        }
-=======
         log('[syncLocation] Using external object CifFeDictLocationVw__x');
         records = new List<Map<String, Object>>();
 
@@ -202,7 +146,6 @@ public class FEC_IntegrationLocationService {
             }
         }
         log('[syncLocation] Total external records loaded: ' + records.size());
->>>>>>> 9157ad6dd (CSM-8236 v3 remove mockup data)
 
         if (records == null || records.isEmpty()) {
             log('[syncLocation] No records to process → EXIT');
