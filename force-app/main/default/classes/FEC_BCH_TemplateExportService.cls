@@ -2,6 +2,8 @@ public without sharing class FEC_BCH_TemplateExportService {
 
     private static final String DBG = 'FEC_BCH_EXPORT';
     private static final Integer MAX_EXPORT_DATA_ROWS = 5000;
+    //tugnnm37 - cache source xlsx entries trong transaction để build result không query ContentVersion từng cell gây SOQL 101
+    private static Map<Id, Map<String, Blob>> importCellZipEntriesCache = new Map<Id, Map<String, Blob>>();
 
     public class ExportRequest {
         @AuraEnabled public Id contentVersionId;
@@ -259,16 +261,7 @@ public without sharing class FEC_BCH_TemplateExportService {
             return FEC_ConstantCommon.STR_EMPTY;
         }
         try {
-            List<ContentVersion> versions = [
-                SELECT VersionData
-                FROM ContentVersion
-                WHERE Id = :contentVersionId
-                LIMIT 1
-            ];
-            if (versions.isEmpty() || versions[0].VersionData == null) {
-                return FEC_ConstantCommon.STR_EMPTY;
-            }
-            Map<String, Blob> entryByPath = readZipEntries(versions[0].VersionData);
+            Map<String, Blob> entryByPath = getImportCellZipEntries(contentVersionId);
             if (entryByPath.isEmpty()) {
                 return FEC_ConstantCommon.STR_EMPTY;
             }
@@ -298,6 +291,28 @@ public without sharing class FEC_BCH_TemplateExportService {
         }
     }
 
+
+    private static Map<String, Blob> getImportCellZipEntries(Id contentVersionId) {
+        //tugnnm37 - readImportCellText được gọi theo từng cell; chỉ query/parse zip 1 lần cho mỗi ContentVersion
+        if (contentVersionId == null) {
+            return new Map<String, Blob>();
+        }
+        if (importCellZipEntriesCache.containsKey(contentVersionId)) {
+            return importCellZipEntriesCache.get(contentVersionId);
+        }
+        Map<String, Blob> entryByPath = new Map<String, Blob>();
+        List<ContentVersion> versions = [
+            SELECT VersionData
+            FROM ContentVersion
+            WHERE Id = :contentVersionId
+            LIMIT 1
+        ];
+        if (!versions.isEmpty() && versions[0].VersionData != null) {
+            entryByPath = readZipEntries(versions[0].VersionData);
+        }
+        importCellZipEntriesCache.put(contentVersionId, entryByPath);
+        return entryByPath;
+    }
     private static ExportWorkbookResponse fail(
         ExportWorkbookResponse out,
         String code,
@@ -2757,6 +2772,24 @@ public without sharing class FEC_BCH_TemplateExportService {
         String cpAssessment = headerDetect.idxCpAssessment >= 0
             ? cellTextAtWorksheetColumn(colTexts, headerDetect.idxCpAssessment)
             : FEC_ConstantCommon.STR_EMPTY;
+        if (
+            String.isBlank(caseIdSearch) &&
+            String.isBlank(routingAction) &&
+            String.isBlank(inputtedRemarks) &&
+            String.isBlank(assignmentId) &&
+            String.isBlank(assignmentRoutingAction) &&
+            String.isBlank(csD2CAssessmentType) &&
+            String.isBlank(csSupportAssessment) &&
+            String.isBlank(riskLevel) &&
+            String.isBlank(requiredAction) &&
+            String.isBlank(classificationByCS) &&
+            String.isBlank(evaluationByCS) &&
+            String.isBlank(finalProduct) &&
+            String.isBlank(paymentContractAssessment) &&
+            String.isBlank(cpAssessment)
+        ) {
+            return null;
+        }
         List<String> originalCells = new List<String>();
         for (Integer i = 0; i < importHeaders.size(); i++) {
             Integer worksheetCol = i < importColumnIndexes.size()
