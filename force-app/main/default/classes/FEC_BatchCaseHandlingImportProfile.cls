@@ -124,7 +124,16 @@ public with sharing class FEC_BatchCaseHandlingImportProfile {
             keyNoSpace == 'INCORRECTPAYMENTHANDLINGLOAN';
     }
 
+    //tungnm37 - support CP assessment for MRC business process names with/without spaces
     private static Boolean isCpAssessmentBusinessProcess(String bpNorm) {
-        return bpNorm == 'ORIGINALMRCRETURN' || bpNorm == 'MRCRETURN';
+        if (String.isBlank(bpNorm)) {
+            return false;
+        }
+        String key = bpNorm.trim().toUpperCase();
+        String keyNoSpace = key.replaceAll('\s+', '').replace('(', '').replace(')', '');
+        return key == 'ORIGINAL MRC RETURN' ||
+            key == 'MRC RETURN' ||
+            keyNoSpace == 'ORIGINALMRCRETURN' ||
+            keyNoSpace == 'MRCRETURN';
     }
 }
