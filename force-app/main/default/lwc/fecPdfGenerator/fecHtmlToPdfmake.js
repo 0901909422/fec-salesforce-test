@@ -788,14 +788,19 @@ export function replacePlaceholders(template, params) {
 
     let result = template;
 
-    // 0. Replace {{TODAY}} với ngày hệ thống (dd/MM/yyyy)
-    const dtToday = new Date();
-    const strToday =
-        String(dtToday.getDate()).padStart(2, "0") +
-        "/" +
-        String(dtToday.getMonth() + 1).padStart(2, "0") +
-        "/" +
-        dtToday.getFullYear();
+    //PhongBT 02/06/26: {{TODAY}} ưu tiên params.TODAY (Case.CreatedDate), không thì ngày hệ thống
+    let strToday = params.TODAY != null && String(params.TODAY).trim() !== ""
+        ? String(params.TODAY).trim()
+        : null;
+    if (!strToday) {
+        const dtToday = new Date();
+        strToday =
+            String(dtToday.getDate()).padStart(2, "0") +
+            "/" +
+            String(dtToday.getMonth() + 1).padStart(2, "0") +
+            "/" +
+            dtToday.getFullYear();
+    }
     result = result.replace(/\{\{TODAY\}\}/g, strToday);
 
     // 1. Process forEach

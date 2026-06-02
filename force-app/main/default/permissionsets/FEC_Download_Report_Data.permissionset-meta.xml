@@ -27,4 +27,8 @@
         <tab>FEC_Download_Report__c</tab>
         <visibility>Visible</visibility>
     </tabSettings>
+    <classAccesses>
+        <apexClass>FEC_DownloadReportController</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
 </PermissionSet>
