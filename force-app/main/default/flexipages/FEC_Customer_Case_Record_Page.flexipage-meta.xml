@@ -755,7 +755,7 @@
                 </componentInstanceProperties>
                 <componentInstanceProperties>
                     <name>relatedListDisplayType</name>
-                    <value>ADVGRID</value>
+                    <value>LIST</value>
                 </componentInstanceProperties>
                 <componentInstanceProperties>
                     <name>relatedListFieldAliases</name>
