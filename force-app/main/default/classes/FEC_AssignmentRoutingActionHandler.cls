@@ -102,7 +102,7 @@ public without sharing class FEC_AssignmentRoutingActionHandler {
         FEC_Assignment__c assignmentToUpdate = new FEC_Assignment__c(
             Id = assignmentId,
         FEC_Assignment_Status__c = FEC_ConstantCommon.ASSIGNMENT_STATUS_COMPLETED
-        // FEC_OwnerID__c = null // unassigned
+            // FEC_OwnerID__c = null // unassigned
         );
         
         update assignmentToUpdate;
@@ -122,9 +122,9 @@ public without sharing class FEC_AssignmentRoutingActionHandler {
         update new FEC_Assignment__c(
             Id = assignmentId,
         FEC_Assignment_Status__c = FEC_ConstantCommon.ASSIGNMENT_STATUS_COMPLETED
-        // FEC_Assignment_Owner__c = null,
+            // FEC_Assignment_Owner__c = null,
         // FEC_OwnerID__c = null
-            );
+        );
         
         // tungnm37: sync lại Case.FEC_Assignment_Users__c → clear về null sau khi resolve
         syncAssignmentUsersToCase(caseId, assignmentId);
@@ -525,9 +525,9 @@ public without sharing class FEC_AssignmentRoutingActionHandler {
         FEC_Routing_Action__c = action,
         
         FEC_Original_User_Queue__c = emailLocalPart(u.Email),
-        FEC_Original_User_Queue_ID__c = emailLocalPart(u.Email),
+        FEC_Original_User_Queue_ID__c = u.Id,
         FEC_Updated_User_Queue__c = ass.FEC_Assignment_Owner_Text__c,
-        FEC_Updated_User_Queue_ID__c =  ass.FEC_Assignment_Owner_Text__c,
+        FEC_Updated_User_Queue_ID__c =  ass.FEC_OwnerID__c,
         
         FEC_Stage_Name__c = c.FEC_Current_Case_Stage__r.FEC_Code__c,
         
@@ -626,9 +626,9 @@ public without sharing class FEC_AssignmentRoutingActionHandler {
         FEC_Routing_Action__c = action,
         
         FEC_Original_User_Queue__c = ownerValue,
-        FEC_Original_User_Queue_ID__c = ownerValue,
+        FEC_Original_User_Queue_ID__c = ownerIdValue,
         FEC_Updated_User_Queue__c = ownerValue,
-        FEC_Updated_User_Queue_ID__c = ownerValue,
+        FEC_Updated_User_Queue_ID__c = ownerIdValue,
         
         FEC_Stage_Name__c = c.FEC_Current_Case_Stage__r.FEC_Code__c,
         
@@ -698,7 +698,7 @@ public without sharing class FEC_AssignmentRoutingActionHandler {
         
         FEC_User__c = emailLocalPart(u.Email),
         FEC_User_Role__c = u.UserRole != null ? u.UserRole.Name : null
-            ));
+        ));
         
         // --- Case Remark ---
         records.add(new FEC_Case_Remarks__c(
@@ -776,7 +776,8 @@ public without sharing class FEC_AssignmentRoutingActionHandler {
         FEC_Stage_Name__c = c.FEC_Current_Case_Stage__r.FEC_Code__c,
         
         FEC_User__c = emailLocalPart(u.Email),
-        FEC_User_Role__c = u.UserRole != null ? u.UserRole.Name : null
+        FEC_User_Role__c = u.UserRole != null ? u.UserRole.Name : null,
+        FEC_Decision__c = decision
             ));
         
         // --- Case Remark ---
@@ -847,14 +848,15 @@ public without sharing class FEC_AssignmentRoutingActionHandler {
         FEC_Routing_Action__c = action,
         
         FEC_Original_User_Queue__c =  emailLocalPart(u.Email),
-        FEC_Original_User_Queue_ID__c =  emailLocalPart(u.Email),
+        FEC_Original_User_Queue_ID__c =  u.Id,
         FEC_Updated_User_Queue__c = updatedUserQueue,
         FEC_Updated_User_Queue_ID__c =  updatedUserQueueId,
         
         FEC_Stage_Name__c = c.FEC_Current_Case_Stage__r.FEC_Code__c,
         
         FEC_User__c = emailLocalPart(u.Email),
-        FEC_User_Role__c = u.UserRole != null ? u.UserRole.Name : null
+        FEC_User_Role__c = u.UserRole != null ? u.UserRole.Name : null,
+        FEC_Decision__c = decision
             ));
         
         // --- Case Remark ---
