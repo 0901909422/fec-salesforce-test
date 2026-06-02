@@ -579,11 +579,8 @@ public without sharing class FEC_CaseBusinessService {
           when PHONE_UPDATE {
             err = phoneUpdateValidate(selectedCase.FEC_Account_or_Contract__c);
             if (err.errorlst.isEmpty()) {
-              if (historylst.isEmpty())
-                // &&
-                // (String.isBlank(selectedCase.FEC_Current_Case_Stage__c) ||
-                // selectedCase.FEC_Current_Case_Stage__r?.FEC_Default_Stage__c)
-                phoneUpdate(selectedCase);
+              //01/06/2026 19:31 linhdev: RL09.01 Stage 1/2 — luôn sync FEC_Original_* từ Customer History; bỏ chặn historylst.isEmpty (sau Route to history không rỗng).
+              phoneUpdate(selectedCase);
             } else {
               result.sectionlst.add(new Section('Case Information', err));
             }
@@ -804,6 +801,9 @@ public without sharing class FEC_CaseBusinessService {
         selectedStage.Name,
         isRevert
       );
+
+      //01/06/2026 linhdev: persist Case (RL09 Original/Updated, stage, business process) trước getData — master data query đọc DB đúng ngay lần Execute.
+      FEC_CaseInitUpdateService.runSystemCaseUpdateIfChanged(selectedCase, caseBaseline);
 
       // ============================= GET MASTET DATA SETTING ===========================
       if (err.errorlst.isEmpty()) {
@@ -1407,8 +1407,6 @@ public without sharing class FEC_CaseBusinessService {
       result.customerType = selectedCase.FEC_Customer_Type__c;
 
       // RL05 duplicate + UI context đã resolve trước vòng master data (mrcRl05Ui / mrcRl0502Duplicate*).
-
-      FEC_CaseInitUpdateService.runSystemCaseUpdateIfChanged(selectedCase, caseBaseline);
 
       return result;
     } catch (CaseBusinessServiceException e) {
@@ -5028,8 +5026,15 @@ public without sharing class FEC_CaseBusinessService {
     return true;
   }
 
+  //01/06/2026 19:31 linhdev: RL09.01–07 — phone/fullName/email/dob/gender/identification Update dùng FEC_CaseMasterDataHelper.resolveCustomerHistoryForCase.
   private static void phoneUpdate(Case selectedCase) {
-    selectedCase.FEC_Original_Info_Phone_Number__c = selectedCase.FEC_Account_or_Contract__r.FEC_Primary_Phone__c;
+    FEC_Customer_History__c customerHistory = FEC_CaseMasterDataHelper.resolveCustomerHistoryForCase(
+      selectedCase
+    );
+    if (customerHistory == null) {
+      return;
+    }
+    selectedCase.FEC_Original_Info_Phone_Number__c = customerHistory.FEC_Primary_Phone__c;
     if (
       shouldFillBlankUpdatedInfoFromOriginal(selectedCase) &&
       String.isBlank(selectedCase.FEC_Updated_Info_Phone_Number__c)
@@ -5044,21 +5049,15 @@ public without sharing class FEC_CaseBusinessService {
    * Chỉ gán Updated = Original khi chưa có giá trị (giữ bản nháp sau Save & Close khi bấm Execute lại).
    */
   private static void fullNameUpdate(Case selectedCase) {
-    SObject accountOrContract = selectedCase.getSObject(
-      'FEC_Account_or_Contract__r'
+    FEC_Customer_History__c customerHistory = FEC_CaseMasterDataHelper.resolveCustomerHistoryForCase(
+      selectedCase
     );
-    if (accountOrContract == null) {
+    if (customerHistory == null) {
       return;
     }
-    selectedCase.FEC_Original_Info_Last_Name__c = (String) accountOrContract.get(
-      'FEC_Last_Name__c'
-    );
-    selectedCase.FEC_Original_Info_Middle_Name__c = (String) accountOrContract.get(
-      'FEC_Middle_Name__c'
-    );
-    selectedCase.FEC_Original_Info_First_Name__c = (String) accountOrContract.get(
-      'FEC_First_Name__c'
-    );
+    selectedCase.FEC_Original_Info_Last_Name__c = customerHistory.FEC_Last_Name__c;
+    selectedCase.FEC_Original_Info_Middle_Name__c = customerHistory.FEC_Middle_Name__c;
+    selectedCase.FEC_Original_Info_First_Name__c = customerHistory.FEC_First_Name__c;
     if (shouldFillBlankUpdatedInfoFromOriginal(selectedCase)) {
       if (String.isBlank(selectedCase.FEC_Updated_Info_First_Name__c)) {
         selectedCase.FEC_Updated_Info_First_Name__c = selectedCase.FEC_Original_Info_First_Name__c;
@@ -5078,15 +5077,13 @@ public without sharing class FEC_CaseBusinessService {
    * Chỉ gán Updated = Original khi chưa có giá trị (giữ bản nháp sau Save & Close khi bấm Execute lại).
    */
   private static void emailUpdate(Case selectedCase) {
-    SObject accountOrContract = selectedCase.getSObject(
-      'FEC_Account_or_Contract__r'
+    FEC_Customer_History__c customerHistory = FEC_CaseMasterDataHelper.resolveCustomerHistoryForCase(
+      selectedCase
     );
-    if (accountOrContract == null) {
+    if (customerHistory == null) {
       return;
     }
-    selectedCase.FEC_Original_Info_Email__c = (String) accountOrContract.get(
-      'FEC_Email__c'
-    );
+    selectedCase.FEC_Original_Info_Email__c = customerHistory.FEC_Email__c;
     if (
       shouldFillBlankUpdatedInfoFromOriginal(selectedCase) &&
       String.isBlank(selectedCase.FEC_Updated_Info_Email__c)
@@ -5101,15 +5098,13 @@ public without sharing class FEC_CaseBusinessService {
    * Chỉ gán Updated = Original khi chưa có giá trị (giữ bản nháp sau Save & Close khi bấm Execute lại).
    */
   private static void dobUpdate(Case selectedCase) {
-    SObject accountOrContract = selectedCase.getSObject(
-      'FEC_Account_or_Contract__r'
+    FEC_Customer_History__c customerHistory = FEC_CaseMasterDataHelper.resolveCustomerHistoryForCase(
+      selectedCase
     );
-    if (accountOrContract == null) {
+    if (customerHistory == null) {
       return;
     }
-    selectedCase.FEC_Original_Info_Date_of_Birth__c = (Date) accountOrContract.get(
-      'FEC_Date_of_Birth__c'
-    );
+    selectedCase.FEC_Original_Info_Date_of_Birth__c = customerHistory.FEC_Date_of_Birth__c;
     if (
       shouldFillBlankUpdatedInfoFromOriginal(selectedCase) &&
       selectedCase.FEC_Updated_Info_Date_of_Birth__c == null
@@ -5124,15 +5119,13 @@ public without sharing class FEC_CaseBusinessService {
    * Chỉ gán Updated = Original khi chưa có giá trị (giữ bản nháp sau Save & Close khi bấm Execute lại).
    */
   private static void genderUpdate(Case selectedCase) {
-    SObject accountOrContract = selectedCase.getSObject(
-      'FEC_Account_or_Contract__r'
+    FEC_Customer_History__c customerHistory = FEC_CaseMasterDataHelper.resolveCustomerHistoryForCase(
+      selectedCase
     );
-    if (accountOrContract == null) {
+    if (customerHistory == null) {
       return;
     }
-    selectedCase.FEC_Original_Info_Gender__c = (String) accountOrContract.get(
-      'FEC_Gender__c'
-    );
+    selectedCase.FEC_Original_Info_Gender__c = customerHistory.FEC_Gender__c;
     if (
       shouldFillBlankUpdatedInfoFromOriginal(selectedCase) &&
       String.isBlank(selectedCase.FEC_Updated_Info_Gender__c)
@@ -5147,21 +5140,15 @@ public without sharing class FEC_CaseBusinessService {
    * FEC_Original_Info_National_ID__c, FEC_Original_Info_Date_of_Issue__c, FEC_Original_Info_Place_of_Issue__c trên Case.
    */
   private static void identificationUpdate(Case selectedCase) {
-    SObject accountOrContract = selectedCase.getSObject(
-      'FEC_Account_or_Contract__r'
+    FEC_Customer_History__c customerHistory = FEC_CaseMasterDataHelper.resolveCustomerHistoryForCase(
+      selectedCase
     );
-    if (accountOrContract == null) {
+    if (customerHistory == null) {
       return;
     }
-    selectedCase.FEC_Original_Info_National_ID__c = (String) accountOrContract.get(
-      'FEC_National_ID_Passport_ID__c'
-    );
-    selectedCase.FEC_Original_Info_Date_of_Issue__c = (Date) accountOrContract.get(
-      'FEC_Date_of_Issue__c'
-    );
-    selectedCase.FEC_Original_Info_Place_of_Issue__c = (String) accountOrContract.get(
-      'FEC_Place_of_Issue__c'
-    );
+    selectedCase.FEC_Original_Info_National_ID__c = customerHistory.FEC_National_ID_Passport_ID__c;
+    selectedCase.FEC_Original_Info_Date_of_Issue__c = customerHistory.FEC_Date_of_Issue__c;
+    selectedCase.FEC_Original_Info_Place_of_Issue__c = customerHistory.FEC_Place_of_Issue__c;
     if (shouldFillBlankUpdatedInfoFromOriginal(selectedCase)) {
       if (String.isBlank(selectedCase.FEC_Updated_Info_National_ID__c)) {
         selectedCase.FEC_Updated_Info_National_ID__c = selectedCase.FEC_Original_Info_National_ID__c;
