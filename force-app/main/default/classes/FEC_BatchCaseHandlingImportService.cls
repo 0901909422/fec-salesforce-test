@@ -90,7 +90,7 @@ public without sharing class FEC_BatchCaseHandlingImportService {
     }
 
     public static Boolean shouldProcessImportSynchronously(List<FEC_BatchCaseHandlingImportRow> rows) {
-        // 28/05/2026 15:24 codex - production safety: always process via queueable to avoid sync SOQL 101
+        // 28/05/2026 15:24 linhdev - production safety: always process via queueable to avoid sync SOQL 101
         return false;
     }
 
@@ -459,7 +459,7 @@ public without sharing class FEC_BatchCaseHandlingImportService {
                     cofOrGsr
                 );
             } catch (Exception sheetRowsEx) {
-                // 29/05/2026 14:21 codex - if normal result rows fail, continue with emergency result workbook
+                // 29/05/2026 14:21 linhdev - if normal result rows fail, continue with emergency result workbook
                 sheetRows = null;
             }
             Blob workbookBlob = null;
@@ -470,7 +470,7 @@ public without sharing class FEC_BatchCaseHandlingImportService {
                     batchFailureReason
                 );
             } catch (Exception templateEx) {
-                // 29/05/2026 14:07 codex - fallback to basic result workbook if original-layout patching fails
+                // 29/05/2026 14:07 linhdev - fallback to basic result workbook if original-layout patching fails
                 workbookBlob = null;
             }
             if (workbookBlob == null && sheetRows != null && !sheetRows.isEmpty()) {
