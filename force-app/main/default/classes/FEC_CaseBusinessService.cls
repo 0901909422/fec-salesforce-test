@@ -2380,7 +2380,7 @@ public without sharing class FEC_CaseBusinessService {
             finalStatusBeforeSubmit,
             (String) params.get('teamUserGroup')
           );
-          // 28/05/2026 15:33 linhdev - tránh Too many queueable jobs khi import batch chain queueable
+          // 28/05/2026 15:33 codex - tránh Too many queueable jobs khi import batch chain queueable
           if (!FEC_BatchCaseHandlingImportService.isBatchImportApplyInProgress()) {
             System.enqueueJob(
               new FEC_MrcDupCancelOnSubmitQueueJob(
