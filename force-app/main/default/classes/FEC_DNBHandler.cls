@@ -770,11 +770,7 @@ public without sharing class FEC_DNBHandler {
             new FEC_GetDNBCalloutService.DNBRequest();
         
         
-        String effectivePhone =
-            String.isNotBlank(phoneNumber)
-            ? phoneNumber
-            : caseRecord.FEC_Case_Phone_Number__c;
-        
+        String effectivePhone = phoneNumber;
         
         req.phone = String.isNotBlank(effectivePhone)
             ? normalizePhone(effectivePhone)
@@ -809,7 +805,7 @@ public without sharing class FEC_DNBHandler {
         
         // ===== Update AFTER callout =====
         caseRecord.FEC_National_ID_Passport_ID__c = req.nid;
-        caseRecord.FEC_Case_Phone_Number__c =       req.phone;
+        caseRecord.FEC_Case_Phone_Number__c =  req.phone;
         update caseRecord;
         return res;
     }
