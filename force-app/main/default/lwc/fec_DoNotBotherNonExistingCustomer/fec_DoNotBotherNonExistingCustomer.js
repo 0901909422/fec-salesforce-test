@@ -365,6 +365,44 @@ export default class Fec_DoNotBotherNonExistingCustomer extends LightningElement
       /*
        * CHECK API ONLY
        */
+      // const result = await this.checkDNB();
+
+      // console.log("DNB RESULT:", JSON.stringify(result));
+
+      // this.isDNBChecked = true;
+
+      // /*
+      //  * API FAIL
+      //  */
+      // if (!result?.success) {
+      //   this.showToast(
+      //     "Error",
+      //     result?.errorMessage || "Check DNB failed",
+      //     "error",
+      //   );
+
+      //   return;
+      // }
+
+      // /*
+      //  * HAS DATA
+      //  */
+      // const hasData = result?.result && result.result.length > 0;
+
+      // this.hasExistingDNB = hasData;
+
+      // this.hasDNBData = hasData;
+
+      // /*
+      //  * IMPORTANT:
+      //  * clear table
+      //  */
+      // this.data = [];
+
+      // this.currentPage = 1;
+
+      // this.updatePagedData();
+
       const result = await this.checkDNB();
 
       console.log("DNB RESULT:", JSON.stringify(result));
@@ -380,28 +418,29 @@ export default class Fec_DoNotBotherNonExistingCustomer extends LightningElement
           result?.errorMessage || "Check DNB failed",
           "error",
         );
-
         return;
       }
 
       /*
-       * HAS DATA
+       * NO DATA FOUND
        */
-      const hasData = result?.result && result.result.length > 0;
+      const hasData = Array.isArray(result?.result) && result.result.length > 0;
 
       this.hasExistingDNB = hasData;
-
       this.hasDNBData = hasData;
 
       /*
-       * IMPORTANT:
        * clear table
        */
       this.data = [];
-
       this.currentPage = 1;
-
       this.updatePagedData();
+
+      if (!hasData) {
+        this.showToast("Info", "No existing DNB record found.", "info");
+
+        return;
+      }
     } catch (e) {
       console.error("handleCheckDNB ERROR", e);
 
