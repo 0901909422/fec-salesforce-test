@@ -12,8 +12,6 @@
  */
 public class FEC_ArchiveVerifyHttpService {
 
-    private static final String API_CREDENTIAL = 'https://sf-csm-service-dev.fecredit.cloud';
-    private static final String PATH           = '/archival/dispatcher/api/v1/cases/archive-status';
     private static final Integer TIMEOUT_MS    = 30000;
     
     /**
@@ -26,7 +24,7 @@ public class FEC_ArchiveVerifyHttpService {
         };
 
         HttpRequest req = new HttpRequest();
-        req.setEndpoint(API_CREDENTIAL + PATH);
+        req.setEndpoint(FEC_ConstantArchive.API_BASE_URL + FEC_ConstantArchive.PATH_CASES_ARCHIVE_STATUS);
         req.setMethod('POST');
         req.setHeader('Content-Type', FEC_ConstantCommon.API_CONTENT_TYPE_JSON);
         req.setHeader('X-API-KEY', FEC_ConstantArchive.X_API_KEY_ARCHIVE);

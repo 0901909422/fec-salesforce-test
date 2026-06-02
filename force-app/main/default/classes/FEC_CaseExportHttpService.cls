@@ -1,7 +1,5 @@
 public class FEC_CaseExportHttpService {
 
-    private static final String EXTERNAL_API_CREDENTIAL = 'https://sf-csm-service-dev.fecredit.cloud';
-    private static final String CASES_PATH               = '/archival/dispatcher/api/v1/cases/ingest_archival';
     private static final Integer TIMEOUT_MS              = 60000;
 
     // Số lần retry khi gặp lỗi 5xx hoặc timeout
@@ -20,7 +18,7 @@ public class FEC_CaseExportHttpService {
             attempt++;
             try {
                 HttpRequest req = new HttpRequest();
-                req.setEndpoint(EXTERNAL_API_CREDENTIAL + CASES_PATH);
+                req.setEndpoint(FEC_ConstantArchive.API_BASE_URL + FEC_ConstantArchive.PATH_CASES_INGEST_ARCHIVAL);
                 req.setMethod(FEC_ConstantCommon.API_METHOD_POST);
                 req.setHeader('Content-Type', FEC_ConstantCommon.API_CONTENT_TYPE_JSON_UTF8);
                 req.setHeader('Accept',       FEC_ConstantCommon.API_CONTENT_TYPE_JSON);
