@@ -1,14 +1,20 @@
 ({
     _timer: null,
 
-    closeOrNavigate: function(component) {
+    closeOrNavigate: function(component, forceReload) {
         var recordId = component.get('v.recordId');
-        // Khi mở dạng tab (actionOverride), navigate về /lightning/r/Case/{id}/view
+        // tugnnm37: navigate or hard reload back to Case detail page
         if (recordId) {
+            var caseUrl = '/lightning/r/Case/' + recordId + '/view';
+            if (forceReload) {
+                // tugnnm37: hard reload Case page after create so standard related list clears cache without manual F5
+                window.location.assign(caseUrl + '?refreshTs=' + new Date().getTime());
+                return;
+            }
             try {
                 var navEvt = $A.get('e.force:navigateToURL');
                 if (navEvt) {
-                    navEvt.setParams({ url: '/lightning/r/Case/' + recordId + '/view' });
+                    navEvt.setParams({ url: caseUrl });
                     navEvt.fire();
                     return;
                 }
@@ -40,7 +46,7 @@
             return;
         }
 
-        // Đảm bảo recordId luôn có giá trị
+        // tugnnm37: make sure recordId has value
         var recordId = component.get('v.recordId');
         if (!recordId) {
             var url = window.location.href;
@@ -49,7 +55,7 @@
             if (m) {
                 recordId = m[1];
             } else {
-                // tungnm37: thử parse inContextOfRef
+                // tugnnm37: parse recordId from inContextOfRef
                 var ref = url.match(new RegExp('inContextOfRef=([^&]+)'));
                 if (ref) {
                     try {
@@ -63,12 +69,12 @@
                                 || obj.recordId;
                     } catch(e) { console.log('[FEC_DEBUG] inContextOfRef parse error=' + e); }
                 }
-                // tungnm37: thử parse recordId trực tiếp từ URL params
+                // tugnnm37: parse recordId directly from URL params
                 if (!recordId) {
                     var ridMatch = url.match(new RegExp('[?&]recordId=([a-zA-Z0-9]{15,18})'));
                     if (ridMatch) recordId = ridMatch[1];
                 }
-                // tungnm37: thử parse từ navigationContext
+                // tugnnm37: parse recordId from navigationContext
                 if (!recordId) {
                     try {
                         var navCtx = url.match(new RegExp('navigationContext=([^&]+)'));
@@ -144,7 +150,7 @@
                                 refreshEvt2.fire();
                             }
                         } catch(re2) {}
-                        this.closeOrNavigate(component);
+                        this.closeOrNavigate(component, true);
                     }.bind(this)), 500);
                 }
             } else {
