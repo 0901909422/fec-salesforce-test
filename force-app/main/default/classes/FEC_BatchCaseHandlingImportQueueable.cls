@@ -1,6 +1,6 @@
 public without sharing class FEC_BatchCaseHandlingImportQueueable implements Queueable {
 
-    // 28/05/2026 15:30 codex - production safety: queueable execute chỉ xử lý 1 row
+    // 28/05/2026 15:30 linhdev - production safety: queueable execute chỉ xử lý 1 row
     // để tránh vượt giới hạn enqueue khi FEC_CaseBusinessService.run tự enqueue job theo routing action.
     @TestVisible
     private static final Integer MAX_APPLICABLE_ROWS_PER_EXECUTE = 1;
