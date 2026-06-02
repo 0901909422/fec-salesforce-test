@@ -198,15 +198,17 @@ export default class Fec_RoutingAssignment extends LightningElement {
       this.validationErrorMsg = errors.join(', ') + ' là bắt buộc.';
       return;
     }
-    // tungnm37: check duplicate queue
-    const isDuplicateQueue = this.manualItems.some(i => i.queueName === this.formQueue);
+    //tugnnm37 - chặn ngay tại Confirm Add Item nếu queue đã có trong assignment gốc hoặc item manual, không chờ Submit tổng
+    const normalizeQueue = (value) => (value || '').toString().trim().toLowerCase();
+    const selectedQueue = normalizeQueue(this.formQueue);
+    const isDuplicateQueue = this.manualItems.some(i => normalizeQueue(i.queueName) === selectedQueue)
+      || this.assignments.some(i => normalizeQueue(i.queue) === selectedQueue || normalizeQueue(i.queueName) === selectedQueue);
     if (isDuplicateQueue) {
       this.dispatchEvent(new CustomEvent('duplicatequeue', {
         detail: { message: FEC_Duplicate_Queue_Error }
       }));
       return;
-    }
-    const newItem = {
+    }const newItem = {
       key: Date.now() + '_' + Math.random(),
       teamName: this.formTeam,
       queueName: this.formQueue,
