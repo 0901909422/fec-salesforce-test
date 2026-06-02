@@ -61,8 +61,10 @@ public without sharing class FEC_CaseMasterDataHelper {
   }
 
   /**
-   * Giữ Field/LWC; với Type Assignment chỉ giữ dòng có FEC_Editable_User_Group__c chứa user group hiện tại.
-   * Tránh nhiều dòng Assignment cùng API (DS;TS vs CL;CO) — map/dedupe chỉ còn bản khớp user.
+   * Lọc master data trước khi build UI Case Business (gọi từ FEC_CaseBusinessService.getByCase).
+   * Field / LWC: giữ nguyên toàn bộ.
+   * Assignment: áp dụng shouldExcludeHiddenAssignmentRowForUserGroup và
+   * shouldExcludeVisibleAssignmentRowWhenHiddenApplies — chỉ giữ dòng Assignment phù hợp user group + hidden.
    */
   public static List<SObject> filterAssignmentRowsByCurrentUserGroup(
     List<SObject> masterDatalst,
@@ -71,22 +73,109 @@ public without sharing class FEC_CaseMasterDataHelper {
     if (masterDatalst == null || masterDatalst.isEmpty()) {
       return masterDatalst;
     }
+    Set<String> hiddenApisForUserGroup = collectHiddenAssignmentApisForUserGroup(
+      masterDatalst,
+      currentUserGroup
+    );
     List<SObject> filtered = new List<SObject>();
     for (SObject mdsRow : masterDatalst) {
       if (!isAssignmentRow(mdsRow)) {
         filtered.add(mdsRow);
         continue;
       }
+      if (shouldExcludeHiddenAssignmentRowForUserGroup(mdsRow, currentUserGroup)) {
+        continue;
+      }
       if (
+        shouldExcludeVisibleAssignmentRowWhenHiddenApplies(
+          mdsRow,
+          hiddenApisForUserGroup
+        )
+      ) {
+        continue;
+      }
+      filtered.add(mdsRow);
+    }
+    return filtered;
+  }
+
+  /**
+   * Thu thập FEC_Field_API_Name__c từ các dòng Assignment có FEC_Hidden__c = true
+   * mà user hiện tại thuộc FEC_Editable_User_Group__c (contains).
+   * Dùng để biết API nào cần ẩn bản Assignment hidden=false tương ứng.
+   */
+  @TestVisible
+  private static Set<String> collectHiddenAssignmentApisForUserGroup(
+    List<SObject> masterDatalst,
+    String currentUserGroup
+  ) {
+    Set<String> apis = new Set<String>();
+    if (masterDatalst == null || masterDatalst.isEmpty()) {
+      return apis;
+    }
+    for (SObject mdsRow : masterDatalst) {
+      if (
+        isAssignmentRow(mdsRow) &&
+        (Boolean) mdsRow.get('FEC_Hidden__c') == true &&
         isUserInEditableGroup(
           (String) mdsRow.get('FEC_Editable_User_Group__c'),
           currentUserGroup
         )
       ) {
-        filtered.add(mdsRow);
+        String api = (String) mdsRow.get('FEC_Field_API_Name__c');
+        if (String.isNotBlank(api)) {
+          apis.add(api);
+        }
       }
     }
-    return filtered;
+    return apis;
+  }
+
+  /**
+   * Trả true → bỏ dòng Assignment khỏi masterDatalst.
+   * Chỉ áp dụng khi FEC_Hidden__c = true và currentUserGroup không nằm trong FEC_Editable_User_Group__c
+   * (user không được xem cấu hình assignment ẩn của team khác).
+   */
+  @TestVisible
+  private static Boolean shouldExcludeHiddenAssignmentRowForUserGroup(
+    SObject assignmentRow,
+    String currentUserGroup
+  ) {
+    if (assignmentRow == null || !isAssignmentRow(assignmentRow)) {
+      return false;
+    }
+    if ((Boolean) assignmentRow.get('FEC_Hidden__c') != true) {
+      return false;
+    }
+    return !isUserInEditableGroup(
+      (String) assignmentRow.get('FEC_Editable_User_Group__c'),
+      currentUserGroup
+    );
+  }
+
+  /**
+   * Trả true → bỏ dòng Assignment hidden=false khỏi masterDatalst.
+   * Khi user thuộc group của bản hidden=true (API có trong hiddenApisForUserGroup),
+   * không hiển thị thêm bản hidden=false cùng FEC_Field_API_Name__c — tránh trùng / lộ field cho team khác.
+   */
+  @TestVisible
+  private static Boolean shouldExcludeVisibleAssignmentRowWhenHiddenApplies(
+    SObject assignmentRow,
+    Set<String> hiddenApisForUserGroup
+  ) {
+    if (
+      assignmentRow == null ||
+      !isAssignmentRow(assignmentRow) ||
+      hiddenApisForUserGroup == null ||
+      hiddenApisForUserGroup.isEmpty()
+    ) {
+      return false;
+    }
+    if ((Boolean) assignmentRow.get('FEC_Hidden__c') == true) {
+      return false;
+    }
+    String api = (String) assignmentRow.get('FEC_Field_API_Name__c');
+    return String.isNotBlank(api) && hiddenApisForUserGroup.contains(api);
   }
 
   /**

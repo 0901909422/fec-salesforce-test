@@ -1691,7 +1691,7 @@ public without sharing class FEC_BatchCaseHandlingImportService {
                 rr.inputtedRemarksCharLength
             );
             rr.recordId = FEC_ConstantCommon.STR_EMPTY;
-            rr.status = System.Label.FEC_Operation_Success;
+            rr.status = System.Label.FEC_Batch_Case_Handling_Success;
             rr.errors = FEC_ConstantCommon.STR_EMPTY;
             output.add(rr);
             if (String.isNotBlank(rr.caseIdSearch)) {
@@ -2950,7 +2950,7 @@ public without sharing class FEC_BatchCaseHandlingImportService {
         if (String.isBlank(rowStatus)) {
             return FEC_ConstantCommon.STR_EMPTY;
         }
-        return System.Label.FEC_Operation_Success;
+        return System.Label.FEC_Batch_Case_Handling_Success;
     }
 
     private static String buildRouteParamsCacheKey(Id currentStageId, RoutingParseResult parsed) {
