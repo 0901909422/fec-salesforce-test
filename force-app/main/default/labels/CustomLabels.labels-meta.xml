@@ -18342,4 +18342,11 @@
         <shortDescription>FEC_Batch_Case_Handling_Success</shortDescription>
         <value>Success</value>
     </labels>
+    <labels>
+        <fullName>FEC_RelevantTicket_Action_Not_Allowed</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Relevant Ticket action not allowed message</shortDescription>
+        <value>Bạn không thể thực hiện Action ở màn hình này</value>
+    </labels>
 </CustomLabels>
