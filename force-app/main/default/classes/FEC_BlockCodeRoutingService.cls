@@ -609,6 +609,10 @@ public without sharing class FEC_BlockCodeRoutingService {
     if (businessResult == null || theCase == null) {
       return;
     }
+    // Revert về Stage 1: giữ Team/Queue từ resolveRouteToDisplayInfo (đích = stage trước revert, vd Stage 3 SP).
+    if (businessResult.routeByLatestRevertHistory == true) {
+      return;
+    }
     if (
       isRc27StageTwoToThreeRouting(
         theCase,
@@ -683,7 +687,21 @@ public without sharing class FEC_BlockCodeRoutingService {
     Case routeCase,
     String queueId
   ) {
+    return applyRouteQueueOverrideIfApplicable(routeCase, queueId, false);
+  }
+
+  /**
+   * @param skipRc27Override true khi Route to sau Revert — giữ queue Stage Change đích (vd Stage 3 SP).
+   */
+  public static String applyRouteQueueOverrideIfApplicable(
+    Case routeCase,
+    String queueId,
+    Boolean skipRc27Override
+  ) {
     if (routeCase == null) {
+      return queueId;
+    }
+    if (skipRc27Override == true) {
       return queueId;
     }
     if (isRc27StageTwoToThreeRouting(routeCase)) {
