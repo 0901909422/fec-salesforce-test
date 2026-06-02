@@ -238,10 +238,8 @@ public with sharing class FEC_CMSIPPBlockWS {
         
         //Nhánh FastCard
         if (disbChannel == DEFAULT_DISB_CHANNEL) {
-            Dom.XmlNode p = action.addChildElement('Param', null, null);
-            p.addChildElement('DisbChannel', null, null).addTextNode(disbChannel);
-            p.addChildElement('IsACL', null, null).addTextNode('true');
-            p.addChildElement('RequestType', null, null).addTextNode('false');
+            action.addChildElement('IsACL', null, null).addTextNode('true');
+            action.addChildElement('RequestType', null, null).addTextNode('false');
         }
 
         // Account 

@@ -2772,7 +2772,7 @@ public without sharing class FEC_BCH_TemplateExportService {
         String cpAssessment = headerDetect.idxCpAssessment >= 0
             ? cellTextAtWorksheetColumn(colTexts, headerDetect.idxCpAssessment)
             : FEC_ConstantCommon.STR_EMPTY;
-        if (
+        Boolean hasAnyImportFieldValue = !(
             String.isBlank(caseIdSearch) &&
             String.isBlank(routingAction) &&
             String.isBlank(inputtedRemarks) &&
@@ -2787,9 +2787,7 @@ public without sharing class FEC_BCH_TemplateExportService {
             String.isBlank(finalProduct) &&
             String.isBlank(paymentContractAssessment) &&
             String.isBlank(cpAssessment)
-        ) {
-            return null;
-        }
+        );
         List<String> originalCells = new List<String>();
         for (Integer i = 0; i < importHeaders.size(); i++) {
             Integer worksheetCol = i < importColumnIndexes.size()
@@ -2803,6 +2801,17 @@ public without sharing class FEC_BCH_TemplateExportService {
                 cellStr = capExcelCellText(cellStr);
             }
             originalCells.add(cellStr == null ? FEC_ConstantCommon.STR_EMPTY : cellStr);
+        }
+        Boolean hasAnyRowCellData = false;
+        for (String cellVal : colTexts.values()) {
+            if (String.isNotBlank(cellVal)) {
+                hasAnyRowCellData = true;
+                break;
+            }
+        }
+        // 02/06/2026 15:25 linhdev - giữ lại row có dữ liệu gốc (case info) dù cột import trống để không bị hụt record khi import
+        if (!hasAnyImportFieldValue && !hasAnyRowCellData) {
+            return null;
         }
         Map<String, Object> rowMap = new Map<String, Object>();
         rowMap.put('caseIdSearch', caseIdSearch);

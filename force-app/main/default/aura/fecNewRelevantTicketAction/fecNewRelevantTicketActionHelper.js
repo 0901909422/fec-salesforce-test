@@ -1,7 +1,29 @@
 ({
     _timer: null,
 
-    closeOrNavigate: function(component) {
+    closeOrNavigate: function(component, reloadHandling) {
+        if (reloadHandling) {
+            try {
+                window.history.back();
+                window.setTimeout($A.getCallback(function() {
+                    try {
+                        var refreshEvt = $A.get('e.force:refreshView');
+                        if (refreshEvt) {
+                            refreshEvt.fire();
+                        }
+                    } catch (refreshErr1) {}
+                }), 500);
+                window.setTimeout($A.getCallback(function() {
+                    try {
+                        var refreshEvt2 = $A.get('e.force:refreshView');
+                        if (refreshEvt2) {
+                            refreshEvt2.fire();
+                        }
+                    } catch (refreshErr2) {}
+                }), 1200);
+                return;
+            } catch (backErr) {}
+        }
         var recordId = component.get('v.recordId');
         // Khi mở dạng tab (actionOverride), navigate về /lightning/r/Case/{id}/view
         if (recordId) {
@@ -129,7 +151,7 @@
                     component.set('v.results', []);
                     component.set('v.errorMsg', '');
                 } else {
-                    this.closeOrNavigate(component);
+                    this.closeOrNavigate(component, true);
                 }
             } else {
                 var errors = res.getError();
