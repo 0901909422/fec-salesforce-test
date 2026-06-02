@@ -583,6 +583,11 @@ function normalizeSubSectionName(value) {
   return value.trim().toLowerCase();
 }
 
+function isD2cAssessmentSubSectionName(subSectionName) {
+  const n = normalizeSubSectionName(subSectionName);
+  return n.includes("d2c") && (n.includes("assessment") || n.includes("assesment"));
+}
+
 /** Revert 2→1 / 3→1: ẩn subsection xác nhận (khớp logic Apex shouldHideRevertConfirmSubSection). */
 function shouldHideRevertConfirmSubSection(subSectionName, sourceStage) {
   if (!subSectionName || (sourceStage !== 2 && sourceStage !== 3)) {
@@ -620,6 +625,14 @@ function mergeSectionSortedRows(section) {
     }
     if (sub._hideForRevertConfirmAssessment === true) {
       return;
+    }
+    if (isD2cAssessmentSubSectionName(sub?.name)) {
+      const hasVisibleField = (sub.objlst || []).some((obj) =>
+        (obj.fieldlst || []).some((field) => field && field.isHidden !== true),
+      );
+      if (!hasVisibleField) {
+        return;
+      }
     }
     const fecOrd = readFecSubSectionOrder(sub);
     const sortOrder =
