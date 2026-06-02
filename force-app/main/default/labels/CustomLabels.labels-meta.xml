@@ -14042,7 +14042,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>Relevant Ticket interaction field label</shortDescription>
-        <value>Interaction</value>
+        <value>Interaction/ Case</value>
     </labels>
     <labels>
         <fullName>FEC_RelevantTicket_Search_Placeholder</fullName>
