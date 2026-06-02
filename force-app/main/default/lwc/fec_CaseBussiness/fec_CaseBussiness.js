@@ -31,6 +31,7 @@ import ID_FIELD from "@salesforce/schema/Case.Id";
 // PhuongNT add field FEC_Stage_Name__c
 import STAGE_NAME_FIELD from "@salesforce/schema/Case.FEC_Stage_Name__c";
 import CASE_CURRENT_STAGE_NAME_FIELD from "@salesforce/schema/Case.FEC_Current_Case_Stage__r.Name";
+import CASE_SELECTED_ADDRESS_FIELD from "@salesforce/schema/Case.FEC_Selected_Address__c";
 import {
   mask,
   maskValue,
@@ -868,6 +869,7 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
   currentStageName;
   /** FEC_Current_Case_Stage__r.Name — áp dụng/khóa RD Payment assessment → Team khi tên stage chứa PM. */
   _currentCaseStageName;
+  _caseSelectedAddressId;
 
   @wire(getRecord, { recordId: USER_ID, fields: [USER_GROUP_FIELD] })
   wiredUser({ error, data }) {
@@ -881,7 +883,7 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
   // PhuongNT add get Case data + tên stage hiện tại (RD Payment assessment → Team khi Name chứa PM)
   @wire(getRecord, {
     recordId: "$recordId",
-    fields: [STAGE_NAME_FIELD, CASE_CURRENT_STAGE_NAME_FIELD],
+    fields: [STAGE_NAME_FIELD, CASE_CURRENT_STAGE_NAME_FIELD, CASE_SELECTED_ADDRESS_FIELD],
   })
   wiredCase({ error, data }) {
     if (data) {
@@ -890,6 +892,7 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
         data,
         CASE_CURRENT_STAGE_NAME_FIELD,
       );
+      this._caseSelectedAddressId = getFieldValue(data, CASE_SELECTED_ADDRESS_FIELD);
     } else if (error) {
       console.error("Get Case record error:", error);
     }
@@ -1739,6 +1742,114 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
       }
     }
     return STR_EMPTY;
+  }
+
+  _isRc27CardReplacementFlow() {
+    return (
+      this.business?.code === PROCESS_CARD_REPLACEMENT &&
+      typeof this.business?.subCodeCode === "string" &&
+      this.business.subCodeCode.startsWith("RC27")
+    );
+  }
+
+  _hasCardReplacementReasonValue() {
+    const fromState = this.cardReplacementReason;
+    if (fromState != null && String(fromState).trim() !== STR_EMPTY) {
+      return true;
+    }
+    const fromForm = this._getCaseFieldValue(FIELD_CARD_REPLACEMENT_REASON);
+    return fromForm != null && String(fromForm).trim() !== STR_EMPTY;
+  }
+
+  _hasPersistedCardReplacementDependentData() {
+    const dependentApis = [
+      FIELD_NEW_BLOCK_CODE_CARD_REPLACE,
+      FIELD_CARD_REPLACEMENT_FEE,
+      FIELD_RECIPIENT_NAME,
+      FIELD_RECIPIENT_PHONE_NUMBER,
+    ];
+    for (const api of dependentApis) {
+      const original = this._getCaseFieldOriginalValue(api);
+      if (original != null && String(original).trim() !== STR_EMPTY) {
+        return true;
+      }
+    }
+    const addressId =
+      this._caseSelectedAddressId || this._getCaseFieldValue("FEC_Selected_Address__c");
+    return addressId != null && String(addressId).trim().length >= 15;
+  }
+
+  _getCaseFieldOriginalValue(apiName) {
+    const sections = this.business?.sectionlst ?? [];
+    for (const section of sections) {
+      for (const sub of section.subSectionlst ?? []) {
+        for (const obj of sub.objlst ?? []) {
+          if (obj.name !== "Case") continue;
+          const f = obj.fieldlst?.find((x) => x.apiName === apiName);
+          if (f != null) {
+            const v = f.original != null ? f.original : f.value;
+            return typeof v === "string" ? v.trim() : (v ?? STR_EMPTY);
+          }
+        }
+      }
+    }
+    return STR_EMPTY;
+  }
+
+  _shouldShowCardReplacementDependentFields() {
+    return (
+      this._hasCardReplacementReasonValue() ||
+      this._hasPersistedCardReplacementDependentData()
+    );
+  }
+
+  _shouldSuppressRc27CardReplacementProcessInfo() {
+    if (!this._isRc27CardReplacementFlow()) {
+      return false;
+    }
+    const sourceStage = this.business?.revertConfirmAssessmentSourceStage;
+    return sourceStage === 2 || sourceStage === 3;
+  }
+
+  _applyCardReplacementDependentFieldsVisibility() {
+    if (this.business?.code !== PROCESS_CARD_REPLACEMENT) {
+      return;
+    }
+    const showDependent = this._shouldShowCardReplacementDependentFields();
+    const dependentApis = new Set([
+      FIELD_NEW_BLOCK_CODE_CARD_REPLACE,
+      FIELD_CARD_REPLACEMENT_FEE,
+      FIELD_RECIPIENT_NAME,
+      FIELD_RECIPIENT_PHONE_NUMBER,
+    ]);
+
+    this.business.sectionlst.forEach((section) => {
+      section.subSectionlst.forEach((sub) => {
+        sub.objlst.forEach((obj) => {
+          obj.fieldlst.forEach((field) => {
+            if (!dependentApis.has(field.apiName)) {
+              return;
+            }
+            field.isHidden = !showDependent;
+            if (
+              field.apiName === FIELD_CARD_REPLACEMENT_FEE &&
+              showDependent &&
+              field.original != null &&
+              String(field.original).trim() !== STR_EMPTY
+            ) {
+              field.displayValue = formatCurrencyIncludeTax(
+                field.value,
+                "VND (include 10% VAT)",
+              );
+              field.readonlyDisplayValue = field.displayValue;
+            }
+          });
+        });
+      });
+    });
+
+    this.isHiddenLwc = !showDependent;
+    this.business = { ...this.business };
   }
 
   /** Case field apiName đang có trên form (form đổi theo NOC). */
@@ -2915,13 +3026,24 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
           });
         });
 
+        this._applyCardReplacementDependentFieldsVisibility();
+
         // PhuongNT add show button process action with process PIN Reissue
         if (this.business?.code === PROCESS_PIN_REISSUE) {
           this.showProcessAction = true;
         }
         // PhuongNT add show button process action with process Card Replacement
         if (this.business?.code === PROCESS_CARD_REPLACEMENT && this._isEdit && this.isStage1) {
-          this.handleCheckProcessAction();
+          if (this._shouldSuppressRc27CardReplacementProcessInfo()) {
+            this.isProcessActionInfo = false;
+            this.processActionMsg = STR_EMPTY;
+            this.showProcessAction = false;
+          } else {
+            this.handleCheckProcessAction();
+          }
+        } else if (this.business?.code === PROCESS_CARD_REPLACEMENT) {
+          this.isProcessActionInfo = false;
+          this.processActionMsg = STR_EMPTY;
         }
 
         const actions = this.business.routingActionlst || [];
