@@ -282,8 +282,14 @@ public without sharing class FEC_CaseExecuteService {
     System.debug('==============================');
     
     Case c = [
-      SELECT Id, OwnerId,
-      FEC_Case_Executor__c FROM Case WHERE Id = : caseId LIMIT 1 FOR UPDATE
+      SELECT Id,
+        OwnerId,
+        FEC_Case_Executor__c,
+        FEC_Assignment_Count__c
+      FROM Case
+      WHERE Id = :caseId
+      LIMIT 1
+      FOR UPDATE
     ];
     
     /*
@@ -296,8 +302,13 @@ public without sharing class FEC_CaseExecuteService {
     }
     
     Id oldOwnerId = c.OwnerId;
+    Boolean ownerWillChange = c.OwnerId != userId;
+    Boolean recordRoutingHistoryOnExecute =
+      ownerWillChange && hasNoActiveAssignments(c);
     
     System.debug('OLD OwnerId = ' + oldOwnerId);
+    System.debug('ownerWillChange = ' + ownerWillChange);
+    System.debug('recordRoutingHistoryOnExecute = ' + recordRoutingHistoryOnExecute);
     
     Case updateCase = new Case(Id = caseId);
     
@@ -335,6 +346,14 @@ public without sharing class FEC_CaseExecuteService {
       
       update updateCase;
       
+      /*
+       * Execute Case (không Assignment): queue/main queue → user.
+       * isSystemUpdate chặn trigger Change Owner trùng; ghi history tường minh (khớp buildRoutingActionHistoryRecord).
+       */
+      if (recordRoutingHistoryOnExecute) {
+        createRoutingActionHistory(caseId, oldOwnerId, userId);
+      }
+      
       System.debug('SUCCESS executeCase');
       
       System.debug('NEW OwnerId = ' + userId);
@@ -351,7 +370,20 @@ public without sharing class FEC_CaseExecuteService {
   
   
   /**
-   * Create Routing Action History
+   * Execute Case không Assignment — cùng điều kiện canExecute (queue member, assignmentCount = 0).
+   */
+  private static Boolean hasNoActiveAssignments(Case c) {
+    if (c == null) {
+      return true;
+    }
+    Integer assignmentCount = c.FEC_Assignment_Count__c == null
+      ? 0
+      : Integer.valueOf(c.FEC_Assignment_Count__c);
+    return assignmentCount == 0;
+  }
+  
+  /**
+   * Routing Action History Change Owner (Case, không Assignment). Khớp FEC_CaseBusinessService.buildRoutingActionHistoryRecord.
    */
   public static void createRoutingActionHistory(
   Id caseId, Id oldOwnerId, Id newOwnerId) {
@@ -465,53 +497,28 @@ public without sharing class FEC_CaseExecuteService {
       }
     }
     
-    /*
-     * Create history
-     */
-    FEC_Routing_Action_History__c history = new FEC_Routing_Action_History__c(
-      
-    FEC_Routing_Action__c = 'Change Owner',
+  FEC_Routing_Action_History__c history = new FEC_Routing_Action_History__c(
+      FEC_Case__c = c.Id,
+      FEC_Routing_Action__c = FEC_CaseBusinessService.CHANGE_OWNER,
+      FEC_Routing_Action_Type__c = 'Case',
+      FEC_Perform_User__c = UserInfo.getUserId(),
+      FEC_Decision__c = '',
+      FEC_Original_User_Queue__c = oldOwnerDisplay,
+      FEC_Original_User_Queue_ID__c = String.valueOf(oldOwnerId),
+      FEC_Updated_User_Queue__c = newOwnerDisplay,
+      FEC_Updated_User_Queue_ID__c = String.valueOf(newOwnerId),
+      FEC_User__c = emailLocalPart(currentUser.Email),
+      FEC_User_Role__c =
+        currentUser.UserRole != null ? currentUser.UserRole.Name : null,
+      FEC_Stage_Name__c = c.FEC_Current_Case_Stage__r != null
+        ? c.FEC_Current_Case_Stage__r.FEC_Code__c
+        : null,
+      FEC_Description__c = FEC_ConstantCommon.FEC_RAH_DESCRIPTION_CHANGE_OWNER,
+      FEC_Current_Status__c = null,
+      FEC_Changed_Status__c = null
+    );
     
-    FEC_Routing_Action_Type__c = 'Case',
-    
-    /*
-     * Original queue/user owner
-     */
-    FEC_Original_User_Queue__c = oldOwnerDisplay,
-    
-    FEC_Original_User_Queue_ID__c = oldOwnerId,
-    
-    /*
-     * Updated owner
-     */
-    FEC_Updated_User_Queue__c = newOwnerDisplay,
-    
-    FEC_Updated_User_Queue_ID__c = newOwnerId,
-    
-    /*
-     * Execute user
-     */
-    FEC_User__c = emailLocalPart(currentUser.Email),
-    
-    /*
-     * Execute user role
-     */
-    FEC_User_Role__c =
-      currentUser.UserRole != null ? currentUser.UserRole.Name : null,
-    
-    /*
-     * Stage
-     */
-    FEC_Stage_Name__c = c.FEC_Current_Case_Stage__r != null
-      ? c.FEC_Current_Case_Stage__r.FEC_Code__c
-      : null,
-    
-    /*
-     * Case
-     */
-    FEC_Case__c = c.Id);
-    
-    insert history;
+    Database.insert(history, AccessLevel.SYSTEM_MODE);
     
     System.debug('Routing Action History created: ' + history.Id);
   }

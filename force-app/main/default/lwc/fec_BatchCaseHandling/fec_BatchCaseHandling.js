@@ -2515,11 +2515,11 @@ export default class Fec_BatchCaseHandling extends LightningElement {
         IMPORT_TIMEOUT_MESSAGE
       );
       if (!result || result.success !== true) {
-        await this.recordImportFailureInBulkActions(
-          fileName,
-          importCtx.templateName,
-          result?.message || MSG_IMPORT_FAILED
-        );
+        //tugnnm37 - Apex importBatchData đã tự ghi Failure vào My Bulk Actions; không log thêm từ LWC để tránh duplicate 2 dòng
+        this.importSuccessMessage = STR_EMPTY;
+        this.importErrorMessage = STR_EMPTY;
+        this.clearSelectedImportFile();
+        await this.refreshRows();
         return;
       }
       const isProcessing = result.status === IMPORT_STATUS_PROCESSING;
