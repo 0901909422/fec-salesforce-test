@@ -926,6 +926,7 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
 
       if (customers.length > 0) {
         this.processCustomerResults(customers);
+        this.fetchPlasticIds();
       }
 
       // [CHANGE][Author : LongNH76] Merge + dedupe kết quả insurance từ nhiều API.

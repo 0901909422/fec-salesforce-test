@@ -880,16 +880,24 @@ export default class Fec_DoNotBotherExistingCustomer extends LightningElement {
       return true;
     }
 
-    /*
-     * HANDLING MODE
-     */
-    return this.isReadonlyMode;
+    // /*
+    //  * HANDLING MODE
+    //  */
+    // return this.isReadonlyMode;
   }
 
   get showUpdateButton() {
     return (
       !this.isReadonlyMode && !this.isDNBUpdated && !this.isMaxRetryReached
     );
+  }
+
+  get isActionLocked() {
+    return this.isReadonlyMode || this.isDNBUpdated || this.isMaxRetryReached;
+  }
+
+  get isUpdateButtonDisabled() {
+    return this.isUpdateDisabled || this.isActionLocked;
   }
   //------------------------- MODAL EVENTS ----------------
   get isOpen() {
