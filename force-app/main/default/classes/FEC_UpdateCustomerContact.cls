@@ -260,7 +260,7 @@ public with sharing class FEC_UpdateCustomerContact {
     }
   }
 
-  // 01/06/2026 linhdev - FEC_Contact_List__c.FEC_Communication_Type__c có nhiều giá trị (Primary/Work/Actual/Home Phone…)
+  // 01/06/2026 linhdev - FEC_Contact_List__c.FEC_Communication_Type__c có nhiều giá trị (Primary/Work/Actual/Home Phone/Mobile…)
   @TestVisible
   private static Boolean isEmailCommunicationType(String commType) {
     if (String.isBlank(commType)) {
@@ -274,7 +274,11 @@ public with sharing class FEC_UpdateCustomerContact {
     if (String.isBlank(commType) || isEmailCommunicationType(commType)) {
       return false;
     }
-    return commType.toLowerCase().contains('phone');
+    String trimmed = commType.trim();
+    if (FEC_ConstantCommon.COMMUNICATION_TYPE_MOBILE.equalsIgnoreCase(trimmed)) {
+      return true;
+    }
+    return trimmed.toLowerCase().contains('phone');
   }
 
   @TestVisible
