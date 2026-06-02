@@ -1258,9 +1258,11 @@ public without sharing class FEC_BatchCaseHandlingController {
                     return out;
                 }
                 System.enqueueJob(
+                    // 02/06/2026 16:10 linhdev - outcomesJson khởi tạo null, queueable tự build state nhẹ cho các hop sau
                     new FEC_BatchCaseHandlingImportQueueable(
                         (Id) batchRow.get('Id'),
                         JSON.serialize(rowResults),
+                        null,
                         cofOrGsr,
                         0
                     )
