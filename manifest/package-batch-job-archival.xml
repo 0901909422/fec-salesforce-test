@@ -11,10 +11,8 @@
     <types>
 		<members>FEC_CaseExportBatch</members>
         <members>FEC_CaseExportHttpService</members>
-		<members>FEC_CasePayloadBuilder</members>
 		<members>FEC_CaseExportBatchTest</members>
 		<members>FEC_CaseExportHttpServiceTest</members>
-		<members>FEC_CasePayloadBuilderTest</members>
 		<members>FEC_ArchiveVerifyBatch</members>
 		<members>FEC_ArchiveVerifyHttpService</members>
 		<members>FEC_ArchiveVerifyBatchTest</members>
