@@ -863,13 +863,14 @@ public without sharing class FEC_MyCaseSoapXml {
 
         String xml;
         if (properties == null || properties.isEmpty()) {
-            xml = FEC_GetCSMasterDataService.buildAdditionalPropertiesXmlForApplyTo(applyTo);
+            xml = additionalPropsXmlCache.containsKey(cacheKey)
+                ? additionalPropsXmlCache.get(cacheKey)
+                : '';
         } else {
             xml = buildMasterDataAdditionalPropertiesXml(properties);
         }
 
         emittedApplyTos.add(cacheKey);
-        additionalPropsXmlCache.put(cacheKey, xml);
         return xml;
     }
 

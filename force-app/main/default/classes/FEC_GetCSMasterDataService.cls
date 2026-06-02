@@ -184,18 +184,42 @@ global with sharing class FEC_GetCSMasterDataService {
     public static String buildGetCSMasterDataSoapXml(SysRequestType sys) {
         GetCSMasterDataResponse res = GetCSMasterDataRequest(sys, false);
         loadSettings(false);
+        Map<String, String> additionalPropsXmlCache =
+            buildAdditionalPropertiesXmlCacheFromItems(res.MasterDataItems);
         return FEC_MyCaseSoapXml.buildGetCSMasterDataSoapResponse(
             res.Sys,
             res.MasterDataItems,
-            new Map<String, String>()
+            additionalPropsXmlCache
         );
     }
 
-    public static String buildAdditionalPropertiesXmlForApplyTo(String applyTo) {
+    private static Map<String, String> buildAdditionalPropertiesXmlCacheFromItems(
+        List<MasterDataItemType> items
+    ) {
+        Map<String, String> cache = new Map<String, String>();
+        if (items == null || items.isEmpty()) {
+            return cache;
+        }
+
+        Set<String> applyTos = new Set<String>();
+        for (MasterDataItemType item : items) {
+            if (item != null) {
+                applyTos.add(item.ApplyTo);
+            }
+        }
+
+        for (String applyTo : applyTos) {
+            String cacheKey = applyTo == null ? '__NULL__' : applyTo;
+            cache.put(cacheKey, buildAdditionalPropertiesXmlForApplyTo(applyTo));
+        }
+        return cache;
+    }
+
+    private static String buildAdditionalPropertiesXmlForApplyTo(String applyTo) {
         return buildAdditionalPropertiesXmlForApplyTo(applyTo, false);
     }
 
-    public static String buildAdditionalPropertiesXmlForApplyTo(
+    private static String buildAdditionalPropertiesXmlForApplyTo(
         String applyTo,
         Boolean includePicklistValues
     ) {
