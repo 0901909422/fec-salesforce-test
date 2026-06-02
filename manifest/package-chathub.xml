@@ -12,6 +12,7 @@
         <members>FEC_ChatHistoryControllerTest</members>
         <members>FEC_ChatHubCaseControllerTest</members>
         <members>CaseTriggerHandlerTest</members>
+        <members>FEC_UtilsTest</members>
         <name>ApexClass</name>
     </types>
 
