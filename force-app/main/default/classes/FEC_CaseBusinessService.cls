@@ -382,6 +382,26 @@ public without sharing class FEC_CaseBusinessService {
       ) {
         result.subCategoryCode = selectedCase.FEC_SubCategory__r.FEC_Code__c.trim();
       }
+      Boolean isRc2701OrRc2702 =
+        'RC27.01'.equalsIgnoreCase(result.subCodeCode) ||
+        'RC27.02'.equalsIgnoreCase(result.subCodeCode);
+      Boolean hasRouteHistoryStage1ToStage3 = false;
+      if (isRc2701OrRc2702) {
+        List<FEC_Routing_Action_History__c> routeHistStage1To3 = [
+          SELECT Id
+          FROM FEC_Routing_Action_History__c
+          WHERE
+            FEC_Case__c = :selectedCase.Id
+            AND FEC_Routing_Action__c = :ROUTE_TO
+            AND FEC_Previous_Stage__r.Name LIKE '%Stage 1%'
+            AND FEC_Next_Stage__r.Name LIKE '%Stage 3%'
+          ORDER BY CreatedDate DESC, Id DESC
+          LIMIT 1
+        ];
+        hasRouteHistoryStage1ToStage3 = !routeHistStage1To3.isEmpty();
+      }
+      Boolean shouldExcludeRc27D2cAssessmentFields =
+        isRc2701OrRc2702 && hasRouteHistoryStage1ToStage3;
 
       // =============================== GET ROUTING ACTION ===========================
 
@@ -795,6 +815,7 @@ public without sharing class FEC_CaseBusinessService {
         selectedStage.Id,
         selectedStage.Name
       );
+      Boolean isCurrentStageRevertedContext = isLatestRevertToCurrentStage;
       result.revertConfirmAssessmentSourceStage = FEC_CaseMasterDataHelper.resolveRevertConfirmAssessmentSourceStage(
         selectedCase.Id,
         selectedStage.Id,
@@ -829,6 +850,11 @@ public without sharing class FEC_CaseBusinessService {
           'ORDER BY FEC_Section__c, FEC_Sub_Section_Order__c NULLS LAST, FEC_Sub_Section__c, FEC_Field_Object_Name__c, FEC_Field_Order_Display__c';
 
         List<SObject> masterDatalst = Database.query(soql);
+        masterDatalst = FEC_CaseMasterDataHelper.filterRevertedAssignmentRowsByStageContext(
+          masterDatalst,
+          isCurrentStageRevertedContext,
+          result.revertConfirmAssessmentSourceStage
+        );
         masterDatalst = FEC_CaseMasterDataHelper.filterAssignmentRowsByCurrentUserGroup(
           masterDatalst,
           currentUser.FEC_User_Group__c
@@ -962,6 +988,16 @@ public without sharing class FEC_CaseBusinessService {
           subSectionNameTemp = (String) item.get('FEC_Sub_Section__c');
           cObjNameTemp = (String) item.get('FEC_Field_Object_Name__c');
           fieldApiNameTemp = (String) item.get('FEC_Field_API_Name__c');
+          if (
+            shouldExcludeRc27D2cAssessmentFields &&
+            'Case'.equals(cObjNameTemp) &&
+            (
+              'FEC_CS_D2C_Assessment_Type__c'.equals(fieldApiNameTemp) ||
+              'FEC_Confirm_D2C_Assessment__c'.equals(fieldApiNameTemp)
+            )
+          ) {
+            continue;
+          }
           subSectionOrderTemp = (Decimal) item.get('FEC_Sub_Section_Order__c');
           subSectionLayoutTemp = (Decimal) item.get(
             'FEC_Sub_Section_Layout__c'
@@ -2350,7 +2386,7 @@ public without sharing class FEC_CaseBusinessService {
             finalStatusBeforeSubmit,
             (String) params.get('teamUserGroup')
           );
-          // 28/05/2026 15:33 codex - tránh Too many queueable jobs khi import batch chain queueable
+          // 28/05/2026 15:33 linhdev - tránh Too many queueable jobs khi import batch chain queueable
           if (!FEC_BatchCaseHandlingImportService.isBatchImportApplyInProgress()) {
             System.enqueueJob(
               new FEC_MrcDupCancelOnSubmitQueueJob(
@@ -2712,34 +2748,36 @@ public without sharing class FEC_CaseBusinessService {
           teamUserGroup,
           queueId
         );
-      if (FEC_BlockCodeRoutingService.isRc27DefaultOmDay2Routing(updatedCase)) {
-        FEC_Stage_Change__c rc27OmDay2 =
-          FEC_BlockCodeRoutingService.selectRc27DefaultOmDay2FromList(changelst);
-        if (rc27OmDay2 == null) {
-          rc27OmDay2 = FEC_BlockCodeRoutingService.queryRc27DefaultOmDay2StageChange(
-            updatedCase.FEC_Current_Case_Stage__c,
-            actionId
-          );
-        }
-        if (rc27OmDay2 != null) {
-          selectedChange = rc27OmDay2;
-        }
-      } else if (
-        FEC_BlockCodeRoutingService.isRc27SiblingSpDqStageThreeRouting(updatedCase)
-      ) {
-        FEC_Stage_Change__c rc27SpDq =
-          FEC_BlockCodeRoutingService.selectRc27SiblingSpDqStageThreeFromList(
-            changelst
-          );
-        if (rc27SpDq == null) {
-          rc27SpDq =
-            FEC_BlockCodeRoutingService.queryRc27SiblingSpDqStageThreeStageChange(
+      if (!routeByLatestRevertHistory) {
+        if (FEC_BlockCodeRoutingService.isRc27DefaultOmDay2Routing(updatedCase)) {
+          FEC_Stage_Change__c rc27OmDay2 =
+            FEC_BlockCodeRoutingService.selectRc27DefaultOmDay2FromList(changelst);
+          if (rc27OmDay2 == null) {
+            rc27OmDay2 = FEC_BlockCodeRoutingService.queryRc27DefaultOmDay2StageChange(
               updatedCase.FEC_Current_Case_Stage__c,
               actionId
             );
-        }
-        if (rc27SpDq != null) {
-          selectedChange = rc27SpDq;
+          }
+          if (rc27OmDay2 != null) {
+            selectedChange = rc27OmDay2;
+          }
+        } else if (
+          FEC_BlockCodeRoutingService.isRc27SiblingSpDqStageThreeRouting(updatedCase)
+        ) {
+          FEC_Stage_Change__c rc27SpDq =
+            FEC_BlockCodeRoutingService.selectRc27SiblingSpDqStageThreeFromList(
+              changelst
+            );
+          if (rc27SpDq == null) {
+            rc27SpDq =
+              FEC_BlockCodeRoutingService.queryRc27SiblingSpDqStageThreeStageChange(
+                updatedCase.FEC_Current_Case_Stage__c,
+                actionId
+              );
+          }
+          if (rc27SpDq != null) {
+            selectedChange = rc27SpDq;
+          }
         }
       }
 
@@ -2764,7 +2802,30 @@ public without sharing class FEC_CaseBusinessService {
         updatedCase.FEC_SubCategory__c = tgt.FEC_Sub_Category__c;
         updatedCase.FEC_SubCode__c = tgt.FEC_Sub_Code__c;
 
-        cloneMasterDataSetting(tgt.Id, natureOfCaseId);
+        Boolean isRouteFromStage1ToStage3 = false;
+        if (selectedChange != null && selectedChange.Id != null) {
+          FEC_Stage_Change__c selectedChangeWithStages = [
+            SELECT
+              Id,
+              FEC_Previous_Stage__r.Name,
+              FEC_Next_Stage__r.Name
+            FROM FEC_Stage_Change__c
+            WHERE Id = :selectedChange.Id
+            LIMIT 1
+          ];
+          String previousStageName = selectedChangeWithStages.FEC_Previous_Stage__r != null
+            ? selectedChangeWithStages.FEC_Previous_Stage__r.Name
+            : null;
+          String nextStageName = selectedChangeWithStages.FEC_Next_Stage__r != null
+            ? selectedChangeWithStages.FEC_Next_Stage__r.Name
+            : null;
+          isRouteFromStage1ToStage3 =
+            String.isNotBlank(previousStageName) &&
+            String.isNotBlank(nextStageName) &&
+            previousStageName.contains('Stage 1') &&
+            nextStageName.contains('Stage 3');
+        }
+        cloneMasterDataSetting(tgt.Id, natureOfCaseId, isRouteFromStage1ToStage3);
       }
 
       // Toannd61 — RL16.02/RL16.03: nếu RD Payment Assessment đã được chọn,
@@ -2798,7 +2859,8 @@ public without sharing class FEC_CaseBusinessService {
 
       queueId = FEC_BlockCodeRoutingService.applyRouteQueueOverrideIfApplicable(
         updatedCase,
-        queueId
+        queueId,
+        routeByLatestRevertHistory
       );
 
       updatedCase.OwnerId = queueId;
@@ -3707,7 +3769,8 @@ public without sharing class FEC_CaseBusinessService {
 
   public static void cloneMasterDataSetting(
     String actualNatureOfCaseId,
-    String natureOfCaseId
+    String natureOfCaseId,
+    Boolean isRouteFromStage1ToStage3
   ) {
     // String stageNameId
     List<FEC_Master_Data_Setting__c> sourcelst = [
@@ -3747,8 +3810,37 @@ public without sharing class FEC_CaseBusinessService {
       );
 
     List<FEC_Actual_Master_Data_Setting__c> targetlst = new List<FEC_Actual_Master_Data_Setting__c>();
+    String subCodeCode = null;
+    List<FEC_Nature_of_Case__c> nocLst = [
+      SELECT FEC_Sub_Code__r.FEC_Code__c
+      FROM FEC_Nature_of_Case__c
+      WHERE Id = :natureOfCaseId
+      LIMIT 1
+    ];
+    if (!nocLst.isEmpty() && nocLst[0].FEC_Sub_Code__r != null) {
+      subCodeCode = nocLst[0].FEC_Sub_Code__r.FEC_Code__c;
+    }
+    Boolean isRc2701OrRc2702 =
+      String.isNotBlank(subCodeCode) &&
+      (
+        subCodeCode == 'RC27.01' ||
+        subCodeCode == 'RC27.02'
+      );
+    Boolean shouldExcludeCsD2cAssessment =
+      isRc2701OrRc2702 &&
+      isRouteFromStage1ToStage3 == true;
 
     for (FEC_Master_Data_Setting__c src : sourcelst) {
+      if (
+        shouldExcludeCsD2cAssessment &&
+        src.FEC_Field_Object_Name__c == 'Case' &&
+        (
+          src.FEC_Field_API_Name__c == 'FEC_CS_D2C_Assessment_Type__c' ||
+          src.FEC_Field_API_Name__c == 'FEC_Confirm_D2C_Assessment__c'
+        )
+      ) {
+        continue;
+      }
       FEC_Actual_Master_Data_Setting__c tgt = new FEC_Actual_Master_Data_Setting__c();
 
       tgt.FEC_Channel__c = src.FEC_Channel__c;
@@ -3780,6 +3872,14 @@ public without sharing class FEC_CaseBusinessService {
     }
 
     insert targetlst;
+  }
+
+  // Backward-compatible overload for existing callers.
+  public static void cloneMasterDataSetting(
+    String actualNatureOfCaseId,
+    String natureOfCaseId
+  ) {
+    cloneMasterDataSetting(actualNatureOfCaseId, natureOfCaseId, false);
   }
 
   private static Map<String, SObject> getData(

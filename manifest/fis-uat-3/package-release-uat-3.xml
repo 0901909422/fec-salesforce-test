@@ -273,6 +273,7 @@
         <members>FEC_LookupController</members>
         <members>FEC_IPPScheduleController</members>
         <members>FEC_GetCSMasterDataService</members>
+        <members>FEC_GetCSMasterDataByCodeService</members>
         <members>FEC_GetRepaymentScheduleByAppIdCallout</members>
         <members>FEC_MyCaseSoapXml</members>
         <members>FEC_ApplicationsListController</members>

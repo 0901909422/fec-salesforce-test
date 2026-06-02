@@ -135,6 +135,7 @@
         <members>FEC_CMSIPPBlockWS</members>
         <members>FEC_GetMRCInfo</members>
         <members>FEC_GetCSMasterDataService</members>
+        <members>FEC_GetCSMasterDataByCodeService</members>
         <members>FEC_GetRepaymentScheduleByAppIdCallout</members>
         <members>FEC_MyCaseSoapXml</members>
         <members>FEC_BCH_ExportPropertyService</members>
@@ -331,6 +332,7 @@
         <members>Case.FEC_Original_Category__c</members>
         <members>Case.FEC_Original_Sub_Category__c</members>
         <members>Case.FEC_Original_Sub_Code__c</members>
+        <members>Case.FEC_Assignment_Count__c</members>
         <members>Case.FEC_Recently_Auto_Case_Assignment__c</members>
         <members>Case.FEC_NFU_Description_Result__c</members>
         <members>Case.FEC_Collections_Response__c</members>
@@ -589,6 +591,7 @@
 		<members>FEC_Batch_Case_Handling_Success</members>
 		<members>FEC_NFU_Modal_Save_Error</members>
         <members>FEC_Send_Manual_Notification</members>
+        <members>FEC_RelevantTicket_Field_Interaction</members>
 		<name>CustomLabel</name>
 	</types>
     <types>
@@ -602,6 +605,7 @@
 		<members>FEC_API_Config.FEC_VMX_AUTH_DETAIL_INQ</members>
 		<members>FEC_API_Config.FEC_Vmx_Acct_Blkcd_Upd_Emea</members>
 		<members>FEC_API_Config.FEC_Get_Customer_List</members>
+		<members>FEC_API_Config.FEC_CheckEligible</members>
 		<name>CustomMetadata</name>
 	</types>
     <types>
