@@ -744,7 +744,8 @@ public without sharing class FEC_MyCaseSoapXml {
         Map<String, String> cache = additionalPropsXmlCache != null
             ? additionalPropsXmlCache
             : new Map<String, String>();
-        String itemsXml = buildMasterDataItemsListXml(items, cache);
+        Set<String> emittedApplyTos = new Set<String>();
+        String itemsXml = buildMasterDataItemsListXml(items, cache, emittedApplyTos);
         return '<?xml version="1.0" encoding="utf-8"?>' +
             '<soap:Envelope xmlns:soap="' + SOAP_ENV + '">' +
             '<soap:Body>' +
@@ -852,19 +853,24 @@ public without sharing class FEC_MyCaseSoapXml {
     private static String resolveMasterDataAdditionalPropertiesXml(
         String applyTo,
         List<FEC_GetCSMasterDataService.AdditionalPropertyType> properties,
-        Map<String, String> additionalPropsXmlCache
+        Map<String, String> additionalPropsXmlCache,
+        Set<String> emittedApplyTos
     ) {
         String cacheKey = masterDataApplyToCacheKey(applyTo);
-        if (additionalPropsXmlCache.containsKey(cacheKey)) {
-            return additionalPropsXmlCache.get(cacheKey);
-        }
-
-        if (properties == null || properties.isEmpty()) {
+        if (emittedApplyTos.contains(cacheKey)) {
             return '';
         }
 
-        String xml = buildMasterDataAdditionalPropertiesXml(properties);
-        additionalPropsXmlCache.put(cacheKey, xml);
+        String xml;
+        if (properties == null || properties.isEmpty()) {
+            xml = additionalPropsXmlCache.containsKey(cacheKey)
+                ? additionalPropsXmlCache.get(cacheKey)
+                : '';
+        } else {
+            xml = buildMasterDataAdditionalPropertiesXml(properties);
+        }
+
+        emittedApplyTos.add(cacheKey);
         return xml;
     }
 
@@ -877,7 +883,8 @@ public without sharing class FEC_MyCaseSoapXml {
 
     private static String buildMasterDataItemsListXml(
         List<FEC_GetCSMasterDataService.MasterDataItemType> items,
-        Map<String, String> additionalPropsXmlCache
+        Map<String, String> additionalPropsXmlCache,
+        Set<String> emittedApplyTos
     ) {
         if (items == null || items.isEmpty()) {
             return '';
@@ -886,7 +893,11 @@ public without sharing class FEC_MyCaseSoapXml {
         String result = '';
         List<String> batch = new List<String>();
         for (FEC_GetCSMasterDataService.MasterDataItemType item : items) {
-            String itemXml = buildMasterDataItemXml(item, additionalPropsXmlCache);
+            String itemXml = buildMasterDataItemXml(
+                item,
+                additionalPropsXmlCache,
+                emittedApplyTos
+            );
             if (String.isNotBlank(itemXml)) {
                 batch.add(itemXml);
                 if (batch.size() >= MASTER_DATA_XML_BATCH_SIZE) {
@@ -900,7 +911,8 @@ public without sharing class FEC_MyCaseSoapXml {
 
     private static String buildMasterDataItemXml(
         FEC_GetCSMasterDataService.MasterDataItemType item,
-        Map<String, String> additionalPropsXmlCache
+        Map<String, String> additionalPropsXmlCache,
+        Set<String> emittedApplyTos
     ) {
         if (item == null) {
             return '';
@@ -915,7 +927,8 @@ public without sharing class FEC_MyCaseSoapXml {
             resolveMasterDataAdditionalPropertiesXml(
                 item.ApplyTo,
                 item.AdditionalProperties,
-                additionalPropsXmlCache
+                additionalPropsXmlCache,
+                emittedApplyTos
             ) +
             buildMasterDataChildrenXml(item.Children) +
             '</MasterDataItems>';
@@ -966,14 +979,69 @@ public without sharing class FEC_MyCaseSoapXml {
         if (properties == null || properties.isEmpty()) {
             return '';
         }
-        List<String> parts = new List<String>();
+        String result = '';
+        List<String> batch = new List<String>();
         for (FEC_GetCSMasterDataService.AdditionalPropertyType property : properties) {
             String propertyXml = buildMasterDataAdditionalPropertyXml(property);
             if (String.isNotBlank(propertyXml)) {
-                parts.add(propertyXml);
+                batch.add(propertyXml);
+                if (batch.size() >= MASTER_DATA_XML_BATCH_SIZE) {
+                    result = appendXmlBatch(result, batch);
+                    batch.clear();
+                }
             }
         }
-        return joinXmlParts(parts);
+        return appendXmlBatch(result, batch);
+    }
+
+    public static String buildMasterDataAdditionalPropertyXml(
+        String id,
+        String name,
+        String nameVN,
+        Integer posOrder,
+        String applyTo,
+        Boolean mandatory,
+        String type,
+        List<Schema.PicklistEntry> picklistEntries
+    ) {
+        return buildMasterDataAdditionalPropertyXml(
+            id,
+            name,
+            nameVN,
+            posOrder,
+            applyTo,
+            mandatory,
+            type,
+            picklistEntries,
+            true
+        );
+    }
+
+    public static String buildMasterDataAdditionalPropertyXml(
+        String id,
+        String name,
+        String nameVN,
+        Integer posOrder,
+        String applyTo,
+        Boolean mandatory,
+        String type,
+        List<Schema.PicklistEntry> picklistEntries,
+        Boolean includePicklistValues
+    ) {
+        String availableValuesXml =
+            includePicklistValues == true
+                ? buildMasterDataAvailableValuesXmlFromPicklist(picklistEntries)
+                : '';
+        return '<AdditionalProperties>' +
+            buildXmlElement('ID', id) +
+            buildXmlElement('Name', name) +
+            buildXmlElement('NameVN', nameVN) +
+            buildXmlIntegerElement('PosOrder', posOrder) +
+            buildXmlElement('ApplyTo', applyTo) +
+            buildXmlBooleanElement('Mandatory', mandatory) +
+            availableValuesXml +
+            buildXmlElement('Type', type) +
+            '</AdditionalProperties>';
     }
 
     private static String buildMasterDataAdditionalPropertyXml(
@@ -994,26 +1062,58 @@ public without sharing class FEC_MyCaseSoapXml {
             '</AdditionalProperties>';
     }
 
+    private static String buildMasterDataAvailableValuesXmlFromPicklist(
+        List<Schema.PicklistEntry> picklistEntries
+    ) {
+        if (picklistEntries == null || picklistEntries.isEmpty()) {
+            return '';
+        }
+        String result = '';
+        List<String> batch = new List<String>();
+        for (Schema.PicklistEntry entry : picklistEntries) {
+            if (entry == null || !entry.isActive()) {
+                continue;
+            }
+            batch.add(
+                '<AvailableValues>' +
+                    buildXmlElement('ID', entry.getValue()) +
+                    buildXmlElement('Name', entry.getLabel()) +
+                    buildXmlElement('NameVN', entry.getLabel()) +
+                    '</AvailableValues>'
+            );
+            if (batch.size() >= MASTER_DATA_XML_BATCH_SIZE) {
+                result = appendXmlBatch(result, batch);
+                batch.clear();
+            }
+        }
+        return appendXmlBatch(result, batch);
+    }
+
     private static String buildMasterDataAvailableValuesXml(
         List<FEC_GetCSMasterDataService.AvailableValueType> values
     ) {
         if (values == null || values.isEmpty()) {
             return '';
         }
-        List<String> parts = new List<String>();
+        String result = '';
+        List<String> batch = new List<String>();
         for (FEC_GetCSMasterDataService.AvailableValueType value : values) {
             if (value == null) {
                 continue;
             }
-            parts.add(
+            batch.add(
                 '<AvailableValues>' +
                     buildXmlElement('ID', value.ID) +
                     buildXmlElement('Name', value.Name) +
                     buildXmlElement('NameVN', value.NameVN) +
                     '</AvailableValues>'
             );
+            if (batch.size() >= MASTER_DATA_XML_BATCH_SIZE) {
+                result = appendXmlBatch(result, batch);
+                batch.clear();
+            }
         }
-        return joinXmlParts(parts);
+        return appendXmlBatch(result, batch);
     }
 
     private static String buildXmlIntegerElement(String tag, Integer value) {

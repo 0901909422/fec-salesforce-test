@@ -345,6 +345,7 @@ public with sharing class FEC_ConstantCommon {
     public static final String EMAIL = 'Email';
     public static final String PHONE = 'Phone';
     public static final String PRIMARY_PHONE = 'Primary Phone';
+    public static final String COMMUNICATION_TYPE_MOBILE = 'Mobile';
     public static final String SUBCHANNEL_INCOMING_EMAIL = 'Incoming Email';
     public static final String CASE_ORIGIN_EMAIL2CASE = 'Email2Case';
     public static final String CASE_ORIGIN_EMAIL_FECREDIT = 'Email FECredit';
