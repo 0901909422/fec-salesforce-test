@@ -181,15 +181,17 @@ public without sharing class FEC_CofGsrAssignmentService {
         }, '|');
     }
 
+    //tugnnm37 - assignment Completed được phép add lại cùng queue nên không tính duplicate
     private static Set<String> loadExistingAssignmentDedupKeys(String caseId) {
         Set<String> keys = new Set<String>();
         if (String.isBlank(caseId)) {
             return keys;
         }
         for (FEC_Assignment__c row : [
-            SELECT FEC_Case__c, FEC_Team__c, FEC_OwnerID__c, FEC_Assignment_Routing_Action__c, FEC_Manual__c
+            SELECT FEC_Case__c, FEC_Team__c, FEC_OwnerID__c, FEC_Assignment_Routing_Action__c, FEC_Manual__c, FEC_Assignment_Status__c
             FROM FEC_Assignment__c
             WHERE FEC_Case__c = :caseId
+              AND FEC_Assignment_Status__c != :FEC_ConstantCommon.ASSIGNMENT_STATUS_COMPLETED
         ]) {
             keys.add(buildAssignmentDedupKey(
                 String.valueOf(row.FEC_Case__c),
@@ -206,16 +208,18 @@ public without sharing class FEC_CofGsrAssignmentService {
         return normalizeAssignmentKeyPart(caseId) + '|' + normalizeAssignmentKeyPart(queueName);
     }
 
+    //tugnnm37 - chỉ chặn queue trùng với assignment chưa Completed
     private static Set<String> loadExistingAssignmentQueueKeys(String caseId) {
         Set<String> keys = new Set<String>();
         if (String.isBlank(caseId)) {
             return keys;
         }
         for (FEC_Assignment__c row : [
-            SELECT FEC_Case__c, FEC_OwnerID__c
+            SELECT FEC_Case__c, FEC_OwnerID__c, FEC_Assignment_Status__c
             FROM FEC_Assignment__c
             WHERE FEC_Case__c = :caseId
               AND FEC_Assignment_Type__c = :FEC_ConstantCommon.ASSIGNMENT_TYPE_ROUTING
+              AND FEC_Assignment_Status__c != :FEC_ConstantCommon.ASSIGNMENT_STATUS_COMPLETED
               AND FEC_OwnerID__c != null
         ]) {
             keys.add(buildCaseQueueDedupKey(String.valueOf(row.FEC_Case__c), row.FEC_OwnerID__c));
@@ -231,10 +235,11 @@ public without sharing class FEC_CofGsrAssignmentService {
             return queues;
         }
         for (FEC_Assignment__c row : [
-            SELECT FEC_OwnerID__c
+            SELECT FEC_OwnerID__c, FEC_Assignment_Status__c
             FROM FEC_Assignment__c
             WHERE FEC_Case__c = :caseId
               AND FEC_Assignment_Type__c = :FEC_ConstantCommon.ASSIGNMENT_TYPE_ROUTING
+              AND FEC_Assignment_Status__c != :FEC_ConstantCommon.ASSIGNMENT_STATUS_COMPLETED
               AND FEC_OwnerID__c != null
         ]) {
             queues.add(row.FEC_OwnerID__c);
