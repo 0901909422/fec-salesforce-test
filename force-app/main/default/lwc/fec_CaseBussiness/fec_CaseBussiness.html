@@ -247,6 +247,18 @@
                           </div>
                         </lightning-record-edit-form>
                       </template>
+                       <!-- Fraud Properties inside Updated Info accordion -->
+                      <!-- <template if:true={row.isUpdatedInfoSub}> -->
+                        <template if:true={section.isCaseInformationSection}>
+                          <div class="slds-m-top_medium">
+                            <c-fec-integration-manage-fraud-case
+                              record-id={recordId}
+                              mode-edit-case={fraudModeEditCase}
+                              nature-of-case-id={business.natureOfCase}>
+                            </c-fec-integration-manage-fraud-case>
+                          </div>
+                        </template>
+                      <!-- </template> -->
                     </lightning-accordion-section>
                   </lightning-accordion>
                 </template>
@@ -354,14 +366,17 @@
           </template>
         </div>
         </div>
-        <!-- Fraud Manage Component under Property Info -->
+        <!-- Fraud Manage Component fallback: only show when no Updated Info section -->
         <template if:true={section.isCaseInformationSection}>
-          <div class="slds-m-top_medium">
-            <c-fec-integration-manage-fraud-case
-              record-id={recordId}
-              nature-of-case-id={business.natureOfCase}>
-            </c-fec-integration-manage-fraud-case>
-          </div>
+          <template if:true={showFraudFallback}>
+            <div class="slds-m-top_medium">
+              <c-fec-integration-manage-fraud-case
+                record-id={recordId}
+                mode-edit-case={fraudModeEditCase}
+                nature-of-case-id={business.natureOfCase}>
+              </c-fec-integration-manage-fraud-case>
+            </div>
+          </template>
         </template>
         <!-- process action -->
         <template if:true={finalShowProcessAction}>

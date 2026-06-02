@@ -165,7 +165,16 @@ public with sharing class FEC_IntegrationFraudCaseUtil {
          /** 
          * CaseId of the Case object.
          */
-        public String caseDataId;      
+        public String caseDataId;
+
+        /**
+         * Nature of Case Id for mapping resolution.
+         */
+        public String natureOfCaseId;      
+         /** 
+         * intCaseId of the Case object.
+         */
+        public String intCaseId;      
 
         /** 
          * List of additional key-value information 
@@ -508,6 +517,8 @@ public with sharing class FEC_IntegrationFraudCaseUtil {
         w.userType     = (String) payload.get(c.USER_TYPE);
         w.caseId       = (String) payload.get(c.FRAUD_CASEID);
         w.caseDataId   = (String) payload.get('caseDataId');
+        w.natureOfCaseId = (String) payload.get('NatureOfCaseId');
+        w.intCaseId = (String) payload.get('IntCaseId');
        
 
         // Automatically assign current user's email as creator
