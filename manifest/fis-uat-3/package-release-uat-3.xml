@@ -153,6 +153,7 @@
         <members>FEC_COFFraudRelatedHandler</members>
         <members>FEC_BancaController</members>
         <members>FEC_RDPaymentContractAssessmentService</members>
+        <members>FEC_RdPaymentRoutingHelper</members>
 	    <members>FEC_CofGsrRoutePrepareService</members>
 	    <members>FEC_AssignmentTriggerHandler</members>
 	    <members>FEC_NatureOfCaseTriggerHandler</members>
@@ -226,6 +227,7 @@
         <members>FEC_CaseSlaNotificationService</members>
         <members>FEC_BlockCodeRoutingService</members>
         <members>FEC_RepeatRouteToOwnerHelper</members>
+        <members>FEC_RdPaymentRoutingHelper</members>
         <members>FEC_CardClosureRefundController</members>
         <members>FEC_CardInfoController</members>
         <members>FEC_CardReplacementAddressController</members>
@@ -263,8 +265,10 @@
         <members>FEC_TransactionsController</members>
         <members>FEC_VMXAUTHDETAILINQ</members>
         <members>FEC_UpdateCustomerAddress</members>
+        <members>FEC_UpdateCustomerContact</members>
 		<members>FEC_NatureOfCaseUserGroupService</members>
         <members>FEC_CustomerIntegrationService</members>
+        <members>FEC_CustomEmailService</members>
         <members>FEC_LookupController</members>
         <members>FEC_IPPScheduleController</members>
         <members>FEC_ApplicationsListController</members>
@@ -916,6 +920,7 @@
         <members>maskedToggleDatatable</members>
         <members>fec_InteractionInfoF2F_Letter</members>
 		<members>fec_IPPDetailPage</members>
+        <members>fec_SecondaryInfoAccount</members>
 		<name>LightningComponentBundle</name>
     </types>
     <types>
@@ -1189,6 +1194,7 @@
         <members>FEC_Batch_Case_Handling_Import_Err_Remark_Too_Long</members>
         <members>FEC_Batch_Case_Handling_Import_Err_Record_Id_Invalid</members>
         <members>FEC_Batch_Case_Handling_Import_Err_Routing_Requires_Params</members>
+        <members>FEC_Batch_Case_Handling_Success</members>
         <members>FEC_BCH_RequestTimeout</members>
         <members>FEC_BCH_NoDataExport</members>
         <members>FEC_BCH_NoDataFound</members>
@@ -1866,6 +1872,7 @@
     <types>
 		<members>FEC_CaseBusinessService</members>
 		<members>FEC_RepeatRouteToOwnerHelper</members>
+		<members>FEC_RdPaymentRoutingHelper</members>
 		<members>FEC_DocumentRequestRoutingService</members>
 		<members>FEC_DocumentRequestRoutingActionService</members>
 		<members>FEC_ClientPDFService</members>
@@ -2452,5 +2459,10 @@
 	    <members>FEC_BCH_PicklistTranslation</members>
 	    <name>ApexPage</name>
 	</types>
+    <types>
+        <members>FE_All_Subdomains</members>
+        <members>FE_Owa_Image</members>
+        <name>CspTrustedSite</name>
+    </types>
 	<version>66.0</version>
 </Package>

@@ -55,6 +55,7 @@
         <members>FEC_RemovePhoneController</members>
         <members>FEC_GetIPPDetailsCallout</members>
         <members>FEC_UpdateCustomerAddress</members>
+        <members>FEC_UpdateCustomerContact</members>
         <members>FEC_CardEligibilityController</members>
         <members>FEC_AssignmentTriggerHandler</members>
         <members>FEC_BancaController</members>
@@ -189,7 +190,9 @@
         <members>FEC_FullCustomerIntegrationJob</members>
         <members>FEC_ImportedInteractionBatch</members>
         <members>FEC_RDPaymentContractAssessmentService</members>
+        <members>FEC_RdPaymentRoutingHelper</members>
         <members>FEC_CustomerIntegrationService</members>
+        <members>FEC_CustomEmailService</members>
         <members>FEC_CaseRemarksTriggerHandler</members>
         <members>FEC_CardLockUnLockController</members>
         <members>FEC_CardReplacementAddressController</members>
@@ -312,6 +315,7 @@
 		<members>fec_NocRoutingAssignment</members>
 		<members>fec_InteractionInfoF2F_Letter</members>
 		<members>fec_IPPDetailPage</members>
+        <members>fec_SecondaryInfoAccount</members>
 		<name>LightningComponentBundle</name>
 	</types>
     <types>
@@ -426,6 +430,7 @@
         <members>fecRoutingAssignmentEditOverride</members>
         <members>fec_CaseAssignmentNocEditOverride</members>
         <members>fecEmailSection</members>
+        <members>fecNewRelevantTicketAction</members>
         <name>AuraDefinitionBundle</name>
     </types>
 	<types>
@@ -576,6 +581,7 @@
 		<members>FEC_Batch_Case_Handling_Import_Err_Missing_Routing_Or_Assignment_Routing</members>
 		<members>FEC_Batch_Case_Handling_Import_Err_Missing_Remark</members>
 		<members>FEC_Batch_Case_Handling_Import_Err_Remark_Too_Long</members>
+		<members>FEC_Batch_Case_Handling_Success</members>
 		<members>FEC_NFU_Modal_Save_Error</members>
         <members>FEC_Send_Manual_Notification</members>
 		<name>CustomLabel</name>
@@ -1010,6 +1016,11 @@
         <members>FEC_Report_Summary_TAT_CO/</members>
         <members>FEC_Report_Summary_TAT_CO/Interactions_Service_Cases_TAT_CO</members>
         <name>Report</name>
+    </types>
+    <types>
+        <members>FE_All_Subdomains</members>
+        <members>FE_Owa_Image</members>
+        <name>CspTrustedSite</name>
     </types>
 	<version>66.0</version>
 </Package>
