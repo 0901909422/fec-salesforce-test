@@ -17,7 +17,6 @@ global with sharing class FEC_GetCSMasterDataByCodeService {
     // CONSTANTS
     // =========================================================================
     private static final Integer MAX_LENGTH_STANDARD = 255;
-    private static Set<String> cachedActiveChannels;
 
     // =========================================================================
     // MAIN
@@ -197,7 +196,7 @@ global with sharing class FEC_GetCSMasterDataByCodeService {
         }
 
         // Channel
-       if (!isValidChannel(Sys.Channel)) {
+       if (!FEC_CommonUltils.isActiveChannelSupported(Sys.Channel)) {
 
             result.isValid = false;
             result.errorMessage = buildUnsupportedChannelMessage(Sys.Channel);
@@ -227,84 +226,8 @@ global with sharing class FEC_GetCSMasterDataByCodeService {
         return result;
     }
 
-    private static Boolean isValidChannel(String channel) {
-        if (String.isBlank(channel)) {
-            return false;
-        }
-        String normalized = channel.trim().toUpperCase();
-        return getActiveChannelIds().contains(normalized);
-    }
-
-    private static Set<String> getActiveChannelIds() {
-        if (cachedActiveChannels != null) {
-            return cachedActiveChannels;
-        }
-
-        cachedActiveChannels = new Set<String>();
-        String channelObjectApi = resolveFirstExistingObjectApi(
-            new List<String>{ 'FEC_Channel__c', 'FEC_Channel_c' }
-        );
-        if (String.isBlank(channelObjectApi)) {
-            return cachedActiveChannels;
-        }
-
-        String channelIdFieldApi = resolveFirstExistingFieldApi(
-            channelObjectApi,
-            new List<String>{ 'FEC_Channel_ID__c', 'FEC_Channel_ID_c' }
-        );
-        String channelStatusFieldApi = resolveFirstExistingFieldApi(
-            channelObjectApi,
-            new List<String>{ 'FEC_Channel_Status__c', 'FEC_Channel_Statusc' }
-        );
-        if (String.isBlank(channelIdFieldApi) || String.isBlank(channelStatusFieldApi)) {
-            return cachedActiveChannels;
-        }
-
-        String soql =
-            'SELECT Id, Name, ' + channelIdFieldApi + ', ' + channelStatusFieldApi +
-            ' FROM ' + channelObjectApi +
-            ' WHERE ' + channelStatusFieldApi + ' = true';
-        for (SObject row : Database.query(soql)) {
-            String channelId = (String) row.get(channelIdFieldApi);
-            if (String.isBlank(channelId)) {
-                continue;
-            }
-            cachedActiveChannels.add(channelId.trim().toUpperCase());
-        }
-        return cachedActiveChannels;
-    }
-
-    private static String resolveFirstExistingObjectApi(List<String> candidates) {
-        Map<String, Schema.SObjectType> gd = Schema.getGlobalDescribe();
-        for (String apiName : candidates) {
-            if (gd.containsKey(apiName)) {
-                return apiName;
-            }
-        }
-        return null;
-    }
-
-    private static String resolveFirstExistingFieldApi(String objectApiName, List<String> candidates) {
-        if (String.isBlank(objectApiName)) {
-            return null;
-        }
-        Schema.SObjectType objectType = Schema.getGlobalDescribe().get(objectApiName);
-        if (objectType == null) {
-            return null;
-        }
-        Map<String, Schema.SObjectField> fieldMap = objectType.getDescribe().fields.getMap();
-        for (String apiName : candidates) {
-            if (fieldMap.containsKey(apiName)) {
-                return apiName;
-            }
-        }
-        return null;
-    }
-
     private static String buildUnsupportedChannelMessage(String channel) {
-        String normalizedChannel = String.isBlank(channel)
-            ? FEC_ConstantCommon.STR_EMPTY
-            : channel.trim().replace('"', FEC_ConstantCommon.STR_EMPTY).replace('&quot;', FEC_ConstantCommon.STR_EMPTY);
+        String normalizedChannel = FEC_CommonUltils.sanitizeChannelForMessage(channel);
         return String.valueOf(System.Label.FEC_MSG_Channel_Validation).trim() +
             ' ' +
             normalizedChannel +
