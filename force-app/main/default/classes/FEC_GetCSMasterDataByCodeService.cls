@@ -17,12 +17,6 @@ global with sharing class FEC_GetCSMasterDataByCodeService {
     // CONSTANTS
     // =========================================================================
     private static final Integer MAX_LENGTH_STANDARD = 255;
-    private static final Set<String> VALID_CHANNELS = new Set<String>{
-        FEC_ConstantCommon.KEY_VALID_CHANNELS_WED,
-        FEC_ConstantCommon.KEY_VALID_CHANNELS_MOBILE,
-        FEC_ConstantCommon.KEY_VALID_CHANNELS_API,
-        FEC_ConstantCommon.KEY_VALID_CHANNELS_PORTAL
-    };
 
     // =========================================================================
     // MAIN
@@ -202,14 +196,10 @@ global with sharing class FEC_GetCSMasterDataByCodeService {
         }
 
         // Channel
-       if (String.isBlank(Sys.Channel) ||
-            !VALID_CHANNELS.contains(Sys.Channel.toUpperCase())) {
+       if (!FEC_CommonUltils.isActiveChannelSupported(Sys.Channel)) {
 
             result.isValid = false;
-            result.errorMessage =
-                System.Label.FEC_MSG_Channel_Validation +
-                Sys.Channel +
-                System.Label.FEC_MSG_Data_Request_Master_Data;
+            result.errorMessage = buildUnsupportedChannelMessage(Sys.Channel);
             return result;
         }
 
@@ -234,6 +224,15 @@ global with sharing class FEC_GetCSMasterDataByCodeService {
 
         result.isValid = true;
         return result;
+    }
+
+    private static String buildUnsupportedChannelMessage(String channel) {
+        String normalizedChannel = FEC_CommonUltils.sanitizeChannelForMessage(channel);
+        return String.valueOf(System.Label.FEC_MSG_Channel_Validation).trim() +
+            ' ' +
+            normalizedChannel +
+            ' ' +
+            String.valueOf(System.Label.FEC_MSG_Data_Request_Master_Data).trim();
     }
 
     private class ValidationResult {

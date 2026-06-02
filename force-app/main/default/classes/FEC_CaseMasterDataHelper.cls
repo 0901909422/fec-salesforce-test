@@ -100,6 +100,34 @@ public without sharing class FEC_CaseMasterDataHelper {
   }
 
   /**
+   * Assignment + FEC_Field_Reverted__c = true: chỉ hiển thị khi current stage là revert context.
+   * Chạy sớm ngay sau query master data để các bước lọc assignment phía sau nhận đúng dataset.
+   */
+  public static List<SObject> filterRevertedAssignmentRowsByStageContext(
+    List<SObject> masterDatalst,
+    Boolean isCurrentStageRevertedContext
+  ) {
+    if (
+      masterDatalst == null ||
+      masterDatalst.isEmpty() ||
+      isCurrentStageRevertedContext == true
+    ) {
+      return masterDatalst;
+    }
+    List<SObject> filtered = new List<SObject>();
+    for (SObject mdsRow : masterDatalst) {
+      if (
+        TYPE_ASSIGNMENT.equals((String) mdsRow.get('FEC_Type__c')) &&
+        (Boolean) mdsRow.get('FEC_Field_Reverted__c') == true
+      ) {
+        continue;
+      }
+      filtered.add(mdsRow);
+    }
+    return filtered;
+  }
+
+  /**
    * Thu thập FEC_Field_API_Name__c từ các dòng Assignment có FEC_Hidden__c = true
    * mà user hiện tại thuộc FEC_Editable_User_Group__c (contains).
    * Dùng để biết API nào cần ẩn bản Assignment hidden=false tương ứng.
