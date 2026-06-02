@@ -107,6 +107,7 @@ export default class Fec_CaseEditNOC extends LightningElement {
   updatedSubCodeId;        // Sub-Code đã chọn trong Updated section
   @track updatedNocDisplayNames = {};
   hasAutoRoutingAssignment = false; // true → ẩn Updated section (có Routing Assignment)
+  _selectedNocDisplayNames = {};
   //PhongBT: Original Information của NOC lấy từ FEC_Case_Flow_History__c
   @track originalNOC = null;
   originalNOCBusinessProcessCode;
@@ -242,6 +243,28 @@ export default class Fec_CaseEditNOC extends LightningElement {
       subCategory: caseRecord.FEC_SubCategory__r?.Name ?? null,
       subCode: caseRecord.FEC_SubCode__r?.Name ?? null,
     };
+  }
+
+  _setSelectedNocDisplayNamesFromCase(caseRecord) {
+    this._selectedNocDisplayNames = {
+      productType: caseRecord?.FEC_Product_Type__r?.Name ?? null,
+      category: caseRecord?.FEC_Category__r?.Name ?? null,
+      subCategory: caseRecord?.FEC_SubCategory__r?.Name ?? null,
+      subCode: caseRecord?.FEC_SubCode__r?.Name ?? null,
+    };
+  }
+
+  //PhongBT 02/06/26: Vẫn hiển thị Name cho user không có phân quyền xem noc: bổ sung option hiện tại theo Name lấy từ Case khi list option bị filter theo user group.
+  _ensureSelectedOptionLabel(options, selectedId, selectedName) {
+    const normalizedOptions = Array.isArray(options) ? [...options] : [];
+    if (!selectedId) {
+      return normalizedOptions;
+    }
+    const hasSelected = normalizedOptions.some((opt) => opt?.value === selectedId);
+    if (hasSelected || !selectedName) {
+      return normalizedOptions;
+    }
+    return [{ label: selectedName, value: selectedId }, ...normalizedOptions];
   }
 
   get isEdit() {
@@ -586,6 +609,7 @@ export default class Fec_CaseEditNOC extends LightningElement {
           this.disableProdType = !!this.productTypeSelectedId;
           this._applyPointsRedemptionNocSelectionFromStorage();
         }
+        this._setSelectedNocDisplayNamesFromCase(res);
 
         this.isSubmited = res.FEC_Is_Submited__c;
         this.interactionViewMode = res.FEC_Interaction_View_Mode__c;
@@ -1282,6 +1306,7 @@ export default class Fec_CaseEditNOC extends LightningElement {
         this._currentStageName = res.FEC_Current_Case_Stage__r?.Name || null;
         this._actualBusinessProcessCode =
           res.FEC_Actual_Nature_of_Case__r?.FEC_Business_Process__r?.FEC_Code__c || null;
+        this._setSelectedNocDisplayNamesFromCase(res);
         this.getProdType();
         this.getCategory();
         this.getSubCategory();
@@ -1449,7 +1474,11 @@ export default class Fec_CaseEditNOC extends LightningElement {
         "🚀 ~ Fec_CaseEditNOC ~ getProdType ~ res:",
         JSON.stringify(res)
       );
-      this.productTypeOptionlst = res;
+      this.productTypeOptionlst = this._ensureSelectedOptionLabel(
+        res,
+        this.productTypeSelectedId,
+        this._selectedNocDisplayNames?.productType
+      );
       if (this._isInternalRequest && !this.productTypeSelectedId) {
         const internalOption = res?.find((opt) => opt.label === INTERNAL_REQUEST);
 
@@ -1476,7 +1505,11 @@ export default class Fec_CaseEditNOC extends LightningElement {
           "🚀 ~ Fec_CaseEditNOC ~ getCategory ~ res:",
           JSON.stringify(res)
         );
-        this.categoryOptionlst = res;
+        this.categoryOptionlst = this._ensureSelectedOptionLabel(
+          res,
+          this.categorySelectedId,
+          this._selectedNocDisplayNames?.category
+        );
 
         this.handleChangeOption("category", this.categoryOptionlst);
       })
@@ -1496,7 +1529,11 @@ export default class Fec_CaseEditNOC extends LightningElement {
           "🚀 ~ Fec_CaseEditNOC ~ getSubCategory ~ res:",
           JSON.stringify(res)
         );
-        this.subCategoryOptionlst = res;
+        this.subCategoryOptionlst = this._ensureSelectedOptionLabel(
+          res,
+          this.subCategorySelectedId,
+          this._selectedNocDisplayNames?.subCategory
+        );
 
         this.handleChangeOption("sub-category", this.subCategoryOptionlst);
       })
@@ -1518,7 +1555,11 @@ export default class Fec_CaseEditNOC extends LightningElement {
           JSON.stringify(res)
         );
 
-        this.subCodeOptionlst = res;
+        this.subCodeOptionlst = this._ensureSelectedOptionLabel(
+          res,
+          this.subCodeSelectedId,
+          this._selectedNocDisplayNames?.subCode
+        );
 
         this.handleChangeOption("sub-code", this.subCodeOptionlst);
         // Không có option Sub-Code: resolve NOC không Sub-Code; getByCase (Apex) không fallback Sub-Code từ Case khi đã có Sub-Category từ UI.
