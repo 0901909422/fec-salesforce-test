@@ -764,7 +764,7 @@ public without sharing class FEC_BatchCaseHandlingImportService {
                 continue;
             }
             String title = link.ContentDocument.Title;
-            if (FEC_BatchImportCommon.isResultContentTitle(title)) {
+            if (isBatchCaseHandlingResultContentTitle(title)) {
                 continue;
             }
             Id versionId = link.ContentDocument.LatestPublishedVersionId;
@@ -787,6 +787,19 @@ public without sharing class FEC_BatchCaseHandlingImportService {
             LIMIT 1
         ];
         return versions.isEmpty() ? null : versions[0].Id;
+    }
+
+    // 02/06/2026 15:45 linhdev - Batch Case Handling: nhận diện Result cả khi ContentDocument.Title có đuôi .xlsx
+    private static Boolean isBatchCaseHandlingResultContentTitle(String title) {
+        if (String.isBlank(title)) {
+            return false;
+        }
+        String normalizedTitle = FEC_BatchCaseHandlingSObjectUtil.removeFileExtension(title.trim());
+        if (String.isBlank(normalizedTitle)) {
+            normalizedTitle = title.trim();
+        }
+        String lower = normalizedTitle.toLowerCase();
+        return lower.endsWith('_importresult') || lower.endsWith('_result');
     }
 
     private static List<List<String>> buildBatchResultSheetRows(

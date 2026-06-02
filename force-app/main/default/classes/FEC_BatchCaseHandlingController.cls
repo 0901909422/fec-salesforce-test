@@ -454,7 +454,7 @@ public without sharing class FEC_BatchCaseHandlingController {
                     continue;
                 }
                 String downloadUrl = FEC_ConstantCommon.CONTENT_VERSION_DOWNLOAD_URL_PREFIX + versionId;
-                if (FEC_BatchImportCommon.isResultContentTitle(title)) {
+                if (isBatchCaseHandlingResultContentTitle(title)) {
                     if (!resultUrlByBatchId.containsKey(link.LinkedEntityId)) {
                         resultUrlByBatchId.put(link.LinkedEntityId, downloadUrl);
                     }
@@ -495,6 +495,19 @@ public without sharing class FEC_BatchCaseHandlingController {
             output.add(dto);
         }
         return output;
+    }
+
+    // 02/06/2026 15:45 linhdev - Batch Case Handling: nhận diện Result cả khi ContentDocument.Title có đuôi .xlsx
+    private static Boolean isBatchCaseHandlingResultContentTitle(String title) {
+        if (String.isBlank(title)) {
+            return false;
+        }
+        String normalizedTitle = FEC_BatchCaseHandlingSObjectUtil.removeFileExtension(title.trim());
+        if (String.isBlank(normalizedTitle)) {
+            normalizedTitle = title.trim();
+        }
+        String lower = normalizedTitle.toLowerCase();
+        return lower.endsWith('_importresult') || lower.endsWith('_result');
     }
 
     @AuraEnabled
@@ -1087,7 +1100,17 @@ public without sharing class FEC_BatchCaseHandlingController {
                     rowsJson,
                     parseError
                 );
-                Id failedBatchId = upsertFailedBatchHandling(fileName, templateName, parseError);
+                Integer parsedTotalRows = parseResult != null && parseResult.inputRows != null
+                    ? parseResult.inputRows.size()
+                    : countImportRowsJson(rowsJson);
+                Id failedBatchId = upsertFailedBatchHandling(
+                    fileName,
+                    templateName,
+                    parseError,
+                    parsedTotalRows,
+                    0,
+                    parsedTotalRows
+                );
                 if (failedBatchId != null) {
                     linkFileToBatchHandling(failedBatchId, insertedCv.ContentDocumentId);
                     //tugnnm37 - parse fail do file no-data vẫn có header; giữ layout template gốc và chỉ custom __Errors
@@ -1109,7 +1132,7 @@ public without sharing class FEC_BatchCaseHandlingController {
                     rowsJson,
                     out.message
                 );
-                Id failedBatchId = upsertFailedBatchHandling(fileName, templateName, out.message);
+                Id failedBatchId = upsertFailedBatchHandling(fileName, templateName, out.message, 0, 0, 0);
                 return out;
             }
 
@@ -1147,7 +1170,14 @@ public without sharing class FEC_BatchCaseHandlingController {
                     rowsJson,
                     out.message
                 );
-                upsertFailedBatchHandling(fileName, resolvedTemplateName, out.message);
+                upsertFailedBatchHandling(
+                    fileName,
+                    resolvedTemplateName,
+                    out.message,
+                    inputRows.size(),
+                    0,
+                    inputRows.size()
+                );
                 return out;
             }
             // 27/05/2026 18:45 linhdev - chặn import template không khớp role/user group (vd. AddressUpdateTemp1_CSSupport khi user khác CS SP)
@@ -1167,7 +1197,14 @@ public without sharing class FEC_BatchCaseHandlingController {
                     rowsJson,
                     roleTemplateError
                 );
-                upsertFailedBatchHandling(fileName, resolvedTemplateName, roleTemplateError);
+                upsertFailedBatchHandling(
+                    fileName,
+                    resolvedTemplateName,
+                    roleTemplateError,
+                    inputRows.size(),
+                    0,
+                    inputRows.size()
+                );
                 return out;
             }
             FEC_BatchCaseHandlingSObjectUtil.putIfFieldExists(
@@ -1395,6 +1432,18 @@ public without sharing class FEC_BatchCaseHandlingController {
     }
 
     private static Id upsertFailedBatchHandling(String fileName, String templateName, String reason) {
+        return upsertFailedBatchHandling(fileName, templateName, reason, null, null, null);
+    }
+
+    // 02/06/2026 15:55 linhdev - set tổng/success/failed cho nhánh import fail sớm để hiển thị count chính xác trên My Bulk Actions
+    private static Id upsertFailedBatchHandling(
+        String fileName,
+        String templateName,
+        String reason,
+        Integer totalRecordsCount,
+        Integer totalSuccessRecords,
+        Integer totalFailedRecords
+    ) {
         try {
             Schema.SObjectType batchType = Schema.getGlobalDescribe().get(OBJECT_API_NAME);
             if (batchType == null) {
@@ -1413,12 +1462,35 @@ public without sharing class FEC_BatchCaseHandlingController {
             FEC_BatchCaseHandlingSObjectUtil.putIfFieldExists(fieldMap, failedRow, new List<String>{ 'FEC_Result__c' }, 'Result');
             FEC_BatchCaseHandlingSObjectUtil.putIfFieldExists(fieldMap, failedRow, new List<String>{ 'FEC_Failure_Reason__c' }, reason);
             FEC_BatchCaseHandlingSObjectUtil.putIfFieldExists(fieldMap, failedRow, new List<String>{ 'FEC_Template_Name__c', 'FEC_Template__c' }, templateName);
+            if (totalRecordsCount != null) {
+                FEC_BatchCaseHandlingSObjectUtil.putIfFieldExists(
+                    fieldMap,
+                    failedRow,
+                    new List<String>{ 'FEC_Total_Records__c', 'FEC_Total_Records_Count__c' },
+                    totalRecordsCount
+                );
+            }
+            if (totalSuccessRecords != null) {
+                FEC_BatchCaseHandlingSObjectUtil.putIfFieldExists(
+                    fieldMap,
+                    failedRow,
+                    new List<String>{ 'FEC_Total_Success_Records__c' },
+                    totalSuccessRecords
+                );
+            }
+            if (totalFailedRecords != null) {
+                FEC_BatchCaseHandlingSObjectUtil.putIfFieldExists(
+                    fieldMap,
+                    failedRow,
+                    new List<String>{ 'FEC_Total_Failed_Records__c' },
+                    totalFailedRecords
+                );
+            }
             if (isUpdate) {
                 update failedRow;
             } else {
                 insert failedRow;
             }
-            insert failedRow;
             //tugnnm37 - trả Id batch Failure để tạo Result file cho cả lỗi parse/file không có dữ liệu
             return (Id) failedRow.get('Id');
         } catch (Exception ex) {
