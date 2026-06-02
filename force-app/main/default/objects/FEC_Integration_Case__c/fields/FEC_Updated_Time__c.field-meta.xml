@@ -1,7 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
     <fullName>FEC_Updated_Time__c</fullName>
+<<<<<<< HEAD
     <externalId>false</externalId>
+=======
+>>>>>>> b60017d78 (CSM-8236: Implement fraud case integration enhancements)
     <label>Updated Time</label>
     <required>false</required>
     <trackTrending>false</trackTrending>

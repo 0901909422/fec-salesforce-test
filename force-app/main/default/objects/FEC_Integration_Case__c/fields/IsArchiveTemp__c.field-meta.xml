@@ -3,7 +3,10 @@
     <fullName>IsArchiveTemp__c</fullName>
     <defaultValue>false</defaultValue>
     <label>Is Archive Temp</label>
+<<<<<<< HEAD
     <trackHistory>false</trackHistory>
+=======
+>>>>>>> b60017d78 (CSM-8236: Implement fraud case integration enhancements)
     <trackTrending>false</trackTrending>
     <type>Checkbox</type>
 </CustomField>

@@ -2997,7 +2997,7 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
         : String(this.business?.natureOfCase || '');
         console.log('[getCaseToFraudFieldMap] nocId:', nocId, '| type:', typeof nocId, '| length:', nocId.length);
         if (nocId) {
-        getCaseToFraudFieldMap({ natureOfCaseId: nocId })
+        getCaseToFraudFieldMap({ natureOfCaseId: nocId, serviceCaseId: this.recordId })
           .then(res => {
             CASE_TO_FRAUD_FIELD_MAP = res || {};
             FRAUD_TO_CASE_FIELD_MAP = Object.fromEntries(
@@ -6796,39 +6796,56 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
 
   @api async submitFraudCase() {
     const fraudEl = this.template.querySelector('c-fec-integration-manage-fraud-case');
-    if (fraudEl && typeof fraudEl.submitFraudCase === 'function') {
-      await fraudEl.submitFraudCase();
+    if (fraudEl) {
+      if (typeof fraudEl.setRemarks === 'function') {
+        fraudEl.setRemarks(this.remarkContent);
+      }
+      if (typeof fraudEl.submitFraudCase === 'function') {
+        await fraudEl.submitFraudCase();
+      }
     }
   }
 
   @api async submitFraudWithoutCallout() {
     const fraudEl = this.template.querySelector('c-fec-integration-manage-fraud-case');
-    if (fraudEl && typeof fraudEl.submitFraudWithoutCallout === 'function') {
-      await fraudEl.submitFraudWithoutCallout();
+    if (fraudEl) {
+      if (typeof fraudEl.setRemarks === 'function') {
+        fraudEl.setRemarks(this.remarkContent);
+      }
+      if (typeof fraudEl.submitFraudWithoutCallout === 'function') {
+        await fraudEl.submitFraudWithoutCallout();
+      }
     }
   }
   
 
   handleChildInputChange(event) {
-    event.stopPropagation();
-    const el = event.currentTarget || event.target;
-    const fieldApiName = el.dataset?.field || el.fieldName;
-    const objName = el.dataset?.objName;
-    const value = event.detail?.value ?? el.value;
+    // event.target in LWC is the element that fired the change event
+    const el = event.target;
+    const fieldApiName = el?.dataset?.field || el?.fieldName;
     
-    console.log('handleChildInputChange:', fieldApiName, value);
-
-    // Sync to fraud component via LMS if field is in mapping
-    if (fieldApiName && CASE_TO_FRAUD_FIELD_MAP[fieldApiName]) {
-      const fraudFieldId = CASE_TO_FRAUD_FIELD_MAP[fieldApiName];
-      console.log('[Sync] publish case→fraud — fieldApiName:', fieldApiName, '| fraudFieldId:', fraudFieldId);
-      publish(this.messageContext, FRAUD_FIELD_SYNC, {
-        fieldId: fraudFieldId,
-        value: value,
-        source: 'case',
-        caseId: this.recordId
-      });
+    // Skip if no field identified (e.g. hidden lightning-input-field with data-is-phone-field)
+    if (!fieldApiName) {
+      return;
     }
+    
+    event.stopPropagation();
+    const objName = el?.dataset?.objName;
+    const value = event.detail?.value ?? el?.value;
+   
+   console.log('handleChildInputChange:', fieldApiName, value);
+
+   // Sync to fraud component directly (same shadow DOM tree)
+   console.log('[Sync] CASE_TO_FRAUD_FIELD_MAP:', JSON.stringify(CASE_TO_FRAUD_FIELD_MAP), '| field:', fieldApiName);
+   if (fieldApiName && CASE_TO_FRAUD_FIELD_MAP[fieldApiName]) {
+     const fraudFieldId = CASE_TO_FRAUD_FIELD_MAP[fieldApiName];
+     console.log('[Sync] case→fraud — fieldApiName:', fieldApiName, '| fraudFieldId:', fraudFieldId, '| value:', value);
+     const fraudEl = this.template.querySelector('c-fec-integration-manage-fraud-case');
+     console.log('[Sync] fraudEl found:', !!fraudEl);
+     if (fraudEl && typeof fraudEl.setFraudFieldValue === 'function') {
+       fraudEl.setFraudFieldValue(fraudFieldId, value);
+     }
+   }
   }
 
   _updateCaseFieldValue(caseFieldName, value) {
@@ -6838,6 +6855,20 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
       inputEl.value = value;
       console.log('[Sync] updated static input:', caseFieldName, '=', value);
     }
+  }
+  get hasUpdatedInfoSection() {
+    if (!this.business?.sectionlst) return false;
+    return this.business.sectionlst.some(section =>
+      section.subSectionlst?.some(sub => sub.name === SUBSECTION_NAME_UPDATED_INFO)
+    );
+  }
+
+  get showFraudFallback() {
+    return !this.hasUpdatedInfoSection;
+  }
+
+  get fraudModeEditCase() {
+    return this._isEdit || this._isCaseInformationEdit;
   }
   //******************End merge with Fraud********************* */
 }

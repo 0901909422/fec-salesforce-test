@@ -348,8 +348,18 @@ global with sharing class FEC_IntegrationFraudCaseApi {
             rec.FEC_Sys_Channel__c = channelID;
             rec.FEC_Sys_Creator_Email__c = xmlCreatorEmail;
 
-            rec.FEC_Created_Time__c = FEC_IntegrationFraudCaseUtil.parsePegaDatetime(xmlCreated);
-            rec.FEC_Updated_Time__c = FEC_IntegrationFraudCaseUtil.parsePegaDatetime(xmlUpdated);
+            try {
+                Datetime parsedCreated = FEC_IntegrationFraudCaseUtil.parsePegaDatetime(xmlCreated);
+                rec.FEC_Created_Time__c = (parsedCreated != null && parsedCreated.year() > 1700) ? parsedCreated : null;
+            } catch (Exception e) {
+                rec.FEC_Created_Time__c = null;
+            }
+            try {
+                Datetime parsedUpdated = FEC_IntegrationFraudCaseUtil.parsePegaDatetime(xmlUpdated);
+                rec.FEC_Updated_Time__c = (parsedUpdated != null && parsedUpdated.year() > 1700) ? parsedUpdated : null;
+            } catch (Exception e) {
+                rec.FEC_Updated_Time__c = null;
+            }
             rec.FEC_Message_Time__c = messageDateTime;
             rec.FEC_Investigation_Conclusion__c = investigationConclusion;
 
@@ -565,8 +575,18 @@ global with sharing class FEC_IntegrationFraudCaseApi {
             rec.FEC_Case_Type__c       = xmlUserType;
             rec.FEC_Sys_Channel__c = channelID;
 
-            rec.FEC_Created_Time__c = FEC_IntegrationFraudCaseUtil.parsePegaDatetime(xmlCreated);
-            rec.FEC_Updated_Time__c = FEC_IntegrationFraudCaseUtil.parsePegaDatetime(xmlUpdated);
+            try {
+                Datetime parsedCreated = FEC_IntegrationFraudCaseUtil.parsePegaDatetime(xmlCreated);
+                rec.FEC_Created_Time__c = (parsedCreated != null && parsedCreated.year() > 1700) ? parsedCreated : null;
+            } catch (Exception e) {
+                rec.FEC_Created_Time__c = null;
+            }
+            try {
+                Datetime parsedUpdated = FEC_IntegrationFraudCaseUtil.parsePegaDatetime(xmlUpdated);
+                rec.FEC_Updated_Time__c = (parsedUpdated != null && parsedUpdated.year() > 1700) ? parsedUpdated : null;
+            } catch (Exception e) {
+                rec.FEC_Updated_Time__c = null;
+            }
             rec.FEC_Message_Time__c = messageDateTime;
             rec.FEC_Investigation_Conclusion__c = investigationConclusion;
             upsert rec;
@@ -760,8 +780,18 @@ global with sharing class FEC_IntegrationFraudCaseApi {
             rec.FEC_Sys_Creator_Email__c= xmlCreatorEmail;
             rec.FEC_Case_Type__c    = xmlUserType;
             rec.FEC_Sys_Channel__c  = channelID;
-            rec.FEC_Created_Time__c = FEC_IntegrationFraudCaseUtil.parsePegaDatetime(xmlCreated);
-            rec.FEC_Updated_Time__c = FEC_IntegrationFraudCaseUtil.parsePegaDatetime(xmlUpdated);
+            try {
+                Datetime parsedCreated = FEC_IntegrationFraudCaseUtil.parsePegaDatetime(xmlCreated);
+                rec.FEC_Created_Time__c = (parsedCreated != null && parsedCreated.year() > 1700) ? parsedCreated : null;
+            } catch (Exception e) {
+                rec.FEC_Created_Time__c = null;
+            }
+            try {
+                Datetime parsedUpdated = FEC_IntegrationFraudCaseUtil.parsePegaDatetime(xmlUpdated);
+                rec.FEC_Updated_Time__c = (parsedUpdated != null && parsedUpdated.year() > 1700) ? parsedUpdated : null;
+            } catch (Exception e) {
+                rec.FEC_Updated_Time__c = null;
+            }
             rec.FEC_Message_Time__c = messageDateTime;
             rec.FEC_Investigation_Conclusion__c = investigationConclusion;
     

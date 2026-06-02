@@ -32,7 +32,17 @@ global with sharing class ArchiveCaseController_Test {
             HttpResponse res = new HttpResponse();
             res.setHeader('Content-Type', 'application/json');
             String body = '{' +
-            '  "FEC_Product_Type__c" : null,' +
+            '"FEC_Product_Type__c" : {' +
+            '    "attributes" : {' +
+            '    "type" : "FEC_Product_Type__c",' +
+            '    "url" : "/services/data/v66.0/sobjects/FEC_Product_Type__c/a0a8600000CBiV4AAL"' +
+            '    },' +
+            '    "Name" : "Card",' +
+            '    "FEC_Active__c" : true,' +
+            '    "FEC_Alias__c" : "Card",' +
+            '    "FEC_Code__c" : "Card",' +
+            '    "FEC_Name_VN__c" : "Card"' +
+            '},' +
             '  "FEC_Sub_Code__c" : null,' +
             '  "FEC_Sub_Category__c" : null,' +
             '  "FEC_District__c" : null,' +
@@ -455,9 +465,9 @@ global with sharing class ArchiveCaseController_Test {
             '  "FEC_Customer_History__c" : [ {' +
             '    "attributes" : {' +
             '      "type" : "FEC_Customer_History__c",' +
-            '      "url" : "/services/data/v66.0/sobjects/FEC_Customer_History__c/a0I86000000R61JEAS"' +
+            '      "url" : "/services/data/v66.0/sobjects/FEC_Customer_History__c/thisIsIdOfCustomerHistory"' +
             '    },' +
-            '    "Id" : "a0I86000000R61JEAS",' +
+            '    "Id" : "thisIsIdOfCustomerHistory",' +
             '    "IsDeleted" : false,' +
             '    "Name" : "0001500040006525520",' +
             '    "CreatedDate" : "2026-03-04T07:41:26.000+0000",' +
@@ -482,17 +492,7 @@ global with sharing class ArchiveCaseController_Test {
             '    "FEC_Total_Per_Diem__c" : 0,' +
             '    "FEC_Total_Plan_Payment_Amount__c" : 0,' +
             '    "FEC_Product_Association__c" : "Not defined",' +
-            '    "FEC_Date_of_Birth__c" : "19750305",' +
-            '    "FEC_Address_Info__c": [' +
-            '      {' +
-            '        "FEC_Mailing_Address__c": "abc@test.com",' +
-            '        "FEC_Address_Type__c": "addrTypeTest"' +
-            '      },' +
-            '      {' +
-            '        "FEC_Mailing_Address__c": "mana@test.com",' +
-            '        "FEC_Address_Type__c": "addrTypeTest22222"' +
-            '      }' +
-            '    ]' +
+            '    "FEC_Date_of_Birth__c" : "19750305"' +
             '  } ],' +
             '  "FEC_Contract_List_for_Remove_Phone__c" : null,' +
             '  "FEC_ChatHistory__c" : null,' +
@@ -504,7 +504,18 @@ global with sharing class ArchiveCaseController_Test {
             '  "FEC_Assignment__c" : null,' +
             '  "FEC_Asset__c" : null,' +
             '  "FEC_Application_History__c" : null,' +
-            '  "FEC_Address_Info__c" : null,' +
+            '   "FEC_Address_Info__c": [' +
+            '      {' +
+            '        "FEC_Customer_History__c": "thisIsIdOfCustomerHistory",' +
+            '        "FEC_Mailing_Address__c": "abc@test.com",' +
+            '        "FEC_Address_Type__c": "addrTypeTest"' +
+            '      },' +
+            '      {' +
+            '        "FEC_Customer_History__c": "thisIsIdOfCustomerHistory",' +
+            '        "FEC_Mailing_Address__c": "mana@test.com",' +
+            '        "FEC_Address_Type__c": "addrTypeTest22222"' +
+            '      }' +
+            '    ],' +
             '  "FEC_Additional_Info__c" : null,' +
             '  "Case" : {' +
             '    "attributes" : {' +
