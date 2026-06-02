@@ -1690,25 +1690,6 @@ public without sharing class FEC_BatchCaseHandlingImportService {
                 rr.inputtedRemarks,
                 rr.inputtedRemarksCharLength
             );
-            Boolean rowEmpty =
-                String.isBlank(rr.caseIdSearch) &&
-                String.isBlank(rr.routingAction) &&
-                String.isBlank(rr.inputtedRemarks) &&
-                (rr.inputtedRemarksCharLength == null || rr.inputtedRemarksCharLength == 0) &&
-                String.isBlank(rr.assignmentId) &&
-                String.isBlank(rr.assignmentRoutingAction) &&
-                String.isBlank(rr.csD2CAssessmentType) &&
-                String.isBlank(rr.csSupportAssessment) &&
-                String.isBlank(rr.riskLevel) &&
-                String.isBlank(rr.requiredAction) &&
-                String.isBlank(rr.classificationByCS) &&
-                String.isBlank(rr.evaluationByCS) &&
-                String.isBlank(rr.finalProduct) &&
-                String.isBlank(rr.paymentContractAssessment) &&
-                String.isBlank(rr.cpAssessment);
-            if (rowEmpty) {
-                continue;
-            }
             rr.recordId = FEC_ConstantCommon.STR_EMPTY;
             rr.status = System.Label.FEC_Operation_Success;
             rr.errors = FEC_ConstantCommon.STR_EMPTY;

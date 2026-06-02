@@ -171,15 +171,17 @@ public with sharing class FEC_UpdateCustomerContact {
         Dom.XmlNode dt = sys.getChildElement('DateTime', null);
         Dom.XmlNode c = sys.getChildElement('Code', null);
         Dom.XmlNode d = sys.getChildElement('Description', null);
-        result.transId = (t != null) ? t.getText() : null;
-        result.dateTimeStr = (dt != null) ? dt.getText() : null;
-        result.code = (c != null) ? c.getText() : null;
-        result.description = (d != null) ? d.getText() : null;
+        result.transId = (t != null) ? t.getText().trim() : null;
+        result.dateTimeStr = (dt != null) ? dt.getText().trim() : null;
+        result.code = (c != null) ? c.getText().trim() : null;
+        result.description = (d != null) ? d.getText().trim() : null;
+        // 01/06/2026 linhdev - API trả Code=1 (SUCCESSFULLY UPDATED); trim Code để LWC nhận success=true
         result.success = (FEC_ConstantCommon.SUCCESS_STATUS_CODE.equals(
           result.code
         ) ||
         FEC_ConstantCommon.SUCCESS_CODE_1.equals(result.code) ||
         FEC_ConstantCommon.SUCCESS_CODE_4.equals(result.code));
+        result.errorMessage = result.success ? null : result.description;
       } else {
         result.errorMessage = System.Label.FEC_MSG_Response_Sys_Null;
         result.success = false;
@@ -258,6 +260,136 @@ public with sharing class FEC_UpdateCustomerContact {
     }
   }
 
+  // 01/06/2026 linhdev - FEC_Contact_List__c.FEC_Communication_Type__c có nhiều giá trị (Primary/Work/Actual/Home Phone…)
+  @TestVisible
+  private static Boolean isEmailCommunicationType(String commType) {
+    if (String.isBlank(commType)) {
+      return false;
+    }
+    return FEC_ConstantCommon.EMAIL.equalsIgnoreCase(commType.trim());
+  }
+
+  @TestVisible
+  private static Boolean isPhoneCommunicationType(String commType) {
+    if (String.isBlank(commType) || isEmailCommunicationType(commType)) {
+      return false;
+    }
+    return commType.toLowerCase().contains('phone');
+  }
+
+  @TestVisible
+  private static Boolean communicationTypesMatch(String expected, String actual) {
+    if (String.isBlank(expected)) {
+      return true;
+    }
+    if (String.isBlank(actual)) {
+      return false;
+    }
+    return expected.trim().equalsIgnoreCase(actual.trim());
+  }
+
+  @TestVisible
+  private static Boolean contactPhonesMatch(String casePhone, String contactPhone) {
+    if (String.isBlank(casePhone) || String.isBlank(contactPhone)) {
+      return false;
+    }
+    if (casePhone.trim() == contactPhone.trim()) {
+      return true;
+    }
+    String normCase = FEC_CommonUltils.normalizePhone(casePhone);
+    String normContact = FEC_CommonUltils.normalizePhone(contactPhone);
+    if (String.isNotBlank(normCase) && normCase == normContact) {
+      return true;
+    }
+    if (casePhone.contains('*')) {
+      String digitsCase = casePhone.replaceAll('[^0-9]', '');
+      String digitsContact = contactPhone.replaceAll('[^0-9]', '');
+      if (digitsCase.length() >= 7 && digitsContact.length() >= 7) {
+        String casePrefix = digitsCase.substring(0, Math.min(5, digitsCase.length()));
+        String caseSuffix = digitsCase.substring(digitsCase.length() - 3);
+        return digitsContact.startsWith(casePrefix) && digitsContact.endsWith(caseSuffix);
+      }
+    }
+    return false;
+  }
+
+  private static String resolveCommunicationTypeForApi(
+    Case selectedCase,
+    FEC_Contact_List__c matched,
+    String method
+  ) {
+    if (PHONE_UPDATE.equals(method)) {
+      if (
+        matched != null &&
+        isPhoneCommunicationType(matched.FEC_Communication_Type__c)
+      ) {
+        return matched.FEC_Communication_Type__c.trim();
+      }
+      if (isPhoneCommunicationType(selectedCase.FEC_Updated_Info_Phone_Type__c)) {
+        return selectedCase.FEC_Updated_Info_Phone_Type__c.trim();
+      }
+      if (isPhoneCommunicationType(selectedCase.FEC_Original_Info_Phone_Type__c)) {
+        return selectedCase.FEC_Original_Info_Phone_Type__c.trim();
+      }
+      return FEC_ConstantCommon.PRIMARY_PHONE;
+    }
+    if (
+      matched != null &&
+      isEmailCommunicationType(matched.FEC_Communication_Type__c)
+    ) {
+      return matched.FEC_Communication_Type__c.trim();
+    }
+    return FEC_ConstantCommon.EMAIL;
+  }
+
+  private static List<FEC_Contact_List__c> pickBestContactMatch(
+    List<FEC_Contact_List__c> candidates,
+    Case selectedCase,
+    Boolean isPhoneMethod,
+    String originalContactString,
+    String originalCommType
+  ) {
+    if (candidates == null || candidates.isEmpty()) {
+      return new List<FEC_Contact_List__c>();
+    }
+    FEC_Contact_List__c best = null;
+    Integer bestScore = -1;
+    for (FEC_Contact_List__c row : candidates) {
+      Integer score = 0;
+      if (isPhoneMethod) {
+        if (contactPhonesMatch(originalContactString, row.FEC_Contact_String__c)) {
+          score += 2;
+        }
+      } else if (
+        String.isNotBlank(originalContactString) &&
+        originalContactString.trim() == row.FEC_Contact_String__c
+      ) {
+        score += 2;
+      }
+      if (communicationTypesMatch(originalCommType, row.FEC_Communication_Type__c)) {
+        score += 1;
+      }
+      if (score > bestScore) {
+        bestScore = score;
+        best = row;
+      }
+    }
+    if (best != null && bestScore > 0) {
+      return new List<FEC_Contact_List__c>{ best };
+    }
+    if (String.isNotBlank(originalCommType)) {
+      for (FEC_Contact_List__c row : candidates) {
+        if (communicationTypesMatch(originalCommType, row.FEC_Communication_Type__c)) {
+          return new List<FEC_Contact_List__c>{ row };
+        }
+      }
+    }
+    if (candidates.size() == 1) {
+      return candidates;
+    }
+    return new List<FEC_Contact_List__c>();
+  }
+
   private static void validate(
     CustomerContactRequest req,
     String transId,
@@ -300,21 +432,18 @@ public with sharing class FEC_UpdateCustomerContact {
     if (String.isBlank(req.CommunicationType)) {
       throw new FEC_APIServiceException(String.format(System.Label.FEC_MSG_Param_Required, new List<String>{'CommunicationType'}));
     } else {
-      Set<String> validTypelst = new Set<String>{ FEC_ConstantCommon.PRIMARY_PHONE, FEC_ConstantCommon.PHONE, FEC_ConstantCommon.EMAIL };
-
-      if (!validTypelst.contains(req.CommunicationType)) {
+      Boolean isPhoneCommType = isPhoneCommunicationType(req.CommunicationType);
+      Boolean isEmailCommType = isEmailCommunicationType(req.CommunicationType);
+      // 01/06/2026 linhdev - chấp nhận mọi loại *Phone* từ FEC_Contact_List__c (Work Phone, Actual/Home Phone…)
+      if (!isPhoneCommType && !isEmailCommType) {
         throw new FEC_APIServiceException(String.format(System.Label.FEC_MSG_Invalid, new List<String>{'CommunicationType'}));
       }
-
-      Boolean isPhoneCommType = FEC_ConstantCommon.PRIMARY_PHONE.equals(req.CommunicationType) || FEC_ConstantCommon.PHONE.equals(req.CommunicationType);
-      Boolean isEmailCommType = FEC_ConstantCommon.EMAIL.equals(req.CommunicationType);
       if (
         (isPhoneCommType &&
         !(FEC_CommonUltils.isPhone(req.ContactString))) ||
         (isEmailCommType &&
         !FEC_CommonUltils.isMail(req.ContactString))
       ) {
-        // valid
         throw new FEC_APIServiceException(
           String.format(System.Label.FEC_MSG_Invalid, new List<String>{'ContactString'})
         );
@@ -330,6 +459,10 @@ public with sharing class FEC_UpdateCustomerContact {
         FEC_Account_or_Contract__c,
         FEC_Updated_Info_Phone_Number__c,
         FEC_Updated_Info_Email__c,
+        FEC_Original_Info_Phone_Number__c,
+        FEC_Original_Info_Email__c,
+        FEC_Original_Info_Phone_Type__c,
+        FEC_Updated_Info_Phone_Type__c,
         FEC_Account_or_Contract__r.FEC_CIF_Number__c,
         FEC_Process_Action_Count__c,
         FEC_Current_Case_Stage__c,
@@ -361,10 +494,23 @@ public with sharing class FEC_UpdateCustomerContact {
         FEC_Contact_List__c matched = contactlst.get(0);
         req.ContactId = matched.FEC_Contact_ID__c;
         req.Channel = selectedCase.FEC_Channel__c;
-        req.CommunicationType = PHONE_UPDATE.equals(method)
-          ? FEC_ConstantCommon.PHONE
-          : FEC_ConstantCommon.EMAIL;
-        req.ContactString = matched.FEC_Contact_String__c;
+        req.CommunicationType = resolveCommunicationTypeForApi(
+          selectedCase,
+          matched,
+          method
+        );
+        req.ContactString = PHONE_UPDATE.equals(method)
+          ? selectedCase.FEC_Updated_Info_Phone_Number__c
+          : selectedCase.FEC_Updated_Info_Email__c;
+        // 01/06/2026 linhdev - gửi SĐT/email Updated lên CIF; ContactId/CIF lấy từ Contact List + History
+        if (String.isBlank(req.ContactString)) {
+          throw new FEC_APIServiceException(
+            String.format(
+              System.Label.FEC_MSG_Param_Required,
+              new List<String>{ PHONE_UPDATE.equals(method) ? 'Updated Phone' : 'Updated Email' }
+            )
+          );
+        }
       } else {
         throw new FEC_APIServiceException(
           String.format(System.Label.FEC_MSG_Not_Found, new List<String>{'Matching FEC_Contact_List__c'})
@@ -377,7 +523,7 @@ public with sharing class FEC_UpdateCustomerContact {
         logApiResponse();
       }
 
-      if (result.success) {
+      if (result.success == true) {
         selectedCase.FEC_Process_Action_Count__c = -1;
       } else {
         if (selectedCase.FEC_Process_Action_Count__c == null) {
@@ -416,17 +562,20 @@ public with sharing class FEC_UpdateCustomerContact {
   }
 
   /**
-   * @description Tìm FEC_Contact_List__c theo Customer History, kênh trên Case, loại liên lạc
-   *              theo method (Phone/Email) và FEC_Contact_String__c trùng email/điện thoại gốc trên History.
-   * @param selectedCase Case có FEC_Account_or_Contract__c = Id Customer History; FEC_Channel__c dùng để lọc.
+   * @description Tìm FEC_Contact_List__c theo Customer History, loại liên lạc (Phone/Email)
+   *              và khớp SĐT/email + FEC_Communication_Type__c trên Case (Original Info).
+   * @param selectedCase Case có FEC_Account_or_Contract__c; FEC_Original_Info_Phone_Type__c cho Phone Update.
    * @param method PHONE_UPDATE hoặc EMAIL_UPDATE.
-   * @return Danh sách bản ghi khớp.
+   * @return Danh sách bản ghi khớp tốt nhất (0 hoặc 1 phần tử).
    */
   public static List<FEC_Contact_List__c> getMatchingContactList(
     Case selectedCase,
     String method
   ) {
     Id accountOrContractId = selectedCase.FEC_Account_or_Contract__c;
+    if (accountOrContractId == null) {
+      return new List<FEC_Contact_List__c>();
+    }
 
     Boolean isPhoneMethod = PHONE_UPDATE.equals(method);
     if (!isPhoneMethod && !EMAIL_UPDATE.equals(method)) {
@@ -434,7 +583,16 @@ public with sharing class FEC_UpdateCustomerContact {
     }
 
     String originalContactString;
-    if (accountOrContractId != null) {
+    String originalCommType;
+    if (isPhoneMethod) {
+      originalContactString = selectedCase.FEC_Original_Info_Phone_Number__c;
+      originalCommType = selectedCase.FEC_Original_Info_Phone_Type__c;
+    } else {
+      originalContactString = selectedCase.FEC_Original_Info_Email__c;
+      originalCommType = null;
+    }
+    // 01/06/2026 linhdev - fallback Customer History khi Case chưa có Original
+    if (String.isBlank(originalContactString)) {
       List<FEC_Customer_History__c> historyRows = [
         SELECT FEC_Email__c, FEC_Primary_Phone__c
         FROM FEC_Customer_History__c
@@ -442,61 +600,13 @@ public with sharing class FEC_UpdateCustomerContact {
         LIMIT 1
       ];
       if (!historyRows.isEmpty()) {
-        originalContactString = EMAIL_UPDATE.equals(method)
-          ? historyRows[0].FEC_Email__c
-          : historyRows[0].FEC_Primary_Phone__c;
+        originalContactString = isPhoneMethod
+          ? historyRows[0].FEC_Primary_Phone__c
+          : historyRows[0].FEC_Email__c;
       }
     }
 
-    if (String.isNotBlank(originalContactString) && isPhoneMethod) {
-      return [
-        SELECT
-          Id,
-          FEC_Customer_History__c,
-          FEC_Communication_Type__c,
-          FEC_Channel__c,
-          FEC_Contact_ID__c,
-          FEC_Contact_String__c
-        FROM FEC_Contact_List__c
-        WHERE
-          FEC_Customer_History__c = :accountOrContractId
-          AND FEC_Contact_String__c = :originalContactString
-      ];
-    }
-
-    if (String.isNotBlank(originalContactString)) {
-      return [
-        SELECT
-          Id,
-          FEC_Customer_History__c,
-          FEC_Communication_Type__c,
-          FEC_Channel__c,
-          FEC_Contact_ID__c,
-          FEC_Contact_String__c
-        FROM FEC_Contact_List__c
-        WHERE
-          FEC_Customer_History__c = :accountOrContractId
-          AND FEC_Communication_Type__c = :FEC_ConstantCommon.EMAIL
-          AND FEC_Contact_String__c = :originalContactString
-      ];
-    }
-
-    if (isPhoneMethod) {
-      return [
-        SELECT
-          Id,
-          FEC_Customer_History__c,
-          FEC_Communication_Type__c,
-          FEC_Channel__c,
-          FEC_Contact_ID__c,
-          FEC_Contact_String__c
-        FROM FEC_Contact_List__c
-        WHERE
-          FEC_Customer_History__c = :accountOrContractId
-      ];
-    }
-
-    return [
+    List<FEC_Contact_List__c> rows = [
       SELECT
         Id,
         FEC_Customer_History__c,
@@ -505,9 +615,24 @@ public with sharing class FEC_UpdateCustomerContact {
         FEC_Contact_ID__c,
         FEC_Contact_String__c
       FROM FEC_Contact_List__c
-      WHERE
-        FEC_Customer_History__c = :accountOrContractId
-        AND FEC_Communication_Type__c = :FEC_ConstantCommon.EMAIL
+      WHERE FEC_Customer_History__c = :accountOrContractId
     ];
+
+    List<FEC_Contact_List__c> candidates = new List<FEC_Contact_List__c>();
+    for (FEC_Contact_List__c row : rows) {
+      if (isPhoneMethod && isPhoneCommunicationType(row.FEC_Communication_Type__c)) {
+        candidates.add(row);
+      } else if (!isPhoneMethod && isEmailCommunicationType(row.FEC_Communication_Type__c)) {
+        candidates.add(row);
+      }
+    }
+
+    return pickBestContactMatch(
+      candidates,
+      selectedCase,
+      isPhoneMethod,
+      originalContactString,
+      originalCommType
+    );
   }
 }
