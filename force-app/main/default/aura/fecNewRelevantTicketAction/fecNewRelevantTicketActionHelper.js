@@ -16,32 +16,6 @@
         }
         window.history.back();
     },
-    refreshParentCaseTab: function(component) {
-        // tugnnm37: refresh parent Case console tab so standard related list updates without manual F5
-        try {
-            var refreshEvt = $A.get('e.force:refreshView');
-            if (refreshEvt) {
-                refreshEvt.fire();
-            }
-        } catch(e) {}
-
-        try {
-            var workspaceAPI = component.find('workspace');
-            if (workspaceAPI) {
-                workspaceAPI.getFocusedTabInfo().then(function(tabInfo) {
-                    var tabId = tabInfo && (tabInfo.parentTabId || tabInfo.tabId);
-                    if (tabId) {
-                        workspaceAPI.refreshTab({
-                            tabId: tabId,
-                            includeAllSubtabs: true
-                        });
-                    }
-                }).catch(function(err) {
-                    // tugnnm37: fallback to force refresh only
-                });
-            }
-        } catch(e2) {}
-    },
 
     searchDebounced: function(component, term) {
         var self = this;
@@ -66,7 +40,7 @@
             return;
         }
 
-        // tugnnm37: make sure recordId has value
+        // Đảm bảo recordId luôn có giá trị
         var recordId = component.get('v.recordId');
         if (!recordId) {
             var url = window.location.href;
@@ -75,7 +49,7 @@
             if (m) {
                 recordId = m[1];
             } else {
-                // tugnnm37: parse recordId from inContextOfRef
+                // tungnm37: thử parse inContextOfRef
                 var ref = url.match(new RegExp('inContextOfRef=([^&]+)'));
                 if (ref) {
                     try {
@@ -89,7 +63,7 @@
                                 || obj.recordId;
                     } catch(e) { console.log('[FEC_DEBUG] inContextOfRef parse error=' + e); }
                 }
-                // tugnnm37: parse recordId directly from URL params
+                // tungnm37: thử parse recordId trực tiếp từ URL params
                 if (!recordId) {
                     var ridMatch = url.match(new RegExp('[?&]recordId=([a-zA-Z0-9]{15,18})'));
                     if (ridMatch) recordId = ridMatch[1];
@@ -141,22 +115,21 @@
                         toast.fire();
                     }
                 } catch(te) {}
-                // tugnnm37: refresh related list in parent Case tab
-                this.refreshParentCaseTab(component);
+                // Refresh parent record page/list immediately so newly linked ticket appears without manual reload
+                try {
+                    var refreshEvt = $A.get('e.force:refreshView');
+                    if (refreshEvt) {
+                        refreshEvt.fire();
+                    }
+                } catch(re) {}
                 if (saveAndNew) {
                     component.set('v.selectedId', '');
                     component.set('v.selectedLabel', '');
                     component.set('v.searchTerm', '');
                     component.set('v.results', []);
                     component.set('v.errorMsg', '');
-                    window.setTimeout($A.getCallback(function() {
-                        this.refreshParentCaseTab(component);
-                    }), 300);
                 } else {
-                    window.setTimeout($A.getCallback(function() {
-                        this.refreshParentCaseTab(component);
-                        this.closeOrNavigate(component);
-                    }.bind(this)), 500);
+                    this.closeOrNavigate(component);
                 }
             } else {
                 var errors = res.getError();
