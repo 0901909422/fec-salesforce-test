@@ -201,7 +201,11 @@ export default class Fec_CaseDetail_Customer extends LightningElement {
 
   get remarkColumnlst() {
     return [
-      { label: FEC_Case_Remark_Label, fieldName: "FEC_Case_Remarks__c" },
+      {
+        label: FEC_Case_Remark_Label,
+        fieldName: "FEC_Case_Remarks__c",
+        cellAttributes: { class: "cell-address-wrap" },
+      },
       { label: "Stage Name", fieldName: "FEC_Stage_Name__c" },
       { label: "User", fieldName: "FEC_User__c" },
       { label: "User Role", fieldName: "FEC_User_Role__c" },
