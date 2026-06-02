@@ -964,6 +964,43 @@
         }
     },
 
+
+    sanitizeIncomingEmailBody: function(html) {
+        //tugnnm37 - Gmail/Genesys có thể trả video/drive chip trong HtmlBody; không render block chip xấu, convert thành link gọn
+        if (!html || html.indexOf('gmail_drive_chip') === -1) {
+            return html || '';
+        }
+        try {
+            var holder = document.createElement('div');
+            holder.innerHTML = html;
+            var chips = holder.querySelectorAll('.gmail_drive_chip');
+            for (var i = 0; i < chips.length; i++) {
+                var chip = chips[i];
+                var link = chip.querySelector('a[href]');
+                var href = link ? link.getAttribute('href') : '';
+                var titleEl = chip.querySelector('[title]');
+                var textEl = chip.querySelector('span');
+                var fileName = (titleEl && titleEl.getAttribute('title')) || (textEl && textEl.textContent) || (link && link.textContent) || 'Attached file';
+                fileName = (fileName || 'Attached file').trim();
+                var p = document.createElement('p');
+                p.className = 'fec-email-drive-link';
+                if (href) {
+                    var a = document.createElement('a');
+                    a.href = href;
+                    a.target = '_blank';
+                    a.rel = 'noopener noreferrer';
+                    a.textContent = fileName;
+                    p.appendChild(a);
+                } else {
+                    p.textContent = fileName;
+                }
+                chip.parentNode.replaceChild(p, chip);
+            }
+            return holder.innerHTML;
+        } catch (e) {
+            return html;
+        }
+    },
     cleanBody: function(html) {
         var result = html
             // Strip any <p> tag containing only br/whitespace/nbsp (with or without attributes)
@@ -1087,6 +1124,7 @@
     },
 
     loadEmails: function(component) {
+        var self = this;
         component.set('v.isLoading',true);
         var a = component.get('c.getEmailMessages');
         a.setParams({caseId:component.get('v.recordId')});
@@ -1105,7 +1143,7 @@
                     var rb=(m.HtmlBody||m.TextBody||'').replace(/<[^>]+>/g,'').replace(/&nbsp;/g,' ').replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&quot;/g,'"').trim();
                     var subj=m.Subject||'';
                     var subjDisplay = subj.replace(/\s*\[\s*ref:[^\]]*:ref\s*\]/gi,'').trim();
-                    var bodyHtml = m.HtmlBody || m.TextBody || '';
+                    var bodyHtml = self.sanitizeIncomingEmailBody(m.HtmlBody || m.TextBody || '');
                     return {Id:m.Id,fromName:m.FromName||m.FromAddress||'Unknown',fromAddress:m.FromAddress||'',toAddress:m.ToAddress||'',ccAddress:m.CcAddress||'',subject:subjDisplay,subjectPreview:subjDisplay||rb,bodyFull:rb,bodyHtml:bodyHtml,messageDate:ds,messageRawDate:m.MessageDate||'',incoming:m.Incoming,expanded:false,showDD:false};
                 });
                 // Sort

@@ -135,6 +135,7 @@
         <members>FEC_CMSIPPBlockWS</members>
         <members>FEC_GetMRCInfo</members>
         <members>FEC_GetCSMasterDataService</members>
+        <members>FEC_GetCSMasterDataByCodeService</members>
         <members>FEC_GetRepaymentScheduleByAppIdCallout</members>
         <members>FEC_MyCaseSoapXml</members>
         <members>FEC_BCH_ExportPropertyService</members>
@@ -331,6 +332,7 @@
         <members>Case.FEC_Original_Category__c</members>
         <members>Case.FEC_Original_Sub_Category__c</members>
         <members>Case.FEC_Original_Sub_Code__c</members>
+        <members>Case.FEC_Assignment_Count__c</members>
         <members>Case.FEC_Recently_Auto_Case_Assignment__c</members>
         <members>Case.FEC_NFU_Description_Result__c</members>
         <members>Case.FEC_Collections_Response__c</members>
