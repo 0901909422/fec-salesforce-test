@@ -197,6 +197,8 @@ export default class Fec_DoNotBotherExistingCustomer extends LightningElement {
         caseId: this.recordId,
       });
 
+      console.log("CASE DATA:", JSON.stringify(result));
+
       this.customerName = result.customerName;
 
       this.nationalId = result.nationalId;
@@ -594,30 +596,46 @@ export default class Fec_DoNotBotherExistingCustomer extends LightningElement {
     );
   }
 
+  // syncUIValuesBeforeReadonly() {
+  //   this.data = this.data.map((row) => {
+  //     /*
+  //      * Only submitted rows
+  //      */
+  //     if (!row.active) {
+  //       return row;
+  //     }
+
+  //     return {
+  //       ...row,
+
+  //       /*
+  //        * Persist current UI values
+  //        */
+  //       originalReasonLabel: this.getReasonLabel(row.originalReason),
+
+  //       updateReasonLabel: this.getReasonLabel(row.updateReason),
+
+  //       remarks: row.remarks || "-",
+  //     };
+  //   });
+
+  //   this.updatePagedData();
+  // }
+
   syncUIValuesBeforeReadonly() {
-    this.data = this.data.map((row) => {
-      /*
-       * Only submitted rows
-       */
-      if (!row.active) {
-        return row;
-      }
+    this.data = this.data.map((row) => ({
+      ...row,
 
-      return {
-        ...row,
+      originalReasonLabel: this.getReasonLabel(row.originalReason),
 
-        /*
-         * Persist current UI values
-         */
-        originalReasonLabel: this.getReasonLabel(row.originalReason),
+      updateReasonLabel: row.updateReason
+        ? this.getReasonLabel(row.updateReason)
+        : "",
 
-        updateReasonLabel: this.getReasonLabel(row.updateReason),
+      remarks: row.remarks || "",
+    }));
 
-        remarks: row.remarks || "-",
-      };
-    });
-
-    this.updatePagedData();
+    this.refreshData();
   }
 
   async handleUpdate() {
@@ -654,30 +672,25 @@ export default class Fec_DoNotBotherExistingCustomer extends LightningElement {
         /*
          * Reset retry count
          */
+
         await updateDNBProcessCount({
           caseId: this.recordId,
-
           isSuccess: true,
         });
 
         /*
-         * Success state
+         * Convert UI values before readonly
          */
+        this.syncUIValuesBeforeReadonly();
+
         this.isDNBUpdated = true;
 
         this.isReadonlyMode = true;
 
         this.applyReadonlyState();
 
-        /*
-         * Publish LMS
-         */
         this.publishReadonlyMessage();
 
-        /*
-         * Reload DB
-         */
-        await this.loadDNBRecords();
         this.showToast("Success", "DNB created successfully", "success");
       } else {
         /*

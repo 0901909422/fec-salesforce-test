@@ -127,7 +127,7 @@ public without sharing class FEC_AssignmentListHandler {
                 FEC_Draft_Assignment_Remark__c
             FROM FEC_Assignment__c
 
-            WHERE FEC_Case__c = :caseId
+            WHERE FEC_Case__c = :caseId AND FEC_Assignment_Type__c = 'Routing'
 
             ORDER BY CreatedDate ASC
         ];
@@ -413,7 +413,7 @@ public without sharing class FEC_AssignmentListHandler {
     
     //------------------------------------------------------------------//
     
-    @AuraEnabled(cacheable=true)
+    @AuraEnabled
     public static AssignmentViewResponse getAssignmentsForViewNEW(
         String caseId,
     Integer pageSize,
@@ -421,42 +421,12 @@ public without sharing class FEC_AssignmentListHandler {
     ) {
         
         if (String.isBlank(caseId)) {
-            
             throw new AuraHandledException(
                 System.Label.LBL_CaseIdRequired
                 );
         }
         
         try {
-            
-            // =====================================================
-            // CURRENT USER
-            // =====================================================
-            User currentUser = [
-
-            SELECT
-                Id,
-                Profile.Name
-
-            FROM User
-
-            WHERE Id = :UserInfo.getUserId()
-
-            LIMIT 1
-        ];
-            
-            String profileName =
-                currentUser.Profile.Name;
-            
-            System.debug(
-                '===== CURRENT USER ===== ' +
-                currentUser.Id
-                );
-            
-            System.debug(
-                '===== PROFILE ===== ' +
-                profileName
-                );
             
             // =====================================================
             // DEFAULT VALUES
@@ -507,122 +477,13 @@ public without sharing class FEC_AssignmentListHandler {
                 );
             
             // =====================================================
-            // FILTER ASSIGNMENTS
-            // =====================================================
-            List<FEC_Assignment__c> visibleAssignments =
-                new List<FEC_Assignment__c>();
-            
-            // =====================================================
-            // CS USERS
-            // => SEE ALL ASSIGNMENTS
-            // =====================================================
-            if (
-                profileName == FEC_ConstantCommon.PROFILE_CS_BO ||
-                profileName == FEC_ConstantCommon.PROFILE_CS_FL
-            ) {
-                
-                visibleAssignments = allAssignments;
-            }
-            
-            // =====================================================
-            // RELEVANT DEPTS
-            // =====================================================
-            else if (
-                profileName == FEC_ConstantCommon.PROFILE_RELEVANT_DEPTS
-            ) {
-                
-                Set<String> userQueueNames =
-                    getCurrentUserQueues(
-                    currentUser.Id
-                    );
-                
-                System.debug(
-                    '===== USER QUEUE NAMES ===== ' +
-                    userQueueNames
-                    );
-                
-                for (
-                    FEC_Assignment__c ass :
-                    allAssignments
-                ) {
-                    
-                    Boolean canView = false;
-                    
-                    // =============================================
-                    // ASSIGNED TO USER
-                    // =============================================
-                    if (
-                        ass.FEC_Assignment_Owner__c != null
-                    ) {
-                        
-                        if (
-                            ass.FEC_Assignment_Owner__c ==
-                            currentUser.Id
-                        ) {
-                            
-                            canView = true;
-                        }
-                    }
-                    
-                    // =============================================
-                    // ASSIGNED TO QUEUE
-                    // =============================================
-                    else if (
-                        ass.FEC_OwnerID__c != null &&
-                        userQueueNames.contains(
-                        ass.FEC_OwnerID__c
-                        )
-                    ) {
-                        
-                        canView = true;
-                    }
-                    
-                    System.debug(
-                        '===== CHECK ASSIGNMENT ====='
-                        );
-                    
-                    System.debug(
-                        'Assignment: ' + ass.Name
-                        );
-                    
-                    System.debug(
-                        'Assignment Queue: ' +
-                        ass.FEC_OwnerID__c
-                        );
-                    
-                    System.debug(
-                        'Assignment Owner: ' +
-                        ass.FEC_Assignment_Owner__c
-                        );
-                    
-                    System.debug(
-                        'Can View: ' + canView
-                        );
-                    
-                    if (canView) {
-                        
-                        visibleAssignments.add(ass);
-                    }
-                }
-            }
-            
-            // =====================================================
-            // OTHER USERS
-            // =====================================================
-            else {
-                
-                visibleAssignments =
-                    new List<FEC_Assignment__c>();
-            }
-            
-            // =====================================================
-            // TOTAL COUNT AFTER FILTER
+            // TOTAL COUNT
             // =====================================================
             response.totalCount =
-                visibleAssignments.size();
+                allAssignments.size();
             
             // =====================================================
-            // MANUAL PAGINATION
+            // PAGINATION
             // =====================================================
             Integer startIndex =
                 offsetValue;
@@ -630,16 +491,13 @@ public without sharing class FEC_AssignmentListHandler {
             Integer endIndex =
                 Math.min(
                 startIndex + pageSize,
-            visibleAssignments.size()
+            allAssignments.size()
                 );
             
             List<FEC_Assignment__c> pagedAssignments =
                 new List<FEC_Assignment__c>();
             
-            if (
-                startIndex <
-                visibleAssignments.size()
-            ) {
+            if (startIndex < allAssignments.size()) {
                 
                 for (
                     Integer i = startIndex;
@@ -648,7 +506,7 @@ public without sharing class FEC_AssignmentListHandler {
                 ) {
                     
                     pagedAssignments.add(
-                        visibleAssignments[i]
+                        allAssignments[i]
                         );
                 }
             }
@@ -664,7 +522,9 @@ public without sharing class FEC_AssignmentListHandler {
                 pagedAssignments
             ) {
                 
-                assignmentIds.add(item.Id);
+                assignmentIds.add(
+                    item.Id
+                    );
             }
             
             // =====================================================
@@ -747,8 +607,7 @@ public without sharing class FEC_AssignmentListHandler {
                     assignment.FEC_Assignment_Name__c;
                 
                 wrapper.assignmentStatus =
-                    assignment
-                    .FEC_Assignment_Status__c;
+                    assignment.FEC_Assignment_Status__c;
                 
                 wrapper.user =
                     assignment.CreatedBy != null
@@ -801,7 +660,6 @@ public without sharing class FEC_AssignmentListHandler {
                 );
         }
     }
-    
     
     
     @AuraEnabled
@@ -2169,7 +2027,7 @@ public without sharing class FEC_AssignmentListHandler {
     @AuraEnabled
     public static void saveAssignmentDraft(
         Id assignmentId,
-        String remark
+    String remark
     ) {
         if (assignmentId == null) {
             return;
