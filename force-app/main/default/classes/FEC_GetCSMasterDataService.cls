@@ -37,9 +37,9 @@ global with sharing class FEC_GetCSMasterDataService {
             return res;
         }
 
-        if (String.isBlank(Sys.Channel) || !FEC_ConstantCommon.SUPPORTED_CHANNELS.contains(Sys.Channel)) {
+        if (!FEC_CommonUltils.isActiveChannelSupported(Sys != null ? Sys.Channel : null)) {
             res.Sys.Code = '102';
-            res.Sys.Description = System.Label.FEC_MSG_Channel_Validation + Sys.Channel + System.Label.FEC_MSG_Data_Request_Master_Data;
+            res.Sys.Description = buildUnsupportedChannelMessage(Sys.Channel);
             return res;
         }
 
@@ -224,10 +224,10 @@ global with sharing class FEC_GetCSMasterDataService {
         Boolean includePicklistValues
     ) {
         if (cachedSettings == null || cachedSettings.isEmpty()) {
-            return '';
+            return FEC_ConstantCommon.STR_EMPTY;
         }
 
-        String result = '';
+        String result = FEC_ConstantCommon.STR_EMPTY;
         Set<String> seenFieldApis = new Set<String>();
         for (FEC_Master_Data_Setting__c setting : cachedSettings) {
             String settingApplyTo = setting.FEC_Nature_Of_Case__r != null
@@ -293,7 +293,7 @@ global with sharing class FEC_GetCSMasterDataService {
         if (batch == null || batch.isEmpty()) {
             return accumulated;
         }
-        return accumulated + String.join(batch, '');
+        return accumulated + String.join(batch, FEC_ConstantCommon.STR_EMPTY);
     }
 
     // ==========================================================
@@ -556,6 +556,15 @@ global with sharing class FEC_GetCSMasterDataService {
         }
 
         return result;
+    }
+
+    private static String buildUnsupportedChannelMessage(String channel) {
+        String normalizedChannel = FEC_CommonUltils.sanitizeChannelForMessage(channel);
+        return String.valueOf(System.Label.FEC_MSG_Channel_Validation).trim() +
+            ' ' +
+            normalizedChannel +
+            ' ' +
+            String.valueOf(System.Label.FEC_MSG_Data_Request_Master_Data).trim();
     }
 
     // ==========================================================
