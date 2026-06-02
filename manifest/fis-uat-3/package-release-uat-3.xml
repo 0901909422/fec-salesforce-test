@@ -920,6 +920,7 @@
         <members>maskedToggleDatatable</members>
         <members>fec_InteractionInfoF2F_Letter</members>
 		<members>fec_IPPDetailPage</members>
+        <members>fec_SecondaryInfoAccount</members>
 		<name>LightningComponentBundle</name>
     </types>
     <types>
@@ -1193,6 +1194,7 @@
         <members>FEC_Batch_Case_Handling_Import_Err_Remark_Too_Long</members>
         <members>FEC_Batch_Case_Handling_Import_Err_Record_Id_Invalid</members>
         <members>FEC_Batch_Case_Handling_Import_Err_Routing_Requires_Params</members>
+        <members>FEC_Batch_Case_Handling_Success</members>
         <members>FEC_BCH_RequestTimeout</members>
         <members>FEC_BCH_NoDataExport</members>
         <members>FEC_BCH_NoDataFound</members>
