@@ -18322,4 +18322,11 @@
         <shortDescription>Email Section - Title label</shortDescription>
         <value>Title</value>
     </labels>
+    <labels>
+        <fullName>TECH_LIST_CHILD_OBJ_OF_CUST_HIST</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>TECH_LIST_CHILD_OBJ_OF_CUST_HIST</shortDescription>
+        <value>FEC_Address_Info__c,FEC_Card_Payment__c,FEC_Collection_Interactions__c,FEC_Contact_List__c,FEC_Do_Not_Bother__c,FEC_Fast_Cash_Info__c,FEC_IPP__c,FEC_Insurance_Info__c,FEC_Other_Card__c,FEC_Payment_History__c,FEC_RePayment_Schedule__c,FEC_Reference_Info__c,FEC_Statement__c,FEC_Transaction__c</value>
+    </labels>
 </CustomLabels>

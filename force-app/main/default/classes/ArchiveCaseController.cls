@@ -715,9 +715,13 @@ public without sharing class ArchiveCaseController {
                     insert recordsToInsert;
                     System.debug('insertChildRecords: Inserted ' + recordsToInsert.size() + ' records for ' + sObjectApiName);
 
-                    // Handle nested child records (e.g. FEC_Address_Info__c inside FEC_Customer_History__c)
                     if (sObjectApiName == 'FEC_Customer_History__c') {
-                        insertNestedAddressInfo(recordsToInsert, childDataList, listSpecialArchiveObject);
+                        Map<Id, Object> custHistIdToDataMap = new Map<Id, Object>();
+                        for (Integer i = 0; i < recordsToInsert.size(); i++) {
+                            custHistIdToDataMap.put(recordsToInsert[i].Id, childDataList[i]);
+                        }
+                        insertNestedChildrenOfCustHist(JSON.serialize(custHistIdToDataMap), 
+                                                        JSON.serialize(listSpecialArchiveObject));
                     }
                 }
             } catch (Exception ex) {
@@ -729,60 +733,71 @@ public without sharing class ArchiveCaseController {
     /*------------------------------------------------------------
     Author:        Thanh Van
     Company:       Amaris
-    Description:   Insert FEC_Address_Info__c records nested inside FEC_Customer_History__c.
-                   FEC_Address_Info__c has a Master-Detail to FEC_Customer_History__c.
+    Description:   Insert all nested child records of FEC_Customer_History__c.
                    After FEC_Customer_History__c records are inserted, extract nested
-                   FEC_Address_Info__c arrays and insert them with the correct parent Id.
+                   child object arrays (e.g. FEC_Address_Info__c, FEC_Card_Payment__c,
+                   FEC_Statement__c, FEC_Transaction__c, etc.) and insert them with
+                   the correct parent Id. Reuses buildChildSObjects for field mapping.
     Returns:       void
     History
     <Date>          <Authors Name>      <Brief Description of Change>
     2026/05/18      Thanh Van           Init
     ------------------------------------------------------------*/
-    private static void insertNestedAddressInfo(List<SObject> insertedCustHistRecords, 
-                                                 List<Map<String, Object>> custHistDataList,
-                                                 List<String> listSpecialArchiveObject) {
-        // insertedCustHistRecords and custHistDataList are in the same order
-        for (Integer i = 0; i < custHistDataList.size(); i++) {
-            Map<String, Object> custHistData = custHistDataList[i];
-            Object addressInfoObj = custHistData.get('FEC_Address_Info__c');
-            if (addressInfoObj == null) continue;
+    @future
+    public static void insertNestedChildrenOfCustHist(String custHistIdToDataJson, 
+                                                        String listSpecialArchiveObjectJson) {
+        List<String> CUST_HIST_CHILD_OBJECTS = Label.TECH_LIST_CHILD_OBJ_OF_CUST_HIST.split(',');
+        Map<String, Object> rawMap = (Map<String, Object>) JSON.deserializeUntyped(custHistIdToDataJson);
+        List<String> listSpecialArchiveObject = (List<String>) JSON.deserialize(listSpecialArchiveObjectJson, List<String>.class);
 
-            List<Map<String, Object>> addressInfoList = new List<Map<String, Object>>();
-            if (addressInfoObj instanceof List<Object>) {
-                for (Object item : (List<Object>) addressInfoObj) {
-                    if (item instanceof Map<String, Object>) {
-                        addressInfoList.add((Map<String, Object>) item);
-                    }
+        for (String custHistIdStr : rawMap.keySet()) {
+            Id custHistId = (Id) custHistIdStr;
+            Map<String, Object> custHistData = (Map<String, Object>) rawMap.get(custHistIdStr);
+
+            for (String childObjName : CUST_HIST_CHILD_OBJECTS) {
+                childObjName = childObjName.trim();
+                Object nestedObj = custHistData.get(childObjName);
+                if (nestedObj == null) continue;
+
+                List<Map<String, Object>> nestedDataList = extractNestedDataList(nestedObj);
+                if (nestedDataList.isEmpty()) continue;
+
+                try {
+                    List<SObject> childRecords = buildChildSObjects(childObjName, 
+                                                                     'FEC_Customer_History__c', 
+                                                                     custHistId, nestedDataList,
+                                                                     listSpecialArchiveObject);
+                    if (!childRecords.isEmpty()) insert childRecords;
+                } catch (Exception ex) {
+                    System.debug('insertNestedChildrenOfCustHist failed for ' + childObjName + ' on CustHist ' + custHistId + ': ' + ex.getMessage());
                 }
-            } else if (addressInfoObj instanceof Map<String, Object>) {
-                // Single record case
-                addressInfoList.add((Map<String, Object>) addressInfoObj);
-            }
-
-            if (addressInfoList.isEmpty()) continue;
-
-            Id custHistId = insertedCustHistRecords[i].Id;
-            try {
-                // FEC_Address_Info__c Master-Detail field to FEC_Customer_History__c
-                List<SObject> addressRecords = buildChildSObjects('FEC_Address_Info__c', 
-                                                                   'FEC_Customer_History__c', 
-                                                                   custHistId, addressInfoList,
-                                                                   listSpecialArchiveObject);
-                if (!addressRecords.isEmpty()) {
-                    Object caseRef = insertedCustHistRecords[i].get('FEC_Case__c');
-                    if (caseRef != null) {
-                        for (SObject addrRec : addressRecords) {
-                            addrRec.put('FEC_Case__c', (Id) caseRef);
-                        }
-                    }
-
-                    insert addressRecords;
-                    System.debug('insertNestedAddressInfo: Inserted ' + addressRecords.size() + ' FEC_Address_Info__c for CustHist ' + custHistId);
-                }
-            } catch (Exception ex) {
-                System.debug('insertNestedAddressInfo failed for CustHist ' + custHistId + ': ' + ex.getMessage());
             }
         }
+    }
+
+    /*------------------------------------------------------------
+    Author:        Thanh Van
+    Company:       Amaris
+    Description:   Extract nested data list from a JSON value that can be either
+                   a List<Object> or a single Map<String, Object>.
+    Returns:       List<Map<String, Object>>
+    History
+    <Date>          <Authors Name>      <Brief Description of Change>
+    2026/06/01      Thanh Van           Init
+    ------------------------------------------------------------*/
+    public static List<Map<String, Object>> extractNestedDataList(Object nestedObj) {
+        List<Map<String, Object>> dataList = new List<Map<String, Object>>();
+        if (nestedObj instanceof List<Object>) {
+            for (Object item : (List<Object>) nestedObj) {
+                if (item instanceof Map<String, Object>) {
+                    dataList.add((Map<String, Object>) item);
+                }
+            }
+        } else if (nestedObj instanceof Map<String, Object>) {
+            // Single record case
+            dataList.add((Map<String, Object>) nestedObj);
+        }
+        return dataList;
     }
 
     /*------------------------------------------------------------
