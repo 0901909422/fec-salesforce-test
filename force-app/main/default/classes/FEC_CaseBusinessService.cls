@@ -2380,7 +2380,7 @@ public without sharing class FEC_CaseBusinessService {
             finalStatusBeforeSubmit,
             (String) params.get('teamUserGroup')
           );
-          // 28/05/2026 15:33 codex - tránh Too many queueable jobs khi import batch chain queueable
+          // 28/05/2026 15:33 linhdev - tránh Too many queueable jobs khi import batch chain queueable
           if (!FEC_BatchCaseHandlingImportService.isBatchImportApplyInProgress()) {
             System.enqueueJob(
               new FEC_MrcDupCancelOnSubmitQueueJob(
@@ -2742,34 +2742,36 @@ public without sharing class FEC_CaseBusinessService {
           teamUserGroup,
           queueId
         );
-      if (FEC_BlockCodeRoutingService.isRc27DefaultOmDay2Routing(updatedCase)) {
-        FEC_Stage_Change__c rc27OmDay2 =
-          FEC_BlockCodeRoutingService.selectRc27DefaultOmDay2FromList(changelst);
-        if (rc27OmDay2 == null) {
-          rc27OmDay2 = FEC_BlockCodeRoutingService.queryRc27DefaultOmDay2StageChange(
-            updatedCase.FEC_Current_Case_Stage__c,
-            actionId
-          );
-        }
-        if (rc27OmDay2 != null) {
-          selectedChange = rc27OmDay2;
-        }
-      } else if (
-        FEC_BlockCodeRoutingService.isRc27SiblingSpDqStageThreeRouting(updatedCase)
-      ) {
-        FEC_Stage_Change__c rc27SpDq =
-          FEC_BlockCodeRoutingService.selectRc27SiblingSpDqStageThreeFromList(
-            changelst
-          );
-        if (rc27SpDq == null) {
-          rc27SpDq =
-            FEC_BlockCodeRoutingService.queryRc27SiblingSpDqStageThreeStageChange(
+      if (!routeByLatestRevertHistory) {
+        if (FEC_BlockCodeRoutingService.isRc27DefaultOmDay2Routing(updatedCase)) {
+          FEC_Stage_Change__c rc27OmDay2 =
+            FEC_BlockCodeRoutingService.selectRc27DefaultOmDay2FromList(changelst);
+          if (rc27OmDay2 == null) {
+            rc27OmDay2 = FEC_BlockCodeRoutingService.queryRc27DefaultOmDay2StageChange(
               updatedCase.FEC_Current_Case_Stage__c,
               actionId
             );
-        }
-        if (rc27SpDq != null) {
-          selectedChange = rc27SpDq;
+          }
+          if (rc27OmDay2 != null) {
+            selectedChange = rc27OmDay2;
+          }
+        } else if (
+          FEC_BlockCodeRoutingService.isRc27SiblingSpDqStageThreeRouting(updatedCase)
+        ) {
+          FEC_Stage_Change__c rc27SpDq =
+            FEC_BlockCodeRoutingService.selectRc27SiblingSpDqStageThreeFromList(
+              changelst
+            );
+          if (rc27SpDq == null) {
+            rc27SpDq =
+              FEC_BlockCodeRoutingService.queryRc27SiblingSpDqStageThreeStageChange(
+                updatedCase.FEC_Current_Case_Stage__c,
+                actionId
+              );
+          }
+          if (rc27SpDq != null) {
+            selectedChange = rc27SpDq;
+          }
         }
       }
 
@@ -2851,7 +2853,8 @@ public without sharing class FEC_CaseBusinessService {
 
       queueId = FEC_BlockCodeRoutingService.applyRouteQueueOverrideIfApplicable(
         updatedCase,
-        queueId
+        queueId,
+        routeByLatestRevertHistory
       );
 
       updatedCase.OwnerId = queueId;
