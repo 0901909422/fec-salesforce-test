@@ -281,6 +281,7 @@ public with sharing class FEC_PaymentHistoryValidationService {
     }
     List<Case> cases = [
       SELECT
+        CreatedDate,
         FEC_Account_or_Contract__c,
         FEC_Account_or_Contract__r.Name,
         FEC_Account_or_Contract__r.FEC_Contract_Number__c,
@@ -295,7 +296,12 @@ public with sharing class FEC_PaymentHistoryValidationService {
       WHERE Id = :caseId
       LIMIT 1
     ];
-    if (cases.isEmpty() || cases[0].FEC_Account_or_Contract__c == null) {
+    if (cases.isEmpty()) {
+      return data;
+    }
+    //PhongBT 02/06/26: pxCreateDateTime = Case.CreatedDate (template {{TODAY}})
+    data.put('pxCreateDateTime', formatCaseCreatedDateForPdf(cases[0].CreatedDate));
+    if (cases[0].FEC_Account_or_Contract__c == null) {
       return data;
     }
     FEC_Customer_History__c h = cases[0].FEC_Account_or_Contract__r;
@@ -418,9 +424,21 @@ public with sharing class FEC_PaymentHistoryValidationService {
     FEC_GetRepaymentScheduleByAppIdCallout.RepaymentScheduleResponseInfo responseInfo = FEC_GetRepaymentScheduleByAppIdCallout.getFirstResponseInfo(
       apiRes
     );
-    result.headerData = mapRl0402HeaderFromApi(responseInfo);
+    Case caseRec = queryCaseForRl0402Pdf(caseId);
+    result.headerData = mapRl0402HeaderFromApi(responseInfo, caseRec);
     result.repaymentRows = mapRl0402RowsFromApi(responseInfo);
     return result;
+  }
+
+  @TestVisible
+  private static Case queryCaseForRl0402Pdf(String caseId) {
+    List<Case> cases = [
+      SELECT Id, CreatedDate
+      FROM Case
+      WHERE Id = :caseId
+      LIMIT 1
+    ];
+    return cases.isEmpty() ? null : cases[0];
   }
 
   @TestVisible
@@ -455,9 +473,15 @@ public with sharing class FEC_PaymentHistoryValidationService {
 
   @TestVisible
   private static Map<String, Object> mapRl0402HeaderFromApi(
-    FEC_GetRepaymentScheduleByAppIdCallout.RepaymentScheduleResponseInfo info
+    FEC_GetRepaymentScheduleByAppIdCallout.RepaymentScheduleResponseInfo info,
+    Case caseRec
   ) {
     Map<String, Object> data = new Map<String, Object>();
+    //PhongBT 02/06/26: Ngày trên PDF = Case.CreatedDate (không dùng ngày hệ thống)
+    data.put(
+      'pxCreateDateTime',
+      formatCaseCreatedDateForPdf(caseRec != null ? caseRec.CreatedDate : null)
+    );
     if (info == null) {
       return data;
     }
@@ -465,6 +489,8 @@ public with sharing class FEC_PaymentHistoryValidationService {
       'ContractNumber',
       defaultEmpty(info.CONTRACT_NUMBER)
     );
+    //PhongBT 02/06/26: DSACode ← API DSA_CODE
+    data.put('DSACode', defaultEmpty(info.DSA_CODE));
     data.put('CustomerName', defaultEmpty(info.CUSTOMER_NAME));
     data.put('CustomerAddress', defaultEmpty(info.ADDRESS));
     data.put('NationalID', defaultEmpty(info.ID_NO));
@@ -491,6 +517,7 @@ public with sharing class FEC_PaymentHistoryValidationService {
       'YearlyRate',
       info.YEARLY_RATE != null ? String.valueOf(info.YEARLY_RATE) : FEC_ConstantCommon.STR_EMPTY
     );
+    //PhongBT 02/06/26: MaturityDate2 ← API END_DATE (fallback kỳ DUE_DATE cuối nếu END_DATE trống)
     data.put('MaturityDate2', resolveMaturityDateForPdf(info));
     return data;
   }
@@ -499,11 +526,14 @@ public with sharing class FEC_PaymentHistoryValidationService {
   private static String resolveMaturityDateForPdf(
     FEC_GetRepaymentScheduleByAppIdCallout.RepaymentScheduleResponseInfo info
   ) {
-    if (
-      info != null &&
-      info.RepaymentScheduleItems != null &&
-      !info.RepaymentScheduleItems.isEmpty()
-    ) {
+    if (info == null) {
+      return FEC_ConstantCommon.STR_EMPTY;
+    }
+    String fromEndDate = formatApiDateForPdf(info.END_DATE);
+    if (String.isNotBlank(fromEndDate)) {
+      return fromEndDate;
+    }
+    if (info.RepaymentScheduleItems != null && !info.RepaymentScheduleItems.isEmpty()) {
       String lastDue = null;
       Date lastDueDate;
       for (
@@ -519,7 +549,14 @@ public with sharing class FEC_PaymentHistoryValidationService {
         return formatApiDateForPdf(lastDue);
       }
     }
-    return formatApiDateForPdf(info != null ? info.FIRST_DATE_REPAYMENT : null);
+    return formatApiDateForPdf(info.FIRST_DATE_REPAYMENT);
+  }
+
+  private static String formatCaseCreatedDateForPdf(Datetime createdDate) {
+    if (createdDate == null) {
+      return FEC_ConstantCommon.STR_EMPTY;
+    }
+    return createdDate.format('dd/MM/yyyy');
   }
 
   @TestVisible
@@ -539,39 +576,11 @@ public with sharing class FEC_PaymentHistoryValidationService {
       row.put('Interest', item.INTEREST_AMOUNT);
       row.put('ClosingPrincipal', item.REMAINING_PRINCIPAL_AMOUNT);
       row.put('RepaymentFees', item.REPAYMENT_FEE);
-      row.put(
-        'InstallmentAmount',
-        resolveInstallmentAmount(item)
-      );
+      //PhongBT 02/06/26: InstallmentAmount ← API TOTAL_REPAYMENT_FEE
+      row.put('InstallmentAmount', item.TOTAL_REPAYMENT_FEE);
       rows.add(row);
     }
     return rows;
-  }
-
-  private static Decimal resolveInstallmentAmount(
-    FEC_GetRepaymentScheduleByAppIdCallout.RepaymentScheduleItem item
-  ) {
-    if (item == null) {
-      return null;
-    }
-    if (item.TOTAL_REPAYMENT_FEE != null) {
-      return item.TOTAL_REPAYMENT_FEE;
-    }
-    Decimal total = 0;
-    Boolean hasValue = false;
-    if (item.PRINCIPAL_AMOUNT != null) {
-      total += item.PRINCIPAL_AMOUNT;
-      hasValue = true;
-    }
-    if (item.INTEREST_AMOUNT != null) {
-      total += item.INTEREST_AMOUNT;
-      hasValue = true;
-    }
-    if (item.REPAYMENT_FEE != null) {
-      total += item.REPAYMENT_FEE;
-      hasValue = true;
-    }
-    return hasValue ? total : null;
   }
 
   private static String formatApiDateForPdf(String apiDateStr) {

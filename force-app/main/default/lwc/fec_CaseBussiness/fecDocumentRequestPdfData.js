@@ -10,7 +10,7 @@
  *   - Key có sẵn: ContractNumber, NationalID, CustomerName, DateOfIssue, PlaceOfIssue,
  *     TotalLoanAmount, MaturityDate2, CustomerAddress.
  *
- * Lưu ý: MonthlyRate / YearlyRate hiện để trống — chờ FEC chốt mapping.
+ * RL04.02 (API): getRl0402DocumentRequestPdfData — mapping theo GetRepaymentScheduleByAppID.
  */
 
 const SUB_CODE_RL0402 = 'RL04.02';
@@ -73,10 +73,12 @@ function buildLsttData(headerData, paymentRows) {
  * DateOfIssue        | FEC_Customer_History__c.FEC_Date_of_Issue__c (format dd/MM/yyyy)
  * PlaceOfIssue       | FEC_Customer_History__c.FEC_Place_of_Issue__c
  * TotalLoanAmount    | FEC_Customer_History__c.FEC_Total_Balance__c (format tiền)
- * LoanAmountInVNText | TODO: convert TotalLoanAmount → chữ tiếng Việt
- * MonthlyRate        | TODO: chờ FEC chốt field
- * YearlyRate         | TODO: chờ FEC chốt field
- * MaturityDate2      | FEC_Customer_History__c.FEC_Expiry_Date__c (format dd/MM/yyyy)
+ * TODAY ({{TODAY}})  | pxCreateDateTime ← Case.CreatedDate
+ * DSACode            | API DSA_CODE (legacy: trống)
+ * LoanAmountInVNText | API TOTAL_LOAN_AMOUNT_WORDS
+ * MonthlyRate        | API MONTHLY_RATE
+ * YearlyRate         | API YEARLY_RATE
+ * MaturityDate2      | API END_DATE (legacy: FEC_Expiry_Date__c)
  * _rows              | FEC_Repayment_Schedule__c theo Customer History (getRepaymentScheduleRows):
  *                      InstallmentDueDate ← FEC_Installment_Due_Date__c,
  *                      Principal ← FEC_Principal__c,
@@ -90,17 +92,21 @@ function buildLsttData(headerData, paymentRows) {
  * @param {Array}  repaymentRows  - kết quả Apex getRepaymentScheduleRows
  */
 function buildTbcvLtnData(headerData, _paymentRows, repaymentRows) {
+  //PhongBT 02/06/26: Map đủ placeholder RL04.02 từ headerData (API/Case), không hardcode rỗng
+  const todayStr = pick(headerData, 'pxCreateDateTime');
   return {
+    TODAY: todayStr,
     ContractNumber: pick(headerData, 'ContractNumber'),
+    DSACode: pick(headerData, 'DSACode'),
     CustomerName: pick(headerData, 'CustomerName'),
     CustomerAddress: pick(headerData, 'CustomerAddress'),
     NationalID: pick(headerData, 'NationalID'),
     DateOfIssue: pick(headerData, 'DateOfIssue'),
     PlaceOfIssue: pick(headerData, 'PlaceOfIssue'),
     TotalLoanAmount: pick(headerData, 'TotalLoanAmount'),
-    LoanAmountInVNText: '',
-    MonthlyRate: '',
-    YearlyRate: '',
+    LoanAmountInVNText: pick(headerData, 'LoanAmountInVNText'),
+    MonthlyRate: pick(headerData, 'MonthlyRate'),
+    YearlyRate: pick(headerData, 'YearlyRate'),
     MaturityDate2: pick(headerData, 'MaturityDate2'),
     _rows: repaymentRows || []
   };

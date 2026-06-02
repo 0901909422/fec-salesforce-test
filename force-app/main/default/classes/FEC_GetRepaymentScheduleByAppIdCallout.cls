@@ -30,6 +30,9 @@ public with sharing class FEC_GetRepaymentScheduleByAppIdCallout {
     @AuraEnabled public String ADDRESS;
     @AuraEnabled public String CC_CODE;
     @AuraEnabled public String CONTRACT_NUMBER;
+    //PhongBT 02/06/26: Thêm DSA_CODE, END_DATE theo mapping PDF RL04.02
+    @AuraEnabled public String DSA_CODE;
+    @AuraEnabled public String END_DATE;
     @AuraEnabled public String CUSTOMER_NAME;
     @AuraEnabled public String FIRST_DATE_REPAYMENT;
     @AuraEnabled public String ID_DATE;
@@ -219,6 +222,8 @@ public with sharing class FEC_GetRepaymentScheduleByAppIdCallout {
     info.ADDRESS = (String) infoMap.get('ADDRESS');
     info.CC_CODE = (String) infoMap.get('CC_CODE');
     info.CONTRACT_NUMBER = (String) infoMap.get('CONTRACT_NUMBER');
+    info.DSA_CODE = (String) infoMap.get('DSA_CODE');
+    info.END_DATE = (String) infoMap.get('END_DATE');
     info.CUSTOMER_NAME = (String) infoMap.get('CUSTOMER_NAME');
     info.FIRST_DATE_REPAYMENT = (String) infoMap.get('FIRST_DATE_REPAYMENT');
     info.ID_DATE = (String) infoMap.get('ID_DATE');
