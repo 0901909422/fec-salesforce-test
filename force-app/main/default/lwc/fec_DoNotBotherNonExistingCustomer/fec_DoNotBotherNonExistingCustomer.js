@@ -1080,16 +1080,28 @@ export default class Fec_DoNotBotherNonExistingCustomer extends LightningElement
       return true;
     }
 
-    /*
-     * HANDLING MODE
-     */
-    return this.isReadonlyMode;
+    // /*
+    //  * HANDLING MODE
+    //  */
+    // return this.isReadonlyMode;
   }
 
   get showUpdateButton() {
     return (
       !this.isReadonlyMode && !this.isDNBUpdated && !this.isMaxRetryReached
     );
+  }
+
+  get isActionLocked() {
+    return this.isReadonlyMode || this.isDNBUpdated || this.isMaxRetryReached;
+  }
+
+  get isUpdateButtonDisabled() {
+    return this.isUpdateDisabled || this.isActionLocked;
+  }
+
+  get isCheckDNBDisabled() {
+    return this.isCheckingDNB || this.isActionLocked;
   }
 
   //FECREDIT_CSM_2025_KH-1561
