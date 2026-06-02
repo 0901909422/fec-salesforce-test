@@ -22,9 +22,6 @@
  */
 public class FEC_AttachmentExportHttpService {
 
-    private static final String API_CREDENTIAL = 'https://sf-csm-service-dev.fecredit.cloud';
-    private static final String UPLOAD_PATH    = '/archival/dispatcher/api/v1/attachments/upload';
-    private static final String BATCH_PATH     = '/archival/dispatcher/api/v1/attachments/batch';
     private static final Integer TIMEOUT_MS    = 120000;
     private static final Integer MAX_RETRY     = 2;
 
@@ -108,7 +105,7 @@ public class FEC_AttachmentExportHttpService {
             attempt++;
             try {
                 HttpRequest req = new HttpRequest();
-                req.setEndpoint(API_CREDENTIAL + UPLOAD_PATH);
+                req.setEndpoint(FEC_ConstantArchive.API_BASE_URL + FEC_ConstantArchive.PATH_ATTACHMENTS_UPLOAD);
                 req.setMethod(FEC_ConstantCommon.API_METHOD_POST);
                 req.setHeader('Content-Type', FEC_ConstantArchive.API_CONTENT_TYPE_MULTIPART + boundary);
                 req.setHeader('X-API-KEY', FEC_ConstantArchive.X_API_KEY_ARCHIVE);
@@ -171,7 +168,7 @@ public class FEC_AttachmentExportHttpService {
             attempt++;
             try {
                 HttpRequest req = new HttpRequest();
-                req.setEndpoint(API_CREDENTIAL + BATCH_PATH);
+                req.setEndpoint(FEC_ConstantArchive.API_BASE_URL + FEC_ConstantArchive.PATH_ATTACHMENTS_BATCH);
                 req.setMethod(FEC_ConstantCommon.API_METHOD_POST);
                 req.setHeader('Content-Type', FEC_ConstantCommon.API_CONTENT_TYPE_JSON);
                 req.setBody(jsonPayload);
