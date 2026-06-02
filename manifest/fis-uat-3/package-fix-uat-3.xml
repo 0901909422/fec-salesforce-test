@@ -315,6 +315,7 @@
 		<members>fec_NocRoutingAssignment</members>
 		<members>fec_InteractionInfoF2F_Letter</members>
 		<members>fec_IPPDetailPage</members>
+        <members>fec_SecondaryInfoAccount</members>
 		<name>LightningComponentBundle</name>
 	</types>
     <types>
