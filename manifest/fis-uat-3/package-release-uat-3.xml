@@ -234,6 +234,7 @@
         <members>FEC_CardReplacementAddressController</members>
         <members>FEC_CaseManagerListService</members>
         <members>FEC_CaseMasterDataHelper</members>
+        <members>FEC_CaseMigrationService</members>
         <members>FEC_ContractClosureController</members>
         <members>FEC_CreateCSCaseService</members>
         <members>FEC_GetCSCaseStatusService</members>
@@ -267,6 +268,7 @@
         <members>FEC_VMXAUTHDETAILINQ</members>
         <members>FEC_UpdateCustomerAddress</members>
         <members>FEC_UpdateCustomerContact</members>
+        <members>FEC_UMSUserManagementRestService</members>
 		<members>FEC_NatureOfCaseUserGroupService</members>
         <members>FEC_CustomerIntegrationService</members>
         <members>FEC_CustomEmailService</members>
