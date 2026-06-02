@@ -18334,4 +18334,12 @@
         <shortDescription>Email Section - Title label</shortDescription>
         <value>Title</value>
     </labels>
+    <labels>
+        <fullName>FEC_Batch_Case_Handling_Success</fullName>
+        <categories>Batch Case Handling</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Batch_Case_Handling_Success</shortDescription>
+        <value>Success</value>
+    </labels>
 </CustomLabels>
