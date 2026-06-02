@@ -47,12 +47,14 @@ import DO_NOT_BOTHER_CHANNEL from "@salesforce/messageChannel/FEC_DoNotBother__c
 import { 
   ACTION_REOPEN, 
   ACTION_RECALL,
-  // RECORD_TYPE_INTERNAL_CASE, 
+  RECORD_TYPE_INTERNAL_CASE, 
   VIEW_MODE_HANDLING, 
   VIEW_MODE_REVIEW, 
   // STR_UNDEFINED, 
   INTERNAL_REQUEST, 
   INTERNAL_UBANK,
+  NON_EXISTING_CUSTOMER_PRODUCT_NAME,
+  UBANK_PRODUCT_NAME,
   //linhdev fix jira FECREDIT_CSM_2025_KH-1366
   FEC_FAST_CASH_STORAGE_NOC_LOCK_PREFIX,
   FEC_FAST_CASH_STORAGE_MODAL_CONFIRMED_PREFIX,
@@ -590,6 +592,7 @@ export default class Fec_CaseEditNOC extends LightningElement {
         this.isSubmited = res.FEC_Is_Submited__c;
         this.interactionViewMode = res.FEC_Interaction_View_Mode__c;
         this.recordTypeDevName = res.RecordType?.DeveloperName;
+        this._accountContractPl = res.FEC_Account_Contract_Number_PL__c;
         this._isInternalRequest = res.FEC_Account_Contract_Number_PL__c === INTERNAL_REQUEST;
         this.isDisableNOC = res.FEC_Is_Call_API_Success__c;
         //PhongBT: update bộ noc chọn ở updated khi revert về
@@ -1084,6 +1087,8 @@ export default class Fec_CaseEditNOC extends LightningElement {
 
     if (this._incomingAccountType == null && hasExistingNOCSelection && !isInternalType) {
       this._incomingAccountType = accountType;
+      this._accountContractPl = accountType;
+      this._syncProductTypeOptionsForInternalNonExisting();
       return;
     }
 
@@ -1092,6 +1097,7 @@ export default class Fec_CaseEditNOC extends LightningElement {
     }
 
     this._incomingAccountType = accountType;
+    this._accountContractPl = accountType;
     this._isInternalRequest = false;
     this.disableProdType = false;
     this._internalProductTypeId = null;
@@ -1134,6 +1140,7 @@ export default class Fec_CaseEditNOC extends LightningElement {
         }, 50);
       }
     } else {
+      this._syncProductTypeOptionsForInternalNonExisting();
       this.handleDisable('category');
       this.handleDisable('sub-category');
       this.handleDisable('sub-code');
@@ -1277,6 +1284,7 @@ export default class Fec_CaseEditNOC extends LightningElement {
         this.isSubmited = res.FEC_Is_Submited__c;
         this.interactionViewMode = res.FEC_Interaction_View_Mode__c;
         this.recordTypeDevName = res.RecordType?.DeveloperName;
+        this._accountContractPl = res.FEC_Account_Contract_Number_PL__c;
         this._isInternalRequest = res.FEC_Account_Contract_Number_PL__c === INTERNAL_REQUEST;
         //PhongBT: update bộ noc chọn ở updated khi revert về
         this._currentStageName = res.FEC_Current_Case_Stage__r?.Name || null;
@@ -1443,13 +1451,44 @@ export default class Fec_CaseEditNOC extends LightningElement {
   //   picker.clearSelection();
   // }
 
+  // Internal Case + Account/Contract = Non-Existing Customer → ẩn Ubank / Internal Request ở Product Type
+  _isInternalCaseWithNonExistingAccount(accountType) {
+    const pl = accountType ?? this._incomingAccountType ?? this._accountContractPl;
+    return (
+      this.recordTypeDevName === RECORD_TYPE_INTERNAL_CASE &&
+      pl === NON_EXISTING_CUSTOMER_PRODUCT_NAME
+    );
+  }
+
+  _filterProductTypeForInternalNonExisting(options) {
+    if (!this._isInternalCaseWithNonExistingAccount()) {
+      return options ?? [];
+    }
+    const hidden = new Set([INTERNAL_UBANK, INTERNAL_REQUEST, UBANK_PRODUCT_NAME]);
+    return (options ?? []).filter((opt) => !hidden.has(opt.label));
+  }
+
+  _syncProductTypeOptionsForInternalNonExisting() {
+    if (!this._isInternalCaseWithNonExistingAccount()) {
+      return;
+    }
+    if (this.productTypeOptionlst?.length) {
+      this.productTypeOptionlst = this._filterProductTypeForInternalNonExisting(
+        this.productTypeOptionlst,
+      );
+      this.handleChangeOption('prod-type', this.productTypeOptionlst);
+      return;
+    }
+    this.getProdType();
+  }
+
   getProdType() {
     getProductTypelst({ recordId: this.recordId }).then((res) => {
       console.log(
         "🚀 ~ Fec_CaseEditNOC ~ getProdType ~ res:",
         JSON.stringify(res)
       );
-      this.productTypeOptionlst = res;
+      this.productTypeOptionlst = this._filterProductTypeForInternalNonExisting(res);
       if (this._isInternalRequest && !this.productTypeSelectedId) {
         const internalOption = res?.find((opt) => opt.label === INTERNAL_REQUEST);
 
