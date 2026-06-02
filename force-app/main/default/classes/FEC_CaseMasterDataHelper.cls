@@ -100,25 +100,49 @@ public without sharing class FEC_CaseMasterDataHelper {
   }
 
   /**
-   * Assignment + FEC_Field_Reverted__c = true: chỉ hiển thị khi current stage là revert context.
-   * Chạy sớm ngay sau query master data để các bước lọc assignment phía sau nhận đúng dataset.
+   * Assignment + FEC_Field_Reverted__c: chỉ giữ khi đang revert context; revert 2↔3 chỉ giữ API xác nhận đúng stage.
    */
   public static List<SObject> filterRevertedAssignmentRowsByStageContext(
     List<SObject> masterDatalst,
     Boolean isCurrentStageRevertedContext
   ) {
-    if (
-      masterDatalst == null ||
-      masterDatalst.isEmpty() ||
-      isCurrentStageRevertedContext == true
-    ) {
+    return filterRevertedAssignmentRowsByStageContext(
+      masterDatalst,
+      isCurrentStageRevertedContext,
+      null
+    );
+  }
+
+  public static List<SObject> filterRevertedAssignmentRowsByStageContext(
+    List<SObject> masterDatalst,
+    Boolean isCurrentStageRevertedContext,
+    Integer revertConfirmAssessmentSourceStage
+  ) {
+    if (masterDatalst == null || masterDatalst.isEmpty()) {
       return masterDatalst;
     }
     List<SObject> filtered = new List<SObject>();
     for (SObject mdsRow : masterDatalst) {
+      if (!isAssignmentRow(mdsRow)) {
+        filtered.add(mdsRow);
+        continue;
+      }
+      Boolean isRevertedAssignment =
+        (Boolean) mdsRow.get('FEC_Field_Reverted__c') == true;
+      if (!isRevertedAssignment) {
+        filtered.add(mdsRow);
+        continue;
+      }
+      if (isCurrentStageRevertedContext != true) {
+        continue;
+      }
+      String fieldApi = (String) mdsRow.get('FEC_Field_API_Name__c');
       if (
-        TYPE_ASSIGNMENT.equals((String) mdsRow.get('FEC_Type__c')) &&
-        (Boolean) mdsRow.get('FEC_Field_Reverted__c') == true
+        revertConfirmAssessmentSourceStage != null &&
+        shouldSkipRevertConfirmAssessmentField(
+          revertConfirmAssessmentSourceStage,
+          fieldApi
+        )
       ) {
         continue;
       }

@@ -852,7 +852,8 @@ public without sharing class FEC_CaseBusinessService {
         List<SObject> masterDatalst = Database.query(soql);
         masterDatalst = FEC_CaseMasterDataHelper.filterRevertedAssignmentRowsByStageContext(
           masterDatalst,
-          isCurrentStageRevertedContext
+          isCurrentStageRevertedContext,
+          result.revertConfirmAssessmentSourceStage
         );
         masterDatalst = FEC_CaseMasterDataHelper.filterAssignmentRowsByCurrentUserGroup(
           masterDatalst,
