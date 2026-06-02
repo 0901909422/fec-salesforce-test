@@ -22,6 +22,13 @@ global with sharing class FEC_GetCSMasterDataService {
     // MAIN
     // ==========================================================
     webservice static GetCSMasterDataResponse GetCSMasterDataRequest(SysRequestType Sys) {
+        return GetCSMasterDataRequest(Sys, true);
+    }
+
+    private static GetCSMasterDataResponse GetCSMasterDataRequest(
+        SysRequestType Sys,
+        Boolean includeAdditionalProperties
+    ) {
 
         GetCSMasterDataResponse res = initResponse(Sys);
         if (Sys == null) {
@@ -42,8 +49,10 @@ global with sharing class FEC_GetCSMasterDataService {
             return res;
         }
 
-        // Load settings ONCE
-        loadSettings();
+        // Settings only needed when AdditionalProperties DTOs are attached (SOAP webservice path).
+        if (includeAdditionalProperties) {
+            loadSettings(true);
+        }
 
         List<FEC_Nature_of_Case__c> records = [
             SELECT
@@ -109,7 +118,9 @@ global with sharing class FEC_GetCSMasterDataService {
                 p.ApplyTo = applyTo;
                 p.Type = FEC_ConstantCommon.KEY_PRODUCT_TYPE_PRODUCT;
                 p.Children = new List<ChildItemType>();
-                p.AdditionalProperties = getAdditionalProperties(applyTo);
+                if (includeAdditionalProperties) {
+                    p.AdditionalProperties = getAdditionalProperties(applyTo);
+                }
 
                 productMap.put(pCode, p);
             } else {
@@ -171,60 +182,94 @@ global with sharing class FEC_GetCSMasterDataService {
     }
 
     public static String buildGetCSMasterDataSoapXml(SysRequestType sys) {
-        GetCSMasterDataResponse res = GetCSMasterDataRequest(sys);
-        SysResponseType sysResp = res.Sys;
-        List<MasterDataItemType> items = res.MasterDataItems;
-        Map<String, String> additionalPropsXmlCache =
-            buildAdditionalPropertiesXmlCache(items);
-        detachAdditionalPropertiesForSoapXml(items);
+        GetCSMasterDataResponse res = GetCSMasterDataRequest(sys, false);
+        loadSettings(false);
         return FEC_MyCaseSoapXml.buildGetCSMasterDataSoapResponse(
-            sysResp,
-            items,
-            additionalPropsXmlCache
+            res.Sys,
+            res.MasterDataItems,
+            new Map<String, String>()
         );
     }
 
-    private static Map<String, String> buildAdditionalPropertiesXmlCache(
-        List<MasterDataItemType> items
-    ) {
-        Map<String, String> cache = new Map<String, String>();
-        if (items == null || items.isEmpty()) {
-            return cache;
-        }
-
-        loadSettings();
-        Set<String> applyTos = new Set<String>();
-        for (MasterDataItemType item : items) {
-            if (item == null) {
-                continue;
-            }
-            applyTos.add(item.ApplyTo);
-        }
-
-        for (String applyTo : applyTos) {
-            String cacheKey = applyTo == null ? '__NULL__' : applyTo;
-            if (cache.containsKey(cacheKey)) {
-                continue;
-            }
-            cache.put(
-                cacheKey,
-                FEC_MyCaseSoapXml.buildMasterDataAdditionalPropertiesXml(
-                    getAdditionalProperties(applyTo)
-                )
-            );
-        }
-        return cache;
+    public static String buildAdditionalPropertiesXmlForApplyTo(String applyTo) {
+        return buildAdditionalPropertiesXmlForApplyTo(applyTo, false);
     }
 
-    private static void detachAdditionalPropertiesForSoapXml(
-        List<MasterDataItemType> items
+    public static String buildAdditionalPropertiesXmlForApplyTo(
+        String applyTo,
+        Boolean includePicklistValues
     ) {
-        if (items == null) {
-            return;
+        if (cachedSettings == null || cachedSettings.isEmpty()) {
+            return '';
         }
-        for (MasterDataItemType item : items) {
-            item.AdditionalProperties = null;
+
+        String result = '';
+        Set<String> seenFieldApis = new Set<String>();
+        for (FEC_Master_Data_Setting__c setting : cachedSettings) {
+            String settingApplyTo = setting.FEC_Nature_Of_Case__r != null
+                ? setting.FEC_Nature_Of_Case__r.FEC_Customer_Type__c
+                : null;
+
+            if (!matchApplyTo(applyTo, settingApplyTo)) {
+                continue;
+            }
+
+            String fieldApi = setting.FEC_Field_API_Name__c;
+            if (String.isBlank(fieldApi)) {
+                continue;
+            }
+
+            String fieldApiKey = fieldApi.toLowerCase();
+            if (seenFieldApis.contains(fieldApiKey)) {
+                continue;
+            }
+            seenFieldApis.add(fieldApiKey);
+
+            Schema.DescribeFieldResult fieldDescribe = getAdditionalFieldDescribe(fieldApi);
+
+            String name = fieldDescribe != null ? fieldDescribe.getLabel() : fieldApi;
+            String type = fieldDescribe != null
+                ? mapFieldTypeFromDisplayType(fieldDescribe.getType())
+                : 'string';
+            Integer posOrder = setting.FEC_Field_Order_Display__c == null
+                ? null
+                : Integer.valueOf(setting.FEC_Field_Order_Display__c);
+            List<Schema.PicklistEntry> picklistEntries = null;
+            if (includePicklistValues == true
+                && type == 'list'
+                && fieldDescribe != null) {
+                picklistEntries = fieldDescribe.getPicklistValues();
+            }
+
+            result = appendAdditionalPropertiesXmlBatch(
+                result,
+                new List<String>{
+                    FEC_MyCaseSoapXml.buildMasterDataAdditionalPropertyXml(
+                        fieldApi,
+                        name,
+                        name,
+                        posOrder,
+                        settingApplyTo,
+                        setting.FEC_Field_Mandatory__c,
+                        type,
+                        picklistEntries,
+                        includePicklistValues
+                    )
+                }
+            );
         }
+
+        return result;
+    }
+
+    private static String appendAdditionalPropertiesXmlBatch(
+        String accumulated,
+        List<String> batch
+    ) {
+        if (batch == null || batch.isEmpty()) {
+            return accumulated;
+        }
+        return accumulated + String.join(batch, '');
     }
 
     // ==========================================================
@@ -264,7 +309,14 @@ global with sharing class FEC_GetCSMasterDataService {
     // SETTINGS CACHE
     // ==========================================================
     private static void loadSettings() {
+        loadSettings(true);
+    }
+
+    private static void loadSettings(Boolean warmPropertiesCache) {
         if (cachedSettings != null) {
+            if (warmPropertiesCache) {
+                warmAdditionalPropertiesCache();
+            }
             return;
         }
 
@@ -278,26 +330,32 @@ global with sharing class FEC_GetCSMasterDataService {
             WHERE FEC_Field_Object_Name__c = :FEC_ConstantCommon.OBJ_ADDITIONAL_INFO
         ];
 
-        ensureAdditionalFieldDescribeCache();
-        warmAdditionalPropertiesCache();
+        if (warmPropertiesCache) {
+            warmAdditionalPropertiesCache();
+        }
     }
 
-    private static void ensureAdditionalFieldDescribeCache() {
-        if (additionalFieldDescribeByApi != null) {
-            return;
+    private static Schema.DescribeFieldResult getAdditionalFieldDescribe(String fieldApi) {
+        if (String.isBlank(fieldApi)) {
+            return null;
         }
 
-        additionalFieldDescribeByApi = new Map<String, Schema.DescribeFieldResult>();
-        Map<String, Schema.SObjectField> fieldMap =
-            FEC_Additional_Info__c.SObjectType.getDescribe().fields.getMap();
+        if (additionalFieldDescribeByApi == null) {
+            additionalFieldDescribeByApi = new Map<String, Schema.DescribeFieldResult>();
+        }
 
-        for (Schema.SObjectField fieldToken : fieldMap.values()) {
-            Schema.DescribeFieldResult fieldDescribe = fieldToken.getDescribe();
+        String key = fieldApi.toLowerCase();
+        if (!additionalFieldDescribeByApi.containsKey(key)) {
+            Map<String, Schema.SObjectField> fieldMap =
+                FEC_Additional_Info__c.SObjectType.getDescribe().fields.getMap();
+            Schema.SObjectField fieldToken = fieldMap.get(key);
             additionalFieldDescribeByApi.put(
-                fieldDescribe.getName().toLowerCase(),
-                fieldDescribe
+                key,
+                fieldToken != null ? fieldToken.getDescribe() : null
             );
         }
+
+        return additionalFieldDescribeByApi.get(key);
     }
 
     private static void warmAdditionalPropertiesCache() {
@@ -369,11 +427,7 @@ global with sharing class FEC_GetCSMasterDataService {
             return;
         }
 
-        ensureAdditionalFieldDescribeCache();
-
-        Schema.DescribeFieldResult fieldDescribe = additionalFieldDescribeByApi.get(
-            p.ID.toLowerCase()
-        );
+        Schema.DescribeFieldResult fieldDescribe = getAdditionalFieldDescribe(p.ID);
 
         if (fieldDescribe == null) {
             p.Name = p.ID;
