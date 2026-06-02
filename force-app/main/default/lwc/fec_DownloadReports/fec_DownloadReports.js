@@ -37,6 +37,16 @@ export default class Fec_DownloadReports extends NavigationMixin(LightningElemen
         }));
     }
 
+    getErrorMessage(error) {
+        if (error?.body?.message) {
+            return error.body.message;
+        }
+        if (error?.message) {
+            return error.message;
+        }
+        return this.customLabel.errorDownload;
+    }
+
     async closeAndRefresh() {
         try {
             this[NavigationMixin.Navigate]({
@@ -48,7 +58,9 @@ export default class Fec_DownloadReports extends NavigationMixin(LightningElemen
                 state: { filterName: 'Recent' }
             });
             await new Promise(resolve => setTimeout(resolve, 500));
-            await closeTab(this.tabId);
+            if (this.tabId) {
+                await closeTab(this.tabId);
+            }
         } catch (e) {
             console.error('closeAndRefresh error:', e);
         }
@@ -71,17 +83,14 @@ export default class Fec_DownloadReports extends NavigationMixin(LightningElemen
 
         urls.forEach((url, i) => {
             setTimeout(() => {
-                const iframe = document.createElement('iframe');
-                iframe.style.display = 'none';
-                iframe.style.width = '0';
-                iframe.style.height = '0';
-                iframe.src = url;
-                document.body.appendChild(iframe);
-                setTimeout(() => {
-                    if (document.body.contains(iframe)) {
-                        document.body.removeChild(iframe);
-                    }
-                }, 10000);
+                const anchor = document.createElement('a');
+                anchor.href = url;
+                anchor.target = '_blank';
+                anchor.rel = 'noopener';
+                anchor.style.display = 'none';
+                document.body.appendChild(anchor);
+                anchor.click();
+                document.body.removeChild(anchor);
             }, i * 1000);
         });
     }
@@ -111,7 +120,7 @@ export default class Fec_DownloadReports extends NavigationMixin(LightningElemen
 
         } catch (e) {
             console.error(e);
-            this.showError('Download failed.');
+            this.showError(this.getErrorMessage(e));
             sessionStorage.removeItem(DOWNLOAD_LOCK_KEY);
             await this.closeAndRefresh();
         }

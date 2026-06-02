@@ -36,10 +36,6 @@
         <apexClass>FEC_Utils</apexClass>
         <enabled>true</enabled>
     </classAccesses>
-    <flowAccesses>
-        <enabled>true</enabled>
-        <flow>FEC_DownloadReportFlow</flow>
-    </flowAccesses>
     <custom>false</custom>
     <customPermissions>
         <enabled>true</enabled>
