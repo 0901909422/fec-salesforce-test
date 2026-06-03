@@ -91,11 +91,17 @@ private class FEC_FastCashCaseController_Test {
         private String ippEligible;
         private String cardRemainingCash;
         private String cmsCode;
+        private String cmsDescription;
 
         FastCashApiMock(String ippEligible, String cardRemainingCash, String cmsCode) {
+            this(ippEligible, cardRemainingCash, cmsCode, null);
+        }
+
+        FastCashApiMock(String ippEligible, String cardRemainingCash, String cmsCode, String cmsDescription) {
             this.ippEligible = ippEligible;
             this.cardRemainingCash = cardRemainingCash;
             this.cmsCode = cmsCode;
+            this.cmsDescription = cmsDescription;
         }
 
         public HttpResponse respond(HttpRequest req) {
@@ -138,7 +144,7 @@ private class FEC_FastCashCaseController_Test {
                     '<TransID>TRX-123</TransID>' +
                     '<DateTime>2026-05-28T18:00:00</DateTime>' +
                     '<Code>' + cmsCode + '</Code>' +
-                    '<Description>Block result</Description>' +
+                    '<Description>' + (String.isNotBlank(cmsDescription) ? cmsDescription : 'Block result') + '</Description>' +
                     '</Sys>' +
                     '<AvailableCredit>1500000</AvailableCredit>' +
                     '</CMSIPPBlockResponse>' +
@@ -425,7 +431,7 @@ private class FEC_FastCashCaseController_Test {
         Map<String, Boolean> expectedSuccess = new Map<String, Boolean>{
             '0' => true,
             '1' => true,
-            '4' => true,
+            '4' => false,
             '2' => false,
             '10' => false,
             '21' => false
@@ -449,6 +455,54 @@ private class FEC_FastCashCaseController_Test {
                 System.assertNotEquals(null, result.errorMessage, 'Code ' + code + ' fail phải có errorMessage');
             }
         }
+    }
+
+    @IsTest
+    static void testExecuteFastCashBlock_SuccessByDescription() {
+        Case c = getMainCase();
+        Test.setMock(HttpCalloutMock.class, new FastCashApiMock('true', '5000000', '10', 'Success'));
+        FEC_FastCashCaseController.BlockResultDTO result =
+            FEC_FastCashCaseController.executeFastCashBlock(
+                c.Id,
+                1000000,
+                'APP-CRM-001',
+                'BRANCH'
+            );
+        System.assertEquals(true, result.success, 'Description Success phải coi là business success');
+    }
+
+    @IsTest
+    static void testExecuteFastCashBlock_Code4AccountHasBlockCodeNotSuccess() {
+        Case c = getMainCase();
+        Test.setMock(
+            HttpCalloutMock.class,
+            new FastCashApiMock('true', '5000000', '4', 'Account has block code')
+        );
+        FEC_FastCashCaseController.BlockResultDTO result =
+            FEC_FastCashCaseController.executeFastCashBlock(
+                c.Id,
+                1000000,
+                'APP-CRM-001',
+                'BRANCH'
+            );
+        System.assertEquals(false, result.success, 'Code 4 không còn là business success');
+    }
+
+    @IsTest
+    static void testExecuteFastCashBlock_UnSuccessFullDescriptionNotSuccess() {
+        Case c = getMainCase();
+        Test.setMock(
+            HttpCalloutMock.class,
+            new FastCashApiMock('true', '5000000', '10', 'UnSuccessFull')
+        );
+        FEC_FastCashCaseController.BlockResultDTO result =
+            FEC_FastCashCaseController.executeFastCashBlock(
+                c.Id,
+                1000000,
+                'APP-CRM-001',
+                'BRANCH'
+            );
+        System.assertEquals(false, result.success, 'UnSuccessFull không được coi là success');
     }
 
     @IsTest
