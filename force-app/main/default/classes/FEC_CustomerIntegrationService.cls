@@ -93,6 +93,7 @@ public without sharing class FEC_CustomerIntegrationService {
         FEC_GetDocumentsList.ResponseWrapper docRes;
         FEC_GetCardBasicInfo.ResponseWrapper cardRes;
         FEC_MFASOUTSTANDINGAUTHINQ.ResponseWrapper authRes;
+        FEC_GetCardPlanInfo.CardPlanResult cardPlanRes;
         FEC_GetCardSecInfo.ResponseWrapper cardSecRes;
         FEC_GetLoanBasicInfo.ResponseWrapper loanRes;
         FEC_GetMRCInfo.MRCInfoResult mrcRes;
@@ -264,6 +265,12 @@ public without sharing class FEC_CustomerIntegrationService {
             applyOutstandingAuthFromApi(hist, authRes);
         } catch (Exception e) {
             System.debug('### OUTSTANDING AUTH DML ERROR: ' + e.getMessage());
+        }
+
+        try {
+            applyCardPlanFromApi(hist, cardPlanRes);
+        } catch (Exception e) {
+            System.debug('### CARD PLAN DML ERROR: ' + e.getMessage());
         }
 
         try {
@@ -757,6 +764,101 @@ public without sharing class FEC_CustomerIntegrationService {
         }
         deleteExistingIppRecords(customerHistoryId);
         insert toInsert;
+    }
+
+    private static void applyCardPlanFromApi(
+        FEC_Customer_History__c hist,
+        FEC_GetCardPlanInfo.CardPlanResult cardPlanRes
+    ) {
+        if (hist == null
+            || hist.Id == null
+            || cardPlanRes == null
+            || cardPlanRes.plans == null
+            || cardPlanRes.plans.isEmpty()
+            || cardPlanRes.responseCode != '1') {
+            return;
+        }
+
+        Map<String, FEC_Card_Payment__c> existingByKey = new Map<String, FEC_Card_Payment__c>();
+        for (FEC_Card_Payment__c row : [
+            SELECT Id, FEC_Rec__c, FEC_Plan__c
+            FROM FEC_Card_Payment__c
+            WHERE FEC_Customer_History__c = :hist.Id
+        ]) {
+            existingByKey.put(buildCardPlanSyncKey(row.FEC_Rec__c, row.FEC_Plan__c), row);
+        }
+
+        List<FEC_Card_Payment__c> toInsert = new List<FEC_Card_Payment__c>();
+        List<FEC_Card_Payment__c> toUpdate = new List<FEC_Card_Payment__c>();
+
+        for (FEC_GetCardPlanInfo.CardPlan plan : cardPlanRes.plans) {
+            if (plan == null) {
+                continue;
+            }
+
+            String key = buildCardPlanSyncKey(plan.recordNumber, plan.planNumber);
+            FEC_Card_Payment__c record = buildCardPaymentFromPlan(plan, hist.Id);
+            if (existingByKey.containsKey(key)) {
+                record.Id = existingByKey.get(key).Id;
+                toUpdate.add(record);
+            } else {
+                toInsert.add(record);
+            }
+        }
+
+        if (!toInsert.isEmpty()) {
+            insert toInsert;
+        }
+        if (!toUpdate.isEmpty()) {
+            update toUpdate;
+        }
+    }
+
+    private static String buildCardPlanSyncKey(String rec, String plan) {
+        return (rec != null ? rec.trim() : '') + '_' + (plan != null ? plan.trim() : '');
+    }
+
+    private static FEC_Card_Payment__c buildCardPaymentFromPlan(
+        FEC_GetCardPlanInfo.CardPlan plan,
+        Id customerHistoryId
+    ) {
+        FEC_Card_Payment__c record = new FEC_Card_Payment__c(
+            FEC_Customer_History__c = customerHistoryId,
+            FEC_Rec__c = plan.recordNumber,
+            FEC_Plan__c = plan.planNumber,
+            FEC_REF_Number__c = plan.refNumber,
+            FEC_Open_Date__c = FEC_CommonUltils.parseDate(plan.openDate),
+            FEC_Begin_Date__c = FEC_CommonUltils.parseDate(plan.beginDate)
+        );
+
+        Decimal currentBalance = plan.currentBalance != null ? plan.currentBalance : 0;
+        Decimal accruedInterest = plan.accruedInterest != null ? plan.accruedInterest : 0;
+        Decimal perDiem = plan.perDiem != null ? plan.perDiem : 0;
+        Decimal deferredInterest = plan.deferredInterest != null ? plan.deferredInterest : 0;
+        Decimal ippAccruedInterest = plan.additionalAccruedInt != null ? plan.additionalAccruedInt : 0;
+
+        record.FEC_Current_Balance__c = currentBalance;
+        record.FEC_Base_Rate__c = (plan.baseRate != null ? plan.baseRate / 100 : null);
+        record.FEC_Deferred_Interest__c = deferredInterest;
+        record.FEC_Accrued_Interest__c = accruedInterest;
+        record.FEC_Per_Diem__c = perDiem;
+        record.FEC_IPP_Interest__c = plan.ippInterest;
+        record.FEC_IPP_Accrued_Interest__c = ippAccruedInterest;
+
+        Decimal closeFeePercent = 0;
+        if (plan.closeFeeIndicator == 'Y' && currentBalance > 0 && plan.closeFeeIndicatorAmt != null) {
+            closeFeePercent = (plan.closeFeeIndicatorAmt / currentBalance) * 100;
+            closeFeePercent = closeFeePercent.setScale(2, RoundingMode.HALF_UP);
+        }
+        record.FEC_Close_Fee__c = closeFeePercent;
+        record.FEC_Close_Fee_Amount__c = plan.closeFeeIndicatorAmt != null
+            ? plan.closeFeeIndicatorAmt
+            : 0;
+        record.FEC_Plan_Payment_Amount__c = plan.totalPaymentAmount != null
+            ? plan.totalPaymentAmount
+            : 0;
+
+        return record;
     }
 
     private static List<FEC_GetCardSecInfo.IPP> buildOrderedIppListFromCardSecInfo(
