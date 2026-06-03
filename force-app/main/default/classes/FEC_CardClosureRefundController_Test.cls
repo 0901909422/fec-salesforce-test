@@ -49,7 +49,19 @@ private class FEC_CardClosureRefundController_Test {
         public HttpResponse respond(HttpRequest req) {
             HttpResponse res = new HttpResponse();
             res.setStatusCode(200);
-            res.setBody('{"Sys":{"Code":"1","Description":"Success","TransID":"TXN-LOCK"}}');
+            res.setBody(
+                '{"Sys":{"TransID":"TXN-LOCK","DateTime":"2026-06-03T17:24:43.867415513+07:00",' +
+                '"Code":"1","Description":"LOCK_SUCCESS","BlockCode":"C"}}'
+            );
+            return res;
+        }
+    }
+
+    private class CardUnlockSuccessMock implements HttpCalloutMock {
+        public HttpResponse respond(HttpRequest req) {
+            HttpResponse res = new HttpResponse();
+            res.setStatusCode(200);
+            res.setBody('{"Sys":{"Code":"2","Description":"UNLOCK_SUCCESS","TransID":"TXN-UNLOCK"}}');
             return res;
         }
     }
@@ -133,7 +145,10 @@ private class FEC_CardClosureRefundController_Test {
                     '"Applications":[{"Application":{"DisbStatus":"ORIG"}}]}'
                 );
             } else {
-                res.setBody('{"Sys":{"Code":"1","Description":"Success","TransID":"TXN-LOCK"}}');
+                res.setBody(
+                '{"Sys":{"TransID":"TXN-LOCK","DateTime":"2026-06-03T17:24:43.867415513+07:00",' +
+                '"Code":"1","Description":"LOCK_SUCCESS","BlockCode":"C"}}'
+            );
             }
             return res;
         }
@@ -292,6 +307,8 @@ private class FEC_CardClosureRefundController_Test {
             Test.stopTest();
 
             System.assertEquals(true, result.success);
+            System.assertEquals('1', result.code);
+            System.assertEquals('LOCK_SUCCESS', result.description);
             System.assertEquals(0, result.cardBlockServiceAttemptsAfter);
             System.assertEquals(true, result.hideBlockCardAfterAction);
 
@@ -324,7 +341,7 @@ private class FEC_CardClosureRefundController_Test {
     static void testUnblockCard_SuccessAndValidationFails() {
         System.runAs(testRunAsUser()) {
             Case c = [SELECT Id FROM Case WHERE Subject = 'Case API Disbursement Test' LIMIT 1];
-            Test.setMock(HttpCalloutMock.class, new CardLockSuccessMock());
+            Test.setMock(HttpCalloutMock.class, new CardUnlockSuccessMock());
 
             Test.startTest();
             FEC_CardClosureRefundController.LockUnlockResultDTO resSuccess =
