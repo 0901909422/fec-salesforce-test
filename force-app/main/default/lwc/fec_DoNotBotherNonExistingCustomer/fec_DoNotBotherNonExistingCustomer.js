@@ -788,22 +788,17 @@ export default class Fec_DoNotBotherNonExistingCustomer extends LightningElement
          */
         await updateDNBProcessCount({
           caseId: this.recordId,
-
           isSuccess: true,
         });
 
-        /*
-         * Success state
-         */
+        this.syncUIValuesBeforeReadonly();
+
         this.isDNBUpdated = true;
 
         this.isReadonlyMode = true;
 
         this.applyReadonlyState();
 
-        /*
-         * Publish LMS
-         */
         this.publishReadonlyMessage();
 
         this.showToast("Success", "DNB created successfully", "success");
@@ -1005,30 +1000,46 @@ export default class Fec_DoNotBotherNonExistingCustomer extends LightningElement
     );
   }
 
+  // syncUIValuesBeforeReadonly() {
+  //   this.data = this.data.map((row) => {
+  //     /*
+  //      * Only submitted rows
+  //      */
+  //     if (!row.active) {
+  //       return row;
+  //     }
+
+  //     return {
+  //       ...row,
+
+  //       /*
+  //        * Persist current UI values
+  //        */
+  //       originalReasonLabel: this.getReasonLabel(row.originalReason),
+
+  //       updateReasonLabel: this.getReasonLabel(row.updateReason),
+
+  //       remarks: row.remarks || "-",
+  //     };
+  //   });
+
+  //   this.updatePagedData();
+  // }
+
   syncUIValuesBeforeReadonly() {
-    this.data = this.data.map((row) => {
-      /*
-       * Only submitted rows
-       */
-      if (!row.active) {
-        return row;
-      }
+    this.data = this.data.map((row) => ({
+      ...row,
 
-      return {
-        ...row,
+      originalReasonLabel: this.getReasonLabel(row.originalReason),
 
-        /*
-         * Persist current UI values
-         */
-        originalReasonLabel: this.getReasonLabel(row.originalReason),
+      updateReasonLabel: row.updateReason
+        ? this.getReasonLabel(row.updateReason)
+        : "",
 
-        updateReasonLabel: this.getReasonLabel(row.updateReason),
+      remarks: row.remarks || "",
+    }));
 
-        remarks: row.remarks || "-",
-      };
-    });
-
-    this.updatePagedData();
+    this.refreshData();
   }
 
   showToast(title, message, variant, mode = "dismissable") {
@@ -1101,7 +1112,7 @@ export default class Fec_DoNotBotherNonExistingCustomer extends LightningElement
   }
 
   get isCheckDNBDisabled() {
-    return this.isCheckingDNB || this.isActionLocked;
+    return this.isCheckingDNB;
   }
 
   //FECREDIT_CSM_2025_KH-1561
