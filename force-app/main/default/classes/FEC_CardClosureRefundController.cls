@@ -581,6 +581,29 @@ public without sharing class FEC_CardClosureRefundController {
         }
     }
 
+    private static void applyCardLockApiResponse(
+        LockUnlockResultDTO dto,
+        FEC_CardLockUnLockCallout.LockUnlockResponse response,
+        String requestTransId,
+        Boolean isBlockOperation
+    ) {
+        dto.transId = requestTransId;
+        if (response != null && response.Sys != null) {
+            dto.code = response.Sys.Code;
+            dto.description = response.Sys.Description;
+            if (String.isNotBlank(response.Sys.TransID)) {
+                dto.transId = response.Sys.TransID;
+            }
+        }
+        dto.success = isBlockOperation
+            ? isCardLockBlockApiSuccess(response)
+            : isCardLockUnblockApiSuccess(response);
+        dto.errorMessage = response != null ? response.errorMessage : null;
+        if (!dto.success && String.isBlank(dto.errorMessage) && String.isNotBlank(dto.description)) {
+            dto.errorMessage = dto.description;
+        }
+    }
+
     private static Boolean isCardLockBlockApiSuccess(FEC_CardLockUnLockCallout.LockUnlockResponse response) {
         return response != null
             && response.Sys != null
@@ -632,7 +655,7 @@ public without sharing class FEC_CardClosureRefundController {
         if (FEC_VmxAcctBlkcdUpdEmeaCallout.isBlkcdUpdSuccess(result)) {
             return true;
         }
-        return FEC_VmxAcctBlkcdUpdEmeaCallout.isBlkcdUpdDescriptionSuccess(result.responseDesc);
+        return descriptionContainsSuccess(result.responseDesc);
     }
 
     private static Boolean descriptionContainsSuccess(String description) {
