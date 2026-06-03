@@ -130,7 +130,7 @@ public with sharing class FEC_BatchCaseHandlingImportProfile {
             return false;
         }
         String key = bpNorm.trim().toUpperCase();
-        String keyNoSpace = key.replaceAll('\s+', '').replace('(', '').replace(')', '');
+        String keyNoSpace = key.replaceAll('\\s+', '').replace('(', '').replace(')', '');
         return key == 'ORIGINAL MRC RETURN' ||
             key == 'MRC RETURN' ||
             keyNoSpace == 'ORIGINALMRCRETURN' ||

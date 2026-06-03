@@ -4,10 +4,14 @@
  */
 global with sharing class FEC_GetCSAttachedFile {
 
-    webservice static GetCSAttachedFileResponseType GetCSAttachedFileRequest(        SysType Sys,
+    webservice static GetCSAttachedFileResponseType GetCSAttachedFileRequest(
+        SysType Sys,
         RequestInfoType RequestInfo
     ) {
         GetCSAttachedFileResponseType response = new GetCSAttachedFileResponseType();
+        Boolean isSuccess = true;
+        String errorMessage;
+
         response.Sys = new SysType2();
         response.Sys.DateTime_x = System.now();
         if (Sys == null) {
@@ -28,7 +32,7 @@ global with sharing class FEC_GetCSAttachedFile {
 
             Case targetCase = getCaseById(RequestInfo.CaseID);
             validateCaseAccess(targetCase, RequestInfo.ContractOrAccountInfos, RequestInfo.UserType);
-            
+
             ContentVersion latestVersion = getAttachedFileVersion(targetCase.Id, RequestInfo.FileID);
 
             response.Sys.Code = FEC_ConstantCommon.CODE_SUCCESS;
@@ -37,8 +41,25 @@ global with sharing class FEC_GetCSAttachedFile {
             response.FileType = getFileType(latestVersion.FileExtension);
             response.FileContent = EncodingUtil.base64Encode(latestVersion.VersionData);
         } catch (Exception e) {
-            handleError(response, e.getMessage());
+            isSuccess = false;
+            errorMessage = e.getMessage();
+            handleError(response, errorMessage);
         }
+
+        GetCSAttachedFileRequestPayload requestPayload = new GetCSAttachedFileRequestPayload();
+        requestPayload.Sys = Sys;
+        requestPayload.RequestInfo = RequestInfo;
+
+        logApiFull(
+            'GetCSAttachedFile',
+            'POST',
+            requestPayload,
+            buildLogResponsePayload(response),
+            isSuccess,
+            isSuccess ? '200' : '500',
+            errorMessage,
+            Sys != null ? Sys.TransactionID : null
+        );
 
         return response;
     }
@@ -50,15 +71,7 @@ global with sharing class FEC_GetCSAttachedFile {
         if (sys == null) {
             throw new ServiceException(String.format(System.Label.FEC_MSG_Param_Required, new List<String>{'Sys'}));
         }
-        if (String.isBlank(sys.Channel)) {
-            throw new ServiceException(String.format(System.Label.FEC_MSG_Param_Required, new List<String>{'Channel'}));
-        }
-        if (!FEC_ConstantCommon.CANCEL_CS_VALID_CHANNELS.contains(sys.Channel)) {
-            throw new ServiceException(String.format(
-                System.Label.FEC_MSG_CancelCS_Channel_Invalid,
-                new List<String>{String.join(FEC_ConstantCommon.CANCEL_CS_VALID_CHANNELS_ORDERED, ', ')}
-            ));
-        }
+        validateActiveChannel(sys.Channel);
         if (String.isNotBlank(sys.TransactionID) && sys.TransactionID.length() > FEC_ConstantCommon.CANCEL_CS_TRANSACTION_ID_MAX_LEN) {
             throw new ServiceException(String.format(
                 System.Label.FEC_MSG_Param_Maxlength,
@@ -254,6 +267,81 @@ global with sharing class FEC_GetCSAttachedFile {
         return parsedId.getSObjectType() == expectedType;
     }
 
+    private static void validateActiveChannel(String channel) {
+        if (String.isBlank(channel)) {
+            throw new ServiceException(String.format(System.Label.FEC_MSG_Param_Required, new List<String>{'Channel'}));
+        }
+        String normalizedChannel = channel.trim();
+        List<FEC_Channel__c> channels = [
+            SELECT Id
+            FROM FEC_Channel__c
+            WHERE FEC_Channel_ID__c = :normalizedChannel
+            AND FEC_Channel_Status__c = true
+            LIMIT 1
+        ];
+        if (channels.isEmpty()) {
+            throw new ServiceException(String.format(
+                System.Label.FEC_MSG_CancelCS_Channel_Invalid,
+                new List<String>{ getActiveChannelIdsForError() }
+            ));
+        }
+    }
+
+    private static String getActiveChannelIdsForError() {
+        List<String> channelIds = new List<String>();
+        for (FEC_Channel__c ch : [
+            SELECT FEC_Channel_ID__c
+            FROM FEC_Channel__c
+            WHERE FEC_Channel_Status__c = true
+            AND FEC_Channel_ID__c != null
+            ORDER BY FEC_Channel_ID__c ASC
+        ]) {
+            channelIds.add(ch.FEC_Channel_ID__c);
+        }
+        return String.join(channelIds, ', ');
+    }
+
+    private static GetCSAttachedFileResponseLogType buildLogResponsePayload(
+        GetCSAttachedFileResponseType response
+    ) {
+        GetCSAttachedFileResponseLogType logResponse = new GetCSAttachedFileResponseLogType();
+        logResponse.Sys = response.Sys;
+        logResponse.FileName = response.FileName;
+        logResponse.FileType = response.FileType;
+        if (String.isNotBlank(response.FileContent)) {
+            logResponse.FileContent = '[OMITTED:length=' + response.FileContent.length() + ']';
+        }
+        return logResponse;
+    }
+
+    private static void logApiFull(
+        String endpoint,
+        String method,
+        Object requestObj,
+        Object responseObj,
+        Boolean isSuccess,
+        String statusCode,
+        String errorMessage,
+        String transactionId
+    ) {
+        try {
+            HttpResponse apiResponse = new HttpResponse();
+            apiResponse.setStatusCode(isSuccess ? 200 : 500);
+            apiResponse.setBody(FEC_CommonUltils.serializeSafe(responseObj));
+
+            FEC_CommonUltils.logApi(
+                'GetCSAttachedFile',
+                endpoint,
+                method,
+                FEC_CommonUltils.serializeSafe(requestObj),
+                apiResponse,
+                errorMessage
+            );
+        } catch (Exception e) {
+            System.debug('LOG_API_ERROR: ' + e.getMessage());
+        }
+    }
+
     private static void handleError(GetCSAttachedFileResponseType response, String errorMessage) {
         response.Sys.Code = FEC_ConstantCommon.CODE_SYS_ERROR;
         response.Sys.Description = errorMessage.startsWith(FEC_ConstantCommon.ERROR_PREFIX)
@@ -264,6 +352,18 @@ global with sharing class FEC_GetCSAttachedFile {
         response.FileType = null;
 
         System.debug(LoggingLevel.ERROR, errorMessage);
+    }
+
+    private class GetCSAttachedFileRequestPayload {
+        public SysType Sys;
+        public RequestInfoType RequestInfo;
+    }
+
+    private class GetCSAttachedFileResponseLogType {
+        public SysType2 Sys;
+        public String FileName;
+        public String FileContent;
+        public String FileType;
     }
 
     private class ServiceException extends Exception {}
