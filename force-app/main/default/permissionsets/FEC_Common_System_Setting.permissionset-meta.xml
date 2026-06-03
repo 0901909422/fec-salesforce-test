@@ -97,6 +97,10 @@
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
+        <apexClass>FEC_BCH_CofGsrImportRouteToService</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
         <apexClass>FEC_BCH_ExportPropertyService</apexClass>
         <enabled>true</enabled>
     </classAccesses>
@@ -114,6 +118,10 @@
     </classAccesses>
     <classAccesses>
         <apexClass>FEC_BCH_ImportRoutingResolver</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_BCH_ImportFileNameValidator</apexClass>
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
@@ -398,6 +406,10 @@
     </classAccesses>
     <classAccesses>
         <apexClass>FEC_CaseMasterDataHelper</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_CaseMigrationService</apexClass>
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
@@ -1282,6 +1294,10 @@
     </classAccesses>
     <classAccesses>
         <apexClass>FEC_TransactionsController</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_UMSUserManagementRestService</apexClass>
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>

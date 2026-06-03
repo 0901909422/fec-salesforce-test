@@ -3374,24 +3374,33 @@ public without sharing class FEC_BatchCaseHandlingImportService {
             return errs;
         }
         if (profile == FEC_BatchCaseHandlingImportProfile.FIELD_PROFILE_PM_PAYMENT) {
-            // 01/06/2026 - PM import: bắt buộc Payment đánh giá yêu cầu đóng hợp đồng khi template có field này.
-            validateD2CField(
-                rr,
-                rr.paymentContractAssessment,
-                LABEL_PAYMENT_CONTRACT_ASSESSMENT,
-                new Set<String>{
-                    normalizeToken(LABEL_PAYMENT_CONTRACT_ASSESSMENT),
-                    normalizeToken(LABEL_PAYMENT_CONTRACT_ASSESSMENT_ALIAS),
-                    normalizeToken(LABEL_PAYMENT_CONTRACT_ASSESSMENT_MDM_EN)
-                },
-                ERR_MISSING_PAYMENT_ASSESSMENT,
-                ERR_INVALID_PAYMENT_ASSESSMENT,
-                'FEC_RD_Payment_Contract_Assessment__c',
-                configuredLabels,
-                picklistValueByNormByField,
-                errs,
-                true
-            );
+            //tungnm37 - chỉ validate Payment assessment khi file import thực sự có cột này.
+            if (hasAnyImportHeader(rr, new Set<String>{
+                normalizeToken(LABEL_PAYMENT_CONTRACT_ASSESSMENT),
+                normalizeToken(LABEL_PAYMENT_CONTRACT_ASSESSMENT_ALIAS),
+                normalizeToken(LABEL_PAYMENT_CONTRACT_ASSESSMENT_MDM_EN),
+                'paymentcontractassessment',
+                'rdpaymentcontractassessment',
+                'paymentdanhgiayeucaudonghopdong'
+            })) {
+                validateD2CField(
+                    rr,
+                    rr.paymentContractAssessment,
+                    LABEL_PAYMENT_CONTRACT_ASSESSMENT,
+                    new Set<String>{
+                        normalizeToken(LABEL_PAYMENT_CONTRACT_ASSESSMENT),
+                        normalizeToken(LABEL_PAYMENT_CONTRACT_ASSESSMENT_ALIAS),
+                        normalizeToken(LABEL_PAYMENT_CONTRACT_ASSESSMENT_MDM_EN)
+                    },
+                    ERR_MISSING_PAYMENT_ASSESSMENT,
+                    ERR_INVALID_PAYMENT_ASSESSMENT,
+                    'FEC_RD_Payment_Contract_Assessment__c',
+                    configuredLabels,
+                    picklistValueByNormByField,
+                    errs,
+                    true
+                );
+            }
             return errs;
         }
         if (profile == FEC_BatchCaseHandlingImportProfile.FIELD_PROFILE_CP_ASSESSMENT) {

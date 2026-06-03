@@ -56,6 +56,7 @@
         <members>FEC_GetIPPDetailsCallout</members>
         <members>FEC_UpdateCustomerAddress</members>
         <members>FEC_UpdateCustomerContact</members>
+        <members>FEC_UMSUserManagementRestService</members>
         <members>FEC_CardEligibilityController</members>
         <members>FEC_AssignmentTriggerHandler</members>
         <members>FEC_BancaController</members>
@@ -120,6 +121,7 @@
 		<members>FEC_CaseAssignmentConflictService_Test</members>
 		<members>FEC_CaseManagerListService</members>
 		<members>FEC_CaseMasterDataHelper</members>
+		<members>FEC_CaseMigrationService</members>
 		<members>FEC_AutoHoldCaseApi</members>
 		<members>FEC_AutoHoldCaseExpireBatch</members>
 		<members>FEC_AutoHoldCaseExpireSchedulable</members>
@@ -180,6 +182,8 @@
 		<members>FEC_BCH_IncorrectPaymentTemplateWriter</members>
 		<members>FEC_BCH_AssignmentRouteToService</members>
 		<members>FEC_BCH_AssignmentUpdateService</members>
+		<members>FEC_BCH_CofGsrImportRouteToService</members>
+		<members>FEC_BCH_ImportFileNameValidator</members>
 		<members>FEC_BCH_ImportRoutingHistoryService</members>
 		<members>FEC_BCH_ImportRoutingResolver</members>
 		<members>FEC_BCH_PicklistTranslationCtrl</members>
@@ -229,6 +233,7 @@
 	    <members>fec_SensitiveDataTable</members>
 	    <members>fec_customerAdditionalData</members>
 	    <members>fec_RepaymentSchedulePaymentHistory</members>
+	    <members>fecRelevantTicketModalHost</members>
 	    <members>fec_UpdateAddress</members>
 	    <members>fec_CollectionInteractions</members>
 	    <members>fec_allocationHistory</members>
@@ -592,6 +597,7 @@
 		<members>FEC_NFU_Modal_Save_Error</members>
         <members>FEC_Send_Manual_Notification</members>
         <members>FEC_RelevantTicket_Field_Interaction</members>
+        <members>FEC_RelevantTicket_Action_Not_Allowed</members>
 		<name>CustomLabel</name>
 	</types>
     <types>
