@@ -491,7 +491,9 @@ public without sharing class FEC_CardClosureRefundController {
             applyVmxBlkcdApiResponse(dto, vmxResult);
         } catch (Exception ex) {
             dto.success = false;
-            dto.errorMessage = System.Label.FEC_MSG_Card_Block_Failed;
+            dto.errorMessage = String.isNotBlank(ex.getMessage())
+                ? ex.getMessage()
+                : System.Label.FEC_MSG_Card_Block_Failed;
         } finally {
             FEC_VmxAcctBlkcdUpdEmeaCallout.logApiResponse();
             logBlockCardProcessActionHistory(ctx, PROCESS_ACTION_VMX_BLKCD, dto.success == true);
@@ -642,22 +644,13 @@ public without sharing class FEC_CardClosureRefundController {
                 dto.transId = result.transId;
             }
         }
-        dto.success = isVmxBlkcdUpdApiSuccess(result);
+        dto.success = FEC_VmxAcctBlkcdUpdEmeaCallout.isBlkcdUpdBusinessSuccess(result);
         if (!dto.success) {
-            dto.errorMessage = String.isNotBlank(result?.responseDesc)
-                ? result.responseDesc
+            String vmxErr = FEC_VmxAcctBlkcdUpdEmeaCallout.resolveBlkcdUpdErrorMessage(result);
+            dto.errorMessage = String.isNotBlank(vmxErr)
+                ? vmxErr
                 : System.Label.FEC_MSG_Card_Block_Failed;
         }
-    }
-
-    private static Boolean isVmxBlkcdUpdApiSuccess(FEC_VmxAcctBlkcdUpdEmeaCallout.BlkcdUpdResult result) {
-        if (result == null) {
-            return false;
-        }
-        if (FEC_VmxAcctBlkcdUpdEmeaCallout.isBlkcdUpdSuccess(result)) {
-            return true;
-        }
-        return descriptionContainsSuccess(result.responseDesc);
     }
 
     private static Boolean descriptionContainsSuccess(String description) {

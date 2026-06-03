@@ -59,6 +59,7 @@ public with sharing class FEC_VmxAcctBlkcdUpdEmeaCallout {
         @AuraEnabled public String transId { get; set; }
         @AuraEnabled public String responseCode { get; set; }
         @AuraEnabled public String responseDesc { get; set; }
+        @AuraEnabled public String vmxReturnDesc { get; set; }
 
         @AuraEnabled public String svcReturn { get; set; }
         @AuraEnabled public Integer rcNbrOccur { get; set; }
@@ -163,19 +164,22 @@ public with sharing class FEC_VmxAcctBlkcdUpdEmeaCallout {
                     Dom.Document responseDoc = new Dom.Document();
                     responseDoc.load(responseBody);
                     BlkcdUpdResult result = parseResponse(responseDoc);
+                    if (isVmxSvcReturnFailure(result)) {
+                        throw new CalloutException(
+                            String.format(
+                                System.Label.FEC_MSG_API_Error,
+                                new List<String>{ resolveBlkcdUpdErrorMessage(result) }
+                            )
+                        );
+                    }
                     if (result.responseCode != null && result.responseCode != '1') {
                         if (!isBlkcdUpdDescriptionSuccess(result.responseDesc)) {
                             throw new CalloutException(
                                 String.format(
                                     System.Label.FEC_MSG_API_Error,
-                                    new List<String>{ result.responseDesc }
+                                    new List<String>{ resolveBlkcdUpdErrorMessage(result) }
                                 )
                             );
-                        }
-                    }
-                    if (result.svcReturn == 'F') {
-                        if (!isBlkcdUpdDescriptionSuccess(result.responseDesc)) {
-                            throw new CalloutException(System.Label.FEC_MSG_API_Error);
                         }
                     }
                     return result;
@@ -222,7 +226,33 @@ public with sharing class FEC_VmxAcctBlkcdUpdEmeaCallout {
     public static Boolean isBlkcdUpdSuccess(BlkcdUpdResult result) {
         return result != null
             && result.responseCode == '1'
-            && result.svcReturn != 'F';
+            && !isVmxSvcReturnFailure(result);
+    }
+
+    public static Boolean isBlkcdUpdBusinessSuccess(BlkcdUpdResult result) {
+        if (result == null || isVmxSvcReturnFailure(result)) {
+            return false;
+        }
+        if (isBlkcdUpdSuccess(result)) {
+            return true;
+        }
+        return isBlkcdUpdDescriptionSuccess(result.responseDesc);
+    }
+
+    public static Boolean isVmxSvcReturnFailure(BlkcdUpdResult result) {
+        return result != null
+            && String.isNotBlank(result.svcReturn)
+            && 'F'.equalsIgnoreCase(result.svcReturn.trim());
+    }
+
+    public static String resolveBlkcdUpdErrorMessage(BlkcdUpdResult result) {
+        if (result == null) {
+            return null;
+        }
+        if (String.isNotBlank(result.vmxReturnDesc)) {
+            return result.vmxReturnDesc;
+        }
+        return result.responseDesc;
     }
 
     public static Boolean isBlkcdUpdDescriptionSuccess(String responseDesc) {
@@ -401,6 +431,10 @@ public with sharing class FEC_VmxAcctBlkcdUpdEmeaCallout {
         }
 
         result.svcReturn = FEC_CommonUltils.getXmlValue(msgOut, 'SVC_RETURN');
+        Dom.XmlNode rcData = msgOut.getChildElement('RC_DATA', null);
+        if (rcData != null) {
+            result.vmxReturnDesc = FEC_CommonUltils.getXmlValue(rcData, 'RETURN_DESC');
+        }
         result.rcNbrOccur = FEC_CommonUltils.toInt(FEC_CommonUltils.getXmlValue(msgOut, 'RC_NBR_OCCUR'));
         result.org = FEC_CommonUltils.getXmlValue(msgOut, 'ORG');
         result.foreignOrg = FEC_CommonUltils.getXmlValue(msgOut, 'FOREIGN_ORG');
