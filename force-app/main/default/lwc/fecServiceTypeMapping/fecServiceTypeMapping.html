@@ -30,7 +30,7 @@
             
             <template if:true={hasSelectedFields}>
                 <div class="slds-m-top_large">
-                    <h3 class="slds-text-heading_small slds-m-bottom_small">BP: {selectedBpName}</h3>
+                    <h3 class="slds-text-heading_small slds-m-bottom_small">{bpHeaderLabel}</h3>
                     <table class="slds-table slds-table_bordered">
                         <thead>
                             <tr class="slds-line-height_reset">
@@ -46,6 +46,7 @@
                                     </td>
                                     <td>
                                         <lightning-input 
+                                            label={field.fieldLabel}
                                             variant="label-hidden" 
                                             value={field.propertyRef}
                                             data-id={field.name}

@@ -97,8 +97,8 @@ export default class FecDecisionTableStage extends LightningElement {
             .catch(err => {
                 this._dropdownHints = {};
                 this.dispatchEvent(new ShowToastEvent({
-                    title: 'Lỗi',
-                    message: err.body?.message || err.message || 'Không thể tải dropdown options',
+                    title: 'Error',
+                    message: err.body?.message || err.message || 'Cannot load dropdown options',
                     variant: 'error'
                 }));
             });

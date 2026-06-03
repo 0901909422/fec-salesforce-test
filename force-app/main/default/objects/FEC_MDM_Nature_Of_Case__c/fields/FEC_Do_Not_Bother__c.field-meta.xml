@@ -1,10 +1,31 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
     <fullName>FEC_Do_Not_Bother__c</fullName>
-    <defaultValue>false</defaultValue>
     <description>Quy trình DNB được áp dụng</description>
     <label>Do Not Bother</label>
+    <required>false</required>
     <trackHistory>true</trackHistory>
     <trackTrending>false</trackTrending>
-    <type>Checkbox</type>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>Enabled</fullName>
+                <default>false</default>
+                <label>Enabled</label>
+            </value>
+            <value>
+                <fullName>Disabled</fullName>
+                <default>true</default>
+                <label>Disabled</label>
+            </value>
+            <value>
+                <fullName>Inherited</fullName>
+                <default>false</default>
+                <label>Inherited</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
 </CustomField>

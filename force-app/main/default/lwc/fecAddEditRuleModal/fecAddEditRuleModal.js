@@ -116,13 +116,13 @@ export default class FecAddEditRuleModal extends LightningElement {
         this.errors = {};
         
         if (!this.formData.previousStageId) {
-            this.errors.previousStageId = 'Vui lòng chọn Current Stage';
+            this.errors.previousStageId = 'Please select Current Stage';
         }
         if (!this.formData.actionButtonId) {
-            this.errors.actionButtonId = 'Vui lòng chọn Action';
+            this.errors.actionButtonId = 'Please select Action';
         }
         if (!this.formData.nextStageId) {
-            this.errors.nextStageId = 'Vui lòng chọn Next Stage';
+            this.errors.nextStageId = 'Please select Next Stage';
         }
         
         const hasErrors = Object.keys(this.errors).length > 0;
@@ -165,11 +165,11 @@ export default class FecAddEditRuleModal extends LightningElement {
     }
 
     get modalTitle() {
-        return this.isEditMode ? 'Chỉnh sửa Rule' : 'Thêm Rule Mới';
+        return this.isEditMode ? 'Edit Rule' : 'Add New Rule';
     }
 
     get saveButtonLabel() {
-        return this.isEditMode ? 'Cập nhật' : 'Thêm Rule';
+        return this.isEditMode ? 'Update' : 'Add Rule';
     }
 
     get getErrorClass() {

@@ -157,7 +157,7 @@
     <nameField>
         <displayFormat>HCC-{0000}</displayFormat>
         <label>Hold Case Config Name</label>
-        <trackHistory>false</trackHistory>
+        <trackHistory>true</trackHistory>
         <type>AutoNumber</type>
     </nameField>
     <pluralLabel>MDM Hold Case Configs</pluralLabel>
