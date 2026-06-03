@@ -20,6 +20,8 @@ public without sharing class FEC_CardClosureRefundController {
     private static final String LOCK_API_SUCCESS_DESCRIPTION = 'LOCK_SUCCESS';
     private static final String UNLOCK_API_SUCCESS_CODE = '2';
     private static final String UNLOCK_API_SUCCESS_DESCRIPTION = 'UNLOCK_SUCCESS';
+    private static final Pattern API_DESCRIPTION_SUCCESS_PATTERN =
+        Pattern.compile('(?i)(?:^|[^a-zA-Z])success(?:[^a-zA-Z]|$)');
 
     public class LockUnlockResultDTO {
         @AuraEnabled public Boolean success;
@@ -659,7 +661,10 @@ public without sharing class FEC_CardClosureRefundController {
     }
 
     private static Boolean descriptionContainsSuccess(String description) {
-        return String.isNotBlank(description) && description.trim().toLowerCase().contains('success');
+        if (String.isBlank(description)) {
+            return false;
+        }
+        return API_DESCRIPTION_SUCCESS_PATTERN.matcher(description.trim()).find();
     }
 
     /**

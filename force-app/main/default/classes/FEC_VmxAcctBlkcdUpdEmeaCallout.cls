@@ -14,6 +14,8 @@ public with sharing class FEC_VmxAcctBlkcdUpdEmeaCallout {
     private static final String WS_RESPONSE_NS = 'http://fecredit.com.vn/cms/ws/v2';
     private static final String SERVICE_ROOT = 'VMX_ACCT_BLKCD_UPD_EMEA';
     private static final String API_LOG_NAME = 'FEC_Vmx_Acct_Blkcd_Upd_Emea';
+    private static final Pattern API_DESCRIPTION_SUCCESS_PATTERN =
+        Pattern.compile('(?i)(?:^|[^a-zA-Z])success(?:[^a-zA-Z]|$)');
 
     private static ResponseLog responseLog;
 
@@ -224,7 +226,10 @@ public with sharing class FEC_VmxAcctBlkcdUpdEmeaCallout {
     }
 
     public static Boolean isBlkcdUpdDescriptionSuccess(String responseDesc) {
-        return String.isNotBlank(responseDesc) && responseDesc.trim().toLowerCase().contains('success');
+        if (String.isBlank(responseDesc)) {
+            return false;
+        }
+        return API_DESCRIPTION_SUCCESS_PATTERN.matcher(responseDesc.trim()).find();
     }
 
     // ==========================================
