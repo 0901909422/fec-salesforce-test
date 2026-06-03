@@ -56,6 +56,7 @@
         <members>FEC_GetIPPDetailsCallout</members>
         <members>FEC_UpdateCustomerAddress</members>
         <members>FEC_UpdateCustomerContact</members>
+        <members>FEC_UMSUserManagementRestService</members>
         <members>FEC_CardEligibilityController</members>
         <members>FEC_AssignmentTriggerHandler</members>
         <members>FEC_BancaController</members>
@@ -120,6 +121,7 @@
 		<members>FEC_CaseAssignmentConflictService_Test</members>
 		<members>FEC_CaseManagerListService</members>
 		<members>FEC_CaseMasterDataHelper</members>
+		<members>FEC_CaseMigrationService</members>
 		<members>FEC_AutoHoldCaseApi</members>
 		<members>FEC_AutoHoldCaseExpireBatch</members>
 		<members>FEC_AutoHoldCaseExpireSchedulable</members>
