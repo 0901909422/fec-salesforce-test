@@ -1747,5 +1747,18 @@ public with sharing class FEC_CommonUltils {
   public static Boolean isCccd(String value) {
     return String.isNotBlank(value) && Pattern.matches(FEC_ConstantCommon.INPUT_SEPARATOR_REGEX_12, value.trim());
   }
+  public static String mapApiContractStatusToPicklist(String apiContractStatus) {
+    if (String.isBlank(apiContractStatus)) {
+      return null;
+    }
+    String normalizedKey = apiContractStatus
+      .trim()
+      .toUpperCase()
+      .replaceAll(FEC_ConstantCommon.PATTERN_NON_ALNUM_UPPER, '');
+    if (String.isBlank(normalizedKey)) {
+      return null;
+    }
+    return FEC_ConstantCommon.API_CONTRACT_STATUS_TO_PICKLIST.get(normalizedKey);
+  }
 
 }

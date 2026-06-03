@@ -36,7 +36,7 @@
                             </p>
                         </template>
                         <lightning-radio-group name="updateChoice" options={radioOptions} value={selectedOption}
-                            type="radio" variant="label-hidden" class="horizontal-radio" onchange={handleRadioChange}>
+                            type="radio" variant="label-hidden" class="horizontal-radio" onchange={handleRadioChange} disabled={isReadonlyMode}>
                         </lightning-radio-group>
 
                     </div>
