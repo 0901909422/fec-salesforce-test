@@ -275,7 +275,9 @@ public with sharing class FEC_MainInfoLoanAccountController {
             rec.FEC_Contract_Type__c    = loan.ContractType;
             String contractStatusValue = resolveContractStatusPicklistValue(loan.ContractStatus);
             if (contractStatusValue != null) {
-                rec.FEC_Contract_Status__c = contractStatusValue;
+               rec.FEC_Contract_Status__c = FEC_CommonUltils.mapApiContractStatusToPicklist(
+                loan.ContractStatus
+            );
             }
             rec.FEC_Agreement_Date__c   = loan.AgreementDate;
             rec.FEC_Application_ID__c   = loan.ApplicationID;
