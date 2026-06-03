@@ -6,7 +6,6 @@ import getGeneralAssignmentNames from '@salesforce/apex/FEC_NewAssignmentControl
 import createAssignment from '@salesforce/apex/FEC_NewAssignmentController.createAssignment';
 import ASSIGNMENT_OBJECT from '@salesforce/schema/FEC_Assignment__c';
 import ASSIGNMENT_TYPE_FIELD from '@salesforce/schema/FEC_Assignment__c.FEC_Assignment_Type__c';
-import ASSIGNMENT_STATUS_FIELD from '@salesforce/schema/FEC_Assignment__c.FEC_Assignment_Status__c';
 import { ASSIGNMENT_TYPE_CALL, ASSIGNMENT_TYPE_GENERAL, ASSIGNMENT_TYPE_ROUTING } from 'c/fec_CommonConst';
 import LABEL_CALL_NAME from '@salesforce/label/c.FEC_NEW_ASSIGNMENT_CALL_NAME';
 import LABEL_ERR_TYPE from '@salesforce/label/c.FEC_NEW_ASSIGNMENT_ERR_TYPE_REQUIRED';
@@ -26,7 +25,6 @@ export default class Fec_NewAssignmentAction extends LightningElement {
 
     _objectInfo;
     _typeOptions = [];
-    _statusOptions = [];
 
     @wire(getObjectInfo, { objectApiName: ASSIGNMENT_OBJECT })
     wiredObjectInfo({ data }) {
@@ -38,10 +36,6 @@ export default class Fec_NewAssignmentAction extends LightningElement {
         if (data) this._typeOptions = data.values.map(v => ({ label: v.label, value: v.value }));
     }
 
-    @wire(getPicklistValues, { recordTypeId: '$_defaultRecordTypeId', fieldApiName: ASSIGNMENT_STATUS_FIELD })
-    wiredStatus({ data }) {
-        if (data) this._statusOptions = data.values.map(v => ({ label: v.label, value: v.value }));
-    }
 
     get _defaultRecordTypeId() {
         return this._objectInfo?.defaultRecordTypeId;
@@ -52,7 +46,7 @@ export default class Fec_NewAssignmentAction extends LightningElement {
     }
 
     get assignmentStatusOptions() {
-        return this._statusOptions.length ? this._statusOptions : [{ label: 'Open', value: 'Open' }];
+        return [{ label: 'Open', value: 'Open' }];
     }
 
     get assignmentNameOptions() {
@@ -91,7 +85,7 @@ export default class Fec_NewAssignmentAction extends LightningElement {
         }
     }
 
-    handleStatusChange(e) { this.assignmentStatus = e.detail.value; }
+    handleStatusChange() { this.assignmentStatus = 'Open'; }
     handleNameChange(e) { this.assignmentName = e.detail.value; }
 
     handleClose() {
@@ -121,3 +115,5 @@ export default class Fec_NewAssignmentAction extends LightningElement {
             });
     }
 }
+
+

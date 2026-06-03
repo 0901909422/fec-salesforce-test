@@ -2263,7 +2263,7 @@
     </types>
     <types>
         <members>Action_Button_Record_Page</members>
-        <members>Assignment_Record_Page</members>
+        <members>FEC_Assignment_Record_Page</members>
         <members>Business_Process_Record_Page</members>
         <members>Case_Stage_Record_Page</members>
         <members>Category_Record_Page</members>

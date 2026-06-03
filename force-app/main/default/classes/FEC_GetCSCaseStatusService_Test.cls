@@ -54,7 +54,9 @@ private class FEC_GetCSCaseStatusService_Test {
         Case c = [SELECT Id FROM Case WHERE FEC_ID_Search__c = 'CASE123' LIMIT 1];
 
         System.assertEquals(1, res.Sys.Code, 'API nên trả về code 1 (Success).');
-        System.assertEquals(c.Id, res.CaseResultInfo.CaseID, 'CaseID phải là Id Case tìm được.');
+        System.assertNotEquals(null, res.CaseResultInfos, 'CaseResultInfos phải được trả về.');
+        System.assertEquals(1, res.CaseResultInfos.size(), 'Phải có đúng 1 case trong kết quả.');
+        System.assertEquals(c.Id, res.CaseResultInfos[0].CaseID, 'CaseID phải là Id Case tìm được.');
     }
 
     @IsTest

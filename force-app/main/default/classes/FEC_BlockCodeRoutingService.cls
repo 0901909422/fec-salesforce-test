@@ -256,10 +256,30 @@ public without sharing class FEC_BlockCodeRoutingService {
     String subCategoryId,
     String subCodeId
   ) {
+    return isRc27DefaultOmDay2RoutingInternal(
+      c,
+      categoryId,
+      subCategoryId,
+      subCodeId,
+      false
+    );
+  }
+
+  @TestVisible
+  private static Boolean isRc27DefaultOmDay2RoutingInternal(
+    Case c,
+    String categoryId,
+    String subCategoryId,
+    String subCodeId,
+    Boolean skipCustomerHistoryBlockCode
+  ) {
     if (!isCurrentCaseRc27ByCurrentNoc(c, categoryId, subCategoryId, subCodeId)) {
       return false;
     }
-    if (isCustomerHistoryForcedOmDay2(c?.FEC_Account_or_Contract__c)) {
+    if (
+      skipCustomerHistoryBlockCode != true &&
+      isCustomerHistoryForcedOmDay2(c?.FEC_Account_or_Contract__c)
+    ) {
       return false;
     }
     return !hasSiblingRc09CasesOnInteraction(c.FEC_Interaction__c, c.Id);
@@ -363,10 +383,30 @@ public without sharing class FEC_BlockCodeRoutingService {
     String subCategoryId,
     String subCodeId
   ) {
+    return isRc27SiblingSpDqStageThreeRoutingInternal(
+      c,
+      categoryId,
+      subCategoryId,
+      subCodeId,
+      false
+    );
+  }
+
+  @TestVisible
+  private static Boolean isRc27SiblingSpDqStageThreeRoutingInternal(
+    Case c,
+    String categoryId,
+    String subCategoryId,
+    String subCodeId,
+    Boolean skipCustomerHistoryBlockCode
+  ) {
     if (!isCurrentCaseRc27ByCurrentNoc(c, categoryId, subCategoryId, subCodeId)) {
       return false;
     }
-    if (isCustomerHistoryForcedOmDay2(c?.FEC_Account_or_Contract__c)) {
+    if (
+      skipCustomerHistoryBlockCode != true &&
+      isCustomerHistoryForcedOmDay2(c?.FEC_Account_or_Contract__c)
+    ) {
       return false;
     }
     return hasSiblingRc09CasesOnInteraction(c.FEC_Interaction__c, c.Id);
@@ -564,6 +604,8 @@ public without sharing class FEC_BlockCodeRoutingService {
       theCase != null ? (String) theCase.FEC_SubCategory__c : null,
       theCase != null ? (String) theCase.FEC_SubCode__c : null,
       theCase != null ? theCase.FEC_Current_Case_Stage__c : null,
+      null,
+      null,
       null
     );
   }
@@ -588,6 +630,8 @@ public without sharing class FEC_BlockCodeRoutingService {
       currentSubCategoryId,
       currentSubCodeId,
       theCase != null ? theCase.FEC_Current_Case_Stage__c : null,
+      null,
+      null,
       null
     );
   }
@@ -605,6 +649,34 @@ public without sharing class FEC_BlockCodeRoutingService {
     String currentSubCodeId,
     Id currentStageId,
     Id routeToActionId
+  ) {
+    applyToBusinessIfApplicable(
+      theCase,
+      businessResult,
+      currentCategoryId,
+      currentSubCategoryId,
+      currentSubCodeId,
+      currentStageId,
+      routeToActionId,
+      null,
+      null
+    );
+  }
+
+  /**
+   * @param clientBlockCode block code thẻ từ LWC (localStorage / checkProcessAction); null = không dùng.
+   * @param clientBlockCode1 blkCd1 EMEA; null = không dùng.
+   */
+  public static void applyToBusinessIfApplicable(
+    Case theCase,
+    FEC_CaseBusinessService.Business businessResult,
+    String currentCategoryId,
+    String currentSubCategoryId,
+    String currentSubCodeId,
+    Id currentStageId,
+    Id routeToActionId,
+    String clientBlockCode,
+    String clientBlockCode1
   ) {
     if (businessResult == null || theCase == null) {
       return;
@@ -628,6 +700,58 @@ public without sharing class FEC_BlockCodeRoutingService {
       );
       return;
     }
+
+    if (
+      isRc27ClientBlockCodeRoutingActive(
+        theCase,
+        currentCategoryId,
+        currentSubCategoryId,
+        currentSubCodeId,
+        clientBlockCode,
+        clientBlockCode1
+      )
+    ) {
+      String cBc = trimBlockCodeParam(clientBlockCode);
+      String cBc1 = trimBlockCodeParam(clientBlockCode1);
+      if (isBlockCodePairForcedOmDay2(cBc, cBc1)) {
+        applyForcedOmDay2DisplayToBusiness(businessResult);
+        return;
+      }
+      if (
+        isRc27DefaultOmDay2RoutingInternal(
+          theCase,
+          currentCategoryId,
+          currentSubCategoryId,
+          currentSubCodeId,
+          true
+        )
+      ) {
+        applyRc27DefaultOmDay2FromStageChange(
+          businessResult,
+          currentStageId,
+          routeToActionId
+        );
+        return;
+      }
+      if (
+        isRc27SiblingSpDqStageThreeRoutingInternal(
+          theCase,
+          currentCategoryId,
+          currentSubCategoryId,
+          currentSubCodeId,
+          true
+        )
+      ) {
+        applyRc27SiblingSpDqStageThreeFromStageChange(
+          businessResult,
+          currentStageId,
+          routeToActionId
+        );
+        return;
+      }
+      return;
+    }
+
     if (
       isRc27DefaultOmDay2Routing(
         theCase,
@@ -644,21 +768,7 @@ public without sharing class FEC_BlockCodeRoutingService {
       return;
     }
     if (isCustomerHistoryForcedOmDay2(theCase.FEC_Account_or_Contract__c)) {
-      List<Group> ql = [
-        SELECT Id, Name
-        FROM Group
-        WHERE Type = :FEC_ConstantCommon.GROUP_TYPE_QUEUE
-          AND DeveloperName = :FEC_ConstantCommon.QUEUE_DAY_2_CHECK_NAME
-        LIMIT 1
-      ];
-      if (!ql.isEmpty()) {
-        businessResult.nextTeam = TEAM_DISPLAY_OM;
-        businessResult.nextQueue = new FEC_CommonUltils.PicklistOption(
-          ql[0].Name,
-          (String) ql[0].Id,
-          null
-        );
-      }
+      applyForcedOmDay2DisplayToBusiness(businessResult);
       return;
     }
     if (
@@ -675,6 +785,56 @@ public without sharing class FEC_BlockCodeRoutingService {
         routeToActionId
       );
       return;
+    }
+  }
+
+  private static String trimBlockCodeParam(String value) {
+    return value != null ? value.trim() : null;
+  }
+
+  private static Boolean hasClientBlockCodeContext(
+    String clientBlockCode,
+    String clientBlockCode1
+  ) {
+    return String.isNotBlank(trimBlockCodeParam(clientBlockCode)) ||
+      String.isNotBlank(trimBlockCodeParam(clientBlockCode1));
+  }
+
+  private static Boolean isRc27ClientBlockCodeRoutingActive(
+    Case c,
+    String categoryId,
+    String subCategoryId,
+    String subCodeId,
+    String clientBlockCode,
+    String clientBlockCode1
+  ) {
+    return hasClientBlockCodeContext(clientBlockCode, clientBlockCode1) &&
+      isCurrentCaseRc27ByCurrentNoc(c, categoryId, subCategoryId, subCodeId);
+  }
+
+  private static void applyForcedOmDay2DisplayToBusiness(
+    FEC_CaseBusinessService.Business businessResult
+  ) {
+    if (businessResult == null) {
+      return;
+    }
+    Id queueId = resolveDay2CheckQueueId();
+    if (queueId == null) {
+      return;
+    }
+    List<Group> ql = [
+      SELECT Id, Name
+      FROM Group
+      WHERE Id = :queueId
+      LIMIT 1
+    ];
+    if (!ql.isEmpty()) {
+      businessResult.nextTeam = TEAM_DISPLAY_OM;
+      businessResult.nextQueue = new FEC_CommonUltils.PicklistOption(
+        ql[0].Name,
+        (String) ql[0].Id,
+        null
+      );
     }
   }
 

@@ -1,4 +1,20 @@
 public without sharing class FEC_CardReplacementAddressController {
+    /**
+     * Prefix key localStorage (LWC): fec_card_replacement_block_codes_{caseId}
+     * JSON: { "blockCode": "...", "blockCode1": "..." }
+     */
+    public static final String BLOCK_CODE_LOCAL_STORAGE_KEY_PREFIX =
+        'fec_card_replacement_block_codes_';
+
+    public static String buildBlockCodeLocalStorageKey(String caseId) {
+        return String.isBlank(caseId)
+            ? 'fec_card_replacement_block_codes'
+            : BLOCK_CODE_LOCAL_STORAGE_KEY_PREFIX + caseId;
+    }
+
+    private static String normalizeBlockCodeValue(String value) {
+        return String.isNotBlank(value) ? value.trim() : null;
+    }
     @AuraEnabled
     public static List<FEC_Address_Info__c> getAddressInfos(String caseId) {
         try {
@@ -167,8 +183,15 @@ public without sharing class FEC_CardReplacementAddressController {
     }
 
     @AuraEnabled
+    public static String getBlockCodeLocalStorageKey(String caseId) {
+        return buildBlockCodeLocalStorageKey(caseId);
+    }
+
+    @AuraEnabled
     public static ReplaceCardResult checkProcessAction(String caseId) {
         ReplaceCardResult result = new ReplaceCardResult();
+        String blockCode;
+        String blockCode1;
         try {
             List<String> inValidBlockCode = new List<String>{'F', 'S', 'G', 'N'};
             List<String> inValidBlockCode1 = new List<String>{'F', 'G', 'N'};
@@ -179,8 +202,6 @@ public without sharing class FEC_CardReplacementAddressController {
                 FROM Case 
                 WHERE Id = :caseId
             ];
-            String blockCode;
-            String blockCode1;
             FEC_CardLockUnLockController.ResponseResult cardStatus = FEC_CardLockUnLockController.getCardStatus(caseId);
             blockCode = cardStatus?.currentBlockCode;
 
@@ -195,7 +216,10 @@ public without sharing class FEC_CardReplacementAddressController {
             FEC_EmeaAccountInqService.EmeaResult emeaRes = FEC_EmeaAccountInqService.callAccountInquiry(input);
             blockCode1 = emeaRes?.blkCd1;
 
-            if ((String.isNotBlank(blockCode) && inValidBlockCode.contains(blockCode))|| (String.isNotBlank(blockCode1) && inValidBlockCode1.contains(blockCode1))) {
+            String bc = normalizeBlockCodeValue(blockCode);
+            String bc1 = normalizeBlockCodeValue(blockCode1);
+
+            if ((String.isNotBlank(bc) && inValidBlockCode.contains(bc))|| (String.isNotBlank(bc1) && inValidBlockCode1.contains(bc1))) {
                 result.isShowAction = false;
                 result.strMsg = System.Label.FEC_MSG_CARD_REPLACEMENT_CS_D2C;
             } else {
@@ -221,6 +245,10 @@ public without sharing class FEC_CardReplacementAddressController {
                 e.getMessage(),
                 e.getStackTraceString()
             );
+        } finally {
+            result.blockCode = normalizeBlockCodeValue(blockCode);
+            result.blockCode1 = normalizeBlockCodeValue(blockCode1);
+            result.localStorageKey = buildBlockCodeLocalStorageKey(caseId);
         }
         return result;
     }
@@ -290,6 +318,14 @@ public without sharing class FEC_CardReplacementAddressController {
         public Boolean isShowAction { get; set; }
         @AuraEnabled
         public String strMsg { get; set; }
+        /** Block code thẻ (MCMS) — LWC lưu localStorage cùng blockCode1. */
+        @AuraEnabled
+        public String blockCode { get; set; }
+        @AuraEnabled
+        public String blockCode1 { get; set; }
+        /** Key: fec_card_replacement_block_codes_{caseId} */
+        @AuraEnabled
+        public String localStorageKey { get; set; }
     }
 
     public class UpdateResult {

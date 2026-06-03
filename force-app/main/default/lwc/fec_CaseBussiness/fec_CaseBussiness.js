@@ -192,6 +192,9 @@ const PROCESS_BLOCK_CARD = "Card Block";
 const PROCESS_UNBLOCK_CARD = "Card Unblock";
 const PROCESS_PIN_REISSUE = "PIN Replacement";
 const PROCESS_CARD_REPLACEMENT = "Card Replacement";
+/** Khớp FEC_CardReplacementAddressController.BLOCK_CODE_LOCAL_STORAGE_KEY_PREFIX */
+const CARD_REPLACEMENT_BLOCK_CODE_STORAGE_PREFIX =
+  "fec_card_replacement_block_codes_";
 
 /** Các action không tự lưu NOC trong run() - cần gọi saveCaseNOC trước khi run */
 const ACTIONS_NEED_NOC_BEFORE_RUN = [
@@ -1066,6 +1069,77 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
     return this.recordId ? `fec_case_business_draft_${this.recordId}` : "fec_case_business_draft";
   }
 
+  get cardReplacementBlockCodeStorageKey() {
+    return this.recordId
+      ? `${CARD_REPLACEMENT_BLOCK_CODE_STORAGE_PREFIX}${this.recordId}`
+      : "fec_card_replacement_block_codes";
+  }
+
+  _saveCardReplacementBlockCodesToLocalStorage(blockCode, blockCode1, storageKey) {
+    const key = storageKey || this.cardReplacementBlockCodeStorageKey;
+    if (!key) return;
+    try {
+      localStorage.setItem(
+        key,
+        JSON.stringify({
+          blockCode: blockCode ?? null,
+          blockCode1: blockCode1 ?? null,
+          savedAt: Date.now(),
+        }),
+      );
+    } catch (e) {
+      /* quota / private mode */
+    }
+  }
+
+  _loadCardReplacementBlockCodesFromLocalStorage(storageKey) {
+    const key = storageKey || this.cardReplacementBlockCodeStorageKey;
+    if (!key) return null;
+    try {
+      const raw = localStorage.getItem(key);
+      return raw ? JSON.parse(raw) : null;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  _getBlockCodesForGetByCase() {
+    const cached = this._loadCardReplacementBlockCodesFromLocalStorage();
+    return {
+      blockCode: cached?.blockCode ?? null,
+      blockCode1: cached?.blockCode1 ?? null,
+    };
+  }
+
+  _refreshTeamQueueFromBlockCodes(blockCode, blockCode1) {
+    const noc = this._lastGetByCaseNocParams;
+    if (!noc?.caseId || this.business?.code !== PROCESS_CARD_REPLACEMENT) {
+      return Promise.resolve();
+    }
+    if (this._shouldSuppressRc27CardReplacementProcessInfo()) {
+      return Promise.resolve();
+    }
+    return getByCase({
+      caseId: noc.caseId,
+      productTypeId: noc.productTypeId,
+      categoryId: noc.categoryId,
+      subCategoryId: noc.subCategoryId,
+      subCodeId: noc.subCodeId,
+      blockCode: blockCode ?? null,
+      blockCode1: blockCode1 ?? null,
+    })
+      .then((res) => {
+        if (!res || !this.business) return;
+        if (!res.nextTeam && !res.nextQueue) return;
+        this.business = {
+          ...this.business,
+          ...(res.nextTeam ? { nextTeam: res.nextTeam } : {}),
+          ...(res.nextQueue ? { nextQueue: res.nextQueue } : {}),
+        };
+      })
+      .catch(() => {});
+  }
+
   //PhongBT 19/05/26: Fix mr chuyển routing action của document request sang lwc con
   handleDocReqRoutingFieldChange(event) {
     const { fieldName, value } = event.detail || {};
@@ -1761,46 +1835,8 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
     return fromForm != null && String(fromForm).trim() !== STR_EMPTY;
   }
 
-  _hasPersistedCardReplacementDependentData() {
-    const dependentApis = [
-      FIELD_NEW_BLOCK_CODE_CARD_REPLACE,
-      FIELD_CARD_REPLACEMENT_FEE,
-      FIELD_RECIPIENT_NAME,
-      FIELD_RECIPIENT_PHONE_NUMBER,
-    ];
-    for (const api of dependentApis) {
-      const original = this._getCaseFieldOriginalValue(api);
-      if (original != null && String(original).trim() !== STR_EMPTY) {
-        return true;
-      }
-    }
-    const addressId =
-      this._caseSelectedAddressId || this._getCaseFieldValue("FEC_Selected_Address__c");
-    return addressId != null && String(addressId).trim().length >= 15;
-  }
-
-  _getCaseFieldOriginalValue(apiName) {
-    const sections = this.business?.sectionlst ?? [];
-    for (const section of sections) {
-      for (const sub of section.subSectionlst ?? []) {
-        for (const obj of sub.objlst ?? []) {
-          if (obj.name !== "Case") continue;
-          const f = obj.fieldlst?.find((x) => x.apiName === apiName);
-          if (f != null) {
-            const v = f.original != null ? f.original : f.value;
-            return typeof v === "string" ? v.trim() : (v ?? STR_EMPTY);
-          }
-        }
-      }
-    }
-    return STR_EMPTY;
-  }
-
   _shouldShowCardReplacementDependentFields() {
-    return (
-      this._hasCardReplacementReasonValue() ||
-      this._hasPersistedCardReplacementDependentData()
-    );
+    return this._hasCardReplacementReasonValue();
   }
 
   _shouldSuppressRc27CardReplacementProcessInfo() {
@@ -2461,6 +2497,7 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
       window.removeEventListener("focus", this._boundCheckHoldCaseRefresh);
     }
     localStorage.removeItem(this.draftStorageKey);
+    localStorage.removeItem(this.cardReplacementBlockCodeStorageKey);
   }
 
   _maskDisplayPhone(raw) {
@@ -2777,12 +2814,23 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
     this._ippClosureHasEligibleRows = false;
     this._fetchRdPaymentQueues(); // Toannd61
 
+    this._lastGetByCaseNocParams = {
+      caseId: this.recordId,
+      productTypeId,
+      categoryId,
+      subCategoryId,
+      subCodeId,
+    };
+    const { blockCode, blockCode1 } = this._getBlockCodesForGetByCase();
+
     return getByCase({
       caseId: this.recordId,
       productTypeId,
       categoryId,
       subCategoryId,
       subCodeId,
+      blockCode,
+      blockCode1,
     })
       .then((res) => {
         if (!res) return;
@@ -3798,6 +3846,7 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
     }
     // card replacement
     else if (fieldName === FIELD_CARD_REPLACEMENT_REASON) {
+      this.cardReplacementReason = value;
       this.isHiddenLwc = !value;
       this.business.sectionlst.forEach(section => {
         section.subSectionlst.forEach(sub => {
@@ -6611,6 +6660,7 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
     }
   }
 
+
   // PhuongNT add check process action Card Replacement
   handleCheckProcessAction() {
     this.showProcessAction = false;
@@ -6618,12 +6668,21 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
     this.processActionMsg = '';
     checkProcessAction({ caseId: this.recordId })
       .then((result) => {
+        this._saveCardReplacementBlockCodesToLocalStorage(
+          result.blockCode,
+          result.blockCode1,
+          result.localStorageKey,
+        );
         if (result.isShowAction) {
           this.showProcessAction = true;
         } else {
           this.isProcessActionInfo = true;
           this.processActionMsg = result.strMsg;
         }
+        return this._refreshTeamQueueFromBlockCodes(
+          result.blockCode,
+          result.blockCode1,
+        );
       })
       .catch((error) => {
         console.log(error);

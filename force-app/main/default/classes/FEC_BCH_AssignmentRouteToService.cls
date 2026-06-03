@@ -238,10 +238,12 @@ public with sharing class FEC_BCH_AssignmentRouteToService {
         if (String.isBlank(queueHintNorm)) {
             return null;
         }
+        //PhongBT 02/06/26: Sửa routing action cho cof/gsr — alias label Excel (phần sau dấu "-").
         Map<String, String> mapped = new Map<String, String>{
             'qualitycontrolmailbox' => FEC_ConstantCommon.QUEUE_QUALITY_CONTROL_MAILBOX_NAME,
             'dqcontractprocessing' => FEC_ConstantCommon.QUEUE_DQ_CONTRACT_PROCESSING_NAME,
-            'contractprocessing' => FEC_ConstantCommon.QUEUE_DQ_CONTRACT_PROCESSING_NAME
+            'contractprocessing' => FEC_ConstantCommon.QUEUE_DQ_CONTRACT_PROCESSING_NAME,
+            'dqcssupport' => FEC_ConstantCommon.QUEUE_DQ_CS_SUPPORT_NAME
         };
         return mapped.containsKey(queueHintNorm) ? mapped.get(queueHintNorm) : null;
     }

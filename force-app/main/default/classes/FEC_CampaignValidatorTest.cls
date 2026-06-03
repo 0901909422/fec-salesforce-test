@@ -120,8 +120,11 @@ private class FEC_CampaignValidatorTest {
 
     @isTest
     static void testValidateRow_BlankAppId() {
+        // Validator yêu cầu ít nhất 1 trong 2 (App ID hoặc Account or Contract number).
+        // Blank chỉ App ID không đủ → cần blank cả 2 mới fail.
         Map<String, Object> row = buildValidRow();
         row.put('App ID', '');
+        row.put('Account or Contract number', '');
 
         FEC_CampaignValidator.ValidationResult result =
             FEC_CampaignValidator.validateRow(row, EXPECTED_CODE, 0);
@@ -131,13 +134,40 @@ private class FEC_CampaignValidatorTest {
 
     @isTest
     static void testValidateRow_BlankAccountNumber() {
+        // Validator yêu cầu ít nhất 1 trong 2 (App ID hoặc Account or Contract number).
+        // Blank chỉ Account Number không đủ → cần blank cả 2 mới fail.
         Map<String, Object> row = buildValidRow();
+        row.put('App ID', '');
         row.put('Account or Contract number', '');
 
         FEC_CampaignValidator.ValidationResult result =
             FEC_CampaignValidator.validateRow(row, EXPECTED_CODE, 0);
 
         Assert.isFalse(result.isValid);
+    }
+
+    @isTest
+    static void testValidateRow_OnlyAppIdProvided() {
+        // App ID có giá trị, Account Number blank → vẫn valid
+        Map<String, Object> row = buildValidRow();
+        row.put('Account or Contract number', '');
+
+        FEC_CampaignValidator.ValidationResult result =
+            FEC_CampaignValidator.validateRow(row, EXPECTED_CODE, 0);
+
+        Assert.isTrue(result.isValid, 'Chỉ cần App ID là đủ');
+    }
+
+    @isTest
+    static void testValidateRow_OnlyAccountNumberProvided() {
+        // Account Number có giá trị, App ID blank → vẫn valid
+        Map<String, Object> row = buildValidRow();
+        row.put('App ID', '');
+
+        FEC_CampaignValidator.ValidationResult result =
+            FEC_CampaignValidator.validateRow(row, EXPECTED_CODE, 0);
+
+        Assert.isTrue(result.isValid, 'Chỉ cần Account Number là đủ');
     }
 
     @isTest

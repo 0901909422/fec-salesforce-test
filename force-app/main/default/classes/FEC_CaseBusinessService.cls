@@ -121,7 +121,9 @@ public without sharing class FEC_CaseBusinessService {
     String productTypeId,
     String categoryId,
     String subCategoryId,
-    String subCodeId
+    String subCodeId,
+    String blockCode,
+    String blockCode1
   ) {
     Business result = new Business();
     try {
@@ -1423,7 +1425,9 @@ public without sharing class FEC_CaseBusinessService {
         subCategoryId,
         subCodeId,
         selectedStage != null ? selectedStage.Id : null,
-        parseIdSafelyForRouting(routeToId)
+        parseIdSafelyForRouting(routeToId),
+        blockCode,
+        blockCode1
       );
 
       // Case đã Submit thì không trả draft → màn Execute hiển thị mới, không autofill dữ liệu cũ
@@ -2427,11 +2431,12 @@ public without sharing class FEC_CaseBusinessService {
             FEC_CofGsrRoutePrepareService.restoreGsrStage1BaselineAfterStage2Revert(
               caseId
             );
-          } else {
-            FEC_CofGsrRoutePrepareService.syncActualNatureToMatchCurrentCaseStage(
-              caseId
-            );
           }
+          // else: sync Actual NOC theo stage hiện tại sau Revert (COF/GSR) — tạm tắt vì
+          // FEC_CofGsrRoutePrepareService.syncActualNatureToMatchCurrentCaseStage chưa có trên org.
+          // else {
+          //   FEC_CofGsrRoutePrepareService.syncActualNatureToMatchCurrentCaseStage(caseId);
+          // }
           return null;
         }
         when RECALL {
@@ -2762,7 +2767,9 @@ public without sharing class FEC_CaseBusinessService {
             selectedChange = rc27OmDay2;
           }
         } else if (
-          FEC_BlockCodeRoutingService.isRc27SiblingSpDqStageThreeRouting(updatedCase)
+          FEC_BlockCodeRoutingService.isRc27SiblingSpDqStageThreeRouting(
+            updatedCase
+          )
         ) {
           FEC_Stage_Change__c rc27SpDq =
             FEC_BlockCodeRoutingService.selectRc27SiblingSpDqStageThreeFromList(
@@ -4137,6 +4144,7 @@ public without sharing class FEC_CaseBusinessService {
     if (isReverted && isEditable && !isStageRevert)
       return null;
 
+
     if (isReverted && isReadOnly && String.isBlank(value))
       return null;
 
@@ -4345,6 +4353,7 @@ public without sharing class FEC_CaseBusinessService {
 
     @AuraEnabled
     public String code;
+
 
     /** RL05.02 — Id Case RL05 cũ hơn cùng hợp đồng (mở); null nếu không có. */
     @AuraEnabled

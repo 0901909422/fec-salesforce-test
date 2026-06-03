@@ -178,7 +178,7 @@ public without sharing class FEC_FollowUpController {
             update new FEC_Watcher__c(Id = watcherId, FEC_Active__c = true);
             
             publishFollowUpdateEvent(caseId);
-            return System.Label.FEC_MSG_FollowUp_Save_Success;
+            return System.Label.FEC_MSG_FollowUp_Case_Follow_Success;
             
         } catch (Exception e) {
             throw new AuraHandledException(String.format(System.Label.FEC_MSG_FollowUp_Save_Error, new List<Object>{ e.getMessage() }));
@@ -238,7 +238,7 @@ public without sharing class FEC_FollowUpController {
             addUserToCaseTeam(caseId, targetUserId);
             addUserToFollowUpField(caseId, targetUserId, picklistValue);
             publishFollowUpdateEvent(caseId);
-            return System.Label.FEC_MSG_FollowUp_Add_User_Success;
+            return System.Label.FEC_MSG_FollowUp_Add_User_To_Watcher_Success;
         } catch (AuraHandledException e) {
             throw e;
         } catch (Exception e) {
