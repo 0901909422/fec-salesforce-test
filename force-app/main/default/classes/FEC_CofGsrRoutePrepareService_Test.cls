@@ -249,7 +249,7 @@ private class FEC_CofGsrRoutePrepareService_Test {
         ];
 
         Test.startTest();
-        FEC_CofGsrRoutePrepareService.syncActualNatureToMatchCurrentCaseStage(c.Id);
+        FEC_CofGsrRoutePrepareService.cloneActualNatureFromCurrentCaseStageAfterRevert(c.Id);
         Test.stopTest();
 
         Case updatedCase = [SELECT FEC_Actual_Nature_of_Case__c FROM Case WHERE Id = :c.Id];
@@ -286,7 +286,7 @@ private class FEC_CofGsrRoutePrepareService_Test {
         Test.startTest();
         FEC_CofGsrRoutePrepareService.updateCaseNocFromSelection(null, null);
         FEC_CofGsrRoutePrepareService.updateCaseNocFromSelection('001', 'not-an-id');
-        FEC_CofGsrRoutePrepareService.syncActualNatureToMatchCurrentCaseStage(null);
+        FEC_CofGsrRoutePrepareService.cloneActualNatureFromCurrentCaseStageAfterRevert(null);
         FEC_CofGsrRoutePrepareService.restoreGsrStage1BaselineAfterStage2Revert(null);
         FEC_CofGsrRoutePrepareService.cloneActualNatureAndMasterData(
             null,
