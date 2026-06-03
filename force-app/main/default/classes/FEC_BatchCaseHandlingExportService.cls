@@ -524,24 +524,29 @@ public without sharing class FEC_BatchCaseHandlingExportService {
         if (rel == null) {
             return FEC_ConstantCommon.STR_EMPTY;
         }
-        String name = (String) rel.get('Name');
-        return String.isBlank(name) ? FEC_ConstantCommon.STR_EMPTY : name;
+        //PhongBT 03/06/26: 4 trường bộ noc hiển thị là code theo design
+        String code = (String) rel.get('FEC_Code__c');
+        return String.isBlank(code) ? FEC_ConstantCommon.STR_EMPTY : code;
+        // String name = (String) rel.get('Name');
+        // return String.isBlank(name) ? FEC_ConstantCommon.STR_EMPTY : name;
     }
 
     private static String formatSubDisplay(SObject rel) {
         if (rel == null) {
             return FEC_ConstantCommon.STR_EMPTY;
         }
+        //PhongBT 03/06/26: 4 trường bộ noc hiển thị là code theo design
         String code = (String) rel.get('FEC_Code__c');
-        String nameVn = (String) rel.get('FEC_Name_VN__c');
-        String name = String.isNotBlank(nameVn) ? nameVn : (String) rel.get('Name');
-        if (String.isNotBlank(code) && String.isNotBlank(name)) {
-            return code + '-' + name;
-        }
-        if (String.isNotBlank(name)) {
-            return name;
-        }
         return String.isBlank(code) ? FEC_ConstantCommon.STR_EMPTY : code;
+        // String nameVn = (String) rel.get('FEC_Name_VN__c');
+        // String name = String.isNotBlank(nameVn) ? nameVn : (String) rel.get('Name');
+        // if (String.isNotBlank(code) && String.isNotBlank(name)) {
+        //     return code + '-' + name;
+        // }
+        // if (String.isNotBlank(name)) {
+        //     return name;
+        // }
+        // return String.isBlank(code) ? FEC_ConstantCommon.STR_EMPTY : code;
     }
 
     private static Map<Id, RemarkBlocks> loadCaseRemarkBlocks(Set<Id> caseIds) {
