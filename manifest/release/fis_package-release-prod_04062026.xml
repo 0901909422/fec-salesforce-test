@@ -625,6 +625,7 @@
         <members>Fec_HoldCaseConfigurationController_Test</members>
         <!-- class FEC (dependence FEC_CaseTriggerHandler) -->
         <members>CaseTriggerHandler</members>
+        <members>CaseTriggerHandler_Test</members>
         <name>ApexClass</name>
     </types>
     <types>
