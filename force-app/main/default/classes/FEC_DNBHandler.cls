@@ -348,6 +348,7 @@ public without sharing class FEC_DNBHandler {
         // ===== Get Case =====
         List<Case> caseRecord = [
       SELECT Id, FEC_Phone_Number__c, FEC_Interaction__c,
+      FEC_Account_or_Contract__r.FEC_Primary_Phone__c,
       FEC_Interaction__r.FEC_Phone_Number__c,
       FEC_Interaction__r.FEC_Interaction_Email__c,
       FEC_Account_or_Contract__r.FEC_National_ID_Passport_ID__c FROM Case WHERE
@@ -1291,7 +1292,7 @@ public without sharing class FEC_DNBHandler {
     private static List<DNBRowTemplate> buildExistingTemplates(Case caseRecord) {
         List<DNBRowTemplate> rows = new List<DNBRowTemplate>();
         
-        String primaryPhone = normalizePhone(caseRecord.FEC_Phone_Number__c);
+        String primaryPhone = normalizePhone(caseRecord.FEC_Account_or_Contract__r.FEC_Primary_Phone__c);
         
         String interactionPhone =
             normalizePhone(caseRecord.FEC_Interaction__r != null
@@ -1463,7 +1464,7 @@ public without sharing class FEC_DNBHandler {
          */
         Case caseRecord = [
       SELECT Id, FEC_Phone_Number__c,
-
+    FEC_Account_or_Contract__r.FEC_Primary_Phone__c,
       FEC_Interaction__r.FEC_Phone_Number__c,
       FEC_Interaction__r.FEC_Interaction_Email__c,
 
