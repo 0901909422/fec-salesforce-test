@@ -919,6 +919,7 @@
         <members>fec_PaymentHistoryAcount</members>
         <members>fec_PinResetView</members>
         <members>fec_RepaymentSchedulePaymentHistory</members>
+        <members>fecRelevantTicketModalHost</members>
         <members>fec_StatementsAccount</members>
         <members>fec_StatementsAccountTabView</members>
         <members>fec_TransactionsAccount</members>
@@ -1119,6 +1120,7 @@
         <members>FEC_Assignment_Id</members>
         <members>FEC_Assignment_Remarks_History</members>
         <members>FEC_RelevantTicket_Cannot_Delete</members>
+        <members>FEC_RelevantTicket_Action_Not_Allowed</members>
 		<members>FEC_Reason_Error</members>
 		<members>FEC_Duplicate_Queue_Error</members>
 		<members>FEC_User_ID</members>
