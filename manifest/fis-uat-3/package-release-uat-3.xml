@@ -177,6 +177,7 @@
         <members>FEC_BatchCaseHandlingExportRow</members>
         <members>FEC_BCH_TemplateExportService</members>
         <members>FEC_BCH_IncorrectPaymentTemplateWriter</members>
+        <members>FEC_BCH_ExportAssignmentRemarkLoader</members>
         <members>FEC_BCH_ExportPropertyService</members>
         <members>FEC_SubProcessService</members>
         <members>Fec_HoldCaseConfigurationController</members>

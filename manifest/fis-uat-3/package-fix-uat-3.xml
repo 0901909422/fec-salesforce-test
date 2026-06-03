@@ -141,6 +141,7 @@
         <members>FEC_GetRepaymentScheduleByAppIdCallout</members>
         <members>FEC_MyCaseSoapXml</members>
         <members>FEC_BCH_ExportPropertyService</members>
+        <members>FEC_BCH_ExportAssignmentRemarkLoader</members>
         <members>FEC_BCH_FilterPropertyService</members>
         <members>FEC_BatchCaseHandlingCaseFilter</members>
         <members>FEC_BatchCaseHandlingImportRow</members>
