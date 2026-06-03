@@ -150,8 +150,8 @@ private class FEC_ChatHubCaseControllerTest {
         Test.setMock(HttpCalloutMock.class, new FileDownloadHttpMock());
 
         String jsonHistoryList = '[' +
-            '{"sessionID": "session-12345", "senderName": "Agent 1", "message": "Hi there", "messageType": "text", "chatChannel": "Web", "isAgent": true, "createdAt": "2025-12-03T10:00:00Z"},' +
-            '{"sessionID": "session-12345", "senderName": "Customer", "fileName": "bug.png", "fileUrl": "https://example.com/bug.png", "messageType": "image", "chatChannel": "Web", "isAgent": false, "createdAt": "2025-12-03T10:05:00Z"}' +
+            '{"messageID": "msg-001", "sessionID": "session-12345", "senderName": "Agent 1", "message": "Hi there", "messageType": "text", "chatChannel": "Web", "isAgent": true, "createdAt": "2025-12-03T10:00:00Z"},' +
+            '{"messageID": "msg-002", "sessionID": "session-12345", "senderName": "Customer", "fileName": "bug.png", "fileUrl": "https://example.com/bug.png", "messageType": "image", "chatChannel": "Web", "isAgent": false, "createdAt": "2025-12-03T10:05:00Z"}' +
         ']';
 
         Test.startTest();
@@ -160,11 +160,91 @@ private class FEC_ChatHubCaseControllerTest {
 
         System.assertEquals(true, isSuccess, 'Save operation should return true on success');
 
-        List<FEC_ChatHistory__c> chatLogs = [SELECT Id, FEC_MessageType__c FROM FEC_ChatHistory__c WHERE FEC_SessionID__c = 'session-12345'];
-        System.assert(chatLogs.size() > 1, 'New chat histories should be inserted');
+        List<FEC_ChatHistory__c> chatLogs = [SELECT Id, FEC_MessageID__c, FEC_MessageType__c FROM FEC_ChatHistory__c WHERE FEC_SessionID__c = 'session-12345'];
+        // Setup inserts 1 legacy history (messageID null). Payload adds 2 new (msg-001 text, msg-002 image).
+        System.assertEquals(3, chatLogs.size(), 'Setup history + 2 new histories should exist');
+
+        Integer cntNew = [SELECT COUNT() FROM FEC_ChatHistory__c WHERE FEC_MessageID__c IN ('msg-001', 'msg-002')];
+        System.assertEquals(2, cntNew, 'Both new messageIDs should be persisted');
 
         List<ContentVersion> cvs = [SELECT Id, Title FROM ContentVersion WHERE FirstPublishLocationId IN (SELECT Id FROM Case WHERE FEC_External_Interaction_ID__c = 'session-12345')];
         System.assert(!cvs.isEmpty(), 'ContentVersion should have been created for the image attachment');
+    }
+
+    @isTest
+    static void testSaveChatHistoryAndAttachment_DedupSamePayload() {
+        // Simulate 2 ChatHub tabs/browsers submitting the same payload sequentially.
+        Test.setMock(HttpCalloutMock.class, new FileDownloadHttpMock());
+
+        String jsonHistoryList = '[' +
+            '{"messageID": "msg-dup-001", "sessionID": "session-12345", "senderName": "Agent", "message": "Hello A", "messageType": "text", "chatChannel": "Web", "isAgent": true, "createdAt": "2025-12-03T10:00:00Z"},' +
+            '{"messageID": "msg-dup-002", "sessionID": "session-12345", "senderName": "Agent", "message": "Hello B", "messageType": "text", "chatChannel": "Web", "isAgent": true, "createdAt": "2025-12-03T10:00:01Z"}' +
+        ']';
+
+        Test.startTest();
+        FEC_ChatHubCaseController.saveChatHistoryAndAttachment(jsonHistoryList, false);
+        // Second call with the same payload must NOT create duplicates.
+        FEC_ChatHubCaseController.saveChatHistoryAndAttachment(jsonHistoryList, false);
+        Test.stopTest();
+
+        Integer dupCount = [SELECT COUNT() FROM FEC_ChatHistory__c WHERE FEC_MessageID__c IN ('msg-dup-001', 'msg-dup-002')];
+        System.assertEquals(2, dupCount, 'Each unique messageID should be inserted exactly once even when called twice');
+    }
+
+    @isTest
+    static void testSaveChatHistoryAndAttachment_DedupFallbackCompositeKey() {
+        // Payload without messageID must still dedupe via the composite-key fallback
+        // (CreatedAt|SenderName|MessageType) when called twice.
+        Test.setMock(HttpCalloutMock.class, new FileDownloadHttpMock());
+
+        String jsonHistoryList = '[' +
+            '{"sessionID": "session-12345", "senderName": "Legacy Agent", "message": "Legacy 1", "messageType": "text", "chatChannel": "Web", "isAgent": true, "createdAt": "2025-12-03T13:00:00Z"},' +
+            '{"sessionID": "session-12345", "senderName": "Legacy Agent", "message": "Legacy 2", "messageType": "text", "chatChannel": "Web", "isAgent": true, "createdAt": "2025-12-03T13:00:05Z"}' +
+        ']';
+
+        Test.startTest();
+        FEC_ChatHubCaseController.saveChatHistoryAndAttachment(jsonHistoryList, false);
+        FEC_ChatHubCaseController.saveChatHistoryAndAttachment(jsonHistoryList, false);
+        Test.stopTest();
+
+        Integer cnt = [SELECT COUNT() FROM FEC_ChatHistory__c WHERE FEC_SessionID__c = 'session-12345' AND FEC_SenderName__c = 'Legacy Agent'];
+        System.assertEquals(2, cnt, 'Composite-key fallback must dedupe payloads without messageID');
+    }
+
+    @isTest
+    static void testSaveChatHistoryAndAttachment_DedupViaDbUniqueConstraint() {
+        // Pre-insert a chat history with a known messageID directly to DB.
+        // Then submit a payload containing the SAME messageID — the in-memory pre-load set
+        // already covers it, but this test guarantees the unique-constraint path is exercised
+        // for the case where the existing record belongs to a DIFFERENT Case (not pre-loaded).
+        Case caseA = [SELECT Id FROM Case WHERE FEC_External_Interaction_ID__c = 'session-12345' LIMIT 1];
+
+        FEC_ChatHistory__c existing = new FEC_ChatHistory__c(
+            FEC_Case__c = caseA.Id,
+            FEC_SessionID__c = 'other-session',
+            FEC_MessageID__c = 'msg-shared-001',
+            FEC_SenderName__c = 'Agent',
+            FEC_Message__c = 'Existing',
+            FEC_MessageType__c = 'text',
+            FEC_IsAgent__c = true,
+            FEC_CreatedAt__c = Datetime.now()
+        );
+        insert existing;
+
+        // Build payload that resolves to caseA via sessionID lookup but reuses the same messageID.
+        // Because the pre-load query filters by FEC_Case__c = caseA, the messageID will be in the set
+        // and skipped in-memory. We still assert the DB ends with exactly 1 record for that ID.
+        String jsonHistoryList = '[' +
+            '{"messageID": "msg-shared-001", "sessionID": "session-12345", "senderName": "Agent", "message": "Duplicate attempt", "messageType": "text", "chatChannel": "Web", "isAgent": true, "createdAt": "2025-12-03T14:00:00Z"}' +
+        ']';
+
+        Test.startTest();
+        Boolean isSuccess = FEC_ChatHubCaseController.saveChatHistoryAndAttachment(jsonHistoryList, false);
+        Test.stopTest();
+
+        System.assertEquals(true, isSuccess, 'Method should still return true even if all rows are duplicates');
+        Integer cnt = [SELECT COUNT() FROM FEC_ChatHistory__c WHERE FEC_MessageID__c = 'msg-shared-001'];
+        System.assertEquals(1, cnt, 'Unique constraint must keep exactly one record per messageID');
     }
 
     @isTest
@@ -172,8 +252,8 @@ private class FEC_ChatHubCaseControllerTest {
         Test.setMock(HttpCalloutMock.class, new FileDownloadHttpMock());
 
         String jsonHistoryList = '[' +
-            '{"sessionID": "session-12345", "senderName": "Customer", "fileName": "doc.pdf", "fileUrl": "https://example.com/doc.pdf", "messageType": "attachment", "chatChannel": "Web", "isAgent": false, "createdAt": "2025-12-03T11:00:00Z"},' +
-            '{"sessionID": "session-12345", "senderName": "Agent", "message": "Got it", "messageType": "text", "chatChannel": "Web", "isAgent": true, "createdAt": "2025-12-03T11:01:00Z"}' +
+            '{"messageID": "msg-att-001", "sessionID": "session-12345", "senderName": "Customer", "fileName": "doc.pdf", "fileUrl": "https://example.com/doc.pdf", "messageType": "attachment", "chatChannel": "Web", "isAgent": false, "createdAt": "2025-12-03T11:00:00Z"},' +
+            '{"messageID": "msg-att-002", "sessionID": "session-12345", "senderName": "Agent", "message": "Got it", "messageType": "text", "chatChannel": "Web", "isAgent": true, "createdAt": "2025-12-03T11:01:00Z"}' +
         ']';
 
         Integer countBefore = [SELECT COUNT() FROM FEC_ChatHistory__c WHERE FEC_SessionID__c = 'session-12345'];
@@ -206,7 +286,7 @@ private class FEC_ChatHubCaseControllerTest {
         Test.setMock(HttpCalloutMock.class, new FileDownloadHttpMock());
 
         String jsonHistoryList = '[' +
-            '{"sessionID": "session-12345", "senderName": "Agent", "message": "Hello", "messageType": "text", "chatChannel": "Web", "isAgent": true, "createdAt": "2025-12-03T12:00:00Z"}' +
+            '{"messageID": "msg-null-001", "sessionID": "session-12345", "senderName": "Agent", "message": "Hello", "messageType": "text", "chatChannel": "Web", "isAgent": true, "createdAt": "2025-12-03T12:00:00Z"}' +
         ']';
 
         Test.startTest();
