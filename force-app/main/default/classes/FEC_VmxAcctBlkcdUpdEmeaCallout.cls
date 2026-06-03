@@ -162,15 +162,19 @@ public with sharing class FEC_VmxAcctBlkcdUpdEmeaCallout {
                     responseDoc.load(responseBody);
                     BlkcdUpdResult result = parseResponse(responseDoc);
                     if (result.responseCode != null && result.responseCode != '1') {
-                        throw new CalloutException(
-                            String.format(
-                                System.Label.FEC_MSG_API_Error,
-                                new List<String>{ result.responseDesc }
-                            )
-                        );
+                        if (!isBlkcdUpdDescriptionSuccess(result.responseDesc)) {
+                            throw new CalloutException(
+                                String.format(
+                                    System.Label.FEC_MSG_API_Error,
+                                    new List<String>{ result.responseDesc }
+                                )
+                            );
+                        }
                     }
                     if (result.svcReturn == 'F') {
-                        throw new CalloutException(System.Label.FEC_MSG_API_Error);
+                        if (!isBlkcdUpdDescriptionSuccess(result.responseDesc)) {
+                            throw new CalloutException(System.Label.FEC_MSG_API_Error);
+                        }
                     }
                     return result;
                 }
@@ -217,6 +221,10 @@ public with sharing class FEC_VmxAcctBlkcdUpdEmeaCallout {
         return result != null
             && result.responseCode == '1'
             && result.svcReturn != 'F';
+    }
+
+    public static Boolean isBlkcdUpdDescriptionSuccess(String responseDesc) {
+        return String.isNotBlank(responseDesc) && responseDesc.trim().toLowerCase().contains('success');
     }
 
     // ==========================================
