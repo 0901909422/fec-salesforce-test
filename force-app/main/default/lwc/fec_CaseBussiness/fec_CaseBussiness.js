@@ -4946,6 +4946,10 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
             const mrcSubmitFields = isMrcRl05Branch(this.business)
               ? this._resolveMrcReturnFieldsForSubmit()
               : { confirmation: null, handlingOption: null };
+            const { blockCode, blockCode1 } =
+              this.business?.code === PROCESS_CARD_REPLACEMENT
+                ? this._getBlockCodesForGetByCase()
+                : { blockCode: null, blockCode1: null };
             params = {
               ...params,
               params: {
@@ -4960,6 +4964,8 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
                   null,
                 mrcCustomerConfirmation: mrcSubmitFields.confirmation || null,
                 mrcHandlingOption: mrcSubmitFields.handlingOption || null,
+                blockCode,
+                blockCode1,
               },
             };
           }
