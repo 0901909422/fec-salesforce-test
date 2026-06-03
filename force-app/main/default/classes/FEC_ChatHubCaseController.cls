@@ -166,7 +166,9 @@ public with sharing class FEC_ChatHubCaseController {
         String currentSessionId = (String)firstItem.get('sessionID');
         
         if (String.isNotBlank(currentSessionId)) {
-            List<Case> lstCases = [SELECT Id FROM Case WHERE FEC_External_Interaction_ID__c = :currentSessionId LIMIT 1];
+            // FOR UPDATE: lock Case row to serialize concurrent calls (e.g. 2 ChatHub tabs in different browsers)
+            // and prevent duplicate FEC_ChatHistory__c being inserted from parallel transactions.
+            List<Case> lstCases = [SELECT Id FROM Case WHERE FEC_External_Interaction_ID__c = :currentSessionId LIMIT 1 FOR UPDATE];
             if (!lstCases.isEmpty()) {
                 strCaseId = lstCases[0].Id;
             }
@@ -176,6 +178,26 @@ public with sharing class FEC_ChatHubCaseController {
         if (String.isBlank(strCaseId) && firstItem.containsKey('pegaID')) {
             strCaseId = FEC_Utils.getInteractionIdFromPegaId((String)firstItem.get('pegaID'));
         }
+        
+        // Pre-load existing chat history keys to avoid duplicates when the same payload
+        // is submitted from multiple ChatHub tabs/browsers for the same Case.
+        // Primary key: FEC_MessageID__c (unique external Id from ChatHub).
+        // Fallback key: CreatedAt|SenderName|MessageType (for legacy records without messageID).
+        Set<String> setExistingMessageIds = new Set<String>();
+        Set<String> setExistingHistoryKeys = new Set<String>();
+        if (String.isNotBlank(strCaseId)) {
+            for (FEC_ChatHistory__c ch : [
+                SELECT FEC_MessageID__c, FEC_CreatedAt__c, FEC_SenderName__c, FEC_MessageType__c
+                FROM FEC_ChatHistory__c
+                WHERE FEC_Case__c = :strCaseId
+            ]) {
+                if (String.isNotBlank(ch.FEC_MessageID__c)) {
+                    setExistingMessageIds.add(ch.FEC_MessageID__c);
+                }
+                setExistingHistoryKeys.add(buildChatHistoryKey(ch.FEC_CreatedAt__c, ch.FEC_SenderName__c, ch.FEC_MessageType__c));
+            }
+        }
+        
         Set<String> setExistingFileNames = new Set<String>();
         
         // Pre-process to collect all file names that need checking
@@ -219,12 +241,27 @@ public with sharing class FEC_ChatHubCaseController {
             objHistory.FEC_ChatChannel__c = (String)mapItem.get('chatChannel');
             objHistory.FEC_IsAgent__c = (Boolean)mapItem.get('isAgent');
             objHistory.FEC_CreatedAt__c = FEC_Utils.parseChatHubDatetime((String)mapItem.get('createdAt'));
+            objHistory.FEC_MessageID__c = (String)mapItem.get('messageID');
+            
+            // Detect duplicates. Prefer messageID (unique External Id from ChatHub);
+            // fall back to composite key for legacy records that have no messageID.
+            String strHistoryKey = buildChatHistoryKey(objHistory.FEC_CreatedAt__c, objHistory.FEC_SenderName__c, objHistory.FEC_MessageType__c);
+            Boolean isDuplicateHistory;
+            if (String.isNotBlank(objHistory.FEC_MessageID__c)) {
+                isDuplicateHistory = setExistingMessageIds.contains(objHistory.FEC_MessageID__c);
+            } else {
+                isDuplicateHistory = setExistingHistoryKeys.contains(strHistoryKey);
+            }
             
             if (objHistory.FEC_MessageType__c == 'attachment' || objHistory.FEC_MessageType__c == 'image') {
                 String fileNameConvert = (FEC_Utils.formatDateTimeToString(objHistory.FEC_CreatedAt__c) + '_' + (String)mapItem.get('fileName')).trim();
                 objHistory.FEC_Message__c = fileNameConvert;
-                if (!isAttachmentOnly) {
+                if (!isAttachmentOnly && !isDuplicateHistory) {
                     listHistoriesToInsert.add(objHistory);
+                    if (String.isNotBlank(objHistory.FEC_MessageID__c)) {
+                        setExistingMessageIds.add(objHistory.FEC_MessageID__c);
+                    }
+                    setExistingHistoryKeys.add(strHistoryKey);
                 }
                 
                 if (mapExistingFiles.containsKey(fileNameConvert)) {
@@ -244,14 +281,20 @@ public with sharing class FEC_ChatHubCaseController {
                         cv.Description = ''; 
                         
                         listCvToInsert.add(cv); 
+                        // Mark as existing to avoid duplicate downloads within the same payload
+                        mapExistingFiles.put(fileNameConvert, true);
                     } catch(Exception e) {
                         System.debug('### Error downloading file: ' + e.getMessage());
                         continue;
                     }
                 }
             } else {
-                if (!isAttachmentOnly) {
+                if (!isAttachmentOnly && !isDuplicateHistory) {
                     listHistoriesToInsert.add(objHistory);
+                    if (String.isNotBlank(objHistory.FEC_MessageID__c)) {
+                        setExistingMessageIds.add(objHistory.FEC_MessageID__c);
+                    }
+                    setExistingHistoryKeys.add(strHistoryKey);
                 }
             }
         }
@@ -261,12 +304,39 @@ public with sharing class FEC_ChatHubCaseController {
                 insert listCvToInsert;
             }
             if(!listHistoriesToInsert.isEmpty()) {
-                insert listHistoriesToInsert;
+                // allOrNone = false: tolerate DUPLICATE_VALUE from the unique
+                // FEC_MessageID__c constraint when 2 concurrent transactions
+                // (e.g. ChatHub opened in 2 browsers) try to insert the same message.
+                Database.SaveResult[] results = Database.insert(listHistoriesToInsert, false);
+                for (Integer i = 0; i < results.size(); i++) {
+                    if (!results[i].isSuccess()) {
+                        Boolean isDupOnly = true;
+                        for (Database.Error err : results[i].getErrors()) {
+                            if (err.getStatusCode() != StatusCode.DUPLICATE_VALUE) {
+                                isDupOnly = false;
+                                break;
+                            }
+                        }
+                        if (!isDupOnly) {
+                            throw new AuraHandledException(System.Label.FEC_Error_SaveChatHistory + results[i].getErrors()[0].getMessage());
+                        }
+                        System.debug('### Skipped duplicate ChatHistory messageID=' + listHistoriesToInsert[i].FEC_MessageID__c);
+                    }
+                }
             }
             return true;
         } catch (Exception e) {
             throw new AuraHandledException(System.Label.FEC_Error_SaveChatHistory + e.getMessage());
         }
+    }
+    
+    /**
+     * Builds a deterministic composite key for a chat history entry, used to detect duplicates
+     * when the same payload is submitted concurrently from multiple ChatHub tabs/browsers.
+     */
+    private static String buildChatHistoryKey(Datetime dtCreatedAt, String strSenderName, String strMessageType) {
+        String strDt = (dtCreatedAt == null) ? '' : String.valueOf(dtCreatedAt.getTime());
+        return strDt + '|' + (strSenderName == null ? '' : strSenderName) + '|' + (strMessageType == null ? '' : strMessageType);
     }
     /**
      * Combines verification and update of old Case into a single Transaction
