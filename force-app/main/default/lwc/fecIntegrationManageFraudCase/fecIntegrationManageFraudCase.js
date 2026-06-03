@@ -1,9 +1,18 @@
 import { LightningElement, api, track, wire } from 'lwc';
 import { CurrentPageReference } from 'lightning/navigation';
+import { subscribe, MessageContext, APPLICATION_SCOPE } from 'lightning/messageService';
+import FRAUD_FIELD_SYNC from '@salesforce/messageChannel/FEC_Fraud_Field_Sync__c';
 import initManageFraudCase from '@salesforce/apex/FEC_IntegrationManageFraudCaseCtrl.initManageFraudCase';
+import getIntegrationActionModes from '@salesforce/apex/FEC_IntegrationCreateFraudController.getIntegrationActionModes';
 
 export default class FecIntegrationManageFraudCase extends LightningElement {
     @api serviceCaseId;
+    @api recordId;
+    @api actionView;
+    @api modeEditCase = false;
+
+    @wire(MessageContext)
+    messageContext;
 
     _natureOfCaseId;
     @api
@@ -14,11 +23,11 @@ export default class FecIntegrationManageFraudCase extends LightningElement {
         const changed = this._natureOfCaseId !== value;
         this._natureOfCaseId = value;
         console.log('this._natureOfCaseId: ', this._natureOfCaseId);
-        if (changed && this.serviceCaseId) {
+        if (changed && (this.serviceCaseId || this.recordId)) {
+            if (!this.serviceCaseId) this.serviceCaseId = this.recordId;
             if (value) {
                 this.loadInitData();
             } else {
-                //this.actionMode = null;
                 this.loading = false;
             }
         }
@@ -36,17 +45,24 @@ export default class FecIntegrationManageFraudCase extends LightningElement {
     @track serviceCSCaseId;
     @track fraudHandlingCaseId;
     _initialized = false;
+    actionModes = {};
 
     @wire(CurrentPageReference)
     handlePageReference(pageRef) {
         if (pageRef && pageRef.state) {
             const urlServiceCaseId = pageRef.state.c__serviceCaseId;
             const urlNatureOfCaseId = pageRef.state.c__natureOfCaseId;
+            const urlActionMode = pageRef.state.c__actionMode;
             
             if (urlServiceCaseId) this.serviceCaseId = urlServiceCaseId;
             if (urlNatureOfCaseId) this.natureOfCaseId = urlNatureOfCaseId;
+            if (urlActionMode) {
+                this.actionMode = urlActionMode;
+                this._urlActionMode = urlActionMode;
+            }
             console.log('this.serviceCaseId : ', this.serviceCaseId );
             console.log('this.natureOfCaseId : ', this.natureOfCaseId );
+            console.log('this.actionMode (from URL) : ', this.actionMode );
         }
         if (this.serviceCaseId) {
             this._initialized = true;
@@ -55,27 +71,57 @@ export default class FecIntegrationManageFraudCase extends LightningElement {
     }
 
     connectedCallback() {
+        console.log('[fecIntegrationManageFraudCase] connectedCallback — serviceCaseId:', this.serviceCaseId, '| recordId:', this.recordId, '| natureOfCaseId:', this._natureOfCaseId);
+        // Subscribe to case→fraud field sync via LMS
+        this._subscriptionFraudSync = subscribe(
+            this.messageContext,
+            FRAUD_FIELD_SYNC,
+            (message) => {
+                if (message.source === 'case' && message.fieldId) {
+                    const createEl = this.template.querySelector('c-fec-integration-create-fraud-case');
+                    const updateEl = this.template.querySelector('c-fec-integration-update-fraud-case');
+                    console.log('[fecIntegrationManageFraudCase] received sync:', message.fieldId, message.value, '| createEl:', !!createEl, '| updateEl:', !!updateEl, '| actionMode:', this.actionMode);
+                    this.setFraudFieldValue(message.fieldId, message.value);
+                }
+            },
+            { scope: APPLICATION_SCOPE }
+        );
+        getIntegrationActionModes()
+            .then(res => { this.actionModes = res || {}; })
+            .catch(err => { console.error('getIntegrationActionModes error', err); });
         // When embedded in another component with @api props (no URL state)
-        if (this.serviceCaseId && !this._initialized) {
+        const effectiveId = this.serviceCaseId || this.recordId;
+        if (effectiveId && !this._initialized) {
             this._initialized = true;
+            if (!this.serviceCaseId) this.serviceCaseId = this.recordId;
             this.loadInitData();
         }
     }
 
     get isCreateMode() {
-        return this.actionMode === 'CreateMode';
+        return this.actionMode === this.actionModes.CREATE_MODE;
     }
 
     get isEditMode() {
-        return this.actionMode === 'EditMode';
+        return this.modeEditCase && this.actionMode === this.actionModes.EDIT_MODE;
+    }
+    get isSubmitMode() {
+        return this.modeEditCase && this.actionMode === this.actionModes.SUBMIT_MODE;
     }
 
     get isViewMode() {
-        return this.actionMode === 'ViewMode';
+        if (!this.modeEditCase) {
+            return true;
+        }
+        if (this.actionView) {
+            return this.actionMode = this.actionView;
+        }
+        return this.actionMode === this.actionModes.VIEW_MODE || this.actionMode === 'ViewOriginal';
     }
 
+
     get hasMapping() {
-        return this.actionMode !== 'NotMapping';
+        return this.actionMode !== this.actionModes.NOT_MAPPING;
     }
 
     get notLoading() {
@@ -98,6 +144,98 @@ export default class FecIntegrationManageFraudCase extends LightningElement {
         this.loadInitData();
     }
 
+    renderedCallback() {
+        // Apply buffered field values once child is rendered
+        if (this._pendingFieldValues) {
+            const createEl = this.template.querySelector('c-fec-integration-create-fraud-case');
+            const updateEl = this.template.querySelector('c-fec-integration-update-fraud-case');
+            const targetEl = createEl || updateEl;
+            if (targetEl && typeof targetEl.setFieldValue === 'function') {
+                for (const [fieldId, value] of Object.entries(this._pendingFieldValues)) {
+                    targetEl.setFieldValue(fieldId, value);
+                }
+                this._pendingFieldValues = null;
+            }
+        }
+    }
+
+    @api
+    getFieldData() {
+        return {
+            actionMode: this.actionMode,
+            fraudCaseId: this.fraudCaseId,
+            caseStatus: this.caseStatus,
+            integrateMappingId: this.integrateMappingId,
+            serviceCSCaseId: this.serviceCSCaseId
+        };
+    }
+
+    @api
+    setFraudFieldValue(fieldId, value) {
+        const createEl = this.template.querySelector('c-fec-integration-create-fraud-case');
+        const updateEl = this.template.querySelector('c-fec-integration-update-fraud-case');
+        console.log('[fecIntegrationManageFraudCase] setFraudFieldValue:', fieldId, value, '| createEl:', !!createEl, '| updateEl:', !!updateEl, '| actionMode:', this.actionMode, '| modeEditCase:', this.modeEditCase);
+        if (createEl && typeof createEl.setFieldValue === 'function') {
+            createEl.setFieldValue(fieldId, value);
+        } else if (updateEl && typeof updateEl.setFieldValue === 'function') {
+            updateEl.setFieldValue(fieldId, value);
+        } else {
+            // Buffer value if child not rendered yet
+            if (!this._pendingFieldValues) {
+                this._pendingFieldValues = {};
+            }
+            this._pendingFieldValues[fieldId] = value;
+        }
+    }
+
+    @api
+    async submitFraudWithoutCallout() {
+        const createEl = this.template.querySelector('c-fec-integration-create-fraud-case');
+        if (createEl && typeof createEl.onSubmitWithoutCallout === 'function') {
+            await createEl.onSubmitWithoutCallout();
+        }
+    }
+
+    @api
+    async submitFraudCase() {
+        const createEl = this.template.querySelector('c-fec-integration-create-fraud-case');
+        if (createEl && typeof createEl.onSubmitFraudCase === 'function') {
+            await createEl.onSubmitFraudCase();
+        }
+    }
+
+    @api
+    setRemarks(value) {
+        const createEl = this.template.querySelector('c-fec-integration-create-fraud-case');
+        if (createEl) {
+            createEl.remarks = value || '';
+        }
+    }
+
+    @api
+    validateFraudForm() {
+        console.log('[fecIntegrationManageFraudCase] validateFraudForm — actionMode:', this.actionMode, '| hasMapping:', this.hasMapping);
+        // Skip validation if no mapping or in ViewMode
+        //if (!this.hasMapping || this.isViewMode) return true;
+
+        if (this.isCreateMode) {
+            const createEl = this.template.querySelector('c-fec-integration-create-fraud-case');
+            console.log('[fecIntegrationManageFraudCase] validateFraudForm — createEl:', createEl);
+            if (createEl && typeof createEl.validateForm === 'function') {
+                return createEl.validateForm();
+            }
+        }
+
+        if (this.isEditMode || this.isSubmitMode) {
+            const updateEl = this.template.querySelector('c-fec-integration-update-fraud-case');
+            if (updateEl && typeof updateEl.validateForm === 'function') {
+                return updateEl.validateForm();
+            }
+        }
+
+        return true;
+    }
+
     loadInitData() {
         this.loading = true;
         console.log('loadInitData-this.natureOfCaseId:', this.natureOfCaseId);
@@ -107,8 +245,12 @@ export default class FecIntegrationManageFraudCase extends LightningElement {
         })
             .then(result => {
                 console.log('[ManageFraudCase] init result:', result);
+                console.log('[ManageFraudCase] actionView (api param):', this.actionView);
                 if (result) {
-                    this.actionMode = result.actionMode;
+                    // Priority: URL param > actionView prop > Apex result
+                    const urlActionMode = this._urlActionMode;
+                    this.actionMode = urlActionMode || this.actionView || result.actionMode;
+                    console.log('[ManageFraudCase] final actionMode:', this.actionMode, '| from:', urlActionMode ? 'URL' : (this.actionView ? 'actionView' : 'result.actionMode'));
                     this.fraudCaseId = result.fraudCaseId;
                     this.caseStatus = result.caseStatus;
                     this.caseData = result.caseData;

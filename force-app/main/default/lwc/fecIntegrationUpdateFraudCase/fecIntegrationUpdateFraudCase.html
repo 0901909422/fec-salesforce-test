@@ -192,7 +192,7 @@
                     <div class="slds-grid slds-wrap slds-gutters">
                         
                         <!-- Column 1 -->
-                        <div class="slds-col slds-size_1-of-3">
+                        <div class="slds-col slds-size_1-of-1">
                             <lightning-textarea
                                 label="Fraud Remarks"
                                 data-field="remarks"
@@ -215,6 +215,8 @@
                         onclick={onSubmit}
                         disabled={isUpdateSubmitting}>
                     </lightning-button>
+                    
+                    <template if:true={showCancelButton}>
                     <lightning-button
                     label={labels.Cancel_Fraud_Case_Button}
                     variant="brand"
@@ -222,15 +224,16 @@
                     onclick={onSubmitCancel}
                     disabled={isCancelSubmitting}>
                 </lightning-button>
+                    </template>
                 </div>
                 
 
                 <!-- Result -->
-                <template lwc:if={resultMessage}>
+                <!-- <template lwc:if={resultMessage}>
                     <div class="slds-m-top_medium">
                         <lightning-formatted-text value={resultMessage}></lightning-formatted-text>
                     </div>
-                </template>
+                </template> -->
                 <!-- Preview Modal -->
             <template lwc:if={showPreview}>
                 <section role="dialog" tabindex="-1" class="slds-modal slds-fade-in-open">

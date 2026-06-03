@@ -16,9 +16,9 @@
                         <div class="slds-box slds-theme_default">
 
                             <!-- TITLE -->
-                            <h3 class="slds-text-heading_small slds-m-bottom_small">
+                            <!-- <h3 class="slds-text-heading_small slds-m-bottom_small">
                                 Fraud  Properties
-                            </h3>
+                            </h3> -->
                     
                             <!-- GRID -->
                             <div class="slds-grid slds-wrap slds-gutters">
@@ -66,8 +66,8 @@
                 
                         <div class="slds-grid slds-wrap slds-gutters">
                             <template for:each={additionalProps} for:item="prop">
-                                <!-- 1 column (1/3 width) -->
-                                <div key={prop.id} class="slds-col slds-size_1-of-1 slds-medium-size_1-of-3">
+                                <!-- Hidden if property has mapping value -->
+                                <div key={prop.id} class="slds-col slds-size_1-of-1 slds-medium-size_1-of-3" lwc:if={prop.isVisible}>
                                     
                                     <div class="slds-m-vertical_small">
                     
@@ -180,9 +180,9 @@
 
                 <!-- Other Fields -->
                 <div class="slds-m-top_medium slds-box slds-p-around_small">
-                    <div class="slds-grid slds-wrap slds-gutters">
+                    <!-- <div class="slds-grid slds-wrap slds-gutters">
                         
-                        <!-- Column 1 -->
+                        
                         <div class="slds-col slds-size_1-of-1">
                             <lightning-textarea
                                 label="Fraud Remarks"
@@ -194,20 +194,20 @@
                                 style="min-height: 150px;">
                             </lightning-textarea>
                         </div>                
-                    </div>
+                    </div> -->
                 </div>
                 
 
                 <!-- BUTTONS -->
                 <div class="slds-m-top_large">
-                    <lightning-button
+                    <!-- <lightning-button
                         label={labels.Create_Fraud_Case_Button}
                         variant="brand"
-                        onclick={onSubmit}
+                        onclick={onSubmitFraudCase}
                         disabled={isCreateSubmitting}>
                     </lightning-button>
 
-                    <!-- <lightning-button
+                    <lightning-button
                         label="Submit Without Callout"
                         variant="brand-outline"
                         onclick={onSubmitWithoutCallout}

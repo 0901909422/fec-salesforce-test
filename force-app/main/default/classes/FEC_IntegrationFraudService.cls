@@ -669,13 +669,21 @@ global with sharing class FEC_IntegrationFraudService {
         
             } else {
                 //For Mockup data
-                responseBody = FEC_FraudCaseMockData.responseFailedCreateConnectFraudCase();
+                responseBody = responseFailedCreateConnectFraudCase();
                 //responseBody = FEC_FraudCaseMockData.responseCreateFraudCase();
                 
                 statusCode = FEC_FraudConstantCommon.SUCCESSFULL;
                 log('LOG-callCreateFraudCaseService MOCKUP: ');
             }
-            FEC_IntegrationSoapFraudcaseService.CreateFraudCaseResponseType resultData = parseCreateFraudCaseResponse(responseBody);
+            FEC_IntegrationSoapFraudcaseService.CreateFraudCaseResponseType resultData;
+            try {
+                resultData = parseCreateFraudCaseResponse(responseBody);
+            } catch (Exception parseEx) {
+                log('ERROR parsing create response: ' + parseEx.getMessage());
+                String parseServiceName = FEC_FraudConstantCommon.FRAUD_CASE_CREATE_NAME;
+                writeLogIntegrationService(parseServiceName, reqWrapper.channelCode, reqWrapper.caseId, reqWrapper.serviceCaseId, requestBody, responseBody, 'ParseError', requestor, parseEx.getMessage());
+                throw parseEx;
+            }
             //Central integration logging
             String serviceName = FEC_FraudConstantCommon.FRAUD_CASE_CREATE_NAME;
             description =  String.valueOf(statusCode);
@@ -778,7 +786,15 @@ global with sharing class FEC_IntegrationFraudService {
                 statusCode = FEC_FraudConstantCommon.SUCCESSFULL;
                 log('LOG-callCreateFraudCaseService MOCKUP: ');
             }
-            FEC_IntegrationSoapFraudcaseService.ProcessCaseResponseType resultData = parseProcessFraudCaseResponse(responseBody);
+            FEC_IntegrationSoapFraudcaseService.ProcessCaseResponseType resultData;
+            try {
+                resultData = parseProcessFraudCaseResponse(responseBody);
+            } catch (Exception parseEx) {
+                log('ERROR parsing process response: ' + parseEx.getMessage());
+                String parseServiceName = FEC_FraudConstantCommon.FRAUD_CASE_PROCESS_NAME;
+                writeLogIntegrationService(parseServiceName, reqWrapper.channelCode, reqWrapper.caseId, reqWrapper.serviceCaseId, requestBody, responseBody, 'ParseError', requestor, parseEx.getMessage());
+                throw parseEx;
+            }
             //Central integration logging
             String serviceName = FEC_FraudConstantCommon.FRAUD_CASE_PROCESS_NAME;
             description =  String.valueOf(statusCode);
@@ -877,11 +893,19 @@ global with sharing class FEC_IntegrationFraudService {
         
             } else {
                 //For Mockup data
-                responseBody = FEC_FraudCaseMockData.responseFailedCreateConnectFraudCase();
+                responseBody = responseFailedCreateConnectFraudCase();
                 statusCode = FEC_FraudConstantCommon.SUCCESSFULL;
                 log('LOG-callUpdateFraudCaseService MOCKUP: ');
             }
-            FEC_IntegrationSoapFraudcaseService.CreateFraudCaseResponseType resultData = parseCreateFraudCaseResponse(responseBody);
+            FEC_IntegrationSoapFraudcaseService.CreateFraudCaseResponseType resultData;
+            try {
+                resultData = parseCreateFraudCaseResponse(responseBody);
+            } catch (Exception parseEx) {
+                log('ERROR parsing update response: ' + parseEx.getMessage());
+                String parseServiceName = FEC_FraudConstantCommon.FRAUD_CASE_UPDATE_NAME;
+                writeLogIntegrationService(parseServiceName, reqWrapper.channelCode, reqWrapper.caseId, reqWrapper.serviceCaseId, requestBody, responseBody, 'ParseError', requestor, parseEx.getMessage());
+                throw parseEx;
+            }
 
             //Central integration logging
             String serviceName = FEC_FraudConstantCommon.FRAUD_CASE_UPDATE_NAME;
@@ -1005,11 +1029,19 @@ global with sharing class FEC_IntegrationFraudService {
         
             } else {
                 //For Mockup data
-                responseBody = FEC_FraudCaseMockData.responseFailedCancelConnectFraudCase();
+                responseBody = responseFailedCancelConnectFraudCase();
                 statusCode = FEC_FraudConstantCommon.SUCCESSFULL;
                 log('LOG-callCancelFraudCaseService MOCKUP: ');
             }
-            FEC_IntegrationSoapFraudcaseService.CancelFraudCaseResponseType resultData = parseCancelFraudCaseResponse(responseBody);
+            FEC_IntegrationSoapFraudcaseService.CancelFraudCaseResponseType resultData;
+            try {
+                resultData = parseCancelFraudCaseResponse(responseBody);
+            } catch (Exception parseEx) {
+                log('ERROR parsing cancel response: ' + parseEx.getMessage());
+                String parseServiceName = FEC_FraudConstantCommon.FRAUD_CASE_CANCEL_NAME;
+                writeLogIntegrationService(parseServiceName, reqWrapper.channelCode, reqWrapper.caseId, reqWrapper.serviceCaseId, requestBody, responseBody, 'ParseError', requestor, parseEx.getMessage());
+                throw parseEx;
+            }
 
             //Central integration logging
             String serviceName = FEC_FraudConstantCommon.FRAUD_CASE_CANCEL_NAME;
@@ -1367,11 +1399,19 @@ global with sharing class FEC_IntegrationFraudService {
                 for (FEC_IntegrationSoapFraudcaseService.AdditionalInfo_element ai 
                     : req.AdditionalInfo) {
 
-                    requestBlock +=
-                        '<ns1:AdditionalInfo>' +
-                            FEC_IntegrationFraudCaseUtil.buildTag('ID', ai.ID) +
-                            FEC_IntegrationFraudCaseUtil.buildTag('Value', ai.Value) +
-                        '</ns1:AdditionalInfo>';
+                    // If value is blank, only output ID without Value tag
+                    if (String.isBlank(ai.Value)) {
+                        // requestBlock +=
+                        //     '<ns1:AdditionalInfo>' +
+                        //         FEC_IntegrationFraudCaseUtil.buildTag('ID', ai.ID) +
+                        //     '</ns1:AdditionalInfo>';
+                    } else {
+                        requestBlock +=
+                            '<ns1:AdditionalInfo>' +
+                                FEC_IntegrationFraudCaseUtil.buildTag('ID', ai.ID) +
+                                FEC_IntegrationFraudCaseUtil.buildTag('Value', ai.Value) +
+                            '</ns1:AdditionalInfo>';
+                    }
                 }
             }
 
@@ -1568,5 +1608,44 @@ global with sharing class FEC_IntegrationFraudService {
         if (DEBUG_LOG) {
             System.debug(LoggingLevel.INFO, msg);
         }
+    }
+
+    public static String responseFailedCreateConnectFraudCase() {
+        String txnId   = FEC_IntegrationFraudCaseUtil.generateUUID();
+        String dtStr   = FEC_IntegrationFraudCaseUtil.nowAsXmlDateTime();
+        String xml =
+        '<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">' +
+        '  <soap:Body>' +
+        '    <ns1:CreateFraudCaseResponse xmlns:ns1="urn:PegaRULES:SOAP:FraudCase:Services">' +
+        '      <ns1:Sys>' +
+        '        <ns1:TransactionID>' + txnId + '</ns1:TransactionID>' +
+        '        <ns1:DateTime>' + dtStr + '</ns1:DateTime>' +
+        '        <ns1:Code>0</ns1:Code>' +
+        '        <ns1:Description>Failed to connect to external service</ns1:Description>' +
+        '      </ns1:Sys>' +
+        '    </ns1:CreateFraudCaseResponse>' +
+        '  </soap:Body>' +
+        '</soap:Envelope>';
+        return xml;
+        
+    }
+    public static String responseFailedCancelConnectFraudCase() {
+        String txnId   = FEC_IntegrationFraudCaseUtil.generateUUID();
+        String dtStr   = FEC_IntegrationFraudCaseUtil.nowAsXmlDateTime();
+        String xml =
+        '<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">' +
+        '  <soap:Body>' +
+        '    <ns1:CancelFraudCaseResponse xmlns:ns1="urn:PegaRULES:SOAP:FraudCase:Services">' +
+        '      <ns1:Sys>' +
+        '        <ns1:TransactionID>' + txnId + '</ns1:TransactionID>' +
+        '        <ns1:DateTime>' + dtStr + '</ns1:DateTime>' +
+        '        <ns1:Code>0</ns1:Code>' +
+        '        <ns1:Description>Failed to connect to external service</ns1:Description>' +
+        '      </ns1:Sys>' +
+        '    </ns1:CancelFraudCaseResponse>' +
+        '  </soap:Body>' +
+        '</soap:Envelope>';
+        return xml;
+        
     }
 }
