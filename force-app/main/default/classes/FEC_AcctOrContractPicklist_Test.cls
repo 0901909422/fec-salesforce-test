@@ -9,6 +9,23 @@
 @IsTest
 private class FEC_AcctOrContractPicklist_Test {
 
+    private class CustomerIntegrationMock implements HttpCalloutMock {
+        public HTTPResponse respond(HTTPRequest req) {
+            HttpResponse res = new HttpResponse();
+            res.setStatusCode(200);
+            res.setHeader('Content-Type', 'text/xml');
+            res.setBody(
+                '<?xml version="1.0" encoding="UTF-8"?>' +
+                '<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">' +
+                '<soapenv:Body><GetCustomerListResponse>' +
+                '<Sys><Code>0</Code></Sys><Count>1</Count>' +
+                '<Customers><Customer><CIFNumber>CIF-CH</CIFNumber><FullName>Synced</FullName></Customer></Customers>' +
+                '</GetCustomerListResponse></soapenv:Body></soapenv:Envelope>'
+            );
+            return res;
+        }
+    }
+
     /* ================================================================
      * CONSTANTS – ánh xạ sang FEC_ConstantCommon để test không hardcode
      * ================================================================ */
@@ -495,8 +512,9 @@ private class FEC_AcctOrContractPicklist_Test {
         Case c = insertCase(pt.Id, null, '0956789012', false, null, null);
 
         // 2. Kiểm thử kịch bản thành công
+        Test.setMock(HttpCalloutMock.class, new CustomerIntegrationMock());
         FEC_AccountOrContractPicklistHandler.createHistory(
-            c.Id, 'LOAN-NEW-001', TYPE_LOAN, 'CIF-CH', '0956789012');
+            c.Id, '12345678-123456-1234', TYPE_LOAN, 'CIF-CH', '0956789012');
 
         List<FEC_Customer_History__c> histories = [
             SELECT FEC_Contract_Number__c, FEC_Product_Code__c, FEC_Case__c
@@ -504,7 +522,7 @@ private class FEC_AcctOrContractPicklist_Test {
             WHERE FEC_Case__c = :c.Id
         ];
         System.assertEquals(1, histories.size(), 'Phải tạo được 1 Customer History');
-        System.assertEquals('LOAN-NEW-001', histories[0].FEC_Contract_Number__c,
+        System.assertEquals('12345678-123456-1234', histories[0].FEC_Contract_Number__c,
             'ContractNumber phải được set cho Loan');
         System.assertEquals(TYPE_LOAN, histories[0].FEC_Product_Code__c,
             'ProductCode phải là LOAN');
@@ -528,13 +546,16 @@ private class FEC_AcctOrContractPicklist_Test {
         Case c = insertCase(pt.Id, null, '0967890123', false, null, null);
 
         // 2. Kiểm thử kịch bản thành công
+        Test.setMock(HttpCalloutMock.class, new CustomerIntegrationMock());
         FEC_AccountOrContractPicklistHandler.createHistory(
-            c.Id, 'CARD-ACC-NEW', TYPE_CARD, 'CIF-CARD2', '0967890123');
+            c.Id, '4111111111111111', TYPE_CARD, 'CIF-CARD2', '0967890123');
 
         List<FEC_Customer_History__c> histories = [
             SELECT FEC_Account_Number__c, FEC_Product_Code__c FROM FEC_Customer_History__c
             WHERE FEC_Case__c = :c.Id];
         System.assertEquals(1, histories.size(), 'Phải tạo 1 Customer History cho Card');
+        System.assertEquals('4111111111111111', histories[0].FEC_Account_Number__c,
+            'AccountNumber phải được set cho Card');
         System.assertEquals(TYPE_CARD, histories[0].FEC_Product_Code__c,
             'ProductCode phải là CARD');
 

@@ -18,6 +18,7 @@ private class FEC_OwnerTeamLookupSvc_Test {
         // Tạo cấu hình Team-Queue
         FEC_Team_Queue__c tq = new FEC_Team_Queue__c(
             FEC_Queue_Name__c = 'Test_Queue_Dev',
+            Team__c = team.Id,
             FEC_Team__c = 'Team Alpha'
         );
         insert tq;

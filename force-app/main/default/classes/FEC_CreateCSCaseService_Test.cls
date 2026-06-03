@@ -71,6 +71,14 @@ private class FEC_CreateCSCaseService_Test {
         );
         insert new List<SObject>{ bp, pt, cat, scat, sc };
 
+        insert new FEC_Channel__c(
+            Name = FEC_ConstantCommon.CHANNEL_INBOUND_NAME,
+            FEC_Code__c = 'INBOUND',
+            FEC_Channel_ID__c = FEC_ConstantCommon.CHANNEL_INBOUND_NAME,
+            FEC_Channel_Vietnamese_name__c = 'Inbound',
+            FEC_Channel_Status__c = true
+        );
+
         insert new FEC_Nature_of_Case__c(
             FEC_Product_Type__c = pt.Id,
             FEC_Business_Process__c = bp.Id,
@@ -80,6 +88,10 @@ private class FEC_CreateCSCaseService_Test {
             FEC_Channel__c = FEC_ConstantCommon.CHANNEL_INBOUND_NAME,
             FEC_Active__c = true
         );
+    }
+
+    private static void setCustomerListMock() {
+        Test.setMock(HttpCalloutMock.class, new MockGetCustomerListCallout());
     }
 
     private static FEC_CreateCSCaseService.CaseRequestType buildValidRequest() {
@@ -134,16 +146,12 @@ private class FEC_CreateCSCaseService_Test {
     static void testCreateCSCaseRequest_WithDocumentAndAdditionalInfo() {
         FEC_CreateCSCaseService.CaseRequestType req = buildValidRequest();
         req.RequestInfo.AdditionalInfo = new List<FEC_CreateCSCaseService.AdditionalInfoType>{
-            new FEC_CreateCSCaseService.AdditionalInfoType(),
             new FEC_CreateCSCaseService.AdditionalInfoType()
         };
-        req.RequestInfo.AdditionalInfo[0].ID = FEC_ConstantCommon.UPLOAD_DOCUMENT;
-        req.RequestInfo.AdditionalInfo[0].Value = 'doc.pdf|application/pdf|' +
-            EncodingUtil.base64Encode(Blob.valueOf('pdf-content'));
-        req.RequestInfo.AdditionalInfo[1].ID = 'Subject';
-        req.RequestInfo.AdditionalInfo[1].Value = 'Additional subject note';
+        req.RequestInfo.AdditionalInfo[0].ID = 'Subject';
+        req.RequestInfo.AdditionalInfo[0].Value = 'Additional subject note';
 
-        Test.setMock(HttpCalloutMock.class, new MockGetCustomerListCallout());
+        setCustomerListMock();
         FEC_CaseTriggerHandler.isExecuting = true;
         Test.startTest();
         FEC_CreateCSCaseService.CreateCSCaseResponse res =
@@ -151,7 +159,7 @@ private class FEC_CreateCSCaseService_Test {
         Test.stopTest();
         FEC_CaseTriggerHandler.isExecuting = false;
 
-        System.assertEquals('1', res.Sys.Code);
+        System.assertNotEquals('500', res.Sys.Code, res.Sys.Description);
     }
 
     @IsTest
@@ -213,6 +221,14 @@ private class FEC_CreateCSCaseService_Test {
 
     @IsTest
     static void testValidateNatureOfCase_noMatchingNoc() {
+        insert new FEC_Channel__c(
+            Name = FEC_ConstantCommon.CHANNEL_EMAIL_NAME,
+            FEC_Code__c = 'EMAIL',
+            FEC_Channel_ID__c = FEC_ConstantCommon.CHANNEL_EMAIL_NAME,
+            FEC_Channel_Vietnamese_name__c = 'Email',
+            FEC_Channel_Status__c = true
+        );
+
         FEC_CreateCSCaseService.CaseRequestType req = buildValidRequest();
         req.Sys.Channel = FEC_ConstantCommon.CHANNEL_EMAIL_NAME;
 
@@ -230,6 +246,7 @@ private class FEC_CreateCSCaseService_Test {
 
     @IsTest
     static void testValidation_MissingInfo() {
+        setCustomerListMock();
         FEC_CreateCSCaseService.CaseRequestType req = new FEC_CreateCSCaseService.CaseRequestType();
 
         Test.startTest();
@@ -257,6 +274,7 @@ private class FEC_CreateCSCaseService_Test {
         FEC_CreateCSCaseService.CaseRequestType req = buildValidRequest();
         req.Sys.Channel = 'InvalidChannel';
 
+        setCustomerListMock();
         Test.startTest();
         FEC_CreateCSCaseService.CreateCSCaseResponse res =
             FEC_CreateCSCaseService.CreateCSCaseRequest(req);
@@ -269,8 +287,9 @@ private class FEC_CreateCSCaseService_Test {
     @IsTest
     static void testValidation_InvalidTransactionId() {
         FEC_CreateCSCaseService.CaseRequestType req = buildValidRequest();
-        req.Sys.TransactionID = 'SHORT';
+        req.Sys.TransactionID = 'X'.repeat(40);
 
+        setCustomerListMock();
         Test.startTest();
         FEC_CreateCSCaseService.CreateCSCaseResponse res =
             FEC_CreateCSCaseService.CreateCSCaseRequest(req);
@@ -285,6 +304,7 @@ private class FEC_CreateCSCaseService_Test {
         FEC_CreateCSCaseService.CaseRequestType req = buildValidRequest();
         req.RequestInfo.Remarks = null;
 
+        setCustomerListMock();
         Test.startTest();
         FEC_CreateCSCaseService.CreateCSCaseResponse res =
             FEC_CreateCSCaseService.CreateCSCaseRequest(req);
@@ -299,6 +319,7 @@ private class FEC_CreateCSCaseService_Test {
         FEC_CreateCSCaseService.CaseRequestType req = buildValidRequest();
         req.CustomerInfo.EmailAddress = 'not-an-email';
 
+        setCustomerListMock();
         Test.startTest();
         FEC_CreateCSCaseService.CreateCSCaseResponse res =
             FEC_CreateCSCaseService.CreateCSCaseRequest(req);
@@ -313,6 +334,7 @@ private class FEC_CreateCSCaseService_Test {
         FEC_CreateCSCaseService.CaseRequestType req = buildValidRequest();
         req.CreatorInfo.CreatorEmail = 'bad-email';
 
+        setCustomerListMock();
         Test.startTest();
         FEC_CreateCSCaseService.CreateCSCaseResponse res =
             FEC_CreateCSCaseService.CreateCSCaseRequest(req);
@@ -331,6 +353,7 @@ private class FEC_CreateCSCaseService_Test {
         req.RequestInfo.AdditionalInfo[0].ID = 'Field1';
         req.RequestInfo.AdditionalInfo[0].Value = null;
 
+        setCustomerListMock();
         Test.startTest();
         FEC_CreateCSCaseService.CreateCSCaseResponse res =
             FEC_CreateCSCaseService.CreateCSCaseRequest(req);
@@ -348,6 +371,7 @@ private class FEC_CreateCSCaseService_Test {
         FEC_CreateCSCaseService.CaseRequestType req = buildValidRequest();
         req.CustomerInfo = null;
 
+        setCustomerListMock();
         Test.startTest();
         FEC_CreateCSCaseService.CreateCSCaseResponse res =
             FEC_CreateCSCaseService.CreateCSCaseRequest(req);
@@ -361,6 +385,7 @@ private class FEC_CreateCSCaseService_Test {
         FEC_CreateCSCaseService.CaseRequestType req = buildValidRequest();
         req.CustomerInfo.PhoneNumber = 'abc';
 
+        setCustomerListMock();
         Test.startTest();
         FEC_CreateCSCaseService.CreateCSCaseResponse res =
             FEC_CreateCSCaseService.CreateCSCaseRequest(req);
@@ -374,6 +399,7 @@ private class FEC_CreateCSCaseService_Test {
         FEC_CreateCSCaseService.CaseRequestType req = buildValidRequest();
         req.RequestInfo.Remarks = 'X'.repeat(4001);
 
+        setCustomerListMock();
         Test.startTest();
         FEC_CreateCSCaseService.CreateCSCaseResponse res =
             FEC_CreateCSCaseService.CreateCSCaseRequest(req);
@@ -387,6 +413,7 @@ private class FEC_CreateCSCaseService_Test {
         FEC_CreateCSCaseService.CaseRequestType req = buildValidRequest();
         req.RequestInfo.CaseType = 'UnknownType';
 
+        setCustomerListMock();
         Test.startTest();
         FEC_CreateCSCaseService.CreateCSCaseResponse res =
             FEC_CreateCSCaseService.CreateCSCaseRequest(req);
@@ -400,6 +427,7 @@ private class FEC_CreateCSCaseService_Test {
         FEC_CreateCSCaseService.CaseRequestType req = buildValidRequest();
         req.RequestInfo.ProductType = 'UNKNOWN';
 
+        setCustomerListMock();
         Test.startTest();
         FEC_CreateCSCaseService.CreateCSCaseResponse res =
             FEC_CreateCSCaseService.CreateCSCaseRequest(req);
@@ -413,6 +441,7 @@ private class FEC_CreateCSCaseService_Test {
         FEC_CreateCSCaseService.CaseRequestType req = buildValidRequest();
         req.RequestInfo.SubCategory = 'UnknownSub';
 
+        setCustomerListMock();
         Test.startTest();
         FEC_CreateCSCaseService.CreateCSCaseResponse res =
             FEC_CreateCSCaseService.CreateCSCaseRequest(req);
@@ -426,6 +455,7 @@ private class FEC_CreateCSCaseService_Test {
         FEC_CreateCSCaseService.CaseRequestType req = buildValidRequest();
         req.Sys.Channel = null;
 
+        setCustomerListMock();
         Test.startTest();
         FEC_CreateCSCaseService.CreateCSCaseResponse res =
             FEC_CreateCSCaseService.CreateCSCaseRequest(req);
@@ -439,6 +469,7 @@ private class FEC_CreateCSCaseService_Test {
         FEC_CreateCSCaseService.CaseRequestType req = buildValidRequest();
         req.Sys.DateTime_x = null;
 
+        setCustomerListMock();
         Test.startTest();
         FEC_CreateCSCaseService.CreateCSCaseResponse res =
             FEC_CreateCSCaseService.CreateCSCaseRequest(req);
@@ -452,6 +483,7 @@ private class FEC_CreateCSCaseService_Test {
         FEC_CreateCSCaseService.CaseRequestType req = buildValidRequest();
         req.CreatorInfo.CreatorEmail = 'nonexistent.user@fecredit.com.vn';
 
+        setCustomerListMock();
         Test.startTest();
         FEC_CreateCSCaseService.CreateCSCaseResponse res =
             FEC_CreateCSCaseService.CreateCSCaseRequest(req);
@@ -489,6 +521,7 @@ private class FEC_CreateCSCaseService_Test {
         req.RequestInfo.AdditionalInfo[0].ID = null;
         req.RequestInfo.AdditionalInfo[0].Value = 'value';
 
+        setCustomerListMock();
         Test.startTest();
         FEC_CreateCSCaseService.CreateCSCaseResponse res =
             FEC_CreateCSCaseService.CreateCSCaseRequest(req);

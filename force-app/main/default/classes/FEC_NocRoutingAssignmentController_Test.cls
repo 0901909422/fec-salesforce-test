@@ -35,6 +35,7 @@ private class FEC_NocRoutingAssignmentController_Test {
         insert team;
 
         FEC_Team_Queue__c teamQueue = new FEC_Team_Queue__c(
+            Team__c = team.Id,
             FEC_Select_Team__c = team.Id,
             FEC_Queue_Name__c = 'Test_Queue_Dev'
         );

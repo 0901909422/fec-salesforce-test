@@ -13,6 +13,7 @@ private class FEC_ContentHistorySelector_Test {
         FEC_Template__c template = new FEC_Template__c(
             Name = 'History Selector Template',
             FEC_Folder__c = folder.Id,
+            FEC_API_Name__c = 'History_Selector_Template',
             FEC_Active__c = true,
             FEC_Subject_Line__c = 'Test Subject',
             FEC_Body__c = '<p>Test body</p>'

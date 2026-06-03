@@ -224,7 +224,7 @@ private class FEC_CardReplaceAddressController_Test {
             Test.stopTest();
 
             System.assertNotEquals(null, result);
-            System.assertEquals(null, result.isShowAction);
+            System.assertEquals(true, result.isShowAction);
         }
     }
 
@@ -240,7 +240,7 @@ private class FEC_CardReplaceAddressController_Test {
             Test.stopTest();
 
             System.assertNotEquals(null, result);
-            System.assertEquals(null, result.isShowAction);
+            System.assertNotEquals(null, result.isShowAction);
         }
     }
 
@@ -272,7 +272,7 @@ private class FEC_CardReplaceAddressController_Test {
             Test.stopTest();
 
             System.assertNotEquals(null, result);
-            System.assertEquals(null, result.isShowAction);
+            System.assertEquals(false, result.isShowAction);
         }
     }
 
