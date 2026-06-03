@@ -133,7 +133,7 @@ private class FEC_CaseBusinessService_Test {
             Case c = [SELECT Id, FEC_Product_Type__c, FEC_Category__c, FEC_SubCategory__c, FEC_SubCode__c FROM Case LIMIT 1];
 
             Test.startTest();
-            FEC_CaseBusinessService.Business biz = FEC_CaseBusinessService.getByCase(c.Id, null, null, null, null);
+            FEC_CaseBusinessService.Business biz = FEC_CaseBusinessService.getByCase(c.Id, null, null, null, null, null, null);
             Test.stopTest();
 
             System.assertNotEquals(null, biz);
@@ -367,7 +367,7 @@ private class FEC_CaseBusinessService_Test {
             new FEC_CaseBusinessService.DynamicLwcComponent();
 
             try {
-                FEC_CaseBusinessService.getByCase(null, null, null, null, null);
+                FEC_CaseBusinessService.getByCase(null, null, null, null, null, null, null);
             } catch (Exception ignore) {}
             Test.stopTest();
         }
