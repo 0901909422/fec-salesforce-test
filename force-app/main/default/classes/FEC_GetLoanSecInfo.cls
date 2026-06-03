@@ -171,6 +171,8 @@ public with sharing class FEC_GetLoanSecInfo {
             }
             // System.debug('### GET LOAN SEC INFO ERROR: ' + ex.getMessage());
             throw ex;
+        } finally {
+            logApiResponse();
         }
     }
 
@@ -369,16 +371,72 @@ public with sharing class FEC_GetLoanSecInfo {
         }
     }
 
+    /**
+     * Ghi FEC_API_Log__c sau callout. Insert chạy @future để tránh DML trước callout tiếp theo
+     * (lỗi "uncommitted work pending"). Khi đã nằm trong deferred scope thì enqueue cùng batch flush.
+     */
     public static void logApiResponse() {
-        if (responseLog != null) {
+        if (responseLog == null) {
+            return;
+        }
+
+        String statusCodeStr = responseLog.response == null
+            ? null
+            : String.valueOf(responseLog.response.getStatusCode());
+        String responseBody = responseLog.response == null ? null : responseLog.response.getBody();
+
+        if (FEC_CommonUltils.isDeferredApiLoggingActive()) {
             FEC_CommonUltils.logApi(
                 responseLog.apiName,
                 responseLog.endpoint,
                 responseLog.method,
                 responseLog.requestBody,
                 responseLog.response,
-                responseLog.errorMessage);
+                responseLog.errorMessage
+            );
+            return;
         }
+
+        if (System.isFuture() || System.isBatch()) {
+            FEC_CommonUltils.logApi(
+                responseLog.apiName,
+                responseLog.endpoint,
+                responseLog.method,
+                responseLog.requestBody,
+                responseLog.response,
+                responseLog.errorMessage
+            );
+            return;
+        }
+
+        persistApiLogAsync(
+            responseLog.apiName,
+            responseLog.endpoint,
+            responseLog.method,
+            responseLog.requestBody,
+            statusCodeStr,
+            responseBody,
+            responseLog.errorMessage
+        );
+    }
+
+    @future
+    private static void persistApiLogAsync(
+        String apiName,
+        String endpoint,
+        String method,
+        String requestBody,
+        String statusCodeStr,
+        String responseBody,
+        String errorMessage
+    ) {
+        HttpResponse res = null;
+        if (String.isNotBlank(statusCodeStr)) {
+            res = new HttpResponse();
+            res.setStatusCode(Integer.valueOf(statusCodeStr));
+            res.setBody(responseBody != null ? responseBody : '');
+        }
+        FEC_CommonUltils.logApi(apiName, endpoint, method, requestBody, res, errorMessage);
     }
 
 }
