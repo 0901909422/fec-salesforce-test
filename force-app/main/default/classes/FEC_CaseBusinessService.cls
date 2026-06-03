@@ -2450,7 +2450,7 @@ public without sharing class FEC_CaseBusinessService {
               caseId
             );
           } else {
-            FEC_CofGsrRoutePrepareService.syncActualNatureToMatchCurrentCaseStage(
+            FEC_CofGsrRoutePrepareService.cloneActualNatureFromCurrentCaseStageAfterRevert(
               caseId
             );
           }
