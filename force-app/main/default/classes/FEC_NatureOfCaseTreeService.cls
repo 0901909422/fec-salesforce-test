@@ -15,7 +15,7 @@ public with sharing class FEC_NatureOfCaseTreeService {
                 FEC_Product_Type__r.FEC_Alias__c, 
                 FEC_Product_Type__r.FEC_Code__c, 
                 FEC_Product_Type__r.FEC_Name_VN__c, 
-                FEC_Product_Type__r.FEC_Pos_Order__c, 
+                FEC_Product_Type__r.FEC_Order__c, 
                 FEC_Product_Type__r.FEC_Active__c, 
                 FEC_Product_Type__r.Process_Change_Status__c, 
 
@@ -24,7 +24,7 @@ public with sharing class FEC_NatureOfCaseTreeService {
                 FEC_Business_Process__r.FEC_Alias__c, 
                 FEC_Business_Process__r.FEC_Code__c, 
                 FEC_Business_Process__r.FEC_Name_VN__c, 
-                FEC_Business_Process__r.FEC_Pos_Order__c, 
+                FEC_Business_Process__r.FEC_Order__c, 
                 FEC_Business_Process__r.FEC_Active__c, 
                 FEC_Business_Process__r.Process_Change_Status__c, 
 
@@ -33,7 +33,7 @@ public with sharing class FEC_NatureOfCaseTreeService {
                 FEC_Category__r.FEC_Alias__c, 
                 FEC_Category__r.FEC_Code__c, 
                 FEC_Category__r.FEC_Name_VN__c, 
-                FEC_Category__r.FEC_Pos_Order__c, 
+                FEC_Category__r.FEC_Order__c, 
                 FEC_Category__r.FEC_Active__c, 
                 FEC_Category__r.Process_Change_Status__c,  
 
@@ -42,7 +42,7 @@ public with sharing class FEC_NatureOfCaseTreeService {
                 FEC_Sub_Category__r.FEC_Alias__c, 
                 FEC_Sub_Category__r.FEC_Code__c, 
                 FEC_Sub_Category__r.FEC_Name_VN__c, 
-                FEC_Sub_Category__r.FEC_Pos_Order__c, 
+                FEC_Sub_Category__r.FEC_Order__c, 
                 FEC_Sub_Category__r.FEC_Active__c, 
                 FEC_Sub_Category__r.Process_Change_Status__c, 
 
@@ -51,16 +51,16 @@ public with sharing class FEC_NatureOfCaseTreeService {
                 FEC_Sub_Code__r.FEC_Alias__c, 
                 FEC_Sub_Code__r.FEC_Code__c, 
                 FEC_Sub_Code__r.FEC_Name_VN__c, 
-                FEC_Sub_Code__r.FEC_Pos_Order__c, 
+                FEC_Sub_Code__r.FEC_Order__c, 
                 FEC_Sub_Code__r.FEC_Active__c,
                 FEC_Sub_Code__r.Process_Change_Status__c
             FROM FEC_MDM_Nature_Of_Case__c
             ORDER BY 
-                FEC_Product_Type__r.FEC_Pos_Order__c ASC,
-                FEC_Business_Process__r.FEC_Pos_Order__c ASC,
-                FEC_Category__r.FEC_Pos_Order__c ASC,
-                FEC_Sub_Category__r.FEC_Pos_Order__c ASC,
-                FEC_Sub_Code__r.FEC_Pos_Order__c ASC
+                FEC_Product_Type__r.FEC_Order__c ASC,
+                FEC_Business_Process__r.FEC_Order__c ASC,
+                FEC_Category__r.FEC_Order__c ASC,
+                FEC_Sub_Category__r.FEC_Order__c ASC,
+                FEC_Sub_Code__r.FEC_Order__c ASC
         ];
         return result;
     }
@@ -103,7 +103,7 @@ public with sharing class FEC_NatureOfCaseTreeService {
         if (fieldMap.containsKey(FEC_FieldConstants.FIELD_NAME_VN)) newRecord.put(FEC_FieldConstants.FIELD_NAME_VN, strNameVN);
         if (fieldMap.containsKey(FEC_FieldConstants.FIELD_ACTIVE)) newRecord.put(FEC_FieldConstants.FIELD_ACTIVE, isStatus);
         if (fieldMap.containsKey(FEC_FieldConstants.FIELD_NAME)) newRecord.put(FEC_FieldConstants.FIELD_NAME, strName);
-        if (fieldMap.containsKey(FEC_FieldConstants.FIELD_POS_ORDER)) newRecord.put(FEC_FieldConstants.FIELD_POS_ORDER, intPosOrder);
+        if (fieldMap.containsKey(FEC_FieldConstants.FIELD_FEC_ORDER)) newRecord.put(FEC_FieldConstants.FIELD_FEC_ORDER, intPosOrder);
         
         try {
             Database.insert(newRecord);
@@ -264,7 +264,7 @@ public with sharing class FEC_NatureOfCaseTreeService {
                         FEC_Name_VN__c = (String)data.get(FEC_UIConstants.PAYLOAD_NAMEVN),
                         FEC_Alias__c = (String)data.get(FEC_UIConstants.PAYLOAD_ALIAS),
                         FEC_Code__c = (String)data.get(FEC_UIConstants.PAYLOAD_CODE),
-                        FEC_Pos_Order__c = data.get(FEC_UIConstants.PAYLOAD_POSORDER) != null ? Decimal.valueOf(String.valueOf(data.get(FEC_UIConstants.PAYLOAD_POSORDER))) : null,
+                        FEC_Order__c = data.get(FEC_UIConstants.PAYLOAD_POSORDER) != null ? Decimal.valueOf(String.valueOf(data.get(FEC_UIConstants.PAYLOAD_POSORDER))) : null,
                         FEC_Active__c = data.get(FEC_UIConstants.PAYLOAD_STATUS) != null ? Boolean.valueOf(data.get(FEC_UIConstants.PAYLOAD_STATUS)) : false
                     ));
                 } else if (type == FEC_UIConstants.LABEL_BUSINESS_PROCESS) {
@@ -274,7 +274,7 @@ public with sharing class FEC_NatureOfCaseTreeService {
                         FEC_Name_VN__c = (String)data.get(FEC_UIConstants.PAYLOAD_NAMEVN),
                         FEC_Alias__c = (String)data.get(FEC_UIConstants.PAYLOAD_ALIAS),
                         FEC_Code__c = (String)data.get(FEC_UIConstants.PAYLOAD_CODE),
-                        FEC_Pos_Order__c = data.get(FEC_UIConstants.PAYLOAD_POSORDER) != null ? Decimal.valueOf(String.valueOf(data.get(FEC_UIConstants.PAYLOAD_POSORDER))) : null,
+                        FEC_Order__c = data.get(FEC_UIConstants.PAYLOAD_POSORDER) != null ? Decimal.valueOf(String.valueOf(data.get(FEC_UIConstants.PAYLOAD_POSORDER))) : null,
                         FEC_Active__c = data.get(FEC_UIConstants.PAYLOAD_STATUS) != null ? Boolean.valueOf(data.get(FEC_UIConstants.PAYLOAD_STATUS)) : false
                     ));
                 } else if (type == FEC_UIConstants.LABEL_CATEGORY) {
@@ -284,7 +284,7 @@ public with sharing class FEC_NatureOfCaseTreeService {
                         FEC_Name_VN__c = (String)data.get(FEC_UIConstants.PAYLOAD_NAMEVN),
                         FEC_Alias__c = (String)data.get(FEC_UIConstants.PAYLOAD_ALIAS),
                         FEC_Code__c = (String)data.get(FEC_UIConstants.PAYLOAD_CODE),
-                        FEC_Pos_Order__c = data.get(FEC_UIConstants.PAYLOAD_POSORDER) != null ? Decimal.valueOf(String.valueOf(data.get(FEC_UIConstants.PAYLOAD_POSORDER))) : null,
+                        FEC_Order__c = data.get(FEC_UIConstants.PAYLOAD_POSORDER) != null ? Decimal.valueOf(String.valueOf(data.get(FEC_UIConstants.PAYLOAD_POSORDER))) : null,
                         FEC_Active__c = data.get(FEC_UIConstants.PAYLOAD_STATUS) != null ? Boolean.valueOf(data.get(FEC_UIConstants.PAYLOAD_STATUS)) : false
                     ));
                 } else if (type == FEC_UIConstants.LABEL_SUB_CATEGORY) {
@@ -294,7 +294,7 @@ public with sharing class FEC_NatureOfCaseTreeService {
                         FEC_Name_VN__c = (String)data.get(FEC_UIConstants.PAYLOAD_NAMEVN),
                         FEC_Alias__c = (String)data.get(FEC_UIConstants.PAYLOAD_ALIAS),
                         FEC_Code__c = (String)data.get(FEC_UIConstants.PAYLOAD_CODE),
-                        FEC_Pos_Order__c = data.get(FEC_UIConstants.PAYLOAD_POSORDER) != null ? Decimal.valueOf(String.valueOf(data.get(FEC_UIConstants.PAYLOAD_POSORDER))) : null,
+                        FEC_Order__c = data.get(FEC_UIConstants.PAYLOAD_POSORDER) != null ? Decimal.valueOf(String.valueOf(data.get(FEC_UIConstants.PAYLOAD_POSORDER))) : null,
                         FEC_Active__c = data.get(FEC_UIConstants.PAYLOAD_STATUS) != null ? Boolean.valueOf(data.get(FEC_UIConstants.PAYLOAD_STATUS)) : false
                     ));
                 } else if (type == FEC_UIConstants.LABEL_SUB_CODE) {
@@ -304,7 +304,7 @@ public with sharing class FEC_NatureOfCaseTreeService {
                         FEC_Name_VN__c = (String)data.get(FEC_UIConstants.PAYLOAD_NAMEVN),
                         FEC_Alias__c = (String)data.get(FEC_UIConstants.PAYLOAD_ALIAS),
                         FEC_Code__c = (String)data.get(FEC_UIConstants.PAYLOAD_CODE),
-                        FEC_Pos_Order__c = data.get(FEC_UIConstants.PAYLOAD_POSORDER) != null ? Decimal.valueOf(String.valueOf(data.get(FEC_UIConstants.PAYLOAD_POSORDER))) : null,
+                        FEC_Order__c = data.get(FEC_UIConstants.PAYLOAD_POSORDER) != null ? Decimal.valueOf(String.valueOf(data.get(FEC_UIConstants.PAYLOAD_POSORDER))) : null,
                         FEC_Active__c = data.get(FEC_UIConstants.PAYLOAD_STATUS) != null ? Boolean.valueOf(data.get(FEC_UIConstants.PAYLOAD_STATUS)) : false
                     ));
                 }
@@ -376,9 +376,9 @@ public with sharing class FEC_NatureOfCaseTreeService {
         }
 
         if (fm.containsKey(FEC_FieldConstants.FIELD_NAME) && fm.get(FEC_FieldConstants.FIELD_NAME).getDescribe().isUpdateable()) targetSObject.put(FEC_FieldConstants.FIELD_NAME, (String)updateData.get(FEC_UIConstants.PAYLOAD_NAMEEN));
-        if (fm.containsKey(FEC_FieldConstants.FIELD_POS_ORDER) && fm.get(FEC_FieldConstants.FIELD_POS_ORDER).getDescribe().isUpdateable()) {
+        if (fm.containsKey(FEC_FieldConstants.FIELD_FEC_ORDER) && fm.get(FEC_FieldConstants.FIELD_FEC_ORDER).getDescribe().isUpdateable()) {
             Object posVal = updateData.get(FEC_UIConstants.PAYLOAD_POSORDER);
-            targetSObject.put(FEC_FieldConstants.FIELD_POS_ORDER, posVal != null ? Decimal.valueOf(String.valueOf(posVal)) : null);
+            targetSObject.put(FEC_FieldConstants.FIELD_FEC_ORDER, posVal != null ? Decimal.valueOf(String.valueOf(posVal)) : null);
         }
 
         try {

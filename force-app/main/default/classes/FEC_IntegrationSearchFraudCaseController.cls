@@ -100,7 +100,7 @@ global with sharing class FEC_IntegrationSearchFraudCaseController {
             Id, Name, FEC_CaseID__c, FEC_Service_Case_ID__c, FEC_Parent_CaseID__c,
             FEC_Case_Status__c, FEC_Category__c, FEC_Sub_Category__c, FEC_Sub_Code__c,
             FEC_Remark__c, CreatedDate, FEC_Sys_Channel__c, FEC_Creator_Email__c, 
-            CreatedBy.Id, CreatedBy.Name, CreatedBy.Email 
+            CreatedBy.Id, CreatedBy.Name, CreatedBy.Email,FEC_Integrate_Case_ID__c 
             FROM FEC_Integration_Case__c
             WHERE FEC_Parent_CaseID__c IN :buIds
             AND FEC_CaseID__c LIKE :likeTKValue
@@ -222,13 +222,24 @@ global with sharing class FEC_IntegrationSearchFraudCaseController {
         String sortField = normalizeSortBy(sortBy);
         String sortDir   = normalizeSortDirection(sortDirection);
     
+        Boolean isAccountNumberSort = (sortBy == 'AccountNumber');
+        String effectiveSortField = isAccountNumberSort ? 'CreatedDate' : sortField;
+
         List<FEC_Integration_Case__c> all =
-            executeParentQuery(parentWhere, sortField, sortDir);
+            executeParentQuery(parentWhere, effectiveSortField, isAccountNumberSort ? 'DESC' : sortDir);
+
+        // For AccountNumber sort, load all account numbers first, then sort in memory
+        if (isAccountNumberSort) {
+            Map<Id, String> allAccountMap = loadAccountNumbers(all);
+            all = sortByAccountNumber(all, allAccountMap, sortDir);
+        }
     
         List<FEC_Integration_Case__c> page =
             paginate(all, pageNum, pageSize);
     
-        Map<Id, String> accountMap = loadAccountNumbers(page);
+        Map<Id, String> accountMap = isAccountNumberSort 
+            ? loadAccountNumbers(page) 
+            : loadAccountNumbers(page);
         Map<String, Integer> childCountMap = buildChildCountMap(page);
     
         Map<String,Object> response =
@@ -442,7 +453,10 @@ global with sharing class FEC_IntegrationSearchFraudCaseController {
             'FEC_Sub_Category__c',
             'FEC_Sub_Code__c',
             'FEC_Case_Status__c',
-            'CreatedDate'
+            'FEC_Sys_Channel__c',
+            'FEC_Creator_Email__c',
+            'CreatedDate',
+            'AccountNumber'
         };
     
         return allowed.contains(sortBy) ? sortBy : 'CreatedDate';
@@ -508,7 +522,7 @@ global with sharing class FEC_IntegrationSearchFraudCaseController {
             'FEC_Parent_CaseID__c, FEC_Case_Status__c, FEC_Category__c, ' +
             'FEC_Sub_Category__c, FEC_Sub_Code__c, FEC_Remark__c, ' +
             'CreatedDate, FEC_Sys_Channel__c, FEC_Creator_Email__c, ' +
-            'CreatedBy.Id, CreatedBy.Name, CreatedBy.Email ' +
+            'CreatedBy.Id, CreatedBy.Name, CreatedBy.Email, FEC_Integrate_Case_ID__c ' +
             'FROM FEC_Integration_Case__c';
     
         if (!parentWhere.isEmpty()) {
@@ -577,6 +591,68 @@ global with sharing class FEC_IntegrationSearchFraudCaseController {
         }
 
         return accountNumberMap;
+    }
+
+    /**
+     * Sorts a list of fraud cases by their associated Account Number in memory.
+     *
+     * Since AccountNumber is stored in a related info record (not a direct field),
+     * it cannot be sorted via SOQL ORDER BY. This method performs an in-memory sort
+     * using a wrapper class that implements Comparable.
+     *
+     * Null account numbers are sorted to the end regardless of direction.
+     *
+     * @param cases         List of cases to sort
+     * @param accountMap    Map of Case Id → Account Number
+     * @param sortDirection ASC or DESC
+     * @return Sorted list of cases
+     */
+    private static List<FEC_Integration_Case__c> sortByAccountNumber(
+        List<FEC_Integration_Case__c> cases,
+        Map<Id, String> accountMap,
+        String sortDirection
+    ) {
+        List<AccountNumberSortWrapper> wrappers = new List<AccountNumberSortWrapper>();
+        for (FEC_Integration_Case__c c : cases) {
+            String acctNum = accountMap.containsKey(c.Id) ? accountMap.get(c.Id) : null;
+            wrappers.add(new AccountNumberSortWrapper(c, acctNum, sortDirection));
+        }
+        wrappers.sort();
+
+        List<FEC_Integration_Case__c> sorted = new List<FEC_Integration_Case__c>();
+        for (AccountNumberSortWrapper w : wrappers) {
+            sorted.add(w.record);
+        }
+        return sorted;
+    }
+
+    /**
+     * Wrapper class to enable sorting FEC_Integration_Case__c records
+     * by their associated Account Number value.
+     */
+    private class AccountNumberSortWrapper implements Comparable {
+        public FEC_Integration_Case__c record;
+        public String accountNumber;
+        public Integer directionMultiplier;
+
+        public AccountNumberSortWrapper(FEC_Integration_Case__c record, String accountNumber, String sortDirection) {
+            this.record = record;
+            this.accountNumber = accountNumber;
+            this.directionMultiplier = (sortDirection == 'ASC') ? 1 : -1;
+        }
+
+        public Integer compareTo(Object other) {
+            AccountNumberSortWrapper otherWrapper = (AccountNumberSortWrapper) other;
+            String a = this.accountNumber;
+            String b = otherWrapper.accountNumber;
+
+            // Nulls go to the end
+            if (a == null && b == null) return 0;
+            if (a == null) return 1;
+            if (b == null) return -1;
+
+            return a.compareTo(b) * directionMultiplier;
+        }
     }
       
         
@@ -719,8 +795,8 @@ global with sharing class FEC_IntegrationSearchFraudCaseController {
 
                 //Hyperlink for LWC
                  'ServiceCaseLink'        => (c.FEC_Service_Case_ID__c != null && (c.FEC_Service_Case_ID__c.startsWith(fraudConstant.CASE_SERVICE)))
-                ? + FEC_FraudConstantCommon.SERVICE_CASE_LINK + c.Id
-                : + FEC_FraudConstantCommon.SERVICE_SFT_CASE_LINK + c.FEC_CaseID__c,
+                ? + FEC_FraudConstantCommon.SERVICE_CASE_LINK + c.FEC_Integrate_Case_ID__c + '/view'
+                : + FEC_FraudConstantCommon.SERVICE_SFT_CASE_LINK + c.FEC_Integrate_Case_ID__c + '/view',
                 'FraudCaseLink'        => (c.FEC_CaseID__c != null && (c.FEC_CaseID__c.startsWith(fraudConstant.CASEFH) || c.FEC_CaseID__c.startsWith(fraudConstant.CASETK)))
                 ? '/lightning/n/'+ FEC_FraudConstantCommon.FRAUD_HANDLING_CASE_DETAIL_PATH + '?c__caseId=' + c.FEC_CaseID__c
                 : null,

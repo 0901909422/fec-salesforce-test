@@ -75,7 +75,7 @@
                                         value={searchFilter} onkeyup={handleSearchChange} />
                                     <template if:true={hasSearchFilter}>
                                         <button class="slds-button slds-button_icon slds-input__icon slds-input__icon_right"
-                                            title="Xóa tìm kiếm" onclick={handleClearSearch}>
+                                            title="Clear search" onclick={handleClearSearch}>
                                             <lightning-icon icon-name="utility:close" size="xx-small"></lightning-icon>
                                         </button>
                                     </template>
@@ -90,7 +90,7 @@
                     <template if:false={isLoading}>
                         <div class="empty-state slds-p-around_large slds-text-align_center">
                             <lightning-icon icon-name="utility:table" size="large" variant="bare"></lightning-icon>
-                            <p class="slds-m-top_small">Chưa có dữ liệu. Hãy thêm cột và dòng đầu tiên.</p>
+                            <p class="slds-m-top_small">No data yet. Add the first column and row.</p>
                         </div>
                     </template>
                 </template>
@@ -99,8 +99,8 @@
                 <template if:true={hasNoSearchResults}>
                     <div class="empty-state slds-p-around_large slds-text-align_center">
                         <lightning-icon icon-name="utility:search" size="medium" variant="bare"></lightning-icon>
-                        <p class="slds-m-top_small">Không tìm thấy kết quả</p>
-                        <lightning-button label="Xóa bộ lọc" onclick={handleClearSearch}
+                        <p class="slds-m-top_small">No results found</p>
+                        <lightning-button label="Clear Filter" onclick={handleClearSearch}
                             variant="neutral" class="slds-m-top_small"></lightning-button>
                     </div>
                 </template>
@@ -200,13 +200,13 @@
                                                                             data-field-id={cell.fieldId}
                                                                             data-range-part="start"
                                                                             onclick={handleRangeCellEdit}
-                                                                            title="Sửa">✏️</button>
+                                                                            title="Edit">✏️</button>
                                                                         <button class="mini-toolbar-btn delete-btn"
                                                                             data-rule-id={row.ruleId}
                                                                             data-field-id={cell.fieldId}
                                                                             data-range-part="start"
                                                                             onclick={handleRangeCellDelete}
-                                                                            title="Xóa">🗑️</button>
+                                                                            title="Delete">🗑️</button>
                                                                     </div>
                                                                 </template>
                                                                 <span class="condition-cell">{cell.startValue}</span>
@@ -239,13 +239,13 @@
                                                                             data-field-id={cell.fieldId}
                                                                             data-range-part="end"
                                                                             onclick={handleRangeCellEdit}
-                                                                            title="Sửa">✏️</button>
+                                                                            title="Edit">✏️</button>
                                                                         <button class="mini-toolbar-btn delete-btn"
                                                                             data-rule-id={row.ruleId}
                                                                             data-field-id={cell.fieldId}
                                                                             data-range-part="end"
                                                                             onclick={handleRangeCellDelete}
-                                                                            title="Xóa">🗑️</button>
+                                                                            title="Delete">🗑️</button>
                                                                     </div>
                                                                 </template>
                                                                 <span class="condition-cell">{cell.endValue}</span>
@@ -287,13 +287,13 @@
                                                                             data-field-id={cell.fieldId}
                                                                             data-value-index={val.valueIndex}
                                                                             onclick={handleCellEdit}
-                                                                            title="Sửa">✏️</button>
+                                                                            title="Edit">✏️</button>
                                                                         <button class="mini-toolbar-btn delete-btn"
                                                                             data-rule-id={row.ruleId}
                                                                             data-field-id={cell.fieldId}
                                                                             data-value-index={val.valueIndex}
                                                                             onclick={handleCellDelete}
-                                                                            title="Xóa">🗑️</button>
+                                                                            title="Delete">🗑️</button>
                                                                     </div>
                                                                 </template>
                                                                 <template if:true={val.isMultiValue}>
@@ -317,7 +317,7 @@
                                             <!-- Edit button -->
                                             <td class={row.editCellClass}>
                                                 <button class="slds-button slds-button_icon slds-button_icon-x-small"
-                                                    data-row-id={row.ruleId} onclick={handleEditRow} title="Sửa Rule">
+                                                    data-row-id={row.ruleId} onclick={handleEditRow} title="Edit Rule">
                                                     <lightning-icon icon-name="utility:edit" size="x-small"></lightning-icon>
                                                 </button>
                                             </td>
@@ -361,14 +361,14 @@
                                                 options={tf.dropdownOptions} value={tf.value}
                                                 data-col-label={tf.key}
                                                 onchange={handleTestDiscoveredConditionChange}
-                                                placeholder="-- Chưa chọn --">
+                                                placeholder="-- Select --">
                                             </lightning-combobox>
                                         </template>
                                         <template if:false={tf.hasDropdown}>
                                             <lightning-input label={tf.label} value={tf.value}
                                                 data-col-label={tf.key}
                                                 onchange={handleTestDiscoveredConditionChange}
-                                                placeholder="Nhập giá trị...">
+                                                placeholder="Enter value...">
                                             </lightning-input>
                                         </template>
                                     </lightning-layout-item>
@@ -412,7 +412,7 @@
                             <div class="test-result-section slds-m-top_small">
                                 <div class="test-filter-summary slds-m-bottom_small">
                                     <template if:true={hasNoTestFilters}>
-                                        <span class="slds-text-body_small slds-text-color_weak">Chưa chọn điều kiện lọc — hiển thị tất cả rules</span>
+                                        <span class="slds-text-body_small slds-text-color_weak">No filter selected — showing all rules</span>
                                     </template>
                                 </div>
                                 <template if:true={testResult.matched}>
@@ -498,14 +498,14 @@
                                                         options={field.dropdownOptions} value={field.value}
                                                         data-col-label={field.key}
                                                         onchange={handleModalConditionValueChange}
-                                                        placeholder="-- Chưa chọn --">
+                                                        placeholder="-- Select --">
                                                     </lightning-combobox>
                                                 </template>
                                                 <template if:false={field.hasDropdown}>
                                                     <lightning-input label={field.label} value={field.value}
                                                         data-col-label={field.key}
                                                         onchange={handleModalConditionValueChange}
-                                                        placeholder="Nhập giá trị...">
+                                                        placeholder="Enter value...">
                                                     </lightning-input>
                                                 </template>
                                             </lightning-layout-item>
@@ -580,17 +580,17 @@
                                                                         {pill.label}
                                                                         <button class="slds-button slds-button_icon slds-button_icon-x-small"
                                                                             data-index={cond.index} data-pill-key={pill.key}
-                                                                            onclick={handleRemovePillValue} title="Xóa">
+                                                                            onclick={handleRemovePillValue} title="Delete">
                                                                             <lightning-icon icon-name="utility:close" size="xx-small"></lightning-icon>
                                                                         </button>
                                                                     </span>
                                                                 </template>
                                                             </div>
                                                             <div class="slds-grid slds-grid_vertical-align-end">
-                                                                <lightning-input label="Thêm giá trị" class="slds-grow"
+                                                                <lightning-input label="Add value" class="slds-grow"
                                                                     data-index={cond.index}
                                                                     onkeyup={handlePillInputKeyup}
-                                                                    placeholder="Nhập và Enter...">
+                                                                    placeholder="Enter and press Enter...">
                                                                 </lightning-input>
                                                                 <lightning-button label="+" variant="neutral"
                                                                     data-index={cond.index}
@@ -602,18 +602,18 @@
                                                     </template>
                                                     <template if:false={cond.isMultiValueOperator}>
                                                         <template if:true={cond.hasDropdown}>
-                                                            <lightning-combobox label="Giá trị"
+                                                            <lightning-combobox label="Value"
                                                                 options={cond.dropdownOptions} value={cond.value}
                                                                 data-index={cond.index} data-field="value"
                                                                 onchange={handleConditionFieldChange}
-                                                                placeholder="-- Chọn --">
+                                                                placeholder="-- Select --">
                                                             </lightning-combobox>
                                                         </template>
                                                         <template if:false={cond.hasDropdown}>
-                                                            <lightning-input label="Giá trị" value={cond.value}
+                                                            <lightning-input label="Value" value={cond.value}
                                                                 data-index={cond.index} data-field="value"
                                                                 onchange={handleConditionFieldChange}
-                                                                placeholder="Nhập giá trị...">
+                                                                placeholder="Enter value...">
                                                             </lightning-input>
                                                         </template>
                                                     </template>
@@ -642,14 +642,14 @@
                                                         options={field.dropdownOptions} value={field.value}
                                                         data-col-label={field.key}
                                                         onchange={handleModalActionValueChange}
-                                                        placeholder="-- Chưa chọn --">
+                                                        placeholder="-- Select --">
                                                     </lightning-combobox>
                                                 </template>
                                                 <template if:false={field.hasDropdown}>
                                                     <lightning-input label={field.label} value={field.value}
                                                         data-col-label={field.key}
                                                         onchange={handleModalActionValueChange}
-                                                        placeholder="Nhập giá trị...">
+                                                        placeholder="Enter value...">
                                                     </lightning-input>
                                                 </template>
                                             </lightning-layout-item>
@@ -663,7 +663,7 @@
 
                     </div>
                     <footer class="slds-modal__footer">
-                        <lightning-button label="Hủy" variant="neutral" onclick={handleCloseModal}></lightning-button>
+                        <lightning-button label="Cancel" variant="neutral" onclick={handleCloseModal}></lightning-button>
                         <lightning-button label={modalSaveLabel} variant="brand" onclick={handleSaveRule} class="slds-m-left_x-small"></lightning-button>
                     </footer>
                 </div>
@@ -680,13 +680,13 @@
                         <button class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse" title="Đóng" onclick={handleCloseAddColModal}>
                             <lightning-icon icon-name="utility:close" size="small" variant="inverse"></lightning-icon>
                         </button>
-                        <h2 class="slds-text-heading_medium">Thêm Cột Mới</h2>
+                        <h2 class="slds-text-heading_medium">Add New Column</h2>
                     </header>
                     <div class="slds-modal__content slds-p-around_medium">
 
                         <!-- Column Group Radio -->
                         <div class="slds-form-element slds-m-bottom_medium">
-                            <lightning-radio-group label="Loại cột" name="colGroup"
+                            <lightning-radio-group label="Column Type" name="colGroup"
                                 options={colGroupOptions} value={newColGroup}
                                 onchange={handleNewColGroupChange} type="button">
                             </lightning-radio-group>
@@ -709,35 +709,36 @@
                                 </div>
                             </template>
                             <div class="slds-form-element slds-m-bottom_small">
-                                <lightning-combobox label="Hoặc chọn Field" name="newColField"
+                                <lightning-combobox label="Or Select Field" name="newColField"
                                     options={fieldOptions} value={selectedNewColFieldId}
                                     onchange={handleNewColFieldChange}
-                                    placeholder="-- Chọn field --">
+                                    placeholder="-- Select field --">
                                 </lightning-combobox>
                             </div>
                             <div class="slds-form-element slds-m-bottom_small">
                                 <lightning-combobox label="Operator" name="newColOperator"
                                     options={operatorOptions} value={selectedNewColOperator}
                                     onchange={handleNewColOperatorChange}
-                                    placeholder="-- Chọn operator --"
+                                    placeholder="-- Select operator --"
                                     disabled={useRange}>
                                 </lightning-combobox>
                             </div>
                             <div class="slds-form-element slds-m-bottom_small">
-                                <lightning-input type="checkbox" label="Sử dụng Range (khoảng giá trị)"
-                                    checked={useRange} onchange={handleToggleUseRange}>
+                                <lightning-input type="checkbox" label="Use Range (value range)"
+                                    checked={useRange} onchange={handleToggleUseRange}
+                                    disabled={showExpressionMode}>
                                 </lightning-input>
                             </div>
                             <template if:true={useRange}>
                                 <div class="slds-grid slds-m-bottom_small">
                                     <div class="slds-col slds-size_1-of-2 slds-p-right_x-small">
-                                        <lightning-combobox label="Operator bắt đầu" name="rangeStartOp"
+                                        <lightning-combobox label="Start Operator" name="rangeStartOp"
                                             options={startRangeOperatorOptions} value={rangeStartOp}
                                             onchange={handleRangeStartOpChange}>
                                         </lightning-combobox>
                                     </div>
                                     <div class="slds-col slds-size_1-of-2 slds-p-left_x-small">
-                                        <lightning-combobox label="Operator kết thúc" name="rangeEndOp"
+                                        <lightning-combobox label="End Operator" name="rangeEndOp"
                                             options={endRangeOperatorOptions} value={rangeEndOp}
                                             onchange={handleRangeEndOpChange}>
                                         </lightning-combobox>
@@ -745,7 +746,7 @@
                                 </div>
                             </template>
                             <div class="slds-form-element slds-m-bottom_small">
-                                <lightning-input type="checkbox" label="Sử dụng Expression"
+                                <lightning-input type="checkbox" label="Use Expression"
                                     checked={showExpressionMode} onchange={handleToggleExpression}
                                     disabled={useRange}>
                                 </lightning-input>
@@ -755,7 +756,7 @@
                                     <lightning-combobox label="Expression" name="expression"
                                         options={expressionOptions} value={expressionValue}
                                         onchange={handleExpressionChange}
-                                        placeholder="-- Chọn expression --">
+                                        placeholder="-- Select expression --">
                                     </lightning-combobox>
                                 </div>
                             </template>
@@ -774,17 +775,17 @@
                                         </lightning-button>
                                     </template>
                                 </div>
-                                <lightning-input label="Hoặc nhập tên cột Action" value={newColActionName}
+                                <lightning-input label="Or enter Action column name" value={newColActionName}
                                     onchange={handleNewColActionNameChange}
-                                    placeholder="Nhập tên cột action...">
+                                    placeholder="Enter action column name...">
                                 </lightning-input>
                             </div>
                         </template>
 
                     </div>
                     <footer class="slds-modal__footer">
-                        <lightning-button label="Hủy" variant="neutral" onclick={handleCloseAddColModal}></lightning-button>
-                        <lightning-button label="Xác nhận" variant="brand" onclick={handleConfirmAddCol} class="slds-m-left_x-small"></lightning-button>
+                        <lightning-button label="Cancel" variant="neutral" onclick={handleCloseAddColModal}></lightning-button>
+                        <lightning-button label="Confirm" variant="brand" onclick={handleConfirmAddCol} class="slds-m-left_x-small"></lightning-button>
                     </footer>
                 </div>
             </section>
@@ -800,7 +801,7 @@
                         <button class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse" title="Đóng" onclick={handleCloseEditColModal}>
                             <lightning-icon icon-name="utility:close" size="small" variant="inverse"></lightning-icon>
                         </button>
-                        <h2 class="slds-text-heading_medium">Chỉnh sửa Cột</h2>
+                        <h2 class="slds-text-heading_medium">Edit Column</h2>
                     </header>
                     <div class="slds-modal__content slds-p-around_medium">
 
@@ -823,13 +824,13 @@
                                 <lightning-combobox label="Operator" name="editColOperator"
                                     options={operatorOptions} value={editColOperator}
                                     onchange={handleEditColOperatorChange}
-                                    placeholder="-- Chọn operator --">
+                                    placeholder="-- Select operator --">
                                 </lightning-combobox>
                             </div>
                         </template>
 
                         <div class="slds-form-element slds-m-bottom_small">
-                            <lightning-input type="checkbox" label="Sử dụng Range (khoảng giá trị)"
+                            <lightning-input type="checkbox" label="Use Range (value range)"
                                 checked={editColUseRange} onchange={handleToggleEditColUseRange}>
                             </lightning-input>
                         </div>
@@ -837,13 +838,13 @@
                         <template if:true={editColUseRange}>
                             <div class="slds-grid slds-m-bottom_small">
                                 <div class="slds-col slds-size_1-of-2 slds-p-right_x-small">
-                                    <lightning-combobox label="Operator bắt đầu" name="editRangeStartOp"
+                                    <lightning-combobox label="Start Operator" name="editRangeStartOp"
                                         options={startRangeOperatorOptions} value={editColRangeStartOp}
                                         onchange={handleEditColRangeStartOpChange}>
                                     </lightning-combobox>
                                 </div>
                                 <div class="slds-col slds-size_1-of-2 slds-p-left_x-small">
-                                    <lightning-combobox label="Operator kết thúc" name="editRangeEndOp"
+                                    <lightning-combobox label="End Operator" name="editRangeEndOp"
                                         options={endRangeOperatorOptions} value={editColRangeEndOp}
                                         onchange={handleEditColRangeEndOpChange}>
                                     </lightning-combobox>
@@ -853,8 +854,8 @@
 
                     </div>
                     <footer class="slds-modal__footer">
-                        <lightning-button label="Hủy" variant="neutral" onclick={handleCloseEditColModal}></lightning-button>
-                        <lightning-button label="Cập nhật" variant="brand" onclick={handleConfirmEditCol} class="slds-m-left_x-small"></lightning-button>
+                        <lightning-button label="Cancel" variant="neutral" onclick={handleCloseEditColModal}></lightning-button>
+                        <lightning-button label="Update" variant="brand" onclick={handleConfirmEditCol} class="slds-m-left_x-small"></lightning-button>
                     </footer>
                 </div>
             </section>

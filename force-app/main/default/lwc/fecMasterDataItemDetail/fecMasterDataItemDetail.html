@@ -83,7 +83,64 @@
                         </div>
                     </template>
 
-                </template>
+                    <template if:true={hasNocData}>
+                        <div class="slds-grid slds-wrap slds-gutters_small slds-p-around_small">
+                            <lightning-layout-item size="12" medium-device-size="6"
+                                class="slds-p-horizontal_small slds-m-bottom_small">
+                                <lightning-input type="text" label={labelNocCode}
+                                    value={nocData.code} read-only
+                                    variant="standard"></lightning-input>
+                            </lightning-layout-item>
+                            <template if:false={isCustomerTypeDisabled}>
+                            <lightning-layout-item size="12" medium-device-size="6"
+                                class="slds-p-horizontal_small slds-m-bottom_small">
+                                <lightning-combobox name="customerType" label={labelCustomerType}
+                                    value={nocData.customerType} options={customerTypeOptions}
+                                    data-noc-field="customerType"
+                                    onchange={handleNocInputChange}></lightning-combobox>
+                            </lightning-layout-item>
+                            </template>
+                            <lightning-layout-item size="12" medium-device-size="6"
+                                class="slds-p-horizontal_small slds-m-bottom_small">
+                                <lightning-input type="checkbox" label={labelStatus}
+                                    checked={nocData.active} data-noc-field="active"
+                                    onchange={handleNocInputChange}></lightning-input>
+                            </lightning-layout-item>
+                            <!-- Sub-Processes -->
+                            <lightning-layout-item size="12"
+                                class="slds-p-horizontal_small sub-processes-header">
+                                <p class="slds-text-title_caps slds-text-color_weak slds-m-bottom_x-small">{labelSubProcesses}</p>
+                                <div class="slds-grid slds-wrap slds-gutters_small">
+                                    <div class="slds-col slds-size_1-of-3">
+                                        <lightning-combobox name="doNotBother" label={labelDoNotBother}
+                                            value={nocData.doNotBother} options={subProcessOptions}
+                                            data-noc-field="doNotBother"
+                                            onchange={handleNocInputChange}></lightning-combobox>
+                                    </div>
+                                    <div class="slds-col slds-size_1-of-3">
+                                        <lightning-combobox name="transferCallToCollection" label={labelTransferCall}
+                                            value={nocData.transferCallToCollection} options={subProcessOptions}
+                                            data-noc-field="transferCallToCollection"
+                                            onchange={handleNocInputChange}></lightning-combobox>
+                                    </div>
+                                    <div class="slds-col slds-size_1-of-3">
+                                        <lightning-combobox name="removePhone" label={labelRemovePhone}
+                                            value={nocData.removePhone} options={subProcessOptions}
+                                            data-noc-field="removePhone"
+                                            onchange={handleNocInputChange}></lightning-combobox>
+                                    </div>
+                                </div>
+                            </lightning-layout-item>
+                            <!-- User Group -->
+                            <lightning-layout-item size="12"
+                                class="slds-p-horizontal_small slds-m-top_small">
+                                <lightning-dual-listbox label={labelUserGroup}
+                                    source-label="Available" selected-label="Selected"
+                                    options={userGroupOptions} value={selectedUserGroups}
+                                    data-noc-field="userGroup"
+                                    onchange={handleNocInputChange}></lightning-dual-listbox>
+                            </lightning-layout-item>
+                        </div>
 
                 <template if:false={editedItem.name}>
                     <div class="empty-state-container">

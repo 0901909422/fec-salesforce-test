@@ -5,6 +5,8 @@ public class FEC_IntegrationLocationService {
     private static final String ENDPOINT =
         'callout:ODI_OData/LocationHierarchy';
     public static Boolean useMock = false;
+    @TestVisible
+    private static List<Map<String, Object>> mockRecords = null;
 
     /* ================= RESPONSE DTO ================= */
 
@@ -102,6 +104,9 @@ public class FEC_IntegrationLocationService {
             log('[syncLocation] Using mock data');
             records = FEC_FraudCaseMockData.getCifFeDictLocationVw();
             log('[syncLocation] Mock records loaded: ' + records.size());
+        } else if (mockRecords != null) {
+            log('[syncLocation] Using injected mock records');
+            records = mockRecords;
         } else {
             log('[syncLocation] Using external object CifFeDictLocationVw__x');
             records = new List<Map<String, Object>>();
@@ -168,6 +173,7 @@ public class FEC_IntegrationLocationService {
      * Upserts flat location records into the correct objects based on SCHEME__c.
      * Order: Country → Province → District → Ward (to resolve lookups).
      */
+    @TestVisible
     private static void upsertFromFlatRecords(List<Map<String, Object>> records) {
 
         /* ================= COUNTRY (SCHEME = Country) ================= */
@@ -295,6 +301,7 @@ public class FEC_IntegrationLocationService {
         }
     }
 
+    @TestVisible
     private static Date parseDate(Object dateVal) {
         if (dateVal == null) return null;
         try {
@@ -328,6 +335,7 @@ public class FEC_IntegrationLocationService {
      * Order is critical to ensure lookup relationships
      * can be resolved correctly.
      */
+    @TestVisible
     private static void upsertSyncLocation(List<LocationRow> rows) {
 
          /* ================= COUNTRY ================= */

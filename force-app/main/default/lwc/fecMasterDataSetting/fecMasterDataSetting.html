@@ -80,11 +80,7 @@
                                     style="text-align: center;">
                                     {labelColSubSecOrder}
                                 </div>
-                                <div class="slds-col" style="text-align: center;">{labelColSubSecLayout}</div>
-                                <div class="slds-col" style="text-align: center;">{labelColSubSecField}</div>
-                                <div class="slds-col" onclick={handleSort} data-field="FEC_Field_Status__c"
-                                    style="text-align: center;">{labelColStatus}</div>
-                                <div class="slds-col">{labelColEditableRole}</div>
+                                <div class="slds-col" style="text-align: center;">Columns</div>
                                 <div class="slds-col" onclick={handleSort} data-field="FEC_Field_Order_Display__c"
                                     style="text-align: center;">
                                     {labelColOrder}
@@ -162,6 +158,14 @@
                             </template>
                           </div>
                         </div>
+                        <template if:true={hasPropertyData}>
+                            <details class="slds-m-top_medium slds-m-horizontal_small slds-box slds-theme_default">
+                                <summary class="slds-p-around_small" style="cursor:pointer; font-weight:600">▶ History</summary>
+                                <div class="slds-p-horizontal_small slds-p-bottom_small">
+                                    <c-fec-setting-history-by-noc data-id="propertyHistory" noc-id={currentNatureOfCaseId} is-integration={isPropertyIntegration}></c-fec-setting-history-by-noc>
+                                </div>
+                            </details>
+                        </template>
                     </lightning-tab>
 
                     <lightning-tab label={labelTabFraudIntegration}>
@@ -434,6 +438,14 @@
                                 </template>
                             </template>
                         </div>
+                        <template if:true={hasFraudData}>
+                            <details class="slds-m-top_medium slds-m-horizontal_small slds-box slds-theme_default">
+                                <summary class="slds-p-around_small" style="cursor:pointer; font-weight:600">▶ History</summary>
+                                <div class="slds-p-horizontal_small slds-p-bottom_small">
+                                    <c-fec-setting-history-by-noc data-id="fraudHistory" noc-id={currentNatureOfCaseId} is-integration={isFraudIntegration}></c-fec-setting-history-by-noc>
+                                </div>
+                            </details>
+                        </template>
                     </lightning-tab>
 
                     <!-- Flow Control Data View tab removed — replaced by Decision Table Stage -->
@@ -447,12 +459,32 @@
 
                     <lightning-tab label="Decision Engine">
                         <c-fec-decision-table-stage item={item}></c-fec-decision-table-stage>
+                        <template if:true={currentBusinessProcessId}>
+                            <details class="slds-m-top_medium slds-m-horizontal_small slds-box slds-theme_default">
+                                <summary class="slds-p-around_small" style="cursor:pointer; font-weight:600">▶ History</summary>
+                                <div class="slds-p-horizontal_small slds-p-bottom_small">
+                                    <c-fec-decision-engine-history data-id="decisionEngineHistory" business-process-id={currentBusinessProcessId}></c-fec-decision-engine-history>
+                                </div>
+                            </details>
+                        </template>
                     </lightning-tab>
 
                     <lightning-tab label="Properties Mapping">
                         <c-fec-map-a-properties-to-master-data-item
                             nature-of-case-code={currentNatureOfCaseCode}>
                         </c-fec-map-a-properties-to-master-data-item>
+                        <template if:true={currentNatureOfCaseCode}>
+                            <details class="slds-m-top_medium slds-m-horizontal_small slds-box slds-theme_default">
+                                <summary class="slds-p-around_small" style="cursor:pointer; font-weight:600">▶ History</summary>
+                                <div class="slds-p-horizontal_small slds-p-bottom_small">
+                                    <c-fec-properties-mapping-history data-id="propertiesMappingHistory" nature-of-case-code={currentNatureOfCaseCode}></c-fec-properties-mapping-history>
+                                </div>
+                            </details>
+                        </template>
+                    </lightning-tab>
+
+                    <lightning-tab label="Hold Case Config">
+                        <c-fec-hold-case-config-list noc-id={currentNatureOfCaseId} stage-id={stageId}></c-fec-hold-case-config-list>
                     </lightning-tab>
                 </lightning-tabset>
 
@@ -498,7 +530,7 @@
     <template if:false={item.name}>
         <div class="slds-illustration slds-illustration_small">
             <div class="slds-text-longform">
-                <p class="slds-text-color_weak">Vui lòng chọn một node để bắt đầu cấu hình.</p>
+                <p class="slds-text-color_weak">Please select a node to start configuration.</p>
             </div>
         </div>
     </template>

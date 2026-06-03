@@ -155,8 +155,10 @@
     <externalSharingModel>Private</externalSharingModel>
     <label>FEC Integration Case Snapshot</label>
     <nameField>
-        <label>FEC Integration Case Snapshoot Name</label>
-        <type>Text</type>
+        <displayFormat>HCC-{0000}</displayFormat>
+        <label>Hold Case Config Name</label>
+        <trackHistory>true</trackHistory>
+        <type>AutoNumber</type>
     </nameField>
     <pluralLabel>FEC Integration Case Snapshot</pluralLabel>
     <searchLayouts></searchLayouts>

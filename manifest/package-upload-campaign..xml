@@ -43,6 +43,9 @@
         <members>FEC_CheckCampaignStatusBatchTest</members>
         <members>FEC_GetCallingListResultBatchTest</members>
         <members>FEC_CampaignControllerTest</members>
+        <members>FEC_EndpointResolverTest</members>
+        <members>FEC_PushExistingRecordsBatchTest</members>
+        <members>FEC_PushCallbackRecordsBatchTest</members>
         <name>ApexClass</name>
     </types>
     <types>

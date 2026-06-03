@@ -81,6 +81,11 @@ export default class FecDecisionTableStage extends LightningElement {
             })
             .catch(() => {
                 this._dropdownHints = {};
+                this.dispatchEvent(new ShowToastEvent({
+                    title: 'Error',
+                    message: err.body?.message || err.message || 'Cannot load dropdown options',
+                    variant: 'error'
+                }));
             });
     }
 }

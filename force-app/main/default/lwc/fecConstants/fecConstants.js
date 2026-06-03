@@ -202,7 +202,7 @@ export const FIELD_CODE = 'FEC_Code__c';
 export const FIELD_ALIAS = 'FEC_Alias__c';
 export const FIELD_NAME = 'Name';
 export const FIELD_NAME_VN = 'FEC_Name_VN__c';
-export const FIELD_POS_ORDER = 'FEC_Pos_Order__c';
+export const FIELD_POS_ORDER = 'FEC_Order__c';
 export const FIELD_STATUS = 'FEC_Status__c';
 export const FIELD_CUSTOMER_TYPE = 'FEC_Customer_Type__c';
 

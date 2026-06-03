@@ -150,12 +150,12 @@ private class FEC_CheckCampaignStatusBatchTest {
             .get('PostgresCampaignLog__x').newSObject();
         mockOData.put('account_or_contract_number__c', scopeRec.FEC_AccountOrContractNumber__c);
         mockOData.put('record_id__c', scopeRec.FEC_RecordId__c);
-        mockOData.put('number4__c', 42);
-        mockOData.put('number5__c', 99);
-        mockOData.put('record_current_lifetime__c', 1);
-        mockOData.put('insertion_date__c', DateTime.now());
+        mockOData.put('number4__c', '42');
+        mockOData.put('number5__c', '99');
+        mockOData.put('record_current_lifetime__c', '1');
+        mockOData.put('insertion_date__c', String.valueOf(DateTime.now().getTime()));
         mockOData.put('callback_requested__c', 'Yes');
-        mockOData.put('current_call_attempt__c', 2);
+        mockOData.put('current_call_attempt__c', '2');
         mockOData.put('send_to_commsdb__c', 'true');
         mockOData.put('sent_instantly__c', 'false');
         mockOData.put('is_max_attempt__c', 'true');
@@ -196,18 +196,19 @@ private class FEC_CheckCampaignStatusBatchTest {
         );
         insert rec;
 
-        // Build mock OData SObject with all 9 lowercase field names
+        // Build mock OData SObject with all 9 lowercase field names.
+        // External object fields are PostgreSQL varchar → must be String values.
         DateTime testInsertionDate = DateTime.newInstance(2025, 6, 15, 10, 0, 0);
         SObject mockOData = Schema.getGlobalDescribe()
             .get('PostgresCampaignLog__x').newSObject();
         mockOData.put('account_or_contract_number__c', 'ACC002');
         mockOData.put('record_id__c', 'REC002');
-        mockOData.put('number4__c', 42);
-        mockOData.put('number5__c', 99);
-        mockOData.put('record_current_lifetime__c', 1);
-        mockOData.put('insertion_date__c', testInsertionDate);
+        mockOData.put('number4__c', '42');
+        mockOData.put('number5__c', '99');
+        mockOData.put('record_current_lifetime__c', '1');
+        mockOData.put('insertion_date__c', String.valueOf(testInsertionDate.getTime()));
         mockOData.put('callback_requested__c', 'Yes');
-        mockOData.put('current_call_attempt__c', 2);
+        mockOData.put('current_call_attempt__c', '2');
         mockOData.put('send_to_commsdb__c', 'true');
         mockOData.put('sent_instantly__c', 'false');
         mockOData.put('is_max_attempt__c', 'true');
@@ -217,8 +218,6 @@ private class FEC_CheckCampaignStatusBatchTest {
         Boolean result = batch.applyODataUpdate(rec, mockOData);
         Test.stopTest();
 
-        // Bug condition: unfixed code reads UPPERCASE field names (NUMBER4__c, etc.)
-        // which return null from the mock SObject that has lowercase field names
         Assert.isTrue(result, 'applyODataUpdate should return true');
         Assert.areEqual(42, rec.FEC_Number4__c,
             'FEC_Number4__c should be mapped from number4__c');

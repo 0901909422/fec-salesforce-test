@@ -1,6 +1,8 @@
-import { LightningElement, api, track } from 'lwc';
+import { LightningElement, api, track, wire } from 'lwc';
 
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
+import { publish, MessageContext } from 'lightning/messageService';
+import FRAUD_FIELD_SYNC from '@salesforce/messageChannel/FEC_Fraud_Field_Sync__c';
 import loadMasterDataIntegrationMappingById from '@salesforce/apex/FEC_IntegrationCreateFraudController.loadMasterDataIntegrationMappingById';
 
 import getIntegrationFieldTypes 
@@ -59,6 +61,9 @@ export default class IntegrationCreateFraudCase extends LightningElement {
     @api mappingId;
     @api caseDataId;
 
+    @wire(MessageContext)
+    messageContext;
+
     @track loading = true;
     @track showPreview = false;
     @track previewJson = '';
@@ -105,9 +110,17 @@ export default class IntegrationCreateFraudCase extends LightningElement {
 
     // Other fields
     productType = '';
-    remarks = '';
+    _remarks = '';
     creatorEmail = '';
     fraudCase = '';
+
+    @api
+    get remarks() {
+        return this._remarks;
+    }
+    set remarks(value) {
+        this._remarks = value || '';
+    }
 
     actionType = this.createActionType; // create | update | cancel
     labels = {
@@ -211,11 +224,15 @@ export default class IntegrationCreateFraudCase extends LightningElement {
             const type = p.type?.trim().toLowerCase();
             // Auto-populate value from propertyMappingValues if exists
             const mappedValue = mappingValues[p.property] || null;
+            // If property has a mapping value, mark as mapped (hidden from UI, skip validation)
+            const isMapped = mappedValue !== null && mappedValue !== '';
 
             return {
                 ...p,
                 type,
                 value: mappedValue,
+                isMapped,
+                isVisible: !isMapped,
 
                 // type flags
                 isString: type === this.fieldTypes.STRING,
@@ -249,8 +266,12 @@ export default class IntegrationCreateFraudCase extends LightningElement {
     onSimpleChange(event) {
         const field = event.target.dataset.field;
         if (field) {
-            this[field] = event.detail.value;
-            console.log(`[SET] ${field}:`, this[field]);
+            if (field === 'remarks') {
+                this._remarks = event.detail.value;
+            } else {
+                this[field] = event.detail.value;
+            }
+            console.log(`[SET] ${field}:`, field === 'remarks' ? this._remarks : this[field]);
         }
     }
 
@@ -266,6 +287,32 @@ export default class IntegrationCreateFraudCase extends LightningElement {
     
         this.additionalProps = this.additionalProps.map(p =>
             p.id === fieldId
+                ? { ...p, value }
+                : p
+        );
+
+        // Publish fraud→case sync via LMS
+        const prop = this.additionalProps.find(p => p.id === fieldId);
+        if (prop && prop.property) {
+            publish(this.messageContext, FRAUD_FIELD_SYNC, {
+                fieldId: prop.property,
+                value: value,
+                source: 'fraud'
+            });
+        }
+
+        // Dispatch event for field mapping sync
+        this.dispatchEvent(new CustomEvent('fraudfieldchange', {
+            detail: { fieldId, value },
+            bubbles: true,
+            composed: true
+        }));
+    }
+
+    @api
+    setFieldValue(fieldId, value) {
+        this.additionalProps = this.additionalProps.map(p =>
+            (p.id === fieldId || p.property === fieldId)
                 ? { ...p, value }
                 : p
         );
@@ -329,6 +376,7 @@ export default class IntegrationCreateFraudCase extends LightningElement {
             FraudCaseId: this.fraudCase,
             ServiceCaseId: this.serviceCaseId,
             caseDataId: this.caseDataId,
+            NatureOfCaseId: this.natureOfCaseId,
             AdditionalInfo: additionalInfoPayload
         };
     }
@@ -366,6 +414,7 @@ export default class IntegrationCreateFraudCase extends LightningElement {
         }
     }
     
+    @api
     validateForm() {
         const allInputs = this.template.querySelectorAll(
             'lightning-input, lightning-combobox, lightning-textarea'
@@ -397,6 +446,8 @@ export default class IntegrationCreateFraudCase extends LightningElement {
 
         const missingDynamic = this.additionalProps.filter(p => {
             if (!p.mandatory) return false;
+            // Skip validation for mapped (auto-populated) properties
+            if (p.isMapped) return false;
             if (p.isBoolean) return p.value !== true;
             if (p.isFile) return !p.fileName;
             return !p.value || p.value === '';
@@ -416,19 +467,20 @@ export default class IntegrationCreateFraudCase extends LightningElement {
             if (firstInvalid) {
                 firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' });
             }
-            this.showErrorToast(this.labels.missingRequiredTitle, this.labels.missingRequiredMsg);
+            //this.showErrorToast(this.labels.missingRequiredTitle, this.labels.missingRequiredMsg);
             return false;
         }
 
         if (this.additionalProps.length === 0) {
-            this.showErrorToast(this.labels.missingAdditionalTitle, this.labels.missingAdditionalMsg);
+            //this.showErrorToast(this.labels.missingAdditionalTitle, this.labels.missingAdditionalMsg);
             return false;
         }
 
         return true;
     }
 
-    async onSubmit() {
+    @api
+    async onSubmitFraudCase() {
         if (this.isCreateSubmitting) return;
         this.isCreateSubmitting = true;
         this.loading = true;
@@ -453,12 +505,14 @@ export default class IntegrationCreateFraudCase extends LightningElement {
             await this.confirmSubmit();
         } catch (error) {
             this.showErrorToast('Error', error?.body?.message || error.message);
+            throw error;
         } finally {
             this.loading = false;
             this.isCreateSubmitting = false;
         }
     }
 
+    @api
     async onSubmitWithoutCallout() {
         if (this.isCreateSubmitting) return;
         this.isCreateSubmitting = true;
@@ -510,6 +564,7 @@ export default class IntegrationCreateFraudCase extends LightningElement {
     
         try {
             payload = JSON.parse(this.previewJson);
+            console.log('confirmSubmit: ', JSON.stringify(payload));
         } catch (e) {
             //this.showPreview = false;
             //return;
@@ -541,10 +596,12 @@ export default class IntegrationCreateFraudCase extends LightningElement {
                 composed: true
             }));
         } else {
-            this.showErrorToast(
-                this.labels.responseFailed,
-                actionPromise.message
-            );
+            const errMsg = actionPromise?.message || 'Fraud case submission failed.';
+            // this.showErrorToast(
+            //     this.labels.responseFailed,
+            //     errMsg
+            // );
+            throw new Error(errMsg);
         }
     
         this.resultMessage = actionPromise?.message;
