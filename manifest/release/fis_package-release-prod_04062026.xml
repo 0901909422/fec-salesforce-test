@@ -366,7 +366,6 @@
         <members>FEC_AssignmentTriggerHandler_Test</members>
         <members>FEC_AssignmentTrigger_Test</members>
         <members>FEC_AutoHoldCaseServiceTest</members>
-        <members>FEC_AutoHoldCaseService_Test</members>
         <members>FEC_BCH_AssignmentRouteToService_Test</members>
         <members>FEC_BCH_AssignmentUpdateService_Test</members>
         <members>FEC_BCH_CofGsrImportRouteToService_Test</members>
