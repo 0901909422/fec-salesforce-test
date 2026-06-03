@@ -378,7 +378,9 @@ public without sharing class FEC_CustomerIntegrationService {
                 hist.FEC_Contract_Number__c = loan.ContractNumber;
             }
             hist.FEC_Contract_Type__c = loan.ContractType;
-            hist.FEC_Contract_Status__c = loan.ContractStatus;
+            hist.FEC_Contract_Status__c = FEC_CommonUltils.mapApiContractStatusToPicklist(
+                loan.ContractStatus
+            );
             hist.FEC_Agreement_Date__c = loan.AgreementDate;
             hist.FEC_Application_ID__c = loan.ApplicationID;
             hist.FEC_Company_Name__c = loan.CompanyName;

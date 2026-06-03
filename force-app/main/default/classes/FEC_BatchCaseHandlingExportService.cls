@@ -200,6 +200,14 @@ public without sharing class FEC_BatchCaseHandlingExportService {
         enrichPendingCsSupportLabels(rows);
     }
 
+    private static String safeRelatedFieldString(SObject row, String fieldApiName) {
+        if (row == null || String.isBlank(fieldApiName)) {
+            return FEC_ConstantCommon.STR_EMPTY;
+        }
+        String value = FEC_BatchCaseHandlingSObjectUtil.asString(row.get(fieldApiName));
+        return value == null ? FEC_ConstantCommon.STR_EMPTY : value;
+    }
+
     // 01/06/2026 12:00 linhdev - stripInaccessible có thể bỏ relationship: không gọi getSObject khi chưa populated
     private static SObject safeRelatedSObject(SObject row, String relationshipApiName) {
         if (row == null || String.isBlank(relationshipApiName)) {
@@ -220,15 +228,14 @@ public without sharing class FEC_BatchCaseHandlingExportService {
         r.caseId = c.Id;
         r.customerType = c.FEC_Customer_Type__c;
         SObject ch = safeRelatedSObject(c, 'FEC_Account_or_Contract__r');
-        r.customerName = ch != null && String.isNotBlank((String) ch.get('FEC_Customer_Name__c'))
-            ? (String) ch.get('FEC_Customer_Name__c')
-            : c.FEC_Customer_Name__c;
-        r.accountContractNumber = ch != null && String.isNotBlank((String) ch.get('Name'))
-            ? (String) ch.get('Name')
+        String chCustomerName = safeRelatedFieldString(ch, 'FEC_Customer_Name__c');
+        r.customerName = String.isNotBlank(chCustomerName) ? chCustomerName : c.FEC_Customer_Name__c;
+        String chAccountName = safeRelatedFieldString(ch, 'Name');
+        r.accountContractNumber = String.isNotBlank(chAccountName)
+            ? chAccountName
             : c.FEC_Account_Contract_Number_Text__c;
-        r.appId = ch != null && String.isNotBlank((String) ch.get('FEC_Application_ID__c'))
-            ? (String) ch.get('FEC_Application_ID__c')
-            : c.FEC_Application_ID__c;
+        String chAppId = safeRelatedFieldString(ch, 'FEC_Application_ID__c');
+        r.appId = String.isNotBlank(chAppId) ? chAppId : c.FEC_Application_ID__c;
         r.caseIdSearch = c.FEC_ID_Search__c;
         r.caseStatus = c.FEC_Final_Status__c;
         r.caseCreatedOn = c.FEC_Case_Created_On__c;
@@ -239,18 +246,10 @@ public without sharing class FEC_BatchCaseHandlingExportService {
         r.complaintSource = c.FEC_Complaint_Source__c;
         SObject interaction = safeRelatedSObject(c, 'FEC_Interaction__r');
         // Export interaction: lấy từ FEC_Interaction__r theo design (Interaction ID đã đúng ở dưới)
-        r.interactionChannel = interaction == null
-            ? FEC_ConstantCommon.STR_EMPTY
-            : (String) interaction.get('FEC_Channel__c');
-        r.interactionSubChannel = interaction == null
-            ? FEC_ConstantCommon.STR_EMPTY
-            : (String) interaction.get('FEC_Interaction_Subchannel__c');
-        r.interactionPhone = interaction == null
-            ? FEC_ConstantCommon.STR_EMPTY
-            : (String) interaction.get('FEC_Phone_Number__c');
-        r.interactionEmail = interaction == null
-            ? FEC_ConstantCommon.STR_EMPTY
-            : (String) interaction.get('FEC_Interaction_Email__c');
+        r.interactionChannel = safeRelatedFieldString(interaction, 'FEC_Channel__c');
+        r.interactionSubChannel = safeRelatedFieldString(interaction, 'FEC_Interaction_Subchannel__c');
+        r.interactionPhone = safeRelatedFieldString(interaction, 'FEC_Phone_Number__c');
+        r.interactionEmail = safeRelatedFieldString(interaction, 'FEC_Interaction_Email__c');
         // Cũ: field trên Case (masked / copy) — không khớp design export
         // r.interactionChannel = c.FEC_Channel__c;
         // r.interactionSubChannel = c.FEC_Interaction_Subchannel__c;
@@ -258,8 +257,8 @@ public without sharing class FEC_BatchCaseHandlingExportService {
         // r.interactionEmail = c.FEC_Interaction_Masked_Email__c;
         SObject ipp = safeRelatedSObject(c, 'FEC_IPP_To_Close__r'); // Toannd 28/5/2026
         if (ipp != null) { // Toannd 28/5/2026
-            r.ippRecordNo = (String) ipp.get('FEC_IPP_Record_No__c'); // Toannd 28/5/2026
-            r.ippPlan = (String) ipp.get('FEC_IPP_Plan__c'); // Toannd 28/5/2026
+            r.ippRecordNo = safeRelatedFieldString(ipp, 'FEC_IPP_Record_No__c'); // Toannd 28/5/2026
+            r.ippPlan = safeRelatedFieldString(ipp, 'FEC_IPP_Plan__c'); // Toannd 28/5/2026
             r.ippOpenDate = ipp.get('FEC_IPP_Open_Date__c') == null // Toannd 28/5/2026
                 ? FEC_ConstantCommon.STR_EMPTY
                 : String.valueOf(ipp.get('FEC_IPP_Open_Date__c'));
@@ -278,9 +277,9 @@ public without sharing class FEC_BatchCaseHandlingExportService {
             r.ippInterestRate = ipp.get('FEC_IPP_Interest_Rate__c') == null // Toannd 28/5/2026
                 ? FEC_ConstantCommon.STR_EMPTY
                 : String.valueOf(ipp.get('FEC_IPP_Interest_Rate__c'));
-            r.ippTerm = (String) ipp.get('FEC_IPP_Term__c'); // Toannd 28/5/2026
-            r.ippInsurance = (String) ipp.get('FEC_IPP_Insurance__c'); // Toannd 28/5/2026
-            r.ippCurrentTerm = (String) ipp.get('FEC_IPP_Current_Term__c'); // Toannd 28/5/2026
+            r.ippTerm = safeRelatedFieldString(ipp, 'FEC_IPP_Term__c'); // Toannd 28/5/2026
+            r.ippInsurance = safeRelatedFieldString(ipp, 'FEC_IPP_Insurance__c'); // Toannd 28/5/2026
+            r.ippCurrentTerm = safeRelatedFieldString(ipp, 'FEC_IPP_Current_Term__c'); // Toannd 28/5/2026
         }
         r.interactionId = c.FEC_Interaction__r == null ? FEC_ConstantCommon.STR_EMPTY : c.FEC_Interaction__r.FEC_ID_Search__c;
         r.productType = c.FEC_Product_Type__r == null
@@ -321,22 +320,22 @@ public without sharing class FEC_BatchCaseHandlingExportService {
         r.correctAccountContract = FEC_ConstantCommon.STR_EMPTY; // tungnm37
         r.adjustedAmount = FEC_ConstantCommon.STR_EMPTY; // tungnm37
         if (ch != null) {
-            r.ccCode = (String) ch.get('FEC_CC_Code__c');
-            r.ccName = (String) ch.get('FEC_CC_Name__c');
-            r.dsaCode = (String) ch.get('FEC_DSA_Code__c');
-            r.dsaName = (String) ch.get('FEC_DSA_Name__c');
-            r.tsaCode = (String) ch.get('FEC_TSA_Code__c');
-            r.tsaName = (String) ch.get('FEC_TSA_Name__c');
-            r.contractStatus = (String) ch.get('FEC_Contract_Status__c'); // Toannd 28/5/2026
-            r.productCode = (String) ch.get('FEC_Product_Code__c'); // Toannd 28/5/2026
+            r.ccCode = safeRelatedFieldString(ch, 'FEC_CC_Code__c');
+            r.ccName = safeRelatedFieldString(ch, 'FEC_CC_Name__c');
+            r.dsaCode = safeRelatedFieldString(ch, 'FEC_DSA_Code__c');
+            r.dsaName = safeRelatedFieldString(ch, 'FEC_DSA_Name__c');
+            r.tsaCode = safeRelatedFieldString(ch, 'FEC_TSA_Code__c');
+            r.tsaName = safeRelatedFieldString(ch, 'FEC_TSA_Name__c');
+            r.contractStatus = safeRelatedFieldString(ch, 'FEC_Contract_Status__c'); // Toannd 28/5/2026
+            r.productCode = safeRelatedFieldString(ch, 'FEC_Product_Code__c'); // Toannd 28/5/2026
             r.loanAmount = ch.get('FEC_Loan_Amount__c') == null // Toannd 28/5/2026
                 ? FEC_ConstantCommon.STR_EMPTY
                 : String.valueOf(ch.get('FEC_Loan_Amount__c'));
             r.tenure = ch.get('FEC_Tenure__c') == null // Toannd 28/5/2026
                 ? FEC_ConstantCommon.STR_EMPTY
                 : String.valueOf(ch.get('FEC_Tenure__c'));
-            r.salesChannel = (String) ch.get('FEC_Sales_Channel__c');
-            r.salesSubChannel = (String) ch.get('FEC_Sales_Sub_Channel__c');
+            r.salesChannel = safeRelatedFieldString(ch, 'FEC_Sales_Channel__c');
+            r.salesSubChannel = safeRelatedFieldString(ch, 'FEC_Sales_Sub_Channel__c');
         }
         return r;
     }
@@ -537,7 +536,7 @@ public without sharing class FEC_BatchCaseHandlingExportService {
             return FEC_ConstantCommon.STR_EMPTY;
         }
         //PhongBT 03/06/26: 4 trường bộ noc hiển thị là code theo design
-        String code = (String) rel.get('FEC_Code__c');
+        String code = safeRelatedFieldString(rel, 'FEC_Code__c');
         return String.isBlank(code) ? FEC_ConstantCommon.STR_EMPTY : code;
         // String name = (String) rel.get('Name');
         // return String.isBlank(name) ? FEC_ConstantCommon.STR_EMPTY : name;
@@ -548,7 +547,7 @@ public without sharing class FEC_BatchCaseHandlingExportService {
             return FEC_ConstantCommon.STR_EMPTY;
         }
         //PhongBT 03/06/26: 4 trường bộ noc hiển thị là code theo design
-        String code = (String) rel.get('FEC_Code__c');
+        String code = safeRelatedFieldString(rel, 'FEC_Code__c');
         return String.isBlank(code) ? FEC_ConstantCommon.STR_EMPTY : code;
         // String nameVn = (String) rel.get('FEC_Name_VN__c');
         // String name = String.isNotBlank(nameVn) ? nameVn : (String) rel.get('Name');
@@ -692,7 +691,9 @@ public without sharing class FEC_BatchCaseHandlingExportService {
             bundle.firstCorrectAccountContract = String.isNotBlank(correctFieldApi)
                 ? String.valueOf(row.get(correctFieldApi))
                 : FEC_ConstantCommon.STR_EMPTY;
-            bundle.firstAdjustedAmount = formatExportCurrency((Decimal) row.get('FEC_Adjusted_Amount__c'));
+            bundle.firstAdjustedAmount = formatExportCurrency(
+                FEC_BatchCaseHandlingSObjectUtil.asDecimal(row.get('FEC_Adjusted_Amount__c'))
+            );
             out.put(caseId, bundle);
         }
         return out;
