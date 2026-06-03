@@ -170,7 +170,7 @@ public without sharing class FEC_CofGsrRoutePrepareService {
 
   /**
    * GSR Revert Stage 2 → Stage 1:
-   * - FEC_Actual_Nature_of_Case__c: bản Actual của bộ NOC gốc (FEC_Case_Flow_History__c, submit Stage 1→2).
+   * - FEC_Actual_Nature_of_Case__c: clone mới từ template NOC gốc (FEC_Case_Flow_History__c) + Actual MD — không reuse Actual theo 4 dimension (tránh lấy nhầm case khác).
    * - 4 trường NOC trên Case (Product Type / Category / Sub Category / Sub Code): giữ bộ Updated NOC Stage 2.
    * - FEC_Current_Case_Stage__c: Case Stage 1 tương ứng bộ Updated NOC trên Case.
    */
@@ -219,7 +219,7 @@ public without sharing class FEC_CofGsrRoutePrepareService {
       return;
     }
 
-    FEC_Actual_Nature_of_Case__c baselineActualNoc = resolveOrCreateActualNatureForTemplate(
+    FEC_Actual_Nature_of_Case__c baselineActualNoc = cloneFreshActualNatureForBaselineTemplate(
       baselineTemplateNoc
     );
 
@@ -371,6 +371,26 @@ public without sharing class FEC_CofGsrRoutePrepareService {
       templateNoc
     );
     applyActualNatureToCase(caseId, actualNoc);
+  }
+
+  /**
+   * GSR Revert 2→1: luôn clone Actual NOC mới (4 dimension từ template Original) và Actual Master Data từ template.
+   */
+  @TestVisible
+  private static FEC_Actual_Nature_of_Case__c cloneFreshActualNatureForBaselineTemplate(
+    FEC_Nature_of_Case__c baselineTemplateNoc
+  ) {
+    if (baselineTemplateNoc == null || baselineTemplateNoc.Id == null) {
+      return null;
+    }
+    FEC_Actual_Nature_of_Case__c actualNoc = FEC_CaseBusinessService.cloneActualNatureOfCase(
+      baselineTemplateNoc.Id
+    );
+    FEC_CaseBusinessService.cloneMasterDataSetting(
+      actualNoc.Id,
+      baselineTemplateNoc.Id
+    );
+    return actualNoc;
   }
 
   /**
