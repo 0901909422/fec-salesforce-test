@@ -125,10 +125,6 @@
     </relatedLists>
     <relatedLists>
         <fields>NAME</fields>
-        <relatedList>FEC_Notification__c.FEC_SubCategory__c</relatedList>
-    </relatedLists>
-    <relatedLists>
-        <fields>NAME</fields>
         <relatedList>FEC_Nature_of_Case__c.FEC_Sub_Category__c</relatedList>
     </relatedLists>
     <relatedLists>

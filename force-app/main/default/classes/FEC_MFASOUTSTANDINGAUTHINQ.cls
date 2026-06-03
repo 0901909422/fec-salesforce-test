@@ -43,6 +43,29 @@ public with sharing class FEC_MFASOUTSTANDINGAUTHINQ {
         public Token PREV_TOKEN;
         public Integer MORE_DATA_FLAG;
         public Integer NBR_RETURNED_ITEMS;
+        public String AUTH_CD;
+        public List<AuthTableRow> Auths;
+    }
+
+    public class AuthTableRow {
+        public String EFF_DATE;
+        public String EFF_DATE_AUTH_DETAIL;
+        public String POSTING_DATE;
+        public String AUTH_AMOUNT;
+        public String Description;
+        public String CreditDebitFlag;
+        public String CREDIT_PLAN;
+        public String AUTHORIZATION_CODE;
+        public String AUTH_CD;
+        public String MERCH_CAT;
+        public String TXN_CURR_CODE;
+        public String FINAL_ACTN;
+        public String ACTN_RSN_DESC;
+        public String DTL_AUTH_AMT;
+        public String DTL_MERC_NAME_LOC;
+        public String DTL_CR_PLAN;
+        public String DTL_MERCH_CAT;
+        public String DTL_TXN_CURR_CODE;
     }
 
     public class RCData {
@@ -108,8 +131,7 @@ public with sharing class FEC_MFASOUTSTANDINGAUTHINQ {
                 errorMsg = response.VMXMsgOut.RC_DATA[0].RETURN_DESC;
             }
         
-            throw new CalloutException(
-            );
+            throw new CalloutException(errorMsg);
         }
 
         return response;
@@ -203,6 +225,7 @@ public with sharing class FEC_MFASOUTSTANDINGAUTHINQ {
     ResponseWrapper result = new ResponseWrapper();
     result.VMXMsgOut = new VMXMsgOut();
     result.VMXMsgOut.RC_DATA = new List<RCData>();
+    result.VMXMsgOut.Auths = new List<AuthTableRow>();
 
     if (String.isBlank(xml)) {
         return result;
@@ -255,6 +278,7 @@ public with sharing class FEC_MFASOUTSTANDINGAUTHINQ {
     out.ORG = FEC_CommonUltils.getValueSafe(msgOutNode, 'ORG');
     out.ACCT = FEC_CommonUltils.getValueSafe(msgOutNode, 'ACCT');
     out.REQ_TYPE = FEC_CommonUltils.getValueSafe(msgOutNode, 'REQ_TYPE');
+    out.AUTH_CD = FEC_CommonUltils.getValueSafe(msgOutNode, 'AUTH_CD');
     out.MORE_DATA_FLAG = FEC_CommonUltils.toInt(FEC_CommonUltils.getValueSafe(msgOutNode, 'MORE_DATA_FLAG') );
     out.NBR_RETURNED_ITEMS = FEC_CommonUltils.toInt( FEC_CommonUltils.getValueSafe(msgOutNode, 'NBR_RETURNED_ITEMS'));
 
@@ -285,8 +309,96 @@ public with sharing class FEC_MFASOUTSTANDINGAUTHINQ {
         out.PREV_TOKEN.TIME_X = FEC_CommonUltils.toInt(FEC_CommonUltils.getValueSafe(prevNode, 'TIME_PREV'));
     }
 
+    Dom.XmlNode authTableNode = FEC_CommonUltils.findChildByName(msgOutNode, 'AUTHS_TABLE');
+    if (authTableNode != null) {
+        for (Dom.XmlNode rowNode : authTableNode.getChildElements()) {
+            if (rowNode == null) {
+                continue;
+            }
+            String effRaw = readAuthTableCell(rowNode, 'EFF_DATE');
+            if (String.isBlank(effRaw)) {
+                effRaw = readAuthTableCell(rowNode, 'POSTING_DATE');
+            }
+            String amtRaw = firstNonBlankAuth(
+                readAuthTableCell(rowNode, 'AUTH_AMOUNT'),
+                readAuthTableCell(rowNode, 'AUTH_AMT')
+            );
+            if (String.isBlank(effRaw) && String.isBlank(amtRaw)) {
+                continue;
+            }
+            if (String.isBlank(effRaw)) {
+                effRaw = readAuthTableCell(rowNode, 'POSTING_DATE');
+            }
+            if (String.isBlank(effRaw)) {
+                continue;
+            }
+
+            AuthTableRow ar = new AuthTableRow();
+            ar.EFF_DATE = effRaw.trim();
+            ar.POSTING_DATE = readAuthTableCell(rowNode, 'POSTING_DATE');
+            ar.AUTH_AMOUNT = amtRaw;
+            ar.Description = readAuthTableCell(rowNode, 'Description');
+            if (String.isBlank(ar.Description)) {
+                ar.Description = readAuthTableCell(rowNode, 'MERCHANT_NAME');
+            }
+            if (String.isBlank(ar.Description)) {
+                ar.Description = readAuthTableCell(rowNode, 'MERC_NAME_LOC');
+            }
+            ar.CreditDebitFlag = readAuthTableCell(rowNode, 'CreditDebitFlag');
+            if (String.isBlank(ar.CreditDebitFlag)) {
+                ar.CreditDebitFlag = readAuthTableCell(rowNode, 'DEBIT_CREDIT_FLAG');
+            }
+            ar.CREDIT_PLAN = firstNonBlankAuth(
+                readAuthTableCell(rowNode, 'CREDIT_PLAN'),
+                readAuthTableCell(rowNode, 'CR_PLAN')
+            );
+            ar.AUTHORIZATION_CODE = firstNonBlankAuth(
+                readAuthTableCell(rowNode, 'AUTHORIZATION_CODE'),
+                readAuthTableCell(rowNode, 'AuthCode')
+            );
+            ar.AUTH_CD = firstNonBlankAuth(
+                readAuthTableCell(rowNode, 'AUTH_CD'),
+                out.AUTH_CD
+            );
+            ar.MERCH_CAT = readAuthTableCell(rowNode, 'MERCH_CAT');
+            ar.TXN_CURR_CODE = readAuthTableCell(rowNode, 'TXN_CURR_CODE');
+            ar.FINAL_ACTN = readAuthTableCell(rowNode, 'FINAL_ACTN');
+            ar.ACTN_RSN_DESC = readAuthTableCell(rowNode, 'ACTN_RSN_DESC');
+            out.Auths.add(ar);
+        }
+    }
+
     return result;
 }
+
+    private static String readAuthTableCell(Dom.XmlNode rowNode, String tagName) {
+        if (rowNode == null || String.isBlank(tagName)) {
+            return null;
+        }
+        String v = FEC_CommonUltils.getXmlValue(rowNode, tagName);
+        if (!String.isBlank(v)) {
+            return v.trim();
+        }
+        for (Dom.XmlNode childEl : rowNode.getChildElements()) {
+            if (childEl != null
+                && childEl.getName() != null
+                && childEl.getName().equalsIgnoreCase(tagName)) {
+                String t = childEl.getText();
+                return String.isBlank(t) ? null : t.trim();
+            }
+        }
+        return null;
+    }
+
+    private static String firstNonBlankAuth(String a, String b) {
+        if (!String.isBlank(a)) {
+            return a.trim();
+        }
+        if (!String.isBlank(b)) {
+            return b.trim();
+        }
+        return null;
+    }
     /* =====================================================
        VALIDATION
        ===================================================== */

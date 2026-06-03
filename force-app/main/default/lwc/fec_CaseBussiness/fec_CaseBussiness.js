@@ -1761,46 +1761,8 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
     return fromForm != null && String(fromForm).trim() !== STR_EMPTY;
   }
 
-  _hasPersistedCardReplacementDependentData() {
-    const dependentApis = [
-      FIELD_NEW_BLOCK_CODE_CARD_REPLACE,
-      FIELD_CARD_REPLACEMENT_FEE,
-      FIELD_RECIPIENT_NAME,
-      FIELD_RECIPIENT_PHONE_NUMBER,
-    ];
-    for (const api of dependentApis) {
-      const original = this._getCaseFieldOriginalValue(api);
-      if (original != null && String(original).trim() !== STR_EMPTY) {
-        return true;
-      }
-    }
-    const addressId =
-      this._caseSelectedAddressId || this._getCaseFieldValue("FEC_Selected_Address__c");
-    return addressId != null && String(addressId).trim().length >= 15;
-  }
-
-  _getCaseFieldOriginalValue(apiName) {
-    const sections = this.business?.sectionlst ?? [];
-    for (const section of sections) {
-      for (const sub of section.subSectionlst ?? []) {
-        for (const obj of sub.objlst ?? []) {
-          if (obj.name !== "Case") continue;
-          const f = obj.fieldlst?.find((x) => x.apiName === apiName);
-          if (f != null) {
-            const v = f.original != null ? f.original : f.value;
-            return typeof v === "string" ? v.trim() : (v ?? STR_EMPTY);
-          }
-        }
-      }
-    }
-    return STR_EMPTY;
-  }
-
   _shouldShowCardReplacementDependentFields() {
-    return (
-      this._hasCardReplacementReasonValue() ||
-      this._hasPersistedCardReplacementDependentData()
-    );
+    return this._hasCardReplacementReasonValue();
   }
 
   _shouldSuppressRc27CardReplacementProcessInfo() {
@@ -3039,7 +3001,7 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
             this.processActionMsg = STR_EMPTY;
             this.showProcessAction = false;
           } else {
-            this.handleCheckProcessAction();
+            this._applyCardReplacementProcessActionFromBusiness();
           }
         } else if (this.business?.code === PROCESS_CARD_REPLACEMENT) {
           this.isProcessActionInfo = false;
@@ -3798,6 +3760,7 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
     }
     // card replacement
     else if (fieldName === FIELD_CARD_REPLACEMENT_REASON) {
+      this.cardReplacementReason = value;
       this.isHiddenLwc = !value;
       this.business.sectionlst.forEach(section => {
         section.subSectionlst.forEach(sub => {
@@ -4911,6 +4874,7 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
                   null,
                 mrcCustomerConfirmation: mrcSubmitFields.confirmation || null,
                 mrcHandlingOption: mrcSubmitFields.handlingOption || null,
+                ...this._getLiveBlockCodeRouteParams(),
               },
             };
           }
@@ -6609,6 +6573,35 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
     if (this.business?.code === PROCESS_BLOCK_CARD && this._isEdit) {
       this.handleCheckProcessActionCardBlock();
     }
+  }
+
+  _getLiveBlockCodeRouteParams() {
+    if (
+      this.business?.liveBlockCode == null &&
+      this.business?.liveBlockCode1 == null
+    ) {
+      return {};
+    }
+    return {
+      liveBlockCode: this.business.liveBlockCode ?? null,
+      liveBlockCode1: this.business.liveBlockCode1 ?? null,
+    };
+  }
+
+  _applyCardReplacementProcessActionFromBusiness() {
+    this.showProcessAction = false;
+    this.isProcessActionInfo = false;
+    this.processActionMsg = STR_EMPTY;
+    if (this.business?.replaceCardProcessActionResolved === true) {
+      if (this.business.replaceCardShowProcessAction === true) {
+        this.showProcessAction = true;
+      } else {
+        this.isProcessActionInfo = true;
+        this.processActionMsg = this.business.replaceCardProcessActionMsg || STR_EMPTY;
+      }
+      return;
+    }
+    this.handleCheckProcessAction();
   }
 
   // PhuongNT add check process action Card Replacement

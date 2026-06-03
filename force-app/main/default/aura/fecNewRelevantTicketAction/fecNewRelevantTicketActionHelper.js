@@ -1,10 +1,96 @@
 ({
     _timer: null,
 
+    showActionNotAllowedToast: function() {
+        try {
+            var toast = $A.get('e.force:showToast');
+            if (toast) {
+                toast.setParams({
+                    title: 'Error',
+                    message: $A.get('$Label.c.FEC_RelevantTicket_Action_Not_Allowed'),
+                    type: 'error',
+                    duration: 4000
+                });
+                toast.fire();
+            }
+        } catch (e) {}
+    },
+
+    closeOnlyCurrentSubtab: function(component) {
+        try {
+            var workspaceAPI = component.find('workspace');
+            if (workspaceAPI) {
+                workspaceAPI.getEnclosingTabId().then(function(enclosingTabId) {
+                    if (!enclosingTabId) return;
+                    workspaceAPI.getTabInfo({ tabId: enclosingTabId }).then(function(tabInfo) {
+                        //tungnm37 - View All: show toast and close only the temporary New subtab; do not focus parent Case.
+                        if (tabInfo && tabInfo.parentTabId) {
+                            window.setTimeout($A.getCallback(function() {
+                                workspaceAPI.closeTab({ tabId: enclosingTabId });
+                            }), 100);
+                        }
+                    });
+                });
+            }
+        } catch (e) {}
+    },
+    bridgeOpenModalOnCasePage: function(component) {
+        var recordId = component.get('v.recordId');
+        var currentUrl = '';
+        try {
+            currentUrl = decodeURIComponent(decodeURIComponent(window.location.href || ''));
+        } catch (urlErr) {
+            try { currentUrl = decodeURIComponent(window.location.href || ''); } catch (urlErr2) { currentUrl = window.location.href || ''; }
+        }
+        var isViewAllContext = currentUrl.indexOf('/related/Relevant_Tickets__r/view') !== -1
+            || currentUrl.indexOf('relatedListId=Relevant_Tickets__r') !== -1
+            || currentUrl.indexOf('Relevant_Tickets__r') !== -1;
+        if (!recordId || isViewAllContext) {
+            //tungnm37 - block standard New from View All page: show toast and close only New subtab.
+            this.showActionNotAllowedToast();
+            this.closeOnlyCurrentSubtab(component);
+            return;
+        }
+        try {
+            //tungnm37 - signal current Case page to open Relevant Ticket modal.
+            window.localStorage.setItem('fecOpenRelevantTicketModal', JSON.stringify({ caseId: recordId, ts: new Date().getTime() }));
+        } catch (e) {}
+        try {
+            var workspaceAPI = component.find('workspace');
+            if (workspaceAPI) {
+                workspaceAPI.getEnclosingTabId().then(function(enclosingTabId) {
+                    if (!enclosingTabId) return;
+                    workspaceAPI.getTabInfo({ tabId: enclosingTabId }).then(function(tabInfo) {
+                        //tungnm37 - only close when this New page is really a subtab; never close primary Case tab.
+                        if (tabInfo && tabInfo.parentTabId) {
+                            workspaceAPI.focusTab({ tabId: tabInfo.parentTabId });
+                            window.setTimeout($A.getCallback(function() {
+                                workspaceAPI.closeTab({ tabId: enclosingTabId });
+                            }), 100);
+                        }
+                    });
+                });
+                return;
+            }
+        } catch (e2) {}
+    },
+    closeCurrentConsoleTab: function(component) {
+        try {
+            var workspaceAPI = component.find('workspace');
+            if (workspaceAPI) {
+                workspaceAPI.getFocusedTabInfo().then(function(tabInfo) {
+                    if (tabInfo && tabInfo.tabId) {
+                        workspaceAPI.closeTab({ tabId: tabInfo.tabId });
+                    }
+                });
+            }
+        } catch (e) {}
+    },
+
     closeOrNavigate: function(component, reloadHandling) {
         if (reloadHandling) {
             try {
-                window.history.back();
+                //tungnm37 - do not close when Salesforce opens this as a primary tab; avoid closing the Case tab.
                 window.setTimeout($A.getCallback(function() {
                     try {
                         var refreshEvt = $A.get('e.force:refreshView');
@@ -25,7 +111,7 @@
             } catch (backErr) {}
         }
         var recordId = component.get('v.recordId');
-        // Khi mở dạng tab (actionOverride), navigate về /lightning/r/Case/{id}/view
+        // Khi má»Ÿ dáº¡ng tab (actionOverride), navigate vá» /lightning/r/Case/{id}/view
         if (recordId) {
             try {
                 var navEvt = $A.get('e.force:navigateToURL');
@@ -36,7 +122,7 @@
                 }
             } catch(e) {}
         }
-        window.history.back();
+        //tungnm37 - do not close when Salesforce opens this as a primary tab; avoid closing the Case tab.
     },
 
     searchDebounced: function(component, term) {
@@ -62,7 +148,7 @@
             return;
         }
 
-        // Đảm bảo recordId luôn có giá trị
+        // Äáº£m báº£o recordId luÃ´n cÃ³ giÃ¡ trá»‹
         var recordId = component.get('v.recordId');
         if (!recordId) {
             var url = window.location.href;
@@ -71,7 +157,7 @@
             if (m) {
                 recordId = m[1];
             } else {
-                // tungnm37: thử parse inContextOfRef
+                // tungnm37: thá»­ parse inContextOfRef
                 var ref = url.match(new RegExp('inContextOfRef=([^&]+)'));
                 if (ref) {
                     try {
@@ -85,12 +171,12 @@
                                 || obj.recordId;
                     } catch(e) { console.log('[FEC_DEBUG] inContextOfRef parse error=' + e); }
                 }
-                // tungnm37: thử parse recordId trực tiếp từ URL params
+                // tungnm37: thá»­ parse recordId trá»±c tiáº¿p tá»« URL params
                 if (!recordId) {
                     var ridMatch = url.match(new RegExp('[?&]recordId=([a-zA-Z0-9]{15,18})'));
                     if (ridMatch) recordId = ridMatch[1];
                 }
-                // tungnm37: thử parse từ navigationContext
+                // tungnm37: thá»­ parse tá»« navigationContext
                 if (!recordId) {
                     try {
                         var navCtx = url.match(new RegExp('navigationContext=([^&]+)'));

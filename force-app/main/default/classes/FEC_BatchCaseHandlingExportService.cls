@@ -13,10 +13,7 @@ public without sharing class FEC_BatchCaseHandlingExportService {
             'FEC_Last_Updated_On__c',
             'FEC_Complain_Type__c',
             'FEC_Complaint_Source__c',
-            'FEC_Channel__c',
-            'FEC_Interaction_Subchannel__c',
-            'FEC_Interaction_Masked_Phone__c',
-            'FEC_Interaction_Masked_Email__c',
+            // Cũ: interaction copy/masked trên Case — export dùng FEC_Interaction__r (dưới)
             'FEC_IPP_To_Close__r.FEC_IPP_Record_No__c', // Toannd 28/5/2026
             'FEC_IPP_To_Close__r.FEC_IPP_Plan__c', // Toannd 28/5/2026
             'FEC_IPP_To_Close__r.FEC_IPP_Open_Date__c', // Toannd 28/5/2026
@@ -150,7 +147,10 @@ public without sharing class FEC_BatchCaseHandlingExportService {
 
         Map<Id, RemarkBlocks> caseRemarkBlocksByCaseId = loadCaseRemarkBlocks(caseIds);
         Map<Id, AssignmentExportData> assignmentByCaseId = loadPrimaryAssignmentExportData(caseIds);
-        Map<Id, RemarkBlocks> assignmentRemarkBlocksByAssignmentId = loadAssignmentRemarkBlocks(assignmentByCaseId);
+        // 03/06/2026 - Assignment remarks: FEC_Case_Remarks__c (thay FEC_Routing_Action_History__c) — FEC_BCH_ExportAssignmentRemarkLoader
+        Map<Id, FEC_BCH_ExportAssignmentRemarkLoader.AssignmentRemarkExportBundle> assignmentRemarkByCaseId =
+            FEC_BCH_ExportAssignmentRemarkLoader.loadByCaseId(caseIds);
+        // Cũ: Map<Id, RemarkBlocks> assignmentRemarkBlocksByAssignmentId = loadAssignmentRemarkBlocks(assignmentByCaseId);
         Map<Id, IncorrectPaymentAdjustmentBundle> incorrectPaymentAdjustmentsByCaseId =
             loadIncorrectPaymentAdjustmentBundles(caseIds); // tungnm37
 
@@ -165,18 +165,31 @@ public without sharing class FEC_BatchCaseHandlingExportService {
                 r.caseRemarksEnteredByRole = caseRemarks.enteredByRole;
                 r.caseRemarksEnteredOn = caseRemarks.enteredOn;
             }
-            AssignmentExportData asg = assignmentByCaseId.get(r.caseId);
-            if (asg != null) {
-                r.assignmentId = asg.assignmentId;
-                r.assignmentOwner = asg.assignmentOwner;
-                RemarkBlocks asgRemarks = assignmentRemarkBlocksByAssignmentId.get(asg.assignmentRecordId);
-                if (asgRemarks != null) {
-                    r.assignmentRemarks = asgRemarks.remarks;
-                    r.assignmentRemarksEnteredBy = asgRemarks.enteredBy;
-                    r.assignmentRemarksEnteredByRole = asgRemarks.enteredByRole;
-                    r.assignmentRemarksEnteredOn = asgRemarks.enteredOn;
+            // 03/06/2026 - Ưu tiên assignment remark từ FEC_Case_Remarks__c; không có remark thì fallback FEC_Assignment__c (ID/Owner)
+            FEC_BCH_ExportAssignmentRemarkLoader.AssignmentRemarkExportBundle asgRemarkBundle =
+                assignmentRemarkByCaseId.get(r.caseId);
+            if (asgRemarkBundle != null && asgRemarkBundle.hasData()) {
+                asgRemarkBundle.applyTo(r);
+            } else {
+                AssignmentExportData asg = assignmentByCaseId.get(r.caseId);
+                if (asg != null) {
+                    r.assignmentId = asg.assignmentId;
+                    r.assignmentOwner = asg.assignmentOwner;
                 }
             }
+            // Cũ (03/06/2026): assignment remarks từ Routing History theo primary assignment
+            // AssignmentExportData asg = assignmentByCaseId.get(r.caseId);
+            // if (asg != null) {
+            //     r.assignmentId = asg.assignmentId;
+            //     r.assignmentOwner = asg.assignmentOwner;
+            //     RemarkBlocks asgRemarks = assignmentRemarkBlocksByAssignmentId.get(asg.assignmentRecordId);
+            //     if (asgRemarks != null) {
+            //         r.assignmentRemarks = asgRemarks.remarks;
+            //         r.assignmentRemarksEnteredBy = asgRemarks.enteredBy;
+            //         r.assignmentRemarksEnteredByRole = asgRemarks.enteredByRole;
+            //         r.assignmentRemarksEnteredOn = asgRemarks.enteredOn;
+            //     }
+            // }
             IncorrectPaymentAdjustmentBundle incorrectPaymentBundle = incorrectPaymentAdjustmentsByCaseId.get(r.caseId); // tungnm37
             if (incorrectPaymentBundle != null) {
                 r.correctAccountContract = incorrectPaymentBundle.firstCorrectAccountContract;
@@ -224,10 +237,25 @@ public without sharing class FEC_BatchCaseHandlingExportService {
         r.lastUpdatedOnLabel = formatExportDatetime(c.FEC_Last_Updated_On__c);
         r.complaintType = c.FEC_Complain_Type__c;
         r.complaintSource = c.FEC_Complaint_Source__c;
-        r.interactionChannel = c.FEC_Channel__c;
-        r.interactionSubChannel = c.FEC_Interaction_Subchannel__c;
-        r.interactionPhone = c.FEC_Interaction_Masked_Phone__c;
-        r.interactionEmail = c.FEC_Interaction_Masked_Email__c;
+        SObject interaction = safeRelatedSObject(c, 'FEC_Interaction__r');
+        // Export interaction: lấy từ FEC_Interaction__r theo design (Interaction ID đã đúng ở dưới)
+        r.interactionChannel = interaction == null
+            ? FEC_ConstantCommon.STR_EMPTY
+            : (String) interaction.get('FEC_Channel__c');
+        r.interactionSubChannel = interaction == null
+            ? FEC_ConstantCommon.STR_EMPTY
+            : (String) interaction.get('FEC_Interaction_Subchannel__c');
+        r.interactionPhone = interaction == null
+            ? FEC_ConstantCommon.STR_EMPTY
+            : (String) interaction.get('FEC_Phone_Number__c');
+        r.interactionEmail = interaction == null
+            ? FEC_ConstantCommon.STR_EMPTY
+            : (String) interaction.get('FEC_Interaction_Email__c');
+        // Cũ: field trên Case (masked / copy) — không khớp design export
+        // r.interactionChannel = c.FEC_Channel__c;
+        // r.interactionSubChannel = c.FEC_Interaction_Subchannel__c;
+        // r.interactionPhone = c.FEC_Interaction_Masked_Phone__c;
+        // r.interactionEmail = c.FEC_Interaction_Masked_Email__c;
         SObject ipp = safeRelatedSObject(c, 'FEC_IPP_To_Close__r'); // Toannd 28/5/2026
         if (ipp != null) { // Toannd 28/5/2026
             r.ippRecordNo = (String) ipp.get('FEC_IPP_Record_No__c'); // Toannd 28/5/2026
@@ -508,34 +536,43 @@ public without sharing class FEC_BatchCaseHandlingExportService {
         if (rel == null) {
             return FEC_ConstantCommon.STR_EMPTY;
         }
-        String name = (String) rel.get('Name');
-        return String.isBlank(name) ? FEC_ConstantCommon.STR_EMPTY : name;
+        //PhongBT 03/06/26: 4 trường bộ noc hiển thị là code theo design
+        String code = (String) rel.get('FEC_Code__c');
+        return String.isBlank(code) ? FEC_ConstantCommon.STR_EMPTY : code;
+        // String name = (String) rel.get('Name');
+        // return String.isBlank(name) ? FEC_ConstantCommon.STR_EMPTY : name;
     }
 
     private static String formatSubDisplay(SObject rel) {
         if (rel == null) {
             return FEC_ConstantCommon.STR_EMPTY;
         }
+        //PhongBT 03/06/26: 4 trường bộ noc hiển thị là code theo design
         String code = (String) rel.get('FEC_Code__c');
-        String nameVn = (String) rel.get('FEC_Name_VN__c');
-        String name = String.isNotBlank(nameVn) ? nameVn : (String) rel.get('Name');
-        if (String.isNotBlank(code) && String.isNotBlank(name)) {
-            return code + '-' + name;
-        }
-        if (String.isNotBlank(name)) {
-            return name;
-        }
         return String.isBlank(code) ? FEC_ConstantCommon.STR_EMPTY : code;
+        // String nameVn = (String) rel.get('FEC_Name_VN__c');
+        // String name = String.isNotBlank(nameVn) ? nameVn : (String) rel.get('Name');
+        // if (String.isNotBlank(code) && String.isNotBlank(name)) {
+        //     return code + '-' + name;
+        // }
+        // if (String.isNotBlank(name)) {
+        //     return name;
+        // }
+        // return String.isBlank(code) ? FEC_ConstantCommon.STR_EMPTY : code;
     }
 
     private static Map<Id, RemarkBlocks> loadCaseRemarkBlocks(Set<Id> caseIds) {
         Map<Id, RemarkBlocks> out = new Map<Id, RemarkBlocks>();
+        // 03/06/2026 - Case Remarks export: loại Remark Type Assignment (khớp FEC_CaseRemarkController)
         for (FEC_Case_Remarks__c remark : [
             SELECT FEC_Case__c, FEC_Case_Remarks__c, FEC_User__c, FEC_User_Role__c, CreatedDate
             FROM FEC_Case_Remarks__c
             WHERE FEC_Case__c IN :caseIds
+            AND (FEC_Remark_Type__c = null
+                OR FEC_Remark_Type__c != :FEC_ConstantCommon.REMARK_TYPE_ASSIGNMENT)
             ORDER BY FEC_Case__c, CreatedDate ASC
         ]) {
+            // Cũ: WHERE FEC_Case__c IN :caseIds — gồm cả assignment remark → lẫn Case Remarks
             if (remark.FEC_Case__c == null) {
                 continue;
             }
@@ -577,40 +614,41 @@ public without sharing class FEC_BatchCaseHandlingExportService {
         return out;
     }
 
-    private static Map<Id, RemarkBlocks> loadAssignmentRemarkBlocks(Map<Id, AssignmentExportData> assignmentByCaseId) {
-        Map<Id, RemarkBlocks> out = new Map<Id, RemarkBlocks>();
-        Set<Id> assignmentIds = new Set<Id>();
-        for (AssignmentExportData item : assignmentByCaseId.values()) {
-            if (item != null && item.assignmentRecordId != null) {
-                assignmentIds.add(item.assignmentRecordId);
-            }
-        }
-        if (assignmentIds.isEmpty()) {
-            return out;
-        }
-        for (FEC_Routing_Action_History__c hist : [
-            SELECT FEC_Assignment__c, FEC_Description__c, FEC_User__c, FEC_User_Role__c, FEC_Date_Time__c, CreatedDate
-            FROM FEC_Routing_Action_History__c
-            WHERE FEC_Assignment__c IN :assignmentIds
-            AND FEC_Routing_Action_Type__c = :FEC_ConstantCommon.REMARK_TYPE_ASSIGNMENT
-            ORDER BY FEC_Assignment__c, CreatedDate ASC
-        ]) {
-            if (hist.FEC_Assignment__c == null) {
-                continue;
-            }
-            if (!out.containsKey(hist.FEC_Assignment__c)) {
-                out.put(hist.FEC_Assignment__c, new RemarkBlocks());
-            }
-            Datetime remarkDt = hist.FEC_Date_Time__c != null ? hist.FEC_Date_Time__c : hist.CreatedDate;
-            out.get(hist.FEC_Assignment__c).add(
-                hist.FEC_Description__c,
-                hist.FEC_User__c,
-                hist.FEC_User_Role__c,
-                remarkDt
-            );
-        }
-        return out;
-    }
+    // 03/06/2026 - Đã thay bằng FEC_BCH_ExportAssignmentRemarkLoader.loadByCaseId (FEC_Case_Remarks__c)
+    // private static Map<Id, RemarkBlocks> loadAssignmentRemarkBlocks(Map<Id, AssignmentExportData> assignmentByCaseId) {
+    //     Map<Id, RemarkBlocks> out = new Map<Id, RemarkBlocks>();
+    //     Set<Id> assignmentIds = new Set<Id>();
+    //     for (AssignmentExportData item : assignmentByCaseId.values()) {
+    //         if (item != null && item.assignmentRecordId != null) {
+    //             assignmentIds.add(item.assignmentRecordId);
+    //         }
+    //     }
+    //     if (assignmentIds.isEmpty()) {
+    //         return out;
+    //     }
+    //     for (FEC_Routing_Action_History__c hist : [
+    //         SELECT FEC_Assignment__c, FEC_Description__c, FEC_User__c, FEC_User_Role__c, FEC_Date_Time__c, CreatedDate
+    //         FROM FEC_Routing_Action_History__c
+    //         WHERE FEC_Assignment__c IN :assignmentIds
+    //         AND FEC_Routing_Action_Type__c = :FEC_ConstantCommon.REMARK_TYPE_ASSIGNMENT
+    //         ORDER BY FEC_Assignment__c, CreatedDate ASC
+    //     ]) {
+    //         if (hist.FEC_Assignment__c == null) {
+    //             continue;
+    //         }
+    //         if (!out.containsKey(hist.FEC_Assignment__c)) {
+    //             out.put(hist.FEC_Assignment__c, new RemarkBlocks());
+    //         }
+    //         Datetime remarkDt = hist.FEC_Date_Time__c != null ? hist.FEC_Date_Time__c : hist.CreatedDate;
+    //         out.get(hist.FEC_Assignment__c).add(
+    //             hist.FEC_Description__c,
+    //             hist.FEC_User__c,
+    //             hist.FEC_User_Role__c,
+    //             remarkDt
+    //         );
+    //     }
+    //     return out;
+    // }
 
     private class AssignmentExportData {
         public Id assignmentRecordId;

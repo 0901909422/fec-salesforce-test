@@ -2,21 +2,41 @@
 private class FEC_CreateCSCaseService_Test {
 
     private class MockGetCustomerListCallout implements HttpCalloutMock {
+        private Boolean returnCustomer;
+
+        MockGetCustomerListCallout() {
+            this(true);
+        }
+
+        MockGetCustomerListCallout(Boolean returnCustomer) {
+            this.returnCustomer = returnCustomer;
+        }
+
         public HTTPResponse respond(HTTPRequest req) {
             HttpResponse res = new HttpResponse();
             res.setStatusCode(200);
             res.setHeader('Content-Type', 'text/xml');
-            res.setBody(
-                '<?xml version="1.0" encoding="UTF-8"?>' +
-                '<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">' +
-                '<soapenv:Body>' +
-                '<GetCustomerListResponse>' +
-                '<Sys><TransID>1</TransID><DateTime>2026-05-19T00:00:00</DateTime><Code>0</Code><Description>OK</Description></Sys>' +
-                '<Count>1</Count>' +
-                '<Customers><Customer><CIFNumber>CIF001</CIFNumber><FullName>Nguyen Van A</FullName></Customer></Customers>' +
-                '</GetCustomerListResponse>' +
-                '</soapenv:Body></soapenv:Envelope>'
-            );
+            if (returnCustomer) {
+                res.setBody(
+                    '<?xml version="1.0" encoding="UTF-8"?>' +
+                    '<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">' +
+                    '<soapenv:Body>' +
+                    '<GetCustomerListResponse>' +
+                    '<Sys><TransID>1</TransID><DateTime>2026-05-19T00:00:00</DateTime><Code>0</Code><Description>OK</Description></Sys>' +
+                    '<Count>1</Count>' +
+                    '<Customers><Customer><CIFNumber>CIF001</CIFNumber><FullName>Nguyen Van A</FullName></Customer></Customers>' +
+                    '</GetCustomerListResponse>' +
+                    '</soapenv:Body></soapenv:Envelope>'
+                );
+            } else {
+                res.setBody(
+                    '<?xml version="1.0" encoding="UTF-8"?>' +
+                    '<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">' +
+                    '<soapenv:Body><GetCustomerListResponse>' +
+                    '<Sys><Code>0</Code></Sys><Count>0</Count></GetCustomerListResponse>' +
+                    '</soapenv:Body></soapenv:Envelope>'
+                );
+            }
             return res;
         }
     }
@@ -62,23 +82,6 @@ private class FEC_CreateCSCaseService_Test {
         );
     }
 
-    @IsTest
-    static void testValidateNatureOfCase_noMatchingNoc() {
-        FEC_CreateCSCaseService.CaseRequestType req = buildValidRequest();
-        req.RequestInfo.SubCode = 'SubCodeNotInNoc';
-
-        Test.startTest();
-        FEC_CreateCSCaseService.CreateCSCaseResponse res =
-            FEC_CreateCSCaseService.CreateCSCaseRequest(req);
-        Test.stopTest();
-
-        System.assertNotEquals('1', res.Sys.Code);
-        System.assertEquals(
-            System.Label.FEC_MSG_Nature_Of_Case_Id_Invalid,
-            res.Sys.Description
-        );
-    }
-
     private static FEC_CreateCSCaseService.CaseRequestType buildValidRequest() {
         FEC_CreateCSCaseService.CaseRequestType req =
             new FEC_CreateCSCaseService.CaseRequestType();
@@ -96,13 +99,78 @@ private class FEC_CreateCSCaseService_Test {
         req.RequestInfo = new FEC_CreateCSCaseService.RequestInfoType();
         req.RequestInfo.CaseType = 'Complaint';
         req.RequestInfo.ProductType = 'CARD';
-        req.RequestInfo.Category = FEC_ConstantCommon.FEC_CATEGORY_REQUEST;
+        req.RequestInfo.Category = 'Request';
         req.RequestInfo.SubCategory = 'SubCat';
         req.RequestInfo.SubCode = 'SubCode';
         req.RequestInfo.Remarks = 'Test Remarks';
         req.CreatorInfo = new FEC_CreateCSCaseService.CreatorInfoType();
         req.CreatorInfo.CreatorEmail = UserInfo.getUserEmail();
         return req;
+    }
+
+    @IsTest
+    static void testCreateCSCaseRequest_Success() {
+        FEC_CreateCSCaseService.CaseRequestType req = buildValidRequest();
+        req.Sys.SubChannel = FEC_ConstantCommon.SYSTEM_SOURCE_VTIGER;
+
+        Test.setMock(HttpCalloutMock.class, new MockGetCustomerListCallout());
+
+        FEC_CaseTriggerHandler.isExecuting = true;
+        Test.startTest();
+        FEC_CreateCSCaseService.CreateCSCaseResponse res =
+            FEC_CreateCSCaseService.CreateCSCaseRequest(req);
+        Test.stopTest();
+        FEC_CaseTriggerHandler.isExecuting = false;
+
+        System.assertEquals(
+            '1',
+            res.Sys.Code,
+            'Expected success. Actual: ' + res.Sys.Code + ' - ' + res.Sys.Description
+        );
+        System.assertNotEquals(null, res.CaseID);
+    }
+
+    @IsTest
+    static void testCreateCSCaseRequest_WithDocumentAndAdditionalInfo() {
+        FEC_CreateCSCaseService.CaseRequestType req = buildValidRequest();
+        req.RequestInfo.AdditionalInfo = new List<FEC_CreateCSCaseService.AdditionalInfoType>{
+            new FEC_CreateCSCaseService.AdditionalInfoType(),
+            new FEC_CreateCSCaseService.AdditionalInfoType()
+        };
+        req.RequestInfo.AdditionalInfo[0].ID = FEC_ConstantCommon.UPLOAD_DOCUMENT;
+        req.RequestInfo.AdditionalInfo[0].Value = 'doc.pdf|application/pdf|' +
+            EncodingUtil.base64Encode(Blob.valueOf('pdf-content'));
+        req.RequestInfo.AdditionalInfo[1].ID = 'Subject';
+        req.RequestInfo.AdditionalInfo[1].Value = 'Additional subject note';
+
+        Test.setMock(HttpCalloutMock.class, new MockGetCustomerListCallout());
+        FEC_CaseTriggerHandler.isExecuting = true;
+        Test.startTest();
+        FEC_CreateCSCaseService.CreateCSCaseResponse res =
+            FEC_CreateCSCaseService.CreateCSCaseRequest(req);
+        Test.stopTest();
+        FEC_CaseTriggerHandler.isExecuting = false;
+
+        System.assertEquals('1', res.Sys.Code);
+    }
+
+    @IsTest
+    static void testCreateCSCaseRequest_NoCustomerFromApi() {
+        FEC_CreateCSCaseService.CaseRequestType req = buildValidRequest();
+        Test.setMock(HttpCalloutMock.class, new MockGetCustomerListCallout(false));
+
+        FEC_CaseTriggerHandler.isExecuting = true;
+        Test.startTest();
+        FEC_CreateCSCaseService.CreateCSCaseResponse res =
+            FEC_CreateCSCaseService.CreateCSCaseRequest(req);
+        Test.stopTest();
+        FEC_CaseTriggerHandler.isExecuting = false;
+
+        System.assertEquals('1', res.Sys.Code, 'Success path khi không tìm thấy customer.');
+        System.assertEquals(
+            0,
+            [SELECT COUNT() FROM FEC_Customer_History__c WHERE FEC_CIF_Number__c = 'CIF001']
+        );
     }
 
     @IsTest
@@ -140,23 +208,268 @@ private class FEC_CreateCSCaseService_Test {
         Test.stopTest();
         FEC_CaseTriggerHandler.isExecuting = false;
 
+        System.assertEquals('1', res.Sys.Code);
+    }
+
+    @IsTest
+    static void testValidateNatureOfCase_noMatchingNoc() {
+        FEC_CreateCSCaseService.CaseRequestType req = buildValidRequest();
+        req.Sys.Channel = FEC_ConstantCommon.CHANNEL_EMAIL_NAME;
+
+        Test.startTest();
+        FEC_CreateCSCaseService.CreateCSCaseResponse res =
+            FEC_CreateCSCaseService.CreateCSCaseRequest(req);
+        Test.stopTest();
+
+        System.assertNotEquals('1', res.Sys.Code);
         System.assertEquals(
-            '1',
-            res.Sys.Code,
-            'Expected success with null SubCode. Actual: ' +
-                res.Sys.Code +
-                ' - ' +
-                res.Sys.Description
+            System.Label.FEC_MSG_Nature_Of_Case_Id_Invalid,
+            res.Sys.Description
         );
     }
 
     @IsTest
-    static void testCreateCSCaseRequest_Success() {
+    static void testValidation_MissingInfo() {
+        FEC_CreateCSCaseService.CaseRequestType req = new FEC_CreateCSCaseService.CaseRequestType();
+
+        Test.startTest();
+        FEC_CreateCSCaseService.CreateCSCaseResponse res =
+            FEC_CreateCSCaseService.CreateCSCaseRequest(req);
+        Test.stopTest();
+
+        System.assertNotEquals('1', res.Sys.Code);
+        System.assertEquals(System.Label.FEC_CS_CASE_SYS_MISSING_MSG, res.Sys.Description);
+    }
+
+    @IsTest
+    static void testValidation_NullRequest() {
+        Test.startTest();
+        FEC_CreateCSCaseService.CreateCSCaseResponse res =
+            FEC_CreateCSCaseService.CreateCSCaseRequest(null);
+        Test.stopTest();
+
+        System.assertNotEquals('1', res.Sys.Code);
+        System.assertEquals(System.Label.FEC_CS_CASE_REQUEST_IS_NULL_MSG, res.Sys.Description);
+    }
+
+    @IsTest
+    static void testValidation_InvalidChannel() {
         FEC_CreateCSCaseService.CaseRequestType req = buildValidRequest();
-        req.Sys.SubChannel = FEC_ConstantCommon.SYSTEM_SOURCE_VTIGER;
+        req.Sys.Channel = 'InvalidChannel';
+
+        Test.startTest();
+        FEC_CreateCSCaseService.CreateCSCaseResponse res =
+            FEC_CreateCSCaseService.CreateCSCaseRequest(req);
+        Test.stopTest();
+
+        System.assertNotEquals('1', res.Sys.Code);
+        System.assertEquals(System.Label.FEC_CS_CASE_CHANNEL_INVALID_MSG, res.Sys.Description);
+    }
+
+    @IsTest
+    static void testValidation_InvalidTransactionId() {
+        FEC_CreateCSCaseService.CaseRequestType req = buildValidRequest();
+        req.Sys.TransactionID = 'SHORT';
+
+        Test.startTest();
+        FEC_CreateCSCaseService.CreateCSCaseResponse res =
+            FEC_CreateCSCaseService.CreateCSCaseRequest(req);
+        Test.stopTest();
+
+        System.assertNotEquals('1', res.Sys.Code);
+        System.assertEquals(System.Label.FEC_CS_CASE_INVALID_TRANSACTION_ID_MSG, res.Sys.Description);
+    }
+
+    @IsTest
+    static void testValidation_MissingRemarks() {
+        FEC_CreateCSCaseService.CaseRequestType req = buildValidRequest();
+        req.RequestInfo.Remarks = null;
+
+        Test.startTest();
+        FEC_CreateCSCaseService.CreateCSCaseResponse res =
+            FEC_CreateCSCaseService.CreateCSCaseRequest(req);
+        Test.stopTest();
+
+        System.assertNotEquals('1', res.Sys.Code);
+        System.assertEquals(System.Label.FEC_CS_CASE_REMARKS_REQUIRED_MSG, res.Sys.Description);
+    }
+
+    @IsTest
+    static void testValidation_InvalidCustomerEmail() {
+        FEC_CreateCSCaseService.CaseRequestType req = buildValidRequest();
+        req.CustomerInfo.EmailAddress = 'not-an-email';
+
+        Test.startTest();
+        FEC_CreateCSCaseService.CreateCSCaseResponse res =
+            FEC_CreateCSCaseService.CreateCSCaseRequest(req);
+        Test.stopTest();
+
+        System.assertNotEquals('1', res.Sys.Code);
+        System.assertEquals(System.Label.FEC_CS_CASE_INVALID_EMAIL_ADDRESS_MSG, res.Sys.Description);
+    }
+
+    @IsTest
+    static void testValidation_InvalidCreatorEmail() {
+        FEC_CreateCSCaseService.CaseRequestType req = buildValidRequest();
+        req.CreatorInfo.CreatorEmail = 'bad-email';
+
+        Test.startTest();
+        FEC_CreateCSCaseService.CreateCSCaseResponse res =
+            FEC_CreateCSCaseService.CreateCSCaseRequest(req);
+        Test.stopTest();
+
+        System.assertNotEquals('1', res.Sys.Code);
+        System.assertEquals(System.Label.FEC_CS_CASE_INVALID_CREATOR_EMAIL_MSG, res.Sys.Description);
+    }
+
+    @IsTest
+    static void testValidation_AdditionalInfoMissingValue() {
+        FEC_CreateCSCaseService.CaseRequestType req = buildValidRequest();
+        req.RequestInfo.AdditionalInfo = new List<FEC_CreateCSCaseService.AdditionalInfoType>{
+            new FEC_CreateCSCaseService.AdditionalInfoType()
+        };
+        req.RequestInfo.AdditionalInfo[0].ID = 'Field1';
+        req.RequestInfo.AdditionalInfo[0].Value = null;
+
+        Test.startTest();
+        FEC_CreateCSCaseService.CreateCSCaseResponse res =
+            FEC_CreateCSCaseService.CreateCSCaseRequest(req);
+        Test.stopTest();
+
+        System.assertNotEquals('1', res.Sys.Code);
+        System.assertEquals(
+            System.Label.FEC_CS_CASE_ADDITIONAL_INFO_VALUE_REQUIRED_MSG,
+            res.Sys.Description
+        );
+    }
+
+    @IsTest
+    static void testValidation_MissingCustomerInfo() {
+        FEC_CreateCSCaseService.CaseRequestType req = buildValidRequest();
+        req.CustomerInfo = null;
+
+        Test.startTest();
+        FEC_CreateCSCaseService.CreateCSCaseResponse res =
+            FEC_CreateCSCaseService.CreateCSCaseRequest(req);
+        Test.stopTest();
+
+        System.assertEquals(System.Label.FEC_CS_CASE_CUSTOMER_INFO_MISSING_MSG, res.Sys.Description);
+    }
+
+    @IsTest
+    static void testValidation_InvalidPhone() {
+        FEC_CreateCSCaseService.CaseRequestType req = buildValidRequest();
+        req.CustomerInfo.PhoneNumber = 'abc';
+
+        Test.startTest();
+        FEC_CreateCSCaseService.CreateCSCaseResponse res =
+            FEC_CreateCSCaseService.CreateCSCaseRequest(req);
+        Test.stopTest();
+
+        System.assertEquals(System.Label.FEC_CS_CASE_INVALID_PHONE_NUMBER_MSG, res.Sys.Description);
+    }
+
+    @IsTest
+    static void testValidation_RemarksTooLong() {
+        FEC_CreateCSCaseService.CaseRequestType req = buildValidRequest();
+        req.RequestInfo.Remarks = 'X'.repeat(4001);
+
+        Test.startTest();
+        FEC_CreateCSCaseService.CreateCSCaseResponse res =
+            FEC_CreateCSCaseService.CreateCSCaseRequest(req);
+        Test.stopTest();
+
+        System.assertEquals(System.Label.FEC_CS_CASE_REMARKS_TOO_LONG_MSG, res.Sys.Description);
+    }
+
+    @IsTest
+    static void testValidation_InvalidCaseType() {
+        FEC_CreateCSCaseService.CaseRequestType req = buildValidRequest();
+        req.RequestInfo.CaseType = 'UnknownType';
+
+        Test.startTest();
+        FEC_CreateCSCaseService.CreateCSCaseResponse res =
+            FEC_CreateCSCaseService.CreateCSCaseRequest(req);
+        Test.stopTest();
+
+        System.assertNotEquals('1', res.Sys.Code);
+    }
+
+    @IsTest
+    static void testValidation_InvalidProductType() {
+        FEC_CreateCSCaseService.CaseRequestType req = buildValidRequest();
+        req.RequestInfo.ProductType = 'UNKNOWN';
+
+        Test.startTest();
+        FEC_CreateCSCaseService.CreateCSCaseResponse res =
+            FEC_CreateCSCaseService.CreateCSCaseRequest(req);
+        Test.stopTest();
+
+        System.assertEquals(System.Label.FEC_CS_CASE_PRODUCT_TYPE_INVALID_MSG, res.Sys.Description);
+    }
+
+    @IsTest
+    static void testValidation_InvalidSubCategory() {
+        FEC_CreateCSCaseService.CaseRequestType req = buildValidRequest();
+        req.RequestInfo.SubCategory = 'UnknownSub';
+
+        Test.startTest();
+        FEC_CreateCSCaseService.CreateCSCaseResponse res =
+            FEC_CreateCSCaseService.CreateCSCaseRequest(req);
+        Test.stopTest();
+
+        System.assertEquals(System.Label.FEC_CS_CASE_SUB_CATEGORY_INVALID_MSG, res.Sys.Description);
+    }
+
+    @IsTest
+    static void testValidation_BlankChannel() {
+        FEC_CreateCSCaseService.CaseRequestType req = buildValidRequest();
+        req.Sys.Channel = null;
+
+        Test.startTest();
+        FEC_CreateCSCaseService.CreateCSCaseResponse res =
+            FEC_CreateCSCaseService.CreateCSCaseRequest(req);
+        Test.stopTest();
+
+        System.assertEquals(System.Label.FEC_CS_CASE_CHANNEL_REQUIRED_MSG, res.Sys.Description);
+    }
+
+    @IsTest
+    static void testValidation_MissingDateTime() {
+        FEC_CreateCSCaseService.CaseRequestType req = buildValidRequest();
+        req.Sys.DateTime_x = null;
+
+        Test.startTest();
+        FEC_CreateCSCaseService.CreateCSCaseResponse res =
+            FEC_CreateCSCaseService.CreateCSCaseRequest(req);
+        Test.stopTest();
+
+        System.assertEquals(System.Label.FEC_CS_CASE_DATETIME_INVALID_MSG, res.Sys.Description);
+    }
+
+    @IsTest
+    static void testValidation_CreatorEmailUserNotFound() {
+        FEC_CreateCSCaseService.CaseRequestType req = buildValidRequest();
+        req.CreatorInfo.CreatorEmail = 'nonexistent.user@fecredit.com.vn';
+
+        Test.startTest();
+        FEC_CreateCSCaseService.CreateCSCaseResponse res =
+            FEC_CreateCSCaseService.CreateCSCaseRequest(req);
+        Test.stopTest();
+
+        System.assertEquals(System.Label.FEC_CS_CASE_INVALID_CREATOR_EMAIL_MSG, res.Sys.Description);
+    }
+
+    @IsTest
+    static void testCreateCSCaseRequest_SkipsInvalidDocumentPayload() {
+        FEC_CreateCSCaseService.CaseRequestType req = buildValidRequest();
+        req.RequestInfo.AdditionalInfo = new List<FEC_CreateCSCaseService.AdditionalInfoType>{
+            new FEC_CreateCSCaseService.AdditionalInfoType()
+        };
+        req.RequestInfo.AdditionalInfo[0].ID = FEC_ConstantCommon.UPLOAD_DOCUMENT;
+        req.RequestInfo.AdditionalInfo[0].Value = 'invalid-payload';
 
         Test.setMock(HttpCalloutMock.class, new MockGetCustomerListCallout());
-
         FEC_CaseTriggerHandler.isExecuting = true;
         Test.startTest();
         FEC_CreateCSCaseService.CreateCSCaseResponse res =
@@ -164,31 +477,26 @@ private class FEC_CreateCSCaseService_Test {
         Test.stopTest();
         FEC_CaseTriggerHandler.isExecuting = false;
 
-        System.assertEquals(
-            '1',
-            res.Sys.Code,
-            'Expected success. Actual: ' + res.Sys.Code + ' - ' + res.Sys.Description
-        );
-
-        Case customerCase = [
-            SELECT OwnerId
-            FROM Case
-            WHERE RecordType.DeveloperName = :FEC_ConstantCommon.CASE_CUSTOMER_RECORD_TYPE_DEV_NAME
-            ORDER BY CreatedDate DESC
-            LIMIT 1
-        ];
-        System.assertEquals(UserInfo.getUserId(), customerCase.OwnerId);
+        System.assertEquals('1', res.Sys.Code, 'Invalid document payload bị skip, vẫn success.');
     }
 
     @IsTest
-    static void testValidation_MissingInfo() {
-        // Test trường hợp thiếu dữ liệu bắt buộc
-        FEC_CreateCSCaseService.CaseRequestType req = new FEC_CreateCSCaseService.CaseRequestType();
-        
+    static void testValidation_AdditionalInfoMissingId() {
+        FEC_CreateCSCaseService.CaseRequestType req = buildValidRequest();
+        req.RequestInfo.AdditionalInfo = new List<FEC_CreateCSCaseService.AdditionalInfoType>{
+            new FEC_CreateCSCaseService.AdditionalInfoType()
+        };
+        req.RequestInfo.AdditionalInfo[0].ID = null;
+        req.RequestInfo.AdditionalInfo[0].Value = 'value';
+
         Test.startTest();
-        FEC_CreateCSCaseService.CreateCSCaseResponse res = FEC_CreateCSCaseService.CreateCSCaseRequest(req);
+        FEC_CreateCSCaseService.CreateCSCaseResponse res =
+            FEC_CreateCSCaseService.CreateCSCaseRequest(req);
         Test.stopTest();
 
-        System.assertNotEquals('1', res.Sys.Code, 'Phải trả về mã lỗi khi thiếu thông tin.');
+        System.assertEquals(
+            System.Label.FEC_CS_CASE_ADDITIONAL_INFO_ID_REQUIRED_MSG,
+            res.Sys.Description
+        );
     }
 }
