@@ -78,20 +78,23 @@ private class FEC_GetCSCaseStatusRestService_Test {
         resp.Sys.Code = 1;
         resp.Sys.Description = 'Success';
 
-        resp.CaseResultInfo = new FEC_GetCSCaseStatusService.CaseResultInfoType();
-        resp.CaseResultInfo.CaseID = '500xx0000000001';
-        resp.CaseResultInfo.CaseStatus = 'Open';
-        resp.CaseResultInfo.Remarks = 'Test remarks';
+        resp.CaseResultInfos = new List<FEC_GetCSCaseStatusService.CaseResultInfoType>();
+        FEC_GetCSCaseStatusService.CaseResultInfoType caseResult =
+            new FEC_GetCSCaseStatusService.CaseResultInfoType();
+        caseResult.CaseID = '500xx0000000001';
+        caseResult.CaseStatus = 'Open';
+        caseResult.Remarks = 'Test remarks';
 
-        resp.OriginalRequest = new FEC_GetCSCaseStatusService.OriginalRequestType();
-        resp.OriginalRequest.Sys = new FEC_GetCSCaseStatusService.SysType();
-        resp.OriginalRequest.Sys.Channel = VALID_CHANNEL;
-        resp.OriginalRequest.CustomerInfo = new FEC_GetCSCaseStatusService.CustomerInfoType();
-        resp.OriginalRequest.CustomerInfo.Name = 'Customer A';
-        resp.OriginalRequest.RequestInfo = new FEC_GetCSCaseStatusService.RequestInfoType();
-        resp.OriginalRequest.RequestInfo.CaseType = 'Complaint';
-        resp.OriginalRequest.CreatorInfo = new FEC_GetCSCaseStatusService.CreatorInfoType();
-        resp.OriginalRequest.CreatorInfo.CreatorEmail = 'user@example.com';
+        caseResult.OriginalRequest = new FEC_GetCSCaseStatusService.OriginalRequestType();
+        caseResult.OriginalRequest.Sys = new FEC_GetCSCaseStatusService.SysType();
+        caseResult.OriginalRequest.Sys.Channel = VALID_CHANNEL;
+        caseResult.OriginalRequest.CustomerInfo = new FEC_GetCSCaseStatusService.CustomerInfoType();
+        caseResult.OriginalRequest.CustomerInfo.Name = 'Customer A';
+        caseResult.OriginalRequest.RequestInfo = new FEC_GetCSCaseStatusService.RequestInfoType();
+        caseResult.OriginalRequest.RequestInfo.CaseType = 'Complaint';
+        caseResult.OriginalRequest.CreatorInfo = new FEC_GetCSCaseStatusService.CreatorInfoType();
+        caseResult.OriginalRequest.CreatorInfo.CreatorEmail = 'user@example.com';
+        resp.CaseResultInfos.add(caseResult);
 
         String xml = FEC_MyCaseSoapXml.buildGetCSCaseStatusSoapResponse(resp);
 
