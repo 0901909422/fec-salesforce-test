@@ -82,7 +82,7 @@ private class FEC_MarkNFU_Test {
                     200,
                     '<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">' +
                     '<soapenv:Body><MarkNFUResponse>' +
-                    '<Code>200</Code><Description>Success</Description>' +
+                    '<Code>0</Code><Description>Success</Description>' +
                     '</MarkNFUResponse></soapenv:Body></soapenv:Envelope>'
                 )
             );

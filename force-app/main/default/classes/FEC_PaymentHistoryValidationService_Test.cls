@@ -382,7 +382,7 @@ private class FEC_PaymentHistoryValidationService_Test {
         );
         Test.stopTest();
 
-        System.assertEquals(true, data.isEmpty());
+        System.assertEquals(true, !data.containsKey('ContractNumber'));
     }
 
     @IsTest

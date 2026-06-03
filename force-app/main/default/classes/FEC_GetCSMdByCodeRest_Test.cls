@@ -29,6 +29,14 @@ private class FEC_GetCSMdByCodeRest_Test {
 
     @TestSetup
     static void setupData() {
+        insert new FEC_Channel__c(
+            Name = FEC_ConstantCommon.KEY_VALID_CHANNELS_API,
+            FEC_Code__c = 'API',
+            FEC_Channel_ID__c = FEC_ConstantCommon.KEY_VALID_CHANNELS_API,
+            FEC_Channel_Vietnamese_name__c = 'API',
+            FEC_Channel_Status__c = true
+        );
+
         FEC_Sub_Category__c subCat = new FEC_Sub_Category__c(
             Name = 'Test SubCat REST',
             FEC_Code__c = 'SC01',

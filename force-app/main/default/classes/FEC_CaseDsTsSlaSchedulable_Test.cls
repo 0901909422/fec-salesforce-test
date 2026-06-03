@@ -24,46 +24,39 @@ private class FEC_CaseDsTsSlaSchedulable_Test {
         List<String> jobIds = FEC_CaseDsTsSlaSchedulable.scheduleEvery15Minutes();
         Test.stopTest();
 
-        System.assertEquals(4, jobIds.size(), 'Should schedule 4 jobs for :00/:15/:30/:45.');
-
-        List<CronTrigger> activeJobs = [
-            SELECT Id, CronJobDetail.Name
-            FROM CronTrigger
-            WHERE CronJobDetail.Name LIKE :('FEC Case DS/TS SLA Every 15m%')
-        ];
-        System.assertEquals(4, activeJobs.size(), 'All 4 DS/TS SLA jobs should exist.');
-
+        System.assertNotEquals(null, jobIds, 'Deprecated scheduler should return a list.');
         FEC_CaseDsTsSlaSchedulable.abortAllJobs();
 
         Integer remaining = [
             SELECT COUNT()
             FROM CronTrigger
-            WHERE CronJobDetail.Name LIKE :('FEC Case DS/TS SLA Every 15m%')
+            WHERE CronJobDetail.Name LIKE :(FEC_CaseDsTsSlaSchedulable.JOB_NAME_PREFIX + '%')
         ];
-        System.assertEquals(0, remaining, 'abortAllJobs should remove all scheduled DS/TS SLA jobs.');
+        System.assertEquals(0, remaining, 'abortAllJobs should remove scheduled DS/TS SLA jobs.');
     }
 
     @IsTest
     static void testAbortExistingByName_andEnsureScheduledInTest() {
-        List<String> jobIds = FEC_CaseDsTsSlaSchedulable.scheduleEvery15Minutes();
-        System.assertEquals(4, jobIds.size());
+        String cron = '0 15 0 1 1 ? 2099';
+        String jobName =
+            FEC_CaseDsTsSlaSchedulable.JOB_NAME_PREFIX + ':' + String.valueOf(System.now().getTime());
+        System.schedule(jobName, cron, new FEC_CaseDsTsSlaSchedulable());
 
-        // In test context this method should short-circuit and not schedule extra jobs.
         FEC_CaseDsTsSlaSchedulable.ensureScheduled();
 
         Integer beforeAbort = [
             SELECT COUNT()
             FROM CronTrigger
-            WHERE CronJobDetail.Name LIKE :('FEC Case DS/TS SLA Every 15m%')
+            WHERE CronJobDetail.Name LIKE :(FEC_CaseDsTsSlaSchedulable.JOB_NAME_PREFIX + '%')
         ];
-        System.assertEquals(4, beforeAbort);
+        System.assert(beforeAbort > 0, 'Scheduled job should exist before abort.');
 
         FEC_CaseDsTsSlaSchedulable.abortExistingByName(FEC_CaseDsTsSlaSchedulable.JOB_NAME);
 
         Integer afterAbort = [
             SELECT COUNT()
             FROM CronTrigger
-            WHERE CronJobDetail.Name LIKE :('FEC Case DS/TS SLA Every 15m%')
+            WHERE CronJobDetail.Name LIKE :(FEC_CaseDsTsSlaSchedulable.JOB_NAME_PREFIX + '%')
         ];
         System.assertEquals(0, afterAbort);
     }

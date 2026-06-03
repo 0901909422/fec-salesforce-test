@@ -3,6 +3,14 @@ private class FEC_GetCSMasterDataByCodeService_Test {
 
     @TestSetup
     static void setupData() {
+        insert new FEC_Channel__c(
+            Name = FEC_ConstantCommon.KEY_VALID_CHANNELS_API,
+            FEC_Code__c = 'API',
+            FEC_Channel_ID__c = FEC_ConstantCommon.KEY_VALID_CHANNELS_API,
+            FEC_Channel_Vietnamese_name__c = 'API',
+            FEC_Channel_Status__c = true
+        );
+
         // 1. Tạo dữ liệu Master Data
         FEC_Sub_Category__c subCat = new FEC_Sub_Category__c(
             Name = 'Test SubCat',

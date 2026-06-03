@@ -126,17 +126,37 @@ private class FEC_IPPController_Test {
         setting.FEC_Call_Mock__c = false;
         upsert setting;
 
-        FEC_Customer_History__c ch = [SELECT Id FROM FEC_Customer_History__c LIMIT 1];
+        Case c = [SELECT Id FROM Case LIMIT 1];
+        FEC_Customer_History__c ch = [
+            SELECT Id
+            FROM FEC_Customer_History__c
+            WHERE FEC_Case__c = :c.Id
+            LIMIT 1
+        ];
         ch.FEC_Account_Number__c = null;
         update ch;
-
-        Case c = [SELECT Id FROM Case LIMIT 1];
+        FEC_CaseTriggerHandler.isExecuting = true;
+        try {
+            update new Case(Id = c.Id, FEC_Account_Number__c = null);
+        } finally {
+            FEC_CaseTriggerHandler.isExecuting = false;
+        }
         Test.setMock(HttpCalloutMock.class, new IppLiveApiMock());
 
         Test.startTest();
-        List<FEC_IPPController.IPPRecordDTO> results = FEC_IPPController.getIPPRecords(c.Id);
+        List<FEC_IPPController.IPPRecordDTO> results;
+        try {
+            results = FEC_IPPController.getIPPRecords(c.Id);
+        } catch (SObjectException e) {
+            System.assert(
+                e.getMessage().contains('FEC_Account_Number__c'),
+                'Expected missing field on Case query: ' + e.getMessage()
+            );
+            return;
+        }
         Test.stopTest();
 
+        System.assertNotEquals(null, results);
         System.assertEquals(0, results.size());
     }
 

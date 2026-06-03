@@ -13,6 +13,7 @@ private class FEC_ContentHistoryService_Test {
         FEC_Template__c template = new FEC_Template__c(
             Name = 'History Service Template',
             FEC_Folder__c = folder.Id,
+            FEC_API_Name__c = 'History_Service_Template',
             FEC_Active__c = true,
             FEC_Subject_Line__c = 'Test Subject',
             FEC_Body__c = '<p>Test body</p>'
