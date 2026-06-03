@@ -1,0 +1,140 @@
+<template>
+  <lightning-modal-header label={modalTitle} icon="utility:flow"></lightning-modal-header>
+
+  <lightning-modal-body class="modal-body-custom">
+    <!-- Form Container -->
+    <div class="form-container">
+      <div class="slds-form slds-form_stacked">
+
+        <!-- Row 1: Current Stage & Action Button -->
+        <div class="form-row slds-grid slds-grid_vertical-align-center slds-gap_medium">
+          <!-- Previous Stage (Current Stage) -->
+          <div class="form-group slds-size_1-of-2">
+            <label class="slds-form-element__label">
+              <span class="required-mark">*</span> Current Stage
+            </label>
+            <div class="slds-form-element__control">
+              <select 
+                class={previousStageClass}
+                data-field-name="previousStageId"
+                value={formData.previousStageId}
+                onchange={handleInputChange}>
+                <option value="">-- Select Stage --</option>
+                <template for:each={stageOptions} for:item="stage">
+                  <option key={stage.value} value={stage.value}>{stage.label}</option>
+                </template>
+              </select>
+            </div>
+            <template if:true={errors.previousStageId}>
+              <div class="form-error">{errors.previousStageId}</div>
+            </template>
+          </div>
+
+          <!-- Action Button -->
+          <div class="form-group slds-size_1-of-2">
+            <label class="slds-form-element__label">
+              <span class="required-mark">*</span> Action Button
+            </label>
+            <div class="slds-form-element__control">
+              <select 
+                class={actionButtonClass}
+                data-field-name="actionButtonId"
+                value={formData.actionButtonId}
+                onchange={handleInputChange}>
+                <option value="">-- Select Action --</option>
+                <template for:each={actionOptions} for:item="action">
+                  <option key={action.value} value={action.value}>{action.label}</option>
+                </template>
+              </select>
+            </div>
+            <template if:true={errors.actionButtonId}>
+              <div class="form-error">{errors.actionButtonId}</div>
+            </template>
+          </div>
+        </div>
+
+        <!-- Row 2: Next Stage (Full Width) -->
+        <div class="form-group form-group-full">
+          <label class="slds-form-element__label">
+            <span class="required-mark">*</span> Next Stage
+          </label>
+          <div class="slds-form-element__control">
+            <select 
+              class={nextStageClass}
+              data-field-name="nextStageId"
+              value={formData.nextStageId}
+              onchange={handleInputChange}>
+              <option value="">-- Select Stage --</option>
+              <template for:each={stageOptions} for:item="stage">
+                <option key={stage.value} value={stage.value}>{stage.label}</option>
+              </template>
+            </select>
+          </div>
+          <template if:true={errors.nextStageId}>
+            <div class="form-error">{errors.nextStageId}</div>
+          </template>
+        </div>
+
+        <!-- Row 3: Next Queue & Team/User Group -->
+        <div class="form-row slds-grid slds-grid_vertical-align-center slds-gap_medium">
+          <!-- Next Queue -->
+          <div class="form-group slds-size_1-of-2">
+            <label class="slds-form-element__label">Next Queue</label>
+            <div class="slds-form-element__control">
+              <input 
+                type="text"
+                class="slds-input"
+                placeholder="e.g., Queue_Name"
+                data-field-name="nextQueue"
+                value={formData.nextQueue}
+                onchange={handleInputChange}/>
+            </div>
+          </div>
+
+          <!-- Team/User Group -->
+          <div class="form-group slds-size_1-of-2">
+            <label class="slds-form-element__label">Team/User Group</label>
+            <div class="slds-form-element__control">
+              <input 
+                type="text"
+                class="slds-input"
+                placeholder="e.g., Team_Name"
+                data-field-name="teamUserGroup"
+                value={formData.teamUserGroup}
+                onchange={handleInputChange}/>
+            </div>
+          </div>
+        </div>
+
+        <!-- Info Message -->
+        <div class="info-message slds-notify slds-notify_alert slds-alert_info slds-m-top_medium">
+          <lightning-icon icon-name="utility:info" size="x-small" variant="inverse" class="slds-m-right_x-small"></lightning-icon>
+          <span class="info-text">Fields marked with <span class="required-mark">*</span> are required</span>
+        </div>
+
+      </div>
+    </div>
+  </lightning-modal-body>
+
+  <lightning-modal-footer class="modal-footer-custom">
+    <div class="footer-actions">
+      <button 
+        class="slds-button slds-button_neutral"
+        onclick={handleCancel}>
+        Cancel
+      </button>
+      <button 
+        class="slds-button slds-button_brand slds-m-left_small"
+        onclick={handleSave}
+        disabled={isLoading}>
+        <template if:true={isLoading}>
+          <lightning-spinner alternative-text="Saving..." size="small" variant="brand" class="slds-m-right_x-small"></lightning-spinner>
+          Saving...
+        </template>
+        <template if:false={isLoading}>
+          {saveButtonLabel}
+        </template>
+      </button>
+    </div>
+  </lightning-modal-footer>
+</template>

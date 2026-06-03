@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
-    <fullName>FEC_Do_Not_Bother__c</fullName>
-    <description>Quy trình DNB được áp dụng</description>
-    <label>Do Not Bother</label>
+    <fullName>FEC_Remove_Phone__c</fullName>
+    <description>Quy trình Remove Phone được áp dụng</description>
+    <label>Remove Phone</label>
     <required>false</required>
     <trackHistory>true</trackHistory>
     <trackTrending>false</trackTrending>

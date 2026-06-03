@@ -6,6 +6,131 @@
 public with sharing class FEC_NatureOfCaseTreeController {
     
     // payload keys and aggregate alias moved to FEC_Constants
+
+    /**
+     * @description Lấy thông tin Nature of Case record theo Id.
+     * @param nocId Id của FEC_MDM_Nature_Of_Case__c
+     * @return Map<String, String> chứa các fields editable của NOC
+     */
+    @AuraEnabled
+    public static Map<String, String> getNocDetail(Id nocId) {
+        if (nocId == null) {
+            throw new AuraHandledException('NOC Id cannot be null.');
+        }
+        try {
+            String soql = 'SELECT Id, Name, FEC_Code__c, FEC_Customer_Type__c, '
+                + 'FEC_User_Group__c, FEC_Active__c, '
+                + 'FEC_Do_Not_Bother__c, FEC_Transfer_Call_to_Collection__c, FEC_Remove_Phone__c, '
+                + 'Process_Change_Status__c '
+                + 'FROM FEC_MDM_Nature_Of_Case__c WHERE Id = :nocId LIMIT 1';
+            List<FEC_MDM_Nature_Of_Case__c> nocs = Database.query(soql);
+            if (nocs.isEmpty()) {
+                throw new AuraHandledException('Nature of Case record not found: ' + nocId);
+            }
+            FEC_MDM_Nature_Of_Case__c noc = nocs[0];
+            Map<String, Object> populated = noc.getPopulatedFieldsAsMap();
+            Map<String, String> result = new Map<String, String>();
+            result.put('id', noc.Id);
+            result.put('name', noc.Name != null ? noc.Name : '');
+            result.put('code', noc.FEC_Code__c != null ? noc.FEC_Code__c : '');
+            result.put('customerType', noc.FEC_Customer_Type__c != null ? noc.FEC_Customer_Type__c : '');
+            result.put('userGroup', noc.FEC_User_Group__c != null ? noc.FEC_User_Group__c : '');
+            result.put('active', String.valueOf(noc.FEC_Active__c));
+            // Use dynamic access for picklist fields (compile-compatible during field type migration)
+            Object dnbVal = noc.get('FEC_Do_Not_Bother__c');
+            Object tcVal = noc.get('FEC_Transfer_Call_to_Collection__c');
+            Object rpVal = noc.get('FEC_Remove_Phone__c');
+            result.put('doNotBother', dnbVal != null ? String.valueOf(dnbVal) : 'Disabled');
+            result.put('transferCallToCollection', tcVal != null ? String.valueOf(tcVal) : 'Disabled');
+            result.put('removePhone', rpVal != null ? String.valueOf(rpVal) : 'Disabled');
+            result.put('processStatus', populated.containsKey('Process_Change_Status__c') 
+                ? (noc.Process_Change_Status__c != null ? noc.Process_Change_Status__c : '') : '');
+            return result;
+        } catch (AuraHandledException ahe) {
+            throw ahe;
+        } catch (Exception e) {
+            throw new AuraHandledException(FEC_UIConstants.ERROR_GENERIC_PREFIX + ' ' + e.getMessage());
+        }
+    }
+
+    /**
+     * @description Cập nhật các fields editable của Nature of Case record.
+     * @param nocId Id của FEC_MDM_Nature_Of_Case__c
+     * @param customerType Giá trị Customer Type mới
+     * @param userGroup Giá trị User Group mới
+     * @param roleNames Giá trị Role Names mới
+     * @param isActive Giá trị Active mới
+     */
+    @AuraEnabled
+    public static void updateNocFields(Id nocId, String customerType, String userGroup, Boolean isActive,
+            String doNotBother, String transferCallToCollection, String removePhone,
+            Id nodeId, String nodeType) {
+        if (nocId == null) {
+            throw new AuraHandledException('NOC Id cannot be null.');
+        }
+        if (!FEC_MDM_Nature_Of_Case__c.SObjectType.getDescribe().isUpdateable()) {
+            throw new AuraHandledException(FEC_UIConstants.ERROR_GENERIC_PREFIX + ' Update not allowed on Nature of Case');
+        }
+        try {
+            FEC_MDM_Nature_Of_Case__c noc = new FEC_MDM_Nature_Of_Case__c(
+                Id = nocId,
+                FEC_Customer_Type__c = customerType,
+                FEC_User_Group__c = String.isNotBlank(userGroup) ? userGroup : null,
+                FEC_Active__c = isActive != null ? isActive : false
+            );
+            // Use dynamic put for picklist fields (compile-compatible during field type migration)
+            noc.put('FEC_Do_Not_Bother__c', String.isNotBlank(doNotBother) ? doNotBother : 'Disabled');
+            noc.put('FEC_Transfer_Call_to_Collection__c', String.isNotBlank(transferCallToCollection) ? transferCallToCollection : 'Disabled');
+            noc.put('FEC_Remove_Phone__c', String.isNotBlank(removePhone) ? removePhone : 'Disabled');
+            SObjectAccessDecision decision = Security.stripInaccessible(
+                AccessType.UPDATABLE,
+                new List<FEC_MDM_Nature_Of_Case__c>{ noc }
+            );
+            update decision.getRecords();
+
+            // Cascade: Khi sửa Customer Type ở Product Type node,
+            // cập nhật tất cả NOC con cùng Product Type
+            if (String.isNotBlank(customerType)) {
+                FEC_MDM_Nature_Of_Case__c updatedNoc = [
+                    SELECT Id, FEC_Product_Type__c, FEC_Customer_Type__c
+                    FROM FEC_MDM_Nature_Of_Case__c WHERE Id = :nocId LIMIT 1
+                ];
+                if (updatedNoc.FEC_Product_Type__c != null) {
+                    List<FEC_MDM_Nature_Of_Case__c> siblings = [
+                        SELECT Id, FEC_Customer_Type__c
+                        FROM FEC_MDM_Nature_Of_Case__c
+                        WHERE FEC_Product_Type__c = :updatedNoc.FEC_Product_Type__c
+                          AND Id != :nocId
+                          AND FEC_Customer_Type__c != :customerType
+                    ];
+                    if (!siblings.isEmpty()) {
+                        for (FEC_MDM_Nature_Of_Case__c s : siblings) {
+                            s.FEC_Customer_Type__c = customerType;
+                        }
+                        SObjectAccessDecision siblingDecision = Security.stripInaccessible(
+                            AccessType.UPDATABLE, siblings
+                        );
+                        update siblingDecision.getRecords();
+                    }
+                }
+            }
+
+            // Touch the node record to trigger Process_Change_Status__c update
+            // so the tree node turns yellow after NOC-level changes
+            if (nodeId != null && String.isNotBlank(nodeType)) {
+                FEC_NatureOfCaseTreeService.touchNodeForStatusUpdate(nodeId, nodeType);
+            }
+        } catch (AuraHandledException ahe) {
+            throw ahe;
+        } catch (DmlException dml) {
+            String msg = dml.getDmlMessage(0);
+            AuraHandledException ex = new AuraHandledException(msg);
+            ex.setMessage(msg);
+            throw ex;
+        } catch (Exception e) {
+            throw new AuraHandledException(FEC_UIConstants.ERROR_GENERIC_PREFIX + ' ' + e.getMessage());
+        }
+    }
     
     @AuraEnabled
     public static Integer getNextPosOrder(String parentId, String childFieldName) {

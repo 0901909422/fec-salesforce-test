@@ -1,4 +1,5 @@
 import { LightningElement, api, track, wire } from 'lwc';
+import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import fetchAllMasterDataMappings from '@salesforce/apex/FEC_NatureOfCaseTreeService.fetchAllMasterDataMappings';
 import updateNode from '@salesforce/apex/FEC_NatureOfCaseTreeController.updateNode';
 import { showLog } from 'c/fecMDMUtils';
@@ -33,10 +34,68 @@ const NODE_CATEGORY = 'Category';
 const NODE_SUB_CATEGORY = 'Sub_Category';
 const NODE_ACTION = 'Action';
 
+const CUSTOMER_TYPE_OPTIONS = [
+    { label: 'All', value: 'All' },
+    { label: 'Existing', value: 'Existing' },
+    { label: 'Non-existing', value: 'Non-existing' }
+];
+
+// Sub-Process picklist options (Enabled / Disabled / Inherited)
+const SUB_PROCESS_OPTIONS = [
+    { label: 'Enabled', value: 'Enabled' },
+    { label: 'Disabled', value: 'Disabled' },
+    { label: 'Inherited', value: 'Inherited' }
+];
+
+// User Group options matching Global Value Set "User_Group" (same as Live object)
+const USER_GROUP_OPTIONS = [
+    { label: 'CA', value: 'CA' },
+    { label: 'CC', value: 'CC' },
+    { label: 'CL', value: 'CL' },
+    { label: 'CO', value: 'CO' },
+    { label: 'CP', value: 'CP' },
+    { label: 'CX', value: 'CX' },
+    { label: 'DS', value: 'DS' },
+    { label: 'EC', value: 'EC' },
+    { label: 'F2F', value: 'F2F' },
+    { label: 'IA', value: 'IA' },
+    { label: 'IB', value: 'IB' },
+    { label: 'IT', value: 'IT' },
+    { label: 'OB', value: 'OB' },
+    { label: 'OM', value: 'OM' },
+    { label: 'PM', value: 'PM' },
+    { label: 'QC', value: 'QC' },
+    { label: 'SP', value: 'SP' },
+    { label: 'TS', value: 'TS' }
+];
+
 export default class FecMasterDataItemDetail extends LightningElement {
     @track editedItem = {};
     @track loading = false;
     @track isDirty = false;
+
+    // ── NOC Section State ──────────────────────────────────────
+    @track nocData = {};
+    @track nocOriginal = {};
+    @track nocLoading = false;
+    nocError = null;
+    customerTypeOptions = CUSTOMER_TYPE_OPTIONS;
+    userGroupOptions = USER_GROUP_OPTIONS;
+    subProcessOptions = SUB_PROCESS_OPTIONS;
+    // Tab default
+
+    // NOC labels
+    labelSectionNodeInfo = LABEL_SECTION_NODE_INFO;
+    labelSectionNoc = LABEL_SECTION_NOC;
+    labelNocCode = LABEL_NOC_CODE;
+    labelCustomerType = LABEL_CUSTOMER_TYPE;
+    labelUserGroup = LABEL_USER_GROUP;
+    labelNocActive = LABEL_NOC_ACTIVE;
+    labelSaveNodeDetails = LABEL_BUTTON_SAVE_NODE_DETAILS;
+    labelSubProcesses = LABEL_SUB_PROCESSES;
+    labelDoNotBother = LABEL_DO_NOT_BOTHER;
+    labelTransferCall = LABEL_TRANSFER_CALL;
+    labelRemovePhone = LABEL_REMOVE_PHONE;
 
     // ==========================================================
     // KHỐI CODE BỔ SUNG CHO HISTORY
@@ -426,6 +485,85 @@ export default class FecMasterDataItemDetail extends LightningElement {
         return label || nodeType;
     }
 
+    // ── NOC Data Methods ──────────────────────────────────────
+    async loadNocData() {
+        const nocId = this._item?.id;
+        if (!nocId) {
+            this.nocData = {};
+            this.nocOriginal = {};
+            return;
+        }
+        this.nocLoading = true;
+        this.nocError = null;
+        try {
+            const result = await getNocDetail({ nocId });
+            this.nocData = {
+                ...result,
+                active: result.active === 'true',
+                doNotBother: result.doNotBother || 'Disabled',
+                transferCallToCollection: result.transferCallToCollection || 'Disabled',
+                removePhone: result.removePhone || 'Disabled'
+            };
+            this.nocOriginal = JSON.parse(JSON.stringify(this.nocData));
+        } catch (error) {
+            this.nocError = error;
+            this.nocData = {};
+            this.nocOriginal = {};
+            console.error('[loadNocData] ERROR:', error);
+            this.showToast(LABEL_ERROR, LABEL_ERROR_LOAD_NOC, VARIANT_ERROR);
+        } finally {
+            this.nocLoading = false;
+        }
+    }
+
+    handleNocInputChange(event) {
+        const field = event.target.dataset.nocField;
+        let value;
+        if (event.target.type === 'checkbox' || event.target.type === 'toggle') {
+            value = event.target.checked;
+        } else if (field === 'userGroup') {
+            // dual-listbox returns array — join with semicolon to match Salesforce multi-select format
+            value = event.detail.value.join(';');
+        } else {
+            // combobox and other inputs use event.detail.value
+            value = event.detail.value;
+        }
+
+        this.nocData = { ...this.nocData, [field]: value };
+
+        // Dispatch buffer change so parent tracks NOC dirty state too
+        this.dispatchEvent(new CustomEvent('nodebufferchange', {
+            detail: { ...this.editedItem, _nocData: this.nocData },
+            bubbles: true,
+            composed: true
+        }));
+    }
+
+    /**
+     * @description Save NOC fields independently (called by Save All flow from parent)
+     */
+    @api
+    async saveNocFields() {
+        if (!this.isNocDirty || !this.nocData.id) return;
+        try {
+            await updateNocFields({
+                nocId: this.nocData.id,
+                customerType: this.nocData.customerType || '',
+                userGroup: this.nocData.userGroup || '',
+                isActive: this.nocData.active,
+                doNotBother: this.nocData.doNotBother,
+                transferCallToCollection: this.nocData.transferCallToCollection,
+                removePhone: this.nocData.removePhone,
+                nodeId: this.editedItem?.idType || null,
+                nodeType: this.editedItem?.type || null
+            });
+            // Update original to match saved state
+            this.nocOriginal = JSON.parse(JSON.stringify(this.nocData));
+        } catch (error) {
+            throw error; // Let parent handle the error
+        }
+    }
+
     handleRefresh() {
         // 1. Tự Component Con khôi phục về bản gốc (A1)
         this.editedItem = JSON.parse(JSON.stringify(this._originalItem));
@@ -477,13 +615,6 @@ export default class FecMasterDataItemDetail extends LightningElement {
     }
 
     showToast(title, message, variant) {
-        // Tái sử dụng CustomEvent nếu bạn dùng showToast ở các component cha, 
-        // hoặc import ShowToastEvent nếu muốn dùng Toast gốc.
-        const event = new CustomEvent('showtoast', {
-            detail: { title, message, variant },
-            bubbles: true,
-            composed: true
-        });
-        this.dispatchEvent(event);
+        this.dispatchEvent(new ShowToastEvent({ title, message, variant }));
     }
 }

@@ -1,17 +1,9 @@
 <template>
     <lightning-card title={labelTitle} icon-name="standard:record_lookup">
         <div slot="actions">
-            <lightning-button-group>
-                <lightning-button label={labelRefresh} icon-name="utility:refresh" onclick={handleRefresh}
-                    variant="neutral">
-                </lightning-button>
-                <lightning-button label={labelReset} variant="brand" icon-name="utility:sync"
-                    onclick={handleSyncDataToMDM} loading={isSyncing} disabled={isSyncing}>
-                </lightning-button>
-                <lightning-button label={labelPush} variant="brand" icon-name="utility:upload"
-                    onclick={handlePushToLive} disabled={isSyncing}>
-                </lightning-button>
-            </lightning-button-group>
+            <lightning-button label={labelRefresh} icon-name="utility:refresh" onclick={handleRefresh}
+                variant="neutral">
+            </lightning-button>
         </div>
         <div class="slds-p-around_small">
             <lightning-tabset variant="scoped">

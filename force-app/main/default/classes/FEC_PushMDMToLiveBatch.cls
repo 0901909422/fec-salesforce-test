@@ -436,6 +436,12 @@ public with sharing class FEC_PushMDMToLiveBatch implements Database.Batchable<S
             if (OBJECTS_WITH_LOOKUP_REMAPPING.contains(mdmObjName)) {
                 buildLookupRemapMaps(mdmObjName, mdmRecords, targetFields, lookupRemapMaps, gd);
             }
+
+            // Build text-typed Id remap (e.g. FEC_Decision_Rule__c.FEC_Key_ID__c)
+            Map<String, Map<Id, Id>> textIdRemapMaps = new Map<String, Map<Id, Id>>();
+            if (FEC_MDMBatchConfig.OBJECTS_WITH_TEXT_ID_REMAPPING.contains(mdmObjName)) {
+                textIdRemapMaps = buildTextIdRemapMaps(mdmObjName, mdmRecords, gd);
+            }
             
             // STEP 4: Split NEW vs UPDATE
             List<SObject> mdmNew    = new List<SObject>();
@@ -450,8 +456,8 @@ public with sharing class FEC_PushMDMToLiveBatch implements Database.Batchable<S
             }
             
             // STEP 5: Prepare records for UPSERT
-            List<SObject> insertList = buildTargetList(mdmNew, mdmObjName, targetObjName, filteredFieldMap, lookupRemapMaps, gd);
-            List<SObject> updateList = buildTargetList(mdmUpdate, mdmObjName, targetObjName, filteredFieldMap, lookupRemapMaps, gd);
+            List<SObject> insertList = buildTargetList(mdmNew, mdmObjName, targetObjName, filteredFieldMap, lookupRemapMaps, textIdRemapMaps, gd);
+            List<SObject> updateList = buildTargetList(mdmUpdate, mdmObjName, targetObjName, filteredFieldMap, lookupRemapMaps, textIdRemapMaps, gd);
             
             Schema.SObjectField extIdField = targetFields.get(FIELD_CODE);
             
@@ -513,6 +519,7 @@ public with sharing class FEC_PushMDMToLiveBatch implements Database.Batchable<S
     private List<SObject> buildTargetList(
         List<SObject> mdmRecords, String mdmObjName, String targetObjName,
     Map<String, String> filteredFieldMap, Map<String, Map<Id, Id>> lookupRemapMaps,
+    Map<String, Map<Id, Id>> textIdRemapMaps,
     Map<String, Schema.SObjectType> gd
     ) {
         List<SObject> targetList = new List<SObject>();
@@ -544,6 +551,11 @@ public with sharing class FEC_PushMDMToLiveBatch implements Database.Batchable<S
             // Remap lookup fields
             if (OBJECTS_WITH_LOOKUP_REMAPPING.contains(mdmObjName)) {
                 remapLookupFields(mdm, target, lookupRemapMaps, mdmObjName);
+            }
+
+            // Remap text-typed Id fields (FEC_Key_ID__c etc.)
+            if (FEC_MDMBatchConfig.OBJECTS_WITH_TEXT_ID_REMAPPING.contains(mdmObjName)) {
+                remapTextIdFields(mdm, target, mdmObjName, textIdRemapMaps);
             }
             
             targetList.add(target);
@@ -629,6 +641,83 @@ public with sharing class FEC_PushMDMToLiveBatch implements Database.Batchable<S
                 target.put(srcLookupField, remapMap.get(mdmId));
             }
         }
+    }
+
+    /**
+     * Remap text-typed ID fields (e.g. FEC_Key_ID__c) from MDM record Ids to
+     * the corresponding Live record Ids by matching FEC_Code__c.
+     */
+    private void remapTextIdFields(SObject mdm, SObject target, String mdmObjName,
+        Map<String, Map<Id, Id>> textIdRemapMaps) {
+
+        Map<String, String> textFields = FEC_MDMBatchConfig.TEXT_ID_REMAP_FIELDS.get(mdmObjName);
+        if (textFields == null || textFields.isEmpty()) return;
+
+        for (String fieldName : textFields.keySet()) {
+            String rawValue = (String) mdm.get(fieldName);
+            if (String.isBlank(rawValue)) continue;
+            try {
+                Id mdmId = (Id) rawValue;
+                Map<Id, Id> remapMap = textIdRemapMaps.get(fieldName);
+                if (remapMap != null && remapMap.containsKey(mdmId)) {
+                    target.put(fieldName, String.valueOf(remapMap.get(mdmId)));
+                }
+            } catch (Exception ignored) {
+                // Value is not a valid Id — leave as-is
+            }
+        }
+    }
+
+    /**
+     * Build a map: textFieldName → (mdmRefId → liveRefId) for all text-typed
+     * Id fields on this object, by matching FEC_Code__c between MDM and Live.
+     */
+    private Map<String, Map<Id, Id>> buildTextIdRemapMaps(String mdmObjName,
+        List<SObject> mdmRecords, Map<String, Schema.SObjectType> gd) {
+
+        Map<String, Map<Id, Id>> result = new Map<String, Map<Id, Id>>();
+        Map<String, String> textFields = FEC_MDMBatchConfig.TEXT_ID_REMAP_FIELDS.get(mdmObjName);
+        if (textFields == null || textFields.isEmpty()) return result;
+
+        for (String fieldName : textFields.keySet()) {
+            String mdmRefObj = textFields.get(fieldName);
+            String liveRefObj = FEC_MDMBatchConfig.MDM_TO_LIVE_MAP.get(mdmRefObj);
+            if (liveRefObj == null || !gd.containsKey(mdmRefObj) || !gd.containsKey(liveRefObj)) {
+                result.put(fieldName, new Map<Id, Id>());
+                continue;
+            }
+            // Collect all referenced Ids from MDM records
+            Set<Id> referencedIds = new Set<Id>();
+            for (SObject m : mdmRecords) {
+                String raw = (String) m.get(fieldName);
+                if (String.isBlank(raw)) continue;
+                try { referencedIds.add((Id) raw); } catch (Exception ignored) {}
+            }
+            if (referencedIds.isEmpty()) {
+                result.put(fieldName, new Map<Id, Id>());
+                continue;
+            }
+            // Map MDM Id → Code → Live Id
+            Map<Id, String> mdmIdToCode = new Map<Id, String>();
+            for (SObject r : Database.query(
+                'SELECT Id, ' + FEC_MDMBatchConfig.FIELD_CODE + ' FROM ' + mdmRefObj + ' WHERE Id IN :referencedIds')) {
+                String code = (String) r.get(FEC_MDMBatchConfig.FIELD_CODE);
+                if (String.isNotBlank(code)) mdmIdToCode.put(r.Id, code);
+            }
+            Map<String, Id> codeToLiveId = new Map<String, Id>();
+            for (SObject r : Database.query(
+                'SELECT Id, ' + FEC_MDMBatchConfig.FIELD_CODE + ' FROM ' + liveRefObj)) {
+                String code = (String) r.get(FEC_MDMBatchConfig.FIELD_CODE);
+                if (String.isNotBlank(code)) codeToLiveId.put(code, r.Id);
+            }
+            Map<Id, Id> idMap = new Map<Id, Id>();
+            for (Id mdmId : mdmIdToCode.keySet()) {
+                Id liveId = codeToLiveId.get(mdmIdToCode.get(mdmId));
+                if (liveId != null) idMap.put(mdmId, liveId);
+            }
+            result.put(fieldName, idMap);
+        }
+        return result;
     }
     
     /**
@@ -729,7 +818,19 @@ public with sharing class FEC_PushMDMToLiveBatch implements Database.Batchable<S
                 System.debug('[finish] Lỗi khi gửi mail: ' + ex.getMessage());
             }
         }
-        
+
+        // 6. Chain Sync (Live → MDM) để đồng bộ ngược các thay đổi
+        //    do Live trigger (e.g. inheritance handler) tạo ra sau khi push.
+        //    Skip khi đang chạy test hoặc khi push batch failed để tránh sync data lỗi.
+        if (!Test.isRunningTest() && batchStatus != 'Failed') {
+            try {
+                Id syncJobId = Database.executeBatch(new FEC_SyncMasterDataBatch(), 1);
+                System.debug('[finish] Chained FEC_SyncMasterDataBatch jobId=' + syncJobId);
+            } catch (Exception ex) {
+                System.debug('[finish] Lỗi khi chain Sync batch: ' + ex.getMessage());
+            }
+        }
+
         System.debug('[finish] RETURN: ' + batchStatus);
     }
 }

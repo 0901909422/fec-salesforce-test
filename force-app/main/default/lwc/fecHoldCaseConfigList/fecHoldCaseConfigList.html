@@ -1,0 +1,327 @@
+<template>
+    <template if:false={hasNocId}>
+        <div class="slds-align_absolute-center slds-p-around_large">
+            <p class="slds-text-color_weak">{labelNoNode}</p>
+        </div>
+    </template>
+
+    <template if:true={hasNocId}>
+        <div class="slds-is-relative">
+            <template if:true={isLoading}>
+                <lightning-spinner alternative-text="Loading..." size="medium"></lightning-spinner>
+            </template>
+
+            <!-- ═══ EMPTY STATE ═══ -->
+            <template if:true={showEmptyState}>
+                <div class="slds-align_absolute-center slds-p-around_large">
+                    <div class="slds-text-align_center">
+                        <p class="slds-text-color_weak slds-m-bottom_medium">No Hold Case configuration for this node.</p>
+                        <lightning-button label="Add Hold Case" variant="brand"
+                            icon-name="utility:add" onclick={handleNew}></lightning-button>
+                    </div>
+                </div>
+            </template>
+
+            <!-- ═══ VIEW MODE ═══ -->
+            <template if:true={isViewing}>
+                <div class="slds-p-around_medium">
+                    <!-- Header: Name + Actions -->
+                    <div class="slds-page-header slds-page-header_record-home slds-m-bottom_small">
+                        <div class="slds-page-header__row">
+                            <div class="slds-page-header__col-title">
+                                <div class="slds-media">
+                                    <div class="slds-media__figure">
+                                        <lightning-icon icon-name="standard:record" size="small"></lightning-icon>
+                                    </div>
+                                    <div class="slds-media__body">
+                                        <p class="slds-page-header__name-meta">Hold Case Config</p>
+                                        <h1 class="slds-page-header__title">{formData.Name}</h1>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="slds-page-header__col-actions">
+                                <div class="slds-page-header__actions">
+                                    <template if:true={canDelete}>
+                                        <lightning-button label={labelDelete} variant="destructive-text"
+                                            icon-name="utility:delete" onclick={handleDelete}></lightning-button>
+                                    </template>
+                                    <lightning-button label={labelEdit} variant="brand" icon-name="utility:edit"
+                                        onclick={handleEditFromView} class="slds-m-left_x-small"></lightning-button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Detail Card -->
+                    <div class="slds-box slds-theme_default slds-p-around_medium">
+                        <!-- Row 1: Type / Status / Process Status (3 equal columns) -->
+                        <div class="slds-grid slds-gutters_small slds-m-bottom_small">
+                            <div class="slds-col slds-size_1-of-3">
+                                <p class="slds-text-title_caps slds-text-color_weak slds-m-bottom_xx-small">{labelHoldCaseType}</p>
+                                <p class="slds-text-body_regular"><strong>{formData.Hold_Case_Type__c}</strong></p>
+                            </div>
+                            <div class="slds-col slds-size_1-of-3">
+                                <p class="slds-text-title_caps slds-text-color_weak slds-m-bottom_xx-small">{labelStatus}</p>
+                                <lightning-badge label={activeDisplay} icon-name="utility:check"></lightning-badge>
+                            </div>
+                            <div class="slds-col slds-size_1-of-3">
+                                <p class="slds-text-title_caps slds-text-color_weak slds-m-bottom_xx-small">Process Change Status</p>
+                                <lightning-badge label={processChangeStatusDisplay}></lightning-badge>
+                            </div>
+                        </div>
+
+                        <!-- Row 2: Channel (full width) -->
+                        <div class="slds-m-bottom_small slds-border_top slds-p-top_small">
+                            <p class="slds-text-title_caps slds-text-color_weak slds-m-bottom_xx-small">{labelChannel}</p>
+                            <template if:true={hasSelectedChannels}>
+                                <template for:each={selectedChannels} for:item="ch">
+                                    <lightning-badge key={ch} label={ch} class="slds-m-right_xx-small slds-m-bottom_xx-small"></lightning-badge>
+                                </template>
+                            </template>
+                            <template if:false={hasSelectedChannels}><p class="slds-text-color_weak">—</p></template>
+                        </div>
+
+                        <!-- Row 3: Auto mode fields (3 equal columns) -->
+                        <template if:true={isAuto}>
+                            <div class="slds-grid slds-gutters_small slds-border_top slds-p-top_small">
+                                <div class="slds-col slds-size_1-of-3">
+                                    <p class="slds-text-title_caps slds-text-color_weak slds-m-bottom_xx-small">{labelNfuCode}</p>
+                                    <p class="slds-text-body_regular">{formData.FEC_NFU_Code__c}</p>
+                                </div>
+                                <div class="slds-col slds-size_1-of-3">
+                                    <p class="slds-text-title_caps slds-text-color_weak slds-m-bottom_xx-small">{labelCurrentStatus}</p>
+                                    <p class="slds-text-body_regular">{formData.FEC_Current_Status__c}</p>
+                                </div>
+                                <div class="slds-col slds-size_1-of-3">
+                                    <p class="slds-text-title_caps slds-text-color_weak slds-m-bottom_xx-small">{labelChangedStatus}</p>
+                                    <p class="slds-text-body_regular">{formData.FEC_Changed_Status__c}</p>
+                                </div>
+                            </div>
+                        </template>
+
+                        <!-- Row 3: Manual mode - NFU Codes table (full width) -->
+                        <template if:true={isManual}>
+                            <div class="slds-border_top slds-p-top_small">
+                                <p class="slds-text-title_caps slds-text-color_weak slds-m-bottom_x-small">{labelNfuCodes}</p>
+                                <template if:true={hasSelectedNfu}>
+                                    <table class="slds-table slds-table_cell-buffer slds-table_bordered slds-no-row-hover slds-table_fixed-layout">
+                                        <thead>
+                                            <tr class="slds-line-height_reset">
+                                                <th scope="col" style="width:40%"><div class="slds-truncate">{labelNfuCode}</div></th>
+                                                <th scope="col" style="width:60%"><div class="slds-truncate">{labelNfuReason}</div></th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <template for:each={selectedNfuCodes} for:item="nfu">
+                                                <tr key={nfu.code}>
+                                                    <td><div class="slds-truncate">{nfu.code}</div></td>
+                                                    <td><div class="slds-truncate">{nfu.reasonVN}</div></td>
+                                                </tr>
+                                            </template>
+                                        </tbody>
+                                    </table>
+                                </template>
+                                <template if:false={hasSelectedNfu}><p class="slds-text-color_weak">—</p></template>
+                            </div>
+                        </template>
+                    </div>
+
+                    <!-- History Section -->
+                    <template if:true={editRecordId}>
+                        <details class="slds-m-top_medium slds-box slds-theme_default">
+                            <summary class="slds-p-around_small" style="cursor:pointer; font-weight:600">
+                                {labelHistorySection}
+                            </summary>
+                            <div class="slds-p-horizontal_small slds-p-bottom_small">
+                                <c-fec-config-history
+                                    data-id="holdCaseHistory"
+                                    object-api-name="FEC_MDM_Hold_Case_Config__c"
+                                    record-id={editRecordId}>
+                                </c-fec-config-history>
+                            </div>
+                        </details>
+                    </template>
+                </div>
+            </template>
+
+            <!-- ═══ EDIT FORM ═══ -->
+            <template if:true={isEditing}>
+                <div class="slds-p-around_medium">
+
+                    <div class="slds-grid slds-wrap slds-gutters_small">
+                        <div class="slds-col slds-size_1-of-2 slds-p-bottom_small">
+                            <lightning-combobox label={labelHoldCaseType}
+                                value={formData.Hold_Case_Type__c}
+                                options={holdCaseTypeOptions} data-field="Hold_Case_Type__c"
+                                onchange={handleFormChange} required
+                                message-when-value-missing="Complete this field."></lightning-combobox>
+                        </div>
+                        <div class="slds-col slds-size_1-of-2 slds-p-bottom_small slds-p-top_large">
+                            <lightning-input type="checkbox" label={labelStatus}
+                                checked={formData.FEC_Active__c}
+                                data-field="FEC_Active__c" onchange={handleFormChange}></lightning-input>
+                        </div>
+
+                        <!-- Channel search + pills -->
+                        <div class="slds-col slds-size_1-of-1 slds-p-bottom_small">
+                            <label class="slds-form-element__label">{labelChannelRequired}</label>
+                            <div class="slds-combobox_container slds-is-relative">
+                                <lightning-input type="search" placeholder={labelSearchChannel}
+                                    value={channelSearchTerm} onchange={handleChannelSearch}
+                                    onfocus={handleChannelFocus} onblur={handleChannelBlur}
+                                    variant="label-hidden"></lightning-input>
+                                <template if:true={isChannelDropdownOpen}>
+                                    <div class="slds-dropdown slds-dropdown_length-5 slds-dropdown_fluid"
+                                        style="position:absolute; z-index:9001; max-height:200px; overflow-y:auto; width:100%">
+                                        <ul class="slds-listbox slds-listbox_vertical" role="listbox">
+                                            <template for:each={filteredChannelOptions} for:item="opt">
+                                                <li key={opt.value} role="option" class="slds-listbox__item"
+                                                    data-value={opt.value} onmousedown={handleSelectChannel}>
+                                                    <div class="slds-media slds-listbox__option slds-listbox__option_plain slds-media_small"
+                                                        style="padding:8px 12px; cursor:pointer">
+                                                        <span class="slds-truncate">{opt.label}</span>
+                                                    </div>
+                                                </li>
+                                            </template>
+                                        </ul>
+                                    </div>
+                                </template>
+                            </div>
+                            <template if:true={hasSelectedChannels}>
+                                <div class="slds-m-top_xx-small">
+                                    <template for:each={selectedChannels} for:item="ch">
+                                        <lightning-pill key={ch} label={ch} name={ch}
+                                            onremove={handleRemoveChannel}
+                                            class="slds-m-right_xx-small slds-m-bottom_xx-small"></lightning-pill>
+                                    </template>
+                                </div>
+                            </template>
+                        </div>
+
+                        <!-- Auto mode -->
+                        <template if:true={isAuto}>
+                            <div class="slds-col slds-size_1-of-2 slds-p-bottom_small">
+                                <lightning-combobox label={labelNfuCode}
+                                    value={formData.FEC_NFU_Code__c} options={nfuOptions}
+                                    data-field="FEC_NFU_Code__c" onchange={handleFormChange}
+                                    placeholder="Select..." required
+                                    message-when-value-missing="Complete this field."></lightning-combobox>
+                            </div>
+                            <div class="slds-col slds-size_1-of-2 slds-p-bottom_small"></div>
+                            <div class="slds-col slds-size_1-of-2 slds-p-bottom_small">
+                                <lightning-combobox label={labelCurrentStatus}
+                                    value={formData.FEC_Current_Status__c}
+                                    options={caseStatusOptions} data-field="FEC_Current_Status__c"
+                                    onchange={handleFormChange} placeholder="Select..." required
+                                    message-when-value-missing="Complete this field."></lightning-combobox>
+                            </div>
+                            <div class="slds-col slds-size_1-of-2 slds-p-bottom_small">
+                                <lightning-combobox label={labelChangedStatus}
+                                    value={formData.FEC_Changed_Status__c}
+                                    options={caseStatusOptions} data-field="FEC_Changed_Status__c"
+                                    onchange={handleFormChange} placeholder="Select..." required
+                                    message-when-value-missing="Complete this field."></lightning-combobox>
+                            </div>
+                        </template>
+
+                        <!-- Manual mode -->
+                        <template if:true={isManual}>
+                            <div class="slds-col slds-size_1-of-1 slds-p-bottom_small">
+                                <div class="slds-grid slds-grid_align-spread slds-m-bottom_x-small">
+                                    <span class="slds-text-title_caps slds-text-color_weak">{labelNfuCodes}</span>
+                                    <lightning-button label={labelAddNfuButton} variant="base"
+                                        onclick={handleOpenNfuModal}></lightning-button>
+                                </div>
+                                <template if:true={hasSelectedNfu}>
+                                    <table class="slds-table slds-table_cell-buffer slds-table_bordered slds-no-row-hover">
+                                        <thead><tr><th>{labelNfuCode}</th><th>{labelNfuReason}</th><th style="width:50px"></th></tr></thead>
+                                        <tbody>
+                                            <template for:each={selectedNfuCodes} for:item="nfu">
+                                                <tr key={nfu.code}>
+                                                    <td>{nfu.code}</td><td>{nfu.reasonVN}</td>
+                                                    <td><lightning-button-icon icon-name="utility:close"
+                                                        data-code={nfu.code} onclick={handleRemoveNfu}
+                                                        variant="bare" size="small"></lightning-button-icon></td>
+                                                </tr>
+                                            </template>
+                                        </tbody>
+                                    </table>
+                                </template>
+                                <template if:false={hasSelectedNfu}>
+                                    <p class="slds-text-color_weak slds-text-align_center slds-p-around_small">{labelNoNfuAdded}</p>
+                                </template>
+                            </div>
+                        </template>
+                    </div>
+
+                    <div class="slds-grid slds-grid_align-center slds-m-top_medium">
+                        <lightning-button label={labelDiscard} variant="neutral" onclick={handleDiscard}
+                            class="slds-m-right_small"></lightning-button>
+                        <lightning-button label={labelSave} variant="brand" onclick={handleSave}></lightning-button>
+                    </div>
+
+                    <!-- History Section (edit mode) -->
+                    <template if:true={editRecordId}>
+                        <details class="slds-m-top_medium slds-box slds-theme_default">
+                            <summary class="slds-p-around_small" style="cursor:pointer; font-weight:600">
+                                {labelHistorySection}
+                            </summary>
+                            <div class="slds-p-horizontal_small slds-p-bottom_small">
+                                <c-fec-config-history
+                                    data-id="holdCaseHistoryEdit"
+                                    object-api-name="FEC_MDM_Hold_Case_Config__c"
+                                    record-id={editRecordId}>
+                                </c-fec-config-history>
+                            </div>
+                        </details>
+                    </template>
+                </div>
+            </template>
+        </div>
+    </template>
+
+    <!-- ═══ NFU CODE PICKER MODAL (with checkboxes) ═══ -->
+    <template if:true={isNfuModalOpen}>
+        <section role="dialog" tabindex="-1" aria-modal="true" class="slds-modal slds-fade-in-open slds-modal_medium">
+            <div class="slds-modal__container">
+                <header class="slds-modal__header">
+                    <button class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse"
+                        onclick={handleCloseNfuModal}>
+                        <lightning-icon icon-name="utility:close" variant="inverse" size="small"></lightning-icon>
+                    </button>
+                    <h2 class="slds-modal__title">{labelNfuModalTitle}</h2>
+                </header>
+                <div class="slds-modal__content slds-p-around_medium" style="max-height:400px; overflow-y:auto">
+                    <table class="slds-table slds-table_cell-buffer slds-table_bordered slds-table_fixed-layout">
+                        <thead>
+                            <tr>
+                                <th scope="col" style="width:50px; padding-right:0"></th>
+                                <th scope="col" style="width:30%; padding-left:12px">{labelNfuCode}</th>
+                                <th scope="col">{labelNfuReason}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <template for:each={nfuCodesWithSelection} for:item="nfu">
+                                <tr key={nfu.code} data-code={nfu.code} onclick={handleSelectNfu}
+                                    class="slds-hint-parent" style="cursor:pointer">
+                                    <td style="width:50px; padding-right:0; vertical-align:middle">
+                                        <input type="checkbox" checked={nfu.isSelected}
+                                            style="pointer-events:none; width:16px; height:16px">
+                                    </td>
+                                    <td style="padding-left:12px">{nfu.code}</td>
+                                    <td>{nfu.reasonVN}</td>
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table>
+                </div>
+                <footer class="slds-modal__footer">
+                    <lightning-button label={labelCancel} variant="neutral" onclick={handleCloseNfuModal}
+                        class="slds-m-right_small"></lightning-button>
+                    <lightning-button label={labelConfirm} variant="brand" onclick={handleConfirmNfu}></lightning-button>
+                </footer>
+            </div>
+        </section>
+        <div class="slds-backdrop slds-backdrop_open"></div>
+    </template>
+</template>

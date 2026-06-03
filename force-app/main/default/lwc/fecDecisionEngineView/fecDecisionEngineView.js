@@ -157,7 +157,7 @@ export default class FecDecisionEngineView extends LightningElement {
                 this.transformToDecisionTable(result);
             })
             .catch(err => {
-                this.error = err.body?.message || err.message || 'Có lỗi khi tải Decision Table';
+                this.error = err.body?.message || err.message || 'Error loading Decision Table';
                 this._clearData();
             })
             .finally(() => {
@@ -605,7 +605,7 @@ export default class FecDecisionEngineView extends LightningElement {
                 this.showAddColModal = true;
             })
             .catch(err => {
-                this.showToast('Lỗi', err.body?.message || err.message || 'Không thể tải danh sách fields', 'error');
+                this.showToast('Error', err.body?.message || err.message || 'Cannot load fields list', 'error');
             })
             .finally(() => {
                 this.isLoading = false;
@@ -741,7 +741,7 @@ export default class FecDecisionEngineView extends LightningElement {
 
     _confirmAddConditionCol() {
         if (!this.selectedNewColFieldId) {
-            this.showToast('Lỗi', 'Vui lòng chọn một field', 'error');
+            this.showToast('Error', 'Please select a field', 'error');
             return;
         }
 
@@ -908,8 +908,8 @@ export default class FecDecisionEngineView extends LightningElement {
         };
 
         saveRuleWithConditions({ ruleData: JSON.stringify(payload) })
-            .then(() => { this.loadDecisionTable(); })
-            .catch(err => { this.isLoading = false; this.showToast('Lỗi', err.body?.message || err.message || 'Không thể lưu cột mới', 'error'); });
+            .then(() => { this.loadDecisionTable(); this._notifyDataChanged(); })
+            .catch(err => { this.isLoading = false; this.showToast('Error', err.body?.message || err.message || 'Cannot save new column', 'error'); });
     }
 
     _confirmAddActionCol() {
@@ -1021,8 +1021,8 @@ export default class FecDecisionEngineView extends LightningElement {
         };
 
         saveRuleWithConditions({ ruleData: JSON.stringify(payload) })
-            .then(() => { this.loadDecisionTable(); })
-            .catch(err => { this.isLoading = false; this.showToast('Lỗi', err.body?.message || err.message || 'Không thể lưu cột mới', 'error'); });
+            .then(() => { this.loadDecisionTable(); this._notifyDataChanged(); })
+            .catch(err => { this.isLoading = false; this.showToast('Error', err.body?.message || err.message || 'Cannot save new column', 'error'); });
     }
 
     _getConditionInsertIndex() {
@@ -1067,9 +1067,9 @@ export default class FecDecisionEngineView extends LightningElement {
         if (!this.selectedColKey) return;
 
         const confirmed = await LightningConfirm.open({
-            message: 'Xóa cột sẽ xóa tất cả điều kiện liên quan trên mọi dòng. Tiếp tục?',
+            message: 'Deleting this column will remove all related conditions on every row. Continue?',
             variant: 'header',
-            label: 'Xác nhận xóa cột',
+            label: 'Confirm Delete Column',
             theme: 'warning'
         });
         if (!confirmed) return;
@@ -1080,7 +1080,7 @@ export default class FecDecisionEngineView extends LightningElement {
             this.dynamicActionColumns = this.dynamicActionColumns.filter(c => c.key !== this.selectedColKey);
             this.selectedColKey = null;
             this.selectedColGroup = null;
-            this.showToast('Thành công', 'Đã xóa cột action', 'success');
+            this.showToast('Success', 'Đã xóa cột action', 'success');
             return;
         }
 
@@ -1095,13 +1095,13 @@ export default class FecDecisionEngineView extends LightningElement {
                 tableKey: this.tableKey
             })
                 .then(() => {
-                    this.showToast('Thành công', 'Đã xóa cột', 'success');
+                    this.showToast('Success', 'Đã xóa cột', 'success');
                     this.selectedColKey = null;
                     this.selectedColGroup = null;
                     this.loadDecisionTable();
                 })
                 .catch(err => {
-                    this.showToast('Lỗi', err.body?.message || err.message || 'Không thể xóa cột', 'error');
+                    this.showToast('Error', err.body?.message || err.message || 'Không thể xóa cột', 'error');
                 })
                 .finally(() => { this.isLoading = false; });
             return;
@@ -1117,13 +1117,13 @@ export default class FecDecisionEngineView extends LightningElement {
                 tableKey: this.tableKey
             })
                 .then(() => {
-                    this.showToast('Thành công', 'Đã xóa cột', 'success');
+                    this.showToast('Success', 'Đã xóa cột', 'success');
                     this.selectedColKey = null;
                     this.selectedColGroup = null;
                     this.loadDecisionTable();
                 })
                 .catch(err => {
-                    this.showToast('Lỗi', err.body?.message || err.message || 'Không thể xóa cột', 'error');
+                    this.showToast('Error', err.body?.message || err.message || 'Không thể xóa cột', 'error');
                 })
                 .finally(() => { this.isLoading = false; });
             return;
@@ -1139,13 +1139,13 @@ export default class FecDecisionEngineView extends LightningElement {
             tableKey: this.tableKey
         })
             .then(() => {
-                this.showToast('Thành công', 'Đã xóa cột điều kiện', 'success');
+                this.showToast('Success', 'Đã xóa cột điều kiện', 'success');
                 this.selectedColKey = null;
                 this.selectedColGroup = null;
                 this.loadDecisionTable();
             })
             .catch(err => {
-                this.showToast('Lỗi', err.body?.message || err.message || 'Không thể xóa cột', 'error');
+                this.showToast('Error', err.body?.message || err.message || 'Không thể xóa cột', 'error');
             })
             .finally(() => { this.isLoading = false; });
     }
@@ -1163,7 +1163,7 @@ export default class FecDecisionEngineView extends LightningElement {
 
     _addRowAtPosition(position) {
         if (!this._currentBPId) {
-            this.showToast('Lỗi', 'Vui lòng chọn một Business Process', 'error');
+            this.showToast('Error', 'Please select a Business Process', 'error');
             return;
         }
 
@@ -1229,7 +1229,7 @@ export default class FecDecisionEngineView extends LightningElement {
         const rowId = event.currentTarget.dataset.rowId;
         const row = this.originalRows.find(r => r.ruleId === rowId);
         if (!row) {
-            this.showToast('Lỗi', 'Không tìm thấy dữ liệu dòng để chỉnh sửa', 'error');
+            this.showToast('Error', 'Cannot find row data to edit', 'error');
             return;
         }
 
@@ -1319,14 +1319,14 @@ export default class FecDecisionEngineView extends LightningElement {
 
         const selectedRow = this.originalRows.find(r => r.ruleId === this.selectedRowId);
         if (selectedRow && this._isOtherwiseRow(selectedRow)) {
-            this.showToast('Lỗi', 'Không thể xóa dòng otherwise (fallback)', 'error');
+            this.showToast('Error', 'Không thể xóa dòng otherwise (fallback)', 'error');
             return;
         }
 
         const confirmed = await LightningConfirm.open({
-            message: 'Bạn có chắc muốn xóa rule này không? Tất cả điều kiện liên quan sẽ bị xóa.',
+            message: 'Are you sure you want to delete this rule? All related conditions will be removed.',
             variant: 'header',
-            label: 'Xác nhận xóa rule',
+            label: 'Confirm Delete Rule',
             theme: 'warning'
         });
         if (!confirmed) return;
@@ -1334,12 +1334,12 @@ export default class FecDecisionEngineView extends LightningElement {
         this.isLoading = true;
         deleteRule({ ruleId: this.selectedRowId })
             .then(() => {
-                this.showToast('Thành công', 'Đã xóa rule', 'success');
+                this.showToast('Success', 'Đã xóa rule', 'success');
                 this.selectedRowId = null;
                 this.loadDecisionTable();
             })
             .catch(err => {
-                this.showToast('Lỗi', err.body?.message || err.message || 'Không thể xóa rule', 'error');
+                this.showToast('Error', err.body?.message || err.message || 'Không thể xóa rule', 'error');
             })
             .finally(() => { this.isLoading = false; });
     }
@@ -1464,12 +1464,12 @@ export default class FecDecisionEngineView extends LightningElement {
 
         saveRuleWithConditions({ ruleData: JSON.stringify(payload) })
             .then(() => {
-                this.showToast('Thành công', this.isEditMode ? 'Đã cập nhật rule' : 'Đã thêm rule mới', 'success');
+                this.showToast('Success', this.isEditMode ? 'Rule updated successfully' : 'New rule added successfully', 'success');
                 this.showAddRuleModal = false;
                 this.loadDecisionTable();
             })
             .catch(err => {
-                this.showToast('Lỗi', err.body?.message || err.message || 'Không thể lưu rule', 'error');
+                this.showToast('Error', err.body?.message || err.message || 'Cannot save rule', 'error');
             })
             .finally(() => { this.isLoading = false; });
     }
@@ -1716,8 +1716,8 @@ export default class FecDecisionEngineView extends LightningElement {
     get hasModalConditionFields() { return this.conditionColumns.length > 0; }
     get hasModalActionFields() { return this.actionColumns.length > 0 || this.dynamicActionColumns.length > 0; }
 
-    get modalTitle() { return this.isEditMode ? 'Chỉnh sửa Rule' : 'Thêm Rule mới'; }
-    get modalSaveLabel() { return this.isEditMode ? 'Cập nhật' : 'Lưu'; }
+    get modalTitle() { return this.isEditMode ? 'Edit Rule' : 'Add New Rule'; }
+    get modalSaveLabel() { return this.isEditMode ? 'Update' : 'Save'; }
 
     // ════════════════════════════════════════════════════════
     // GETTERS
@@ -2191,11 +2191,11 @@ export default class FecDecisionEngineView extends LightningElement {
 
         saveRuleWithConditions({ ruleData: JSON.stringify(payload) })
             .then(() => {
-                this.showToast('Thành công', 'Đã cập nhật giá trị', 'success');
+                this.showToast('Success', 'Value updated successfully', 'success');
                 this.loadDecisionTable();
             })
             .catch(err => {
-                this.showToast('Lỗi', err.body?.message || err.message || 'Không thể lưu giá trị', 'error');
+                this.showToast('Error', err.body?.message || err.message || 'Cannot save value', 'error');
             })
             .finally(() => { this.isLoading = false; });
     }
@@ -2447,11 +2447,11 @@ export default class FecDecisionEngineView extends LightningElement {
                     newExpression: this.editColExpression || '',
                     tableKey: this.tableKey
                 })
-                    .then(() => { this.showToast('Thành công', 'Đã cập nhật cột', 'success'); this.loadDecisionTable(); })
-                    .catch(err => { this.showToast('Lỗi', err.body?.message || err.message || 'Không thể cập nhật cột', 'error'); })
+                    .then(() => { this.showToast('Success', 'Đã cập nhật cột', 'success'); this.loadDecisionTable(); this._notifyDataChanged(); })
+                    .catch(err => { this.showToast('Error', err.body?.message || err.message || 'Không thể cập nhật cột', 'error'); })
                     .finally(() => { this.isLoading = false; });
             } else {
-                this.showToast('Thành công', 'Đã cập nhật cột', 'success');
+                this.showToast('Success', 'Đã cập nhật cột', 'success');
             }
         } else {
             this.isLoading = true;
@@ -2462,8 +2462,8 @@ export default class FecDecisionEngineView extends LightningElement {
                 newExpression: this.editColExpression || '',
                 tableKey: this.tableKey
             })
-                .then(() => { this.showToast('Thành công', 'Đã cập nhật cột', 'success'); this.loadDecisionTable(); })
-                .catch(err => { this.showToast('Lỗi', err.body?.message || err.message || 'Không thể cập nhật cột', 'error'); })
+                .then(() => { this.showToast('Success', 'Đã cập nhật cột', 'success'); this.loadDecisionTable(); this._notifyDataChanged(); })
+                .catch(err => { this.showToast('Error', err.body?.message || err.message || 'Không thể cập nhật cột', 'error'); })
                 .finally(() => { this.isLoading = false; });
         }
 
@@ -2515,7 +2515,7 @@ export default class FecDecisionEngineView extends LightningElement {
                 fieldId: col.fieldId,
                 fieldApiName: col.fieldApiName,
                 label: col.fieldName + ' (' + opLabel + ')',
-                placeholder: opLabel + ' nhập giá trị...',
+                placeholder: opLabel + ' enter value...',
                 value: this.testFormData.fieldValues[col.fieldApiName] || ''
             };
         });
@@ -2808,5 +2808,127 @@ export default class FecDecisionEngineView extends LightningElement {
 
     showToast(title, message, variant) {
         this.dispatchEvent(new ShowToastEvent({ title, message, variant }));
+    }
+
+    /**
+     * Notify parent that data has been mutated (save/delete) so history can refresh.
+     */
+    _notifyDataChanged() {
+        this.dispatchEvent(new CustomEvent('datachanged', { bubbles: true, composed: true }));
+    }
+
+    // ════════════════════════════════════════════════════════
+    // EMPTY STATE — TẠO DECISION TABLE MỚI VỚI 5 CỘT DEFAULT
+    // ════════════════════════════════════════════════════════
+
+    /** True khi BP có context nhưng chưa có rule và chưa có cột nào */
+    get isEmptyDecisionTable() {
+        return this.isBPSelected
+            && !this.isLoading
+            && this.originalRows.length === 0
+            && this.conditionColumns.length === 0
+            && this.actionColumns.length === 0
+            && this.dynamicConditionColumns.length === 0
+            && this.dynamicActionColumns.length === 0;
+    }
+
+    /**
+     * Khởi tạo Decision Table mới — seed các cột default + 1 row trống.
+     * Save xuống DB ngay lập tức để rule có Id.
+     */
+    handleCreateNewDecisionTable() {
+        if (!this._currentBPId) {
+            this.showToast('Error', 'Please select a Business Process', 'error');
+            return;
+        }
+        this.isLoading = true;
+
+        const builtConditions = [];
+        let order = 1;
+
+        // Seed default condition columns (Type='Condition')
+        for (const label of (this.defaultConditionColumns || [])) {
+            builtConditions.push({
+                id: null, fieldId: null, operator: '=',
+                value: '', expression: null,
+                order: order++, type: 'Condition', label
+            });
+        }
+
+        // Seed default action columns (Type='Action')
+        for (const label of (this.defaultActionColumns || [])) {
+            builtConditions.push({
+                id: null, fieldId: null, operator: null,
+                value: '', expression: null,
+                order: order++, type: 'Action', label
+            });
+        }
+
+        const payload = {
+            recordId: null,
+            priority: 1,
+            conditionRequirement: 'AND',
+            conditionLogic: '',
+            conditions: builtConditions,
+            tableKey: this.tableKey,
+            keyId: this._currentBPId
+        };
+
+        saveRuleWithConditions({ ruleData: JSON.stringify(payload) })
+            .then(() => {
+                this.showToast(LABEL_TOAST_SUCCESS, LABEL_MSG_CREATED, 'success');
+                this.loadDecisionTable();
+                this._notifyDataChanged();
+            })
+            .catch(err => {
+                this.isLoading = false;
+                this.showToast(LABEL_TOAST_ERROR, err.body?.message || err.message || 'Cannot create Decision Table', 'error');
+            });
+    }
+
+    /**
+     * Check label có nằm trong danh sách cột default (locked) không
+     */
+    _isDefaultColumn(label) {
+        const allDefaults = [
+            ...(this.defaultConditionColumns || []),
+            ...(this.defaultActionColumns || [])
+        ];
+        return allDefaults.includes(label);
+    }
+
+    /**
+     * Xoá toàn bộ Decision Table cho BP hiện tại — confirm trước.
+     * Chỉ áp dụng MDM, chưa sync Live.
+     */
+    async handleClearAllRules() {
+        if (!this._currentBPId) return;
+        if (this.originalRows.length === 0) {
+            this.showToast(LABEL_TOAST_SUCCESS, 'Table is already empty', 'info');
+            return;
+        }
+
+        const confirmed = await LightningConfirm.open({
+            message: LABEL_CONFIRM_CLEAR_MSG,
+            variant: 'header',
+            label: LABEL_CONFIRM_CLEAR_TITLE,
+            theme: 'warning'
+        });
+        if (!confirmed) return;
+
+        this.isLoading = true;
+        deleteAllRulesByBP({ businessProcessId: this._currentBPId, tableKey: this.tableKey })
+            .then(count => {
+                this.showToast(LABEL_TOAST_SUCCESS, LABEL_MSG_CLEARED.replace('{0}', count), 'success');
+                this.selectedRowId = null;
+                this.selectedColKey = null;
+                this.selectedColGroup = null;
+                this.loadDecisionTable();
+                this._notifyDataChanged();
+            })
+            .catch(err => {
+                this.showToast(LABEL_TOAST_ERROR, err.body?.message || err.message || 'Cannot clear table', 'error');
+            })
+            .finally(() => { this.isLoading = false; });
     }
 }

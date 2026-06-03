@@ -3,19 +3,19 @@ private class FEC_NatureOfCaseTreeControllerTest {
     @testSetup
     static void setupFull() {
         // Create Product Type
-        FEC_MDM_Product_Type__c prod = new FEC_MDM_Product_Type__c(Name='Product', FEC_Code__c='P01', FEC_Alias__c='PT', FEC_Name_VN__c='SP', FEC_Pos_Order__c=1, FEC_Status__c=true);
+        FEC_MDM_Product_Type__c prod = new FEC_MDM_Product_Type__c(Name='Product', FEC_Code__c='P01', FEC_Alias__c='PT', FEC_Name_VN__c='SP', FEC_Order__c=1, FEC_Active__c=true);
         insert prod;
         // Create Business Process
-        FEC_MDM_Business_Process__c bp = new FEC_MDM_Business_Process__c(Name='BP', FEC_Code__c='B01', FEC_Alias__c='BP', FEC_Name_VN__c='BPVN', FEC_Pos_Order__c=1, FEC_Status__c=true);
+        FEC_MDM_Business_Process__c bp = new FEC_MDM_Business_Process__c(Name='BP', FEC_Code__c='B01', FEC_Alias__c='BP', FEC_Name_VN__c='BPVN', FEC_Order__c=1, FEC_Status__c=true);
         insert bp;
         // Create Category
-        FEC_MDM_Category__c cat = new FEC_MDM_Category__c(Name='Cat', FEC_Code__c='C01', FEC_Alias__c='CAT', FEC_Name_VN__c='CATVN', FEC_Pos_Order__c=1, FEC_Status__c=true);
+        FEC_MDM_Category__c cat = new FEC_MDM_Category__c(Name='Cat', FEC_Code__c='C01', FEC_Alias__c='CAT', FEC_Name_VN__c='CATVN', FEC_Order__c=1, FEC_Active__c=true);
         insert cat;
         // Create Sub Category
-        FEC_MDM_Sub_Category__c scat = new FEC_MDM_Sub_Category__c(Name='SCat', FEC_Code__c='SC01', FEC_Alias__c='SCAT', FEC_Name_VN__c='SCATVN', FEC_Pos_Order__c=1, FEC_Status__c=true);
+        FEC_MDM_Sub_Category__c scat = new FEC_MDM_Sub_Category__c(Name='SCat', FEC_Code__c='SC01', FEC_Alias__c='SCAT', FEC_Name_VN__c='SCATVN', FEC_Order__c=1, FEC_Active__c=true);
         insert scat;
         // Create Sub Code
-        FEC_MDM_Sub_Code__c scode = new FEC_MDM_Sub_Code__c(Name='SCode', FEC_Code__c='SCODE01', FEC_Alias__c='SCODE', FEC_Name_VN__c='SCODEVN', FEC_Pos_Order__c=1, FEC_Status__c=true);
+        FEC_MDM_Sub_Code__c scode = new FEC_MDM_Sub_Code__c(Name='SCode', FEC_Code__c='SCODE01', FEC_Alias__c='SCODE', FEC_Name_VN__c='SCODEVN', FEC_Order__c=1, FEC_Active__c=true);
         insert scode;
         // Create Nature Of Case
         FEC_MDM_Nature_Of_Case__c noc = new FEC_MDM_Nature_Of_Case__c(
