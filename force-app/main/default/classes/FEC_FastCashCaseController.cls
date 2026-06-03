@@ -107,7 +107,7 @@ public without sharing class FEC_FastCashCaseController {
         if (!isAccEligibilityTrue(ipp.accEligibility)) {
             outDto.callCompleted = true;
             outDto.fastCashStatus = System.Label.FEC_LBL_Fast_Cash_Status_Not_Eligible;
-            outDto.errorCode = String.isNotBlank(ipp.code) ? ipp.code : '';
+            outDto.errorCode = String.isNotBlank(ipp.code) ? ipp.code : FEC_ConstantCommon.STR_EMPTY;
             outDto.errorDescription = resolveIppUserDescription(ipp);
             return outDto;
         }
@@ -336,7 +336,7 @@ public without sharing class FEC_FastCashCaseController {
             return false;
         }
         String e = accEligibility.trim();
-        return 'true'.equalsIgnoreCase(e) || 'eligible'.equalsIgnoreCase(e) || '1'.equals(e);
+        return 'true'.equalsIgnoreCase(e) || 'eligible'.equalsIgnoreCase(e) || FEC_ConstantCommon.SUCCESS_CODE_1.equals(e);
     }
 
     private static FastCashEligibilityDTO loadMaxFromCardSecAndFinish(FastCashEligibilityDTO outDto, String accountNumber) {
@@ -470,8 +470,10 @@ public without sharing class FEC_FastCashCaseController {
         if (w == null || w.Sys == null) {
             return false;
         }
-        String c = String.isBlank(w.Sys.Code) ? '' : w.Sys.Code.trim();
-        return '0'.equals(c) || '1'.equals(c) || w.Sys.Description == 'Success';
+        String c = String.isBlank(w.Sys.Code) ? FEC_ConstantCommon.STR_EMPTY : w.Sys.Code.trim();
+        return FEC_ConstantCommon.SUCCESS_STATUS_CODE.equals(c)
+            || FEC_ConstantCommon.SUCCESS_CODE_1.equals(c)
+            || w.Sys.Description == FEC_ConstantCommon.SUCCESS_MESSAGE;
     }
 
     private static Boolean isFastCashRc35Case(Case c) {
@@ -480,7 +482,7 @@ public without sharing class FEC_FastCashCaseController {
         }
         String code = c.FEC_SubCategory__r.FEC_Code__c;
         return FEC_ConstantCommon.FAST_CASH_SUB_CATEGORY_CODE_RC35.equalsIgnoreCase(
-            String.isBlank(code) ? '' : code.trim()
+            String.isBlank(code) ? FEC_ConstantCommon.STR_EMPTY : code.trim()
         );
     }
 
