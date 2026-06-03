@@ -43,11 +43,14 @@
         <members>DeleteArchiveCaseBatch_Test</members>
         <members>ArchiveInteractionCaseController</members>
         <members>ArchiveInteractionCaseRedirectCtrl_Test</members>
-        <members>FEC_CaseTriggerHandler</members>
         <members>ArchiveCaseAttachmentController</members>
         <members>ArchiveCaseAttachmentController_Test</members>
-        <members>FEC_MockupEndpoint</members>
         <name>ApexClass</name>
+    </types>
+
+    <types>
+        <members>FEC_CaseTrigger</members>
+        <name>ApexTrigger</name>
     </types>
 
     <types>
@@ -84,6 +87,7 @@
         <members>TECH_ARCHIVE_S3_PATCH</members>
         <members>TECH_GET_CASE_ARCHIVE_ENDPOINT_MOCKUP</members>
         <members>TECH_LIST_CHILD_OBJ_OF_CUST_HIST</members>
+        <members>TECH_GET_CASE_ARCHIVE_ATTACHMENT_ENDPOINT_MOCKUP</members>
         <name>CustomLabel</name>
     </types>
 

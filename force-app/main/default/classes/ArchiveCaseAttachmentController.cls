@@ -110,7 +110,7 @@ public without sharing class ArchiveCaseAttachmentController {
         FEC_API_Config__mdt apiConfig = FEC_API_Config__mdt.getInstance(serviceName);
         String migrationSource = caseIns.ArchiveMigrationSource__c;
 
-        String endpoint = FEC_MockupEndpoint.GET_CASE_ARCHIVE_ATTACHMENT_ENDPOINT_MOCKUP 
+        String endpoint = label.TECH_GET_CASE_ARCHIVE_ATTACHMENT_ENDPOINT_MOCKUP 
                             + s3Key + '&source=' + migrationSource;
         if (apiConfig != null && String.isNotBlank(apiConfig.FEC_Endpoint__c)) {
             endpoint = apiSetting?.FEC_Call_Mock__c ? endpoint 

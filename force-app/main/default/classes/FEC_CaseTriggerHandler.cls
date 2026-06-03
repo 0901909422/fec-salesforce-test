@@ -31,32 +31,24 @@ public without sharing class FEC_CaseTriggerHandler {
 
         if (Trigger.isBefore && Trigger.isInsert) {
             List<Case> newCases = (List<Case>) Trigger.new;
-            List<Case> listCase = new List<Case>();
-            filterCase(listCase, newCases);
-            if (!listCase.isEmpty()) handler.onBeforeInsert(listCase);
+            handler.onBeforeInsert(newCases);
         }
         
         if (Trigger.isBefore && Trigger.isUpdate) {
             List<Case> newCases = (List<Case>) Trigger.new;
             Map<Id, Case> oldMap = (Map<Id, Case>) Trigger.oldMap;
-            List<Case> listCase = new List<Case>();
-            filterCase(listCase, newCases);
-            if (!listCase.isEmpty()) handler.onBeforeUpdate(listCase, oldMap);
+            handler.onBeforeUpdate(newCases, oldMap);
         }
         
         if (Trigger.isAfter && Trigger.isInsert) {
             List<Case> newCases = (List<Case>) Trigger.new;
-            List<Case> listCase = new List<Case>();
-            filterCase(listCase, newCases);
-            if (!listCase.isEmpty()) handler.onAfterInsert(listCase);
+            handler.onAfterInsert(newCases);
         }
         
         if (Trigger.isAfter && Trigger.isUpdate) {
             List<Case> newCases = (List<Case>) Trigger.new;
             Map<Id, Case> oldMap = (Map<Id, Case>) Trigger.oldMap;
-            List<Case> listCase = new List<Case>();
-            filterCase(listCase, newCases);
-            if (!listCase.isEmpty()) handler.onAfterUpdate(listCase, oldMap);
+            handler.onAfterUpdate(newCases, oldMap);
         }
     }
 
@@ -1227,22 +1219,6 @@ public without sharing class FEC_CaseTriggerHandler {
             if (!toDelete.isEmpty()) delete toDelete;
         } catch (Exception e) {
             System.debug('deleteCasesAsync failed: ' + e.getMessage());
-        }
-    }
-
-    /*------------------------------------------------------------
-    Author:        Thanh Van
-    Company:       Amaris
-    Description:   Filter Case
-    History
-    <Date>          <Authors Name>      <Brief Description of Change>
-    2026/04/07      Thanh Van           Init
-    ------------------------------------------------------------*/
-    public static void filterCase(List<Case> listCase, List<Case> newCases){
-        for (Case caseIns : newCases) {
-            if (String.isBlank(caseIns.ArchiveExternalId__c)) {
-                listCase.add(caseIns);
-            }
         }
     }
 

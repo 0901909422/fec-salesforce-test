@@ -18344,4 +18344,11 @@
         <shortDescription>FEC_Batch_Case_Handling_Success</shortDescription>
         <value>Success</value>
     </labels>
+    <labels>
+        <fullName>TECH_GET_CASE_ARCHIVE_ATTACHMENT_ENDPOINT_MOCKUP</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>TECH_GET_CASE_ARCHIVE_ATTACHMENT_ENDPOINT_MOCKUP</shortDescription>
+        <value>https://sf-csm-service-dev.fecredit.cloud/dispatcher/api/v1/attachments/download?s3Key=</value>
+    </labels>
 </CustomLabels>
