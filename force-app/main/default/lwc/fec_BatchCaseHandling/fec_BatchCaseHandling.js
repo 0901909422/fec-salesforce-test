@@ -20,6 +20,7 @@ import getBulkExportPropertyBundle from "@salesforce/apex/FEC_BatchCaseHandlingC
 import downloadCaseAttachmentsZip from "@salesforce/apex/FEC_BatchCaseHandlingController.downloadCaseAttachmentsZip";
 import zipExcelFiles from "@salesforce/apex/FEC_BatchCaseHandlingController.zipExcelFiles";
 import importBatchData from "@salesforce/apex/FEC_BatchCaseHandlingController.importBatchData";
+import validateImportFileName from "@salesforce/apex/FEC_BatchCaseHandlingController.validateImportFileName";
 import logFailedImport from "@salesforce/apex/FEC_BatchCaseHandlingController.logFailedImport";
 import FEC_SheetJS from "@salesforce/resourceUrl/FEC_SheetJS";
 import { STR_EMPTY, DATE_PLACEHOLDER } from "c/fec_CommonConst";
@@ -2431,7 +2432,7 @@ export default class Fec_BatchCaseHandling extends LightningElement {
     );
   }
 
-  handleImportFileChange(event) {
+  async handleImportFileChange(event) {
     const file = event.target?.files?.[0];
     if (!file) {
       return;
@@ -2447,8 +2448,36 @@ export default class Fec_BatchCaseHandling extends LightningElement {
       this.resetImportFileInput();
       return;
     }
+    const fileName = file.name;
+    try {
+      const selectedBpCount = (this.bpRows || []).filter((r) => r && r.selected).length;
+      const importCtx = await this.resolveImportTemplateContext(
+        this.inferCofOrGsrFromFileName(fileName),
+        fileName
+      );
+      const validation = await validateImportFileName({
+        fileName,
+        businessProcessCode: importCtx.businessProcessCode,
+        businessProcessName: importCtx.businessProcessName,
+        templateName: importCtx.templateName,
+        selectedBusinessProcessCount: selectedBpCount
+      });
+      if (!validation || validation.valid !== true) {
+        this.showError(
+          MSG_IMPORT_FAILED,
+          validation?.message ||
+            "Tên file không khớp template Bulk Actions của quy trình và nhóm người dùng."
+        );
+        this.clearSelectedImportFile();
+        return;
+      }
+    } catch (e) {
+      this.showError(MSG_IMPORT_FAILED, this.extractError(e) || MSG_IMPORT_FAILED);
+      this.clearSelectedImportFile();
+      return;
+    }
     this.selectedImportFile = file;
-    this.selectedImportFileName = file.name;
+    this.selectedImportFileName = fileName;
     this.attachDataRequiredError = false;
     this.importSuccessMessage = STR_EMPTY;
     this.importErrorMessage = STR_EMPTY;

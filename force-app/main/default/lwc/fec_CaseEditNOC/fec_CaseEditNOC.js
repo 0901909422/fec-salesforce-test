@@ -1520,12 +1520,13 @@ export default class Fec_CaseEditNOC extends LightningElement {
         "🚀 ~ Fec_CaseEditNOC ~ getProdType ~ res:",
         JSON.stringify(res)
       );
-      this.productTypeOptionlst = this._ensureSelectedOptionLabel(
+      //PhongBT 03/06/26: Lấy Name để hiển thị trên bộ NOC
+      this._productTypeOptionlstFull = this._ensureSelectedOptionLabel(
         res,
         this.productTypeSelectedId,
         this._selectedNocDisplayNames?.productType
       );
-      this._applyProductTypeOptionList();
+      this._applyProductTypeOptionList(this._accountContractPl ?? this._incomingAccountType);
       if (this._isInternalRequest && !this.productTypeSelectedId) {
         const internalOption = this._productTypeOptionlstFull?.find(
           (opt) => opt.label === INTERNAL_REQUEST
