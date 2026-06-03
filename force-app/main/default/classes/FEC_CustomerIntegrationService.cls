@@ -83,38 +83,46 @@ public without sharing class FEC_CustomerIntegrationService {
             return result;
         }
 
-        String requestId = String.valueOf(UUID.randomUUID());
         String requestor = FEC_ConstantCommon.REQUESTOR_CRM;
         String timestamp = Datetime.now().format(FEC_ConstantCommon.DATETIME_FORMAT);
         String timestampZ = Datetime.now().format(FEC_ConstantCommon.STR_DATETIME_FORMAT_Z);
 
-        // 1. BASIC INFO
-        try {
-            FEC_GetCustomerInfoBasic.ResponseWrapper basicRes =
-                FEC_GetCustomerInfoBasic.callGetCustomerInfoBasic(requestId, requestor, timestampZ, effectiveCif);
+        FEC_GetCustomerInfoBasic.ResponseWrapper basicRes;
+        FEC_GetContactsList.ResponseWrapper contactsRes;
+        FEC_GetAddressesList.ResponseWrapper addressesRes;
+        FEC_GetDocumentsList.ResponseWrapper docRes;
+        FEC_GetCardBasicInfo.ResponseWrapper cardRes;
+        FEC_MFASOUTSTANDINGAUTHINQ.ResponseWrapper authRes;
+        FEC_GetCardSecInfo.ResponseWrapper cardSecRes;
+        FEC_GetLoanBasicInfo.ResponseWrapper loanRes;
+        FEC_GetMRCInfo.MRCInfoResult mrcRes;
+        List<FEC_IPP__c> ippToInsert = new List<FEC_IPP__c>();
 
-            applyCustomerInfoBasicFromApi(hist, result, basicRes);
+        try {
+            basicRes = FEC_GetCustomerInfoBasic.callGetCustomerInfoBasic(
+                FEC_CommonUltils.generateTransactionId(),
+                requestor,
+                timestampZ,
+                effectiveCif
+            );
         } catch (Exception e) {
-            System.debug('### BASIC ERROR: ' + e.getMessage());
+            System.debug('### BASIC CALLOUT ERROR: ' + e.getMessage());
         }
 
-        // 1.5. CONTACTS LIST
         try {
-            FEC_GetContactsList.ResponseWrapper contactsRes =
-                FEC_GetContactsList.callGetContactsList(requestId, requestor, timestampZ, effectiveCif);
-
-            if (contactsRes != null && contactsRes.Contacts != null) {
-                saveContactsListFromApi(hist, contactsRes.Contacts);
-            }
+            contactsRes = FEC_GetContactsList.callGetContactsList(
+                FEC_CommonUltils.generateTransactionId(),
+                requestor,
+                timestampZ,
+                effectiveCif
+            );
         } catch (Exception e) {
-            System.debug('### CONTACTS LIST ERROR: ' + e.getMessage());
+            System.debug('### CONTACTS LIST CALLOUT ERROR: ' + e.getMessage());
         }
 
-        // 1.6. ADDRESSES LIST
-        FEC_GetAddressesList.ResponseWrapper addressesRes = null;
         try {
             addressesRes = FEC_GetAddressesList.callGetAddressesList(
-                requestId,
+                FEC_CommonUltils.generateTransactionId(),
                 requestor,
                 Datetime.now().format(FEC_ConstantCommon.DATETIME_FORMAT),
                 effectiveCif
@@ -123,32 +131,20 @@ public without sharing class FEC_CustomerIntegrationService {
             System.debug('### ADDRESSES LIST CALLOUT ERROR: ' + e.getMessage());
         }
 
-        if (addressesRes != null
-            && addressesRes.Addresses != null
-            && !addressesRes.Addresses.isEmpty()) {
-            try {
-                applyAddressesListFromApi(hist, addressesRes.Addresses);
-            } catch (Exception e) {
-                System.debug(
-                    '### ADDRESSES LIST DML ERROR: ' + e.getMessage()
-                        + ' | ' + e.getStackTraceString()
-                );
-            }
-        }
-
-        // 2. DOCUMENT
         try {
-            FEC_GetDocumentsList.ResponseWrapper docRes =
-                FEC_GetDocumentsList.callGetDocumentsList(requestId, requestor, timestamp, effectiveCif);
-
-            applyDocumentsListFromApi(hist, result, docRes);
+            docRes = FEC_GetDocumentsList.callGetDocumentsList(
+                FEC_CommonUltils.generateTransactionId(),
+                requestor,
+                timestamp,
+                effectiveCif
+            );
         } catch (Exception e) {
-            System.debug('### DOCUMENT ERROR: ' + e.getMessage());
+            System.debug('### DOCUMENT CALLOUT ERROR: ' + e.getMessage());
         }
 
-        // 3. PRIMARY PHONE 
         try {
-            if (String.isBlank(result.primaryPhone) && (String.isNotBlank(acctNum) || String.isNotBlank(contractNum))) {
+            if (String.isBlank(result.primaryPhone)
+                && (String.isNotBlank(acctNum) || String.isNotBlank(contractNum))) {
                 String mobilePhone = getPrimaryPhone(acctNum, contractNum);
                 if (String.isNotBlank(mobilePhone)) {
                     hist.FEC_Primary_Phone__c = mobilePhone;
@@ -156,89 +152,134 @@ public without sharing class FEC_CustomerIntegrationService {
                 }
             }
         } catch (Exception e) {
-            System.debug('### PHONE ERROR: ' + e.getMessage());
+            System.debug('### PHONE CALLOUT ERROR: ' + e.getMessage());
         }
 
-        // 4. CARD APIs Product Type = Card
         if (isCardInteractionProductType(hist)) {
             String cardAccountNumber = String.isNotBlank(acctNum) ? acctNum : accountNumber;
             if (String.isNotBlank(cardAccountNumber)) {
                 try {
-                    FEC_GetCardBasicInfo.ResponseWrapper cardRes =
-                        FEC_GetCardBasicInfo.callGetCardBasicInfo(
-                            FEC_CommonUltils.generateTransactionId(),
-                            FEC_ConstantCommon.REQUESTOR_CRM,
-                            Datetime.now().formatGMT(FEC_ConstantCommon.DATETIME_FORMAT),
-                            cardAccountNumber
-                        );
-
-                    applyCardBasicInfoFromApi(hist, result, cardRes);
+                    cardRes = FEC_GetCardBasicInfo.callGetCardBasicInfo(
+                        FEC_CommonUltils.generateTransactionId(),
+                        FEC_ConstantCommon.REQUESTOR_CRM,
+                        Datetime.now().formatGMT(FEC_ConstantCommon.DATETIME_FORMAT),
+                        cardAccountNumber
+                    );
                 } catch (Exception e) {
-                    System.debug(System.Label.FEC_MSG_API_Error + e.getMessage());
+                    System.debug('### CARD BASIC CALLOUT ERROR: ' + e.getMessage());
                 }
 
                 try {
-                    FEC_MFASOUTSTANDINGAUTHINQ.ResponseWrapper authRes =
-                        FEC_MFASOUTSTANDINGAUTHINQ.callService(
-                            FEC_CommonUltils.generateTransactionId(),
-                            FEC_ConstantCommon.REQUESTOR_CRM,
-                            Datetime.now().formatGMT(FEC_ConstantCommon.DATETIME_FORMAT),
-                            FEC_ConstantCommon.VMX_VERSION_DEFAULT,
-                            FEC_ConstantCommon.REQUESTOR_VMX_CONTEXT,
-                            FEC_ConstantCommon.REQUESTOR_VMX_CONTEXT,
-                            FEC_ConstantCommon.REQUESTOR_ORG,
-                            cardAccountNumber
-                        );
-
-                    applyOutstandingAuthFromApi(hist, authRes);
+                    authRes = FEC_MFASOUTSTANDINGAUTHINQ.callService(
+                        FEC_CommonUltils.generateTransactionId(),
+                        FEC_ConstantCommon.REQUESTOR_CRM,
+                        Datetime.now().formatGMT(FEC_ConstantCommon.DATETIME_FORMAT),
+                        FEC_ConstantCommon.VMX_VERSION_DEFAULT,
+                        FEC_ConstantCommon.REQUESTOR_VMX_CONTEXT,
+                        FEC_ConstantCommon.REQUESTOR_VMX_CONTEXT,
+                        FEC_ConstantCommon.REQUESTOR_ORG,
+                        cardAccountNumber
+                    );
                 } catch (Exception e) {
-                    System.debug('### OUTSTANDING AUTH ERROR: ' + e.getMessage());
+                    System.debug('### OUTSTANDING AUTH CALLOUT ERROR: ' + e.getMessage());
                 }
 
                 try {
-                    FEC_GetCardSecInfo.ResponseWrapper cardSecRes =
-                        FEC_GetCardSecInfo.getCardSecInfo(cardAccountNumber);
-
-                    applyCardSecInfoFromApi(hist, cardSecRes);
-                    syncIppRecordsFromCardSecAndDetailsApis(hist, cardAccountNumber, cardSecRes);
+                    cardSecRes = FEC_GetCardSecInfo.getCardSecInfo(cardAccountNumber);
+                    ippToInsert = buildIppRecordsFromCardSecWithDetailCallouts(
+                        hist,
+                        cardAccountNumber,
+                        cardSecRes
+                    );
                 } catch (Exception e) {
-                    System.debug('### CARD SEC INFO / IPP ERROR: ' + e.getMessage());
+                    System.debug('### CARD SEC / IPP CALLOUT ERROR: ' + e.getMessage());
                 }
             }
         }
 
-        // 5. LOAN APIs có Product Type = Loan
         if (isLoanInteractionProductType(hist)) {
             String loanContractNumber = String.isNotBlank(contractNum)
                 ? contractNum
                 : hist.FEC_Contract_Number__c;
             if (String.isNotBlank(loanContractNumber)) {
                 try {
-                    FEC_GetLoanBasicInfo.ResponseWrapper loanRes =
-                        FEC_GetLoanBasicInfo.callGetLoanBasicInfo(
-                            FEC_CommonUltils.generateTransactionId(),
-                            FEC_ConstantCommon.REQUESTOR_CRM,
-                            Datetime.now().formatGMT(FEC_ConstantCommon.DATETIME_FORMAT),
-                            loanContractNumber
-                        );
-
-                    applyLoanBasicInfoFromApi(hist, loanRes);
+                    loanRes = FEC_GetLoanBasicInfo.callGetLoanBasicInfo(
+                        FEC_CommonUltils.generateTransactionId(),
+                        FEC_ConstantCommon.REQUESTOR_CRM,
+                        Datetime.now().formatGMT(FEC_ConstantCommon.DATETIME_FORMAT),
+                        loanContractNumber
+                    );
                 } catch (Exception e) {
-                    System.debug('### LOAN BASIC INFO ERROR: ' + e.getMessage());
+                    System.debug('### LOAN BASIC CALLOUT ERROR: ' + e.getMessage());
                 }
 
                 try {
                     FEC_GetMRCInfo.MRCInfoRequest mrcReq = new FEC_GetMRCInfo.MRCInfoRequest();
                     mrcReq.ContractNumber = loanContractNumber;
-
-                    FEC_GetMRCInfo.MRCInfoResult mrcRes = FEC_GetMRCInfo.getMRCInfo(mrcReq);
-                    if (mrcRes != null && mrcRes.success && mrcRes.data != null) {
-                        applyMrcInfoFromApi(hist, mrcRes.data);
-                    }
+                    mrcRes = FEC_GetMRCInfo.getMRCInfo(mrcReq);
                 } catch (Exception e) {
-                    System.debug('### GET MRC INFO ERROR: ' + e.getMessage());
+                    System.debug('### MRC CALLOUT ERROR: ' + e.getMessage());
                 }
             }
+        }
+
+        try {
+            applyCustomerInfoBasicFromApi(hist, result, basicRes);
+        } catch (Exception e) {
+            System.debug('### BASIC APPLY ERROR: ' + e.getMessage());
+        }
+
+        try {
+            if (contactsRes != null && contactsRes.Contacts != null) {
+                saveContactsListFromApi(hist, contactsRes.Contacts);
+            }
+        } catch (Exception e) {
+            System.debug('### CONTACTS LIST DML ERROR: ' + e.getMessage());
+        }
+
+        try {
+            if (addressesRes != null && addressesRes.Addresses != null) {
+                applyAddressesListFromApi(hist, addressesRes.Addresses);
+            }
+        } catch (Exception e) {
+            System.debug(
+                '### ADDRESSES LIST DML ERROR: ' + e.getMessage()
+                    + ' | ' + e.getStackTraceString()
+            );
+        }
+
+        try {
+            applyDocumentsListFromApi(hist, result, docRes);
+        } catch (Exception e) {
+            System.debug('### DOCUMENT APPLY ERROR: ' + e.getMessage());
+        }
+
+        try {
+            applyCardBasicInfoFromApi(hist, result, cardRes);
+        } catch (Exception e) {
+            System.debug('### CARD BASIC APPLY ERROR: ' + e.getMessage());
+        }
+
+        try {
+            applyOutstandingAuthFromApi(hist, authRes);
+        } catch (Exception e) {
+            System.debug('### OUTSTANDING AUTH DML ERROR: ' + e.getMessage());
+        }
+
+        try {
+            applyCardSecInfoFromApi(hist, cardSecRes);
+            persistIppRecords(hist.Id, ippToInsert);
+        } catch (Exception e) {
+            System.debug('### CARD SEC / IPP DML ERROR: ' + e.getMessage());
+        }
+
+        try {
+            applyLoanBasicInfoFromApi(hist, loanRes);
+            if (mrcRes != null && mrcRes.success && mrcRes.data != null) {
+                applyMrcInfoFromApi(hist, mrcRes.data);
+            }
+        } catch (Exception e) {
+            System.debug('### LOAN APPLY ERROR: ' + e.getMessage());
         }
 
         return result;
@@ -621,22 +662,22 @@ public without sharing class FEC_CustomerIntegrationService {
         return null;
     }
 
-    private static void syncIppRecordsFromCardSecAndDetailsApis(
+    private static List<FEC_IPP__c> buildIppRecordsFromCardSecWithDetailCallouts(
         FEC_Customer_History__c hist,
         String accountNumber,
         FEC_GetCardSecInfo.ResponseWrapper cardSecRes
     ) {
+        List<FEC_IPP__c> toInsert = new List<FEC_IPP__c>();
         if (hist == null || hist.Id == null || String.isBlank(accountNumber)) {
-            return;
+            return toInsert;
         }
 
         List<FEC_GetCardSecInfo.IPP> orderedIppList = buildOrderedIppListFromCardSecInfo(cardSecRes);
         if (orderedIppList.isEmpty()) {
-            return;
+            return toInsert;
         }
 
         String todayStr = Datetime.now().formatGmt(FEC_ConstantCommon.DATE_FORMAT);
-        List<FEC_IPP__c> toInsert = new List<FEC_IPP__c>();
         Integer detailCallCount = 0;
 
         for (FEC_GetCardSecInfo.IPP ipp : orderedIppList) {
@@ -669,11 +710,14 @@ public without sharing class FEC_CustomerIntegrationService {
             toInsert.add(rec);
         }
 
-        if (toInsert.isEmpty()) {
+        return toInsert;
+    }
+
+    private static void persistIppRecords(Id customerHistoryId, List<FEC_IPP__c> toInsert) {
+        if (customerHistoryId == null || toInsert == null || toInsert.isEmpty()) {
             return;
         }
-
-        deleteExistingIppRecords(hist.Id);
+        deleteExistingIppRecords(customerHistoryId);
         insert toInsert;
     }
 
@@ -995,6 +1039,7 @@ public without sharing class FEC_CustomerIntegrationService {
                 addr = existingMap.get(type);
             } else {
                 addr = new FEC_Address_Info__c();
+                addr.Name = type.left(80);
                 addr.FEC_Customer_History__c = hist.Id;
                 addr.FEC_Address_Type__c = type;
                 toInsert.add(addr);
@@ -1040,7 +1085,9 @@ public without sharing class FEC_CustomerIntegrationService {
                 addr.FEC_Country_Text__c = ai.CountryName;
             }
 
-            toUpdate.add(addr);
+            if (addr.Id != null) {
+                toUpdate.add(addr);
+            }
         }
 
         if (!toInsert.isEmpty()) {
@@ -1188,18 +1235,14 @@ public without sharing class FEC_CustomerIntegrationService {
     }
 
     private static String mapApiAddressTypeToSF(String apiType) {
-        String normalized = normalizeApiAddressType(apiType);
-        if (String.isBlank(normalized)) {
-            return null;
-        }
-        if (normalized == FEC_ConstantCommon.ADDRESS_TYPE_CURRES) {
+        if (apiType == FEC_ConstantCommon.ADDRESS_TYPE_CURRES) {
             return FEC_ConstantCommon.SF_ADDRESS_TYPE_CURRENT;
         }
-        if (normalized == FEC_ConstantCommon.ADDRESS_TYPE_OFFICE) {
+        if (apiType == FEC_ConstantCommon.ADDRESS_TYPE_OFFICE) {
             return FEC_ConstantCommon.SF_ADDRESS_TYPE_OFFICE;
         }
-        if (normalized == FEC_ConstantCommon.ADDRESS_TYPE_PERMNENT
-            || normalized == FEC_ConstantCommon.ADDRESS_TYPE_PERMANENT) {
+        if (apiType == FEC_ConstantCommon.ADDRESS_TYPE_PERMNENT
+            || apiType == FEC_ConstantCommon.ADDRESS_TYPE_PERMANENT) {
             return FEC_ConstantCommon.SF_ADDRESS_TYPE_PERMANENT;
         }
         return null;
@@ -1213,8 +1256,7 @@ public without sharing class FEC_CustomerIntegrationService {
         }
         Boolean hasPermnent = false;
         for (FEC_GetAddressesList.AddressInfo ai : raw) {
-            String apiType = normalizeApiAddressType(ai != null ? ai.AddressType : null);
-            if (apiType == FEC_ConstantCommon.ADDRESS_TYPE_PERMNENT) {
+            if (ai != null && ai.AddressType == FEC_ConstantCommon.ADDRESS_TYPE_PERMNENT) {
                 hasPermnent = true;
                 break;
             }
@@ -1224,16 +1266,11 @@ public without sharing class FEC_CustomerIntegrationService {
         }
         List<FEC_GetAddressesList.AddressInfo> out = new List<FEC_GetAddressesList.AddressInfo>();
         for (FEC_GetAddressesList.AddressInfo ai : raw) {
-            String apiType = normalizeApiAddressType(ai != null ? ai.AddressType : null);
-            if (apiType == FEC_ConstantCommon.ADDRESS_TYPE_PERMANENT) {
+            if (ai != null && ai.AddressType == FEC_ConstantCommon.ADDRESS_TYPE_PERMANENT) {
                 continue;
             }
             out.add(ai);
         }
         return out;
-    }
-
-    private static String normalizeApiAddressType(String apiType) {
-        return String.isBlank(apiType) ? '' : apiType.trim().toUpperCase();
     }
 }
