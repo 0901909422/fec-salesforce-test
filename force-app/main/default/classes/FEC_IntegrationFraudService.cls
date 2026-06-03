@@ -1399,11 +1399,19 @@ global with sharing class FEC_IntegrationFraudService {
                 for (FEC_IntegrationSoapFraudcaseService.AdditionalInfo_element ai 
                     : req.AdditionalInfo) {
 
-                    requestBlock +=
-                        '<ns1:AdditionalInfo>' +
-                            FEC_IntegrationFraudCaseUtil.buildTag('ID', ai.ID) +
-                            FEC_IntegrationFraudCaseUtil.buildTag('Value', ai.Value) +
-                        '</ns1:AdditionalInfo>';
+                    // If value is blank, only output ID without Value tag
+                    if (String.isBlank(ai.Value)) {
+                        // requestBlock +=
+                        //     '<ns1:AdditionalInfo>' +
+                        //         FEC_IntegrationFraudCaseUtil.buildTag('ID', ai.ID) +
+                        //     '</ns1:AdditionalInfo>';
+                    } else {
+                        requestBlock +=
+                            '<ns1:AdditionalInfo>' +
+                                FEC_IntegrationFraudCaseUtil.buildTag('ID', ai.ID) +
+                                FEC_IntegrationFraudCaseUtil.buildTag('Value', ai.Value) +
+                            '</ns1:AdditionalInfo>';
+                    }
                 }
             }
 
