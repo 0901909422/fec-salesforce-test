@@ -1335,7 +1335,9 @@ public without sharing class FEC_DNBHandler {
     Case caseRecord) {
         List<DNBRowTemplate> rows = new List<DNBRowTemplate>();
         
-        String phone = normalizePhone(caseRecord.FEC_Case_Phone_Number__c);
+        String phone = normalizePhone(caseRecord.FEC_Interaction__r != null
+            ? caseRecord.FEC_Interaction__r.FEC_Phone_Number__c
+            : null);
         
         String email = caseRecord.FEC_Case_Email__c != null
             ? caseRecord.FEC_Case_Email__c
@@ -1525,12 +1527,15 @@ public without sharing class FEC_DNBHandler {
     
     @AuraEnabled
     public static void createNonExistingDNBRows(Id caseId, String nid) {
+        
+        
+        
         /*
          * Prevent duplicate
          */
         List<FEC_Do_Not_Bother__c> existing = [
-      SELECT Id FROM FEC_Do_Not_Bother__c WHERE FEC_Case__c = : caseId LIMIT 1
-    ];
+            SELECT Id FROM FEC_Do_Not_Bother__c WHERE FEC_Case__c = : caseId LIMIT 1
+        ];
         
         if (!existing.isEmpty()) {
             return;
@@ -1540,15 +1545,19 @@ public without sharing class FEC_DNBHandler {
          * Get case data
          */
         Case caseRecord = [
-      SELECT Id, FEC_Case_Phone_Number__c,
-      FEC_Case_Email__c,
-    FEC_Account_or_Contract__c
-          FROM Case
-
-              WHERE Id = : caseId
-
-          LIMIT 1
-    ];
+            SELECT Id, FEC_Case_Phone_Number__c,
+            FEC_Case_Email__c,
+            FEC_Interaction__c,
+            FEC_Interaction__r.FEC_Phone_Number__c,
+            FEC_Account_or_Contract__c
+            FROM Case
+            WHERE Id = : caseId
+            LIMIT 1
+        ];
+        
+        System.debug('PHONE=' + caseRecord.FEC_Case_Phone_Number__c);
+        System.debug('NID=' + nid);
+        System.debug('EMAIL=' + caseRecord.FEC_Case_Email__c);
         
         /*
          * Check DNB
