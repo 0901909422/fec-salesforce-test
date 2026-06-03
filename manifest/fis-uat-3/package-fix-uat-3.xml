@@ -180,6 +180,8 @@
 		<members>FEC_BCH_IncorrectPaymentTemplateWriter</members>
 		<members>FEC_BCH_AssignmentRouteToService</members>
 		<members>FEC_BCH_AssignmentUpdateService</members>
+		<members>FEC_BCH_CofGsrImportRouteToService</members>
+		<members>FEC_BCH_ImportFileNameValidator</members>
 		<members>FEC_BCH_ImportRoutingHistoryService</members>
 		<members>FEC_BCH_ImportRoutingResolver</members>
 		<members>FEC_BCH_PicklistTranslationCtrl</members>
