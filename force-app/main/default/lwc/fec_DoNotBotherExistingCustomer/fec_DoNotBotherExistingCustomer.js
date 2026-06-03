@@ -55,7 +55,7 @@ export default class Fec_DoNotBotherExistingCustomer extends LightningElement {
   subscription = null;
   @api recordId;
   @track selectedOption = "no";
-
+  @track initialHasDNBData = null;
   @track data = [];
   @track pagedData = [];
   isReadonlyMode = false;
@@ -285,6 +285,7 @@ export default class Fec_DoNotBotherExistingCustomer extends LightningElement {
        * DEFAULT UI
        */
       this.hasDNBData = this.data.length > 0;
+      this.initialHasDNBData = this.hasDNBData;
 
       // this.selectedOption = this.hasDNBData ? "yes" : "no";
     } catch (e) {
@@ -460,6 +461,10 @@ export default class Fec_DoNotBotherExistingCustomer extends LightningElement {
   }
 
   get hasDataAtDNB() {
+    if (this.initialHasDNBData !== null) {
+      return this.initialHasDNBData;
+    }
+
     return this.hasDNBData;
   }
 

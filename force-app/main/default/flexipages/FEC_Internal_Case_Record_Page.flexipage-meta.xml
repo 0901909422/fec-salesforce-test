@@ -623,6 +623,12 @@
         </itemInstances>
         <itemInstances>
             <componentInstance>
+                <componentName>fecRelevantTicketModalHost</componentName>
+                <identifier>c_fecRelevantTicketModalHost</identifier>
+            </componentInstance>
+        </itemInstances>
+        <itemInstances>
+            <componentInstance>
                 <componentInstanceProperties>
                     <name>actionNames</name>
                     <valueList>

@@ -309,22 +309,79 @@ public without sharing class FEC_MyCaseSoapXml {
         return parsed;
     }
 
-    public static String buildGetCSCaseStatusSoapResponse(
-        FEC_GetCSCaseStatusService.GetCSCaseStatusResponse resp
-    ) {
-        FEC_GetCSCaseStatusService.GetCSCaseStatusResponse r = resp != null
+    // public static String buildGetCSCaseStatusSoapResponse(
+    //     FEC_GetCSCaseStatusService.GetCSCaseStatusResponse resp
+    // ) {
+    //     FEC_GetCSCaseStatusService.GetCSCaseStatusResponse r = resp != null
+    //         ? resp
+    //         : new FEC_GetCSCaseStatusService.GetCSCaseStatusResponse();
+
+    //     String xml = '<?xml version="1.0" encoding="utf-8"?>' +
+    //         '<soap:Envelope xmlns:soap="' + SOAP_ENV + '">' +
+    //         '<soap:Body>' +
+    //         '<GetCSCaseStatusResponse xmlns="' + MYCASE_NS + '">' +
+    //         buildGetStatusResponseSysXml(r.Sys);
+    //     if (r.CaseResultInfo != null) {
+    //         xml += buildGetCaseResultInfoXml(r.CaseResultInfo, r.OriginalRequest);
+    //     }
+    //     xml += '</GetCSCaseStatusResponse></soap:Body></soap:Envelope>';
+    //     return xml;
+    // }
+
+    // public static String buildGetCSCaseStatusErrorSoapResponse(
+    //     String transactionId,
+    //     String code,
+    //     String message
+    // ) {
+    //     FEC_GetCSCaseStatusService.GetCSCaseStatusResponse err =
+    //         new FEC_GetCSCaseStatusService.GetCSCaseStatusResponse();
+    //     err.Sys = new FEC_GetCSCaseStatusService.SysType2();
+    //     err.Sys.TransactionID = transactionId;
+    //     err.Sys.DateTime_x = String.valueOf(System.now());
+    //     err.Sys.Code = parseGetStatusErrorCode(code);
+    //     err.Sys.Description = message;
+    //     err.CaseResultInfo = null;
+    //     err.OriginalRequest = null;
+    //     return buildGetCSCaseStatusSoapResponse(err);
+    // }
+
+
+    //--------------HIEUTT UPDATED Ngày 03/06/2026----------------
+
+        public static String buildGetCSCaseStatusSoapResponse(
+            FEC_GetCSCaseStatusService.GetCSCaseStatusResponse resp
+        ) {
+        FEC_GetCSCaseStatusService.GetCSCaseStatusResponse r =
+            resp != null
             ? resp
             : new FEC_GetCSCaseStatusService.GetCSCaseStatusResponse();
 
-        String xml = '<?xml version="1.0" encoding="utf-8"?>' +
+        String xml =
+            '<?xml version="1.0" encoding="utf-8"?>' +
             '<soap:Envelope xmlns:soap="' + SOAP_ENV + '">' +
             '<soap:Body>' +
             '<GetCSCaseStatusResponse xmlns="' + MYCASE_NS + '">' +
             buildGetStatusResponseSysXml(r.Sys);
-        if (r.CaseResultInfo != null) {
-            xml += buildGetCaseResultInfoXml(r.CaseResultInfo, r.OriginalRequest);
+
+        if (r.CaseResultInfos != null) {
+
+            for (
+                FEC_GetCSCaseStatusService.CaseResultInfoType item
+                : r.CaseResultInfos
+            ) {
+
+                xml += buildGetCaseResultInfoXml(
+                    item,
+                    item.OriginalRequest
+                );
+            }
         }
-        xml += '</GetCSCaseStatusResponse></soap:Body></soap:Envelope>';
+
+        xml +=
+            '</GetCSCaseStatusResponse>' +
+            '</soap:Body>' +
+            '</soap:Envelope>';
+
         return xml;
     }
 
@@ -333,17 +390,24 @@ public without sharing class FEC_MyCaseSoapXml {
         String code,
         String message
     ) {
-        FEC_GetCSCaseStatusService.GetCSCaseStatusResponse err =
-            new FEC_GetCSCaseStatusService.GetCSCaseStatusResponse();
-        err.Sys = new FEC_GetCSCaseStatusService.SysType2();
-        err.Sys.TransactionID = transactionId;
-        err.Sys.DateTime_x = String.valueOf(System.now());
-        err.Sys.Code = parseGetStatusErrorCode(code);
-        err.Sys.Description = message;
-        err.CaseResultInfo = null;
-        err.OriginalRequest = null;
-        return buildGetCSCaseStatusSoapResponse(err);
-    }
+    FEC_GetCSCaseStatusService.GetCSCaseStatusResponse err =
+        new FEC_GetCSCaseStatusService.GetCSCaseStatusResponse();
+
+    err.Sys = new FEC_GetCSCaseStatusService.SysType2();
+    err.Sys.TransactionID = transactionId;
+    err.Sys.DateTime_x = String.valueOf(System.now());
+    err.Sys.Code = parseGetStatusErrorCode(code);
+    err.Sys.Description = message;
+
+    err.CaseResultInfos =
+        new List<FEC_GetCSCaseStatusService.CaseResultInfoType>();
+
+    return buildGetCSCaseStatusSoapResponse(err);
+}
+
+
+
+    //-------------------------------------------//
 
     private static Integer parseGetStatusErrorCode(String code) {
         if (String.isBlank(code)) {
