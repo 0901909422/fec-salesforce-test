@@ -75,6 +75,35 @@ private class FEC_CardClosureRefundController_Test {
         }
     }
 
+    private class CardLockUnsuccessfulDescMock implements HttpCalloutMock {
+        public HttpResponse respond(HttpRequest req) {
+            HttpResponse res = new HttpResponse();
+            res.setStatusCode(200);
+            res.setBody('{"Sys":{"Code":"1","Description":"Unsuccessful operation","TransID":"TXN-UNSUCCESS"}}');
+            return res;
+        }
+    }
+
+    private class VmxSysSuccessSvcReturnFailureMock implements HttpCalloutMock {
+        public HttpResponse respond(HttpRequest req) {
+            HttpResponse res = new HttpResponse();
+            res.setStatusCode(200);
+            res.setBody(
+                '<?xml version="1.0" encoding="UTF-8"?>' +
+                '<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">' +
+                '<soapenv:Body><WSResponse>' +
+                '<Sys><TransID>T-VMX-SYS-OK</TransID><Code>1</Code><Description>Success</Description></Sys>' +
+                '<VMX_ACCT_BLKCD_UPD_EMEA><VMX_ROOT><VMX_MSGOUT>' +
+                '<SVC_RETURN>F</SVC_RETURN>' +
+                '<RC_DATA><RETURN_CODE>VPL5SAB12S</RETURN_CODE>' +
+                '<RETURN_DESC>CARD NUMBER NOT FOUND</RETURN_DESC></RC_DATA>' +
+                '</VMX_MSGOUT></VMX_ROOT></VMX_ACCT_BLKCD_UPD_EMEA>' +
+                '</WSResponse></soapenv:Body></soapenv:Envelope>'
+            );
+            return res;
+        }
+    }
+
     private class DisbInfoBadParseMock implements HttpCalloutMock {
         public HttpResponse respond(HttpRequest req) {
             HttpResponse res = new HttpResponse();
@@ -504,6 +533,43 @@ private class FEC_CardClosureRefundController_Test {
             System.assertEquals(false, failResult.success);
             System.assertEquals(1, failResult.cardBlockServiceAttemptsAfter);
             System.assertEquals(false, nullCase.success);
+        }
+    }
+
+    @IsTest
+    static void testBlockCardLockApi_UnsuccessfulDescription_Fails() {
+        System.runAs(testRunAsUser()) {
+            Case c = [SELECT Id FROM Case WHERE Subject = 'Case API Disbursement Test' LIMIT 1];
+            Test.setMock(HttpCalloutMock.class, new CardLockUnsuccessfulDescMock());
+
+            Test.startTest();
+            FEC_CardClosureRefundController.LockUnlockApiResultDTO lockApi =
+                FEC_CardClosureRefundController.blockCardLockApi(c.Id);
+            Test.stopTest();
+
+            System.assertEquals(false, lockApi.success);
+            System.assertEquals('1', lockApi.code);
+            System.assertEquals('Unsuccessful operation', lockApi.description);
+        }
+    }
+
+    @IsTest
+    static void testBlockCardAccountBlkcdApi_SysSuccessSvcReturnF_Fails() {
+        System.runAs(testRunAsUser()) {
+            FEC_Customer_History__c cust = [SELECT Id FROM FEC_Customer_History__c LIMIT 1];
+            cust.FEC_Block_Code_1__c = null;
+            update cust;
+
+            Case c = [SELECT Id FROM Case WHERE Subject = 'Case API Disbursement Test' LIMIT 1];
+            Test.setMock(HttpCalloutMock.class, new VmxSysSuccessSvcReturnFailureMock());
+
+            Test.startTest();
+            FEC_CardClosureRefundController.LockUnlockApiResultDTO vmxApi =
+                FEC_CardClosureRefundController.blockCardAccountBlkcdApi(c.Id);
+            Test.stopTest();
+
+            System.assertEquals(false, vmxApi.success);
+            System.assert(vmxApi.errorMessage != null && vmxApi.errorMessage.contains('CARD NUMBER NOT FOUND'));
         }
     }
 

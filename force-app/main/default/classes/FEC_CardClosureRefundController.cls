@@ -20,6 +20,8 @@ public without sharing class FEC_CardClosureRefundController {
     private static final String LOCK_API_SUCCESS_DESCRIPTION = 'LOCK_SUCCESS';
     private static final String UNLOCK_API_SUCCESS_CODE = '2';
     private static final String UNLOCK_API_SUCCESS_DESCRIPTION = 'UNLOCK_SUCCESS';
+    private static final Pattern API_DESCRIPTION_SUCCESS_PATTERN =
+        Pattern.compile('(?i)(?:^|[^a-zA-Z])success(?:[^a-zA-Z]|$)');
 
     public class LockUnlockResultDTO {
         @AuraEnabled public Boolean success;
@@ -489,7 +491,9 @@ public without sharing class FEC_CardClosureRefundController {
             applyVmxBlkcdApiResponse(dto, vmxResult);
         } catch (Exception ex) {
             dto.success = false;
-            dto.errorMessage = System.Label.FEC_MSG_Card_Block_Failed;
+            dto.errorMessage = String.isNotBlank(ex.getMessage())
+                ? ex.getMessage()
+                : System.Label.FEC_MSG_Card_Block_Failed;
         } finally {
             FEC_VmxAcctBlkcdUpdEmeaCallout.logApiResponse();
             logBlockCardProcessActionHistory(ctx, PROCESS_ACTION_VMX_BLKCD, dto.success == true);
@@ -581,6 +585,29 @@ public without sharing class FEC_CardClosureRefundController {
         }
     }
 
+    private static void applyCardLockApiResponse(
+        LockUnlockResultDTO dto,
+        FEC_CardLockUnLockCallout.LockUnlockResponse response,
+        String requestTransId,
+        Boolean isBlockOperation
+    ) {
+        dto.transId = requestTransId;
+        if (response != null && response.Sys != null) {
+            dto.code = response.Sys.Code;
+            dto.description = response.Sys.Description;
+            if (String.isNotBlank(response.Sys.TransID)) {
+                dto.transId = response.Sys.TransID;
+            }
+        }
+        dto.success = isBlockOperation
+            ? isCardLockBlockApiSuccess(response)
+            : isCardLockUnblockApiSuccess(response);
+        dto.errorMessage = response != null ? response.errorMessage : null;
+        if (!dto.success && String.isBlank(dto.errorMessage) && String.isNotBlank(dto.description)) {
+            dto.errorMessage = dto.description;
+        }
+    }
+
     private static Boolean isCardLockBlockApiSuccess(FEC_CardLockUnLockCallout.LockUnlockResponse response) {
         return response != null
             && response.Sys != null
@@ -617,26 +644,20 @@ public without sharing class FEC_CardClosureRefundController {
                 dto.transId = result.transId;
             }
         }
-        dto.success = isVmxBlkcdUpdApiSuccess(result);
+        dto.success = FEC_VmxAcctBlkcdUpdEmeaCallout.isBlkcdUpdBusinessSuccess(result);
         if (!dto.success) {
-            dto.errorMessage = String.isNotBlank(result?.responseDesc)
-                ? result.responseDesc
+            String vmxErr = FEC_VmxAcctBlkcdUpdEmeaCallout.resolveBlkcdUpdErrorMessage(result);
+            dto.errorMessage = String.isNotBlank(vmxErr)
+                ? vmxErr
                 : System.Label.FEC_MSG_Card_Block_Failed;
         }
     }
 
-    private static Boolean isVmxBlkcdUpdApiSuccess(FEC_VmxAcctBlkcdUpdEmeaCallout.BlkcdUpdResult result) {
-        if (result == null) {
+    private static Boolean descriptionContainsSuccess(String description) {
+        if (String.isBlank(description)) {
             return false;
         }
-        if (FEC_VmxAcctBlkcdUpdEmeaCallout.isBlkcdUpdSuccess(result)) {
-            return true;
-        }
-        return FEC_VmxAcctBlkcdUpdEmeaCallout.isBlkcdUpdDescriptionSuccess(result.responseDesc);
-    }
-
-    private static Boolean descriptionContainsSuccess(String description) {
-        return String.isNotBlank(description) && description.trim().toLowerCase().contains('success');
+        return API_DESCRIPTION_SUCCESS_PATTERN.matcher(description.trim()).find();
     }
 
     /**
