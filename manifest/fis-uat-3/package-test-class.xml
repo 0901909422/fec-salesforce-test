@@ -12,7 +12,7 @@
         <members>FEC_AssignmentRoutingActionHandler_Test</members>
         <members>FEC_AssignmentTriggerHandler_Test</members>
         <members>FEC_AssignmentTrigger_Test</members>
-        <members>FEC_AutoHoldCaseService_Test</members>
+        <members>FEC_AutoHoldCaseServiceTest</members>
         <members>FEC_BCH_IPTemplateWriter_Test</members>
         <members>FEC_BCH_PicklistTranslationCtrl_Test</members>
         <members>FEC_BancaController_Test</members>

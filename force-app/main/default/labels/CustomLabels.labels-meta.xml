@@ -18356,4 +18356,12 @@
         <shortDescription>Relevant Ticket action not allowed message</shortDescription>
         <value>Bạn không thể thực hiện Action ở màn hình này</value>
     </labels>
+    <labels>
+        <fullName>FEC_Termination_No_Data</fullName>
+        <categories>Account Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>No data message</shortDescription>
+        <value>No data</value>
+    </labels>
 </CustomLabels>

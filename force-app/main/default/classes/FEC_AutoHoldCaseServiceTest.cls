@@ -1,5 +1,5 @@
 @IsTest
-private class FEC_AutoHoldCaseService_Test {
+private class FEC_AutoHoldCaseServiceTest {
 
     private static final String CONTRACT_NUMBER = 'CNT123456789';
 
