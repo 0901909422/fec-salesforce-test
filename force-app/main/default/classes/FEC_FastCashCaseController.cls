@@ -470,24 +470,8 @@ public without sharing class FEC_FastCashCaseController {
         if (w == null || w.Sys == null) {
             return false;
         }
-        if (String.isNotBlank(w.Sys.Code)) {
-            String c = w.Sys.Code.trim();
-            if ('0'.equals(c) || '1'.equals(c)) {
-                return true;
-            }
-        }
-        return isCmsBlockDescriptionIndicatesSuccess(w.Sys.Description);
-    }
-
-    private static Boolean isCmsBlockDescriptionIndicatesSuccess(String description) {
-        if (String.isBlank(description)) {
-            return false;
-        }
-        String d = description.trim().toLowerCase();
-        if (d.contains('unsuccess')) {
-            return false;
-        }
-        return d.contains('success');
+        String c = String.isBlank(w.Sys.Code) ? '' : w.Sys.Code.trim();
+        return '0'.equals(c) || '1'.equals(c) || w.Sys.Description == 'Success';
     }
 
     private static Boolean isFastCashRc35Case(Case c) {

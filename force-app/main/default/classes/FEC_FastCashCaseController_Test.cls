@@ -468,7 +468,7 @@ private class FEC_FastCashCaseController_Test {
                 'APP-CRM-001',
                 'BRANCH'
             );
-        System.assertEquals(true, result.success, 'Description Success phải coi là business success');
+        System.assertEquals(true, result.success, 'Description == Success (FEC_AddIPP) phải coi là business success');
     }
 
     @IsTest
@@ -502,7 +502,7 @@ private class FEC_FastCashCaseController_Test {
                 'APP-CRM-001',
                 'BRANCH'
             );
-        System.assertEquals(false, result.success, 'UnSuccessFull không được coi là success');
+        System.assertEquals(false, result.success, 'UnSuccessFull != Success (FEC_AddIPP)');
     }
 
     @IsTest
