@@ -13,10 +13,7 @@ public without sharing class FEC_BatchCaseHandlingExportService {
             'FEC_Last_Updated_On__c',
             'FEC_Complain_Type__c',
             'FEC_Complaint_Source__c',
-            'FEC_Channel__c',
-            'FEC_Interaction_Subchannel__c',
-            'FEC_Interaction_Masked_Phone__c',
-            'FEC_Interaction_Masked_Email__c',
+            // Cũ: interaction copy/masked trên Case — export dùng FEC_Interaction__r (dưới)
             'FEC_IPP_To_Close__r.FEC_IPP_Record_No__c', // Toannd 28/5/2026
             'FEC_IPP_To_Close__r.FEC_IPP_Plan__c', // Toannd 28/5/2026
             'FEC_IPP_To_Close__r.FEC_IPP_Open_Date__c', // Toannd 28/5/2026
@@ -240,10 +237,25 @@ public without sharing class FEC_BatchCaseHandlingExportService {
         r.lastUpdatedOnLabel = formatExportDatetime(c.FEC_Last_Updated_On__c);
         r.complaintType = c.FEC_Complain_Type__c;
         r.complaintSource = c.FEC_Complaint_Source__c;
-        r.interactionChannel = c.FEC_Channel__c;
-        r.interactionSubChannel = c.FEC_Interaction_Subchannel__c;
-        r.interactionPhone = c.FEC_Interaction_Masked_Phone__c;
-        r.interactionEmail = c.FEC_Interaction_Masked_Email__c;
+        SObject interaction = safeRelatedSObject(c, 'FEC_Interaction__r');
+        // Export interaction: lấy từ FEC_Interaction__r theo design (Interaction ID đã đúng ở dưới)
+        r.interactionChannel = interaction == null
+            ? FEC_ConstantCommon.STR_EMPTY
+            : (String) interaction.get('FEC_Channel__c');
+        r.interactionSubChannel = interaction == null
+            ? FEC_ConstantCommon.STR_EMPTY
+            : (String) interaction.get('FEC_Interaction_Subchannel__c');
+        r.interactionPhone = interaction == null
+            ? FEC_ConstantCommon.STR_EMPTY
+            : (String) interaction.get('FEC_Phone_Number__c');
+        r.interactionEmail = interaction == null
+            ? FEC_ConstantCommon.STR_EMPTY
+            : (String) interaction.get('FEC_Interaction_Email__c');
+        // Cũ: field trên Case (masked / copy) — không khớp design export
+        // r.interactionChannel = c.FEC_Channel__c;
+        // r.interactionSubChannel = c.FEC_Interaction_Subchannel__c;
+        // r.interactionPhone = c.FEC_Interaction_Masked_Phone__c;
+        // r.interactionEmail = c.FEC_Interaction_Masked_Email__c;
         SObject ipp = safeRelatedSObject(c, 'FEC_IPP_To_Close__r'); // Toannd 28/5/2026
         if (ipp != null) { // Toannd 28/5/2026
             r.ippRecordNo = (String) ipp.get('FEC_IPP_Record_No__c'); // Toannd 28/5/2026
@@ -524,24 +536,29 @@ public without sharing class FEC_BatchCaseHandlingExportService {
         if (rel == null) {
             return FEC_ConstantCommon.STR_EMPTY;
         }
-        String name = (String) rel.get('Name');
-        return String.isBlank(name) ? FEC_ConstantCommon.STR_EMPTY : name;
+        //PhongBT 03/06/26: 4 trường bộ noc hiển thị là code theo design
+        String code = (String) rel.get('FEC_Code__c');
+        return String.isBlank(code) ? FEC_ConstantCommon.STR_EMPTY : code;
+        // String name = (String) rel.get('Name');
+        // return String.isBlank(name) ? FEC_ConstantCommon.STR_EMPTY : name;
     }
 
     private static String formatSubDisplay(SObject rel) {
         if (rel == null) {
             return FEC_ConstantCommon.STR_EMPTY;
         }
+        //PhongBT 03/06/26: 4 trường bộ noc hiển thị là code theo design
         String code = (String) rel.get('FEC_Code__c');
-        String nameVn = (String) rel.get('FEC_Name_VN__c');
-        String name = String.isNotBlank(nameVn) ? nameVn : (String) rel.get('Name');
-        if (String.isNotBlank(code) && String.isNotBlank(name)) {
-            return code + '-' + name;
-        }
-        if (String.isNotBlank(name)) {
-            return name;
-        }
         return String.isBlank(code) ? FEC_ConstantCommon.STR_EMPTY : code;
+        // String nameVn = (String) rel.get('FEC_Name_VN__c');
+        // String name = String.isNotBlank(nameVn) ? nameVn : (String) rel.get('Name');
+        // if (String.isNotBlank(code) && String.isNotBlank(name)) {
+        //     return code + '-' + name;
+        // }
+        // if (String.isNotBlank(name)) {
+        //     return name;
+        // }
+        // return String.isBlank(code) ? FEC_ConstantCommon.STR_EMPTY : code;
     }
 
     private static Map<Id, RemarkBlocks> loadCaseRemarkBlocks(Set<Id> caseIds) {
