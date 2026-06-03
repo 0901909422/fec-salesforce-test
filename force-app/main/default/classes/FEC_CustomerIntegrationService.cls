@@ -409,7 +409,45 @@ public without sharing class FEC_CustomerIntegrationService {
             return;
         }
 
+        hist.FEC_MRC_Zone__c = data.mrcZone;
+        hist.FEC_Area__c = data.area;
+        hist.FEC_Plate_Number__c = data.plateNumber;
         hist.FEC_MRC_Status__c = data.status;
+        hist.FEC_Status_ID__c = data.statusId;
+        hist.FEC_ID__c = data.id;
+
+        hist.FEC_Original_MRC_Remark__c = data.remark;
+        hist.FEC_Modified_Date__c = parseMrcDateFromApi(data.modifiedDate);
+        hist.FEC_Delivery_Date__c = parseMrcDateFromApi(data.mailcode);
+        hist.FEC_Received_Date__c = parseMrcDateFromApi(data.receivedDate);
+        hist.FEC_Original_MRC_Receiver__c = data.receiverInformation;
+
+        hist.FEC_Posted_Date__c = parseMrcDateFromApi(data.notaryPostedDate);
+        hist.FEC_Postal_Code__c = data.notaryMailcode;
+        hist.FEC_Notarized_MRC_Remark__c = data.notaryRemark;
+        hist.FEC_Notarized_MRC_Receiver__c = data.notaryReceiverInformation;
+
+        if (String.isNotBlank(data.provideNumber)) {
+            try {
+                hist.FEC_Provided_Number__c = Decimal.valueOf(data.provideNumber.trim());
+            } catch (Exception e) {
+                System.debug('### MRC ProvidedNumber parse: ' + e.getMessage());
+            }
+        } else {
+            hist.FEC_Provided_Number__c = null;
+        }
+    }
+
+    private static Date parseMrcDateFromApi(String raw) {
+        if (String.isBlank(raw)) {
+            return null;
+        }
+        String trimmed = raw.trim();
+        try {
+            return Date.valueOf(trimmed);
+        } catch (Exception e) {
+            return FEC_CommonUltils.parseDate(trimmed);
+        }
     }
 
     private static Boolean isCardInteractionProductType(FEC_Customer_History__c hist) {
