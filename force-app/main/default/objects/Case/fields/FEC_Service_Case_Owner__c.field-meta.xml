@@ -3,20 +3,25 @@
     <fullName>FEC_Service_Case_Owner__c</fullName>
     <description>email của chủ sở hữu (bỏ đuôi) hoặc tên Queue nếu người sở hữu Case là Queue. Ẩn khi là COF/GSR và đã có Assignment.</description>
     <externalId>false</externalId>
-    <formula>IF(
-    BEGINS(TEXT(Status), "Resolved"),
-    "Unassigned",
+    <formula>IF (NOT(ISBLANK(ArchiveServiceCaseOwner__c)), ArchiveServiceCaseOwner__c, 
     IF(
-        FEC_Assignment_Count__c > 0,
-        "",
+        AND(
+            FEC_Assignment_Count__c &gt; 0,
+            BEGINS(TEXT(Status), &quot;Resolved&quot;)
+        ),
+        &quot;Unassigned&quot;,
         IF(
-            OR(RecordType.Name = "Customer Case", RecordType.Name = "Internal Case"),
+            FEC_Assignment_Count__c &gt; 0,
+            &quot;&quot;,
             IF(
-                ISBLANK(Owner:Queue.Name),
-                IF(ISBLANK(Owner:User.Email), "", LEFT(Owner:User.Email, FIND("@", Owner:User.Email) - 1)),
-                Owner:Queue.Name
-            ),
-            ""
+                OR(RecordType.Name = &quot;Customer Case&quot;, RecordType.Name = &quot;Internal Case&quot;),
+                IF(
+                    ISBLANK(Owner:Queue.Name),
+                    IF(ISBLANK(Owner:User.Email), &quot;&quot;, LEFT(Owner:User.Email, FIND(&quot;@&quot;, Owner:User.Email) - 1)),
+                    Owner:Queue.Name
+                ),
+                &quot;&quot;
+            )
         )
     )
 )</formula>
