@@ -459,7 +459,7 @@ export default class Fec_FastCashCaseForm extends NavigationMixin(LightningEleme
     }
 
     _applyDisbursementFromState(st) {
-        if (!st) {
+        if (!st || !this._isBlockModalConfirmedInStorage()) {
             this.disbursementStatusDisplay = STR_EMPTY;
             this.disbursementDateDisplay = STR_EMPTY;
             return;
@@ -759,11 +759,10 @@ export default class Fec_FastCashCaseForm extends NavigationMixin(LightningEleme
     }
 
     get showDisbursementFields() {
-        return (
-            this.isReadOnly ||
-            !!this.disbursementStatusDisplay ||
-            this.nocLockedAfterBlockModal
-        );
+        if (!this._isBlockModalConfirmedInStorage()) {
+            return false;
+        }
+        return this.isReadOnly || !!this.disbursementStatusDisplay;
     }
 
     get showDisbursementDate() {
@@ -987,7 +986,7 @@ export default class Fec_FastCashCaseForm extends NavigationMixin(LightningEleme
             requestedAmount: n,
             maxAmount: this.maxAmountDecimal
         }).then((res) => {
-            if (res && res.success) {
+            if (res && res.success && this._isBlockModalConfirmedInStorage()) {
                 this.disbursementStatusDisplay = DISBURSEMENT_STATUS_PENDING_CUSTOMER_WITHDRAWAL;
                 this.disbursementDateDisplay = STR_EMPTY;
             }
