@@ -486,12 +486,7 @@ public without sharing class FEC_CardClosureRefundController {
                 FEC_VmxAcctBlkcdUpdEmeaCallout.buildDefaultInput(vmxCardNbr);
             FEC_VmxAcctBlkcdUpdEmeaCallout.BlkcdUpdResult vmxResult =
                 FEC_VmxAcctBlkcdUpdEmeaCallout.executeUpdateAccountBlockCode(vmxInput);
-            dto.success = FEC_VmxAcctBlkcdUpdEmeaCallout.isBlkcdUpdSuccess(vmxResult);
-            if (!dto.success) {
-                dto.errorMessage = String.isNotBlank(vmxResult?.responseDesc)
-                    ? vmxResult.responseDesc
-                    : System.Label.FEC_MSG_Card_Block_Failed;
-            }
+            applyVmxBlkcdApiResponse(dto, vmxResult);
         } catch (Exception ex) {
             dto.success = false;
             dto.errorMessage = System.Label.FEC_MSG_Card_Block_Failed;
@@ -608,7 +603,40 @@ public without sharing class FEC_CardClosureRefundController {
         if (expectedDescription.equalsIgnoreCase(normalized)) {
             return true;
         }
-        return normalized.toLowerCase().contains('success');
+        return descriptionContainsSuccess(normalized);
+    }
+
+    private static void applyVmxBlkcdApiResponse(
+        LockUnlockApiResultDTO dto,
+        FEC_VmxAcctBlkcdUpdEmeaCallout.BlkcdUpdResult result
+    ) {
+        if (result != null) {
+            dto.code = result.responseCode;
+            dto.description = result.responseDesc;
+            if (String.isNotBlank(result.transId)) {
+                dto.transId = result.transId;
+            }
+        }
+        dto.success = isVmxBlkcdUpdApiSuccess(result);
+        if (!dto.success) {
+            dto.errorMessage = String.isNotBlank(result?.responseDesc)
+                ? result.responseDesc
+                : System.Label.FEC_MSG_Card_Block_Failed;
+        }
+    }
+
+    private static Boolean isVmxBlkcdUpdApiSuccess(FEC_VmxAcctBlkcdUpdEmeaCallout.BlkcdUpdResult result) {
+        if (result == null) {
+            return false;
+        }
+        if (FEC_VmxAcctBlkcdUpdEmeaCallout.isBlkcdUpdSuccess(result)) {
+            return true;
+        }
+        return FEC_VmxAcctBlkcdUpdEmeaCallout.isBlkcdUpdDescriptionSuccess(result.responseDesc);
+    }
+
+    private static Boolean descriptionContainsSuccess(String description) {
+        return String.isNotBlank(description) && description.trim().toLowerCase().contains('success');
     }
 
     /**
