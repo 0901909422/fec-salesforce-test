@@ -287,14 +287,18 @@ public with sharing class FEC_FraudConstantCommon {
 	public static final String CONFIG_SYNC_STATUS_DELETED               = 'Deleted';
 
 	// Mock flags for testing
-	public static Boolean USE_MOCK_PROCESS_CASE = true;
+
+	public static Boolean USE_MOCK_PROCESS_CASE = false;
+
 	public static String PROCESS_CASE_SUCCESS_STATUS = 'Success';
 	public static String PROCESS_CASE_CANCEL_STATUS = 'Cancel';
 
 	// Case Status for SFT decision
 	public static final String CASE_STATUS_RESOLVED_COMPLETED = 'Resolved-Completed';
 	public static final String CASE_STATUS_RESOLVED_CANCELLED = 'Resolved-Cancelled';
-	
+
+	// SFT Queue
+	public static final String SFT_QUEUE_NAME = 'FEC_Handling';	
 	
 	 // SEC Investigating
 	 public static final String ALLOCATING            = 'Allocating';
@@ -341,6 +345,7 @@ public with sharing class FEC_FraudConstantCommon {
 
 	 public static final String INTEGRATING_FRAUD_CREATE_MODE    = 'CreateMode';
 	 public static final String INTEGRATING_FRAUD_EDIT_MODE    = 'EditMode';
+	 public static final String INTEGRATING_FRAUD_SUBMIT_MODE    = 'SubmitMode';
 	 public static final String INTEGRATING_FRAUD_VIEW_MODE    = 'ViewMode';
 	 public static final String INTEGRATING_FRAUD_NOTMAPPING_MODE    = 'NotMapping';
 

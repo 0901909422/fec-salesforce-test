@@ -176,25 +176,20 @@ public with sharing class FEC_IntegrationCreateFraudController{
             new FEC_IntegrationFraudCaseUtil.CategoryMappingResponse();
         FEC_FraudConstantCommon.IntegrationMappingField integrationField = new FEC_FraudConstantCommon.IntegrationMappingField();
     
-        List<Map<String, Object>> categoryMock = new List<Map<String, Object>>();
-        // List<Map<String, Object>> categoryMock =
-        //     FEC_FraudCaseMockData.getCategoryMockupData() != null
-        //     ? FEC_FraudCaseMockData.getCategoryMockupData()
-        //     : new List<Map<String, Object>>();
-
-        List<Map<String, Object>> subCategoryMock = new List<Map<String, Object>>();
+        List<Map<String, Object>> categoryMock =
+            FEC_FraudCaseMockData.getCategoryMockupData() != null
+            ? FEC_FraudCaseMockData.getCategoryMockupData()
+            : new List<Map<String, Object>>();
     
-        // List<Map<String, Object>> subCategoryMock =
-        //     FEC_FraudCaseMockData.getSubCategoryMockupData() != null
-        //     ? FEC_FraudCaseMockData.getSubCategoryMockupData()
-        //     : new List<Map<String, Object>>();
-
-        List<Map<String, Object>> subCodeMock = new List<Map<String, Object>>();
+        List<Map<String, Object>> subCategoryMock =
+            FEC_FraudCaseMockData.getSubCategoryMockupData() != null
+            ? FEC_FraudCaseMockData.getSubCategoryMockupData()
+            : new List<Map<String, Object>>();
     
-        // List<Map<String, Object>> subCodeMock =
-        //     FEC_FraudCaseMockData.getCategorySubCodeMockupData() != null
-        //     ? FEC_FraudCaseMockData.getCategorySubCodeMockupData()
-        //     : new List<Map<String, Object>>();
+        List<Map<String, Object>> subCodeMock =
+            FEC_FraudCaseMockData.getCategorySubCodeMockupData() != null
+            ? FEC_FraudCaseMockData.getCategorySubCodeMockupData()
+            : new List<Map<String, Object>>();
     
         for (Map<String, Object> row : categoryMock) {
             log('categoryMock: '+ row);
@@ -899,8 +894,6 @@ private static FraudPropertyDTO getDataIntegrationMapping(String integrationMapp
             // 6. Create snapshot on first successful create
             if (result.success && String.isNotBlank(result.fraudCaseId)) {
                 createOriginalSnapshot(result.fraudCaseId, reqWrapper.caseDataId);
-                // ET5 - Send success notification email to Declarer
-                sendFraudCaseCreatedEmail(result.fraudCaseId, reqWrapper.caseDataId);
             }
 
             log('========= SUBMIT CREATE  CASE END =========');
@@ -990,17 +983,6 @@ private static FraudPropertyDTO getDataIntegrationMapping(String integrationMapp
                 //Create snapshot on first successful create
                 if (result.success && String.isNotBlank(result.fraudCaseId)) {
                     createOriginalSnapshot(result.fraudCaseId, reqWrapper.caseDataId);
-                }
-                // Save Nature Of Case Id on the integration case record
-                if (String.isNotBlank(reqWrapper.natureOfCaseId)) {
-                    List<FEC_Integration_Case__c> recs = [
-                        SELECT Id FROM FEC_Integration_Case__c
-                        WHERE FEC_CaseID__c = :reqWrapper.caseId LIMIT 1
-                    ];
-                    if (!recs.isEmpty()) {
-                        recs[0].FEC_Nature_Of_Case_Id__c = reqWrapper.natureOfCaseId;
-                        update recs[0];
-                    }
                 }
             }
 
@@ -1102,19 +1084,6 @@ private static FraudPropertyDTO getDataIntegrationMapping(String integrationMapp
             result.responseCode = isUpsert ? 1 : 0;
             result.message = isUpsert ? MSG_CREATE_SUCCESS : MSG_CREATE_FAILED;
             result.fraudCaseId = w.caseId;
-            log('handleCreateResponse-Log: '+ JSON.serialize(w));
-
-            // Save Nature Of Case Id on the integration case record
-            if (isUpsert && String.isNotBlank(w.natureOfCaseId)) {
-                List<FEC_Integration_Case__c> recs = [
-                    SELECT Id FROM FEC_Integration_Case__c
-                    WHERE FEC_CaseID__c = :w.caseId LIMIT 1
-                ];
-                if (!recs.isEmpty()) {
-                    recs[0].FEC_Nature_Of_Case_Id__c = w.natureOfCaseId;
-                    update recs[0];
-                }
-            }
 
         } else {
 
@@ -1416,7 +1385,6 @@ private static FraudPropertyDTO getDataIntegrationMapping(String integrationMapp
 
         log('==================== UPSERT FRAUD CASE START ====================');
         log('LOG-upsertFraudCaseService CASEID: '+ caseId);
-        log('LOG-upsertFraudCaseService integrationCaseId: '+ integrationCaseId);
         String serviceCaseDataId = caseDataId;
         FEC_FraudConstantCommon.IntegrationFieldType caseFileType = new FEC_FraudConstantCommon.IntegrationFieldType();
         try {
@@ -2129,79 +2097,6 @@ private static FraudPropertyDTO getDataIntegrationMapping(String integrationMapp
             log('[createOriginalSnapshot] Snapshot created for serviceCaseId=' + serviceCaseId);
         } catch (Exception ex) {
             log('[createOriginalSnapshot] ERROR: ' + ex.getMessage());
-        }
-    }
-
-    /**
-     * ET5 - Sends a "Fraud Case Created Successfully" notification email to the Declarer.
-     * Queries the email template from FEC_Template__c by API Name, replaces merge fields,
-     * and sends the email.
-     *
-     * Merge fields supported in Subject and Body:
-     *   {CaseID}       → Fraud Case ID (e.g. FH-500070)
-     *   {UserEmail}    → Declarer's email address
-     *   {CreatedTime}  → Timestamp of creation
-     *
-     * Template API Name: ET5_FRAUD_CASE_CREATED
-     *
-     * @param fraudCaseId   The fraud case ID (e.g. FH-500070)
-     * @param caseDataId    The Salesforce Case record Id (service case)
-     */
-    private static void sendFraudCaseCreatedEmail(String fraudCaseId, String caseDataId) {
-        try {
-            if (String.isBlank(fraudCaseId) || String.isBlank(caseDataId)) {
-                log('[sendFraudCaseCreatedEmail] Missing fraudCaseId or caseDataId, skip email.');
-                return;
-            }
-
-            // Query the email template from FEC_Template__c
-            List<FEC_Template__c> templates = [
-                SELECT FEC_Subject_Line__c, FEC_Body__c
-                FROM FEC_Template__c
-                WHERE FEC_API_Name__c = 'ET5_FRAUD_CASE_CREATED'
-                  AND FEC_Active__c = true
-                LIMIT 1
-            ];
-
-            if (templates.isEmpty()) {
-                log('[sendFraudCaseCreatedEmail] Template ET5_FRAUD_CASE_CREATED not found or inactive, skip email.');
-                return;
-            }
-
-            FEC_Template__c tmpl = templates[0];
-            String declarerEmail = UserInfo.getUserEmail();
-            String createdTime = Datetime.now().format(FEC_ConstantCommon.DATETIME_FORMAT_OUTPUT);
-
-            // Replace merge fields in subject
-            String subject = tmpl.FEC_Subject_Line__c;
-            subject = subject.replace('{CaseID}', fraudCaseId);
-            subject = subject.replace('{UserEmail}', declarerEmail);
-            subject = subject.replace('{CreatedTime}', createdTime);
-
-            // Replace merge fields in body
-            String body = tmpl.FEC_Body__c;
-            body = body.replace('{CaseID}', fraudCaseId);
-            body = body.replace('{UserEmail}', declarerEmail);
-            body = body.replace('{CreatedTime}', createdTime);
-
-            // Build and send email
-            List<Messaging.SendEmailResult> results = FEC_CommonUltils.sendEmails(
-                new List<Messaging.SingleEmailMessage>{
-                    FEC_CommonUltils.buildEmail(
-                        new List<String>{ declarerEmail },
-                        subject,
-                        body
-                    )
-                }
-            );
-            if (!results.isEmpty() && !results[0].isSuccess()) {
-                log('[sendFraudCaseCreatedEmail] Send failed: ' + results[0].getErrors());
-            }
-            log('[sendFraudCaseCreatedEmail] Email sent to ' + declarerEmail + ' for fraudCaseId=' + fraudCaseId);
-
-        } catch (Exception ex) {
-            // Log but don't fail the main flow if email fails
-            log('[sendFraudCaseCreatedEmail] ERROR: ' + ex.getMessage());
         }
     }
  
