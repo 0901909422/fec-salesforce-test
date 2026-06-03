@@ -468,7 +468,21 @@ private class FEC_FastCashCaseController_Test {
                 'APP-CRM-001',
                 'BRANCH'
             );
-        System.assertEquals(true, result.success, 'Description == Success (FEC_AddIPP) phải coi là business success');
+        System.assertEquals(true, result.success, 'Description Success (equalsIgnoreCase) phải coi là business success');
+    }
+
+    @IsTest
+    static void testExecuteFastCashBlock_SuccessByDescriptionIgnoreCaseAndTrim() {
+        Case c = getMainCase();
+        Test.setMock(HttpCalloutMock.class, new FastCashApiMock('true', '5000000', '10', ' SUCCESS '));
+        FEC_FastCashCaseController.BlockResultDTO result =
+            FEC_FastCashCaseController.executeFastCashBlock(
+                c.Id,
+                1000000,
+                'APP-CRM-001',
+                'BRANCH'
+            );
+        System.assertEquals(true, result.success, 'Description trim + equalsIgnoreCase Success');
     }
 
     @IsTest
@@ -502,7 +516,7 @@ private class FEC_FastCashCaseController_Test {
                 'APP-CRM-001',
                 'BRANCH'
             );
-        System.assertEquals(false, result.success, 'UnSuccessFull != Success (FEC_AddIPP)');
+        System.assertEquals(false, result.success, 'UnSuccessFull không equalsIgnoreCase Success');
     }
 
     @IsTest

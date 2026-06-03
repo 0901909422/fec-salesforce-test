@@ -473,7 +473,8 @@ public without sharing class FEC_FastCashCaseController {
         String c = String.isBlank(w.Sys.Code) ? FEC_ConstantCommon.STR_EMPTY : w.Sys.Code.trim();
         return FEC_ConstantCommon.SUCCESS_STATUS_CODE.equals(c)
             || FEC_ConstantCommon.SUCCESS_CODE_1.equals(c)
-            || w.Sys.Description == FEC_ConstantCommon.SUCCESS_MESSAGE;
+            || (String.isNotBlank(w.Sys.Description)
+                && w.Sys.Description.trim().equalsIgnoreCase(FEC_ConstantCommon.SUCCESS_MESSAGE));
     }
 
     private static Boolean isFastCashRc35Case(Case c) {
