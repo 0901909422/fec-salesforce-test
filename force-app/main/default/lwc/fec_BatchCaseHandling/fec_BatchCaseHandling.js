@@ -3253,16 +3253,20 @@ export default class Fec_BatchCaseHandling extends LightningElement {
     if (HEADERS_CASE_ID.indexOf(normalizedHeader) >= 0) {
       return "caseIdSearch";
     }
-    // Toannd 29/5/2026 - map cột original category/subcategory/subcode
+    // Toannd 29/5/2026 - map cột original category/subcategory/subcode (COF/GSR)
+    //PhongBT 03/06/2026 - map sang original*Display (Apex mapCaseToExportRow dòng 269-271), không dùng *Code
     if (isCofOrGsr === true) {
       if (normalizedHeader === "category") {
-        return "originalCategoryCode";
+        // return "originalCategoryCode";
+        return "originalCategoryDisplay";
       }
       if (normalizedHeader === "subcategory") {
-        return "originalSubCategoryCode";
+        // return "originalSubCategoryCode";
+        return "originalSubCategoryDisplay";
       }
       if (normalizedHeader === "subcode") {
-        return "originalSubCodeCode";
+        // return "originalSubCodeCode";
+        return "originalSubCodeDisplay";
       }
     } else {
       if (normalizedHeader === "category") {
