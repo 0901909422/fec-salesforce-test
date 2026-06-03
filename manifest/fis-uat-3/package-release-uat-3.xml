@@ -107,6 +107,11 @@
         <members>FEC_Format</members>
         <members>FEC_Format_Excel</members>
         <members>FEC_Send_Manual_Notification</members>
+        <members>FEC_MSG_FollowUp_Add_User_To_Watcher_Success</members>
+        <members>FEC_MSG_FollowUp_Case_Follow_Success</members>
+        <members>FEC_MSG_FollowUp_Type_Updated_Success</members>
+        <members>FEC_MSG_FollowUp_Unfollow_Success</members>
+        <members>FEC_Success_Title</members>
         <name>CustomLabel</name>
     </types>
 
@@ -282,6 +287,7 @@
         <members>FEC_GetRepaymentScheduleByAppIdCallout</members>
         <members>FEC_MyCaseSoapXml</members>
         <members>FEC_ApplicationsListController</members>
+        <members>FEC_FollowUpController</members>
         <name>ApexClass</name>
     </types>
 	<types>

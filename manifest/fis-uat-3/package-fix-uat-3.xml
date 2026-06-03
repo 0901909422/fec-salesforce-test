@@ -211,6 +211,7 @@
         <members>FEC_GetCSAttachedFile</members>
         <members>FEC_GetLoanSecInfo</members>
         <members>FEC_CancelCSCaseService</members>
+        <members>FEC_FollowUpController</members>
 		<name>ApexClass</name>
 	</types>
     <types>
@@ -602,6 +603,11 @@
         <members>FEC_Send_Manual_Notification</members>
         <members>FEC_RelevantTicket_Field_Interaction</members>
         <members>FEC_RelevantTicket_Action_Not_Allowed</members>
+        <members>FEC_MSG_FollowUp_Add_User_To_Watcher_Success</members>
+        <members>FEC_MSG_FollowUp_Case_Follow_Success</members>
+        <members>FEC_MSG_FollowUp_Type_Updated_Success</members>
+        <members>FEC_MSG_FollowUp_Unfollow_Success</members>
+        <members>FEC_Success_Title</members>
 		<name>CustomLabel</name>
 	</types>
     <types>
