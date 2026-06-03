@@ -2020,6 +2020,7 @@ public without sharing class FEC_BatchCaseHandlingImportService {
             : new Map<Id, Case>([
                 SELECT
                     Id,
+                    OwnerId,
                     FEC_Current_Case_Stage__c,
                     FEC_Assignment_Count__c,
                     FEC_Final_Status__c,
@@ -2053,6 +2054,9 @@ public without sharing class FEC_BatchCaseHandlingImportService {
             new List<FEC_BCH_AssignmentUpdateService.ImportUpdateItem>();
         List<FEC_BCH_ImportRoutingHistoryService.ImportHistoryItem> importHistoryItems =
             new List<FEC_BCH_ImportRoutingHistoryService.ImportHistoryItem>();
+        //PhongBT 02/06/26: Sửa routing action cho cof/gsr — Route To level Case tạo Assignment mới.
+        List<FEC_BCH_CofGsrImportRouteToService.CreateContext> cofGsrRouteToCreateItems =
+            new List<FEC_BCH_CofGsrImportRouteToService.CreateContext>();
         Map<Id, Case> pendingCaseFieldUpdatesById = new Map<Id, Case>();
         Map<Id, List<FEC_BatchCaseHandlingImportRow>> rowsByCaseForFieldUpdate = new Map<Id, List<FEC_BatchCaseHandlingImportRow>>();
         for (FEC_BatchCaseHandlingImportRow rr : rows) {
@@ -2117,7 +2121,9 @@ public without sharing class FEC_BatchCaseHandlingImportService {
                 );
                 continue;
             }
-            if (assignmentOnly != true &&
+            //PhongBT 02/06/26: Sửa routing action cho cof/gsr — không trả lỗi Requires_Params.
+            if (cofOrGsr != true &&
+                assignmentOnly != true &&
                 routingParsed != null &&
                 routingActionRequiresExtraParams(methodKey, routingParsed.decision)) {
                 rr.status = System.Label.FEC_Batch_Case_Handling_Import_Row_Status_Failed;
@@ -2128,6 +2134,11 @@ public without sharing class FEC_BatchCaseHandlingImportService {
                 continue;
             }
             try {
+                //PhongBT 02/06/26: Sửa routing action cho cof/gsr
+                Boolean cofGsrCaseRouteToCreate = cofOrGsr == true &&
+                    assignmentOnly != true &&
+                    String.isNotBlank(rr.routingAction) &&
+                    FEC_BCH_CofGsrImportRouteToService.isCofGsrRouteToImportLabel(rr.routingAction);
                 Map<String, String> runParams = new Map<String, String>{ 'caseId' => String.valueOf(caseId) };
                 if (routingParsed != null && methodKey == FEC_CaseBusinessService.UPDATEACTION && String.isNotBlank(routingParsed.decision)) {
                     runParams.put('decision', routingParsed.decision);
@@ -2181,7 +2192,16 @@ public without sharing class FEC_BatchCaseHandlingImportService {
                     Boolean routeParamsValid = routeParams != null &&
                         String.isNotBlank(routeParams.get('actionId')) &&
                         String.isNotBlank(routeParams.get('queueId'));
-                    if (assignmentOnly != true && !routeParamsValid) {
+                    if (cofGsrCaseRouteToCreate == true) {
+                        FEC_BCH_CofGsrImportRouteToService.collectCreateContext(
+                            rr,
+                            caseId,
+                            rr.routingAction,
+                            cofGsrRouteToCreateItems
+                        );
+                    }
+                    //PhongBT 02/06/26: Sửa routing action cho cof/gsr — không trả lỗi Requires_Params.
+                    if (cofOrGsr != true && assignmentOnly != true && !routeParamsValid) {
                         rr.status = System.Label.FEC_Batch_Case_Handling_Import_Row_Status_Failed;
                         rr.errors = appendError(
                             rr.errors,
@@ -2194,7 +2214,8 @@ public without sharing class FEC_BatchCaseHandlingImportService {
                         runParams.put('queueId', routeParams.get('queueId'));
                     }
                     //PhongBT 28/05/26: COF/GSR có assignmentId — queue team/queue từ Stage Change hoặc hint Excel.
-                    if (cofOrGsr == true && String.isNotBlank(rr.assignmentId)) {
+                    //PhongBT 02/06/26: Sửa routing action cho cof/gsr — Route To Case tạo Assignment mới, không update Assignment ID.
+                    if (cofOrGsr == true && String.isNotBlank(rr.assignmentId) && cofGsrCaseRouteToCreate != true) {
                         Id assignmentRecordId = parseAssignmentId(rr.assignmentId, assignmentByName, assignmentByRecordId);
                         if (assignmentRecordId != null) {
                             AssignmentRouteToUpdateItem routeToItem = new AssignmentRouteToUpdateItem();
@@ -2235,7 +2256,8 @@ public without sharing class FEC_BatchCaseHandlingImportService {
                             rr.actionButtonId,
                             rr.revertPreferRevertedChange == true
                         );
-                    if (assignmentOnly != true && String.isBlank(revertActionId)) {
+                    //PhongBT 02/06/26: Sửa routing action cho cof/gsr — không trả lỗi Requires_Params.
+                    if (cofOrGsr != true && assignmentOnly != true && String.isBlank(revertActionId)) {
                         rr.status = System.Label.FEC_Batch_Case_Handling_Import_Row_Status_Failed;
                         rr.errors = appendError(
                             rr.errors,
@@ -2251,6 +2273,10 @@ public without sharing class FEC_BatchCaseHandlingImportService {
                     runParams.put('routingActionValue', rr.routingActionValue);
                 }
                 Boolean skipCaseRun = false;
+                //PhongBT 02/06/26: Sửa routing action cho cof/gsr — Route To Case đã xử lý tạo Assignment.
+                if (cofGsrCaseRouteToCreate == true) {
+                    skipCaseRun = true;
+                }
                 if (assignmentOnly == true) {
                     if (methodKey == FEC_CaseBusinessService.ROUTE_TO && !runParams.containsKey('queueId')) {
                         skipCaseRun = true;
@@ -2310,6 +2336,11 @@ public without sharing class FEC_BatchCaseHandlingImportService {
             }
         }
         applyAssignmentRouteToBulk(validAssignmentRouteToItems);
+        //PhongBT 02/06/26: Sửa routing action cho cof/gsr — bulk tạo Assignment Route To level Case.
+        FEC_BCH_CofGsrImportRouteToService.applyCreateRoutingAssignmentsBulk(
+            cofGsrRouteToCreateItems,
+            caseLiteById
+        );
         List<FEC_BCH_AssignmentUpdateService.ImportUpdateItem> validAssignmentUpdateItems =
             new List<FEC_BCH_AssignmentUpdateService.ImportUpdateItem>();
         for (FEC_BCH_AssignmentUpdateService.ImportUpdateItem item : assignmentUpdateItems) {
@@ -3183,7 +3214,17 @@ public without sharing class FEC_BatchCaseHandlingImportService {
         String routingInvalidLabel = assignmentOnly == true
             ? System.Label.FEC_Batch_Case_Handling_Import_Err_Assignment_Routing_Invalid
             : System.Label.FEC_Batch_Case_Handling_Import_Err_Routing_Action_Invalid;
+        //PhongBT 02/06/26: Sửa routing action cho cof/gsr — Route To Excel không cần khớp Datagroup.
+        Boolean cofGsrRouteToImportLabel = cofOrGsr == true &&
+            FEC_BCH_CofGsrImportRouteToService.isCofGsrRouteToImportLabel(primaryLabel);
+        Boolean cofGsrCaseRouteToLabel = cofGsrRouteToImportLabel == true && assignmentOnly != true;
         if (resolved == null || String.isBlank(resolved.methodKey)) {
+            if (cofGsrRouteToImportLabel == true) {
+                if (!FEC_BCH_CofGsrImportRouteToService.isRouteToLabelResolvable(primaryLabel)) {
+                    errs.add(routingInvalidLabel);
+                }
+                return errs;
+            }
             errs.add(routingInvalidLabel);
             return errs;
         }
@@ -3194,9 +3235,15 @@ public without sharing class FEC_BatchCaseHandlingImportService {
         //PhongBT 29/05/26: thêm update vào datagroup cho Assignment Routing Action
         Boolean skipDatagroupForUpdate = isCofGsrImportUpdateAction(cofOrGsr, primaryLabel);
         if (!skipDatagroupForUpdate &&
+            cofGsrRouteToImportLabel != true &&
             FEC_BCH_ImportRoutingResolver.requiresStageScreenMatch(resolved.methodKey) &&
             stageId != null &&
             resolved.matchedStageScreen != true) {
+            errs.add(routingInvalidLabel);
+            return errs;
+        }
+        if (cofGsrRouteToImportLabel == true &&
+            !FEC_BCH_CofGsrImportRouteToService.isRouteToLabelResolvable(primaryLabel)) {
             errs.add(routingInvalidLabel);
             return errs;
         }
@@ -3327,24 +3374,33 @@ public without sharing class FEC_BatchCaseHandlingImportService {
             return errs;
         }
         if (profile == FEC_BatchCaseHandlingImportProfile.FIELD_PROFILE_PM_PAYMENT) {
-            // 01/06/2026 - PM import: bắt buộc Payment đánh giá yêu cầu đóng hợp đồng khi template có field này.
-            validateD2CField(
-                rr,
-                rr.paymentContractAssessment,
-                LABEL_PAYMENT_CONTRACT_ASSESSMENT,
-                new Set<String>{
-                    normalizeToken(LABEL_PAYMENT_CONTRACT_ASSESSMENT),
-                    normalizeToken(LABEL_PAYMENT_CONTRACT_ASSESSMENT_ALIAS),
-                    normalizeToken(LABEL_PAYMENT_CONTRACT_ASSESSMENT_MDM_EN)
-                },
-                ERR_MISSING_PAYMENT_ASSESSMENT,
-                ERR_INVALID_PAYMENT_ASSESSMENT,
-                'FEC_RD_Payment_Contract_Assessment__c',
-                configuredLabels,
-                picklistValueByNormByField,
-                errs,
-                true
-            );
+            //tungnm37 - chỉ validate Payment assessment khi file import thực sự có cột này.
+            if (hasAnyImportHeader(rr, new Set<String>{
+                normalizeToken(LABEL_PAYMENT_CONTRACT_ASSESSMENT),
+                normalizeToken(LABEL_PAYMENT_CONTRACT_ASSESSMENT_ALIAS),
+                normalizeToken(LABEL_PAYMENT_CONTRACT_ASSESSMENT_MDM_EN),
+                'paymentcontractassessment',
+                'rdpaymentcontractassessment',
+                'paymentdanhgiayeucaudonghopdong'
+            })) {
+                validateD2CField(
+                    rr,
+                    rr.paymentContractAssessment,
+                    LABEL_PAYMENT_CONTRACT_ASSESSMENT,
+                    new Set<String>{
+                        normalizeToken(LABEL_PAYMENT_CONTRACT_ASSESSMENT),
+                        normalizeToken(LABEL_PAYMENT_CONTRACT_ASSESSMENT_ALIAS),
+                        normalizeToken(LABEL_PAYMENT_CONTRACT_ASSESSMENT_MDM_EN)
+                    },
+                    ERR_MISSING_PAYMENT_ASSESSMENT,
+                    ERR_INVALID_PAYMENT_ASSESSMENT,
+                    'FEC_RD_Payment_Contract_Assessment__c',
+                    configuredLabels,
+                    picklistValueByNormByField,
+                    errs,
+                    true
+                );
+            }
             return errs;
         }
         if (profile == FEC_BatchCaseHandlingImportProfile.FIELD_PROFILE_CP_ASSESSMENT) {

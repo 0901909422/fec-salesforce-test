@@ -12,6 +12,8 @@
 ****************************************************************************************/
 global with sharing class FEC_GetCSMasterDataService {
     private static final Integer MAX_TRANSACTION_ID = 36;
+    private static final Integer FEC_API_LOG_RESPONSE_FIELD_LEN = 131072;
+    private static final String API_LOG_TRUNCATED_SUFFIX = '...[truncated]';
 
     // Cache
     private static Map<String, List<AdditionalPropertyType>> cacheByApplyTo = new Map<String, List<AdditionalPropertyType>>();
@@ -29,27 +31,51 @@ global with sharing class FEC_GetCSMasterDataService {
         SysRequestType Sys,
         Boolean includeAdditionalProperties
     ) {
-
         GetCSMasterDataResponse res = initResponse(Sys);
-        if (Sys == null) {
-            res.Sys.Code = '101';
-            res.Sys.Description = System.Label.FEC_MSG_Sys_Null;
-            return res;
+        String errorMessage = null;
+        Boolean isSuccess = false;
+
+        try {
+            if (Sys == null) {
+                res.Sys.Code = '101';
+                res.Sys.Description = System.Label.FEC_MSG_Sys_Null;
+            } else if (!FEC_CommonUltils.isActiveChannelSupported(Sys.Channel)) {
+                res.Sys.Code = '102';
+                res.Sys.Description = buildUnsupportedChannelMessage(Sys.Channel);
+            } else if (
+                String.isBlank(Sys.TransactionID)
+                || Sys.TransactionID.length() > FEC_ConstantCommon.CANCEL_CS_TRANSACTION_ID_MAX_LEN
+            ) {
+                res.Sys.Code = '103';
+                res.Sys.Description =
+                    System.Label.FEC_MSG_TransactionId_Validation
+                    + FEC_ConstantCommon.CANCEL_CS_TRANSACTION_ID_MAX_LEN
+                    + System.Label.FEC_MSG_Limit_Character;
+            } else {
+                processMasterDataRequest(includeAdditionalProperties, res);
+                res.Sys.Code = System.Label.FEC_Success_Title;
+                res.Sys.Description = System.Label.FEC_MSG_Get_CS_Data_Success;
+                isSuccess = true;
+            }
+        } catch (Exception e) {
+            errorMessage = e.getMessage();
+            res.Sys.Code = '500';
+            res.Sys.Description = 'Internal server error: ' + errorMessage;
+            res.MasterDataItems = new List<MasterDataItemType>();
         }
 
-        if (!FEC_CommonUltils.isActiveChannelSupported(Sys != null ? Sys.Channel : null)) {
-            res.Sys.Code = '102';
-            res.Sys.Description = buildUnsupportedChannelMessage(Sys.Channel);
-            return res;
+        if (!isSuccess && String.isBlank(errorMessage) && res.Sys != null) {
+            errorMessage = res.Sys.Description;
         }
 
-        if (String.isBlank(Sys.TransactionID) || Sys.TransactionID.length() > FEC_ConstantCommon.CANCEL_CS_TRANSACTION_ID_MAX_LEN) {
-            res.Sys.Code = '103';
-            res.Sys.Description = System.Label.FEC_MSG_TransactionId_Validation + FEC_ConstantCommon.CANCEL_CS_TRANSACTION_ID_MAX_LEN + System.Label.FEC_MSG_Limit_Character;
-            return res;
-        }
+        writeGetCSMasterDataApiLog(Sys, res, isSuccess, errorMessage);
+        return res;
+    }
 
-        // Settings only needed when AdditionalProperties DTOs are attached (SOAP webservice path).
+    private static void processMasterDataRequest(
+        Boolean includeAdditionalProperties,
+        GetCSMasterDataResponse res
+    ) {
         if (includeAdditionalProperties) {
             loadSettings(true);
         }
@@ -175,10 +201,45 @@ global with sharing class FEC_GetCSMasterDataService {
         }
 
         res.MasterDataItems = productMap.values();
-        res.Sys.Code = System.Label.FEC_Success_Title;
-        res.Sys.Description = System.Label.FEC_MSG_Get_CS_Data_Success;
+    }
 
-        return res;
+    private static void writeGetCSMasterDataApiLog(
+        SysRequestType request,
+        GetCSMasterDataResponse response,
+        Boolean isSuccess,
+        String errorMessage
+    ) {
+        try {
+            HttpResponse apiResponse = new HttpResponse();
+            apiResponse.setStatusCode(isSuccess ? 200 : 500);
+            apiResponse.setBody(buildApiLogResponseBody(response));
+            FEC_CommonUltils.logApi(
+                'GetCSMasterData',
+                'GetCSMasterData',
+                FEC_ConstantCommon.API_METHOD_POST,
+                FEC_CommonUltils.serializeSafe(request),
+                apiResponse,
+                errorMessage
+            );
+        } catch (Exception logEx) {
+            System.debug('LOG_API_ERROR GetCSMasterData: ' + logEx.getMessage());
+        }
+    }
+
+    private static String buildApiLogResponseBody(GetCSMasterDataResponse response) {
+        if (response == null) {
+            return null;
+        }
+
+        String body = FEC_CommonUltils.serializeSafe(response);
+        Integer maxBodyLen =
+            FEC_API_LOG_RESPONSE_FIELD_LEN - API_LOG_TRUNCATED_SUFFIX.length();
+
+        return FEC_CommonUltils.truncateForLog(
+            body,
+            maxBodyLen,
+            API_LOG_TRUNCATED_SUFFIX
+        );
     }
 
     public static String buildGetCSMasterDataSoapXml(SysRequestType sys) {

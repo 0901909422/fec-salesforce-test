@@ -1,6 +1,24 @@
 public with sharing class FEC_MarkNFU {
   public static final String API_CONFIG_NAME = 'FEC_Mark_NFU';
+  private static ResponseLog responseLog;
 
+  public class ResponseLog {
+    public String apiName;
+    public String endpoint;
+    public String method;
+    public String requestBody;
+    public HttpResponse response;
+    public String errorMessage;
+
+    public ResponseLog(String apiName, String endpoint, String method, String requestBody, HttpResponse response, String errorMessage) {
+      this.apiName = apiName;
+      this.endpoint = endpoint;
+      this.method = method;
+      this.requestBody = requestBody;
+      this.response = response;
+      this.errorMessage = errorMessage;
+    }
+  }
   public class MarkNFURequest {
     public String ContractNumber;
     public String NFUReasonCode;
@@ -49,18 +67,33 @@ public with sharing class FEC_MarkNFU {
     String endpoint = apiSetting?.FEC_Call_Mock__c
       ? FEC_ConstantCommon.STR_EMPTY
       : (apiSetting?.FEC_Endpoint__c + apiConfig?.FEC_Endpoint__c);
-    
-    HttpResponse res = FEC_CommonUltils.calloutApi(
-      endpoint,
-      FEC_ConstantCommon.API_METHOD_POST,
-      FEC_ConstantCommon.API_CONTENT_TYPE,
-      apiConfig?.FEC_SOAP_Action__c,
-      null,
-      envelope
-    );
-    return res;
-  }
 
+    HttpResponse res;
+    String errorMessage;
+    try {
+      res = FEC_CommonUltils.calloutApi(
+        endpoint,
+        FEC_ConstantCommon.API_METHOD_POST,
+        FEC_ConstantCommon.API_CONTENT_TYPE,
+        apiConfig?.FEC_SOAP_Action__c,
+        null,
+        envelope
+      );
+      return res;
+    } catch (Exception ex) {
+      errorMessage = ex.getMessage();
+      throw ex;
+    } finally {
+      responseLog = new ResponseLog(
+        'FEC_MarkNFU',
+        endpoint,
+        FEC_ConstantCommon.API_METHOD_POST,
+        envelope,
+        res,
+        errorMessage
+      );
+    }
+  }
   public static MarkNFUResult parseResponse(String xml, Integer httpStatus) {
     MarkNFUResult result = new MarkNFUResult();
     result.httpStatus = httpStatus;
@@ -128,10 +161,24 @@ public with sharing class FEC_MarkNFU {
     } catch (Exception ex) {
       finalResult.errorMessage = ex.getMessage();
       finalResult.success = false;
+    } finally {
+      logApiResponse();
     }
     return finalResult;
   }
 
+  public static void logApiResponse() {
+    if (responseLog != null) {
+      FEC_CommonUltils.logApi(
+        responseLog.apiName,
+        responseLog.endpoint,
+        responseLog.method,
+        responseLog.requestBody,
+        responseLog.response,
+        responseLog.errorMessage
+      );
+    }
+  }
   private static void validate(MarkNFURequest req) {
     if (req == null) {
       throw new FEC_APIServiceException(
