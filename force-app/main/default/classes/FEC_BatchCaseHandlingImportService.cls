@@ -3523,6 +3523,19 @@ public without sharing class FEC_BatchCaseHandlingImportService {
         return errs;
     }
 
+    //tungnm37 03/06/26: thêm hàm kiểm tra xem có bất kỳ header nào trong file import thực sự có trong Set<String> normalizedHeaderTokens không.
+    private static Boolean hasAnyImportHeader(FEC_BatchCaseHandlingImportRow rr, Set<String> normalizedHeaderTokens) {
+        if (rr == null || rr.originalHeaders == null || rr.originalHeaders.isEmpty() || normalizedHeaderTokens == null || normalizedHeaderTokens.isEmpty()) {
+            return false;
+        }
+        for (String header : rr.originalHeaders) {
+            String normalized = normalizeToken(header);
+            if (normalizedHeaderTokens.contains(normalized)) {
+                return true;
+            }
+        }
+        return false;
+    }
     private static void validateD2CField(
         FEC_BatchCaseHandlingImportRow rr,
         String inputValue,
