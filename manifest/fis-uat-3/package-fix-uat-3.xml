@@ -208,6 +208,8 @@
         <members>FEC_CloseInterationSchedulerBatch</members>
         <members>FEC_IPPScheduleController</members>
         <members>FEC_ApplicationsListController</members>
+        <members>FEC_GetCSAttachedFile</members>
+        <members>FEC_GetLoanSecInfo</members>
 		<name>ApexClass</name>
 	</types>
     <types>
