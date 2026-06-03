@@ -210,6 +210,7 @@
         <members>FEC_ApplicationsListController</members>
         <members>FEC_GetCSAttachedFile</members>
         <members>FEC_GetLoanSecInfo</members>
+        <members>FEC_CancelCSCaseService</members>
 		<name>ApexClass</name>
 	</types>
     <types>
