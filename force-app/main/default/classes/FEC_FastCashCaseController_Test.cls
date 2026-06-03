@@ -420,6 +420,38 @@ private class FEC_FastCashCaseController_Test {
     }
 
     @IsTest
+    static void testExecuteFastCashBlock_FecCmsResponseCodes() {
+        Case c = getMainCase();
+        Map<String, Boolean> expectedSuccess = new Map<String, Boolean>{
+            '0' => true,
+            '1' => true,
+            '4' => true,
+            '2' => false,
+            '10' => false,
+            '21' => false
+        };
+        for (String code : expectedSuccess.keySet()) {
+            Test.setMock(HttpCalloutMock.class, new FastCashApiMock('true', '5000000', code));
+            FEC_FastCashCaseController.BlockResultDTO result =
+                FEC_FastCashCaseController.executeFastCashBlock(
+                    c.Id,
+                    1000000,
+                    'APP-CRM-001',
+                    'BRANCH'
+                );
+            System.assertEquals(
+                expectedSuccess.get(code),
+                result.success,
+                'CMSIPPBlock Code ' + code
+            );
+            System.assertEquals(code, result.sysCode, 'sysCode phải khớp Code ' + code);
+            if (!result.success) {
+                System.assertNotEquals(null, result.errorMessage, 'Code ' + code + ' fail phải có errorMessage');
+            }
+        }
+    }
+
+    @IsTest
     static void testFinalizeFastCashOnSubmit_Rc35AndNonRc35() {
         Case rc35Case = getMainCase();
         delete [SELECT Id FROM FEC_Pending_Disbursement__c WHERE FEC_Case__c = :rc35Case.Id];
