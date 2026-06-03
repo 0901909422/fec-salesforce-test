@@ -150,6 +150,136 @@ public with sharing class FEC_FecServiceTypeMappingController {
         return result;
     }
     
+    /**
+     * @description Trả về danh sách Case field + relationship parents 1-cấp dùng cho field picker.
+     * Output gồm direct Case fields và parent fields của 1 số relationship phổ biến (Account, Owner,
+     * Contact, CreatedBy, RecordType + custom relationship FEC_*__r). Chỉ field user có FLS read mới
+     * xuất hiện. Cú pháp value đảm bảo đúng định dạng SOQL/Schema để imp Case auto-mapping ăn được:
+     *   - Direct: ApiName (vd "CaseNumber", "FEC_Application_ID__c")
+     *   - Relationship: Parent.ChildApi (vd "Account.Name", "FEC_Customer__r.Phone")
+     * @return List<Map<String, Object>> với keys: label, value, group, apiName.
+     */
+    @AuraEnabled(cacheable=true)
+    public static List<Map<String, Object>> getCaseFieldOptions() {
+        try {
+            List<Map<String, Object>> options = new List<Map<String, Object>>();
+            Schema.DescribeSObjectResult caseDescribe = Case.SObjectType.getDescribe();
+            Map<String, Schema.SObjectField> caseFields = caseDescribe.fields.getMap();
+
+            // 1. Direct Case fields
+            List<Map<String, Object>> caseDirect = new List<Map<String, Object>>();
+            for (String apiName : caseFields.keySet()) {
+                Schema.SObjectField sf = caseFields.get(apiName);
+                Schema.DescribeFieldResult dfr = sf.getDescribe();
+                if (!dfr.isAccessible()) continue;
+                // Skip system fields ít dùng để picker gọn hơn
+                if (dfr.isCalculated() && dfr.getType() == Schema.DisplayType.Address) continue;
+
+                String label = dfr.getLabel();
+                String displayApiName = dfr.getName();
+                caseDirect.add(new Map<String, Object>{
+                    'label' => label + ' (' + displayApiName + ')',
+                    'value' => displayApiName,
+                    'apiName' => displayApiName,
+                    'group' => System.Label.FEC_Group_CaseFields
+                });
+            }
+
+            // 2. Relationship parents 1-cấp — group theo từng parent object
+            // Standard: Account, Owner, Contact, CreatedBy, RecordType
+            // Custom: bất cứ field __c nào là Reference type → thêm vào
+            Set<String> relationshipNames = new Set<String>();
+            for (String apiName : caseFields.keySet()) {
+                Schema.DescribeFieldResult dfr = caseFields.get(apiName).getDescribe();
+                if (dfr.getType() != Schema.DisplayType.Reference) continue;
+                String relName = dfr.getRelationshipName();
+                if (String.isBlank(relName)) continue;
+                if (!dfr.isAccessible()) continue;
+                relationshipNames.add(relName);
+            }
+
+            // Mỗi parent → 1 group riêng (vd "Account Fields", "Owner Fields")
+            // Map<groupName, List<options>> để sort group alphabet
+            Map<String, List<Map<String, Object>>> parentGroupMap = new Map<String, List<Map<String, Object>>>();
+            for (String relName : relationshipNames) {
+                Schema.SObjectField relField = caseFields.get(getReferenceFieldApiName(relName, caseFields));
+                if (relField == null) continue;
+                Schema.DescribeFieldResult relDfr = relField.getDescribe();
+                List<Schema.SObjectType> refTos = relDfr.getReferenceTo();
+                if (refTos == null || refTos.isEmpty()) continue;
+                Schema.DescribeSObjectResult parentDescribe = refTos[0].getDescribe();
+                if (!parentDescribe.isAccessible()) continue;
+
+                String groupName = relName + ' Fields';
+                List<Map<String, Object>> groupItems = new List<Map<String, Object>>();
+
+                Map<String, Schema.SObjectField> parentFields = parentDescribe.fields.getMap();
+                for (String pApiName : parentFields.keySet()) {
+                    Schema.DescribeFieldResult pDfr = parentFields.get(pApiName).getDescribe();
+                    if (!pDfr.isAccessible()) continue;
+                    // Skip lookup ID fields trên parent — tránh nested 2-cấp
+                    if (pDfr.getType() == Schema.DisplayType.Reference) continue;
+                    String pName = pDfr.getName();
+                    String pLabel = pDfr.getLabel();
+                    groupItems.add(new Map<String, Object>{
+                        'label' => pLabel + ' (' + relName + '.' + pName + ')',
+                        'value' => relName + '.' + pName,
+                        'apiName' => relName + '.' + pName,
+                        'group' => groupName
+                    });
+                }
+                if (!groupItems.isEmpty()) {
+                    groupItems.sort(new FieldOptionLabelComparator());
+                    parentGroupMap.put(groupName, groupItems);
+                }
+            }
+
+            // Sort each group theo label
+            caseDirect.sort(new FieldOptionLabelComparator());
+
+            // Output order: Case Fields trước → parent groups (alphabet sort theo group name)
+            options.addAll(caseDirect);
+            List<String> sortedGroups = new List<String>(parentGroupMap.keySet());
+            sortedGroups.sort();
+            for (String g : sortedGroups) {
+                options.addAll(parentGroupMap.get(g));
+            }
+            return options;
+        } catch (System.QueryException qe) {
+            System.debug('FEC_FecServiceTypeMappingController.getCaseFieldOptions FLS denied: ' + qe);
+            throw new AuraHandledException(System.Label.FEC_Error_FLS_Denied);
+        } catch (Exception e) {
+            System.debug('FEC_FecServiceTypeMappingController.getCaseFieldOptions error: ' + e);
+            throw new AuraHandledException(System.Label.FEC_Error_FLS_Denied);
+        }
+    }
+
+    /**
+     * Helper: tìm apiName của field reference dựa vào relationshipName.
+     * Vd relationshipName "Account" → field api "AccountId"; "FEC_Customer__r" → "FEC_Customer__c".
+     */
+    private static String getReferenceFieldApiName(String relName, Map<String, Schema.SObjectField> fields) {
+        for (String fApi : fields.keySet()) {
+            Schema.DescribeFieldResult dfr = fields.get(fApi).getDescribe();
+            if (dfr.getType() == Schema.DisplayType.Reference
+                && relName.equalsIgnoreCase(dfr.getRelationshipName())) {
+                return dfr.getName();
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Comparator: sort field options theo 'label' ASC (case-insensitive).
+     */
+    public class FieldOptionLabelComparator implements Comparator<Map<String, Object>> {
+        public Integer compare(Map<String, Object> a, Map<String, Object> b) {
+            String la = String.valueOf(a.get('label')).toLowerCase();
+            String lb = String.valueOf(b.get('label')).toLowerCase();
+            return la.compareTo(lb);
+        }
+    }
+
     @AuraEnabled
     public static void savePropertyMapping(Id settingId, String newRef) {
         if (settingId == null) throw new AuraHandledException(FEC_UIConstants.ERROR_INVALID_ID);

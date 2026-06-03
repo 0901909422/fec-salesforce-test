@@ -20,21 +20,21 @@ private class FEC_MDM_WorkflowEngineTest {
                 Name = 'Stage Open',
                 FEC_Code__c = 'STG_OPEN',
                 FEC_Business_Process__c = bp.Id,
-                FEC_Pos_Order__c = 1,
+                FEC_Order__c = 1,
                 FEC_Status__c = true
             ),
             new FEC_MDM_Case_Stage__c(
                 Name = 'Stage Review',
                 FEC_Code__c = 'STG_REVIEW',
                 FEC_Business_Process__c = bp.Id,
-                FEC_Pos_Order__c = 2,
+                FEC_Order__c = 2,
                 FEC_Status__c = true
             ),
             new FEC_MDM_Case_Stage__c(
                 Name = 'Stage Closed',
                 FEC_Code__c = 'STG_CLOSED',
                 FEC_Business_Process__c = bp.Id,
-                FEC_Pos_Order__c = 3,
+                FEC_Order__c = 3,
                 FEC_Status__c = true
             )
         };
@@ -504,14 +504,14 @@ private class FEC_MDM_WorkflowEngineTest {
             Name = 'Bulk Stage A',
             FEC_Code__c = 'BULK_A',
             FEC_Business_Process__c = bulkBp.Id,
-            FEC_Pos_Order__c = 1,
+            FEC_Order__c = 1,
             FEC_Status__c = true
         );
         FEC_MDM_Case_Stage__c stageB = new FEC_MDM_Case_Stage__c(
             Name = 'Bulk Stage B',
             FEC_Code__c = 'BULK_B',
             FEC_Business_Process__c = bulkBp.Id,
-            FEC_Pos_Order__c = 2,
+            FEC_Order__c = 2,
             FEC_Status__c = true
         );
         insert new List<FEC_MDM_Case_Stage__c>{ stageA, stageB };

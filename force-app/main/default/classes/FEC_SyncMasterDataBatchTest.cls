@@ -119,6 +119,29 @@ private class FEC_SyncMasterDataBatchTest {
             );
             insert scc;
 
+            // 15. Decision Rule (Live) — to cover text Id remap path
+            // FEC_Key_ID__c stores BP Id as text → text Id remap remaps to MDM BP Id
+            FEC_Decision_Rule__c dr = new FEC_Decision_Rule__c(
+                FEC_Code__c = 'DR-001',
+                FEC_Table_Key__c = 'STAGE_TRANSITION',
+                FEC_Key_ID__c = String.valueOf(bp.Id),
+                FEC_Priority__c = 1,
+                FEC_Active__c = true
+            );
+            insert dr;
+
+            // 16. Decision Condition (Live, depends on DR)
+            FEC_Decision_Condition__c dc = new FEC_Decision_Condition__c(
+                FEC_Code__c = 'DC-001',
+                FEC_Decision_Rule__c = dr.Id,
+                FEC_Type__c = 'Condition',
+                FEC_Label__c = 'Status',
+                FEC_Operator__c = '=',
+                FEC_Value__c = 'New',
+                FEC_Order__c = 1
+            );
+            insert dc;
+
         } finally {
             FEC_ProcessChangeStatusTriggerHandler.isTriggerEnabled = true;
         }
@@ -144,7 +167,9 @@ private class FEC_SyncMasterDataBatchTest {
             FEC_ObjectConstants.OBJ_MDM_MASTER_DATA_SETTING,
             FEC_ObjectConstants.OBJ_MDM_ACTION_BUTTON,
             FEC_ObjectConstants.OBJ_MDM_STAGE_CHANGE,
-            FEC_ObjectConstants.OBJ_MDM_STAGE_CHANGE_CONDITION
+            FEC_ObjectConstants.OBJ_MDM_STAGE_CHANGE_CONDITION,
+            FEC_ObjectConstants.OBJ_MDM_DECISION_RULE,
+            FEC_ObjectConstants.OBJ_MDM_DECISION_CONDITION
         };
         for (String objName : executionOrder) {
             batch.execute(null, new List<String>{ objName });

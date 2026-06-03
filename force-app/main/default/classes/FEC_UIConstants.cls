@@ -61,6 +61,7 @@ public class FEC_UIConstants {
     public static final String PROCESS_STATUS_NEW = 'New';
     public static final String PROCESS_STATUS_UPDATE = 'Update';
     public static final String PROCESS_STATUS_SYNCED = 'Synced';
+    public static final String PROCESS_STATUS_DELETED = 'Deleted';
 
     // ── CSS classes ───────────────────────────────────────────────────────
     public static final String CSS_WARN = 'slds-theme_warning';

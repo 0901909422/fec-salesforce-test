@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Package xmlns="http://soap.sforce.com/2006/04/metadata">
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <!-- MDM (Master Data Management) - SIT Deployment Manifest -->
+    <!-- Generated: 2026-04-10                                  -->
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <!-- AUTHOR LEGEND (verify trên Org SIT, KHÔNG phải git):  -->
+    <!--   [DAT NGO]    = Đạt Ngô     (UserId 005d50000049NpVAAU) -->
+    <!--   [PHUONG]     = Phuong Nguyen                         -->
+    <!--   [VU_NGUYEN]  = Vu Nguyen                             -->
+    <!--   [VU_NGUYEN2] = Vũ Nguyễn                             -->
+    <!--   [BUI_TRUNG]  = Bùi Trung                             -->
+    <!-- File không có comment author → mặc định là [DAT NGO]. -->
+    <!-- File có comment author khác → ghi rõ tên người tạo.    -->
+    <!-- Query verify: SELECT CreatedBy.Name FROM ... WHERE ...  -->
+    <!-- ═══════════════════════════════════════════════════════ -->
+
+    <!-- ── Custom Objects (MDM Layer + Live Layer + Supporting) ── -->
+    <!-- ── Apex Classes [ALL DAT NGO] ── -->
+    <types>
+        <!-- Constants -->
+        <members>FEC_Constants</members>
+        <members>FEC_FieldConstants</members>
+        <members>FEC_MDMBatchConfig</members>
+        <members>FEC_ObjectConstants</members>
+        <members>FEC_UIConstants</members>
+        <!-- Controllers -->
+        <members>FEC_MasterDataSettingController</members>
+        <members>FEC_MasterDataSettingControllerTest</members>
+        <members>FEC_MasterDataSettingCtrlPropertyTest</members>
+        <members>FEC_MasterDataReviewController</members>
+        <members>FEC_MasterDataReviewControllerTest</members>
+        <members>FEC_CleanUpMasterDataController</members>
+        <!-- Live Data View -->
+        <members>FEC_LiveDataViewController</members>
+        <!-- Nature of Case Tree -->
+        <members>FEC_NatureOfCaseTreeBuilder</members>
+        <members>FEC_NatureOfCaseTreeController</members>
+        <members>FEC_NatureOfCaseTreeControllerTest</members>
+        <members>FEC_NatureOfCaseTreeItem</members>
+        <members>FEC_NatureOfCaseTreeService</members>
+        <!-- Decision Table -->
+        <members>FEC_DecisionTableController</members>
+        <members>FEC_DecisionEngineController</members>
+        <members>FEC_DecisionEngineController_Test</members>
+        <members>FEC_DecisionEngine_Property_Test</members>
+        <!-- History -->
+        <members>FEC_HistoryController</members>
+        <!-- Additional Info -->
+        <members>FEC_AdditionalInfoController</members>
+        <members>FEC_AdditionalInfoControllerTest</members>
+        <!-- Service Type Mapping -->
+        <members>FEC_FecServiceTypeMappingController</members>
+        <members>FEC_FecServiceTypeMappingControllerTest</members>
+        <!-- Batch & Sync -->
+        <members>FEC_SyncMasterDataBatch</members>
+        <members>FEC_SyncMasterDataBatchTest</members>
+        <members>FEC_PushMDMToLiveBatch</members>
+        <members>FEC_PushMDMToLiveBatchTest</members>
+        <members>FEC_PushMDM_Scheduler</members>
+        <members>FEC_PushMDM_SchedulerTest</members>
+        <!-- Workflow Engine -->
+        <members>FEC_MDM_WorkflowEngine</members>
+        <members>FEC_MDM_WorkflowEngineTest</members>
+        <!-- Metadata Field Creator -->
+        <members>FEC_MetadataFieldCreator</members>
+        <members>FEC_MetadataFieldCreatorTest</members>
+        <members>FEC_MetadataFieldCreatorPropertyTest</members>
+        <members>FEC_MetadataDeployCallback</members>
+        <members>FEC_MetadataDeployCallbackTest</members>
+        <members>FEC_MetadataDeployCallbackPropertyTest</members>
+        <!-- Trigger Handlers -->
+        <members>FEC_ProcessChangeStatusTriggerHandler</members>
+        <members>FEC_AdditionalFieldValueTriggerHandler</members>
+        <!-- Misc -->
+        <members>FEC_AdditionalFieldControllerTest</members>
+        <members>FEC_BusinessProcessService</members>
+        <members>FEC_CaseChannelController</members>
+        <members>FEC_ChannelController</members>
+        <members>FEC_AdditionalFieldController</members>
+        <members>FEC_FieldDeployQueueable</members>
+        <members>FEC_StageTransitionEngine</members>
+        <members>FEC_StageTransitionEngine_Test</members>
+        <members>FEC_BatchUtils</members>
+        <members>FEC_Util</members>
+        <!-- Hold Case Config -->
+        <members>FEC_HoldCaseConfigController</members>
+        <!-- Added by DAT NGO -->
+        <members>FEC_ChannelControllerTest</members>
+        <members>FEC_NfuCodeController</members>
+        <members>FEC_SeedNfuCodes</members>
+        <members>FEC_BatchException</members>
+        <members>FEC_ChangeStatusHandlerTest</members>
+        <members>FEC_SyncPropertyFromSchemaBatch</members>
+        <!-- Live NOC Tree -->
+        <members>FEC_LiveNatureOfCaseTreeController</members>
+        <members>FEC_LiveNatureOfCaseTreeService</members>
+        <!-- (REMOVED: FEC_DNBHandler + FEC_SubProcessService — owned by PHUONG, out of MDM scope) -->
+        <!-- Phase 2 Refactor [DAT NGO] - extracted services -->
+        <members>FEC_CaseStageService</members>
+        <members>FEC_MasterDataSettingService</members>
+        <members>FEC_RuleEngineService</members>
+        <members>FEC_RuleEngineServiceTest</members>
+        <members>FEC_RuleTestService</members>
+        <!-- Live Layer Services/Controllers [DAT NGO] -->
+        <members>FEC_LiveAdditionalFieldController</members>
+        <members>FEC_LiveChannelController</members>
+        <members>FEC_LiveChannelFieldService</members>
+        <members>FEC_LiveMasterDataAggregatorService</members>
+        <members>FEC_LiveMasterDataReviewController</members>
+        <members>FEC_LiveMasterDataSettingController</members>
+        <members>FEC_LiveNOCQueryService</members>
+        <members>FEC_LiveReviewService</members>
+        <members>FEC_LiveServiceTypeMappingController</members>
+        <!-- MDM Helper Services [DAT NGO] -->
+        <members>FEC_MDMConditionUtils</members>
+        <members>FEC_MDMDecisionTableService</members>
+        <members>FEC_MDMFieldOptionService</members>
+        <members>FEC_MDMLookupRemapper</members>
+        <members>FEC_MDMOptionService</members>
+        <!-- Stage Transition / Decision [DAT NGO] -->
+        <members>FEC_StageChangeToDecisionBatch</members>
+        <members>FEC_StageTransitionExecutor</members>
+        <members>FEC_StageTransitionResolver</members>
+        <!-- NOC Tree extra tests [DAT NGO] -->
+        <members>FEC_NatureOfCaseTreeBuilderBugTest</members>
+        <!-- Test Infrastructure [DAT NGO] -->
+        <members>FEC_TestDataFactory</members>
+        <members>FEC_TestDataFactoryTest</members>
+        <name>ApexClass</name>
+    </types>
+
+    <!-- ── Apex Triggers [ALL DAT NGO] ── -->
+    <types>
+        <members>FEC_MDM_ActionButtonTrigger</members>
+        <members>FEC_MDM_AdditionalFieldTrigger</members>
+        <members>FEC_MDM_AdditionalFieldListValueTrigger</members>
+        <members>FEC_MDM_BusinessProcessTrigger</members>
+        <members>FEC_MDM_CaseStageTrigger</members>
+        <members>FEC_MDM_CategoryTrigger</members>
+        <members>FEC_MDM_ChannelTrigger</members>
+        <members>FEC_MDM_MasterDataSettingTrigger</members>
+        <members>FEC_MDM_NatureOfCaseTrigger</members>
+        <members>FEC_MDM_ProductTypeTrigger</members>
+        <members>FEC_MDM_StageChangeTrigger</members>
+        <members>FEC_MDM_SubCategoryTrigger</members>
+        <members>FEC_MDM_SubCodeTrigger</members>
+        <members>FEC_MDM_DecisionRuleTrigger</members>
+        <members>FEC_MDM_DecisionConditionTrigger</members>
+        <!-- Added by DAT NGO -->
+        <members>FEC_MDM_HoldCaseConfigTrigger</members>
+        <members>FEC_MDM_NFUCodeTrigger</members>
+        <!-- Live Object Triggers -->
+        <members>FEC_NatureOfCaseTrigger</members>
+        <name>ApexTrigger</name>
+    </types>
+    <version>64.0</version>
+</Package>

@@ -134,6 +134,30 @@ private class FEC_PushMDMToLiveBatchTest {
             );
             insert scc;
 
+            // 15. Decision Rule (MDM)
+            FEC_MDM_Decision_Rule__c dr = new FEC_MDM_Decision_Rule__c(
+                FEC_Code__c = 'DR-001',
+                FEC_Table_Key__c = 'STAGE_TRANSITION',
+                FEC_Key_ID__c = String.valueOf(bp.Id),
+                FEC_Priority__c = 1,
+                FEC_Active__c = true,
+                Process_Change_Status__c = 'New'
+            );
+            insert dr;
+
+            // 16. Decision Condition (MDM)
+            FEC_MDM_Decision_Condition__c dc = new FEC_MDM_Decision_Condition__c(
+                FEC_Code__c = 'DC-001',
+                FEC_Decision_Rule__c = dr.Id,
+                FEC_Type__c = 'Condition',
+                FEC_Label__c = 'Status',
+                FEC_Operator__c = '=',
+                FEC_Value__c = 'New',
+                FEC_Order__c = 1,
+                Process_Change_Status__c = 'New'
+            );
+            insert dc;
+
         } finally {
             FEC_ProcessChangeStatusTriggerHandler.isTriggerEnabled = true;
         }
@@ -159,7 +183,9 @@ private class FEC_PushMDMToLiveBatchTest {
             FEC_ObjectConstants.OBJ_MDM_MASTER_DATA_SETTING,
             FEC_ObjectConstants.OBJ_MDM_ACTION_BUTTON,
             FEC_ObjectConstants.OBJ_MDM_STAGE_CHANGE,
-            FEC_ObjectConstants.OBJ_MDM_STAGE_CHANGE_CONDITION
+            FEC_ObjectConstants.OBJ_MDM_STAGE_CHANGE_CONDITION,
+            FEC_ObjectConstants.OBJ_MDM_DECISION_RULE,
+            FEC_ObjectConstants.OBJ_MDM_DECISION_CONDITION
         };
         for (String objName : executionOrder) {
             batch.execute(null, new List<String>{ objName });
@@ -436,5 +462,42 @@ private class FEC_PushMDMToLiveBatchTest {
             'SCC Stage Change lookup should point to Live Stage Change (remapped)');
         Assert.areEqual(liveMds[0].Id, scc.FEC_Master_Data_Setting__c,
             'SCC Master Data Setting lookup should point to Live MDS (remapped)');
+    }
+
+    /**
+     * Test: MDM record with status 'Deleted' triggers processDelete branch (lines 155-192).
+     * Verifies that Live record is deleted and MDM record is also deleted.
+     */
+    @isTest
+    static void testPushBatch_DeletedStatus() {
+        // Insert a Live Action Button with code 'AB-DEL'
+        FEC_Action_Button__c liveAb = new FEC_Action_Button__c(
+            Name = 'To Delete', FEC_Code__c = 'AB-DEL-001'
+        );
+        insert liveAb;
+
+        // Insert MDM Action Button with same code + 'Deleted' status
+        FEC_ProcessChangeStatusTriggerHandler.isTriggerEnabled = false;
+        try {
+            insert new FEC_MDM_Action_Button__c(
+                Name = 'To Delete MDM', FEC_Code__c = 'AB-DEL-001',
+                Process_Change_Status__c = 'Deleted'
+            );
+        } finally {
+            FEC_ProcessChangeStatusTriggerHandler.isTriggerEnabled = true;
+        }
+
+        Test.startTest();
+        FEC_PushMDMToLiveBatch batch = new FEC_PushMDMToLiveBatch();
+        batch.execute(null, new List<String>{ FEC_ObjectConstants.OBJ_MDM_ACTION_BUTTON });
+        Test.stopTest();
+
+        // Verify Live Action Button was deleted
+        Integer liveCount = [SELECT COUNT() FROM FEC_Action_Button__c WHERE FEC_Code__c = 'AB-DEL-001'];
+        Assert.areEqual(0, liveCount, 'Live record should be deleted after push');
+
+        // Verify MDM record was also deleted
+        Integer mdmCount = [SELECT COUNT() FROM FEC_MDM_Action_Button__c WHERE FEC_Code__c = 'AB-DEL-001'];
+        Assert.areEqual(0, mdmCount, 'MDM record should be deleted after push');
     }
 }

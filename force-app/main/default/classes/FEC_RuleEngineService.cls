@@ -1,146 +1,343 @@
 /**
- * @description Trái tim của hệ thống: Động cơ đánh giá Luật (Rule Evaluation Engine)
- * @author DAT NGO
- * @date 2026-03-11
+ * @description Service layer for runtime rule evaluation.
+ *              Extracted from FEC_MDM_WorkflowEngine in Phase 2.2 refactor.
+ *              Handles First-Match-Wins evaluation of stage transition rules
+ *              against actual Case data on both MDM and Live layers.
+ * @author      DAT NGO
+ * @date        2026-05-28
+ * @category    MDM Refactor Phase 2.2
  */
 public with sharing class FEC_RuleEngineService {
 
-    public class RuleResult {
-        @AuraEnabled public Boolean isMatched { get; set; }
-        @AuraEnabled public String matchedRowId { get; set; }
-        @AuraEnabled public Map<String, String> actionResults { get; set; } 
-        @AuraEnabled public String message { get; set; }
-        
-        public RuleResult() {
-            this.isMatched = false;
-            this.actionResults = new Map<String, String>();
+    // ════════════════════════════════════════════════════════
+    // MDM LAYER: Evaluate Stage Transition (First Match Wins)
+    // ════════════════════════════════════════════════════════
+
+    public static Map<String, Object> evaluateStageTransition(Id caseId, Id currentStageId, Id actionButtonId) {
+        try {
+            if (caseId == null || currentStageId == null || actionButtonId == null) {
+                throw new AuraHandledException(System.Label.FEC_Error_Required_Fields);
+            }
+
+            List<FEC_MDM_Stage_Change__c> rules = queryActiveRulesForTransition(currentStageId, actionButtonId);
+            if (rules.isEmpty()) return buildNoMatchResponse();
+
+            Set<Id> ruleIds = new Set<Id>();
+            for (FEC_MDM_Stage_Change__c rule : rules) ruleIds.add(rule.Id);
+
+            List<FEC_MDM_Stage_Change_Condition__c> allConditions = queryConditionsForRules(ruleIds);
+            Map<Id, List<FEC_MDM_Stage_Change_Condition__c>> conditionsByRule = groupConditionsByRule(allConditions);
+
+            Map<String, Object> caseData = fetchCaseDataForConditions(caseId, allConditions);
+            return findFirstMatchingRule(rules, conditionsByRule, caseData);
+
+        } catch (AuraHandledException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new AuraHandledException(System.Label.FEC_Error_EngineError + ' ' + e.getMessage());
         }
     }
 
-    public static RuleResult evaluateRule(String businessProcessCode, Id recordId, Map<String, String> contextData) {
-        RuleResult result = new RuleResult();
-        if (contextData == null) contextData = new Map<String, String>();
+    private static List<FEC_MDM_Stage_Change__c> queryActiveRulesForTransition(Id currentStageId, Id actionButtonId) {
+        return [
+            SELECT  Id, Name,
+                    FEC_Previous_Stage__c,
+                    FEC_Next_Stage__c, FEC_Next_Stage__r.Name,
+                    FEC_Next_Queue__c, FEC_Team_User_Group__c,
+                    FEC_Priority__c
+            FROM    FEC_MDM_Stage_Change__c
+            WHERE   FEC_Previous_Stage__c = :currentStageId
+            AND     FEC_Action_Button__c = :actionButtonId
+            AND     FEC_Active__c = true
+            ORDER BY FEC_Priority__c ASC NULLS LAST
+        ];
+    }
 
-        try {
-            // 1. Tìm Bảng quyết định
-            List<FEC_Decision_Table__c> tables = [
-                SELECT Id FROM FEC_Decision_Table__c 
-                WHERE FEC_Business_Process__r.FEC_Code__c = :businessProcessCode 
-                  AND FEC_Active__c = true LIMIT 1
-            ];
-            if (tables.isEmpty()) {
-                result.message = 'Không tìm thấy Decision Table nào đang Active cho Process: ' + businessProcessCode;
-                return result;
+    private static List<FEC_MDM_Stage_Change_Condition__c> queryConditionsForRules(Set<Id> ruleIds) {
+        return [
+            SELECT  Id, FEC_Stage_Change__c,
+                    FEC_Master_Data_Setting__c,
+                    FEC_Master_Data_Setting__r.FEC_Field_API_Name__c,
+                    FEC_Master_Data_Setting__r.FEC_Field_Object_Name__c,
+                    FEC_Operator__c, FEC_Value__c,
+                    FEC_Expression__c, FEC_Order__c
+            FROM    FEC_MDM_Stage_Change_Condition__c
+            WHERE   FEC_Stage_Change__c IN :ruleIds
+            ORDER BY FEC_Order__c ASC NULLS LAST
+        ];
+    }
+
+    private static Map<Id, List<FEC_MDM_Stage_Change_Condition__c>> groupConditionsByRule(
+        List<FEC_MDM_Stage_Change_Condition__c> allConditions
+    ) {
+        Map<Id, List<FEC_MDM_Stage_Change_Condition__c>> grouped = new Map<Id, List<FEC_MDM_Stage_Change_Condition__c>>();
+        for (FEC_MDM_Stage_Change_Condition__c cond : allConditions) {
+            Id ruleId = cond.FEC_Stage_Change__c;
+            if (!grouped.containsKey(ruleId)) {
+                grouped.put(ruleId, new List<FEC_MDM_Stage_Change_Condition__c>());
             }
-            Id tableId = tables[0].Id;
+            grouped.get(ruleId).add(cond);
+        }
+        return grouped;
+    }
 
-            // 2. Lấy Cột
-            List<FEC_Decision_Column__c> columns = [
-                SELECT Id, Name, FEC_Column_Type__c, FEC_MDM_Field__r.Field_API_Name__c, FEC_MDM_Field__r.FEC_Data_Type__c 
-                FROM FEC_Decision_Column__c 
-                WHERE FEC_Decision_Table__c = :tableId
-            ];
+    private static Map<String, Object> fetchCaseDataForConditions(
+        Id caseId, List<FEC_MDM_Stage_Change_Condition__c> conditions
+    ) {
+        Set<String> fieldApiNames = new Set<String>();
+        for (FEC_MDM_Stage_Change_Condition__c cond : conditions) {
+            String apiName = cond.FEC_Master_Data_Setting__r?.FEC_Field_API_Name__c;
+            if (String.isNotBlank(apiName)) fieldApiNames.add(apiName);
+        }
+        return fieldApiNames.isEmpty() ? new Map<String, Object>() : queryCaseFields(caseId, fieldApiNames);
+    }
 
-            Set<String> fieldsToQuery = new Set<String>();
-            List<FEC_Decision_Column__c> conditionCols = new List<FEC_Decision_Column__c>();
-            List<FEC_Decision_Column__c> actionCols = new List<FEC_Decision_Column__c>();
-
-            for (FEC_Decision_Column__c col : columns) {
-                if (col.FEC_Column_Type__c == 'Condition') {
-                    conditionCols.add(col);
-                    if (String.isNotBlank(col.FEC_MDM_Field__r?.Field_API_Name__c) && !contextData.containsKey(col.FEC_MDM_Field__r.Field_API_Name__c)) {
-                        fieldsToQuery.add(col.FEC_MDM_Field__r.Field_API_Name__c);
-                    }
-                } else {
-                    actionCols.add(col);
-                }
+    private static Map<String, Object> findFirstMatchingRule(
+        List<FEC_MDM_Stage_Change__c> rules,
+        Map<Id, List<FEC_MDM_Stage_Change_Condition__c>> conditionsByRule,
+        Map<String, Object> caseData
+    ) {
+        for (FEC_MDM_Stage_Change__c rule : rules) {
+            List<FEC_MDM_Stage_Change_Condition__c> ruleConditions = conditionsByRule.get(rule.Id);
+            if (ruleConditions == null || ruleConditions.isEmpty()) {
+                return buildMatchResult(rule);
             }
-
-            // 3. Query dữ liệu Case/Ticket
-            SObject recordData = null;
-            if (recordId != null && !fieldsToQuery.isEmpty()) {
-                String objectName = recordId.getSObjectType().getDescribe().getName();
-                List<String> fieldList = new List<String>(fieldsToQuery);
-                String soql = 'SELECT ' + String.join(fieldList, ', ') + ' FROM ' + objectName + ' WHERE Id = :recordId';
-                
-                List<SObject> records = Database.query(soql);
-                if (!records.isEmpty()) recordData = records[0];
+            if (evaluateRuleConditions(ruleConditions, caseData)) {
+                return buildMatchResult(rule);
             }
+        }
+        return buildNoMatchResponse();
+    }
 
-            Map<String, String> actualValuesMap = new Map<String, String>();
-            if (recordData != null) {
-                for (String f : fieldsToQuery) {
-                    Object val = recordData.get(f);
-                    actualValuesMap.put(f, val != null ? String.valueOf(val) : '');
-                }
+    /**
+     * Evaluate all conditions for an MDM rule. Logic: OR within same field, AND between fields.
+     */
+    public static Boolean evaluateRuleConditions(
+        List<FEC_MDM_Stage_Change_Condition__c> conditions,
+        Map<String, Object> caseData
+    ) {
+        Map<Id, List<FEC_MDM_Stage_Change_Condition__c>> conditionsByField = new Map<Id, List<FEC_MDM_Stage_Change_Condition__c>>();
+        for (FEC_MDM_Stage_Change_Condition__c cond : conditions) {
+            Id fieldId = cond.FEC_Master_Data_Setting__c;
+            if (fieldId == null) continue;
+            if (!conditionsByField.containsKey(fieldId)) {
+                conditionsByField.put(fieldId, new List<FEC_MDM_Stage_Change_Condition__c>());
             }
-            for (String key : contextData.keySet()) {
-                actualValuesMap.put(key, contextData.get(key));
-            }
-
-            // 4. Lấy danh sách Rule (ĐÃ FIX LỖI SOQL Ở ĐÂY)
-            List<FEC_Decision_Row__c> rows = [
-                SELECT Id, FEC_Priority__c 
-                FROM FEC_Decision_Row__c 
-                WHERE FEC_Decision_Table__c = :tableId AND FEC_Active__c = true 
-                ORDER BY FEC_Priority__c ASC
-            ];
-
-            // 5. Lấy toàn bộ Cells
-            List<FEC_Decision_Cell__c> allCells = [
-                SELECT FEC_Decision_Row__c, FEC_Decision_Column__c, FEC_Value__c 
-                FROM FEC_Decision_Cell__c 
-                WHERE FEC_Decision_Row__c IN :rows
-            ];
-            
-            Map<Id, Map<Id, String>> cellMatrix = new Map<Id, Map<Id, String>>();
-            for (FEC_Decision_Cell__c c : allCells) {
-                if (!cellMatrix.containsKey(c.FEC_Decision_Row__c)) {
-                    cellMatrix.put(c.FEC_Decision_Row__c, new Map<Id, String>());
-                }
-                cellMatrix.get(c.FEC_Decision_Row__c).put(c.FEC_Decision_Column__c, c.FEC_Value__c);
-            }
-
-            // 6. THUẬT TOÁN ĐÁNH GIÁ
-            for (FEC_Decision_Row__c row : rows) {
-                Boolean isRowMatch = true;
-                Map<Id, String> rowCells = cellMatrix.get(row.Id);
-
-                for (FEC_Decision_Column__c condCol : conditionCols) {
-                    String ruleValue = rowCells != null ? rowCells.get(condCol.Id) : null;
-                    if (String.isBlank(ruleValue) || ruleValue == '--') continue;
-
-                    String fieldApi = condCol.FEC_MDM_Field__r?.Field_API_Name__c;
-                    String actualValue = actualValuesMap.containsKey(fieldApi) ? actualValuesMap.get(fieldApi) : '';
-
-                    if (ruleValue != actualValue) {
-                        isRowMatch = false; 
-                        break;
-                    }
-                }
-
-                if (isRowMatch) {
-                    result.isMatched = true;
-                    result.matchedRowId = row.Id;
-                    result.message = 'Matched Rule Priority: ' + row.FEC_Priority__c;
-
-                    for (FEC_Decision_Column__c actCol : actionCols) {
-                        String actionVal = rowCells != null ? rowCells.get(actCol.Id) : '--';
-                        String actApi = String.isNotBlank(actCol.FEC_MDM_Field__r?.Field_API_Name__c) ? actCol.FEC_MDM_Field__r.Field_API_Name__c : actCol.Name;
-                        result.actionResults.put(actApi, actionVal);
-                    }
-                    break; 
-                }
-            }
-
-            if (!result.isMatched) {
-                result.message = 'Không có Rule nào thỏa mãn điều kiện.';
-            }
-
-        } catch (Exception e) {
-            result.message = 'Lỗi Engine: ' + e.getMessage() + ' - Line: ' + e.getLineNumber();
+            conditionsByField.get(fieldId).add(cond);
         }
 
-        return result;
+        for (Id fieldId : conditionsByField.keySet()) {
+            if (!isFieldGroupMatched(conditionsByField.get(fieldId), caseData)) return false;
+        }
+        return true;
+    }
+
+    private static Boolean isFieldGroupMatched(
+        List<FEC_MDM_Stage_Change_Condition__c> fieldConditions,
+        Map<String, Object> caseData
+    ) {
+        for (FEC_MDM_Stage_Change_Condition__c cond : fieldConditions) {
+            String apiName = cond.FEC_Master_Data_Setting__r?.FEC_Field_API_Name__c;
+            String actualValue = '';
+            if (String.isNotBlank(apiName)) {
+                Object val = caseData.get(apiName.toLowerCase());
+                actualValue = val != null ? String.valueOf(val) : '';
+            }
+            if (FEC_MDMConditionUtils.evaluateCondition(actualValue, cond.FEC_Operator__c, cond.FEC_Value__c, cond.FEC_Expression__c)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Query Case fields dynamically, validating each field against the Case schema.
+     */
+    public static Map<String, Object> queryCaseFields(Id caseId, Set<String> fieldApiNames) {
+        Map<String, Schema.SObjectField> caseFields = Schema.SObjectType.Case.fields.getMap();
+        List<String> validFields = new List<String>();
+        for (String fieldName : fieldApiNames) {
+            if (caseFields.containsKey(fieldName.toLowerCase())) validFields.add(fieldName);
+        }
+        if (validFields.isEmpty()) return new Map<String, Object>();
+
+        String fieldList = String.join(validFields, ', ');
+        String soql = 'SELECT ' + fieldList + ' FROM Case WHERE Id = :caseId LIMIT 1';
+        List<SObject> results = Database.query(soql);
+
+        Map<String, Object> caseData = new Map<String, Object>();
+        if (!results.isEmpty()) {
+            SObject caseRecord = results[0];
+            for (String fieldName : validFields) {
+                Object val = caseRecord.get(fieldName);
+                caseData.put(fieldName.toLowerCase(), val != null ? String.valueOf(val) : '');
+            }
+        }
+        return caseData;
+    }
+
+    // ════════════════════════════════════════════════════════
+    // LIVE LAYER: Evaluate Stage Transition (First Match Wins)
+    // ════════════════════════════════════════════════════════
+
+    public static Map<String, Object> evaluateLiveStageTransition(Id caseId, Id currentStageId, Id actionButtonId) {
+        try {
+            if (caseId == null || currentStageId == null || actionButtonId == null) {
+                throw new AuraHandledException(System.Label.FEC_Error_Required_Fields);
+            }
+
+            List<FEC_Stage_Change__c> rules = queryActiveLiveRules(currentStageId, actionButtonId);
+            if (rules.isEmpty()) return buildNoMatchResponse();
+
+            Set<Id> ruleIds = new Set<Id>();
+            for (FEC_Stage_Change__c rule : rules) ruleIds.add(rule.Id);
+
+            List<FEC_Stage_Change_Condition__c> allConditions = queryLiveConditions(ruleIds);
+            Map<Id, List<FEC_Stage_Change_Condition__c>> conditionsByRule = groupLiveConditionsByRule(allConditions);
+
+            Map<String, Object> caseData = fetchCaseDataForLiveConditions(caseId, allConditions);
+            return findFirstMatchingLiveRule(rules, conditionsByRule, caseData);
+
+        } catch (AuraHandledException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new AuraHandledException(System.Label.FEC_Error_EngineError + ' ' + e.getMessage());
+        }
+    }
+
+    private static List<FEC_Stage_Change__c> queryActiveLiveRules(Id currentStageId, Id actionButtonId) {
+        return [
+            SELECT  Id, Name,
+                    FEC_Previous_Stage__c,
+                    FEC_Next_Stage__c, FEC_Next_Stage__r.Name,
+                    FEC_Next_Queue__c, FEC_Team_User_Group__c
+            FROM    FEC_Stage_Change__c
+            WHERE   FEC_Previous_Stage__c = :currentStageId
+            AND     FEC_Action_Button__c = :actionButtonId
+            AND     FEC_Active__c = true
+            ORDER BY Name ASC
+        ];
+    }
+
+    private static List<FEC_Stage_Change_Condition__c> queryLiveConditions(Set<Id> ruleIds) {
+        return [
+            SELECT  Id, FEC_Stage_Change__c,
+                    FEC_Master_Data_Setting__c,
+                    FEC_Master_Data_Setting__r.FEC_Field_API_Name__c,
+                    FEC_Operator__c, FEC_Value__c, FEC_Order__c
+            FROM    FEC_Stage_Change_Condition__c
+            WHERE   FEC_Stage_Change__c IN :ruleIds
+            ORDER BY FEC_Order__c ASC NULLS LAST
+        ];
+    }
+
+    private static Map<Id, List<FEC_Stage_Change_Condition__c>> groupLiveConditionsByRule(
+        List<FEC_Stage_Change_Condition__c> allConditions
+    ) {
+        Map<Id, List<FEC_Stage_Change_Condition__c>> grouped = new Map<Id, List<FEC_Stage_Change_Condition__c>>();
+        for (FEC_Stage_Change_Condition__c c : allConditions) {
+            if (!grouped.containsKey(c.FEC_Stage_Change__c)) {
+                grouped.put(c.FEC_Stage_Change__c, new List<FEC_Stage_Change_Condition__c>());
+            }
+            grouped.get(c.FEC_Stage_Change__c).add(c);
+        }
+        return grouped;
+    }
+
+    private static Map<String, Object> fetchCaseDataForLiveConditions(
+        Id caseId, List<FEC_Stage_Change_Condition__c> conditions
+    ) {
+        Set<String> fieldApiNames = new Set<String>();
+        for (FEC_Stage_Change_Condition__c c : conditions) {
+            String apiName = c.FEC_Master_Data_Setting__r?.FEC_Field_API_Name__c;
+            if (String.isNotBlank(apiName)) fieldApiNames.add(apiName);
+        }
+        return fieldApiNames.isEmpty() ? new Map<String, Object>() : queryCaseFields(caseId, fieldApiNames);
+    }
+
+    private static Map<String, Object> findFirstMatchingLiveRule(
+        List<FEC_Stage_Change__c> rules,
+        Map<Id, List<FEC_Stage_Change_Condition__c>> conditionsByRule,
+        Map<String, Object> caseData
+    ) {
+        for (FEC_Stage_Change__c rule : rules) {
+            List<FEC_Stage_Change_Condition__c> ruleConds = conditionsByRule.get(rule.Id);
+            if (ruleConds == null || ruleConds.isEmpty()) return buildLiveMatchResult(rule);
+            if (evaluateLiveRuleConditions(ruleConds, caseData)) return buildLiveMatchResult(rule);
+        }
+        return buildNoMatchResponse();
+    }
+
+    private static Boolean evaluateLiveRuleConditions(
+        List<FEC_Stage_Change_Condition__c> conditions,
+        Map<String, Object> caseData
+    ) {
+        Map<Id, List<FEC_Stage_Change_Condition__c>> conditionsByField = new Map<Id, List<FEC_Stage_Change_Condition__c>>();
+        for (FEC_Stage_Change_Condition__c cond : conditions) {
+            Id fieldId = cond.FEC_Master_Data_Setting__c;
+            if (fieldId == null) continue;
+            if (!conditionsByField.containsKey(fieldId)) {
+                conditionsByField.put(fieldId, new List<FEC_Stage_Change_Condition__c>());
+            }
+            conditionsByField.get(fieldId).add(cond);
+        }
+
+        for (Id fieldId : conditionsByField.keySet()) {
+            if (!isLiveFieldGroupMatched(conditionsByField.get(fieldId), caseData)) return false;
+        }
+        return true;
+    }
+
+    private static Boolean isLiveFieldGroupMatched(
+        List<FEC_Stage_Change_Condition__c> fieldConds,
+        Map<String, Object> caseData
+    ) {
+        for (FEC_Stage_Change_Condition__c cond : fieldConds) {
+            String apiName = cond.FEC_Master_Data_Setting__r?.FEC_Field_API_Name__c;
+            String actualValue = '';
+            if (String.isNotBlank(apiName)) {
+                Object val = caseData.get(apiName.toLowerCase());
+                actualValue = val != null ? String.valueOf(val) : '';
+            }
+            if (FEC_MDMConditionUtils.evaluateCondition(actualValue, cond.FEC_Operator__c, cond.FEC_Value__c, null)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    // ════════════════════════════════════════════════════════
+    // RESULT BUILDERS
+    // ════════════════════════════════════════════════════════
+
+    public static Map<String, Object> buildMatchResult(FEC_MDM_Stage_Change__c rule) {
+        return new Map<String, Object>{
+            'matched'       => true,
+            'ruleId'        => rule.Id,
+            'ruleName'      => rule.Name,
+            'nextStageId'   => rule.FEC_Next_Stage__c,
+            'nextStageName' => rule.FEC_Next_Stage__r?.Name,
+            'nextQueue'     => rule.FEC_Next_Queue__c,
+            'teamUserGroup' => rule.FEC_Team_User_Group__c
+        };
+    }
+
+    public static Map<String, Object> buildLiveMatchResult(FEC_Stage_Change__c rule) {
+        return new Map<String, Object>{
+            'matched'       => true,
+            'ruleId'        => rule.Id,
+            'ruleName'      => rule.Name,
+            'nextStageId'   => rule.FEC_Next_Stage__c,
+            'nextStageName' => rule.FEC_Next_Stage__r?.Name,
+            'nextQueue'     => rule.FEC_Next_Queue__c,
+            'teamUserGroup' => rule.FEC_Team_User_Group__c
+        };
+    }
+
+    private static Map<String, Object> buildNoMatchResponse() {
+        return new Map<String, Object>{
+            'matched' => false,
+            'message' => System.Label.FEC_Error_NoRuleMatched
+        };
     }
 }

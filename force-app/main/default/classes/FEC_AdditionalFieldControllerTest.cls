@@ -49,8 +49,8 @@ private class FEC_AdditionalFieldControllerTest {
         String resField = FEC_AdditionalFieldController.deleteRecord(field.Id);
         Test.stopTest();
 
-        Assert.areEqual('Success', resVal);
-        Assert.areEqual('Success', resField);
+        Assert.areEqual(FEC_UIConstants.OPERATION_SUCCESS, resVal);
+        Assert.areEqual(FEC_UIConstants.OPERATION_SUCCESS, resField);
         Assert.isFalse(fields.isEmpty());
         Assert.isFalse(values.isEmpty());
     }
@@ -65,30 +65,41 @@ private class FEC_AdditionalFieldControllerTest {
         delete field; // Xóa trước để gây lỗi
 
         Test.startTest();
+        Boolean caught = false;
         try {
             // Cố gắng xóa một ID không còn tồn tại
             FEC_AdditionalFieldController.deleteRecord(field.Id);
         } catch (AuraHandledException e) {
-            // Xác nhận code đã nhảy vào khối catch
-            Assert.isTrue(e.getMessage().contains('Error deleting record'));
+            caught = true;
+            // Xác nhận message dùng prefix từ Custom Label (đa ngôn ngữ)
+            Assert.isTrue(
+                String.isNotBlank(e.getMessage()),
+                'Error message phải có nội dung'
+            );
         }
         Test.stopTest();
+        Assert.isTrue(caught, 'Phải catch được AuraHandledException khi delete record không tồn tại');
     }
 
     /**
      * @description Test khối Catch của hàm deleteFieldListValue.
-     * Kỹ thuật: Truyền một ID sai loại (ví dụ User ID) để gây lỗi hệ thống.
+     * Kỹ thuật: Truyền null Id để trigger validation exception.
      */
     @isTest
     static void testDeleteFieldListValue_Catch() {
         Test.startTest();
+        Boolean caught = false;
         try {
-            // Truyền ID của chính người dùng hiện tại vào lệnh xóa Field List Value
-            FEC_AdditionalFieldController.deleteFieldListValue(UserInfo.getUserId());
+            // Pass null Id — must throw AuraHandledException with "Invalid Id" prefix
+            FEC_AdditionalFieldController.deleteFieldListValue(null);
         } catch (AuraHandledException e) {
-            // Xác nhận code đã nhảy vào khối catch
-            Assert.isTrue(e.getMessage().contains('Error deleting Field List Value'));
+            caught = true;
+            Assert.isTrue(
+                String.isNotBlank(e.getMessage()),
+                'Error message phải có nội dung'
+            );
         }
         Test.stopTest();
+        Assert.isTrue(caught, 'Phải catch được AuraHandledException khi pass null Id');
     }
 }

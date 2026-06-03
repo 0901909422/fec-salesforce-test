@@ -91,17 +91,19 @@ private class FEC_MasterDataSettingCtrlPropertyTest {
     }
 
     // Test executePushToLive
+    // NOTE: KHÔNG dùng Test.startTest()/stopTest() — xem ghi chú ở
+    // FEC_MasterDataSettingControllerTest.testExecutePushToLive
     @isTest
     static void testExecutePushToLive() {
-        Test.startTest();
         try {
             Id batchId = FEC_MasterDataSettingController.executePushToLive();
             Assert.isNotNull(batchId, 'Batch job ID should not be null');
+            try {
+                System.abortJob(batchId);
+            } catch (Exception ignored) { /* OK */ }
         } catch (Exception e) {
-            // May fail if batch class has dependencies, but method should be callable
             Assert.isNotNull(e.getMessage(), 'Error message should exist');
         }
-        Test.stopTest();
     }
 
     // Feature: mdm-auto-field-creator, Property 12: MDS record tạo sau deploy có đầy đủ thông tin và invariants

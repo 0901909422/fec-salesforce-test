@@ -1,2 +1,4 @@
 **/jsconfig.json
 **/.eslintrc.json
+**/searchCustomizations/**
+*.searchCustomization-meta.xml

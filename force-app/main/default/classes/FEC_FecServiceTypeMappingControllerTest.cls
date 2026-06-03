@@ -364,4 +364,65 @@ private class FEC_FecServiceTypeMappingControllerTest {
         }
         Test.stopTest();
     }
+
+    /**
+     * @description Test getCaseFieldOptions trả về danh sách Case fields có shape đúng.
+     * Validates: Case field picker data source — value đúng API name, có group label.
+     */
+    @isTest
+    static void testGetCaseFieldOptions() {
+        Test.startTest();
+        List<Map<String, Object>> options = FEC_FecServiceTypeMappingController.getCaseFieldOptions();
+        Test.stopTest();
+
+        Assert.isNotNull(options, 'Options không được null');
+        Assert.isFalse(options.isEmpty(), 'Options phải có ít nhất 1 field');
+
+        Boolean hasCaseField = false;
+        Boolean hasCaseNumberField = false;
+        for (Map<String, Object> opt : options) {
+            String groupName = (String) opt.get('group');
+            String value = (String) opt.get('value');
+            String label = (String) opt.get('label');
+            String apiName = (String) opt.get('apiName');
+
+            Assert.isNotNull(value, 'Mỗi option phải có value');
+            Assert.isNotNull(label, 'Mỗi option phải có label');
+            Assert.isNotNull(apiName, 'Mỗi option phải có apiName');
+            Assert.isNotNull(groupName, 'Mỗi option phải có group');
+
+            // Verify label format: "<Label> (<ApiName>)"
+            Assert.isTrue(label.contains('('), 'Label phải có format "Label (ApiName)": ' + label);
+            Assert.isTrue(label.contains(')'), 'Label phải có format "Label (ApiName)": ' + label);
+
+            if (groupName == System.Label.FEC_Group_CaseFields) hasCaseField = true;
+            if (value == 'CaseNumber') hasCaseNumberField = true;
+        }
+        Assert.isTrue(hasCaseField, 'Phải có ít nhất 1 Case field option');
+        Assert.isTrue(hasCaseNumberField, 'Phải có CaseNumber field trong options');
+    }
+
+    /**
+     * @description Test getCaseFieldOptions value format đúng cho direct vs relationship.
+     * Direct field không có dot, relationship có đúng 1 dot.
+     */
+    @isTest
+    static void testGetCaseFieldOptionsValueFormat() {
+        Test.startTest();
+        List<Map<String, Object>> options = FEC_FecServiceTypeMappingController.getCaseFieldOptions();
+        Test.stopTest();
+
+        for (Map<String, Object> opt : options) {
+            String value = (String) opt.get('value');
+            String groupName = (String) opt.get('group');
+
+            if (groupName == System.Label.FEC_Group_CaseFields) {
+                Assert.isFalse(value.contains('.'), 'Direct Case field không được chứa dot: ' + value);
+            } else {
+                // Group khác (vd "Account Fields", "Owner Fields") → relationship 1-cấp
+                List<String> parts = value.split('\\.');
+                Assert.areEqual(2, parts.size(), 'Relationship value phải có format Parent.Field: ' + value);
+            }
+        }
+    }
 }
