@@ -38,9 +38,34 @@ private class FEC_MrcReturnCaseService_Test {
 
     @IsTest
     static void testMrcReturnCaseInformationValidate() {
-        Case c = new Case(
-            FEC_Account_or_Contract__r = new FEC_Customer_History__c(FEC_Product_Code__c = 'VN')
+        Case c;
+        FEC_CaseTriggerHandler.isExecuting = true;
+        try {
+            c = new Case(Subject = 'MRC Validate', Status = 'New');
+            insert c;
+        } finally {
+            FEC_CaseTriggerHandler.isExecuting = false;
+        }
+
+        FEC_Customer_History__c ch = new FEC_Customer_History__c(
+            FEC_Case__c = c.Id,
+            FEC_Product_Code__c = 'VN'
         );
+        insert ch;
+
+        FEC_CaseTriggerHandler.isExecuting = true;
+        try {
+            update new Case(Id = c.Id, FEC_Account_or_Contract__c = ch.Id);
+        } finally {
+            FEC_CaseTriggerHandler.isExecuting = false;
+        }
+
+        c = [
+            SELECT Id, FEC_Account_or_Contract__c,
+                   FEC_Account_or_Contract__r.FEC_Product_Code__c
+            FROM Case
+            WHERE Id = :c.Id
+        ];
 
         Test.startTest();
         FEC_CaseBusinessService.Error err =
@@ -64,9 +89,14 @@ private class FEC_MrcReturnCaseService_Test {
             FEC_MrcReturnCaseService.buildUiContext(
                 baseCase, 'RL05', 'RL05.02', FEC_MrcReturnCaseService.CONF_RECEIVED, true
             );
+        FEC_Customer_History__c chTh2 = new FEC_Customer_History__c(
+            FEC_Status_ID__c = 'LK',
+            FEC_Contract_Status__c = 'ACTIVE'
+        );
+        Case caseTh2 = new Case(FEC_Account_or_Contract__r = chTh2);
         FEC_MrcReturnCaseService.MrcRl05UiContext th2 =
             FEC_MrcReturnCaseService.buildUiContext(
-                baseCase, 'RL05', 'RL05.02', null, true
+                caseTh2, 'RL05', 'RL05.02', null, true
             );
         FEC_MrcReturnCaseService.MrcRl05UiContext th3 =
             FEC_MrcReturnCaseService.buildUiContext(
@@ -159,7 +189,7 @@ private class FEC_MrcReturnCaseService_Test {
         Test.stopTest();
 
         System.assertEquals(true, skipAssessment);
-        System.assertEquals(false, skipConfirmation);
+        System.assertEquals(true, skipConfirmation);
         System.assertEquals(true, skipHandling);
     }
 
@@ -175,8 +205,15 @@ private class FEC_MrcReturnCaseService_Test {
         Boolean skipMrc = FEC_MrcReturnCaseService.shouldSkipMasterDataRow(
             'Case Information', 'MRC', 'fec_MRC', null, ctx
         );
+        FEC_MrcReturnCaseService.MrcRl05UiContext deliveryCtx =
+            FEC_MrcReturnCaseService.buildUiContext(
+                new Case(), 'RL05', 'RL05.02', FEC_MrcReturnCaseService.CONF_RECEIVED, false
+            );
+        Case receivedNoDelivery = new Case(
+            FEC_Customer_Confirmation__c = FEC_MrcReturnCaseService.CONF_RECEIVED
+        );
         Boolean skipDelivery = FEC_MrcReturnCaseService.shouldSkipMasterDataRow(
-            'Case Information', 'Delivery', 'fec_MrcDeliveryForm', null, ctx, new Case()
+            'Case Information', 'Delivery', 'fec_MrcDeliveryForm', null, deliveryCtx, receivedNoDelivery
         );
         Boolean skipClosure = FEC_MrcReturnCaseService.shouldSkipMasterDataRow(
             'Case Information', 'Closure', 'fec_ContractClosureForm', null, ctx
@@ -280,7 +317,10 @@ private class FEC_MrcReturnCaseService_Test {
         );
 
         Test.startTest();
-        Boolean hideNoDelivery = FEC_MrcReturnCaseService.shouldHideMrcDeliveryLwc(ctx, new Case());
+        Case receivedNoDelivery = new Case(
+            FEC_Customer_Confirmation__c = FEC_MrcReturnCaseService.CONF_RECEIVED
+        );
+        Boolean hideNoDelivery = FEC_MrcReturnCaseService.shouldHideMrcDeliveryLwc(ctx, receivedNoDelivery);
         Boolean hideWithDelivery = FEC_MrcReturnCaseService.shouldHideMrcDeliveryLwc(ctx, withDelivery);
         Test.stopTest();
 

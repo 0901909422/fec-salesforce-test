@@ -3,7 +3,14 @@ private class FEC_SyncCaseStatusScheduler_Test {
 
     @IsTest
     static void testSchedulerExecution() {
-        // 1. Kiểm tra việc lập lịch (Scheduling)
+        for (CronTrigger existing : [
+            SELECT Id
+            FROM CronTrigger
+            WHERE CronJobDetail.Name = 'FEC Sync Case Status Daily 00:00'
+        ]) {
+            System.abortJob(existing.Id);
+        }
+
         Test.startTest();
         String jobId = FEC_SyncCaseStatusScheduler.scheduleDailyMidnightJob();
         Test.stopTest();

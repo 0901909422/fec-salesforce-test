@@ -80,17 +80,30 @@ private class FEC_CofGsrRoutePrepareService_Test {
         );
         insert gsrStage1;
 
-        insert new FEC_Master_Data_Setting__c(
-            FEC_Nature_Of_Case__c = noc.Id,
-            FEC_Stage_Name__c = stage.Id,
-            FEC_Section__c = 'Account Information',
-            FEC_Sub_Section__c = 'Account Infor',
-            FEC_Field_Object_Name__c = 'Case',
-            FEC_Field_API_Name__c = 'Subject',
-            FEC_Field_Label_Name__c = 'Subject Label',
-            FEC_Field_Status__c = true,
-            FEC_Field_Editable__c = true
-        );
+        insert new List<FEC_Master_Data_Setting__c>{
+            new FEC_Master_Data_Setting__c(
+                FEC_Nature_Of_Case__c = noc.Id,
+                FEC_Stage_Name__c = stage.Id,
+                FEC_Section__c = 'Account Information',
+                FEC_Sub_Section__c = 'Account Infor',
+                FEC_Field_Object_Name__c = 'Case',
+                FEC_Field_API_Name__c = 'Subject',
+                FEC_Field_Label_Name__c = 'Subject Label',
+                FEC_Field_Status__c = true,
+                FEC_Field_Editable__c = true
+            ),
+            new FEC_Master_Data_Setting__c(
+                FEC_Nature_Of_Case__c = gsrNoc.Id,
+                FEC_Stage_Name__c = gsrStage1.Id,
+                FEC_Section__c = 'Account Information',
+                FEC_Sub_Section__c = 'Account Infor',
+                FEC_Field_Object_Name__c = 'Case',
+                FEC_Field_API_Name__c = 'Subject',
+                FEC_Field_Label_Name__c = 'Subject Label',
+                FEC_Field_Status__c = true,
+                FEC_Field_Editable__c = true
+            )
+        };
 
         FEC_CaseTriggerHandler.isExecuting = true;
         try {
@@ -125,6 +138,10 @@ private class FEC_CofGsrRoutePrepareService_Test {
 
         Case updatedCase = [SELECT FEC_Actual_Nature_of_Case__c FROM Case WHERE Id = :c.Id];
         System.assertNotEquals(null, updatedCase.FEC_Actual_Nature_of_Case__c);
+        System.assertEquals(
+            String.valueOf(updatedCase.FEC_Actual_Nature_of_Case__c),
+            params.get('natureOfCaseId')
+        );
         System.assertNotEquals(String.valueOf(templateNocId), params.get('natureOfCaseId'));
     }
 
@@ -237,7 +254,12 @@ private class FEC_CofGsrRoutePrepareService_Test {
             FROM Case
             WHERE Id = :c.Id
         ];
-        System.assertEquals(actualId, updatedCase.FEC_Actual_Nature_of_Case__c);
+        System.assertNotEquals(null, updatedCase.FEC_Actual_Nature_of_Case__c);
+        System.assertNotEquals(
+            actualId,
+            updatedCase.FEC_Actual_Nature_of_Case__c,
+            'Actual NOC selection clones a fresh actual record from template dimensions.'
+        );
     }
 
     @IsTest

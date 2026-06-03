@@ -136,6 +136,20 @@ private class FEC_ApplicationsListController_Test {
             '</GetAddressesListResponse></soapenv:Body></soapenv:Envelope>';
     }
 
+    private static String mockProductListXml() {
+        return '<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">' +
+            '<soapenv:Body>' +
+            '<cif:GetProductsListResponse xmlns:cif="http://fecredit.com.vn/CIF_CustomerInfo">' +
+            '<Sys><Code>1</Code><Description>OK</Description></Sys>' +
+            '<CIFNumber>' + CIF + '</CIFNumber>' +
+            '<Products><Product>' +
+            '<ApplicationID>' + APP_ID + '</ApplicationID>' +
+            '<AccountNumber>' + ACCOUNT_NUM + '</AccountNumber>' +
+            '<DealID>' + CONTRACT_NUM + '</DealID>' +
+            '</Product></Products>' +
+            '</cif:GetProductsListResponse></soapenv:Body></soapenv:Envelope>';
+    }
+
     private static String mockSaleDisburseJson() {
         return '{' +
             '"Sys":{"TransID":"TXN-SALE","DateTime":"2026-05-27T10:00:00.000Z","Code":1,"Description":"OK"},' +
@@ -153,6 +167,8 @@ private class FEC_ApplicationsListController_Test {
 
             if (body.contains('GetCustomerList')) {
                 responseBody = mockCustomerListXml();
+            } else if (body.contains('GetProductsList')) {
+                responseBody = mockProductListXml();
             } else if (body.contains('GetApplicationsList')) {
                 responseBody = mockApplicationsListXml();
             } else if (body.contains('GetAddressesList')) {

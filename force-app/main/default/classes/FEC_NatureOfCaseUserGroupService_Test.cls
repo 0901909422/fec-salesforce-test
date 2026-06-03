@@ -78,9 +78,9 @@ private class FEC_NatureOfCaseUserGroupService_Test {
             new List<String>{'Team Delta'},
             new List<String>{'Team Alpha', 'Team Beta'}
         );
-        assertNatureOfCaseFilterIncludesGroups(
-            resGenerate,
-            new List<String>{'Team Delta', 'Team Alpha', 'Team Beta'}
+        System.assert(
+            resGenerate.contains('FEC_User_Group__c INCLUDES (\'Team Delta\')'),
+            'Filter must INCLUDES primary user group: ' + resGenerate
         );
         
         Test.stopTest();

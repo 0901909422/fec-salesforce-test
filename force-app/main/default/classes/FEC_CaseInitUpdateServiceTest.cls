@@ -37,7 +37,10 @@ private class FEC_CaseInitUpdateServiceTest {
             FROM Case
             WHERE Id = :testCase.Id
         ];
-        System.assertEquals('', updatedCase.FEC_Is_Routing_Action_Display__c);
+        System.assert(
+            String.isBlank(updatedCase.FEC_Is_Routing_Action_Display__c),
+            'Routing action display phải được xóa (blank hoặc null).'
+        );
     }
 
     @IsTest

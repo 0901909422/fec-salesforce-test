@@ -1,34 +1,6 @@
 @IsTest
 private class FEC_CaseAssignmentConflictService_Test {
 
-    private static Id resolveProductCategoryId(String categoryName) {
-        List<ProductCategory> existing = [
-            SELECT Id
-            FROM ProductCategory
-            WHERE Name = :categoryName
-            LIMIT 1
-        ];
-        if (!existing.isEmpty()) {
-            return existing[0].Id;
-        }
-        List<ProductCatalog> catalogs = [SELECT Id FROM ProductCatalog LIMIT 1];
-        Id catalogId;
-        if (catalogs.isEmpty()) {
-            ProductCatalog catalog = new ProductCatalog(Name = 'FEC Test Catalog');
-            insert catalog;
-            catalogId = catalog.Id;
-        } else {
-            catalogId = catalogs[0].Id;
-        }
-        ProductCategory created = new ProductCategory(
-            Name = categoryName,
-            CatalogId = catalogId,
-            IsNavigational = false
-        );
-        insert created;
-        return created.Id;
-    }
-
     private static Id getBusinessHoursId() {
         return [SELECT Id FROM BusinessHours LIMIT 1].Id;
     }
@@ -53,6 +25,12 @@ private class FEC_CaseAssignmentConflictService_Test {
             FEC_Active__c = true
         );
         insert prod;
+        FEC_Category__c cat = new FEC_Category__c(
+            Name = 'Request',
+            FEC_Code__c = 'Request',
+            FEC_Active__c = true
+        );
+        insert cat;
         FEC_Sub_Category__c subCat = new FEC_Sub_Category__c(
             Name = 'RC27',
             FEC_Code__c = 'RC27',
@@ -65,8 +43,6 @@ private class FEC_CaseAssignmentConflictService_Test {
             FEC_Active__c = true
         );
         insert subCode;
-
-        Id productCategoryId = resolveProductCategoryId('Request');
 
         Id businessHoursId = getBusinessHoursId();
         FEC_Case_Assignment__c existingAssignment = new FEC_Case_Assignment__c(
@@ -84,7 +60,7 @@ private class FEC_CaseAssignmentConflictService_Test {
             FEC_Assignment_Method__c = 'Continuous',
             FEC_Business_Hours__c = businessHoursId,
             FEC_Scheduled_Time__c = 30,
-            FEC_Role__c = 'CS Agent B|1',
+            FEC_Role__c = 'CS Agent A|1;CS Agent B|1',
             FEC_Scale__c = 1,
             FEC_Select_Queues__c = 'Queue Card Processing;Queue VIP Customer',
             FEC_Status__c = 'Draft'
@@ -108,7 +84,7 @@ private class FEC_CaseAssignmentConflictService_Test {
         insert new FEC_Case_Assignment_NOC__c(
             FEC_Case_Assignment_Name__c = existingAssignment.Id,
             FEC_Product_Type__c = prod.Id,
-            FEC_Category__c = productCategoryId,
+            FEC_Category__c = cat.Id,
             FEC_Sub_Category__c = subCat.Id,
             FEC_Sub_Code__c = subCode.Id
         );
@@ -257,7 +233,7 @@ private class FEC_CaseAssignmentConflictService_Test {
             FEC_Scheduled_Time__c = 30,
             FEC_Role__c = 'CS Agent A|1',
             FEC_Scale__c = 1,
-            FEC_Select_Queues__c = 'Queue Digital Support',
+            FEC_Select_Queues__c = ' ; , \n ',
             FEC_Status__c = 'Draft'
         );
         insert emptyQueueAssign;
@@ -270,7 +246,6 @@ private class FEC_CaseAssignmentConflictService_Test {
             FEC_Sub_Category__c = template.FEC_Sub_Category__c
         );
 
-        emptyQueueAssign.FEC_Select_Queues__c = ' ; , \n ';
         emptyQueueAssign.FEC_Status__c = FEC_ConstantCommon.FEC_CASE_ASSIGNMENT_STATUS_ACTIVE;
         update emptyQueueAssign;
 

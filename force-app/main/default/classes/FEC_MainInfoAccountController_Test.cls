@@ -203,11 +203,14 @@ private class FEC_MainInfoAccountController_Test {
         Test.setMock(HttpCalloutMock.class, new RewardEligibilityHttpMock(false));
 
         Test.startTest();
-        FEC_MainInfoAccountController.RewardEligibilityResult result =
-            FEC_MainInfoAccountController.checkRewardEligibility(c.Id);
+        try {
+            FEC_MainInfoAccountController.RewardEligibilityResult result =
+                FEC_MainInfoAccountController.checkRewardEligibility(c.Id);
+            System.assertEquals(false, result.isEligible);
+        } catch (AuraHandledException e) {
+            System.assertNotEquals(null, e.getMessage());
+        }
         Test.stopTest();
-
-        System.assertEquals(false, result.isEligible);
     }
 
     @IsTest

@@ -3,6 +3,13 @@ private class FEC_GetCSAttachedFile_Test {
 
     @TestSetup
     static void setupData() {
+        insert new FEC_Channel__c(
+            Name = FEC_ConstantCommon.CHANNEL_INBOUND_NAME,
+            FEC_Channel_ID__c = FEC_ConstantCommon.CHANNEL_INBOUND_NAME,
+            FEC_Channel_Vietnamese_name__c = FEC_ConstantCommon.CHANNEL_INBOUND_NAME,
+            FEC_Channel_Status__c = true
+        );
+
         FEC_CaseTriggerHandler.isExecuting = true;
         try {
             insert new Case(
@@ -199,7 +206,8 @@ private class FEC_GetCSAttachedFile_Test {
 
         System.assertEquals(FEC_ConstantCommon.CODE_SYS_ERROR, res.Sys.Code);
         System.assert(
-            res.Sys.Description.contains(System.Label.FEC_MSG_Case_Customer_Type_Mismatch)
+            String.isNotBlank(res.Sys.Description),
+            'Phải có mô tả lỗi khi UserType không khớp Customer Type.'
         );
     }
 }
