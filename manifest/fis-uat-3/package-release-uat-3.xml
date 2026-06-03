@@ -785,7 +785,7 @@
 		<members>FEC_Case_Assignment_NOC__c</members>
 		<members>FEC_Case_Assignment__c</members>
         <members>FEC_Transfer_Call_Error__c</members>
-		<members>Download_Report__c</members>
+		<members>FEC_Download_Report__c</members>
 		<members>FEC_Case_Hold_History__c</members>
         <members>FEC_Notification_Template_Channel__c</members>
 		<members>FEC_Notification__c</members>
@@ -905,7 +905,6 @@
         <members>fec_NewAssignmentAction</members>
         <members>fec_holdCaseAuto</members>
         <members>fec_DoNotBotherResultView</members>
-        <members>fec_DownloadReport</members>
         <members>fec_GenesysSoftphone</members>
         <members>fec_AccountOrContractPicklistCustomerCase</members>
         <members>fec_CardClosureRefundForm</members>
@@ -1691,7 +1690,6 @@
         <members>Case.FEC_Execute_Assigment</members>
         <members>Case.FEC_New_Assignment_LWC</members>
         <members>Case.New_Assignment</members>
-        <members>Download_Report__c.FEC_DownloadReport</members>
         <name>QuickAction</name>
     </types>
     <types>
