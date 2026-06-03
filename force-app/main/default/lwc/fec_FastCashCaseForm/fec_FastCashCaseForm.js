@@ -465,7 +465,11 @@ export default class Fec_FastCashCaseForm extends NavigationMixin(LightningEleme
             return;
         }
         this.disbursementStatusDisplay = st.disbursementStatus ? String(st.disbursementStatus) : STR_EMPTY;
-        this.disbursementDateDisplay = st.disbursementDate ? formatDateVNI(String(st.disbursementDate)) : STR_EMPTY;
+        if (this.disbursementStatusDisplay === DISBURSEMENT_STATUS_PENDING_CUSTOMER_WITHDRAWAL) {
+            this.disbursementDateDisplay = STR_EMPTY;
+        } else {
+            this.disbursementDateDisplay = st.disbursementDate ? formatDateVNI(String(st.disbursementDate)) : STR_EMPTY;
+        }
     }
 
     loadLockedSnapshot() {
@@ -755,12 +759,21 @@ export default class Fec_FastCashCaseForm extends NavigationMixin(LightningEleme
     }
 
     get showDisbursementFields() {
-        return this.isReadOnly || !!this.disbursementStatusDisplay;
+        return (
+            this.isReadOnly ||
+            !!this.disbursementStatusDisplay ||
+            this.nocLockedAfterBlockModal
+        );
     }
 
     get showDisbursementDate() {
+        if (!this.showDisbursementFields) {
+            return false;
+        }
+        if (this.disbursementStatusDisplay === DISBURSEMENT_STATUS_PENDING_CUSTOMER_WITHDRAWAL) {
+            return true;
+        }
         return (
-            this.showDisbursementFields &&
             this.disbursementStatusDisplay === DISBURSEMENT_STATUS_SUCCESS &&
             !!this.disbursementDateDisplay
         );
@@ -870,6 +883,7 @@ export default class Fec_FastCashCaseForm extends NavigationMixin(LightningEleme
     }
 
     //linhdev fix jira FECREDIT_CSM_2025_KH-1366 — block fail: giữ handling mode + Requested Amount, không navigate view
+    // FEC_CMSIPPBlockWS fail: chỉ Noti09/10 — Disbursement Status gán Pending sau Submit (finalizeFastCashOnSubmit), không từ Block API
     _handleBlockFailure() {
         this.blockLoading = false;
         this._saveRequestedAmountToStorage();
@@ -975,6 +989,7 @@ export default class Fec_FastCashCaseForm extends NavigationMixin(LightningEleme
         }).then((res) => {
             if (res && res.success) {
                 this.disbursementStatusDisplay = DISBURSEMENT_STATUS_PENDING_CUSTOMER_WITHDRAWAL;
+                this.disbursementDateDisplay = STR_EMPTY;
             }
             return Promise.resolve();
         });
