@@ -1,4 +1,5 @@
 import { LightningElement, api, track, wire } from 'lwc';
+import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import fetchAllMasterDataMappings from '@salesforce/apex/FEC_NatureOfCaseTreeService.fetchAllMasterDataMappings';
 import updateNode from '@salesforce/apex/FEC_NatureOfCaseTreeController.updateNode';
 import getNocDetail from '@salesforce/apex/FEC_NatureOfCaseTreeController.getNocDetail';
@@ -56,6 +57,13 @@ const CUSTOMER_TYPE_OPTIONS = [
     { label: 'Non-existing', value: 'Non-existing' }
 ];
 
+// Sub-Process picklist options (Enabled / Disabled / Inherited)
+const SUB_PROCESS_OPTIONS = [
+    { label: 'Enabled', value: 'Enabled' },
+    { label: 'Disabled', value: 'Disabled' },
+    { label: 'Inherited', value: 'Inherited' }
+];
+
 // User Group options matching Global Value Set "User_Group" (same as Live object)
 const USER_GROUP_OPTIONS = [
     { label: 'CA', value: 'CA' },
@@ -90,6 +98,7 @@ export default class FecMasterDataItemDetail extends LightningElement {
     nocError = null;
     customerTypeOptions = CUSTOMER_TYPE_OPTIONS;
     userGroupOptions = USER_GROUP_OPTIONS;
+    subProcessOptions = SUB_PROCESS_OPTIONS;
     // Tab default
 
     // NOC labels
@@ -543,9 +552,9 @@ export default class FecMasterDataItemDetail extends LightningElement {
             this.nocData = {
                 ...result,
                 active: result.active === 'true',
-                doNotBother: result.doNotBother === 'true',
-                transferCallToCollection: result.transferCallToCollection === 'true',
-                removePhone: result.removePhone === 'true'
+                doNotBother: result.doNotBother || 'Disabled',
+                transferCallToCollection: result.transferCallToCollection || 'Disabled',
+                removePhone: result.removePhone || 'Disabled'
             };
             this.nocOriginal = JSON.parse(JSON.stringify(this.nocData));
         } catch (error) {
@@ -568,7 +577,8 @@ export default class FecMasterDataItemDetail extends LightningElement {
             // dual-listbox returns array — join with semicolon to match Salesforce multi-select format
             value = event.detail.value.join(';');
         } else {
-            value = event.target.value;
+            // combobox and other inputs use event.detail.value
+            value = event.detail.value;
         }
 
         this.nocData = { ...this.nocData, [field]: value };
@@ -711,13 +721,6 @@ export default class FecMasterDataItemDetail extends LightningElement {
     }
 
     showToast(title, message, variant) {
-        // Tái sử dụng CustomEvent nếu bạn dùng showToast ở các component cha, 
-        // hoặc import ShowToastEvent nếu muốn dùng Toast gốc.
-        const event = new CustomEvent('showtoast', {
-            detail: { title, message, variant },
-            bubbles: true,
-            composed: true
-        });
-        this.dispatchEvent(event);
+        this.dispatchEvent(new ShowToastEvent({ title, message, variant }));
     }
 }

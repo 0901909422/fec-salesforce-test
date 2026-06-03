@@ -211,8 +211,8 @@
 
 
 /* ========================================================== */
-/* BỔ SUNG CSS CHO TÍNH NĂNG HISTORY PANEL VÀ NGĂN CHẶN LỖI   */
-/* Đưa ra ngoài @media để áp dụng cho cả Desktop            */
+/* CSS for History Panel feature and prevent UI errors */
+/* Moved outside @media to apply for Desktop too */
 /* ========================================================== */
 
 /* Container tổng - Chặn rớt dòng và chặn thanh cuộn ngang tuyệt đối */
@@ -236,14 +236,14 @@
     padding-left: 16px;
     animation: slideInRight 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
     height: 100%;
-    /* THÊM MỚI: Ép Panel kéo dài 100% bằng với thẻ cha */
+    /* NEW: Force panel to stretch 100% to match parent */
 }
 
-/* Khu vực cuộn của lịch sử */
+/* History scroll area */
 .history-content {
     height: 100%;
     max-height: none;
-    /* SỬA LỖI: Gỡ bỏ giới hạn 600px để nó tràn hết khoảng trắng phía dưới */
+    /* FIX: Remove 600px limit so it fills space below */
 }
 
 /* Hiệu ứng trượt cho Panel History từ bên phải */

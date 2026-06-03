@@ -129,16 +129,25 @@
                             <lightning-layout-item size="12"
                                 class="slds-p-horizontal_small sub-processes-header">
                                 <p class="slds-text-title_caps slds-text-color_weak slds-m-bottom_x-small">{labelSubProcesses}</p>
-                                <div class="checkbox-row">
-                                    <lightning-input type="checkbox" label={labelDoNotBother}
-                                        checked={nocData.doNotBother} data-noc-field="doNotBother"
-                                        onchange={handleNocInputChange}></lightning-input>
-                                    <lightning-input type="checkbox" label={labelTransferCall}
-                                        checked={nocData.transferCallToCollection} data-noc-field="transferCallToCollection"
-                                        onchange={handleNocInputChange}></lightning-input>
-                                    <lightning-input type="checkbox" label={labelRemovePhone}
-                                        checked={nocData.removePhone} data-noc-field="removePhone"
-                                        onchange={handleNocInputChange}></lightning-input>
+                                <div class="slds-grid slds-wrap slds-gutters_small">
+                                    <div class="slds-col slds-size_1-of-3">
+                                        <lightning-combobox name="doNotBother" label={labelDoNotBother}
+                                            value={nocData.doNotBother} options={subProcessOptions}
+                                            data-noc-field="doNotBother"
+                                            onchange={handleNocInputChange}></lightning-combobox>
+                                    </div>
+                                    <div class="slds-col slds-size_1-of-3">
+                                        <lightning-combobox name="transferCallToCollection" label={labelTransferCall}
+                                            value={nocData.transferCallToCollection} options={subProcessOptions}
+                                            data-noc-field="transferCallToCollection"
+                                            onchange={handleNocInputChange}></lightning-combobox>
+                                    </div>
+                                    <div class="slds-col slds-size_1-of-3">
+                                        <lightning-combobox name="removePhone" label={labelRemovePhone}
+                                            value={nocData.removePhone} options={subProcessOptions}
+                                            data-noc-field="removePhone"
+                                            onchange={handleNocInputChange}></lightning-combobox>
+                                    </div>
                                 </div>
                             </lightning-layout-item>
                             <!-- User Group -->

@@ -55,7 +55,7 @@ export default class FecFlowConfiguration extends LightningElement {
     }
 
     // =========================================================
-    // FIX LỖI UI: Ẩn Flow Stage nếu là Node Product Type
+    // UI FIX: Hide Flow Stage when node is Product Type
     // =========================================================
     get shouldShowFlow() {
         if (this.nodeData && this.nodeData.name && this.nodeData.name.startsWith('PT')) {
@@ -438,7 +438,7 @@ export default class FecFlowConfiguration extends LightningElement {
             }
 
             // =========================================================
-            // FIX LỖI DATA KHÔNG LOAD: Ép load lại toàn bộ hệ thống cây
+            // DATA FIX: Force reload of the whole tree system
             // =========================================================
             this.dispatchEvent(new CustomEvent('refreshall', { bubbles: true, composed: true }));
 

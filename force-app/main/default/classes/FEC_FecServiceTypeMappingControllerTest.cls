@@ -22,41 +22,121 @@ private class FEC_FecServiceTypeMappingControllerTest {
         );
         insert noc;
 
-        // 3. Khởi tạo Additional Field (Bắt buộc để Setting xuất hiện trong Tree)
+        // 3. Khởi tạo Stage thuộc BP (cấp giữa trong tree mới: BP→Stage→Field)
+        FEC_MDM_Case_Stage__c stage = new FEC_MDM_Case_Stage__c(
+            Name = 'Test Stage',
+            FEC_Business_Process__c = bp.Id,
+            FEC_Nature_of_Cases__c = noc.Id,
+            FEC_Active__c = true,
+            FEC_Order__c = 1
+        );
+        insert stage;
+
+        // 4. Khởi tạo Additional Field (Bắt buộc để Setting xuất hiện trong Tree)
         FEC_MDM_Additional_Field__c field = new FEC_MDM_Additional_Field__c(
             FEC_Unique_ID__c = 'FLD_TEST',
             FEC_Name_VN__c = 'Test Field Property'
         );
         insert field;
 
-        // 4. Khởi tạo Master Data Settings (Cấp con trong Tree)
+        // 5. Khởi tạo Master Data Settings — gán Stage để xuất hiện dưới Stage node
         FEC_MDM_Master_Data_Setting__c setting = new FEC_MDM_Master_Data_Setting__c(
             FEC_Nature_Of_Case__c = noc.Id,
             FEC_Additional_Field__c = field.Id,
+            FEC_Stage_Name__c = stage.Id,
             Property_Reference__c = 'OLD_REF'
         );
         insert setting;
     }
 
     /**
-     * @description Test hàm getServiceTypeTree để đảm bảo dữ liệu cây được xây dựng đúng.
+     * @description Test hàm getServiceTypeTree — verify shape mới BP→Stage→Field.
      */
     @isTest
     static void testGetServiceTypeTree() {
         Test.startTest();
-        // Gọi hàm lấy cấu trúc cây
         List<Map<String, Object>> treeData = FEC_FecServiceTypeMappingController.getServiceTypeTree();
         Test.stopTest();
 
-        // Kiểm tra kết quả
+        // BP node
         Assert.isFalse(treeData.isEmpty(), 'Tree data không được rỗng');
-        
-        Map<String, Object> parentNode = treeData[0];
-        Assert.areEqual('Test Business Process', parentNode.get('label'), 'Tên cấp cha không đúng');
-        
-        List<Map<String, Object>> children = (List<Map<String, Object>>)parentNode.get('items');
-        Assert.isFalse(children.isEmpty(), 'Business Process phải có items con');
-        Assert.areEqual('OLD_REF', children[0].get('propertyRef'), 'Giá trị Property Reference không khớp');
+        Map<String, Object> bpNode = treeData[0];
+        Assert.areEqual('Test Business Process', bpNode.get('label'), 'Tên BP node không đúng');
+        Assert.areEqual(FEC_UIConstants.NODE_TYPE_BP, bpNode.get('nodeType'), 'BP node phải có nodeType=BP');
+
+        // Stage node (con của BP)
+        List<Map<String, Object>> stageNodes = (List<Map<String, Object>>)bpNode.get('items');
+        Assert.isFalse(stageNodes.isEmpty(), 'BP phải có Stage con');
+        Map<String, Object> stageNode = stageNodes[0];
+        Assert.areEqual('Test Stage', stageNode.get('label'), 'Tên Stage node không đúng');
+        Assert.areEqual(FEC_UIConstants.NODE_TYPE_STAGE, stageNode.get('nodeType'), 'Stage node phải có nodeType=STAGE');
+
+        // Stage là LEAF của tree — không có 'items' key (lightning-tree sẽ render Stage là leaf).
+        // Field list nằm dưới key 'fields' (không render bởi tree).
+        Assert.isNull(stageNode.get('items'), 'Stage không được có items (Stage là leaf của tree)');
+        List<Map<String, Object>> fieldNodes = (List<Map<String, Object>>)stageNode.get('fields');
+        Assert.isFalse(fieldNodes.isEmpty(), 'Stage phải có Field con (qua key "fields")');
+        Map<String, Object> fieldNode = fieldNodes[0];
+        Assert.areEqual('OLD_REF', fieldNode.get('propertyRef'), 'Giá trị Property Reference không khớp');
+        Assert.areEqual(FEC_UIConstants.NODE_TYPE_FIELD, fieldNode.get('nodeType'), 'Field node phải có nodeType=FIELD');
+        Assert.areEqual('Test Stage', fieldNode.get('stageName'), 'Field node phải có stageName context');
+    }
+
+    /**
+     * @description Test setting có FEC_Stage_Name__c=null → xuất hiện dưới virtual node "(No Stage)".
+     */
+    @isTest
+    static void testGetServiceTypeTreeNoStageBucket() {
+        // Tạo setting không có Stage
+        FEC_MDM_Nature_Of_Case__c noc = [SELECT Id FROM FEC_MDM_Nature_Of_Case__c LIMIT 1];
+        FEC_MDM_Additional_Field__c field = [SELECT Id FROM FEC_MDM_Additional_Field__c LIMIT 1];
+        insert new FEC_MDM_Master_Data_Setting__c(
+            FEC_Nature_Of_Case__c = noc.Id,
+            FEC_Additional_Field__c = field.Id,
+            FEC_Stage_Name__c = null,
+            Property_Reference__c = 'NO_STAGE_REF'
+        );
+
+        Test.startTest();
+        List<Map<String, Object>> treeData = FEC_FecServiceTypeMappingController.getServiceTypeTree();
+        Test.stopTest();
+
+        // BP có ≥ 2 stage nodes: real "Test Stage" + virtual "(No Stage)"
+        List<Map<String, Object>> stageNodes = (List<Map<String, Object>>)treeData[0].get('items');
+        Boolean foundNoStageNode = false;
+        for (Map<String, Object> sn : stageNodes) {
+            if (sn.get('label') == System.Label.FEC_Label_NoStage) {
+                foundNoStageNode = true;
+                List<Map<String, Object>> noStageFields = (List<Map<String, Object>>)sn.get('fields');
+                Assert.isFalse(noStageFields.isEmpty(), 'Virtual no-stage node phải chứa setting có FEC_Stage_Name__c=null');
+                break;
+            }
+        }
+        Assert.isTrue(foundNoStageNode, 'Phải có virtual node "(No Stage)" khi tồn tại setting không thuộc stage nào');
+    }
+
+    /**
+     * @description Test Stage có FEC_Active__c=false → bị filter ra khỏi tree.
+     */
+    @isTest
+    static void testGetServiceTypeTreeInactiveStageFiltered() {
+        // Inactivate stage hiện có
+        FEC_MDM_Case_Stage__c stage = [SELECT Id FROM FEC_MDM_Case_Stage__c LIMIT 1];
+        stage.FEC_Active__c = false;
+        update stage;
+
+        Test.startTest();
+        List<Map<String, Object>> treeData = FEC_FecServiceTypeMappingController.getServiceTypeTree();
+        Test.stopTest();
+
+        // Stage inactive bị filter, nhưng setting vẫn còn (nó tham chiếu stage inactive)
+        // → Setting bị orphan: vì map theo stageId, vẫn nằm trong stageMap[stage.Id]
+        //   nhưng Stage không xuất hiện trong bpToStages (do filter Active=true).
+        //   Behavior: setting đó sẽ KHÔNG xuất hiện trong tree (acceptable — admin nên reactivate stage).
+        List<Map<String, Object>> stageNodes = (List<Map<String, Object>>)treeData[0].get('items');
+        for (Map<String, Object> sn : stageNodes) {
+            Assert.areNotEqual('Test Stage', sn.get('label'), 'Stage inactive không được xuất hiện trong tree');
+        }
     }
 
     /**
@@ -80,6 +160,7 @@ private class FEC_FecServiceTypeMappingControllerTest {
     /**
      * @description Test lưu chuỗi rỗng '' để xóa Property Reference.
      * Validates: Requirements 1.4
+     * Note: Salesforce Text fields coerce empty string to null on DML — assert null/blank.
      */
     @isTest
     static void testSavePropertyMappingEmptyRef() {
@@ -90,12 +171,13 @@ private class FEC_FecServiceTypeMappingControllerTest {
         Test.stopTest();
 
         FEC_MDM_Master_Data_Setting__c updatedSetting = [SELECT Property_Reference__c FROM FEC_MDM_Master_Data_Setting__c WHERE Id = :setting.Id];
-        Assert.areEqual('', updatedSetting.Property_Reference__c, 'Property_Reference__c phải được cập nhật thành chuỗi rỗng');
+        Assert.isTrue(String.isBlank(updatedSetting.Property_Reference__c), 'Property_Reference__c phải blank khi lưu chuỗi rỗng (Salesforce coerces empty string to null)');
     }
 
     /**
-     * @description Test lưu chuỗi chỉ chứa khoảng trắng '   ' và verify giá trị được lưu đúng.
+     * @description Test lưu chuỗi chỉ chứa khoảng trắng '   ' và verify xử lý không lỗi.
      * Validates: Requirements 1.4
+     * Note: Salesforce Text fields normalize whitespace-only strings to null/blank on DML — assert null/blank.
      */
     @isTest
     static void testSavePropertyMappingWhitespaceRef() {
@@ -106,7 +188,7 @@ private class FEC_FecServiceTypeMappingControllerTest {
         Test.stopTest();
 
         FEC_MDM_Master_Data_Setting__c updatedSetting = [SELECT Property_Reference__c FROM FEC_MDM_Master_Data_Setting__c WHERE Id = :setting.Id];
-        Assert.areEqual('   ', updatedSetting.Property_Reference__c, 'Property_Reference__c phải được cập nhật thành chuỗi chỉ chứa khoảng trắng');
+        Assert.isTrue(String.isBlank(updatedSetting.Property_Reference__c), 'Property_Reference__c phải blank khi lưu chuỗi whitespace (Salesforce normalizes)');
     }
 
     /**
@@ -167,7 +249,7 @@ private class FEC_FecServiceTypeMappingControllerTest {
         );
         Assert.areEqual('.piID', updatedMap.get(existingSetting.Id).Property_Reference__c, 'Setting 1 phải được cập nhật thành .piID');
         Assert.areEqual('.CaseNumber', updatedMap.get(setting2.Id).Property_Reference__c, 'Setting 2 phải được cập nhật thành .CaseNumber');
-        Assert.areEqual('', updatedMap.get(setting3.Id).Property_Reference__c, 'Setting 3 phải được cập nhật thành chuỗi rỗng');
+        Assert.isTrue(String.isBlank(updatedMap.get(setting3.Id).Property_Reference__c), 'Setting 3 phải blank khi save chuỗi rỗng (Salesforce coerces empty string to null)');
     }
 
     /**
@@ -218,11 +300,11 @@ private class FEC_FecServiceTypeMappingControllerTest {
     }
 
     /**
-     * @description Test trường hợp Business Process không có con (Empty items).
+     * @description Test trường hợp Business Process có Stage nhưng Stage không có Setting con.
      */
     @isTest
     static void testTreeWithNoChildren() {
-        // Xóa setting hiện tại để tạo kịch bản cha không có con
+        // Xóa setting hiện tại để Stage không có field con
         delete [SELECT Id FROM FEC_MDM_Master_Data_Setting__c];
 
         Test.startTest();
@@ -230,7 +312,56 @@ private class FEC_FecServiceTypeMappingControllerTest {
         Test.stopTest();
 
         Assert.isFalse(treeData.isEmpty());
-        List<Map<String, Object>> children = (List<Map<String, Object>>)treeData[0].get('items');
-        Assert.isTrue(children.isEmpty(), 'Items phải rỗng khi không có setting tương ứng');
+        // BP node vẫn có Stage con (real Stage from Case_Stage table)
+        List<Map<String, Object>> stageNodes = (List<Map<String, Object>>)treeData[0].get('items');
+        Assert.isFalse(stageNodes.isEmpty(), 'BP vẫn phải có Stage node (lấy từ Case_Stage table)');
+        // Stage không có Setting → fields rỗng (Stage vẫn là leaf, không có 'items')
+        List<Map<String, Object>> stageFields = (List<Map<String, Object>>)stageNodes[0].get('fields');
+        Assert.isTrue(stageFields.isEmpty(), 'Stage không có Setting → fields phải rỗng');
+    }
+
+    /**
+     * @description Test getServiceTypeTree throw AuraHandledException khi user thiếu FLS/CRUD.
+     * Validates: Bug 1.3, Expected 2.3 (bugfix.md) — FLS-Enforced Read.
+     * Strategy: chạy under restricted profile (Minimum Access / Read Only) → WITH SECURITY_ENFORCED
+     * sẽ throw QueryException, controller wrap thành AuraHandledException.
+     */
+    @isTest
+    static void testGetServiceTypeTreeFLSDenied() {
+        // Tìm profile hạn chế nhất — fallback graceful nếu org không có
+        List<Profile> restrictiveProfiles = [
+            SELECT Id, Name FROM Profile
+            WHERE Name IN ('Minimum Access - Salesforce', 'Read Only')
+            ORDER BY Name ASC
+            LIMIT 1
+        ];
+        if (restrictiveProfiles.isEmpty()) {
+            Assert.isTrue(true, 'No restrictive profile available in org — FLS test skipped gracefully.');
+            return;
+        }
+
+        User restrictedUser = new User(
+            Alias = 'flstest',
+            Email = 'flsdenied@fec.test.invalid',
+            EmailEncodingKey = 'UTF-8',
+            LastName = 'FLS_Denied_Test',
+            LanguageLocaleKey = 'en_US',
+            LocaleSidKey = 'en_US',
+            ProfileId = restrictiveProfiles[0].Id,
+            TimeZoneSidKey = 'Asia/Ho_Chi_Minh',
+            UserName = 'flsdenied' + System.currentTimeMillis() + '@fec.test.invalid'
+        );
+        insert restrictedUser;
+
+        Test.startTest();
+        System.runAs(restrictedUser) {
+            try {
+                FEC_FecServiceTypeMappingController.getServiceTypeTree();
+                Assert.fail('Phải throw AuraHandledException khi user thiếu FLS/CRUD');
+            } catch (AuraHandledException ae) {
+                Assert.isNotNull(ae.getMessage(), 'AuraHandledException phải có message');
+            }
+        }
+        Test.stopTest();
     }
 }

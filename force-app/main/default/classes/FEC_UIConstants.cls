@@ -78,11 +78,21 @@ public class FEC_UIConstants {
     public static final String MAP_NAME = 'name';
     public static final String MAP_EXPANDED = 'expanded';
     public static final String MAP_ITEMS = 'items';
+    public static final String MAP_FIELDS = 'fields';
     public static final String MAP_PROPERTY_REF = 'propertyRef';
     public static final String MAP_PARENT_NAME = 'parentName';
     public static final String MAP_FIELD_LABEL = 'fieldLabel';
     public static final String MAP_FIELD_API_NAME = 'fieldApiName';
     public static final String MAP_VALUE = 'value';
+
+    // ── Tree node types for Service Type Mapping (BP→Stage→Field) ────────
+    public static final String MAP_NODE_TYPE = 'nodeType';
+    public static final String MAP_STAGE_NAME = 'stageName';
+    public static final String NODE_TYPE_BP = 'BP';
+    public static final String NODE_TYPE_STAGE = 'STAGE';
+    public static final String NODE_TYPE_FIELD = 'FIELD';
+    public static final String STAGE_NODE_PREFIX = 'STAGE_';
+    public static final String NO_STAGE_NODE_PREFIX = 'NOSTAGE_';
 
     // ── Display prefixes (used in UI tree node naming) ────────────────────
     public static final String PT_PREFIX = 'PT_';

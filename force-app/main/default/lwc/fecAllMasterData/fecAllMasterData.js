@@ -3,8 +3,6 @@ import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import { refreshApex } from '@salesforce/apex';
 import { showLog } from 'c/fecMDMUtils';
 import getAllMasterData from '@salesforce/apex/FEC_CleanUpMasterDataController.getAllMasterData';
-import syncDataToMDM from '@salesforce/apex/FEC_CleanUpMasterDataController.syncDataToMDM';
-import pushMDMToLive from '@salesforce/apex/FEC_CleanUpMasterDataController.pushMDMToLive';
 
 import LABEL_TITLE from '@salesforce/label/c.FEC_AllMasterData_Title';
 import LABEL_REFRESH from '@salesforce/label/c.FEC_Refresh_Data';
@@ -342,38 +340,6 @@ export default class FecAllMasterData extends LightningElement {
             this.showToast(LABEL_TOAST_REFRESH_SUCCESS, '', VARIANT_SUCCESS);
         } catch (error) {
             this.showToast(LABEL_TOAST_REFRESH_ERROR, '', VARIANT_ERROR);
-        }
-    }
-
-    async handleSyncDataToMDM() {
-        const confirmed = confirm(LABEL_CONFIRM_SYNC);
-        if (!confirmed) return;
-
-        this.isSyncing = true;
-        try {
-            await syncDataToMDM();
-            this.showToast(LABEL_NOTIFY_SYNC_STARTED, '', VARIANT_INFO);
-            await refreshApex(this.wiredDataResult);
-        } catch (error) {
-            this.showToast(LABEL_TOAST_ERROR, error.body?.message || error.message, VARIANT_ERROR);
-        } finally {
-            this.isSyncing = false;
-        }
-    }
-
-    async handlePushToLive() {
-        const confirmed = confirm(LABEL_CONFIRM_PUSH);
-        if (!confirmed) return;
-
-        this.isSyncing = true;
-        try {
-            await pushMDMToLive();
-            this.showToast(LABEL_NOTIFY_PUSH_STARTED, '', VARIANT_SUCCESS);
-            await refreshApex(this.wiredDataResult);
-        } catch (error) {
-            this.showToast(LABEL_TOAST_ERROR, error.body?.message || error.message, VARIANT_ERROR);
-        } finally {
-            this.isSyncing = false;
         }
     }
 

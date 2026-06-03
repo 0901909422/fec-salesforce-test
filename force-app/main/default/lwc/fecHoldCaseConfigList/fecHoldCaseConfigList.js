@@ -214,6 +214,7 @@ export default class FecHoldCaseConfigList extends LightningElement {
         if (!rec) return;
         this.editRecordId = id;
         this.formData = {
+            Name: rec.Name || '',
             Hold_Case_Type__c: rec.Hold_Case_Type__c || 'Manual',
             FEC_Active__c: rec.FEC_Active__c || false,
             FEC_Channel__c: rec.FEC_Channel__c || '',

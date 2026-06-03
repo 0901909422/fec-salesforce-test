@@ -174,7 +174,7 @@ export default class FecMasterDataSetting extends LightningElement {
 
     get mainPanelSize() { return this.isHistoryVisible ? 9 : 12; }
     get toggleHistoryIcon() { return this.isHistoryVisible ? 'utility:close' : 'utility:history'; }
-    get toggleHistoryLabel() { return this.isHistoryVisible ? 'Đóng Lịch sử' : 'Xem Lịch sử'; }
+    get toggleHistoryLabel() { return this.isHistoryVisible ? 'Close History' : 'View History'; }
     get toggleButtonVariant() { return this.isHistoryVisible ? 'neutral' : 'brand-outline'; }
 
     handleToggleHistory() {
@@ -373,7 +373,7 @@ export default class FecMasterDataSetting extends LightningElement {
 
         if (data) {
             console.log('[wiredFraud] Data received:', data.length, 'records');
-            // Luôn gán lại giá trị kể cả khi data là danh sách rỗng []
+            // Always reassign even when data is empty list
             this.fraudDataList = this.processMasterData(data);
             console.log('[wiredFraud] fraudDataList length:', this.fraudDataList ? this.fraudDataList.length : 'null');
             console.log('[wiredFraud] hasFraudData:', this.hasFraudData);
@@ -488,8 +488,8 @@ export default class FecMasterDataSetting extends LightningElement {
     }
 
     /**
-     * @description Xử lý khi người dùng chọn một Stage khác trên Flow.
-     * Cần reset các biến trạng thái để tránh việc hiển thị dữ liệu cũ của Stage trước đó.
+     * @description Handle when user selects a different Stage on Flow.
+     * Reset state variables to avoid showing stale data from previous Stage.
      */
     handleStageClick(event) {
         try {
@@ -506,7 +506,7 @@ export default class FecMasterDataSetting extends LightningElement {
             this.selectedMappingId = null;
             this.isModalOpen = false;
 
-            // 3. Cập nhật Stage Id mới - This will trigger wire adapter
+            // 3. Update new Stage Id - This will trigger wire adapter
             this.stageId = newStageId;
         } catch (error) {
             console.error('[handleStageClick] Error:', error);
@@ -515,7 +515,7 @@ export default class FecMasterDataSetting extends LightningElement {
 
     // --- Action Handlers ---
     handleAddIntegration() {
-        // Đảm bảo FEC_Customer_Type có giá trị
+        // Ensure FEC_Customer_Type has a value
         if (!this.FEC_Customer_Type) {
             console.warn('[handleAddIntegration] WARNING: FEC_Customer_Type is empty!');
         }
@@ -590,7 +590,7 @@ export default class FecMasterDataSetting extends LightningElement {
             const statusLabel = newStatus ? this.labelActive : this.labelInactive;
             this.showToast(LABEL_TOAST_UPDATE_STATUS_SUCCESS, statusLabel, VARIANT_SUCCESS);
 
-            // 4. Refresh dữ liệu để UI cập nhật Badge mới
+            // 4. Refresh data so UI shows new Badge
             await refreshApex(this.wiredFraudResult);
             
             // HISTORY: Refresh history panel
@@ -598,7 +598,7 @@ export default class FecMasterDataSetting extends LightningElement {
 
         } catch (error) {
             console.error('[handleToggleStatus] ERROR:', error);
-            this.showToast(LABEL_TOAST_UPDATE_STATUS_SUCCESS, 'Không thể cập nhật trạng thái: ' + (error.body?.message || error.message), VARIANT_ERROR);
+            this.showToast(LABEL_TOAST_UPDATE_STATUS_SUCCESS, 'Cannot update status: ' + (error.body?.message || error.message), VARIANT_ERROR);
         } finally {
             this.isLoading = false;
         }
@@ -808,7 +808,7 @@ export default class FecMasterDataSetting extends LightningElement {
         const existingFields = this.masterDataList ? this.masterDataList.map(item => item.FEC_Additional_Field__c).filter(Boolean) : [];
         this.selectedRecord = { existingFields };
 
-        // Tìm giá trị lớn nhất của FEC_Field_Order_Display__c trong danh sách hiện tại
+        // Find the maximum FEC_Field_Order_Display__c in the current list
         if (this.masterDataList && this.masterDataList.length > 0) {
             const maxOrder = Math.max(...this.masterDataList.map(item => item.FEC_Field_Order_Display__c || 0));
             this.nextOrder = maxOrder + 1;
@@ -935,8 +935,8 @@ export default class FecMasterDataSetting extends LightningElement {
         this.processedData = this.processedData.map((row, index) => ({ ...row, rowNumber: index + 1 }));
     }
 
-    // Getter ảo để hiển thị icon (Lưu ý: Trong LWC bạn không thể gọi hàm có tham số trực tiếp từ HTML, 
-    // nên dùng logic render thủ công hoặc dùng template if:true cho từng cột)
+    // Virtual getter to display icon (Note: LWC does not allow calling functions with parameters directly from HTML, 
+    // so use manual render logic or template if:true per column)
 
     get sortIconName() {
         return this.sortDirection === 'asc' ? ICON_ARROW_UP : ICON_ARROW_DOWN;

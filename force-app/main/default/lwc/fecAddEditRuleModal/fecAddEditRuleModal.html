@@ -19,7 +19,7 @@
                 data-field-name="previousStageId"
                 value={formData.previousStageId}
                 onchange={handleInputChange}>
-                <option value="">-- Chọn Stage --</option>
+                <option value="">-- Select Stage --</option>
                 <template for:each={stageOptions} for:item="stage">
                   <option key={stage.value} value={stage.value}>{stage.label}</option>
                 </template>
@@ -41,7 +41,7 @@
                 data-field-name="actionButtonId"
                 value={formData.actionButtonId}
                 onchange={handleInputChange}>
-                <option value="">-- Chọn Action --</option>
+                <option value="">-- Select Action --</option>
                 <template for:each={actionOptions} for:item="action">
                   <option key={action.value} value={action.value}>{action.label}</option>
                 </template>
@@ -64,7 +64,7 @@
               data-field-name="nextStageId"
               value={formData.nextStageId}
               onchange={handleInputChange}>
-              <option value="">-- Chọn Stage --</option>
+              <option value="">-- Select Stage --</option>
               <template for:each={stageOptions} for:item="stage">
                 <option key={stage.value} value={stage.value}>{stage.label}</option>
               </template>
@@ -109,7 +109,7 @@
         <!-- Info Message -->
         <div class="info-message slds-notify slds-notify_alert slds-alert_info slds-m-top_medium">
           <lightning-icon icon-name="utility:info" size="x-small" variant="inverse" class="slds-m-right_x-small"></lightning-icon>
-          <span class="info-text">Các trường đánh dấu <span class="required-mark">*</span> là bắt buộc</span>
+          <span class="info-text">Fields marked with <span class="required-mark">*</span> are required</span>
         </div>
 
       </div>
@@ -121,7 +121,7 @@
       <button 
         class="slds-button slds-button_neutral"
         onclick={handleCancel}>
-        Hủy bỏ
+        Cancel
       </button>
       <button 
         class="slds-button slds-button_brand slds-m-left_small"
@@ -129,7 +129,7 @@
         disabled={isLoading}>
         <template if:true={isLoading}>
           <lightning-spinner alternative-text="Saving..." size="small" variant="brand" class="slds-m-right_x-small"></lightning-spinner>
-          Đang lưu...
+          Saving...
         </template>
         <template if:false={isLoading}>
           {saveButtonLabel}
