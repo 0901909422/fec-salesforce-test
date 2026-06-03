@@ -3039,7 +3039,7 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
             this.processActionMsg = STR_EMPTY;
             this.showProcessAction = false;
           } else {
-            this.handleCheckProcessAction();
+            this._applyCardReplacementProcessActionFromBusiness();
           }
         } else if (this.business?.code === PROCESS_CARD_REPLACEMENT) {
           this.isProcessActionInfo = false;
@@ -4911,6 +4911,7 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
                   null,
                 mrcCustomerConfirmation: mrcSubmitFields.confirmation || null,
                 mrcHandlingOption: mrcSubmitFields.handlingOption || null,
+                ...this._getLiveBlockCodeRouteParams(),
               },
             };
           }
@@ -6609,6 +6610,35 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
     if (this.business?.code === PROCESS_BLOCK_CARD && this._isEdit) {
       this.handleCheckProcessActionCardBlock();
     }
+  }
+
+  _getLiveBlockCodeRouteParams() {
+    if (
+      this.business?.liveBlockCode == null &&
+      this.business?.liveBlockCode1 == null
+    ) {
+      return {};
+    }
+    return {
+      liveBlockCode: this.business.liveBlockCode ?? null,
+      liveBlockCode1: this.business.liveBlockCode1 ?? null,
+    };
+  }
+
+  _applyCardReplacementProcessActionFromBusiness() {
+    this.showProcessAction = false;
+    this.isProcessActionInfo = false;
+    this.processActionMsg = STR_EMPTY;
+    if (this.business?.replaceCardProcessActionResolved === true) {
+      if (this.business.replaceCardShowProcessAction === true) {
+        this.showProcessAction = true;
+      } else {
+        this.isProcessActionInfo = true;
+        this.processActionMsg = this.business.replaceCardProcessActionMsg || STR_EMPTY;
+      }
+      return;
+    }
+    this.handleCheckProcessAction();
   }
 
   // PhuongNT add check process action Card Replacement
