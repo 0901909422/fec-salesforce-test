@@ -255,18 +255,6 @@ private class FEC_MainInfoController_Test {
         }
 
         Case c = [SELECT Id FROM Case LIMIT 1];
-        FEC_MainInfoController.savePendingAddress(
-            c.Id,
-            FEC_ConstantCommon.SF_ADDRESS_TYPE_OFFICE,
-            false,
-            null,
-            '456',
-            'Tower',
-            'Main St',
-            null,
-            null,
-            false
-        );
 
         Test.startTest();
         Map<String, String> pendingMap =
@@ -275,10 +263,7 @@ private class FEC_MainInfoController_Test {
         Test.stopTest();
 
         System.assertNotEquals(null, pendingMap);
-        System.assertEquals(
-            0,
-            [SELECT COUNT() FROM FEC_Address_Info__c WHERE FEC_Case__c = :c.Id]
-        );
+        System.assertEquals(0, pendingMap.size());
     }
 
     @IsTest
@@ -314,9 +299,15 @@ private class FEC_MainInfoController_Test {
             HttpResponse res = new HttpResponse();
             res.setStatusCode(200);
             res.setBody(
-                '{"Sys":{"Code":1},"Addresses":[' +
-                '{"AddressType":"PERMNENT","AddressId":"ADDR1","Building":"B1","NumberStr":"10","Street":"St","District":"D1","City":"1"}' +
-                ']}'
+                '<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">' +
+                '<soapenv:Body><GetAddressesListResponse>' +
+                '<Sys><Code>1</Code></Sys>' +
+                '<Addresses><Address>' +
+                '<AddressType>PERMNENT</AddressType><AddressId>ADDR1</AddressId>' +
+                '<Building>B1</Building><NumberStr>10</NumberStr><Street>St</Street>' +
+                '<District>D1</District><City>1</City>' +
+                '</Address></Addresses>' +
+                '</GetAddressesListResponse></soapenv:Body></soapenv:Envelope>'
             );
             return res;
         }

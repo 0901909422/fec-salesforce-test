@@ -1,6 +1,13 @@
 @IsTest
 private class FEC_BatchDataCreationController_Test {
 
+    private static String formatImportDatetimeUtc(Datetime dt) {
+        if (dt == null) {
+            return '';
+        }
+        return dt.formatGmt('yyyy-MM-dd\'T\'HH:mm:ss.SSS') + '+0000';
+    }
+
     @TestSetup
     static void setupData() {
         // 1. Khởi tạo dữ liệu người dùng (User) mồi phục vụ phân giải ServiceResource qua Email
@@ -21,12 +28,28 @@ private class FEC_BatchDataCreationController_Test {
         );
         insert sr;
 
-        // 3. Khởi tạo một bản ghi vắng mặt (FEC_Service_Resource_Absence__c) quá khứ để test nhánh check trùng trên Hệ thống (dbExistingKeys)
-        // Lưu ý: Datetime.newInstanceGMT nhận mốc thời gian tĩnh để so khớp chính xác time.getTime()
+        // 3. Existing absence for dbExistingKeys duplicate check (future Start Date — org VR blocks past dates)
+        Datetime futureAnchor = System.now().addDays(60);
+        Datetime existingStart = Datetime.newInstanceGmt(
+            futureAnchor.yearGmt(),
+            futureAnchor.monthGmt(),
+            futureAnchor.dayGmt(),
+            8,
+            0,
+            0
+        );
+        Datetime existingEnd = Datetime.newInstanceGmt(
+            futureAnchor.yearGmt(),
+            futureAnchor.monthGmt(),
+            futureAnchor.dayGmt(),
+            17,
+            0,
+            0
+        );
         FEC_Service_Resource_Absence__c existingAbs = new FEC_Service_Resource_Absence__c(
             FEC_Service_Resource__c = sr.Id,
-            FEC_Start_Date__c = Datetime.newInstanceGMT(2026, 6, 1, 8, 0, 0),
-            FEC_End_Date__c = Datetime.newInstanceGMT(2026, 6, 1, 17, 0, 0),
+            FEC_Start_Date__c = existingStart,
+            FEC_End_Date__c = existingEnd,
             FEC_Note__c = 'Existing Absence'
         );
         insert existingAbs;
@@ -166,11 +189,17 @@ private class FEC_BatchDataCreationController_Test {
             'endDate' => '2025-01-01T17:00:00.000+0700'
         };
 
-        // Dòng lỗi 5: Trùng lặp với dữ liệu đã tồn tại sẵn trong hệ thống (dbExistingKeys - setup ở hàm SetupData mốc 2026-06-01)
+        // Dòng lỗi 5: Trùng lặp với absence từ @TestSetup (khớp millis qua formatImportDatetimeUtc)
+        FEC_Service_Resource_Absence__c existingAbs = [
+            SELECT FEC_Start_Date__c, FEC_End_Date__c
+            FROM FEC_Service_Resource_Absence__c
+            WHERE FEC_Note__c = 'Existing Absence'
+            LIMIT 1
+        ];
         Map<String, String> rowErr5 = new Map<String, String>{
             'serviceResource' => 'res.abs@fecredit.com.vn',
-            'startDate' => '2026-06-01T08:00:00.000+0000', // Chú ý: dùng offset +0000 khớp khâu ép về GMT ở Setup
-            'endDate' => '2026-06-01T17:00:00.000+0000'
+            'startDate' => formatImportDatetimeUtc(existingAbs.FEC_Start_Date__c),
+            'endDate' => formatImportDatetimeUtc(existingAbs.FEC_End_Date__c)
         };
 
         // Dòng lỗi 6 & 7: Hai dòng trùng lặp y xì nhau ngay trong tệp tin gửi lên (uniqueKeys - Duplicate In File)

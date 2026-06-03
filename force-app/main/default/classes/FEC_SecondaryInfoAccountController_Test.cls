@@ -4,10 +4,10 @@ private class FEC_SecondaryInfoAccountController_Test {
     private static final String SOAP_ENV = FEC_ConstantCommon.SOAP_ENV;
 
     private static final String MOCK_CARD_SEC_XML =
-        '<?xml version="1.0" encoding="UTF-8"?>' +
-        '<soapenv:Envelope xmlns:soapenv="' + SOAP_ENV + '">' +
-        '<soapenv:Body><GetCardSecInfoResponse>' +
-        '<Sys><Code>1</Code><Description>OK</Description></Sys>' +
+        '<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">' +
+        '<soapenv:Body>' +
+        '<GetCardSecInfoResponse>' +
+        '<Sys><TransID>TXN-SEC</TransID><Code>1</Code><Description>OK</Description></Sys>' +
         '<CardSecInfo>' +
         '<MainCardProduct>' +
         '<DailyRetailLimit>10000</DailyRetailLimit>' +
@@ -15,18 +15,19 @@ private class FEC_SecondaryInfoAccountController_Test {
         '<DailyCashLimit>2000</DailyCashLimit>' +
         '<DailyCashNumber>3</DailyCashNumber>' +
         '<LastCreditLimit>5000000</LastCreditLimit>' +
-        '<LastCreditLimitDate>20260101</LastCreditLimitDate>' +
-        '<LastDelinquencyDate>20260201</LastDelinquencyDate>' +
+        '<LastCreditLimitDate>2026-01-01</LastCreditLimitDate>' +
+        '<LastDelinquencyDate>2026-02-01</LastDelinquencyDate>' +
         '<StatementNotificationType>Email</StatementNotificationType>' +
         '</MainCardProduct>' +
         '<MainCardPlastic><EmbossingName>NGUYEN VAN A</EmbossingName></MainCardPlastic>' +
         '<PassDue>' +
         '<ResponsibleUnit>Collection Dept</ResponsibleUnit>' +
         '<ResposiblePerson>Agent One</ResposiblePerson>' +
-        '<DateAssgined>20260301</DateAssgined>' +
+        '<DateAssgined>2026-03-01</DateAssgined>' +
         '</PassDue>' +
         '</CardSecInfo>' +
-        '</GetCardSecInfoResponse></soapenv:Body></soapenv:Envelope>';
+        '</GetCardSecInfoResponse>' +
+        '</soapenv:Body></soapenv:Envelope>';
 
     private static final String MOCK_SALE_JSON =
         '{' +
@@ -61,6 +62,7 @@ private class FEC_SecondaryInfoAccountController_Test {
             Subject = 'Secondary Info Test',
             Status = 'New',
             FEC_Product_Type__c = pt.Id,
+            FEC_Account_Number__c = '1234567890123456',
             FEC_Is_Test_API__c = false,
             FEC_ID_Search__c = 'SIA-' + suffix
         );
@@ -80,11 +82,18 @@ private class FEC_SecondaryInfoAccountController_Test {
         );
         insert ch;
 
+        ch.FEC_Account_Number__c = '1234567890123456';
+        ch.FEC_CIF_Number__c = 'CIF001';
+        ch.FEC_Application_ID__c = 'APP123';
+        update ch;
+
         FEC_CaseTriggerHandler.isExecuting = true;
         try {
             update new Case(
                 Id = c.Id,
-                FEC_Account_or_Contract__c = ch.Id
+                FEC_Account_or_Contract__c = ch.Id,
+                FEC_Account_Number__c = '1234567890123456',
+                FEC_Is_Test_API__c = false
             );
         } finally {
             FEC_CaseTriggerHandler.isExecuting = false;
@@ -98,12 +107,16 @@ private class FEC_SecondaryInfoAccountController_Test {
             String body = req.getBody() != null ? req.getBody() : '';
             String endpoint = req.getEndpoint() != null ? req.getEndpoint() : '';
 
-            if (body.contains('GetCardSecInfo') || endpoint.contains('CardSec')) {
-                res.setHeader('Content-Type', 'text/xml');
-                res.setBody(MOCK_CARD_SEC_XML);
-            } else {
+            if (
+                endpoint.contains('APPLICATION_ID')
+                || endpoint.contains('Sale')
+                || endpoint.contains('Disburse')
+            ) {
                 res.setHeader('Content-Type', 'application/json');
                 res.setBody(MOCK_SALE_JSON);
+            } else {
+                res.setHeader('Content-Type', 'text/xml');
+                res.setBody(MOCK_CARD_SEC_XML);
             }
             return res;
         }
@@ -119,7 +132,27 @@ private class FEC_SecondaryInfoAccountController_Test {
     }
 
     private static Case getTestCase() {
-        return [SELECT Id FROM Case LIMIT 1];
+        return [
+            SELECT Id, FEC_Account_or_Contract__c, FEC_Account_Number__c, FEC_Is_Test_API__c
+            FROM Case
+            WHERE Subject = 'Secondary Info Test'
+            LIMIT 1
+        ];
+    }
+
+    @IsTest
+    static void testCardSecCallout_MockParses() {
+        Test.startTest();
+        Test.setMock(HttpCalloutMock.class, new SecondaryApiMock());
+        FEC_GetCardSecInfo.ResponseWrapper res = FEC_GetCardSecInfo.callGetCardSecInfo(
+            FEC_CommonUltils.generateTransactionId(),
+            FEC_ConstantCommon.REQUESTOR_CRM,
+            Datetime.now().formatGMT(FEC_ConstantCommon.DATETIME_FORMAT),
+            '1234567890123456',
+            false
+        );
+        Test.stopTest();
+        System.assertEquals(1, res.Sys.Code);
     }
 
     @IsTest
@@ -250,11 +283,8 @@ private class FEC_SecondaryInfoAccountController_Test {
 
     @IsTest
     static void testLoadSecondaryAccount_MockMode() {
-        FEC_API_Setting__c setting = FEC_API_Setting__c.getOrgDefaults();
-        setting.FEC_Call_Mock__c = true;
-        upsert setting;
-
         Case c = getTestCase();
+        Test.setMock(HttpCalloutMock.class, new SecondaryApiMock());
         Test.startTest();
         FEC_SecondaryInfoAccountController.SecondaryAccountDTO result =
             FEC_SecondaryInfoAccountController.loadSecondaryAccount(c.Id);

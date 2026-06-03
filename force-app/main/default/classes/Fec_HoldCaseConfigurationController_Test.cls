@@ -51,7 +51,8 @@ private class Fec_HoldCaseConfigurationController_Test {
 
         insert new FEC_Hold_Case__c(
             FEC_NFU_Code__c = 'NFU01',
-            FEC_NFU_Reason_VN__c = 'Reason test'
+            FEC_NFU_Reason_VN__c = 'Reason test',
+            FEC_NFU_Duration__c = 30
         );
     }
 
