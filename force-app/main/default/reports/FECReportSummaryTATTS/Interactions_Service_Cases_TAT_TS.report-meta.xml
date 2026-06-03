@@ -22,10 +22,10 @@
         <field>FEC_Routing_Action_History__c$FEC_Case__c.FEC_Interaction__c.FEC_Created_by__c</field>
     </columns>
     <columns>
-        <field>FEC_Routing_Action_History__c$FEC_Case__c.FEC_Channel__c</field>
+        <field>FEC_Routing_Action_History__c$FEC_Case__c.FEC_Interaction__c.FEC_Channel__c</field>
     </columns>
     <columns>
-        <field>FEC_Routing_Action_History__c$FEC_Case__c.FEC_Interaction_Subchannel__c</field>
+        <field>FEC_Routing_Action_History__c$FEC_Case__c.FEC_Interaction__c.FEC_Interaction_Subchannel__c</field>
     </columns>
     <columns>
         <field>FEC_Routing_Action_History__c$FEC_Case__c.FEC_Case_ID__c</field>
@@ -118,10 +118,10 @@
         <field>FEC_Routing_Action_History__c$FEC_Changed_Status__c</field>
     </columns>
     <columns>
-        <field>FEC_Routing_Action_History__c$FEC_Case__c.FEC_TAT_Full_Process_Hrs__c</field>
+        <field>FEC_Routing_Action_History__c$FEC_TAT_by_Assignment__c</field>
     </columns>
     <columns>
-        <field>FEC_Routing_Action_History__c$FEC_TAT_by_Assignment__c</field>
+        <field>FEC_Routing_Action_History__c$FEC_Case__c.FEC_TAT_Full_Process_Hrs__c</field>
     </columns>
     <filter>
         <booleanFilter>(1 OR 2) AND 3 AND 4</booleanFilter>
