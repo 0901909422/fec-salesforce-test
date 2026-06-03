@@ -22,7 +22,7 @@ public with sharing class FEC_CheckCampaignStatusBatch implements Database.Batch
     public Database.QueryLocator start(Database.BatchableContext BC) {
         String query = 'SELECT Id, FEC_RecordId__c, FEC_RecordStatus__c, ' +
             'FEC_InsertionDate__c, FEC_CurrentCallAttempt__c, ' +
-            'FEC_RecordCurrentLifetime__c, FEC_RecordLifeTime__c, FEC_Number4__c, FEC_Number5__c, ' +
+            'FEC_RecordCurrentLifetime__c, FEC_RecordLifetime__c, FEC_Number4__c, FEC_Number5__c, ' +
             'FEC_CallbackRequested__c, FEC_SendToCommsDB__c, FEC_AccountOrContractNumber__c ' +
             'FROM FEC_DataCampaign__c ' +
             'WHERE FEC_IsPushed__c = true ' +
