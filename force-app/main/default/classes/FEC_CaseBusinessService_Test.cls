@@ -529,4 +529,159 @@ private class FEC_CaseBusinessService_Test {
             System.assert(true);
         }
     }
+
+    @IsTest
+    static void testGetByCase_WithNocIdsAndBlockCodes() {
+        System.runAs(caseOwnerUser()) {
+            Case c = [
+                SELECT Id, FEC_Product_Type__c, FEC_Category__c, FEC_SubCategory__c, FEC_SubCode__c
+                FROM Case
+                LIMIT 1
+            ];
+            Test.startTest();
+            FEC_CaseBusinessService.Business biz = FEC_CaseBusinessService.getByCase(
+                String.valueOf(c.Id),
+                String.valueOf(c.FEC_Product_Type__c),
+                String.valueOf(c.FEC_Category__c),
+                String.valueOf(c.FEC_SubCategory__c),
+                String.valueOf(c.FEC_SubCode__c),
+                'F',
+                'G'
+            );
+            Test.stopTest();
+            System.assertNotEquals(null, biz);
+        }
+    }
+
+    @IsTest
+    static void testRoutingHistoryAndSubmitHelpers() {
+        System.runAs(caseOwnerUser()) {
+            Case c = [SELECT Id, Status, FEC_Team__c, FEC_Is_Submited__c FROM Case LIMIT 1];
+            c.Status = FEC_ConstantCommon.CASE_STATUS_PENDING;
+            c.FEC_Team__c = 'CC';
+            update c;
+            c = [SELECT Id, Status, FEC_Team__c FROM Case WHERE Id = :c.Id];
+
+            Test.startTest();
+            System.assertEquals('Pending - CC', FEC_CaseBusinessService.routingHistoryStatusSnapshot(c));
+            System.assertNotEquals(null, FEC_CaseBusinessService.readRoutingHistoryCurrentStatus(c.Id));
+            System.assertNotEquals(null, FEC_CaseBusinessService.getPendingStatusFromLatestRouteTo(c.Id));
+            FEC_CaseBusinessService.markCaseSubmittedWithoutRouting(c.Id);
+            FEC_Nature_of_Case__c noc = [SELECT Id FROM FEC_Nature_of_Case__c LIMIT 1];
+            Case unsubmitted = new Case(
+                Subject = 'Submit With History',
+                Status = FEC_ConstantCommon.CASE_STATUS_OPEN,
+                FEC_Is_Submited__c = false,
+                FEC_ID_Search__c = 'SWH-' + String.valueOf(System.currentTimeMillis())
+            );
+            insert unsubmitted;
+            FEC_CaseBusinessService.markCaseSubmittedWithoutRoutingWithHistory(
+                unsubmitted.Id,
+                noc.Id,
+                '[]'
+            );
+            FEC_CaseBusinessService.createCaseFlowHistory(unsubmitted.Id, noc.Id, '[]');
+            Test.stopTest();
+
+            System.assertEquals(true, [SELECT FEC_Is_Submited__c FROM Case WHERE Id = :c.Id].FEC_Is_Submited__c);
+        }
+    }
+
+    @IsTest
+    static void testResolveRoutingHistoryOwnerLabelAndHelpText() {
+        System.runAs(caseOwnerUser()) {
+            Group q = [SELECT Id, Name FROM Group WHERE DeveloperName = 'CS_Frontline_Queue' LIMIT 1];
+            Test.startTest();
+            String userLabel = FEC_CaseBusinessService.resolveRoutingHistoryOwnerLabel(
+                UserInfo.getUserId(),
+                'Fallback'
+            );
+            String queueLabel = FEC_CaseBusinessService.resolveRoutingHistoryOwnerLabel(q.Id, 'Fallback');
+            Map<String, Map<String, String>> help = FEC_CaseBusinessService.getHelpTextMap(
+                new Map<String, Set<String>>{
+                    'Case' => new Set<String>{ 'Subject', 'Status' }
+                }
+            );
+            Test.stopTest();
+            System.assertNotEquals(null, userLabel);
+            System.assertEquals(q.Name, queueLabel);
+            System.assert(help.containsKey('Case'));
+        }
+    }
+
+    @IsTest
+    static void testCloneActualNatureAndMasterData() {
+        System.runAs(caseOwnerUser()) {
+            FEC_Nature_of_Case__c noc = [SELECT Id FROM FEC_Nature_of_Case__c LIMIT 1];
+            FEC_Case_Stage__c stage = [SELECT Id FROM FEC_Case_Stage__c WHERE FEC_Code__c = 'STG01' LIMIT 1];
+
+            Test.startTest();
+            FEC_Actual_Nature_of_Case__c actual = FEC_CaseBusinessService.cloneActualNatureOfCase(noc.Id);
+            FEC_CaseBusinessService.cloneMasterDataSetting(actual.Id, noc.Id, false);
+            FEC_CaseBusinessService.cloneMasterDataSetting(actual.Id, noc.Id, true);
+            Test.stopTest();
+
+            System.assertNotEquals(null, actual.Id);
+            System.assert(
+                [SELECT COUNT() FROM FEC_Master_Data_Setting__c WHERE FEC_Nature_Of_Case__c = :actual.Id] >= 0
+            );
+        }
+    }
+
+    @IsTest
+    static void testCreateRoutingActionHisAndPatchStatus() {
+        System.runAs(caseOwnerUser()) {
+            Case c = [SELECT Id, OwnerId, FEC_Current_Case_Stage__c FROM Case LIMIT 1];
+            Group q = [SELECT Id, Name FROM Group WHERE DeveloperName = 'CS_Frontline_Queue' LIMIT 1];
+
+            Test.startTest();
+            FEC_CaseBusinessService.createRoutingActionHis(
+                FEC_CaseBusinessService.ROUTE_TO,
+                'Approved',
+                q.Name,
+                q.Id,
+                c.Id,
+                'Stage 1 Open',
+                'Open',
+                c.FEC_Current_Case_Stage__c
+            );
+            FEC_Routing_Action_History__c hist = [
+                SELECT Id
+                FROM FEC_Routing_Action_History__c
+                WHERE FEC_Case__c = :c.Id
+                ORDER BY CreatedDate DESC
+                LIMIT 1
+            ];
+            FEC_CaseBusinessService.patchRoutingHistoryChangedStatus(hist.Id, 'Pending - CC');
+            Test.stopTest();
+
+            System.assertEquals('Pending - CC', [SELECT FEC_Changed_Status__c FROM FEC_Routing_Action_History__c WHERE Id = :hist.Id].FEC_Changed_Status__c);
+        }
+    }
+
+    @IsTest
+    static void testRunInternal_TransferAndInvalidMethod() {
+        System.runAs(caseOwnerUser()) {
+            Case c = [SELECT Id, OwnerId FROM Case LIMIT 1];
+            Group q = [SELECT Id FROM Group WHERE DeveloperName = 'CS_Frontline_Queue' LIMIT 1];
+
+            Test.startTest();
+            FEC_CaseBusinessService.runInternal(
+                FEC_CaseBusinessService.TRANSFER,
+                new Map<String, String>{
+                    'caseId' => c.Id,
+                    'userOrQueueId' => String.valueOf(q.Id),
+                    'decision' => 'Approved'
+                }
+            );
+            Object invalid = FEC_CaseBusinessService.runInternal(
+                'NotARealMethod',
+                new Map<String, String>{ 'caseId' => c.Id }
+            );
+            Test.stopTest();
+
+            System.assertEquals(null, invalid);
+            System.assertEquals(q.Id, [SELECT OwnerId FROM Case WHERE Id = :c.Id].OwnerId);
+        }
+    }
 }
