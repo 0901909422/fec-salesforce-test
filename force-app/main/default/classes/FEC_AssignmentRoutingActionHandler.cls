@@ -527,7 +527,7 @@ public without sharing class FEC_AssignmentRoutingActionHandler {
         FEC_Original_User_Queue__c = emailLocalPart(u.Email),
         FEC_Original_User_Queue_ID__c = u.Id,
         FEC_Updated_User_Queue__c = ass.FEC_Assignment_Owner_Text__c,
-        FEC_Updated_User_Queue_ID__c =  ass.FEC_OwnerID__c,
+        FEC_Updated_User_Queue_ID__c =  getQueueIdByName(ass.FEC_OwnerID__c),
         
         FEC_Stage_Name__c = c.FEC_Current_Case_Stage__r.FEC_Code__c,
         
@@ -671,7 +671,7 @@ public without sharing class FEC_AssignmentRoutingActionHandler {
         ];
         
         FEC_Assignment__c ass = [
-            SELECT Id, FEC_Assignment_Owner__c, FEC_Assignment_Owner_Text__c
+            SELECT Id, FEC_Assignment_Owner__c, FEC_Assignment_Owner_Text__c, FEC_OwnerID__c
             FROM FEC_Assignment__c
             WHERE Id = :assignmentId
         ];
@@ -692,13 +692,13 @@ public without sharing class FEC_AssignmentRoutingActionHandler {
         FEC_Original_User_Queue__c = emailLocalPart(u.Email),
         FEC_Original_User_Queue_ID__c = u.Id,
         FEC_Updated_User_Queue__c = ass.FEC_Assignment_Owner_Text__c,
-        FEC_Updated_User_Queue_ID__c =  ass.FEC_Assignment_Owner__c,
+        FEC_Updated_User_Queue_ID__c =  ass.FEC_OwnerID__c,
         
         FEC_Stage_Name__c = c.FEC_Current_Case_Stage__r.FEC_Code__c,
         
         FEC_User__c = emailLocalPart(u.Email),
         FEC_User_Role__c = u.UserRole != null ? u.UserRole.Name : null
-        ));
+            ));
         
         // --- Case Remark ---
         records.add(new FEC_Case_Remarks__c(
@@ -750,13 +750,16 @@ public without sharing class FEC_AssignmentRoutingActionHandler {
         
         String updatedUserQueueId = '';
         String updatedUserQueue = '';
+        String decisionStr ='';
         if (decision ==  FEC_ConstantCommon.DECISION_USER) {
             updatedUserQueueId = ass.FEC_Assignment_Owner__c;
             updatedUserQueue = ass.FEC_Assignment_Owner_Text__c ;
+            decisionStr = 'User';
             // ===== QUEUE =====
         } else if (decision ==  FEC_ConstantCommon.DECISION_QUEUE ) {
             updatedUserQueueId = ass.FEC_OwnerID__c;
             updatedUserQueue = ass.FEC_Assignment_Owner_Text__c ;
+            decisionStr = 'Queue';
         }
         // ===== BUILD RECORDS =====
         List<SObject> records = new List<SObject>();
@@ -777,7 +780,7 @@ public without sharing class FEC_AssignmentRoutingActionHandler {
         
         FEC_User__c = emailLocalPart(u.Email),
         FEC_User_Role__c = u.UserRole != null ? u.UserRole.Name : null,
-        FEC_Decision__c = decision
+        FEC_Decision__c =   decisionStr
             ));
         
         // --- Case Remark ---
@@ -807,7 +810,7 @@ public without sharing class FEC_AssignmentRoutingActionHandler {
         System.debug(assignmentId);
         System.debug(action);
         System.debug(remark);
-        
+        System.debug(decision);
         // ===== GET DATA =====
         User u = [
             SELECT Id, Email, UserRole.Name
@@ -829,13 +832,16 @@ public without sharing class FEC_AssignmentRoutingActionHandler {
         
         String updatedUserQueueId = '';
         String updatedUserQueue = '';
+        String decisionStr = '';
         if (decision ==  FEC_ConstantCommon.DECISION_USER) {
             updatedUserQueueId = ass.FEC_Assignment_Owner__c;
             updatedUserQueue = ass.FEC_Assignment_Owner_Text__c ;
+            decisionStr = 'User';
             // ===== QUEUE =====
-        } else if (decision ==  FEC_ConstantCommon.DECISION_QUEUE ) {
-            updatedUserQueueId = ass.FEC_OwnerID__c;
+        } else if (decision ==  FEC_ConstantCommon.DECISION_USER_TEAM_QUEUE ) {
+            updatedUserQueueId = getQueueIdByName(ass.FEC_OwnerID__c);
             updatedUserQueue = ass.FEC_Assignment_Owner_Text__c ;
+            decisionStr = 'User\'s Team Queue';
         }
         // ===== BUILD RECORDS =====
         List<SObject> records = new List<SObject>();
@@ -856,7 +862,7 @@ public without sharing class FEC_AssignmentRoutingActionHandler {
         
         FEC_User__c = emailLocalPart(u.Email),
         FEC_User_Role__c = u.UserRole != null ? u.UserRole.Name : null,
-        FEC_Decision__c = decision
+        FEC_Decision__c =   decisionStr
             ));
         
         // --- Case Remark ---
