@@ -2410,7 +2410,6 @@
         <members>FEC_Case_Assignment_NOC__c</members>
         <members>FEC_Case_Assignment__c</members>
         <members>FEC_Transfer_Call_Error__c</members>
-        <members>Download_Report__c</members>
         <members>FEC_Case_Hold_History__c</members>
         <members>FEC_Notification_Template_Channel__c</members>
         <members>FEC_PDFTemplate__mdt</members>
@@ -2501,7 +2500,6 @@
         <members>FEC_Service_UtilityBar</members>
         <members>FEC_Interaction_Case_Record_Page</members>
         <members>FEC_Customer_Case_Record_Page</members>
-        <members>Assignment_Record_Page</members>
         <members>Hold_Case_Record_Page</members>
         <members>FEC_Search_Case_Record_Page</members>
         <members>FEC_Internal_Case_Record_Page</members>
@@ -2816,7 +2814,6 @@
         <members>fec_NewAssignmentAction</members>
         <members>fec_holdCaseAuto</members>
         <members>fec_DoNotBotherResultView</members>
-        <members>fec_DownloadReport</members>
         <members>fec_Il10DeliveryForm</members>
         <members>fec_MrcReturnCaseForm</members>
         <members>fec_MrcDeliveryForm</members>
@@ -3279,7 +3276,6 @@
         <members>Case.Hold_Case</members>
         <members>Case.FEC_Execute_Assigment</members>
         <members>Case.FEC_New_Assignment_LWC</members>
-        <members>Download_Report__c.FEC_DownloadReport</members>
         <members>FEC_General_Assignment_Config__c.New_General_Assignment</members>
         <members>FEC_General_Assignment__c.New_General_Assignment</members>
         <name>QuickAction</name>
