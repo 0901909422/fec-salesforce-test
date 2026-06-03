@@ -295,6 +295,7 @@ public class FEC_IntegrationLocationService {
         }
     }
 
+    @TestVisible
     private static Date parseDate(Object dateVal) {
         if (dateVal == null) return null;
         try {
@@ -328,6 +329,7 @@ public class FEC_IntegrationLocationService {
      * Order is critical to ensure lookup relationships
      * can be resolved correctly.
      */
+    @TestVisible
     private static void upsertSyncLocation(List<LocationRow> rows) {
 
          /* ================= COUNTRY ================= */

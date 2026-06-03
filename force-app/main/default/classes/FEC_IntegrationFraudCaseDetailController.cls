@@ -55,6 +55,35 @@ global with sharing class FEC_IntegrationFraudCaseDetailController {
         }
 
         Map<String, Object> snapshotData = (Map<String, Object>) JSON.deserializeUntyped(snapshots[0].FEC_Data__c);
+
+        // Format datetime fields in case data if they exist
+        if (snapshotData.containsKey('case')) {
+            Map<String, Object> caseData = (Map<String, Object>) snapshotData.get('case');
+            
+            // Format CreatedDate
+            if (caseData.containsKey('CreatedDate') && caseData.get('CreatedDate') != null) {
+                try {
+                    Datetime dt = (Datetime) JSON.deserialize('"' + String.valueOf(caseData.get('CreatedDate')) + '"', Datetime.class);
+                    caseData.put('CreatedDate', FEC_IntegrationFraudCaseUtil.formatDateTime(dt));
+                } catch (Exception e) { /* keep original value */ }
+            }
+            
+            // Format LastModifiedDate
+            if (caseData.containsKey('LastModifiedDate') && caseData.get('LastModifiedDate') != null) {
+                try {
+                    Datetime dt = (Datetime) JSON.deserialize('"' + String.valueOf(caseData.get('LastModifiedDate')) + '"', Datetime.class);
+                    caseData.put('LastModifiedDate', null);
+                } catch (Exception e) { /* keep original value */ }
+            }
+
+            // If FEC_CaseID__c does not start with 'FH-', set it to null
+            String caseId = (String) caseData.get('FEC_CaseID__c');
+            FEC_FraudConstantCommon.IntegrationField caseField = new FEC_FraudConstantCommon.IntegrationField();
+            if (String.isNotBlank(caseId) && !caseId.startsWith(caseField.CASEFH)) {
+                caseData.put('FEC_CaseID__c', null);
+            }
+        }
+
         snapshotData.put('snapshotDate', FEC_IntegrationFraudCaseUtil.formatDateTime(snapshots[0].CreatedDate));
         return snapshotData;
     }

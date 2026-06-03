@@ -1,6 +1,8 @@
 import { LightningElement, track , wire, api} from 'lwc';
 
 import { CurrentPageReference } from 'lightning/navigation';
+import { publish, MessageContext } from 'lightning/messageService';
+import FRAUD_FIELD_SYNC from '@salesforce/messageChannel/FEC_Fraud_Field_Sync__c';
 
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import getFraudCaseById from '@salesforce/apex/FEC_IntegrationCreateFraudController.getFraudCaseById';
@@ -53,11 +55,15 @@ import LBL_Cancel_Fraud_Case_Button from '@salesforce/label/c.LBL_Cancel_Fraud_C
 import LBL_Create_Fraud_Case_Button from '@salesforce/label/c.LBL_Create_Fraud_Case_Button';
 import LBL_DownloadFile from '@salesforce/label/c.LBL_DownloadFile';
 
+import getIntegrationActionModes from '@salesforce/apex/FEC_IntegrationCreateFraudController.getIntegrationActionModes';
 
 
 export default class IntegrationCreateFraudCase extends LightningElement {
 
     @api fraudHandlingCaseId;
+    @api actionMode;
+    @api serviceCaseId;
+    @api caseDataId;
     @track caseId;
     @track loading = true;
     @track showPreview = false;
@@ -65,6 +71,9 @@ export default class IntegrationCreateFraudCase extends LightningElement {
     isUpdateSubmitting = false;
     isCancelSubmitting = false;
     @track showCancelConfirm = false;
+
+    @wire(MessageContext)
+    messageContext;
     
     fraudIntUserType = '';
     fraudIntChannel = '';
@@ -75,6 +84,7 @@ export default class IntegrationCreateFraudCase extends LightningElement {
     fraudIntSubCode = '';
     intCaseId = '';
     fieldTypes = {};
+    actionModes = {};
     createActionType = 'create';
     updateActionType = 'update';
     cancelActionType = 'cancel';
@@ -84,6 +94,10 @@ export default class IntegrationCreateFraudCase extends LightningElement {
     subCodesAll = [];
     @track rows = [];
     get notLoading() { return !this.loading; }
+    get showCancelButton() {
+        console.log('[DEBUG] showCancelButton — actionMode:', this.actionMode, '| actionModes.EDIT_MODE:', this.actionModes.EDIT_MODE, '| result:', this.actionMode === this.actionModes.EDIT_MODE);
+        return this.actionMode === this.actionModes.EDIT_MODE;
+    }
 
     master = null;
     resultMessage = '';
@@ -149,7 +163,9 @@ export default class IntegrationCreateFraudCase extends LightningElement {
    
 
     connectedCallback() {
-        //this.loading = true;   
+        getIntegrationActionModes()
+            .then(res => { this.actionModes = res || {}; })
+            .catch(err => { console.error('getIntegrationActionModes error', err); });
     }
 
     @wire(CurrentPageReference)
@@ -327,6 +343,16 @@ export default class IntegrationCreateFraudCase extends LightningElement {
 
 
     // OTHER FIELD CHANGES
+    @api
+    setFieldValue(fieldId, value) {
+        console.log('[fecIntegrationUpdateFraudCase] setFieldValue:', fieldId, value, '| props count:', this.additionalProps?.length, '| matched:', this.additionalProps?.some(p => p.id === fieldId || p.property === fieldId));
+        this.additionalProps = this.additionalProps.map(p =>
+            (p.id === fieldId || p.property === fieldId)
+                ? { ...p, value }
+                : p
+        );
+    }
+
     onSimpleChange(event) {
         const field = event.target.dataset.field;
         if (field) {
@@ -350,6 +376,16 @@ export default class IntegrationCreateFraudCase extends LightningElement {
                 ? { ...p, value }
                 : p
         );
+
+        // Publish fraud→case sync via LMS
+        const prop = this.additionalProps.find(p => p.id === fieldId);
+        if (prop && prop.property) {
+            publish(this.messageContext, FRAUD_FIELD_SYNC, {
+                fieldId: prop.property,
+                value: value,
+                source: 'fraud'
+            });
+        }
     }
 
     // -------------------------------------------------------------------
@@ -626,7 +662,7 @@ export default class IntegrationCreateFraudCase extends LightningElement {
             //this.showPreview = false;
             //return;
         }
-    
+       
         let actionPromise;
        
         if (this.actionType === this.cancelActionType) {
@@ -640,6 +676,12 @@ export default class IntegrationCreateFraudCase extends LightningElement {
                 this.labels.responseSuccess,
                 actionPromise.message
             );
+            // Notify parent to reload
+            this.dispatchEvent(new CustomEvent('fraudcasesuccess', {
+                detail: { message: actionPromise.message },
+                bubbles: true,
+                composed: true
+            }));
         } else {
             this.showErrorToast(
                 this.labels.responseFailed,

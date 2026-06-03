@@ -36,10 +36,11 @@ public with sharing class FEC_IntegrationManageFraudCaseCtrl {
      */
     @AuraEnabled
     public static ManageFraudCaseDTO initManageFraudCase(String serviceCaseId, String natureOfCaseId) {
-
         //log('[getAllValueCaseInfoByCaseId] serviceCaseId=' + serviceCaseId + ' | natureOfCaseId=' + natureOfCaseId);
+        FEC_FraudConstantCommon.IntegrationField caseField = new FEC_FraudConstantCommon.IntegrationField();
         ManageFraudCaseDTO dto = new ManageFraudCaseDTO();        
         dto.natureOfCaseId = natureOfCaseId;
+        Boolean isConfigFraudIntegrate = false;
 
         if (String.isBlank(serviceCaseId)) {
             dto.actionMode = FEC_FraudConstantCommon.INTEGRATING_FRAUD_CREATE_MODE;
@@ -71,11 +72,16 @@ public with sharing class FEC_IntegrationManageFraudCaseCtrl {
             log('[initManageFraudCase] No fraud case found → CreateMode');
         } else {
             FEC_Integration_Case__c fraudCase = existing[0];
+            isConfigFraudIntegrate = true;
             dto.fraudCaseId = fraudCase.FEC_CaseID__c;
             dto.caseStatus = fraudCase.FEC_Case_Status__c;
+            Boolean isNotAllow = (fraudCase.FEC_CaseID__c != null && fraudCase.FEC_CaseID__c.startsWith(caseField.CASEFH))
+            ? true: false;
 
-            if (fraudCase.FEC_Case_Status__c == FEC_FraudConstantCommon.CS_UPDATING
-                || fraudCase.FEC_Case_Status__c == FEC_FraudConstantCommon.PROVIDE_INFORMATION) {
+            if (!isNotAllow) {
+                dto.actionMode = FEC_FraudConstantCommon.INTEGRATING_FRAUD_SUBMIT_MODE;
+            }else if(isNotAllow && (fraudCase.FEC_Case_Status__c == FEC_FraudConstantCommon.CS_UPDATING
+                || fraudCase.FEC_Case_Status__c == FEC_FraudConstantCommon.PROVIDE_INFORMATION)) {
                 dto.actionMode = FEC_FraudConstantCommon.INTEGRATING_FRAUD_EDIT_MODE;
             } else {
                 dto.actionMode = FEC_FraudConstantCommon.INTEGRATING_FRAUD_VIEW_MODE;
@@ -89,14 +95,75 @@ public with sharing class FEC_IntegrationManageFraudCaseCtrl {
         dto.caseData = getAllValueCaseInfoByCaseId(
             getCaseIdFromServiceCaseId(serviceCaseId)
         );
-
-        // Resolve Integration Mapping Id from Nature Of Case
-        dto.integrateMappingId = getIntegrateMappingIdByNatureOfCase(natureOfCaseId);
-        if(String.isBlank(dto.integrateMappingId)) {
-            dto.actionMode = FEC_FraudConstantCommon.INTEGRATING_FRAUD_NOTMAPPING_MODE;
+        //Check Not config Fraud Integration
+        if(!isConfigFraudIntegrate) {
+             // Resolve Integration Mapping Id from Nature Of Case
+            dto.integrateMappingId = getIntegrateMappingIdByNatureOfCase(natureOfCaseId);
+            if(String.isBlank(dto.integrateMappingId)) {
+                dto.actionMode = FEC_FraudConstantCommon.INTEGRATING_FRAUD_NOTMAPPING_MODE;
+            }
         }
+       
 
         return dto;
+    }
+
+    @AuraEnabled
+    public static Map<String, String> getCaseToFraudFieldMap(String natureOfCaseId, String serviceCaseId) {
+        Map<String, String> result = new Map<String, String>();
+        String integrateMappingId = getIntegrateMappingIdByNatureOfCase(natureOfCaseId);
+        log('integrateMappingId-log: '+ integrateMappingId);
+        log('serviceCaseId-log: '+ serviceCaseId);
+        
+        // Fallback: if no mapping found by natureOfCaseId, try from Case's Actual Nature of Case
+        if (String.isBlank(integrateMappingId) && String.isNotBlank(serviceCaseId)) {
+            List<Case> cases = [
+                SELECT FEC_Actual_Nature_of_Case__c
+                FROM Case
+                WHERE Id = :serviceCaseId
+                LIMIT 1
+            ];
+            if (!cases.isEmpty() && cases[0].FEC_Actual_Nature_of_Case__c != null) {
+                integrateMappingId = getIntegrateMappingIdByNatureOfCase(cases[0].FEC_Actual_Nature_of_Case__c);
+            }
+        }
+
+        if (String.isBlank(integrateMappingId)) {
+            return result;
+        }
+
+        // Step 1: Get mapping info records        
+        List<FEC_Data_Integration_Mapping_Info__c> mappingInfos = [
+            SELECT Id,
+                FEC_Auto_Mapping_Property__c,
+                FEC_CSM_Property__c,
+                FEC_CSM_Property_Type__c,
+                FEC_Data_Integration_Mapping__c,
+                FEC_Integrating_Property__c,
+                FEC_Integrating_Property_Type__c,
+                FEC_Mandatory__c,
+                FEC_Auto_Mapping_Property_Source__c
+            FROM FEC_Data_Integration_Mapping_Info__c           
+            WHERE FEC_Data_Integration_Mapping__c = :integrateMappingId 
+             AND (
+                FEC_CSM_Property__c != null 
+                OR FEC_Auto_Mapping_Property_Source__c != null
+            )
+        ];
+
+        if (mappingInfos.isEmpty()) {
+            return result;
+        }
+
+        for (FEC_Data_Integration_Mapping_Info__c info : mappingInfos) {
+            String caseField = String.isNotBlank(info.FEC_Auto_Mapping_Property_Source__c)
+                ? info.FEC_Auto_Mapping_Property_Source__c
+                : info.FEC_CSM_Property__c;
+            // Map: Case field → Fraud (Integrating) field
+            result.put(caseField, info.FEC_Integrating_Property__c);
+        }
+        
+        return result;
     }
 
     private static Map<String, Object> getAllValueCaseInfoByCaseId(Id caseId) {
