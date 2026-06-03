@@ -1416,6 +1416,25 @@ public without sharing class FEC_CaseBusinessService {
 
       // RL05: định tuyến hiển thị / Route to theo bản ghi FEC_Stage_Change__c (resolveRouteToDisplayInfo + route).
       // Data admin: tạo Stage Change đúng Previous Stage + Action Route to + Queue/Team — không hardcode SP/OM tại đây.
+      FEC_BlockCodeRoutingService.LiveBlockCodeContext liveBlockCodes = null;
+      if (isRc2701OrRc2702) {
+        liveBlockCodes = FEC_BlockCodeRoutingService.resolveLiveBlockCodesForCase(
+          selectedCase.Id
+        );
+        result.liveBlockCode = liveBlockCodes.blockCode;
+        result.liveBlockCode1 = liveBlockCodes.blockCode1;
+        if ('Card Replacement'.equalsIgnoreCase(result.code)) {
+          FEC_CardReplacementAddressController.ReplaceCardResult replaceCardPa =
+            FEC_CardReplacementAddressController.evaluateReplaceCardProcessAction(
+              selectedCase.Id,
+              liveBlockCodes.blockCode,
+              liveBlockCodes.blockCode1
+            );
+          result.replaceCardProcessActionResolved = true;
+          result.replaceCardShowProcessAction = replaceCardPa.isShowAction == true;
+          result.replaceCardProcessActionMsg = replaceCardPa.strMsg;
+        }
+      }
       FEC_BlockCodeRoutingService.applyToBusinessIfApplicable(
         selectedCase,
         result,
@@ -1423,7 +1442,8 @@ public without sharing class FEC_CaseBusinessService {
         subCategoryId,
         subCodeId,
         selectedStage != null ? selectedStage.Id : null,
-        parseIdSafelyForRouting(routeToId)
+        parseIdSafelyForRouting(routeToId),
+        liveBlockCodes
       );
 
       // Case đã Submit thì không trả draft → màn Execute hiển thị mới, không autofill dữ liệu cũ
@@ -2384,7 +2404,9 @@ public without sharing class FEC_CaseBusinessService {
             natureOfCaseId,
             actionId,
             finalStatusBeforeSubmit,
-            (String) params.get('teamUserGroup')
+            (String) params.get('teamUserGroup'),
+            (String) params.get('liveBlockCode'),
+            (String) params.get('liveBlockCode1')
           );
           // 28/05/2026 15:33 linhdev - tránh Too many queueable jobs khi import batch chain queueable
           if (!FEC_BatchCaseHandlingImportService.isBatchImportApplyInProgress()) {
@@ -2557,9 +2579,13 @@ public without sharing class FEC_CaseBusinessService {
     String natureOfCaseId,
     String actionId,
     String finalStatusBeforeSubmit,
-    String teamUserGroup
+    String teamUserGroup,
+    String liveBlockCode,
+    String liveBlockCode1
   ) {
     try {
+      FEC_BlockCodeRoutingService.LiveBlockCodeContext liveBlockCodes =
+        FEC_BlockCodeRoutingService.contextFromParams(liveBlockCode, liveBlockCode1);
       Long corrId = DateTime.now().getTime();
       System.debug(
         'FEC_DEBUG CaseBusinessService.route start corrId=' +
@@ -2749,7 +2775,7 @@ public without sharing class FEC_CaseBusinessService {
           queueId
         );
       if (!routeByLatestRevertHistory) {
-        if (FEC_BlockCodeRoutingService.isRc27DefaultOmDay2Routing(updatedCase)) {
+        if (FEC_BlockCodeRoutingService.isRc27DefaultOmDay2Routing(updatedCase, liveBlockCodes)) {
           FEC_Stage_Change__c rc27OmDay2 =
             FEC_BlockCodeRoutingService.selectRc27DefaultOmDay2FromList(changelst);
           if (rc27OmDay2 == null) {
@@ -2762,7 +2788,10 @@ public without sharing class FEC_CaseBusinessService {
             selectedChange = rc27OmDay2;
           }
         } else if (
-          FEC_BlockCodeRoutingService.isRc27SiblingSpDqStageThreeRouting(updatedCase)
+          FEC_BlockCodeRoutingService.isRc27SiblingSpDqStageThreeRouting(
+            updatedCase,
+            liveBlockCodes
+          )
         ) {
           FEC_Stage_Change__c rc27SpDq =
             FEC_BlockCodeRoutingService.selectRc27SiblingSpDqStageThreeFromList(
@@ -2860,7 +2889,8 @@ public without sharing class FEC_CaseBusinessService {
       queueId = FEC_BlockCodeRoutingService.applyRouteQueueOverrideIfApplicable(
         updatedCase,
         queueId,
-        routeByLatestRevertHistory
+        routeByLatestRevertHistory,
+        liveBlockCodes
       );
 
       updatedCase.OwnerId = queueId;
@@ -4345,6 +4375,23 @@ public without sharing class FEC_CaseBusinessService {
 
     @AuraEnabled
     public String code;
+
+    /** RC27: block code thẻ live từ API (session, không persist). */
+    @AuraEnabled
+    public String liveBlockCode;
+
+    @AuraEnabled
+    public String liveBlockCode1;
+
+    /** Card Replacement: Process Action đã resolve trong getByCase (tránh gọi API trùng). */
+    @AuraEnabled
+    public Boolean replaceCardProcessActionResolved;
+
+    @AuraEnabled
+    public Boolean replaceCardShowProcessAction;
+
+    @AuraEnabled
+    public String replaceCardProcessActionMsg;
 
     /** RL05.02 — Id Case RL05 cũ hơn cùng hợp đồng (mở); null nếu không có. */
     @AuraEnabled

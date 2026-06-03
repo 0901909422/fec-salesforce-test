@@ -168,40 +168,42 @@ public without sharing class FEC_CardReplacementAddressController {
 
     @AuraEnabled
     public static ReplaceCardResult checkProcessAction(String caseId) {
+        FEC_BlockCodeRoutingService.LiveBlockCodeContext liveCtx =
+            FEC_BlockCodeRoutingService.resolveLiveBlockCodesForCase(caseId);
+        return evaluateReplaceCardProcessAction(
+            caseId,
+            liveCtx.blockCode,
+            liveCtx.blockCode1
+        );
+    }
+
+    /**
+     * Đánh giá hiển thị Process Action Replace Card từ block code live (không gọi API).
+     */
+    public static ReplaceCardResult evaluateReplaceCardProcessAction(
+        String caseId,
+        String blockCode,
+        String blockCode1
+    ) {
         ReplaceCardResult result = new ReplaceCardResult();
         try {
             List<String> inValidBlockCode = new List<String>{'F', 'S', 'G', 'N'};
             List<String> inValidBlockCode1 = new List<String>{'F', 'G', 'N'};
             Case objCase = [
-                SELECT Id, 
+                SELECT Id,
                     FEC_Interaction__c,
                     FEC_Account_Number__c
-                FROM Case 
+                FROM Case
                 WHERE Id = :caseId
             ];
-            String blockCode;
-            String blockCode1;
-            FEC_CardLockUnLockController.ResponseResult cardStatus = FEC_CardLockUnLockController.getCardStatus(caseId);
-            blockCode = cardStatus?.currentBlockCode;
-
-            FEC_EmeaAccountInqService.EmeaInput input = new FEC_EmeaAccountInqService.EmeaInput();
-            input.context    = FEC_ConstantCommon.REQUESTOR_CONTEXT;
-            input.name       = UserInfo.getUserId();
-            input.org        = FEC_ConstantCommon.REQUESTOR_ORG;
-            input.account    = objCase.FEC_Account_Number__c;
-            input.dualInd    = FEC_ConstantCommon.SUCCESS_STATUS_CODE;
-            input.vmxVersion = FEC_ConstantCommon.REQUESTOR_VMXVERSION_EMEA;
-
-            FEC_EmeaAccountInqService.EmeaResult emeaRes = FEC_EmeaAccountInqService.callAccountInquiry(input);
-            blockCode1 = emeaRes?.blkCd1;
 
             if ((String.isNotBlank(blockCode) && inValidBlockCode.contains(blockCode))|| (String.isNotBlank(blockCode1) && inValidBlockCode1.contains(blockCode1))) {
                 result.isShowAction = false;
                 result.strMsg = System.Label.FEC_MSG_CARD_REPLACEMENT_CS_D2C;
             } else {
                 List<Case> cases = [
-                    SELECT Id 
-                    FROM Case 
+                    SELECT Id
+                    FROM Case
                     WHERE FEC_Interaction__c = :objCase.FEC_Interaction__c
                         AND (FEC_SubCode__r.FEC_Code__c = :FEC_ConstantCommon.SUB_CODE_PROCESS_UPDATE_MOBILE
                         OR FEC_SubCode__r.FEC_Code__c = :FEC_ConstantCommon.SUB_CODE_PROCESS_UPDATE_ADDRESS)
@@ -216,8 +218,8 @@ public without sharing class FEC_CardReplacementAddressController {
             }
         } catch (Exception e) {
             FEC_CommonUltils.logException(
-                'FEC_CardReplacementAddressController', 
-                'checkProcessAction', 
+                'FEC_CardReplacementAddressController',
+                'evaluateReplaceCardProcessAction',
                 e.getMessage(),
                 e.getStackTraceString()
             );
