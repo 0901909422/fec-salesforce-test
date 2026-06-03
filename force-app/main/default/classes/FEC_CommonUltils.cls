@@ -1078,6 +1078,10 @@ public with sharing class FEC_CommonUltils {
     deferredApiLogDepth++;
   }
 
+  public static Boolean isDeferredApiLoggingActive() {
+    return deferredApiLogDepth > 0;
+  }
+
   public static void flushDeferredApiLogs() {
     if (deferredApiLogDepth <= 0) {
       return;
