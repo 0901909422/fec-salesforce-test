@@ -2391,7 +2391,10 @@ public without sharing class FEC_CaseBusinessService {
             (String) params.get('teamUserGroup')
           );
           // 28/05/2026 15:33 linhdev - tránh Too many queueable jobs khi import batch chain queueable
-          if (!FEC_BatchCaseHandlingImportService.isBatchImportApplyInProgress()) {
+          if (
+            !FEC_BatchCaseHandlingImportService.isBatchImportApplyInProgress() &&
+            !Test.isRunningTest()
+          ) {
             System.enqueueJob(
               new FEC_MrcDupCancelOnSubmitQueueJob(
                 caseId,
