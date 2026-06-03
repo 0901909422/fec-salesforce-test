@@ -930,9 +930,10 @@ public without sharing class FEC_BatchCaseHandlingController {
             userGroup,
             templateRows
         );
+        //PhongBT 02/06/26: Chỉ resolve template khi tên file khớp chính xác file export.
         if (
             String.isNotBlank(fromBusinessProcess) &&
-            FEC_BatchCaseHandlingTemplateHelper.validateUploadedTemplateFileName(fileName, fromBusinessProcess) == null
+            FEC_BCH_ImportFileNameValidator.validateExactFileNameMatch(fileName, fromBusinessProcess)
         ) {
             return fromBusinessProcess;
         }
@@ -941,15 +942,15 @@ public without sharing class FEC_BatchCaseHandlingController {
             userGroup,
             templateRows
         );
-        if (String.isNotBlank(fromFileName)) {
+        if (
+            String.isNotBlank(fromFileName) &&
+            FEC_BCH_ImportFileNameValidator.validateExactFileNameMatch(fileName, fromFileName)
+        ) {
             return fromFileName;
-        }
-        if (String.isNotBlank(fromBusinessProcess)) {
-            return fromBusinessProcess;
         }
         if (
             !isPlaceholderImportTemplateName(templateName) &&
-            FEC_BatchCaseHandlingTemplateHelper.validateUploadedTemplateFileName(fileName, templateName) == null
+            FEC_BCH_ImportFileNameValidator.validateExactFileNameMatch(fileName, templateName)
         ) {
             return templateName.trim();
         }
@@ -1025,6 +1026,24 @@ public without sharing class FEC_BatchCaseHandlingController {
         }
         return FEC_BCH_TemplateExportService.exportWorkbook(requestJson);
     }
+    //PhongBT 02/06/26: Kiểm tra tên file import khớp file export (LWC chọn file).
+    @AuraEnabled
+    public static FEC_BCH_ImportFileNameValidator.ValidationResult validateImportFileName(
+        String fileName,
+        String businessProcessCode,
+        String businessProcessName,
+        String templateName,
+        Integer selectedBusinessProcessCount
+    ) {
+        return FEC_BCH_ImportFileNameValidator.validateImportFileNameAura(
+            fileName,
+            businessProcessCode,
+            businessProcessName,
+            templateName,
+            selectedBusinessProcessCount
+        );
+    }
+
     @AuraEnabled
     public static ImportResult importBatchData(
         String fileName,
@@ -1049,6 +1068,29 @@ public without sharing class FEC_BatchCaseHandlingController {
                 out.message
             );
             Id failedBatchId = upsertFailedBatchHandling(fileName, templateName, out.message);
+            return out;
+        }
+
+        //PhongBT 02/06/26: Kiểm tra tên file import khớp file export trước khi parse.
+        String fileNameError = FEC_BCH_ImportFileNameValidator.validateForImport(
+            fileName,
+            businessProcessCode,
+            businessProcessName,
+            templateName,
+            null
+        );
+        if (String.isNotBlank(fileNameError)) {
+            out.message = fileNameError;
+            logImportBatchDebug(
+                'importBatchData',
+                fileName,
+                templateName,
+                businessProcessCode,
+                businessProcessName,
+                rowsJson,
+                fileNameError
+            );
+            upsertFailedBatchHandling(fileName, templateName, fileNameError);
             return out;
         }
 
@@ -1154,13 +1196,14 @@ public without sharing class FEC_BatchCaseHandlingController {
                 businessProcessCode,
                 businessProcessName
             );
+            //PhongBT 02/06/26: Đã validate tên file sớm; giữ guard exact match trước validate rows.
             if (
-                FEC_BatchCaseHandlingTemplateHelper.validateUploadedTemplateFileName(
+                !FEC_BCH_ImportFileNameValidator.validateExactFileNameMatch(
                     fileName,
                     resolvedTemplateName
-                ) != null
+                )
             ) {
-                out.message = 'Tên file không khớp template Bulk Actions của quy trình và nhóm người dùng.';
+                out.message = FEC_BCH_ImportFileNameValidator.ERR_FILE_NAME_MISMATCH;
                 logImportBatchDebug(
                     'importBatchData',
                     fileName,

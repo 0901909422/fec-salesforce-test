@@ -872,6 +872,11 @@ public without sharing class FEC_BatchCaseHandlingTemplateHelper {
         return 0;
     }
 
+    //PhongBT 02/06/26: delegate cho FEC_BCH_ImportFileNameValidator (import file name exact match).
+    public static Boolean importTemplateRowMatchesUserGroup(SObject templateRow, String userGroup) {
+        return templateRowMatchesUserGroup(templateRow, userGroup);
+    }
+
     private static Boolean templateRowMatchesUserGroup(SObject templateRow, String userGroup) {
         if (String.isBlank(userGroup)) {
             return true;

@@ -82,11 +82,16 @@ public with sharing class FEC_BCH_AssignmentUpdateService {
             cofOrGsr != true ||
             assignmentRecordId == null ||
             caseId == null ||
-            String.isBlank(rr.assignmentRoutingAction) ||
             assignmentUpdateItems == null) {
             return;
         }
-        String routingLabel = rr.assignmentRoutingAction.trim();
+        //PhongBT 02/06/26: Sửa routing action cho cof/gsr — Update từ Routing Action hoặc Assignment Routing Action.
+        String routingLabel = String.isNotBlank(rr.assignmentRoutingAction)
+            ? rr.assignmentRoutingAction.trim()
+            : (String.isNotBlank(rr.routingAction) ? rr.routingAction.trim() : null);
+        if (String.isBlank(routingLabel)) {
+            return;
+        }
         FEC_BCH_ImportRoutingResolver.ResolvedRouting resolvedRouting =
             FEC_BCH_ImportRoutingResolver.resolve(stageId, routingLabel, true);
         String methodKey = resolvedRouting != null && String.isNotBlank(resolvedRouting.methodKey)
