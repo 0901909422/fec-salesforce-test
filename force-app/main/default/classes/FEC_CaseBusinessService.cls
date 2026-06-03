@@ -2450,7 +2450,7 @@ public without sharing class FEC_CaseBusinessService {
               caseId
             );
           } else {
-            FEC_CofGsrRoutePrepareService.syncActualNatureToMatchCurrentCaseStage(
+            FEC_CofGsrRoutePrepareService.cloneActualNatureFromCurrentCaseStageAfterRevert(
               caseId
             );
           }
@@ -4167,9 +4167,9 @@ public without sharing class FEC_CaseBusinessService {
     if (isReverted && isEditable && !isStageRevert)
       return null;
 
-    //PhongBT 02/06/26: Không ẩn field khi value trống trong th field read-only 
-    // if (isReverted && isReadOnly && String.isBlank(value))
-    //   return null;
+
+    if (isReverted && isReadOnly && String.isBlank(value))
+      return null;
 
     String apiName = (String) masterDataItem.get('FEC_Field_API_Name__c');
     Boolean masked = (Boolean) masterDataItem.get('FEC_Field_Masking__c');
