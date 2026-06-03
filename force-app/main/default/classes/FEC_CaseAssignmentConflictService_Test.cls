@@ -1,6 +1,34 @@
 @IsTest
 private class FEC_CaseAssignmentConflictService_Test {
 
+    private static Id resolveProductCategoryId(String categoryName) {
+        List<ProductCategory> existing = [
+            SELECT Id
+            FROM ProductCategory
+            WHERE Name = :categoryName
+            LIMIT 1
+        ];
+        if (!existing.isEmpty()) {
+            return existing[0].Id;
+        }
+        List<ProductCatalog> catalogs = [SELECT Id FROM ProductCatalog LIMIT 1];
+        Id catalogId;
+        if (catalogs.isEmpty()) {
+            ProductCatalog catalog = new ProductCatalog(Name = 'FEC Test Catalog');
+            insert catalog;
+            catalogId = catalog.Id;
+        } else {
+            catalogId = catalogs[0].Id;
+        }
+        ProductCategory created = new ProductCategory(
+            Name = categoryName,
+            CatalogId = catalogId,
+            IsNavigational = false
+        );
+        insert created;
+        return created.Id;
+    }
+
     private static Id getBusinessHoursId() {
         return [SELECT Id FROM BusinessHours LIMIT 1].Id;
     }
@@ -37,12 +65,8 @@ private class FEC_CaseAssignmentConflictService_Test {
             FEC_Active__c = true
         );
         insert subCode;
-        FEC_Category__c cat = new FEC_Category__c(
-            Name = 'Request',
-            FEC_Code__c = 'Request',
-            FEC_Active__c = true
-        );
-        insert cat;
+
+        Id productCategoryId = resolveProductCategoryId('Request');
 
         Id businessHoursId = getBusinessHoursId();
         FEC_Case_Assignment__c existingAssignment = new FEC_Case_Assignment__c(
@@ -84,7 +108,7 @@ private class FEC_CaseAssignmentConflictService_Test {
         insert new FEC_Case_Assignment_NOC__c(
             FEC_Case_Assignment_Name__c = existingAssignment.Id,
             FEC_Product_Type__c = prod.Id,
-            FEC_Category__c = cat.Id,
+            FEC_Category__c = productCategoryId,
             FEC_Sub_Category__c = subCat.Id,
             FEC_Sub_Code__c = subCode.Id
         );
