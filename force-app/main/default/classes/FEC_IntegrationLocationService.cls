@@ -168,7 +168,6 @@ public class FEC_IntegrationLocationService {
      * Upserts flat location records into the correct objects based on SCHEME__c.
      * Order: Country → Province → District → Ward (to resolve lookups).
      */
-    @TestVisible
     private static void upsertFromFlatRecords(List<Map<String, Object>> records) {
 
         /* ================= COUNTRY (SCHEME = Country) ================= */
