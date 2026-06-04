@@ -1300,7 +1300,7 @@ private class FEC_FraudIntegrationTest {
     static void testManageFraudCase_getCaseToFraudFieldMap() {
         Test.startTest();
         Map<String, String> fieldMap =
-            FEC_IntegrationManageFraudCaseCtrl.getCaseToFraudFieldMap(null);
+            FEC_IntegrationManageFraudCaseCtrl.getCaseToFraudFieldMap(null, null);
         Test.stopTest();
 
         Assert.isNotNull(fieldMap, 'Field map should not be null');

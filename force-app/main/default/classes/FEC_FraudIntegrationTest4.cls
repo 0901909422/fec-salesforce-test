@@ -233,7 +233,7 @@ private class FEC_FraudIntegrationTest4 {
         // Since we can't easily create NatureOfCase, test with null (empty result)
         Test.startTest();
         Map<String, String> result =
-            FEC_IntegrationManageFraudCaseCtrl.getCaseToFraudFieldMap(null);
+            FEC_IntegrationManageFraudCaseCtrl.getCaseToFraudFieldMap(null, null);
         Test.stopTest();
 
         Assert.isNotNull(result, 'Should return map');

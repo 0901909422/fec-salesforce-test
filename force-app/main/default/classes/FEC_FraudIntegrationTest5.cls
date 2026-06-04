@@ -141,7 +141,7 @@ private class FEC_FraudIntegrationTest5 {
         // test with null to cover the blank-check path
         Test.startTest();
         Map<String, String> result =
-            FEC_IntegrationManageFraudCaseCtrl.getCaseToFraudFieldMap(null);
+            FEC_IntegrationManageFraudCaseCtrl.getCaseToFraudFieldMap(null, null);
         Test.stopTest();
 
         Assert.isNotNull(result, 'Should return empty map');

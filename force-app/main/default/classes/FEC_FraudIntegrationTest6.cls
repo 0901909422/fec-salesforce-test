@@ -491,7 +491,7 @@ private class FEC_FraudIntegrationTest6 {
         Id nocId = [SELECT Id FROM FEC_Nature_of_Case__c WHERE FEC_Code__c = 'NOC_T6' LIMIT 1].Id;
 
         Test.startTest();
-        Map<String, String> result = FEC_IntegrationManageFraudCaseCtrl.getCaseToFraudFieldMap(nocId);
+        Map<String, String> result = FEC_IntegrationManageFraudCaseCtrl.getCaseToFraudFieldMap(nocId, null);
         Test.stopTest();
 
         Assert.isTrue(result.size() > 0, 'Should return mapping with valid NOC');
@@ -501,7 +501,7 @@ private class FEC_FraudIntegrationTest6 {
     @IsTest
     static void testManage_getCaseToFraudFieldMap_Null() {
         Test.startTest();
-        Map<String, String> result = FEC_IntegrationManageFraudCaseCtrl.getCaseToFraudFieldMap(null);
+        Map<String, String> result = FEC_IntegrationManageFraudCaseCtrl.getCaseToFraudFieldMap(null, null);
         Test.stopTest();
         Assert.areEqual(0, result.size(), 'Null → empty');
     }
