@@ -7,7 +7,8 @@
         "Entitlements",
         "LightningServiceConsole",
         "Knowledge",
-        "LiveAgent"
+        "LiveAgent",
+        "PlatformConnect:5"
     ],
     "settings": {
         "entitlementSettings": {

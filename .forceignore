@@ -1,19 +1,10 @@
 **/jsconfig.json
 **/.eslintrc.json
-**/searchCustomizations/**
-*.searchCustomization-meta.xml
 
 # GROUP E: Assignment Rules that reference Roles not available in scratch org
 # These roles exist in metadata but scratch org creation doesn't support them
 # force-app/main/default/assignmentRules/
 
-# GROUP F: External Object / OData — not supported on scratch org package validation
-**/dataSources/OData_Service.dataSource-meta.xml
-**/objects/CifFeDictLocationVw__x/**
 
 # GROUP H: Report folders that may fail due to missing report types in scratch org
 # force-app/main/default/reports/
-
-# Translations that require Translation Workbench enabled
-force-app/main/default/translations/vi.translation-meta.xml
-**/objects/FEC_Hold_Case_Config__c/fields/FEC_Category__c.field-meta.xml

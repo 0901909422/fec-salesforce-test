@@ -119,10 +119,6 @@
         <searchable>false</searchable>
     </objectOverride>
     <objectOverride>
-        <objectApiName>ProfileSkill</objectApiName>
-        <searchable>false</searchable>
-    </objectOverride>
-    <objectOverride>
         <objectApiName>ServiceResource</objectApiName>
         <searchable>false</searchable>
     </objectOverride>

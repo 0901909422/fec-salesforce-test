@@ -3,7 +3,7 @@
     <fullName>FEC_Category__c</fullName>
     <deleteConstraint>SetNull</deleteConstraint>
     <label>Category</label>
-    <referenceTo>ProductCategory</referenceTo>
+    <referenceTo>FEC_Category__c</referenceTo>
     <relationshipLabel>Hold Case Config</relationshipLabel>
     <relationshipName>Hold_Case_Config</relationshipName>
     <required>false</required>
