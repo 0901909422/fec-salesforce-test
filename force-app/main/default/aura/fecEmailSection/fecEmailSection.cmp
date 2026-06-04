@@ -48,7 +48,7 @@
     <aura:attribute name="serviceCaseToError" type="String" default="" />
 
     <!-- Custom Labels -->
-    <aura:attribute name="lblDanhXung" type="String" default="{!$Label.c.FEC_Email_Label_Danh_Xung}" />
+    <aura:attribute name="lblTitle" type="String" default="{!$Label.c.FEC_Email_Label_Title}" />
     <aura:attribute name="lblAnhChi" type="String" default="{!$Label.c.FEC_Email_Option_Anh_Chi}" />
     <aura:attribute name="lblAnh" type="String" default="{!$Label.c.FEC_Email_Option_Anh}" />
     <aura:attribute name="lblChi" type="String" default="{!$Label.c.FEC_Email_Option_Chi}" />
