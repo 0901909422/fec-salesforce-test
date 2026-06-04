@@ -225,7 +225,7 @@ private class FEC_IntegrationMappingController_Test {
         Test.startTest();
         List<FEC_IntegrationMappingController.PropertyDTO> result =
             FEC_IntegrationMappingController.loadAdditionalProperties(
-                'CC', 'CC01', 'CC01-03', 'FIMA'
+                'CC', 'CC01', 'CC01-03', 'FIMA', null, null
             );
         Test.stopTest();
 
@@ -241,7 +241,7 @@ private class FEC_IntegrationMappingController_Test {
         Test.startTest();
         List<FEC_IntegrationMappingController.PropertyDTO> result =
             FEC_IntegrationMappingController.loadAdditionalProperties(
-                'CC', null, null, 'FIMA'
+                'CC', null, null, 'FIMA', null, null
             );
         Test.stopTest();
 
@@ -271,7 +271,7 @@ private class FEC_IntegrationMappingController_Test {
         Test.startTest();
         List<FEC_IntegrationMappingController.PropertyDTO> result =
             FEC_IntegrationMappingController.loadAdditionalProperties(
-                'CC', 'CC01', 'CC01-03', 'BRANCH'
+                'CC', 'CC01', 'CC01-03', 'BRANCH', null, null
             );
         Test.stopTest();
 

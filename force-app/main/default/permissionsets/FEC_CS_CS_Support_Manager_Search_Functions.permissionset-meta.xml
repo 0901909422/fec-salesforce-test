@@ -267,4 +267,8 @@
         <tab>FEC_Customer_Search</tab>
         <visibility>Visible</visibility>
     </tabSettings>
+    <tabSettings>
+        <tab>Search_Fraud_Case</tab>
+        <visibility>Visible</visibility>
+    </tabSettings>
 </PermissionSet>
