@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    ═══════════════════════════════════════════════════════════════════════
+    MISSING METADATA FIX PACKAGE
+    ───────────────────────────────────────────────────────────────────────
+    Mục đích: retrieve các CustomField / metadata CÒN THIẾU trong git repo
+    (salesforce-new-csm) — những thứ TỒN TẠI trên org UAT nhưng chưa có file
+    trong source nên "package version create" báo lỗi
+    (no CustomField named ... / Invalid type ...).
+
+    ⚠️ CHỈ chứa metadata RETRIEVE ĐƯỢC (đã verify tồn tại trên org UAT).
+    Các lỗi do SAI TÊN field trong code (vd Team__c) KHÔNG nằm ở đây — xem
+    mục "LƯU Ý" bên dưới, cần team chủ quản sửa code.
+
+    Cách dùng (tại repo salesforce-new-csm, target org UAT):
+      sf project retrieve start \
+        --manifest manifest/Master-Data-Management/missing-metadata-fix-package.xml \
+        --target-org <uat-alias>
+    Sau đó: git add . && git commit && git push
+
+    Generated: 2026-06-04 | Author: DAT NGO
+    ───────────────────────────────────────────────────────────────────────
+    PHÂN ĐỊNH OWNER:
+      • Case.Language, Case.SourceId  → Team Case Management / CS
+      • CasePriority (value Critical) → đã fix (standardValueSet), giữ để chắc
+    ═══════════════════════════════════════════════════════════════════════
+-->
+<Package xmlns="http://soap.sforce.com/2006/04/metadata">
+
+    <!-- ── Case custom fields thiếu (lỗi 48-135: no CustomField named Case.Language / Case.SourceId) ──
+         Verified tồn tại trên org UAT:
+           - Case.Language : Picklist
+           - Case.SourceId : Lookup (standard, có khi bật feature) -->
+    <types>
+        <members>Case.Language</members>
+        <members>Case.SourceId</members>
+        <name>CustomField</name>
+    </types>
+
+    <!-- ── Standard Value Set: CasePriority (lỗi 12-16: Picklist value Critical not found) ── -->
+    <types>
+        <members>CasePriority</members>
+        <name>StandardValueSet</name>
+    </types>
+
+</Package>
