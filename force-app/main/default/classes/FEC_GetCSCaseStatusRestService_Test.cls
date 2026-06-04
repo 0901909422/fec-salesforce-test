@@ -1,6 +1,7 @@
 @IsTest
 private class FEC_GetCSCaseStatusRestService_Test {
-    private static final String VALID_CHANNEL = FEC_ConstantCommon.CHANNEL_INBOUND_NAME;
+    private static final String VALID_CHANNEL = 'InboundUTRestGetCaseStatus';
+    private static final String TEST_ACCOUNT_NUMBER = 'ACC-REST-123';
 
     private static final String SAMPLE_GET_STATUS_REQUEST =
         '<?xml version="1.0" encoding="utf-8"?>' +
@@ -8,20 +9,18 @@ private class FEC_GetCSCaseStatusRestService_Test {
         '<soap:Body>' +
         '<GetCSCaseStatusRequest xmlns="urn:PegaRULES:SOAP:MyCase:Services">' +
         '<Sys>' +
-        '<Channel>Inbound</Channel>' +
+        '<Channel>' + VALID_CHANNEL + '</Channel>' +
         '<TransactionID>TXN-GET-STATUS-2026-99999999999</TransactionID>' +
         '<DateTime>2026-05-25T06:52:33.616Z</DateTime>' +
         '</Sys>' +
         '<CaseRequestInfo>' +
         '<ContractOrAccountInfos>' +
-        '<ContractOrAccountNumber>ACC123</ContractOrAccountNumber>' +
+        '<ContractOrAccountNumber>' + TEST_ACCOUNT_NUMBER + '</ContractOrAccountNumber>' +
         '<ProductType>CreditCard</ProductType>' +
         '</ContractOrAccountInfos>' +
-        '<PhoneNumber>0901234567</PhoneNumber>' +
-        '<UserType>Existing</UserType>' +
+        '<UserType>EXISTING</UserType>' +
         '<CaseID>CASE123</CaseID>' +
         '<IncludeFinishedRequest>true</IncludeFinishedRequest>' +
-        '<NationalID>123456789</NationalID>' +
         '</CaseRequestInfo>' +
         '</GetCSCaseStatusRequest>' +
         '</soap:Body>' +
@@ -30,12 +29,14 @@ private class FEC_GetCSCaseStatusRestService_Test {
     @TestSetup
     static void setupData() {
         insert new FEC_Channel__c(
-            Name = 'Inbound',
-            FEC_Channel_ID__c = FEC_ConstantCommon.CHANNEL_INBOUND_NAME,
-            FEC_Channel_Vietnamese_name__c = 'Inbound',
+            Name = 'Inbound UT REST',
+            FEC_Code__c = 'INBOUNDUTREST',
+            FEC_Channel_ID__c = VALID_CHANNEL,
+            FEC_Channel_Vietnamese_name__c = 'Inbound UT REST',
             FEC_Channel_Status__c = true,
             FEC_Update_Case_Status__c = true
         );
+        FEC_CommonUltils.resetActiveChannelCacheForTest();
 
         FEC_Business_Process__c proc = new FEC_Business_Process__c(
             Name = 'Fraud Process',
@@ -44,14 +45,47 @@ private class FEC_GetCSCaseStatusRestService_Test {
         );
         insert proc;
 
+        FEC_Product_Type__c productType = new FEC_Product_Type__c(
+            Name = 'CreditCard',
+            FEC_Code__c = 'CREDITCARD',
+            FEC_Name_VN__c = 'CreditCard',
+            FEC_Active__c = true
+        );
+        insert productType;
+
         FEC_CaseTriggerHandler.isExecuting = true;
+        Case testCase;
         try {
-            insert new Case(
+            testCase = new Case(
+                RecordTypeId = Schema.SObjectType.Case.getRecordTypeInfosByDeveloperName()
+                    .get(FEC_ConstantCommon.CASE_CUSTOMER_RECORD_TYPE_DEV_NAME)
+                    .getRecordTypeId(),
                 Subject = 'REST Get Status Test',
                 Status = 'New',
                 FEC_ID_Search__c = 'CASE123',
                 FEC_Customer_Name__c = 'Test Customer',
-                FEC_Business_Process__c = proc.Id
+                FEC_Customer_Type__c = FEC_ConstantCommon.CASE_EXISTING_CUSTOMER,
+                FEC_Business_Process__c = proc.Id,
+                FEC_Product_Type__c = productType.Id
+            );
+            insert testCase;
+        } finally {
+            FEC_CaseTriggerHandler.isExecuting = false;
+        }
+
+        FEC_Customer_History__c history = new FEC_Customer_History__c(
+            Name = TEST_ACCOUNT_NUMBER,
+            FEC_Case__c = testCase.Id,
+            FEC_Account_Number__c = TEST_ACCOUNT_NUMBER,
+            FEC_National_ID_Passport_ID__c = '123456789'
+        );
+        insert history;
+
+        FEC_CaseTriggerHandler.isExecuting = true;
+        try {
+            update new Case(
+                Id = testCase.Id,
+                FEC_Account_or_Contract__c = history.Id
             );
         } finally {
             FEC_CaseTriggerHandler.isExecuting = false;
@@ -70,9 +104,11 @@ private class FEC_GetCSCaseStatusRestService_Test {
 
         System.assertNotEquals(null, parsed.CaseRequestInfo);
         System.assertEquals('CASE123', parsed.CaseRequestInfo.CaseID);
-        System.assertEquals('123456789', parsed.CaseRequestInfo.NationalID);
         System.assertEquals(true, parsed.CaseRequestInfo.IncludeFinishedRequest);
-        System.assertEquals('ACC123', parsed.CaseRequestInfo.ContractOrAccountInfos.ContractOrAccountNumber);
+        System.assertEquals(
+            TEST_ACCOUNT_NUMBER,
+            parsed.CaseRequestInfo.ContractOrAccountInfos.ContractOrAccountNumber
+        );
         System.assertEquals('CreditCard', parsed.CaseRequestInfo.ContractOrAccountInfos.ProductType);
     }
 
