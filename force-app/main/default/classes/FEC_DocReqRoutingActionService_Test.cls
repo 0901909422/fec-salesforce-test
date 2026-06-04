@@ -1,9 +1,37 @@
 @IsTest
 private class FEC_DocReqRoutingActionService_Test {
 
+    private static void ensureRunUserMainQueue() {
+        Map<String, Schema.SObjectField> userFields = User.SObjectType.getDescribe().fields.getMap();
+        if (!userFields.containsKey('FEC_Main_Queue__c')) {
+            return;
+        }
+        User runUser = new User(Id = UserInfo.getUserId());
+        List<Group> queues = [
+            SELECT DeveloperName
+            FROM Group
+            WHERE Type = 'Queue'
+              AND DeveloperName = :FEC_ConstantCommon.QUEUE_DQ_CS_SUPPORT_NAME
+            LIMIT 1
+        ];
+        if (queues.isEmpty()) {
+            Group q = new Group(
+                Name = 'DocReq Action Test CS Support Queue',
+                DeveloperName = FEC_ConstantCommon.QUEUE_DQ_CS_SUPPORT_NAME,
+                Type = 'Queue'
+            );
+            insert q;
+            runUser.FEC_Main_Queue__c = q.DeveloperName;
+        } else {
+            runUser.FEC_Main_Queue__c = queues[0].DeveloperName;
+        }
+        update runUser;
+    }
+
     @TestSetup
     static void setupData() {
         System.runAs(new User(Id = UserInfo.getUserId())) {
+            ensureRunUserMainQueue();
             update new User(
                 Id = UserInfo.getUserId(),
                 FEC_User_Group__c = 'CC'
