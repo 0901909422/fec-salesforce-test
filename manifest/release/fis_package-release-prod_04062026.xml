@@ -539,7 +539,6 @@
         <members>FEC_Il10DeliveryController_Test</members>
         <members>FEC_ImportedInteractionBatch_Test</members>
         <members>FEC_IncorrectPaymentController_Test</members>
-        <members>FEC_IntegrationSoapFraudcaseService_Test</members>
         <members>FEC_InteractionController_Test</members>
         <members>FEC_InteractionHighlightController_Test</members>
         <members>FEC_InteractionInforHandler_Test</members>

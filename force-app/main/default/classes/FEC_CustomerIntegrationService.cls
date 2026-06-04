@@ -187,13 +187,25 @@ public without sharing class FEC_CustomerIntegrationService {
 
                 try {
                     cardSecRes = FEC_GetCardSecInfo.getCardSecInfo(cardAccountNumber);
-                    ippToInsert = buildIppRecordsFromCardSecWithDetailCallouts(
+                } catch (Exception e) {
+                    System.debug('### CARD SEC CALLOUT ERROR: ' + e.getMessage());
+                }
+
+                try {
+                    cardPlanRes = FEC_GetCardPlanInfo.getCardPlanInfo(cardAccountNumber);
+                } catch (Exception e) {
+                    System.debug('### CARD PLAN CALLOUT ERROR: ' + e.getMessage());
+                }
+
+                try {
+                    ippToInsert = buildIppRecordsFromThreeApis(
                         hist,
                         cardAccountNumber,
-                        cardSecRes
+                        cardSecRes,
+                        cardPlanRes
                     );
                 } catch (Exception e) {
-                    System.debug('### CARD SEC / IPP CALLOUT ERROR: ' + e.getMessage());
+                    System.debug('### IPP BUILD ERROR: ' + e.getMessage());
                 }
             }
         }
@@ -709,10 +721,11 @@ public without sharing class FEC_CustomerIntegrationService {
         return null;
     }
 
-    private static List<FEC_IPP__c> buildIppRecordsFromCardSecWithDetailCallouts(
+    private static List<FEC_IPP__c> buildIppRecordsFromThreeApis(
         FEC_Customer_History__c hist,
         String accountNumber,
-        FEC_GetCardSecInfo.ResponseWrapper cardSecRes
+        FEC_GetCardSecInfo.ResponseWrapper cardSecRes,
+        FEC_GetCardPlanInfo.CardPlanResult cardPlanRes
     ) {
         List<FEC_IPP__c> toInsert = new List<FEC_IPP__c>();
         if (hist == null || hist.Id == null || String.isBlank(accountNumber)) {
@@ -720,44 +733,101 @@ public without sharing class FEC_CustomerIntegrationService {
         }
 
         List<FEC_GetCardSecInfo.IPP> orderedIppList = buildOrderedIppListFromCardSecInfo(cardSecRes);
-        if (orderedIppList.isEmpty()) {
+        List<FEC_GetCardPlanInfo.CardPlan> cardPlans = new List<FEC_GetCardPlanInfo.CardPlan>();
+        if (cardPlanRes != null && cardPlanRes.plans != null && !cardPlanRes.plans.isEmpty()) {
+            cardPlans = cardPlanRes.plans;
+        }
+
+        Boolean hasPlans = !cardPlans.isEmpty();
+        Boolean hasIpps = orderedIppList != null && !orderedIppList.isEmpty();
+        if (!hasPlans && !hasIpps) {
             return toInsert;
         }
 
+        Integer planCount = cardPlans.size();
+        Integer ippCount = orderedIppList.size();
+        Integer maxSize = Math.max(planCount, ippCount);
         String todayStr = Datetime.now().formatGmt(FEC_ConstantCommon.DATE_FORMAT);
-        Integer detailCallCount = 0;
 
-        for (FEC_GetCardSecInfo.IPP ipp : orderedIppList) {
-            if (ipp == null) {
+        for (Integer i = 0; i < maxSize; i++) {
+            FEC_GetCardPlanInfo.CardPlan cardPlan = (i < planCount) ? cardPlans[i] : null;
+            FEC_GetCardSecInfo.IPP ipp = (i < ippCount) ? orderedIppList[i] : null;
+            FEC_IPP__c rec;
+
+            if (cardPlan != null) {
+                String planNumberKey = String.isNotBlank(cardPlan.planNumber)
+                    ? cardPlan.planNumber.trim()
+                    : '';
+                if (String.isBlank(planNumberKey)) {
+                    continue;
+                }
+                rec = buildIppRecordFromCardPlanAndSecIpp(hist.Id, cardPlan, ipp, planNumberKey);
+            } else {
+                if (ipp == null) {
+                    continue;
+                }
+                rec = buildIppRecordFromSecIppOnly(hist.Id, ipp);
+            }
+
+            if (rec == null) {
                 continue;
             }
 
-            String planNumber = String.isNotBlank(ipp.IPPPlan) ? ipp.IPPPlan.trim() : null;
-            if (String.isBlank(planNumber)) {
-                continue;
-            }
-
-            FEC_IPP__c rec = new FEC_IPP__c(
-                FEC_Customer_History__c = hist.Id,
-                FEC_IPP_Record_No__c = ipp.IPPRecordNo != null ? ipp.IPPRecordNo.trim() : null,
-                FEC_IPP_Plan__c = planNumber,
-                FEC_IPP_First_Due_Date__c = FEC_CommonUltils.parseDate(ipp.IPPStartDate),
-                FEC_IPP_Mature_Date__c = FEC_CommonUltils.parseDate(ipp.IPPMatureDate),
-                FEC_IPP_Balance__c = ipp.IPPBalance,
-                FEC_IPP_Current_Balance__c = ipp.IPPCurrentBalance,
-                FEC_IPP_Current_Term__c = ipp.currentTerm,
-                FEC_IPP_Interest_Rate__c = ipp.InterestRate
-            );
-
-            if (detailCallCount < 50) {
-                enrichIppRecordFromDetailsApi(rec, accountNumber, planNumber, todayStr);
-                detailCallCount++;
-            }
-
+            enrichIppRecordFromDetailsApi(rec, accountNumber, rec.FEC_IPP_Plan__c, todayStr);
             toInsert.add(rec);
         }
 
         return toInsert;
+    }
+
+    private static FEC_IPP__c buildIppRecordFromCardPlanAndSecIpp(
+        Id customerHistoryId,
+        FEC_GetCardPlanInfo.CardPlan cardPlan,
+        FEC_GetCardSecInfo.IPP ipp,
+        String planNumberKey
+    ) {
+        FEC_IPP__c rec = new FEC_IPP__c(
+            FEC_Customer_History__c = customerHistoryId,
+            FEC_IPP_Plan__c = planNumberKey,
+            FEC_IPP_Open_Date__c = FEC_CommonUltils.parseDate(cardPlan.openDate),
+            FEC_IPP_Balance__c = cardPlan.currentBalance
+        );
+
+        if (ipp != null) {
+            rec.FEC_IPP_Record_No__c = ipp.IPPRecordNo != null ? ipp.IPPRecordNo.trim() : null;
+            rec.FEC_IPP_First_Due_Date__c = FEC_CommonUltils.parseDate(ipp.IPPStartDate);
+            rec.FEC_IPP_Mature_Date__c = FEC_CommonUltils.parseDate(ipp.IPPMatureDate);
+            rec.FEC_IPP_Current_Balance__c = ipp.IPPCurrentBalance;
+            rec.FEC_IPP_Current_Term__c = ipp.currentTerm;
+        }
+
+        return rec;
+    }
+
+    private static FEC_IPP__c buildIppRecordFromSecIppOnly(
+        Id customerHistoryId,
+        FEC_GetCardSecInfo.IPP ipp
+    ) {
+        if (ipp == null) {
+            return null;
+        }
+
+        String planNumberKey = String.isNotBlank(ipp.IPPPlan) ? ipp.IPPPlan.trim() : '';
+        if (String.isBlank(planNumberKey)) {
+            planNumberKey = FEC_ConstantCommon.STR_DASH;
+        }
+
+        return new FEC_IPP__c(
+            FEC_Customer_History__c = customerHistoryId,
+            FEC_IPP_Plan__c = planNumberKey,
+            FEC_IPP_Record_No__c = ipp.IPPRecordNo != null ? ipp.IPPRecordNo.trim() : null,
+            FEC_IPP_Balance__c = ipp.IPPBalance,
+            FEC_IPP_First_Due_Date__c = FEC_CommonUltils.parseDate(ipp.IPPStartDate),
+            FEC_IPP_Mature_Date__c = FEC_CommonUltils.parseDate(ipp.IPPMatureDate),
+            FEC_IPP_Current_Balance__c = ipp.IPPCurrentBalance,
+            FEC_IPP_Current_Term__c = ipp.currentTerm,
+            FEC_IPP_Interest_Rate__c = ipp.InterestRate
+        );
     }
 
     private static void persistIppRecords(Id customerHistoryId, List<FEC_IPP__c> toInsert) {
@@ -894,7 +964,9 @@ public without sharing class FEC_CustomerIntegrationService {
         String planNumber,
         String todayStr
     ) {
-        if (rec == null || String.isBlank(planNumber)) {
+        if (rec == null
+            || String.isBlank(planNumber)
+            || FEC_ConstantCommon.STR_DASH.equals(planNumber)) {
             return;
         }
 

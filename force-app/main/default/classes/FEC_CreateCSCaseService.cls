@@ -456,8 +456,13 @@ global with sharing class FEC_CreateCSCaseService {
         if(String.isBlank(c.NationalID) || c.NationalID.length()>15)
             throw new ValidationException(txnId,System.Label.FEC_CS_CASE_ERROR_CODE, System.Label.FEC_CS_CASE_INVALID_NATIONAL_ID_MSG);
         
-        if(String.isBlank(c.ContractOrAccountNumber) || c.ContractOrAccountNumber.length()>255)
-            throw new ValidationException(txnId,System.Label.FEC_CS_CASE_ERROR_CODE, System.Label.FEC_CS_CASE_INVALID_CONTRACT_OR_ACCOUNT_NUMBER_MSG);
+        if (!isValidContractOrAccountNumber(c.ContractOrAccountNumber)) {
+            throw new ValidationException(
+                txnId,
+            System.Label.FEC_CS_CASE_ERROR_CODE,
+            System.Label.FEC_CS_CASE_INVALID_CONTRACT_OR_ACCOUNT_NUMBER_MSG
+                );
+        }
     }
     
     // =================================================
@@ -466,6 +471,23 @@ global with sharing class FEC_CreateCSCaseService {
     // =================================================
     // VALIDATE CASE TYPE
     // =================================================
+    
+    private static Boolean isValidContractOrAccountNumber(String value) {
+        if (String.isBlank(value)) {
+            return false;
+        }
+        
+        String input = value.trim();
+        
+        Boolean isContractNumber =
+            Pattern.matches('^\\d{8}-\\d{6}-\\d{4}$', input);
+        
+        Boolean isAccountNumber =
+            Pattern.matches('^\\d{19}$', input);
+        
+        return isContractNumber || isAccountNumber;
+    }
+    
     private static FEC_Business_Process__c validateCaseType(
         String caseType,
     String transactionId

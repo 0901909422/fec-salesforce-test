@@ -1,6 +1,7 @@
 import { LightningElement, track } from "lwc";
 import { ShowToastEvent } from "lightning/platformShowToastEvent";
-import { loadScript } from "lightning/platformResourceLoader";
+import { loadScript, loadStyle } from "lightning/platformResourceLoader";
+import COMMON_STYLES from "@salesforce/resourceUrl/FEC_CommonCss";
 import getRecentRows from "@salesforce/apex/FEC_BatchCaseCreationController.getRecentRows";
 import importBatchData from "@salesforce/apex/FEC_BatchCaseCreationController.importBatchData";
 import saveResultFile from "@salesforce/apex/FEC_BatchCaseCreationController.saveResultFile";
@@ -172,6 +173,7 @@ export default class Fec_BatchCaseCreation extends LightningElement {
   pageSizeOptions = PAGE_SIZE_OPTIONS;
 
   async connectedCallback() {
+    loadStyle(this, COMMON_STYLES).catch(() => { });
     await this.loadTemplateOptions();
     this.refreshRows();
   }

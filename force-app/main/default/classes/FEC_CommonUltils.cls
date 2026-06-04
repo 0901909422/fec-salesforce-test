@@ -171,6 +171,13 @@ public with sharing class FEC_CommonUltils {
     return channel.trim().replace('"', '').replace('&quot;', '');
   }
 
+  public static String buildNatureOfCaseChannelLikePattern(String channel) {
+    if (String.isBlank(channel)) {
+      return null;
+    }
+    return '%' + channel.trim() + '%';
+  }
+
   public static Set<String> getActiveChannelIds() {
     if (cachedActiveChannelIds != null) {
       return cachedActiveChannelIds;
