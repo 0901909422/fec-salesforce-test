@@ -143,6 +143,7 @@
     <allowInChatterGroups>false</allowInChatterGroups>
     <compactLayoutAssignment>SYSTEM</compactLayoutAssignment>
     <deploymentStatus>Deployed</deploymentStatus>
+    <description>Stage History - tracks stage transitions for Cases, used for Revert logic and audit trail</description>
     <enableActivities>false</enableActivities>
     <enableBulkApi>true</enableBulkApi>
     <enableFeeds>false</enableFeeds>
@@ -153,13 +154,14 @@
     <enableSharing>true</enableSharing>
     <enableStreamingApi>true</enableStreamingApi>
     <externalSharingModel>Private</externalSharingModel>
-    <label>Map A Properties To Master Data Item</label>
+    <label>FEC Stage History</label>
     <nameField>
-        <label>Map A Properties To Master Data Item Nam</label>
-        <trackHistory>true</trackHistory>
-        <type>Text</type>
+        <displayFormat>SH-{0000}</displayFormat>
+        <label>Name</label>
+        <trackHistory>false</trackHistory>
+        <type>AutoNumber</type>
     </nameField>
-    <pluralLabel>Map A Properties To Master Data Items</pluralLabel>
+    <pluralLabel>FEC Stage Histories</pluralLabel>
     <searchLayouts></searchLayouts>
     <sharingModel>ReadWrite</sharingModel>
     <visibility>Public</visibility>

@@ -7,6 +7,7 @@
     <relationshipLabel>Map A Properties To Master Data Items</relationshipLabel>
     <relationshipName>Map_A_Properties_To_Master_Data_Items</relationshipName>
     <required>false</required>
+    <trackHistory>true</trackHistory>
     <trackTrending>false</trackTrending>
     <type>Lookup</type>
 </CustomField>

@@ -1,20 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CustomObject xmlns="http://soap.sforce.com/2006/04/metadata">
     <actionOverrides>
-        <actionName>Accept</actionName>
-        <type>Default</type>
-    </actionOverrides>
-    <actionOverrides>
-        <actionName>Accept</actionName>
-        <formFactor>Large</formFactor>
-        <type>Default</type>
-    </actionOverrides>
-    <actionOverrides>
-        <actionName>Accept</actionName>
-        <formFactor>Small</formFactor>
-        <type>Default</type>
-    </actionOverrides>
-    <actionOverrides>
         <actionName>CancelEdit</actionName>
         <type>Default</type>
     </actionOverrides>
@@ -25,20 +11,6 @@
     </actionOverrides>
     <actionOverrides>
         <actionName>CancelEdit</actionName>
-        <formFactor>Small</formFactor>
-        <type>Default</type>
-    </actionOverrides>
-    <actionOverrides>
-        <actionName>Clone</actionName>
-        <type>Default</type>
-    </actionOverrides>
-    <actionOverrides>
-        <actionName>Clone</actionName>
-        <formFactor>Large</formFactor>
-        <type>Default</type>
-    </actionOverrides>
-    <actionOverrides>
-        <actionName>Clone</actionName>
         <formFactor>Small</formFactor>
         <type>Default</type>
     </actionOverrides>
@@ -140,27 +112,16 @@
         <formFactor>Small</formFactor>
         <type>Default</type>
     </actionOverrides>
-    <allowInChatterGroups>false</allowInChatterGroups>
     <compactLayoutAssignment>SYSTEM</compactLayoutAssignment>
-    <deploymentStatus>Deployed</deploymentStatus>
-    <enableActivities>false</enableActivities>
-    <enableBulkApi>true</enableBulkApi>
+    <deploymentStatus>InDevelopment</deploymentStatus>
+    <description>CifFeDictLocationVw</description>
     <enableFeeds>false</enableFeeds>
-    <enableHistory>true</enableHistory>
     <enableLicensing>false</enableLicensing>
     <enableReports>false</enableReports>
-    <enableSearch>false</enableSearch>
-    <enableSharing>true</enableSharing>
-    <enableStreamingApi>true</enableStreamingApi>
-    <externalSharingModel>Private</externalSharingModel>
-    <label>Map A Properties To Master Data Item</label>
-    <nameField>
-        <label>Map A Properties To Master Data Item Nam</label>
-        <trackHistory>true</trackHistory>
-        <type>Text</type>
-    </nameField>
-    <pluralLabel>Map A Properties To Master Data Items</pluralLabel>
+    <enableSearch>true</enableSearch>
+    <externalDataSource>OData_Service</externalDataSource>
+    <externalName>CifFeDictLocationVw</externalName>
+    <label>CifFeDictLocationVw</label>
+    <pluralLabel>CifFeDictLocationVw</pluralLabel>
     <searchLayouts></searchLayouts>
-    <sharingModel>ReadWrite</sharingModel>
-    <visibility>Public</visibility>
 </CustomObject>

@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
-    <fullName>FEC_User_Type__c</fullName>
+    <fullName>FEC_To_Stage__c</fullName>
     <deleteConstraint>SetNull</deleteConstraint>
-    <label>FEC User Type</label>
-    <referenceTo>FEC_User_Type__c</referenceTo>
-    <relationshipLabel>Map A Properties To Master Data Items</relationshipLabel>
-    <relationshipName>Map_A_Properties_To_Master_Data_Items</relationshipName>
+    <label>To Stage</label>
+    <referenceTo>FEC_Case_Stage__c</referenceTo>
+    <relationshipLabel>Stage Histories (To Stage)</relationshipLabel>
+    <relationshipName>To_Stage_Histories</relationshipName>
     <required>false</required>
     <trackHistory>true</trackHistory>
     <trackTrending>false</trackTrending>
