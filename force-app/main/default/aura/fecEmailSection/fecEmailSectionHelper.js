@@ -623,14 +623,6 @@
             var range = sel.getRangeAt(0);
             var editorEl = quill.root;
 
-            // Template HTML is injected directly into the editor, so Quill's internal delta
-            // may not know about all nodes. For Backspace/Delete, bypass Quill keyboard
-            // handlers and let the browser edit the real DOM natively.
-            if (e.keyCode === 8 || e.keyCode === 46) {
-                e.stopImmediatePropagation();
-                return;
-            }
-
             // Kiểm tra cursor/selection có trong table không
             var anchorNode = range.commonAncestorContainer;
             var cur = anchorNode.nodeType === 3 ? anchorNode.parentNode : anchorNode;
@@ -644,10 +636,16 @@
             }
 
             if (inTable) {
-                // Stop Quill from intercepting table editing, but DO NOT prevent default.
-                // Let the browser handle Backspace/Delete natively so template text inside
-                // td/th can be removed. execCommand('delete') is unreliable in Lightning.
+                // tungnm37 sửa: stop Quill intercept TẤT CẢ key trong table, để native browser xử lý
                 e.stopImmediatePropagation();
+                // Backspace/Delete: dùng execCommand để xóa nội dung trong td
+                if (e.keyCode === 8) {
+                    e.preventDefault();
+                    document.execCommand('delete', false, null);
+                } else if (e.keyCode === 46) {
+                    e.preventDefault();
+                    document.execCommand('forwardDelete', false, null);
+                }
                 return;
             }
 
@@ -828,24 +826,6 @@
         $A.enqueueAction(a);
     },
 
-
-    loadCaseFiles: function(component, delayMs) {
-        var run = function() {
-            var action = component.get('c.getCaseFileInfos');
-            action.setParams({ caseId: component.get('v.recordId') });
-            action.setCallback(this, function(resp) {
-                if (resp.getState() === 'SUCCESS') {
-                    component.set('v.caseFileList', resp.getReturnValue() || []);
-                }
-            });
-            $A.enqueueAction(action);
-        };
-        if (delayMs && delayMs > 0) {
-            window.setTimeout($A.getCallback(run), delayMs);
-        } else {
-            run();
-        }
-    },
     showPreviewModal: function(body) {
         var existing = document.getElementById('fec-preview-overlay');
         if (existing) existing.parentNode.removeChild(existing);
@@ -1164,43 +1144,24 @@
                     var subj=m.Subject||'';
                     var subjDisplay = subj.replace(/\s*\[\s*ref:[^\]]*:ref\s*\]/gi,'').trim();
                     var bodyHtml = self.sanitizeIncomingEmailBody(m.HtmlBody || m.TextBody || '');
-                    return {Id:m.Id,fromName:m.FromName||m.FromAddress||'Unknown',fromAddress:m.FromAddress||'',toAddress:m.ToAddress||'',ccAddress:m.CcAddress||'',subject:subjDisplay,subjectPreview:subjDisplay||rb,bodyFull:rb,bodyHtml:bodyHtml,messageDate:ds,messageRawDate:m.MessageDate||'',incoming:m.Incoming,expanded:false,showDD:false,attachments:[]};
+                    return {Id:m.Id,fromName:m.FromName||m.FromAddress||'Unknown',fromAddress:m.FromAddress||'',toAddress:m.ToAddress||'',ccAddress:m.CcAddress||'',subject:subjDisplay,subjectPreview:subjDisplay||rb,bodyFull:rb,bodyHtml:bodyHtml,messageDate:ds,messageRawDate:m.MessageDate||'',incoming:m.Incoming,expanded:false,showDD:false};
                 });
+                // Sort
                 list.sort(function(a,b){
                     if (sortOrder==='oldest') return (a.messageRawDate||'') < (b.messageRawDate||'') ? -1 : 1;
                     if (sortOrder==='latest') return (a.messageRawDate||'') > (b.messageRawDate||'') ? -1 : 1;
-                    return (a.messageRawDate||'') > (b.messageRawDate||'') ? -1 : 1;
+                    return (a.messageRawDate||'') > (b.messageRawDate||'') ? -1 : 1; // recent = newest first
                 });
-                var finalizeList = function(finalList) {
-                    component.set('v.emailList', finalList);
-                    if (component.get('v.isServiceCase') && !component.get('v.serviceCaseToEmail')) {
-                        var outgoing = finalList.filter(function(e) { return e.incoming === false; });
-                        if (outgoing.length > 0 && outgoing[0].toAddress) {
-                            component.set('v.serviceCaseToEmail', outgoing[0].toAddress);
-                        }
+                component.set('v.emailList',list);
+                // Pre-fill To cho Service Case từ outgoing email gần nhất
+                if (component.get('v.isServiceCase') && !component.get('v.serviceCaseToEmail')) {
+                    var outgoing = list.filter(function(e) { return e.incoming === false; });
+                    if (outgoing.length > 0 && outgoing[0].toAddress) {
+                        component.set('v.serviceCaseToEmail', outgoing[0].toAddress);
                     }
-                };
-                var emailIds = list.map(function(e) { return e.Id; });
-                if (!emailIds.length) { finalizeList(list); return; }
-                var attAction = component.get('c.getEmailMessageAttachments');
-                attAction.setParams({ emailMessageIds: emailIds });
-                attAction.setCallback(self, function(ar) {
-                    if (ar.getState() === 'SUCCESS') {
-                        var mapAtt = ar.getReturnValue() || {};
-                        list = list.map(function(e) {
-                            e.attachments = mapAtt[e.Id] || [];
-                            return e;
-                        });
-                    }
-                    finalizeList(list);
-                });
-                $A.enqueueAction(attAction);
+                }
             }
         });
         $A.enqueueAction(a);
     }
 })
-
-
-
-
