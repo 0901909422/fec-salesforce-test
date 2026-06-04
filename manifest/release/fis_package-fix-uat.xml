@@ -12,6 +12,7 @@
         <members>FEC_CofGsrAssignmentService</members>
         <members>FEC_CofGsrAssignmentService_Test</members>
         <members>FEC_CustomerIntegrationService</members>
+        <members>FEC_DownloadReportController</members>
         <members>FEC_CommonUltils</members>
         <members>FEC_GetCSMasterDataByCodeService</members>
         <name>ApexClass</name>
@@ -26,7 +27,12 @@
         <members>fec_BatchCaseCreation</members>
         <members>fec_BatchDataCreation</members>
         <members>fec_CaseBussiness</members>
+        <members>fec_DownloadReports</members>
         <name>LightningComponentBundle</name>
+    </types>
+    <types>
+        <members>FEC_Download_Report__c.Interaction_and_Service_Case_Summary</members>
+        <name>ListView</name>
     </types>
     <types>
         <members>FEC_Common_System_Setting</members>
