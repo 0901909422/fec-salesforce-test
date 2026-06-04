@@ -8,7 +8,7 @@
     </values>
     <values>
         <field>FEC_Endpoint__c</field>
-        <value xsi:type="xsd:string">/archival/dispatcher/api/v1/bix/ingest_bix</value>
+        <value xsi:type="xsd:string">/dispatcher/api/v1/bix/ingest_bix</value>
     </values>
     <values>
         <field>FEC_FromDate_Hard_Code__c</field>
@@ -33,5 +33,5 @@
     <values>
         <field>FEC_ToDate_Hard_Code__c</field>
         <value xsi:nil="true"/>
-    </values> 
+    </values>
 </CustomMetadata>
