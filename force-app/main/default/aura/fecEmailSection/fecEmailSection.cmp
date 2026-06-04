@@ -73,6 +73,13 @@
     <aura:attribute name="lblSuccessTitle" type="String" default="{!$Label.c.FEC_Email_Success_Title}" />
     <aura:attribute name="lblSuccessSentMsg" type="String" default="{!$Label.c.FEC_Email_Success_Sent_Msg}" />
     <aura:attribute name="lblToRequired" type="String" default="{!$Label.c.FEC_Email_Error_To_Required}" />
+    <aura:attribute name="lblUploadFiles" type="String" default="{!$Label.c.FEC_BCH_UploadFiles}" />
+    <aura:attribute name="lblCancelGeneric" type="String" default="{!$Label.c.FEC_Email_Btn_Cancel}" />
+    <aura:attribute name="lblSelectFiles" type="String" default="{!$Label.c.FEC_Email_File_Select_Files}" />
+    <aura:attribute name="lblRelatedFiles" type="String" default="{!$Label.c.FEC_Email_File_Related_Files}" />
+    <aura:attribute name="lblSearchFiles" type="String" default="{!$Label.c.FEC_Email_File_Search_Files}" />
+    <aura:attribute name="lblFilesSelectedSuffix" type="String" default="{!$Label.c.FEC_Email_File_Selected_Suffix}" />
+    <aura:attribute name="lblFilesUploadHelp" type="String" default="{!$Label.c.FEC_Email_File_Upload_Help}" />`r`n    <aura:attribute name="lblFileUploadedAdded" type="String" default="{!$Label.c.FEC_Email_File_Uploaded_Added}" />
 
     <!-- Load viewMode từ Case record -->
     <force:recordData aura:id="caseData"
@@ -443,6 +450,16 @@
                                         </aura:set>
                                     </aura:if>
                                 </div>
+                                <aura:if isTrue="{!not(empty(email.attachments))}">
+                                    <div class="feed-attachment-list">
+                                        <aura:iteration items="{!email.attachments}" var="att">
+                                            <div class="feed-attachment-item">
+                                                <lightning:icon iconName="doctype:attachment" size="xx-small" class="fec-icon" />
+                                                <span class="feed-attachment-name">{!att.name}</span>
+                                            </div>
+                                        </aura:iteration>
+                                    </div>
+                                </aura:if>
                                 <!-- tungnm37 sửa: chỉ hiện Reply/Reply All/Forward ở màn Handling, không hiện ở Review -->
                                 <aura:if isTrue="{!v.isHandling}">
                                 <div class="feed-actions">
@@ -495,19 +512,19 @@
         <div class="fec-file-modal-overlay" onclick="{!c.closeUploadModal}"></div>
         <div class="fec-file-modal" onclick="{!c.stopPropagation}">
             <div class="fec-file-modal-close" onclick="{!c.closeUploadModal}">&#x2715;</div>
-            <div class="fec-file-modal-title">Select Files</div>
+            <div class="fec-file-modal-title">{!v.lblSelectFiles}</div>
             <div class="fec-file-modal-body">
                 <div class="fec-file-modal-left">
-                    <lightning:fileUpload label="Upload Files"
+                    <lightning:fileUpload label="{!v.lblUploadFiles}"
                         name="fecEmailStdUpload"
                         recordId="{!v.recordId}"
                         multiple="true"
                         onuploadfinished="{!c.onStandardUploadFinished}" />
-                    <div class="{!v.selectedUploadTab == 'related' ? 'fec-file-tab active' : 'fec-file-tab'}" onclick="{!c.selectUploadTabRelated}">Related Files</div>
-                    <div class="{!v.selectedUploadTab == 'uploaded' ? 'fec-file-tab active' : 'fec-file-tab'}" onclick="{!c.selectUploadTabUploaded}">Uploaded to this Case</div>
+                    <div class="{!v.selectedUploadTab == 'related' ? 'fec-file-tab active' : 'fec-file-tab'}" onclick="{!c.selectUploadTabRelated}">{!v.lblRelatedFiles}</div>
+                    
                 </div>
                 <div class="fec-file-modal-right">
-                    <div class="fec-file-search">&#128269;&nbsp;&nbsp;Search Files...</div>
+                    <div class="fec-file-search">&#128269;&nbsp;&nbsp;{!v.lblSearchFiles}</div>
                                         <aura:if isTrue="{!not(empty(v.caseFileList))}">
                         <div class="fec-case-file-list">
                             <aura:iteration items="{!v.caseFileList}" var="f">
@@ -525,15 +542,18 @@
                 </div>
             </div>
             <div class="fec-file-modal-footer">
-                <span>{!v.selectedCaseFileIds.length} file(s) selected</span>
+                <span>{!v.selectedCaseFileIds.length} {!v.lblFilesSelectedSuffix}</span>
                 <div>
-                    <lightning:button label="Cancel" onclick="{!c.closeUploadModal}" />
+                    <lightning:button label="{!v.lblCancelGeneric}" onclick="{!c.closeUploadModal}" />
                     <lightning:button variant="brand" label="Add" onclick="{!c.addSelectedCaseFiles}" disabled="{!empty(v.selectedCaseFileIds)}" class="slds-m-left_x-small" />
                 </div>
             </div>
         </div>
     </aura:if>
 </aura:component>
+
+
+
 
 
 

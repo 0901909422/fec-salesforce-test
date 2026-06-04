@@ -915,3 +915,8 @@
     min-width: 130px !important;
     justify-content: center !important;
 }
+.THIS .fec-file-modal-left .slds-form-element__label,
+.THIS.fec-file-modal .slds-form-element__label { display:none !important; }
+.THIS .feed-attachment-list { margin-top:10px; display:flex; flex-direction:column; gap:6px; }
+.THIS .feed-attachment-item { display:flex; align-items:center; gap:6px; color:#032d60; font-size:12px; }
+.THIS .feed-attachment-name { word-break:break-all; }

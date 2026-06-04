@@ -323,14 +323,10 @@
 
     selectUploadTabRelated: function(component, event, helper) {
         component.set('v.selectedUploadTab', 'related');
-        component.set('v.uploadModalHelpText', 'Related Files is a placeholder in the email popup. Use Upload Files to upload files to this Case and attach them to this email.');
+        component.set('v.uploadModalHelpText', component.get('v.lblFilesUploadHelp')); 
     },
 
-    selectUploadTabUploaded: function(component, event, helper) {
-        component.set('v.selectedUploadTab', 'uploaded');
-        component.set('v.uploadModalHelpText', 'Uploaded to this Case: files uploaded here are saved to this Case and attached to this email after upload finishes.');
-    },
-
+    
     toggleCaseFileSelection: function(component, event, helper) {
         var id = event.target.dataset.id;
         var selected = component.get('v.selectedCaseFileIds') || [];
@@ -362,25 +358,46 @@
         $A.enqueueAction(action);
     },
     onStandardUploadFinished: function(component, event, helper) {
-        var files = event.getParam('files') || [];
-        component.set('v.showUploadModal', false);
+        var files = (event.getParam('files') || []).slice();
         if (!files.length) return;
         var docIds = files.map(function(f) { return f.documentId; }).filter(function(id) { return !!id; });
-        var action = component.get('c.getEmailAttachmentsFromContentDocuments');
-        action.setParams({ contentDocumentIds: docIds });
-        action.setCallback(this, function(resp) {
-            if (resp.getState() === 'SUCCESS') {
-                var existing = component.get('v.attachments') || [];
-                var uploaded = resp.getReturnValue() || [];
-                var merged = existing.concat(uploaded.map(function(a) {
-                    return { name: a.fileName, size: 0, _fromStandardUpload: true, _base64: a.base64Data, _mime: a.mimeType, _contentDocumentId: a.contentDocumentId };
-                }));
-                component.set('v.attachments', merged);
-                component.set('v.showUploadModal', false);
-                helper.loadCaseFiles(component);
-            }
-        });
-        $A.enqueueAction(action);
+        if (!docIds.length) return;
+
+        var tryLoad = function(attempt) {
+            var action = component.get('c.getEmailAttachmentsFromContentDocuments');
+            action.setParams({ contentDocumentIds: docIds });
+            action.setCallback(this, function(resp) {
+                if (resp.getState() === 'SUCCESS') {
+                    var uploaded = resp.getReturnValue() || [];
+                    if (uploaded.length === 0 && attempt < 3) {
+                        window.setTimeout($A.getCallback(function() { tryLoad(attempt + 1); }), 1200);
+                        return;
+                    }
+                    if (uploaded.length > 0) {
+                        var existing = component.get('v.attachments') || [];
+                        var merged = existing.concat(uploaded.map(function(a) {
+                            return { name: a.fileName, size: 0, _fromStandardUpload: true, _base64: a.base64Data, _mime: a.mimeType, _contentDocumentId: a.contentDocumentId };
+                        }));
+                        component.set('v.attachments', merged);
+                        try {
+                            var t = $A.get('e.force:showToast');
+                            if (t) {
+                                t.setParams({ title: component.get('v.lblSuccessTitle') || 'Success', message: component.get('v.lblFileUploadedAdded'), type: 'success', duration: 3000 });
+                                t.fire();
+                            }
+                        } catch (e) {}
+                    }
+                    helper.loadCaseFiles(component, attempt < 3 ? 800 : 0);
+                    if (uploaded.length > 0) { component.set('v.showUploadModal', false); }
+                }
+            });
+            $A.enqueueAction(action);
+        };
+
+        // Wait for Salesforce standard upload to finish committing ContentVersion/ContentDocumentLink.
+        window.setTimeout($A.getCallback(function() {
+            tryLoad(1);
+        }), 1200);
     },
     onAttachChange: function(component, event, helper) {
         var files = event.target.files;
@@ -670,6 +687,9 @@
         });
     }
 })
+
+
+
 
 
 

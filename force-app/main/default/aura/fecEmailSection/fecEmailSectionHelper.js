@@ -829,15 +829,22 @@
     },
 
 
-    loadCaseFiles: function(component) {
-        var action = component.get('c.getCaseFileInfos');
-        action.setParams({ caseId: component.get('v.recordId') });
-        action.setCallback(this, function(resp) {
-            if (resp.getState() === 'SUCCESS') {
-                component.set('v.caseFileList', resp.getReturnValue() || []);
-            }
-        });
-        $A.enqueueAction(action);
+    loadCaseFiles: function(component, delayMs) {
+        var run = function() {
+            var action = component.get('c.getCaseFileInfos');
+            action.setParams({ caseId: component.get('v.recordId') });
+            action.setCallback(this, function(resp) {
+                if (resp.getState() === 'SUCCESS') {
+                    component.set('v.caseFileList', resp.getReturnValue() || []);
+                }
+            });
+            $A.enqueueAction(action);
+        };
+        if (delayMs && delayMs > 0) {
+            window.setTimeout($A.getCallback(run), delayMs);
+        } else {
+            run();
+        }
     },
     showPreviewModal: function(body) {
         var existing = document.getElementById('fec-preview-overlay');
@@ -1157,25 +1164,43 @@
                     var subj=m.Subject||'';
                     var subjDisplay = subj.replace(/\s*\[\s*ref:[^\]]*:ref\s*\]/gi,'').trim();
                     var bodyHtml = self.sanitizeIncomingEmailBody(m.HtmlBody || m.TextBody || '');
-                    return {Id:m.Id,fromName:m.FromName||m.FromAddress||'Unknown',fromAddress:m.FromAddress||'',toAddress:m.ToAddress||'',ccAddress:m.CcAddress||'',subject:subjDisplay,subjectPreview:subjDisplay||rb,bodyFull:rb,bodyHtml:bodyHtml,messageDate:ds,messageRawDate:m.MessageDate||'',incoming:m.Incoming,expanded:false,showDD:false};
+                    return {Id:m.Id,fromName:m.FromName||m.FromAddress||'Unknown',fromAddress:m.FromAddress||'',toAddress:m.ToAddress||'',ccAddress:m.CcAddress||'',subject:subjDisplay,subjectPreview:subjDisplay||rb,bodyFull:rb,bodyHtml:bodyHtml,messageDate:ds,messageRawDate:m.MessageDate||'',incoming:m.Incoming,expanded:false,showDD:false,attachments:[]};
                 });
-                // Sort
                 list.sort(function(a,b){
                     if (sortOrder==='oldest') return (a.messageRawDate||'') < (b.messageRawDate||'') ? -1 : 1;
                     if (sortOrder==='latest') return (a.messageRawDate||'') > (b.messageRawDate||'') ? -1 : 1;
-                    return (a.messageRawDate||'') > (b.messageRawDate||'') ? -1 : 1; // recent = newest first
+                    return (a.messageRawDate||'') > (b.messageRawDate||'') ? -1 : 1;
                 });
-                component.set('v.emailList',list);
-                // Pre-fill To cho Service Case từ outgoing email gần nhất
-                if (component.get('v.isServiceCase') && !component.get('v.serviceCaseToEmail')) {
-                    var outgoing = list.filter(function(e) { return e.incoming === false; });
-                    if (outgoing.length > 0 && outgoing[0].toAddress) {
-                        component.set('v.serviceCaseToEmail', outgoing[0].toAddress);
+                var finalizeList = function(finalList) {
+                    component.set('v.emailList', finalList);
+                    if (component.get('v.isServiceCase') && !component.get('v.serviceCaseToEmail')) {
+                        var outgoing = finalList.filter(function(e) { return e.incoming === false; });
+                        if (outgoing.length > 0 && outgoing[0].toAddress) {
+                            component.set('v.serviceCaseToEmail', outgoing[0].toAddress);
+                        }
                     }
-                }
+                };
+                var emailIds = list.map(function(e) { return e.Id; });
+                if (!emailIds.length) { finalizeList(list); return; }
+                var attAction = component.get('c.getEmailMessageAttachments');
+                attAction.setParams({ emailMessageIds: emailIds });
+                attAction.setCallback(self, function(ar) {
+                    if (ar.getState() === 'SUCCESS') {
+                        var mapAtt = ar.getReturnValue() || {};
+                        list = list.map(function(e) {
+                            e.attachments = mapAtt[e.Id] || [];
+                            return e;
+                        });
+                    }
+                    finalizeList(list);
+                });
+                $A.enqueueAction(attAction);
             }
         });
         $A.enqueueAction(a);
     }
 })
+
+
+
 

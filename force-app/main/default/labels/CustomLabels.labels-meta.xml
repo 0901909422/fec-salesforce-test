@@ -18327,4 +18327,46 @@
         <shortDescription>Hold Case Edit Success</shortDescription>
         <value>Hold Case Config was saved</value>
     </labels>
+    <labels>
+        <fullName>FEC_Email_File_Select_Files</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Email file modal - Select Files</shortDescription>
+        <value>Select Files</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Email_File_Related_Files</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Email file modal - Related Files</shortDescription>
+        <value>Related Files</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Email_File_Search_Files</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Email file modal - Search Files placeholder</shortDescription>
+        <value>Search Files...</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Email_File_Selected_Suffix</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Email file modal - selected files suffix</shortDescription>
+        <value>file(s) selected</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Email_File_Upload_Help</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Email file modal - upload help</shortDescription>
+        <value>Files uploaded here will be added to email attachments.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Email_File_Uploaded_Added</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Email file upload success message</shortDescription>
+        <value>File uploaded and added to email.</value>
+    </labels>
 </CustomLabels>
