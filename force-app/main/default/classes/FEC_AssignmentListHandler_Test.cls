@@ -57,12 +57,10 @@ private class FEC_AssignmentListHandler_Test {
 
         insert new List<FEC_Team_Queue__c>{
             new FEC_Team_Queue__c(
-                Team__c = teamSp.Id,
                 FEC_Select_Team__c = teamSp.Id,
                 FEC_Queue_Name__c = csSupportQueue.DeveloperName
             ),
             new FEC_Team_Queue__c(
-                Team__c = teamCc.Id,
                 FEC_Select_Team__c = teamCc.Id,
                 FEC_Queue_Name__c = csCareQueue.DeveloperName
             )

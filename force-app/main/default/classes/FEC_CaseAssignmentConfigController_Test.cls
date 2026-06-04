@@ -52,7 +52,7 @@ private class FEC_CaseAssignmentConfigController_Test {
         insert team;
         insert new FEC_Team_Queue__c(
             FEC_Queue_Name__c = testQueue.DeveloperName,
-            Team__c = team.Id
+            FEC_Select_Team__c = team.Id
         );
     }
 

@@ -20,7 +20,7 @@ private class FEC_BCH_AssignmentRouteToService_Test {
         insert team;
         insert new FEC_Team_Queue__c(
             FEC_Queue_Name__c = QUEUE_DEV,
-            Team__c = team.Id,
+            FEC_Select_Team__c = team.Id,
             FEC_Team__c = TEAM_CODE
         );
 

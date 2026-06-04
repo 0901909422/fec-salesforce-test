@@ -1,36 +1,6 @@
 @IsTest
 private class FEC_CaseAssignmentNOCTrigger_Test {
 
-    private static Id resolveProductCategoryId(String categoryName) {
-        List<ProductCategory> existing = [
-            SELECT Id
-            FROM ProductCategory
-            WHERE Name = :categoryName
-            LIMIT 1
-        ];
-        if (!existing.isEmpty()) {
-            return existing[0].Id;
-        }
-
-        List<ProductCatalog> catalogs = [SELECT Id FROM ProductCatalog LIMIT 1];
-        Id catalogId;
-        if (catalogs.isEmpty()) {
-            ProductCatalog catalog = new ProductCatalog(Name = 'FEC Trigger Test Catalog');
-            insert catalog;
-            catalogId = catalog.Id;
-        } else {
-            catalogId = catalogs[0].Id;
-        }
-
-        ProductCategory created = new ProductCategory(
-            Name = categoryName,
-            CatalogId = catalogId,
-            IsNavigational = false
-        );
-        insert created;
-        return created.Id;
-    }
-
     private static Id getBusinessHoursId() {
         return [SELECT Id FROM BusinessHours LIMIT 1].Id;
     }

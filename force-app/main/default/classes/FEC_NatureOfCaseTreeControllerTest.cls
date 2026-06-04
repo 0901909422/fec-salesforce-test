@@ -12,10 +12,10 @@ private class FEC_NatureOfCaseTreeControllerTest {
         FEC_MDM_Category__c cat = new FEC_MDM_Category__c(Name='Cat', FEC_Code__c='C01', FEC_Alias__c='CAT', FEC_Name_VN__c='CATVN', FEC_Order__c=1, FEC_Active__c=true);
         insert cat;
         // Create Sub Category
-        FEC_MDM_Sub_Category__c scat = new FEC_MDM_Sub_Category__c(Name='SCat', FEC_Code__c='SC01', FEC_Alias__c='SCAT', FEC_Name_VN__c='SCATVN', FEC_Order__c=1, FEC_Active__c=true);
+        FEC_MDM_Sub_Category__c scat = new FEC_MDM_Sub_Category__c(Name='SCat', FEC_Code__c='SC01', FEC_Alias__c='SCAT', FEC_Name_VN__c='SCATVN', FEC_Pos_Order__c=1, FEC_Active__c=true);
         insert scat;
         // Create Sub Code
-        FEC_MDM_Sub_Code__c scode = new FEC_MDM_Sub_Code__c(Name='SCode', FEC_Code__c='SCODE01', FEC_Alias__c='SCODE', FEC_Name_VN__c='SCODEVN', FEC_Order__c=1, FEC_Active__c=true);
+        FEC_MDM_Sub_Code__c scode = new FEC_MDM_Sub_Code__c(Name='SCode', FEC_Code__c='SCODE01', FEC_Alias__c='SCODE', FEC_Name_VN__c='SCODEVN', FEC_Pos_Order__c=1, FEC_Active__c=true);
         insert scode;
         // Create Nature Of Case
         FEC_MDM_Nature_Of_Case__c noc = new FEC_MDM_Nature_Of_Case__c(
