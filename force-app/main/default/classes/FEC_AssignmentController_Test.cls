@@ -30,8 +30,12 @@ private class FEC_AssignmentController_Test {
             insert new QueueSobject(QueueId = testQueue.Id, SobjectType = 'Case');
         }
 
+        FEC_Team__c team = new FEC_Team__c(Name = TARGET_TEAM);
+        insert team;
+
         insert new FEC_Team_Queue__c(
             FEC_Queue_Name__c = QUEUE_DEV_NAME,
+            Team__c = team.Id,
             FEC_Team__c = TARGET_TEAM
         );
     }

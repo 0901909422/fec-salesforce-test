@@ -700,16 +700,12 @@ private class FEC_TranferInformationCallout_Test {
     private static void assertValidationFails(
         FEC_TranferInformationCallout.TransferCallInput req
     ) {
-        Boolean threw = false;
-        try {
+        FEC_TranferInformationCallout.TransferCallResponse res =
             FEC_TranferInformationCallout.transferCall(req);
-        } catch (Exception ex) {
-            threw = true;
-            System.assert(
-                ex instanceof FEC_APIServiceException ||
-                    ex.getMessage() != null
-            );
-        }
-        System.assertEquals(true, threw, 'Validation must throw for invalid transfer input.');
+        System.assertEquals(
+            false,
+            res.success,
+            'Validation must fail for invalid transfer input.'
+        );
     }
 }

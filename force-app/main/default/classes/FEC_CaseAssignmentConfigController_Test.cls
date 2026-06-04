@@ -9,6 +9,7 @@ private class FEC_CaseAssignmentConfigController_Test {
 
         Group testQueue = new Group(Name = 'Queue CS Support', Type = 'Queue');
         insert testQueue;
+        testQueue = [SELECT Id, DeveloperName FROM Group WHERE Id = :testQueue.Id];
 
         QueueSobject mappingObject = new QueueSobject(QueueId = testQueue.Id, SobjectType = 'Case');
         System.runAs(new User(Id = UserInfo.getUserId())) {
@@ -46,6 +47,13 @@ private class FEC_CaseAssignmentConfigController_Test {
             new GroupMember(GroupId = testQueue.Id, UserOrGroupId = userA.Id),
             new GroupMember(GroupId = testQueue.Id, UserOrGroupId = userB.Id)
         };
+
+        FEC_Team__c team = new FEC_Team__c(Name = 'CS Support Team');
+        insert team;
+        insert new FEC_Team_Queue__c(
+            FEC_Queue_Name__c = testQueue.DeveloperName,
+            Team__c = team.Id
+        );
     }
 
     /**

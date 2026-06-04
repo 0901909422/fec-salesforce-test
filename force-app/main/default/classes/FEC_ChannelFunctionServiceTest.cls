@@ -4,7 +4,9 @@ private class FEC_ChannelFunctionServiceTest {
     static void testIsFunctionAllowedTrueWhenNocContainsChannelAndFlagEnabled() {
         FEC_Channel__c ch = new FEC_Channel__c(
             Name = 'Vtiger',
+            FEC_Code__c = 'VTIGER',
             FEC_Channel_ID__c = 'CH-VTIGER',
+            FEC_Channel_Vietnamese_name__c = 'Vtiger VN',
             FEC_Channel_Status__c = true,
             FEC_Update_Case_Status__c = true,
             FEC_Get_Nature_Of_Case__c = false,
@@ -29,7 +31,9 @@ private class FEC_ChannelFunctionServiceTest {
     static void testIsFunctionAllowedByChannelIdCancelCase() {
         FEC_Channel__c ch = new FEC_Channel__c(
             Name = 'test2',
+            FEC_Code__c = 'FEMOBILE',
             FEC_Channel_ID__c = 'FEMobile',
+            FEC_Channel_Vietnamese_name__c = 'Mobile VN',
             FEC_Channel_Status__c = true,
             FEC_Cancel_Case__c = true,
             FEC_Update_Case_Status__c = false,
@@ -51,7 +55,9 @@ private class FEC_ChannelFunctionServiceTest {
     static void testCancelCaseFalseWhenCheckboxOff() {
         FEC_Channel__c ch = new FEC_Channel__c(
             Name = 'MobileOnly',
+            FEC_Code__c = 'FEMOBILE2',
             FEC_Channel_ID__c = 'FEMobile2',
+            FEC_Channel_Vietnamese_name__c = 'Mobile Only VN',
             FEC_Channel_Status__c = true,
             FEC_Cancel_Case__c = false,
             FEC_Get_Nature_Of_Case__c = false,
@@ -71,7 +77,9 @@ private class FEC_ChannelFunctionServiceTest {
     static void testIsFunctionAllowedFalseWhenNoMatchingNocOrUnknownFunction() {
         FEC_Channel__c ch = new FEC_Channel__c(
             Name = 'Zalo',
+            FEC_Code__c = 'ZALO',
             FEC_Channel_ID__c = 'CH-ZALO',
+            FEC_Channel_Vietnamese_name__c = 'Zalo VN',
             FEC_Channel_Status__c = true,
             FEC_Get_Nature_Of_Case__c = true,
             FEC_Self_Service_Flag__c = true,
@@ -92,7 +100,9 @@ private class FEC_ChannelFunctionServiceTest {
     static void testGetNatureOfCaseCamelCaseRequiresNoc() {
         FEC_Channel__c ch = new FEC_Channel__c(
             Name = 'ApiCh',
+            FEC_Code__c = 'APICH',
             FEC_Channel_ID__c = 'CH-API',
+            FEC_Channel_Vietnamese_name__c = 'API Channel VN',
             FEC_Channel_Status__c = true,
             FEC_Get_Nature_Of_Case__c = true,
             FEC_Update_Case_Status__c = false,

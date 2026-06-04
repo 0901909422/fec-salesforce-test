@@ -31,6 +31,13 @@ private class FEC_GetCSAttachedFileRestService_Test {
 
     @TestSetup
     static void setupData() {
+        insert new FEC_Channel__c(
+            Name = VALID_CHANNEL,
+            FEC_Channel_ID__c = VALID_CHANNEL,
+            FEC_Channel_Vietnamese_name__c = VALID_CHANNEL,
+            FEC_Channel_Status__c = true
+        );
+
         FEC_CaseTriggerHandler.isExecuting = true;
         try {
             insert new Case(

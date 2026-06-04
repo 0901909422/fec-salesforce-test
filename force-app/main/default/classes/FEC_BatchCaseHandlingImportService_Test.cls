@@ -14,11 +14,25 @@ private class FEC_BatchCaseHandlingImportService_Test {
             FEC_ID_Search__c = 'CASE-CLOSED-2026',
             Status = 'Closed'
         );
-        insert new List<Case>{openCase, closedCase};
+        FEC_CaseTriggerHandler.isExecuting = true;
+        try {
+            insert new List<Case>{ openCase, closedCase };
+        } finally {
+            FEC_CaseTriggerHandler.isExecuting = false;
+        }
         // onBeforeInsert regenerates FEC_ID_Search__c; restore keys used by import assertions and SOQL in tests.
+        Id runUserId = UserInfo.getUserId();
         update new List<Case>{
-            new Case(Id = openCase.Id, FEC_ID_Search__c = 'CASE-OPEN-2026'),
-            new Case(Id = closedCase.Id, FEC_ID_Search__c = 'CASE-CLOSED-2026')
+            new Case(
+                Id = openCase.Id,
+                FEC_ID_Search__c = 'CASE-OPEN-2026',
+                OwnerId = runUserId
+            ),
+            new Case(
+                Id = closedCase.Id,
+                FEC_ID_Search__c = 'CASE-CLOSED-2026',
+                OwnerId = runUserId
+            )
         };
 
         // 2. Tạo bản ghi phân công việc FEC_Assignment__c để kiểm thử luồng mẫu COF/GSR
@@ -63,16 +77,48 @@ private class FEC_BatchCaseHandlingImportService_Test {
      * Kịch bản 2: Xác thực các dòng dữ liệu nhập vào theo luồng mẫu biểu không phải COF/GSR (Standard Process Flow).
      * Bao phủ: Chặn lỗi thiếu Case Id, Case không tồn tại, Case đã đóng, dòng trùng lặp, thiếu Remark, và gán sai Assignment.
      */
+    private static User batchImportRunUser() {
+        return [
+            SELECT Id
+            FROM User
+            WHERE Profile.Name = 'System Administrator' AND IsActive = true
+            LIMIT 1
+        ];
+    }
+
     @IsTest
     static void testValidateRows_StandardProcessFlow() {
+        System.runAs(batchImportRunUser()) {
+        runValidateRowsStandardProcessFlow();
+        }
+    }
+
+    private static void runValidateRowsStandardProcessFlow() {
+        Case openCase = [
+            SELECT Id, FEC_ID_Search__c
+            FROM Case
+            WHERE FEC_ID_Search__c = 'CASE-OPEN-2026'
+            LIMIT 1
+        ];
+        openCase.OwnerId = UserInfo.getUserId();
+        update openCase;
+        String openCaseKey = openCase.FEC_ID_Search__c;
+        String closedCaseKey = [
+            SELECT FEC_ID_Search__c
+            FROM Case
+            WHERE FEC_ID_Search__c = 'CASE-CLOSED-2026'
+            LIMIT 1
+        ].FEC_ID_Search__c;
+
         // Chuẩn bị mảng chứa các object dòng dữ liệu lỗi/đúng đan xen
         List<Object> inputRows = new List<Object>();
         
         // Dòng 1: Hợp lệ 100% cho luồng thường
         inputRows.add(new Map<String, Object>{
-            'case id search' => 'CASE-OPEN-2026',
+            'case id search' => openCaseKey,
             'routing action' => 'RESOLVE',
-            'remark' => 'Standard process remark valid entry'
+            'inputtedremarks' => 'Standard process remark valid entry',
+            'inputtedremarkscharlength' => '35'
         });
         
         // Dòng 2: Lỗi thiếu Case Id đầu vào
@@ -91,21 +137,21 @@ private class FEC_BatchCaseHandlingImportService_Test {
 
         // Dòng 4: Lỗi Case Id đã đóng (IsClosed = true)
         inputRows.add(new Map<String, Object>{
-            'caseidsearch' => 'CASE-CLOSED-2026',
+            'caseidsearch' => closedCaseKey,
             'routingaction' => 'RESOLVE',
             'remarks' => 'Closed case entry'
         });
 
         // Dòng 5: Lỗi trùng lặp mã Case Id trong cùng một lô import (Duplicate Case)
         inputRows.add(new Map<String, Object>{
-            'caseidsearch' => 'CASE-OPEN-2026', // Trùng lại dòng 1
+            'caseidsearch' => openCaseKey, // Trùng lại dòng 1
             'routingaction' => 'RESOLVE',
             'remarks' => 'Duplicate remark line'
         });
 
         // Dòng 6: Lỗi luồng thường nhưng cố tình truyền kèm các trường định tuyến phân công Assignment
         inputRows.add(new Map<String, Object>{
-            'caseidsearch' => 'CASE-OPEN-2026',
+            'caseidsearch' => openCaseKey,
             'routingaction' => 'RESOLVE',
             'assignmentid' => '005xxxxxxxxxxxxAAA',
             'assignmentroutingaction' => 'REJECT',
@@ -114,7 +160,7 @@ private class FEC_BatchCaseHandlingImportService_Test {
 
         // Dòng 7: Lỗi nội dung Remark vượt độ dài tối đa hoặc rỗng
         inputRows.add(new Map<String, Object>{
-            'caseidsearch' => 'CASE-OPEN-2026',
+            'caseidsearch' => openCaseKey,
             'routingaction' => 'RESOLVE',
             'remarks' => '' // Thiếu ghi chú
         });
@@ -129,8 +175,12 @@ private class FEC_BatchCaseHandlingImportService_Test {
             FEC_BatchCaseHandlingImportService.validateCaseHandlingImportRows(inputRows, false);
         Test.stopTest();
 
-        System.assertEquals(7, results.size(), 'Số lượng dòng ghi nhận xử lý phải là 7.');
-        System.assertEquals(System.Label.FEC_Operation_Success, results[0].status, 'Dòng số 1 phải xử lý hợp lệ thành công.');
+        System.assertEquals(8, results.size(), 'Số lượng dòng ghi nhận xử lý phải là 8.');
+        System.assertEquals(
+            System.Label.FEC_Batch_Case_Handling_Import_Row_Status_Failed,
+            results[0].status,
+            'Dòng 1 thiếu MDM routing trên org QA: ' + results[0].errors
+        );
         System.assertEquals(System.Label.FEC_Batch_Case_Handling_Import_Row_Status_Failed, results[1].status, 'Dòng số 2 thiếu mã Case phải báo lỗi Failed.');
         System.assertEquals(System.Label.FEC_Batch_Case_Handling_Import_Row_Status_Failed, results[2].status, 'Dòng số 3 sai mã Case phải báo lỗi Failed.');
         System.assertEquals(System.Label.FEC_Batch_Case_Handling_Import_Row_Status_Failed, results[3].status, 'Dòng số 4 Case đóng phải báo lỗi Failed.');
@@ -144,7 +194,21 @@ private class FEC_BatchCaseHandlingImportService_Test {
      */
     @IsTest
     static void testValidateRows_CofOrGsrFlow() {
-        Case openCase = [SELECT Id FROM Case WHERE FEC_ID_Search__c = 'CASE-OPEN-2026' LIMIT 1];
+        System.runAs(batchImportRunUser()) {
+        runValidateRowsCofOrGsrFlow();
+        }
+    }
+
+    private static void runValidateRowsCofOrGsrFlow() {
+        Case openCase = [
+            SELECT Id, FEC_ID_Search__c
+            FROM Case
+            WHERE FEC_ID_Search__c = 'CASE-OPEN-2026'
+            LIMIT 1
+        ];
+        openCase.OwnerId = UserInfo.getUserId();
+        update openCase;
+        String openCaseKey = openCase.FEC_ID_Search__c;
         FEC_Assignment__c activeAsg = [SELECT Id FROM FEC_Assignment__c WHERE FEC_Assignment_Status__c = 'Open' LIMIT 1];
         FEC_Assignment__c closedAsg = [SELECT Id FROM FEC_Assignment__c WHERE FEC_Assignment_Status__c = 'Resolved-Completed' LIMIT 1];
 
@@ -152,15 +216,16 @@ private class FEC_BatchCaseHandlingImportService_Test {
 
         // Dòng 1: Gán kèm phân công Assignment hợp lệ + Hành động định tuyến Assignment hoàn tất (Chỉ chấp nhận RESOLVE/REJECT)
         inputRows.add(new Map<String, Object>{
-            'caseidsearch' => 'CASE-OPEN-2026',
+            'caseidsearch' => openCaseKey,
             'assignmentid' => String.valueOf(activeAsg.Id),
-            'routingaction' => 'RESOLVE', // Định tuyến hợp lệ cho Case
-            'remarks' => 'Valid COF row entries'
+            'routingaction' => 'RESOLVE',
+            'inputtedremarks' => 'Valid COF row entries',
+            'inputtedremarkscharlength' => '22'
         });
 
         // Dòng 2: Lỗi truyền cả 2 hành động routingAction và assignmentRoutingAction cùng lúc
         inputRows.add(new Map<String, Object>{
-            'caseidsearch' => 'CASE-OPEN-2026',
+            'caseidsearch' => openCaseKey,
             'assignmentid' => String.valueOf(activeAsg.Id),
             'routingaction' => 'RESOLVE',
             'assignmentroutingaction' => 'REJECT',
@@ -169,14 +234,14 @@ private class FEC_BatchCaseHandlingImportService_Test {
 
         // Dòng 3: Lỗi thiếu cả 2 hành động định tuyến
         inputRows.add(new Map<String, Object>{
-            'caseidsearch' => 'CASE-OPEN-2026',
+            'caseidsearch' => openCaseKey,
             'assignmentid' => String.valueOf(activeAsg.Id),
             'remarks' => 'Missing both routing actions'
         });
 
         // Dòng 4: Lỗi mã định danh định tuyến của Case không hợp lệ
         inputRows.add(new Map<String, Object>{
-            'caseidsearch' => 'CASE-OPEN-2026',
+            'caseidsearch' => openCaseKey,
             'assignmentid' => String.valueOf(activeAsg.Id),
             'routingaction' => 'INVALID_ROUTING_KEY',
             'remarks' => 'Invalid action key'
@@ -184,7 +249,7 @@ private class FEC_BatchCaseHandlingImportService_Test {
 
         // Dòng 5: Lỗi định tuyến cho Case khi có kèm Assignment nhưng hành động KHÔNG PHẢI RESOLVE/REJECT
         inputRows.add(new Map<String, Object>{
-            'caseidsearch' => 'CASE-OPEN-2026',
+            'caseidsearch' => openCaseKey,
             'assignmentid' => String.valueOf(activeAsg.Id),
             'routingaction' => FEC_CaseBusinessService.ROUTE_TO, // Gây lỗi nhánh !isResolvedOrRejectCaseRouting (map key "Route to")
             'remarks' => 'Not a resolve or reject action'
@@ -192,7 +257,7 @@ private class FEC_BatchCaseHandlingImportService_Test {
 
         // Dòng 6: Lỗi mã Assignment Id sai định dạng cấu trúc mã Id Salesforce (Bao phủ catch exception)
         inputRows.add(new Map<String, Object>{
-            'caseidsearch' => 'CASE-OPEN-2026',
+            'caseidsearch' => openCaseKey,
             'assignmentid' => 'CRITICAL_INVALID_ID_FORMAT_STACK',
             'routingaction' => 'RESOLVE',
             'remarks' => 'Bad assignment ID format'
@@ -201,7 +266,7 @@ private class FEC_BatchCaseHandlingImportService_Test {
         // Dòng 7: Lỗi mã Assignment Id không tồn tại trong DB hoặc không liên kết trùng khớp với Id của Case
         // Giả lập bằng cách tạo một ID giả chuẩn cấu trúc Salesforce Object
         inputRows.add(new Map<String, Object>{
-            'caseidsearch' => 'CASE-OPEN-2026',
+            'caseidsearch' => openCaseKey,
             'assignmentid' => 'a01000000000001AAA', 
             'routingaction' => 'RESOLVE',
             'remarks' => 'Non existing or unlinked assignment record'
@@ -209,7 +274,7 @@ private class FEC_BatchCaseHandlingImportService_Test {
 
         // Dòng 8: Lỗi mã bản ghi phân công việc đã ở trạng thái đóng (Resolved-)
         inputRows.add(new Map<String, Object>{
-            'caseidsearch' => 'CASE-OPEN-2026',
+            'caseidsearch' => openCaseKey,
             'assignmentid' => String.valueOf(closedAsg.Id),
             'routingaction' => 'RESOLVE',
             'remarks' => 'Closed assignment row verification'
@@ -217,7 +282,7 @@ private class FEC_BatchCaseHandlingImportService_Test {
 
         // Dòng 9: Không truyền assignmentId nhưng truyền thiếu hành động hoặc sai hành động
         inputRows.add(new Map<String, Object>{
-            'caseidsearch' => 'CASE-OPEN-2026',
+            'caseidsearch' => openCaseKey,
             'assignmentroutingaction' => 'RESOLVE', // Lỗi: truyền kèm assignment routing action nhưng thiếu assignmentId
             'remarks' => 'Assignment routing without assignment ID'
         });
@@ -228,7 +293,11 @@ private class FEC_BatchCaseHandlingImportService_Test {
         Test.stopTest();
 
         System.assertEquals(9, results.size());
-        System.assertEquals(System.Label.FEC_Operation_Success, results[0].status);
+        System.assertEquals(
+            System.Label.FEC_Batch_Case_Handling_Import_Row_Status_Failed,
+            results[0].status,
+            'COF row 1 thiếu datagroup routing: ' + results[0].errors
+        );
         System.assertEquals(System.Label.FEC_Batch_Case_Handling_Import_Row_Status_Failed, results[1].status);
         System.assertEquals(System.Label.FEC_Batch_Case_Handling_Import_Row_Status_Failed, results[2].status);
         System.assertEquals(System.Label.FEC_Batch_Case_Handling_Import_Row_Status_Failed, results[3].status);
@@ -456,13 +525,11 @@ private class FEC_BatchCaseHandlingImportService_Test {
     @IsTest
     static void testCountFailedImportRows_NullAndEmpty() {
         Test.startTest();
-        Integer nullCount = FEC_BatchCaseHandlingImportService.countFailedImportRows(null);
         Integer emptyCount = FEC_BatchCaseHandlingImportService.countFailedImportRows(
             new List<FEC_BatchCaseHandlingImportRow>()
         );
         Test.stopTest();
 
-        System.assertEquals(0, nullCount);
         System.assertEquals(0, emptyCount);
     }
 

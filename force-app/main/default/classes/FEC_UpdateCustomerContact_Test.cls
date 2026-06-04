@@ -49,7 +49,11 @@ private class FEC_UpdateCustomerContact_Test {
         try {
             update new Case(
                 Id = c.Id,
-                FEC_Account_or_Contract__c = ch.Id
+                FEC_Account_or_Contract__c = ch.Id,
+                FEC_Original_Info_Phone_Number__c = '0901234567',
+                FEC_Updated_Info_Phone_Number__c = '0909876543',
+                FEC_Original_Info_Email__c = 'test@example.com',
+                FEC_Updated_Info_Email__c = 'updated@example.com'
             );
         } finally {
             FEC_CaseTriggerHandler.isExecuting = false;
@@ -280,8 +284,14 @@ private class FEC_UpdateCustomerContact_Test {
 
     @IsTest
     static void testGetMatchingContactList() {
-        Case c = [SELECT Id, FEC_Account_or_Contract__c FROM Case LIMIT 1];
-        
+        Case c = [
+            SELECT Id, FEC_Account_or_Contract__c,
+                   FEC_Original_Info_Phone_Number__c, FEC_Original_Info_Email__c,
+                   FEC_Original_Info_Phone_Type__c
+            FROM Case
+            LIMIT 1
+        ];
+
         Test.startTest();
         List<FEC_Contact_List__c> phoneMatch = FEC_UpdateCustomerContact.getMatchingContactList(c, FEC_UpdateCustomerContact.PHONE_UPDATE);
         List<FEC_Contact_List__c> emailMatch = FEC_UpdateCustomerContact.getMatchingContactList(c, FEC_UpdateCustomerContact.EMAIL_UPDATE);

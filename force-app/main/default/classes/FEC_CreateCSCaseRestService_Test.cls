@@ -97,6 +97,14 @@ private class FEC_CreateCSCaseRestService_Test {
         );
         insert new List<SObject>{ bp, pt, cat, scat, sc };
 
+        insert new FEC_Channel__c(
+            Name = FEC_ConstantCommon.CHANNEL_INBOUND_NAME,
+            FEC_Code__c = 'INBOUND',
+            FEC_Channel_ID__c = FEC_ConstantCommon.CHANNEL_INBOUND_NAME,
+            FEC_Channel_Vietnamese_name__c = 'Inbound',
+            FEC_Channel_Status__c = true
+        );
+
         insert new FEC_Nature_of_Case__c(
             FEC_Product_Type__c = pt.Id,
             FEC_Business_Process__c = bp.Id,

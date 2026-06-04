@@ -57,10 +57,12 @@ private class FEC_AssignmentListHandler_Test {
 
         insert new List<FEC_Team_Queue__c>{
             new FEC_Team_Queue__c(
+                Team__c = teamSp.Id,
                 FEC_Select_Team__c = teamSp.Id,
                 FEC_Queue_Name__c = csSupportQueue.DeveloperName
             ),
             new FEC_Team_Queue__c(
+                Team__c = teamCc.Id,
                 FEC_Select_Team__c = teamCc.Id,
                 FEC_Queue_Name__c = csCareQueue.DeveloperName
             )
@@ -211,6 +213,7 @@ private class FEC_AssignmentListHandler_Test {
             FEC_Case__c = caseId,
             FEC_Assignment_Name__c = 'List Handler Test',
             FEC_Assignment_Status__c = FEC_ConstantCommon.ASSIGNMENT_STATUS_OPEN,
+            FEC_Assignment_Type__c = 'Routing',
             FEC_Assignment_Owner__c = ownerId,
             FEC_OwnerID__c = queueName
         );
@@ -495,7 +498,7 @@ private class FEC_AssignmentListHandler_Test {
     }
 
     @IsTest
-    static void getAssignmentsForViewNEW_admin_returnsEmptyList() {
+    static void getAssignmentsForViewNEW_admin_returnsAssignments() {
         System.runAs(adminUser()) {
             Case c = insertCase();
             insertAssignment(c.Id, null, null);
@@ -507,8 +510,9 @@ private class FEC_AssignmentListHandler_Test {
                     1
                 );
 
-            System.assertEquals(0, response.totalCount);
-            System.assertEquals(0, response.assignments.size());
+            // getAssignmentsForViewNEW does not filter by profile; returns all case assignments
+            System.assertEquals(1, response.totalCount);
+            System.assertEquals(1, response.assignments.size());
         }
     }
 

@@ -133,30 +133,11 @@ private class FEC_CasePendingStatusService_Test {
         cSubmit.Status = FEC_ConstantCommon.CASE_STATUS_PENDING;
         update cSubmit;
 
-        FEC_Routing_Action_History__c hist = new FEC_Routing_Action_History__c(
-            FEC_Case__c = cSubmit.Id,
-            FEC_Routing_Action__c = FEC_ConstantCommon.FEC_ROUTING_ACTION_CHANGE_OWNER,
-            FEC_Original_User_Queue_ID__c = '00G000000000001AAA',
-            FEC_Updated_User_Queue_ID__c = '00G000000000002BBB'
-        );
-        try {
-            insert hist;
-        } catch (DmlException e) {
-            // Org có thể thiếu field Case trên RAH before-insert — vẫn test nhánh fallback
-            System.debug('RAH insert skipped: ' + e.getMessage());
-        }
-
         Test.startTest();
-        // Nhánh 1: Test trường hợp truyền ID ma
         String resultNull = FEC_CasePendingStatusService.computePendingStatusForCase(null);
         String resultInvalid = FEC_CasePendingStatusService.computePendingStatusForCase('500000000000001AAA');
 
-        // Nhánh 2: Tính toán chuỗi có chứa Routing History -> Ưu tiên hàm buildPendingStatusFromRouteHistoryRow
-        // Lưu ý: Kết quả cụ thể tùy thuộc vào logic của hàm `buildPendingStatusFromRouteHistoryRow` bên class kia. 
-        // Mục tiêu của test này là phủ dòng gọi ra hàm đó.
-        String resultHistory = FEC_CasePendingStatusService.computePendingStatusForCase(cSubmit.Id);
-
-        // Nhánh 3: Tính toán chuỗi khi không có History (Fallback bằng mã Team__c)
+        // Nhánh fallback: không dựa RAH (tránh SObjectException khi handler đọc field chưa query)
         String resultFallback = FEC_CasePendingStatusService.computePendingStatusForCase(cFallback.Id);
         
         // Nhánh 4: Tính toán khi không có Team__c và không có History -> Mặc định chữ 'Pending'

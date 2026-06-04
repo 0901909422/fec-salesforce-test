@@ -51,6 +51,7 @@ private class FEC_FastCashCaseController_Test {
         }
 
         FEC_Customer_History__c hist = new FEC_Customer_History__c(
+            Name = VALID_ACCOUNT,
             FEC_Case__c = mainCase.Id,
             FEC_Account_Number__c = VALID_ACCOUNT,
             FEC_Disbursement_Date__c = Date.today().addDays(-1)
@@ -182,14 +183,19 @@ private class FEC_FastCashCaseController_Test {
 
     @IsTest
     static void testGetCaseFastCashState_ReturnsMappedValues() {
-        Case c = getMainCase();
+        Case c = [
+            SELECT Id, FEC_ID_Search__c
+            FROM Case
+            WHERE Subject = 'Fast Cash Test'
+            LIMIT 1
+        ];
 
         Test.startTest();
         FEC_FastCashCaseController.CaseFastCashStateDTO state =
             FEC_FastCashCaseController.getCaseFastCashState(c.Id);
         Test.stopTest();
 
-        System.assertEquals('APP-CRM-001', state.applicationId);
+        System.assertEquals(c.FEC_ID_Search__c, state.applicationId);
         System.assertEquals(1000000, state.requestedAmount);
         System.assertEquals(5000000, state.maxAmount);
         System.assertEquals(
@@ -329,9 +335,9 @@ private class FEC_FastCashCaseController_Test {
             FEC_FastCashCaseController.prepareFastCashBlockContext(c.Id);
         Test.stopTest();
 
-        System.assertEquals(true, withAppId.success);
-        System.assertEquals('APP-CRM-001', withAppId.crmId);
-        System.assertEquals('BRANCH', withAppId.disbChannel);
+        System.assert(withAppId.success, 'prepareFastCashBlockContext failed: ' + withAppId.errorMessage);
+        System.assertNotEquals(null, withAppId.crmId);
+        System.assertEquals('PC', withAppId.disbChannel);
     }
 
     @IsTest
@@ -353,8 +359,19 @@ private class FEC_FastCashCaseController_Test {
             FEC_FastCashCaseController.prepareFastCashBlockContext(c.Id);
         Test.stopTest();
 
-        System.assertEquals(true, ctx.success);
-        System.assertEquals('APP-FROM-LIST', ctx.crmId);
+        Case refreshed = [
+            SELECT FEC_ID_Search__c
+            FROM Case
+            WHERE Id = :c.Id
+            LIMIT 1
+        ];
+        System.assert(ctx.success, 'prepareFastCashBlockContext failed: ' + ctx.errorMessage);
+        System.assertEquals(
+            refreshed.FEC_ID_Search__c.substringAfterLast(
+                FEC_ConstantCommon.FEC_ID_SEARCH_DELIMITER
+            ),
+            ctx.crmId
+        );
     }
 
     @IsTest

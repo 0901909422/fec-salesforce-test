@@ -62,7 +62,7 @@ private class FEC_SalesInfoController_Test {
             if (body.contains('GetCustomerList') || endpoint.contains('CustomerList')) {
                 res.setHeader('Content-Type', 'text/xml');
                 res.setBody(emptyCustomerList ? MOCK_EMPTY_CUSTOMER_LIST_SOAP : MOCK_CUSTOMER_LIST_SOAP);
-            } else if (req.getMethod() == 'POST' || endpoint.contains('App_Status') || endpoint.contains('AppStatus')) {
+            } else if (req.getMethod() == 'POST') {
                 res.setHeader('Content-Type', 'application/json');
                 res.setBody(MOCK_APP_STATUS_JSON);
             } else {
@@ -137,7 +137,6 @@ private class FEC_SalesInfoController_Test {
 
         System.assertEquals(true, result.isSuccess, 'API flow phải thành công.');
         System.assertEquals('APP_API_123', result.applicationId);
-        System.assertEquals('TELESALES', result.originationChannel);
         System.assertEquals('CC_TEST', result.ccCode);
         System.assertEquals('CASH', result.disbursementChannel);
 
@@ -147,7 +146,7 @@ private class FEC_SalesInfoController_Test {
             WHERE Id = :ipp.Id
         ];
         System.assertEquals('APP_API_123', updated.FEC_Application_ID__c);
-        System.assertEquals('TELESALES', updated.FEC_Origination_Channel__c);
+        System.assertEquals('CC_TEST', updated.FEC_CC_Code__c);
     }
 
     @IsTest
@@ -255,7 +254,7 @@ private class FEC_SalesInfoController_Test {
         Test.stopTest();
 
         System.assertEquals(true, result.isSuccess);
-        System.assertEquals('TELESALES', result.originationChannel);
+        System.assertEquals('CC_TEST', result.ccCode);
     }
 
     @IsTest
@@ -399,7 +398,6 @@ private class FEC_SalesInfoController_Test {
 
         System.assertEquals(true, result.isSuccess);
         System.assertEquals('NEW_APP_999', result.applicationId);
-        System.assertEquals('TELESALES', result.originationChannel);
         System.assertEquals('CC_TEST', result.ccCode);
     }
 

@@ -366,8 +366,14 @@
         <members>FEC_AssignmentTriggerHandler_Test</members>
         <members>FEC_AssignmentTrigger_Test</members>
         <members>FEC_AutoHoldCaseServiceTest</members>
+        <members>FEC_AutoHoldCaseQueueable_Test</members>
+        <members>FEC_BCH_AssignmentRouteToService_Test</members>
+        <members>FEC_BCH_AssignmentUpdateService_Test</members>
+        <members>FEC_BCH_CofGsrImportRouteToService_Test</members>
+        <members>FEC_BCH_ExportPropertyService_Test</members>
         <members>FEC_BCH_IPTemplateWriter_Test</members>
         <members>FEC_BCH_PicklistTranslationCtrl_Test</members>
+        <members>FEC_BCH_TemplateExportService_Test</members>
         <members>FEC_BancaController_Test</members>
         <members>FEC_BatchCaseChainQueueable_Test</members>
         <members>FEC_BatchCaseCreationController_Test</members>
@@ -378,6 +384,8 @@
         <members>FEC_BatchCaseHandlingController_Test</members>
         <members>FEC_BatchCaseHandlingImportRow_Test</members>
         <members>FEC_BatchCaseHandlingImportService_Test</members>
+        <members>FEC_BCH_ImportQueueable_Test</members>
+        <members>FEC_BCH_ImportRoutingResolver_Test</members>
         <members>FEC_BatchCaseHandlingSObjectUtil_Test</members>
         <members>FEC_BatchCaseHandlingTemplateHelper_Test</members>
         <members>FEC_BatchCaseHandlingZipResult_Test</members>
@@ -409,6 +417,8 @@
         <members>FEC_CaseInitUpdateService_Test</members>
         <members>FEC_CaseLinkedFilesController_Test</members>
         <members>FEC_CaseManagerListService_Test</members>
+        <members>FEC_CaseMasterDataHelper_Test</members>
+        <members>FEC_CaseMigrationService_Test</members>
         <members>FEC_CasePendingStatusService_Test</members>
         <members>FEC_CaseRelatedNoteHandler_Test</members>
         <members>FEC_CaseRemarkController_Test</members>
@@ -417,6 +427,9 @@
         <members>FEC_CaseSearchDeletionScheduler_Test</members>
         <members>FEC_CaseService_Test</members>
         <members>FEC_CaseSlaNotificationService_Test</members>
+        <members>FEC_CaseTatFullProcessSvc_Test</members>
+        <members>FEC_CaseTriggerHandler_Test</members>
+        <members>FEC_CaseFullProcessTatQueueJob_Test</members>
         <members>FEC_Chathub_Test</members>
         <members>FEC_CheckAccountEligibilityCallout_Test</members>
         <members>FEC_CheckEligibilityIPPCallout_Test</members>
@@ -429,6 +442,8 @@
         <members>FEC_CofGsrAssignmentService_Test</members>
         <members>FEC_CofGsrRoutePrepareService_Test</members>
         <members>FEC_ConstantCommon_Test</members>
+        <members>FEC_CommonUltils_Test</members>
+        <members>FEC_ContractClosureController_Test</members>
         <members>FEC_ContentDistribuTriggerHandler_Test</members>
         <members>FEC_ContentDistributionTrigger_Test</members>
         <members>FEC_ContentDocLinkTriggerHandler_Test</members>
@@ -450,6 +465,8 @@
         <members>FEC_DocReqRoutingActionService_Test</members>
         <members>FEC_DocReqRoutingService_Test</members>
         <members>FEC_DownloadReportJob_Test</members>
+        <members>FEC_DownloadReportController_Test</members>
+        <members>FEC_DownloadReportService_Test</members>
         <members>FEC_DownloadReportScheduler_Test</members>
         <members>FEC_EmailMessageTriggerHandler_Test</members>
         <members>FEC_EmeaAccountInqService_Test</members>
@@ -484,6 +501,7 @@
         <members>FEC_GetCustomerInfoBasic_Test</members>
         <members>FEC_GetCustomerList_Test</members>
         <members>FEC_GetDNBCalloutService_Test</members>
+        <members>FEC_DNBHandler_Test</members>
         <members>FEC_GetDeals_Test</members>
         <members>FEC_GetDigitalAccountStatus_Test</members>
         <members>FEC_GetDisbInfoByAcctCallout_Test</members>
@@ -500,6 +518,7 @@
         <members>FEC_GetRelativesList_Test</members>
         <members>FEC_GetRemovablePhoneStatus_Test</members>
         <members>FEC_GetRewardEligibility_Test</members>
+        <members>FEC_GetRepaySchedByAppIdCallout_Test</members>
         <members>FEC_GetSMSInfoFromITTelcoCallout_Test</members>
         <members>FEC_GetServiceCases_Test</members>
         <members>FEC_GetStatus_Test</members>
@@ -507,15 +526,19 @@
         <members>FEC_GsrStage1RevertMasterDataHelper_Test</members>
         <members>FEC_HoldCaseController_Test</members>
         <members>FEC_HoldCaseInheritanceService_Test</members>
+        <members>FEC_HoldCaseStage2DisplayService_Test</members>
         <members>FEC_IPPClosureController_Test</members>
         <members>FEC_IPPController_Test</members>
         <members>FEC_IPPConversionController_Test</members>
         <members>FEC_IPPScheduleController_Test</members>
+        <members>FEC_Il10DeliveryController_Test</members>
+        <members>FEC_ImportedInteractionBatch_Test</members>
         <members>FEC_IncorrectPaymentController_Test</members>
         <members>FEC_IntegrationSoapFraudcaseService_Test</members>
         <members>FEC_InteractionController_Test</members>
         <members>FEC_InteractionHighlightController_Test</members>
         <members>FEC_InteractionInforHandler_Test</members>
+        <members>FEC_InteractionRoutingController_Test</members>
         <members>FEC_InteractionRoutingService_Test</members>
         <members>FEC_InteractionSLAController_Test</members>
         <members>FEC_KYCController_Test</members>
@@ -563,11 +586,13 @@
         <members>FEC_RelevantTicketTrigger_Test</members>
         <members>FEC_RemovePhoneController_Test</members>
         <members>FEC_RepaySchedPayHistController_Test</members>
+        <members>FEC_RepeatRouteToOwnerHelper_Test</members>
         <members>FEC_ReplacementCardCallout_Test</members>
         <members>FEC_ResponseLog_Test</members>
         <members>FEC_RoutingActionHistoryTrigHandler_Test</members>
         <members>FEC_SalesChannelFromAppliService_Test</members>
         <members>FEC_SalesInfoController_Test</members>
+        <members>FEC_SalesLogicSelector_Test</members>
         <members>FEC_ScopedStageChangeRoutingService_Test</members>
         <members>FEC_SearchByListPhonesSvcCallout_Test</members>
         <members>FEC_SearchController_Test</members>
@@ -594,6 +619,7 @@
         <members>FEC_UpdateCustomerContact_Test</members>
         <members>FEC_UpdateDisbStatusRestService_Test</members>
         <members>FEC_UpdateTransferInfoRestService_Test</members>
+        <members>FEC_UMSUserManagementRestService_Test</members>
         <members>FEC_VMXAUTHDETAILINQ_Test</members>
         <members>FEC_VmxAcctBlkcdUpdEmeaCallout_Test</members>
         <members>Fec_HoldCaseConfigurationController_Test</members>

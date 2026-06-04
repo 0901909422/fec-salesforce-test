@@ -1,42 +1,75 @@
 /**
  * Test Class: FEC_TemplateTriggerHandler_Test
- * Covers:  ① Auto-generate FEC_API_Name__c
- *          ② Duplicate check – same folder → error
- *          ③ Duplicate check – different folder → OK
- *          ④ Update rename → re-generate API Name
- *          ⑤ Batch-internal duplicate check
+ * Covers:  ① FEC_API_Name__c duplicate check – same folder → error
+ *          ② Duplicate check – different folder → OK
+ *          ③ Update FEC_API_Name__c → duplicate check
+ *          ④ Batch-internal duplicate check
+ * Note: FEC_API_Name__c is set explicitly in tests (handler no longer auto-generates on insert).
  * @created  : 2026/03/12
  */
 @IsTest
 private class FEC_TemplateTriggerHandler_Test {
+
+    private static final String API_WELCOME = 'Welcome_Email_Template';
+    private static final String API_OTP = 'OTP_Verification_V2';
+    private static final String API_PROMO = 'Promo_Email';
+    private static final String API_WELCOME_SHORT = 'Welcome_Email';
 
     /**
      * Setup: Create test folders
      */
     @TestSetup
     static void setupData() {
-        List<FEC_Folder__c> folders = new List<FEC_Folder__c>();
-        folders.add(new FEC_Folder__c(
-            FEC_Folder_Label__c = 'Marketing',
-            FEC_Folder_Unique_Name__c = 'Marketing'
-        ));
-        folders.add(new FEC_Folder__c(
-            FEC_Folder_Label__c = 'Support',
-            FEC_Folder_Unique_Name__c = 'Support'
-        ));
-        insert folders;
+        insert new List<FEC_Folder__c>{
+            new FEC_Folder__c(
+                FEC_Folder_Label__c = 'Marketing',
+                FEC_Folder_Unique_Name__c = 'TmplHandler_Marketing'
+            ),
+            new FEC_Folder__c(
+                FEC_Folder_Label__c = 'Support',
+                FEC_Folder_Unique_Name__c = 'TmplHandler_Support'
+            )
+        };
+    }
+
+    private static FEC_Folder__c marketingFolder() {
+        return [
+            SELECT Id
+            FROM FEC_Folder__c
+            WHERE FEC_Folder_Unique_Name__c = 'TmplHandler_Marketing'
+            LIMIT 1
+        ];
+    }
+
+    private static FEC_Folder__c supportFolder() {
+        return [
+            SELECT Id
+            FROM FEC_Folder__c
+            WHERE FEC_Folder_Unique_Name__c = 'TmplHandler_Support'
+            LIMIT 1
+        ];
+    }
+
+    private static FEC_Template__c buildTemplate(Id folderId, String name, String apiName) {
+        return new FEC_Template__c(
+            Name = name,
+            FEC_Folder__c = folderId,
+            FEC_API_Name__c = apiName,
+            FEC_Active__c = true
+        );
     }
 
     /**
-     * Test: Auto-generate API Name from Template Name
+     * Test: Insert with explicit API Name persists value
      */
     @IsTest
     static void testAutoGenerateApiName() {
-        FEC_Folder__c folder = [SELECT Id FROM FEC_Folder__c WHERE FEC_Folder_Label__c = 'Marketing' LIMIT 1];
+        FEC_Folder__c folder = marketingFolder();
 
-        FEC_Template__c tmpl = new FEC_Template__c(
-            Name = 'Welcome Email Template',
-            FEC_Folder__c = folder.Id
+        FEC_Template__c tmpl = buildTemplate(
+            folder.Id,
+            'Welcome Email Template',
+            API_WELCOME
         );
 
         Test.startTest();
@@ -48,20 +81,21 @@ private class FEC_TemplateTriggerHandler_Test {
             FROM FEC_Template__c
             WHERE Id = :tmpl.Id
         ];
-        Assert.areEqual('Welcome_Email_Template', result.FEC_API_Name__c,
-            'API Name should be auto-generated from Template Name');
+        Assert.areEqual(API_WELCOME, result.FEC_API_Name__c,
+            'API Name should match value set on insert');
     }
 
     /**
-     * Test: Special characters in Template Name → replaced with underscores
+     * Test: Explicit API Name with special characters normalized in client; stored as provided
      */
     @IsTest
     static void testApiNameSpecialCharacters() {
-        FEC_Folder__c folder = [SELECT Id FROM FEC_Folder__c WHERE FEC_Folder_Label__c = 'Marketing' LIMIT 1];
+        FEC_Folder__c folder = marketingFolder();
 
-        FEC_Template__c tmpl = new FEC_Template__c(
-            Name = 'OTP & Verification (V2)',
-            FEC_Folder__c = folder.Id
+        FEC_Template__c tmpl = buildTemplate(
+            folder.Id,
+            'OTP & Verification (V2)',
+            API_OTP
         );
 
         Test.startTest();
@@ -73,154 +107,129 @@ private class FEC_TemplateTriggerHandler_Test {
             FROM FEC_Template__c
             WHERE Id = :tmpl.Id
         ];
-        Assert.areEqual('OTP_Verification_V2', result.FEC_API_Name__c,
-            'Special characters should be replaced with underscores and collapsed');
+        Assert.areEqual(API_OTP, result.FEC_API_Name__c,
+            'API Name should match explicit value');
     }
 
     /**
-     * Test: Duplicate template name in same folder → should fail
+     * Test: Duplicate API name in same folder → should fail
      */
     @IsTest
     static void testDuplicateSameFolder() {
-        FEC_Folder__c folder = [SELECT Id FROM FEC_Folder__c WHERE FEC_Folder_Label__c = 'Marketing' LIMIT 1];
+        FEC_Folder__c folder = marketingFolder();
 
-        // Insert first template
-        insert new FEC_Template__c(
-            Name = 'Promo Email',
-            FEC_Folder__c = folder.Id
-        );
+        insert buildTemplate(folder.Id, 'Promo Email', API_PROMO);
 
-        // Insert duplicate in same folder
-        FEC_Template__c duplicate = new FEC_Template__c(
-            Name = 'Promo Email',
-            FEC_Folder__c = folder.Id
-        );
+        FEC_Template__c duplicate = buildTemplate(folder.Id, 'Promo Email Copy', API_PROMO);
 
         Test.startTest();
-        try {
-            insert duplicate;
-            Assert.fail('Expected DmlException for duplicate template in same folder');
-        } catch (DmlException e) {
-            Assert.isTrue(e.getMessage().contains('already exists in the same folder'),
-                'Error message should mention duplicate in same folder. Actual: ' + e.getMessage());
-        }
+        Database.SaveResult sr = Database.insert(duplicate, false);
         Test.stopTest();
+
+        Assert.isFalse(sr.isSuccess(), 'Duplicate API name in same folder must fail');
+        Assert.isTrue(
+            sr.getErrors()[0].getMessage().contains('already exists in the same folder'),
+            'Error message should mention duplicate in same folder. Actual: ' + sr.getErrors()[0].getMessage()
+        );
     }
 
     /**
-     * Test: Same template name in different folders → should succeed
+     * Test: Same API name in different folders → should succeed
      */
     @IsTest
     static void testDuplicateDifferentFolder() {
-        FEC_Folder__c folder1 = [SELECT Id FROM FEC_Folder__c WHERE FEC_Folder_Label__c = 'Marketing' LIMIT 1];
-        FEC_Folder__c folder2 = [SELECT Id FROM FEC_Folder__c WHERE FEC_Folder_Label__c = 'Support' LIMIT 1];
+        insert buildTemplate(marketingFolder().Id, 'Welcome Email', API_WELCOME_SHORT);
 
-        insert new FEC_Template__c(
-            Name = 'Welcome Email',
-            FEC_Folder__c = folder1.Id
-        );
-
-        FEC_Template__c tmpl2 = new FEC_Template__c(
-            Name = 'Welcome Email',
-            FEC_Folder__c = folder2.Id
+        FEC_Template__c tmpl2 = buildTemplate(
+            supportFolder().Id,
+            'Welcome Email',
+            API_WELCOME_SHORT
         );
 
         Test.startTest();
         insert tmpl2;
         Test.stopTest();
 
-        // Both should exist
         Integer count = [
             SELECT COUNT()
             FROM FEC_Template__c
-            WHERE FEC_API_Name__c = 'Welcome_Email'
+            WHERE FEC_API_Name__c = :API_WELCOME_SHORT
         ];
-        Assert.areEqual(2, count, 'Same name in different folders should be allowed');
+        Assert.areEqual(2, count, 'Same API name in different folders should be allowed');
     }
 
     /**
-     * Test: Update template name → should re-generate API Name
+     * Test: Update API Name to unique value → should succeed
      */
     @IsTest
     static void testUpdateRegeneratesApiName() {
-        FEC_Folder__c folder = [SELECT Id FROM FEC_Folder__c WHERE FEC_Folder_Label__c = 'Marketing' LIMIT 1];
+        FEC_Folder__c folder = marketingFolder();
 
-        FEC_Template__c tmpl = new FEC_Template__c(
-            Name = 'Old Name',
-            FEC_Folder__c = folder.Id
-        );
+        FEC_Template__c tmpl = buildTemplate(folder.Id, 'Old Name', 'Old_Name');
         insert tmpl;
 
         Test.startTest();
-        tmpl.Name = 'New Name Updated';
-        update tmpl;
+        tmpl.FEC_API_Name__c = 'New_Name_Updated';
+        Database.SaveResult sr = Database.update(tmpl, false);
         Test.stopTest();
 
+        Assert.isTrue(sr.isSuccess(), 'Update to unique API name should succeed');
         FEC_Template__c result = [
             SELECT FEC_API_Name__c
             FROM FEC_Template__c
             WHERE Id = :tmpl.Id
         ];
         Assert.areEqual('New_Name_Updated', result.FEC_API_Name__c,
-            'API Name should be re-generated after template name update');
+            'API Name should reflect explicit update');
     }
 
     /**
-     * Test: Update template to conflict with existing → should fail
+     * Test: Update template API name to conflict with existing → should fail
      */
     @IsTest
     static void testUpdateCausesDuplicate() {
-        FEC_Folder__c folder = [SELECT Id FROM FEC_Folder__c WHERE FEC_Folder_Label__c = 'Marketing' LIMIT 1];
+        FEC_Folder__c folder = marketingFolder();
 
-        insert new FEC_Template__c(
-            Name = 'Existing Template',
-            FEC_Folder__c = folder.Id
-        );
-
-        FEC_Template__c tmpl2 = new FEC_Template__c(
-            Name = 'Another Template',
-            FEC_Folder__c = folder.Id
-        );
+        insert buildTemplate(folder.Id, 'Existing Template', 'Existing_Template');
+        FEC_Template__c tmpl2 = buildTemplate(folder.Id, 'Another Template', 'Another_Template');
         insert tmpl2;
 
         Test.startTest();
-        tmpl2.Name = 'Existing Template';
-        try {
-            update tmpl2;
-            Assert.fail('Expected DmlException when updating to duplicate name in same folder');
-        } catch (DmlException e) {
-            Assert.isTrue(e.getMessage().contains('already exists in the same folder'),
-                'Error should mention duplicate. Actual: ' + e.getMessage());
-        }
+        tmpl2.FEC_API_Name__c = 'Existing_Template';
+        Database.SaveResult sr = Database.update(tmpl2, false);
         Test.stopTest();
+
+        Assert.isFalse(sr.isSuccess(), 'Update to duplicate API name in same folder must fail');
+        Assert.isTrue(
+            sr.getErrors()[0].getMessage().contains('already exists in the same folder'),
+            'Error should mention duplicate. Actual: ' + sr.getErrors()[0].getMessage()
+        );
     }
 
     /**
-     * Test: Batch-internal duplicate – inserting 2 templates with same name in same folder in one batch
+     * Test: Batch-internal duplicate – same API name in same folder in one batch
      */
     @IsTest
     static void testBatchInternalDuplicate() {
-        FEC_Folder__c folder = [SELECT Id FROM FEC_Folder__c WHERE FEC_Folder_Label__c = 'Marketing' LIMIT 1];
+        FEC_Folder__c folder = marketingFolder();
 
-        List<FEC_Template__c> batch = new List<FEC_Template__c>();
-        batch.add(new FEC_Template__c(
-            Name = 'Batch Template',
-            FEC_Folder__c = folder.Id
-        ));
-        batch.add(new FEC_Template__c(
-            Name = 'Batch Template',
-            FEC_Folder__c = folder.Id
-        ));
+        List<FEC_Template__c> batch = new List<FEC_Template__c>{
+            buildTemplate(folder.Id, 'Batch Template A', 'Batch_Template'),
+            buildTemplate(folder.Id, 'Batch Template B', 'Batch_Template')
+        };
 
         Test.startTest();
-        try {
-            insert batch;
-            Assert.fail('Expected DmlException for batch-internal duplicate');
-        } catch (DmlException e) {
-            Assert.isTrue(e.getMessage().contains('already exists'),
-                'Error should mention duplicate. Actual: ' + e.getMessage());
-        }
+        Database.SaveResult[] results = Database.insert(batch, false);
         Test.stopTest();
+
+        Boolean hasBatchDuplicateError = false;
+        for (Database.SaveResult sr : results) {
+            if (!sr.isSuccess()
+                && sr.getErrors()[0].getMessage().contains('Duplicate template name detected')) {
+                hasBatchDuplicateError = true;
+            }
+        }
+        Assert.isTrue(hasBatchDuplicateError, 'Batch-internal duplicate must be blocked');
     }
 
     /**
@@ -228,24 +237,26 @@ private class FEC_TemplateTriggerHandler_Test {
      */
     @IsTest
     static void testNullFolderDuplicate() {
-        // Insert template without folder
         insert new FEC_Template__c(
-            Name = 'No Folder Template'
+            Name = 'No Folder Template',
+            FEC_API_Name__c = 'No_Folder_Template',
+            FEC_Active__c = true
         );
 
-        // Insert duplicate without folder
         FEC_Template__c duplicate = new FEC_Template__c(
-            Name = 'No Folder Template'
+            Name = 'No Folder Template Copy',
+            FEC_API_Name__c = 'No_Folder_Template',
+            FEC_Active__c = true
         );
 
         Test.startTest();
-        try {
-            insert duplicate;
-            Assert.fail('Expected DmlException for duplicate template with null folder');
-        } catch (DmlException e) {
-            Assert.isTrue(e.getMessage().contains('already exists'),
-                'Error should mention duplicate. Actual: ' + e.getMessage());
-        }
+        Database.SaveResult sr = Database.insert(duplicate, false);
         Test.stopTest();
+
+        Assert.isFalse(sr.isSuccess(), 'Duplicate API name with null folder must fail');
+        Assert.isTrue(
+            sr.getErrors()[0].getMessage().contains('already exists'),
+            'Error should mention duplicate. Actual: ' + sr.getErrors()[0].getMessage()
+        );
     }
 }

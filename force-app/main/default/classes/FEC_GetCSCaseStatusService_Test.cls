@@ -1,8 +1,25 @@
 @IsTest
 private class FEC_GetCSCaseStatusService_Test {
 
+    private static Id customerCaseRecordTypeId() {
+        Map<String, Schema.RecordTypeInfo> byDev =
+            Schema.SObjectType.Case.getRecordTypeInfosByDeveloperName();
+        if (byDev.containsKey(FEC_ConstantCommon.CASE_CUSTOMER_RECORD_TYPE_DEV_NAME)) {
+            return byDev.get(FEC_ConstantCommon.CASE_CUSTOMER_RECORD_TYPE_DEV_NAME).getRecordTypeId();
+        }
+        return null;
+    }
+
     @TestSetup
     static void setupData() {
+        insert new FEC_Channel__c(
+            Name = FEC_ConstantCommon.CHANNEL_INBOUND_NAME,
+            FEC_Code__c = 'INBOUND',
+            FEC_Channel_ID__c = FEC_ConstantCommon.CHANNEL_INBOUND_NAME,
+            FEC_Channel_Vietnamese_name__c = 'Inbound',
+            FEC_Channel_Status__c = true
+        );
+
         FEC_Business_Process__c proc = new FEC_Business_Process__c(
             Name = 'Fraud Process',
             FEC_Code__c = 'FRAUDPROC',
@@ -12,13 +29,28 @@ private class FEC_GetCSCaseStatusService_Test {
 
         FEC_CaseTriggerHandler.isExecuting = true;
         try {
-            insert new Case(
+            Case statusCase = new Case(
                 Subject = 'CS Case Status Test',
                 Status = 'New',
                 FEC_ID_Search__c = 'CASE123',
                 FEC_Customer_Name__c = 'Test Customer',
                 FEC_Business_Process__c = proc.Id
             );
+            Id rtId = customerCaseRecordTypeId();
+            if (rtId != null) {
+                statusCase.RecordTypeId = rtId;
+            }
+            insert statusCase;
+
+            FEC_Customer_History__c accountHist = new FEC_Customer_History__c(
+                Name = 'ACC123',
+                FEC_Case__c = statusCase.Id,
+                FEC_Account_Number__c = 'ACC123'
+            );
+            insert accountHist;
+
+            statusCase.FEC_Account_or_Contract__c = accountHist.Id;
+            update statusCase;
         } finally {
             FEC_CaseTriggerHandler.isExecuting = false;
         }
@@ -37,8 +69,6 @@ private class FEC_GetCSCaseStatusService_Test {
 
         req.CaseRequestInfo = new FEC_GetCSCaseStatusService.CaseRequestInfoType();
         req.CaseRequestInfo.CaseID = 'CASE123';
-        req.CaseRequestInfo.NationalID = '123456789';
-        req.CaseRequestInfo.PhoneNumber = '0901234567';
         req.CaseRequestInfo.UserType = FEC_ConstantCommon.REQUEST_EXISTING_USER_TYPE;
         req.CaseRequestInfo.IncludeFinishedRequest = true;
 
@@ -50,13 +80,10 @@ private class FEC_GetCSCaseStatusService_Test {
         FEC_GetCSCaseStatusService.GetCSCaseStatusResponse res = FEC_GetCSCaseStatusService.GetCSCaseStatus(req);
         Test.stopTest();
 
-        // Xác thực kết quả
-        Case c = [SELECT Id FROM Case WHERE FEC_ID_Search__c = 'CASE123' LIMIT 1];
-
         System.assertEquals(1, res.Sys.Code, 'API nên trả về code 1 (Success).');
         System.assertNotEquals(null, res.CaseResultInfos, 'CaseResultInfos phải được trả về.');
         System.assertEquals(1, res.CaseResultInfos.size(), 'Phải có đúng 1 case trong kết quả.');
-        System.assertEquals(c.Id, res.CaseResultInfos[0].CaseID, 'CaseID phải là Id Case tìm được.');
+        System.assertEquals('CASE123', res.CaseResultInfos[0].CaseID, 'CaseID phải là FEC_ID_Search__c.');
     }
 
     @IsTest

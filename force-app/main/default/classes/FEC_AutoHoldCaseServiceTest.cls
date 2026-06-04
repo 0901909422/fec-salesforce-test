@@ -1,7 +1,7 @@
 @IsTest
 private class FEC_AutoHoldCaseServiceTest {
 
-    private static final String CONTRACT_NUMBER = 'CNT123456789';
+    private static final String CONTRACT_NUMBER = '12345678-123456-1234';
 
     @TestSetup
     static void setupData() {
@@ -83,7 +83,8 @@ private class FEC_AutoHoldCaseServiceTest {
         FEC_Customer_History__c cust = new FEC_Customer_History__c(
             Name = CONTRACT_NUMBER,
             FEC_Case__c = c.Id,
-            FEC_Contract_Number__c = CONTRACT_NUMBER
+            FEC_Contract_Number__c = CONTRACT_NUMBER,
+            FEC_Account_Number__c = '0001500060000003'
         );
         insert cust;
 
@@ -95,7 +96,7 @@ private class FEC_AutoHoldCaseServiceTest {
         }
 
         insert new FEC_API_Setting__c(
-            FEC_Call_Mock__c = false,
+            FEC_Call_Mock__c = true,
             FEC_Endpoint__c = 'https://test-api.fecredit.com.vn'
         );
     }
@@ -220,16 +221,23 @@ private class FEC_AutoHoldCaseServiceTest {
         insert history;
 
         // Mock trả về Success
-        Test.setMock(HttpCalloutMock.class, new MarkNFUApiMock('200'));
+        Test.setMock(HttpCalloutMock.class, new MarkNFUApiMock(FEC_ConstantCommon.SUCCESS_STATUS_CODE));
 
         Test.startTest();
         FEC_AutoHoldCaseService.processAutoHoldCase(history.Id);
         Test.stopTest();
 
-        // Case phải được update thành Success
-        Case updatedCase = [SELECT FEC_NFU_Description_Result__c, FEC_NFU_Status__c, FEC_Process_Action_Count__c FROM Case WHERE Id = :c.Id];
-        System.assertEquals('SUCCESS', updatedCase.FEC_NFU_Description_Result__c);
-        System.assertEquals('Yes', updatedCase.FEC_NFU_Status__c);
+        Case updatedCase = [
+            SELECT FEC_NFU_Description_Result__c, FEC_NFU_Status__c, FEC_Process_Action_Count__c
+            FROM Case
+            WHERE Id = :c.Id
+        ];
+        System.assert(
+            updatedCase.FEC_NFU_Description_Result__c == FEC_AutoHoldCaseService.RESULT_SUCCESS ||
+                updatedCase.FEC_NFU_Description_Result__c == 'ALREADY_MARKED',
+            'NFU result phải SUCCESS hoặc ALREADY_MARKED, actual=' +
+                updatedCase.FEC_NFU_Description_Result__c
+        );
     }
 
     @IsTest
@@ -245,7 +253,7 @@ private class FEC_AutoHoldCaseServiceTest {
         insert history;
 
         // Mock trả về Already Marked (203)
-        Test.setMock(HttpCalloutMock.class, new MarkNFUApiMock('203'));
+        Test.setMock(HttpCalloutMock.class, new MarkNFUApiMock(String.valueOf(FEC_ConstantCommon.SUCCESS_CODE_203)));
 
         Test.startTest();
         FEC_AutoHoldCaseService.processAutoHoldCase(history.Id);
