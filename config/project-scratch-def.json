@@ -2,12 +2,10 @@
     "orgName": "GitLab Pipelines Package Validation",
     "edition": "Developer",
     "language": "en_US",
-    "features": ["ServiceCloud"],
+    "features": [
+        "ServiceCloud"
+    ],
     "settings": {
-        "orgPreferenceSettings": {
-            "s1DesktopEnabled": true,
-            "s1EncryptedStoragePref2": false
-        },
         "languageSettings": {
             "enableTranslationWorkbench": true,
             "enableEndUserLanguages": true,
@@ -16,6 +14,9 @@
         "omniChannelSettings": {
             "enableOmniChannel": true,
             "enableOmniSkillsRouting": true
+        },
+        "mobileSettings": {
+            "enableS1EncryptedStoragePref2": false
         }
     },
     "objectSettings": {

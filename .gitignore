@@ -60,3 +60,11 @@ README.md
 .github/prompts/MainPrompt.prompt.md
 # ApexPMD cache
 .pmdCache
+
+# Kiro and code intelligence
+.kiro/
+.code-intel/
+
+# Documents
+documents/
+documents/templates/

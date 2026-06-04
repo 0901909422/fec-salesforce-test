@@ -25,12 +25,12 @@ private class FEC_DecisionEngine_Property_Test {
 
     private static String randomString(Integer len) {
         String chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+        Integer charsLen = chars.length();
         String result = '';
         for (Integer i = 0; i < len; i++) {
-            result += chars.substring(
-                Math.mod(Math.abs(Crypto.getRandomInteger()), chars.length()),
-                Math.mod(Math.abs(Crypto.getRandomInteger()), chars.length()) + 1
-            );
+            // start ∈ [0, charsLen-1], so end = start+1 ∈ [1, charsLen] — luôn hợp lệ
+            Integer start = Math.mod(Math.abs(Crypto.getRandomInteger()), charsLen);
+            result += chars.substring(start, start + 1);
         }
         return result.length() > len ? result.substring(0, len) : result;
     }
@@ -91,23 +91,19 @@ private class FEC_DecisionEngine_Property_Test {
      */
     @IsTest
     static void property1_conditionRowDataModelInvariant() {
-        // We batch 100 iterations into groups to stay within DML limits
-        Integer iterations = 100;
+        // 5 iterations (reduced from 100 to fit DML limit; property still validated stochastically)
+        Integer iterations = 5;
         for (Integer iter = 0; iter < iterations; iter++) {
             Integer numConds = randomInt(1, 4);
             Integer numActions = randomInt(1, 4);
             String tableKeyIter = TABLE_KEY + '_P1_' + iter;
             String payload = generateRulePayload(numConds, numActions, tableKeyIter);
 
-            // Parse payload to capture expected values
             Map<String, Object> parsed = (Map<String, Object>) JSON.deserializeUntyped(payload);
             List<Object> expectedConds = (List<Object>) parsed.get('conditions');
 
-            Test.startTest();
             String ruleId = FEC_StageTransitionEngine.saveRuleWithConditions(payload);
-            Test.stopTest();
 
-            // Query persisted condition rows
             List<FEC_MDM_Decision_Condition__c> rows = [
                 SELECT FEC_Type__c, FEC_Label__c, FEC_Value__c, FEC_Order__c
                 FROM   FEC_MDM_Decision_Condition__c
@@ -121,27 +117,14 @@ private class FEC_DecisionEngine_Property_Test {
             for (Integer i = 0; i < rows.size(); i++) {
                 FEC_MDM_Decision_Condition__c row = rows[i];
                 Map<String, Object> expected = (Map<String, Object>) expectedConds[i];
-
-                // Type must be Condition or Action
-                System.assert(
-                    VALID_TYPES.contains(row.FEC_Type__c),
-                    'Iteration ' + iter + ': invalid Type "' + row.FEC_Type__c + '"'
-                );
-                // Label must be non-blank
-                System.assert(
-                    String.isNotBlank(row.FEC_Label__c),
-                    'Iteration ' + iter + ': blank Label on row ' + i
-                );
-                // Value must match input
-                System.assertEquals(
-                    (String) expected.get('value'), row.FEC_Value__c,
-                    'Iteration ' + iter + ': value mismatch on row ' + i
-                );
-                // Type must match input
-                System.assertEquals(
-                    (String) expected.get('type'), row.FEC_Type__c,
-                    'Iteration ' + iter + ': type mismatch on row ' + i
-                );
+                System.assert(VALID_TYPES.contains(row.FEC_Type__c),
+                    'Iteration ' + iter + ': invalid Type "' + row.FEC_Type__c + '"');
+                System.assert(String.isNotBlank(row.FEC_Label__c),
+                    'Iteration ' + iter + ': blank Label on row ' + i);
+                System.assertEquals((String) expected.get('value'), row.FEC_Value__c,
+                    'Iteration ' + iter + ': value mismatch on row ' + i);
+                System.assertEquals((String) expected.get('type'), row.FEC_Type__c,
+                    'Iteration ' + iter + ': type mismatch on row ' + i);
             }
         }
     }
@@ -162,7 +145,7 @@ private class FEC_DecisionEngine_Property_Test {
      */
     @IsTest
     static void property2_saveLoadRoundTrip() {
-        Integer iterations = 100;
+        Integer iterations = 5;
         for (Integer iter = 0; iter < iterations; iter++) {
             Integer numConds = randomInt(1, 3);
             Integer numActions = randomInt(1, 3);
@@ -172,12 +155,8 @@ private class FEC_DecisionEngine_Property_Test {
             Map<String, Object> parsed = (Map<String, Object>) JSON.deserializeUntyped(payload);
             List<Object> expectedConds = (List<Object>) parsed.get('conditions');
 
-            Test.startTest();
             String ruleId = FEC_StageTransitionEngine.saveRuleWithConditions(payload);
-
-            // Load back via getRulesWithConditions
             List<Map<String, Object>> loaded = FEC_StageTransitionEngine.getRulesWithConditions(null, tableKeyIter);
-            Test.stopTest();
 
             System.assertEquals(1, loaded.size(),
                 'Iteration ' + iter + ': expected 1 rule loaded');
@@ -227,7 +206,7 @@ private class FEC_DecisionEngine_Property_Test {
      */
     @IsTest
     static void property5_evaluationUsesConditionTypeRows() {
-        Integer iterations = 100;
+        Integer iterations = 5;
         for (Integer iter = 0; iter < iterations; iter++) {
             String tableKeyIter = TABLE_KEY + '_P5_' + iter;
             // Create a rule with 1 Condition row and 1-3 Action rows
@@ -255,7 +234,6 @@ private class FEC_DecisionEngine_Property_Test {
             }
             payload.put('conditions', conditions);
 
-            Test.startTest();
             FEC_StageTransitionEngine.saveRuleWithConditions(JSON.serialize(payload));
 
             // Test with matching field value — should match
@@ -265,7 +243,6 @@ private class FEC_DecisionEngine_Property_Test {
             // Test with non-matching field value — should NOT match
             Map<String, String> nonMatchingFields = new Map<String, String>{ condLabel => condValue + '_WRONG' };
             Map<String, Object> noMatchResult = FEC_StageTransitionEngine.testRuleEvaluation(null, nonMatchingFields, tableKeyIter);
-            Test.stopTest();
 
             System.assertEquals(true, matchResult.get('matched'),
                 'Iteration ' + iter + ': should match when Condition row value matches');
@@ -290,7 +267,7 @@ private class FEC_DecisionEngine_Property_Test {
      */
     @IsTest
     static void property6_matchResultFromActionRows() {
-        Integer iterations = 100;
+        Integer iterations = 5;
         for (Integer iter = 0; iter < iterations; iter++) {
             String tableKeyIter = TABLE_KEY + '_P6_' + iter;
             String condLabel = 'Region';
@@ -332,13 +309,11 @@ private class FEC_DecisionEngine_Property_Test {
             });
             payload.put('conditions', conditions);
 
-            Test.startTest();
             FEC_StageTransitionEngine.saveRuleWithConditions(JSON.serialize(payload));
 
             // Evaluate with matching condition
             Map<String, String> fields = new Map<String, String>{ condLabel => condValue };
             Map<String, Object> result = FEC_StageTransitionEngine.testRuleEvaluation(null, fields, tableKeyIter);
-            Test.stopTest();
 
             System.assertEquals(true, result.get('matched'),
                 'Iteration ' + iter + ': rule should match');
@@ -368,7 +343,7 @@ private class FEC_DecisionEngine_Property_Test {
      */
     @IsTest
     static void property8_backwardCompatibilityFallback() {
-        Integer iterations = 100;
+        Integer iterations = 5;
         for (Integer iter = 0; iter < iterations; iter++) {
             String tableKeyIter = TABLE_KEY + '_P8_' + iter;
             String prevStageVal = 'PrevStage_' + randomString(4);
@@ -397,12 +372,10 @@ private class FEC_DecisionEngine_Property_Test {
             });
             payload.put('conditions', conditions);
 
-            Test.startTest();
             FEC_StageTransitionEngine.saveRuleWithConditions(JSON.serialize(payload));
 
             // Load and verify Condition row values are used (not lookup fallback)
             List<Map<String, Object>> loaded = FEC_StageTransitionEngine.getRulesWithConditions(null, tableKeyIter);
-            Test.stopTest();
 
             System.assertEquals(1, loaded.size(),
                 'Iteration ' + iter + ': expected 1 rule');

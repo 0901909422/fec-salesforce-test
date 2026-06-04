@@ -67,7 +67,7 @@ li[role="treeitem"] {
 }
 
 ul[role="group"] {
-    padding: 0;
+    padding-left: 1rem;
     margin: 0;
 }
 

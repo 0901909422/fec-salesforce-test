@@ -100,12 +100,14 @@ export default class FecMasterDataSetting extends LightningElement {
     currentNatureOfCaseCode;
     FEC_Customer_Type;
     userTypeName;
+    nocUserGroup = '';
     @track selectedRecord = {};
     recordIdForIntegration;
     integrationModeEnabled = false;
     @track integrationFormData = {
         selectedRoles: [],
-        section: '',
+        section: 'Case Information',
+        subSection: 'Fraud Info',
         fieldStatus: true
     };
     @track roleOptions = [];
@@ -185,10 +187,22 @@ export default class FecMasterDataSetting extends LightningElement {
     }
 
     refreshHistoryPanel() {
-        const historyComp = this.template.querySelector('[data-id="historyComponent"]');
-        if (historyComp) {
-            historyComp.refreshData();
-        } else {
+        // Refresh all history components across all tabs
+        const historySelectors = [
+            '[data-id="propertyHistory"]',
+            '[data-id="fraudHistory"]',
+            '[data-id="decisionEngineHistory"]',
+            '[data-id="propertiesMappingHistory"]'
+        ];
+        let found = false;
+        for (const selector of historySelectors) {
+            const comp = this.template.querySelector(selector);
+            if (comp && typeof comp.refreshData === 'function') {
+                comp.refreshData();
+                found = true;
+            }
+        }
+        if (!found) {
             this._pendingHistoryRefresh = true;
         }
     }
@@ -205,6 +219,7 @@ export default class FecMasterDataSetting extends LightningElement {
             this.currentNatureOfCaseId = value.id;
             this.currentNatureOfCaseCode = value.Code || value.name || '';
             this.FEC_Customer_Type = value.FEC_Customer_Type;
+            this.nocUserGroup = value.FEC_User_Group || '';
             this.stageId = null;
             this.processedData = []; // Clear data cũ ngay lập tức
             
@@ -218,6 +233,58 @@ export default class FecMasterDataSetting extends LightningElement {
 
     get hasFraudData() {
         return this.fraudDataList && this.fraudDataList.length > 0;
+    }
+
+    get hasPropertyData() {
+        return this.processedData && this.processedData.length > 0;
+    }
+
+    // Boolean getters for history component is-integration attribute
+    get isPropertyIntegration() { return false; }
+    get isFraudIntegration() { return true; }
+
+    // Business Process Id for Decision Engine history (extracted from item.idType)
+    get currentBusinessProcessId() {
+        if (!this._item) return null;
+        const rawType = (this._item.type || '').replace(/\s+/g, '');
+        const nodeType = rawType || 'BusinessProcess';
+        const leafTypes = new Set(['Stage', 'Category', 'SubCategory', 'SubCode']);
+        if (leafTypes.has(nodeType)) return null;
+        return this._item.idType || null;
+    }
+
+    handleDecisionEngineChanged() {
+        // eslint-disable-next-line @lwc/lwc/no-async-operation
+        setTimeout(() => {
+            const hist = this.template.querySelector('[data-id="decisionEngineHistory"]');
+            if (hist && typeof hist.refreshData === 'function') {
+                hist.refreshData();
+            }
+        }, 500);
+    }
+
+    handlePropertiesMappingChanged() {
+        // eslint-disable-next-line @lwc/lwc/no-async-operation
+        setTimeout(() => {
+            const hist = this.template.querySelector('[data-id="propertiesMappingHistory"]');
+            if (hist && typeof hist.refreshData === 'function') {
+                hist.refreshData();
+            }
+        }, 500);
+    }
+
+    // Record Ids for Property Configuration history (non-integration)
+    get propertyRecordIds() {
+        if (!this.masterDataList) return [];
+        return this.masterDataList
+            .filter(r => !r.FEC_Data_Integration_Mapping__c)
+            .map(r => r.Id);
+    }
+
+    // Record Ids for Fraud Integration history (integration)
+    get fraudRecordIds() {
+        if (!this.fraudDataList) return [];
+        return this.fraudDataList.map(r => r.Id);
     }
 
     // Tab 1: Properties
@@ -258,6 +325,7 @@ export default class FecMasterDataSetting extends LightningElement {
                     FEC_Sub_Section_Order__c: row.FEC_Sub_Section_Order__c || 0,
                     FEC_Sub_Section_Layout__c: row.FEC_Sub_Section_Layout__c || 0,
                     FEC_Sub_Section_Field_Layout__c: row.FEC_Sub_Section_Field_Layout__c || 0,
+                    computedColumnCount: row.FEC_Sub_Section_Field_Layout__c > 0 ? Math.floor(12 / row.FEC_Sub_Section_Field_Layout__c) : 4,
                     FEC_Field_Order_Display__c: row.FEC_Field_Order_Display__c || 0,
                     FEC_Field_Status__c: row.FEC_Field_Status__c || false,
                     FEC_Field_ReadOnly__c: row.FEC_Field_ReadOnly__c || false,
@@ -383,7 +451,8 @@ export default class FecMasterDataSetting extends LightningElement {
                     this.recordIdForIntegration = recordId; // Track for edit mode
                     this.integrationFormData = {
                         selectedRoles: item.FEC_Applicable_Role__c ? item.FEC_Applicable_Role__c.split(',').map(r => r.trim()) : [],
-                        section: item.FEC_Section__c || '',
+                        section: item.FEC_Section__c || 'Case Information',
+                        subSection: item.FEC_Sub_Section__c || 'Fraud Info',
                         fieldStatus: !!item.FEC_Field_Status__c
                     };
                 } else {
@@ -391,7 +460,8 @@ export default class FecMasterDataSetting extends LightningElement {
                     this.recordIdForIntegration = undefined;
                     this.integrationFormData = {
                         selectedRoles: [],
-                        section: '',
+                        section: 'Case Information',
+                        subSection: 'Fraud Info',
                         fieldStatus: true
                     };
                 }
@@ -462,36 +532,15 @@ export default class FecMasterDataSetting extends LightningElement {
         let child;
         
         if (buttonDataId) {
-            const parentButton = this.template.querySelector(`lightning-button[data-id="${buttonDataId}"]`);
-            
-            if (parentButton) {
-                let container = parentButton.closest('.slds-p-around_medium');
-                
-                if (container) {
-                    child = container.querySelector('c-fec-integration-mapping');
-                }
-            }
-            
-            if (!child) {
-                const allMappingComponents = this.template.querySelectorAll('c-fec-integration-mapping');
-                
-                if (allMappingComponents.length > 1) {
-                    child = allMappingComponents[allMappingComponents.length - 1];
-                } else if (allMappingComponents.length === 1) {
-                    child = allMappingComponents[0];
-                }
-            }
+            // Edit mode: find the specific c-fec-integration-mapping for this row
+            child = this.template.querySelector(
+                `c-fec-integration-mapping[data-mapping-row="${buttonDataId}"]`
+            );
         } else {
-            const addSection = this.template.querySelector('.slds-box.slds-theme_default');
-            
-            if (addSection) {
-                child = addSection.querySelector('c-fec-integration-mapping');
-            } else {
-                const allMappingComponents = this.template.querySelectorAll('c-fec-integration-mapping');
-                if (allMappingComponents.length > 0) {
-                    child = allMappingComponents[0];
-                }
-            }
+            // Add mode: find the c-fec-integration-mapping in add section
+            child = this.template.querySelector(
+                'c-fec-integration-mapping[data-mapping-mode="add"]'
+            );
         }
         
         if (child) {
@@ -503,7 +552,7 @@ export default class FecMasterDataSetting extends LightningElement {
             }
         } else {
             this.showToast('Error', 'Integration mapping component not found', VARIANT_ERROR);
-            console.error('[handleSaveIntegration] ERROR: Child component not found');
+            console.error('[handleSaveIntegration] ERROR: Child component not found. buttonDataId:', buttonDataId);
         }
     }
 
@@ -512,14 +561,15 @@ export default class FecMasterDataSetting extends LightningElement {
         // Reset form data
         this.integrationFormData = {
             selectedRoles: [],
-            section: '',
+            section: 'Case Information',
+            subSection: 'Fraud Info',
             fieldStatus: true
         };
     }
 
     /**
  * @description Xử lý thay đổi trạng thái Active/Inactive trực tiếp từ Badge.
- * @param event 
+ * @param {Event} event 
  */
     async handleToggleStatus(event) {
         const recordId = event.currentTarget.dataset.id;
@@ -564,12 +614,37 @@ export default class FecMasterDataSetting extends LightningElement {
         console.log('[handleSuccessIntegration] integrationId:', integrationId);
 
         // Combine mapping data with integration form data
+        // Calculate Fraud Info Sub Section Order:
+        // 1. Nếu có Property Info → Fraud Info = Property Info order + 1
+        // 2. Nếu không có Property Info → Fraud Info = max order của tất cả sub sections đã có + 1
+        // 3. Nếu chưa có sub section nào → Fraud Info = 1
+        let fraudInfoOrder = 1;
+        if (this.processedData && this.processedData.length > 0) {
+            const propertyInfoRows = this.processedData.filter(
+                row => row.FEC_Sub_Section__c === 'Property Info' && row.FEC_Sub_Section_Order__c
+            );
+            if (propertyInfoRows.length > 0) {
+                // Có Property Info → lấy order của nó + 1
+                fraudInfoOrder = Math.max(...propertyInfoRows.map(r => r.FEC_Sub_Section_Order__c)) + 1;
+            } else {
+                // Không có Property Info → lấy max order của tất cả sub sections + 1
+                const allOrders = this.processedData
+                    .filter(row => row.FEC_Sub_Section_Order__c)
+                    .map(r => r.FEC_Sub_Section_Order__c);
+                if (allOrders.length > 0) {
+                    fraudInfoOrder = Math.max(...allOrders) + 1;
+                }
+            }
+        }
+
         const newMapping = {
             FEC_Data_Integration_Mapping__c: integrationId,
             FEC_Nature_Of_Case__c: this.currentNatureOfCaseId,
             FEC_Stage_Name__c: this.stageId,
             FEC_Applicable_Role__c: this.integrationFormData.selectedRoles.join(','),
             FEC_Section__c: this.integrationFormData.section,
+            FEC_Sub_Section__c: this.integrationFormData.subSection,
+            FEC_Sub_Section_Order__c: fraudInfoOrder,
             FEC_Field_Editable__c: true,
             FEC_Field_Status__c: this.integrationFormData.fieldStatus
         };
@@ -588,10 +663,16 @@ export default class FecMasterDataSetting extends LightningElement {
                 this.recordIdForIntegration = undefined;
                 this.integrationFormData = {
                     selectedRoles: [],
-                    section: '',
+                    section: 'Case Information',
+                    subSection: 'Fraud Info',
                     fieldStatus: true
                 };
-                // Imperative call to bypass cacheable=true cache
+                // Refresh wire cache so subsequent reactive triggers see fresh data
+                console.log('[handleSuccessIntegration] Refreshing wire cache...');
+                return refreshApex(this.wiredFraudResult);
+            })
+            .then(() => {
+                // Also do imperative call to immediately update UI (wire may not re-trigger if params unchanged)
                 console.log('[handleSuccessIntegration] Calling getMasterDataSettings imperatively...');
                 return getMasterDataSettingsFresh({
                     selectedNodeId: this.currentNatureOfCaseId,
@@ -744,7 +825,10 @@ export default class FecMasterDataSetting extends LightningElement {
 
     closeModal() {
         this.isModalOpen = false;
+        this.isSavingModal = false;
     }
+
+    isSavingModal = false;
 
     handleSaveFromModal() {
         const formCmp = this.template.querySelector('c-fec-master-data-setting-form');
@@ -755,6 +839,7 @@ export default class FecMasterDataSetting extends LightningElement {
 
     handleSuccess() {
         try {
+            this.isSavingModal = false;
             this.closeModal();
             // this.showToast(LABEL_TOAST_SAVE_SUCCESS, '', VARIANT_SUCCESS);
             
@@ -907,6 +992,22 @@ export default class FecMasterDataSetting extends LightningElement {
         );
     }
 
+    // Section options for Fraud Integration Mapping Settings (fixed: Case Information only)
+    get integrationSectionOptions() {
+        return [
+            { label: 'Case Information', value: 'Case Information' }
+        ];
+    }
+
+    // Sub Section options for Fraud Integration Mapping (fixed: Fraud Info only)
+    get integrationSubSectionOptions() {
+        return [
+            { label: 'Fraud Info', value: 'Fraud Info' }
+        ];
+    }
+
+    // Column count options removed — not needed for Fraud Integration Mapping
+
     handleRoleSearchInput(event) {
         this.roleSearchTerm = event.target.value;
         this.isRoleDropdownOpen = true;
@@ -982,7 +1083,9 @@ export default class FecMasterDataSetting extends LightningElement {
         const value = event.detail.value;
         
         if (fieldName === 'section') {
-            this.integrationFormData.section = value;
+            this.integrationFormData = { ...this.integrationFormData, section: value };
+        } else if (fieldName === 'subSection') {
+            this.integrationFormData = { ...this.integrationFormData, subSection: value };
         }
     }
 
@@ -1021,19 +1124,43 @@ export default class FecMasterDataSetting extends LightningElement {
 
         this.isLoading = true;
 
-        // Call Apex to delete record
+        // Call Apex to soft-delete record
         deleteFraudIntegrationMapping({ recordId: recordId })
             .then(() => {
                 this.showToast(LABEL_TOAST_SUCCESS, LABEL_TOAST_DELETED_SUCCESS, VARIANT_SUCCESS);
                 
-                // Refresh the fraud data
-                return refreshApex(this.wiredFraudResult);
+                // Imperative call to bypass cacheable=true cache
+                return getMasterDataSettingsFresh({
+                    selectedNodeId: this.currentNatureOfCaseId,
+                    selectedStageId: this.stageId,
+                    isIntegration: true
+                });
             })
-            .then(() => {
+            .then((data) => {
+                if (data) {
+                    this.fraudDataList = this.processMasterData(data);
+                    this.processedDataFraud = this.fraudDataList.map(row => {
+                        let statusClass = STATUS_CLASS_BLUE;
+                        if (row.Process_Change_Status__c === STATUS_NEW) statusClass = STATUS_CLASS_RED;
+                        else if (row.Process_Change_Status__c === STATUS_UPDATE) statusClass = STATUS_CLASS_YELLOW;
+                        let custTypeClass = CUST_CLASS_ALL;
+                        if (this.FEC_Customer_Type === CUST_TYPE_NON_EXISTING) custTypeClass = CUST_CLASS_NON_EXISTING;
+                        else if (this.FEC_Customer_Type === CUST_TYPE_EXISTING) custTypeClass = CUST_CLASS_EXISTING;
+                        return {
+                            ...row,
+                            dynamicIconClass: `${CSS_BASE_SML_LEFT} ${statusClass}`,
+                            customerIconClass: `${CSS_BASE_SML_LEFT} ${custTypeClass}`
+                        };
+                    });
+                } else {
+                    this.fraudDataList = [];
+                    this.processedDataFraud = [];
+                }
                 this.isLoading = false;
 
                 // HISTORY: Refresh history panel
-                this.refreshHistoryPanel();
+                // eslint-disable-next-line @lwc/lwc/no-async-operation
+                setTimeout(() => { this.refreshHistoryPanel(); }, 500);
             })
             .catch(error => {
                 this.isLoading = false;

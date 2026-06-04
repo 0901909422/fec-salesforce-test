@@ -40,7 +40,6 @@ public with sharing class FEC_IntegrationManageFraudCaseCtrl {
         FEC_FraudConstantCommon.IntegrationField caseField = new FEC_FraudConstantCommon.IntegrationField();
         ManageFraudCaseDTO dto = new ManageFraudCaseDTO();        
         dto.natureOfCaseId = natureOfCaseId;
-        Boolean isConfigFraudIntegrate = false;
 
         if (String.isBlank(serviceCaseId)) {
             dto.actionMode = FEC_FraudConstantCommon.INTEGRATING_FRAUD_CREATE_MODE;
@@ -72,7 +71,6 @@ public with sharing class FEC_IntegrationManageFraudCaseCtrl {
             log('[initManageFraudCase] No fraud case found → CreateMode');
         } else {
             FEC_Integration_Case__c fraudCase = existing[0];
-            isConfigFraudIntegrate = true;
             dto.fraudCaseId = fraudCase.FEC_CaseID__c;
             dto.caseStatus = fraudCase.FEC_Case_Status__c;
             Boolean isNotAllow = (fraudCase.FEC_CaseID__c != null && fraudCase.FEC_CaseID__c.startsWith(caseField.CASEFH))
@@ -95,40 +93,21 @@ public with sharing class FEC_IntegrationManageFraudCaseCtrl {
         dto.caseData = getAllValueCaseInfoByCaseId(
             getCaseIdFromServiceCaseId(serviceCaseId)
         );
-        //Check Not config Fraud Integration
-        if(!isConfigFraudIntegrate) {
-             // Resolve Integration Mapping Id from Nature Of Case
-            dto.integrateMappingId = getIntegrateMappingIdByNatureOfCase(natureOfCaseId);
-            if(String.isBlank(dto.integrateMappingId)) {
-                dto.actionMode = FEC_FraudConstantCommon.INTEGRATING_FRAUD_NOTMAPPING_MODE;
-            }
+
+        // Resolve Integration Mapping Id from Nature Of Case
+        dto.integrateMappingId = getIntegrateMappingIdByNatureOfCase(natureOfCaseId);
+        if(String.isBlank(dto.integrateMappingId)) {
+            dto.actionMode = FEC_FraudConstantCommon.INTEGRATING_FRAUD_NOTMAPPING_MODE;
         }
-       
 
         return dto;
     }
 
     @AuraEnabled
-    public static Map<String, String> getCaseToFraudFieldMap(String natureOfCaseId, String serviceCaseId) {
+    public static Map<String, String> getCaseToFraudFieldMap(String natureOfCaseId) {
         Map<String, String> result = new Map<String, String>();
         String integrateMappingId = getIntegrateMappingIdByNatureOfCase(natureOfCaseId);
-        log('integrateMappingId-log: '+ integrateMappingId);
-        log('serviceCaseId-log: '+ serviceCaseId);
-        
-        // Fallback: if no mapping found by natureOfCaseId, try from Case's Actual Nature of Case
-        if (String.isBlank(integrateMappingId) && String.isNotBlank(serviceCaseId)) {
-            List<Case> cases = [
-                SELECT FEC_Actual_Nature_of_Case__c
-                FROM Case
-                WHERE Id = :serviceCaseId
-                LIMIT 1
-            ];
-            if (!cases.isEmpty() && cases[0].FEC_Actual_Nature_of_Case__c != null) {
-                integrateMappingId = getIntegrateMappingIdByNatureOfCase(cases[0].FEC_Actual_Nature_of_Case__c);
-            }
-        }
-
-        if (String.isBlank(integrateMappingId)) {
+        if(String.isBlank(integrateMappingId)) {
             return result;
         }
 

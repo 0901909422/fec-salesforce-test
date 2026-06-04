@@ -265,13 +265,6 @@ export default class FecAllMasterDataMDM extends LightningElement {
         this.currentPages = pages;
     }
 
-    _buildPageInfo(tabKey) {
-        const page = this.currentPages[tabKey] || 1;
-        const total = this._getTotalPages(tabKey);
-        const records = this._getTotalRecords(tabKey);
-        return `Page ${page} of ${total} (${records} records)`;
-    }
-
     // --- Event handlers ---
 
     handleSearch(event) {
@@ -279,33 +272,6 @@ export default class FecAllMasterDataMDM extends LightningElement {
         const value = event.target.value;
         this.searchTerms = { ...this.searchTerms, [tabKey]: value };
         this.currentPages = { ...this.currentPages, [tabKey]: 1 };
-    }
-
-    handlePrev(event) {
-        const tabKey = event.target.dataset.tab;
-        const current = this.currentPages[tabKey] || 1;
-        if (current > 1) {
-            this.currentPages = { ...this.currentPages, [tabKey]: current - 1 };
-        }
-    }
-
-    handleNext(event) {
-        const tabKey = event.target.dataset.tab;
-        const current = this.currentPages[tabKey] || 1;
-        const totalPages = this._getTotalPages(tabKey);
-        if (current < totalPages) {
-            this.currentPages = { ...this.currentPages, [tabKey]: current + 1 };
-        }
-    }
-
-    handleFirst(event) {
-        const tabKey = event.target.dataset.tab;
-        this.currentPages = { ...this.currentPages, [tabKey]: 1 };
-    }
-
-    handleLast(event) {
-        const tabKey = event.target.dataset.tab;
-        this.currentPages = { ...this.currentPages, [tabKey]: this._getTotalPages(tabKey) };
     }
 
     // --- Paged data getters per tab ---
@@ -323,48 +289,46 @@ export default class FecAllMasterDataMDM extends LightningElement {
     get pagedActionButton() { return this._getPagedData('ActionButton'); }
     get pagedStageChange() { return this._getPagedData('StageChange'); }
 
-    // --- Page info getters ---
-    get pageInfoProductType() { return this._buildPageInfo('ProductType'); }
-    get pageInfoBusinessProcess() { return this._buildPageInfo('BusinessProcess'); }
-    get pageInfoCategory() { return this._buildPageInfo('Category'); }
-    get pageInfoSubCategory() { return this._buildPageInfo('SubCategory'); }
-    get pageInfoSubCode() { return this._buildPageInfo('SubCode'); }
-    get pageInfoMasterSetting() { return this._buildPageInfo('MasterSetting'); }
-    get pageInfoChannel() { return this._buildPageInfo('Channel'); }
-    get pageInfoNatureOfCase() { return this._buildPageInfo('NatureOfCase'); }
-    get pageInfoAdditionalField() { return this._buildPageInfo('AdditionalField'); }
-    get pageInfoAdditionalFieldList() { return this._buildPageInfo('AdditionalFieldList'); }
-    get pageInfoCaseStage() { return this._buildPageInfo('CaseStage'); }
-    get pageInfoActionButton() { return this._buildPageInfo('ActionButton'); }
-    get pageInfoStageChange() { return this._buildPageInfo('StageChange'); }
+    // --- Per-tab current page getters ---
+    get currentPageProductType() { return this.currentPages.ProductType || 1; }
+    get currentPageBusinessProcess() { return this.currentPages.BusinessProcess || 1; }
+    get currentPageCategory() { return this.currentPages.Category || 1; }
+    get currentPageSubCategory() { return this.currentPages.SubCategory || 1; }
+    get currentPageSubCode() { return this.currentPages.SubCode || 1; }
+    get currentPageMasterSetting() { return this.currentPages.MasterSetting || 1; }
+    get currentPageChannel() { return this.currentPages.Channel || 1; }
+    get currentPageNatureOfCase() { return this.currentPages.NatureOfCase || 1; }
+    get currentPageAdditionalField() { return this.currentPages.AdditionalField || 1; }
+    get currentPageAdditionalFieldList() { return this.currentPages.AdditionalFieldList || 1; }
+    get currentPageCaseStage() { return this.currentPages.CaseStage || 1; }
+    get currentPageActionButton() { return this.currentPages.ActionButton || 1; }
+    get currentPageStageChange() { return this.currentPages.StageChange || 1; }
 
-    // --- Prev/Next disabled getters ---
-    get isPrevDisabledProductType() { return (this.currentPages.ProductType || 1) <= 1; }
-    get isNextDisabledProductType() { return (this.currentPages.ProductType || 1) >= this._getTotalPages('ProductType'); }
-    get isPrevDisabledBusinessProcess() { return (this.currentPages.BusinessProcess || 1) <= 1; }
-    get isNextDisabledBusinessProcess() { return (this.currentPages.BusinessProcess || 1) >= this._getTotalPages('BusinessProcess'); }
-    get isPrevDisabledCategory() { return (this.currentPages.Category || 1) <= 1; }
-    get isNextDisabledCategory() { return (this.currentPages.Category || 1) >= this._getTotalPages('Category'); }
-    get isPrevDisabledSubCategory() { return (this.currentPages.SubCategory || 1) <= 1; }
-    get isNextDisabledSubCategory() { return (this.currentPages.SubCategory || 1) >= this._getTotalPages('SubCategory'); }
-    get isPrevDisabledSubCode() { return (this.currentPages.SubCode || 1) <= 1; }
-    get isNextDisabledSubCode() { return (this.currentPages.SubCode || 1) >= this._getTotalPages('SubCode'); }
-    get isPrevDisabledMasterSetting() { return (this.currentPages.MasterSetting || 1) <= 1; }
-    get isNextDisabledMasterSetting() { return (this.currentPages.MasterSetting || 1) >= this._getTotalPages('MasterSetting'); }
-    get isPrevDisabledChannel() { return (this.currentPages.Channel || 1) <= 1; }
-    get isNextDisabledChannel() { return (this.currentPages.Channel || 1) >= this._getTotalPages('Channel'); }
-    get isPrevDisabledNatureOfCase() { return (this.currentPages.NatureOfCase || 1) <= 1; }
-    get isNextDisabledNatureOfCase() { return (this.currentPages.NatureOfCase || 1) >= this._getTotalPages('NatureOfCase'); }
-    get isPrevDisabledAdditionalField() { return (this.currentPages.AdditionalField || 1) <= 1; }
-    get isNextDisabledAdditionalField() { return (this.currentPages.AdditionalField || 1) >= this._getTotalPages('AdditionalField'); }
-    get isPrevDisabledAdditionalFieldList() { return (this.currentPages.AdditionalFieldList || 1) <= 1; }
-    get isNextDisabledAdditionalFieldList() { return (this.currentPages.AdditionalFieldList || 1) >= this._getTotalPages('AdditionalFieldList'); }
-    get isPrevDisabledCaseStage() { return (this.currentPages.CaseStage || 1) <= 1; }
-    get isNextDisabledCaseStage() { return (this.currentPages.CaseStage || 1) >= this._getTotalPages('CaseStage'); }
-    get isPrevDisabledActionButton() { return (this.currentPages.ActionButton || 1) <= 1; }
-    get isNextDisabledActionButton() { return (this.currentPages.ActionButton || 1) >= this._getTotalPages('ActionButton'); }
-    get isPrevDisabledStageChange() { return (this.currentPages.StageChange || 1) <= 1; }
-    get isNextDisabledStageChange() { return (this.currentPages.StageChange || 1) >= this._getTotalPages('StageChange'); }
+    // --- Per-tab total records getters ---
+    get totalRecordsProductType() { return this._getTotalRecords('ProductType'); }
+    get totalRecordsBusinessProcess() { return this._getTotalRecords('BusinessProcess'); }
+    get totalRecordsCategory() { return this._getTotalRecords('Category'); }
+    get totalRecordsSubCategory() { return this._getTotalRecords('SubCategory'); }
+    get totalRecordsSubCode() { return this._getTotalRecords('SubCode'); }
+    get totalRecordsMasterSetting() { return this._getTotalRecords('MasterSetting'); }
+    get totalRecordsChannel() { return this._getTotalRecords('Channel'); }
+    get totalRecordsNatureOfCase() { return this._getTotalRecords('NatureOfCase'); }
+    get totalRecordsAdditionalField() { return this._getTotalRecords('AdditionalField'); }
+    get totalRecordsAdditionalFieldList() { return this._getTotalRecords('AdditionalFieldList'); }
+    get totalRecordsCaseStage() { return this._getTotalRecords('CaseStage'); }
+    get totalRecordsActionButton() { return this._getTotalRecords('ActionButton'); }
+    get totalRecordsStageChange() { return this._getTotalRecords('StageChange'); }
+
+    // --- Pagination event handlers ---
+    handleTabPageChange(event) {
+        const tabKey = event.target.dataset.tab;
+        this.currentPages = { ...this.currentPages, [tabKey]: event.detail.page };
+    }
+
+    handleTabPageSizeChange(event) {
+        this.pageSize = event.detail.pageSize;
+        this._resetAllPages();
+    }
 
     // --- Original action handlers ---
 

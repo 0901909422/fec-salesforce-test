@@ -438,12 +438,17 @@ global with sharing class FEC_IntegrationFraudService {
         Exception ex,
         List<String> recipients
     ) {
-        EmailTemplate tpl = [
+        List<EmailTemplate> tpls = [
             SELECT Subject, Body
             FROM EmailTemplate
             WHERE DeveloperName = :TEMPLATE_NAME
             LIMIT 1
         ];
+        if (tpls.isEmpty()) {
+            System.debug(LoggingLevel.WARN, 'sendJobEmail: EmailTemplate "' + TEMPLATE_NAME + '" not found - skip email.');
+            return;
+        }
+        EmailTemplate tpl = tpls[0];
 
         String errorBlock = '';
         if (ex != null) {
@@ -669,7 +674,7 @@ global with sharing class FEC_IntegrationFraudService {
         
             } else {
                 //For Mockup data
-                responseBody = responseFailedCreateConnectFraudCase();
+                responseBody = FEC_FraudCaseMockData.responseFailedCreateConnectFraudCase();
                 //responseBody = FEC_FraudCaseMockData.responseCreateFraudCase();
                 
                 statusCode = FEC_FraudConstantCommon.SUCCESSFULL;
@@ -893,7 +898,7 @@ global with sharing class FEC_IntegrationFraudService {
         
             } else {
                 //For Mockup data
-                responseBody = responseFailedCreateConnectFraudCase();
+                responseBody = FEC_FraudCaseMockData.responseFailedCreateConnectFraudCase();
                 statusCode = FEC_FraudConstantCommon.SUCCESSFULL;
                 log('LOG-callUpdateFraudCaseService MOCKUP: ');
             }
@@ -1029,7 +1034,7 @@ global with sharing class FEC_IntegrationFraudService {
         
             } else {
                 //For Mockup data
-                responseBody = responseFailedCancelConnectFraudCase();
+                responseBody = FEC_FraudCaseMockData.responseFailedCancelConnectFraudCase();
                 statusCode = FEC_FraudConstantCommon.SUCCESSFULL;
                 log('LOG-callCancelFraudCaseService MOCKUP: ');
             }
@@ -1399,19 +1404,11 @@ global with sharing class FEC_IntegrationFraudService {
                 for (FEC_IntegrationSoapFraudcaseService.AdditionalInfo_element ai 
                     : req.AdditionalInfo) {
 
-                    // If value is blank, only output ID without Value tag
-                    if (String.isBlank(ai.Value)) {
-                        // requestBlock +=
-                        //     '<ns1:AdditionalInfo>' +
-                        //         FEC_IntegrationFraudCaseUtil.buildTag('ID', ai.ID) +
-                        //     '</ns1:AdditionalInfo>';
-                    } else {
-                        requestBlock +=
-                            '<ns1:AdditionalInfo>' +
-                                FEC_IntegrationFraudCaseUtil.buildTag('ID', ai.ID) +
-                                FEC_IntegrationFraudCaseUtil.buildTag('Value', ai.Value) +
-                            '</ns1:AdditionalInfo>';
-                    }
+                    requestBlock +=
+                        '<ns1:AdditionalInfo>' +
+                            FEC_IntegrationFraudCaseUtil.buildTag('ID', ai.ID) +
+                            FEC_IntegrationFraudCaseUtil.buildTag('Value', ai.Value) +
+                        '</ns1:AdditionalInfo>';
                 }
             }
 
@@ -1608,44 +1605,5 @@ global with sharing class FEC_IntegrationFraudService {
         if (DEBUG_LOG) {
             System.debug(LoggingLevel.INFO, msg);
         }
-    }
-
-    public static String responseFailedCreateConnectFraudCase() {
-        String txnId   = FEC_IntegrationFraudCaseUtil.generateUUID();
-        String dtStr   = FEC_IntegrationFraudCaseUtil.nowAsXmlDateTime();
-        String xml =
-        '<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">' +
-        '  <soap:Body>' +
-        '    <ns1:CreateFraudCaseResponse xmlns:ns1="urn:PegaRULES:SOAP:FraudCase:Services">' +
-        '      <ns1:Sys>' +
-        '        <ns1:TransactionID>' + txnId + '</ns1:TransactionID>' +
-        '        <ns1:DateTime>' + dtStr + '</ns1:DateTime>' +
-        '        <ns1:Code>0</ns1:Code>' +
-        '        <ns1:Description>Failed to connect to external service</ns1:Description>' +
-        '      </ns1:Sys>' +
-        '    </ns1:CreateFraudCaseResponse>' +
-        '  </soap:Body>' +
-        '</soap:Envelope>';
-        return xml;
-        
-    }
-    public static String responseFailedCancelConnectFraudCase() {
-        String txnId   = FEC_IntegrationFraudCaseUtil.generateUUID();
-        String dtStr   = FEC_IntegrationFraudCaseUtil.nowAsXmlDateTime();
-        String xml =
-        '<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">' +
-        '  <soap:Body>' +
-        '    <ns1:CancelFraudCaseResponse xmlns:ns1="urn:PegaRULES:SOAP:FraudCase:Services">' +
-        '      <ns1:Sys>' +
-        '        <ns1:TransactionID>' + txnId + '</ns1:TransactionID>' +
-        '        <ns1:DateTime>' + dtStr + '</ns1:DateTime>' +
-        '        <ns1:Code>0</ns1:Code>' +
-        '        <ns1:Description>Failed to connect to external service</ns1:Description>' +
-        '      </ns1:Sys>' +
-        '    </ns1:CancelFraudCaseResponse>' +
-        '  </soap:Body>' +
-        '</soap:Envelope>';
-        return xml;
-        
     }
 }

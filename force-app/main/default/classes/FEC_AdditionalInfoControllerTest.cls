@@ -1,7 +1,9 @@
 /**
  * @description Test class cho FEC_AdditionalInfoController.
- * Kiểm tra truy vấn dữ liệu FEC_Additional_Info__c với FLS, sorting, và limit.
- * @author Kiro
+ *              Kiểm tra truy vấn dữ liệu FEC_Additional_Info__c với FLS, sorting, và limit.
+ * @author      DAT NGO
+ * @date        2026-06-02
+ * @module      MDM
  */
 @IsTest
 private class FEC_AdditionalInfoControllerTest {
@@ -20,7 +22,7 @@ private class FEC_AdditionalInfoControllerTest {
             records.add(new FEC_Additional_Info__c(
                 FEC_Case__c = testCase.Id,
                 FEC_Callback__c = 'Yes',
-                FEC_Gender__c = 'Male'
+                FEC_Gender__c = 'M'
             ));
         }
         insert records;
@@ -93,5 +95,31 @@ private class FEC_AdditionalInfoControllerTest {
                 results[i].CreatedDate + ' should be >= ' + results[i + 1].CreatedDate
             );
         }
+    }
+
+    @IsTest
+    static void testDeleteRecord_NullId() {
+        Boolean caught = false;
+        try {
+            Test.startTest();
+            FEC_AdditionalInfoController.deleteRecord(null);
+            Test.stopTest();
+        } catch (AuraHandledException e) {
+            caught = true;
+        }
+        Assert.isTrue(caught, 'null Id phải throw');
+    }
+
+    @IsTest
+    static void testDeleteRecord_Success() {
+        List<FEC_Additional_Info__c> recs = createTestRecords(1);
+        Id recId = recs[0].Id;
+
+        Test.startTest();
+        FEC_AdditionalInfoController.deleteRecord(recId);
+        Test.stopTest();
+
+        Integer remaining = [SELECT COUNT() FROM FEC_Additional_Info__c WHERE Id = :recId];
+        Assert.areEqual(0, remaining);
     }
 }

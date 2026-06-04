@@ -1,8 +1,6 @@
 import { LightningElement, track , wire, api} from 'lwc';
 
 import { CurrentPageReference } from 'lightning/navigation';
-import { publish, MessageContext } from 'lightning/messageService';
-import FRAUD_FIELD_SYNC from '@salesforce/messageChannel/FEC_Fraud_Field_Sync__c';
 
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import getFraudCaseById from '@salesforce/apex/FEC_IntegrationCreateFraudController.getFraudCaseById';
@@ -62,8 +60,6 @@ export default class IntegrationCreateFraudCase extends LightningElement {
 
     @api fraudHandlingCaseId;
     @api actionMode;
-    @api serviceCaseId;
-    @api caseDataId;
     @track caseId;
     @track loading = true;
     @track showPreview = false;
@@ -71,9 +67,6 @@ export default class IntegrationCreateFraudCase extends LightningElement {
     isUpdateSubmitting = false;
     isCancelSubmitting = false;
     @track showCancelConfirm = false;
-
-    @wire(MessageContext)
-    messageContext;
     
     fraudIntUserType = '';
     fraudIntChannel = '';
@@ -343,16 +336,6 @@ export default class IntegrationCreateFraudCase extends LightningElement {
 
 
     // OTHER FIELD CHANGES
-    @api
-    setFieldValue(fieldId, value) {
-        console.log('[fecIntegrationUpdateFraudCase] setFieldValue:', fieldId, value, '| props count:', this.additionalProps?.length, '| matched:', this.additionalProps?.some(p => p.id === fieldId || p.property === fieldId));
-        this.additionalProps = this.additionalProps.map(p =>
-            (p.id === fieldId || p.property === fieldId)
-                ? { ...p, value }
-                : p
-        );
-    }
-
     onSimpleChange(event) {
         const field = event.target.dataset.field;
         if (field) {
@@ -376,16 +359,6 @@ export default class IntegrationCreateFraudCase extends LightningElement {
                 ? { ...p, value }
                 : p
         );
-
-        // Publish fraud→case sync via LMS
-        const prop = this.additionalProps.find(p => p.id === fieldId);
-        if (prop && prop.property) {
-            publish(this.messageContext, FRAUD_FIELD_SYNC, {
-                fieldId: prop.property,
-                value: value,
-                source: 'fraud'
-            });
-        }
     }
 
     // -------------------------------------------------------------------

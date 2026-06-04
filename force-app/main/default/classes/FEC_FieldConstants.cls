@@ -5,6 +5,7 @@
  */
 public class FEC_FieldConstants {
     // Prevent instantiation
+    @TestVisible
     private FEC_FieldConstants() {}
 
     // Common field API names
@@ -27,6 +28,7 @@ public class FEC_FieldConstants {
     public static final String FIELD_CHANNEL_STATUS = 'FEC_Channel_Status__c';
     public static final String FIELD_CHANNEL_VI_NAME = 'FEC_Channel_Vietnamese_name__c';
     public static final String FIELD_CHANNEL = 'FEC_Channel__c';
+    public static final String FIELD_MDM_CHANNEL = 'FEC_MDM_Channel__c';
     public static final String FIELD_CASE_CHANNEL = 'FEC_Case_Channel__c';
     public static final String FIELD_SELF_SERVICE_FLAG = 'FEC_Self_Service_Flag__c';
 
@@ -70,8 +72,8 @@ public class FEC_FieldConstants {
     public static final String FIELD_SUB_CODE = 'FEC_Sub_Code__c';
     public static final String FIELD_SUB_CODE_STATUS = 'FEC_Sub_Code_Status__c';
     public static final String FIELD_USER_GROUP = 'FEC_User_Group__c';
-    public static final String FIELD_ROLE_NAMES = 'FEC_Role_Names__c';
     public static final String FIELD_DEFAULT_STAGE = 'FEC_Default_Stage__c';
+    public static final String FIELD_END_STAGE = 'FEC_End_Stage__c';
     public static final String FIELD_STATUS_NAME = 'FEC_Status_Name__c';
     public static final String FIELD_NATURE_OF_CASES = 'FEC_Nature_of_Cases__c';
 
@@ -98,6 +100,21 @@ public class FEC_FieldConstants {
     public static final String FIELD_DECISION_RULE = 'FEC_Decision_Rule__c';
     public static final String FIELD_LABEL = 'FEC_Label__c';
     public static final String FIELD_EXPRESSION = 'FEC_Expression__c';
+
+    // Nature of Case — Sub-Process checkbox fields
+    public static final String FIELD_DO_NOT_BOTHER = 'FEC_Do_Not_Bother__c';
+    public static final String FIELD_TRANSFER_CALL_TO_COLLECTION = 'FEC_Transfer_Call_to_Collection__c';
+    public static final String FIELD_REMOVE_PHONE = 'FEC_Remove_Phone__c';
+
+    // Hold Case Config field API names
+    public static final String FIELD_HOLD_CASE_TYPE = 'Hold_Case_Type__c';
+    public static final String FIELD_NFU_CODE = 'FEC_NFU_Code__c';
+    public static final String FIELD_CHANGED_STATUS = 'FEC_Changed_Status__c';
+    public static final String FIELD_CURRENT_STATUS = 'FEC_Current_Status__c';
+    public static final String FIELD_USER = 'FEC_User__c';
+    public static final String FIELD_CASE_STAGE = 'FEC_Case_Stage__c';
+    public static final String FIELD_HOLD_CASE_NOC = 'FEC_Nature_of_Case__c';
+    public static final String FIELD_REASON_VN = 'FEC_Reason_VN__c';
 
     // NOC lookup field API names
     public static final String NOC_FIELD_PRODUCT_TYPE = 'FEC_Product_Type__c';

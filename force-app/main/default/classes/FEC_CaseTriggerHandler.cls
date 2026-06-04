@@ -499,13 +499,8 @@ public without sharing class FEC_CaseTriggerHandler {
             casesByPrefix.get(prefix).add(c);
         }
         
-        // BƯỚC 4: LẤY MAX NUMBER CHO TỪNG PREFIX (SỬ DỤNG AGGREGATE)
-        Map<String, Integer> maxNumberByPrefix = new Map<String, Integer>();
-        
-        for (String prefix : casesByPrefix.keySet()) {
-            Integer maxNum = getMaxNumberForPrefix(prefix);
-            maxNumberByPrefix.put(prefix, maxNum);
-        }
+        // BƯỚC 4: LẤY MAX NUMBER CHO TẤT CẢ PREFIXES (SINGLE BULK QUERY)
+        Map<String, Integer> maxNumberByPrefix = getMaxNumberForPrefixes(casesByPrefix.keySet());
         
         // BƯỚC 5: GENERATE ID CHO TỪNG CASE
         for (String prefix : casesByPrefix.keySet()) {
@@ -558,29 +553,56 @@ public without sharing class FEC_CaseTriggerHandler {
     }
     
     /**
-     * Method Description: Lấy số lớn nhất hiện có cho một prefix cụ thể (sử dụng Aggregate MAX)
-     * @param prefix Prefix cần tìm (ví dụ: 'S', 'I', 'C')
-     * @return Integer Số lớn nhất hiện có (0 nếu chưa có record nào)
+     * Method Description: Lấy số lớn nhất hiện có cho nhiều prefix cùng lúc (SINGLE BULK QUERY)
+     * Tránh SOQL-in-loop bằng cách query tất cả Cases có FEC_ID_Search__c bắt đầu bằng bất kỳ prefix nào,
+     * rồi parse và tìm max cho từng prefix trong memory.
+     * @param prefixes Set các prefix cần tìm (ví dụ: {'S', 'I', 'C'})
+     * @return Map<String, Integer> Map prefix -> số lớn nhất hiện có (0 nếu chưa có)
      * @created: 2026/01/07
+     * @modified: 2026/06/04 - Refactor từ single-prefix sang bulk để tránh SOQL 101
      */
-    private Integer getMaxNumberForPrefix(String prefix) {
-        Integer maxNum = 0;
+    private Map<String, Integer> getMaxNumberForPrefixes(Set<String> prefixes) {
+        Map<String, Integer> maxNumberByPrefix = new Map<String, Integer>();
+        
+        // Initialize all prefixes with 0
+        for (String prefix : prefixes) {
+            maxNumberByPrefix.put(prefix, 0);
+        }
+        
+        if (prefixes.isEmpty()) {
+            return maxNumberByPrefix;
+        }
         
         try {
-            // Query tất cả FEC_ID_Search__c có prefix này
+            // Build LIKE patterns for all prefixes
+            String delimiter = FEC_ConstantCommon.FEC_ID_SEARCH_DELIMITER;
+            List<String> likePatterns = new List<String>();
+            for (String prefix : prefixes) {
+                likePatterns.add(prefix + delimiter + '%');
+            }
+            
+            // Single SOQL query for ALL prefixes — avoid SOQL 101
             List<Case> cases = [SELECT FEC_ID_Search__c 
                                FROM Case 
-                               WHERE FEC_ID_Search__c LIKE :prefix + FEC_ConstantCommon.FEC_ID_SEARCH_DELIMITER + '%'
-                               ALL ROWS];
+                               WHERE FEC_ID_Search__c LIKE :likePatterns
+                               LIMIT 50000];
             
-            // Tách số và tìm max
+            // Parse and find max for each prefix in memory
             for (Case c : cases) {
+                if (String.isBlank(c.FEC_ID_Search__c)) continue;
+                
                 try {
-                    String numberPart = c.FEC_ID_Search__c.substringAfterLast(FEC_ConstantCommon.FEC_ID_SEARCH_DELIMITER);
-                    if (numberPart.isNumeric()) {
+                    String idSearch = c.FEC_ID_Search__c;
+                    Integer delimIdx = idSearch.lastIndexOf(delimiter);
+                    if (delimIdx < 0) continue;
+                    
+                    String casePrefix = idSearch.substring(0, delimIdx);
+                    String numberPart = idSearch.substring(delimIdx + delimiter.length());
+                    
+                    if (maxNumberByPrefix.containsKey(casePrefix) && numberPart.isNumeric()) {
                         Integer num = Integer.valueOf(numberPart);
-                        if (num > maxNum) {
-                            maxNum = num;
+                        if (num > maxNumberByPrefix.get(casePrefix)) {
+                            maxNumberByPrefix.put(casePrefix, num);
                         }
                     }
                 } catch (Exception e) {
@@ -588,10 +610,10 @@ public without sharing class FEC_CaseTriggerHandler {
                 }
             }
         } catch (Exception e) {
-            System.debug('Lỗi query max number cho prefix ' + prefix + ': ' + e.getMessage());
+            System.debug('Lỗi query max number cho prefixes: ' + e.getMessage());
         }
         
-        return maxNum;
+        return maxNumberByPrefix;
     }
     
     /**

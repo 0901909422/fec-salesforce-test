@@ -2,19 +2,17 @@
 private class FEC_LocationSyncScheduler_Test {
 
     @IsTest
-    static void test_execute() {
-        // Use mock to avoid external object queries
+    static void test_Schedule() {
         FEC_IntegrationLocationService.useMock = true;
 
         Test.startTest();
         String jobId = System.schedule(
-            'Test Location Sync',
-            '0 0 2 * * ?',
+            'TestLocationScheduler_' + Datetime.now().getTime(),
+            '0 0 0 1 1 ? 2099',
             new FEC_LocationSyncScheduler()
         );
         Test.stopTest();
 
-        CronTrigger ct = [SELECT Id, State FROM CronTrigger WHERE Id = :jobId];
-        System.assertNotEquals(null, ct, 'Job should be scheduled');
+        System.assertNotEquals(null, jobId, 'Job should be scheduled');
     }
 }

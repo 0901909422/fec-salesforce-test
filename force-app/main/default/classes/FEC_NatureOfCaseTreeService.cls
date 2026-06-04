@@ -9,6 +9,7 @@ public with sharing class FEC_NatureOfCaseTreeService {
                 Name, 
                 Process_Change_Status__c, 
                 FEC_Customer_Type__c, 
+                FEC_User_Group__c,
 
                 FEC_Product_Type__c, 
                 FEC_Product_Type__r.Name, 
@@ -65,8 +66,8 @@ public with sharing class FEC_NatureOfCaseTreeService {
         return result;
     }
 
-    // Regex pattern for validating Code/ID fields: only alphanumeric, hyphen, underscore
-    private static final Pattern VALID_CODE_PATTERN = Pattern.compile('^[a-zA-Z0-9_-]+$');
+    // Regex pattern for validating Code/ID fields: must start with letter, allow letters, digits, underscore, dot, hyphen
+    private static final Pattern VALID_CODE_PATTERN = Pattern.compile('^[a-zA-Z][a-zA-Z0-9_.\\-]*$');
 
     public static String saveNewLookupNode(String strObjectType, String strCustomerType, String strParentId,String strName, String strAlias, String strCode, String strNameVN, Integer intPosOrder, Boolean isStatus) {
         // Server-side validation: Code must only contain alphanumeric, hyphen, underscore
@@ -408,7 +409,45 @@ public with sharing class FEC_NatureOfCaseTreeService {
     // NOC data fields that must be inherited from parent when creating child nodes
     private static final List<String> NOC_INHERITED_DATA_FIELDS = new List<String>{
         FEC_FieldConstants.FIELD_USER_GROUP,
-        FEC_FieldConstants.FIELD_ROLE_NAMES,
         FEC_FieldConstants.FIELD_CUSTOMER_TYPE
     };
+
+    /**
+     * @description Touch a node record (update without field changes) to trigger
+     * Process_Change_Status__c update via FEC_ProcessChangeStatusTriggerHandler.
+     * This ensures the tree node turns yellow when only NOC-level fields are modified.
+     * @param nodeId The Id of the node record to touch
+     * @param nodeType The type label of the node (e.g., 'Product Type', 'Business Process', etc.)
+     */
+    public static void touchNodeForStatusUpdate(Id nodeId, String nodeType) {
+        if (nodeId == null || String.isBlank(nodeType)) return;
+
+        SObject targetSObject = null;
+        if (nodeType == FEC_UIConstants.LABEL_PRODUCT_TYPE) {
+            targetSObject = [SELECT Id, Process_Change_Status__c FROM FEC_MDM_Product_Type__c WHERE Id = :nodeId LIMIT 1];
+        } else if (nodeType == FEC_UIConstants.LABEL_BUSINESS_PROCESS) {
+            targetSObject = [SELECT Id, Process_Change_Status__c FROM FEC_MDM_Business_Process__c WHERE Id = :nodeId LIMIT 1];
+        } else if (nodeType == FEC_UIConstants.LABEL_CATEGORY) {
+            targetSObject = [SELECT Id, Process_Change_Status__c FROM FEC_MDM_Category__c WHERE Id = :nodeId LIMIT 1];
+        } else if (nodeType == FEC_UIConstants.LABEL_SUB_CATEGORY) {
+            targetSObject = [SELECT Id, Process_Change_Status__c FROM FEC_MDM_Sub_Category__c WHERE Id = :nodeId LIMIT 1];
+        } else if (nodeType == FEC_UIConstants.LABEL_SUB_CODE) {
+            targetSObject = [SELECT Id, Process_Change_Status__c FROM FEC_MDM_Sub_Code__c WHERE Id = :nodeId LIMIT 1];
+        }
+
+        if (targetSObject == null) return;
+
+        // Only touch if status is not already 'New' (trigger handler preserves 'New')
+        String currentStatus = (String) targetSObject.get(FEC_FieldConstants.FIELD_PROCESS_CHANGE_STATUS);
+        if (currentStatus == FEC_UIConstants.PROCESS_STATUS_NEW || currentStatus == FEC_UIConstants.PROCESS_STATUS_UPDATE) {
+            // Already 'New' or 'Update' — no need to touch
+            return;
+        }
+
+        // Perform a no-op update to trigger the before update handler
+        // which will set Process_Change_Status__c to 'Update'
+        if (targetSObject.getSObjectType().getDescribe().isUpdateable()) {
+            update targetSObject;
+        }
+    }
 }

@@ -1,12 +1,19 @@
 public class FEC_IntegrationFraudScheduler implements Schedulable {
 
-    
-    
     public void execute(SchedulableContext sc) {
+        runJob(sc != null ? sc.getTriggerId() : null);
+    }
+
+    /**
+     * @description Core job logic, extracted from execute() for unit testability.
+     *              Callable directly with a triggerId (or null) so tests can apply
+     *              HttpCalloutMock in the same transaction to cover the SUCCESS path.
+     */
+    @TestVisible
+    private static void runJob(String triggerId) {
 
         Long startTime = System.currentTimeMillis();
 
-        String triggerId = sc.getTriggerId();
         String jobName = null;
         String cronExpr = null;
         Datetime nextRun = null;
@@ -15,16 +22,20 @@ public class FEC_IntegrationFraudScheduler implements Schedulable {
         Integer importedCount = 0;
 
         try {
-            CronTrigger ct = [
-                SELECT Id, CronExpression, NextFireTime, CronJobDetail.Name
-                FROM CronTrigger
-                WHERE Id = :triggerId
-                LIMIT 1
-            ];
-
-            jobName = ct.CronJobDetail.Name;
-            cronExpr = ct.CronExpression;
-            nextRun = ct.NextFireTime;
+            if (String.isNotBlank(triggerId)) {
+                List<CronTrigger> cts = [
+                    SELECT Id, CronExpression, NextFireTime, CronJobDetail.Name
+                    FROM CronTrigger
+                    WHERE Id = :triggerId
+                    LIMIT 1
+                ];
+                if (!cts.isEmpty()) {
+                    CronTrigger ct = cts[0];
+                    jobName = ct.CronJobDetail.Name;
+                    cronExpr = ct.CronExpression;
+                    nextRun = ct.NextFireTime;
+                }
+            }
 
             // ---------------------------------------------------------
             // RUN IMPORT
@@ -48,7 +59,6 @@ public class FEC_IntegrationFraudScheduler implements Schedulable {
                 null, // no exception
                 ADMIN_RECIPIENTS
             );
-            
 
         } catch (Exception ex) {
 
@@ -70,9 +80,8 @@ public class FEC_IntegrationFraudScheduler implements Schedulable {
                 ex,
                 ADMIN_RECIPIENTS
             );
-           
+
         }
     }
 
-    
 }

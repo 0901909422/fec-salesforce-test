@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Package xmlns="http://soap.sforce.com/2006/04/metadata">
+    <!--
+    ╔══════════════════════════════════════════════════════════════════╗
+    ║  FRAUD MODULE — CODE COVERAGE TRACKING                         ║
+    ╠══════════════════════════════════════════════════════════════════╣
+    ║  Last checked: 2026-06-03                                      ║
+    ║  Target: >= 75% per class                                      ║
+    ╠══════════════════════════════════════════════════════════════════╣
+    ║                                                                  ║
+    ║  ✅ ĐẠT (>= 75%)                                               ║
+    ║  ─────────────────────────────────────────────                   ║
+    ║  FEC_FraudConstantCommon              100%                       ║
+    ║  FEC_FraudCaseMockData                100%                       ║
+    ║  FEC_AutoIntegratingPropertyMappingCtrl 100%                     ║
+    ║  FEC_LocationSyncScheduler            100%                       ║
+    ║  FEC_IntegrationSearchFraudCaseController 92%                    ║
+    ║  FEC_IntegrationMappingController     92%                        ║
+    ║  FEC_MapAPropertiesToMasterDataItemCtrl 90%                      ║
+    ║  FEC_IntegrationFraudService          83%                        ║
+    ║  FEC_IntegrationFraudCaseDetailController 82%                    ║
+    ║  FEC_IntegrationFraudCaseUtil         79%                        ║
+    ║  FEC_IntegrationMasterDataController  78%                        ║
+    ║  FEC_ServiceFraudTaskCaseController   77%                        ║
+    ║  FEC_IntegrationLocationService       76%                        ║
+    ║                                                                  ║
+    ║  ⚠️ GẦN ĐẠT (68-72%)                                           ║
+    ║  ─────────────────────────────────────────────                   ║
+    ║  FEC_IntegrationSoapFraudcaseService  72% (WebServiceMock done)  ║
+    ║  FEC_IntegrationCreateFraudController 72%                        ║
+    ║  FEC_IntegrationFraudScheduler        69% (BLOCKED: EmailTemplate)║
+    ║  FEC_IntegrationManageFraudCaseCtrl   63% (BLOCKED: NOC validation)║
+    ║                                                                  ║
+    ║  ❌ CHƯA ĐẠT                                                    ║
+    ║  ─────────────────────────────────────────────                   ║
+    ║  FEC_IntegrationFraudCaseApi          31% (REST API coverage issue)║
+    ║                                                                  ║
+    ║  ACTION ITEMS:                                                   ║
+    ║  1. Tạo EmailTemplate "Integration_MasterData_Job_Notification"  ║
+    ║     → Scheduler sẽ lên 100%                                      ║
+    ║  2. Fix validation rule FEC_Nature_of_Case__c.FEC_Product_Type   ║
+    ║     → ManageFraudCaseCtrl sẽ lên 90%+                           ║
+    ║  3. FraudCaseApi: REST coverage issue — cần investigate          ║
+    ║                                                                  ║
+    ╚══════════════════════════════════════════════════════════════════╝
+    -->
+
+    <!-- ═══════════════════════════════════════ -->
+    <!-- SOURCE CLASSES (18 classes)            -->
+    <!-- ═══════════════════════════════════════ -->
+    <types>
+        <members>FEC_FraudConstantCommon</members>
+        <members>FEC_IntegrationSoapFraudcaseService</members>
+        <members>FEC_IntegrationFraudCaseUtil</members>
+        <members>FEC_FraudCaseMockData</members>
+        <members>FEC_IntegrationFraudScheduler</members>
+        <members>FEC_IntegrationFraudService</members>
+        <members>FEC_IntegrationMasterDataController</members>
+        <members>FEC_ServiceFraudTaskCaseController</members>
+        <members>FEC_IntegrationSearchFraudCaseController</members>
+        <members>FEC_IntegrationFraudCaseDetailController</members>
+        <members>FEC_IntegrationFraudCaseApi</members>
+        <members>FEC_IntegrationCreateFraudController</members>
+        <members>FEC_IntegrationMappingController</members>
+        <members>FEC_IntegrationLocationService</members>
+        <members>FEC_LocationSyncScheduler</members>
+        <members>FEC_AutoIntegratingPropertyMappingCtrl</members>
+        <members>FEC_MapAPropertiesToMasterDataItemCtrl</members>
+        <members>FEC_IntegrationManageFraudCaseCtrl</members>
+        <name>ApexClass</name>
+    </types>
+
+    <!-- ═══════════════════════════════════════ -->
+    <!-- TEST CLASSES (8 classes)              -->
+    <!-- ═══════════════════════════════════════ -->
+    <types>
+        <members>FEC_FraudIntegrationTest</members>
+        <members>FEC_FraudIntegrationTest2</members>
+        <members>FEC_FraudIntegrationTest3</members>
+        <members>FEC_FraudIntegrationTest4</members>
+        <members>FEC_FraudIntegrationTest5</members>
+        <members>FEC_FraudIntegrationTest6</members>
+        <members>FEC_IntegSearchFraudCaseController_Test</members>
+        <members>FEC_InteFraudCaseDetailController_Test</members>
+        <name>ApexClass</name>
+    </types>
+
+    <version>62.0</version>
+</Package>

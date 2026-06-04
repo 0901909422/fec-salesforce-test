@@ -230,7 +230,6 @@
         <excludedStandardButtons>PrintableListView</excludedStandardButtons>
         <excludedStandardButtons>MassAddToActionableList</excludedStandardButtons>
         <excludedStandardButtons>MassAssignRecordLabel</excludedStandardButtons>
-        <excludedStandardButtons>OmniChannelMassRouteWork</excludedStandardButtons>
         <listViewButtons>FEC_Create_Interaction_Manual</listViewButtons>
         <listViewButtons>Create_Case</listViewButtons>
         <listViewButtons>Get_next_work</listViewButtons>

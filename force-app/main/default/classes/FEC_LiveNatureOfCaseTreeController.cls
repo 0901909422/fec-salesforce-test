@@ -22,11 +22,14 @@ public with sharing class FEC_LiveNatureOfCaseTreeController {
             throw new AuraHandledException('NOC Id cannot be null.');
         }
         try {
-            String soql = 'SELECT Id, Name, FEC_Code__c, FEC_Customer_Type__c, '
-                + 'FEC_User_Group__c, FEC_Active__c, '
-                + 'FEC_Do_Not_Bother__c, FEC_Transfer_Call_to_Collection__c, FEC_Remove_Phone__c '
-                + 'FROM FEC_Nature_Of_Case__c WHERE Id = :nocId LIMIT 1';
-            List<FEC_Nature_Of_Case__c> nocs = Database.query(soql);
+            List<FEC_Nature_Of_Case__c> nocs = [
+                SELECT Id, Name, FEC_Code__c, FEC_Customer_Type__c,
+                       FEC_User_Group__c, FEC_Active__c,
+                       FEC_Do_Not_Bother__c, FEC_Transfer_Call_to_Collection__c, FEC_Remove_Phone__c
+                FROM FEC_Nature_Of_Case__c
+                WHERE Id = :nocId
+                LIMIT 1
+            ];
             if (nocs.isEmpty()) {
                 throw new AuraHandledException('Nature of Case record not found: ' + nocId);
             }
@@ -38,13 +41,9 @@ public with sharing class FEC_LiveNatureOfCaseTreeController {
             result.put('customerType', noc.FEC_Customer_Type__c != null ? noc.FEC_Customer_Type__c : '');
             result.put('userGroup', noc.FEC_User_Group__c != null ? noc.FEC_User_Group__c : '');
             result.put('active', String.valueOf(noc.FEC_Active__c));
-            // Use dynamic access for picklist fields (compile-compatible during field type migration)
-            Object dnbVal = noc.get('FEC_Do_Not_Bother__c');
-            Object tcVal = noc.get('FEC_Transfer_Call_to_Collection__c');
-            Object rpVal = noc.get('FEC_Remove_Phone__c');
-            result.put('doNotBother', dnbVal != null ? String.valueOf(dnbVal) : 'Disabled');
-            result.put('transferCallToCollection', tcVal != null ? String.valueOf(tcVal) : 'Disabled');
-            result.put('removePhone', rpVal != null ? String.valueOf(rpVal) : 'Disabled');
+            result.put('doNotBother', String.valueOf(noc.FEC_Do_Not_Bother__c));
+            result.put('transferCallToCollection', String.valueOf(noc.FEC_Transfer_Call_to_Collection__c));
+            result.put('removePhone', String.valueOf(noc.FEC_Remove_Phone__c));
             // Live objects do NOT have Process_Change_Status__c
             result.put('processStatus', '');
             return result;
@@ -114,12 +113,12 @@ public with sharing class FEC_LiveNatureOfCaseTreeController {
         else if (childFieldName == FEC_FieldConstants.NOC_FIELD_SUB_CATEGORY) targetChildField = FEC_FieldConstants.NOC_FIELD_SUB_CODE;
         else targetChildField = FEC_FieldConstants.NOC_FIELD_PRODUCT_TYPE;
 
-        String query = 'SELECT COUNT_DISTINCT(' + targetChildField + ') expr0 FROM FEC_Nature_Of_Case__c';
+        String query = 'SELECT COUNT_DISTINCT(' + targetChildField + ') uniqueCount FROM FEC_Nature_Of_Case__c';
         if (String.isNotBlank(parentId) && String.isNotBlank(childFieldName)) {
             query += ' WHERE ' + childFieldName + ' = :parentId AND ' + targetChildField + ' != NULL';
         }
         AggregateResult[] results = Database.query(query);
-        Integer uniqueCount = (Integer) results[0].get('expr0');
+        Integer uniqueCount = (Integer) results[0].get('uniqueCount');
         return uniqueCount + 1;
     }
 
@@ -177,7 +176,7 @@ public with sharing class FEC_LiveNatureOfCaseTreeController {
     @AuraEnabled
     public static void updateNocFields(
         Id nocId, String customerType, String userGroup, Boolean isActive,
-        String doNotBother, String transferCallToCollection, String removePhone,
+        Boolean doNotBother, Boolean transferCallToCollection, Boolean removePhone,
         Id nodeId, String nodeType
     ) {
         if (nocId == null) {
@@ -191,12 +190,11 @@ public with sharing class FEC_LiveNatureOfCaseTreeController {
                 Id = nocId,
                 FEC_Customer_Type__c = customerType,
                 FEC_User_Group__c = String.isNotBlank(userGroup) ? userGroup : null,
-                FEC_Active__c = isActive != null ? isActive : false
+                FEC_Active__c = isActive != null ? isActive : false,
+                FEC_Do_Not_Bother__c = doNotBother != null ? doNotBother : false,
+                FEC_Transfer_Call_to_Collection__c = transferCallToCollection != null ? transferCallToCollection : false,
+                FEC_Remove_Phone__c = removePhone != null ? removePhone : false
             );
-            // Use dynamic put for picklist fields (compile-compatible during field type migration)
-            noc.put('FEC_Do_Not_Bother__c', String.isNotBlank(doNotBother) ? doNotBother : 'Disabled');
-            noc.put('FEC_Transfer_Call_to_Collection__c', String.isNotBlank(transferCallToCollection) ? transferCallToCollection : 'Disabled');
-            noc.put('FEC_Remove_Phone__c', String.isNotBlank(removePhone) ? removePhone : 'Disabled');
             SObjectAccessDecision decision = Security.stripInaccessible(
                 AccessType.UPDATABLE,
                 new List<FEC_Nature_Of_Case__c>{ noc }

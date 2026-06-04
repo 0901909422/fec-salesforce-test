@@ -54,6 +54,11 @@ export default class FecMasterDataContainer extends LightningElement {
         return this.pendingChanges.size === 0 || this.loading;
     }
 
+    // NOC Id from the currently selected tree item (for Hold Case Config tab)
+    get currentNocId() {
+        return this._item?.id || '';
+    }
+
     handleNodeBufferChange(event) {
         const updatedNode = event.detail;
         const nodeKey = updatedNode.idType;
@@ -133,6 +138,17 @@ export default class FecMasterDataContainer extends LightningElement {
             await updateMultipleNodes({ listData: listToUpdate });
             this.showToast(LABEL_TOAST_SUCCESS, LABEL_NOTIFY_SAVE_ALL.replace('{0}', listToUpdate.length), VARIANT_SUCCESS);
 
+            // Save NOC fields if dirty
+            const detailCmp = this.template.querySelector('[data-id="detailComponent"]');
+            if (detailCmp) {
+                try {
+                    await detailCmp.saveNocFields();
+                } catch (nocError) {
+                    console.error('[handleSaveAll] NOC save error:', nocError);
+                    this.showToast(LABEL_TOAST_ERROR, nocError.body?.message || nocError.message || 'Error saving NOC', VARIANT_ERROR);
+                }
+            }
+
             // TỰ ĐỒNG BỘ DỮ LIỆU Ở CHA
             const currentNodeKey = this.displayItem?.idType;
             if (currentNodeKey && this.pendingChanges.has(currentNodeKey)) {
@@ -145,7 +161,6 @@ export default class FecMasterDataContainer extends LightningElement {
 
             this.dispatchEvent(new CustomEvent(EVENT_REFRESH_ALL, { bubbles: true, composed: true }));
 
-            const detailCmp = this.template.querySelector('[data-id="detailComponent"]');
             detailCmp.markAsSaved();
             detailCmp.refreshHistory();
 
@@ -168,6 +183,24 @@ export default class FecMasterDataContainer extends LightningElement {
         } finally {
             this.loading = false;
         }
+    }
+
+    /**
+     * Handle save event from detail component (Save Node Details button).
+     * Refreshes tree and clears pending changes for the saved node.
+     */
+    handleItemSave() {
+        // Clear pending changes for the current node since it was saved directly
+        if (this._item && this._item.idType) {
+            const key = this._item.idType;
+            if (this.pendingChanges && this.pendingChanges.has(key)) {
+                this.pendingChanges.delete(key);
+                // Reassign Map to trigger reactivity for saveButtonLabel/isSaveDisabled getters
+                this.pendingChanges = new Map(this.pendingChanges);
+            }
+        }
+        // Refresh tree to reflect updated data
+        this.dispatchEvent(new CustomEvent(EVENT_REFRESH_ALL, { bubbles: true, composed: true }));
     }
 
     showToast(title, message, variant) {

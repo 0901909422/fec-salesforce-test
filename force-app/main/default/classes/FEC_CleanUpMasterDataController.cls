@@ -145,6 +145,25 @@ public with sharing class FEC_CleanUpMasterDataController {
             throw new AuraHandledException(FEC_UIConstants.ERROR_CANNOT_START_PUSH + ' ' + e.getMessage());
         }
     }
+
+    /**
+     * @description Get the most recent FEC_Batch_Log__c records for the MDM Sync/Push UI.
+     * @param limitSize Number of records to return (default 50, max 200).
+     * @return List of batch log records ordered by CreatedDate DESC.
+     */
+    @AuraEnabled(cacheable=true)
+    public static List<FEC_Batch_Log__c> getRecentBatchLogs(Integer limitSize) {
+        Integer effectiveLimit = (limitSize == null || limitSize <= 0) ? 50 : Math.min(limitSize, 200);
+        return [
+            SELECT Id, FEC_Batch_Name__c, FEC_Job_ID__c, FEC_Status__c,
+                   FEC_Total_Job_Items__c, FEC_Processed_Items__c, FEC_Error_Count__c,
+                   FEC_Error_Details__c, CreatedDate
+            FROM FEC_Batch_Log__c
+            WHERE FEC_Batch_Name__c IN ('FEC_PushMDMToLiveBatch', 'FEC_SyncMasterDataBatch')
+            ORDER BY CreatedDate DESC
+            LIMIT :effectiveLimit
+        ];
+    }
     
     public class NatureOfCaseMDMWrapper {
         @AuraEnabled public Id Id;
