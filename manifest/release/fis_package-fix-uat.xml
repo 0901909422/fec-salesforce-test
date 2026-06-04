@@ -15,6 +15,7 @@
         <members>FEC_DownloadReportController</members>
         <members>FEC_CommonUltils</members>
         <members>FEC_GetCSMasterDataByCodeService</members>
+        <members>FEC_ConstantCommon</members>
         <name>ApexClass</name>
     </types>
     <types>
