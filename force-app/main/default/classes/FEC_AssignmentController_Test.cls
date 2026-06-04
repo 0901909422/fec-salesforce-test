@@ -35,7 +35,7 @@ private class FEC_AssignmentController_Test {
 
         insert new FEC_Team_Queue__c(
             FEC_Queue_Name__c = QUEUE_DEV_NAME,
-            Team__c = team.Id,
+            FEC_Select_Team__c = team.Id,
             FEC_Team__c = TARGET_TEAM
         );
     }

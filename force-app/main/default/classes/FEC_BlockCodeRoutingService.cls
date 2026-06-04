@@ -812,6 +812,62 @@ public without sharing class FEC_BlockCodeRoutingService {
       isCurrentCaseRc27ByCurrentNoc(c, categoryId, subCategoryId, subCodeId);
   }
 
+  /**
+   * Submit Route to: RC27 từ Case đã lưu hoặc natureOfCaseId (Stage 1 submit trước khi ghi NOC lên Case).
+   */
+  @TestVisible
+  private static Boolean isRc27RouteContext(Case routeCase, String natureOfCaseId) {
+    if (routeCase != null && isCurrentCaseRc27ByCaseFields(routeCase)) {
+      return true;
+    }
+    Id nocId = parseIdSafely(natureOfCaseId);
+    if (nocId == null) {
+      return false;
+    }
+    List<FEC_Nature_of_Case__c> rows = [
+      SELECT
+        FEC_Category__r.FEC_Code__c,
+        FEC_Sub_Category__r.FEC_Code__c,
+        FEC_Sub_Code__r.FEC_Code__c
+      FROM FEC_Nature_of_Case__c
+      WHERE Id = :nocId
+      LIMIT 1
+    ];
+    if (rows.isEmpty()) {
+      return false;
+    }
+    FEC_Nature_of_Case__c noc = rows[0];
+    String cat = trimSafe(noc.FEC_Category__r?.FEC_Code__c);
+    String subCat = trimSafe(noc.FEC_Sub_Category__r?.FEC_Code__c);
+    String subCode = trimSafe(noc.FEC_Sub_Code__r?.FEC_Code__c);
+    return String.isNotBlank(cat) &&
+      cat.equalsIgnoreCase(REQUEST_CATEGORY_CODE) &&
+      CURRENT_RC27_SUBCATEGORY_CODE.equals(subCat) &&
+      String.isNotBlank(subCode) &&
+      CURRENT_RC27_SUBCODE_CODES.contains(subCode);
+  }
+
+  /**
+   * Submit Route to: block code từ LWC (checkProcessAction / localStorage) ép OM/Day 2 — khớp hiển thị CS D2C.
+   */
+  public static Boolean isClientBlockCodeForcedOmDay2ForRc27Route(
+    Case routeCase,
+    String clientBlockCode,
+    String clientBlockCode1,
+    String natureOfCaseId
+  ) {
+    if (!hasClientBlockCodeContext(clientBlockCode, clientBlockCode1)) {
+      return false;
+    }
+    if (!isRc27RouteContext(routeCase, natureOfCaseId)) {
+      return false;
+    }
+    return isBlockCodePairForcedOmDay2(
+      trimBlockCodeParam(clientBlockCode),
+      trimBlockCodeParam(clientBlockCode1)
+    );
+  }
+
   private static void applyForcedOmDay2DisplayToBusiness(
     FEC_CaseBusinessService.Business businessResult
   ) {
@@ -858,6 +914,28 @@ public without sharing class FEC_BlockCodeRoutingService {
     String queueId,
     Boolean skipRc27Override
   ) {
+    return applyRouteQueueOverrideIfApplicable(
+      routeCase,
+      queueId,
+      skipRc27Override,
+      null,
+      null,
+      null
+    );
+  }
+
+  /**
+   * @param clientBlockCode block code từ LWC (API checkProcessAction); null = chỉ History/sibling.
+   * @param natureOfCaseId NOC submit (Stage 1 Case có thể chưa ghi RC27 lên Case).
+   */
+  public static String applyRouteQueueOverrideIfApplicable(
+    Case routeCase,
+    String queueId,
+    Boolean skipRc27Override,
+    String clientBlockCode,
+    String clientBlockCode1,
+    String natureOfCaseId
+  ) {
     if (routeCase == null) {
       return queueId;
     }
@@ -866,6 +944,17 @@ public without sharing class FEC_BlockCodeRoutingService {
     }
     if (isRc27StageTwoToThreeRouting(routeCase)) {
       return queueId;
+    }
+    if (
+      isClientBlockCodeForcedOmDay2ForRc27Route(
+        routeCase,
+        clientBlockCode,
+        clientBlockCode1,
+        natureOfCaseId
+      )
+    ) {
+      Id forcedId = resolveDay2CheckQueueId();
+      return forcedId != null ? String.valueOf(forcedId) : queueId;
     }
     if (isCustomerHistoryForcedOmDay2(routeCase.FEC_Account_or_Contract__c)) {
       Id forcedId = resolveDay2CheckQueueId();

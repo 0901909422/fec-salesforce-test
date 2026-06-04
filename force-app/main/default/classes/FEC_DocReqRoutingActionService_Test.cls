@@ -353,4 +353,19 @@ private class FEC_DocReqRoutingActionService_Test {
 
         System.assert(actions.size() > 0, 'Revert path RL05 phải trả actions.');
     }
+
+    @IsTest
+    static void testIsRl0402OrRl0403SubCode_andNullCaseGuards() {
+        System.assertEquals(false, FEC_DocumentRequestRoutingActionService.isRl0402OrRl0403SubCode(null));
+        System.assertEquals(
+            true,
+            FEC_DocumentRequestRoutingActionService.isRl0402OrRl0403SubCode('RL04.02')
+        );
+        Test.startTest();
+        System.assertEquals(
+            0,
+            FEC_DocumentRequestRoutingActionService.getRoutingActionsForRl0402Rl0403(null).size()
+        );
+        Test.stopTest();
+    }
 }

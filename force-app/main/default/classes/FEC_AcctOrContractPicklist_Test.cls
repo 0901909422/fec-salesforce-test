@@ -719,4 +719,42 @@ private class FEC_AcctOrContractPicklist_Test {
         System.assertEquals(null, ubankResult,
             'Phải trả null khi productCode là UBANK (không có nhánh xử lý)');
     }
+
+    @IsTest
+    static void testInteractionLookupHelpers_onCustomerCase() {
+        Id ptId = insertProductType('Credit Card').Id;
+        Case interaction = insertCase(ptId, null, '0901234567', true, MODE_HANDLING, 'Existing');
+        FEC_Customer_History__c history = insertCustomerHistory(
+            interaction.Id,
+            TYPE_CARD,
+            'CON-LOOKUP',
+            'ACC-LOOKUP',
+            'CIF-LOOKUP'
+        );
+        interaction.FEC_Account_or_Contract__c = history.Id;
+        update interaction;
+
+        Case customerCase = insertCase(ptId, history.Id, '0901234567', true, MODE_HANDLING, 'Existing');
+        customerCase.FEC_Interaction__c = interaction.Id;
+        update customerCase;
+
+        Test.startTest();
+        System.assertNotEquals(
+            null,
+            FEC_AccountOrContractPicklistHandler.getInteractionAccountNumber(interaction.Id)
+        );
+        System.assertEquals(
+            String.valueOf(history.Id),
+            FEC_AccountOrContractPicklistHandler.getCustomerHistoryId(customerCase.Id)
+        );
+        System.assertEquals(
+            MODE_HANDLING,
+            FEC_AccountOrContractPicklistHandler.getInteractionViewMode(interaction.Id)
+        );
+        System.assertEquals(
+            'Existing',
+            FEC_AccountOrContractPicklistHandler.getInteractionCustomerType(interaction.Id)
+        );
+        Test.stopTest();
+    }
 }

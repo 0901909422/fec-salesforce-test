@@ -212,4 +212,20 @@ private class FEC_ScopedStageChangeRoutingService_Test {
         
         System.assert(true, 'Test Prior History chạy thành công không crash.');
     }
+
+    @IsTest
+    static void testUtilityMethods_isScopedAndExtractStageNumber() {
+        System.assertEquals(false, FEC_ScopedStageChangeRoutingService.isScopedBusinessProcess(null));
+        System.assertEquals(
+            true,
+            FEC_ScopedStageChangeRoutingService.isScopedBusinessProcess(
+                FEC_ScopedStageChangeRoutingService.DOCUMENT_REQUEST
+            )
+        );
+        System.assertEquals(null, FEC_ScopedStageChangeRoutingService.extractStageNumber(null));
+        System.assertEquals(
+            2,
+            FEC_ScopedStageChangeRoutingService.extractStageNumber('Workflow stage 2 - Review')
+        );
+    }
 }

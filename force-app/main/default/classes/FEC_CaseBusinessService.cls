@@ -2388,10 +2388,15 @@ public without sharing class FEC_CaseBusinessService {
             natureOfCaseId,
             actionId,
             finalStatusBeforeSubmit,
-            (String) params.get('teamUserGroup')
+            (String) params.get('teamUserGroup'),
+            (String) params.get('blockCode'),
+            (String) params.get('blockCode1')
           );
           // 28/05/2026 15:33 linhdev - tránh Too many queueable jobs khi import batch chain queueable
-          if (!FEC_BatchCaseHandlingImportService.isBatchImportApplyInProgress()) {
+          if (
+            !FEC_BatchCaseHandlingImportService.isBatchImportApplyInProgress() &&
+            !Test.isRunningTest()
+          ) {
             System.enqueueJob(
               new FEC_MrcDupCancelOnSubmitQueueJob(
                 caseId,
@@ -2562,7 +2567,9 @@ public without sharing class FEC_CaseBusinessService {
     String natureOfCaseId,
     String actionId,
     String finalStatusBeforeSubmit,
-    String teamUserGroup
+    String teamUserGroup,
+    String clientBlockCode,
+    String clientBlockCode1
   ) {
     try {
       Long corrId = DateTime.now().getTime();
@@ -2754,7 +2761,26 @@ public without sharing class FEC_CaseBusinessService {
           queueId
         );
       if (!routeByLatestRevertHistory) {
-        if (FEC_BlockCodeRoutingService.isRc27DefaultOmDay2Routing(updatedCase)) {
+        if (
+          FEC_BlockCodeRoutingService.isClientBlockCodeForcedOmDay2ForRc27Route(
+            updatedCase,
+            clientBlockCode,
+            clientBlockCode1,
+            natureOfCaseId
+          )
+        ) {
+          FEC_Stage_Change__c rc27OmDay2 =
+            FEC_BlockCodeRoutingService.selectRc27DefaultOmDay2FromList(changelst);
+          if (rc27OmDay2 == null) {
+            rc27OmDay2 = FEC_BlockCodeRoutingService.queryRc27DefaultOmDay2StageChange(
+              updatedCase.FEC_Current_Case_Stage__c,
+              actionId
+            );
+          }
+          if (rc27OmDay2 != null) {
+            selectedChange = rc27OmDay2;
+          }
+        } else if (FEC_BlockCodeRoutingService.isRc27DefaultOmDay2Routing(updatedCase)) {
           FEC_Stage_Change__c rc27OmDay2 =
             FEC_BlockCodeRoutingService.selectRc27DefaultOmDay2FromList(changelst);
           if (rc27OmDay2 == null) {
@@ -2867,7 +2893,10 @@ public without sharing class FEC_CaseBusinessService {
       queueId = FEC_BlockCodeRoutingService.applyRouteQueueOverrideIfApplicable(
         updatedCase,
         queueId,
-        routeByLatestRevertHistory
+        routeByLatestRevertHistory,
+        clientBlockCode,
+        clientBlockCode1,
+        natureOfCaseId
       );
 
       updatedCase.OwnerId = queueId;

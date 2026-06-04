@@ -322,4 +322,19 @@ private class FEC_GsrStage1RevertMasterDataHelper_Test {
         System.assertEquals(1, masterDatalst.size());
         System.assertEquals('Other Original Info', (String) masterDatalst[0].get('FEC_Field_Label_Name__c'));
     }
+
+    @IsTest
+    static void testAppendStage2OriginalInfoLwc_nullInputs() {
+        List<SObject> rows = new List<SObject>();
+        Test.startTest();
+        FEC_GsrStage1RevertMasterDataHelper.appendStage2OriginalInfoLwc(
+            rows,
+            null,
+            null,
+            null,
+            null
+        );
+        Test.stopTest();
+        System.assertEquals(0, rows.size());
+    }
 }

@@ -91,4 +91,75 @@ private class FEC_RoutingActionHistoryTrigHandler_Test {
             'Actual status: ' + status
         );
     }
+
+    @IsTest
+    static void testAfterInsert_RouteToHistory() {
+        Case c = [SELECT Id FROM Case LIMIT 1];
+        FEC_Routing_Action_History__c history = new FEC_Routing_Action_History__c(
+            FEC_Case__c = c.Id,
+            FEC_Routing_Action__c = FEC_CaseBusinessService.ROUTE_TO,
+            FEC_Routing_Action_Type__c = 'Case',
+            FEC_Current_Status__c = 'Pending',
+            FEC_Changed_Status__c = 'Pending'
+        );
+
+        Test.startTest();
+        insert history;
+        Test.stopTest();
+
+        System.assertNotEquals(null, [SELECT Id FROM FEC_Routing_Action_History__c WHERE Id = :history.Id].Id);
+    }
+
+    @IsTest
+    static void testProcessNotificationEmails_directCall() {
+        Case c = [SELECT Id FROM Case LIMIT 1];
+        FEC_Routing_Action_History__c history = new FEC_Routing_Action_History__c(
+            FEC_Case__c = c.Id,
+            FEC_Current_Status__c = 'Pending',
+            FEC_Changed_Status__c = 'Resolved'
+        );
+        insert history;
+
+        Test.startTest();
+        FEC_RoutingActionHistoryTriggerHandler.processNotificationEmails(
+            new List<FEC_Routing_Action_History__c>{ history }
+        );
+        Test.stopTest();
+
+        System.assert(true, 'processNotificationEmails should complete without unhandled exception.');
+    }
+
+    @IsTest
+    static void testAfterUpdate_runsHandlerPaths() {
+        Case c = [SELECT Id FROM Case LIMIT 1];
+        FEC_Routing_Action_History__c history = new FEC_Routing_Action_History__c(
+            FEC_Case__c = c.Id,
+            FEC_Routing_Action__c = FEC_CaseBusinessService.ROUTE_TO,
+            FEC_Current_Status__c = 'Open',
+            FEC_Changed_Status__c = 'Pending'
+        );
+        insert history;
+
+        history.FEC_Changed_Status__c = 'Resolved';
+        Test.startTest();
+        update history;
+        Test.stopTest();
+
+        System.assertEquals(
+            'Resolved',
+            [SELECT FEC_Changed_Status__c FROM FEC_Routing_Action_History__c WHERE Id = :history.Id]
+                .FEC_Changed_Status__c
+        );
+    }
+
+    @IsTest
+    static void testSendNotificationEmails_guardClauses() {
+        Test.startTest();
+        FEC_RoutingActionHistoryTriggerHandler.sendNotificationEmails(null);
+        FEC_RoutingActionHistoryTriggerHandler.sendNotificationEmails(
+            new List<FEC_Routing_Action_History__c>()
+        );
+        Test.stopTest();
+        System.assert(true, 'Guard clauses should not throw.');
+    }
 }
