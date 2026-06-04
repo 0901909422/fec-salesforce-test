@@ -167,6 +167,25 @@ private class FEC_BCH_ExpAsgRemarkLoader_Test {
     }
 
     @IsTest
+    static void testLoadByCaseId_assignmentRemarkWithoutAssignmentLink() {
+        Case c = insertCase('BCH Export Remark No Assignment Link');
+        insertRemark(
+            c.Id,
+            null,
+            FEC_ConstantCommon.REMARK_TYPE_ASSIGNMENT,
+            'Assignment remark without lookup',
+            'User X',
+            'Role X'
+        );
+
+        Map<Id, FEC_BCH_ExportAssignmentRemarkLoader.AssignmentRemarkExportBundle> loaded =
+            FEC_BCH_ExportAssignmentRemarkLoader.loadByCaseId(new Set<Id>{ c.Id });
+
+        System.assertEquals(1, loaded.size());
+        System.assert(loaded.get(c.Id).assignmentRemarks.contains('Assignment remark without lookup'));
+    }
+
+    @IsTest
     static void testLoadByCaseId_noMatchingRemarks_returnsEmptyMap() {
         Case c = insertCase('BCH Export Remark Empty');
         insertRemark(c.Id, null, 'Case', 'Only case remark', 'U', 'R');

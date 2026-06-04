@@ -190,6 +190,7 @@
         <members>FEC_DownloadReportController</members>
         <members>FEC_DownloadReportService</members>
         <members>FEC_AutoHoldCaseApi</members>
+        <members>FEC_AutoHoldCaseApi_Test</members>
         <members>FEC_AutoHoldCaseExpireBatch</members>
         <members>FEC_AutoHoldCaseExpireSchedulable</members>
         <members>FEC_AutoHoldCaseHistoryService</members>
