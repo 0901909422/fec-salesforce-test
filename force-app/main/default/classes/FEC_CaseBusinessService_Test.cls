@@ -747,11 +747,15 @@ private class FEC_CaseBusinessService_Test {
             ];
 
             Test.startTest();
-            FEC_CaseBusinessService.run(
+            // 04/06/2026 17:10 linhdev - runInternal tránh AuraHandledException + giảm SOQL vs run()
+            FEC_CaseBusinessService.runInternal(
                 'Route to',
                 buildRouteParams(c.Id, targetQueue.Id, noc.Id, btnRoute.Id)
             );
-            FEC_CaseBusinessService.run('Revert', buildRevertParams(c.Id, btnRevert.Id));
+            FEC_CaseBusinessService.runInternal(
+                FEC_CaseBusinessService.REVERT,
+                buildRevertParams(c.Id, btnRevert.Id)
+            );
             Case afterRevert = queryCaseSystem(c.Id);
             System.assertEquals(stg1.Id, afterRevert.FEC_Current_Case_Stage__c);
             Test.stopTest();
