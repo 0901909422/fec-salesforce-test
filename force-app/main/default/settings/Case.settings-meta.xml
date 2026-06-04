@@ -10,8 +10,8 @@
     <caseMergeInLightning>false</caseMergeInLightning>
     <closeCaseThroughStatusChange>true</closeCaseThroughStatusChange>
     <defaultCaseFeedLayoutOn>false</defaultCaseFeedLayoutOn>
-    <defaultCaseOwner>duc.nguyen.10@fecredit.com.vn</defaultCaseOwner>
-    <defaultCaseOwnerType>User</defaultCaseOwnerType>
+    <defaultCaseOwner>FEC_CSM_Mailbox</defaultCaseOwner>
+    <defaultCaseOwnerType>Queue</defaultCaseOwnerType>
     <emailToCase>
         <enableE2CAttachmentAsFile>true</enableE2CAttachmentAsFile>
         <enableE2CDeduplicateAttachments>false</enableE2CDeduplicateAttachments>
@@ -185,7 +185,6 @@
     <rtaCaseDescription>false</rtaCaseDescription>
     <showEmailAttachmentsInCaseAttachmentsRL>true</showEmailAttachmentsInCaseAttachmentsRL>
     <showFewerCloseActions>false</showFewerCloseActions>
-    <systemUserEmail>duc.nguyen.10@fecredit.com.vn</systemUserEmail>
     <useSystemEmailAddress>true</useSystemEmailAddress>
     <useSystemUserAsDefaultCaseUser>true</useSystemUserAsDefaultCaseUser>
     <visibleInCssCheckbox>false</visibleInCssCheckbox>

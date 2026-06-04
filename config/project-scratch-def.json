@@ -40,6 +40,9 @@
         }
     },
     "objectSettings": {
+        "account": {
+            "sharingModel": "read"
+        },
         "opportunity": {
             "sharingModel": "read"
         }
