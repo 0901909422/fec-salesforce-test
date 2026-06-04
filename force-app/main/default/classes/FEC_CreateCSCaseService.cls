@@ -483,7 +483,7 @@ global with sharing class FEC_CreateCSCaseService {
             Pattern.matches('^\\d{8}-\\d{6}-\\d{4}$', input);
         
         Boolean isAccountNumber =
-            Pattern.matches('^\\d{19}$', input);
+            Pattern.matches('^\\d{16}$|^\\d{19}$', input);
         
         return isContractNumber || isAccountNumber;
     }
