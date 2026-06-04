@@ -324,6 +324,7 @@
     </types>
     <types>
         <members>MDM</members>
+        <members>Master_Data_Fraud_Integration</members>
         <name>CustomTab</name>
     </types>
     <types>

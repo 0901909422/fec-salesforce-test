@@ -1,0 +1,27 @@
+.slds-input_warning {
+    border-color: #fe9339;
+    background-color: #fef0e6;
+}
+
+.slds-listbox__option_plain {
+    cursor: pointer;
+}
+
+.slds-listbox__option_plain:hover {
+    background-color: #f3f3f3;
+}
+
+.group-header {
+    display: flex;
+    align-items: center;
+    background-color: #f3f3f3;
+    border-bottom: 1px solid #dddbda;
+    border-top: 1px solid #dddbda;
+    cursor: default;
+    padding: 0.25rem 0.5rem;
+    font-weight: 600;
+}
+
+.group-header:hover {
+    background-color: #f3f3f3;
+}
