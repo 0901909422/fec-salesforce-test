@@ -438,12 +438,14 @@ global with sharing class FEC_IntegrationFraudService {
         Exception ex,
         List<String> recipients
     ) {
-        EmailTemplate tpl = [
+        List<EmailTemplate> tpls = [
             SELECT Subject, Body
             FROM EmailTemplate
             WHERE DeveloperName = :TEMPLATE_NAME
             LIMIT 1
         ];
+        if (tpls.isEmpty()) return;
+        EmailTemplate tpl = tpls[0];
 
         String errorBlock = '';
         if (ex != null) {
