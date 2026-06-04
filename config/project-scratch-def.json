@@ -27,7 +27,8 @@
         },
         "caseSettings": {
             "enableCaseFeed": true,
-            "useSystemUserAsDefaultCaseUser": true
+            "useSystemUserAsDefaultCaseUser": true,
+            "systemUserEmail": "admin@fec.scratch.org"
         },
         "chatterSettings": {
             "enableChatter": true
