@@ -71,6 +71,9 @@ export default class FecConfigHistory extends LightningElement {
                 })
                 .catch((err) => {
                     this.showLog('refreshData', 'ERROR: ' + JSON.stringify(err));
+                })
+                .finally(() => {
+                    this.isLoading = false;
                 });
         }
         return Promise.resolve();

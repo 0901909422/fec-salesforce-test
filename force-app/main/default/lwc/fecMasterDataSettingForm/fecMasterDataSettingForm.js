@@ -4,6 +4,7 @@ import { getObjectInfo, getPicklistValues } from 'lightning/uiObjectInfoApi';
 import saveMasterDataSetting from '@salesforce/apex/FEC_MasterDataSettingController.saveMasterDataSetting';
 import getAdditionalFieldOptions from '@salesforce/apex/FEC_MasterDataSettingController.getAdditionalFieldOptions';
 import checkParentDuplicateProperty from '@salesforce/apex/FEC_MasterDataSettingController.checkParentDuplicateProperty';
+import getSubSectionOrderMap from '@salesforce/apex/FEC_MasterDataSettingController.getSubSectionOrderMap';
 
 import getChannels from '@salesforce/apex/FEC_MasterDataSettingController.getChannels';
 import getUserRoles from '@salesforce/apex/FEC_MasterDataSettingController.getUserRoles';
@@ -38,6 +39,7 @@ export default class FecMasterDataSettingForm extends LightningElement {
     @api stageId;
     @api nextOrder;
     @api isIntegrationMode = false;
+    @api nocUserGroup = '';
 
     selectedChannel = '';
     @track selectedRoles = [];
@@ -49,9 +51,10 @@ export default class FecMasterDataSettingForm extends LightningElement {
     propertyInfoMap = new Map(); // Map<Id, {name, fieldApiName}> for auto-fill
     @track editableUserGroupOptions = [];
     @track displayOrder;
+    @track selectedColumnCount = '4'; // Virtual field: number of columns (default 4 → 12/4=3)
     @track formData = {
         additionalField: '',
-        section: '',
+        section: 'Case Information',
         fieldStatus: true,
         fieldReadOnly: false,
         fieldMandatory: false,
@@ -61,7 +64,7 @@ export default class FecMasterDataSettingForm extends LightningElement {
         fieldMasking: false,
         maskingType: '',
         fieldReverted: false,
-        subSection: '',
+        subSection: 'Property Info',
         subSectionFieldLayout: 3,
         subSectionLayout: 12,
         subSectionOrder: null,
@@ -87,12 +90,282 @@ export default class FecMasterDataSettingForm extends LightningElement {
     dataNameRoles = DATA_NAME_ROLES;
     dataNameEditableUserGroups = DATA_NAME_EDITABLE_USER_GROUPS;
 
+    // Search state for custom search dropdowns
+    additionalFieldSearchTerm = '';
+    isAdditionalFieldDropdownOpen = false;
+    roleSearchTerm = '';
+    isRoleDropdownOpen = false;
+    editableRoleSearchTerm = '';
+    isEditableRoleDropdownOpen = false;
+    @track selectedEditableRoles = [];
+    channelSearchTerm = '';
+    isChannelDropdownOpen = false;
+    isSaving = false;
+
+    // Filtered options for search dropdowns
+    get filteredAdditionalFieldOptions() {
+        if (!this.additionalFieldOptions) return [];
+        if (!this.additionalFieldSearchTerm || !this.additionalFieldSearchTerm.trim()) {
+            return this.additionalFieldOptions;
+        }
+        const key = this.additionalFieldSearchTerm.toLowerCase().trim();
+        return this.additionalFieldOptions.filter(opt =>
+            (opt.label || '').toLowerCase().includes(key)
+        );
+    }
+
+    get filteredRoleOptions() {
+        if (!this.roleOptions) return [];
+        if (!this.roleSearchTerm || !this.roleSearchTerm.trim()) {
+            return this.roleOptions;
+        }
+        const key = this.roleSearchTerm.toLowerCase().trim();
+        return this.roleOptions.filter(opt =>
+            (opt.label || '').toLowerCase().includes(key)
+        );
+    }
+
+    // Additional Field search handlers
+    handleAdditionalFieldSearch(event) {
+        this.additionalFieldSearchTerm = event.target.value;
+        this.isAdditionalFieldDropdownOpen = true;
+    }
+    handleAdditionalFieldFocus() { this.isAdditionalFieldDropdownOpen = true; }
+    handleAdditionalFieldBlur() {
+        // eslint-disable-next-line @lwc/lwc/no-async-operation
+        setTimeout(() => { this.isAdditionalFieldDropdownOpen = false; }, 200);
+    }
+    handleSelectAdditionalField(event) {
+        const selectedValue = event.currentTarget.dataset.value;
+        const selectedLabel = event.currentTarget.dataset.label;
+        this.additionalFieldSearchTerm = selectedLabel;
+        this.isAdditionalFieldDropdownOpen = false;
+        // Trigger same logic as handleInputChange for FEC_Additional_Field__c
+        this.formData = { ...this.formData, additionalField: selectedValue };
+        const info = this.propertyInfoMap.get(selectedValue);
+        if (info && info.fieldApiName) {
+            this.formData = {
+                ...this.formData,
+                additionalField: selectedValue,
+                fieldObjectName: 'FEC_Additional_Info__c',
+                fieldApiName: info.fieldApiName,
+                fieldLabelName: info.name
+            };
+        } else {
+            this.formData = {
+                ...this.formData,
+                additionalField: selectedValue,
+                fieldObjectName: selectedValue ? 'FEC_Additional_Info__c' : '',
+                fieldApiName: selectedValue ? this.formData.fieldApiName : '',
+                fieldLabelName: selectedValue ? this.formData.fieldLabelName : ''
+            };
+        }
+    }
+
+    // Role search handlers
+    handleRoleSearch(event) {
+        this.roleSearchTerm = event.target.value;
+        this.isRoleDropdownOpen = true;
+    }
+    handleRoleFocus() { this.isRoleDropdownOpen = true; }
+    handleRoleBlur() {
+        // eslint-disable-next-line @lwc/lwc/no-async-operation
+        setTimeout(() => { this.isRoleDropdownOpen = false; }, 200);
+    }
+    handleSelectRoleFromList(event) {
+        const selectedRole = event.currentTarget.dataset.value;
+        if (selectedRole && !this.selectedRoles.includes(selectedRole)) {
+            this.selectedRoles = [...this.selectedRoles, selectedRole];
+        }
+        this.roleSearchTerm = '';
+        this.isRoleDropdownOpen = false;
+    }
+
+    handleDropdownItemHover(event) {
+        event.currentTarget.style.backgroundColor = '#f3f3f3';
+        event.currentTarget.addEventListener('mouseleave', (e) => {
+            e.currentTarget.style.backgroundColor = '#ffffff';
+        }, { once: true });
+    }
+
+    // Channel search handlers (single-select)
+    get filteredChannelOptions() {
+        if (!this.channelOptions) return [];
+        if (!this.channelSearchTerm || !this.channelSearchTerm.trim()) {
+            return this.channelOptions;
+        }
+        const key = this.channelSearchTerm.toLowerCase().trim();
+        return this.channelOptions.filter(opt =>
+            (opt.label || '').toLowerCase().includes(key)
+        );
+    }
+    handleChannelSearch(event) {
+        this.channelSearchTerm = event.target.value;
+        this.isChannelDropdownOpen = true;
+    }
+    handleChannelFocus() { this.isChannelDropdownOpen = true; }
+    handleChannelBlur() {
+        // eslint-disable-next-line @lwc/lwc/no-async-operation
+        setTimeout(() => { this.isChannelDropdownOpen = false; }, 200);
+    }
+    handleSelectChannel(event) {
+        const selectedValue = event.currentTarget.dataset.value;
+        const selectedLabel = event.currentTarget.dataset.label;
+        this.selectedChannel = selectedValue;
+        this.channelSearchTerm = selectedLabel;
+        this.isChannelDropdownOpen = false;
+    }
+
+    // Editable Role search handlers (uses same roleOptions as Applicable Roles)
+    get filteredEditableRoleOptions() {
+        if (!this.roleOptions) return [];
+        if (!this.editableRoleSearchTerm || !this.editableRoleSearchTerm.trim()) {
+            return this.roleOptions;
+        }
+        const key = this.editableRoleSearchTerm.toLowerCase().trim();
+        return this.roleOptions.filter(opt =>
+            (opt.label || '').toLowerCase().includes(key)
+        );
+    }
+    handleEditableRoleSearch(event) {
+        this.editableRoleSearchTerm = event.target.value;
+        this.isEditableRoleDropdownOpen = true;
+    }
+    handleEditableRoleFocus() { this.isEditableRoleDropdownOpen = true; }
+    handleEditableRoleBlur() {
+        // eslint-disable-next-line @lwc/lwc/no-async-operation
+        setTimeout(() => { this.isEditableRoleDropdownOpen = false; }, 200);
+    }
+    handleSelectEditableRoleFromList(event) {
+        const selectedRole = event.currentTarget.dataset.value;
+        if (selectedRole && !this.selectedEditableRoles.includes(selectedRole)) {
+            this.selectedEditableRoles = [...this.selectedEditableRoles, selectedRole];
+            this.formData = { ...this.formData, editableRole: this.selectedEditableRoles.join(', ') };
+        }
+        this.editableRoleSearchTerm = '';
+        this.isEditableRoleDropdownOpen = false;
+    }
+    handleRemoveEditableRole(event) {
+        const roleToRemove = event.detail.name;
+        if (!roleToRemove) return;
+        this.selectedEditableRoles = this.selectedEditableRoles.filter(r => r !== roleToRemove);
+        this.formData = { ...this.formData, editableRole: this.selectedEditableRoles.join(', ') };
+    }
+
+    // Section & Sub Section standard options
+    get sectionOptions() {
+        return [
+            { label: 'Case Information', value: 'Case Information' },
+            { label: 'Account Information', value: 'Account Information' },
+            { label: '-- Custom --', value: '__custom__' }
+        ];
+    }
+
+    get subSectionOptions() {
+        const opts = [];
+        if (this.formData.section === 'Case Information') {
+            opts.push(
+                { label: 'Property Info', value: 'Property Info' },
+                { label: 'Case Info', value: 'Case Info' },
+                { label: 'Original Information', value: 'Original Information' },
+                { label: 'Updated Information', value: 'Updated Information' },
+                { label: 'CS SP Assessment', value: 'CS SP Assessment' },
+                { label: 'Confirm to CS SP Assessment', value: 'Confirm to CS SP Assessment' },
+                { label: 'D2C Assessment', value: 'D2C Assessment' },
+                { label: 'Confirm to D2C Assessment', value: 'Confirm to D2C Assessment' }
+            );
+        } else if (this.formData.section === 'Account Information') {
+            opts.push({ label: 'C360 Info', value: 'C360 Info' });
+        }
+        opts.push({ label: '-- Custom --', value: '__custom__' });
+        return opts;
+    }
+
+    get isCustomSection() { return this._isCustomSection; }
+    get isCustomSubSection() { return this._isCustomSubSection; }
+    get isSubSectionOrderReadOnly() { return !this._isCustomSubSection && this.formData.subSectionOrder != null; }
+    get showSubSectionOrder() { return this._isCustomSubSection || this.formData.subSectionOrder == null; }
+    _isCustomSection = false;
+    _isCustomSubSection = false;
+
+    handleSectionChange(event) {
+        const value = event.detail.value;
+        if (value === '__custom__') {
+            this._isCustomSection = true;
+            this._isCustomSubSection = true;
+            this.formData = { ...this.formData, section: '', subSection: '', subSectionOrder: null };
+        } else {
+            this._isCustomSection = false;
+            this._isCustomSubSection = false;
+            let defaultSubSection = '';
+            if (value === 'Case Information') defaultSubSection = 'Property Info';
+            else if (value === 'Account Information') defaultSubSection = 'C360 Info';
+            const order = this.subSectionOrderMap[defaultSubSection] || null;
+            this.formData = { ...this.formData, section: value, subSection: defaultSubSection, subSectionOrder: order };
+        }
+    }
+
+    handleSubSectionChange(event) {
+        const value = event.detail.value;
+        if (value === '__custom__') {
+            this._isCustomSubSection = true;
+            this.formData = { ...this.formData, subSection: '', subSectionOrder: null };
+        } else {
+            this._isCustomSubSection = false;
+            // Auto-fill Sub Section Order from existing data
+            const order = this.subSectionOrderMap[value] || null;
+            this.formData = { ...this.formData, subSection: value, subSectionOrder: order };
+        }
+    }
+
+    handleCustomSectionInput(event) {
+        this.formData = { ...this.formData, section: event.target.value };
+    }
+
+    handleCustomSubSectionInput(event) {
+        this.formData = { ...this.formData, subSection: event.target.value };
+    }
+
+    // Column count options for Sub Section layout (12-column grid)
+    get columnCountOptions() {
+        return [
+            { label: '1', value: '1' },
+            { label: '2', value: '2' },
+            { label: '3', value: '3' },
+            { label: '4', value: '4' },
+            { label: '6', value: '6' },
+            { label: '12', value: '12' }
+        ];
+    }
+
+    handleColumnCountChange(event) {
+        const cols = parseInt(event.detail.value, 10);
+        this.selectedColumnCount = String(cols);
+        const fieldLayout = Math.floor(12 / cols);
+        this.formData = {
+            ...this.formData,
+            subSectionLayout: 12,
+            subSectionFieldLayout: fieldLayout
+        };
+    }
+
     get isEditMode() {
         return !!this.recordId;
     }
 
     get isCreateMode() {
         return !this.recordId;
+    }
+
+    // Conditional visibility getters
+    get isFieldActive() { return this.formData.fieldStatus; }
+    get showMaskingType() { return this.formData.fieldStatus && this.formData.fieldMasking; }
+    get showEditableRole() { return this.formData.fieldStatus && this.formData.fieldEditable; }
+    get showFieldReverted() {
+        // Field Reverted chỉ hiện khi Additional Field là Updated Info field
+        if (!this.formData.additionalField) return false;
+        const info = this.propertyInfoMap.get(this.formData.additionalField);
+        return info && info.fieldApiName && info.fieldApiName.includes('Updated_Info');
     }
 
     /**
@@ -118,6 +391,11 @@ export default class FecMasterDataSettingForm extends LightningElement {
         if (!this.recordId) {
             // Create mode
             this.displayOrder = this.nextOrder;
+            
+            // Auto-fill Editable User Group from NOC User Group
+            if (this.nocUserGroup) {
+                this.selectedEditableUserGroups = this.nocUserGroup.split(';').map(g => g.trim()).filter(g => g);
+            }
             
             // Integration Mode: Set FIMA defaults
             if (this.isIntegrationMode) {
@@ -162,9 +440,19 @@ export default class FecMasterDataSettingForm extends LightningElement {
             const editableRole = data.FEC_Editable_Role__c || '';
 
             this.selectedChannel = data.FEC_MDM_Channel__c || (data.FEC_MDM_Channel__r ? data.FEC_MDM_Channel__r.Id : '') || '';
+            // Set channel search term for display
+            if (data.FEC_MDM_Channel__r && data.FEC_MDM_Channel__r.Name) {
+                this.channelSearchTerm = data.FEC_MDM_Channel__r.Name;
+            }
             this.selectedRoles = rolesStr ? rolesStr.split(',').map(item => item.trim()) : [];
             this.selectedEditableUserGroups = editableUserGroupStr ? editableUserGroupStr.split(';').map(item => item.trim()) : [];
+            this.selectedEditableRoles = editableRole ? editableRole.split(',').map(item => item.trim()).filter(item => item) : [];
+            this.selectedEditableRoles = editableRole ? editableRole.split(',').map(item => item.trim()).filter(item => item) : [];
             this.displayOrder = order;
+            // Reverse-calculate column count from existing layout values
+            if (subSectionFieldLayout && subSectionFieldLayout > 0) {
+                this.selectedColumnCount = String(Math.floor(12 / subSectionFieldLayout));
+            }
             this.formData = {
                 additionalField: additionalField,
                 section: section,
@@ -186,6 +474,27 @@ export default class FecMasterDataSettingForm extends LightningElement {
                 editableRole
             };
             showLog('[populateFormFromRecordData] Form populated successfully');
+            // Set search term for Additional Field display in edit mode
+            if (additionalField && this.additionalFieldOptions) {
+                const match = this.additionalFieldOptions.find(opt => opt.value === additionalField);
+                if (match) {
+                    this.additionalFieldSearchTerm = match.label;
+                }
+            }
+            // Check if section/sub section are custom (not in standard list)
+            const standardSections = ['Case Information', 'Account Information'];
+            if (section && !standardSections.includes(section)) {
+                this._isCustomSection = true;
+                this._isCustomSubSection = true;
+            } else {
+                this._isCustomSection = false;
+                const standardSubSections = {
+                    'Case Information': ['Property Info', 'Case Info', 'Original Information', 'Updated Information', 'CS SP Assessment', 'Confirm to CS SP Assessment', 'D2C Assessment', 'Confirm to D2C Assessment'],
+                    'Account Information': ['C360 Info']
+                };
+                const validSubs = standardSubSections[section] || [];
+                this._isCustomSubSection = subSection && !validSubs.includes(subSection);
+            }
         } catch (error) {
             showLog('[populateFormFromRecordData] Error:', error);
         }
@@ -194,7 +503,14 @@ export default class FecMasterDataSettingForm extends LightningElement {
 
     @wire(getChannels)
     wiredChannels({ data }) {
-        if (data) this.channelOptions = data;
+        if (data) {
+            this.channelOptions = data;
+            // Set channel search term for edit mode display
+            if (this.selectedChannel) {
+                const match = data.find(opt => opt.value === this.selectedChannel);
+                if (match) this.channelSearchTerm = match.label;
+            }
+        }
     }
 
     @wire(getUserRoles)
@@ -214,6 +530,13 @@ export default class FecMasterDataSettingForm extends LightningElement {
                     fieldApiName: opt.fieldApiName || ''
                 });
             });
+            // Set search term display for edit mode (options may load after form data)
+            if (this.formData.additionalField) {
+                const match = data.find(opt => opt.value === this.formData.additionalField);
+                if (match) {
+                    this.additionalFieldSearchTerm = match.label;
+                }
+            }
         }
     }
 
@@ -237,6 +560,22 @@ export default class FecMasterDataSettingForm extends LightningElement {
                 label: item.label,
                 value: item.value
             }));
+        }
+    }
+
+    // Sub Section Order auto-fill map from Live data
+    subSectionOrderMap = {};
+    @wire(getSubSectionOrderMap)
+    wiredSubSectionOrderMap({ data }) {
+        if (data) {
+            this.subSectionOrderMap = data;
+            // Auto-fill Sub Section Order for default sub section (wire loads after connectedCallback)
+            if (this.formData.subSection && this.formData.subSectionOrder == null) {
+                const order = data[this.formData.subSection];
+                if (order != null) {
+                    this.formData = { ...this.formData, subSectionOrder: order };
+                }
+            }
         }
     }
 
@@ -275,11 +614,39 @@ export default class FecMasterDataSettingForm extends LightningElement {
         } else if (fieldName === 'FEC_Field_Order_Display__c') {
             this.displayOrder = value;
         } else if (fieldName === 'FEC_Field_Status__c') {
-            this.formData = { ...this.formData, fieldStatus: event.detail.checked };
+            const checked = event.detail.checked;
+            // Field Status = false → reset tất cả checkbox khác vì field ẩn hoàn toàn
+            if (!checked) {
+                this.formData = {
+                    ...this.formData,
+                    fieldStatus: false,
+                    fieldReadOnly: false,
+                    fieldMandatory: false,
+                    fieldMasking: false,
+                    maskingType: '',
+                    fieldReverted: false,
+                    fieldEditable: false,
+                    editableRole: ''
+                };
+            } else {
+                this.formData = { ...this.formData, fieldStatus: true };
+            }
         } else if (fieldName === 'FEC_Field_ReadOnly__c') {
-            this.formData = { ...this.formData, fieldReadOnly: event.detail.checked };
+            const checked = event.detail.checked;
+            // Read Only + Mandatory conflict: bỏ Mandatory khi bật Read Only
+            if (checked && this.formData.fieldMandatory) {
+                this.formData = { ...this.formData, fieldReadOnly: true, fieldMandatory: false };
+            } else {
+                this.formData = { ...this.formData, fieldReadOnly: checked };
+            }
         } else if (fieldName === 'FEC_Field_Mandatory__c') {
-            this.formData = { ...this.formData, fieldMandatory: event.detail.checked };
+            const checked = event.detail.checked;
+            // Mandatory + Read Only conflict: bỏ Read Only khi bật Mandatory
+            if (checked && this.formData.fieldReadOnly) {
+                this.formData = { ...this.formData, fieldMandatory: true, fieldReadOnly: false };
+            } else {
+                this.formData = { ...this.formData, fieldMandatory: checked };
+            }
         } else if (fieldName === 'FEC_Field_Object_Name__c') {
             this.formData = { ...this.formData, fieldObjectName: value };
         } else if (fieldName === 'FEC_Field_API_Name__c') {
@@ -287,7 +654,13 @@ export default class FecMasterDataSettingForm extends LightningElement {
         } else if (fieldName === 'FEC_Field_Label_Name__c') {
             this.formData = { ...this.formData, fieldLabelName: value };
         } else if (fieldName === 'FEC_Field_Masking__c') {
-            this.formData = { ...this.formData, fieldMasking: event.detail.checked };
+            const checked = event.detail.checked;
+            // Masking off → clear Masking Type
+            if (!checked) {
+                this.formData = { ...this.formData, fieldMasking: false, maskingType: '' };
+            } else {
+                this.formData = { ...this.formData, fieldMasking: true };
+            }
         } else if (fieldName === 'FEC_Masking_Type__c') {
             this.formData = { ...this.formData, maskingType: value };
         } else if (fieldName === 'FEC_Field_Reverted__c') {
@@ -301,7 +674,13 @@ export default class FecMasterDataSettingForm extends LightningElement {
         } else if (fieldName === 'FEC_Sub_Section_Order__c') {
             this.formData = { ...this.formData, subSectionOrder: value };
         } else if (fieldName === 'FEC_Field_Editable__c') {
-            this.formData = { ...this.formData, fieldEditable: event.detail.checked };
+            const checked = event.detail.checked;
+            // Editable off → clear Editable Role
+            if (!checked) {
+                this.formData = { ...this.formData, fieldEditable: false, editableRole: '' };
+            } else {
+                this.formData = { ...this.formData, fieldEditable: true };
+            }
         } else if (fieldName === 'FEC_Editable_Role__c') {
             this.formData = { ...this.formData, editableRole: value };
         }
@@ -373,6 +752,7 @@ export default class FecMasterDataSettingForm extends LightningElement {
     }
 
     handleCreateSubmit() {
+        if (this.isSaving) return;
         showLog('[handleCreateSubmit] START');
 
         // Validation - Trimming whitespace and making sure content exists
@@ -430,6 +810,7 @@ export default class FecMasterDataSettingForm extends LightningElement {
      * @param {String} trimmedSection
      */
     _doCreateSave(trimmedSection) {
+        this.isSaving = true;
         try {
             const mappingReq = {
                 [FIELD_ADDITIONAL_FIELD]: this.formData.additionalField,
@@ -488,10 +869,12 @@ export default class FecMasterDataSettingForm extends LightningElement {
                     }
                     this.showToast('Error', errorMessage, 'error');
                     console.error('Error saving Master Data Setting:', error);
+                    this.isSaving = false;
                 });
         } catch (error) {
             console.error('Error in handleCreateSubmit:', error);
             this.showToast('Error', 'An unexpected error occurred', 'error');
+            this.isSaving = false;
         }
     }
 
@@ -500,6 +883,7 @@ export default class FecMasterDataSettingForm extends LightningElement {
     }
 
     handleSubmitEdit() {
+        if (this.isSaving) return;
         showLog('[handleSubmitEdit] START - Saving edit with all fields editable');
         showLog('[handleSubmitEdit] Current formData:', this.formData);
         showLog('[handleSubmitEdit] Selected Channel:', this.selectedChannel);
@@ -523,6 +907,7 @@ export default class FecMasterDataSettingForm extends LightningElement {
         }
 
         try {
+            this.isSaving = true;
             const mappingReq = {
                 [FIELD_ID]: this.recordId,
                 [FIELD_ADDITIONAL_FIELD]: this.formData.additionalField,

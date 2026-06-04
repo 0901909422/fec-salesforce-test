@@ -13,11 +13,55 @@ import getDecisionTableData from '@salesforce/apex/FEC_StageTransitionEngine.get
 import getFieldsForBusinessProcess from '@salesforce/apex/FEC_StageTransitionEngine.getFieldsForBusinessProcess';
 import saveRuleWithConditions from '@salesforce/apex/FEC_StageTransitionEngine.saveRuleWithConditions';
 import deleteRule from '@salesforce/apex/FEC_StageTransitionEngine.deleteRule';
+import deleteAllRulesByBP from '@salesforce/apex/FEC_StageTransitionEngine.deleteAllRulesByBP';
 import deleteConditionColumn from '@salesforce/apex/FEC_StageTransitionEngine.deleteConditionColumn';
 import testRuleEvaluation from '@salesforce/apex/FEC_StageTransitionEngine.testRuleEvaluation';
 import updateColumnProperties from '@salesforce/apex/FEC_StageTransitionEngine.updateColumnProperties';
 
+// Custom Labels — Decision Table toolbar & messages
+import LABEL_ADD_COL_LEFT from '@salesforce/label/c.FEC_DT_Btn_AddColLeft';
+import LABEL_ADD_COL_RIGHT from '@salesforce/label/c.FEC_DT_Btn_AddColRight';
+import LABEL_DELETE_COL from '@salesforce/label/c.FEC_DT_Btn_DeleteCol';
+import LABEL_ADD_ROW_ABOVE from '@salesforce/label/c.FEC_DT_Btn_AddRowAbove';
+import LABEL_ADD_ROW_BELOW from '@salesforce/label/c.FEC_DT_Btn_AddRowBelow';
+import LABEL_DELETE_ROW from '@salesforce/label/c.FEC_DT_Btn_DeleteRow';
+import LABEL_CLEAR_ALL from '@salesforce/label/c.FEC_DT_Btn_ClearAll';
+import LABEL_CREATE_NEW from '@salesforce/label/c.FEC_DT_Btn_CreateNew';
+import LABEL_SEARCH from '@salesforce/label/c.FEC_DT_Search_Placeholder';
+import LABEL_EMPTY_NO_NODE from '@salesforce/label/c.FEC_DT_Empty_NoNode';
+import LABEL_EMPTY_NO_TABLE from '@salesforce/label/c.FEC_DT_Empty_NoTable';
+import LABEL_EMPTY_HINT from '@salesforce/label/c.FEC_DT_Empty_DefaultColsHint';
+import LABEL_CONFIRM_CLEAR_TITLE from '@salesforce/label/c.FEC_DT_Confirm_ClearAll_Title';
+import LABEL_CONFIRM_CLEAR_MSG from '@salesforce/label/c.FEC_DT_Confirm_ClearAll_Message';
+import LABEL_TOAST_SUCCESS from '@salesforce/label/c.FEC_DT_Toast_Title_Success';
+import LABEL_TOAST_ERROR from '@salesforce/label/c.FEC_DT_Toast_Title_Error';
+import LABEL_MSG_CREATED from '@salesforce/label/c.FEC_DT_Msg_Created';
+import LABEL_MSG_CLEARED from '@salesforce/label/c.FEC_DT_Msg_ClearedCount';
+import LABEL_VALIDATE_RANGE_START_GT_END from '@salesforce/label/c.FEC_DT_Validate_Range_StartGtEnd';
+import LABEL_VALIDATE_RANGE_NOT_NUMERIC from '@salesforce/label/c.FEC_DT_Validate_Range_NotNumeric';
+import LABEL_VALIDATE_RANGE_INCOMPLETE from '@salesforce/label/c.FEC_DT_Validate_Range_Incomplete';
+
 export default class FecDecisionEngineView extends LightningElement {
+
+    // ════════════════════════════════════════════════════════
+    // LABELS (exposed for template)
+    // ════════════════════════════════════════════════════════
+    labels = {
+        addColLeft: LABEL_ADD_COL_LEFT,
+        addColRight: LABEL_ADD_COL_RIGHT,
+        deleteCol: LABEL_DELETE_COL,
+        addRowAbove: LABEL_ADD_ROW_ABOVE,
+        addRowBelow: LABEL_ADD_ROW_BELOW,
+        deleteRow: LABEL_DELETE_ROW,
+        clearAll: LABEL_CLEAR_ALL,
+        createNew: LABEL_CREATE_NEW,
+        search: LABEL_SEARCH,
+        emptyNoNode: LABEL_EMPTY_NO_NODE,
+        emptyNoTable: LABEL_EMPTY_NO_TABLE,
+        emptyHint: LABEL_EMPTY_HINT,
+        toastSuccess: LABEL_TOAST_SUCCESS,
+        toastError: LABEL_TOAST_ERROR
+    };
 
     // ════════════════════════════════════════════════════════
     // @api properties
@@ -46,6 +90,12 @@ export default class FecDecisionEngineView extends LightningElement {
 
     /** Suggested action column labels for Add Column modal (e.g., ['Next Stage', 'Next Queue']) */
     @api suggestedActionColumns = [];
+
+    /** Default condition column labels — auto-seeded khi tạo Decision Table mới, không cho xoá */
+    @api defaultConditionColumns = [];
+
+    /** Default action column labels — auto-seeded khi tạo Decision Table mới, không cho xoá */
+    @api defaultActionColumns = [];
 
     /** Display label for the selected context */
     @api contextLabel = '';
@@ -591,6 +641,8 @@ export default class FecDecisionEngineView extends LightningElement {
     _openAddColModal() {
         this.isLoading = true;
         this.selectedNewColFieldId = null;
+        this.fieldSearchTerm = '';
+        this.showFieldDropdown = false;
         this.newColGroup = this.selectedColGroup || 'condition';
         this.newColActionName = '';
 
@@ -632,6 +684,8 @@ export default class FecDecisionEngineView extends LightningElement {
     handleSelectSuggestedCondition(event) {
         const colName = event.currentTarget.dataset.colName;
         this.selectedNewColFieldId = colName;
+        this.fieldSearchTerm = colName;
+        this.showFieldDropdown = false;
         // Also add to fieldOptions if not present
         const exists = (this.fieldOptions || []).some(f => f.value === colName);
         if (!exists) {
@@ -645,6 +699,39 @@ export default class FecDecisionEngineView extends LightningElement {
 
     handleNewColFieldChange(event) {
         this.selectedNewColFieldId = event.detail.value;
+    }
+
+    // ── Searchable dropdown cho "Or Select Field" ──
+    fieldSearchTerm = '';
+    showFieldDropdown = false;
+
+    get filteredFieldOptions() {
+        const term = (this.fieldSearchTerm || '').toLowerCase().trim();
+        if (!term) return this.fieldOptions;
+        return (this.fieldOptions || []).filter(
+            (f) => (f.label || '').toLowerCase().includes(term)
+        );
+    }
+
+    get hasFilteredFieldOptions() {
+        return this.filteredFieldOptions.length > 0;
+    }
+
+    handleFieldSearch(event) {
+        this.fieldSearchTerm = event.target.value;
+        this.showFieldDropdown = true;
+    }
+
+    handleFieldSearchFocus() {
+        this.showFieldDropdown = true;
+    }
+
+    handlePickField(event) {
+        const value = event.currentTarget.dataset.value;
+        this.selectedNewColFieldId = value;
+        const picked = (this.fieldOptions || []).find((f) => f.value === value);
+        this.fieldSearchTerm = picked ? picked.label : value;
+        this.showFieldDropdown = false;
     }
 
     handleNewColActionNameChange(event) {
@@ -685,6 +772,9 @@ export default class FecDecisionEngineView extends LightningElement {
             this.selectedNewColOperator = 'BETWEEN';
             this.rangeStartOp = '>=';
             this.rangeEndOp = '<=';
+            // Khi bật Range thì phải tắt Expression (và ẩn dropdown Expression)
+            this.showExpressionMode = false;
+            this.expressionValue = '';
         } else {
             this.selectedNewColOperator = 'EQUALS';
         }
@@ -715,6 +805,11 @@ export default class FecDecisionEngineView extends LightningElement {
     handleToggleExpression() {
         this.showExpressionMode = !this.showExpressionMode;
         if (!this.showExpressionMode) this.expressionValue = '';
+    }
+
+    // Expression dropdown chỉ hiển thị khi Expression đang bật VÀ không đang dùng Range
+    get isExpressionSectionVisible() {
+        return this.showExpressionMode && !this.useRange;
     }
 
     handleExpressionChange(event) {
@@ -1099,6 +1194,7 @@ export default class FecDecisionEngineView extends LightningElement {
                     this.selectedColKey = null;
                     this.selectedColGroup = null;
                     this.loadDecisionTable();
+                    this._notifyDataChanged();
                 })
                 .catch(err => {
                     this.showToast('Error', err.body?.message || err.message || 'Không thể xóa cột', 'error');
@@ -1121,6 +1217,7 @@ export default class FecDecisionEngineView extends LightningElement {
                     this.selectedColKey = null;
                     this.selectedColGroup = null;
                     this.loadDecisionTable();
+                    this._notifyDataChanged();
                 })
                 .catch(err => {
                     this.showToast('Error', err.body?.message || err.message || 'Không thể xóa cột', 'error');
@@ -1143,6 +1240,7 @@ export default class FecDecisionEngineView extends LightningElement {
                 this.selectedColKey = null;
                 this.selectedColGroup = null;
                 this.loadDecisionTable();
+                this._notifyDataChanged();
             })
             .catch(err => {
                 this.showToast('Error', err.body?.message || err.message || 'Không thể xóa cột', 'error');
@@ -1337,6 +1435,7 @@ export default class FecDecisionEngineView extends LightningElement {
                 this.showToast('Success', 'Đã xóa rule', 'success');
                 this.selectedRowId = null;
                 this.loadDecisionTable();
+                this._notifyDataChanged();
             })
             .catch(err => {
                 this.showToast('Error', err.body?.message || err.message || 'Không thể xóa rule', 'error');
@@ -1467,6 +1566,7 @@ export default class FecDecisionEngineView extends LightningElement {
                 this.showToast('Success', this.isEditMode ? 'Rule updated successfully' : 'New rule added successfully', 'success');
                 this.showAddRuleModal = false;
                 this.loadDecisionTable();
+                this._notifyDataChanged();
             })
             .catch(err => {
                 this.showToast('Error', err.body?.message || err.message || 'Cannot save rule', 'error');
@@ -1485,17 +1585,42 @@ export default class FecDecisionEngineView extends LightningElement {
         });
         if (!allValid) return false;
 
-        // Validate Range conditions: End >= Start
+        // Validate Range conditions: numeric, both filled or both blank, End >= Start
         for (const cond of (this.formData.conditions || [])) {
             if (!cond.isRange) continue;
-            const startVal = cond.rangeStartValue;
-            const endVal = cond.rangeEndValue;
-            if (startVal && endVal && Number(endVal) < Number(startVal)) {
-                this.showToast('Error', `"${cond.fieldName}" End value must be >= Start value`, 'error');
+            const result = this._validateRangePair(cond.fieldName, cond.rangeStartValue, cond.rangeEndValue);
+            if (!result.valid) {
+                this.showToast(LABEL_TOAST_ERROR, result.message, 'error');
                 return false;
             }
         }
         return true;
+    }
+
+    /**
+     * Validate a BETWEEN range pair.
+     * Rules: both blank = OK (empty cell), both filled = required numeric & start <= end.
+     * Returns { valid: boolean, message: string }.
+     */
+    _validateRangePair(fieldName, startVal, endVal) {
+        const colLabel = fieldName || 'Range';
+        const startStr = (startVal == null ? '' : String(startVal)).trim();
+        const endStr = (endVal == null ? '' : String(endVal)).trim();
+        // Both blank → cell empty, allow save
+        if (!startStr && !endStr) return { valid: true, message: '' };
+        // One filled, one missing → reject
+        if (!startStr || !endStr) {
+            return { valid: false, message: LABEL_VALIDATE_RANGE_INCOMPLETE.replace('{0}', colLabel) };
+        }
+        const startNum = Number(startStr);
+        const endNum = Number(endStr);
+        if (Number.isNaN(startNum) || Number.isNaN(endNum)) {
+            return { valid: false, message: LABEL_VALIDATE_RANGE_NOT_NUMERIC.replace('{0}', colLabel) };
+        }
+        if (startNum > endNum) {
+            return { valid: false, message: LABEL_VALIDATE_RANGE_START_GT_END.replace('{0}', colLabel) };
+        }
+        return { valid: true, message: '' };
     }
 
     // ════════════════════════════════════════════════════════
@@ -1739,7 +1864,12 @@ export default class FecDecisionEngineView extends LightningElement {
         return this.actionColumns.length + this.dynamicActionColumns.length;
     }
 
-    get disableDeleteCol() { return !this.selectedColKey; }
+    get disableDeleteCol() {
+        if (!this.selectedColKey) return true;
+        // Chặn xoá nếu là cột default (locked)
+        if (this._isDefaultColumn(this.selectedColKey)) return true;
+        return false;
+    }
     get disableAddCol() { return this.isLoading; }
 
     get disableDeleteRow() {
@@ -1942,7 +2072,8 @@ export default class FecDecisionEngineView extends LightningElement {
     _isOtherwiseRow(row) {
         if (!row || !row.conditionCells) return false;
         if (this.dynamicConditionColumns.length === 0) return false;
-        const rows = this.filteredRows;
+        // Dùng originalRows thay vì filteredRows để tránh bug khi search
+        const rows = this.originalRows;
         if (rows.length === 0) return false;
         const lastRow = rows[rows.length - 1];
         if (row.ruleId !== lastRow.ruleId) return false;
@@ -2193,6 +2324,7 @@ export default class FecDecisionEngineView extends LightningElement {
             .then(() => {
                 this.showToast('Success', 'Value updated successfully', 'success');
                 this.loadDecisionTable();
+                this._notifyDataChanged();
             })
             .catch(err => {
                 this.showToast('Error', err.body?.message || err.message || 'Cannot save value', 'error');
@@ -2345,6 +2477,14 @@ export default class FecDecisionEngineView extends LightningElement {
                 if (this._pendingRangeStart && this._pendingRangeStart.ruleId === ruleId && this._pendingRangeStart.fieldId === fieldId) {
                     const startValue = this._pendingRangeStart.value;
                     this._pendingRangeStart = null;
+                    // Validate range pair before commit
+                    const colInfo = this.dynamicConditionColumns.find(c => c.fieldId === fieldId);
+                    const colLabel = colInfo ? colInfo.fieldName : fieldId;
+                    const result = this._validateRangePair(colLabel, startValue, endValue);
+                    if (!result.valid) {
+                        this.showToast(LABEL_TOAST_ERROR, result.message, 'error');
+                        return;
+                    }
                     const combinedValue = (startValue || endValue) ? `${startValue},${endValue}` : '';
                     this._saveCellValue(ruleId, fieldId, combinedValue, 0);
                 } else {
@@ -2389,6 +2529,18 @@ export default class FecDecisionEngineView extends LightningElement {
         let startVal = (parts[0] || '').trim();
         let endVal = (parts[1] || '').trim();
         if (rangePart === 'start') { startVal = newValue; } else { endVal = newValue; }
+
+        // Validate: only enforce when both ends are present (partial inline edit may save just one side)
+        if (startVal && endVal) {
+            const colInfo = this.dynamicConditionColumns.find(c => c.fieldId === fieldId);
+            const colLabel = colInfo ? colInfo.fieldName : fieldId;
+            const result = this._validateRangePair(colLabel, startVal, endVal);
+            if (!result.valid) {
+                this.showToast(LABEL_TOAST_ERROR, result.message, 'error');
+                return;
+            }
+        }
+
         const combinedValue = (startVal || endVal) ? `${startVal},${endVal}` : '';
         this._saveCellValue(ruleId, fieldId, combinedValue, 0);
     }

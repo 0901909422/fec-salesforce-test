@@ -245,8 +245,8 @@ export default class FecNatureOfCaseModal extends LightningModal {
             return;
         }
 
-        // Validate Code: chỉ cho phép chữ, số, gạch ngang, gạch dưới
-        if (this.strCode && !/^[a-zA-Z0-9_-]+$/.test(this.strCode)) {
+        // Validate Code: phải bắt đầu bằng chữ Latin, cho phép chữ, số, gạch dưới, dấu chấm, gạch ngang
+        if (this.strCode && !/^[a-zA-Z][a-zA-Z0-9_.\-]*$/.test(this.strCode)) {
             this.dispatchEvent(
                 new ShowToastEvent({
                     title: LABEL_TOAST_VALIDATION_TITLE,

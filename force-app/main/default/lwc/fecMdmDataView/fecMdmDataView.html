@@ -1,0 +1,19 @@
+<template>
+    <lightning-tabset variant="standard">
+        <lightning-tab label={labelLive} icon-name="standard:database">
+            <div class="slds-p-around_x-small">
+                <c-fec-all-master-data></c-fec-all-master-data>
+            </div>
+        </lightning-tab>
+        <lightning-tab label={labelMdm} icon-name="standard:data_streams">
+            <div class="slds-p-around_x-small">
+                <c-fec-all-master-data-mdm></c-fec-all-master-data-mdm>
+            </div>
+        </lightning-tab>
+        <lightning-tab label={labelSync} icon-name="standard:sync_action">
+            <div class="slds-p-around_x-small">
+                <c-fec-mdm-sync-operations></c-fec-mdm-sync-operations>
+            </div>
+        </lightning-tab>
+    </lightning-tabset>
+</template>

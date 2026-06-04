@@ -64,6 +64,10 @@ export default class FecNatureOfCaseTree extends LightningElement {
     lastSelectedNodeId = null;
     selectNodeTimeout = null;
 
+    // Search optimization: debounce timer + flat search index
+    _searchDebounceTimer = null;
+    _searchIndex = []; // [{name, code, alias, nameVN, nameEN, label, parentChain: Set<name>}]
+
     objectMap = {
         [PREFIX_PT]: OBJ_BUSINESS_PROCESS,
         [PREFIX_BP]: OBJ_CATEGORY,
@@ -87,10 +91,42 @@ export default class FecNatureOfCaseTree extends LightningElement {
                 this.treeItems = data;
             }
             this.fecRawData = data;
+            // Build flat search index once for fast O(N) search
+            this._buildSearchIndex(data);
         } else if (result.error) {
             console.error('Error fetching tree data:', result.error);
             this.showToast(LABEL_TOAST_ERROR, result.error.body.message, 'error');
         }
+    }
+
+    /**
+     * Build flat array of all nodes with parent chain.
+     * Used for fast O(N) search instead of recursive tree walk.
+     * Called once on data load and after refresh.
+     */
+    _buildSearchIndex(data) {
+        const index = [];
+        const walk = (nodes, parentChain) => {
+            if (!nodes) return;
+            for (const node of nodes) {
+                const name = String(node.name);
+                index.push({
+                    name,
+                    code: String(node.Code || '').toLowerCase(),
+                    alias: String(node.Alias || '').toLowerCase(),
+                    nameVN: String(node.nameVN || '').toLowerCase(),
+                    nameEN: String(node.NameEN || '').toLowerCase(),
+                    label: String(node.label || '').toLowerCase(),
+                    Status: node.Status,
+                    parentChain
+                });
+                if (node.items && node.items.length > 0) {
+                    walk(node.items, [...parentChain, name]);
+                }
+            }
+        };
+        walk(data, []);
+        this._searchIndex = index;
     }
 
 
@@ -104,6 +140,7 @@ export default class FecNatureOfCaseTree extends LightningElement {
         if (freshData) {
             this.treeKey = false;
             this.fecRawData = JSON.parse(JSON.stringify(freshData));
+            this._buildSearchIndex(this.fecRawData);
             if (this.selectedNodeName) {
                 this.expandedNodeNames.add(String(this.selectedNodeName));
             }
@@ -129,9 +166,13 @@ export default class FecNatureOfCaseTree extends LightningElement {
     }
 
     handleFecSearch(event) {
-        this.searchTerm = event.target.value;
-        // Khi xóa search, searchTerm thành rỗng, hàm applyFilterAndExpand sẽ chạy vào Trường hợp 2
-        this.treeItems = this.applyFilterAndExpand(this.fecRawData, this.searchTerm);
+        const value = event.target.value;
+        // Debounce 250ms — wait until user stops typing before recomputing tree
+        clearTimeout(this._searchDebounceTimer);
+        this._searchDebounceTimer = setTimeout(() => {
+            this.searchTerm = value;
+            this.treeItems = this.applyFilterAndExpand(this.fecRawData, value);
+        }, 250);
     }
 
     // Hàm lọc đệ quy chuyên sâu
@@ -332,6 +373,7 @@ export default class FecNatureOfCaseTree extends LightningElement {
 
                 // 2. Tạo bản sao mới hoàn toàn (Deep Copy)
                 this.fecRawData = JSON.parse(JSON.stringify(freshData));
+                this._buildSearchIndex(this.fecRawData);
 
                 // 3. Đảm bảo node đang select cũng được mở
                 if (this.selectedNodeName) {
@@ -357,58 +399,92 @@ export default class FecNatureOfCaseTree extends LightningElement {
     applyFilterAndExpand(data, searchTerm, forceExpandId) {
         const searchKey = searchTerm ? searchTerm.toLowerCase().trim() : '';
         const targetId = forceExpandId ? String(forceExpandId) : null;
+        const statusFilter = this.selectedStatusFilter;
+        const hasStatusFilter = statusFilter && statusFilter !== 'ALL';
+        const shouldBeActive = statusFilter === 'ACTIVE';
+
+        // Pre-compute auto-expand set when searching: O(N) flat scan instead of recursive
+        // For each match, all ancestors are added to the expand set so user sees the path.
+        let searchExpandSet = null;
+        let searchMatchSet = null;
+        if (searchKey && this._searchIndex && this._searchIndex.length > 0) {
+            searchExpandSet = new Set();
+            searchMatchSet = new Set();
+            const searchField = this.selectedDisplayField;
+            for (const entry of this._searchIndex) {
+                let valueToCheck;
+                if (searchField === 'Code') valueToCheck = entry.code;
+                else if (searchField === 'Alias') valueToCheck = entry.alias;
+                else if (searchField === 'nameVN') valueToCheck = entry.nameVN;
+                else if (searchField === 'NameEN') valueToCheck = entry.nameEN;
+                else valueToCheck = entry.label;
+
+                if (valueToCheck.includes(searchKey)) {
+                    // Status filter applies to leaf-level match decision
+                    if (hasStatusFilter && entry.Status !== undefined && entry.Status !== null) {
+                        if (Boolean(entry.Status) !== shouldBeActive) continue;
+                    }
+                    searchMatchSet.add(entry.name);
+                    // Mark all ancestors so they auto-expand to reveal this match
+                    for (const parent of entry.parentChain) {
+                        searchExpandSet.add(parent);
+                    }
+                }
+            }
+        }
 
         const filterAndExpand = (items) => {
-            return items.map(item => {
-                const newItem = { ...item };
-                const currentName = String(newItem.name);
+            const result = [];
+            for (const item of items) {
+                const currentName = String(item.name);
 
-                // Apply status filter: show only nodes that match selectedStatusFilter
-                if (this.selectedStatusFilter && this.selectedStatusFilter !== 'ALL') {
-                    const shouldBeActive = this.selectedStatusFilter === 'ACTIVE';
-                    // If Status property is present, filter nodes that don't match
-                    if (newItem.Status !== undefined && newItem.Status !== null) {
-                        if (Boolean(newItem.Status) !== shouldBeActive) {
-                            // Node itself doesn't match; but children might. We continue to process children and keep parent
-                            // only if any child matches after recursion. We don't return null immediately.
-                        }
-                    }
+                // Recurse children FIRST (we need filteredChildren to decide keep)
+                let filteredChildren = item.items;
+                let childrenChanged = false;
+                if (item.items && item.items.length > 0) {
+                    filteredChildren = filterAndExpand(item.items);
+                    childrenChanged = filteredChildren !== item.items
+                        || filteredChildren.length !== item.items.length;
                 }
 
-                let isAnyChildExpanded = false;
-                if (newItem.items && newItem.items.length > 0) {
-                    newItem.items = filterAndExpand(newItem.items);
-                    // Nếu có bất kỳ con nào của nó đang mở, thì chính nó cũng phải mở
-                    isAnyChildExpanded = newItem.items.some(child => child.isExpanded);
+                // Status match for THIS node
+                let statusMatches = true;
+                if (hasStatusFilter && item.Status !== undefined && item.Status !== null) {
+                    statusMatches = Boolean(item.Status) === shouldBeActive;
                 }
 
-                const isManuallyExpanded = this.expandedNodeNames.has(currentName);
-                const isTargetParent = targetId && currentName === targetId;
-
-                // Evaluate status match for this node
-                let statusMatches = true; // default: matches
-                if (this.selectedStatusFilter && this.selectedStatusFilter !== 'ALL' && newItem.Status !== undefined && newItem.Status !== null) {
-                    statusMatches = (this.selectedStatusFilter === 'ACTIVE') ? Boolean(newItem.Status) === true : Boolean(newItem.Status) === false;
-                }
+                // Decide keep + new isExpanded
+                let keep = true;
+                let newIsExpanded = item.isExpanded;
 
                 if (searchKey) {
-                    showLog('Filtering node:', newItem.label);
-                    // For search, check the selected display field to match searchKey
-                    const fieldToSearch = (this.selectedDisplayField && newItem[this.selectedDisplayField] != null) ? String(newItem[this.selectedDisplayField]).toLowerCase() : String(newItem.label).toLowerCase();
-                    const matchesSearch = fieldToSearch.includes(searchKey);
-                    newItem.isExpanded = (matchesSearch && statusMatches) || isAnyChildExpanded;
-                    return ((matchesSearch && statusMatches) || isAnyChildExpanded) ? newItem : null;
+                    const isOwnMatch = searchMatchSet ? searchMatchSet.has(currentName) : false;
+                    const hasMatchingDescendant = searchExpandSet ? searchExpandSet.has(currentName) : false;
+                    keep = isOwnMatch || hasMatchingDescendant
+                        || (filteredChildren && filteredChildren.length > 0);
+                    newIsExpanded = hasMatchingDescendant || (isOwnMatch && filteredChildren && filteredChildren.length > 0);
                 } else {
-                    // No search term: respect status filter and manual/child expansion
-                    if (!statusMatches && !(newItem.items && newItem.items.length > 0)) {
-                        // Node and descendants don't match status filter -> filter out
-                        return null;
+                    if (!statusMatches && !(filteredChildren && filteredChildren.length > 0)) {
+                        keep = false;
+                    } else {
+                        const isManuallyExpanded = this.expandedNodeNames.has(currentName);
+                        const isTargetParent = targetId && currentName === targetId;
+                        newIsExpanded = (isManuallyExpanded || isTargetParent) && statusMatches;
                     }
-
-                    newItem.isExpanded = (isManuallyExpanded || isTargetParent) && statusMatches;
-                    return newItem;
                 }
-            }).filter(item => item !== null);
+
+                if (!keep) continue;
+
+                // Only clone if something actually changed → preserve reference equality
+                // for unchanged nodes so LWC reactivity skips re-render.
+                const isExpandedChanged = newIsExpanded !== item.isExpanded;
+                if (isExpandedChanged || childrenChanged) {
+                    result.push({ ...item, isExpanded: newIsExpanded, items: filteredChildren });
+                } else {
+                    result.push(item);
+                }
+            }
+            return result;
         };
 
         return filterAndExpand(data || []);

@@ -209,7 +209,8 @@ export default class FecMasterDataReview extends LightningElement {
                 }));
                 return {
                     ...row,
-                    displayName: row.propertyName || row.name,
+                    displayName: row.name,
+                    hasPropertyName: !!row.propertyName,
                     expanded: false,
                     iconName: ICON_CHEVRON_RIGHT,
                     headerClass: 'row-header row-header-' + meta.headerSuffix,

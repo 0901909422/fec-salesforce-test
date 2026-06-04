@@ -517,3 +517,50 @@
 .range-sub-header {
     white-space: nowrap;
 }
+
+
+/* ── Searchable Field Dropdown (Add Column modal) ─────── */
+.fec-field-search {
+    position: relative;
+}
+
+.fec-field-listbox {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    z-index: 9001;
+    max-height: 220px;
+    overflow-y: auto;
+    list-style: none;
+    margin: 2px 0 0 0;
+    padding: 0;
+    background: #ffffff;
+    border: 1px solid #dddbda;
+    border-radius: 0.25rem;
+    box-shadow: 0 2px 3px 0 rgba(0, 0, 0, 0.16);
+}
+
+.fec-field-option {
+    padding: 0.5rem 0.75rem;
+    cursor: pointer;
+    font-size: 0.8125rem;
+    color: #080707;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.fec-field-option:hover {
+    background-color: #f3f2f2;
+}
+
+.fec-field-empty {
+    cursor: default;
+    color: #706e6b;
+    font-style: italic;
+}
+
+.fec-field-empty:hover {
+    background-color: transparent;
+}

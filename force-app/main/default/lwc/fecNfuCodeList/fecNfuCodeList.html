@@ -1,0 +1,103 @@
+<template>
+    <lightning-card title="NFU Code Management" icon-name="standard:code_set">
+        <lightning-button label="New NFU Code" icon-name="utility:add" slot="actions"
+            variant="brand" onclick={handleNew}></lightning-button>
+
+        <div class="slds-p-horizontal_medium slds-p-bottom_medium">
+            <div class="slds-m-bottom_small">
+                <lightning-input type="search" placeholder="Search by Code or Reason..."
+                    value={searchTerm} onchange={handleSearch} variant="label-hidden"></lightning-input>
+            </div>
+
+            <template if:true={isLoading}>
+                <lightning-spinner alternative-text="Loading..." size="medium"></lightning-spinner>
+            </template>
+
+            <template if:true={hasCodes}>
+                <table class="slds-table slds-table_cell-buffer slds-table_bordered slds-table_striped">
+                    <thead>
+                        <tr class="slds-line-height_reset">
+                            <th scope="col" style="width:5%">#</th>
+                            <th scope="col" style="width:25%">NFU Code</th>
+                            <th scope="col">NFU Reason VN</th>
+                            <th scope="col" style="width:10%">Active</th>
+                            <th scope="col" style="width:10%">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <template for:each={pagedCodeList} for:item="nfu" for:index="idx">
+                            <tr key={nfu.Id}>
+                                <td>{idx}</td>
+                                <td>{nfu.Name}</td>
+                                <td>{nfu.FEC_Reason_VN__c}</td>
+                                <td>
+                                    <template if:true={nfu.FEC_Active__c}>
+                                        <lightning-icon icon-name="utility:check" size="x-small" variant="success"></lightning-icon>
+                                    </template>
+                                </td>
+                                <td>
+                                    <lightning-button-icon icon-name="utility:edit" data-id={nfu.Id}
+                                        onclick={handleEdit} variant="bare" class="slds-m-right_xx-small"></lightning-button-icon>
+                                    <lightning-button-icon icon-name="utility:delete" data-id={nfu.Id}
+                                        onclick={handleDelete} variant="bare"></lightning-button-icon>
+                                </td>
+                            </tr>
+                        </template>
+                    </tbody>
+                </table>
+            </template>
+
+            <template if:false={hasCodes}>
+                <div class="slds-align_absolute-center slds-p-around_large">
+                    <p class="slds-text-color_weak">No NFU Codes found.</p>
+                </div>
+            </template>
+
+            <!-- Pagination -->
+            <c-fec-pagination
+                current-page={currentPage}
+                total-records={totalRecords}
+                page-size={pageSize}
+                onpagechange={handlePageChange}
+                onpagesizechange={handlePageSizeChange}>
+            </c-fec-pagination>
+        </div>
+    </lightning-card>
+
+    <!-- Modal -->
+    <template if:true={isModalOpen}>
+        <section role="dialog" tabindex="-1" aria-modal="true" class="slds-modal slds-fade-in-open">
+            <div class="slds-modal__container">
+                <header class="slds-modal__header">
+                    <button class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse"
+                        onclick={handleCancel}>
+                        <lightning-icon icon-name="utility:close" variant="inverse" size="small"></lightning-icon>
+                    </button>
+                    <h2 class="slds-modal__title">{modalTitle}</h2>
+                </header>
+                <div class="slds-modal__content slds-p-around_medium">
+                    <div class="slds-grid slds-wrap slds-gutters_small">
+                        <div class="slds-col slds-size_1-of-1 slds-p-bottom_small">
+                            <lightning-input label="NFU Code *" value={formCode}
+                                data-field="code" onchange={handleFormInput} required></lightning-input>
+                        </div>
+                        <div class="slds-col slds-size_1-of-1 slds-p-bottom_small">
+                            <lightning-input label="NFU Reason VN" value={formReasonVN}
+                                data-field="reasonVN" onchange={handleFormInput}></lightning-input>
+                        </div>
+                        <div class="slds-col slds-size_1-of-1 slds-p-bottom_small">
+                            <lightning-input type="checkbox" label="Active" checked={formActive}
+                                data-field="active" onchange={handleFormInput}></lightning-input>
+                        </div>
+                    </div>
+                </div>
+                <footer class="slds-modal__footer">
+                    <lightning-button label="Cancel" variant="neutral" onclick={handleCancel}
+                        class="slds-m-right_x-small"></lightning-button>
+                    <lightning-button label="Save" variant="brand" onclick={handleSave}></lightning-button>
+                </footer>
+            </div>
+        </section>
+        <div class="slds-backdrop slds-backdrop_open"></div>
+    </template>
+</template>
