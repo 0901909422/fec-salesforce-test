@@ -741,6 +741,7 @@ public without sharing class FEC_InteractionInforHandler {
                    FEC_Phone_Number__c,
                    FEC_Created_On__c,
                    FEC_Created_by__c,
+                   FEC_KYC_Stauts__c,
                    FEC_External_Interaction_ID__c
             FROM Case
             WHERE Id = :recordId

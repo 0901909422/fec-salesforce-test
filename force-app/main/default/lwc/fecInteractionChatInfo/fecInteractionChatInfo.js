@@ -122,7 +122,7 @@ export default class FecInteractionChatInfo extends LightningElement {
     get realPhone() { return this.record?.FEC_Phone_Number__c || STR_EMPTY; }
     get createdOn() { return formatDateTimeVN(this.record?.FEC_Created_On__c); }
     get createdBy() { return this.record?.FEC_Created_by__c || STR_EMPTY; }
-    get kycStatus() { return this.record?.FEC_KYC_Status__c || STR_EMPTY; }
+    get kycStatus() { return this.record?.FEC_KYC_Stauts__c || STR_EMPTY; }
     get externalInteractionId() { return this.record?.FEC_External_Interaction_ID__c || STR_EMPTY; }
     get outcomeCode() { return this.record?.FEC_Outcome_Code__c || STR_EMPTY; }
     get interactionRemark() { return this.record?.FEC_Interaction_Remarks__c || STR_EMPTY; }
