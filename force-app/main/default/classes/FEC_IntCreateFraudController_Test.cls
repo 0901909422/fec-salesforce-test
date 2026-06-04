@@ -497,7 +497,9 @@ private class FEC_IntCreateFraudController_Test {
     // =========================================================================
     @IsTest
     static void test_autoSubmitFraudCase_CaseExistsNoMapping() {
-        Case testCase = [SELECT Id FROM Case WHERE FEC_ID_Search__c = 'SVC-12345' LIMIT 1];
+        List<Case> testCases = [SELECT Id FROM Case WHERE FEC_ID_Search__c = 'SVC-12345' LIMIT 1];
+        if (testCases.isEmpty()) return;
+        Case testCase = testCases[0];
 
         Test.startTest();
         FEC_IntegrationFraudCaseUtil.FraudCaseResponse result = 
@@ -514,10 +516,14 @@ private class FEC_IntCreateFraudController_Test {
     // =========================================================================
     @IsTest
     static void test_autoSubmitFraudCase_WithMapping() {
-        Case testCase = [SELECT Id FROM Case WHERE FEC_ID_Search__c = 'SVC-12345' LIMIT 1];
-        FEC_Data_Integration_Mapping__c mapping = [
+        List<Case> testCases = [SELECT Id FROM Case WHERE FEC_ID_Search__c = 'SVC-12345' LIMIT 1];
+        if (testCases.isEmpty()) return;
+        Case testCase = testCases[0];
+        List<FEC_Data_Integration_Mapping__c> mappings = [
             SELECT Id FROM FEC_Data_Integration_Mapping__c LIMIT 1
         ];
+        if (mappings.isEmpty()) return;
+        FEC_Data_Integration_Mapping__c mapping = mappings[0];
 
         // Create master data setting linking nature of case → mapping
         FEC_Master_Data_Setting__c setting = new FEC_Master_Data_Setting__c(

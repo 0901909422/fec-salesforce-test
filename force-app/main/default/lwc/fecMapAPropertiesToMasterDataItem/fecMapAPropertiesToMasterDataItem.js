@@ -487,6 +487,7 @@ export default class FecMapAPropertiesToMasterDataItem extends LightningElement 
             .then(() => {
                 this.showToast(this.labels.toastSuccess, this.labels.msgRecordDeleted, 'success');
                 this.deleteRecordId = null;
+                this._notifyDataChanged();
                 this.loadRecords();
             })
             .catch(error => {
@@ -584,6 +585,7 @@ export default class FecMapAPropertiesToMasterDataItem extends LightningElement 
                 this.showToast(this.labels.toastSuccess, msg, 'success');
                 this.newRows = [];
                 this.selectedRowId = null;
+                this._notifyDataChanged();
                 return this.loadRecords();
             })
             .catch(error => {
@@ -596,6 +598,10 @@ export default class FecMapAPropertiesToMasterDataItem extends LightningElement 
     // ===== UTILS =====
     showToast(title, message, variant) {
         this.dispatchEvent(new ShowToastEvent({ title, message, variant }));
+    }
+
+    _notifyDataChanged() {
+        this.dispatchEvent(new CustomEvent('datachanged', { bubbles: true, composed: true }));
     }
 
     reduceErrors(error) {
