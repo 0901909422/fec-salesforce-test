@@ -3,9 +3,15 @@
     "edition": "Developer",
     "language": "en_US",
     "features": [
-        "ServiceCloud"
+        "ServiceCloud",
+        "Entitlements",
+        "LightningServiceConsole"
     ],
     "settings": {
+        "entitlementSettings": {
+            "enableEntitlements": true,
+            "enableMilestoneFeedItem": true
+        },
         "languageSettings": {
             "enableTranslationWorkbench": true,
             "enableEndUserLanguages": true
