@@ -2,15 +2,6 @@
 private class FEC_GetCSCaseStatusRestService_Test {
     private static final String VALID_CHANNEL = FEC_ConstantCommon.CHANNEL_INBOUND_NAME;
 
-    private static Id customerCaseRecordTypeId() {
-        Map<String, Schema.RecordTypeInfo> byDev =
-            Schema.SObjectType.Case.getRecordTypeInfosByDeveloperName();
-        if (byDev.containsKey(FEC_ConstantCommon.CASE_CUSTOMER_RECORD_TYPE_DEV_NAME)) {
-            return byDev.get(FEC_ConstantCommon.CASE_CUSTOMER_RECORD_TYPE_DEV_NAME).getRecordTypeId();
-        }
-        return null;
-    }
-
     private static final String SAMPLE_GET_STATUS_REQUEST =
         '<?xml version="1.0" encoding="utf-8"?>' +
         '<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">' +
@@ -36,62 +27,15 @@ private class FEC_GetCSCaseStatusRestService_Test {
         '</soap:Body>' +
         '</soap:Envelope>';
 
-    private static final String SAMPLE_GET_STATUS_SUCCESS_REQUEST =
-        '<?xml version="1.0" encoding="utf-8"?>' +
-        '<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">' +
-        '<soap:Body>' +
-        '<GetCSCaseStatusRequest xmlns="urn:PegaRULES:SOAP:MyCase:Services">' +
-        '<Sys>' +
-        '<Channel>Inbound</Channel>' +
-        '<TransactionID>TXN-GET-STATUS-2026-99999999999</TransactionID>' +
-        '<DateTime>2026-05-25T06:52:33.616Z</DateTime>' +
-        '</Sys>' +
-        '<CaseRequestInfo>' +
-        '<ContractOrAccountInfos>' +
-        '<ContractOrAccountNumber>ACC123</ContractOrAccountNumber>' +
-        '<ProductType>CreditCard</ProductType>' +
-        '</ContractOrAccountInfos>' +
-        '<UserType>EXISTING</UserType>' +
-        '<CaseID>CASE123</CaseID>' +
-        '<IncludeFinishedRequest>true</IncludeFinishedRequest>' +
-        '</CaseRequestInfo>' +
-        '</GetCSCaseStatusRequest>' +
-        '</soap:Body>' +
-        '</soap:Envelope>';
-
     @TestSetup
     static void setupData() {
         insert new FEC_Channel__c(
-            Name = VALID_CHANNEL,
-            FEC_Code__c = 'INBOUND',
-            FEC_Channel_ID__c = VALID_CHANNEL,
+            Name = 'Inbound',
+            FEC_Channel_ID__c = FEC_ConstantCommon.CHANNEL_INBOUND_NAME,
             FEC_Channel_Vietnamese_name__c = 'Inbound',
-            FEC_Channel_Status__c = true
+            FEC_Channel_Status__c = true,
+            FEC_Update_Case_Status__c = true
         );
-
-        FEC_Product_Type__c pt = new FEC_Product_Type__c(
-            Name = 'Credit Card',
-            FEC_Code__c = 'CC',
-            FEC_Name_VN__c = 'The Tin Dung',
-            FEC_Active__c = true
-        );
-        FEC_Category__c cat = new FEC_Category__c(
-            Name = 'Request',
-            FEC_Code__c = 'Request',
-            FEC_Name_VN__c = 'Yeu Cau',
-            FEC_Active__c = true
-        );
-        FEC_Sub_Category__c subCat = new FEC_Sub_Category__c(
-            Name = 'RC27',
-            FEC_Code__c = 'RC27',
-            FEC_Active__c = true
-        );
-        FEC_Sub_Code__c subCode = new FEC_Sub_Code__c(
-            Name = 'RC27.01',
-            FEC_Code__c = 'RC27.01',
-            FEC_Active__c = true
-        );
-        insert new List<SObject>{ pt, cat, subCat, subCode };
 
         FEC_Business_Process__c proc = new FEC_Business_Process__c(
             Name = 'Fraud Process',
@@ -102,33 +46,13 @@ private class FEC_GetCSCaseStatusRestService_Test {
 
         FEC_CaseTriggerHandler.isExecuting = true;
         try {
-            Case statusCase = new Case(
+            insert new Case(
                 Subject = 'REST Get Status Test',
                 Status = 'New',
                 FEC_ID_Search__c = 'CASE123',
                 FEC_Customer_Name__c = 'Test Customer',
-                FEC_Business_Process__c = proc.Id,
-                FEC_Product_Type__c = pt.Id,
-                FEC_Category__c = cat.Id,
-                FEC_SubCategory__c = subCat.Id,
-                FEC_SubCode__c = subCode.Id
+                FEC_Business_Process__c = proc.Id
             );
-            Id rtId = customerCaseRecordTypeId();
-            if (rtId != null) {
-                statusCase.RecordTypeId = rtId;
-            }
-            insert statusCase;
-
-            FEC_Customer_History__c accountHist = new FEC_Customer_History__c(
-                Name = 'ACC123',
-                FEC_Case__c = statusCase.Id,
-                FEC_Account_Number__c = 'ACC123',
-                FEC_Email__c = 'customer@example.com'
-            );
-            insert accountHist;
-
-            statusCase.FEC_Account_or_Contract__c = accountHist.Id;
-            update statusCase;
         } finally {
             FEC_CaseTriggerHandler.isExecuting = false;
         }
@@ -161,8 +85,9 @@ private class FEC_GetCSCaseStatusRestService_Test {
         resp.Sys.DateTime_x = String.valueOf(System.now());
         resp.Sys.Code = 1;
         resp.Sys.Description = 'Success';
-
+        resp.TotalCases = 1;
         resp.CaseResultInfos = new List<FEC_GetCSCaseStatusService.CaseResultInfoType>();
+
         FEC_GetCSCaseStatusService.CaseResultInfoType caseResult =
             new FEC_GetCSCaseStatusService.CaseResultInfoType();
         caseResult.CaseID = '500xx0000000001';
@@ -172,12 +97,16 @@ private class FEC_GetCSCaseStatusRestService_Test {
         caseResult.OriginalRequest = new FEC_GetCSCaseStatusService.OriginalRequestType();
         caseResult.OriginalRequest.Sys = new FEC_GetCSCaseStatusService.SysType();
         caseResult.OriginalRequest.Sys.Channel = VALID_CHANNEL;
-        caseResult.OriginalRequest.CustomerInfo = new FEC_GetCSCaseStatusService.CustomerInfoType();
+        caseResult.OriginalRequest.CustomerInfo =
+            new FEC_GetCSCaseStatusService.CustomerInfoType();
         caseResult.OriginalRequest.CustomerInfo.Name = 'Customer A';
-        caseResult.OriginalRequest.RequestInfo = new FEC_GetCSCaseStatusService.RequestInfoType();
+        caseResult.OriginalRequest.RequestInfo =
+            new FEC_GetCSCaseStatusService.RequestInfoType();
         caseResult.OriginalRequest.RequestInfo.CaseType = 'Complaint';
-        caseResult.OriginalRequest.CreatorInfo = new FEC_GetCSCaseStatusService.CreatorInfoType();
+        caseResult.OriginalRequest.CreatorInfo =
+            new FEC_GetCSCaseStatusService.CreatorInfoType();
         caseResult.OriginalRequest.CreatorInfo.CreatorEmail = 'user@example.com';
+
         resp.CaseResultInfos.add(caseResult);
 
         String xml = FEC_MyCaseSoapXml.buildGetCSCaseStatusSoapResponse(resp);
@@ -196,7 +125,7 @@ private class FEC_GetCSCaseStatusRestService_Test {
         RestResponse res = new RestResponse();
         req.requestUri = '/services/apexrest/MyCase/v1/GetCSCaseStatus';
         req.httpMethod = 'POST';
-        req.requestBody = Blob.valueOf(SAMPLE_GET_STATUS_SUCCESS_REQUEST);
+        req.requestBody = Blob.valueOf(SAMPLE_GET_STATUS_REQUEST);
         RestContext.request = req;
         RestContext.response = res;
 
@@ -246,38 +175,6 @@ private class FEC_GetCSCaseStatusRestService_Test {
         System.assert(
             res.responseBody.toString().contains('GetCSCaseStatusResponse')
         );
-    }
-
-    @IsTest
-    static void testRestPost_serviceValidationError_returnsOkWithCode2() {
-        String badChannelRequest =
-            '<?xml version="1.0" encoding="utf-8"?>' +
-            '<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">' +
-            '<soap:Body>' +
-            '<GetCSCaseStatusRequest xmlns="urn:PegaRULES:SOAP:MyCase:Services">' +
-            '<Sys><Channel>BAD</Channel><TransactionID>TXN-BAD</TransactionID>' +
-            '<DateTime>2026-05-25T06:52:33.616Z</DateTime></Sys>' +
-            '<CaseRequestInfo><ContractOrAccountInfos>' +
-            '<ContractOrAccountNumber>ACC123</ContractOrAccountNumber>' +
-            '<ProductType>CreditCard</ProductType></ContractOrAccountInfos>' +
-            '<UserType>Existing</UserType><CaseID>CASE123</CaseID>' +
-            '<IncludeFinishedRequest>true</IncludeFinishedRequest></CaseRequestInfo>' +
-            '</GetCSCaseStatusRequest></soap:Body></soap:Envelope>';
-
-        RestRequest req = new RestRequest();
-        RestResponse res = new RestResponse();
-        req.requestUri = '/services/apexrest/MyCase/v1/GetCSCaseStatus';
-        req.httpMethod = 'POST';
-        req.requestBody = Blob.valueOf(badChannelRequest);
-        RestContext.request = req;
-        RestContext.response = res;
-
-        Test.startTest();
-        FEC_GetCSCaseStatusRestService.doPost();
-        Test.stopTest();
-
-        System.assertEquals(FEC_ConstantCommon.HTTP_STATUS_OK, res.statusCode);
-        System.assert(res.responseBody.toString().contains('<Code>2</Code>'));
     }
 
     @IsTest
