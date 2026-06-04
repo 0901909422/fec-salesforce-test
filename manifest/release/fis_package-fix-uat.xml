@@ -27,6 +27,7 @@
         <members>fec_BatchCaseCreation</members>
         <members>fec_BatchDataCreation</members>
         <members>fec_CaseBussiness</members>
+        <members>fec_CaseEditNOC</members>
         <members>fec_DownloadReports</members>
         <name>LightningComponentBundle</name>
     </types>
