@@ -748,13 +748,8 @@ public without sharing class FEC_CustomerIntegrationService {
         Integer ippCount = orderedIppList.size();
         Integer maxSize = Math.max(planCount, ippCount);
         String todayStr = Datetime.now().formatGmt(FEC_ConstantCommon.DATE_FORMAT);
-        Integer detailCallCount = 0;
 
         for (Integer i = 0; i < maxSize; i++) {
-            if (detailCallCount >= 50) {
-                break;
-            }
-
             FEC_GetCardPlanInfo.CardPlan cardPlan = (i < planCount) ? cardPlans[i] : null;
             FEC_GetCardSecInfo.IPP ipp = (i < ippCount) ? orderedIppList[i] : null;
             FEC_IPP__c rec;
@@ -779,7 +774,6 @@ public without sharing class FEC_CustomerIntegrationService {
             }
 
             enrichIppRecordFromDetailsApi(rec, accountNumber, rec.FEC_IPP_Plan__c, todayStr);
-            detailCallCount++;
             toInsert.add(rec);
         }
 
