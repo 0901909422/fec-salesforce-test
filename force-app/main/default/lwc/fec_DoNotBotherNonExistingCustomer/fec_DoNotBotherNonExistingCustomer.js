@@ -824,7 +824,7 @@ export default class Fec_DoNotBotherNonExistingCustomer extends LightningElement
           row.channel === "Email"
             ? row.contact
             : this.normalizePhone(row.contact),
-        contract_id: this.contractId || "UNKNOWN",
+        // contract_id: this.contractId || "UNKNOWN",
       }));
   }
   mapType(channel) {
