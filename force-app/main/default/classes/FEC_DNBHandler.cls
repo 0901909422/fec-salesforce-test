@@ -1568,25 +1568,26 @@ public without sharing class FEC_DNBHandler {
             FEC_Case_Email__c,
             FEC_Interaction__c,
             FEC_Interaction__r.FEC_Phone_Number__c,
+            FEC_Interaction__r.FEC_Interaction_Email__c,
             FEC_Account_or_Contract__c
             FROM Case
             WHERE Id = : caseId
             LIMIT 1
         ];
         
-        System.debug('PHONE=' + caseRecord.FEC_Case_Phone_Number__c);
+        System.debug('PHONE=' + caseRecord.FEC_Interaction__r.FEC_Phone_Number__c);
         System.debug('NID=' + nid);
-        System.debug('EMAIL=' + caseRecord.FEC_Case_Email__c);
+        System.debug('EMAIL=' + caseRecord.FEC_Interaction__r.FEC_Interaction_Email__c);
         
         /*
          * Check DNB
          */
         FEC_GetDNBCalloutService.DNBResult res = checkDNB(
             
-        caseRecord.FEC_Case_Phone_Number__c,
+        caseRecord.FEC_Interaction__r.FEC_Phone_Number__c,
         nid,
-        caseRecord.FEC_Case_Email__c != null
-            ? caseRecord.FEC_Case_Email__c
+        caseRecord.FEC_Interaction__r.FEC_Interaction_Email__c != null
+            ? caseRecord.FEC_Interaction__r.FEC_Interaction_Email__c
             : null);
         
         /*
