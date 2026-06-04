@@ -879,3 +879,22 @@
     text-overflow: ellipsis;
     white-space: nowrap;
 }
+.THIS .fec-file-modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,.45); z-index:99998; }
+.THIS .fec-file-modal { position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); width:760px; max-width:92vw; background:#fff; border-radius:16px; box-shadow:0 8px 32px rgba(0,0,0,.28); z-index:99999; overflow:hidden; }
+.THIS .fec-file-modal-close { position:absolute; top:14px; right:16px; width:28px; height:28px; border:2px solid #1b5cab; border-radius:50%; color:#1b5cab; line-height:23px; font-size:22px; text-align:center; cursor:pointer; background:#fff; }
+.THIS .fec-file-modal-title { padding:18px 48px 14px; text-align:center; border-bottom:1px solid #ddd; font-size:20px; color:#032d60; }
+.THIS .fec-file-modal-body { display:flex; min-height:280px; }
+.THIS .fec-file-modal-left { width:220px; border-right:1px solid #ddd; background:#fafafa; padding:16px 12px; }
+.THIS .fec-file-tab { margin-top:12px; padding:10px 12px; font-size:13px; color:#032d60; border-left:3px solid transparent; }
+.THIS .fec-file-tab.active { background:#eaf3ff; border-left-color:#0176d3; }
+.THIS .fec-file-modal-right { flex:1; padding:16px; }
+.THIS .fec-file-search { border:1px solid #747474; border-radius:4px; height:34px; display:flex; align-items:center; padding:0 12px; color:#706e6b; font-size:13px; }
+.THIS .fec-file-help { margin-top:20px; color:#706e6b; font-size:14px; line-height:1.6; }
+.THIS .fec-file-modal-footer { display:flex; justify-content:space-between; align-items:center; border-top:1px solid #ddd; padding:12px 16px; font-size:12px; color:#032d60; }
+.THIS.fec-file-modal-overlay { position:fixed !important; top:0 !important; left:0 !important; right:0 !important; bottom:0 !important; background:rgba(0,0,0,.45) !important; z-index:2147483646 !important; }
+.THIS.fec-file-modal { position:fixed !important; top:50% !important; left:50% !important; transform:translate(-50%,-50%) !important; width:760px !important; max-width:92vw !important; background:#fff !important; border-radius:16px !important; box-shadow:0 8px 32px rgba(0,0,0,.28) !important; z-index:2147483647 !important; overflow:hidden !important; }
+.THIS .fec-case-file-list { margin-top:16px; max-height:250px; overflow:auto; border:1px solid #e5e5e5; border-radius:6px; }
+.THIS .fec-case-file-row { display:flex; align-items:center; gap:8px; padding:10px 12px; border-bottom:1px solid #f0f0f0; font-size:13px; color:#032d60; }
+.THIS .fec-case-file-row:last-child { border-bottom:none; }
+.THIS .fec-case-file-icon { font-size:14px; }
+.THIS .fec-case-file-name { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }

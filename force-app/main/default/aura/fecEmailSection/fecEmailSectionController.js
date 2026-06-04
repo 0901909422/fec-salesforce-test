@@ -112,6 +112,7 @@
             var allAtts = component.get('v.templateAttachments') || {};
             var tmplAtts = allAtts[templateId] || [];
             component.set('v.attachments', tmplAtts.map(function(a) {
+                helper.loadCaseFiles(component);
                 return { name: a.fileName, size: 0, _fromTemplate: true, _base64: a.base64Data, _mime: a.mimeType };
             }));
         } else {
@@ -309,6 +310,78 @@
         }));
     },
 
+
+    openAttachModal: function(component, event, helper) {
+        component.set('v.showUploadModal', true);
+        helper.loadCaseFiles(component);
+    },
+
+    closeUploadModal: function(component, event, helper) {
+        component.set('v.showUploadModal', false);
+    },
+
+
+    selectUploadTabRelated: function(component, event, helper) {
+        component.set('v.selectedUploadTab', 'related');
+        component.set('v.uploadModalHelpText', 'Related Files is a placeholder in the email popup. Use Upload Files to upload files to this Case and attach them to this email.');
+    },
+
+    selectUploadTabUploaded: function(component, event, helper) {
+        component.set('v.selectedUploadTab', 'uploaded');
+        component.set('v.uploadModalHelpText', 'Uploaded to this Case: files uploaded here are saved to this Case and attached to this email after upload finishes.');
+    },
+
+    toggleCaseFileSelection: function(component, event, helper) {
+        var id = event.target.dataset.id;
+        var selected = component.get('v.selectedCaseFileIds') || [];
+        if (event.target.checked) {
+            if (selected.indexOf(id) === -1) selected.push(id);
+        } else {
+            selected = selected.filter(function(x) { return x !== id; });
+        }
+        component.set('v.selectedCaseFileIds', selected);
+    },
+
+    addSelectedCaseFiles: function(component, event, helper) {
+        var docIds = component.get('v.selectedCaseFileIds') || [];
+        if (!docIds.length) return;
+        var action = component.get('c.getEmailAttachmentsFromContentDocuments');
+        action.setParams({ contentDocumentIds: docIds });
+        action.setCallback(this, function(resp) {
+            if (resp.getState() === 'SUCCESS') {
+                var existing = component.get('v.attachments') || [];
+                var uploaded = resp.getReturnValue() || [];
+                var merged = existing.concat(uploaded.map(function(a) {
+                    return { name: a.fileName, size: 0, _fromStandardUpload: true, _base64: a.base64Data, _mime: a.mimeType };
+                }));
+                component.set('v.attachments', merged);
+                component.set('v.selectedCaseFileIds', []);
+                component.set('v.showUploadModal', false);
+            }
+        });
+        $A.enqueueAction(action);
+    },
+    onStandardUploadFinished: function(component, event, helper) {
+        var files = event.getParam('files') || [];
+        component.set('v.showUploadModal', false);
+        if (!files.length) return;
+        var docIds = files.map(function(f) { return f.documentId; }).filter(function(id) { return !!id; });
+        var action = component.get('c.getEmailAttachmentsFromContentDocuments');
+        action.setParams({ contentDocumentIds: docIds });
+        action.setCallback(this, function(resp) {
+            if (resp.getState() === 'SUCCESS') {
+                var existing = component.get('v.attachments') || [];
+                var uploaded = resp.getReturnValue() || [];
+                var merged = existing.concat(uploaded.map(function(a) {
+                    return { name: a.fileName, size: 0, _fromStandardUpload: true, _base64: a.base64Data, _mime: a.mimeType, _contentDocumentId: a.contentDocumentId };
+                }));
+                component.set('v.attachments', merged);
+                component.set('v.showUploadModal', false);
+                helper.loadCaseFiles(component);
+            }
+        });
+        $A.enqueueAction(action);
+    },
     onAttachChange: function(component, event, helper) {
         var files = event.target.files;
         if (!files || files.length === 0) return;
@@ -547,7 +620,7 @@
         var templateAtts = [];
         var fileAtts = [];
         for (var i = 0; i < attachments.length; i++) {
-            if (attachments[i]._fromTemplate) {
+            if (attachments[i]._fromTemplate || attachments[i]._fromStandardUpload) {
                 templateAtts.push({ fileName: attachments[i].name, base64Data: attachments[i]._base64, mimeType: attachments[i]._mime });
             } else if (attachments[i]._isInlineImg) {
                 // Ảnh insert vào body — không gửi kèm, đã strip blob URL khỏi bodyToSend
@@ -597,3 +670,10 @@
         });
     }
 })
+
+
+
+
+
+
+

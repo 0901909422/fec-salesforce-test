@@ -27,6 +27,11 @@
     <aura:attribute name="searchKeyword" type="String" default="" />
     <aura:attribute name="allExpanded" type="Boolean" default="false" />
     <aura:attribute name="attachments" type="List" default="[]" />
+    <aura:attribute name="showUploadModal" type="Boolean" default="false" />
+    <aura:attribute name="selectedUploadTab" type="String" default="related" />
+    <aura:attribute name="uploadModalHelpText" type="String" default="Use Upload Files to upload files with Salesforce standard upload. Uploaded files are saved to this Case and attached to this email." />
+    <aura:attribute name="caseFileList" type="List" default="[]" />
+    <aura:attribute name="selectedCaseFileIds" type="List" default="[]" />
     <aura:attribute name="activeItemId" type="String" default="" />
     <aura:attribute name="showSortDD" type="Boolean" default="false" />
     <aura:attribute name="sortOrder" type="String" default="recent" />
@@ -172,10 +177,7 @@
                                 <div class="attach-pill">
                                     <span class="attach-pill-icon"><lightning:icon iconName="doctype:attachment" size="xx-small" class="fec-icon" /></span>
                                     <span class="attach-pill-name">{!att.name}</span>
-                                    <!-- tungnm37 sửa: chỉ hiện X với file user upload, không hiện với template attachment -->
-                                    <aura:if isTrue="{!not(att._fromTemplate)}">
                                         <span class="attach-pill-remove" data-idx="{!idx}" onclick="{!c.removeAttachment}">&#x2715;</span>
-                                    </aura:if>
                                 </div>
                             </aura:iteration>
                         </div>
@@ -184,10 +186,10 @@
                         <p class="error-text">{!v.errorMsg}</p>
                     </aura:if>
                     <div class="compose-footer">
-                        <label class="foot-icon" title="Attach file">
+                        <span class="foot-icon" title="Select files" onclick="{!c.openAttachModal}">
                             <input type="file" multiple="true" aura:id="attachInput" onchange="{!c.onAttachChange}" style="display:none" />
                             <lightning:icon iconName="utility:attach" size="xx-small" class="fec-icon" />
-                        </label>
+                        </span>
                         <span class="foot-icon" title="Preview" onclick="{!c.previewEmail}">
                             <lightning:icon iconName="utility:preview" size="xx-small" class="fec-icon" />
                         </span>
@@ -276,10 +278,7 @@
                                         <lightning:icon iconName="doctype:attachment" size="xx-small" class="fec-icon" />
                                     </span>
                                     <span class="attach-pill-name">{!att.name}</span>
-                                    <!-- tungnm37 sửa: chỉ hiện X với file user upload, không hiện với template attachment -->
-                                    <aura:if isTrue="{!not(att._fromTemplate)}">
                                         <span class="attach-pill-remove" data-idx="{!idx}" onclick="{!c.removeAttachment}">&#x2715;</span>
-                                    </aura:if>
                                 </div>
                             </aura:iteration>
                         </div>
@@ -289,10 +288,10 @@
                     </aura:if>
                     <!-- Inline footer: icons left, Send right -->
                     <div class="compose-footer">
-                        <label class="foot-icon" title="Attach file">
+                        <span class="foot-icon" title="Select files" onclick="{!c.openAttachModal}">
                             <input type="file" multiple="true" aura:id="attachInput" onchange="{!c.onAttachChange}" style="display:none" />
                             <lightning:icon iconName="utility:attach" size="xx-small" class="fec-icon" />
-                        </label>
+                        </span>
                         <span class="foot-icon" title="Preview" onclick="{!c.previewEmail}">
                             <lightning:icon iconName="utility:preview" size="xx-small" class="fec-icon" />
                         </span>
@@ -491,4 +490,54 @@
         </div>
     </aura:if>
 
+
+    <aura:if isTrue="{!v.showUploadModal}">
+        <div class="fec-file-modal-overlay" onclick="{!c.closeUploadModal}"></div>
+        <div class="fec-file-modal" onclick="{!c.stopPropagation}">
+            <div class="fec-file-modal-close" onclick="{!c.closeUploadModal}">&#x2715;</div>
+            <div class="fec-file-modal-title">Select Files</div>
+            <div class="fec-file-modal-body">
+                <div class="fec-file-modal-left">
+                    <lightning:fileUpload label="Upload Files"
+                        name="fecEmailStdUpload"
+                        recordId="{!v.recordId}"
+                        multiple="true"
+                        onuploadfinished="{!c.onStandardUploadFinished}" />
+                    <div class="{!v.selectedUploadTab == 'related' ? 'fec-file-tab active' : 'fec-file-tab'}" onclick="{!c.selectUploadTabRelated}">Related Files</div>
+                    <div class="{!v.selectedUploadTab == 'uploaded' ? 'fec-file-tab active' : 'fec-file-tab'}" onclick="{!c.selectUploadTabUploaded}">Uploaded to this Case</div>
+                </div>
+                <div class="fec-file-modal-right">
+                    <div class="fec-file-search">&#128269;&nbsp;&nbsp;Search Files...</div>
+                                        <aura:if isTrue="{!not(empty(v.caseFileList))}">
+                        <div class="fec-case-file-list">
+                            <aura:iteration items="{!v.caseFileList}" var="f">
+                                <div class="fec-case-file-row">
+                                    <input type="checkbox" class="fec-case-file-check" data-id="{!f.documentId}" onchange="{!c.toggleCaseFileSelection}" />
+                                    <lightning:icon iconName="doctype:attachment" size="xx-small" class="fec-icon" />
+                                    <span class="fec-case-file-name">{!f.name}</span>
+                                </div>
+                            </aura:iteration>
+                        </div>
+                        <aura:set attribute="else">
+                            <div class="fec-file-help">{!v.uploadModalHelpText}</div>
+                        </aura:set>
+                    </aura:if>
+                </div>
+            </div>
+            <div class="fec-file-modal-footer">
+                <span>{!v.selectedCaseFileIds.length} file(s) selected</span>
+                <div>
+                    <lightning:button label="Cancel" onclick="{!c.closeUploadModal}" />
+                    <lightning:button variant="brand" label="Add" onclick="{!c.addSelectedCaseFiles}" disabled="{!empty(v.selectedCaseFileIds)}" class="slds-m-left_x-small" />
+                </div>
+            </div>
+        </div>
+    </aura:if>
 </aura:component>
+
+
+
+
+
+
+

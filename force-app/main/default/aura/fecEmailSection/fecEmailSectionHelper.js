@@ -623,6 +623,14 @@
             var range = sel.getRangeAt(0);
             var editorEl = quill.root;
 
+            // Template HTML is injected directly into the editor, so Quill's internal delta
+            // may not know about all nodes. For Backspace/Delete, bypass Quill keyboard
+            // handlers and let the browser edit the real DOM natively.
+            if (e.keyCode === 8 || e.keyCode === 46) {
+                e.stopImmediatePropagation();
+                return;
+            }
+
             // Kiểm tra cursor/selection có trong table không
             var anchorNode = range.commonAncestorContainer;
             var cur = anchorNode.nodeType === 3 ? anchorNode.parentNode : anchorNode;
@@ -636,16 +644,10 @@
             }
 
             if (inTable) {
-                // tungnm37 sửa: stop Quill intercept TẤT CẢ key trong table, để native browser xử lý
+                // Stop Quill from intercepting table editing, but DO NOT prevent default.
+                // Let the browser handle Backspace/Delete natively so template text inside
+                // td/th can be removed. execCommand('delete') is unreliable in Lightning.
                 e.stopImmediatePropagation();
-                // Backspace/Delete: dùng execCommand để xóa nội dung trong td
-                if (e.keyCode === 8) {
-                    e.preventDefault();
-                    document.execCommand('delete', false, null);
-                } else if (e.keyCode === 46) {
-                    e.preventDefault();
-                    document.execCommand('forwardDelete', false, null);
-                }
                 return;
             }
 
@@ -826,6 +828,17 @@
         $A.enqueueAction(a);
     },
 
+
+    loadCaseFiles: function(component) {
+        var action = component.get('c.getCaseFileInfos');
+        action.setParams({ caseId: component.get('v.recordId') });
+        action.setCallback(this, function(resp) {
+            if (resp.getState() === 'SUCCESS') {
+                component.set('v.caseFileList', resp.getReturnValue() || []);
+            }
+        });
+        $A.enqueueAction(action);
+    },
     showPreviewModal: function(body) {
         var existing = document.getElementById('fec-preview-overlay');
         if (existing) existing.parentNode.removeChild(existing);
@@ -1165,3 +1178,4 @@
         $A.enqueueAction(a);
     }
 })
+
