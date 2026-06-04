@@ -677,7 +677,7 @@
     </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
-        <field>Case.FEC_KYC_Stauts__c</field>
+        <field>Case.FEC_KYC_Status__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
@@ -4615,3 +4615,4 @@
         <tab>standard-ServiceResource</tab>
         <visibility>Visible</visibility>
     </tabSettings></PermissionSet>
+
