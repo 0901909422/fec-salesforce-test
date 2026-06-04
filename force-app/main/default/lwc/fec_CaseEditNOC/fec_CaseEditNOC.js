@@ -302,6 +302,7 @@ export default class Fec_CaseEditNOC extends LightningElement {
   subscription = null;
   subscriptionNOC = null;
   _nocResolveEpoch = 0;
+  _subCodeRequestId = 0;
   subscriptionResetPin = null;
   subscriptionPinReissue = null;
   subscriptionDoNotBother = null;
@@ -1592,7 +1593,39 @@ export default class Fec_CaseEditNOC extends LightningElement {
       });
   }
 
+  /**
+   * Chỉ auto-resolve/persist NOC không Sub-Code khi draft và chưa chọn Sub-Code.
+   * Tránh reload/revert (Case đã submit hoặc đã có FEC_SubCode__c) bị ghi đè null lên DB.
+   */
+  _shouldAutoResolveNocWithoutSubCode() {
+    if (this.isDisableNOC || this.isSubmited) {
+      return false;
+    }
+    return !this.subCodeSelectedId;
+  }
+
+  _resolveAndPersistNocWithoutSubCode() {
+    return getNatureOfCaseWithoutSubCode({
+      productTypeId: this.productTypeSelectedId,
+      categoryId: this.categorySelectedId,
+      subCategoryId: this.subCategorySelectedId
+    })
+      .then((noc) => {
+        this.natureOfCase = noc;
+        return this._persistSelectedNocToDatabase(noc?.Id);
+      })
+      .then(() => {
+        this.handlePublishMessageChanel();
+      })
+      .catch((e) => {
+        console.log("getNatureOfCaseWithoutSubCode err:", e);
+        this.natureOfCase = null;
+        this.handlePublishMessageChanel();
+      });
+  }
+
   getSubCode() {
+    const requestId = ++this._subCodeRequestId;
     getSubCodelst({
       recordId: this.recordId,
       productTypeId: this.productTypeSelectedId,
@@ -1600,6 +1633,9 @@ export default class Fec_CaseEditNOC extends LightningElement {
       subCategoryId: this.subCategorySelectedId
     })
       .then((res) => {
+        if (requestId !== this._subCodeRequestId) {
+          return;
+        }
         console.log(
           "🚀 ~ Fec_CaseEditNOC ~ getSubCode ~ res:",
           JSON.stringify(res)
@@ -1619,26 +1655,10 @@ export default class Fec_CaseEditNOC extends LightningElement {
           this.subCategorySelectedId;
         const noSubCodeOptions = !res || res.length === 0;
 
-        if (triple && noSubCodeOptions) {
+        if (triple && noSubCodeOptions && this._shouldAutoResolveNocWithoutSubCode()) {
           this.subCodeSelectedId = null;
           this.syncSubCodeComboValue();
-          return getNatureOfCaseWithoutSubCode({
-            productTypeId: this.productTypeSelectedId,
-            categoryId: this.categorySelectedId,
-            subCategoryId: this.subCategorySelectedId
-          })
-            .then((noc) => {
-              this.natureOfCase = noc;
-              return this._persistSelectedNocToDatabase(noc?.Id);
-            })
-            .then(() => {
-              this.handlePublishMessageChanel();
-            })
-            .catch((e) => {
-              console.log("getNatureOfCaseWithoutSubCode err:", e);
-              this.natureOfCase = null;
-              this.handlePublishMessageChanel();
-            });
+          return this._resolveAndPersistNocWithoutSubCode();
         }
       })
       .catch((err) => {

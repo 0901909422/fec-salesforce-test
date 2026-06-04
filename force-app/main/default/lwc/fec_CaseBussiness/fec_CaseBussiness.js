@@ -1820,6 +1820,25 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
     return this.business?.natureOfCase || null;
   }
 
+  /**
+   * Revert (non-GSR): natureOfCaseId cho Apex updateCaseNocFromSelection.
+   * Ưu tiên FEC_Actual_Nature_of_Case__c (business.natureOfCase) — Apex resolve template 4 cấp có MD.
+   * Không ưu tiên _lastCaseNocTemplateNatureId trước Actual (dễ là template 3 cấp, 0 FEC_Master_Data_Setting__c).
+   */
+  _resolveRevertNatureOfCaseId() {
+    const subCodeId =
+      this.holdCaseNocParams?.subCodeId ??
+      this._lastGetByCaseNocParams?.subCodeId ??
+      this.holdCaseNocBaseline?.subCodeId ??
+      null;
+
+    if (!subCodeId) {
+      return null;
+    }
+
+    return this.business?.natureOfCase || this._lastCaseNocTemplateNatureId || null;
+  }
+
   @api getStageName() {
     return this.business?.stageName ?? STR_EMPTY;
   }
@@ -2612,8 +2631,10 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
         subCategoryId: message.subCategoryId,
         subCodeId: message.subCodeId,
       };
-      if (message.natureOfCaseId) {
+      if (message.natureOfCaseId && message.subCodeId) {
         this._lastCaseNocTemplateNatureId = message.natureOfCaseId;
+      } else if (message.subCodeId == null) {
+        this._lastCaseNocTemplateNatureId = null;
       }
       this._handleNOCUpdate(message);
     }
@@ -5016,8 +5037,10 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
           // GSR: không gửi NOC Stage 2 — Apex sync Actual theo template Stage 1 sau revert
           const bpCode = (this.business?.code || "").toUpperCase();
           if (!bpCode.includes("GSR")) {
-            revertParams.natureOfCaseId =
-              this._lastCaseNocTemplateNatureId || this.business?.natureOfCase;
+            const revertNocId = this._resolveRevertNatureOfCaseId();
+            if (revertNocId) {
+              revertParams.natureOfCaseId = revertNocId;
+            }
           }
           params = { ...params, params: revertParams };
           break;
