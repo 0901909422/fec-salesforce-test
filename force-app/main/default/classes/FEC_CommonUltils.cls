@@ -157,25 +157,79 @@ public with sharing class FEC_CommonUltils {
     return obj != null ? String.valueOf(obj) : FEC_ConstantCommon.STR_EMPTY;
   }
 
+  private static final String CHANNEL_QUOTE_CHARS = '"\'\u201C\u201D\u2018\u2019\u00AB\u00BB';
+
+  public static String normalizeChannelInput(String channel) {
+    if (channel == null) {
+      return null;
+    }
+    String cleaned = channel.trim();
+    if (String.isBlank(cleaned)) {
+      return null;
+    }
+    cleaned = cleaned.replaceAll('(?i)&quot;|&apos;|&#34;|&#39;|&#x22;|&#x27;', '');
+    for (Integer i = 0; i < CHANNEL_QUOTE_CHARS.length(); i++) {
+      cleaned = cleaned.replace(CHANNEL_QUOTE_CHARS.substring(i, i + 1), '');
+    }
+    cleaned = cleaned.replaceAll('\\s+', ' ').trim();
+    return String.isBlank(cleaned) ? null : cleaned;
+  }
+
+  private static String stripChannelQuoteCharacters(String value) {
+    if (String.isBlank(value)) {
+      return value;
+    }
+    String cleaned = value.replaceAll('(?i)&quot;|&apos;|&#34;|&#39;|&#x22;|&#x27;', '');
+    for (Integer i = 0; i < CHANNEL_QUOTE_CHARS.length(); i++) {
+      cleaned = cleaned.replace(CHANNEL_QUOTE_CHARS.substring(i, i + 1), '');
+    }
+    return cleaned.replaceAll('\\s+', ' ').trim();
+  }
+
   public static Boolean isActiveChannelSupported(String channel) {
-    if (String.isBlank(channel)) {
+    String normalized = normalizeChannelInput(channel);
+    if (String.isBlank(normalized)) {
       return false;
     }
-    return getActiveChannelIds().contains(normalizeChannelKey(channel));
+    return getActiveChannelIds().contains(normalizeChannelKey(normalized));
   }
 
   public static String sanitizeChannelForMessage(String channel) {
-    if (String.isBlank(channel)) {
-      return '';
+    String normalized = normalizeChannelInput(channel);
+    return normalized == null ? '' : normalized;
+  }
+
+  public static String buildUnsupportedChannelMessage(String channel) {
+    String channelId = sanitizeChannelForMessage(channel);
+    String message =
+      String.valueOf(System.Label.FEC_MSG_Channel_Validation).trim() +
+      ' ' +
+      channelId +
+      ' ' +
+      String.valueOf(System.Label.FEC_MSG_Data_Request_Master_Data).trim();
+    return stripQuotesFromChannelErrorMessage(message);
+  }
+
+  private static String stripQuotesFromChannelErrorMessage(String message) {
+    if (String.isBlank(message)) {
+      return message;
     }
-    return channel.trim().replace('"', '').replace('&quot;', '');
+    String cleaned = message.replaceAll('(?i)&quot;|&apos;|&#34;|&#39;', '');
+    cleaned = stripChannelQuoteCharacters(cleaned);
+    return cleaned.replaceAll('\\s+', ' ').trim();
   }
 
   public static String buildNatureOfCaseChannelLikePattern(String channel) {
-    if (String.isBlank(channel)) {
+    String normalized = normalizeChannelInput(channel);
+    if (String.isBlank(normalized)) {
       return null;
     }
-    return '%' + channel.trim() + '%';
+    return '%' + normalized + '%';
+  }
+
+  @TestVisible
+  public static void resetActiveChannelCacheForTest() {
+    cachedActiveChannelIds = null;
   }
 
   public static Set<String> getActiveChannelIds() {
@@ -220,7 +274,8 @@ public with sharing class FEC_CommonUltils {
   }
 
   private static String normalizeChannelKey(String channel) {
-    return channel == null ? null : channel.trim().toUpperCase();
+    String normalized = normalizeChannelInput(channel);
+    return normalized == null ? null : normalized.toUpperCase();
   }
 
   private static String resolveFirstExistingObjectApi(List<String> candidates) {
