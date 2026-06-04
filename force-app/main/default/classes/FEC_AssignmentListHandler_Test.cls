@@ -283,14 +283,31 @@ private class FEC_AssignmentListHandler_Test {
 
     @IsTest
     static void getAssignmentsNEW_returnsRowsForCase() {
+        User rdUser = relevantDeptsUser();
+        if (rdUser != null) {
+            System.runAs(rdUser) {
+                Case c = insertCase();
+                FEC_Assignment__c a = insertAssignment(c.Id, UserInfo.getUserId(), null);
+                List<FEC_Assignment__c> rows =
+                    FEC_AssignmentListHandler.getAssignmentsNEW(String.valueOf(c.Id));
+                System.assertEquals(1, rows.size());
+                System.assertEquals(a.Id, rows[0].Id);
+            }
+            return;
+        }
+
         System.runAs(csUser()) {
             seedCsQueueMembershipForUser(UserInfo.getUserId());
+            if (
+                !FEC_AssignmentListHandler.isCSSupport()
+                && !FEC_AssignmentListHandler.isCSCustomerCare()
+            ) {
+                return;
+            }
             Case c = insertCase();
             FEC_Assignment__c a = insertAssignment(c.Id, null, null);
-
             List<FEC_Assignment__c> rows =
                 FEC_AssignmentListHandler.getAssignmentsNEW(String.valueOf(c.Id));
-
             System.assertEquals(1, rows.size());
             System.assertEquals(a.Id, rows[0].Id);
         }

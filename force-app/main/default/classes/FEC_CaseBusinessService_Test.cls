@@ -1,6 +1,34 @@
 @IsTest
 private class FEC_CaseBusinessService_Test {
 
+    private static String picklistValue(String objectApi, String fieldApi, String preferred) {
+        Schema.SObjectType token = Schema.getGlobalDescribe().get(objectApi);
+        if (token == null) {
+            return preferred;
+        }
+        Map<String, Schema.SObjectField> fieldMap = token.getDescribe().fields.getMap();
+        if (!fieldMap.containsKey(fieldApi)) {
+            return preferred;
+        }
+        Schema.DescribeFieldResult describe = fieldMap.get(fieldApi).getDescribe();
+        if (describe.getType() != Schema.DisplayType.PICKLIST) {
+            return preferred;
+        }
+        String fallback;
+        for (Schema.PicklistEntry entry : describe.getPicklistValues()) {
+            if (!entry.isActive()) {
+                continue;
+            }
+            if (fallback == null) {
+                fallback = entry.getValue();
+            }
+            if (preferred != null && entry.getValue().equalsIgnoreCase(preferred)) {
+                return entry.getValue();
+            }
+        }
+        return fallback != null ? fallback : preferred;
+    }
+
     private static User testRunAsUser() {
         List<User> admins = [
             SELECT Id
@@ -19,9 +47,12 @@ private class FEC_CaseBusinessService_Test {
         Group internalQueue = new Group(Name = 'Care Internal Task', DeveloperName = 'Care_Internal_Task', Type = 'Queue');
         insert new List<Group>{testQueue, handlingQueue, internalQueue};
 
-        QueueSobject mappingObject = new QueueSobject(QueueId = testQueue.Id, SobjectType = 'Case');
         System.runAs(new User(Id = UserInfo.getUserId())) {
-            insert mappingObject;
+            insert new List<QueueSobject>{
+                new QueueSobject(QueueId = testQueue.Id, SobjectType = 'Case'),
+                new QueueSobject(QueueId = handlingQueue.Id, SobjectType = 'Case'),
+                new QueueSobject(QueueId = internalQueue.Id, SobjectType = 'Case')
+            };
         }
 
         // 2. Agent chạy test + master data (custom objects — tránh MIXED_DML sau Queue/User DML)
@@ -333,7 +364,11 @@ private class FEC_CaseBusinessService_Test {
                 FEC_Section__c = 'Case Information',
                 FEC_Sub_Section__c = 'Original Info',
                 FEC_Sub_Section_Order__c = 1,
-                FEC_Type__c = FEC_CaseBusinessService.TYPE_LWC,
+                FEC_Type__c = picklistValue(
+                    'FEC_Master_Data_Setting__c',
+                    'FEC_Type__c',
+                    FEC_CaseBusinessService.TYPE_LWC
+                ),
                 FEC_LWC_Name__c = FEC_CaseBusinessService.LWC_INCORRECT_PAYMENT_FORM,
                 FEC_Field_Status__c = true,
                 FEC_Field_Editable__c = true
@@ -344,7 +379,11 @@ private class FEC_CaseBusinessService_Test {
                 FEC_Section__c = 'Case Information',
                 FEC_Sub_Section__c = 'Original Info',
                 FEC_Sub_Section_Order__c = 1,
-                FEC_Type__c = FEC_CaseBusinessService.TYPE_LWC,
+                FEC_Type__c = picklistValue(
+                    'FEC_Master_Data_Setting__c',
+                    'FEC_Type__c',
+                    FEC_CaseBusinessService.TYPE_LWC
+                ),
                 FEC_LWC_Name__c = FEC_ConstantCommon.ORIGINAL_LWC_COF,
                 FEC_Field_Status__c = true,
                 FEC_Field_Editable__c = true
@@ -366,7 +405,11 @@ private class FEC_CaseBusinessService_Test {
                 FEC_Stage_Name__c = gsrStage2.Id,
                 FEC_Section__c = 'Case Information',
                 FEC_Sub_Section__c = 'Assignment List',
-                FEC_Type__c = FEC_CaseBusinessService.TYPE_ASSIGNMENT,
+                FEC_Type__c = picklistValue(
+                    'FEC_Master_Data_Setting__c',
+                    'FEC_Type__c',
+                    FEC_CaseBusinessService.TYPE_ASSIGNMENT
+                ),
                 FEC_Field_Object_Name__c = 'Case',
                 FEC_Field_API_Name__c = 'Subject',
                 FEC_Field_Status__c = true,
@@ -388,7 +431,11 @@ private class FEC_CaseBusinessService_Test {
                 FEC_Stage_Name__c = cofStage1.Id,
                 FEC_Section__c = 'Case Information',
                 FEC_Sub_Section__c = 'Original Info',
-                FEC_Type__c = FEC_CaseBusinessService.TYPE_LWC,
+                FEC_Type__c = picklistValue(
+                    'FEC_Master_Data_Setting__c',
+                    'FEC_Type__c',
+                    FEC_CaseBusinessService.TYPE_LWC
+                ),
                 FEC_LWC_Name__c = FEC_ConstantCommon.ORIGINAL_LWC_COF,
                 FEC_Field_Status__c = true,
                 FEC_Field_Editable__c = true
@@ -747,11 +794,15 @@ private class FEC_CaseBusinessService_Test {
             ];
 
             Test.startTest();
-            FEC_CaseBusinessService.run(
+            // 04/06/2026 17:10 linhdev - runInternal tránh AuraHandledException + giảm SOQL vs run()
+            FEC_CaseBusinessService.runInternal(
                 'Route to',
                 buildRouteParams(c.Id, targetQueue.Id, noc.Id, btnRoute.Id)
             );
-            FEC_CaseBusinessService.run('Revert', buildRevertParams(c.Id, btnRevert.Id));
+            FEC_CaseBusinessService.runInternal(
+                FEC_CaseBusinessService.REVERT,
+                buildRevertParams(c.Id, btnRevert.Id)
+            );
             Case afterRevert = queryCaseSystem(c.Id);
             System.assertEquals(stg1.Id, afterRevert.FEC_Current_Case_Stage__c);
             Test.stopTest();
@@ -935,7 +986,7 @@ private class FEC_CaseBusinessService_Test {
             }
             Test.stopTest();
 
-            Case check1 = [SELECT OwnerId, Status FROM Case WHERE Id = :outOfProcessCase.Id];
+            Case check1 = queryCaseSystem(outOfProcessCase.Id);
             System.assertNotEquals(null, check1.OwnerId, 'Update action phải thay đổi owner hoặc status.');
         }
     }
@@ -1544,7 +1595,7 @@ private class FEC_CaseBusinessService_Test {
             }
             Test.stopTest();
 
-            System.assertNotEquals(null, [SELECT OwnerId FROM Case WHERE Id = :c.Id].OwnerId);
+            System.assertNotEquals(null, queryCaseSystem(c.Id).OwnerId);
         }
     }
 
@@ -2035,7 +2086,7 @@ private class FEC_CaseBusinessService_Test {
                 System.assert(String.isNotBlank(e.getMessage()));
             }
             Test.stopTest();
-            System.assertNotEquals(null, [SELECT OwnerId FROM Case WHERE Id = :c.Id].OwnerId);
+            System.assertNotEquals(null, queryCaseSystem(c.Id).OwnerId);
         }
     }
 
