@@ -11,6 +11,9 @@ public without sharing class FEC_CaseDsTsSlaService {
     public static final String PROFILE_DIRECT_SALES = 'DIRECT_SALES';
     public static final String PROFILE_POS_SALES = 'POS_SALES';
 
+    public static final String TEMPLATE_API_DS = 'Template_for_DS_Direct_Sales';
+    public static final String TEMPLATE_API_TS = 'Template_for_TS_Telesales';
+
     private static final String ROUTE_TO = FEC_CaseBusinessService.ROUTE_TO;
     private static final String RAH_TYPE_CASE = 'Case';
     private static final Long MS_1MIN = 60L * 1000L;
@@ -550,6 +553,49 @@ public without sharing class FEC_CaseDsTsSlaService {
             userIds.add(u.Id);
         }
         return userIds;
+    }
+
+    public static String resolveSlaTemplateApiName(String queueProfile) {
+        if (queueProfile == PROFILE_DIRECT_SALES || queueProfile == PROFILE_POS_SALES) {
+            return TEMPLATE_API_DS;
+        }
+        if (queueProfile == PROFILE_TELESALES || queueProfile == PROFILE_LG) {
+            return TEMPLATE_API_TS;
+        }
+        return null;
+    }
+
+    public static List<String> resolveRecipientEmails(Set<String> userIds) {
+        List<String> emails = new List<String>();
+        if (userIds == null || userIds.isEmpty()) {
+            return emails;
+        }
+        Set<Id> idSet = new Set<Id>();
+        for (String uid : userIds) {
+            if (String.isBlank(uid)) {
+                continue;
+            }
+            try {
+                idSet.add(Id.valueOf(uid));
+            } catch (Exception e) {
+                // skip invalid id
+            }
+        }
+        if (idSet.isEmpty()) {
+            return emails;
+        }
+        for (User u : [
+            SELECT Email
+            FROM User
+            WHERE IsActive = TRUE
+              AND Id IN :idSet
+              AND Email != NULL
+        ]) {
+            if (String.isNotBlank(u.Email)) {
+                emails.add(u.Email.trim());
+            }
+        }
+        return emails;
     }
 
     public static String resolveCaseDisplayId(Case c) {
