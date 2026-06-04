@@ -36,10 +36,6 @@
                 <behavior>Edit</behavior>
                 <field>IsActive</field>
             </layoutItems>
-            <layoutItems>
-                <behavior>Edit</behavior>
-                <field>SchedulingConstraintId</field>
-            </layoutItems>
         </layoutColumns>
         <style>TwoColumnsLeftToRight</style>
     </layoutSections>
