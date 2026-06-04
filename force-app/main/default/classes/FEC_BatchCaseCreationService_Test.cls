@@ -223,4 +223,27 @@ private class FEC_BatchCaseCreationService_Test {
 
         System.assertEquals(0, results.size(), 'Empty input returns no row results.');
     }
+
+    @IsTest
+    static void testProcessImportRows_WelcomeCallMissingDashInContract() {
+        List<Object> inputRows = new List<Object>();
+        inputRows.add(new Map<String, Object>{
+            'fileType' => 'welcome',
+            'contractNumber' => '0001500010000000261',
+            'caseStatus' => FEC_ConstantCommon.CASE_STATUS_RESOLVED_COMPLETED,
+            'productType' => 'Credit Card',
+            'category' => 'Inquiry',
+            'subCategory' => 'Card Issue',
+            'subCode' => 'Lost Card'
+        });
+
+        Test.startTest();
+        List<FEC_BatchCaseCreationController.CaseRowResult> results =
+            FEC_BatchCaseCreationService.processImportRows(inputRows, 'FEC Welcome Call Template');
+        Test.stopTest();
+
+        System.assertEquals(1, results.size());
+        System.assertEquals('Failed', results[0].status);
+        System.assertNotEquals('', results[0].errors);
+    }
 }

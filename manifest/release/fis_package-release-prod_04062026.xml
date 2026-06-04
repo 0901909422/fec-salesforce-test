@@ -348,6 +348,7 @@
         <members>FEC_GetCSAttachedFile_Test</members>
         <members>FEC_GetCSCaseStatusRestService</members>
         <members>FEC_GetCSCaseStatusRestService_Test</members>
+        <members>FEC_MyCaseSoapXml_Test</members>
         <members>FEC_GetCSCaseStatusService_Test</members>
         <members>FEC_GetCSMasterDataByCodeRestService</members>
         <members>FEC_GetCSMasterDataByCodeService_Test</members>
@@ -386,6 +387,7 @@
         <members>FEC_BatchCaseHandlingController_Test</members>
         <members>FEC_BatchCaseHandlingImportRow_Test</members>
         <members>FEC_BatchCaseHandlingImportService_Test</members>
+        <members>FEC_BatchCaseHandlingImportProfile_Test</members>
         <members>FEC_BCH_ImportQueueable_Test</members>
         <members>FEC_BCH_ImportRoutingResolver_Test</members>
         <members>FEC_BatchCaseHandlingSObjectUtil_Test</members>
@@ -3549,6 +3551,7 @@
     <types>
         <members>CaseStatus</members>
         <members>CaseOrigin</members>
+        <members>CasePriority</members>
         <name>StandardValueSet</name>
     </types>
     <types>
