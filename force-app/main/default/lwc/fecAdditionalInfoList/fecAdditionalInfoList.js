@@ -88,20 +88,8 @@ export default class FecAdditionalInfoList extends LightningElement {
         return this.filteredData.slice(start, start + this.pageSize);
     }
 
-    get totalPages() {
-        return Math.max(1, Math.ceil(this.filteredData.length / this.pageSize));
-    }
-
-    get pageInfo() {
-        return `Page ${this.currentPage} of ${this.totalPages} (${this.filteredData.length} records)`;
-    }
-
-    get isPrevDisabled() {
-        return this.currentPage <= 1;
-    }
-
-    get isNextDisabled() {
-        return this.currentPage >= this.totalPages;
+    get totalFilteredRecords() {
+        return this.filteredData.length;
     }
 
     handleSearch(event) {
@@ -109,10 +97,14 @@ export default class FecAdditionalInfoList extends LightningElement {
         this.currentPage = 1;
     }
 
-    handleFirst() { this.currentPage = 1; }
-    handlePrev() { if (this.currentPage > 1) this.currentPage--; }
-    handleNext() { if (this.currentPage < this.totalPages) this.currentPage++; }
-    handleLast() { this.currentPage = this.totalPages; }
+    handlePageChange(event) {
+        this.currentPage = event.detail.page;
+    }
+
+    handlePageSizeChange(event) {
+        this.pageSize = event.detail.pageSize;
+        this.currentPage = 1;
+    }
 
     // --- Original handlers ---
 

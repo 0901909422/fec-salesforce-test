@@ -65,6 +65,10 @@ export default class FecLiveNocTree extends LightningElement {
     lastSelectedNodeId = null;
     selectNodeTimeout = null;
 
+    // Search optimization: debounce timer + flat search index
+    _searchDebounceTimer = null;
+    _searchIndex = [];
+
     objectMap = {
         [PREFIX_PT]: OBJ_BUSINESS_PROCESS,
         [PREFIX_BP]: OBJ_CATEGORY,
@@ -106,11 +110,41 @@ export default class FecLiveNocTree extends LightningElement {
                 this.treeItems = data;
             }
             this.fecRawData = data;
+            this._buildSearchIndex(data);
         } else if (error) {
             this.treeItems = [];
             this.fecRawData = [];
             this.showErrorToast(error.body?.message || error.message || 'Unknown error');
         }
+    }
+
+    /**
+     * Build flat array of all nodes with parent chain for fast O(N) search.
+     * Called once on data load and after refresh.
+     */
+    _buildSearchIndex(data) {
+        const index = [];
+        const walk = (nodes, parentChain) => {
+            if (!nodes) return;
+            for (const node of nodes) {
+                const name = String(node.name);
+                index.push({
+                    name,
+                    code: String(node.Code || '').toLowerCase(),
+                    alias: String(node.Alias || '').toLowerCase(),
+                    nameVN: String(node.nameVN || '').toLowerCase(),
+                    nameEN: String(node.NameEN || '').toLowerCase(),
+                    label: String(node.label || '').toLowerCase(),
+                    Status: node.Status,
+                    parentChain
+                });
+                if (node.items && node.items.length > 0) {
+                    walk(node.items, [...parentChain, name]);
+                }
+            }
+        };
+        walk(data, []);
+        this._searchIndex = index;
     }
 
     @api
@@ -121,6 +155,7 @@ export default class FecLiveNocTree extends LightningElement {
         if (freshData) {
             this.treeKey = false;
             this.fecRawData = [...freshData].map(item => ({ ...item }));
+            this._buildSearchIndex(this.fecRawData);
             if (this.selectedNodeName) {
                 this.expandedNodeNames.add(String(this.selectedNodeName));
             }
@@ -218,8 +253,13 @@ export default class FecLiveNocTree extends LightningElement {
     }
 
     handleFecSearch(event) {
-        this.searchTerm = event.target.value;
-        this.treeItems = this.applyFilterAndExpand(this.fecRawData, this.searchTerm);
+        const value = event.target.value;
+        clearTimeout(this._searchDebounceTimer);
+        // eslint-disable-next-line @lwc/lwc/no-async-operation
+        this._searchDebounceTimer = setTimeout(() => {
+            this.searchTerm = value;
+            this.treeItems = this.applyFilterAndExpand(this.fecRawData, value);
+        }, 250);
     }
 
     handleDisplayFieldChange(event) {
@@ -345,6 +385,7 @@ export default class FecLiveNocTree extends LightningElement {
             if (freshData) {
                 this.treeKey = false;
                 this.fecRawData = [...freshData].map(item => ({ ...item }));
+                this._buildSearchIndex(this.fecRawData);
                 if (this.selectedNodeName) {
                     this.expandedNodeNames.add(String(this.selectedNodeName));
                 }
@@ -364,44 +405,84 @@ export default class FecLiveNocTree extends LightningElement {
     applyFilterAndExpand(data, searchTerm, forceExpandId) {
         const searchKey = searchTerm ? searchTerm.toLowerCase().trim() : '';
         const targetId = forceExpandId ? String(forceExpandId) : null;
+        const statusFilter = this.selectedStatusFilter;
+        const hasStatusFilter = statusFilter && statusFilter !== 'ALL';
+        const shouldBeActive = statusFilter === 'ACTIVE';
+
+        // Pre-compute auto-expand set for search via flat O(N) scan
+        let searchExpandSet = null;
+        let searchMatchSet = null;
+        if (searchKey && this._searchIndex && this._searchIndex.length > 0) {
+            searchExpandSet = new Set();
+            searchMatchSet = new Set();
+            const searchField = this.selectedDisplayField;
+            for (const entry of this._searchIndex) {
+                let valueToCheck;
+                if (searchField === 'Code') valueToCheck = entry.code;
+                else if (searchField === 'Alias') valueToCheck = entry.alias;
+                else if (searchField === 'nameVN') valueToCheck = entry.nameVN;
+                else if (searchField === 'NameEN') valueToCheck = entry.nameEN;
+                else valueToCheck = entry.label;
+
+                if (valueToCheck.includes(searchKey)) {
+                    if (hasStatusFilter && entry.Status !== undefined && entry.Status !== null) {
+                        if (Boolean(entry.Status) !== shouldBeActive) continue;
+                    }
+                    searchMatchSet.add(entry.name);
+                    for (const parent of entry.parentChain) {
+                        searchExpandSet.add(parent);
+                    }
+                }
+            }
+        }
 
         const filterAndExpand = (items) => {
-            return items.map(item => {
-                const newItem = { ...item };
-                const currentName = String(newItem.name);
+            const result = [];
+            for (const item of items) {
+                const currentName = String(item.name);
 
-                let isAnyChildExpanded = false;
-                if (newItem.items && newItem.items.length > 0) {
-                    newItem.items = filterAndExpand(newItem.items);
-                    isAnyChildExpanded = newItem.items.some(child => child.isExpanded);
+                let filteredChildren = item.items;
+                let childrenChanged = false;
+                if (item.items && item.items.length > 0) {
+                    filteredChildren = filterAndExpand(item.items);
+                    childrenChanged = filteredChildren !== item.items
+                        || filteredChildren.length !== item.items.length;
                 }
-
-                const isManuallyExpanded = this.expandedNodeNames.has(currentName);
-                const isTargetParent = targetId && currentName === targetId;
 
                 let statusMatches = true;
-                if (this.selectedStatusFilter && this.selectedStatusFilter !== 'ALL' &&
-                    newItem.Status !== undefined && newItem.Status !== null) {
-                    statusMatches = (this.selectedStatusFilter === 'ACTIVE')
-                        ? Boolean(newItem.Status) === true
-                        : Boolean(newItem.Status) === false;
+                if (hasStatusFilter && item.Status !== undefined && item.Status !== null) {
+                    statusMatches = Boolean(item.Status) === shouldBeActive;
                 }
+
+                let keep = true;
+                let newIsExpanded = item.isExpanded;
 
                 if (searchKey) {
-                    const fieldToSearch = (this.selectedDisplayField && newItem[this.selectedDisplayField] != null)
-                        ? String(newItem[this.selectedDisplayField]).toLowerCase()
-                        : String(newItem.label).toLowerCase();
-                    const matchesSearch = fieldToSearch.includes(searchKey);
-                    newItem.isExpanded = (matchesSearch && statusMatches) || isAnyChildExpanded;
-                    return ((matchesSearch && statusMatches) || isAnyChildExpanded) ? newItem : null;
+                    const isOwnMatch = searchMatchSet ? searchMatchSet.has(currentName) : false;
+                    const hasMatchingDescendant = searchExpandSet ? searchExpandSet.has(currentName) : false;
+                    keep = isOwnMatch || hasMatchingDescendant
+                        || (filteredChildren && filteredChildren.length > 0);
+                    newIsExpanded = hasMatchingDescendant || (isOwnMatch && filteredChildren && filteredChildren.length > 0);
+                } else {
+                    if (!statusMatches && !(filteredChildren && filteredChildren.length > 0)) {
+                        keep = false;
+                    } else {
+                        const isManuallyExpanded = this.expandedNodeNames.has(currentName);
+                        const isTargetParent = targetId && currentName === targetId;
+                        newIsExpanded = (isManuallyExpanded || isTargetParent) && statusMatches;
+                    }
                 }
 
-                if (!statusMatches && !(newItem.items && newItem.items.length > 0)) {
-                    return null;
+                if (!keep) continue;
+
+                const isExpandedChanged = newIsExpanded !== item.isExpanded;
+                if (isExpandedChanged || childrenChanged) {
+                    result.push({ ...item, isExpanded: newIsExpanded, items: filteredChildren });
+                } else {
+                    result.push(item);
                 }
-                newItem.isExpanded = (isManuallyExpanded || isTargetParent) && statusMatches;
-                return newItem;
-            }).filter(item => item !== null);
+            }
+            return result;
         };
 
         return filterAndExpand(data || []);

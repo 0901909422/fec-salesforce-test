@@ -72,18 +72,26 @@
     /* 
      * Column sizing: min-width ensures text doesn't overlap.
      * Columns: STT(35) Icon(40) Channel(120) Role(1fr) Property(1fr) 
-     * Section(1fr) SubSection(1fr) SubSecOrder(60) SubSecLayout(60) SubSecFieldLayout(60)
-     * Status(55) EditableRole(1fr) Order(55) ProcessStatus(75) Action(70)
+     * Section(1fr) SubSection(1fr) EditableRole(1fr)
+     * SubSecOrder(60) SốCột(55) Order(55)
+     * Status(55) ProcessStatus(75) Action(70)
+     * Order: Text → Number → Checkbox, Process Status & Action stay at end
      */
     grid-template-columns:
         35px 40px 120px minmax(80px, 1fr) minmax(100px, 1fr)
-        minmax(70px, 1fr) minmax(70px, 1fr)
-        60px 60px 60px
-        55px minmax(80px, 1fr) 55px 75px 70px;
+        minmax(70px, 1fr) minmax(70px, 1fr) minmax(80px, 1fr)
+        60px 55px 55px
+        55px 75px 70px;
     min-width: 1100px;
     align-items: stretch;
     border-left: 1px solid #d8d8d8;
     border-right: 1px solid #d8d8d8;
+}
+
+/* Fraud Integration Mapping grid — 18 equal columns for span-based layout */
+.custom-table-grid.fraud-grid {
+    grid-template-columns: repeat(18, 1fr);
+    min-width: 900px;
 }
 
 /* Column styling within the custom grid */

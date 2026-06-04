@@ -1,0 +1,40 @@
+<template>
+    <lightning-card title={labelTitle} icon-name="standard:sync_action">
+        <div slot="actions">
+            <lightning-button label={labelRefresh} icon-name="utility:refresh"
+                onclick={handleRefreshBatchLogs} variant="neutral">
+            </lightning-button>
+        </div>
+
+        <!-- Sync Action Buttons -->
+        <div class="slds-box slds-theme_shade slds-m-around_small">
+            <div class="slds-text-heading_small slds-m-bottom_small">{labelSectionActions}</div>
+            <lightning-button-group>
+                <lightning-button label={labelReset} variant="brand" icon-name="utility:sync"
+                    onclick={handleSyncDataToMDM} loading={isSyncing} disabled={isBusy}>
+                </lightning-button>
+                <lightning-button label={labelPush} variant="brand" icon-name="utility:upload"
+                    onclick={handlePushToLive} loading={isPushing} disabled={isBusy}>
+                </lightning-button>
+            </lightning-button-group>
+        </div>
+
+        <!-- Batch Log Table -->
+        <div class="slds-box slds-m-around_small">
+            <div class="slds-text-heading_small slds-m-bottom_small">{labelSectionLog}</div>
+            <template lwc:if={hasBatchLogs}>
+                <lightning-datatable
+                    key-field="Id"
+                    data={batchLogs}
+                    columns={columnsBatchLog}
+                    hide-checkbox-column>
+                </lightning-datatable>
+            </template>
+            <template lwc:else>
+                <div class="slds-text-align_center slds-p-around_medium slds-text-color_weak">
+                    {labelNoBatchLogs}
+                </div>
+            </template>
+        </div>
+    </lightning-card>
+</template>

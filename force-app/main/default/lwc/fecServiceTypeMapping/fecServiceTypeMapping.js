@@ -3,6 +3,7 @@ import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import { refreshApex } from '@salesforce/apex';
 import LightningConfirm from 'lightning/confirm';
 import getServiceTypeTree from '@salesforce/apex/FEC_FecServiceTypeMappingController.getServiceTypeTree';
+import getCaseFieldOptions from '@salesforce/apex/FEC_FecServiceTypeMappingController.getCaseFieldOptions';
 import savePropertyMapping from '@salesforce/apex/FEC_FecServiceTypeMappingController.savePropertyMapping';
 import savePropertyMappings from '@salesforce/apex/FEC_FecServiceTypeMappingController.savePropertyMappings';
 import { showLog } from 'c/fecMDMUtils';
@@ -22,6 +23,8 @@ import LABEL_BP_PREFIX from '@salesforce/label/c.FEC_Label_BusinessProcess_Prefi
 import LABEL_STAGE_PREFIX from '@salesforce/label/c.FEC_Label_Stage_Prefix';
 import LABEL_CONFIRM_DISCARD_TITLE from '@salesforce/label/c.FEC_Confirm_DiscardChanges_Title';
 import LABEL_CONFIRM_DISCARD_MESSAGE from '@salesforce/label/c.FEC_Confirm_DiscardChanges_Message';
+import LABEL_PLACEHOLDER_SEARCH_TREE from '@salesforce/label/c.FEC_Placeholder_Search_Tree';
+import LABEL_PICKER_NO_MATCH from '@salesforce/label/c.FEC_Picker_NoMatch';
 
 const NODE_TYPE_BP = 'BP';
 const NODE_TYPE_STAGE = 'STAGE';
@@ -32,6 +35,8 @@ export default class FecServiceTypeMapping extends LightningElement {
     @track selectedFields = [];
     @track selectedBpName = '';
     @track selectedStageName = '';
+    @track caseFieldOptions = [];
+    @track searchTerm = '';
     // Lưu node đang chọn để re-derive sau refresh: { nodeType, bpName, stageName? }
     selectedKey = null;
     allPropertiesFlat = [];
@@ -48,6 +53,19 @@ export default class FecServiceTypeMapping extends LightningElement {
     tableHeaderReference = LABEL_TABLE_HEADER_REFERENCE;
     placeholderMappingRef = LABEL_PLACEHOLDER_MAPPING_REF;
     messageSelectProperty = LABEL_MESSAGE_SELECT_PROPERTY;
+    searchPlaceholder = LABEL_PLACEHOLDER_SEARCH_TREE;
+    noMatchLabel = LABEL_PICKER_NO_MATCH;
+    emptyHintLabel = 'Chọn 1 Business Process hoặc Stage để xem các Property cần mapping.';
+
+    @wire(getCaseFieldOptions)
+    wiredCaseFields({ data, error }) {
+        if (data) {
+            this.caseFieldOptions = data;
+        } else if (error) {
+            const msg = error?.body?.message || error?.message || LABEL_TOAST_SAVE_ERROR_MESSAGE;
+            this.showToast(LABEL_TOAST_SAVE_ERROR_TITLE, msg, VARIANT_ERROR);
+        }
+    }
 
     @wire(getServiceTypeTree)
     wiredTree(result) {
@@ -95,12 +113,38 @@ export default class FecServiceTypeMapping extends LightningElement {
             if (stageNode) fields = stageNode.fields || [];
         }
 
-        this.selectedFields = fields.map(field => ({
+        this.selectedFields = fields.map(field => this._enrichField(field));
+    }
+
+    /**
+     * Helper: enrich field with computed visual properties (rowClass, statusIcon, statusIconClass).
+     * Tách thành function để tái dùng khi update propertyRef.
+     */
+    _enrichField(field) {
+        const propertyRef = field.propertyRef || '';
+        const originalRef = field.originalRef !== undefined ? field.originalRef : (field.propertyRef || '');
+        const isDirty = propertyRef !== originalRef;
+        const hasValue = propertyRef && propertyRef.trim().length > 0;
+
+        let statusIcon = 'utility:dash';
+        let statusIconClass = 'status-icon-empty';
+        if (isDirty) {
+            statusIcon = 'utility:edit';
+            statusIconClass = 'status-icon-dirty';
+        } else if (hasValue) {
+            statusIcon = 'utility:check';
+            statusIconClass = 'status-icon-mapped';
+        }
+
+        return {
             ...field,
             fieldLabel: field.fieldLabel || field.label,
             fieldApiName: field.fieldApiName,
-            originalRef: field.propertyRef
-        }));
+            originalRef,
+            rowClass: isDirty ? 'row-dirty' : '',
+            statusIcon,
+            statusIconClass
+        };
     }
 
     async handleSelect(event) {
@@ -162,13 +206,21 @@ export default class FecServiceTypeMapping extends LightningElement {
     }
 
     handleFieldInputChange(event) {
-        const fieldName = event.target.dataset.id;
+        // Picker gửi CustomEvent với detail.value và detail.fieldName.
+        // Native lightning-input fallback gửi event.target.value và data-id.
+        const fieldName = event.detail?.fieldName ?? event.target.dataset.id;
+        const newValue = event.detail?.value ?? event.target.value;
         this.selectedFields = this.selectedFields.map(field => {
             if (field.name === fieldName) {
-                return { ...field, propertyRef: event.target.value };
+                // Re-enrich để cập nhật rowClass + statusIcon theo dirty state mới
+                return this._enrichField({ ...field, propertyRef: newValue });
             }
             return field;
         });
+    }
+
+    handleTreeSearch(event) {
+        this.searchTerm = event.target.value || '';
     }
 
     // Getter để kiểm tra khi nào nút Save nên bị khóa
@@ -192,6 +244,43 @@ export default class FecServiceTypeMapping extends LightningElement {
             return `${bpPart}  —  ${LABEL_STAGE_PREFIX} ${this.selectedStageName}`;
         }
         return bpPart;
+    }
+
+    /**
+     * Filter tree theo searchTerm. Match BP label hoặc Stage label, case-insensitive.
+     * Nếu BP match → giữ tất cả Stage. Nếu chỉ Stage match → giữ Stage đó kèm BP cha.
+     */
+    get filteredTreeItems() {
+        const term = (this.searchTerm || '').toLowerCase().trim();
+        if (!term) return this.treeItems;
+
+        const filtered = [];
+        this.treeItems.forEach(bp => {
+            const bpMatch = (bp.label || '').toLowerCase().includes(term);
+            const matchedStages = (bp.items || []).filter(stage =>
+                (stage.label || '').toLowerCase().includes(term)
+            );
+            if (bpMatch) {
+                filtered.push(bp); // giữ nguyên cả BP + tất cả stages
+            } else if (matchedStages.length > 0) {
+                filtered.push({ ...bp, items: matchedStages, expanded: true });
+            }
+        });
+        return filtered;
+    }
+
+    get hasFilteredTree() {
+        return this.filteredTreeItems && this.filteredTreeItems.length > 0;
+    }
+
+    get fieldCountLabel() {
+        const n = this.selectedFields.length;
+        return n === 1 ? `1 property` : `${n} properties`;
+    }
+
+    get dirtyCountLabel() {
+        const n = this.selectedFields.filter(f => f.propertyRef !== f.originalRef).length;
+        return n === 1 ? `1 chưa lưu` : `${n} chưa lưu`;
     }
 
     async handleSave() {
@@ -232,7 +321,7 @@ export default class FecServiceTypeMapping extends LightningElement {
             });
 
             // 4. Update originalRef in selectedFields to reflect saved state
-            this.selectedFields = this.selectedFields.map(field => ({
+            this.selectedFields = this.selectedFields.map(field => this._enrichField({
                 ...field,
                 originalRef: field.propertyRef
             }));

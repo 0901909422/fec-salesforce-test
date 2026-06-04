@@ -37,41 +37,62 @@
             <template if:false={isBPSelected}>
                 <div class="empty-state slds-p-around_large slds-text-align_center">
                     <lightning-icon icon-name="utility:data_mapping" size="large" variant="bare"></lightning-icon>
-                    <p class="slds-m-top_small">Vui lòng chọn một node để xem Decision Table</p>
+                    <p class="slds-m-top_small">{labels.emptyNoNode}</p>
                 </div>
             </template>
 
-            <!-- ── BP Selected: show toolbar + table ── -->
+            <!-- ── Empty state: BP selected but no rules/columns yet ── -->
+            <template if:true={isEmptyDecisionTable}>
+                <div class="empty-state slds-p-around_large slds-text-align_center">
+                    <lightning-icon icon-name="utility:add" size="large" variant="brand"></lightning-icon>
+                    <p class="slds-m-top_small slds-m-bottom_small">
+                        {labels.emptyNoTable}
+                    </p>
+                    <p class="slds-text-body_small slds-text-color_weak slds-m-bottom_medium">
+                        {labels.emptyHint}
+                    </p>
+                    <lightning-button label={labels.createNew} variant="brand"
+                        onclick={handleCreateNewDecisionTable} disabled={isLoading}>
+                    </lightning-button>
+                </div>
+            </template>
+
+            <!-- ── BP Selected: show toolbar + table (ẩn khi empty state) ── -->
             <template if:true={isBPSelected}>
+                <template if:false={isEmptyDecisionTable}>
 
                 <!-- ═══════════════ TOOLBAR ═══════════════ -->
                 <div class="decision-toolbar slds-p-horizontal_small slds-p-vertical_x-small">
                     <div class="slds-grid slds-grid_vertical-align-center slds-wrap">
                         <div class="slds-grid slds-grid_vertical-align-center slds-gap_x-small slds-m-right_medium">
-                            <lightning-button label="Thêm Cột Trái" icon-name="utility:back"
+                            <lightning-button label={labels.addColLeft} icon-name="utility:back"
                                 onclick={handleAddColLeft} variant="neutral"
                                 disabled={disableAddCol}></lightning-button>
-                            <lightning-button label="Thêm Cột Phải" icon-name="utility:forward"
+                            <lightning-button label={labels.addColRight} icon-name="utility:forward"
                                 onclick={handleAddColRight} variant="neutral"
                                 disabled={disableAddCol}></lightning-button>
-                            <lightning-button label="Xóa Cột" icon-name="utility:delete"
+                            <lightning-button label={labels.deleteCol} icon-name="utility:delete"
                                 onclick={handleDeleteColumn} variant="destructive-text"
                                 disabled={disableDeleteCol}></lightning-button>
                             <span class="slds-border_left slds-m-left_x-small slds-p-left_x-small"></span>
-                            <lightning-button label="Thêm Dòng Trên" icon-name="utility:arrowup"
+                            <lightning-button label={labels.addRowAbove} icon-name="utility:arrowup"
                                 onclick={handleAddRowAbove} variant="neutral"
                                 disabled={disableAddRow}></lightning-button>
-                            <lightning-button label="Thêm Dòng Dưới" icon-name="utility:arrowdown"
+                            <lightning-button label={labels.addRowBelow} icon-name="utility:arrowdown"
                                 onclick={handleAddRowBelow} variant="neutral"
                                 disabled={disableAddRow}></lightning-button>
-                            <lightning-button label="Xóa Dòng" icon-name="utility:delete"
+                            <lightning-button label={labels.deleteRow} icon-name="utility:delete"
                                 onclick={handleDeleteRow} variant="destructive-text"
                                 disabled={disableDeleteRow}></lightning-button>
+                            <span class="slds-border_left slds-m-left_x-small slds-p-left_x-small"></span>
+                            <lightning-button label={labels.clearAll} icon-name="utility:clear"
+                                onclick={handleClearAllRules} variant="destructive"
+                                disabled={isLoading}></lightning-button>
                         </div>
                         <div class="search-container slds-grow">
                             <div class="slds-form-element">
                                 <div class="slds-form-element__control slds-input-has-icon slds-input-has-icon_right">
-                                    <input type="text" class="slds-input" placeholder="Tìm kiếm..."
+                                    <input type="text" class="slds-input" placeholder={labels.search}
                                         value={searchFilter} onkeyup={handleSearchChange} />
                                     <template if:true={hasSearchFilter}>
                                         <button class="slds-button slds-button_icon slds-input__icon slds-input__icon_right"
@@ -466,6 +487,7 @@
             </div>
             </template>
 
+                </template>
             </template>
         </div>
     </div>
@@ -708,12 +730,37 @@
                                     </div>
                                 </div>
                             </template>
-                            <div class="slds-form-element slds-m-bottom_small">
-                                <lightning-combobox label="Or Select Field" name="newColField"
-                                    options={fieldOptions} value={selectedNewColFieldId}
-                                    onchange={handleNewColFieldChange}
-                                    placeholder="-- Select field --">
-                                </lightning-combobox>
+                            <div class="slds-form-element slds-m-bottom_small fec-field-search">
+                                <label class="slds-form-element__label">Or Select Field</label>
+                                <div class="slds-form-element__control">
+                                    <lightning-input
+                                        type="search"
+                                        variant="label-hidden"
+                                        value={fieldSearchTerm}
+                                        onchange={handleFieldSearch}
+                                        onfocus={handleFieldSearchFocus}
+                                        placeholder="Search or select field...">
+                                    </lightning-input>
+                                    <template if:true={showFieldDropdown}>
+                                        <ul class="fec-field-listbox" role="listbox">
+                                            <template if:true={hasFilteredFieldOptions}>
+                                                <template for:each={filteredFieldOptions} for:item="opt">
+                                                    <li key={opt.value}
+                                                        class="fec-field-option"
+                                                        role="option"
+                                                        data-value={opt.value}
+                                                        title={opt.label}
+                                                        onmousedown={handlePickField}>
+                                                        {opt.label}
+                                                    </li>
+                                                </template>
+                                            </template>
+                                            <template if:false={hasFilteredFieldOptions}>
+                                                <li class="fec-field-option fec-field-empty">No field found</li>
+                                            </template>
+                                        </ul>
+                                    </template>
+                                </div>
                             </div>
                             <div class="slds-form-element slds-m-bottom_small">
                                 <lightning-combobox label="Operator" name="newColOperator"
@@ -751,7 +798,7 @@
                                     disabled={useRange}>
                                 </lightning-input>
                             </div>
-                            <template if:true={showExpressionMode}>
+                            <template if:true={isExpressionSectionVisible}>
                                 <div class="slds-form-element slds-m-bottom_small">
                                     <lightning-combobox label="Expression" name="expression"
                                         options={expressionOptions} value={expressionValue}
