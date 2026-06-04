@@ -17,6 +17,8 @@ global with sharing class FEC_GetCSMasterDataByCodeService {
     // CONSTANTS
     // =========================================================================
     private static final Integer MAX_LENGTH_STANDARD = 255;
+    private static final Integer FEC_API_LOG_RESPONSE_FIELD_LEN = 131072;
+    private static final String API_LOG_TRUNCATED_SUFFIX = '...[truncated]';
 
     // =========================================================================
     // MAIN
@@ -29,13 +31,24 @@ global with sharing class FEC_GetCSMasterDataByCodeService {
         String Remarks
     ) {
         GetCSMasterDataByCodeResponse res = initResponse(Sys);
+        Boolean isSuccess = false;
+        String errorMessage = null;
+        Map<String, Object> logRequest = buildApiLogRequest(
+            Sys,
+            MasterDataCode,
+            CustomerType,
+            AdditionalInfo,
+            Remarks
+        );
 
         try {
             // ===== VALIDATION =====
             ValidationResult sysVal = validateSys(Sys);
             if (!sysVal.isValid) {
-                return errorResponse(res, sysVal.errorMessage);
-            }
+                res.Sys.Code = '0';
+                res.Sys.Description = sysVal.errorMessage;
+                errorMessage = sysVal.errorMessage;
+            } else {
 
             // ===== EXTRACT =====
             String productTypeCode = (MasterDataCode != null) ? MasterDataCode.ProductType : null;
@@ -108,13 +121,18 @@ global with sharing class FEC_GetCSMasterDataByCodeService {
             // ===== SUCCESS =====
             res.Sys.Code = '1';
             res.Sys.Description = 'Success';
+            isSuccess = true;
+
+            }
 
         } catch (Exception e) {
             res.Sys.Code = '0';
             res.Sys.Description = e.getMessage();
+            errorMessage = e.getMessage();
         }
 
         normalizeResponse(res);
+        writeGetCSMasterDataByCodeApiLog(logRequest, res, isSuccess, errorMessage);
         return res;
     }
 
@@ -312,7 +330,8 @@ global with sharing class FEC_GetCSMasterDataByCodeService {
             return result;
         }
 
-        // Channel
+        // Channel (normalize trim / quotes from XML)
+        Sys.Channel = FEC_CommonUltils.normalizeChannelInput(Sys.Channel);
         if (String.isBlank(Sys.Channel)) {
             result.isValid = false;
             result.errorMessage = String.format(
@@ -323,7 +342,7 @@ global with sharing class FEC_GetCSMasterDataByCodeService {
         }
         if (!FEC_CommonUltils.isActiveChannelSupported(Sys.Channel)) {
             result.isValid = false;
-            result.errorMessage = buildUnsupportedChannelMessage(Sys.Channel);
+            result.errorMessage = FEC_CommonUltils.buildUnsupportedChannelMessage(Sys.Channel);
             return result;
         }
 
@@ -350,30 +369,70 @@ global with sharing class FEC_GetCSMasterDataByCodeService {
         return result;
     }
 
-    private static String buildUnsupportedChannelMessage(String channel) {
-        String normalizedChannel = FEC_CommonUltils.sanitizeChannelForMessage(channel);
-        return String.valueOf(System.Label.FEC_MSG_Channel_Validation).trim() +
-            ' ' +
-            normalizedChannel +
-            ' ' +
-            String.valueOf(System.Label.FEC_MSG_Data_Request_Master_Data).trim();
-    }
-
     private class ValidationResult {
         Boolean isValid;
         String errorMessage;
     }
 
     // =========================================================================
-    // RESPONSE HELPERS
+    // API LOG
     // =========================================================================
-    private static GetCSMasterDataByCodeResponse errorResponse(GetCSMasterDataByCodeResponse res, String message) {
-        res.Sys.Code = '0';
-        res.Sys.Description = message;
-        normalizeResponse(res);
-        return res;
+    private static Map<String, Object> buildApiLogRequest(
+        SysRequestType sys,
+        MasterDataCodeType masterDataCode,
+        CustomerTypeRequest customerType,
+        AdditionalInfoRequest additionalInfo,
+        String remarks
+    ) {
+        return new Map<String, Object>{
+            'Sys' => sys,
+            'MasterDataCode' => masterDataCode,
+            'CustomerType' => customerType,
+            'AdditionalInfo' => additionalInfo,
+            'Remarks' => remarks
+        };
     }
 
+    private static void writeGetCSMasterDataByCodeApiLog(
+        Map<String, Object> request,
+        GetCSMasterDataByCodeResponse response,
+        Boolean isSuccess,
+        String errorMessage
+    ) {
+        try {
+            HttpResponse apiResponse = new HttpResponse();
+            apiResponse.setStatusCode(isSuccess ? 200 : 500);
+            apiResponse.setBody(buildApiLogResponseBody(response));
+            FEC_CommonUltils.logApi(
+                'GetCSMasterDataByCode',
+                'GetCSMasterDataByCode',
+                FEC_ConstantCommon.API_METHOD_POST,
+                FEC_CommonUltils.serializeSafe(request),
+                apiResponse,
+                errorMessage
+            );
+        } catch (Exception logEx) {
+            System.debug('LOG_API_ERROR GetCSMasterDataByCode: ' + logEx.getMessage());
+        }
+    }
+
+    private static String buildApiLogResponseBody(GetCSMasterDataByCodeResponse response) {
+        if (response == null) {
+            return null;
+        }
+        String body = FEC_CommonUltils.serializeSafe(response);
+        Integer maxBodyLen =
+            FEC_API_LOG_RESPONSE_FIELD_LEN - API_LOG_TRUNCATED_SUFFIX.length();
+        return FEC_CommonUltils.truncateForLog(
+            body,
+            maxBodyLen,
+            API_LOG_TRUNCATED_SUFFIX
+        );
+    }
+
+    // =========================================================================
+    // RESPONSE HELPERS
+    // =========================================================================
     private static void normalizeResponse(GetCSMasterDataByCodeResponse res) {
         if (res == null) return;
 
