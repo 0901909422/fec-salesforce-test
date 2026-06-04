@@ -3,7 +3,7 @@
     <fullName>FEC_Is_Deleted__c</fullName>
     <defaultValue>false</defaultValue>
     <label>FEC Is Deleted</label>
-    <trackHistory>false</trackHistory>
+    <trackHistory>true</trackHistory>
     <trackTrending>false</trackTrending>
     <type>Checkbox</type>
 </CustomField>

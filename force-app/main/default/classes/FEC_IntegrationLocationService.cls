@@ -120,21 +120,21 @@ public class FEC_IntegrationLocationService {
                     String soql = 'SELECT ExternalId, CODE__c, NAME__c, NAME_EN__c, '
                                 + 'PARENTCODE__c, ISACTIVE__c, SCHEME__c, EFFECTIVEDATE__c '
                                 + 'FROM CifFeDictLocationVw__x '
-                                + 'WHERE SCHEME__c = \'' + String.escapeSingleQuotes(scheme) + '\' '
+                                + 'WHERE SCHEME__c = :scheme '
                                 + 'LIMIT ' + pageSize + ' OFFSET ' + offset;
-                    List<SObject> batch = Database.query(soql);
+                    List<CifFeDictLocationVw__x> batch = Database.query(soql);
                     log('[syncLocation] SCHEME=' + scheme + ' returned ' + batch.size() + ' records');
 
-                    for (SObject loc : batch) {
+                    for (CifFeDictLocationVw__x loc : batch) {
                         records.add(new Map<String, Object>{
-                            'ExternalId' => loc.get('ExternalId'),
-                            'CODE__c' => loc.get('CODE__c'),
-                            'NAME__c' => loc.get('NAME__c'),
-                            'NAME_EN__c' => loc.get('NAME_EN__c'),
-                            'PARENTCODE__c' => loc.get('PARENTCODE__c'),
-                            'ISACTIVE__c' => loc.get('ISACTIVE__c'),
-                            'SCHEME__c' => loc.get('SCHEME__c'),
-                            'EFFECTIVEDATE__c' => loc.get('EFFECTIVEDATE__c')
+                            'ExternalId' => loc.ExternalId,
+                            'CODE__c' => loc.CODE__c,
+                            'NAME__c' => loc.NAME__c,
+                            'NAME_EN__c' => loc.NAME_EN__c,
+                            'PARENTCODE__c' => loc.PARENTCODE__c,
+                            'ISACTIVE__c' => loc.ISACTIVE__c,
+                            'SCHEME__c' => loc.SCHEME__c,
+                            'EFFECTIVEDATE__c' => loc.EFFECTIVEDATE__c
                         });
                     }
 
