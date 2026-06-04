@@ -165,12 +165,16 @@ public with sharing class FEC_IntegrationFraudCaseUtil {
          /** 
          * CaseId of the Case object.
          */
-        public String caseDataId;   
+        public String caseDataId;
+
+        /**
+         * Nature of Case Id for mapping resolution.
+         */
+        public String natureOfCaseId;      
          /** 
          * intCaseId of the Case object.
          */
         public String intCaseId;      
-        
 
         /** 
          * List of additional key-value information 
@@ -513,6 +517,7 @@ public with sharing class FEC_IntegrationFraudCaseUtil {
         w.userType     = (String) payload.get(c.USER_TYPE);
         w.caseId       = (String) payload.get(c.FRAUD_CASEID);
         w.caseDataId   = (String) payload.get('caseDataId');
+        w.natureOfCaseId = (String) payload.get('NatureOfCaseId');
         w.intCaseId = (String) payload.get('IntCaseId');
        
 
@@ -569,12 +574,6 @@ public with sharing class FEC_IntegrationFraudCaseUtil {
                         String fileName  = infoValue.substring(0, firstPipe);
                         String extension = infoValue.substring(firstPipe + 1, secondPipe);
                         String base64Val = infoValue.substring(secondPipe + 1);
-
-                        // If the value is a Salesforce ContentDocument ID, fetch actual file content
-                        if (base64Val != null && base64Val.length() == 18 && base64Val.startsWith('069')) {
-                            base64Val = getBase64FromContentDocumentId(base64Val);
-                        }
-
                         String convertZipFile = createZipBase64(fileName, base64Val);
                         if (convertZipFile != null) {
                             infoValue =
@@ -603,23 +602,6 @@ public with sharing class FEC_IntegrationFraudCaseUtil {
         return w;
     }
    
-
-    /**
-     * Fetches file content as base64 from a ContentDocument ID.
-     */
-    private static String getBase64FromContentDocumentId(String contentDocumentId) {
-        List<ContentVersion> versions = [
-            SELECT VersionData
-            FROM ContentVersion
-            WHERE ContentDocumentId = :contentDocumentId
-              AND IsLatest = true
-            LIMIT 1
-        ];
-        if (!versions.isEmpty() && versions[0].VersionData != null) {
-            return EncodingUtil.base64Encode(versions[0].VersionData);
-        }
-        return null;
-    }
 
     private static String createZipBase64(String fileName, String base64Data) {
 

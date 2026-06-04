@@ -156,7 +156,7 @@
     <label>Map A Properties To Master Data Item</label>
     <nameField>
         <label>Map A Properties To Master Data Item Nam</label>
-        <trackHistory>true</trackHistory>
+        <trackHistory>false</trackHistory>
         <type>Text</type>
     </nameField>
     <pluralLabel>Map A Properties To Master Data Items</pluralLabel>

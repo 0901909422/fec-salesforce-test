@@ -5,7 +5,8 @@
       "versionNumber": "0.1.0.NEXT",
       "path": "force-app",
       "package": "GitLabPipelinesPkg",
-      "versionDescription": ""
+      "versionDescription": "",
+      "definitionFile": "config/project-scratch-def.json"
     }
   ],
   "namespace": "",

@@ -125,6 +125,7 @@ sf project deploy preview --target-org MySandbox
 sf package version create \
   --package "GitLabPipelinesPkg" \
   --installation-key "Fec@123" \
+  --definition-file config/project-scratch-def.json \
   --wait 20 \
   --target-dev-hub prod \
   --code-coverage
@@ -359,6 +360,7 @@ sf org display --target-org prod --verbose
 | `Scratch org expired` | Scratch org hết hạn (30 ngày) | Tạo scratch org mới |
 | `Package install failed: dependency` | Package phụ thuộc package khác | Install dependency trước |
 | `INVALID_TYPE: Cannot create version` | Metadata type không hỗ trợ trong package | Tách metadata đó ra deploy riêng |
+| `FlexiPage … unexpected error (-997975201)` | Scratch org build package thiếu feature / component phụ thuộc chưa deploy (milestones, LWC, quick action) | Dùng `--definition-file config/project-scratch-def.json` (Entitlements + Service Cloud). Xem `sf package version report --verbose` |
 
 ### Lệnh debug hữu ích
 
@@ -435,6 +437,7 @@ sf package uninstall \
 sf package version create \
   --package "GitLabPipelinesPkg" \
   --installation-key "Fec@123" \
+  --definition-file config/project-scratch-def.json \
   --wait 20 \
   --target-dev-hub prod \
   --code-coverage
