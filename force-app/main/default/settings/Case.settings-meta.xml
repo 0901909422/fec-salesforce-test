@@ -10,9 +10,10 @@
     <caseMergeInLightning>false</caseMergeInLightning>
     <closeCaseThroughStatusChange>true</closeCaseThroughStatusChange>
     <defaultCaseFeedLayoutOn>false</defaultCaseFeedLayoutOn>
+    <defaultCaseOwner>duc.nguyen.10@fecredit.com.vn</defaultCaseOwner>
     <defaultCaseOwnerType>User</defaultCaseOwnerType>
     <emailToCase>
-        <enableE2CAttachmentAsFile>false</enableE2CAttachmentAsFile>
+        <enableE2CAttachmentAsFile>true</enableE2CAttachmentAsFile>
         <enableE2CDeduplicateAttachments>false</enableE2CDeduplicateAttachments>
         <enableE2CExternalServer>true</enableE2CExternalServer>
         <enableE2CSourceTracking>true</enableE2CSourceTracking>
@@ -26,113 +27,131 @@
         <notifyOwnerOnNewCaseEmail>true</notifyOwnerOnNewCaseEmail>
         <notifySenderE2CError>false</notifySenderE2CError>
         <overEmailLimitAction>Bounce</overEmailLimitAction>
-        <preQuoteSignature>false</preQuoteSignature>
+        <preQuoteSignature>true</preQuoteSignature>
         <replyWithNewContentOnly>false</replyWithNewContentOnly>
         <routingAddresses>
             <addressType>EmailToCase</addressType>
-            <caseOrigin>Email</caseOrigin>
+            <caseOrigin>Email-Internal</caseOrigin>
             <caseOwner>FEC_CSM_Mailbox</caseOwner>
             <caseOwnerType>Queue</caseOwnerType>
             <casePriority>Medium</casePriority>
             <createTask>false</createTask>
             <emailAddress>supportcsm@fecredit.com.vn</emailAddress>
-            <isVerified>false</isVerified>
+            <isPermsetControlled>false</isPermsetControlled>
+            <isVerified>true</isVerified>
+            <newEntityRecordType>Case.Interaction</newEntityRecordType>
             <routingName>CSM Mailbox</routingName>
             <saveEmailHeaders>false</saveEmailHeaders>
         </routingAddresses>
         <routingAddresses>
             <addressType>EmailToCase</addressType>
-            <caseOrigin>Email</caseOrigin>
+            <caseOrigin>Email-Internal</caseOrigin>
             <caseOwner>FEC_Care_Mailbox</caseOwner>
             <caseOwnerType>Queue</caseOwnerType>
             <casePriority>Medium</casePriority>
             <createTask>false</createTask>
             <emailAddress>customercare@fecredit.com.vn</emailAddress>
-            <isVerified>false</isVerified>
+            <isPermsetControlled>false</isPermsetControlled>
+            <isVerified>true</isVerified>
+            <newEntityRecordType>Case.Interaction</newEntityRecordType>
             <routingName>Care Mailbox</routingName>
             <saveEmailHeaders>false</saveEmailHeaders>
         </routingAddresses>
         <routingAddresses>
             <addressType>EmailToCase</addressType>
-            <caseOrigin>Email</caseOrigin>
+            <caseOrigin>Email-Internal</caseOrigin>
             <caseOwner>FEC_Day_2_Check</caseOwner>
             <caseOwnerType>Queue</caseOwnerType>
             <casePriority>Medium</casePriority>
             <createTask>false</createTask>
             <emailAddress>cs_d2c@fecredit.com.vn</emailAddress>
-            <isVerified>false</isVerified>
+            <isPermsetControlled>false</isPermsetControlled>
+            <isVerified>true</isVerified>
+            <newEntityRecordType>Case.Interaction</newEntityRecordType>
             <routingName>Day 2 Check</routingName>
             <saveEmailHeaders>false</saveEmailHeaders>
         </routingAddresses>
         <routingAddresses>
             <addressType>EmailToCase</addressType>
-            <caseOrigin>Email</caseOrigin>
+            <caseOrigin>Email-Internal</caseOrigin>
             <caseOwner>FEC_Ecom_Mailbox</caseOwner>
             <caseOwnerType>Queue</caseOwnerType>
             <casePriority>Medium</casePriority>
             <createTask>false</createTask>
             <emailAddress>e_com@fecredit.com.vn</emailAddress>
-            <isVerified>false</isVerified>
+            <isPermsetControlled>false</isPermsetControlled>
+            <isVerified>true</isVerified>
+            <newEntityRecordType>Case.Interaction</newEntityRecordType>
             <routingName>Ecom Mailbox</routingName>
             <saveEmailHeaders>false</saveEmailHeaders>
         </routingAddresses>
         <routingAddresses>
             <addressType>EmailToCase</addressType>
-            <caseOrigin>Email</caseOrigin>
+            <caseOrigin>Email-Internal</caseOrigin>
             <caseOwner>FEC_OM_Mailbox</caseOwner>
             <caseOwnerType>Queue</caseOwnerType>
             <casePriority>Medium</casePriority>
             <createTask>false</createTask>
             <emailAddress>cs_om@fecredit.com.vn</emailAddress>
-            <isVerified>false</isVerified>
+            <isPermsetControlled>false</isPermsetControlled>
+            <isVerified>true</isVerified>
+            <newEntityRecordType>Case.Interaction</newEntityRecordType>
             <routingName>OM Mailbox</routingName>
             <saveEmailHeaders>false</saveEmailHeaders>
         </routingAddresses>
         <routingAddresses>
             <addressType>EmailToCase</addressType>
-            <caseOrigin>Email</caseOrigin>
+            <caseOrigin>Email-Internal</caseOrigin>
             <caseOwner>FEC_Office_Based_Mailbox</caseOwner>
             <caseOwnerType>Queue</caseOwnerType>
             <casePriority>Medium</casePriority>
             <createTask>false</createTask>
             <emailAddress>f2f@fecredit.com.vn</emailAddress>
-            <isVerified>false</isVerified>
+            <isPermsetControlled>false</isPermsetControlled>
+            <isVerified>true</isVerified>
+            <newEntityRecordType>Case.Interaction</newEntityRecordType>
             <routingName>Office Based Mailbox</routingName>
             <saveEmailHeaders>false</saveEmailHeaders>
         </routingAddresses>
         <routingAddresses>
             <addressType>EmailToCase</addressType>
-            <caseOrigin>Email</caseOrigin>
+            <caseOrigin>Email-Internal</caseOrigin>
             <caseOwner>FEC_Quality_Control_Mailbox</caseOwner>
             <caseOwnerType>Queue</caseOwnerType>
             <casePriority>Medium</casePriority>
             <createTask>false</createTask>
             <emailAddress>cs_qc_team@fecredit.com.vn</emailAddress>
-            <isVerified>false</isVerified>
+            <isPermsetControlled>false</isPermsetControlled>
+            <isVerified>true</isVerified>
+            <newEntityRecordType>Case.Interaction</newEntityRecordType>
             <routingName>Quality Control Mailbox</routingName>
             <saveEmailHeaders>false</saveEmailHeaders>
         </routingAddresses>
         <routingAddresses>
             <addressType>EmailToCase</addressType>
-            <caseOrigin>Email</caseOrigin>
+            <caseOrigin>Email-Internal</caseOrigin>
             <caseOwner>FEC_Support_Mailbox</caseOwner>
             <caseOwnerType>Queue</caseOwnerType>
             <casePriority>Medium</casePriority>
             <createTask>false</createTask>
             <emailAddress>cssupport@fecredit.com.vn</emailAddress>
-            <isVerified>false</isVerified>
+            <isPermsetControlled>false</isPermsetControlled>
+            <isVerified>true</isVerified>
+            <newEntityRecordType>Case.Interaction</newEntityRecordType>
             <routingName>Support Mailbox</routingName>
             <saveEmailHeaders>false</saveEmailHeaders>
         </routingAddresses>
         <routingAddresses>
             <addressType>EmailToCase</addressType>
-            <caseOrigin>Email</caseOrigin>
+            <caseOrigin>Email-Ubank</caseOrigin>
             <caseOwner>FEC_Ubank_Email</caseOwner>
             <caseOwnerType>Queue</caseOwnerType>
             <casePriority>Medium</casePriority>
             <createTask>false</createTask>
             <emailAddress>dichvukhachhang@ubank.vn</emailAddress>
-            <isVerified>false</isVerified>
+            <isPermsetControlled>false</isPermsetControlled>
+            <isVerified>true</isVerified>
+            <newEntityRecordType>Case.Interaction</newEntityRecordType>
             <routingName>Ubank Email</routingName>
             <saveEmailHeaders>false</saveEmailHeaders>
         </routingAddresses>
@@ -158,7 +177,7 @@
     <enableSuggestedSolutions>true</enableSuggestedSolutions>
     <escalateCaseBefore>false</escalateCaseBefore>
     <hidePublicInCaseComment>false</hidePublicInCaseComment>
-    <keepRecordTypeOnAssignmentRule>false</keepRecordTypeOnAssignmentRule>
+    <keepRecordTypeOnAssignmentRule>true</keepRecordTypeOnAssignmentRule>
     <notifyContactOnCaseComment>false</notifyContactOnCaseComment>
     <notifyDefaultCaseOwner>false</notifyDefaultCaseOwner>
     <notifyOwnerOnCaseComment>false</notifyOwnerOnCaseComment>
@@ -168,7 +187,7 @@
     <showEmailAttachmentsInCaseAttachmentsRL>true</showEmailAttachmentsInCaseAttachmentsRL>
     <showFewerCloseActions>false</showFewerCloseActions>
     <useSystemEmailAddress>true</useSystemEmailAddress>
-    <useSystemUserAsDefaultCaseUser>false</useSystemUserAsDefaultCaseUser>
+    <useSystemUserAsDefaultCaseUser>true</useSystemUserAsDefaultCaseUser>
     <visibleInCssCheckbox>false</visibleInCssCheckbox>
     <webToCase>
         <enableWebToCase>false</enableWebToCase>
