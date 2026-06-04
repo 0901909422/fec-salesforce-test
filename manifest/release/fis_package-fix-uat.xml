@@ -33,6 +33,13 @@
     </types>
     <types>
         <members>FEC_Download_Report__c.Interaction_and_Service_Case_Summary</members>
+        <members>FEC_Download_Report__c.Interactions_Service_Cases_TAT_CA</members>
+        <members>FEC_Download_Report__c.Interactions_Service_Cases_TAT_CL</members>
+        <members>FEC_Download_Report__c.Interactions_Service_Cases_TAT_CO</members>
+        <members>FEC_Download_Report__c.Interactions_Service_Cases_TAT_CP</members>
+        <members>FEC_Download_Report__c.Interactions_Service_Cases_TAT_DS</members>
+        <members>FEC_Download_Report__c.Interactions_Service_Cases_TAT_PM</members>
+        <members>FEC_Download_Report__c.Interactions_Service_Cases_TAT_TS</members>
         <name>ListView</name>
     </types>
     <types>
