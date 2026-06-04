@@ -5,8 +5,11 @@
         <members>FEC_CreateCaseInteractionController</members>
         <members>FEC_GetCSCaseStatusService</members>
         <members>FEC_GetCSCaseStatusService_Test</members>
+        <members>FEC_GetCSCaseStatusRestService_Test</members>
+        <members>FEC_PsDNBServiceCallout</members>
         <members>FEC_AssignmentMasterFieldPersistService</members>
         <members>FEC_BatchCaseHandlingImportService</members>
+        <members>FEC_ChannelFunctionService</members>
         <members>FEC_CaseBusinessService</members>
         <members>FEC_CaseBusinessService_Test</members>
         <members>FEC_CofGsrAssignmentService</members>
