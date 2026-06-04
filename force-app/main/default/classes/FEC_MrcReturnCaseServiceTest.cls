@@ -111,11 +111,28 @@ private class FEC_MrcReturnCaseServiceTest {
 
     @IsTest
     static void mrcReturnCaseInformationValidate_rl0503_dpdBlocksWithDedicatedTitle() {
+        Case c = new Case(Subject = 'MRC RL0503 DPD');
+        FEC_CaseTriggerHandler.isExecuting = true;
+        try {
+            insert c;
+        } finally {
+            FEC_CaseTriggerHandler.isExecuting = false;
+        }
         FEC_Customer_History__c ch = new FEC_Customer_History__c(
+            FEC_Case__c = c.Id,
             FEC_Product_Code__c = 'TW',
             FEC_Days_Past_Due__c = 15
         );
-        Case c = new Case(FEC_Account_or_Contract__r = ch);
+        insert ch;
+        update new Case(Id = c.Id, FEC_Account_or_Contract__c = ch.Id);
+        c = [
+            SELECT
+                FEC_Account_or_Contract__c,
+                FEC_Account_or_Contract__r.FEC_Product_Code__c,
+                FEC_Account_or_Contract__r.FEC_Days_Past_Due__c
+            FROM Case
+            WHERE Id = :c.Id
+        ];
         FEC_CaseBusinessService.Error err = FEC_MrcReturnCaseService.mrcReturnCaseInformationValidate(
             c,
             'RL05',

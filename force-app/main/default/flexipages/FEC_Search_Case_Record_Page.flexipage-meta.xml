@@ -513,6 +513,80 @@
     <flexiPageRegions>
         <itemInstances>
             <componentInstance>
+                <componentName>fec_PendingServiceCases</componentName>
+                <identifier>c_fec_PendingServiceCases</identifier>
+            </componentInstance>
+        </itemInstances>
+        <name>Facet-d2a2c81a-512f-48c8-98b5-83e494397eba</name>
+        <type>Facet</type>
+    </flexiPageRegions>
+    <flexiPageRegions>
+        <itemInstances>
+            <componentInstance>
+                <componentName>fec_InteractionCases</componentName>
+                <identifier>c_fec_InteractionCases</identifier>
+            </componentInstance>
+        </itemInstances>
+        <name>Facet-3c107894-4c2c-4c8f-9463-c8ad3990e17f</name>
+        <type>Facet</type>
+    </flexiPageRegions>
+    <flexiPageRegions>
+        <itemInstances>
+            <componentInstance>
+                <componentInstanceProperties>
+                    <name>active</name>
+                    <value>true</value>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>body</name>
+                    <value>Facet-d2a2c81a-512f-48c8-98b5-83e494397eba</value>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>title</name>
+                    <value>All Service Cases</value>
+                </componentInstanceProperties>
+                <componentName>flexipage:tab</componentName>
+                <identifier>flexipage_tab15</identifier>
+            </componentInstance>
+        </itemInstances>
+        <itemInstances>
+            <componentInstance>
+                <componentInstanceProperties>
+                    <name>body</name>
+                    <value>Facet-3c107894-4c2c-4c8f-9463-c8ad3990e17f</value>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>title</name>
+                    <value>All Interactions</value>
+                </componentInstanceProperties>
+                <componentName>flexipage:tab</componentName>
+                <identifier>flexipage_tab19</identifier>
+            </componentInstance>
+        </itemInstances>
+        <name>Facet-f96f934b-de6a-467b-9443-3452a86d7148</name>
+        <type>Facet</type>
+    </flexiPageRegions>
+    <flexiPageRegions>
+        <itemInstances>
+            <componentInstance>
+                <componentInstanceProperties>
+                    <name>label</name>
+                    <value>Tabs</value>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>tabs</name>
+                    <value>Facet-f96f934b-de6a-467b-9443-3452a86d7148</value>
+                </componentInstanceProperties>
+                <componentName>flexipage:tabset</componentName>
+                <identifier>flexipage_tabset4</identifier>
+            </componentInstance>
+        </itemInstances>
+        <name>Facet-045bcee4-23a4-4445-99ef-031437798e39</name>
+        <type>Facet</type>
+    </flexiPageRegions>
+    <flexiPageRegions>
+        <itemInstances>
+            <componentInstance>
                 <componentName>fec_CollectionDateFilter</componentName>
                 <identifier>c_fec_CollectionDateFilter</identifier>
             </componentInstance>
@@ -853,6 +927,43 @@
                         <leftValue>{!Record.FEC_Customer_Type__c}</leftValue>
                         <operator>NE</operator>
                         <rightValue>Non-existing</rightValue>
+                    </criteria>
+                </visibilityRule>
+            </componentInstance>
+        </itemInstances>
+        <itemInstances>
+            <componentInstance>
+                <componentInstanceProperties>
+                    <name>body</name>
+                    <value>Facet-045bcee4-23a4-4445-99ef-031437798e39</value>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>title</name>
+                    <value>Interaction History</value>
+                </componentInstanceProperties>
+                <componentName>flexipage:tab</componentName>
+                <identifier>flexipage_tab11</identifier>
+                <visibilityRule>
+                    <booleanFilter>1 AND 2 AND (3 OR 4)</booleanFilter>
+                    <criteria>
+                        <leftValue>{!Record.FEC_Customer_Type__c}</leftValue>
+                        <operator>NE</operator>
+                        <rightValue>Non-existing</rightValue>
+                    </criteria>
+                    <criteria>
+                        <leftValue>{!Record.FEC_Has_Account_or_Contract__c}</leftValue>
+                        <operator>EQUAL</operator>
+                        <rightValue>true</rightValue>
+                    </criteria>
+                    <criteria>
+                        <leftValue>{!Record.FEC_Channel__c}</leftValue>
+                        <operator>NE</operator>
+                        <rightValue>F2F</rightValue>
+                    </criteria>
+                    <criteria>
+                        <leftValue>{!Record.FEC_Channel__c}</leftValue>
+                        <operator>NE</operator>
+                        <rightValue>Letter</rightValue>
                     </criteria>
                 </visibilityRule>
             </componentInstance>

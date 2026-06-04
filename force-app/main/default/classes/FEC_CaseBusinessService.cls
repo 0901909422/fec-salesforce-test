@@ -121,7 +121,9 @@ public without sharing class FEC_CaseBusinessService {
     String productTypeId,
     String categoryId,
     String subCategoryId,
-    String subCodeId
+    String subCodeId,
+    String blockCode,
+    String blockCode1
   ) {
     Business result = new Business();
     try {
@@ -1423,7 +1425,9 @@ public without sharing class FEC_CaseBusinessService {
         subCategoryId,
         subCodeId,
         selectedStage != null ? selectedStage.Id : null,
-        parseIdSafelyForRouting(routeToId)
+        parseIdSafelyForRouting(routeToId),
+        blockCode,
+        blockCode1
       );
 
       // Case đã Submit thì không trả draft → màn Execute hiển thị mới, không autofill dữ liệu cũ
@@ -2384,10 +2388,15 @@ public without sharing class FEC_CaseBusinessService {
             natureOfCaseId,
             actionId,
             finalStatusBeforeSubmit,
-            (String) params.get('teamUserGroup')
+            (String) params.get('teamUserGroup'),
+            (String) params.get('blockCode'),
+            (String) params.get('blockCode1')
           );
           // 28/05/2026 15:33 linhdev - tránh Too many queueable jobs khi import batch chain queueable
-          if (!FEC_BatchCaseHandlingImportService.isBatchImportApplyInProgress()) {
+          if (
+            !FEC_BatchCaseHandlingImportService.isBatchImportApplyInProgress() &&
+            !Test.isRunningTest()
+          ) {
             System.enqueueJob(
               new FEC_MrcDupCancelOnSubmitQueueJob(
                 caseId,
@@ -2427,11 +2436,12 @@ public without sharing class FEC_CaseBusinessService {
             FEC_CofGsrRoutePrepareService.restoreGsrStage1BaselineAfterStage2Revert(
               caseId
             );
-          } else {
-            FEC_CofGsrRoutePrepareService.syncActualNatureToMatchCurrentCaseStage(
-              caseId
-            );
           }
+          // else: sync Actual NOC theo stage hiện tại sau Revert (COF/GSR) — tạm tắt vì
+          // FEC_CofGsrRoutePrepareService.syncActualNatureToMatchCurrentCaseStage chưa có trên org.
+          // else {
+          //   FEC_CofGsrRoutePrepareService.syncActualNatureToMatchCurrentCaseStage(caseId);
+          // }
           return null;
         }
         when RECALL {
@@ -2557,7 +2567,9 @@ public without sharing class FEC_CaseBusinessService {
     String natureOfCaseId,
     String actionId,
     String finalStatusBeforeSubmit,
-    String teamUserGroup
+    String teamUserGroup,
+    String clientBlockCode,
+    String clientBlockCode1
   ) {
     try {
       Long corrId = DateTime.now().getTime();
@@ -2749,7 +2761,26 @@ public without sharing class FEC_CaseBusinessService {
           queueId
         );
       if (!routeByLatestRevertHistory) {
-        if (FEC_BlockCodeRoutingService.isRc27DefaultOmDay2Routing(updatedCase)) {
+        if (
+          FEC_BlockCodeRoutingService.isClientBlockCodeForcedOmDay2ForRc27Route(
+            updatedCase,
+            clientBlockCode,
+            clientBlockCode1,
+            natureOfCaseId
+          )
+        ) {
+          FEC_Stage_Change__c rc27OmDay2 =
+            FEC_BlockCodeRoutingService.selectRc27DefaultOmDay2FromList(changelst);
+          if (rc27OmDay2 == null) {
+            rc27OmDay2 = FEC_BlockCodeRoutingService.queryRc27DefaultOmDay2StageChange(
+              updatedCase.FEC_Current_Case_Stage__c,
+              actionId
+            );
+          }
+          if (rc27OmDay2 != null) {
+            selectedChange = rc27OmDay2;
+          }
+        } else if (FEC_BlockCodeRoutingService.isRc27DefaultOmDay2Routing(updatedCase)) {
           FEC_Stage_Change__c rc27OmDay2 =
             FEC_BlockCodeRoutingService.selectRc27DefaultOmDay2FromList(changelst);
           if (rc27OmDay2 == null) {
@@ -2762,7 +2793,9 @@ public without sharing class FEC_CaseBusinessService {
             selectedChange = rc27OmDay2;
           }
         } else if (
-          FEC_BlockCodeRoutingService.isRc27SiblingSpDqStageThreeRouting(updatedCase)
+          FEC_BlockCodeRoutingService.isRc27SiblingSpDqStageThreeRouting(
+            updatedCase
+          )
         ) {
           FEC_Stage_Change__c rc27SpDq =
             FEC_BlockCodeRoutingService.selectRc27SiblingSpDqStageThreeFromList(
@@ -2860,7 +2893,10 @@ public without sharing class FEC_CaseBusinessService {
       queueId = FEC_BlockCodeRoutingService.applyRouteQueueOverrideIfApplicable(
         updatedCase,
         queueId,
-        routeByLatestRevertHistory
+        routeByLatestRevertHistory,
+        clientBlockCode,
+        clientBlockCode1,
+        natureOfCaseId
       );
 
       updatedCase.OwnerId = queueId;
@@ -4137,6 +4173,7 @@ public without sharing class FEC_CaseBusinessService {
     if (isReverted && isEditable && !isStageRevert)
       return null;
 
+
     if (isReverted && isReadOnly && String.isBlank(value))
       return null;
 
@@ -4345,6 +4382,7 @@ public without sharing class FEC_CaseBusinessService {
 
     @AuraEnabled
     public String code;
+
 
     /** RL05.02 — Id Case RL05 cũ hơn cùng hợp đồng (mở); null nếu không có. */
     @AuraEnabled

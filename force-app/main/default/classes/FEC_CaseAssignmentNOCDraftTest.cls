@@ -22,7 +22,7 @@ private class FEC_CaseAssignmentNOCDraftTest {
         FEC_Case_Assignment_NOC__c seed = seeds[0];
         FEC_Case_Assignment__c parentRow = new FEC_Case_Assignment__c(
             Name = 'CA-DraftRestriction-' + String.valueOf(Crypto.getRandomLong()),
-            FEC_Status__c = 'Active',
+            FEC_Status__c = FEC_ConstantCommon.FEC_CASE_ASSIGNMENT_STATUS_DRAFT,
             FEC_Assignment_Method__c = 'Continuous',
             FEC_Business_Hours__c = [SELECT Id FROM BusinessHours LIMIT 1].Id,
             FEC_Select_Queues__c = 'Queue Z',
@@ -31,6 +31,17 @@ private class FEC_CaseAssignmentNOCDraftTest {
             FEC_Scale__c = 1
         );
         insert parentRow;
+
+        insert new FEC_Case_Assignment_NOC__c(
+            FEC_Case_Assignment_Name__c = parentRow.Id,
+            FEC_Product_Type__c = seed.FEC_Product_Type__c,
+            FEC_Category__c = seed.FEC_Category__c,
+            FEC_Sub_Category__c = seed.FEC_Sub_Category__c,
+            FEC_Sub_Code__c = seed.FEC_Sub_Code__c
+        );
+
+        parentRow.FEC_Status__c = FEC_ConstantCommon.FEC_CASE_ASSIGNMENT_STATUS_ACTIVE;
+        update parentRow;
 
         FEC_Case_Assignment_NOC__c noc = new FEC_Case_Assignment_NOC__c(
             FEC_Case_Assignment_Name__c = parentRow.Id,

@@ -25,6 +25,12 @@ private class FEC_CaseAssignmentConflictService_Test {
             FEC_Active__c = true
         );
         insert prod;
+        FEC_Category__c cat = new FEC_Category__c(
+            Name = 'Request',
+            FEC_Code__c = 'Request',
+            FEC_Active__c = true
+        );
+        insert cat;
         FEC_Sub_Category__c subCat = new FEC_Sub_Category__c(
             Name = 'RC27',
             FEC_Code__c = 'RC27',
@@ -37,12 +43,6 @@ private class FEC_CaseAssignmentConflictService_Test {
             FEC_Active__c = true
         );
         insert subCode;
-        FEC_Category__c cat = new FEC_Category__c(
-            Name = 'Request',
-            FEC_Code__c = 'Request',
-            FEC_Active__c = true
-        );
-        insert cat;
 
         Id businessHoursId = getBusinessHoursId();
         FEC_Case_Assignment__c existingAssignment = new FEC_Case_Assignment__c(
@@ -60,7 +60,7 @@ private class FEC_CaseAssignmentConflictService_Test {
             FEC_Assignment_Method__c = 'Continuous',
             FEC_Business_Hours__c = businessHoursId,
             FEC_Scheduled_Time__c = 30,
-            FEC_Role__c = 'CS Agent B|1',
+            FEC_Role__c = 'CS Agent A|1;CS Agent B|1',
             FEC_Scale__c = 1,
             FEC_Select_Queues__c = 'Queue Card Processing;Queue VIP Customer',
             FEC_Status__c = 'Draft'
@@ -233,7 +233,7 @@ private class FEC_CaseAssignmentConflictService_Test {
             FEC_Scheduled_Time__c = 30,
             FEC_Role__c = 'CS Agent A|1',
             FEC_Scale__c = 1,
-            FEC_Select_Queues__c = 'Queue Digital Support',
+            FEC_Select_Queues__c = ' ; , \n ',
             FEC_Status__c = 'Draft'
         );
         insert emptyQueueAssign;
@@ -246,7 +246,6 @@ private class FEC_CaseAssignmentConflictService_Test {
             FEC_Sub_Category__c = template.FEC_Sub_Category__c
         );
 
-        emptyQueueAssign.FEC_Select_Queues__c = ' ; , \n ';
         emptyQueueAssign.FEC_Status__c = FEC_ConstantCommon.FEC_CASE_ASSIGNMENT_STATUS_ACTIVE;
         update emptyQueueAssign;
 

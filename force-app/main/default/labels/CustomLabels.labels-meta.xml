@@ -3332,7 +3332,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>Follow-Up User added to list and Watcher Information</shortDescription>
-        <value>Follow-Up User đã được thêm vào danh sách follow-up và Watcher Information.</value>
+        <value>Thêm người dùng theo dõi Case thành công</value>
     </labels>
     <labels>
         <fullName>FEC_MSG_FollowUp_Not02_User_Already_Watcher</fullName>
@@ -3356,7 +3356,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>Follow Case saved successfully</shortDescription>
-        <value>Follow Case has been saved successfully</value>
+        <value>Đã theo dõi case thành công</value>
     </labels>
     <labels>
         <fullName>FEC_MSG_FollowUp_Case_ID_Not_Found</fullName>
@@ -3444,7 +3444,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>Follow-up type updated successfully</shortDescription>
-        <value>Follow-up type has been updated successfully</value>
+        <value>Đã theo dõi case thành công</value>
     </labels>
     <labels>
         <fullName>FEC_MSG_FollowUp_Unfollow_Error</fullName>
@@ -3460,7 +3460,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>Unfollowed Case successfully</shortDescription>
-        <value>Unfollowed Case successfully</value>
+        <value>Đã bỏ theo dõi case thành công</value>
     </labels>
     <labels>
         <fullName>FEC_MSG_FollowUp_User_Not_Found</fullName>
@@ -4849,7 +4849,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>Auto-generated label</shortDescription>
-        <value>Success</value>
+        <value>Success!</value>
     </labels>
     <labels>
         <fullName>FEC_Suggested_answer_Label</fullName>
@@ -18348,5 +18348,20 @@
         <protected>false</protected>
         <shortDescription>FEC_Batch_Case_Handling_Success</shortDescription>
         <value>Success</value>
+    </labels>
+    <labels>
+        <fullName>FEC_RelevantTicket_Action_Not_Allowed</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Relevant Ticket action not allowed message</shortDescription>
+        <value>Bạn không thể thực hiện Action ở màn hình này</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Termination_No_Data</fullName>
+        <categories>Account Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>No data message</shortDescription>
+        <value>No data</value>
     </labels>
 </CustomLabels>

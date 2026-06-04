@@ -29,7 +29,12 @@ private class FEC_CaseEditNOCControllerTest {
 
     @IsTest
     static void clearCaseNOC_skipsImportedCase() {
-        FEC_Product_Type__c productType = new FEC_Product_Type__c(Name = 'Card Import Test');
+        String suffix = String.valueOf(System.currentTimeMillis()).right(6);
+        FEC_Product_Type__c productType = new FEC_Product_Type__c(
+            Name = 'Card Import Test',
+            FEC_Code__c = 'CIMP' + suffix,
+            FEC_Active__c = true
+        );
         insert productType;
 
         Case testCase = new Case(

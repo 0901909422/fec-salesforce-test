@@ -1,0 +1,411 @@
+@IsTest
+private class FEC_CustomerIntegrationService_Test {
+
+    private static final String ACCOUNT_NUMBER = '1234567890123456';
+
+    private class CustomerIntegrationMock implements HttpCalloutMock {
+        public HttpResponse respond(HttpRequest req) {
+            String endpoint = req.getEndpoint() != null ? req.getEndpoint().toLowerCase() : '';
+            String body = req.getBody() != null ? req.getBody().toLowerCase() : '';
+            HttpResponse res = new HttpResponse();
+            res.setStatusCode(200);
+
+            if (endpoint.contains('customerlist') || body.contains('getcustomerlist')) {
+                res.setBody(
+                    '<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">' +
+                    '<soapenv:Body><cif:GetCustomerListResponse xmlns:cif="http://fecredit.com.vn/CIF_CustomerSearch">' +
+                    '<Sys><Code>1</Code><Description>OK</Description></Sys>' +
+                    '<Count>1</Count><Customers><Customer>' +
+                    '<CIFNumber>CIF-SYNC-001</CIFNumber>' +
+                    '<FullName>Nguyen Van Sync</FullName>' +
+                    '<NationalID>079123456789</NationalID>' +
+                    '<DateOfBirth>1990-05-15</DateOfBirth>' +
+                    '<Phones><PhoneNode><Type>Mobile</Type><Phone>0909998877</Phone></PhoneNode></Phones>' +
+                    '<Emails><Email>sync@example.com</Email></Emails>' +
+                    '</Customer></Customers>' +
+                    '</cif:GetCustomerListResponse></soapenv:Body></soapenv:Envelope>'
+                );
+                return res;
+            }
+
+            if (endpoint.contains('customerinfobasic') || body.contains('getcustomerinfobasic')) {
+                res.setBody(
+                    '<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">' +
+                    '<soapenv:Body><GetCustomerInfoBasicResponse>' +
+                    '<Sys><Code>1</Code><Description>OK</Description></Sys>' +
+                    '<CustomerBasicInfo>' +
+                    '<FullName>Nguyen Van Basic</FullName>' +
+                    '<Gender>Male</Gender>' +
+                    '<Birthday>1990-05-15</Birthday>' +
+                    '<PreferredContacts>' +
+                    '<PreferredContact><Contact><Channel>Email</Channel><ContactString>basic@example.com</ContactString></Contact></PreferredContact>' +
+                    '</PreferredContacts>' +
+                    '</CustomerBasicInfo>' +
+                    '</GetCustomerInfoBasicResponse></soapenv:Body></soapenv:Envelope>'
+                );
+                return res;
+            }
+
+            if (endpoint.contains('documentslist') || body.contains('getdocumentslist')) {
+                res.setBody(
+                    '<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">' +
+                    '<soapenv:Body><GetDocumentsListResponse>' +
+                    '<Sys><Code>1</Code><Description>OK</Description></Sys>' +
+                    '<Documents><Document><DocumentID>DOC-SYNC-001</DocumentID></Document></Documents>' +
+                    '</GetDocumentsListResponse></soapenv:Body></soapenv:Envelope>'
+                );
+                return res;
+            }
+
+            if (endpoint.contains('cardbasicinfo') || body.contains('getcardbasicinfo')) {
+                res.setBody(
+                    '<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">' +
+                    '<soapenv:Body><GetCardBasicInfoResponse>' +
+                    '<Sys><Code>1</Code><Description>OK</Description></Sys>' +
+                    '<CardBasicInfo><MainCard><PlasticIndicator>PLASTIC-001</PlasticIndicator></MainCard></CardBasicInfo>' +
+                    '</GetCardBasicInfoResponse></soapenv:Body></soapenv:Envelope>'
+                );
+                return res;
+            }
+
+            res.setBody('');
+            return res;
+        }
+    }
+
+    private static Case insertIntegrationCase(String subject) {
+        Case c;
+        FEC_CaseTriggerHandler.isExecuting = true;
+        try {
+            c = new Case(
+                Subject = subject,
+                Status = 'New',
+                FEC_ID_Search__c = 'CIS-' + String.valueOf(System.currentTimeMillis())
+            );
+            insert c;
+        } finally {
+            FEC_CaseTriggerHandler.isExecuting = false;
+        }
+        return c;
+    }
+
+    @IsTest
+    static void testQueryHistoryForSync() {
+        Case c;
+        FEC_CaseTriggerHandler.isExecuting = true;
+        try {
+            c = new Case(
+                Subject = 'Query history sync',
+                Status = 'New',
+                FEC_ID_Search__c = 'CIS-Q-' + String.valueOf(System.currentTimeMillis())
+            );
+            insert c;
+        } finally {
+            FEC_CaseTriggerHandler.isExecuting = false;
+        }
+
+        FEC_Customer_History__c hist = new FEC_Customer_History__c(
+            FEC_Case__c = c.Id,
+            FEC_CIF_Number__c = 'CIF-QUERY',
+            FEC_Account_Number__c = ACCOUNT_NUMBER,
+            FEC_Customer_Name__c = 'Query User',
+            FEC_National_ID_Passport_ID__c = '123456789',
+            FEC_Primary_Phone__c = '0901112233',
+            FEC_Email__c = 'query@example.com'
+        );
+        insert hist;
+
+        Test.startTest();
+        FEC_Customer_History__c loaded = FEC_CustomerIntegrationService.queryHistoryForSync(hist.Id);
+        Test.stopTest();
+
+        System.assertEquals(hist.Id, loaded.Id);
+        System.assertEquals('CIF-QUERY', loaded.FEC_CIF_Number__c);
+        System.assertEquals(ACCOUNT_NUMBER, loaded.FEC_Account_Number__c);
+        System.assertEquals('Query User', loaded.FEC_Customer_Name__c);
+    }
+
+    @IsTest
+    static void testSyncCustomer_Success() {
+        FEC_Product_Type__c pt = new FEC_Product_Type__c(
+            Name = 'Credit Card',
+            FEC_Code__c = FEC_ConstantCommon.PRODUCT_TYPE_CARD_CASE,
+            FEC_Active__c = true
+        );
+        insert pt;
+
+        Case c;
+        FEC_CaseTriggerHandler.isExecuting = true;
+        try {
+            c = new Case(
+                Subject = 'Integration Sync Test',
+                Status = 'New',
+                FEC_Product_Type__c = pt.Id,
+                FEC_ID_Search__c = 'CIS-' + String.valueOf(System.currentTimeMillis())
+            );
+            insert c;
+        } finally {
+            FEC_CaseTriggerHandler.isExecuting = false;
+        }
+
+        FEC_Customer_History__c hist = new FEC_Customer_History__c(
+            FEC_Case__c = c.Id,
+            FEC_Account_Number__c = ACCOUNT_NUMBER,
+            FEC_National_ID_Passport_ID__c = '123456789'
+        );
+        insert hist;
+
+        hist = FEC_CustomerIntegrationService.queryHistoryForSync(hist.Id);
+
+        Test.setMock(HttpCalloutMock.class, new CustomerIntegrationMock());
+        Test.startTest();
+        FEC_CustomerIntegrationService.ResultDTO result = FEC_CustomerIntegrationService.syncCustomer(
+            hist, null, null, ACCOUNT_NUMBER
+        );
+        Test.stopTest();
+
+        System.assertNotEquals(null, result);
+        System.assertEquals('Nguyen Van Sync', result.customerName);
+        System.assertEquals('DOC-SYNC-001', result.nationalId);
+        System.assertEquals('0909998877', result.primaryPhone);
+        System.assertEquals('sync@example.com', result.emailAddress);
+        System.assertEquals('PLASTIC-001', result.plasticID);
+        System.assertEquals('CIF-SYNC-001', hist.FEC_CIF_Number__c);
+        System.assertEquals('DOC-SYNC-001', hist.FEC_National_ID_Passport_ID__c);
+    }
+
+    @IsTest
+    static void testSyncCustomer_WithProvidedCif() {
+        FEC_Product_Type__c pt = new FEC_Product_Type__c(
+            Name = 'Credit Card',
+            FEC_Code__c = FEC_ConstantCommon.PRODUCT_TYPE_CARD_CASE,
+            FEC_Active__c = true
+        );
+        insert pt;
+
+        Case c;
+        FEC_CaseTriggerHandler.isExecuting = true;
+        try {
+            c = new Case(
+                Subject = 'Integration CIF Test',
+                Status = 'New',
+                FEC_Product_Type__c = pt.Id,
+                FEC_ID_Search__c = 'CIS-CIF-' + String.valueOf(System.currentTimeMillis())
+            );
+            insert c;
+        } finally {
+            FEC_CaseTriggerHandler.isExecuting = false;
+        }
+
+        FEC_Customer_History__c hist = new FEC_Customer_History__c(
+            FEC_Case__c = c.Id,
+            FEC_National_ID_Passport_ID__c = '123456789'
+        );
+        insert hist;
+
+        hist = FEC_CustomerIntegrationService.queryHistoryForSync(hist.Id);
+
+        Test.setMock(HttpCalloutMock.class, new CustomerIntegrationMock());
+        Test.startTest();
+        FEC_CustomerIntegrationService.ResultDTO result = FEC_CustomerIntegrationService.syncCustomer(
+            hist, 'CIF123', '0901234567', null
+        );
+        Test.stopTest();
+
+        System.assertNotEquals(null, result);
+        System.assertEquals('DOC-SYNC-001', result.nationalId);
+        if (result.plasticID != null) {
+            System.assertEquals('PLASTIC-001', result.plasticID);
+        }
+    }
+
+    @IsTest
+    static void testSyncCustomer_NullInputs() {
+        Test.startTest();
+        FEC_CustomerIntegrationService.ResultDTO result =
+            FEC_CustomerIntegrationService.syncCustomer(null, null, null, null);
+        Test.stopTest();
+
+        System.assertEquals(null, result.customerName, 'Khi hist null, kết quả nên rỗng.');
+    }
+
+    @IsTest
+    static void testSyncCustomer_NoCifReturnsEmpty() {
+        Case c = insertIntegrationCase('No CIF Test');
+        FEC_Customer_History__c hist = new FEC_Customer_History__c(
+            FEC_Case__c = c.Id,
+            FEC_National_ID_Passport_ID__c = '123456789'
+        );
+        insert hist;
+
+        Test.startTest();
+        FEC_CustomerIntegrationService.ResultDTO result =
+            FEC_CustomerIntegrationService.syncCustomer(hist, null, null, null);
+        Test.stopTest();
+
+        System.assertEquals(null, result.customerName);
+        System.assertEquals(null, result.nationalId);
+    }
+
+    @IsTest
+    static void testSyncCustomer_WithContractNumber() {
+        Case c;
+        FEC_CaseTriggerHandler.isExecuting = true;
+        try {
+            c = new Case(
+                Subject = 'Integration Contract Test',
+                Status = 'New',
+                FEC_ID_Search__c = 'CIS-CTR-' + String.valueOf(System.currentTimeMillis())
+            );
+            insert c;
+        } finally {
+            FEC_CaseTriggerHandler.isExecuting = false;
+        }
+
+        FEC_Customer_History__c hist = new FEC_Customer_History__c(
+            FEC_Case__c = c.Id,
+            FEC_Contract_Number__c = '12345678-123456-1234',
+            FEC_National_ID_Passport_ID__c = '123456789'
+        );
+        insert hist;
+
+        Test.setMock(HttpCalloutMock.class, new CustomerIntegrationMock());
+        Test.startTest();
+        FEC_CustomerIntegrationService.ResultDTO result =
+            FEC_CustomerIntegrationService.syncCustomer(hist, null, null, null);
+        Test.stopTest();
+
+        System.assertEquals('Nguyen Van Sync', result.customerName);
+        System.assertEquals('DOC-SYNC-001', result.nationalId);
+        System.assertEquals('CIF-SYNC-001', hist.FEC_CIF_Number__c);
+        System.assertEquals('0909998877', result.primaryPhone);
+    }
+
+    @IsTest
+    static void testSyncCustomer_FallbackAccountNumberParam() {
+        Case c = insertIntegrationCase('Fallback Account Test');
+        FEC_Customer_History__c hist = new FEC_Customer_History__c(
+            FEC_Case__c = c.Id,
+            FEC_National_ID_Passport_ID__c = '123456789'
+        );
+        insert hist;
+
+        Test.setMock(HttpCalloutMock.class, new CustomerIntegrationMock());
+        Test.startTest();
+        FEC_CustomerIntegrationService.ResultDTO result =
+            FEC_CustomerIntegrationService.syncCustomer(hist, null, null, ACCOUNT_NUMBER);
+        Test.stopTest();
+
+        System.assertEquals('Nguyen Van Sync', result.customerName);
+        System.assertEquals('CIF-SYNC-001', hist.FEC_CIF_Number__c);
+    }
+
+    private class CustomerIntegrationErrorMock implements HttpCalloutMock {
+        public HttpResponse respond(HttpRequest req) {
+            HttpResponse res = new HttpResponse();
+            res.setStatusCode(500);
+            res.setBody('<error>Service unavailable</error>');
+            return res;
+        }
+    }
+
+    private class CustomerIntegrationSysErrorMock implements HttpCalloutMock {
+        public HttpResponse respond(HttpRequest req) {
+            String endpoint = req.getEndpoint() != null ? req.getEndpoint().toLowerCase() : '';
+            HttpResponse res = new HttpResponse();
+            res.setStatusCode(200);
+            if (endpoint.contains('customerlist')) {
+                res.setBody(
+                    '<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">' +
+                    '<soapenv:Body><cif:GetCustomerListResponse>' +
+                    '<Sys><Code>99</Code><Description>Failed</Description></Sys>' +
+                    '</cif:GetCustomerListResponse></soapenv:Body></soapenv:Envelope>'
+                );
+                return res;
+            }
+            res.setBody('');
+            return res;
+        }
+    }
+
+    @IsTest
+    static void testSyncCustomer_CalloutFailuresReturnPartialResult() {
+        Case c = insertIntegrationCase('Callout failure sync');
+        FEC_Customer_History__c hist = new FEC_Customer_History__c(
+            FEC_Case__c = c.Id,
+            FEC_Account_Number__c = ACCOUNT_NUMBER,
+            FEC_National_ID_Passport_ID__c = '123456789'
+        );
+        insert hist;
+        hist = FEC_CustomerIntegrationService.queryHistoryForSync(hist.Id);
+
+        Test.setMock(HttpCalloutMock.class, new CustomerIntegrationErrorMock());
+        Test.startTest();
+        FEC_CustomerIntegrationService.ResultDTO result =
+            FEC_CustomerIntegrationService.syncCustomer(hist, 'CIF-ERR', null, ACCOUNT_NUMBER);
+        Test.stopTest();
+
+        System.assertNotEquals(null, result);
+    }
+
+    @IsTest
+    static void testSyncCustomer_CustomerListSysError() {
+        Case c = insertIntegrationCase('Customer list sys error');
+        FEC_Customer_History__c hist = new FEC_Customer_History__c(
+            FEC_Case__c = c.Id,
+            FEC_Account_Number__c = ACCOUNT_NUMBER,
+            FEC_National_ID_Passport_ID__c = '123456789'
+        );
+        insert hist;
+        hist = FEC_CustomerIntegrationService.queryHistoryForSync(hist.Id);
+
+        Test.setMock(HttpCalloutMock.class, new CustomerIntegrationSysErrorMock());
+        Test.startTest();
+        FEC_CustomerIntegrationService.ResultDTO result =
+            FEC_CustomerIntegrationService.syncCustomer(hist, null, null, ACCOUNT_NUMBER);
+        Test.stopTest();
+
+        System.assertEquals(null, result.customerName);
+    }
+
+    @IsTest
+    static void testSyncCustomer_LoanProductTypePath() {
+        FEC_Product_Type__c loanPt = new FEC_Product_Type__c(
+            Name = 'Loan',
+            FEC_Code__c = FEC_ConstantCommon.PRODUCT_TYPE_LOAN_CASE,
+            FEC_Active__c = true
+        );
+        insert loanPt;
+
+        Case c;
+        FEC_CaseTriggerHandler.isExecuting = true;
+        try {
+            c = new Case(
+                Subject = 'Loan integration sync',
+                Status = 'New',
+                FEC_Product_Type__c = loanPt.Id,
+                FEC_ID_Search__c = 'CIS-LOAN-' + String.valueOf(System.currentTimeMillis())
+            );
+            insert c;
+        } finally {
+            FEC_CaseTriggerHandler.isExecuting = false;
+        }
+
+        FEC_Customer_History__c hist = new FEC_Customer_History__c(
+            FEC_Case__c = c.Id,
+            FEC_Contract_Number__c = '12345678-123456-1234',
+            FEC_CIF_Number__c = 'CIF-LOAN-001',
+            FEC_National_ID_Passport_ID__c = '123456789'
+        );
+        insert hist;
+        hist = FEC_CustomerIntegrationService.queryHistoryForSync(hist.Id);
+
+        Test.setMock(HttpCalloutMock.class, new CustomerIntegrationMock());
+        Test.startTest();
+        FEC_CustomerIntegrationService.ResultDTO result =
+            FEC_CustomerIntegrationService.syncCustomer(hist, hist.FEC_CIF_Number__c, null, null);
+        Test.stopTest();
+
+        System.assertNotEquals(null, result);
+    }
+}

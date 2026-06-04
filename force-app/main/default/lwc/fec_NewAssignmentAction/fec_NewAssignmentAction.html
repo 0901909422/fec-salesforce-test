@@ -22,7 +22,8 @@
                     label="Assignment Status"
                     value={assignmentStatus}
                     options={assignmentStatusOptions}
-                    onchange={handleStatusChange}>
+                    onchange={handleStatusChange}
+                    disabled>
                 </lightning-combobox>
             </div>
         </div>
@@ -49,3 +50,5 @@
         <lightning-button variant="brand" label="Save" onclick={handleSave} disabled={isSaving}></lightning-button>
     </div>
 </template>
+
+
