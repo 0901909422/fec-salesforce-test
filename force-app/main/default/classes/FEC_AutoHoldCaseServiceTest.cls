@@ -311,6 +311,10 @@ private class FEC_AutoHoldCaseServiceTest {
         String baselineStr = 'HC_BL:' + fakeId1 + ';' + fakeId2 + ';' + fakeId3 + ';null';
         System.assert(baselineStr.startsWith('HC_BL:'));
 
+        System.assertEquals(null, FEC_AutoHoldCaseService.parseNfuDateTime(''));
+        System.assertEquals(false, FEC_AutoHoldCaseService.statusConfigContains(null, 'New'));
+        System.assertEquals(false, FEC_AutoHoldCaseService.statusConfigContains('New', null));
+
         Test.stopTest();
     }
 }

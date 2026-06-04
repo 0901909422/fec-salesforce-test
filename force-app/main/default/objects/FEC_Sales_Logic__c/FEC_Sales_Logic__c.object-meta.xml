@@ -156,7 +156,7 @@
     <externalSharingModel>Private</externalSharingModel>
     <label>Sales Logic</label>
     <nameField>
-        <displayFormat>S-{0000}</displayFormat>
+        <displayFormat>SL-{0000}</displayFormat>
         <label>Sales Logic Name</label>
         <type>AutoNumber</type>
     </nameField>

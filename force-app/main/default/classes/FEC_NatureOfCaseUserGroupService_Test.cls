@@ -52,6 +52,33 @@ private class FEC_NatureOfCaseUserGroupService_Test {
     }
 
     @IsTest
+    static void testBuildRoleListForIncludes_includesBackOfficeGroup() {
+        Profile p = [SELECT Id FROM Profile WHERE Name = 'Standard User' OR Name = 'System Administrator' LIMIT 1];
+        String uniqueId = String.valueOf(DateTime.now().getTime());
+        User backOffice = new User(
+            Alias = 'usrbo1',
+            Email = 'usrbo1@fecredit.com.test',
+            EmailEncodingKey = 'UTF-8',
+            LastName = 'Back Office User',
+            LanguageLocaleKey = 'en_US',
+            LocaleSidKey = 'en_US',
+            ProfileId = p.Id,
+            TimeZoneSidKey = 'America/Los_Angeles',
+            UserName = 'usrbo1_' + uniqueId + '@fecredit.com.test',
+            FEC_User_Group__c = 'CC',
+            FEC_User_Division_Group__c = FEC_NatureOfCaseUserGroupService.BACK_OFFICE,
+            IsActive = true
+        );
+        insert backOffice;
+
+        Test.startTest();
+        List<String> roles = FEC_NatureOfCaseUserGroupService.buildRoleListForIncludes('ignored');
+        Test.stopTest();
+
+        System.assert(roles.contains('CC'), 'Danh sách phải chứa nhóm user CS Back Office.');
+    }
+
+    @IsTest
     static void testBuildNatureOfCaseUserGroupFilterClause() {
         Test.startTest();
         

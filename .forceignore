@@ -2,3 +2,16 @@
 **/.eslintrc.json
 **/searchCustomizations/**
 *.searchCustomization-meta.xml
+
+# GROUP E: Assignment Rules that reference Roles not available in scratch org
+# These roles exist in metadata but scratch org creation doesn't support them
+# force-app/main/default/assignmentRules/
+
+# GROUP F: External Object not included in package (managed externally)
+# CifFeDictLocationVw__x is an OData external object provisioned separately
+
+# GROUP H: Report folders that may fail due to missing report types in scratch org
+# force-app/main/default/reports/
+
+# Translations that require Translation Workbench enabled
+force-app/main/default/translations/vi.translation-meta.xml

@@ -226,7 +226,7 @@ export default class IntegrationFraudCaseDetail extends LightningElement {
                 this.snapshotDate = res.snapshotDate || '';
 
                 this.snapshotCase = {
-                    FEC_CaseID__c: (caseData.FEC_CaseID__c && caseData.FEC_CaseID__c.startsWith('DRAFT-')) ? '' : caseData.FEC_CaseID__c,
+                    FEC_CaseID__c: caseData.FEC_CaseID__c,
                     FEC_Case_Status__c: caseData.FEC_Case_Status__c,
                     FEC_Creator_Email__c: caseData.FEC_Creator_Email__c,
                     FEC_Category__c: caseData.FEC_Category__c,
@@ -284,20 +284,12 @@ export default class IntegrationFraudCaseDetail extends LightningElement {
         const fh = this.hierarchy?.find(item => 
             item.FEC_CaseID__c && item.FEC_CaseID__c.startsWith(this.casePrefixesFH)
         );
-        const result = fh || this.hierarchy?.[0];
-        if (result && result.FEC_CaseID__c && result.FEC_CaseID__c.startsWith('DRAFT-')) {
-            return { ...result, FEC_CaseID__c: '' };
-        }
-        return result;
+        return fh || this.hierarchy?.[0];
     }
 
     get fhCases() {
         return this.hierarchy.filter(item => 
             item.FEC_CaseID__c && item.FEC_CaseID__c.startsWith(this.casePrefixesFH)
-        ).map(item => 
-            item.FEC_CaseID__c.startsWith('DRAFT-')
-                ? { ...item, FEC_CaseID__c: '' }
-                : item
         );
     }
 

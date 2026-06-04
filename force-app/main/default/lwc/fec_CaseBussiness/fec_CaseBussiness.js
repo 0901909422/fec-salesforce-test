@@ -1103,7 +1103,33 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
     }
   }
 
+  /** Xóa block code cache khi đổi NOC / account — tránh submit/route dùng dữ liệu case cũ. */
+  _clearCardReplacementBlockCodesLocalStorage() {
+    try {
+      localStorage.removeItem(this.cardReplacementBlockCodeStorageKey);
+    } catch (e) {
+      /* quota / private mode */
+    }
+  }
+
+  _resetCardReplacementProcessActionAfterBlockCodeClear() {
+    if (this.business?.code !== PROCESS_CARD_REPLACEMENT) {
+      return;
+    }
+    this.showProcessAction = false;
+    this.isProcessActionInfo = false;
+    this.processActionMsg = STR_EMPTY;
+  }
+
+  _onCardReplacementBlockCodeContextChanged() {
+    this._clearCardReplacementBlockCodesLocalStorage();
+    this._resetCardReplacementProcessActionAfterBlockCodeClear();
+  }
+
   _getBlockCodesForGetByCase() {
+    if (!this._isRc27CardReplacementFlow()) {
+      return { blockCode: null, blockCode1: null };
+    }
     const cached = this._loadCardReplacementBlockCodesFromLocalStorage();
     return {
       blockCode: cached?.blockCode ?? null,
@@ -1113,7 +1139,7 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
 
   _refreshTeamQueueFromBlockCodes(blockCode, blockCode1) {
     const noc = this._lastGetByCaseNocParams;
-    if (!noc?.caseId || this.business?.code !== PROCESS_CARD_REPLACEMENT) {
+    if (!noc?.caseId || !this._isRc27CardReplacementFlow()) {
       return Promise.resolve();
     }
     if (this._shouldSuppressRc27CardReplacementProcessInfo()) {
@@ -2497,7 +2523,7 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
       window.removeEventListener("focus", this._boundCheckHoldCaseRefresh);
     }
     localStorage.removeItem(this.draftStorageKey);
-    localStorage.removeItem(this.cardReplacementBlockCodeStorageKey);
+    this._clearCardReplacementBlockCodesLocalStorage();
   }
 
   _maskDisplayPhone(raw) {
@@ -2535,8 +2561,7 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
     }
 
     if (Object.prototype.hasOwnProperty.call(message, 'accountType')) {
-      // Existing behavior: account type change — không xử lý ở đây
-      // (fec_CaseEditNOC đã tự xử lý)
+      this._onCardReplacementBlockCodeContextChanged();
       return;
     }
     //PhongBT 07/05/26: fix case nếu đang chọn bộ noc đủ subcode mà chuyển sang muốn submit bộ không có subcode thì lại
@@ -2551,6 +2576,7 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
     if (hasNocSelectionPayload) {
       // NOC update từ Updated Information section.
       // Lưu ý: bộ NOC không có Sub-Code sẽ publish subCodeId = null, vẫn phải reload.
+      this._onCardReplacementBlockCodeContextChanged();
       this._applyHoldCaseNocBaselineFromMessage(message);
       const prevParams = this.holdCaseNocParams || {};
       if (
@@ -3541,6 +3567,7 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
       }
       if (fieldName === FIELD_ACCOUNT_CONTRACT_NUMBER_PL) {
         // field.isInternalRequest = value === INTERNAL_REQUEST;
+        this._onCardReplacementBlockCodeContextChanged();
         publish(this.messageContext, CASE_NOC, {
           caseId: this.recordId,
           accountType: value
@@ -4946,6 +4973,9 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
             const mrcSubmitFields = isMrcRl05Branch(this.business)
               ? this._resolveMrcReturnFieldsForSubmit()
               : { confirmation: null, handlingOption: null };
+            const { blockCode, blockCode1 } = this._isRc27CardReplacementFlow()
+              ? this._getBlockCodesForGetByCase()
+              : { blockCode: null, blockCode1: null };
             params = {
               ...params,
               params: {
@@ -4960,6 +4990,8 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
                   null,
                 mrcCustomerConfirmation: mrcSubmitFields.confirmation || null,
                 mrcHandlingOption: mrcSubmitFields.handlingOption || null,
+                blockCode,
+                blockCode1,
               },
             };
           }

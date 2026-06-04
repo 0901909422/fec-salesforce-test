@@ -269,6 +269,7 @@
         <members>FEC_CaseAssignmentNOCDraftTest</members>
         <members>FEC_CaseAssignmentNOCTriggerHandler</members>
         <members>FEC_CaseAssignmentNOCTriggerHandler_Test</members>
+        <members>FEC_CaseAssignmentTriggerHandler_Test</members>
         <members>FEC_CaseAssignmentNocController</members>
         <members>FEC_CaseAssignmentNocController_Test</members>
         <members>FEC_CaseAssignmentQueueRoleResolver</members>
@@ -347,6 +348,7 @@
         <members>FEC_GetCSAttachedFile_Test</members>
         <members>FEC_GetCSCaseStatusRestService</members>
         <members>FEC_GetCSCaseStatusRestService_Test</members>
+        <members>FEC_MyCaseSoapXml_Test</members>
         <members>FEC_GetCSCaseStatusService_Test</members>
         <members>FEC_GetCSMasterDataByCodeRestService</members>
         <members>FEC_GetCSMasterDataByCodeService_Test</members>
@@ -355,6 +357,7 @@
         <members>FEC_GetCSMasterDataService_Test</members>
         <members>FEC_GetCSMdByCodeRest_Test</members>
         <members>FEC_AcctOrContractPicklist_Test</members>
+        <members>FEC_APIServiceException_Test</members>
         <members>FEC_AddIPP_Test</members>
         <members>FEC_ApplicationsListController_Test</members>
         <members>FEC_AssignAutoDistribSched_Test</members>
@@ -384,6 +387,7 @@
         <members>FEC_BatchCaseHandlingController_Test</members>
         <members>FEC_BatchCaseHandlingImportRow_Test</members>
         <members>FEC_BatchCaseHandlingImportService_Test</members>
+        <members>FEC_BatchCaseHandlingImportProfile_Test</members>
         <members>FEC_BCH_ImportQueueable_Test</members>
         <members>FEC_BCH_ImportRoutingResolver_Test</members>
         <members>FEC_BatchCaseHandlingSObjectUtil_Test</members>
@@ -410,6 +414,7 @@
         <members>FEC_CaseAssignmentQueueRoleResolver_Test</members>
         <members>FEC_CaseBusinessService_Test</members>
         <members>FEC_CaseDsTsSlaBatch_Test</members>
+        <members>FEC_CaseDsTsSlaNotificationSender_Test</members>
         <members>FEC_CaseDsTsSlaSchedulable_Test</members>
         <members>FEC_CaseDsTsSlaService_Test</members>
         <members>FEC_CaseEditNOCController_Test</members>
@@ -567,6 +572,7 @@
         <members>FEC_NocGeneralAssignmentController_Test</members>
         <members>FEC_NocRoutingAssignmentController_Test</members>
         <members>FEC_NotificationHistoryController_Test</members>
+        <members>FEC_NotificationHistoryService_Test</members>
         <members>FEC_NotificationService_Test</members>
         <members>FEC_Notification_Test</members>
         <members>FEC_OwnerTeamLookupSvc_Test</members>
@@ -579,6 +585,7 @@
         <members>FEC_PointsRedemptionCaseController_Test</members>
         <members>FEC_PsDNBServiceCallout_Test</members>
         <members>FEC_RDPaymentContractAssessService_Test</members>
+        <members>FEC_RdPaymentRoutingHelper_Test</members>
         <members>FEC_RecordTypeDAO_Test</members>
         <members>FEC_RefundRequestController_Test</members>
         <members>FEC_RelevantTicketController_Test</members>
@@ -591,6 +598,7 @@
         <members>FEC_ResponseLog_Test</members>
         <members>FEC_RoutingActionHistoryTrigHandler_Test</members>
         <members>FEC_SalesChannelFromAppliService_Test</members>
+        <members>FEC_CustomerHistoryTriggerHandler_Test</members>
         <members>FEC_SalesInfoController_Test</members>
         <members>FEC_SalesLogicSelector_Test</members>
         <members>FEC_ScopedStageChangeRoutingService_Test</members>
@@ -625,6 +633,7 @@
         <members>Fec_HoldCaseConfigurationController_Test</members>
         <!-- class FEC (dependence FEC_CaseTriggerHandler) -->
         <members>CaseTriggerHandler</members>
+        <members>CaseTriggerHandler_Test</members>
         <name>ApexClass</name>
     </types>
     <types>
@@ -3542,6 +3551,7 @@
     <types>
         <members>CaseStatus</members>
         <members>CaseOrigin</members>
+        <members>CasePriority</members>
         <name>StandardValueSet</name>
     </types>
     <types>

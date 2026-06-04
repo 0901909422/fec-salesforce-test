@@ -1,11 +1,28 @@
 {
-    "orgName": "GitLab Pipelines",
+    "orgName": "GitLab Pipelines Package Validation",
+    "orgName": "GitLab Pipelines Package Validation",
     "edition": "Developer",
-    "features": [],
+    "language": "en_US",
+    "features": [
+        "ServiceCloud"
+    ],
     "settings": {
-        "orgPreferenceSettings": {
-            "s1DesktopEnabled": true,
-            "s1EncryptedStoragePref2": false
+        "languageSettings": {
+            "enableTranslationWorkbench": true,
+            "enableEndUserLanguages": true,
+            "enablePlatformLanguages": true
+        },
+        "omniChannelSettings": {
+            "enableOmniChannel": true,
+            "enableOmniSkillsRouting": true
+        },
+        "mobileSettings": {
+            "enableS1EncryptedStoragePref2": false
+        }
+    },
+    "objectSettings": {
+        "opportunity": {
+            "sharingModel": "read"
         }
     }
 }

@@ -63,4 +63,12 @@ private class FEC_SalesLogicSelector_Test {
         System.assertNotEquals(null, laterIdx);
         System.assert(earlierIdx < laterIdx, 'Lower FEC_Sequence__c should appear first.');
     }
+
+    @IsTest
+    static void testSelectAllOrdered_returnsListWhenAccessible() {
+        Test.startTest();
+        List<FEC_Sales_Logic__c> rows = FEC_SalesLogicSelector.selectAllOrdered();
+        Test.stopTest();
+        System.assertNotEquals(null, rows);
+    }
 }

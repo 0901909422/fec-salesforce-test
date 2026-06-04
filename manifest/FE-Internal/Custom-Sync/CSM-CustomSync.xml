@@ -70,10 +70,14 @@
     <types>
         <members>CustomSyncTrigger</members>
         <name>ApexTrigger</name>
-    </types> 
-    
+    </types>  
+    <types>
+        <members>FEC_Custom_Sync__c.All</members>  
+        <name>ListView</name>
+    </types>
     <types>
         <members>FEC_Common_System_Setting</members>
+        <members>RD_IT_User_System_Management</members>
         <name>PermissionSet</name>
     </types>
     <version>65.0</version>
