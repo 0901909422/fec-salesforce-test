@@ -4,6 +4,7 @@ import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import { getRecord, getRecordNotifyChange } from 'lightning/uiRecordApi';
 import searchChannels from '@salesforce/apex/FEC_NocChannelConfigController.searchChannels';
 import getChannelIds from '@salesforce/apex/FEC_NocChannelConfigController.getChannelIds';
+import getChannelsByCodes from '@salesforce/apex/FEC_NocChannelConfigController.getChannelsByCodes';
 import saveChannelIds from '@salesforce/apex/FEC_NocChannelConfigController.saveChannelIds';
 import canEditChannelConfig from '@salesforce/apex/FEC_NocChannelConfigController.canEditChannelConfig';
 import FEC_Toast_Success from '@salesforce/label/c.FEC_Toast_Success';
@@ -44,22 +45,19 @@ export default class Fec_NocChannelConfig extends LightningElement {
 
     async loadCurrentChannels() {
         try {
-            const ids = await getChannelIds({ nocId: this.recordId });
-            if (!ids) return;
-            // ids là comma-separated Channel IDs (Id của FEC_Channel__c)
-            const idList = ids.split(',').map(s => s.trim()).filter(s => s);
-            if (!idList.length) return;
-            this._originalIds = ids;
-            // Load tên channel từ search
-            const results = await searchChannels({ searchTerm: '' });
-            this.selectedChannels = results
-                .filter(ch => idList.includes(ch.Id))
-                .map(ch => ({ id: ch.Id, name: ch.FEC_Channel_Vietnamese_name__c || ch.Name }));
+            const codes = await getChannelIds({ nocId: this.recordId });
+            if (!codes) return;
+            // codes l� comma-separated FEC_Channel__c.FEC_Code__c
+            const codeList = codes.split(',').map(s => s.trim()).filter(s => s);
+            if (!codeList.length) return;
+            this._originalIds = codes;
+            const results = await getChannelsByCodes({ channelCodes: codeList });
+            this.selectedChannels = (results || [])
+                .map(ch => ({ id: ch.FEC_Code__c, name: ch.FEC_Channel_Vietnamese_name__c || ch.Name }));
         } catch (e) {
             console.error('loadCurrentChannels error', e);
         }
     }
-
     get hasSelected() {
         return this.selectedChannels.length > 0;
     }
@@ -96,7 +94,7 @@ export default class Fec_NocChannelConfig extends LightningElement {
             searchChannels({ searchTerm: this.searchTerm })
                 .then(data => {
                     const selectedIds = this.selectedChannels.map(c => c.id);
-                    this.searchResults = (data || []).filter(ch => !selectedIds.includes(ch.Id));
+                    this.searchResults = (data || []).filter(ch => !selectedIds.includes(ch.FEC_Code__c));
                     this.isLoading = false;
                 })
                 .catch(() => { this.isLoading = false; });
@@ -164,14 +162,13 @@ export default class Fec_NocChannelConfig extends LightningElement {
     }
 
     handleCancel() {
-        // tungnm37: Restore về giá trị ban đầu từ _originalIds, không gọi lại Apex (cache)
+        // Restore v? gi� tr? ban d?u t? _originalIds (comma-separated FEC_Code__c)
         if (this._originalIds) {
-            const idList = this._originalIds.split(',').map(s => s.trim()).filter(s => s);
-            searchChannels({ searchTerm: '' })
+            const codeList = this._originalIds.split(',').map(s => s.trim()).filter(s => s);
+            getChannelsByCodes({ channelCodes: codeList })
                 .then(results => {
-                    this.selectedChannels = results
-                        .filter(ch => idList.includes(ch.Id))
-                        .map(ch => ({ id: ch.Id, name: ch.FEC_Channel_Vietnamese_name__c || ch.Name }));
+                    this.selectedChannels = (results || [])
+                        .map(ch => ({ id: ch.FEC_Code__c, name: ch.FEC_Channel_Vietnamese_name__c || ch.Name }));
                 })
                 .catch(() => {});
         } else {
@@ -182,8 +179,9 @@ export default class Fec_NocChannelConfig extends LightningElement {
         this.isOpen = false;
         this.isEditMode = false;
     }
-
     handleEdit() {
         this.isEditMode = true;
     }
 }
+
+

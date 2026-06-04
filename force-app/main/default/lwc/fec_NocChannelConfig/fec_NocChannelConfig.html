@@ -72,7 +72,7 @@
                           key="{ch.Id}"
                           class="slds-listbox__item noc-channel-config-option"
                           onmousedown={handleSelect}
-                          data-id="{ch.Id}"
+                          data-id="{ch.FEC_Code__c}"
                           data-name="{ch.FEC_Channel_Vietnamese_name__c}"
                         >
                           <span>{ch.FEC_Channel_Vietnamese_name__c}</span>
@@ -131,3 +131,5 @@
     </div>
   </lightning-card>
 </template>
+
+
