@@ -64,6 +64,7 @@
         <members>FEC_DocumentRequestRoutingService</members>
         <members>FEC_DocumentRequestRoutingActionService</members>
         <members>FEC_GetCSCaseStatusService</members>
+        <members>FEC_GetCSCaseStatusService_Test</members>
 		<members>Fec_HoldCaseConfigurationController</members>
 		<members>FEC_HoldCaseInheritanceService</members>
 		<members>FEC_HoldCaseStage2DisplayService</members>
@@ -103,6 +104,7 @@
 		<members>FEC_MrcReturnCaseService</members>
 		<members>FEC_MrcReturnCaseServiceTest</members>
 		<members>FEC_CreateCSCaseService</members>
+		<members>FEC_CreateCaseInteractionController</members>
 		<members>FEC_CreateInteractionGenesys</members>
 		<members>FEC_GsrStage1RevertMasterDataHelper</members>
 		<members>FEC_AssignAutoDistribSched</members>
