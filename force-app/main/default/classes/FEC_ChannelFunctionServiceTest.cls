@@ -1,7 +1,7 @@
 @IsTest
 private class FEC_ChannelFunctionServiceTest {
     @IsTest
-    static void testIsFunctionAllowedTrueWhenNocContainsChannelAndFlagEnabled() {
+    static void testIsFunctionAllowedGetCSCaseStatusWhenUpdateFlagEnabled() {
         FEC_Channel__c ch = new FEC_Channel__c(
             Name = 'Vtiger',
             FEC_Code__c = 'VTIGER',
@@ -10,21 +10,23 @@ private class FEC_ChannelFunctionServiceTest {
             FEC_Channel_Status__c = true,
             FEC_Update_Case_Status__c = true,
             FEC_Get_Nature_Of_Case__c = false,
-            FEC_Self_Service_Flag__c = false
+            FEC_Cancel_Case__c = false
         );
         insert ch;
 
-        insert new FEC_Nature_of_Case__c(
-            FEC_Channel__c = ch.Id
-        );
-
         Test.startTest();
-        Boolean allowed = FEC_ChannelFunctionService.isFunctionAllowed('Vtiger', 'Update_Case_Status');
-        Boolean allowedCamel = FEC_ChannelFunctionService.isFunctionAllowed('Vtiger', 'UpdateCaseStatus');
+        Boolean allowed = FEC_ChannelFunctionService.isFunctionAllowed(
+            'CH-VTIGER',
+            FEC_ConstantCommon.MY_CASE_FUNCTION_GET_CS_CASE_STATUS
+        );
+        Boolean allowedByName = FEC_ChannelFunctionService.isFunctionAllowed(
+            'Vtiger',
+            'Get_CSCase_Status'
+        );
         Test.stopTest();
 
-        System.assertEquals(true, allowed, 'Legacy underscore form.');
-        System.assertEquals(true, allowedCamel, 'CamelCase UpdateCaseStatus.');
+        System.assertEquals(true, allowed, 'Channel ID + FEC_Update_Case_Status__c.');
+        System.assertEquals(true, allowedByName, 'Channel Name resolves the same record.');
     }
 
     @IsTest
@@ -43,12 +45,12 @@ private class FEC_ChannelFunctionServiceTest {
         insert ch;
 
         Test.startTest();
-        Boolean byId = FEC_ChannelFunctionService.isFunctionAllowed('FEMobile', 'CancelCase');
-        Boolean byLabel = FEC_ChannelFunctionService.isFunctionAllowed('FEMobile', 'Cancel_Case');
+        Boolean byId = FEC_ChannelFunctionService.isFunctionAllowed('FEMobile', 'CancelCSCase');
+        Boolean byLabel = FEC_ChannelFunctionService.isFunctionAllowed('FEMobile', 'Cancel_CS_Case');
         Test.stopTest();
 
-        System.assertEquals(true, byId, 'Channel ID + FEC_Cancel_Case__c; no NOC required.');
-        System.assertEquals(true, byLabel, 'Cancel_Case normalizes to same capability.');
+        System.assertEquals(true, byId, 'Channel ID + FEC_Cancel_Case__c.');
+        System.assertEquals(true, byLabel, 'Cancel_CS_Case normalizes to CancelCSCase.');
     }
 
     @IsTest
@@ -68,7 +70,7 @@ private class FEC_ChannelFunctionServiceTest {
 
         System.assertEquals(
             false,
-            FEC_ChannelFunctionService.isFunctionAllowed('FEMobile2', 'CancelCase'),
+            FEC_ChannelFunctionService.isFunctionAllowed('FEMobile2', 'CancelCSCase'),
             'FEC_Cancel_Case__c false must return false.'
         );
     }
@@ -97,7 +99,7 @@ private class FEC_ChannelFunctionServiceTest {
     }
 
     @IsTest
-    static void testGetNatureOfCaseCamelCaseRequiresNoc() {
+    static void testGetCSMasterDataByCodeWhenNatureOfCaseFlagEnabled() {
         FEC_Channel__c ch = new FEC_Channel__c(
             Name = 'ApiCh',
             FEC_Code__c = 'APICH',
@@ -106,16 +108,14 @@ private class FEC_ChannelFunctionServiceTest {
             FEC_Channel_Status__c = true,
             FEC_Get_Nature_Of_Case__c = true,
             FEC_Update_Case_Status__c = false,
-            FEC_Cancel_Case__c = false,
-            FEC_Self_Service_Flag__c = false
+            FEC_Cancel_Case__c = false
         );
         insert ch;
-        insert new FEC_Nature_of_Case__c(FEC_Channel__c = ch.Id);
 
         System.assertEquals(
             true,
-            FEC_ChannelFunctionService.isFunctionAllowed('ApiCh', 'GetNatureOfCase'),
-            'GetNatureOfCase maps to FEC_Get_Nature_Of_Case__c with NOC.'
+            FEC_ChannelFunctionService.isFunctionAllowed('ApiCh', 'GetCSMasterDataByCode'),
+            'GetCSMasterDataByCode maps to FEC_Get_Nature_Of_Case__c.'
         );
     }
 }

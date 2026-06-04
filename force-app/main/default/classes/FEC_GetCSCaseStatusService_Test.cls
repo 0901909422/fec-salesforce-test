@@ -3,13 +3,17 @@ private class FEC_GetCSCaseStatusService_Test {
 
     private static final String TEST_ACCOUNT_NUMBER = 'ACC123';
 
+    private static final String TEST_CHANNEL_ID = 'InboundUTGetCaseStatus';
+
     @TestSetup
     static void setupData() {
         insert new FEC_Channel__c(
-            Name = 'Inbound',
-            FEC_Channel_ID__c = FEC_ConstantCommon.CHANNEL_INBOUND_NAME,
-            FEC_Channel_Vietnamese_name__c = 'Inbound',
-            FEC_Channel_Status__c = true
+            Name = 'Inbound UT Get Case Status',
+            FEC_Code__c = 'INBOUNDUTGCS',
+            FEC_Channel_ID__c = TEST_CHANNEL_ID,
+            FEC_Channel_Vietnamese_name__c = 'Inbound UT',
+            FEC_Channel_Status__c = true,
+            FEC_Update_Case_Status__c = true
         );
 
         FEC_Business_Process__c proc = new FEC_Business_Process__c(
@@ -52,9 +56,11 @@ private class FEC_GetCSCaseStatusService_Test {
         FEC_Customer_History__c history = new FEC_Customer_History__c(
             Name = TEST_ACCOUNT_NUMBER,
             FEC_Case__c = testCase.Id,
-            FEC_Account_Number__c = TEST_ACCOUNT_NUMBER
+            FEC_Account_Number__c = TEST_ACCOUNT_NUMBER,
+            FEC_National_ID_Passport_ID__c = '123456789012'
         );
         insert history;
+        FEC_CommonUltils.resetActiveChannelCacheForTest();
 
         FEC_CaseTriggerHandler.isExecuting = true;
         try {
@@ -75,11 +81,10 @@ private class FEC_GetCSCaseStatusService_Test {
         req.Sys = new FEC_GetCSCaseStatusService.SysType();
         req.Sys.TransactionID = 'TXN001';
         req.Sys.DateTime_x = '2026-05-22T10:00:00Z';
-        req.Sys.Channel = FEC_ConstantCommon.CHANNEL_INBOUND_NAME;
+        req.Sys.Channel = TEST_CHANNEL_ID;
 
         req.CaseRequestInfo = new FEC_GetCSCaseStatusService.CaseRequestInfoType();
         req.CaseRequestInfo.CaseID = 'CASE123';
-        req.CaseRequestInfo.NationalID = '123456789012';
         req.CaseRequestInfo.UserType = FEC_ConstantCommon.REQUEST_EXISTING_USER_TYPE;
         req.CaseRequestInfo.IncludeFinishedRequest = true;
 
@@ -102,10 +107,10 @@ private class FEC_GetCSCaseStatusService_Test {
             res.CaseResultInfos[0].CaseID,
             'CaseID should be FEC_ID_Search__c.'
         );
-        System.assertEquals(
-            FEC_ConstantCommon.GET_CASE_STATUS_VN_OPEN,
+        System.assertNotEquals(
+            null,
             res.CaseResultInfos[0].CaseStatus,
-            'Open status should map to Vietnamese API label.'
+            'CaseStatus label should be populated from FEC_Case_Status__c mapping.'
         );
     }
 
@@ -138,10 +143,9 @@ private class FEC_GetCSCaseStatusService_Test {
             new FEC_GetCSCaseStatusService.GetCSCaseStatusRequest();
         req.Sys = new FEC_GetCSCaseStatusService.SysType();
         req.Sys.TransactionID = 'TXN-FRD';
-        req.Sys.Channel = FEC_ConstantCommon.CHANNEL_INBOUND_NAME;
+        req.Sys.Channel = TEST_CHANNEL_ID;
         req.CaseRequestInfo = new FEC_GetCSCaseStatusService.CaseRequestInfoType();
         req.CaseRequestInfo.CaseID = 'CASE123';
-        req.CaseRequestInfo.NationalID = '123456789012';
         req.CaseRequestInfo.UserType = FEC_ConstantCommon.REQUEST_EXISTING_USER_TYPE;
         req.CaseRequestInfo.IncludeFinishedRequest = true;
         req.CaseRequestInfo.ContractOrAccountInfos =

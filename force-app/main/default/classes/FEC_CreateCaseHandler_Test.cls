@@ -1,8 +1,36 @@
 @IsTest
 private class FEC_CreateCaseHandler_Test {
 
+    private static void ensureRunUserMainQueue() {
+        Map<String, Schema.SObjectField> userFields = User.SObjectType.getDescribe().fields.getMap();
+        if (!userFields.containsKey('FEC_Main_Queue__c')) {
+            return;
+        }
+        User runUser = new User(Id = UserInfo.getUserId());
+        List<Group> queues = [
+            SELECT DeveloperName
+            FROM Group
+            WHERE Type = 'Queue'
+              AND DeveloperName = :FEC_ConstantCommon.QUEUE_DQ_CS_SUPPORT_NAME
+            LIMIT 1
+        ];
+        if (queues.isEmpty()) {
+            Group q = new Group(
+                Name = 'CreateCase Test CS Support Queue',
+                DeveloperName = FEC_ConstantCommon.QUEUE_DQ_CS_SUPPORT_NAME,
+                Type = 'Queue'
+            );
+            insert q;
+            runUser.FEC_Main_Queue__c = q.DeveloperName;
+        } else {
+            runUser.FEC_Main_Queue__c = queues[0].DeveloperName;
+        }
+        update runUser;
+    }
+
     @TestSetup
     static void setupData() {
+        ensureRunUserMainQueue();
         insert new List<FEC_Category__c>{
             new FEC_Category__c(
                 Name = FEC_ConstantCommon.FEC_CATEGORY_REQUEST,
