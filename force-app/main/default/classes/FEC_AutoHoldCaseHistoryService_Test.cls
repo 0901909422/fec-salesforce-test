@@ -4,6 +4,31 @@
 @IsTest
 private class FEC_AutoHoldCaseHistoryService_Test {
 
+    private static String holdConfigStatusValue(String fieldApi, String preferred) {
+        Map<String, Schema.SObjectField> fieldMap =
+            FEC_Hold_Case_Config__c.SObjectType.getDescribe().fields.getMap();
+        if (!fieldMap.containsKey(fieldApi)) {
+            return preferred;
+        }
+        Schema.DescribeFieldResult d = fieldMap.get(fieldApi).getDescribe();
+        if (d.getType() != Schema.DisplayType.PICKLIST) {
+            return preferred;
+        }
+        String fallback;
+        for (Schema.PicklistEntry entry : d.getPicklistValues()) {
+            if (!entry.isActive()) {
+                continue;
+            }
+            if (fallback == null) {
+                fallback = entry.getValue();
+            }
+            if (preferred != null && entry.getValue().equalsIgnoreCase(preferred)) {
+                return entry.getValue();
+            }
+        }
+        return fallback != null ? fallback : preferred;
+    }
+
     private static Case insertCaseRow(String subject) {
         Case c = new Case(Subject = subject, Status = 'New');
         FEC_CaseTriggerHandler.isExecuting = true;
@@ -61,8 +86,8 @@ private class FEC_AutoHoldCaseHistoryService_Test {
             FEC_Nature_of_Cases__c = noc.Id,
             FEC_Case_Stage__c = stage.Id,
             FEC_NFU_Code__c = 'NFUH' + suffix,
-            FEC_Current_Status__c = 'New',
-            FEC_Changed_Status__c = 'Pending',
+            FEC_Current_Status__c = holdConfigStatusValue('FEC_Current_Status__c', 'New'),
+            FEC_Changed_Status__c = holdConfigStatusValue('FEC_Changed_Status__c', 'Pending'),
             FEC_Auto_Hold_Release_Case_Status__c = releaseStatus,
             FEC_Auto_Hold_Duration_Minutes__c = durationMinutes
         );
