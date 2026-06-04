@@ -5,6 +5,7 @@
         <members>FEC_CreateCaseInteractionController</members>
         <members>FEC_GetCSCaseStatusService</members>
         <members>FEC_GetCSCaseStatusService_Test</members>
+        <members>FEC_AssignmentMasterFieldPersistService</members>
         <members>FEC_BatchCaseHandlingImportService</members>
         <members>FEC_CaseBusinessService</members>
         <members>FEC_CaseBusinessService_Test</members>
@@ -19,9 +20,17 @@
         <name>FlexiPage</name>
     </types>
     <types>
+        <members>fec_AssignmentList</members>
+        <members>fec_AssignmentMasterFieldUtils</members>
         <members>fec_BatchCaseCreation</members>
         <members>fec_BatchDataCreation</members>
+        <members>fec_CaseBussiness</members>
         <name>LightningComponentBundle</name>
+    </types>
+    <types>
+        <members>FEC_Common_System_Setting</members>
+        <members>RD_IT_User_System_Management</members>
+        <name>PermissionSet</name>
     </types>
     <types>
         <members>FEC_CommonCss</members>
