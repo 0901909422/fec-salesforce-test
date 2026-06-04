@@ -92,7 +92,7 @@ export default class fec_genesysSoftphone extends NavigationMixin(
 
     const genesysResposnse = {
       type: eventType,
-      phoneNumber: callData.DNIS || callData.ANI,
+      phoneNumber: callData.ANI,
       genesysInteractionID: callData.GenesysInteractionID,
       nationalId: callData.NationalID,
       cardAccountNum: callData.CardAccountNum,
