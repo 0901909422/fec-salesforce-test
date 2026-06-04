@@ -14,7 +14,7 @@
     <!-- File có comment author khác → ghi rõ tên người tạo.    -->
     <!-- Query verify: SELECT CreatedBy.Name FROM ... WHERE ...  -->
     <!-- ═══════════════════════════════════════════════════════ -->
-
+ 
     <!-- ── Custom Objects (MDM Layer + Live Layer + Supporting) ── -->
     <types>
         <!-- MDM Staging Objects [DAT NGO] -->
@@ -70,7 +70,7 @@
         <members>ContentVersion</members>
         <name>CustomObject</name>
     </types>
-
+ 
     <!-- ── Apex Classes [ALL DAT NGO] ── -->
     <types>
         <!-- Constants -->
@@ -155,7 +155,6 @@
         <members>FEC_CaseStageService</members>
         <members>FEC_MasterDataSettingService</members>
         <members>FEC_RuleEngineService</members>
-        <members>FEC_RuleEngineServiceTest</members>
         <members>FEC_RuleTestService</members>
         <!-- Live Layer Services/Controllers [DAT NGO] -->
         <members>FEC_LiveAdditionalFieldController</members>
@@ -184,7 +183,7 @@
         <members>FEC_TestDataFactoryTest</members>
         <name>ApexClass</name>
     </types>
-
+ 
     <!-- ── Apex Triggers [ALL DAT NGO] ── -->
     <types>
         <members>FEC_MDM_ActionButtonTrigger</members>
@@ -209,7 +208,7 @@
         <members>FEC_NatureOfCaseTrigger</members>
         <name>ApexTrigger</name>
     </types>
-
+ 
     <!-- ── Lightning Web Components ── -->
     <types>
         <!-- Core MDM UI [DAT NGO] -->
@@ -275,7 +274,7 @@
         <members>fecMdmSyncOperations</members>
         <name>LightningComponentBundle</name>
     </types>
-
+ 
     <!-- ── Permission Sets [ALL DAT NGO] ── -->
     <types>
         <members>FEC_MDM_Full_Field_Access</members>
@@ -284,22 +283,22 @@
         <members>FEC_MDM_Tool_Objects_Access</members>
         <name>PermissionSet</name>
     </types>
-
+ 
     <!-- ── Permission Set Groups [DAT NGO] ── -->
     <types>
         <members>FEC_MDM_Tool_Full_Access</members>
         <name>PermissionSetGroup</name>
     </types>
-
+ 
     <!-- ── Custom Permission ── -->
     <types>
         <members>FEC_MDM_Field_Creator</members>
         <name>CustomPermission</name>
     </types>
-
+ 
     <!-- ── Static Resources ── -->
     <!-- (Removed: FEC_SheetJS - do Bùi Trung tạo) -->
-
+ 
     <!-- ── Layouts ── -->
     <types>
         <!-- MDM Object Layouts -->
@@ -323,7 +322,7 @@
         <members>FEC_Master_Data_Integration__c-FEC Master Data Integration Layout</members>
         <name>Layout</name>
     </types>
-
+ 
     <!-- ── FlexiPages ── -->
     <types>
         <members>MDM</members>
@@ -331,19 +330,19 @@
         <members>Nature_of_Cases_Record_Page</members>
         <name>FlexiPage</name>
     </types>
-
+ 
     <!-- ── Custom Tabs ── -->
     <!-- Added by DAT NGO -->
     <types>
         <members>MDM</members>
         <name>CustomTab</name>
     </types>
-
+ 
     <!-- ── Custom Labels (all) ── -->
     <types>
         <members>*</members>
         <name>CustomLabel</name>
     </types>
-
+ 
     <version>64.0</version>
 </Package>
