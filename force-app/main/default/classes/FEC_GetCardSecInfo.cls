@@ -75,8 +75,10 @@ public with sharing class FEC_GetCardSecInfo {
     // =========================================================================
     public class IPP {
         public String IPPPlan;
+        public String IPPOpenDate;
         public Decimal IPPBalance;
         public Decimal InterestRate;
+        public Decimal Term;
         public Decimal currentTerm;
         public String IPPStartDate;
         public String IPPMatureDate;
@@ -635,6 +637,7 @@ public with sharing class FEC_GetCardSecInfo {
         if (ippNode == null) return listOut;
   
         String ippPlan = FEC_CommonUltils.getXmlValue(ippNode, 'IPPPlan');
+        String ippOpenDate = FEC_CommonUltils.getXmlValue(ippNode, 'IPPOpenDate');
         String ippRecordNoFromXml = FEC_CommonUltils.getXmlValue(ippNode, 'IPPRecordNo');
         if (String.isBlank(ippRecordNoFromXml)) {
             ippRecordNoFromXml = FEC_CommonUltils.getValueSafe(ippNode, 'IPPRecordNo');
@@ -642,6 +645,7 @@ public with sharing class FEC_GetCardSecInfo {
         String ippRecordNo = String.isBlank(ippRecordNoFromXml) ? null : ippRecordNoFromXml.trim();
         Decimal ippBalance = FEC_CommonUltils.xmlValToDecimal(ippNode, 'IPPBalance');
         Decimal interestRate = FEC_CommonUltils.xmlValToDecimal(ippNode, 'InterestRate');
+        Decimal term = FEC_CommonUltils.xmlValToDecimal(ippNode, 'Term');
         Decimal currentTerm = FEC_CommonUltils.xmlValToDecimal(ippNode, 'CurrentTerm');
         String ippStartDate = FEC_CommonUltils.getXmlValue(ippNode, 'IPPStartDate');
         String ippMatureDate = FEC_CommonUltils.getXmlValue(ippNode, 'IPPMatureDate');
@@ -662,9 +666,11 @@ public with sharing class FEC_GetCardSecInfo {
                     Decimal interestK = FEC_CommonUltils.xmlValToDecimal(ippNode, 'MONTHLY_INTEREST_' + k);
                     IPP ipp = new IPP();
                     ipp.IPPPlan = ippPlan;
+                    ipp.IPPOpenDate = ippOpenDate;
                     ipp.IPPRecordNo = ippRecordNo;
                     ipp.IPPBalance = ippBalance;
                     ipp.InterestRate = interestRate;
+                    ipp.Term = term;
                     ipp.currentTerm = currentTerm;
                     ipp.IPPStartDate = ippStartDate;
                     ipp.IPPMatureDate = ippMatureDate;
