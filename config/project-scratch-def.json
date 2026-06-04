@@ -11,7 +11,8 @@
             "enableEndUserLanguages": true
         },
         "omniChannelSettings": {
-            "enableOmniChannel": true
+            "enableOmniChannel": true,
+            "enableOmniSkillsRouting": true
         },
         "mobileSettings": {
             "enableS1EncryptedStoragePref2": false
