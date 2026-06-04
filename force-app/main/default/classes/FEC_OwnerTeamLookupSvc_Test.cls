@@ -34,6 +34,9 @@ private class FEC_OwnerTeamLookupSvc_Test {
             EmailEncodingKey = 'UTF-8', LocaleSidKey = 'en_US'
         );
         insert u;
+
+        // Assign Permission Sets cho FLS access
+        FEC_TestDataFactory.assignStandardFECPermissions(u.Id);
     }
 
     @IsTest
@@ -78,6 +81,9 @@ private class FEC_OwnerTeamLookupSvc_Test {
             EmailEncodingKey = 'UTF-8', LocaleSidKey = 'en_US'
         );
         insert u2;
+
+        // Assign Permission Sets cho FLS access
+        FEC_TestDataFactory.assignStandardFECPermissions(u2.Id);
 
         Test.startTest();
         Map<Id, String> res = FEC_OwnerTeamLookupSvc.getByOwnerIds(new Set<Id>{u2.Id});
