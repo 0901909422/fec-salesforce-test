@@ -9926,15 +9926,15 @@
         <fullName>FEC_Lbl_Genesys_Campaign</fullName>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>Genesys Campaign</shortDescription>
-        <value>Genesys Campaign</value>
+        <shortDescription>MSG Channel Validation</shortDescription>
+        <value>Channel id </value>
     </labels>
     <labels>
         <fullName>FEC_Lbl_Is_Active</fullName>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>Is Active Checkbox Label</shortDescription>
-        <value>Is Active?</value>
+        <shortDescription>MSG Data Request Master Data</shortDescription>
+        <value> is not supported.</value>
     </labels>
     <labels>
         <fullName>FEC_Lbl_Is_Active_Table</fullName>
@@ -13214,12 +13214,11 @@
         <value>Notification Type</value>
     </labels>
     <labels>
-        <fullName>FEC_Notification_History_Col_Sent_Status</fullName>
-        <categories>Notification History LWC</categories>
+        <fullName>FEC_Col_Team_User_Group</fullName>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>Grid column Sent Status</shortDescription>
-        <value>Sent Status</value>
+        <shortDescription>FEC Col Team User Group</shortDescription>
+        <value>Team/User Group</value>
     </labels>
     <labels>
         <fullName>FEC_Notification_History_Col_Sent_System</fullName>
@@ -13322,8 +13321,8 @@
         <categories>Notification History LWC</categories>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>Accordion section Email</shortDescription>
-        <value>Email</value>
+        <shortDescription>No Template Question</shortDescription>
+        <value>Don't have the template?</value>
     </labels>
     <labels>
         <fullName>FEC_Notification_History_Tab_MobileApp</fullName>
@@ -13353,8 +13352,8 @@
         <fullName>FEC_Notification_Information</fullName>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>Notification Information</shortDescription>
-        <value>Notification Information</value>
+        <shortDescription>Number of Inprogress records</shortDescription>
+        <value>No. of Inprogress records: </value>
     </labels>
     <labels>
         <fullName>FEC_Notification_Template</fullName>
@@ -13495,61 +13494,61 @@
         <fullName>FEC_Opt_IDCard</fullName>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>ID Card Number</shortDescription>
-        <value>ID Card / Citizen ID</value>
+        <shortDescription>Campaign Validation Campaign ID Mismatch</shortDescription>
+        <value>Row {0}: Field ''Campaign ID'' - value does not match expected campaign code ''{1}''</value>
     </labels>
     <labels>
         <fullName>FEC_Opt_Phone</fullName>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>Primary Phone Number</shortDescription>
-        <value>Primary Phone Number</value>
+        <shortDescription>Campaign Validation Field Blank</shortDescription>
+        <value>Row {0}: Field ''{1}'' - must not be blank</value>
     </labels>
     <labels>
         <fullName>FEC_Opt_Select</fullName>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>Select placeholder</shortDescription>
-        <value>Select..</value>
+        <shortDescription>Campaign Validation Field Exceeds Max Length</shortDescription>
+        <value>Row {0}: Field ''{1}'' - exceeds max length of {2} characters</value>
     </labels>
     <labels>
         <fullName>FEC_Original_MRC</fullName>
         <categories>fec_MRC</categories>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>FEC_Original_MRC</shortDescription>
-        <value>Original MRC</value>
+        <shortDescription>Campaign Validation ProductLine Invalid</shortDescription>
+        <value>Row {0}: Field ''ProductLine'' - value ''{1}'' is invalid, only ''Loan'' or ''Card'' accepted</value>
     </labels>
     <labels>
         <fullName>FEC_Original_Value</fullName>
         <categories>Label</categories>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>Original Value</shortDescription>
-        <value>Original Value</value>
+        <shortDescription>Campaign Validation At Least One Required</shortDescription>
+        <value>Row {0}: At least one of ''App ID'' or ''Account or Contract number'' must not be blank</value>
     </labels>
     <labels>
         <fullName>FEC_Origination_Channel_Label</fullName>
         <categories>Account Info</categories>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>Origination Channel Label</shortDescription>
-        <value>Origination Channel</value>
+        <shortDescription>Campaign Validation Invalid Number</shortDescription>
+        <value>Row {0}: Field ''{1}'' - value ''{2}'' is not a valid number</value>
     </labels>
     <labels>
         <fullName>FEC_Other_Card_Label</fullName>
         <categories>Account Info</categories>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>Other Card Label</shortDescription>
-        <value>Other Card</value>
+        <shortDescription>Campaign Validation Duplicate Key</shortDescription>
+        <value>Row {0}: Duplicate composite key ''{1}''</value>
     </labels>
     <labels>
         <fullName>FEC_Outcome_Code_Label</fullName>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>Outcome Code</shortDescription>
-        <value>Outcome Code</value>
+        <shortDescription>Saving Error Message</shortDescription>
+        <value>Lỗi khi lưu dữ liệu: </value>
     </labels>
     <labels>
         <fullName>FEC_Overdue_Label</fullName>
@@ -13568,87 +13567,81 @@
         <value>Document</value>
     </labels>
     <labels>
-        <fullName>FEC_PDF_Error_DataEmpty</fullName>
-        <categories>PDF</categories>
+        <fullName>FEC_Auto_Integrating_Btn_Cancel</fullName>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>PDF Error Data Empty</shortDescription>
-        <value>Dữ liệu PDF không được để trống.</value>
+        <shortDescription>Cancel button</shortDescription>
+        <value>Cancel</value>
     </labels>
     <labels>
-        <fullName>FEC_PDF_Error_NoCreatePermission</fullName>
-        <categories>PDF</categories>
+        <fullName>FEC_Auto_Integrating_Btn_Delete</fullName>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>PDF Error No Create Permission</shortDescription>
-        <value>Không có quyền tạo file. Vui lòng liên hệ Admin.</value>
+        <shortDescription>Delete button</shortDescription>
+        <value>Delete</value>
     </labels>
     <labels>
-        <fullName>FEC_PDF_Error_NoLinkPermission</fullName>
-        <categories>PDF</categories>
+        <fullName>FEC_Auto_Integrating_Btn_Huy</fullName>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>PDF Error No Link Permission</shortDescription>
-        <value>Không có quyền liên kết file. Vui lòng liên hệ Admin.</value>
+        <shortDescription>Cancel button Vietnamese</shortDescription>
+        <value>Hủy</value>
     </labels>
     <labels>
-        <fullName>FEC_PDF_Error_TemplateNotFound</fullName>
-        <categories>PDF</categories>
+        <fullName>FEC_Auto_Integrating_Btn_Luu</fullName>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>PDF Error Template Not Found</shortDescription>
-        <value>Không tìm thấy template: {0}</value>
+        <shortDescription>Save button Vietnamese</shortDescription>
+        <value>Lưu</value>
     </labels>
     <labels>
-        <fullName>FEC_PHONE_IS_INVALID_FORMAT_1_MSG</fullName>
+        <fullName>FEC_Auto_Integrating_Btn_New</fullName>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>FEC_PHONE_IS_INVALID_FORMAT_1_MSG</shortDescription>
-        <value>Phone number starting with 0 must be exactly 10 digits.</value>
+        <shortDescription>New button</shortDescription>
+        <value>New</value>
     </labels>
     <labels>
-        <fullName>FEC_PHONE_IS_INVALID_FORMAT_2_MSG</fullName>
+        <fullName>FEC_Auto_Integrating_Btn_Next</fullName>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>FEC_PHONE_IS_INVALID_FORMAT_2_MSG</shortDescription>
-        <value>Phone number starting with 84 must be exactly 11 digits.</value>
+        <shortDescription>Next button</shortDescription>
+        <value>Next</value>
     </labels>
     <labels>
-        <fullName>FEC_PHONE_IS_INVALID_FORMAT_3_MSG</fullName>
+        <fullName>FEC_Auto_Integrating_Btn_Previous</fullName>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>FEC_PHONE_IS_INVALID_FORMAT_3_MSG</shortDescription>
-        <value>Phone number must start with 0 (10 digits) or 84 (11 digits).</value>
+        <shortDescription>Previous button</shortDescription>
+        <value>Previous</value>
     </labels>
     <labels>
-        <fullName>FEC_PHONE_IS_REQUIRED_MSG</fullName>
+        <fullName>FEC_Auto_Integrating_Btn_Save</fullName>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>FEC_PHONE_IS_REQUIRED_MSG</shortDescription>
-        <value>Phone number is required.</value>
+        <shortDescription>Save button</shortDescription>
+        <value>Save</value>
     </labels>
     <labels>
-        <fullName>FEC_PID_Number_Label</fullName>
-        <categories>Customer Info</categories>
+        <fullName>FEC_Auto_Integrating_Card_Title</fullName>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>PID Number Label</shortDescription>
-        <value>PID Number</value>
+        <shortDescription>Auto Integrating Property Mapping card title</shortDescription>
+        <value>Auto Integrating Property Mapping</value>
     </labels>
     <labels>
-        <fullName>FEC_PIN_Label</fullName>
-        <categories>Account Info</categories>
+        <fullName>FEC_Auto_Integrating_Col_Actions</fullName>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>PIN Label</shortDescription>
-        <value>PIN</value>
+        <shortDescription>Actions column header</shortDescription>
+        <value>Actions</value>
     </labels>
     <labels>
-        <fullName>FEC_POS</fullName>
+        <fullName>FEC_Auto_Integrating_Col_Channel</fullName>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>POS</shortDescription>
-        <value>POS</value>
+        <shortDescription>Channel column header</shortDescription>
+        <value>Channel</value>
     </labels>
     <labels>
         <fullName>FEC_Page_Context</fullName>
@@ -13955,754 +13948,720 @@
         <value>Đổi điểm thưởng thành công.</value>
     </labels>
     <labels>
-        <fullName>FEC_Points_Redeemed_Points_Label</fullName>
-        <categories>Points Redemption LWC</categories>
+        <fullName>FEC_Auto_Integrating_Col_Integrating_Channel</fullName>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>FEC_Points_Redeemed_Points_Label</shortDescription>
-        <value>Redeemed Points</value>
+        <shortDescription>Integrating Channel column header</shortDescription>
+        <value>Integrating Channel</value>
     </labels>
     <labels>
-        <fullName>FEC_Points_Redemption_Available_Points_Below_Min</fullName>
-        <categories>Points Redemption LWC</categories>
+        <fullName>FEC_Auto_Integrating_Col_Integrating_Property_ID</fullName>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>FEC_Points_Redemption_Available_Points_Below_Min</shortDescription>
-        <value>Available Points &lt; 100,000</value>
+        <shortDescription>Integrating Property ID column header</shortDescription>
+        <value>Integrating Property ID</value>
     </labels>
     <labels>
-        <fullName>FEC_Points_Redemption_CMS_Phone_Label</fullName>
-        <categories>Points Redemption LWC</categories>
+        <fullName>FEC_Auto_Integrating_Col_Is_Mandatory</fullName>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>FEC_Points_Redemption_CMS_Phone_Label</shortDescription>
-        <value>CMS Phone</value>
+        <shortDescription>Is Mandatory column header</shortDescription>
+        <value>Is Mandatory</value>
     </labels>
     <labels>
-        <fullName>FEC_Points_Redemption_Confirm_Message</fullName>
-        <categories>Points Redemption LWC</categories>
+        <fullName>FEC_Auto_Integrating_Col_Name</fullName>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>FEC_Points_Redemption_Confirm_Message</shortDescription>
-        <value>Bạn có muốn tiếp tục thực hiện đổi điểm thưởng?</value>
+        <shortDescription>Name column header</shortDescription>
+        <value>Name</value>
     </labels>
     <labels>
-        <fullName>FEC_Points_Redemption_Confirm_Title</fullName>
-        <categories>Points Redemption LWC</categories>
+        <fullName>FEC_Auto_Integrating_Col_Property_ID</fullName>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>FEC_Points_Redemption_Confirm_Title</shortDescription>
-        <value>Xác nhận đổi điểm</value>
+        <shortDescription>Property ID column header</shortDescription>
+        <value>Property ID</value>
     </labels>
     <labels>
-        <fullName>FEC_Policy_Number</fullName>
-        <categories>Label</categories>
+        <fullName>FEC_Auto_Integrating_Col_Property_Name_VN</fullName>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>Policy Number</shortDescription>
-        <value>Policy Number</value>
+        <shortDescription>Property Name VN column header</shortDescription>
+        <value>Property Name VN</value>
     </labels>
     <labels>
-        <fullName>FEC_Post_Date</fullName>
+        <fullName>FEC_Auto_Integrating_Col_Property_Type</fullName>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>Post Date</shortDescription>
-        <value>Post Date</value>
+        <shortDescription>Property Type column header</shortDescription>
+        <value>Property Type</value>
     </labels>
     <labels>
-        <fullName>FEC_Postal_Code</fullName>
-        <categories>fec_MRC</categories>
+        <fullName>FEC_Auto_Integrating_Col_Source_Property_ID</fullName>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>FEC_Postal_Code</shortDescription>
-        <value>Postal Code</value>
+        <shortDescription>Source Property ID column header</shortDescription>
+        <value>Source Property ID</value>
     </labels>
     <labels>
-        <fullName>FEC_Posted_Date</fullName>
-        <categories>fec_MRC</categories>
+        <fullName>FEC_Auto_Integrating_Col_Status</fullName>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>FEC_Posted_Date</shortDescription>
-        <value>Posted Date</value>
+        <shortDescription>Status column header</shortDescription>
+        <value>Status</value>
     </labels>
     <labels>
-        <fullName>FEC_Premium_Free</fullName>
-        <categories>Label</categories>
+        <fullName>FEC_Auto_Integrating_Confirm_Delete_Msg</fullName>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>Premium Free</shortDescription>
-        <value>Premium Free</value>
+        <shortDescription>Confirm delete message</shortDescription>
+        <value>Are you sure you want to delete this record? This action cannot be undone.</value>
     </labels>
     <labels>
-        <fullName>FEC_Previous_Btn_Label</fullName>
+        <fullName>FEC_Auto_Integrating_Confirm_Delete_Title</fullName>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>Previous</shortDescription>
-        <value>Previous</value>
+        <shortDescription>Confirm Delete modal title</shortDescription>
+        <value>Confirm Delete</value>
     </labels>
     <labels>
-        <fullName>FEC_Primary_Phone_Label</fullName>
-        <categories>Customer Info</categories>
+        <fullName>FEC_Auto_Integrating_Loading</fullName>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>Primary Phone Label</shortDescription>
-        <value>Primary Phone</value>
+        <shortDescription>Loading spinner alt text</shortDescription>
+        <value>Loading</value>
     </labels>
     <labels>
-        <fullName>FEC_Process_Now_Success</fullName>
+        <fullName>FEC_Auto_Integrating_Modal_Edit</fullName>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>FEC_Process_Now_Success</shortDescription>
-        <value>Batch processing has been triggered successfully</value>
+        <shortDescription>Edit Record modal title</shortDescription>
+        <value>Edit Record</value>
     </labels>
     <labels>
-        <fullName>FEC_Product_Group</fullName>
+        <fullName>FEC_Auto_Integrating_Modal_New</fullName>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>Product Group</shortDescription>
-        <value>Product Group</value>
+        <shortDescription>New Record modal title</shortDescription>
+        <value>New Record</value>
     </labels>
     <labels>
-        <fullName>FEC_Product_Name</fullName>
-        <categories>Label</categories>
+        <fullName>FEC_Auto_Integrating_Msg_Record_Created</fullName>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>Product Name</shortDescription>
-        <value>Product Name</value>
+        <shortDescription>Record created message</shortDescription>
+        <value>Record created</value>
     </labels>
     <labels>
-        <fullName>FEC_Promised_Repayment_Amount</fullName>
+        <fullName>FEC_Auto_Integrating_Msg_Record_Deleted</fullName>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>Promised Repayment Amount</shortDescription>
-        <value>Promised Repayment Amount</value>
+        <shortDescription>Record deleted message</shortDescription>
+        <value>Record deleted</value>
     </labels>
     <labels>
-        <fullName>FEC_Prompt_Enter_New_Stage_Name</fullName>
+        <fullName>FEC_Auto_Integrating_Msg_Record_Updated</fullName>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>Auto-generated label</shortDescription>
-        <value>Enter new stage name:</value>
+        <shortDescription>Record updated message</shortDescription>
+        <value>Record updated</value>
     </labels>
     <labels>
-        <fullName>FEC_Prompt_Select_Node_Detail</fullName>
+        <fullName>FEC_Auto_Integrating_Msg_Required_Fields</fullName>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>Auto-generated label</shortDescription>
-        <value>Please select a node to view details.</value>
+        <shortDescription>Required fields validation message</shortDescription>
+        <value>Please fill in all required fields</value>
     </labels>
     <labels>
-        <fullName>FEC_Prompt_Select_Node_Flow_Control</fullName>
+        <fullName>FEC_Auto_Integrating_No_Records</fullName>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>Auto-generated label</shortDescription>
-        <value>Select a Node to view Flow Control configuration</value>
+        <shortDescription>No records found message</shortDescription>
+        <value>No records found.</value>
     </labels>
     <labels>
-        <fullName>FEC_Provided_Number</fullName>
-        <categories>fec_MRC</categories>
+        <fullName>FEC_Auto_Integrating_Picklist_Default</fullName>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>FEC_Provided_Number</shortDescription>
-        <value>Provided Number</value>
+        <shortDescription>Picklist default option</shortDescription>
+        <value>-- Select --</value>
     </labels>
     <labels>
-        <fullName>FEC_Push_MDM_To_Live</fullName>
+        <fullName>FEC_Auto_Integrating_Placeholder_Search</fullName>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>Auto-generated label</shortDescription>
-        <value>Push MDM to Live</value>
+        <shortDescription>Source Property search placeholder</shortDescription>
+        <value>Search property name from Additional Info...</value>
     </labels>
     <labels>
-        <fullName>FEC_Queue_Label</fullName>
-        <categories>Case</categories>
+        <fullName>FEC_Auto_Integrating_Search_Text</fullName>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>Queue Label</shortDescription>
-        <value>Queue</value>
+        <shortDescription>Search Text</shortDescription>
+        <value>Search Text</value>
     </labels>
     <labels>
-        <fullName>FEC_Quick_Wrap_up_Label</fullName>
-        <categories>Case</categories>
+        <fullName>FEC_Auto_Integrating_Toast_Error</fullName>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>Quick Wrap-up Label</shortDescription>
-        <value>Quick Wrap-up</value>
+        <shortDescription>Error toast title</shortDescription>
+        <value>Error</value>
     </labels>
     <labels>
-        <fullName>FEC_RA_Channel_Required</fullName>
+        <fullName>FEC_Auto_Integrating_Toast_Success</fullName>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>RA Channel Required</shortDescription>
-        <value>Vui lòng chọn Channel</value>
+        <shortDescription>Success toast title</shortDescription>
+        <value>Success</value>
     </labels>
     <labels>
-        <fullName>FEC_RA_Create_Success</fullName>
+        <fullName>FEC_Col_Auto_Create_Field</fullName>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>RA Create Success</shortDescription>
-        <value>Tạo mới thành công</value>
+        <shortDescription>Auto Create Field button label</shortDescription>
+        <value>Auto Create Field</value>
     </labels>
     <labels>
-        <fullName>FEC_RA_Customer_Type_Required</fullName>
+        <fullName>FEC_Col_Field_API_Name</fullName>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>RA Customer Type Required</shortDescription>
-        <value>Vui lòng chọn Customer Type</value>
+        <shortDescription>Field API Name column header</shortDescription>
+        <value>Field API Name</value>
     </labels>
     <labels>
-        <fullName>FEC_RA_Error_Load</fullName>
+        <fullName>FEC_Col_Field_Label_Name</fullName>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>RA Error Load</shortDescription>
-        <value>Không thể tải thông tin Routing Assignment.</value>
+        <shortDescription>Field Label Name column header</shortDescription>
+        <value>Field Label Name</value>
     </labels>
     <labels>
-        <fullName>FEC_RA_Error_Update</fullName>
+        <fullName>FEC_Col_Self_Service_Flag</fullName>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>RA Error Update</shortDescription>
-        <value>Có lỗi xảy ra khi cập nhật.</value>
+        <shortDescription>Self-Service Flag column header</shortDescription>
+        <value>Self-Service Flag</value>
     </labels>
     <labels>
-        <fullName>FEC_RA_Queue_Required</fullName>
+        <fullName>FEC_Col_Sub_Sec_Field</fullName>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>RA Queue Required</shortDescription>
-        <value>Vui lòng chọn Queue</value>
+        <shortDescription>Sub Section Field column header</shortDescription>
+        <value>Sub Sec Field</value>
     </labels>
     <labels>
-        <fullName>FEC_RA_Save_Error</fullName>
+        <fullName>FEC_Col_Sub_Sec_Layout</fullName>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>RA Save Error</shortDescription>
-        <value>Lưu thất bại</value>
+        <shortDescription>Sub Section Layout column header</shortDescription>
+        <value>Sub Sec Layout</value>
     </labels>
     <labels>
-        <fullName>FEC_RA_Save_Success</fullName>
+        <fullName>FEC_Col_Sub_Sec_Order</fullName>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>RA Save Success</shortDescription>
-        <value>Lưu thành công</value>
+        <shortDescription>Sub Section Order column header</shortDescription>
+        <value>Sub Sec Order</value>
     </labels>
     <labels>
-        <fullName>FEC_RA_Team_Required</fullName>
+        <fullName>FEC_Col_Sub_Section</fullName>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>RA Team Required</shortDescription>
-        <value>Vui lòng chọn Team</value>
+        <shortDescription>Sub Section column header</shortDescription>
+        <value>Sub Section</value>
     </labels>
     <labels>
-        <fullName>FEC_RA_Update_Success</fullName>
+        <fullName>FEC_Confirm_Delete_Fraud_Mapping_Msg</fullName>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>RA Update Success</shortDescription>
-        <value>Cập nhật thành công</value>
+        <shortDescription>Confirm delete fraud integration mapping message</shortDescription>
+        <value>Are you sure you want to delete this fraud integration mapping? This action cannot be undone.</value>
     </labels>
     <labels>
-        <fullName>FEC_RELATED_NOTES_COMPOSE_TEXT_FIELD</fullName>
+        <fullName>FEC_Duplicate_Property_Channel_Error</fullName>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>FEC_RELATED_NOTES_COMPOSE_TEXT_FIELD</shortDescription>
-        <value>Compose text</value>
+        <shortDescription>A record with the same Property ID and Channel already exists.</shortDescription>
+        <value>A record with the same Property ID and Channel already exists.</value>
     </labels>
     <labels>
-        <fullName>FEC_RELATED_NOTES_CREATED_MSG</fullName>
+        <fullName>FEC_Email_Body_Case_Owner_Change</fullName>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>FEC_RELATED_NOTES_CREATED_MSG</shortDescription>
-        <value>Note created</value>
+        <shortDescription>Email body when Case owner changes. {0}=Case Number, {1}=Case link URL</shortDescription>
+        <value>Case {0} đã được phân công cho bạn. Vui lòng xem và xử lý: {1}</value>
     </labels>
     <labels>
-        <fullName>FEC_RELATED_NOTES_DELETED_MSG</fullName>
+        <fullName>FEC_Email_Subject_Case_Owner_Change</fullName>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>FEC_RELATED_NOTES_DELETED_MSG</shortDescription>
-        <value>Note deleted</value>
+        <shortDescription>Email subject when Case owner changes (Send Notification)</shortDescription>
+        <value>Case {0} đã được phân công cho bạn</value>
     </labels>
     <labels>
-        <fullName>FEC_RELATED_NOTES_DELETE_BTN</fullName>
+        <fullName>FEC_Error_Add_Column</fullName>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>FEC_RELATED_NOTES_DELETE_BTN</shortDescription>
-        <value>Delete File?</value>
+        <shortDescription>Error adding column</shortDescription>
+        <value>Error adding Column:</value>
     </labels>
     <labels>
-        <fullName>FEC_RELATED_NOTES_DELETE_MODAL_MSG</fullName>
+        <fullName>FEC_Error_Add_Row</fullName>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>FEC_RELATED_NOTES_DELETE_MODAL_MSG</shortDescription>
-        <value>Deleting a file also removes it from any records or posts it&apos;s attached to.</value>
+        <shortDescription>Error adding row</shortDescription>
+        <value>Error adding Row:</value>
     </labels>
     <labels>
-        <fullName>FEC_RELATED_NOTES_EDIT_NOTE_MODAL_TITLE</fullName>
+        <fullName>FEC_Error_Cannot_Load_History</fullName>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>FEC_RELATED_NOTES_EDIT_NOTE_MODAL_TITLE</shortDescription>
-        <value>Edit Note</value>
+        <shortDescription>Cannot load history</shortDescription>
+        <value>Cannot load history:</value>
     </labels>
     <labels>
-        <fullName>FEC_RELATED_NOTES_NEW_NOTE_MODAL_TITLE</fullName>
+        <fullName>FEC_Error_Cannot_Save_Rule</fullName>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>FEC_RELATED_NOTES_NEW_NOTE_MODAL_TITLE</shortDescription>
-        <value>New Note</value>
+        <shortDescription>Error saving rule</shortDescription>
+        <value>Cannot save rule:</value>
     </labels>
     <labels>
-        <fullName>FEC_RELATED_NOTES_REMOVED_MSG</fullName>
-        <language>en_US</language>
+        <fullName>FEC_Error_CaseFileTotalExceeds2GB</fullName>
+        <language>vi</language>
         <protected>false</protected>
-        <shortDescription>FEC_RELATED_NOTES_REMOVED_MSG</shortDescription>
-        <value>Note removed from record</value>
+        <shortDescription>Total case file size exceeds 2GB limit</shortDescription>
+        <value>Tổng dung lượng file gắn Case không được vượt quá 2GB. File này không được gắn vào Case.</value>
     </labels>
     <labels>
-        <fullName>FEC_RELATED_NOTES_REMOVE_BTN</fullName>
+        <fullName>FEC_Error_Delete_Column</fullName>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>FEC_RELATED_NOTES_REMOVE_BTN</shortDescription>
-        <value>Remove file?</value>
+        <shortDescription>Error deleting column</shortDescription>
+        <value>Error deleting Column:</value>
     </labels>
     <labels>
-        <fullName>FEC_RELATED_NOTES_REMOVE_MODAL_MSG</fullName>
+        <fullName>FEC_Error_Delete_Failed</fullName>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>FEC_RELATED_NOTES_REMOVE_MODAL_MSG</shortDescription>
-        <value>The file will be removed from the record, but not deleted.</value>
+        <shortDescription>Failed to delete record</shortDescription>
+        <value>Failed to delete record.</value>
     </labels>
     <labels>
-        <fullName>FEC_RELATED_NOTES_TABLE_HEADER_CREATED_BY_COLUMN</fullName>
+        <fullName>FEC_Error_Delete_Fraud_Mapping</fullName>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>FEC_RELATED_NOTES_TABLE_HEADER_CREATED_BY_COLUMN</shortDescription>
-        <value>Created By</value>
+        <shortDescription>Error deleting fraud integration mapping</shortDescription>
+        <value>Error deleting fraud integration mapping.</value>
     </labels>
     <labels>
-        <fullName>FEC_RELATED_NOTES_TABLE_HEADER_LAST_MODIFIED_COLUMN</fullName>
+        <fullName>FEC_Error_Delete_Rule</fullName>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>FEC_RELATED_NOTES_TABLE_HEADER_LAST_MODIFIED_COLUMN</shortDescription>
-        <value>Last Modified</value>
+        <shortDescription>Error deleting rule</shortDescription>
+        <value>Error deleting Rule:</value>
     </labels>
     <labels>
-        <fullName>FEC_RELATED_NOTES_TABLE_HEADER_TEXT_PREVIEW_COLUMN</fullName>
-        <language>en_US</language>
+        <fullName>FEC_Error_DuplicateCodeInField</fullName>
+        <language>vi</language>
         <protected>false</protected>
-        <shortDescription>FEC_RELATED_NOTES_TABLE_HEADER_TEXT_PREVIEW_COLUMN</shortDescription>
-        <value>Text Preview</value>
+        <shortDescription>Duplicate code in field list validation error</shortDescription>
+        <value>Mã Code này đã tồn tại trong danh sách của trường hiện tại. Vui lòng nhập Code khác.</value>
     </labels>
     <labels>
-        <fullName>FEC_RELATED_NOTES_TABLE_HEADER_TITLE_COLUMN</fullName>
-        <language>en_US</language>
+        <fullName>FEC_Error_EngineError</fullName>
+        <language>vi</language>
         <protected>false</protected>
-        <shortDescription>FEC_RELATED_NOTES_TABLE_HEADER_TITLE_COLUMN</shortDescription>
-        <value>Title</value>
+        <shortDescription>Rule engine error prefix</shortDescription>
+        <value>Lỗi Engine:</value>
     </labels>
     <labels>
-        <fullName>FEC_RELATED_NOTES_UPDATED_MSG</fullName>
+        <fullName>FEC_Error_Field_Already_Exists</fullName>
+        <categories>MDM Auto Field Creator</categories>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>FEC_RELATED_NOTES_UPDATED_MSG</shortDescription>
-        <value>Note updated</value>
+        <shortDescription>Error when field already exists on object</shortDescription>
+        <value>Field {0} already exists on {1}. Please select the existing field instead.</value>
     </labels>
     <labels>
-        <fullName>FEC_RESET_PIN_ERROR</fullName>
-        <language>en_US</language>
+        <fullName>FEC_Error_FileSizeExceeds2GB</fullName>
+        <language>vi</language>
         <protected>false</protected>
-        <shortDescription>FEC_RESET_PIN_ERROR</shortDescription>
-        <value>Mở khóa PIN thất bại. Vui lòng thử lại.</value>
+        <shortDescription>Single file size exceeds 2GB limit</shortDescription>
+        <value>Dung lượng file vượt quá 2GB. Hệ thống không cho phép upload file có dung lượng lớn hơn 2GB.</value>
     </labels>
     <labels>
-        <fullName>FEC_RESET_PIN_FAILED</fullName>
+        <fullName>FEC_Error_Generic</fullName>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>FEC_RESET_PIN_FAILED</shortDescription>
-        <value>Mở khóa PIN thất bại.</value>
+        <shortDescription>Generic error prefix</shortDescription>
+        <value>Error:</value>
     </labels>
     <labels>
-        <fullName>FEC_RESET_PIN_SUCCESS</fullName>
+        <fullName>FEC_Error_Get_MDM_Fields</fullName>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>FEC_RESET_PIN_SUCCESS</shortDescription>
-        <value>Mở khóa PIN thành công.</value>
+        <shortDescription>Error getting MDM field list</shortDescription>
+        <value>Error getting MDM Field list:</value>
     </labels>
     <labels>
-        <fullName>FEC_Real_Time_Payment_Label</fullName>
-        <categories>Account Info</categories>
+        <fullName>FEC_Error_Invalid_Api_Name</fullName>
+        <categories>MDM Auto Field Creator</categories>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>Real-Time Payment section label</shortDescription>
-        <value>Real-Time Payment</value>
+        <shortDescription>Error when API name format is invalid</shortDescription>
+        <value>Invalid Field API Name: must contain only letters, numbers, underscores, end with __c, and be at most 40 characters.</value>
     </labels>
     <labels>
-        <fullName>FEC_Reason_Error</fullName>
-        <categories>Label</categories>
+        <fullName>FEC_Error_Invalid_Field_Name</fullName>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>Reason Error</shortDescription>
-        <value>Không tìm thấy NFU Config cho Sub Code</value>
+        <shortDescription>Invalid Field API Name</shortDescription>
+        <value>Invalid Field API Name</value>
     </labels>
     <labels>
-        <fullName>FEC_Reason_Label</fullName>
-        <categories>Case</categories>
+        <fullName>FEC_Error_Invalid_Object_Name</fullName>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>Reason Label</shortDescription>
-        <value>Reason</value>
+        <shortDescription>Invalid Object Name</shortDescription>
+        <value>Invalid Object Name</value>
     </labels>
     <labels>
-        <fullName>FEC_Received_Date</fullName>
-        <categories>fec_MRC</categories>
+        <fullName>FEC_Error_Load_Field_List</fullName>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>FEC_Received_Date</shortDescription>
-        <value>Received Date</value>
+        <shortDescription>Error loading field list</shortDescription>
+        <value>Error loading field list:</value>
     </labels>
     <labels>
-        <fullName>FEC_Receiver</fullName>
-        <categories>fec_MRC</categories>
-        <language>en_US</language>
+        <fullName>FEC_Error_NoActiveDecisionTable</fullName>
+        <language>vi</language>
         <protected>false</protected>
-        <shortDescription>FEC_Receiver</shortDescription>
-        <value>Receiver</value>
+        <shortDescription>No active Decision Table found for process</shortDescription>
+        <value>Không tìm thấy Decision Table nào đang Active cho Process:</value>
     </labels>
     <labels>
-        <fullName>FEC_Record_Type_Is_Null</fullName>
-        <language>en_US</language>
+        <fullName>FEC_Error_NoRuleMatched</fullName>
+        <language>vi</language>
         <protected>false</protected>
-        <shortDescription>FEC_Record_Type_Is_Null</shortDescription>
-        <value>Record Type is null</value>
+        <shortDescription>No rule matched the conditions</shortDescription>
+        <value>Không có Rule nào thỏa mãn điều kiện.</value>
     </labels>
     <labels>
-        <fullName>FEC_Record_per_Page</fullName>
+        <fullName>FEC_Error_No_Create_Permission</fullName>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>Record per Page</shortDescription>
-        <value>Records per page</value>
+        <shortDescription>You do not have permission to create Master Data Setting records.</shortDescription>
+        <value>You do not have permission to create Master Data Setting records.</value>
     </labels>
     <labels>
-        <fullName>FEC_Reference_Info_Label</fullName>
-        <categories>Customer Info</categories>
+        <fullName>FEC_Error_No_Deploy_Permission</fullName>
+        <categories>MDM Auto Field Creator</categories>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>Reference Info Label</shortDescription>
-        <value>Reference Info</value>
+        <shortDescription>Error when user lacks deploy permission</shortDescription>
+        <value>You do not have permission to deploy metadata. Please contact your System Administrator.</value>
     </labels>
     <labels>
-        <fullName>FEC_Refresh_Data</fullName>
+        <fullName>FEC_Error_Record_ID_Required</fullName>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>Auto-generated label</shortDescription>
-        <value>Refresh Data</value>
+        <shortDescription>Record ID required</shortDescription>
+        <value>Record ID must not be empty</value>
     </labels>
     <labels>
-        <fullName>FEC_Reg_No_Label</fullName>
+        <fullName>FEC_Error_Required_Fields_Empty</fullName>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>FEC_Reg_No_Label</shortDescription>
-        <value>Reg No.</value>
+        <shortDescription>Required fields cannot be empty</shortDescription>
+        <value>Required fields cannot be empty or contain only spaces.</value>
     </labels>
     <labels>
-        <fullName>FEC_Registration_Email</fullName>
+        <fullName>FEC_Error_Required_Stage_Fields</fullName>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>Registration Email</shortDescription>
-        <value>Registration Email</value>
+        <shortDescription>Required stage fields validation</shortDescription>
+        <value>Previous Stage, Action Button, and Next Stage are required</value>
     </labels>
     <labels>
-        <fullName>FEC_Registration_Info_Label</fullName>
-        <categories>Customer Info</categories>
+        <fullName>FEC_Error_Save_Data_To_System</fullName>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>Registration Info Label</shortDescription>
-        <value>Registration Info</value>
+        <shortDescription>Error saving data to system</shortDescription>
+        <value>Error saving data to system:</value>
     </labels>
     <labels>
-        <fullName>FEC_Registration_Phone</fullName>
+        <fullName>FEC_Error_Save_Rule</fullName>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>Registration Phone</shortDescription>
-        <value>Registration Phone</value>
+        <shortDescription>Error saving rule</shortDescription>
+        <value>Error saving Rule:</value>
     </labels>
     <labels>
-        <fullName>FEC_RelevantCaseListViewAll_Label</fullName>
+        <fullName>FEC_Error_Special_Characters_Channel_ID</fullName>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>Relevant Case List View All Label</shortDescription>
-        <value>View All Relevant Cases</value>
+        <shortDescription>Special characters not allowed for Channel ID</shortDescription>
+        <value>Special characters are not allowed for Channel ID.</value>
     </labels>
     <labels>
-        <fullName>FEC_RelevantTicket_Action_Not_Allowed</fullName>
+        <fullName>FEC_Error_Special_Characters_ID</fullName>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>Relevant Ticket action not allowed message</shortDescription>
-        <value>Bạn không thể thực hiện Action ở màn hình này</value>
+        <shortDescription>Special characters not allowed for ID field</shortDescription>
+        <value>Special characters are not allowed for ID field.</value>
     </labels>
     <labels>
-        <fullName>FEC_RelevantTicket_Cannot_Delete</fullName>
+        <fullName>FEC_Label_Auto_Field_Creator_Title</fullName>
+        <categories>MDM Auto Field Creator</categories>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>Relevant Ticket cannot delete</shortDescription>
-        <value>Không thể xóa Ticket đã liên kết</value>
+        <shortDescription>Auto Field Creator modal title</shortDescription>
+        <value>Auto Field Creator</value>
     </labels>
     <labels>
-        <fullName>FEC_RelevantTicket_Case_Not_Found</fullName>
+        <fullName>FEC_Label_Case_Channel</fullName>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>Relevant Ticket case not found error</shortDescription>
-        <value>Could not determine the current Case. Please try again.</value>
+        <shortDescription>Case Channel</shortDescription>
+        <value>Case Channel</value>
     </labels>
     <labels>
-        <fullName>FEC_RelevantTicket_Field_Interaction</fullName>
+        <fullName>FEC_Label_Data_Integration</fullName>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>Relevant Ticket interaction field label</shortDescription>
-        <value>Interaction/ Case</value>
+        <shortDescription>Data Integration Mapping</shortDescription>
+        <value>Data Integration Mapping</value>
     </labels>
     <labels>
-        <fullName>FEC_RelevantTicket_No_Results</fullName>
+        <fullName>FEC_Label_Deploy_Failed</fullName>
+        <categories>MDM Auto Field Creator</categories>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>Relevant Ticket no results message</shortDescription>
-        <value>No results found.</value>
+        <shortDescription>Deploy failed status</shortDescription>
+        <value>Field deployment failed. Please try again.</value>
     </labels>
     <labels>
-        <fullName>FEC_RelevantTicket_Save_Error</fullName>
+        <fullName>FEC_Label_Deploy_In_Progress</fullName>
+        <categories>MDM Auto Field Creator</categories>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>Relevant Ticket save error</shortDescription>
-        <value>An error occurred while saving. Please try again.</value>
+        <shortDescription>Deploy in progress status</shortDescription>
+        <value>Deploying field...</value>
     </labels>
     <labels>
-        <fullName>FEC_RelevantTicket_Save_Success</fullName>
+        <fullName>FEC_Label_Deploy_Success</fullName>
+        <categories>MDM Auto Field Creator</categories>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>Relevant Ticket save success</shortDescription>
-        <value>Relevant Ticket was created successfully.</value>
+        <shortDescription>Deploy success status</shortDescription>
+        <value>Field deployed successfully.</value>
     </labels>
     <labels>
-        <fullName>FEC_RelevantTicket_Search_Placeholder</fullName>
+        <fullName>FEC_Label_Editable_User_Group</fullName>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>Relevant Ticket search placeholder</shortDescription>
-        <value>Search by Case Number or ID...</value>
+        <shortDescription>Editable User Group</shortDescription>
+        <value>Editable User Group</value>
     </labels>
     <labels>
-        <fullName>FEC_RelevantTicket_Section_Information</fullName>
+        <fullName>FEC_Label_Masking</fullName>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>Relevant Ticket section header</shortDescription>
-        <value>Relevant Ticket Information</value>
+        <shortDescription>Masking</shortDescription>
+        <value>Masking</value>
     </labels>
     <labels>
-        <fullName>FEC_RelevantTicket_Select_Required</fullName>
+        <fullName>FEC_Label_Masking_Type</fullName>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>Relevant Ticket select required error</shortDescription>
-        <value>Please select an Interaction.</value>
+        <shortDescription>Masking Type</shortDescription>
+        <value>Masking Type</value>
     </labels>
     <labels>
-        <fullName>FEC_RelevantTicket_Title</fullName>
+        <fullName>FEC_Label_Node_Detail_Title</fullName>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>Relevant Ticket modal title</shortDescription>
-        <value>New Relevant Ticket</value>
+        <shortDescription>Node Detail panel title</shortDescription>
+        <value>Node Detail</value>
     </labels>
     <labels>
-        <fullName>FEC_Relevant_Cases_Label</fullName>
+        <fullName>FEC_Label_Push_To_Live</fullName>
+        <categories>MDM Auto Field Creator</categories>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>Relevant Cases</shortDescription>
-        <value>Relevant Cases</value>
+        <shortDescription>Push to Live button label</shortDescription>
+        <value>Push to Live</value>
     </labels>
     <labels>
-        <fullName>FEC_Relevant_Interactions_Label</fullName>
+        <fullName>FEC_Label_Reverted</fullName>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>Relevant Interactions</shortDescription>
-        <value>Relevant Interactions</value>
+        <shortDescription>Reverted</shortDescription>
+        <value>Reverted</value>
     </labels>
     <labels>
-        <fullName>FEC_Remark</fullName>
-        <categories>fec_MRC</categories>
+        <fullName>FEC_Label_Sub_Section</fullName>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>FEC_Remark</shortDescription>
-        <value>Remark</value>
+        <shortDescription>Sub Section</shortDescription>
+        <value>Sub Section</value>
     </labels>
     <labels>
-        <fullName>FEC_RemarkMsg</fullName>
+        <fullName>FEC_Label_Sub_Section_Field_Layout</fullName>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>FEC_RemarkMsg</shortDescription>
-        <value>Yêu cầu được tự động chuyển trạng thái Resolved-AutoCancelled theo quy trình tự động kết thúc tương tác cuối ngày</value>
+        <shortDescription>Sub Section Field Layout</shortDescription>
+        <value>Sub Section Field Layout</value>
     </labels>
     <labels>
-        <fullName>FEC_Remark_Label</fullName>
-        <categories>Case</categories>
+        <fullName>FEC_Label_Sub_Section_Layout</fullName>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>Remark column label</shortDescription>
-        <value>Remark</value>
+        <shortDescription>Sub Section Layout</shortDescription>
+        <value>Sub Section Layout</value>
     </labels>
     <labels>
-        <fullName>FEC_Repay_Booking_Date_Label</fullName>
-        <categories>Account Info</categories>
+        <fullName>FEC_Label_Sub_Section_Order</fullName>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>Booking Date</shortDescription>
-        <value>Booking Date</value>
+        <shortDescription>Sub Section Order</shortDescription>
+        <value>Sub Section Order</value>
     </labels>
     <labels>
-        <fullName>FEC_Repay_Closing_Principal_Label</fullName>
-        <categories>Account Info</categories>
+        <fullName>FEC_MDM_Sync_Admin_Emails</fullName>
+        <categories>MDM</categories>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>Closing Principal</shortDescription>
-        <value>Closing Principal</value>
+        <shortDescription>MDM Sync Admin Email Recipients</shortDescription>
+        <value>dat.ngo.1@fecredit.com.vn,long.nguyen.50@fecredit.com.vn</value>
     </labels>
     <labels>
-        <fullName>FEC_Repay_EMI_Label</fullName>
-        <categories>Account Info</categories>
+        <fullName>FEC_Manage_Mapping</fullName>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>EMI (Repayment Schedule)</shortDescription>
-        <value>EMI</value>
+        <shortDescription>Manage Mapping</shortDescription>
+        <value>Manage Mapping</value>
     </labels>
     <labels>
-        <fullName>FEC_Repay_Installment_Amount_Label</fullName>
-        <categories>Account Info</categories>
+        <fullName>FEC_Map_Properties_Card_Title</fullName>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>Installment Amount</shortDescription>
-        <value>Installment Amount</value>
+        <shortDescription>Map A Properties To Master Data Item</shortDescription>
+        <value>Map A Properties To Master Data Item</value>
     </labels>
     <labels>
-        <fullName>FEC_Repay_Installment_Due_Date_Label</fullName>
-        <categories>Account Info</categories>
+        <fullName>FEC_Map_Properties_Col_Channel</fullName>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>Installment Due Date</shortDescription>
-        <value>Installment Due Date</value>
+        <shortDescription>Integrating Channel</shortDescription>
+        <value>Integrating Channel</value>
     </labels>
     <labels>
-        <fullName>FEC_Repay_Installment_No_Label</fullName>
-        <categories>Account Info</categories>
+        <fullName>FEC_Map_Properties_Col_Property_ID</fullName>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>Installment No (Repay Schedule / Payment History)</shortDescription>
-        <value>Installment No.</value>
+        <shortDescription>Integrating Property ID</shortDescription>
+        <value>Integrating Property ID</value>
     </labels>
     <labels>
-        <fullName>FEC_Repay_Interest_Label</fullName>
-        <categories>Account Info</categories>
+        <fullName>FEC_Map_Properties_Col_User_Type</fullName>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>Interest</shortDescription>
-        <value>Interest</value>
+        <shortDescription>UserTypeId</shortDescription>
+        <value>UserTypeId</value>
     </labels>
     <labels>
-        <fullName>FEC_Repay_No_Data_Label</fullName>
-        <categories>Account Info</categories>
-        <language>en_US</language>
+        <fullName>FEC_Msg_HistoryFieldCreated</fullName>
+        <language>vi</language>
         <protected>false</protected>
-        <shortDescription>No data (Repayment Schedule / Payment History)</shortDescription>
-        <value>No data</value>
+        <shortDescription>History field name for record creation</shortDescription>
+        <value>Khởi tạo</value>
     </labels>
     <labels>
-        <fullName>FEC_Repay_Opening_Principal_Label</fullName>
-        <categories>Account Info</categories>
-        <language>en_US</language>
+        <fullName>FEC_Msg_NewRecordCreated</fullName>
+        <language>vi</language>
         <protected>false</protected>
-        <shortDescription>Opening Principal</shortDescription>
-        <value>Opening Principal</value>
+        <shortDescription>History new value for record creation</shortDescription>
+        <value>Tạo bản ghi mới</value>
     </labels>
     <labels>
-        <fullName>FEC_Repay_Particulars_Label</fullName>
-        <categories>Account Info</categories>
+        <fullName>FEC_No_Data_Found</fullName>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>Particulars</shortDescription>
-        <value>Particulars</value>
+        <shortDescription>No data found message</shortDescription>
+        <value>No matching records found.</value>
     </labels>
     <labels>
-        <fullName>FEC_Repay_Payment_Amount_Label</fullName>
-        <categories>Account Info</categories>
+        <fullName>FEC_Page_Info</fullName>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>Payment Amount</shortDescription>
-        <value>Payment Amount</value>
+        <shortDescription>Page info display</shortDescription>
+        <value>Page {0} of {1} ({2} records)</value>
     </labels>
     <labels>
-        <fullName>FEC_Repay_Payment_Channel_Label</fullName>
-        <categories>Account Info</categories>
+        <fullName>FEC_Review_Changes_Summary</fullName>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>Payment Channel</shortDescription>
-        <value>Payment Channel</value>
+        <shortDescription>Changes Summary</shortDescription>
+        <value>Changes Summary</value>
     </labels>
     <labels>
-        <fullName>FEC_Repay_Payment_Date_Label</fullName>
-        <categories>Account Info</categories>
+        <fullName>FEC_Review_Diff_Count</fullName>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>Payment Date</shortDescription>
-        <value>Payment Date</value>
+        <shortDescription>Differences count</shortDescription>
+        <value>differences</value>
     </labels>
     <labels>
-        <fullName>FEC_Repay_Payment_No_Label</fullName>
-        <categories>Account Info</categories>
+        <fullName>FEC_Review_Field_Name</fullName>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>Payment No.</shortDescription>
-        <value>Payment No.</value>
+        <shortDescription>Field Name</shortDescription>
+        <value>Field Name</value>
     </labels>
     <labels>
-        <fullName>FEC_Repay_Principal_Label</fullName>
-        <categories>Account Info</categories>
+        <fullName>FEC_Review_Live_Value</fullName>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>Principal</shortDescription>
-        <value>Principal</value>
+        <shortDescription>Live Value</shortDescription>
+        <value>Live (Current)</value>
     </labels>
     <labels>
-        <fullName>FEC_Repay_Refresh_Button_Label</fullName>
-        <categories>Account Info</categories>
+        <fullName>FEC_Review_MDM_Value</fullName>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>Refresh button (Real-Time Payment)</shortDescription>
-        <value>Refresh</value>
+        <shortDescription>MDM Value</shortDescription>
+        <value>MDM (Staging)</value>
     </labels>
     <labels>
-        <fullName>FEC_Repay_Repayment_Fee_Label</fullName>
-        <categories>Account Info</categories>
+        <fullName>FEC_Rows_Per_Page</fullName>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>Repayment Fee</shortDescription>
-        <value>Repayment Fee</value>
+        <shortDescription>Rows per page label</shortDescription>
+        <value>Rows per page</value>
     </labels>
     <labels>
-        <fullName>FEC_Repay_Total_Installment_Amount_Label</fullName>
-        <categories>Account Info</categories>
+        <fullName>FEC_Search_All_Columns</fullName>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>Total Installment Amount (Repayment Schedule)</shortDescription>
-        <value>Total Installment Amount</value>
+        <shortDescription>Search all columns placeholder</shortDescription>
+        <value>Search all columns...</value>
     </labels>
     <labels>
-        <fullName>FEC_Repay_Total_Interest_Label</fullName>
-        <categories>Account Info</categories>
+        <fullName>FEC_Search_Placeholder</fullName>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>Total Interest (Repayment Schedule)</shortDescription>
-        <value>Total Interest</value>
+        <shortDescription>Search placeholder text</shortDescription>
+        <value>Search by ID or Name...</value>
     </labels>
     <labels>
-        <fullName>FEC_Repay_Total_Payment_Amount_Label</fullName>
-        <categories>Account Info</categories>
+        <fullName>FEC_Warning_Delete_New_Only</fullName>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>Total Payment Amount (Payment History)</shortDescription>
-        <value>Total Payment Amount</value>
+        <shortDescription>Warning: only New status records can be deleted</shortDescription>
+        <value>Only records with Process Status &quot;New&quot; can be deleted.</value>
     </labels>
     <labels>
         <fullName>FEC_Repay_Total_Principal_Label</fullName>
@@ -15453,11 +15412,12 @@
         <value>TSA Name</value>
     </labels>
     <labels>
-        <fullName>FEC_Tab_Action_Button</fullName>
+        <fullName>FEC_MSG_Unknown_Sys_Code</fullName>
+        <categories>API</categories>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>FEC Tab Action Button</shortDescription>
-        <value>Action Button</value>
+        <shortDescription>Unrecognized Sys.Code in SOAP response</shortDescription>
+        <value>Unknown system response code: {0}</value>
     </labels>
     <labels>
         <fullName>FEC_Tab_Additional_Field</fullName>
@@ -15692,53 +15652,44 @@
         <value>Enhanced Letterhead</value>
     </labels>
     <labels>
-        <fullName>FEC_Template_History_Tab</fullName>
-        <language>vi</language>
-        <protected>false</protected>
-        <shortDescription>Template History tab label</shortDescription>
-        <value>Template History Tracking</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Template_ID</fullName>
+        <fullName>FEC_PDF_DefaultFileName</fullName>
+        <categories>PDF</categories>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>Template ID</shortDescription>
-        <value>Template ID</value>
+        <shortDescription>PDF Default File Name</shortDescription>
+        <value>Document</value>
     </labels>
     <labels>
-        <fullName>FEC_Template_Management_Title</fullName>
+        <fullName>FEC_PDF_Error_DataEmpty</fullName>
+        <categories>PDF</categories>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>Template Management page title</shortDescription>
-        <value>Templates</value>
+        <shortDescription>PDF Error Data Empty</shortDescription>
+        <value>Dữ liệu PDF không được để trống.</value>
     </labels>
     <labels>
-        <fullName>FEC_Template_Not_Found</fullName>
+        <fullName>FEC_PDF_Error_NoCreatePermission</fullName>
+        <categories>PDF</categories>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>Template Not Found</shortDescription>
-        <value>Không tìm thấy template.</value>
+        <shortDescription>PDF Error No Create Permission</shortDescription>
+        <value>Không có quyền tạo file. Vui lòng liên hệ Admin.</value>
     </labels>
     <labels>
-        <fullName>FEC_Template_Required_Fields_Msg</fullName>
+        <fullName>FEC_PDF_Error_NoLinkPermission</fullName>
+        <categories>PDF</categories>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>Required fields validation message</shortDescription>
-        <value>These required fields must be completed: {0}</value>
+        <shortDescription>PDF Error No Link Permission</shortDescription>
+        <value>Không có quyền liên kết file. Vui lòng liên hệ Admin.</value>
     </labels>
     <labels>
-        <fullName>FEC_Template_Save_And_Close</fullName>
-        <language>vi</language>
-        <protected>false</protected>
-        <shortDescription>Save and Close button label</shortDescription>
-        <value>Save &amp; Close</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Template_Save_And_New</fullName>
+        <fullName>FEC_PDF_Error_TemplateNotFound</fullName>
+        <categories>PDF</categories>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>Save and New button label</shortDescription>
-        <value>Save &amp; New</value>
+        <shortDescription>PDF Error Template Not Found</shortDescription>
+        <value>Không tìm thấy template: {0}</value>
     </labels>
     <labels>
         <fullName>FEC_Template_Saved_Success</fullName>
@@ -16091,11 +16042,11 @@
         <value>An error occurred while saving.</value>
     </labels>
     <labels>
-        <fullName>FEC_Toast_Save_Error_Title</fullName>
+        <fullName>FEC_Effective_Date</fullName>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>Auto-generated label</shortDescription>
-        <value>Error</value>
+        <shortDescription>Effective Date</shortDescription>
+        <value>Effective Date</value>
     </labels>
     <labels>
         <fullName>FEC_Toast_Save_Success</fullName>
@@ -16175,20 +16126,20 @@
         <value>Click to Deactivate</value>
     </labels>
     <labels>
-        <fullName>FEC_Total_Accrued_Interest_Label</fullName>
-        <categories>Account Info</categories>
+        <fullName>FEC_Collections_Transfer_Failed_Summary</fullName>
+        <categories>Label</categories>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>Total Accrued Interest Label</shortDescription>
-        <value>Total Accrued Interest</value>
+        <shortDescription>Transfer Collections thất bại — dòng tóm tắt (đỏ đậm)</shortDescription>
+        <value>Chuyển thông tin khách hàng tới hệ thống Collections thất bại. Vui lòng thử lại</value>
     </labels>
     <labels>
-        <fullName>FEC_Total_Close_Fee_Amount_Label</fullName>
-        <categories>Account Info</categories>
+        <fullName>FEC_Notification_16_Collections_Transfer_Success</fullName>
+        <categories>Label</categories>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>Total Close Fee Amount Label</shortDescription>
-        <value>Total Close Fee Amount</value>
+        <shortDescription>Noti-16: chuyển KH tới Collections thành công</shortDescription>
+        <value>Chuyển thông tin khách hàng tới hệ thống Collections thành công.</value>
     </labels>
     <labels>
         <fullName>FEC_Total_Current_Balance_Label</fullName>
@@ -16348,8 +16299,8 @@
         <categories>Label</categories>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>TransferCall: nút/tiêu đề modal Transfer Data to Collection</shortDescription>
-        <value>Transfer Data to Collection</value>
+        <shortDescription>Hold Case Save Success</shortDescription>
+        <value>Hold Case Config was created </value>
     </labels>
     <labels>
         <fullName>FEC_TransferCall_Details_Title</fullName>
@@ -16424,12 +16375,11 @@
         <value>Transfer Status</value>
     </labels>
     <labels>
-        <fullName>FEC_TransferCall_Field_TransferTime</fullName>
-        <categories>Label</categories>
+        <fullName>CS_OrgChart_Table_UserTable_UserRole_Column</fullName>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>TransferCall: nhãn Transfer Time</shortDescription>
-        <value>Transfer Time</value>
+        <shortDescription>Table</shortDescription>
+        <value>User Role</value>
     </labels>
     <labels>
         <fullName>FEC_TransferCall_Modal_ConfirmMessage</fullName>
@@ -16476,24 +16426,24 @@
         <categories>Label</categories>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>TransferCall: tiêu đề phụ Transfer Call</shortDescription>
-        <value>Transfer Call</value>
+        <shortDescription>API Code</shortDescription>
+        <value>API Code: </value>
     </labels>
     <labels>
         <fullName>FEC_Transfer_Err_Category_Null</fullName>
         <categories>Label</categories>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>Transfer Collections: Category trống</shortDescription>
-        <value>Category không có giá trị.</value>
+        <shortDescription>Description</shortDescription>
+        <value>Description: </value>
     </labels>
     <labels>
         <fullName>FEC_Transfer_Err_CsCaseId_Null</fullName>
         <categories>Label</categories>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>Transfer Collections: Case ID trống</shortDescription>
-        <value>Case ID không có giá trị.</value>
+        <shortDescription>Parsing Error</shortDescription>
+        <value>Parsing Error: </value>
     </labels>
     <labels>
         <fullName>FEC_Transfer_Err_ExtAppId_Null</fullName>
@@ -17119,8 +17069,8 @@
         <fullName>LBL_API_Invalid_Fraud_Case_Update_Success</fullName>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>Fraud case updated successfully</shortDescription>
-        <value>Fraud case updated successfully</value>
+        <shortDescription>FEC_BCH_BpItemsSortedSuffix</shortDescription>
+        <value> • Sorted by Business Process Name</value>
     </labels>
     <labels>
         <fullName>LBL_API_Invalid_Service_Case_Existing</fullName>
@@ -18040,11 +17990,12 @@
         <value>Loại vi phạm</value>
     </labels>
     <labels>
-        <fullName>LBL_SaveFailed</fullName>
+        <fullName>FEC_Transfer_Err_Remark_Null</fullName>
+        <categories>Label</categories>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>Save mapping failed message</shortDescription>
-        <value>Save failed</value>
+        <shortDescription>Transfer Collections: Remark trống</shortDescription>
+        <value>Remarks for Collections không có giá trị.</value>
     </labels>
     <labels>
         <fullName>LBL_SaveSuccess</fullName>
@@ -18106,8 +18057,8 @@
         <fullName>LBL_Service_Call_Logs_Description</fullName>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>Description</shortDescription>
-        <value>Description</value>
+        <shortDescription>Format Exce</shortDescription>
+        <value> Excel Format .xlsx</value>
     </labels>
     <labels>
         <fullName>LBL_Service_Call_Logs_EndDateTime</fullName>
@@ -18568,5 +18519,96 @@
         <protected>false</protected>
         <shortDescription>Label</shortDescription>
         <value>No Case Found</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Error_Stage_Id_Null</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Stage ID cannot be null</shortDescription>
+        <value>Stage ID cannot be null.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Error_Stage_ActionButton_Null</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Stage ID and Action Button ID cannot be null</shortDescription>
+        <value>Stage ID and Action Button ID cannot be null.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Error_StageScreen_Id_Null</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Stage Screen ID cannot be null</shortDescription>
+        <value>Stage Screen ID cannot be null.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Error_Parent_Duplicate_Check</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Error checking parent duplicate</shortDescription>
+        <value>Error checking parent duplicate:</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Error_ActionButton_Duplicate</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Action Button already linked to this stage</shortDescription>
+        <value>Action Button này đã được gắn cho stage này</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Error_FLS_Denied</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Friendly error thrown by getServiceTypeTree when FLS/CRUD denial is detected</shortDescription>
+        <value>You do not have permission to view some required fields. Please contact your administrator.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Error_Invalid_Sobject_Allowlist</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Invalid sObject not in allowlist</shortDescription>
+        <value>Invalid sObject. Only allowed objects can be queried.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Error_Record_Id_Empty</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Record ID cannot be empty</shortDescription>
+        <value>Record ID cannot be empty</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Error_Record_Not_Found</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Record not found</shortDescription>
+        <value>Record not found</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Error_Stage_Name_Empty</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Stage name cannot be empty</shortDescription>
+        <value>Stage name cannot be empty.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Error_Stage_Not_Found</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Stage not found</shortDescription>
+        <value>Stage not found</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Group_CaseFields</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Group label for direct Case fields in field picker</shortDescription>
+        <value>Case Fields</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Label_NoStage</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Virtual stage node for settings without a Stage assignment</shortDescription>
+        <value>(No Stage)</value>
     </labels>
 </CustomLabels>
