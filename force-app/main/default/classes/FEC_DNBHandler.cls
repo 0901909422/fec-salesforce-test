@@ -175,7 +175,7 @@ public without sharing class FEC_DNBHandler {
                 req.do_not_bother = (Boolean) item.get('do_not_bother');
                 req.type = (String) item.get('type');
                 req.type_value = (String) item.get('type_value');
-                req.contract_id = (String) item.get('contract_id');
+                // req.contract_id = (String) item.get('contract_id');
                 reqList.add(req);
             }
             
@@ -359,8 +359,9 @@ public without sharing class FEC_DNBHandler {
         FEC_GetDNBCalloutService.DNBRequest req =
             new FEC_GetDNBCalloutService.DNBRequest();
         
-        req.phone = String.isNotBlank(caseRecord[0].FEC_Phone_Number__c)
-            ? normalizePhone(caseRecord[0].FEC_Phone_Number__c)
+        req.phone =
+            caseRecord[0].FEC_Interaction__r != null
+            ? normalizePhone(caseRecord[0].FEC_Interaction__r.FEC_Phone_Number__c)
             : '';
         
         req.nid =
@@ -538,33 +539,48 @@ public without sharing class FEC_DNBHandler {
         
         // ===== Check existing =====
         List<FEC_Do_Not_Bother__c> existingDNB = [
-      SELECT Id FROM FEC_Do_Not_Bother__c WHERE FEC_Case__c = : caseId LIMIT 1
-    ];
+            SELECT Id
+            FROM FEC_Do_Not_Bother__c
+            WHERE FEC_Case__c = :caseId
+            LIMIT 1
+        ];
         
         // ===== Get Case =====
+        // ===== Get Case =====
         List<Case> caseRecord = [
-      SELECT Id, FEC_Phone_Number__c, FEC_Interaction__c,
-      FEC_Interaction__r.FEC_Phone_Number__c,
-      FEC_Interaction__r.FEC_Interaction_Email__c,
-      FEC_Account_or_Contract__r.FEC_National_ID_Passport_ID__c FROM Case WHERE
-          Id = : caseId LIMIT 1
-    ];
+            SELECT Id,
+                FEC_Case_Phone_Number__c,
+                FEC_Interaction__r.FEC_Phone_Number__c, 
+                FEC_Interaction__r.FEC_Interaction_Email__c, 
+                FEC_Case_Email__c,
+                FEC_National_ID_Passport_ID__c
+            FROM Case
+            WHERE Id = :caseId
+            LIMIT 1
+        ];
+        
         
         // ===== Build request =====
         FEC_GetDNBCalloutService.DNBRequest req =
             new FEC_GetDNBCalloutService.DNBRequest();
         
-        req.phone = String.isNotBlank(caseRecord[0].FEC_Phone_Number__c)
-            ? normalizePhone(caseRecord[0].FEC_Phone_Number__c)
+        req.phone =
+            String.isNotBlank(caseRecord[0].FEC_Case_Phone_Number__c)
+            ? normalizePhone(caseRecord[0].FEC_Case_Phone_Number__c)
             : '';
         
-        req.nid = nid;
+        req.nid =
+            String.isNotBlank(nid)
+            ? nid.trim()
+            : (
+            String.isNotBlank(caseRecord[0].FEC_National_ID_Passport_ID__c)
+            ? caseRecord[0].FEC_National_ID_Passport_ID__c.trim()
+            : ''
+            );
         
         req.email =
-            (caseRecord[0].FEC_Interaction__r != null
-            && String.isNotBlank(
-            caseRecord[0].FEC_Interaction__r.FEC_Interaction_Email__c))
-            ? caseRecord[0].FEC_Interaction__r.FEC_Interaction_Email__c
+            String.isNotBlank(caseRecord[0].FEC_Case_Email__c)
+            ? caseRecord[0].FEC_Case_Email__c.trim()
             : '';
         
         // ===== Call API =====
@@ -710,7 +726,7 @@ public without sharing class FEC_DNBHandler {
         // ===== Get Case =====
         List<Case> caseRecords = [
       SELECT Id, FEC_Phone_Number__c,FEC_Account_or_Contract__r.FEC_Search_Result_National_ID__c,
-      FEC_Interaction__r.FEC_Interaction_Email__c FROM Case WHERE
+      FEC_Interaction__r.FEC_Interaction_Email__c, FEC_Interaction__r.FEC_Phone_Number__c FROM Case WHERE
           Id = : caseId LIMIT 1
     ];
         
@@ -720,9 +736,6 @@ public without sharing class FEC_DNBHandler {
         FEC_GetDNBCalloutService.DNBRequest req =
             new FEC_GetDNBCalloutService.DNBRequest();
         
-        req.phone = String.isNotBlank(caseRecord.FEC_Phone_Number__c)
-            ? normalizePhone(caseRecord.FEC_Phone_Number__c)
-            : '';
         
         req.nid =  caseRecord.FEC_Account_or_Contract__r.FEC_Search_Result_National_ID__c != null
             ? caseRecord.FEC_Account_or_Contract__r.FEC_Search_Result_National_ID__c
@@ -730,6 +743,10 @@ public without sharing class FEC_DNBHandler {
         
         req.email = caseRecord.FEC_Interaction__r != null && caseRecord.FEC_Interaction__r.FEC_Interaction_Email__c != null
             ? caseRecord.FEC_Interaction__r.FEC_Interaction_Email__c
+            : '';
+        
+        req.phone = caseRecord.FEC_Interaction__r != null && caseRecord.FEC_Interaction__r.FEC_Phone_Number__c != null
+            ? normalizePhone(caseRecord.FEC_Interaction__r.FEC_Phone_Number__c)
             : '';
         
         // ===== Call API =====
@@ -1339,8 +1356,8 @@ public without sharing class FEC_DNBHandler {
             ? caseRecord.FEC_Interaction__r.FEC_Phone_Number__c
             : null);
         
-        String email = caseRecord.FEC_Case_Email__c != null
-            ? caseRecord.FEC_Case_Email__c
+        String email = caseRecord.FEC_Interaction__r != null
+            ? caseRecord.FEC_Interaction__r.FEC_Interaction_Email__c
             : null;
         
         /*
@@ -1484,7 +1501,9 @@ public without sharing class FEC_DNBHandler {
          */
         FEC_GetDNBCalloutService.DNBResult res = checkDNB(
             
-        caseRecord.FEC_Phone_Number__c,
+        caseRecord.FEC_Interaction__r != null
+            ? caseRecord.FEC_Interaction__r.FEC_Phone_Number__c
+            : null,
         
         caseRecord.FEC_Account_or_Contract__r.FEC_Search_Result_National_ID__c,
         
