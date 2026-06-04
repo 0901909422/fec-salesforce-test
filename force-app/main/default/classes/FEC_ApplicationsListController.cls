@@ -108,6 +108,17 @@ public without sharing class FEC_ApplicationsListController {
 
         if (cusRes == null || cusRes.Customers == null) return;
 
+        // Cache Province/District maps ONCE before loop (avoid SOQL-in-loop)
+        Map<String, String> cityMap = new Map<String, String>();
+        for (FEC_Province__c c : [SELECT Name, FEC_Code__c, FEC_Name_VN__c FROM FEC_Province__c]) {
+            cityMap.put(c.FEC_Code__c, c.FEC_Name_VN__c);
+        }
+
+        Map<String, String> districtMap = new Map<String, String>();
+        for (FEC_District__c d : [SELECT Name, FEC_Code__c, FEC_Name_VN__c FROM FEC_District__c]) {
+            districtMap.put(d.FEC_Code__c, d.FEC_Name_VN__c);
+        }
+
         for (FEC_GetCustomerList.Customer cus : cusRes.Customers) {
 
             if (cus.Applications == null) continue;
@@ -164,15 +175,8 @@ public without sharing class FEC_ApplicationsListController {
                     addrRes = null;
                 }
 
-                Map<String, String> cityMap = new Map<String, String>();
-                for (FEC_Province__c c : [SELECT Name, FEC_Code__c,FEC_Name_VN__c FROM FEC_Province__c]) {
-                    cityMap.put(c.FEC_Code__c, c.FEC_Name_VN__c);
-                }
-
-                Map<String, String> districtMap = new Map<String, String>();
-                for (FEC_District__c d : [SELECT Name, FEC_Code__c,FEC_Name_VN__c FROM FEC_District__c]) {
-                    districtMap.put(d.FEC_Code__c, d.FEC_Name_VN__c);
-                }
+                // Province/District maps already cached outside loop
+                // (moved to avoid SOQL-in-loop governor limit violation)
 
             for (FEC_GetApplicationsList.ApplicationInfo st: statusRes.Applications) {
                 String accountNumbers = FEC_ConstantCommon.STR_NA;

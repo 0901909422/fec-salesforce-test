@@ -95,7 +95,7 @@ private class FEC_CaseBusinessService_Test {
             insert teamCc;
             insert new FEC_Team_Queue__c(
                 FEC_Queue_Name__c = 'CS_Frontline_Queue',
-                Team__c = teamCc.Id,
+                FEC_Select_Team__c = teamCc.Id,
                 FEC_Team__c = 'CC'
             );
 

@@ -1,0 +1,33 @@
+{
+    "orgName": "GitLab Pipelines",
+    "edition": "Developer",
+    "features": [
+        "Knowledge",
+        "ServiceCloud",
+        "Communities",
+        "MultiCurrency",
+        "LightningSalesConsole",
+        "LightningServiceConsole"
+    ],
+    "settings": {
+        "knowledgeSettings": {
+            "enableKnowledge": true
+        },
+        "caseSettings": {
+            "systemUserEmail": "admin@fec.scratch.org"
+        },
+        "omniChannelSettings": {
+            "enableOmniChannel": true
+        },
+        "languageSettings": {
+            "enableTranslationWorkbench": true,
+            "enableEndUserLanguages": true
+        },
+        "chatterSettings": {
+            "enableChatter": true
+        },
+        "enhancedNotesSettings": {
+            "enableEnhancedNotes": true
+        }
+    }
+}

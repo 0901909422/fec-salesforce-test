@@ -175,7 +175,6 @@
         <excludedStandardButtons>MassChangeOwner</excludedStandardButtons>
         <excludedStandardButtons>PrintableListView</excludedStandardButtons>
         <excludedStandardButtons>MassAssignRecordLabel</excludedStandardButtons>
-        <excludedStandardButtons>OmniChannelMassRouteWork</excludedStandardButtons>
         <listViewButtons>FEC_Download</listViewButtons>
     </searchLayouts>
     <sharingModel>ReadWrite</sharingModel>

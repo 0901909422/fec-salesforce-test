@@ -35,7 +35,7 @@ private class FEC_AssignmentController_Test {
 
         insert new FEC_Team_Queue__c(
             FEC_Queue_Name__c = QUEUE_DEV_NAME,
-            Team__c = team.Id,
+            FEC_Select_Team__c = team.Id,
             FEC_Team__c = TARGET_TEAM
         );
     }
@@ -100,9 +100,15 @@ private class FEC_AssignmentController_Test {
 
     @IsTest
     static void handle_nullOrEmpty_noOp() {
-        FEC_AssignmentController.handle(null);
-        FEC_AssignmentController.handle(new List<FEC_Routing_Action_History__c>());
-        System.assert(true);
+        // Verify no exceptions thrown when handling null or empty list
+        Boolean exceptionThrown = false;
+        try {
+            FEC_AssignmentController.handle(null);
+            FEC_AssignmentController.handle(new List<FEC_Routing_Action_History__c>());
+        } catch (Exception e) {
+            exceptionThrown = true;
+        }
+        System.assertEquals(false, exceptionThrown, 'handle() should not throw exception for null or empty input');
     }
 
     @IsTest

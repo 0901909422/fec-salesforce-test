@@ -58,6 +58,8 @@ public without sharing class FEC_RoutingActionHistoryTriggerHandler {
       FEC_RoutingHistTatSvc.queueCaseFullProcessTatAfterSave(newRecords);
       FEC_RoutingHistTatSvc.commitPendingCaseFullProcessTatSync();
       sendNotificationEmails(newRecords);
+      // Moved from trigger body into handler (separation of concerns)
+      FEC_AssignmentController.handle(newRecords);
     } catch (Exception e) {
       throw new RoutingActionHistoryException('Error processing Routing Action History after insert: ' + e.getMessage());
     } finally {
@@ -336,6 +338,8 @@ public without sharing class FEC_RoutingActionHistoryTriggerHandler {
       FEC_RoutingHistTatSvc.queueCaseFullProcessTatAfterSave(newRecords, oldMap);
       FEC_RoutingHistTatSvc.commitPendingCaseFullProcessTatSync();
       sendNotificationEmails(newRecords);
+      // Moved from trigger body into handler (separation of concerns)
+      FEC_AssignmentController.handle(newRecords);
     } finally {
       isExecuting = false;
     }
