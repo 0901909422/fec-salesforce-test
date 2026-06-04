@@ -1,32 +1,23 @@
 {
     "orgName": "GitLab Pipelines Package Validation",
-    "orgName": "GitLab Pipelines Package Validation",
     "edition": "Developer",
     "language": "en_US",
     "features": [
-        "ServiceCloud",
-        "FieldService",
-        "EnhancedNotes"
+        "ServiceCloud"
     ],
     "settings": {
         "languageSettings": {
             "enableTranslationWorkbench": true,
-            "enableEndUserLanguages": true,
-            "enablePlatformLanguages": true
+            "enableEndUserLanguages": true
         },
         "omniChannelSettings": {
-            "enableOmniChannel": true,
-            "enableOmniSkillsRouting": true
+            "enableOmniChannel": true
         },
         "mobileSettings": {
             "enableS1EncryptedStoragePref2": false
         },
-        "caseSettings": {
-            "systemUserEmail": "admin@example.com",
-            "keepRecordTypeOnAssignmentRule": true
-        },
-        "knowledgeSettings": {
-            "enableKnowledge": false
+        "enhancedNotesSettings": {
+            "enableEnhancedNotes": true
         }
     },
     "objectSettings": {
