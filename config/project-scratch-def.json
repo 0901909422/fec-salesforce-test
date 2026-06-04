@@ -4,7 +4,9 @@
     "edition": "Developer",
     "language": "en_US",
     "features": [
-        "ServiceCloud"
+        "ServiceCloud",
+        "FieldService",
+        "EnhancedNotes"
     ],
     "settings": {
         "languageSettings": {
@@ -18,6 +20,13 @@
         },
         "mobileSettings": {
             "enableS1EncryptedStoragePref2": false
+        },
+        "caseSettings": {
+            "systemUserEmail": "admin@example.com",
+            "keepRecordTypeOnAssignmentRule": true
+        },
+        "knowledgeSettings": {
+            "enableKnowledge": false
         }
     },
     "objectSettings": {
