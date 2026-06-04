@@ -79,12 +79,31 @@ public without sharing class FEC_DownloadReportService {
 
             String fileName = today.replace('/', '') + '_' + uniqueName + '.xls';
 
-            ContentVersion cv = new ContentVersion();
-            cv.Title          = today + ' - ' + reportName;
-            cv.PathOnClient   = fileName;
-            cv.VersionData    = Blob.valueOf(excelContent);
-            cv.IsMajorVersion = true;
+            List<FEC_Download_Report__c> existing = [
+                SELECT Id
+                FROM FEC_Download_Report__c
+                WHERE FEC_Report_Unique_Name__c = :uniqueName
+                AND Name LIKE :(today + '%')
+                LIMIT 1
+            ];
 
+            Id reportRecordId;
+            if (!existing.isEmpty()) {
+                reportRecordId = existing[0].Id;
+            } else {
+                FEC_Download_Report__c rec = new FEC_Download_Report__c();
+                rec.Name = today + ' - ' + reportName;
+                rec.FEC_Report_Unique_Name__c = uniqueName;
+                insert rec;
+                reportRecordId = rec.Id;
+            }
+
+            ContentVersion cv = new ContentVersion();
+            cv.Title = today + ' - ' + reportName;
+            cv.PathOnClient = fileName;
+            cv.VersionData = Blob.valueOf(excelContent);
+            cv.IsMajorVersion = true;
+            cv.FirstPublishLocationId = reportRecordId;
             insert cv;
 
             excelContent = null;
@@ -104,28 +123,10 @@ public without sharing class FEC_DownloadReportService {
                 }
             );
 
-            List<FEC_Download_Report__c> existing = [
-                SELECT Id
-                FROM FEC_Download_Report__c
-                WHERE FEC_Report_Unique_Name__c = :uniqueName
-                AND Name LIKE :(today + '%')
-                LIMIT 1
-            ];
-
-            if (!existing.isEmpty()) {
-
-                existing[0].FEC_Link__c = fileLink;
-                update existing[0];
-
-            } else {
-
-                FEC_Download_Report__c rec    = new FEC_Download_Report__c();
-                rec.Name                      = today + ' - ' + reportName;
-                rec.FEC_Report_Unique_Name__c = uniqueName;
-                rec.FEC_Link__c               = fileLink;
-
-                insert rec;
-            }
+            update new FEC_Download_Report__c(
+                Id = reportRecordId,
+                FEC_Link__c = fileLink
+            );
 
         } catch (Exception e) {
             System.debug(e.getMessage());

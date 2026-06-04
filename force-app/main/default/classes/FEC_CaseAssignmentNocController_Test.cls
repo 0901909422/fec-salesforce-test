@@ -215,6 +215,140 @@ private class FEC_CaseAssignmentNocController_Test {
     }
 
     @IsTest
+    static void testGetCategoryOptions_EmptyWhenNoNatureOfCase() {
+        FEC_Product_Type__c orphanProd = new FEC_Product_Type__c(
+            Name = 'Orphan Product',
+            FEC_Code__c = 'ORPH',
+            FEC_Active__c = true
+        );
+        insert orphanProd;
+
+        Test.startTest();
+        List<FEC_CaseAssignmentNocController.OptionItem> emptyOpts =
+            FEC_CaseAssignmentNocController.getCategoryOptions(orphanProd.Id);
+        Test.stopTest();
+
+        System.assertEquals(0, emptyOpts.size(), 'Product type without NOC rows must return empty categories.');
+    }
+
+    @IsTest
+    static void testUpdateNoc_Success() {
+        FEC_Case_Assignment__c draftAssign = [
+            SELECT Id
+            FROM FEC_Case_Assignment__c
+            WHERE Name = 'Draft Case Assignment'
+            LIMIT 1
+        ];
+        FEC_Case_Assignment_NOC__c existingNoc = [
+            SELECT Id
+            FROM FEC_Case_Assignment_NOC__c
+            WHERE FEC_Case_Assignment_Name__c = :draftAssign.Id
+            LIMIT 1
+        ];
+        FEC_Product_Type__c prod = [SELECT Id FROM FEC_Product_Type__c LIMIT 1];
+        FEC_Sub_Category__c subCat = [SELECT Id FROM FEC_Sub_Category__c LIMIT 1];
+        FEC_Sub_Code__c subCode = [SELECT Id FROM FEC_Sub_Code__c LIMIT 1];
+
+        Test.startTest();
+        Id updatedId = FEC_CaseAssignmentNocController.updateNoc(
+            existingNoc.Id,
+            prod.Id,
+            'Request',
+            subCat.Id,
+            subCode.Id
+        );
+        Test.stopTest();
+
+        System.assertEquals(existingNoc.Id, updatedId);
+        FEC_Case_Assignment_NOC__c updated = [
+            SELECT FEC_Sub_Code__c
+            FROM FEC_Case_Assignment_NOC__c
+            WHERE Id = :existingNoc.Id
+        ];
+        System.assertEquals(subCode.Id, updated.FEC_Sub_Code__c);
+    }
+
+    @IsTest
+    static void testUpdateNoc_ValidationFailures() {
+        FEC_Case_Assignment__c activeAssign = [
+            SELECT Id
+            FROM FEC_Case_Assignment__c
+            WHERE Name = 'Active Case Assignment'
+            LIMIT 1
+        ];
+        FEC_Case_Assignment_NOC__c activeNoc = [
+            SELECT Id
+            FROM FEC_Case_Assignment_NOC__c
+            WHERE FEC_Case_Assignment_Name__c = :activeAssign.Id
+            LIMIT 1
+        ];
+        FEC_Product_Type__c prod = [SELECT Id FROM FEC_Product_Type__c LIMIT 1];
+
+        Boolean nullNocThrown = false;
+        Boolean missingNocThrown = false;
+        Boolean notDraftThrown = false;
+
+        Test.startTest();
+        try {
+            FEC_CaseAssignmentNocController.updateNoc(null, prod.Id, 'Request', null, null);
+        } catch (AuraHandledException e) {
+            nullNocThrown = true;
+        }
+
+        try {
+            FEC_CaseAssignmentNocController.updateNoc(
+                Id.valueOf('a04000000000001AAA'),
+                prod.Id,
+                'Request',
+                null,
+                null
+            );
+        } catch (AuraHandledException e) {
+            missingNocThrown = true;
+        }
+
+        try {
+            FEC_CaseAssignmentNocController.updateNoc(activeNoc.Id, prod.Id, 'Request', null, null);
+        } catch (AuraHandledException e) {
+            notDraftThrown = true;
+        }
+        Test.stopTest();
+
+        System.assertEquals(true, nullNocThrown);
+        System.assertEquals(true, missingNocThrown);
+        System.assertEquals(true, notDraftThrown);
+    }
+
+    @IsTest
+    static void testCreateNoc_InvalidCategoryKey() {
+        FEC_Case_Assignment__c draftAssign = [
+            SELECT Id
+            FROM FEC_Case_Assignment__c
+            WHERE Name = 'Draft Case Assignment'
+            LIMIT 1
+        ];
+        FEC_Product_Type__c prod = [SELECT Id FROM FEC_Product_Type__c LIMIT 1];
+
+        Boolean categoryNotFoundThrown = false;
+
+        Test.startTest();
+        try {
+            FEC_CaseAssignmentNocController.createNoc(
+                draftAssign.Id,
+                prod.Id,
+                'NonExistentCategoryKey',
+                null,
+                null
+            );
+        } catch (AuraHandledException e) {
+            categoryNotFoundThrown = true;
+        }
+        Test.stopTest();
+
+        System.assertEquals(true, categoryNotFoundThrown);
+    }
+
+    @IsTest
     static void testDataStructures_CoverageOnly() {
         FEC_Case_Assignment__c draftAssign = [
             SELECT Id

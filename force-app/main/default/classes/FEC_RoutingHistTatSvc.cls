@@ -62,6 +62,7 @@ public without sharing class FEC_RoutingHistTatSvc {
         }
 
         applySubmittedOn(newRows, oldMap);
+        applyUpdatedGroup(newRows, oldMap);
 
         Set<Id> updatingIds = oldMap != null ? oldMap.keySet() : new Set<Id>();
         ensureTxnRahPoolFromDb(caseIds, updatingIds);
@@ -238,9 +239,125 @@ public without sharing class FEC_RoutingHistTatSvc {
     }
 
     /**
-     * TH1 & TH2 (spec 11/05): có FEC_Case__c thì FEC_Submitted_On__c = thời điểm sinh RAH (FEC_Date_Time__c).
-     * Không phân nhánh theo FEC_Assignment__c = null. Insert: offset giây trong batch cho thứ tự Assigned On.
+     * Gán FEC_Updated_Group__c và Is_{Team}_Queue_User__c từ team lookup theo Owner Id
+     * (FEC_Updated_User_Queue_ID__c / FEC_Original_User_Queue_ID__c), không dùng label text.
      */
+    private static void applyUpdatedGroup(
+        List<FEC_Routing_Action_History__c> newRows,
+        Map<Id, FEC_Routing_Action_History__c> oldMap
+    ) {
+        Set<Id> ownerIds = new Set<Id>();
+        for (FEC_Routing_Action_History__c h : newRows) {
+            if (!needsUpdatedGroupRecalc(h, oldMap)) {
+                continue;
+            }
+            collectOwnerIdsForUpdatedGroup(h, ownerIds);
+        }
+        if (ownerIds.isEmpty()) {
+            return;
+        }
+
+        Map<Id, String> teamByOwner = FEC_OwnerTeamLookupSvc.getByOwnerIds(ownerIds);
+        for (FEC_Routing_Action_History__c h : newRows) {
+            if (!needsUpdatedGroupRecalc(h, oldMap)) {
+                continue;
+            }
+            h.FEC_Updated_Group__c = resolveUpdatedGroupCode(h, teamByOwner);
+            applyQueueUserFlags(h, teamByOwner);
+        }
+    }
+
+    private static void applyQueueUserFlags(
+        FEC_Routing_Action_History__c h,
+        Map<Id, String> teamByOwner
+    ) {
+        String updTeam = resolveTeamForQueueSide(h, teamByOwner, true);
+        String origTeam = resolveTeamForQueueSide(h, teamByOwner, false);
+        h.FEC_Is_CA_Queue_User__c = teamMatches(updTeam, origTeam, 'CA');
+        h.FEC_Is_CL_Queue_User__c = teamMatches(updTeam, origTeam, 'CL');
+        h.FEC_Is_CO_Queue_User__c = teamMatches(updTeam, origTeam, 'CO');
+        h.FEC_Is_DS_Queue_User__c = teamMatches(updTeam, origTeam, 'DS');
+        h.FEC_Is_PM_Queue_User__c = teamMatches(updTeam, origTeam, 'PM');
+        h.FEC_Is_TS_Queue_User__c = teamMatches(updTeam, origTeam, 'TS');
+    }
+
+    @TestVisible
+    private static Boolean teamMatches(String updTeam, String origTeam, String teamCode) {
+        return (String.isNotBlank(updTeam) && updTeam.equalsIgnoreCase(teamCode))
+            || (String.isNotBlank(origTeam) && origTeam.equalsIgnoreCase(teamCode));
+    }
+
+    private static Boolean needsUpdatedGroupRecalc(
+        FEC_Routing_Action_History__c h,
+        Map<Id, FEC_Routing_Action_History__c> oldMap
+    ) {
+        if (oldMap == null || !oldMap.containsKey(h.Id)) {
+            return true;
+        }
+        FEC_Routing_Action_History__c prior = oldMap.get(h.Id);
+        return h.FEC_Updated_User_Queue_ID__c != prior.FEC_Updated_User_Queue_ID__c
+            || h.FEC_Original_User_Queue_ID__c != prior.FEC_Original_User_Queue_ID__c;
+    }
+
+    private static void collectOwnerIdsForUpdatedGroup(
+        FEC_Routing_Action_History__c h,
+        Set<Id> ownerIds
+    ) {
+        Id updId = parseOwnerIdField(h.FEC_Updated_User_Queue_ID__c);
+        Id origId = parseOwnerIdField(h.FEC_Original_User_Queue_ID__c);
+        if (updId != null) {
+            ownerIds.add(updId);
+        }
+        if (origId != null) {
+            ownerIds.add(origId);
+        }
+    }
+
+    @TestVisible
+    private static String resolveUpdatedGroupCode(
+        FEC_Routing_Action_History__c h,
+        Map<Id, String> teamByOwner
+    ) {
+        String updTeam = resolveTeamForQueueSide(h, teamByOwner, true);
+        if (String.isNotBlank(updTeam)) {
+            return updTeam;
+        }
+        return resolveTeamForQueueSide(h, teamByOwner, false);
+    }
+
+    private static String resolveTeamForQueueSide(
+        FEC_Routing_Action_History__c h,
+        Map<Id, String> teamByOwner,
+        Boolean updatedSide
+    ) {
+        String idText = updatedSide
+            ? h.FEC_Updated_User_Queue_ID__c
+            : h.FEC_Original_User_Queue_ID__c;
+        String label = updatedSide
+            ? h.FEC_Updated_User_Queue__c
+            : h.FEC_Original_User_Queue__c;
+        Id ownerId = parseOwnerIdField(idText);
+        if (ownerId != null) {
+            String team = teamByOwner != null ? teamByOwner.get(ownerId) : null;
+            if (String.isNotBlank(team)) {
+                return team;
+            }
+        }
+        String labelCandidate = String.isNotBlank(label) ? label : idText;
+        return FEC_OwnerTeamLookupSvc.getTeamByOwnerLabel(labelCandidate);
+    }
+
+    private static Id parseOwnerIdField(String idText) {
+        if (String.isBlank(idText)) {
+            return null;
+        }
+        try {
+            return Id.valueOf(idText.trim());
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
     private static void applySubmittedOn(
         List<FEC_Routing_Action_History__c> newRows,
         Map<Id, FEC_Routing_Action_History__c> oldMap

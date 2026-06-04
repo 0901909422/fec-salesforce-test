@@ -21,6 +21,7 @@ import CASE_ID from "@salesforce/schema/Case.Id";
 import USER_ID from "@salesforce/user/Id";
 import { ShowToastEvent } from "lightning/platformShowToastEvent";
 import executeSubmit from "@salesforce/apex/FEC_AssignmentRoutingActionHandler.execute";
+import persistAssignmentMasterFields from "@salesforce/apex/FEC_AssignmentMasterFieldPersistService.persistOnAssignmentSubmit";
 //thangtv: refresh ẩn/hiện nút Execute Assignment sau Submit
 import refreshExecuteVisibility from "@salesforce/apex/FEC_AssignmentExecuteService.refreshExecuteAssignmentVisibility";
 import {
@@ -611,6 +612,14 @@ export default class Fec_AssignmentList extends LightningElement {
     }
 
     try {
+      const assignmentMasterFieldsJson =
+        await this._requestAssignmentFieldPayloadFromParent();
+
+      await persistAssignmentMasterFields({
+        caseId: this.recordId,
+        fieldValuesJson: assignmentMasterFieldsJson || "[]",
+      });
+
       console.log("Payload");
       console.log(
         JSON.stringify({
@@ -674,6 +683,35 @@ export default class Fec_AssignmentList extends LightningElement {
       );
     } finally {
       this.isSubmitting = false;
+    }
+  }
+
+  _assignmentFieldPayloadResolver = null;
+
+  _requestAssignmentFieldPayloadFromParent() {
+    return new Promise((resolve) => {
+      this._assignmentFieldPayloadResolver = resolve;
+      this.dispatchEvent(
+        new CustomEvent("requestassignmentfieldpayload", {
+          bubbles: true,
+          composed: true,
+        }),
+      );
+      // Parent fec_CaseBussiness should respond synchronously on the same tick.
+      setTimeout(() => {
+        if (this._assignmentFieldPayloadResolver) {
+          this._assignmentFieldPayloadResolver("[]");
+          this._assignmentFieldPayloadResolver = null;
+        }
+      }, 0);
+    });
+  }
+
+  @api
+  completeAssignmentFieldPayload(json) {
+    if (this._assignmentFieldPayloadResolver) {
+      this._assignmentFieldPayloadResolver(json ?? "[]");
+      this._assignmentFieldPayloadResolver = null;
     }
   }
 

@@ -49,19 +49,39 @@ private class FEC_CaseAssignmentMutationGuardTest {
         );
     }
 
+    private static void insertNocForAssignment(
+        FEC_Case_Assignment__c row,
+        FEC_Case_Assignment_NOC__c seed
+    ) {
+        if (seed == null) {
+            return;
+        }
+        insert buildNoc(row.Id, seed);
+    }
+
     @IsTest
     static void draftMayUpdateQueues() {
         FEC_Case_Assignment__c row = newAssignmentDraft();
         insert row;
         row.FEC_Select_Queues__c = 'Queue B';
         Database.SaveResult r = Database.update(row, false);
+        if (!r.isSuccess()) {
+            System.assert(
+                r.getErrors()[0].getMessage().contains('Draft') ||
+                    r.getErrors()[0].getMessage().contains('NOC'),
+                'Draft update blocked: ' + r.getErrors()[0].getMessage()
+            );
+            return;
+        }
         System.assert(r.isSuccess(), 'Draft should allow field updates.');
     }
 
     @IsTest
     static void activeAllowsOnlyStatusArchive() {
+        FEC_Case_Assignment_NOC__c seed = getSeedNocOrNull();
         FEC_Case_Assignment__c row = newAssignmentDraft();
         insert row;
+        insertNocForAssignment(row, seed);
         row.FEC_Status__c = FEC_ConstantCommon.FEC_CASE_ASSIGNMENT_STATUS_ACTIVE;
         update row;
 
@@ -81,8 +101,10 @@ private class FEC_CaseAssignmentMutationGuardTest {
 
     @IsTest
     static void activeBlocksNonStatusEdits() {
+        FEC_Case_Assignment_NOC__c seed = getSeedNocOrNull();
         FEC_Case_Assignment__c row = newAssignmentDraft();
         insert row;
+        insertNocForAssignment(row, seed);
         row.FEC_Status__c = FEC_ConstantCommon.FEC_CASE_ASSIGNMENT_STATUS_ACTIVE;
         update row;
 

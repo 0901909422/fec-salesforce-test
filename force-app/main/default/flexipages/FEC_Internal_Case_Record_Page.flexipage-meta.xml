@@ -623,6 +623,12 @@
         </itemInstances>
         <itemInstances>
             <componentInstance>
+                <componentName>fecRelevantTicketModalHost</componentName>
+                <identifier>c_fecRelevantTicketModalHost</identifier>
+            </componentInstance>
+        </itemInstances>
+        <itemInstances>
+            <componentInstance>
                 <componentInstanceProperties>
                     <name>actionNames</name>
                     <valueList>
@@ -1582,10 +1588,17 @@
             <componentInstance>
                 <componentInstanceProperties>
                     <name>hideMarkCompleteButton</name>
-                    <value>false</value>
+                    <value>true</value>
                 </componentInstanceProperties>
                 <componentName>support:milestones</componentName>
                 <identifier>support_milestones</identifier>
+                <visibilityRule>
+                    <criteria>
+                        <leftValue>{!Record.FEC_Interaction_View_Mode__c}</leftValue>
+                        <operator>EQUAL</operator>
+                        <rightValue>handling</rightValue>
+                    </criteria>
+                </visibilityRule>
             </componentInstance>
         </itemInstances>
         <itemInstances>

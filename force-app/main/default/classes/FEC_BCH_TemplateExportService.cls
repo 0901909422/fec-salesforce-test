@@ -2,6 +2,8 @@ public without sharing class FEC_BCH_TemplateExportService {
 
     private static final String DBG = 'FEC_BCH_EXPORT';
     private static final Integer MAX_EXPORT_DATA_ROWS = 5000;
+    //tugnnm37 - cache source xlsx entries trong transaction để build result không query ContentVersion từng cell gây SOQL 101
+    private static Map<Id, Map<String, Blob>> importCellZipEntriesCache = new Map<Id, Map<String, Blob>>();
 
     public class ExportRequest {
         @AuraEnabled public Id contentVersionId;
@@ -126,11 +128,12 @@ public without sharing class FEC_BCH_TemplateExportService {
                     resultColStyles
                 );
                 mappedCols = shiftMappedColumnIndexes(mappedCols, insertBefore, insertHeaders.size());
+                // 01/06/2026 16:30 linhdev - __Status/__Errors chèn cuối mảng dataRows (insertBefore là cột worksheet, không cắt lệch remark/routing)
                 dataRows = mergeInsertColumnValues(
                     dataRows,
                     insertValues,
                     insertHeaders.size(),
-                    insertBefore
+                    resolveDataRowsLogicalWidth(dataRows)
                 );
             }
             Integer preserveSourceColIdx = req.preserveSourceWorksheetColIndex;
@@ -227,6 +230,27 @@ public without sharing class FEC_BCH_TemplateExportService {
         Integer dataRowIndex0,
         Integer worksheetColIndex0
     ) {
+        String text = readImportCellRawText(contentVersionId, sheetName, dataRowIndex0, worksheetColIndex0);
+        return capExcelCellText(text);
+    }
+
+    // 01/06/2026 12:30 linhdev - đo đúng độ dài remark trước khi cap (tránh mất lỗi quá 32,767 ký tự)
+    public static Integer readImportCellTextLength(
+        Id contentVersionId,
+        String sheetName,
+        Integer dataRowIndex0,
+        Integer worksheetColIndex0
+    ) {
+        String text = readImportCellRawText(contentVersionId, sheetName, dataRowIndex0, worksheetColIndex0);
+        return String.isBlank(text) ? 0 : text.length();
+    }
+
+    private static String readImportCellRawText(
+        Id contentVersionId,
+        String sheetName,
+        Integer dataRowIndex0,
+        Integer worksheetColIndex0
+    ) {
         if (
             contentVersionId == null ||
             dataRowIndex0 == null ||
@@ -237,16 +261,7 @@ public without sharing class FEC_BCH_TemplateExportService {
             return FEC_ConstantCommon.STR_EMPTY;
         }
         try {
-            List<ContentVersion> versions = [
-                SELECT VersionData
-                FROM ContentVersion
-                WHERE Id = :contentVersionId
-                LIMIT 1
-            ];
-            if (versions.isEmpty() || versions[0].VersionData == null) {
-                return FEC_ConstantCommon.STR_EMPTY;
-            }
-            Map<String, Blob> entryByPath = readZipEntries(versions[0].VersionData);
+            Map<String, Blob> entryByPath = getImportCellZipEntries(contentVersionId);
             if (entryByPath.isEmpty()) {
                 return FEC_ConstantCommon.STR_EMPTY;
             }
@@ -269,14 +284,35 @@ public without sharing class FEC_BCH_TemplateExportService {
             }
             String attrs = cellMat.group(1) == null ? FEC_ConstantCommon.STR_EMPTY : cellMat.group(1);
             String cellBody = cellMat.group(2) == null ? FEC_ConstantCommon.STR_EMPTY : cellMat.group(2);
-            String text = resolveCellDisplayText(attrs + cellBody, sharedStrings);
-            return capExcelCellText(text);
+            return resolveCellDisplayText(attrs + cellBody, sharedStrings);
         } catch (Exception ex) {
             dbg('READ_IMPORT_CELL_FAIL', ex.getMessage());
             return FEC_ConstantCommon.STR_EMPTY;
         }
     }
 
+
+    private static Map<String, Blob> getImportCellZipEntries(Id contentVersionId) {
+        //tugnnm37 - readImportCellText được gọi theo từng cell; chỉ query/parse zip 1 lần cho mỗi ContentVersion
+        if (contentVersionId == null) {
+            return new Map<String, Blob>();
+        }
+        if (importCellZipEntriesCache.containsKey(contentVersionId)) {
+            return importCellZipEntriesCache.get(contentVersionId);
+        }
+        Map<String, Blob> entryByPath = new Map<String, Blob>();
+        List<ContentVersion> versions = [
+            SELECT VersionData
+            FROM ContentVersion
+            WHERE Id = :contentVersionId
+            LIMIT 1
+        ];
+        if (!versions.isEmpty() && versions[0].VersionData != null) {
+            entryByPath = readZipEntries(versions[0].VersionData);
+        }
+        importCellZipEntriesCache.put(contentVersionId, entryByPath);
+        return entryByPath;
+    }
     private static ExportWorkbookResponse fail(
         ExportWorkbookResponse out,
         String code,
@@ -299,20 +335,25 @@ public without sharing class FEC_BCH_TemplateExportService {
         if (archiveBlob == null) {
             return out;
         }
-        Compression.ZipReader reader = new Compression.ZipReader(archiveBlob);
-        List<String> entryNames = reader.getEntryNames();
-        if (entryNames == null) {
+        // 01/06/2026 12:00 linhdev - file không phải zip hợp lệ: trả map rỗng (parse import báo HeaderInvalid)
+        try {
+            Compression.ZipReader reader = new Compression.ZipReader(archiveBlob);
+            List<String> entryNames = reader.getEntryNames();
+            if (entryNames == null) {
+                return out;
+            }
+            for (String entryName : entryNames) {
+                if (String.isBlank(entryName) || entryName.endsWith('/')) {
+                    continue;
+                }
+                String path = normalizeZipPath(entryName);
+                Blob body = reader.extract(entryName);
+                if (String.isNotBlank(path) && body != null) {
+                    out.put(path, body);
+                }
+            }
+        } catch (Exception ex) {
             return out;
-        }
-        for (String entryName : entryNames) {
-            if (String.isBlank(entryName) || entryName.endsWith('/')) {
-                continue;
-            }
-            String path = normalizeZipPath(entryName);
-            Blob body = reader.extract(entryName);
-            if (String.isNotBlank(path) && body != null) {
-                out.put(path, body);
-            }
         }
         return out;
     }
@@ -701,13 +742,22 @@ public without sharing class FEC_BCH_TemplateExportService {
                 return inlineText;
             }
         }
-        Pattern sharedPat = Pattern.compile('<v>(\\d+)</v>');
-        Matcher sharedMat = sharedPat.matcher(cellXml);
-        if (sharedMat.find() && sharedStrings != null && !sharedStrings.isEmpty()) {
-            Integer idx = Integer.valueOf(sharedMat.group(1));
-            if (idx >= 0 && idx < sharedStrings.size()) {
-                return sharedStrings[idx];
+        Pattern valuePat = Pattern.compile('(?s)<v>(.*?)</v>');
+        Matcher valueMat = valuePat.matcher(cellXml);
+        if (valueMat.find()) {
+            String rawValue = decodeXlsxTextFragment(valueMat.group(1));
+            //tugnnm37 - chỉ lookup sharedStrings khi cell type là shared string; numeric/plain value như Inputted Remarks=111 phải trả raw <v>
+            if (cellXml.contains(' t="s"') && sharedStrings != null && !sharedStrings.isEmpty()) {
+                try {
+                    Integer idx = Integer.valueOf(rawValue);
+                    if (idx >= 0 && idx < sharedStrings.size()) {
+                        return sharedStrings[idx];
+                    }
+                } catch (Exception ex) {
+                    return FEC_ConstantCommon.STR_EMPTY;
+                }
             }
+            return rawValue == null ? FEC_ConstantCommon.STR_EMPTY : rawValue;
         }
         return FEC_ConstantCommon.STR_EMPTY;
     }
@@ -1406,6 +1456,14 @@ public without sharing class FEC_BCH_TemplateExportService {
                 val = String.valueOf(values[valueIdx]);
             }
             valueIdx += 1;
+            // 01/06/2026 16:30 linhdev - remark dài chỉ giữ ở cột preserve; không upsert sang Routing Action
+            if (
+                preserveTargetColIdx != null &&
+                colIdx != preserveTargetColIdx &&
+                val.length() >= IMPORT_EXCEL_CELL_TEXT_MAX_LEN
+            ) {
+                val = FEC_ConstantCommon.STR_EMPTY;
+            }
             String styleAttr = resolveResultDataCellStyleAttr(
                 resultColStyles,
                 insertBeforeColIndex,
@@ -1463,6 +1521,8 @@ public without sharing class FEC_BCH_TemplateExportService {
         return null;
     }
 
+    // 01/06/2026 18:00 linhdev - giữ mappedCols[i] khớp dataRows[i]; dịch chỉ số cột worksheet, append __Status/__Errors cuối list
+    @TestVisible
     private static List<Integer> shiftMappedColumnIndexes(
         List<Integer> mappedCols,
         Integer insertBefore,
@@ -1472,35 +1532,31 @@ public without sharing class FEC_BCH_TemplateExportService {
         if (mappedCols == null) {
             return out;
         }
-        //tungnm37 - chèn cột result/property đúng ngay vị trí insertBefore để thứ tự cột khớp thứ tự values
-        List<Integer> beforeCols = new List<Integer>();
-        List<Integer> afterCols = new List<Integer>();
-        Integer safeInsertBefore = insertBefore == null ? 0 : insertBefore;
+        Integer safeInsertBefore = insertBefore == null ? 2147483647 : insertBefore;
         Integer safeInsertCount = insertCount == null || insertCount < 0 ? 0 : insertCount;
         for (Integer colIdx : mappedCols) {
             if (colIdx == null || colIdx < 0) {
                 continue;
             }
-            if (safeInsertCount > 0 && colIdx >= safeInsertBefore) {
-                afterCols.add(colIdx + safeInsertCount);
-            } else {
-                beforeCols.add(colIdx);
+            Integer wsCol = colIdx;
+            if (safeInsertCount > 0 && wsCol >= safeInsertBefore) {
+                wsCol += safeInsertCount;
             }
+            out.add(wsCol);
         }
-        out.addAll(beforeCols);
         for (Integer i = 0; i < safeInsertCount; i++) {
             out.add(safeInsertBefore + i);
         }
-        out.addAll(afterCols);
         return out;
     }
 
-    // 30/05/2026 11:30 linhdev - ghép __Status/__Errors đúng insertBefore (cuối sheet khi insertBefore == base.size())
+    // 01/06/2026 16:30 linhdev - ghép __Status/__Errors cuối mảng dataRows (logicalInsertBefore, không dùng chỉ số cột worksheet)
+    @TestVisible
     private static List<List<String>> mergeInsertColumnValues(
         List<List<String>> dataRows,
         List<List<String>> insertValues,
         Integer insertCount,
-        Integer insertBefore
+        Integer logicalInsertBefore
     ) {
         List<List<String>> out = new List<List<String>>();
         if (dataRows == null) {
@@ -1513,8 +1569,8 @@ public without sharing class FEC_BCH_TemplateExportService {
                 ? insertValues[rowIdx]
                 : new List<String>();
             Integer splitIndex = base.size();
-            if (insertBefore != null && insertBefore >= 0 && insertBefore <= base.size()) {
-                splitIndex = insertBefore;
+            if (logicalInsertBefore != null && logicalInsertBefore >= 0 && logicalInsertBefore <= base.size()) {
+                splitIndex = logicalInsertBefore;
             }
             List<String> merged = new List<String>();
             for (Integer i = 0; i < splitIndex && i < base.size(); i++) {
@@ -1533,6 +1589,20 @@ public without sharing class FEC_BCH_TemplateExportService {
             out.add(merged);
         }
         return out;
+    }
+
+    @TestVisible
+    private static Integer resolveDataRowsLogicalWidth(List<List<String>> dataRows) {
+        if (dataRows == null || dataRows.isEmpty()) {
+            return 0;
+        }
+        Integer maxWidth = 0;
+        for (List<String> row : dataRows) {
+            if (row != null && row.size() > maxWidth) {
+                maxWidth = row.size();
+            }
+        }
+        return maxWidth;
     }
 
     private static String insertPropertyColumnsInWorksheet(
@@ -2411,6 +2481,481 @@ public without sharing class FEC_BCH_TemplateExportService {
             ? m.group(5)
             : String.valueOf(lastRow1);
         return m.replaceFirst('$1' + startCol + startRow + ':' + endCol + endRow + '$6');
+    }
+
+    // 01/06/2026 12:00 linhdev - parse import workbook on Apex (thay SheetJS LWC)
+    public class ImportWorkbookParseResult {
+        public Boolean parseSuccess;
+        public String errorMessage;
+        public String sheetName;
+        public Integer headerRowIndex0;
+        public Boolean cofOrGsr;
+        public List<Object> inputRows;
+        public List<String> importHeaders;
+        public List<Integer> importColumnIndexes;
+    }
+
+    private static final Integer IMPORT_HEADER_SCAN_MAX_ROW = 25;
+    private static final Integer IMPORT_EXCEL_CELL_TEXT_MAX_LEN = 32767;
+
+    public static ImportWorkbookParseResult parseBatchImportWorkbook(Id contentVersionId) {
+        ImportWorkbookParseResult out = new ImportWorkbookParseResult();
+        out.parseSuccess = false;
+        out.inputRows = new List<Object>();
+        out.cofOrGsr = false;
+        if (contentVersionId == null) {
+            out.errorMessage = System.Label.FEC_BCH_RequireFile;
+            return out;
+        }
+        List<ContentVersion> versions = [
+            SELECT VersionData
+            FROM ContentVersion
+            WHERE Id = :contentVersionId
+            LIMIT 1
+        ];
+        if (versions.isEmpty() || versions[0].VersionData == null) {
+            out.errorMessage = System.Label.FEC_BCH_RequireFile;
+            return out;
+        }
+        Map<String, Blob> entryByPath = readZipEntries(versions[0].VersionData);
+        if (entryByPath.isEmpty()) {
+            out.errorMessage = System.Label.FEC_BCH_HeaderInvalid;
+            return out;
+        }
+        String workbookXml = blobToUtf8(entryByPath.get('xl/workbook.xml'));
+        String workbookRelsXml = blobToUtf8(entryByPath.get('xl/_rels/workbook.xml.rels'));
+        String worksheetPath = resolveMainWorksheetPath(workbookXml, workbookRelsXml);
+        if (String.isBlank(worksheetPath) || !entryByPath.containsKey(worksheetPath)) {
+            out.errorMessage = System.Label.FEC_BCH_HeaderInvalid;
+            return out;
+        }
+        out.sheetName = resolveSheetDisplayName(workbookXml, worksheetPath, workbookRelsXml);
+        String worksheetXml = blobToUtf8(entryByPath.get(worksheetPath));
+        if (String.isBlank(worksheetXml)) {
+            out.errorMessage = System.Label.FEC_BCH_HeaderInvalid;
+            return out;
+        }
+        List<String> sharedStrings = parseSharedStrings(
+            blobToUtf8(entryByPath.get('xl/sharedStrings.xml'))
+        );
+        ImportHeaderDetect headerDetect = detectImportHeaderRow(worksheetXml, sharedStrings);
+        if (headerDetect == null) {
+            out.errorMessage = System.Label.FEC_BCH_HeaderInvalid;
+            return out;
+        }
+        out.headerRowIndex0 = headerDetect.headerRowIndex0;
+        out.cofOrGsr = headerDetect.cofOrGsr;
+        List<String> importHeaders = headerDetect.importHeaders;
+        List<Integer> importColumnIndexes = headerDetect.importColumnIndexes;
+        //tugnnm37 - expose header layout để failure no-data vẫn build Result theo đúng template gốc
+        out.importHeaders = importHeaders;
+        out.importColumnIndexes = importColumnIndexes;
+        Integer headerRowNum1 = headerDetect.headerRowIndex0 + 1;
+        List<Integer> rowNums = listWorksheetRowNumbers(worksheetXml);
+        for (Integer rowNum1 : rowNums) {
+            if (rowNum1 <= headerRowNum1) {
+                continue;
+            }
+            Map<String, Object> rowMap = buildImportRowMap(
+                contentVersionId,
+                out.sheetName,
+                headerDetect.headerRowIndex0,
+                rowNum1,
+                importHeaders,
+                importColumnIndexes,
+                headerDetect,
+                worksheetXml,
+                sharedStrings
+            );
+            if (rowMap != null) {
+                out.inputRows.add(rowMap);
+            }
+        }
+        if (out.inputRows.isEmpty()) {
+            out.errorMessage = System.Label.FEC_BCH_FileNoData;
+            return out;
+        }
+        out.parseSuccess = true;
+        out.errorMessage = FEC_ConstantCommon.STR_EMPTY;
+        return out;
+    }
+
+    private class ImportHeaderDetect {
+        Integer headerRowIndex0;
+        Boolean cofOrGsr;
+        List<String> importHeaders;
+        List<Integer> importColumnIndexes;
+        Integer idxCaseId;
+        Integer idxRouting;
+        Integer idxRemark;
+        Integer idxAssignmentId;
+        Integer idxAssignmentRouting;
+        Integer idxCsD2CAssessment;
+        Integer idxCsSupportAssessment;
+        Integer idxRiskLevel;
+        Integer idxRequiredAction;
+        Integer idxClassificationByCS;
+        Integer idxEvaluationByCS;
+        Integer idxFinalProduct;
+        Integer idxPaymentContractAssessment;
+        Integer idxCpAssessment;
+    }
+
+    private static ImportHeaderDetect detectImportHeaderRow(
+        String worksheetXml,
+        List<String> sharedStrings
+    ) {
+        if (String.isBlank(worksheetXml)) {
+            return null;
+        }
+        List<Integer> rowNums = listWorksheetRowNumbers(worksheetXml);
+        Integer scanMax = IMPORT_HEADER_SCAN_MAX_ROW;
+        for (Integer rowNum1 : rowNums) {
+            if (rowNum1 > scanMax) {
+                break;
+            }
+            Map<Integer, String> colTexts = parseRowColumnTextsByIndex(worksheetXml, rowNum1, sharedStrings);
+            List<String> headerCells = buildOrderedHeaderCells(colTexts);
+            if (headerCells.isEmpty()) {
+                continue;
+            }
+            Integer idxCaseId = findAliasHeaderIndex(headerCells, new List<String>{ 'caseid', 'caseidsearch' });
+            Integer idxRouting = findAliasHeaderIndex(headerCells, new List<String>{ 'routingaction' });
+            Integer idxAssignmentRouting = findAliasHeaderIndex(
+                headerCells,
+                new List<String>{ 'assignmentroutingaction' }
+            );
+            Integer idxRemark = findAliasHeaderIndex(
+                headerCells,
+                new List<String>{ 'inputtedremarks', 'inputtedremark', 'inputremarks', 'inputremark' }
+            );
+            Boolean hasRoutingHeaderCol = idxRouting >= 0 || idxAssignmentRouting >= 0;
+            if (idxCaseId < 0 || !hasRoutingHeaderCol || idxRemark < 0) {
+                continue;
+            }
+            ImportHeaderDetect detect = new ImportHeaderDetect();
+            detect.headerRowIndex0 = rowNum1 - 1;
+            detect.idxCaseId = idxCaseId;
+            detect.idxRouting = idxRouting;
+            detect.idxRemark = idxRemark;
+            detect.idxAssignmentId = findAliasHeaderIndex(headerCells, new List<String>{ 'assignmentid' });
+            detect.idxAssignmentRouting = idxAssignmentRouting;
+            detect.idxCsD2CAssessment = findAliasHeaderIndex(
+                headerCells,
+                new List<String>{
+                    'csd2cđánhgiáyêucầu',
+                    'csd2cdanhgiayeucau',
+                    'csd2cassessment',
+                    'csd2cassessmenttype'
+                }
+            );
+            detect.idxCsSupportAssessment = findAliasHeaderIndex(
+                headerCells,
+                new List<String>{
+                    'cssupportđánhgiáyêucầu',
+                    'cssupportdanhgiayeucau',
+                    'cssupportassessment',
+                    'cssupportassessmenttype',
+                    'cssupportevaluation'
+                }
+            );
+            detect.idxRiskLevel = findAliasHeaderIndex(
+                headerCells,
+                new List<String>{ 'mứcđộrủiro', 'mucdoruiro', 'risklevel' }
+            );
+            detect.idxRequiredAction = findAliasHeaderIndex(
+                headerCells,
+                new List<String>{
+                    'hànhđộngcầnthiết',
+                    'hanhdongcanthiet',
+                    'requiredaction',
+                    'requiredcorrectiveaction'
+                }
+            );
+            detect.idxClassificationByCS = findAliasHeaderIndex(
+                headerCells,
+                new List<String>{ 'classificationbycs' }
+            );
+            detect.idxEvaluationByCS = findAliasHeaderIndex(
+                headerCells,
+                new List<String>{ 'evaluationbycs' }
+            );
+            detect.idxFinalProduct = findAliasHeaderIndex(headerCells, new List<String>{ 'finalproduct' });
+            detect.idxPaymentContractAssessment = findAliasHeaderIndex(
+                headerCells,
+                new List<String>{
+                    'paymentđánhgiáyêucầuđónghợpđồng',
+                    'paymentdanhgiayeucaudonghopdong',
+                    'paymentcontractassessment',
+                    'rdpaymentcontractassessment'
+                }
+            );
+            detect.idxCpAssessment = findAliasHeaderIndex(
+                headerCells,
+                new List<String>{
+                    'cpđánhgiáyêucầu',
+                    'cpdanhgiayeucau',
+                    'cpassessment',
+                    'contractprocessingassessment'
+                }
+            );
+            detect.cofOrGsr = detect.idxAssignmentId >= 0 || detect.idxAssignmentRouting >= 0;
+            Set<Integer> resultExclude = resultColumnExcludeIndices(headerCells);
+            detect.importHeaders = new List<String>();
+            detect.importColumnIndexes = new List<Integer>();
+            for (Integer col = 0; col < headerCells.size(); col++) {
+                if (resultExclude.contains(col)) {
+                    continue;
+                }
+                detect.importHeaders.add(headerCells[col]);
+                detect.importColumnIndexes.add(col);
+            }
+            return detect;
+        }
+        return null;
+    }
+
+    private static Map<String, Object> buildImportRowMap(
+        Id contentVersionId,
+        String sheetName,
+        Integer headerRowIndex0,
+        Integer dataRowNum1,
+        List<String> importHeaders,
+        List<Integer> importColumnIndexes,
+        ImportHeaderDetect headerDetect,
+        String worksheetXml,
+        List<String> sharedStrings
+    ) {
+        Map<Integer, String> colTexts = parseRowColumnTextsByIndex(worksheetXml, dataRowNum1, sharedStrings);
+        //tugnnm37 - headerDetect idx đã là worksheet column index thật; đọc trực tiếp colTexts, không map lại qua importColumnIndexes
+        String caseIdSearch = cellTextAtWorksheetColumn(colTexts, headerDetect.idxCaseId);
+        String routingAction = headerDetect.idxRouting >= 0
+            ? cellTextAtWorksheetColumn(colTexts, headerDetect.idxRouting)
+            : FEC_ConstantCommon.STR_EMPTY;
+        String inputtedRemarksRaw = headerDetect.idxRemark >= 0
+            ? cellTextAtWorksheetColumn(colTexts, headerDetect.idxRemark)
+            : FEC_ConstantCommon.STR_EMPTY;
+        Integer remarkCharLen = String.isBlank(inputtedRemarksRaw) ? 0 : inputtedRemarksRaw.length();
+        String inputtedRemarks = remarkCharLen >= IMPORT_EXCEL_CELL_TEXT_MAX_LEN
+            ? FEC_ConstantCommon.STR_EMPTY
+            : inputtedRemarksRaw;
+        String assignmentId = headerDetect.idxAssignmentId >= 0
+            ? cellTextAtWorksheetColumn(colTexts, headerDetect.idxAssignmentId)
+            : FEC_ConstantCommon.STR_EMPTY;
+        String assignmentRoutingAction = headerDetect.idxAssignmentRouting >= 0
+            ? cellTextAtWorksheetColumn(colTexts, headerDetect.idxAssignmentRouting)
+            : FEC_ConstantCommon.STR_EMPTY;
+        String csD2CAssessmentType = headerDetect.idxCsD2CAssessment >= 0
+            ? cellTextAtWorksheetColumn(colTexts, headerDetect.idxCsD2CAssessment)
+            : FEC_ConstantCommon.STR_EMPTY;
+        String csSupportAssessment = headerDetect.idxCsSupportAssessment >= 0
+            ? cellTextAtWorksheetColumn(colTexts, headerDetect.idxCsSupportAssessment)
+            : FEC_ConstantCommon.STR_EMPTY;
+        String riskLevel = headerDetect.idxRiskLevel >= 0
+            ? cellTextAtWorksheetColumn(colTexts, headerDetect.idxRiskLevel)
+            : FEC_ConstantCommon.STR_EMPTY;
+        String requiredAction = headerDetect.idxRequiredAction >= 0
+            ? cellTextAtWorksheetColumn(colTexts, headerDetect.idxRequiredAction)
+            : FEC_ConstantCommon.STR_EMPTY;
+        String classificationByCS = headerDetect.idxClassificationByCS >= 0
+            ? cellTextAtWorksheetColumn(colTexts, headerDetect.idxClassificationByCS)
+            : FEC_ConstantCommon.STR_EMPTY;
+        String evaluationByCS = headerDetect.idxEvaluationByCS >= 0
+            ? cellTextAtWorksheetColumn(colTexts, headerDetect.idxEvaluationByCS)
+            : FEC_ConstantCommon.STR_EMPTY;
+        String finalProduct = headerDetect.idxFinalProduct >= 0
+            ? cellTextAtWorksheetColumn(colTexts, headerDetect.idxFinalProduct)
+            : FEC_ConstantCommon.STR_EMPTY;
+        String paymentContractAssessment = headerDetect.idxPaymentContractAssessment >= 0
+            ? cellTextAtWorksheetColumn(colTexts, headerDetect.idxPaymentContractAssessment)
+            : FEC_ConstantCommon.STR_EMPTY;
+        String cpAssessment = headerDetect.idxCpAssessment >= 0
+            ? cellTextAtWorksheetColumn(colTexts, headerDetect.idxCpAssessment)
+            : FEC_ConstantCommon.STR_EMPTY;
+        Boolean hasAnyImportFieldValue = !(
+            String.isBlank(caseIdSearch) &&
+            String.isBlank(routingAction) &&
+            String.isBlank(inputtedRemarks) &&
+            String.isBlank(assignmentId) &&
+            String.isBlank(assignmentRoutingAction) &&
+            String.isBlank(csD2CAssessmentType) &&
+            String.isBlank(csSupportAssessment) &&
+            String.isBlank(riskLevel) &&
+            String.isBlank(requiredAction) &&
+            String.isBlank(classificationByCS) &&
+            String.isBlank(evaluationByCS) &&
+            String.isBlank(finalProduct) &&
+            String.isBlank(paymentContractAssessment) &&
+            String.isBlank(cpAssessment)
+        );
+        List<String> originalCells = new List<String>();
+        for (Integer i = 0; i < importHeaders.size(); i++) {
+            Integer worksheetCol = i < importColumnIndexes.size()
+                ? importColumnIndexes[i]
+                : i;
+            String cellStr = FEC_ConstantCommon.STR_EMPTY;
+            if (colTexts.containsKey(worksheetCol)) {
+                cellStr = colTexts.get(worksheetCol);
+            }
+            if (String.isNotBlank(cellStr)) {
+                cellStr = capExcelCellText(cellStr);
+            }
+            originalCells.add(cellStr == null ? FEC_ConstantCommon.STR_EMPTY : cellStr);
+        }
+        Boolean hasAnyRowCellData = false;
+        for (String cellVal : colTexts.values()) {
+            if (String.isNotBlank(cellVal)) {
+                hasAnyRowCellData = true;
+                break;
+            }
+        }
+        // 02/06/2026 15:25 linhdev - giữ lại row có dữ liệu gốc (case info) dù cột import trống để không bị hụt record khi import
+        if (!hasAnyImportFieldValue && !hasAnyRowCellData) {
+            return null;
+        }
+        Map<String, Object> rowMap = new Map<String, Object>();
+        rowMap.put('caseIdSearch', caseIdSearch);
+        rowMap.put('routingAction', routingAction);
+        rowMap.put('inputtedRemarks', inputtedRemarks);
+        rowMap.put('inputtedRemarksCharLength', remarkCharLen);
+        rowMap.put('assignmentId', assignmentId);
+        rowMap.put('assignmentRoutingAction', assignmentRoutingAction);
+        rowMap.put('csD2CAssessmentType', csD2CAssessmentType);
+        rowMap.put('csSupportAssessment', csSupportAssessment);
+        rowMap.put('riskLevel', riskLevel);
+        rowMap.put('requiredAction', requiredAction);
+        rowMap.put('classificationByCS', classificationByCS);
+        rowMap.put('evaluationByCS', evaluationByCS);
+        rowMap.put('finalProduct', finalProduct);
+        rowMap.put('paymentContractAssessment', paymentContractAssessment);
+        rowMap.put('cpAssessment', cpAssessment);
+        rowMap.put('originalHeaders', importHeaders);
+        rowMap.put('originalCells', originalCells);
+        rowMap.put('originalColumnIndexes', importColumnIndexes);
+        rowMap.put('originalHeaderRowIndex', headerRowIndex0);
+        rowMap.put('originalDataRowIndex', dataRowNum1 - 1);
+        rowMap.put('originalSheetName', sheetName);
+        return rowMap;
+    }
+
+    @TestVisible
+    private static String cellTextAtWorksheetColumn(Map<Integer, String> colTexts, Integer worksheetCol) {
+        if (colTexts == null || worksheetCol == null || worksheetCol < 0) {
+            return FEC_ConstantCommon.STR_EMPTY;
+        }
+        String val = colTexts.get(worksheetCol);
+        return val == null ? FEC_ConstantCommon.STR_EMPTY : val;
+    }
+
+    private static List<String> buildOrderedHeaderCells(Map<Integer, String> colTexts) {
+        List<String> cells = new List<String>();
+        if (colTexts == null || colTexts.isEmpty()) {
+            return cells;
+        }
+        Integer maxCol = -1;
+        for (Integer col : colTexts.keySet()) {
+            if (col > maxCol) {
+                maxCol = col;
+            }
+        }
+        for (Integer c = 0; c <= maxCol; c++) {
+            cells.add(colTexts.containsKey(c) ? colTexts.get(c) : FEC_ConstantCommon.STR_EMPTY);
+        }
+        return cells;
+    }
+
+    private static Set<Integer> resultColumnExcludeIndices(List<String> headerCells) {
+        Set<Integer> exclude = new Set<Integer>();
+        if (headerCells == null) {
+            return exclude;
+        }
+        for (Integer i = 0; i < headerCells.size(); i++) {
+            String norm = normalizeImportHeaderToken(headerCells[i]);
+            if (norm == '__status' || norm == '__errors') {
+                exclude.add(i);
+            }
+        }
+        return exclude;
+    }
+
+    private static Integer findAliasHeaderIndex(List<String> headerCells, List<String> aliases) {
+        if (headerCells == null || aliases == null) {
+            return -1;
+        }
+        for (Integer i = 0; i < headerCells.size(); i++) {
+            String norm = normalizeImportHeaderToken(headerCells[i]);
+            if (String.isBlank(norm)) {
+                continue;
+            }
+            for (String alias : aliases) {
+                if (norm == alias) {
+                    return i;
+                }
+            }
+        }
+        return -1;
+    }
+
+    private static String normalizeImportHeaderToken(String value) {
+        if (String.isBlank(value)) {
+            return FEC_ConstantCommon.STR_EMPTY;
+        }
+        return value.trim().toLowerCase().replaceAll('\\s+', FEC_ConstantCommon.STR_EMPTY);
+    }
+
+    private static List<Integer> listWorksheetRowNumbers(String worksheetXml) {
+        List<Integer> out = new List<Integer>();
+        if (String.isBlank(worksheetXml)) {
+            return out;
+        }
+        Pattern rowPat = Pattern.compile('<row r="(\\d+)"');
+        Matcher rowMat = rowPat.matcher(worksheetXml);
+        while (rowMat.find()) {
+            out.add(Integer.valueOf(rowMat.group(1)));
+        }
+        out.sort();
+        return out;
+    }
+
+    private static String resolveSheetDisplayName(
+        String workbookXml,
+        String worksheetPath,
+        String workbookRelsXml
+    ) {
+        if (String.isBlank(workbookXml) || String.isBlank(worksheetPath) || String.isBlank(workbookRelsXml)) {
+            return FEC_ConstantCommon.STR_EMPTY;
+        }
+        String targetSuffix = worksheetPath.contains('/')
+            ? worksheetPath.substring(worksheetPath.lastIndexOf('/') + 1)
+            : worksheetPath;
+        Pattern relPat = Pattern.compile(
+            'Target="([^"]*' + Pattern.quote(targetSuffix) + ')"[^>]+Id="([^"]+)"'
+        );
+        Matcher relMat = relPat.matcher(workbookRelsXml);
+        String rid;
+        if (relMat.find()) {
+            rid = relMat.group(2);
+        } else {
+            Pattern relPat2 = Pattern.compile(
+                'Id="([^"]+)"[^>]+Target="([^"]*' + Pattern.quote(targetSuffix) + ')"'
+            );
+            Matcher relMat2 = relPat2.matcher(workbookRelsXml);
+            if (!relMat2.find()) {
+                return FEC_ConstantCommon.STR_EMPTY;
+            }
+            rid = relMat2.group(1);
+        }
+        Pattern sheetPat = Pattern.compile('<sheet[^>]+name="([^"]+)"[^>]+r:id="' + Pattern.quote(rid) + '"');
+        Matcher sheetMat = sheetPat.matcher(workbookXml);
+        if (sheetMat.find()) {
+            return sheetMat.group(1);
+        }
+        Pattern sheetPat2 = Pattern.compile('<sheet[^>]+r:id="' + Pattern.quote(rid) + '"[^>]+name="([^"]+)"');
+        Matcher sheetMat2 = sheetPat2.matcher(workbookXml);
+        if (sheetMat2.find()) {
+            return sheetMat2.group(1);
+        }
+        return FEC_ConstantCommon.STR_EMPTY;
     }
 
 }

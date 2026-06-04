@@ -3,6 +3,11 @@
     <fullName>FEC_Assignment_Count__c</fullName>
     <description>Đếm số lượng assignment có trên case</description>
     <label>Assignment Count</label>
+    <summaryFilterItems>
+        <field>FEC_Assignment__c.FEC_Assignment_Type__c</field>
+        <operation>equals</operation>
+        <value>Routing</value>
+    </summaryFilterItems>
     <summaryForeignKey>FEC_Assignment__c.FEC_Case__c</summaryForeignKey>
     <summaryOperation>count</summaryOperation>
     <trackHistory>false</trackHistory>

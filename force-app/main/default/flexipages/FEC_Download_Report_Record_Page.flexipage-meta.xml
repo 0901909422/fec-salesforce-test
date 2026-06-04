@@ -7,12 +7,6 @@
                     <name>actionNames</name>
                     <valueList>
                         <valueListItems>
-                            <value>FeedItem.TextPost</value>
-                        </valueListItems>
-                        <valueListItems>
-                            <value>FeedItem.ContentPost</value>
-                        </valueListItems>
-                        <valueListItems>
                             <value>Global.NewTask</value>
                         </valueListItems>
                         <valueListItems>
@@ -32,9 +26,6 @@
                         </valueListItems>
                         <valueListItems>
                             <value>Global.NewLead</value>
-                        </valueListItems>
-                        <valueListItems>
-                            <value>FeedItem.PollPost</value>
                         </valueListItems>
                         <valueListItems>
                             <value>Delete</value>

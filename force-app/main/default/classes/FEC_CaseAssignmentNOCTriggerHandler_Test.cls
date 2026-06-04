@@ -47,18 +47,18 @@ private class FEC_CaseAssignmentNOCTriggerHandler_Test {
             FEC_Active__c = true
         );
         insert prod;
-        FEC_Sub_Category__c subCat = new FEC_Sub_Category__c(
-            Name = 'RC27',
-            FEC_Code__c = 'RC27',
-            FEC_Active__c = true
-        );
-        insert subCat;
         FEC_Category__c cat = new FEC_Category__c(
             Name = 'Request',
             FEC_Code__c = 'Request',
             FEC_Active__c = true
         );
         insert cat;
+        FEC_Sub_Category__c subCat = new FEC_Sub_Category__c(
+            Name = 'RC27',
+            FEC_Code__c = 'RC27',
+            FEC_Active__c = true
+        );
+        insert subCat;
 
         insert new List<FEC_Case_Assignment_NOC__c>{
             new FEC_Case_Assignment_NOC__c(

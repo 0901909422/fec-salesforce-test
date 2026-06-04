@@ -87,6 +87,49 @@ export function isCurrentCaseStageTeamPm(host) {
   return text.toUpperCase().includes("PM");
 }
 
+/**
+ * RL16: map assessment → CC/SP/CP chỉ khi Case đang ở stage PM (payment).
+ * Stage sau (vd. Stage 3 - CC) → Team/Queue lấy từ FEC_Stage_Change__c trên DB.
+ */
+export function shouldUseRdPaymentAssessmentTeamFilter(host) {
+  return isCurrentCaseStageTeamPm(host);
+}
+
+/** Chọn dòng Route to có team (vd. Stage 3 CC → PM / FEC_DQ_Payment). */
+function selectRdPaymentStageChangeFromDatabase(allOpts) {
+  const candidates = (allOpts || []).filter(
+    (o) => o?.stageChangeId && String(o.team ?? "").trim(),
+  );
+  if (!candidates.length) {
+    return null;
+  }
+  if (candidates.length === 1) {
+    return candidates[0];
+  }
+  return (
+    candidates.find((o) => o.queueDeveloperName || o.queueValue) ||
+    candidates[0]
+  );
+}
+
+async function fetchRdPaymentStageChangeFromDatabase(host) {
+  const routeToActionId = computeRouteToActionButtonId(host);
+  try {
+    const allOpts = await getRouteToTeamOptions({
+      caseId: host.recordId,
+      routeToActionId: routeToActionId || null,
+    });
+    rdPaymentDebug("fetchRdPaymentStageChangeFromDatabase", allOpts);
+    return selectRdPaymentStageChangeFromDatabase(allOpts);
+  } catch (err) {
+    console.error(
+      "[RD-Payment-Scoped] fetchRdPaymentStageChangeFromDatabase:ERROR",
+      err,
+    );
+    return null;
+  }
+}
+
 /** RD Payment Stage 2+: assessment đã chọn → khóa combobox Team (khi FEC_Current_Case_Stage__r.Name chứa PM). */
 export function computeRdPaymentScopedRouteToLocked(host) {
   if (!shouldPreferScopedRoutingFromStage2(host)) {
@@ -316,17 +359,31 @@ async function fetchRdPaymentStageChangeOption(host, assessmentVal) {
     assessmentVal,
     picklistOptions,
   );
-  const teamUserGroupFilter = getRdPaymentScopedStageTeamSafe(
-    assessmentVal,
-    picklistOptions,
-  );
+  const useAssessmentTeamFilter = shouldUseRdPaymentAssessmentTeamFilter(host);
 
   rdPaymentDebug("fetchRdPaymentStageChangeOption:filter", {
     assessmentVal,
     assessmentApiValue,
-    teamUserGroupFilter,
+    useAssessmentTeamFilter,
+    stageName: host.business?.stageName,
     scopedTeamMap: getRdPaymentScopedStageTeamMapForDebug(),
   });
+
+  if (!useAssessmentTeamFilter) {
+    const opt = await fetchRdPaymentStageChangeFromDatabase(host);
+    return {
+      opt,
+      teamUserGroupFilter: null,
+      params: null,
+      assessmentApiValue,
+      fromDatabase: true,
+    };
+  }
+
+  const teamUserGroupFilter = getRdPaymentScopedStageTeamSafe(
+    assessmentVal,
+    picklistOptions,
+  );
 
   if (!teamUserGroupFilter) {
     return { opt: null, teamUserGroupFilter: null, params: null, assessmentApiValue };
@@ -416,31 +473,33 @@ async function applyRoutingSelectionToChild(host, opt, maxAttempts = 8) {
 }
 
 /**
- * RD Payment assessment → tra FEC_Stage_Change__c:
- *   FEC_Previous_Stage__c = Case.FEC_Current_Case_Stage__c
- *   FEC_Team_User_Group__c = filter theo assessment
- * Team/Queue UI lấy từ FEC_Stage_Change__c:
- *   • Team  ← FEC_Team_User_Group__c
- *   • Queue ← FEC_Next_Queue__c (hiển thị Group.Name)
+ * RL16 RD Payment routing:
+ *   • Stage PM (payment): FEC_Team_User_Group__c filter theo assessment (CC/SP/CP).
+ *   • Stage sau (vd. Stage 3 - CC): Team/Queue từ FEC_Stage_Change__c trên DB (không filter assessment).
  * @returns {Promise<boolean>}
  */
 export async function applyRdPaymentStageChangeRoutingFromAssessment(
   host,
   assessmentVal,
 ) {
-  const { opt, teamUserGroupFilter } = await fetchRdPaymentStageChangeOption(
-    host,
-    assessmentVal,
-  );
+  const { opt, teamUserGroupFilter, fromDatabase } =
+    await fetchRdPaymentStageChangeOption(host, assessmentVal);
 
   rdPaymentDebug("applyRdPaymentStageChangeRouting:entry", {
     assessmentVal,
     teamUserGroupFilter,
+    fromDatabase,
+    useAssessmentTeamFilter: shouldUseRdPaymentAssessmentTeamFilter(host),
     isScopedStage2: shouldPreferScopedRoutingFromStage2(host),
     stageName: host.business?.stageName,
   });
 
-  if (!teamUserGroupFilter) {
+  host._setActionValueByCode?.(ACTION_ROUTE_TO);
+
+  if (
+    shouldUseRdPaymentAssessmentTeamFilter(host) &&
+    !teamUserGroupFilter
+  ) {
     rdPaymentDebug("applyRdPaymentStageChangeRouting:no-team-filter", {
       assessmentVal,
       assessmentApiValue: resolveRdPaymentAssessmentApiValue(
@@ -448,17 +507,17 @@ export async function applyRdPaymentStageChangeRoutingFromAssessment(
         host.business?.picklistOptionsMap?.Case?.FEC_RD_Payment_Contract_Assessment__c,
       ),
     });
-    host._setActionValueByCode?.(ACTION_ROUTE_TO);
     applyRdPaymentRoutingDisplayDefault(host);
     return true;
   }
 
-  host._setActionValueByCode?.(ACTION_ROUTE_TO);
-
   if (!opt?.stageChangeId || !opt?.team) {
     rdPaymentDebug("applyRdPaymentStageChangeRouting:no-stage-change", {
       teamUserGroupFilter,
-      note: "Đã gọi getRouteToOptionForTeam — không có FEC_Stage_Change__c",
+      fromDatabase,
+      note: fromDatabase
+        ? "getRouteToTeamOptions — không có FEC_Stage_Change__c hợp lệ"
+        : "getRouteToOptionForTeam — không có FEC_Stage_Change__c",
       fallback: RD_PAYMENT_ROUTING_DISPLAY_DEFAULT,
     });
     applyRdPaymentRoutingDisplayDefault(host);

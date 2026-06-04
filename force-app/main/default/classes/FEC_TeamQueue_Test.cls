@@ -67,7 +67,7 @@ public class FEC_TeamQueue_Test {
         FEC_Team__c team = createSampleTeam();
         // Tạo record FEC_Team_Queue__c giả lập
         FEC_Team_Queue__c tq = new FEC_Team_Queue__c(
-            Team__c = team.Id,
+            FEC_Select_Team__c = team.Id,
             FEC_Queue_Name__c = 'TestQueueDevName'
         );
         insert tq;
@@ -88,7 +88,7 @@ public class FEC_TeamQueue_Test {
         
         // Tạo mapping record FEC_Team_Queue__c
         FEC_Team_Queue__c tq = new FEC_Team_Queue__c(
-            Team__c = team.Id,
+            FEC_Select_Team__c = team.Id,
             FEC_Queue_Name__c = 'EditQueueDevName'
         );
         insert tq;
@@ -110,7 +110,7 @@ public class FEC_TeamQueue_Test {
         // Then create team and mapping record
         FEC_Team__c team = createSampleTeam();
         FEC_Team_Queue__c tq = new FEC_Team_Queue__c(
-            Team__c = team.Id,
+            FEC_Select_Team__c = team.Id,
             FEC_Queue_Name__c = 'EditQueueDevName'
         );
         insert tq;

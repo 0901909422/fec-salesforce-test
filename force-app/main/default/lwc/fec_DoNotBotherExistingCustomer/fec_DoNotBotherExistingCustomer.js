@@ -55,7 +55,7 @@ export default class Fec_DoNotBotherExistingCustomer extends LightningElement {
   subscription = null;
   @api recordId;
   @track selectedOption = "no";
-
+  @track initialHasDNBData = null;
   @track data = [];
   @track pagedData = [];
   isReadonlyMode = false;
@@ -197,6 +197,8 @@ export default class Fec_DoNotBotherExistingCustomer extends LightningElement {
         caseId: this.recordId,
       });
 
+      console.log("CASE DATA:", JSON.stringify(result));
+
       this.customerName = result.customerName;
 
       this.nationalId = result.nationalId;
@@ -283,6 +285,7 @@ export default class Fec_DoNotBotherExistingCustomer extends LightningElement {
        * DEFAULT UI
        */
       this.hasDNBData = this.data.length > 0;
+      this.initialHasDNBData = this.hasDNBData;
 
       // this.selectedOption = this.hasDNBData ? "yes" : "no";
     } catch (e) {
@@ -458,6 +461,10 @@ export default class Fec_DoNotBotherExistingCustomer extends LightningElement {
   }
 
   get hasDataAtDNB() {
+    if (this.initialHasDNBData !== null) {
+      return this.initialHasDNBData;
+    }
+
     return this.hasDNBData;
   }
 
@@ -594,30 +601,46 @@ export default class Fec_DoNotBotherExistingCustomer extends LightningElement {
     );
   }
 
+  // syncUIValuesBeforeReadonly() {
+  //   this.data = this.data.map((row) => {
+  //     /*
+  //      * Only submitted rows
+  //      */
+  //     if (!row.active) {
+  //       return row;
+  //     }
+
+  //     return {
+  //       ...row,
+
+  //       /*
+  //        * Persist current UI values
+  //        */
+  //       originalReasonLabel: this.getReasonLabel(row.originalReason),
+
+  //       updateReasonLabel: this.getReasonLabel(row.updateReason),
+
+  //       remarks: row.remarks || "-",
+  //     };
+  //   });
+
+  //   this.updatePagedData();
+  // }
+
   syncUIValuesBeforeReadonly() {
-    this.data = this.data.map((row) => {
-      /*
-       * Only submitted rows
-       */
-      if (!row.active) {
-        return row;
-      }
+    this.data = this.data.map((row) => ({
+      ...row,
 
-      return {
-        ...row,
+      originalReasonLabel: this.getReasonLabel(row.originalReason),
 
-        /*
-         * Persist current UI values
-         */
-        originalReasonLabel: this.getReasonLabel(row.originalReason),
+      updateReasonLabel: row.updateReason
+        ? this.getReasonLabel(row.updateReason)
+        : "",
 
-        updateReasonLabel: this.getReasonLabel(row.updateReason),
+      remarks: row.remarks || "",
+    }));
 
-        remarks: row.remarks || "-",
-      };
-    });
-
-    this.updatePagedData();
+    this.refreshData();
   }
 
   async handleUpdate() {
@@ -642,6 +665,7 @@ export default class Fec_DoNotBotherExistingCustomer extends LightningElement {
 
       const result = await createDNB({
         payload: JSON.stringify(payload),
+        caseId: this.recordId,
       });
 
       console.log("DNB RESULT =", result);
@@ -653,30 +677,25 @@ export default class Fec_DoNotBotherExistingCustomer extends LightningElement {
         /*
          * Reset retry count
          */
+
         await updateDNBProcessCount({
           caseId: this.recordId,
-
           isSuccess: true,
         });
 
         /*
-         * Success state
+         * Convert UI values before readonly
          */
+        this.syncUIValuesBeforeReadonly();
+
         this.isDNBUpdated = true;
 
         this.isReadonlyMode = true;
 
         this.applyReadonlyState();
 
-        /*
-         * Publish LMS
-         */
         this.publishReadonlyMessage();
 
-        /*
-         * Reload DB
-         */
-        await this.loadDNBRecords();
         this.showToast("Success", "DNB created successfully", "success");
       } else {
         /*
@@ -879,16 +898,24 @@ export default class Fec_DoNotBotherExistingCustomer extends LightningElement {
       return true;
     }
 
-    /*
-     * HANDLING MODE
-     */
-    return this.isReadonlyMode;
+    // /*
+    //  * HANDLING MODE
+    //  */
+    // return this.isReadonlyMode;
   }
 
   get showUpdateButton() {
     return (
       !this.isReadonlyMode && !this.isDNBUpdated && !this.isMaxRetryReached
     );
+  }
+
+  get isActionLocked() {
+    return this.isReadonlyMode || this.isDNBUpdated || this.isMaxRetryReached;
+  }
+
+  get isUpdateButtonDisabled() {
+    return this.isUpdateDisabled || this.isActionLocked;
   }
   //------------------------- MODAL EVENTS ----------------
   get isOpen() {

@@ -53,6 +53,10 @@
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
+        <apexClass>FEC_AssignmentMasterFieldPersistService</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
         <apexClass>FEC_AssignmentRoutingActionHandler</apexClass>
         <enabled>true</enabled>
     </classAccesses>
@@ -97,6 +101,14 @@
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
+        <apexClass>FEC_BCH_CofGsrImportRouteToService</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_BCH_ExportAssignmentRemarkLoader</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
         <apexClass>FEC_BCH_ExportPropertyService</apexClass>
         <enabled>true</enabled>
     </classAccesses>
@@ -114,6 +126,10 @@
     </classAccesses>
     <classAccesses>
         <apexClass>FEC_BCH_ImportRoutingResolver</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_BCH_ImportFileNameValidator</apexClass>
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
@@ -398,6 +414,10 @@
     </classAccesses>
     <classAccesses>
         <apexClass>FEC_CaseMasterDataHelper</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_CaseMigrationService</apexClass>
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
@@ -849,6 +869,10 @@
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
+        <apexClass>FEC_GetRepaymentScheduleByAppIdCallout</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
         <apexClass>FEC_GetRewardEligibility</apexClass>
         <enabled>true</enabled>
     </classAccesses>
@@ -1101,6 +1125,10 @@
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
+        <apexClass>FEC_RdPaymentRoutingHelper</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
         <apexClass>FEC_RecordTypeDAO</apexClass>
         <enabled>true</enabled>
     </classAccesses>
@@ -1274,6 +1302,10 @@
     </classAccesses>
     <classAccesses>
         <apexClass>FEC_TransactionsController</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_UMSUserManagementRestService</apexClass>
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>

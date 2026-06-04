@@ -59,7 +59,7 @@ export default class Fec_DoNotBotherNonExistingCustomer extends LightningElement
   maxRetry = 3;
 
   isMaxRetryReached = false;
-
+  @track initialHasDNBData = null;
   labels = {
     pageSizeLabel: FEC_RECORDS_PER_PAGE_LABEL,
     goToPageLabel: FEC_GO_TO_PAGE_LABEL,
@@ -267,75 +267,27 @@ export default class Fec_DoNotBotherNonExistingCustomer extends LightningElement
   }
 
   async checkDNB() {
+    const draftStorageKey = `fec_case_business_draft_${this.recordId}`;
+
+    const draft = JSON.parse(localStorage.getItem(draftStorageKey)) || {};
+
+    // tìm field phone trong draft
+    const phoneKey = Object.keys(draft).find(
+      (k) =>
+        k.toLowerCase().includes("phone") || k.toLowerCase().includes("mobile"),
+    );
+
+    const phoneNumber = phoneKey ? draft[phoneKey] : this.phoneNumber;
+
     console.log("Checking DNB for NID:", this.nationalId);
+    console.log("Checking DNB for Phone:", phoneNumber);
 
     return await checkDNBNonExisting({
       caseId: this.recordId,
       nid: this.nationalId,
+      phoneNumber: phoneNumber,
     });
   }
-
-  // async handleCheckDNB() {
-  //   this.isCheckingDNB = true;
-
-  //   try {
-  //     /*
-  //      * CHECK API ONLY
-  //      */
-  //     const result = await this.checkDNB();
-
-  //     console.log("DNB RESULT:", JSON.stringify(result));
-
-  //     this.isDNBChecked = true;
-
-  //     /*
-  //      * API FAIL
-  //      */
-  //     if (!result?.success) {
-  //       this.showToast(
-  //         "Error",
-  //         result?.errorMessage || "Check DNB failed",
-  //         "error",
-  //       );
-
-  //       return;
-  //     }
-
-  //     /*
-  //      * HAS DATA
-  //      */
-  //     const hasData = result?.result && result.result.length > 0;
-
-  //     this.hasExistingDNB = hasData;
-
-  //     this.hasDNBData = hasData;
-
-  //     // /*
-  //     //  * default selection
-  //     //  */
-  //     // this.selectedOption = hasData ? "yes" : "no";
-
-  //     /*
-  //      * IMPORTANT:
-  //      * clear table
-  //      */
-  //     this.data = [];
-
-  //     this.currentPage = 1;
-
-  //     this.updatePagedData();
-  //   } catch (e) {
-  //     console.error("handleCheckDNB ERROR", e);
-
-  //     this.showToast(
-  //       "Error",
-  //       e?.body?.message || e?.message || "Unexpected error",
-  //       "error",
-  //     );
-  //   } finally {
-  //     this.isCheckingDNB = false;
-  //   }
-  // }
 
   async handleCheckDNB() {
     /*
@@ -348,9 +300,6 @@ export default class Fec_DoNotBotherNonExistingCustomer extends LightningElement
     this.isCheckingDNB = true;
 
     try {
-      /*
-       * CHECK API ONLY
-       */
       const result = await this.checkDNB();
 
       console.log("DNB RESULT:", JSON.stringify(result));
@@ -366,28 +315,30 @@ export default class Fec_DoNotBotherNonExistingCustomer extends LightningElement
           result?.errorMessage || "Check DNB failed",
           "error",
         );
-
         return;
       }
 
       /*
-       * HAS DATA
+       * NO DATA FOUND
        */
-      const hasData = result?.result && result.result.length > 0;
+      const hasData = Array.isArray(result?.result) && result.result.length > 0;
 
       this.hasExistingDNB = hasData;
-
       this.hasDNBData = hasData;
 
+      if (this.initialHasDNBData === null) {
+        this.initialHasDNBData = hasData;
+      }
       /*
-       * IMPORTANT:
        * clear table
        */
       this.data = [];
-
       this.currentPage = 1;
-
       this.updatePagedData();
+
+      if (!hasData) {
+        return;
+      }
     } catch (e) {
       console.error("handleCheckDNB ERROR", e);
 
@@ -507,6 +458,10 @@ export default class Fec_DoNotBotherNonExistingCustomer extends LightningElement
   }
 
   get hasDataAtDNB() {
+    if (this.initialHasDNBData !== null) {
+      return this.initialHasDNBData;
+    }
+
     return this.hasDNBData;
   }
 
@@ -721,6 +676,7 @@ export default class Fec_DoNotBotherNonExistingCustomer extends LightningElement
 
       const result = await createDNB({
         payload: JSON.stringify(payload),
+        caseId: this.recordId,
       });
 
       console.log("DNB RESULT =", result);
@@ -734,22 +690,17 @@ export default class Fec_DoNotBotherNonExistingCustomer extends LightningElement
          */
         await updateDNBProcessCount({
           caseId: this.recordId,
-
           isSuccess: true,
         });
 
-        /*
-         * Success state
-         */
+        this.syncUIValuesBeforeReadonly();
+
         this.isDNBUpdated = true;
 
         this.isReadonlyMode = true;
 
         this.applyReadonlyState();
 
-        /*
-         * Publish LMS
-         */
         this.publishReadonlyMessage();
 
         this.showToast("Success", "DNB created successfully", "success");
@@ -951,30 +902,46 @@ export default class Fec_DoNotBotherNonExistingCustomer extends LightningElement
     );
   }
 
+  // syncUIValuesBeforeReadonly() {
+  //   this.data = this.data.map((row) => {
+  //     /*
+  //      * Only submitted rows
+  //      */
+  //     if (!row.active) {
+  //       return row;
+  //     }
+
+  //     return {
+  //       ...row,
+
+  //       /*
+  //        * Persist current UI values
+  //        */
+  //       originalReasonLabel: this.getReasonLabel(row.originalReason),
+
+  //       updateReasonLabel: this.getReasonLabel(row.updateReason),
+
+  //       remarks: row.remarks || "-",
+  //     };
+  //   });
+
+  //   this.updatePagedData();
+  // }
+
   syncUIValuesBeforeReadonly() {
-    this.data = this.data.map((row) => {
-      /*
-       * Only submitted rows
-       */
-      if (!row.active) {
-        return row;
-      }
+    this.data = this.data.map((row) => ({
+      ...row,
 
-      return {
-        ...row,
+      originalReasonLabel: this.getReasonLabel(row.originalReason),
 
-        /*
-         * Persist current UI values
-         */
-        originalReasonLabel: this.getReasonLabel(row.originalReason),
+      updateReasonLabel: row.updateReason
+        ? this.getReasonLabel(row.updateReason)
+        : "",
 
-        updateReasonLabel: this.getReasonLabel(row.updateReason),
+      remarks: row.remarks || "",
+    }));
 
-        remarks: row.remarks || "-",
-      };
-    });
-
-    this.updatePagedData();
+    this.refreshData();
   }
 
   showToast(title, message, variant, mode = "dismissable") {
@@ -1026,16 +993,28 @@ export default class Fec_DoNotBotherNonExistingCustomer extends LightningElement
       return true;
     }
 
-    /*
-     * HANDLING MODE
-     */
-    return this.isReadonlyMode;
+    // /*
+    //  * HANDLING MODE
+    //  */
+    // return this.isReadonlyMode;
   }
 
   get showUpdateButton() {
     return (
       !this.isReadonlyMode && !this.isDNBUpdated && !this.isMaxRetryReached
     );
+  }
+
+  get isActionLocked() {
+    return this.isReadonlyMode || this.isDNBUpdated || this.isMaxRetryReached;
+  }
+
+  get isUpdateButtonDisabled() {
+    return this.isUpdateDisabled || this.isActionLocked;
+  }
+
+  get isCheckDNBDisabled() {
+    return this.isCheckingDNB;
   }
 
   //FECREDIT_CSM_2025_KH-1561

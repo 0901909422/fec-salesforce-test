@@ -1,4 +1,6 @@
 public with sharing class FEC_CommonUltils {
+  private static Set<String> cachedActiveChannelIds;
+
   public static void notifyUsers(
     Set<String> recipientsIds,
     String targetId,
@@ -153,6 +155,99 @@ public with sharing class FEC_CommonUltils {
    */
   public static String defaultToEmpty(Object obj) {
     return obj != null ? String.valueOf(obj) : FEC_ConstantCommon.STR_EMPTY;
+  }
+
+  public static Boolean isActiveChannelSupported(String channel) {
+    if (String.isBlank(channel)) {
+      return false;
+    }
+    return getActiveChannelIds().contains(normalizeChannelKey(channel));
+  }
+
+  public static String sanitizeChannelForMessage(String channel) {
+    if (String.isBlank(channel)) {
+      return '';
+    }
+    return channel.trim().replace('"', '').replace('&quot;', '');
+  }
+
+  public static String buildNatureOfCaseChannelLikePattern(String channel) {
+    if (String.isBlank(channel)) {
+      return null;
+    }
+    return '%' + channel.trim() + '%';
+  }
+
+  public static Set<String> getActiveChannelIds() {
+    if (cachedActiveChannelIds != null) {
+      return cachedActiveChannelIds;
+    }
+
+    cachedActiveChannelIds = new Set<String>();
+    String channelObjectApi = resolveFirstExistingObjectApi(
+      new List<String>{ 'FEC_Channel__c', 'FEC_Channel_c' }
+    );
+    if (String.isBlank(channelObjectApi)) {
+      return cachedActiveChannelIds;
+    }
+
+    String channelIdFieldApi = resolveFirstExistingFieldApi(
+      channelObjectApi,
+      new List<String>{ 'FEC_Channel_ID__c', 'FEC_Channel_ID_c' }
+    );
+    String channelStatusFieldApi = resolveFirstExistingFieldApi(
+      channelObjectApi,
+      new List<String>{ 'FEC_Channel_Status__c', 'FEC_Channel_Statusc' }
+    );
+    if (String.isBlank(channelIdFieldApi) || String.isBlank(channelStatusFieldApi)) {
+      return cachedActiveChannelIds;
+    }
+
+    String soql =
+      'SELECT Id, Name, ' + channelIdFieldApi + ', ' + channelStatusFieldApi +
+      ' FROM ' + channelObjectApi +
+      ' WHERE ' + channelStatusFieldApi + ' = true';
+
+    for (SObject row : Database.query(soql)) {
+      String channelId = (String) row.get(channelIdFieldApi);
+      if (String.isBlank(channelId)) {
+        continue;
+      }
+      cachedActiveChannelIds.add(normalizeChannelKey(channelId));
+    }
+
+    return cachedActiveChannelIds;
+  }
+
+  private static String normalizeChannelKey(String channel) {
+    return channel == null ? null : channel.trim().toUpperCase();
+  }
+
+  private static String resolveFirstExistingObjectApi(List<String> candidates) {
+    Map<String, Schema.SObjectType> globalDescribe = Schema.getGlobalDescribe();
+    for (String apiName : candidates) {
+      if (globalDescribe.containsKey(apiName)) {
+        return apiName;
+      }
+    }
+    return null;
+  }
+
+  private static String resolveFirstExistingFieldApi(String objectApiName, List<String> candidates) {
+    if (String.isBlank(objectApiName)) {
+      return null;
+    }
+    Schema.SObjectType objectType = Schema.getGlobalDescribe().get(objectApiName);
+    if (objectType == null) {
+      return null;
+    }
+    Map<String, Schema.SObjectField> fieldMap = objectType.getDescribe().fields.getMap();
+    for (String apiName : candidates) {
+      if (fieldMap.containsKey(apiName)) {
+        return apiName;
+      }
+    }
+    return null;
   }
 
   public static Boolean isPhone(String phone) {
@@ -990,6 +1085,10 @@ public with sharing class FEC_CommonUltils {
     deferredApiLogDepth++;
   }
 
+  public static Boolean isDeferredApiLoggingActive() {
+    return deferredApiLogDepth > 0;
+  }
+
   public static void flushDeferredApiLogs() {
     if (deferredApiLogDepth <= 0) {
       return;
@@ -1628,6 +1727,19 @@ public with sharing class FEC_CommonUltils {
   }
   public static Boolean isCccd(String value) {
     return String.isNotBlank(value) && Pattern.matches(FEC_ConstantCommon.INPUT_SEPARATOR_REGEX_12, value.trim());
+  }
+  public static String mapApiContractStatusToPicklist(String apiContractStatus) {
+    if (String.isBlank(apiContractStatus)) {
+      return null;
+    }
+    String normalizedKey = apiContractStatus
+      .trim()
+      .toUpperCase()
+      .replaceAll(FEC_ConstantCommon.PATTERN_NON_ALNUM_UPPER, '');
+    if (String.isBlank(normalizedKey)) {
+      return null;
+    }
+    return FEC_ConstantCommon.API_CONTRACT_STATUS_TO_PICKLIST.get(normalizedKey);
   }
 
 }

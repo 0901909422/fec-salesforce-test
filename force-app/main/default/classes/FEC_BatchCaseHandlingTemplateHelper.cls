@@ -872,6 +872,11 @@ public without sharing class FEC_BatchCaseHandlingTemplateHelper {
         return 0;
     }
 
+    //PhongBT 02/06/26: delegate cho FEC_BCH_ImportFileNameValidator (import file name exact match).
+    public static Boolean importTemplateRowMatchesUserGroup(SObject templateRow, String userGroup) {
+        return templateRowMatchesUserGroup(templateRow, userGroup);
+    }
+
     private static Boolean templateRowMatchesUserGroup(SObject templateRow, String userGroup) {
         if (String.isBlank(userGroup)) {
             return true;
@@ -887,6 +892,7 @@ public without sharing class FEC_BatchCaseHandlingTemplateHelper {
     }
 
     // 27/05/2026 18:45 linhdev - validate suffix template (vd. _CSSupport) khớp role/user group khi import
+    // 01/06/2026 18:45 phongbt - sửa match contains để thêm đuôi vào (vd. _CSSupport123) thì vẫn match
     public static String validateUploadedTemplateForUserGroup(
         String templateOrFileName,
         String businessProcessCode,
@@ -909,8 +915,13 @@ public without sharing class FEC_BatchCaseHandlingTemplateHelper {
         if (allowedSuffixes == null || allowedSuffixes.isEmpty()) {
             return ERR_ROLE_TEMPLATE_MISMATCH;
         }
+        String suffixNorm = templateSuffix.toLowerCase();
         for (String allowed : allowedSuffixes) {
-            if (String.isNotBlank(allowed) && allowed.trim().equalsIgnoreCase(templateSuffix)) {
+            if (String.isBlank(allowed)) {
+                continue;
+            }
+            String allowedNorm = allowed.trim().toLowerCase();
+            if (String.isNotBlank(allowedNorm) && suffixNorm.contains(allowedNorm)) {
                 return null;
             }
         }

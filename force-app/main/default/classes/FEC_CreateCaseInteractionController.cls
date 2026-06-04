@@ -102,7 +102,7 @@ public with sharing class FEC_CreateCaseInteractionController {
       newCase.OwnerId = UserInfo.getUserId();
       newCase.FEC_Customer_Name__c = customerName;
       newCase.FEC_National_ID_Passport_ID__c = nationalPassportId;
-      newCase.Status = FEC_ConstantCommon.CASE_STATUS_NEW;
+      newCase.Status = FEC_ConstantCommon.CASE_STATUS_OPEN;
       newCase.Origin = FEC_ConstantCommon.CASE_WEB_ORIGIN;
       newCase.FEC_Customer_Type__c = FEC_ConstantCommon.CUSTOMER_HISTORY_NON_EXISTING_CUSTOMER;
       newCase.FEC_Interaction__c = interaction.Id;
@@ -159,5 +159,23 @@ public with sharing class FEC_CreateCaseInteractionController {
       throw new AuraHandledException(e.getMessage());
     }
     return rec;
+  }
+
+  // Create case with no recordId in Lisview
+  @AuraEnabled
+  public static Id createInteractionCase(String customerName, String nationalId) {
+      Case c = new Case();
+      c.RecordTypeId = Schema.SObjectType.Case.getRecordTypeInfosByDeveloperName()
+          .get(FEC_ConstantCommon.CASE_INTERNAL_RECORD_TYPE_DEV_NAME)
+          .getRecordTypeId();
+      c.OwnerId = UserInfo.getUserId();
+      c.Status = FEC_ConstantCommon.CASE_STATUS_NEW;
+      c.Origin = FEC_ConstantCommon.CASE_WEB_ORIGIN;
+      c.FEC_Customer_Name__c = customerName;
+      c.FEC_National_ID_Passport_ID__c = nationalId;
+      c.FEC_Interaction_View_Mode__c = FEC_ConstantCommon.INTERACTION_HANDLING_MODE;
+
+      insert c;
+      return c.Id;
   }
 }

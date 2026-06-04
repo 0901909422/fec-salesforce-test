@@ -65,6 +65,11 @@
         <field>FEC_Routing_Action_History__c.FEC_Is_TS_Queue_User__c</field>
         <readable>true</readable>
     </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
+        <field>FEC_Routing_Action_History__c.FEC_Updated_Group__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
     <hasActivationRequired>false</hasActivationRequired>
     <label>RD - IT User - Report &amp; Dashboard</label>
     <license>Salesforce</license>

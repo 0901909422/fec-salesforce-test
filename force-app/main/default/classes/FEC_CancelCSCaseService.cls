@@ -19,7 +19,9 @@ global with sharing class FEC_CancelCSCaseService {
         CaseInfoType CaseInfo
     ) {
         CancelCSCaseResponseType response = new CancelCSCaseResponseType();
-        
+        Boolean isSuccess = true;
+        String errorMessage;
+
         // LUÔN LUÔN khởi tạo Sys để trả về TransactionID và DateTime dù lỗi hay thành công
         response.Sys = new SysType2();
         response.Sys.DateTime_x = System.now();
@@ -75,9 +77,26 @@ global with sharing class FEC_CancelCSCaseService {
 
         } catch (Exception e) {
             // G. XỬ LÝ RESPONSE LỖI
-            handleError(response, e.getMessage());
+            isSuccess = false;
+            errorMessage = e.getMessage();
+            handleError(response, errorMessage);
         }
-        
+
+        CancelCSCaseRequestPayload requestPayload = new CancelCSCaseRequestPayload();
+        requestPayload.Sys = Sys;
+        requestPayload.CaseInfo = CaseInfo;
+
+        logApiFull(
+            'CancelCSCase',
+            'POST',
+            requestPayload,
+            response,
+            isSuccess,
+            isSuccess ? '200' : '500',
+            errorMessage,
+            Sys != null ? Sys.TransactionID : null
+        );
+
         return response;
     }
     
@@ -96,16 +115,8 @@ global with sharing class FEC_CancelCSCaseService {
     }
 
     private static void validateInputDetail(SysType Sys, CaseInfoType CaseInfo) {
-        // 1. Channel
-        if (String.isBlank(Sys.Channel)) {
-            throw new ServiceException(String.format(System.Label.FEC_MSG_Param_Required, new List<String>{'Channel'}));
-        }
-        if (!FEC_ConstantCommon.CANCEL_CS_VALID_CHANNELS.contains(Sys.Channel)) {
-            throw new ServiceException(String.format(
-                System.Label.FEC_MSG_CancelCS_Channel_Invalid,
-                new List<String>{String.join(FEC_ConstantCommon.CANCEL_CS_VALID_CHANNELS_ORDERED, ', ')}
-            ));
-        }
+        // 1. Channel — chỉ chấp nhận FEC_Channel_ID__c có FEC_Channel_Status__c = true
+        validateActiveChannel(Sys.Channel);
 
         // 2. TransactionID
         if (String.isBlank(Sys.TransactionID)) {
@@ -204,9 +215,77 @@ global with sharing class FEC_CancelCSCaseService {
         }
     }
     
+    private static void validateActiveChannel(String channel) {
+        if (String.isBlank(channel)) {
+            throw new ServiceException(String.format(System.Label.FEC_MSG_Param_Required, new List<String>{'Channel'}));
+        }
+        String normalizedChannel = channel.trim();
+        List<FEC_Channel__c> channels = [
+            SELECT Id
+            FROM FEC_Channel__c
+            WHERE FEC_Channel_ID__c = :normalizedChannel
+            AND FEC_Channel_Status__c = true
+            LIMIT 1
+        ];
+        if (channels.isEmpty()) {
+            throw new ServiceException(String.format(
+                System.Label.FEC_MSG_CancelCS_Channel_Invalid,
+                new List<String>{ getActiveChannelIdsForError() }
+            ));
+        }
+    }
+
+    private static String getActiveChannelIdsForError() {
+        List<String> channelIds = new List<String>();
+        for (FEC_Channel__c ch : [
+            SELECT FEC_Channel_ID__c
+            FROM FEC_Channel__c
+            WHERE FEC_Channel_Status__c = true
+            AND FEC_Channel_ID__c != null
+            ORDER BY FEC_Channel_ID__c ASC
+        ]) {
+            channelIds.add(ch.FEC_Channel_ID__c);
+        }
+        return String.join(channelIds, ', ');
+    }
+
     private static String safeString(String input) {
         return input == null ? FEC_ConstantCommon.STR_EMPTY : input;
     }
+
+    private static void logApiFull(
+        String endpoint,
+        String method,
+        Object requestObj,
+        Object responseObj,
+        Boolean isSuccess,
+        String statusCode,
+        String errorMessage,
+        String transactionId
+    ) {
+        try {
+            HttpResponse apiResponse = new HttpResponse();
+            apiResponse.setStatusCode(isSuccess ? 200 : 500);
+            apiResponse.setBody(FEC_CommonUltils.serializeSafe(responseObj));
+
+            FEC_CommonUltils.logApi(
+                'CancelCSCase',
+                endpoint,
+                method,
+                FEC_CommonUltils.serializeSafe(requestObj),
+                apiResponse,
+                errorMessage
+            );
+        } catch (Exception e) {
+            System.debug('LOG_API_ERROR: ' + e.getMessage());
+        }
+    }
+
+    private class CancelCSCaseRequestPayload {
+        public SysType Sys;
+        public CaseInfoType CaseInfo;
+    }
+
     private class ServiceException extends Exception {}
     
     // -------------------------------------------------

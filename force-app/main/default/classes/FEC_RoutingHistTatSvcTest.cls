@@ -7,6 +7,48 @@ private class FEC_RoutingHistTatSvcTest {
     private static final Datetime T2 = Datetime.newInstance(2026, 5, 20, 12, 0, 0);
 
     @isTest
+    static void updatedGroupPrefersUpdatedOwnerTeam() {
+        Id updOwnerId = nextId(User.SObjectType);
+        Id origOwnerId = nextId(User.SObjectType);
+        Map<Id, String> teamByOwner = new Map<Id, String>{
+            updOwnerId => 'CP',
+            origOwnerId => 'CA'
+        };
+
+        FEC_Routing_Action_History__c row = new FEC_Routing_Action_History__c(
+            FEC_Updated_User_Queue_ID__c = String.valueOf(updOwnerId),
+            FEC_Original_User_Queue_ID__c = String.valueOf(origOwnerId)
+        );
+
+        System.assertEquals(
+            'CP',
+            FEC_RoutingHistTatSvc.resolveUpdatedGroupCode(row, teamByOwner)
+        );
+    }
+
+    @isTest
+    static void queueUserFlagTrueWhenUpdatedOrOriginalTeamMatches() {
+        System.assertEquals(true, FEC_RoutingHistTatSvc.teamMatches('CP', 'CS', 'CP'));
+        System.assertEquals(true, FEC_RoutingHistTatSvc.teamMatches('CS', 'CO', 'CO'));
+        System.assertEquals(false, FEC_RoutingHistTatSvc.teamMatches('CS', 'IB', 'CP'));
+    }
+
+    @isTest
+    static void updatedGroupFallsBackToOriginalOwnerTeam() {
+        Id origOwnerId = nextId(User.SObjectType);
+        Map<Id, String> teamByOwner = new Map<Id, String>{ origOwnerId => 'DS' };
+
+        FEC_Routing_Action_History__c row = new FEC_Routing_Action_History__c(
+            FEC_Original_User_Queue_ID__c = String.valueOf(origOwnerId)
+        );
+
+        System.assertEquals(
+            'DS',
+            FEC_RoutingHistTatSvc.resolveUpdatedGroupCode(row, teamByOwner)
+        );
+    }
+
+    @isTest
     static void th222RequiresNullAssignmentOnCase() {
         Id caseId = nextId(Case.SObjectType);
         Id assignmentId = nextId(FEC_Assignment__c.SObjectType);

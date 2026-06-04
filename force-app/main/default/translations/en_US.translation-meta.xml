@@ -24,12 +24,4 @@
         <name>FEC_MSG_ACTION_PHONE_UPDATE_ERROR</name>
         <label>Cập nhật thông tin khách hàng thất bại. Vui lòng thử lại</label>
     </customLabels>
-    <customLabels>
-        <name>LBL_SFT_Notification_Type</name>
-        <label>Notification Type</label>
-    </customLabels>
-    <customLabels>
-        <name>LBL_SFT_Notification_Channel</name>
-        <label>Notification Channel</label>
-    </customLabels>
 </Translations>

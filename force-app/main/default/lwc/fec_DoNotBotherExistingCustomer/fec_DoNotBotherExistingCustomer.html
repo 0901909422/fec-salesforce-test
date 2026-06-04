@@ -39,11 +39,9 @@
                         </template>
 
                         <!-- BUTTON -->
-                        <template if:true={showUpdateButton}>
                             <lightning-button class="update-dnb-btn" label="Update to DNB" variant="brand"
-                                onclick={openModal} disabled={isUpdateDisabled}>
+                                onclick={openModal} disabled={isUpdateButtonDisabled}>
                             </lightning-button>
-                        </template>
 
                         <template if:true={errorMessage}>
 
@@ -58,11 +56,11 @@
                 </template>
             </div>
         </template>
-        <!-- <template if:true={showResultSection}> -->
+        <template if:true={showResultSection}>
         <div>
             <c-fec_-do-not-bother-result-view record-id={recordId}></c-fec_-do-not-bother-result-view>
         </div>
-        <!-- </template> -->
+        </template>
     </lightning-card>
     <!-- MODAL -->
     <template if:true={isOpen}>

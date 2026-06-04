@@ -20,6 +20,7 @@ import getBulkExportPropertyBundle from "@salesforce/apex/FEC_BatchCaseHandlingC
 import downloadCaseAttachmentsZip from "@salesforce/apex/FEC_BatchCaseHandlingController.downloadCaseAttachmentsZip";
 import zipExcelFiles from "@salesforce/apex/FEC_BatchCaseHandlingController.zipExcelFiles";
 import importBatchData from "@salesforce/apex/FEC_BatchCaseHandlingController.importBatchData";
+import validateImportFileName from "@salesforce/apex/FEC_BatchCaseHandlingController.validateImportFileName";
 import logFailedImport from "@salesforce/apex/FEC_BatchCaseHandlingController.logFailedImport";
 import FEC_SheetJS from "@salesforce/resourceUrl/FEC_SheetJS";
 import { STR_EMPTY, DATE_PLACEHOLDER } from "c/fec_CommonConst";
@@ -2431,7 +2432,7 @@ export default class Fec_BatchCaseHandling extends LightningElement {
     );
   }
 
-  handleImportFileChange(event) {
+  async handleImportFileChange(event) {
     const file = event.target?.files?.[0];
     if (!file) {
       return;
@@ -2447,8 +2448,36 @@ export default class Fec_BatchCaseHandling extends LightningElement {
       this.resetImportFileInput();
       return;
     }
+    const fileName = file.name;
+    try {
+      const selectedBpCount = (this.bpRows || []).filter((r) => r && r.selected).length;
+      const importCtx = await this.resolveImportTemplateContext(
+        this.inferCofOrGsrFromFileName(fileName),
+        fileName
+      );
+      const validation = await validateImportFileName({
+        fileName,
+        businessProcessCode: importCtx.businessProcessCode,
+        businessProcessName: importCtx.businessProcessName,
+        templateName: importCtx.templateName,
+        selectedBusinessProcessCount: selectedBpCount
+      });
+      if (!validation || validation.valid !== true) {
+        this.showError(
+          MSG_IMPORT_FAILED,
+          validation?.message ||
+            "Tên file không khớp template Bulk Actions của quy trình và nhóm người dùng."
+        );
+        this.clearSelectedImportFile();
+        return;
+      }
+    } catch (e) {
+      this.showError(MSG_IMPORT_FAILED, this.extractError(e) || MSG_IMPORT_FAILED);
+      this.clearSelectedImportFile();
+      return;
+    }
     this.selectedImportFile = file;
-    this.selectedImportFileName = file.name;
+    this.selectedImportFileName = fileName;
     this.attachDataRequiredError = false;
     this.importSuccessMessage = STR_EMPTY;
     this.importErrorMessage = STR_EMPTY;
@@ -2482,6 +2511,7 @@ export default class Fec_BatchCaseHandling extends LightningElement {
     }
   }
 
+  // 01/06/2026 12:00 linhdev - import: gửi file base64 + rowsJson rỗng; Apex parse/validate (không SheetJS)
   async handleImportData() {
     this.importSuccessMessage = STR_EMPTY;
     this.importErrorMessage = STR_EMPTY;
@@ -2492,47 +2522,21 @@ export default class Fec_BatchCaseHandling extends LightningElement {
     }
     const file = this.selectedImportFile;
     const fileName = this.selectedImportFileName;
-    if (!this.sheetJsReady) {
-      try {
-        await loadScript(this, FEC_SheetJS);
-        this.sheetJsReady = true;
-      } catch (e) {
-        this.handleImportFailure(e, fileName);
-        return;
-      }
-    }
     this.isImportSubmitting = true;
     this.isLoading = true;
     try {
       const arrayBuffer = await this.readFileAsArrayBuffer(file);
       const fileBodyBase64 = arrayBufferToBase64(arrayBuffer);
-      const parsed = this.parseImportWorkbook(arrayBuffer);
-      if (!parsed) {
-        this.handleImportFailure(MSG_HEADER_INVALID, fileName);
-        await this.safeLogFailedImport(
-          fileName,
-          TEMPLATE_NAME_OTHER,
-          MSG_HEADER_INVALID
-        );
-        return;
-      }
-      const { rows, isCofOrGsr, originalHeaders } = parsed;
-      if (!rows.length) {
-        this.handleImportFailure(MSG_FILE_NO_DATA, fileName);
-        await this.safeLogFailedImport(
-          fileName,
-          isCofOrGsr ? TEMPLATE_NAME_GSR : TEMPLATE_NAME_OTHER,
-          MSG_FILE_NO_DATA
-        );
-        return;
-      }
-      const importCtx = await this.resolveImportTemplateContext(isCofOrGsr, fileName);
+      const importCtx = await this.resolveImportTemplateContext(
+        this.inferCofOrGsrFromFileName(fileName),
+        fileName
+      );
       const result = await this.withTimeout(
         importBatchData({
           fileName,
           fileBodyBase64,
           templateName: importCtx.templateName,
-          rowsJson: JSON.stringify(rows),
+          rowsJson: "[]",
           businessProcessCode: importCtx.businessProcessCode,
           businessProcessName: importCtx.businessProcessName
         }),
@@ -2540,10 +2544,17 @@ export default class Fec_BatchCaseHandling extends LightningElement {
         IMPORT_TIMEOUT_MESSAGE
       );
       if (!result || result.success !== true) {
-        this.handleImportFailure(
+        // Apex importBatchData đã ghi Failure — không gọi logFailedImport tránh 2 dòng My Bulk Actions
+        await this.recordImportFailureInBulkActions(
+          fileName,
+          importCtx.templateName,
           result?.message || MSG_IMPORT_FAILED,
-          fileName
+          true
         );
+        //tugnnm37 - Apex importBatchData đã tự ghi Failure vào My Bulk Actions; không log thêm từ LWC để tránh duplicate 2 dòng
+        this.importSuccessMessage = STR_EMPTY;
+        this.importErrorMessage = STR_EMPTY;
+        this.clearSelectedImportFile();
         await this.refreshRows();
         return;
       }
@@ -2557,16 +2568,44 @@ export default class Fec_BatchCaseHandling extends LightningElement {
       this.clearSelectedImportFile();
       await this.refreshRows();
     } catch (error) {
-      this.handleImportFailure(error, fileName);
-      await this.safeLogFailedImport(
+      await this.recordImportFailureInBulkActions(
         fileName,
         TEMPLATE_NAME_OTHER,
-        this.extractError(error)
+        this.extractError(error) || MSG_IMPORT_FAILED
       );
     } finally {
       this.isImportSubmitting = false;
       this.isLoading = false;
     }
+  }
+
+  // 01/06/2026 12:00 linhdev - suy COF/GSR từ tên file (gsrtemp/coftemp) cho resolve template
+  inferCofOrGsrFromFileName(fileName) {
+    const core = String(fileName || STR_EMPTY)
+      .trim()
+      .toLowerCase()
+      .replace(/\.xlsx$/i, STR_EMPTY);
+    return core.startsWith("gsrtemp") || core.startsWith("coftemp");
+  }
+
+  // 01/06/2026 12:00 linhdev - Lỗi import: ghi My Bulk Actions (chỉ client-side; Apex đã ghi thì skipLog)
+  async recordImportFailureInBulkActions(
+    fileName,
+    templateName,
+    reason,
+    skipLog = false
+  ) {
+    this.importSuccessMessage = STR_EMPTY;
+    this.importErrorMessage = STR_EMPTY;
+    if (!skipLog) {
+      await this.safeLogFailedImport(
+        fileName,
+        templateName,
+        reason || MSG_IMPORT_FAILED
+      );
+    }
+    this.clearSelectedImportFile();
+    await this.refreshRows();
   }
 
   handleImportFailure(error, fileName) {
@@ -2690,6 +2729,23 @@ export default class Fec_BatchCaseHandling extends LightningElement {
       headerRow,
       headerColumnIndexes
     ).headers;
+    const importHeadersNormalized = importHeaders.map((h) =>
+      (h == null ? STR_EMPTY : String(h))
+        .replace(/\s+/g, STR_EMPTY)
+        .toLowerCase()
+    );
+    const idxCaseIdImport = this.findHeaderIndex(
+      importHeadersNormalized,
+      HEADERS_CASE_ID
+    );
+    const idxRemarkImport = this.findHeaderIndex(
+      importHeadersNormalized,
+      HEADERS_REMARKS
+    );
+    const idxRoutingImport = this.findHeaderIndex(
+      importHeadersNormalized,
+      HEADERS_ROUTING_ACTION
+    );
     const idxCaseId = this.findHeaderIndex(normalized, HEADERS_CASE_ID);
     const idxRouting = this.findHeaderIndex(normalized, HEADERS_ROUTING_ACTION);
     const idxRemark = this.findHeaderIndex(normalized, HEADERS_REMARKS);
@@ -2741,41 +2797,55 @@ export default class Fec_BatchCaseHandling extends LightningElement {
       const caseIdSearch = this.readImportCellValue(
         sheet,
         i,
-        idxCaseId,
-        headerColumnIndexes,
+        idxCaseIdImport >= 0 ? idxCaseIdImport : idxCaseId,
+        importColumnIndexes,
         r
       );
       const routingAction =
-        idxRouting >= 0
+        idxRoutingImport >= 0 || idxRouting >= 0
           ? this.readImportCellValue(
             sheet,
             i,
-            idxRouting,
-            headerColumnIndexes,
+            idxRoutingImport >= 0 ? idxRoutingImport : idxRouting,
+            importColumnIndexes,
             r
           )
           : STR_EMPTY;
       const inputtedRemarksRaw =
-        idxRemark >= 0
+        idxRemarkImport >= 0 || idxRemark >= 0
           ? this.readImportCellValue(
             sheet,
             i,
-            idxRemark,
-            headerColumnIndexes,
+            idxRemarkImport >= 0 ? idxRemarkImport : idxRemark,
+            importColumnIndexes,
             r
           )
           : STR_EMPTY;
       const inputtedRemarksCharLength = inputtedRemarksRaw ? inputtedRemarksRaw.length : 0;
       // 30/05/2026 21:00 linhdev - không gửi full remark > 32,767 trong JSON (Apex validate qua charLength + file gốc)
       const inputtedRemarks =
-        inputtedRemarksCharLength > INPUTTED_REMARKS_MAX_LEN
+        inputtedRemarksCharLength >= INPUTTED_REMARKS_MAX_LEN
           ? STR_EMPTY
           : inputtedRemarksRaw;
       const assignmentId =
-        idxAssignmentId >= 0 ? this.cellAsString(r[idxAssignmentId]) : STR_EMPTY;
+        idxAssignmentId >= 0
+          ? this.readImportCellValue(
+            sheet,
+            i,
+            idxAssignmentId,
+            headerColumnIndexes,
+            r
+          )
+          : STR_EMPTY;
       const assignmentRoutingAction =
         idxAssignmentRouting >= 0
-          ? this.cellAsString(r[idxAssignmentRouting])
+          ? this.readImportCellValue(
+            sheet,
+            i,
+            idxAssignmentRouting,
+            headerColumnIndexes,
+            r
+          )
           : STR_EMPTY;
       const csD2CAssessmentType =
         idxCsD2CAssessment >= 0
@@ -2828,20 +2898,18 @@ export default class Fec_BatchCaseHandling extends LightningElement {
         continue;
       }
       const originalCells = [];
-      for (let col = 0; col < headerRow.length; col += 1) {
-        if (resultColExclude.has(col)) {
-          continue;
-        }
+      // 01/06/2026 18:00 linhdev - originalCells theo importColumnIndexes (không lệch khi resolveWorksheetHeaderColumnIndexes map sai cột)
+      for (let col = 0; col < importHeaders.length; col += 1) {
         const worksheetCol =
-          Array.isArray(headerColumnIndexes) && col < headerColumnIndexes.length
-            ? headerColumnIndexes[col]
+          Array.isArray(importColumnIndexes) && col < importColumnIndexes.length
+            ? importColumnIndexes[col]
             : col;
         const cellRef = window.XLSX.utils.encode_cell({ r: i, c: worksheetCol });
         const cell = sheet[cellRef];
         const cellValue = cell && cell.v !== undefined ? cell.v : STR_EMPTY;
         let cellStr = this.cellAsString(cellValue);
         // 30/05/2026 21:00 linhdev - giữ tối đa 32,767 ký tự Excel trong originalCells
-        if (col === idxRemark && cellStr.length > INPUTTED_REMARKS_MAX_LEN) {
+        if (col === idxRemarkImport && cellStr.length >= INPUTTED_REMARKS_MAX_LEN) {
           cellStr = cellStr.substring(0, INPUTTED_REMARKS_MAX_LEN);
         }
         originalCells.push(cellStr);
@@ -3185,16 +3253,20 @@ export default class Fec_BatchCaseHandling extends LightningElement {
     if (HEADERS_CASE_ID.indexOf(normalizedHeader) >= 0) {
       return "caseIdSearch";
     }
-    // Toannd 29/5/2026 - map cột original category/subcategory/subcode
+    // Toannd 29/5/2026 - map cột original category/subcategory/subcode (COF/GSR)
+    //PhongBT 03/06/2026 - map sang original*Display (Apex mapCaseToExportRow dòng 269-271), không dùng *Code
     if (isCofOrGsr === true) {
       if (normalizedHeader === "category") {
-        return "originalCategoryCode";
+        // return "originalCategoryCode";
+        return "originalCategoryDisplay";
       }
       if (normalizedHeader === "subcategory") {
-        return "originalSubCategoryCode";
+        // return "originalSubCategoryCode";
+        return "originalSubCategoryDisplay";
       }
       if (normalizedHeader === "subcode") {
-        return "originalSubCodeCode";
+        // return "originalSubCodeCode";
+        return "originalSubCodeDisplay";
       }
     } else {
       if (normalizedHeader === "category") {

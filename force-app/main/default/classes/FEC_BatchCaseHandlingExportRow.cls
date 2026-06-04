@@ -31,9 +31,6 @@ public without sharing class FEC_BatchCaseHandlingExportRow {
     @AuraEnabled public String categoryDisplay;
     @AuraEnabled public String subCategoryDisplay;
     @AuraEnabled public String subCodeDisplay;
-    @AuraEnabled public String originalCategoryCode;
-    @AuraEnabled public String originalSubCategoryCode;
-    @AuraEnabled public String originalSubCodeCode;
     @AuraEnabled public String originalCategoryDisplay;
     @AuraEnabled public String originalSubCategoryDisplay;
     @AuraEnabled public String originalSubCodeDisplay;

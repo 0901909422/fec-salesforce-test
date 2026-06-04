@@ -66,7 +66,6 @@ export default class Fec_SecondaryInfoAccount extends LightningElement {
 
     refreshStatusMap = {
         'Limit': 'NONE',
-        'Main Card': 'NONE',
         'Collections Info': 'NONE',
         'Sales Info': 'NONE'
     };
@@ -158,10 +157,6 @@ export default class Fec_SecondaryInfoAccount extends LightningElement {
 
         refreshSecondaryAccount({ caseId: this.recordId })
             .then(dto => {
-
-                if (section === 'Main Card') {
-                    this.mapMainCardSection(dto, 'SUCCESS');
-                }
 
                 if (section === 'Collections Info') {
                     this.mapCollectionsInfoSection(dto, 'SUCCESS');

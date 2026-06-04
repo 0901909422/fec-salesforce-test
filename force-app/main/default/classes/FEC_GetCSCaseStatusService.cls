@@ -3,6 +3,25 @@
  * REST (raw SOAP XML): FEC_GetCSCaseStatusRestService → FEC_MyCaseSoapXml.
  */
 global with sharing class FEC_GetCSCaseStatusService {
+
+    private static final Set<String> COMPLAINT_OR_FEEDBACK_ALLOWED_CATEGORIES =
+        new Set<String>{
+            FEC_ConstantCommon.FEC_CATEGORY_FEEDBACK,
+            FEC_ConstantCommon.FEC_CATEGORY_FEEDBACK_UB
+        };
+
+    private static final Set<String> ADDITIONAL_INFO_EXCLUDE_FIELDS = new Set<String>{
+        'Id',
+        'Name',
+        'OwnerId',
+        'CreatedDate',
+        'CreatedById',
+        'LastModifiedDate',
+        'LastModifiedById',
+        'SystemModstamp',
+        'IsDeleted',
+        'FEC_Case__c'
+    };
     
     // -------------------------------------------------
     // MAIN SERVICE METHOD
@@ -12,8 +31,6 @@ global with sharing class FEC_GetCSCaseStatusService {
         
         GetCSCaseStatusResponse response = new GetCSCaseStatusResponse();
         response.Sys = new SysType2();
-        response.CaseResultInfo = new CaseResultInfoType();
-        response.OriginalRequest = new OriginalRequestType();
         
         Boolean isSuccess = false;
         String errorMessage;
@@ -25,80 +42,161 @@ global with sharing class FEC_GetCSCaseStatusService {
         }
         response.Sys.DateTime_x = String.valueOf(System.now());
         
-        CaseResultInfoType result = new CaseResultInfoType();
-        OriginalRequestType originalRequest = new OriginalRequestType();
-        originalRequest.Sys = req.Sys;
+        response.CaseResultInfos = new List<CaseResultInfoType>();
+        
         try {
             System.debug('=== START GetCSCaseStatus ===');
             System.debug('Request: ' + JSON.serialize(req));
             
             validateRequest(req);
             
-            Case resultCase = getCaseById(req.CaseRequestInfo.CaseID);
+            List<Case> cases = applyFrdCaseFilters(
+                getCases(
+                    req.CaseRequestInfo.ContractOrAccountInfos.ContractOrAccountNumber,
+                    req.CaseRequestInfo.ContractOrAccountInfos.ProductType,
+                    req.CaseRequestInfo.CaseID,
+                    req.CaseRequestInfo.NationalID,
+                    req.CaseRequestInfo.PhoneNumber,
+                    req.CaseRequestInfo.UserType,
+                    req.CaseRequestInfo.IncludeFinishedRequest
+                )
+            );
+
+            Set<Id> caseIds = new Set<Id>();
+            for (Case resultCase : cases) {
+                caseIds.add(resultCase.Id);
+            }
+            Map<Id, List<AdditionalInfor>> additionalInfoByCaseId =
+                getAdditionalInfoBulk(caseIds);
             
-            result.CaseID = resultCase.Id;
-            result.CaseStatus = resultCase.FEC_Case_Status__c;
-            result.Remarks = resultCase.FEC_Remarks__c;
-            result.CreatedTime = String.valueOf(resultCase.CreatedDate);
-            result.UpdatedTime = String.valueOf(resultCase.LastModifiedDate);
+            List<CaseResultInfoType> results =
+                new List<CaseResultInfoType>();
             
+            for (Case resultCase : cases) {
+                
+                CaseResultInfoType result =
+                    new CaseResultInfoType();
+                
+                result.CaseID = resultCase.FEC_ID_Search__c;
+                result.CaseStatus = mapCaseStatusForApi(resultCase.FEC_Case_Status__c);
+                result.Remarks = resultCase.FEC_Remarks__c;
+                result.CreatedTime =
+                    String.valueOf(resultCase.CreatedDate);
+                result.UpdatedTime =
+                    String.valueOf(resultCase.LastModifiedDate);
+                
+                OriginalRequestType originalRequest =
+                    new OriginalRequestType();
+                
+                originalRequest.Sys = req.Sys;
+                
+                // CustomerInfo
+                originalRequest.CustomerInfo =
+                    new CustomerInfoType();
+                
+                originalRequest.CustomerInfo.Name =
+                    resultCase.FEC_Customer_Name__c;
+                
+                originalRequest.CustomerInfo.PhoneNumber =
+                    resultCase.FEC_Account_or_Contract__r != null
+                    ? resultCase.FEC_Account_or_Contract__r.FEC_Primary_Phone__c
+                    : null;
+                
+                originalRequest.CustomerInfo.NationalID =
+                    resultCase.FEC_Account_or_Contract__r != null
+                    ? resultCase.FEC_Account_or_Contract__r.FEC_National_ID_Passport_ID__c
+                    : null;
+                
+                originalRequest.CustomerInfo.UserType =
+                    req.CaseRequestInfo.UserType;
+                
+                originalRequest.CustomerInfo.ContractOrAccountNumber =
+                    resultCase.FEC_Account_Contract_Number_Text__c;
+                
+                originalRequest.CustomerInfo.EmailAddress =
+                    resultCase.FEC_Account_or_Contract__r != null
+                    ? resultCase.FEC_Account_or_Contract__r.FEC_Email__c
+                    : null;
+                
+                
+                originalRequest.RequestInfo = new RequestInfoType();
+                // RequestInfo
+                originalRequest.RequestInfo.CaseType =
+                    resultCase.FEC_Business_Process__r != null
+                    ? resultCase.FEC_Business_Process__r.Name
+                    : null;
+                
+                originalRequest.RequestInfo.ProductType =
+                    resultCase.FEC_Product_Type__r != null
+                    ? resultCase.FEC_Product_Type__r.FEC_Name_VN__c
+                    : null;
+                
+                originalRequest.RequestInfo.Category =
+                    resultCase.FEC_Category__r != null
+                    ? resultCase.FEC_Category__r.FEC_Name_VN__c
+                    : null;
+                
+                originalRequest.RequestInfo.SubCategory =
+                    resultCase.FEC_SubCategory__r != null
+                    ? resultCase.FEC_SubCategory__r.FEC_Name_VN__c
+                    : null;
+                
+                originalRequest.RequestInfo.SubCode =
+                    resultCase.FEC_SubCode__r != null
+                    ? resultCase.FEC_SubCode__r.FEC_Name_VN__c
+                    : null;
+
+                RequestTypeMapping requestTypeMapping =
+                    resolveRequestTypeMapping(resultCase);
+                originalRequest.RequestInfo.RequestType =
+                    requestTypeMapping.requestType;
+                originalRequest.RequestInfo.RequestTypeVN =
+                    requestTypeMapping.requestTypeVn;
+                originalRequest.RequestInfo.RequestTypeEN =
+                    requestTypeMapping.requestTypeEn;
+                
+                originalRequest.RequestInfo.Remarks =
+                    resultCase.FEC_Remarks__c;
+                
+                originalRequest.RequestInfo.AdditionalInfo =
+                    additionalInfoByCaseId.containsKey(resultCase.Id)
+                        ? additionalInfoByCaseId.get(resultCase.Id)
+                        : new List<AdditionalInfor>();
+                
+                // CreatorInfo
+                originalRequest.CreatorInfo =
+                    new CreatorInfoType();
+                
+                originalRequest.CreatorInfo.CreatorEmail =
+                    resultCase.CreatedBy != null
+                    ? resultCase.CreatedBy.Email
+                    : null;
+                
+                result.OriginalRequest = originalRequest;
+                
+                results.add(result);
+            }
             
-            
-            
-            //    đang thiếu EmailAddress;
-            originalRequest.CustomerInfo = new CustomerInfoType();
-            originalRequest.CustomerInfo.Name = resultCase.FEC_Customer_Name__c;
-            originalRequest.CustomerInfo.PhoneNumber = req.CaseRequestInfo.PhoneNumber;
-            originalRequest.CustomerInfo.NationalID = req.CaseRequestInfo.NationalID;
-            originalRequest.CustomerInfo.UserType = req.CaseRequestInfo.UserType;
-            originalRequest.CustomerInfo.ContractOrAccountNumber = req.CaseRequestInfo.ContractOrAccountInfos.ContractOrAccountNumber;
-            originalRequest.CustomerInfo.EmailAddress = '';
-            
-            
-            
-            
-            originalRequest.RequestInfo = new RequestInfoType();
-            FEC_Business_Process__c caseType = getCaseType(resultCase.FEC_Business_Process__c);
-            originalRequest.RequestInfo.CaseType = caseType != null ? caseType.Name : null;
-            
-            FEC_Product_Type__c productType = getProductType(resultCase.FEC_Product_Type__c);
-            originalRequest.RequestInfo.ProductType = productType != null ? productType.FEC_Name_VN__c : null;
-            
-            FEC_Category__c category = getCategory(resultCase.FEC_Category__c);
-            originalRequest.RequestInfo.Category = category != null ? category.FEC_Name_VN__c : null;
-            
-            FEC_Sub_Category__c subCategory = getSubCategory(resultCase.FEC_SubCategory__c);
-            originalRequest.RequestInfo.SubCategory = subCategory != null ? subCategory.FEC_Name_VN__c : null;
-            
-            FEC_Sub_Code__c subCode = getSubCode(resultCase.FEC_SubCode__c);
-            originalRequest.RequestInfo.SubCode = subCode != null ? subCode.FEC_Name_VN__c : null;
-            originalRequest.RequestInfo.Remarks = resultCase.FEC_Remarks__c;
-            
-            originalRequest.RequestInfo.AdditionalInfo =  getAdditionalInfo(resultCase.Id);
-            
-            
-            originalRequest.CreatorInfo = new CreatorInfoType();
-            User creator = getCreatorInfo(resultCase.CreatedById);
-            originalRequest.CreatorInfo.CreatorEmail = creator != null ? creator.Email : null;
+            response.TotalCases = results.size();
+            response.CaseResultInfos = results;
             
             isSuccess = true;
             response.Sys.Code = 1;
             response.Sys.Description = 'Success';
             
         } catch (Exception e) {
-            errorMessage = e.getMessage();
             
-            System.debug('ERROR: ' + errorMessage);
+            errorMessage =
+                e.getMessage()
+                + ' | line='
+                + e.getLineNumber();
+            
             response.Sys.Code = 2;
             response.Sys.Description = errorMessage;
-            response.CaseResultInfo = null;
-            response.OriginalRequest = null;
         }
         
-        if (isSuccess) {
-            response.CaseResultInfo = result;
-            response.OriginalRequest = originalRequest;
-        }
+        
+        
         // ✅ LOG API (ALWAYS)
         logApiFull(
             'GetCSCaseStatus',   // endpoint name
@@ -114,41 +212,252 @@ global with sharing class FEC_GetCSCaseStatusService {
         return response;
     }
     
-    
-    private static Case getCaseById(String caseId) {
-        String pattern = '%' + caseId + '%';
+    private static List<Case> getCases(
+        String accountNumber,
+        String productType,
+        String caseId,
+        String nationalId,
+        String phoneNumber,
+        String userType,
+        Boolean includeFinishedRequest
+    ) {
+        String customerType = normalizeCustomerTypeForFilter(userType);
         
-        List<Case> cases = [
-        SELECT 
-            Id,
-            CaseNumber,
-            OwnerId,
-            CreatedById,
-            CreatedDate,
-            LastModifiedDate,
-            FEC_Customer_Name__c,
-            FEC_Phone_Number__c,
-            FEC_National_ID_Passport_ID__c,
-            FEC_Case_Status__c,
-            FEC_Remarks__c,
-            FEC_Account_or_Contract__c,
-            FEC_Product_Type__c,
-            FEC_Category__c,
-            FEC_SubCategory__c,
-            FEC_SubCode__c,
-            FEC_Business_Process__c
-        FROM Case
-        WHERE FEC_ID_Search__c LIKE :pattern
-        LIMIT 1
-    ];
+        String soql =
+            'SELECT ' +
+            'Id,' +
+            'FEC_ID_Search__c,' +
+            'CaseNumber,' +
+            
+        'OwnerId,' +
+            'CreatedById,' +
+            'CreatedBy.Email,' +
+            'CreatedDate,' +
+            'LastModifiedDate,' +
+            
+        'FEC_Customer_Name__c,' +
+            'FEC_Phone_Number__c,' +
+            'FEC_National_ID_Passport_ID__c,' +
+            'FEC_Case_Status__c,' +
+            'FEC_FCR__c,' +
+            'FEC_Remarks__c,' +
+            
+        'FEC_Account_or_Contract__c,' +
+            'FEC_Account_or_Contract__r.FEC_Email__c,' +
+            'FEC_Account_or_Contract__r.FEC_Primary_Phone__c,' +
+            'FEC_Account_or_Contract__r.FEC_National_ID_Passport_ID__c,' +
+            
+        'FEC_Account_Contract_Number_Text__c,' +
+            
+        'FEC_Product_Type__c,' +
+            'FEC_Product_Type__r.FEC_Name_VN__c,' +
+            
+        'FEC_Category__c,' +
+            'FEC_Category__r.Name,' +
+            'FEC_Category__r.FEC_Name_VN__c,' +
+            
+        'FEC_SubCategory__c,' +
+            'FEC_SubCategory__r.Name,' +
+            'FEC_SubCategory__r.FEC_Alias__c,' +
+            'FEC_SubCategory__r.FEC_Name_VN__c,' +
+            
+        'FEC_SubCode__c,' +
+            'FEC_SubCode__r.FEC_Name_VN__c,' +
+            
+        'FEC_Business_Process__c,' +
+            'FEC_Business_Process__r.Name,' +
+            'FEC_Business_Process__r.FEC_Name_VN__c,' +
+            'FEC_Business_Process__r.FEC_Alias__c ' +
+            
+        'FROM Case ' +
+            'WHERE RecordType.DeveloperName = \'Customer_Case\'' +
+            ' AND (FEC_FCR__c = false OR FEC_FCR__c = null)';
         
-        if (cases.isEmpty()) {
-            throw new ServiceException(
-                System.Label.FEC_CS_CASE_NOT_FOUND_MSG + caseId
-                );
+        if (!String.isBlank(accountNumber)) {
+            soql +=
+                ' AND FEC_Account_Contract_Number_Text__c = :accountNumber';
+        }
+
+        if (!String.isBlank(productType)) {
+            soql +=
+                ' AND FEC_Product_Type__r.FEC_Name_VN__c = :productType';
+        }
+
+        if (!String.isBlank(customerType)) {
+            soql += ' AND FEC_Customer_Type__c = :customerType';
+        }
+
+        if (includeFinishedRequest != true) {
+            String resolvedStatusPattern =
+                FEC_ConstantCommon.CASE_STATUS_PREFIX_RESOLVED + '%';
+            soql +=
+                ' AND (FEC_Case_Status__c = null OR NOT FEC_Case_Status__c LIKE :resolvedStatusPattern)';
         }
         
-        return cases[0];
+        if (!String.isBlank(nationalId)) {
+            soql +=
+                ' AND FEC_Account_or_Contract__r.FEC_National_ID_Passport_ID__c = :nationalId';
+        }
+        
+        if (!String.isBlank(phoneNumber)) {
+            soql +=
+                ' AND FEC_Account_or_Contract__r.FEC_Primary_Phone__c = :phoneNumber';
+        }
+        
+        if (!String.isBlank(caseId)) {
+            
+            String pattern = '%' + caseId + '%';
+            
+            soql +=
+                ' AND FEC_ID_Search__c LIKE :pattern';
+        }
+        
+        soql += ' ORDER BY CreatedDate DESC';
+        
+        return Database.query(soql);
+    }
+
+    /**
+     * CRP-1726: exclude FCR cases and apply Complaint/Feedback category rules.
+     */
+    private static List<Case> applyFrdCaseFilters(List<Case> cases) {
+        List<Case> filtered = new List<Case>();
+        if (cases == null || cases.isEmpty()) {
+            return filtered;
+        }
+
+        for (Case resultCase : cases) {
+            if (resultCase.FEC_FCR__c == true) {
+                continue;
+            }
+            if (!isEligibleForComplaintOrFeedbackRules(resultCase)) {
+                continue;
+            }
+            filtered.add(resultCase);
+        }
+        return filtered;
+    }
+
+    /**
+     * Complaint Or Feedback case type: only Feedback / Feedback UB categories.
+     */
+    private static Boolean isEligibleForComplaintOrFeedbackRules(Case resultCase) {
+        if (!isComplaintOrFeedbackCaseType(resultCase)) {
+            return true;
+        }
+
+        String categoryName = resultCase.FEC_Category__r != null
+            ? resultCase.FEC_Category__r.Name
+            : null;
+        return COMPLAINT_OR_FEEDBACK_ALLOWED_CATEGORIES.contains(categoryName);
+    }
+
+    private static Boolean isComplaintOrFeedbackCaseType(Case resultCase) {
+        String businessProcessName = resultCase.FEC_Business_Process__r != null
+            ? resultCase.FEC_Business_Process__r.Name
+            : null;
+        if (isComplaintOrFeedbackBusinessProcess(businessProcessName)) {
+            return true;
+        }
+
+        String categoryName = resultCase.FEC_Category__r != null
+            ? resultCase.FEC_Category__r.Name
+            : null;
+        return categoryName == FEC_ConstantCommon.FEC_CATEGORY_COMPLAINT
+            || categoryName == FEC_ConstantCommon.FEC_CATEGORY_FEEDBACK
+            || categoryName == FEC_ConstantCommon.FEC_CATEGORY_FEEDBACK_UB;
+    }
+
+    private static Boolean isComplaintOrFeedbackBusinessProcess(String businessProcessName) {
+        if (String.isBlank(businessProcessName)) {
+            return false;
+        }
+        return businessProcessName == FEC_ConstantCommon.BP_COMPLAINT_OR_FEEDBACK
+            || businessProcessName == FEC_ConstantCommon.BP_COMPLAINT
+            || businessProcessName == FEC_ConstantCommon.BP_FEEDBACK;
+    }
+
+    /** CRP-1726 §5.2.1 — map internal status to API Vietnamese label. */
+    private static String mapCaseStatusForApi(String status) {
+        if (String.isBlank(status)) {
+            return FEC_ConstantCommon.GET_CASE_STATUS_VN_UNDEFINED;
+        }
+        if (status.startsWith(FEC_ConstantCommon.CASE_STATUS_PREFIX_RESOLVED)) {
+            return FEC_ConstantCommon.GET_CASE_STATUS_VN_CLOSED;
+        }
+        if (status.startsWith('Pending')) {
+            return FEC_ConstantCommon.GET_CASE_STATUS_VN_IN_PROGRESS;
+        }
+        if (status.equalsIgnoreCase('Open')) {
+            return FEC_ConstantCommon.GET_CASE_STATUS_VN_OPEN;
+        }
+        return FEC_ConstantCommon.GET_CASE_STATUS_VN_UNDEFINED;
+    }
+
+    /**
+     * CRP-1726 §5.2.4 — Request Type from Sub Category or Business Process master data.
+     */
+    private static RequestTypeMapping resolveRequestTypeMapping(Case resultCase) {
+        RequestTypeMapping mapping = new RequestTypeMapping();
+        if (usesSubCategoryRequestType(resultCase)) {
+            if (resultCase.FEC_SubCategory__r != null) {
+                mapping.requestType = firstNonBlank(
+                    resultCase.FEC_SubCategory__r.FEC_Alias__c,
+                    resultCase.FEC_SubCategory__r.FEC_Name_VN__c,
+                    resultCase.FEC_SubCategory__r.Name
+                );
+                mapping.requestTypeVn = resultCase.FEC_SubCategory__r.FEC_Name_VN__c;
+                mapping.requestTypeEn = resultCase.FEC_SubCategory__r.Name;
+            }
+            return mapping;
+        }
+
+        if (resultCase.FEC_Business_Process__r != null) {
+            mapping.requestType = firstNonBlank(
+                resultCase.FEC_Business_Process__r.FEC_Alias__c,
+                resultCase.FEC_Business_Process__r.FEC_Name_VN__c,
+                resultCase.FEC_Business_Process__r.Name
+            );
+            mapping.requestTypeVn = resultCase.FEC_Business_Process__r.FEC_Name_VN__c;
+            mapping.requestTypeEn = resultCase.FEC_Business_Process__r.Name;
+        }
+        return mapping;
+    }
+
+    private static Boolean usesSubCategoryRequestType(Case resultCase) {
+        String businessProcessName = resultCase.FEC_Business_Process__r != null
+            ? resultCase.FEC_Business_Process__r.Name
+            : null;
+        if (businessProcessName == FEC_ConstantCommon.BP_GENERAL_SERVICE) {
+            return true;
+        }
+        if (businessProcessName == FEC_ConstantCommon.BP_COMPLAINT_OR_FEEDBACK) {
+            return true;
+        }
+        if (isComplaintOrFeedbackBusinessProcess(businessProcessName)) {
+            return true;
+        }
+        if (String.isNotBlank(businessProcessName)
+            && businessProcessName.contains(FEC_ConstantCommon.BP_GSR)) {
+            return true;
+        }
+        return false;
+    }
+
+    private static String firstNonBlank(String first, String second, String third) {
+        if (!String.isBlank(first)) {
+            return first;
+        }
+        if (!String.isBlank(second)) {
+            return second;
+        }
+        return third;
+    }
+
+    private class RequestTypeMapping {
+        public String requestType;
+        public String requestTypeVn;
+        public String requestTypeEn;
     }
     
     // =================================================
@@ -228,20 +537,6 @@ global with sharing class FEC_GetCSCaseStatusService {
     // -------------------------------------------------
     // GET CREATOR INFO
     // -------------------------------------------------
-    private static User getCreatorInfo(String userId) {
-        if (String.isBlank(userId)) {
-            return null;
-        }
-        List<User> users = [
-        SELECT Id, Name, Email
-        FROM User
-        WHERE Id = :userId
-        LIMIT 1
-    ];
-        
-        return users.isEmpty() ? null : users[0];
-    }
-    
     private static void validateRequest(GetCSCaseStatusRequest req){
         
         if(req==null) throw new ServiceException(System.Label.FEC_CS_CASE_REQUEST_IS_NULL_MSG);
@@ -253,14 +548,16 @@ global with sharing class FEC_GetCSCaseStatusService {
         
         
         
-        // Channel required
-        if(String.isBlank(req.Sys.Channel))
-            throw new ServiceException(System.Label.FEC_CS_CASE_STATUS_CHANNEL_REQUIRED_MSG);
+        // // Channel required
+        // if(String.isBlank(req.Sys.Channel))
+        //     throw new ServiceException(System.Label.FEC_CS_CASE_STATUS_CHANNEL_REQUIRED_MSG);
         
-        // FIX NEW #3 - Channel must exist
-        if(!channelSet.contains(req.Sys.Channel)){
-            throw new ServiceException(System.Label.FEC_GET_CASE_STATUS_INVALID_CHANNEL_MSG + req.Sys.Channel);
-        }
+        // // FIX NEW #3 - Channel must exist
+        // if(!channelSet.contains(req.Sys.Channel)){
+            //     throw new ServiceException(System.Label.FEC_GET_CASE_STATUS_INVALID_CHANNEL_MSG + req.Sys.Channel);
+        // }
+        
+        validateChannel(req.Sys.Channel);
         
         // FIX #4 TransactionID required + <=36
         if(String.isBlank(req.Sys.TransactionID))
@@ -269,18 +566,11 @@ global with sharing class FEC_GetCSCaseStatusService {
         if(req.Sys.TransactionID.length()>36)
             throw new ServiceException(System.Label.FEC_CS_CASE_STATUS_TRANSACTIONID_MAX_MSG);
         
-        if(!isISO8601(req.Sys.DateTime_x))
-            throw new ServiceException(System.Label.FEC_CS_CASE_STATUS_DATETIME_INVALID_MSG);
+        // if(!isISO8601(req.Sys.DateTime_x))
+        //     throw new ServiceException(System.Label.FEC_CS_CASE_STATUS_DATETIME_INVALID_MSG);
         
         if(req.CaseRequestInfo==null)
             throw new ServiceException(System.Label.FEC_CS_CASE_STATUS_CASEREQUESTINFO_REQUIRED_MSG);
-        
-        if(String.isBlank(req.CaseRequestInfo.CaseID))
-            throw new ServiceException(System.Label.FEC_CS_CASE_STATUS_CASEID_REQUIRED_MSG);
-        
-        if(String.isBlank(req.CaseRequestInfo.NationalID)) {
-            throw new ServiceException(System.Label.FEC_GET_CASE_STATUS_NATIONALID_REQUIRE_MSG);
-        }
         
         if (req.CaseRequestInfo.IncludeFinishedRequest == null) {
             throw new ServiceException(System.Label.FEC_GET_CASE_STATUS_INCLUDE_FINISHED_REQUEST_REQUIRE_MSG);
@@ -300,81 +590,160 @@ global with sharing class FEC_GetCSCaseStatusService {
         if(String.isBlank(info.ProductType))
             throw new ServiceException(System.Label.FEC_CS_CASE_STATUS_PRODUCT_TYPE_REQUIRED_MSG);
         
-        if(String.isBlank(req.CaseRequestInfo.PhoneNumber))
-            throw new ServiceException(System.Label.FEC_CS_CASE_STATUS_PHONE_REQUIRED_MSG);
         
         if(String.isBlank(req.CaseRequestInfo.UserType))
             throw new ServiceException(System.Label.FEC_CS_CASE_STATUS_USERTYPE_REQUIRED_MSG);
         
         if(req.CaseRequestInfo.UserType.length()>15)
             throw new ServiceException(System.Label.FEC_CS_CASE_STATUS_USERTYPE_MAX_MSG);
+
+        if (isExistingUserType(req.CaseRequestInfo.UserType)
+            && String.isBlank(req.CaseRequestInfo.NationalID)) {
+            throw new ServiceException(
+                System.Label.FEC_GET_CASE_STATUS_NATIONALID_REQUIRE_MSG
+            );
+        }
+    }
+
+    private static Boolean isExistingUserType(String userType) {
+        if (String.isBlank(userType)) {
+            return false;
+        }
+        return userType.equalsIgnoreCase(FEC_ConstantCommon.CASE_EXISTING_CUSTOMER)
+            || userType.equalsIgnoreCase(FEC_ConstantCommon.REQUEST_EXISTING_USER_TYPE);
+    }
+
+    /**
+     * Map request UserType (e.g. EXISTING) to Case.FEC_Customer_Type__c picklist API value.
+     */
+    private static String normalizeCustomerTypeForFilter(String userType) {
+        if (String.isBlank(userType)) {
+            return null;
+        }
+
+        String normalized = userType.trim();
+        if (normalized.equalsIgnoreCase(FEC_ConstantCommon.REQUEST_EXISTING_USER_TYPE)
+            || normalized.equalsIgnoreCase(FEC_ConstantCommon.CASE_EXISTING_CUSTOMER)) {
+            return FEC_ConstantCommon.CASE_EXISTING_CUSTOMER;
+        }
+        if (normalized.equalsIgnoreCase('NONEXISTING')
+            || normalized.equalsIgnoreCase(FEC_ConstantCommon.CASE_NON_EXISTING_CUSTOMER)
+            || normalized.equalsIgnoreCase('Non-existing')) {
+            return 'Non-existing';
+        }
+        if (normalized.equalsIgnoreCase('ALL')) {
+            return 'All';
+        }
+        return normalized;
     }
     
-    private static Boolean isISO8601(String s){
-        if(String.isBlank(s)) return false;
-        try{
-            Datetime.valueOfGmt(
-                s.replace('T',' ').replace('Z','')
-                );
+    private static Boolean isISO8601(String s) {
+        if (String.isBlank(s)) {
+            return false;
+        }
+        
+        try {
+            String dt = s.replace('T', ' ').replace('Z', '');
+            
+            Integer dotIndex = dt.indexOf('.');
+            if (dotIndex > -1) {
+                dt = dt.substring(0, dotIndex);
+            }
+            
+            Datetime.valueOfGmt(dt);
             return true;
-        }catch(Exception e){
+            
+        } catch (Exception e) {
             return false;
         }
     }
     
-    //----Get Addition Info-----//
-    private static List<AdditionalInfor> getAdditionalInfo(Id caseId) {
-        
-        List<AdditionalInfor> result = new List<AdditionalInfor>();
-        
+    //----Get Addition Info (bulk)-----//
+    private static Map<Id, List<AdditionalInfor>> getAdditionalInfoBulk(Set<Id> caseIds) {
+        Map<Id, List<AdditionalInfor>> resultByCaseId =
+            new Map<Id, List<AdditionalInfor>>();
+
+        if (caseIds == null || caseIds.isEmpty()) {
+            return resultByCaseId;
+        }
+
+        for (Id caseId : caseIds) {
+            resultByCaseId.put(caseId, new List<AdditionalInfor>());
+        }
+
         Map<String, Schema.SObjectField> fields =
             FEC_Additional_Info__c.SObjectType.getDescribe().fields.getMap();
-        
+
         String soql =
-            'SELECT ' + String.join(new List<String>(fields.keySet()), ',') +
+            'SELECT ' +
+            String.join(new List<String>(fields.keySet()), ',') +
             ' FROM FEC_Additional_Info__c' +
-            ' WHERE FEC_Case__c = :caseId' +
-            ' LIMIT 1';
-        
-        List<SObject> records = Database.query(soql);
-        
-        if (records.isEmpty()) {
-            return result;
-        }
-        
-        FEC_Additional_Info__c info =
-            (FEC_Additional_Info__c)records[0];
-        
-        Map<String, Object> populatedFields =
-            info.getPopulatedFieldsAsMap();
-        
-        Set<String> excludeFields = new Set<String>{
-            'Id',
-            'OwnerId',
-            'CreatedDate',
-            'CreatedById',
-            'LastModifiedDate',
-            'LastModifiedById',
-            'SystemModstamp',
-            'FEC_Case__c'
-        };
-        
-        for (String fieldName : populatedFields.keySet()) {
-            
-            if (excludeFields.contains(fieldName)) {
+            ' WHERE FEC_Case__c IN :caseIds';
+
+        Set<Id> processedCaseIds = new Set<Id>();
+        for (SObject record : Database.query(soql)) {
+            Id caseId = (Id) record.get('FEC_Case__c');
+            if (processedCaseIds.contains(caseId)) {
                 continue;
             }
-            
+            processedCaseIds.add(caseId);
+            resultByCaseId.put(
+                caseId,
+                buildAdditionalInfoList((FEC_Additional_Info__c) record)
+            );
+        }
+
+        return resultByCaseId;
+    }
+
+    private static List<AdditionalInfor> buildAdditionalInfoList(
+        FEC_Additional_Info__c info
+    ) {
+        List<AdditionalInfor> result = new List<AdditionalInfor>();
+        if (info == null) {
+            return result;
+        }
+
+        Map<String, Object> populatedFields = info.getPopulatedFieldsAsMap();
+        for (String fieldName : populatedFields.keySet()) {
+            if (ADDITIONAL_INFO_EXCLUDE_FIELDS.contains(fieldName)) {
+                continue;
+            }
+
             AdditionalInfor item = new AdditionalInfor();
             item.ID = fieldName;
             item.Value = String.valueOf(populatedFields.get(fieldName));
-            
             result.add(item);
         }
-        
+
         return result;
     }
     
+    
+    private static void validateChannel(String channel) {
+        
+        if (String.isBlank(channel)) {
+            throw new ServiceException(
+                System.Label.FEC_CS_CASE_STATUS_CHANNEL_REQUIRED_MSG
+                );
+        }
+        
+        String normalizedChannel = channel.trim();
+        
+        List<FEC_Channel__c> channels = [
+        SELECT Id
+        FROM FEC_Channel__c
+        WHERE FEC_Channel_ID__c = :normalizedChannel
+        AND FEC_Channel_Status__c = TRUE
+        LIMIT 1
+    ];
+        
+        if (channels.isEmpty()) {
+            throw new ServiceException(
+                System.Label.FEC_GET_CASE_STATUS_INVALID_CHANNEL_MSG + normalizedChannel
+                );
+        }
+    }
     
     //-------------------------//
     
@@ -443,8 +812,8 @@ global with sharing class FEC_GetCSCaseStatusService {
     // -------------------------------------------------
     global class GetCSCaseStatusResponse {
         webservice  SysType2 Sys;
-        webservice  CaseResultInfoType CaseResultInfo;
-        webservice  OriginalRequestType OriginalRequest;
+        webservice Integer TotalCases;
+        webservice List<CaseResultInfoType> CaseResultInfos;
     }
     
     global class SysType2 {
@@ -454,12 +823,23 @@ global with sharing class FEC_GetCSCaseStatusService {
         webservice  String Description;
     }
     
+    // global class CaseResultInfoType {
+        //     webservice  String CaseID;
+        //     webservice  String CaseStatus;
+        //     webservice  String Remarks;
+        //     webservice  String CreatedTime;
+        //     webservice  String UpdatedTime;
+    // }
+    
     global class CaseResultInfoType {
-        webservice  String CaseID;
-        webservice  String CaseStatus;
-        webservice  String Remarks;
-        webservice  String CreatedTime;
-        webservice  String UpdatedTime;
+        
+        webservice String CaseID;
+        webservice String CaseStatus;
+        webservice String Remarks;
+        webservice String CreatedTime;
+        webservice String UpdatedTime;
+        
+        webservice OriginalRequestType OriginalRequest;
     }
     
     global class OriginalRequestType {
@@ -481,6 +861,9 @@ global with sharing class FEC_GetCSCaseStatusService {
     
     global class RequestInfoType {
         webservice  String CaseType;
+        webservice  String RequestType;
+        webservice  String RequestTypeVN;
+        webservice  String RequestTypeEN;
         webservice  String ProductType;
         webservice  String Category;
         webservice  String SubCategory;
@@ -500,13 +883,4 @@ global with sharing class FEC_GetCSCaseStatusService {
     }
     
     
-    private static Set<String> channelSet = new Set<String>{
-        FEC_ConstantCommon.CHANNEL_INBOUND_NAME,
-        FEC_ConstantCommon.CHANNEL_OUTBOUND_NAME,
-        FEC_ConstantCommon.CHANNEL_EMAIL_NAME,
-        FEC_ConstantCommon.CHANNEL_LETTER_NAME,
-        FEC_ConstantCommon.CHANNEL_F2F_NAME,
-        FEC_ConstantCommon.CHANNEL_INTERNAL_NAME,
-        FEC_ConstantCommon.CHANNEL_EXTERNAL_NAME
-    };
 }

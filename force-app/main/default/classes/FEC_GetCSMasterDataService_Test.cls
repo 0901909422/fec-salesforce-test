@@ -3,6 +3,14 @@ private class FEC_GetCSMasterDataService_Test {
 
     @TestSetup
     static void setupData() {
+        insert new FEC_Channel__c(
+            Name = FEC_ConstantCommon.CHANNEL_INBOUND_NAME,
+            FEC_Code__c = 'INBOUND',
+            FEC_Channel_ID__c = FEC_ConstantCommon.CHANNEL_INBOUND_NAME,
+            FEC_Channel_Vietnamese_name__c = 'Inbound',
+            FEC_Channel_Status__c = true
+        );
+
         String suffix = String.valueOf(Math.mod(Math.abs(Crypto.getRandomInteger()), 1000));
 
         FEC_Product_Type__c prod = new FEC_Product_Type__c(
@@ -66,7 +74,7 @@ private class FEC_GetCSMasterDataService_Test {
     static void testGetCSMasterData_Success() {
         FEC_GetCSMasterDataService.SysRequestType sys = new FEC_GetCSMasterDataService.SysRequestType();
         sys.TransactionID = 'TXN123';
-        sys.Channel = 'INBOUND';
+        sys.Channel = FEC_ConstantCommon.CHANNEL_INBOUND_NAME;
         sys.DateTime_x = System.now();
 
         Test.startTest();

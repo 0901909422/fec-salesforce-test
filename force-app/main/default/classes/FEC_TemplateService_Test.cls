@@ -7,9 +7,21 @@
 @IsTest
 private class FEC_TemplateService_Test {
 
+    private static User runAsAdmin() {
+        return [
+            SELECT Id
+            FROM User
+            WHERE IsActive = TRUE AND Profile.Name = 'System Administrator'
+            LIMIT 1
+        ];
+    }
+
     @TestSetup
     static void setupData() {
-        FEC_Folder__c folder = new FEC_Folder__c(FEC_Folder_Label__c = 'TestFolder');
+        FEC_Folder__c folder = new FEC_Folder__c(
+            FEC_Folder_Label__c = 'TestFolder',
+            FEC_Folder_Unique_Name__c = 'TestFolder'
+        );
         insert folder;
 
         FEC_Template__c tmpl = new FEC_Template__c(
@@ -36,11 +48,14 @@ private class FEC_TemplateService_Test {
 
     @IsTest
     static void testGetTemplatesNoFilter() {
-        Test.startTest();
-        List<FEC_Template__c> results = FEC_TemplateService.getTemplates(null, null, false);
-        Test.stopTest();
+        System.runAs(runAsAdmin()) {
+            Test.startTest();
+            List<FEC_Template__c> results = FEC_TemplateService.getTemplates(null, null, null);
+            Test.stopTest();
 
-        Assert.areEqual(1, results.size());
+            Integer expected = [SELECT COUNT() FROM FEC_Template__c];
+            Assert.areEqual(expected, results.size());
+        }
     }
 
     @IsTest

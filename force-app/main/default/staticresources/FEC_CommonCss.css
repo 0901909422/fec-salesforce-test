@@ -37,30 +37,32 @@ c-fec_-card-replacement-address .slds-accordion__summary,
 c-fec_-assignment-list .slds-accordion__summary,
 c-fec_-banca .slds-accordion__summary,
 c-fec_-hold-case-configuration .slds-accordion__summary,
-c-fec_-batch-case-handling .slds-accordion__summary {
-  background-color: #f3f3f3;
+c-fec_-batch-case-handling .slds-accordion__summary,
+c-fec_-batch-case-creation .slds-accordion__summary,
+c-fec_-batch-data-creation .slds-accordion__summary {
+  background-color: var(--slds-g-color-neutral-base-95, var(--lwc-colorBackground, #f3f3f3));
   border-radius: 4px;
 }
 
 c-fec_-noc-general-assignment .slds-accordion__summary {
-  background-color: #f3f3f3;
+  background-color: var(--slds-g-color-neutral-base-95, var(--lwc-colorBackground, #f3f3f3));
   border-radius: 4px;
 }
 
 c-fec_-noc-routing-assignment .slds-accordion__summary {
-  background-color: #f3f3f3;
+  background-color: var(--slds-g-color-neutral-base-95, var(--lwc-colorBackground, #f3f3f3));
   border-radius: 4px;
 }
 
 
 c-fec_-noc-general-assignment .slds-card__header {
-  background-color: #f3f3f3;
+  background-color: var(--slds-g-color-neutral-base-95, var(--lwc-colorBackground, #f3f3f3));
   border-radius: 4px 4px 0 0;
 }
 
-/* fecEmailSection: bỏ viền xám slds-tabs_card, header #f3f3f3 */
+/* fecEmailSection: bỏ viền xám slds-tabs_card, header SLDS neutral-base-95 */
 c-fec-email-section .slds-accordion__summary {
-  background-color: #f3f3f3;
+  background-color: var(--slds-g-color-neutral-base-95, var(--lwc-colorBackground, #f3f3f3));
   border-radius: 4px 4px 0 0;
   min-height: 2.75rem;
 }
@@ -80,7 +82,7 @@ c-fec-email-section .slds-tabs_card {
 c-fec-email-section .email-section-card {
   border-radius: 8px;
   overflow: hidden;
-  border: 1px solid #dddbda;
+  border: 1px solid var(--slds-g-color-border-base-1, var(--lwc-colorBorder, #dddbda));
   box-shadow: 0 2px 8px rgba(0,0,0,0.08);
 }
 c-lwc-multi-lookup input.channel {

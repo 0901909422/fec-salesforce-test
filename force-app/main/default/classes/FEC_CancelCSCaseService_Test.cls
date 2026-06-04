@@ -5,6 +5,14 @@ private class FEC_CancelCSCaseService_Test {
 
     @TestSetup
     static void setupData() {
+        insert new FEC_Channel__c(
+            Name = VALID_CHANNEL,
+            FEC_Code__c = 'INBOUND',
+            FEC_Channel_ID__c = VALID_CHANNEL,
+            FEC_Channel_Vietnamese_name__c = 'Inbound',
+            FEC_Channel_Status__c = true
+        );
+
         Case openCase = new Case(
             Subject = 'Web Service Cancel Test 1',
             Status = FEC_ConstantCommon.CASE_STATUS_OPEN,

@@ -1,6 +1,9 @@
 /**
- * Map Owner Id (User/Queue) → FEC_Team__c qua FEC_Main_Queue__c / Group.DeveloperName + FEC_Team_Queue__c.
- * Cache theo transaction — dùng chung RAH trigger, Assignment UI, export (tránh SOQL 101 submit NOC bulk).
+ * Map Owner Id (User/Queue) → mã team Case ({@code FEC_Team__c} / Pending-{team}) qua
+ * {@code FEC_Main_Queue__c} / Group.DeveloperName + {@code FEC_Team_Queue__c}.
+ * Ưu tiên {@code FEC_Team_Queue__c.FEC_Team__c} (vd CSSupport); {@code FEC_Select_Team__c} chỉ fallback
+ * khi FEC_Team__c trống — Stage Change vẫn dùng {@code FEC_Stage_Change__c.FEC_Team_User_Group__c} riêng.
+ * Cache theo transaction — dùng chung RAH trigger, TAT, export (tránh SOQL 101 submit NOC bulk).
  */
 public without sharing class FEC_OwnerTeamLookupSvc {
 
@@ -8,6 +11,7 @@ public without sharing class FEC_OwnerTeamLookupSvc {
     private static Map<Id, String> userMainQueueById = new Map<Id, String>();
     private static Map<Id, String> groupDevNameById = new Map<Id, String>();
     private static Map<String, String> teamByQueueName = new Map<String, String>();
+    private static Map<String, String> teamByOwnerLabel = new Map<String, String>();
     private static Boolean teamByQueueNameLoaded = false;
 
     public static Map<Id, String> getByOwnerIds(Set<Id> ownerIds) {
@@ -35,6 +39,48 @@ public without sharing class FEC_OwnerTeamLookupSvc {
             }
         }
         return out;
+    }
+
+    /**
+     * Fallback khi FEC_Updated_User_Queue_ID__c lưu nhầm label (vd "DQ - Card Operations") thay vì Id.
+     */
+    public static String getTeamByOwnerLabel(String ownerLabel) {
+        if (String.isBlank(ownerLabel)) {
+            return null;
+        }
+        String key = ownerLabel.trim();
+        if (teamByOwnerLabel.containsKey(key)) {
+            return teamByOwnerLabel.get(key);
+        }
+        ensureTeamByQueueNameMap();
+        String teamCode = resolveTeamCodeFromOwnerLabel(key);
+        teamByOwnerLabel.put(key, teamCode);
+        return teamCode;
+    }
+
+    private static String resolveTeamCodeFromOwnerLabel(String ownerLabel) {
+        for (Group g : [
+            SELECT DeveloperName
+            FROM Group
+            WHERE Name = :ownerLabel AND Type = :FEC_ConstantCommon.GROUP_TYPE_QUEUE
+            LIMIT 1
+        ]) {
+            if (teamByQueueName.containsKey(g.DeveloperName)) {
+                return teamByQueueName.get(g.DeveloperName);
+            }
+        }
+        for (User u : [
+            SELECT FEC_Main_Queue__c
+            FROM User
+            WHERE Username = :ownerLabel
+            LIMIT 1
+        ]) {
+            if (String.isNotBlank(u.FEC_Main_Queue__c)
+                && teamByQueueName.containsKey(u.FEC_Main_Queue__c)) {
+                return teamByQueueName.get(u.FEC_Main_Queue__c);
+            }
+        }
+        return null;
     }
 
     private static Map<Id, String> resolveUncached(Set<Id> ownerIds) {
@@ -126,13 +172,35 @@ public without sharing class FEC_OwnerTeamLookupSvc {
             return;
         }
         for (FEC_Team_Queue__c row : [
-            SELECT FEC_Queue_Name__c, FEC_Team__c
+            SELECT FEC_Queue_Name__c, FEC_Team__c, FEC_Select_Team__r.Name
             FROM FEC_Team_Queue__c
+            WHERE FEC_Queue_Name__c != NULL
         ]) {
-            if (String.isNotBlank(row.FEC_Queue_Name__c)) {
-                teamByQueueName.put(row.FEC_Queue_Name__c, row.FEC_Team__c);
+            // Toannd 01/06/2026
+            String teamCode = resolveTeamCodeFromTeamQueueRow(row);
+            if (String.isNotBlank(teamCode)) {
+                teamByQueueName.put(row.FEC_Queue_Name__c, teamCode);
             }
         }
         teamByQueueNameLoaded = true;
+    }
+
+    //Toannd 01/06/2026
+    /**
+     * Mã team trên Case / history: {@code FEC_Team__c} trên FEC_Team_Queue__c (vd CSSupport).
+     * {@code FEC_Select_Team__c} (vd SP) dùng cho Stage Change — chỉ fallback khi FEC_Team__c trống.
+     */
+    @TestVisible
+    private static String resolveTeamCodeFromTeamQueueRow(FEC_Team_Queue__c row) {
+        if (row == null) {
+            return null;
+        }
+        if (String.isNotBlank(row.FEC_Team__c)) {
+            return row.FEC_Team__c.trim();
+        }
+        return row.FEC_Select_Team__r != null &&
+            String.isNotBlank(row.FEC_Select_Team__r.Name)
+            ? row.FEC_Select_Team__r.Name.trim()
+            : null;
     }
 }
