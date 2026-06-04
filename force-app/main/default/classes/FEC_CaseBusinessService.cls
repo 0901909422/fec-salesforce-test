@@ -2422,7 +2422,13 @@ public without sharing class FEC_CaseBusinessService {
           String revertNocId = (String) params.get('natureOfCaseId');
           finalStatusBeforeSubmit = readCaseFinalStatusBeforeSubmit(caseId);
           markCaseSubmittedAndClearDrafts(caseId);
-          revert(caseId, revertActionId, finalStatusBeforeSubmit, routingActionValue);
+          // 04/06/2026 16:45 linhdev - bulk import truyền revertPreferRevertedChange để chọn đúng FEC_Stage_Change__c
+          Boolean preferRevertedStageChange = null;
+          if (params != null && params.containsKey('revertPreferRevertedChange')) {
+            preferRevertedStageChange =
+              'true'.equalsIgnoreCase((String) params.get('revertPreferRevertedChange'));
+          }
+          revert(caseId, revertActionId, finalStatusBeforeSubmit, routingActionValue, preferRevertedStageChange);
           // GSR Revert Stage 2→1 (NOC Stage 2 khác Original): không áp NOC Stage 2 từ UI.
           Boolean isGsrStage2ToStage1Revert =
             FEC_CaseMasterDataHelper.isGsrRevertStage2ToStage1(caseId);
@@ -2613,6 +2619,8 @@ public without sharing class FEC_CaseBusinessService {
           // // Toannd61 19/05/26 jira 1423 jira 1423
           FEC_Current_Case_Stage__r.FEC_Code__c,
           FEC_Current_Case_Stage__r.Name,
+          // 04/06/2026 17:10 linhdev - đọc BP stage để gate COF/GSR Assignment (không thêm SOQL)
+          FEC_Current_Case_Stage__r.FEC_Business_Process__r.FEC_Code__c,
           FEC_Actual_Nature_of_Case__c,
           FEC_Team__c,
           FEC_Account_or_Contract__c,
@@ -2979,10 +2987,18 @@ public without sharing class FEC_CaseBusinessService {
 
       // tungnm37 fix: chỉ skip khi TẤT CẢ teams đều là CC/SP (thủ công - user thêm qua Add Item)
       // Nếu có bất kỳ team nào khác CC/SP → tạo Assignment tự động cho tất cả team
-      Set<Id> nocIds = FEC_CofGsrAssignmentService.resolveToNocIds(natureOfCaseId);
-      Boolean hasNonCcSpTeam = FEC_CofGsrAssignmentService.hasNonCcSpTeam(nocIds);
-      if (hasNonCcSpTeam) {
-        FEC_CofGsrAssignmentService.createAssignmentsOnRoute(caseId, nocIds, currentUser, history.Id, history.FEC_Stage_Name__c, null);
+      // 04/06/2026 17:10 linhdev - Phone Update/Document Request: bỏ resolveToNocIds để tránh SOQL 101 trên route()
+      if (
+        FEC_CofGsrAssignmentService.shouldCreateAssignmentsOnStandardRoute(
+          updatedCase,
+          natureOfCaseId
+        )
+      ) {
+        Set<Id> nocIds = FEC_CofGsrAssignmentService.resolveToNocIds(natureOfCaseId);
+        Boolean hasNonCcSpTeam = FEC_CofGsrAssignmentService.hasNonCcSpTeam(nocIds);
+        if (hasNonCcSpTeam) {
+          FEC_CofGsrAssignmentService.createAssignmentsOnRoute(caseId, nocIds, currentUser, history.Id, history.FEC_Stage_Name__c, null);
+        }
       }
 
       registerSkipOwnerChangeRoutingHistory(updatedCase.Id);
@@ -3524,7 +3540,8 @@ public without sharing class FEC_CaseBusinessService {
     String caseId,
     String actionId,
     String finalStatusBeforeSubmit,
-    String routingActionDisplayValue
+    String routingActionDisplayValue,
+    Boolean preferRevertedStageChange
   ) {
     try {
       List<Case> caselst = [
@@ -3562,7 +3579,13 @@ public without sharing class FEC_CaseBusinessService {
       String actionValTrim = String.isBlank(routingActionDisplayValue)
         ? REVERT
         : routingActionDisplayValue.trim();
-      Boolean scIsRevertedFilter = REVERT.equals(actionValTrim);
+      // 04/06/2026 16:45 linhdev - ưu tiên cờ từ bulk import; LWC giữ logic action.value = Revert → IsReverted true
+      Boolean scIsRevertedFilter;
+      if (preferRevertedStageChange != null) {
+        scIsRevertedFilter = preferRevertedStageChange;
+      } else {
+        scIsRevertedFilter = REVERT.equals(actionValTrim);
+      }
       //thangtv: đồng bộ cờ history với nhánh Stage Change (theo action.value)
       Boolean historyIsRevertedFlag = scIsRevertedFilter;
 
@@ -3571,7 +3594,8 @@ public without sharing class FEC_CaseBusinessService {
           FEC_Next_Stage__c,
           FEC_Next_Stage__r.FEC_Default_Stage__c,
           FEC_Next_Queue__c,
-          FEC_Previous_Stage__c
+          FEC_Previous_Stage__c,
+          FEC_IsReverted__c
         FROM FEC_Stage_Change__c
         WHERE
           FEC_Previous_Stage__c = :updatedCase.FEC_Current_Case_Stage__c
@@ -3581,11 +3605,33 @@ public without sharing class FEC_CaseBusinessService {
         LIMIT 1
       ];
 
+      // 04/06/2026 16:45 linhdev - fallback theo actionId khi lọc IsReverted không khớp metadata
+      if (scRowList.isEmpty()) {
+        scRowList = [
+          SELECT
+            FEC_Next_Stage__c,
+            FEC_Next_Stage__r.FEC_Default_Stage__c,
+            FEC_Next_Queue__c,
+            FEC_Previous_Stage__c,
+            FEC_IsReverted__c
+          FROM FEC_Stage_Change__c
+          WHERE
+            FEC_Previous_Stage__c = :updatedCase.FEC_Current_Case_Stage__c
+            AND FEC_Active__c = TRUE
+            AND FEC_Action_Button__c = :actionId
+          ORDER BY FEC_IsReverted__c DESC
+          LIMIT 1
+        ];
+      }
+
       if (scRowList.isEmpty()) {
         throw new CaseBusinessServiceException(
           String.format(System.Label.FEC_MSG_Not_Found, new List<String>{ 'Stage Change' })
         );
       }
+
+      // 04/06/2026 16:45 linhdev - history IsReverted đồng bộ bản ghi Stage Change thực tế
+      historyIsRevertedFlag = scRowList.get(0).FEC_IsReverted__c == true;
 
       FEC_Stage_Change__c stagingRow = scRowList.get(0);
       Id nextStageId = stagingRow.FEC_Next_Stage__c;

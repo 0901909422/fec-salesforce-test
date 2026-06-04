@@ -768,6 +768,69 @@ public without sharing class FEC_CofGsrAssignmentService {
         }
     }
 
+    // 04/06/2026 17:10 linhdev - Route To chuẩn: chỉ auto Assignment khi BP stage hoặc NOC thuộc COF/GSR
+    public static Boolean shouldCreateAssignmentsOnStandardRoute(
+        Case caseRow,
+        String natureOfCaseId
+    ) {
+        String stageBpCode = caseRow == null ||
+            caseRow.FEC_Current_Case_Stage__r == null ||
+            caseRow.FEC_Current_Case_Stage__r.FEC_Business_Process__r == null
+            ? null
+            : caseRow.FEC_Current_Case_Stage__r.FEC_Business_Process__r.FEC_Code__c;
+        if (isCofOrGsrBusinessProcessCode(stageBpCode)) {
+            return true;
+        }
+        return isCofOrGsrNatureOfCaseInput(natureOfCaseId);
+    }
+
+    private static Boolean isCofOrGsrBusinessProcessCode(String bpCode) {
+        if (String.isBlank(bpCode)) {
+            return false;
+        }
+        String u = bpCode.toUpperCase();
+        return u.contains('COF') || u.contains('GSR');
+    }
+
+    private static Boolean isCofOrGsrNatureOfCaseInput(String inputId) {
+        if (String.isBlank(inputId)) {
+            return false;
+        }
+        try {
+            Id recordId = Id.valueOf(inputId.trim());
+            String objName = recordId.getSObjectType().getDescribe().getName();
+            String bpCode;
+            if (objName == 'FEC_Nature_of_Case__c') {
+                List<FEC_Nature_of_Case__c> nocs = [
+                    SELECT FEC_Business_Process__r.FEC_Code__c
+                    FROM FEC_Nature_of_Case__c
+                    WHERE Id = :recordId
+                    LIMIT 1
+                ];
+                if (nocs.isEmpty()) {
+                    return false;
+                }
+                bpCode = nocs[0].FEC_Business_Process__r.FEC_Code__c;
+            } else if (objName == 'FEC_Actual_Nature_of_Case__c') {
+                List<FEC_Actual_Nature_of_Case__c> actualNocs = [
+                    SELECT FEC_Business_Process__r.FEC_Code__c
+                    FROM FEC_Actual_Nature_of_Case__c
+                    WHERE Id = :recordId
+                    LIMIT 1
+                ];
+                if (actualNocs.isEmpty()) {
+                    return false;
+                }
+                bpCode = actualNocs[0].FEC_Business_Process__r.FEC_Code__c;
+            } else {
+                return false;
+            }
+            return isCofOrGsrBusinessProcessCode(bpCode);
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
     public static Set<Id> resolveToNocIds(String inputId) {
         Set<Id> result = new Set<Id>();
         if (String.isBlank(inputId)) return result;
