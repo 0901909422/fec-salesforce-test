@@ -162,8 +162,6 @@ private class FEC_GetCSCaseStatusService_Test {
         Test.startTest();
         FEC_GetCSCaseStatusService.GetCSCaseStatusResponse res =
             FEC_GetCSCaseStatusService.GetCSCaseStatus(req);
-        FEC_GetCSCaseStatusService.GetCSCaseStatusResponse res =
-            FEC_GetCSCaseStatusService.GetCSCaseStatus(req);
         Test.stopTest();
 
         System.assertEquals(2, res.Sys.Code, 'API should fail for invalid channel.');
