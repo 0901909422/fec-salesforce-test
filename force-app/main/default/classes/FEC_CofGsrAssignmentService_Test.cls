@@ -178,7 +178,6 @@ private class FEC_CofGsrAssignmentService_Test {
         FEC_Team__c team = new FEC_Team__c(Name = 'TEAM-' + String.valueOf(System.currentTimeMillis()));
         insert team;
         insert new FEC_Team_Queue__c(
-            Team__c = team.Id,
             FEC_Select_Team__c = team.Id,
             FEC_Queue_Name__c = ccQueue.DeveloperName
         );

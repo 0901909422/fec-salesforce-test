@@ -151,20 +151,21 @@ private class FEC_CaseRemarkController_Test {
     @IsTest
     static void testSubmitRemarkDirect_SuccessAndDuplicateCheck() {
         Case c = [SELECT Id FROM Case WHERE Subject = 'Case Draft Remarks Test' LIMIT 1];
+        String remarkText = 'Direct Submit Remark ' + String.valueOf(System.currentTimeMillis());
 
         Test.startTest();
-        // Chạy lần 1: Lưu thẳng một nội dung mới hoàn toàn
-        FEC_CaseRemarkController.submitRemarkDirect(c.Id, 'Stage 1', 'Direct Submit Remark Content');
+        FEC_CaseRemarkController.submitRemarkDirect(c.Id, 'Stage 1', remarkText);
 
         System.assertEquals(null, [SELECT FEC_Draft_Remarks__c FROM Case WHERE Id = :c.Id].FEC_Draft_Remarks__c);
-        System.assertEquals(1, countRemarksWithText(c.Id, 'Direct Submit Remark Content'));
+        Integer afterFirst = countRemarksWithText(c.Id, remarkText);
+        System.assertEquals(1, afterFirst);
 
-        FEC_CaseRemarkController.submitRemarkDirect(c.Id, 'Stage 1', 'Direct Submit Remark Content');
+        FEC_CaseRemarkController.submitRemarkDirect(c.Id, 'Stage 1', remarkText);
         Test.stopTest();
 
         System.assertEquals(
-            1,
-            countRemarksWithText(c.Id, 'Direct Submit Remark Content'),
+            afterFirst,
+            countRemarksWithText(c.Id, remarkText),
             'Hệ thống phải chặn không tạo bản ghi Remark trùng lặp nội dung qua phương thức Submit Direct.'
         );
     }
