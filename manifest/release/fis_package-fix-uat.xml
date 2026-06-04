@@ -10,6 +10,8 @@
         <members>FEC_CaseBusinessService_Test</members>
         <members>FEC_CofGsrAssignmentService</members>
         <members>FEC_CofGsrAssignmentService_Test</members>
+        <members>FEC_CommonUltils</members>
+        <members>FEC_GetCSMasterDataByCodeService</members>
         <name>ApexClass</name>
     </types>
     <types>
