@@ -5,7 +5,7 @@ import updateRecord from '@salesforce/apex/FEC_AutoIntegratingPropertyMappingCtr
 import deleteRecord from '@salesforce/apex/FEC_AutoIntegratingPropertyMappingCtrl.deleteRecord';
 
 import getChannels from '@salesforce/apex/FEC_AutoIntegratingPropertyMappingCtrl.getChannels';
-import getAdditionalFieldById from '@salesforce/apex/FEC_AutoIntegratingPropertyMappingCtrl.getAdditionalFieldById';
+import getAdditionalFieldById from '@salesforce/apex/FEC_AutoIntegratingPropertyMappingCtrl.getAdditionalFieldByUniqueID';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 
 // Custom Labels
@@ -89,7 +89,7 @@ export default class FecAutoIntetgratingPropertyMapping extends LightningElement
     }
 
     loadAdditionalField() {
-        getAdditionalFieldById({ fieldId: this.recordId })
+        getAdditionalFieldById({ uniqueID: this.recordId })
             .then(result => {
                 if (result) {
                     this.additionalFieldData = {

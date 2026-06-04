@@ -1,46 +1,55 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
     ═══════════════════════════════════════════════════════════════════════
-    MISSING METADATA FIX PACKAGE
+    MISSING METADATA FIX PACKAGE  (loi 2GP "package version create")
     ───────────────────────────────────────────────────────────────────────
-    Mục đích: retrieve các CustomField / metadata CÒN THIẾU trong git repo
-    (salesforce-new-csm) — những thứ TỒN TẠI trên org UAT nhưng chưa có file
-    trong source nên "package version create" báo lỗi
-    (no CustomField named ... / Invalid type ...).
+    Muc dich: bo sung metadata MDM-scope CON THIEU trong git repo
+    (salesforce-new-csm) de fix loi build 2GP.
 
-    ⚠️ CHỈ chứa metadata RETRIEVE ĐƯỢC (đã verify tồn tại trên org UAT).
-    Các lỗi do SAI TÊN field trong code (vd Team__c) KHÔNG nằm ở đây — xem
-    mục "LƯU Ý" bên dưới, cần team chủ quản sửa code.
+    CHI chua metadata RETRIEVE DUOC tu org UAT (da verify).
 
-    Cách dùng (tại repo salesforce-new-csm, target org UAT):
+    Cach dung (tai repo salesforce-new-csm, target org UAT):
       sf project retrieve start \
         --manifest manifest/Master-Data-Management/missing-metadata-fix-package.xml \
-        --target-org <uat-alias>
-    Sau đó: git add . && git commit && git push
+        --target-org fecuat
+    Sau do: git add . , git commit , git push
 
     Generated: 2026-06-04 | Author: DAT NGO
     ───────────────────────────────────────────────────────────────────────
-    PHÂN ĐỊNH OWNER:
-      • Case.Language, Case.SourceId  → Team Case Management / CS
-      • CasePriority (value Critical) → đã fix (standardValueSet), giữ để chắc
+    LOI XU LY BANG FILE EDIT (KHONG retrieve duoc — xem doc duoi):
+      (2)(3) Case.Language / Case.SourceId  -> chay script strip-standard-case-fields.py
+      (4)    FEC_Hold_Case_Config.FEC_Category__c (ProductCategory) -> .forceignore
+      (12)(14) fecAutoIntetgratingPropertyMapping import sai method -> da fix code
     ═══════════════════════════════════════════════════════════════════════
 -->
 <Package xmlns="http://soap.sforce.com/2006/04/metadata">
 
-    <!-- ── Case custom fields thiếu (lỗi 48-135: no CustomField named Case.Language / Case.SourceId) ──
-         Verified tồn tại trên org UAT:
-           - Case.Language : Picklist
-           - Case.SourceId : Lookup (standard, có khi bật feature) -->
-    <types>
-        <members>Case.Language</members>
-        <members>Case.SourceId</members>
-        <name>CustomField</name>
-    </types>
-
-    <!-- ── Standard Value Set: CasePriority (lỗi 12-16: Picklist value Critical not found) ── -->
+    <!-- ── (5-9 cu) Standard Value Sets thieu value ──
+         CasePriority: 'Critical' | CaseType: 'Feature Request' -->
     <types>
         <members>CasePriority</members>
+        <members>CaseType</members>
         <name>StandardValueSet</name>
+    </types>
+
+    <!-- ── (7) Custom Tab thieu: no CustomTab named Master_Data_Fraud_Integration ── -->
+    <types>
+        <members>Master_Data_Fraud_Integration</members>
+        <name>CustomTab</name>
+    </types>
+
+    <!-- ── (7 dependency) FlexiPage ma CustomTab tro toi ── -->
+    <types>
+        <members>Master_Data_Fraud_Integration</members>
+        <name>FlexiPage</name>
+    </types>
+
+    <!-- ── (1) External Data Source cho external object CifFeDictLocationVw__x ──
+         CifFeDictLocationVw__x.object-meta.xml co <externalDataSource>OData_Service</externalDataSource>.
+         Thieu datasource nay -> "Can not find external datasource with name OData_Service". -->
+    <types>
+        <members>OData_Service</members>
+        <name>ExternalDataSource</name>
     </types>
 
 </Package>
