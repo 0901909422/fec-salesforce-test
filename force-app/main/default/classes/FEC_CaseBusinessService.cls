@@ -4273,7 +4273,7 @@ public without sharing class FEC_CaseBusinessService {
       outEditable = false;
     }
 
-    return new Field(
+    Field fieldResult = new Field(
       apiName,
       (String) masterDataItem.get('FEC_Field_Label_Name__c'),
       value,
@@ -4286,6 +4286,8 @@ public without sharing class FEC_CaseBusinessService {
       (Decimal) masterDataItem.get('FEC_Sub_Section_Field_Layout__c'),
       maskingTypeTemp
     );
+    fieldResult.mdsType = mdsType;
+    return fieldResult;
   }
 
   public static Map<String, Map<String, String>> getHelpTextMap(
@@ -4742,6 +4744,10 @@ public without sharing class FEC_CaseBusinessService {
 
     @AuraEnabled
     public Boolean hidden;
+
+    /** FEC_Type__c from master data row (e.g. Assignment, Field). */
+    @AuraEnabled
+    public String mdsType;
 
     public Field() {
     }

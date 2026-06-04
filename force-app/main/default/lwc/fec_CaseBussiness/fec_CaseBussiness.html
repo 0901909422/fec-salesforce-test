@@ -508,7 +508,9 @@
   </lightning-accordion>
 
   <!--Assigment Routing Action-->
-  <c-fec_-assignment-list  record-id={recordId}>
+  <c-fec_-assignment-list
+    record-id={recordId}
+    onrequestassignmentfieldpayload={handleRequestAssignmentFieldPayload}>
   </c-fec_-assignment-list>
   <!--END: Hieutt74: Update ngày 21/4/2026-->
   <c-fec_-modal header={header} onclose={handleCloseModal} if:true={isModalOpen}>

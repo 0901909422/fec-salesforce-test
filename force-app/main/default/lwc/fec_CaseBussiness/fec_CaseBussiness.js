@@ -48,6 +48,7 @@ import {
   formatCurrencyIncludeTax,
   formatCurrency2,
 } from "c/fec_CommonUtils";
+import { collectAssignmentMasterFieldPayload } from "c/fec_AssignmentMasterFieldUtils";
 
 import { MASKING_TYPE_PHONE, MASKING_TYPE_PASSPORT, STR_EMPTY, ICON_HIDE, ICON_PREVIEW, INTERNAL_REQUEST, CASE_OBJECT_API_NAME, FIELD_CUSTOMER_PHONE_NUMBER, FIELD_RECEIVING_PHONE_NUMBER, FEC_FAST_CASH_STORAGE_MODAL_CONFIRMED_PREFIX, FEC_FAST_CASH_STORAGE_NOC_SELECTION_PREFIX, FEC_POINTS_REDEMPTION_STORAGE_NOC_SELECTION_PREFIX, isPointsRedemptionRedeemOkInStorage } from "c/fec_CommonConst";
 import FEC_MSG_UPDATED_INFO_NOT_UPDATED from "@salesforce/label/c.FEC_MSG_UPDATED_INFO_NOT_UPDATED";
@@ -2139,6 +2140,15 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
       }
     }
     return { success: true };
+  }
+
+  /** Child fec_AssignmentList requests Case form values for Assignment MDS fields. */
+  handleRequestAssignmentFieldPayload(event) {
+    const json = collectAssignmentMasterFieldPayload(this);
+    const list = event.target;
+    if (list && typeof list.completeAssignmentFieldPayload === "function") {
+      list.completeAssignmentFieldPayload(json);
+    }
   }
 
   hasContractProcessingAssessmentTypeChanged() {
