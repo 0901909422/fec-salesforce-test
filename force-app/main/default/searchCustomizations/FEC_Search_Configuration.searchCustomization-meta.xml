@@ -11,10 +11,6 @@
         <searchable>false</searchable>
     </objectOverride>
     <objectOverride>
-        <objectApiName>CustomerProperty</objectApiName>
-        <searchable>false</searchable>
-    </objectOverride>
-    <objectOverride>
         <objectApiName>Customer</objectApiName>
         <searchable>false</searchable>
     </objectOverride>
