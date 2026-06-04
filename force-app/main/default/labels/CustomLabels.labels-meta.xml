@@ -3332,7 +3332,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>Follow-Up User added to list and Watcher Information</shortDescription>
-        <value>Thêm người dùng theo dõi Case thành công</value>
+        <value>Follow-Up User đã được thêm vào danh sách follow-up và Watcher Information.</value>
     </labels>
     <labels>
         <fullName>FEC_MSG_FollowUp_Not02_User_Already_Watcher</fullName>
@@ -3356,7 +3356,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>Follow Case saved successfully</shortDescription>
-        <value>Đã theo dõi case thành công</value>
+        <value>Follow Case has been saved successfully</value>
     </labels>
     <labels>
         <fullName>FEC_MSG_FollowUp_Case_ID_Not_Found</fullName>
@@ -3444,7 +3444,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>Follow-up type updated successfully</shortDescription>
-        <value>Đã theo dõi case thành công</value>
+        <value>Follow-up type has been updated successfully</value>
     </labels>
     <labels>
         <fullName>FEC_MSG_FollowUp_Unfollow_Error</fullName>
@@ -3460,7 +3460,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>Unfollowed Case successfully</shortDescription>
-        <value>Đã bỏ theo dõi case thành công</value>
+        <value>Unfollowed Case successfully</value>
     </labels>
     <labels>
         <fullName>FEC_MSG_FollowUp_User_Not_Found</fullName>
@@ -4849,7 +4849,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>Auto-generated label</shortDescription>
-        <value>Success!</value>
+        <value>Success</value>
     </labels>
     <labels>
         <fullName>FEC_Suggested_answer_Label</fullName>
@@ -11634,7 +11634,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>MSG Channel Validation</shortDescription>
-        <value>Channel id </value>
+        <value>Channel id &quot;</value>
     </labels>
     <labels>
         <fullName>FEC_MSG_Data_Request_Master_Data</fullName>
@@ -11642,7 +11642,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>MSG Data Request Master Data</shortDescription>
-        <value> is not supported.</value>
+        <value>&quot; is not supported.</value>
     </labels>
     <labels>
         <fullName>FEC_MSG_Limit_Character</fullName>
@@ -14042,7 +14042,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>Relevant Ticket interaction field label</shortDescription>
-        <value>Interaction/ Case</value>
+        <value>Interaction</value>
     </labels>
     <labels>
         <fullName>FEC_RelevantTicket_Search_Placeholder</fullName>
@@ -18328,40 +18328,45 @@
         <value>Hold Case Config was saved</value>
     </labels>
     <labels>
-        <fullName>FEC_Email_Label_Title</fullName>
+        <fullName>FEC_Email_File_Select_Files</fullName>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>Email Section - Title label</shortDescription>
-        <value>Title</value>
+        <shortDescription>Email file modal - Select Files</shortDescription>
+        <value>Select Files</value>
     </labels>
     <labels>
-        <fullName>FEC_Assignment_Duplicate_Queue_Error</fullName>
+        <fullName>FEC_Email_File_Related_Files</fullName>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>Duplicate assignment queue error</shortDescription>
-        <value>Assignment đến queue này đã tồn tại.</value>
+        <shortDescription>Email file modal - Related Files</shortDescription>
+        <value>Related Files</value>
     </labels>
     <labels>
-        <fullName>FEC_Batch_Case_Handling_Success</fullName>
-        <categories>Batch Case Handling</categories>
+        <fullName>FEC_Email_File_Search_Files</fullName>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>FEC_Batch_Case_Handling_Success</shortDescription>
-        <value>Success</value>
+        <shortDescription>Email file modal - Search Files placeholder</shortDescription>
+        <value>Search Files...</value>
     </labels>
     <labels>
-        <fullName>FEC_RelevantTicket_Action_Not_Allowed</fullName>
+        <fullName>FEC_Email_File_Selected_Suffix</fullName>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>Relevant Ticket action not allowed message</shortDescription>
-        <value>Bạn không thể thực hiện Action ở màn hình này</value>
+        <shortDescription>Email file modal - selected files suffix</shortDescription>
+        <value>file(s) selected</value>
     </labels>
     <labels>
-        <fullName>FEC_Termination_No_Data</fullName>
-        <categories>Account Info</categories>
+        <fullName>FEC_Email_File_Upload_Help</fullName>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>No data message</shortDescription>
-        <value>No data</value>
+        <shortDescription>Email file modal - upload help</shortDescription>
+        <value>Files uploaded here will be added to email attachments.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Email_File_Uploaded_Added</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Email file upload success message</shortDescription>
+        <value>File uploaded and added to email.</value>
     </labels>
 </CustomLabels>
