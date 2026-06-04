@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ListView xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Interactions_Service_Cases_TAT_DS</fullName>
+    <columns>NAME</columns>
+    <filterScope>Mine</filterScope>
+    <filters>
+        <field>NAME</field>
+        <operation>contains</operation>
+        <value>Interactions &amp; Service Cases Summary TAT - Direct Sales</value>
+    </filters>
+    <label>Interactions &amp; Service Cases TAT - DS</label>
+    <sharedTo>
+        <role>FEC_Customer_Service_Support_Manager</role>
+        <role>FEC_Customer_Service_Support_Specialist</role>
+        <role>FEC_Direct_Sales_Analysis_Process_Management_Team_Leader</role>
+        <role>FEC_Direct_Sales_Process_Management_Specialist</role>
+        <role>FEC_POS_Sales_Process_Management_Specialist</role>
+        <role>FEC_Senior_Customer_Service_Support_Specialist</role>
+        <role>FEC_Unit_Head_of_Customer_Service_Support</role>
+    </sharedTo>
+</ListView>

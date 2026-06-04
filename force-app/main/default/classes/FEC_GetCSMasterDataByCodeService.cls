@@ -33,7 +33,9 @@ global with sharing class FEC_GetCSMasterDataByCodeService {
         try {
             // ===== VALIDATION =====
             ValidationResult sysVal = validateSys(Sys);
-            if (!sysVal.isValid) return errorResponse(res, sysVal.errorMessage);
+            if (!sysVal.isValid) {
+                return errorResponse(res, sysVal.errorMessage);
+            }
 
             // ===== EXTRACT =====
             String productTypeCode = (MasterDataCode != null) ? MasterDataCode.ProductType : null;
@@ -46,8 +48,8 @@ global with sharing class FEC_GetCSMasterDataByCodeService {
                 ? CustomerType.Language
                 : FEC_ConstantCommon.LANGUAGE_EN;
 
-            // ===== QUERY =====
-            List<FEC_Nature_of_Case__c> records = queryNatureOfCase(
+            String customerTypeFilter = resolveCustomerTypeFilter(CustomerType);
+            String returnLevel = resolveReturnLevel(
                 productTypeCode,
                 caseTypeCode,
                 categoryCode,
@@ -55,42 +57,32 @@ global with sharing class FEC_GetCSMasterDataByCodeService {
                 subCode
             );
 
+            // ===== QUERY =====
+            List<FEC_Nature_of_Case__c> records = queryNatureOfCase(
+                Sys.Channel,
+                productTypeCode,
+                caseTypeCode,
+                categoryCode,
+                subCategoryCode,
+                subCode,
+                customerTypeFilter,
+                returnLevel
+            );
+
             // ===== BUILD DATA =====
             res.DataItems = new List<DataItemType>();
             Set<String> uniqueSet = new Set<String>();
 
             for (FEC_Nature_of_Case__c noc : records) {
+                DataItemType item = buildDataItem(noc, returnLevel, language);
+                if (item == null) {
+                    continue;
+                }
 
-                if (noc.FEC_Sub_Category__r != null &&
-                    String.isNotBlank(noc.FEC_Sub_Category__r.FEC_Code__c)) {
-
-                    String code = noc.FEC_Sub_Category__r.FEC_Code__c;
-
-                    String name = FEC_CommonUltils.pickNameByLanguage(
-                        noc.FEC_Sub_Category__r.Name,
-                        noc.FEC_Sub_Category__r.FEC_Name_VN__c,
-                        language
-                    );
-
-                    String key = code + '|' + name;
-
-                    if (!uniqueSet.contains(key)) {
-                        uniqueSet.add(key);
-
-                        DataItemType item = new DataItemType();
-
-                        item.ID = code;
-                        item.Name = name;
-                        item.NameVN = FEC_CommonUltils.defaultToEmpty(
-                            noc.FEC_Sub_Category__r.FEC_Name_VN__c
-                        );
-                        item.PosOrder = null;
-                        item.ApplyTo = FEC_ConstantCommon.STR_EMPTY;
-
-                        item.Type = resolveType(noc);
-
-                        res.DataItems.add(item);
-                    }
+                String key = item.ID + '|' + item.Name;
+                if (!uniqueSet.contains(key)) {
+                    uniqueSet.add(key);
+                    res.DataItems.add(item);
                 }
             }
 
@@ -127,60 +119,185 @@ global with sharing class FEC_GetCSMasterDataByCodeService {
     }
 
     // =========================================================================
-    // RESOLVE TYPE
+    // RETURN LEVEL 
     // =========================================================================
-    private static String resolveType(FEC_Nature_of_Case__c noc) {
-
-        if (noc.FEC_Sub_Code__r != null &&
-            String.isNotBlank(noc.FEC_Sub_Code__r.FEC_Code__c)) {
-            return FEC_ConstantCommon.KEY_SUBCODE;
-        }
-
-        if (noc.FEC_Sub_Category__r != null &&
-            String.isNotBlank(noc.FEC_Sub_Category__r.FEC_Code__c)) {
-            return FEC_ConstantCommon.KEY_SUBCATEGORY;
-        }
-
-        if (noc.FEC_Category__r != null &&
-            String.isNotBlank(noc.FEC_Category__r.FEC_Code__c)) {
-            return FEC_ConstantCommon.KEY_CATEGORY;
-        }
-
-        if (noc.FEC_Business_Process__r != null &&
-            String.isNotBlank(noc.FEC_Business_Process__r.FEC_Code__c)) {
-            return FEC_ConstantCommon.KEY_CASETYPE;
-        }
-
-        if (noc.FEC_Product_Type__r != null &&
-            String.isNotBlank(noc.FEC_Product_Type__r.FEC_Code__c)) {
-            return FEC_ConstantCommon.KEY_PRODUCT_TYPE_PRODUCT;
-        }
-
-        return FEC_ConstantCommon.STR_EMPTY;
-    }
-
-    // =========================================================================
-    // QUERY
-    // =========================================================================
-    private static List<FEC_Nature_of_Case__c> queryNatureOfCase(
+    private static String resolveReturnLevel(
         String productTypeCode,
         String caseTypeCode,
         String categoryCode,
         String subCategoryCode,
         String subCode
     ) {
-        return [
-            SELECT 
-                FEC_Product_Type__r.FEC_Code__c,
-                FEC_Business_Process__r.FEC_Code__c,
-                FEC_Category__r.FEC_Code__c,
-                FEC_Sub_Category__r.FEC_Code__c,
-                FEC_Sub_Category__r.Name,
-                FEC_Sub_Category__r.FEC_Name_VN__c,
-                FEC_Sub_Code__r.FEC_Code__c
-            FROM FEC_Nature_of_Case__c
-            WHERE FEC_Sub_Category__r.FEC_Code__c != null
-        ];
+        if (String.isBlank(productTypeCode)) {
+            return FEC_ConstantCommon.KEY_PRODUCT_TYPE_PRODUCT;
+        }
+        if (String.isBlank(caseTypeCode)) {
+            return FEC_ConstantCommon.KEY_CASETYPE;
+        }
+        if (String.isBlank(categoryCode)) {
+            return FEC_ConstantCommon.KEY_CATEGORY;
+        }
+        if (String.isBlank(subCategoryCode)) {
+            return FEC_ConstantCommon.KEY_SUBCATEGORY;
+        }
+        return FEC_ConstantCommon.KEY_SUBCODE;
+    }
+
+    private static String resolveCustomerTypeFilter(CustomerTypeRequest customerType) {
+        if (customerType == null || String.isBlank(customerType.UserType)) {
+            return null;
+        }
+
+        String userType = customerType.UserType.trim().toUpperCase();
+        if (userType == FEC_ConstantCommon.REQUEST_EXISTING_USER_TYPE) {
+            return FEC_ConstantCommon.CASE_EXISTING_CUSTOMER;
+        }
+        if (userType == FEC_ConstantCommon.REQUEST_NON_EXISTING_USER_TYPE) {
+            return FEC_ConstantCommon.CASE_NON_EXISTING_CUSTOMER;
+        }
+        return null;
+    }
+
+    private static DataItemType buildDataItem(
+        FEC_Nature_of_Case__c noc,
+        String returnLevel,
+        String language
+    ) {
+        if (noc == null || String.isBlank(returnLevel)) {
+            return null;
+        }
+
+        String code;
+        String nameEn;
+        String nameVn;
+        String applyTo = FEC_CommonUltils.defaultToEmpty(noc.FEC_Customer_Type__c);
+
+        if (returnLevel == FEC_ConstantCommon.KEY_SUBCODE) {
+            if (noc.FEC_Sub_Code__r == null ||
+                String.isBlank(noc.FEC_Sub_Code__r.FEC_Code__c)) {
+                return null;
+            }
+            code = noc.FEC_Sub_Code__r.FEC_Code__c;
+            nameEn = noc.FEC_Sub_Code__r.Name;
+            nameVn = noc.FEC_Sub_Code__r.FEC_Name_VN__c;
+        } else if (returnLevel == FEC_ConstantCommon.KEY_SUBCATEGORY) {
+            if (noc.FEC_Sub_Category__r == null ||
+                String.isBlank(noc.FEC_Sub_Category__r.FEC_Code__c)) {
+                return null;
+            }
+            code = noc.FEC_Sub_Category__r.FEC_Code__c;
+            nameEn = noc.FEC_Sub_Category__r.Name;
+            nameVn = noc.FEC_Sub_Category__r.FEC_Name_VN__c;
+        } else if (returnLevel == FEC_ConstantCommon.KEY_CATEGORY) {
+            if (noc.FEC_Category__r == null ||
+                String.isBlank(noc.FEC_Category__r.FEC_Code__c)) {
+                return null;
+            }
+            code = noc.FEC_Category__r.FEC_Code__c;
+            nameEn = noc.FEC_Category__r.Name;
+            nameVn = noc.FEC_Category__r.FEC_Name_VN__c;
+        } else if (returnLevel == FEC_ConstantCommon.KEY_CASETYPE) {
+            if (noc.FEC_Business_Process__r == null ||
+                String.isBlank(noc.FEC_Business_Process__r.FEC_Code__c)) {
+                return null;
+            }
+            code = noc.FEC_Business_Process__r.FEC_Code__c;
+            nameEn = noc.FEC_Business_Process__r.Name;
+            nameVn = noc.FEC_Business_Process__r.FEC_Name_VN__c;
+        } else if (returnLevel == FEC_ConstantCommon.KEY_PRODUCT_TYPE_PRODUCT) {
+            if (noc.FEC_Product_Type__r == null ||
+                String.isBlank(noc.FEC_Product_Type__r.FEC_Code__c)) {
+                return null;
+            }
+            code = noc.FEC_Product_Type__r.FEC_Code__c;
+            nameEn = noc.FEC_Product_Type__r.Name;
+            nameVn = noc.FEC_Product_Type__r.FEC_Name_VN__c;
+        } else {
+            return null;
+        }
+
+        DataItemType item = new DataItemType();
+        item.ID = code;
+        item.Name = FEC_CommonUltils.pickNameByLanguage(nameEn, nameVn, language);
+        item.NameVN = FEC_CommonUltils.defaultToEmpty(nameVn);
+        item.PosOrder = null;
+        item.ApplyTo = applyTo;
+        item.Type = returnLevel;
+        return item;
+    }
+
+    // =========================================================================
+    // QUERY
+    // =========================================================================
+    private static List<FEC_Nature_of_Case__c> queryNatureOfCase(
+        String channel,
+        String productTypeCode,
+        String caseTypeCode,
+        String categoryCode,
+        String subCategoryCode,
+        String subCode,
+        String customerTypeFilter,
+        String returnLevel
+    ) {
+        String channelPattern = FEC_CommonUltils.buildNatureOfCaseChannelLikePattern(channel);
+
+        List<String> conditions = new List<String>();
+        conditions.add('FEC_Active__c = true');
+        conditions.add('FEC_Channel__c LIKE :channelPattern');
+
+        if (String.isNotBlank(productTypeCode)) {
+            conditions.add('FEC_Product_Type__r.FEC_Code__c = :productTypeCode');
+        }
+        if (String.isNotBlank(caseTypeCode)) {
+            conditions.add('FEC_Business_Process__r.FEC_Code__c = :caseTypeCode');
+        }
+        if (String.isNotBlank(categoryCode)) {
+            conditions.add('FEC_Category__r.FEC_Code__c = :categoryCode');
+        }
+        if (String.isNotBlank(subCategoryCode)) {
+            conditions.add('FEC_Sub_Category__r.FEC_Code__c = :subCategoryCode');
+        }
+        if (String.isNotBlank(subCode)) {
+            conditions.add('FEC_Sub_Code__r.FEC_Code__c = :subCode');
+        }
+        if (String.isNotBlank(customerTypeFilter)) {
+            conditions.add('FEC_Customer_Type__c = :customerTypeFilter');
+        }
+
+        if (returnLevel == FEC_ConstantCommon.KEY_SUBCODE) {
+            conditions.add('FEC_Sub_Code__r.FEC_Code__c != null');
+        } else if (returnLevel == FEC_ConstantCommon.KEY_SUBCATEGORY) {
+            conditions.add('FEC_Sub_Category__r.FEC_Code__c != null');
+        } else if (returnLevel == FEC_ConstantCommon.KEY_CATEGORY) {
+            conditions.add('FEC_Category__r.FEC_Code__c != null');
+        } else if (returnLevel == FEC_ConstantCommon.KEY_CASETYPE) {
+            conditions.add('FEC_Business_Process__r.FEC_Code__c != null');
+        } else if (returnLevel == FEC_ConstantCommon.KEY_PRODUCT_TYPE_PRODUCT) {
+            conditions.add('FEC_Product_Type__r.FEC_Code__c != null');
+        }
+
+        String soql =
+            'SELECT FEC_Customer_Type__c,' +
+            ' FEC_Channel__c,' +
+            ' FEC_Product_Type__r.FEC_Code__c,' +
+            ' FEC_Product_Type__r.Name,' +
+            ' FEC_Product_Type__r.FEC_Name_VN__c,' +
+            ' FEC_Business_Process__r.FEC_Code__c,' +
+            ' FEC_Business_Process__r.Name,' +
+            ' FEC_Business_Process__r.FEC_Name_VN__c,' +
+            ' FEC_Category__r.FEC_Code__c,' +
+            ' FEC_Category__r.Name,' +
+            ' FEC_Category__r.FEC_Name_VN__c,' +
+            ' FEC_Sub_Category__r.FEC_Code__c,' +
+            ' FEC_Sub_Category__r.Name,' +
+            ' FEC_Sub_Category__r.FEC_Name_VN__c,' +
+            ' FEC_Sub_Code__r.FEC_Code__c,' +
+            ' FEC_Sub_Code__r.Name,' +
+            ' FEC_Sub_Code__r.FEC_Name_VN__c' +
+            ' FROM FEC_Nature_of_Case__c' +
+            ' WHERE ' + String.join(conditions, ' AND ');
+
+        return Database.query(soql);
     }
 
     // =========================================================================
@@ -196,8 +313,15 @@ global with sharing class FEC_GetCSMasterDataByCodeService {
         }
 
         // Channel
-       if (!FEC_CommonUltils.isActiveChannelSupported(Sys.Channel)) {
-
+        if (String.isBlank(Sys.Channel)) {
+            result.isValid = false;
+            result.errorMessage = String.format(
+                System.Label.FEC_MSG_Param_Required,
+                new List<String>{ 'Channel' }
+            );
+            return result;
+        }
+        if (!FEC_CommonUltils.isActiveChannelSupported(Sys.Channel)) {
             result.isValid = false;
             result.errorMessage = buildUnsupportedChannelMessage(Sys.Channel);
             return result;
@@ -246,6 +370,7 @@ global with sharing class FEC_GetCSMasterDataByCodeService {
     private static GetCSMasterDataByCodeResponse errorResponse(GetCSMasterDataByCodeResponse res, String message) {
         res.Sys.Code = '0';
         res.Sys.Description = message;
+        normalizeResponse(res);
         return res;
     }
 

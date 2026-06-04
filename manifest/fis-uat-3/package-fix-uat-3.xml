@@ -4,6 +4,7 @@
 	    <members>FEC_IPPClosureController</members>
 	    <members>FEC_AssignmentListHandler</members>
 	    <members>FEC_CaseBusinessService</members>
+	    <members>FEC_CaseBusinessService_Test</members>
 	    <members>FEC_CaseEditNOCController</members>
 	    <members>FEC_CaseEditNOCControllerTest</members>
 	    <members>FEC_CofGsrRoutePrepareService</members>
@@ -15,6 +16,7 @@
 	    <members>FEC_MainInfoController</members>
 	    <members>FEC_UpdateDisbursementStatusRestService</members>
 	    <members>FEC_CofGsrAssignmentService</members>
+	    <members>FEC_CofGsrAssignmentService_Test</members>
 	    <members>FEC_ConstantCommon</members>
 	    <members>FEC_CommonUltils</members>
 	    <members>FEC_MainInfoLoanAccountController</members>
@@ -64,6 +66,7 @@
         <members>FEC_DocumentRequestRoutingService</members>
         <members>FEC_DocumentRequestRoutingActionService</members>
         <members>FEC_GetCSCaseStatusService</members>
+        <members>FEC_GetCSCaseStatusService_Test</members>
 		<members>Fec_HoldCaseConfigurationController</members>
 		<members>FEC_HoldCaseInheritanceService</members>
 		<members>FEC_HoldCaseStage2DisplayService</members>
@@ -103,6 +106,7 @@
 		<members>FEC_MrcReturnCaseService</members>
 		<members>FEC_MrcReturnCaseServiceTest</members>
 		<members>FEC_CreateCSCaseService</members>
+		<members>FEC_CreateCaseInteractionController</members>
 		<members>FEC_CreateInteractionGenesys</members>
 		<members>FEC_GsrStage1RevertMasterDataHelper</members>
 		<members>FEC_AssignAutoDistribSched</members>

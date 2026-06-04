@@ -48,6 +48,7 @@ import {
   formatCurrencyIncludeTax,
   formatCurrency2,
 } from "c/fec_CommonUtils";
+import { collectAssignmentMasterFieldPayload } from "c/fec_AssignmentMasterFieldUtils";
 
 import { MASKING_TYPE_PHONE, MASKING_TYPE_PASSPORT, STR_EMPTY, ICON_HIDE, ICON_PREVIEW, INTERNAL_REQUEST, CASE_OBJECT_API_NAME, FIELD_CUSTOMER_PHONE_NUMBER, FIELD_RECEIVING_PHONE_NUMBER, FEC_FAST_CASH_STORAGE_MODAL_CONFIRMED_PREFIX, FEC_FAST_CASH_STORAGE_NOC_SELECTION_PREFIX, FEC_POINTS_REDEMPTION_STORAGE_NOC_SELECTION_PREFIX, isPointsRedemptionRedeemOkInStorage } from "c/fec_CommonConst";
 import FEC_MSG_UPDATED_INFO_NOT_UPDATED from "@salesforce/label/c.FEC_MSG_UPDATED_INFO_NOT_UPDATED";
@@ -1819,6 +1820,25 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
     return this.business?.natureOfCase || null;
   }
 
+  /**
+   * Revert (non-GSR): natureOfCaseId cho Apex updateCaseNocFromSelection.
+   * Ưu tiên FEC_Actual_Nature_of_Case__c (business.natureOfCase) — Apex resolve template 4 cấp có MD.
+   * Không ưu tiên _lastCaseNocTemplateNatureId trước Actual (dễ là template 3 cấp, 0 FEC_Master_Data_Setting__c).
+   */
+  _resolveRevertNatureOfCaseId() {
+    const subCodeId =
+      this.holdCaseNocParams?.subCodeId ??
+      this._lastGetByCaseNocParams?.subCodeId ??
+      this.holdCaseNocBaseline?.subCodeId ??
+      null;
+
+    if (!subCodeId) {
+      return null;
+    }
+
+    return this.business?.natureOfCase || this._lastCaseNocTemplateNatureId || null;
+  }
+
   @api getStageName() {
     return this.business?.stageName ?? STR_EMPTY;
   }
@@ -2139,6 +2159,15 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
       }
     }
     return { success: true };
+  }
+
+  /** Child fec_AssignmentList requests Case form values for Assignment MDS fields. */
+  handleRequestAssignmentFieldPayload(event) {
+    const json = collectAssignmentMasterFieldPayload(this);
+    const list = event.target;
+    if (list && typeof list.completeAssignmentFieldPayload === "function") {
+      list.completeAssignmentFieldPayload(json);
+    }
   }
 
   hasContractProcessingAssessmentTypeChanged() {
@@ -2602,8 +2631,10 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
         subCategoryId: message.subCategoryId,
         subCodeId: message.subCodeId,
       };
-      if (message.natureOfCaseId) {
+      if (message.natureOfCaseId && message.subCodeId) {
         this._lastCaseNocTemplateNatureId = message.natureOfCaseId;
+      } else if (message.subCodeId == null) {
+        this._lastCaseNocTemplateNatureId = null;
       }
       this._handleNOCUpdate(message);
     }
@@ -5006,8 +5037,10 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
           // GSR: không gửi NOC Stage 2 — Apex sync Actual theo template Stage 1 sau revert
           const bpCode = (this.business?.code || "").toUpperCase();
           if (!bpCode.includes("GSR")) {
-            revertParams.natureOfCaseId =
-              this._lastCaseNocTemplateNatureId || this.business?.natureOfCase;
+            const revertNocId = this._resolveRevertNatureOfCaseId();
+            if (revertNocId) {
+              revertParams.natureOfCaseId = revertNocId;
+            }
           }
           params = { ...params, params: revertParams };
           break;

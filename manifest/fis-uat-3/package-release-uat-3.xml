@@ -245,6 +245,7 @@
         <members>FEC_CaseMigrationService</members>
         <members>FEC_ContractClosureController</members>
         <members>FEC_CreateCSCaseService</members>
+        <members>FEC_CreateCaseInteractionController</members>
         <members>FEC_GetCSCaseStatusService</members>
         <members>FEC_GetCardBasicInfo</members>
         <members>FEC_GetCardFinancialTransactions</members>
