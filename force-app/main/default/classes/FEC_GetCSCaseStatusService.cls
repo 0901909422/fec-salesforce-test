@@ -558,7 +558,8 @@ global with sharing class FEC_GetCSCaseStatusService {
         // }
         
         validateChannel(req.Sys.Channel);
-        
+        validateChannelGetCaseStatusFunction(req.Sys.Channel);
+
         // FIX #4 TransactionID required + <=36
         if(String.isBlank(req.Sys.TransactionID))
             throw new ServiceException(System.Label.FEC_CS_CASE_STATUS_TRANSACTIONID_REQUIRED_MSG);
@@ -742,6 +743,17 @@ global with sharing class FEC_GetCSCaseStatusService {
             throw new ServiceException(
                 System.Label.FEC_GET_CASE_STATUS_INVALID_CHANNEL_MSG + normalizedChannel
                 );
+        }
+    }
+
+    private static void validateChannelGetCaseStatusFunction(String channel) {
+        if (!FEC_ChannelFunctionService.isFunctionAllowed(
+            channel,
+            FEC_ConstantCommon.MY_CASE_FUNCTION_GET_CS_CASE_STATUS
+        )) {
+            throw new ServiceException(
+                FEC_ConstantCommon.MY_CASE_CHANNEL_GET_CASE_STATUS_NOT_ALLOWED_MSG
+            );
         }
     }
     
