@@ -19,9 +19,12 @@ private class FEC_CaseBusinessService_Test {
         Group internalQueue = new Group(Name = 'Care Internal Task', DeveloperName = 'Care_Internal_Task', Type = 'Queue');
         insert new List<Group>{testQueue, handlingQueue, internalQueue};
 
-        QueueSobject mappingObject = new QueueSobject(QueueId = testQueue.Id, SobjectType = 'Case');
         System.runAs(new User(Id = UserInfo.getUserId())) {
-            insert mappingObject;
+            insert new List<QueueSobject>{
+                new QueueSobject(QueueId = testQueue.Id, SobjectType = 'Case'),
+                new QueueSobject(QueueId = handlingQueue.Id, SobjectType = 'Case'),
+                new QueueSobject(QueueId = internalQueue.Id, SobjectType = 'Case')
+            };
         }
 
         // 2. Agent chạy test + master data (custom objects — tránh MIXED_DML sau Queue/User DML)
@@ -939,7 +942,7 @@ private class FEC_CaseBusinessService_Test {
             }
             Test.stopTest();
 
-            Case check1 = [SELECT OwnerId, Status FROM Case WHERE Id = :outOfProcessCase.Id];
+            Case check1 = queryCaseSystem(outOfProcessCase.Id);
             System.assertNotEquals(null, check1.OwnerId, 'Update action phải thay đổi owner hoặc status.');
         }
     }
@@ -1548,7 +1551,7 @@ private class FEC_CaseBusinessService_Test {
             }
             Test.stopTest();
 
-            System.assertNotEquals(null, [SELECT OwnerId FROM Case WHERE Id = :c.Id].OwnerId);
+            System.assertNotEquals(null, queryCaseSystem(c.Id).OwnerId);
         }
     }
 
@@ -2039,7 +2042,7 @@ private class FEC_CaseBusinessService_Test {
                 System.assert(String.isNotBlank(e.getMessage()));
             }
             Test.stopTest();
-            System.assertNotEquals(null, [SELECT OwnerId FROM Case WHERE Id = :c.Id].OwnerId);
+            System.assertNotEquals(null, queryCaseSystem(c.Id).OwnerId);
         }
     }
 
