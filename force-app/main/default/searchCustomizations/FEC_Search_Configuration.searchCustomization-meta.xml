@@ -3,10 +3,6 @@
     <channel>GlobalSearch</channel>
     <masterLabel>FEC_Search_Configuration</masterLabel>
     <objectOverride>
-        <objectApiName>LegalEntity</objectApiName>
-        <searchable>false</searchable>
-    </objectOverride>
-    <objectOverride>
         <objectApiName>FEC_IPP__c</objectApiName>
         <searchable>false</searchable>
     </objectOverride>
