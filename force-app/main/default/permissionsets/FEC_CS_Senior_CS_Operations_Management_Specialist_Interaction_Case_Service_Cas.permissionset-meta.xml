@@ -1132,11 +1132,6 @@
     </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
-        <field>Case.Language</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>true</editable>
         <field>Case.MilestoneStatus</field>
         <readable>true</readable>
     </fieldPermissions>
