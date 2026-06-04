@@ -7,8 +7,9 @@
 # These roles exist in metadata but scratch org creation doesn't support them
 # force-app/main/default/assignmentRules/
 
-# GROUP F: External Object not included in package (managed externally)
-# CifFeDictLocationVw__x is an OData external object provisioned separately
+# GROUP F: External Object / OData — not supported on scratch org package validation
+**/dataSources/OData_Service.dataSource-meta.xml
+**/objects/CifFeDictLocationVw__x/**
 
 # GROUP H: Report folders that may fail due to missing report types in scratch org
 # force-app/main/default/reports/
