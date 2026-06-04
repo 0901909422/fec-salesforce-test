@@ -898,3 +898,20 @@
 .THIS .fec-case-file-row:last-child { border-bottom:none; }
 .THIS .fec-case-file-icon { font-size:14px; }
 .THIS .fec-case-file-name { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+/* Make standard file upload look like Salesforce Files selector button only */
+.THIS .fec-file-modal-left .slds-file-selector__dropzone,
+.THIS.fec-file-modal .slds-file-selector__dropzone {
+    border: none !important;
+    padding: 0 !important;
+    background: transparent !important;
+}
+.THIS .fec-file-modal-left .slds-file-selector__text,
+.THIS.fec-file-modal .slds-file-selector__text {
+    display: none !important;
+}
+.THIS .fec-file-modal-left .slds-file-selector__button,
+.THIS.fec-file-modal .slds-file-selector__button {
+    border-radius: 16px !important;
+    min-width: 130px !important;
+    justify-content: center !important;
+}
