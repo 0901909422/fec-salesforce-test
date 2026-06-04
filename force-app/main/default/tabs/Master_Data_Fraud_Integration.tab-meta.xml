@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomTab xmlns="http://soap.sforce.com/2006/04/metadata">
+    <flexiPage>Master_Data_Fraud_Integration</flexiPage>
+    <label>Master Data Fraud Integration</label>
+    <motif>Custom68: Handsaw</motif>
+</CustomTab>
