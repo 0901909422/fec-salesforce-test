@@ -1,16 +1,21 @@
 {
     "orgName": "GitLab Pipelines Package Validation",
-    "edition": "Developer",
+    "edition": "Enterprise",
     "language": "en_US",
     "features": [
         "ServiceCloud",
         "Entitlements",
-        "LightningServiceConsole"
+        "LightningServiceConsole",
+        "Knowledge",
+        "LiveAgent"
     ],
     "settings": {
         "entitlementSettings": {
             "enableEntitlements": true,
             "enableMilestoneFeedItem": true
+        },
+        "knowledgeSettings": {
+            "enableKnowledge": true
         },
         "languageSettings": {
             "enableTranslationWorkbench": true,
@@ -19,6 +24,13 @@
         "omniChannelSettings": {
             "enableOmniChannel": true,
             "enableOmniSkillsRouting": true
+        },
+        "caseSettings": {
+            "enableCaseFeed": true,
+            "useSystemUserAsDefaultCaseUser": true
+        },
+        "chatterSettings": {
+            "enableChatter": true
         },
         "mobileSettings": {
             "enableS1EncryptedStoragePref2": false
