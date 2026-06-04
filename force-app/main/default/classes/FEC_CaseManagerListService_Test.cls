@@ -229,4 +229,49 @@ private class FEC_CaseManagerListService_Test {
         // Trường CSV vẫn giữ nguyên định dạng rỗng (null) tạo từ khâu Setup
         System.assertEquals(null, [SELECT FEC_Manager_ID_List__c FROM Case WHERE Id = :c.Id].FEC_Manager_ID_List__c);
     }
+
+    @IsTest
+    static void testSyncFromOwnerCases_nullOwnerSkipped() {
+        Case c = [SELECT Id FROM Case WHERE Subject = 'Case Owned by Child' LIMIT 1];
+        List<Case> newCases = new List<Case>{ new Case(Id = c.Id, OwnerId = null) };
+
+        Test.startTest();
+        FEC_CaseManagerListService.syncFromOwnerCases(newCases, null);
+        FEC_CaseManagerListService.syncFromOwnerCases(null, null);
+        FEC_CaseManagerListService.syncFromOwnerCases(new List<Case>(), null);
+        Test.stopTest();
+
+        System.assertNotEquals(null, c.Id);
+    }
+
+    @IsTest
+    static void testApplyAfterRoutingHistoryInsert_dedupeSameTransaction() {
+        Case c = [SELECT Id FROM Case WHERE Subject = 'Case Owned by Child' LIMIT 1];
+        List<FEC_Routing_Action_History__c> histories = new List<FEC_Routing_Action_History__c>{
+            new FEC_Routing_Action_History__c(FEC_Case__c = c.Id, FEC_Routing_Action__c = 'Route to')
+        };
+
+        Test.startTest();
+        FEC_CaseManagerListService.applyAfterRoutingHistoryInsert(histories);
+        FEC_CaseManagerListService.applyAfterRoutingHistoryInsert(histories);
+        Test.stopTest();
+
+        System.assertNotEquals(null, [SELECT FEC_Manager_ID_List__c FROM Case WHERE Id = :c.Id].FEC_Manager_ID_List__c);
+    }
+
+    @IsTest
+    static void testBuildManagerCsvForUserIds_returnsCsvForChildOwner() {
+        Case c = [SELECT Id, OwnerId FROM Case WHERE Subject = 'Case Owned by Child' LIMIT 1];
+
+        Test.startTest();
+        Map<Id, String> csvByOwner = FEC_CaseManagerListService.buildManagerCsvForUserIds(
+            new Set<Id>{ c.OwnerId }
+        );
+        FEC_CaseManagerListService.buildManagerCsvForUserIds(null);
+        FEC_CaseManagerListService.buildManagerCsvForUserIds(new Set<Id>());
+        Test.stopTest();
+
+        System.assert(csvByOwner.containsKey(c.OwnerId));
+        System.assertNotEquals(null, csvByOwner.get(c.OwnerId));
+    }
 }

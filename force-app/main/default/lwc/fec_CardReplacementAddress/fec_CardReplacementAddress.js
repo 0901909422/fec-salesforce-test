@@ -21,9 +21,11 @@ import getWardOptionsForProvinceCode from '@salesforce/apex/FEC_CardReplacementA
 import getAddressInfos from '@salesforce/apex/FEC_CardReplacementAddressController.getAddressInfos';
 import getCountryId from '@salesforce/apex/FEC_CardReplacementAddressController.getCountryId';
 import getAddressInfo from '@salesforce/apex/FEC_CardReplacementAddressController.getAddressInfo';
+import getCaseTemporaryAddressInfo from '@salesforce/apex/FEC_CardReplacementAddressController.getCaseTemporaryAddressInfo';
 import createAddressInfo from '@salesforce/apex/FEC_CardReplacementAddressController.createAddressInfo';
 import updateAddressInfo from '@salesforce/apex/FEC_CardReplacementAddressController.updateAddressInfo';
 import deleteAddressInfo from '@salesforce/apex/FEC_CardReplacementAddressController.deleteAddressInfo';
+import updateCaseSelectedAddress from '@salesforce/apex/FEC_CardReplacementAddressController.updateCaseSelectedAddress';
 
 export default class Fec_CardReplacementAddress extends LightningElement {
     @api recordId;
@@ -72,14 +74,21 @@ export default class Fec_CardReplacementAddress extends LightningElement {
     ];
 
     @wire(getRecord, { recordId: "$recordId", fields: [ACCOUNT_OR_CONTRACT_FIELD, SELECTED_ADDRESS_FIELD] })
+    wiredCase(result) {
+        this.objCase = result;
+        if (result?.data) {
+            this.loadAddressData();
+        }
+    }
+
     objCase;
 
     get customerHistoryId() {
-        return getFieldValue(this.objCase.data, ACCOUNT_OR_CONTRACT_FIELD);
+        return getFieldValue(this.objCase?.data, ACCOUNT_OR_CONTRACT_FIELD);
     }
 
     get selectedAddressId() {
-        return getFieldValue(this.objCase.data, SELECTED_ADDRESS_FIELD);
+        return getFieldValue(this.objCase?.data, SELECTED_ADDRESS_FIELD);
     }
 
     get isDisable() {
@@ -97,37 +106,6 @@ export default class Fec_CardReplacementAddress extends LightningElement {
     }
 
     connectedCallback() {
-        getAddressInfos({ caseId: this.recordId })
-        .then((addressInfos) => {
-            this.addressInfos = addressInfos.map(item => {
-                return {
-                    ...item,
-                    mailingAddressLabel: item.FEC_Mailing_Address__c ? 'Yes' : 'No'
-                };
-            });
-            if (this.selectedAddressId) {
-                this.selectedRows = [this.selectedAddressId];
-                this.newSelectedAddressId = this.selectedAddressId;
-            }
-            const hasSelectedAddress = addressInfos.some(address => address.Id === this.selectedAddressId); 
-            if (this.selectedAddressId && !this.isEdit && !hasSelectedAddress) {
-                getAddressInfo({ addressId: this.selectedAddressId })
-                .then((addressInfo) => {
-                    this.isDisableBtnAddTempAddress = true;
-                    this.newTempAddressOptions = [
-                        { label: addressInfo.FEC_Address__c, value: addressInfo.Id }
-                    ];
-                    this.addressInfoValue = addressInfo.Id;
-                })
-                .catch((err) => {
-                    console.log(err);
-                });
-            }
-        })
-        .catch((error) => {
-            console.log(error);
-        });
-
         getProvinceOptionsForAddress()
         .then((provinces) => {
             const mapped = (provinces || []).map((o) => ({
@@ -139,6 +117,84 @@ export default class Fec_CardReplacementAddress extends LightningElement {
         .catch((error) => {
             console.log(error);
         });
+        if (this.recordId) {
+            this.loadAddressData();
+        }
+    }
+
+    formatAddressLabel(addressInfo) {
+        if (!addressInfo) {
+            return '';
+        }
+        return (
+            addressInfo.FEC_Full_Address__c ||
+            addressInfo.FEC_Address__c ||
+            ''
+        );
+    }
+
+    applyTemporaryAddressDisplay(addressInfo) {
+        if (!addressInfo?.Id) {
+            return;
+        }
+        this.isDisableBtnAddTempAddress = true;
+        this.newAddressInfoId = addressInfo.Id;
+        this.addressInfoValue = addressInfo.Id;
+        this.newSelectedAddressId = addressInfo.Id;
+        this.newTempAddressOptions = [
+            {
+                label: this.formatAddressLabel(addressInfo),
+                value: addressInfo.Id,
+            },
+        ];
+    }
+
+    async hydrateTemporaryAddressDisplay(addressInfos) {
+        const list = addressInfos || [];
+        const selectedId = this.selectedAddressId;
+        if (selectedId && list.some((address) => address.Id === selectedId)) {
+            this.selectedRows = [selectedId];
+            this.newSelectedAddressId = selectedId;
+            return;
+        }
+
+        let tempRecord = null;
+        try {
+            if (selectedId) {
+                tempRecord = await getAddressInfo({ addressId: selectedId });
+            } else {
+                tempRecord = await getCaseTemporaryAddressInfo({
+                    caseId: this.recordId,
+                });
+            }
+        } catch (err) {
+            console.log(err);
+            return;
+        }
+
+        if (tempRecord?.Id) {
+            this.applyTemporaryAddressDisplay(tempRecord);
+            if (!this.isEdit) {
+                this.selectedRows = [tempRecord.Id];
+            }
+        }
+    }
+
+    loadAddressData() {
+        if (!this.recordId) {
+            return;
+        }
+        getAddressInfos({ caseId: this.recordId })
+            .then(async (addressInfos) => {
+                this.addressInfos = (addressInfos || []).map((item) => ({
+                    ...item,
+                    mailingAddressLabel: item.FEC_Mailing_Address__c ? 'Yes' : 'No',
+                }));
+                await this.hydrateTemporaryAddressDisplay(this.addressInfos);
+            })
+            .catch((error) => {
+                console.log(error);
+            });
     }
 
     handleMailingProvinceChange(e) {
@@ -233,12 +289,16 @@ export default class Fec_CardReplacementAddress extends LightningElement {
             } else {
                 this.newAddressInfoId = await createAddressInfo({ input: addressInput });
             }
+            await updateCaseSelectedAddress({
+                caseId: this.recordId,
+                selectedAddressId: this.newAddressInfoId,
+            });
             this.isModalOpen = false;
-            this.isDisableBtnAddTempAddress = true;
-            this.newTempAddressOptions = [
-                { label: address, value: this.newAddressInfoId }
-            ];
-            this.addressInfoValue = this.newAddressInfoId;
+            this.applyTemporaryAddressDisplay({
+                Id: this.newAddressInfoId,
+                FEC_Address__c: address,
+                FEC_Full_Address__c: address,
+            });
             this.selectedRows = [];
             this.newSelectedAddressId = this.newAddressInfoId;
         } catch (error) {
@@ -257,9 +317,15 @@ export default class Fec_CardReplacementAddress extends LightningElement {
         this.isLoading = true;
         try {
             await deleteAddressInfo({ addressInfoId: this.newAddressInfoId });
+            await updateCaseSelectedAddress({
+                caseId: this.recordId,
+                selectedAddressId: null,
+            });
             this.isDisableBtnAddTempAddress = false;
             this.newAddressInfoId = '';
             this.newSelectedAddressId = '';
+            this.newTempAddressOptions = undefined;
+            this.addressInfoValue = undefined;
         } catch (error) {
             this.showToast('Error', this.handleError(error), 'error');
             console.log(error);

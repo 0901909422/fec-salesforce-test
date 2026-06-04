@@ -37,10 +37,32 @@ public without sharing class FEC_CardReplacementAddressController {
     public static FEC_Address_Info__c getAddressInfo(String addressId) {
         return [
             SELECT Id,
-                FEC_Address__c
+                FEC_Address__c,
+                FEC_Full_Address__c,
+                FEC_Address_Type__c
             FROM FEC_Address_Info__c
             WHERE Id = :addressId
         ];
+    }
+
+    /** Địa chỉ tạm gắn Case (FEC_Case__c) — không nằm trong getAddressInfos (chỉ History). */
+    @AuraEnabled
+    public static FEC_Address_Info__c getCaseTemporaryAddressInfo(String caseId) {
+        if (String.isBlank(caseId)) {
+            return null;
+        }
+        List<FEC_Address_Info__c> rows = [
+            SELECT Id,
+                FEC_Address__c,
+                FEC_Full_Address__c,
+                FEC_Address_Type__c
+            FROM FEC_Address_Info__c
+            WHERE FEC_Case__c = :caseId
+                AND FEC_Address_Type__c = 'Temporary Address'
+            ORDER BY CreatedDate DESC
+            LIMIT 1
+        ];
+        return rows.isEmpty() ? null : rows[0];
     }
 
     @AuraEnabled(cacheable=true)

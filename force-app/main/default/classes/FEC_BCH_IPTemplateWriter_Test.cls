@@ -69,4 +69,5 @@ private class FEC_BCH_IPTemplateWriter_Test {
         System.assertEquals('UNSUPPORTED_TEMPLATE', resp.errorCode);
         System.assertNotEquals(null, resp.errorMessage);
     }
+
 }

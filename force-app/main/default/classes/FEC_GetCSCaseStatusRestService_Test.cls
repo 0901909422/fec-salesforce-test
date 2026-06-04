@@ -69,6 +69,30 @@ private class FEC_GetCSCaseStatusRestService_Test {
             FEC_Channel_Status__c = true
         );
 
+        FEC_Product_Type__c pt = new FEC_Product_Type__c(
+            Name = 'Credit Card',
+            FEC_Code__c = 'CC',
+            FEC_Name_VN__c = 'The Tin Dung',
+            FEC_Active__c = true
+        );
+        FEC_Category__c cat = new FEC_Category__c(
+            Name = 'Request',
+            FEC_Code__c = 'Request',
+            FEC_Name_VN__c = 'Yeu Cau',
+            FEC_Active__c = true
+        );
+        FEC_Sub_Category__c subCat = new FEC_Sub_Category__c(
+            Name = 'RC27',
+            FEC_Code__c = 'RC27',
+            FEC_Active__c = true
+        );
+        FEC_Sub_Code__c subCode = new FEC_Sub_Code__c(
+            Name = 'RC27.01',
+            FEC_Code__c = 'RC27.01',
+            FEC_Active__c = true
+        );
+        insert new List<SObject>{ pt, cat, subCat, subCode };
+
         FEC_Business_Process__c proc = new FEC_Business_Process__c(
             Name = 'Fraud Process',
             FEC_Code__c = 'FRAUDPROC',
@@ -83,7 +107,11 @@ private class FEC_GetCSCaseStatusRestService_Test {
                 Status = 'New',
                 FEC_ID_Search__c = 'CASE123',
                 FEC_Customer_Name__c = 'Test Customer',
-                FEC_Business_Process__c = proc.Id
+                FEC_Business_Process__c = proc.Id,
+                FEC_Product_Type__c = pt.Id,
+                FEC_Category__c = cat.Id,
+                FEC_SubCategory__c = subCat.Id,
+                FEC_SubCode__c = subCode.Id
             );
             Id rtId = customerCaseRecordTypeId();
             if (rtId != null) {
@@ -94,7 +122,8 @@ private class FEC_GetCSCaseStatusRestService_Test {
             FEC_Customer_History__c accountHist = new FEC_Customer_History__c(
                 Name = 'ACC123',
                 FEC_Case__c = statusCase.Id,
-                FEC_Account_Number__c = 'ACC123'
+                FEC_Account_Number__c = 'ACC123',
+                FEC_Email__c = 'customer@example.com'
             );
             insert accountHist;
 
@@ -217,6 +246,38 @@ private class FEC_GetCSCaseStatusRestService_Test {
         System.assert(
             res.responseBody.toString().contains('GetCSCaseStatusResponse')
         );
+    }
+
+    @IsTest
+    static void testRestPost_serviceValidationError_returnsOkWithCode2() {
+        String badChannelRequest =
+            '<?xml version="1.0" encoding="utf-8"?>' +
+            '<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">' +
+            '<soap:Body>' +
+            '<GetCSCaseStatusRequest xmlns="urn:PegaRULES:SOAP:MyCase:Services">' +
+            '<Sys><Channel>BAD</Channel><TransactionID>TXN-BAD</TransactionID>' +
+            '<DateTime>2026-05-25T06:52:33.616Z</DateTime></Sys>' +
+            '<CaseRequestInfo><ContractOrAccountInfos>' +
+            '<ContractOrAccountNumber>ACC123</ContractOrAccountNumber>' +
+            '<ProductType>CreditCard</ProductType></ContractOrAccountInfos>' +
+            '<UserType>Existing</UserType><CaseID>CASE123</CaseID>' +
+            '<IncludeFinishedRequest>true</IncludeFinishedRequest></CaseRequestInfo>' +
+            '</GetCSCaseStatusRequest></soap:Body></soap:Envelope>';
+
+        RestRequest req = new RestRequest();
+        RestResponse res = new RestResponse();
+        req.requestUri = '/services/apexrest/MyCase/v1/GetCSCaseStatus';
+        req.httpMethod = 'POST';
+        req.requestBody = Blob.valueOf(badChannelRequest);
+        RestContext.request = req;
+        RestContext.response = res;
+
+        Test.startTest();
+        FEC_GetCSCaseStatusRestService.doPost();
+        Test.stopTest();
+
+        System.assertEquals(FEC_ConstantCommon.HTTP_STATUS_OK, res.statusCode);
+        System.assert(res.responseBody.toString().contains('<Code>2</Code>'));
     }
 
     @IsTest
