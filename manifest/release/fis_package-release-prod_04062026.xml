@@ -3549,6 +3549,7 @@
     <types>
         <members>CaseStatus</members>
         <members>CaseOrigin</members>
+        <members>CasePriority</members>
         <name>StandardValueSet</name>
     </types>
     <types>
