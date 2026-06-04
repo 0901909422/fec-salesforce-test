@@ -812,14 +812,18 @@
 
                 // Sync native <select>
                 function syncSelect() {
-                    var el = component.getElement();
-                    if (!el) return;
-                    var sel = el.querySelector('.fec-from-select');
-                    if (sel) {
-                        sel.value = toSelect;
-                        if (sel.value !== toSelect) {
-                            window.setTimeout($A.getCallback(syncSelect), 150);
+                    try {
+                        var el = component && component.isValid && component.isValid() ? component.getElement() : null;
+                        if (!el || typeof el.querySelector !== 'function') return;
+                        var sel = el.querySelector('.fec-from-select');
+                        if (sel) {
+                            sel.value = toSelect;
+                            if (sel.value !== toSelect) {
+                                window.setTimeout($A.getCallback(syncSelect), 150);
+                            }
                         }
+                    } catch (e) {
+                        return;
                     }
                 }
                 window.setTimeout($A.getCallback(syncSelect), 100);
@@ -984,6 +988,25 @@
         }
     },
 
+
+    normalizeIncomingBodyHtml: function(html, isPlainText) {
+        var value = html || '';
+        value = value
+            .replace(/\\r\\n/g, '\n')
+            .replace(/\\n/g, '\n')
+            .replace(/\\r/g, '\n')
+            .replace(/\r\n/g, '\n')
+            .replace(/\n/g, '\n')
+            .replace(/\r/g, '\n');
+        if (isPlainText) {
+            return value
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/\n/g, '<br/>');
+        }
+        return this.sanitizeIncomingEmailBody(value);
+    },
 
     sanitizeIncomingEmailBody: function(html) {
         //tugnnm37 - Gmail/Genesys có thể trả video/drive chip trong HtmlBody; không render block chip xấu, convert thành link gọn
@@ -1163,7 +1186,8 @@
                     var rb=(m.HtmlBody||m.TextBody||'').replace(/<[^>]+>/g,'').replace(/&nbsp;/g,' ').replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&quot;/g,'"').trim();
                     var subj=m.Subject||'';
                     var subjDisplay = subj.replace(/\s*\[\s*ref:[^\]]*:ref\s*\]/gi,'').trim();
-                    var bodyHtml = self.sanitizeIncomingEmailBody(m.HtmlBody || m.TextBody || '');
+                    var rawBody = m.HtmlBody || m.TextBody || '';
+                    var bodyHtml = self.normalizeIncomingBodyHtml(rawBody, !m.HtmlBody);
                     return {Id:m.Id,fromName:m.FromName||m.FromAddress||'Unknown',fromAddress:m.FromAddress||'',toAddress:m.ToAddress||'',ccAddress:m.CcAddress||'',subject:subjDisplay,subjectPreview:subjDisplay||rb,bodyFull:rb,bodyHtml:bodyHtml,messageDate:ds,messageRawDate:m.MessageDate||'',incoming:m.Incoming,expanded:false,showDD:false,attachments:[]};
                 });
                 list.sort(function(a,b){

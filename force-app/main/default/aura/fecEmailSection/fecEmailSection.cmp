@@ -29,7 +29,7 @@
     <aura:attribute name="attachments" type="List" default="[]" />
     <aura:attribute name="showUploadModal" type="Boolean" default="false" />
     <aura:attribute name="selectedUploadTab" type="String" default="related" />
-    <aura:attribute name="uploadModalHelpText" type="String" default="Use Upload Files to upload files with Salesforce standard upload. Uploaded files are saved to this Case and attached to this email." />
+    <aura:attribute name="uploadModalHelpText" type="String" default="{!$Label.c.FEC_Email_File_Upload_Help}" />
     <aura:attribute name="caseFileList" type="List" default="[]" />
     <aura:attribute name="selectedCaseFileIds" type="List" default="[]" />
     <aura:attribute name="activeItemId" type="String" default="" />
@@ -79,7 +79,8 @@
     <aura:attribute name="lblRelatedFiles" type="String" default="{!$Label.c.FEC_Email_File_Related_Files}" />
     <aura:attribute name="lblSearchFiles" type="String" default="{!$Label.c.FEC_Email_File_Search_Files}" />
     <aura:attribute name="lblFilesSelectedSuffix" type="String" default="{!$Label.c.FEC_Email_File_Selected_Suffix}" />
-    <aura:attribute name="lblFilesUploadHelp" type="String" default="{!$Label.c.FEC_Email_File_Upload_Help}" />`r`n    <aura:attribute name="lblFileUploadedAdded" type="String" default="{!$Label.c.FEC_Email_File_Uploaded_Added}" />
+    <aura:attribute name="lblFilesUploadHelp" type="String" default="{!$Label.c.FEC_Email_File_Upload_Help}" />
+    <aura:attribute name="lblFileUploadedAdded" type="String" default="{!$Label.c.FEC_Email_File_Uploaded_Added}" />
 
     <!-- Load viewMode từ Case record -->
     <force:recordData aura:id="caseData"
