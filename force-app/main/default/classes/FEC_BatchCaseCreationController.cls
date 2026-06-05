@@ -565,10 +565,17 @@ public without sharing class FEC_BatchCaseCreationController {
         }
         Map<String, Schema.SObjectField> batchFieldMap = batchType.getDescribe().fields.getMap();
         SObject batchRow = batchType.newSObject(batchRecordId);
-        FEC_BatchImportCommon.putIfFieldExists(batchFieldMap, batchRow, new List<String>{ 'FEC_Status__c' }, 'Failure');
-        FEC_BatchImportCommon.putIfFieldExists(batchFieldMap, batchRow, new List<String>{ 'FEC_Result__c' }, 'Result');
-        FEC_BatchImportCommon.putIfFieldExists(batchFieldMap, batchRow, new List<String>{ 'FEC_Failure_Reason__c' }, reason);
-        update batchRow;
+        // Use direct put to bypass FLS check — this is a system-level operation
+        if (batchFieldMap.containsKey('FEC_Status__c')) {
+            batchRow.put('FEC_Status__c', 'Failure');
+        }
+        if (batchFieldMap.containsKey('FEC_Result__c')) {
+            batchRow.put('FEC_Result__c', 'Result');
+        }
+        if (batchFieldMap.containsKey('FEC_Failure_Reason__c')) {
+            batchRow.put('FEC_Failure_Reason__c', reason);
+        }
+        Database.update(batchRow, true, AccessLevel.SYSTEM_MODE);
     }
 
     @AuraEnabled

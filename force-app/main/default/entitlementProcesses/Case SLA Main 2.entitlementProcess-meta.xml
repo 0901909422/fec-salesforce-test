@@ -222,4 +222,6 @@ FEC_SubCode__r.FEC_Code__c=&quot;RC24.01&quot;
         </timeTriggers>
         <useCriteriaStartTime>true</useCriteriaStartTime>
     </milestones>
+    <name>Case SLA Main 2</name>
+    <versionNumber>1</versionNumber>
 </EntitlementProcess>

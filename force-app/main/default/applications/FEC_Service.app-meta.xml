@@ -585,6 +585,7 @@
     <tabs>FEC_Clear_Session__c</tabs>
     <tabs>FEC_Notification_Template_Channel__c</tabs>
     <tabs>FEC_Download_Report__c</tabs>
+    <tabs>FE_Department_Admin</tabs>
     <uiType>Lightning</uiType>
     <utilityBar>FEC_Service_UtilityBar</utilityBar>
     <workspaceConfig>
@@ -599,6 +600,9 @@
         </mappings>
         <mappings>
             <tab>FEC_Account_Contract_Search</tab>
+        </mappings>
+        <mappings>
+            <tab>FE_Department_Admin</tab>
         </mappings>
         <mappings>
             <tab>FEC_Action_Button__c</tab>

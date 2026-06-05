@@ -18,7 +18,7 @@
           </template>
           </template>
         </div>
-
+        <div onchange={handleChildInputChange}>
         <div class="slds-grid slds-wrap slds-m-top--small">
           <template for:each={section.sortedSectionContentlst} for:item="row">
             <div key={row.rowKey} class={row.outerClass}>
@@ -247,6 +247,18 @@
                           </div>
                         </lightning-record-edit-form>
                       </template>
+                      <!-- Fraud Properties inside Updated Info accordion -->
+                      <!-- <template if:true={row.isUpdatedInfoSub}> -->
+                        <template if:true={section.isCaseInformationSection}>
+                          <div class="slds-m-top_medium">
+                            <c-fec-integration-manage-fraud-case
+                              record-id={recordId}
+                              mode-edit-case={fraudModeEditCase}
+                              nature-of-case-id={business.natureOfCase}>
+                            </c-fec-integration-manage-fraud-case>
+                          </div>
+                        </template>
+                      <!-- </template> -->
                     </lightning-accordion-section>
                   </lightning-accordion>
                 </template>
@@ -353,6 +365,19 @@
             </template>
           </template>
         </div>
+      </div>
+        <!-- Fraud Manage Component fallback: only show when no Updated Info section -->
+        <template if:true={section.isCaseInformationSection}>
+          <template if:true={showFraudFallback}>
+            <div class="slds-m-top_medium">
+              <c-fec-integration-manage-fraud-case
+                record-id={recordId}
+                mode-edit-case={fraudModeEditCase}
+                nature-of-case-id={business.natureOfCase}>
+              </c-fec-integration-manage-fraud-case>
+            </div>
+          </template>
+        </template>
 
         <!-- process action -->
         <template if:true={finalShowProcessAction}>

@@ -345,4 +345,6 @@ FEC_SubCategory__r.FEC_Code__c=&quot;FU03&quot;
         </timeTriggers>
         <useCriteriaStartTime>true</useCriteriaStartTime>
     </milestones>
+    <name>Case SLA Main 1</name>
+    <versionNumber>1</versionNumber>
 </EntitlementProcess>

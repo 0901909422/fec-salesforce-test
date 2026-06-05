@@ -861,7 +861,9 @@ export default class FecChathubContainer extends NavigationMixin(LightningElemen
         this.notifyIfPanelClosed();
         if (data && (data.messageType === 'attachment' || data.messageType === 'image')) {
 
-            const uniqueMessageId = data.sessionID + '_' + data.createdAt;
+            // Prefer messageID (UUID from ChatHub) for the lock key — it matches the server-side
+            // unique key (FEC_MessageID__c). Fall back to sessionID+createdAt for older payloads.
+            const uniqueMessageId = data.messageID || (data.sessionID + '_' + data.createdAt);
             const lockName = 'LOCK_FILE_' + uniqueMessageId;
 
             // Encapsulate file processing logic in arrow function
