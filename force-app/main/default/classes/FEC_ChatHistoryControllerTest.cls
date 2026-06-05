@@ -175,7 +175,7 @@ private class FEC_ChatHistoryControllerTest {
             FEC_ChatHistoryController.saveManualChatHistory(testCase.Id, '');
             System.assert(false, 'Expected AuraHandledException for blank message');
         } catch (AuraHandledException e) {
-            System.assert(e.getMessage().contains('Message cannot be blank'), 'Error message should indicate blank message');
+            System.assert(e.getMessage().contains('Message cannot be blank'), 'Error message should indicate blank message. Got: ' + e.getMessage());
         }
         Test.stopTest();
     }
@@ -189,7 +189,7 @@ private class FEC_ChatHistoryControllerTest {
             FEC_ChatHistoryController.saveManualChatHistory(testCase.Id, null);
             System.assert(false, 'Expected AuraHandledException for null message');
         } catch (AuraHandledException e) {
-            System.assert(e.getMessage().contains('Message cannot be blank'), 'Error message should indicate blank message');
+            System.assert(e.getMessage().contains('Message cannot be blank'), 'Error message should indicate blank message. Got: ' + e.getMessage());
         }
         Test.stopTest();
     }

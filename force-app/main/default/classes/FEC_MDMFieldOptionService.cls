@@ -36,15 +36,19 @@ public with sharing class FEC_MDMFieldOptionService {
     }
 
     private static Map<String, Object> buildAdditionalFieldOption(FEC_MDM_Additional_Field__c f) {
-        String displayLabel = (f.FEC_Name_VN__c != null ? f.FEC_Name_VN__c : f.Name)
-            + ' (' + (f.FEC_Unique_ID__c != null ? f.FEC_Unique_ID__c : f.FEC_Code__c) + ')';
+        Map<String, Object> populated = f.getPopulatedFieldsAsMap();
+        String nameVn = populated.containsKey('FEC_Name_VN__c') ? (String) f.FEC_Name_VN__c : null;
+        String code = populated.containsKey('FEC_Code__c') ? f.FEC_Code__c : null;
+        String uniqueId = populated.containsKey('FEC_Unique_ID__c') ? f.FEC_Unique_ID__c : null;
+        String displayLabel = (nameVn != null ? nameVn : f.Name)
+            + ' (' + (uniqueId != null ? uniqueId : (code != null ? code : '')) + ')';
         return new Map<String, Object>{
             'label'        => displayLabel,
             'value'        => f.Id,
-            'fieldApiName' => f.FEC_Unique_ID__c,
-            'fieldCode'    => f.FEC_Code__c,
-            'fieldNameVN'  => f.FEC_Name_VN__c,
-            'dataType'     => f.FEC_Type__c
+            'fieldApiName' => uniqueId,
+            'fieldCode'    => code,
+            'fieldNameVN'  => nameVn,
+            'dataType'     => populated.containsKey('FEC_Type__c') ? f.FEC_Type__c : null
         };
     }
 
@@ -116,13 +120,17 @@ public with sharing class FEC_MDMFieldOptionService {
     }
 
     private static Map<String, String> buildMDSOption(FEC_MDM_Master_Data_Setting__c mds) {
-        String labelName = String.isNotBlank(mds.FEC_Field_Label_Name__c) ? mds.FEC_Field_Label_Name__c : mds.Name;
-        String apiName = String.isNotBlank(mds.FEC_Field_API_Name__c) ? mds.FEC_Field_API_Name__c : mds.Name;
+        Map<String, Object> populated = mds.getPopulatedFieldsAsMap();
+        String fieldLabelName = populated.containsKey('FEC_Field_Label_Name__c') ? (String) mds.FEC_Field_Label_Name__c : null;
+        String fieldApiName = populated.containsKey('FEC_Field_API_Name__c') ? (String) mds.FEC_Field_API_Name__c : null;
+        String fieldObjName = populated.containsKey('FEC_Field_Object_Name__c') ? (String) mds.FEC_Field_Object_Name__c : null;
+        String labelName = String.isNotBlank(fieldLabelName) ? fieldLabelName : mds.Name;
+        String apiName = String.isNotBlank(fieldApiName) ? fieldApiName : mds.Name;
         return new Map<String, String>{
             'label'        => labelName + ' (' + apiName + ')',
             'value'        => (String) mds.Id,
             'fieldApiName' => apiName,
-            'dataType'     => FEC_MDMConditionUtils.resolveFieldDataType(mds.FEC_Field_Object_Name__c, apiName)
+            'dataType'     => FEC_MDMConditionUtils.resolveFieldDataType(fieldObjName, apiName)
         };
     }
 }

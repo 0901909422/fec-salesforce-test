@@ -36,12 +36,12 @@ public without sharing class FEC_BeneficiaryBankInfoController {
         if (t == null || !t.getDescribe().isAccessible()) {
             return out;
         }
-        String soql = 'SELECT ' + FLD_BANK_NAME_NOACCENT + ' FROM ' + OBJ_BANK_NAME
+        String soql = 'SELECT Id, ' + FLD_BANK_NAME_NOACCENT + ' FROM ' + OBJ_BANK_NAME
             + ' WHERE ' + FLD_BANK_NAME_NOACCENT + ' != null ORDER BY ' + FLD_BANK_NAME_NOACCENT;
         List<SObject> rows = Security.stripInaccessible(AccessType.READABLE, Database.query(soql)).getRecords();
         Set<String> seen = new Set<String>();
         for (SObject r : rows) {
-            String val = (String) r.get(FLD_BANK_NAME_NOACCENT);
+            String val = r.getPopulatedFieldsAsMap().containsKey(FLD_BANK_NAME_NOACCENT) ? (String) r.get(FLD_BANK_NAME_NOACCENT) : null;
             if (String.isBlank(val) || seen.contains(val)) {
                 continue;
             }
@@ -66,7 +66,7 @@ public without sharing class FEC_BeneficiaryBankInfoController {
         List<SObject> rows = Security.stripInaccessible(AccessType.READABLE, Database.query(soql)).getRecords();
         Set<String> seen = new Set<String>();
         for (SObject r : rows) {
-            String val = (String) r.get(FLD_PROVINCE_NAME_VN);
+            String val = r.getPopulatedFieldsAsMap().containsKey(FLD_PROVINCE_NAME_VN) ? (String) r.get(FLD_PROVINCE_NAME_VN) : null;
             if (String.isBlank(val) || seen.contains(val)) {
                 continue;
             }
@@ -110,7 +110,7 @@ public without sharing class FEC_BeneficiaryBankInfoController {
         List<SObject> rows = Security.stripInaccessible(AccessType.READABLE, Database.query(soql)).getRecords();
         Set<String> seen = new Set<String>();
         for (SObject r : rows) {
-            String val = (String) r.get(FLD_BANK_BRANCH_NAME_NOACCENT);
+            String val = r.getPopulatedFieldsAsMap().containsKey(FLD_BANK_BRANCH_NAME_NOACCENT) ? (String) r.get(FLD_BANK_BRANCH_NAME_NOACCENT) : null;
             if (String.isBlank(val) || seen.contains(val)) {
                 continue;
             }
@@ -136,12 +136,12 @@ public without sharing class FEC_BeneficiaryBankInfoController {
                 FEC_Beneficiary_Account__c,
                 FEC_Bank_Name_Noaccent__c,
                 FEC_Bank_Branch_Name_Noaccent__c,
-                FEC_Province_City__c
+                FEC_Province_City__c,
+                FEC_Account_or_Contract__r.FEC_Customer_Name__c
             FROM Case
             WHERE Id = :caseId
             LIMIT 1
         ];
-        caseRows = (List<Case>) Security.stripInaccessible(AccessType.READABLE, caseRows).getRecords();
         if (caseRows.isEmpty()) {
             return dto;
         }
@@ -151,11 +151,12 @@ public without sharing class FEC_BeneficiaryBankInfoController {
         dto.bankPicklistValue = c.FEC_Bank_Name_Noaccent__c;
         dto.bankBranch = c.FEC_Bank_Branch_Name_Noaccent__c;
         dto.provinceCity = c.FEC_Province_City__c;
-        if (String.isNotBlank(c.FEC_Beneficiary_Name__c)) {
-            dto.beneficiaryName = c.FEC_Beneficiary_Name__c;
+        String beneficiaryName = c.FEC_Beneficiary_Name__c;
+        if (String.isNotBlank(beneficiaryName)) {
+            dto.beneficiaryName = beneficiaryName;
             return dto;
         }
-        if (c.FEC_Account_or_Contract__c == null || !Schema.sObjectType.FEC_Customer_History__c.isAccessible()) {
+        if (dto.customerHistoryId == null || !Schema.sObjectType.FEC_Customer_History__c.isAccessible()) {
             return dto;
         }
         List<FEC_Customer_History__c> histories = [
@@ -165,10 +166,9 @@ public without sharing class FEC_BeneficiaryBankInfoController {
                 FEC_Middle_Name__c,
                 FEC_Last_Name__c
             FROM FEC_Customer_History__c
-            WHERE Id = :c.FEC_Account_or_Contract__c
+            WHERE Id = :dto.customerHistoryId
             LIMIT 1
         ];
-        histories = (List<FEC_Customer_History__c>) Security.stripInaccessible(AccessType.READABLE, histories).getRecords();
         if (histories.isEmpty()) {
             return dto;
         }

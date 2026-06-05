@@ -32,9 +32,7 @@ public with sharing class FEC_MDMDecisionTableService {
     }
 
     private static List<FEC_MDM_Stage_Change__c> queryActiveRules(Id businessProcessId) {
-        return (List<FEC_MDM_Stage_Change__c>) Security.stripInaccessible(
-            AccessType.READABLE,
-            [
+        return [
                 SELECT  Id, Name,
                         FEC_Previous_Stage__c,
                         FEC_Previous_Stage__r.Name,
@@ -57,14 +55,11 @@ public with sharing class FEC_MDMDecisionTableService {
                 AND     FEC_Active__c = true
                 ORDER BY FEC_Previous_Stage__r.Name ASC,
                          FEC_Priority__c ASC NULLS LAST
-            ]
-        ).getRecords();
+        ];
     }
 
     private static List<FEC_MDM_Stage_Change_Condition__c> queryConditionsByRules(Set<Id> ruleIds) {
-        return (List<FEC_MDM_Stage_Change_Condition__c>) Security.stripInaccessible(
-            AccessType.READABLE,
-            [
+        return [
                 SELECT  Id, Name,
                         FEC_Stage_Change__c,
                         FEC_Master_Data_Setting__c,
@@ -72,12 +67,12 @@ public with sharing class FEC_MDMDecisionTableService {
                         FEC_Master_Data_Setting__r.FEC_Field_API_Name__c,
                         FEC_Master_Data_Setting__r.FEC_Field_Object_Name__c,
                         FEC_Operator__c, FEC_Value__c,
-                        FEC_Expression__c, FEC_Order__c
+                        FEC_Expression__c, FEC_Order__c,
+                        FEC_Stage_Change__r.Id
                 FROM    FEC_MDM_Stage_Change_Condition__c
                 WHERE   FEC_Stage_Change__c IN :ruleIds
                 ORDER BY FEC_Order__c ASC NULLS LAST
-            ]
-        ).getRecords();
+        ];
     }
 
     private static Map<Id, List<FEC_MDM_Stage_Change_Condition__c>> groupConditionsByRule(
@@ -86,6 +81,7 @@ public with sharing class FEC_MDMDecisionTableService {
         Map<Id, List<FEC_MDM_Stage_Change_Condition__c>> grouped = new Map<Id, List<FEC_MDM_Stage_Change_Condition__c>>();
         for (FEC_MDM_Stage_Change_Condition__c cond : conditions) {
             Id ruleId = cond.FEC_Stage_Change__c;
+            if (ruleId == null) continue;
             if (!grouped.containsKey(ruleId)) {
                 grouped.put(ruleId, new List<FEC_MDM_Stage_Change_Condition__c>());
             }
@@ -104,17 +100,18 @@ public with sharing class FEC_MDMDecisionTableService {
                 condList.add(buildConditionMap(cond));
             }
         }
+        Map<String, Object> populated = rule.getPopulatedFieldsAsMap();
         return new Map<String, Object>{
             'rowId'                => rule.Id,
-            'currentStage'         => rule.FEC_Previous_Stage__r?.Name,
+            'currentStage'         => (populated.containsKey('FEC_Previous_Stage__r') && rule.FEC_Previous_Stage__r != null && rule.FEC_Previous_Stage__r.getPopulatedFieldsAsMap().containsKey('Name')) ? rule.FEC_Previous_Stage__r.Name : null,
             'currentStageId'       => rule.FEC_Previous_Stage__c,
-            'currentStageCode'     => rule.FEC_Previous_Stage__r?.FEC_Code__c,
-            'action'               => rule.FEC_Action_Button__r?.Name,
+            'currentStageCode'     => (populated.containsKey('FEC_Previous_Stage__r') && rule.FEC_Previous_Stage__r != null && rule.FEC_Previous_Stage__r.getPopulatedFieldsAsMap().containsKey('FEC_Code__c')) ? rule.FEC_Previous_Stage__r.FEC_Code__c : null,
+            'action'               => (populated.containsKey('FEC_Action_Button__r') && rule.FEC_Action_Button__r != null && rule.FEC_Action_Button__r.getPopulatedFieldsAsMap().containsKey('Name')) ? rule.FEC_Action_Button__r.Name : null,
             'actionId'             => rule.FEC_Action_Button__c,
-            'actionCode'           => rule.FEC_Action_Button__r?.FEC_Code__c,
-            'nextStage'            => rule.FEC_Next_Stage__r?.Name,
+            'actionCode'           => (populated.containsKey('FEC_Action_Button__r') && rule.FEC_Action_Button__r != null && rule.FEC_Action_Button__r.getPopulatedFieldsAsMap().containsKey('FEC_Code__c')) ? rule.FEC_Action_Button__r.FEC_Code__c : null,
+            'nextStage'            => (populated.containsKey('FEC_Next_Stage__r') && rule.FEC_Next_Stage__r != null && rule.FEC_Next_Stage__r.getPopulatedFieldsAsMap().containsKey('Name')) ? rule.FEC_Next_Stage__r.Name : null,
             'nextStageId'          => rule.FEC_Next_Stage__c,
-            'nextStageCode'        => rule.FEC_Next_Stage__r?.FEC_Code__c,
+            'nextStageCode'        => (populated.containsKey('FEC_Next_Stage__r') && rule.FEC_Next_Stage__r != null && rule.FEC_Next_Stage__r.getPopulatedFieldsAsMap().containsKey('FEC_Code__c')) ? rule.FEC_Next_Stage__r.FEC_Code__c : null,
             'nextQueue'            => rule.FEC_Next_Queue__c,
             'teamUserGroup'        => rule.FEC_Team_User_Group__c,
             'priority'             => rule.FEC_Priority__c,
@@ -127,15 +124,16 @@ public with sharing class FEC_MDMDecisionTableService {
     }
 
     private static Map<String, Object> buildConditionMap(FEC_MDM_Stage_Change_Condition__c cond) {
+        Map<String, Object> populated = cond.getPopulatedFieldsAsMap();
         return new Map<String, Object>{
             'id'           => cond.Id,
             'conditionName'=> cond.Name,
             'fieldId'      => cond.FEC_Master_Data_Setting__c,
-            'fieldName'    => cond.FEC_Master_Data_Setting__r?.FEC_Field_Label_Name__c,
-            'fieldApiName' => cond.FEC_Master_Data_Setting__r?.FEC_Field_API_Name__c,
+            'fieldName'    => (populated.containsKey('FEC_Master_Data_Setting__r') && cond.FEC_Master_Data_Setting__r != null && cond.FEC_Master_Data_Setting__r.getPopulatedFieldsAsMap().containsKey('FEC_Field_Label_Name__c')) ? cond.FEC_Master_Data_Setting__r.FEC_Field_Label_Name__c : null,
+            'fieldApiName' => (populated.containsKey('FEC_Master_Data_Setting__r') && cond.FEC_Master_Data_Setting__r != null && cond.FEC_Master_Data_Setting__r.getPopulatedFieldsAsMap().containsKey('FEC_Field_API_Name__c')) ? cond.FEC_Master_Data_Setting__r.FEC_Field_API_Name__c : null,
             'fieldType'    => FEC_MDMConditionUtils.resolveFieldDataType(
-                cond.FEC_Master_Data_Setting__r?.FEC_Field_Object_Name__c,
-                cond.FEC_Master_Data_Setting__r?.FEC_Field_API_Name__c
+                (populated.containsKey('FEC_Master_Data_Setting__r') && cond.FEC_Master_Data_Setting__r != null && cond.FEC_Master_Data_Setting__r.getPopulatedFieldsAsMap().containsKey('FEC_Field_Object_Name__c')) ? cond.FEC_Master_Data_Setting__r.FEC_Field_Object_Name__c : null,
+                (populated.containsKey('FEC_Master_Data_Setting__r') && cond.FEC_Master_Data_Setting__r != null && cond.FEC_Master_Data_Setting__r.getPopulatedFieldsAsMap().containsKey('FEC_Field_API_Name__c')) ? cond.FEC_Master_Data_Setting__r.FEC_Field_API_Name__c : null
             ),
             'operator'     => cond.FEC_Operator__c,
             'value'        => cond.FEC_Value__c,

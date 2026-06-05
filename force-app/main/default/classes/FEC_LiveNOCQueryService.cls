@@ -40,8 +40,7 @@ public with sharing class FEC_LiveNOCQueryService {
                     FEC_Sub_Category__r.Name ASC,
                     FEC_Sub_Code__r.Name ASC
             ];
-            List<FEC_Nature_Of_Case__c> safeNOC = (List<FEC_Nature_Of_Case__c>)
-                Security.stripInaccessible(AccessType.READABLE, listNOC).getRecords();
+            List<FEC_Nature_Of_Case__c> safeNOC = listNOC;
             return FEC_NatureOfCaseTreeBuilder.buildTree(safeNOC);
         } catch (Exception e) {
             throw new AuraHandledException(FEC_UIConstants.ERROR_GENERIC_PREFIX + ' ' + e.getMessage());
@@ -57,7 +56,7 @@ public with sharing class FEC_LiveNOCQueryService {
                 WHERE  FEC_Business_Process__c = :businessProcessId
                 ORDER BY Name ASC
             ];
-            List<SObject> safe = Security.stripInaccessible(AccessType.READABLE, stages).getRecords();
+            List<SObject> safe = stages;
             List<Map<String, String>> result = new List<Map<String, String>>();
             for (FEC_Case_Stage__c stage : (List<FEC_Case_Stage__c>) safe) {
                 result.add(new Map<String, String>{
@@ -173,14 +172,14 @@ public with sharing class FEC_LiveNOCQueryService {
     }
 
     private static List<Map<String, String>> mapStageChangesToRows(List<FEC_Stage_Change__c> changes) {
-        List<SObject> safeChanges = Security.stripInaccessible(AccessType.READABLE, changes).getRecords();
         List<Map<String, String>> result = new List<Map<String, String>>();
-        for (FEC_Stage_Change__c sc : (List<FEC_Stage_Change__c>) safeChanges) {
+        for (FEC_Stage_Change__c sc : changes) {
+            Map<String, Object> pop = sc.getPopulatedFieldsAsMap();
             Map<String, String> row = new Map<String, String>();
             row.put('rowId', sc.Id);
-            row.put('previousStage', sc.FEC_Previous_Stage__r?.Name);
-            row.put('actionButton', sc.FEC_Action_Button__r?.Name);
-            row.put('nextStage', sc.FEC_Next_Stage__r?.Name);
+            row.put('previousStage', (pop.containsKey('FEC_Previous_Stage__r') && sc.FEC_Previous_Stage__r != null) ? sc.FEC_Previous_Stage__r.Name : null);
+            row.put('actionButton', (pop.containsKey('FEC_Action_Button__r') && sc.FEC_Action_Button__r != null) ? sc.FEC_Action_Button__r.Name : null);
+            row.put('nextStage', (pop.containsKey('FEC_Next_Stage__r') && sc.FEC_Next_Stage__r != null) ? sc.FEC_Next_Stage__r.Name : null);
             row.put('nextQueue', sc.FEC_Next_Queue__c);
             row.put('teamUserGroup', sc.FEC_Team_User_Group__c);
             result.add(row);

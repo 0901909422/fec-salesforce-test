@@ -48,7 +48,7 @@ public with sharing class FEC_BatchUtils {
     public static void copyFieldsToMDM(SObject mdm, SObject live, Map<String, Schema.SObjectField> mdmFields, Map<String, String> commonFieldMap) {
         for (String mdmF : commonFieldMap.keySet()) {
             String liveF = commonFieldMap.get(mdmF);
-            if (mdmFields.containsKey(mdmF) && mdmFields.get(mdmF).getDescribe().isUpdateable()) {
+            if (mdmFields.containsKey(mdmF)) {
                 try {
                     mdm.put(mdmF, live.get(liveF));
                 } catch(Exception e) {

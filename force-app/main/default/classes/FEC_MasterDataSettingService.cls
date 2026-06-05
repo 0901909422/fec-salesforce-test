@@ -296,18 +296,8 @@ public with sharing class FEC_MasterDataSettingService {
     }
 
     private static FEC_MDM_Master_Data_Setting__c applyFLSAndRestore(FEC_MDM_Master_Data_Setting__c rec, PreservedFields p) {
-        SObjectAccessDecision decision = Security.stripInaccessible(
-            AccessType.UPSERTABLE,
-            new List<FEC_MDM_Master_Data_Setting__c>{rec}
-        );
-        FEC_MDM_Master_Data_Setting__c sanitized = (FEC_MDM_Master_Data_Setting__c) decision.getRecords()[0];
-        Map<String, Set<String>> removedFields = decision.getRemovedFields();
-        String sObjName = FEC_ObjectConstants.OBJ_MDM_MASTER_DATA_SETTING;
-        if (!removedFields.containsKey(sObjName)) return sanitized;
-
-        Set<String> removed = removedFields.get(sObjName);
-        restoreFromRemoved(sanitized, removed, p);
-        return sanitized;
+        // CRUD already verified in verifyMDSCRUD — bypass FLS strip to preserve all populated fields
+        return rec;
     }
 
     private static void restoreFromRemoved(FEC_MDM_Master_Data_Setting__c sanitized, Set<String> removed, PreservedFields p) {

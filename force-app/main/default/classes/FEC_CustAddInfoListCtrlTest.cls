@@ -118,7 +118,9 @@ private class FEC_CustAddInfoListCtrlTest {
 
         FEC_CustomerAdditionalInfo__c detail = new FEC_CustomerAdditionalInfo__c(
             FEC_Config__c = cfg.Id,
-            FEC_KeyIDValue__c = 'DEL_KEY'
+            FEC_KeyIDValue__c = 'DEL_KEY',
+            FEC_KeyIdentifier__c = 'DEL_TEST',
+            FEC_FieldID__c = 'DEL_FIELD'
         );
         insert detail;
 

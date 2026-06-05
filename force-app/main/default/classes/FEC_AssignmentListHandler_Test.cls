@@ -184,8 +184,10 @@ private class FEC_AssignmentListHandler_Test {
     }
 
     private static Case insertCase() {
+        FEC_CaseTriggerHandler.isExecuting = true;
         Case c = new Case(Subject = 'FEC_AssignmentListHandler_Test');
         insert c;
+        FEC_CaseTriggerHandler.isExecuting = false;
         return c;
     }
 
@@ -197,12 +199,14 @@ private class FEC_AssignmentListHandler_Test {
             FEC_Active__c = true
         );
         insert stage;
+        FEC_CaseTriggerHandler.isExecuting = true;
         Case c = new Case(
             Subject = 'FEC_AssignmentListHandler_Test',
             FEC_Current_Case_Stage__c = stage.Id,
             OwnerId = ownerId
         );
         insert c;
+        FEC_CaseTriggerHandler.isExecuting = false;
         return c;
     }
 

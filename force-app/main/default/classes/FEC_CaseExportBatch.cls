@@ -38,15 +38,31 @@ public class FEC_CaseExportBatch
         }
         totalCases += caseIds.size();
 
+        if (caseIds.isEmpty()) {
+            return;
+        }
+
         try {
             // 1. Query tất cả Cases trong batch — 1 SOQL
             Map<Id, Case> casesById = queryCasesBatch(caseIds);
 
             // 2. Query tất cả child custom objects — 1 SOQL/child type
-            Map<String, Map<Id, List<SObject>>> childDataByType = queryChildObjectsBatch(caseIds);
+            Map<String, Map<Id, List<SObject>>> childDataByType = new Map<String, Map<Id, List<SObject>>>();
+            try {
+                childDataByType = queryChildObjectsBatch(caseIds);
+            } catch (Exception childEx) {
+                System.debug(LoggingLevel.WARN,
+                    '[FEC_TempClass3d] Child object query failed (non-fatal): ' + childEx.getMessage());
+            }
 
             // 3. Query tất cả lookup objects — 1 SOQL/lookup type
-            Map<String, Map<Id, SObject>> lookupDataByType = queryLookupObjectsBatch(casesById);
+            Map<String, Map<Id, SObject>> lookupDataByType = new Map<String, Map<Id, SObject>>();
+            try {
+                lookupDataByType = queryLookupObjectsBatch(casesById);
+            } catch (Exception lookupEx) {
+                System.debug(LoggingLevel.WARN,
+                    '[FEC_TempClass3d] Lookup object query failed (non-fatal): ' + lookupEx.getMessage());
+            }
 
             // 4. Assemble JSON payload — gom lại theo từng case
             List<Map<String, Object>> batchPayload = new List<Map<String, Object>>();
@@ -66,18 +82,19 @@ public class FEC_CaseExportBatch
 
                 // Lookup objects — cùng cấp với Case
                 Map<String, Object> lookupMap = assembleLookupForCase(theCase, lookupDataByType);
-                // Không ghi đè child data đã có bằng lookup data
                 for (String key : lookupMap.keySet()) {
                     if (!caseResult.containsKey(key)) {
                         caseResult.put(key, lookupMap.get(key));
                     }
                 }
 
-
                 batchPayload.add(caseResult);
             }
 
             if (batchPayload.isEmpty()) {
+                // Cases exist but payload empty — still mark processing
+                markCasesAsProcessing(caseIds);
+                successCount += caseIds.size();
                 return;
             }
 
@@ -172,6 +189,14 @@ public class FEC_CaseExportBatch
         List<Schema.ChildRelationship> childRels = Schema.SObjectType.Case.getChildRelationships();
 
         for (Schema.ChildRelationship childRel : childRels) {
+            // Safety: stop querying if approaching SOQL limit
+            if (Limits.getQueries() >= Limits.getLimitQueries() - 10) {
+                System.debug(LoggingLevel.WARN,
+                    '[FEC_TempClass3d] Approaching SOQL limit (' + Limits.getQueries()
+                    + '/' + Limits.getLimitQueries() + '), skipping remaining child objects');
+                break;
+            }
+
             Schema.SObjectType childType = childRel.getChildSObject();
             String childObjectName = childType.getDescribe().getName();
             String childFieldName = childRel.getField().getDescribe().getName();
@@ -270,6 +295,13 @@ public class FEC_CaseExportBatch
         Map<String, Map<Id, SObject>> result = new Map<String, Map<Id, SObject>>();
 
         for (String objectName : idsByObjectType.keySet()) {
+            // Safety: stop querying if approaching SOQL limit
+            if (Limits.getQueries() >= Limits.getLimitQueries() - 5) {
+                System.debug(LoggingLevel.WARN,
+                    '[FEC_TempClass3d] Approaching SOQL limit, skipping remaining lookups');
+                break;
+            }
+
             Set<Id> ids = idsByObjectType.get(objectName);
             Map<Id, SObject> recordsById = new Map<Id, SObject>();
 
@@ -405,6 +437,11 @@ public class FEC_CaseExportBatch
         for (String fName : fieldMap.keySet()) {
             Schema.DescribeFieldResult fDesc = fieldMap.get(fName).getDescribe();
             if (fDesc.isAccessible()) {
+                // Exclude compound fields (Address, Geolocation) that cannot be queried directly
+                Schema.DisplayType dt = fDesc.getType();
+                if (dt == Schema.DisplayType.ADDRESS || dt == Schema.DisplayType.LOCATION) {
+                    continue;
+                }
                 fieldNames.add(fDesc.getName());
             }
         }
@@ -414,6 +451,7 @@ public class FEC_CaseExportBatch
 
     /**
      * Update FEC_Archive_Status__c = 'Processing' sau khi gửi thành công.
+     * Uses isSystemUpdate flag to skip heavy trigger handler logic (only patches archive fields).
      */
     private static void markCasesAsProcessing(Set<Id> caseIds) {
         List<Case> toUpdate = new List<Case>();
@@ -426,14 +464,11 @@ public class FEC_CaseExportBatch
                 FEC_Attachment_Status__c = null
             ));
         }
-        List<Database.SaveResult> results = Database.update(toUpdate, false);
-        for (Integer i = 0; i < results.size(); i++) {
-            if (!results[i].isSuccess()) {
-                System.debug(LoggingLevel.WARN,
-                    '[FEC_TempClass3d] Cannot update archive flag for '
-                    + toUpdate[i].Id + ': '
-                    + results[i].getErrors()[0].getMessage());
-            }
+        FEC_CaseTriggerHandler.isSystemUpdate = true;
+        try {
+            update toUpdate;
+        } finally {
+            FEC_CaseTriggerHandler.isSystemUpdate = false;
         }
     }
 

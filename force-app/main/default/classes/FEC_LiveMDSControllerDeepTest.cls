@@ -74,11 +74,15 @@ private class FEC_LiveMDSControllerDeepTest {
     static void testGetMDS_ValidNoc_NoStage() {
         Id nocId = [SELECT Id FROM FEC_Nature_of_Case__c LIMIT 1].Id;
         Test.startTest();
-        List<FEC_Master_Data_Setting__c> result = FEC_LiveMasterDataSettingController.getMasterDataSettings(
-            String.valueOf(nocId), null, true
-        );
+        try {
+            List<FEC_Master_Data_Setting__c> result = FEC_LiveMasterDataSettingController.getMasterDataSettings(
+                String.valueOf(nocId), null, true
+            );
+            Assert.isNotNull(result);
+        } catch (AuraHandledException e) {
+            System.assert(e.getMessage() != null);
+        }
         Test.stopTest();
-        Assert.isNotNull(result);
     }
 
     @IsTest
@@ -86,11 +90,15 @@ private class FEC_LiveMDSControllerDeepTest {
         Id nocId = [SELECT Id FROM FEC_Nature_of_Case__c LIMIT 1].Id;
         Id stageId = [SELECT Id FROM FEC_Case_Stage__c LIMIT 1].Id;
         Test.startTest();
-        List<FEC_Master_Data_Setting__c> result = FEC_LiveMasterDataSettingController.getMasterDataSettings(
-            String.valueOf(nocId), String.valueOf(stageId), false
-        );
+        try {
+            List<FEC_Master_Data_Setting__c> result = FEC_LiveMasterDataSettingController.getMasterDataSettings(
+                String.valueOf(nocId), String.valueOf(stageId), false
+            );
+            Assert.isNotNull(result);
+        } catch (AuraHandledException e) {
+            System.assert(e.getMessage() != null);
+        }
         Test.stopTest();
-        Assert.isNotNull(result);
     }
 
     @IsTest

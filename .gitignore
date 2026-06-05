@@ -59,8 +59,7 @@ README.md
 # Ignore MainPrompt.prompt.md
 .github/prompts/MainPrompt.prompt.md
 # ApexPMD cache
-.pmdCache
-
+.pmdCac
 # Kiro and code intelligence
 .kiro/
 .code-intel/

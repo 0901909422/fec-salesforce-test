@@ -237,7 +237,7 @@ public with sharing class FEC_LiveMasterDataSettingController {
                 WHERE FEC_Previous_Stage__c IN :stageIds
                 ORDER BY FEC_Previous_Stage__r.Name ASC, FEC_Action_Button__r.Name ASC
             ];
-            List<SObject> safe = Security.stripInaccessible(AccessType.READABLE, changes).getRecords();
+            List<SObject> safe = changes;
             List<Map<String, String>> result = new List<Map<String, String>>();
             for (FEC_Stage_Change__c sc : (List<FEC_Stage_Change__c>) safe) {
                 result.add(new Map<String, String>{

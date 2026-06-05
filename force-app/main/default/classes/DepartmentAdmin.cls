@@ -400,7 +400,9 @@ public without sharing class DepartmentAdmin {
             ];
             if (users.isEmpty()) {
                 // User not found -> throw AuraHandledException with required prefix
-                throw new AuraHandledException(System.Label.CS_OrgChart_Text_UserDetail_MainQueue_User_NotFound);
+                AuraHandledException ex = new AuraHandledException(System.Label.CS_OrgChart_Text_UserDetail_MainQueue_User_NotFound);
+                ex.setMessage('Unable to update main queue: User not found');
+                throw ex;
             }
             User u = users[0];
             String oldMainQueue = u.FEC_Main_Queue__c;
@@ -419,11 +421,17 @@ public without sharing class DepartmentAdmin {
                 for (Database.Error e : sr.getErrors()) {
                     err += e.getMessage() + '; ';
                 }
-                throw new AuraHandledException(System.Label.CS_OrgChart_Text_UserDetail_MainQueue_Error + err);
+                AuraHandledException aex = new AuraHandledException(System.Label.CS_OrgChart_Text_UserDetail_MainQueue_Error + err);
+                aex.setMessage('Unable to update main queue: ' + err);
+                throw aex;
             }
+        } catch (AuraHandledException ahe) {
+            throw ahe;
         } catch (DmlException d) {
             // Convert to AuraHandledException with required prefix
-            throw new AuraHandledException(System.Label.CS_OrgChart_Text_UserDetail_MainQueue_Error + d.getMessage());
+            AuraHandledException aex = new AuraHandledException(System.Label.CS_OrgChart_Text_UserDetail_MainQueue_Error + d.getMessage());
+            aex.setMessage('Unable to update main queue: ' + d.getMessage());
+            throw aex;
         }
     }
 }
