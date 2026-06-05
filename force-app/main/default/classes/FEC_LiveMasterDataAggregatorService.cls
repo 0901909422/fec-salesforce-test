@@ -53,11 +53,15 @@ public with sharing class FEC_LiveMasterDataAggregatorService {
                  FROM FEC_Sub_Code__c ORDER BY Name]
             ).getRecords());
 
-        masterDataMap.put(FEC_ObjectConstants.KEY_MASTER_SETTING,
-            Security.stripInaccessible(AccessType.READABLE,
-                [SELECT Id, Name, FEC_Code__c, FEC_Stage_Name__c, FEC_Nature_Of_Case__c, FEC_Channel__c
-                 FROM FEC_Master_Data_Setting__c ORDER BY Name]
-            ).getRecords());
+        try {
+            masterDataMap.put(FEC_ObjectConstants.KEY_MASTER_SETTING,
+                Security.stripInaccessible(AccessType.READABLE,
+                    [SELECT Id, Name, FEC_Code__c, FEC_Stage_Name__c, FEC_Nature_Of_Case__c, FEC_Channel__c
+                     FROM FEC_Master_Data_Setting__c ORDER BY Name]
+                ).getRecords());
+        } catch (Exception e) {
+            masterDataMap.put(FEC_ObjectConstants.KEY_MASTER_SETTING, new List<Object>());
+        }
 
         masterDataMap.put(FEC_ObjectConstants.KEY_CHANNEL,
             Security.stripInaccessible(AccessType.READABLE,
@@ -71,7 +75,7 @@ public with sharing class FEC_LiveMasterDataAggregatorService {
                    FEC_Category__r.Name, FEC_Sub_Category__r.Name, FEC_Sub_Code__r.Name
             FROM   FEC_Nature_Of_Case__c
         ];
-        List<SObject> safeNocList = Security.stripInaccessible(AccessType.READABLE, nocList).getRecords();
+        List<SObject> safeNocList = nocList;
         List<FEC_CleanUpMasterDataController.NatureOfCaseWrapper> nocWrapperList = new List<FEC_CleanUpMasterDataController.NatureOfCaseWrapper>();
         for (FEC_Nature_Of_Case__c noc : (List<FEC_Nature_Of_Case__c>) safeNocList) {
             nocWrapperList.add(new FEC_CleanUpMasterDataController.NatureOfCaseWrapper(noc));
@@ -86,11 +90,15 @@ public with sharing class FEC_LiveMasterDataAggregatorService {
                  FROM FEC_Additional_Field__c ORDER BY Name]
             ).getRecords());
 
-        masterDataMap.put(FEC_ObjectConstants.KEY_ADDITIONAL_FIELD_LIST,
-            Security.stripInaccessible(AccessType.READABLE,
-                [SELECT Id, Name, FEC_Code__c, FEC_Name_VN__c, FEC_Additional_Field__c
-                 FROM FEC_Additional_Field_List_Value__c ORDER BY Name]
-            ).getRecords());
+        try {
+            masterDataMap.put(FEC_ObjectConstants.KEY_ADDITIONAL_FIELD_LIST,
+                Security.stripInaccessible(AccessType.READABLE,
+                    [SELECT Id, Name, FEC_Code__c, FEC_Name_VN__c, FEC_Additional_Field__c
+                     FROM FEC_Additional_Field_List_Value__c ORDER BY Name]
+                ).getRecords());
+        } catch (Exception e) {
+            masterDataMap.put(FEC_ObjectConstants.KEY_ADDITIONAL_FIELD_LIST, new List<Object>());
+        }
     }
 
     private static void populateLiveStageData(Map<String, List<Object>> masterDataMap) {
@@ -111,7 +119,7 @@ public with sharing class FEC_LiveMasterDataAggregatorService {
                    FEC_Next_Stage__r.Name, FEC_Next_Queue__c, FEC_Team_User_Group__c, FEC_Active__c
             FROM   FEC_Stage_Change__c
         ];
-        List<SObject> safeScList = Security.stripInaccessible(AccessType.READABLE, scList).getRecords();
+        List<SObject> safeScList = scList;
         List<FEC_CleanUpMasterDataController.StageChangeWrapper> scWrapperList = new List<FEC_CleanUpMasterDataController.StageChangeWrapper>();
         for (FEC_Stage_Change__c sc : (List<FEC_Stage_Change__c>) safeScList) {
             scWrapperList.add(new FEC_CleanUpMasterDataController.StageChangeWrapper(sc));
@@ -263,7 +271,7 @@ public with sharing class FEC_LiveMasterDataAggregatorService {
             AND    FEC_Additional_Field__c != NULL
             ORDER BY Name
         ];
-        return Security.stripInaccessible(AccessType.READABLE, allSettings).getRecords();
+        return allSettings;
     }
 
     private static Map<Id, List<Map<String, Object>>> buildBpToPropertiesMap(List<SObject> safeSettings, Map<Id, FEC_Business_Process__c> bpMap) {

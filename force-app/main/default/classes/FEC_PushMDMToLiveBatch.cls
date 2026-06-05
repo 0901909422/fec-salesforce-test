@@ -37,11 +37,6 @@ public with sharing class FEC_PushMDMToLiveBatch implements Database.Batchable<S
             for (String liveField : FEC_MDMBatchConfig.COMMON_FIELD_MAP.keySet()) {
                 String mdmField = FEC_MDMBatchConfig.COMMON_FIELD_MAP.get(liveField);
                 if (targetFields.containsKey(liveField) && mdmFieldsMap.containsKey(mdmField)) {
-                    // Skip formula/non-updateable fields on target object
-                    Schema.DescribeFieldResult targetFieldDesc = targetFields.get(liveField).getDescribe();
-                    if (!targetFieldDesc.isUpdateable() && !targetFieldDesc.isCreateable()) {
-                        continue;
-                    }
                     validQueryFields.add(mdmField);
                     filteredFieldMap.put(mdmField, liveField); // Reverse mapping: MDM -> Live
                 }

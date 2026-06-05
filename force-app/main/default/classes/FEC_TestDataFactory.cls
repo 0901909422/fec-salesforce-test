@@ -292,15 +292,29 @@ public class FEC_TestDataFactory {
             SELECT Id FROM PermissionSet
             WHERE Name IN :permSetNames OR Label IN :permSetNames
         ];
+        List<PermissionSetAssignment> existing = [
+            SELECT PermissionSetId FROM PermissionSetAssignment
+            WHERE AssigneeId = :userId AND PermissionSetId IN :psList
+        ];
+        Set<Id> existingIds = new Set<Id>();
+        for (PermissionSetAssignment psa : existing) {
+            existingIds.add(psa.PermissionSetId);
+        }
         List<PermissionSetAssignment> assignments = new List<PermissionSetAssignment>();
         for (PermissionSet ps : psList) {
-            assignments.add(new PermissionSetAssignment(
-                AssigneeId = userId,
-                PermissionSetId = ps.Id
-            ));
+            if (!existingIds.contains(ps.Id)) {
+                assignments.add(new PermissionSetAssignment(
+                    AssigneeId = userId,
+                    PermissionSetId = ps.Id
+                ));
+            }
         }
         if (!assignments.isEmpty()) {
-            insert assignments;
+            // Use System.runAs to isolate setup-object DML from non-setup DML in same test transaction
+            User u = new User(Id = userId);
+            System.runAs(u) {
+                insert assignments;
+            }
         }
     }
 

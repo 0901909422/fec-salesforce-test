@@ -525,9 +525,18 @@ private class FEC_IntCreateFraudController_Test {
         if (mappings.isEmpty()) return;
         FEC_Data_Integration_Mapping__c mapping = mappings[0];
 
+        // Create a real Nature of Case record for the lookup
+        FEC_Product_Type__c pt = new FEC_Product_Type__c(FEC_Code__c = 'PT_AUTO_001', FEC_Active__c = true);
+        insert pt;
+        FEC_Nature_of_Case__c noc = new FEC_Nature_of_Case__c(
+            FEC_Product_Type__c = pt.Id, FEC_Code__c = 'NOC_AUTO_001',
+            FEC_Customer_Type__c = 'Existing'
+        );
+        insert noc;
+
         // Create master data setting linking nature of case → mapping
         FEC_Master_Data_Setting__c setting = new FEC_Master_Data_Setting__c(
-            FEC_Nature_Of_Case__c = 'NOC-AUTO-001',
+            FEC_Nature_Of_Case__c = noc.Id,
             FEC_Data_Integration_Mapping__c = mapping.Id,
             FEC_Field_Status__c = true
         );
@@ -543,7 +552,7 @@ private class FEC_IntCreateFraudController_Test {
         Test.startTest();
         FEC_IntegrationFraudCaseUtil.FraudCaseResponse result = 
             FEC_IntegrationCreateFraudController.autoSubmitFraudCase(
-                testCase.Id, 'NOC-AUTO-001', 'Auto submit test'
+                testCase.Id, String.valueOf(noc.Id), 'Auto submit test'
             );
         Test.stopTest();
 

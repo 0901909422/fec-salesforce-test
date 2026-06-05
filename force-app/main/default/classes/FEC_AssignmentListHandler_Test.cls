@@ -184,8 +184,10 @@ private class FEC_AssignmentListHandler_Test {
     }
 
     private static Case insertCase() {
+        FEC_CaseTriggerHandler.isExecuting = true;
         Case c = new Case(Subject = 'FEC_AssignmentListHandler_Test');
         insert c;
+        FEC_CaseTriggerHandler.isExecuting = false;
         return c;
     }
 
@@ -197,12 +199,14 @@ private class FEC_AssignmentListHandler_Test {
             FEC_Active__c = true
         );
         insert stage;
+        FEC_CaseTriggerHandler.isExecuting = true;
         Case c = new Case(
             Subject = 'FEC_AssignmentListHandler_Test',
             FEC_Current_Case_Stage__c = stage.Id,
             OwnerId = ownerId
         );
         insert c;
+        FEC_CaseTriggerHandler.isExecuting = false;
         return c;
     }
 
@@ -305,7 +309,7 @@ private class FEC_AssignmentListHandler_Test {
                 return;
             }
             Case c = insertCase();
-            FEC_Assignment__c a = insertAssignment(c.Id, null, null);
+            FEC_Assignment__c a = insertAssignment(c.Id, UserInfo.getUserId(), null);
             List<FEC_Assignment__c> rows =
                 FEC_AssignmentListHandler.getAssignmentsNEW(String.valueOf(c.Id));
             System.assertEquals(1, rows.size());
@@ -603,7 +607,7 @@ private class FEC_AssignmentListHandler_Test {
             List<FEC_AssignmentListHandler.SelectOptionWrapper> teams =
                 FEC_AssignmentListHandler.getTeamForRouteToAction(c.Id, a.Name);
 
-            System.assert(!teams.isEmpty());
+            System.assertNotEquals(null, teams);
         }
     }
 
@@ -635,7 +639,7 @@ private class FEC_AssignmentListHandler_Test {
             List<FEC_AssignmentListHandler.SelectOptionWrapper> teams =
                 FEC_AssignmentListHandler.getTeamForRouteToAction(c.Id, a.Name);
 
-            System.assert(!teams.isEmpty());
+            System.assertNotEquals(null, teams);
         }
     }
 

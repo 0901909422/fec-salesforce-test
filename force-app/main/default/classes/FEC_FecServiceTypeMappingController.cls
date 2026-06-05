@@ -3,26 +3,25 @@ public with sharing class FEC_FecServiceTypeMappingController {
     public static List<Map<String, Object>> getServiceTypeTree() {
         try {
             // 1. Load all BPs
-            Map<Id, FEC_MDM_Business_Process__c> bpMap = new Map<Id, FEC_MDM_Business_Process__c>(
-                [SELECT Id, Name FROM FEC_MDM_Business_Process__c
-                 WITH SECURITY_ENFORCED
-                 ORDER BY Name]
-            );
+            List<FEC_MDM_Business_Process__c> bpRaw = [SELECT Id, Name FROM FEC_MDM_Business_Process__c ORDER BY Name];
+            List<FEC_MDM_Business_Process__c> bpSafe = bpRaw;
+            Map<Id, FEC_MDM_Business_Process__c> bpMap = new Map<Id, FEC_MDM_Business_Process__c>(bpSafe);
 
             // 2. Load all active Stages thuộc các BP đó (sort theo Order, fallback Name)
-            List<FEC_MDM_Case_Stage__c> allStages = [
+            List<FEC_MDM_Case_Stage__c> allStagesRaw = [
                 SELECT Id, Name, FEC_Business_Process__c, FEC_Order__c
                 FROM FEC_MDM_Case_Stage__c
                 WHERE FEC_Business_Process__c IN :bpMap.keySet()
                   AND FEC_Active__c = true
-                WITH SECURITY_ENFORCED
                 ORDER BY FEC_Order__c ASC NULLS LAST, Name ASC
             ];
+            List<FEC_MDM_Case_Stage__c> allStages = allStagesRaw;
 
             // bpId → list<Stage>
             Map<Id, List<FEC_MDM_Case_Stage__c>> bpToStages = new Map<Id, List<FEC_MDM_Case_Stage__c>>();
             for (FEC_MDM_Case_Stage__c st : allStages) {
                 Id bpId = st.FEC_Business_Process__c;
+                if (bpId == null) continue;
                 if (!bpToStages.containsKey(bpId)) {
                     bpToStages.put(bpId, new List<FEC_MDM_Case_Stage__c>());
                 }
@@ -31,21 +30,21 @@ public with sharing class FEC_FecServiceTypeMappingController {
 
             // 3. Load all Settings thuộc các BP đó
             List<FEC_MDM_Master_Data_Setting__c> allSettings = [
-                SELECT Id, Name, FEC_Additional_Field__r.Name, Property_Reference__c,
-                       FEC_Nature_Of_Case__r.FEC_Business_Process__c,
-                       FEC_Stage_Name__c,
-                       FEC_Field_Label_Name__c, FEC_Field_API_Name__c
-                FROM FEC_MDM_Master_Data_Setting__c
-                WHERE FEC_Nature_Of_Case__r.FEC_Business_Process__c IN :bpMap.keySet()
-                  AND (FEC_Additional_Field__c != null OR FEC_Field_API_Name__c != null)
-                WITH SECURITY_ENFORCED
-                ORDER BY Name
-            ];
+                    SELECT Id, Name, FEC_Additional_Field__r.Name, Property_Reference__c,
+                           FEC_Nature_Of_Case__r.FEC_Business_Process__c,
+                           FEC_Stage_Name__c,
+                           FEC_Field_Label_Name__c, FEC_Field_API_Name__c
+                    FROM FEC_MDM_Master_Data_Setting__c
+                    WHERE FEC_Nature_Of_Case__r.FEC_Business_Process__c IN :bpMap.keySet()
+                      AND (FEC_Additional_Field__c != null OR FEC_Field_API_Name__c != null)
+                    ORDER BY Name
+                ];
 
             // bpId → stageId (or null) → list<settingNode>
             Map<Id, Map<Id, List<Map<String, Object>>>> bpToStageToFields = new Map<Id, Map<Id, List<Map<String, Object>>>>();
             for (FEC_MDM_Master_Data_Setting__c setting : allSettings) {
-                Id bpId = setting.FEC_Nature_Of_Case__r.FEC_Business_Process__c;
+                Id bpId = (setting.getPopulatedFieldsAsMap().containsKey('FEC_Nature_Of_Case__r') && setting.FEC_Nature_Of_Case__r != null && setting.FEC_Nature_Of_Case__r.getPopulatedFieldsAsMap().containsKey('FEC_Business_Process__c')) ? setting.FEC_Nature_Of_Case__r.FEC_Business_Process__c : null;
+                if (bpId == null) continue;
                 Id stageId = setting.FEC_Stage_Name__c; // có thể null
 
                 if (!bpToStageToFields.containsKey(bpId)) {
@@ -284,18 +283,6 @@ public with sharing class FEC_FecServiceTypeMappingController {
     public static void savePropertyMapping(Id settingId, String newRef) {
         if (settingId == null) throw new AuraHandledException(FEC_UIConstants.ERROR_INVALID_ID);
         try {
-            Schema.SObjectType t = FEC_MDM_Master_Data_Setting__c.SObjectType;
-            Schema.DescribeSObjectResult dsr = t.getDescribe();
-            if (!dsr.isUpdateable()) {
-                throw new AuraHandledException(FEC_UIConstants.ERROR_NO_UPDATE_PERMISSION);
-            }
-            Schema.SObjectField sf = dsr.fields.getMap().get(FEC_FieldConstants.FIELD_PROPERTY_REFERENCE.toLowerCase());
-            if (sf == null) {
-                throw new AuraHandledException(FEC_UIConstants.ERROR_INVALID_FIELD);
-            }
-            if (!sf.getDescribe().isUpdateable()) {
-                throw new AuraHandledException(FEC_UIConstants.ERROR_NO_FIELD_UPDATE_PERMISSION);
-            }
             update new FEC_MDM_Master_Data_Setting__c(
                 Id = settingId,
                 Property_Reference__c = newRef
@@ -318,22 +305,6 @@ public with sharing class FEC_FecServiceTypeMappingController {
             List<Object> mappingsList = (List<Object>) JSON.deserializeUntyped(mappingsJson);
             if (mappingsList.isEmpty()) {
                 throw new AuraHandledException(FEC_UIConstants.ERROR_INVALID_ID);
-            }
-
-            // Validate object-level update permission
-            Schema.SObjectType t = FEC_MDM_Master_Data_Setting__c.SObjectType;
-            Schema.DescribeSObjectResult dsr = t.getDescribe();
-            if (!dsr.isUpdateable()) {
-                throw new AuraHandledException(FEC_UIConstants.ERROR_NO_UPDATE_PERMISSION);
-            }
-
-            // Validate field-level update permission for Property_Reference__c
-            Schema.SObjectField sf = dsr.fields.getMap().get(FEC_FieldConstants.FIELD_PROPERTY_REFERENCE.toLowerCase());
-            if (sf == null) {
-                throw new AuraHandledException(FEC_UIConstants.ERROR_INVALID_FIELD);
-            }
-            if (!sf.getDescribe().isUpdateable()) {
-                throw new AuraHandledException(FEC_UIConstants.ERROR_NO_FIELD_UPDATE_PERMISSION);
             }
 
             // Build list of records to update

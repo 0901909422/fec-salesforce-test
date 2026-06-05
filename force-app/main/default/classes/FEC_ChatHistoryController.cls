@@ -57,7 +57,9 @@ public with sharing class FEC_ChatHistoryController {
     @AuraEnabled
     public static void saveManualChatHistory(Id caseId, String message) {
         if (String.isBlank(message)) {
-            throw new AuraHandledException('Message cannot be blank.');
+            AuraHandledException ex = new AuraHandledException('Message cannot be blank');
+            ex.setMessage('Message cannot be blank');
+            throw ex;
         }
         
         update new Case(Id = caseId, FEC_Chat_History__c = message);

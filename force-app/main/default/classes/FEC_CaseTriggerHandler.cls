@@ -83,6 +83,10 @@ public without sharing class FEC_CaseTriggerHandler {
      * @created: 2026/02/02 Toannd61
      */
     private void onBeforeUpdate(List<Case> newCases, Map<Id, Case> oldMap) {
+        // Batch/system chỉ patch vài field — bỏ qua before-handlers tránh đọc field chưa có trên Trigger.new
+        if (isSystemUpdate) {
+            return;
+        }
         updateCaseParticipantsOnUpdate(newCases, oldMap);
         syncChannelFromInteractionForCustomerCase(newCases, oldMap);
                 
@@ -230,7 +234,6 @@ public without sharing class FEC_CaseTriggerHandler {
         isExecuting = true;
         // Batch/system chỉ patch vài field — tránh handler đọc field chưa có trên Trigger.new
         if (isSystemUpdate) {
-            FEC_CaseDsTsSlaNotificationSender.sendAfterCaseUpdate(newCases, oldMap);
             isExecuting = false;
             return;
         }
@@ -490,6 +493,10 @@ public without sharing class FEC_CaseTriggerHandler {
         Map<String, List<Case>> casesByPrefix = new Map<String, List<Case>>();
         
         for (Case c : newCases) {
+            // Skip cases that already have FEC_ID_Search__c populated (e.g. from external integrations)
+            if (String.isNotBlank(c.FEC_ID_Search__c)) {
+                continue;
+            }
             // Xác định prefix cho Case này
             String prefix = determinePrefixForCase(c, recordTypeDeveloperNameMap, prefixConfigMap);
             

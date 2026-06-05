@@ -13,11 +13,12 @@ public with sharing class FEC_NatureOfCaseTreeBuilder {
         Map<String, FEC_NatureOfCaseTreeItem> mapProductType = new Map<String, FEC_NatureOfCaseTreeItem>();
 
         for (FEC_Nature_Of_Case__c noc : listLiveNOC) {
-            String productTypeCode = noc.FEC_Product_Type__r?.FEC_Code__c;
-            String businessProcessCode = noc.FEC_Business_Process__r?.FEC_Code__c;
-            String categoryCode = noc.FEC_Category__r?.FEC_Code__c;
-            String subCategoryCode = noc.FEC_Sub_Category__r?.FEC_Code__c;
-            String subCodeCode = noc.FEC_Sub_Code__r?.FEC_Code__c;
+            Map<String, Object> nocPop = noc.getPopulatedFieldsAsMap();
+            String productTypeCode = (nocPop.containsKey('FEC_Product_Type__r') && noc.FEC_Product_Type__r != null) ? noc.FEC_Product_Type__r.FEC_Code__c : null;
+            String businessProcessCode = (nocPop.containsKey('FEC_Business_Process__r') && noc.FEC_Business_Process__r != null) ? noc.FEC_Business_Process__r.FEC_Code__c : null;
+            String categoryCode = (nocPop.containsKey('FEC_Category__r') && noc.FEC_Category__r != null) ? noc.FEC_Category__r.FEC_Code__c : null;
+            String subCategoryCode = (nocPop.containsKey('FEC_Sub_Category__r') && noc.FEC_Sub_Category__r != null) ? noc.FEC_Sub_Category__r.FEC_Code__c : null;
+            String subCodeCode = (nocPop.containsKey('FEC_Sub_Code__r') && noc.FEC_Sub_Code__r != null) ? noc.FEC_Sub_Code__r.FEC_Code__c : null;
 
             String ptId = noc.FEC_Product_Type__c;
             String bpId = noc.FEC_Business_Process__c;
