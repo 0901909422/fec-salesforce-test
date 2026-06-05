@@ -2055,6 +2055,8 @@ public without sharing class FEC_BatchCaseHandlingImportService {
             new List<FEC_BCH_AssignmentUpdateService.ImportUpdateItem>();
         List<FEC_BCH_AssignmentResolveRejectService.ImportResolveRejectItem> assignmentResolveRejectItems =
             new List<FEC_BCH_AssignmentResolveRejectService.ImportResolveRejectItem>();
+        List<FEC_BCH_AssignmentRevertService.ImportRevertItem> assignmentRevertItems =
+            new List<FEC_BCH_AssignmentRevertService.ImportRevertItem>();
         List<FEC_BCH_ImportRoutingHistoryService.ImportHistoryItem> importHistoryItems =
             new List<FEC_BCH_ImportRoutingHistoryService.ImportHistoryItem>();
         //PhongBT 02/06/26: Sửa routing action cho cof/gsr — Route To level Case tạo Assignment mới.
@@ -2211,6 +2213,15 @@ public without sharing class FEC_BatchCaseHandlingImportService {
                             rr.routeViaRevertButton == true
                         );
                     }
+                    FEC_BCH_AssignmentRevertService.collectFromImportRow(
+                        rr,
+                        cofOrGsr,
+                        assignmentOnly,
+                        caseId,
+                        assignmentRecordIdForUpdate,
+                        methodKey,
+                        assignmentRevertItems
+                    );
                 }
                 if (routingParsed != null && methodKey == FEC_CaseBusinessService.ROUTE_TO) {
                     Case caseLite = caseLiteById.get(caseId);
@@ -2325,6 +2336,9 @@ public without sharing class FEC_BatchCaseHandlingImportService {
                 if (assignmentOnly == true) {
                     if (methodKey == FEC_CaseBusinessService.ROUTE_TO && !runParams.containsKey('queueId')) {
                         skipCaseRun = true;
+                    } else if (methodKey == FEC_CaseBusinessService.REVERT &&
+                        FEC_BCH_AssignmentRevertService.resolveRevertDecisionFromLabel(rr.assignmentRoutingAction) != null) {
+                        skipCaseRun = true;
                     } else if (methodKey == FEC_CaseBusinessService.REVERT && !runParams.containsKey('actionId')) {
                         skipCaseRun = true;
                     } else if (methodKey == FEC_CaseBusinessService.UPDATEACTION) {
@@ -2414,6 +2428,16 @@ public without sharing class FEC_BatchCaseHandlingImportService {
             }
         }
         FEC_BCH_AssignmentResolveRejectService.applyImportBulk(validAssignmentResolveRejectItems);
+        List<FEC_BCH_AssignmentRevertService.ImportRevertItem> validAssignmentRevertItems =
+            new List<FEC_BCH_AssignmentRevertService.ImportRevertItem>();
+        for (FEC_BCH_AssignmentRevertService.ImportRevertItem item : assignmentRevertItems) {
+            if (item != null &&
+                item.row != null &&
+                item.row.status != System.Label.FEC_Batch_Case_Handling_Import_Row_Status_Failed) {
+                validAssignmentRevertItems.add(item);
+            }
+        }
+        FEC_BCH_AssignmentRevertService.applyImportBulk(validAssignmentRevertItems);
         FEC_BCH_ImportRoutingHistoryService.applyAfterAssignmentBulk(importHistoryItems);
         applyDraftRemarksBulk(validRemarkItems, cofOrGsr);
     }
@@ -2985,9 +3009,17 @@ public without sharing class FEC_BatchCaseHandlingImportService {
             && FEC_BCH_AssignmentResolveRejectService.isResolveOrRejectMethodKey(parsed.methodKey);
     }
 
+    private static Boolean isCofGsrImportAssignmentRevertAction(Boolean cofOrGsr, String routingLabel) {
+        if (cofOrGsr != true || String.isBlank(routingLabel)) {
+            return false;
+        }
+        return String.isNotBlank(FEC_BCH_AssignmentRevertService.resolveRevertDecisionFromLabel(routingLabel));
+    }
+
     private static Boolean isCofGsrImportAllowedAssignmentRoutingAction(Boolean cofOrGsr, String routingLabel) {
         return isCofGsrImportUpdateAction(cofOrGsr, routingLabel)
-            || isCofGsrImportResolveRejectAction(cofOrGsr, routingLabel);
+            || isCofGsrImportResolveRejectAction(cofOrGsr, routingLabel)
+            || isCofGsrImportAssignmentRevertAction(cofOrGsr, routingLabel);
     }
 
     private static Map<String, String> resolveRouteToParams(
