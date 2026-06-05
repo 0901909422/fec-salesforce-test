@@ -1204,11 +1204,16 @@ public without sharing class FEC_BatchCaseHandlingImportService {
         }
         target.status = source.status;
         target.errors = source.errors;
-        target.routingAction = source.routingAction;
+        // 05/06/2026 17:00 linhdev - giữ routing đã parse từ file gốc; LWC có thể lệch cột assignment sang routing case
+        if (String.isBlank(target.routingAction)) {
+            target.routingAction = source.routingAction;
+        }
         target.inputtedRemarks = source.inputtedRemarks;
         target.inputtedRemarksCharLength = source.inputtedRemarksCharLength;
         target.assignmentId = source.assignmentId;
-        target.assignmentRoutingAction = source.assignmentRoutingAction;
+        if (String.isBlank(target.assignmentRoutingAction)) {
+            target.assignmentRoutingAction = source.assignmentRoutingAction;
+        }
         target.csD2CAssessmentType = source.csD2CAssessmentType;
         target.csSupportAssessment = source.csSupportAssessment;
         target.riskLevel = source.riskLevel;
@@ -1429,11 +1434,26 @@ public without sharing class FEC_BatchCaseHandlingImportService {
         if (cells == null || row == null) {
             return;
         }
+        String assignmentRouting = rowValue(row.assignmentRoutingAction);
         if (routingActionIndex >= 0 && routingActionIndex < cells.size()) {
-            cells[routingActionIndex] = rowValue(row.routingAction);
+            String sourceRouting = rowValue(cells[routingActionIndex]);
+            String validatedRouting = rowValue(row.routingAction);
+            // 05/06/2026 17:00 linhdev - Result giữ Routing Action gốc từ file; không copy Assignment Routing Action sang cột case
+            if (String.isNotBlank(sourceRouting)) {
+                cells[routingActionIndex] = sourceRouting;
+            } else if (
+                String.isNotBlank(validatedRouting) &&
+                validatedRouting != assignmentRouting
+            ) {
+                cells[routingActionIndex] = validatedRouting;
+            } else {
+                cells[routingActionIndex] = FEC_ConstantCommon.STR_EMPTY;
+            }
         }
         if (assignmentRoutingActionIndex >= 0 && assignmentRoutingActionIndex < cells.size()) {
-            cells[assignmentRoutingActionIndex] = rowValue(row.assignmentRoutingAction);
+            if (String.isNotBlank(assignmentRouting)) {
+                cells[assignmentRoutingActionIndex] = assignmentRouting;
+            }
         }
     }
 
