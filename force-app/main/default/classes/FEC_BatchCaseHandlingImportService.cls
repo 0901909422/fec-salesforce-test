@@ -1904,7 +1904,8 @@ public without sharing class FEC_BatchCaseHandlingImportService {
                     FEC_Assignment__c asg = resolveAssignmentForImport(
                         rr.assignmentId,
                         assignmentByName,
-                        assignmentByRecordId
+                        assignmentByRecordId,
+                        matched == null ? null : matched.Id
                     );
                     if (asg == null) {
                         errs.add(System.Label.FEC_Batch_Case_Handling_Import_Err_Assignment_Id_Not_Found);
@@ -2149,7 +2150,8 @@ public without sharing class FEC_BatchCaseHandlingImportService {
                     Id assignmentRecordIdForUpdate = parseAssignmentId(
                         rr.assignmentId,
                         assignmentByName,
-                        assignmentByRecordId
+                        assignmentByRecordId,
+                        caseId
                     );
                     FEC_BCH_AssignmentUpdateService.collectFromImportRow(
                         rr,
@@ -2247,7 +2249,12 @@ public without sharing class FEC_BatchCaseHandlingImportService {
                     //PhongBT 28/05/26: COF/GSR có assignmentId — queue team/queue từ Stage Change hoặc hint Excel.
                     //PhongBT 02/06/26: Sửa routing action cho cof/gsr — Route To Case tạo Assignment mới, không update Assignment ID.
                     if (cofOrGsr == true && String.isNotBlank(rr.assignmentId) && cofGsrCaseRouteToCreate != true) {
-                        Id assignmentRecordId = parseAssignmentId(rr.assignmentId, assignmentByName, assignmentByRecordId);
+                        Id assignmentRecordId = parseAssignmentId(
+                            rr.assignmentId,
+                            assignmentByName,
+                            assignmentByRecordId,
+                            caseId
+                        );
                         if (assignmentRecordId != null) {
                             AssignmentRouteToUpdateItem routeToItem = new AssignmentRouteToUpdateItem();
                             routeToItem.row = rr;
@@ -2354,7 +2361,12 @@ public without sharing class FEC_BatchCaseHandlingImportService {
                 item.row = rr;
                 item.caseId = caseId;
                 item.inputtedRemarks = rr.inputtedRemarks;
-                item.assignmentId = parseAssignmentId(rr.assignmentId, assignmentByName, assignmentByRecordId);
+                item.assignmentId = parseAssignmentId(
+                    rr.assignmentId,
+                    assignmentByName,
+                    assignmentByRecordId,
+                    caseId
+                );
                 remarkDraftItems.add(item);
             }
         }
@@ -2443,13 +2455,66 @@ public without sharing class FEC_BatchCaseHandlingImportService {
         if (String.isBlank(assignmentIdRaw)) {
             return;
         }
-        String trimmed = assignmentIdRaw.trim();
-        Id recordId = tryParseAssignmentRecordId(trimmed);
-        if (recordId != null) {
-            assignmentRecordIds.add(recordId);
-        } else if (assignmentNames != null) {
-            assignmentNames.add(trimmed);
+        for (String token : extractAssignmentLookupTokens(assignmentIdRaw)) {
+            Id recordId = tryParseAssignmentRecordId(token);
+            if (recordId != null) {
+                assignmentRecordIds.add(recordId);
+            } else if (assignmentNames != null) {
+                assignmentNames.add(token);
+            }
         }
+    }
+
+    // 05/06/2026 - parse Assignment ID từ export remark (#1: A-000329) hoặc nhiều dòng trong một ô
+    @TestVisible
+    private static List<String> extractAssignmentLookupTokens(String assignmentIdRaw) {
+        List<String> tokens = new List<String>();
+        if (String.isBlank(assignmentIdRaw)) {
+            return tokens;
+        }
+        Set<String> seen = new Set<String>();
+        String normalized = assignmentIdRaw.replace('\r\n', '\n').replace('\r', '\n');
+        if (normalized.contains('\n')) {
+            for (String line : normalized.split('\n')) {
+                addAssignmentLookupToken(tokens, seen, stripAssignmentExportLinePrefix(line));
+            }
+        } else {
+            addAssignmentLookupToken(tokens, seen, stripAssignmentExportLinePrefix(normalized));
+            addAssignmentLookupToken(tokens, seen, normalized.trim());
+        }
+        return tokens;
+    }
+
+    @TestVisible
+    private static String stripAssignmentExportLinePrefix(String line) {
+        if (String.isBlank(line)) {
+            return FEC_ConstantCommon.STR_EMPTY;
+        }
+        String trimmed = line.trim();
+        if (!trimmed.startsWith('#')) {
+            return trimmed;
+        }
+        Integer colonPos = trimmed.indexOf(':');
+        if (colonPos < 0) {
+            return trimmed;
+        }
+        return trimmed.substring(colonPos + 1).trim();
+    }
+
+    private static void addAssignmentLookupToken(
+        List<String> tokens,
+        Set<String> seen,
+        String candidate
+    ) {
+        if (String.isBlank(candidate)) {
+            return;
+        }
+        String trimmed = candidate.trim();
+        if (String.isBlank(trimmed) || seen.contains(trimmed)) {
+            return;
+        }
+        seen.add(trimmed);
+        tokens.add(trimmed);
     }
 
     private static Id tryParseAssignmentRecordId(String trimmed) {
@@ -2501,10 +2566,55 @@ public without sharing class FEC_BatchCaseHandlingImportService {
         Map<String, FEC_Assignment__c> assignmentByName,
         Map<Id, FEC_Assignment__c> assignmentByRecordId
     ) {
-        if (String.isBlank(assignmentIdRaw)) {
+        return resolveAssignmentForImport(
+            assignmentIdRaw,
+            assignmentByName,
+            assignmentByRecordId,
+            null
+        );
+    }
+
+    private static FEC_Assignment__c resolveAssignmentForImport(
+        String assignmentIdRaw,
+        Map<String, FEC_Assignment__c> assignmentByName,
+        Map<Id, FEC_Assignment__c> assignmentByRecordId,
+        Id caseId
+    ) {
+        List<String> tokens = extractAssignmentLookupTokens(assignmentIdRaw);
+        if (tokens.isEmpty()) {
             return null;
         }
-        String trimmed = assignmentIdRaw.trim();
+        FEC_Assignment__c caseMatch = null;
+        FEC_Assignment__c lastResolved = null;
+        for (String token : tokens) {
+            FEC_Assignment__c asg = resolveAssignmentLookupToken(
+                token,
+                assignmentByName,
+                assignmentByRecordId
+            );
+            if (asg == null) {
+                continue;
+            }
+            lastResolved = asg;
+            if (caseId != null && asg.FEC_Case__c == caseId) {
+                caseMatch = asg;
+            }
+        }
+        if (caseId != null) {
+            return caseMatch;
+        }
+        return lastResolved;
+    }
+
+    private static FEC_Assignment__c resolveAssignmentLookupToken(
+        String token,
+        Map<String, FEC_Assignment__c> assignmentByName,
+        Map<Id, FEC_Assignment__c> assignmentByRecordId
+    ) {
+        if (String.isBlank(token)) {
+            return null;
+        }
+        String trimmed = token.trim();
         if (assignmentByName != null && assignmentByName.containsKey(trimmed)) {
             return assignmentByName.get(trimmed);
         }
@@ -2520,7 +2630,21 @@ public without sharing class FEC_BatchCaseHandlingImportService {
         Map<String, FEC_Assignment__c> assignmentByName,
         Map<Id, FEC_Assignment__c> assignmentByRecordId
     ) {
-        FEC_Assignment__c asg = resolveAssignmentForImport(assignmentIdRaw, assignmentByName, assignmentByRecordId);
+        return parseAssignmentId(assignmentIdRaw, assignmentByName, assignmentByRecordId, null);
+    }
+
+    private static Id parseAssignmentId(
+        String assignmentIdRaw,
+        Map<String, FEC_Assignment__c> assignmentByName,
+        Map<Id, FEC_Assignment__c> assignmentByRecordId,
+        Id caseId
+    ) {
+        FEC_Assignment__c asg = resolveAssignmentForImport(
+            assignmentIdRaw,
+            assignmentByName,
+            assignmentByRecordId,
+            caseId
+        );
         return asg == null ? null : asg.Id;
     }
 
