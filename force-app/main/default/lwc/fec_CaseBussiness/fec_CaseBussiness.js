@@ -5228,10 +5228,9 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
         });
         if (rl0402Payload && rl0402Payload.success === false) {
           console.warn(
-            '[PDF] RL04.02 data failed:',
+            '[PDF] RL04.02 API no data, generating empty document:',
             rl0402Payload.errorMessage
           );
-          return;
         }
         headerData = rl0402Payload?.headerData || {};
         repaymentRows = rl0402Payload?.repaymentRows || [];
