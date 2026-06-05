@@ -59,6 +59,36 @@ export function isRdPaymentSubCode(subCodeCode) {
     return subCodeCode === SUB_CODE_RL16_02 || subCodeCode === SUB_CODE_RL16_03;
 }
 
+/** Số stage từ FEC_Current_Case_Stage__r.Name (vd. "... - Stage 2" → 2). */
+export function extractCaseStageNumber(stageName) {
+    if (!stageName || typeof stageName !== "string") {
+        return null;
+    }
+    const m = stageName.match(/stage\s*(\d+)/i);
+    return m ? parseInt(m[1], 10) : null;
+}
+
+/**
+ * RL16.02/03 — stage RD Payment assessment (Stage 2 trên org; tên có thể không chứa "PM").
+ * Stage 3+ → false (Team/Queue lấy từ FEC_Stage_Change__c trên DB).
+ */
+export function isRl16RdPaymentAssessmentStage(subCodeCode, stageName) {
+    if (!isRdPaymentSubCode(subCodeCode)) {
+        return false;
+    }
+    return extractCaseStageNumber(stageName) === 2;
+}
+
+/** RL16 assessment stage — đọc stage/sub-code từ host Case Business. */
+export function isRl16RdPaymentAssessmentStageFromHost(host) {
+    const stageName =
+        host?._currentCaseStageName ?? host?.business?.stageName ?? "";
+    return isRl16RdPaymentAssessmentStage(
+        host?.business?.subCodeCode,
+        stageName,
+    );
+}
+
 /** Resolve assessment API value (onchange value hoặc label từ toLabel). */
 export function resolveRdPaymentAssessmentApiValue(assessmentVal, picklistOptions) {
     if (!assessmentVal) {

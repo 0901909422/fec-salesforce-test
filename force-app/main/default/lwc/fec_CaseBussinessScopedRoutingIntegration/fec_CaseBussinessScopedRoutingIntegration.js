@@ -10,6 +10,7 @@ import {
   RD_PAYMENT_ROUTING_DISPLAY_DEFAULT,
   setRdPaymentScopedStageTeamMap,
   FIELD_RD_PAYMENT_CONTRACT_ASSESSMENT,
+  isRl16RdPaymentAssessmentStageFromHost,
 } from "c/fec_RdPaymentRoutingUtils";
 
 /** Fallback khi org chưa deploy fec_RdPaymentRoutingUtils mới (không có getRdPaymentScopedStageTeam). */
@@ -88,11 +89,14 @@ export function isCurrentCaseStageTeamPm(host) {
 }
 
 /**
- * RL16: map assessment → CC/SP/CP chỉ khi Case đang ở stage PM (payment).
+ * RL16: map assessment → CC/SP/CP tại stage RD Payment (PM hoặc RL16 Stage 2).
  * Stage sau (vd. Stage 3 - CC) → Team/Queue lấy từ FEC_Stage_Change__c trên DB.
  */
 export function shouldUseRdPaymentAssessmentTeamFilter(host) {
-  return isCurrentCaseStageTeamPm(host);
+  return (
+    isCurrentCaseStageTeamPm(host) ||
+    isRl16RdPaymentAssessmentStageFromHost(host)
+  );
 }
 
 /** Chọn dòng Route to có team (vd. Stage 3 CC → PM / FEC_DQ_Payment). */
