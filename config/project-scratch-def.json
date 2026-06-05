@@ -1,16 +1,22 @@
 {
     "orgName": "GitLab Pipelines Package Validation",
-    "edition": "Developer",
+    "edition": "Enterprise",
     "language": "en_US",
     "features": [
         "ServiceCloud",
         "Entitlements",
-        "LightningServiceConsole"
+        "LightningServiceConsole",
+        "Knowledge",
+        "LiveAgent",
+        "PlatformConnect:5"
     ],
     "settings": {
         "entitlementSettings": {
             "enableEntitlements": true,
             "enableMilestoneFeedItem": true
+        },
+        "knowledgeSettings": {
+            "enableKnowledge": true
         },
         "languageSettings": {
             "enableTranslationWorkbench": true,
@@ -20,6 +26,14 @@
             "enableOmniChannel": true,
             "enableOmniSkillsRouting": true
         },
+        "caseSettings": {
+            "enableCaseFeed": true,
+            "useSystemUserAsDefaultCaseUser": true,
+            "systemUserEmail": "admin@fec.scratch.org"
+        },
+        "chatterSettings": {
+            "enableChatter": true
+        },
         "mobileSettings": {
             "enableS1EncryptedStoragePref2": false
         },
@@ -28,6 +42,9 @@
         }
     },
     "objectSettings": {
+        "account": {
+            "sharingModel": "read"
+        },
         "opportunity": {
             "sharingModel": "read"
         }

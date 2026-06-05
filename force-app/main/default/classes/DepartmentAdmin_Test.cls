@@ -53,6 +53,10 @@ private class DepartmentAdmin_Test {
         );
         insert new List<User>{ u1, u2, u3 };
 
+        // Assign Permission Sets cho FLS access
+        FEC_TestDataFactory.assignStandardFECPermissions(u1.Id);
+        FEC_TestDataFactory.assignStandardFECPermissions(u2.Id);
+
         // Create two Queues (Group Type = Queue) with DeveloperName
         Group q1 = new Group(Name = 'Support Queue A', DeveloperName = 'Support_Queue_A', Type = 'Queue');
         Group q2 = new Group(Name = 'Support Queue B', DeveloperName = 'Support_Queue_B', Type = 'Queue');

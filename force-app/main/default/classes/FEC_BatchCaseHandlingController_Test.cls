@@ -46,8 +46,33 @@ private class FEC_BatchCaseHandlingController_Test {
         insert stage;
 
         Map<String, Schema.SObjectField> userFields = User.SObjectType.getDescribe().fields.getMap();
+        Boolean userNeedsUpdate = false;
         if (userFields.containsKey('FEC_User_Group__c')) {
             admin.FEC_User_Group__c = 'CC';
+            userNeedsUpdate = true;
+        }
+        if (userFields.containsKey('FEC_Main_Queue__c')) {
+            List<Group> queues = [
+                SELECT DeveloperName
+                FROM Group
+                WHERE Type = 'Queue'
+                  AND DeveloperName = :FEC_ConstantCommon.QUEUE_DQ_CS_SUPPORT_NAME
+                LIMIT 1
+            ];
+            if (queues.isEmpty()) {
+                Group q = new Group(
+                    Name = 'BCH Test CS Support Queue',
+                    DeveloperName = FEC_ConstantCommon.QUEUE_DQ_CS_SUPPORT_NAME,
+                    Type = 'Queue'
+                );
+                insert q;
+                admin.FEC_Main_Queue__c = q.DeveloperName;
+            } else {
+                admin.FEC_Main_Queue__c = queues[0].DeveloperName;
+            }
+            userNeedsUpdate = true;
+        }
+        if (userNeedsUpdate) {
             update admin;
         }
 

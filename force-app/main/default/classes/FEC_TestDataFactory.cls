@@ -254,6 +254,73 @@ public class FEC_TestDataFactory {
     }
 
     // ============================================================
+    // User & Permission Set Helpers
+    // ============================================================
+
+    /**
+     * Tạo test User (Standard User profile) với optional overrides.
+     * Tự generate unique username.
+     */
+    public static User createTestUser(Map<String, Object> overrides) {
+        Profile p = [SELECT Id FROM Profile WHERE Name = 'Standard User' LIMIT 1];
+        String suffix = String.valueOf(System.currentTimeMillis()) + '_' + Math.round(Math.random() * 9999);
+        User u = new User(
+            Alias = 'tuser',
+            Email = 'testuser@fecredit.test.invalid',
+            EmailEncodingKey = 'UTF-8',
+            LastName = 'TestUser',
+            LanguageLocaleKey = 'en_US',
+            LocaleSidKey = 'en_US',
+            ProfileId = p.Id,
+            TimeZoneSidKey = 'America/Los_Angeles',
+            Username = 'fec.testuser.' + suffix + '@test.invalid'
+        );
+        applyOverrides(u, overrides);
+        insert u;
+        return u;
+    }
+
+    /**
+     * Assign một hoặc nhiều Permission Set cho User.
+     * Dùng trong @TestSetup hoặc trước System.runAs().
+     * 
+     * @param userId           Id của User cần assign
+     * @param permSetNames     List tên Permission Set (DeveloperName hoặc Name)
+     */
+    public static void assignPermissionSets(Id userId, List<String> permSetNames) {
+        List<PermissionSet> psList = [
+            SELECT Id FROM PermissionSet
+            WHERE Name IN :permSetNames OR Label IN :permSetNames
+        ];
+        List<PermissionSetAssignment> assignments = new List<PermissionSetAssignment>();
+        for (PermissionSet ps : psList) {
+            assignments.add(new PermissionSetAssignment(
+                AssigneeId = userId,
+                PermissionSetId = ps.Id
+            ));
+        }
+        if (!assignments.isEmpty()) {
+            insert assignments;
+        }
+    }
+
+    /**
+     * Assign bộ Permission Set tiêu chuẩn cho FEC test user.
+     * Bao gồm: FEC_Common_System_Setting (Apex + object access)
+     *           FEC_MDM_Full_Field_Access (FLS cho MDM objects)
+     *           FEC_MDM_Tool_Objects_Access (CRUD cho MDM objects)
+     *
+     * @param userId  Id của User cần assign full access
+     */
+    public static void assignStandardFECPermissions(Id userId) {
+        assignPermissionSets(userId, new List<String>{
+            'FEC_Common_System_Setting',
+            'FEC_MDM_Full_Field_Access',
+            'FEC_MDM_Tool_Objects_Access'
+        });
+    }
+
+    // ============================================================
     // Helpers
     // ============================================================
 
