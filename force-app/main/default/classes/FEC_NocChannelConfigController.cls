@@ -33,10 +33,10 @@ public with sharing class FEC_NocChannelConfigController {
 
 
     @AuraEnabled(cacheable=true)
-    public static List<FEC_Channel__c> getChannelsByCodes(List<String> channelCodes) {
-        if (channelCodes == null || channelCodes.isEmpty()) return new List<FEC_Channel__c>();
+    public static List<FEC_Channel__c> getChannelsByChannelIds(List<String> channelIds) {
+        if (channelIds == null || channelIds.isEmpty()) return new List<FEC_Channel__c>();
         Set<String> codes = new Set<String>();
-        for (String c : channelCodes) {
+        for (String c : channelIds) {
             if (String.isNotBlank(c)) codes.add(c.trim());
         }
         if (codes.isEmpty()) return new List<FEC_Channel__c>();
@@ -44,7 +44,7 @@ public with sharing class FEC_NocChannelConfigController {
             SELECT Id, Name, FEC_Code__c, FEC_Channel_ID__c, FEC_Channel_Vietnamese_name__c
             FROM FEC_Channel__c
             WHERE FEC_Channel_Status__c = true
-              AND FEC_Code__c IN :codes
+              AND FEC_Channel_ID__c IN :codes
             ORDER BY FEC_Channel_Vietnamese_name__c ASC
         ];
     }

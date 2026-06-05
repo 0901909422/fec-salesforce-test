@@ -4,7 +4,7 @@ import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import { getRecord, getRecordNotifyChange } from 'lightning/uiRecordApi';
 import searchChannels from '@salesforce/apex/FEC_NocChannelConfigController.searchChannels';
 import getChannelIds from '@salesforce/apex/FEC_NocChannelConfigController.getChannelIds';
-import getChannelsByCodes from '@salesforce/apex/FEC_NocChannelConfigController.getChannelsByCodes';
+import getChannelsByChannelIds from '@salesforce/apex/FEC_NocChannelConfigController.getChannelsByChannelIds';
 import saveChannelIds from '@salesforce/apex/FEC_NocChannelConfigController.saveChannelIds';
 import canEditChannelConfig from '@salesforce/apex/FEC_NocChannelConfigController.canEditChannelConfig';
 import FEC_Toast_Success from '@salesforce/label/c.FEC_Toast_Success';
@@ -47,13 +47,13 @@ export default class Fec_NocChannelConfig extends LightningElement {
         try {
             const codes = await getChannelIds({ nocId: this.recordId });
             if (!codes) return;
-            // codes là comma-separated FEC_Channel__c.FEC_Code__c
+            // channelIds là comma-separated FEC_Channel__c.FEC_Channel_ID__c
             const codeList = codes.split(',').map(s => s.trim()).filter(s => s);
             if (!codeList.length) return;
             this._originalIds = codes;
-            const results = await getChannelsByCodes({ channelCodes: codeList });
+            const results = await getChannelsByChannelIds({ channelIds: codeList });
             this.selectedChannels = (results || [])
-                .map(ch => ({ id: ch.FEC_Code__c, name: ch.FEC_Channel_Vietnamese_name__c || ch.Name }));
+                .map(ch => ({ id: ch.FEC_Channel_ID__c, name: ch.FEC_Channel_Vietnamese_name__c || ch.Name }));
         } catch (e) {
             console.error('loadCurrentChannels error', e);
         }
@@ -94,7 +94,7 @@ export default class Fec_NocChannelConfig extends LightningElement {
             searchChannels({ searchTerm: this.searchTerm })
                 .then(data => {
                     const selectedIds = this.selectedChannels.map(c => c.id);
-                    this.searchResults = (data || []).filter(ch => !selectedIds.includes(ch.FEC_Code__c));
+                    this.searchResults = (data || []).filter(ch => !selectedIds.includes(ch.FEC_Channel_ID__c));
                     this.isLoading = false;
                 })
                 .catch(() => { this.isLoading = false; });
@@ -162,13 +162,13 @@ export default class Fec_NocChannelConfig extends LightningElement {
     }
 
     handleCancel() {
-        // Restore v? giá tr? ban d?u t? _originalIds (comma-separated FEC_Code__c)
+        // Restore v? giá tr? ban d?u t? _originalIds (comma-separated FEC_Channel__c.FEC_Channel_ID__c)
         if (this._originalIds) {
             const codeList = this._originalIds.split(',').map(s => s.trim()).filter(s => s);
-            getChannelsByCodes({ channelCodes: codeList })
+            getChannelsByChannelIds({ channelIds: codeList })
                 .then(results => {
                     this.selectedChannels = (results || [])
-                        .map(ch => ({ id: ch.FEC_Code__c, name: ch.FEC_Channel_Vietnamese_name__c || ch.Name }));
+                        .map(ch => ({ id: ch.FEC_Channel_ID__c, name: ch.FEC_Channel_Vietnamese_name__c || ch.Name }));
                 })
                 .catch(() => {});
         } else {
