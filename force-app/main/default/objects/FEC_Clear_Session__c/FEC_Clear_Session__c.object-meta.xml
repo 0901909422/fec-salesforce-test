@@ -170,12 +170,6 @@
         <fields>FEC_Status__c</fields>
         <profileName>System Administrator</profileName>
     </profileSearchLayouts>
-    <profileSearchLayouts>
-        <fields>NAME</fields>
-        <fields>FEC_User__c</fields>
-        <fields>FEC_Status__c</fields>
-        <profileName>RD - IT User</profileName>
-    </profileSearchLayouts>
     <searchLayouts>
         <excludedStandardButtons>OpenListInQuip</excludedStandardButtons>
         <excludedStandardButtons>NewFromDocument</excludedStandardButtons>
