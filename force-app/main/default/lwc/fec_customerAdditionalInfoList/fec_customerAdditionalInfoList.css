@@ -1,0 +1,14 @@
+/* Màu xanh lá đậm cho Header (tương đương #04844b) */
+.custom-header {
+    background-color: #0070d2; /* Giả định màu xanh Salesforce chuẩn, hoặc bạn có thể dùng #04844b */
+    color: white;
+}
+.custom-header h1 {
+    line-height: 2.2rem;
+    font-size: 1.5rem;
+    color: white !important;
+}
+/* Styling cho header section */
+.header-section {
+    background-color: #f3f2f2;
+}

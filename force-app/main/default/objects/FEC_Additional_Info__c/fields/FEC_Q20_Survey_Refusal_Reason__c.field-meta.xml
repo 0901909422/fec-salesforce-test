@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>FEC_Q20_Survey_Refusal_Reason__c</fullName>
+    <description>Q20: Lý do KH từ chối khảo sát</description>
+    <label>Q20 Survey Refusal Reason</label>
+    <required>false</required>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>Survey Declined</fullName>
+                <default>false</default>
+                <label>Survey Declined</label>
+            </value>
+            <value>
+                <fullName>Survey Completed</fullName>
+                <default>false</default>
+                <label>Survey Completed</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>

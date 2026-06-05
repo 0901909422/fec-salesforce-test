@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>FEC_Case_Assignment_log_Name__c</fullName>
+    <deleteConstraint>SetNull</deleteConstraint>
+    <label>Case Assignment log Name</label>
+    <referenceTo>FEC_Case_Assignment_Logs__c</referenceTo>
+    <relationshipLabel>User Information</relationshipLabel>
+    <relationshipName>Case_Assignment_Log_Details</relationshipName>
+    <required>false</required>
+    <trackTrending>false</trackTrending>
+    <type>Lookup</type>
+</CustomField>

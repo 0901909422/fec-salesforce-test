@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomFieldTranslation xmlns="http://soap.sforce.com/2006/04/metadata">
+    <label>Đánh giá hoàn MRC - Xử lý hợp đồng</label>
+    <name>FEC_Contract_Processing_MRC_Assessment__c</name>
+    <picklistValues>
+        <masterLabel>Can return MRC</masterLabel>
+        <translation>Có thể hoàn trả MRC</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Cannot return MRC</masterLabel>
+        <translation>Không thể hoàn trả MRC</translation>
+    </picklistValues>
+</CustomFieldTranslation>

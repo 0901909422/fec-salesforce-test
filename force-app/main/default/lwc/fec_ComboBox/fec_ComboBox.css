@@ -1,0 +1,8 @@
+.slds-combobox__input[aria-disabled="true"] {
+  background-color: #f3f2f2;
+  cursor: not-allowed;
+}
+
+abbr {
+  color: red;
+}

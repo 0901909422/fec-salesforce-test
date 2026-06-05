@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<GlobalValueSet xmlns="http://soap.sforce.com/2006/04/metadata">
+    <customValue>
+        <fullName>Contact Customer</fullName>
+        <default>false</default>
+        <label>Contact Customer</label>
+    </customValue>
+    <customValue>
+        <fullName>Create New Ticket</fullName>
+        <default>false</default>
+        <label>Create New Ticket</label>
+    </customValue>
+    <customValue>
+        <fullName>Other</fullName>
+        <default>false</default>
+        <label>Other</label>
+    </customValue>
+    <description>Hành động cần thiết</description>
+    <masterLabel>Corrective Action</masterLabel>
+    <sorted>false</sorted>
+</GlobalValueSet>

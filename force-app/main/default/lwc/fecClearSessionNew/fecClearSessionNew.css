@@ -1,0 +1,18 @@
+.fec-cs-container { padding: 1rem; }
+.fec-cs-header { margin-bottom: 1rem; }
+.fec-cs-title { font-size: 1.25rem; font-weight: 700; color: #16325c; }
+.fec-cs-subtitle { font-size: 0.875rem; color: #706e6b; margin-bottom: 0.75rem; }
+.fec-cs-search-row { display: flex; align-items: flex-end; gap: 0.75rem; margin-bottom: 0.75rem; position: relative; }
+.fec-cs-search-wrap { flex: 1; position: relative; }
+.fec-cs-dropdown { position: absolute; top: 100%; left: 0; right: 0; background: #fff; border: 1px solid #dddbda; border-radius: 4px; box-shadow: 0 4px 12px rgba(0,0,0,.15); z-index: 9999; max-height: 200px; overflow-y: auto; }
+.fec-cs-dropdown-item { padding: 0.5rem 0.75rem; cursor: pointer; display: flex; flex-direction: column; }
+.fec-cs-dropdown-item:hover { background-color: #f0f7ff; }
+.fec-cs-user-name { font-size: 0.875rem; font-weight: 600; }
+.fec-cs-user-email { font-size: 0.75rem; color: #706e6b; }
+.fec-cs-dropdown-empty { padding: 0.5rem 0.75rem; font-size: 0.875rem; color: #706e6b; }
+.fec-cs-tags { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.75rem; }
+.fec-cs-tag { display: inline-flex; align-items: center; gap: 4px; background: #e8f0fe; border: 1px solid #0070d2; border-radius: 20px; padding: 3px 10px; font-size: 0.8125rem; color: #0070d2; }
+.fec-cs-tag-remove { cursor: pointer; color: #706e6b; }
+.fec-cs-tag-remove:hover { color: #c23934; }
+.fec-cs-input { width: 100%; height: 2.25rem; padding: 0 0.75rem; border: 1px solid #dddbda; border-radius: 4px; font-size: 0.875rem; outline: none; box-sizing: border-box; }
+.fec-cs-input:focus { border-color: #0070d2; box-shadow: 0 0 0 1px #0070d2; }

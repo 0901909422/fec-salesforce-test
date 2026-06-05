@@ -1,0 +1,95 @@
+<template>
+    <template if:true={isLoading}>
+        <div class="fec-section-spinner-wrapper">
+            <lightning-spinner alternative-text={customLabel.loadingAlt} size="medium"></lightning-spinner>
+        </div>
+    </template>
+    <template if:false={isLoading}>
+    <template if:true={hasData}>
+        <lightning-accordion allow-multiple-sections-open active-section-name={activeSections}>
+            <c-fec_-common-record-detail-section
+                section-title={customLabel.earlyTermination}
+                fields={earlyTerminationFields}
+                columns="3">
+            </c-fec_-common-record-detail-section>
+            <c-fec_-common-record-detail-section
+                section-title={customLabel.overdue}
+                fields={overdueFields}
+                columns="3">
+            </c-fec_-common-record-detail-section>
+            <lightning-accordion-section name={customLabel.feeCharge} label={customLabel.feeCharge} class="slds-accordion__section fec-termination-fee-section">
+                <div class="slds-form slds-p-around_small fec-termination-fee-content" role="list">
+                    <template if:true={hasFeeChargeData}>
+                        <c-fec_-related-list-paging
+                            columns={feeChargePagingColumns}
+                            records={feeChargePagingRecords}
+                            default-sorted-by={feeChargeDefaultSortedBy}
+                            page-size={feeChargePageSize}
+                            hide-row-number
+                            hide-updated-time>
+                        </c-fec_-related-list-paging>
+                    </template>
+                </div>
+            </lightning-accordion-section>
+        </lightning-accordion>
+    </template>
+    <template if:false={hasData}>
+        <div class="slds-accordion">
+            <section class="slds-accordion__section slds-is-open">
+                <div class="slds-accordion__summary">
+                    <h3 class="slds-accordion__summary-heading">
+                        <span class="slds-accordion__summary-content slds-grid">
+                            <lightning-icon icon-name="utility:chevrondown" size="x-small" class="slds-m-right_x-small">
+                            </lightning-icon>
+                            <span>
+                                {customLabel.earlyTermination}&nbsp;-&nbsp;
+                                <span class="sync-fail-text">
+                                    {customLabel.msgErrorAPI}
+                                </span>
+                            </span>
+                        </span>
+                    </h3>
+                </div>
+                <div class="slds-accordion__content slds-hide">
+                </div>
+            </section>
+            <section class="slds-accordion__section slds-is-open">
+                <div class="slds-accordion__summary">
+                    <h3 class="slds-accordion__summary-heading">
+                        <span class="slds-accordion__summary-content slds-grid">
+                            <lightning-icon icon-name="utility:chevrondown" size="x-small" class="slds-m-right_x-small">
+                            </lightning-icon>
+                            <span>
+                                {customLabel.overdue}&nbsp;-&nbsp;
+                                <span class="sync-fail-text">
+                                    {customLabel.msgErrorAPI}
+                                </span>
+                            </span>
+                        </span>
+                    </h3>
+                </div>
+                <div class="slds-accordion__content slds-hide">
+                </div>
+            </section>
+            <section class="slds-accordion__section slds-is-open">
+                <div class="slds-accordion__summary">
+                    <h3 class="slds-accordion__summary-heading">
+                        <span class="slds-accordion__summary-content slds-grid">
+                            <lightning-icon icon-name="utility:chevrondown" size="x-small" class="slds-m-right_x-small">
+                            </lightning-icon>
+                            <span>
+                                {customLabel.feeCharge}&nbsp;-&nbsp;
+                                <span class="sync-fail-text">
+                                    {customLabel.msgErrorAPI}
+                                </span>
+                            </span>
+                        </span>
+                    </h3>
+                </div>
+                <div class="slds-accordion__content slds-hide">
+                </div>
+            </section>
+        </div>
+    </template>
+    </template>
+</template>

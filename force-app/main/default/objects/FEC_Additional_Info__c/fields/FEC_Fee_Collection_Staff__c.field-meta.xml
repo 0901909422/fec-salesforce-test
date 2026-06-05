@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>FEC_Fee_Collection_Staff__c</fullName>
+    <description>Nhân viên thu phí</description>
+    <label>Fee Collection Staff</label>
+    <required>false</required>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>NV làm hồ sơ</fullName>
+                <default>false</default>
+                <label>NV làm hồ sơ</label>
+            </value>
+            <value>
+                <fullName>NV khác</fullName>
+                <default>false</default>
+                <label>NV khác</label>
+            </value>
+            <value>
+                <fullName>Không cung cấp/ không nhớ</fullName>
+                <default>false</default>
+                <label>Không cung cấp/ không nhớ</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>

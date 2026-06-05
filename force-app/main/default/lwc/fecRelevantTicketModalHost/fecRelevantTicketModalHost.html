@@ -1,0 +1,24 @@
+<template>
+    <template if:true={isModalOpen}>
+        <section role="dialog" tabindex="-1" aria-modal="true" class="slds-modal slds-fade-in-open fec-modal">
+            <div class="slds-modal__container fec-modal-container">
+                <div class="fec-header"><h2>{labels.title}</h2></div>
+                <div class="fec-body">
+                    <div class="fec-required">* = {labels.requiredInfo}</div>
+                    <section class="fec-section">
+                        <div class="fec-section-title">{labels.sectionInfo}</div>
+                        <div class="fec-section-body"><div class="fec-field-row"><label class="fec-field-label"><abbr class="fec-required-mark" title="required">* </abbr>{labels.fieldInteraction}</label><div class="fec-lookup">
+                            <template if:false={selectedId}><div class="fec-search-box"><input class="fec-search-input" type="text" placeholder={labels.searchPlaceholder} value={searchTerm} oninput={handleInput} onfocus={handleFocus} onblur={handleBlur} autocomplete="off" /><lightning-icon icon-name="utility:search" size="x-small" class="fec-search-icon"></lightning-icon></div>
+                                <template if:true={isOpen}><div class="fec-dropdown"><template if:true={isLoading}><div class="fec-option fec-muted"><lightning-spinner size="small" alternative-text="Loading"></lightning-spinner></div></template><template if:false={isLoading}><template for:each={results} for:item="item"><div key={item.id} class="fec-option" data-id={item.id} data-label={item.label} onmousedown={handleSelect}><lightning-icon icon-name="standard:case" size="small"></lightning-icon><span class="fec-option-text"><span class="fec-option-label">{item.label}</span><span class="fec-option-sub">{item.sub}</span></span></div></template><template if:true={showNoResults}><div class="fec-option fec-muted">{labels.noResults}</div></template></template></div></template>
+                            </template>
+                            <template if:true={selectedId}><div class="fec-pill"><lightning-icon icon-name="standard:case" size="small"></lightning-icon><span class="fec-pill-label">{selectedLabel}</span><button class="fec-pill-remove" type="button" onclick={handleRemove} title="Remove"><lightning-icon icon-name="utility:close" size="x-small"></lightning-icon></button></div></template>
+                            <template if:true={errorMsg}><p class="fec-error">{errorMsg}</p></template>
+                        </div></div></div>
+                    </section>
+                    <div class="fec-footer"><lightning-button label={labels.cancel} onclick={closeModal}></lightning-button><lightning-button label={labels.saveAndNew} onclick={handleSaveAndNew} disabled={isSaving}></lightning-button><lightning-button label={labels.save} variant="brand" onclick={handleSave} disabled={isSaving}></lightning-button></div>
+                </div>
+            </div>
+        </section>
+        <div class="slds-backdrop slds-backdrop_open"></div>
+    </template>
+</template>

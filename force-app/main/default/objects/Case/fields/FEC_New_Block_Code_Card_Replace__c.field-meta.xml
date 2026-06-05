@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>FEC_New_Block_Code_Card_Replace__c</fullName>
+    <label>New Block Code</label>
+    <required>false</required>
+    <trackFeedHistory>false</trackFeedHistory>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Picklist</type>
+    <valueSet>
+        <controllingField>FEC_Card_Replacement_Reason__c</controllingField>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>L</fullName>
+                <default>false</default>
+                <label>L</label>
+            </value>
+            <value>
+                <fullName>S</fullName>
+                <default>false</default>
+                <label>S</label>
+            </value>
+        </valueSetDefinition>
+        <valueSettings>
+            <controllingFieldValue>Bị hư hỏng</controllingFieldValue>
+            <controllingFieldValue>Bị mất/ đánh cắp</controllingFieldValue>
+            <controllingFieldValue>Bị nuốt tại ATM</controllingFieldValue>
+            <controllingFieldValue>Chưa nhận được thẻ</controllingFieldValue>
+            <controllingFieldValue>Không còn nguyên vẹn</controllingFieldValue>
+            <controllingFieldValue>Sai tên in nổi</controllingFieldValue>
+            <controllingFieldValue>Thay thế lần đầu thẻ Money Tab</controllingFieldValue>
+            <valueName>L</valueName>
+        </valueSettings>
+        <valueSettings>
+            <controllingFieldValue>Liên quan gian lận</controllingFieldValue>
+            <valueName>S</valueName>
+        </valueSettings>
+    </valueSet>
+</CustomField>

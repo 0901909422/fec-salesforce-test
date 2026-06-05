@@ -1,0 +1,348 @@
+<template>
+  <div class="fec-card">
+    <div class="fec-card__header">
+      <div class="fec-card__title-group">
+        <span class="fec-card__title-icon" aria-hidden="true">
+          <lightning-icon
+            icon-name="doctype:attachment"
+            size="x-small"
+            alternative-text="Files"
+          ></lightning-icon>
+        </span>
+        <span class="fec-card__title">{titleLabel}</span>
+      </div>
+      <template if:true={hasRecordId}>
+        <div class="fec-add-files-wrap" title="Add files to this Case">
+          <span class="fec-add-files-pill" aria-hidden="true">Add Files</span>
+          <div class="fec-add-files-hitbox">
+            <template lwc:if={multiple}>
+              <lightning-file-upload
+                class="fec-add-files-lfu"
+                label="Add Files"
+                title="Attach files to this Case"
+                name={uploadName}
+                record-id={recordId}
+                multiple
+                accept={inputAccept}
+                disabled={uploadDisabled}
+                onuploadfinished={handleUploadFinished}
+                onuploaderror={handleUploadError}
+              ></lightning-file-upload>
+            </template>
+            <template lwc:else>
+              <lightning-file-upload
+                class="fec-add-files-lfu"
+                label="Add Files"
+                title="Attach files to this Case"
+                name={uploadName}
+                record-id={recordId}
+                accept={inputAccept}
+                disabled={uploadDisabled}
+                onuploadfinished={handleUploadFinished}
+                onuploaderror={handleUploadError}
+              ></lightning-file-upload>
+            </template>
+          </div>
+        </div>
+      </template>
+      <template if:false={hasRecordId}>
+        <button
+          type="button"
+          class="fec-pill-btn"
+          aria-label="Add files"
+          onclick={handleAddFilesClick}
+          disabled={disabled}
+        >
+          Add Files
+        </button>
+      </template>
+    </div>
+
+    <!-- Gắn Case: bảng related list (tối đa 5 dòng) giống tab Attachments LEX -->
+    <template if:true={hasRecordId}>
+      <div class="fec-related-body">
+        <template if:true={isLoadingServerFiles}>
+          <div class="fec-file-list-spinner">
+            <lightning-spinner
+              size="small"
+              alternative-text="Loading files"
+            ></lightning-spinner>
+          </div>
+        </template>
+        <template if:false={isLoadingServerFiles}>
+          <template if:true={hasServerFiles}>
+            <div class="fec-files-embed">
+              <div class="fec-files-table-scroll">
+                <table class="fec-files-table">
+                  <thead>
+                    <tr>
+                      <th class="fec-files-table__th fec-files-table__th_title" scope="col">
+                        Title
+                      </th>
+                      <th class="fec-files-table__th" scope="col">Owner</th>
+                      <th class="fec-files-table__th" scope="col">Last Modified</th>
+                      <th class="fec-files-table__th fec-files-table__th_size" scope="col">
+                        Size
+                      </th>
+                      <th class="fec-files-table__th fec-files-table__th_actions" scope="col">
+                        <span class="slds-assistive-text">Actions</span>
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <template for:each={previewTableRows} for:item="row">
+                      <tr key={row.id}>
+                        <td class="fec-files-table__td">
+                          <div class="fec-files-table__title-cell">
+                            <span class="fec-files-table__doctype" aria-hidden="true">
+                              <lightning-icon
+                                icon-name={row.iconName}
+                                size="small"
+                                alternative-text="File type"
+                              ></lightning-icon>
+                            </span>
+                            <button
+                              type="button"
+                              class="fec-files-table__title-link"
+                              data-docid={row.contentDocumentId}
+                              onclick={handleOpenServerFile}
+                            >
+                              {row.linkLabel}
+                            </button>
+                          </div>
+                        </td>
+                        <td class="fec-files-table__td">
+                          <span class="fec-files-table__owner">{row.ownerLabel}</span>
+                        </td>
+                        <td class="fec-files-table__td fec-files-table__td_muted">
+                          {row.lastModifiedLabel}
+                        </td>
+                        <td class="fec-files-table__td fec-files-table__td_muted">
+                          {row.sizeLabel}
+                        </td>
+                        <td class="fec-files-table__td fec-files-table__td_actions">
+                          <lightning-button-menu
+                            alternative-text="File actions"
+                            icon-name="utility:down"
+                            variant="border-filled"
+                            menu-alignment="right"
+                            data-docid={row.contentDocumentId}
+                            onselect={handleModalFileMenuSelect}
+                          >
+                            <lightning-menu-item
+                              value="open"
+                              label="Open"
+                            ></lightning-menu-item>
+                          </lightning-button-menu>
+                        </td>
+                      </tr>
+                    </template>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </template>
+        </template>
+      </div>
+      <div class="fec-related-footer">
+        <button
+          type="button"
+          class="fec-view-all"
+          aria-label="View all files linked to this Case"
+          onclick={handleViewAllFiles}
+        >
+          View All
+        </button>
+      </div>
+    </template>
+
+    <!-- Không có recordId: chọn file cục bộ (legacy) -->
+    <template if:false={hasRecordId}>
+      <template lwc:if={multiple}>
+        <input
+          type="file"
+          class="fec-file-input"
+          data-id="file-input"
+          aria-label="Choose files to upload"
+          accept={inputAccept}
+          multiple
+          onchange={handleInputChange}
+          disabled={disabled}
+        />
+      </template>
+      <template lwc:else>
+        <input
+          type="file"
+          class="fec-file-input"
+          data-id="file-input"
+          aria-label="Choose file to upload"
+          accept={inputAccept}
+          onchange={handleInputChange}
+          disabled={disabled}
+        />
+      </template>
+
+      <div
+        class={dropZoneClass}
+        ondragenter={handleDragEnter}
+        ondragleave={handleDragLeave}
+        ondragover={handleDragOver}
+        ondrop={handleDrop}
+      >
+        <button
+          type="button"
+          class="fec-pill-btn fec-pill-btn_primary"
+          aria-label="Upload files"
+          onclick={handleUploadClick}
+          disabled={disabled}
+        >
+          <lightning-icon
+            class="fec-upload-icon"
+            icon-name="utility:upload"
+            size="x-small"
+            alternative-text="Upload"
+          ></lightning-icon>
+          <span>Upload Files</span>
+        </button>
+        <p class="fec-drop-hint">Or drop files</p>
+      </div>
+
+      <template lwc:if={fileCount}>
+        <ul class="fec-file-list">
+          <template for:each={fileRows} for:item="row">
+            <li key={row.id} class="fec-file-list__item">
+              <span class="fec-file-list__name" title={row.file.name}>{row.file.name}</span>
+              <button
+                type="button"
+                class="fec-file-list__remove"
+                data-index={row.index}
+                onclick={handleRemoveFile}
+                disabled={disabled}
+                title="Remove"
+              >
+                <lightning-icon
+                  icon-name="utility:close"
+                  size="xx-small"
+                  alternative-text="Remove"
+                ></lightning-icon>
+              </button>
+            </li>
+          </template>
+        </ul>
+      </template>
+    </template>
+  </div>
+
+  <template if:true={showAllFilesModal}>
+    <div
+      class="fec-all-files-overlay"
+      onclick={handleAllFilesOverlayClick}
+      role="presentation"
+    >
+      <section
+        class="fec-all-files-dialog"
+        onclick={handleAllFilesPanelClick}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="fec-all-files-heading"
+      >
+        <div class="fec-all-files-dialog__head">
+          <h2 id="fec-all-files-heading" class="fec-all-files-dialog__title">
+            {titleLabel}
+          </h2>
+          <lightning-button-icon
+            icon-name="utility:close"
+            alternative-text="Close"
+            variant="border-filled"
+            onclick={closeAllFilesModal}
+          ></lightning-button-icon>
+        </div>
+        <div class="fec-all-files-dialog__body">
+          <template if:true={isLoadingServerFiles}>
+            <div class="fec-file-list-spinner">
+              <lightning-spinner
+                size="small"
+                alternative-text="Loading files"
+              ></lightning-spinner>
+            </div>
+          </template>
+          <template if:false={isLoadingServerFiles}>
+            <template if:true={hasServerFiles}>
+              <div class="fec-files-table-scroll">
+                <table class="fec-files-table">
+                  <thead>
+                    <tr>
+                      <th class="fec-files-table__th fec-files-table__th_title" scope="col">
+                        Title
+                      </th>
+                      <th class="fec-files-table__th" scope="col">Owner</th>
+                      <th class="fec-files-table__th" scope="col">Last Modified</th>
+                      <th class="fec-files-table__th fec-files-table__th_size" scope="col">
+                        Size
+                      </th>
+                      <th class="fec-files-table__th fec-files-table__th_actions" scope="col">
+                        <span class="slds-assistive-text">Actions</span>
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <template for:each={modalTableRows} for:item="row">
+                      <tr key={row.id}>
+                        <td class="fec-files-table__td">
+                          <div class="fec-files-table__title-cell">
+                            <span class="fec-files-table__doctype" aria-hidden="true">
+                              <lightning-icon
+                                icon-name={row.iconName}
+                                size="small"
+                                alternative-text="File type"
+                              ></lightning-icon>
+                            </span>
+                            <button
+                              type="button"
+                              class="fec-files-table__title-link"
+                              data-docid={row.contentDocumentId}
+                              onclick={handleOpenServerFile}
+                            >
+                              {row.linkLabel}
+                            </button>
+                          </div>
+                        </td>
+                        <td class="fec-files-table__td">
+                          <span class="fec-files-table__owner">{row.ownerLabel}</span>
+                        </td>
+                        <td class="fec-files-table__td fec-files-table__td_muted">
+                          {row.lastModifiedLabel}
+                        </td>
+                        <td class="fec-files-table__td fec-files-table__td_muted">
+                          {row.sizeLabel}
+                        </td>
+                        <td class="fec-files-table__td fec-files-table__td_actions">
+                          <lightning-button-menu
+                            alternative-text="File actions"
+                            icon-name="utility:down"
+                            variant="border-filled"
+                            menu-alignment="right"
+                            data-docid={row.contentDocumentId}
+                            onselect={handleModalFileMenuSelect}
+                          >
+                            <lightning-menu-item
+                              value="open"
+                              label="Open"
+                            ></lightning-menu-item>
+                          </lightning-button-menu>
+                        </td>
+                      </tr>
+                    </template>
+                  </tbody>
+                </table>
+              </div>
+            </template>
+            <template if:false={hasServerFiles}>
+              <p class="fec-all-files-empty">No files linked to this Case.</p>
+            </template>
+          </template>
+        </div>
+      </section>
+    </div>
+  </template>
+</template>

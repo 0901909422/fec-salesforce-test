@@ -1,0 +1,131 @@
+<template>
+    <div class="container slds-grid slds-wrap slds-is-relative">
+        <template if:true={isSaving}>
+            <lightning-spinner alternative-text="Saving..." size="medium"></lightning-spinner>
+        </template>
+
+        <!-- LEFT: Tree panel -->
+        <div class="slds-col slds-size_1-of-4 tree-panel">
+            <div class="tree-panel__header">
+                <div class="tree-panel__title-row">
+                    <lightning-icon icon-name="utility:apps" size="x-small" class="slds-m-right_x-small"></lightning-icon>
+                    <h3 class="slds-text-heading_small slds-text-color_inverse">{labelServiceTypes}</h3>
+                </div>
+                <div class="tree-panel__search">
+                    <lightning-input
+                        type="search"
+                        variant="label-hidden"
+                        placeholder={searchPlaceholder}
+                        value={searchTerm}
+                        onchange={handleTreeSearch}
+                        class="tree-search-input">
+                    </lightning-input>
+                </div>
+            </div>
+            <div class="tree-panel__body">
+                <template lwc:if={hasFilteredTree}>
+                    <lightning-tree
+                        items={filteredTreeItems}
+                        onselect={handleSelect}>
+                    </lightning-tree>
+                </template>
+                <template lwc:else>
+                    <div class="tree-empty">
+                        <lightning-icon icon-name="utility:search" size="small" class="slds-m-bottom_x-small slds-text-color_weak"></lightning-icon>
+                        <p class="slds-text-color_weak slds-text-body_small">{noMatchLabel}</p>
+                    </div>
+                </template>
+            </div>
+        </div>
+
+        <!-- RIGHT: Detail panel -->
+        <div class="slds-col slds-size_3-of-4 detail-panel">
+            <div class="detail-panel__header">
+                <div class="detail-panel__title-row">
+                    <div>
+                        <h2 class="detail-panel__title">{title}</h2>
+                        <template lwc:if={hasSelectedFields}>
+                            <p class="detail-panel__subtitle">{bpHeaderLabel}</p>
+                        </template>
+                    </div>
+                    <div class="detail-panel__actions">
+                        <template lwc:if={hasSelectedFields}>
+                            <span class="detail-panel__counter">
+                                <lightning-icon icon-name="utility:list" size="xx-small" class="slds-m-right_xx-small"></lightning-icon>
+                                {fieldCountLabel}
+                            </span>
+                            <template lwc:if={isDirty}>
+                                <span class="detail-panel__dirty-badge">
+                                    <lightning-icon icon-name="utility:edit" size="xx-small" class="slds-m-right_xx-small"></lightning-icon>
+                                    {dirtyCountLabel}
+                                </span>
+                            </template>
+                        </template>
+                        <lightning-button
+                            label="Save Mapping"
+                            variant="brand"
+                            icon-name="utility:save"
+                            onclick={handleSave}
+                            disabled={isSaveDisabled}>
+                        </lightning-button>
+                    </div>
+                </div>
+            </div>
+
+            <template lwc:if={hasSelectedFields}>
+                <div class="mapping-table-wrap">
+                    <table class="slds-table slds-table_bordered slds-table_fixed-layout mapping-table">
+                        <thead>
+                            <tr class="slds-line-height_reset">
+                                <th scope="col" class="mapping-table__th-property">
+                                    <span class="slds-truncate">{tableHeaderProperty}</span>
+                                </th>
+                                <th scope="col" class="mapping-table__th-reference">
+                                    <span class="slds-truncate">{tableHeaderReference}</span>
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <template for:each={selectedFields} for:item="field">
+                                <tr key={field.name} class={field.rowClass}>
+                                    <td class="mapping-table__cell-property">
+                                        <div class="property-cell">
+                                            <lightning-icon
+                                                icon-name={field.statusIcon}
+                                                size="x-small"
+                                                class={field.statusIconClass}>
+                                            </lightning-icon>
+                                            <div class="property-cell__text">
+                                                <strong>{field.fieldLabel}</strong>
+                                                <template lwc:if={field.fieldApiName}>
+                                                    <span class="property-cell__api">{field.fieldApiName}</span>
+                                                </template>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="mapping-table__cell-reference">
+                                        <c-fec-case-field-picker
+                                            label={field.fieldLabel}
+                                            options={caseFieldOptions}
+                                            value={field.propertyRef}
+                                            field-name={field.name}
+                                            onchange={handleFieldInputChange}>
+                                        </c-fec-case-field-picker>
+                                    </td>
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table>
+                </div>
+            </template>
+
+            <template lwc:else>
+                <div class="empty-state">
+                    <lightning-icon icon-name="utility:filter" size="large" class="empty-state__icon"></lightning-icon>
+                    <p class="empty-state__title">{messageSelectProperty}</p>
+                    <p class="empty-state__hint">{emptyHintLabel}</p>
+                </div>
+            </template>
+        </div>
+    </div>
+</template>

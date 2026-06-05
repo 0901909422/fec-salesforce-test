@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>FEC_Search_Products__c</fullName>
+    <defaultValue>&apos;Card&apos;</defaultValue>
+    <description>Trường lưu thông tin danh sách tất cả các sản phẩm của khách hàng đã search được gần nhất</description>
+    <externalId>false</externalId>
+    <label>Search Products</label>
+    <length>255</length>
+    <required>false</required>
+    <trackFeedHistory>false</trackFeedHistory>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Text</type>
+    <unique>false</unique>
+</CustomField>

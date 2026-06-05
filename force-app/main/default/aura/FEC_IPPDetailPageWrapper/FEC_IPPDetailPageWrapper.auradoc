@@ -1,0 +1,3 @@
+<aura:documentation>
+	<aura:description>Wrapper component for FEC IPP Detail Page to enable URL addressability</aura:description>
+</aura:documentation>

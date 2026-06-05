@@ -1,0 +1,26 @@
+.noc-channel-config-search {
+    position: relative;
+    width: 100%;
+    max-width: 400px;
+}
+
+.noc-channel-config-dropdown {
+    position: fixed;
+    z-index: 9001;
+    background: #fff;
+    border: 1px solid #dddbda;
+    border-radius: 0.25rem;
+    box-shadow: 0 2px 3px 0 rgba(0,0,0,.16);
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.noc-channel-config-option {
+    cursor: pointer;
+    padding: 0.5rem 0.75rem;
+    list-style: none;
+}
+
+.noc-channel-config-option:hover {
+    background-color: #f3f3f3;
+}

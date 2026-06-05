@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomFieldTranslation xmlns="http://soap.sforce.com/2006/04/metadata">
+    <label><!-- Q14 Reason for Office Visit --></label>
+    <name>FEC_Q14_Reason_for_Office_Visit__c</name>
+    <picklistValues>
+        <masterLabel>Call Center Agent instructions</masterLabel>
+        <translation>NV tổng đài hướng dẫn</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Convenient location</masterLabel>
+        <translation>Ở gần/ Tiện đường ghé qua</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Did not know how to contact other channels</masterLabel>
+        <translation>Không biết cách liên hệ các kênh khác</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Did not want to have phone charges</masterLabel>
+        <translation>Không tốn tiền gọi điện thoại</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Faster and more effective solutions</masterLabel>
+        <translation>Vấn đề được giải quyết nhanh chóng/ triệt để hơn</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>N/A</masterLabel>
+        <translation>N/A</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Office Staff more enthusiastic than other channels</masterLabel>
+        <translation>NV tại văn phòng hỗ trợ nhiệt tình/ vui vẻ hơn các kênh khác</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Other channels failed to resolve</masterLabel>
+        <translation>Đã liên hệ các kênh khác nhưng không giải quyết được</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Prefer in-person consultancy</masterLabel>
+        <translation>Muốn được tư vấn trực tiếp rõ ràng/ dễ hiểu hơn</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Sales or Collections&apos; Staff instructions</masterLabel>
+        <translation>NV Sales/ Collections hướng dẫn</translation>
+    </picklistValues>
+</CustomFieldTranslation>

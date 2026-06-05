@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>FEC_Email__c</fullName>
+    <description>Trường sinh ra lưu trữ các email hệ thống gửi ra theo user group</description>
+    <externalId>false</externalId>
+    <inlineHelpText>Trường sinh ra lưu trữ các email hệ thống gửi ra theo user group</inlineHelpText>
+    <label>FEC_Email</label>
+    <required>false</required>
+    <trackTrending>false</trackTrending>
+    <type>Email</type>
+    <unique>false</unique>
+</CustomField>

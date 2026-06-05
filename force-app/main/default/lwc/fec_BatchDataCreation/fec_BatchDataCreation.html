@@ -1,0 +1,395 @@
+<template>
+  <div class="fec-root">
+    <template if:true={isLoading}>
+      <lightning-spinner alternative-text="Loading" size="small"></lightning-spinner>
+    </template>
+
+    <div class="fec-wrapper">
+      <div class="fec-session-shell">
+        <lightning-accordion
+          allow-multiple-sections-open
+          active-section-name={activeSettingSections}
+          onsectiontoggle={handleSettingSectionToggle}
+          class="fec-session-accordion"
+        >
+        <!-- Session 1 -->
+        <lightning-accordion-section
+          name="setting"
+          label="Batch Data Creation Setting"
+          class="slds-accordion__section"
+        >
+          <div class="fec-session-body fec-session-body--setting">
+            <div class="fec-row fec-row--template">
+              <div class="fec-field-grow fec-template-field">
+                <lightning-combobox
+                  name="template"
+                  label="Template"
+                  value={selectedTemplate}
+                  placeholder="Chọn mẫu"
+                  options={templateOptions}
+                  onchange={handleTemplateChange}
+                ></lightning-combobox>
+                <template if:true={templateRequiredError}>
+                  <p class="fec-template-error" role="alert">{labelSelectTemplate}</p>
+                </template>
+              </div>
+              <div class="fec-field-actions-top">
+                <lightning-button
+                  label="Download Template"
+                  variant="brand"
+                  onclick={handleDownloadTemplate}
+                ></lightning-button>
+              </div>
+            </div>
+
+            <!-- Hàng Import: trái = nhãn + Upload đỏ + strip; phải = Import Data; gạch chỉ phía trái -->
+            <div class="fec-import-grid">
+              <div class="fec-import-grid__left">
+                <div class="fec-import-label">
+                  <lightning-icon
+                    icon-name="utility:attach"
+                    size="x-small"
+                    alternative-text=""
+                    class="fec-import-label__icon"
+                  ></lightning-icon>
+                  <span class="fec-import-label__text">Import File</span>
+                </div>
+                <div class="fec-import-inner">
+                  <button
+                    type="button"
+                    class="fec-upload-files-btn"
+                    onclick={handleChooseFile}
+                  >
+                    <lightning-icon
+                      icon-name="utility:upload"
+                      size="x-small"
+                      alternative-text=""
+                      class="fec-upload-files-btn__icon"
+                    ></lightning-icon>
+                    <span>Upload Files</span>
+                  </button>
+                  <input
+                    data-id="batch-file-input"
+                    class="fec-hidden-input"
+                    type="file"
+                    accept=".xlsx"
+                    onchange={handleFileSelected}
+                  />
+                  <template if:false={hasAttachedFile}>
+                    <div class="fec-file-strip" onclick={handleChooseFile}>
+                      <lightning-icon
+                        icon-name="utility:file"
+                        size="x-small"
+                        alternative-text=""
+                        class="fec-file-strip__lead-icon"
+                      ></lightning-icon>
+                      <span class="fec-file-strip__name">No file selected</span>
+                    </div>
+                  </template>
+                  <template if:true={hasAttachedFile}>
+                    <div class="fec-file-attached">
+                      <lightning-icon
+                        icon-name="utility:file"
+                        size="small"
+                        alternative-text=""
+                        class="fec-file-attached__icon"
+                      ></lightning-icon>
+                      <span class="fec-file-attached__name" title={selectedFileName}
+                        >{selectedFileName}</span
+                      >
+                      <lightning-button-icon
+                        icon-name="utility:close"
+                        variant="bare"
+                        alternative-text="Xóa tệp"
+                        title="Xóa tệp"
+                        class="fec-file-attached__clear"
+                        onclick={handleClearFile}
+                      ></lightning-button-icon>
+                    </div>
+                  </template>
+                </div>
+                <template if:true={fileRequiredError}>
+                  <p class="fec-template-error" role="alert">
+                    Vui lòng chọn mẫu
+                  </p>
+                </template>
+                <template if:true={attachDataRequiredError}>
+                  <p class="fec-template-error" role="alert">
+                    Vui lòng đính kèm tệp dữ liệu
+                  </p>
+                </template>
+                <template if:true={importValidationError}>
+                  <p class="fec-template-error" role="alert">{importValidationError}</p>
+                </template>
+              </div>
+              <div class="fec-import-grid__right">
+                <lightning-button
+                  label="Import Data"
+                  variant="brand"
+                  onclick={handleImportData}
+                ></lightning-button>
+              </div>
+            </div>
+          </div>
+        </lightning-accordion-section>
+        </lightning-accordion>
+      </div>
+
+      <div class="fec-session-shell">
+        <lightning-accordion
+          allow-multiple-sections-open
+          active-section-name={activeProcessedSections}
+          onsectiontoggle={handleProcessedSectionToggle}
+          class="fec-session-accordion"
+        >
+        <!-- Session 2: bảng + phân trang -->
+        <lightning-accordion-section
+          name="processed"
+          label="Processed &amp; Unprocessed Data"
+          class="slds-accordion__section"
+        >
+          <div class="fec-session-body">
+            <div class="fec-section2-toolbar">
+              <span class="fec-section2-toolbar__spacer"></span>
+              <lightning-button-icon
+                icon-name="utility:refresh"
+                alternative-text="Refresh"
+                title="Refresh"
+                onclick={handleRefresh}
+              ></lightning-button-icon>
+            </div>
+            <div class="fec-table-wrap">
+              <table class="fec-table">
+                <thead>
+                  <tr>
+                    <th class="fec-stt-col">STT</th>
+                    <th>
+                      <button
+                        type="button"
+                        class="fec-sort-button"
+                        data-field="fileName"
+                        onclick={handleSort}
+                      >
+                        File Name
+                        <lightning-icon
+                          icon-name={fileNameSortIcon}
+                          size="xx-small"
+                          class="fec-sort-icon"
+                          alternative-text=""
+                        ></lightning-icon>
+                      </button>
+                    </th>
+                    <th>
+                      <button
+                        type="button"
+                        class="fec-sort-button"
+                        data-field="uploadedOn"
+                        onclick={handleSort}
+                      >
+                        Uploaded On
+                        <lightning-icon
+                          icon-name={uploadedOnSortIcon}
+                          size="xx-small"
+                          class="fec-sort-icon"
+                          alternative-text=""
+                        ></lightning-icon>
+                      </button>
+                    </th>
+                    <th>
+                      <button
+                        type="button"
+                        class="fec-sort-button"
+                        data-field="uploadedBy"
+                        onclick={handleSort}
+                      >
+                        Uploaded By
+                        <lightning-icon
+                          icon-name={uploadedBySortIcon}
+                          size="xx-small"
+                          class="fec-sort-icon"
+                          alternative-text=""
+                        ></lightning-icon>
+                      </button>
+                    </th>
+                    <th>
+                      <button
+                        type="button"
+                        class="fec-sort-button"
+                        data-field="totalRecordsCount"
+                        onclick={handleSort}
+                      >
+                        Total Records Count
+                        <lightning-icon
+                          icon-name={totalRecordsCountSortIcon}
+                          size="xx-small"
+                          class="fec-sort-icon"
+                          alternative-text=""
+                        ></lightning-icon>
+                      </button>
+                    </th>
+                    <th>
+                      <button
+                        type="button"
+                        class="fec-sort-button"
+                        data-field="totalSuccessRecords"
+                        onclick={handleSort}
+                      >
+                        Total Success Records
+                        <lightning-icon
+                          icon-name={totalSuccessRecordsSortIcon}
+                          size="xx-small"
+                          class="fec-sort-icon"
+                          alternative-text=""
+                        ></lightning-icon>
+                      </button>
+                    </th>
+                    <th>
+                      <button
+                        type="button"
+                        class="fec-sort-button"
+                        data-field="totalFailedRecords"
+                        onclick={handleSort}
+                      >
+                        Total Failed Records
+                        <lightning-icon
+                          icon-name={totalFailedRecordsSortIcon}
+                          size="xx-small"
+                          class="fec-sort-icon"
+                          alternative-text=""
+                        ></lightning-icon>
+                      </button>
+                    </th>
+                    <th>
+                      <button
+                        type="button"
+                        class="fec-sort-button"
+                        data-field="status"
+                        onclick={handleSort}
+                      >
+                        Status
+                        <lightning-icon
+                          icon-name={statusSortIcon}
+                          size="xx-small"
+                          class="fec-sort-icon"
+                          alternative-text=""
+                        ></lightning-icon>
+                      </button>
+                    </th>
+                    <th>
+                      <button
+                        type="button"
+                        class="fec-sort-button"
+                        data-field="result"
+                        onclick={handleSort}
+                      >
+                        Result
+                        <lightning-icon
+                          icon-name={resultSortIcon}
+                          size="xx-small"
+                          class="fec-sort-icon"
+                          alternative-text=""
+                        ></lightning-icon>
+                      </button>
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <template if:true={hasRows}>
+                    <template for:each={pagedRows} for:item="row">
+                      <tr key={row.id}>
+                        <td class="fec-stt-col">{row.rowNumber}</td>
+                        <td>
+                          <template if:true={row.fileDownloadUrl}>
+                            <a
+                              href="javascript:void(0);"
+                              data-url={row.fileDownloadUrl}
+                              onclick={handleFileNameClick}
+                            >
+                              {row.fileName}
+                            </a>
+                          </template>
+                          <template if:false={row.fileDownloadUrl}>
+                            {row.fileName}
+                          </template>
+                        </td>
+                        <td>{row.uploadedOnLabel}</td>
+                        <td>{row.uploadedBy}</td>
+                        <td>{row.totalRecordsCount}</td>
+                        <td>{row.totalSuccessRecords}</td>
+                        <td>{row.totalFailedRecords}</td>
+                        <td>{row.status}</td>
+                        <td>
+                          <template if:true={row.resultDownloadUrl}>
+                            <a
+                              href="javascript:void(0);"
+                              data-url={row.resultDownloadUrl}
+                              onclick={handleResultClick}
+                            >
+                              {row.result}
+                            </a>
+                          </template>
+                          <template if:false={row.resultDownloadUrl}>
+                            {row.result}
+                          </template>
+                        </td>
+                      </tr>
+                    </template>
+                  </template>
+                  <template if:false={hasRows}>
+                    <tr>
+                      <td colspan="9" class="fec-empty">No records found.</td>
+                    </tr>
+                  </template>
+                </tbody>
+              </table>
+            </div>
+            <div class="fec-footer">
+              <div class="fec-footer__left">
+                <span class="fec-footer__label">Page size</span>
+                <lightning-combobox
+                  variant="label-hidden"
+                  value={pageSize}
+                  placeholder="20"
+                  options={pageSizeOptions}
+                  onchange={handlePageSizeChange}
+                  dropdown-alignment="bottom-left"
+                ></lightning-combobox>
+              </div>
+              <div class="fec-footer__center">
+                <lightning-button-icon
+                  icon-name="utility:chevronleft"
+                  alternative-text="Previous"
+                  onclick={handlePreviousPage}
+                  disabled={previousDisabled}
+                ></lightning-button-icon>
+                <span class="fec-footer__page">{currentPage}</span>
+                <lightning-button-icon
+                  icon-name="utility:chevronright"
+                  alternative-text="Next"
+                  onclick={handleNextPage}
+                  disabled={nextDisabled}
+                ></lightning-button-icon>
+              </div>
+              <div class="fec-footer__goto">
+                <span class="fec-footer__label">Go to page</span>
+                <lightning-input
+                  variant="label-hidden"
+                  value={goToPageInput}
+                  type="number"
+                  min="1"
+                  class="fec-footer__goto-input"
+                  onchange={handleGoToPageInput}
+                ></lightning-input>
+                <lightning-button
+                  label="Go"
+                  onclick={handleGoToPage}
+                ></lightning-button>
+              </div>
+            </div>
+          </div>
+        </lightning-accordion-section>
+        </lightning-accordion>
+      </div>
+    </div>
+  </div>
+</template>

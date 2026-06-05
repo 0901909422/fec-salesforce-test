@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>FEC_Validation_Effective_End_Date</fullName>
+    <active>true</active>
+    <errorConditionFormula>EffectiveEndDate &lt; EffectiveStartDate</errorConditionFormula>
+    <errorDisplayField>EffectiveEndDate</errorDisplayField>
+    <errorMessage>The End Date must be later than the Start Date.</errorMessage>
+</ValidationRule>

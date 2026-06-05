@@ -1,0 +1,35 @@
+<template>
+    <lightning-card title="PDF Generator Demo">
+        <div class="slds-p-around_medium">
+            <lightning-button
+                label="Generate tai lieu mau (LSTT)"
+                variant="brand"
+                onclick={handleGenerateLstt}
+                disabled={isGenerating}
+            ></lightning-button>
+            <lightning-button
+                class="slds-m-left_small"
+                label="Generate tai lieu mau (TBCV_LTN)"
+                variant="neutral"
+                onclick={handleGenerateTbcvLtn}
+                disabled={isGenerating}
+            ></lightning-button>
+            <lightning-button
+                class="slds-m-left_small"
+                label="Generate tai lieu mau (XNTL_HDTD)"
+                variant="neutral"
+                onclick={handleGenerateXntlHtd}
+                disabled={isGenerating}
+            ></lightning-button>
+            <lightning-button
+                class="slds-m-left_small"
+                label="Generate tai lieu mau (XNCD_THE)"
+                variant="neutral"
+                onclick={handleGenerateXncdThe}
+                disabled={isGenerating}
+            ></lightning-button>
+        </div>
+    </lightning-card>
+
+    <c-fec-pdf-generator></c-fec-pdf-generator>
+</template>

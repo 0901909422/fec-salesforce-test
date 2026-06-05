@@ -1,0 +1,27 @@
+<template>
+    <div class="customer-info-container slds-card slds-p-around_small">
+        <template if:true={isLoading}>
+            <lightning-spinner alternative-text="Loading" size="small"></lightning-spinner>
+        </template>
+
+        <template if:false={isLoading}>
+            <lightning-accordion active-section-name={activeSections} allow-multiple-sections-open>
+                <lightning-accordion-section name="appHistory" label={customLabel.applicationHistoryLabel}>
+
+                    <template if:true={errorText}>
+                        <div class="sync-fail-text slds-p-around_small slds-text-align_center">
+                            {customLabel.applicationHistoryLabel}&nbsp;-&nbsp;{errorText}
+                        </div>
+                    </template>
+
+                    <template if:true={showDataTable}>
+                        <c-fec_-related-list-paging records={histories} data-section="history" columns={columns}
+                            empty-state-message={emptyStateMessage} sorted-by="user">
+                        </c-fec_-related-list-paging>
+                    </template>
+
+                </lightning-accordion-section>
+            </lightning-accordion>
+        </template>
+    </div>
+</template>

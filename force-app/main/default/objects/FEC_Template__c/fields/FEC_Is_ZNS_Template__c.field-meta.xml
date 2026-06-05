@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>FEC_Is_ZNS_Template__c</fullName>
+    <defaultValue>false</defaultValue>
+    <description>True nếu là ZNS Template, ngược lại False</description>
+    <label>Is ZNS Template</label>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Checkbox</type>
+</CustomField>

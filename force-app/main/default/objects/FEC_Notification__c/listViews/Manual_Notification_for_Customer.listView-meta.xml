@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ListView xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Manual_Notification_for_Customer</fullName>
+    <columns>NAME</columns>
+    <columns>FEC_Target_Group__c</columns>
+    <columns>FEC_Customer_Type__c</columns>
+    <columns>FEC_Product_Type__c</columns>
+    <columns>FEC_Category__c</columns>
+    <columns>FEC_Notification_Status__c</columns>
+    <columns>FEC_Channel__c</columns>
+    <columns>FEC_Applicable_User_Groups__c</columns>
+    <filterScope>Everything</filterScope>
+    <filters>
+        <field>RECORDTYPE</field>
+        <operation>equals</operation>
+        <value>FEC_Notification__c.Manual_Notification</value>
+    </filters>
+    <filters>
+        <field>FEC_Target_Group__c</field>
+        <operation>equals</operation>
+        <value>Customer</value>
+    </filters>
+    <label>Manual Notification for Customer</label>
+</ListView>

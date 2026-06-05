@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomMetadata xmlns="http://soap.sforce.com/2006/04/metadata" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+    <label>ChatHub Settings</label>
+    <protected>false</protected>
+    <values>
+        <field>FEC_ChatHubEnabled__c</field>
+        <value xsi:type="xsd:boolean">true</value>
+    </values>
+    <values>
+        <field>FEC_ChatHubEncryptKey__c</field>
+        <value xsi:type="xsd:string">E/N/AmnqAoOaPnHqXuX4cUyCwqbsw/L/mn5isA/Vsak=</value>
+    </values>
+    <values>
+        <field>FEC_ChatHubStaticSalt__c</field>
+        <value xsi:type="xsd:string">bcdympfKIm4LEohVzZ7cyg==</value>
+    </values>
+    <values>
+        <field>FEC_ChatHubURL__c</field>
+        <value xsi:type="xsd:string">https://portal-chathub-uat.fecredit.cloud</value>
+    </values>
+</CustomMetadata>

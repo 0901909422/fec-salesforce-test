@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ListView xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>All</fullName>
+    <columns>NAME</columns>
+    <columns>FEC_Decision__c</columns>
+    <columns>FEC_Next_Stage__c</columns>
+    <columns>FEC_Original_User_Queue__c</columns>
+    <columns>FEC_Perform_User__c</columns>
+    <columns>FEC_Previous_Stage__c</columns>
+    <columns>FEC_Routing_Action__c</columns>
+    <columns>FEC_Stage_Name__c</columns>
+    <columns>FEC_Updated_User_Queue__c</columns>
+    <columns>FEC_Updated_User_Queue_ID__c</columns>
+    <columns>FEC_User__c</columns>
+    <columns>FEC_User_Role__c</columns>
+    <columns>FEC_Case__c</columns>
+    <columns>LAST_UPDATE</columns>
+    <filterScope>Everything</filterScope>
+    <label>All</label>
+</ListView>

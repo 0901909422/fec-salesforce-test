@@ -1,0 +1,72 @@
+.container {
+  padding: 16px;
+}
+
+/* Row spacing */
+.form-row {
+  margin-bottom: 8px;
+}
+
+/* Combobox spacing & feel */
+.custom-combobox {
+  width: 100%;
+}
+
+/* Help text box (giống spec) */
+.help-box {
+  margin-top: 12px;
+  padding: 12px;
+  background-color: #fafaf9;
+  border-left: 3px solid #0176d3;
+  border-radius: 4px;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+/* Bold label highlight */
+.help-box b {
+  color: #1b1b1b;
+}
+
+.container {
+  padding: 16px;
+}
+
+/* Row spacing */
+.form-row {
+  margin-bottom: 8px;
+}
+
+/* Combobox spacing & feel */
+.custom-combobox {
+  width: 100%;
+}
+
+/* Help text box (giống spec) */
+.help-box {
+  margin-top: 12px;
+  padding: 12px;
+  background-color: #fafaf9;
+  border-left: 3px solid #0176d3;
+  border-radius: 4px;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+/* Bold label highlight */
+.help-box b {
+  color: #1b1b1b;
+}
+
+.field-wrapper {
+  position: relative;
+}
+
+/* FIX: anchor theo input, không theo bottom */
+.help-icon {
+  position: absolute;
+  top: 28px;
+  right: -20px;
+  transform: scale(0.9);
+  z-index: 2; /* nổi lên trên border đỏ */
+}

@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>FEC_Reported_Card_Or_Loan__c</fullName>
+    <description>Thẻ hoặc khoản vay mà khách hàng phản ánh</description>
+    <label>Reported Card Or Loan</label>
+    <required>false</required>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>Thẻ/ Khoản vay hiện tại</fullName>
+                <default>false</default>
+                <label>Thẻ/ Khoản vay hiện tại</label>
+            </value>
+            <value>
+                <fullName>Thẻ/ Khoản vay mới</fullName>
+                <default>false</default>
+                <label>Thẻ/ Khoản vay mới</label>
+            </value>
+            <value>
+                <fullName>Chưa có cơ hội khai thác</fullName>
+                <default>false</default>
+                <label>Chưa có cơ hội khai thác</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>

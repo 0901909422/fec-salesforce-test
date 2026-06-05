@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>FEC_Is_CO_Queue_User__c</fullName>
+    <defaultValue>false</defaultValue>
+    <description>True khi Original hoặc Updated User/Queue thuộc team CO (FEC_Team_Queue__c.FEC_Select_Team__r.Name = CO).</description>
+    <label>Is CO Queue User</label>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Checkbox</type>
+</CustomField>

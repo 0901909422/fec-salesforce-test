@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<LightningMessageChannel xmlns="http://soap.sforce.com/2006/04/metadata">
+    <description>Message channel for PIN Reissue communication</description>
+    <isExposed>true</isExposed>
+    <lightningMessageFields>
+        <description>SUCCESS | ERROR</description>
+        <fieldName>status</fieldName>
+    </lightningMessageFields>
+    <lightningMessageFields>
+        <description>Case Id</description>
+        <fieldName>caseId</fieldName>
+    </lightningMessageFields>
+    <lightningMessageFields>
+        <description>Optional message</description>
+        <fieldName>message</fieldName>
+    </lightningMessageFields>
+    <masterLabel>FEC Pin Reissue</masterLabel>
+</LightningMessageChannel>

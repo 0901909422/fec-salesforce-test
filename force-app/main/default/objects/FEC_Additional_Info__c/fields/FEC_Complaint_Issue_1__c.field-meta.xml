@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>FEC_Complaint_Issue_1__c</fullName>
+    <description>Vấn đề khiếu nại (1)</description>
+    <label>Complaint Issue 1</label>
+    <required>false</required>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>Quá 5 cuộc gọi thành công/ ngày</fullName>
+                <default>false</default>
+                <label>Quá 5 cuộc gọi thành công/ ngày</label>
+            </value>
+            <value>
+                <fullName>Ngoài khung giờ 7:00 - 21:00</fullName>
+                <default>false</default>
+                <label>Ngoài khung giờ 7:00 - 21:00</label>
+            </value>
+            <value>
+                <fullName>Nhiều cuộc gọi nhá máy</fullName>
+                <default>false</default>
+                <label>Nhiều cuộc gọi nhá máy</label>
+            </value>
+            <value>
+                <fullName>Sử dụng thiết bị ngoài</fullName>
+                <default>false</default>
+                <label>Sử dụng thiết bị ngoài</label>
+            </value>
+            <value>
+                <fullName>Kỹ năng</fullName>
+                <default>false</default>
+                <label>Kỹ năng</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>

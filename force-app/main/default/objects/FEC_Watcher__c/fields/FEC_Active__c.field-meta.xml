@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>FEC_Active__c</fullName>
+    <defaultValue>false</defaultValue>
+    <description>Trạng thái của người xem là đang được xem hay đã kết thúc rồi.
+Liên quan đến luồng unfollow. Khi User Unfollow hệ thống sẽ cập nhật lại check box của trường Active trên Watcher từ Y - N</description>
+    <label>Active</label>
+    <trackTrending>false</trackTrending>
+    <type>Checkbox</type>
+</CustomField>

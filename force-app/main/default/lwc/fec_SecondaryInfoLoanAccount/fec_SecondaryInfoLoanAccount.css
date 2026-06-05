@@ -1,0 +1,60 @@
+.fec-secondary-loan-accordion .slds-accordion__summary {
+    cursor: pointer;
+    user-select: none;
+}
+
+.fec-secondary-loan-accordion .slds-accordion__summary:hover {
+    background-color: #f3f2f2;
+}
+
+/* Phần lỗi tải dữ liệu — cùng dòng với tên section Collections Info */
+.fec-secondary-loan-header-error {
+    color: #c23934;
+    font-weight: 400;
+}
+
+.sync-fail-text {
+    color: #c23934;
+    font-weight: 400;
+}
+
+.text-negative {
+    color: var(--lwc-colorTextError, #ea001e);
+    font-weight: 600;
+}
+
+.fec-field-label-value-row {
+    flex-wrap: nowrap;
+    align-items: flex-start;
+    gap: 0.25rem;
+}
+
+.field-label-style {
+    flex: 1 1 0;
+    min-width: 0;
+    max-width: 55%;
+    margin-right: 0;
+    white-space: normal;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+}
+
+.field-value-style {
+    flex: 1 1 0;
+    min-width: 0;
+    word-break: break-word;
+    text-align: right;
+}
+
+.fec-field-label-value-row > div:last-child {
+    flex-shrink: 0;
+    align-self: center;
+}
+
+.fec-section-spinner-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 120px;
+    padding: 1rem;
+}

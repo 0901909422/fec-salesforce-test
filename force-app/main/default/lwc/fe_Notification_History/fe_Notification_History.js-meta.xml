@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<LightningComponentBundle xmlns="http://soap.sforce.com/2006/04/metadata">
+    <apiVersion>65.0</apiVersion>
+    <isExposed>true</isExposed>
+    <masterLabel>Notification History</masterLabel>
+    <description>Accordion SMS / ZNS / Email / Mobile App — fec_RelatedListPaging. recordId (Case). SMS: FEC_Account_or_Contract__r.FEC_Primary_Phone__c. Chuỗi UI: Custom Label prefix FEC_Notification_History_* + FEC_Toast_Error / FEC_Toast_Error_Generic.</description>
+    <targets>
+        <target>lightning__RecordPage</target>
+        <target>lightning__AppPage</target>
+        <target>lightning__HomePage</target>
+    </targets>
+</LightningComponentBundle>

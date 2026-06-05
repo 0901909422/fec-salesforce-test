@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>FEC_Data_Integration_Mapping__c</fullName>
+    <deleteConstraint>SetNull</deleteConstraint>
+    <label>FEC Data Integration Mapping</label>
+    <referenceTo>FEC_Data_Integration_Mapping__c</referenceTo>
+    <relationshipLabel>Master MDM Data Setting</relationshipLabel>
+    <relationshipName>Master_MDM_Data_Setting</relationshipName>
+    <required>false</required>
+    <trackHistory>true</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Lookup</type>
+</CustomField>

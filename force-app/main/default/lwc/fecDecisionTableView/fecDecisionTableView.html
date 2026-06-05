@@ -1,0 +1,326 @@
+<template>
+    <div class="decision-table-wrapper slds-grid">
+
+        <div class="tree-panel">
+            <div class="panel-header">
+                <div class="slds-grid slds-grid_vertical-align-center">
+                    <lightning-icon icon-name="utility:data_mapping" size="x-small"
+                        class="slds-m-right_x-small"></lightning-icon>
+                    <span class="panel-title">Business Process</span>
+                </div>
+                <button class="slds-button slds-button_icon slds-button_icon-small" title="Toggle Tree"
+                    onclick={handleToggleTree}>
+                    <lightning-icon icon-name={treeArrowIcon} size="x-small"></lightning-icon>
+                </button>
+            </div>
+            <div class="tree-body">
+                <template if:true={treeError}>
+                    <div class="slds-notify slds-notify_alert slds-alert_error slds-m-around_x-small">
+                        <lightning-icon icon-name="utility:error" size="x-small" variant="inverse"
+                            class="slds-m-right_x-small"></lightning-icon>
+                        <span class="slds-text-body_small">{treeError}</span>
+                    </div>
+                </template>
+                <template if:true={isTreeExpanded}>
+                    <template if:true={hasTreeData}>
+                        <lightning-tree items={treeData} onselect={handleNodeSelect} class="bp-tree"></lightning-tree>
+                    </template>
+                    <template if:false={hasTreeData}>
+                        <div class="empty-state">
+                            <lightning-icon icon-name="utility:info" size="small" variant="bare"></lightning-icon>
+                            <p>Không có Business Process</p>
+                        </div>
+                    </template>
+                </template>
+            </div>
+        </div>
+
+        <div class="content-panel">
+            <div class="panel-header">
+                <div class="slds-grid slds-grid_vertical-align-center">
+                    <lightning-icon icon-name="utility:flow" size="x-small" variant="brand"
+                        class="slds-m-right_x-small"></lightning-icon>
+                    <span class="panel-title">Decision Table — Flow Control</span>
+                    <template if:true={hasSelection}>
+                        <span class="selected-badge slds-m-left_small">{selectedItemLabel}</span>
+                    </template>
+                </div>
+                <template if:true={hasDecisionData}>
+                    <div class="slds-grid slds-grid_vertical-align-center slds-gap_x-small">
+                        <span class="slds-badge slds-badge_inverse">{stageCount} Stages</span>
+                        <span class="slds-badge">{totalRuleCount} Rules</span>
+                    </div>
+                </template>
+            </div>
+
+            <div class="content-body slds-is-relative">
+                <template if:true={isLoading}>
+                    <lightning-spinner alternative-text="Loading..." size="medium" variant="brand"></lightning-spinner>
+                </template>
+
+                <template if:true={error}>
+                    <div class="slds-notify slds-notify_alert slds-alert_error slds-m-around_small" role="alert">
+                        <lightning-icon icon-name="utility:error" size="x-small" variant="inverse"
+                            class="slds-m-right_x-small"></lightning-icon>
+                        <span>{error}</span>
+                    </div>
+                </template>
+
+                <template if:true={hasDecisionData}>
+                    <div class="decision-toolbar">
+                        <div class="slds-grid slds-grid_vertical-align-center slds-gap_small slds-m-bottom_small">
+                            <template if:true={isBPSelected}>
+                                <div class="pega-toolbar slds-m-right_medium">
+                                    <lightning-button-group>
+                                        <lightning-button-icon icon-name="utility:insert_template"
+                                            tooltip="Thêm Cột bên Trái"
+                                            onclick={handleAddColLeft}></lightning-button-icon>
+                                        <lightning-button-icon icon-name="utility:insert_template"
+                                            tooltip="Thêm Cột bên Phải" onclick={handleAddColRight}
+                                            class="flip-icon"></lightning-button-icon>
+                                        <lightning-button-icon icon-name="utility:delete" tooltip="Xóa Cột"
+                                            disabled={disableColButtons} onclick={handleDeleteCol}
+                                            variant="error"></lightning-button-icon>
+                                    </lightning-button-group>
+
+                                    <span class="toolbar-divider"></span>
+
+                                    <lightning-button-group>
+                                        <lightning-button-icon icon-name="utility:rows" tooltip="Thêm Dòng bên Trên"
+                                            onclick={handleAddRowAbove}></lightning-button-icon>
+                                        <lightning-button-icon icon-name="utility:rows" tooltip="Thêm Dòng bên Dưới"
+                                            onclick={handleAddRowBelow}
+                                            class="flip-icon-vertical"></lightning-button-icon>
+                                        <lightning-button-icon icon-name="utility:delete" tooltip="Xóa Dòng"
+                                            disabled={disableRowButtons} onclick={handleDeleteRowToolbar}
+                                            variant="error"></lightning-button-icon>
+                                    </lightning-button-group>
+                                </div>
+                            </template>
+
+                            <div class="search-container slds-grow">
+                                <div class="search-input-wrapper">
+                                    <span class="search-icon-wrap">&#128269;</span>
+                                    <input type="text" class="search-input"
+                                        placeholder="Tìm kiếm theo Action hoặc Stage..." value={searchFilter}
+                                        onchange={handleSearchChange} onkeyup={handleSearchChange} />
+                                    <template if:true={hasSearchFilter}>
+                                        <button class="slds-button slds-button_icon clear-search-btn"
+                                            title="Clear Search" onclick={handleClearSearch}>
+                                            <lightning-icon icon-name="utility:close" size="x-small"></lightning-icon>
+                                        </button>
+                                    </template>
+                                </div>
+                                <template if:true={hasSearchFilter}>
+                                    <p class="search-message slds-text-body_small slds-m-top_x-small">
+                                        {displaySearchMessage}</p>
+                                </template>
+                            </div>
+
+                            <template if:true={isBPSelected}>
+                                <button class="slds-button slds-button_brand slds-m-left_small" onclick={handleAddRule}>
+                                    <lightning-icon icon-name="utility:add" size="x-small"
+                                        class="slds-m-right_x-small"></lightning-icon>
+                                    Thêm Rule Mới
+                                </button>
+                            </template>
+                        </div>
+                    </div>
+
+                    <template if:true={hasNoSearchResults}>
+                        <div class="empty-state slds-p_large">
+                            <lightning-icon icon-name="utility:search" size="medium" variant="bare"></lightning-icon>
+                            <p class="slds-m-top_small">Không tìm thấy kết quả cho "<strong>{searchFilter}</strong>"</p>
+                            <button class="slds-button slds-button_neutral slds-m-top_small"
+                                onclick={handleClearSearch}>Xóa bộ lọc</button>
+                        </div>
+                    </template>
+
+                    <template if:false={hasNoSearchResults}>
+                        <div class="table-scroll">
+                            <table class="decision-table slds-table slds-table_bordered slds-table_cell-buffer">
+                                <thead>
+                                    <tr class="group-header-row">
+                                        <template if:true={conditionColSpan}>
+                                            <th colspan={conditionColSpan} class="group-header conditions-group">
+                                                CONDITIONS</th>
+                                        </template>
+                                        <template if:true={actionColSpan}>
+                                            <th colspan={actionColSpan} class="group-header actions-group">ACTIONS</th>
+                                        </template>
+                                        <th class="group-header actions-group" style="width: 80px;"></th>
+                                    </tr>
+                                    <tr class="col-header-row">
+                                        <template for:each={dynamicData.conditionCols} for:item="col">
+                                            <th key={col.id} data-col-id={col.id} data-col-type="Condition"
+                                                onclick={handleSelectColumn} class={col.cssClass}>{col.label}</th>
+                                        </template>
+                                        <template for:each={dynamicData.actionCols} for:item="col">
+                                            <th key={col.id} data-col-id={col.id} data-col-type="Action"
+                                                onclick={handleSelectColumn} class={col.cssClass}>{col.label}</th>
+                                        </template>
+                                        <th scope="col" class="col-actions">Thao tác</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <template for:each={dynamicData.rows} for:item="row">
+                                        <tr key={row.rowId} data-row-id={row.rowId} onclick={handleSelectRow}
+                                            class={row.cssClass}>
+                                            <template for:each={row.conditionCells} for:item="cell">
+                                                <td key={cell.colId} class="conditions-cell">{cell.value}</td>
+                                            </template>
+                                            <template for:each={row.actionCells} for:item="cell">
+                                                <td key={cell.colId} class="action-cell">{cell.value}</td>
+                                            </template>
+
+                                            <td class="col-actions action-buttons">
+                                                <button class="slds-button slds-button_icon slds-button_icon-x-small"
+                                                    data-row-id={row.rowId} onclick={handleEditRule} title="Sửa Rule">
+                                                    <lightning-icon icon-name="utility:edit"
+                                                        size="x-small"></lightning-icon>
+                                                </button>
+                                                <button
+                                                    class="slds-button slds-button_icon slds-button_icon-x-small slds-button_icon-error"
+                                                    data-row-id={row.rowId} onclick={handleDeleteRule} title="Xóa Rule">
+                                                    <lightning-icon icon-name="utility:delete"
+                                                        size="x-small"></lightning-icon>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    </template>
+                                </tbody>
+                            </table>
+                        </div>
+                    </template>
+                </template>
+
+                <template if:true={isBPSelected}>
+                    <template if:false={hasDecisionData}>
+                        <template if:false={isLoading}>
+                            <div class="empty-state large slds-p_large">
+                                <lightning-icon icon-name="utility:table" size="large" variant="bare"></lightning-icon>
+                                <p class="slds-m-top_small">Không có rules cho Business Process này.</p>
+
+                                <div class="slds-m-top_medium slds-grid slds-gap_small slds-grid_align-center">
+                                    <button class="slds-button slds-button_brand" onclick={handleAddRule}>
+                                        <lightning-icon icon-name="utility:add" size="x-small"
+                                            class="slds-m-right_x-small"></lightning-icon>
+                                        Tạo Rule Đầu Tiên
+                                    </button>
+                                    <button class="slds-button slds-button_neutral" onclick={handleAddColRight}>
+                                        <lightning-icon icon-name="utility:insert_template" size="x-small"
+                                            class="slds-m-right_x-small"></lightning-icon>
+                                        Tạo Cột Đầu Tiên
+                                    </button>
+                                </div>
+                            </div>
+                        </template>
+                    </template>
+                </template>
+
+                <template if:true={isStageSelected}>
+                    <div class="empty-state large slds-p_large">
+                        <lightning-icon icon-name="utility:info" size="large" variant="bare"></lightning-icon>
+                        <p class="slds-m-top_small">Hãy chọn node <strong>Business Process</strong> để xem Decision
+                            Table.</p>
+                    </div>
+                </template>
+
+                <template if:false={hasSelection}>
+                    <div class="empty-state large slds-p_large">
+                        <lightning-icon icon-name="utility:data_mapping" size="large" variant="bare"></lightning-icon>
+                        <p class="slds-m-top_small">Chọn một <strong>Business Process</strong> từ danh sách bên trái.
+                        </p>
+                    </div>
+                </template>
+            </div>
+        </div>
+    </div>
+
+    <template if:true={showAddRuleModal}>
+        <div class="modal-overlay" onclick={handleOverlayClick}>
+            <div class="modal-dialog" onclick={handleDialogClick}>
+                <div class="modal-header">
+                    <div class="slds-grid slds-grid_vertical-align-center">
+                        <lightning-icon icon-name="utility:flow" size="x-small" variant="inverse"
+                            class="slds-m-right_x-small"></lightning-icon>
+                        <h2 class="modal-title">{modalTitle}</h2>
+                    </div>
+                    <button class="slds-button slds-button_icon slds-button_icon-inverse" onclick={handleCloseModal}
+                        title="Đóng">
+                        <lightning-icon icon-name="utility:close" size="small"></lightning-icon>
+                    </button>
+                </div>
+
+                <div class="modal-body">
+                    <div class="slds-text-title_caps slds-m-bottom_small"
+                        style="color: #1a4480; font-weight: bold; border-bottom: 1px solid #1a4480; padding-bottom: 4px;">
+                        Conditions</div>
+                    <lightning-layout multiple-rows="true">
+                        <template for:each={modalConditionCols} for:item="col">
+                            <lightning-layout-item size="6" padding="horizontal-small" key={col.id}
+                                class="slds-m-bottom_medium">
+                                <lightning-input label={col.label} data-id={col.id} data-type="condition"
+                                    value={col.value} onchange={handleDynamicInputChange}></lightning-input>
+                            </lightning-layout-item>
+                        </template>
+                    </lightning-layout>
+
+                    <div class="slds-text-title_caps slds-m-bottom_small slds-m-top_small"
+                        style="color: #27573a; font-weight: bold; border-bottom: 1px solid #27573a; padding-bottom: 4px;">
+                        Actions</div>
+                    <lightning-layout multiple-rows="true">
+                        <template for:each={modalActionCols} for:item="col">
+                            <lightning-layout-item size="6" padding="horizontal-small" key={col.id}
+                                class="slds-m-bottom_medium">
+                                <lightning-input label={col.label} data-id={col.id} data-type="action" value={col.value}
+                                    onchange={handleDynamicInputChange} required></lightning-input>
+                            </lightning-layout-item>
+                        </template>
+                    </lightning-layout>
+                </div>
+
+                <div class="modal-footer">
+                    <button class="slds-button slds-button_neutral" onclick={handleCloseModal}>Hủy bỏ</button>
+                    <button class="slds-button slds-button_brand" onclick={handleSaveRule} disabled={isLoading}>
+                        <template if:true={isLoading}>Đang lưu...</template>
+                        <template if:false={isLoading}>Lưu Rule</template>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <template if:true={showAddColModal}>
+        <div class="modal-overlay" onclick={handleOverlayClick}>
+            <div class="modal-dialog slds-p-around_medium" style="width: 480px; min-height: unset;"
+                onclick={handleDialogClick}>
+                <h2 class="slds-text-heading_small slds-m-bottom_medium"><b>Thêm Cột Dữ Liệu</b></h2>
+
+                <lightning-combobox label="Chọn Trường (Field)" options={mdmFieldOptions} value={newMdmFieldId}
+                    onchange={handleMdmFieldChange} placeholder="-- Chọn trường từ thư viện --"
+                    class="slds-m-bottom_medium" required>
+                </lightning-combobox>
+
+                <div class="slds-grid slds-gap_small slds-m-bottom_medium">
+                    <div class="slds-col slds-size_1-of-2">
+                        <lightning-input label="Tên Cột (Tự động)" value={newColName} disabled></lightning-input>
+                    </div>
+                    <div class="slds-col slds-size_1-of-2">
+                        <lightning-combobox label="Loại Dữ liệu (Tự động)" options={dataTypeOptions}
+                            value={newColDataType} disabled></lightning-combobox>
+                    </div>
+                </div>
+
+                <lightning-combobox label="Nhóm Cột" options={colTypeOptions} value={newColType}
+                    onchange={handleNewColTypeChange} class="slds-m-bottom_large" required></lightning-combobox>
+
+                <div class="slds-text-align_right">
+                    <button class="slds-button slds-button_neutral slds-m-right_small" onclick={closeAddColModal}>Hủy
+                        bỏ</button>
+                    <button class="slds-button slds-button_brand" onclick={submitAddColumn}>Thêm Cột Mới</button>
+                </div>
+            </div>
+        </div>
+    </template>
+</template>

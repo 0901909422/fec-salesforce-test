@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>FEC_Receive_Method__c</fullName>
+    <label>Receive Method</label>
+    <required>false</required>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>Chuyển khoản</fullName>
+                <default>false</default>
+                <label>Chuyển khoản</label>
+            </value>
+            <value>
+                <fullName>Tiền mặt</fullName>
+                <default>false</default>
+                <label>Tiền mặt</label>
+            </value>
+            <value>
+                <fullName>Không cung cấp/ không nhớ</fullName>
+                <default>false</default>
+                <label>Không cung cấp/ không nhớ</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>

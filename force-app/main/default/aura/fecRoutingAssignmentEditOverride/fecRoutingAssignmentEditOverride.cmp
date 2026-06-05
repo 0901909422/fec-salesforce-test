@@ -1,0 +1,4 @@
+<aura:component implements="lightning:actionOverride,force:hasRecordId,force:hasSObjectName" access="global">
+    <aura:handler name="init" value="{!this}" action="{!c.init}" />
+    <c:fecRoutingAssignmentEditForm recordId="{!v.recordId}" onclose="{!c.handleClose}" />
+</aura:component>

@@ -1,0 +1,39 @@
+<template>
+    <div class="customer-info-container slds-card slds-p-around_small">
+        <template if:true={isLoading}>
+            <lightning-spinner alternative-text="Loading" size="small"></lightning-spinner>
+        </template>
+
+        <template if:false={isLoading}>
+            <template if:true={hasData}>
+                <lightning-accordion allow-multiple-sections-open active-section-name={activeSections}>
+
+                    <c-fec_-common-record-detail-section section-title={customLabel.assetLabel} fields={assetFields}
+                        columns="3">
+                    </c-fec_-common-record-detail-section>
+
+                </lightning-accordion>
+            </template>
+
+            <template if:false={hasData}>
+                <div class="slds-accordion">
+                    <section class="slds-accordion__section slds-is-open">
+                        <div class="slds-accordion__summary">
+                            <h3 class="slds-accordion__summary-heading">
+                                <span class="slds-accordion__summary-content slds-grid">
+                                    <lightning-icon icon-name="utility:chevrondown" size="x-small"
+                                        class="slds-m-right_x-small"></lightning-icon>
+                                    <span>
+                                        {customLabel.assetLabel}&nbsp;-&nbsp;
+                                        <span class="sync-fail-text">{customLabel.msgErrorAPI}</span>
+                                    </span>
+                                </span>
+                            </h3>
+                        </div>
+                        <div class="slds-accordion__content slds-hide"></div>
+                    </section>
+                </div>
+            </template>
+        </template>
+    </div>
+</template>

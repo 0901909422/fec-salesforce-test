@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomFieldTranslation xmlns="http://soap.sforce.com/2006/04/metadata">
+    <label><!-- Settlement Request Category --></label>
+    <name>FEC_Settlement_Request_Category__c</name>
+    <picklistValues>
+        <masterLabel>Customer has settled</masterLabel>
+        <translation>KH đã tất toán</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Customer requests settlement</masterLabel>
+        <translation>KH muốn tất toán</translation>
+    </picklistValues>
+</CustomFieldTranslation>

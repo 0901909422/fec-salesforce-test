@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>FEC_Can_Execute__c</fullName>
+    <defaultValue>false</defaultValue>
+    <description>Xác định việc hiển thị nút &quot;Execute&quot; trên màn hình Case.
+
+Field này được tính toán động dựa trên user hiện tại và trạng thái của Case. Giá trị được set tự động bởi hệ thống (Apex/LWC), không chỉnh tay.
+
+Field = TRUE khi thỏa TẤT CẢ điều kiện:
+
+1. Case đang ở mode &quot;Review&quot; (FEC_Interaction_View_Mode__c = &apos;Review&apos;)
+2. Case chưa đóng (IsClosed = FALSE)
+3. Điều kiện Owner:
+   - Owner là User và trùng với user hiện tại
+   HOẶC
+   - Owner là Queue và user hiện tại thuộc queue đó
+4. Điều kiện Assignment:
+   - Assignment_Count__c = 0
+   HOẶC
+   - Assignment_Count__c &gt; 0 và user thuộc profile:
+     • CS Support
+     • CS Customer Care
+
+Các trường hợp khác → FALSE (ẩn nút Execute)
+
+Ghi chú:
+- Dùng cho Dynamic Action để điều khiển hiển thị button
+- Kiểm tra queue membership qua GroupMember
+- Giá trị được cập nhật tự động khi load record</description>
+    <label>Can Execute</label>
+    <trackFeedHistory>false</trackFeedHistory>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Checkbox</type>
+</CustomField>

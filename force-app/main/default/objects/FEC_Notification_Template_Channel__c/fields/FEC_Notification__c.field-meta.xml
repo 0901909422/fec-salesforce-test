@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>FEC_Notification__c</fullName>
+    <description>Thông tin cấu hình Notification</description>
+    <label>Notification</label>
+    <referenceTo>FEC_Notification__c</referenceTo>
+    <relationshipLabel>Notification Template Channel</relationshipLabel>
+    <relationshipName>Notification_Template_Channel</relationshipName>
+    <relationshipOrder>0</relationshipOrder>
+    <reparentableMasterDetail>false</reparentableMasterDetail>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>MasterDetail</type>
+    <writeRequiresMasterRead>false</writeRequiresMasterRead>
+</CustomField>

@@ -1,0 +1,12 @@
+<template>
+  <lightning-textarea
+    name="remark"
+    label="Case Remarks"
+    value={draftRemarkValue}
+    onchange={handleRemarkInput}
+    oninput={handleRemarkInput}
+    if:true={isEdit}
+    variant="label-hidden"
+    class="slds-m-top--small"
+  ></lightning-textarea>
+</template>

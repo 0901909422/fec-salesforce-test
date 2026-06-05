@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>FEC_Q2_FEOL_App_Info_Checked__c</fullName>
+    <description>Q2: Khách đã tra cứu thông tin trên ứng dụng FEOL</description>
+    <label>Q2. FEOL App Info Checked</label>
+    <required>false</required>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>Đã tra cứu (Hỏi tiếp câu 3)</fullName>
+                <default>false</default>
+                <label>Đã tra cứu (Hỏi tiếp câu 3)</label>
+            </value>
+            <value>
+                <fullName>Chưa tra cứu (Hỏi tiếp câu 4)</fullName>
+                <default>false</default>
+                <label>Chưa tra cứu (Hỏi tiếp câu 4)</label>
+            </value>
+            <value>
+                <fullName>Chưa có cơ hội khảo sát</fullName>
+                <default>false</default>
+                <label>Chưa có cơ hội khảo sát</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>

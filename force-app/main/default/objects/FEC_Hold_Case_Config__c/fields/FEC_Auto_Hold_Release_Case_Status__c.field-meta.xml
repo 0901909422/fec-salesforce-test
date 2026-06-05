@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>FEC_Auto_Hold_Release_Case_Status__c</fullName>
+    <description>Exact Case.Status API value applied when automatic hold expires (batch).</description>
+    <externalId>false</externalId>
+    <label>Auto Hold Release Case Status</label>
+    <length>255</length>
+    <required>false</required>
+    <trackHistory>true</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Text</type>
+    <unique>false</unique>
+</CustomField>

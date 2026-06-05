@@ -1,0 +1,200 @@
+/* Container cho icon dấu cộng/trừ */
+.custom-square-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 14px;
+    height: 14px;
+    border: 1px solid #97a2dd;
+    border-radius: 1px;
+    background-color: #f3f3f3;
+}
+
+/* Ẩn viền và nền của nút button gốc của Salesforce */
+.custom-toggle-button {
+    border: none;
+    background-color: transparent;
+    padding: 0;
+}
+
+/* Status icons với màu sắc khác nhau */
+.red-record-icon {
+    --slds-c-icon-color-foreground-default: #e47f7f !important; 
+    --lwc-colorTextIconDefault: #e47f7f !important;
+}
+
+.blue-record-icon {
+    --slds-c-icon-color-foreground-default: #65cd76 !important; 
+    --lwc-colorTextIconDefault: #65cd76 !important;
+}
+
+.yellow-record-icon {
+    --slds-c-icon-color-foreground-default: #f7f311e1 !important; 
+    --lwc-colorTextIconDefault: #d6da14 !important;
+}
+
+/* Khoảng trắng giữ chỗ cho nodes không có children */
+.toggle-placeholder {
+    width: 14px;
+    height: 14px;
+    display: inline-block;
+    flex-shrink: 0;
+}
+
+/* Margin cho button và placeholder */
+.slds-m-right_x-small {
+    margin-right: 0.5rem;
+}
+
+/* Styling cho node được chọn */
+.node-selected {
+    background-color: #e0f0ff !important;
+    border-left: 4px solid #0070d2 !important;
+    font-weight: bold;
+}
+
+/* Tree item positioning và styling */
+:host {
+    display: block;
+    margin: 0;
+    padding: 0;
+}
+
+li[role="treeitem"] {
+    padding: 0;
+    margin: 0;
+    line-height: 1.2;
+}
+
+ul[role="group"] {
+    padding-left: 1rem;
+    margin: 0;
+}
+
+.slds-tree__item {
+    position: relative;
+    padding: 2px 0;
+}
+
+.slds-tree__item > div {
+    display: flex;
+    align-items: center;
+    padding: 2px 8px;
+    position: relative;
+}
+
+.slds-tree__item:hover {
+    background-color: #f3f3f3;
+    cursor: pointer;
+}
+
+.slds-tree__item > div:hover {
+    background-color: #f7f9fb;
+    border-radius: 4px;
+    transition: background-color 0.15s ease;
+}
+
+.slds-tree__item-label {
+    cursor: pointer;
+    user-select: none;
+}
+
+/* Action buttons styling */
+.custom-btn-small {
+    padding: 6px 12px !important;
+    line-height: 1.4 !important;
+    height: 28px !important;
+    font-size: 12px !important;
+    font-weight: 500 !important;
+    border-radius: 4px !important;
+    transition: all 0.15s ease-in-out !important;
+    margin-bottom: 4px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 100%;
+}
+
+.custom-btn-small:last-child {
+    margin-bottom: 0 !important;
+}
+
+.custom-btn-small:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.12) !important;
+}
+
+/* Brand button (Add Child) */
+.slds-button_brand.custom-btn-small {
+    background-color: #0176d3 !important;
+    border-color: #0176d3 !important;
+    color: #ffffff !important;
+}
+
+.slds-button_brand.custom-btn-small:hover {
+    background-color: #014486 !important;
+    border-color: #014486 !important;
+}
+
+/* Destructive button (Delete) */
+.slds-button_destructive.custom-btn-small {
+    background-color: #ea001e !important;
+    border-color: #ea001e !important;
+    color: #ffffff !important;
+}
+
+.slds-button_destructive.custom-btn-small:hover {
+    background-color: #ba0517 !important;
+    border-color: #ba0517 !important;
+}
+
+/* Action box container */
+.vertical-action-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    min-width: 120px;
+}
+
+.action-box {
+    border: 1px solid #d8dde6;
+    border-radius: 6px;
+    background: #ffffff;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    padding: 8px;
+    position: absolute;
+    left: 0;
+    top: 100%;
+    margin-top: 4px;
+    z-index: 1000;
+    animation: slideDown 0.2s ease-out;
+}
+
+/* Fade in animation cho action box */
+@keyframes fadeInScale {
+    from {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+/* Slide down animation cho dropdown */
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Icon trong button */
+.custom-btn-small lightning-icon {
+    margin-right: 4px !important;
+}

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Queue xmlns="http://soap.sforce.com/2006/04/metadata">
+    <description>Team Queue</description>
+    <doesSendEmailToMembers>false</doesSendEmailToMembers>
+    <name>Colls Training</name>
+    <queueMembers>
+        <roles>
+            <role>FEC_Collections_Inbound_Activities_Specialist</role>
+            <role>FEC_Collections_Quality_Assurance_Expert</role>
+            <role>FEC_Head_Of_Collections_Training_Department</role>
+        </roles>
+    </queueMembers>
+    <queueSobject>
+        <sobjectType>Case</sobjectType>
+    </queueSobject>
+</Queue>

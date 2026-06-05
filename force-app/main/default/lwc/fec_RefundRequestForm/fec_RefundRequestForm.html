@@ -1,0 +1,133 @@
+<template>
+  <lightning-layout multiple-rows>
+    <template if:true={isLoadingData}>
+      <lightning-layout-item size="12" padding="around-small">
+        <lightning-spinner
+          alternative-text={customLabel.loading}
+          size="small"
+        >
+        </lightning-spinner>
+      </lightning-layout-item>
+    </template>
+    <template if:true={configLoaded}>
+      <template if:false={isLoadingData}>
+        <lightning-layout-item size="12" padding="around-small">
+          <lightning-input
+            name="refundAmount"
+            type="number"
+            label={customLabel.refundAmount}
+            value={refundAmount}
+            step="1"
+            formatter="decimal"
+            required
+            disabled={isReadOnly}
+            onchange={handleRefundAmountChange}
+            onblur={handleRefundAmountChange}
+          >
+          </lightning-input>
+        </lightning-layout-item>
+        <template if:true={hasReceiptRows}>
+          <lightning-layout-item size="12" padding="around-small">
+            <div class="receipt-box">
+              <template for:each={receiptLines} for:item="row">
+                <lightning-layout
+                  key={row.id}
+                  multiple-rows
+                  vertical-align="end"
+                  class="receipt-row slds-grid_vertical-align-end"
+                >
+                  <lightning-layout-item size="3" padding="around-small">
+                    <lightning-input
+                      type="date"
+                      date-style="short"
+                      placeholder="DD/MM/YYYY"
+                      label={customLabel.receiptDate}
+                      value={row.receiptDateIso}
+                      data-id-value={row.id}
+                      data-field="receiptDate"
+                      max={maxDateIso}
+                      required
+                      disabled={isReadOnly}
+                      onchange={handleReceiptDateChange}
+                      onblur={handleReceiptDateChange}
+                    >
+                    </lightning-input>
+                  </lightning-layout-item>
+                  <lightning-layout-item size="3" padding="around-small">
+                    <lightning-input
+                      type="number"
+                      label={customLabel.receiptAmount}
+                      value={row.receiptAmount}
+                      data-id-value={row.id}
+                      data-field="receiptAmount"
+                      step="1"
+                      formatter="decimal"
+                      required
+                      disabled={isReadOnly}
+                      onchange={handleReceiptAmountChange}
+                      onblur={handleReceiptAmountChange}
+                    >
+                    </lightning-input>
+                  </lightning-layout-item>
+                  <lightning-layout-item size="3" padding="around-small">
+                    <lightning-input
+                      type="text"
+                      label={customLabel.transactionNo}
+                      value={row.transactionNo}
+                      data-id-value={row.id}
+                      data-field="transactionNo"
+                      required
+                      disabled={isReadOnly}
+                      onchange={handleTransactionChange}
+                      onblur={handleTransactionChange}
+                    >
+                    </lightning-input>
+                  </lightning-layout-item>
+                  <lightning-layout-item size="2" padding="around-small">
+                    <lightning-input
+                      type="text"
+                      label={customLabel.paymentChannel}
+                      value={row.paymentChannel}
+                      data-id-value={row.id}
+                      data-field="paymentChannel"
+                      required
+                      disabled={isReadOnly}
+                      onchange={handlePaymentChannelChange}
+                      onblur={handlePaymentChannelChange}
+                    >
+                    </lightning-input>
+                  </lightning-layout-item>
+                  <lightning-layout-item size="1" padding="around-small" class="btn-delete">
+                    <template if:false={isReadOnly}>
+                      <lightning-button-icon
+                        icon-name="utility:delete"
+                        variant="border"
+                        alternative-text={customLabel.removeRow}
+                        aria-label={customLabel.removeRow}
+                        title={customLabel.removeRow}
+                        data-id={row.id}
+                        onclick={handleRemoveReceiptLine}
+                      >
+                      </lightning-button-icon>
+                    </template>
+                  </lightning-layout-item>
+                </lightning-layout>
+              </template>
+            </div>
+          </lightning-layout-item>
+        </template>
+        <lightning-layout-item size="12" padding="around-small">
+          <template if:false={isReadOnly}>
+            <lightning-button
+              label={customLabel.addItem}
+              icon-name="utility:add"
+              variant="neutral"
+              onclick={handleAddReceiptLine}
+            >
+            </lightning-button>
+          </template>
+        </lightning-layout-item>
+      </template>
+    </template>
+  </lightning-layout>
+</template>

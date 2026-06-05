@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<GlobalValueSetTranslation xmlns="http://soap.sforce.com/2006/04/metadata">
+    <valueTranslation>
+        <masterLabel>Contact Customer</masterLabel>
+        <translation>Liên hệ khách hàng</translation>
+    </valueTranslation>
+    <valueTranslation>
+        <masterLabel>Create New Ticket</masterLabel>
+        <translation>Tạo yêu cầu mới</translation>
+    </valueTranslation>
+    <valueTranslation>
+        <masterLabel>Other</masterLabel>
+        <translation>Khác</translation>
+    </valueTranslation>
+</GlobalValueSetTranslation>

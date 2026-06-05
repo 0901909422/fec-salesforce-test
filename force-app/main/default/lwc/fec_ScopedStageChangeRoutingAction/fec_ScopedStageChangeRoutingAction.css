@@ -1,0 +1,20 @@
+.route-to-info__item {
+  display: flex;
+}
+
+.route-to-info__item * {
+  flex: 1;
+}
+
+.label {
+  font-weight: 500;
+  margin-bottom: 6px;
+}
+
+.value {
+  min-height: 17px;
+}
+
+.route-to-loading {
+  min-height: 4.5rem;
+}

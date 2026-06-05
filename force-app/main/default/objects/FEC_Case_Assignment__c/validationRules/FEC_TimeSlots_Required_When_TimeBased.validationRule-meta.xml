@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>FEC_TimeSlots_Required_When_TimeBased</fullName>
+    <active>true</active>
+    <description>Require Time Slots when Assignment Method is Time-Based.</description>
+    <errorConditionFormula>AND(
+            ISPICKVAL(FEC_Assignment_Method__c, &quot;Time-Based&quot;),
+            ISBLANK(FEC_Time_Slots__c)
+        )</errorConditionFormula>
+    <errorDisplayField>FEC_Time_Slots__c</errorDisplayField>
+    <errorMessage>Time Slots are required when Assignment Method is Time-Based.</errorMessage>
+</ValidationRule>

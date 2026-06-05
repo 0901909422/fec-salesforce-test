@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>FEC_ScheduledTime_Req_When_Continuous</fullName>
+    <active>true</active>
+    <description>Require Scheduled Time when Assignment Method is Continuous.</description>
+    <errorConditionFormula>AND(
+            ISPICKVAL(FEC_Assignment_Method__c, &quot;Continuous&quot;),
+            ISBLANK(FEC_Scheduled_Time__c)
+        )</errorConditionFormula>
+    <errorDisplayField>FEC_Scheduled_Time__c</errorDisplayField>
+    <errorMessage>Scheduled Time is required when Assignment Method is Continuous.</errorMessage>
+</ValidationRule>

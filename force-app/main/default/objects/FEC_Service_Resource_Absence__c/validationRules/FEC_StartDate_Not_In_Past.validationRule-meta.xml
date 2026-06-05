@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>FEC_StartDate_Not_In_Past</fullName>
+    <active>true</active>
+    <description>Noti-01 mapping for start date</description>
+    <errorConditionFormula>AND(
+NOT(ISBLANK(FEC_Start_Date__c)),
+FEC_Start_Date__c &lt; NOW()
+)</errorConditionFormula>
+    <errorDisplayField>FEC_Start_Date__c</errorDisplayField>
+    <errorMessage>Review the following fields
+Start Date</errorMessage>
+</ValidationRule>

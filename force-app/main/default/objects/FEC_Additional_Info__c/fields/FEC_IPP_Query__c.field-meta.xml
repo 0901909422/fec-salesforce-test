@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>FEC_IPP_Query__c</fullName>
+    <description>Truy vấn / khoản IPP</description>
+    <label>IPP Query</label>
+    <required>false</required>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>Khoản 1</fullName>
+                <default>false</default>
+                <label>Khoản 1</label>
+            </value>
+            <value>
+                <fullName>Khoản 2/3/4</fullName>
+                <default>false</default>
+                <label>Khoản 2/3/4</label>
+            </value>
+            <value>
+                <fullName>Không có IPP</fullName>
+                <default>false</default>
+                <label>Không có IPP</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>

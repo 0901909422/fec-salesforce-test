@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<GlobalValueSet xmlns="http://soap.sforce.com/2006/04/metadata">
+    <customValue>
+        <fullName>CS Frontline</fullName>
+        <default>false</default>
+        <label>CS Frontline</label>
+    </customValue>
+    <customValue>
+        <fullName>CS Back Office</fullName>
+        <default>false</default>
+        <label>CS Back Office</label>
+    </customValue>
+    <customValue>
+        <fullName>Relevant Depts</fullName>
+        <default>false</default>
+        <label>Relevant Depts</label>
+    </customValue>
+    <masterLabel>User Division Group</masterLabel>
+    <sorted>false</sorted>
+</GlobalValueSet>

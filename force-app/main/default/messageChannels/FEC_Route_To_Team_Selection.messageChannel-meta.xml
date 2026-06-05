@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<LightningMessageChannel xmlns="http://soap.sforce.com/2006/04/metadata">
+    <description>Chọn Team/Queue trên Routing Action Route to (vd RD Payment assessment RL05.02)</description>
+    <isExposed>true</isExposed>
+    <lightningMessageFields>
+        <description>Case Id</description>
+        <fieldName>caseId</fieldName>
+    </lightningMessageFields>
+    <lightningMessageFields>
+        <description>Route to action code</description>
+        <fieldName>actionCode</fieldName>
+    </lightningMessageFields>
+    <lightningMessageFields>
+        <description>FEC_Team_User_Group__c — CP, CC, SP, …</description>
+        <fieldName>team</fieldName>
+    </lightningMessageFields>
+    <lightningMessageFields>
+        <description>Queue Group.Name hiển thị</description>
+        <fieldName>queueLabel</fieldName>
+    </lightningMessageFields>
+    <lightningMessageFields>
+        <description>Queue DeveloperName — FEC_Stage_Change__c.FEC_Next_Queue__c</description>
+        <fieldName>queueDeveloperName</fieldName>
+    </lightningMessageFields>
+    <lightningMessageFields>
+        <description>Khóa combobox Team sau khi auto-chọn</description>
+        <fieldName>lockSelection</fieldName>
+    </lightningMessageFields>
+    <lightningMessageFields>
+        <description>Chỉ xử lý khi = RL05.02 (cô lập khỏi RL16 / RL05.01 / RL05.03)</description>
+        <fieldName>source</fieldName>
+    </lightningMessageFields>
+    <masterLabel>FEC Route To Team Selection</masterLabel>
+</LightningMessageChannel>

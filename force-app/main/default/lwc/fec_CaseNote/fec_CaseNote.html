@@ -1,0 +1,126 @@
+<template>
+    <lightning-card>
+        <!-- CUSTOM HEADER -->
+        <div class="slds-card__header slds-grid slds-grid_align-spread slds-grid_vertical-align-center">
+
+            <!-- LEFT -->
+            <div class="slds-media slds-media_center">
+
+                <!-- ICON -->
+                <div class="slds-media__figure">
+                    <lightning-icon icon-name="standard:note" size="small" class="note-icon">
+                    </lightning-icon>
+                </div>
+
+                <!-- TITLE -->
+                <div class="slds-media__body">
+                    <h2 class="slds-card__header-title slds-truncate">
+                        Notes ({notes.length})
+                    </h2>
+                </div>
+
+            </div>
+
+            <!-- RIGHT: BUTTON -->
+            <template if:true={isEditMode}>
+                <div>
+                    <lightning-button label="New" variant="neutral" onclick={handleNew}>
+                    </lightning-button>
+                </div>
+            </template>
+
+
+        </div>
+
+        <!-- <lightning-datatable key-field="Id" data={pagedNotes} columns={columns} hide-checkbox-column
+            onrowaction={handleRowAction}>
+        </lightning-datatable> -->
+        <template if:true={showTable}>
+            <c-fec_-custom-datatable key-field="id" data={pagedNotes} columns={columns} hide-checkbox-column
+                onnamelinkclick={handleNameClick}>
+            </c-fec_-custom-datatable>
+            <!-- ================= PAGINATION ================= -->
+            <div
+                class="table-pagination slds-m-top_small slds-grid slds-grid_align-spread slds-grid_vertical-align-center">
+
+                <!-- Page size -->
+                <div class="page-size slds-grid slds-grid_vertical-align-center">
+                    <span class="slds-m-right_x-small">{labels.pageSizeLabel}</span>
+                    <lightning-combobox value={pageSize} options={pageSizeOptions} onchange={handlePageSizeChange}
+                        variant="label-hidden">
+                    </lightning-combobox>
+                </div>
+
+                <!-- Prev / Current / Next -->
+                <div class="pagination-controls slds-grid slds-grid_vertical-align-center">
+                    <lightning-button-icon icon-name="utility:chevronleft" alternative-text="Previous"
+                        onclick={handlePrevPage} disabled={isFirstPage}>
+                    </lightning-button-icon>
+
+                    <span class="slds-m-horizontal_small slds-text-title_bold">
+                        {currentPage}
+                    </span>
+
+                    <lightning-button-icon icon-name="utility:chevronright" alternative-text="Next"
+                        onclick={handleNextPage} disabled={isLastPage}>
+                    </lightning-button-icon>
+                </div>
+
+                <!-- Go to page -->
+                <div class="go-to-page slds-grid slds-grid_vertical-align-center">
+                    <span class="slds-m-right_x-small">{labels.goToPageLabel}</span>
+
+                    <lightning-input type="number" value={currentPage} min="1" max={totalPages} variant="label-hidden"
+                        class="page-input" onchange={handleGoToPageInput}>
+                    </lightning-input>
+
+                    <span class="slds-m-horizontal_x-small">
+                        of {totalPages}
+                    </span>
+
+                    <lightning-button label="Go" onclick={handleGoToPage} variant="brand">
+                    </lightning-button>
+                </div>
+            </div>
+        </template>
+    </lightning-card>
+
+    <!-- Modal -->
+    <template if:true={showModal}>
+        <c-fec_-new-note-modal note={selectedNote} is-edit={isEditMode} record-id={recordId} onclose={handleClose}
+            onsuccess={handleSuccess}>
+        </c-fec_-new-note-modal>
+    </template>
+
+    <template if:true={showConfirmModal}>
+        <section role="dialog" tabindex="-1" class="slds-modal slds-fade-in-open slds-modal_small">
+
+            <div class="slds-modal__container">
+
+                <!-- HEADER -->
+                <header class="slds-modal__header">
+                    <h2 class="slds-text-heading_medium slds-hyphenate">
+                        {modalTitle}
+                    </h2>
+                </header>
+
+                <!-- BODY -->
+                <div class="slds-modal__content slds-p-around_medium">
+                    <p>{modalMessage}</p>
+                </div>
+
+                <!-- FOOTER -->
+                <footer class="slds-modal__footer">
+                    <lightning-button label="Cancel" onclick={closeConfirmModal}>
+                    </lightning-button>
+
+                    <lightning-button variant="brand" label={confirmLabel} onclick={handleConfirm}>
+                    </lightning-button>
+                </footer>
+
+            </div>
+        </section>
+
+        <div class="slds-backdrop slds-backdrop_open"></div>
+    </template>
+</template>

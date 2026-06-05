@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomFieldTranslation xmlns="http://soap.sforce.com/2006/04/metadata">
+    <label><!-- Reason Decline IPP Conversion --></label>
+    <name>FEC_Reason_Decline_IPP_Conversion__c</name>
+    <picklistValues>
+        <masterLabel>High Interest or Fees</masterLabel>
+        <translation>Lãi/ phí cao</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Other</masterLabel>
+        <translation>Khác</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Personal Preference</masterLabel>
+        <translation>Muốn chuyển đổi theo nhu cầu cá nhân</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Prefer Full Payment</masterLabel>
+        <translation>Muốn trả 1 lần</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Unclear Outstanding Balance</masterLabel>
+        <translation>Dư nợ phát sinh không rõ ràng</translation>
+    </picklistValues>
+</CustomFieldTranslation>

@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>FEC_Interaction_Masked_Email__c</fullName>
+    <externalId>false</externalId>
+    <formula>IF(
+    ISBLANK( FEC_Interaction_Email__c ),
+    &quot;&quot;,
+    LEFT(FEC_Interaction_Email__c , 2)
+    &amp; &quot;****&quot;
+    &amp; MID(
+        FEC_Interaction_Email__c ,
+        FIND(&quot;@&quot;, FEC_Interaction_Email__c ) - 2,
+        2
+    )
+    &amp; &quot;@&quot;
+    &amp; RIGHT(
+        FEC_Interaction_Email__c ,
+        LEN(FEC_Interaction_Email__c ) - FIND(&quot;@&quot;, FEC_Interaction_Email__c )
+    )
+)</formula>
+    <label>Interaction Email (Delete)</label>
+    <required>false</required>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Text</type>
+    <unique>false</unique>
+</CustomField>

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>FEC_Stage_Name__c</fullName>
+    <deleteConstraint>SetNull</deleteConstraint>
+    <description>Tên giai đoạn của Case</description>
+    <label>Stage Name</label>
+    <referenceTo>FEC_Case_Stage__c</referenceTo>
+    <relationshipLabel>Actual Master Data Settings</relationshipLabel>
+    <relationshipName>Actual_Master_Data_Settings</relationshipName>
+    <required>false</required>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Lookup</type>
+</CustomField>

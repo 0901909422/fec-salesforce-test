@@ -1,0 +1,22 @@
+<template>
+    <lightning-modal-header label="Xác nhận bỏ qua"></lightning-modal-header>
+
+    <lightning-modal-body>
+        <div class="slds-p-around_medium slds-text-align_center">
+            {content}
+        </div>
+    </lightning-modal-body>
+
+    <lightning-modal-footer>
+        <div class="slds-align_absolute-center">
+
+            <lightning-button label="Hủy" onclick={handleCancel} class="slds-m-horizontal_x-small">
+            </lightning-button>
+
+            <lightning-button label="Xác nhận" variant="brand" onclick={handleConfirm}
+                class="slds-m-horizontal_x-small">
+            </lightning-button>
+
+        </div>
+    </lightning-modal-footer>
+</template>

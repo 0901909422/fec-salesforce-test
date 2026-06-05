@@ -1,0 +1,793 @@
+<template>
+    <div class="decision-table-stage-wrapper slds-is-relative">
+
+        <!-- ═══════════════ PANEL HEADER ═══════════════ -->
+        <div class="panel-header slds-grid slds-grid_vertical-align-center slds-grid_spread slds-p-around_small">
+            <div class="slds-grid slds-grid_vertical-align-center">
+                <lightning-icon icon-name="utility:flow" size="x-small" variant="brand"
+                    class="slds-m-right_x-small"></lightning-icon>
+                <span class="panel-title">Decision Table Stage</span>
+                <template if:true={selectedItemLabel}>
+                    <span class="selected-badge slds-m-left_small">{selectedItemLabel}</span>
+                </template>
+            </div>
+            <template if:true={isBPSelected}>
+                <span class="slds-badge">{totalRuleCount} Rules</span>
+            </template>
+        </div>
+
+        <!-- ═══════════════ LOADING SPINNER ═══════════════ -->
+        <template if:true={isLoading}>
+            <lightning-spinner alternative-text="Loading..." size="medium" variant="brand"></lightning-spinner>
+        </template>
+
+        <!-- ═══════════════ ERROR DISPLAY ═══════════════ -->
+        <template if:true={error}>
+            <div class="slds-notify slds-notify_alert slds-alert_error slds-m-around_small" role="alert">
+                <lightning-icon icon-name="utility:error" size="x-small" variant="inverse"
+                    class="slds-m-right_x-small"></lightning-icon>
+                <span>{error}</span>
+            </div>
+        </template>
+
+        <!-- ═══════════════ CONTENT BODY ═══════════════ -->
+        <div class="content-body">
+
+            <!-- ── Empty state: no node selected ── -->
+            <template if:false={isBPSelected}>
+                <template if:false={showLeafMessage}>
+                    <div class="empty-state slds-p-around_large slds-text-align_center">
+                        <lightning-icon icon-name="utility:data_mapping" size="large" variant="bare"></lightning-icon>
+                        <p class="slds-m-top_small">Vui lòng chọn một node để xem Decision Table</p>
+                    </div>
+                </template>
+            </template>
+
+            <!-- ── Empty state: leaf node selected ── -->
+            <template if:true={showLeafMessage}>
+                <div class="empty-state slds-p-around_large slds-text-align_center">
+                    <lightning-icon icon-name="utility:info" size="large" variant="bare"></lightning-icon>
+                    <p class="slds-m-top_small">Vui lòng chọn Business Process để xem Decision Table Stage</p>
+                </div>
+            </template>
+
+            <!-- ── BP Selected: show toolbar + table ── -->
+            <template if:true={isBPSelected}>
+
+                <!-- ═══════════════ TOOLBAR ═══════════════ -->
+                <div class="decision-toolbar slds-p-horizontal_small slds-p-vertical_x-small">
+                    <div class="slds-grid slds-grid_vertical-align-center slds-wrap">
+                        <div class="slds-grid slds-grid_vertical-align-center slds-gap_x-small slds-m-right_medium">
+                            <lightning-button label="Thêm Cột Trái" icon-name="utility:back"
+                                onclick={handleAddColLeft} variant="neutral"
+                                disabled={disableAddCol}></lightning-button>
+                            <lightning-button label="Thêm Cột Phải" icon-name="utility:forward"
+                                onclick={handleAddColRight} variant="neutral"
+                                disabled={disableAddCol}></lightning-button>
+                            <lightning-button label="Xóa Cột" icon-name="utility:delete"
+                                onclick={handleDeleteColumn} variant="destructive-text"
+                                disabled={disableDeleteCol}></lightning-button>
+                            <span class="slds-border_left slds-m-left_x-small slds-p-left_x-small"></span>
+                            <lightning-button label="Thêm Dòng Trên" icon-name="utility:arrowup"
+                                onclick={handleAddRowAbove} variant="neutral"
+                                disabled={disableAddRow}></lightning-button>
+                            <lightning-button label="Thêm Dòng Dưới" icon-name="utility:arrowdown"
+                                onclick={handleAddRowBelow} variant="neutral"
+                                disabled={disableAddRow}></lightning-button>
+                            <lightning-button label="Xóa Dòng" icon-name="utility:delete"
+                                onclick={handleDeleteRow} variant="destructive-text"
+                                disabled={disableDeleteRow}></lightning-button>
+                        </div>
+                        <div class="search-container slds-grow">
+                            <div class="slds-form-element">
+                                <div class="slds-form-element__control slds-input-has-icon slds-input-has-icon_right">
+                                    <input type="text" class="slds-input" placeholder="Tìm kiếm..."
+                                        value={searchFilter} onkeyup={handleSearchChange} />
+                                    <template if:true={hasSearchFilter}>
+                                        <button class="slds-button slds-button_icon slds-input__icon slds-input__icon_right"
+                                            title="Xóa tìm kiếm" onclick={handleClearSearch}>
+                                            <lightning-icon icon-name="utility:close" size="xx-small"></lightning-icon>
+                                        </button>
+                                    </template>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ── Empty state: no data ── -->
+                <template if:false={hasData}>
+                    <template if:false={isLoading}>
+                        <div class="empty-state slds-p-around_large slds-text-align_center">
+                            <lightning-icon icon-name="utility:table" size="large" variant="bare"></lightning-icon>
+                            <p class="slds-m-top_small">Chưa có dữ liệu. Hãy thêm cột và dòng đầu tiên.</p>
+                        </div>
+                    </template>
+                </template>
+
+                <!-- ── Empty state: no search results ── -->
+                <template if:true={hasNoSearchResults}>
+                    <div class="empty-state slds-p-around_large slds-text-align_center">
+                        <lightning-icon icon-name="utility:search" size="medium" variant="bare"></lightning-icon>
+                        <p class="slds-m-top_small">Không tìm thấy kết quả</p>
+                        <lightning-button label="Xóa bộ lọc" onclick={handleClearSearch}
+                            variant="neutral" class="slds-m-top_small"></lightning-button>
+                    </div>
+                </template>
+
+                <!-- ═══════════════ DECISION TABLE ═══════════════ -->
+                <template if:true={hasData}>
+                    <template if:false={hasNoSearchResults}>
+                        <div class="table-scroll slds-p-horizontal_small">
+                            <table class="decision-table slds-table slds-table_bordered slds-table_cell-buffer">
+                                <thead>
+                                    <!-- Group header row -->
+                                    <tr class="group-header-row">
+                                        <th rowspan={headerRowspan} class="group-header priority-header" style="width: 40px;">No.</th>
+                                        <template if:true={hasConditionColumns}>
+                                            <th colspan={conditionColSpan} class="group-header conditions-group">CONDITIONS</th>
+                                        </template>
+                                        <th colspan={actionColSpan} class="group-header actions-group">ACTIONS</th>
+                                        <th class="group-header actions-group" style="width: 60px;"></th>
+                                    </tr>
+                                    <!-- Column header row -->
+                                    <tr class="col-header-row">
+                                        <template for:each={displayConditionColumns} for:item="col">
+                                            <template if:true={col.isRange}>
+                                                <th key={col.colKey} data-col-key={col.colKey}
+                                                    data-col-group={col.colGroup}
+                                                    onclick={handleSelectColumn}
+                                                    ondblclick={handleColumnDblClick}
+                                                    colspan="2"
+                                                    class={col.headerClass}>{col.fieldName}</th>
+                                            </template>
+                                            <template if:false={col.isRange}>
+                                                <th key={col.colKey} data-col-key={col.colKey}
+                                                    data-col-group={col.colGroup}
+                                                    onclick={handleSelectColumn}
+                                                    ondblclick={handleColumnDblClick}
+                                                    rowspan={headerRowspanNonRange}
+                                                    class={col.headerClass}>{col.fieldName}</th>
+                                            </template>
+                                        </template>
+                                        <template for:each={displayActionColumns} for:item="col">
+                                            <th key={col.colKey} data-col-key={col.colKey}
+                                                data-col-group={col.colGroup}
+                                                onclick={handleSelectColumn}
+                                                rowspan={headerRowspanNonRange}
+                                                class={col.headerClass}>{col.label}</th>
+                                        </template>
+                                        <th scope="col" rowspan={headerRowspanNonRange} style="width: 60px;">Sửa</th>
+                                    </tr>
+                                    <!-- Sub-header row for range columns (Start/End) -->
+                                    <template if:true={hasRangeColumns}>
+                                        <tr class="col-header-row range-sub-header-row">
+                                            <template for:each={displayConditionColumns} for:item="col">
+                                                <template if:true={col.isRange}>
+                                                    <th key={col.startSubKey} class="col-header range-sub-header">{col.startSubHeader}</th>
+                                                    <th key={col.endSubKey} class="col-header range-sub-header">{col.endSubHeader}</th>
+                                                </template>
+                                            </template>
+                                        </tr>
+                                    </template>
+                                </thead>
+                                <tbody>
+                                    <template for:each={displayRows} for:item="row">
+                                        <tr key={row.ruleId} data-row-id={row.ruleId}
+                                            onclick={handleSelectRow}
+                                            class={row.rowClass}>
+                                            <!-- Priority # cell -->
+                                            <td class={row.priorityCellClass}>{row.priorityDisplay}</td>
+                                            <!-- Fixed condition cells (Previous Stage, Action Button) -->
+                                            <template for:each={row.fixedConditionCells} for:item="fc">
+                                                <td key={fc.key} class={fc.cellClass}>{fc.value}</td>
+                                            </template>
+                                            <!-- Dynamic condition cells (MDS fields) — inline edit with OR sub-values -->
+                                            <template for:each={row.displayConditionCells} for:item="cell">
+                                                <!-- Range cell → 2 separate td elements (Start + End) -->
+                                                <template if:true={cell.isRange}>
+                                                    <td key={cell.startTdKey} class={cell.cellClass}>
+                                                        <div class="cell-value-row"
+                                                            data-rule-id={row.ruleId} data-field-id={cell.fieldId}
+                                                            data-range-part="start"
+                                                            onclick={handleRangeCellClick}>
+                                                            <template if:true={cell.isEditingStart}>
+                                                                <div class="inline-edit-container">
+                                                                    <input type="text" class="inline-edit-input"
+                                                                        data-cell-key={cell.startCellKey}
+                                                                        data-rule-id={row.ruleId}
+                                                                        data-field-id={cell.fieldId}
+                                                                        data-range-part="start"
+                                                                        value={cell.editStartValue}
+                                                                        onkeydown={handleRangeCellInputKeydown}
+                                                                        onblur={handleRangeCellInputBlur}
+                                                                        onclick={handleInlineInputClick} />
+                                                                </div>
+                                                            </template>
+                                                            <template if:false={cell.isEditingStart}>
+                                                                <template if:true={cell.showStartToolbar}>
+                                                                    <div class="cell-mini-toolbar">
+                                                                        <button class="mini-toolbar-btn edit-btn"
+                                                                            data-rule-id={row.ruleId}
+                                                                            data-field-id={cell.fieldId}
+                                                                            data-range-part="start"
+                                                                            onclick={handleRangeCellEdit}
+                                                                            title="Sửa">✏️</button>
+                                                                        <button class="mini-toolbar-btn delete-btn"
+                                                                            data-rule-id={row.ruleId}
+                                                                            data-field-id={cell.fieldId}
+                                                                            data-range-part="start"
+                                                                            onclick={handleRangeCellDelete}
+                                                                            title="Xóa">🗑️</button>
+                                                                    </div>
+                                                                </template>
+                                                                <span class="condition-cell">{cell.startValue}</span>
+                                                            </template>
+                                                        </div>
+                                                    </td>
+                                                    <td key={cell.endTdKey} class={cell.cellClass}>
+                                                        <div class="cell-value-row"
+                                                            data-rule-id={row.ruleId} data-field-id={cell.fieldId}
+                                                            data-range-part="end"
+                                                            onclick={handleRangeCellClick}>
+                                                            <template if:true={cell.isEditingEnd}>
+                                                                <div class="inline-edit-container">
+                                                                    <input type="text" class="inline-edit-input"
+                                                                        data-cell-key={cell.endCellKey}
+                                                                        data-rule-id={row.ruleId}
+                                                                        data-field-id={cell.fieldId}
+                                                                        data-range-part="end"
+                                                                        value={cell.editEndValue}
+                                                                        onkeydown={handleRangeCellInputKeydown}
+                                                                        onblur={handleRangeCellInputBlur}
+                                                                        onclick={handleInlineInputClick} />
+                                                                </div>
+                                                            </template>
+                                                            <template if:false={cell.isEditingEnd}>
+                                                                <template if:true={cell.showEndToolbar}>
+                                                                    <div class="cell-mini-toolbar">
+                                                                        <button class="mini-toolbar-btn edit-btn"
+                                                                            data-rule-id={row.ruleId}
+                                                                            data-field-id={cell.fieldId}
+                                                                            data-range-part="end"
+                                                                            onclick={handleRangeCellEdit}
+                                                                            title="Sửa">✏️</button>
+                                                                        <button class="mini-toolbar-btn delete-btn"
+                                                                            data-rule-id={row.ruleId}
+                                                                            data-field-id={cell.fieldId}
+                                                                            data-range-part="end"
+                                                                            onclick={handleRangeCellDelete}
+                                                                            title="Xóa">🗑️</button>
+                                                                    </div>
+                                                                </template>
+                                                                <span class="condition-cell">{cell.endValue}</span>
+                                                            </template>
+                                                        </div>
+                                                    </td>
+                                                </template>
+                                                <!-- Normal (non-range) cell -->
+                                                <template if:false={cell.isRange}>
+                                                <td key={cell.fieldId} class={cell.cellClass}>
+                                                    <template for:each={cell.values} for:item="val">
+                                                        <div key={val.key} class="cell-value-row"
+                                                            data-rule-id={row.ruleId} data-field-id={cell.fieldId}
+                                                            data-value-index={val.valueIndex}
+                                                            onclick={handleCellClick}>
+                                                            <!-- EDIT MODE: inline input -->
+                                                            <template if:true={val.isEditing}>
+                                                                <div class="inline-edit-container">
+                                                                    <input type="text" class="inline-edit-input"
+                                                                        data-cell-key={val.cellKey}
+                                                                        data-rule-id={row.ruleId}
+                                                                        data-field-id={cell.fieldId}
+                                                                        data-value-index={val.valueIndex}
+                                                                        value={val.editValue}
+                                                                        onkeydown={handleCellInputKeydown}
+                                                                        onblur={handleCellInputBlur}
+                                                                        onclick={handleInlineInputClick} />
+                                                                </div>
+                                                            </template>
+                                                            <!-- DISPLAY MODE -->
+                                                            <template if:false={val.isEditing}>
+                                                                <!-- Mini toolbar overlay (OR + Edit + Delete) -->
+                                                                <template if:true={val.showToolbar}>
+                                                                    <div class="cell-mini-toolbar">
+                                                                        <button class="mini-toolbar-btn or-btn"
+                                                                            data-rule-id={row.ruleId}
+                                                                            data-field-id={cell.fieldId}
+                                                                            data-value-index={val.valueIndex}
+                                                                            onclick={handleCellOR}
+                                                                            title="OR">OR</button>
+                                                                        <button class="mini-toolbar-btn edit-btn"
+                                                                            data-rule-id={row.ruleId}
+                                                                            data-field-id={cell.fieldId}
+                                                                            data-value-index={val.valueIndex}
+                                                                            onclick={handleCellEdit}
+                                                                            title="Sửa">✏️</button>
+                                                                        <button class="mini-toolbar-btn delete-btn"
+                                                                            data-rule-id={row.ruleId}
+                                                                            data-field-id={cell.fieldId}
+                                                                            data-value-index={val.valueIndex}
+                                                                            onclick={handleCellDelete}
+                                                                            title="Xóa">🗑️</button>
+                                                                    </div>
+                                                                </template>
+                                                                <!-- Value display -->
+                                                                <template if:true={val.isMultiValue}>
+                                                                    <template for:each={val.valuePills} for:item="pill">
+                                                                        <span key={pill.key} class="condition-pill">{pill.label}</span>
+                                                                    </template>
+                                                                </template>
+                                                                <template if:false={val.isMultiValue}>
+                                                                    <span class="condition-cell">{val.displayValue}</span>
+                                                                </template>
+                                                            </template>
+                                                        </div>
+                                                    </template>
+                                                </td>
+                                                </template>
+                                            </template>
+                                            <!-- Action cells (Next Stage, Next Queue, Team/User Group) -->
+                                            <template for:each={row.displayActionCells} for:item="ac">
+                                                <td key={ac.key} class={ac.cellClass}>{ac.value}</td>
+                                            </template>
+                                            <!-- Edit button -->
+                                            <td class={row.editCellClass}>
+                                                <button class="slds-button slds-button_icon slds-button_icon-x-small"
+                                                    data-row-id={row.ruleId} onclick={handleEditRow} title="Sửa Rule">
+                                                    <lightning-icon icon-name="utility:edit" size="x-small"></lightning-icon>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    </template>
+                                </tbody>
+                            </table>
+                        </div>
+                    </template>
+                </template>
+
+            <!-- ═══════════════ TEST RULE PANEL ═══════════════ -->
+            <div class="test-panel-wrapper slds-p-horizontal_small">
+                <div class="test-panel-header slds-grid slds-grid_vertical-align-center"
+                    onclick={handleToggleTestPanel}>
+                    <lightning-icon icon-name={testPanelChevronIcon} size="xx-small"
+                        class="slds-m-right_x-small"></lightning-icon>
+                    <lightning-icon icon-name="utility:preview" size="xx-small" variant="brand"
+                        class="slds-m-right_x-small"></lightning-icon>
+                    <span class="test-panel-title">Test Rule Evaluation</span>
+                    <span class="test-panel-subtitle slds-m-left_x-small">— Kiểm tra logic chuyển Stage</span>
+                    <template if:true={testResult}>
+                        <template if:true={testResult.matched}>
+                            <span class="slds-badge slds-badge_success slds-m-left_small">✅ Match</span>
+                        </template>
+                        <template if:false={testResult.matched}>
+                            <span class="slds-badge slds-badge_inverse slds-m-left_small">❌ No Match</span>
+                        </template>
+                    </template>
+                </div>
+                <template if:true={isTestPanelOpen}>
+                    <div class="test-panel-body slds-p-around_small">
+                        <!-- Form inputs -->
+                        <lightning-layout multiple-rows="true">
+                            <lightning-layout-item size="4" padding="horizontal-small" class="slds-m-bottom_small">
+                                <lightning-combobox label="Previous Stage" name="testPrevStage"
+                                    options={stageOptions} value={testFormData.previousStageId}
+                                    onchange={handleTestInputChange}
+                                    placeholder="-- Chưa chọn --">
+                                </lightning-combobox>
+                            </lightning-layout-item>
+                            <lightning-layout-item size="4" padding="horizontal-small" class="slds-m-bottom_small">
+                                <lightning-combobox label="Action" name="testAction"
+                                    options={actionButtonOptions} value={testFormData.actionButtonId}
+                                    onchange={handleTestInputChange}
+                                    placeholder="-- Chưa chọn --">
+                                </lightning-combobox>
+                            </lightning-layout-item>
+                            <lightning-layout-item size="4" padding="horizontal-small"
+                                class="slds-m-bottom_small slds-grid slds-grid_align-end slds-grid_vertical-align-end">
+                                <lightning-button label="🔍 Test" variant="brand"
+                                    onclick={handleRunTest} disabled={disableTestButton}>
+                                </lightning-button>
+                                <template if:true={testResult}>
+                                    <lightning-button label="Xóa" variant="neutral"
+                                        onclick={handleClearTestResult} class="slds-m-left_x-small">
+                                    </lightning-button>
+                                </template>
+                            </lightning-layout-item>
+                        </lightning-layout>
+                        <!-- Dynamic condition field inputs -->
+                        <template if:true={hasTestConditionFields}>
+                            <div class="slds-section slds-is-open slds-m-bottom_small">
+                                <h3 class="slds-section__title slds-theme_shade slds-p-around_xx-small">
+                                    <span class="slds-truncate">Condition Fields</span>
+                                </h3>
+                                <div class="slds-section__content slds-p-top_x-small">
+                                    <lightning-layout multiple-rows="true">
+                                        <template for:each={testConditionFields} for:item="tf">
+                                            <lightning-layout-item key={tf.fieldId} size="4"
+                                                padding="horizontal-small" class="slds-m-bottom_x-small">
+                                                <lightning-input label={tf.label} value={tf.value}
+                                                    placeholder={tf.placeholder}
+                                                    data-field-api={tf.fieldApiName}
+                                                    onchange={handleTestFieldChange}>
+                                                </lightning-input>
+                                            </lightning-layout-item>
+                                        </template>
+                                    </lightning-layout>
+                                </div>
+                            </div>
+                        </template>
+                        <!-- Test Result -->
+                        <template if:true={testResult}>
+                            <div class="test-result-section slds-m-top_small">
+                                <!-- Filter summary -->
+                                <div class="test-filter-summary slds-m-bottom_small">
+                                    <template if:true={hasNoTestFilters}>
+                                        <span class="slds-text-body_small slds-text-color_weak">Chưa chọn điều kiện lọc — hiển thị tất cả rules</span>
+                                    </template>
+                                </div>
+                                <!-- Match info -->
+                                <template if:true={testResult.matched}>
+                                    <div class="test-match-info slds-box slds-box_x-small slds-theme_success slds-m-bottom_small">
+                                        <p class="slds-text-heading_x-small">✅ {testResult.matchCount} / {testResult.totalCount} rules khớp — First Match = dòng đầu tiên bên dưới</p>
+                                    </div>
+                                </template>
+                                <template if:false={testResult.matched}>
+                                    <div class="test-no-match slds-box slds-box_x-small slds-theme_shade slds-m-bottom_small">
+                                        <p>❌ Không có rule nào khớp với điều kiện lọc (0 / {testResult.totalCount})</p>
+                                    </div>
+                                </template>
+                                <!-- Evaluation Trace -->
+                                <template if:true={hasEvaluationTrace}>
+                                    <div class="test-trace slds-m-top_x-small">
+                                        <p class="slds-text-title_caps slds-m-bottom_xx-small">📋 Danh sách Rules khớp</p>
+                                        <template for:each={matchedTraceRows} for:item="rt">
+                                            <div key={rt.ruleId} class={rt.traceClass}>
+                                                <p class="trace-rule-header">
+                                                    <template if:true={rt.isFirstMatch}>
+                                                        <span class="trace-match">✅ MATCH</span> Rule #{rt.stt}: {rt.previousStage} → {rt.action} → {rt.nextStage}
+                                                        <span class="trace-first-match slds-m-left_x-small">🏆 FIRST MATCH</span>
+                                                    </template>
+                                                    <template if:false={rt.isFirstMatch}>
+                                                        <span class="trace-match">✅ MATCH</span> Rule #{rt.stt}: {rt.previousStage} → {rt.action} → {rt.nextStage}
+                                                    </template>
+                                                </p>
+                                                <p class="trace-condition slds-p-left_medium">
+                                                    Queue: {rt.nextQueue} │ Team: {rt.team}
+                                                </p>
+                                                <template if:true={rt.hasConditions}>
+                                                    <template for:each={rt.conditions} for:item="cd">
+                                                        <p key={cd.key} class="trace-condition-detail slds-p-left_large">
+                                                            <template if:true={cd.result}>
+                                                                <span class="trace-cond-pass">✅</span>
+                                                            </template>
+                                                            <template if:false={cd.result}>
+                                                                <span class="trace-cond-fail">❌</span>
+                                                            </template>
+                                                            {cd.fieldLabel} {cd.operator} {cd.expectedValue} — actual: "{cd.actualValue}"
+                                                        </p>
+                                                    </template>
+                                                </template>
+                                            </div>
+                                        </template>
+                                    </div>
+                                </template>
+                            </div>
+                        </template>
+                    </div>
+                </template>
+            </div>
+
+            </template>
+        </div>
+    </div>
+
+    <!-- ═══════════════ MODAL: ADD/EDIT RULE ═══════════════ -->
+    <template if:true={showAddRuleModal}>
+        <section role="dialog" tabindex="-1" class="slds-modal slds-fade-in-open slds-modal_medium">
+            <div class="slds-modal__container" onclick={handleDialogClick}>
+                <!-- Modal Header -->
+                <div class="slds-modal__header">
+                    <button class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse"
+                        title="Đóng" onclick={handleCloseModal}>
+                        <lightning-icon icon-name="utility:close" size="small"></lightning-icon>
+                        <span class="slds-assistive-text">Đóng</span>
+                    </button>
+                    <h2 class="slds-modal__title slds-hyphenate">{modalTitle}</h2>
+                </div>
+
+                <!-- Modal Body -->
+                <div class="slds-modal__content slds-p-around_medium">
+
+                    <!-- Section: CONDITIONS -->
+                    <div class="slds-section slds-is-open slds-m-bottom_medium">
+                        <h3 class="slds-section__title slds-theme_shade slds-p-around_x-small">
+                            <span class="slds-truncate" title="Conditions">Conditions</span>
+                        </h3>
+                        <div class="slds-section__content slds-p-top_small">
+                            <!-- Fixed conditions: Previous Stage + Action Button -->
+                            <lightning-layout multiple-rows="true">
+                                <lightning-layout-item size="6" padding="horizontal-small" class="slds-m-bottom_small">
+                                    <lightning-combobox label="Previous Stage" name="previousStageId"
+                                        options={stageOptions} value={formData.previousStageId}
+                                        onchange={handleModalInputChange}
+                                        placeholder="-- Chọn Previous Stage --" required>
+                                    </lightning-combobox>
+                                </lightning-layout-item>
+                                <lightning-layout-item size="6" padding="horizontal-small" class="slds-m-bottom_small">
+                                    <lightning-combobox label="Action Button" name="actionButtonId"
+                                        options={actionButtonOptions} value={formData.actionButtonId}
+                                        onchange={handleModalInputChange}
+                                        placeholder="-- Chọn Action Button --" required>
+                                    </lightning-combobox>
+                                </lightning-layout-item>
+                            </lightning-layout>
+                            <!-- Dynamic MDS field conditions (value only — operator is on column header) -->
+                            <template if:true={hasFormConditions}>
+                                <template for:each={formConditions} for:item="cond">
+                                    <lightning-layout key={cond.key} multiple-rows="true" class="slds-m-bottom_small">
+                                        <lightning-layout-item size="4" padding="horizontal-small">
+                                            <label class="slds-form-element__label">{cond.fieldLabel}</label>
+                                        </lightning-layout-item>
+                                        <lightning-layout-item size="6" padding="horizontal-small">
+                                            <!-- Range: 2 side-by-side inputs (Start + End) -->
+                                            <template if:true={cond.isRange}>
+                                                <lightning-layout>
+                                                    <lightning-layout-item size="6" padding="horizontal-small">
+                                                        <lightning-input label={cond.rangeStartOp}
+                                                            value={cond.rangeStartValue}
+                                                            placeholder="Start..."
+                                                            data-index={cond.index}
+                                                            data-range-part="start"
+                                                            onchange={handleRangeConditionChange}>
+                                                        </lightning-input>
+                                                    </lightning-layout-item>
+                                                    <lightning-layout-item size="6" padding="horizontal-small">
+                                                        <lightning-input label={cond.rangeEndOp}
+                                                            value={cond.rangeEndValue}
+                                                            placeholder="End..."
+                                                            data-index={cond.index}
+                                                            data-range-part="end"
+                                                            onchange={handleRangeConditionChange}>
+                                                        </lightning-input>
+                                                    </lightning-layout-item>
+                                                </lightning-layout>
+                                            </template>
+                                            <template if:false={cond.isRange}>
+                                            <template if:true={cond.isMultiValueOperator}>
+                                                <!-- Pill input for IN/NOT_IN -->
+                                                <div class="pill-input-container">
+                                                    <div class="pill-list">
+                                                        <template for:each={cond.pillValues} for:item="pill">
+                                                            <span key={pill.key} class="condition-pill">
+                                                                {pill.label}
+                                                                <button class="pill-remove-btn" data-index={cond.index}
+                                                                    data-pill-key={pill.key} onclick={handleRemovePillValue}
+                                                                    title="Xóa">×</button>
+                                                            </span>
+                                                        </template>
+                                                    </div>
+                                                    <div class="slds-grid slds-grid_vertical-align-end slds-gap_xx-small">
+                                                        <div class="slds-grow">
+                                                            <lightning-input label="Value" variant="label-hidden"
+                                                                placeholder="Nhập giá trị..."
+                                                                data-index={cond.index}
+                                                                onkeyup={handlePillInputKeyup}>
+                                                            </lightning-input>
+                                                        </div>
+                                                        <lightning-button label="Add" variant="neutral"
+                                                            data-index={cond.index}
+                                                            onclick={handleAddPillValue}></lightning-button>
+                                                    </div>
+                                                </div>
+                                            </template>
+                                            <template if:false={cond.isMultiValueOperator}>
+                                                <lightning-input label="Value" variant="label-hidden"
+                                                    value={cond.value} placeholder="Nhập giá trị..."
+                                                    data-index={cond.index} data-field="value"
+                                                    onchange={handleConditionFieldChange}>
+                                                </lightning-input>
+                                            </template>
+                                            </template>
+                                        </lightning-layout-item>
+                                    </lightning-layout>
+                                </template>
+                            </template>
+                        </div>
+                    </div>
+
+                    <!-- Section: ACTIONS -->
+                    <div class="slds-section slds-is-open slds-m-bottom_medium">
+                        <h3 class="slds-section__title slds-theme_shade slds-p-around_x-small">
+                            <span class="slds-truncate" title="Actions">Actions</span>
+                        </h3>
+                        <div class="slds-section__content slds-p-top_small">
+                            <lightning-layout multiple-rows="true">
+                                <lightning-layout-item size="6" padding="horizontal-small" class="slds-m-bottom_small">
+                                    <lightning-combobox label="Next Stage" name="nextStageId"
+                                        options={stageOptions} value={formData.nextStageId}
+                                        onchange={handleModalInputChange}
+                                        placeholder="-- Chọn Next Stage --" required>
+                                    </lightning-combobox>
+                                </lightning-layout-item>
+                                <lightning-layout-item size="6" padding="horizontal-small" class="slds-m-bottom_small">
+                                    <lightning-input label="Next Queue" name="nextQueue"
+                                        value={formData.nextQueue}
+                                        onchange={handleModalInputChange}></lightning-input>
+                                </lightning-layout-item>
+                                <lightning-layout-item size="6" padding="horizontal-small" class="slds-m-bottom_small">
+                                    <lightning-input label="Team/User Group" name="teamUserGroup"
+                                        value={formData.teamUserGroup}
+                                        onchange={handleModalInputChange}></lightning-input>
+                                </lightning-layout-item>
+                            </lightning-layout>
+                        </div>
+                    </div>
+
+                    <!-- Condition Requirement / Custom Logic removed — AND implicit always applied -->
+                
+                </div>
+
+                <!-- Modal Footer -->
+                <div class="slds-modal__footer">
+                    <lightning-button label="Hủy" onclick={handleCloseModal} variant="neutral"></lightning-button>
+                    <lightning-button label={modalSaveLabel} onclick={handleSaveRule}
+                        variant="brand" class="slds-m-left_x-small"></lightning-button>
+                </div>
+            </div>
+        </section>
+        <div class="slds-backdrop slds-backdrop_open" onclick={handleOverlayClick}></div>
+    </template>
+
+    <!-- ═══════════════ MODAL: ADD COLUMN ═══════════════ -->
+    <template if:true={showAddColModal}>
+        <section role="dialog" tabindex="-1" class="slds-modal slds-fade-in-open">
+            <div class="slds-modal__container" onclick={handleDialogClick}>
+                <!-- Modal Header -->
+                <div class="slds-modal__header">
+                    <button class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse"
+                        title="Đóng" onclick={handleCloseAddColModal}>
+                        <lightning-icon icon-name="utility:close" size="small"></lightning-icon>
+                        <span class="slds-assistive-text">Đóng</span>
+                    </button>
+                    <h2 class="slds-modal__title slds-hyphenate">Thêm Cột</h2>
+                </div>
+
+                <!-- Modal Body -->
+                <div class="slds-modal__content slds-p-around_medium">
+                    <!-- Column Group Selection -->
+                    <lightning-radio-group label="Nhóm cột" name="colGroup"
+                        options={colGroupOptions} value={newColGroup}
+                        onchange={handleNewColGroupChange}
+                        type="button" class="slds-m-bottom_medium">
+                    </lightning-radio-group>
+
+                    <!-- Condition: pick MDS field + operator -->
+                    <template if:true={isConditionColGroup}>
+                        <div class="slds-grid slds-grid_vertical-align-end slds-m-bottom_small">
+                            <div class="slds-grow">
+                                <lightning-combobox label="Chọn Field" options={fieldOptions}
+                                    value={selectedNewColFieldId} onchange={handleNewColFieldChange}
+                                    placeholder="-- Chọn field từ Master Data Setting --" required>
+                                </lightning-combobox>
+                            </div>
+                            <lightning-button-icon icon-name="utility:settings"
+                                onclick={handleToggleExpression}
+                                title="Expression Mode"
+                                variant="border-filled"
+                                class="slds-m-left_x-small slds-m-bottom_xx-small">
+                            </lightning-button-icon>
+                        </div>
+                        <template if:true={showExpressionMode}>
+                            <lightning-combobox label="Expression" options={expressionOptions}
+                                value={expressionValue} onchange={handleExpressionChange}
+                                placeholder="-- Chọn hàm xử lý --"
+                                class="slds-m-bottom_small">
+                            </lightning-combobox>
+                        </template>
+                        <template if:false={useRange}>
+                            <lightning-combobox label="Operator" options={operatorOptions}
+                                value={selectedNewColOperator} onchange={handleNewColOperatorChange}
+                                placeholder="-- Chọn operator --" required>
+                            </lightning-combobox>
+                        </template>
+                        <lightning-input type="checkbox" label="Use Range" checked={useRange}
+                            onchange={handleToggleUseRange} class="slds-m-top_small slds-m-bottom_small">
+                        </lightning-input>
+                        <template if:true={useRange}>
+                            <lightning-layout multiple-rows="true">
+                                <lightning-layout-item size="6" padding="horizontal-small">
+                                    <lightning-combobox label="Start Range" options={startRangeOperatorOptions}
+                                        value={rangeStartOp} onchange={handleRangeStartOpChange}>
+                                    </lightning-combobox>
+                                </lightning-layout-item>
+                                <lightning-layout-item size="6" padding="horizontal-small">
+                                    <lightning-combobox label="End Range" options={endRangeOperatorOptions}
+                                        value={rangeEndOp} onchange={handleRangeEndOpChange}>
+                                    </lightning-combobox>
+                                </lightning-layout-item>
+                            </lightning-layout>
+                        </template>
+                    </template>
+
+                    <!-- Action: enter custom name -->
+                    <template if:true={isActionColGroup}>
+                        <lightning-input label="Tên cột Action" value={newColActionName}
+                            onchange={handleNewColActionNameChange}
+                            placeholder="Nhập tên cột action..." required>
+                        </lightning-input>
+                    </template>
+                </div>
+
+                <!-- Modal Footer -->
+                <div class="slds-modal__footer">
+                    <lightning-button label="Hủy" onclick={handleCloseAddColModal} variant="neutral"></lightning-button>
+                    <lightning-button label="Xác nhận" onclick={handleConfirmAddCol}
+                        variant="brand" class="slds-m-left_x-small"></lightning-button>
+                </div>
+            </div>
+        </section>
+        <div class="slds-backdrop slds-backdrop_open" onclick={handleOverlayClick}></div>
+    </template>
+
+    <!-- ═══════════════ MODAL: EDIT COLUMN ═══════════════ -->
+    <template if:true={showEditColModal}>
+        <section role="dialog" tabindex="-1" class="slds-modal slds-fade-in-open">
+            <div class="slds-modal__container" onclick={handleDialogClick}>
+                <!-- Modal Header -->
+                <div class="slds-modal__header">
+                    <button class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse"
+                        title="Đóng" onclick={handleCloseEditColModal}>
+                        <lightning-icon icon-name="utility:close" size="small"></lightning-icon>
+                        <span class="slds-assistive-text">Đóng</span>
+                    </button>
+                    <h2 class="slds-modal__title slds-hyphenate">Chỉnh sửa Cột</h2>
+                </div>
+
+                <!-- Modal Body -->
+                <div class="slds-modal__content slds-p-around_medium">
+                    <lightning-input label="Tên cột (Label)" value={editColFieldName}
+                        onchange={handleEditColFieldNameChange}
+                        class="slds-m-bottom_small">
+                    </lightning-input>
+                    <lightning-combobox label="Expression" options={expressionOptions}
+                        value={editColExpression} onchange={handleEditColExpressionChange}
+                        class="slds-m-bottom_small">
+                    </lightning-combobox>
+                    <template if:false={editColUseRange}>
+                        <lightning-combobox label="Operator" options={operatorOptions}
+                            value={editColOperator} onchange={handleEditColOperatorChange}
+                            required>
+                        </lightning-combobox>
+                    </template>
+                    <lightning-input type="checkbox" label="Use Range" checked={editColUseRange}
+                        onchange={handleToggleEditColUseRange} class="slds-m-top_small slds-m-bottom_small">
+                    </lightning-input>
+                    <template if:true={editColUseRange}>
+                        <lightning-layout multiple-rows="true">
+                            <lightning-layout-item size="6" padding="horizontal-small">
+                                <lightning-combobox label="Start Range" options={startRangeOperatorOptions}
+                                    value={editColRangeStartOp} onchange={handleEditColRangeStartOpChange}>
+                                </lightning-combobox>
+                            </lightning-layout-item>
+                            <lightning-layout-item size="6" padding="horizontal-small">
+                                <lightning-combobox label="End Range" options={endRangeOperatorOptions}
+                                    value={editColRangeEndOp} onchange={handleEditColRangeEndOpChange}>
+                                </lightning-combobox>
+                            </lightning-layout-item>
+                        </lightning-layout>
+                    </template>
+                </div>
+
+                <!-- Modal Footer -->
+                <div class="slds-modal__footer">
+                    <lightning-button label="Hủy" onclick={handleCloseEditColModal} variant="neutral"></lightning-button>
+                    <lightning-button label="Cập nhật" onclick={handleConfirmEditCol}
+                        variant="brand" class="slds-m-left_x-small"></lightning-button>
+                </div>
+            </div>
+        </section>
+        <div class="slds-backdrop slds-backdrop_open" onclick={handleOverlayClick}></div>
+    </template>
+
+</template>

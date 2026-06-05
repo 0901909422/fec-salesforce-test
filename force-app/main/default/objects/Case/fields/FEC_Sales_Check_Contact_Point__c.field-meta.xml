@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>FEC_Sales_Check_Contact_Point__c</fullName>
+    <label>Sales Check - Contact Point</label>
+    <required>false</required>
+    <trackFeedHistory>false</trackFeedHistory>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>vy.dang.2@fecredit.com.vn</fullName>
+                <default>false</default>
+                <label>vy.dang.2@fecredit.com.vn</label>
+            </value>
+            <value>
+                <fullName>qc_lg@fecredit.com.vn</fullName>
+                <default>false</default>
+                <label>qc_lg@fecredit.com.vn</label>
+            </value>
+            <value>
+                <fullName>dong.nguyen.4@fecredit.com.vn</fullName>
+                <default>false</default>
+                <label>dong.nguyen.4@fecredit.com.vn</label>
+            </value>
+            <value>
+                <fullName>tram.phan.10@fecredit.com.vn&quot;</fullName>
+                <default>false</default>
+                <label>tram.phan.10@fecredit.com.vn&quot;</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>FEC_Case_Assignmetn_NOC_Count__c</fullName>
+    <description>Tổng số Case Assignmetn NOC liên quan</description>
+    <label>Case Assignmetn NOC Count</label>
+    <summaryForeignKey>FEC_Case_Assignment_NOC__c.FEC_Case_Assignment_Name__c</summaryForeignKey>
+    <summaryOperation>count</summaryOperation>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Summary</type>
+</CustomField>

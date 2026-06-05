@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomFieldTranslation xmlns="http://soap.sforce.com/2006/04/metadata">
+    <label><!-- Q20 Survey Refusal Reason --></label>
+    <name>FEC_Q20_Survey_Refusal_Reason__c</name>
+    <picklistValues>
+        <masterLabel>Survey Completed</masterLabel>
+        <translation>Đã được khảo sát</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Survey Declined</masterLabel>
+        <translation>Không đồng ý khảo sát</translation>
+    </picklistValues>
+</CustomFieldTranslation>

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomFieldTranslation xmlns="http://soap.sforce.com/2006/04/metadata">
+    <label><!-- Card Type 1 --></label>
+    <name>FEC_Card_Type_1__c</name>
+    <picklistValues>
+        <masterLabel>Primary card</masterLabel>
+        <translation>Thẻ chính</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Supplementary card</masterLabel>
+        <translation>Thẻ phụ</translation>
+    </picklistValues>
+</CustomFieldTranslation>

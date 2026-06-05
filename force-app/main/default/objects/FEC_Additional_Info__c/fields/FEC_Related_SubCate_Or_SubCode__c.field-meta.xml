@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>FEC_Related_SubCate_Or_SubCode__c</fullName>
+    <description>Sub category hoặc sub code liên quan</description>
+    <externalId>false</externalId>
+    <label>Related SubCate Or SubCode</label>
+    <length>255</length>
+    <required>false</required>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Text</type>
+    <unique>false</unique>
+</CustomField>

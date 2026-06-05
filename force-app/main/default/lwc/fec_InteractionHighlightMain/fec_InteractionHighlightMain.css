@@ -1,0 +1,66 @@
+:host {
+  display: block;
+}
+
+.slds-gutters .slds-col {
+  padding-inline-end: 0 !important;
+  padding-inline-start: var(--slds-g-spacing-3);
+}
+
+.slds-tabs_card {
+  background-color: #ffffff;
+  box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.1);
+  padding-bottom: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.full-height {
+  height: 100%;
+}
+
+
+.slds-page-header {
+  padding: var(--lwc-spacingXxSmall, 0.5rem) var(--lwc-spacingSmall, 1rem);
+  background-color: #ffffff;
+}
+
+.slds-page-header__title {
+  color: #1f6aaa;
+  font-size: 23px;
+  font-weight: 500;
+}
+
+.badge-container {
+  margin-left: 38px;
+}
+
+.slds-badge_success {
+  background-color: #2e844a;
+  color: #ffffff;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.75rem;
+  font-size: 0.75rem;
+}
+
+/* Button group styling is handled by SLDS */
+
+.slds-border_bottom {
+  border-bottom: 1px solid #e5e5e5;
+  margin: 0;
+}
+
+/* Remove bottom padding from main content grid to eliminate white space */
+.slds-grid.slds-gutters.slds-p-around_xxx-small {
+  padding-bottom: 0;
+  margin-bottom: 0;
+}
+
+ul.slds-grid {
+  padding-left: 3px;
+}
+
+span.slds-text-title,
+span.slds-text-body_regular {
+  font-size: medium;
+}

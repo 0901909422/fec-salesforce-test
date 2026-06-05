@@ -1,0 +1,9 @@
+<template>
+    <lightning-accordion class="interaction-infor" allow-multiple-sections-open active-section-name={activeSections}>
+        <lightning-accordion-section name="interactionInfo" label="Click To Call">
+            <lightning-datatable key-field="label" data={phones} columns={columns} onrowaction={handleRowAction}
+                hide-checkbox-column>
+            </lightning-datatable>
+        </lightning-accordion-section>
+    </lightning-accordion>
+</template>

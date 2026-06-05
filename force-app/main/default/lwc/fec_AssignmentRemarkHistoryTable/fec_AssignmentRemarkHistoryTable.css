@@ -1,0 +1,18 @@
+:host {
+    display: block;
+    width: 100%;
+}
+
+.table-wrapper {
+    width: 100%;
+    overflow-x: auto;
+}
+
+.custom-datatable {
+    width: 100%;
+}
+
+/* FIX HEADER ALIGNMENT */
+.custom-datatable table {
+    table-layout: fixed !important;
+}

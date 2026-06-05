@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>FEC_Interaction_Subchannel__c</fullName>
+    <description>Kênh tương tác phụ</description>
+    <label>Interaction Sub Channel</label>
+    <required>false</required>
+    <trackFeedHistory>false</trackFeedHistory>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Picklist</type>
+    <valueSet>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>Inbound Call</fullName>
+                <default>false</default>
+                <label>Inbound Call</label>
+            </value>
+            <value>
+                <fullName>Outbound Call</fullName>
+                <default>false</default>
+                <label>Outbound Call</label>
+            </value>
+            <value>
+                <fullName>Incoming Email</fullName>
+                <default>false</default>
+                <label>Incoming Email</label>
+            </value>
+            <value>
+                <fullName>Outgoing Email</fullName>
+                <default>false</default>
+                <label>Outgoing Email</label>
+            </value>
+            <value>
+                <fullName>Other</fullName>
+                <default>false</default>
+                <label>Other</label>
+            </value>
+            <value>
+                <fullName>F2F</fullName>
+                <default>false</default>
+                <label>F2F</label>
+            </value>
+            <value>
+                <fullName>Letter</fullName>
+                <default>false</default>
+                <label>Letter</label>
+            </value>
+            <value>
+                <fullName>Internal Email</fullName>
+                <default>false</default>
+                <label>Internal Email</label>
+            </value>
+            <value>
+                <fullName>iCollect</fullName>
+                <default>false</default>
+                <label>iCollect</label>
+            </value>
+            <value>
+                <fullName>iSale</fullName>
+                <default>false</default>
+                <label>iSale</label>
+            </value>
+            <value>
+                <fullName>VTiger</fullName>
+                <default>false</default>
+                <label>VTiger</label>
+            </value>
+            <value>
+                <fullName>Facebook</fullName>
+                <default>false</default>
+                <label>Facebook</label>
+            </value>
+            <value>
+                <fullName>Zalo</fullName>
+                <default>false</default>
+                <label>Zalo</label>
+            </value>
+            <value>
+                <fullName>Website</fullName>
+                <default>false</default>
+                <label>Website</label>
+            </value>
+            <value>
+                <fullName>Mobile App</fullName>
+                <default>false</default>
+                <label>Mobile App</label>
+            </value>
+            <value>
+                <fullName>PR/MKT</fullName>
+                <default>false</default>
+                <label>PR/MKT</label>
+            </value>
+            <value>
+                <fullName>SBV</fullName>
+                <default>false</default>
+                <label>SBV</label>
+            </value>
+            <value>
+                <fullName>EA</fullName>
+                <default>false</default>
+                <label>EA</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Package xmlns="http://soap.sforce.com/2006/04/metadata">
+    <types>
+        <members>FEC_IntegrationFraudCaseDetailController</members>
+        <members>FEC_IntegrationFraudCaseUtil</members>
+        <name>ApexClass</name>
+    </types>
+    <types>
+        <members>fecIntegrationFraudCaseDetail</members>
+        <name>LightningComponentBundle</name>
+    </types>
+    <version>65.0</version>
+</Package>

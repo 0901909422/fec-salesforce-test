@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>FEC_Q4_Reason_Not_Checking_FEOL_App__c</fullName>
+    <description>Q4: Lý do chưa tra cứu trên ứng dụng FEOL</description>
+    <label>Q4. Reason Not Checking FEOL App</label>
+    <required>false</required>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>Muốn kiểm tra trực tiếp với tổng đài viên</fullName>
+                <default>false</default>
+                <label>Muốn kiểm tra trực tiếp với tổng đài viên</label>
+            </value>
+            <value>
+                <fullName>Không biết cách kiểm tra</fullName>
+                <default>false</default>
+                <label>Không biết cách kiểm tra</label>
+            </value>
+            <value>
+                <fullName>Không rành công nghệ</fullName>
+                <default>false</default>
+                <label>Không rành công nghệ</label>
+            </value>
+            <value>
+                <fullName>Không có smart phone</fullName>
+                <default>false</default>
+                <label>Không có smart phone</label>
+            </value>
+            <value>
+                <fullName>Không đăng nhập được ứng dụng</fullName>
+                <default>false</default>
+                <label>Không đăng nhập được ứng dụng</label>
+            </value>
+            <value>
+                <fullName>Ứng dụng lỗi</fullName>
+                <default>false</default>
+                <label>Ứng dụng lỗi</label>
+            </value>
+            <value>
+                <fullName>Lý do khác</fullName>
+                <default>false</default>
+                <label>Lý do khác</label>
+            </value>
+            <value>
+                <fullName>Chưa có cơ hội khảo sát</fullName>
+                <default>false</default>
+                <label>Chưa có cơ hội khảo sát</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>
