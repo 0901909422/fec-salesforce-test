@@ -58,6 +58,10 @@ private class FEC_CaseExecuteService_Test {
         insert new List<User>{agentDirect, agentRole};
         agentDirect = [SELECT Id FROM User WHERE Alias = 'agentD' LIMIT 1];
 
+        // Assign Permission Sets cho FLS access
+        FEC_TestDataFactory.assignStandardFECPermissions(agentDirect.Id);
+        FEC_TestDataFactory.assignStandardFECPermissions(agentRole.Id);
+
         // 3. Liên kết GroupMembers
         System.runAs(new User(Id = UserInfo.getUserId())) {
             QueueSobject qs = new QueueSobject(QueueId = testQueue.Id, SobjectType = 'Case');

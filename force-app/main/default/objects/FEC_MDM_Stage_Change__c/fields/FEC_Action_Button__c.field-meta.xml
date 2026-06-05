@@ -1,11 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
     <fullName>FEC_Action_Button__c</fullName>
+    <deleteConstraint>SetNull</deleteConstraint>
     <label>Action Button</label>
     <referenceTo>FEC_MDM_Action_Button__c</referenceTo>
     <relationshipLabel>Stage Changes</relationshipLabel>
     <relationshipName>Stage_Changes</relationshipName>
+    <required>false</required>
+    <trackHistory>true</trackHistory>
     <trackTrending>false</trackTrending>
     <type>Lookup</type>
-    <trackHistory>true</trackHistory>
 </CustomField>

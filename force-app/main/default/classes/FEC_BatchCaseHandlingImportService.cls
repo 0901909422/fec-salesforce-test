@@ -2272,6 +2272,13 @@ public without sharing class FEC_BatchCaseHandlingImportService {
                 if (methodKey == FEC_CaseBusinessService.REVERT && String.isNotBlank(rr.routingActionValue)) {
                     runParams.put('routingActionValue', rr.routingActionValue);
                 }
+                // 04/06/2026 16:45 linhdev - bulk Revert: truyền cờ FEC_IsReverted__c khớp resolver (tránh query Stage Change sai nhánh)
+                if (methodKey == FEC_CaseBusinessService.REVERT) {
+                    runParams.put(
+                        'revertPreferRevertedChange',
+                        rr.revertPreferRevertedChange == true ? 'true' : 'false'
+                    );
+                }
                 Boolean skipCaseRun = false;
                 //PhongBT 02/06/26: Sửa routing action cho cof/gsr — Route To Case đã xử lý tạo Assignment.
                 if (cofGsrCaseRouteToCreate == true) {
@@ -2293,7 +2300,8 @@ public without sharing class FEC_BatchCaseHandlingImportService {
                     continue;
                 }
                 if (!skipCaseRun) {
-                    FEC_CaseBusinessService.run(methodKey, runParams);
+                    // 04/06/2026 16:45 linhdev - queueable gọi runInternal; tránh AuraHandledException crash import Processing
+                    FEC_CaseBusinessService.runInternal(methodKey, runParams);
                 }
             } catch (Exception ex) {
                 rr.status = System.Label.FEC_Batch_Case_Handling_Import_Row_Status_Failed;

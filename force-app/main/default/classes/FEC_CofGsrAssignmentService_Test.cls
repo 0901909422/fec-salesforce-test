@@ -325,6 +325,38 @@ private class FEC_CofGsrAssignmentService_Test {
         );
     }
 
+    // 04/06/2026 17:10 linhdev - gate COF/GSR Assignment trên route() (tránh SOQL 101 Phone Update)
+    @IsTest
+    static void testShouldCreateAssignmentsOnStandardRoute() {
+        FEC_Nature_of_Case__c noc = [SELECT Id FROM FEC_Nature_of_Case__c LIMIT 1];
+        Case c = insertTestCase('Route Assignment Gate');
+        c = [
+            SELECT
+                Id,
+                FEC_Current_Case_Stage__c,
+                FEC_Current_Case_Stage__r.FEC_Business_Process__r.FEC_Code__c
+            FROM Case
+            WHERE Id = :c.Id
+            LIMIT 1
+        ];
+
+        System.assertEquals(
+            true,
+            FEC_CofGsrAssignmentService.shouldCreateAssignmentsOnStandardRoute(c, noc.Id),
+            'NOC COF/GSR phải bật luồng Assignment.'
+        );
+        System.assertEquals(
+            false,
+            FEC_CofGsrAssignmentService.shouldCreateAssignmentsOnStandardRoute(c, c.Id),
+            'Input không phải NOC/Actual NOC phải trả false.'
+        );
+        System.assertEquals(
+            false,
+            FEC_CofGsrAssignmentService.shouldCreateAssignmentsOnStandardRoute(c, null),
+            'Blank natureOfCaseId và stage không COF phải trả false.'
+        );
+    }
+
     @IsTest
     static void testResolveToNocIds() {
         FEC_Nature_of_Case__c noc = [SELECT Id FROM FEC_Nature_of_Case__c LIMIT 1];

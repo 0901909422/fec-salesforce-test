@@ -816,4 +816,100 @@
         <name>FEC_MSG_Can_Not_Find_Next_Stage</name>
         <label>Không tìm thấy giai đoạn tiếp theo</label>
     </customLabels>
+    <customLabels>
+        <name>FEC_Uploaded_File_Contains_Error_Message</name>
+        <label>Tệp đã tải lên có lỗi</label>
+    </customLabels>
+    <customLabels>
+        <name>FEC_Duplicate_Records_Message</name>
+        <label>Đã tìm thấy bản ghi trùng lặp</label>
+    </customLabels>
+    <customLabels>
+        <name>FEC_Mapping_Could_Not_Be_Found_Message</name>
+        <label>Không thể tìm thấy Mapping này</label>
+    </customLabels>
+    <customLabels>
+        <name>FEC_Please_Select_A_Campaign_Message</name>
+        <label>Vui lòng chọn một chiến dịch</label>
+    </customLabels>
+    <customLabels>
+        <name>FEC_Saving_Configuration_Error_Message</name>
+        <label>Lỗi khi lưu cấu hình</label>
+    </customLabels>
+    <customLabels>
+        <name>FEC_Cannot_Read_File_Message</name>
+        <label>Không thể đọc file</label>
+    </customLabels>
+    <customLabels>
+        <name>FEC_Unable_To_Load_Records_Message</name>
+        <label>Không tải được các bản ghi</label>
+    </customLabels>
+    <customLabels>
+        <name>FEC_Lbl_CS_Campaign_Name</name>
+        <label>Tên Chiến dịch của CS</label>
+    </customLabels>
+    <customLabels>
+        <name>FEC_Lbl_Genesys_Campaign</name>
+        <label>Tên Chiến dịch của Genesys</label>
+    </customLabels>
+    <customLabels>
+        <name>FEC_Lbl_Mapping_Configuration_Title</name>
+        <label>Cấu hình Mapping chiến dịch</label>
+    </customLabels>
+    <customLabels>
+        <name>FEC_Lbl_Upload_Campaign_Data</name>
+        <label>Tải lên dữ liệu chiến dịch</label>
+    </customLabels>
+    <customLabels>
+        <name>FEC_Lbl_Upload_Instruction</name>
+        <label>Chọn một tệp excel theo mẫu để tải lên chi tiết</label>
+    </customLabels>
+    <customLabels>
+        <name>FEC_Lbl_No_Template_Question</name>
+        <label>Bạn chưa có tệp mẫu?</label>
+    </customLabels>
+    <customLabels>
+        <name>FEC_Lbl_Campaign_Configuration</name>
+        <label>Cấu hình Chiến dịch</label>
+    </customLabels>
+    <customLabels>
+        <name>FEC_Lbl_CS_Campaign_Mapping</name>
+        <label>Mapping Chiến dịch CS</label>
+    </customLabels>
+    <customLabels>
+        <name>FEC_Placeholder_Select_Campaign</name>
+        <label>Chọn Chiến dịch...</label>
+    </customLabels>
+    <customLabels>
+        <name>FEC_Lbl_No_Of_Inprogress_Records</name>
+        <label>Số bản ghi đang xử lý: </label>
+    </customLabels>
+    <customLabels>
+        <name>FEC_Btn_Download_Excel</name>
+        <label>Tải xuống Excel</label>
+    </customLabels>
+    <customLabels>
+        <name>FEC_Lbl_DB_Job_Announcement</name>
+        <label>Job DB chỉ chạy trong khoảng từ 6 giờ sáng đến 6 giờ tối</label>
+    </customLabels>
+    <customLabels>
+        <name>FEC_Lbl_Enable_Schedule</name>
+        <label>Kích hoạt Lịch trình</label>
+    </customLabels>
+    <customLabels>
+        <name>FEC_Lbl_Run_Weekend_Question</name>
+        <label>Bạn có muốn chạy chiến dịch vào cuối tuần không?</label>
+    </customLabels>
+    <customLabels>
+        <name>FEC_Lbl_Saturday</name>
+        <label>Thứ Bảy</label>
+    </customLabels>
+    <customLabels>
+        <name>FEC_Lbl_Sunday</name>
+        <label>Chủ Nhật</label>
+    </customLabels>
+    <customLabels>
+        <name>FEC_Btn_Push_Record</name>
+        <label>Đẩy bản ghi</label>
+    </customLabels>
 </Translations>

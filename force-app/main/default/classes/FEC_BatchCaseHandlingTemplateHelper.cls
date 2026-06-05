@@ -120,6 +120,11 @@ public without sharing class FEC_BatchCaseHandlingTemplateHelper {
         if (row == null || caseRecord == null) {
             return;
         }
+        if (!caseRecord.getPopulatedFieldsAsMap().containsKey('FEC_Current_Case_Stage__r')) {
+            row.businessProcessCode = null;
+            row.businessProcessName = null;
+            return;
+        }
         SObject stage = caseRecord.getSObject('FEC_Current_Case_Stage__r');
         if (stage == null) {
             row.businessProcessCode = null;

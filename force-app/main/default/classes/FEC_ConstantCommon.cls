@@ -60,7 +60,8 @@ public with sharing class FEC_ConstantCommon {
     public static final String DATE_FORMAT_DDMMYYYY = 'dd/MM/yyyy';
     public static final String DATETIME_FORMAT_OUTPUT = 'dd/MM/yyyy HH:mm:ss';
     public static final String DATETIME_FORMAT_OUTPUT1 = 'dd/MM/yyyy, HH:mm:ss';
-    
+    public static final String DATETIME_FORMAT_LOG = 'yyyy-MM-dd HH:mm:ss';
+
     public static final String PAYMENT_PREFIX = 'pay_';
     
     public static final String CASE_INTERACTION_RECORD_TYPE_DEV_NAME = 'Interaction';
@@ -109,7 +110,7 @@ public with sharing class FEC_ConstantCommon {
     public static final String PATTERN_APPLICATION_ID = '^(\\d{6}|\\d{8}|\\d{9})$';
     public static final String PATTERN_ACCOUNT_NUMBER = '^(\\d{16}|\\d{19})$';
     public static final String PATTERN_CONTRACT_NUMBER = '^(\\d{8}-\\d{6}-\\d{4}|\\d{8}-\\d{7}-\\d{3}|\\d{8}-\\d{7}-\\d{2}|\\d{8}-\\d{7}-\\d{1}|\\d{8}-\\d{7}|\\d{2}-\\d{2}-\\d{2}-\\d{2})$';
-    public static final String PATTERN_EMAIL = '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,8}(\\.[A-Za-z]{2,8})*$';
+    public static final String PATTERN_EMAIL = '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,5}(\\.[A-Za-z]{2,5})?$';
     public static final String PATTERN_DATE = '^\\d{4}-\\d{2}-\\d{2}$';
     public static final String PATTERN_SYS_TIME = '\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}';
     public static final String PATTERN_DATE_TIME = '^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$';
@@ -722,6 +723,24 @@ public with sharing class FEC_ConstantCommon {
     
     public static final String BP_GSR= 'GSR';
     public static final String BP_COF= 'COF';
+    public static final String BP_COMPLAINT_OR_FEEDBACK = 'Complaint Or Feedback';
+
+    /** CRP-1726 GetCSCaseStatus — category allowed for Complaint/Feedback case type */
+    public static final String FEC_CATEGORY_FEEDBACK_UB = 'Feedback UB';
+
+    /** CRP-1726 GetCSCaseStatus — mapped CaseStatus labels (Vietnamese) */
+    public static final String GET_CASE_STATUS_VN_CLOSED = 'Đã đóng';
+    public static final String GET_CASE_STATUS_VN_IN_PROGRESS = 'Đang xử lý';
+    public static final String GET_CASE_STATUS_VN_OPEN = 'Đang mở';
+    public static final String GET_CASE_STATUS_VN_UNDEFINED = 'Chưa xác định';
+
+    // ================= MY CASE API — channel function names =================
+    public static final String MY_CASE_FUNCTION_CREATE_CS_CASE = 'CreateCSCase';
+    public static final String MY_CASE_FUNCTION_GET_CS_CASE_STATUS = 'GetCSCaseStatus';
+    public static final String MY_CASE_CHANNEL_CREATE_CASE_NOT_ALLOWED_MSG =
+        'Channel is not allowed to execute CreateCSCase';
+    public static final String MY_CASE_CHANNEL_GET_CASE_STATUS_NOT_ALLOWED_MSG =
+        'Channel is not allowed to execute GetCSCaseStatus';
     
     // ================= ROUTE STATUS =================
     public static final String STATUS_CS_BACKOFFICE = 'CSBackOfficeReview';

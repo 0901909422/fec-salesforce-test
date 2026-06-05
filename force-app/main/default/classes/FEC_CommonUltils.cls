@@ -157,18 +157,79 @@ public with sharing class FEC_CommonUltils {
     return obj != null ? String.valueOf(obj) : FEC_ConstantCommon.STR_EMPTY;
   }
 
+  private static final String CHANNEL_QUOTE_CHARS = '"\'\u201C\u201D\u2018\u2019\u00AB\u00BB';
+
+  public static String normalizeChannelInput(String channel) {
+    if (channel == null) {
+      return null;
+    }
+    String cleaned = channel.trim();
+    if (String.isBlank(cleaned)) {
+      return null;
+    }
+    cleaned = cleaned.replaceAll('(?i)&quot;|&apos;|&#34;|&#39;|&#x22;|&#x27;', '');
+    for (Integer i = 0; i < CHANNEL_QUOTE_CHARS.length(); i++) {
+      cleaned = cleaned.replace(CHANNEL_QUOTE_CHARS.substring(i, i + 1), '');
+    }
+    cleaned = cleaned.replaceAll('\\s+', ' ').trim();
+    return String.isBlank(cleaned) ? null : cleaned;
+  }
+
+  private static String stripChannelQuoteCharacters(String value) {
+    if (String.isBlank(value)) {
+      return value;
+    }
+    String cleaned = value.replaceAll('(?i)&quot;|&apos;|&#34;|&#39;|&#x22;|&#x27;', '');
+    for (Integer i = 0; i < CHANNEL_QUOTE_CHARS.length(); i++) {
+      cleaned = cleaned.replace(CHANNEL_QUOTE_CHARS.substring(i, i + 1), '');
+    }
+    return cleaned.replaceAll('\\s+', ' ').trim();
+  }
+
   public static Boolean isActiveChannelSupported(String channel) {
-    if (String.isBlank(channel)) {
+    String normalized = normalizeChannelInput(channel);
+    if (String.isBlank(normalized)) {
       return false;
     }
-    return getActiveChannelIds().contains(normalizeChannelKey(channel));
+    return getActiveChannelIds().contains(normalizeChannelKey(normalized));
   }
 
   public static String sanitizeChannelForMessage(String channel) {
-    if (String.isBlank(channel)) {
-      return '';
+    String normalized = normalizeChannelInput(channel);
+    return normalized == null ? '' : normalized;
+  }
+
+  public static String buildUnsupportedChannelMessage(String channel) {
+    String channelId = sanitizeChannelForMessage(channel);
+    String message =
+      String.valueOf(System.Label.FEC_MSG_Channel_Validation).trim() +
+      ' ' +
+      channelId +
+      ' ' +
+      String.valueOf(System.Label.FEC_MSG_Data_Request_Master_Data).trim();
+    return stripQuotesFromChannelErrorMessage(message);
+  }
+
+  private static String stripQuotesFromChannelErrorMessage(String message) {
+    if (String.isBlank(message)) {
+      return message;
     }
-    return channel.trim().replace('"', '').replace('&quot;', '');
+    String cleaned = message.replaceAll('(?i)&quot;|&apos;|&#34;|&#39;', '');
+    cleaned = stripChannelQuoteCharacters(cleaned);
+    return cleaned.replaceAll('\\s+', ' ').trim();
+  }
+
+  public static String buildNatureOfCaseChannelLikePattern(String channel) {
+    String normalized = normalizeChannelInput(channel);
+    if (String.isBlank(normalized)) {
+      return null;
+    }
+    return '%' + normalized + '%';
+  }
+
+  @TestVisible
+  public static void resetActiveChannelCacheForTest() {
+    cachedActiveChannelIds = null;
   }
 
   public static Set<String> getActiveChannelIds() {
@@ -213,7 +274,8 @@ public with sharing class FEC_CommonUltils {
   }
 
   private static String normalizeChannelKey(String channel) {
-    return channel == null ? null : channel.trim().toUpperCase();
+    String normalized = normalizeChannelInput(channel);
+    return normalized == null ? null : normalized.toUpperCase();
   }
 
   private static String resolveFirstExistingObjectApi(List<String> candidates) {
@@ -691,7 +753,7 @@ public with sharing class FEC_CommonUltils {
     } else if (body != null) {
       req.setBody(body);
     }
-    req.setTimeout(120000); // 120 seconds timeout
+    req.setTimeout(FEC_ConstantCommon.HTTP_TIMEOUT_MAX); // 120 seconds timeout
 
     Http http = new Http();
     HttpResponse res = http.send(req);
@@ -718,7 +780,7 @@ public with sharing class FEC_CommonUltils {
         req.setBody(body);
     }
 
-    req.setTimeout(120000);
+    req.setTimeout(FEC_ConstantCommon.HTTP_TIMEOUT_MAX);
 
     Http http = new Http();
     HttpResponse res = http.send(req);
@@ -1588,6 +1650,32 @@ public with sharing class FEC_CommonUltils {
       );
       return null;
     }
+  }
+
+  /**
+   * Parse an Object value to Decimal.
+   * Handles both Decimal and String (varchar from OData/PostgreSQL).
+   */
+  public static Decimal parseDecimal(Object val) {
+    if (val == null) return null;
+    if (val instanceof Decimal) return (Decimal) val;
+    String s = String.valueOf(val).trim();
+    return String.isBlank(s) ? null : Decimal.valueOf(s);
+  }
+
+  /**
+   * Parse an Object value to DateTime.
+   * Handles DateTime, epoch millis as String (varchar from OData/PostgreSQL).
+   */
+  public static DateTime parseDateTime(Object val) {
+    if (val == null) return null;
+    if (val instanceof DateTime) return (DateTime) val;
+    String s = String.valueOf(val).trim();
+    if (String.isBlank(s)) return null;
+    if (s.isNumeric()) {
+      return DateTime.newInstance(Long.valueOf(s));
+    }
+    return null;
   }
 
   private static String normalizeAmountString(String raw) {

@@ -90,7 +90,7 @@ public with sharing class FEC_AdditionalFieldValueTriggerHandler {
             String compositeKey = String.valueOf(record.FEC_Additional_Field__c) + '-' + record.FEC_Code__c;
 
             if (existingCompositeKeys.contains(compositeKey) || keysInCurrentTransaction.contains(compositeKey)) {
-                record.FEC_Code__c.addError('Mã Code này đã tồn tại trong danh sách của trường hiện tại. Vui lòng nhập Code khác.');
+                record.FEC_Code__c.addError(System.Label.FEC_Error_DuplicateCodeInField);
             } else {
                 keysInCurrentTransaction.add(compositeKey);
             }

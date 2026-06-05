@@ -354,6 +354,143 @@
             <componentInstance>
                 <componentName>fecInteractionInfo</componentName>
                 <identifier>c_fecInteractionInfo</identifier>
+                <visibilityRule>
+                    <booleanFilter>1 OR 2</booleanFilter>
+                    <criteria>
+                        <leftValue>{!Record.FEC_Interaction__r.FEC_Channel__c}</leftValue>
+                        <operator>EQUAL</operator>
+                        <rightValue>Inbound</rightValue>
+                    </criteria>
+                    <criteria>
+                        <leftValue>{!Record.FEC_Interaction__r.FEC_Channel__c}</leftValue>
+                        <operator>EQUAL</operator>
+                        <rightValue>Outbound</rightValue>
+                    </criteria>
+                </visibilityRule>
+            </componentInstance>
+        </itemInstances>
+        <itemInstances>
+            <componentInstance>
+                <componentName>fecInteractionEmailInfo</componentName>
+                <identifier>c_fecInteractionEmailInfo</identifier>
+                <visibilityRule>
+                    <booleanFilter>(1 AND 4) OR (2 AND 3)</booleanFilter>
+                    <criteria>
+                        <leftValue>{!Record.FEC_Interaction__r.FEC_Channel__c}</leftValue>
+                        <operator>EQUAL</operator>
+                        <rightValue>Email</rightValue>
+                    </criteria>
+                    <criteria>
+                        <leftValue>{!Record.FEC_Interaction__r.FEC_Channel__c}</leftValue>
+                        <operator>EQUAL</operator>
+                        <rightValue>Internal</rightValue>
+                    </criteria>
+                    <criteria>
+                        <leftValue>{!Record.FEC_Interaction__r.FEC_Interaction_Subchannel__c}</leftValue>
+                        <operator>EQUAL</operator>
+                        <rightValue>Internal Email</rightValue>
+                    </criteria>
+                    <criteria>
+                        <leftValue>{!Record.FEC_Interaction__r.FEC_Send_To__c}</leftValue>
+                        <operator>NE</operator>
+                        <rightValue>dichvukhachhang@fecredit.com.vn</rightValue>
+                    </criteria>
+                </visibilityRule>
+            </componentInstance>
+        </itemInstances>
+        <itemInstances>
+            <componentInstance>
+                <componentName>fec_InteractionInfoF2F_Letter</componentName>
+                <identifier>c_fec_InteractionInfoF2F_Letter</identifier>
+                <visibilityRule>
+                    <booleanFilter>(1 OR 2 OR 3 OR (4 AND 6)) AND 5</booleanFilter>
+                    <criteria>
+                        <leftValue>{!Record.FEC_Interaction__r.FEC_Channel__c}</leftValue>
+                        <operator>EQUAL</operator>
+                        <rightValue>F2F</rightValue>
+                    </criteria>
+                    <criteria>
+                        <leftValue>{!Record.FEC_Interaction__r.FEC_Channel__c}</leftValue>
+                        <operator>EQUAL</operator>
+                        <rightValue>Letter</rightValue>
+                    </criteria>
+                    <criteria>
+                        <leftValue>{!Record.FEC_Interaction__r.FEC_Channel__c}</leftValue>
+                        <operator>EQUAL</operator>
+                        <rightValue>External</rightValue>
+                    </criteria>
+                    <criteria>
+                        <leftValue>{!Record.FEC_Interaction__r.FEC_Channel__c}</leftValue>
+                        <operator>EQUAL</operator>
+                        <rightValue>Internal</rightValue>
+                    </criteria>
+                    <criteria>
+                        <leftValue>{!Record.FEC_Interaction__r.FEC_Is_MyCaseAPI_Interaction__c}</leftValue>
+                        <operator>EQUAL</operator>
+                        <rightValue>false</rightValue>
+                    </criteria>
+                    <criteria>
+                        <leftValue>{!Record.FEC_Interaction__r.FEC_Interaction_Subchannel__c}</leftValue>
+                        <operator>NE</operator>
+                        <rightValue>Internal Email</rightValue>
+                    </criteria>
+                </visibilityRule>
+            </componentInstance>
+        </itemInstances>
+        <itemInstances>
+            <componentInstance>
+                <componentName>fecInteractionChatInfo</componentName>
+                <identifier>c_fecInteractionChatInfo</identifier>
+                <visibilityRule>
+                    <criteria>
+                        <leftValue>{!Record.FEC_Interaction__r.FEC_Channel__c}</leftValue>
+                        <operator>EQUAL</operator>
+                        <rightValue>Chat</rightValue>
+                    </criteria>
+                </visibilityRule>
+            </componentInstance>
+        </itemInstances>
+        <itemInstances>
+            <componentInstance>
+                <componentName>fec_InteractionMyCaseInfo</componentName>
+                <identifier>c_fec_InteractionMyCaseInfo</identifier>
+                <visibilityRule>
+                    <booleanFilter>(1 AND 2) OR 3</booleanFilter>
+                    <criteria>
+                        <leftValue>{!Record.FEC_Interaction__r.FEC_Channel__c}</leftValue>
+                        <operator>EQUAL</operator>
+                        <rightValue>External</rightValue>
+                    </criteria>
+                    <criteria>
+                        <leftValue>{!Record.FEC_Interaction__r.FEC_Channel__c}</leftValue>
+                        <operator>EQUAL</operator>
+                        <rightValue>Internal</rightValue>
+                    </criteria>
+                    <criteria>
+                        <leftValue>{!Record.FEC_Interaction__r.FEC_Is_MyCaseAPI_Interaction__c}</leftValue>
+                        <operator>EQUAL</operator>
+                        <rightValue>true</rightValue>
+                    </criteria>
+                </visibilityRule>
+            </componentInstance>
+        </itemInstances>
+        <itemInstances>
+            <componentInstance>
+                <componentName>fecInteractionEmailInfoUbank</componentName>
+                <identifier>c_fecInteractionEmailInfoUbank</identifier>
+                <visibilityRule>
+                    <booleanFilter>1 AND 2</booleanFilter>
+                    <criteria>
+                        <leftValue>{!Record.FEC_Interaction__r.FEC_Channel__c}</leftValue>
+                        <operator>EQUAL</operator>
+                        <rightValue>Email</rightValue>
+                    </criteria>
+                    <criteria>
+                        <leftValue>{!Record.FEC_Interaction__r.FEC_Send_To__c}</leftValue>
+                        <operator>EQUAL</operator>
+                        <rightValue>dichvukhachhang@fecredit.com.vn</rightValue>
+                    </criteria>
+                </visibilityRule>
             </componentInstance>
         </itemInstances>
         <itemInstances>
