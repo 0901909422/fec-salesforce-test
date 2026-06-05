@@ -3,6 +3,8 @@ import { getRelatedListRecords } from 'lightning/uiRelatedListApi';
 import {FEC_ERROR_LOADING_ORIGINAL_INFORMATION } from "c/fec_CommonConst";
 import { getRecord, getFieldValue } from 'lightning/uiRecordApi';
 
+import getOriginalSnapshot from '@salesforce/apex/FEC_IntegrationFraudCaseDetailController.getOriginalSnapshot';
+
 const CASE_FIELDS = ['Case.FEC_Nature_of_Case__c'];
 export default class Fec_OriginalInformation extends LightningElement {
     // Standard properties passed by fec_CaseBussiness dynamic loader
@@ -12,6 +14,8 @@ export default class Fec_OriginalInformation extends LightningElement {
     @api isHiddenLwc;
     natureOfCaseId;
     @track fieldList = [];
+    @track isFraudCase = false;
+
     error;
     label = {
         FEC_ERROR_LOADING_ORIGINAL_INFORMATION
@@ -20,6 +24,22 @@ export default class Fec_OriginalInformation extends LightningElement {
     wiredCase({ data }) {
         if (data) {
             this.natureOfCaseId = getFieldValue(data, 'Case.FEC_Nature_of_Case__c');
+        }
+    }
+    
+    @wire(getOriginalSnapshot, { serviceCaseId: '$recordId' })
+    wiredSnapshot({ data, error }) {
+        console.log('getOriginalSnapshot-data:', JSON.stringify(data));
+        if (data) {
+            this.isFraudCase = true;
+            console.log('getOriginalSnapshot');
+        } else {
+            this.isFraudCase = false;
+        }
+
+        if (error) {
+            console.error('[fec_OriginalInformation] Error loading snapshot:', error);
+            this.isFraudCase = false;
         }
     }
     @wire(getRelatedListRecords, {
@@ -65,8 +85,6 @@ export default class Fec_OriginalInformation extends LightningElement {
             console.error('[fec_OriginalInformation] Error fetching flow history: ', error);
         }
     }
-    get isFraudCase() {
-        return true;
-    }
+   
     
 }
