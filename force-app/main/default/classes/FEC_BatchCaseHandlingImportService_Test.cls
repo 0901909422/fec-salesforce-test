@@ -1128,154 +1128,129 @@ private class FEC_BatchCaseHandlingImportService_Test {
     }
 
     @IsTest
-    static void validateImportRows_missingInputtedRemarks_usesExpectedLabel() {
-        List<Object> inputRows = new List<Object>{
-            new Map<String, Object>{
-                'caseidsearch' => 'CASE-IMPORT-TEST-001',
-                'routingaction' => 'Reject'
-            }
-        };
+    static void testValidateImportRows_RemarkLengthAndMissingFields() {
+        String tooLongMsg = System.Label.FEC_Batch_Case_Handling_Import_Err_Remark_Too_Long;
+        String missingRemarkMsg = System.Label.FEC_Batch_Case_Handling_Import_Err_Missing_Remark;
+        String missingRoutingMsg = System.Label.FEC_Batch_Case_Handling_Import_Err_Missing_Routing_Action;
+        String invalidRoutingMsg = System.Label.FEC_Batch_Case_Handling_Import_Err_Routing_Action_Invalid;
+        String failedStatus = System.Label.FEC_Batch_Case_Handling_Import_Row_Status_Failed;
 
-        List<FEC_BatchCaseHandlingImportRow> rows =
-            FEC_BatchCaseHandlingImportService.validateCaseHandlingImportRows(inputRows, false);
+        List<FEC_BatchCaseHandlingImportRow> missingRemarkRows =
+            FEC_BatchCaseHandlingImportService.validateCaseHandlingImportRows(
+                new List<Object>{ new Map<String, Object>{ 'caseidsearch' => 'CASE-IMPORT-TEST-001', 'routingaction' => 'Reject' } },
+                false
+            );
+        System.assertEquals(1, missingRemarkRows.size());
+        System.assertEquals(failedStatus, missingRemarkRows[0].status);
+        System.assert(missingRemarkRows[0].errors.contains(missingRemarkMsg), missingRemarkRows[0].errors);
 
-        System.assertEquals(1, rows.size());
-        System.assertEquals(
-            System.Label.FEC_Batch_Case_Handling_Import_Row_Status_Failed,
-            rows[0].status
-        );
+        List<FEC_BatchCaseHandlingImportRow> emptyRowResults =
+            FEC_BatchCaseHandlingImportService.validateCaseHandlingImportRows(
+                new List<Object>{
+                    new Map<String, Object>{ 'caseidsearch' => 'CASE-IMPORT-TEST-001', 'routingaction' => 'Reject', 'inputtedremarks' => 'ok' },
+                    new Map<String, Object>{
+                        'originalHeaders' => new List<String>{ 'Case ID Search', 'Routing Action', 'Inputted Remarks' },
+                        'originalCells' => new List<String>{ '', '', '' }
+                    }
+                },
+                false
+            );
+        System.assertEquals(2, emptyRowResults.size());
+        System.assertEquals(failedStatus, emptyRowResults[1].status);
         System.assert(
-            rows[0].errors.contains(System.Label.FEC_Batch_Case_Handling_Import_Err_Missing_Remark),
-            'Expected missing Inputted Remarks error: ' + rows[0].errors
+            emptyRowResults[1].errors.contains(System.Label.FEC_Batch_Case_Handling_Import_Err_Missing_Case_Id),
+            emptyRowResults[1].errors
         );
-    }
 
-    @IsTest
-    static void validateImportRows_emptyRow_recordsFailedWithMissingCaseId() {
-        List<Object> inputRows = new List<Object>{
-            new Map<String, Object>{
-                'caseidsearch' => 'CASE-IMPORT-TEST-001',
-                'routingaction' => 'Reject',
-                'inputtedremarks' => 'ok'
-            },
-            new Map<String, Object>{
-                'originalHeaders' => new List<String>{ 'Case ID Search', 'Routing Action', 'Inputted Remarks' },
-                'originalCells' => new List<String>{ '', '', '' }
-            }
-        };
+        List<FEC_BatchCaseHandlingImportRow> remarkLenRows =
+            FEC_BatchCaseHandlingImportService.validateCaseHandlingImportRows(
+                new List<Object>{ new Map<String, Object>{
+                    'caseidsearch' => 'CASE-IMPORT-TEST-REMARK-LEN',
+                    'routingaction' => 'Reject',
+                    'inputtedremarks' => buildRemarkOfLength(32768)
+                }},
+                false
+            );
+        System.assertEquals(failedStatus, remarkLenRows[0].status);
+        System.assert(remarkLenRows[0].errors.contains(tooLongMsg), remarkLenRows[0].errors);
+        System.assert(!remarkLenRows[0].errors.contains(missingRoutingMsg), remarkLenRows[0].errors);
 
-        List<FEC_BatchCaseHandlingImportRow> rows =
-            FEC_BatchCaseHandlingImportService.validateCaseHandlingImportRows(inputRows, false);
+        List<FEC_BatchCaseHandlingImportRow> maxLenRows =
+            FEC_BatchCaseHandlingImportService.validateCaseHandlingImportRows(
+                new List<Object>{ new Map<String, Object>{
+                    'caseidsearch' => 'CASE-IMPORT-TEST-REMARK-MAX',
+                    'routingaction' => 'Reject',
+                    'inputtedremarks' => buildRemarkOfLength(32767)
+                }},
+                false
+            );
+        System.assert(maxLenRows[0].errors.contains(tooLongMsg), maxLenRows[0].errors);
 
-        System.assertEquals(2, rows.size());
-        System.assertEquals(
-            System.Label.FEC_Batch_Case_Handling_Import_Row_Status_Failed,
-            rows[1].status
-        );
-        System.assert(
-            rows[1].errors.contains(System.Label.FEC_Batch_Case_Handling_Import_Err_Missing_Case_Id),
-            'Expected missing Case ID for empty row: ' + rows[1].errors
-        );
-    }
-
-    @IsTest
-    static void validateImportRows_remarkTooLong_usesExpectedLabel() {
-        List<Object> inputRows = new List<Object>{
-            new Map<String, Object>{
-                'caseidsearch' => 'CASE-IMPORT-TEST-REMARK-LEN',
-                'routingaction' => 'Reject',
-                'inputtedremarks' => buildRemarkOfLength(32768)
-            }
-        };
-
-        List<FEC_BatchCaseHandlingImportRow> rows =
-            FEC_BatchCaseHandlingImportService.validateCaseHandlingImportRows(inputRows, false);
-
-        System.assertEquals(1, rows.size());
-        System.assertEquals(
-            System.Label.FEC_Batch_Case_Handling_Import_Row_Status_Failed,
-            rows[0].status
-        );
-        System.assert(
-            rows[0].errors.contains(System.Label.FEC_Batch_Case_Handling_Import_Err_Remark_Too_Long),
-            'Expected remark too long error: ' + rows[0].errors
-        );
-    }
-
-    @IsTest
-    static void validateImportRows_remarkTooLong_skipsRoutingValidation() {
-        List<Object> inputRows = new List<Object>{
-            new Map<String, Object>{
-                'caseidsearch' => 'CASE-IMPORT-TEST-REMARK-LEN',
-                'routingaction' => 'Reject',
-                'inputtedremarks' => buildRemarkOfLength(32768)
-            }
-        };
-
-        List<FEC_BatchCaseHandlingImportRow> rows =
-            FEC_BatchCaseHandlingImportService.validateCaseHandlingImportRows(inputRows, false);
-
-        System.assertEquals(1, rows.size());
-        System.assert(
-            rows[0].errors.contains(System.Label.FEC_Batch_Case_Handling_Import_Err_Remark_Too_Long),
-            'Expected remark too long error: ' + rows[0].errors
-        );
-        System.assert(
-            !rows[0].errors.contains(System.Label.FEC_Batch_Case_Handling_Import_Err_Missing_Routing_Action),
-            'Must not show missing Routing when remark over max: ' + rows[0].errors
-        );
-    }
-
-    @IsTest
-    static void validateImportRows_remarkTooLongFromCharLengthOnly_usesExpectedLabel() {
-        List<Object> inputRows = new List<Object>{
-            new Map<String, Object>{
+        for (List<Object> charLenInput : new List<List<Object>>{
+            new List<Object>{ new Map<String, Object>{
                 'caseidsearch' => 'CASE-IMPORT-TEST-REMARK-LEN-CHAR',
                 'routingaction' => 'Reject',
                 'inputtedremarks' => FEC_ConstantCommon.STR_EMPTY,
                 'inputtedRemarksCharLength' => 32768
-            }
-        };
-
-        List<FEC_BatchCaseHandlingImportRow> rows =
-            FEC_BatchCaseHandlingImportService.validateCaseHandlingImportRows(inputRows, false);
-
-        System.assertEquals(1, rows.size());
-        System.assert(
-            rows[0].errors.contains(System.Label.FEC_Batch_Case_Handling_Import_Err_Remark_Too_Long),
-            'Expected remark too long from charLength: ' + rows[0].errors
-        );
-    }
-
-    @IsTest
-    static void validateImportRows_truncatedOriginalCells_hiddenOverflow_usesCharLength() {
-        List<Object> inputRows = new List<Object>{
-            new Map<String, Object>{
+            }},
+            new List<Object>{ new Map<String, Object>{
                 'caseidsearch' => 'CASE-IMPORT-TEST-REMARK-TRUNC',
                 'routingaction' => 'Reject',
                 'inputtedremarks' => FEC_ConstantCommon.STR_EMPTY,
                 'inputtedRemarksCharLength' => 40000,
                 'originalHeaders' => new List<String>{ 'Case ID Search', 'Routing Action', 'Inputted Remarks' },
-                'originalCells' => new List<String>{
-                    'CASE-IMPORT-TEST-REMARK-TRUNC',
-                    'Reject',
-                    buildRemarkOfLength(32768)
-                }
-            }
-        };
+                'originalCells' => new List<String>{ 'CASE-IMPORT-TEST-REMARK-TRUNC', 'Reject', buildRemarkOfLength(32768) }
+            }},
+            new List<Object>{ new Map<String, Object>{
+                'caseidsearch' => 'CASE-IMPORT-TEST-REMARK-ALIAS',
+                'routingaction' => 'Reject',
+                'inputtedremarks' => FEC_ConstantCommon.STR_EMPTY,
+                'inputtedRemarksCharLength' => 40000,
+                'originalHeaders' => new List<String>{ 'Case ID Search', 'Routing Action', 'Input Remark' },
+                'originalCells' => new List<String>{ 'CASE-IMPORT-TEST-REMARK-ALIAS', 'Reject', buildRemarkOfLength(32768) }
+            }}
+        }) {
+            System.assert(
+                FEC_BatchCaseHandlingImportService.validateCaseHandlingImportRows(charLenInput, false)[0].errors.contains(tooLongMsg),
+                String.valueOf(charLenInput)
+            );
+        }
 
-        List<FEC_BatchCaseHandlingImportRow> rows =
-            FEC_BatchCaseHandlingImportService.validateCaseHandlingImportRows(inputRows, false);
+        List<FEC_BatchCaseHandlingImportRow> missingRemarkWithRouting =
+            FEC_BatchCaseHandlingImportService.validateCaseHandlingImportRows(
+                new List<Object>{ new Map<String, Object>{
+                    'caseidsearch' => 'CASE-IMPORT-TEST-004',
+                    'routingaction' => 'Reject',
+                    'inputtedremarks' => FEC_ConstantCommon.STR_EMPTY
+                }},
+                false
+            );
+        System.assert(missingRemarkWithRouting[0].errors.contains(missingRemarkMsg), missingRemarkWithRouting[0].errors);
+        System.assert(!missingRemarkWithRouting[0].errors.contains(missingRoutingMsg), missingRemarkWithRouting[0].errors);
 
-        System.assertEquals(1, rows.size());
-        System.assert(
-            rows[0].errors.contains(System.Label.FEC_Batch_Case_Handling_Import_Err_Remark_Too_Long),
-            'Expected remark too long when charLength exceeds max: ' + rows[0].errors
-        );
+        List<FEC_BatchCaseHandlingImportRow> missingRoutingRows =
+            FEC_BatchCaseHandlingImportService.validateCaseHandlingImportRows(
+                new List<Object>{ new Map<String, Object>{ 'caseidsearch' => 'CASE-IMPORT-TEST-002' } },
+                false
+            );
+        System.assert(missingRoutingRows[0].errors.contains(missingRoutingMsg), missingRoutingRows[0].errors);
+        System.assertEquals(1, countOccurrences(missingRoutingRows[0].errors, missingRoutingMsg), missingRoutingRows[0].errors);
+
+        List<FEC_BatchCaseHandlingImportRow> invalidRoutingRows =
+            FEC_BatchCaseHandlingImportService.validateCaseHandlingImportRows(
+                new List<Object>{ new Map<String, Object>{
+                    'caseidsearch' => 'CASE-IMPORT-TEST-003',
+                    'routingaction' => 'Reject',
+                    'inputtedremarks' => 'Test remark'
+                }},
+                false
+            );
+        System.assert(invalidRoutingRows[0].errors.contains(invalidRoutingMsg), invalidRoutingRows[0].errors);
+        System.assertEquals(1, countOccurrences(invalidRoutingRows[0].errors, invalidRoutingMsg), invalidRoutingRows[0].errors);
     }
 
     @IsTest
-    static void isInputtedRemarksOverMaxLength_boundary() {
+    static void testIsInputtedRemarksOverMaxLength_boundary() {
         System.assertEquals(
             false,
             FEC_BatchCaseHandlingImportService.isInputtedRemarksOverMaxLength(
@@ -1303,346 +1278,153 @@ private class FEC_BatchCaseHandlingImportService_Test {
     }
 
     @IsTest
-    static void applyValidatedRoutingToResultCells_keepsSourceRoutingNotAssignment() {
-        List<String> cells = new List<String>{
-            'Resolve',
-            'Route to CS Support - DQ-CS Support',
-            'remark'
-        };
-        FEC_BatchCaseHandlingImportRow row = new FEC_BatchCaseHandlingImportRow();
-        row.routingAction = 'Route to CS Support - DQ-CS Support';
-        row.assignmentRoutingAction = 'Route to CS Support - DQ-CS Support';
-        FEC_BatchCaseHandlingImportService.applyValidatedRoutingToResultCells(cells, 0, 1, row);
-        System.assertEquals('Resolve', cells[0]);
-        System.assertEquals('Route to CS Support - DQ-CS Support', cells[1]);
+    static void testApplyValidatedRoutingToResultCells_KeepsSourceValues() {
+        String routeTo = 'Route to CS Support - DQ-CS Support';
+        for (List<String> cells : new List<List<String>>{
+            new List<String>{ 'Resolve', routeTo, 'remark' },
+            new List<String>{ 'Revert', 'Escalate', 'remark' },
+            new List<String>{ FEC_ConstantCommon.STR_EMPTY, routeTo, 'remark' }
+        }) {
+            String expectedCaseRouting = cells[0];
+            FEC_BatchCaseHandlingImportRow row = new FEC_BatchCaseHandlingImportRow();
+            row.routingAction = cells[1] == routeTo ? routeTo : 'Escalate';
+            row.assignmentRoutingAction = row.routingAction;
+            FEC_BatchCaseHandlingImportService.applyValidatedRoutingToResultCells(cells, 0, 1, row);
+            System.assertEquals(expectedCaseRouting, cells[0]);
+            System.assertEquals(row.routingAction, cells[1]);
+        }
     }
 
     @IsTest
-    static void applyValidatedRoutingToResultCells_keepsSourceRevertNotAssignment() {
-        List<String> cells = new List<String>{
-            'Revert',
-            'Escalate',
-            'remark'
-        };
-        FEC_BatchCaseHandlingImportRow row = new FEC_BatchCaseHandlingImportRow();
-        row.routingAction = 'Escalate';
-        row.assignmentRoutingAction = 'Escalate';
-        FEC_BatchCaseHandlingImportService.applyValidatedRoutingToResultCells(cells, 0, 1, row);
-        System.assertEquals('Revert', cells[0]);
-        System.assertEquals('Escalate', cells[1]);
-    }
+    static void testCofGsrRoutingBleedSanitizeAndValidate() {
+        FEC_BatchCaseHandlingImportRow bleedRow = buildCofGsrBleedImportRow();
+        FEC_BatchCaseHandlingImportService.sanitizeCofGsrCaseRoutingBleedFromAssignment(bleedRow);
+        System.assertEquals(FEC_ConstantCommon.STR_EMPTY, bleedRow.routingAction);
+        System.assertEquals('Route to CS Support - DQ-CS Support', bleedRow.assignmentRoutingAction);
 
-    @IsTest
-    static void sanitizeCofGsrCaseRoutingBleedFromAssignment_clearsBleedWhenSourceRoutingBlank() {
-        FEC_BatchCaseHandlingImportRow rr = new FEC_BatchCaseHandlingImportRow();
-        rr.originalHeaders = new List<String>{
-            'Case ID',
-            'Assignment ID',
-            'Routing Action',
-            'Assignment Routing Action',
-            'Inputted Remarks'
-        };
-        rr.originalCells = new List<String>{
-            'S-3653',
-            'A-001762',
-            FEC_ConstantCommon.STR_EMPTY,
-            'Route to CS Support - DQ-CS Support',
-            'remark'
-        };
-        rr.routingAction = 'Route to CS Support - DQ-CS Support';
-        rr.assignmentRoutingAction = 'Route to CS Support - DQ-CS Support';
-        FEC_BatchCaseHandlingImportService.sanitizeCofGsrCaseRoutingBleedFromAssignment(rr);
-        System.assertEquals(FEC_ConstantCommon.STR_EMPTY, rr.routingAction);
-        System.assertEquals('Route to CS Support - DQ-CS Support', rr.assignmentRoutingAction);
-    }
-
-    @IsTest
-    static void validateImportRows_cofGsrOnlyAssignmentRouting_doesNotReportBothRoutingActions() {
-        List<String> headers = new List<String>{
-            'Case ID',
-            'Assignment ID',
-            'Routing Action',
-            'Assignment Routing Action',
-            'Inputted Remarks'
-        };
-        List<String> cells = new List<String>{
-            'S-3653',
-            'A-001762',
-            FEC_ConstantCommon.STR_EMPTY,
-            'Route to CS Support - DQ-CS Support',
-            'remark'
-        };
-        List<Object> inputRows = new List<Object>{
-            new Map<String, Object>{
-                'caseidsearch' => 'S-3653',
-                'assignmentid' => 'A-001762',
-                'routingaction' => 'Route to CS Support - DQ-CS Support',
-                'assignmentroutingaction' => 'Route to CS Support - DQ-CS Support',
-                'inputtedremarks' => 'remark',
-                'originalHeaders' => headers,
-                'originalCells' => cells
-            }
-        };
         List<FEC_BatchCaseHandlingImportRow> rows =
-            FEC_BatchCaseHandlingImportService.validateCaseHandlingImportRows(inputRows, true);
+            FEC_BatchCaseHandlingImportService.validateCaseHandlingImportRows(
+                new List<Object>{ new Map<String, Object>{
+                    'caseidsearch' => 'S-3653',
+                    'assignmentid' => 'A-001762',
+                    'routingaction' => 'Route to CS Support - DQ-CS Support',
+                    'assignmentroutingaction' => 'Route to CS Support - DQ-CS Support',
+                    'inputtedremarks' => 'remark',
+                    'originalHeaders' => bleedRow.originalHeaders,
+                    'originalCells' => bleedRow.originalCells
+                }},
+                true
+            );
         System.assertEquals(1, rows.size());
         System.assert(
             !rows[0].errors.contains(System.Label.FEC_Batch_Case_Handling_Import_Err_Both_Routing_Actions),
-            'Must not report both routing when case routing empty in file: ' + rows[0].errors
+            rows[0].errors
         );
         System.assert(
             !rows[0].errors.contains(System.Label.FEC_Batch_Case_Handling_Import_Err_Assignment_Routing_Resolve_Only),
-            'Must not report resolve-only when case routing cleared: ' + rows[0].errors
+            rows[0].errors
         );
     }
 
     @IsTest
-    static void applyValidatedRoutingToResultCells_keepsBlankSourceRoutingWhenOnlyAssignment() {
-        List<String> cells = new List<String>{
-            FEC_ConstantCommon.STR_EMPTY,
-            'Route to CS Support - DQ-CS Support',
-            'remark'
-        };
-        FEC_BatchCaseHandlingImportRow row = new FEC_BatchCaseHandlingImportRow();
-        row.routingAction = 'Route to CS Support - DQ-CS Support';
-        row.assignmentRoutingAction = 'Route to CS Support - DQ-CS Support';
-        FEC_BatchCaseHandlingImportService.applyValidatedRoutingToResultCells(cells, 0, 1, row);
-        System.assertEquals(FEC_ConstantCommon.STR_EMPTY, cells[0]);
-        System.assertEquals('Route to CS Support - DQ-CS Support', cells[1]);
-    }
-
-    @IsTest
-    static void clearRoutingCellIfRemarkBleed_clearsDuplicateRemarkInRoutingColumn() {
-        List<String> cells = new List<String>();
+    static void testImportRowLayoutAndExportHelpers() {
+        List<String> bleedCells = new List<String>();
         for (Integer i = 0; i < 24; i++) {
-            cells.add(FEC_ConstantCommon.STR_EMPTY);
+            bleedCells.add(FEC_ConstantCommon.STR_EMPTY);
         }
         String remark = buildRemarkOfLength(32767);
-        cells[21] = remark;
-        cells[22] = remark;
-        FEC_BatchCaseHandlingImportService.clearRoutingCellIfRemarkBleed(cells, 21, 22);
-        System.assertEquals(FEC_ConstantCommon.STR_EMPTY, cells[21]);
-        System.assertEquals(remark, cells[22]);
+        bleedCells[21] = remark;
+        bleedCells[22] = remark;
+        FEC_BatchCaseHandlingImportService.clearRoutingCellIfRemarkBleed(bleedCells, 21, 22);
+        System.assertEquals(FEC_ConstantCommon.STR_EMPTY, bleedCells[21]);
+        System.assertEquals(remark, bleedCells[22]);
+
+        FEC_BatchCaseHandlingImportRow layoutRow = new FEC_BatchCaseHandlingImportRow();
+        layoutRow.originalHeaders = new List<String>{ 'Case ID', 'Routing Action', 'Inputted Remarks' };
+        layoutRow.originalCells = new List<String>{ 'S-3603', 'Resolve', '111' };
+        FEC_BatchCaseHandlingImportService.enrichImportRowValidateFieldsFromOriginalLayout(layoutRow);
+        System.assertEquals('S-3603', layoutRow.caseIdSearch);
+        System.assertEquals('Resolve', layoutRow.routingAction);
+        System.assertEquals('111', layoutRow.inputtedRemarks);
+
+        List<String> headers = new List<String>{ 'Plastic ID', 'Case ID', 'Other' };
+        List<String> exportCells = new List<String>{ 'S-4866', FEC_ConstantCommon.STR_EMPTY, 'x' };
+        FEC_BatchCaseHandlingImportService.syncCaseIdIntoExportCells(exportCells, headers, 'S-4866');
+        System.assertEquals(FEC_ConstantCommon.STR_EMPTY, exportCells[0]);
+        System.assertEquals('S-4866', exportCells[1]);
+        System.assertEquals('x', exportCells[2]);
     }
 
     @IsTest
-    static void enrichImportRowsLayoutFromSourceFile_replacesMisalignedLwcCells() {
-        ContentVersion cv = new ContentVersion(
-            Title = 'LayoutEnrichImport',
-            PathOnClient = 'LayoutEnrichImport.xlsx',
-            VersionData = EncodingUtil.base64Decode(buildMinimalImportWorkbookBase64())
-        );
-        insert cv;
+    static void testImportWorkbookEnrichAndHydrate() {
+        Id cvId = insertMinimalImportContentVersion('LayoutEnrichImport', null);
         FEC_BCH_TemplateExportService.ImportWorkbookParseResult parsed =
-            FEC_BCH_TemplateExportService.parseBatchImportWorkbook(cv.Id);
+            FEC_BCH_TemplateExportService.parseBatchImportWorkbook(cvId);
         System.assertEquals(true, parsed.parseSuccess, parsed.errorMessage);
         List<FEC_BatchCaseHandlingImportRow> parsedRows = (List<FEC_BatchCaseHandlingImportRow>) JSON.deserialize(
             JSON.serialize(parsed.inputRows),
             List<FEC_BatchCaseHandlingImportRow>.class
         );
-        System.assertEquals(1, parsedRows.size());
-        List<FEC_BatchCaseHandlingImportRow> lwcRows = new List<FEC_BatchCaseHandlingImportRow>();
-        FEC_BatchCaseHandlingImportRow bad = new FEC_BatchCaseHandlingImportRow();
+        List<String> expectedCells = parsedRows[0].originalCells;
+        FEC_BatchCaseHandlingImportRow bad = parsedRows[0];
         bad.caseIdSearch = 'CASE-001';
         bad.status = System.Label.FEC_Batch_Case_Handling_Import_Row_Status_Failed;
         bad.errors = 'test';
-        bad.originalHeaders = parsedRows[0].originalHeaders;
-        bad.originalColumnIndexes = parsedRows[0].originalColumnIndexes;
-        bad.originalDataRowIndex = parsedRows[0].originalDataRowIndex;
-        bad.originalHeaderRowIndex = parsedRows[0].originalHeaderRowIndex;
-        bad.originalSheetName = parsedRows[0].originalSheetName;
-        bad.originalCells = new List<String>();
-        for (Integer i = 0; i < parsedRows[0].originalHeaders.size(); i++) {
-            bad.originalCells.add('MISPLACED-' + String.valueOf(i));
+        List<String> misplacedCells = new List<String>();
+        for (Integer i = 0; i < bad.originalHeaders.size(); i++) {
+            misplacedCells.add('MISPLACED-' + String.valueOf(i));
         }
-        lwcRows.add(bad);
+        bad.originalCells = misplacedCells;
         List<FEC_BatchCaseHandlingImportRow> enriched =
-            FEC_BatchCaseHandlingImportService.enrichImportRowsLayoutFromSourceFile(cv.Id, lwcRows);
-        System.assertEquals(1, enriched.size());
-        System.assertEquals(parsedRows[0].originalCells, enriched[0].originalCells);
-        System.assertNotEquals(bad.originalCells, enriched[0].originalCells);
-    }
+            FEC_BatchCaseHandlingImportService.enrichImportRowsLayoutFromSourceFile(cvId, new List<FEC_BatchCaseHandlingImportRow>{ bad });
+        System.assertEquals(expectedCells, enriched[0].originalCells);
 
-    @IsTest
-    static void enrichImportRowValidateFieldsFromOriginalLayout_fillsBlankCaseIdFromCells() {
-        FEC_BatchCaseHandlingImportRow rr = new FEC_BatchCaseHandlingImportRow();
-        rr.originalHeaders = new List<String>{ 'Case ID', 'Routing Action', 'Inputted Remarks' };
-        rr.originalCells = new List<String>{ 'S-3603', 'Resolve', '111' };
-        rr.caseIdSearch = FEC_ConstantCommon.STR_EMPTY;
-        rr.routingAction = FEC_ConstantCommon.STR_EMPTY;
-        rr.inputtedRemarks = FEC_ConstantCommon.STR_EMPTY;
-        FEC_BatchCaseHandlingImportService.enrichImportRowValidateFieldsFromOriginalLayout(rr);
-        System.assertEquals('S-3603', rr.caseIdSearch);
-        System.assertEquals('Resolve', rr.routingAction);
-        System.assertEquals('111', rr.inputtedRemarks);
-    }
-
-    @IsTest
-    static void syncCaseIdIntoExportCells_placesCaseIdOnHeaderColumnOnly() {
-        List<String> headers = new List<String>{ 'Plastic ID', 'Case ID', 'Other' };
-        List<String> cells = new List<String>{ 'S-4866', FEC_ConstantCommon.STR_EMPTY, 'x' };
-        FEC_BatchCaseHandlingImportService.syncCaseIdIntoExportCells(cells, headers, 'S-4866');
-        System.assertEquals(FEC_ConstantCommon.STR_EMPTY, cells[0]);
-        System.assertEquals('S-4866', cells[1]);
-        System.assertEquals('x', cells[2]);
-    }
-
-    @IsTest
-    static void hydrateFailureRowsFromSourceImport_buildsFailedRowsFromTemplateLayout() {
         Schema.SObjectType batchType = Schema.getGlobalDescribe().get('FEC_Batch_Case_Handling__c');
-        System.assertNotEquals(null, batchType);
         SObject batchRow = batchType.newSObject();
-        Map<String, Schema.SObjectField> fieldMap = batchType.getDescribe().fields.getMap();
         FEC_BatchCaseHandlingSObjectUtil.putIfFieldExists(
-            fieldMap,
+            batchType.getDescribe().fields.getMap(),
             batchRow,
             new List<String>{ 'FEC_File_Name__c' },
             'HydrateFailureRowsFromTemplate.xlsx'
         );
         insert batchRow;
-        Id batchId = (Id) batchRow.get('Id');
-
-        ContentVersion cv = new ContentVersion(
-            Title = 'HydrateFailureRowsFromTemplate',
-            PathOnClient = 'HydrateFailureRowsFromTemplate.xlsx',
-            VersionData = EncodingUtil.base64Decode(buildMinimalImportWorkbookBase64()),
-            FirstPublishLocationId = batchId
-        );
-        insert cv;
-
-        List<FEC_BatchCaseHandlingImportRow> rows =
+        insertMinimalImportContentVersion('HydrateFailureRowsFromTemplate', (Id) batchRow.get('Id'));
+        List<FEC_BatchCaseHandlingImportRow> hydrated =
             FEC_BatchCaseHandlingImportService.hydrateFailureRowsFromSourceImport(
-                batchId,
+                (Id) batchRow.get('Id'),
                 'Apex CPU time limit exceeded'
             );
-        System.assertEquals(1, rows.size());
-        System.assertEquals(
-            System.Label.FEC_Batch_Case_Handling_Import_Row_Status_Failed,
-            rows[0].status
-        );
-        System.assertEquals('Apex CPU time limit exceeded', rows[0].errors);
-        System.assertEquals('CASE-001', rows[0].caseIdSearch);
-        System.assertNotEquals(null, rows[0].originalHeaders);
-        System.assert(rows[0].originalHeaders.size() > 0);
+        System.assertEquals(1, hydrated.size());
+        System.assertEquals(System.Label.FEC_Batch_Case_Handling_Import_Row_Status_Failed, hydrated[0].status);
+        System.assertEquals('Apex CPU time limit exceeded', hydrated[0].errors);
+        System.assertEquals('CASE-001', hydrated[0].caseIdSearch);
+        System.assert(hydrated[0].originalHeaders.size() > 0);
     }
 
-    @IsTest
-    static void validateImportRows_remarkExactly32767_triggersTooLongError() {
-        List<Object> inputRows = new List<Object>{
-            new Map<String, Object>{
-                'caseidsearch' => 'CASE-IMPORT-TEST-REMARK-MAX',
-                'routingaction' => 'Reject',
-                'inputtedremarks' => buildRemarkOfLength(32767)
-            }
+    private static FEC_BatchCaseHandlingImportRow buildCofGsrBleedImportRow() {
+        FEC_BatchCaseHandlingImportRow rr = new FEC_BatchCaseHandlingImportRow();
+        rr.originalHeaders = new List<String>{
+            'Case ID', 'Assignment ID', 'Routing Action', 'Assignment Routing Action', 'Inputted Remarks'
         };
-
-        List<FEC_BatchCaseHandlingImportRow> rows =
-            FEC_BatchCaseHandlingImportService.validateCaseHandlingImportRows(inputRows, false);
-
-        System.assertEquals(1, rows.size());
-        System.assert(
-            rows[0].errors.contains(System.Label.FEC_Batch_Case_Handling_Import_Err_Remark_Too_Long),
-            '32767 chars must trigger remark too long at Excel max: ' + rows[0].errors
-        );
+        rr.originalCells = new List<String>{
+            'S-3653', 'A-001762', FEC_ConstantCommon.STR_EMPTY, 'Route to CS Support - DQ-CS Support', 'remark'
+        };
+        rr.routingAction = 'Route to CS Support - DQ-CS Support';
+        rr.assignmentRoutingAction = 'Route to CS Support - DQ-CS Support';
+        return rr;
     }
 
-    @IsTest
-    static void validateImportRows_missingRemarkWithRouting_usesExpectedLabel() {
-        List<Object> inputRows = new List<Object>{
-            new Map<String, Object>{
-                'caseidsearch' => 'CASE-IMPORT-TEST-004',
-                'routingaction' => 'Reject',
-                'inputtedremarks' => FEC_ConstantCommon.STR_EMPTY
-            }
-        };
-
-        List<FEC_BatchCaseHandlingImportRow> rows =
-            FEC_BatchCaseHandlingImportService.validateCaseHandlingImportRows(inputRows, false);
-
-        System.assertEquals(1, rows.size());
-        System.assert(
-            rows[0].errors.contains(System.Label.FEC_Batch_Case_Handling_Import_Err_Missing_Remark),
-            'Expected missing Inputted Remarks error: ' + rows[0].errors
+    private static Id insertMinimalImportContentVersion(String title, Id publishLocationId) {
+        ContentVersion cv = new ContentVersion(
+            Title = title,
+            PathOnClient = title + '.xlsx',
+            VersionData = EncodingUtil.base64Decode(buildMinimalImportWorkbookBase64())
         );
-        System.assert(
-            !rows[0].errors.contains(System.Label.FEC_Batch_Case_Handling_Import_Err_Missing_Routing_Action),
-            'Must not show missing Routing Action when routing is provided: ' + rows[0].errors
-        );
-    }
-
-    @IsTest
-    static void validateImportRows_missingRoutingAction_usesExpectedLabel() {
-        List<Object> inputRows = new List<Object>{
-            new Map<String, Object>{
-                'caseidsearch' => 'CASE-IMPORT-TEST-002'
-            }
-        };
-
-        List<FEC_BatchCaseHandlingImportRow> rows =
-            FEC_BatchCaseHandlingImportService.validateCaseHandlingImportRows(inputRows, false);
-
-        System.assertEquals(1, rows.size());
-        System.assert(
-            rows[0].errors.contains(System.Label.FEC_Batch_Case_Handling_Import_Err_Missing_Routing_Action),
-            'Expected missing Routing Action error: ' + rows[0].errors
-        );
-        System.assert(
-            countOccurrences(rows[0].errors, System.Label.FEC_Batch_Case_Handling_Import_Err_Missing_Routing_Action) == 1,
-            'Missing Routing Action must appear once: ' + rows[0].errors
-        );
-    }
-
-    @IsTest
-    static void validateImportRows_invalidRoutingAction_notDuplicated() {
-        List<Object> inputRows = new List<Object>{
-            new Map<String, Object>{
-                'caseidsearch' => 'CASE-IMPORT-TEST-003',
-                'routingaction' => 'Reject',
-                'inputtedremarks' => 'Test remark'
-            }
-        };
-
-        List<FEC_BatchCaseHandlingImportRow> rows =
-            FEC_BatchCaseHandlingImportService.validateCaseHandlingImportRows(inputRows, false);
-
-        System.assertEquals(1, rows.size());
-        String invalidMsg = System.Label.FEC_Batch_Case_Handling_Import_Err_Routing_Action_Invalid;
-        System.assert(
-            rows[0].errors.contains(invalidMsg),
-            'Expected invalid Routing Action error: ' + rows[0].errors
-        );
-        System.assertEquals(
-            1,
-            countOccurrences(rows[0].errors, invalidMsg),
-            'Routing Action datagroup error must appear once: ' + rows[0].errors
-        );
-    }
-
-    @IsTest
-    static void validateImportRows_remarkTooLongFromInputRemarkHeaderAlias_usesCharLength() {
-        List<Object> inputRows = new List<Object>{
-            new Map<String, Object>{
-                'caseidsearch' => 'CASE-IMPORT-TEST-REMARK-ALIAS',
-                'routingaction' => 'Reject',
-                'inputtedremarks' => FEC_ConstantCommon.STR_EMPTY,
-                'inputtedRemarksCharLength' => 40000,
-                'originalHeaders' => new List<String>{ 'Case ID Search', 'Routing Action', 'Input Remark' },
-                'originalCells' => new List<String>{
-                    'CASE-IMPORT-TEST-REMARK-ALIAS',
-                    'Reject',
-                    buildRemarkOfLength(32768)
-                }
-            }
-        };
-
-        List<FEC_BatchCaseHandlingImportRow> rows =
-            FEC_BatchCaseHandlingImportService.validateCaseHandlingImportRows(inputRows, false);
-
-        System.assertEquals(1, rows.size());
-        System.assert(
-            rows[0].errors.contains(System.Label.FEC_Batch_Case_Handling_Import_Err_Remark_Too_Long),
-            'Expected remark too long with Input Remark header alias: ' + rows[0].errors
-        );
+        if (publishLocationId != null) {
+            cv.FirstPublishLocationId = publishLocationId;
+        }
+        insert cv;
+        return cv.Id;
     }
 
     private static String buildRemarkOfLength(Integer targetLength) {
