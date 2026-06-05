@@ -733,20 +733,82 @@ public without sharing class FEC_InteractionInforHandler {
         return String.isNotBlank(parentList[0].FEC_ID_Search__c) ? parentList[0].FEC_ID_Search__c : null;
     }
 
-    @AuraEnabled(cacheable=true)
-    public static Case getChatInteractionInfo(Id recordId) {
+    @AuraEnabled(cacheable=false)
+    public static Map<String, Object> getChatInteractionInfo(Id recordId) {
+        if (recordId == null) return null;
+
         List<Case> caseList = [
             SELECT FEC_Customer_Username__c,
                    FEC_Interaction_Masked_Phone__c,
                    FEC_Phone_Number__c,
                    FEC_Created_On__c,
                    FEC_Created_by__c,
-                   FEC_External_Interaction_ID__c
+                   FEC_KYC_Status__c,
+                   FEC_External_Interaction_ID__c,
+                   FEC_Outcome_Code__c,
+                   FEC_Interaction_Remarks__c,
+                   FEC_Interaction__c,
+                   IsClosed,
+                   RecordType.DeveloperName
             FROM Case
             WHERE Id = :recordId
             LIMIT 1
         ];
-        return caseList.isEmpty() ? null : caseList[0];
+        if (caseList.isEmpty()) return null;
+
+        Case currentCase = caseList[0];
+        Boolean isCustomerCase = currentCase.RecordType != null && currentCase.RecordType.DeveloperName == FEC_ConstantCommon.CASE_CUSTOMER_RECORD_TYPE_DEV_NAME;
+        Boolean isInteraction = currentCase.RecordType != null && currentCase.RecordType.DeveloperName == FEC_ConstantCommon.CASE_INTERACTION_RECORD_TYPE_DEV_NAME;
+
+        Case interactionCase;
+        Case customerCase;
+
+        if (isCustomerCase) {
+            customerCase = currentCase;
+            if (currentCase.FEC_Interaction__c != null) {
+                List<Case> interactions = [
+                    SELECT FEC_Created_On__c,
+                           FEC_Created_by__c,
+                           FEC_External_Interaction_ID__c,
+                           FEC_Outcome_Code__c,
+                           FEC_Interaction_Remarks__c,
+                           IsClosed
+                    FROM Case
+                    WHERE Id = :currentCase.FEC_Interaction__c
+                    LIMIT 1
+                ];
+                interactionCase = interactions.isEmpty() ? null : interactions[0];
+            }
+        } else if (isInteraction) {
+            interactionCase = currentCase;
+            List<Case> customerCases = [
+                SELECT FEC_Customer_Username__c,
+                       FEC_Interaction_Masked_Phone__c,
+                       FEC_Phone_Number__c,
+                       FEC_KYC_Status__c
+                FROM Case
+                WHERE FEC_Interaction__c = :recordId
+                ORDER BY CreatedDate DESC
+                LIMIT 1
+            ];
+            customerCase = customerCases.isEmpty() ? null : customerCases[0];
+        } else {
+            interactionCase = currentCase;
+            customerCase = currentCase;
+        }
+
+        Map<String, Object> result = new Map<String, Object>();
+        result.put('FEC_Customer_Username__c', customerCase != null && String.isNotBlank(customerCase.FEC_Customer_Username__c) ? customerCase.FEC_Customer_Username__c : currentCase.FEC_Customer_Username__c);
+        result.put('FEC_Interaction_Masked_Phone__c', customerCase != null && String.isNotBlank(customerCase.FEC_Interaction_Masked_Phone__c) ? customerCase.FEC_Interaction_Masked_Phone__c : currentCase.FEC_Interaction_Masked_Phone__c);
+        result.put('FEC_Phone_Number__c', customerCase != null && String.isNotBlank(customerCase.FEC_Phone_Number__c) ? customerCase.FEC_Phone_Number__c : currentCase.FEC_Phone_Number__c);
+        result.put('FEC_KYC_Status__c', customerCase != null && String.isNotBlank(customerCase.FEC_KYC_Status__c) ? customerCase.FEC_KYC_Status__c : currentCase.FEC_KYC_Status__c);
+        result.put('FEC_Created_On__c', interactionCase != null && interactionCase.FEC_Created_On__c != null ? interactionCase.FEC_Created_On__c : currentCase.FEC_Created_On__c);
+        result.put('FEC_Created_by__c', interactionCase != null && String.isNotBlank(interactionCase.FEC_Created_by__c) ? interactionCase.FEC_Created_by__c : currentCase.FEC_Created_by__c);
+        result.put('FEC_External_Interaction_ID__c', interactionCase != null && String.isNotBlank(interactionCase.FEC_External_Interaction_ID__c) ? interactionCase.FEC_External_Interaction_ID__c : currentCase.FEC_External_Interaction_ID__c);
+        result.put('FEC_Outcome_Code__c', interactionCase != null && String.isNotBlank(interactionCase.FEC_Outcome_Code__c) ? interactionCase.FEC_Outcome_Code__c : currentCase.FEC_Outcome_Code__c);
+        result.put('FEC_Interaction_Remarks__c', interactionCase != null && String.isNotBlank(interactionCase.FEC_Interaction_Remarks__c) ? interactionCase.FEC_Interaction_Remarks__c : currentCase.FEC_Interaction_Remarks__c);
+        result.put('IsClosed', interactionCase != null ? interactionCase.IsClosed : currentCase.IsClosed);
+        return result;
     }
 
     @AuraEnabled
