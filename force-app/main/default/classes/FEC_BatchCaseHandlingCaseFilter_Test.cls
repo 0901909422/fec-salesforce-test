@@ -96,6 +96,232 @@ private class FEC_BatchCaseHandlingCaseFilter_Test {
         System.assert(baseWhere.size() > 0, 'Hàm phải trả về danh sách các mệnh đề điều kiện WHERE cơ sở.');
         String combined = String.join(baseWhere, ' AND ');
         System.assert(combined.contains('IsClosed = false'), 'Mệnh đề WHERE cơ sở bắt buộc phải chứa lọc trạng thái chưa đóng.');
+        System.assert(combined.contains('RecordType.DeveloperName'), 'Mệnh đề WHERE cơ sở bắt buộc phải lọc Record Type Customer_Case.');
+        System.assert(combined.contains('FEC_Final_Status__c'), 'Mệnh đề WHERE cơ sở bắt buộc phải lọc Status Open/Pending.');
+        // 05/06/2026 10:00 linhdev - default filter: Owner OR assigned OR queue member (không chỉ OwnerId)
+        System.assert(
+            combined.contains('FEC_Is_Owner_Or_Assigned__c = true'),
+            'Mệnh đề WHERE cơ sở phải lọc Owner hoặc user trong FEC_Assignment_Users__c.'
+        );
+    }
+
+    /**
+     * Kịch bản 2b: Case owned by queue mà login user là member phải nằm trong default filter scope.
+     */
+    @IsTest
+    static void testBuildBaseCaseWhere_IncludesQueueOwnedCaseForMember() {
+        List<Group> queues = [
+            SELECT Id
+            FROM Group
+            WHERE Type = :FEC_ConstantCommon.GROUP_TYPE_QUEUE
+            LIMIT 1
+        ];
+        if (queues.isEmpty()) {
+            System.assert(true, 'Skipped: no queue in org.');
+            return;
+        }
+        Id queueId = queues[0].Id;
+        User runUser = new User(Id = UserInfo.getUserId());
+        System.runAs(runUser) {
+            ensureGroupMember(queueId, UserInfo.getUserId());
+        }
+
+        Id bulkCaseRtId = bulkCaseHandlingEligibleRecordTypeId();
+        Id caseId;
+        System.runAs(runUser) {
+            Case queueOwnedCase = new Case(
+                Subject = 'Queue Owned Filter Case',
+                Status = FEC_ConstantCommon.CASE_STATUS_OPEN,
+                OwnerId = queueId,
+                FEC_ID_Search__c = 'FILTER-QUEUE-OWNED',
+                FEC_Customer_Type__c = 'Existing'
+            );
+            if (bulkCaseRtId != null) {
+                queueOwnedCase.RecordTypeId = bulkCaseRtId;
+            }
+            insert queueOwnedCase;
+            update new Case(Id = queueOwnedCase.Id, FEC_ID_Search__c = 'FILTER-QUEUE-OWNED');
+            caseId = queueOwnedCase.Id;
+        }
+
+        Test.startTest();
+        List<String> baseWhere = FEC_BatchCaseHandlingCaseFilter.buildBaseCaseWhere();
+        String whereClause = String.join(baseWhere, ' AND ') + ' AND Id = \'' + String.valueOf(caseId) + '\'';
+        Integer count = Database.countQuery('SELECT COUNT() FROM Case WHERE ' + whereClause);
+        Test.stopTest();
+
+        System.assertEquals(1, count, 'Case owned by queue mà user là member phải match default filter.');
+    }
+
+    /**
+     * Kịch bản 2c: Case user là Owner trực tiếp phải match default filter scope.
+     */
+    @IsTest
+    static void testBuildBaseCaseWhere_IncludesDirectOwnerCase() {
+        Id bulkCaseRtId = bulkCaseHandlingEligibleRecordTypeId();
+        Id loginUserId = UserInfo.getUserId();
+        Case ownerCase = new Case(
+            Subject = 'Direct Owner Filter Case',
+            Status = FEC_ConstantCommon.CASE_STATUS_OPEN,
+            OwnerId = loginUserId,
+            FEC_ID_Search__c = 'FILTER-DIRECT-OWNER',
+            FEC_Customer_Type__c = 'Existing'
+        );
+        if (bulkCaseRtId != null) {
+            ownerCase.RecordTypeId = bulkCaseRtId;
+        }
+        insert ownerCase;
+        update new Case(Id = ownerCase.Id, FEC_ID_Search__c = 'FILTER-DIRECT-OWNER');
+
+        Test.startTest();
+        List<String> baseWhere = FEC_BatchCaseHandlingCaseFilter.buildBaseCaseWhere();
+        String whereClause = String.join(baseWhere, ' AND ') + ' AND Id = \'' + String.valueOf(ownerCase.Id) + '\'';
+        Integer count = Database.countQuery('SELECT COUNT() FROM Case WHERE ' + whereClause);
+        Test.stopTest();
+
+        System.assertEquals(1, count, 'Case owner trực tiếp phải match default filter.');
+    }
+
+    /**
+     * Kịch bản 2d: User nằm trong FEC_Assignment_Users__c (không phải Owner) phải match default filter.
+     */
+    @IsTest
+    static void testBuildBaseCaseWhere_IncludesAssignedUserCase() {
+        Id bulkCaseRtId = bulkCaseHandlingEligibleRecordTypeId();
+        List<User> otherUsers = [
+            SELECT Id
+            FROM User
+            WHERE IsActive = true AND Id != :UserInfo.getUserId()
+            LIMIT 1
+        ];
+        if (otherUsers.isEmpty()) {
+            System.assert(true, 'Skipped: no other active user in org.');
+            return;
+        }
+        Id loginUserId = UserInfo.getUserId();
+        Case assignedCase = new Case(
+            Subject = 'Assigned User Filter Case',
+            Status = FEC_ConstantCommon.CASE_STATUS_OPEN,
+            OwnerId = otherUsers[0].Id,
+            FEC_ID_Search__c = 'FILTER-ASSIGNED-USER',
+            FEC_Customer_Type__c = 'Existing'
+        );
+        if (bulkCaseRtId != null) {
+            assignedCase.RecordTypeId = bulkCaseRtId;
+        }
+        insert assignedCase;
+        update new Case(
+            Id = assignedCase.Id,
+            FEC_ID_Search__c = 'FILTER-ASSIGNED-USER',
+            FEC_Assignment_Users__c = String.valueOf(loginUserId)
+        );
+
+        Test.startTest();
+        List<String> baseWhere = FEC_BatchCaseHandlingCaseFilter.buildBaseCaseWhere();
+        String whereClause = String.join(baseWhere, ' AND ') + ' AND Id = \'' + String.valueOf(assignedCase.Id) + '\'';
+        Integer count = Database.countQuery('SELECT COUNT() FROM Case WHERE ' + whereClause);
+        Test.stopTest();
+
+        System.assertEquals(1, count, 'User trong FEC_Assignment_Users__c phải match default filter.');
+    }
+
+    /**
+     * Kịch bản 2e: Case owner user khác, không assigned, không thuộc queue member => không match default filter.
+     */
+    @IsTest
+    static void testBuildBaseCaseWhere_ExcludesUnrelatedUserOwnedCase() {
+        Id bulkCaseRtId = bulkCaseHandlingEligibleRecordTypeId();
+        List<User> otherUsers = [
+            SELECT Id
+            FROM User
+            WHERE IsActive = true AND Id != :UserInfo.getUserId()
+            LIMIT 1
+        ];
+        if (otherUsers.isEmpty()) {
+            System.assert(true, 'Skipped: no other active user in org.');
+            return;
+        }
+        Case otherOwnerCase = new Case(
+            Subject = 'Other Owner Filter Case',
+            Status = FEC_ConstantCommon.CASE_STATUS_OPEN,
+            OwnerId = otherUsers[0].Id,
+            FEC_ID_Search__c = 'FILTER-OTHER-OWNER',
+            FEC_Customer_Type__c = 'Existing'
+        );
+        if (bulkCaseRtId != null) {
+            otherOwnerCase.RecordTypeId = bulkCaseRtId;
+        }
+        insert otherOwnerCase;
+        update new Case(Id = otherOwnerCase.Id, FEC_ID_Search__c = 'FILTER-OTHER-OWNER');
+
+        Test.startTest();
+        List<String> baseWhere = FEC_BatchCaseHandlingCaseFilter.buildBaseCaseWhere();
+        String whereClause = String.join(baseWhere, ' AND ') + ' AND Id = \'' + String.valueOf(otherOwnerCase.Id) + '\'';
+        Integer count = Database.countQuery('SELECT COUNT() FROM Case WHERE ' + whereClause);
+        Test.stopTest();
+
+        System.assertEquals(0, count, 'Case owner user khác không liên quan phải bị loại khỏi default filter.');
+    }
+
+    /**
+     * Kịch bản 2f: buildCompleteWhere với filter rỗng vẫn áp dụng default scope owner/assigned/queue.
+     */
+    @IsTest
+    static void testBuildCompleteWhere_DefaultScopeIncludesQueueMemberCase() {
+        List<Group> queues = [
+            SELECT Id
+            FROM Group
+            WHERE Type = :FEC_ConstantCommon.GROUP_TYPE_QUEUE
+            LIMIT 1
+        ];
+        if (queues.isEmpty()) {
+            System.assert(true, 'Skipped: no queue in org.');
+            return;
+        }
+        Id queueId = queues[0].Id;
+        User runUser = new User(Id = UserInfo.getUserId());
+        System.runAs(runUser) {
+            ensureGroupMember(queueId, UserInfo.getUserId());
+        }
+
+        Id bulkCaseRtId = bulkCaseHandlingEligibleRecordTypeId();
+        Id caseId;
+        System.runAs(runUser) {
+            Case queueOwnedCase = new Case(
+                Subject = 'Complete Where Queue Case',
+                Status = FEC_ConstantCommon.CASE_STATUS_OPEN,
+                OwnerId = queueId,
+                FEC_ID_Search__c = 'FILTER-COMPLETE-QUEUE',
+                FEC_Customer_Type__c = 'Existing'
+            );
+            if (bulkCaseRtId != null) {
+                queueOwnedCase.RecordTypeId = bulkCaseRtId;
+            }
+            insert queueOwnedCase;
+            update new Case(Id = queueOwnedCase.Id, FEC_ID_Search__c = 'FILTER-COMPLETE-QUEUE');
+            caseId = queueOwnedCase.Id;
+        }
+
+        Test.startTest();
+        List<String> whereParts = FEC_BatchCaseHandlingCaseFilter.buildCompleteWhere(new List<Map<String, Object>>());
+        String whereClause = String.join(whereParts, ' AND ') + ' AND Id = \'' + String.valueOf(caseId) + '\'';
+        Integer count = Database.countQuery('SELECT COUNT() FROM Case WHERE ' + whereClause);
+        Test.stopTest();
+
+        System.assert(whereParts.size() > 0);
+        System.assertEquals(1, count, 'buildCompleteWhere phải giữ Case queue member trong default scope.');
+    }
+
+    private static void ensureGroupMember(Id groupId, Id userOrGroupId) {
+        List<GroupMember> existing = [
+            SELECT Id
+            FROM GroupMember
+            WHERE GroupId = :groupId AND UserOrGroupId = :userOrGroupId
+            LIMIT 1
+        ];
+        if (existing.isEmpty()) {
+            insert new GroupMember(GroupId = groupId, UserOrGroupId = userOrGroupId);
+        }
     }
 
     /**

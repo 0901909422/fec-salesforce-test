@@ -688,4 +688,865 @@ private class FEC_BatchCaseHandlingImportService_Test {
         System.assertEquals(false, atEnd);
         System.assertEquals(false, negative);
     }
+
+    /**
+     * Kịch bản: quy trình không GSR/COF — Case owner Queue mà login user là member không bị lỗi ERR_NOT_OWNER.
+     */
+    @IsTest
+    static void testValidateRows_NonCofGsr_AllowsQueueOwnedCaseForMember() {
+        System.runAs(batchImportRunUser()) {
+            List<Group> queues = [
+                SELECT Id
+                FROM Group
+                WHERE Type = :FEC_ConstantCommon.GROUP_TYPE_QUEUE
+                LIMIT 1
+            ];
+            if (queues.isEmpty()) {
+                System.assert(true, 'Skipped: no queue in org.');
+                return;
+            }
+            Id queueId = queues[0].Id;
+            ensureQueueMember(queueId, UserInfo.getUserId());
+
+            String caseKey = 'CASE-QUEUE-IMPORT-' + String.valueOf(DateTime.now().getTime());
+            FEC_CaseTriggerHandler.isExecuting = true;
+            Case queueOwnedCase = new Case(
+                Subject = 'Queue Owned Import Case',
+                Status = FEC_ConstantCommon.CASE_STATUS_OPEN,
+                OwnerId = queueId,
+                FEC_ID_Search__c = caseKey
+            );
+            insert queueOwnedCase;
+            FEC_CaseTriggerHandler.isExecuting = false;
+            update new Case(Id = queueOwnedCase.Id, FEC_ID_Search__c = caseKey);
+
+            List<Object> inputRows = new List<Object>{
+                new Map<String, Object>{
+                    'caseidsearch' => caseKey,
+                    'routingaction' => 'RESOLVE',
+                    'inputtedremarks' => 'Queue owned import validate',
+                    'inputtedremarkscharlength' => '26'
+                }
+            };
+
+            Test.startTest();
+            List<FEC_BatchCaseHandlingImportRow> results =
+                FEC_BatchCaseHandlingImportService.validateCaseHandlingImportRows(inputRows, false);
+            Test.stopTest();
+
+            System.assertEquals(1, results.size());
+            System.assert(
+                results[0].errors == null || !results[0].errors.contains('Người dùng không phải chủ sở hữu Case'),
+                'Queue member không được báo ERR_NOT_OWNER: ' + results[0].errors
+            );
+        }
+    }
+
+    /**
+     * Kịch bản: quy trình không GSR/COF Resolve — Case owner Queue phải chuyển OwnerId sang Login User trước khi xử lý.
+     */
+    @IsTest
+    static void testApplyCaseHandlingUpdates_NonCofGsr_TransfersQueueOwnerOnResolve() {
+        System.runAs(batchImportRunUser()) {
+            List<Group> queues = [
+                SELECT Id
+                FROM Group
+                WHERE Type = :FEC_ConstantCommon.GROUP_TYPE_QUEUE
+                LIMIT 1
+            ];
+            if (queues.isEmpty()) {
+                System.assert(true, 'Skipped: no queue in org.');
+                return;
+            }
+            Id queueId = queues[0].Id;
+            Id loginUserId = UserInfo.getUserId();
+            ensureQueueMember(queueId, loginUserId);
+
+            String caseKey = 'CASE-QUEUE-APPLY-' + String.valueOf(DateTime.now().getTime());
+            FEC_CaseTriggerHandler.isExecuting = true;
+            Case queueOwnedCase = new Case(
+                Subject = 'Queue Owned Apply Case',
+                Status = FEC_ConstantCommon.CASE_STATUS_OPEN,
+                OwnerId = queueId,
+                FEC_ID_Search__c = caseKey
+            );
+            insert queueOwnedCase;
+            FEC_CaseTriggerHandler.isExecuting = false;
+            update new Case(Id = queueOwnedCase.Id, FEC_ID_Search__c = caseKey);
+
+            FEC_BatchCaseHandlingImportRow row = new FEC_BatchCaseHandlingImportRow();
+            row.status = System.Label.FEC_Operation_Success;
+            row.recordId = String.valueOf(queueOwnedCase.Id);
+            row.routingAction = 'RESOLVE';
+            row.inputtedRemarks = 'Transfer owner before resolve';
+
+            Test.startTest();
+            FEC_BatchCaseHandlingImportService.applyCaseHandlingUpdates(
+                new List<FEC_BatchCaseHandlingImportRow>{ row },
+                false
+            );
+            Test.stopTest();
+
+            Case updated = [SELECT OwnerId FROM Case WHERE Id = :queueOwnedCase.Id LIMIT 1];
+            System.assertEquals(
+                loginUserId,
+                updated.OwnerId,
+                'Import quy trình không GSR/COF Resolve phải chuyển OwnerId từ Queue sang Login User.'
+            );
+        }
+    }
+
+    /**
+     * Kịch bản: quy trình không GSR/COF — user không phải queue member phải báo ERR_NOT_OWNER.
+     */
+    @IsTest
+    static void testValidateRows_NonCofGsr_RejectsQueueOwnedCaseForNonMember() {
+        Id isolatedQueueId = createIsolatedQueueWithoutMembership();
+        System.runAs(batchImportRunUser()) {
+            String caseKey = 'CASE-QUEUE-NOMEMBER-' + String.valueOf(DateTime.now().getTime());
+            FEC_CaseTriggerHandler.isExecuting = true;
+            Case queueOwnedCase = new Case(
+                Subject = 'Queue Owned Non Member Case',
+                Status = FEC_ConstantCommon.CASE_STATUS_OPEN,
+                OwnerId = isolatedQueueId,
+                FEC_ID_Search__c = caseKey
+            );
+            insert queueOwnedCase;
+            FEC_CaseTriggerHandler.isExecuting = false;
+            update new Case(Id = queueOwnedCase.Id, FEC_ID_Search__c = caseKey);
+
+            List<Object> inputRows = new List<Object>{
+                new Map<String, Object>{
+                    'caseidsearch' => caseKey,
+                    'routingaction' => 'RESOLVE',
+                    'inputtedremarks' => 'Non member should fail owner check',
+                    'inputtedremarkscharlength' => '33'
+                }
+            };
+
+            Test.startTest();
+            List<FEC_BatchCaseHandlingImportRow> results =
+                FEC_BatchCaseHandlingImportService.validateCaseHandlingImportRows(inputRows, false);
+            Test.stopTest();
+
+            System.assertEquals(1, results.size());
+            System.assert(
+                results[0].errors != null && results[0].errors.contains('Người dùng không phải chủ sở hữu Case'),
+                'User không phải queue member phải báo ERR_NOT_OWNER: ' + results[0].errors
+            );
+        }
+    }
+
+    /**
+     * Kịch bản: quy trình COF — dù user là queue member vẫn phải báo ERR_NOT_OWNER khi không phải Owner.
+     */
+    @IsTest
+    static void testValidateRows_CofGsr_RejectsQueueOwnedCaseForMember() {
+        System.runAs(batchImportRunUser()) {
+            List<FEC_Business_Process__c> cofBpRows = [
+                SELECT Id, FEC_Code__c
+                FROM FEC_Business_Process__c
+                WHERE FEC_Code__c LIKE 'COF%'
+                LIMIT 1
+            ];
+            if (cofBpRows.isEmpty()) {
+                System.assert(true, 'Skipped: no COF business process in org.');
+                return;
+            }
+            List<Group> queues = [
+                SELECT Id
+                FROM Group
+                WHERE Type = :FEC_ConstantCommon.GROUP_TYPE_QUEUE
+                LIMIT 1
+            ];
+            if (queues.isEmpty()) {
+                System.assert(true, 'Skipped: no queue in org.');
+                return;
+            }
+            Id queueId = queues[0].Id;
+            ensureQueueMember(queueId, UserInfo.getUserId());
+
+            String caseKey = 'CASE-COF-VALIDATE-' + String.valueOf(DateTime.now().getTime());
+            FEC_CaseTriggerHandler.isExecuting = true;
+            Case queueOwnedCase = new Case(
+                Subject = 'COF Queue Validate Case',
+                Status = FEC_ConstantCommon.CASE_STATUS_OPEN,
+                OwnerId = queueId,
+                FEC_ID_Search__c = caseKey,
+                FEC_Business_Process__c = cofBpRows[0].Id
+            );
+            insert queueOwnedCase;
+            FEC_CaseTriggerHandler.isExecuting = false;
+            update new Case(Id = queueOwnedCase.Id, FEC_ID_Search__c = caseKey);
+
+            List<Object> inputRows = new List<Object>{
+                new Map<String, Object>{
+                    'caseidsearch' => caseKey,
+                    'routingaction' => 'RESOLVE',
+                    'inputtedremarks' => 'COF queue member still not owner',
+                    'inputtedremarkscharlength' => '34'
+                }
+            };
+
+            Test.startTest();
+            List<FEC_BatchCaseHandlingImportRow> results =
+                FEC_BatchCaseHandlingImportService.validateCaseHandlingImportRows(inputRows, false);
+            Test.stopTest();
+
+            System.assertEquals(1, results.size());
+            System.assert(
+                results[0].errors != null && results[0].errors.contains('Người dùng không phải chủ sở hữu Case'),
+                'COF queue member không phải owner phải báo ERR_NOT_OWNER: ' + results[0].errors
+            );
+        }
+    }
+
+    /**
+     * Kịch bản: quy trình không GSR/COF Reject — Case owner Queue phải chuyển OwnerId sang Login User.
+     */
+    @IsTest
+    static void testApplyCaseHandlingUpdates_NonCofGsr_TransfersQueueOwnerOnReject() {
+        System.runAs(batchImportRunUser()) {
+            Id queueId = resolveMemberQueueId();
+            if (queueId == null) {
+                return;
+            }
+            Id loginUserId = UserInfo.getUserId();
+            Id caseId = insertQueueOwnedImportCase(queueId, 'CASE-QUEUE-REJECT-');
+            FEC_BatchCaseHandlingImportRow row = buildImportRow(caseId, 'REJECT', 'Transfer owner before reject');
+
+            Test.startTest();
+            FEC_BatchCaseHandlingImportService.applyCaseHandlingUpdates(
+                new List<FEC_BatchCaseHandlingImportRow>{ row },
+                false
+            );
+            Test.stopTest();
+
+            Case updated = [SELECT OwnerId FROM Case WHERE Id = :caseId LIMIT 1];
+            System.assertEquals(loginUserId, updated.OwnerId, 'Reject phải chuyển OwnerId từ Queue sang Login User.');
+        }
+    }
+
+    /**
+     * Kịch bản: quy trình không GSR/COF + Route To — không được tự chuyển OwnerId từ Queue.
+     */
+    @IsTest
+    static void testApplyCaseHandlingUpdates_NonCofGsr_SkipsTransferOnRouteTo() {
+        System.runAs(batchImportRunUser()) {
+            Id queueId = resolveMemberQueueId();
+            if (queueId == null) {
+                return;
+            }
+            Id caseId = insertQueueOwnedImportCase(queueId, 'CASE-QUEUE-ROUTE-');
+            FEC_BatchCaseHandlingImportRow row = buildImportRow(
+                caseId,
+                FEC_CaseBusinessService.ROUTE_TO,
+                'Route to should not transfer owner'
+            );
+
+            Test.startTest();
+            FEC_BatchCaseHandlingImportService.applyCaseHandlingUpdates(
+                new List<FEC_BatchCaseHandlingImportRow>{ row },
+                false
+            );
+            Test.stopTest();
+
+            Case updated = [SELECT OwnerId FROM Case WHERE Id = :caseId LIMIT 1];
+            System.assertEquals(queueId, updated.OwnerId, 'Route To không được tự chuyển OwnerId từ Queue.');
+        }
+    }
+
+    /**
+     * Kịch bản: quy trình không GSR/COF + owner đã là User — giữ nguyên OwnerId.
+     */
+    @IsTest
+    static void testApplyCaseHandlingUpdates_NonCofGsr_UserOwnedCase_KeepsOwner() {
+        System.runAs(batchImportRunUser()) {
+            Case openCase = [
+                SELECT Id
+                FROM Case
+                WHERE FEC_ID_Search__c = 'CASE-OPEN-2026'
+                LIMIT 1
+            ];
+            Id loginUserId = UserInfo.getUserId();
+            update new Case(Id = openCase.Id, OwnerId = loginUserId);
+
+            FEC_BatchCaseHandlingImportRow row = buildImportRow(openCase.Id, 'RESOLVE', 'User owned keeps owner');
+
+            Test.startTest();
+            FEC_BatchCaseHandlingImportService.applyCaseHandlingUpdates(
+                new List<FEC_BatchCaseHandlingImportRow>{ row },
+                false
+            );
+            Test.stopTest();
+
+            Case updated = [SELECT OwnerId FROM Case WHERE Id = :openCase.Id LIMIT 1];
+            System.assertEquals(loginUserId, updated.OwnerId, 'Case owner User không được đổi OwnerId.');
+        }
+    }
+
+    /**
+     * Kịch bản: quy trình GSR — Case owner Queue không được tự chuyển OwnerId khi import.
+     */
+    @IsTest
+    static void testApplyCaseHandlingUpdates_GsrProcess_SkipsQueueOwnerTransfer() {
+        System.runAs(batchImportRunUser()) {
+            List<FEC_Business_Process__c> gsrBpRows = [
+                SELECT Id, FEC_Code__c
+                FROM FEC_Business_Process__c
+                WHERE FEC_Code__c LIKE 'GSR%'
+                LIMIT 1
+            ];
+            if (gsrBpRows.isEmpty()) {
+                System.assert(true, 'Skipped: no GSR business process in org.');
+                return;
+            }
+            Id queueId = resolveMemberQueueId();
+            if (queueId == null) {
+                return;
+            }
+            String caseKey = 'CASE-GSR-QUEUE-' + String.valueOf(DateTime.now().getTime());
+            FEC_CaseTriggerHandler.isExecuting = true;
+            Case queueOwnedCase = new Case(
+                Subject = 'GSR Queue Owned Case',
+                Status = FEC_ConstantCommon.CASE_STATUS_OPEN,
+                OwnerId = queueId,
+                FEC_ID_Search__c = caseKey,
+                FEC_Business_Process__c = gsrBpRows[0].Id
+            );
+            insert queueOwnedCase;
+            FEC_CaseTriggerHandler.isExecuting = false;
+            update new Case(Id = queueOwnedCase.Id, FEC_ID_Search__c = caseKey);
+
+            FEC_BatchCaseHandlingImportRow row = buildImportRow(queueOwnedCase.Id, 'RESOLVE', 'GSR should not auto transfer owner');
+
+            Test.startTest();
+            FEC_BatchCaseHandlingImportService.applyCaseHandlingUpdates(
+                new List<FEC_BatchCaseHandlingImportRow>{ row },
+                false
+            );
+            Test.stopTest();
+
+            Case updated = [SELECT OwnerId FROM Case WHERE Id = :queueOwnedCase.Id LIMIT 1];
+            System.assertEquals(queueId, updated.OwnerId, 'Quy trình GSR không được tự chuyển OwnerId từ Queue.');
+        }
+    }
+
+    /**
+     * Kịch bản: quy trình COF — Case owner Queue không được tự chuyển OwnerId khi import (cofOrGsr=false ở batch).
+     */
+    @IsTest
+    static void testApplyCaseHandlingUpdates_CofGsrProcess_SkipsQueueOwnerTransfer() {
+        System.runAs(batchImportRunUser()) {
+            List<FEC_Business_Process__c> cofBpRows = [
+                SELECT Id, FEC_Code__c
+                FROM FEC_Business_Process__c
+                WHERE FEC_Code__c LIKE 'COF%'
+                LIMIT 1
+            ];
+            if (cofBpRows.isEmpty()) {
+                System.assert(true, 'Skipped: no COF business process in org.');
+                return;
+            }
+            List<Group> queues = [
+                SELECT Id
+                FROM Group
+                WHERE Type = :FEC_ConstantCommon.GROUP_TYPE_QUEUE
+                LIMIT 1
+            ];
+            if (queues.isEmpty()) {
+                System.assert(true, 'Skipped: no queue in org.');
+                return;
+            }
+            Id queueId = queues[0].Id;
+            ensureQueueMember(queueId, UserInfo.getUserId());
+
+            String caseKey = 'CASE-COF-QUEUE-' + String.valueOf(DateTime.now().getTime());
+            FEC_CaseTriggerHandler.isExecuting = true;
+            Case queueOwnedCase = new Case(
+                Subject = 'COF Queue Owned Case',
+                Status = FEC_ConstantCommon.CASE_STATUS_OPEN,
+                OwnerId = queueId,
+                FEC_ID_Search__c = caseKey,
+                FEC_Business_Process__c = cofBpRows[0].Id
+            );
+            insert queueOwnedCase;
+            FEC_CaseTriggerHandler.isExecuting = false;
+            update new Case(Id = queueOwnedCase.Id, FEC_ID_Search__c = caseKey);
+
+            FEC_BatchCaseHandlingImportRow row = new FEC_BatchCaseHandlingImportRow();
+            row.status = System.Label.FEC_Operation_Success;
+            row.recordId = String.valueOf(queueOwnedCase.Id);
+            row.routingAction = 'RESOLVE';
+            row.inputtedRemarks = 'COF should not auto transfer owner';
+
+            Test.startTest();
+            FEC_BatchCaseHandlingImportService.applyCaseHandlingUpdates(
+                new List<FEC_BatchCaseHandlingImportRow>{ row },
+                false
+            );
+            Test.stopTest();
+
+            Case updated = [SELECT OwnerId FROM Case WHERE Id = :queueOwnedCase.Id LIMIT 1];
+            System.assertEquals(
+                queueId,
+                updated.OwnerId,
+                'Quy trình COF không được tự chuyển OwnerId từ Queue sang Login User.'
+            );
+        }
+    }
+
+    private static Id createIsolatedQueueWithoutMembership() {
+        Group isolatedQueue = new Group(
+            Name = 'BCH Import Test Queue ' + String.valueOf(DateTime.now().getTime()),
+            Type = FEC_ConstantCommon.GROUP_TYPE_QUEUE
+        );
+        insert isolatedQueue;
+        if ([SELECT COUNT() FROM QueueSobject WHERE QueueId = :isolatedQueue.Id AND SobjectType = 'Case'] == 0) {
+            insert new QueueSobject(QueueId = isolatedQueue.Id, SobjectType = 'Case');
+        }
+        return isolatedQueue.Id;
+    }
+
+    private static Id resolveMemberQueueId() {
+        List<Group> queues = [
+            SELECT Id
+            FROM Group
+            WHERE Type = :FEC_ConstantCommon.GROUP_TYPE_QUEUE
+            LIMIT 1
+        ];
+        if (queues.isEmpty()) {
+            System.assert(true, 'Skipped: no queue in org.');
+            return null;
+        }
+        ensureQueueMember(queues[0].Id, UserInfo.getUserId());
+        return queues[0].Id;
+    }
+
+    private static Id insertQueueOwnedImportCase(Id queueId, String caseKeyPrefix) {
+        String caseKey = caseKeyPrefix + String.valueOf(DateTime.now().getTime());
+        FEC_CaseTriggerHandler.isExecuting = true;
+        Case queueOwnedCase = new Case(
+            Subject = 'Queue Owned Import Helper Case',
+            Status = FEC_ConstantCommon.CASE_STATUS_OPEN,
+            OwnerId = queueId,
+            FEC_ID_Search__c = caseKey
+        );
+        insert queueOwnedCase;
+        FEC_CaseTriggerHandler.isExecuting = false;
+        update new Case(Id = queueOwnedCase.Id, FEC_ID_Search__c = caseKey);
+        return queueOwnedCase.Id;
+    }
+
+    private static FEC_BatchCaseHandlingImportRow buildImportRow(Id caseId, String routingAction, String remarks) {
+        FEC_BatchCaseHandlingImportRow row = new FEC_BatchCaseHandlingImportRow();
+        row.status = System.Label.FEC_Operation_Success;
+        row.recordId = String.valueOf(caseId);
+        row.routingAction = routingAction;
+        row.inputtedRemarks = remarks;
+        return row;
+    }
+
+    private static void ensureQueueMember(Id groupId, Id userOrGroupId) {
+        if (groupId == null || userOrGroupId == null) {
+            return;
+        }
+        if ([SELECT COUNT() FROM GroupMember WHERE GroupId = :groupId AND UserOrGroupId = :userOrGroupId] > 0) {
+            return;
+        }
+        insert new GroupMember(GroupId = groupId, UserOrGroupId = userOrGroupId);
+    }
+
+    // 05/06/2026 16:00 linhdev - test __Errors Export Result luôn tiếng Việt
+    /**
+     * Kịch bản: __Errors Export Result — message tiếng Anh được chuyển sang tiếng Việt.
+     */
+    @IsTest
+    static void testLocalizeImportResultError_MapsEnglishToVietnamese() {
+        System.assertEquals(
+            'Không tìm thấy Queue.',
+            FEC_BatchCaseHandlingImportService.localizeImportResultError('Queue not found')
+        );
+        System.assertEquals(
+            'Case Id không hợp lệ.',
+            FEC_BatchCaseHandlingImportService.localizeImportResultError('Case Id is invalid.')
+        );
+        System.assertEquals(
+            'Không tìm thấy Stage Change.',
+            FEC_BatchCaseHandlingImportService.localizeImportResultError('Stage Change not found.')
+        );
+        System.assertEquals(
+            'Tên file không khớp template Bulk Actions của quy trình và nhóm người dùng.',
+            FEC_BatchCaseHandlingImportService.localizeImportResultError('TEMPLATE_MISMATCH')
+        );
+    }
+
+    /**
+     * Kịch bản: __Errors Export Result — giữ nguyên message tiếng Việt đã có sẵn.
+     */
+    @IsTest
+    static void testLocalizeImportResultError_KeepsVietnameseMessage() {
+        String vietnameseMessage = 'Người dùng không phải chủ sở hữu Case';
+        System.assertEquals(
+            vietnameseMessage,
+            FEC_BatchCaseHandlingImportService.localizeImportResultError(vietnameseMessage)
+        );
+        System.assertEquals(
+            'Case ID không tồn tại trong hệ thống',
+            FEC_BatchCaseHandlingImportService.localizeImportResultError('Case ID không tồn tại trong hệ thống')
+        );
+    }
+
+    /**
+     * Kịch bản: __Errors Export Result — chuỗi nhiều lỗi (phân tách bằng ",\n") đều tiếng Việt.
+     */
+    @IsTest
+    static void testLocalizeImportResultErrors_LocalizesCombinedMessages() {
+        String combined =
+            'Queue not found,\n' +
+            'Người dùng không phải chủ sở hữu Case';
+        String localized = FEC_BatchCaseHandlingImportService.localizeImportResultErrors(combined);
+        System.assert(localized.contains('Không tìm thấy Queue.'), localized);
+        System.assert(localized.contains('Người dùng không phải chủ sở hữu Case'), localized);
+    }
+
+    @IsTest
+    static void testValidateImportRows_RemarkLengthAndMissingFields() {
+        String tooLongMsg = System.Label.FEC_Batch_Case_Handling_Import_Err_Remark_Too_Long;
+        String missingRemarkMsg = System.Label.FEC_Batch_Case_Handling_Import_Err_Missing_Remark;
+        String missingRoutingMsg = System.Label.FEC_Batch_Case_Handling_Import_Err_Missing_Routing_Action;
+        String invalidRoutingMsg = System.Label.FEC_Batch_Case_Handling_Import_Err_Routing_Action_Invalid;
+        String failedStatus = System.Label.FEC_Batch_Case_Handling_Import_Row_Status_Failed;
+
+        List<FEC_BatchCaseHandlingImportRow> missingRemarkRows =
+            FEC_BatchCaseHandlingImportService.validateCaseHandlingImportRows(
+                new List<Object>{ new Map<String, Object>{ 'caseidsearch' => 'CASE-IMPORT-TEST-001', 'routingaction' => 'Reject' } },
+                false
+            );
+        System.assertEquals(1, missingRemarkRows.size());
+        System.assertEquals(failedStatus, missingRemarkRows[0].status);
+        System.assert(missingRemarkRows[0].errors.contains(missingRemarkMsg), missingRemarkRows[0].errors);
+
+        List<FEC_BatchCaseHandlingImportRow> emptyRowResults =
+            FEC_BatchCaseHandlingImportService.validateCaseHandlingImportRows(
+                new List<Object>{
+                    new Map<String, Object>{ 'caseidsearch' => 'CASE-IMPORT-TEST-001', 'routingaction' => 'Reject', 'inputtedremarks' => 'ok' },
+                    new Map<String, Object>{
+                        'originalHeaders' => new List<String>{ 'Case ID Search', 'Routing Action', 'Inputted Remarks' },
+                        'originalCells' => new List<String>{ '', '', '' }
+                    }
+                },
+                false
+            );
+        System.assertEquals(2, emptyRowResults.size());
+        System.assertEquals(failedStatus, emptyRowResults[1].status);
+        System.assert(
+            emptyRowResults[1].errors.contains(System.Label.FEC_Batch_Case_Handling_Import_Err_Missing_Case_Id),
+            emptyRowResults[1].errors
+        );
+
+        List<FEC_BatchCaseHandlingImportRow> remarkLenRows =
+            FEC_BatchCaseHandlingImportService.validateCaseHandlingImportRows(
+                new List<Object>{ new Map<String, Object>{
+                    'caseidsearch' => 'CASE-IMPORT-TEST-REMARK-LEN',
+                    'routingaction' => 'Reject',
+                    'inputtedremarks' => buildRemarkOfLength(32768)
+                }},
+                false
+            );
+        System.assertEquals(failedStatus, remarkLenRows[0].status);
+        System.assert(remarkLenRows[0].errors.contains(tooLongMsg), remarkLenRows[0].errors);
+        System.assert(!remarkLenRows[0].errors.contains(missingRoutingMsg), remarkLenRows[0].errors);
+
+        List<FEC_BatchCaseHandlingImportRow> maxLenRows =
+            FEC_BatchCaseHandlingImportService.validateCaseHandlingImportRows(
+                new List<Object>{ new Map<String, Object>{
+                    'caseidsearch' => 'CASE-IMPORT-TEST-REMARK-MAX',
+                    'routingaction' => 'Reject',
+                    'inputtedremarks' => buildRemarkOfLength(32767)
+                }},
+                false
+            );
+        System.assert(maxLenRows[0].errors.contains(tooLongMsg), maxLenRows[0].errors);
+
+        for (List<Object> charLenInput : new List<List<Object>>{
+            new List<Object>{ new Map<String, Object>{
+                'caseidsearch' => 'CASE-IMPORT-TEST-REMARK-LEN-CHAR',
+                'routingaction' => 'Reject',
+                'inputtedremarks' => FEC_ConstantCommon.STR_EMPTY,
+                'inputtedRemarksCharLength' => 32768
+            }},
+            new List<Object>{ new Map<String, Object>{
+                'caseidsearch' => 'CASE-IMPORT-TEST-REMARK-TRUNC',
+                'routingaction' => 'Reject',
+                'inputtedremarks' => FEC_ConstantCommon.STR_EMPTY,
+                'inputtedRemarksCharLength' => 40000,
+                'originalHeaders' => new List<String>{ 'Case ID Search', 'Routing Action', 'Inputted Remarks' },
+                'originalCells' => new List<String>{ 'CASE-IMPORT-TEST-REMARK-TRUNC', 'Reject', buildRemarkOfLength(32768) }
+            }},
+            new List<Object>{ new Map<String, Object>{
+                'caseidsearch' => 'CASE-IMPORT-TEST-REMARK-ALIAS',
+                'routingaction' => 'Reject',
+                'inputtedremarks' => FEC_ConstantCommon.STR_EMPTY,
+                'inputtedRemarksCharLength' => 40000,
+                'originalHeaders' => new List<String>{ 'Case ID Search', 'Routing Action', 'Input Remark' },
+                'originalCells' => new List<String>{ 'CASE-IMPORT-TEST-REMARK-ALIAS', 'Reject', buildRemarkOfLength(32768) }
+            }}
+        }) {
+            System.assert(
+                FEC_BatchCaseHandlingImportService.validateCaseHandlingImportRows(charLenInput, false)[0].errors.contains(tooLongMsg),
+                String.valueOf(charLenInput)
+            );
+        }
+
+        List<FEC_BatchCaseHandlingImportRow> missingRemarkWithRouting =
+            FEC_BatchCaseHandlingImportService.validateCaseHandlingImportRows(
+                new List<Object>{ new Map<String, Object>{
+                    'caseidsearch' => 'CASE-IMPORT-TEST-004',
+                    'routingaction' => 'Reject',
+                    'inputtedremarks' => FEC_ConstantCommon.STR_EMPTY
+                }},
+                false
+            );
+        System.assert(missingRemarkWithRouting[0].errors.contains(missingRemarkMsg), missingRemarkWithRouting[0].errors);
+        System.assert(!missingRemarkWithRouting[0].errors.contains(missingRoutingMsg), missingRemarkWithRouting[0].errors);
+
+        List<FEC_BatchCaseHandlingImportRow> missingRoutingRows =
+            FEC_BatchCaseHandlingImportService.validateCaseHandlingImportRows(
+                new List<Object>{ new Map<String, Object>{ 'caseidsearch' => 'CASE-IMPORT-TEST-002' } },
+                false
+            );
+        System.assert(missingRoutingRows[0].errors.contains(missingRoutingMsg), missingRoutingRows[0].errors);
+        System.assertEquals(1, countOccurrences(missingRoutingRows[0].errors, missingRoutingMsg), missingRoutingRows[0].errors);
+
+        List<FEC_BatchCaseHandlingImportRow> invalidRoutingRows =
+            FEC_BatchCaseHandlingImportService.validateCaseHandlingImportRows(
+                new List<Object>{ new Map<String, Object>{
+                    'caseidsearch' => 'CASE-IMPORT-TEST-003',
+                    'routingaction' => 'Reject',
+                    'inputtedremarks' => 'Test remark'
+                }},
+                false
+            );
+        System.assert(invalidRoutingRows[0].errors.contains(invalidRoutingMsg), invalidRoutingRows[0].errors);
+        System.assertEquals(1, countOccurrences(invalidRoutingRows[0].errors, invalidRoutingMsg), invalidRoutingRows[0].errors);
+    }
+
+    @IsTest
+    static void testIsInputtedRemarksOverMaxLength_boundary() {
+        System.assertEquals(
+            false,
+            FEC_BatchCaseHandlingImportService.isInputtedRemarksOverMaxLength(
+                buildRemarkOfLength(32766)
+            )
+        );
+        System.assertEquals(
+            true,
+            FEC_BatchCaseHandlingImportService.isInputtedRemarksOverMaxLength(
+                buildRemarkOfLength(32767)
+            )
+        );
+        System.assertEquals(
+            false,
+            FEC_BatchCaseHandlingImportService.isInputtedRemarksOverMaxLength(32766)
+        );
+        System.assertEquals(
+            true,
+            FEC_BatchCaseHandlingImportService.isInputtedRemarksOverMaxLength(32767)
+        );
+        System.assertEquals(
+            true,
+            FEC_BatchCaseHandlingImportService.isInputtedRemarksOverMaxLength(32768)
+        );
+    }
+
+    @IsTest
+    static void testApplyValidatedRoutingToResultCells_KeepsSourceValues() {
+        String routeTo = 'Route to CS Support - DQ-CS Support';
+        for (List<String> cells : new List<List<String>>{
+            new List<String>{ 'Resolve', routeTo, 'remark' },
+            new List<String>{ 'Revert', 'Escalate', 'remark' },
+            new List<String>{ FEC_ConstantCommon.STR_EMPTY, routeTo, 'remark' }
+        }) {
+            String expectedCaseRouting = cells[0];
+            FEC_BatchCaseHandlingImportRow row = new FEC_BatchCaseHandlingImportRow();
+            row.routingAction = cells[1] == routeTo ? routeTo : 'Escalate';
+            row.assignmentRoutingAction = row.routingAction;
+            FEC_BatchCaseHandlingImportService.applyValidatedRoutingToResultCells(cells, 0, 1, row);
+            System.assertEquals(expectedCaseRouting, cells[0]);
+            System.assertEquals(row.routingAction, cells[1]);
+        }
+    }
+
+    @IsTest
+    static void testCofGsrRoutingBleedSanitizeAndValidate() {
+        FEC_BatchCaseHandlingImportRow bleedRow = buildCofGsrBleedImportRow();
+        FEC_BatchCaseHandlingImportService.sanitizeCofGsrCaseRoutingBleedFromAssignment(bleedRow);
+        System.assertEquals(FEC_ConstantCommon.STR_EMPTY, bleedRow.routingAction);
+        System.assertEquals('Route to CS Support - DQ-CS Support', bleedRow.assignmentRoutingAction);
+
+        List<FEC_BatchCaseHandlingImportRow> rows =
+            FEC_BatchCaseHandlingImportService.validateCaseHandlingImportRows(
+                new List<Object>{ new Map<String, Object>{
+                    'caseidsearch' => 'S-3653',
+                    'assignmentid' => 'A-001762',
+                    'routingaction' => 'Route to CS Support - DQ-CS Support',
+                    'assignmentroutingaction' => 'Route to CS Support - DQ-CS Support',
+                    'inputtedremarks' => 'remark',
+                    'originalHeaders' => bleedRow.originalHeaders,
+                    'originalCells' => bleedRow.originalCells
+                }},
+                true
+            );
+        System.assertEquals(1, rows.size());
+        System.assert(
+            !rows[0].errors.contains(System.Label.FEC_Batch_Case_Handling_Import_Err_Both_Routing_Actions),
+            rows[0].errors
+        );
+        System.assert(
+            !rows[0].errors.contains(System.Label.FEC_Batch_Case_Handling_Import_Err_Assignment_Routing_Resolve_Only),
+            rows[0].errors
+        );
+    }
+
+    @IsTest
+    static void testCofGsrRoutingBleedSanitize_misalignedOriginalCells() {
+        FEC_BatchCaseHandlingImportRow bleedRow = buildCofGsrBleedImportRow();
+        bleedRow.originalCells[2] = 'Route to CS Support - DQ-CS Support';
+        FEC_BatchCaseHandlingImportService.sanitizeCofGsrCaseRoutingBleedFromAssignment(bleedRow);
+        System.assertEquals(FEC_ConstantCommon.STR_EMPTY, bleedRow.routingAction);
+        System.assertEquals('Route to CS Support - DQ-CS Support', bleedRow.assignmentRoutingAction);
+    }
+
+    @IsTest
+    static void testImportRowLayoutAndExportHelpers() {
+        List<String> bleedCells = new List<String>();
+        for (Integer i = 0; i < 24; i++) {
+            bleedCells.add(FEC_ConstantCommon.STR_EMPTY);
+        }
+        String remark = buildRemarkOfLength(32767);
+        bleedCells[21] = remark;
+        bleedCells[22] = remark;
+        FEC_BatchCaseHandlingImportService.clearRoutingCellIfRemarkBleed(bleedCells, 21, 22);
+        System.assertEquals(FEC_ConstantCommon.STR_EMPTY, bleedCells[21]);
+        System.assertEquals(remark, bleedCells[22]);
+
+        FEC_BatchCaseHandlingImportRow layoutRow = new FEC_BatchCaseHandlingImportRow();
+        layoutRow.originalHeaders = new List<String>{ 'Case ID', 'Routing Action', 'Inputted Remarks' };
+        layoutRow.originalCells = new List<String>{ 'S-3603', 'Resolve', '111' };
+        FEC_BatchCaseHandlingImportService.enrichImportRowValidateFieldsFromOriginalLayout(layoutRow);
+        System.assertEquals('S-3603', layoutRow.caseIdSearch);
+        System.assertEquals('Resolve', layoutRow.routingAction);
+        System.assertEquals('111', layoutRow.inputtedRemarks);
+
+        List<String> headers = new List<String>{ 'Plastic ID', 'Case ID', 'Other' };
+        List<String> exportCells = new List<String>{ 'S-4866', FEC_ConstantCommon.STR_EMPTY, 'x' };
+        FEC_BatchCaseHandlingImportService.syncCaseIdIntoExportCells(exportCells, headers, 'S-4866');
+        System.assertEquals(FEC_ConstantCommon.STR_EMPTY, exportCells[0]);
+        System.assertEquals('S-4866', exportCells[1]);
+        System.assertEquals('x', exportCells[2]);
+    }
+
+    @IsTest
+    static void testImportWorkbookEnrichAndHydrate() {
+        Id cvId = insertMinimalImportContentVersion('LayoutEnrichImport', null);
+        FEC_BCH_TemplateExportService.ImportWorkbookParseResult parsed =
+            FEC_BCH_TemplateExportService.parseBatchImportWorkbook(cvId);
+        System.assertEquals(true, parsed.parseSuccess, parsed.errorMessage);
+        List<FEC_BatchCaseHandlingImportRow> parsedRows = (List<FEC_BatchCaseHandlingImportRow>) JSON.deserialize(
+            JSON.serialize(parsed.inputRows),
+            List<FEC_BatchCaseHandlingImportRow>.class
+        );
+        List<String> expectedCells = parsedRows[0].originalCells;
+        FEC_BatchCaseHandlingImportRow bad = parsedRows[0];
+        bad.caseIdSearch = 'CASE-001';
+        bad.status = System.Label.FEC_Batch_Case_Handling_Import_Row_Status_Failed;
+        bad.errors = 'test';
+        List<String> misplacedCells = new List<String>();
+        for (Integer i = 0; i < bad.originalHeaders.size(); i++) {
+            misplacedCells.add('MISPLACED-' + String.valueOf(i));
+        }
+        bad.originalCells = misplacedCells;
+        List<FEC_BatchCaseHandlingImportRow> enriched =
+            FEC_BatchCaseHandlingImportService.enrichImportRowsLayoutFromSourceFile(cvId, new List<FEC_BatchCaseHandlingImportRow>{ bad });
+        System.assertEquals(expectedCells, enriched[0].originalCells);
+
+        Schema.SObjectType batchType = Schema.getGlobalDescribe().get('FEC_Batch_Case_Handling__c');
+        SObject batchRow = batchType.newSObject();
+        FEC_BatchCaseHandlingSObjectUtil.putIfFieldExists(
+            batchType.getDescribe().fields.getMap(),
+            batchRow,
+            new List<String>{ 'FEC_File_Name__c' },
+            'HydrateFailureRowsFromTemplate.xlsx'
+        );
+        insert batchRow;
+        insertMinimalImportContentVersion('HydrateFailureRowsFromTemplate', (Id) batchRow.get('Id'));
+        List<FEC_BatchCaseHandlingImportRow> hydrated =
+            FEC_BatchCaseHandlingImportService.hydrateFailureRowsFromSourceImport(
+                (Id) batchRow.get('Id'),
+                'Apex CPU time limit exceeded'
+            );
+        System.assertEquals(1, hydrated.size());
+        System.assertEquals(System.Label.FEC_Batch_Case_Handling_Import_Row_Status_Failed, hydrated[0].status);
+        System.assertEquals('Apex CPU time limit exceeded', hydrated[0].errors);
+        System.assertEquals('CASE-001', hydrated[0].caseIdSearch);
+        System.assert(hydrated[0].originalHeaders.size() > 0);
+    }
+
+    private static FEC_BatchCaseHandlingImportRow buildCofGsrBleedImportRow() {
+        FEC_BatchCaseHandlingImportRow rr = new FEC_BatchCaseHandlingImportRow();
+        rr.originalHeaders = new List<String>{
+            'Case ID', 'Assignment ID', 'Routing Action', 'Assignment Routing Action', 'Inputted Remarks'
+        };
+        rr.originalCells = new List<String>{
+            'S-3653', 'A-001762', FEC_ConstantCommon.STR_EMPTY, 'Route to CS Support - DQ-CS Support', 'remark'
+        };
+        rr.routingAction = 'Route to CS Support - DQ-CS Support';
+        rr.assignmentRoutingAction = 'Route to CS Support - DQ-CS Support';
+        return rr;
+    }
+
+    private static Id insertMinimalImportContentVersion(String title, Id publishLocationId) {
+        ContentVersion cv = new ContentVersion(
+            Title = title,
+            PathOnClient = title + '.xlsx',
+            VersionData = EncodingUtil.base64Decode(buildMinimalImportWorkbookBase64())
+        );
+        if (publishLocationId != null) {
+            cv.FirstPublishLocationId = publishLocationId;
+        }
+        insert cv;
+        return cv.Id;
+    }
+
+    private static String buildRemarkOfLength(Integer targetLength) {
+        if (targetLength == null || targetLength <= 0) {
+            return FEC_ConstantCommon.STR_EMPTY;
+        }
+        String chunk = '0123456789012345678901234567890';
+        String out = FEC_ConstantCommon.STR_EMPTY;
+        while (out.length() < targetLength) {
+            out += chunk;
+        }
+        return out.substring(0, targetLength);
+    }
+
+    private static Integer countOccurrences(String haystack, String needle) {
+        if (String.isBlank(haystack) || String.isBlank(needle)) {
+            return 0;
+        }
+        Integer count = 0;
+        Integer fromIndex = 0;
+        Integer foundAt = haystack.indexOf(needle, fromIndex);
+        while (foundAt != -1) {
+            count += 1;
+            fromIndex = foundAt + needle.length();
+            foundAt = haystack.indexOf(needle, fromIndex);
+        }
+        return count;
+    }
+
+    private static String buildMinimalImportWorkbookBase64() {
+        return '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';
+    }
 }
