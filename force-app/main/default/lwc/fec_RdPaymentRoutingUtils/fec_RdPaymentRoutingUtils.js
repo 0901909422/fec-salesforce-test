@@ -128,6 +128,30 @@ export function isRdPaymentCloseWithoutStatement(assessmentVal, picklistOptions)
     );
 }
 
+/** RL16 — Action routing theo RD Payment Assessment. */
+export const RD_PAYMENT_RL16_ACTION_RESOLVE = "Resolve";
+export const RD_PAYMENT_RL16_ACTION_ROUTE_TO = "Route to";
+
+/**
+ * RL16.02/03: "đóng không cần tờ trình" → Resolve; các assessment khác → Route to.
+ * @returns {"Resolve"|"Route to"|null}
+ */
+export function resolveRdPaymentRl16RoutingActionCode(
+    assessmentVal,
+    picklistOptions,
+) {
+    if (assessmentVal == null || String(assessmentVal).trim() === "") {
+        return null;
+    }
+    if (isRdPaymentCloseWithoutStatement(assessmentVal, picklistOptions)) {
+        return RD_PAYMENT_RL16_ACTION_RESOLVE;
+    }
+    if (resolveRdPaymentAssessmentApiValue(assessmentVal, picklistOptions)) {
+        return RD_PAYMENT_RL16_ACTION_ROUTE_TO;
+    }
+    return null;
+}
+
 export function isRdPaymentCannotClose(assessmentVal, picklistOptions) {
     return (
         resolveRdPaymentAssessmentApiValue(assessmentVal, picklistOptions) ===

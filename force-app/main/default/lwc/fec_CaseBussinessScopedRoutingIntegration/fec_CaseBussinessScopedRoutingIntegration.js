@@ -11,6 +11,9 @@ import {
   setRdPaymentScopedStageTeamMap,
   FIELD_RD_PAYMENT_CONTRACT_ASSESSMENT,
   isRl16RdPaymentAssessmentStageFromHost,
+  resolveRdPaymentRl16RoutingActionCode,
+  RD_PAYMENT_RL16_ACTION_RESOLVE,
+  RD_PAYMENT_RL16_ACTION_ROUTE_TO,
 } from "c/fec_RdPaymentRoutingUtils";
 
 /** Fallback khi org chưa deploy fec_RdPaymentRoutingUtils mới (không có getRdPaymentScopedStageTeam). */
@@ -265,9 +268,30 @@ function rdPaymentDebug(label, payload) {
   console.log(`[RD-Payment-Scoped] ${label}`, payload ?? "");
 }
 
+function applyRdPaymentRl16ActionFromAssessment(host, assessmentVal, picklistOptions) {
+  const actionCode = resolveRdPaymentRl16RoutingActionCode(
+    assessmentVal,
+    picklistOptions,
+  );
+  if (!actionCode) {
+    return null;
+  }
+  host._setActionValueByCode?.(actionCode);
+  if (actionCode === RD_PAYMENT_RL16_ACTION_RESOLVE) {
+    host.business = {
+      ...host.business,
+      nextTeam: null,
+      nextQueue: null,
+    };
+    host.business = { ...host.business };
+    getScopedRoutingCmp(host)?.clearForcedRoutingSelection?.();
+  }
+  return actionCode;
+}
+
 /**
- * Đồng bộ ngay khi onChange RD Payment Assessment — chỉ set Route to.
- * Team/Queue hiển thị sau khi Apex tra FEC_Stage_Change__c (FEC_Team_User_Group__c, FEC_Next_Queue__c).
+ * Đồng bộ ngay khi onChange RD Payment Assessment (RL16).
+ * "Đóng không cần tờ trình" → Resolve; các giá trị khác → Route to (+ Team/Queue sau Apex).
  */
 export function applyRdPaymentAssessmentRoutingImmediate(host, assessmentVal) {
   const picklistOptions =
@@ -281,10 +305,15 @@ export function applyRdPaymentAssessmentRoutingImmediate(host, assessmentVal) {
     picklistOptions,
   );
   const routeToActionId = computeRouteToActionButtonId(host);
+  const routingActionCode = resolveRdPaymentRl16RoutingActionCode(
+    assessmentVal,
+    picklistOptions,
+  );
 
   const debugPayload = {
     rawValue: assessmentVal,
     assessmentApiValue,
+    routingActionCode,
     teamUserGroupFilter,
     getRouteToOptionForTeam: {
       caseId: host.recordId,
@@ -297,12 +326,24 @@ export function applyRdPaymentAssessmentRoutingImmediate(host, assessmentVal) {
   };
   rdPaymentDebug("picklist-change", debugPayload);
 
-  if (!assessmentApiValue) {
+  if (!routingActionCode) {
     rdPaymentDebug("picklist-change:skip-no-assessment", debugPayload);
     return { applied: false, ...debugPayload };
   }
 
-  host._setActionValueByCode?.(ACTION_ROUTE_TO);
+  const appliedAction = applyRdPaymentRl16ActionFromAssessment(
+    host,
+    assessmentVal,
+    picklistOptions,
+  );
+
+  if (appliedAction === RD_PAYMENT_RL16_ACTION_RESOLVE) {
+    rdPaymentDebug("picklist-change:resolve-set", {
+      actionValue: host.actionValue,
+    });
+    return { applied: true, ...debugPayload };
+  }
+
   host.business = {
     ...host.business,
     nextTeam: null,
@@ -486,19 +527,35 @@ export async function applyRdPaymentStageChangeRoutingFromAssessment(
   host,
   assessmentVal,
 ) {
-  const { opt, teamUserGroupFilter, fromDatabase } =
-    await fetchRdPaymentStageChangeOption(host, assessmentVal);
+  const picklistOptions =
+    host.business?.picklistOptionsMap?.Case?.FEC_RD_Payment_Contract_Assessment__c;
+  const routingActionCode = applyRdPaymentRl16ActionFromAssessment(
+    host,
+    assessmentVal,
+    picklistOptions,
+  );
 
   rdPaymentDebug("applyRdPaymentStageChangeRouting:entry", {
     assessmentVal,
-    teamUserGroupFilter,
-    fromDatabase,
+    routingActionCode,
     useAssessmentTeamFilter: shouldUseRdPaymentAssessmentTeamFilter(host),
     isScopedStage2: shouldPreferScopedRoutingFromStage2(host),
     stageName: host.business?.stageName,
   });
 
-  host._setActionValueByCode?.(ACTION_ROUTE_TO);
+  if (routingActionCode === RD_PAYMENT_RL16_ACTION_RESOLVE) {
+    rdPaymentDebug("applyRdPaymentStageChangeRouting:resolve", { assessmentVal });
+    return true;
+  }
+
+  const { opt, teamUserGroupFilter, fromDatabase } =
+    await fetchRdPaymentStageChangeOption(host, assessmentVal);
+
+  rdPaymentDebug("applyRdPaymentStageChangeRouting:route-to", {
+    assessmentVal,
+    teamUserGroupFilter,
+    fromDatabase,
+  });
 
   if (
     shouldUseRdPaymentAssessmentTeamFilter(host) &&
