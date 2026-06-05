@@ -1,7 +1,7 @@
 {
   "packageDirectories": [
     {
-      "versionName": "ver 0.2",
+      "versionName": "ver 0.3",
       "versionNumber": "0.2.0.NEXT",
       "path": "force-app",
       "package": "GitLabPipelinesPkg",
@@ -14,6 +14,7 @@
   "sourceApiVersion": "66.0",
   "packageAliases": {
     "GitLabPipelinesPkg": "0HoIW000000021p0AA",
-    "GitLabPipelinesPkg@0.1.0-1": "04tIW000004HwjdYAC"
+    "GitLabPipelinesPkg@0.1.0-1": "04tIW000004HwjdYAC",
+    "GitLabPipelinesPkg@0.2.0-2": "04tIW000004I9NVYA0"
   }
 }
