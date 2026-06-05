@@ -1,8 +1,8 @@
 {
   "packageDirectories": [
     {
-      "versionName": "ver 0.1",
-      "versionNumber": "0.1.0.NEXT",
+      "versionName": "ver 0.2",
+      "versionNumber": "0.2.0.NEXT",
       "path": "force-app",
       "package": "GitLabPipelinesPkg",
       "versionDescription": "",
@@ -13,6 +13,7 @@
   "sfdcLoginUrl": "https://login.salesforce.com",
   "sourceApiVersion": "66.0",
   "packageAliases": {
-    "GitLabPipelinesPkg": "0HoIW000000021p0AA"
+    "GitLabPipelinesPkg": "0HoIW000000021p0AA",
+    "GitLabPipelinesPkg@0.1.0-1": "04tIW000004HwjdYAC"
   }
 }

@@ -300,12 +300,21 @@ private class FEC_AssignmentListHandler_Test {
             return;
         }
 
-        System.runAs(csUser()) {
+        User csU = csUser();
+        System.runAs(csU) {
             seedCsQueueMembershipForUser(UserInfo.getUserId());
             if (
                 !FEC_AssignmentListHandler.isCSSupport()
                 && !FEC_AssignmentListHandler.isCSCustomerCare()
             ) {
+                return;
+            }
+            // getAssignmentsNEW filters by profile — if running user has admin profile
+            // (fallback) it returns empty regardless of queue membership
+            String profileName = [SELECT Profile.Name FROM User WHERE Id = :UserInfo.getUserId()].Profile.Name;
+            if (profileName != FEC_ConstantCommon.PROFILE_CS_BO
+                && profileName != FEC_ConstantCommon.PROFILE_CS_FL
+                && profileName != FEC_ConstantCommon.PROFILE_RELEVANT_DEPTS) {
                 return;
             }
             Case c = insertCase();
