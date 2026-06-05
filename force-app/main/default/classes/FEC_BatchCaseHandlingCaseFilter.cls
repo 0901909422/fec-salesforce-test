@@ -22,14 +22,28 @@ public without sharing class FEC_BatchCaseHandlingCaseFilter {
             String.escapeSingleQuotes(FEC_ConstantCommon.CASE_CUSTOMER_RECORD_TYPE_DEV_NAME) +
             '\''
         );
-        parts.add(
-            'OwnerId = \'' +
-            String.escapeSingleQuotes(String.valueOf(UserInfo.getUserId())) +
-            '\''
-        );
+        // 05/06/2026 10:00 linhdev - default filter: Owner OR FEC_Assignment_Users__c OR Queue member (design Batch Case Handling)
+        String userVisibilityClause = buildDefaultUserVisibilityClause();
+        if (String.isNotBlank(userVisibilityClause)) {
+            parts.add(userVisibilityClause);
+        }
         parts.add('IsClosed = false');
         parts.add('(FEC_Final_Status__c LIKE \'Pending - %\' OR FEC_Final_Status__c = \'Open\')');
         return parts;
+    }
+
+    // 05/06/2026 10:00 linhdev - OwnerId=$User.Id OR CONTAINS(FEC_Assignment_Users__c) OR OwnerId=Queue user là thành viên
+    private static String buildDefaultUserVisibilityClause() {
+        List<String> visibilityParts = new List<String>();
+        visibilityParts.add('FEC_Is_Owner_Or_Assigned__c = true');
+        Set<Id> userQueueIds = FEC_AssignmentListHandler.getCurrentUserQueueIds(UserInfo.getUserId());
+        if (userQueueIds != null && !userQueueIds.isEmpty()) {
+            visibilityParts.add(formatIdInClause('OwnerId', userQueueIds));
+        }
+        if (visibilityParts.size() == 1) {
+            return visibilityParts[0];
+        }
+        return '(' + String.join(visibilityParts, ' OR ') + ')';
     }
 
     public static List<String> buildCompleteWhere(List<Map<String, Object>> filterMaps) {
@@ -122,11 +136,15 @@ public without sharing class FEC_BatchCaseHandlingCaseFilter {
     }
 
     private static String formatIdInClause(Set<Id> recordIds) {
+        return formatIdInClause('Id', recordIds);
+    }
+
+    private static String formatIdInClause(String fieldApi, Set<Id> recordIds) {
         List<String> literals = new List<String>();
         for (Id recordId : recordIds) {
             literals.add('\'' + String.escapeSingleQuotes(String.valueOf(recordId)) + '\'');
         }
-        return 'Id IN (' + String.join(literals, ',') + ')';
+        return fieldApi + ' IN (' + String.join(literals, ',') + ')';
     }
 
     private static String formatIdNotInClause(Set<Id> recordIds) {

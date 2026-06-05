@@ -605,4 +605,185 @@ private class FEC_BatchCaseHandlingImportService_Test {
         System.assertEquals(false, atEnd);
         System.assertEquals(false, negative);
     }
+
+    /**
+     * Kịch bản: quy trình không GSR/COF — Case owner Queue mà login user là member không bị lỗi ERR_NOT_OWNER.
+     */
+    @IsTest
+    static void testValidateRows_NonCofGsr_AllowsQueueOwnedCaseForMember() {
+        System.runAs(batchImportRunUser()) {
+            List<Group> queues = [
+                SELECT Id
+                FROM Group
+                WHERE Type = :FEC_ConstantCommon.GROUP_TYPE_QUEUE
+                LIMIT 1
+            ];
+            if (queues.isEmpty()) {
+                System.assert(true, 'Skipped: no queue in org.');
+                return;
+            }
+            Id queueId = queues[0].Id;
+            ensureQueueMember(queueId, UserInfo.getUserId());
+
+            String caseKey = 'CASE-QUEUE-IMPORT-' + String.valueOf(DateTime.now().getTime());
+            FEC_CaseTriggerHandler.isExecuting = true;
+            Case queueOwnedCase = new Case(
+                Subject = 'Queue Owned Import Case',
+                Status = FEC_ConstantCommon.CASE_STATUS_OPEN,
+                OwnerId = queueId,
+                FEC_ID_Search__c = caseKey
+            );
+            insert queueOwnedCase;
+            FEC_CaseTriggerHandler.isExecuting = false;
+            update new Case(Id = queueOwnedCase.Id, FEC_ID_Search__c = caseKey);
+
+            List<Object> inputRows = new List<Object>{
+                new Map<String, Object>{
+                    'caseidsearch' => caseKey,
+                    'routingaction' => 'RESOLVE',
+                    'inputtedremarks' => 'Queue owned import validate',
+                    'inputtedremarkscharlength' => '26'
+                }
+            };
+
+            Test.startTest();
+            List<FEC_BatchCaseHandlingImportRow> results =
+                FEC_BatchCaseHandlingImportService.validateCaseHandlingImportRows(inputRows, false);
+            Test.stopTest();
+
+            System.assertEquals(1, results.size());
+            System.assert(
+                results[0].errors == null || !results[0].errors.contains('Người dùng không phải chủ sở hữu Case'),
+                'Queue member không được báo ERR_NOT_OWNER: ' + results[0].errors
+            );
+        }
+    }
+
+    /**
+     * Kịch bản: quy trình không GSR/COF Resolve — Case owner Queue phải chuyển OwnerId sang Login User trước khi xử lý.
+     */
+    @IsTest
+    static void testApplyCaseHandlingUpdates_NonCofGsr_TransfersQueueOwnerOnResolve() {
+        System.runAs(batchImportRunUser()) {
+            List<Group> queues = [
+                SELECT Id
+                FROM Group
+                WHERE Type = :FEC_ConstantCommon.GROUP_TYPE_QUEUE
+                LIMIT 1
+            ];
+            if (queues.isEmpty()) {
+                System.assert(true, 'Skipped: no queue in org.');
+                return;
+            }
+            Id queueId = queues[0].Id;
+            Id loginUserId = UserInfo.getUserId();
+            ensureQueueMember(queueId, loginUserId);
+
+            String caseKey = 'CASE-QUEUE-APPLY-' + String.valueOf(DateTime.now().getTime());
+            FEC_CaseTriggerHandler.isExecuting = true;
+            Case queueOwnedCase = new Case(
+                Subject = 'Queue Owned Apply Case',
+                Status = FEC_ConstantCommon.CASE_STATUS_OPEN,
+                OwnerId = queueId,
+                FEC_ID_Search__c = caseKey
+            );
+            insert queueOwnedCase;
+            FEC_CaseTriggerHandler.isExecuting = false;
+            update new Case(Id = queueOwnedCase.Id, FEC_ID_Search__c = caseKey);
+
+            FEC_BatchCaseHandlingImportRow row = new FEC_BatchCaseHandlingImportRow();
+            row.status = System.Label.FEC_Operation_Success;
+            row.recordId = String.valueOf(queueOwnedCase.Id);
+            row.routingAction = 'RESOLVE';
+            row.inputtedRemarks = 'Transfer owner before resolve';
+
+            Test.startTest();
+            FEC_BatchCaseHandlingImportService.applyCaseHandlingUpdates(
+                new List<FEC_BatchCaseHandlingImportRow>{ row },
+                false
+            );
+            Test.stopTest();
+
+            Case updated = [SELECT OwnerId FROM Case WHERE Id = :queueOwnedCase.Id LIMIT 1];
+            System.assertEquals(
+                loginUserId,
+                updated.OwnerId,
+                'Import quy trình không GSR/COF Resolve phải chuyển OwnerId từ Queue sang Login User.'
+            );
+        }
+    }
+
+    /**
+     * Kịch bản: quy trình COF — Case owner Queue không được tự chuyển OwnerId khi import (cofOrGsr=false ở batch).
+     */
+    @IsTest
+    static void testApplyCaseHandlingUpdates_CofGsrProcess_SkipsQueueOwnerTransfer() {
+        System.runAs(batchImportRunUser()) {
+            List<FEC_Business_Process__c> cofBpRows = [
+                SELECT Id, FEC_Code__c
+                FROM FEC_Business_Process__c
+                WHERE FEC_Code__c LIKE 'COF%'
+                LIMIT 1
+            ];
+            if (cofBpRows.isEmpty()) {
+                System.assert(true, 'Skipped: no COF business process in org.');
+                return;
+            }
+            List<Group> queues = [
+                SELECT Id
+                FROM Group
+                WHERE Type = :FEC_ConstantCommon.GROUP_TYPE_QUEUE
+                LIMIT 1
+            ];
+            if (queues.isEmpty()) {
+                System.assert(true, 'Skipped: no queue in org.');
+                return;
+            }
+            Id queueId = queues[0].Id;
+            ensureQueueMember(queueId, UserInfo.getUserId());
+
+            String caseKey = 'CASE-COF-QUEUE-' + String.valueOf(DateTime.now().getTime());
+            FEC_CaseTriggerHandler.isExecuting = true;
+            Case queueOwnedCase = new Case(
+                Subject = 'COF Queue Owned Case',
+                Status = FEC_ConstantCommon.CASE_STATUS_OPEN,
+                OwnerId = queueId,
+                FEC_ID_Search__c = caseKey,
+                FEC_Business_Process__c = cofBpRows[0].Id
+            );
+            insert queueOwnedCase;
+            FEC_CaseTriggerHandler.isExecuting = false;
+            update new Case(Id = queueOwnedCase.Id, FEC_ID_Search__c = caseKey);
+
+            FEC_BatchCaseHandlingImportRow row = new FEC_BatchCaseHandlingImportRow();
+            row.status = System.Label.FEC_Operation_Success;
+            row.recordId = String.valueOf(queueOwnedCase.Id);
+            row.routingAction = 'RESOLVE';
+            row.inputtedRemarks = 'COF should not auto transfer owner';
+
+            Test.startTest();
+            FEC_BatchCaseHandlingImportService.applyCaseHandlingUpdates(
+                new List<FEC_BatchCaseHandlingImportRow>{ row },
+                false
+            );
+            Test.stopTest();
+
+            Case updated = [SELECT OwnerId FROM Case WHERE Id = :queueOwnedCase.Id LIMIT 1];
+            System.assertEquals(
+                queueId,
+                updated.OwnerId,
+                'Quy trình COF không được tự chuyển OwnerId từ Queue sang Login User.'
+            );
+        }
+    }
+
+    private static void ensureQueueMember(Id groupId, Id userOrGroupId) {
+        if (groupId == null || userOrGroupId == null) {
+            return;
+        }
+        if ([SELECT COUNT() FROM GroupMember WHERE GroupId = :groupId AND UserOrGroupId = :userOrGroupId] > 0) {
+            return;
+        }
+        insert new GroupMember(GroupId = groupId, UserOrGroupId = userOrGroupId);
+    }
 }

@@ -14,6 +14,7 @@ public without sharing class FEC_BatchCaseHandlingImportService {
     private static final String RESULT_COL_ERRORS = '__Errors';
     private static final String IMPORT_ERROR_SEPARATOR = ',\n';
     private static final String ERR_NOT_OWNER = 'Người dùng không phải chủ sở hữu Case';
+    private static final String QUEUE_OWNER_ID_PREFIX = '00G';
     private static final String ERR_FIELD_NOT_CONFIGURED = 'Trường dữ liệu chưa được thiết lập trong Master Data Setting';
     private static final String ERR_MISSING_CS_D2C_ASSESSMENT = 'Thiếu giá trị CS D2C đánh giá yêu cầu';
     private static final String ERR_MISSING_RISK_LEVEL = 'Thiếu giá trị Mức độ rủi ro';
@@ -1845,7 +1846,7 @@ public without sharing class FEC_BatchCaseHandlingImportService {
                 errs.add(System.Label.FEC_Batch_Case_Handling_Import_Err_Case_Id_Not_Found);
             } else if (matched != null && matched.IsClosed) {
                 errs.add(System.Label.FEC_Batch_Case_Handling_Import_Err_Case_Closed);
-            } else if (matched != null && matched.OwnerId != currentUserId) {
+            } else if (matched != null && !canImportCaseForCurrentUser(matched, currentUserId)) {
                 errs.add(ERR_NOT_OWNER);
             }
             if (!remarkOverMax) {
@@ -2024,7 +2025,9 @@ public without sharing class FEC_BatchCaseHandlingImportService {
                     FEC_Current_Case_Stage__c,
                     FEC_Assignment_Count__c,
                     FEC_Final_Status__c,
-                    FEC_Current_Case_Stage__r.FEC_Code__c
+                    FEC_Current_Case_Stage__r.FEC_Code__c,
+                    FEC_Business_Process__r.FEC_Code__c,
+                    FEC_Current_Case_Stage__r.FEC_Business_Process__r.FEC_Code__c
                 FROM Case
                 WHERE Id IN :caseIds
             ]);
@@ -2300,6 +2303,12 @@ public without sharing class FEC_BatchCaseHandlingImportService {
                     continue;
                 }
                 if (!skipCaseRun) {
+                    // 05/06/2026 14:00 linhdev - quy trình không GSR/COF: Resolve/Reject/Update + owner Queue → gán Login User
+                    transferQueueOwnedCaseToLoginUserForNonCofGsrProcess(
+                        caseId,
+                        methodKey,
+                        caseLiteById
+                    );
                     // 04/06/2026 16:45 linhdev - queueable gọi runInternal; tránh AuraHandledException crash import Processing
                     FEC_CaseBusinessService.runInternal(methodKey, runParams);
                 }
@@ -2758,6 +2767,70 @@ public without sharing class FEC_BatchCaseHandlingImportService {
             return false;
         }
         return methodKey == FEC_CaseBusinessService.RESOLVE || methodKey == FEC_CaseBusinessService.REJECT;
+    }
+
+    // 05/06/2026 14:00 linhdev - OwnerId Queue (prefix 00G) vs User (design import không GSR/COF)
+    private static Boolean isQueueCaseOwnerId(Id ownerId) {
+        if (ownerId == null) {
+            return false;
+        }
+        return String.valueOf(ownerId).startsWith(QUEUE_OWNER_ID_PREFIX);
+    }
+
+    // 05/06/2026 14:00 linhdev - check Business Process COF/GSR theo từng Case (không chỉ cờ import batch)
+    private static Boolean isCofOrGsrBusinessProcess(Case matched) {
+        String bpCode = resolveCaseBusinessProcessCode(matched);
+        if (String.isBlank(bpCode)) {
+            return false;
+        }
+        String prefix = FEC_BatchCaseHandlingTemplateHelper.mapBusinessProcessToTemplatePrefix(bpCode);
+        return prefix == 'COF' || prefix == 'GSR';
+    }
+
+    private static Boolean isResolveRejectUpdateImportAction(String methodKey) {
+        if (String.isBlank(methodKey)) {
+            return false;
+        }
+        return methodKey == FEC_CaseBusinessService.RESOLVE
+            || methodKey == FEC_CaseBusinessService.REJECT
+            || methodKey == FEC_CaseBusinessService.UPDATEACTION;
+    }
+
+    // 05/06/2026 14:00 linhdev - quy trình không GSR/COF: cho phép Case owner Queue mà login user là member
+    private static Boolean canImportCaseForCurrentUser(Case matched, Id currentUserId) {
+        if (matched == null || currentUserId == null) {
+            return false;
+        }
+        if (matched.OwnerId == currentUserId) {
+            return true;
+        }
+        if (isCofOrGsrBusinessProcess(matched)) {
+            return false;
+        }
+        if (!isQueueCaseOwnerId(matched.OwnerId)) {
+            return false;
+        }
+        Set<Id> userQueueIds = FEC_AssignmentListHandler.getCurrentUserQueueIds(currentUserId);
+        return userQueueIds != null && userQueueIds.contains(matched.OwnerId);
+    }
+
+    // 05/06/2026 14:00 linhdev - quy trình không GSR/COF Resolve/Reject/Update: owner Queue → chuyển OwnerId sang Login User
+    private static void transferQueueOwnedCaseToLoginUserForNonCofGsrProcess(
+        Id caseId,
+        String methodKey,
+        Map<Id, Case> caseLiteById
+    ) {
+        if (caseId == null || !isResolveRejectUpdateImportAction(methodKey)) {
+            return;
+        }
+        Case caseLite = caseLiteById == null ? null : caseLiteById.get(caseId);
+        if (caseLite == null || isCofOrGsrBusinessProcess(caseLite) || !isQueueCaseOwnerId(caseLite.OwnerId)) {
+            return;
+        }
+        Id loginUserId = UserInfo.getUserId();
+        update new Case(Id = caseId, OwnerId = loginUserId);
+        caseLite.OwnerId = loginUserId;
+        caseLiteById.put(caseId, caseLite);
     }
 
     //PhongBT 28/05/26: COF/GSR — chỉ cột Assignment Routing Action (routingAction trống).
