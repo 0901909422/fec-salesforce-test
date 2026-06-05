@@ -1,6 +1,10 @@
 public without sharing class FEC_BatchCaseHandlingTemplateHelper {
 
     private static final String TEMPLATE_OBJECT_API_NAME = 'FEC_Template_Import__c';
+    // 27/05/2026 18:45 linhdev - lỗi khi user import template không thuộc role/user group
+    public static final String ERR_ROLE_TEMPLATE_MISMATCH = 'role/template không phù hợp';
+    // 05/06/2026 17:30 linhdev - mã lỗi validateUploadedTemplateFileName
+    public static final String ERR_TEMPLATE_FILE_NAME_MISMATCH = 'TEMPLATE_MISMATCH';
 
     public static final List<String> ALLOWED_BUSINESS_PROCESS_NAMES = new List<String>{
         'COF - General Flow',
@@ -827,9 +831,6 @@ public without sharing class FEC_BatchCaseHandlingTemplateHelper {
         return pathOrTitle.trim().toLowerCase().endsWith('.xlsx');
     }
 
-    // 27/05/2026 18:45 linhdev - lỗi khi user import template không thuộc role/user group
-    public static final String ERR_ROLE_TEMPLATE_MISMATCH = 'role/template không phù hợp';
-
     public static String resolveTemplateNameFromUploadedFileName(
         String fileName,
         String userGroup,
@@ -952,7 +953,7 @@ public without sharing class FEC_BatchCaseHandlingTemplateHelper {
         if (fileCore == expectedCore || fileCore.contains(expectedCore)) {
             return null;
         }
-        return 'TEMPLATE_MISMATCH';
+        return ERR_TEMPLATE_FILE_NAME_MISMATCH;
     }
 
     // 29/05/2026 15:00 linhdev - debug log export template binding (Dev Console)

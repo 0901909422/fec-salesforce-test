@@ -1,5 +1,9 @@
 public without sharing class FEC_BatchCaseHandlingCaseFilter {
 
+    // 05/06/2026 17:30 linhdev - constant filter QUEUE đưa lên đầu class
+    private static final String MY_PENDING_CASES_VALUE = 'My Pending Cases';
+    private static final String QUEUE_MY_PENDING = 'MY_PENDING_CASES';
+
     public static List<Map<String, Object>> parseFilterMaps(String filtersJson) {
         List<Object> rawFilters = String.isBlank(filtersJson)
             ? new List<Object>()
@@ -235,9 +239,6 @@ public without sharing class FEC_BatchCaseHandlingCaseFilter {
         }
         return s;
     }
-
-    private static final String MY_PENDING_CASES_VALUE = 'My Pending Cases';
-    private static final String QUEUE_MY_PENDING = 'MY_PENDING_CASES';
 
     private static String buildOneFilterClause(String prop, String op, String vText, List<String> vList) {
         if (prop == 'CUSTOMER_TYPE') {

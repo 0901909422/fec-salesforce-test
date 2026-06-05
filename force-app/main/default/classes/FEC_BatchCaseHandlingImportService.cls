@@ -38,6 +38,45 @@ public without sharing class FEC_BatchCaseHandlingImportService {
     private static final String ERR_INVALID_PAYMENT_ASSESSMENT = 'Giá trị Payment đánh giá yêu cầu đóng hợp đồng không tồn tại trong Datagroup.';
     private static final String ERR_MISSING_CP_ASSESSMENT = 'Thiếu giá trị CP đánh giá yêu cầu';
     private static final String ERR_INVALID_CP_ASSESSMENT = 'Giá trị CP đánh giá yêu cầu không tồn tại trong Datagroup.';
+    // 05/06/2026 16:00 linhdev - __Errors Export Result luôn hiển thị tiếng Việt
+    private static final String ERR_GENERIC_APPLY = 'Xử lý dữ liệu thất bại.';
+    private static final String ERR_IMPORT_RESULT_QUEUE_NOT_FOUND = 'Không tìm thấy Queue.';
+    private static final String ERR_IMPORT_RESULT_CANT_FIND_NEXT_STAGE = 'Không tìm thấy stage tiếp theo.';
+    private static final String ERR_IMPORT_RESULT_CANNOT_FIND_STAGE_CHANGE = 'Không tìm thấy Stage Change.';
+    private static final String ERR_IMPORT_RESULT_ASSIGNMENT_NOT_FOUND = 'Không tìm thấy Assignment.';
+    private static final String ERR_IMPORT_RESULT_DECISION_REQUIRED = 'Thiếu giá trị decision.';
+    private static final String ERR_IMPORT_RESULT_INVALID_INPUT = 'Dữ liệu nhập không hợp lệ.';
+    private static final String ERR_IMPORT_RESULT_TEAM_REQUIRED = 'Thiếu giá trị Team.';
+    private static final String ERR_IMPORT_RESULT_ESCALATE_NO_MANAGER =
+        'Escalate thất bại: Owner hiện tại không có manager. Vui lòng cập nhật dữ liệu user.';
+    private static final String ERR_IMPORT_RESULT_ESCALATE_NO_OWNER = 'Escalate thất bại: Assignment không có owner.';
+    private static final String ERR_IMPORT_RESULT_MANAGER_NOT_FOUND = 'Không tìm thấy manager của User owner hiện tại.';
+    private static final String ERR_IMPORT_RESULT_INSUFFICIENT_ACCESS = 'Không đủ quyền truy cập để cập nhật dữ liệu.';
+    private static final String ERR_IMPORT_RESULT_UNABLE_TO_LOCK = 'Không thể khóa bản ghi để cập nhật. Vui lòng thử lại.';
+    private static final String ERR_IMPORT_RESULT_ENTITY_DELETED = 'Bản ghi đã bị xóa.';
+    private static final String ERR_IMPORT_RESULT_VALIDATION_FAILED = 'Dữ liệu không thỏa điều kiện kiểm tra hệ thống.';
+    private static final String ERR_IMPORT_RESULT_SUFFIX_INVALID = ' không hợp lệ.';
+    private static final String ERR_IMPORT_RESULT_PREFIX_NOT_FOUND = 'Không tìm thấy ';
+    private static final String ERR_IMPORT_RESULT_SUFFIX_NOT_FOUND = '.';
+    private static final String IMPORT_RESULT_EN_SUFFIX_INVALID = ' is invalid.';
+    private static final String IMPORT_RESULT_EN_SUFFIX_NOT_FOUND = ' not found.';
+    // 05/06/2026 17:30 linhdev - lỗi resolve queue Assignment Route To khi import
+    private static final String ERR_ASSIGNMENT_ROUTE_TO_QUEUE_UNKNOWN =
+        'Không xác định được queue đích để cập nhật Assignment Route To.';
+    private static final Map<String, String> IMPORT_RESULT_ERROR_EN_TO_VI = new Map<String, String>{
+        'queue not found' => ERR_IMPORT_RESULT_QUEUE_NOT_FOUND,
+        'can\'t find next stage' => ERR_IMPORT_RESULT_CANT_FIND_NEXT_STAGE,
+        'cannot find stage change.' => ERR_IMPORT_RESULT_CANNOT_FIND_STAGE_CHANGE,
+        'assignment not found.' => ERR_IMPORT_RESULT_ASSIGNMENT_NOT_FOUND,
+        'decision is required' => ERR_IMPORT_RESULT_DECISION_REQUIRED,
+        'invalid input' => ERR_IMPORT_RESULT_INVALID_INPUT,
+        'team is required' => ERR_IMPORT_RESULT_TEAM_REQUIRED,
+        'escalate failed: current owner has no manager. please update user data.' => ERR_IMPORT_RESULT_ESCALATE_NO_MANAGER,
+        'escalate failed: assignment has no owner.' => ERR_IMPORT_RESULT_ESCALATE_NO_OWNER,
+        'manager not found for the current user owner.' => ERR_IMPORT_RESULT_MANAGER_NOT_FOUND,
+        // 05/06/2026 17:00 linhdev - 1 key template mismatch (TEMPLATE_MISMATCH / template_mismatch) → ERR_TEMPLATE_FILE_MISMATCH
+        'template mismatch' => ERR_TEMPLATE_FILE_MISMATCH
+    };
     private class RoutingParseResult {
         public String methodKey;
         public String decision;
@@ -664,7 +703,8 @@ public without sharing class FEC_BatchCaseHandlingImportService {
             insertValues.add(
                 new List<String>{
                     rowValue(resolveImportResultStatusLabel(row.status)),
-                    rowValue(row.errors)
+                    // 05/06/2026 16:00 linhdev - __Errors Export Result luôn tiếng Việt
+                    rowValue(localizeImportResultErrors(row.errors))
                 }
             );
         }
@@ -749,7 +789,8 @@ public without sharing class FEC_BatchCaseHandlingImportService {
                 continue;
             }
             row.status = System.Label.FEC_Batch_Case_Handling_Import_Row_Status_Failed;
-            row.errors = failureError;
+            // 05/06/2026 16:00 linhdev - __Errors Export Result luôn tiếng Việt
+            row.errors = localizeImportResultErrors(failureError);
             row.recordId = FEC_ConstantCommon.STR_EMPTY;
         }
         return parsedRows;
@@ -907,7 +948,8 @@ public without sharing class FEC_BatchCaseHandlingImportService {
                     cols.add(rowValue(row.assignmentRoutingAction));
                 }
                 cols.add(rowValue(resolveImportResultStatusLabel(row.status)));
-                cols.add(rowValue(row.errors));
+                // 05/06/2026 16:00 linhdev - __Errors Export Result luôn tiếng Việt
+                cols.add(rowValue(localizeImportResultErrors(row.errors)));
                 sheetRows.add(cols);
             }
         } else if (String.isNotBlank(batchFailureReason)) {
@@ -918,7 +960,8 @@ public without sharing class FEC_BatchCaseHandlingImportService {
                 failureRow.add(FEC_ConstantCommon.STR_EMPTY);
             }
             failureRow.add('Failed');
-            failureRow.add(rowValue(batchFailureReason));
+            // 05/06/2026 16:00 linhdev - __Errors Export Result luôn tiếng Việt
+            failureRow.add(rowValue(localizeImportResultErrors(batchFailureReason)));
             sheetRows.add(failureRow);
         } else {
             return null;
@@ -945,7 +988,12 @@ public without sharing class FEC_BatchCaseHandlingImportService {
             failureRow.add(FEC_ConstantCommon.STR_EMPTY);
         }
         failureRow.add('Failed');
-        failureRow.add(String.isBlank(batchFailureReason) ? System.Label.FEC_BCH_ImportFailed : batchFailureReason);
+        // 05/06/2026 16:00 linhdev - __Errors Export Result luôn tiếng Việt
+        failureRow.add(
+            localizeImportResultErrors(
+                String.isBlank(batchFailureReason) ? System.Label.FEC_BCH_ImportFailed : batchFailureReason
+            )
+        );
         sheetRows.add(failureRow);
         return sheetRows;
     }
@@ -3023,7 +3071,7 @@ public without sharing class FEC_BatchCaseHandlingImportService {
                 item.row.status = System.Label.FEC_Batch_Case_Handling_Import_Row_Status_Failed;
                 item.row.errors = appendError(
                     item.row.errors,
-                    'Không xác định được queue đích để cập nhật Assignment Route To.'
+                    ERR_ASSIGNMENT_ROUTE_TO_QUEUE_UNKNOWN
                 );
                 continue;
             }
@@ -4111,7 +4159,7 @@ public without sharing class FEC_BatchCaseHandlingImportService {
         if (errs == null || String.isBlank(message)) {
             return;
         }
-        errs.add(message);
+        errs.add(localizeImportResultError(message));
     }
 
     private static String joinImportErrors(List<String> errs) {
@@ -4121,7 +4169,7 @@ public without sharing class FEC_BatchCaseHandlingImportService {
         List<String> parts = new List<String>();
         for (String err : errs) {
             if (String.isNotBlank(err)) {
-                parts.add(err);
+                parts.add(localizeImportResultError(err));
             }
         }
         return parts.isEmpty() ? FEC_ConstantCommon.STR_EMPTY : String.join(parts, IMPORT_ERROR_SEPARATOR);
@@ -4131,10 +4179,130 @@ public without sharing class FEC_BatchCaseHandlingImportService {
         if (String.isBlank(incoming)) {
             return current;
         }
+        String localizedIncoming = localizeImportResultError(incoming);
         if (String.isBlank(current)) {
-            return incoming;
+            return localizedIncoming;
         }
-        return current + IMPORT_ERROR_SEPARATOR + incoming;
+        return current + IMPORT_ERROR_SEPARATOR + localizedIncoming;
+    }
+
+    // 05/06/2026 16:00 linhdev - chuẩn hóa __Errors Export Result sang tiếng Việt
+    public static String localizeImportResultErrors(String combinedErrors) {
+        if (String.isBlank(combinedErrors)) {
+            return combinedErrors;
+        }
+        if (!combinedErrors.contains(IMPORT_ERROR_SEPARATOR)) {
+            return localizeImportResultError(combinedErrors);
+        }
+        List<String> parts = combinedErrors.split(IMPORT_ERROR_SEPARATOR);
+        List<String> localizedParts = new List<String>();
+        for (String part : parts) {
+            if (String.isNotBlank(part)) {
+                localizedParts.add(localizeImportResultError(part));
+            }
+        }
+        return localizedParts.isEmpty() ? FEC_ConstantCommon.STR_EMPTY : String.join(localizedParts, IMPORT_ERROR_SEPARATOR);
+    }
+
+    public static String localizeImportResultError(String message) {
+        if (String.isBlank(message)) {
+            return message;
+        }
+        String trimmed = message.trim();
+        String mapped = mapKnownEnglishImportResultError(trimmed);
+        if (String.isNotBlank(mapped)) {
+            return mapped;
+        }
+        if (isLikelyVietnameseImportResultMessage(trimmed)) {
+            return trimmed;
+        }
+        return ERR_GENERIC_APPLY;
+    }
+
+    private static String mapKnownEnglishImportResultError(String trimmed) {
+        String norm = trimmed.toLowerCase();
+        if (IMPORT_RESULT_ERROR_EN_TO_VI.containsKey(norm)) {
+            return IMPORT_RESULT_ERROR_EN_TO_VI.get(norm);
+        }
+        // 05/06/2026 17:00 linhdev - TEMPLATE_MISMATCH → template mismatch (1 map key duy nhất)
+        String normSpaced = norm.replace('_', ' ');
+        if (normSpaced != norm && IMPORT_RESULT_ERROR_EN_TO_VI.containsKey(normSpaced)) {
+            return IMPORT_RESULT_ERROR_EN_TO_VI.get(normSpaced);
+        }
+        if (norm.endsWith(IMPORT_RESULT_EN_SUFFIX_INVALID)) {
+            String token = trimmed.substring(0, trimmed.length() - IMPORT_RESULT_EN_SUFFIX_INVALID.length()).trim();
+            return String.isBlank(token) ? ERR_GENERIC_APPLY : token + ERR_IMPORT_RESULT_SUFFIX_INVALID;
+        }
+        if (norm.endsWith(IMPORT_RESULT_EN_SUFFIX_NOT_FOUND)) {
+            String token = trimmed.substring(0, trimmed.length() - IMPORT_RESULT_EN_SUFFIX_NOT_FOUND.length()).trim();
+            return String.isBlank(token)
+                ? ERR_GENERIC_APPLY
+                : ERR_IMPORT_RESULT_PREFIX_NOT_FOUND + token + ERR_IMPORT_RESULT_SUFFIX_NOT_FOUND;
+        }
+        if (norm.contains('insufficient access')) {
+            return ERR_IMPORT_RESULT_INSUFFICIENT_ACCESS;
+        }
+        if (norm.contains('unable to lock') || norm.contains('unable_to_lock_row')) {
+            return ERR_IMPORT_RESULT_UNABLE_TO_LOCK;
+        }
+        if (norm.contains('entity is deleted')) {
+            return ERR_IMPORT_RESULT_ENTITY_DELETED;
+        }
+        if (norm.contains('field_custom_validation_exception')) {
+            return ERR_IMPORT_RESULT_VALIDATION_FAILED;
+        }
+        return null;
+    }
+
+    private static Boolean isLikelyVietnameseImportResultMessage(String trimmed) {
+        if (containsVietnameseDiacritic(trimmed)) {
+            return true;
+        }
+        String norm = trimmed.toLowerCase();
+        List<String> vietnamesePrefixes = new List<String>{
+            'thiếu ',
+            'không ',
+            'giá trị ',
+            'người dùng ',
+            'cùng ',
+            'đã ',
+            'trường ',
+            'record id ',
+            'case id ',
+            'assignment id ',
+            'routing ',
+            'import ',
+            'template ',
+            'tên file ',
+            'vui lòng ',
+            'một hoặc ',
+            'bạn ',
+            'chỉ ',
+            'cập nhật ',
+            'quy trình ',
+            'tệp đính kèm ',
+            'dữ liệu '
+        };
+        for (String prefix : vietnamesePrefixes) {
+            if (norm.startsWith(prefix)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static Boolean containsVietnameseDiacritic(String value) {
+        if (String.isBlank(value)) {
+            return false;
+        }
+        String vietnameseChars = 'àáạảãâầấậẩẫăằắặẳẵèéẹẻẽêềếệểễìíịỉĩòóọỏõôồốộổỗơờớợởỡùúụủũưừứựửữỳýỵỷỹđ';
+        String lower = value.toLowerCase();
+        for (Integer i = 0; i < vietnameseChars.length(); i++) {
+            if (lower.contains(vietnameseChars.substring(i, i + 1))) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private static String ensureResultContentTitle(String fileName) {
