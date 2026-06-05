@@ -762,6 +762,7 @@ public without sharing class FEC_InteractionInforHandler {
 
         Case interactionCase;
         Case customerCase;
+        Boolean hasRelatedCustomerCase = false;
 
         if (isCustomerCase) {
             customerCase = currentCase;
@@ -792,13 +793,17 @@ public without sharing class FEC_InteractionInforHandler {
                 ORDER BY CreatedDate DESC
                 LIMIT 1
             ];
-            customerCase = customerCases.isEmpty() ? null : customerCases[0];
+            if (!customerCases.isEmpty()) {
+                customerCase = customerCases[0];
+                hasRelatedCustomerCase = true;
+            }
         } else {
             interactionCase = currentCase;
             customerCase = currentCase;
         }
 
         Map<String, Object> result = new Map<String, Object>();
+        result.put('hasRelatedCustomerCase', hasRelatedCustomerCase);
         result.put('FEC_Customer_Username__c', interactionCase != null && String.isNotBlank(interactionCase.FEC_Customer_Username__c) ? interactionCase.FEC_Customer_Username__c : (customerCase != null && String.isNotBlank(customerCase.FEC_Customer_Username__c) ? customerCase.FEC_Customer_Username__c : currentCase.FEC_Customer_Username__c));
         result.put('FEC_Interaction_Masked_Phone__c', customerCase != null && String.isNotBlank(customerCase.FEC_Interaction_Masked_Phone__c) ? customerCase.FEC_Interaction_Masked_Phone__c : currentCase.FEC_Interaction_Masked_Phone__c);
         result.put('FEC_Phone_Number__c', customerCase != null && String.isNotBlank(customerCase.FEC_Phone_Number__c) ? customerCase.FEC_Phone_Number__c : currentCase.FEC_Phone_Number__c);

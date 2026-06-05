@@ -133,7 +133,7 @@ export default class FecInteractionChatInfo extends LightningElement {
     get isInteractionCase() { return this.recordTypeDevName === RECORD_TYPE_INTERACTION; }
     get canEditChatFields() {
         // 05/06/2026 10:00 tungnm37 - Allow edit only on new Interaction before selecting account/contract.
-        return this.isInteractionCase && this.hasAccountOrContract !== true;
+        return this.isInteractionCase && this.hasAccountOrContract !== true && this.record?.hasRelatedCustomerCase !== true;
     }
 
     get customerUsername() { return this.record?.FEC_Customer_Username__c || STR_EMPTY; }
