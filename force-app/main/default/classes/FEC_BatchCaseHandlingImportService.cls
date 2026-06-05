@@ -1564,28 +1564,64 @@ public without sharing class FEC_BatchCaseHandlingImportService {
                 continue;
             }
             String sheetName = pickRowString(row, new List<String>{ 'originalsheetname' });
+            Integer headerRowIndex = pickRowInteger(row, 'originalHeaderRowIndex');
+            Boolean isCofGsrTemplate = findAssignmentRoutingHeaderIndex(headers) >= 0;
+            Integer routingHeaderIdx = findHeaderIndex(headers, LABEL_ROUTING_ACTION);
+            Integer assignmentRoutingHeaderIdx = findAssignmentRoutingHeaderIndex(headers);
             putImportFieldIfBlank(
                 row,
                 new List<String>{ 'caseidsearch', 'caseid' },
                 readImportValidateCell(contentVersionId, sheetName, dataRowIndex, headers, columnIndexes, findCaseIdHeaderIndex(headers))
             );
-            putImportFieldIfBlank(
-                row,
-                new List<String>{ 'routingaction' },
-                readImportValidateCell(contentVersionId, sheetName, dataRowIndex, headers, columnIndexes, findHeaderIndex(headers, LABEL_ROUTING_ACTION))
-            );
-            putImportFieldIfBlank(
-                row,
-                new List<String>{ 'assignmentroutingaction' },
-                readImportValidateCell(
-                    contentVersionId,
-                    sheetName,
-                    dataRowIndex,
-                    headers,
-                    columnIndexes,
-                    findAssignmentRoutingHeaderIndex(headers)
-                )
-            );
+            if (isCofGsrTemplate && routingHeaderIdx >= 0) {
+                // 05/06/2026 20:00 linhdev - COF/GSR: Routing Action (case) luôn lấy từ file server (ghi đè LWC lệch cột)
+                putImportFieldFromFile(
+                    row,
+                    new List<String>{ 'routingaction' },
+                    readImportValidateCellFromServerMap(
+                        contentVersionId,
+                        sheetName,
+                        dataRowIndex,
+                        headers,
+                        headerRowIndex,
+                        routingHeaderIdx
+                    )
+                );
+            } else {
+                putImportFieldIfBlank(
+                    row,
+                    new List<String>{ 'routingaction' },
+                    readImportValidateCell(contentVersionId, sheetName, dataRowIndex, headers, columnIndexes, routingHeaderIdx)
+                );
+            }
+            if (isCofGsrTemplate && assignmentRoutingHeaderIdx >= 0) {
+                // 05/06/2026 20:00 linhdev - COF/GSR: Assignment Routing Action luôn lấy từ file server
+                putImportFieldFromFile(
+                    row,
+                    new List<String>{ 'assignmentroutingaction' },
+                    readImportValidateCellFromServerMap(
+                        contentVersionId,
+                        sheetName,
+                        dataRowIndex,
+                        headers,
+                        headerRowIndex,
+                        assignmentRoutingHeaderIdx
+                    )
+                );
+            } else {
+                putImportFieldIfBlank(
+                    row,
+                    new List<String>{ 'assignmentroutingaction' },
+                    readImportValidateCell(
+                        contentVersionId,
+                        sheetName,
+                        dataRowIndex,
+                        headers,
+                        columnIndexes,
+                        assignmentRoutingHeaderIdx
+                    )
+                );
+            }
             putImportFieldIfBlank(
                 row,
                 new List<String>{ 'assignmentid' },
@@ -1674,6 +1710,45 @@ public without sharing class FEC_BatchCaseHandlingImportService {
         );
     }
 
+    // 05/06/2026 20:00 linhdev - map cột từ file Excel server (không tin originalColumnIndexes LWC)
+    @TestVisible
+    private static String readImportValidateCellFromServerMap(
+        Id contentVersionId,
+        String sheetName,
+        Integer dataRowIndex,
+        List<String> headers,
+        Integer headerRowIndex,
+        Integer headerIdx
+    ) {
+        if (contentVersionId == null || dataRowIndex == null || headers == null || headerIdx == null || headerIdx < 0) {
+            return FEC_ConstantCommon.STR_EMPTY;
+        }
+        List<Integer> mapped = FEC_BCH_TemplateExportService.resolveMappedColumnIndexesForHeaders(
+            contentVersionId,
+            headerRowIndex == null || headerRowIndex < 0 ? 0 : headerRowIndex,
+            sheetName,
+            headers
+        );
+        Integer worksheetCol = headerIdx;
+        if (mapped != null && headerIdx < mapped.size() && mapped[headerIdx] != null) {
+            worksheetCol = mapped[headerIdx];
+        }
+        return FEC_BCH_TemplateExportService.readImportCellText(
+            contentVersionId,
+            sheetName,
+            dataRowIndex,
+            worksheetCol
+        );
+    }
+
+    // 05/06/2026 20:00 linhdev - ghi đè field từ file (kể cả blank) để xóa bleed LWC
+    private static void putImportFieldFromFile(Map<String, Object> row, List<String> keys, String fileValue) {
+        if (row == null || keys == null || keys.isEmpty()) {
+            return;
+        }
+        row.put(keys[0], fileValue == null ? FEC_ConstantCommon.STR_EMPTY : fileValue);
+    }
+
     private static void putImportFieldIfBlank(Map<String, Object> row, List<String> keys, String fileValue) {
         if (row == null || keys == null || keys.isEmpty() || String.isBlank(fileValue)) {
             return;
@@ -1688,17 +1763,25 @@ public without sharing class FEC_BatchCaseHandlingImportService {
     // 05/06/2026 18:30 linhdev - file gốc trống Routing Action (case) nhưng JSON/LWC dính Assignment Routing → xóa trước validate
     @TestVisible
     private static void sanitizeCofGsrCaseRoutingBleedFromAssignment(FEC_BatchCaseHandlingImportRow rr) {
-        if (rr == null || String.isBlank(rr.routingAction) || String.isBlank(rr.assignmentRoutingAction)) {
+        if (rr == null || findAssignmentRoutingHeaderIndex(rr.originalHeaders) < 0) {
             return;
         }
-        if (findAssignmentRoutingHeaderIndex(rr.originalHeaders) < 0) {
+        // 05/06/2026 20:00 linhdev - originalCells LWC lệch cột: routingAction trùng assignment → coi như chỉ nhập assignment
+        if (
+            String.isNotBlank(rr.routingAction) &&
+            String.isNotBlank(rr.assignmentRoutingAction) &&
+            rr.routingAction == rr.assignmentRoutingAction
+        ) {
+            rr.routingAction = FEC_ConstantCommon.STR_EMPTY;
+            return;
+        }
+        if (String.isBlank(rr.routingAction) || String.isBlank(rr.assignmentRoutingAction)) {
             return;
         }
         String sourceRouting = cellTextAtOriginalLayout(rr, findHeaderIndex(rr.originalHeaders, LABEL_ROUTING_ACTION));
-        if (String.isNotBlank(sourceRouting)) {
-            return;
+        if (String.isBlank(sourceRouting)) {
+            rr.routingAction = FEC_ConstantCommon.STR_EMPTY;
         }
-        rr.routingAction = FEC_ConstantCommon.STR_EMPTY;
     }
 
     // 01/06/2026 22:00 linhdev - bù field validate từ originalCells khi LWC gửi JSON trống/lệch cột

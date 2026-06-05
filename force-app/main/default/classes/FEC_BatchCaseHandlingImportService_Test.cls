@@ -1327,6 +1327,15 @@ private class FEC_BatchCaseHandlingImportService_Test {
     }
 
     @IsTest
+    static void testCofGsrRoutingBleedSanitize_misalignedOriginalCells() {
+        FEC_BatchCaseHandlingImportRow bleedRow = buildCofGsrBleedImportRow();
+        bleedRow.originalCells[2] = 'Route to CS Support - DQ-CS Support';
+        FEC_BatchCaseHandlingImportService.sanitizeCofGsrCaseRoutingBleedFromAssignment(bleedRow);
+        System.assertEquals(FEC_ConstantCommon.STR_EMPTY, bleedRow.routingAction);
+        System.assertEquals('Route to CS Support - DQ-CS Support', bleedRow.assignmentRoutingAction);
+    }
+
+    @IsTest
     static void testImportRowLayoutAndExportHelpers() {
         List<String> bleedCells = new List<String>();
         for (Integer i = 0; i < 24; i++) {
