@@ -7,9 +7,11 @@ import IS_MODE_EDIT from '@salesforce/messageChannel/FEC_Case_Mode__c';
 
 import getChatInteractionInfo from '@salesforce/apex/FEC_InteractionInforHandler.getChatInteractionInfo';
 import updateChatInteractionFields from '@salesforce/apex/FEC_InteractionInforHandler.updateChatInteractionFields';
+import getRecordTypeName from '@salesforce/apex/FEC_InteractionInforHandler.getRecordTypeName';
 
 import ISCLOSED from '@salesforce/schema/Case.IsClosed';
 import VIEW_MODE from '@salesforce/schema/Case.FEC_Interaction_View_Mode__c';
+import HAS_ACCOUNT_OR_CONTRACT from '@salesforce/schema/Case.FEC_Has_Account_or_Contract__c';
 
 import FEC_Interaction_Information_Label from '@salesforce/label/c.FEC_Interaction_Information_Label';
 import FEC_Interaction_Created_On_Label from '@salesforce/label/c.FEC_Interaction_Created_On_Label';
@@ -27,7 +29,7 @@ import FEC_Chat_Phone_Required from '@salesforce/label/c.FEC_Chat_Phone_Required
 import FEC_Chat_Phone_Invalid from '@salesforce/label/c.FEC_Chat_Phone_Invalid';
 import FEC_Chat_Save_Failed from '@salesforce/label/c.FEC_Chat_Save_Failed';
 
-import { VIEW_MODE_HANDLING, VIEW_MODE_REVIEW, STR_EMPTY } from 'c/fec_CommonConst';
+import { VIEW_MODE_HANDLING, VIEW_MODE_REVIEW, STR_EMPTY, RECORD_TYPE_INTERACTION } from 'c/fec_CommonConst';
 import { formatDateTimeVN } from 'c/fec_CommonUtils';
 
 const PHONE_REGEX_0 = /^0\d{9}$/;
@@ -63,6 +65,8 @@ export default class FecInteractionChatInfo extends LightningElement {
     isEditingUsername = false;
     isEditingPhone = false;
     viewMode;
+    hasAccountOrContract = false;
+    recordTypeDevName;
     activeSections = ['interactionChatInfo'];
     subscription = null;
 
@@ -73,6 +77,8 @@ export default class FecInteractionChatInfo extends LightningElement {
     wiredCase({ data, error }) {
         if (data) {
             this.viewMode = getFieldValue(data, VIEW_MODE);
+            this.hasAccountOrContract = getFieldValue(data, HAS_ACCOUNT_OR_CONTRACT);
+            this.loadRecordType();
             this.loadRecord();
         } else if (error) {
             console.error('getRecord error', error);
@@ -107,6 +113,14 @@ export default class FecInteractionChatInfo extends LightningElement {
         this.subscription = null;
     }
 
+    async loadRecordType() {
+        if (!this.recordId) return;
+        try {
+            this.recordTypeDevName = await getRecordTypeName({ recordId: this.recordId });
+        } catch (e) {
+            console.error('getRecordTypeName error', e);
+        }
+    }
     loadRecord() {
         if (!this.recordId) return;
         getChatInteractionInfo({ recordId: this.recordId })
@@ -116,6 +130,11 @@ export default class FecInteractionChatInfo extends LightningElement {
 
     // ===== GETTERS =====
     get isReview() { return this.viewMode === VIEW_MODE_REVIEW; }
+    get isInteractionCase() { return this.recordTypeDevName === RECORD_TYPE_INTERACTION; }
+    get canEditChatFields() {
+        // 05/06/2026 10:00 tungnm37 - Allow edit only on new Interaction before selecting account/contract.
+        return this.isInteractionCase && this.hasAccountOrContract !== true;
+    }
 
     get customerUsername() { return this.record?.FEC_Customer_Username__c || STR_EMPTY; }
     get maskedPhone() { return this.record?.FEC_Interaction_Masked_Phone__c || null; }
@@ -128,21 +147,22 @@ export default class FecInteractionChatInfo extends LightningElement {
     get interactionRemark() { return this.record?.FEC_Interaction_Remarks__c || STR_EMPTY; }
     get showClosedOnlyFields() { return this.record?.IsClosed === true; }
 
-    get isUsernameReadOnly() { return !!this.customerUsername && !this.isEditingUsername; }
-    get showUsernameEditIcon() { return !this.isReview && !this.isEditingUsername; }
+    get isUsernameReadOnly() { return !this.canEditChatFields || (!!this.customerUsername && !this.isEditingUsername); }
+    get showUsernameEditIcon() { return this.canEditChatFields && !this.isEditingUsername; }
 
-    get isPhoneReadOnly() { return !!(this.maskedPhone || this.realPhone) && !this.isEditingPhone; }
-    get showPhoneEditIcon() { return !this.isReview && !this.isEditingPhone; }
+    get isPhoneReadOnly() { return !this.canEditChatFields || (!!(this.maskedPhone || this.realPhone) && !this.isEditingPhone); }
+    get showPhoneEditIcon() { return this.canEditChatFields && !this.isEditingPhone; }
 
     get displayPhone() {
         return this.maskedPhone || this.realPhone || '';
     }
 
     // ===== USERNAME ACTIONS =====
-    handleEditUsername() { this.isEditingUsername = true; this.usernameDraft = this.customerUsername; }
+    handleEditUsername() { if (!this.canEditChatFields) return; this.isEditingUsername = true; this.usernameDraft = this.customerUsername; }
     handleUsernameChange(e) { this.usernameDraft = e.target.value; this.usernameError = STR_EMPTY; }
     handleCancelEditUsername() { this.isEditingUsername = false; this.usernameDraft = STR_EMPTY; this.usernameError = STR_EMPTY; }
     handleSaveUsername() {
+        if (!this.canEditChatFields) return;
         const val = this.usernameDraft?.trim();
         if (!val) { this.usernameError = this.labels.usernameRequired; return; }
         updateChatInteractionFields({ recordId: this.recordId, username: val, phone: null })
@@ -155,10 +175,11 @@ export default class FecInteractionChatInfo extends LightningElement {
     }
 
     // ===== PHONE ACTIONS =====
-    handleEditPhone() { this.isEditingPhone = true; this.phoneDraft = this.realPhone; }
+    handleEditPhone() { if (!this.canEditChatFields) return; this.isEditingPhone = true; this.phoneDraft = this.realPhone; }
     handlePhoneChange(e) { this.phoneDraft = e.target.value; this.phoneError = STR_EMPTY; }
     handleCancelEditPhone() { this.isEditingPhone = false; this.phoneDraft = STR_EMPTY; this.phoneError = STR_EMPTY; }
     handleSavePhone() {
+        if (!this.canEditChatFields) return;
         const val = this.phoneDraft?.trim();
         if (!val) { this.phoneError = this.labels.phoneRequired; return; }
         if (!PHONE_REGEX_0.test(val) && !PHONE_REGEX_84.test(val)) {
