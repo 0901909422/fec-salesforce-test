@@ -269,7 +269,7 @@ public without sharing class FEC_CreateCaseHandler {
             interactionCase.Status = FEC_ConstantCommon.CASE_STATUS_OPEN;
         }
         interactionCase.FEC_Interaction_View_Mode__c  = FEC_ConstantCommon.INTERACTION_HANDLING_MODE;
-        
+        interactionCase.FEC_Is_Manual__c = true; //Đánh dấu case này được tạo thủ công
         insert interactionCase;
         
         interactionCase = [
@@ -334,18 +334,8 @@ public without sharing class FEC_CreateCaseHandler {
         
         if(dto.agentId != null && dto.agentId != '') {
             System.debug('Assigning Agent ID: ' + dto.agentId + ' to User Id    : ' + createdInteraction.OwnerId);
-            User userInfo = (User) Database.queryWithBinds(
-                'SELECT Id, FEC_Agent_ID__c, FEC_Main_Queue__c FROM User WHERE Id = :ownerId LIMIT 1',
-                new Map<String, Object>{ 'ownerId' => createdInteraction.OwnerId },
-                AccessLevel.SYSTEM_MODE
-            )[0];
+            User userInfo = [SELECT Id, FEC_Agent_ID__c,FEC_Main_Queue__c FROM User WHERE Id = :createdInteraction.OwnerId];
             userInfo.FEC_Agent_ID__c = dto.agentId;
-            if (
-                User.SObjectType.getDescribe().fields.getMap().containsKey('FEC_Main_Queue__c') &&
-                String.isBlank(userInfo.FEC_Main_Queue__c)
-            ) {
-                userInfo.FEC_Main_Queue__c = FEC_ConstantCommon.QUEUE_DQ_CS_SUPPORT_NAME;
-            }
             update userInfo;
         }
         

@@ -53,7 +53,6 @@ import getCardInfoByAccountNumber from "@salesforce/apex/FEC_SearchController.ge
 import getApplicationHistory from "@salesforce/apex/FEC_SearchController.getApplicationHistory";
 import CASE_ID_FIELD from "@salesforce/schema/Case.Id";
 import SEARCH_NATIONAL_ID_FIELD from "@salesforce/schema/Case.FEC_Search_National_ID__c";
-import { formatDateFlexibleVN } from "c/fec_CommonUtils";
 import SEARCH_PHONE_FIELD from "@salesforce/schema/Case.FEC_Search_Phone_Number__c";
 import SEARCH_APP_ID_FIELD from "@salesforce/schema/Case.FEC_Search_Application_ID__c";
 import SEARCH_CONTRACT_FIELD from "@salesforce/schema/Case.FEC_Search_Contract_Number__c";
@@ -926,7 +925,6 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
 
       if (customers.length > 0) {
         this.processCustomerResults(customers);
-        this.fetchPlasticIds();
       }
 
       // [CHANGE][Author : LongNH76] Merge + dedupe kết quả insurance từ nhiều API.
@@ -1707,24 +1705,25 @@ hasAnySearchCriteria(params) {
                 await notifyRecordUpdateAvailable([{ recordId: this.recordId }]);
                 this.dispatchEvent(new RefreshEvent());
             } else {
-                const devName = await getCaseRecordTypeDevName({ caseId: res });
-                if (devName === 'Internal_Case') {
-                    this.dispatchEvent(
-                        new CustomEvent('closerequest', {
-                            detail: { recordId: res }
-                        })
-                    );
-                  } else {
-                      this[NavigationMixin.Navigate]({
-                          type: "standard__recordPage",
-                          attributes: {
-                              recordId: res,
-                              objectApiName: "Case",
-                              actionName: "view"
-                          }
-                      });
-                  }
-              }
+               const devName = await getCaseRecordTypeDevName({ caseId: res });
+               if (devName === 'Internal_Case') {
+                  this.dispatchEvent(
+                      new CustomEvent('closerequest', {
+                          detail: { recordId: res }
+                      })
+                  );
+                } else {
+
+                    this[NavigationMixin.Navigate]({
+                        type: "standard__recordPage",
+                        attributes: {
+                            recordId: res,
+                            objectApiName: "Case",
+                            actionName: "view"
+                        }
+                    });
+                }
+            }
             //await this.refreshTab();
           })
           .catch((e) => {
