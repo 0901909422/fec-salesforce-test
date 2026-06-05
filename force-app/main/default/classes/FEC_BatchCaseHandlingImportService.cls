@@ -1685,6 +1685,22 @@ public without sharing class FEC_BatchCaseHandlingImportService {
         row.put(keys[0], fileValue);
     }
 
+    // 05/06/2026 18:30 linhdev - file gốc trống Routing Action (case) nhưng JSON/LWC dính Assignment Routing → xóa trước validate
+    @TestVisible
+    private static void sanitizeCofGsrCaseRoutingBleedFromAssignment(FEC_BatchCaseHandlingImportRow rr) {
+        if (rr == null || String.isBlank(rr.routingAction) || String.isBlank(rr.assignmentRoutingAction)) {
+            return;
+        }
+        if (findAssignmentRoutingHeaderIndex(rr.originalHeaders) < 0) {
+            return;
+        }
+        String sourceRouting = cellTextAtOriginalLayout(rr, findHeaderIndex(rr.originalHeaders, LABEL_ROUTING_ACTION));
+        if (String.isNotBlank(sourceRouting)) {
+            return;
+        }
+        rr.routingAction = FEC_ConstantCommon.STR_EMPTY;
+    }
+
     // 01/06/2026 22:00 linhdev - bù field validate từ originalCells khi LWC gửi JSON trống/lệch cột
     @TestVisible
     private static void enrichImportRowValidateFieldsFromOriginalLayout(FEC_BatchCaseHandlingImportRow rr) {
@@ -1830,6 +1846,8 @@ public without sharing class FEC_BatchCaseHandlingImportService {
                 rr.inputtedRemarks,
                 rr.inputtedRemarksCharLength
             );
+            // 05/06/2026 18:30 linhdev - tránh __Errors báo nhập cả 2 routing khi user chỉ nhập Assignment Routing Action
+            sanitizeCofGsrCaseRoutingBleedFromAssignment(rr);
             rr.recordId = FEC_ConstantCommon.STR_EMPTY;
             rr.status = System.Label.FEC_Batch_Case_Handling_Success;
             rr.errors = FEC_ConstantCommon.STR_EMPTY;
