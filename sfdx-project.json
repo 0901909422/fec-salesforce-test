@@ -13,6 +13,7 @@
   "sfdcLoginUrl": "https://login.salesforce.com",
   "sourceApiVersion": "66.0",
   "packageAliases": {
-    "GitLabPipelinesPkg": "0HoIW000000021p0AA"
+    "GitLabPipelinesPkg": "0HoIW000000021p0AA",
+    "GitLabPipelinesPkg@0.1.0-1": "04tIW000004HwjdYAC"
   }
 }
