@@ -1,7 +1,7 @@
-// tungnm37: NOC Channel Config tab - multi-select Channel lookup
-import { LightningElement, api, track, wire } from 'lwc';
+// NOC Channel Config tab - multi-select Channel lookup
+import { LightningElement, api, track } from 'lwc';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
-import { getRecord, getRecordNotifyChange } from 'lightning/uiRecordApi';
+import { getRecordNotifyChange } from 'lightning/uiRecordApi';
 import searchChannels from '@salesforce/apex/FEC_NocChannelConfigController.searchChannels';
 import getChannelIds from '@salesforce/apex/FEC_NocChannelConfigController.getChannelIds';
 import getChannelsByChannelIds from '@salesforce/apex/FEC_NocChannelConfigController.getChannelsByChannelIds';
@@ -19,7 +19,7 @@ import FEC_Channel_Config_Invalid_Selection from '@salesforce/label/c.FEC_Channe
 
 export default class Fec_NocChannelConfig extends LightningElement {
     @api recordId;
-    @track selectedChannels = []; // [{id, name}]
+    @track selectedChannels = []; // [{ id, name }]
     @track searchTerm = '';
     @track searchResults = [];
     @track isOpen = false;
@@ -37,7 +37,6 @@ export default class Fec_NocChannelConfig extends LightningElement {
 
     connectedCallback() {
         this.loadCurrentChannels();
-        //tungnm37: check permission khi load
         canEditChannelConfig()
             .then(result => { this.canEdit = result; })
             .catch(() => { this.canEdit = false; });
@@ -45,19 +44,19 @@ export default class Fec_NocChannelConfig extends LightningElement {
 
     async loadCurrentChannels() {
         try {
-            const codes = await getChannelIds({ nocId: this.recordId });
-            if (!codes) return;
-            // channelIds là comma-separated FEC_Channel__c.FEC_Channel_ID__c
-            const codeList = codes.split(',').map(s => s.trim()).filter(s => s);
-            if (!codeList.length) return;
-            this._originalIds = codes;
-            const results = await getChannelsByChannelIds({ channelIds: codeList });
+            const channelIds = await getChannelIds({ nocId: this.recordId });
+            if (!channelIds) return;
+            const channelIdList = channelIds.split(',').map(s => s.trim()).filter(s => s);
+            if (!channelIdList.length) return;
+            this._originalIds = channelIds;
+            const results = await getChannelsByChannelIds({ channelIds: channelIdList });
             this.selectedChannels = (results || [])
                 .map(ch => ({ id: ch.FEC_Channel_ID__c, name: ch.FEC_Channel_Vietnamese_name__c || ch.Name }));
         } catch (e) {
             console.error('loadCurrentChannels error', e);
         }
     }
+
     get hasSelected() {
         return this.selectedChannels.length > 0;
     }
@@ -162,10 +161,9 @@ export default class Fec_NocChannelConfig extends LightningElement {
     }
 
     handleCancel() {
-        // Restore v? giá tr? ban d?u t? _originalIds (comma-separated FEC_Channel__c.FEC_Channel_ID__c)
         if (this._originalIds) {
-            const codeList = this._originalIds.split(',').map(s => s.trim()).filter(s => s);
-            getChannelsByChannelIds({ channelIds: codeList })
+            const channelIdList = this._originalIds.split(',').map(s => s.trim()).filter(s => s);
+            getChannelsByChannelIds({ channelIds: channelIdList })
                 .then(results => {
                     this.selectedChannels = (results || [])
                         .map(ch => ({ id: ch.FEC_Channel_ID__c, name: ch.FEC_Channel_Vietnamese_name__c || ch.Name }));
@@ -179,9 +177,8 @@ export default class Fec_NocChannelConfig extends LightningElement {
         this.isOpen = false;
         this.isEditMode = false;
     }
+
     handleEdit() {
         this.isEditMode = true;
     }
 }
-
-
