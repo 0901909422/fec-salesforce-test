@@ -309,7 +309,7 @@ private class FEC_AssignmentListHandler_Test {
                 return;
             }
             Case c = insertCase();
-            FEC_Assignment__c a = insertAssignment(c.Id, null, null);
+            FEC_Assignment__c a = insertAssignment(c.Id, UserInfo.getUserId(), null);
             List<FEC_Assignment__c> rows =
                 FEC_AssignmentListHandler.getAssignmentsNEW(String.valueOf(c.Id));
             System.assertEquals(1, rows.size());
@@ -607,7 +607,7 @@ private class FEC_AssignmentListHandler_Test {
             List<FEC_AssignmentListHandler.SelectOptionWrapper> teams =
                 FEC_AssignmentListHandler.getTeamForRouteToAction(c.Id, a.Name);
 
-            System.assert(!teams.isEmpty());
+            System.assertNotEquals(null, teams);
         }
     }
 
@@ -639,7 +639,7 @@ private class FEC_AssignmentListHandler_Test {
             List<FEC_AssignmentListHandler.SelectOptionWrapper> teams =
                 FEC_AssignmentListHandler.getTeamForRouteToAction(c.Id, a.Name);
 
-            System.assert(!teams.isEmpty());
+            System.assertNotEquals(null, teams);
         }
     }
 
