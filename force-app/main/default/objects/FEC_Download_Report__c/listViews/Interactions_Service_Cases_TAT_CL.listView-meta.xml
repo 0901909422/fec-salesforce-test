@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ListView xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Interactions_Service_Cases_TAT_CL</fullName>
+    <columns>NAME</columns>
+    <filterScope>Mine</filterScope>
+    <filters>
+        <field>NAME</field>
+        <operation>contains</operation>
+        <value>Interactions &amp; Service Cases Summary TAT - Collections</value>
+    </filters>
+    <label>Interactions &amp; Service Cases TAT - CL</label>
+    <sharedTo>
+        <role>FEC_Call_Collections_Operations_Support_Officer</role>
+        <role>FEC_Call_Collections_Operations_Support_Specialist</role>
+        <role>FEC_Call_Collections_Operations_Support_Team_Leader</role>
+        <role>FEC_Collections_Complaint_Handling_Team_Leader</role>
+        <role>FEC_Collections_Inbound_Activities_Specialist</role>
+        <role>FEC_Collections_Operations_Coordination_Reporting_Specialist</role>
+        <role>FEC_Collections_Operations_Coordination_Reporting_Team_Leader</role>
+        <role>FEC_Collections_Quality_Assurance_Expert</role>
+        <role>FEC_Customer_Service_Support_Manager</role>
+        <role>FEC_Customer_Service_Support_Specialist</role>
+        <role>FEC_Head_Of_Collections_Training_Department</role>
+        <role>FEC_Senior_Call_Collections_Operations_Support_Specialist</role>
+        <role>FEC_Senior_Call_Collections_Operations_Support_Team_Leader</role>
+        <role>FEC_Senior_Call_Queue_Management_Specialist</role>
+        <role>FEC_Senior_Collections_Complaint_Handling_Specialist</role>
+        <role>FEC_Senior_Collections_Complaint_Handling_Team_Leader</role>
+        <role>FEC_Senior_Collections_Operations_Coordination_Reporting_Specialist</role>
+        <role>FEC_Senior_Customer_Service_Support_Specialist</role>
+        <role>FEC_Unit_Head_of_Customer_Service_Support</role>
+    </sharedTo>
+</ListView>

@@ -22,14 +22,15 @@ public without sharing class FEC_DownloadReportController {
         try {
             List<String> links = new List<String>();
 
-            List<FEC_Download_Report__c> reports = [
+            Map<Id, FEC_Download_Report__c> reportsById = new Map<Id, FEC_Download_Report__c>([
                 SELECT Id, FEC_Link__c
                 FROM FEC_Download_Report__c
                 WHERE Id IN :downloadReportIds
-            ];
+            ]);
 
-            for (FEC_Download_Report__c r : reports) {
-                if (String.isBlank(r.FEC_Link__c)) {
+            for (Id reportId : downloadReportIds) {
+                FEC_Download_Report__c r = reportsById.get(reportId);
+                if (r == null || String.isBlank(r.FEC_Link__c)) {
                     continue;
                 }
 
