@@ -770,9 +770,12 @@
                 component.set('v.fromEmail', d.fromEmail||'');
                 component.set('v.fromDisplay', d.fromDisplay||d.fromEmail||'');
                 component.set('v.toEmail', d.toEmail||'');
+                component.set('v.isManualInteraction', d.isManual === 'true');
                 component.set('v.incomingToAddress', d.fromEmail||'');
                 // tungnm37 thêm: load templates theo fromEmail của Interaction (giống Service Case)
-                if (d.fromEmail) {
+                if (d.isManual === 'true') {
+                    component.set('v.hasFromOptions', false);
+                } else if (d.fromEmail) {
                     self.loadTemplates(component, d.fromEmail);
                 }
             }

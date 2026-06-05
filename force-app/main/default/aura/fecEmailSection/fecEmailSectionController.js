@@ -253,6 +253,10 @@
         component.set('v.serviceCaseToError', '');
     },
 
+    onInteractionToChange: function(component, event, helper) {
+        component.set('v.toEmail', event.target.value);
+    },
+
     onFromInputChange: function(component, event, helper) {
         component.set('v.fromEmail', event.target.value);
     },
@@ -529,6 +533,27 @@
         var lblToReq = component.get('v.lblToRequired') || 'To email is required.';
         var lblInvalidFmt = component.get('v.lblInvalidFormatTitle');
         var finalToEmail;
+        var isManualInteraction = component.get('v.isManualInteraction');
+        var fromEmail = (component.get('v.fromEmail') || '').trim();
+        var emailReFrom = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!isServiceCase && isManualInteraction) {
+            if (!fromEmail) {
+                component.set('v.errorMsg', 'From email is required.');
+                try {
+                    var tf1 = $A.get('e.force:showToast');
+                    if (tf1) { tf1.setParams({ title: lblSnag, message: 'Review the errors on this page. From email is required.', type: 'error', duration: 4000 }); tf1.fire(); }
+                } catch(e) {}
+                return;
+            }
+            if (!emailReFrom.test(fromEmail)) {
+                component.set('v.errorMsg', '"' + fromEmail + '" is not a valid From email address.');
+                try {
+                    var tf2 = $A.get('e.force:showToast');
+                    if (tf2) { tf2.setParams({ title: lblInvalidFmt, message: '"' + fromEmail + '" is not a valid From email address.', type: 'error', duration: 4000 }); tf2.fire(); }
+                } catch(e) {}
+                return;
+            }
+        }
         if (isServiceCase) {
             finalToEmail = (component.get('v.serviceCaseToEmail') || '').trim();
             if (!finalToEmail) {

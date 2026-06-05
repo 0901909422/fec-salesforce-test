@@ -39,6 +39,7 @@
     <aura:attribute name="hasFromOptions" type="Boolean" default="false" />
     <aura:attribute name="incomingToAddress" type="String" default="" />
     <aura:attribute name="fromDisplay" type="String" default="" />
+    <aura:attribute name="isManualInteraction" type="Boolean" default="false" />
     <!-- viewMode: handling = hiện đầy đủ compose, review = chỉ hiện feed -->
     <aura:attribute name="isHandling" type="Boolean" default="false" />
     <aura:attribute name="caseRecord" type="Object" />
@@ -243,18 +244,28 @@
             <!-- Inline Compose Section -->
             <aura:if isTrue="{!v.showCompose}">
                 <div class="compose-section">
-                    <!-- From: read-only, lấy từ Send To của Interaction -->
+                    <!-- From -->
                     <div class="compose-row">
-                        <label class="compose-label">From</label>
+                        <label class="compose-label">From <abbr title="required" style="color:#c23934">*</abbr></label>
                         <div class="compose-field-wrap">
-                            <span class="compose-from-text">{!v.fromDisplay}</span>
+                            <aura:if isTrue="{!v.isManualInteraction}">
+                                <input type="text" class="compose-input" value="{!v.fromEmail}" onchange="{!c.onFromInputChange}" />
+                                <aura:set attribute="else">
+                                    <span class="compose-from-text">{!v.fromDisplay}</span>
+                                </aura:set>
+                            </aura:if>
                         </div>
                     </div>
-                    <!-- To: read-only, lấy từ Interaction Email của case -->
+                    <!-- To -->
                     <div class="compose-row">
                         <label class="compose-label">To <abbr title="required" style="color:#c23934">*</abbr></label>
                         <div class="compose-field-wrap">
-                            <span class="compose-from-text">{!v.toEmail}</span>
+                            <aura:if isTrue="{!v.isManualInteraction}">
+                                <input type="text" class="compose-input" value="{!v.toEmail}" onchange="{!c.onInteractionToChange}" placeholder="Enter recipient email(s)" />
+                                <aura:set attribute="else">
+                                    <span class="compose-from-text">{!v.toEmail}</span>
+                                </aura:set>
+                            </aura:if>
                         </div>
                     </div>
                     <!-- CC -->

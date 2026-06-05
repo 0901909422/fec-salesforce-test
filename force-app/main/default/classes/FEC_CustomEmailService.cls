@@ -8,7 +8,7 @@ public without sharing class FEC_CustomEmailService {
     @AuraEnabled
     public static Map<String, String> getInteractionEmail(String caseId) {
         Map<String, String> result = new Map<String, String>();
-        Case c = [SELECT FEC_Send_To__c, FEC_Interaction_Email__c, RecordType.DeveloperName, FEC_Interaction__c, OwnerId, Owner.Type FROM Case WHERE Id = :caseId LIMIT 1];
+        Case c = [SELECT FEC_Send_To__c, FEC_Interaction_Email__c, FEC_Is_Manual__c, RecordType.DeveloperName, FEC_Interaction__c, OwnerId, Owner.Type FROM Case WHERE Id = :caseId LIMIT 1];
         
         String sendTo = c.FEC_Send_To__c;
         String interactionEmail = c.FEC_Interaction_Email__c;
@@ -83,6 +83,7 @@ public without sharing class FEC_CustomEmailService {
         result.put('fromEmail', sendTo != null ? sendTo : '');
         result.put('fromDisplay', fromDisplay);
         result.put('toEmail', interactionEmail != null ? interactionEmail : '');
+        result.put('isManual', String.valueOf(c.FEC_Is_Manual__c == true));
         return result;
     }
 

@@ -84,7 +84,6 @@ public without sharing class FEC_InteractionInforHandler {
             FEC_Interaction_Email__c = String.isNotBlank(email) ? email.trim() : null
         );
     }
-    
     @AuraEnabled(cacheable=false)
     public static void updateInteractionOnHold(Id recordId, Boolean onHold) {
         if (recordId == null) {
