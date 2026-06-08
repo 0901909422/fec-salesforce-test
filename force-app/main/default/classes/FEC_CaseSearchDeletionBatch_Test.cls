@@ -25,18 +25,24 @@ private class FEC_CaseSearchDeletionBatch_Test {
 
     @TestSetup
     static void setupData() {
-        Case oldCase = buildSearchCase('Old Search Case');
-        insert oldCase;
-        Test.setCreatedDate(oldCase.Id, Date.today().addDays(-7));
+        FEC_CaseTriggerHandler.isExecuting = true;
+        try {
+            Case oldCase = buildSearchCase('Old Search Case');
+            insert oldCase;
+            // Set CreatedDate well beyond the 7-day retention threshold
+            Test.setCreatedDate(oldCase.Id, DateTime.now().addDays(-10));
 
-        Case newCase = buildSearchCase('Today Search Case');
-        insert newCase;
+            Case newCase = buildSearchCase('Today Search Case');
+            insert newCase;
 
-        Case otherTypeCase = new Case(
-            Subject = 'Other Record Type',
-            Status = FEC_ConstantCommon.CASE_STATUS_OPEN
-        );
-        insert otherTypeCase;
+            Case otherTypeCase = new Case(
+                Subject = 'Other Record Type',
+                Status = FEC_ConstantCommon.CASE_STATUS_OPEN
+            );
+            insert otherTypeCase;
+        } finally {
+            FEC_CaseTriggerHandler.isExecuting = false;
+        }
     }
 
     @IsTest

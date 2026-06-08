@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ListView xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>All</fullName>
+    <columns>NAME</columns>
+    <columns>FEC_Sync_To__c</columns>
+    <columns>FEC_Start_At__c</columns>
+    <columns>FEC_End_At__c</columns>
+    <columns>FEC_Sync_Failed__c</columns>
+    <columns>FEC_Sync_Successfully__c</columns>
+    <columns>FEC_Processing_Quantity__c</columns>
+    <columns>FEC_Total_Record_Sync__c</columns>
+    <columns>FEC_Active__c</columns>
+    <columns>FEC_Table_Name__c</columns>
+    <filterScope>Everything</filterScope>
+    <label>All</label>
+</ListView>

@@ -101,6 +101,10 @@ private class FEC_CaseAssigAutoDistributeService_Test {
         );
         insert new List<User>{userA, userB};
 
+        // Assign Permission Sets cho FLS access
+        FEC_TestDataFactory.assignStandardFECPermissions(userA.Id);
+        FEC_TestDataFactory.assignStandardFECPermissions(userB.Id);
+
         Group publicGroup = new Group(Name = 'CS Support Public Group', Type = 'Regular');
         insert publicGroup;
         insert new GroupMember(GroupId = publicGroup.Id, UserOrGroupId = userB.Id);

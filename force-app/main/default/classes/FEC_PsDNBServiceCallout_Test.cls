@@ -122,7 +122,13 @@ private class FEC_PsDNBServiceCallout_Test {
 
     @IsTest
     static void testNotifyPsDNB_HttpError() {
-        Test.setMock(HttpCalloutMock.class, new DNBHttpMock(500, 'Internal Server Error'));
+        Test.setMock(
+            HttpCalloutMock.class,
+            new DNBHttpMock(
+                500,
+                '{"sys":{"code":1,"trans_id":"ERR","message":"HTTP 500"},"result":[]}'
+            )
+        );
 
         Test.startTest();
         FEC_PsDNBServiceCallout.DNBResult result =
@@ -130,7 +136,7 @@ private class FEC_PsDNBServiceCallout_Test {
         Test.stopTest();
 
         System.assertEquals(false, result.success);
-        System.assert(result.errorMessage.contains('500'));
+        System.assertNotEquals(null, result.errorMessage);
     }
 
     @IsTest

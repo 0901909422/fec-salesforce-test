@@ -36,8 +36,8 @@
                     <!-- Không có phone -->
                     <template if:false={hasPhone}>
                       <template if:true={isEditingPhone}>
-                        <lightning-input type="tel" value={phoneDraft} onchange={handlePhoneChange}
-                          variant="label-hidden">
+                        <lightning-input  data-id="interactionPhone" type="tel" value={phoneDraft} onchange={handlePhoneChange}
+                          variant="label-hidden" required={isPhoneRequired}  message-when-value-missing={phoneRequiredMsg}>
                         </lightning-input>
                       </template>
 
