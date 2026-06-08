@@ -102,8 +102,8 @@ private class FEC_BCC_ImportResolveHistService_Test {
             new Map<Id, Case>()
         );
 
-        FEC_BatchCaseCreationController.CaseRowResult failedRow = new FEC_BatchCaseCreationController.CaseRowResult();
-        failedRow.status = 'Failed';
+        FEC_BatchCaseHandlingImportRow failedRow = new FEC_BatchCaseHandlingImportRow();
+        failedRow.status = System.Label.FEC_Batch_Case_Handling_Import_Row_Status_Failed;
         FEC_BCC_ImportResolveHistService.ImportResolveHistoryItem item =
             new FEC_BCC_ImportResolveHistService.ImportResolveHistoryItem();
         item.row = failedRow;
@@ -116,7 +116,11 @@ private class FEC_BCC_ImportResolveHistService_Test {
         );
         Test.stopTest();
 
-        System.assertEquals('Failed', failedRow.status, 'Dòng đã fail phải bỏ qua, không đổi status.');
+        System.assertEquals(
+            System.Label.FEC_Batch_Case_Handling_Import_Row_Status_Failed,
+            failedRow.status,
+            'Dòng đã fail phải bỏ qua, không đổi status.'
+        );
     }
 
     @IsTest
@@ -128,6 +132,12 @@ private class FEC_BCC_ImportResolveHistService_Test {
             WHERE Subject = 'BCC Resolve History Case'
             LIMIT 1
         ];
+        FEC_Action_Button__c btnResolve = [
+            SELECT Id
+            FROM FEC_Action_Button__c
+            WHERE FEC_Code__c = :FEC_CaseBusinessService.RESOLVE
+            LIMIT 1
+        ];
         User runUser = [
             SELECT Id, Email, UserRole.Name
             FROM User
@@ -136,25 +146,26 @@ private class FEC_BCC_ImportResolveHistService_Test {
         ];
         String importerEmailId = FEC_CaseBusinessService.emailLocalPart(runUser.Email);
 
-        FEC_BatchCaseCreationController.CaseRowResult row = new FEC_BatchCaseCreationController.CaseRowResult();
-        row.caseStatus = FEC_ConstantCommon.CASE_STATUS_RESOLVED_COMPLETED;
-        row.status = 'Succeeded';
+        FEC_BatchCaseHandlingImportRow row = new FEC_BatchCaseHandlingImportRow();
+        row.routingAction = FEC_CaseBusinessService.RESOLVE;
+        row.actionButtonId = String.valueOf(btnResolve.Id);
 
         FEC_BCC_ImportResolveHistService.ImportResolveHistoryItem item =
             new FEC_BCC_ImportResolveHistService.ImportResolveHistoryItem();
         item.row = row;
         item.caseId = testCase.Id;
+        item.actionButtonId = btnResolve.Id;
         item.currentStageId = testCase.FEC_Current_Case_Stage__c;
         item.stageNameBefore = testCase.FEC_Current_Case_Stage__r.FEC_Code__c;
         item.finalStatusBefore = FEC_ConstantCommon.CASE_STATUS_OPEN;
+        item.excelRoutingLabel = FEC_CaseBusinessService.RESOLVE;
 
         update new Case(
             Id = testCase.Id,
             Status = FEC_ConstantCommon.CASE_STATUS_RESOLVED_COMPLETED
         );
         Case caseAfter = [
-            SELECT Id, OwnerId, Owner.Name, Owner.Type, Status, FEC_Final_Status__c, FEC_Team__c,
-                FEC_Current_Case_Stage__c, FEC_Current_Case_Stage__r.FEC_Code__c
+            SELECT Id, OwnerId, Owner.Name, Owner.Type, Status, FEC_Final_Status__c, FEC_Team__c
             FROM Case
             WHERE Id = :testCase.Id
             LIMIT 1
@@ -204,25 +215,38 @@ private class FEC_BCC_ImportResolveHistService_Test {
     }
 
     @IsTest
-    static void collectItem_andApplyAfterCaseCreateBulk() {
+    static void collectItem_andApplyAfterCaseRunBulk() {
         Case testCase = [
             SELECT Id, FEC_Current_Case_Stage__c, FEC_Current_Case_Stage__r.FEC_Code__c
             FROM Case
             WHERE Subject = 'BCC Resolve History Case'
             LIMIT 1
         ];
+        FEC_Action_Button__c btnResolve = [
+            SELECT Id
+            FROM FEC_Action_Button__c
+            WHERE FEC_Code__c = :FEC_CaseBusinessService.RESOLVE
+            LIMIT 1
+        ];
 
         List<FEC_BCC_ImportResolveHistService.ImportResolveHistoryItem> items =
             new List<FEC_BCC_ImportResolveHistService.ImportResolveHistoryItem>();
-        FEC_BCC_ImportResolveHistService.collectItem(null, null, null);
-        FEC_BCC_ImportResolveHistService.collectItem(items, null, null);
-        FEC_BCC_ImportResolveHistService.applyAfterCaseCreateBulk(null);
-        FEC_BCC_ImportResolveHistService.applyAfterCaseCreateBulk(items);
+        FEC_BCC_ImportResolveHistService.collectItem(null, null, null, null, null, null);
+        FEC_BCC_ImportResolveHistService.collectItem(items, null, null, null, null, null);
+        FEC_BCC_ImportResolveHistService.applyAfterCaseRunBulk(null);
+        FEC_BCC_ImportResolveHistService.applyAfterCaseRunBulk(items);
 
-        FEC_BatchCaseCreationController.CaseRowResult row = new FEC_BatchCaseCreationController.CaseRowResult();
-        row.caseStatus = FEC_ConstantCommon.CASE_STATUS_RESOLVED_COMPLETED;
-        row.status = 'Succeeded';
-        FEC_BCC_ImportResolveHistService.collectItem(items, row, testCase.Id);
+        FEC_BatchCaseHandlingImportRow row = new FEC_BatchCaseHandlingImportRow();
+        row.routingAction = FEC_CaseBusinessService.RESOLVE;
+        row.actionButtonId = String.valueOf(btnResolve.Id);
+        FEC_BCC_ImportResolveHistService.collectItem(
+            items,
+            row,
+            testCase.Id,
+            testCase.FEC_Current_Case_Stage__c,
+            testCase.FEC_Current_Case_Stage__r.FEC_Code__c,
+            FEC_ConstantCommon.CASE_STATUS_OPEN
+        );
 
         update new Case(
             Id = testCase.Id,
@@ -230,25 +254,24 @@ private class FEC_BCC_ImportResolveHistService_Test {
         );
 
         Test.startTest();
-        FEC_BCC_ImportResolveHistService.applyAfterCaseCreateBulk(items);
+        FEC_BCC_ImportResolveHistService.applyAfterCaseRunBulk(items);
         Test.stopTest();
 
         System.assertEquals(
             1,
             [SELECT COUNT() FROM FEC_Routing_Action_History__c WHERE FEC_Case__c = :testCase.Id],
-            'applyAfterCaseCreateBulk phải insert history.'
+            'applyAfterCaseRunBulk phải insert history.'
         );
     }
 
     @IsTest
     static void applyImportBulk_marksFailedWhenCaseAfterMissing() {
-        FEC_BatchCaseCreationController.CaseRowResult row = new FEC_BatchCaseCreationController.CaseRowResult();
-        row.status = 'Succeeded';
+        FEC_BatchCaseHandlingImportRow row = new FEC_BatchCaseHandlingImportRow();
+        row.routingAction = FEC_CaseBusinessService.RESOLVE;
         FEC_BCC_ImportResolveHistService.ImportResolveHistoryItem item =
             new FEC_BCC_ImportResolveHistService.ImportResolveHistoryItem();
         item.row = row;
         item.caseId = UserInfo.getUserId();
-        item.currentStageId = UserInfo.getUserId();
 
         Test.startTest();
         FEC_BCC_ImportResolveHistService.applyImportBulk(
@@ -257,7 +280,36 @@ private class FEC_BCC_ImportResolveHistService_Test {
         );
         Test.stopTest();
 
-        System.assertEquals('Failed', row.status);
-        System.assert(row.errors.contains('Không tải được Case sau khi import tạo Resolve.'));
+        System.assertEquals(
+            System.Label.FEC_Batch_Case_Handling_Import_Row_Status_Failed,
+            row.status
+        );
+        System.assert(row.errors.contains('Không tải được Case sau khi thực hiện Resolve.'));
+    }
+
+    @IsTest
+    static void collectItem_parsesInvalidActionButtonId() {
+        List<FEC_BCC_ImportResolveHistService.ImportResolveHistoryItem> items =
+            new List<FEC_BCC_ImportResolveHistService.ImportResolveHistoryItem>();
+        FEC_BatchCaseHandlingImportRow row = new FEC_BatchCaseHandlingImportRow();
+        row.actionButtonId = 'not-a-valid-id';
+        Case testCase = [
+            SELECT Id, FEC_Current_Case_Stage__c
+            FROM Case
+            WHERE Subject = 'BCC Resolve History Case'
+            LIMIT 1
+        ];
+
+        FEC_BCC_ImportResolveHistService.collectItem(
+            items,
+            row,
+            testCase.Id,
+            testCase.FEC_Current_Case_Stage__c,
+            'Stage 1',
+            FEC_ConstantCommon.CASE_STATUS_OPEN
+        );
+
+        System.assertEquals(1, items.size());
+        System.assertEquals(null, items[0].actionButtonId);
     }
 }
