@@ -1,14 +1,21 @@
 **/jsconfig.json
 **/.eslintrc.json
 
-# Unsupported metadata types in unlocked packages
+# NOT supported in unlocked package (verified: Metadata Coverage Report API v66)
+# channels.unlockedPackagingWithoutNamespace = false
 **/sharingRules/**
 **/searchCustomizations/**
+**/settings/**
 
-# GROUP E: Assignment Rules that reference Roles not available in scratch org
-# These roles exist in metadata but scratch org creation doesn't support them
-# force-app/main/default/assignmentRules/
+# StandardValueSets: API says unsupported but REQUIRED for BusinessProcess/RecordType validation
+# DO NOT EXCLUDE — package create needs these for picklist value references
+# If install fails on target, deploy standardValueSets via manifest first
+# **/standardValueSets/**
 
+# === Supported by package, but EXCLUDED due to version-conflict bug on install ===
+# (EntitlementProcess IS package-able, but Active SLA versions cause install errors)
+**/entitlementProcesses/**
 
-# GROUP H: Report folders that may fail due to missing report types in scratch org
-# force-app/main/default/reports/
+# NOTE: profiles, roles, queues, groups, workflows, reports, translations,
+# duplicateRules, matchingRules, milestoneTypes ARE supported by unlocked packages.
+# Do NOT exclude them unless a specific install error proves otherwise.

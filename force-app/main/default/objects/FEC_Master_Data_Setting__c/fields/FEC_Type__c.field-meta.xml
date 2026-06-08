@@ -23,7 +23,6 @@
             <value>
                 <fullName>Assignment</fullName>
                 <default>false</default>
-                <isActive>false</isActive>
                 <label>Assignment</label>
             </value>
         </valueSetDefinition>
