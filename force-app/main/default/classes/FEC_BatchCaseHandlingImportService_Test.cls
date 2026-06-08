@@ -1488,7 +1488,10 @@ private class FEC_BatchCaseHandlingImportService_Test {
             );
         System.assertEquals(1, hydrated.size());
         System.assertEquals(System.Label.FEC_Batch_Case_Handling_Import_Row_Status_Failed, hydrated[0].status);
-        System.assertEquals('Apex CPU time limit exceeded', hydrated[0].errors);
+        System.assertEquals(
+            FEC_BatchCaseHandlingImportService.localizeImportResultErrors('Apex CPU time limit exceeded'),
+            hydrated[0].errors
+        );
         System.assertEquals('CASE-001', hydrated[0].caseIdSearch);
         System.assert(hydrated[0].originalHeaders.size() > 0);
     }
@@ -1504,6 +1507,684 @@ private class FEC_BatchCaseHandlingImportService_Test {
         rr.routingAction = 'Route to CS Support - DQ-CS Support';
         rr.assignmentRoutingAction = 'Route to CS Support - DQ-CS Support';
         return rr;
+    }
+
+    @IsTest
+    static void testLocalizeImportResultError_AdditionalEnglishPatterns() {
+        System.assertNotEquals(
+            'Apex CPU time limit exceeded',
+            FEC_BatchCaseHandlingImportService.localizeImportResultError('insufficient access on record')
+        );
+        System.assertNotEquals(
+            null,
+            FEC_BatchCaseHandlingImportService.localizeImportResultError('unable to lock row')
+        );
+        System.assertNotEquals(
+            null,
+            FEC_BatchCaseHandlingImportService.localizeImportResultError('entity is deleted')
+        );
+        System.assertNotEquals(
+            null,
+            FEC_BatchCaseHandlingImportService.localizeImportResultError('field_custom_validation_exception')
+        );
+        System.assertEquals(
+            'Xử lý dữ liệu thất bại.',
+            FEC_BatchCaseHandlingImportService.localizeImportResultError('Apex CPU time limit exceeded')
+        );
+    }
+
+    @IsTest
+    static void testExtractAssignmentLookupTokens() {
+        Test.startTest();
+        List<String> single = FEC_BatchCaseHandlingImportService.extractAssignmentLookupTokens('#1: A-000329');
+        List<String> multi = FEC_BatchCaseHandlingImportService.extractAssignmentLookupTokens(
+            'A-000001\n#2: A-000002'
+        );
+        List<String> blank = FEC_BatchCaseHandlingImportService.extractAssignmentLookupTokens('');
+        String stripped = FEC_BatchCaseHandlingImportService.stripAssignmentExportLinePrefix('#3: A-000003');
+        Test.stopTest();
+
+        System.assert(single.contains('A-000329'), String.valueOf(single));
+        System.assertEquals(2, multi.size());
+        System.assertEquals(0, blank.size());
+        System.assertEquals('A-000003', stripped);
+    }
+
+    @IsTest
+    static void testApplyCaseHandlingUpdates_CofGsrAssignmentResolveAndRevert() {
+        System.runAs(batchImportRunUser()) {
+            Case c = [SELECT Id FROM Case WHERE FEC_ID_Search__c = 'CASE-OPEN-2026' LIMIT 1];
+            c.OwnerId = UserInfo.getUserId();
+            update c;
+            FEC_Assignment__c resolveAsg = [
+                SELECT Id
+                FROM FEC_Assignment__c
+                WHERE FEC_Assignment_Status__c = 'Open'
+                ORDER BY CreatedDate ASC
+                LIMIT 1
+            ];
+            FEC_Assignment__c revertAsg = new FEC_Assignment__c(
+                FEC_Case__c = c.Id,
+                FEC_Assignment_Name__c = 'Revert Import Assignment',
+                FEC_Assignment_Status__c = 'Open',
+                FEC_Assignment_Owner__c = UserInfo.getUserId()
+            );
+            insert revertAsg;
+
+            FEC_BatchCaseHandlingImportRow resolveRow = new FEC_BatchCaseHandlingImportRow();
+            resolveRow.status = System.Label.FEC_Operation_Success;
+            resolveRow.recordId = String.valueOf(c.Id);
+            resolveRow.assignmentId = String.valueOf(resolveAsg.Id);
+            resolveRow.assignmentRoutingAction = FEC_CaseBusinessService.RESOLVE;
+            resolveRow.inputtedRemarks = 'cof gsr assignment resolve';
+
+            FEC_BatchCaseHandlingImportRow revertRow = new FEC_BatchCaseHandlingImportRow();
+            revertRow.status = System.Label.FEC_Operation_Success;
+            revertRow.recordId = String.valueOf(c.Id);
+            revertRow.assignmentId = String.valueOf(revertAsg.Id);
+            revertRow.assignmentRoutingAction = 'Revert to User';
+            revertRow.inputtedRemarks = 'cof gsr assignment revert';
+
+            FEC_BatchCaseHandlingImportRow pendingRow = new FEC_BatchCaseHandlingImportRow();
+            pendingRow.status = System.Label.FEC_Operation_Success;
+            pendingRow.recordId = String.valueOf(c.Id);
+            pendingRow.assignmentId = String.valueOf(revertAsg.Id);
+            pendingRow.assignmentRoutingAction = FEC_CaseBusinessService.RESOLVE;
+            pendingRow.inputtedRemarks = 'pending row for hasRemaining check';
+
+            Test.startTest();
+            FEC_BatchCaseHandlingImportService.applyCaseHandlingUpdates(
+                new List<FEC_BatchCaseHandlingImportRow>{ resolveRow },
+                true
+            );
+            FEC_BatchCaseHandlingImportService.applyCaseHandlingUpdates(
+                new List<FEC_BatchCaseHandlingImportRow>{ revertRow },
+                true
+            );
+            Boolean sync = FEC_BatchCaseHandlingImportService.shouldProcessImportSynchronously(
+                new List<FEC_BatchCaseHandlingImportRow>{ pendingRow }
+            );
+            Boolean hasMore = FEC_BatchCaseHandlingImportService.hasRemainingApplicableImportRows(
+                new List<FEC_BatchCaseHandlingImportRow>{ pendingRow },
+                0
+            );
+            Test.stopTest();
+
+            System.assertEquals(false, sync);
+            System.assertEquals(true, hasMore);
+            FEC_Assignment__c resolved = [
+                SELECT FEC_Assignment_Status__c
+                FROM FEC_Assignment__c
+                WHERE Id = :resolveAsg.Id
+            ];
+            System.assertEquals(
+                FEC_ConstantCommon.ASSIGNMENT_STATUS_COMPLETED,
+                resolved.FEC_Assignment_Status__c
+            );
+        }
+    }
+
+    @IsTest
+    static void testInputtedRemarksValidationHelpers() {
+        List<String> errs = new List<String>();
+        FEC_BatchCaseHandlingImportRow row = new FEC_BatchCaseHandlingImportRow();
+        row.originalHeaders = new List<String>{ 'Inputted Remarks' };
+        row.originalCells = new List<String>{ 'remark from cell' };
+        Map<String, Object> payload = new Map<String, Object>{
+            'inputtedremarks' => 'short',
+            'inputtedRemarksCharLength' => 5
+        };
+
+        Test.startTest();
+        FEC_BatchCaseHandlingImportService.addInputtedRemarksValidationErrors(errs, '', 0);
+        FEC_BatchCaseHandlingImportService.addInputtedRemarksValidationErrors(errs, 'ok', 2);
+        String resolved = FEC_BatchCaseHandlingImportService.resolveInputtedRemarksValue(payload, row);
+        Integer charLen = FEC_BatchCaseHandlingImportService.resolveInputtedRemarksCharLength(payload, row);
+        String fromCells = FEC_BatchCaseHandlingImportService.extractRemarkFromOriginalCells(row);
+        Boolean overMax = FEC_BatchCaseHandlingImportService.isInputtedRemarksOverMaxLength('x'.repeat(32767));
+        Test.stopTest();
+
+        System.assert(errs.size() >= 1);
+        System.assertEquals('remark from cell', resolved);
+        System.assertEquals('remark from cell', fromCells);
+        System.assertEquals(true, overMax);
+        System.assertNotEquals(null, charLen);
+    }
+
+    @IsTest
+    static void testValidateRows_D2CFieldProfile_Success() {
+        System.runAs(batchImportRunUser()) {
+            ensureRunUserGroup('OM');
+            validateImportFieldProfileScenario(
+                'IMP-D2C-ONLY-' + String.valueOf(DateTime.now().getTime()),
+                'Document Request',
+                new Map<String, Object>{
+                    'csd2cassessmenttype' => firstPicklistLabel('FEC_CS_D2C_Assessment_Type__c'),
+                    'risklevel' => firstPicklistLabel('FEC_CS_D2C_Risk_Level__c'),
+                    'requiredaction' => firstPicklistLabel('FEC_CS_D2C_Required_Corrective_Action__c')
+                },
+                new List<String>{
+                    'CS D2C đánh giá yêu cầu',
+                    'Mức độ rủi ro',
+                    'Hành động cần thiết'
+                },
+                'OM'
+            );
+        }
+    }
+
+    @IsTest
+    static void testValidateRows_PmPaymentFieldProfile() {
+        System.runAs(batchImportRunUser()) {
+            ensureRunUserGroup('PM');
+            validateImportFieldProfileScenario(
+                'IMP-PM-ONLY-' + String.valueOf(DateTime.now().getTime()),
+                'Incorrect Payment Handling',
+                new Map<String, Object>{
+                    'paymentcontractassessment' => firstPicklistLabel('FEC_RD_Payment_Contract_Assessment__c'),
+                    'originalHeaders' => new List<String>{ 'Payment đánh giá yêu cầu đóng hợp đồng' }
+                },
+                new List<String>{ 'Payment đánh giá yêu cầu đóng hợp đồng', 'RD Payment Contract Assessment' },
+                'PM'
+            );
+        }
+    }
+
+    @IsTest
+    static void testValidateRows_CpAssessmentFieldProfile() {
+        System.runAs(batchImportRunUser()) {
+            ensureRunUserGroup('CP');
+            validateImportFieldProfileScenario(
+                'IMP-CP-ONLY-' + String.valueOf(DateTime.now().getTime()),
+                'Original MRC Return',
+                new Map<String, Object>{
+                    'cpassessment' => firstPicklistLabel('FEC_Contract_Processing_MRC_Assessment__c')
+                },
+                new List<String>{ 'CP đánh giá yêu cầu' },
+                'CP'
+            );
+        }
+    }
+
+    @IsTest
+    static void testValidateRows_CsSupportFieldProfile() {
+        System.runAs(batchImportRunUser()) {
+            ensureRunUserGroup('SP');
+            validateImportFieldProfileScenario(
+                'IMP-CSS-ONLY-' + String.valueOf(DateTime.now().getTime()),
+                'GSR - General Flow',
+                new Map<String, Object>{
+                    'cssupportassessmenttype' => firstPicklistLabel('FEC_CS_Support_Assessment_Type__c'),
+                    'classificationbycs' => firstPicklistLabel('FEC_CS_Check_Classification_by_CS__c'),
+                    'evaluationbycs' => firstPicklistLabel('FEC_CS_Check_Evaluation_by_CS__c'),
+                    'finalproduct' => firstPicklistLabel('FEC_CS_Check_Final_product__c'),
+                    'originalHeaders' => new List<String>{
+                        'CS Support đánh giá yêu cầu',
+                        'Classification by CS',
+                        'Evaluation by CS',
+                        'Final Product'
+                    }
+                },
+                new List<String>{
+                    'CS Support đánh giá yêu cầu',
+                    'Classification by CS',
+                    'Evaluation by CS',
+                    'Final Product'
+                },
+                'SP'
+            );
+        }
+    }
+
+    @IsTest
+    static void testValidateRows_CofCoRole_WithOptionalD2CFields() {
+        System.runAs(batchImportRunUser()) {
+            ensureRunUserGroup('CO');
+            String caseKey = 'IMP-COF-D2C-OPT-' + String.valueOf(DateTime.now().getTime());
+            FEC_Business_Process__c bp = ensureImportBusinessProcess('COF - General Flow');
+            FEC_Case_Stage__c stage = ensureImportStage(bp.Id, 'COF - General Flow', 'CO');
+            insertMasterDataLabels(
+                stage.Id,
+                new List<String>{ 'CS D2C đánh giá yêu cầu', 'Mức độ rủi ro', 'Hành động cần thiết' }
+            );
+            ensureImportRoutingForStage(stage.Id, 'CO');
+
+            FEC_CaseTriggerHandler.isExecuting = true;
+            Case importCase = new Case(
+                Subject = 'Import COF optional D2C',
+                Status = 'New',
+                FEC_ID_Search__c = caseKey,
+                FEC_Business_Process__c = bp.Id,
+                FEC_Current_Case_Stage__c = stage.Id,
+                OwnerId = UserInfo.getUserId()
+            );
+            insert importCase;
+            FEC_CaseTriggerHandler.isExecuting = false;
+            update new Case(Id = importCase.Id, FEC_ID_Search__c = caseKey);
+
+            Test.startTest();
+            List<FEC_BatchCaseHandlingImportRow> rows =
+                FEC_BatchCaseHandlingImportService.validateCaseHandlingImportRows(
+                    new List<Object>{ new Map<String, Object>{
+                        'caseidsearch' => caseKey,
+                        'routingaction' => 'RESOLVE',
+                        'inputtedremarks' => 'optional d2c fields on cof co role import',
+                        'csd2cassessmenttype' => firstPicklistLabel('FEC_CS_D2C_Assessment_Type__c'),
+                        'risklevel' => firstPicklistLabel('FEC_CS_D2C_Risk_Level__c'),
+                        'requiredaction' => firstPicklistLabel('FEC_CS_D2C_Required_Corrective_Action__c')
+                    }},
+                    false
+                );
+            Test.stopTest();
+
+            System.assertEquals(1, rows.size());
+            System.assert(
+                rows[0].status != System.Label.FEC_Batch_Case_Handling_Import_Row_Status_Failed,
+                rows[0].errors
+            );
+        }
+    }
+
+    @IsTest
+    static void testValidateRows_ImportFieldProfiles_MissingD2CValues() {
+        System.runAs(batchImportRunUser()) {
+            ensureRunUserGroup('OM');
+            String caseKey = 'IMP-D2C-MISS-' + String.valueOf(DateTime.now().getTime());
+            FEC_Business_Process__c bp = ensureImportBusinessProcess('Document Request');
+            FEC_Case_Stage__c stage = ensureImportStage(bp.Id, 'Document Request', 'OM');
+            insertMasterDataLabels(
+                stage.Id,
+                new List<String>{ 'CS D2C đánh giá yêu cầu', 'Mức độ rủi ro', 'Hành động cần thiết' }
+            );
+            ensureImportRoutingForStage(stage.Id, 'OM');
+
+            FEC_CaseTriggerHandler.isExecuting = true;
+            Case importCase = new Case(
+                Subject = 'Import D2C missing values',
+                Status = 'New',
+                FEC_ID_Search__c = caseKey,
+                FEC_Business_Process__c = bp.Id,
+                FEC_Current_Case_Stage__c = stage.Id,
+                OwnerId = UserInfo.getUserId()
+            );
+            insert importCase;
+            FEC_CaseTriggerHandler.isExecuting = false;
+            update new Case(Id = importCase.Id, FEC_ID_Search__c = caseKey);
+
+            Test.startTest();
+            List<FEC_BatchCaseHandlingImportRow> rows =
+                FEC_BatchCaseHandlingImportService.validateCaseHandlingImportRows(
+                    new List<Object>{ new Map<String, Object>{
+                        'caseidsearch' => caseKey,
+                        'routingaction' => 'RESOLVE',
+                        'inputtedremarks' => 'missing d2c field values on import row'
+                    }},
+                    false
+                );
+            Test.stopTest();
+
+            System.assertEquals(1, rows.size());
+            System.assert(
+                rows[0].errors != null && rows[0].errors.contains('Thiếu giá trị CS D2C'),
+                rows[0].errors
+            );
+        }
+    }
+
+    @IsTest
+    static void testApplyCaseHandlingUpdates_CofGsrAssignmentUpdate() {
+        System.runAs(batchImportRunUser()) {
+            Case c = [SELECT Id FROM Case WHERE FEC_ID_Search__c = 'CASE-OPEN-2026' LIMIT 1];
+            c.OwnerId = UserInfo.getUserId();
+            update c;
+            FEC_Assignment__c asg = [
+                SELECT Id
+                FROM FEC_Assignment__c
+                WHERE FEC_Assignment_Status__c = 'Open'
+                ORDER BY CreatedDate ASC
+                LIMIT 1
+            ];
+
+            FEC_BatchCaseHandlingImportRow row = new FEC_BatchCaseHandlingImportRow();
+            row.status = System.Label.FEC_Operation_Success;
+            row.recordId = String.valueOf(c.Id);
+            row.assignmentId = String.valueOf(asg.Id);
+            row.assignmentRoutingAction = 'Update to Approve';
+            row.inputtedRemarks = 'cof gsr assignment update routing';
+
+            Test.startTest();
+            FEC_BatchCaseHandlingImportService.applyCaseHandlingUpdates(
+                new List<FEC_BatchCaseHandlingImportRow>{ row },
+                true
+            );
+            Test.stopTest();
+
+            System.assert(
+                row.status != System.Label.FEC_Batch_Case_Handling_Import_Row_Status_Failed,
+                row.errors == null ? 'update failed' : row.errors
+            );
+        }
+    }
+
+    @IsTest
+    static void testApplyCaseHandlingUpdates_CofGsrAssignmentRouteTo() {
+        System.runAs(batchImportRunUser()) {
+            String suffix = String.valueOf(Math.abs(Crypto.getRandomInteger())).left(6);
+            String queueDev = 'FEC_BCH_Imp_Rt_' + suffix;
+            String queueLabel = 'FEC BCH Import RouteTo ' + suffix;
+            String teamCode = 'ImpRtTeam' + suffix;
+            ensureAssignmentRouteToQueueFixture(queueDev, queueLabel, teamCode);
+
+            Case c = [SELECT Id FROM Case WHERE FEC_ID_Search__c = 'CASE-OPEN-2026' LIMIT 1];
+            c.OwnerId = UserInfo.getUserId();
+            update c;
+            FEC_Assignment__c asg = [
+                SELECT Id
+                FROM FEC_Assignment__c
+                WHERE FEC_Assignment_Status__c = 'Open'
+                ORDER BY CreatedDate ASC
+                LIMIT 1
+            ];
+
+            FEC_BatchCaseHandlingImportRow row = new FEC_BatchCaseHandlingImportRow();
+            row.status = System.Label.FEC_Operation_Success;
+            row.recordId = String.valueOf(c.Id);
+            row.assignmentId = String.valueOf(asg.Id);
+            row.assignmentRoutingAction = 'Route to ' + teamCode + ' - ' + queueLabel;
+            row.inputtedRemarks = 'cof gsr assignment route to import';
+
+            Test.startTest();
+            FEC_BatchCaseHandlingImportService.applyCaseHandlingUpdates(
+                new List<FEC_BatchCaseHandlingImportRow>{ row },
+                true
+            );
+            Test.stopTest();
+
+            System.assert(
+                row.status != System.Label.FEC_Batch_Case_Handling_Import_Row_Status_Failed,
+                row.errors == null ? 'route to failed' : row.errors
+            );
+        }
+    }
+
+    @IsTest
+    static void testApplyCaseHandlingUpdates_WithResolvedPicklistApiValues() {
+        System.runAs(batchImportRunUser()) {
+            Case c = [SELECT Id FROM Case WHERE FEC_ID_Search__c = 'CASE-OPEN-2026' LIMIT 1];
+            c.OwnerId = UserInfo.getUserId();
+            update c;
+
+            String assessmentApi = firstPicklistApiValue('FEC_CS_D2C_Assessment_Type__c');
+            String riskApi = firstPicklistApiValue('FEC_CS_D2C_Risk_Level__c');
+            String requiredApi = firstPicklistApiValue('FEC_CS_D2C_Required_Corrective_Action__c');
+            String paymentApi = firstPicklistApiValue('FEC_RD_Payment_Contract_Assessment__c');
+            String cpApi = firstPicklistApiValue('FEC_Contract_Processing_MRC_Assessment__c');
+            String csSupportApi = firstPicklistApiValue('FEC_CS_Support_Assessment_Type__c');
+
+            FEC_BatchCaseHandlingImportRow row = new FEC_BatchCaseHandlingImportRow();
+            row.status = System.Label.FEC_Operation_Success;
+            row.recordId = String.valueOf(c.Id);
+            row.routingAction = 'RESOLVE';
+            row.inputtedRemarks = 'apply d2c and related picklist api values';
+            row.csD2CAssessmentTypeApiValue = assessmentApi;
+            row.riskLevelApiValue = riskApi;
+            row.requiredActionApiValue = requiredApi;
+            row.paymentContractAssessmentApiValue = paymentApi;
+            row.cpAssessmentApiValue = cpApi;
+            row.csSupportAssessmentApiValue = csSupportApi;
+            row.classificationByCSApiValue = firstPicklistApiValue('FEC_CS_Check_Classification_by_CS__c');
+            row.evaluationByCSApiValue = firstPicklistApiValue('FEC_CS_Check_Evaluation_by_CS__c');
+            row.finalProductApiValue = firstPicklistApiValue('FEC_CS_Check_Final_product__c');
+
+            Test.startTest();
+            FEC_BatchCaseHandlingImportService.applyCaseHandlingUpdates(
+                new List<FEC_BatchCaseHandlingImportRow>{ row },
+                false
+            );
+            Test.stopTest();
+
+            System.assert(
+                row.status != System.Label.FEC_Batch_Case_Handling_Import_Row_Status_Failed,
+                row.errors == null ? 'apply failed' : row.errors
+            );
+        }
+    }
+
+    private static void ensureAssignmentRouteToQueueFixture(
+        String queueDeveloperName,
+        String queueLabel,
+        String teamCode
+    ) {
+        List<Group> existingQueues = [
+            SELECT Id
+            FROM Group
+            WHERE DeveloperName = :queueDeveloperName
+            LIMIT 1
+        ];
+        Group queueRow;
+        if (existingQueues.isEmpty()) {
+            queueRow = new Group(
+                Name = queueLabel,
+                DeveloperName = queueDeveloperName,
+                Type = FEC_ConstantCommon.GROUP_TYPE_QUEUE
+            );
+            insert queueRow;
+            insert new QueueSobject(QueueId = queueRow.Id, SobjectType = 'Case');
+        } else {
+            queueRow = existingQueues[0];
+        }
+        List<FEC_Team__c> teams = [
+            SELECT Id
+            FROM FEC_Team__c
+            WHERE Name = :teamCode
+            LIMIT 1
+        ];
+        Id teamId;
+        if (teams.isEmpty()) {
+            FEC_Team__c team = new FEC_Team__c(Name = teamCode);
+            insert team;
+            teamId = team.Id;
+        } else {
+            teamId = teams[0].Id;
+        }
+        List<FEC_Team_Queue__c> mappings = [
+            SELECT Id
+            FROM FEC_Team_Queue__c
+            WHERE FEC_Queue_Name__c = :queueDeveloperName
+            LIMIT 1
+        ];
+        if (mappings.isEmpty()) {
+            insert new FEC_Team_Queue__c(
+                FEC_Queue_Name__c = queueDeveloperName,
+                FEC_Select_Team__c = teamId,
+                FEC_Team__c = teamCode
+            );
+        }
+    }
+
+    private static void ensureRunUserGroup(String userGroup) {
+        Map<String, Schema.SObjectField> userFields = User.SObjectType.getDescribe().fields.getMap();
+        if (!userFields.containsKey('FEC_User_Group__c')) {
+            return;
+        }
+        User runUser = new User(Id = UserInfo.getUserId(), FEC_User_Group__c = userGroup);
+        update runUser;
+    }
+
+    private static void validateImportFieldProfileScenario(
+        String caseKey,
+        String businessProcessCode,
+        Map<String, Object> extraFields,
+        List<String> masterDataLabels,
+        String userGroup
+    ) {
+        FEC_Business_Process__c bp = ensureImportBusinessProcess(businessProcessCode);
+        FEC_Case_Stage__c stage = ensureImportStage(bp.Id, businessProcessCode, userGroup);
+        insertMasterDataLabels(stage.Id, masterDataLabels);
+        ensureImportRoutingForStage(stage.Id, userGroup);
+
+        FEC_CaseTriggerHandler.isExecuting = true;
+        Case importCase = new Case(
+            Subject = 'Import profile ' + businessProcessCode,
+            Status = 'New',
+            FEC_ID_Search__c = caseKey,
+            FEC_Business_Process__c = bp.Id,
+            FEC_Current_Case_Stage__c = stage.Id,
+            OwnerId = UserInfo.getUserId()
+        );
+        insert importCase;
+        FEC_CaseTriggerHandler.isExecuting = false;
+        update new Case(Id = importCase.Id, FEC_ID_Search__c = caseKey, OwnerId = UserInfo.getUserId());
+
+        Map<String, Object> payload = new Map<String, Object>{
+            'caseidsearch' => caseKey,
+            'routingaction' => 'RESOLVE',
+            'inputtedremarks' => 'import profile validation remark long enough'
+        };
+        if (extraFields != null) {
+            payload.putAll(extraFields);
+        }
+
+        List<FEC_BatchCaseHandlingImportRow> rows =
+            FEC_BatchCaseHandlingImportService.validateCaseHandlingImportRows(
+                new List<Object>{ payload },
+                false
+            );
+        System.assertEquals(1, rows.size(), businessProcessCode);
+        String failedStatus = System.Label.FEC_Batch_Case_Handling_Import_Row_Status_Failed;
+        System.assert(
+            rows[0].status != failedStatus,
+            businessProcessCode + ': ' + (rows[0].errors == null ? '' : rows[0].errors)
+        );
+    }
+
+    private static FEC_Business_Process__c ensureImportBusinessProcess(String code) {
+        List<FEC_Business_Process__c> existing = [
+            SELECT Id, FEC_Code__c
+            FROM FEC_Business_Process__c
+            WHERE FEC_Code__c = :code
+            LIMIT 1
+        ];
+        if (!existing.isEmpty()) {
+            return existing[0];
+        }
+        FEC_Business_Process__c bp = new FEC_Business_Process__c(
+            Name = code,
+            FEC_Code__c = code,
+            FEC_Active__c = true
+        );
+        insert bp;
+        return bp;
+    }
+
+    private static FEC_Case_Stage__c ensureImportStage(Id businessProcessId, String code, String userGroup) {
+        List<FEC_Case_Stage__c> existing = [
+            SELECT Id
+            FROM FEC_Case_Stage__c
+            WHERE FEC_Business_Process__c = :businessProcessId
+            LIMIT 1
+        ];
+        if (!existing.isEmpty()) {
+            return existing[0];
+        }
+        FEC_Case_Stage__c stage = new FEC_Case_Stage__c(
+            Name = 'Import Stage ' + code,
+            FEC_Code__c = 'IMP_STG_' + String.valueOf(Math.abs(Crypto.getRandomInteger())).left(8),
+            FEC_Business_Process__c = businessProcessId,
+            FEC_Order__c = 1,
+            FEC_Active__c = true,
+            FEC_User_Group__c = userGroup
+        );
+        insert stage;
+        return stage;
+    }
+
+    private static void ensureImportRoutingForStage(Id stageId, String userGroup) {
+        if (stageId == null || String.isBlank(userGroup)) {
+            return;
+        }
+        List<FEC_Stage_Screen__c> existing = [
+            SELECT Id
+            FROM FEC_Stage_Screen__c
+            WHERE FEC_Case_Stage__c = :stageId
+              AND FEC_User_Group__c = :userGroup
+              AND FEC_Action_Button__r.FEC_Code__c = :FEC_CaseBusinessService.RESOLVE
+            LIMIT 1
+        ];
+        if (!existing.isEmpty()) {
+            return;
+        }
+        List<FEC_Action_Button__c> resolveButtons = [
+            SELECT Id
+            FROM FEC_Action_Button__c
+            WHERE FEC_Code__c = :FEC_CaseBusinessService.RESOLVE
+              AND FEC_Active__c = true
+            LIMIT 1
+        ];
+        Id btnResolveId;
+        if (resolveButtons.isEmpty()) {
+            FEC_Action_Button__c btnResolve = new FEC_Action_Button__c(
+                Name = 'Import Resolve ' + userGroup,
+                FEC_Code__c = FEC_CaseBusinessService.RESOLVE,
+                FEC_Type__c = FEC_ConstantCommon.ACTION_BUTTON_TYPE_ROUTING_ACTION,
+                FEC_Active__c = true
+            );
+            insert btnResolve;
+            btnResolveId = btnResolve.Id;
+        } else {
+            btnResolveId = resolveButtons[0].Id;
+        }
+        insert new FEC_Stage_Screen__c(
+            FEC_Case_Stage__c = stageId,
+            FEC_Action_Button__c = btnResolveId,
+            FEC_Code__c = 'IMP-SCR-' + userGroup + '-' + String.valueOf(Math.abs(Crypto.getRandomInteger())).left(6),
+            FEC_User_Group__c = userGroup,
+            FEC_Active__c = true,
+            FEC_Field_Type__c = FEC_ConstantCommon.STAGE_SCREEN_FIELD_TYPE_ALL
+        );
+    }
+
+    private static void insertMasterDataLabels(Id stageId, List<String> labels) {
+        if (stageId == null || labels == null || labels.isEmpty()) {
+            return;
+        }
+        List<FEC_Master_Data_Setting__c> rows = new List<FEC_Master_Data_Setting__c>();
+        for (String labelName : labels) {
+            rows.add(new FEC_Master_Data_Setting__c(
+                FEC_Stage_Name__c = stageId,
+                FEC_Field_Label_Name__c = labelName,
+                FEC_Field_Object_Name__c = 'Case',
+                FEC_Field_Status__c = true,
+                FEC_Field_Editable__c = true
+            ));
+        }
+        insert rows;
+    }
+
+    private static String firstPicklistLabel(String fieldApi) {
+        Map<String, Schema.SObjectField> fieldMap = Case.SObjectType.getDescribe().fields.getMap();
+        if (!fieldMap.containsKey(fieldApi)) {
+            return 'TestValue';
+        }
+        for (Schema.PicklistEntry entry : fieldMap.get(fieldApi).getDescribe().getPicklistValues()) {
+            if (entry.isActive() && String.isNotBlank(entry.getValue())) {
+                return entry.getLabel();
+            }
+        }
+        return 'TestValue';
+    }
+
+    private static String firstPicklistApiValue(String fieldApi) {
+        Map<String, Schema.SObjectField> fieldMap = Case.SObjectType.getDescribe().fields.getMap();
+        if (!fieldMap.containsKey(fieldApi)) {
+            return null;
+        }
+        for (Schema.PicklistEntry entry : fieldMap.get(fieldApi).getDescribe().getPicklistValues()) {
+            if (entry.isActive() && String.isNotBlank(entry.getValue())) {
+                return entry.getValue();
+            }
+        }
+        return null;
     }
 
     private static Id insertMinimalImportContentVersion(String title, Id publishLocationId) {

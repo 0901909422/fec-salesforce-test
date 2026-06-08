@@ -80,6 +80,7 @@ public without sharing class FEC_CaseDsTsSlaNotificationSender {
         return emailsToSend;
     }
 
+    @TestVisible
     private static FEC_Notification.EmailInfo buildEmailInfoForCase(
         Id caseId,
         Case row,

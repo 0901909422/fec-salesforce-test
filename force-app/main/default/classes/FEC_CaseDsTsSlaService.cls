@@ -68,6 +68,22 @@ public without sharing class FEC_CaseDsTsSlaService {
     private static Map<String, Id> slaQueueIdByLabel;
     private static Set<Id> allQueueOwnerIds;
 
+    @TestVisible
+    private static List<Id> testRecipientUserIdsOverride;
+
+    @TestVisible
+    private static void resetSlaQueueCacheForTest() {
+        slaOwnerQueueIds = null;
+        slaQueueIdByDevName = null;
+        slaQueueIdByLabel = null;
+        allQueueOwnerIds = null;
+    }
+
+    @TestVisible
+    private static Boolean testForceSlaEligible = false;
+    @TestVisible
+    private static String testForceSlaQueueProfile = PROFILE_TELESALES;
+
     private static final Map<String, String> PROFILE_TO_LABEL = new Map<String, String>{
         PROFILE_TELESALES => 'DQ - Telesales',
         PROFILE_LG => 'LG',
@@ -90,6 +106,13 @@ public without sharing class FEC_CaseDsTsSlaService {
 
     public static SlaEligibilityContext evaluateEligibility(Case c) {
         SlaEligibilityContext ctx = new SlaEligibilityContext();
+        if (Test.isRunningTest() && testForceSlaEligible == true) {
+            ctx.isEligible = true;
+            ctx.queueProfile = testForceSlaQueueProfile;
+            ctx.activeProfiles = new List<String>{ testForceSlaQueueProfile };
+            ctx.scenario = SCENARIO_TH1;
+            return ctx;
+        }
         if (c == null || !meetsCommonCriteria(c)) {
             return ctx;
         }
@@ -502,7 +525,14 @@ public without sharing class FEC_CaseDsTsSlaService {
         } catch (Exception e) {
             // token không phải User Id hợp lệ
         }
-        return null;
+        List<User> byEmail = [
+            SELECT Id
+            FROM User
+            WHERE IsActive = TRUE
+              AND Email = :token
+            LIMIT 1
+        ];
+        return byEmail.isEmpty() ? null : byEmail[0].Id;
     }
 
     public static String getRecipientLabelApiName(String queueProfile) {
@@ -510,6 +540,9 @@ public without sharing class FEC_CaseDsTsSlaService {
     }
 
     public static List<Id> getRecipientUserIdsForProfile(String queueProfile) {
+        if (Test.isRunningTest() && testRecipientUserIdsOverride != null && !testRecipientUserIdsOverride.isEmpty()) {
+            return new List<Id>(testRecipientUserIdsOverride);
+        }
         if (queueProfile == PROFILE_TELESALES) {
             return parseUserIdsFromLabelValue(Label.FEC_SLA_DS_TS_Recipient_Telesales);
         }
@@ -526,6 +559,13 @@ public without sharing class FEC_CaseDsTsSlaService {
     }
 
     public static Set<String> resolveRecipientUserIds(SlaEligibilityContext ctx) {
+        if (Test.isRunningTest() && testRecipientUserIdsOverride != null && !testRecipientUserIdsOverride.isEmpty()) {
+            Set<String> ids = new Set<String>();
+            for (Id userId : testRecipientUserIdsOverride) {
+                ids.add(String.valueOf(userId));
+            }
+            return ids;
+        }
         if (ctx == null) {
             return new Set<String>();
         }
