@@ -1910,36 +1910,55 @@ private class FEC_BatchCaseHandlingImportService_Test {
     @IsTest
     static void testApplyCaseHandlingUpdates_WithResolvedPicklistApiValues() {
         System.runAs(batchImportRunUser()) {
-            Case c = [SELECT Id FROM Case WHERE FEC_ID_Search__c = 'CASE-OPEN-2026' LIMIT 1];
-            c.OwnerId = UserInfo.getUserId();
-            update c;
+            ensureRunUserGroup('OM');
+            String caseKey = 'IMP-APPLY-API-' + String.valueOf(DateTime.now().getTime());
+            FEC_Business_Process__c bp = ensureImportBusinessProcess('Document Request');
+            FEC_Case_Stage__c stage = ensureImportStage(bp.Id, 'Document Request', 'OM');
+            insertMasterDataLabels(
+                stage.Id,
+                new List<String>{ 'CS D2C đánh giá yêu cầu', 'Mức độ rủi ro', 'Hành động cần thiết' }
+            );
+            ensureImportRoutingForStage(stage.Id, 'OM');
+
+            FEC_CaseTriggerHandler.isExecuting = true;
+            Case importCase = new Case(
+                Subject = 'Import apply picklist api values',
+                Status = 'New',
+                FEC_ID_Search__c = caseKey,
+                FEC_Business_Process__c = bp.Id,
+                FEC_Current_Case_Stage__c = stage.Id,
+                OwnerId = UserInfo.getUserId()
+            );
+            insert importCase;
+            FEC_CaseTriggerHandler.isExecuting = false;
+            update new Case(Id = importCase.Id, FEC_ID_Search__c = caseKey, OwnerId = UserInfo.getUserId());
+
+            FEC_Assignment__c asg = new FEC_Assignment__c(
+                FEC_Case__c = importCase.Id,
+                FEC_Assignment_Name__c = 'Apply Api Values Assignment',
+                FEC_Assignment_Status__c = 'Open',
+                FEC_Assignment_Owner__c = UserInfo.getUserId()
+            );
+            insert asg;
 
             String assessmentApi = firstPicklistApiValue('FEC_CS_D2C_Assessment_Type__c');
             String riskApi = firstPicklistApiValue('FEC_CS_D2C_Risk_Level__c');
             String requiredApi = firstPicklistApiValue('FEC_CS_D2C_Required_Corrective_Action__c');
-            String paymentApi = firstPicklistApiValue('FEC_RD_Payment_Contract_Assessment__c');
-            String cpApi = firstPicklistApiValue('FEC_Contract_Processing_MRC_Assessment__c');
-            String csSupportApi = firstPicklistApiValue('FEC_CS_Support_Assessment_Type__c');
 
             FEC_BatchCaseHandlingImportRow row = new FEC_BatchCaseHandlingImportRow();
             row.status = System.Label.FEC_Operation_Success;
-            row.recordId = String.valueOf(c.Id);
-            row.routingAction = 'RESOLVE';
-            row.inputtedRemarks = 'apply d2c and related picklist api values';
+            row.recordId = String.valueOf(importCase.Id);
+            row.assignmentId = String.valueOf(asg.Id);
+            row.assignmentRoutingAction = FEC_CaseBusinessService.RESOLVE;
+            row.inputtedRemarks = 'apply d2c picklist api values on document request case';
             row.csD2CAssessmentTypeApiValue = assessmentApi;
             row.riskLevelApiValue = riskApi;
             row.requiredActionApiValue = requiredApi;
-            row.paymentContractAssessmentApiValue = paymentApi;
-            row.cpAssessmentApiValue = cpApi;
-            row.csSupportAssessmentApiValue = csSupportApi;
-            row.classificationByCSApiValue = firstPicklistApiValue('FEC_CS_Check_Classification_by_CS__c');
-            row.evaluationByCSApiValue = firstPicklistApiValue('FEC_CS_Check_Evaluation_by_CS__c');
-            row.finalProductApiValue = firstPicklistApiValue('FEC_CS_Check_Final_product__c');
 
             Test.startTest();
             FEC_BatchCaseHandlingImportService.applyCaseHandlingUpdates(
                 new List<FEC_BatchCaseHandlingImportRow>{ row },
-                false
+                true
             );
             Test.stopTest();
 
@@ -1947,6 +1966,23 @@ private class FEC_BatchCaseHandlingImportService_Test {
                 row.status != System.Label.FEC_Batch_Case_Handling_Import_Row_Status_Failed,
                 row.errors == null ? 'apply failed' : row.errors
             );
+            FEC_Assignment__c resolvedAsg = [
+                SELECT FEC_Assignment_Status__c
+                FROM FEC_Assignment__c
+                WHERE Id = :asg.Id
+            ];
+            System.assertEquals(
+                FEC_ConstantCommon.ASSIGNMENT_STATUS_COMPLETED,
+                resolvedAsg.FEC_Assignment_Status__c
+            );
+            if (String.isNotBlank(assessmentApi)) {
+                Case updated = [
+                    SELECT FEC_CS_D2C_Assessment_Type__c
+                    FROM Case
+                    WHERE Id = :importCase.Id
+                ];
+                System.assertEquals(assessmentApi, updated.FEC_CS_D2C_Assessment_Type__c);
+            }
         }
     }
 
