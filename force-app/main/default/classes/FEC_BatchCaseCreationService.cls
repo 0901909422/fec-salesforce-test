@@ -39,11 +39,14 @@ public with sharing class FEC_BatchCaseCreationService {
             parsed,
             isWelcomeFlow
         );
+        List<FEC_BCC_ImportResolveHistService.ImportResolveHistoryItem> resolveHistoryItems =
+            new List<FEC_BCC_ImportResolveHistService.ImportResolveHistoryItem>();
         if (isWelcomeFlow) {
-            insertWelcomeCallCases(parsed, rowResults);
+            insertWelcomeCallCases(parsed, rowResults, resolveHistoryItems);
         } else {
-            insertStandardCasesWithInteraction(parsed, rowResults);
+            insertStandardCasesWithInteraction(parsed, rowResults, resolveHistoryItems);
         }
+        FEC_BCC_ImportResolveHistService.applyAfterCaseCreateBulk(resolveHistoryItems);
         if (hasAnySucceededRowResult(rowResults)) {
             runImportedInteractionBatchAfterCaseImport();
         }
@@ -722,7 +725,11 @@ public with sharing class FEC_BatchCaseCreationService {
         caseToFill.FEC_Interaction_Subchannel__c = String.isNotBlank(subChannelApi) ? subChannelApi : FEC_ConstantCommon.CHANNEL_OUTBOUND_SUBCHANNEL_NAME;
     }
 
-    private static void insertWelcomeCallCases(List<ParsedCaseRow> parsed, List<FEC_BatchCaseCreationController.CaseRowResult> rowResults) {
+    private static void insertWelcomeCallCases(
+        List<ParsedCaseRow> parsed,
+        List<FEC_BatchCaseCreationController.CaseRowResult> rowResults,
+        List<FEC_BCC_ImportResolveHistService.ImportResolveHistoryItem> resolveHistoryItems
+    ) {
         Id intRt = FEC_CommonUltils.getRecordTypeIdByDev(FEC_ConstantCommon.CASE_INTERACTION_RECORD_TYPE_DEV_NAME);
         Id custRt = FEC_BatchImportCommon.getCustomerCaseRecordTypeId();
         if (intRt == null) {
@@ -733,6 +740,7 @@ public with sharing class FEC_BatchCaseCreationService {
         }
 
         LookupMaps maps = loadLookupMaps(parsed);
+        NatureOfCaseResolveMaps nocResolveMaps = loadNatureOfCaseResolveMaps(parsed, maps);
         Schema.DescribeFieldResult channelDfr = Case.FEC_Channel__c.getDescribe();
         Schema.DescribeFieldResult subChannelDfr = Case.FEC_Interaction_Subchannel__c.getDescribe();
         Schema.DescribeFieldResult statusDfr = Case.Status.getDescribe();
@@ -798,6 +806,7 @@ public with sharing class FEC_BatchCaseCreationService {
             applyWelcomeCustomerCaseDefaults(cc);
             cc.Subject = truncateWelcomeSubject('Welcome Call Case - ', r.contractNumber);
             applyNatureFields(cc, r, maps, channelDfr, subChannelDfr, false);
+            applyOtherDefaultCaseStageFromNature(cc, r, maps, nocResolveMaps);
             applyBatchImportedCaseFlag(cc);
             customerCases.add(cc);
             customerOrigRowIndex.add(origIdx);
@@ -814,6 +823,9 @@ public with sharing class FEC_BatchCaseCreationService {
                     rr.recordId = customerCaseId;
                     rr.status = 'Succeeded';
                     rr.errors = '';
+                    if (isResolvedCustomerCaseImportStatus(customerCases[k].Status)) {
+                        FEC_BCC_ImportResolveHistService.collectItem(resolveHistoryItems, rr, customerCaseId);
+                    }
                     insertWelcomeAdditionalInfo(customerCaseId);
                     String remarkError = insertWelcomeCaseRemark(customerCaseId, r.caseRemarks);
                     if (String.isNotBlank(remarkError)) {
@@ -834,7 +846,11 @@ public with sharing class FEC_BatchCaseCreationService {
         }
     }
 
-    private static void insertStandardCasesWithInteraction(List<ParsedCaseRow> parsed, List<FEC_BatchCaseCreationController.CaseRowResult> rowResults) {
+    private static void insertStandardCasesWithInteraction(
+        List<ParsedCaseRow> parsed,
+        List<FEC_BatchCaseCreationController.CaseRowResult> rowResults,
+        List<FEC_BCC_ImportResolveHistService.ImportResolveHistoryItem> resolveHistoryItems
+    ) {
         Id intRt = FEC_CommonUltils.getRecordTypeIdByDev(FEC_ConstantCommon.CASE_INTERACTION_RECORD_TYPE_DEV_NAME);
         Id custRt = FEC_BatchImportCommon.getCustomerCaseRecordTypeId();
         if (intRt == null) {
@@ -928,6 +944,9 @@ public with sharing class FEC_BatchCaseCreationService {
                 if (srCust[k].isSuccess()) {
                     Id customerCaseId = srCust[k].getId();
                     applyCustomerCaseSuccessResult(rr, customerCases[k], customerCaseId);
+                    if (isResolvedCustomerCaseImportStatus(customerCases[k].Status)) {
+                        FEC_BCC_ImportResolveHistService.collectItem(resolveHistoryItems, rr, customerCaseId);
+                    }
                     String remarkError = insertWelcomeCaseRemark(customerCaseId, r.caseRemarks);
                     if (String.isNotBlank(remarkError)) {
                         rr.status = 'Failed';
@@ -1385,6 +1404,11 @@ public with sharing class FEC_BatchCaseCreationService {
             }
         }
         return null;
+    }
+
+    private static Boolean isResolvedCustomerCaseImportStatus(String statusApi) {
+        return String.isNotBlank(statusApi) &&
+            statusApi.equalsIgnoreCase(FEC_ConstantCommon.CASE_STATUS_RESOLVED_COMPLETED);
     }
 
     private static String matchBatchImportCaseStatus(Schema.DescribeFieldResult statusDfr, String raw) {
