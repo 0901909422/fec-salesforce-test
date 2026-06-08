@@ -524,4 +524,140 @@ private class FEC_IPPClosureController_Test {
 
         System.assertEquals(false, success);
     }
+
+    @IsTest
+    static void testGetEligibleIPPsForClosure_DedupesByRecordNoAndCoalescesFields() {
+        if (Type.forName('FEC_IPPClosureController') == null) {
+            return;
+        }
+
+        Case c = [SELECT Id FROM Case LIMIT 1];
+        FEC_Customer_History__c cust = [
+            SELECT Id FROM FEC_Customer_History__c LIMIT 1
+        ];
+
+        insert new FEC_IPP__c(
+            FEC_Customer_History__c = cust.Id,
+            FEC_IPP_Record_No__c = '004',
+            FEC_IPP_Plan__c = '90003',
+            FEC_IPP_Open_Date__c = Date.newInstance(2022, 7, 19),
+            FEC_IPP_Current_Balance__c = 3000000,
+            FEC_IPP_Balance__c = 3000000
+        );
+        insert new FEC_IPP__c(
+            FEC_Customer_History__c = cust.Id,
+            FEC_IPP_Record_No__c = '004',
+            FEC_IPP_Plan__c = '90003',
+            FEC_IPP_Open_Date__c = Date.newInstance(2022, 7, 19),
+            FEC_IPP_Current_Balance__c = 3000000,
+            FEC_IPP_Interest_Rate__c = 12
+        );
+
+        Test.startTest();
+        FEC_IPPClosureController.IPPClosureResultDTO result =
+            FEC_IPPClosureController.getEligibleIPPsForClosure(c.Id);
+        Test.stopTest();
+
+        Integer record004Count = 0;
+        for (FEC_IPPClosureController.IPPClosureDTO row : result.rows) {
+            if (row.ippRecordNo == '004') {
+                record004Count++;
+                System.assertEquals(12, row.ippInterestRate);
+            }
+        }
+        System.assertEquals(1, record004Count, 'Record No 004 chỉ hiển thị một lần và giữ Interest Rate từ bản ghi đầy đủ hơn.');
+    }
+
+    @IsTest
+    static void testGetEligibleIPPsForClosure_MergesSplit004RowsFromImageScenario() {
+        if (Type.forName('FEC_IPPClosureController') == null) {
+            return;
+        }
+
+        Case c = [SELECT Id FROM Case LIMIT 1];
+        FEC_Customer_History__c cust = [
+            SELECT Id FROM FEC_Customer_History__c LIMIT 1
+        ];
+
+        insert new FEC_IPP__c(
+            FEC_Customer_History__c = cust.Id,
+            FEC_IPP_Record_No__c = '004',
+            FEC_IPP_Plan__c = '90003',
+            FEC_IPP_Open_Date__c = Date.newInstance(2022, 7, 19),
+            FEC_IPP_First_Due_Date__c = Date.newInstance(2022, 8, 14),
+            FEC_IPP_Mature_Date__c = Date.newInstance(2022, 10, 14),
+            FEC_IPP_Balance__c = 3000000,
+            FEC_IPP_Current_Balance__c = 3000000
+        );
+        insert new FEC_IPP__c(
+            FEC_Customer_History__c = cust.Id,
+            FEC_IPP_Record_No__c = '004',
+            FEC_IPP_Plan__c = '90003',
+            FEC_IPP_First_Due_Date__c = Date.newInstance(2022, 8, 14),
+            FEC_IPP_Mature_Date__c = Date.newInstance(2022, 10, 14),
+            FEC_IPP_Balance__c = 82000000,
+            FEC_IPP_Current_Balance__c = 3000000,
+            FEC_IPP_Interest_Rate__c = 12
+        );
+
+        Test.startTest();
+        FEC_IPPClosureController.IPPClosureResultDTO result =
+            FEC_IPPClosureController.getEligibleIPPsForClosure(c.Id);
+        Test.stopTest();
+
+        FEC_IPPClosureController.IPPClosureDTO row004;
+        for (FEC_IPPClosureController.IPPClosureDTO row : result.rows) {
+            if (row.ippRecordNo == '004') {
+                row004 = row;
+            }
+        }
+        System.assertNotEquals(null, row004, 'Phải có đúng một dòng 004.');
+        System.assertEquals(Date.newInstance(2022, 7, 19), row004.ippOpenDate);
+        System.assertEquals(3000000, row004.ippBalance);
+        System.assertEquals(12, row004.ippInterestRate);
+    }
+
+    @IsTest
+    static void testGetEligibleIPPsForClosure_DoesNotCoalesceInterestFromDifferentPlan() {
+        if (Type.forName('FEC_IPPClosureController') == null) {
+            return;
+        }
+
+        Case c = [SELECT Id FROM Case LIMIT 1];
+        FEC_Customer_History__c cust = [
+            SELECT Id FROM FEC_Customer_History__c LIMIT 1
+        ];
+
+        insert new FEC_IPP__c(
+            FEC_Customer_History__c = cust.Id,
+            FEC_IPP_Record_No__c = '003',
+            FEC_IPP_Plan__c = '60050',
+            FEC_IPP_Open_Date__c = Date.newInstance(2022, 7, 6),
+            FEC_IPP_Balance__c = 47493546,
+            FEC_IPP_Current_Balance__c = 3000000
+        );
+        insert new FEC_IPP__c(
+            FEC_Customer_History__c = cust.Id,
+            FEC_IPP_Record_No__c = '003',
+            FEC_IPP_Plan__c = '90003',
+            FEC_IPP_Balance__c = 82000000,
+            FEC_IPP_Current_Balance__c = 3000000,
+            FEC_IPP_Interest_Rate__c = 12
+        );
+
+        Test.startTest();
+        FEC_IPPClosureController.IPPClosureResultDTO result =
+            FEC_IPPClosureController.getEligibleIPPsForClosure(c.Id);
+        Test.stopTest();
+
+        FEC_IPPClosureController.IPPClosureDTO row003;
+        for (FEC_IPPClosureController.IPPClosureDTO row : result.rows) {
+            if (row.ippRecordNo == '003') {
+                row003 = row;
+            }
+        }
+        System.assertNotEquals(null, row003, 'Phải có đúng một dòng 003.');
+        System.assertEquals('60050', row003.ippPlan);
+        System.assertEquals(null, row003.ippInterestRate, 'Không lấy Interest từ bản ghi Plan khác.');
+    }
 }
