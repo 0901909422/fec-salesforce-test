@@ -1638,12 +1638,14 @@ hasAnySearchCriteria(params) {
         }
 
         // 2. Check Loan data (If ANY of the three have records)
-        if (
-          (this.loanContractData && this.loanContractData.length > 0) ||
-          (this.loanB2Data && this.loanB2Data.length > 0) ||
-          (this.loanCash24Data && this.loanCash24Data.length > 0)
-        ) {
+        if (this.loanContractData && this.loanContractData.length > 0) {
           categories.push("Loan");
+        }
+        if (this.loanB2Data && this.loanB2Data.length > 0) {
+          categories.push("B2");
+        }
+        if (this.loanCash24Data && this.loanCash24Data.length > 0) {
+          categories.push("Cash24");
         }
 
         // 3. Check Insurance data
