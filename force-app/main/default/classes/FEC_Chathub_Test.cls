@@ -24,6 +24,14 @@ private class FEC_Chathub_Test {
         return label + suffix;
     }
 
+    @TestSetup
+    static void setupData() {
+        // Ensure running user has FEC_Main_Queue__c set (required field on User)
+        System.runAs(new User(Id = UserInfo.getUserId())) {
+            update new User(Id = UserInfo.getUserId(), FEC_Main_Queue__c = 'TestQueue');
+        }
+    }
+
     /**
      * Kịch bản 1: Kiểm tra tạo Interaction Case (createInteractionCase)
      */

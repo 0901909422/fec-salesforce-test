@@ -229,7 +229,7 @@ public with sharing class FEC_BusinessProcessService {
 
             // Validate required fields
             if (String.isBlank(previousStageId) || String.isBlank(actionButtonId) || String.isBlank(nextStageId)) {
-                throw new IllegalArgumentException('Previous Stage, Action Button, và Next Stage là bắt buộc');
+                throw new IllegalArgumentException(System.Label.FEC_Error_Required_Stage_Fields);
             }
 
             FEC_Stage_Change__c rule;
@@ -253,9 +253,9 @@ public with sharing class FEC_BusinessProcessService {
             return rule.Id;
 
         } catch (DmlException dml) {
-            throw new AuraHandledException('Lỗi DML: ' + dml.getDmlMessage(0));
+            throw new AuraHandledException(System.Label.FEC_Error_DML_Prefix + ' ' + dml.getDmlMessage(0));
         } catch (Exception e) {
-            throw new AuraHandledException('Lỗi khi lưu Rule: ' + e.getMessage());
+            throw new AuraHandledException(System.Label.FEC_Error_Save_Rule + ' ' + e.getMessage());
         }
     }
 
@@ -267,16 +267,16 @@ public with sharing class FEC_BusinessProcessService {
     public static void deleteStagChangeRule(String recordId) {
         try {
             if (String.isBlank(recordId)) {
-                throw new IllegalArgumentException('Record ID không được để trống');
+                throw new IllegalArgumentException(System.Label.FEC_Error_Record_ID_Required);
             }
 
             FEC_Stage_Change__c rule = new FEC_Stage_Change__c(Id = recordId);
             delete rule;
 
         } catch (DmlException dml) {
-            throw new AuraHandledException('Lỗi DML: ' + dml.getDmlMessage(0));
+            throw new AuraHandledException(System.Label.FEC_Error_DML_Prefix + ' ' + dml.getDmlMessage(0));
         } catch (Exception e) {
-            throw new AuraHandledException('Lỗi khi xóa Rule: ' + e.getMessage());
+            throw new AuraHandledException(System.Label.FEC_Error_Delete_Rule + ' ' + e.getMessage());
         }
     }
 
@@ -317,16 +317,24 @@ public with sharing class FEC_BusinessProcessService {
         return options;
     }
 
-    /** Get MDM Stage options for a given Business Process (used in modal combobox) */
+    /**
+     * Get MDM Stage options for a given Business Process (used in modal combobox).
+     * IMPORTANT: value = FEC_Code__c (immutable, validation rule locked) instead of Id/Name.
+     *           This makes Decision Rules survive Stage rename and cross-environment deployment.
+     */
     @AuraEnabled(cacheable=true)
     public static List<Map<String, String>> getMDMStageOptions(Id businessProcessId) {
         List<Map<String, String>> options = new List<Map<String, String>>();
         for (FEC_MDM_Case_Stage__c stage : [
-            SELECT Id, Name FROM FEC_MDM_Case_Stage__c
+            SELECT Id, Name, FEC_Code__c FROM FEC_MDM_Case_Stage__c
             WHERE FEC_Business_Process__c = :businessProcessId
+              AND FEC_Code__c != null
             ORDER BY Name
         ]) {
-            options.add(new Map<String, String>{ 'label' => stage.Name, 'value' => stage.Id });
+            options.add(new Map<String, String>{
+                'label' => stage.Name,
+                'value' => stage.FEC_Code__c
+            });
         }
         return options;
     }
@@ -341,6 +349,28 @@ public with sharing class FEC_BusinessProcessService {
             ORDER BY Name
         ]) {
             options.add(new Map<String, String>{ 'label' => ab.Name, 'value' => ab.Id });
+        }
+        return options;
+    }
+
+    /**
+     * @description Lấy danh sách Queue (Group WHERE Type = 'Queue') để dùng làm dropdown
+     *              cho cột "Next Queue" trong Decision Table.
+     *              Trả về DeveloperName làm value để bền vững khi rename queue label.
+     */
+    @AuraEnabled(cacheable=true)
+    public static List<Map<String, String>> getQueueOptions() {
+        List<Map<String, String>> options = new List<Map<String, String>>();
+        for (Group q : [
+            SELECT Id, Name, DeveloperName
+            FROM Group
+            WHERE Type = 'Queue'
+            ORDER BY Name
+        ]) {
+            options.add(new Map<String, String>{
+                'label' => q.Name,
+                'value' => q.DeveloperName
+            });
         }
         return options;
     }

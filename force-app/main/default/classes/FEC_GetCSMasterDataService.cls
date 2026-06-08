@@ -42,6 +42,10 @@ global with sharing class FEC_GetCSMasterDataService {
             } else if (!FEC_CommonUltils.isActiveChannelSupported(Sys.Channel)) {
                 res.Sys.Code = '102';
                 res.Sys.Description = buildUnsupportedChannelMessage(Sys.Channel);
+            } else if (!isGetCSMasterDataChannelFunctionAllowed(Sys.Channel)) {
+                res.Sys.Code = '102';
+                res.Sys.Description =
+                    FEC_ConstantCommon.MY_CASE_CHANNEL_GET_MASTER_DATA_NOT_ALLOWED_MSG;
             } else if (
                 String.isBlank(Sys.TransactionID)
                 || Sys.TransactionID.length() > FEC_ConstantCommon.CANCEL_CS_TRANSACTION_ID_MAX_LEN
@@ -52,7 +56,7 @@ global with sharing class FEC_GetCSMasterDataService {
                     + FEC_ConstantCommon.CANCEL_CS_TRANSACTION_ID_MAX_LEN
                     + System.Label.FEC_MSG_Limit_Character;
             } else {
-                processMasterDataRequest(includeAdditionalProperties, res);
+                processMasterDataRequest(includeAdditionalProperties, res, Sys.Channel);
                 res.Sys.Code = System.Label.FEC_Success_Title;
                 res.Sys.Description = System.Label.FEC_MSG_Get_CS_Data_Success;
                 isSuccess = true;
@@ -74,7 +78,8 @@ global with sharing class FEC_GetCSMasterDataService {
 
     private static void processMasterDataRequest(
         Boolean includeAdditionalProperties,
-        GetCSMasterDataResponse res
+        GetCSMasterDataResponse res,
+        String requestChannel
     ) {
         if (includeAdditionalProperties) {
             loadSettings(true);
@@ -83,6 +88,7 @@ global with sharing class FEC_GetCSMasterDataService {
         List<FEC_Nature_of_Case__c> records = [
             SELECT
                 FEC_Customer_Type__c,
+                FEC_Channel__c,
 
                 FEC_Product_Type__r.FEC_Code__c,
                 FEC_Product_Type__r.Name,
@@ -121,6 +127,14 @@ global with sharing class FEC_GetCSMasterDataService {
         Map<String, MasterDataItemType> productMap = new Map<String, MasterDataItemType>();
 
         for (FEC_Nature_of_Case__c n : records) {
+            if (
+                !FEC_CommonUltils.isNatureOfCaseChannelAllowed(
+                    n.FEC_Channel__c,
+                    requestChannel
+                )
+            ) {
+                continue;
+            }
 
             if (n.FEC_Product_Type__r == null ||
                 n.FEC_Business_Process__r == null ||
@@ -626,6 +640,13 @@ global with sharing class FEC_GetCSMasterDataService {
             normalizedChannel +
             ' ' +
             String.valueOf(System.Label.FEC_MSG_Data_Request_Master_Data).trim();
+    }
+
+    private static Boolean isGetCSMasterDataChannelFunctionAllowed(String channel) {
+        return FEC_ChannelFunctionService.isFunctionAllowed(
+            channel,
+            FEC_ConstantCommon.MY_CASE_FUNCTION_GET_CS_MASTER_DATA
+        );
     }
 
     // ==========================================================

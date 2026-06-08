@@ -1,0 +1,15 @@
+/* fecLiveNocTree.css - Thu gọn khoảng cách */
+
+:host {
+    --slds-c-card-body-padding-top: 0;
+    --slds-c-card-body-padding-bottom: 0;
+}
+
+/* Giảm padding các section bên trong card */
+lightning-card .slds-p-around_small {
+    padding: 0.25rem 0.5rem !important;
+}
+
+lightning-card .slds-p-around_medium {
+    padding: 0.25rem 0.5rem !important;
+}

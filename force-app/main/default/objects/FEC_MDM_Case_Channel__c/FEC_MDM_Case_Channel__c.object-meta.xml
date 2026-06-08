@@ -156,6 +156,7 @@
     <label>FEC Case Channel</label>
     <nameField>
         <label>FEC_Case Channel Name</label>
+        <trackHistory>false</trackHistory>
         <type>Text</type>
     </nameField>
     <pluralLabel>FEC Case Channels</pluralLabel>
