@@ -95,6 +95,7 @@
         <members>fec_DownloadReports</members>
         <members>fecInteractionCreationHighlight</members>
         <members>fecInteractionInfo</members>
+        <members>fec_Search</members>
         <name>LightningComponentBundle</name>
     </types>
     <types>
@@ -111,7 +112,12 @@
     <types>
         <members>Case.FEC_Is_Manual__c</members>
         <members>Case.FEC_KYC_Status__c</members>
+        <members>Case.FEC_Search_Products__c</members>
         <name>CustomField</name>
+    </types>
+    <types>
+        <members>FEC_PSG_RD_Contract_Processing_User</members>
+        <name>PermissionSetGroup</name>
     </types>
     <types>
         <members>FEC_CS_CS_Ecom_Officer_Interaction_Case_Service_Case</members>
@@ -167,6 +173,9 @@
         <members>FEC_RD_Telesales_User_1_Interaction_Case_Service_Case</members>
         <members>FEC_RD_Telesales_User_2_Interaction_Case_Service_Case</members>
         <members>RD_IT_User_Interaction_Case_Service_Case</members>
+        <members>FEC_CS_CS_Outbound_Officer_Search_Functions</members>
+        <members>FEC_CS_CS_Outbound_Specialist_Search_Functions</members>
+        <members>FEC_RD_Contract_Processing_User_Search_Functions</members>
         <members>FEC_Common_System_Setting</members>
         <members>RD_IT_User_System_Management</members>
         <name>PermissionSet</name>
