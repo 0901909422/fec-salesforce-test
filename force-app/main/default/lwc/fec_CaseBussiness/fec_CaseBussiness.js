@@ -786,7 +786,7 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
     this._isCaseInformationEdit = next;
     // Execute Assignment: reload master data (hasCaseAssignment, assignment groups) rồi áp rule từng field.
     if (next) {
-      this.getData().then(() => {
+      this._reloadBusinessPreservingNocSelection().then(() => {
         this._updateDynCmpIsEditFlags();
       });
       return;
@@ -2230,6 +2230,23 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
     });
   }
 
+  _isHoldCaseNocSelectionComplete(noc) {
+    return !!(
+      noc &&
+      noc.productTypeId &&
+      noc.categoryId &&
+      noc.subCategoryId
+    );
+  }
+
+  _resolveNatureOfCaseIdFallback() {
+    return (
+      this._lastCaseNocTemplateNatureId ??
+      this.business?.natureOfCase ??
+      null
+    );
+  }
+
   _reloadBusinessPreservingNocSelection() {
     const fastCashNocSel = readFastCashNocSelectionFromStorage(this.recordId);
     const pointsRedemptionNocSel = readPointsRedemptionNocSelectionFromStorage(
@@ -2258,7 +2275,27 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
         pointsRedemptionNocSel.subCodeId,
       );
     }
+    const noc =
+      this.holdCaseNocParams?.productTypeId &&
+      this.holdCaseNocParams?.categoryId &&
+      this.holdCaseNocParams?.subCategoryId
+        ? this.holdCaseNocParams
+        : this._lastGetByCaseNocParams;
+    if (this._isHoldCaseNocSelectionComplete(noc)) {
+      return this.getData(
+        noc.productTypeId,
+        noc.categoryId,
+        noc.subCategoryId,
+        noc.subCodeId ?? null,
+        this._resolveNatureOfCaseIdFallback(),
+      );
+    }
     return this.getData();
+  }
+
+  /** Execute / reload: giữ bộ Updated NOC đang chọn (holdCaseNocParams), không chỉ đọc Case DB. */
+  @api reloadDataPreservingNoc() {
+    return this._reloadBusinessPreservingNocSelection();
   }
 
   hasContractProcessingAssessmentTypeChanged() {
@@ -5138,9 +5175,10 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
             //Toannd61: action.value (label/value dropdown) cho Apex phân nhánh FEC_IsReverted__c + custom label history
             routingActionValue: selectedAction?.value ?? "",
           };
-          // GSR: không gửi NOC Stage 2 — Apex sync Actual theo template Stage 1 sau revert
-          const bpCode = (this.business?.code || "").toUpperCase();
-          if (!bpCode.includes("GSR")) {
+          // COF/GSR Revert Stage 2→1: không gửi natureOfCaseId — Apex giữ Updated NOC trên Case + restore baseline
+          const isStage2ToStage1Revert =
+            this.business?.contextFlags?.isGsrStage2ToStage1Revert === true;
+          if (!isStage2ToStage1Revert) {
             const revertNocId = this._resolveRevertNatureOfCaseId();
             if (revertNocId) {
               revertParams.natureOfCaseId = revertNocId;
