@@ -499,4 +499,66 @@ private class FEC_InteractionInforHandler_Test {
 
         System.assertEquals(null, highlight);
     }
+
+    @IsTest
+    static void testInteractionEmailActionBlocked_EmailChannelMissingEmail() {
+        String suffix = String.valueOf(System.currentTimeMillis());
+        Case emailInteraction = new Case(
+            Subject = 'Email Interaction ' + suffix,
+            Status = 'New',
+            FEC_Channel__c = FEC_ConstantCommon.CHANNEL_EMAIL_NAME,
+            FEC_Interaction_Email__c = null,
+            FEC_ID_Search__c = 'EMAIL-BLOCK-' + suffix
+        );
+        Id rtId = interactionRecordTypeId();
+        if (rtId != null) {
+            emailInteraction.RecordTypeId = rtId;
+        }
+        FEC_CaseTriggerHandler.isExecuting = true;
+        try {
+            insert emailInteraction;
+        } finally {
+            FEC_CaseTriggerHandler.isExecuting = false;
+        }
+
+        Test.startTest();
+        System.assertEquals(true, FEC_InteractionInforHandler.isInteractionEmailActionBlocked(emailInteraction.Id));
+        Boolean threw = false;
+        try {
+            FEC_InteractionInforHandler.assertInteractionEmailForAction(emailInteraction.Id);
+        } catch (AuraHandledException e) {
+            threw = true;
+            System.assertEquals(System.Label.FEC_Interaction_Email_Required_Msg, e.getMessage());
+        }
+        Test.stopTest();
+
+        System.assertEquals(true, threw);
+    }
+
+    @IsTest
+    static void testInteractionEmailActionBlocked_EmailChannelWithEmail() {
+        String suffix = String.valueOf(System.currentTimeMillis());
+        Case emailInteraction = new Case(
+            Subject = 'Email Interaction ' + suffix,
+            Status = 'New',
+            FEC_Channel__c = FEC_ConstantCommon.CHANNEL_EMAIL_NAME,
+            FEC_Interaction_Email__c = 'valid@test.com',
+            FEC_ID_Search__c = 'EMAIL-OK-' + suffix
+        );
+        Id rtId = interactionRecordTypeId();
+        if (rtId != null) {
+            emailInteraction.RecordTypeId = rtId;
+        }
+        FEC_CaseTriggerHandler.isExecuting = true;
+        try {
+            insert emailInteraction;
+        } finally {
+            FEC_CaseTriggerHandler.isExecuting = false;
+        }
+
+        Test.startTest();
+        System.assertEquals(false, FEC_InteractionInforHandler.isInteractionEmailActionBlocked(emailInteraction.Id));
+        FEC_InteractionInforHandler.assertInteractionEmailForAction(emailInteraction.Id);
+        Test.stopTest();
+    }
 }

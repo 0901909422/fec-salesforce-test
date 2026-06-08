@@ -21,6 +21,9 @@ import FEC_WRAP_UP_BTN_LABEL from "@salesforce/label/c.FEC_Wrap_up_Btn_Label";
 import FEC_INTERACTION_CHANNEL from "@salesforce/label/c.FEC_Interaction_Channel_Label";
 import FEC_INTERACTION_SUB_CHANNEL from "@salesforce/label/c.FEC_Interaction_Sub_Channel_Label";
 import FEC_No_Permission_Msg from '@salesforce/label/c.FEC_No_Permission_Msg';
+import FEC_Interaction_Email_Required_Msg from '@salesforce/label/c.FEC_Interaction_Email_Required_Msg';
+import FEC_Toast_Validation_Title from '@salesforce/label/c.FEC_Toast_Validation_Title';
+import isInteractionEmailActionBlocked from '@salesforce/apex/FEC_InteractionInforHandler.isInteractionEmailActionBlocked';
 import { formatDateTime } from "c/fec_CommonUtils";
 import { PROFILE_RELEVANT_DEPTS } from 'c/fec_CommonConst';
 
@@ -201,6 +204,22 @@ export default class FecInteractionCreationHighlight extends NavigationMixin(
     console.log("handleCreateCase from creation highlight");
     if (this._userProfile === PROFILE_RELEVANT_DEPTS) {
       this.dispatchEvent(new ShowToastEvent({ title: 'Lỗi', message: FEC_No_Permission_Msg, variant: 'error' }));
+      return;
+    }
+    try {
+      const blocked = await isInteractionEmailActionBlocked({ recordId: this.recordId });
+      if (blocked) {
+        this.dispatchEvent(
+          new ShowToastEvent({
+            title: FEC_Toast_Validation_Title,
+            message: FEC_Interaction_Email_Required_Msg,
+            variant: 'error',
+          }),
+        );
+        return;
+      }
+    } catch (error) {
+      console.error('isInteractionEmailActionBlocked error:', error);
       return;
     }
     this.isOpen = true;
