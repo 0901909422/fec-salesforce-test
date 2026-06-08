@@ -20,6 +20,9 @@ private class FEC_BatchDataCreationController_Test {
         );
         insert testUser;
 
+        // Assign Permission Sets cho FLS access
+        FEC_TestDataFactory.assignStandardFECPermissions(testUser.Id);
+
         // 2. Khởi tạo ServiceResource liên kết với User vừa tạo
         ServiceResource sr = new ServiceResource(
             Name = 'Test Service Resource',

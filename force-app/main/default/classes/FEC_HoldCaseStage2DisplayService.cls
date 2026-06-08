@@ -79,7 +79,6 @@ public with sharing class FEC_HoldCaseStage2DisplayService {
                 FEC_Current_Case_Stage__r.Name
             FROM Case
             WHERE Id = :caseId
-            WITH SECURITY_ENFORCED
             LIMIT 1
         ];
         if (cases.isEmpty()) {
@@ -283,7 +282,7 @@ public with sharing class FEC_HoldCaseStage2DisplayService {
             WHERE Hold_Case_Type__c = :holdType
               AND FEC_Active__c = TRUE
               AND (FEC_Nature_of_Cases__c = :nocId OR FEC_Nature_of_Cases__c = NULL)
-            WITH SECURITY_ENFORCED
+
             LIMIT 1
         ];
         return !rows.isEmpty();
@@ -306,7 +305,7 @@ public with sharing class FEC_HoldCaseStage2DisplayService {
               AND FEC_Active__c = TRUE
               AND FEC_Case_Stage__c = :stageId
               AND (FEC_Nature_of_Cases__c = :nocId OR FEC_Nature_of_Cases__c = NULL)
-            WITH SECURITY_ENFORCED
+
             LIMIT 1
         ];
         return !rows.isEmpty();
@@ -332,7 +331,7 @@ public with sharing class FEC_HoldCaseStage2DisplayService {
             FROM FEC_Case_Stage__c
             WHERE FEC_Nature_of_Cases__c = :nocId
               AND FEC_Default_Stage__c = TRUE
-            WITH SECURITY_ENFORCED
+
             LIMIT 1
         ];
         if (!byDefault.isEmpty()) {
@@ -343,7 +342,7 @@ public with sharing class FEC_HoldCaseStage2DisplayService {
             FROM FEC_Case_Stage__c
             WHERE FEC_Nature_of_Cases__c = :nocId
               AND Name LIKE '%Stage 1%'
-            WITH SECURITY_ENFORCED
+
             LIMIT 1
         ];
         return byName.isEmpty() ? null : byName[0].Id;
@@ -370,7 +369,7 @@ public with sharing class FEC_HoldCaseStage2DisplayService {
                   AND FEC_Category__c = :categoryId
                   AND FEC_Sub_Category__c = :subCategoryId
                   AND FEC_Sub_Code__c = :subCodeId
-                WITH SECURITY_ENFORCED
+    
             ];
         } else {
             nocList = [
@@ -380,7 +379,7 @@ public with sharing class FEC_HoldCaseStage2DisplayService {
                   AND FEC_Category__c = :categoryId
                   AND FEC_Sub_Category__c = :subCategoryId
                   AND FEC_Sub_Code__c = NULL
-                WITH SECURITY_ENFORCED
+    
             ];
         }
         if (nocList.isEmpty()) {
@@ -398,7 +397,7 @@ public with sharing class FEC_HoldCaseStage2DisplayService {
               AND Hold_Case_Type__c = :HOLD_TYPE_AUTO
               AND FEC_Active__c = TRUE
               AND FEC_Case_Stage__c = :stageId
-            WITH SECURITY_ENFORCED
+
             LIMIT 1
         ];
         if (!configs.isEmpty() && configs[0].FEC_Nature_of_Cases__c != null) {

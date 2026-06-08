@@ -93,6 +93,14 @@
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
+        <apexClass>FEC_BCH_AssignmentResolveRejectService</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_BCH_AssignmentRevertService</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
         <apexClass>FEC_BCH_AssignmentRouteToService</apexClass>
         <enabled>true</enabled>
     </classAccesses>
@@ -228,12 +236,28 @@
         <apexClass>FEC_BatchCaseHandlingZipService</apexClass>
         <enabled>true</enabled>
     </classAccesses>
+        <classAccesses>
+        <apexClass>FEC_BatchCustomSync</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+        <classAccesses>
+        <apexClass>FEC_BatchCustomSyncByIds</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+        <classAccesses>
+        <apexClass>FEC_BatchCustomSyncByIdsTest</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
     <classAccesses>
         <apexClass>FEC_BatchDataCreationController</apexClass>
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
         <apexClass>FEC_BatchImportCommon</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+        <classAccesses>
+        <apexClass>FEC_BatchReCallCustomSync</apexClass>
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
@@ -594,6 +618,22 @@
     </classAccesses>
     <classAccesses>
         <apexClass>FEC_CustomerIntegrationService</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+        <classAccesses>
+        <apexClass>FEC_CustomSyncAllInOneTest</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+        <classAccesses>
+        <apexClass>FEC_CustomSyncCallout</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+        <classAccesses>
+        <apexClass>FEC_CustomSyncValidator</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+        <classAccesses>
+        <apexClass>FEC_CustomSyncValidatorTest</apexClass>
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
@@ -1120,6 +1160,14 @@
         <apexClass>FEC_PsDNBServiceCallout</apexClass>
         <enabled>true</enabled>
     </classAccesses>
+        <classAccesses>
+        <apexClass>FEC_QueueReportCustomSyncBix</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+        <classAccesses>
+        <apexClass>FEC_QueueRunBatchSync</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
     <classAccesses>
         <apexClass>FEC_RDPaymentContractAssessmentService</apexClass>
         <enabled>true</enabled>
@@ -1186,6 +1234,10 @@
     </classAccesses>
     <classAccesses>
         <apexClass>FEC_SalesInfoController</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+        <classAccesses>
+        <apexClass>FEC_ScheduledSyncDataToBix</apexClass>
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
@@ -1352,6 +1404,14 @@
         <apexClass>FEC_TeamQueue</apexClass>
         <enabled>true</enabled>
     </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_UndeliveredCardRestService</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_UndeliveredCardRestService_Test</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
     <customMetadataTypeAccesses>
         <enabled>true</enabled>
         <name>FEC_API_Config__mdt</name>
@@ -1395,6 +1455,126 @@
         <field>CustomLog__c.TargetObjectId__c</field>
         <readable>true</readable>
     </fieldPermissions>
+        <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Custom_Sync__c.FEC_Active__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+        <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Custom_Sync__c.FEC_Case_Business_Code__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+        <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Custom_Sync__c.FEC_End_At__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Custom_Sync__c.FEC_Mapping_Data_Type__c</field>
+        <readable>true</readable> 
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Custom_Sync__c.FEC_Processing_Quantity__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Custom_Sync__c.FEC_Request_Body_Mapping__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Custom_Sync__c.FEC_Start_At__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Custom_Sync__c.FEC_Sync_Failed__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+        <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Custom_Sync__c.FEC_Sync_Successfully__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+        <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Custom_Sync__c.FEC_Sync_To__c</field>
+        <readable>true</readable>
+    </fieldPermissions>  
+        <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Custom_Sync__c.FEC_Total_Record_Sync__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+        <fieldPermissions>
+        <editable>true</editable>
+        <field>CustomSyncSetting__c.ApiKey__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+        <fieldPermissions>
+        <editable>true</editable>
+        <field>CustomSyncSetting__c.Endpoint__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+        <fieldPermissions>
+        <editable>true</editable>
+        <field>CustomSyncSetting__c.LimitQuanitySync__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+        <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_integration_service_log__c.FEC_Bix_Is_Success__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+        <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_integration_service_log__c.FEC_Custom_Sync__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+        <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_integration_service_log__c.FEC_Endpoint__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+        <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_integration_service_log__c.FEC_Error_Message__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+        <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_integration_service_log__c.FEC_Method__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+        <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_integration_service_log__c.FEC_Quantity_Call__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+        <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_integration_service_log__c.FEC_Request_Data__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+        <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_integration_service_log__c.FEC_Response_Data__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+        <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_integration_service_log__c.FEC_Status_Code__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+        <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_integration_service_log__c.Records__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
         <field>FEC_Team__c.FEC_Team_Description__c</field>
@@ -1405,9 +1585,84 @@
         <field>FEC_Team__c.FEC_Team_Label__c</field>
         <readable>true</readable>
     </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Team__c.FEC_Team_Active__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Undelivered_Card__c.FEC_Request_ID__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Undelivered_Card__c.FEC_Source_System__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Undelivered_Card__c.FEC_Received_DateTime__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Undelivered_Card__c.FEC_Account_No__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Undelivered_Card__c.FEC_Phone__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Undelivered_Card__c.FEC_Delay_Code__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Undelivered_Card__c.FEC_Delay_Notes__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Undelivered_Card__c.FEC_Delivery_Notes__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Undelivered_Card__c.FEC_Tracking_No__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Undelivered_Card__c.FEC_Plastic_Id__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
     <hasActivationRequired>false</hasActivationRequired>
     <label>Common System Setting</label>
     <license>Salesforce</license>
+        <objectPermissions>
+        <allowCreate>true</allowCreate>
+        <allowDelete>true</allowDelete>
+        <allowEdit>true</allowEdit>
+        <allowRead>true</allowRead>
+        <modifyAllRecords>true</modifyAllRecords>
+        <object>FEC_Custom_Sync__c</object>
+        <viewAllFields>true</viewAllFields>
+        <viewAllRecords>true</viewAllRecords>
+    </objectPermissions>
+        <objectPermissions>
+        <allowCreate>true</allowCreate>
+        <allowDelete>true</allowDelete>
+        <allowEdit>true</allowEdit>
+        <allowRead>true</allowRead>
+        <modifyAllRecords>true</modifyAllRecords>
+        <object>CustomSyncSetting__c</object>
+        <viewAllFields>true</viewAllFields>
+        <viewAllRecords>true</viewAllRecords>
+    </objectPermissions>
     <objectPermissions>
         <allowCreate>true</allowCreate>
         <allowDelete>false</allowDelete>
@@ -1448,6 +1703,16 @@
         <viewAllFields>true</viewAllFields>
         <viewAllRecords>true</viewAllRecords>
     </objectPermissions>
+    <objectPermissions>
+        <allowCreate>true</allowCreate>
+        <allowDelete>true</allowDelete>
+        <allowEdit>true</allowEdit>
+        <allowRead>true</allowRead>
+        <modifyAllRecords>true</modifyAllRecords>
+        <object>FEC_Undelivered_Card__c</object>
+        <viewAllFields>true</viewAllFields>
+        <viewAllRecords>true</viewAllRecords>
+    </objectPermissions>
     <tabSettings>
         <tab>Batch_Case_Creation</tab>
         <visibility>Visible</visibility>
@@ -1466,6 +1731,10 @@
     </tabSettings>
     <tabSettings>
         <tab>FEC_Account_Contract_Search</tab>
+        <visibility>Visible</visibility>
+    </tabSettings>
+    <tabSettings>
+        <tab>FE_Department_Admin</tab>
         <visibility>Visible</visibility>
     </tabSettings>
     <tabSettings>
@@ -1494,6 +1763,10 @@
     </tabSettings>
     <tabSettings>
         <tab>FEC_Channel__c</tab>
+        <visibility>Visible</visibility>
+    </tabSettings>
+    <tabSettings>
+        <tab>FEC_Custom_Sync__c</tab>
         <visibility>Visible</visibility>
     </tabSettings>
     <tabSettings>
@@ -1550,6 +1823,10 @@
     </tabSettings>
     <tabSettings>
         <tab>standard-Case</tab>
+        <visibility>Visible</visibility>
+    </tabSettings>
+    <tabSettings>
+        <tab>FEC_Undelivered_Card__c</tab>
         <visibility>Visible</visibility>
     </tabSettings>
     <userPermissions>
