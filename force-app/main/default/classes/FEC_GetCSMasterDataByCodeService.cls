@@ -61,7 +61,7 @@ global with sharing class FEC_GetCSMasterDataByCodeService {
                 ? CustomerType.Language
                 : FEC_ConstantCommon.LANGUAGE_EN;
 
-            String customerTypeFilter = resolveCustomerTypeFilter(CustomerType);
+            List<String> customerTypeFilters = resolveCustomerTypeFilters(CustomerType);
             String returnLevel = resolveReturnLevel(
                 productTypeCode,
                 caseTypeCode,
@@ -78,7 +78,7 @@ global with sharing class FEC_GetCSMasterDataByCodeService {
                 categoryCode,
                 subCategoryCode,
                 subCode,
-                customerTypeFilter,
+                customerTypeFilters,
                 returnLevel
             );
 
@@ -161,7 +161,7 @@ global with sharing class FEC_GetCSMasterDataByCodeService {
         return FEC_ConstantCommon.KEY_SUBCODE;
     }
 
-    private static String resolveCustomerTypeFilter(CustomerTypeRequest customerType) {
+    private static List<String> resolveCustomerTypeFilters(CustomerTypeRequest customerType) {
         if (customerType == null || String.isBlank(customerType.UserType)) {
             return null;
         }
@@ -254,7 +254,7 @@ global with sharing class FEC_GetCSMasterDataByCodeService {
         String categoryCode,
         String subCategoryCode,
         String subCode,
-        String customerTypeFilter,
+        List<String> customerTypeFilters,
         String returnLevel
     ) {
         String channelPattern = FEC_CommonUltils.buildNatureOfCaseChannelLikePattern(channel);
@@ -278,8 +278,8 @@ global with sharing class FEC_GetCSMasterDataByCodeService {
         if (String.isNotBlank(subCode)) {
             conditions.add('FEC_Sub_Code__r.FEC_Code__c = :subCode');
         }
-        if (String.isNotBlank(customerTypeFilter)) {
-            conditions.add('FEC_Customer_Type__c = :customerTypeFilter');
+        if (customerTypeFilters != null && !customerTypeFilters.isEmpty()) {
+            conditions.add('FEC_Customer_Type__c IN :customerTypeFilters');
         }
 
         if (returnLevel == FEC_ConstantCommon.KEY_SUBCODE) {
