@@ -89,9 +89,9 @@ public without sharing class FEC_CardClosureRefundController {
                 FEC_Is_Test_API__c
             FROM Case
             WHERE Id = :caseId
+            WITH SYSTEM_MODE
             LIMIT 1
         ];
-        caseRows = (List<Case>) Security.stripInaccessible(AccessType.READABLE, caseRows).getRecords();
         if (caseRows.isEmpty()) {
             return dto;
         }
@@ -109,9 +109,9 @@ public without sharing class FEC_CardClosureRefundController {
                 SELECT Id, FEC_Block_Code__c, FEC_Account_Number__c, FEC_Block_Code_1__c
                 FROM FEC_Customer_History__c
                 WHERE Id = :c.FEC_Account_or_Contract__c
+                WITH SYSTEM_MODE
                 LIMIT 1
             ];
-            histories = (List<FEC_Customer_History__c>) Security.stripInaccessible(AccessType.READABLE, histories).getRecords();
             if (!histories.isEmpty()) {
                 FEC_Customer_History__c h = histories[0];
                 cardBlock = h.FEC_Block_Code__c;
@@ -380,9 +380,9 @@ public without sharing class FEC_CardClosureRefundController {
                 FEC_Current_Case_Stage__r.Name
             FROM Case
             WHERE Id = :caseId
+            WITH SYSTEM_MODE
             LIMIT 1
         ];
-        caseRows = (List<Case>) Security.stripInaccessible(AccessType.READABLE, caseRows).getRecords();
         if (caseRows.isEmpty()) {
             ctx.errorMessage = String.format(System.Label.FEC_MSG_Not_Found, new List<String>{ 'Case' });
             return ctx;
@@ -408,9 +408,9 @@ public without sharing class FEC_CardClosureRefundController {
                 FEC_Block_Code_1__c
             FROM FEC_Customer_History__c
             WHERE Id = :ctx.caseRecord.FEC_Account_or_Contract__c
+            WITH SYSTEM_MODE
             LIMIT 1
         ];
-        historyRows = (List<FEC_Customer_History__c>) Security.stripInaccessible(AccessType.READABLE, historyRows).getRecords();
         if (historyRows.isEmpty()) {
             ctx.errorMessage = String.format(System.Label.FEC_MSG_Not_Found, new List<String>{ 'Customer History' });
             return ctx;
@@ -693,10 +693,10 @@ public without sharing class FEC_CardClosureRefundController {
             SELECT Id, FEC_Card_Block_Service_Attempts__c
             FROM Case
             WHERE Id = :caseId
+            WITH SYSTEM_MODE
             LIMIT 1
             FOR UPDATE
         ];
-        rows = (List<Case>) Security.stripInaccessible(AccessType.READABLE, rows).getRecords();
         if (rows.isEmpty()) {
             return null;
         }

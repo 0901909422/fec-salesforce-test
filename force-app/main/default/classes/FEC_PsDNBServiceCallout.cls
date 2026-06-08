@@ -10,7 +10,7 @@ public with sharing class FEC_PsDNBServiceCallout {
         public Boolean do_not_bother;
         public String type;
         public String type_value;
-        public String contract_id;
+        // public String contract_id;
     }
     
     // ================= RESPONSE =================

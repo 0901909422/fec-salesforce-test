@@ -5,16 +5,21 @@
         <members>FEC_CreateCaseInteractionController</members>
         <members>FEC_GetCSCaseStatusService</members>
         <members>FEC_GetCSCaseStatusService_Test</members>
+        <members>FEC_GetCSCaseStatusRestService_Test</members>
+        <members>FEC_PsDNBServiceCallout</members>
         <members>FEC_AssignmentMasterFieldPersistService</members>
         <members>FEC_BatchCaseHandlingImportService</members>
+        <members>FEC_ChannelFunctionService</members>
         <members>FEC_CaseBusinessService</members>
         <members>FEC_CaseBusinessService_Test</members>
         <members>FEC_CofGsrAssignmentService</members>
         <members>FEC_CofGsrAssignmentService_Test</members>
         <members>FEC_CustomerIntegrationService</members>
+        <members>FEC_DNBHandler</members>
         <members>FEC_DownloadReportController</members>
         <members>FEC_CommonUltils</members>
         <members>FEC_GetCSMasterDataByCodeService</members>
+        <members>FEC_ConstantCommon</members>
         <name>ApexClass</name>
     </types>
     <types>
@@ -28,6 +33,8 @@
         <members>fec_BatchDataCreation</members>
         <members>fec_CaseBussiness</members>
         <members>fec_CaseEditNOC</members>
+        <members>fec_DoNotBotherExistingCustomer</members>
+        <members>fec_DoNotBotherNonExistingCustomer</members>
         <members>fec_DownloadReports</members>
         <name>LightningComponentBundle</name>
     </types>
