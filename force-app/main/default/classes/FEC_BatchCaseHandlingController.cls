@@ -949,6 +949,9 @@ public without sharing class FEC_BatchCaseHandlingController {
         ) {
             return fromFileName;
         }
+        if (String.isNotBlank(fromBusinessProcess)) {
+            return fromBusinessProcess;
+        }
         if (
             !isPlaceholderImportTemplateName(templateName) &&
             FEC_BCH_ImportFileNameValidator.validateExactFileNameMatch(fileName, templateName)
@@ -1453,7 +1456,8 @@ public without sharing class FEC_BatchCaseHandlingController {
         row.originalDataRowIndex = row.originalHeaderRowIndex == null ? 1 : row.originalHeaderRowIndex + 1;
         row.originalSheetName = parseResult == null ? FEC_ConstantCommon.STR_EMPTY : parseResult.sheetName;
         row.status = System.Label.FEC_Batch_Case_Handling_Import_Row_Status_Failed;
-        row.errors = errorMessage;
+        // 05/06/2026 16:00 linhdev - __Errors Export Result luôn tiếng Việt
+        row.errors = FEC_BatchCaseHandlingImportService.localizeImportResultErrors(errorMessage);
         return new List<FEC_BatchCaseHandlingImportRow>{ row };
     }
     @AuraEnabled

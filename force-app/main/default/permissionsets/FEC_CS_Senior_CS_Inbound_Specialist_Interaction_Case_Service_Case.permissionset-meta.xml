@@ -833,6 +833,12 @@
         <field>Case.FEC_Is_Manager_For_Cur_User__c</field>
         <readable>true</readable>
     </fieldPermissions>
+
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>Case.FEC_Is_Manual__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
         <field>Case.FEC_Is_MyCaseAPI_Interaction__c</field>
@@ -891,6 +897,12 @@
     <fieldPermissions>
         <editable>true</editable>
         <field>Case.FEC_KYC_Result__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>Case.FEC_KYC_Status__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
@@ -1571,11 +1583,6 @@
     <fieldPermissions>
         <editable>true</editable>
         <field>FEC_Actual_Master_Data_Setting__c.FEC_Actual_Nature_of_Case__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>true</editable>
-        <field>FEC_Actual_Master_Data_Setting__c.FEC_Channel__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
