@@ -2379,6 +2379,7 @@
         <members>FEC_Actual_Master_Data_Setting__c.FEC_Type__c</members>
         <members>FEC_Case_Assignment_Log_Detail__c.FEC_Case_Assignment_log_Name__c</members>
         <members>FEC_Master_Data_Setting__c.FEC_Type__c</members>
+        <members>FEC_Actual_Master_Data_Setting__c.FEC_Channel__c</members>
         <name>CustomField</name>
     </types>
     <types>

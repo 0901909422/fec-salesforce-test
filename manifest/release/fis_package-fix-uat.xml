@@ -20,6 +20,8 @@
         <members>FEC_CommonUltils</members>
         <members>FEC_GetCSMasterDataByCodeService</members>
         <members>FEC_ConstantCommon</members>
+        <members>FEC_IPPClosureController</members>
+        <members>FEC_IPPClosureController_Test</members>
         <name>ApexClass</name>
     </types>
     <types>
@@ -54,6 +56,10 @@
         <members>RD_IT_User_System_Management</members>
         <name>PermissionSet</name>
     </types>
+    <types>
+		<members>FEC_Actual_Master_Data_Setting__c.FEC_Channel__c</members>
+		<name>CustomField</name>
+	</types>
     <types>
         <members>FEC_CommonCss</members>
         <name>StaticResource</name>
