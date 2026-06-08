@@ -8,19 +8,66 @@
         <members>FEC_GetCSCaseStatusRestService_Test</members>
         <members>FEC_PsDNBServiceCallout</members>
         <members>FEC_AssignmentMasterFieldPersistService</members>
+        <members>FEC_BCH_AssignmentResolveRejectService</members>
+        <members>FEC_CancelCSCaseRestService_Test</members>
+        <members>FEC_CancelCSCaseRestService_UT_Test</members>
+        <members>FEC_CancelCSCaseService</members>
+        <members>FEC_CancelCSCaseService_Test</members>
+        <members>FEC_ChannelFunctionServiceTest</members>
+        <members>FEC_BCH_AssignmentResolveReject_Test</members>
+        <members>FEC_BCH_AssignmentRevertService</members>
+        <members>FEC_BCH_AssignmentRevertService_Test</members>
+        <members>FEC_BCH_AssignmentRouteToService</members>
+        <members>FEC_BCH_AssignmentRouteToService_Test</members>
+        <members>FEC_BCH_AssignmentUpdateService</members>
+        <members>FEC_BCH_AssignmentUpdateService_Test</members>
+        <members>FEC_BatchCaseHandlingCaseFilter</members>
+        <members>FEC_BatchCaseHandlingCaseFilter_Test</members>
+        <members>FEC_BatchCaseHandlingController</members>
+        <members>FEC_BatchCaseHandlingController_Test</members>
         <members>FEC_BatchCaseHandlingImportService</members>
         <members>FEC_ChannelFunctionService</members>
         <members>FEC_CaseBusinessService</members>
         <members>FEC_CaseBusinessService_Test</members>
         <members>FEC_CofGsrAssignmentService</members>
         <members>FEC_CofGsrAssignmentService_Test</members>
+        <members>FEC_CommonUltils</members>
+        <members>FEC_ConstantCommon</members>
+        <members>FEC_CreateCSCaseRestService_Test</members>
+        <members>FEC_CreateCSCaseService</members>
+        <members>FEC_CreateCSCaseService_Test</members>
+        <members>FEC_CreateCaseHandler</members>
+        <members>FEC_CreateCaseHandler_Test</members>
+        <members>FEC_CreateCaseInteractionController</members>
+        <members>FEC_CreateCaseInteractionController_Test</members>
+        <members>FEC_CreateInteractionGenesys</members>
+        <members>FEC_CreateInteractionGenesys_Test</members>
         <members>FEC_CustomerIntegrationService</members>
         <members>FEC_DNBHandler</members>
+        <members>FEC_DNBHandler_Test</members>
         <members>FEC_DownloadReportController</members>
-        <members>FEC_CommonUltils</members>
+        <members>FEC_GetCSCaseStatusRestService_Test</members>
+        <members>FEC_GetCSCaseStatusService</members>
+        <members>FEC_GetCSCaseStatusService_Test</members>
+        <members>FEC_GetCSAttachedFile</members>
+        <members>FEC_GetCSAttachedFileRestService_Test</members>
+        <members>FEC_GetCSAttachedFile_Test</members>
         <members>FEC_GetCSMasterDataByCodeService</members>
-        <members>FEC_ConstantCommon</members>
-        <members>FEC_RdPaymentRoutingHelper</members>
+        <members>FEC_GetCSMasterDataByCodeService_Test</members>
+        <members>FEC_GetCSMasterDataRestService_Test</members>
+        <members>FEC_GetCSMasterDataService</members>
+        <members>FEC_GetCSMasterDataService_Test</members>
+        <members>FEC_GetCSMdByCodeRest_Test</members>
+        <members>FEC_InteractionInforHandler</members>
+        <members>FEC_InteractionInforHandler_Test</members>
+        <members>FEC_MyCaseSoapXml</members>
+        <members>FEC_PaymentHistoryValidationService</members>
+        <members>FEC_PaymentHistoryValidationService_Test</members>
+        <members>FEC_PsDNBServiceCallout</members>
+        <members>FEC_PsDNBServiceCallout_Test</members>
+        <members>FEC_SearchController</members>
+        <members>FEC_SearchController_Test</members>
+        <members>FEC_UnitTestMyCaseChannelUtil</members>
         <name>ApexClass</name>
     </types>
     <types>
