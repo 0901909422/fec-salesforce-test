@@ -2104,6 +2104,7 @@
         <members>FEC_PSG_RD_Telesales_User_2</members>
         <members>FEC_PSG_RD_Credit_Assessment_User</members>
         <members>FEC_PSG_RD_Internal_Audit_User</members>
+        <members>FEC_PSG_RD_Contract_Processing_User</members>
 		<name>PermissionSetGroup</name>
 	</types>
 
@@ -2286,6 +2287,7 @@
         <members>FEC_RD_Telesales_User_1_Master_Data_Management</members>
         <members>FEC_RD_Telesales_User_2_Master_Data_Management</members>
         <members>RD_IT_User_Master_Data_Management</members>
+        <members>FEC_RD_Contract_Processing_User_Search_Functions</members>
         <name>PermissionSet</name>
     </types>
     <types>
