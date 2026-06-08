@@ -2314,6 +2314,7 @@
         <members>FEC_CaseRemarksRollupService</members>
         <members>FEC_CaseRemarksTriggerHandler</members>
         <members>FEC_CaseRemarksRollupServiceTest</members>
+        <members>FEC_BCC_ImportResolveHistService</members>
         <members>FEC_BCH_ImportRoutingHistoryService</members>
         <members>FEC_BCH_ImportRoutingResolver</members>
         <members>FEC_BCH_AssignmentRouteToService</members>
@@ -2533,6 +2534,7 @@
         <members>FEC_AssignmentTriggerHandler_Test</members>
         <members>FEC_AssignmentTrigger_Test</members>
         <members>FEC_AutoHoldCaseServiceTest</members>
+        <members>FEC_BCC_ImportResolveHistService_Test</members>
         <members>FEC_BCH_IPTemplateWriter_Test</members>
         <members>FEC_BCH_PicklistTranslationCtrl_Test</members>
         <members>FEC_BancaController_Test</members>

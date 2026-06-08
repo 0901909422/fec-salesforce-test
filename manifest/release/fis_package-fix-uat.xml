@@ -9,6 +9,8 @@
         <members>FEC_PsDNBServiceCallout</members>
         <members>FEC_AssignmentMasterFieldPersistService</members>
         <members>FEC_BatchCaseHandlingImportService</members>
+        <members>FEC_BCC_ImportResolveHistService</members>
+        <members>FEC_BCC_ImportResolveHistService_Test</members>
         <members>FEC_ChannelFunctionService</members>
         <members>FEC_CaseBusinessService</members>
         <members>FEC_CaseBusinessService_Test</members>
