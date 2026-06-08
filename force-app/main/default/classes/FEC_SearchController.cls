@@ -73,6 +73,7 @@ public with sharing class FEC_SearchController {
         throw new AuraHandledException(System.Label.FEC_MSG_Create_Customer_History_Field_Null);
     }
 
+
     Case interactionCase;
 
     if (caseId != null) {
