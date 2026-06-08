@@ -27,6 +27,7 @@ public without sharing class FEC_CreateCaseHandler {
         public String transcription;
         public String kycMethod;
         public String kycResult;
+        public String kycStatus;
 
         /** MyCase API: Owner = User theo CreatorEmail (nếu resolve được). */
         public Id ownerUserId;
@@ -554,6 +555,7 @@ public without sharing class FEC_CreateCaseHandler {
         // ---------------------------
         interactionCase.FEC_Transcription__c = dto.transcription;
         interactionCase.FEC_KYC_Method__c = dto.kycMethod;
+        interactionCase.FEC_KYC_Status__c = dto.kycStatus;
         
         insert interactionCase;
         
