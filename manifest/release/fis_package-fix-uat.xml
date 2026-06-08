@@ -36,6 +36,7 @@
         <members>fec_DoNotBotherExistingCustomer</members>
         <members>fec_DoNotBotherNonExistingCustomer</members>
         <members>fec_DownloadReports</members>
+        <members>fecInteractionCreationHighlight</members>
         <name>LightningComponentBundle</name>
     </types>
     <types>
