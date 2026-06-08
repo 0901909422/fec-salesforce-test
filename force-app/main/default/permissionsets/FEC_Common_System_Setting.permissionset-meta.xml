@@ -1493,10 +1493,6 @@
         <visibility>Visible</visibility>
     </tabSettings>
     <tabSettings>
-        <tab>FEC_Customer_Search</tab>
-        <visibility>Visible</visibility>
-    </tabSettings>
-    <tabSettings>
         <tab>FEC_GetNextWork</tab>
         <visibility>Visible</visibility>
     </tabSettings>
