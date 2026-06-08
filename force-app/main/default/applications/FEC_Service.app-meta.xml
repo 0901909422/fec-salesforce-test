@@ -555,12 +555,12 @@
         <type>Flexipage</type>
         <profile>Admin</profile>
     </profileActionOverrides>
+    <tabs>standard-Case</tabs>
     <tabs>FEC_Customer_Search</tabs>
     <tabs>FEC_Account_Contract_Search</tabs>
     <tabs>Batch_Case_Creation</tabs>
     <tabs>Batch_Data_Creation</tabs>
     <tabs>Batch_Case_Handling</tabs>
-    <tabs>standard-Case</tabs>
     <tabs>standard-report</tabs>
     <tabs>FEC_Product_Type__c</tabs>
     <tabs>FEC_Category__c</tabs>
