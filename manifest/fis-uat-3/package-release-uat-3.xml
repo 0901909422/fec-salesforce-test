@@ -758,6 +758,7 @@
         <name>CustomTab</name>
     </types>
 	<types>
+        <members>Case</members>
 		<members>FEC_Assignment__c</members>
 		<members>FEC_CustomerAdditionalInfoConfig__c</members>
 		<members>FEC_CustomerAdditionalInfo__c</members>
