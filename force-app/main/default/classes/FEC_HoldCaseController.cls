@@ -96,7 +96,7 @@ public with sharing class FEC_HoldCaseController {
                           AND FEC_Category__c     = :categoryId
                           AND FEC_Sub_Category__c = :subCategoryId
                           AND FEC_Sub_Code__c     = :subCodeId
-                        WITH SECURITY_ENFORCED LIMIT 1
+                        LIMIT 1
                     ];
                 } else {
                     nocs = [
@@ -105,7 +105,7 @@ public with sharing class FEC_HoldCaseController {
                           AND FEC_Category__c     = :categoryId
                           AND FEC_Sub_Category__c = :subCategoryId
                           AND FEC_Sub_Code__c     = null
-                        WITH SECURITY_ENFORCED LIMIT 1
+                        LIMIT 1
                     ];
                 }
                 if (!nocs.isEmpty()) nocId = nocs[0].Id;
@@ -116,7 +116,7 @@ public with sharing class FEC_HoldCaseController {
                 List<Case> cases = [
                     SELECT FEC_Product_Type__c, FEC_Category__c, FEC_SubCategory__c, FEC_SubCode__c,
                            FEC_Current_Case_Stage__c
-                    FROM Case WHERE Id = :caseId WITH SECURITY_ENFORCED LIMIT 1
+                    FROM Case WHERE Id = :caseId LIMIT 1
                 ];
                 if (!cases.isEmpty() && cases[0].FEC_Product_Type__c != null) {
                     Case c = cases[0];
@@ -126,7 +126,7 @@ public with sharing class FEC_HoldCaseController {
                           AND FEC_Category__c     = :c.FEC_Category__c
                           AND FEC_Sub_Category__c = :c.FEC_SubCategory__c
                           AND FEC_Sub_Code__c     = :c.FEC_SubCode__c
-                        WITH SECURITY_ENFORCED LIMIT 1
+                        LIMIT 1
                     ];
                     if (!nocs.isEmpty()) nocId = nocs[0].Id;
                 }
@@ -160,7 +160,7 @@ public with sharing class FEC_HoldCaseController {
                     WHERE FEC_Active__c = true
                       AND Hold_Case_Type__c = 'Manual'
                       AND FEC_Case_Stage__c = :currentStageId
-                    WITH SECURITY_ENFORCED
+                    
                 ];
             } else {
                 return new List<NFUReasonModel>();
@@ -188,7 +188,7 @@ public with sharing class FEC_HoldCaseController {
                 SELECT FEC_NFU_Code__c, FEC_NFU_Reason_VN__c, FEC_NFU_Reason_EN__c, FEC_NFU_Duration__c
                 FROM FEC_Hold_Case__c
                 WHERE FEC_NFU_Code__c IN :nfuCodes
-                WITH SECURITY_ENFORCED
+                
             ];
 
             if (holdCases.isEmpty()) return new List<NFUReasonModel>();
@@ -237,7 +237,7 @@ public with sharing class FEC_HoldCaseController {
                     FEC_NFU_Reason__c
                 FROM Case
                 WHERE Id = :caseId
-                WITH SECURITY_ENFORCED
+                
                 LIMIT 1
             ];
             System.debug('[callMarkNFUAndGetInfo] Case: ' + JSON.serialize(c));
@@ -247,7 +247,7 @@ public with sharing class FEC_HoldCaseController {
                 FROM FEC_Hold_Case_Config__c
                 WHERE FEC_Nature_of_Cases__r.FEC_Sub_Code__c = :c.FEC_SubCode__c
                 AND   FEC_Active__c   = true
-                WITH SECURITY_ENFORCED
+                
                 LIMIT 1
             ];
              System.debug('[callMarkNFUAndGetInfo] configs: ' + JSON.serialize(configs));
@@ -358,7 +358,7 @@ public with sharing class FEC_HoldCaseController {
                     FEC_Current_Case_Stage__r.Name
                 FROM Case
                 WHERE Id = :model.caseId
-                WITH SECURITY_ENFORCED
+                
                 LIMIT 1
             ];
 
@@ -472,7 +472,7 @@ public with sharing class FEC_HoldCaseController {
                 FEC_Current_Case_Stage__r.Name
             FROM Case
             WHERE Id = :caseId
-            WITH SECURITY_ENFORCED
+            
             LIMIT 1
         ];
         updateCaseAfterManualHold(
@@ -525,7 +525,7 @@ public with sharing class FEC_HoldCaseController {
             SELECT FEC_NFU_Reason_VN__c
             FROM FEC_Hold_Case__c
             WHERE FEC_NFU_Code__c = :nfuCode
-            WITH SECURITY_ENFORCED
+            
             LIMIT 1
         ];
         return rows.isEmpty() ? nfuCode : rows[0].FEC_NFU_Reason_VN__c;
@@ -598,7 +598,7 @@ public with sharing class FEC_HoldCaseController {
                    FEC_NFU_Reason__c
             FROM Case
             WHERE Id = :caseId
-            WITH SECURITY_ENFORCED
+            
             LIMIT 1
         ];
         resp.nfuStatus      = refreshed.FEC_NFU_Status__c;

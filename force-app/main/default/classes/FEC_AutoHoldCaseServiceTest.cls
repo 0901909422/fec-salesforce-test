@@ -234,13 +234,21 @@ private class FEC_AutoHoldCaseServiceTest {
     @IsTest
     static void testProcessAutoHoldCase_Success() {
         Case c = [SELECT Id, FEC_Current_Case_Stage__c FROM Case LIMIT 1];
-        
-        // Tạo History giả lập hành động Submit
+
+        // Query the config to get the actual status values (may differ from 'New'/'Pending' if picklist restricted)
+        FEC_Hold_Case_Config__c config = [
+            SELECT FEC_Current_Status__c, FEC_Changed_Status__c
+            FROM FEC_Hold_Case_Config__c WHERE FEC_Active__c = true AND Hold_Case_Type__c = 'Auto' LIMIT 1
+        ];
+        String currentStatusVal = config.FEC_Current_Status__c;
+        String changedStatusVal = config.FEC_Changed_Status__c;
+
+        // Tạo History giả lập hành động Submit with matching status values
         FEC_Routing_Action_History__c history = new FEC_Routing_Action_History__c(
             FEC_Case__c = c.Id,
             FEC_Routing_Action__c = 'Submit',
-            FEC_Current_Status__c = 'New',
-            FEC_Changed_Status__c = 'Pending',
+            FEC_Current_Status__c = currentStatusVal,
+            FEC_Changed_Status__c = changedStatusVal,
             FEC_Previous_Stage__c = c.FEC_Current_Case_Stage__c
         );
         insert history;
@@ -268,11 +276,18 @@ private class FEC_AutoHoldCaseServiceTest {
     @IsTest
     static void testProcessAutoHoldCase_AlreadyMarked() {
         Case c = [SELECT Id, FEC_Current_Case_Stage__c FROM Case LIMIT 1];
+
+        // Query the config to get the actual status values
+        FEC_Hold_Case_Config__c config = [
+            SELECT FEC_Current_Status__c, FEC_Changed_Status__c
+            FROM FEC_Hold_Case_Config__c WHERE FEC_Active__c = true AND Hold_Case_Type__c = 'Auto' LIMIT 1
+        ];
+
         FEC_Routing_Action_History__c history = new FEC_Routing_Action_History__c(
             FEC_Case__c = c.Id,
             FEC_Routing_Action__c = 'Submit',
-            FEC_Current_Status__c = 'New',
-            FEC_Changed_Status__c = 'Pending',
+            FEC_Current_Status__c = config.FEC_Current_Status__c,
+            FEC_Changed_Status__c = config.FEC_Changed_Status__c,
             FEC_Previous_Stage__c = c.FEC_Current_Case_Stage__c
         );
         insert history;

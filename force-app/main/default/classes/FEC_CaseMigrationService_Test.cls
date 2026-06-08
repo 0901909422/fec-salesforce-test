@@ -4,7 +4,7 @@ private class FEC_CaseMigrationService_Test {
     @TestSetup
     static void setupData() {
         System.runAs(new User(Id = UserInfo.getUserId())) {
-            update new User(Id = UserInfo.getUserId(), FEC_User_Group__c = 'CC');
+            update new User(Id = UserInfo.getUserId(), FEC_User_Group__c = 'CC', FEC_Main_Queue__c = 'TestQueue');
         }
 
         FEC_Business_Process__c bp = new FEC_Business_Process__c(

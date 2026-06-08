@@ -38,6 +38,15 @@ import LBL_Search_RecordPerPage from '@salesforce/label/c.LBL_Search_RecordPerPa
 
 
 
+// Map display fieldName to actual sortable API field name
+const SORT_FIELD_MAP = {
+    'FraudCaseUrl': 'FEC_CaseID__c',
+    'ServiceCaseLink': 'FEC_Service_Case_ID__c',
+    'AccountNumber': 'AccountNumber',
+    'CreatedByEmail': 'FEC_Creator_Email__c',
+    'FEC_Sys_Channel__c': 'FEC_Sys_Channel__c'
+};
+
 export default class IntegrationFraudCaseSearch extends LightningElement {
 
     fraudCaseId = '';
@@ -56,6 +65,7 @@ export default class IntegrationFraudCaseSearch extends LightningElement {
     totalRecords = 0;
 
     sortBy = 'CreatedDate';
+    sortedByDisplay = 'CreatedDate';
     sortDirection = 'DESC';
     pageSizeOptions = [
         { label: '10', value: '10' },
@@ -160,10 +170,12 @@ export default class IntegrationFraudCaseSearch extends LightningElement {
 
     // Sorting handler
     handleSort(event) {
-        this.sortBy = event.detail.fieldName;
+        const rawField = event.detail.fieldName;
+        this.sortedByDisplay = rawField;
+        this.sortBy = SORT_FIELD_MAP[rawField] || rawField;
         this.sortDirection = event.detail.sortDirection;
 
-        console.log('Sorting:', this.sortBy, this.sortDirection);
+        console.log('Sorting:', rawField, '→', this.sortBy, this.sortDirection);
 
         this.doSearchFraudCase();
     }

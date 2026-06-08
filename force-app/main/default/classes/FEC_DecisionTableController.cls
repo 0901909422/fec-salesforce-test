@@ -28,71 +28,6 @@ public with sharing class FEC_DecisionTableController {
     }
     
     // =========================================================
-    // 1. HÀM LOAD CÂY BUSINESS PROCESS (Đã khôi phục đầy đủ)
-    // =========================================================
-    @AuraEnabled(cacheable=true)
-    public static List<Map<String, Object>> getBusinessProcessTree() {
-        System.debug('[getBusinessProcessTree] START');
-        List<Map<String, Object>> result = new List<Map<String, Object>>();
-        
-        try {
-            List<FEC_Business_Process__c> businessProcesses = [
-                SELECT Id, Name, FEC_Code__c, FEC_Name_VN__c, FEC_Order__c
-                FROM FEC_Business_Process__c
-                WHERE FEC_Active__c = true
-                ORDER BY FEC_Order__c ASC NULLS LAST, Name ASC
-            ];
-            
-            if (businessProcesses.isEmpty()) return result;
-            
-            Map<Id, List<FEC_Case_Stage__c>> stagesByBP = new Map<Id, List<FEC_Case_Stage__c>>();
-            List<FEC_Case_Stage__c> allStages = [
-                SELECT Id, Name, FEC_Code__c, FEC_Business_Process__c, FEC_Order__c
-                FROM FEC_Case_Stage__c
-                WHERE FEC_Active__c = true AND FEC_Business_Process__c IN :businessProcesses
-                ORDER BY FEC_Business_Process__c ASC, FEC_Order__c ASC NULLS LAST, Name ASC
-            ];
-            
-            for (FEC_Case_Stage__c stage : allStages) {
-                if (!stagesByBP.containsKey(stage.FEC_Business_Process__c)) {
-                    stagesByBP.put(stage.FEC_Business_Process__c, new List<FEC_Case_Stage__c>());
-                }
-                stagesByBP.get(stage.FEC_Business_Process__c).add(stage);
-            }
-            
-            for (FEC_Business_Process__c bp : businessProcesses) {
-                Map<String, Object> bpNode = new Map<String, Object>();
-                bpNode.put('id', bp.Id);
-                bpNode.put('label', bp.Name);
-                bpNode.put('code', bp.FEC_Code__c);
-                bpNode.put('nameVN', bp.FEC_Name_VN__c);
-                bpNode.put('type', 'BUSINESS_PROCESS');
-                bpNode.put('icon', 'utility:process');
-                
-                List<Map<String, Object>> stageNodes = new List<Map<String, Object>>();
-                if (stagesByBP.containsKey(bp.Id)) {
-                    for (FEC_Case_Stage__c stage : stagesByBP.get(bp.Id)) {
-                        Map<String, Object> stageNode = new Map<String, Object>();
-                        stageNode.put('id', stage.Id);
-                        stageNode.put('label', stage.Name);
-                        stageNode.put('code', stage.FEC_Code__c);
-                        stageNode.put('type', 'STAGE');
-                        stageNode.put('parentId', bp.Id);
-                        stageNode.put('icon', 'utility:steps');
-                        stageNodes.add(stageNode);
-                    }
-                }
-                bpNode.put('children', stageNodes);
-                bpNode.put('childCount', stageNodes.size());
-                result.add(bpNode);
-            }
-            return result;
-        } catch (Exception e) {
-            throw new AuraHandledException('Error fetching BP tree: ' + e.getMessage());
-        }
-    }
-    
-    // =========================================================
     // 2. HÀM LOAD BẢNG QUYẾT ĐỊNH ĐỘNG
     // =========================================================
     @AuraEnabled(cacheable=true)
@@ -141,15 +76,39 @@ public with sharing class FEC_DecisionTableController {
                 cellValueMap.put(cell.FEC_Decision_Row__c + '-' + cell.FEC_Decision_Column__c, cell.FEC_Value__c);
             }
             
+            // Resolve IDs to Names for display (Stage, etc.)
+            Set<String> possibleIds = new Set<String>();
+            for (String val : cellValueMap.values()) {
+                if (val != null && val != '--' && (val.length() == 15 || val.length() == 18)) {
+                    // Validate: Salesforce ID starts with alphanumeric, contains only alphanumeric
+                    if (Pattern.matches('[a-zA-Z0-9]{15,18}', val)) {
+                        possibleIds.add(val);
+                    }
+                }
+            }
+            Map<String, String> idToNameMap = new Map<String, String>();
+            if (!possibleIds.isEmpty()) {
+                for (FEC_MDM_Case_Stage__c s : [SELECT Id, Name FROM FEC_MDM_Case_Stage__c WHERE Id IN :possibleIds]) {
+                    idToNameMap.put(String.valueOf(s.Id), s.Name);
+                    idToNameMap.put(String.valueOf(s.Id).substring(0, 15), s.Name);
+                }
+                for (FEC_Case_Stage__c s : [SELECT Id, Name FROM FEC_Case_Stage__c WHERE Id IN :possibleIds]) {
+                    idToNameMap.put(String.valueOf(s.Id), s.Name);
+                    idToNameMap.put(String.valueOf(s.Id).substring(0, 15), s.Name);
+                }
+            }
+
             for (RowWrapper rw : result.rows) {
                 for (ColumnWrapper cw : result.conditionCols) {
                     CellWrapper cell = new CellWrapper(); cell.colId = cw.id;
-                    cell.value = cellValueMap.containsKey(rw.rowId + '-' + cw.id) ? cellValueMap.get(rw.rowId + '-' + cw.id) : '--';
+                    String rawValue = cellValueMap.containsKey(rw.rowId + '-' + cw.id) ? cellValueMap.get(rw.rowId + '-' + cw.id) : '--';
+                    cell.value = idToNameMap.containsKey(rawValue) ? idToNameMap.get(rawValue) : rawValue;
                     rw.conditionCells.add(cell); rw.allSearchableCells.add(cell);
                 }
                 for (ColumnWrapper cw : result.actionCols) {
                     CellWrapper cell = new CellWrapper(); cell.colId = cw.id;
-                    cell.value = cellValueMap.containsKey(rw.rowId + '-' + cw.id) ? cellValueMap.get(rw.rowId + '-' + cw.id) : '--';
+                    String rawValue = cellValueMap.containsKey(rw.rowId + '-' + cw.id) ? cellValueMap.get(rw.rowId + '-' + cw.id) : '--';
+                    cell.value = idToNameMap.containsKey(rawValue) ? idToNameMap.get(rawValue) : rawValue;
                     rw.actionCells.add(cell); rw.allSearchableCells.add(cell);
                 }
             }
@@ -157,6 +116,14 @@ public with sharing class FEC_DecisionTableController {
         } catch(Exception e) {
             throw new AuraHandledException('Error loading dynamic table: ' + e.getMessage());
         }
+    }
+    
+    /**
+     * Non-cacheable version for imperative refresh after DML
+     */
+    @AuraEnabled
+    public static TableWrapper getDynamicDecisionTableFresh(String businessProcessId) {
+        return getDynamicDecisionTable(businessProcessId);
     }
     
     // =========================================================
@@ -198,7 +165,7 @@ public with sharing class FEC_DecisionTableController {
             upsert upsertCells;
         } catch (Exception e) {
             Database.rollback(sp);
-            throw new AuraHandledException('Lỗi khi lưu Rule: ' + e.getMessage());
+            throw new AuraHandledException(System.Label.FEC_Error_Save_Rule + ' ' + e.getMessage());
         }
     }
     
@@ -207,7 +174,7 @@ public with sharing class FEC_DecisionTableController {
         try {
             delete new FEC_Decision_Row__c(Id = rowId);
         } catch (Exception e) {
-            throw new AuraHandledException('Lỗi khi xóa Rule: ' + e.getMessage());
+            throw new AuraHandledException(System.Label.FEC_Error_Delete_Rule + ' ' + e.getMessage());
         }
     }
     
@@ -265,7 +232,7 @@ public with sharing class FEC_DecisionTableController {
             
         } catch (Exception e) {
             Database.rollback(sp);
-            throw new AuraHandledException('Lỗi thêm Cột: ' + e.getMessage());
+            throw new AuraHandledException(System.Label.FEC_Error_Add_Column + ' ' + e.getMessage());
         }
     }
     
@@ -275,7 +242,7 @@ public with sharing class FEC_DecisionTableController {
             // Nhờ Master-Detail, xóa Cột sẽ tự động xóa các Cells liên quan
             delete new FEC_Decision_Column__c(Id = colId);
         } catch (Exception e) {
-            throw new AuraHandledException('Lỗi xóa Cột: ' + e.getMessage());
+            throw new AuraHandledException(System.Label.FEC_Error_Delete_Column + ' ' + e.getMessage());
         }
     }
     
@@ -329,7 +296,7 @@ public with sharing class FEC_DecisionTableController {
             
         } catch (Exception e) {
             Database.rollback(sp);
-            throw new AuraHandledException('Lỗi thêm Dòng: ' + e.getMessage());
+            throw new AuraHandledException(System.Label.FEC_Error_Add_Row + ' ' + e.getMessage());
         }
     }
     
@@ -367,7 +334,7 @@ public with sharing class FEC_DecisionTableController {
             }
             return options;
         } catch (Exception e) {
-            throw new AuraHandledException('Lỗi khi lấy danh sách Field MDM: ' + e.getMessage());
+            throw new AuraHandledException(System.Label.FEC_Error_Get_MDM_Fields + ' ' + e.getMessage());
         }
     }
 }

@@ -558,15 +558,16 @@ public without sharing class FEC_BatchCaseHandlingController {
 
         for (Case c : cases) {
             FEC_BatchCaseHandlingExportRow r = new FEC_BatchCaseHandlingExportRow();
+            Map<String, Object> pop = c.getPopulatedFieldsAsMap();
             r.caseId = c.Id;
-            r.customerType = c.FEC_Customer_Type__c;
-            r.caseIdSearch = c.FEC_ID_Search__c;
-            r.categoryCode = c.FEC_Category__r == null ? null : c.FEC_Category__r.FEC_Code__c;
-            r.subCategoryCode = c.FEC_SubCategory__r == null ? null : c.FEC_SubCategory__r.FEC_Code__c;
-            r.subCodeCode = c.FEC_SubCode__r == null ? null : c.FEC_SubCode__r.FEC_Code__c;
-            r.caseStatus = c.FEC_Final_Status__c;
-            r.caseCreatedOn = c.FEC_Case_Created_On__c;
-            r.lastUpdatedOn = c.FEC_Last_Updated_On__c;
+            r.customerType = pop.containsKey('FEC_Customer_Type__c') ? c.FEC_Customer_Type__c : null;
+            r.caseIdSearch = pop.containsKey('FEC_ID_Search__c') ? c.FEC_ID_Search__c : null;
+            r.categoryCode = pop.containsKey('FEC_Category__c') && c.FEC_Category__r != null ? c.FEC_Category__r.FEC_Code__c : null;
+            r.subCategoryCode = pop.containsKey('FEC_SubCategory__c') && c.FEC_SubCategory__r != null ? c.FEC_SubCategory__r.FEC_Code__c : null;
+            r.subCodeCode = pop.containsKey('FEC_SubCode__c') && c.FEC_SubCode__r != null ? c.FEC_SubCode__r.FEC_Code__c : null;
+            r.caseStatus = pop.containsKey('FEC_Final_Status__c') ? c.FEC_Final_Status__c : null;
+            r.caseCreatedOn = pop.containsKey('FEC_Case_Created_On__c') ? c.FEC_Case_Created_On__c : null;
+            r.lastUpdatedOn = pop.containsKey('FEC_Last_Updated_On__c') ? c.FEC_Last_Updated_On__c : null;
             r.caseReviewUrl = '/lightning/r/Case/' + String.valueOf(c.Id) + '/view';
             FEC_BatchCaseHandlingTemplateHelper.applyStageBusinessProcessToExportRow(r, c);
             out.rows.add(r);
@@ -947,6 +948,9 @@ public without sharing class FEC_BatchCaseHandlingController {
             FEC_BCH_ImportFileNameValidator.validateExactFileNameMatch(fileName, fromFileName)
         ) {
             return fromFileName;
+        }
+        if (String.isNotBlank(fromBusinessProcess)) {
+            return fromBusinessProcess;
         }
         if (
             !isPlaceholderImportTemplateName(templateName) &&
@@ -1452,7 +1456,8 @@ public without sharing class FEC_BatchCaseHandlingController {
         row.originalDataRowIndex = row.originalHeaderRowIndex == null ? 1 : row.originalHeaderRowIndex + 1;
         row.originalSheetName = parseResult == null ? FEC_ConstantCommon.STR_EMPTY : parseResult.sheetName;
         row.status = System.Label.FEC_Batch_Case_Handling_Import_Row_Status_Failed;
-        row.errors = errorMessage;
+        // 05/06/2026 16:00 linhdev - __Errors Export Result luôn tiếng Việt
+        row.errors = FEC_BatchCaseHandlingImportService.localizeImportResultErrors(errorMessage);
         return new List<FEC_BatchCaseHandlingImportRow>{ row };
     }
     @AuraEnabled
