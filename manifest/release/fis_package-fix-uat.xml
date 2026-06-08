@@ -41,9 +41,12 @@
         <members>FEC_CreateCaseHandler</members>
         <members>FEC_CreateCaseHandler_Test</members>
         <members>FEC_CreateCaseInteractionController</members>
+        <members>FEC_CreateCaseInteractionController_Test</members>
         <members>FEC_CreateInteractionGenesys</members>
+        <members>FEC_CreateInteractionGenesys_Test</members>
         <members>FEC_CustomerIntegrationService</members>
         <members>FEC_DNBHandler</members>
+        <members>FEC_DNBHandler_Test</members>
         <members>FEC_DownloadReportController</members>
         <members>FEC_GetCSCaseStatusRestService_Test</members>
         <members>FEC_GetCSCaseStatusService</members>
@@ -58,11 +61,14 @@
         <members>FEC_GetCSMasterDataService_Test</members>
         <members>FEC_GetCSMdByCodeRest_Test</members>
         <members>FEC_InteractionInforHandler</members>
+        <members>FEC_InteractionInforHandler_Test</members>
         <members>FEC_MyCaseSoapXml</members>
         <members>FEC_PaymentHistoryValidationService</members>
         <members>FEC_PaymentHistoryValidationService_Test</members>
         <members>FEC_PsDNBServiceCallout</members>
+        <members>FEC_PsDNBServiceCallout_Test</members>
         <members>FEC_SearchController</members>
+        <members>FEC_SearchController_Test</members>
         <members>FEC_UnitTestMyCaseChannelUtil</members>
         <name>ApexClass</name>
     </types>
