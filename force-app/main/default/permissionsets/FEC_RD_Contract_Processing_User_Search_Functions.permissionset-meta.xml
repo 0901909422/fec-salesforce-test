@@ -36,6 +36,16 @@
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
+        <editable>true</editable>
+        <field>Case.FEC_Search_Products__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
+        <field>FEC_Additional_Info__c.FEC_Statement_Fee__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
         <editable>false</editable>
         <field>FEC_B2_Contract__c.FEC_Channel__c</field>
         <readable>true</readable>
@@ -156,6 +166,11 @@
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
+        <editable>false</editable>
+        <field>FEC_Customer_History__c.FEC_Description__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
         <editable>true</editable>
         <field>FEC_Customer_Search__c.FEC_Search_Customer_Number__c</field>
         <readable>true</readable>
@@ -165,8 +180,18 @@
         <field>FEC_Customer_Search__c.FEC_Search_Email_Address__c</field>
         <readable>true</readable>
     </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Do_Not_Bother__c.FEC_Case__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
+        <field>ServiceResourceSkill.FEC_Skill_Name__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
     <hasActivationRequired>false</hasActivationRequired>
-    <label>CS - CS Outbound Specialist - Search Functions</label>
+    <label>RD - Contract Processing User - Search Functions</label>
     <license>Salesforce</license>
     <objectPermissions>
         <allowCreate>false</allowCreate>
@@ -198,4 +223,8 @@
         <viewAllFields>false</viewAllFields>
         <viewAllRecords>false</viewAllRecords>
     </objectPermissions>
+    <tabSettings>
+        <tab>FEC_Account_Contract_Search</tab>
+        <visibility>Visible</visibility>
+    </tabSettings>
 </PermissionSet>
