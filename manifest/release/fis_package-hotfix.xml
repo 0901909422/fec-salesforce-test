@@ -2,6 +2,7 @@
 <Package xmlns="http://soap.sforce.com/2006/04/metadata">
     <types>
         <members>FEC_Master_Data_Setting__c.FEC_Type__c</members>
+        <members>FEC_KYC__c.FEC_Plastic_ID__c</members>
         <name>CustomField</name>
     </types>
     <types>
