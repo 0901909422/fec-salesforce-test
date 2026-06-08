@@ -8,7 +8,7 @@
     </values>
     <values>
         <field>FEC_Endpoint__c</field>
-        <value xsi:type="xsd:string">/esb/banca/customer_banca_info/v1/SearchByListPhones</value>
+        <value xsi:type="xsd:string">/esb/customer_banca_info/v1/SearchByListPhones</value>
     </values>
     <values>
         <field>FEC_FromDate_Hard_Code__c</field>
