@@ -9677,7 +9677,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>Waiting for data message</shortDescription>
-        <value>Đang chờ dữ liệu từ hệ thống...</value>
+        <value>Waiting for data from the system...</value>
     </labels>
     <labels>
         <fullName>FEC_Last_Credit_Limit</fullName>

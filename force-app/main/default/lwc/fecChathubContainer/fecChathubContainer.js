@@ -7,17 +7,20 @@ import { publish, MessageContext } from 'lightning/messageService';
 import FEC_CHAT_UPDATE from '@salesforce/messageChannel/FecChatUpdate__c';
 
 import getChatHubInfo from '@salesforce/apex/FEC_ChatHubInitController.getChatHubInfo';
+import getCurrentUserPermissionSets from '@salesforce/apex/FEC_ChatHubInitController.getCurrentUserPermissionSets';
 import createCaseOnNewSession from '@salesforce/apex/FEC_ChatHubCaseController.createCaseOnNewSession';
 import saveChatHistoryAndAttachment from '@salesforce/apex/FEC_ChatHubCaseController.saveChatHistoryAndAttachment';
 import checkExistCaseByExtInteractionID from '@salesforce/apex/FEC_Utils.checkExistCaseByExtInteractionID';
 import updateOldCaseInteractionId from '@salesforce/apex/FEC_ChatHubCaseController.updateOldCaseInteractionId';
 import downloadAndSaveBase64 from '@salesforce/apex/FEC_AttachmentController.downloadAndSaveBase64';
-import { executeWithLock, fetchFileFromUrl, formatDatetime, showToast, decryptDataKYC } from 'c/fecChathubUtils';
+import { executeWithLock, fetchFileFromUrl, formatDatetime, showToast, decryptDataKYC, ALLOWED_CHATHUB_PERMISSION_SETS, removeUtilityItemByLabel } from 'c/fecChathubUtils';
 import FEC_CHATHUB_STATUS from '@salesforce/messageChannel/FecChatHubStatus__c';
 import { subscribe, APPLICATION_SCOPE } from 'lightning/messageService';
 import labelChatHubDisabled from '@salesforce/label/c.FEC_Label_ChatHubDisabled';
 
 const CHATHUB_URL_KEY = 'https://portal-chathub-uat.fecredit.cloud';
+// ChatHub Utility Item label - dùng để identify utility item trong DOM
+const CHATHUB_UTILITY_LABEL = 'ChatHub';
 // Log formatting for better console visibility
 const LOG_PREFIX = '%c[FEC-ChatHub] ';
 const LOG_STYLE = 'color: #fff; background: #0070d2; padding: 2px 5px; border-radius: 4px; font-weight: bold;';
@@ -144,6 +147,9 @@ export default class FecChathubContainer extends NavigationMixin(LightningElemen
      * @return {void}
      */
     connectedCallback() {
+        // Kiểm tra Permission Set, nếu user không có thì xóa utility item khỏi DOM
+        this.checkAccessAndRemoveUtilityIfNeeded();
+
         // Attach mousemove and mouseup to document (entire page)
         document.addEventListener('mousemove', this.boundHandleMouseMove, { capture: true });
         document.addEventListener('mouseup', this.boundHandleMouseUp, { capture: true });
@@ -683,7 +689,7 @@ export default class FecChathubContainer extends NavigationMixin(LightningElemen
                             chatChannel: data.chatSession.chatChannel
                         };
                         this.postMessageToChatHub('pegaCsmCaseInfo', response);
-                        showToast(this, 'Thành công', `Đã tạo Case tương tác: ${caseNo || ''}`, 'success');
+                        showToast(this, 'Success', `Interaction Case created: ${caseNo || ''}`, 'success');
                         this.navigateToRecord(caseId);
                         if (data.chatSession.oldAgentID && data.chatSession.oldAgentID !== this.chatHubUsername) {
                             const historyRequest = {
@@ -705,7 +711,7 @@ export default class FecChathubContainer extends NavigationMixin(LightningElemen
                         console.log(`[FEC-ChatHub] Encountered Duplicate key. Waiting for Tab A to complete update... Retrying. ${retriesLeft - 1} attempts remaining.`);
                         this.attemptCreateCase(payload, data, retriesLeft - 1);
                     } else {
-                        showToast(this, 'Lỗi', 'Không thể tạo Case tương tác sau nhiều lần thử, vui lòng kiểm tra lại.', 'error');
+                        showToast(this, 'Error', 'Unable to create Interaction Case after multiple attempts. Please try again.', 'error');
                     }
                 });
         }, delayTime);
@@ -902,15 +908,37 @@ export default class FecChathubContainer extends NavigationMixin(LightningElemen
                     uniqueMessageId: uniqueMessageId
                 });
 
-                showToast(this, 'Thành công', 'File đã được tải và lưu vào Case.', 'success');
+                showToast(this, 'Success', 'File downloaded and saved to Case.', 'success');
             } catch (error) {
-                showToast(this, 'Lỗi', 'Không thể tải và lưu file.', 'error');
+                showToast(this, 'Error', 'Unable to download and save file.', 'error');
                 console.error('Apex: error', error);
             }
         }
     }
 
     // ===== HELPER & UTILITY FUNCTIONS =====
+
+    /**
+     * Kiểm tra permission set của user hiện tại.
+     * Nếu user không thuộc bất kỳ permission set nào trong ALLOWED_CHATHUB_PERMISSION_SETS,
+     * tìm và xóa <li> utility item của ChatHub khỏi DOM của Utility Bar.
+     * @return {Promise<void>}
+     */
+    async checkAccessAndRemoveUtilityIfNeeded() {
+        try {
+            const userPermissionSets = await getCurrentUserPermissionSets();
+            console.log('userPermissionSets', userPermissionSets);
+            const hasAccess = Array.isArray(userPermissionSets)
+                && userPermissionSets.some(ps => ALLOWED_CHATHUB_PERMISSION_SETS.includes(ps));
+            console.log('hasAccess', hasAccess);
+            if (!hasAccess) {
+                console.warn(LOG_PREFIX + 'User has no allowed Permission Set - removing ChatHub utility item', LOG_STYLE);
+                removeUtilityItemByLabel(CHATHUB_UTILITY_LABEL);
+            }
+        } catch (err) {
+            console.error(LOG_PREFIX + 'Permission Set check error:', LOG_STYLE, err);
+        }
+    }
 
     /**
      * Encrypts URL by encoding token in pathname
