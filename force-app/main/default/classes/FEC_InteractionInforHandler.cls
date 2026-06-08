@@ -25,7 +25,7 @@ public without sharing class FEC_InteractionInforHandler {
         FROM Case
         WHERE Id = :recordId
     ];
-
+        
         return caseList.isEmpty() ? null : caseList[0];
     }
     
@@ -73,7 +73,18 @@ public without sharing class FEC_InteractionInforHandler {
         
         return FEC_CommonUltils.maskPhone(phone);
     }
-
+    
+    @AuraEnabled
+    public static String updateInteractionExternalId(Id recordId, String externalId) {
+        
+        update new Case(
+            Id = recordId,
+        FEC_External_Interaction_ID__c = externalId
+            );
+        
+        return externalId;
+    }
+    
     @AuraEnabled(cacheable=false)
     public static void updateInteractionEmail(Id recordId, String email) {
         if (recordId == null) {
@@ -81,8 +92,8 @@ public without sharing class FEC_InteractionInforHandler {
         }
         update new Case(
             Id = recordId,
-            FEC_Interaction_Email__c = String.isNotBlank(email) ? email.trim() : null
-        );
+        FEC_Interaction_Email__c = String.isNotBlank(email) ? email.trim() : null
+            );
     }
     
     @AuraEnabled(cacheable=false)
@@ -92,8 +103,8 @@ public without sharing class FEC_InteractionInforHandler {
         }
         update new Case(
             Id = recordId,
-            FEC_On_Hold__c = onHold
-        );
+        FEC_On_Hold__c = onHold
+            );
     }
     
     @AuraEnabled(cacheable=true)
@@ -671,7 +682,7 @@ public without sharing class FEC_InteractionInforHandler {
     @AuraEnabled
     public static String resetViewMode(Id recordId, String viewMode) {
         if (recordId == null) return null;
-
+        
         List<Case> caselst = [
             SELECT
                 Id,
@@ -683,17 +694,17 @@ public without sharing class FEC_InteractionInforHandler {
             FROM Case
             WHERE Id = :recordId
         ];
-
+        
         if (caselst.isEmpty())
             return null;
-
+        
         Case c = caselst[0];
         if (c.FEC_Get_Next_Work__c == true) {
             viewMode = FEC_ConstantCommon.INTERACTION_HANDLING_MODE;
         } else if (c.FEC_First_Access__c == true) {
             viewMode = c.FEC_Interaction_View_Mode__c;
         }
-
+        
         Boolean needsUpdate =
             c.FEC_First_Access__c == true ||
             c.FEC_Get_Next_Work__c == true ||
@@ -701,15 +712,15 @@ public without sharing class FEC_InteractionInforHandler {
         if (!needsUpdate) {
             return viewMode;
         }
-
+        
         FEC_CaseInitUpdateService.runSystemCaseUpdate(
             new Case(
-                Id = recordId,
-                FEC_Interaction_View_Mode__c = viewMode,
-                FEC_First_Access__c = false,
-                FEC_Get_Next_Work__c = false
+            Id = recordId,
+        FEC_Interaction_View_Mode__c = viewMode,
+        FEC_First_Access__c = false,
+        FEC_Get_Next_Work__c = false
             )
-        );
+            );
         return viewMode;
     }
     
@@ -723,7 +734,7 @@ public without sharing class FEC_InteractionInforHandler {
         string recordTypeName = caseList.isEmpty() ? null : caseList[0].RecordType.DeveloperName;
         return recordTypeName;
     }
-
+    
     @AuraEnabled
     public static String getParentCaseNumber(Id caseId) {
         List<Case> caseList = [SELECT ParentId FROM Case WHERE Id = :caseId LIMIT 1];
@@ -732,7 +743,7 @@ public without sharing class FEC_InteractionInforHandler {
         if (parentList.isEmpty()) return null;
         return String.isNotBlank(parentList[0].FEC_ID_Search__c) ? parentList[0].FEC_ID_Search__c : null;
     }
-
+    
     @AuraEnabled(cacheable=true)
     public static Case getChatInteractionInfo(Id recordId) {
         List<Case> caseList = [
@@ -741,14 +752,34 @@ public without sharing class FEC_InteractionInforHandler {
                    FEC_Phone_Number__c,
                    FEC_Created_On__c,
                    FEC_Created_by__c,
-                   FEC_External_Interaction_ID__c
+                   FEC_KYC_Status__c,
+                   FEC_External_Interaction_ID__c,
+                   FEC_Outcome_Code__c,
+                   FEC_Interaction_Remarks__c,
+                   IsClosed
             FROM Case
             WHERE Id = :recordId
             LIMIT 1
         ];
-        return caseList.isEmpty() ? null : caseList[0];
+        if (caseList.isEmpty()) return null;
+        
+        Case interactionCase = caseList[0];
+        if (String.isBlank(interactionCase.FEC_KYC_Status__c)) {
+            List<FEC_KYC_Result__c> kycResults = [
+                SELECT FEC_KYC_Result__c
+                FROM FEC_KYC_Result__c
+                WHERE FEC_Case_Interaction__c = :recordId
+                AND FEC_KYC_Result__c != null
+                ORDER BY CreatedDate DESC
+                LIMIT 1
+            ];
+            if (!kycResults.isEmpty()) {
+                interactionCase.FEC_KYC_Status__c = kycResults[0].FEC_KYC_Result__c;
+            }
+        }
+        return interactionCase;
     }
-
+    
     @AuraEnabled
     public static void updateChatInteractionFields(Id recordId, String username, String phone) {
         if (recordId == null) return;

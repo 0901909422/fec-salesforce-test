@@ -2,14 +2,13 @@ import { LightningElement, api, track, wire } from "lwc";
 import { getRecord, getFieldValue } from "lightning/uiRecordApi";
 import { loadStyle } from "lightning/platformResourceLoader";
 import COMMON_STYLES from "@salesforce/resourceUrl/FEC_CommonCss";
-import {
-  notifyRecordUpdateAvailable,
-} from "lightning/uiRecordApi";
+import { notifyRecordUpdateAvailable } from "lightning/uiRecordApi";
 
 // ================= APEX =================
 import getInteraction from "@salesforce/apex/FEC_InteractionInforHandler.getInteraction";
 import getInteractionPhoneReveal from "@salesforce/apex/FEC_InteractionInforHandler.getInteractionPhoneReveal";
 import updateInteractionPhone from "@salesforce/apex/FEC_InteractionInforHandler.updateInteractionPhone";
+import updateInteractionExternalId from "@salesforce/apex/FEC_InteractionInforHandler.updateInteractionExternalId";
 import getRecordTypeName from "@salesforce/apex/FEC_InteractionInforHandler.getRecordTypeName";
 import getInteractionIdFromCustomerCase from "@salesforce/apex/FEC_InteractionInforHandler.getInteractionIdFromCustomerCase";
 
@@ -18,7 +17,7 @@ import ISCLOSED from "@salesforce/schema/Case.IsClosed";
 import VIEW_MODE from "@salesforce/schema/Case.FEC_Interaction_View_Mode__c";
 import RECORDTYPE_ID from "@salesforce/schema/Case.RecordTypeId";
 import PHONE_NUMBER from "@salesforce/schema/Case.FEC_Phone_Number__c";
-
+import IS_MANUAL from "@salesforce/schema/Case.FEC_Is_Manual__c";
 //==================== LABELED CONSTANTS ====================
 import FEC_INTERACTION_PHONE_LABEL from "@salesforce/label/c.FEC_Interaction_Phone_Label";
 import FEC_INTERACTION_CREATED_ON_LABEL from "@salesforce/label/c.FEC_Interaction_Created_On_Label";
@@ -79,20 +78,22 @@ export default class FecInteractionInfo extends LightningElement {
   recordTypeDevName;
 
   interactionId;
-
+  isManual = false;
+  isEditingExternalId = false;
+  externalIdDraft;
   activeSections = ["interactionInfo"];
 
   // ================= WIRE: CASE CONTEXT =================
   @wire(getRecord, {
     recordId: "$recordId",
-    fields: [ISCLOSED, VIEW_MODE, RECORDTYPE_ID],
+    fields: [ISCLOSED, VIEW_MODE, RECORDTYPE_ID, IS_MANUAL],
   })
   async wiredCase({ data, error }) {
     if (data) {
       this.isClosed = getFieldValue(data, ISCLOSED);
       this.viewMode = getFieldValue(data, VIEW_MODE);
       this.recordTypeId = getFieldValue(data, RECORDTYPE_ID);
-
+      this.isManual = getFieldValue(data, IS_MANUAL);
       await this.resolveRecordType();
       await this.resolveInteractionId();
 
@@ -171,7 +172,7 @@ export default class FecInteractionInfo extends LightningElement {
   }
 
   // ================= GETTERS =================
-   get isInteractionCase() {
+  get isInteractionCase() {
     return this.recordTypeDevName === RECORD_TYPES.INTERACTION;
   }
 
@@ -179,13 +180,15 @@ export default class FecInteractionInfo extends LightningElement {
     return this.recordTypeDevName === RECORD_TYPES.CUSTOMER_CASE;
   }
 
-
   get isInteractionClosed() {
-    if (this.record?.FEC_Interaction_Status__c === "Closed"|| this.record?.FEC_Interaction_Status__c === "Auto-Closed") return true;
+    if (
+      this.record?.FEC_Interaction_Status__c === "Closed" ||
+      this.record?.FEC_Interaction_Status__c === "Auto-Closed"
+    )
+      return true;
     return false;
   }
 
-  
   get isReview() {
     return this.viewMode === VIEW_MODE_REVIEW;
   }
@@ -212,6 +215,10 @@ export default class FecInteractionInfo extends LightningElement {
       this.record?.FEC_Interaction_Masked_Phone__c ||
       maskValue(this.record?.FEC_Phone_Number__c, false)
     );
+  }
+
+  get canEditExternalId() {
+    return this.isManual;
   }
 
   get eyeIcon() {
@@ -274,6 +281,15 @@ export default class FecInteractionInfo extends LightningElement {
     this.phoneDraft = "";
   }
 
+  handleEditExternalId() {
+    this.isEditingExternalId = true;
+    this.externalIdDraft = this.externalId || "";
+  }
+
+  handleExternalIdChange(event) {
+    this.externalIdDraft = event.target.value;
+  }
+
   handlePhoneChange(event) {
     this.phoneDraft = event.target.value;
 
@@ -329,6 +345,29 @@ export default class FecInteractionInfo extends LightningElement {
       await notifyRecordUpdateAvailable([{ recordId: this.recordId }]);
     } catch (error) {
       console.error("updateInteractionPhone error", error);
+    }
+  }
+
+  async handleSaveExternalId() {
+    try {
+      await updateExternalId({
+        recordId: this.interactionId,
+        externalId: this.externalIdDraft,
+      });
+
+      this.record = {
+        ...this.record,
+        FEC_External_Interaction_ID__c: this.externalIdDraft,
+      };
+
+      this.isEditingExternalId = false;
+
+      await notifyRecordUpdateAvailable([
+        { recordId: this.recordId },
+        { recordId: this.interactionId },
+      ]);
+    } catch (error) {
+      console.error("updateExternalId error", error);
     }
   }
 
