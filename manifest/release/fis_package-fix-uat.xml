@@ -1,25 +1,47 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <Package xmlns="http://soap.sforce.com/2006/04/metadata">
     <types>
-        <members>FEC_CreateCSCaseService</members>
-        <members>FEC_CreateCaseInteractionController</members>
-        <members>FEC_GetCSCaseStatusService</members>
-        <members>FEC_GetCSCaseStatusService_Test</members>
-        <members>FEC_GetCSCaseStatusRestService_Test</members>
-        <members>FEC_PsDNBServiceCallout</members>
+        <members>FEC_AssignMasterPersist_Test</members>
         <members>FEC_AssignmentMasterFieldPersistService</members>
+        <members>FEC_BCH_AssignmentResolveRejectService</members>
+        <members>FEC_BCH_AssignmentResolveReject_Test</members>
+        <members>FEC_BCH_AssignmentRevertService</members>
+        <members>FEC_BCH_AssignmentRevertService_Test</members>
+        <members>FEC_BCH_AssignmentRouteToService</members>
+        <members>FEC_BCH_AssignmentRouteToService_Test</members>
+        <members>FEC_BCH_AssignmentUpdateService</members>
+        <members>FEC_BCH_AssignmentUpdateService_Test</members>
+        <members>FEC_BatchCaseHandlingCaseFilter</members>
+        <members>FEC_BatchCaseHandlingCaseFilter_Test</members>
+        <members>FEC_BatchCaseHandlingController</members>
+        <members>FEC_BatchCaseHandlingController_Test</members>
         <members>FEC_BatchCaseHandlingImportService</members>
-        <members>FEC_ChannelFunctionService</members>
+        <members>FEC_BatchCaseHandlingImportService_Test</members>
+        <members>FEC_BatchCaseHandlingTemplateHelper</members>
+        <members>FEC_BatchCaseHandlingTemplateHelper_Test</members>
         <members>FEC_CaseBusinessService</members>
         <members>FEC_CaseBusinessService_Test</members>
+        <members>FEC_CaseDsTsSlaNotificationSender</members>
+        <members>FEC_CaseDsTsSlaNotificationSender_Test</members>
+        <members>FEC_CaseDsTsSlaService</members>
+        <members>FEC_CaseDsTsSlaService_Test</members>
+        <members>FEC_ChannelFunctionService</members>
         <members>FEC_CofGsrAssignmentService</members>
         <members>FEC_CofGsrAssignmentService_Test</members>
+        <members>FEC_CommonUltils</members>
+        <members>FEC_ConstantCommon</members>
+        <members>FEC_CreateCSCaseService</members>
+        <members>FEC_CreateCaseInteractionController</members>
         <members>FEC_CustomerIntegrationService</members>
         <members>FEC_DNBHandler</members>
         <members>FEC_DownloadReportController</members>
-        <members>FEC_CommonUltils</members>
+        <members>FEC_GetCSCaseStatusRestService_Test</members>
+        <members>FEC_GetCSCaseStatusService</members>
+        <members>FEC_GetCSCaseStatusService_Test</members>
         <members>FEC_GetCSMasterDataByCodeService</members>
-        <members>FEC_ConstantCommon</members>
+        <members>FEC_PaymentHistoryValidationService</members>
+        <members>FEC_PaymentHistoryValidationService_Test</members>
+        <members>FEC_PsDNBServiceCallout</members>
         <name>ApexClass</name>
     </types>
     <types>
@@ -36,6 +58,7 @@
         <members>fec_DoNotBotherExistingCustomer</members>
         <members>fec_DoNotBotherNonExistingCustomer</members>
         <members>fec_DownloadReports</members>
+        <members>fecInteractionCreationHighlight</members>
         <name>LightningComponentBundle</name>
     </types>
     <types>

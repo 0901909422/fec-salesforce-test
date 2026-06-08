@@ -43,7 +43,24 @@ private class FEC_CaseDsTsSlaNotificationSender_Test {
         ensureSlaQueue('FEC_LG', 'LG');
         ensureSlaQueue('FEC_DQ_Direct_Sales', 'DQ - Direct Sales');
         ensureSlaQueue('FEC_DQ_POS_Sales', 'DQ - POS Sales');
+        FEC_CaseDsTsSlaService.resetSlaQueueCacheForTest();
         return telesalesId;
+    }
+
+    private static Case buildEligibleSlaCase(
+        Id ownerId,
+        Id categoryId,
+        String team,
+        String searchKeySuffix
+    ) {
+        return new Case(
+            Subject = 'DS/TS SLA Case',
+            OwnerId = ownerId,
+            Status = FEC_ConstantCommon.CASE_STATUS_PENDING,
+            FEC_Team__c = team,
+            FEC_Category__c = categoryId,
+            FEC_ID_Search__c = 'DSTS-' + searchKeySuffix
+        );
     }
 
     private static Id ensureCategory(String categoryName) {
@@ -223,24 +240,13 @@ private class FEC_CaseDsTsSlaNotificationSender_Test {
 
     @IsTest
     static void testSendAfterCaseUpdate_withTemplatesAndEligibleCase() {
-        Set<Id> queueIds = FEC_CaseDsTsSlaService.getSlaOwnerQueueIds();
-        if (queueIds.isEmpty()) {
-            System.assert(true, 'No SLA queue metadata in org.');
-            return;
-        }
         ensureSlaTemplates();
+        FEC_CaseDsTsSlaService.testRecipientUserIdsOverride = new List<Id>{ UserInfo.getUserId() };
 
-        Id queueId = queueIds.iterator().next();
+        Id queueId = getOrCreateSlaQueueId();
         Id complaintId = ensureCategory('Complaint');
         String suffix = String.valueOf(System.currentTimeMillis());
-        Case row = insertCaseRow(new Case(
-            Subject = 'DS/TS SLA Template Flow',
-            OwnerId = queueId,
-            Status = FEC_ConstantCommon.CASE_STATUS_PENDING,
-            FEC_Team__c = 'TS',
-            FEC_Category__c = complaintId,
-            FEC_ID_Search__c = 'DSTS-TPL-' + suffix
-        ));
+        Case row = insertCaseRow(buildEligibleSlaCase(queueId, complaintId, 'TS', 'TPL-' + suffix));
 
         FEC_Routing_Action_History__c rah = new FEC_Routing_Action_History__c(
             FEC_Case__c = row.Id,
@@ -255,10 +261,14 @@ private class FEC_CaseDsTsSlaNotificationSender_Test {
         row.FEC_SLA_Notification_1__c = System.now();
 
         Test.startTest();
-        FEC_CaseDsTsSlaNotificationSender.sendAfterCaseUpdate(
-            new List<Case>{ row },
-            new Map<Id, Case>{ row.Id => oldC }
-        );
+        try {
+            FEC_CaseDsTsSlaNotificationSender.sendAfterCaseUpdate(
+                new List<Case>{ row },
+                new Map<Id, Case>{ row.Id => oldC }
+            );
+        } finally {
+            FEC_CaseDsTsSlaService.testRecipientUserIdsOverride = null;
+        }
         Test.stopTest();
 
         System.assertNotEquals(null, [SELECT Id FROM Case WHERE Id = :row.Id].Id);
@@ -285,6 +295,8 @@ private class FEC_CaseDsTsSlaNotificationSender_Test {
     @IsTest
     static void testSendAfterCaseUpdate_th2DirectSalesProfile() {
         ensureSlaTemplates();
+        FEC_CaseDsTsSlaService.testRecipientUserIdsOverride = new List<Id>{ UserInfo.getUserId() };
+        getOrCreateSlaQueueId();
         Id complaintId = ensureCategory('Complaint');
         String suffix = String.valueOf(System.currentTimeMillis());
         Case row = insertCaseRow(new Case(
@@ -302,10 +314,14 @@ private class FEC_CaseDsTsSlaNotificationSender_Test {
         row.FEC_SLA_Notification_1__c = System.now();
 
         Test.startTest();
-        FEC_CaseDsTsSlaNotificationSender.sendAfterCaseUpdate(
-            new List<Case>{ row },
-            new Map<Id, Case>{ row.Id => oldC }
-        );
+        try {
+            FEC_CaseDsTsSlaNotificationSender.sendAfterCaseUpdate(
+                new List<Case>{ row },
+                new Map<Id, Case>{ row.Id => oldC }
+            );
+        } finally {
+            FEC_CaseDsTsSlaService.testRecipientUserIdsOverride = null;
+        }
         Test.stopTest();
 
         System.assertNotEquals(null, row.Id);
@@ -538,6 +554,144 @@ private class FEC_CaseDsTsSlaNotificationSender_Test {
         FEC_CaseDsTsSlaNotificationSender.sendAfterCaseUpdate(
             new List<Case>{ row },
             new Map<Id, Case>{ row.Id => oldC }
+        );
+        Test.stopTest();
+
+        System.assertNotEquals(null, row.Id);
+    }
+
+    @IsTest
+    static void testSendAfterCaseUpdate_withLetterheadTemplate() {
+        if (!Schema.getGlobalDescribe().containsKey('FEC_Enhanced_Letterhead__c')) {
+            System.assert(true, 'Skipped: FEC_Enhanced_Letterhead__c not on org.');
+            return;
+        }
+
+        ensureSlaTemplates();
+        FEC_CaseDsTsSlaService.testRecipientUserIdsOverride = new List<Id>{ UserInfo.getUserId() };
+        Id queueId = getOrCreateSlaQueueId();
+        Id complaintId = ensureCategory('Complaint');
+        Case row = insertCaseRow(buildEligibleSlaCase(
+            queueId,
+            complaintId,
+            'TS',
+            'LH-' + String.valueOf(System.currentTimeMillis())
+        ));
+
+        FEC_Routing_Action_History__c rah = new FEC_Routing_Action_History__c(
+            FEC_Case__c = row.Id,
+            FEC_Routing_Action__c = FEC_CaseBusinessService.ROUTE_TO,
+            FEC_Routing_Action_Type__c = 'Case',
+            FEC_Updated_User_Queue_ID__c = String.valueOf(queueId)
+        );
+        insert rah;
+        Test.setCreatedDate(rah.Id, System.now().addMinutes(-3));
+
+        List<FEC_Template__c> templates = [
+            SELECT Id
+            FROM FEC_Template__c
+            WHERE FEC_API_Name__c = :TEMPLATE_API_TS
+            LIMIT 1
+        ];
+        if (!templates.isEmpty()) {
+            FEC_Enhanced_Letterhead__c letterhead = new FEC_Enhanced_Letterhead__c(
+                FEC_Header__c = '<header>',
+                FEC_Footer__c = '<footer>'
+            );
+            insert letterhead;
+            update new FEC_Template__c(
+                Id = templates[0].Id,
+                FEC_Enhanced_Letterhead__c = letterhead.Id
+            );
+        }
+
+        Case oldC = row.clone(true, true, true, true);
+        row.FEC_SLA_Notification_1__c = System.now();
+
+        Test.startTest();
+        try {
+            FEC_CaseDsTsSlaNotificationSender.sendAfterCaseUpdate(
+                new List<Case>{ row },
+                new Map<Id, Case>{ row.Id => oldC }
+            );
+        } finally {
+            FEC_CaseDsTsSlaService.testRecipientUserIdsOverride = null;
+        }
+        Test.stopTest();
+
+        System.assertNotEquals(null, row.Id);
+    }
+
+    @IsTest
+    static void testBuildEmailInfoForCase_WithRecipientsAndLetterhead() {
+        ensureSlaTemplates();
+        FEC_CaseDsTsSlaService.testRecipientUserIdsOverride = new List<Id>{ UserInfo.getUserId() };
+        FEC_CaseDsTsSlaService.testForceSlaEligible = true;
+        FEC_CaseDsTsSlaService.testForceSlaQueueProfile = FEC_CaseDsTsSlaService.PROFILE_TELESALES;
+
+        Id queueId = getOrCreateSlaQueueId();
+        Id complaintId = ensureCategory('Complaint');
+        Case row = insertCaseRow(buildEligibleSlaCase(
+            queueId,
+            complaintId,
+            'TS',
+            'UNIT-' + String.valueOf(System.currentTimeMillis())
+        ));
+
+        Map<String, FEC_Template__c> templateByApi = new Map<String, FEC_Template__c>();
+        for (FEC_Template__c tmpl : [
+            SELECT Id, FEC_API_Name__c, FEC_Subject_Line__c, FEC_Body__c,
+                   FEC_Enhanced_Letterhead__c,
+                   FEC_Enhanced_Letterhead__r.FEC_Header__c,
+                   FEC_Enhanced_Letterhead__r.FEC_Footer__c
+            FROM FEC_Template__c
+            WHERE FEC_API_Name__c = :TEMPLATE_API_TS
+              AND FEC_Active__c = true
+        ]) {
+            templateByApi.put(tmpl.FEC_API_Name__c, tmpl);
+        }
+
+        Case loaded = [
+            SELECT Id, OwnerId, FEC_Case_Status__c, FEC_Team__c,
+                   FEC_Assignment_Count__c, FEC_Assignment_Users__c,
+                   FEC_Category__r.Name
+            FROM Case
+            WHERE Id = :row.Id
+        ];
+
+        Test.startTest();
+        try {
+            FEC_Notification.EmailInfo info = FEC_CaseDsTsSlaNotificationSender.buildEmailInfoForCase(
+                loaded.Id,
+                loaded,
+                templateByApi
+            );
+            System.assertNotEquals(null, info);
+            System.assert(String.isNotBlank(info.subject));
+        } finally {
+            FEC_CaseDsTsSlaService.testRecipientUserIdsOverride = null;
+            FEC_CaseDsTsSlaService.testForceSlaEligible = false;
+        }
+        Test.stopTest();
+    }
+
+    @IsTest
+    static void testSendAfterCaseUpdate_oldMapMissingCaseEntry() {
+        ensureSlaTemplates();
+        Id queueId = getOrCreateSlaQueueId();
+        Case row = insertCaseRow(new Case(
+            Subject = 'DS/TS SLA Missing OldMap',
+            OwnerId = queueId,
+            Status = FEC_ConstantCommon.CASE_STATUS_PENDING,
+            FEC_Team__c = 'TS',
+            FEC_ID_Search__c = 'DSTS-OLD-' + String.valueOf(System.currentTimeMillis())
+        ));
+        row.FEC_SLA_Notification_1__c = System.now();
+
+        Test.startTest();
+        FEC_CaseDsTsSlaNotificationSender.sendAfterCaseUpdate(
+            new List<Case>{ row },
+            new Map<Id, Case>()
         );
         Test.stopTest();
 

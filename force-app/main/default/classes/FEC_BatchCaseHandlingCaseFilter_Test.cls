@@ -607,4 +607,153 @@ private class FEC_BatchCaseHandlingCaseFilter_Test {
 
         System.assert(clauses.size() >= 1);
     }
+
+    @IsTest
+    static void testBuildCompleteWhere_NullFilterMaps() {
+        Test.startTest();
+        List<String> whereParts = FEC_BatchCaseHandlingCaseFilter.buildCompleteWhere(null);
+        Test.stopTest();
+
+        System.assert(whereParts.size() >= 1);
+    }
+
+    @IsTest
+    static void testBuildDynamicWhere_AdditionalOperators() {
+        List<Map<String, Object>> filters = new List<Map<String, Object>>{
+            new Map<String, Object>{ 'propertyKey' => 'CASE_ID', 'operatorKey' => 'starts_with', 'valueText' => 'FILTER' },
+            new Map<String, Object>{ 'propertyKey' => 'CASE_STATUS', 'operatorKey' => 'does_not_contain', 'valueText' => 'Closed' },
+            new Map<String, Object>{ 'propertyKey' => 'CUSTOMER_TYPE', 'operatorKey' => 'not_equal_to', 'valueList' => new List<Object>{ 'Existing' } },
+            new Map<String, Object>{ 'propertyKey' => 'CASE_CREATED_BY_ROLE', 'operatorKey' => 'is_not_null', 'valueText' => '' }
+        };
+
+        Test.startTest();
+        List<String> clauses = FEC_BatchCaseHandlingCaseFilter.buildDynamicWhereFromFilters(filters);
+        Test.stopTest();
+
+        System.assert(clauses.size() >= 2);
+    }
+
+    @IsTest
+    static void testBuildDynamicWhere_QueueAndDateFilters() {
+        List<Group> queues = [
+            SELECT Name
+            FROM Group
+            WHERE Type = :FEC_ConstantCommon.GROUP_TYPE_QUEUE
+            LIMIT 1
+        ];
+        List<Map<String, Object>> filters = new List<Map<String, Object>>{
+            new Map<String, Object>{
+                'propertyKey' => 'QUEUE',
+                'operatorKey' => 'equals',
+                'valueList' => new List<Object>{ 'My Pending Cases' }
+            },
+            new Map<String, Object>{
+                'propertyKey' => 'CASE_CREATED_ON',
+                'operatorKey' => 'equals',
+                'valueText' => '2026-01-05'
+            },
+            new Map<String, Object>{
+                'propertyKey' => 'CASE_CREATED_ON',
+                'operatorKey' => 'greater_or_equal',
+                'valueText' => 'invalid-date'
+            }
+        };
+        if (!queues.isEmpty()) {
+            filters.add(new Map<String, Object>{
+                'propertyKey' => 'QUEUE',
+                'operatorKey' => 'not_equal_to',
+                'valueList' => new List<Object>{ queues[0].Name }
+            });
+        }
+
+        Test.startTest();
+        List<String> clauses = FEC_BatchCaseHandlingCaseFilter.buildDynamicWhereFromFilters(filters);
+        Test.stopTest();
+
+        System.assertNotEquals(null, clauses);
+        System.assert(clauses.size() >= 1);
+    }
+
+    @IsTest
+    static void testBuildGenericCaseFieldClause_BooleanNotEqual() {
+        Map<String, Schema.SObjectField> fieldMap = Case.SObjectType.getDescribe().fields.getMap();
+        if (!fieldMap.containsKey('IsEscalated')) {
+            System.assert(true, 'Skipped: IsEscalated not on Case.');
+            return;
+        }
+        List<Map<String, Object>> filters = new List<Map<String, Object>>{
+            new Map<String, Object>{
+                'propertyKey' => 'IsEscalated',
+                'operatorKey' => 'not_equal_to',
+                'valueText' => 'true'
+            }
+        };
+
+        Test.startTest();
+        List<String> clauses = FEC_BatchCaseHandlingCaseFilter.buildDynamicWhereFromFilters(filters);
+        Test.stopTest();
+
+        System.assertEquals(1, clauses.size());
+        System.assert(clauses[0].contains('!='));
+    }
+
+    @IsTest
+    static void testBuildDateClause_AllOperators() {
+        List<Map<String, Object>> filters = new List<Map<String, Object>>{
+            new Map<String, Object>{ 'propertyKey' => 'CASE_CREATED_ON', 'operatorKey' => 'less_than', 'valueText' => '2026-01-05' },
+            new Map<String, Object>{ 'propertyKey' => 'CASE_CREATED_ON', 'operatorKey' => 'greater_than', 'valueText' => '2026-09-09' },
+            new Map<String, Object>{ 'propertyKey' => 'CASE_CREATED_ON', 'operatorKey' => 'less_or_equal', 'valueText' => '2026-03-03' },
+            new Map<String, Object>{ 'propertyKey' => 'CASE_CREATED_ON', 'operatorKey' => 'greater_or_equal', 'valueText' => '2026-12-31' },
+            new Map<String, Object>{ 'propertyKey' => 'CASE_CREATED_ON', 'operatorKey' => 'is_null', 'valueText' => '' },
+            new Map<String, Object>{ 'propertyKey' => 'CASE_CREATED_ON', 'operatorKey' => 'is_not_null', 'valueText' => '' }
+        };
+
+        Test.startTest();
+        List<String> clauses = FEC_BatchCaseHandlingCaseFilter.buildDynamicWhereFromFilters(filters);
+        Test.stopTest();
+
+        System.assert(clauses.size() >= 4);
+    }
+
+    @IsTest
+    static void testBuildCompleteWhere_WithQueueFilter() {
+        List<Group> queues = [
+            SELECT Name
+            FROM Group
+            WHERE Type = :FEC_ConstantCommon.GROUP_TYPE_QUEUE
+            LIMIT 1
+        ];
+        if (queues.isEmpty()) {
+            System.assert(true, 'Skipped: no queue in org.');
+            return;
+        }
+        String filtersJson = '[{"propertyKey":"QUEUE","operatorKey":"equals","valueList":["' +
+            String.escapeSingleQuotes(queues[0].Name) +
+            '"]}]';
+
+        Test.startTest();
+        List<String> whereParts = FEC_BatchCaseHandlingCaseFilter.buildCompleteWhere(
+            FEC_BatchCaseHandlingCaseFilter.parseFilterMaps(filtersJson)
+        );
+        Test.stopTest();
+
+        System.assert(whereParts.size() >= 1);
+    }
+
+    @IsTest
+    static void testBuildDynamicWhere_QueueNotEqualCombined() {
+        List<Map<String, Object>> filters = new List<Map<String, Object>>{
+            new Map<String, Object>{
+                'propertyKey' => 'QUEUE',
+                'operatorKey' => 'not_equal_to',
+                'valueList' => new List<Object>{ 'My Pending Cases', 'DQ - CS Support' }
+            }
+        };
+
+        Test.startTest();
+        List<String> clauses = FEC_BatchCaseHandlingCaseFilter.buildDynamicWhereFromFilters(filters);
+        Test.stopTest();
+
+        System.assertNotEquals(null, clauses);
+    }
 }

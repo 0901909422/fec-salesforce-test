@@ -9,6 +9,8 @@ import resetViewMode from "@salesforce/apex/FEC_InteractionInforHandler.resetVie
 import getCurrentUserProfileName from '@salesforce/apex/FEC_SearchController.getCurrentUserProfileName';
 import HAS_ACCOUNT_OR_CONTRACT from "@salesforce/schema/Case.FEC_Has_Account_or_Contract__c";
 import VIEW_MODE from "@salesforce/schema/Case.FEC_Interaction_View_Mode__c";
+import ISOWNER from "@salesforce/schema/Case.FEC_Is_Owner__c";
+import CAN_EXECUTE from "@salesforce/schema/Case.FEC_Can_Execute__c";
 import { refreshApex } from "@salesforce/apex";
 import FEC_INTERACTION_ID_LABEL from "@salesforce/label/c.FEC_Interaction_ID";
 import FEC_INTERACTION_STATUS_LABEL from "@salesforce/label/c.FEC_Interaction_Status_Label";
@@ -47,6 +49,8 @@ export default class FecInteractionCreationHighlight extends NavigationMixin(
   wiredViewModeResult;
   _resetDone = false;
   isOpen = false;
+  isOwner = false;
+  canExecuteFlag = false;
   _userProfile;
 
   // ===============================
@@ -65,7 +69,7 @@ export default class FecInteractionCreationHighlight extends NavigationMixin(
   // ===============================
   @wire(getRecord, {
     recordId: "$recordId",
-    fields: [VIEW_MODE],
+    fields: [VIEW_MODE, ISOWNER, CAN_EXECUTE],
   })
   wiredViewMode(result) {
     this.wiredViewModeResult = result;
@@ -74,6 +78,8 @@ export default class FecInteractionCreationHighlight extends NavigationMixin(
 
     if (data) {
       this.viewMode = getFieldValue(data, VIEW_MODE);
+      this.isOwner = getFieldValue(data, ISOWNER);
+      this.canExecuteFlag = getFieldValue(data, CAN_EXECUTE);
       //await this.tryResetViewMode();
     } else if (error) {
       console.error("ViewMode load error", error);
@@ -137,6 +143,11 @@ export default class FecInteractionCreationHighlight extends NavigationMixin(
     return this._userProfile !== PROFILE_RELEVANT_DEPTS;
   }
 
+  get showExecute() {
+    // 05/06/2026 10:00 tungnm37 - Hide Execute when current user is not Interaction owner on creation screen.
+    return !this.isHandling && (this.isOwner === true || this.canExecuteFlag === true);
+  }
+
   // ===============================
   // GETTERS
   // ===============================
@@ -183,6 +194,9 @@ export default class FecInteractionCreationHighlight extends NavigationMixin(
   }
 
   async handleExecute() {
+    if (!this.showExecute) {
+      return;
+    }
     try {
       await resetViewMode({
         recordId: this.recordId,

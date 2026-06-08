@@ -571,4 +571,78 @@ private class FEC_PaymentHistoryValidationService_Test {
         System.assertEquals(1, rows.size());
         System.assertEquals(1000, rows[0].get('Principal'));
     }
+
+    @IsTest
+    static void testGetRl0402DocumentRequestPdfData_BlankCaseId() {
+        Test.startTest();
+        FEC_PaymentHistoryValidationService.Rl0402PdfDataResult result =
+            FEC_PaymentHistoryValidationService.getRl0402DocumentRequestPdfData('', 'requestor');
+        Test.stopTest();
+
+        System.assertEquals(false, result.success);
+        System.assertNotEquals(null, result.errorMessage);
+    }
+
+    @IsTest
+    static void testGetRl0402DocumentRequestPdfData_NoApplicationId() {
+        Case c = getTestCase();
+
+        Test.startTest();
+        FEC_PaymentHistoryValidationService.Rl0402PdfDataResult result =
+            FEC_PaymentHistoryValidationService.getRl0402DocumentRequestPdfData(String.valueOf(c.Id), 'requestor');
+        String appId = FEC_PaymentHistoryValidationService.resolveApplicationIdForCase(String.valueOf(c.Id));
+        Test.stopTest();
+
+        System.assertEquals(true, result.success);
+        System.assertNotEquals(null, result.headerData);
+        System.assertEquals(null, appId);
+    }
+
+    @IsTest
+    static void testRl0402PdfMappingHelpers() {
+        Case c = getTestCase();
+        update new Case(Id = c.Id, FEC_Application_ID__c = 'APP-RL0402-001');
+
+        FEC_GetRepaymentScheduleByAppIdCallout.RepaymentScheduleResponseInfo info =
+            new FEC_GetRepaymentScheduleByAppIdCallout.RepaymentScheduleResponseInfo();
+        info.CONTRACT_NUMBER = 'CN-001';
+        info.DSA_CODE = 'DSA01';
+        info.CUSTOMER_NAME = 'Test Customer';
+        info.ADDRESS = '123 Street';
+        info.ID_NO = 'ID001';
+        info.IDCARD_ISSUEPLACE = 'HCM';
+        info.ID_DATE = '2020-01-15';
+        info.TOTAL_LOAN_AMOUNT = 1000000;
+        info.TOTAL_LOAN_AMOUNT_WORDS = 'One million';
+        info.MONTHLY_RATE = 1.5;
+        info.YEARLY_RATE = 18;
+        info.END_DATE = '2026-12-31';
+        FEC_GetRepaymentScheduleByAppIdCallout.RepaymentScheduleItem item =
+            new FEC_GetRepaymentScheduleByAppIdCallout.RepaymentScheduleItem();
+        item.DUE_DATE = '2026-06-01';
+        item.PRINCIPAL_AMOUNT = 100;
+        item.INTEREST_AMOUNT = 10;
+        item.REMAINING_PRINCIPAL_AMOUNT = 900;
+        item.REPAYMENT_FEE = 5;
+        item.TOTAL_REPAYMENT_FEE = 115;
+        info.RepaymentScheduleItems = new List<FEC_GetRepaymentScheduleByAppIdCallout.RepaymentScheduleItem>{ item };
+
+        Test.startTest();
+        Map<String, Object> header = FEC_PaymentHistoryValidationService.mapRl0402HeaderFromApi(
+            info,
+            FEC_PaymentHistoryValidationService.queryCaseForRl0402Pdf(String.valueOf(c.Id))
+        );
+        List<Map<String, Object>> rows = FEC_PaymentHistoryValidationService.mapRl0402RowsFromApi(info);
+        String maturity = FEC_PaymentHistoryValidationService.resolveMaturityDateForPdf(info);
+        FEC_PaymentHistoryValidationService.Rl0402PdfDataResult emptyResult =
+            FEC_PaymentHistoryValidationService.buildEmptyRl0402PdfDataResult(String.valueOf(c.Id));
+        String resolvedApp = FEC_PaymentHistoryValidationService.resolveApplicationIdForCase(String.valueOf(c.Id));
+        Test.stopTest();
+
+        System.assertEquals('CN-001', header.get('ContractNumber'));
+        System.assertEquals(1, rows.size());
+        System.assertNotEquals(null, maturity);
+        System.assertEquals(true, emptyResult.success);
+        System.assertEquals('APP-RL0402-001', resolvedApp);
+    }
 }
