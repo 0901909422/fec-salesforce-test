@@ -34,6 +34,7 @@
         <members>FEC_CofGsrAssignmentService</members>
         <members>FEC_CofGsrAssignmentService_Test</members>
         <members>FEC_CommonUltils</members>
+        <members>FEC_CommonUltils_Test</members>
         <members>FEC_ConstantCommon</members>
         <members>FEC_CreateCSCaseRestService_Test</members>
         <members>FEC_CreateCSCaseService</members>
