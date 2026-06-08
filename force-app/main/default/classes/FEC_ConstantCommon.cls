@@ -736,10 +736,19 @@ public with sharing class FEC_ConstantCommon {
     // ================= MY CASE API — channel function names =================
     public static final String MY_CASE_FUNCTION_CREATE_CS_CASE = 'CreateCSCase';
     public static final String MY_CASE_FUNCTION_GET_CS_CASE_STATUS = 'GetCSCaseStatus';
+    public static final String MY_CASE_FUNCTION_GET_CS_MASTER_DATA = 'GetCSMasterData';
+    public static final String MY_CASE_FUNCTION_GET_CS_MASTER_DATA_BY_CODE = 'GetCSMasterDataByCode';
+    public static final String MY_CASE_FUNCTION_CANCEL_CS_CASE = 'CancelCSCase';
     public static final String MY_CASE_CHANNEL_CREATE_CASE_NOT_ALLOWED_MSG =
         'Channel is not allowed to execute CreateCSCase';
     public static final String MY_CASE_CHANNEL_GET_CASE_STATUS_NOT_ALLOWED_MSG =
         'Channel is not allowed to execute GetCSCaseStatus';
+    public static final String MY_CASE_CHANNEL_GET_MASTER_DATA_NOT_ALLOWED_MSG =
+        'Channel is not allowed to execute GetCSMasterData';
+    public static final String MY_CASE_CHANNEL_GET_MASTER_DATA_BY_CODE_NOT_ALLOWED_MSG =
+        'Channel is not allowed to execute GetCSMasterDataByCode';
+    public static final String MY_CASE_CHANNEL_CANCEL_CASE_NOT_ALLOWED_MSG =
+        'Channel is not allowed to execute CancelCSCase';
     
     // ================= ROUTE STATUS =================
     public static final String STATUS_CS_BACKOFFICE = 'CSBackOfficeReview';
