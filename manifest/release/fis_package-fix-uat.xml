@@ -118,6 +118,7 @@
         <members>Case.FEC_KYC_Status__c</members>
         <members>Case.FEC_Search_Products__c</members>
         <members>FEC_Actual_Master_Data_Setting__c.FEC_Channel__c</members>
+        <members>FEC_Master_Data_Setting__c.FEC_Channel__c</members>
         <name>CustomField</name>
     </types>
     <types>
