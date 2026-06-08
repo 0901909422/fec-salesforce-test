@@ -1,36 +1,8 @@
 @IsTest
 private class FEC_CreateCaseHandler_Test {
 
-    private static void ensureRunUserMainQueue() {
-        Map<String, Schema.SObjectField> userFields = User.SObjectType.getDescribe().fields.getMap();
-        if (!userFields.containsKey('FEC_Main_Queue__c')) {
-            return;
-        }
-        User runUser = new User(Id = UserInfo.getUserId());
-        List<Group> queues = [
-            SELECT DeveloperName
-            FROM Group
-            WHERE Type = 'Queue'
-              AND DeveloperName = :FEC_ConstantCommon.QUEUE_DQ_CS_SUPPORT_NAME
-            LIMIT 1
-        ];
-        if (queues.isEmpty()) {
-            Group q = new Group(
-                Name = 'CreateCase Test CS Support Queue',
-                DeveloperName = FEC_ConstantCommon.QUEUE_DQ_CS_SUPPORT_NAME,
-                Type = 'Queue'
-            );
-            insert q;
-            runUser.FEC_Main_Queue__c = q.DeveloperName;
-        } else {
-            runUser.FEC_Main_Queue__c = queues[0].DeveloperName;
-        }
-        update runUser;
-    }
-
     @TestSetup
     static void setupData() {
-        ensureRunUserMainQueue();
         insert new List<FEC_Category__c>{
             new FEC_Category__c(
                 Name = FEC_ConstantCommon.FEC_CATEGORY_REQUEST,
@@ -154,13 +126,25 @@ private class FEC_CreateCaseHandler_Test {
 
         System.assertNotEquals(null, res.caseId);
         Case created = [
-            SELECT FEC_Is_Submited__c, FEC_Is_MyCaseAPI_Interaction__c, FEC_Interaction_Email__c
+            SELECT
+                FEC_Is_Submited__c,
+                FEC_Is_MyCaseAPI_Interaction__c,
+                FEC_Interaction_Email__c,
+                FEC_Channel__c,
+                FEC_Interaction_Subchannel__c,
+                FEC_Other_Subchannel__c
             FROM Case
             WHERE Id = :res.caseId
         ];
         System.assertEquals(true, created.FEC_Is_Submited__c);
         System.assertEquals(true, created.FEC_Is_MyCaseAPI_Interaction__c);
         System.assertEquals('mycase@example.com', created.FEC_Interaction_Email__c);
+        System.assertEquals(FEC_ConstantCommon.CHANNEL_EXTERNAL, created.FEC_Channel__c);
+        System.assertEquals(
+            FEC_ConstantCommon.CHANNEL_EXTERNAL_SUBCHANNEL_OTHER_NAME,
+            created.FEC_Interaction_Subchannel__c
+        );
+        System.assertEquals(FEC_ConstantCommon.CHANNEL_INBOUND_NAME, created.FEC_Other_Subchannel__c);
     }
 
     @IsTest
@@ -303,7 +287,13 @@ private class FEC_CreateCaseHandler_Test {
         Test.stopTest();
 
         System.assertEquals(true, c.FEC_Is_Submited__c);
-        System.assertEquals(FEC_ConstantCommon.CHANNEL_INBOUND_NAME, c.FEC_Channel__c);
+        System.assertEquals(FEC_ConstantCommon.CHANNEL_EXTERNAL, c.FEC_Channel__c);
+        System.assertEquals(FEC_ConstantCommon.CHANNEL_EXTERNAL, c.FEC_Case_Channel__c);
+        System.assertEquals(
+            FEC_ConstantCommon.CHANNEL_EXTERNAL_SUBCHANNEL_OTHER_NAME,
+            c.FEC_Sub_Channel__c
+        );
+        System.assertEquals(FEC_ConstantCommon.CHANNEL_INBOUND_NAME, c.FEC_Other_Subchannel__c);
     }
 
     @IsTest
@@ -314,11 +304,7 @@ private class FEC_CreateCaseHandler_Test {
 
         Case c = [SELECT Status, FEC_Customer_Name__c FROM Case WHERE Id = :caseId];
         System.assertEquals('Test Internal', c.FEC_Customer_Name__c);
-        System.assert(
-            c.Status == FEC_ConstantCommon.CASE_STATUS_NEW
-                || c.Status == FEC_ConstantCommon.CASE_STATUS_OPEN,
-            'Internal case status phải là New hoặc Open tùy org.'
-        );
+        System.assertEquals(FEC_ConstantCommon.CASE_STATUS_NEW, c.Status);
         System.assert(
             [SELECT COUNT() FROM FEC_Additional_Info__c WHERE FEC_Case__c = :caseId] > 0,
             'Phải tạo Additional Info.'

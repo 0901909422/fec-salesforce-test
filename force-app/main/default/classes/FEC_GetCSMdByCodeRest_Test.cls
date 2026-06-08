@@ -29,37 +29,6 @@ private class FEC_GetCSMdByCodeRest_Test {
 
     @TestSetup
     static void setupData() {
-        insert new FEC_Channel__c(
-            Name = FEC_ConstantCommon.KEY_VALID_CHANNELS_API,
-            FEC_Code__c = 'API',
-            FEC_Channel_ID__c = FEC_ConstantCommon.KEY_VALID_CHANNELS_API,
-            FEC_Channel_Vietnamese_name__c = 'API',
-            FEC_Channel_Status__c = true,
-            FEC_Get_Nature_Of_Case__c = true
-        );
-
-        FEC_Product_Type__c productType = new FEC_Product_Type__c(
-            Name = 'Card REST',
-            FEC_Code__c = 'CARD',
-            FEC_Name_VN__c = 'Card REST',
-            FEC_Active__c = true
-        );
-        insert productType;
-
-        FEC_Business_Process__c businessProcess = new FEC_Business_Process__c(
-            Name = 'Complaint REST',
-            FEC_Code__c = 'COMPLAINT',
-            FEC_Active__c = true
-        );
-        insert businessProcess;
-
-        FEC_Category__c category = new FEC_Category__c(
-            Name = 'Request REST',
-            FEC_Code__c = 'REQUEST',
-            FEC_Active__c = true
-        );
-        insert category;
-
         FEC_Sub_Category__c subCat = new FEC_Sub_Category__c(
             Name = 'Test SubCat REST',
             FEC_Code__c = 'SC01',
@@ -68,23 +37,10 @@ private class FEC_GetCSMdByCodeRest_Test {
         );
         insert subCat;
 
-        FEC_Sub_Code__c subCode = new FEC_Sub_Code__c(
-            Name = 'SubCode REST',
-            FEC_Code__c = 'SUB01',
+        insert new FEC_Nature_of_Case__c(
+            FEC_Sub_Category__c = subCat.Id,
             FEC_Active__c = true
         );
-        insert subCode;
-
-        insert new FEC_Nature_of_Case__c(
-            FEC_Product_Type__c = productType.Id,
-            FEC_Business_Process__c = businessProcess.Id,
-            FEC_Category__c = category.Id,
-            FEC_Sub_Category__c = subCat.Id,
-            FEC_Sub_Code__c = subCode.Id,
-            FEC_Active__c = true,
-            FEC_Channel__c = FEC_ConstantCommon.KEY_VALID_CHANNELS_API
-        );
-        FEC_CommonUltils.resetActiveChannelCacheForTest();
     }
 
     @IsTest

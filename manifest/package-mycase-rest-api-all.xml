@@ -1,0 +1,34 @@
+<Package xmlns="http://soap.sforce.com/2006/04/metadata">
+<types>
+<members>FEC_ConstantCommon</members>
+
+       <members>FEC_ConstantCommon</members>
+        <members>FEC_ChannelFunctionService</members>
+        <members>FEC_ChannelFunctionServiceTest</members>
+        <members>FEC_MyCaseSoapXml</members>
+        <members>FEC_CancelCSCaseService</members>
+        <members>FEC_CancelCSCaseRestService</members>
+        <members>FEC_CreateCSCaseService</members>
+        <members>FEC_CreateCSCaseRestService</members>
+        <members>FEC_GetCSCaseStatusService</members>
+        <members>FEC_GetCSCaseStatusRestService</members>
+        <members>FEC_GetCSMasterDataService</members>
+        <members>FEC_GetCSMasterDataRestService</members>
+        <members>FEC_GetCSMasterDataByCodeService</members>
+        <members>FEC_GetCSMasterDataByCodeRestService</members>
+        <members>FEC_CancelCSCaseService_Test</members>
+        <members>FEC_CancelCSCaseRestService_Test</members>
+        <members>FEC_CancelCSCaseRestService_UT_Test</members>
+        <members>FEC_CreateCSCaseService_Test</members>
+        <members>FEC_CreateCSCaseRestService_Test</members>
+        <members>FEC_GetCSCaseStatusService_Test</members>
+        <members>FEC_GetCSCaseStatusRestService_Test</members>
+        <members>FEC_GetCSMasterDataService_Test</members>
+        <members>FEC_GetCSMasterDataRestService_Test</members>
+        <members>FEC_GetCSMasterDataByCodeService_Test</members>
+        <members>FEC_GetCSMdByCodeRest_Test</members>
+
+<name>ApexClass</name>
+</types>
+<version>65.0</version>
+</Package>
