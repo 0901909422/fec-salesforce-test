@@ -72,6 +72,7 @@ private class FEC_CreateCSCaseRestService_Test {
 
     @TestSetup
     static void setupData() {
+        FEC_UnitTestMyCaseChannelUtil.ensureInboundMyCaseChannel();
         FEC_Business_Process__c bp = new FEC_Business_Process__c(
             Name = 'Complaint',
             FEC_Code__c = 'Complaint',
@@ -184,19 +185,29 @@ private class FEC_CreateCSCaseRestService_Test {
 
         //Thangtv: assert field MyCase API (submitted, channel, review mode)
         List<Case> cases = [
-            SELECT FEC_Channel__c, FEC_Is_Submited__c, FEC_Interaction_View_Mode__c,
+            SELECT FEC_Channel__c,
+                FEC_Other_Subchannel__c,
+                FEC_Is_Submited__c,
+                FEC_Interaction_View_Mode__c,
                 RecordType.DeveloperName
             FROM Case
             ORDER BY CreatedDate DESC
             LIMIT 2
         ];
         for (Case c : cases) {
-            System.assertEquals(true, c.FEC_Is_Submited__c);
-            System.assertEquals('Inbound', c.FEC_Channel__c);
             System.assertEquals(
-                FEC_ConstantCommon.INTERACTION_REVIEW_MODE,
-                c.FEC_Interaction_View_Mode__c
+                FEC_ConstantCommon.CHANNEL_EXTERNAL,
+                c.FEC_Channel__c
             );
+            if (c.RecordType.DeveloperName ==
+                FEC_ConstantCommon.CASE_CUSTOMER_RECORD_TYPE_DEV_NAME) {
+                System.assertEquals(true, c.FEC_Is_Submited__c);
+                System.assertEquals('Inbound', c.FEC_Other_Subchannel__c);
+                System.assertEquals(
+                    FEC_ConstantCommon.INTERACTION_REVIEW_MODE,
+                    c.FEC_Interaction_View_Mode__c
+                );
+            }
         }
     }
 

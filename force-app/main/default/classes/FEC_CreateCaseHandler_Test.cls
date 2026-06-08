@@ -304,7 +304,7 @@ private class FEC_CreateCaseHandler_Test {
 
         Case c = [SELECT Status, FEC_Customer_Name__c FROM Case WHERE Id = :caseId];
         System.assertEquals('Test Internal', c.FEC_Customer_Name__c);
-        System.assertEquals(FEC_ConstantCommon.CASE_STATUS_NEW, c.Status);
+        System.assertEquals(FEC_ConstantCommon.CASE_STATUS_OPEN, c.Status);
         System.assert(
             [SELECT COUNT() FROM FEC_Additional_Info__c WHERE FEC_Case__c = :caseId] > 0,
             'Phải tạo Additional Info.'
