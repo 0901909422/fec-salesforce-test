@@ -14,5 +14,5 @@
     <permissionSets>FEC_Permission_Set_Batch_Data_Creation</permissionSets>
     <permissionSets>FEC_Permission_Set_Customer_Data_Management_User</permissionSets>
     <permissionSets>Upload_Outbound_Campaign</permissionSets>
-    <status>Updating</status>
+    <status>Updated</status>
 </PermissionSetGroup>
