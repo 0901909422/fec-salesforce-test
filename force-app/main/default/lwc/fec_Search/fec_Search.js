@@ -136,6 +136,20 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
     return this.tabName === 'FEC_Account_Contract_Search'; // your tab's API name
   }
 
+  get isCustomerSearchTab() {
+    return this.tabName === 'FEC_Customer_Search';
+  }
+
+  get showNoResultWithIcon() {
+    if (this.isAccountContractSearch) {
+      return true;
+    }
+    if (this.isCustomerSearchTab) {
+      return true;
+    }
+    return false;
+  }
+
   get isCaseListView() {
     return this.pageRef?.type === 'standard__objectPage' &&
       this.pageRef?.attributes?.objectApiName === 'Case' &&
@@ -1779,16 +1793,23 @@ hasAnySearchCriteria(params) {
   //linhdev Fix jira FECREDIT_CSM_2025_KH-1243
   get isDisplayCreateCase() {
     return (
+      !this.isSearchServiceError &&
       (this.isCreateCaseTab ||
-        this.tabName === 'FEC_Customer_Search' ||
         this.tabName === 'FEC_Account_Contract_Search' ||
-        !!this.recordId) &&
-      !this.isSearchServiceError
+        this.showSkipButton ||
+        this.isListView ||
+        this.caseRecordTypeName === 'Internal Case' ||
+        this.caseRecordTypeName === 'Interaction' || 
+        this.caseRecordTypeName === 'Customer Case' ||
+        this.caseRecordTypeName === 'Search Interaction')
     );
   }
 
   //linhdev Fix jira FECREDIT_CSM_2025_KH-1243
   get noCustomerFoundMessage() {
+    if (this.isCustomerSearchTab) {
+      return FEC_MSG_Service_Error_Label;
+    }
     if (this.isSearchServiceError) {
       return FEC_MSG_Service_Error_Label;
     }

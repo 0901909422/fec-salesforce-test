@@ -58,7 +58,7 @@
                 <lightning-accordion-section class="search-result" name="results" label="Search Result">
                     <template if:true={isNoCustomerFound}>
                         <div class="slds-p-vertical_medium">
-                            <template if:true={isAccountContractSearch}>
+                            <template if:true={showNoResultWithIcon}>
                                 <div class="slds-text-align_center slds-text-body_regular slds-m-bottom_medium">
                                     <span class="no-result-text">
                                         <span class="no-result-icon">&#x2297;</span>
@@ -66,7 +66,7 @@
                                     </span>
                                 </div>
                             </template>
-                            <template if:false={isAccountContractSearch}>
+                            <template if:false={showNoResultWithIcon}>
                                 <div class={noCustomerFoundClass}>
                                     {noCustomerFoundMessage}
                                 </div>
