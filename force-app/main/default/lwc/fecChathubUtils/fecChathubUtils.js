@@ -132,6 +132,81 @@ const base64ToUint8Array = (base64) => {
     return bytes;
 }
 
+/**
+ * Permission Sets / Permission Set Groups cho phép sử dụng ChatHub & ChatHub Status Utility Item.
+ * Khi user không thuộc bất kỳ giá trị nào trong array này, các utility item liên quan
+ * sẽ bị remove khỏi DOM khi component khởi tạo.
+ */
+const ALLOWED_CHATHUB_PERMISSION_SETS = [
+    // Permission Sets
+    'FEC_CS_Head_of_CS_Contact_Center_Dept_Interaction_Case_Service_Case',
+    'FEC_CS_CS_Operations_Manager_Interaction_Case_Service_Case',
+    'FEC_CS_Unit_Head_of_CS_Inbound_Interaction_Case_Service_Case',
+    'FEC_CS_CS_Inbound_Team_Leader_Interaction_Case_Service_Case',
+    'FEC_CS_Senior_CS_Inbound_Specialist_Interaction_Case_Service_Case',
+    'FEC_CS_CS_Inbound_Specialist_Interaction_Case_Service_Case',
+    'FEC_CS_CS_Inbound_Officer_Interaction_Case_Service_Case',
+    'FEC_CS_Unit_Head_of_CS_Ecom_Interaction_Case_Service_Case',
+    'FEC_CS_CS_Ecom_Team_Leader_Interaction_Case_Service_Case',
+    'FEC_CS_Senior_CS_Ecom_Specialist_Interaction_Case_Service_Case',
+    'FEC_CS_CS_Ecom_Specialist_Interaction_Case_Service_Case',
+    'FEC_CS_CS_Ecom_Officer_Interaction_Case_Service_Case',
+    // Permission Set Groups
+    'FEC_PSG_CS_Head_of_CS_Contact_Center_Dept',
+    'FEC_PSG_CS_CS_Operations_Manager',
+    'FEC_PSG_CS_Unit_Head_of_CS_Inbound',
+    'FEC_PSG_CS_CS_Inbound_Team_Leader',
+    'FEC_PSG_CS_Senior_CS_Inbound_Specialist',
+    'FEC_PSG_CS_CS_Inbound_Specialist',
+    'FEC_PSG_CS_CS_Inbound_Officer',
+    'FEC_PSG_CS_Unit_Head_of_CS_Ecom',
+    'FEC_PSG_CS_CS_Ecom_Team_Leader',
+    'FEC_PSG_CS_Senior_CS_Ecom_Specialist',
+    'FEC_PSG_CS_CS_Ecom_Specialist',
+    'FEC_PSG_CS_CS_Ecom_Officer',
+];
+
+/**
+ * Tìm <li> utility item theo label (so khớp chính xác, case-insensitive) và remove khỏi DOM.
+ * Có retry vì utility bar có thể render sau component LWC.
+ *
+ * @param {string} targetLabel - Label hiển thị của utility item (ví dụ 'ChatHub')
+ * @param {Object} [options]
+ * @param {number} [options.maxAttempts=10] - Số lần thử tối đa
+ * @param {number} [options.intervalMs=300] - Thời gian giữa các lần retry (ms)
+ * @return {void}
+ */
+const removeUtilityItemByLabel = (targetLabel, options = {}) => {
+    if (!targetLabel) return;
+    console.log('targetLabel');
+    console.log(targetLabel);
+    const maxAttempts = options.maxAttempts || 10;
+    const intervalMs = options.intervalMs || 300;
+    const normalized = targetLabel.trim().toLowerCase();
+    let attempts = 0;
+
+    const tryRemove = () => {
+        attempts++;
+        const utilityItems = document.querySelectorAll('.oneUtilityBar ul li');
+        let removed = false;
+        utilityItems.forEach(li => {
+            const labelEl = li.querySelector('.label, .utilityBarLabel, [data-aura-class*="Label"]');
+            const labelText = labelEl ? labelEl.textContent.trim() : li.textContent.trim();
+            // Match nếu labelText chứa target (case-insensitive)
+            if (labelText && labelText.toLowerCase().includes(normalized)) {
+                li.remove();
+                removed = true;
+            }
+        });
+
+        if (!removed && attempts < maxAttempts) {
+            setTimeout(tryRemove, intervalMs);
+        }
+    };
+
+    tryRemove();
+};
+
 const decryptDataKYC = async (encryptedBase64, password) => {
     if (!password) {
         throw new Error("SecretKey parameter must not be null or empty.");
@@ -186,4 +261,4 @@ const decryptDataKYC = async (encryptedBase64, password) => {
     }
 }
 
-export { formatDatetimeLocal, executeWithLock, fetchFileFromUrl, formatDatetime, showToast, decryptDataKYC };
+export { formatDatetimeLocal, executeWithLock, fetchFileFromUrl, formatDatetime, showToast, decryptDataKYC, ALLOWED_CHATHUB_PERMISSION_SETS, removeUtilityItemByLabel };
