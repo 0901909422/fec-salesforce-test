@@ -11,19 +11,7 @@ public with sharing class FEC_CreateCaseInteractionController {
       LIMIT 1
     ];
 
-    if (
-        interation.FEC_Is_Manual__c == true &&
-        (
-            interation.FEC_Channel__c == 'Inbound' ||
-            interation.FEC_Channel__c == 'Outbound'
-        ) &&
-        String.isBlank(interation.FEC_Phone_Number__c)
-    ) {
-        throw new AuraHandledException(
-            System.Label.FEC_PHONE_IS_REQUIRED_MSG
-        );
-    }
-    
+   
      if (
         interation.FEC_Is_Manual__c == true &&
         (
