@@ -119,6 +119,11 @@
                 <default>false</default>
                 <label>Others</label>
             </value>
+            <value>
+                <fullName>All</fullName>
+                <default>false</default>
+                <label>All</label>
+            </value>
         </valueSetDefinition>
     </valueSet>
     <visibleLines>4</visibleLines>

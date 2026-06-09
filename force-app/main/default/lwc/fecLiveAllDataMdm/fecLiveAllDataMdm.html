@@ -1,0 +1,75 @@
+<template>
+    <lightning-card title={labelTitle} icon-name="standard:record_lookup">
+        <div slot="actions">
+            <lightning-button label={labelRefresh} icon-name="utility:refresh" onclick={handleRefresh}
+                variant="neutral">
+            </lightning-button>
+        </div>
+        <div class="slds-p-around_small">
+            <template if:true={isLoading}>
+                <lightning-spinner alternative-text="Loading MDM data" size="medium"></lightning-spinner>
+            </template>
+            <template if:false={isLoading}>
+                <template if:true={hasData}>
+                    <lightning-tabset variant="scoped">
+                        <lightning-tab label={labelTabProduct}>
+                            <lightning-datatable key-field="Id" data={data.ProductType}
+                                columns={columnsBasic} hide-checkbox-column></lightning-datatable>
+                        </lightning-tab>
+                        <lightning-tab label={labelTabBP}>
+                            <lightning-datatable key-field="Id" data={data.BusinessProcess}
+                                columns={columnsBasic} hide-checkbox-column></lightning-datatable>
+                        </lightning-tab>
+                        <lightning-tab label={labelTabCategory}>
+                            <lightning-datatable key-field="Id" data={data.Category}
+                                columns={columnsBasic} hide-checkbox-column></lightning-datatable>
+                        </lightning-tab>
+                        <lightning-tab label={labelTabSubCategory}>
+                            <lightning-datatable key-field="Id" data={data.SubCategory}
+                                columns={columnsBasic} hide-checkbox-column></lightning-datatable>
+                        </lightning-tab>
+                        <lightning-tab label={labelTabSubCode}>
+                            <lightning-datatable key-field="Id" data={data.SubCode}
+                                columns={columnsBasic} hide-checkbox-column></lightning-datatable>
+                        </lightning-tab>
+                        <lightning-tab label={labelTabMasterSetting}>
+                            <lightning-datatable key-field="Id" data={data.MasterSetting}
+                                columns={columnsMsSetting} hide-checkbox-column></lightning-datatable>
+                        </lightning-tab>
+                        <lightning-tab label={labelTabChannel}>
+                            <lightning-datatable key-field="Id" data={data.Channel}
+                                columns={columnsSetting} hide-checkbox-column></lightning-datatable>
+                        </lightning-tab>
+                        <lightning-tab label={labelTabNOC}>
+                            <lightning-datatable key-field="Id" data={data.NatureOfCase}
+                                columns={columnsNOC} hide-checkbox-column></lightning-datatable>
+                        </lightning-tab>
+                        <lightning-tab label={labelTabAddField}>
+                            <lightning-datatable key-field="Id" data={data.AdditionalField}
+                                columns={columnsField} hide-checkbox-column></lightning-datatable>
+                        </lightning-tab>
+                        <lightning-tab label={labelTabAddFieldList}>
+                            <lightning-datatable key-field="Id" data={data.AdditionalFieldList}
+                                columns={columnsSetting} hide-checkbox-column></lightning-datatable>
+                        </lightning-tab>
+                        <lightning-tab label={labelTabCaseStage} value="CaseStage">
+                            <lightning-datatable key-field="Id" data={data.CaseStage}
+                                columns={columnsStage} hide-checkbox-column></lightning-datatable>
+                        </lightning-tab>
+                        <lightning-tab label={labelTabActionButton} value="ActionButton">
+                            <lightning-datatable key-field="Id" data={data.ActionButton}
+                                columns={columnsActionButton} hide-checkbox-column></lightning-datatable>
+                        </lightning-tab>
+                        <lightning-tab label={labelTabStageChange} value="StageChange">
+                            <lightning-datatable key-field="Id" data={data.StageChange}
+                                columns={columnsStageChange} hide-checkbox-column></lightning-datatable>
+                        </lightning-tab>
+                    </lightning-tabset>
+                </template>
+                <template if:false={hasData}>
+                    <p class="slds-text-color_weak slds-p-around_medium slds-text-align_center">No MDM master data records found.</p>
+                </template>
+            </template>
+        </div>
+    </lightning-card>
+</template>

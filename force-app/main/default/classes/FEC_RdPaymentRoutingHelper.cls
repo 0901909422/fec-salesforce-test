@@ -20,7 +20,34 @@ public without sharing class FEC_RdPaymentRoutingHelper {
       return false;
     }
     String stageName = c.FEC_Current_Case_Stage__r?.Name;
-    return String.isNotBlank(stageName) &&
-      stageName.toUpperCase().contains('PM');
+    if (String.isBlank(stageName)) {
+      return false;
+    }
+    if (stageName.toUpperCase().contains('PM')) {
+      return true;
+    }
+    return isRl16RdPaymentAssessmentStage(subCode, stageName);
+  }
+
+  /**
+   * RL16.02/03 Stage 2 — stage đánh giá RD Payment (tên org có thể không chứa "PM").
+   */
+  private static Boolean isRl16RdPaymentAssessmentStage(
+    String subCode,
+    String stageName
+  ) {
+    if (String.isBlank(subCode) || String.isBlank(stageName)) {
+      return false;
+    }
+    if (
+      !FEC_ConstantCommon.SUB_CODE_RD_PAYMENT_ASSESSMENT_1.equals(subCode) &&
+      !FEC_ConstantCommon.SUB_CODE_RD_PAYMENT_ASSESSMENT_2.equals(subCode)
+    ) {
+      return false;
+    }
+    Matcher m = FEC_ConstantCommon.PAT_STAGE_NAME_WITH_NUMBER.matcher(
+      stageName.trim()
+    );
+    return m.find() && Integer.valueOf(m.group(1)) == 2;
   }
 }

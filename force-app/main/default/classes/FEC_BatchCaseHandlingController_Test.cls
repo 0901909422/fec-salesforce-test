@@ -1115,4 +1115,73 @@ private class FEC_BatchCaseHandlingController_Test {
         );
         Test.stopTest();
     }
+
+    @IsTest
+    static void testZipExcelFiles_EmptyInput() {
+        Test.startTest();
+        FEC_BatchCaseHandlingZipResult result = FEC_BatchCaseHandlingController.zipExcelFiles(
+            new List<Map<String, Object>>(),
+            'empty-archive'
+        );
+        FEC_BCH_ImportFileNameValidator.ValidationResult validation =
+            FEC_BatchCaseHandlingController.validateImportFileName(
+                'COFTemp_Sample_CSCustomerCare.xlsx',
+                'COF',
+                'COF - General Flow',
+                'COFTemp_Sample_CSCustomerCare',
+                1
+            );
+        FEC_BatchCaseHandlingController.logFailedImport('bad.xlsx', 'COF Template', 'validation failed');
+        FEC_BatchCaseHandlingController.FilterPropertyMetadataBundle bundle =
+            FEC_BatchCaseHandlingController.getCaseFilterPropertyMetadataBundle();
+        FEC_BatchCaseHandlingController.BulkCaseSearchResult search =
+            FEC_BatchCaseHandlingController.searchBulkCases('[]', 10, 1);
+        Test.stopTest();
+
+        System.assertNotEquals(null, result);
+        System.assertNotEquals(null, validation);
+        System.assertNotEquals(null, bundle);
+        System.assertNotEquals(null, search);
+    }
+
+    @IsTest
+    static void testGetCaseFilterPropertyMetadata_CaseStatusOptions() {
+        Test.startTest();
+        List<FEC_BatchCaseHandlingController.FilterPropertyMeta> preDefine =
+            FEC_BatchCaseHandlingController.getCaseFilterPropertyMetadata(
+                FEC_BCH_FilterPropertyService.SCOPE_PRE_DEFINE
+            );
+        Test.stopTest();
+
+        Boolean hasCaseStatus = false;
+        for (FEC_BatchCaseHandlingController.FilterPropertyMeta meta : preDefine) {
+            if (meta != null && meta.propertyKey == 'CASE_STATUS') {
+                hasCaseStatus = true;
+                System.assertNotEquals(null, meta.picklistOptions);
+                break;
+            }
+        }
+        System.assertEquals(true, hasCaseStatus);
+    }
+
+    @IsTest
+    static void testImportBatchData_InvalidWorkbookParse() {
+        User privileged = privilegedUserForBulkCaseRead();
+        System.runAs(privileged) {
+            Test.startTest();
+            FEC_BatchCaseHandlingController.ImportResult result =
+                FEC_BatchCaseHandlingController.importBatchData(
+                    'COFTemp_BCH_Test_CSCustomerCare.xlsx',
+                    EncodingUtil.base64Encode(Blob.valueOf('NOT_A_VALID_XLSX_FILE')),
+                    'COFTemp_BCH_Test_CSCustomerCare',
+                    '[]',
+                    'COF',
+                    'COF - General Flow'
+                );
+            Test.stopTest();
+
+            System.assertEquals(false, result.success);
+            System.assertNotEquals(null, result.message);
+        }
+    }
 }

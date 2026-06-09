@@ -118,7 +118,9 @@ private class FEC_CustAddInfoListCtrlTest {
 
         FEC_CustomerAdditionalInfo__c detail = new FEC_CustomerAdditionalInfo__c(
             FEC_Config__c = cfg.Id,
-            FEC_KeyIDValue__c = 'DEL_KEY'
+            FEC_KeyIDValue__c = 'DEL_KEY',
+            FEC_KeyIdentifier__c = 'DEL_TEST',
+            FEC_FieldID__c = 'DEL_FIELD'
         );
         insert detail;
 
@@ -134,8 +136,9 @@ private class FEC_CustAddInfoListCtrlTest {
         FEC_CustomerAdditionalInfoListController.deleteConfig(cfg.Id);
         Test.stopTest();
 
-        List<FEC_CustomerAdditionalInfoConfig__c> remaining = [SELECT Id FROM FEC_CustomerAdditionalInfoConfig__c WHERE Id = :cfg.Id];
-        System.assertEquals(0, remaining.size(), 'Config phải bị xóa');
+        List<FEC_CustomerAdditionalInfoConfig__c> remaining = [SELECT Id, FEC_Status__c FROM FEC_CustomerAdditionalInfoConfig__c WHERE Id = :cfg.Id];
+        System.assertEquals(1, remaining.size(), 'Config vẫn tồn tại (soft delete)');
+        System.assertEquals(FEC_ConstantCommon.CANCELLED_STATUS, remaining[0].FEC_Status__c, 'Config phải chuyển sang Cancelled');
     }
 
     @isTest

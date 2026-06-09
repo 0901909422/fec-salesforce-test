@@ -83,6 +83,10 @@ private class FEC_AssignmentExecuteService_Test {
         );
         insert new List<User>{ agentDirect, agentRole };
 
+        // Assign Permission Sets cho FLS access
+        FEC_TestDataFactory.assignStandardFECPermissions(agentDirect.Id);
+        FEC_TestDataFactory.assignStandardFECPermissions(agentRole.Id);
+
         System.runAs(new User(Id = UserInfo.getUserId())) {
             insert new QueueSobject(QueueId = testQueue.Id, SobjectType = 'Case');
             insert new List<GroupMember>{

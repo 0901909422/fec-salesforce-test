@@ -584,6 +584,9 @@ public without sharing class FEC_MyCaseSoapXml {
         }
         String xml = '<RequestInfo>' +
             buildXmlElement('CaseType', requestInfo.CaseType) +
+            buildXmlElement('RequestType', requestInfo.RequestType) +
+            buildXmlElement('RequestTypeVN', requestInfo.RequestTypeVN) +
+            buildXmlElement('RequestTypeEN', requestInfo.RequestTypeEN) +
             buildXmlElement('ProductType', requestInfo.ProductType) +
             buildXmlElement('Category', requestInfo.Category) +
             buildXmlElement('SubCategory', requestInfo.SubCategory) +
@@ -1551,7 +1554,8 @@ public without sharing class FEC_MyCaseSoapXml {
     }
 
     /**
-     * Map Interaction Case DTO từ XML CreateCSCase (Channel/SubChannel từ Sys).
+     * Map Interaction Case DTO từ XML CreateCSCase.
+     * dto.channel (Sys.Channel) → FEC_Other_Subchannel__c trên Interaction (External/Other).
      * Chỉ gọi từ FEC_CreateCSCaseService.CreateCSCaseRequest (MyCase API).
      * //Thangtv
      */

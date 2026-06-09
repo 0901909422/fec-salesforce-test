@@ -2,9 +2,8 @@
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
     <fullName>FEC_Value_Type__c</fullName>
     <description>Data type of the Value field, used for correct comparison (String, Number, Boolean, List).</description>
-    <externalId>false</externalId>
     <label>Value Type</label>
-    <trackHistory>false</trackHistory>
+    <required>false</required>
     <trackTrending>false</trackTrending>
     <type>Picklist</type>
     <valueSet>

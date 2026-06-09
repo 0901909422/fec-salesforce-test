@@ -145,6 +145,39 @@ private class FEC_TransactionsController_Test {
         System.assertNotEquals(null, res);
         System.assert(res.unbilledTransactions.size() > 0, 'Phải tải được unbilled transactions.');
         System.assert(res.pendingTransactions.size() > 0, 'Phải tải được pending transactions.');
+
+        FEC_TransactionsController.TransactionDTO unbilledRow =
+            res.unbilledTransactions[0];
+        System.assertNotEquals(
+            null,
+            unbilledRow.effectiveDateDualDisplay,
+            'Unbilled phải map effective date từ API.'
+        );
+        System.assertNotEquals(
+            null,
+            unbilledRow.transactionAmountDualDisplay,
+            'Unbilled phải map amount từ API.'
+        );
+
+        FEC_TransactionsController.TransactionDTO pendingRow =
+            res.pendingTransactions[0];
+        System.assertNotEquals(
+            null,
+            pendingRow.effectiveDateDualDisplay,
+            'Pending phải map effective date từ VMX API.'
+        );
+
+        FEC_Transaction__c pendingTx = [
+            SELECT FEC_Merchant_Description__c, FEC_Transaction_Amount__c
+            FROM FEC_Transaction__c
+            WHERE FEC_Transaction_Code__c = 'AUTH001'
+            LIMIT 1
+        ];
+        System.assertEquals(
+            'Pending auth',
+            pendingTx.FEC_Merchant_Description__c,
+            'Pending API data phải được lưu xuống FEC_Transaction__c.'
+        );
     }
 
     @IsTest
