@@ -1538,7 +1538,7 @@ public without sharing class FEC_BatchCaseCreationController {
             }
         }
         //09/06/2026 dungLTdev: Insert Routing Action History Resolve sau khi tạo Case import thành công.
-        FEC_BCC_CreationResolveHistService.applyAfterCreationBulk(resolveHistoryItems);
+        FEC_BCC_CreationResolveHistService.applyAfterCreationBulk(resolveHistoryItems, importerUserId);
     }
 
     private static void insertStandardCasesWithInteraction(
@@ -1676,7 +1676,7 @@ public without sharing class FEC_BatchCaseCreationController {
             }
         }
         //09/06/2026 dungLTdev: Insert Routing Action History Resolve sau khi tạo Case import thành công.
-        FEC_BCC_CreationResolveHistService.applyAfterCreationBulk(resolveHistoryItems);
+        FEC_BCC_CreationResolveHistService.applyAfterCreationBulk(resolveHistoryItems, importerUserId);
     }
 
     private static String buildSubject(String contractNumber) {
