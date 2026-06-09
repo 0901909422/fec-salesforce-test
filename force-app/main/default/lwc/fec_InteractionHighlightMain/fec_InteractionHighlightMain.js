@@ -6,10 +6,14 @@ import {
   setTabLabel,
 } from "lightning/platformWorkspaceApi";
 import { NavigationMixin } from "lightning/navigation";
+import { ShowToastEvent } from "lightning/platformShowToastEvent";
 import { getRecord, getFieldValue } from "lightning/uiRecordApi";
 import { notifyRecordUpdateAvailable } from "lightning/uiRecordApi";
 import resetViewMode from "@salesforce/apex/FEC_InteractionInforHandler.resetViewMode";
 import getRecordTypeName from "@salesforce/apex/FEC_InteractionInforHandler.getRecordTypeName";
+import isInteractionEmailActionBlocked from "@salesforce/apex/FEC_InteractionInforHandler.isInteractionEmailActionBlocked";
+import FEC_Interaction_Email_Required_Msg from "@salesforce/label/c.FEC_Interaction_Email_Required_Msg";
+import FEC_Toast_Validation_Title from "@salesforce/label/c.FEC_Toast_Validation_Title";
 
 import FIRST_ACCESS from "@salesforce/schema/Case.FEC_First_Access__c";
 import VIEW_MODE from "@salesforce/schema/Case.FEC_Interaction_View_Mode__c";
@@ -339,6 +343,24 @@ export default class Fec_InteractionHighlightMain extends NavigationMixin(
 
   async handleCreateCase() {
     console.log("handleCreateCase from creation highlight");
+    try {
+      const blocked = await isInteractionEmailActionBlocked({
+        recordId: this.createCaseSourceId,
+      });
+      if (blocked) {
+        this.dispatchEvent(
+          new ShowToastEvent({
+            title: FEC_Toast_Validation_Title,
+            message: FEC_Interaction_Email_Required_Msg,
+            variant: "error",
+          }),
+        );
+        return;
+      }
+    } catch (error) {
+      console.error("isInteractionEmailActionBlocked error:", error);
+      return;
+    }
     this.handlePublishMode(true);
     await new Promise((r) => setTimeout(r, 200));
     if (this.isConsoleNavigation) {

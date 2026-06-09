@@ -85,6 +85,42 @@ public without sharing class FEC_InteractionInforHandler {
             FEC_Interaction_Email__c = String.isNotBlank(email) ? email.trim() : null
         );
     }
+
+    public static Boolean isEmailChannelWithMissingInteractionEmail(Case interactionCase) {
+        return interactionCase != null
+            && interactionCase.FEC_Channel__c == FEC_ConstantCommon.CHANNEL_EMAIL_NAME
+            && String.isBlank(interactionCase.FEC_Interaction_Email__c);
+    }
+
+    @AuraEnabled(cacheable=false)
+    public static Boolean isInteractionEmailActionBlocked(Id recordId) {
+        if (recordId == null) {
+            return false;
+        }
+        List<Case> caseList = [
+            SELECT FEC_Channel__c, FEC_Interaction_Email__c
+            FROM Case
+            WHERE Id = :recordId
+            LIMIT 1
+        ];
+        return !caseList.isEmpty() && isEmailChannelWithMissingInteractionEmail(caseList[0]);
+    }
+
+    public static void assertInteractionEmailForAction(Id recordId) {
+        if (recordId == null) {
+            return;
+        }
+        List<Case> caseList = [
+            SELECT FEC_Channel__c, FEC_Interaction_Email__c
+            FROM Case
+            WHERE Id = :recordId
+            LIMIT 1
+        ];
+        if (!caseList.isEmpty() && isEmailChannelWithMissingInteractionEmail(caseList[0])) {
+            throw new AuraHandledException(System.Label.FEC_Interaction_Email_Required_Msg);
+        }
+    }
+    
     @AuraEnabled(cacheable=false)
     public static void updateInteractionOnHold(Id recordId, Boolean onHold) {
         if (recordId == null) {
