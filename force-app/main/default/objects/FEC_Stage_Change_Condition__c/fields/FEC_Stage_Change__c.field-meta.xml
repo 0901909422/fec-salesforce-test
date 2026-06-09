@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>FEC_Stage_Change__c</fullName>
+    <deleteConstraint>SetNull</deleteConstraint>
+    <description>Lookup to Stage Change (Transition Rule). This condition belongs to one Stage Change rule.</description>
+    <label>Stage Change</label>
+    <referenceTo>FEC_Stage_Change__c</referenceTo>
+    <relationshipLabel>Stage Change Conditions</relationshipLabel>
+    <relationshipName>Stage_Change_Conditions_Live</relationshipName>
+    <required>false</required>
+    <trackTrending>false</trackTrending>
+    <type>Lookup</type>
+</CustomField>

@@ -1,0 +1,148 @@
+.detail-root {
+  background: #ffffff;
+  border-radius: 0.25rem;
+}
+
+.accordion-block {
+  border: 1px solid #dddbda;
+  border-radius: 0.25rem;
+  margin-bottom: 0.75rem;
+  background: #ffffff;
+}
+
+.accordion-block-last {
+  margin-bottom: 0;
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  padding: 0.625rem 0.75rem;
+  margin: 0;
+  border: none;
+  background: #f7f9fb;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #181818;
+  border-radius: 0.25rem 0.25rem 0 0;
+}
+
+.section-header:focus {
+  outline: 2px solid #1b96ff;
+  outline-offset: 2px;
+}
+
+.section-header-text {
+  flex: 1;
+}
+
+.section-chevron {
+  --slds-c-icon-color-foreground-default: #706e6b;
+}
+
+.section-body {
+  padding: 0.75rem 0.875rem 0.875rem;
+  border-top: 1px solid #e5e5e5;
+}
+
+.detail-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.875rem 1.5rem;
+}
+
+@media (min-width: 64rem) {
+  .detail-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.detail-cell-wide {
+  grid-column: 1 / -1;
+}
+
+.detail-label {
+  color: #706e6b;
+  font-size: 0.75rem;
+  margin-bottom: 0.25rem;
+}
+
+.detail-value {
+  font-size: 0.875rem;
+  color: #080707;
+  line-height: 1.35;
+  word-break: break-word;
+}
+
+.detail-value-row {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  flex-wrap: wrap;
+}
+
+.detail-value-row .detail-value {
+  flex: 1;
+  min-width: 0;
+}
+
+.edit-pencil {
+  flex-shrink: 0;
+}
+
+.hours-link,
+.entity-link {
+  color: var(--lwc-brandTextLink, #0176d3);
+  font-size: 0.875rem;
+  text-decoration: none;
+}
+
+.hours-link:hover,
+.entity-link:hover {
+  text-decoration: underline;
+}
+
+.queues-value {
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
+  line-height: 1.4;
+}
+
+.role-table thead th {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #3e3e3c;
+  background-color: #f3f3f3;
+}
+
+.role-table tbody td {
+  font-size: 0.875rem;
+  vertical-align: middle;
+}
+
+.empty-cell {
+  text-align: center;
+  color: #706e6b;
+}
+
+.empty-hint {
+  font-size: 0.8125rem;
+  color: #706e6b;
+  background: #fafaf9;
+  border-radius: 0.25rem;
+  padding: 0.5rem 0.75rem;
+  margin-bottom: 0.5rem;
+  line-height: 1.4;
+}
+
+.slds-modal__container {
+  max-width: 28rem;
+}
+
+.modal-container-wide {
+  max-width: 40rem;
+}

@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ListView xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Interactions_Service_Cases_TAT_CO</fullName>
+    <columns>NAME</columns>
+    <filterScope>Mine</filterScope>
+    <filters>
+        <field>NAME</field>
+        <operation>contains</operation>
+        <value>Interactions &amp; Service Cases Summary TAT - Card Operations</value>
+    </filters>
+    <label>Interactions &amp; Service Cases TAT - CO</label>
+    <sharedTo>
+        <role>FEC_Card_Dispute_Charge_Back_Specialist</role>
+        <role>FEC_Card_Issuance_Specialist</role>
+        <role>FEC_Card_Operations_Control_Support_Expert</role>
+        <role>FEC_Card_Settlement_Manager</role>
+        <role>FEC_Card_Transaction_Management_Officer</role>
+        <role>FEC_Card_Transaction_Management_Specialist</role>
+        <role>FEC_Card_Transaction_Manager</role>
+        <role>FEC_Customer_Service_Support_Manager</role>
+        <role>FEC_Customer_Service_Support_Specialist</role>
+        <role>FEC_Head_Of_Card_Operations_Department</role>
+        <role>FEC_Senior_Card_Dispute_Charge_Back_Specialist</role>
+        <role>FEC_Senior_Card_Issuance_Specialist</role>
+        <role>FEC_Senior_Card_Operations_Control_Support_Specialist</role>
+        <role>FEC_Senior_Card_Transaction_Management_Specialist</role>
+        <role>FEC_Senior_Customer_Service_Support_Specialist</role>
+        <role>FEC_Unit_Head_of_Card_Operations</role>
+        <role>FEC_Unit_Head_of_Card_Risk_Management</role>
+        <role>FEC_Unit_Head_of_Customer_Service_Support</role>
+    </sharedTo>
+</ListView>

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Queue xmlns="http://soap.sforce.com/2006/04/metadata">
+    <description>Default Queue</description>
+    <doesSendEmailToMembers>false</doesSendEmailToMembers>
+    <name>DQ - CS Customer Care Dept</name>
+    <queueMembers>
+        <roles>
+            <role>FEC_Head_of_Customer_Care_Department</role>
+            <role>FEC_Senior_Operations_Automation_Project_Manager</role>
+        </roles>
+    </queueMembers>
+    <queueSobject>
+        <sobjectType>Case</sobjectType>
+    </queueSobject>
+</Queue>

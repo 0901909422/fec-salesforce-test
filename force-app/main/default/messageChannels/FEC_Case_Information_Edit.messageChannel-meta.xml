@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<LightningMessageChannel xmlns="http://soap.sforce.com/2006/04/metadata">
+    <description>Partial edit Case Information after Execute Assignment (not full Case mode)</description>
+    <isExposed>true</isExposed>
+    <lightningMessageFields>
+        <fieldName>caseId</fieldName>
+        <description>Case Id — filter messages per tab (APPLICATION_SCOPE)</description>
+    </lightningMessageFields>
+    <lightningMessageFields>
+        <fieldName>isCaseInformationEdit</fieldName>
+        <description>true = enable edit for Case Information fields and Updated NOC only</description>
+    </lightningMessageFields>
+    <masterLabel>FEC Case Information Edit</masterLabel>
+</LightningMessageChannel>

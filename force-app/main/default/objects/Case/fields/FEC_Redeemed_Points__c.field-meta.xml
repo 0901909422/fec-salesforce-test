@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>FEC_Redeemed_Points__c</fullName>
+    <description>Sẽ lấy nhiều giá trị do Response trả dưới dạng Array, cần để các giá trị cách nhau bằng dấu ;</description>
+    <externalId>false</externalId>
+    <label>Redeemed Points</label>
+    <length>255</length>
+    <required>false</required>
+    <trackFeedHistory>false</trackFeedHistory>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Text</type>
+    <unique>false</unique>
+</CustomField>

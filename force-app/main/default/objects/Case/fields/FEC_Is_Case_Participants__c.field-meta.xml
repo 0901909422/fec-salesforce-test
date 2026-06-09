@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>FEC_Is_Case_Participants__c</fullName>
+    <description>Trường tạo để check listview my completed case (user đang xem có nằm trong danh sách tham gia xử lý case không)</description>
+    <formula>OR(
+CONTAINS(FEC_Case_Participants__c, $User.Id),
+CONTAINS(FEC_Case_Participants__c, LEFT($User.Id, 15))
+)</formula>
+    <formulaTreatBlanksAs>BlankAsZero</formulaTreatBlanksAs>
+    <label>Is Case Participants</label>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Checkbox</type>
+</CustomField>

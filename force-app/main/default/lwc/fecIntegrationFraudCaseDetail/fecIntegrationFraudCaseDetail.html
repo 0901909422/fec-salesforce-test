@@ -1,0 +1,290 @@
+<template>
+    <lightning-card title='' icon-name="standard:case">
+
+        <!-- ================= SPINNER ================= -->
+        <template if:true={loading}>
+            <lightning-spinner alternative-text={labels.loading}></lightning-spinner>
+        </template>
+
+        <!-- ================= ERROR ================= -->
+        <template if:true={error}>
+            <div class="slds-text-color_error slds-p-around_medium">
+                {error}
+            </div>
+        </template>
+
+        <!-- ================= CONTENT ================= -->
+        <template if:false={loading}>
+
+            <!-- ================= VIEW ORIGINAL SNAPSHOT ================= -->
+            <template if:true={isViewOriginal}>
+                <template if:true={snapshotCase}>
+                    <div class="slds-p-around_medium slds-border_bottom">
+                        <!-- <div class="slds-text-heading_small slds-m-bottom_small">
+                            Original Snapshot — {snapshotDate}
+                        </div> -->
+                        <div class="slds-grid slds-wrap slds-text-title_bold">
+                            <div class="slds-col slds-size_1-of-6">{labels.fraudCaseId}</div>
+                            <div class="slds-col slds-size_1-of-6">{labels.caseStatus}</div>
+                            <div class="slds-col slds-size_1-of-6">{labels.creator}</div>
+                            <div class="slds-col slds-size_1-of-6">{labels.category}</div>
+                            <div class="slds-col slds-size_1-of-6">{labels.subCategory}</div>
+                            <div class="slds-col slds-size_1-of-6">{labels.subCode}</div>
+                        </div>
+
+                        <div class="slds-grid slds-wrap slds-m-top_x-small">
+                            <div class="slds-col slds-size_1-of-6">{snapshotCase.FEC_CaseID__c}</div>
+                            <div class="slds-col slds-size_1-of-6">{snapshotCase.FEC_Case_Status__c}</div>
+                            <div class="slds-col slds-size_1-of-6">{snapshotCase.FEC_Creator_Email__c}</div>
+                            <div class="slds-col slds-size_1-of-6">{snapshotCase.FEC_Category__c}</div>
+                            <div class="slds-col slds-size_1-of-6">{snapshotCase.FEC_Sub_Category__c}</div>
+                            <div class="slds-col slds-size_1-of-6">{snapshotCase.FEC_Sub_Code__c}</div>
+                        </div>
+
+                        <div class="slds-grid slds-wrap slds-m-top_small">
+                            <div class="slds-col slds-size_1-of-6">
+                                <b>{labels.createTime}</b><br />
+                                {snapshotCase.CreatedDate}
+                            </div>
+                            <div class="slds-col slds-size_1-of-6">
+                                <b>{labels.updateTime}</b><br />
+                                {snapshotCase.LastModifiedDate}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ===== SNAPSHOT INFO COLUMNS ===== -->
+                    <div class="slds-grid slds-wrap slds-p-around_medium">
+                        <template for:each={snapshotLayoutColumns} for:item="col">
+                            <div key={col.key} class="slds-col slds-size_1-of-4 slds-p-horizontal_small">
+                                <template for:each={col.items} for:item="info">
+                                    <div key={info.id} class="slds-m-bottom_small">
+                                        <b>{info.displayName}</b><br />
+                                        {info.fileName} &nbsp;
+                                        <template if:true={info.isFileWithValue}>
+                                            <lightning-button
+                                                label={labels.downloadFile}
+                                                icon-name="utility:download"
+                                                variant="base"
+                                                data-base64={info.value}
+                                                onclick={handleFileDownload}>
+                                            </lightning-button>
+                                        </template>
+                                        <template if:false={info.isFile}>
+                                            {info.value}
+                                        </template>
+                                    </div>
+                                </template>
+                            </div>
+                        </template>
+                    </div>
+
+                    <!-- REMARKS -->
+                    <template if:true={snapshotCase.FEC_CS_Remark__c}>
+                        <div class="slds-p-around_medium">
+                            <b>{labels.remarks}</b>
+                            <div class="slds-box slds-m-top_x-small slds-scrollable_y" style="max-height:200px">
+                                {snapshotCase.FEC_CS_Remark__c}
+                            </div>
+                        </div>
+                    </template>
+                </template>
+            </template>
+
+            <!-- ================= NORMAL VIEW ================= -->
+            <template if:false={isViewOriginal}>
+            <template if:true={mainCase}>
+
+                <!-- ===== SINGLE CASE: show flat (as before) ===== -->
+                <template if:true={hasSingleCase}>
+                    <!-- ===== HEADER ===== -->
+                    <div class="slds-p-around_medium slds-border_bottom">
+                        <div class="slds-grid slds-wrap slds-text-title_bold">
+                            <div class="slds-col slds-size_1-of-6">{labels.fraudCaseId}</div>
+                            <div class="slds-col slds-size_1-of-6">{labels.caseStatus}</div>
+                            <div class="slds-col slds-size_1-of-6">{labels.creator}</div>
+                            <div class="slds-col slds-size_1-of-6">{labels.category}</div>
+                            <div class="slds-col slds-size_1-of-6">{labels.subCategory}</div>
+                            <div class="slds-col slds-size_1-of-6">{labels.subCode}</div>
+                        </div>
+
+                        <div class="slds-grid slds-wrap slds-m-top_x-small">
+                            <div class="slds-col slds-size_1-of-6">{mainCase.FEC_CaseID__c}</div>
+                            <div class="slds-col slds-size_1-of-6">{mainCase.FEC_Case_Status__c}</div>
+                            <div class="slds-col slds-size_1-of-6">{mainCase.FEC_Creator_Email__c}</div>
+                            <div class="slds-col slds-size_1-of-6">{mainCase.FEC_Category__c}</div>
+                            <div class="slds-col slds-size_1-of-6">{mainCase.FEC_Sub_Category__c}</div>
+                            <div class="slds-col slds-size_1-of-6">{mainCase.FEC_Sub_Code__c}</div>
+                        </div>
+
+                        <div class="slds-grid slds-wrap slds-m-top_small">
+                            <div class="slds-col slds-size_1-of-6">
+                                <b>{labels.createTime}</b><br />
+                                {mainCase.CreatedDate}
+                            </div>
+                            <div class="slds-col slds-size_1-of-6">
+                                <b>{labels.updateTime}</b><br />
+                                {mainCase.LastModifiedDate}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ===== INFO (AUTO LEFT / RIGHT) ===== -->
+                    <div class="slds-grid slds-wrap slds-p-around_medium">
+                        <template for:each={getLayoutColumns} for:item="col">
+                            <div key={col.key} class="slds-col slds-size_1-of-4 slds-p-horizontal_small">
+                                <template for:each={col.items} for:item="info">
+                                    <div key={info.id} class="slds-m-bottom_small">
+                                        <b>{info.displayName}</b><br />
+                                        {info.fileName} &nbsp;
+                                        <template if:true={info.isFileWithValue}>
+                                            <lightning-button
+                                                label={labels.downloadFile}
+                                                icon-name="utility:download"
+                                                variant="base"
+                                                data-base64={info.value}
+                                                onclick={handleFileDownload}>
+                                            </lightning-button>
+                                        </template>
+                                        <template if:false={info.isFile}>
+                                            {info.value}
+                                        </template>
+                                    </div>
+                                </template>
+                            </div>
+                        </template>
+                    </div>
+                </template>
+
+                <!-- ===== MULTIPLE CASES: collapsible sections ===== -->
+                <template if:true={hasMultipleCases}>
+                    <!-- Collapsible Sections -->
+                    <template for:each={fhCases} for:item="caseItem">
+                        <div key={caseItem.Id} class="slds-m-bottom_small">
+                            <!-- Section Header (clickable) -->
+                            <div class="slds-box slds-theme_shade slds-p-around_small" 
+                                 data-id={caseItem.Id} 
+                                 onclick={toggleSection}
+                                 style="cursor: pointer;">
+                                <div class="slds-grid slds-grid_vertical-center">
+                                    <lightning-icon 
+                                        icon-name={caseItem.sectionIcon} 
+                                        size="x-small" 
+                                        class="slds-m-right_small">
+                                    </lightning-icon>
+                                    <div class="slds-grid slds-wrap slds-grid_align-spread" style="width:100%">
+                                        <span class="slds-col slds-size_1-of-8"><b>{labels.fraudCaseId}</b><br/>{caseItem.FEC_CaseID__c}</span>
+                                        <span class="slds-col slds-size_1-of-8"><b>{labels.caseStatus}</b><br/>{caseItem.FEC_Case_Status__c}</span>
+                                        <span class="slds-col slds-size_1-of-8"><b>{labels.creator}</b><br/>{caseItem.FEC_Creator_Email__c}</span>
+                                        <span class="slds-col slds-size_1-of-8"><b>{labels.category}</b><br/>{caseItem.FEC_Category__c}</span>
+                                        <span class="slds-col slds-size_1-of-8"><b>{labels.subCategory}</b><br/>{caseItem.FEC_Sub_Category__c}</span>
+                                        <span class="slds-col slds-size_1-of-8"><b>{labels.subCode}</b><br/>{caseItem.FEC_Sub_Code__c}</span>
+                                        <span class="slds-col slds-size_1-of-8"><b>{labels.createTime}</b><br/>{caseItem.CreatedDate}</span>
+                                        <span class="slds-col slds-size_1-of-8"><b>{labels.updateTime}</b><br/>{caseItem.LastModifiedDate}</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Section Content (collapsible) -->
+                            <template if:true={caseItem.isExpanded}>
+                                <!-- INFO COLUMNS -->
+                                <div class="slds-grid slds-wrap slds-p-around_medium">
+                                    <template for:each={caseItem.layoutColumns} for:item="col">
+                                        <div key={col.key} class="slds-col slds-size_1-of-4 slds-p-horizontal_small">
+                                            <template for:each={col.items} for:item="info">
+                                                <div key={info.id} class="slds-m-bottom_small">
+                                                    <b>{info.displayName}</b><br />
+                                                    {info.fileName} &nbsp;
+                                                    <template if:true={info.isFileWithValue}>
+                                                        <lightning-button
+                                                            label={labels.downloadFile}
+                                                            icon-name="utility:download"
+                                                            variant="base"
+                                                            data-base64={info.value}
+                                                            onclick={handleFileDownload}>
+                                                        </lightning-button>
+                                                    </template>
+                                                    <template if:false={info.isFile}>
+                                                        {info.value}
+                                                    </template>
+                                                </div>
+                                            </template>
+                                        </div>
+                                    </template>
+                                </div>
+                            </template>
+                        </div>
+                    </template>
+                </template>
+                                
+                <template if:true={isFraudCase}>
+                    <!-- ================= REMARKS ================= -->
+                    <div class="slds-p-around_medium">
+                        <b>{labels.remarks}</b>
+                        <div class="slds-box slds-m-top_x-small slds-scrollable_y" style="max-height:200px">
+                            {customerRemarks}
+                        </div>
+                    </div>
+                </template>                
+                <!-- ================= CONCLUSION ================= -->
+                <div class="slds-p-around_medium">
+                    <b>{labels.conclusion}</b>
+                    <div class="slds-box slds-m-top_x-small slds-scrollable_y" style="max-height:200px">
+                        {fraudConclusion}
+                    </div>
+                </div>
+                <template if:true={isFraudCase}>
+                    <!-- ================= TASK LIST ================= -->
+                    <div class="slds-p-around_medium">
+                        <b>{labels.taskList}</b>
+
+                        <table class="slds-table slds-table_cell-buffer slds-table_bordered slds-m-top_small">
+                            <thead>
+                                <tr>
+                                    <th>{labels.taskId}</th>
+                                    <th>{labels.fraudTaskId}</th>
+                                    <th>{labels.taskName}</th>
+                                    <th>{labels.uic}</th>
+                                    <th>{labels.deadline}</th>
+                                    <th>{labels.taskStatus}</th>
+                                    <th>{labels.createTimeTask}</th>
+                                    <th>{labels.updateTimeTask}</th>
+                                    <th>{labels.appId}</th>
+                                    <th>{labels.violationType}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <template for:each={tasks} for:item="task">
+                                    <tr key={task.Id}>
+                                        <td>{task.TaskId}</td>
+                                        <td>
+                                            <template if:true={task.FraudTaskUrl}>
+                                                <a href={task.FraudTaskUrl} target="_blank">
+                                                    {task.FraudTaskId}
+                                                </a>
+                                            </template>
+
+                                            <template if:false={task.FraudTaskUrl}>
+                                                {task.FraudTaskId}
+                                            </template>
+                                        </td>
+                                        <td>{task.TaskName}</td>
+                                        <td>{task.UIC}</td>
+                                        <td>{task.Deadline}</td>
+                                        <td>{task.Status}</td>
+                                        <td>{task.CreatedDate}</td>
+                                        <td>{task.LastModifiedDate}</td>
+                                        <td>{task.AppId}</td>
+                                        <td>{task.ViolationType}</td>
+                                    </tr>
+                                </template>
+                            </tbody>
+                        </table>
+                    </div>
+                </template>
+            </template>
+            </template>
+        </template>
+
+    </lightning-card>
+</template>

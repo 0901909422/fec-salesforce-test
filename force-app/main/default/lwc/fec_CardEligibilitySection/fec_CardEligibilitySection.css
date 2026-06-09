@@ -1,0 +1,115 @@
+/* ==========================================================================
+   fec_CardEligibilitySection.css
+   ========================================================================== */
+
+/* ── Wrapper ─────────────────────────────────────────────────────────────── */
+.card-eligibility-wrapper {
+    padding: 0.5rem 0;
+}
+
+/* ── Section Header (gray bar like accordion / mock) ─────────────────────── */
+.section-header {
+    cursor: pointer;
+    padding: 0.5rem 0.75rem;
+    user-select: none;
+    background-color: #f3f3f3;
+    border-radius: 4px 4px 0 0;
+    border: 1px solid #e5e5e5;
+    border-bottom: 1px solid #dddbda;
+}
+
+.section-title {
+    font-weight: 600;
+    color: #032d60;
+    font-size: 0.875rem;
+    letter-spacing: 0.01em;
+}
+
+.toggle-icon {
+    cursor: pointer;
+}
+
+/* ── Section Body ────────────────────────────────────────────────────────── */
+.section-body {
+    padding: 0.5rem 0.25rem 0.5rem 1.25rem;
+}
+
+/* ── Eligibility block (Top-up & IPP blocks) ─────────────────────────────── */
+.eligibility-block {
+    padding: 0.25rem 0;
+}
+
+/* ── Toolbar (chỉ nút — giống vị trí Refresh trên Main Info, nhưng giữ 2 nút brand) ─ */
+.card-eligibility-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+/* ── Vùng dữ liệu: giữ field cũ, spinner phủ lên khi gọi lại API ─ */
+.fec-card-block-content {
+    position: relative;
+    min-height: 3rem;
+}
+
+.fec-card-loading-overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.72);
+    border-radius: 4px;
+}
+
+.card-eligibility-fields {
+    min-height: 3rem;
+}
+
+/* ── Hàng label | value | icon — khớp fec_CommonRecordDetailSection ─ */
+.text-negative {
+    color: var(--lwc-colorTextError, #ea001e);
+    font-weight: 600;
+}
+
+.fec-field-label-value-row {
+    flex-wrap: nowrap;
+    align-items: flex-start;
+    gap: 0.25rem;
+}
+
+.field-label-style {
+    flex: 1 1 0;
+    min-width: 0;
+    max-width: 55%;
+    margin-right: 0;
+    white-space: normal;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+}
+
+.field-value-style {
+    flex: 1 1 0;
+    min-width: 0;
+    word-break: break-word;
+    text-align: right;
+}
+
+.fec-field-label-value-row > .fec-card-field-sync {
+    flex-shrink: 0;
+    align-self: center;
+}
+
+.field-value--placeholder {
+    color: #706e6b;
+}
+
+/* ── IPP Table Wrapper ───────────────────────────────────────────────────── */
+.ipp-table-wrapper {
+    margin-top: 0.5rem;
+    border: 1px solid #dddbda;
+    border-radius: 4px;
+    overflow: hidden;
+}

@@ -1,0 +1,163 @@
+<template>
+    <lightning-card title={labelListTitle} icon-name="standard:list_view">
+        
+        <lightning-button label={labelNewField} icon-name="utility:add" slot="actions"
+            onclick={openNewFieldModal} variant="brand" class="slds-m-right_x-small">
+        </lightning-button>
+        <lightning-button 
+            slot="actions" 
+            label={toggleHistoryLabel} 
+            icon-name={toggleHistoryIcon} 
+            variant={toggleButtonVariant}
+            onclick={handleToggleHistory}>
+        </lightning-button>
+
+        <div class="slds-p-horizontal_medium slds-p-bottom_medium">
+            <!-- Search bar -->
+            <div class="slds-m-bottom_medium">
+                <lightning-input
+                    type="search"
+                    placeholder={labelSearchPlaceholder}
+                    value={searchTerm}
+                    onchange={handleSearch}
+                    icon-name="utility:search"
+                    variant="label-hidden">
+                </lightning-input>
+            </div>
+
+            <lightning-layout class="main-container slds-grid_stretch">
+                
+                <lightning-layout-item size="12" large-device-size={mainPanelSize} class="main-panel slds-p-right_small">
+                    
+                    <template if:true={isLoading}>
+                        <lightning-layout class="slds-align_absolute-center slds-m-bottom_medium">
+                            <lightning-spinner alternative-text="Loading" size="medium"></lightning-spinner>
+                        </lightning-layout>
+                    </template>
+
+                    <template if:true={error}>
+                        <div class="slds-text-color_error slds-m-bottom_medium">Error loading data: {error}</div>
+                    </template>
+
+                    <template if:true={fieldList}>
+                        <div class="table-wrapper">
+                            <lightning-datatable key-field="Id" data={paginatedFieldList} columns={columns} hide-checkbox-column
+                                show-row-number-column onsort={handleSort} onrowaction={handleRowAction}
+                                sorted-direction={sortDirection} sorted-by={sortedBy}>
+                            </lightning-datatable>
+                        </div>
+                        <!-- Pagination -->
+                        <c-fec-pagination
+                            current-page={currentPage}
+                            total-records={totalRecords}
+                            page-size={pageSize}
+                            onpagechange={handlePageChange}
+                            onpagesizechange={handlePageSizeChange}>
+                        </c-fec-pagination>
+                    </template>
+
+                </lightning-layout-item>
+
+                <template if:true={isHistoryVisible}>
+                    <lightning-layout-item size="12" large-device-size="3" class="history-panel">
+                        <div class="history-content slds-scrollable_y">
+                            <c-fec-config-history 
+                                data-id="historyComponent"
+                                object-api-name="FEC_MDM_Additional_Field__c"
+                                record-id={historyRecordId}>
+                            </c-fec-config-history>
+                        </div>
+                    </lightning-layout-item>
+                </template>
+
+            </lightning-layout>
+        </div>
+    </lightning-card>
+
+    <template if:true={showDeleteConfirm}>
+        <section role="dialog" tabindex="-1" aria-modal="true" aria-labelledby="modal-heading-delete-confirm"
+            class="slds-modal slds-fade-in-open">
+            <div class="slds-modal__container">
+                <header class="slds-modal__header">
+                    <h2 id="modal-heading-delete-confirm" class="slds-modal__title slds-hyphenate">{labelConfirmDeleteTitle}</h2>
+                </header>
+                <div class="slds-modal__content slds-p-around_medium">
+                    <p>{labelConfirmDeleteMsg}</p>
+                </div>
+                <footer class="slds-modal__footer">
+                    <lightning-button variant="neutral" label={labelButtonCancel} onclick={cancelDelete}></lightning-button>
+                    <lightning-button variant="destructive" label={labelButtonDelete} onclick={confirmDelete} class="slds-m-left_small"></lightning-button>
+                </footer>
+            </div>
+        </section>
+        <div class="slds-backdrop slds-backdrop_open"></div>
+    </template>
+
+    <template if:true={isModalOpen}>
+        <section role="dialog" tabindex="-1" aria-modal="true" aria-labelledby="modal-heading-03" aria-describedby="modal-desc-03"
+            class="slds-modal slds-fade-in-open">
+            <div class="slds-modal__container">
+                <header class="slds-modal__header">
+                    <button class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse"
+                        title="Close" onclick={closeSettingModal}>
+                        <lightning-icon icon-name="utility:close" alternative-text="Close" variant="inverse"
+                            size="small"></lightning-icon>
+                        <span class="slds-assistive-text">Close</span>
+                    </button>
+                    <h2 id="modal-heading-03" class="slds-modal__title slds-hyphenate">{modalTitle}</h2>
+                </header>
+                <div id="modal-desc-03" class="slds-modal__content slds-p-around_medium">
+                    <c-fec-additional-field-form record-id={recordIdForEdit} onsuccess={handleSuccess}
+                        onsave={closeModal} oncancel={handleCancelEvent}>
+                    </c-fec-additional-field-form>
+                </div>
+            </div>
+        </section>
+        <div class="slds-backdrop slds-backdrop_open"></div>
+    </template>
+
+    <template if:true={isListValueModalOpen}>
+        <section role="dialog" tabindex="-1" aria-modal="true" aria-labelledby="modal-heading-list-value" aria-describedby="modal-desc-list-value"
+            class="slds-modal slds-fade-in-open slds-modal_medium">
+            <div class="slds-modal__container">
+                <header class="slds-modal__header">
+                    <button class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse"
+                        title="Close" onclick={closeListValueModal}>
+                        <lightning-icon icon-name="utility:close" alternative-text="Close" variant="inverse"
+                            size="small"></lightning-icon>
+                        <span class="slds-assistive-text">Close</span>
+                    </button>
+                    <h2 id="modal-heading-list-value" class="slds-modal__title slds-hyphenate">{modalTitle}</h2>
+                </header>
+                <div id="modal-desc-list-value" class="slds-modal__content slds-p-around_medium">
+                    <c-fec-additional-filed-list-value 
+                        field-record={selectedFieldRecord}>
+                    </c-fec-additional-filed-list-value>
+                </div>
+            </div>
+        </section>
+        <div class="slds-backdrop slds-backdrop_open"></div>
+    </template>
+
+    <template if:true={isMappingModalOpen}>
+        <section role="dialog" tabindex="-1" aria-modal="true" aria-labelledby="modal-heading-mapping"
+            class="slds-modal slds-fade-in-open slds-modal_large">
+            <div class="slds-modal__container">
+                <header class="slds-modal__header">
+                    <button class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse"
+                        title="Close" onclick={closeMappingModal}>
+                        <lightning-icon icon-name="utility:close" alternative-text="Close" variant="inverse"
+                            size="small"></lightning-icon>
+                        <span class="slds-assistive-text">Close</span>
+                    </button>
+                    <h2 id="modal-heading-mapping" class="slds-modal__title slds-hyphenate">{mappingModalTitle}</h2>
+                </header>
+                <div class="slds-modal__content slds-p-around_medium">
+                    <c-fec-auto-integrating-property-mapping record-id={mappingRecordId}>
+                    </c-fec-auto-integrating-property-mapping>
+                </div>
+            </div>
+        </section>
+        <div class="slds-backdrop slds-backdrop_open"></div>
+    </template>
+</template>

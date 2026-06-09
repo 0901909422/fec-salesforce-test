@@ -1,0 +1,18 @@
+/* ═══════════════════════════════════════════════════════ */
+/* fec_folderTreePanel                                     */
+/* Matches the SF standard Email Templates left sidebar    */
+/* ═══════════════════════════════════════════════════════ */
+
+:host {
+    display: block;
+    height: 100%;
+}
+
+.ftp-container {
+    height: 100%;
+    padding-top: 0.25rem;
+}
+
+.ftp-folder-search {
+    padding-bottom: 0.25rem;
+}

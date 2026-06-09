@@ -1,0 +1,54 @@
+<template>
+    <section class="slds-popover slds-popover_prompt slds-nubbin_top-right filter-popover-fixed" 
+             style={strPopoverStyle} 
+             role="dialog">
+        
+        <div class="slds-popover__body slds-p-around_medium">
+            <div class="clear-filter-container slds-grid slds-grid_align-spread slds-m-bottom_x-small">
+                <h2 class="slds-text-heading_small">{label.lblFilter}: {strColumnLabel}</h2>
+                <a href="javascript:void(0);" onclick={handleClearFilter} class="slds-text-link">{label.btnClearFilter}</a>
+            </div>
+            
+            <div class="slds-m-top_small slds-m-bottom_small filter-options-scroll">
+                <ul class="slds-list_vertical">
+                    <template for:each={lstVisibleOptions} for:item="objOption">
+                        <li key={objOption.value} class="slds-p-vertical_x-small">
+                            <div class="slds-checkbox">
+                                <input type="checkbox" 
+                                       id={objOption.value} 
+                                       value={objOption.value} 
+                                       checked={objOption.isChecked} 
+                                       onchange={handleCheckboxChange} />
+                                <label class="slds-checkbox__label" for={objOption.value}>
+                                    <span class="slds-checkbox_faux"></span>
+                                    <span class="slds-form-element__helper">{objOption.label}</span>
+                                </label>
+                            </div>
+                        </li>
+                    </template>
+                    <template if:false={lstVisibleOptions.length}>
+                        <p class="slds-text-align_center slds-text-color_weak slds-m-top_small">{label.msgNoContent}</p>
+                    </template>
+                </ul>
+            </div>
+
+            <div class="slds-form-element slds-m-top_small">
+                <lightning-input 
+                    label={label.searchText} 
+                    variant="label-hidden" 
+                    placeholder="Search Text"
+                    type="search" 
+                    value={strSearchKey}
+                    onchange={handleSearchChange}>
+                </lightning-input>
+            </div>
+        </div>
+
+        <footer class="slds-popover__footer slds-grid slds-grid_align-spread">
+            <lightning-button label={label.btnApply} variant="brand" onclick={handleApply}></lightning-button>
+            <lightning-button label={label.btnCancel} variant="neutral" onclick={handleCancel}></lightning-button>
+        </footer>
+    </section>
+    
+    <div class="filter-backdrop" onclick={handleCancel}></div>
+</template>

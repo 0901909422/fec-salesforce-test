@@ -1,0 +1,191 @@
+/* Typography khớp fec_CaseBussiness (.label, .value, .sub-section, .error, process-action-*). */
+.fec-transfer-call {
+    font-family: inherit;
+}
+
+/* Giống .sub-section — Account Infor */
+h3.fec-transfer-call__subtitle,
+.fec-transfer-details__title {
+    font-family: inherit;
+    font-size: 16px;
+    font-weight: 500;
+    line-height: 1.25;
+    color: #706e6b;
+}
+
+/* Nút SLDS native — chữ trắng (styling hooks lightning-button không ổn định khi disabled). */
+button.slds-button.fec-transfer-call__btn-transfer {
+    color: #ffffff;
+    background-color: var(--slds-g-color-palette-blue-50, #0176d3);
+    border-color: var(--slds-g-color-palette-blue-50, #0176d3);
+}
+
+button.slds-button.fec-transfer-call__btn-transfer:hover:not(:disabled),
+button.slds-button.fec-transfer-call__btn-transfer:active:not(:disabled) {
+    color: #ffffff;
+    background-color: #014486;
+    border-color: #014486;
+}
+
+/* Tránh giữ màu hover sau click (focus sticky); chỉ highlight khi Tab bàn phím. */
+button.slds-button.fec-transfer-call__btn-transfer:focus:not(:disabled) {
+    outline: none;
+    box-shadow: none;
+}
+
+button.slds-button.fec-transfer-call__btn-transfer:focus-visible:not(:disabled) {
+    color: #ffffff;
+    background-color: #014486;
+    border-color: #014486;
+    box-shadow: 0 0 0 2px #ffffff, 0 0 0 4px #014486;
+}
+
+button.slds-button.fec-transfer-call__btn-transfer:disabled {
+    color: #ffffff;
+}
+
+/* Khóa sau 3 lần thất bại: nền xám, chữ trắng. */
+button.slds-button.fec-transfer-call__btn-transfer.fec-transfer-call__btn-max-failed,
+button.slds-button.fec-transfer-call__btn-transfer.fec-transfer-call__btn-max-failed:disabled {
+    background-color: #6b6b6b;
+    border-color: #6b6b6b;
+    color: #ffffff;
+    opacity: 1;
+    cursor: not-allowed;
+}
+
+/* Giống .error + .process-action-result trong fec_CaseBussiness */
+.fec-transfer-call__error-summary {
+    color: red;
+    font-weight: 500;
+    font-size: inherit;
+    line-height: 1.5;
+    margin-bottom: 6px;
+}
+
+.fec-transfer-call__error-reason {
+    color: red;
+    font-weight: 500;
+    font-size: inherit;
+    line-height: 1.5;
+    margin-bottom: 6px;
+}
+
+/* Giống .process-action-result--success */
+.fec-transfer-call__success-noti16 {
+    color: #00cc00;
+    font-weight: 500;
+    font-size: inherit;
+    line-height: 1.5;
+}
+
+.fec-transfer-modal {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    outline: none;
+}
+
+.fec-transfer-modal .slds-modal__container {
+    width: min(92vw, 56rem);
+    max-width: none;
+    border-radius: 0.75rem;
+    border: none;
+    outline: none;
+}
+
+.fec-transfer-modal__header {
+    border-bottom: 1px solid var(--slds-g-color-border-base-1, #e5e5e5);
+    text-align: center;
+    padding: var(--slds-spacing-medium, 1rem);
+}
+
+/* Giống .sub-section (16px / 500) */
+.fec-transfer-modal__title {
+    font-family: inherit;
+    font-size: 16px;
+    font-weight: 500;
+    color: inherit;
+}
+
+.fec-transfer-modal__message {
+    font-family: inherit;
+    font-size: inherit;
+    font-weight: 500;
+    color: inherit;
+    line-height: 1.5;
+}
+
+.fec-transfer-modal__textarea {
+    --lwc-formLabelFontWeight: 500;
+}
+
+/* ── Call Transfer Details ── */
+.fec-transfer-details {
+    font-family: inherit;
+}
+
+.fec-transfer-details__grid {
+    --fec-td-label-col: 13rem;
+    margin-top: 0.5rem;
+    min-width: 0;
+}
+
+/**
+ * Hàng: 3 cột đều nhau. Mỗi ô (trường) có lưới nhãn|giá trị + border-bottom chỉ trong ô — không kéo ngang cả hàng.
+ */
+.fec-transfer-details__row {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    column-gap: 0.5rem;
+    align-items: stretch;
+    min-width: 0;
+    margin-bottom: var(--slds-spacing-small, 1.25rem);
+    padding: 0;
+    box-sizing: border-box;
+}
+
+.fec-transfer-details__cell {
+    display: grid;
+    grid-template-columns: minmax(0, var(--fec-td-label-col)) minmax(0, 1fr);
+    column-gap: 0.5rem;
+    align-content: start;
+    align-items: start;
+    min-width: 0;
+    min-height: 100%;
+    padding: var(--slds-spacing-x-small, 0.5rem) 0;
+    border-bottom: 1px solid var(--slds-g-color-border-base-1, #e5e5e5);
+    box-sizing: border-box;
+}
+
+.fec-transfer-details__cell > p {
+    margin: 0;
+}
+
+/* Nhãn — giống .label (Account Infor) */
+.fec-td-label {
+    font-family: inherit;
+    font-size: inherit;
+    font-weight: 500;
+    color: #706e6b;
+    line-height: 1.25;
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    padding-right: 0.25rem;
+}
+
+/* Giá trị — giống .value (Account Infor): đen/xám đậm */
+.fec-td-value {
+    min-width: 0;
+    text-align: left;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+    font-family: inherit;
+    font-size: 0.8125rem;
+    font-weight: 400;
+    color: #706e6b;
+    line-height: 1.35;
+}

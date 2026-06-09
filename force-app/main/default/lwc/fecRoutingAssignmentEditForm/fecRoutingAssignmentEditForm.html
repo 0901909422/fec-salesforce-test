@@ -1,0 +1,144 @@
+<template>
+    <div class="ra-edit-wrapper">
+        <template if:true={isLoading}>
+            <lightning-spinner alternative-text="Loading" size="medium"></lightning-spinner>
+        </template>
+
+        <!-- Centered Modern Dialog with Backdrop -->
+        <section role="dialog" tabindex="-1" aria-modal="true" class="slds-modal slds-fade-in-open slds-modal_medium">
+            <div class="slds-modal__container modern-modal-container">
+                
+                <!-- Modal Header -->
+                <header class="slds-modal__header modern-modal-header">
+                    <h2 class="slds-text-heading_medium modern-title">{titleText}</h2>
+                    <p class="slds-text-body_small slds-m-top_x-small modern-subtitle">{labels.requiredInfo}</p>
+                </header>
+                
+                <!-- Modal Body -->
+                <div class="slds-modal__content slds-p-around_large modern-modal-body">
+                    <template if:true={errorMsg}>
+                        <div class="slds-notify slds-notify_alert slds-alert_error slds-m-bottom_medium" role="alert">
+                            <span class="slds-assistive-text">error</span>
+                            <h2>{errorMsg}</h2>
+                        </div>
+                    </template>
+
+                    <div class="slds-grid slds-wrap slds-gutters">
+                        <!-- Left Column -->
+                        <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
+                            <!-- RA Name (Readonly) -->
+                            <div class="slds-m-bottom_medium">
+                                <lightning-input
+                                    label={labels.raName}
+                                    value={raName}
+                                    disabled>
+                                </lightning-input>
+                            </div>
+
+                            <!-- Customer Type -->
+                            <div class="slds-m-bottom_medium">
+                                <lightning-combobox
+                                    label={labels.customerType}
+                                    required
+                                    value={customerType}
+                                    options={customerTypeOptions}
+                                    onchange={handleCustomerTypeChange}>
+                                </lightning-combobox>
+                            </div>
+
+                            <!-- Team -->
+                            <div class="slds-m-bottom_medium">
+                                <lightning-combobox
+                                    label={labels.team}
+                                    required
+                                    value={team}
+                                    options={teamOptions}
+                                    onchange={handleTeamChange}>
+                                </lightning-combobox>
+                            </div>
+
+                            <!-- Active -->
+                            <div class="slds-m-bottom_medium slds-p-top_medium">
+                                <lightning-input
+                                    type="checkbox"
+                                    label={labels.active}
+                                    checked={active}
+                                    onchange={handleActiveChange}>
+                                </lightning-input>
+                            </div>
+                        </div>
+
+                        <!-- Right Column -->
+                        <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
+                            <!-- Nature of Cases (Readonly) -->
+                            <div class="slds-m-bottom_medium">
+                                <lightning-input
+                                    label={labels.noc}
+                                    value={nocName}
+                                    disabled>
+                                </lightning-input>
+                            </div>
+
+                            <!-- Channel (Multi-select) -->
+                            <div class="slds-m-bottom_medium">
+                                <div class="slds-form-element">
+                                    <label class="slds-form-element__label">
+                                        <abbr class="slds-required" title="required">*</abbr> {labels.channel}
+                                    </label>
+                                    <div class="ra-search-container">
+                                        <div class="slds-input-has-icon slds-input-has-icon_right">
+                                            <lightning-icon icon-name="utility:search" size="x-small" class="slds-icon slds-input__icon slds-input__icon_right"></lightning-icon>
+                                            <input type="text" class="slds-input search-input" placeholder={labels.searchChannel}
+                                                value={channelSearchTerm}
+                                                oninput={handleChannelSearch}
+                                                onfocus={handleChannelFocus}
+                                                onblur={handleChannelBlur}
+                                                autocomplete="off" />
+                                        </div>
+                                        <template if:true={showChannelDropdown}>
+                                            <div class="ra-dropdown">
+                                                <ul class="slds-listbox slds-listbox_vertical">
+                                                    <template for:each={filteredChannelOptions} for:item="opt">
+                                                        <li key={opt.value} class="ra-option" data-value={opt.value} onmousedown={handleChannelSelect}>
+                                                            {opt.label}
+                                                        </li>
+                                                    </template>
+                                                </ul>
+                                            </div>
+                                        </template>
+                                    </div>
+                                    <template if:true={selectedChannelIds.length}>
+                                        <div class="slds-m-top_x-small pill-container">
+                                            <template for:each={selectedChannelIds} for:item="ch">
+                                                <lightning-pill key={ch} label={ch} name={ch} onremove={handleChannelRemove} class="modern-pill"></lightning-pill>
+                                            </template>
+                                        </div>
+                                    </template>
+                                </div>
+                            </div>
+
+                            <!-- Queue -->
+                            <div class="slds-m-bottom_medium">
+                                <lightning-combobox
+                                    label={labels.queue}
+                                    required
+                                    value={queue}
+                                    options={queueOptions}
+                                    onchange={handleQueueChange}>
+                                </lightning-combobox>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Modal Footer -->
+                <footer class="slds-modal__footer modern-modal-footer">
+                    <lightning-button label={labels.cancel} onclick={handleCancel} class="slds-m-right_small cancel-btn"></lightning-button>
+                    <lightning-button variant="brand" label={labels.save} onclick={handleSave} class="save-btn"></lightning-button>
+                </footer>
+                
+            </div>
+        </section>
+        <div class="slds-backdrop slds-backdrop_open"></div>
+    </div>
+</template>

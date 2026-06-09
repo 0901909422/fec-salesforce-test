@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>FEC_Editable__c</fullName>
+    <defaultValue>true</defaultValue>
+    <description>Trạng thái được cập nhật câu trả lời hay không
+Nếu check - User được chọn lại đáp án cho câu hỏi này
+Nếu không, User sẽ không thể chỉnh sửa đáp án câu hỏi này nữa</description>
+    <label>Editable</label>
+    <trackTrending>false</trackTrending>
+    <type>Checkbox</type>
+</CustomField>

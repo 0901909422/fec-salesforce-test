@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<GlobalValueSet xmlns="http://soap.sforce.com/2006/04/metadata">
+    <customValue>
+        <fullName>Agree</fullName>
+        <default>false</default>
+        <label>Agree</label>
+    </customValue>
+    <customValue>
+        <fullName>Disagree</fullName>
+        <default>false</default>
+        <label>Disagree</label>
+    </customValue>
+    <description>Xác nhận đánh giá trong quy trình</description>
+    <masterLabel>Confirm Assessment</masterLabel>
+    <sorted>false</sorted>
+</GlobalValueSet>

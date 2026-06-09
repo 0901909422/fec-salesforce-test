@@ -1,0 +1,39 @@
+<template>
+    <!-- Interaction Section - Chỉ hiển thị khi recordType là 'Interaction' -->
+    <lightning-card if:true={isInteractionRecordType} title="Interaction" icon-name="standard:live_chat">
+        <div slot="actions">
+            <lightning-button-icon 
+                icon-name="utility:settings" 
+                alternative-text="Settings"
+                onclick={handleInteractionSettings}>
+            </lightning-button-icon>
+            <lightning-button-icon 
+                icon-name="utility:refresh" 
+                alternative-text="Refresh"
+                onclick={handleInteractionRefresh}>
+            </lightning-button-icon>
+        </div>
+        
+        <div class="slds-p-horizontal_medium slds-p-bottom_medium">
+            <div class="slds-text-body_small slds-m-bottom_small">
+                {interactionRecordInfo}
+            </div>
+            
+            <lightning-datatable
+                key-field="Id"
+                data={interactions}
+                columns={interactionColumns}
+                hide-checkbox-column
+                show-row-number-column
+                sorted-by={sortedBy}
+                sorted-direction={sortDirection}
+                onsort={handleSort}
+                onrowaction={handleInteractionRowAction}>
+            </lightning-datatable>
+            
+            <div class="slds-text-align_center slds-m-top_small">
+                <a onclick={handleViewAllInteractions} class="slds-text-link">{customlabel.viewAllBtnLabel}</a>
+            </div>
+        </div>
+    </lightning-card>
+</template>

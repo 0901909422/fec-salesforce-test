@@ -1,0 +1,63 @@
+<template>
+    <div class="slds-card slds-card_boundary fec-section--bordered">
+        <div class="section-header slds-grid slds-grid_vertical-align-center slds-p-around_small" onclick={toggleSection}>
+            <lightning-icon
+                icon-name={iconName}
+                size="x-small"
+                class="slds-m-right_x-small">
+            </lightning-icon>
+            <h2 class="slds-text-heading_small slds-truncate section-title">{loanSectionTitle}</h2>
+
+            <template lwc:if={error}>
+                <span class="slds-m-left_medium error-text">- {headerErrorText}</span>
+            </template>
+
+            <template lwc:if={isLoading}>
+                <div class="slds-m-left_medium">
+                    <lightning-spinner variant="brand" alternative-text={lblLoadingAlt} size="x-small" is-static></lightning-spinner>
+                </div>
+            </template>
+        </div>
+
+        <template lwc:if={isExpanded}>
+            <div class="slds-p-around_medium content-body slds-theme_default">
+                <div class="slds-grid slds-wrap">
+                    <div class="slds-col slds-size_1-of-3 slds-p-horizontal_small field-container">
+                        <span class="field-label">{lblTopUpXsellEligibility}</span>
+                        <span class="field-value field-value--placeholder">{displayEligibility}</span>
+                    </div>
+
+                    <div class="slds-col slds-size_1-of-3 slds-p-horizontal_small field-container">
+                        <span class="field-label">{lblTopUpXsellMin}</span>
+                        <span class="field-value field-value--placeholder">
+                            <template lwc:if={hasMinNumber}>
+                                <lightning-formatted-number
+                                    value={minNumberValue}
+                                    format-style="decimal">
+                                </lightning-formatted-number>
+                            </template>
+                            <template lwc:else>
+                                {placeholderDash}
+                            </template>
+                        </span>
+                    </div>
+
+                    <div class="slds-col slds-size_1-of-3 slds-p-horizontal_small field-container">
+                        <span class="field-label">{lblTopUpXsellMax}</span>
+                        <span class="field-value field-value--placeholder">
+                            <template lwc:if={hasMaxNumber}>
+                                <lightning-formatted-number
+                                    value={maxNumberValue}
+                                    format-style="decimal">
+                                </lightning-formatted-number>
+                            </template>
+                            <template lwc:else>
+                                {placeholderDash}
+                            </template>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </template>
+    </div>
+</template>

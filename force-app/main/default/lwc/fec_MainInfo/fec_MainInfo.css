@@ -1,0 +1,124 @@
+.detail-row {
+    display: flex;
+    flex-wrap: wrap;              
+    padding: 10px 0;
+    border-bottom: 1px solid #dddbda;
+    column-gap: 4px;             
+}
+
+.detail-label {
+    flex: 0 0 180px;        
+    max-width: 180px;
+
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+
+    font-weight: 600;
+    font-size: 13px;
+}
+
+.detail-value {
+    flex: 1;
+    min-width: 0;
+
+    display: flex;
+    align-items: center;
+    gap: 6px;
+
+    white-space: normal;
+    word-break: break-word;
+}
+
+.help-icon {
+    display: flex;
+    align-items: center;
+}
+
+.with-icon {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.eye-icon {
+    margin-left: auto;
+}
+
+.sync-fail-text {
+    color: #c23934;
+    font-weight: 400;
+}
+/* Wrapper */
+.customer-info-wrapper {
+    background: #ffffff;
+}
+
+/* Info Section */
+.info-section {
+    background: #fafaf9;
+    padding: 0;
+}
+
+/* Info Row Container */
+.info-row-container {
+    display: flex;
+    border-bottom: 1px solid #e5e5e5;
+    min-height: 52px;
+}
+
+.info-row-container:last-child {
+    border-bottom: none;
+}
+
+/* Info Item */
+.info-item {
+    flex: 0 0 50%;
+    display: flex;
+    padding: 12px 24px;
+    align-items: center;
+}
+
+.info-item.left {
+    border-right: 1px solid #e5e5e5;
+}
+
+.info-item.right {
+    padding-left: 24px;
+}
+
+.info-item.empty {
+    background: #fafaf9;
+}
+
+/* Label & Value */
+.label {
+    flex: 0 0 200px;
+    font-size: 14px;
+    color: #706e6b;
+    font-weight: 400;
+    margin-right: 16px;
+}
+
+.value {
+    flex: 1;
+    font-size: 14px;
+    color: #080707;
+    font-weight: 400;
+    word-break: break-word;
+}
+
+.value-container {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.value-container .value {
+    flex: 1;
+}

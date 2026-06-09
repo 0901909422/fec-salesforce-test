@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>FEC_Show_Unfollow__c</fullName>
+    <description>True khi user hiện tại có thể bỏ theo dõi (Unfollow) trên Lightning Record Page. OR: (A) Case Resolved VÀ (Normal Watcher trong FEC_Follow_Up_User__c HOẶC Owner/Creator có |U); (B) Case chưa Resolved VÀ chỉ Normal Watcher (không Owner/Creator) có ID trong FEC_Follow_Up_User__c.</description>
+    <externalId>false</externalId>
+    <formula>OR(
+  AND(
+    BEGINS(TEXT(Status), &apos;Resolved&apos;),
+    OR(
+      AND(
+        OwnerId &lt;&gt; $User.Id,
+        CreatedById &lt;&gt; $User.Id,
+        OR(
+          CONTAINS(FEC_Follow_Up_User__c, $User.Id),
+          CONTAINS(FEC_Follow_Up_User__c, CASESAFEID($User.Id))
+        )
+      ),
+      AND(
+        OR(
+          OwnerId = $User.Id,
+          CreatedById = $User.Id
+        ),
+        OR(
+          CONTAINS(FEC_Follow_Up_User__c, CASESAFEID($User.Id) &amp; &quot;|U&quot;),
+          CONTAINS(FEC_Follow_Up_User__c, $User.Id &amp; &quot;|U&quot;)
+        )
+      )
+    )
+  ),
+  AND(
+    NOT(BEGINS(TEXT(Status), &apos;Resolved&apos;)),
+    OwnerId &lt;&gt; $User.Id,
+    CreatedById &lt;&gt; $User.Id,
+    OR(
+      CONTAINS(FEC_Follow_Up_User__c, $User.Id),
+      CONTAINS(FEC_Follow_Up_User__c, CASESAFEID($User.Id))
+    )
+  )
+)</formula>
+    <formulaTreatBlanksAs>BlankAsZero</formulaTreatBlanksAs>
+    <label>Show Unfollow</label>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Checkbox</type>
+</CustomField>

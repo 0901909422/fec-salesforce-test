@@ -1,0 +1,9 @@
+<template>
+  <div class="cell-container">
+    <p class="cell-text slds-truncate" title={rawValue}>{displayValue}</p>
+    <template if:true={isDisplay}>
+      <lightning-button-icon class="toggle-icon" variant="border" size="small" icon-name={buttonIcon}
+        alternative-text={buttonAltText} title={buttonAltText} onclick={handleToggle}></lightning-button-icon>
+    </template>
+  </div>
+</template>

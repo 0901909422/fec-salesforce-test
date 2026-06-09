@@ -1,0 +1,10 @@
+.fec-addl-body {
+    border-bottom: 1px solid var(--lwc-colorBorder, #dddbda);
+    padding-bottom: var(--lwc-spacingXSmall, 0.5rem);
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: baseline;
+    column-gap: var(--lwc-spacingXSmall, 0.5rem);
+    row-gap: var(--lwc-spacingXxxSmall, 0.25rem);
+}

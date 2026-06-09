@@ -1,0 +1,61 @@
+<template>
+  <!-- Updated Information section — hiển thị khi isSubmited=true và không có Auto-Routing Assignment -->
+  <lightning-layout multiple-rows>
+
+    <!-- Product Type: luôn disabled, lấy giá trị từ Original NOC -->
+    <lightning-layout-item padding="around-small" size="12">
+      <c-fec_-combo-box
+        data-id="upd-prod-type"
+        label="Product Type"
+        placehoder="Select Product Type"
+        value={productTypeId}
+        option={formattedProductTypeOption}
+        disabled={disableProductType}
+      ></c-fec_-combo-box>
+    </lightning-layout-item>
+
+    <!-- Category: editable khi isEditable=true -->
+    <lightning-layout-item padding="around-small" size="12">
+      <c-fec_-combo-box
+        data-id="upd-category"
+        label="Category"
+        placehoder="Select Category"
+        value={_categoryId}
+        option={formattedCategoryOption}
+        disabled={disableCategory}
+        onremove={handleRemoveCategory}
+        onchange={handleChangeCategory}
+      ></c-fec_-combo-box>
+    </lightning-layout-item>
+
+    <!-- Sub-Category: editable khi isEditable=true và đã chọn Category -->
+    <lightning-layout-item padding="around-small" size="12">
+      <c-fec_-combo-box
+        data-id="upd-sub-category"
+        label="Sub-Category"
+        placehoder="Select Sub-Category"
+        value={_subCategoryId}
+        option={formattedSubCategoryOption}
+        disabled={disableSubCategory}
+        onremove={handleRemoveSubCategory}
+        onchange={handleChangeSubCategory}
+      ></c-fec_-combo-box>
+    </lightning-layout-item>
+
+    <!-- Sub-Code: editable khi isEditable=true và đã chọn Sub-Category -->
+    <!-- Khi chọn xong Sub-Code sẽ fire nocupdatedsubcodechange lên parent để publish CASE_NOC_Channel -->
+    <lightning-layout-item padding="around-small" size="12">
+      <c-fec_-combo-box
+        data-id="upd-sub-code"
+        label="Sub-Code"
+        placehoder="Select Sub-Code"
+        value={_subCodeId}
+        option={formattedSubCodeOption}
+        disabled={disableSubCode}
+        onremove={handleRemoveSubCode}
+        onchange={handleChangeSubCode}
+      ></c-fec_-combo-box>
+    </lightning-layout-item>
+
+  </lightning-layout>
+</template>

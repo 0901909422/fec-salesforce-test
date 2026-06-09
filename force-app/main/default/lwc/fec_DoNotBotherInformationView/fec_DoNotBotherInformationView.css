@@ -1,0 +1,70 @@
+.custom-header {
+  font-size: medium;
+  font-weight: 400;
+  margin-left: 10px;
+}
+
+.error-text {
+  color: #ea001e;
+  margin-left: 4px;
+}
+
+.slds-accordion__summary-action-icon {
+  transition: transform 0.2s ease;
+}
+
+.rotate-closed {
+  transform: rotate(-90deg);
+}
+
+.accordion-body {
+  padding: 0.75rem;
+}
+
+.square-icon {
+  --slds-c-button-radius-border: 4px;
+
+  --slds-c-button-sizing-border: 0.5px;
+
+  --slds-c-button-color-border: #d8dde6c7;
+
+  --slds-c-button-color-background: #ffffff;
+
+  --slds-c-button-color-background-hover: #f3f3f3;
+
+  width: 32px;
+  height: 32px;
+}
+
+.page-number {
+  min-width: 32px;
+  height: 32px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: #0176d3;
+  color: white;
+
+  border-radius: 4px;
+
+  font-weight: 700;
+}
+
+.square-go-btn {
+  --slds-c-button-radius-border: 4px;
+
+  --slds-c-button-sizing-border: 0.5px;
+
+  --slds-c-button-color-border: #0176d3;
+
+  --slds-c-button-color-background: #0176d3;
+
+  --slds-c-button-color-background-hover: #0176d3;
+  
+  color: white;
+
+  width: 32px;
+  height: 32px;
+}

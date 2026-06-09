@@ -1,0 +1,86 @@
+<template>
+    <div class="customer-info-container slds-card slds-p-around_small">
+        <template if:true={isLoading}>
+            <div class="ci-spinner">
+                <lightning-spinner alternative-text="Loading" size="small"></lightning-spinner>
+            </div>
+        </template>
+
+        <template if:false={isLoading}>
+            <!-- Chưa apply: chỉ label, không bảng; bấm mũi tên vẫn đổi trạng thái mở/đóng -->
+            <template if:true={showCollapsed}>
+                <div class="slds-accordion">
+                    <section class={sectionClass}>
+                        <div class="slds-accordion__summary fec-collection-accordion-panel" onclick={handleToggle}>
+                            <h3 class="slds-accordion__summary-heading">
+                                <span class="slds-accordion__summary-content slds-grid">
+                                    <lightning-icon
+                                        icon-name={iconName}
+                                        size="x-small"
+                                        class="slds-m-right_x-small">
+                                    </lightning-icon>
+                                    <span class="fec-accordion-section-label">{sectionTitleText}</span>
+                                </span>
+                            </h3>
+                        </div>
+                        <div class="slds-accordion__content"></div>
+                    </section>
+                </div>
+            </template>
+
+            <!-- Lỗi API -->
+            <template if:true={showErrorBanner}>
+                <div class="slds-accordion">
+                    <section class={sectionClass}>
+                        <div class="slds-accordion__summary fec-collection-accordion-panel" onclick={handleToggle}>
+                            <h3 class="slds-accordion__summary-heading">
+                                <span class="slds-accordion__summary-content slds-grid">
+                                    <lightning-icon
+                                        icon-name={iconName}
+                                        size="x-small"
+                                        class="slds-m-right_x-small">
+                                    </lightning-icon>
+                                    <span>
+                                        <span class="fec-accordion-section-label">{sectionTitleText}</span>&nbsp;-&nbsp;
+                                        <span class="ci-sync-fail">{labelMsgApiError}</span>
+                                    </span>
+                                </span>
+                            </h3>
+                        </div>
+                        <div class="slds-accordion__content slds-hide"></div>
+                    </section>
+                </div>
+            </template>
+
+            <!-- Có data (kể cả rỗng): auto expand sau apply -->
+            <template if:true={showDataSection}>
+                <div class="slds-accordion">
+                    <section class={sectionClass}>
+                        <div class="slds-accordion__summary fec-collection-accordion-panel" onclick={handleToggle}>
+                            <h3 class="slds-accordion__summary-heading">
+                                <span class="slds-accordion__summary-content slds-grid">
+                                    <lightning-icon
+                                        icon-name={iconName}
+                                        size="x-small"
+                                        class="slds-m-right_x-small">
+                                    </lightning-icon>
+                                    <span class="fec-accordion-section-label">{sectionTitleText}</span>
+                                </span>
+                            </h3>
+                        </div>
+                        <div class="slds-accordion__content">
+                            <c-fec_-related-list-paging
+                                records={recordsForTable}
+                                columns={columns}
+                                default-sorted-by="InteractedDate"
+                                default-sort-direction="desc"
+                                sorted-by-description={sortedByDescription}
+                                empty-state-message={labelNoData}>
+                            </c-fec_-related-list-paging>
+                        </div>
+                    </section>
+                </div>
+            </template>
+        </template>
+    </div>
+</template>

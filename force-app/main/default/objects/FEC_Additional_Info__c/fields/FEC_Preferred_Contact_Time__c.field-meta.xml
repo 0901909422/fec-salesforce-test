@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>FEC_Preferred_Contact_Time__c</fullName>
+    <description>Khung giờ khách hàng mong muốn được liên hệ</description>
+    <label>Preferred Contact Time</label>
+    <required>false</required>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>Sáng (8h30 - 11h30)</fullName>
+                <default>false</default>
+                <label>Sáng (8h30 - 11h30)</label>
+            </value>
+            <value>
+                <fullName>Chiều (13h30 - 17h30)</fullName>
+                <default>false</default>
+                <label>Chiều (13h30 - 17h30)</label>
+            </value>
+            <value>
+                <fullName>Giờ hành chính bất kỳ</fullName>
+                <default>false</default>
+                <label>Giờ hành chính bất kỳ</label>
+            </value>
+            <value>
+                <fullName>Khác (ghi chú chi tiết)</fullName>
+                <default>false</default>
+                <label>Khác (ghi chú chi tiết)</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>

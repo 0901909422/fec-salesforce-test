@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomFieldTranslation xmlns="http://soap.sforce.com/2006/04/metadata">
+    <label><!-- Q19 Staff Type --></label>
+    <name>FEC_Q19_Staff_Type__c</name>
+    <picklistValues>
+        <masterLabel>Collection Staff</masterLabel>
+        <translation>NV thu hồi nợ</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Customer Service Staff</masterLabel>
+        <translation>NV DVKH</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Sales Staff</masterLabel>
+        <translation>NV tư vấn</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Underwriting Staff</masterLabel>
+        <translation>NV thẩm định</translation>
+    </picklistValues>
+</CustomFieldTranslation>

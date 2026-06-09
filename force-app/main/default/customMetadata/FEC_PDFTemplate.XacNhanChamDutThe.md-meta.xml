@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomMetadata xmlns="http://soap.sforce.com/2006/04/metadata" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+    <label>Xác Nhận Chấm Dứt Thẻ Tín Dụng</label>
+    <protected>false</protected>
+    <values>
+        <field>FEC_Category__c</field>
+        <value xsi:type="xsd:string">Thẻ Tín Dụng</value>
+    </values>
+    <values>
+        <field>FEC_Description__c</field>
+        <value xsi:type="xsd:string">Template xác nhận chấm dứt hợp đồng thẻ tín dụng theo yêu cầu khách hàng</value>
+    </values>
+    <values>
+        <field>FEC_FileName__c</field>
+        <value xsi:type="xsd:string">XacNhanChamDut_TheTinDung</value>
+    </values>
+    <values>
+        <field>FEC_HTMLBody__c</field>
+        <value xsi:type="xsd:string">&lt;div style=&quot;font-size: 16px; margin: 30px; line-height:1.2;&quot;&gt;
+
+    &lt;table style=&quot;width: 100%; border-collapse: collapse; line-height:1;&quot;&gt;
+        &lt;tr&gt;
+            &lt;td style=&quot;width: 65%; vertical-align: top;&quot;&gt;
+                &lt;b style=&quot;font-size: 13pt;&quot;&gt;CÔNG TY TÀI CHÍNH TNHH&lt;br /&gt;NGÂN HÀNG VIỆT NAM THỊNH VƯỢNG SMBC&lt;/b&gt;&lt;br /&gt;
+                &lt;b style=&quot;font-size: 12pt;&quot;&gt;&lt;i&gt;VPBANK SMBC FINANCE COMPANY LIMITED&lt;/i&gt;&lt;/b&gt;&lt;br /&gt;
+                &lt;div style=&quot;font-size: 10pt;&quot;&gt;Tầng 2, Tòa nhà Ree Tower, Số 9 Đoàn Văn Bơ, P. Xóm Chiếu, TP. HCM&lt;/div&gt;&lt;br /&gt;
+                &lt;i&gt;2nd Floor, Ree Tower Bldg, 9 Doan Van Bo, Xom Chieu Ward, HCMC&lt;/i&gt;
+            &lt;/td&gt;
+            &lt;td style=&quot;width: 35%; vertical-align: middle; text-align: right; padding-top:20px;&quot;&gt;
+                &lt;img src=&quot;/resource/Logo&quot; style=&quot;width: 150px; height: auto;&quot; /&gt;
+            &lt;/td&gt;
+        &lt;/tr&gt;
+    &lt;/table&gt;
+    
+    &lt;table style=&quot;width: 100%; margin-top: 20px;&quot;&gt;
+        &lt;tr&gt;
+            &lt;td style=&quot;width: 50%; text-align: left; font-size: 12pt;&quot;&gt;Số: &lt;pega:reference name=&quot;.DocumentNumber&quot;&gt;
+                &lt;/pega:reference&gt;/&lt;pega:reference name=&quot;.DocumentIssueBy&quot;&gt;&lt;/pega:reference&gt;.&lt;pega:reference
+                    name=&quot;.YearOfTheDocument&quot;&gt;&lt;/pega:reference&gt;
+            &lt;/td&gt;
+            &lt;td style=&quot;width: 50%; text-align: right; font-size: 12pt; font-style: italic;&quot;&gt;Tp.Hồ Chí Minh, ngày
+                &lt;pega:reference name=&quot;.CurrentDay&quot;&gt;&lt;/pega:reference&gt; tháng &lt;pega:reference name=&quot;.CurrentMonth&quot;&gt;
+                &lt;/pega:reference&gt; năm &lt;pega:reference name=&quot;.CurrentYear&quot;&gt;&lt;/pega:reference&gt;
+            &lt;/td&gt;
+        &lt;/tr&gt;
+    &lt;/table&gt;
+    
+    &lt;h2 style=&quot;text-align: center; font-size: 16pt; font-weight: bold; margin: 25px 0 20px 0;&quot;&gt;XÁC NHẬN THANH LÝ HỢP ĐỒNG
+        TÍN DỤNG&lt;/h2&gt;
+    
+    &lt;div style=&quot;line-height: 170%; font-size: 12pt;&quot;&gt;
+        Công ty Tài chính TNHH Ngân hàng Việt Nam Thịnh Vượng SMBC - VPB SMBC FC (Tên thương mại FE CREDIT) xác nhận:&lt;br /&gt;
+        Ông/Bà: &lt;pega:reference name=&quot;.CustomerName&quot;&gt;&lt;/pega:reference&gt;&lt;br /&gt;
+        CMND/CCCD số: &lt;pega:reference name=&quot;.NationalID&quot;&gt;&lt;/pega:reference&gt;&lt;br /&gt;
+        Ngày &lt;pega:reference format=&quot;VNDate&quot; name=&quot;.CorrAgreementDate&quot;&gt;&lt;/pega:reference&gt;, Ông/Bà có ký Hợp đồng tín dụng với
+        FE CREDIT với thông tin sau:&lt;br /&gt;
+        &lt;span style=&quot;padding-left: 40px;&quot;&gt;Số Hợp đồng tín dụng: &lt;pega:reference name=&quot;.ContractNumber&quot;&gt;&lt;/pega:reference&gt;
+            &lt;/span&gt;&lt;br /&gt;
+        &lt;span style=&quot;padding-left: 40px;&quot;&gt;Số tiền vay: &lt;pega:reference name=&quot;.LoanAmount&quot;&gt;&lt;/pega:reference&gt; VNĐ&lt;/span&gt;&lt;br /&gt;
+        &lt;span style=&quot;padding-left: 40px;&quot;&gt;Thời hạn vay: &lt;pega:reference name=&quot;.Tenure&quot;&gt;&lt;/pega:reference&gt; tháng.&lt;/span&gt;&lt;br /&gt;
+        Bằng văn bản này, FE CREDIT xác nhận Khách hàng đã hoàn tất mọi nghĩa vụ như cam kết trong Hợp đồng tín dụng đã ký
+        với FE CREDIT kể từ ngày &lt;pega:reference format=&quot;VNDate&quot; name=&quot;.AccountStatusChangeDate&quot;&gt;&lt;/pega:reference&gt;.&lt;br /&gt;
+        Trân trọng.
+    &lt;/div&gt;
+    
+    &lt;table style=&quot;width: 100%; margin-top: 30px;&quot;&gt;
+        &lt;tr&gt;
+            &lt;td style=&quot;width: 50%;&quot;&gt;&lt;/td&gt;
+            &lt;td style=&quot;text-align: center; width: 50%; vertical-align: top; font-size: 12pt;&quot;&gt;
+                &lt;b&gt;
+                    &lt;pega:reference name=&quot;.CorrSignature1&quot;&gt;&lt;/pega:reference&gt;
+                &lt;/b&gt;&lt;br /&gt;
+                &lt;b&gt;
+                    &lt;pega:reference name=&quot;.pyTitle&quot;&gt;&lt;/pega:reference&gt;
+                &lt;/b&gt;&lt;br /&gt;
+                Số: &lt;pega:reference name=&quot;.DocumentNumber&quot;&gt;&lt;/pega:reference&gt;/&lt;pega:reference name=&quot;.DocumentIssueBy&quot;&gt;
+                &lt;/pega:reference&gt;.&lt;pega:reference name=&quot;.YearOfTheDocument&quot;&gt;&lt;/pega:reference&gt;
+                &lt;div style=&quot;height: 100px;&quot;&gt;&lt;/div&gt;
+                &lt;b&gt;
+                    &lt;pega:reference name=&quot;.pyName&quot;&gt;&lt;/pega:reference&gt;
+                &lt;/b&gt;
+            &lt;/td&gt;
+        &lt;/tr&gt;
+    &lt;/table&gt;
+    
+    &lt;div style=&quot;font-size: 11pt; color: gray; margin-top: 40px;&quot;&gt;MB09.QĐ-XLTD.10&lt;/div&gt;
+&lt;/div&gt;</value>
+    </values>
+    <values>
+        <field>FEC_IsActive__c</field>
+        <value xsi:type="xsd:boolean">true</value>
+    </values>
+    <values>
+        <field>FEC_TemplateCode__c</field>
+        <value xsi:type="xsd:string">XNCD_THE</value>
+    </values>
+</CustomMetadata>

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>FEC_Full_Payment_Without_IPP__c</fullName>
+    <description>Tổng số tiền thanh toán không gồm khoản trả góp
+Formula = Total Balance (real-time) – Loan Balance + Sum (Accrued Interest + Per Diem + Deferred Interest) of non-IPP plans</description>
+    <externalId>false</externalId>
+    <inlineHelpText>Tổng số tiền thanh toán không gồm khoản trả góp</inlineHelpText>
+    <label>Full Payment Without IPP</label>
+    <precision>18</precision>
+    <required>false</required>
+    <scale>0</scale>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Number</type>
+    <unique>false</unique>
+</CustomField>

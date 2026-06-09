@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>FEC_City_Eng_Name__c</fullName>
+    <description>Tên tỉnh/ thành phố bằng tiếng anh</description>
+    <externalId>false</externalId>
+    <label>City Eng Name</label>
+    <length>255</length>
+    <required>false</required>
+    <trackTrending>false</trackTrending>
+    <type>Text</type>
+    <unique>false</unique>
+</CustomField>

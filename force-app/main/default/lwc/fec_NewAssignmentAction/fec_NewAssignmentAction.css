@@ -1,0 +1,16 @@
+.required-info {
+    font-size: 0.75rem;
+    color: #3e3e3c;
+}
+
+.required-star {
+    color: #c23934;
+    font-weight: bold;
+    text-decoration: none;
+}
+
+/* Giới hạn dropdown list không vượt quá modal */
+:host lightning-combobox .slds-dropdown {
+    max-height: 180px;
+    overflow-y: auto;
+}

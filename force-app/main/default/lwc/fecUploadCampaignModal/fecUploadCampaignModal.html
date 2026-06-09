@@ -1,0 +1,47 @@
+<template>
+    <c-fec-generic-modal 
+        title={label.lblUploadCampaignData}
+        onclose={handleClose}>
+
+        <div if:true={isLoading} class="slds-is-relative">
+            <lightning-spinner alternative-text="Loading" size="medium"></lightning-spinner>
+        </div>
+
+        <div>
+            <div class="upload-container">
+                <p class="instruction-text">{label.lblUploadInstruction}</p>
+                
+                <div class="file-input-wrapper slds-var-m-top_small">
+                    <label class="custom-file-upload">
+                        <input type="file" accept=".xlsx, .xls" onchange={handleFileChange}/>
+                        {label.lblChooseFile}
+                    </label>
+                    <span class="file-name-display">{fileNameDisplay}</span>
+                </div>
+            </div>
+
+            <div class="template-section">
+                <div class="slds-grid slds-grid_vertical-align-center">
+                    <div class="slds-col">
+                        <p class="template-question">{label.lblNoTemplateQuestion}</p>
+                    </div>
+                    <div class="slds-col slds-grow-none">
+                        <lightning-button
+                            label={label.btnDownloadTemplate}
+                            icon-name="utility:download"
+                            variant="neutral"
+                            onclick={downloadTemplate}
+                            class="slds-var-m-right_xx-small">
+                        </lightning-button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div slot="footer">
+            <lightning-button label={label.btnCancel} variant="neutral" onclick={handleClose} class="slds-var-m-right_xx-small"></lightning-button>
+            <lightning-button label={label.btnSave} variant="brand" onclick={handleConfirm}></lightning-button>
+        </div>
+
+    </c-fec-generic-modal>
+</template>

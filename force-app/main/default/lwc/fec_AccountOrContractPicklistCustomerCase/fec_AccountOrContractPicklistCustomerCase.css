@@ -1,0 +1,23 @@
+.account-contract-wrapper {
+  position: relative;
+}
+
+.account-contract-trigger {
+  color: #0176d3;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+}
+
+.popover {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  width: 520px;
+  background: #fff;
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+  z-index: 1000;
+  padding: 0.5rem;
+}

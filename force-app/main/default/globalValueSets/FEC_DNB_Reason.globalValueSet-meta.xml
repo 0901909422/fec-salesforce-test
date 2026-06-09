@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<GlobalValueSet xmlns="http://soap.sforce.com/2006/04/metadata">
+    <customValue>
+        <fullName>Not interested</fullName>
+        <default>false</default>
+        <label>Not interested</label>
+    </customValue>
+    <customValue>
+        <fullName>Receiving too many calls/ SMS/ Emails, ...</fullName>
+        <default>false</default>
+        <label>Receiving too many calls/ SMS/ Emails, ...</label>
+    </customValue>
+    <customValue>
+        <fullName>Already have a loan from another company</fullName>
+        <default>false</default>
+        <label>Already have a loan from another company</label>
+    </customValue>
+    <customValue>
+        <fullName>Already being served by 1 FEC employee</fullName>
+        <default>false</default>
+        <label>Already being served by 1 FEC employee</label>
+    </customValue>
+    <customValue>
+        <fullName>Other reason</fullName>
+        <default>false</default>
+        <label>Other reason</label>
+    </customValue>
+    <masterLabel>DNB Reason</masterLabel>
+    <sorted>false</sorted>
+</GlobalValueSet>

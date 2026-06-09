@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ListView xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>FEC_Customer_Experience_Case</fullName>
+    <booleanFilter>1 AND 2 AND (3 OR 4)</booleanFilter>
+    <columns>FEC_Link_ID__c</columns>
+    <columns>FEC_Final_Status__c</columns>
+    <columns>FEC_Channel__c</columns>
+    <columns>FEC_Customer_Name__c</columns>
+    <columns>FEC_Account_Contract_Number_Text__c</columns>
+    <columns>FEC_Category__c</columns>
+    <columns>FEC_SubCategory__c</columns>
+    <columns>FEC_SubCode__c</columns>
+    <columns>FEC_Stage_Name__c</columns>
+    <columns>FEC_Case_Created_On__c</columns>
+    <columns>FEC_Case_Created_By__c</columns>
+    <filterScope>Everything</filterScope>
+    <filters>
+        <field>CASES.STATUS</field>
+        <operation>equals</operation>
+        <value>Open,Pending</value>
+    </filters>
+    <filters>
+        <field>CASES.RECORDTYPE</field>
+        <operation>equals</operation>
+        <value>Case.Customer_Case,Case.Internal_Case</value>
+    </filters>
+    <filters>
+        <field>FEC_Service_Case_Owner__c</field>
+        <operation>equals</operation>
+        <value>Customer Experience</value>
+    </filters>
+    <filters>
+        <field>FEC_Assignment_Users__c</field>
+        <operation>contains</operation>
+        <value>Customer Experience</value>
+    </filters>
+    <label>Customer Experience</label>
+    <queue>FEC_Customer_Experience</queue>
+    <sharedTo>
+        <role>FEC_Customer_Service_Operations_Management_Specialist</role>
+        <role>FEC_Head_of_Customer_Care_Department</role>
+        <role>FEC_Operations_Automation_Project_Manager</role>
+        <role>FEC_Senior_Customer_Service_Operations_Management_Specialist</role>
+        <role>FEC_Senior_Operations_Automation_Project_Manager</role>
+        <role>FEC_Software_Development_Expert_Digital_Customer</role>
+    </sharedTo>
+</ListView>

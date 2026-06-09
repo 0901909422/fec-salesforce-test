@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomFieldTranslation xmlns="http://soap.sforce.com/2006/04/metadata">
+    <label><!-- Q18 Staff Dissatisfaction Reason --></label>
+    <name>FEC_Q18_Staff_Dissatisfaction_Reason__c</name>
+    <picklistValues>
+        <masterLabel>Staff Attitude</masterLabel>
+        <translation>Thái độ NV</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Staff Incorrect/Missing Advice</masterLabel>
+        <translation>NV tư vấn sai/ thiếu</translation>
+    </picklistValues>
+</CustomFieldTranslation>

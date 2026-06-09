@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ListView xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>All</fullName>
+    <columns>CREATED_DATE</columns>
+    <columns>NAME</columns>
+    <columns>FEC_KYC__c</columns>
+    <columns>FEC_Case_Interaction__c</columns>
+    <columns>FEC_KYC_Answer__c</columns>
+    <columns>FEC_KYC_Product__c</columns>
+    <columns>FEC_KYC_Result__c</columns>
+    <columns>FEC_Editable__c</columns>
+    <columns>FEC_Status__c</columns>
+    <filterScope>Everything</filterScope>
+    <label>All</label>
+</ListView>

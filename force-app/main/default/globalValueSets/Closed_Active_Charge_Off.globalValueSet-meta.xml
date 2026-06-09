@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<GlobalValueSet xmlns="http://soap.sforce.com/2006/04/metadata">
+    <customValue>
+        <fullName>Closed</fullName>
+        <default>false</default>
+        <label>Closed</label>
+    </customValue>
+    <customValue>
+        <fullName>Active</fullName>
+        <default>false</default>
+        <label>Active</label>
+    </customValue>
+    <customValue>
+        <fullName>Charge-Off</fullName>
+        <default>false</default>
+        <label>Charge-Off</label>
+    </customValue>
+    <description>- Closed (VIE: Đã đóng)
+- Active (VIE: Chưa đóng)
+- Charged-off</description>
+    <masterLabel>Closed Active Charge-Off</masterLabel>
+    <sorted>false</sorted>
+</GlobalValueSet>

@@ -1,0 +1,144 @@
+<template>
+    <lightning-tree-grid 
+        key-field="id"
+        data={treeItems}
+        columns={columns}
+        expanded-rows={expandedTeams}
+        ontoggle={handleTreeItemClick}
+        onrowaction={handleTreeItemClick}
+        variant="bordered"
+        hide-checkbox-column
+        class="tree-style">
+    </lightning-tree-grid>
+    
+    <!-- Add Queue Modal -->
+    <template if:true={showModalNewQueue}>
+        <section role="dialog" tabindex="-1" aria-modal="true" aria-labelledby="modal-heading-add-queue" class="slds-modal slds-fade-in-open">
+            <div class="slds-modal__container">
+                <header class="slds-modal__header">
+                    <h2 id="modal-heading-add-queue" class="slds-text-heading_medium">{customLabels.CS_OrgChart_Btn_TeamQueue_Add_NewQueue}</h2>
+                </header>
+                <div class="slds-modal__content slds-p-around_medium">
+                    <div class="slds-form">
+                        <div class="slds-form-element">
+                            <div class="slds-form-element__control">
+                                <lightning-input
+                                    name="queueLabel"
+                                    class="validate-input"
+                                    label={customLabels.CS_OrgChart_Text_EditQueueModal_Input_Label}
+                                    type="text"
+                                    value={queueLabel}
+                                    onchange={handleQueueLabelChange}
+                                    placeholder={customLabels.CS_OrgChart_Text_AddQueueModal_Label_PlaceHolder}
+                                    required>
+                                </lightning-input>
+                            </div>
+                        </div>
+                        <div class="slds-form-element slds-m-top_medium">
+                            <div class="slds-form-element__control">
+                                <lightning-input
+                                    name="inputQueueName"
+                                    class="validate-input"
+                                    label={customLabels.CS_OrgChart_Text_AddQueueModal_Input_Name}
+                                    type="text"
+                                    value={queueName}
+                                    onchange={handleQueueNameChange}
+                                    placeholder={customLabels.CS_OrgChart_Text_AddQueueModal_Input_Name}
+                                    required>
+                                </lightning-input>
+                                <div class="slds-form-element__help slds-text-body_small slds-m-top_x-small">
+                                    {customLabels.CS_OrgChart_Text_AddQueueModal_Input_Name_Pattern}
+                                </br>{customLabels.CS_OrgChart_Text_AddQueueModal_Input_Name_Exp}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="slds-form-element">
+                            <div class="slds-form-element__control">
+                                <lightning-input
+                                    name="queueLabelStatus"
+                                    class="validate-input"
+                                    label={customLabels.CS_OrgChart_Text_EditQueueModal_Input_Queue_Status}
+                                    type="text"
+                                    value={queueLabelStatus}
+                                    onchange={handleQueueLabelStatusChange}
+                                    placeholder={customLabels.CS_OrgChart_Text_AddQueueModal_QueueLabelStatus_PlaceHolder}
+                                    required>
+                                </lightning-input>
+                            </div>
+                        </div>
+                        <div class="slds-notify slds-notify_alert slds-theme_error slds-m-top_medium" role="alert" if:true={errorMessage}>
+                            <span class="slds-assistive-text">{customLabels.CS_OrgChart_Text_Save_Error_Title}</span>
+                            {errorMessage}
+                        </div>
+                    </div>
+                </div>
+                <footer class="slds-modal__footer">
+                    <button class="slds-button slds-button_neutral" onclick={closeModal}>{customLabels.CS_OrgChart_Btn_Modal_Cancel}</button>
+                    <button class="slds-button slds-button_brand" onclick={saveNewQueue} disabled={isLoading}>{customLabels.CS_OrgChart_Btn_Modal_Save}</button>
+                </footer>
+            </div>
+        </section>
+        <div class="slds-backdrop slds-backdrop_open"></div>
+    </template>
+
+    <!-- Add New Team Modal -->
+    <template if:true={showModalNewTeam}>
+        <section role="dialog" tabindex="-1" aria-modal="true" aria-labelledby="modal-heading-add-team" class="slds-modal slds-fade-in-open">
+            <div class="slds-modal__container">
+                <header class="slds-modal__header">
+                    <h2 id="modal-heading-add-team" class="slds-text-heading_medium">{customLabels.CS_OrgChart_Btn_TeamQueue_Add_New}</h2>
+                </header>
+                <div class="slds-modal__content slds-p-around_medium">
+                    <div class="slds-form">
+                        <div class="slds-form-element">
+                            <div class="slds-form-element__control">
+                                <lightning-input
+                                    name="teamLabel"
+                                    class="validate-input"
+                                    label={customLabels.CS_OrgChart_Text_AddTeamModal_Input_Label}
+                                    type="text"
+                                    value={teamLabel}
+                                    onchange={handleTeamLabelChange}
+                                    placeholder={customLabels.CS_OrgChart_Text_AddTeamModal_Input_Label_Placeholder}
+                                    required>
+                                </lightning-input>
+                            </div>
+                        </div>
+                        <div class="slds-form-element slds-m-top_medium">
+                            <div class="slds-form-element__control">
+                                <lightning-input
+                                    name="teamName"
+                                    class="validate-input"
+                                    label={customLabels.CS_OrgChart_Text_AddTeamModal_Input_Name}
+                                    type="text"
+                                    value={teamName}
+                                    onchange={handleTeamNameChange}
+                                    placeholder={customLabels.CS_OrgChart_Text_AddTeamModal_Input_Name_Placeholder}
+                                    required>
+                                </lightning-input>
+                                <div class="slds-form-element__help slds-text-body_small slds-m-top_x-small">
+                                    {customLabels.CS_OrgChart_Text_AddTeamModal_Input_Name_Pattern}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="slds-form-element slds-m-top_medium">
+                            <label class="slds-form-element__label" for="teamDescription">{customLabels.CS_OrgChart_Text_AddTeamModal_Input_Description}
+</label>
+                            <div class="slds-form-element__control">
+                                <input id="teamDescription" type="text" class="slds-input" value={teamDescription} onchange={handleTeamDescriptionChange} placeholder="Describe this team" />
+                            </div>
+                        </div>
+                        <div class="slds-notify slds-notify_alert slds-theme_error slds-m-top_medium" role="alert" if:true={teamErrorMessage}>
+                            <span class="slds-assistive-text">{customLabels.CS_OrgChart_Text_Save_Error_Title}</span>
+                            {teamErrorMessage}
+                        </div>
+                    </div>
+                </div>
+                <footer class="slds-modal__footer">
+                    <button class="slds-button slds-button_neutral" onclick={closeTeamModal}>{customLabels.CS_OrgChart_Btn_Modal_Cancel}</button>
+                    <button class="slds-button slds-button_brand" onclick={saveNewTeam} disabled={isLoadingTeam}>{customLabels.CS_OrgChart_Btn_Modal_Save}</button>
+                </footer>
+            </div>
+        </section>
+        <div class="slds-backdrop slds-backdrop_open"></div>
+    </template>

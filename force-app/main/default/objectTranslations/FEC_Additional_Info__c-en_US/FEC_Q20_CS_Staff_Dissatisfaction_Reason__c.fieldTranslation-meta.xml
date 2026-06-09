@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomFieldTranslation xmlns="http://soap.sforce.com/2006/04/metadata">
+    <label><!-- Q20 CS Staff Dissatisfaction Reason --></label>
+    <name>FEC_Q20_CS_Staff_Dissatisfaction_Reason__c</name>
+    <picklistValues>
+        <masterLabel>Staff Inappropriate Attitude</masterLabel>
+        <translation>NV có thái độ không phù hợp</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Staff Slow Response</masterLabel>
+        <translation>NV phản hồi thông tin chậm</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Staff Unable to Resolve Issue</masterLabel>
+        <translation>NV không hỗ trợ được vấn đề</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Staff Unclear Advice</masterLabel>
+        <translation>NV tư vấn không rõ ràng</translation>
+    </picklistValues>
+</CustomFieldTranslation>

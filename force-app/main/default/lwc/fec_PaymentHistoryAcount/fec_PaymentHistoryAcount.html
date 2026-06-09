@@ -1,0 +1,47 @@
+<template>
+    <div class="customer-info-container slds-card slds-p-around_small">
+        <lightning-accordion active-section-name={activeSections} allow-multiple-sections-open>
+
+            <!-- Payment History -->
+            <lightning-accordion-section name="paymentHistory" label="Payment History">
+
+                <div class="slds-m-top_xx-small slds-m-bottom_small">
+                    <span class="slds-text-heading_small slds-text-title_bold" style="color: #e11900;">
+                      {customLabel.totalPaymentAmountLabel}: 
+                    </span>
+                    <span class="slds-text-body_regular slds-m-left_x-small">
+                        {formattedTotalAmount}
+                    </span>
+                </div>
+
+                <c-fec_-related-list-paging 
+                        records={paymentHistory} 
+                        columns={paymentHistoryColumns}
+                        default-sorted-by="paymentDate" default-sort-direction="desc"
+                        hide-row-number>
+                </c-fec_-related-list-paging>
+
+            </lightning-accordion-section>
+
+            <!-- Real-time Payment -->
+            <lightning-accordion-section name="realtimePayment" label="Real-time Payment">
+                <div slot="actions" class="slds-button-group" role="group">
+
+                    <lightning-button
+                        label="Refresh"
+                        variant="brand"
+                        class="slds-m-left_x-small"
+                        onclick={handleRefreshData}>
+                    </lightning-button>
+
+                </div>
+
+                <c-fec_-related-list-paging records={realtimePayments} columns={realtimePaymentColumns}
+                   default-sorted-by="paymentDate" default-sort-direction="desc" show-refresh onrefresh={handleRefreshData}>
+                </c-fec_-related-list-paging>
+
+            </lightning-accordion-section>
+
+        </lightning-accordion>
+    </div>
+</template>

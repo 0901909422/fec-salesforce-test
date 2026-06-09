@@ -1,0 +1,172 @@
+/* Grid 3 cột x 5 hàng: hàng 2 chỉ có Full IPP Payment Amount ở cột 3 */
+.card-payment-summary {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(5, auto);
+    gap: 0;
+    min-width: 0;
+}
+
+.card-payment-summary .detail-row {
+    display: flex;
+    padding: 10px 12px 0 12px;
+    align-items: flex-start;
+    min-width: 0;
+    min-height: 44px;
+    box-sizing: border-box;
+}
+
+/* Gạch dưới có chiều dài bằng nhau (full width ô) */
+.card-payment-summary .detail-row-inner {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    width: 100%;
+    min-width: 0;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #dddbda;
+    box-sizing: border-box;
+}
+
+/* Hàng 3 thấp hơn hàng 2 một chút (thêm khoảng cách phía trên) */
+.card-payment-summary .detail-row:nth-child(7),
+.card-payment-summary .detail-row:nth-child(8),
+.card-payment-summary .detail-row:nth-child(9) {
+    margin-top: 2rem;
+}
+
+/* Ô trống: không gạch dưới */
+.card-payment-summary .detail-row-empty {
+    border: none;
+}
+
+.card-payment-summary .detail-label {
+    flex: 0 1 55%;
+    min-width: 0;
+    max-width: 55%;
+    color: #080707; 
+    font-weight: 600;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    white-space: normal;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    line-height: 1.3;
+}
+
+.card-payment-summary .detail-value {
+    flex: 1 1 0%;
+    min-width: 0;
+    color: #3e3e3c;
+    font-size: 13px;
+    font-weight: 400;
+    display: flex;
+    align-items: flex-start;
+    justify-content: flex-start;
+    gap: 6px;
+    word-break: break-all;
+    overflow-wrap: anywhere;
+    text-align: left;
+}
+
+.card-payment-summary .help-icon {
+    display: inline-flex;
+    align-items: center;
+    flex-shrink: 0;
+    line-height: 0;
+    margin-top: -2px;
+}
+
+/* Khi thu nhỏ màn hình: chuyển 1 cột để tránh đè */
+@media (max-width: 768px) {
+    .card-payment-summary {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto;
+    }
+}
+
+/* Màu nhãn 10 trường (trừ Full Payment Amount) */
+.payment-field-label-gray {
+    color: #3e3e3c !important;
+}
+
+/* Màu đỏ cho label Full Payment Amount - cùng màu với currency-negative */
+.payment-field-label-red {
+    color: #ea001e !important;
+}
+
+/* Override SLDS styles cho các giá trị âm trong summary - chỉ màu đỏ, không in đậm */
+.slds-text-heading_small .slds-text-color_error,
+span.slds-text-color_error,
+.slds-text-color_error {
+    color: #ea001e !important;
+    font-weight: 400;
+}
+/* Info text styling */
+.slds-text-body_small {
+    padding: 8px 0;
+}
+
+/* Loading spinner container */
+.slds-is-relative {
+    min-height: 100px;
+}
+
+/* Error text styling - giống MainInfo */
+.sync-fail-text {
+    color: #ea001e;
+    font-weight: 600;
+}
+
+/* Currency negative value styling - only for detail screens */
+/* Target vào lightning-datatable cells với class currency-negative */
+:host c-fec_-related-list-paging lightning-datatable .currency-negative,
+:host c-fec_-related-list-paging lightning-datatable td.currency-negative,
+:host c-fec_-related-list-paging lightning-datatable .slds-cell-wrap.currency-negative,
+:host c-fec_-related-list-paging lightning-datatable tbody td[class*="currency-negative"] {
+    color: #ea001e !important;
+    font-weight: 400;
+}
+
+/* Fallback cho các trường hợp khác */
+.currency-negative {
+    color: #ea001e;
+    font-weight: 400;
+}
+
+/* In đậm và cùng màu tab cho các field: Full Payment Without IPP, Full IPP Payment Amount, Loan Balance */
+.payment-field-label {
+    font-weight: 700 !important;
+    color: #0176D3 !important;
+}
+
+/* Custom Accordion Styling */
+.slds-accordion__summary {
+    cursor: pointer;
+    user-select: none;
+}
+
+.slds-accordion__summary:hover {
+    background-color: #f3f2f2;
+}
+
+/* Error text styling - highlight phần "Tải dữ liệu không thành công" màu đỏ */
+.error-text {
+    color: #ea001e !important;
+    font-weight: 400;
+}
+
+.card-payment-empty {
+    min-height: 120px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    color: #706e6b;
+}
+
+.card-payment-empty p {
+    margin: 0;
+}

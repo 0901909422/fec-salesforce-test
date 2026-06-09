@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ListView xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>X2_My_Follow_Up_Cases</fullName>
+    <columns>FEC_Link_ID__c</columns>
+    <columns>FEC_Final_Status__c</columns>
+    <columns>FEC_Channel__c</columns>
+    <columns>FEC_Customer_Name__c</columns>
+    <columns>FEC_Account_Contract_Number_Text__c</columns>
+    <columns>FEC_Category__c</columns>
+    <columns>FEC_SubCategory__c</columns>
+    <columns>FEC_SubCode__c</columns>
+    <columns>FEC_Stage_Name__c</columns>
+    <columns>FEC_Service_Case_Owner__c</columns>
+    <columns>FEC_Case_Created_On__c</columns>
+    <columns>FEC_Case_Created_By__c</columns>
+    <filterScope>Everything</filterScope>
+    <filters>
+        <field>CASES.RECORDTYPE</field>
+        <operation>equals</operation>
+        <value>Case.Customer_Case,Case.Internal_Case</value>
+    </filters>
+    <filters>
+        <field>FEC_Is_My_Follow_Up__c</field>
+        <operation>equals</operation>
+        <value>1</value>
+    </filters>
+    <filters>
+        <field>CASES.STATUS</field>
+        <operation>equals</operation>
+        <value>Open,Pending,Resolved-Rejected,Resolved-CannotContactCustomer,Resolved-AutoCancelled,Resolved-Cancelled,Auto-Closed,Resolved-Completed,Closed</value>
+    </filters>
+    <label>2. My Follow-Up Cases</label>
+</ListView>

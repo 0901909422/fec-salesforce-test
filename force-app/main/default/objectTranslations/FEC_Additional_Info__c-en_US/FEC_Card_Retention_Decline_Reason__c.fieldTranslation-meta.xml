@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomFieldTranslation xmlns="http://soap.sforce.com/2006/04/metadata">
+    <label><!-- Card Retention Decline Reason --></label>
+    <name>FEC_Card_Retention_Decline_Reason__c</name>
+    <picklistValues>
+        <masterLabel>Annual Fee</masterLabel>
+        <translation>Phí thường niên</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Borrowing from Other Provider</masterLabel>
+        <translation>Cần vay bên khác</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Collection Staff Attitude</masterLabel>
+        <translation>Thái độ NV THN</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Debt Reminder Process</masterLabel>
+        <translation>Quy trình nhắc nợ</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>High Interest/Fees</masterLabel>
+        <translation>Lãi/ phí cao</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Loan/Card Opening Process</masterLabel>
+        <translation>Quy trình mời vay/ mở thẻ</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Low Credit Limit</masterLabel>
+        <translation>Hạn mức thấp</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Mandatory Card Cancellation</masterLabel>
+        <translation>Thẻ cần hủy theo quy định (Thẻ RS/ Có NQH/ Đã khóa C/...)</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>No Longer Need Card</masterLabel>
+        <translation>Không còn nhu cầu sử dụng thẻ</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Not Tech-Savvy</masterLabel>
+        <translation>Không rành công nghệ</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Other (Details)</masterLabel>
+        <translation>Khác (ghi chú chi tiết)</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Overseas</masterLabel>
+        <translation>Đi nước ngoài</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Payment Process</masterLabel>
+        <translation>Quy trình thanh toán</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Sales Advice Unclear/Inaccurate</masterLabel>
+        <translation>NV Sales tư vấn không rõ ràng/ không chính xác</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Sales Requested Cancel &amp; Reapply</masterLabel>
+        <translation>NV Sales yêu cầu hủy để mở hồ sơ mới</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Survey Failed (Details)</masterLabel>
+        <translation>Khảo sát không thành công (ghi chú chi tiết)</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Unattractive Promotions</masterLabel>
+        <translation>Chương trình/ khuyến mãi ít hoặc không hấp dẫn</translation>
+    </picklistValues>
+</CustomFieldTranslation>

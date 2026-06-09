@@ -1,0 +1,201 @@
+import CS_OrgChart_Text_header from '@salesforce/label/c.CS_OrgChart_Text_header';
+import CS_OrgChart_Text_Title from '@salesforce/label/c.CS_OrgChart_Text_Title';
+import CS_OrgChart_Text_UserTable_Title from '@salesforce/label/c.CS_OrgChart_Text_UserTable_Title';
+import CS_OrgChart_Text_UserTable_Queue_Name_Title from '@salesforce/label/c.CS_OrgChart_Text_UserTable_Queue_Name_Title';
+import CS_OrgChart_Text_UserTable_Edit_Queue from '@salesforce/label/c.CS_OrgChart_Text_UserTable_Edit_Queue';
+import CS_OrgChart_Text_UserTable_Add_User_To_Queue from '@salesforce/label/c.CS_OrgChart_Text_UserTable_Add_User_To_Queue';
+import CS_OrgChart_Text_UserTable_Requie_Select_Queue from '@salesforce/label/c.CS_OrgChart_Text_UserTable_Requie_Select_Queue';
+import CS_OrgChart_Text_UserTable_No_User from '@salesforce/label/c.CS_OrgChart_Text_UserTable_No_User';
+import CS_OrgChart_Text_UserQueueDetailModal_Title from '@salesforce/label/c.CS_OrgChart_Text_UserQueueDetailModal_Title';
+import CS_OrgChart_Text_UserQueueDetailModal_UserId from '@salesforce/label/c.CS_OrgChart_Text_UserQueueDetailModal_UserId';
+import CS_OrgChart_Text_AddUserModal_Title from '@salesforce/label/c.CS_OrgChart_Text_AddUserModal_Title';
+import CS_OrgChart_Text_AddUserModal_Queue from '@salesforce/label/c.CS_OrgChart_Text_AddUserModal_Queue';
+import CS_OrgChart_Text_AddUserModal_SearchUser_Input from '@salesforce/label/c.CS_OrgChart_Text_AddUserModal_SearchUser_Input';
+import CS_OrgChart_Text_AddUserModal_SearchUser_PlaceHolder from '@salesforce/label/c.CS_OrgChart_Text_AddUserModal_SearchUser_PlaceHolder';
+import CS_OrgChart_Text_AddUserModal_SearchUser_Result from '@salesforce/label/c.CS_OrgChart_Text_AddUserModal_SearchUser_Result';
+import CS_OrgChart_Checkbox_AddUserModal_SearchUser_SelectAll from '@salesforce/label/c.CS_OrgChart_Checkbox_AddUserModal_SearchUser_SelectAll';
+import CS_OrgChart_Btn_AddUserModal_SearchUser_AddIntoQueue from '@salesforce/label/c.CS_OrgChart_Btn_AddUserModal_SearchUser_AddIntoQueue';
+import CS_OrgChart_table_AddUserModal_SuggestUser_Name_Column from '@salesforce/label/c.CS_OrgChart_table_AddUserModal_SuggestUser_Name_Column';
+import CS_OrgChart_table_AddUserModal_SuggestUser_Email_Column from '@salesforce/label/c.CS_OrgChart_table_AddUserModal_SuggestUser_Email_Column';
+import CS_OrgChart_table_AddUserModal_SuggestUser_Role_Column from '@salesforce/label/c.CS_OrgChart_table_AddUserModal_SuggestUser_Role_Column';
+import CS_OrgChart_table_AddUserModal_SuggestUser_ResultNotFound from '@salesforce/label/c.CS_OrgChart_table_AddUserModal_SuggestUser_ResultNotFound';
+import CS_OrgChart_Table_UserTable_Name_Column from '@salesforce/label/c.CS_OrgChart_Table_UserTable_Name_Column';
+import CS_OrgChart_Table_UserTable_Email_Column from '@salesforce/label/c.CS_OrgChart_Table_UserTable_Email_Column';
+import CS_OrgChart_Table_UserTable_UserRole_Column from '@salesforce/label/c.CS_OrgChart_Table_UserTable_UserRole_Column';
+import CS_OrgChart_Table_UserTable_Queue_Unknow from '@salesforce/label/c.CS_OrgChart_Table_UserTable_Queue_Unknow';
+import CS_OrgChart_Text_UserQueueDetailModal_Error from '@salesforce/label/c.CS_OrgChart_Text_UserQueueDetailModal_Error';
+import CS_OrgChart_Text_RemoveUser_Message_Confirm from '@salesforce/label/c.CS_OrgChart_Text_RemoveUser_Message_Confirm';
+import CS_OrgChart_Text_AddUserModal_AddAction_Eror from '@salesforce/label/c.CS_OrgChart_Text_AddUserModal_AddAction_Eror';
+import CS_OrgChart_Text_Unknow_Eror from '@salesforce/label/c.CS_OrgChart_Text_Unknow_Eror';
+import CS_OrgChart_Text_RemoveUser_Error from '@salesforce/label/c.CS_OrgChart_Text_RemoveUser_Error';
+import CS_OrgChart_Text_Refresh_History_Error from '@salesforce/label/c.CS_OrgChart_Text_Refresh_History_Error';
+import CS_OrgChart_Text_AddQueueModal_Input_Label from '@salesforce/label/c.CS_OrgChart_Text_AddQueueModal_Input_Label';
+import CS_OrgChart_Text_AddQueueModal_Label_PlaceHolder from '@salesforce/label/c.CS_OrgChart_Text_AddQueueModal_Label_PlaceHolder';
+import CS_OrgChart_Text_AddQueueModal_Input_Name from '@salesforce/label/c.CS_OrgChart_Text_AddQueueModal_Input_Name';
+import CS_OrgChart_Text_AddQueueModal_Name_PlaceHolder from '@salesforce/label/c.CS_OrgChart_Text_AddQueueModal_Name_PlaceHolder';
+import CS_OrgChart_Text_AddQueueModal_Input_Name_Pattern from '@salesforce/label/c.CS_OrgChart_Text_AddQueueModal_Input_Name_Pattern';
+import CS_OrgChart_Text_AddQueueModal_Input_Name_Exp from '@salesforce/label/c.CS_OrgChart_Text_AddQueueModal_Input_Name_Exp';
+import CS_OrgChart_Btn_Modal_Cancel from '@salesforce/label/c.CS_OrgChart_Btn_Modal_Cancel';
+import CS_OrgChart_Btn_Modal_Save from '@salesforce/label/c.CS_OrgChart_Btn_Modal_Save';
+import CS_OrgChart_Text_TeamQueue_Label from '@salesforce/label/c.CS_OrgChart_Text_TeamQueue_Label';
+import CS_OrgChart_Text_HistoryLog_No_Result from '@salesforce/label/c.CS_OrgChart_Text_HistoryLog_No_Result';
+import CS_OrgChart_Table_HistoryLog_ModifiedOn_Column from '@salesforce/label/c.CS_OrgChart_Table_HistoryLog_ModifiedOn_Column';
+import CS_OrgChart_Table_HistoryLog_ModifiedBy_Column from '@salesforce/label/c.CS_OrgChart_Table_HistoryLog_ModifiedBy_Column';
+import CS_OrgChart_Table_HistoryLog_Action_Column from '@salesforce/label/c.CS_OrgChart_Table_HistoryLog_Action_Column';
+import CS_OrgChart_Table_HistoryLog_OldValue_Column from '@salesforce/label/c.CS_OrgChart_Table_HistoryLog_OldValue_Column';
+import CS_OrgChart_Table_HistoryLog_NewValue_Column from '@salesforce/label/c.CS_OrgChart_Table_HistoryLog_NewValue_Column';
+import CS_OrgChart_Btn_HistoryLog_View from '@salesforce/label/c.CS_OrgChart_Btn_HistoryLog_View';
+import CS_OrgChart_Btn_HistoryLog_Hide from '@salesforce/label/c.CS_OrgChart_Btn_HistoryLog_Hide';
+import CS_OrgChart_Text_HistoryLog_Require_Select_Object from '@salesforce/label/c.CS_OrgChart_Text_HistoryLog_Require_Select_Object';
+import CS_OrgChart_Text_EditQueueModal_Heading from '@salesforce/label/c.CS_OrgChart_Text_EditQueueModal_Heading';
+import CS_OrgChart_Text_EditQueueModal_Input_Label from '@salesforce/label/c.CS_OrgChart_Text_EditQueueModal_Input_Label';
+import CS_OrgChart_Combobox_EditQueueModal_Team from '@salesforce/label/c.CS_OrgChart_Combobox_EditQueueModal_Team';
+import CS_OrgChart_Combobox_EditQueueModal_Team_Placeholder from '@salesforce/label/c.CS_OrgChart_Combobox_EditQueueModal_Team_Placeholder';
+import CS_OrgChart_Text_EditQueueModal_Error from '@salesforce/label/c.CS_OrgChart_Text_EditQueueModal_Error';
+import CS_OrgChart_Text_EditQueueModal_Confirm_Save from '@salesforce/label/c.CS_OrgChart_Text_EditQueueModal_Confirm_Save';
+import CS_OrgChart_Text_EditQueueModal_Save_Success_Message from '@salesforce/label/c.CS_OrgChart_Text_EditQueueModal_Save_Success_Message';
+import CS_OrgChart_Text_Save_Success_Title from '@salesforce/label/c.CS_OrgChart_Text_Save_Success_Title';
+import CS_OrgChart_Text_Save_Error_Title from '@salesforce/label/c.CS_OrgChart_Text_Save_Error_Title';
+import CS_OrgChart_Btn_TeamQueue_Add_New from '@salesforce/label/c.CS_OrgChart_Btn_TeamQueue_Add_New';
+import CS_OrgChart_Text_AddTeamModal_Input_Label from '@salesforce/label/c.CS_OrgChart_Text_AddTeamModal_Input_Label';
+import CS_OrgChart_Text_AddTeamModal_Input_Name from '@salesforce/label/c.CS_OrgChart_Text_AddTeamModal_Input_Name';
+import CS_OrgChart_Text_AddTeamModal_Input_Name_Pattern from '@salesforce/label/c.CS_OrgChart_Text_AddTeamModal_Input_Name_Pattern';
+import CS_OrgChart_Text_AddTeamModal_Input_Description from '@salesforce/label/c.CS_OrgChart_Text_AddTeamModal_Input_Description';
+import CS_OrgChart_Text_AddTeamModal_Input_Description_Placehoder from '@salesforce/label/c.CS_OrgChart_Text_AddTeamModal_Input_Description_Placehoder';
+import CS_OrgChart_Text_AddTeamModal_Success_Message from '@salesforce/label/c.CS_OrgChart_Text_AddTeamModal_Success_Message';
+import CS_OrgChart_Text_AddTeamModal_Label_Require_Err from '@salesforce/label/c.CS_OrgChart_Text_AddTeamModal_Label_Require_Err';
+import CS_OrgChart_Text_AddTeamModal_Name_Require_Err from '@salesforce/label/c.CS_OrgChart_Text_AddTeamModal_Name_Require_Err';
+import CS_OrgChart_Btn_TeamQueue_Add_NewQueue from '@salesforce/label/c.CS_OrgChart_Btn_TeamQueue_Add_NewQueue';
+import CS_OrgChart_Text_UserDetail_Queues from '@salesforce/label/c.CS_OrgChart_Text_UserDetail_Queues';
+import CS_OrgChart_Text_UserDetail_QueueName from '@salesforce/label/c.CS_OrgChart_Text_UserDetail_QueueName';
+import CS_OrgChart_Text_UserDetail_MainQueue from '@salesforce/label/c.CS_OrgChart_Text_UserDetail_MainQueue';
+import CS_OrgChart_Text_UserTable_View_ListQueue from '@salesforce/label/c.CS_OrgChart_Text_UserTable_View_ListQueue';
+import CS_OrgChart_Text_UserTable_Remove_User_Title from '@salesforce/label/c.CS_OrgChart_Text_UserTable_Remove_User_Title';
+import CS_OrgChart_Text_AddQueueModal_InvalidName_Err from '@salesforce/label/c.CS_OrgChart_Text_AddQueueModal_InvalidName_Err';
+import CS_OrgChart_Text_AddQueueModal_InvalidName_Exist from '@salesforce/label/c.CS_OrgChart_Text_AddQueueModal_InvalidName_Exist';
+import CS_OrgChart_Text_AddQueueModal_AddQueue_Success from '@salesforce/label/c.CS_OrgChart_Text_AddQueueModal_AddQueue_Success';
+import CS_OrgChart_Text_AddQueueModal_AddQueue_Error from '@salesforce/label/c.CS_OrgChart_Text_AddQueueModal_AddQueue_Error';
+import CS_OrgChart_Text_AddQueueModal_AddQueue_Error_Catch from '@salesforce/label/c.CS_OrgChart_Text_AddQueueModal_AddQueue_Error_Catch';
+import CS_OrgChart_Text_UserDetail_Error_UserID_Null from '@salesforce/label/c.CS_OrgChart_Text_UserDetail_Error_UserID_Null';
+import CS_OrgChart_Text_UserDetail_MainQueue_Success from '@salesforce/label/c.CS_OrgChart_Text_UserDetail_MainQueue_Success';
+import CS_OrgChart_Text_UserDetail_MainQueue_Error from '@salesforce/label/c.CS_OrgChart_Text_UserDetail_MainQueue_Error';
+import CS_OrgChart_Text_EditQueueModal_Invalid_Queue from '@salesforce/label/c.CS_OrgChart_Text_EditQueueModal_Invalid_Queue';
+import CS_OrgChart_Text_AddTeamModal_Create_Err from '@salesforce/label/c.CS_OrgChart_Text_AddTeamModal_Create_Err';
+import CS_OrgChart_Text_EditQueueModal_Update_Err from '@salesforce/label/c.CS_OrgChart_Text_EditQueueModal_Update_Err';
+import CS_OrgChart_Text_EditQueueModal_UpdateTeam_Err from '@salesforce/label/c.CS_OrgChart_Text_EditQueueModal_UpdateTeam_Err';
+import CS_OrgChart_Btn_Modal_Close from '@salesforce/label/c.CS_OrgChart_Btn_Modal_Close';
+import CS_OrgChart_Text_UserDetail_MainQueue_Select_Err from '@salesforce/label/c.CS_OrgChart_Text_UserDetail_MainQueue_Select_Err';
+import CS_OrgChart_Text_UserDetail_MainQueue_User_NotFound from '@salesforce/label/c.CS_OrgChart_Text_UserDetail_MainQueue_User_NotFound';
+import CS_OrgChart_Text_UserDetail_MainQueue_Init_Queue_Data_Err from '@salesforce/label/c.CS_OrgChart_Text_UserDetail_MainQueue_Init_Queue_Data_Err';
+import CS_OrgChart_Text_AddTeamModal_Input_Label_Placeholder from '@salesforce/label/c.CS_OrgChart_Text_AddTeamModal_Input_Label_Placeholder';
+import CS_OrgChart_Text_AddTeamModal_Input_Name_Placeholder from '@salesforce/label/c.CS_OrgChart_Text_AddTeamModal_Input_Name_Placeholder';
+import CS_OrgChart_Text_EditQueueModal_Input_Queue_Status from '@salesforce/label/c.CS_OrgChart_Text_EditQueueModal_Input_Queue_Status';
+import CS_OrgChart_Text_AddQueueModal_QueueLabelStatus_PlaceHolder from '@salesforce/label/c.CS_OrgChart_Text_AddQueueModal_QueueLabelStatus_PlaceHolder';
+import CS_OrgChart_Text_EditQueueModal_Warning_No_Changes_Detected from '@salesforce/label/c.CS_OrgChart_Text_EditQueueModal_Warning_No_Changes_Detected';
+import CS_OrgChart_Text_Save_Waning_Title from '@salesforce/label/c.CS_OrgChart_Text_Save_Waning_Title';
+import CS_OrgChart_Table_UserTable_Page_Size from '@salesforce/label/c.CS_OrgChart_Table_UserTable_Page_Size';
+import CS_OrgChart_Text_RemoveUser_MainQueue_Warning from '@salesforce/label/c.CS_OrgChart_Text_RemoveUser_MainQueue_Warning';
+import CS_OrgChart_Text_Add_User_To_Queue_Sucess from '@salesforce/label/c.CS_OrgChart_Text_Add_User_To_Queue_Sucess';
+import CS_OrgChart_Text_Remove_User_Sucess from '@salesforce/label/c.CS_OrgChart_Text_Remove_User_Sucess';
+
+export const customLabels = {
+    CS_OrgChart_Text_header,
+    CS_OrgChart_Text_Title,
+    CS_OrgChart_Text_UserTable_Title,
+    CS_OrgChart_Text_UserTable_Queue_Name_Title,
+    CS_OrgChart_Text_UserTable_Edit_Queue,
+    CS_OrgChart_Text_UserTable_Add_User_To_Queue,
+    CS_OrgChart_Text_UserTable_Requie_Select_Queue,
+    CS_OrgChart_Text_UserTable_No_User,
+    CS_OrgChart_Text_UserQueueDetailModal_Title,
+    CS_OrgChart_Text_UserQueueDetailModal_UserId,
+    CS_OrgChart_Text_AddUserModal_Title,
+    CS_OrgChart_Text_AddUserModal_Queue,
+    CS_OrgChart_Text_AddUserModal_SearchUser_Input,
+    CS_OrgChart_Text_AddUserModal_SearchUser_PlaceHolder,
+    CS_OrgChart_Text_AddUserModal_SearchUser_Result,
+    CS_OrgChart_Checkbox_AddUserModal_SearchUser_SelectAll,
+    CS_OrgChart_Btn_AddUserModal_SearchUser_AddIntoQueue,
+    CS_OrgChart_table_AddUserModal_SuggestUser_Name_Column,
+    CS_OrgChart_table_AddUserModal_SuggestUser_Email_Column,
+    CS_OrgChart_table_AddUserModal_SuggestUser_Role_Column,
+    CS_OrgChart_table_AddUserModal_SuggestUser_ResultNotFound,
+    CS_OrgChart_Table_UserTable_Name_Column,
+    CS_OrgChart_Table_UserTable_Email_Column,
+    CS_OrgChart_Table_UserTable_UserRole_Column,
+    CS_OrgChart_Table_UserTable_Queue_Unknow,
+    CS_OrgChart_Text_UserQueueDetailModal_Error,
+    CS_OrgChart_Text_RemoveUser_Message_Confirm,
+    CS_OrgChart_Text_AddUserModal_AddAction_Eror,
+    CS_OrgChart_Text_Unknow_Eror,
+    CS_OrgChart_Text_RemoveUser_Error,
+    CS_OrgChart_Text_Refresh_History_Error,
+    CS_OrgChart_Text_AddQueueModal_Input_Label,
+    CS_OrgChart_Text_AddQueueModal_Label_PlaceHolder,
+    CS_OrgChart_Text_AddQueueModal_Input_Name,
+    CS_OrgChart_Text_AddQueueModal_Name_PlaceHolder,
+    CS_OrgChart_Text_AddQueueModal_Input_Name_Pattern,
+    CS_OrgChart_Text_AddQueueModal_Input_Name_Exp,
+    CS_OrgChart_Btn_Modal_Cancel,
+    CS_OrgChart_Btn_Modal_Save,
+    CS_OrgChart_Text_TeamQueue_Label,
+    CS_OrgChart_Text_HistoryLog_No_Result,
+    CS_OrgChart_Table_HistoryLog_ModifiedOn_Column,
+    CS_OrgChart_Table_HistoryLog_ModifiedBy_Column,
+    CS_OrgChart_Table_HistoryLog_Action_Column,
+    CS_OrgChart_Table_HistoryLog_OldValue_Column,
+    CS_OrgChart_Table_HistoryLog_NewValue_Column,
+    CS_OrgChart_Btn_HistoryLog_View,
+    CS_OrgChart_Btn_HistoryLog_Hide,
+    CS_OrgChart_Text_HistoryLog_Require_Select_Object,
+    CS_OrgChart_Text_EditQueueModal_Heading,
+    CS_OrgChart_Text_EditQueueModal_Input_Label,
+    CS_OrgChart_Combobox_EditQueueModal_Team,
+    CS_OrgChart_Combobox_EditQueueModal_Team_Placeholder,
+    CS_OrgChart_Text_EditQueueModal_Error,
+    CS_OrgChart_Text_EditQueueModal_Confirm_Save,
+    CS_OrgChart_Text_EditQueueModal_Save_Success_Message,
+    CS_OrgChart_Text_Save_Success_Title,
+    CS_OrgChart_Text_Save_Error_Title,
+    CS_OrgChart_Btn_TeamQueue_Add_New,
+    CS_OrgChart_Text_AddTeamModal_Input_Label,
+    CS_OrgChart_Text_AddTeamModal_Input_Name,
+    CS_OrgChart_Text_AddTeamModal_Input_Name_Pattern,
+    CS_OrgChart_Text_AddTeamModal_Input_Description,
+    CS_OrgChart_Text_AddTeamModal_Input_Description_Placehoder,
+    CS_OrgChart_Text_AddTeamModal_Success_Message,
+    CS_OrgChart_Text_AddTeamModal_Label_Require_Err,
+    CS_OrgChart_Text_AddTeamModal_Name_Require_Err,
+    CS_OrgChart_Btn_TeamQueue_Add_NewQueue,
+    CS_OrgChart_Text_UserDetail_Queues,
+    CS_OrgChart_Text_UserDetail_QueueName,
+    CS_OrgChart_Text_UserDetail_MainQueue,
+    CS_OrgChart_Text_UserTable_View_ListQueue,
+    CS_OrgChart_Text_UserTable_Remove_User_Title,
+    CS_OrgChart_Text_AddQueueModal_InvalidName_Err,
+    CS_OrgChart_Text_AddQueueModal_InvalidName_Exist,
+    CS_OrgChart_Text_AddQueueModal_AddQueue_Success,
+    CS_OrgChart_Text_AddQueueModal_AddQueue_Error,
+    CS_OrgChart_Text_AddQueueModal_AddQueue_Error_Catch,
+    CS_OrgChart_Text_UserDetail_Error_UserID_Null,
+    CS_OrgChart_Text_UserDetail_MainQueue_Success,
+    CS_OrgChart_Text_UserDetail_MainQueue_Error,
+    CS_OrgChart_Text_EditQueueModal_Invalid_Queue,
+    CS_OrgChart_Text_AddTeamModal_Create_Err,
+    CS_OrgChart_Text_EditQueueModal_Update_Err,
+    CS_OrgChart_Text_EditQueueModal_UpdateTeam_Err,
+    CS_OrgChart_Btn_Modal_Close,
+    CS_OrgChart_Text_UserDetail_MainQueue_Select_Err,
+    CS_OrgChart_Text_UserDetail_MainQueue_User_NotFound,
+    CS_OrgChart_Text_UserDetail_MainQueue_Init_Queue_Data_Err,
+    CS_OrgChart_Text_AddTeamModal_Input_Label_Placeholder,
+    CS_OrgChart_Text_AddTeamModal_Input_Name_Placeholder,
+    CS_OrgChart_Text_EditQueueModal_Input_Queue_Status,
+    CS_OrgChart_Text_AddQueueModal_QueueLabelStatus_PlaceHolder,
+    CS_OrgChart_Text_EditQueueModal_Warning_No_Changes_Detected,
+    CS_OrgChart_Text_Save_Waning_Title,
+    CS_OrgChart_Table_UserTable_Page_Size,
+    CS_OrgChart_Text_RemoveUser_MainQueue_Warning,
+    CS_OrgChart_Text_Add_User_To_Queue_Sucess,
+    CS_OrgChart_Text_Remove_User_Sucess
+};

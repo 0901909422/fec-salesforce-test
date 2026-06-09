@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>FEC_Settlement_Reason__c</fullName>
+    <description>Lý do thanh lý / tất toán</description>
+    <label>Settlement Reason</label>
+    <required>false</required>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>Muốn vay khoản mới ở FE</fullName>
+                <default>false</default>
+                <label>Muốn vay khoản mới ở FE</label>
+            </value>
+            <value>
+                <fullName>Cần vay bên khác</fullName>
+                <default>false</default>
+                <label>Cần vay bên khác</label>
+            </value>
+            <value>
+                <fullName>Muốn thanh lý trước hạn vì đã có tiền</fullName>
+                <default>false</default>
+                <label>Muốn thanh lý trước hạn vì đã có tiền</label>
+            </value>
+            <value>
+                <fullName>Lãi cao nên thanh lý sớm</fullName>
+                <default>false</default>
+                <label>Lãi cao nên thanh lý sớm</label>
+            </value>
+            <value>
+                <fullName>Không hài lòng về nhắc nợ</fullName>
+                <default>false</default>
+                <label>Không hài lòng về nhắc nợ</label>
+            </value>
+            <value>
+                <fullName>Mời vay quá nhiều</fullName>
+                <default>false</default>
+                <label>Mời vay quá nhiều</label>
+            </value>
+            <value>
+                <fullName>Khoản góp không giống NV Sales đã tư vấn</fullName>
+                <default>false</default>
+                <label>Khoản góp không giống NV Sales đã tư vấn</label>
+            </value>
+            <value>
+                <fullName>KH không chia sẻ/ Rớt cuộc chưa có cơ hội khai thác</fullName>
+                <default>false</default>
+                <label>KH không chia sẻ/ Rớt cuộc chưa có cơ hội khai thác</label>
+            </value>
+            <value>
+                <fullName>Khác (ghi chú chi tiết)</fullName>
+                <default>false</default>
+                <label>Khác (ghi chú chi tiết)</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>

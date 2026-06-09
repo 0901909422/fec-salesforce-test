@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomFieldTranslation xmlns="http://soap.sforce.com/2006/04/metadata">
+    <label><!-- Q25 Sales Improvement 1 --></label>
+    <name>FEC_Q25_Sales_Improvement_1__c</name>
+    <picklistValues>
+        <masterLabel>Complicated Application</masterLabel>
+        <translation>Hồ sơ phức tạp</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Complicated Disbursement Process</masterLabel>
+        <translation>Thủ tục giải ngân phức tạp</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Dissatisfied with Other Aspects</masterLabel>
+        <translation>Không hài lòng về khía cạnh khác</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Hard to Find Disbursement Location</masterLabel>
+        <translation>Khó tìm địa điểm giải ngân</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>No Improvement Needed</masterLabel>
+        <translation>Không có điểm cần cải thiện</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>No Reason Provided</masterLabel>
+        <translation>Không chia sẻ lý do</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Other (Details)</masterLabel>
+        <translation>Khác (ghi chú chi tiết)</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Slow Approval Time</masterLabel>
+        <translation>Thời gian phê duyệt hồ sơ lâu</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Slow Disbursement</masterLabel>
+        <translation>Giải ngân lâu</translation>
+    </picklistValues>
+</CustomFieldTranslation>

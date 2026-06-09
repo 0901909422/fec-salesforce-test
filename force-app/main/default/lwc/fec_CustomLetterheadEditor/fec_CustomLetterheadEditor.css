@@ -1,0 +1,101 @@
+/* This targets the internal height of the rich text editing area */
+:host {
+    /* Standard height in your screenshot looks to be around 300px to 400px */
+    --lwc-heightRichTextEditor: 400px;
+}
+
+/* Optional: If you want to remove the 'resize' handle at the bottom */
+.custom-rich-text {
+    --slds-c-textarea-hide-resize: none;
+}
+
+/* Container styling to match the image border/rounded corners */
+.rich-text-editor-container {
+    border: 1px solid #dddbda;
+    border-radius: 4px;
+    overflow: hidden; /* Ensures the editor doesn't spill over the rounded corners */
+}
+.page-container {
+    background-color: #f3f3f2;
+    min-height: 100vh;
+}
+
+.main-content-card {
+    background: #fff;
+    border-radius: 0.5rem;
+    border: 1px solid #dddbda;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.header-title {
+    background-color: transparent;
+}
+
+.slds-section__title {
+    border-radius: 4px;
+}
+
+.rich-text-outer {
+    border: 1px solid #dddbda;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.custom-bottom-toolbar {
+    background-color: #f3f3f2;
+    border-top: 1px solid #dddbda;
+    padding: 4px 8px;
+    display: flex;
+    justify-content: flex-end;
+}
+
+.merge-field-button {
+    background: white;
+    border: 1px solid #dddbda;
+    border-radius: 4px;
+    padding: 2px 10px;
+    font-weight: bold;
+    color: #0176d3;
+    cursor: pointer;
+    font-size: 13px;
+}
+
+.merge-field-button:hover {
+    background-color: #f3f3f2;
+}
+
+.merge-icon {
+    border: 1px solid #dddbda;
+    background: white;
+    padding: 2px 8px;
+    border-radius: 4px;
+    color: #0176d3;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.slds-form-element__label {
+    font-weight: 700;
+}
+
+.custom-font-size {
+    font-size: 13px;
+}
+
+.custom-error-banner {
+    border-radius: 4px;
+    text-align: left;
+    justify-content: flex-start;
+    padding: 0.75rem 1rem;
+}
+
+/* Optional: Make the "Complete this field" message look exactly like standard */
+.slds-has-error .slds-form-element__help {
+    color: #ea001e;
+    font-size: 0.75rem;
+    margin-top: 0.125rem;
+}
+
+.custom-font-24 {
+    font-size: 24px;
+}

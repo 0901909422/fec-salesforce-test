@@ -1,0 +1,189 @@
+<template>
+    <!-- Modal -->
+    <template if:true={showModal}>
+        <section role="dialog" tabindex="-1" class="slds-modal slds-fade-in-open slds-modal_small follow-up-modal-layer" aria-modal="true">
+            <div class="slds-modal__container">
+                <!-- Modal Header -->
+                <div class="slds-modal__header">
+                    <h1 class="slds-modal__title slds-hyphenate slds-text-heading_medium slds-text-align_center">{customLabels.labelFollowUp}</h1>
+                    <button class="slds-button slds-modal__close slds-button_icon-inverse" title= "Close" onclick={handleCancel}>
+                        <lightning-icon icon-name="utility:close" alternative-text="Close" size="small"></lightning-icon>
+                    </button>
+                </div>
+
+                <!-- Modal Body -->
+                <div class="slds-modal__content slds-p-around_medium" style="min-height: 100px;">
+                    <!-- Loading Spinner -->
+                    <template if:true={isLoading}>
+                        <div class="slds-text-align_center slds-p-vertical_large">
+                            <lightning-spinner alternative-text="Loading" size="small"></lightning-spinner>
+                        </div>
+                    </template>
+
+                    <!-- Content -->
+                    <template if:false={isLoading}>
+                        <fieldset class="slds-form-element">
+                            <div class="slds-form-element__control">
+                                <!-- Option 1: Until Case Resolved - Ẩn khi Case đã Resolved -->
+                                <template if:true={showUntilResolvedOption}>
+                                    <span class={resolvedRadioClass} onclick={handleSelectResolved} data-value="UNTIL_RESOLVED">
+                                        <input 
+                                            type="radio" 
+                                            id="radio-resolved"
+                                            name="followType"
+                                            value="UNTIL_RESOLVED"
+                                            checked={isUntilResolvedChecked}
+                                            disabled={isUntilResolvedDisabled}
+                                        />
+                                        <label class="slds-radio__label" for="radio-resolved">
+                                            <span class="slds-radio_faux"></span>
+                                            <span class="slds-form-element__label">{customLabels.untilResolved}</span>
+                                        </label>
+                                    </span>
+                                </template>
+                                
+                                <!-- Option 2: Until Unfollow -->
+                                <span class={unfollowRadioClass} onclick={handleSelectUnfollow} data-value="UNTIL_UNFOLLOW">
+                                    <input 
+                                        type="radio" 
+                                        id="radio-unfollow"
+                                        name="followType"
+                                        value="UNTIL_UNFOLLOW"
+                                        checked={isUntilUnfollowChecked}
+                                        disabled={isUntilUnfollowDisabled}
+                                    />
+                                    <label class="slds-radio__label" for="radio-unfollow">
+                                        <span class="slds-radio_faux"></span>
+                                        <span class="slds-form-element__label">{customLabels.untilUnfollow}</span>
+                                    </label>
+                                </span>
+                            </div>
+                        </fieldset>
+                    </template>
+                </div>
+
+                <!-- Modal Footer -->
+                <div class="slds-modal__footer">
+                    <template if:true={isCaseOwner}>
+                    <button 
+                        class="slds-button slds-button_neutral custom-select-user-btn"
+                        onclick={handleSelectUser}>
+                        {customLabels.actionSelectUser}
+                    </button>
+                    </template>
+                    <button 
+                        class="slds-button slds-button_neutral custom-cancel-btn"
+                        onclick={handleCancel}>
+                        {customLabels.actionCancel}
+                    </button>
+                    <button 
+                        class="slds-button slds-button_brand custom-confirm-btn"
+                        onclick={handleConfirm}
+                        disabled={isLoading}>
+                        {customLabels.actionConfirm}
+                    </button>
+                </div>
+            </div>
+        </section>
+        <div class="slds-backdrop slds-backdrop_open"></div>
+        </template>
+        <!-- Popup chọn Follow-up User (mở khi click Select User) -->
+        <template if:true={showUserModal}>
+            <section role="dialog" tabindex="-1" class="slds-modal slds-fade-in-open slds-modal_small user-modal-layer" aria-modal="true" aria-labelledby="user-modal-title">
+                <div class="slds-modal__container">
+                    <div class="slds-modal__header">
+                        <h2 id="user-modal-title" class="slds-modal__title slds-hyphenate slds-text-heading_medium">{customLabels.labelSelectFollowUpUser}</h2>
+                        <button class="slds-button slds-modal__close slds-button_icon-inverse" title={customLabels.actionClose} onclick={handleCloseUserModal}>
+                            <lightning-icon icon-name="utility:close" alternative-text="Close" size="small"></lightning-icon>
+                        </button>
+                    </div>
+                    <div class="slds-modal__content slds-p-around_medium">
+                        <div class="slds-form-element slds-form-element_horizontal slds-m-bottom_medium user-search-wrap">
+                            <label class="slds-form-element__label" for="user-search-input">
+                                {customLabels.labelUser}
+                            </label>
+                            <div class="slds-form-element__control slds-combobox-group">
+                                <div class={userComboboxClass}>
+                                    <div class="user-search-combobox-wrapper">
+                                        <span class="user-search-icon user-search-icon-left">
+                                            <lightning-icon icon-name="utility:user" size="x-small" alternative-text="User"></lightning-icon>
+                                        </span>
+                                        <input
+                                            id="user-search-input"
+                                            type="text"
+                                            class="user-search-input-el"
+                                            placeholder="Search Users..."
+                                            value={userSearchDisplayValue}
+                                            oninput={handleUserSearchInput}
+                                            onfocus={handleUserSearchFocus}
+                                            role="combobox"
+                                            aria-expanded={showUserDropdown}
+                                            aria-autocomplete="list"
+                                            data-input="user-search">
+                                        <template if:true={selectedUserId}>
+                                            <span class="user-search-icon user-search-icon-right user-search-clear-icon" role="button" tabindex="0" title={customLabels.labelClearUserSelection} onclick={handleClearSelectedUser} onkeydown={handleClearSelectedUserKeydown}>
+                                                <lightning-icon icon-name="utility:close" size="x-small" alternative-text="Clear"></lightning-icon>
+                                            </span>
+                                        </template>
+                                        <template if:false={selectedUserId}>
+                                            <span class="user-search-icon user-search-icon-right">
+                                                <lightning-icon icon-name="utility:search" size="x-small" alternative-text="Search"></lightning-icon>
+                                            </span>
+                                        </template>
+                                    </div>
+                                    <template if:true={showUserDropdown}>
+                                        <div class="slds-dropdown slds-dropdown_left user-search-dropdown" role="listbox">
+                                            <ul class="slds-listbox" role="presentation">
+                                                <template for:each={userSearchResults} for:item="u">
+                                                    <li key={u.id} role="option" class="slds-listbox__option slds-listbox__option_plain user-search-option" data-user-id={u.id} data-user-name={u.name} data-user-email={u.email} data-user-display-label={u.displayLabel} onclick={handleUserOptionSelect}>
+                                                        <span class="slds-listbox__option-icon">
+                                                            <lightning-icon icon-name="utility:user" size="xx-small" alternative-text=""></lightning-icon>
+                                                        </span>
+                                                        <span class="slds-truncate">{u.displayLabel}</span>
+                                                    </li>
+                                                </template>
+                                            </ul>
+                                        </div>
+                                    </template>
+                                    <template if:true={showNoUserResults}>
+                                        <div class="slds-dropdown slds-dropdown_left user-search-dropdown user-search-no-results">
+                                            <p class="slds-p-around_small slds-text-color_weak">{customLabels.msgNoUserFound}</p>
+                                        </div>
+                                    </template>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="slds-form-element slds-form-element_horizontal follow-type-wrap">
+                            <label class="slds-form-element__label" for="follow-type-trigger">{customLabels.labelFollowUpType}</label>
+                            <div class="slds-form-element__control slds-combobox-group">
+                                <div class={followTypeComboboxClass}>
+                                    <div class="follow-type-combobox-wrapper" role="combobox" aria-expanded={showFollowTypeDropdown} aria-haspopup="listbox" id="follow-type-trigger" onclick={handleFollowTypeToggle}>
+                                        <span class="follow-type-display">{customLabels.selectedFollowUpTypeLabel}</span>
+                                        <span class="follow-type-icon">
+                                            <lightning-icon icon-name="utility:chevrondown" size="x-small" alternative-text=""></lightning-icon>
+                                        </span>
+                                    </div>
+                                    <template if:true={showFollowTypeDropdown}>
+                                        <div class="slds-dropdown slds-dropdown_left follow-type-dropdown" role="listbox">
+                                            <ul class="slds-listbox" role="presentation">
+                                                <template for:each={followUpTypeOptions} for:item="opt">
+                                                    <li key={opt.value} role="option" class="slds-listbox__option slds-listbox__option_plain follow-type-option" data-value={opt.value} onclick={handleFollowTypeOptionSelect}>
+                                                        <span class="slds-truncate">{opt.label}</span>
+                                                    </li>
+                                                </template>
+                                            </ul>
+                                        </div>
+                                    </template>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="slds-modal__footer user-modal__footer">
+                        <button class="slds-button slds-button_neutral" onclick={handleCloseUserModal}>{customLabels.labelCancel}</button>
+                        <button class="slds-button slds-button_brand" onclick={handleConfirmUserModal} disabled={isLoading}>{customLabels.labelConfirm}</button>
+                    </div>
+                </div>
+            </section>
+            <div class="slds-backdrop slds-backdrop_open user-modal-backdrop"></div>
+        </template>
+</template>

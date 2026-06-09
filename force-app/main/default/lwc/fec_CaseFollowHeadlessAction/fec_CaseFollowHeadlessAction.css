@@ -1,0 +1,355 @@
+/* Thu hẹp chiều ngang popup Follow-Up và Select Follow-Up User */
+.follow-up-modal-layer.slds-modal .slds-modal__container,
+.user-modal-layer.slds-modal .slds-modal__container {
+    max-width: 22rem; /* ~384px; có thể giảm xuống 22rem nếu muốn hẹp hơn */
+    width: 100%;
+}
+
+/* Modal Header */
+.slds-modal__header {
+    background-color: white;
+    border-bottom: 1px solid #e5e5e5;
+    padding: 1rem;
+}
+
+.slds-modal__title {
+    font-weight: 700;
+    color: #080707;
+}
+
+/* Modal Content */
+.slds-modal__content {
+    background-color: white;
+    padding: 1.5rem;
+}
+
+/* Modal Footer */
+.slds-modal__footer {
+    background-color: #f3f3f3;
+    border-top: 1px solid #e5e5e5;
+    padding: 1rem 1.5rem;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+/* Radio buttons */
+.slds-radio {
+    display: block;
+    margin-bottom: 0.5rem;
+}
+
+.slds-radio__label {
+    cursor: pointer;
+}
+
+.slds-radio.slds-is-disabled .slds-radio__label {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Styling cho Select User button - kích cỡ giống popup Select Follow-Up User */
+.slds-modal__footer .custom-select-user-btn {
+    border-radius: 0.5rem;
+    background-color: #0176d3;
+    border: 1px solid #0176d3;
+    color: #ffffff;
+    transition: all 0.2s ease-in-out;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+    cursor: pointer;
+}
+
+.slds-modal__footer .custom-select-user-btn:hover {
+    background-color: #014486;
+    border-color: #014486;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+}
+
+.slds-modal__footer .custom-select-user-btn:active {
+    background-color: #013360;
+    border-color: #013360;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+/* Styling cho Cancel button - kích cỡ giống popup Select Follow-Up User */
+.slds-modal__footer .custom-cancel-btn {
+    border-radius: 0.5rem;
+    border: 1px solid #c9c9c9;
+    background-color: #ffffff;
+    color: #3e3e3c;
+    transition: all 0.2s ease-in-out;
+    cursor: pointer;
+}
+
+.slds-modal__footer .custom-cancel-btn:hover {
+    background-color: #f3f3f3;
+    border-color: #a8a8a8;
+    color: #080707;
+}
+
+.slds-modal__footer .custom-cancel-btn:active {
+    background-color: #e8e8e8;
+    border-color: #939393;
+}
+
+/* Styling cho Confirm button - kích cỡ giống popup Select Follow-Up User */
+.slds-modal__footer .custom-confirm-btn {
+    border-radius: 0.5rem;
+    background-color: #0176d3;
+    border: 1px solid #0176d3;
+    color: #ffffff;
+    transition: all 0.2s ease-in-out;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+    cursor: pointer;
+}
+
+.slds-modal__footer .custom-confirm-btn:hover:not(:disabled) {
+    background-color: #014486;
+    border-color: #014486;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+}
+
+.slds-modal__footer .custom-confirm-btn:active:not(:disabled) {
+    background-color: #013360;
+    border-color: #013360;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.slds-modal__footer .custom-confirm-btn:disabled {
+    background-color: #c9c9c9;
+    border-color: #c9c9c9;
+    color: #969492;
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+/* Bo góc 2 nút Cancel và Confirm trong popup Select follow-up user */
+.user-modal__footer .slds-button,
+.user-modal__footer button {
+    border-radius: 0.5rem;
+}
+
+/* Nút Close hình tròn trong popup Follow-up và popup Select follow-up user */
+.follow-up-modal-layer .slds-modal__close,
+.user-modal-layer .slds-modal__close {
+    border-radius: 50%;
+    width: 2rem;
+    height: 2rem;
+    min-width: 2rem;
+    min-height: 2rem;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* User search: 1 ô combobox tích hợp tìm kiếm */
+.user-modal-layer .slds-modal__content {
+    overflow: visible;
+}
+/* Form horizontal trong modal: nhãn cùng độ rộng để 2 ô input thẳng cột, căn giữa dọc */
+.user-modal-layer .user-search-wrap.slds-form-element_horizontal,
+.user-modal-layer .follow-type-wrap.slds-form-element_horizontal {
+    display: flex;
+    align-items: center;
+}
+.user-modal-layer .user-search-wrap.slds-form-element_horizontal .slds-form-element__label,
+.user-modal-layer .follow-type-wrap.slds-form-element_horizontal .slds-form-element__label {
+    flex: 0 0 7rem;
+    min-width: 7rem;
+}
+.user-search-wrap {
+    position: relative;
+    overflow: visible;
+}
+.user-search-wrap .slds-form-element__control {
+    flex: 1;
+    min-width: 0;
+}
+.user-search-wrap .slds-combobox-group {
+    position: relative;
+    overflow: visible;
+    width: 100%;
+}
+.user-search-wrap .slds-dropdown-trigger {
+    position: relative;
+    display: block;
+    overflow: visible;
+    width: 100%;
+}
+.user-search-combobox-wrapper {
+    width: 100%;
+}
+.user-search-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    z-index: 9999;
+    max-height: 12rem;
+    overflow-y: auto;
+    min-width: 100%;
+    background: #fff;
+    border: 1px solid #dddbda;
+    border-radius: 0.25rem;
+    box-shadow: 0 2px 3px 0 rgba(0, 0, 0, 0.16);
+}
+.user-search-dropdown .slds-listbox__option {
+    cursor: pointer;
+    padding: 0.5rem 0.75rem;
+}
+.user-search-dropdown .slds-listbox__option:hover {
+    background-color: #f3f3f3;
+}
+
+/* Giống giao diện Change Owner: ô tìm kiếm có icon trái (user) + input + icon phải (search) */
+.user-search-combobox-wrapper {
+    display: flex;
+    align-items: center;
+    border: 1px solid #dddbda;
+    border-radius: 0.25rem;
+    background-color: #fff;
+    min-height: 2.25rem;
+    transition: border-color 0.1s linear, box-shadow 0.1s linear;
+    box-sizing: border-box;
+}
+.user-search-combobox-wrapper:focus-within {
+    border-color: #0176d3;
+    box-shadow: 0 0 3px #0176d3;
+}
+.user-search-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    color: #706e6b;
+}
+.user-search-icon-left {
+    padding-left: 0.75rem;
+    padding-right: 0.25rem;
+}
+.user-search-icon-right {
+    padding-left: 0.25rem;
+    padding-right: 0.75rem;
+}
+.user-search-clear-icon {
+    cursor: pointer;
+    color: #706e6b;
+}
+.user-search-clear-icon:hover {
+    color: #080707;
+}
+.user-search-input-el {
+    flex: 1;
+    min-width: 0;
+    border: none;
+    outline: none;
+    padding: 0.5rem 0.5rem 0.5rem 0.25rem;
+    font-size: 0.8125rem;
+    font-family: inherit;
+    color: #080707;
+    background: transparent;
+}
+.user-search-input-el::placeholder {
+    color: #706e6b;
+}
+
+/* Mỗi mục trong dropdown có icon user bên trái (giống Change Owner) */
+.user-search-option {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+.user-search-option .slds-listbox__option-icon {
+    display: inline-flex;
+    align-items: center;
+    flex-shrink: 0;
+    color: #706e6b;
+}
+.user-search-option .slds-truncate {
+    flex: 1;
+    min-width: 0;
+}
+
+/* Follow-Up Type: custom combobox (giống ô User) - cùng chiều rộng với ô User */
+.follow-type-wrap {
+    position: relative;
+    overflow: visible;
+}
+.follow-type-wrap .slds-form-element__control {
+    flex: 1;
+    min-width: 0;
+}
+.follow-type-wrap .slds-combobox-group {
+    position: relative;
+    overflow: visible;
+    width: 100%;
+}
+.follow-type-combobox-container.slds-dropdown-trigger {
+    width: 100%;
+}
+.follow-type-combobox-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border: 1px solid #dddbda;
+    border-radius: 0.25rem;
+    background-color: #fff;
+    min-height: 2.25rem;
+    padding: 0.5rem 0.75rem;
+    cursor: pointer;
+    transition: border-color 0.1s linear, box-shadow 0.1s linear;
+    width: 100%;
+    box-sizing: border-box;
+}
+.follow-type-combobox-wrapper:hover {
+    border-color: #0176d3;
+}
+.follow-type-combobox-wrapper:focus {
+    outline: none;
+    border-color: #0176d3;
+    box-shadow: 0 0 3px #0176d3;
+}
+.follow-type-display {
+    font-size: 0.8125rem;
+    color: #080707;
+    flex: 1;
+    min-width: 0;
+    text-align: left;
+}
+.follow-type-icon {
+    display: inline-flex;
+    align-items: center;
+    color: #706e6b;
+    flex-shrink: 0;
+    margin-left: 0.25rem;
+}
+.follow-type-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    z-index: 9999;
+    max-height: 10rem;
+    overflow-y: auto;
+    min-width: 100%;
+    background: #fff;
+    border: 1px solid #dddbda;
+    border-radius: 0.25rem;
+    box-shadow: 0 2px 3px 0 rgba(0, 0, 0, 0.16);
+}
+.follow-type-dropdown .slds-listbox__option,
+.follow-type-option {
+    cursor: pointer;
+    padding: 0.5rem 0.75rem;
+}
+.follow-type-dropdown .slds-listbox__option:hover,
+.follow-type-option:hover {
+    background-color: #f3f3f3;
+}
+.follow-type-combobox-container.slds-dropdown-trigger {
+    position: relative;
+    display: block;
+    overflow: visible;
+}

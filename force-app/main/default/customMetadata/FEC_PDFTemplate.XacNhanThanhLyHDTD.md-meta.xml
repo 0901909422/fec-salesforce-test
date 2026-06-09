@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomMetadata xmlns="http://soap.sforce.com/2006/04/metadata" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+    <label>Xác Nhận Thanh Lý HĐTD</label>
+    <protected>false</protected>
+    <values>
+        <field>FEC_Category__c</field>
+        <value xsi:type="xsd:string">Thanh Lý</value>
+    </values>
+    <values>
+        <field>FEC_Description__c</field>
+        <value xsi:type="xsd:string">Template xác nhận thanh lý hợp đồng tín dụng cho khách hàng</value>
+    </values>
+    <values>
+        <field>FEC_FileName__c</field>
+        <value xsi:type="xsd:string">XacNhanThanhLy_HDTD</value>
+    </values>
+    <values>
+        <field>FEC_HTMLBody__c</field>
+        <value xsi:type="xsd:string">&lt;div style=&quot;font-size: 16px; margin: 30px; line-height:1;&quot;&gt;
+
+    &lt;table style=&quot;width: 100%; border-collapse: collapse;&quot;&gt;
+        &lt;tr style=&quot;height: 100px;&quot;&gt;
+            &lt;td style=&quot;width: 65%; vertical-align: top;&quot;&gt;
+                &lt;div style=&quot;font-weight:bold;line-height: 1;&quot;&gt;CÔNG TY TÀI CHÍNH TNHH&lt;/div&gt;&lt;br /&gt;
+                &lt;div style=&quot;font-weight:bold;line-height: 1;&quot;&gt;NGÂN HÀNG VIỆT NAM THỊNH VƯỢNG SMBC&lt;/div&gt;&lt;br /&gt;
+                &lt;div style=&quot;font-weight:bold; font-style:italic;line-height: 1;&quot;&gt;VPBANK SMBC FINANCE COMPANY LIMITED
+                &lt;/div&gt;&lt;br /&gt;
+                &lt;div style=&quot;font-size: 13px;line-height: 1;&quot;&gt;Tầng 2, Tòa nhà Ree Tower, Số 9 Đoàn Văn Bơ, P. Xóm Chiếu,
+                    TP. HCM&lt;/div&gt;&lt;br /&gt;
+                &lt;div style=&quot;font-size: 13px; font-style:italic;line-height: 1;&quot;&gt;2nd Floor, Ree Tower Bldg, 9 Doan Van
+                    Bo, Xom Chieu Ward, HCMC&lt;/div&gt;
+            &lt;/td&gt;
+            &lt;td style=&quot;width: 35%; vertical-align: middle; text-align: right;&quot;&gt;
+                &lt;div style=&quot; margin-top:25px;&quot;&gt;
+                    &lt;img src=&quot;/resource/Logo&quot; style=&quot;width: 130px; height: auto;&quot; /&gt;
+                &lt;/div&gt;
+            &lt;/td&gt;
+        &lt;/tr&gt;
+    &lt;/table&gt;
+    &lt;hr style=&quot;border-color: #cccccc; border-width: 1px;&quot;&gt;
+
+
+    &lt;table style=&quot;width: 100%; margin-top: 15px;&quot;&gt;
+        &lt;tr&gt;
+            &lt;td style=&quot;width: 50%; text-align: left; font-size: 12pt;&quot;&gt;Số: &lt;pega:reference name=&quot;.DocumentNumber&quot;&gt;
+                &lt;/pega:reference&gt;/&lt;pega:reference name=&quot;.DocumentIssueBy&quot;&gt;&lt;/pega:reference&gt;.&lt;pega:reference
+                    name=&quot;.YearOfTheDocument&quot;&gt;&lt;/pega:reference&gt;
+            &lt;/td&gt;
+            &lt;td style=&quot;width: 50%; text-align: right; font-size: 12pt; font-style: italic;&quot;&gt;Tp.Hồ Chí Minh, ngày
+                &lt;pega:reference name=&quot;.CurrentDay&quot;&gt;&lt;/pega:reference&gt; tháng &lt;pega:reference name=&quot;.CurrentMonth&quot;&gt;
+                &lt;/pega:reference&gt; năm &lt;pega:reference name=&quot;.CurrentYear&quot;&gt;&lt;/pega:reference&gt;
+            &lt;/td&gt;
+        &lt;/tr&gt;
+    &lt;/table&gt;
+
+    &lt;div style=&quot;text-align: center; font-size: 18px; font-weight: bold;margin-top:30px; margin-bottom:30px;&quot;&gt;XÁC NHẬN THANH LÝ HỢP ĐỒNG TÍN DỤNG&lt;/div&gt;
+
+    &lt;p style=&quot;line-height:1.2;&quot;&gt;Công ty Tài chính TNHH Ngân hàng Việt Nam Thịnh Vượng SMBC - VPB SMBC FC (Tên thương mại FE CREDIT) xác nhận:&lt;/p&gt;
+    &lt;p&gt;Ông/Bà: &lt;pega:reference name=&quot;.CustomerName&quot;&gt;&lt;/pega:reference&gt;&lt;/p&gt;
+    &lt;p&gt;CMND/CCCD số: &lt;pega:reference name=&quot;.NationalID&quot;&gt;&lt;/pega:reference&gt;&lt;/p&gt;
+    &lt;p&gt;Ngày &lt;pega:reference format=&quot;dd/MM/yyyy&quot; name=&quot;.CorrAgreementDate&quot;&gt;&lt;/pega:reference&gt;, Ông/Bà có ký Hợp đồng tín dụng
+        với FE CREDIT với thông tin sau:&lt;/p&gt;
+    &lt;p&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;Số Hợp đồng tín dụng: &lt;pega:reference name=&quot;.ContractNumber&quot;&gt;&lt;/pega:reference&gt;&lt;/p&gt;
+    &lt;p&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;Số tiền vay: &lt;pega:reference name=&quot;.LoanAmount&quot;&gt;&lt;/pega:reference&gt; VNĐ&lt;/p&gt;
+    &lt;p&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;Thời hạn vay: &lt;pega:reference name=&quot;.Tenure&quot;&gt;&lt;/pega:reference&gt; tháng.&lt;/p&gt;
+    &lt;p style=&quot;line-height:1.2;&quot;&gt;Bằng văn bản này, FE CREDIT xác nhận Khách hàng đã hoàn tất mọi nghĩa vụ như cam kết trong Hợp đồng tín dụng đã ký
+        với FE CREDIT kể từ ngày &lt;pega:reference format=&quot;VNDate&quot; name=&quot;.AccountStatusChangeDate&quot;&gt;&lt;/pega:reference&gt;.&lt;/p&gt;
+    &lt;p&gt;Trân trọng.&lt;/p&gt;
+
+    &lt;table style=&quot;width: 100%; border-collapse: collapse;&quot;&gt;
+        &lt;tr&gt;
+            &lt;td style=&quot;width: 50%;&quot;&gt;&lt;/td&gt;
+            &lt;td style=&quot;text-align: center; vertical-align: top;&quot;&gt;
+                &lt;b&gt;&lt;pega:reference name=&quot;.CorrSignature1&quot;&gt;&lt;/pega:reference&gt;&lt;/b&gt;&lt;br /&gt;
+                &lt;b&gt;&lt;pega:reference name=&quot;.pyTitle&quot;&gt;&lt;/pega:reference&gt;&lt;/b&gt;&lt;br /&gt;
+                &lt;div&gt;Số: &lt;pega:reference name=&quot;.DocumentNumber&quot;&gt;&lt;/pega:reference&gt;/&lt;pega:reference name=&quot;.DocumentIssueBy&quot;&gt;
+                &lt;/pega:reference&gt;.&lt;pega:reference name=&quot;.YearOfTheDocument&quot;&gt;&lt;/pega:reference&gt;&lt;/div&gt;
+                &lt;br/&gt;&lt;br/&gt;&lt;br/&gt;&lt;br/&gt;&lt;br/&gt;
+                &lt;b&gt;
+                    &lt;pega:reference name=&quot;.pyName&quot;&gt;&lt;/pega:reference&gt;
+                &lt;/b&gt;
+            &lt;/td&gt;
+        &lt;/tr&gt;
+    &lt;/table&gt;
+
+    &lt;div style=&quot;font-size: 11pt; color: gray; margin-top: 200px;&quot;&gt;MB09.QĐ-XLTD.10&lt;/div&gt;
+&lt;/div&gt;</value>
+    </values>
+    <values>
+        <field>FEC_IsActive__c</field>
+        <value xsi:type="xsd:boolean">true</value>
+    </values>
+    <values>
+        <field>FEC_TemplateCode__c</field>
+        <value xsi:type="xsd:string">XNTL_HDTD</value>
+    </values>
+</CustomMetadata>

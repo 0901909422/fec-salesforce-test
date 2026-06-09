@@ -1,0 +1,177 @@
+<template>
+    <lightning-card title={labels.screenTitle}>
+        <template if:true={isLoading}>
+            <lightning-spinner
+                alternative-text="Loading"
+                size="medium">
+            </lightning-spinner>
+        </template>
+        <!-- Search Filters -->
+        <div class="slds-grid slds-wrap slds-gutters slds-p-around_medium">
+
+            <!-- Case ID -->
+            <div class="slds-col slds-size_1-of-4">
+                <label class="slds-form-element__label">{labels.colCaseID}</label>
+                <div class="slds-grid slds-gutters_small">
+                    <div class="slds-col">
+                        <lightning-input
+                            variant="label-hidden"
+                            value={caseID}
+                            onchange={handleChange}
+                            data-field="caseID">
+                        </lightning-input>
+                    </div>
+                </div>
+            </div>
+        
+            <!-- Operation Name -->
+            <div class="slds-col slds-size_1-of-4">
+                <label class="slds-form-element__label">{labels.colOperationName}</label>
+                <div class="slds-grid slds-gutters_small">
+                    <div class="slds-col">
+                        <lightning-input
+                            variant="label-hidden"
+                            value={operationName}
+                            onchange={handleChange}
+                            data-field="operationName">
+                        </lightning-input>
+                    </div>
+                </div>
+            </div>
+        
+            <div class="slds-col slds-size_1-of-4"></div>
+            <div class="slds-col slds-size_1-of-4"></div>
+        
+            <!-- Start Date Time -->
+            <div class="slds-col slds-size_1-of-4">
+                <label class="slds-form-element__label">{labels.colStartDateTime}</label>
+                <div class="slds-grid slds-gutters_small">
+                    <div class="slds-col">
+                        <lightning-input
+                            type="date"
+                            variant="label-hidden"
+                            value={startDate}
+                            onchange={handleChange}
+                            data-field="startDate">
+                        </lightning-input>
+                    </div>
+                    <div class="slds-col">
+                        <lightning-input
+                            type="time"
+                            variant="label-hidden"
+                            value={startTime}
+                            onchange={handleChange}
+                            data-field="startTime">
+                        </lightning-input>
+                    </div>
+                </div>
+            </div>
+        
+            <!-- End Date Time -->
+            <div class="slds-col slds-size_1-of-4">
+                <label class="slds-form-element__label">{labels.colEndDateTime}</label>
+                <div class="slds-grid slds-gutters_small">
+                    <div class="slds-col">
+                        <lightning-input
+                            type="date"
+                            variant="label-hidden"
+                            value={endDate}
+                            onchange={handleChange}
+                            data-field="endDate">
+                        </lightning-input>
+                    </div>
+                    <div class="slds-col">
+                        <lightning-input
+                            type="time"
+                            variant="label-hidden"
+                            value={endTime}
+                            onchange={handleChange}
+                            data-field="endTime">
+                        </lightning-input>
+                    </div>
+                </div>
+            </div>
+        
+        </div>
+
+        <!-- Buttons -->
+        <div class="button-row">
+            <lightning-button variant="brand" label={labels.searchBtn} onclick={doSearchServiceCallLogs}></lightning-button>
+            <lightning-button class="slds-m-left_x-small" label={labels.clearBtn} onclick={doClear}></lightning-button>
+        </div>
+
+        <!-- Help Text -->
+        <p class="help-text">{labels.helpSearch}</p>
+
+        <!-- Results Table -->
+        <template if:true={records.length}>
+            <!-- TOOLBAR -->
+            <div class="table-toolbar slds-grid slds-grid_align-center slds-grid_vertical-align-center slds-wrap">
+                <div class="pagination slds-grid slds-grid_vertical-align-center">
+                    <!-- Total records -->
+                    <span class="total-records slds-m-right_medium">
+                        {labels.totalRecords}: {totalRecords}
+                    </span>
+                
+                    <!-- Records per page -->
+                    <lightning-combobox
+                        class="page-size-combobox slds-m-right_medium"
+                        label={labels.recordsPerPage}
+                        variant="label-hidden"
+                        placeholder={labels.recordsPerPage}
+                        name="pageSize"
+                        field-name="pageSize"
+                        type="number"
+                        min="1"
+                        max={maxPageSize}
+                        step="1"
+                        value={pageSize}
+                        options={pageSizeOptions}
+                        onchange={handlePageSizeChange}>
+                    </lightning-combobox>
+                </div>
+            
+                <!-- Pagination -->
+                <div class="pagination slds-grid slds-grid_vertical-align-center">
+                    <lightning-button
+                        label={labels.prevBtn}
+                        onclick={prevPage}
+                        disabled={isFirstPage}>
+                    </lightning-button>
+            
+                    <span class="page-label slds-m-horizontal_medium">
+                        Page {pageNumber} / {totalPages}
+                    </span>
+            
+                    <lightning-button
+                        label={labels.nextBtn}
+                        onclick={nextPage}
+                        disabled={isLastPage}>
+                    </lightning-button>
+                </div>
+            
+            </div>
+                      
+            
+        
+            <!-- TABLE -->
+            <lightning-datatable
+                key-field="Id"
+                data={records}
+                columns={columns}
+                row-class={rowClass}
+                hide-checkbox-column
+                sorted-by={sortBy}
+                sorted-direction={sortDirection}
+                onsort={handleSort}
+                onrowaction={handleRowAction}>
+            </lightning-datatable>
+        </template>        
+
+        <!-- No Results -->
+        <template if:true={noResult}>
+            <p class="no-result">{labels.noRecords}</p>
+        </template>
+
+    </lightning-card>
+</template>

@@ -1,0 +1,65 @@
+/* tungnm37 thêm: styles cho fec_RoutingAssignment */
+.label {
+  font-weight: 500;
+  margin-bottom: 6px;
+}
+
+.value {
+  min-height: 17px;
+}
+
+.route-to-info__item {
+  display: flex;
+}
+
+.route-to-info__item * {
+  flex: 1;
+}
+
+/* tungnm37 thêm: form Add Item */
+.add-item-form {
+  background: #fff;
+  border: 1px solid #dddbda;
+  border-radius: 4px;
+  padding: 12px;
+  margin-bottom: 8px;
+}
+
+/* tungnm37 thêm: table list manual items - cột cố định */
+.manual-items-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  margin-bottom: 8px;
+}
+
+.manual-items-table th,
+.manual-items-table td {
+  padding: 6px 8px;
+  text-align: left;
+  vertical-align: middle;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.manual-items-table th {
+  font-weight: 600;
+  color: #444;
+  border-bottom: 1px solid #c9c9c9;
+}
+
+.manual-items-table .col-team {
+  width: 25%;
+}
+
+.manual-items-table .col-queue {
+  width: 25%;
+}
+
+.manual-items-table .col-remark {
+  width: 25%;
+}
+
+.manual-items-table .col-action {
+  width: 25%;
+  text-align: center;
+}

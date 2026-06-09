@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomFieldTranslation xmlns="http://soap.sforce.com/2006/04/metadata">
+    <label><!-- Q29 Spending Increase Suggestion --></label>
+    <name>FEC_Q29_Spending_Increase_Suggestion__c</name>
+    <picklistValues>
+        <masterLabel>Continue Dcard Credit Access</masterLabel>
+        <translation>Tiếp tục được vay và sử dụng hạn mức trên thẻ Dcard</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Fewer Debt Reminder Calls</masterLabel>
+        <translation>Hạn chế tần suất nhắc nợ</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Fewer Loan Offer Calls</masterLabel>
+        <translation>Hạn chế tần suất gọi mời vay</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Higher Cashback</masterLabel>
+        <translation>Tăng số tiền hoàn</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Increase Credit Limit</masterLabel>
+        <translation>Tăng hạn mức thẻ</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>More Promotions</masterLabel>
+        <translation>Nhiều chương trình khuyến mãi</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>No Relative Debt Reminders</masterLabel>
+        <translation>Không nhắc nợ người thân</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Not Tech-Savvy</masterLabel>
+        <translation>Không rành công nghệ</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Other</masterLabel>
+        <translation>Khác</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Prefer Cash</masterLabel>
+        <translation>Quen sử dụng tiền mặt</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Reduce/Waive Annual Fee</masterLabel>
+        <translation>Miễn/ giảm phí thường niên</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Reduce/Waive Interest</masterLabel>
+        <translation>Miễn/ giảm lãi suất thẻ</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Reduce/Waive Other Fees (Details)</masterLabel>
+        <translation>Miễn/ giảm phí khác (ghi chú chi tiết)</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Reduce/Waive Penalty Fees</masterLabel>
+        <translation>Miễn/ giảm phí phạt</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Remote Area</masterLabel>
+        <translation>Ở vùng sâu/ vùng xa</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Softer Collection Approach</masterLabel>
+        <translation>NV THN nhắc nợ nhẹ nhàng hơn</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Stronger Card Security</masterLabel>
+        <translation>Tăng cường bảo mật thông tin thẻ</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Survey Declined</masterLabel>
+        <translation>Không đồng ý khảo sát</translation>
+    </picklistValues>
+</CustomFieldTranslation>

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomFieldTranslation xmlns="http://soap.sforce.com/2006/04/metadata">
+    <label><!-- Replace Card --></label>
+    <name>FEC_Replace_Card__c</name>
+    <picklistValues>
+        <masterLabel>Card renewal</masterLabel>
+        <translation>Gia hạn thẻ</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Card replacement with fee</masterLabel>
+        <translation>Thay thế thẻ có phí</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Free card replacement</masterLabel>
+        <translation>Thay thế thẻ miễn phí</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>No</masterLabel>
+        <translation>Không</translation>
+    </picklistValues>
+</CustomFieldTranslation>

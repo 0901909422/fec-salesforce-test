@@ -1,0 +1,313 @@
+<template>
+    <div class="card-eligibility-wrapper fec-section--bordered">
+        <!-- ===== SECTION HEADER ===== -->
+        <div class="section-header slds-grid slds-grid_vertical-align-center">
+            <lightning-icon
+                icon-name={sectionIconName}
+                size="x-small"
+                class="slds-m-right_x-small toggle-icon"
+                onclick={toggleSection}>
+            </lightning-icon>
+            <h2
+                class="slds-text-heading_small section-title"
+                onclick={toggleSection}>
+                {cardSectionTitle}
+            </h2>
+        </div>
+
+        <!-- ===== SECTION BODY ===== -->
+        <template lwc:if={isExpanded}>
+            <div class="section-body">
+
+                <!-- ============================================================ -->
+                <!--  TOP-UP / E-VOUCHER ELIGIBILITY BLOCK                       -->
+                <!-- ============================================================ -->
+                <div class="eligibility-block">
+                    <div class="card-eligibility-toolbar slds-m-bottom_small">
+                        <lightning-button
+                            id="btnTopUpEligibility"
+                            variant="brand"
+                            label={topUpBtnLabel}
+                            onclick={handleTopUpClick}
+                            disabled={isTopUpLoading}>
+                        </lightning-button>
+                    </div>
+
+                    <div class="fec-card-block-content">
+                        <template lwc:if={isTopUpLoading}>
+                            <div class="fec-card-loading-overlay">
+                                <lightning-spinner alternative-text={lblLoadingAlt} size="medium"></lightning-spinner>
+                            </div>
+                        </template>
+                        <div class="slds-form slds-p-around_xx-small card-eligibility-fields" role="list">
+                            <div class="slds-grid slds-wrap slds-gutters_x-small">
+                                <div class="slds-col slds-size_1-of-2">
+                                    <div class="slds-p-around_x-small">
+                                        <div class="slds-grid slds-grid_vertical-align-start slds-border_bottom slds-p-bottom_x-small fec-field-label-value-row">
+                                            <div class="slds-grid slds-grid_vertical-align-center slds-text-title_bold field-label-style">
+                                                <span>{lblAvailableCreditLimit}</span>
+                                            </div>
+                                            <div class="slds-text-body_regular field-value-style">
+                                                <template lwc:if={topUpResult}>
+                                                    <template lwc:if={topUpResult.availableCreditLimit}>
+                                                        <lightning-formatted-number
+                                                            value={topUpResult.availableCreditLimit}
+                                                            format-style="decimal"
+                                                            maximum-fraction-digits="0">
+                                                        </lightning-formatted-number>
+                                                    </template>
+                                                    <template lwc:else>
+                                                        <span class="field-value--placeholder">—</span>
+                                                    </template>
+                                                </template>
+                                                <template lwc:else>
+                                                    <span class="field-value--placeholder">—</span>
+                                                </template>
+                                            </div>
+                                            <div class="fec-card-field-sync slds-m-left_x-small slds-grid slds-grid_vertical-align-center">
+                                                <template lwc:if={topUpShowSyncSuccess}>
+                                                    <lightning-icon icon-name="utility:success" variant="success" size="x-small"></lightning-icon>
+                                                </template>
+                                                <template lwc:if={topUpShowSyncError}>
+                                                    <lightning-icon icon-name="utility:clear" variant="error" size="x-small"></lightning-icon>
+                                                </template>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="slds-col slds-size_1-of-2">
+                                    <div class="slds-p-around_x-small">
+                                        <div class="slds-grid slds-grid_vertical-align-start slds-border_bottom slds-p-bottom_x-small fec-field-label-value-row">
+                                            <div class="slds-grid slds-grid_vertical-align-center slds-text-title_bold field-label-style">
+                                                <span>{lblReason}</span>
+                                            </div>
+                                            <div class="slds-text-body_regular field-value-style">
+                                                <template lwc:if={topUpResult}>
+                                                    <template lwc:if={topUpResult.reason}>
+                                                        <span>{topUpResult.reason}</span>
+                                                    </template>
+                                                    <template lwc:else>
+                                                        <span class="field-value--placeholder">—</span>
+                                                    </template>
+                                                </template>
+                                                <template lwc:else>
+                                                    <span class="field-value--placeholder">—</span>
+                                                </template>
+                                            </div>
+                                            <div class="fec-card-field-sync slds-m-left_x-small slds-grid slds-grid_vertical-align-center">
+                                                <template lwc:if={topUpShowSyncSuccess}>
+                                                    <lightning-icon icon-name="utility:success" variant="success" size="x-small"></lightning-icon>
+                                                </template>
+                                                <template lwc:if={topUpShowSyncError}>
+                                                    <lightning-icon icon-name="utility:clear" variant="error" size="x-small"></lightning-icon>
+                                                </template>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ============================================================ -->
+                <!--  FAST CASH / IPP ELIGIBILITY BLOCK                          -->
+                <!-- ============================================================ -->
+                <div class="eligibility-block slds-m-top_small">
+                    <div class="card-eligibility-toolbar slds-m-bottom_small">
+                        <lightning-button
+                            id="btnIPPEligibility"
+                            variant="brand"
+                            label={ippBtnLabel}
+                            onclick={handleIPPClick}
+                            disabled={isIPPLoading}>
+                        </lightning-button>
+                    </div>
+
+                    <div class="fec-card-block-content">
+                        <template lwc:if={isIPPLoading}>
+                            <div class="fec-card-loading-overlay">
+                                <lightning-spinner alternative-text={lblLoadingAlt} size="medium"></lightning-spinner>
+                            </div>
+                        </template>
+                        <div class="slds-form slds-p-around_xx-small card-eligibility-fields" role="list">
+                            <div class="slds-grid slds-wrap slds-gutters_x-small">
+                                <div class="slds-col slds-size_1-of-3">
+                                    <div class="slds-p-around_x-small">
+                                        <div class="slds-grid slds-grid_vertical-align-start slds-border_bottom slds-p-bottom_x-small fec-field-label-value-row">
+                                            <div class="slds-grid slds-grid_vertical-align-center slds-text-title_bold field-label-style">
+                                                <span>{lblFastCashStatus}</span>
+                                            </div>
+                                            <div class="slds-text-body_regular field-value-style">
+                                                <template lwc:if={ippResult}>
+                                                    <template lwc:if={ippResult.fastCashStatus}>
+                                                        <span>{ippResult.fastCashStatus}</span>
+                                                    </template>
+                                                    <template lwc:else>
+                                                        <span class="field-value--placeholder">—</span>
+                                                    </template>
+                                                </template>
+                                                <template lwc:else>
+                                                    <span class="field-value--placeholder">—</span>
+                                                </template>
+                                            </div>
+                                            <div class="fec-card-field-sync slds-m-left_x-small slds-grid slds-grid_vertical-align-center">
+                                                <template lwc:if={ippShowSyncSuccess}>
+                                                    <lightning-icon icon-name="utility:success" variant="success" size="x-small"></lightning-icon>
+                                                </template>
+                                                <template lwc:if={ippShowSyncError}>
+                                                    <lightning-icon icon-name="utility:clear" variant="error" size="x-small"></lightning-icon>
+                                                </template>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="slds-col slds-size_1-of-3">
+                                    <div class="slds-p-around_x-small">
+                                        <div class="slds-grid slds-grid_vertical-align-start slds-border_bottom slds-p-bottom_x-small fec-field-label-value-row">
+                                            <div class="slds-grid slds-grid_vertical-align-center slds-text-title_bold field-label-style">
+                                                <span>{lblIppStatus}</span>
+                                            </div>
+                                            <div class="slds-text-body_regular field-value-style">
+                                                <template lwc:if={ippResult}>
+                                                    <template lwc:if={ippResult.ippStatus}>
+                                                        <span>{ippResult.ippStatus}</span>
+                                                    </template>
+                                                    <template lwc:else>
+                                                        <span class="field-value--placeholder">—</span>
+                                                    </template>
+                                                </template>
+                                                <template lwc:else>
+                                                    <span class="field-value--placeholder">—</span>
+                                                </template>
+                                            </div>
+                                            <div class="fec-card-field-sync slds-m-left_x-small slds-grid slds-grid_vertical-align-center">
+                                                <template lwc:if={ippShowSyncSuccess}>
+                                                    <lightning-icon icon-name="utility:success" variant="success" size="x-small"></lightning-icon>
+                                                </template>
+                                                <template lwc:if={ippShowSyncError}>
+                                                    <lightning-icon icon-name="utility:clear" variant="error" size="x-small"></lightning-icon>
+                                                </template>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="slds-col slds-size_1-of-3">
+                                    <div class="slds-p-around_x-small">
+                                        <div class="slds-grid slds-grid_vertical-align-start slds-border_bottom slds-p-bottom_x-small fec-field-label-value-row">
+                                            <div class="slds-grid slds-grid_vertical-align-center slds-text-title_bold field-label-style">
+                                                <span>{lblLimit}</span>
+                                            </div>
+                                            <div class="slds-text-body_regular field-value-style">
+                                                <template lwc:if={ippResult}>
+                                                    <template lwc:if={ippResult.creditLimit}>
+                                                        <lightning-formatted-number
+                                                            value={ippResult.creditLimit}
+                                                            format-style="decimal"
+                                                            maximum-fraction-digits="0">
+                                                        </lightning-formatted-number>
+                                                    </template>
+                                                    <template lwc:else>
+                                                        <span class="field-value--placeholder">—</span>
+                                                    </template>
+                                                </template>
+                                                <template lwc:else>
+                                                    <span class="field-value--placeholder">—</span>
+                                                </template>
+                                            </div>
+                                            <div class="fec-card-field-sync slds-m-left_x-small slds-grid slds-grid_vertical-align-center">
+                                                <template lwc:if={ippShowSyncSuccess}>
+                                                    <lightning-icon icon-name="utility:success" variant="success" size="x-small"></lightning-icon>
+                                                </template>
+                                                <template lwc:if={ippShowSyncError}>
+                                                    <lightning-icon icon-name="utility:clear" variant="error" size="x-small"></lightning-icon>
+                                                </template>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="slds-grid slds-wrap slds-gutters_x-small slds-m-top_x-small">
+                                <div class="slds-col slds-size_1-of-3">
+                                    <div class="slds-p-around_x-small">
+                                        <div class="slds-grid slds-grid_vertical-align-start slds-border_bottom slds-p-bottom_x-small fec-field-label-value-row">
+                                            <div class="slds-grid slds-grid_vertical-align-center slds-text-title_bold field-label-style">
+                                                <span>{lblErrorCode}</span>
+                                            </div>
+                                            <div class="slds-text-body_regular field-value-style">
+                                                <template lwc:if={ippResult}>
+                                                    <template lwc:if={ippResult.errorCode}>
+                                                        <span>{ippResult.errorCode}</span>
+                                                    </template>
+                                                    <template lwc:else>
+                                                        <span class="field-value--placeholder">—</span>
+                                                    </template>
+                                                </template>
+                                                <template lwc:else>
+                                                    <span class="field-value--placeholder">—</span>
+                                                </template>
+                                            </div>
+                                            <div class="fec-card-field-sync slds-m-left_x-small slds-grid slds-grid_vertical-align-center">
+                                                <template lwc:if={ippShowSyncSuccess}>
+                                                    <lightning-icon icon-name="utility:success" variant="success" size="x-small"></lightning-icon>
+                                                </template>
+                                                <template lwc:if={ippShowSyncError}>
+                                                    <lightning-icon icon-name="utility:clear" variant="error" size="x-small"></lightning-icon>
+                                                </template>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="slds-col slds-size_2-of-3">
+                                    <div class="slds-p-around_x-small">
+                                        <div class="slds-grid slds-grid_vertical-align-start slds-border_bottom slds-p-bottom_x-small fec-field-label-value-row">
+                                            <div class="slds-grid slds-grid_vertical-align-center slds-text-title_bold field-label-style">
+                                                <span>{lblDescription}</span>
+                                            </div>
+                                            <div class="slds-text-body_regular field-value-style">
+                                                <template lwc:if={ippResult}>
+                                                    <template lwc:if={ippResult.description}>
+                                                        <span>{ippResult.description}</span>
+                                                    </template>
+                                                    <template lwc:else>
+                                                        <span class="field-value--placeholder">—</span>
+                                                    </template>
+                                                </template>
+                                                <template lwc:else>
+                                                    <span class="field-value--placeholder">—</span>
+                                                </template>
+                                            </div>
+                                            <div class="fec-card-field-sync slds-m-left_x-small slds-grid slds-grid_vertical-align-center">
+                                                <template lwc:if={ippShowSyncSuccess}>
+                                                    <lightning-icon icon-name="utility:success" variant="success" size="x-small"></lightning-icon>
+                                                </template>
+                                                <template lwc:if={ippShowSyncError}>
+                                                    <lightning-icon icon-name="utility:clear" variant="error" size="x-small"></lightning-icon>
+                                                </template>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- IPP ELIGIBILITY TABLE (only when Eligible + tenor rows) -->
+                        <template lwc:if={showIPPTable}>
+                            <div class="ipp-table-wrapper slds-m-top_small">
+                                <c-fec_-related-list-paging
+                                    columns={ippColumns}
+                                    records={ippTenorData}
+                                    default-sorted-by="tenure"
+                                    default-sort-direction="asc"
+                                    hide-row-number="false">
+                                </c-fec_-related-list-paging>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+
+            </div><!-- /section-body -->
+        </template>
+    </div>
+</template>

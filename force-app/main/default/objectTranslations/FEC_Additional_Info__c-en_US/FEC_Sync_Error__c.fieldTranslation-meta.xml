@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomFieldTranslation xmlns="http://soap.sforce.com/2006/04/metadata">
+    <label><!-- Sync Error --></label>
+    <name>FEC_Sync_Error__c</name>
+    <picklistValues>
+        <masterLabel>Personal Information Management</masterLabel>
+        <translation>Quản lý thông tin cá nhân</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Register FEOL 2.0 with New Phone Number</masterLabel>
+        <translation>Đăng ký FEOL 2.0 bằng SĐT mới</translation>
+    </picklistValues>
+</CustomFieldTranslation>

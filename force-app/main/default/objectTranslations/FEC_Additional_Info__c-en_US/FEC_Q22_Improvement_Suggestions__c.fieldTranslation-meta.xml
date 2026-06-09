@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomFieldTranslation xmlns="http://soap.sforce.com/2006/04/metadata">
+    <label><!-- Q22 Improvement Suggestions --></label>
+    <name>FEC_Q22_Improvement_Suggestions__c</name>
+    <picklistValues>
+        <masterLabel>Card Limit</masterLabel>
+        <translation>Hạn mức thẻ</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Customer Service</masterLabel>
+        <translation>Quy trình CSKH</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Debt Collection</masterLabel>
+        <translation>Quy trình nhắc nợ</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Interest Rate</masterLabel>
+        <translation>Lãi suất</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Loan Limit</masterLabel>
+        <translation>Hạn mức khoản vay</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Other (State reason)</masterLabel>
+        <translation>Khác (ghi chú chi tiết)</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Payment Term</masterLabel>
+        <translation>Thời hạn thanh toán</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Telemarketing or Onboarding Process</masterLabel>
+        <translation>Quy trình mời vay/ mở thẻ</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Unattractive Promotions</masterLabel>
+        <translation>Chương trình/ khuyến mãi ít hoặc không hấp dẫn</translation>
+    </picklistValues>
+</CustomFieldTranslation>

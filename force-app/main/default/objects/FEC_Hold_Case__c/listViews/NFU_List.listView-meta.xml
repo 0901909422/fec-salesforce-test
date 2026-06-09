@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ListView xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>NFU_List</fullName>
+    <columns>FEC_NFU_Code__c</columns>
+    <columns>NAME</columns>
+    <columns>FEC_NFU_Reason_VN__c</columns>
+    <columns>FEC_NFU_Reason_EN__c</columns>
+    <columns>FEC_NFU_Duration__c</columns>
+    <columns>FEC_NFU_Code_Status__c</columns>
+    <filterScope>Everything</filterScope>
+    <filters>
+        <field>FEC_NFU_Duration__c</field>
+        <operation>lessThan</operation>
+        <value>46</value>
+    </filters>
+    <label>NFU List</label>
+</ListView>

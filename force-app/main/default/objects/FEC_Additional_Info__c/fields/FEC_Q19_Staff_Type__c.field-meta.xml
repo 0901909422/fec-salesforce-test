@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>FEC_Q19_Staff_Type__c</fullName>
+    <description>Q19: Phân loại NV</description>
+    <label>Q19 Staff Type</label>
+    <required>false</required>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>Customer Service Staff</fullName>
+                <default>false</default>
+                <label>Customer Service Staff</label>
+            </value>
+            <value>
+                <fullName>Collection Staff</fullName>
+                <default>false</default>
+                <label>Collection Staff</label>
+            </value>
+            <value>
+                <fullName>Underwriting Staff</fullName>
+                <default>false</default>
+                <label>Underwriting Staff</label>
+            </value>
+            <value>
+                <fullName>Sales Staff</fullName>
+                <default>false</default>
+                <label>Sales Staff</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>

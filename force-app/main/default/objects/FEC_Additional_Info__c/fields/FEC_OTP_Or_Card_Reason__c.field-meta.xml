@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>FEC_OTP_Or_Card_Reason__c</fullName>
+    <description>Lý do chia sẻ OTP / thẻ</description>
+    <label>OTP Or Card Reason</label>
+    <required>false</required>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>Gia hạn thẻ</fullName>
+                <default>false</default>
+                <label>Gia hạn thẻ</label>
+            </value>
+            <value>
+                <fullName>NV hỗ trợ kiểm tra tài khoản/ số dư</fullName>
+                <default>false</default>
+                <label>NV hỗ trợ kiểm tra tài khoản/ số dư</label>
+            </value>
+            <value>
+                <fullName>NV tư vấn chuyển đổi trả góp</fullName>
+                <default>false</default>
+                <label>NV tư vấn chuyển đổi trả góp</label>
+            </value>
+            <value>
+                <fullName>NV tư vấn đáo hạn</fullName>
+                <default>false</default>
+                <label>NV tư vấn đáo hạn</label>
+            </value>
+            <value>
+                <fullName>NV tư vấn để không bị gọi nhắc nợ</fullName>
+                <default>false</default>
+                <label>NV tư vấn để không bị gọi nhắc nợ</label>
+            </value>
+            <value>
+                <fullName>NV tư vấn gọi hỗ trợ hủy thẻ</fullName>
+                <default>false</default>
+                <label>NV tư vấn gọi hỗ trợ hủy thẻ</label>
+            </value>
+            <value>
+                <fullName>NV tư vấn hủy bảo hiểm</fullName>
+                <default>false</default>
+                <label>NV tư vấn hủy bảo hiểm</label>
+            </value>
+            <value>
+                <fullName>NV tư vấn nhận thẻ cào/ khuyến mãi/ trúng thưởng</fullName>
+                <default>false</default>
+                <label>NV tư vấn nhận thẻ cào/ khuyến mãi/ trúng thưởng</label>
+            </value>
+            <value>
+                <fullName>NV tư vấn phí thường niên</fullName>
+                <default>false</default>
+                <label>NV tư vấn phí thường niên</label>
+            </value>
+            <value>
+                <fullName>NV tư vấn rút tiền mặt</fullName>
+                <default>false</default>
+                <label>NV tư vấn rút tiền mặt</label>
+            </value>
+            <value>
+                <fullName>NV tư vấn thu hồi thẻ</fullName>
+                <default>false</default>
+                <label>NV tư vấn thu hồi thẻ</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>

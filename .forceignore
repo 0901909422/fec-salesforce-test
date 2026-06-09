@@ -1,0 +1,14 @@
+**/jsconfig.json
+**/.eslintrc.json
+
+# Unsupported metadata types in unlocked packages
+**/sharingRules/**
+**/searchCustomizations/**
+
+# GROUP E: Assignment Rules that reference Roles not available in scratch org
+# These roles exist in metadata but scratch org creation doesn't support them
+# force-app/main/default/assignmentRules/
+
+
+# GROUP H: Report folders that may fail due to missing report types in scratch org
+# force-app/main/default/reports/

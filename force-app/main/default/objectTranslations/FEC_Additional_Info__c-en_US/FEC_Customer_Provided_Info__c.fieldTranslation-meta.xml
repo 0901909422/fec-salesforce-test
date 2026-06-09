@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomFieldTranslation xmlns="http://soap.sforce.com/2006/04/metadata">
+    <label><!-- Customer Provided Info --></label>
+    <name>FEC_Customer_Provided_Info__c</name>
+    <picklistValues>
+        <masterLabel>Insufficient information</masterLabel>
+        <translation>Thiếu thông tin</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Sufficient information</masterLabel>
+        <translation>Đủ thông tin</translation>
+    </picklistValues>
+</CustomFieldTranslation>

@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>FEC_Q29_Spending_Increase_Suggestion__c</fullName>
+    <description>Q29: Góp ý cải thiện để KH chi tiêu nhiều hơn</description>
+    <label>Q29 Spending Increase Suggestion</label>
+    <required>false</required>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>Fewer Loan Offer Calls</fullName>
+                <default>false</default>
+                <label>Fewer Loan Offer Calls</label>
+            </value>
+            <value>
+                <fullName>Fewer Debt Reminder Calls</fullName>
+                <default>false</default>
+                <label>Fewer Debt Reminder Calls</label>
+            </value>
+            <value>
+                <fullName>No Relative Debt Reminders</fullName>
+                <default>false</default>
+                <label>No Relative Debt Reminders</label>
+            </value>
+            <value>
+                <fullName>Not Tech-Savvy</fullName>
+                <default>false</default>
+                <label>Not Tech-Savvy</label>
+            </value>
+            <value>
+                <fullName>Reduce/Waive Interest</fullName>
+                <default>false</default>
+                <label>Reduce/Waive Interest</label>
+            </value>
+            <value>
+                <fullName>Reduce/Waive Other Fees (Details)</fullName>
+                <default>false</default>
+                <label>Reduce/Waive Other Fees (Details)</label>
+            </value>
+            <value>
+                <fullName>Reduce/Waive Penalty Fees</fullName>
+                <default>false</default>
+                <label>Reduce/Waive Penalty Fees</label>
+            </value>
+            <value>
+                <fullName>Reduce/Waive Annual Fee</fullName>
+                <default>false</default>
+                <label>Reduce/Waive Annual Fee</label>
+            </value>
+            <value>
+                <fullName>More Promotions</fullName>
+                <default>false</default>
+                <label>More Promotions</label>
+            </value>
+            <value>
+                <fullName>Softer Collection Approach</fullName>
+                <default>false</default>
+                <label>Softer Collection Approach</label>
+            </value>
+            <value>
+                <fullName>Remote Area</fullName>
+                <default>false</default>
+                <label>Remote Area</label>
+            </value>
+            <value>
+                <fullName>Prefer Cash</fullName>
+                <default>false</default>
+                <label>Prefer Cash</label>
+            </value>
+            <value>
+                <fullName>Stronger Card Security</fullName>
+                <default>false</default>
+                <label>Stronger Card Security</label>
+            </value>
+            <value>
+                <fullName>Increase Credit Limit</fullName>
+                <default>false</default>
+                <label>Increase Credit Limit</label>
+            </value>
+            <value>
+                <fullName>Higher Cashback</fullName>
+                <default>false</default>
+                <label>Higher Cashback</label>
+            </value>
+            <value>
+                <fullName>Continue Dcard Credit Access</fullName>
+                <default>false</default>
+                <label>Continue Dcard Credit Access</label>
+            </value>
+            <value>
+                <fullName>Survey Declined</fullName>
+                <default>false</default>
+                <label>Survey Declined</label>
+            </value>
+            <value>
+                <fullName>Other</fullName>
+                <default>false</default>
+                <label>Other</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<GlobalValueSetTranslation xmlns="http://soap.sforce.com/2006/04/metadata">
+    <valueTranslation>
+        <masterLabel>N/A</masterLabel>
+        <translation>N/A</translation>
+    </valueTranslation>
+    <valueTranslation>
+        <masterLabel>Successful</masterLabel>
+        <translation>Thành công</translation>
+    </valueTranslation>
+    <valueTranslation>
+        <masterLabel>Unsuccessful</masterLabel>
+        <translation>Không thành công</translation>
+    </valueTranslation>
+</GlobalValueSetTranslation>

@@ -1,0 +1,39 @@
+.header {
+    display: flex;
+    align-items: center;
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid #e5e5e5;
+}
+
+.header-icon {
+    margin-right: 0.5rem;
+    --slds-c-icon-color-foreground-default: #e11c2a;
+}
+
+.header-title {
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+.highlight-row {
+    background-color: #fef3f2;
+}
+
+.case-link {
+    color: #0176d3;
+    font-weight: 500;
+}
+
+.case-link:hover {
+    text-decoration: underline;
+}
+
+.footer {
+    text-align: left;
+    padding: 0.75rem;
+}
+
+.footer a {
+    color: #0176d3;
+    font-weight: 500;
+}

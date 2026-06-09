@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>FEC_Complaint_Assessment__c</fullName>
+    <description>Đánh giá loại khiếu nại</description>
+    <label>Complaint Assessment</label>
+    <required>false</required>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>Lỗi thái độ</fullName>
+                <default>false</default>
+                <label>Lỗi thái độ</label>
+            </value>
+            <value>
+                <fullName>Lỗi kỹ năng</fullName>
+                <default>false</default>
+                <label>Lỗi kỹ năng</label>
+            </value>
+            <value>
+                <fullName>Lỗi hệ thống</fullName>
+                <default>false</default>
+                <label>Lỗi hệ thống</label>
+            </value>
+            <value>
+                <fullName>Khiếu nại sai</fullName>
+                <default>false</default>
+                <label>Khiếu nại sai</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>

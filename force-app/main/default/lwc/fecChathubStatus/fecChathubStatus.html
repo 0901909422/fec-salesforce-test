@@ -1,0 +1,12 @@
+<template>
+    <div class="slds-p-around_medium status-container">
+        <template if:true={agentStatuses}>
+            <lightning-combobox name="agentStatus" label={labelCurrentStatus} value={selectedStatus}
+                options={agentStatuses} onchange={handleStatusChange}>
+            </lightning-combobox>
+        </template>
+        <template if:false={agentStatuses}>
+            <p class="slds-text-color_weak">{labelWaitingForData}</p>
+        </template>
+    </div>
+</template>

@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomFieldTranslation xmlns="http://soap.sforce.com/2006/04/metadata">
+    <label><!-- Q27 Sales Improvement 3 --></label>
+    <name>FEC_Q27_Sales_Improvement_3__c</name>
+    <picklistValues>
+        <masterLabel>Credit Limit</masterLabel>
+        <translation>Hạn mức tín dụng</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Dissatisfied with Other Aspects</masterLabel>
+        <translation>Không hài lòng về khía cạnh khác</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Fees</masterLabel>
+        <translation>Các loại phí</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Installment Amount</masterLabel>
+        <translation>Tiền góp</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Interest Rate</masterLabel>
+        <translation>Lãi suất</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>No Improvement Needed</masterLabel>
+        <translation>Không có điểm cần cải thiện</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>No Reason Provided</masterLabel>
+        <translation>Không chia sẻ lý do</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Other (Details)</masterLabel>
+        <translation>Khác (ghi chú chi tiết)</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Unattractive Promotions</masterLabel>
+        <translation>Chương trình/ khuyến mãi ít hoặc không hấp dẫn</translation>
+    </picklistValues>
+</CustomFieldTranslation>

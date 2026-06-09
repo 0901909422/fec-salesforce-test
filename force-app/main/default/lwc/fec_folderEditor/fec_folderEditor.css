@@ -1,0 +1,6 @@
+/* fec_folderEditor – modal styles */
+
+/* Ensure modal content doesn't overflow */
+.slds-modal__content {
+    overflow: visible;
+}

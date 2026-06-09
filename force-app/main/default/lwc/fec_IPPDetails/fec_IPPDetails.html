@@ -1,0 +1,82 @@
+<template>
+    <div class="slds-accordion">
+        <section class={sectionClass}>
+            <div class="slds-accordion__summary" onclick={handleIPPDetailsToggle}>
+                <h3 class="slds-accordion__summary-heading">
+                    <span class="slds-accordion__summary-content slds-grid">
+                        <lightning-icon 
+                            icon-name={ippDetailsIconName} 
+                            size="x-small" 
+                            class="slds-m-right_x-small">
+                        </lightning-icon>
+                        <span>
+                            {customLabel.ippDetailsLabel}
+                            <template if:true={showErrorInHeader}>
+                                <span class="error-text"> - {ERROR_MESSAGE}</span>
+                            </template>
+                        </span>
+                    </span>
+                </h3>
+            </div>
+            <div class={ippDetailsContentClass}>
+                <!-- Total IPP Balance Summary - grid 2 cột, label đỏ, gạch dưới từng ô -->
+                <template if:true={hasData}>
+                    <div class="ipp-details-summary slds-m-bottom_medium">
+                        <div class="ipp-details-summary-item">
+                            <div class="ipp-details-row-inner">
+                                <label class="ipp-details-label ipp-label-red">
+                                    {customLabel.totalIPPBalanceLabel}
+                                    <span class="ipp-details-help-icon">
+                                        <template if:true={helpTextMap.FEC_Total_IPP_Balance__c}>
+                                            <lightning-helptext content={helpTextMap.FEC_Total_IPP_Balance__c}></lightning-helptext>
+                                        </template>
+                                    </span>
+                                </label>
+                                <div class="ipp-details-value">
+                                    <span class={totalIPPBalanceClass}>{formattedTotalIPPBalance}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="ipp-details-summary-item">
+                            <div class="ipp-details-row-inner">
+                                <label class="ipp-details-label ipp-label-red">
+                                    {customLabel.totalIPPCurrentBalanceLabel}
+                                    <span class="ipp-details-help-icon">
+                                        <template if:true={helpTextMap.FEC_Total_IPP_Current_Balance__c}>
+                                            <lightning-helptext content={helpTextMap.FEC_Total_IPP_Current_Balance__c}></lightning-helptext>
+                                        </template>
+                                    </span>
+                                </label>
+                                <div class="ipp-details-value">
+                                    <span class={totalIPPCurrentBalanceClass}>{formattedTotalIPPCurrentBalance}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </template>
+                
+                <template if:false={isLoading}>
+                    <template if:false={hasError}>
+                        <div class="ipp-details-table-wrapper">
+                            <c-fec_-related-list-paging
+                                columns={columns}
+                                records={ippData}
+                                page-size={pageSize}
+                                updated-time={updatedTime}
+                                hide-updated-time="true"
+                                default-sorted-by={defaultSortBy}
+                                default-sort-direction={defaultSortDirection}
+                                onrowselect={handleRowSelect}>
+                            </c-fec_-related-list-paging>
+                        </div>
+                    </template>
+                </template>
+                <template if:true={isLoading}>
+                    <div class="slds-is-relative slds-p-vertical_large">
+                        <lightning-spinner alternative-text="Loading" size="medium"></lightning-spinner>
+                    </div>
+                </template>
+            </div>
+        </section>
+    </div>
+</template>

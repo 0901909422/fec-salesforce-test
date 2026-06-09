@@ -1,0 +1,19 @@
+<aura:component implements="lightning:actionOverride,force:hasRecordId,force:hasSObjectName,force:lightningQuickActionWithoutHeader" access="global"
+    controller="FEC_RelevantTicketController">
+    <lightning:workspaceAPI aura:id="workspace" />
+
+    <aura:attribute name="recordId" type="String" />
+    <aura:attribute name="searchTerm" type="String" default="" />
+    <aura:attribute name="results" type="List" default="[]" />
+    <aura:attribute name="isOpen" type="Boolean" default="false" />
+    <aura:attribute name="isLoading" type="Boolean" default="false" />
+    <aura:attribute name="selectedId" type="String" default="" />
+    <aura:attribute name="selectedLabel" type="String" default="" />
+    <aura:attribute name="errorMsg" type="String" default="" />
+    <aura:attribute name="isSaving" type="Boolean" default="false" />
+
+    <aura:handler name="init" value="{!this}" action="{!c.doInit}" />
+
+    <div style="display:none;"></div>
+
+</aura:component>

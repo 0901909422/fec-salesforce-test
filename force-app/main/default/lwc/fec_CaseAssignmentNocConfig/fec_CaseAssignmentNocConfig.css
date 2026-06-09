@@ -1,0 +1,12 @@
+.rule-hint {
+  font-size: 0.8125rem;
+  color: #3e3e3c;
+  line-height: 1.45;
+  background: #fafaf9;
+  border-radius: 0.25rem;
+  padding: 0.5rem 0.75rem;
+}
+
+.slds-modal__container {
+  max-width: 28rem;
+}

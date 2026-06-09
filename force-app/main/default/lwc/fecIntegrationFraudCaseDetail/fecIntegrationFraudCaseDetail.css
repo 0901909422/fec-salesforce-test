@@ -1,0 +1,15 @@
+.case-block {
+    border: 1px solid #d8dde6;
+    border-radius: .25rem;
+}
+
+.header-row {
+    background: #f3f2f2;
+    cursor: pointer;
+    border-bottom: 1px solid #d8dde6;
+}
+
+.remarks-box {
+    white-space: pre-wrap;
+    background: #fafafa;
+}
