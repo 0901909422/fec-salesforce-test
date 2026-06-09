@@ -24,7 +24,14 @@
                         <span class="fec-error-text">{emailError}</span>
                       </template>
                     </template>
-                    <template if:false={isEditingEmail}></template>
+                    <template if:false={isEditingEmail}>
+                      <template if:true={showEmailRequiredInline}>
+                        <span class="fec-error-text">{labels.emailRequiredMsg}</span>
+                      </template>
+                      <template if:false={showEmailRequiredInline}>
+                        <span class="fec-empty">{labels.empty}</span>
+                      </template>
+                    </template>
                   </template>
                 </span>
                 <span class="fec-info-action">
