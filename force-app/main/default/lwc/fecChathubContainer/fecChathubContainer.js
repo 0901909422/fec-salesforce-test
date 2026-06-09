@@ -18,7 +18,7 @@ import FEC_CHATHUB_STATUS from '@salesforce/messageChannel/FecChatHubStatus__c';
 import { subscribe, APPLICATION_SCOPE } from 'lightning/messageService';
 import labelChatHubDisabled from '@salesforce/label/c.FEC_Label_ChatHubDisabled';
 
-const CHATHUB_URL_KEY = 'https://portal-chathub-uat.fecredit.cloud';
+const CHATHUB_URL_KEY = 'https://chathub.fecredit.com.vn';
 // ChatHub Utility Item label - dùng để identify utility item trong DOM
 const CHATHUB_UTILITY_LABEL = 'ChatHub';
 // Log formatting for better console visibility

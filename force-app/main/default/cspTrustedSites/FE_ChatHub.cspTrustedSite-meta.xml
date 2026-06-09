@@ -3,7 +3,7 @@
     <canAccessCamera>false</canAccessCamera>
     <canAccessMicrophone>false</canAccessMicrophone>
     <context>All</context>
-    <endpointUrl>https://portal-chathub-uat.fecredit.cloud</endpointUrl>
+    <endpointUrl>https://chathub.fecredit.com.vn</endpointUrl>
     <isActive>true</isActive>
     <isApplicableToConnectSrc>false</isApplicableToConnectSrc>
     <isApplicableToFontSrc>false</isApplicableToFontSrc>
