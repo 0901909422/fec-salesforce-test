@@ -3,7 +3,6 @@
     <fullName>FEC_Channel__c</fullName>
     <deleteConstraint>SetNull</deleteConstraint>
     <description>Thông tin kênh được khai thác dữ liệu</description>
-    <externalId>false</externalId>
     <label>Channel</label>
     <referenceTo>FEC_Channel__c</referenceTo>
     <relationshipLabel>Master Data Setting</relationshipLabel>

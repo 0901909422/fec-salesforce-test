@@ -11,6 +11,23 @@ import FEC_Total_IPP_Current_Balance_Label from '@salesforce/label/c.FEC_Total_I
 import FEC_MSG_Error_API_Label from '@salesforce/label/c.FEC_MSG_Error_API_Label';
 import { formatDate } from 'c/fec_CommonUtils';
 
+/** Parse Record No. (vd "014", "059") thành số để sort đúng thứ tự, không sort theo chuỗi. */
+function parseRecordNoSortValue(recordNo) {
+    if (recordNo == null || recordNo === '') {
+        return null;
+    }
+    const trimmed = String(recordNo).trim();
+    if (trimmed === '' || trimmed === '-') {
+        return null;
+    }
+    const digitsOnly = trimmed.replace(/\D/g, '');
+    if (digitsOnly === '') {
+        return null;
+    }
+    const parsed = Number(digitsOnly);
+    return Number.isNaN(parsed) ? null : parsed;
+}
+
 export default class Fec_IPPDetails extends NavigationMixin(LightningElement) {
     @api recordId;
     
@@ -58,7 +75,15 @@ export default class Fec_IPPDetails extends NavigationMixin(LightningElement) {
     helpTextMap = {};
     
     columns = [
-        { label: 'Record No.', fieldName: 'recordNo', type: 'text', cellAlign: 'center', width: '100px', minWidth: '90px' },
+        {
+            label: 'Record No.',
+            fieldName: 'recordNo',
+            sortFieldName: 'recordNoSort',
+            type: 'text',
+            cellAlign: 'center',
+            width: '100px',
+            minWidth: '90px'
+        },
         { 
             label: 'Plan', 
             fieldName: 'planNumber', 
@@ -264,6 +289,7 @@ export default class Fec_IPPDetails extends NavigationMixin(LightningElement) {
                         return {
                             Id: record.Id ?? record.id,
                             recordNo: recordNo,
+                            recordNoSort: parseRecordNoSortValue(recordNo),
                             planNumber: planNumber,
                             openDate: openDate,
                             openDateFormatted: formatDate(openDate) || '',

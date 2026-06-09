@@ -115,4 +115,6 @@ FEC_SubCode__r.FEC_Code__c=&quot;ITC02.03&quot;
         </timeTriggers>
         <useCriteriaStartTime>true</useCriteriaStartTime>
     </milestones>
+    <name>Case SLA Main 3</name>
+    <versionNumber>1</versionNumber>
 </EntitlementProcess>

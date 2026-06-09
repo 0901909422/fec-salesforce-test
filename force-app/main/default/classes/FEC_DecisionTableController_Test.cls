@@ -74,7 +74,8 @@ private class FEC_DecisionTableController_Test {
             return;
         }
 
-        Id bpId = setupDecisionData();
+        // Use data from @TestSetup — do NOT call setupDecisionData() again (causes DUPLICATE_VALUE)
+        Id bpId = [SELECT Id FROM FEC_Business_Process__c WHERE FEC_Code__c = 'BP_DEC' LIMIT 1].Id;
 
         Integer tableCount = Database.countQuery(
             'SELECT COUNT() FROM ' + API_TABLE + ' WHERE FEC_Business_Process__c = \'' + bpId + '\''

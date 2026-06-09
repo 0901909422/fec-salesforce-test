@@ -1,51 +1,61 @@
 @IsTest
 private class FEC_FraudConstantCommon_Test {
 
-    private static final Integer EXPECTED_SUCCESSFULL = 200;
-    private static final Integer EXPECTED_SERVER_ERROR = 500;
-    private static final String EXPECTED_SYSTEM_CHANNEL = 'PEGACSM';
-    private static final String EXPECTED_MIME_PDF = 'application/pdf';
-    private static final String EXPECTED_ALLOCATING = 'Allocating';
-    private static final String EXPECTED_RESOLVED_COMPLETED = 'Resolved-Completed';
+    @IsTest
+    static void test_StaticConstants() {
+        System.assertNotEquals(null, FEC_FraudConstantCommon.LANG_VI);
+        System.assertNotEquals(null, FEC_FraudConstantCommon.START_NUMBER_CASE_SFT);
+        System.assertNotEquals(null, FEC_FraudConstantCommon.SET_ENPOINT_FRAUD_HEALTH);
+        System.assertNotEquals(null, FEC_FraudConstantCommon.SET_ENPOINT_FRAUD_SERVICE);
+        System.assertNotEquals(null, FEC_FraudConstantCommon.FRAUD_X_API_KEY);
+        System.assertNotEquals(null, FEC_FraudConstantCommon.FRAUD_CASE_SERVICE_NAME);
+        System.assertNotEquals(null, FEC_FraudConstantCommon.FRAUD_CASE_CANCEL_NAME);
+        System.assertNotEquals(null, FEC_FraudConstantCommon.FRAUD_CASE_CREATE_NAME);
+        System.assertNotEquals(null, FEC_FraudConstantCommon.FRAUD_CASE_UPDATE_NAME);
+        System.assertNotEquals(null, FEC_FraudConstantCommon.LOCATION_PAGE_SIZE);
+        System.assertNotEquals(null, FEC_FraudConstantCommon.LOCATION_OFFSET);
+        System.assertNotEquals(null, FEC_FraudConstantCommon.NUMBER_MAX_LENGTH);
+        System.assertNotEquals(null, FEC_FraudConstantCommon.CATEGORY_KEY);
+        System.assertNotEquals(null, FEC_FraudConstantCommon.SUBCATEGORY_KEY);
+        System.assertNotEquals(null, FEC_FraudConstantCommon.SUBCODE_KEY);
+        System.assertNotEquals(null, FEC_FraudConstantCommon.NEW_STATUS);
+        System.assertNotEquals(null, FEC_FraudConstantCommon.CANCELED);
+        System.assertNotEquals(null, FEC_FraudConstantCommon.INFO_NATION_ID);
+        System.assertNotEquals(null, FEC_FraudConstantCommon.INFO_PHONE_NUMBER);
+        System.assertNotEquals(null, FEC_FraudConstantCommon.INFO_ACCOUNT_NUMBER);
+    }
 
     @IsTest
-    static void testConstantsAndStructures() {
-        if (Type.forName('FEC_FraudConstantCommon') == null) {
-            System.assert(true, 'FEC_FraudConstantCommon chưa deploy trên org.');
-        }
-        System.assertEquals(200, EXPECTED_SUCCESSFULL);
-        System.assertEquals(500, EXPECTED_SERVER_ERROR);
-        System.assertEquals('PEGACSM', EXPECTED_SYSTEM_CHANNEL);
-        System.assertEquals('application/pdf', EXPECTED_MIME_PDF);
-
-        assertNestedClassContracts();
+    static void test_IntegrationFieldType() {
+        FEC_FraudConstantCommon.IntegrationFieldType t = new FEC_FraudConstantCommon.IntegrationFieldType();
+        System.assertEquals('file', t.TYPE_FILE);
+        System.assertNotEquals(null, t.TYPE_TEXT);
+        System.assertNotEquals(null, t.TYPE_STRING);
     }
 
     @IsTest
-    static void testStatusConstants() {
-        if (Type.forName('FEC_FraudConstantCommon') == null) {
-            System.assert(true, 'FEC_FraudConstantCommon chưa deploy trên org.');
-        }
-        System.assertEquals('Allocating', EXPECTED_ALLOCATING);
-        System.assertEquals('Resolved-Completed', EXPECTED_RESOLVED_COMPLETED);
+    static void test_IntegrationField() {
+        FEC_FraudConstantCommon.IntegrationField f = new FEC_FraudConstantCommon.IntegrationField();
+        System.assertNotEquals(null, f);
     }
 
-    private static void assertNestedClassContracts() {
-        assertNestedField('FEC_FraudConstantCommon.IntegrationFieldType', 'TYPE_FILE', 'file');
-        assertNestedField('FEC_FraudConstantCommon.IntegrationLabelFieldType', 'LABEL_TYPE_FILE', 'FILE');
-        assertNestedField('FEC_FraudConstantCommon.IntegrationPayloadField', 'CHANNEL', 'Channel');
-        assertNestedField('FEC_FraudConstantCommon.IntegrationMappingField', 'SOURCE_HEADER', 'header');
-        assertNestedField('FEC_FraudConstantCommon.IntegrationField', 'CASEFH', 'FH-');
+    @IsTest
+    static void test_IntegrationLabelFieldType() {
+        FEC_FraudConstantCommon.IntegrationLabelFieldType l = new FEC_FraudConstantCommon.IntegrationLabelFieldType();
+        System.assertEquals('FILE', l.LABEL_TYPE_FILE);
     }
 
-    private static void assertNestedField(String typeName, String fieldName, String expectedValue) {
-        Type nestedType = Type.forName(typeName);
-        if (nestedType == null) {
-            System.assertNotEquals(null, expectedValue, typeName + ' chưa deploy trên org.');
-            return;
-        }
-        Object instance = nestedType.newInstance();
-        Map<String, Object> fields = (Map<String, Object>) JSON.deserializeUntyped(JSON.serialize(instance));
-        System.assertEquals(expectedValue, fields.get(fieldName));
+    @IsTest
+    static void test_IntegrationMappingField() {
+        FEC_FraudConstantCommon.IntegrationMappingField m = new FEC_FraudConstantCommon.IntegrationMappingField();
+        System.assertNotEquals(null, m);
+    }
+
+    @IsTest
+    static void test_IntegrationPayloadField() {
+        FEC_FraudConstantCommon.IntegrationPayloadField p = new FEC_FraudConstantCommon.IntegrationPayloadField();
+        System.assertNotEquals(null, p);
+        System.assertEquals('Channel', p.CHANNEL);
+        System.assertEquals('CaseType', p.CASE_TYPE);
     }
 }

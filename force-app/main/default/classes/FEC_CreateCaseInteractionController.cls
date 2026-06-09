@@ -4,11 +4,24 @@ public with sharing class FEC_CreateCaseInteractionController {
     Case interation = [
       SELECT Id, FEC_Account_or_Contract__c, FEC_Account_or_Contract__r.FEC_Customer_Name__c,
              FEC_Product_Type__c, FEC_Phone_Number__c,
-             FEC_Account_Number__c, FEC_Contract_Number__c, FEC_CIF_Number__c
+             FEC_Account_Number__c, FEC_Contract_Number__c, FEC_CIF_Number__c, FEC_Is_Manual__c, FEC_Channel__c
       FROM Case
       WHERE Id = :caseId
       LIMIT 1
     ];
+
+    if (
+        interation.FEC_Is_Manual__c == true &&
+        (
+            interation.FEC_Channel__c == 'Inbound' ||
+            interation.FEC_Channel__c == 'Outbound'
+        ) &&
+        String.isBlank(interation.FEC_Phone_Number__c)
+    ) {
+        throw new AuraHandledException(
+            System.Label.FEC_PHONE_IS_REQUIRED_MSG
+        );
+    }
     
     Id customerCaseRtId = Schema.SObjectType.Case.getRecordTypeInfosByDeveloperName()
       .get(FEC_ConstantCommon.CASE_CUSTOMER_RECORD_TYPE_DEV_NAME)
@@ -71,11 +84,24 @@ public with sharing class FEC_CreateCaseInteractionController {
       Case interaction = [
         SELECT Id, FEC_Account_or_Contract__r.FEC_Customer_Name__c, FEC_Product_Type__c, FEC_Phone_Number__c,
                FEC_Customer_Type__c, FEC_Account_or_Contract__c, RecordType.DeveloperName,
-               FEC_Account_Number__c, FEC_Contract_Number__c, FEC_CIF_Number__c
+               FEC_Account_Number__c, FEC_Contract_Number__c, FEC_CIF_Number__c, FEC_Is_Manual__c, FEC_Channel__c
         FROM Case
         WHERE Id = :caseId
         LIMIT 1
       ];
+
+      if (
+        interaction.FEC_Is_Manual__c == true &&
+        (
+            interaction.FEC_Channel__c == 'Inbound' ||
+            interaction.FEC_Channel__c == 'Outbound'
+        ) &&
+        String.isBlank(interaction.FEC_Phone_Number__c)
+    ) {
+        throw new AuraHandledException(
+            System.Label.FEC_PHONE_IS_REQUIRED_MSG
+        );
+    }
 
       Id recordTypeToUse;
 

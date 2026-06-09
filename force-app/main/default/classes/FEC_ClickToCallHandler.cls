@@ -35,7 +35,7 @@ public without sharing class FEC_ClickToCallHandler {
                 
                 Schema.DescribeFieldResult d = f.getDescribe();
                 
-                if (d.getType() == Schema.DisplayType.Phone && d.isAccessible()) {
+                if (d.getType() == Schema.DisplayType.Phone) {
                     phoneFields.add(d.getName());
                 }
             }
@@ -50,7 +50,11 @@ public without sharing class FEC_ClickToCallHandler {
                 'SELECT ' + String.join(phoneFields, ',') +
                 ' FROM Case WHERE Id = :caseId LIMIT 1';
             
-            List<Case> results = Database.query(query);
+            List<Case> results = Database.queryWithBinds(
+                query,
+                new Map<String, Object>{ 'caseId' => caseId },
+                AccessLevel.SYSTEM_MODE
+            );
             
             if (results.isEmpty()) {
                 return phoneList;

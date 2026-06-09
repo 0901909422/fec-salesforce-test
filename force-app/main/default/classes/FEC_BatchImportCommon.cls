@@ -123,10 +123,17 @@ public with sharing class FEC_BatchImportCommon {
             if (dfr.isAutoNumber()) {
                 continue;
             }
-            if (!dfr.isCalculated()) {
-                recordToFill.put(name, value);
-                return;
+            if (dfr.isCalculated()) {
+                continue;
             }
+            Boolean canWrite = recordToFill.Id == null
+                ? dfr.isCreateable()
+                : dfr.isUpdateable();
+            if (!canWrite) {
+                continue;
+            }
+            recordToFill.put(name, value);
+            return;
         }
     }
 

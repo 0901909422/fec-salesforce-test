@@ -146,21 +146,17 @@ public without sharing class FEC_ContractClosureController {
         }
         try {
             Map<String, Schema.SObjectField> caseFields = Schema.SObjectType.Case.fields.getMap();
-            List<Case> rows = [
-                SELECT Id,
-                    FEC_Account_or_Contract__c,
-                    FEC_Account_or_Contract__r.Id,
-                    FEC_Account_or_Contract__r.FEC_Email__c,
-                    FEC_Account_or_Contract__r.FEC_Customer_Name__c,
-                    FEC_Account_or_Contract__r.FEC_Primary_Phone__c,
-                    FEC_Delivery_Option_2__c,
-                    FEC_Recipient_Name__c,
-                    FEC_Recipient_Phone_Number__c,
-                    FEC_Channel__c
-                FROM Case
-                WHERE Id = :caseId
-                LIMIT 1
-            ];
+            List<Case> rows = (List<Case>) Database.queryWithBinds(
+                'SELECT Id, FEC_Account_or_Contract__c, FEC_Account_or_Contract__r.Id,' +
+                    ' FEC_Account_or_Contract__r.FEC_Email__c,' +
+                    ' FEC_Account_or_Contract__r.FEC_Customer_Name__c,' +
+                    ' FEC_Account_or_Contract__r.FEC_Primary_Phone__c,' +
+                    ' FEC_Delivery_Option_2__c, FEC_Recipient_Name__c,' +
+                    ' FEC_Recipient_Phone_Number__c, FEC_Channel__c' +
+                    ' FROM Case WHERE Id = :caseId LIMIT 1',
+                new Map<String, Object>{ 'caseId' => caseId },
+                AccessLevel.SYSTEM_MODE
+            );
             if (rows.isEmpty()) {
                 out.errorMessage = String.format(System.Label.FEC_MSG_Not_Found, new List<String>{ 'Case' });
                 return out;
@@ -174,21 +170,16 @@ public without sharing class FEC_ContractClosureController {
                 out.demographicPrimaryPhone = hist.FEC_Primary_Phone__c;
             }
             if (histId != null) {
-                if (
-                    Schema.sObjectType.FEC_Address_Info__c.isAccessible() &&
-                    Schema.SObjectType.FEC_Address_Info__c.fields.FEC_Address_Type__c.isAccessible() &&
-                    Schema.SObjectType.FEC_Address_Info__c.fields.FEC_Full_Address__c.isAccessible() &&
-                    Schema.SObjectType.FEC_Address_Info__c.fields.FEC_Mailing_Address__c.isAccessible()
-                ) {
-                    for (FEC_Address_Info__c a : [
-                        SELECT Id, FEC_Address_Type__c, FEC_Full_Address__c, FEC_Mailing_Address__c, FEC_Case__c,
-                            FEC_Building__c, FEC_Number__c, FEC_Street__c,
-                            FEC_Ward__c, FEC_Ward__r.FEC_Name_VN__c, FEC_Ward_Text__c,
-                            FEC_Province__c, FEC_Province__r.FEC_Name_VN__c, FEC_Province_Text__c
-                        FROM FEC_Address_Info__c
-                        WHERE FEC_Customer_History__c = :histId
-                        ORDER BY FEC_Address_Type__c
-                    ]) {
+                for (FEC_Address_Info__c a : (List<FEC_Address_Info__c>) Database.queryWithBinds(
+                    'SELECT Id, FEC_Address_Type__c, FEC_Full_Address__c, FEC_Mailing_Address__c, FEC_Case__c,' +
+                        ' FEC_Building__c, FEC_Number__c, FEC_Street__c,' +
+                        ' FEC_Ward__c, FEC_Ward__r.FEC_Name_VN__c, FEC_Ward_Text__c,' +
+                        ' FEC_Province__c, FEC_Province__r.FEC_Name_VN__c, FEC_Province_Text__c' +
+                        ' FROM FEC_Address_Info__c WHERE FEC_Customer_History__c = :histId' +
+                        ' ORDER BY FEC_Address_Type__c',
+                    new Map<String, Object>{ 'histId' => histId },
+                    AccessLevel.SYSTEM_MODE
+                )) {
                         if (
                             a.FEC_Address_Type__c == FEC_ConstantCommon.CONTRACT_CLOSURE_ADDRESS_TYPE_TEMPORARY &&
                             a.FEC_Case__c != caseId
@@ -216,7 +207,6 @@ public without sharing class FEC_ContractClosureController {
                         row.wardLabel = wardLabel;
                         row.provinceLabel = provinceLabel;
                         out.addresses.add(row);
-                    }
                 }
             }
             out.deliveryOptions = describePicklist(OBJ_CASE, FLD_DELIVERY);
@@ -239,8 +229,10 @@ public without sharing class FEC_ContractClosureController {
             }
             String selectedAddressApi = resolveCaseSelectedAddressFieldApi();
             if (String.isNotBlank(selectedAddressApi) && caseFields.containsKey(flc(selectedAddressApi))) {
-                List<SObject> selectedRows = Database.query(
-                    'SELECT ' + selectedAddressApi + ' FROM Case WHERE Id = :caseId LIMIT 1'
+                List<SObject> selectedRows = Database.queryWithBinds(
+                    'SELECT ' + selectedAddressApi + ' FROM Case WHERE Id = :caseId LIMIT 1',
+                    new Map<String, Object>{ 'caseId' => caseId },
+                    AccessLevel.SYSTEM_MODE
                 );
                 if (!selectedRows.isEmpty()) {
                     Object selectedAddressVal = selectedRows[0].get(selectedAddressApi);
@@ -251,12 +243,12 @@ public without sharing class FEC_ContractClosureController {
             out.verifyInformationOptions = describePicklist(OBJ_ADDITIONAL_INFO, FLD_AI_VERIFY);
             out.callbackOptions = describePicklist(OBJ_ADDITIONAL_INFO, FLD_AI_CALLBACK);
             if (Schema.sObjectType.FEC_Additional_Info__c.isAccessible()) {
-                List<FEC_Additional_Info__c> aiRows = [
-                    SELECT Id, FEC_Verify_Information__c, FEC_Callback__c
-                    FROM FEC_Additional_Info__c
-                    WHERE FEC_Case__c = :caseId
-                    LIMIT 1
-                ];
+                List<FEC_Additional_Info__c> aiRows = (List<FEC_Additional_Info__c>) Database.queryWithBinds(
+                    'SELECT Id, FEC_Verify_Information__c, FEC_Callback__c' +
+                        ' FROM FEC_Additional_Info__c WHERE FEC_Case__c = :caseId LIMIT 1',
+                    new Map<String, Object>{ 'caseId' => caseId },
+                    AccessLevel.SYSTEM_MODE
+                );
                 if (!aiRows.isEmpty()) {
                     out.additionalInfoId = aiRows[0].Id;
                     out.savedVerifyInformation = aiRows[0].FEC_Verify_Information__c;
@@ -267,8 +259,10 @@ public without sharing class FEC_ContractClosureController {
                 if (!caseFields.containsKey(flc(cashApi))) {
                     continue;
                 }
-                List<SObject> cashOnly = Database.query(
-                    'SELECT ' + cashApi + ' FROM Case WHERE Id = :caseId LIMIT 1'
+                List<SObject> cashOnly = Database.queryWithBinds(
+                    'SELECT ' + cashApi + ' FROM Case WHERE Id = :caseId LIMIT 1',
+                    new Map<String, Object>{ 'caseId' => caseId },
+                    AccessLevel.SYSTEM_MODE
                 );
                 if (!cashOnly.isEmpty()) {
                     out.savedCash24ContractText = (String) cashOnly[0].get(cashApi);
@@ -863,14 +857,19 @@ public without sharing class FEC_ContractClosureController {
         }
         Id caseIdRef = caseRow.Id;
         String emailCommType = FEC_ConstantCommon.EMAIL;
-        List<SObject> teRows = Database.query(
+        List<SObject> teRows = Database.queryWithBinds(
             'SELECT Id, ' +
                 FLD_CL_CONTACT_STRING +
                 ' FROM ' +
                 OBJ_CONTACT_LIST +
                 ' WHERE ' + caseFieldApi + ' = :caseIdRef' +
                 ' AND ' + FLD_CL_COMM_TYPE + ' = :emailCommType' +
-                ' ORDER BY LastModifiedDate DESC LIMIT 1'
+                ' ORDER BY LastModifiedDate DESC LIMIT 1',
+            new Map<String, Object>{
+                'caseIdRef' => caseIdRef,
+                'emailCommType' => emailCommType
+            },
+            AccessLevel.SYSTEM_MODE
         );
         if (teRows.isEmpty()) {
             return null;
