@@ -308,6 +308,89 @@ private class FEC_BatchCaseHandlingImportService_Test {
         System.assertEquals(System.Label.FEC_Batch_Case_Handling_Import_Row_Status_Failed, results[8].status);
     }
 
+    @IsTest
+    static void testExtractAssignmentLookupTokens_ExportPrefixAndMultiline() {
+        List<String> singlePrefix = FEC_BatchCaseHandlingImportService.extractAssignmentLookupTokens(
+            '#1: A-000329'
+        );
+        System.assertEquals(2, singlePrefix.size(), 'Một dòng prefix vẫn giữ token strip và raw.');
+        System.assertEquals('A-000329', singlePrefix[0]);
+
+        List<String> multiline = FEC_BatchCaseHandlingImportService.extractAssignmentLookupTokens(
+            '#1: \n#2: A-000329\n#3: A-000330'
+        );
+        System.assertEquals(2, multiline.size(), 'Bỏ qua dòng prefix rỗng, lấy đủ mã Assignment.');
+        System.assertEquals('A-000329', multiline[0]);
+        System.assertEquals('A-000330', multiline[1]);
+
+        System.assertEquals(
+            'A-000331',
+            FEC_BatchCaseHandlingImportService.stripAssignmentExportLinePrefix('#5: A-000331')
+        );
+        System.assertEquals(
+            'A-000331',
+            FEC_BatchCaseHandlingImportService.stripAssignmentExportLinePrefix('A-000331')
+        );
+    }
+
+    @IsTest
+    static void testValidateRows_AssignmentIdWithExportPrefix() {
+        System.runAs(batchImportRunUser()) {
+            Case openCase = [
+                SELECT Id, FEC_ID_Search__c
+                FROM Case
+                WHERE FEC_ID_Search__c = 'CASE-OPEN-2026'
+                LIMIT 1
+            ];
+            openCase.OwnerId = UserInfo.getUserId();
+            update openCase;
+            FEC_Assignment__c activeAsg = [
+                SELECT Id, Name
+                FROM FEC_Assignment__c
+                WHERE FEC_Assignment_Status__c = 'Open'
+                LIMIT 1
+            ];
+
+            List<Object> inputRows = new List<Object>{
+                new Map<String, Object>{
+                    'caseidsearch' => openCase.FEC_ID_Search__c,
+                    'assignmentid' => '#1: ' + activeAsg.Name,
+                    'routingaction' => 'RESOLVE',
+                    'inputtedremarks' => 'Prefixed assignment id',
+                    'inputtedremarkscharlength' => '21'
+                },
+                new Map<String, Object>{
+                    'caseidsearch' => openCase.FEC_ID_Search__c,
+                    'assignmentid' => '#1: \n#2: ' + activeAsg.Name,
+                    'routingaction' => 'RESOLVE',
+                    'inputtedremarks' => 'Multiline prefixed assignment id',
+                    'inputtedremarkscharlength' => '31'
+                },
+                new Map<String, Object>{
+                    'caseidsearch' => openCase.FEC_ID_Search__c,
+                    'assignmentid' => String.valueOf(activeAsg.Id),
+                    'routingaction' => 'RESOLVE',
+                    'inputtedremarks' => 'Bare Salesforce Id still works',
+                    'inputtedremarkscharlength' => '28'
+                }
+            };
+
+            List<FEC_BatchCaseHandlingImportRow> results =
+                FEC_BatchCaseHandlingImportService.validateCaseHandlingImportRows(inputRows, true);
+
+            System.assertEquals(3, results.size());
+            for (FEC_BatchCaseHandlingImportRow row : results) {
+                System.assert(
+                    row.errors == null ||
+                        !row.errors.contains(
+                            System.Label.FEC_Batch_Case_Handling_Import_Err_Assignment_Id_Not_Found
+                        ),
+                    'Assignment export prefix/multiline phải resolve được: ' + row.errors
+                );
+            }
+        }
+    }
+
     /**
      * Kịch bản 4: Thực thi áp dụng cập nhật trạng thái Case và ghi chú hàng loạt xuống Database (applyCaseHandlingUpdates).
      * Bao phủ: Kịch bản thành công chạy hàm lõi chạy FEC_CaseBusinessService, kịch bản lỗi cấu trúc Id, kịch bản hành động đòi hỏi bổ sung tham số (routingActionRequiresExtraParams).

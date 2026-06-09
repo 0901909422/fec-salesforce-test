@@ -47,6 +47,10 @@
         },
         "opportunity": {
             "sharingModel": "read"
+        },
+        "case": {
+            "sharingModel": "readWrite",
+            "defaultRecordType": "Customer_Case"
         }
     }
 }

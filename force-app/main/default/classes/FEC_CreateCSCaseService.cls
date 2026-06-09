@@ -462,8 +462,28 @@ global with sharing class FEC_CreateCSCaseService {
         if(String.isBlank(c.NationalID) || c.NationalID.length()>15)
             throw new ValidationException(txnId,System.Label.FEC_CS_CASE_ERROR_CODE, System.Label.FEC_CS_CASE_INVALID_NATIONAL_ID_MSG);
         
-        if(String.isBlank(c.ContractOrAccountNumber) || c.ContractOrAccountNumber.length()>255)
-            throw new ValidationException(txnId,System.Label.FEC_CS_CASE_ERROR_CODE, System.Label.FEC_CS_CASE_INVALID_CONTRACT_OR_ACCOUNT_NUMBER_MSG);
+        if (String.isBlank(c.ContractOrAccountNumber) || c.ContractOrAccountNumber.length() > 255) {
+            throw new ValidationException(
+                txnId,
+                System.Label.FEC_CS_CASE_ERROR_CODE,
+                System.Label.FEC_CS_CASE_INVALID_CONTRACT_OR_ACCOUNT_NUMBER_MSG
+            );
+        }
+        if (!isValidContractOrAccountNumber(c.ContractOrAccountNumber)) {
+            throw new ValidationException(
+                txnId,
+                System.Label.FEC_CS_CASE_ERROR_CODE,
+                System.Label.FEC_CS_CASE_INVALID_CONTRACT_OR_ACCOUNT_NUMBER_MSG
+            );
+        }
+    }
+
+    private static Boolean isValidContractOrAccountNumber(String value) {
+        if (String.isBlank(value)) {
+            return false;
+        }
+        return Pattern.matches(FEC_ConstantCommon.PATTERN_ACCOUNT_NUMBER, value)
+            || Pattern.matches(FEC_ConstantCommon.PATTERN_CONTRACT_NUMBER, value);
     }
     
     // =================================================
@@ -800,8 +820,15 @@ global with sharing class FEC_CreateCSCaseService {
         return r;
     }
     
-    private static CustomerResponse getCustomerInfo(String accountContractNumber  ) {
+    private static CustomerResponse getCustomerInfo(String accountContractNumber) {
         CustomerResponse resp = new CustomerResponse();
+        String accountNumber = null;
+        String contractNumber = null;
+        if (Pattern.matches(FEC_ConstantCommon.PATTERN_ACCOUNT_NUMBER, accountContractNumber)) {
+            accountNumber = accountContractNumber;
+        } else if (Pattern.matches(FEC_ConstantCommon.PATTERN_CONTRACT_NUMBER, accountContractNumber)) {
+            contractNumber = accountContractNumber;
+        }
         FEC_GetCustomerList.ResponseWrapper res =
             FEC_GetCustomerList.getCustomerList(
             FEC_ConstantCommon.REQUESTOR_PEGA_CSM_HYPHEN,                 // requestorId
@@ -811,8 +838,8 @@ global with sharing class FEC_CreateCSCaseService {
         null,            // nationalId
         null,               // applicationId
         null,     // creditCardNumber
-        accountContractNumber,     // accountNumber
-        null, // contractNumber
+        accountNumber,
+        contractNumber,
         null,  // email
         null               // personId
             );

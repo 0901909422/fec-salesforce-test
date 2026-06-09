@@ -21,7 +21,7 @@ private class FEC_GetLoanApplicationHistory_Test {
         '      "USER_NAME": "Tung Nguyen",' +
         '      "ACTIVITIY_ID": "ACT01",' +
         '      "ACTIVITIY_NAME": "Review",' +
-        '      "STATUS_ID": "In Progress",' +
+        '      "STATUS_ID": "A",' +
         '      "EDIT_DATE": "2026-05-25",' +
         '      "END_DATE": "2026-05-26",' +
         '      "CREATED_DATE": "2026-05-24"' +
@@ -103,7 +103,19 @@ private class FEC_GetLoanApplicationHistory_Test {
         System.assertNotEquals(null, historyRec.Id, 'Bản ghi History phải được tạo thành công.');
         System.assertEquals('Tung Nguyen', historyRec.FEC_User__c, 'UserName phải được map vào field FEC_User__c.');
         System.assertEquals('ACT01', historyRec.FEC_Activity_ID__c, 'Activity ID phải khớp.');
+        System.assertEquals('APPROVED', historyRec.FEC_Status__c, 'Status phải được map từ mã A sang APPROVED.');
         System.assertEquals(Date.valueOf('2026-05-25'), historyRec.FEC_Edit_Date__c, 'Edit date phải được parse chính xác.');
+    }
+
+    @IsTest
+    static void testResolveStatusLabel() {
+        Test.startTest();
+        System.assertEquals('', FEC_GetLoanApplicationHistory.resolveStatusLabel(''));
+        System.assertEquals('', FEC_GetLoanApplicationHistory.resolveStatusLabel(null));
+        System.assertEquals('APPROVED', FEC_GetLoanApplicationHistory.resolveStatusLabel('A'));
+        System.assertEquals('APPROVED', FEC_GetLoanApplicationHistory.resolveStatusLabel('a'));
+        System.assertEquals('UNKNOWN_CODE', FEC_GetLoanApplicationHistory.resolveStatusLabel('UNKNOWN_CODE'));
+        Test.stopTest();
     }
 
     @IsTest

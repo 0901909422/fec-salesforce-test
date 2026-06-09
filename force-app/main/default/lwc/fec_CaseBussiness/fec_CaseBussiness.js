@@ -787,7 +787,7 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
     this._isCaseInformationEdit = next;
     // Execute Assignment: reload master data (hasCaseAssignment, assignment groups) rồi áp rule từng field.
     if (next) {
-      this.getData().then(() => {
+      this._reloadBusinessPreservingNocSelection().then(() => {
         this._updateDynCmpIsEditFlags();
       });
       return;
@@ -1891,8 +1891,46 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
     return fromForm != null && String(fromForm).trim() !== STR_EMPTY;
   }
 
+  _hasPersistedCardReplacementDependentData() {
+    const dependentApis = [
+      FIELD_NEW_BLOCK_CODE_CARD_REPLACE,
+      FIELD_CARD_REPLACEMENT_FEE,
+      FIELD_RECIPIENT_NAME,
+      FIELD_RECIPIENT_PHONE_NUMBER,
+    ];
+    for (const api of dependentApis) {
+      const original = this._getCaseFieldOriginalValue(api);
+      if (original != null && String(original).trim() !== STR_EMPTY) {
+        return true;
+      }
+    }
+    const addressId =
+      this._caseSelectedAddressId || this._getCaseFieldValue("FEC_Selected_Address__c");
+    return addressId != null && String(addressId).trim().length >= 15;
+  }
+
+  _getCaseFieldOriginalValue(apiName) {
+    const sections = this.business?.sectionlst ?? [];
+    for (const section of sections) {
+      for (const sub of section.subSectionlst ?? []) {
+        for (const obj of sub.objlst ?? []) {
+          if (obj.name !== "Case") continue;
+          const f = obj.fieldlst?.find((x) => x.apiName === apiName);
+          if (f != null) {
+            const v = f.original != null ? f.original : f.value;
+            return typeof v === "string" ? v.trim() : (v ?? STR_EMPTY);
+          }
+        }
+      }
+    }
+    return STR_EMPTY;
+  }
+
   _shouldShowCardReplacementDependentFields() {
-    return this._hasCardReplacementReasonValue();
+    return (
+      this._hasCardReplacementReasonValue() ||
+      this._hasPersistedCardReplacementDependentData()
+    );
   }
 
   _shouldSuppressRc27CardReplacementProcessInfo() {
@@ -2178,6 +2216,87 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
     if (list && typeof list.completeAssignmentFieldPayload === "function") {
       list.completeAssignmentFieldPayload(json);
     }
+  }
+
+  /** Sau Submit Assignment: reload master data (hasCaseAssignment, field editable/hidden). */
+  handleAssignmentSubmitSuccess() {
+    this._reloadBusinessPreservingNocSelection().then(() => {
+      if (this.business?.sectionlst) {
+        this._applyEditModeToBusiness();
+        this._updateDynCmpIsEditFlags();
+      }
+      if (this.isEdit) {
+        this.updateRoutingActionDisplay(STR_EMPTY);
+      }
+    });
+  }
+
+  _isHoldCaseNocSelectionComplete(noc) {
+    return !!(
+      noc &&
+      noc.productTypeId &&
+      noc.categoryId &&
+      noc.subCategoryId
+    );
+  }
+
+  _resolveNatureOfCaseIdFallback() {
+    return (
+      this._lastCaseNocTemplateNatureId ??
+      this.business?.natureOfCase ??
+      null
+    );
+  }
+
+  _reloadBusinessPreservingNocSelection() {
+    const fastCashNocSel = readFastCashNocSelectionFromStorage(this.recordId);
+    const pointsRedemptionNocSel = readPointsRedemptionNocSelectionFromStorage(
+      this.recordId,
+    );
+    if (fastCashNocSel?.productTypeId) {
+      this.holdCaseNocParams = {
+        recordId: this.recordId,
+        productTypeId: fastCashNocSel.productTypeId,
+        categoryId: fastCashNocSel.categoryId,
+        subCategoryId: fastCashNocSel.subCategoryId,
+        subCodeId: fastCashNocSel.subCodeId,
+      };
+      return this.getData(
+        fastCashNocSel.productTypeId,
+        fastCashNocSel.categoryId,
+        fastCashNocSel.subCategoryId,
+        fastCashNocSel.subCodeId,
+      );
+    }
+    if (pointsRedemptionNocSel?.productTypeId) {
+      return this.getData(
+        pointsRedemptionNocSel.productTypeId,
+        pointsRedemptionNocSel.categoryId,
+        pointsRedemptionNocSel.subCategoryId,
+        pointsRedemptionNocSel.subCodeId,
+      );
+    }
+    const noc =
+      this.holdCaseNocParams?.productTypeId &&
+      this.holdCaseNocParams?.categoryId &&
+      this.holdCaseNocParams?.subCategoryId
+        ? this.holdCaseNocParams
+        : this._lastGetByCaseNocParams;
+    if (this._isHoldCaseNocSelectionComplete(noc)) {
+      return this.getData(
+        noc.productTypeId,
+        noc.categoryId,
+        noc.subCategoryId,
+        noc.subCodeId ?? null,
+        this._resolveNatureOfCaseIdFallback(),
+      );
+    }
+    return this.getData();
+  }
+
+  /** Execute / reload: giữ bộ Updated NOC đang chọn (holdCaseNocParams), không chỉ đọc Case DB. */
+  @api reloadDataPreservingNoc() {
+    return this._reloadBusinessPreservingNocSelection();
   }
 
   hasContractProcessingAssessmentTypeChanged() {
@@ -2524,34 +2643,7 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
     window.addEventListener("focus", this._boundCheckHoldCaseRefresh);
     this._checkHoldCaseRefreshFlag();
     void this._initializeHoldCaseVisibility();
-    //linhdev fix jira FECREDIT_CSM_2025_KH-1366
-    const fastCashNocSel = readFastCashNocSelectionFromStorage(this.recordId);
-    //linhdev fix jira FECREDIT_CSM_2025_KH-1469-1474
-    const pointsRedemptionNocSel = readPointsRedemptionNocSelectionFromStorage(this.recordId);
-    if (fastCashNocSel && fastCashNocSel.productTypeId) {
-      this.holdCaseNocParams = {
-        recordId: this.recordId,
-        productTypeId: fastCashNocSel.productTypeId,
-        categoryId: fastCashNocSel.categoryId,
-        subCategoryId: fastCashNocSel.subCategoryId,
-        subCodeId: fastCashNocSel.subCodeId,
-      };
-      this.getData(
-        fastCashNocSel.productTypeId,
-        fastCashNocSel.categoryId,
-        fastCashNocSel.subCategoryId,
-        fastCashNocSel.subCodeId
-      );
-    } else if (pointsRedemptionNocSel && pointsRedemptionNocSel.productTypeId) {
-      this.getData(
-        pointsRedemptionNocSel.productTypeId,
-        pointsRedemptionNocSel.categoryId,
-        pointsRedemptionNocSel.subCategoryId,
-        pointsRedemptionNocSel.subCodeId
-      );
-    } else {
-      this.getData();
-    }
+    this._reloadBusinessPreservingNocSelection();
     if (this.isEdit) {
       this.updateRoutingActionDisplay(STR_EMPTY);
     }
@@ -2618,7 +2710,8 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
     }
 
     if (Object.prototype.hasOwnProperty.call(message, 'accountType')) {
-      this._onCardReplacementBlockCodeContextChanged();
+      // Existing behavior: account type change — không xử lý ở đây
+      // (fec_CaseEditNOC đã tự xử lý)
       return;
     }
     //PhongBT 07/05/26: fix case nếu đang chọn bộ noc đủ subcode mà chuyển sang muốn submit bộ không có subcode thì lại
@@ -5100,9 +5193,10 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
             //Toannd61: action.value (label/value dropdown) cho Apex phân nhánh FEC_IsReverted__c + custom label history
             routingActionValue: selectedAction?.value ?? "",
           };
-          // GSR: không gửi NOC Stage 2 — Apex sync Actual theo template Stage 1 sau revert
-          const bpCode = (this.business?.code || "").toUpperCase();
-          if (!bpCode.includes("GSR")) {
+          // COF/GSR Revert Stage 2→1: không gửi natureOfCaseId — Apex giữ Updated NOC trên Case + restore baseline
+          const isStage2ToStage1Revert =
+            this.business?.contextFlags?.isGsrStage2ToStage1Revert === true;
+          if (!isStage2ToStage1Revert) {
             const revertNocId = this._resolveRevertNatureOfCaseId();
             if (revertNocId) {
               revertParams.natureOfCaseId = revertNocId;
@@ -5238,10 +5332,9 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
         });
         if (rl0402Payload && rl0402Payload.success === false) {
           console.warn(
-            '[PDF] RL04.02 data failed:',
+            '[PDF] RL04.02 API no data, generating empty document:',
             rl0402Payload.errorMessage
           );
-          return;
         }
         headerData = rl0402Payload?.headerData || {};
         repaymentRows = rl0402Payload?.repaymentRows || [];
@@ -6791,6 +6884,34 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
     }
   }
 
+  _getLiveBlockCodeRouteParams() {
+    if (
+      this.business?.liveBlockCode == null &&
+      this.business?.liveBlockCode1 == null
+    ) {
+      return {};
+    }
+    return {
+      liveBlockCode: this.business.liveBlockCode ?? null,
+      liveBlockCode1: this.business.liveBlockCode1 ?? null,
+    };
+  }
+
+  _applyCardReplacementProcessActionFromBusiness() {
+    this.showProcessAction = false;
+    this.isProcessActionInfo = false;
+    this.processActionMsg = STR_EMPTY;
+    if (this.business?.replaceCardProcessActionResolved === true) {
+      if (this.business.replaceCardShowProcessAction === true) {
+        this.showProcessAction = true;
+      } else {
+        this.isProcessActionInfo = true;
+        this.processActionMsg = this.business.replaceCardProcessActionMsg || STR_EMPTY;
+      }
+      return;
+    }
+    this.handleCheckProcessAction();
+  }
 
   // PhuongNT add check process action Card Replacement
   handleCheckProcessAction() {

@@ -14,6 +14,7 @@ public without sharing class FEC_BatchCaseHandlingImportService {
     private static final String RESULT_COL_ERRORS = '__Errors';
     private static final String IMPORT_ERROR_SEPARATOR = ',\n';
     private static final String ERR_NOT_OWNER = 'Người dùng không phải chủ sở hữu Case';
+    private static final String QUEUE_OWNER_ID_PREFIX = '00G';
     private static final String ERR_FIELD_NOT_CONFIGURED = 'Trường dữ liệu chưa được thiết lập trong Master Data Setting';
     private static final String ERR_MISSING_CS_D2C_ASSESSMENT = 'Thiếu giá trị CS D2C đánh giá yêu cầu';
     private static final String ERR_MISSING_RISK_LEVEL = 'Thiếu giá trị Mức độ rủi ro';
@@ -37,11 +38,95 @@ public without sharing class FEC_BatchCaseHandlingImportService {
     private static final String ERR_INVALID_PAYMENT_ASSESSMENT = 'Giá trị Payment đánh giá yêu cầu đóng hợp đồng không tồn tại trong Datagroup.';
     private static final String ERR_MISSING_CP_ASSESSMENT = 'Thiếu giá trị CP đánh giá yêu cầu';
     private static final String ERR_INVALID_CP_ASSESSMENT = 'Giá trị CP đánh giá yêu cầu không tồn tại trong Datagroup.';
+    // 05/06/2026 16:00 linhdev - __Errors Export Result luôn hiển thị tiếng Việt
+    private static final String ERR_GENERIC_APPLY = 'Xử lý dữ liệu thất bại.';
+    private static final String ERR_IMPORT_RESULT_QUEUE_NOT_FOUND = 'Không tìm thấy Queue.';
+    private static final String ERR_IMPORT_RESULT_CANT_FIND_NEXT_STAGE = 'Không tìm thấy stage tiếp theo.';
+    private static final String ERR_IMPORT_RESULT_CANNOT_FIND_STAGE_CHANGE = 'Không tìm thấy Stage Change.';
+    private static final String ERR_IMPORT_RESULT_ASSIGNMENT_NOT_FOUND = 'Không tìm thấy Assignment.';
+    private static final String ERR_IMPORT_RESULT_DECISION_REQUIRED = 'Thiếu giá trị decision.';
+    private static final String ERR_IMPORT_RESULT_INVALID_INPUT = 'Dữ liệu nhập không hợp lệ.';
+    private static final String ERR_IMPORT_RESULT_TEAM_REQUIRED = 'Thiếu giá trị Team.';
+    private static final String ERR_IMPORT_RESULT_ESCALATE_NO_MANAGER =
+        'Escalate thất bại: Owner hiện tại không có manager. Vui lòng cập nhật dữ liệu user.';
+    private static final String ERR_IMPORT_RESULT_ESCALATE_NO_OWNER = 'Escalate thất bại: Assignment không có owner.';
+    private static final String ERR_IMPORT_RESULT_MANAGER_NOT_FOUND = 'Không tìm thấy manager của User owner hiện tại.';
+    private static final String ERR_IMPORT_RESULT_INSUFFICIENT_ACCESS = 'Không đủ quyền truy cập để cập nhật dữ liệu.';
+    private static final String ERR_IMPORT_RESULT_UNABLE_TO_LOCK = 'Không thể khóa bản ghi để cập nhật. Vui lòng thử lại.';
+    private static final String ERR_IMPORT_RESULT_ENTITY_DELETED = 'Bản ghi đã bị xóa.';
+    private static final String ERR_IMPORT_RESULT_VALIDATION_FAILED = 'Dữ liệu không thỏa điều kiện kiểm tra hệ thống.';
+    private static final String ERR_IMPORT_RESULT_SUFFIX_INVALID = ' không hợp lệ.';
+    private static final String ERR_IMPORT_RESULT_PREFIX_NOT_FOUND = 'Không tìm thấy ';
+    private static final String ERR_IMPORT_RESULT_SUFFIX_NOT_FOUND = '.';
+    private static final String IMPORT_RESULT_EN_SUFFIX_INVALID = ' is invalid.';
+    private static final String IMPORT_RESULT_EN_SUFFIX_NOT_FOUND = ' not found.';
+    // 05/06/2026 17:30 linhdev - lỗi resolve queue Assignment Route To khi import
+    private static final String ERR_ASSIGNMENT_ROUTE_TO_QUEUE_UNKNOWN =
+        'Không xác định được queue đích để cập nhật Assignment Route To.';
+    private static final Map<String, String> IMPORT_RESULT_ERROR_EN_TO_VI = new Map<String, String>{
+        'queue not found' => ERR_IMPORT_RESULT_QUEUE_NOT_FOUND,
+        'can\'t find next stage' => ERR_IMPORT_RESULT_CANT_FIND_NEXT_STAGE,
+        'cannot find stage change.' => ERR_IMPORT_RESULT_CANNOT_FIND_STAGE_CHANGE,
+        'assignment not found.' => ERR_IMPORT_RESULT_ASSIGNMENT_NOT_FOUND,
+        'decision is required' => ERR_IMPORT_RESULT_DECISION_REQUIRED,
+        'invalid input' => ERR_IMPORT_RESULT_INVALID_INPUT,
+        'team is required' => ERR_IMPORT_RESULT_TEAM_REQUIRED,
+        'escalate failed: current owner has no manager. please update user data.' => ERR_IMPORT_RESULT_ESCALATE_NO_MANAGER,
+        'escalate failed: assignment has no owner.' => ERR_IMPORT_RESULT_ESCALATE_NO_OWNER,
+        'manager not found for the current user owner.' => ERR_IMPORT_RESULT_MANAGER_NOT_FOUND,
+        // 05/06/2026 17:00 linhdev - 1 key template mismatch (TEMPLATE_MISMATCH / template_mismatch) → ERR_TEMPLATE_FILE_MISMATCH
+        'template mismatch' => ERR_TEMPLATE_FILE_MISMATCH
+    };
     private class RoutingParseResult {
         public String methodKey;
         public String decision;
         public String routeTeamHint;
         public String routeQueueHint;
+    }
+
+    private class ImportCaseValidateSnap {
+        public String searchKey;
+        public Id caseId;
+        public Boolean isClosed;
+        public Id ownerId;
+        public Id currentStageId;
+        public Decimal assignmentCount;
+        public String businessProcessCode;
+    }
+
+    private class ImportAssignmentValidateSnap {
+        public String assignmentLookupName;
+        public Id assignmentId;
+        public Id caseId;
+        public String assignmentStatus;
+    }
+
+    public class ImportValidateChunkContext {
+        public Boolean cofOrGsr;
+        public Id currentUserId;
+        public String currentUserGroup;
+        public Set<Id> currentUserQueueIds;
+        public Map<String, Case> caseBySearch;
+        public Map<Id, String> businessProcessCodeByCaseId;
+        public Map<String, FEC_Assignment__c> assignmentByName;
+        public Map<Id, FEC_Assignment__c> assignmentByRecordId;
+        public Map<Id, Set<String>> configuredLabelsByStage;
+        public Map<String, Map<String, String>> picklistValueByNormByField;
+        public Set<String> seenCaseSearch;
+        public Map<String, String> routingSignatureByCaseSearch;
+    }
+
+    public class ImportValidateChunkStatePayload {
+        public Boolean cofOrGsr;
+        public String currentUserGroup;
+        public List<String> seenCaseSearch;
+        public Map<String, String> routingSignatureByCaseSearch;
+        public List<ImportCaseValidateSnap> caseSnaps;
+        public List<ImportAssignmentValidateSnap> assignmentSnapsByName;
+        public List<ImportAssignmentValidateSnap> assignmentSnapsByRecordId;
+        public Map<String, List<String>> configuredLabelsByStage;
+        public List<String> currentUserQueueIds;
+        public Boolean prepared;
     }
 
     private static final String BATCH_OBJECT_API_NAME = 'FEC_Batch_Case_Handling__c';
@@ -56,6 +141,14 @@ public without sharing class FEC_BatchCaseHandlingImportService {
     // 28/05/2026 11:20 linhdev - dừng apply sớm trước 101 SOQL (mỗi row run + trigger tốn thêm query)
     @TestVisible
     private static final Integer IMPORT_SOQL_SAFE_THRESHOLD_PERCENT = 72;
+    // 08/06/2026 linhdev - file >5000 row: validate async theo chunk Queueable (tránh CPU/heap sync)
+    @TestVisible
+    public static final Integer IMPORT_ASYNC_VALIDATE_MIN_ROWS = 5000;
+    @TestVisible
+    public static final Integer IMPORT_VALIDATE_MAX_ROWS_PER_CHUNK = 400;
+    // 08/06/2026 linhdev - ~8-12 SOQL/row runInternal; 2 row/transaction an toàn dưới ngưỡng 72%
+    @TestVisible
+    public static final Integer IMPORT_QUEUEABLE_MAX_ROWS_PER_EXECUTE = 2;
     private static Map<String, Map<String, String>> routeParamsCacheByKey = new Map<String, Map<String, String>>();
     private static Map<String, String> revertActionIdCacheByStage = new Map<String, String>();
     private static Map<String, String> queueIdCacheByToken = new Map<String, String>();
@@ -92,6 +185,10 @@ public without sharing class FEC_BatchCaseHandlingImportService {
     public static Boolean shouldProcessImportSynchronously(List<FEC_BatchCaseHandlingImportRow> rows) {
         // 28/05/2026 15:24 linhdev - production safety: always process via queueable to avoid sync SOQL 101
         return false;
+    }
+
+    public static Boolean shouldValidateImportAsynchronously(Integer rowCount) {
+        return rowCount != null && rowCount > IMPORT_ASYNC_VALIDATE_MIN_ROWS;
     }
 
     @TestVisible
@@ -663,7 +760,8 @@ public without sharing class FEC_BatchCaseHandlingImportService {
             insertValues.add(
                 new List<String>{
                     rowValue(resolveImportResultStatusLabel(row.status)),
-                    rowValue(row.errors)
+                    // 05/06/2026 16:00 linhdev - __Errors Export Result luôn tiếng Việt
+                    rowValue(localizeImportResultErrors(row.errors))
                 }
             );
         }
@@ -748,7 +846,8 @@ public without sharing class FEC_BatchCaseHandlingImportService {
                 continue;
             }
             row.status = System.Label.FEC_Batch_Case_Handling_Import_Row_Status_Failed;
-            row.errors = failureError;
+            // 05/06/2026 16:00 linhdev - __Errors Export Result luôn tiếng Việt
+            row.errors = localizeImportResultErrors(failureError);
             row.recordId = FEC_ConstantCommon.STR_EMPTY;
         }
         return parsedRows;
@@ -906,7 +1005,8 @@ public without sharing class FEC_BatchCaseHandlingImportService {
                     cols.add(rowValue(row.assignmentRoutingAction));
                 }
                 cols.add(rowValue(resolveImportResultStatusLabel(row.status)));
-                cols.add(rowValue(row.errors));
+                // 05/06/2026 16:00 linhdev - __Errors Export Result luôn tiếng Việt
+                cols.add(rowValue(localizeImportResultErrors(row.errors)));
                 sheetRows.add(cols);
             }
         } else if (String.isNotBlank(batchFailureReason)) {
@@ -917,7 +1017,8 @@ public without sharing class FEC_BatchCaseHandlingImportService {
                 failureRow.add(FEC_ConstantCommon.STR_EMPTY);
             }
             failureRow.add('Failed');
-            failureRow.add(rowValue(batchFailureReason));
+            // 05/06/2026 16:00 linhdev - __Errors Export Result luôn tiếng Việt
+            failureRow.add(rowValue(localizeImportResultErrors(batchFailureReason)));
             sheetRows.add(failureRow);
         } else {
             return null;
@@ -944,7 +1045,12 @@ public without sharing class FEC_BatchCaseHandlingImportService {
             failureRow.add(FEC_ConstantCommon.STR_EMPTY);
         }
         failureRow.add('Failed');
-        failureRow.add(String.isBlank(batchFailureReason) ? System.Label.FEC_BCH_ImportFailed : batchFailureReason);
+        // 05/06/2026 16:00 linhdev - __Errors Export Result luôn tiếng Việt
+        failureRow.add(
+            localizeImportResultErrors(
+                String.isBlank(batchFailureReason) ? System.Label.FEC_BCH_ImportFailed : batchFailureReason
+            )
+        );
         sheetRows.add(failureRow);
         return sheetRows;
     }
@@ -1155,11 +1261,16 @@ public without sharing class FEC_BatchCaseHandlingImportService {
         }
         target.status = source.status;
         target.errors = source.errors;
-        target.routingAction = source.routingAction;
+        // 05/06/2026 17:00 linhdev - giữ routing đã parse từ file gốc; LWC có thể lệch cột assignment sang routing case
+        if (String.isBlank(target.routingAction)) {
+            target.routingAction = source.routingAction;
+        }
         target.inputtedRemarks = source.inputtedRemarks;
         target.inputtedRemarksCharLength = source.inputtedRemarksCharLength;
         target.assignmentId = source.assignmentId;
-        target.assignmentRoutingAction = source.assignmentRoutingAction;
+        if (String.isBlank(target.assignmentRoutingAction)) {
+            target.assignmentRoutingAction = source.assignmentRoutingAction;
+        }
         target.csD2CAssessmentType = source.csD2CAssessmentType;
         target.csSupportAssessment = source.csSupportAssessment;
         target.riskLevel = source.riskLevel;
@@ -1380,11 +1491,26 @@ public without sharing class FEC_BatchCaseHandlingImportService {
         if (cells == null || row == null) {
             return;
         }
+        String assignmentRouting = rowValue(row.assignmentRoutingAction);
         if (routingActionIndex >= 0 && routingActionIndex < cells.size()) {
-            cells[routingActionIndex] = rowValue(row.routingAction);
+            String sourceRouting = rowValue(cells[routingActionIndex]);
+            String validatedRouting = rowValue(row.routingAction);
+            // 05/06/2026 17:00 linhdev - Result giữ Routing Action gốc từ file; không copy Assignment Routing Action sang cột case
+            if (String.isNotBlank(sourceRouting)) {
+                cells[routingActionIndex] = sourceRouting;
+            } else if (
+                String.isNotBlank(validatedRouting) &&
+                validatedRouting != assignmentRouting
+            ) {
+                cells[routingActionIndex] = validatedRouting;
+            } else {
+                cells[routingActionIndex] = FEC_ConstantCommon.STR_EMPTY;
+            }
         }
         if (assignmentRoutingActionIndex >= 0 && assignmentRoutingActionIndex < cells.size()) {
-            cells[assignmentRoutingActionIndex] = rowValue(row.assignmentRoutingAction);
+            if (String.isNotBlank(assignmentRouting)) {
+                cells[assignmentRoutingActionIndex] = assignmentRouting;
+            }
         }
     }
 
@@ -1495,28 +1621,64 @@ public without sharing class FEC_BatchCaseHandlingImportService {
                 continue;
             }
             String sheetName = pickRowString(row, new List<String>{ 'originalsheetname' });
+            Integer headerRowIndex = pickRowInteger(row, 'originalHeaderRowIndex');
+            Boolean isCofGsrTemplate = findAssignmentRoutingHeaderIndex(headers) >= 0;
+            Integer routingHeaderIdx = findHeaderIndex(headers, LABEL_ROUTING_ACTION);
+            Integer assignmentRoutingHeaderIdx = findAssignmentRoutingHeaderIndex(headers);
             putImportFieldIfBlank(
                 row,
                 new List<String>{ 'caseidsearch', 'caseid' },
                 readImportValidateCell(contentVersionId, sheetName, dataRowIndex, headers, columnIndexes, findCaseIdHeaderIndex(headers))
             );
-            putImportFieldIfBlank(
-                row,
-                new List<String>{ 'routingaction' },
-                readImportValidateCell(contentVersionId, sheetName, dataRowIndex, headers, columnIndexes, findHeaderIndex(headers, LABEL_ROUTING_ACTION))
-            );
-            putImportFieldIfBlank(
-                row,
-                new List<String>{ 'assignmentroutingaction' },
-                readImportValidateCell(
-                    contentVersionId,
-                    sheetName,
-                    dataRowIndex,
-                    headers,
-                    columnIndexes,
-                    findAssignmentRoutingHeaderIndex(headers)
-                )
-            );
+            if (isCofGsrTemplate && routingHeaderIdx >= 0) {
+                // 05/06/2026 20:00 linhdev - COF/GSR: Routing Action (case) luôn lấy từ file server (ghi đè LWC lệch cột)
+                putImportFieldFromFile(
+                    row,
+                    new List<String>{ 'routingaction' },
+                    readImportValidateCellFromServerMap(
+                        contentVersionId,
+                        sheetName,
+                        dataRowIndex,
+                        headers,
+                        headerRowIndex,
+                        routingHeaderIdx
+                    )
+                );
+            } else {
+                putImportFieldIfBlank(
+                    row,
+                    new List<String>{ 'routingaction' },
+                    readImportValidateCell(contentVersionId, sheetName, dataRowIndex, headers, columnIndexes, routingHeaderIdx)
+                );
+            }
+            if (isCofGsrTemplate && assignmentRoutingHeaderIdx >= 0) {
+                // 05/06/2026 20:00 linhdev - COF/GSR: Assignment Routing Action luôn lấy từ file server
+                putImportFieldFromFile(
+                    row,
+                    new List<String>{ 'assignmentroutingaction' },
+                    readImportValidateCellFromServerMap(
+                        contentVersionId,
+                        sheetName,
+                        dataRowIndex,
+                        headers,
+                        headerRowIndex,
+                        assignmentRoutingHeaderIdx
+                    )
+                );
+            } else {
+                putImportFieldIfBlank(
+                    row,
+                    new List<String>{ 'assignmentroutingaction' },
+                    readImportValidateCell(
+                        contentVersionId,
+                        sheetName,
+                        dataRowIndex,
+                        headers,
+                        columnIndexes,
+                        assignmentRoutingHeaderIdx
+                    )
+                );
+            }
             putImportFieldIfBlank(
                 row,
                 new List<String>{ 'assignmentid' },
@@ -1605,6 +1767,45 @@ public without sharing class FEC_BatchCaseHandlingImportService {
         );
     }
 
+    // 05/06/2026 20:00 linhdev - map cột từ file Excel server (không tin originalColumnIndexes LWC)
+    @TestVisible
+    private static String readImportValidateCellFromServerMap(
+        Id contentVersionId,
+        String sheetName,
+        Integer dataRowIndex,
+        List<String> headers,
+        Integer headerRowIndex,
+        Integer headerIdx
+    ) {
+        if (contentVersionId == null || dataRowIndex == null || headers == null || headerIdx == null || headerIdx < 0) {
+            return FEC_ConstantCommon.STR_EMPTY;
+        }
+        List<Integer> mapped = FEC_BCH_TemplateExportService.resolveMappedColumnIndexesForHeaders(
+            contentVersionId,
+            headerRowIndex == null || headerRowIndex < 0 ? 0 : headerRowIndex,
+            sheetName,
+            headers
+        );
+        Integer worksheetCol = headerIdx;
+        if (mapped != null && headerIdx < mapped.size() && mapped[headerIdx] != null) {
+            worksheetCol = mapped[headerIdx];
+        }
+        return FEC_BCH_TemplateExportService.readImportCellText(
+            contentVersionId,
+            sheetName,
+            dataRowIndex,
+            worksheetCol
+        );
+    }
+
+    // 05/06/2026 20:00 linhdev - ghi đè field từ file (kể cả blank) để xóa bleed LWC
+    private static void putImportFieldFromFile(Map<String, Object> row, List<String> keys, String fileValue) {
+        if (row == null || keys == null || keys.isEmpty()) {
+            return;
+        }
+        row.put(keys[0], fileValue == null ? FEC_ConstantCommon.STR_EMPTY : fileValue);
+    }
+
     private static void putImportFieldIfBlank(Map<String, Object> row, List<String> keys, String fileValue) {
         if (row == null || keys == null || keys.isEmpty() || String.isBlank(fileValue)) {
             return;
@@ -1614,6 +1815,30 @@ public without sharing class FEC_BatchCaseHandlingImportService {
             return;
         }
         row.put(keys[0], fileValue);
+    }
+
+    // 05/06/2026 18:30 linhdev - file gốc trống Routing Action (case) nhưng JSON/LWC dính Assignment Routing → xóa trước validate
+    @TestVisible
+    private static void sanitizeCofGsrCaseRoutingBleedFromAssignment(FEC_BatchCaseHandlingImportRow rr) {
+        if (rr == null || findAssignmentRoutingHeaderIndex(rr.originalHeaders) < 0) {
+            return;
+        }
+        // 05/06/2026 20:00 linhdev - originalCells LWC lệch cột: routingAction trùng assignment → coi như chỉ nhập assignment
+        if (
+            String.isNotBlank(rr.routingAction) &&
+            String.isNotBlank(rr.assignmentRoutingAction) &&
+            rr.routingAction == rr.assignmentRoutingAction
+        ) {
+            rr.routingAction = FEC_ConstantCommon.STR_EMPTY;
+            return;
+        }
+        if (String.isBlank(rr.routingAction) || String.isBlank(rr.assignmentRoutingAction)) {
+            return;
+        }
+        String sourceRouting = cellTextAtOriginalLayout(rr, findHeaderIndex(rr.originalHeaders, LABEL_ROUTING_ACTION));
+        if (String.isBlank(sourceRouting)) {
+            rr.routingAction = FEC_ConstantCommon.STR_EMPTY;
+        }
     }
 
     // 01/06/2026 22:00 linhdev - bù field validate từ originalCells khi LWC gửi JSON trống/lệch cột
@@ -1670,8 +1895,17 @@ public without sharing class FEC_BatchCaseHandlingImportService {
     }
 
     public static List<FEC_BatchCaseHandlingImportRow> validateCaseHandlingImportRows(List<Object> inputRows, Boolean cofOrGsr) {
+        List<FEC_BatchCaseHandlingImportRow> output = buildImportRowsFromInputObjects(inputRows);
+        ImportValidateChunkContext ctx = prepareImportValidateChunkContext(output, cofOrGsr);
+        validateImportRowsChunk(output, ctx, 0, output.size());
+        return output;
+    }
+
+    public static List<FEC_BatchCaseHandlingImportRow> buildImportRowsFromInputObjects(List<Object> inputRows) {
         List<FEC_BatchCaseHandlingImportRow> output = new List<FEC_BatchCaseHandlingImportRow>();
-        List<String> searchKeys = new List<String>();
+        if (inputRows == null || inputRows.isEmpty()) {
+            return output;
+        }
         for (Object rowObj : inputRows) {
             if (!(rowObj instanceof Map<String, Object>)) {
                 continue;
@@ -1761,71 +1995,115 @@ public without sharing class FEC_BatchCaseHandlingImportService {
                 rr.inputtedRemarks,
                 rr.inputtedRemarksCharLength
             );
+            // 05/06/2026 18:30 linhdev - tránh __Errors báo nhập cả 2 routing khi user chỉ nhập Assignment Routing Action
+            sanitizeCofGsrCaseRoutingBleedFromAssignment(rr);
             rr.recordId = FEC_ConstantCommon.STR_EMPTY;
             rr.status = System.Label.FEC_Batch_Case_Handling_Success;
             rr.errors = FEC_ConstantCommon.STR_EMPTY;
             output.add(rr);
-            if (String.isNotBlank(rr.caseIdSearch)) {
+        }
+        return output;
+    }
+
+    public static ImportValidateChunkContext prepareImportValidateChunkContext(
+        List<FEC_BatchCaseHandlingImportRow> output,
+        Boolean cofOrGsr
+    ) {
+        ImportValidateChunkContext ctx = new ImportValidateChunkContext();
+        ctx.cofOrGsr = cofOrGsr == true;
+        ctx.caseBySearch = new Map<String, Case>();
+        ctx.businessProcessCodeByCaseId = new Map<Id, String>();
+        ctx.seenCaseSearch = new Set<String>();
+        ctx.routingSignatureByCaseSearch = new Map<String, String>();
+        if (output == null || output.isEmpty()) {
+            return ctx;
+        }
+        Set<String> searchKeys = new Set<String>();
+        for (FEC_BatchCaseHandlingImportRow rr : output) {
+            if (rr != null && String.isNotBlank(rr.caseIdSearch)) {
                 searchKeys.add(rr.caseIdSearch);
             }
         }
-
-        Map<String, Case> caseBySearch = new Map<String, Case>();
         if (!searchKeys.isEmpty()) {
-            for (Case c : [
-                SELECT Id, IsClosed, FEC_ID_Search__c, OwnerId, FEC_Current_Case_Stage__c,
-                    FEC_Assignment_Count__c,
-                    FEC_Business_Process__r.FEC_Code__c, FEC_Current_Case_Stage__r.FEC_Business_Process__r.FEC_Code__c
-                FROM Case
-                WHERE FEC_ID_Search__c IN :searchKeys
-                LIMIT 5000
-            ]) {
-                if (c.FEC_ID_Search__c != null) {
-                    caseBySearch.put(c.FEC_ID_Search__c, c);
+            List<String> searchKeyList = new List<String>(searchKeys);
+            for (Integer startIdx = 0; startIdx < searchKeyList.size(); startIdx += 5000) {
+                Integer endIdx = Math.min(startIdx + 5000, searchKeyList.size());
+                List<String> keyChunk = new List<String>();
+                for (Integer idx = startIdx; idx < endIdx; idx++) {
+                    keyChunk.add(searchKeyList[idx]);
+                }
+                for (Case c : [
+                    SELECT Id, IsClosed, FEC_ID_Search__c, OwnerId, FEC_Current_Case_Stage__c,
+                        FEC_Assignment_Count__c,
+                        FEC_Business_Process__r.FEC_Code__c, FEC_Current_Case_Stage__r.FEC_Business_Process__r.FEC_Code__c
+                    FROM Case
+                    WHERE FEC_ID_Search__c IN :keyChunk
+                ]) {
+                    if (c.FEC_ID_Search__c != null) {
+                        ctx.caseBySearch.put(c.FEC_ID_Search__c, c);
+                        ctx.businessProcessCodeByCaseId.put(c.Id, resolveCaseBusinessProcessCode(c));
+                    }
                 }
             }
         }
-
         Set<String> assignmentNames = new Set<String>();
         Set<Id> assignmentRecordIds = new Set<Id>();
         for (FEC_BatchCaseHandlingImportRow rr : output) {
-            if (!cofOrGsr || String.isBlank(rr.assignmentId)) {
+            if (ctx.cofOrGsr != true || rr == null || String.isBlank(rr.assignmentId)) {
                 continue;
             }
             collectAssignmentLookupKeys(rr.assignmentId, assignmentNames, assignmentRecordIds);
         }
-        Map<String, FEC_Assignment__c> assignmentByName = loadAssignmentsByName(assignmentNames);
-        Map<Id, FEC_Assignment__c> assignmentByRecordId = loadAssignmentsByRecordId(assignmentRecordIds);
-
-        Id currentUserId = UserInfo.getUserId();
-        String currentUserGroup = null;
+        ctx.assignmentByName = loadAssignmentsByName(assignmentNames);
+        ctx.assignmentByRecordId = loadAssignmentsByRecordId(assignmentRecordIds);
+        ctx.currentUserId = UserInfo.getUserId();
+        ctx.currentUserGroup = null;
         List<User> importUsers = [
             SELECT FEC_User_Group__c
             FROM User
-            WHERE Id = :currentUserId
+            WHERE Id = :ctx.currentUserId
             LIMIT 1
         ];
         if (!importUsers.isEmpty()) {
-            currentUserGroup = importUsers[0].FEC_User_Group__c;
+            ctx.currentUserGroup = importUsers[0].FEC_User_Group__c;
         }
         Set<Id> stageIds = new Set<Id>();
-        for (Case c : caseBySearch.values()) {
+        for (Case c : ctx.caseBySearch.values()) {
             if (c != null && c.FEC_Current_Case_Stage__c != null) {
                 stageIds.add(c.FEC_Current_Case_Stage__c);
             }
         }
-        Map<Id, Set<String>> configuredLabelsByStage = loadConfiguredLabelsByStage(stageIds);
+        ctx.configuredLabelsByStage = loadConfiguredLabelsByStage(stageIds);
         FEC_BatchCaseHandlingPicklistResolver.clearCache();
         FEC_BCH_ImportRoutingResolver.clearCache();
-        FEC_BCH_ImportRoutingResolver.preloadStageScreens(stageIds, currentUserGroup);
-        Map<String, Map<String, String>> picklistValueByNormByField =
+        FEC_BCH_ImportRoutingResolver.preloadStageScreens(stageIds, ctx.currentUserGroup);
+        ctx.picklistValueByNormByField =
             FEC_BatchCaseHandlingPicklistResolver.buildNormalizedToApiValueByField(
                 importPicklistFieldApis()
             );
+        ctx.currentUserQueueIds = FEC_AssignmentListHandler.getCurrentUserQueueIds(ctx.currentUserId);
+        return ctx;
+    }
 
-        Set<String> seenCaseSearch = new Set<String>();
-        Map<String, String> routingSignatureByCaseSearch = new Map<String, String>();
-        for (FEC_BatchCaseHandlingImportRow rr : output) {
+    public static void validateImportRowsChunk(
+        List<FEC_BatchCaseHandlingImportRow> output,
+        ImportValidateChunkContext ctx,
+        Integer startIdx,
+        Integer endIdx
+    ) {
+        if (output == null || output.isEmpty() || ctx == null || startIdx == null || endIdx == null) {
+            return;
+        }
+        Integer safeStart = startIdx < 0 ? 0 : startIdx;
+        Integer safeEnd = endIdx > output.size() ? output.size() : endIdx;
+        if (safeStart >= safeEnd) {
+            return;
+        }
+        for (Integer rowIdx = safeStart; rowIdx < safeEnd; rowIdx++) {
+            FEC_BatchCaseHandlingImportRow rr = output[rowIdx];
+            if (rr == null) {
+                continue;
+            }
             List<String> errs = new List<String>();
             Case matched = null;
             try {
@@ -1840,36 +2118,36 @@ public without sharing class FEC_BatchCaseHandlingImportService {
             if (String.isBlank(rr.caseIdSearch)) {
                 addImportError(errs, System.Label.FEC_Batch_Case_Handling_Import_Err_Missing_Case_Id);
             }
-            matched = String.isNotBlank(rr.caseIdSearch) ? caseBySearch.get(rr.caseIdSearch) : null;
+            matched = String.isNotBlank(rr.caseIdSearch) ? ctx.caseBySearch.get(rr.caseIdSearch) : null;
             if (String.isNotBlank(rr.caseIdSearch) && matched == null) {
                 errs.add(System.Label.FEC_Batch_Case_Handling_Import_Err_Case_Id_Not_Found);
             } else if (matched != null && matched.IsClosed) {
                 errs.add(System.Label.FEC_Batch_Case_Handling_Import_Err_Case_Closed);
-            } else if (matched != null && matched.OwnerId != currentUserId) {
+            } else if (matched != null && !canImportCaseForCurrentUser(matched, ctx.currentUserId, ctx.currentUserQueueIds)) {
                 errs.add(ERR_NOT_OWNER);
             }
             if (!remarkOverMax) {
             if (String.isNotBlank(rr.caseIdSearch)) {
-                if (seenCaseSearch.contains(rr.caseIdSearch)) {
+                if (ctx.seenCaseSearch.contains(rr.caseIdSearch)) {
                     errs.add(System.Label.FEC_Batch_Case_Handling_Import_Err_Duplicate_Case_Id);
                 } else {
-                    seenCaseSearch.add(rr.caseIdSearch);
+                    ctx.seenCaseSearch.add(rr.caseIdSearch);
                 }
-                String routingSig = buildRoutingSignature(rr, cofOrGsr);
-                if (routingSignatureByCaseSearch.containsKey(rr.caseIdSearch)) {
-                    if (routingSignatureByCaseSearch.get(rr.caseIdSearch) != routingSig) {
+                String routingSig = buildRoutingSignature(rr, ctx.cofOrGsr);
+                if (ctx.routingSignatureByCaseSearch.containsKey(rr.caseIdSearch)) {
+                    if (ctx.routingSignatureByCaseSearch.get(rr.caseIdSearch) != routingSig) {
                         errs.add(ERR_ROUTING_CONFLICT);
                     }
                 } else if (String.isNotBlank(routingSig)) {
-                    routingSignatureByCaseSearch.put(rr.caseIdSearch, routingSig);
+                    ctx.routingSignatureByCaseSearch.put(rr.caseIdSearch, routingSig);
                 }
             }
 
-            if (matched != null && cofOrGsr != true) {
+            if (matched != null && ctx.cofOrGsr != true) {
                 FEC_BatchCaseHandlingImportProfile.ImportScope importScope =
                     FEC_BatchCaseHandlingImportProfile.resolveForCase(
-                        resolveCaseBusinessProcessCode(matched),
-                        currentUserGroup
+                        resolveImportValidateBusinessProcessCode(matched, ctx),
+                        ctx.currentUserGroup
                     );
                 if (importScope != null && importScope.allowed == false) {
                     addImportError(errs, importScope.errorMessage);
@@ -1879,32 +2157,33 @@ public without sharing class FEC_BatchCaseHandlingImportService {
                             rr,
                             matched,
                             importScope,
-                            configuredLabelsByStage,
-                            picklistValueByNormByField
+                            ctx.configuredLabelsByStage,
+                            ctx.picklistValueByNormByField
                         )
                     );
                 }
             }
 
             // 28/05/2026 14:30 linhdev - resolve Routing Action vs Datagroup (tránh duplicate với block bên dưới)
-            List<String> resolvedRoutingErrs = validateResolvedRoutingForRow(rr, matched, cofOrGsr);
+            List<String> resolvedRoutingErrs = validateResolvedRoutingForRow(rr, matched, ctx.cofOrGsr);
             errs.addAll(resolvedRoutingErrs);
 
             //PhongBT 29/05/26: COF/GSR — Routing Action (case) Revert/Update/Escalate khi Case có Assignment.
-            if (cofOrGsr == true && matched != null) {
+            if (ctx.cofOrGsr == true && matched != null) {
                 String routingBlockedByAssignment = validateCaseRoutingActionBlockedByAssignmentCount(rr, matched);
                 if (String.isNotBlank(routingBlockedByAssignment)) {
                     errs.add(routingBlockedByAssignment);
                 }
             }
 
-            if (cofOrGsr) {
+            if (ctx.cofOrGsr) {
                 Boolean hasAssignment = String.isNotBlank(rr.assignmentId);
                 if (hasAssignment) {
                     FEC_Assignment__c asg = resolveAssignmentForImport(
                         rr.assignmentId,
-                        assignmentByName,
-                        assignmentByRecordId
+                        ctx.assignmentByName,
+                        ctx.assignmentByRecordId,
+                        matched == null ? null : matched.Id
                     );
                     if (asg == null) {
                         errs.add(System.Label.FEC_Batch_Case_Handling_Import_Err_Assignment_Id_Not_Found);
@@ -1934,7 +2213,7 @@ public without sharing class FEC_BatchCaseHandlingImportService {
                     }
                     //PhongBT 29/05/26: thêm update vào datagroup cho Assignment Routing Action
                     if (String.isNotBlank(rr.assignmentRoutingAction) && String.isBlank(rr.actionButtonId)) {
-                        if (!isCofGsrImportUpdateAction(true, rr.assignmentRoutingAction)) {
+                        if (!isCofGsrImportAllowedAssignmentRoutingAction(true, rr.assignmentRoutingAction)) {
                             errs.add(System.Label.FEC_Batch_Case_Handling_Import_Err_Assignment_Routing_Invalid);
                         }
                     }
@@ -1946,7 +2225,7 @@ public without sharing class FEC_BatchCaseHandlingImportService {
                         String.isBlank(rr.routingAction) &&
                         String.isNotBlank(rr.assignmentRoutingAction) &&
                         String.isBlank(rr.actionButtonId) &&
-                        !isCofGsrImportUpdateAction(true, rr.assignmentRoutingAction)
+                        !isCofGsrImportAllowedAssignmentRoutingAction(true, rr.assignmentRoutingAction)
                     ) {
                         errs.add(System.Label.FEC_Batch_Case_Handling_Import_Err_Assignment_Routing_Invalid);
                     }
@@ -1985,7 +2264,214 @@ public without sharing class FEC_BatchCaseHandlingImportService {
                 rr.recordId = matched == null ? FEC_ConstantCommon.STR_EMPTY : String.valueOf(matched.Id);
             }
         }
-        return output;
+    }
+
+    public static String serializeImportValidateChunkContext(ImportValidateChunkContext ctx) {
+        ImportValidateChunkStatePayload payload = new ImportValidateChunkStatePayload();
+        if (ctx == null) {
+            payload.prepared = false;
+            return JSON.serialize(payload);
+        }
+        payload.prepared = true;
+        payload.cofOrGsr = ctx.cofOrGsr == true;
+        payload.currentUserGroup = ctx.currentUserGroup;
+        payload.seenCaseSearch = ctx.seenCaseSearch == null
+            ? new List<String>()
+            : new List<String>(ctx.seenCaseSearch);
+        payload.routingSignatureByCaseSearch = ctx.routingSignatureByCaseSearch == null
+            ? new Map<String, String>()
+            : new Map<String, String>(ctx.routingSignatureByCaseSearch);
+        payload.caseSnaps = new List<ImportCaseValidateSnap>();
+        if (ctx.caseBySearch != null) {
+            for (String searchKey : ctx.caseBySearch.keySet()) {
+                Case matched = ctx.caseBySearch.get(searchKey);
+                if (matched == null) {
+                    continue;
+                }
+                ImportCaseValidateSnap snap = new ImportCaseValidateSnap();
+                snap.searchKey = searchKey;
+                snap.caseId = matched.Id;
+                snap.isClosed = matched.IsClosed;
+                snap.ownerId = matched.OwnerId;
+                snap.currentStageId = matched.FEC_Current_Case_Stage__c;
+                snap.assignmentCount = matched.FEC_Assignment_Count__c;
+                snap.businessProcessCode = ctx.businessProcessCodeByCaseId == null
+                    ? resolveCaseBusinessProcessCode(matched)
+                    : ctx.businessProcessCodeByCaseId.get(matched.Id);
+                payload.caseSnaps.add(snap);
+            }
+        }
+        payload.assignmentSnapsByName = new List<ImportAssignmentValidateSnap>();
+        if (ctx.assignmentByName != null) {
+            for (String nameKey : ctx.assignmentByName.keySet()) {
+                FEC_Assignment__c asg = ctx.assignmentByName.get(nameKey);
+                ImportAssignmentValidateSnap snap = toImportAssignmentValidateSnap(asg);
+                if (snap != null) {
+                    snap.assignmentLookupName = nameKey;
+                    payload.assignmentSnapsByName.add(snap);
+                }
+            }
+        }
+        payload.assignmentSnapsByRecordId = new List<ImportAssignmentValidateSnap>();
+        if (ctx.assignmentByRecordId != null) {
+            for (Id asgId : ctx.assignmentByRecordId.keySet()) {
+                FEC_Assignment__c asg = ctx.assignmentByRecordId.get(asgId);
+                ImportAssignmentValidateSnap snap = toImportAssignmentValidateSnap(asg);
+                if (snap != null) {
+                    payload.assignmentSnapsByRecordId.add(snap);
+                }
+            }
+        }
+        payload.configuredLabelsByStage = new Map<String, List<String>>();
+        if (ctx.configuredLabelsByStage != null) {
+            for (Id stageId : ctx.configuredLabelsByStage.keySet()) {
+                Set<String> labels = ctx.configuredLabelsByStage.get(stageId);
+                payload.configuredLabelsByStage.put(
+                    String.valueOf(stageId),
+                    labels == null ? new List<String>() : new List<String>(labels)
+                );
+            }
+        }
+        payload.currentUserQueueIds = new List<String>();
+        if (ctx.currentUserQueueIds != null) {
+            for (Id queueId : ctx.currentUserQueueIds) {
+                payload.currentUserQueueIds.add(String.valueOf(queueId));
+            }
+        }
+        return JSON.serialize(payload);
+    }
+
+    public static ImportValidateChunkContext deserializeImportValidateChunkContext(String jsonPayload) {
+        ImportValidateChunkContext ctx = new ImportValidateChunkContext();
+        ctx.caseBySearch = new Map<String, Case>();
+        ctx.businessProcessCodeByCaseId = new Map<Id, String>();
+        ctx.assignmentByName = new Map<String, FEC_Assignment__c>();
+        ctx.assignmentByRecordId = new Map<Id, FEC_Assignment__c>();
+        ctx.seenCaseSearch = new Set<String>();
+        ctx.routingSignatureByCaseSearch = new Map<String, String>();
+        ctx.configuredLabelsByStage = new Map<Id, Set<String>>();
+        ctx.currentUserQueueIds = new Set<Id>();
+        if (String.isBlank(jsonPayload)) {
+            return ctx;
+        }
+        ImportValidateChunkStatePayload payload = (ImportValidateChunkStatePayload) JSON.deserialize(
+            jsonPayload,
+            ImportValidateChunkStatePayload.class
+        );
+        if (payload == null || payload.prepared != true) {
+            return ctx;
+        }
+        ctx.cofOrGsr = payload.cofOrGsr == true;
+        ctx.currentUserGroup = payload.currentUserGroup;
+        ctx.currentUserId = UserInfo.getUserId();
+        if (payload.seenCaseSearch != null) {
+            ctx.seenCaseSearch.addAll(payload.seenCaseSearch);
+        }
+        if (payload.routingSignatureByCaseSearch != null) {
+            ctx.routingSignatureByCaseSearch.putAll(payload.routingSignatureByCaseSearch);
+        }
+        if (payload.caseSnaps != null) {
+            for (ImportCaseValidateSnap snap : payload.caseSnaps) {
+                if (snap == null || String.isBlank(snap.searchKey) || snap.caseId == null) {
+                    continue;
+                }
+                Case matched = new Case(Id = snap.caseId);
+                matched.put('IsClosed', snap.isClosed);
+                matched.put('OwnerId', snap.ownerId);
+                matched.put('FEC_Current_Case_Stage__c', snap.currentStageId);
+                matched.put('FEC_Assignment_Count__c', snap.assignmentCount);
+                ctx.caseBySearch.put(snap.searchKey, matched);
+                if (String.isNotBlank(snap.businessProcessCode)) {
+                    ctx.businessProcessCodeByCaseId.put(snap.caseId, snap.businessProcessCode);
+                }
+            }
+        }
+        if (payload.assignmentSnapsByName != null) {
+            for (ImportAssignmentValidateSnap snap : payload.assignmentSnapsByName) {
+                FEC_Assignment__c asg = fromImportAssignmentValidateSnap(snap);
+                if (asg != null && String.isNotBlank(snap.assignmentLookupName)) {
+                    ctx.assignmentByName.put(snap.assignmentLookupName, asg);
+                }
+            }
+        }
+        if (payload.assignmentSnapsByRecordId != null) {
+            for (ImportAssignmentValidateSnap snap : payload.assignmentSnapsByRecordId) {
+                FEC_Assignment__c asg = fromImportAssignmentValidateSnap(snap);
+                if (asg != null && asg.Id != null) {
+                    ctx.assignmentByRecordId.put(asg.Id, asg);
+                }
+            }
+        }
+        if (payload.configuredLabelsByStage != null) {
+            for (String stageIdKey : payload.configuredLabelsByStage.keySet()) {
+                try {
+                    Id stageId = Id.valueOf(stageIdKey);
+                    List<String> labels = payload.configuredLabelsByStage.get(stageIdKey);
+                    ctx.configuredLabelsByStage.put(
+                        stageId,
+                        labels == null ? new Set<String>() : new Set<String>(labels)
+                    );
+                } catch (Exception ex) {
+                }
+            }
+        }
+        if (payload.currentUserQueueIds != null) {
+            for (String queueIdKey : payload.currentUserQueueIds) {
+                try {
+                    ctx.currentUserQueueIds.add(Id.valueOf(queueIdKey));
+                } catch (Exception ex) {
+                }
+            }
+        }
+        Set<Id> stageIds = new Set<Id>();
+        for (Case matched : ctx.caseBySearch.values()) {
+            if (matched != null && matched.FEC_Current_Case_Stage__c != null) {
+                stageIds.add(matched.FEC_Current_Case_Stage__c);
+            }
+        }
+        FEC_BatchCaseHandlingPicklistResolver.clearCache();
+        FEC_BCH_ImportRoutingResolver.clearCache();
+        FEC_BCH_ImportRoutingResolver.preloadStageScreens(stageIds, ctx.currentUserGroup);
+        ctx.picklistValueByNormByField =
+            FEC_BatchCaseHandlingPicklistResolver.buildNormalizedToApiValueByField(
+                importPicklistFieldApis()
+            );
+        return ctx;
+    }
+
+    private static ImportAssignmentValidateSnap toImportAssignmentValidateSnap(FEC_Assignment__c asg) {
+        if (asg == null || asg.Id == null) {
+            return null;
+        }
+        ImportAssignmentValidateSnap snap = new ImportAssignmentValidateSnap();
+        snap.assignmentId = asg.Id;
+        snap.caseId = asg.FEC_Case__c;
+        snap.assignmentStatus = asg.FEC_Assignment_Status__c;
+        return snap;
+    }
+
+    private static FEC_Assignment__c fromImportAssignmentValidateSnap(ImportAssignmentValidateSnap snap) {
+        if (snap == null || snap.assignmentId == null) {
+            return null;
+        }
+        return new FEC_Assignment__c(
+            Id = snap.assignmentId,
+            FEC_Case__c = snap.caseId,
+            FEC_Assignment_Status__c = snap.assignmentStatus
+        );
+    }
+
+    private static String resolveImportValidateBusinessProcessCode(
+        Case matched,
+        ImportValidateChunkContext ctx
+    ) {
+        if (matched == null || matched.Id == null) {
+            return FEC_ConstantCommon.STR_EMPTY;
+        }
+        if (ctx != null && ctx.businessProcessCodeByCaseId != null && ctx.businessProcessCodeByCaseId.containsKey(matched.Id)) {
+            return ctx.businessProcessCodeByCaseId.get(matched.Id);
+        }
+        return resolveCaseBusinessProcessCode(matched);
     }
 
     public static void applyCaseHandlingUpdates(List<FEC_BatchCaseHandlingImportRow> rows, Boolean cofOrGsr) {
@@ -2024,7 +2510,9 @@ public without sharing class FEC_BatchCaseHandlingImportService {
                     FEC_Current_Case_Stage__c,
                     FEC_Assignment_Count__c,
                     FEC_Final_Status__c,
-                    FEC_Current_Case_Stage__r.FEC_Code__c
+                    FEC_Current_Case_Stage__r.FEC_Code__c,
+                    FEC_Business_Process__r.FEC_Code__c,
+                    FEC_Current_Case_Stage__r.FEC_Business_Process__r.FEC_Code__c
                 FROM Case
                 WHERE Id IN :caseIds
             ]);
@@ -2052,6 +2540,10 @@ public without sharing class FEC_BatchCaseHandlingImportService {
         List<AssignmentRouteToUpdateItem> assignmentRouteToItems = new List<AssignmentRouteToUpdateItem>();
         List<FEC_BCH_AssignmentUpdateService.ImportUpdateItem> assignmentUpdateItems =
             new List<FEC_BCH_AssignmentUpdateService.ImportUpdateItem>();
+        List<FEC_BCH_AssignmentResolveRejectService.ImportResolveRejectItem> assignmentResolveRejectItems =
+            new List<FEC_BCH_AssignmentResolveRejectService.ImportResolveRejectItem>();
+        List<FEC_BCH_AssignmentRevertService.ImportRevertItem> assignmentRevertItems =
+            new List<FEC_BCH_AssignmentRevertService.ImportRevertItem>();
         List<FEC_BCH_ImportRoutingHistoryService.ImportHistoryItem> importHistoryItems =
             new List<FEC_BCH_ImportRoutingHistoryService.ImportHistoryItem>();
         //08/06/2026 dungLTdev: Gom payload Routing Action History cho Case-level Resolve import.
@@ -2150,7 +2642,8 @@ public without sharing class FEC_BatchCaseHandlingImportService {
                     Id assignmentRecordIdForUpdate = parseAssignmentId(
                         rr.assignmentId,
                         assignmentByName,
-                        assignmentByRecordId
+                        assignmentByRecordId,
+                        caseId
                     );
                     FEC_BCH_AssignmentUpdateService.collectFromImportRow(
                         rr,
@@ -2181,6 +2674,44 @@ public without sharing class FEC_BatchCaseHandlingImportService {
                             rr.routeViaRevertButton == true
                         );
                     }
+                    FEC_BCH_AssignmentResolveRejectService.collectFromImportRow(
+                        rr,
+                        cofOrGsr,
+                        assignmentOnly,
+                        caseId,
+                        assignmentRecordIdForUpdate,
+                        methodKey,
+                        assignmentResolveRejectItems
+                    );
+                    if (assignmentOnly == true &&
+                        assignmentRecordIdForUpdate != null &&
+                        FEC_BCH_AssignmentResolveRejectService.isResolveOrRejectMethodKey(methodKey)) {
+                        Case caseLiteForHistory = caseLiteById.get(caseId);
+                        FEC_BCH_ImportRoutingHistoryService.collectItem(
+                            importHistoryItems,
+                            rr,
+                            caseId,
+                            assignmentRecordIdForUpdate,
+                            methodKey,
+                            null,
+                            stageIdForRow,
+                            caseLiteForHistory == null ? null : caseLiteForHistory.FEC_Current_Case_Stage__r?.FEC_Code__c,
+                            caseLiteForHistory == null ? null : caseLiteForHistory.FEC_Final_Status__c,
+                            null,
+                            null,
+                            null,
+                            rr.routeViaRevertButton == true
+                        );
+                    }
+                    FEC_BCH_AssignmentRevertService.collectFromImportRow(
+                        rr,
+                        cofOrGsr,
+                        assignmentOnly,
+                        caseId,
+                        assignmentRecordIdForUpdate,
+                        methodKey,
+                        assignmentRevertItems
+                    );
                 }
                 if (routingParsed != null && methodKey == FEC_CaseBusinessService.ROUTE_TO) {
                     Case caseLite = caseLiteById.get(caseId);
@@ -2219,7 +2750,12 @@ public without sharing class FEC_BatchCaseHandlingImportService {
                     //PhongBT 28/05/26: COF/GSR có assignmentId — queue team/queue từ Stage Change hoặc hint Excel.
                     //PhongBT 02/06/26: Sửa routing action cho cof/gsr — Route To Case tạo Assignment mới, không update Assignment ID.
                     if (cofOrGsr == true && String.isNotBlank(rr.assignmentId) && cofGsrCaseRouteToCreate != true) {
-                        Id assignmentRecordId = parseAssignmentId(rr.assignmentId, assignmentByName, assignmentByRecordId);
+                        Id assignmentRecordId = parseAssignmentId(
+                            rr.assignmentId,
+                            assignmentByName,
+                            assignmentByRecordId,
+                            caseId
+                        );
                         if (assignmentRecordId != null) {
                             AssignmentRouteToUpdateItem routeToItem = new AssignmentRouteToUpdateItem();
                             routeToItem.row = rr;
@@ -2290,9 +2826,14 @@ public without sharing class FEC_BatchCaseHandlingImportService {
                 if (assignmentOnly == true) {
                     if (methodKey == FEC_CaseBusinessService.ROUTE_TO && !runParams.containsKey('queueId')) {
                         skipCaseRun = true;
+                    } else if (methodKey == FEC_CaseBusinessService.REVERT &&
+                        FEC_BCH_AssignmentRevertService.resolveRevertDecisionFromLabel(rr.assignmentRoutingAction) != null) {
+                        skipCaseRun = true;
                     } else if (methodKey == FEC_CaseBusinessService.REVERT && !runParams.containsKey('actionId')) {
                         skipCaseRun = true;
                     } else if (methodKey == FEC_CaseBusinessService.UPDATEACTION) {
+                        skipCaseRun = true;
+                    } else if (FEC_BCH_AssignmentResolveRejectService.isResolveOrRejectMethodKey(methodKey)) {
                         skipCaseRun = true;
                     }
                 }
@@ -2303,6 +2844,12 @@ public without sharing class FEC_BatchCaseHandlingImportService {
                     continue;
                 }
                 if (!skipCaseRun) {
+                    // 05/06/2026 14:00 linhdev - quy trình không GSR/COF: Resolve/Reject/Update + owner Queue → gán Login User
+                    transferQueueOwnedCaseToLoginUserForNonCofGsrProcess(
+                        caseId,
+                        methodKey,
+                        caseLiteById
+                    );
                     // 04/06/2026 16:45 linhdev - queueable gọi runInternal; tránh AuraHandledException crash import Processing
                     FEC_CaseBusinessService.runInternal(methodKey, runParams);
                     //08/06/2026 dungLTdev: Excel Routing Action = Resolve — tạo FEC_Routing_Action_History__c sau run thành công.
@@ -2337,7 +2884,12 @@ public without sharing class FEC_BatchCaseHandlingImportService {
                 item.row = rr;
                 item.caseId = caseId;
                 item.inputtedRemarks = rr.inputtedRemarks;
-                item.assignmentId = parseAssignmentId(rr.assignmentId, assignmentByName, assignmentByRecordId);
+                item.assignmentId = parseAssignmentId(
+                    rr.assignmentId,
+                    assignmentByName,
+                    assignmentByRecordId,
+                    caseId
+                );
                 remarkDraftItems.add(item);
             }
         }
@@ -2375,6 +2927,26 @@ public without sharing class FEC_BatchCaseHandlingImportService {
             }
         }
         FEC_BCH_AssignmentUpdateService.applyImportBulk(validAssignmentUpdateItems);
+        List<FEC_BCH_AssignmentResolveRejectService.ImportResolveRejectItem> validAssignmentResolveRejectItems =
+            new List<FEC_BCH_AssignmentResolveRejectService.ImportResolveRejectItem>();
+        for (FEC_BCH_AssignmentResolveRejectService.ImportResolveRejectItem item : assignmentResolveRejectItems) {
+            if (item != null &&
+                item.row != null &&
+                item.row.status != System.Label.FEC_Batch_Case_Handling_Import_Row_Status_Failed) {
+                validAssignmentResolveRejectItems.add(item);
+            }
+        }
+        FEC_BCH_AssignmentResolveRejectService.applyImportBulk(validAssignmentResolveRejectItems);
+        List<FEC_BCH_AssignmentRevertService.ImportRevertItem> validAssignmentRevertItems =
+            new List<FEC_BCH_AssignmentRevertService.ImportRevertItem>();
+        for (FEC_BCH_AssignmentRevertService.ImportRevertItem item : assignmentRevertItems) {
+            if (item != null &&
+                item.row != null &&
+                item.row.status != System.Label.FEC_Batch_Case_Handling_Import_Row_Status_Failed) {
+                validAssignmentRevertItems.add(item);
+            }
+        }
+        FEC_BCH_AssignmentRevertService.applyImportBulk(validAssignmentRevertItems);
         FEC_BCH_ImportRoutingHistoryService.applyAfterAssignmentBulk(importHistoryItems);
         //08/06/2026 dungLTdev: Insert Routing Action History cho các dòng Excel Routing Action = Resolve.
         FEC_BCC_ImportResolveHistService.applyAfterCaseRunBulk(resolveHistoryItems);
@@ -2418,13 +2990,66 @@ public without sharing class FEC_BatchCaseHandlingImportService {
         if (String.isBlank(assignmentIdRaw)) {
             return;
         }
-        String trimmed = assignmentIdRaw.trim();
-        Id recordId = tryParseAssignmentRecordId(trimmed);
-        if (recordId != null) {
-            assignmentRecordIds.add(recordId);
-        } else if (assignmentNames != null) {
-            assignmentNames.add(trimmed);
+        for (String token : extractAssignmentLookupTokens(assignmentIdRaw)) {
+            Id recordId = tryParseAssignmentRecordId(token);
+            if (recordId != null) {
+                assignmentRecordIds.add(recordId);
+            } else if (assignmentNames != null) {
+                assignmentNames.add(token);
+            }
         }
+    }
+
+    // 05/06/2026 - parse Assignment ID từ export remark (#1: A-000329) hoặc nhiều dòng trong một ô
+    @TestVisible
+    private static List<String> extractAssignmentLookupTokens(String assignmentIdRaw) {
+        List<String> tokens = new List<String>();
+        if (String.isBlank(assignmentIdRaw)) {
+            return tokens;
+        }
+        Set<String> seen = new Set<String>();
+        String normalized = assignmentIdRaw.replace('\r\n', '\n').replace('\r', '\n');
+        if (normalized.contains('\n')) {
+            for (String line : normalized.split('\n')) {
+                addAssignmentLookupToken(tokens, seen, stripAssignmentExportLinePrefix(line));
+            }
+        } else {
+            addAssignmentLookupToken(tokens, seen, stripAssignmentExportLinePrefix(normalized));
+            addAssignmentLookupToken(tokens, seen, normalized.trim());
+        }
+        return tokens;
+    }
+
+    @TestVisible
+    private static String stripAssignmentExportLinePrefix(String line) {
+        if (String.isBlank(line)) {
+            return FEC_ConstantCommon.STR_EMPTY;
+        }
+        String trimmed = line.trim();
+        if (!trimmed.startsWith('#')) {
+            return trimmed;
+        }
+        Integer colonPos = trimmed.indexOf(':');
+        if (colonPos < 0) {
+            return trimmed;
+        }
+        return trimmed.substring(colonPos + 1).trim();
+    }
+
+    private static void addAssignmentLookupToken(
+        List<String> tokens,
+        Set<String> seen,
+        String candidate
+    ) {
+        if (String.isBlank(candidate)) {
+            return;
+        }
+        String trimmed = candidate.trim();
+        if (String.isBlank(trimmed) || seen.contains(trimmed)) {
+            return;
+        }
+        seen.add(trimmed);
+        tokens.add(trimmed);
     }
 
     private static Id tryParseAssignmentRecordId(String trimmed) {
@@ -2476,10 +3101,55 @@ public without sharing class FEC_BatchCaseHandlingImportService {
         Map<String, FEC_Assignment__c> assignmentByName,
         Map<Id, FEC_Assignment__c> assignmentByRecordId
     ) {
-        if (String.isBlank(assignmentIdRaw)) {
+        return resolveAssignmentForImport(
+            assignmentIdRaw,
+            assignmentByName,
+            assignmentByRecordId,
+            null
+        );
+    }
+
+    private static FEC_Assignment__c resolveAssignmentForImport(
+        String assignmentIdRaw,
+        Map<String, FEC_Assignment__c> assignmentByName,
+        Map<Id, FEC_Assignment__c> assignmentByRecordId,
+        Id caseId
+    ) {
+        List<String> tokens = extractAssignmentLookupTokens(assignmentIdRaw);
+        if (tokens.isEmpty()) {
             return null;
         }
-        String trimmed = assignmentIdRaw.trim();
+        FEC_Assignment__c caseMatch = null;
+        FEC_Assignment__c lastResolved = null;
+        for (String token : tokens) {
+            FEC_Assignment__c asg = resolveAssignmentLookupToken(
+                token,
+                assignmentByName,
+                assignmentByRecordId
+            );
+            if (asg == null) {
+                continue;
+            }
+            lastResolved = asg;
+            if (caseId != null && asg.FEC_Case__c == caseId) {
+                caseMatch = asg;
+            }
+        }
+        if (caseId != null) {
+            return caseMatch;
+        }
+        return lastResolved;
+    }
+
+    private static FEC_Assignment__c resolveAssignmentLookupToken(
+        String token,
+        Map<String, FEC_Assignment__c> assignmentByName,
+        Map<Id, FEC_Assignment__c> assignmentByRecordId
+    ) {
+        if (String.isBlank(token)) {
+            return null;
+        }
+        String trimmed = token.trim();
         if (assignmentByName != null && assignmentByName.containsKey(trimmed)) {
             return assignmentByName.get(trimmed);
         }
@@ -2495,7 +3165,21 @@ public without sharing class FEC_BatchCaseHandlingImportService {
         Map<String, FEC_Assignment__c> assignmentByName,
         Map<Id, FEC_Assignment__c> assignmentByRecordId
     ) {
-        FEC_Assignment__c asg = resolveAssignmentForImport(assignmentIdRaw, assignmentByName, assignmentByRecordId);
+        return parseAssignmentId(assignmentIdRaw, assignmentByName, assignmentByRecordId, null);
+    }
+
+    private static Id parseAssignmentId(
+        String assignmentIdRaw,
+        Map<String, FEC_Assignment__c> assignmentByName,
+        Map<Id, FEC_Assignment__c> assignmentByRecordId,
+        Id caseId
+    ) {
+        FEC_Assignment__c asg = resolveAssignmentForImport(
+            assignmentIdRaw,
+            assignmentByName,
+            assignmentByRecordId,
+            caseId
+        );
         return asg == null ? null : asg.Id;
     }
 
@@ -2778,6 +3462,80 @@ public without sharing class FEC_BatchCaseHandlingImportService {
         return methodKey == FEC_CaseBusinessService.RESOLVE || methodKey == FEC_CaseBusinessService.REJECT;
     }
 
+    // 05/06/2026 14:00 linhdev - OwnerId Queue (prefix 00G) vs User (design import không GSR/COF)
+    private static Boolean isQueueCaseOwnerId(Id ownerId) {
+        if (ownerId == null) {
+            return false;
+        }
+        return String.valueOf(ownerId).startsWith(QUEUE_OWNER_ID_PREFIX);
+    }
+
+    // 05/06/2026 14:00 linhdev - check Business Process COF/GSR theo từng Case (không chỉ cờ import batch)
+    private static Boolean isCofOrGsrBusinessProcess(Case matched) {
+        String bpCode = resolveCaseBusinessProcessCode(matched);
+        if (String.isBlank(bpCode)) {
+            return false;
+        }
+        String prefix = FEC_BatchCaseHandlingTemplateHelper.mapBusinessProcessToTemplatePrefix(bpCode);
+        return prefix == 'COF' || prefix == 'GSR';
+    }
+
+    private static Boolean isResolveRejectUpdateImportAction(String methodKey) {
+        if (String.isBlank(methodKey)) {
+            return false;
+        }
+        return methodKey == FEC_CaseBusinessService.RESOLVE
+            || methodKey == FEC_CaseBusinessService.REJECT
+            || methodKey == FEC_CaseBusinessService.UPDATEACTION;
+    }
+
+    // 05/06/2026 14:00 linhdev - quy trình không GSR/COF: cho phép Case owner Queue mà login user là member
+    private static Boolean canImportCaseForCurrentUser(Case matched, Id currentUserId) {
+        return canImportCaseForCurrentUser(matched, currentUserId, null);
+    }
+
+    private static Boolean canImportCaseForCurrentUser(
+        Case matched,
+        Id currentUserId,
+        Set<Id> preloadedUserQueueIds
+    ) {
+        if (matched == null || currentUserId == null) {
+            return false;
+        }
+        if (matched.OwnerId == currentUserId) {
+            return true;
+        }
+        if (isCofOrGsrBusinessProcess(matched)) {
+            return false;
+        }
+        if (!isQueueCaseOwnerId(matched.OwnerId)) {
+            return false;
+        }
+        Set<Id> userQueueIds = preloadedUserQueueIds == null
+            ? FEC_AssignmentListHandler.getCurrentUserQueueIds(currentUserId)
+            : preloadedUserQueueIds;
+        return userQueueIds != null && userQueueIds.contains(matched.OwnerId);
+    }
+
+    // 05/06/2026 14:00 linhdev - quy trình không GSR/COF Resolve/Reject/Update: owner Queue → chuyển OwnerId sang Login User
+    private static void transferQueueOwnedCaseToLoginUserForNonCofGsrProcess(
+        Id caseId,
+        String methodKey,
+        Map<Id, Case> caseLiteById
+    ) {
+        if (caseId == null || !isResolveRejectUpdateImportAction(methodKey)) {
+            return;
+        }
+        Case caseLite = caseLiteById == null ? null : caseLiteById.get(caseId);
+        if (caseLite == null || isCofOrGsrBusinessProcess(caseLite) || !isQueueCaseOwnerId(caseLite.OwnerId)) {
+            return;
+        }
+        Id loginUserId = UserInfo.getUserId();
+        update new Case(Id = caseId, OwnerId = loginUserId);
+        caseLite.OwnerId = loginUserId;
+        caseLiteById.put(caseId, caseLite);
+    }
+
     //PhongBT 28/05/26: COF/GSR — chỉ cột Assignment Routing Action (routingAction trống).
     private static Boolean isAssignmentRoutingOnly(
         FEC_BatchCaseHandlingImportRow rr,
@@ -2825,6 +3583,28 @@ public without sharing class FEC_BatchCaseHandlingImportService {
         }
         RoutingParseResult parsed = parseRoutingPattern(routingLabel.trim());
         return parsed != null && parsed.methodKey == FEC_CaseBusinessService.UPDATEACTION;
+    }
+
+    private static Boolean isCofGsrImportResolveRejectAction(Boolean cofOrGsr, String routingLabel) {
+        if (cofOrGsr != true || String.isBlank(routingLabel)) {
+            return false;
+        }
+        RoutingParseResult parsed = parseRoutingPattern(routingLabel.trim());
+        return parsed != null
+            && FEC_BCH_AssignmentResolveRejectService.isResolveOrRejectMethodKey(parsed.methodKey);
+    }
+
+    private static Boolean isCofGsrImportAssignmentRevertAction(Boolean cofOrGsr, String routingLabel) {
+        if (cofOrGsr != true || String.isBlank(routingLabel)) {
+            return false;
+        }
+        return String.isNotBlank(FEC_BCH_AssignmentRevertService.resolveRevertDecisionFromLabel(routingLabel));
+    }
+
+    private static Boolean isCofGsrImportAllowedAssignmentRoutingAction(Boolean cofOrGsr, String routingLabel) {
+        return isCofGsrImportUpdateAction(cofOrGsr, routingLabel)
+            || isCofGsrImportResolveRejectAction(cofOrGsr, routingLabel)
+            || isCofGsrImportAssignmentRevertAction(cofOrGsr, routingLabel);
     }
 
     private static Map<String, String> resolveRouteToParams(
@@ -2968,7 +3748,7 @@ public without sharing class FEC_BatchCaseHandlingImportService {
                 item.row.status = System.Label.FEC_Batch_Case_Handling_Import_Row_Status_Failed;
                 item.row.errors = appendError(
                     item.row.errors,
-                    'Không xác định được queue đích để cập nhật Assignment Route To.'
+                    ERR_ASSIGNMENT_ROUTE_TO_QUEUE_UNKNOWN
                 );
                 continue;
             }
@@ -3259,7 +4039,7 @@ public without sharing class FEC_BatchCaseHandlingImportService {
             return errs;
         }
         //PhongBT 29/05/26: thêm update vào datagroup cho Assignment Routing Action
-        Boolean skipDatagroupForUpdate = isCofGsrImportUpdateAction(cofOrGsr, primaryLabel);
+        Boolean skipDatagroupForUpdate = isCofGsrImportAllowedAssignmentRoutingAction(cofOrGsr, primaryLabel);
         if (!skipDatagroupForUpdate &&
             cofGsrRouteToImportLabel != true &&
             FEC_BCH_ImportRoutingResolver.requiresStageScreenMatch(resolved.methodKey) &&
@@ -3299,7 +4079,7 @@ public without sharing class FEC_BatchCaseHandlingImportService {
                 FEC_BCH_ImportRoutingResolver.resolve(stageId, rr.assignmentRoutingAction, true);
             //PhongBT 29/05/26: thêm update vào datagroup cho Assignment Routing Action
             if ((asgResolved == null || String.isBlank(asgResolved.methodKey)) &&
-                !isCofGsrImportUpdateAction(cofOrGsr, rr.assignmentRoutingAction)) {
+                !isCofGsrImportAllowedAssignmentRoutingAction(cofOrGsr, rr.assignmentRoutingAction)) {
                 errs.add(System.Label.FEC_Batch_Case_Handling_Import_Err_Assignment_Routing_Invalid);
             } else if (asgResolved != null) {
                 applyResolvedRoutingToRow(rr, asgResolved);
@@ -4056,7 +4836,7 @@ public without sharing class FEC_BatchCaseHandlingImportService {
         if (errs == null || String.isBlank(message)) {
             return;
         }
-        errs.add(message);
+        errs.add(localizeImportResultError(message));
     }
 
     private static String joinImportErrors(List<String> errs) {
@@ -4066,7 +4846,7 @@ public without sharing class FEC_BatchCaseHandlingImportService {
         List<String> parts = new List<String>();
         for (String err : errs) {
             if (String.isNotBlank(err)) {
-                parts.add(err);
+                parts.add(localizeImportResultError(err));
             }
         }
         return parts.isEmpty() ? FEC_ConstantCommon.STR_EMPTY : String.join(parts, IMPORT_ERROR_SEPARATOR);
@@ -4076,10 +4856,130 @@ public without sharing class FEC_BatchCaseHandlingImportService {
         if (String.isBlank(incoming)) {
             return current;
         }
+        String localizedIncoming = localizeImportResultError(incoming);
         if (String.isBlank(current)) {
-            return incoming;
+            return localizedIncoming;
         }
-        return current + IMPORT_ERROR_SEPARATOR + incoming;
+        return current + IMPORT_ERROR_SEPARATOR + localizedIncoming;
+    }
+
+    // 05/06/2026 16:00 linhdev - chuẩn hóa __Errors Export Result sang tiếng Việt
+    public static String localizeImportResultErrors(String combinedErrors) {
+        if (String.isBlank(combinedErrors)) {
+            return combinedErrors;
+        }
+        if (!combinedErrors.contains(IMPORT_ERROR_SEPARATOR)) {
+            return localizeImportResultError(combinedErrors);
+        }
+        List<String> parts = combinedErrors.split(IMPORT_ERROR_SEPARATOR);
+        List<String> localizedParts = new List<String>();
+        for (String part : parts) {
+            if (String.isNotBlank(part)) {
+                localizedParts.add(localizeImportResultError(part));
+            }
+        }
+        return localizedParts.isEmpty() ? FEC_ConstantCommon.STR_EMPTY : String.join(localizedParts, IMPORT_ERROR_SEPARATOR);
+    }
+
+    public static String localizeImportResultError(String message) {
+        if (String.isBlank(message)) {
+            return message;
+        }
+        String trimmed = message.trim();
+        String mapped = mapKnownEnglishImportResultError(trimmed);
+        if (String.isNotBlank(mapped)) {
+            return mapped;
+        }
+        if (isLikelyVietnameseImportResultMessage(trimmed)) {
+            return trimmed;
+        }
+        return ERR_GENERIC_APPLY;
+    }
+
+    private static String mapKnownEnglishImportResultError(String trimmed) {
+        String norm = trimmed.toLowerCase();
+        if (IMPORT_RESULT_ERROR_EN_TO_VI.containsKey(norm)) {
+            return IMPORT_RESULT_ERROR_EN_TO_VI.get(norm);
+        }
+        // 05/06/2026 17:00 linhdev - TEMPLATE_MISMATCH → template mismatch (1 map key duy nhất)
+        String normSpaced = norm.replace('_', ' ');
+        if (normSpaced != norm && IMPORT_RESULT_ERROR_EN_TO_VI.containsKey(normSpaced)) {
+            return IMPORT_RESULT_ERROR_EN_TO_VI.get(normSpaced);
+        }
+        if (norm.endsWith(IMPORT_RESULT_EN_SUFFIX_INVALID)) {
+            String token = trimmed.substring(0, trimmed.length() - IMPORT_RESULT_EN_SUFFIX_INVALID.length()).trim();
+            return String.isBlank(token) ? ERR_GENERIC_APPLY : token + ERR_IMPORT_RESULT_SUFFIX_INVALID;
+        }
+        if (norm.endsWith(IMPORT_RESULT_EN_SUFFIX_NOT_FOUND)) {
+            String token = trimmed.substring(0, trimmed.length() - IMPORT_RESULT_EN_SUFFIX_NOT_FOUND.length()).trim();
+            return String.isBlank(token)
+                ? ERR_GENERIC_APPLY
+                : ERR_IMPORT_RESULT_PREFIX_NOT_FOUND + token + ERR_IMPORT_RESULT_SUFFIX_NOT_FOUND;
+        }
+        if (norm.contains('insufficient access')) {
+            return ERR_IMPORT_RESULT_INSUFFICIENT_ACCESS;
+        }
+        if (norm.contains('unable to lock') || norm.contains('unable_to_lock_row')) {
+            return ERR_IMPORT_RESULT_UNABLE_TO_LOCK;
+        }
+        if (norm.contains('entity is deleted')) {
+            return ERR_IMPORT_RESULT_ENTITY_DELETED;
+        }
+        if (norm.contains('field_custom_validation_exception')) {
+            return ERR_IMPORT_RESULT_VALIDATION_FAILED;
+        }
+        return null;
+    }
+
+    private static Boolean isLikelyVietnameseImportResultMessage(String trimmed) {
+        if (containsVietnameseDiacritic(trimmed)) {
+            return true;
+        }
+        String norm = trimmed.toLowerCase();
+        List<String> vietnamesePrefixes = new List<String>{
+            'thiếu ',
+            'không ',
+            'giá trị ',
+            'người dùng ',
+            'cùng ',
+            'đã ',
+            'trường ',
+            'record id ',
+            'case id ',
+            'assignment id ',
+            'routing ',
+            'import ',
+            'template ',
+            'tên file ',
+            'vui lòng ',
+            'một hoặc ',
+            'bạn ',
+            'chỉ ',
+            'cập nhật ',
+            'quy trình ',
+            'tệp đính kèm ',
+            'dữ liệu '
+        };
+        for (String prefix : vietnamesePrefixes) {
+            if (norm.startsWith(prefix)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static Boolean containsVietnameseDiacritic(String value) {
+        if (String.isBlank(value)) {
+            return false;
+        }
+        String vietnameseChars = 'àáạảãâầấậẩẫăằắặẳẵèéẹẻẽêềếệểễìíịỉĩòóọỏõôồốộổỗơờớợởỡùúụủũưừứựửữỳýỵỷỹđ';
+        String lower = value.toLowerCase();
+        for (Integer i = 0; i < vietnameseChars.length(); i++) {
+            if (lower.contains(vietnameseChars.substring(i, i + 1))) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private static String ensureResultContentTitle(String fileName) {

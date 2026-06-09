@@ -77,7 +77,9 @@ public with sharing class FEC_GetCardSecInfo {
         public String IPPPlan;
         public Decimal IPPBalance;
         public Decimal InterestRate;
+        public Decimal term;
         public Decimal currentTerm;
+        public String IPPOpenDate;
         public String IPPStartDate;
         public String IPPMatureDate;
         public Decimal IPPCurrentBalance;
@@ -642,7 +644,12 @@ public with sharing class FEC_GetCardSecInfo {
         String ippRecordNo = String.isBlank(ippRecordNoFromXml) ? null : ippRecordNoFromXml.trim();
         Decimal ippBalance = FEC_CommonUltils.xmlValToDecimal(ippNode, 'IPPBalance');
         Decimal interestRate = FEC_CommonUltils.xmlValToDecimal(ippNode, 'InterestRate');
+        Decimal term = FEC_CommonUltils.xmlValToDecimal(ippNode, 'Term');
         Decimal currentTerm = FEC_CommonUltils.xmlValToDecimal(ippNode, 'CurrentTerm');
+        String ippOpenDate = FEC_CommonUltils.getXmlValue(ippNode, 'IPPOpenDate');
+        if (String.isBlank(ippOpenDate)) {
+            ippOpenDate = FEC_CommonUltils.getXmlValue(ippNode, 'OpenDate');
+        }
         String ippStartDate = FEC_CommonUltils.getXmlValue(ippNode, 'IPPStartDate');
         String ippMatureDate = FEC_CommonUltils.getXmlValue(ippNode, 'IPPMatureDate');
         Decimal ippCurrentBalance = FEC_CommonUltils.xmlValToDecimal(ippNode, 'IPPCurrentBalance');
@@ -665,7 +672,9 @@ public with sharing class FEC_GetCardSecInfo {
                     ipp.IPPRecordNo = ippRecordNo;
                     ipp.IPPBalance = ippBalance;
                     ipp.InterestRate = interestRate;
+                    ipp.term = term;
                     ipp.currentTerm = currentTerm;
+                    ipp.IPPOpenDate = ippOpenDate;
                     ipp.IPPStartDate = ippStartDate;
                     ipp.IPPMatureDate = ippMatureDate;
                     ipp.IPPCurrentBalance = ippCurrentBalance;
@@ -676,6 +685,23 @@ public with sharing class FEC_GetCardSecInfo {
                     listOut.add(ipp);
                 } catch (Exception e) { /* skip invalid number */ }
             }
+        }
+        if (listOut.isEmpty() && String.isNotBlank(ippPlan)) {
+            IPP summary = new IPP();
+            summary.IPPPlan = ippPlan;
+            summary.IPPRecordNo = ippRecordNo;
+            summary.IPPBalance = ippBalance;
+            summary.InterestRate = interestRate;
+            summary.term = term;
+            summary.currentTerm = currentTerm;
+            summary.IPPOpenDate = ippOpenDate;
+            summary.IPPStartDate = ippStartDate;
+            summary.IPPMatureDate = ippMatureDate;
+            summary.IPPCurrentBalance = ippCurrentBalance;
+            summary.PaymentAmount = paymentAmount;
+            summary.MonthlyPrincipal = monthlyPrincipal;
+            summary.MonthlyInterest = monthlyInterest;
+            listOut.add(summary);
         }
         return listOut;
     }
