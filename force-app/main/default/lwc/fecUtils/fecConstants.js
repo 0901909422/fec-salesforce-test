@@ -54,3 +54,47 @@ export const DELETABLE_STATUSES = new Set([
 export const EDITABLE_STATUSES = new Set([
     STATUS_UPLOADED, STATUS_REUPLOADED, STATUS_FAILURE, STATUS_PROCESSED
 ]);
+export const CAMPAIGN_EXCEL_HEADERS = [
+    "ProductLine",
+    "Campaign ID",
+    "App ID",
+    "Account or Contract number",
+    "DateTime 1",
+    "DateTime 2",
+    "DateTime 3",
+    "Number 1",
+    "Number 2",
+    "Number 3",
+    "Number 4",
+    "Number 5",
+    "String 1",
+    "String 2",
+    "String 3",
+    "String 4",
+    "String 5"
+];
+
+export const CAMPAIGN_INPROGRESS_EXPORT_HEADERS = [
+    "ProductLine",
+    "App ID",
+    "Account or Contract number",
+    "Campaign ID",
+    "DateTime 1",
+    "DateTime 2",
+    "DateTime 3",
+    "Number 1",
+    "Number 2",
+    "Number 3",
+    "Number 4",
+    "Number 5",
+    "String 1",
+    "String 2",
+    "String 3",
+    "String 4",
+    "String 5",
+    "Uploaded Time",
+    "Inserted Time"
+];
+
+// Column indices that should be formatted as Text (z: '@') to prevent Excel auto-conversion
+export const CAMPAIGN_STRING_COLUMNS = [0, 1, 2, 3, 12, 13, 14, 15, 16];

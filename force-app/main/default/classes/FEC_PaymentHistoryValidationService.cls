@@ -376,8 +376,8 @@ public with sharing class FEC_PaymentHistoryValidationService {
     String caseId,
     String fecRequestor
   ) {
-    Rl0402PdfDataResult result = new Rl0402PdfDataResult();
     if (String.isBlank(caseId)) {
+      Rl0402PdfDataResult result = new Rl0402PdfDataResult();
       result.success = false;
       result.errorMessage = String.format(
         System.Label.FEC_MSG_Param_Required,
@@ -388,9 +388,7 @@ public with sharing class FEC_PaymentHistoryValidationService {
 
     String applicationId = resolveApplicationIdForCase(caseId);
     if (String.isBlank(applicationId)) {
-      result.success = false;
-      result.errorMessage = 'Application ID is required for repayment schedule API.';
-      return result;
+      return buildEmptyRl0402PdfDataResult(caseId);
     }
 
     FEC_GetRepaymentScheduleByAppIdCallout.GetRepaymentScheduleResponse apiRes = FEC_GetRepaymentScheduleByAppIdCallout.getRepaymentScheduleByAppId(
@@ -398,35 +396,32 @@ public with sharing class FEC_PaymentHistoryValidationService {
       fecRequestor
     );
 
-    if (apiRes == null) {
-      result.success = false;
-      result.errorMessage = System.Label.FEC_MSG_Response_Null;
-      return result;
-    }
-    if (String.isNotBlank(apiRes.errorCode) || String.isNotBlank(apiRes.errorMessage)) {
-      result.success = false;
-      result.errorMessage = String.isNotBlank(apiRes.errorMessage)
-        ? apiRes.errorMessage
-        : apiRes.errorCode;
-      return result;
-    }
-    if (!FEC_GetRepaymentScheduleByAppIdCallout.isSuccess(apiRes)) {
-      FEC_GetRepaymentScheduleByAppIdCallout.RepaymentScheduleResponseInfo info = FEC_GetRepaymentScheduleByAppIdCallout.getFirstResponseInfo(
-        apiRes
-      );
-      result.success = false;
-      result.errorMessage = info != null && String.isNotBlank(info.Message)
-        ? info.Message
-        : 'Repayment schedule API did not return SUCCESS.';
-      return result;
+    if (
+      apiRes == null ||
+      String.isNotBlank(apiRes.errorCode) ||
+      String.isNotBlank(apiRes.errorMessage) ||
+      !FEC_GetRepaymentScheduleByAppIdCallout.isSuccess(apiRes)
+    ) {
+      return buildEmptyRl0402PdfDataResult(caseId);
     }
 
     FEC_GetRepaymentScheduleByAppIdCallout.RepaymentScheduleResponseInfo responseInfo = FEC_GetRepaymentScheduleByAppIdCallout.getFirstResponseInfo(
       apiRes
     );
     Case caseRec = queryCaseForRl0402Pdf(caseId);
+    Rl0402PdfDataResult result = new Rl0402PdfDataResult();
     result.headerData = mapRl0402HeaderFromApi(responseInfo, caseRec);
     result.repaymentRows = mapRl0402RowsFromApi(responseInfo);
+    return result;
+  }
+
+  /** RL04.02: API không trả data — vẫn gen PDF với header tối thiểu (ngày Case) và bảng rỗng. */
+  @TestVisible
+  private static Rl0402PdfDataResult buildEmptyRl0402PdfDataResult(String caseId) {
+    Rl0402PdfDataResult result = new Rl0402PdfDataResult();
+    Case caseRec = queryCaseForRl0402Pdf(caseId);
+    result.headerData = mapRl0402HeaderFromApi(null, caseRec);
+    result.repaymentRows = new List<Map<String, Object>>();
     return result;
   }
 

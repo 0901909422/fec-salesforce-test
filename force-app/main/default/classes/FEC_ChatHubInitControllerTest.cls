@@ -41,6 +41,7 @@ private class FEC_ChatHubInitControllerTest {
             UserName = uniqueName
         );
         insert u;
+        FEC_TestDataFactory.assignStandardFECPermissions(u.Id);
         return u;
     }
 

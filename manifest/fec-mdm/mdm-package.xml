@@ -1,0 +1,307 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Package xmlns="http://soap.sforce.com/2006/04/metadata">
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <!-- MDM (Master Data Management) - SIT Deployment Manifest -->
+    <!-- Generated: 2026-04-10                                  -->
+    <!-- ═══════════════════════════════════════════════════════ -->
+
+    <!-- ── Custom Objects (MDM Layer + Live Layer + Supporting) ── -->
+    <types>
+        <!-- MDM Staging Objects -->
+        <members>FEC_MDM_Action_Button__c</members>
+        <members>FEC_MDM_Additional_Field__c</members>
+        <members>FEC_MDM_Additional_Field_List_Value__c</members>
+        <members>FEC_MDM_Business_Process__c</members>
+        <members>FEC_MDM_Case_Channel__c</members>
+        <members>FEC_MDM_Case_Stage__c</members>
+        <members>FEC_MDM_Category__c</members>
+        <members>FEC_MDM_Channel__c</members>
+        <members>FEC_MDM_Decision_Condition__c</members>
+        <members>FEC_MDM_Decision_Rule__c</members>
+        <members>FEC_MDM_Master_Data_Setting__c</members>
+        <members>FEC_MDM_Nature_Of_Case__c</members>
+        <members>FEC_MDM_Product_Type__c</members>
+        <members>FEC_MDM_Stage_Change__c</members>
+        <members>FEC_MDM_Stage_Change_Condition__c</members>
+        <members>FEC_MDM_Sub_Category__c</members>
+        <members>FEC_MDM_Sub_Code__c</members>
+        <!-- Live Objects -->
+        <members>FEC_Action_Button__c</members>
+        <members>FEC_Additional_Field__c</members>
+        <members>FEC_Additional_Field_List_Value__c</members>
+        <members>FEC_Business_Process__c</members>
+        <members>FEC_Case_Channel__c</members>
+        <members>FEC_Case_Stage__c</members>
+        <members>FEC_Category__c</members>
+        <members>FEC_Channel__c</members>
+        <members>FEC_Master_Data_Setting__c</members>
+        <members>FEC_Nature_of_Case__c</members>
+        <members>FEC_Product_Type__c</members>
+        <members>FEC_Stage_Change__c</members>
+        <members>FEC_Stage_Change_Condition__c</members>
+        <members>FEC_Sub_Category__c</members>
+        <members>FEC_Sub_Code__c</members>
+        <!-- Supporting Objects -->
+        <members>FEC_Batch_Log__c</members>
+        <members>FEC_Field_Deploy_Request__c</members>
+        <members>FEC_Master_Data_Integration__c</members>
+        <members>FEC_Stage_Screen__c</members>
+        <members>FEC_User_Type__c</members>
+        <!-- Additional Objects for fecsb06 -->
+        <members>FEC_Auto_Intetgrating_Property_Mapping__c</members>
+        <members>FEC_CustomerAdditionalInfoConfig__c</members>
+        <members>FEC_CustomerAdditionalInfo__c</members>
+        <members>FEC_CustomerDataConfigHistory__c</members>
+        <members>FEC_Decision_Cell__c</members>
+        <members>FEC_Decision_Column__c</members>
+        <members>FEC_Decision_Row__c</members>
+        <members>FEC_Decision_Table__c</members>
+        <members>FEC_Actual_Master_Data_Setting__c</members>
+        <members>FEC_Actual_Nature_of_Case__c</members>
+        <members>FEC_Data_Integration_Mapping__c</members>
+        <members>FEC_Data_Integration_Mapping_Info__c</members>
+        <members>FEC_Integration_Case__c</members>
+        <members>FEC_Integration_Case_Info__c</members>
+        <members>FEC_integration_service_log__c</members>
+        <members>FEC_Integration_Admin_Recipient__mdt</members>
+        <members>FEC_Map_A_Properties_To_Master_Data_Item__c</members>
+        <members>FEC_Additional_Info__c</members>
+        <members>FEC_Decision_Rule__c</members>
+        <members>FEC_Decision_Condition__c</members>
+        <!-- ContentVersion custom field -->
+        <members>ContentVersion</members>
+        <!-- Platform Event -->
+        <members>FEC_Field_Deploy_Event__e</members>
+        <name>CustomObject</name>
+    </types>
+
+    <!-- ── Apex Classes ── -->
+    <types>
+        <!-- Constants (dependencies) -->
+        <members>FEC_Constants</members>
+        <members>FEC_FieldConstants</members>
+        <members>FEC_ObjectConstants</members>
+        <members>FEC_UIConstants</members>
+        <!-- Controllers -->
+        <members>FEC_MasterDataSettingController</members>
+        <members>FEC_MasterDataSettingControllerTest</members>
+        <members>FEC_MasterDataSettingCtrlPropertyTest</members>
+        <members>FEC_MasterDataReviewController</members>
+        <members>FEC_MasterDataReviewControllerTest</members>
+        <members>FEC_CleanUpMasterDataController</members>
+        <members>FEC_IntegrationMasterDataController</members>
+        <!-- Live Data View -->
+        <members>FEC_LiveDataViewController</members>
+        <!-- Nature of Case Tree -->
+        <members>FEC_NatureOfCaseTreeBuilder</members>
+        <members>FEC_NatureOfCaseTreeController</members>
+        <members>FEC_NatureOfCaseTreeControllerTest</members>
+        <members>FEC_NatureOfCaseTreeItem</members>
+        <members>FEC_NatureOfCaseTreeService</members>
+        <!-- Decision Table -->
+        <members>FEC_DecisionTableController</members>
+        <members>FEC_DecisionEngineController</members>
+        <members>FEC_DecisionEngineController_Test</members>
+        <members>FEC_DecisionEngine_Property_Test</members>
+        <!-- History -->
+        <members>FEC_HistoryController</members>
+        <!-- Additional Info -->
+        <members>FEC_AdditionalInfoController</members>
+        <members>FEC_AdditionalInfoControllerTest</members>
+        <!-- Service Type Mapping -->
+        <members>FEC_FecServiceTypeMappingController</members>
+        <members>FEC_FecServiceTypeMappingControllerTest</members>
+        <!-- Batch & Sync -->
+        <members>FEC_SyncMasterDataBatch</members>
+        <members>FEC_SyncMasterDataBatchTest</members>
+        <members>FEC_PushMDMToLiveBatch</members>
+        <members>FEC_PushMDMToLiveBatchTest</members>
+        <members>FEC_PushMDM_Scheduler</members>
+        <members>FEC_PushMDM_SchedulerTest</members>
+        <!-- Workflow Engine -->
+        <members>FEC_MDM_WorkflowEngine</members>
+        <members>FEC_MDM_WorkflowEngineTest</members>
+        <!-- Metadata Field Creator -->
+        <members>FEC_MetadataFieldCreator</members>
+        <members>FEC_MetadataFieldCreatorTest</members>
+        <members>FEC_MetadataFieldCreatorPropertyTest</members>
+        <members>FEC_MetadataDeployCallback</members>
+        <members>FEC_MetadataDeployCallbackTest</members>
+        <members>FEC_MetadataDeployCallbackPropertyTest</members>
+        <!-- Trigger Handlers -->
+        <members>FEC_ProcessChangeStatusTriggerHandler</members>
+        <members>FEC_AdditionalFieldValueTriggerHandler</members>
+        <!-- Missing Apex dependencies -->
+        <members>FEC_AdditionalFieldControllerTest</members>
+        <members>FEC_AutoIntegratingPropertyMappingCtrl</members>
+        <members>FEC_BusinessProcessService</members>
+        <members>FEC_CaseChannelController</members>
+        <members>FEC_CustomerAdditionalInfoListController</members>
+        <members>FEC_ChannelController</members>
+        <members>FEC_IntegrationMappingController</members>
+        <members>FEC_MapAPropertiesToMasterDataItemCtrl</members>
+        <!-- Additional classes for fecsb06 -->
+        <members>FEC_AdditionalFieldController</members>
+        <members>FEC_FileInfo</members>
+        <members>FEC_ProcessCustomerDataBatch</members>
+        <members>FEC_ConstantCommon</members>
+        <members>FEC_CustomerAdditionalHistoryHandler</members>
+        <members>FEC_FraudConstantCommon</members>
+        <members>FEC_InsertCustomerDataQueueable</members>
+        <members>FEC_IntegrationFraudService</members>
+        <members>FEC_IntegrationFraudCaseUtil</members>
+        <members>FEC_IntegrationSoapFraudcaseService</members>
+        <members>FEC_FraudCaseMockData</members>
+        <!-- Missing Apex: Queueable, Batch Utils, Utilities, Stage Transition -->
+        <members>FEC_FieldDeployQueueable</members>
+        <members>FEC_StageTransitionEngine</members>
+        <members>FEC_StageTransitionEngine_Test</members>
+        <members>FEC_BatchUtils</members>
+        <members>FEC_CommonUltils</members>
+        <members>FEC_Util</members>
+        <name>ApexClass</name>
+    </types>
+
+    <!-- ── Apex Triggers ── -->
+    <types>
+        <members>FEC_MDM_ActionButtonTrigger</members>
+        <members>FEC_MDM_AdditionalFieldTrigger</members>
+        <members>FEC_MDM_AdditionalFieldListValueTrigger</members>
+        <members>FEC_MDM_BusinessProcessTrigger</members>
+        <members>FEC_MDM_CaseStageTrigger</members>
+        <members>FEC_MDM_CategoryTrigger</members>
+        <members>FEC_MDM_ChannelTrigger</members>
+        <members>FEC_MDM_MasterDataSettingTrigger</members>
+        <members>FEC_MDM_NatureOfCaseTrigger</members>
+        <members>FEC_MDM_ProductTypeTrigger</members>
+        <members>FEC_MDM_StageChangeTrigger</members>
+        <members>FEC_MDM_SubCategoryTrigger</members>
+        <members>FEC_MDM_SubCodeTrigger</members>
+        <members>FEC_MDM_DecisionRuleTrigger</members>
+        <members>FEC_MDM_DecisionConditionTrigger</members>
+        <members>FEC_CustomerAdditionalConfigHistory</members>
+        <name>ApexTrigger</name>
+    </types>
+
+    <!-- ── Lightning Web Components ── -->
+    <types>
+        <!-- Core MDM UI -->
+        <members>fecMasterData</members>
+        <members>fecMasterDataContainer</members>
+        <members>fecMasterDataItemDetail</members>
+        <members>fecMasterDataReview</members>
+        <members>fecMasterDataSetting</members>
+        <members>fecMasterDataSettingForm</members>
+        <members>fecMasterDataSettingModal</members>
+        <members>fecMaterDataReview</members>
+        <!-- Live Data Views -->
+        <members>fecLiveAllData</members>
+        <members>fecLiveAllDataMdm</members>
+        <members>fecLiveDataReview</members>
+        <members>fecLiveDataView</members>
+        <members>fecLiveDecisionTable</members>
+        <members>fecLiveMasterDataSetting</members>
+        <members>fecLiveNocTree</members>
+        <members>fecLiveNodeDetail</members>
+        <members>fecLiveServiceTypeMapping</members>
+        <!-- Decision Engine -->
+        <members>fecDecisionEngineView</members>
+        <members>fecDecisionTableStage</members>
+        <members>fecDecisionTableStageView</members>
+        <members>fecDecisionTableView</members>
+        <!-- MDM Utilities -->
+        <members>fecMDMUtils</members>
+        <members>fecAllMasterData</members>
+        <members>fecAllMasterDataMdm</members>
+        <members>fecAutoFieldCreator</members>
+        <members>fecAutoIntetgratingPropertyMapping</members>
+        <members>fecMapAPropertiesToMasterDataItem</members>
+        <members>integrationFraudMasterData</members>
+        <!-- Additional Field / Info -->
+        <members>fecAdditionalFieldForm</members>
+        <members>fecAdditionalFieldList</members>
+        <members>fecAdditionalFiledListValue</members>
+        <members>fecAdditionalInfoForm</members>
+        <members>fecAdditionalInfoList</members>
+        <!-- Nature of Case -->
+        <members>fecNatureOfCaseModal</members>
+        <members>fecNatureOfCaseTree</members>
+        <members>fecNatureOfCaseTreeItem</members>
+        <!-- Other Related -->
+        <members>fecCaseChannelManagement</members>
+        <members>fecConfigHistory</members>
+        <members>fecFlowConfiguration</members>
+        <!-- Missing LWC dependencies -->
+        <members>fecChannelSession</members>
+        <members>fecCustomDatatable</members>
+        <members>fecCustomerHistoryModal</members>
+        <members>fecCustomerUpsertModal</members>
+        <members>fecFlowControlDataView</members>
+        <members>fecIntegrationMapping</members>
+        <members>fecNoRecordDisplay</members>
+        <members>fecCustomPopoverFilter</members>
+        <members>fecGenericModal</members>
+        <members>fecUtils</members>
+        <members>fecConstants</members>
+        <members>fecServiceTypeMapping</members>
+        <members>fec_customerAdditionalInfoList</members>
+        <name>LightningComponentBundle</name>
+    </types>
+
+    <!-- ── Permission Sets (core MDM only) ── -->
+    <types>
+        <members>FEC_MDM_Full_Field_Access</members>
+        <name>PermissionSet</name>
+    </types>
+
+    <!-- ── Custom Permission ── -->
+    <types>
+        <members>FEC_MDM_Field_Creator</members>
+        <name>CustomPermission</name>
+    </types>
+
+    <!-- ── Static Resources ── -->
+    <types>
+        <members>FEC_SheetJS</members>
+        <name>StaticResource</name>
+    </types>
+
+    <!-- ── Layouts ── -->
+    <types>
+        <!-- MDM Object Layouts -->
+        <members>FEC_MDM_Action_Button__c-FEC MDM Action Button Layout</members>
+        <members>FEC_MDM_Additional_Field_List_Value__c-FEC MDM Additional Field List Value Layout</members>
+        <members>FEC_MDM_Additional_Field__c-FEC_MDM_Additional_Field%5F%5Fc Layout</members>
+        <members>FEC_MDM_Business_Process__c-Business Process MDM Layout</members>
+        <members>FEC_MDM_Case_Channel__c-FEC Case Channel Layout</members>
+        <members>FEC_MDM_Case_Stage__c-Case Stage MDM Layout</members>
+        <members>FEC_MDM_Category__c-Category MDM Layout</members>
+        <members>FEC_MDM_Channel__c-Channel MDM Layout</members>
+        <members>FEC_MDM_Master_Data_Setting__c-Master MDM Data Setting Layout</members>
+        <members>FEC_MDM_Nature_Of_Case__c-Nature of Case MDM Layout</members>
+        <members>FEC_MDM_Product_Type__c-Product Type MDM Layout</members>
+        <members>FEC_MDM_Stage_Change__c-FEC MDM Stage Change Layout</members>
+        <members>FEC_MDM_Stage_Change_Condition__c-Stage Change Condition Layout</members>
+        <members>FEC_MDM_Sub_Category__c-FEC_Sub Category MDM Layout</members>
+        <members>FEC_MDM_Sub_Code__c-FEC_MDM_Sub_Code%5F%5Fc Layout</members>
+        <!-- Live Object Layouts -->
+        <members>FEC_Master_Data_Setting__c-Master Data Setting Layout</members>
+        <members>FEC_Master_Data_Integration__c-FEC Master Data Integration Layout</members>
+        <name>Layout</name>
+    </types>
+
+    <!-- ── FlexiPages ── -->
+    <types>
+        <members>MDM</members>
+        <members>Master_Data_Fraud_Integration</members>
+        <name>FlexiPage</name>
+    </types>
+
+    <!-- ── Custom Labels (all) ── -->
+    <types>
+        <members>*</members>
+        <name>CustomLabel</name>
+    </types>
+
+    <version>61.0</version>
+</Package>

@@ -188,6 +188,9 @@ private class FEC_InteractionRoutingService_Test {
         );
         insert agent;
 
+        // Assign Permission Sets cho FLS access
+        FEC_TestDataFactory.assignStandardFECPermissions(agent.Id);
+
         insert new ServiceResource(
             Name = 'Routing Agent ' + suffix,
             RelatedRecordId = agent.Id,
@@ -682,6 +685,9 @@ private class FEC_InteractionRoutingService_Test {
         );
         insert secondAgent;
 
+        // Assign Permission Sets cho FLS access
+        FEC_TestDataFactory.assignStandardFECPermissions(secondAgent.Id);
+
         ServiceResource secondSr = new ServiceResource(
             Name = 'Second SR ' + suffix,
             RelatedRecordId = secondAgent.Id,
@@ -768,6 +774,9 @@ private class FEC_InteractionRoutingService_Test {
             UserName = 'other' + suffix + '@fec.routing.other.test'
         );
         insert otherUser;
+
+        // Assign Permission Sets cho FLS access
+        FEC_TestDataFactory.assignStandardFECPermissions(otherUser.Id);
 
         try {
             Case parentCase = new Case(

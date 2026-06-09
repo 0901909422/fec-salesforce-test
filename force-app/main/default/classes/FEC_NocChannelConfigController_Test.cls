@@ -93,4 +93,51 @@ private class FEC_NocChannelConfigController_Test {
         FEC_Nature_of_Case__c updatedNoc = [SELECT FEC_Channel__c FROM FEC_Nature_of_Case__c WHERE Id = :noc.Id];
         System.assertEquals(fbChannel.Id, updatedNoc.FEC_Channel__c, 'Trường FEC_Channel__c phải được cập nhật thành ID mới.');
     }
+
+    @IsTest
+    static void testGetChannelsByChannelIds() {
+        FEC_Channel__c zalo = [
+            SELECT FEC_Channel_ID__c, FEC_Code__c
+            FROM FEC_Channel__c
+            WHERE FEC_Channel_Vietnamese_name__c = 'Zalo'
+            LIMIT 1
+        ];
+        FEC_Channel__c fb = [
+            SELECT FEC_Channel_ID__c
+            FROM FEC_Channel__c
+            WHERE FEC_Channel_Vietnamese_name__c = 'Facebook'
+            LIMIT 1
+        ];
+
+        Test.startTest();
+        List<FEC_Channel__c> emptyNull =
+            FEC_NocChannelConfigController.getChannelsByChannelIds(null);
+        List<FEC_Channel__c> emptyList =
+            FEC_NocChannelConfigController.getChannelsByChannelIds(new List<String>());
+        List<FEC_Channel__c> blankOnly =
+            FEC_NocChannelConfigController.getChannelsByChannelIds(new List<String>{ '', '  ' });
+        List<FEC_Channel__c> matched = FEC_NocChannelConfigController.getChannelsByChannelIds(
+            new List<String>{ zalo.FEC_Channel_ID__c, fb.FEC_Channel_ID__c }
+        );
+        List<FEC_Channel__c> notFound = FEC_NocChannelConfigController.getChannelsByChannelIds(
+            new List<String>{ 'NON-EXISTING-CHANNEL-ID' }
+        );
+        Test.stopTest();
+
+        System.assertEquals(0, emptyNull.size());
+        System.assertEquals(0, emptyList.size());
+        System.assertEquals(0, blankOnly.size());
+        System.assertEquals(2, matched.size());
+        System.assertEquals(0, notFound.size());
+        System.assertNotEquals(null, matched[0].FEC_Code__c);
+    }
+
+    @IsTest
+    static void testGetChannelIds_NotFound() {
+        Test.startTest();
+        String result = FEC_NocChannelConfigController.getChannelIds(UserInfo.getUserId());
+        Test.stopTest();
+
+        System.assertEquals(null, result, 'NOC Id không tồn tại phải trả về null.');
+    }
 }
