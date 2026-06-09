@@ -21,6 +21,10 @@ private class FEC_AssignmentCaseShareService_Test {
         );
         insert new List<User>{user1, user2};
 
+        // Assign Permission Sets cho FLS access
+        FEC_TestDataFactory.assignStandardFECPermissions(user1.Id);
+        FEC_TestDataFactory.assignStandardFECPermissions(user2.Id);
+
         // 2. Tạo Case (Gán cho User1)
         System.runAs(user1) {
             Case c = new Case(Subject = 'Test Share Case', Status = 'New');
