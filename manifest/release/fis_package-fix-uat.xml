@@ -131,6 +131,8 @@
         <members>FEC_VMXAUTHDETAILINQ_Test</members>
         <members>FEC_AssignmentExecuteService</members>
         <members>FEC_MainInfoController</members>
+        <members>FEC_CardPaymentController</members>
+        <members>FEC_RepaySchedPayHistController</members>
         <name>ApexClass</name>
     </types>
     <types>
