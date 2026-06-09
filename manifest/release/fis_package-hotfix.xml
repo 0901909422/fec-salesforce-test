@@ -6,17 +6,6 @@
         <name>CustomField</name>
     </types>
     <types>
-        <members>FEC_BCH_ImportQueueable_Test</members>
-        <members>FEC_BCH_ImportValidateQueueable</members>
-        <members>FEC_BCH_TemplateExportService</members>
-        <members>FEC_BCC_CreationResolveHistService</members>
-        <members>FEC_BCC_CreationResolveHistService_Test</members>
-        <members>FEC_BatchCaseCreationService</members>
-        <members>FEC_BatchCaseCreationService_Test</members>
-        <members>FEC_BatchCaseHandlingController</members>
-        <members>FEC_BatchCaseHandlingImportQueueable</members>
-        <members>FEC_BatchCaseHandlingImportQueueableTest</members>
-        <members>FEC_BatchCaseHandlingImportService</members>
         <members>FEC_NatureOfCaseTriggerHandler</members>
         <members>FEC_NatureOfCaseTriggerHandler_Test</members>
         <members>FEC_NocRemovePhoneInheritanceHandler</members>
