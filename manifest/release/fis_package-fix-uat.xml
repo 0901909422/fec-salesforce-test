@@ -49,6 +49,8 @@
         <members>FEC_CreateCaseInteractionController_Test</members>
         <members>FEC_CreateInteractionGenesys</members>
         <members>FEC_CreateInteractionGenesys_Test</members>
+        <members>FEC_CustomEmailService</members>
+        <members>FEC_CustomEmailService_Test</members>
         <members>FEC_CustomerAdditionalDataController</members>
         <members>FEC_CustomerAddDataController_Test</members>
         <members>FEC_CustomerIntegrationService</members>
@@ -78,8 +80,14 @@
         <members>FEC_PsDNBServiceCallout_Test</members>
         <members>FEC_SearchController</members>
         <members>FEC_SearchController_Test</members>
+        <members>FEC_ServiceCaseEmailService</members>
+        <members>FEC_ServiceCaseEmailService_Test</members>
         <members>FEC_UnitTestMyCaseChannelUtil</members>
         <name>ApexClass</name>
+    </types>
+    <types>
+        <members>fecEmailSection</members>
+        <name>AuraDefinitionBundle</name>
     </types>
     <types>
         <members>FEC_Customer_Case_Record_Page</members>
@@ -119,6 +127,15 @@
         <members>Case.FEC_Search_Products__c</members>
         <members>FEC_Actual_Master_Data_Setting__c.FEC_Channel__c</members>
         <name>CustomField</name>
+    </types>
+    <types>
+        <members>FEC_Email_File_Related_Files</members>
+        <members>FEC_Email_File_Search_Files</members>
+        <members>FEC_Email_File_Select_Files</members>
+        <members>FEC_Email_File_Selected_Suffix</members>
+        <members>FEC_Email_File_Upload_Help</members>
+        <members>FEC_Email_File_Uploaded_Added</members>
+        <name>CustomLabel</name>
     </types>
     <types>
         <members>FEC_PSG_RD_Contract_Processing_User</members>
