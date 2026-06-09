@@ -3593,11 +3593,11 @@ public without sharing class FEC_CaseBusinessService {
       Case updatedCase = caselst.get(0);
       
       // Kiểm tra xem user hiện tại có phải là Owner không
-      if (updatedCase.OwnerId != currentUserId) {
-        throw new CaseBusinessServiceException(
-          System.Label.FEC_MSG_Escalate_Owner_Only
-        );
-      }
+      // if (updatedCase.OwnerId != currentUserId) {
+      //   throw new CaseBusinessServiceException(
+      //     System.Label.FEC_MSG_Escalate_Owner_Only
+      //   );
+      // }
 
       // 2. Check if the Owner is actually a User (not a Queue)
       if (updatedCase.Owner instanceof User) {
