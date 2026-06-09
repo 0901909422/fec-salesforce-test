@@ -938,6 +938,7 @@
         <members>fec_InteractionInfoF2F_Letter</members>
 		<members>fec_IPPDetailPage</members>
         <members>fec_SecondaryInfoAccount</members>
+        <members>customDblclickCell</members>
 		<name>LightningComponentBundle</name>
     </types>
     <types>
