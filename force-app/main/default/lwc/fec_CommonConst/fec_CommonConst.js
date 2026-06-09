@@ -35,6 +35,9 @@ const MSG_INVALID_NATIONAL_ID = 'Invalid National ID number';
 const MSG_NATIONAL_ID_DIGITS_ONLY_9_OR_12 = 'National ID must contain digits only (9 or 12 digits)';
 const MSG_INVALID_EMAIL_FORMAT = 'Email must be one of (randomString1)@(randomString2).(2-5 chars) or (randomString1)@(randomString2).(2-5 chars).(2-5 chars)';
 const UBANK_PRODUCT_NAME = 'UBank';
+const INSURANCE_PRODUCT_NAME = "Insurance";
+const B2_PRODUCT_NAME = "B2";
+const CASH24_PRODUCT_NAME = "Cash24";
 const RECORD_TYPE_INTERACTION = 'Interaction';
 const RECORD_TYPE_CUSTOMER_CASE = 'Customer_Case';
 const RECORD_TYPE_INTERNAL_CASE = 'Internal_Case';
@@ -109,7 +112,7 @@ const FORM_STATE_NONE = 'NONE';
 const FORM_STATE_HAS_DATA = 'HAS_DATA';
 const INTERNAL_REQUEST = 'Internal Request';
 const INTERNAL_UBANK = 'Ubank';
-const PATTERN_EMAIL_FEC_STRICT = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,8}(\.[A-Za-z]{2,8})*$/;
+const PATTERN_EMAIL_FEC_STRICT = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,5}(\.[A-Za-z]{2,5})?$/;
 const PATTERN_PHONE_VN_FEC = /^(0\d{9}|84\d{9})$/;
 const CONTRACT_CLOSURE_EMAIL_CHANNEL_C360 = 'C360';
 const CONTRACT_CLOSURE_EMAIL_CHANNEL_TEMPORARY = 'TEMPORARY';
@@ -400,5 +403,8 @@ export {
   FIELD_CUSTOMER_PHONE_NUMBER,
   FIELD_RECEIVING_PHONE_NUMBER,
   FIELD_CONTACT_CHANNEL,
-  DOWNLOAD_LOCK_KEY
+  DOWNLOAD_LOCK_KEY,
+  INSURANCE_PRODUCT_NAME,
+  B2_PRODUCT_NAME,
+  CASH24_PRODUCT_NAME
 };

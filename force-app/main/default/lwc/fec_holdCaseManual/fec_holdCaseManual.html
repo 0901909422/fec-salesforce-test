@@ -65,7 +65,7 @@
             </div>
 
             <!-- Footer - ẩn khi đã thành công (TH1/TH2) -->
-            <template if:false={isCompleted}>
+            <template if:true={showFooterActions}>
                 <div class="hold-case-footer">
                     <lightning-button label="Cancel" onclick={handleCancel}></lightning-button>
                     <lightning-button

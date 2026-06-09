@@ -213,7 +213,7 @@ public without sharing class FEC_MainInfoController {
                 );
 
             if (docRes != null && docRes.Documents != null && !docRes.Documents.isEmpty()) {
-                hist.FEC_National_ID_Passport_ID__c = docRes.Documents[0].DocumentID;
+                hist.FEC_National_ID_Passport_ID__c = docRes.Documents[0].IDDocumentNumber;
                 hist.FEC_Date_of_Issue__c           = docRes.Documents[0].IssueDate;
                 hist.FEC_Place_of_Issue__c          = docRes.Documents[0].IssuePlace;
             }

@@ -822,6 +822,8 @@ public with sharing class FEC_ConstantCommon {
     public static final String UPDATE_TRANSFER_REST_SERVICE_NAME = 'FEC_UpdateTransferInfoRestService';
     public static final String UPDATE_TRANSFER_MSG_SUCCESS =
         'Update call transfer information by ServiceCaseID successfully';
+    /** REST call-transfer response Status khi lỗi (đồng bộ API cũ). */
+    public static final String UPDATE_TRANSFER_STATUS_FAIL = 'Fail';
     public static final String UPDATE_TRANSFER_VAL_REQUEST_BODY_REQUIRED = 'Request body is required';
     public static final String UPDATE_TRANSFER_VAL_SERVICE_CASE_ID_REQUIRED = 'ServiceCaseID is required';
     public static final String UPDATE_TRANSFER_VAL_REQUESTOR_ID_REQUIRED = 'RequestorID is required';
