@@ -21,7 +21,8 @@ public without sharing class FEC_InteractionInforHandler {
                Parent.FEC_ID_Search__c,
                IsClosed,
                FEC_Interaction_Status__c,
-               Origin
+               Origin,
+               FEC_Is_Manual__c
         FROM Case
         WHERE Id = :recordId
     ];
@@ -84,7 +85,6 @@ public without sharing class FEC_InteractionInforHandler {
             FEC_Interaction_Email__c = String.isNotBlank(email) ? email.trim() : null
         );
     }
-    
     @AuraEnabled(cacheable=false)
     public static void updateInteractionOnHold(Id recordId, Boolean onHold) {
         if (recordId == null) {
@@ -829,3 +829,4 @@ public without sharing class FEC_InteractionInforHandler {
         update c;
     }
 }
+

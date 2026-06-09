@@ -1,0 +1,350 @@
+[
+  {
+    "FullName": "FEC_AssignmentTriggerHandler_Test.testUpdateOtherField_NoOwnerChange_Bypassed",
+    "Message": "System.DmlException: Insert failed. First exception on row 0; first error: MIXED_DML_OPERATION, DML operation on setup object is not permitted after you have updated a non-setup object (or vice versa): PermissionSetAssignment, original object: Case: []"
+  },
+  {
+    "FullName": "FEC_AssignmentTriggerHandler_Test.testUpdateOwner_GeneralAssignment_SetsNull",
+    "Message": "System.DmlException: Insert failed. First exception on row 0; first error: MIXED_DML_OPERATION, DML operation on setup object is not permitted after you have updated a non-setup object (or vice versa): PermissionSetAssignment, original object: Case: []"
+  },
+  {
+    "FullName": "FEC_AssignmentTriggerHandler_Test.testUpdateOwner_RoutingAssignment_Success",
+    "Message": "System.DmlException: Insert failed. First exception on row 0; first error: MIXED_DML_OPERATION, DML operation on setup object is not permitted after you have updated a non-setup object (or vice versa): PermissionSetAssignment, original object: Case: []"
+  },
+  {
+    "FullName": "FEC_AssignmentTriggerHandler_Test.testUpdateOwner_RoutingToQueue_Success",
+    "Message": "System.DmlException: Insert failed. First exception on row 0; first error: MIXED_DML_OPERATION, DML operation on setup object is not permitted after you have updated a non-setup object (or vice versa): PermissionSetAssignment, original object: Case: []"
+  },
+  {
+    "FullName": "FEC_CaseExportBatchTest.testAttachmentStatusReset",
+    "Message": "System.AssertException: Assertion Failed: FEC_Archive_Status__c phß║úi l├á Processing: Expected: Processing, Actual: null"
+  },
+  {
+    "FullName": "FEC_CaseExportBatchTest.testExecuteCaseWithoutLookups",
+    "Message": "System.AssertException: Assertion Failed: Case kh├┤ng c├│ lookups vß║½n phß║úi ─æ╞░ß╗úc xß╗¡ l├╜: Expected: Processing, Actual: null"
+  },
+  {
+    "FullName": "FEC_CaseExportBatchTest.testExecuteLargeBatch",
+    "Message": "System.AssertException: Assertion Failed: Tß║Ñt cß║ú 10 cases phß║úi ─æ╞░ß╗úc xß╗¡ l├╜: Expected: 10, Actual: 0"
+  },
+  {
+    "FullName": "FEC_CaseExportBatchTest.testExecuteMultipleCasesSameLookup",
+    "Message": "System.AssertException: Assertion Failed: Cß║ú 2 cases c├╣ng lookup phß║úi ─æ╞░ß╗úc xß╗¡ l├╜: Expected: 2, Actual: 0"
+  },
+  {
+    "FullName": "FEC_CaseExportBatchTest.testExecuteSuccessUpdatesArchiveStatus",
+    "Message": "System.AssertException: Assertion Failed: FEC_Archive_Status__c phß║úi l├á Processing sau callout th├ánh c├┤ng: Expected: Processing, Actual: null"
+  },
+  {
+    "FullName": "FEC_CaseExportBatchTest.testExecuteWithLookupRelationships",
+    "Message": "System.AssertException: Assertion Failed: Case vß╗¢i lookups phß║úi ─æ╞░ß╗úc xß╗¡ l├╜ th├ánh c├┤ng: Expected: Processing, Actual: null"
+  },
+  {
+    "FullName": "FEC_CaseExportBatchTest.testFinishWithFailures",
+    "Message": "System.AssertException: Assertion Failed: 2 cases th├ánh c├┤ng phß║úi c├│ status Processing: Expected: 2, Actual: 0"
+  },
+  {
+    "FullName": "FEC_CaseExportBatchTest.testStatefulAccumulation",
+    "Message": "System.AssertException: Assertion Failed: Cß║ú 5 cases (2+3) phß║úi c├│ status Processing: Expected: 5, Actual: 0"
+  },
+  {
+    "FullName": "FEC_BatchUtilsTest.testCopyValidFields_PutThrows",
+    "Message": "System.AssertException: Assertion Failed: Should record error from put exception"
+  },
+  {
+    "FullName": "FEC_CaseAssignmentConfigController_Test.testGetActiveCaseQueues_Success",
+    "Message": "System.DmlException: Insert failed. First exception on row 0; first error: MIXED_DML_OPERATION, DML operation on setup object is not permitted after you have updated a non-setup object (or vice versa): FEC_Team__c, original object: UserRole: []"
+  },
+  {
+    "FullName": "FEC_CaseAssignmentConfigController_Test.testGetBusinessHourOptions_Success",
+    "Message": "System.DmlException: Insert failed. First exception on row 0; first error: MIXED_DML_OPERATION, DML operation on setup object is not permitted after you have updated a non-setup object (or vice versa): FEC_Team__c, original object: UserRole: []"
+  },
+  {
+    "FullName": "FEC_CaseAssignmentConfigController_Test.testGetRoleOptions_EmptyAndNullInputs",
+    "Message": "System.DmlException: Insert failed. First exception on row 0; first error: MIXED_DML_OPERATION, DML operation on setup object is not permitted after you have updated a non-setup object (or vice versa): FEC_Team__c, original object: UserRole: []"
+  },
+  {
+    "FullName": "FEC_CaseAssignmentConfigController_Test.testGetRoleOptions_Success",
+    "Message": "System.DmlException: Insert failed. First exception on row 0; first error: MIXED_DML_OPERATION, DML operation on setup object is not permitted after you have updated a non-setup object (or vice versa): FEC_Team__c, original object: UserRole: []"
+  },
+  {
+    "FullName": "FEC_InteractionRoutingService_Test.testAssignInteractionReply_AbsentAgent",
+    "Message": "System.DmlException: Insert failed. First exception on row 0; first error: MIXED_DML_OPERATION, DML operation on setup object is not permitted after you have updated a non-setup object (or vice versa): PermissionSetAssignment, original object: FEC_System_Config__c: []"
+  },
+  {
+    "FullName": "FEC_InteractionRoutingService_Test.testAssignInteractionReply_AtCapacity",
+    "Message": "System.DmlException: Insert failed. First exception on row 0; first error: MIXED_DML_OPERATION, DML operation on setup object is not permitted after you have updated a non-setup object (or vice versa): PermissionSetAssignment, original object: FEC_System_Config__c: []"
+  },
+  {
+    "FullName": "FEC_InteractionRoutingService_Test.testAssignInteractionReply_InactiveServiceResource",
+    "Message": "System.DmlException: Insert failed. First exception on row 0; first error: MIXED_DML_OPERATION, DML operation on setup object is not permitted after you have updated a non-setup object (or vice versa): PermissionSetAssignment, original object: FEC_System_Config__c: []"
+  },
+  {
+    "FullName": "FEC_InteractionRoutingService_Test.testAssignInteractionReply_NoParent_NoOp",
+    "Message": "System.DmlException: Insert failed. First exception on row 0; first error: MIXED_DML_OPERATION, DML operation on setup object is not permitted after you have updated a non-setup object (or vice versa): PermissionSetAssignment, original object: FEC_System_Config__c: []"
+  },
+  {
+    "FullName": "FEC_InteractionRoutingService_Test.testAssignInteractionReply_NoServiceResourceForAgent",
+    "Message": "System.DmlException: Insert failed. First exception on row 0; first error: MIXED_DML_OPERATION, DML operation on setup object is not permitted after you have updated a non-setup object (or vice versa): PermissionSetAssignment, original object: FEC_System_Config__c: []"
+  },
+  {
+    "FullName": "FEC_InteractionRoutingService_Test.testAssignInteractionReply_ParentNotInteraction_NoOp",
+    "Message": "System.DmlException: Insert failed. First exception on row 0; first error: MIXED_DML_OPERATION, DML operation on setup object is not permitted after you have updated a non-setup object (or vice versa): PermissionSetAssignment, original object: FEC_System_Config__c: []"
+  },
+  {
+    "FullName": "FEC_InteractionRoutingService_Test.testAssignInteractionReply_ParentOwnedByQueue",
+    "Message": "System.DmlException: Insert failed. First exception on row 0; first error: MIXED_DML_OPERATION, DML operation on setup object is not permitted after you have updated a non-setup object (or vice versa): PermissionSetAssignment, original object: FEC_System_Config__c: []"
+  },
+  {
+    "FullName": "FEC_InteractionRoutingService_Test.testAssignInteractionReply_WithParentAgent",
+    "Message": "System.DmlException: Insert failed. First exception on row 0; first error: MIXED_DML_OPERATION, DML operation on setup object is not permitted after you have updated a non-setup object (or vice versa): PermissionSetAssignment, original object: FEC_System_Config__c: []"
+  },
+  {
+    "FullName": "FEC_InteractionRoutingService_Test.testAssignInteractionReply_WithServiceResourceAbsence",
+    "Message": "System.DmlException: Insert failed. First exception on row 0; first error: MIXED_DML_OPERATION, DML operation on setup object is not permitted after you have updated a non-setup object (or vice versa): PermissionSetAssignment, original object: FEC_System_Config__c: []"
+  },
+  {
+    "FullName": "FEC_InteractionRoutingService_Test.testAssignNewInteractionEmail_EmptyAndNull",
+    "Message": "System.DmlException: Insert failed. First exception on row 0; first error: MIXED_DML_OPERATION, DML operation on setup object is not permitted after you have updated a non-setup object (or vice versa): PermissionSetAssignment, original object: FEC_System_Config__c: []"
+  },
+  {
+    "FullName": "FEC_InteractionRoutingService_Test.testAssignNewInteractionEmail_NoMatchingSkillCapacity",
+    "Message": "System.DmlException: Insert failed. First exception on row 0; first error: MIXED_DML_OPERATION, DML operation on setup object is not permitted after you have updated a non-setup object (or vice versa): PermissionSetAssignment, original object: FEC_System_Config__c: []"
+  },
+  {
+    "FullName": "FEC_InteractionRoutingService_Test.testAssignNewInteractionEmail_ReplyWithInteractionParent",
+    "Message": "System.DmlException: Insert failed. First exception on row 0; first error: MIXED_DML_OPERATION, DML operation on setup object is not permitted after you have updated a non-setup object (or vice versa): PermissionSetAssignment, original object: FEC_System_Config__c: []"
+  },
+  {
+    "FullName": "FEC_InteractionRoutingService_Test.testAssignNewInteractionEmail_SkillLevelComparison",
+    "Message": "System.DmlException: Insert failed. First exception on row 0; first error: MIXED_DML_OPERATION, DML operation on setup object is not permitted after you have updated a non-setup object (or vice versa): PermissionSetAssignment, original object: FEC_System_Config__c: []"
+  },
+  {
+    "FullName": "FEC_InteractionRoutingService_Test.testAssignNewInteractionEmail_Success",
+    "Message": "System.DmlException: Insert failed. First exception on row 0; first error: MIXED_DML_OPERATION, DML operation on setup object is not permitted after you have updated a non-setup object (or vice versa): PermissionSetAssignment, original object: FEC_System_Config__c: []"
+  },
+  {
+    "FullName": "FEC_InteractionRoutingService_Test.testAssignNewInteractionEmail_TwoCasesInBatch",
+    "Message": "System.DmlException: Insert failed. First exception on row 0; first error: MIXED_DML_OPERATION, DML operation on setup object is not permitted after you have updated a non-setup object (or vice versa): PermissionSetAssignment, original object: FEC_System_Config__c: []"
+  },
+  {
+    "FullName": "FEC_InteractionRoutingService_Test.testAssignNewInteractionEmail_WrongChannelNoOp",
+    "Message": "System.DmlException: Insert failed. First exception on row 0; first error: MIXED_DML_OPERATION, DML operation on setup object is not permitted after you have updated a non-setup object (or vice versa): PermissionSetAssignment, original object: FEC_System_Config__c: []"
+  },
+  {
+    "FullName": "FEC_InteractionRoutingService_Test.testAssignNewInteractionEmail_WrongSendToNoOp",
+    "Message": "System.DmlException: Insert failed. First exception on row 0; first error: MIXED_DML_OPERATION, DML operation on setup object is not permitted after you have updated a non-setup object (or vice versa): PermissionSetAssignment, original object: FEC_System_Config__c: []"
+  },
+  {
+    "FullName": "FEC_LiveMDSControllerDeepTest.testGetStageChangeRules_ValidBP",
+    "Message": "System.AuraHandledException: Script-thrown exception"
+  },
+  {
+    "FullName": "FEC_MDM_WorkflowEngineTest.testGetDecisionTableData_Bulk",
+    "Message": "System.AssertException: Assertion Failed: Should have exactly 1 unique condition column for bulk test: Expected: 1, Actual: 0"
+  },
+  {
+    "FullName": "FEC_MDM_WorkflowEngineTest.testGetDecisionTableData_Positive",
+    "Message": "System.AssertException: Assertion Failed: Should have 2 unique condition columns (Customer Type + Amount): Expected: 2, Actual: 0"
+  },
+  {
+    "FullName": "FEC_MDM_WorkflowEngineTest.testMultipleConditionsSameFieldSameRule",
+    "Message": "System.AssertException: Assertion Failed: Instance expected to be a non null value: Should find the OR rule with priority 50"
+  },
+  {
+    "FullName": "FEC_MDM_WorkflowEngineTest.testProperty4_CellConditionMapping",
+    "Message": "System.AssertException: Assertion Failed: Should have verified all 3 conditions across 2 rules: Expected: 3, Actual: 0"
+  },
+  {
+    "FullName": "FEC_MDM_WorkflowEngineTest.testProperty8_RoundTripSaveLoad",
+    "Message": "System.AssertException: Assertion Failed: Instance expected to be a non null value: Should find the saved rule with priority 99 in reloaded data"
+  },
+  {
+    "FullName": "FEC_FraudIntegrationTest6.testManage_WithMapping",
+    "Message": "System.AssertException: Assertion Failed: Instance expected to be a non null value: Mapping should be resolved when MDS links to NOC"
+  },
+  {
+    "FullName": "FEC_BeneficiaryBankInfoController_Test.testSaveBeneficiaryBankInfoDraft_AllBranches",
+    "Message": "System.AssertException: Assertion Failed: Expected: BUI VIET HOANG, Actual: null"
+  },
+  {
+    "FullName": "FEC_BatchDataCreationController_Test.testGetRecentRows",
+    "Message": "System.DmlException: Insert failed. First exception on row 0; first error: MIXED_DML_OPERATION, DML operation on setup object is not permitted after you have updated a non-setup object (or vice versa): FEC_Service_Resource_Absence__c, original object: PermissionSetAssignment: []"
+  },
+  {
+    "FullName": "FEC_BatchDataCreationController_Test.testGetTemplateOptions",
+    "Message": "System.DmlException: Insert failed. First exception on row 0; first error: MIXED_DML_OPERATION, DML operation on setup object is not permitted after you have updated a non-setup object (or vice versa): FEC_Service_Resource_Absence__c, original object: PermissionSetAssignment: []"
+  },
+  {
+    "FullName": "FEC_BatchDataCreationController_Test.testImportBatchData_EmptyJsonArray",
+    "Message": "System.DmlException: Insert failed. First exception on row 0; first error: MIXED_DML_OPERATION, DML operation on setup object is not permitted after you have updated a non-setup object (or vice versa): FEC_Service_Resource_Absence__c, original object: PermissionSetAssignment: []"
+  },
+  {
+    "FullName": "FEC_BatchDataCreationController_Test.testImportBatchData_ParamsBlankAndException",
+    "Message": "System.DmlException: Insert failed. First exception on row 0; first error: MIXED_DML_OPERATION, DML operation on setup object is not permitted after you have updated a non-setup object (or vice versa): FEC_Service_Resource_Absence__c, original object: PermissionSetAssignment: []"
+  },
+  {
+    "FullName": "FEC_BatchDataCreationController_Test.testImportBatchData_Success",
+    "Message": "System.DmlException: Insert failed. First exception on row 0; first error: MIXED_DML_OPERATION, DML operation on setup object is not permitted after you have updated a non-setup object (or vice versa): FEC_Service_Resource_Absence__c, original object: PermissionSetAssignment: []"
+  },
+  {
+    "FullName": "FEC_BatchDataCreationController_Test.testImportBatchData_ValidationFailures",
+    "Message": "System.DmlException: Insert failed. First exception on row 0; first error: MIXED_DML_OPERATION, DML operation on setup object is not permitted after you have updated a non-setup object (or vice versa): FEC_Service_Resource_Absence__c, original object: PermissionSetAssignment: []"
+  },
+  {
+    "FullName": "FEC_BatchDataCreationController_Test.testLogAndSaveResultFiles",
+    "Message": "System.DmlException: Insert failed. First exception on row 0; first error: MIXED_DML_OPERATION, DML operation on setup object is not permitted after you have updated a non-setup object (or vice versa): FEC_Service_Resource_Absence__c, original object: PermissionSetAssignment: []"
+  },
+  {
+    "FullName": "FEC_OwnerTeamLookupSvc_Test.testGetByOwnerIds_NullOrEmpty",
+    "Message": "System.DmlException: Insert failed. First exception on row 0; first error: MIXED_DML_OPERATION, DML operation on setup object is not permitted after you have updated a non-setup object (or vice versa): PermissionSetAssignment, original object: FEC_Team__c: []"
+  },
+  {
+    "FullName": "FEC_OwnerTeamLookupSvc_Test.testGetByOwnerIds_Success",
+    "Message": "System.DmlException: Insert failed. First exception on row 0; first error: MIXED_DML_OPERATION, DML operation on setup object is not permitted after you have updated a non-setup object (or vice versa): PermissionSetAssignment, original object: FEC_Team__c: []"
+  },
+  {
+    "FullName": "FEC_OwnerTeamLookupSvc_Test.testMissingDataHandling",
+    "Message": "System.DmlException: Insert failed. First exception on row 0; first error: MIXED_DML_OPERATION, DML operation on setup object is not permitted after you have updated a non-setup object (or vice versa): PermissionSetAssignment, original object: FEC_Team__c: []"
+  },
+  {
+    "FullName": "FEC_LiveServicesDeepTest.testAggregator_GetAllLiveMasterData",
+    "Message": "System.AuraHandledException: Script-thrown exception"
+  },
+  {
+    "FullName": "FEC_LiveServicesDeepTest.testAggregator_GetLiveServiceTypeTree",
+    "Message": "System.AuraHandledException: Script-thrown exception"
+  },
+  {
+    "FullName": "FEC_LiveServicesDeepTest.testLiveNOC_GetStageChangeRules",
+    "Message": "System.AuraHandledException: Script-thrown exception"
+  },
+  {
+    "FullName": "FEC_LiveServicesDeepTest.testLiveNOC_GetTreeData",
+    "Message": "System.AuraHandledException: Script-thrown exception"
+  },
+  {
+    "FullName": "FEC_GetInteractionCases_Test.testGetAllInteractions_Success",
+    "Message": "System.AssertException: Assertion Failed: Expected: INT-1780608038434, Actual:"
+  },
+  {
+    "FullName": "FEC_FecServiceTypeMappingControllerTest.testGetServiceTypeTree",
+    "Message": "System.AuraHandledException: Script-thrown exception"
+  },
+  {
+    "FullName": "FEC_FecServiceTypeMappingControllerTest.testGetServiceTypeTreeNoStageBucket",
+    "Message": "System.AuraHandledException: Script-thrown exception"
+  },
+  {
+    "FullName": "FEC_FecServiceTypeMappingControllerTest.testTreeWithNoChildren",
+    "Message": "System.AuraHandledException: Script-thrown exception"
+  },
+  {
+    "FullName": "FEC_GetServiceCases_Test.testGetClosedServiceCases",
+    "Message": "System.AssertException: Assertion Failed: Phß║úi t├¼m thß║Ñy Case Closed trong danh s├ích.: Expected: true, Actual: false"
+  },
+  {
+    "FullName": "FEC_GetServiceCases_Test.testGetPendingServiceCases",
+    "Message": "System.AssertException: Assertion Failed: Phß║úi t├¼m thß║Ñy Case Pending trong danh s├ích.: Expected: true, Actual: false"
+  },
+  {
+    "FullName": "FEC_CaseRemarkController_Test.testSubmitRemarkDirect_SuccessAndDuplicateCheck",
+    "Message": "System.AssertException: Assertion Failed: Hß╗ç thß╗æng phß║úi chß║╖n kh├┤ng tß║ío bß║ún ghi Remark tr├╣ng lß║╖p nß╗Öi dung qua ph╞░╞íng thß╗⌐c Submit Direct.: Expected: 1, Actual: 2"
+  },
+  {
+    "FullName": "FEC_CaseRemarkController_Test.testSubmitRemark_SuccessAndDuplicateCheck",
+    "Message": "System.AssertException: Assertion Failed: Hß╗ç thß╗æng phß║úi chß║╖n kh├┤ng tß║ío th├¬m bß║ún ghi tr├╣ng lß║╖p nß╗Öi dung trong v├▓ng 30s.: Expected: 1, Actual: 2"
+  },
+  {
+    "FullName": "FEC_CustAddInfoListCtrlTest.testDeleteConfig",
+    "Message": "System.DmlException: Insert failed. First exception on row 0; first error: REQUIRED_FIELD_MISSING, Required fields are missing: [FEC_FieldID__c, FEC_KeyIdentifier__c]: [FEC_FieldID__c, FEC_KeyIdentifier__c]"
+  },
+  {
+    "FullName": "FEC_Notification_Test.testBulkMergeFields_UserAndFlexibleBraces",
+    "Message": "System.DmlException: Insert failed. First exception on row 0; first error: MIXED_DML_OPERATION, DML operation on setup object is not permitted after you have updated a non-setup object (or vice versa): PermissionSetAssignment, original object: FEC_System_Config__c: []"
+  },
+  {
+    "FullName": "FEC_Notification_Test.testEmailInfoConstructorsAndEmptyBulk",
+    "Message": "System.DmlException: Insert failed. First exception on row 0; first error: MIXED_DML_OPERATION, DML operation on setup object is not permitted after you have updated a non-setup object (or vice versa): PermissionSetAssignment, original object: FEC_System_Config__c: []"
+  },
+  {
+    "FullName": "FEC_Notification_Test.testExecuteSendEmailsBulk",
+    "Message": "System.DmlException: Insert failed. First exception on row 0; first error: MIXED_DML_OPERATION, DML operation on setup object is not permitted after you have updated a non-setup object (or vice versa): PermissionSetAssignment, original object: FEC_System_Config__c: []"
+  },
+  {
+    "FullName": "FEC_Notification_Test.testExecuteSendEmailsBulk_WithRoutingHistory",
+    "Message": "System.DmlException: Insert failed. First exception on row 0; first error: MIXED_DML_OPERATION, DML operation on setup object is not permitted after you have updated a non-setup object (or vice versa): PermissionSetAssignment, original object: FEC_System_Config__c: []"
+  },
+  {
+    "FullName": "FEC_Notification_Test.testExecuteSendEmailsBulk_WithTemplateAttachment",
+    "Message": "System.DmlException: Insert failed. First exception on row 0; first error: MIXED_DML_OPERATION, DML operation on setup object is not permitted after you have updated a non-setup object (or vice versa): PermissionSetAssignment, original object: FEC_System_Config__c: []"
+  },
+  {
+    "FullName": "FEC_Notification_Test.testGetAvailableNotifications_ExistingCustomer",
+    "Message": "System.DmlException: Insert failed. First exception on row 0; first error: MIXED_DML_OPERATION, DML operation on setup object is not permitted after you have updated a non-setup object (or vice versa): PermissionSetAssignment, original object: FEC_System_Config__c: []"
+  },
+  {
+    "FullName": "FEC_Notification_Test.testGetAvailableNotifications_NonExistingCustomer",
+    "Message": "System.DmlException: Insert failed. First exception on row 0; first error: MIXED_DML_OPERATION, DML operation on setup object is not permitted after you have updated a non-setup object (or vice versa): PermissionSetAssignment, original object: FEC_System_Config__c: []"
+  },
+  {
+    "FullName": "FEC_Notification_Test.testGetNotificationById",
+    "Message": "System.DmlException: Insert failed. First exception on row 0; first error: MIXED_DML_OPERATION, DML operation on setup object is not permitted after you have updated a non-setup object (or vice versa): PermissionSetAssignment, original object: FEC_System_Config__c: []"
+  },
+  {
+    "FullName": "FEC_Notification_Test.testGetNotificationById_LookupPillsById",
+    "Message": "System.DmlException: Insert failed. First exception on row 0; first error: MIXED_DML_OPERATION, DML operation on setup object is not permitted after you have updated a non-setup object (or vice versa): PermissionSetAssignment, original object: FEC_System_Config__c: []"
+  },
+  {
+    "FullName": "FEC_Notification_Test.testGetRecordTypeName",
+    "Message": "System.DmlException: Insert failed. First exception on row 0; first error: MIXED_DML_OPERATION, DML operation on setup object is not permitted after you have updated a non-setup object (or vice versa): PermissionSetAssignment, original object: FEC_System_Config__c: []"
+  },
+  {
+    "FullName": "FEC_Notification_Test.testGetRecordTypeName_InvalidId",
+    "Message": "System.DmlException: Insert failed. First exception on row 0; first error: MIXED_DML_OPERATION, DML operation on setup object is not permitted after you have updated a non-setup object (or vice versa): PermissionSetAssignment, original object: FEC_System_Config__c: []"
+  },
+  {
+    "FullName": "FEC_Notification_Test.testPreviewTemplate_And_MergeFields",
+    "Message": "System.DmlException: Insert failed. First exception on row 0; first error: MIXED_DML_OPERATION, DML operation on setup object is not permitted after you have updated a non-setup object (or vice versa): PermissionSetAssignment, original object: FEC_System_Config__c: []"
+  },
+  {
+    "FullName": "FEC_Notification_Test.testSearchInternalUsers",
+    "Message": "System.DmlException: Insert failed. First exception on row 0; first error: MIXED_DML_OPERATION, DML operation on setup object is not permitted after you have updated a non-setup object (or vice versa): PermissionSetAssignment, original object: FEC_System_Config__c: []"
+  },
+  {
+    "FullName": "FEC_Notification_Test.testSendManualNotification_EmailSuccess",
+    "Message": "System.DmlException: Insert failed. First exception on row 0; first error: MIXED_DML_OPERATION, DML operation on setup object is not permitted after you have updated a non-setup object (or vice versa): PermissionSetAssignment, original object: FEC_System_Config__c: []"
+  },
+  {
+    "FullName": "FEC_Notification_Test.testSendManualNotification_MissingTemplate",
+    "Message": "System.DmlException: Insert failed. First exception on row 0; first error: MIXED_DML_OPERATION, DML operation on setup object is not permitted after you have updated a non-setup object (or vice versa): PermissionSetAssignment, original object: FEC_System_Config__c: []"
+  },
+  {
+    "FullName": "FEC_Notification_Test.testSendManualNotification_NoEmailAddress",
+    "Message": "System.DmlException: Insert failed. First exception on row 0; first error: MIXED_DML_OPERATION, DML operation on setup object is not permitted after you have updated a non-setup object (or vice versa): PermissionSetAssignment, original object: FEC_System_Config__c: []"
+  },
+  {
+    "FullName": "FEC_Notification_Test.testSendManualNotification_ResolvesEmailFromCase",
+    "Message": "System.DmlException: Insert failed. First exception on row 0; first error: MIXED_DML_OPERATION, DML operation on setup object is not permitted after you have updated a non-setup object (or vice versa): PermissionSetAssignment, original object: FEC_System_Config__c: []"
+  },
+  {
+    "FullName": "FEC_Notification_Test.testSendManualNotification_SalesforceAppChannel",
+    "Message": "System.DmlException: Insert failed. First exception on row 0; first error: MIXED_DML_OPERATION, DML operation on setup object is not permitted after you have updated a non-setup object (or vice versa): PermissionSetAssignment, original object: FEC_System_Config__c: []"
+  },
+  {
+    "FullName": "FEC_Notification_Test.testSendManualNotification_SfAppTargetUserNotFound",
+    "Message": "System.DmlException: Insert failed. First exception on row 0; first error: MIXED_DML_OPERATION, DML operation on setup object is not permitted after you have updated a non-setup object (or vice versa): PermissionSetAssignment, original object: FEC_System_Config__c: []"
+  },
+  {
+    "FullName": "FEC_AssignmentListHandler_Test.getAssignmentsNEW_returnsRowsForCase",
+    "Message": "System.AssertException: Assertion Failed: Expected: 1, Actual: 0"
+  },
+  {
+    "FullName": "FEC_AssignmentListHandler_Test.getTeamForRouteToAction_otherCofStage",
+    "Message": "System.AssertException: Assertion Failed"
+  },
+  {
+    "FullName": "FEC_AssignmentListHandler_Test.getTeamForRouteToAction_otherGsrStage",
+    "Message": "System.AssertException: Assertion Failed"
+  }
+]

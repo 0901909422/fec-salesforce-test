@@ -1,0 +1,290 @@
+<template>
+    <template if:true={isLoading}>
+        <lightning-spinner alternative-text={labels.loading}></lightning-spinner>
+    </template>
+
+    <!-- Collapsible Section -->
+    <div class={sectionClass}>
+        <h3 class="slds-section__title">
+            <button class="slds-button slds-section__title-action" onclick={toggleSection} type="button">
+                <lightning-icon icon-name={sectionIcon} size="xx-small" class="slds-m-right_x-small chevron-icon"></lightning-icon>
+                <span class="slds-truncate section-title">{labels.cardTitle}</span>
+            </button>
+        </h3>
+
+        <div class="slds-section__content">
+            <!-- Add Item Link -->
+            <div class="slds-m-bottom_small">
+                <a href="javascript:void(0)" class="add-item-link" onclick={handleAddItem}>
+                    <lightning-icon icon-name="utility:add" size="xx-small" class="slds-m-right_xx-small"></lightning-icon>
+                    {labels.addItem}
+                </a>
+            </div>
+
+            <!-- Table Header -->
+            <div class="slds-grid slds-grid_vertical-align-center table-header slds-p-vertical_x-small">
+                <div class="slds-col slds-size_1-of-12"></div>
+                <div class="slds-col slds-size_3-of-12 filter-col">
+                    <span class="col-header-text">{labels.colChannel}</span>
+                    <button class="slds-button slds-button_icon filter-icon-btn" onclick={toggleChannelFilter} type="button">
+                        <lightning-icon icon-name="utility:filterList" size="xx-small"
+                            class={channelFilterIconClass}></lightning-icon>
+                    </button>
+                    <!-- Channel Filter Popup -->
+                    <template if:true={showChannelFilter}>
+                        <div class="filter-popup">
+                            <a href="javascript:void(0)" class="clear-filter-link" onclick={handleClearChannelFilter}>{labels.btnClearFilter}</a>
+                            <div class="filter-checkbox-list">
+                                <template for:each={channelFilterOptions} for:item="opt">
+                                    <div key={opt.value} class="filter-checkbox-item">
+                                        <input type="checkbox" checked={opt.checked} data-value={opt.value}
+                                            onchange={handleChannelCheckboxChange} />
+                                        <span class="filter-checkbox-label">{opt.label}</span>
+                                    </div>
+                                </template>
+                            </div>
+                            <div class="filter-search">
+                                <label class="filter-search-label">{labels.searchText}</label>
+                                <lightning-input type="text" value={channelFilterSearch}
+                                    onchange={handleChannelFilterSearch} variant="label-hidden"></lightning-input>
+                            </div>
+                            <div class="filter-actions">
+                                <lightning-button label={labels.btnApply} variant="brand" onclick={handleChannelFilterApply}
+                                    class="slds-m-right_x-small"></lightning-button>
+                                <lightning-button label={labels.btnCancel} onclick={handleChannelFilterCancel}></lightning-button>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+                <div class="slds-col slds-size_2-of-12 filter-col">
+                    <span class="col-header-text">{labels.colUserType}</span>
+                    <button class="slds-button slds-button_icon filter-icon-btn" onclick={toggleUserTypeFilter} type="button">
+                        <lightning-icon icon-name="utility:filterList" size="xx-small"
+                            class={userTypeFilterIconClass}></lightning-icon>
+                    </button>
+                    <!-- UserType Filter Popup -->
+                    <template if:true={showUserTypeFilter}>
+                        <div class="filter-popup">
+                            <a href="javascript:void(0)" class="clear-filter-link" onclick={handleClearUserTypeFilter}>{labels.btnClearFilter}</a>
+                            <div class="filter-checkbox-list">
+                                <template for:each={userTypeFilterOptions} for:item="opt">
+                                    <div key={opt.value} class="filter-checkbox-item">
+                                        <input type="checkbox" checked={opt.checked} data-value={opt.value}
+                                            onchange={handleUserTypeCheckboxChange} />
+                                        <span class="filter-checkbox-label">{opt.label}</span>
+                                    </div>
+                                </template>
+                            </div>
+                            <div class="filter-search">
+                                <label class="filter-search-label">{labels.searchText}</label>
+                                <lightning-input type="text" value={userTypeFilterSearch}
+                                    onchange={handleUserTypeFilterSearch} variant="label-hidden"></lightning-input>
+                            </div>
+                            <div class="filter-actions">
+                                <lightning-button label={labels.btnApply} variant="brand" onclick={handleUserTypeFilterApply}
+                                    class="slds-m-right_x-small"></lightning-button>
+                                <lightning-button label={labels.btnCancel} onclick={handleUserTypeFilterCancel}></lightning-button>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+                <div class="slds-col slds-size_3-of-12 filter-col">
+                    <span class="col-header-text">{labels.colPropertyId}</span>
+                    <button class="slds-button slds-button_icon filter-icon-btn" onclick={togglePropertyIdFilter} type="button">
+                        <lightning-icon icon-name="utility:filterList" size="xx-small"
+                            class={propertyIdFilterIconClass}></lightning-icon>
+                    </button>
+                    <!-- Property ID Filter Popup -->
+                    <template if:true={showPropertyIdFilter}>
+                        <div class="filter-popup">
+                            <a href="javascript:void(0)" class="clear-filter-link" onclick={handleClearPropertyIdFilter}>{labels.btnClearFilter}</a>
+                            <div class="filter-checkbox-list">
+                                <template for:each={propertyIdFilterOptions} for:item="opt">
+                                    <div key={opt.value} class="filter-checkbox-item">
+                                        <input type="checkbox" checked={opt.checked} data-value={opt.value}
+                                            onchange={handlePropertyIdCheckboxChange} />
+                                        <span class="filter-checkbox-label">{opt.label}</span>
+                                    </div>
+                                </template>
+                            </div>
+                            <div class="filter-search">
+                                <label class="filter-search-label">{labels.searchText}</label>
+                                <lightning-input type="text" value={propertyIdFilterSearch}
+                                    onchange={handlePropertyIdFilterSearch} variant="label-hidden"></lightning-input>
+                            </div>
+                            <div class="filter-actions">
+                                <lightning-button label={labels.btnApply} variant="brand" onclick={handlePropertyIdFilterApply}
+                                    class="slds-m-right_x-small"></lightning-button>
+                                <lightning-button label={labels.btnCancel} onclick={handlePropertyIdFilterCancel}></lightning-button>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+                <div class="slds-col slds-size_2-of-12">{labels.colStatus}</div>
+                <div class="slds-col slds-size_1-of-12"></div>
+            </div>
+
+            <!-- Existing Records -->
+            <template for:each={records} for:item="rec">
+                <div key={rec.Id} class="slds-grid slds-grid_vertical-align-center row-item slds-p-vertical_xx-small" data-id={rec.Id} onclick={handleRowClick}>
+                    <div class="slds-col slds-size_1-of-12">
+                        <template lwc:if={rec.isNewStatus}>
+                            <span class="status-dot new"></span>
+                        </template>
+                        <template lwc:elseif={rec.isUpdatedStatus}>
+                            <span class="status-dot modified"></span>
+                        </template>
+                        <template lwc:elseif={rec.isSynced}>
+                            <span class="status-dot active"></span>
+                        </template>
+                        <template lwc:else>
+                            <span class="status-dot inactive"></span>
+                        </template>
+                    </div>
+                    <div class="slds-col slds-size_3-of-12 slds-p-right_small">
+                        <template lwc:if={rec.isEditing}>
+                            <lightning-combobox value={rec.FEC_Channel__c} options={channelOptions}
+                                data-id={rec.Id} data-field="FEC_Channel__c" onchange={handleExistingRowChange}
+                                variant="label-hidden"></lightning-combobox>
+                        </template>
+                        <template lwc:else>
+                            <span class="slds-truncate row-text">{rec.channelName}</span>
+                        </template>
+                    </div>
+                    <div class="slds-col slds-size_2-of-12 slds-p-right_small">
+                        <template lwc:if={rec.isEditing}>
+                            <lightning-combobox value={rec.FEC_User_Type__c} options={userTypeOptions}
+                                data-id={rec.Id} data-field="FEC_User_Type__c" onchange={handleExistingRowChange}
+                                variant="label-hidden"></lightning-combobox>
+                        </template>
+                        <template lwc:else>
+                            <span class="slds-truncate row-text">{rec.userTypeName}</span>
+                        </template>
+                    </div>
+                    <div class="slds-col slds-size_3-of-12 slds-p-right_small">
+                        <template lwc:if={rec.isEditing}>
+                            <div class="autocomplete-container">
+                                <lightning-input value={rec.additionalFieldSearch}
+                                    data-id={rec.Id} data-field="FEC_Additional_Field__c"
+                                    onchange={handleExistingRowFieldSearch}
+                                    variant="label-hidden" placeholder={labels.colPropertyId}></lightning-input>
+                                <template if:true={rec.showFieldResults}>
+                                    <div class="autocomplete-dropdown">
+                                        <template for:each={additionalFieldResults} for:item="field">
+                                            <div key={field.Id} class="autocomplete-option" data-id={rec.Id}
+                                                data-field-id={field.Id} data-field-name={field.FEC_Unique_ID__c}
+                                                data-mandatory={field.FEC_Field_Mandatory__c}
+                                                onclick={handleSelectAdditionalField}>
+                                                {field.FEC_Unique_ID__c}
+                                            </div>
+                                        </template>
+                                    </div>
+                                </template>
+                            </div>
+                        </template>
+                        <template lwc:else>
+                            <span class="slds-truncate row-text">{rec.additionalFieldName}</span>
+                        </template>
+                    </div>
+                    <div class="slds-col slds-size_2-of-12">
+                        <lightning-input type="checkbox" checked={rec.FEC_Status__c}
+                            data-id={rec.Id} data-field="FEC_Status__c" onchange={handleExistingRowChange}
+                            variant="label-hidden"></lightning-input>
+                    </div>
+                    <div class="slds-col slds-size_1-of-12">
+                        <lightning-button-icon icon-name="utility:delete" alternative-text="Delete" data-id={rec.Id} onclick={handleDelete} variant="bare" size="small"></lightning-button-icon>
+                    </div>
+                </div>
+            </template>
+
+            <!-- New Rows -->
+            <template for:each={newRows} for:item="row" for:index="idx">
+                <div key={row.key} class="slds-grid slds-grid_vertical-align-center row-item new-row slds-p-vertical_xx-small">
+                    <div class="slds-col slds-size_1-of-12">
+                        <span class="status-dot new"></span>
+                    </div>
+                    <div class="slds-col slds-size_3-of-12 slds-p-right_small">
+                        <lightning-combobox value={row.FEC_Channel__c} options={channelOptions}
+                            data-index={idx} data-validate onchange={handleNewRowChannelChange}
+                            variant="label-hidden" required></lightning-combobox>
+                    </div>
+                    <div class="slds-col slds-size_2-of-12 slds-p-right_small">
+                        <lightning-combobox value={row.FEC_User_Type__c} options={userTypeOptions}
+                            data-index={idx} data-validate onchange={handleNewRowUserTypeChange}
+                            variant="label-hidden" required></lightning-combobox>
+                    </div>
+                    <div class="slds-col slds-size_3-of-12 slds-p-right_small">
+                        <div class="autocomplete-container">
+                            <lightning-input value={row.additionalFieldSearch}
+                                data-index={idx} data-validate
+                                onchange={handleNewRowFieldSearch}
+                                variant="label-hidden" placeholder={labels.colPropertyId} required></lightning-input>
+                            <template if:true={row.showFieldResults}>
+                                <div class="autocomplete-dropdown">
+                                    <template for:each={additionalFieldResults} for:item="field">
+                                        <div key={field.Id} class="autocomplete-option" data-index={idx}
+                                            data-field-id={field.Id} data-field-name={field.FEC_Unique_ID__c}
+                                            data-mandatory={field.FEC_Field_Mandatory__c}
+                                            onclick={handleSelectNewRowAdditionalField}>
+                                            {field.FEC_Unique_ID__c}
+                                        </div>
+                                    </template>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+                    <div class="slds-col slds-size_2-of-12">
+                        <lightning-input type="checkbox" checked={row.FEC_Status__c}
+                            data-index={idx} onchange={handleNewRowStatusChange}
+                            variant="label-hidden"></lightning-input>
+                    </div>
+                    <div class="slds-col slds-size_1-of-12">
+                        <lightning-button-icon icon-name="utility:close" alternative-text="Remove" data-index={idx} onclick={handleRemoveNewRow} variant="bare" size="small"></lightning-button-icon>
+                    </div>
+                </div>
+            </template>
+
+            <!-- No records message -->
+            <template if:false={hasRecords}>
+                <template if:false={hasNewRows}>
+                    <template if:false={isLoading}>
+                        <div class="slds-align_absolute-center slds-p-around_medium">
+                            <p class="slds-text-color_weak">{labels.noRecords}</p>
+                        </div>
+                    </template>
+                </template>
+            </template>
+
+            <!-- Footer Buttons -->
+            <template if:true={hasChanges}>
+                <div class="slds-grid slds-grid_align-center slds-m-top_medium slds-m-bottom_small">
+                    <lightning-button label={labels.btnHuy} onclick={handleCancel} class="slds-m-right_small"></lightning-button>
+                    <lightning-button label={labels.btnLuu} variant="brand" onclick={handleSave}></lightning-button>
+                </div>
+            </template>
+        </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <template if:true={showDeleteModal}>
+        <section role="dialog" tabindex="-1" aria-modal="true" class="slds-modal slds-fade-in-open">
+            <div class="slds-modal__container">
+                <header class="slds-modal__header">
+                    <button class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse" onclick={closeDeleteModal}>
+                        <lightning-icon icon-name="utility:close" size="small" variant="inverse"></lightning-icon>
+                        <span class="slds-assistive-text">Close</span>
+                    </button>
+                    <h2 class="slds-modal__title">{labels.confirmDeleteTitle}</h2>
+                </header>
+                <div class="slds-modal__content slds-p-around_medium">
+                    <p>{labels.confirmDeleteMsg}</p>
+                </div>
+                <footer class="slds-modal__footer">
+                    <lightning-button label={labels.btnCancel} onclick={closeDeleteModal} class="slds-m-right_x-small"></lightning-button>
+                    <lightning-button label={labels.btnDelete} variant="destructive" onclick={confirmDelete}></lightning-button>
+                </footer>
+            </div>
+        </section>
+        <div class="slds-backdrop slds-backdrop_open"></div>
+    </template>
+</template>

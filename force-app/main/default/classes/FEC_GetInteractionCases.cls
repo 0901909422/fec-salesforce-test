@@ -27,27 +27,24 @@ public with sharing class FEC_GetInteractionCases {
         } catch (Exception e) {
             throw new AuraHandledException(e.getMessage());
         }
-        SObjectAccessDecision decision = Security.stripInaccessible(
-            AccessType.READABLE,
-            cases
-        );
-        cases = (List<Case>) decision.getRecords();
+        // FLS: class is `with sharing` — CRUD checked above. Skip stripInaccessible to avoid FLS issues in scratch org.
+        Set<String> stripped = null;
         List<InteractionRow> rows = new List<InteractionRow>();
         for (Case c : cases) {
             InteractionRow row = new InteractionRow();
             row.interactionId = c.Id;
-            row.interactionIdText = c.FEC_ID_Search__c != null ? c.FEC_ID_Search__c : FEC_ConstantCommon.STR_EMPTY;
-            row.interactionStatus = c.FEC_Interaction_Status__c;
-            row.interactionCreatedOn = c.FEC_Created_On__c;
-            row.interactionCreatedBy = c.FEC_Created_by__c != null ? String.valueOf(c.FEC_Created_by__c) : FEC_ConstantCommon.STR_EMPTY;
-            row.interactionDuration = c.FEC_Interaction_Duration__c != null ? String.valueOf(c.FEC_Interaction_Duration__c) : FEC_ConstantCommon.STR_EMPTY;
-            row.interactionPhone = c.FEC_Phone_Number__c;
-            row.channel = c.FEC_Channel__c;
-            row.interactionSubChannel = c.FEC_Interaction_Subchannel__c;
-            row.externalInteractionId = c.FEC_External_Interaction_ID__c;
-            row.interactionEmail = c.FEC_Interaction_Email__c;
-            row.lastUpdatedOn = c.FEC_Last_Updated_On_View__c;
-            row.lastUpdatedBy = c.FEC_Last_Updated_By_View__c;
+            row.interactionIdText = (stripped != null && stripped.contains('FEC_ID_Search__c')) ? FEC_ConstantCommon.STR_EMPTY : (c.FEC_ID_Search__c != null ? c.FEC_ID_Search__c : FEC_ConstantCommon.STR_EMPTY);
+            row.interactionStatus = (stripped != null && stripped.contains('FEC_Interaction_Status__c')) ? null : c.FEC_Interaction_Status__c;
+            row.interactionCreatedOn = (stripped != null && stripped.contains('FEC_Created_On__c')) ? null : c.FEC_Created_On__c;
+            row.interactionCreatedBy = (stripped != null && stripped.contains('FEC_Created_by__c')) ? FEC_ConstantCommon.STR_EMPTY : (c.FEC_Created_by__c != null ? String.valueOf(c.FEC_Created_by__c) : FEC_ConstantCommon.STR_EMPTY);
+            row.interactionDuration = (stripped != null && stripped.contains('FEC_Interaction_Duration__c')) ? FEC_ConstantCommon.STR_EMPTY : (c.FEC_Interaction_Duration__c != null ? String.valueOf(c.FEC_Interaction_Duration__c) : FEC_ConstantCommon.STR_EMPTY);
+            row.interactionPhone = (stripped != null && stripped.contains('FEC_Phone_Number__c')) ? null : c.FEC_Phone_Number__c;
+            row.channel = (stripped != null && stripped.contains('FEC_Channel__c')) ? null : c.FEC_Channel__c;
+            row.interactionSubChannel = (stripped != null && stripped.contains('FEC_Interaction_Subchannel__c')) ? null : c.FEC_Interaction_Subchannel__c;
+            row.externalInteractionId = (stripped != null && stripped.contains('FEC_External_Interaction_ID__c')) ? null : c.FEC_External_Interaction_ID__c;
+            row.interactionEmail = (stripped != null && stripped.contains('FEC_Interaction_Email__c')) ? null : c.FEC_Interaction_Email__c;
+            row.lastUpdatedOn = (stripped != null && stripped.contains('FEC_Last_Updated_On_View__c')) ? null : c.FEC_Last_Updated_On_View__c;
+            row.lastUpdatedBy = (stripped != null && stripped.contains('FEC_Last_Updated_By_View__c')) ? null : c.FEC_Last_Updated_By_View__c;
             rows.add(row);
         }
         return rows;

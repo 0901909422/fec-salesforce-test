@@ -7,7 +7,23 @@
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
-/* Ép spacing label-input sát nhau qua.button-wrapper {
+/* Sticky action buttons at top of form */
+.sticky-button-bar {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: #f9fafb;
+    border-bottom: 1px solid #e5e7eb;
+    border-radius: 0.5rem 0.5rem 0 0;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+/* Legacy button wrapper (kept for backward compat) */
+.button-wrapper {
     display: flex;
     justify-content: center;
     align-items: center;
@@ -396,4 +412,31 @@ lightning-button {
     margin-top: -0.655rem !important;
     padding-top: 0 !important;
     display: block;
+}
+
+
+/* Search dropdown styles */
+.search-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    z-index: 9999;
+    max-height: 200px;
+    overflow-y: auto;
+    width: 100%;
+    background: #ffffff;
+    border: 1px solid #d8dde6;
+    border-radius: 0 0 4px 4px;
+    box-shadow: 0 2px 3px rgba(0, 0, 0, 0.16);
+}
+
+.search-dropdown-item {
+    cursor: pointer;
+    color: #181818;
+    font-size: 13px;
+    border-bottom: 1px solid #f3f3f3;
+}
+
+.search-dropdown-item:hover {
+    background-color: #f3f3f3;
 }

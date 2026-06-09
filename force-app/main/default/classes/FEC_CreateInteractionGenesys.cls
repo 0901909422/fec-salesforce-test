@@ -155,6 +155,7 @@ public without sharing class FEC_CreateInteractionGenesys {
         dto.transcription = req.chatSession.lastMessage;
         
         dto.kycMethod = mapKycMethod(req.customerInfo != null ? req.customerInfo.kYCStatus : null);
+        dto.kycStatus =req.customerInfo.kYCStatus;
         dto.kycResult = deriveKycResult(req.customerInfo != null ? req.customerInfo.kYCStatus : null);
         
         return dto;
