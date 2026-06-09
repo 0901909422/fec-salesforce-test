@@ -937,6 +937,7 @@ export default class FecChathubContainer extends NavigationMixin(LightningElemen
             }
         } catch (err) {
             console.error(LOG_PREFIX + 'Permission Set check error:', LOG_STYLE, err);
+            removeUtilityItemByLabel(CHATHUB_UTILITY_LABEL);
         }
     }
 
