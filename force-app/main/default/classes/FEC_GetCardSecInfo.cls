@@ -75,7 +75,6 @@ public with sharing class FEC_GetCardSecInfo {
     // =========================================================================
     public class IPP {
         public String IPPPlan;
-        public String IPPOpenDate;
         public Decimal IPPBalance;
         public Decimal InterestRate;
         public Decimal term;
@@ -638,7 +637,6 @@ public with sharing class FEC_GetCardSecInfo {
         if (ippNode == null) return listOut;
   
         String ippPlan = FEC_CommonUltils.getXmlValue(ippNode, 'IPPPlan');
-        String ippOpenDate = FEC_CommonUltils.getXmlValue(ippNode, 'IPPOpenDate');
         String ippRecordNoFromXml = FEC_CommonUltils.getXmlValue(ippNode, 'IPPRecordNo');
         if (String.isBlank(ippRecordNoFromXml)) {
             ippRecordNoFromXml = FEC_CommonUltils.getValueSafe(ippNode, 'IPPRecordNo');
@@ -671,7 +669,6 @@ public with sharing class FEC_GetCardSecInfo {
                     Decimal interestK = FEC_CommonUltils.xmlValToDecimal(ippNode, 'MONTHLY_INTEREST_' + k);
                     IPP ipp = new IPP();
                     ipp.IPPPlan = ippPlan;
-                    ipp.IPPOpenDate = ippOpenDate;
                     ipp.IPPRecordNo = ippRecordNo;
                     ipp.IPPBalance = ippBalance;
                     ipp.InterestRate = interestRate;
