@@ -99,6 +99,10 @@
         <members>FEC_GetCardSecInfo_Test</members>
         <members>FEC_GetCardFinancialTransactions</members>
         <members>FEC_GetCardFinancialTransactions_Test</members>
+        <members>FEC_GetInteractionCases</members>
+        <members>FEC_GetInteractionCases_Test</members>
+        <members>FEC_GetServiceCases</members>
+        <members>FEC_GetServiceCases_Test</members>
         <members>FEC_GetUnbilledTransactions</members>
         <members>FEC_GetUnbilledTransactions_Test</members>
         <members>FEC_InteractionInforHandler</members>
@@ -163,11 +167,13 @@
         <members>fec_CaseBussinessScopedRoutingIntegration</members>
         <members>fec_CaseDetail_Customer</members>
         <members>fec_CaseEditNOC</members>
+        <members>fec_ClosedServiceCases</members>
         <members>fec_DoNotBotherExistingCustomer</members>
         <members>fec_DoNotBotherNonExistingCustomer</members>
         <members>fec_DownloadReports</members>
         <members>fecInteractionChatInfo</members>
         <members>fec_InteractionCreateCase</members>
+        <members>fec_InteractionCases</members>
         <members>fec_InteractionHighlightMain</members>
         <members>fec_InteractionSLA</members>
         <members>fecInteractionCreationHighlight</members>
@@ -177,6 +183,7 @@
         <members>fec_IPPDetailPage</members>
         <members>fec_IPPDetails</members>
         <members>fec_NocChannelConfig</members>
+        <members>fec_PendingServiceCases</members>
         <members>fec_RdPaymentRoutingUtils</members>
         <members>fec_RelatedListPaging</members>
         <members>fec_customerAdditionalData</members>
