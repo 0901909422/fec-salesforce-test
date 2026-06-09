@@ -19,7 +19,8 @@ private class FEC_TemplateHistorySelector_Test {
 
     private static FEC_Template__c createTemplate() {
         FEC_Folder__c folder = new FEC_Folder__c(
-            FEC_Folder_Label__c = 'Test Folder'
+            FEC_Folder_Label__c = 'Test Folder',
+            FEC_Folder_Unique_Name__c = 'Test Folder'
         );
         insert folder;
 
@@ -104,10 +105,17 @@ private class FEC_TemplateHistorySelector_Test {
         System.assertEquals(existing[0].Id, result.Id, 'Ids should match');
     }
 
+    private static Id fakeHistoryId() {
+        String prefix = FEC_Template__History.SObjectType.getDescribe().getKeyPrefix();
+        if (String.isBlank(prefix)) {
+            prefix = FEC_Template__c.SObjectType.getDescribe().getKeyPrefix();
+        }
+        return (Id)(prefix + '000000000AAA');
+    }
+
     @IsTest
     static void testSelectByIdNotFound() {
-        // Use an Id that does not correspond to any real record
-        Id fakeId = FEC_Template__History.SObjectType.getDescribe().getKeyPrefix() + '000000000001';
+        Id fakeId = fakeHistoryId();
 
         Test.startTest();
         FEC_Template__History result = FEC_TemplateHistorySelector.selectById(fakeId);

@@ -149,6 +149,24 @@
     min-width: 0;
 }
 
+.ipp-sales-info-column {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+@media (max-width: 768px) {
+    .ipp-detail-sales-info-grid .slds-col {
+        width: 100%;
+    }
+}
+
+/* Thông báo lỗi API trên tiêu đề section (giống fec_IPPDetails / fec_CardInfo) */
+.error-text {
+    color: #ea001e !important;
+    font-weight: 400;
+}
+
 /* Màu đỏ cho các giá trị âm - cùng màu với Card Payment */
 .currency-negative,
 .slds-text-color_error,

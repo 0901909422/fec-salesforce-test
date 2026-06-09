@@ -2,6 +2,10 @@ public with sharing class FEC_CMSIPPBlockWS {
 
     //Thangtv: API Log sau callout (ResponseLog + logApiResponse)
     public static final String API_CONFIG_NAME = 'FEC_CMS_IPP_BlockWS';
+    // 29/05/2026 14:00 linhdev - default payload CMSIPPBlockWS theo integration spec
+    public static final String DEFAULT_DISB_CHANNEL = 'PC';
+    public static final Integer DEFAULT_TENURE = 0;
+    public static final String DEFAULT_CAMPAIGN_NAME = 'TMN';
     private static ResponseLog responseLog;
 
     /* ================================
@@ -67,6 +71,17 @@ public with sharing class FEC_CMSIPPBlockWS {
         try { //Thangtv
             FEC_API_Config__mdt apiConfig = FEC_API_Config__mdt.getInstance(API_CONFIG_NAME);
 
+            // 29/05/2026 14:00 linhdev - default DisbChannel/CampaignName: ưu tiên FEC_API_Config__mdt, fallback constant
+            if (String.isBlank(disbChannel)) {
+                disbChannel = resolveDisbChannelDefault(apiConfig);
+            }
+            if (String.isBlank(campaignName)) {
+                campaignName = resolveCampaignNameDefault(apiConfig);
+            }
+            tenure = tenure != null ? tenure : DEFAULT_TENURE;
+            noIPP = noIPP != null ? noIPP : true;
+            flatRate = flatRate != null ? flatRate : 0;
+
             validate(
                 transId,
                 requestorId,
@@ -77,10 +92,6 @@ public with sharing class FEC_CMSIPPBlockWS {
                 amount,
                 tenure
             );
-
-            campaignName = (apiConfig != null && String.isNotBlank(apiConfig.FEC_Campaign_Name__c))
-                ? apiConfig.FEC_Campaign_Name__c
-                : campaignName;
 
             String soapBody = buildSoapBody(
                 transId,
@@ -224,6 +235,12 @@ public with sharing class FEC_CMSIPPBlockWS {
 
         // DisbChannel 
         Dom.XmlNode disbChannelNode = action.addChildElement('DisbChannel', null, null).addTextNode(disbChannel);
+        
+        //Nhánh FastCard
+        if (disbChannel == DEFAULT_DISB_CHANNEL) {
+            action.addChildElement('IsACL', null, null).addTextNode('true');
+            action.addChildElement('RequestType', null, null).addTextNode('false');
+        }
 
         // Account 
         Dom.XmlNode accountNode = action.addChildElement('Account', null, null).addTextNode(accountNumber);
@@ -244,22 +261,34 @@ public with sharing class FEC_CMSIPPBlockWS {
         Dom.XmlNode flatRateNode = action.addChildElement('FlatRate', null, null).addTextNode(String.valueOf(flatRate));
 
         // CustAccount
-        Dom.XmlNode custAccountNode = action.addChildElement('CustAccount', null, null).addTextNode(custAccount);
+        if (String.isNotBlank(custAccount)) {
+            action.addChildElement('CustAccount', null, null).addTextNode(custAccount);
+        }
 
         // BankName
-        Dom.XmlNode bankNameNode = action.addChildElement('BankName', null, null).addTextNode(bankName);
+        if (String.isNotBlank(bankName)) {
+            action.addChildElement('BankName', null, null).addTextNode(bankName);
+        }
 
         // BankBranch
-        Dom.XmlNode bankBranchNode = action.addChildElement('BankBranch', null, null).addTextNode(bankBranch);
+        if (String.isNotBlank(bankBranch)) {
+            action.addChildElement('BankBranch', null, null).addTextNode(bankBranch);
+        }
 
         // SMSRate
-        Dom.XmlNode smsRateNode = action.addChildElement('SMSRate', null, null).addTextNode(String.valueOf(smsRate));
+        if (smsRate != null && smsRate != 0) {
+            action.addChildElement('SMSRate', null, null).addTextNode(String.valueOf(smsRate));
+        }
 
         // InsuranceAmount
-        Dom.XmlNode insuranceAmountNode = action.addChildElement('InsuranceAmount', null, null).addTextNode(String.valueOf(insuranceAmount));
+        if (insuranceAmount != null && insuranceAmount != 0) {
+            action.addChildElement('InsuranceAmount', null, null).addTextNode(String.valueOf(insuranceAmount));
+        }
 
         // HighRisk
-        Dom.XmlNode highRiskNode = action.addChildElement('HighRisk', null, null).addTextNode(highRisk);
+        if (String.isNotBlank(highRisk)) {
+            action.addChildElement('HighRisk', null, null).addTextNode(highRisk);
+        }
 
         return doc.toXmlString();
     }
@@ -378,6 +407,22 @@ public with sharing class FEC_CMSIPPBlockWS {
         }
 
 
+    }
+
+    // 29/05/2026 14:00 linhdev - DisbChannel default: FEC_API_Config.FEC_Disb_Channel__c hoặc DEFAULT_DISB_CHANNEL
+    private static String resolveDisbChannelDefault(FEC_API_Config__mdt apiConfig) {
+        if (apiConfig != null && String.isNotBlank(apiConfig.FEC_Disb_Channel__c)) {
+            return apiConfig.FEC_Disb_Channel__c.trim();
+        }
+        return DEFAULT_DISB_CHANNEL;
+    }
+
+    // 29/05/2026 14:00 linhdev - CampaignName default: FEC_API_Config.FEC_Campaign_Name__c hoặc DEFAULT_CAMPAIGN_NAME
+    private static String resolveCampaignNameDefault(FEC_API_Config__mdt apiConfig) {
+        if (apiConfig != null && String.isNotBlank(apiConfig.FEC_Campaign_Name__c)) {
+            return apiConfig.FEC_Campaign_Name__c.trim();
+        }
+        return DEFAULT_CAMPAIGN_NAME;
     }
     
 }

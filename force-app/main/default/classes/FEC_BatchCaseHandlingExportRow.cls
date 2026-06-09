@@ -4,11 +4,26 @@ public without sharing class FEC_BatchCaseHandlingExportRow {
     @AuraEnabled public String customerName;
     @AuraEnabled public String accountContractNumber;
     @AuraEnabled public String appId;
+    @AuraEnabled public String contractStatus; // Toannd 28/5/2026
+    @AuraEnabled public String productCode; // Toannd 28/5/2026
+    @AuraEnabled public String loanAmount; // Toannd 28/5/2026
+    @AuraEnabled public String tenure; // Toannd 28/5/2026
     @AuraEnabled public String interactionId;
     @AuraEnabled public String interactionChannel;
     @AuraEnabled public String interactionSubChannel;
     @AuraEnabled public String interactionPhone;
     @AuraEnabled public String interactionEmail;
+    @AuraEnabled public String ippRecordNo; // Toannd 28/5/2026
+    @AuraEnabled public String ippPlan; // Toannd 28/5/2026
+    @AuraEnabled public String ippOpenDate; // Toannd 28/5/2026
+    @AuraEnabled public String ippFirstDueDate; // Toannd 28/5/2026
+    @AuraEnabled public String ippMatureDate; // Toannd 28/5/2026
+    @AuraEnabled public String ippBalance; // Toannd 28/5/2026
+    @AuraEnabled public String ippCurrentBalance; // Toannd 28/5/2026
+    @AuraEnabled public String ippInterestRate; // Toannd 28/5/2026
+    @AuraEnabled public String ippTerm; // Toannd 28/5/2026
+    @AuraEnabled public String ippInsurance; // Toannd 28/5/2026
+    @AuraEnabled public String ippCurrentTerm; // Toannd 28/5/2026
     @AuraEnabled public String caseIdSearch;
     @AuraEnabled public String categoryCode;
     @AuraEnabled public String subCategoryCode;
@@ -55,6 +70,7 @@ public without sharing class FEC_BatchCaseHandlingExportRow {
     @AuraEnabled public String classificationByCs;
     @AuraEnabled public String evaluationByCs;
     @AuraEnabled public String finalProduct;
+    @AuraEnabled public String paymentContractAssessment; // Toannd 28/5/2026
     @AuraEnabled public String evaluationBySales;
     @AuraEnabled public String disciplineResult;
     @AuraEnabled public String contactPoint;

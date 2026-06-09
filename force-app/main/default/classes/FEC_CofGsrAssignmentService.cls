@@ -181,15 +181,17 @@ public without sharing class FEC_CofGsrAssignmentService {
         }, '|');
     }
 
+    //tugnnm37 - assignment Completed được phép add lại cùng queue nên không tính duplicate
     private static Set<String> loadExistingAssignmentDedupKeys(String caseId) {
         Set<String> keys = new Set<String>();
         if (String.isBlank(caseId)) {
             return keys;
         }
         for (FEC_Assignment__c row : [
-            SELECT FEC_Case__c, FEC_Team__c, FEC_OwnerID__c, FEC_Assignment_Routing_Action__c, FEC_Manual__c
+            SELECT FEC_Case__c, FEC_Team__c, FEC_OwnerID__c, FEC_Assignment_Routing_Action__c, FEC_Manual__c, FEC_Assignment_Status__c
             FROM FEC_Assignment__c
             WHERE FEC_Case__c = :caseId
+              AND FEC_Assignment_Status__c != :FEC_ConstantCommon.ASSIGNMENT_STATUS_COMPLETED
         ]) {
             keys.add(buildAssignmentDedupKey(
                 String.valueOf(row.FEC_Case__c),
@@ -202,6 +204,48 @@ public without sharing class FEC_CofGsrAssignmentService {
         return keys;
     }
  
+    private static String buildCaseQueueDedupKey(String caseId, String queueName) {
+        return normalizeAssignmentKeyPart(caseId) + '|' + normalizeAssignmentKeyPart(queueName);
+    }
+
+    //tugnnm37 - chỉ chặn queue trùng với assignment chưa Completed
+    private static Set<String> loadExistingAssignmentQueueKeys(String caseId) {
+        Set<String> keys = new Set<String>();
+        if (String.isBlank(caseId)) {
+            return keys;
+        }
+        for (FEC_Assignment__c row : [
+            SELECT FEC_Case__c, FEC_OwnerID__c, FEC_Assignment_Status__c
+            FROM FEC_Assignment__c
+            WHERE FEC_Case__c = :caseId
+              AND FEC_Assignment_Type__c = :FEC_ConstantCommon.ASSIGNMENT_TYPE_ROUTING
+              AND FEC_Assignment_Status__c != :FEC_ConstantCommon.ASSIGNMENT_STATUS_COMPLETED
+              AND FEC_OwnerID__c != null
+        ]) {
+            keys.add(buildCaseQueueDedupKey(String.valueOf(row.FEC_Case__c), row.FEC_OwnerID__c));
+        }
+        return keys;
+    }
+
+    @AuraEnabled
+    public static List<String> getExistingAssignmentQueueNames(String caseId) {
+        //tugnnm37 - trả queue đã tồn tại trong Assignment List để LWC chặn Add Item trùng ngay bằng toast
+        List<String> queues = new List<String>();
+        if (String.isBlank(caseId)) {
+            return queues;
+        }
+        for (FEC_Assignment__c row : [
+            SELECT FEC_OwnerID__c, FEC_Assignment_Status__c
+            FROM FEC_Assignment__c
+            WHERE FEC_Case__c = :caseId
+              AND FEC_Assignment_Type__c = :FEC_ConstantCommon.ASSIGNMENT_TYPE_ROUTING
+              AND FEC_Assignment_Status__c != :FEC_ConstantCommon.ASSIGNMENT_STATUS_COMPLETED
+              AND FEC_OwnerID__c != null
+        ]) {
+            queues.add(row.FEC_OwnerID__c);
+        }
+        return queues;
+    }
     public static void createAssignmentsOnRoute(
         String caseId, Set<Id> nocIds, User currentUser, Id historyId,
         String stageName, String remarkContentParam
@@ -302,30 +346,7 @@ public without sharing class FEC_CofGsrAssignmentService {
                 update submitStamp;
             }
 
-            // tungnm37: lưu Queue Id vào Case.FEC_Assignment_Users__c để FEC_AssignmentExecuteService check quyền
-            // tungnm37: User → lưu User Id; Queue → lưu Queue Id (lookup từ queueNameToId)
-            List<String> assignmentUsers = resolveAssignmentUsers(assignments, queueNameToId);
-            if (!assignmentUsers.isEmpty()) {
-                try {
-                    FEC_CaseTriggerHandler.isSystemUpdate = true; // tungnm37: đánh dấu đây là system update
-                    Database.SaveResult sr = Database.update(new Case(
-                        Id = caseId, 
-                        FEC_Assignment_Users__c = String.join(assignmentUsers, ',')
-                    ), AccessLevel.SYSTEM_MODE);
-                    if (!sr.isSuccess()) {
-                        for (Database.Error err : sr.getErrors()) {
-                            System.debug('FEC_DEBUG update Case error: ' + err.getStatusCode() + ' - ' + err.getMessage() + ' - Fields: ' + err.getFields());
-                        }
-                    } else {
-                        System.debug('FEC_DEBUG update Case success: FEC_Assignment_Users__c = ' + String.join(assignmentUsers, ','));
-                    }
-                } catch (Exception eu) {
-                    System.debug('FEC_DEBUG update FEC_Assignment_Users__c error: ' + eu.getMessage());
-                    System.debug('FEC_DEBUG Stack trace: ' + eu.getStackTraceString());
-                } finally {
-                    FEC_CaseTriggerHandler.isSystemUpdate = false;
-                }
-            }
+            rebuildAssignmentUsersForCase(caseId);
 
             List<FEC_Case_Remarks__c> remarksToInsert = new List<FEC_Case_Remarks__c>();
             for (FEC_Assignment__c a : assignments) {
@@ -431,6 +452,7 @@ public without sharing class FEC_CofGsrAssignmentService {
             //tungnm37 end
 
             Set<String> existingAssignmentKeys = loadExistingAssignmentDedupKeys(caseId);
+            Set<String> existingAssignmentQueueKeys = loadExistingAssignmentQueueKeys(caseId);
             List<FEC_Assignment__c> assignments = new List<FEC_Assignment__c>();
             List<String> remarkList = new List<String>();
             List<String> queueNameList = new List<String>(); // tungnm37: lưu queueName để dùng cho history
@@ -440,6 +462,10 @@ public without sharing class FEC_CofGsrAssignmentService {
                 String queueName = (String) item.get('queueName');
                 String remark = (String) item.get('remark');
                 String displayQueueName = queueDevNameToDisplayName.containsKey(queueName) ? queueDevNameToDisplayName.get(queueName) : queueName;
+                String queueDedupKey = buildCaseQueueDedupKey(caseId, displayQueueName);
+                if (existingAssignmentQueueKeys.contains(queueDedupKey)) {
+                    throw new AuraHandledException(System.Label.FEC_Assignment_Duplicate_Queue_Error);
+                }
                 String dedupKey = buildAssignmentDedupKey(caseId, teamName, displayQueueName, stageName, true);
                 if (existingAssignmentKeys.contains(dedupKey) || txnCreatedAssignmentKeys.contains(dedupKey)) {
                     System.debug('FEC_DEBUG skip duplicate manual assignment key=' + dedupKey);
@@ -462,6 +488,7 @@ public without sharing class FEC_CofGsrAssignmentService {
                 remarkList.add(remark);
                 queueNameList.add(displayQueueName); // tungnm37: lưu display name cho history
                 existingAssignmentKeys.add(dedupKey);
+                existingAssignmentQueueKeys.add(queueDedupKey);
                 txnCreatedAssignmentKeys.add(dedupKey);
             }
             if (assignments.isEmpty()) return;
@@ -479,33 +506,10 @@ public without sharing class FEC_CofGsrAssignmentService {
                 update manualSubmitStamp;
             }
 
-            // tungnm37: lưu owner ids vào Case.FEC_Assignment_Users__c, queue thì lưu Queue Id, user thì lưu User Id
-            // tungnm37: KHÔNG set OwnerId = null vì Salesforce không cho phép (INVALID_CROSS_REFERENCE_KEY)
-            // tungnm37: Chỉ dùng FEC_Assignment_Users__c để track assignments
-            // tungnm37: FEC_Service_Case_Owner__c sẽ tự động ẩn giá trị khi có assignment (formula field)
             // tungnm37: Chỉ set FEC_Assignment_Users__c từ Stage 2 trở đi (không set ở Stage 1 để Service Case Owner vẫn hiển thị)
             Boolean isStage1 = stageName != null && Pattern.matches('(?i).*stage\\s*1.*', stageName);
-            List<String> assignmentUsers = resolveAssignmentUsers(assignments, queueNameToId);
-            if (!assignmentUsers.isEmpty() && !isStage1) {
-                try {
-                    FEC_CaseTriggerHandler.isSystemUpdate = true; // tungnm37: đánh dấu đây là system update
-                    Database.SaveResult sr = Database.update(new Case(
-                        Id = caseId, 
-                        FEC_Assignment_Users__c = String.join(assignmentUsers, ',')
-                    ), AccessLevel.SYSTEM_MODE);
-                    if (!sr.isSuccess()) {
-                        for (Database.Error err : sr.getErrors()) {
-                            System.debug('FEC_DEBUG update Case (manual) error: ' + err.getStatusCode() + ' - ' + err.getMessage() + ' - Fields: ' + err.getFields());
-                        }
-                    } else {
-                        System.debug('FEC_DEBUG update Case (manual) success: FEC_Assignment_Users__c = ' + String.join(assignmentUsers, ','));
-                    }
-                } catch (Exception eu) {
-                    System.debug('FEC_DEBUG update FEC_Assignment_Users__c (manual) error: ' + eu.getMessage());
-                    System.debug('FEC_DEBUG Stack trace: ' + eu.getStackTraceString());
-                } finally {
-                    FEC_CaseTriggerHandler.isSystemUpdate = false;
-                }
+            if (!isStage1) {
+                rebuildAssignmentUsersForCase(caseId);
             }
 
             List<FEC_Case_Remarks__c> remarks = new List<FEC_Case_Remarks__c>();
@@ -547,6 +551,9 @@ public without sharing class FEC_CofGsrAssignmentService {
                 Database.insert(histories, AccessLevel.SYSTEM_MODE);
             }
         } catch (Exception e) {
+            if (e instanceof AuraHandledException) {
+                throw e;
+            }
             System.debug('createAssignmentsFromManualItems error: ' + e.getMessage() + ' | ' + e.getStackTraceString());
             FEC_CommonUltils.logException('tungnm37', 'createAssignmentsFromManualItems', e.getMessage(), e.getStackTraceString());
         }
@@ -701,6 +708,127 @@ public without sharing class FEC_CofGsrAssignmentService {
             }
         }
         return assignmentUsers;
+    }
+
+    @TestVisible
+    private static void rebuildAssignmentUsersForCase(String caseId) {
+        if (String.isBlank(caseId)) {
+            return;
+        }
+
+        List<FEC_Assignment__c> routingAssignments = [
+            SELECT FEC_Assignment_Owner__c, FEC_OwnerID__c
+            FROM FEC_Assignment__c
+            WHERE FEC_Case__c = :caseId
+              AND FEC_Assignment_Type__c = :FEC_ConstantCommon.ASSIGNMENT_TYPE_ROUTING
+        ];
+
+        List<String> assignmentUsers = resolveAssignmentUsers(
+            routingAssignments,
+            new Map<String, Id>()
+        );
+        String assignmentUsersValue = assignmentUsers.isEmpty()
+            ? null
+            : String.join(assignmentUsers, ',');
+
+        try {
+            FEC_CaseTriggerHandler.isSystemUpdate = true;
+            Database.SaveResult sr = Database.update(
+                new Case(
+                    Id = caseId,
+                    FEC_Assignment_Users__c = assignmentUsersValue
+                ),
+                AccessLevel.SYSTEM_MODE
+            );
+            if (!sr.isSuccess()) {
+                for (Database.Error err : sr.getErrors()) {
+                    System.debug(
+                        'FEC_DEBUG rebuild FEC_Assignment_Users__c error: ' +
+                        err.getStatusCode() +
+                        ' - ' +
+                        err.getMessage() +
+                        ' - Fields: ' +
+                        err.getFields()
+                    );
+                }
+            } else {
+                System.debug(
+                    'FEC_DEBUG rebuild FEC_Assignment_Users__c success: ' +
+                    assignmentUsersValue
+                );
+            }
+        } catch (Exception eu) {
+            System.debug(
+                'FEC_DEBUG rebuild FEC_Assignment_Users__c exception: ' +
+                eu.getMessage()
+            );
+            System.debug('FEC_DEBUG Stack trace: ' + eu.getStackTraceString());
+        } finally {
+            FEC_CaseTriggerHandler.isSystemUpdate = false;
+        }
+    }
+
+    // 04/06/2026 17:10 linhdev - Route To chuẩn: chỉ auto Assignment khi BP stage hoặc NOC thuộc COF/GSR
+    public static Boolean shouldCreateAssignmentsOnStandardRoute(
+        Case caseRow,
+        String natureOfCaseId
+    ) {
+        String stageBpCode = caseRow == null ||
+            caseRow.FEC_Current_Case_Stage__r == null ||
+            caseRow.FEC_Current_Case_Stage__r.FEC_Business_Process__r == null
+            ? null
+            : caseRow.FEC_Current_Case_Stage__r.FEC_Business_Process__r.FEC_Code__c;
+        if (isCofOrGsrBusinessProcessCode(stageBpCode)) {
+            return true;
+        }
+        return isCofOrGsrNatureOfCaseInput(natureOfCaseId);
+    }
+
+    private static Boolean isCofOrGsrBusinessProcessCode(String bpCode) {
+        if (String.isBlank(bpCode)) {
+            return false;
+        }
+        String u = bpCode.toUpperCase();
+        return u.contains('COF') || u.contains('GSR');
+    }
+
+    private static Boolean isCofOrGsrNatureOfCaseInput(String inputId) {
+        if (String.isBlank(inputId)) {
+            return false;
+        }
+        try {
+            Id recordId = Id.valueOf(inputId.trim());
+            String objName = recordId.getSObjectType().getDescribe().getName();
+            String bpCode;
+            if (objName == 'FEC_Nature_of_Case__c') {
+                List<FEC_Nature_of_Case__c> nocs = [
+                    SELECT FEC_Business_Process__r.FEC_Code__c
+                    FROM FEC_Nature_of_Case__c
+                    WHERE Id = :recordId
+                    LIMIT 1
+                ];
+                if (nocs.isEmpty()) {
+                    return false;
+                }
+                bpCode = nocs[0].FEC_Business_Process__r.FEC_Code__c;
+            } else if (objName == 'FEC_Actual_Nature_of_Case__c') {
+                List<FEC_Actual_Nature_of_Case__c> actualNocs = [
+                    SELECT FEC_Business_Process__r.FEC_Code__c
+                    FROM FEC_Actual_Nature_of_Case__c
+                    WHERE Id = :recordId
+                    LIMIT 1
+                ];
+                if (actualNocs.isEmpty()) {
+                    return false;
+                }
+                bpCode = actualNocs[0].FEC_Business_Process__r.FEC_Code__c;
+            } else {
+                return false;
+            }
+            return isCofOrGsrBusinessProcessCode(bpCode);
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     public static Set<Id> resolveToNocIds(String inputId) {

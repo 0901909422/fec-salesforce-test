@@ -367,9 +367,11 @@ public with sharing class FEC_SalesChannelFromApplicationService {
                 return logic.FEC_Sequence__c.intValue();
             }
             String nm = logic.Name;
-            if (String.isNotBlank(nm) && nm.startsWith('S-')) {
+            if (String.isNotBlank(nm)) {
                 try {
-                    return Integer.valueOf(nm.substring(2));
+                    if (nm.startsWith('SL-')) {
+                        return Integer.valueOf(nm.substring(3));
+                    }
                 } catch (Exception e) {
                     return 99999;
                 }

@@ -12,41 +12,83 @@
 ****************************************************************************************/
 global with sharing class FEC_GetCSMasterDataService {
     private static final Integer MAX_TRANSACTION_ID = 36;
+    private static final Integer FEC_API_LOG_RESPONSE_FIELD_LEN = 131072;
+    private static final String API_LOG_TRUNCATED_SUFFIX = '...[truncated]';
 
     // Cache
     private static Map<String, List<AdditionalPropertyType>> cacheByApplyTo = new Map<String, List<AdditionalPropertyType>>();
     private static List<FEC_Master_Data_Setting__c> cachedSettings;
+    private static Map<String, Schema.DescribeFieldResult> additionalFieldDescribeByApi;
 
     // ==========================================================
     // MAIN
     // ==========================================================
     webservice static GetCSMasterDataResponse GetCSMasterDataRequest(SysRequestType Sys) {
+        return GetCSMasterDataRequest(Sys, true);
+    }
 
+    private static GetCSMasterDataResponse GetCSMasterDataRequest(
+        SysRequestType Sys,
+        Boolean includeAdditionalProperties
+    ) {
         GetCSMasterDataResponse res = initResponse(Sys);
-        if (Sys == null) {
-            res.Sys.Code = '101';
-            res.Sys.Description = System.Label.FEC_MSG_Sys_Null;
-            return res;
+        String errorMessage = null;
+        Boolean isSuccess = false;
+
+        try {
+            if (Sys == null) {
+                res.Sys.Code = '101';
+                res.Sys.Description = System.Label.FEC_MSG_Sys_Null;
+            } else if (!FEC_CommonUltils.isActiveChannelSupported(Sys.Channel)) {
+                res.Sys.Code = '102';
+                res.Sys.Description = buildUnsupportedChannelMessage(Sys.Channel);
+            } else if (!isGetCSMasterDataChannelFunctionAllowed(Sys.Channel)) {
+                res.Sys.Code = '102';
+                res.Sys.Description =
+                    FEC_ConstantCommon.MY_CASE_CHANNEL_GET_MASTER_DATA_NOT_ALLOWED_MSG;
+            } else if (
+                String.isBlank(Sys.TransactionID)
+                || Sys.TransactionID.length() > FEC_ConstantCommon.CANCEL_CS_TRANSACTION_ID_MAX_LEN
+            ) {
+                res.Sys.Code = '103';
+                res.Sys.Description =
+                    System.Label.FEC_MSG_TransactionId_Validation
+                    + FEC_ConstantCommon.CANCEL_CS_TRANSACTION_ID_MAX_LEN
+                    + System.Label.FEC_MSG_Limit_Character;
+            } else {
+                processMasterDataRequest(includeAdditionalProperties, res, Sys.Channel);
+                res.Sys.Code = System.Label.FEC_Success_Title;
+                res.Sys.Description = System.Label.FEC_MSG_Get_CS_Data_Success;
+                isSuccess = true;
+            }
+        } catch (Exception e) {
+            errorMessage = e.getMessage();
+            res.Sys.Code = '500';
+            res.Sys.Description = 'Internal server error: ' + errorMessage;
+            res.MasterDataItems = new List<MasterDataItemType>();
         }
 
-        if (String.isBlank(Sys.Channel) || !FEC_ConstantCommon.SUPPORTED_CHANNELS.contains(Sys.Channel)) {
-            res.Sys.Code = '102';
-            res.Sys.Description = System.Label.FEC_MSG_Channel_Validation + Sys.Channel + System.Label.FEC_MSG_Data_Request_Master_Data;
-            return res;
+        if (!isSuccess && String.isBlank(errorMessage) && res.Sys != null) {
+            errorMessage = res.Sys.Description;
         }
 
-        if (String.isBlank(Sys.TransactionID) || Sys.TransactionID.length() > FEC_ConstantCommon.CANCEL_CS_TRANSACTION_ID_MAX_LEN) {
-            res.Sys.Code = '103';
-            res.Sys.Description = System.Label.FEC_MSG_TransactionId_Validation + FEC_ConstantCommon.CANCEL_CS_TRANSACTION_ID_MAX_LEN + System.Label.FEC_MSG_Limit_Character;
-            return res;
-        }
+        writeGetCSMasterDataApiLog(Sys, res, isSuccess, errorMessage);
+        return res;
+    }
 
-        // Load settings ONCE
-        loadSettings();
+    private static void processMasterDataRequest(
+        Boolean includeAdditionalProperties,
+        GetCSMasterDataResponse res,
+        String requestChannel
+    ) {
+        if (includeAdditionalProperties) {
+            loadSettings(true);
+        }
 
         List<FEC_Nature_of_Case__c> records = [
             SELECT
                 FEC_Customer_Type__c,
+                FEC_Channel__c,
 
                 FEC_Product_Type__r.FEC_Code__c,
                 FEC_Product_Type__r.Name,
@@ -85,6 +127,14 @@ global with sharing class FEC_GetCSMasterDataService {
         Map<String, MasterDataItemType> productMap = new Map<String, MasterDataItemType>();
 
         for (FEC_Nature_of_Case__c n : records) {
+            if (
+                !FEC_CommonUltils.isNatureOfCaseChannelAllowed(
+                    n.FEC_Channel__c,
+                    requestChannel
+                )
+            ) {
+                continue;
+            }
 
             if (n.FEC_Product_Type__r == null ||
                 n.FEC_Business_Process__r == null ||
@@ -108,7 +158,9 @@ global with sharing class FEC_GetCSMasterDataService {
                 p.ApplyTo = applyTo;
                 p.Type = FEC_ConstantCommon.KEY_PRODUCT_TYPE_PRODUCT;
                 p.Children = new List<ChildItemType>();
-                p.AdditionalProperties = getAdditionalProperties(applyTo);
+                if (includeAdditionalProperties) {
+                    p.AdditionalProperties = getAdditionalProperties(applyTo);
+                }
 
                 productMap.put(pCode, p);
             } else {
@@ -128,8 +180,6 @@ global with sharing class FEC_GetCSMasterDataService {
                 applyTo,
                 FEC_ConstantCommon.KEY_CASETYPE
             );
-            setAdditionalIfNull(caseType, applyTo);
-
             // ================= CATEGORY =================
             ChildItemType category = findOrCreateChild(
                 caseType.Children,
@@ -140,7 +190,6 @@ global with sharing class FEC_GetCSMasterDataService {
                 applyTo,
                 FEC_ConstantCommon.KEY_CATEGORY
             );
-            setAdditionalIfNull(category, applyTo);
 
             // ================= SUB CATEGORY =================
             ChildItemType subCategory = findOrCreateChild(
@@ -152,10 +201,9 @@ global with sharing class FEC_GetCSMasterDataService {
                 applyTo,
                 FEC_ConstantCommon.KEY_SUBCATEGORY
             );
-            setAdditionalIfNull(subCategory, applyTo);
 
             // ================= SUB CODE =================
-            ChildItemType subCode = findOrCreateChild(
+            findOrCreateChild(
                 subCategory.Children,
                 n.FEC_Sub_Code__r.FEC_Code__c,
                 n.FEC_Sub_Code__r.Name,
@@ -164,14 +212,163 @@ global with sharing class FEC_GetCSMasterDataService {
                 applyTo,
                 FEC_ConstantCommon.KEY_SUBCODE
             );
-            setAdditionalIfNull(subCode, applyTo);
         }
 
         res.MasterDataItems = productMap.values();
-        res.Sys.Code = System.Label.FEC_Success_Title;
-        res.Sys.Description = System.Label.FEC_MSG_Get_CS_Data_Success;
+    }
 
-        return res;
+    private static void writeGetCSMasterDataApiLog(
+        SysRequestType request,
+        GetCSMasterDataResponse response,
+        Boolean isSuccess,
+        String errorMessage
+    ) {
+        try {
+            HttpResponse apiResponse = new HttpResponse();
+            apiResponse.setStatusCode(isSuccess ? 200 : 500);
+            apiResponse.setBody(buildApiLogResponseBody(response));
+            FEC_CommonUltils.logApi(
+                'GetCSMasterData',
+                'GetCSMasterData',
+                FEC_ConstantCommon.API_METHOD_POST,
+                FEC_CommonUltils.serializeSafe(request),
+                apiResponse,
+                errorMessage
+            );
+        } catch (Exception logEx) {
+            System.debug('LOG_API_ERROR GetCSMasterData: ' + logEx.getMessage());
+        }
+    }
+
+    private static String buildApiLogResponseBody(GetCSMasterDataResponse response) {
+        if (response == null) {
+            return null;
+        }
+
+        String body = FEC_CommonUltils.serializeSafe(response);
+        Integer maxBodyLen =
+            FEC_API_LOG_RESPONSE_FIELD_LEN - API_LOG_TRUNCATED_SUFFIX.length();
+
+        return FEC_CommonUltils.truncateForLog(
+            body,
+            maxBodyLen,
+            API_LOG_TRUNCATED_SUFFIX
+        );
+    }
+
+    public static String buildGetCSMasterDataSoapXml(SysRequestType sys) {
+        GetCSMasterDataResponse res = GetCSMasterDataRequest(sys, false);
+        loadSettings(false);
+        Map<String, String> additionalPropsXmlCache =
+            buildAdditionalPropertiesXmlCacheFromItems(res.MasterDataItems);
+        return FEC_MyCaseSoapXml.buildGetCSMasterDataSoapResponse(
+            res.Sys,
+            res.MasterDataItems,
+            additionalPropsXmlCache
+        );
+    }
+
+    private static Map<String, String> buildAdditionalPropertiesXmlCacheFromItems(
+        List<MasterDataItemType> items
+    ) {
+        Map<String, String> cache = new Map<String, String>();
+        if (items == null || items.isEmpty()) {
+            return cache;
+        }
+
+        Set<String> applyTos = new Set<String>();
+        for (MasterDataItemType item : items) {
+            if (item != null) {
+                applyTos.add(item.ApplyTo);
+            }
+        }
+
+        for (String applyTo : applyTos) {
+            String cacheKey = applyTo == null ? '__NULL__' : applyTo;
+            cache.put(cacheKey, buildAdditionalPropertiesXmlForApplyTo(applyTo));
+        }
+        return cache;
+    }
+
+    private static String buildAdditionalPropertiesXmlForApplyTo(String applyTo) {
+        return buildAdditionalPropertiesXmlForApplyTo(applyTo, false);
+    }
+
+    private static String buildAdditionalPropertiesXmlForApplyTo(
+        String applyTo,
+        Boolean includePicklistValues
+    ) {
+        if (cachedSettings == null || cachedSettings.isEmpty()) {
+            return FEC_ConstantCommon.STR_EMPTY;
+        }
+
+        String result = FEC_ConstantCommon.STR_EMPTY;
+        Set<String> seenFieldApis = new Set<String>();
+        for (FEC_Master_Data_Setting__c setting : cachedSettings) {
+            String settingApplyTo = setting.FEC_Nature_Of_Case__r != null
+                ? setting.FEC_Nature_Of_Case__r.FEC_Customer_Type__c
+                : null;
+
+            if (!matchApplyTo(applyTo, settingApplyTo)) {
+                continue;
+            }
+
+            String fieldApi = setting.FEC_Field_API_Name__c;
+            if (String.isBlank(fieldApi)) {
+                continue;
+            }
+
+            String fieldApiKey = fieldApi.toLowerCase();
+            if (seenFieldApis.contains(fieldApiKey)) {
+                continue;
+            }
+            seenFieldApis.add(fieldApiKey);
+
+            Schema.DescribeFieldResult fieldDescribe = getAdditionalFieldDescribe(fieldApi);
+
+            String name = fieldDescribe != null ? fieldDescribe.getLabel() : fieldApi;
+            String type = fieldDescribe != null
+                ? mapFieldTypeFromDisplayType(fieldDescribe.getType())
+                : 'string';
+            Integer posOrder = setting.FEC_Field_Order_Display__c == null
+                ? null
+                : Integer.valueOf(setting.FEC_Field_Order_Display__c);
+            List<Schema.PicklistEntry> picklistEntries = null;
+            if (includePicklistValues == true
+                && type == 'list'
+                && fieldDescribe != null) {
+                picklistEntries = fieldDescribe.getPicklistValues();
+            }
+
+            result = appendAdditionalPropertiesXmlBatch(
+                result,
+                new List<String>{
+                    FEC_MyCaseSoapXml.buildMasterDataAdditionalPropertyXml(
+                        fieldApi,
+                        name,
+                        name,
+                        posOrder,
+                        settingApplyTo,
+                        setting.FEC_Field_Mandatory__c,
+                        type,
+                        picklistEntries,
+                        includePicklistValues
+                    )
+                }
+            );
+        }
+
+        return result;
+    }
+
+    private static String appendAdditionalPropertiesXmlBatch(
+        String accumulated,
+        List<String> batch
+    ) {
+        if (batch == null || batch.isEmpty()) {
+            return accumulated;
+        }
+        return accumulated + String.join(batch, FEC_ConstantCommon.STR_EMPTY);
     }
 
     // ==========================================================
@@ -207,17 +404,20 @@ global with sharing class FEC_GetCSMasterDataService {
         return c;
     }
 
-    private static void setAdditionalIfNull(ChildItemType c, String applyTo) {
-        if (c.AdditionalProperties == null) {
-            c.AdditionalProperties = getAdditionalProperties(applyTo);
-        }
-    }
-
     // ==========================================================
     // SETTINGS CACHE
     // ==========================================================
     private static void loadSettings() {
-        if (cachedSettings != null) return;
+        loadSettings(true);
+    }
+
+    private static void loadSettings(Boolean warmPropertiesCache) {
+        if (cachedSettings != null) {
+            if (warmPropertiesCache) {
+                warmAdditionalPropertiesCache();
+            }
+            return;
+        }
 
         cachedSettings = [
             SELECT
@@ -228,6 +428,51 @@ global with sharing class FEC_GetCSMasterDataService {
             FROM FEC_Master_Data_Setting__c
             WHERE FEC_Field_Object_Name__c = :FEC_ConstantCommon.OBJ_ADDITIONAL_INFO
         ];
+
+        if (warmPropertiesCache) {
+            warmAdditionalPropertiesCache();
+        }
+    }
+
+    private static Schema.DescribeFieldResult getAdditionalFieldDescribe(String fieldApi) {
+        if (String.isBlank(fieldApi)) {
+            return null;
+        }
+
+        if (additionalFieldDescribeByApi == null) {
+            additionalFieldDescribeByApi = new Map<String, Schema.DescribeFieldResult>();
+        }
+
+        String key = fieldApi.toLowerCase();
+        if (!additionalFieldDescribeByApi.containsKey(key)) {
+            Map<String, Schema.SObjectField> fieldMap =
+                FEC_Additional_Info__c.SObjectType.getDescribe().fields.getMap();
+            Schema.SObjectField fieldToken = fieldMap.get(key);
+            additionalFieldDescribeByApi.put(
+                key,
+                fieldToken != null ? fieldToken.getDescribe() : null
+            );
+        }
+
+        return additionalFieldDescribeByApi.get(key);
+    }
+
+    private static void warmAdditionalPropertiesCache() {
+        Set<String> applyTos = new Set<String>();
+        applyTos.add(null);
+
+        for (FEC_Master_Data_Setting__c setting : cachedSettings) {
+            String settingApplyTo = setting.FEC_Nature_Of_Case__r != null
+                ? setting.FEC_Nature_Of_Case__r.FEC_Customer_Type__c
+                : null;
+            applyTos.add(settingApplyTo);
+        }
+
+        for (String applyTo : applyTos) {
+            if (!cacheByApplyTo.containsKey(applyTo)) {
+                getAdditionalProperties(applyTo);
+            }
+        }
     }
 
     // ==========================================================
@@ -236,7 +481,7 @@ global with sharing class FEC_GetCSMasterDataService {
     private static List<AdditionalPropertyType> getAdditionalProperties(String applyTo) {
 
         if (cacheByApplyTo.containsKey(applyTo)) {
-            return new List<AdditionalPropertyType>(cacheByApplyTo.get(applyTo));
+            return cacheByApplyTo.get(applyTo);
         }
 
         List<AdditionalPropertyType> result = new List<AdditionalPropertyType>();
@@ -259,34 +504,14 @@ global with sharing class FEC_GetCSMasterDataService {
             p.ApplyTo = settingApplyTo;
             p.Mandatory = m.FEC_Field_Mandatory__c;
 
-            p.Name = FEC_CommonUltils.getFieldLabel(
-                FEC_ConstantCommon.OBJ_ADDITIONAL_INFO,
-                p.ID
-            );
-            p.NameVN = p.Name;
-
-            p.Type = mapFieldType(
-                FEC_CommonUltils.getFieldType(
-                    FEC_ConstantCommon.OBJ_ADDITIONAL_INFO,
-                    p.ID
-                )
-            );
-
-            if (p.Type == 'list') {
-                p.AvailableValues = mapAvailableValues(
-                    FEC_CommonUltils.getPicklistOptions(
-                        FEC_ConstantCommon.OBJ_ADDITIONAL_INFO,
-                        p.ID
-                    )
-                );
-            }
+            populateAdditionalPropertyMetadata(p);
 
             result.add(p);
         }
 
         cacheByApplyTo.put(applyTo, result);
 
-        return new List<AdditionalPropertyType>(result);
+        return result;
     }
 
     private static Boolean matchApplyTo(String req, String setting) {
@@ -296,13 +521,96 @@ global with sharing class FEC_GetCSMasterDataService {
         return setting == req;
     }
 
+    private static void populateAdditionalPropertyMetadata(AdditionalPropertyType p) {
+        if (p == null || String.isBlank(p.ID)) {
+            return;
+        }
+
+        Schema.DescribeFieldResult fieldDescribe = getAdditionalFieldDescribe(p.ID);
+
+        if (fieldDescribe == null) {
+            p.Name = p.ID;
+            p.NameVN = p.ID;
+            p.Type = 'string';
+            return;
+        }
+
+        p.Name = fieldDescribe.getLabel();
+        p.NameVN = p.Name;
+        p.Type = mapFieldTypeFromDisplayType(fieldDescribe.getType());
+
+        if (p.Type == 'list') {
+            p.AvailableValues = mapPicklistEntries(fieldDescribe.getPicklistValues());
+        }
+    }
+
     private static String mapFieldType(String t) {
-        if (t == FEC_ConstantCommon.KEY_PICKLIST) return 'list';
-        if (t == FEC_ConstantCommon.KEY_CHECKBOX) return 'boolean';
-        if (t == FEC_ConstantCommon.KEY_DATE) return 'date';
-        if (t == FEC_ConstantCommon.KEY_DATETIME) return 'datetime';
-        if (t == FEC_ConstantCommon.KEY_NUMBER) return 'number';
+        if (t == FEC_ConstantCommon.KEY_PICKLIST) {
+            return 'list';
+        }
+        if (t == FEC_ConstantCommon.KEY_CHECKBOX) {
+            return 'boolean';
+        }
+        if (t == FEC_ConstantCommon.KEY_DATE) {
+            return 'date';
+        }
+        if (t == FEC_ConstantCommon.KEY_DATETIME) {
+            return 'datetime';
+        }
+        if (t == FEC_ConstantCommon.KEY_NUMBER) {
+            return 'number';
+        }
         return 'string';
+    }
+
+    private static String mapFieldTypeFromDisplayType(Schema.DisplayType fieldType) {
+        return mapFieldType(displayTypeToFieldTypeKey(fieldType));
+    }
+
+    private static String displayTypeToFieldTypeKey(Schema.DisplayType fieldType) {
+        switch on fieldType {
+            when Picklist {
+                return FEC_ConstantCommon.KEY_PICKLIST;
+            }
+            when Boolean {
+                return FEC_ConstantCommon.KEY_CHECKBOX;
+            }
+            when Date {
+                return FEC_ConstantCommon.KEY_DATE;
+            }
+            when DateTime {
+                return FEC_ConstantCommon.KEY_DATETIME;
+            }
+            when Integer, Double, Currency, Percent {
+                return FEC_ConstantCommon.KEY_NUMBER;
+            }
+            when else {
+                return 'string';
+            }
+        }
+    }
+
+    private static List<AvailableValueType> mapPicklistEntries(
+        List<Schema.PicklistEntry> picklistEntries
+    ) {
+        List<AvailableValueType> result = new List<AvailableValueType>();
+
+        if (picklistEntries == null) {
+            return result;
+        }
+
+        for (Schema.PicklistEntry entry : picklistEntries) {
+            if (entry == null || !entry.isActive()) {
+                continue;
+            }
+            AvailableValueType value = new AvailableValueType();
+            value.ID = entry.getValue();
+            value.Name = entry.getLabel();
+            value.NameVN = entry.getLabel();
+            result.add(value);
+        }
+
+        return result;
     }
 
     private static List<AvailableValueType> mapAvailableValues(
@@ -310,7 +618,9 @@ global with sharing class FEC_GetCSMasterDataService {
     ) {
         List<AvailableValueType> result = new List<AvailableValueType>();
 
-        if (options == null) return result;
+        if (options == null) {
+            return result;
+        }
 
         for (FEC_CommonUltils.PicklistOption opt : options) {
             AvailableValueType v = new AvailableValueType();
@@ -321,6 +631,22 @@ global with sharing class FEC_GetCSMasterDataService {
         }
 
         return result;
+    }
+
+    private static String buildUnsupportedChannelMessage(String channel) {
+        String normalizedChannel = FEC_CommonUltils.sanitizeChannelForMessage(channel);
+        return String.valueOf(System.Label.FEC_MSG_Channel_Validation).trim() +
+            ' ' +
+            normalizedChannel +
+            ' ' +
+            String.valueOf(System.Label.FEC_MSG_Data_Request_Master_Data).trim();
+    }
+
+    private static Boolean isGetCSMasterDataChannelFunctionAllowed(String channel) {
+        return FEC_ChannelFunctionService.isFunctionAllowed(
+            channel,
+            FEC_ConstantCommon.MY_CASE_FUNCTION_GET_CS_MASTER_DATA
+        );
     }
 
     // ==========================================================

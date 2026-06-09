@@ -4,7 +4,7 @@
     <protected>false</protected>
     <values>
         <field>FEC_Endpoint__c</field>
-        <value xsi:type="xsd:string">/esb/cp/soap/MRC_Info</value>
+        <value xsi:type="xsd:string">/esb/cp/MRC_Info</value>
     </values>
     <values>
         <field>FEC_SOAP_Action__c</field>

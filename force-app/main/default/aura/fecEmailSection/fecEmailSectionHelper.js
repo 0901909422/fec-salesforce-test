@@ -623,6 +623,33 @@
             var range = sel.getRangeAt(0);
             var editorEl = quill.root;
 
+            // Handle Enter natively so caret stays at the current cursor position.
+            if (e.keyCode === 13) {
+                e.preventDefault();
+                e.stopImmediatePropagation();
+
+                var br = document.createElement('br');
+                var spacer = document.createTextNode('\u200B');
+                range.deleteContents();
+                range.insertNode(spacer);
+                range.insertNode(br);
+
+                var nextRange = document.createRange();
+                nextRange.setStartAfter(spacer);
+                nextRange.collapse(true);
+                sel.removeAllRanges();
+                sel.addRange(nextRange);
+                return;
+            }
+
+            // Template HTML is injected directly into the editor, so Quill's internal delta
+            // may not know about all nodes. For Backspace/Delete, bypass Quill keyboard
+            // handlers and let the browser edit the real DOM natively.
+            if (e.keyCode === 8 || e.keyCode === 46) {
+                e.stopImmediatePropagation();
+                return;
+            }
+
             // Kiểm tra cursor/selection có trong table không
             var anchorNode = range.commonAncestorContainer;
             var cur = anchorNode.nodeType === 3 ? anchorNode.parentNode : anchorNode;
@@ -636,16 +663,10 @@
             }
 
             if (inTable) {
-                // tungnm37 sửa: stop Quill intercept TẤT CẢ key trong table, để native browser xử lý
+                // Stop Quill from intercepting table editing, but DO NOT prevent default.
+                // Let the browser handle Backspace/Delete natively so template text inside
+                // td/th can be removed. execCommand('delete') is unreliable in Lightning.
                 e.stopImmediatePropagation();
-                // Backspace/Delete: dùng execCommand để xóa nội dung trong td
-                if (e.keyCode === 8) {
-                    e.preventDefault();
-                    document.execCommand('delete', false, null);
-                } else if (e.keyCode === 46) {
-                    e.preventDefault();
-                    document.execCommand('forwardDelete', false, null);
-                }
                 return;
             }
 
@@ -768,9 +789,12 @@
                 component.set('v.fromEmail', d.fromEmail||'');
                 component.set('v.fromDisplay', d.fromDisplay||d.fromEmail||'');
                 component.set('v.toEmail', d.toEmail||'');
+                component.set('v.isManualInteraction', d.isManual === 'true');
                 component.set('v.incomingToAddress', d.fromEmail||'');
                 // tungnm37 thêm: load templates theo fromEmail của Interaction (giống Service Case)
-                if (d.fromEmail) {
+                if (d.isManual === 'true') {
+                    component.set('v.hasFromOptions', false);
+                } else if (d.fromEmail) {
                     self.loadTemplates(component, d.fromEmail);
                 }
             }
@@ -810,14 +834,18 @@
 
                 // Sync native <select>
                 function syncSelect() {
-                    var el = component.getElement();
-                    if (!el) return;
-                    var sel = el.querySelector('.fec-from-select');
-                    if (sel) {
-                        sel.value = toSelect;
-                        if (sel.value !== toSelect) {
-                            window.setTimeout($A.getCallback(syncSelect), 150);
+                    try {
+                        var el = component && component.isValid && component.isValid() ? component.getElement() : null;
+                        if (!el || typeof el.querySelector !== 'function') return;
+                        var sel = el.querySelector('.fec-from-select');
+                        if (sel) {
+                            sel.value = toSelect;
+                            if (sel.value !== toSelect) {
+                                window.setTimeout($A.getCallback(syncSelect), 150);
+                            }
                         }
+                    } catch (e) {
+                        return;
                     }
                 }
                 window.setTimeout($A.getCallback(syncSelect), 100);
@@ -826,6 +854,24 @@
         $A.enqueueAction(a);
     },
 
+
+    loadCaseFiles: function(component, delayMs) {
+        var run = function() {
+            var action = component.get('c.getCaseFileInfos');
+            action.setParams({ caseId: component.get('v.recordId') });
+            action.setCallback(this, function(resp) {
+                if (resp.getState() === 'SUCCESS') {
+                    component.set('v.caseFileList', resp.getReturnValue() || []);
+                }
+            });
+            $A.enqueueAction(action);
+        };
+        if (delayMs && delayMs > 0) {
+            window.setTimeout($A.getCallback(run), delayMs);
+        } else {
+            run();
+        }
+    },
     showPreviewModal: function(body) {
         var existing = document.getElementById('fec-preview-overlay');
         if (existing) existing.parentNode.removeChild(existing);
@@ -940,6 +986,8 @@
             'Anh/ Ch\u1ECB', 'Anh/Ch\u1ECB', 'Anh / Ch\u1ECB',
             'Anh/ Chi', 'Anh/Chi', 'Anh / Chi',
             '{danh_xung}', '{DANH_XUNG}',
+            'Quý khách hàng', 'Quý Khách hàng', 'Quý Khách Hàng',
+            'Quý khách', 'Quý Khách',
             'Ch\u1ECB', 'Chi', 'Anh'
         ];
         var result = html;
@@ -962,6 +1010,62 @@
         }
     },
 
+
+    normalizeIncomingBodyHtml: function(html, isPlainText) {
+        var value = html || '';
+        value = value
+            .replace(/\\r\\n/g, '\n')
+            .replace(/\\n/g, '\n')
+            .replace(/\\r/g, '\n')
+            .replace(/\r\n/g, '\n')
+            .replace(/\n/g, '\n')
+            .replace(/\r/g, '\n');
+        if (isPlainText) {
+            return value
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/\n/g, '<br/>');
+        }
+        return this.sanitizeIncomingEmailBody(value);
+    },
+
+    sanitizeIncomingEmailBody: function(html) {
+        //tugnnm37 - Gmail/Genesys có thể trả video/drive chip trong HtmlBody; không render block chip xấu, convert thành link gọn
+        if (!html || html.indexOf('gmail_drive_chip') === -1) {
+            return html || '';
+        }
+        try {
+            var holder = document.createElement('div');
+            holder.innerHTML = html;
+            var chips = holder.querySelectorAll('.gmail_drive_chip');
+            for (var i = 0; i < chips.length; i++) {
+                var chip = chips[i];
+                var link = chip.querySelector('a[href]');
+                var href = link ? link.getAttribute('href') : '';
+                var titleEl = chip.querySelector('[title]');
+                var textEl = chip.querySelector('span');
+                var fileName = (titleEl && titleEl.getAttribute('title')) || (textEl && textEl.textContent) || (link && link.textContent) || 'Attached file';
+                fileName = (fileName || 'Attached file').trim();
+                var p = document.createElement('p');
+                p.className = 'fec-email-drive-link';
+                if (href) {
+                    var a = document.createElement('a');
+                    a.href = href;
+                    a.target = '_blank';
+                    a.rel = 'noopener noreferrer';
+                    a.textContent = fileName;
+                    p.appendChild(a);
+                } else {
+                    p.textContent = fileName;
+                }
+                chip.parentNode.replaceChild(p, chip);
+            }
+            return holder.innerHTML;
+        } catch (e) {
+            return html;
+        }
+    },
     cleanBody: function(html) {
         var result = html
             // Strip any <p> tag containing only br/whitespace/nbsp (with or without attributes)
@@ -974,11 +1078,26 @@
     },
 
     applyTitleToBody: function(component, title) {
-        var body = component.get('v.body') || '';
-        if (!body) return;
-        var updated = this.replaceDanhXung(body, title);
+        var baseBody = component.get('v.titleBaseBody') || component.get('v.body') || '';
+        if (!baseBody) return;
+        var updated = title ? this.replaceDanhXung(baseBody, title) : baseBody;
         component.set('v.body', updated);
-        if (window._fecQuill) window._fecQuill.clipboard.dangerouslyPasteHTML(this.cleanBody(updated));
+        component.set('v.rawBody', updated);
+        if (window._fecQuill) {
+            var q = window._fecQuill;
+            var cleaned = this.cleanBody(updated);
+            if (q.scroll && q.scroll.observer) {
+                q.scroll.observer.disconnect();
+            }
+            q.root.innerHTML = cleaned;
+            q.root.classList.remove('ql-blank');
+            this._makeTableCellsEditable(q.root);
+            window.setTimeout(function() {
+                if (q.scroll && q.scroll.observer) {
+                    q.scroll.observer.observe(q.root, q.scroll.observer._options || { childList: true, subtree: true, characterData: true });
+                }
+            }, 100);
+        }
     },
 
     doSendEmail: function(component, toEmail, subject, body, attachments) {
@@ -1070,6 +1189,7 @@
     },
 
     loadEmails: function(component) {
+        var self = this;
         component.set('v.isLoading',true);
         var a = component.get('c.getEmailMessages');
         a.setParams({caseId:component.get('v.recordId')});
@@ -1088,25 +1208,45 @@
                     var rb=(m.HtmlBody||m.TextBody||'').replace(/<[^>]+>/g,'').replace(/&nbsp;/g,' ').replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&quot;/g,'"').trim();
                     var subj=m.Subject||'';
                     var subjDisplay = subj.replace(/\s*\[\s*ref:[^\]]*:ref\s*\]/gi,'').trim();
-                    var bodyHtml = m.HtmlBody || m.TextBody || '';
-                    return {Id:m.Id,fromName:m.FromName||m.FromAddress||'Unknown',fromAddress:m.FromAddress||'',toAddress:m.ToAddress||'',ccAddress:m.CcAddress||'',subject:subjDisplay,subjectPreview:subjDisplay||rb,bodyFull:rb,bodyHtml:bodyHtml,messageDate:ds,messageRawDate:m.MessageDate||'',incoming:m.Incoming,expanded:false,showDD:false};
+                    var rawBody = m.HtmlBody || m.TextBody || '';
+                    var bodyHtml = self.normalizeIncomingBodyHtml(rawBody, !m.HtmlBody);
+                    return {Id:m.Id,fromName:m.FromName||m.FromAddress||'Unknown',fromAddress:m.FromAddress||'',toAddress:m.ToAddress||'',ccAddress:m.CcAddress||'',subject:subjDisplay,subjectPreview:subjDisplay||rb,bodyFull:rb,bodyHtml:bodyHtml,messageDate:ds,messageRawDate:m.MessageDate||'',incoming:m.Incoming,expanded:false,showDD:false,attachments:[]};
                 });
-                // Sort
                 list.sort(function(a,b){
                     if (sortOrder==='oldest') return (a.messageRawDate||'') < (b.messageRawDate||'') ? -1 : 1;
                     if (sortOrder==='latest') return (a.messageRawDate||'') > (b.messageRawDate||'') ? -1 : 1;
-                    return (a.messageRawDate||'') > (b.messageRawDate||'') ? -1 : 1; // recent = newest first
+                    return (a.messageRawDate||'') > (b.messageRawDate||'') ? -1 : 1;
                 });
-                component.set('v.emailList',list);
-                // Pre-fill To cho Service Case từ outgoing email gần nhất
-                if (component.get('v.isServiceCase') && !component.get('v.serviceCaseToEmail')) {
-                    var outgoing = list.filter(function(e) { return e.incoming === false; });
-                    if (outgoing.length > 0 && outgoing[0].toAddress) {
-                        component.set('v.serviceCaseToEmail', outgoing[0].toAddress);
+                var finalizeList = function(finalList) {
+                    component.set('v.emailList', finalList);
+                    if (component.get('v.isServiceCase') && !component.get('v.serviceCaseToEmail')) {
+                        var outgoing = finalList.filter(function(e) { return e.incoming === false; });
+                        if (outgoing.length > 0 && outgoing[0].toAddress) {
+                            component.set('v.serviceCaseToEmail', outgoing[0].toAddress);
+                        }
                     }
-                }
+                };
+                var emailIds = list.map(function(e) { return e.Id; });
+                if (!emailIds.length) { finalizeList(list); return; }
+                var attAction = component.get('c.getEmailMessageAttachments');
+                attAction.setParams({ emailMessageIds: emailIds });
+                attAction.setCallback(self, function(ar) {
+                    if (ar.getState() === 'SUCCESS') {
+                        var mapAtt = ar.getReturnValue() || {};
+                        list = list.map(function(e) {
+                            e.attachments = mapAtt[e.Id] || [];
+                            return e;
+                        });
+                    }
+                    finalizeList(list);
+                });
+                $A.enqueueAction(attAction);
             }
         });
         $A.enqueueAction(a);
     }
 })
+
+
+
+

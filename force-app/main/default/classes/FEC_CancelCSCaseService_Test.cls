@@ -5,6 +5,14 @@ private class FEC_CancelCSCaseService_Test {
 
     @TestSetup
     static void setupData() {
+        insert new FEC_Channel__c(
+            Name = FEC_ConstantCommon.CHANNEL_INBOUND_NAME,
+            FEC_Channel_ID__c = FEC_ConstantCommon.CHANNEL_INBOUND_NAME,
+            FEC_Channel_Vietnamese_name__c = FEC_ConstantCommon.CHANNEL_INBOUND_NAME,
+            FEC_Channel_Status__c = true,
+            FEC_Cancel_Case__c = true
+        );
+
         Case openCase = new Case(
             Subject = 'Web Service Cancel Test 1',
             Status = FEC_ConstantCommon.CASE_STATUS_OPEN,
@@ -70,6 +78,40 @@ private class FEC_CancelCSCaseService_Test {
         // Kiểm định sự thay đổi thực tế dưới Database
         Case updatedCase = [SELECT Status FROM Case WHERE FEC_ID_Search__c = 'CS-OPEN-2026' LIMIT 1];
         System.assertEquals(FEC_ConstantCommon.STATUS_CANCELLED, updatedCase.Status, 'Trạng thái Case phải được cập nhật ghi đè.');
+    }
+
+    @IsTest
+    static void testCancelCSCaseRequest_ChannelFunctionNotAllowed() {
+        insert new FEC_Channel__c(
+            Name = FEC_ConstantCommon.CHANNEL_OUTBOUND_NAME,
+            FEC_Channel_ID__c = FEC_ConstantCommon.CHANNEL_OUTBOUND_NAME,
+            FEC_Channel_Vietnamese_name__c = FEC_ConstantCommon.CHANNEL_OUTBOUND_NAME,
+            FEC_Channel_Status__c = true,
+            FEC_Cancel_Case__c = false
+        );
+
+        FEC_CancelCSCaseService.SysType sys = new FEC_CancelCSCaseService.SysType();
+        sys.Channel = FEC_ConstantCommon.CHANNEL_OUTBOUND_NAME;
+        sys.TransactionID = 'TXN-OUTBOUND-DENY';
+        sys.DateTime_x = System.now();
+
+        FEC_CancelCSCaseService.CaseInfoType caseInfo = new FEC_CancelCSCaseService.CaseInfoType();
+        caseInfo.CaseID = 'CS-OPEN-2026';
+        caseInfo.ContractOrAccountNumber = 'CON-123';
+        caseInfo.PhoneNumber = '0912345678';
+        caseInfo.UserType = FEC_ConstantCommon.REQUEST_EXISTING_USER_TYPE;
+
+        Test.startTest();
+        FEC_CancelCSCaseService.CancelCSCaseResponseType response =
+            FEC_CancelCSCaseService.CancelCSCaseRequest(sys, caseInfo);
+        Test.stopTest();
+
+        System.assertEquals(FEC_ConstantCommon.CODE_FAILURE, response.Sys.Code);
+        System.assert(
+            response.Sys.Description.contains(
+                FEC_ConstantCommon.MY_CASE_CHANNEL_CANCEL_CASE_NOT_ALLOWED_MSG
+            )
+        );
     }
 
     /**

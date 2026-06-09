@@ -15,8 +15,8 @@ private class FEC_CancelCSCaseRestService_Test {
         '<CaseInfo>' +
         '<ContractOrAccountNumber>CON-19032003</ContractOrAccountNumber>' +
         '<PhoneNumber>0912345678</PhoneNumber>' +
-        '<CaseID>CS-OPEN-REST-2026</CaseID>' +
-        '<UserType>Existing</UserType>' +
+        '<CaseID>CS-CANCEL-01</CaseID>' +
+        '<UserType>EXISTING</UserType>' +
         '</CaseInfo>' +
         '</CancelCSCaseRequest>' +
         '</soap:Body>' +
@@ -24,13 +24,25 @@ private class FEC_CancelCSCaseRestService_Test {
 
     @TestSetup
     static void setupData() {
-        insert new Case(
-            Subject = 'REST Cancel Test',
-            Status = FEC_ConstantCommon.CASE_STATUS_OPEN,
-            Origin = 'Phone',
-            FEC_ID_Search__c = 'CS-OPEN-REST-2026',
-            Type = 'Request'
-        );
+        FEC_UnitTestMyCaseChannelUtil.ensureInboundMyCaseChannel();
+        FEC_CaseTriggerHandler.isExecuting = true;
+        try {
+            Case openCase = new Case(
+                Subject = 'REST Cancel Test',
+                Status = FEC_ConstantCommon.CASE_STATUS_OPEN,
+                Origin = 'Phone',
+                FEC_Customer_Type__c = FEC_ConstantCommon.CASE_EXISTING_CUSTOMER,
+                FEC_Contract_Number__c = 'CON-19032003',
+                Type = 'Request'
+            );
+            insert openCase;
+            update new Case(
+                Id = openCase.Id,
+                FEC_ID_Search__c = 'CS-CANCEL-01'
+            );
+        } finally {
+            FEC_CaseTriggerHandler.isExecuting = false;
+        }
     }
 
     @IsTest
@@ -44,13 +56,10 @@ private class FEC_CancelCSCaseRestService_Test {
         System.assertNotEquals(null, parsed.Sys.DateTime_x);
 
         System.assertNotEquals(null, parsed.CaseInfo);
-        System.assertEquals('CS-OPEN-REST-2026', parsed.CaseInfo.CaseID);
+        System.assertEquals('CS-CANCEL-01', parsed.CaseInfo.CaseID);
         System.assertEquals('CON-19032003', parsed.CaseInfo.ContractOrAccountNumber);
         System.assertEquals('0912345678', parsed.CaseInfo.PhoneNumber);
-        System.assertEquals(
-            FEC_ConstantCommon.REQUEST_EXISTING_USER_TYPE,
-            parsed.CaseInfo.UserType
-        );
+        System.assertEquals('EXISTING', parsed.CaseInfo.UserType);
     }
 
     @IsTest
@@ -89,12 +98,12 @@ private class FEC_CancelCSCaseRestService_Test {
         System.assertEquals(FEC_ConstantCommon.HTTP_STATUS_OK, res.statusCode);
         System.assert(body.contains('CancelCSCaseResponse'));
         System.assert(body.contains('<Code>1</Code>'), body);
-        System.assert(body.contains('<CaseID>CS-OPEN-REST-2026</CaseID>'));
+        System.assert(body.contains('<CaseID>CS-CANCEL-01</CaseID>'));
 
         Case updated = [
             SELECT Status
             FROM Case
-            WHERE FEC_ID_Search__c = 'CS-OPEN-REST-2026'
+            WHERE FEC_ID_Search__c = 'CS-CANCEL-01'
             LIMIT 1
         ];
         System.assertEquals(FEC_ConstantCommon.STATUS_CANCELLED, updated.Status);
@@ -106,7 +115,12 @@ private class FEC_CancelCSCaseRestService_Test {
         RestResponse res = new RestResponse();
         req.requestUri = '/services/apexrest/MyCase/v1/CancelCSCase';
         req.httpMethod = 'POST';
-        req.requestBody = Blob.valueOf('<not-valid');
+        req.requestBody = Blob.valueOf(
+            '<?xml version="1.0" encoding="utf-8"?>' +
+            '<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">' +
+            '<soap:Body></soap:Body>' +
+            '</soap:Envelope>'
+        );
         RestContext.request = req;
         RestContext.response = res;
 

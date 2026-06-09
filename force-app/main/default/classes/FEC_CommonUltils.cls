@@ -1,4 +1,6 @@
 public with sharing class FEC_CommonUltils {
+  private static Set<String> cachedActiveChannelIds;
+
   public static void notifyUsers(
     Set<String> recipientsIds,
     String targetId,
@@ -153,6 +155,305 @@ public with sharing class FEC_CommonUltils {
    */
   public static String defaultToEmpty(Object obj) {
     return obj != null ? String.valueOf(obj) : FEC_ConstantCommon.STR_EMPTY;
+  }
+
+  private static final String CHANNEL_QUOTE_CHARS = '"\'\u201C\u201D\u2018\u2019\u00AB\u00BB';
+
+  public static String normalizeChannelInput(String channel) {
+    if (channel == null) {
+      return null;
+    }
+    String cleaned = channel.trim();
+    if (String.isBlank(cleaned)) {
+      return null;
+    }
+    cleaned = cleaned.replaceAll('(?i)&quot;|&apos;|&#34;|&#39;|&#x22;|&#x27;', '');
+    for (Integer i = 0; i < CHANNEL_QUOTE_CHARS.length(); i++) {
+      cleaned = cleaned.replace(CHANNEL_QUOTE_CHARS.substring(i, i + 1), '');
+    }
+    cleaned = cleaned.replaceAll('\\s+', ' ').trim();
+    return String.isBlank(cleaned) ? null : cleaned;
+  }
+
+  private static String stripChannelQuoteCharacters(String value) {
+    if (String.isBlank(value)) {
+      return value;
+    }
+    String cleaned = value.replaceAll('(?i)&quot;|&apos;|&#34;|&#39;|&#x22;|&#x27;', '');
+    for (Integer i = 0; i < CHANNEL_QUOTE_CHARS.length(); i++) {
+      cleaned = cleaned.replace(CHANNEL_QUOTE_CHARS.substring(i, i + 1), '');
+    }
+    return cleaned.replaceAll('\\s+', ' ').trim();
+  }
+
+  public static Boolean isActiveChannelSupported(String channel) {
+    String normalized = normalizeChannelInput(channel);
+    if (String.isBlank(normalized)) {
+      return false;
+    }
+    return getActiveChannelIds().contains(normalizeChannelKey(normalized));
+  }
+
+  public static String sanitizeChannelForMessage(String channel) {
+    String normalized = normalizeChannelInput(channel);
+    return normalized == null ? '' : normalized;
+  }
+
+  public static String buildUnsupportedChannelMessage(String channel) {
+    String channelId = sanitizeChannelForMessage(channel);
+    String message =
+      String.valueOf(System.Label.FEC_MSG_Channel_Validation).trim() +
+      ' ' +
+      channelId +
+      ' ' +
+      String.valueOf(System.Label.FEC_MSG_Data_Request_Master_Data).trim();
+    return stripQuotesFromChannelErrorMessage(message);
+  }
+
+  private static String stripQuotesFromChannelErrorMessage(String message) {
+    if (String.isBlank(message)) {
+      return message;
+    }
+    String cleaned = message.replaceAll('(?i)&quot;|&apos;|&#34;|&#39;', '');
+    cleaned = stripChannelQuoteCharacters(cleaned);
+    return cleaned.replaceAll('\\s+', ' ').trim();
+  }
+
+  /**
+   * @deprecated Prefer buildNatureOfCaseChannelFilterClause / isNatureOfCaseChannelAllowed.
+   * Kept for backward compatibility with callers still using LIKE.
+   */
+  public static String buildNatureOfCaseChannelLikePattern(String channel) {
+    String normalized = normalizeChannelInput(channel);
+    if (String.isBlank(normalized)) {
+      return null;
+    }
+    return '%' + normalized + '%';
+  }
+
+  /**
+   * True when NOC.FEC_Channel__c is blank (no restriction) or contains request channel
+   * as a comma-delimited token (e.g. CSM,Vymo,Vtiger_Sale,...).
+   */
+  public static Boolean isNatureOfCaseChannelAllowed(
+    String storedChannels,
+    String requestChannel
+  ) {
+    if (String.isBlank(storedChannels)) {
+      return true;
+    }
+    Set<String> matchKeys = resolveNatureOfCaseChannelMatchKeys(requestChannel);
+    if (matchKeys.isEmpty()) {
+      return false;
+    }
+    for (String part : storedChannels.split(',')) {
+      String tokenKey = normalizeChannelKey(part);
+      if (String.isNotBlank(tokenKey) && matchKeys.contains(tokenKey)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /**
+   * SOQL fragment: blank NOC channel OR exact comma-delimited token match for request channel.
+   */
+  public static String buildNatureOfCaseChannelFilterClause(
+    String fieldApi,
+    String requestChannel
+  ) {
+    List<String> orParts = new List<String>();
+    orParts.add(fieldApi + ' = null');
+    orParts.add(fieldApi + ' = \'\'');
+
+    Set<String> matchKeys = resolveNatureOfCaseChannelMatchKeys(requestChannel);
+    for (String key : matchKeys) {
+      orParts.add(buildCommaDelimitedTokenMatchClause(fieldApi, key));
+    }
+    return '(' + String.join(orParts, ' OR ') + ')';
+  }
+
+  @TestVisible
+  private static Set<String> resolveNatureOfCaseChannelMatchKeys(String requestChannel) {
+    Set<String> keys = new Set<String>();
+    String normalized = normalizeChannelInput(requestChannel);
+    if (String.isBlank(normalized)) {
+      return keys;
+    }
+    addNatureOfCaseChannelMatchKey(keys, normalized);
+
+    String channelObjectApi = resolveFirstExistingObjectApi(
+      new List<String>{ 'FEC_Channel__c', 'FEC_Channel_c' }
+    );
+    if (String.isBlank(channelObjectApi)) {
+      return keys;
+    }
+
+    String channelIdFieldApi = resolveFirstExistingFieldApi(
+      channelObjectApi,
+      new List<String>{ 'FEC_Channel_ID__c', 'FEC_Channel_ID_c' }
+    );
+    String channelCodeFieldApi = resolveFirstExistingFieldApi(
+      channelObjectApi,
+      new List<String>{ 'FEC_Code__c', 'FEC_Code_c' }
+    );
+    String channelStatusFieldApi = resolveFirstExistingFieldApi(
+      channelObjectApi,
+      new List<String>{ 'FEC_Channel_Status__c', 'FEC_Channel_Statusc' }
+    );
+
+    List<String> selectFields = new List<String>{ 'Id', 'Name' };
+    if (String.isNotBlank(channelIdFieldApi)) {
+      selectFields.add(channelIdFieldApi);
+    }
+    if (String.isNotBlank(channelCodeFieldApi)) {
+      selectFields.add(channelCodeFieldApi);
+    }
+
+    List<String> matchParts = new List<String>{ 'Name = :normalized' };
+    if (String.isNotBlank(channelIdFieldApi)) {
+      matchParts.add(channelIdFieldApi + ' = :normalized');
+    }
+    if (String.isNotBlank(channelCodeFieldApi)) {
+      matchParts.add(channelCodeFieldApi + ' = :normalized');
+    }
+
+    List<String> whereParts = new List<String>{
+      '(' + String.join(matchParts, ' OR ') + ')'
+    };
+    if (String.isNotBlank(channelStatusFieldApi)) {
+      whereParts.add(0, channelStatusFieldApi + ' = true');
+    }
+
+    String soql =
+      'SELECT ' +
+      String.join(selectFields, ', ') +
+      ' FROM ' +
+      channelObjectApi +
+      ' WHERE ' +
+      String.join(whereParts, ' AND ') +
+      ' LIMIT 1';
+
+    for (SObject row : Database.query(soql)) {
+      addNatureOfCaseChannelMatchKey(keys, (String) row.get('Name'));
+      if (String.isNotBlank(channelIdFieldApi)) {
+        addNatureOfCaseChannelMatchKey(keys, (String) row.get(channelIdFieldApi));
+      }
+      if (String.isNotBlank(channelCodeFieldApi)) {
+        addNatureOfCaseChannelMatchKey(keys, (String) row.get(channelCodeFieldApi));
+      }
+    }
+    return keys;
+  }
+
+  private static void addNatureOfCaseChannelMatchKey(Set<String> keys, String value) {
+    String key = normalizeChannelKey(value);
+    if (String.isNotBlank(key)) {
+      keys.add(key);
+    }
+  }
+
+  private static String buildCommaDelimitedTokenMatchClause(
+    String fieldApi,
+    String normalizedKey
+  ) {
+    String escaped = String.escapeSingleQuotes(normalizedKey);
+    return '(' +
+      fieldApi +
+      ' = \'' +
+      escaped +
+      '\' OR ' +
+      fieldApi +
+      ' LIKE \'' +
+      escaped +
+      ',%\' OR ' +
+      fieldApi +
+      ' LIKE \'%,' +
+      escaped +
+      ',%\' OR ' +
+      fieldApi +
+      ' LIKE \'%,' +
+      escaped +
+      '\'' +
+      ')';
+  }
+
+  @TestVisible
+  public static void resetActiveChannelCacheForTest() {
+    cachedActiveChannelIds = null;
+  }
+
+  public static Set<String> getActiveChannelIds() {
+    if (cachedActiveChannelIds != null) {
+      return cachedActiveChannelIds;
+    }
+
+    cachedActiveChannelIds = new Set<String>();
+    String channelObjectApi = resolveFirstExistingObjectApi(
+      new List<String>{ 'FEC_Channel__c', 'FEC_Channel_c' }
+    );
+    if (String.isBlank(channelObjectApi)) {
+      return cachedActiveChannelIds;
+    }
+
+    String channelIdFieldApi = resolveFirstExistingFieldApi(
+      channelObjectApi,
+      new List<String>{ 'FEC_Channel_ID__c', 'FEC_Channel_ID_c' }
+    );
+    String channelStatusFieldApi = resolveFirstExistingFieldApi(
+      channelObjectApi,
+      new List<String>{ 'FEC_Channel_Status__c', 'FEC_Channel_Statusc' }
+    );
+    if (String.isBlank(channelIdFieldApi) || String.isBlank(channelStatusFieldApi)) {
+      return cachedActiveChannelIds;
+    }
+
+    String soql =
+      'SELECT Id, Name, ' + channelIdFieldApi + ', ' + channelStatusFieldApi +
+      ' FROM ' + channelObjectApi +
+      ' WHERE ' + channelStatusFieldApi + ' = true';
+
+    for (SObject row : Database.query(soql)) {
+      String channelId = (String) row.get(channelIdFieldApi);
+      if (String.isBlank(channelId)) {
+        continue;
+      }
+      cachedActiveChannelIds.add(normalizeChannelKey(channelId));
+    }
+
+    return cachedActiveChannelIds;
+  }
+
+  private static String normalizeChannelKey(String channel) {
+    String normalized = normalizeChannelInput(channel);
+    return normalized == null ? null : normalized.toUpperCase();
+  }
+
+  private static String resolveFirstExistingObjectApi(List<String> candidates) {
+    Map<String, Schema.SObjectType> globalDescribe = Schema.getGlobalDescribe();
+    for (String apiName : candidates) {
+      if (globalDescribe.containsKey(apiName)) {
+        return apiName;
+      }
+    }
+    return null;
+  }
+
+  private static String resolveFirstExistingFieldApi(String objectApiName, List<String> candidates) {
+    if (String.isBlank(objectApiName)) {
+      return null;
+    }
+    Schema.SObjectType objectType = Schema.getGlobalDescribe().get(objectApiName);
+    if (objectType == null) {
+      return null;
+    }
+    Map<String, Schema.SObjectField> fieldMap = objectType.getDescribe().fields.getMap();
+    for (String apiName : candidates) {
+      if (fieldMap.containsKey(apiName)) {
+        return apiName;
+      }
+    }
+    return null;
   }
 
   public static Boolean isPhone(String phone) {
@@ -603,7 +904,7 @@ public with sharing class FEC_CommonUltils {
     } else if (body != null) {
       req.setBody(body);
     }
-    req.setTimeout(120000); // 120 seconds timeout
+    req.setTimeout(FEC_ConstantCommon.HTTP_TIMEOUT_MAX); // 120 seconds timeout
 
     Http http = new Http();
     HttpResponse res = http.send(req);
@@ -630,7 +931,7 @@ public with sharing class FEC_CommonUltils {
         req.setBody(body);
     }
 
-    req.setTimeout(120000);
+    req.setTimeout(FEC_ConstantCommon.HTTP_TIMEOUT_MAX);
 
     Http http = new Http();
     HttpResponse res = http.send(req);
@@ -988,6 +1289,10 @@ public with sharing class FEC_CommonUltils {
    */
   public static void beginDeferredApiLogging() {
     deferredApiLogDepth++;
+  }
+
+  public static Boolean isDeferredApiLoggingActive() {
+    return deferredApiLogDepth > 0;
   }
 
   public static void flushDeferredApiLogs() {
@@ -1498,6 +1803,32 @@ public with sharing class FEC_CommonUltils {
     }
   }
 
+  /**
+   * Parse an Object value to Decimal.
+   * Handles both Decimal and String (varchar from OData/PostgreSQL).
+   */
+  public static Decimal parseDecimal(Object val) {
+    if (val == null) return null;
+    if (val instanceof Decimal) return (Decimal) val;
+    String s = String.valueOf(val).trim();
+    return String.isBlank(s) ? null : Decimal.valueOf(s);
+  }
+
+  /**
+   * Parse an Object value to DateTime.
+   * Handles DateTime, epoch millis as String (varchar from OData/PostgreSQL).
+   */
+  public static DateTime parseDateTime(Object val) {
+    if (val == null) return null;
+    if (val instanceof DateTime) return (DateTime) val;
+    String s = String.valueOf(val).trim();
+    if (String.isBlank(s)) return null;
+    if (s.isNumeric()) {
+      return DateTime.newInstance(Long.valueOf(s));
+    }
+    return null;
+  }
+
   private static String normalizeAmountString(String raw) {
     if (String.isBlank(raw)) {
       return null;
@@ -1628,6 +1959,19 @@ public with sharing class FEC_CommonUltils {
   }
   public static Boolean isCccd(String value) {
     return String.isNotBlank(value) && Pattern.matches(FEC_ConstantCommon.INPUT_SEPARATOR_REGEX_12, value.trim());
+  }
+  public static String mapApiContractStatusToPicklist(String apiContractStatus) {
+    if (String.isBlank(apiContractStatus)) {
+      return null;
+    }
+    String normalizedKey = apiContractStatus
+      .trim()
+      .toUpperCase()
+      .replaceAll(FEC_ConstantCommon.PATTERN_NON_ALNUM_UPPER, '');
+    if (String.isBlank(normalizedKey)) {
+      return null;
+    }
+    return FEC_ConstantCommon.API_CONTRACT_STATUS_TO_PICKLIST.get(normalizedKey);
   }
 
 }

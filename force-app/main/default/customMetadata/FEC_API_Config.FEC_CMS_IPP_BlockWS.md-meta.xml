@@ -11,6 +11,10 @@
         <value xsi:type="xsd:string">TMN</value>
     </values>
     <values>
+        <field>FEC_Disb_Channel__c</field>
+        <value xsi:type="xsd:string">PC</value>
+    </values>
+    <values>
         <field>FEC_Endpoint__c</field>
         <value xsi:type="xsd:string">/esb/cms/CMS_IPP_BlockWS</value>
     </values>

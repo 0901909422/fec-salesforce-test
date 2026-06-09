@@ -27,6 +27,7 @@
                 component.set('v.recordId', recordId);
             }
         }
+        helper.bridgeOpenModalOnCasePage(component);
         // tungnm37 sửa: không pre-fill case hiện tại vào ô search
         // selectedId/selectedLabel để trống để user tự tìm case cần link
     },

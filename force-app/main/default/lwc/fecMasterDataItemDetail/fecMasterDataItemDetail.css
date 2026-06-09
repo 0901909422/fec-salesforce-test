@@ -529,3 +529,58 @@
         }
     }
 }
+
+/* ── NOC Section Styles ────────────────────────────────────── */
+
+/* Compact dual-listbox height */
+lightning-dual-listbox {
+    --slds-c-dueling-list-options-height: 120px;
+}
+
+/* Sub-Processes section header */
+.sub-processes-header {
+    border-top: 1px solid #e5e5e5;
+    padding-top: 0.75rem;
+    margin-top: 0.5rem;
+}
+
+/* Checkbox row alignment for Sub-Processes */
+.checkbox-row {
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+    flex-wrap: wrap;
+    padding: 0.5rem 0;
+}
+
+/* ── Collapsible History Section ───────────────────────────── */
+
+/* Ensure native disclosure triangle is visible */
+details > summary {
+    cursor: pointer;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+/* Force show triangle via ::before when native marker is hidden */
+details > summary::before {
+    content: '▶';
+    font-size: 0.7rem;
+    transition: transform 0.2s ease;
+    display: inline-block;
+}
+
+details[open] > summary::before {
+    transform: rotate(90deg);
+}
+
+/* Hide native marker to avoid double triangle */
+details > summary::-webkit-details-marker {
+    display: none;
+}
+
+details > summary {
+    list-style: none;
+}

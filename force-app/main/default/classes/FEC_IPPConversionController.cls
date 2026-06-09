@@ -90,15 +90,16 @@ public without sharing class FEC_IPPConversionController {
         SObjectAccessDecision decision = Security.stripInaccessible(AccessType.READABLE, txs);
         for (SObject so : decision.getRecords()) {
             FEC_Transaction__c tx = (FEC_Transaction__c) so;
+            Map<String, Object> txPopulated = tx.getPopulatedFieldsAsMap();
             EligibleTransactionDTO dto = new EligibleTransactionDTO();
             dto.transactionId = tx.Id;
-            dto.transactionCode = tx.FEC_Transaction_Code__c != null ? tx.FEC_Transaction_Code__c : FEC_ConstantCommon.STR_EMPTY;
-            dto.effectiveDateStr = tx.FEC_Effective_Date__c != null ? String.valueOf(tx.FEC_Effective_Date__c) : FEC_ConstantCommon.STR_EMPTY;
-            dto.transactionPlan = tx.FEC_Transaction_Plan__c != null ? tx.FEC_Transaction_Plan__c : FEC_ConstantCommon.STR_EMPTY;
-            dto.amount = tx.FEC_Transaction_Amount__c;
-            dto.postingDateStr = tx.FEC_Post_Date__c != null ? String.valueOf(tx.FEC_Post_Date__c) : FEC_ConstantCommon.STR_EMPTY;
-            dto.authorizationCode = tx.FEC_Authorization_Code__c != null ? tx.FEC_Authorization_Code__c : FEC_ConstantCommon.STR_EMPTY;
-            dto.merchant = tx.FEC_Merchant_Description__c != null ? tx.FEC_Merchant_Description__c : FEC_ConstantCommon.STR_EMPTY;
+            dto.transactionCode = txPopulated.containsKey('FEC_Transaction_Code__c') && tx.FEC_Transaction_Code__c != null ? tx.FEC_Transaction_Code__c : FEC_ConstantCommon.STR_EMPTY;
+            dto.effectiveDateStr = txPopulated.containsKey('FEC_Effective_Date__c') && tx.FEC_Effective_Date__c != null ? String.valueOf(tx.FEC_Effective_Date__c) : FEC_ConstantCommon.STR_EMPTY;
+            dto.transactionPlan = txPopulated.containsKey('FEC_Transaction_Plan__c') && tx.FEC_Transaction_Plan__c != null ? tx.FEC_Transaction_Plan__c : FEC_ConstantCommon.STR_EMPTY;
+            dto.amount = txPopulated.containsKey('FEC_Transaction_Amount__c') ? tx.FEC_Transaction_Amount__c : null;
+            dto.postingDateStr = txPopulated.containsKey('FEC_Post_Date__c') && tx.FEC_Post_Date__c != null ? String.valueOf(tx.FEC_Post_Date__c) : FEC_ConstantCommon.STR_EMPTY;
+            dto.authorizationCode = txPopulated.containsKey('FEC_Authorization_Code__c') && tx.FEC_Authorization_Code__c != null ? tx.FEC_Authorization_Code__c : FEC_ConstantCommon.STR_EMPTY;
+            dto.merchant = txPopulated.containsKey('FEC_Merchant_Description__c') && tx.FEC_Merchant_Description__c != null ? tx.FEC_Merchant_Description__c : FEC_ConstantCommon.STR_EMPTY;
             result.add(dto);
         }
         return result;
@@ -294,6 +295,8 @@ public without sharing class FEC_IPPConversionController {
         } catch (Exception e) {
             result.errorMessage = e.getMessage();
             updateCaseActionCountForConvertResult(c, false);
+        } finally {
+            logConvertIppProcessActionHistory(c, result.success == true);
         }
         result.actionCount = c != null ? c.FEC_Process_Action_Count__c : null;
         result.maxRetriesExceeded = (result.success != true && c != null && c.FEC_Process_Action_Count__c != null && c.FEC_Process_Action_Count__c >= MAX_RETRY_COUNT);
@@ -379,6 +382,8 @@ public without sharing class FEC_IPPConversionController {
         } catch (Exception e) {
             result.errorMessage = e.getMessage();
             updateCaseActionCountForConvertResult(c, false);
+        } finally {
+            logConvertIppProcessActionHistory(c, result.success == true);
         }
         result.actionCount = c != null ? c.FEC_Process_Action_Count__c : null;
         result.maxRetriesExceeded = (result.success != true && c != null && c.FEC_Process_Action_Count__c != null && c.FEC_Process_Action_Count__c >= MAX_RETRY_COUNT);
@@ -463,10 +468,18 @@ public without sharing class FEC_IPPConversionController {
         } catch (Exception e) {
             result.errorMessage = e.getMessage();
             updateCaseActionCountForConvertResult(c, false);
+        } finally {
+            logConvertIppProcessActionHistory(c, result.success == true);
         }
         result.actionCount = c != null ? c.FEC_Process_Action_Count__c : null;
         result.maxRetriesExceeded = (result.success != true && c != null && c.FEC_Process_Action_Count__c != null && c.FEC_Process_Action_Count__c >= MAX_RETRY_COUNT);
         return result;
+    }
+
+    private static void logConvertIppProcessActionHistory(Case c, Boolean isSuccess) {
+        if (c != null) {
+            FEC_CommonUltils.createProcessActionHistory(FEC_AddIPP.API_CONFIG_NAME, c, isSuccess == true);
+        }
     }
 
     private static String resolveCardNumberForAddIpp(FEC_Transaction__c tx, Case c) {
@@ -487,6 +500,7 @@ public without sharing class FEC_IPPConversionController {
         List<Case> cases = [
             SELECT Id, FEC_Account_Number__c, FEC_Account_Contract_Number_Text__c, FEC_Account_or_Contract__c,
                    FEC_Process_Action_Count__c, FEC_Is_Test_API__c,
+                   FEC_Current_Case_Stage__c, FEC_Current_Case_Stage__r.Name,
                    FEC_Account_or_Contract__r.FEC_Account_Number__c, FEC_Account_or_Contract__r.FEC_Card_Number__c
             FROM Case
             WHERE Id = :caseId
@@ -501,13 +515,14 @@ public without sharing class FEC_IPPConversionController {
         if (c == null) {
             return null;
         }
-        if (String.isNotBlank(c.FEC_Account_Contract_Number_Text__c)) {
+        Map<String, Object> cPopulated = c.getPopulatedFieldsAsMap();
+        if (cPopulated.containsKey('FEC_Account_Contract_Number_Text__c') && String.isNotBlank(c.FEC_Account_Contract_Number_Text__c)) {
             return c.FEC_Account_Contract_Number_Text__c.trim();
         }
-        if (c.FEC_Account_or_Contract__c != null && String.isNotBlank(c.FEC_Account_or_Contract__r?.FEC_Account_Number__c)) {
+        if (cPopulated.containsKey('FEC_Account_or_Contract__c') && c.FEC_Account_or_Contract__c != null && String.isNotBlank(c.FEC_Account_or_Contract__r?.FEC_Account_Number__c)) {
             return c.FEC_Account_or_Contract__r.FEC_Account_Number__c;
         }
-        return c.FEC_Account_Number__c;
+        return cPopulated.containsKey('FEC_Account_Number__c') ? c.FEC_Account_Number__c : null;
     }
 
     private static String accountNumberIfValidFormat(String raw) {
@@ -530,15 +545,16 @@ public without sharing class FEC_IPPConversionController {
         if (c == null) {
             return null;
         }
+        Map<String, Object> cPop = c.getPopulatedFieldsAsMap();
         acc = accountNumberIfValidFormat(c.FEC_Account_or_Contract__r?.FEC_Account_Number__c);
         if (acc != null) {
             return acc;
         }
-        acc = accountNumberIfValidFormat(c.FEC_Account_Number__c);
+        acc = accountNumberIfValidFormat(cPop.containsKey('FEC_Account_Number__c') ? c.FEC_Account_Number__c : null);
         if (acc != null) {
             return acc;
         }
-        return accountNumberIfValidFormat(c.FEC_Account_Contract_Number_Text__c);
+        return accountNumberIfValidFormat(cPop.containsKey('FEC_Account_Contract_Number_Text__c') ? c.FEC_Account_Contract_Number_Text__c : null);
     }
 
     private static Boolean isGetIPPDetailsResponseSuccess(FEC_GetIPPDetailsCallout.IPPDetailsResponse r) {

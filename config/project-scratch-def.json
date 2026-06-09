@@ -1,11 +1,56 @@
 {
-    "orgName": "GitLab Pipelines",
-    "edition": "Developer",
-    "features": [],
+    "orgName": "GitLab Pipelines Package Validation",
+    "edition": "Enterprise",
+    "language": "en_US",
+    "features": [
+        "ServiceCloud",
+        "Entitlements",
+        "LightningServiceConsole",
+        "Knowledge",
+        "LiveAgent",
+        "PlatformConnect:5"
+    ],
     "settings": {
-        "orgPreferenceSettings": {
-            "s1DesktopEnabled": true,
-            "s1EncryptedStoragePref2": false
+        "entitlementSettings": {
+            "enableEntitlements": true,
+            "enableMilestoneFeedItem": true
+        },
+        "knowledgeSettings": {
+            "enableKnowledge": true
+        },
+        "languageSettings": {
+            "enableTranslationWorkbench": true,
+            "enableEndUserLanguages": true
+        },
+        "omniChannelSettings": {
+            "enableOmniChannel": true,
+            "enableOmniSkillsRouting": true
+        },
+        "caseSettings": {
+            "enableCaseFeed": true,
+            "useSystemUserAsDefaultCaseUser": true,
+            "systemUserEmail": "admin@fec.scratch.org"
+        },
+        "chatterSettings": {
+            "enableChatter": true
+        },
+        "mobileSettings": {
+            "enableS1EncryptedStoragePref2": false
+        },
+        "enhancedNotesSettings": {
+            "enableEnhancedNotes": true
+        }
+    },
+    "objectSettings": {
+        "account": {
+            "sharingModel": "read"
+        },
+        "opportunity": {
+            "sharingModel": "read"
+        },
+        "case": {
+            "sharingModel": "readWrite",
+            "defaultRecordType": "Customer_Case"
         }
     }
 }

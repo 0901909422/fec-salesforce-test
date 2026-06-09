@@ -475,7 +475,7 @@
 		<name>EntitlementProcess</name>
 	</types>
 	<types>
-		<members>InteractionTime</members>
+		<members>Interaction Time</members>
 		<name>MilestoneType</name>
 	</types>
 	<types>

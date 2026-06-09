@@ -45,7 +45,7 @@ public without sharing class FEC_DNBHandler {
         // Simulate fetching data from server
         Case caseRecord = [
       SELECT Id, FEC_Customer_Name__c,
-      FEC_Account_or_Contract__r.FEC_Search_Result_National_ID__c ,
+      FEC_Account_or_Contract__r.FEC_National_ID_Passport_ID__c ,
       FEC_Phone_Number__c, FEC_Interaction__r.FEC_Phone_Number__c,
       FEC_Interaction__r.FEC_Interaction_Masked_Phone__c,
       FEC_Interaction__r.FEC_Interaction_Email__c,
@@ -57,7 +57,7 @@ public without sharing class FEC_DNBHandler {
         CaseInfoResponse response = new CaseInfoResponse();
         response.customerName = caseRecord.FEC_Customer_Name__c;
         response.nationalId =
-            caseRecord.FEC_Account_or_Contract__r.FEC_Search_Result_National_ID__c;
+            caseRecord.FEC_Account_or_Contract__r.FEC_National_ID_Passport_ID__c;
         response.primaryPhoneNumber = caseRecord.FEC_Phone_Number__c;
         response.interactionPhoneNumber =
             caseRecord.FEC_Interaction__r.FEC_Phone_Number__c;
@@ -145,7 +145,16 @@ public without sharing class FEC_DNBHandler {
     
     @AuraEnabled
     public static FEC_PsDNBServiceCallout.DNBResult createDNB(
-    List<Object> payload) {
+    List<Object> payload, String caseId) {
+        
+        Case selectedCase = [
+                    SELECT Id,
+                        FEC_Current_Case_Stage__r.Name
+                    FROM Case
+                    WHERE Id = :caseId
+                    LIMIT 1
+                ];
+        
         try {
             if (payload == null || payload.isEmpty()) {
                 throw new AuraHandledException('Payload is empty');
@@ -166,7 +175,7 @@ public without sharing class FEC_DNBHandler {
                 req.do_not_bother = (Boolean) item.get('do_not_bother');
                 req.type = (String) item.get('type');
                 req.type_value = (String) item.get('type_value');
-                req.contract_id = (String) item.get('contract_id');
+                // req.contract_id = (String) item.get('contract_id');
                 reqList.add(req);
             }
             
@@ -175,17 +184,46 @@ public without sharing class FEC_DNBHandler {
             FEC_PsDNBServiceCallout.DNBResult result =
                 FEC_PsDNBServiceCallout.notifyPsDNB(reqList);
             
+            System.debug('RESULT = ' + JSON.serialize(result));
             /*
              * Persist DB if success
              */
-            if (result != null && Integer.valueOf(result.code) == 0) {
+            if (result != null && result.success == true)  {
                 saveDNBUpdates(payload);
+                
+                
+                FEC_CommonUltils.createProcessActionHistory(
+                    'Create DNB',
+                selectedCase,
+                true
+                    );
             }
             
             return result;
             
         } catch (Exception e) {
-            throw new AuraHandledException('Create DNB failed: ' + e.getMessage());
+            
+            System.debug('===== ERROR MESSAGE =====');
+            System.debug(e.getMessage());
+            
+            System.debug('===== ERROR TYPE =====');
+            System.debug(e.getTypeName());
+            
+            System.debug('===== STACK =====');
+            System.debug(e.getStackTraceString());
+            
+            FEC_CommonUltils.createProcessActionHistory(
+                'Create DNB',
+            selectedCase,
+            false
+                );
+            
+            throw new AuraHandledException(
+                'Create DNB failed: ' +
+                e.getTypeName() +
+                ' - ' +
+                e.getMessage()
+                );
         }
     }
     
@@ -327,6 +365,7 @@ public without sharing class FEC_DNBHandler {
         // ===== Get Case =====
         List<Case> caseRecord = [
       SELECT Id, FEC_Phone_Number__c, FEC_Interaction__c,
+      FEC_Account_or_Contract__r.FEC_Primary_Phone__c,
       FEC_Interaction__r.FEC_Phone_Number__c,
       FEC_Interaction__r.FEC_Interaction_Email__c,
       FEC_Account_or_Contract__r.FEC_National_ID_Passport_ID__c FROM Case WHERE
@@ -337,8 +376,9 @@ public without sharing class FEC_DNBHandler {
         FEC_GetDNBCalloutService.DNBRequest req =
             new FEC_GetDNBCalloutService.DNBRequest();
         
-        req.phone = String.isNotBlank(caseRecord[0].FEC_Phone_Number__c)
-            ? normalizePhone(caseRecord[0].FEC_Phone_Number__c)
+        req.phone =
+            caseRecord[0].FEC_Interaction__r != null
+            ? normalizePhone(caseRecord[0].FEC_Interaction__r.FEC_Phone_Number__c)
             : '';
         
         req.nid =
@@ -471,7 +511,35 @@ public without sharing class FEC_DNBHandler {
             try {
                 insert dnbToInsert;
                 
+                Case selectedCase = [
+                    SELECT Id,
+                        FEC_Current_Case_Stage__r.Name
+                    FROM Case
+                    WHERE Id = :caseId
+                    LIMIT 1
+                ];
+                
+                FEC_CommonUltils.createProcessActionHistory(
+                    'Get DNB',
+                selectedCase,
+                true
+                    );
+                
             } catch (Exception e) {
+                
+                Case selectedCase = [
+                    SELECT Id,
+                        FEC_Current_Case_Stage__r.Name
+                    FROM Case
+                    WHERE Id = :caseId
+                    LIMIT 1
+                ];
+                
+                FEC_CommonUltils.createProcessActionHistory(
+                    'Get DNB',
+                selectedCase,
+                false
+                    );
                 res.success = false;
                 
                 res.errorMessage = 'Insert failed: ' + e.getMessage();
@@ -488,33 +556,48 @@ public without sharing class FEC_DNBHandler {
         
         // ===== Check existing =====
         List<FEC_Do_Not_Bother__c> existingDNB = [
-      SELECT Id FROM FEC_Do_Not_Bother__c WHERE FEC_Case__c = : caseId LIMIT 1
-    ];
+            SELECT Id
+            FROM FEC_Do_Not_Bother__c
+            WHERE FEC_Case__c = :caseId
+            LIMIT 1
+        ];
         
         // ===== Get Case =====
+        // ===== Get Case =====
         List<Case> caseRecord = [
-      SELECT Id, FEC_Phone_Number__c, FEC_Interaction__c,
-      FEC_Interaction__r.FEC_Phone_Number__c,
-      FEC_Interaction__r.FEC_Interaction_Email__c,
-      FEC_Account_or_Contract__r.FEC_National_ID_Passport_ID__c FROM Case WHERE
-          Id = : caseId LIMIT 1
-    ];
+            SELECT Id,
+                FEC_Case_Phone_Number__c,
+                FEC_Interaction__r.FEC_Phone_Number__c, 
+                FEC_Interaction__r.FEC_Interaction_Email__c, 
+                FEC_Case_Email__c,
+                FEC_National_ID_Passport_ID__c
+            FROM Case
+            WHERE Id = :caseId
+            LIMIT 1
+        ];
+        
         
         // ===== Build request =====
         FEC_GetDNBCalloutService.DNBRequest req =
             new FEC_GetDNBCalloutService.DNBRequest();
         
-        req.phone = String.isNotBlank(caseRecord[0].FEC_Phone_Number__c)
-            ? normalizePhone(caseRecord[0].FEC_Phone_Number__c)
+        req.phone =
+            String.isNotBlank(caseRecord[0].FEC_Case_Phone_Number__c)
+            ? normalizePhone(caseRecord[0].FEC_Case_Phone_Number__c)
             : '';
         
-        req.nid = nid;
+        req.nid =
+            String.isNotBlank(nid)
+            ? nid.trim()
+            : (
+            String.isNotBlank(caseRecord[0].FEC_National_ID_Passport_ID__c)
+            ? caseRecord[0].FEC_National_ID_Passport_ID__c.trim()
+            : ''
+            );
         
         req.email =
-            (caseRecord[0].FEC_Interaction__r != null
-            && String.isNotBlank(
-            caseRecord[0].FEC_Interaction__r.FEC_Interaction_Email__c))
-            ? caseRecord[0].FEC_Interaction__r.FEC_Interaction_Email__c
+            String.isNotBlank(caseRecord[0].FEC_Case_Email__c)
+            ? caseRecord[0].FEC_Case_Email__c.trim()
             : '';
         
         // ===== Call API =====
@@ -630,8 +713,19 @@ public without sharing class FEC_DNBHandler {
         if (!dnbToInsert.isEmpty()) {
             try {
                 insert dnbToInsert;
+                FEC_CommonUltils.createProcessActionHistory(
+                    'Get DNB',
+                caseRecord[0],
+                true
+                    );
                 
             } catch (Exception e) {
+                
+                FEC_CommonUltils.createProcessActionHistory(
+                    'Get DNB',
+                caseRecord[0],
+                false
+                    );
                 res.success = false;
                 
                 res.errorMessage = 'Insert failed: ' + e.getMessage();
@@ -649,7 +743,7 @@ public without sharing class FEC_DNBHandler {
         // ===== Get Case =====
         List<Case> caseRecords = [
       SELECT Id, FEC_Phone_Number__c,FEC_Account_or_Contract__r.FEC_Search_Result_National_ID__c,
-      FEC_Interaction__r.FEC_Interaction_Email__c FROM Case WHERE
+      FEC_Interaction__r.FEC_Interaction_Email__c, FEC_Interaction__r.FEC_Phone_Number__c FROM Case WHERE
           Id = : caseId LIMIT 1
     ];
         
@@ -659,9 +753,6 @@ public without sharing class FEC_DNBHandler {
         FEC_GetDNBCalloutService.DNBRequest req =
             new FEC_GetDNBCalloutService.DNBRequest();
         
-        req.phone = String.isNotBlank(caseRecord.FEC_Phone_Number__c)
-            ? normalizePhone(caseRecord.FEC_Phone_Number__c)
-            : '';
         
         req.nid =  caseRecord.FEC_Account_or_Contract__r.FEC_Search_Result_National_ID__c != null
             ? caseRecord.FEC_Account_or_Contract__r.FEC_Search_Result_National_ID__c
@@ -669,6 +760,10 @@ public without sharing class FEC_DNBHandler {
         
         req.email = caseRecord.FEC_Interaction__r != null && caseRecord.FEC_Interaction__r.FEC_Interaction_Email__c != null
             ? caseRecord.FEC_Interaction__r.FEC_Interaction_Email__c
+            : '';
+        
+        req.phone = caseRecord.FEC_Interaction__r != null && caseRecord.FEC_Interaction__r.FEC_Phone_Number__c != null
+            ? normalizePhone(caseRecord.FEC_Interaction__r.FEC_Phone_Number__c)
             : '';
         
         // ===== Call API =====
@@ -690,7 +785,8 @@ public without sharing class FEC_DNBHandler {
     @AuraEnabled
     public static FEC_GetDNBCalloutService.DNBResult checkDNBNonExisting(
         Id caseId,
-    String nid
+    String nid,
+    String phoneNumber
     ) {
         
         // ===== Get Case =====
@@ -708,8 +804,11 @@ public without sharing class FEC_DNBHandler {
         FEC_GetDNBCalloutService.DNBRequest req =
             new FEC_GetDNBCalloutService.DNBRequest();
         
-        req.phone = String.isNotBlank(caseRecord.FEC_Case_Phone_Number__c)
-            ? normalizePhone(caseRecord.FEC_Case_Phone_Number__c)
+        
+        String effectivePhone = phoneNumber;
+        
+        req.phone = String.isNotBlank(effectivePhone)
+            ? normalizePhone(effectivePhone)
             : '';
         
         req.nid = String.isNotBlank(nid)
@@ -741,7 +840,7 @@ public without sharing class FEC_DNBHandler {
         
         // ===== Update AFTER callout =====
         caseRecord.FEC_National_ID_Passport_ID__c = req.nid;
-        
+        caseRecord.FEC_Case_Phone_Number__c =  req.phone;
         update caseRecord;
         return res;
     }
@@ -1147,8 +1246,19 @@ public without sharing class FEC_DNBHandler {
             if (!dnbToInsert.isEmpty()) {
                 try {
                     insert dnbToInsert;
+                    FEC_CommonUltils.createProcessActionHistory(
+                        'Get DNB',
+                    caseRecord,
+                    true
+                        );
+                    
                     
                 } catch (Exception e) {
+                    FEC_CommonUltils.createProcessActionHistory(
+                        'Get DNB',
+                    caseRecord,
+                    false
+                        );
                     finalRes.success = false;
                     finalRes.errorMessage = 'Insert failed: ' + e.getMessage();
                 }
@@ -1216,7 +1326,7 @@ public without sharing class FEC_DNBHandler {
     private static List<DNBRowTemplate> buildExistingTemplates(Case caseRecord) {
         List<DNBRowTemplate> rows = new List<DNBRowTemplate>();
         
-        String primaryPhone = normalizePhone(caseRecord.FEC_Phone_Number__c);
+        String primaryPhone = normalizePhone(caseRecord.FEC_Account_or_Contract__r.FEC_Primary_Phone__c);
         
         String interactionPhone =
             normalizePhone(caseRecord.FEC_Interaction__r != null
@@ -1259,10 +1369,12 @@ public without sharing class FEC_DNBHandler {
     Case caseRecord) {
         List<DNBRowTemplate> rows = new List<DNBRowTemplate>();
         
-        String phone = normalizePhone(caseRecord.FEC_Case_Phone_Number__c);
+        String phone = normalizePhone(caseRecord.FEC_Interaction__r != null
+            ? caseRecord.FEC_Interaction__r.FEC_Phone_Number__c
+            : null);
         
-        String email = caseRecord.FEC_Case_Email__c != null
-            ? caseRecord.FEC_Case_Email__c
+        String email = caseRecord.FEC_Interaction__r != null
+            ? caseRecord.FEC_Interaction__r.FEC_Interaction_Email__c
             : null;
         
         /*
@@ -1388,7 +1500,7 @@ public without sharing class FEC_DNBHandler {
          */
         Case caseRecord = [
       SELECT Id, FEC_Phone_Number__c,
-
+    FEC_Account_or_Contract__r.FEC_Primary_Phone__c,
       FEC_Interaction__r.FEC_Phone_Number__c,
       FEC_Interaction__r.FEC_Interaction_Email__c,
 
@@ -1406,7 +1518,9 @@ public without sharing class FEC_DNBHandler {
          */
         FEC_GetDNBCalloutService.DNBResult res = checkDNB(
             
-        caseRecord.FEC_Phone_Number__c,
+        caseRecord.FEC_Interaction__r != null
+            ? caseRecord.FEC_Interaction__r.FEC_Phone_Number__c
+            : null,
         
         caseRecord.FEC_Account_or_Contract__r.FEC_Search_Result_National_ID__c,
         
@@ -1449,12 +1563,15 @@ public without sharing class FEC_DNBHandler {
     
     @AuraEnabled
     public static void createNonExistingDNBRows(Id caseId, String nid) {
+        
+        
+        
         /*
          * Prevent duplicate
          */
         List<FEC_Do_Not_Bother__c> existing = [
-      SELECT Id FROM FEC_Do_Not_Bother__c WHERE FEC_Case__c = : caseId LIMIT 1
-    ];
+            SELECT Id FROM FEC_Do_Not_Bother__c WHERE FEC_Case__c = : caseId LIMIT 1
+        ];
         
         if (!existing.isEmpty()) {
             return;
@@ -1464,25 +1581,30 @@ public without sharing class FEC_DNBHandler {
          * Get case data
          */
         Case caseRecord = [
-      SELECT Id, FEC_Case_Phone_Number__c,
-      FEC_Case_Email__c,
-    FEC_Account_or_Contract__c
-          FROM Case
-
-              WHERE Id = : caseId
-
-          LIMIT 1
-    ];
+            SELECT Id, FEC_Case_Phone_Number__c,
+            FEC_Case_Email__c,
+            FEC_Interaction__c,
+            FEC_Interaction__r.FEC_Phone_Number__c,
+            FEC_Interaction__r.FEC_Interaction_Email__c,
+            FEC_Account_or_Contract__c
+            FROM Case
+            WHERE Id = : caseId
+            LIMIT 1
+        ];
+        
+        System.debug('PHONE=' + caseRecord.FEC_Interaction__r.FEC_Phone_Number__c);
+        System.debug('NID=' + nid);
+        System.debug('EMAIL=' + caseRecord.FEC_Interaction__r.FEC_Interaction_Email__c);
         
         /*
          * Check DNB
          */
         FEC_GetDNBCalloutService.DNBResult res = checkDNB(
             
-        caseRecord.FEC_Case_Phone_Number__c,
+        caseRecord.FEC_Interaction__r.FEC_Phone_Number__c,
         nid,
-        caseRecord.FEC_Case_Email__c != null
-            ? caseRecord.FEC_Case_Email__c
+        caseRecord.FEC_Interaction__r.FEC_Interaction_Email__c != null
+            ? caseRecord.FEC_Interaction__r.FEC_Interaction_Email__c
             : null);
         
         /*

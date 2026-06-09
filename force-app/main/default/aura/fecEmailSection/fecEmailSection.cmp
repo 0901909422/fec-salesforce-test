@@ -20,12 +20,18 @@
     <aura:attribute name="templateHeaders" type="Object" default="{}" />
     <aura:attribute name="templateFooters" type="Object" default="{}" />
     <aura:attribute name="templateAttachments" type="Object" default="{}" />
+    <aura:attribute name="titleBaseBody" type="String" default="" />
     <aura:attribute name="originalSubject" type="String" default="" />
     <aura:attribute name="emailList" type="List" default="[]" />
     <aura:attribute name="isLoading" type="Boolean" default="false" />
     <aura:attribute name="searchKeyword" type="String" default="" />
     <aura:attribute name="allExpanded" type="Boolean" default="false" />
     <aura:attribute name="attachments" type="List" default="[]" />
+    <aura:attribute name="showUploadModal" type="Boolean" default="false" />
+    <aura:attribute name="selectedUploadTab" type="String" default="related" />
+    <aura:attribute name="uploadModalHelpText" type="String" default="{!$Label.c.FEC_Email_File_Upload_Help}" />
+    <aura:attribute name="caseFileList" type="List" default="[]" />
+    <aura:attribute name="selectedCaseFileIds" type="List" default="[]" />
     <aura:attribute name="activeItemId" type="String" default="" />
     <aura:attribute name="showSortDD" type="Boolean" default="false" />
     <aura:attribute name="sortOrder" type="String" default="recent" />
@@ -33,6 +39,7 @@
     <aura:attribute name="hasFromOptions" type="Boolean" default="false" />
     <aura:attribute name="incomingToAddress" type="String" default="" />
     <aura:attribute name="fromDisplay" type="String" default="" />
+    <aura:attribute name="isManualInteraction" type="Boolean" default="false" />
     <!-- viewMode: handling = hiện đầy đủ compose, review = chỉ hiện feed -->
     <aura:attribute name="isHandling" type="Boolean" default="false" />
     <aura:attribute name="caseRecord" type="Object" />
@@ -42,7 +49,7 @@
     <aura:attribute name="serviceCaseToError" type="String" default="" />
 
     <!-- Custom Labels -->
-    <aura:attribute name="lblDanhXung" type="String" default="{!$Label.c.FEC_Email_Label_Danh_Xung}" />
+    <aura:attribute name="lblTitle" type="String" default="{!$Label.c.FEC_Email_Label_Title}" />
     <aura:attribute name="lblAnhChi" type="String" default="{!$Label.c.FEC_Email_Option_Anh_Chi}" />
     <aura:attribute name="lblAnh" type="String" default="{!$Label.c.FEC_Email_Option_Anh}" />
     <aura:attribute name="lblChi" type="String" default="{!$Label.c.FEC_Email_Option_Chi}" />
@@ -67,6 +74,14 @@
     <aura:attribute name="lblSuccessTitle" type="String" default="{!$Label.c.FEC_Email_Success_Title}" />
     <aura:attribute name="lblSuccessSentMsg" type="String" default="{!$Label.c.FEC_Email_Success_Sent_Msg}" />
     <aura:attribute name="lblToRequired" type="String" default="{!$Label.c.FEC_Email_Error_To_Required}" />
+    <aura:attribute name="lblUploadFiles" type="String" default="{!$Label.c.FEC_BCH_UploadFiles}" />
+    <aura:attribute name="lblCancelGeneric" type="String" default="{!$Label.c.FEC_Email_Btn_Cancel}" />
+    <aura:attribute name="lblSelectFiles" type="String" default="{!$Label.c.FEC_Email_File_Select_Files}" />
+    <aura:attribute name="lblRelatedFiles" type="String" default="{!$Label.c.FEC_Email_File_Related_Files}" />
+    <aura:attribute name="lblSearchFiles" type="String" default="{!$Label.c.FEC_Email_File_Search_Files}" />
+    <aura:attribute name="lblFilesSelectedSuffix" type="String" default="{!$Label.c.FEC_Email_File_Selected_Suffix}" />
+    <aura:attribute name="lblFilesUploadHelp" type="String" default="{!$Label.c.FEC_Email_File_Upload_Help}" />
+    <aura:attribute name="lblFileUploadedAdded" type="String" default="{!$Label.c.FEC_Email_File_Uploaded_Added}" />
 
     <!-- Load viewMode từ Case record -->
     <force:recordData aura:id="caseData"
@@ -171,10 +186,7 @@
                                 <div class="attach-pill">
                                     <span class="attach-pill-icon"><lightning:icon iconName="doctype:attachment" size="xx-small" class="fec-icon" /></span>
                                     <span class="attach-pill-name">{!att.name}</span>
-                                    <!-- tungnm37 sửa: chỉ hiện X với file user upload, không hiện với template attachment -->
-                                    <aura:if isTrue="{!not(att._fromTemplate)}">
                                         <span class="attach-pill-remove" data-idx="{!idx}" onclick="{!c.removeAttachment}">&#x2715;</span>
-                                    </aura:if>
                                 </div>
                             </aura:iteration>
                         </div>
@@ -183,10 +195,10 @@
                         <p class="error-text">{!v.errorMsg}</p>
                     </aura:if>
                     <div class="compose-footer">
-                        <label class="foot-icon" title="Attach file">
+                        <span class="foot-icon" title="Select files" onclick="{!c.openAttachModal}">
                             <input type="file" multiple="true" aura:id="attachInput" onchange="{!c.onAttachChange}" style="display:none" />
                             <lightning:icon iconName="utility:attach" size="xx-small" class="fec-icon" />
-                        </label>
+                        </span>
                         <span class="foot-icon" title="Preview" onclick="{!c.previewEmail}">
                             <lightning:icon iconName="utility:preview" size="xx-small" class="fec-icon" />
                         </span>
@@ -232,18 +244,28 @@
             <!-- Inline Compose Section -->
             <aura:if isTrue="{!v.showCompose}">
                 <div class="compose-section">
-                    <!-- From: read-only, lấy từ Send To của Interaction -->
+                    <!-- From -->
                     <div class="compose-row">
-                        <label class="compose-label">From</label>
+                        <label class="compose-label">From <abbr title="required" style="color:#c23934">*</abbr></label>
                         <div class="compose-field-wrap">
-                            <span class="compose-from-text">{!v.fromDisplay}</span>
+                            <aura:if isTrue="{!v.isManualInteraction}">
+                                <input type="text" class="compose-input" value="{!v.fromEmail}" onchange="{!c.onFromInputChange}" />
+                                <aura:set attribute="else">
+                                    <span class="compose-from-text">{!v.fromDisplay}</span>
+                                </aura:set>
+                            </aura:if>
                         </div>
                     </div>
-                    <!-- To: read-only, lấy từ Interaction Email của case -->
+                    <!-- To -->
                     <div class="compose-row">
                         <label class="compose-label">To <abbr title="required" style="color:#c23934">*</abbr></label>
                         <div class="compose-field-wrap">
-                            <span class="compose-from-text">{!v.toEmail}</span>
+                            <aura:if isTrue="{!v.isManualInteraction}">
+                                <input type="text" class="compose-input" value="{!v.toEmail}" onchange="{!c.onInteractionToChange}" placeholder="Enter recipient email(s)" />
+                                <aura:set attribute="else">
+                                    <span class="compose-from-text">{!v.toEmail}</span>
+                                </aura:set>
+                            </aura:if>
                         </div>
                     </div>
                     <!-- CC -->
@@ -275,10 +297,7 @@
                                         <lightning:icon iconName="doctype:attachment" size="xx-small" class="fec-icon" />
                                     </span>
                                     <span class="attach-pill-name">{!att.name}</span>
-                                    <!-- tungnm37 sửa: chỉ hiện X với file user upload, không hiện với template attachment -->
-                                    <aura:if isTrue="{!not(att._fromTemplate)}">
                                         <span class="attach-pill-remove" data-idx="{!idx}" onclick="{!c.removeAttachment}">&#x2715;</span>
-                                    </aura:if>
                                 </div>
                             </aura:iteration>
                         </div>
@@ -288,10 +307,10 @@
                     </aura:if>
                     <!-- Inline footer: icons left, Send right -->
                     <div class="compose-footer">
-                        <label class="foot-icon" title="Attach file">
+                        <span class="foot-icon" title="Select files" onclick="{!c.openAttachModal}">
                             <input type="file" multiple="true" aura:id="attachInput" onchange="{!c.onAttachChange}" style="display:none" />
                             <lightning:icon iconName="utility:attach" size="xx-small" class="fec-icon" />
-                        </label>
+                        </span>
                         <span class="foot-icon" title="Preview" onclick="{!c.previewEmail}">
                             <lightning:icon iconName="utility:preview" size="xx-small" class="fec-icon" />
                         </span>
@@ -443,6 +462,16 @@
                                         </aura:set>
                                     </aura:if>
                                 </div>
+                                <aura:if isTrue="{!not(empty(email.attachments))}">
+                                    <div class="feed-attachment-list">
+                                        <aura:iteration items="{!email.attachments}" var="att">
+                                            <div class="feed-attachment-item">
+                                                <lightning:icon iconName="doctype:attachment" size="xx-small" class="fec-icon" />
+                                                <span class="feed-attachment-name">{!att.name}</span>
+                                            </div>
+                                        </aura:iteration>
+                                    </div>
+                                </aura:if>
                                 <!-- tungnm37 sửa: chỉ hiện Reply/Reply All/Forward ở màn Handling, không hiện ở Review -->
                                 <aura:if isTrue="{!v.isHandling}">
                                 <div class="feed-actions">
@@ -490,4 +519,57 @@
         </div>
     </aura:if>
 
+
+    <aura:if isTrue="{!v.showUploadModal}">
+        <div class="fec-file-modal-overlay" onclick="{!c.closeUploadModal}"></div>
+        <div class="fec-file-modal" onclick="{!c.stopPropagation}">
+            <div class="fec-file-modal-close" onclick="{!c.closeUploadModal}">&#x2715;</div>
+            <div class="fec-file-modal-title">{!v.lblSelectFiles}</div>
+            <div class="fec-file-modal-body">
+                <div class="fec-file-modal-left">
+                    <lightning:fileUpload label="{!v.lblUploadFiles}"
+                        name="fecEmailStdUpload"
+                        recordId="{!v.recordId}"
+                        multiple="true"
+                        onuploadfinished="{!c.onStandardUploadFinished}" />
+                    <div class="{!v.selectedUploadTab == 'related' ? 'fec-file-tab active' : 'fec-file-tab'}" onclick="{!c.selectUploadTabRelated}">{!v.lblRelatedFiles}</div>
+                    
+                </div>
+                <div class="fec-file-modal-right">
+                    <div class="fec-file-search">&#128269;&nbsp;&nbsp;{!v.lblSearchFiles}</div>
+                                        <aura:if isTrue="{!not(empty(v.caseFileList))}">
+                        <div class="fec-case-file-list">
+                            <aura:iteration items="{!v.caseFileList}" var="f">
+                                <div class="fec-case-file-row">
+                                    <input type="checkbox" class="fec-case-file-check" data-id="{!f.documentId}" onchange="{!c.toggleCaseFileSelection}" />
+                                    <lightning:icon iconName="doctype:attachment" size="xx-small" class="fec-icon" />
+                                    <span class="fec-case-file-name">{!f.name}</span>
+                                </div>
+                            </aura:iteration>
+                        </div>
+                        <aura:set attribute="else">
+                            <div class="fec-file-help">{!v.uploadModalHelpText}</div>
+                        </aura:set>
+                    </aura:if>
+                </div>
+            </div>
+            <div class="fec-file-modal-footer">
+                <span>{!v.selectedCaseFileIds.length} {!v.lblFilesSelectedSuffix}</span>
+                <div>
+                    <lightning:button label="{!v.lblCancelGeneric}" onclick="{!c.closeUploadModal}" />
+                    <lightning:button variant="brand" label="Add" onclick="{!c.addSelectedCaseFiles}" disabled="{!empty(v.selectedCaseFileIds)}" class="slds-m-left_x-small" />
+                </div>
+            </div>
+        </div>
+    </aura:if>
 </aura:component>
+
+
+
+
+
+
+
+
+
+

@@ -1,48 +1,72 @@
 /**
- * Map Owner Id (User/Queue) → FEC_Team__c qua FEC_Main_Queue__c / Group.DeveloperName + FEC_Team_Queue__c.
- * Cache theo transaction — dùng chung RAH trigger, Assignment UI, export (tránh SOQL 101 submit NOC bulk).
+ * Map Owner Id (User/Queue) → team qua FEC_Main_Queue__c / Group.DeveloperName + FEC_Team_Queue__c.
+ *
+ * Hai luồng tách biệt:
+ * - {@link #getByOwnerIds}: Case Status / FEC_Team__c (vd CSSupport, SP) — ưu tiên FEC_Team_Queue__c.FEC_Team__c,
+ *   fallback FEC_Select_Team__c khi FEC_Team__c trống.
+ * - {@link #getReportTeamByOwnerIds}: báo cáo TAT / FEC_Updated_Group__c — chỉ FEC_Team__c, chuẩn hóa mã ngắn (PM, CC, …).
  */
 public without sharing class FEC_OwnerTeamLookupSvc {
 
     private static Map<Id, String> teamByOwnerId = new Map<Id, String>();
+    private static Map<Id, String> reportTeamByOwnerId = new Map<Id, String>();
     private static Map<Id, String> userMainQueueById = new Map<Id, String>();
     private static Map<Id, String> groupDevNameById = new Map<Id, String>();
-    private static Map<String, String> teamByQueueName = new Map<String, String>();
+    private static Map<String, String> teamByQueueNameForCase = new Map<String, String>();
+    private static Map<String, String> teamByQueueNameForReport = new Map<String, String>();
     private static Boolean teamByQueueNameLoaded = false;
 
+    /** Team hiển thị trên Case (Pending - SP, FEC_Team__c). */
     public static Map<Id, String> getByOwnerIds(Set<Id> ownerIds) {
+        return resolveTeamMap(ownerIds, teamByOwnerId, teamByQueueNameForCase, false);
+    }
+
+    /** Mã team ngắn cho báo cáo TAT (FEC_Updated_Group__c). */
+    public static Map<Id, String> getReportTeamByOwnerIds(Set<Id> ownerIds) {
+        return resolveTeamMap(ownerIds, reportTeamByOwnerId, teamByQueueNameForReport, true);
+    }
+
+    private static Map<Id, String> resolveTeamMap(
+        Set<Id> ownerIds,
+        Map<Id, String> cache,
+        Map<String, String> queueTeamMap,
+        Boolean forReport
+    ) {
         Map<Id, String> out = new Map<Id, String>();
         if (ownerIds == null || ownerIds.isEmpty()) {
             return out;
         }
         Set<Id> missing = new Set<Id>();
         for (Id oid : ownerIds) {
-            if (oid != null && !teamByOwnerId.containsKey(oid)) {
+            if (oid != null && !cache.containsKey(oid)) {
                 missing.add(oid);
             }
         }
         if (!missing.isEmpty()) {
-            teamByOwnerId.putAll(resolveUncached(missing));
+            ensureTeamByQueueNameMaps();
+            cache.putAll(resolveUncached(missing, queueTeamMap));
             for (Id oid : missing) {
-                if (!teamByOwnerId.containsKey(oid)) {
-                    teamByOwnerId.put(oid, null);
+                if (!cache.containsKey(oid)) {
+                    cache.put(oid, null);
                 }
             }
         }
         for (Id oid : ownerIds) {
-            if (oid != null && teamByOwnerId.containsKey(oid)) {
-                out.put(oid, teamByOwnerId.get(oid));
+            if (oid != null && cache.containsKey(oid)) {
+                out.put(oid, cache.get(oid));
             }
         }
         return out;
     }
 
-    private static Map<Id, String> resolveUncached(Set<Id> ownerIds) {
+    private static Map<Id, String> resolveUncached(
+        Set<Id> ownerIds,
+        Map<String, String> queueTeamMap
+    ) {
         Map<Id, String> out = new Map<Id, String>();
         if (ownerIds == null || ownerIds.isEmpty()) {
             return out;
         }
-        ensureTeamByQueueNameMap();
         Map<Id, String> ownerToQueueName = buildOwnerToQueueName(ownerIds);
         if (ownerToQueueName.isEmpty()) {
             return out;
@@ -52,8 +76,8 @@ public without sharing class FEC_OwnerTeamLookupSvc {
                 continue;
             }
             String qName = ownerToQueueName.get(oid);
-            if (teamByQueueName.containsKey(qName)) {
-                out.put(oid, teamByQueueName.get(qName));
+            if (queueTeamMap.containsKey(qName)) {
+                out.put(oid, queueTeamMap.get(qName));
             }
         }
         return out;
@@ -121,17 +145,43 @@ public without sharing class FEC_OwnerTeamLookupSvc {
         return ownerToQueueName;
     }
 
-    private static void ensureTeamByQueueNameMap() {
+    private static void ensureTeamByQueueNameMaps() {
         if (teamByQueueNameLoaded) {
             return;
         }
         for (FEC_Team_Queue__c row : [
-            SELECT FEC_Queue_Name__c, FEC_Team__c
+            SELECT FEC_Queue_Name__c, FEC_Team__c, FEC_Select_Team__r.Name
             FROM FEC_Team_Queue__c
-            WHERE FEC_Queue_Name__c != NULL AND FEC_Team__c != NULL
+            WHERE FEC_Queue_Name__c != NULL
         ]) {
-            teamByQueueName.put(row.FEC_Queue_Name__c, row.FEC_Team__c.trim());
+            String caseTeam = resolveTeamCodeForCase(row);
+            if (String.isNotBlank(caseTeam)) {
+                teamByQueueNameForCase.put(row.FEC_Queue_Name__c, caseTeam);
+            }
+            if (String.isNotBlank(row.FEC_Team__c)) {
+                String reportTeam = FEC_TeamGroupCodeUtil.normalizeForReport(row.FEC_Team__c);
+                if (String.isNotBlank(reportTeam)) {
+                    teamByQueueNameForReport.put(row.FEC_Queue_Name__c, reportTeam);
+                }
+            }
         }
         teamByQueueNameLoaded = true;
+    }
+
+    /**
+     * Team trên Case / Pending status: FEC_Team__c trước; FEC_Select_Team__c chỉ khi FEC_Team__c trống.
+     */
+    @TestVisible
+    private static String resolveTeamCodeForCase(FEC_Team_Queue__c row) {
+        if (row == null) {
+            return null;
+        }
+        if (String.isNotBlank(row.FEC_Team__c)) {
+            return row.FEC_Team__c.trim();
+        }
+        return row.FEC_Select_Team__r != null &&
+            String.isNotBlank(row.FEC_Select_Team__r.Name)
+            ? row.FEC_Select_Team__r.Name.trim()
+            : null;
     }
 }

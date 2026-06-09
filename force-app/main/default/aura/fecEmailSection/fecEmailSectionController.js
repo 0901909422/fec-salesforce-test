@@ -51,6 +51,7 @@
     onTemplateChange: function(component, event, helper) {
         var templateId = event.getSource().get('v.value');
         component.set('v.replyTemplate', templateId);
+        component.set('v.titleReply', '');
         if (templateId) {
             var bodies = component.get('v.templateBodies');
             var subjects = component.get('v.templateSubjects');
@@ -60,38 +61,58 @@
             var header = headers[templateId] || '';
             var footer = footers[templateId] || '';
             var title = component.get('v.titleReply') || '';
-            var body = helper.replaceDanhXung(rawBody, title);
-            // Ghép header + body + footer
-            var fullBody = (header ? header : '') + body + (footer ? footer : '');
-            component.set('v.body', fullBody);
-            component.set('v.rawBody', fullBody); // tungnm37: lưu raw HTML để gửi email
-            if (window._fecQuill) {
-                var _q = window._fecQuill;
-                var _body = helper.cleanBody(fullBody);
-                window.setTimeout(function() {
-                    if (_q.scroll && _q.scroll.observer) {
-                        _q.scroll.observer.disconnect();
-                    }
-                    _q.root.innerHTML = _body;
-                    _q.root.classList.remove('ql-blank');
-                    // tungnm37 thêm: đảm bảo td/th từ template có contenteditable
-                    helper._makeTableCellsEditable(_q.root);
+            // Ghép header + body + footer từ template gốc, chưa map Title
+            var fullBody = (header ? header : '') + rawBody + (footer ? footer : '');
+            var templateSubject = subjects && subjects[templateId] ? subjects[templateId] : '';
+
+            var renderResolvedTemplate = function(resolvedSubject, resolvedBody) {
+                component.set('v.titleBaseBody', resolvedBody);
+                var displayBody = title ? helper.replaceDanhXung(resolvedBody, title) : resolvedBody;
+                component.set('v.body', displayBody);
+                component.set('v.rawBody', displayBody); // lưu HTML hiển thị để gửi email
+                if (window._fecQuill) {
+                    var _q = window._fecQuill;
+                    var _body = helper.cleanBody(displayBody);
                     window.setTimeout(function() {
                         if (_q.scroll && _q.scroll.observer) {
-                            _q.scroll.observer.observe(_q.root, _q.scroll.observer._options || { childList: true, subtree: true, characterData: true });
+                            _q.scroll.observer.disconnect();
                         }
-                    }, 100);
-                }, 50);
-            }
-            // Apply subject từ template, giữ prefix RE:/FW: nếu đang reply/forward
-            var templateSubject = subjects && subjects[templateId] ? subjects[templateId] : '';
-            if (templateSubject) {
-                component.set('v.subject', templateSubject);
-            }
+                        _q.root.innerHTML = _body;
+                        _q.root.classList.remove('ql-blank');
+                        // tungnm37 thêm: đảm bảo td/th từ template có contenteditable
+                        helper._makeTableCellsEditable(_q.root);
+                        window.setTimeout(function() {
+                            if (_q.scroll && _q.scroll.observer) {
+                                _q.scroll.observer.observe(_q.root, _q.scroll.observer._options || { childList: true, subtree: true, characterData: true });
+                            }
+                        }, 100);
+                    }, 50);
+                }
+                if (resolvedSubject) {
+                    component.set('v.subject', resolvedSubject);
+                }
+            };
+
+            var resolveAction = component.get('c.resolveEmailTemplate');
+            resolveAction.setParams({
+                caseId: component.get('v.recordId'),
+                subject: templateSubject,
+                body: fullBody
+            });
+            resolveAction.setCallback(this, function(resp) {
+                if (resp.getState() === 'SUCCESS') {
+                    var resolved = resp.getReturnValue() || {};
+                    renderResolvedTemplate(resolved.subject || templateSubject, resolved.body || fullBody);
+                } else {
+                    renderResolvedTemplate(templateSubject, fullBody);
+                }
+            });
+            $A.enqueueAction(resolveAction);
             // Load attachments từ template (pre-loaded in templateAttachments cache)
             var allAtts = component.get('v.templateAttachments') || {};
             var tmplAtts = allAtts[templateId] || [];
             component.set('v.attachments', tmplAtts.map(function(a) {
+                helper.loadCaseFiles(component);
                 return { name: a.fileName, size: 0, _fromTemplate: true, _base64: a.base64Data, _mime: a.mimeType };
             }));
         } else {
@@ -232,6 +253,10 @@
         component.set('v.serviceCaseToError', '');
     },
 
+    onInteractionToChange: function(component, event, helper) {
+        component.set('v.toEmail', event.target.value);
+    },
+
     onFromInputChange: function(component, event, helper) {
         component.set('v.fromEmail', event.target.value);
     },
@@ -289,6 +314,95 @@
         }));
     },
 
+
+    openAttachModal: function(component, event, helper) {
+        component.set('v.showUploadModal', true);
+        helper.loadCaseFiles(component);
+    },
+
+    closeUploadModal: function(component, event, helper) {
+        component.set('v.showUploadModal', false);
+    },
+
+
+    selectUploadTabRelated: function(component, event, helper) {
+        component.set('v.selectedUploadTab', 'related');
+        component.set('v.uploadModalHelpText', component.get('v.lblFilesUploadHelp')); 
+    },
+
+    
+    toggleCaseFileSelection: function(component, event, helper) {
+        var id = event.target.dataset.id;
+        var selected = component.get('v.selectedCaseFileIds') || [];
+        if (event.target.checked) {
+            if (selected.indexOf(id) === -1) selected.push(id);
+        } else {
+            selected = selected.filter(function(x) { return x !== id; });
+        }
+        component.set('v.selectedCaseFileIds', selected);
+    },
+
+    addSelectedCaseFiles: function(component, event, helper) {
+        var docIds = component.get('v.selectedCaseFileIds') || [];
+        if (!docIds.length) return;
+        var action = component.get('c.getEmailAttachmentsFromContentDocuments');
+        action.setParams({ contentDocumentIds: docIds });
+        action.setCallback(this, function(resp) {
+            if (resp.getState() === 'SUCCESS') {
+                var existing = component.get('v.attachments') || [];
+                var uploaded = resp.getReturnValue() || [];
+                var merged = existing.concat(uploaded.map(function(a) {
+                    return { name: a.fileName, size: 0, _fromStandardUpload: true, _base64: a.base64Data, _mime: a.mimeType };
+                }));
+                component.set('v.attachments', merged);
+                component.set('v.selectedCaseFileIds', []);
+                component.set('v.showUploadModal', false);
+            }
+        });
+        $A.enqueueAction(action);
+    },
+    onStandardUploadFinished: function(component, event, helper) {
+        var files = (event.getParam('files') || []).slice();
+        if (!files.length) return;
+        var docIds = files.map(function(f) { return f.documentId; }).filter(function(id) { return !!id; });
+        if (!docIds.length) return;
+
+        var tryLoad = function(attempt) {
+            var action = component.get('c.getEmailAttachmentsFromContentDocuments');
+            action.setParams({ contentDocumentIds: docIds });
+            action.setCallback(this, function(resp) {
+                if (resp.getState() === 'SUCCESS') {
+                    var uploaded = resp.getReturnValue() || [];
+                    if (uploaded.length === 0 && attempt < 3) {
+                        window.setTimeout($A.getCallback(function() { tryLoad(attempt + 1); }), 1200);
+                        return;
+                    }
+                    if (uploaded.length > 0) {
+                        var existing = component.get('v.attachments') || [];
+                        var merged = existing.concat(uploaded.map(function(a) {
+                            return { name: a.fileName, size: 0, _fromStandardUpload: true, _base64: a.base64Data, _mime: a.mimeType, _contentDocumentId: a.contentDocumentId };
+                        }));
+                        component.set('v.attachments', merged);
+                        try {
+                            var t = $A.get('e.force:showToast');
+                            if (t) {
+                                t.setParams({ title: component.get('v.lblSuccessTitle') || 'Success', message: component.get('v.lblFileUploadedAdded'), type: 'success', duration: 3000 });
+                                t.fire();
+                            }
+                        } catch (e) {}
+                    }
+                    helper.loadCaseFiles(component, attempt < 3 ? 800 : 0);
+                    if (uploaded.length > 0) { component.set('v.showUploadModal', false); }
+                }
+            });
+            $A.enqueueAction(action);
+        };
+
+        // Wait for Salesforce standard upload to finish committing ContentVersion/ContentDocumentLink.
+        window.setTimeout($A.getCallback(function() {
+            tryLoad(1);
+        }), 1200);
+    },
     onAttachChange: function(component, event, helper) {
         var files = event.target.files;
         if (!files || files.length === 0) return;
@@ -419,6 +533,27 @@
         var lblToReq = component.get('v.lblToRequired') || 'To email is required.';
         var lblInvalidFmt = component.get('v.lblInvalidFormatTitle');
         var finalToEmail;
+        var isManualInteraction = component.get('v.isManualInteraction');
+        var fromEmail = (component.get('v.fromEmail') || '').trim();
+        var emailReFrom = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!isServiceCase && isManualInteraction) {
+            if (!fromEmail) {
+                component.set('v.errorMsg', 'From email is required.');
+                try {
+                    var tf1 = $A.get('e.force:showToast');
+                    if (tf1) { tf1.setParams({ title: lblSnag, message: 'Review the errors on this page. From email is required.', type: 'error', duration: 4000 }); tf1.fire(); }
+                } catch(e) {}
+                return;
+            }
+            if (!emailReFrom.test(fromEmail)) {
+                component.set('v.errorMsg', '"' + fromEmail + '" is not a valid From email address.');
+                try {
+                    var tf2 = $A.get('e.force:showToast');
+                    if (tf2) { tf2.setParams({ title: lblInvalidFmt, message: '"' + fromEmail + '" is not a valid From email address.', type: 'error', duration: 4000 }); tf2.fire(); }
+                } catch(e) {}
+                return;
+            }
+        }
         if (isServiceCase) {
             finalToEmail = (component.get('v.serviceCaseToEmail') || '').trim();
             if (!finalToEmail) {
@@ -527,7 +662,7 @@
         var templateAtts = [];
         var fileAtts = [];
         for (var i = 0; i < attachments.length; i++) {
-            if (attachments[i]._fromTemplate) {
+            if (attachments[i]._fromTemplate || attachments[i]._fromStandardUpload) {
                 templateAtts.push({ fileName: attachments[i].name, base64Data: attachments[i]._base64, mimeType: attachments[i]._mime });
             } else if (attachments[i]._isInlineImg) {
                 // Ảnh insert vào body — không gửi kèm, đã strip blob URL khỏi bodyToSend
@@ -577,3 +712,13 @@
         });
     }
 })
+
+
+
+
+
+
+
+
+
+

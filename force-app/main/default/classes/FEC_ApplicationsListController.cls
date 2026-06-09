@@ -108,19 +108,39 @@ public without sharing class FEC_ApplicationsListController {
 
         if (cusRes == null || cusRes.Customers == null) return;
 
+        // Cache Province/District maps ONCE before loop (avoid SOQL-in-loop)
+        Map<String, String> cityMap = new Map<String, String>();
+        for (FEC_Province__c c : [SELECT Name, FEC_Code__c, FEC_Name_VN__c FROM FEC_Province__c]) {
+            cityMap.put(c.FEC_Code__c, c.FEC_Name_VN__c);
+        }
+
+        Map<String, String> districtMap = new Map<String, String>();
+        for (FEC_District__c d : [SELECT Name, FEC_Code__c, FEC_Name_VN__c FROM FEC_District__c]) {
+            districtMap.put(d.FEC_Code__c, d.FEC_Name_VN__c);
+        }
+
         for (FEC_GetCustomerList.Customer cus : cusRes.Customers) {
 
             if (cus.Applications == null) continue;
 
             String cif = cus.CIFNumber;
 
-            Map<String, FEC_GetCustomerList.Application> appMap = new Map<String, FEC_GetCustomerList.Application>();
+            Map<String, FEC_GetProductListCallout.ProductInfo> productMap =
+                new Map<String, FEC_GetProductListCallout.ProductInfo>();
 
-            if (cus.Applications != null) {
+            try {
+                FEC_GetProductListCallout.CIF_GetProductsListResponse productRes =
+                    FEC_GetProductListCallout.callService(cif);
 
-                for (FEC_GetCustomerList.Application a : cus.Applications) {
-                    appMap.put(a.ApplicationID, a);
+                if (productRes != null && productRes.products != null) {
+                    for (FEC_GetProductListCallout.ProductInfo p : productRes.products) {
+                        if (String.isNotBlank(p.applicationId)) {
+                            productMap.put(p.applicationId, p);
+                        }
+                    }
                 }
+            } catch (Exception e) {
+                System.debug('GetProductList API failed: ' + e.getMessage());
             }
 
             /* =================================================
@@ -155,15 +175,8 @@ public without sharing class FEC_ApplicationsListController {
                     addrRes = null;
                 }
 
-                Map<String, String> cityMap = new Map<String, String>();
-                for (FEC_Province__c c : [SELECT Name, FEC_Code__c,FEC_Name_VN__c FROM FEC_Province__c]) {
-                    cityMap.put(c.FEC_Code__c, c.FEC_Name_VN__c);
-                }
-
-                Map<String, String> districtMap = new Map<String, String>();
-                for (FEC_District__c d : [SELECT Name, FEC_Code__c,FEC_Name_VN__c FROM FEC_District__c]) {
-                    districtMap.put(d.FEC_Code__c, d.FEC_Name_VN__c);
-                }
+                // Province/District maps already cached outside loop
+                // (moved to avoid SOQL-in-loop governor limit violation)
 
             for (FEC_GetApplicationsList.ApplicationInfo st: statusRes.Applications) {
                 String accountNumbers = FEC_ConstantCommon.STR_NA;
@@ -184,11 +197,13 @@ public without sharing class FEC_ApplicationsListController {
                     row.put('registrationEmail', cus.Emails[0].Email);
                 }
 
-                if (appMap.containsKey(st.ApplicationID)) {
-
-                    FEC_GetCustomerList.Application ca = appMap.get(st.ApplicationID);
-                        accountNumbers = String.isBlank(ca.AccountNumber) ? FEC_ConstantCommon.STR_NA : ca.AccountNumber;
-                        row.put('contractNumber', ca.ContractNumber);
+                if (productMap.containsKey(st.ApplicationID)) {
+                    FEC_GetProductListCallout.ProductInfo prod =
+                        productMap.get(st.ApplicationID);
+                    accountNumbers = String.isBlank(prod.accountNumber)
+                        ? FEC_ConstantCommon.STR_NA
+                        : prod.accountNumber;
+                    row.put('contractNumber', prod.dealId);
                 }
                 row.put('accountNumber', accountNumbers);
 

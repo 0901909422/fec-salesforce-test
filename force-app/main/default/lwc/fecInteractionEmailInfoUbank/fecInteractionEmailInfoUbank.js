@@ -159,6 +159,18 @@ export default class FecInteractionEmailInfoUbank extends NavigationMixin(Lightn
     return !this.hasInteractionEmail && !this.isEditingEmail;
   }
 
+  get channel() {
+    return this.record?.FEC_Channel__c || STR_EMPTY;
+  }
+
+  get showEmailRequiredInline() {
+    return (
+      this.channel === "Email" &&
+      !this.hasInteractionEmail &&
+      !this.isEditingEmail
+    );
+  }
+
   get displayInteractionEmail() {
     return this.record?.[INTERACTION_EMAIL_FIELD.fieldApiName] || STR_EMPTY;
   }

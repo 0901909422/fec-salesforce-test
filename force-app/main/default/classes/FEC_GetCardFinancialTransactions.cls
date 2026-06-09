@@ -70,25 +70,11 @@ public with sharing class FEC_GetCardFinancialTransactions {
             FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
             FEC_API_Config__mdt apiConfig = FEC_API_Config__mdt.getInstance('FEC_Get_Card_Financial_Transaction');
 
-            // =====================================================
-            // ENV OVERRIDE 
-            // =====================================================
-            String accountNumberParam;
-            Date fromDateParam;
-            Date toDateParam;
-
-            if (String.isNotBlank(apiSetting?.FEC_Enviroment__c)
-                && apiSetting.FEC_Enviroment__c == FEC_ConstantCommon.ENVIROMENT_NON_PRODUCTION) {
-
-                accountNumberParam = apiConfig?.FEC_Account_Number_Hard_Code__c;
-                fromDateParam = apiConfig?.FEC_FromDate_Hard_Code__c;
-                toDateParam =  apiConfig?.FEC_ToDate_Hard_Code__c;
-
-            } else {
-                accountNumberParam = accountNumber;
-                fromDateParam = fromDate;
-                toDateParam = toDate;
-            }
+            String accountNumberParam = String.isNotBlank(accountNumber)
+                ? accountNumber.trim()
+                : accountNumber;
+            Date fromDateParam = fromDate;
+            Date toDateParam = toDate;
             
             String soapBody = buildSoapBody(
                 transId,

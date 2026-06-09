@@ -492,6 +492,8 @@ public without sharing class FEC_AssignmentExecuteService {
                 
                 //thangtv: SYSTEM_MODE — claim owner khi user chưa có share edit trên Assignment
                 Database.update(assignmentsToUpdate, AccessLevel.SYSTEM_MODE);
+                
+                // tungnm37: Share Case cho user sau khi Execute Assignment claim owner.
                 FEC_AssignmentCaseShareService.shareCasesForAssignments(assignmentsToUpdate);
                 
                 System.debug('Assignments updated successfully');
@@ -702,8 +704,8 @@ public without sharing class FEC_AssignmentExecuteService {
             /*
              * Original queue/user owner
              */
-            history.FEC_Original_User_Queue__c = assignment.FEC_Assignment_Owner_Text__c;
-            history.FEC_Original_User_Queue_ID__c = assignment.FEC_OwnerID__c;
+            history.FEC_Original_User_Queue__c = assignment.FEC_OwnerID__c;
+            history.FEC_Original_User_Queue_ID__c = getQueueIdByName(assignment.FEC_OwnerID__c);
             /*
              * Updated owner email
              */
@@ -820,6 +822,17 @@ public without sharing class FEC_AssignmentExecuteService {
         return parts.isEmpty()
             ? email.trim()
             : parts[0].trim();
+    }
+    
+    private static Id getQueueIdByName(String queueName) {
+        List<Group> g = [
+        SELECT Id
+        FROM Group
+        WHERE Type = :FEC_ConstantCommon.GROUP_TYPE_QUEUE
+        AND Name = :queueName
+        LIMIT 1
+    ];
+        return g != null && !g.isEmpty() ? g.get(0).Id : null;
     }
 }
 

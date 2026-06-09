@@ -1,6 +1,10 @@
 public without sharing class FEC_BatchCaseHandlingTemplateHelper {
 
     private static final String TEMPLATE_OBJECT_API_NAME = 'FEC_Template_Import__c';
+    // 27/05/2026 18:45 linhdev - lỗi khi user import template không thuộc role/user group
+    public static final String ERR_ROLE_TEMPLATE_MISMATCH = 'role/template không phù hợp';
+    // 05/06/2026 17:30 linhdev - mã lỗi validateUploadedTemplateFileName
+    public static final String ERR_TEMPLATE_FILE_NAME_MISMATCH = 'TEMPLATE_MISMATCH';
 
     public static final List<String> ALLOWED_BUSINESS_PROCESS_NAMES = new List<String>{
         'COF - General Flow',
@@ -118,6 +122,11 @@ public without sharing class FEC_BatchCaseHandlingTemplateHelper {
 
     public static void applyStageBusinessProcessToExportRow(FEC_BatchCaseHandlingExportRow row, Case caseRecord) {
         if (row == null || caseRecord == null) {
+            return;
+        }
+        if (!caseRecord.getPopulatedFieldsAsMap().containsKey('FEC_Current_Case_Stage__r')) {
+            row.businessProcessCode = null;
+            row.businessProcessName = null;
             return;
         }
         SObject stage = caseRecord.getSObject('FEC_Current_Case_Stage__r');
@@ -469,6 +478,17 @@ public without sharing class FEC_BatchCaseHandlingTemplateHelper {
         public String templateDownloadUrl;
     }
 
+    // 29/05/2026 18:00 linhdev - export popup chỉ hiện BP có templateName + ContentVersion khớp user group
+    public static Boolean hasExportTemplateBinding(TemplateExportBinding binding) {
+        if (binding == null) {
+            return false;
+        }
+        if (String.isBlank(binding.templateName)) {
+            return false;
+        }
+        return binding.templateContentVersionId != null;
+    }
+
     public static TemplateExportBinding resolveExportTemplateBinding(
         String businessProcessCode,
         String businessProcessName,
@@ -816,9 +836,6 @@ public without sharing class FEC_BatchCaseHandlingTemplateHelper {
         return pathOrTitle.trim().toLowerCase().endsWith('.xlsx');
     }
 
-    // 27/05/2026 18:45 linhdev - lỗi khi user import template không thuộc role/user group
-    public static final String ERR_ROLE_TEMPLATE_MISMATCH = 'role/template không phù hợp';
-
     public static String resolveTemplateNameFromUploadedFileName(
         String fileName,
         String userGroup,
@@ -861,6 +878,11 @@ public without sharing class FEC_BatchCaseHandlingTemplateHelper {
         return 0;
     }
 
+    //PhongBT 02/06/26: delegate cho FEC_BCH_ImportFileNameValidator (import file name exact match).
+    public static Boolean importTemplateRowMatchesUserGroup(SObject templateRow, String userGroup) {
+        return templateRowMatchesUserGroup(templateRow, userGroup);
+    }
+
     private static Boolean templateRowMatchesUserGroup(SObject templateRow, String userGroup) {
         if (String.isBlank(userGroup)) {
             return true;
@@ -876,6 +898,7 @@ public without sharing class FEC_BatchCaseHandlingTemplateHelper {
     }
 
     // 27/05/2026 18:45 linhdev - validate suffix template (vd. _CSSupport) khớp role/user group khi import
+    // 01/06/2026 18:45 phongbt - sửa match contains để thêm đuôi vào (vd. _CSSupport123) thì vẫn match
     public static String validateUploadedTemplateForUserGroup(
         String templateOrFileName,
         String businessProcessCode,
@@ -898,8 +921,13 @@ public without sharing class FEC_BatchCaseHandlingTemplateHelper {
         if (allowedSuffixes == null || allowedSuffixes.isEmpty()) {
             return ERR_ROLE_TEMPLATE_MISMATCH;
         }
+        String suffixNorm = templateSuffix.toLowerCase();
         for (String allowed : allowedSuffixes) {
-            if (String.isNotBlank(allowed) && allowed.trim().equalsIgnoreCase(templateSuffix)) {
+            if (String.isBlank(allowed)) {
+                continue;
+            }
+            String allowedNorm = allowed.trim().toLowerCase();
+            if (String.isNotBlank(allowedNorm) && suffixNorm.contains(allowedNorm)) {
                 return null;
             }
         }
@@ -930,7 +958,7 @@ public without sharing class FEC_BatchCaseHandlingTemplateHelper {
         if (fileCore == expectedCore || fileCore.contains(expectedCore)) {
             return null;
         }
-        return 'TEMPLATE_MISMATCH';
+        return ERR_TEMPLATE_FILE_NAME_MISMATCH;
     }
 
     // 29/05/2026 15:00 linhdev - debug log export template binding (Dev Console)

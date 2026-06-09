@@ -73,7 +73,7 @@ public without sharing class FEC_TranferInformationCallout {
         FEC_Actual_Nature_of_Case__r.FEC_Sub_Code__r.Name
       FROM Case
       WHERE Id = :caseId
-      WITH SECURITY_ENFORCED
+      
       LIMIT 1
     ];
 
@@ -122,7 +122,7 @@ public without sharing class FEC_TranferInformationCallout {
         FEC_Current_Case_Stage__r.FEC_Nature_of_Cases__c
       FROM Case
       WHERE Id = :caseId
-      WITH SECURITY_ENFORCED
+      
       LIMIT 1
     ];
     if (rows.isEmpty() || rows[0].FEC_Is_Submited__c == true) {
@@ -147,7 +147,7 @@ public without sharing class FEC_TranferInformationCallout {
           FEC_Sub_Code__c
         FROM FEC_Actual_Nature_of_Case__c
         WHERE Id = :actualNatureId
-        WITH SECURITY_ENFORCED
+        
         LIMIT 1
       ];
       if (!actuals.isEmpty()) {
@@ -171,7 +171,7 @@ public without sharing class FEC_TranferInformationCallout {
           FEC_Sub_Code__c
         FROM FEC_Nature_of_Case__c
         WHERE Id = :templateNatureId
-        WITH SECURITY_ENFORCED
+        
         LIMIT 1
       ];
       if (!templates.isEmpty()) {
@@ -289,6 +289,8 @@ public without sharing class FEC_TranferInformationCallout {
   /** LWC: Case Id + remark; RequestorID = CSM constant. */
   @AuraEnabled
   public static TransferCallResponse transferCallFromCase(Id caseId, String remark) {
+    Case historyCase = null;
+    TransferCallResponse result = null;
     try {
       if (caseId == null) {
         TransferCallResponse res = new TransferCallResponse();
@@ -304,7 +306,7 @@ public without sharing class FEC_TranferInformationCallout {
         SELECT FEC_Is_Submited__c
         FROM Case
         WHERE Id = :caseId
-        WITH SECURITY_ENFORCED
+        
         LIMIT 1
       ];
       if (submittedCheck.isEmpty()) {
@@ -342,7 +344,15 @@ public without sharing class FEC_TranferInformationCallout {
         res.Code = FEC_ConstantCommon.SUCCESS_CODE_E;
         return res;
       }
-      TransferCallResponse result = transferCallByCase(
+      List<Case> historyRows = [
+        SELECT Id, FEC_Current_Case_Stage__r.Name
+        FROM Case
+        WHERE Id = :caseId
+        
+        LIMIT 1
+      ];
+      historyCase = historyRows.isEmpty() ? null : historyRows[0];
+      result = transferCallByCase(
         caseId,
         data.genesysId,
         FEC_ConstantCommon.TRANSFER_CALL_REQUESTOR_ID_CSM,
@@ -392,8 +402,25 @@ public without sharing class FEC_TranferInformationCallout {
       err.errorMessage = formatExceptionDetail(e);
       err.ResultOfClass = err.errorMessage;
       localizeTransferCallFailure(err);
+      result = err;
       return err;
+    } finally {
+      logTransferCallProcessActionHistory(historyCase, result);
     }
+  }
+
+  private static void logTransferCallProcessActionHistory(
+    Case c,
+    TransferCallResponse apiResult
+  ) {
+    if (c == null || apiResult == null) {
+      return;
+    }
+    FEC_CommonUltils.createProcessActionHistory(
+      FEC_ConstantCommon.API_CONFIG_NAME,
+      c,
+      apiResult.success == true
+    );
   }
 
   /**
@@ -408,7 +435,7 @@ public without sharing class FEC_TranferInformationCallout {
       SELECT FEC_Is_Submited__c
       FROM Case
       WHERE Id = :caseId
-      WITH SECURITY_ENFORCED
+      
       LIMIT 1
     ];
     if (rows.isEmpty() || rows[0].FEC_Is_Submited__c == true) {
@@ -829,14 +856,23 @@ public without sharing class FEC_TranferInformationCallout {
 
   @AuraEnabled
   public static TransferCallResponse transferCall(TransferCallInput reqObj) {
-    validate(reqObj);
     TransferCallResponse finalResult = new TransferCallResponse();
     try {
+      validate(reqObj);
       String transId = FEC_CommonUltils.generateTransactionUUID();
       Datetime nowDt = Datetime.now();
       String timestamp = FEC_CommonUltils.formatTransferCallRequestDateTime(nowDt);
       String jsonPayload = buildRequestBodyJson(reqObj);
       String endpoint = resolveTransferEndpoint();
+
+      responseLog = new FEC_ResponseLog(
+        FEC_ConstantCommon.API_CONFIG_NAME,
+        endpoint,
+        FEC_ConstantCommon.API_METHOD_POST,
+        jsonPayload,
+        null,
+        null
+      );
 
       HttpResponse res = sendRequest(
         endpoint,
@@ -845,17 +881,12 @@ public without sharing class FEC_TranferInformationCallout {
         reqObj.requestorId,
         timestamp
       );
+      if (responseLog != null) {
+        responseLog.response = res;
+      }
+
       Integer status = (res == null) ? null : res.getStatusCode();
       String body = (res == null) ? null : res.getBody();
-
-      responseLog = new FEC_ResponseLog(
-        'FEC_TranferInformationCallout',
-        endpoint,
-        FEC_ConstantCommon.API_METHOD_POST,
-        jsonPayload,
-        res,
-        null
-      );
 
       finalResult = parseResponse(body, status);
       localizeTransferCallFailure(finalResult);
@@ -867,24 +898,10 @@ public without sharing class FEC_TranferInformationCallout {
       if (finalResult.rawResponse == null)
         finalResult.rawResponse = body;
 
-      String logError = null;
-      if (!finalResult.success) {
-        logError = String.isNotBlank(finalResult.errorMessage)
+      if (responseLog != null && !finalResult.success) {
+        responseLog.errorMessage = String.isNotBlank(finalResult.errorMessage)
           ? finalResult.errorMessage
           : finalResult.ResultOfClass;
-      }
-      if (responseLog != null) {
-        responseLog.errorMessage = logError;
-      }
-      if (res != null) {
-        FEC_CommonUltils.logApi(
-          'FEC_TranferInformationCallout',
-          endpoint,
-          FEC_ConstantCommon.API_METHOD_POST,
-          jsonPayload,
-          res,
-          logError
-        );
       }
     } catch (Exception ex) {
       finalResult.errorMessage = formatExceptionDetail(ex);
@@ -892,8 +909,18 @@ public without sharing class FEC_TranferInformationCallout {
       finalResult.Code = FEC_ConstantCommon.SUCCESS_CODE_E;
       finalResult.ResultOfClass = finalResult.errorMessage;
       localizeTransferCallFailure(finalResult);
+      if (responseLog != null) {
+        responseLog.errorMessage = finalResult.errorMessage;
+      }
+    } finally {
+      logApiResponse();
     }
     return finalResult;
+  }
+
+  /** Ghi FEC_API_Log__c sau mỗi lần gọi Transfer Call To Collection. */
+  public static void logApiResponse() {
+    FEC_CommonUltils.logApiResponse(responseLog);
   }
 
   private static void throwTransferValidationError(String enLookupKey) {

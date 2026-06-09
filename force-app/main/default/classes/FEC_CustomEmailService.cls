@@ -8,7 +8,7 @@ public without sharing class FEC_CustomEmailService {
     @AuraEnabled
     public static Map<String, String> getInteractionEmail(String caseId) {
         Map<String, String> result = new Map<String, String>();
-        Case c = [SELECT FEC_Send_To__c, FEC_Interaction_Email__c, RecordType.DeveloperName, FEC_Interaction__c, OwnerId, Owner.Type FROM Case WHERE Id = :caseId LIMIT 1];
+        Case c = [SELECT FEC_Send_To__c, FEC_Interaction_Email__c, FEC_Is_Manual__c, RecordType.DeveloperName, FEC_Interaction__c, OwnerId, Owner.Type FROM Case WHERE Id = :caseId LIMIT 1];
         
         String sendTo = c.FEC_Send_To__c;
         String interactionEmail = c.FEC_Interaction_Email__c;
@@ -83,6 +83,7 @@ public without sharing class FEC_CustomEmailService {
         result.put('fromEmail', sendTo != null ? sendTo : '');
         result.put('fromDisplay', fromDisplay);
         result.put('toEmail', interactionEmail != null ? interactionEmail : '');
+        result.put('isManual', String.valueOf(c.FEC_Is_Manual__c == true));
         return result;
     }
 
@@ -122,6 +123,81 @@ public without sharing class FEC_CustomEmailService {
         ];
     }
 
+
+    @AuraEnabled
+    public static List<Map<String, String>> getCaseFileInfos(String caseId) {
+        List<Map<String, String>> result = new List<Map<String, String>>();
+        if (String.isBlank(caseId)) return result;
+        for (ContentDocumentLink cdl : [
+            SELECT ContentDocumentId, ContentDocument.Title, ContentDocument.FileExtension, ContentDocument.ContentSize, ContentDocument.CreatedDate
+            FROM ContentDocumentLink
+            WHERE LinkedEntityId = :caseId
+            ORDER BY ContentDocument.CreatedDate DESC
+            LIMIT 50
+        ]) {
+            Map<String, String> item = new Map<String, String>();
+            item.put('documentId', String.valueOf(cdl.ContentDocumentId));
+            String ext = cdl.ContentDocument.FileExtension;
+            item.put('name', cdl.ContentDocument.Title + (String.isNotBlank(ext) ? '.' + ext : ''));
+            item.put('size', String.valueOf(cdl.ContentDocument.ContentSize));
+            item.put('createdDate', String.valueOf(cdl.ContentDocument.CreatedDate));
+            result.add(item);
+        }
+        return result;
+    }
+
+    @AuraEnabled
+    public static List<FEC_ServiceCaseEmailService.AttachmentWrapper> getEmailAttachmentsFromContentDocuments(List<String> contentDocumentIds) {
+        List<FEC_ServiceCaseEmailService.AttachmentWrapper> result = new List<FEC_ServiceCaseEmailService.AttachmentWrapper>();
+        if (contentDocumentIds == null || contentDocumentIds.isEmpty()) return result;
+        Set<Id> docIds = new Set<Id>();
+        for (String docId : contentDocumentIds) {
+            if (String.isNotBlank(docId)) docIds.add((Id)docId);
+        }
+        if (docIds.isEmpty()) return result;
+        for (ContentVersion cv : [
+            SELECT ContentDocumentId, Title, FileExtension, VersionData, FileType
+            FROM ContentVersion
+            WHERE ContentDocumentId IN :docIds AND IsLatest = true
+        ]) {
+            FEC_ServiceCaseEmailService.AttachmentWrapper att = new FEC_ServiceCaseEmailService.AttachmentWrapper();
+            att.fileName = cv.Title + (String.isNotBlank(cv.FileExtension) ? '.' + cv.FileExtension : '');
+            att.base64Data = EncodingUtil.base64Encode(cv.VersionData);
+            String mime = FEC_ConstantCommon.MIME_OCTET_STREAM;
+            if (cv.FileType == FEC_ConstantCommon.FILE_TYPE_PDF) mime = FEC_ConstantCommon.MIME_PDF;
+            else if (cv.FileType == FEC_ConstantCommon.FILE_TYPE_PNG) mime = FEC_ConstantCommon.MIME_PNG;
+            else if (cv.FileType == FEC_ConstantCommon.FILE_TYPE_JPG || cv.FileType == FEC_ConstantCommon.FILE_TYPE_JPEG) mime = FEC_ConstantCommon.MIME_JPEG;
+            else if (cv.FileType == FEC_ConstantCommon.FILE_TYPE_EXCEL_X || cv.FileType == FEC_ConstantCommon.FILE_TYPE_EXCEL) mime = FEC_ConstantCommon.MIME_EXCEL;
+            else if (cv.FileType == FEC_ConstantCommon.FILE_TYPE_WORD_X || cv.FileType == FEC_ConstantCommon.FILE_TYPE_WORD) mime = FEC_ConstantCommon.MIME_WORD;
+            att.mimeType = mime;
+            result.add(att);
+        }
+        return result;
+    }
+
+    @AuraEnabled
+    public static Map<String, List<Map<String, String>>> getEmailMessageAttachments(List<String> emailMessageIds) {
+        Map<String, List<Map<String, String>>> result = new Map<String, List<Map<String, String>>>();
+        if (emailMessageIds == null || emailMessageIds.isEmpty()) return result;
+        Set<Id> ids = new Set<Id>();
+        for (String s : emailMessageIds) if (String.isNotBlank(s)) ids.add((Id)s);
+        if (ids.isEmpty()) return result;
+        for (Id eid : ids) result.put(String.valueOf(eid), new List<Map<String, String>>());
+        for (ContentDocumentLink cdl : [
+            SELECT LinkedEntityId, ContentDocumentId, ContentDocument.Title, ContentDocument.FileExtension, ContentDocument.ContentSize
+            FROM ContentDocumentLink
+            WHERE LinkedEntityId IN :ids
+            ORDER BY ContentDocument.Title ASC
+        ]) {
+            Map<String, String> item = new Map<String, String>();
+            item.put('documentId', String.valueOf(cdl.ContentDocumentId));
+            String ext = cdl.ContentDocument.FileExtension;
+            item.put('name', cdl.ContentDocument.Title + (String.isNotBlank(ext) ? '.' + ext : ''));
+            item.put('size', String.valueOf(cdl.ContentDocument.ContentSize));
+            result.get(String.valueOf(cdl.LinkedEntityId)).add(item);
+        }
+        return result;
+    }
     @AuraEnabled
     public static List<SObject> getEmailTemplates() {
         // Lấy email từ FEC_Outbound_Email_Config__c theo User Group của current user
@@ -177,6 +253,80 @@ public without sharing class FEC_CustomEmailService {
         return result;
     }
 
+    @AuraEnabled
+    public static Map<String, String> resolveEmailTemplate(String caseId, String subject, String body) {
+        Map<String, String> result = new Map<String, String>{
+            'subject' => subject == null ? '' : subject,
+            'body' => body == null ? '' : body
+        };
+        try {
+            Case c = loadCaseForTemplateResolve(caseId, new List<String>{ subject, body });
+            result.put('subject', resolveEmailTemplateText(subject, c));
+            result.put('body', resolveEmailTemplateText(body, c));
+        } catch (Exception ex) {
+            System.debug('resolveEmailTemplate failed: ' + ex.getMessage());
+        }
+        return result;
+    }
+
+    private static String resolveEmailTemplateText(String template, Case c) {
+        if (String.isBlank(template)) return template;
+        String resolved = template.replaceAll(FEC_ConstantCommon.PATTERN_TRIPLE_BRACE, '{{$1}}');
+        try {
+            Pattern userPat = Pattern.compile(FEC_ConstantCommon.PATTERN_USER_MERGE_FIELD);
+            Matcher userMat = userPat.matcher(resolved);
+            if (userMat.find()) {
+                User u = [SELECT Id, Name, FirstName, LastName, Email, Phone, Title, Department, AboutMe, MobilePhone FROM User WHERE Id = :UserInfo.getUserId() LIMIT 1];
+                Matcher userMat2 = userPat.matcher(resolved);
+                while (userMat2.find()) {
+                    String fieldName = userMat2.group(1);
+                    String val = '';
+                    try { Object rawVal = u.get(fieldName); val = rawVal == null ? '' : String.valueOf(rawVal); } catch (Exception ex) {}
+                    if (val == null || val == 'null') val = '';
+                    resolved = resolved.replace('{{User.' + fieldName + '}}', val);
+                }
+            }
+            resolved = normalizeCaseMergeFields(resolved);
+            if (c != null) resolved = FEC_CommonUltils.resolveTemplate(resolved, c);
+        } catch (Exception ex) {
+            System.debug('resolveEmailTemplateText failed: ' + ex.getMessage());
+        }
+        return resolved;
+    }
+
+    private static String normalizeCaseMergeFields(String template) {
+        if (String.isBlank(template)) return template;
+        Pattern casePat = Pattern.compile(FEC_ConstantCommon.PATTERN_CASE_MERGE_FIELD);
+        Matcher caseMat = casePat.matcher(template);
+        String result = template;
+        while (caseMat.find()) {
+            String fieldPath = caseMat.group(1);
+            result = result.replace('{{Case.' + fieldPath + '}}', '{{' + fieldPath + '}}');
+        }
+        return result;
+    }
+
+    private static Case loadCaseForTemplateResolve(String caseId, List<String> templates) {
+        if (String.isBlank(caseId)) return null;
+        Set<String> fieldApis = new Set<String>{ 'Id', 'CaseNumber', 'Subject', 'Status' };
+        Map<String, Schema.SObjectField> caseFields = Case.SObjectType.getDescribe().fields.getMap();
+        if (templates != null) {
+            for (String template : templates) {
+                if (String.isBlank(template)) continue;
+                String normalized = template.replaceAll(FEC_ConstantCommon.PATTERN_TRIPLE_BRACE, '{{$1}}');
+                Pattern p = Pattern.compile('\\{\\{([^}]+)\\}\\}');
+                Matcher m = p.matcher(normalized);
+                while (m.find()) {
+                    String fieldPath = m.group(1);
+                    if (String.isBlank(fieldPath) || fieldPath.startsWith('User.')) continue;
+                    if (fieldPath.startsWith('Case.')) fieldPath = fieldPath.substring(5);
+                    if (!fieldPath.contains('.') && caseFields.containsKey(fieldPath)) fieldApis.add(fieldPath);
+                }
+            }
+        }
+        String soql = 'SELECT ' + String.join(new List<String>(fieldApis), ',') + ' FROM Case WHERE Id = :caseId LIMIT 1';
+        return Database.query(soql);
+    }
     @AuraEnabled
     public static String fetchImageAsBase64(String imageUrl) {
         try {
@@ -383,27 +533,7 @@ public without sharing class FEC_CustomEmailService {
 
             mail.setSubject(subjectWithThread);
             // Resolve merge fields {{{...}}} và {{...}} trong body trước khi gửi
-            String resolvedBody = body != null ? body : '';
-            try {
-                resolvedBody = resolvedBody.replaceAll(FEC_ConstantCommon.PATTERN_TRIPLE_BRACE, '{{$1}}');
-                // Resolve User.* fields
-                Pattern userPat = Pattern.compile(FEC_ConstantCommon.PATTERN_USER_MERGE_FIELD);
-                Matcher userMat = userPat.matcher(resolvedBody);
-                if (userMat.find()) {
-                    User u = [SELECT Id, Name, FirstName, LastName, Email, Phone, Title, Department, AboutMe, MobilePhone FROM User WHERE Id = :UserInfo.getUserId() LIMIT 1];
-                    Matcher userMat2 = userPat.matcher(resolvedBody);
-                    while (userMat2.find()) {
-                        String fieldName = userMat2.group(1);
-                        String val = '';
-                        try { val = String.valueOf(u.get(fieldName)); } catch(Exception ex) {}
-                        if (val == 'null') val = '';
-                        resolvedBody = resolvedBody.replace('{{User.' + fieldName + '}}', val);
-                    }
-                }
-                resolvedBody = FEC_CommonUltils.resolveTemplate(resolvedBody, c);
-            } catch (Exception resolveEx) {
-                System.debug('resolveTemplate failed: ' + resolveEx.getMessage());
-            }
+            String resolvedBody = resolveEmailTemplateText(body != null ? body : '', loadCaseForTemplateResolve(caseId, new List<String>{ body }));
             mail.setHtmlBody(resolvedBody.replace('\n', '<br/>'));
             mail.setSaveAsActivity(false);
 

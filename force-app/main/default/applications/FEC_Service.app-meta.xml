@@ -17,6 +17,96 @@
     <navType>Console</navType>
     <profileActionOverrides>
         <actionName>View</actionName>
+        <content>FEC_SFT_Case_Record_Page</content>
+        <formFactor>Small</formFactor>
+        <pageOrSobjectType>Case</pageOrSobjectType>
+        <recordType>Case.SFT_Case</recordType>
+        <type>Flexipage</type>
+        <profile>Admin</profile>
+    </profileActionOverrides>
+    <profileActionOverrides>
+        <actionName>View</actionName>
+        <content>FEC_SFT_Case_Record_Page</content>
+        <formFactor>Large</formFactor>
+        <pageOrSobjectType>Case</pageOrSobjectType>
+        <recordType>Case.SFT_Case</recordType>
+        <type>Flexipage</type>
+        <profile>Admin</profile>
+    </profileActionOverrides>
+    <profileActionOverrides>
+        <actionName>View</actionName>
+        <content>FEC_SFT_Case_Record_Page</content>
+        <formFactor>Small</formFactor>
+        <pageOrSobjectType>Case</pageOrSobjectType>
+        <recordType>Case.SFT_Case</recordType>
+        <type>Flexipage</type>
+        <profile>CS Frontline</profile>
+    </profileActionOverrides>
+    <profileActionOverrides>
+        <actionName>View</actionName>
+        <content>FEC_SFT_Case_Record_Page</content>
+        <formFactor>Large</formFactor>
+        <pageOrSobjectType>Case</pageOrSobjectType>
+        <recordType>Case.SFT_Case</recordType>
+        <type>Flexipage</type>
+        <profile>CS Frontline</profile>
+    </profileActionOverrides>
+    <profileActionOverrides>
+        <actionName>View</actionName>
+        <content>FEC_SFT_Case_Record_Page</content>
+        <formFactor>Small</formFactor>
+        <pageOrSobjectType>Case</pageOrSobjectType>
+        <recordType>Case.SFT_Case</recordType>
+        <type>Flexipage</type>
+        <profile>CS Back Office</profile>
+    </profileActionOverrides>
+    <profileActionOverrides>
+        <actionName>View</actionName>
+        <content>FEC_SFT_Case_Record_Page</content>
+        <formFactor>Large</formFactor>
+        <pageOrSobjectType>Case</pageOrSobjectType>
+        <recordType>Case.SFT_Case</recordType>
+        <type>Flexipage</type>
+        <profile>CS Back Office</profile>
+    </profileActionOverrides>
+    <profileActionOverrides>
+        <actionName>View</actionName>
+        <content>FEC_SFT_Case_Record_Page</content>
+        <formFactor>Small</formFactor>
+        <pageOrSobjectType>Case</pageOrSobjectType>
+        <recordType>Case.SFT_Case</recordType>
+        <type>Flexipage</type>
+        <profile>Relevant Depts</profile>
+    </profileActionOverrides>
+    <profileActionOverrides>
+        <actionName>View</actionName>
+        <content>FEC_SFT_Case_Record_Page</content>
+        <formFactor>Large</formFactor>
+        <pageOrSobjectType>Case</pageOrSobjectType>
+        <recordType>Case.SFT_Case</recordType>
+        <type>Flexipage</type>
+        <profile>Relevant Depts</profile>
+    </profileActionOverrides>
+    <profileActionOverrides>
+        <actionName>View</actionName>
+        <content>FEC_SFT_Case_Record_Page</content>
+        <formFactor>Small</formFactor>
+        <pageOrSobjectType>Case</pageOrSobjectType>
+        <recordType>Case.SFT_Case</recordType>
+        <type>Flexipage</type>
+        <profile>RD - IT User</profile>
+    </profileActionOverrides>
+    <profileActionOverrides>
+        <actionName>View</actionName>
+        <content>FEC_SFT_Case_Record_Page</content>
+        <formFactor>Large</formFactor>
+        <pageOrSobjectType>Case</pageOrSobjectType>
+        <recordType>Case.SFT_Case</recordType>
+        <type>Flexipage</type>
+        <profile>RD - IT User</profile>
+    </profileActionOverrides>
+    <profileActionOverrides>
+        <actionName>View</actionName>
         <content>FEC_Interaction_Case_Record_Page</content>
         <formFactor>Small</formFactor>
         <pageOrSobjectType>Case</pageOrSobjectType>
@@ -555,12 +645,12 @@
         <type>Flexipage</type>
         <profile>Admin</profile>
     </profileActionOverrides>
+    <tabs>standard-Case</tabs>
     <tabs>FEC_Customer_Search</tabs>
     <tabs>FEC_Account_Contract_Search</tabs>
     <tabs>Batch_Case_Creation</tabs>
     <tabs>Batch_Data_Creation</tabs>
     <tabs>Batch_Case_Handling</tabs>
-    <tabs>standard-Case</tabs>
     <tabs>standard-report</tabs>
     <tabs>FEC_Product_Type__c</tabs>
     <tabs>FEC_Category__c</tabs>
@@ -585,6 +675,10 @@
     <tabs>FEC_Clear_Session__c</tabs>
     <tabs>FEC_Notification_Template_Channel__c</tabs>
     <tabs>FEC_Download_Report__c</tabs>
+    <tabs>FE_Department_Admin</tabs>
+    <tabs>FEC_Fraud_Case_Detail</tabs>
+    <tabs>Search_Fraud_Case</tabs>
+    <tabs>Service_Call_Logs</tabs>
     <uiType>Lightning</uiType>
     <utilityBar>FEC_Service_UtilityBar</utilityBar>
     <workspaceConfig>
@@ -599,6 +693,18 @@
         </mappings>
         <mappings>
             <tab>FEC_Account_Contract_Search</tab>
+        </mappings>
+        <mappings>
+            <tab>FE_Department_Admin</tab>
+        </mappings>
+        <mappings>
+            <tab>FE_Department_Admin</tab>
+        </mappings>
+        <mappings>
+            <tab>Search_Fraud_Case</tab>
+        </mappings>
+        <mappings>
+            <tab>Service_Call_Logs</tab>
         </mappings>
         <mappings>
             <tab>FEC_Action_Button__c</tab>
@@ -626,6 +732,9 @@
         </mappings>
         <mappings>
             <tab>FEC_Enhanced_Letterhead__c</tab>
+        </mappings>
+        <mappings>
+            <tab>FEC_Fraud_Case_Detail</tab>
         </mappings>
         <mappings>
             <tab>FEC_Hold_Case__c</tab>

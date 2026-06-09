@@ -257,13 +257,13 @@ public without sharing class FEC_RoutingHistTatSvc {
             return;
         }
 
-        Map<Id, String> teamByOwner = FEC_OwnerTeamLookupSvc.getByOwnerIds(ownerIds);
+        Map<Id, String> reportTeamByOwner = FEC_OwnerTeamLookupSvc.getReportTeamByOwnerIds(ownerIds);
         for (FEC_Routing_Action_History__c h : newRows) {
             if (!needsUpdatedGroupRecalc(h, oldMap)) {
                 continue;
             }
-            h.FEC_Updated_Group__c = resolveUpdatedGroupCode(h, teamByOwner);
-            applyQueueUserFlags(h, teamByOwner);
+            h.FEC_Updated_Group__c = resolveUpdatedGroupCode(h, reportTeamByOwner);
+            applyQueueUserFlags(h, reportTeamByOwner);
         }
     }
 

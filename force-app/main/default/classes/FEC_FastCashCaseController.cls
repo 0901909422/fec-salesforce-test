@@ -1,6 +1,9 @@
 public without sharing class FEC_FastCashCaseController {
 
-    private static final Integer DEFAULT_FAST_CASH_TENURE = 1;
+    // 29/05/2026 14:00 linhdev - CMSIPPBlockWS spec: Tenure=0, DisbChannel=PC, NO_IPP=true, CampaignName=TMN, FlatRate=0
+    private static final Integer DEFAULT_FAST_CASH_TENURE = 0;
+    private static final String DEFAULT_CMS_IPP_DISB_CHANNEL = 'PC';
+    private static final String DEFAULT_CMS_IPP_CAMPAIGN_NAME = 'TMN';
 
     public class CaseFastCashStateDTO {
         @AuraEnabled public Id actualNatureOfCaseId;
@@ -49,7 +52,7 @@ public without sharing class FEC_FastCashCaseController {
             SELECT FEC_Actual_Nature_of_Case__c,
                 FEC_Requested_Amount__c,
                 FEC_Max_Amount__c,
-                FEC_Application_ID__c,
+                FEC_ID_Search__c,
                 FEC_Disbursement_Status__c,
                 FEC_Disbursement_Date__c,
                 FEC_Account_or_Contract__r.FEC_Disbursement_Date__c,
@@ -69,7 +72,7 @@ public without sharing class FEC_FastCashCaseController {
         dto.actualNatureOfCaseId = c.FEC_Actual_Nature_of_Case__c;
         dto.requestedAmount = c.FEC_Requested_Amount__c;
         dto.maxAmount = c.FEC_Max_Amount__c;
-        dto.applicationId = c.FEC_Application_ID__c;
+        dto.applicationId = c.FEC_ID_Search__c;
         dto.disbursementStatus = resolveDisbursementStatusForCase(c);
         dto.disbursementDate = resolveDisbursementDateForCase(c);
         return dto;
@@ -104,7 +107,7 @@ public without sharing class FEC_FastCashCaseController {
         if (!isAccEligibilityTrue(ipp.accEligibility)) {
             outDto.callCompleted = true;
             outDto.fastCashStatus = System.Label.FEC_LBL_Fast_Cash_Status_Not_Eligible;
-            outDto.errorCode = String.isNotBlank(ipp.code) ? ipp.code : '';
+            outDto.errorCode = String.isNotBlank(ipp.code) ? ipp.code : FEC_ConstantCommon.STR_EMPTY;
             outDto.errorDescription = resolveIppUserDescription(ipp);
             return outDto;
         }
@@ -147,7 +150,7 @@ public without sharing class FEC_FastCashCaseController {
         }
         List<Case> rows = [
             SELECT Id,
-                FEC_Application_ID__c,
+                FEC_ID_Search__c,
                 FEC_SubCategory__r.FEC_Code__c,
                 (
                     SELECT Id, FEC_PD_Disbursement_Status__c
@@ -188,30 +191,20 @@ public without sharing class FEC_FastCashCaseController {
             return ctx;
         }
         Case c = caseRows[0];
-        String accountNumber = resolveAccountNumberForCase(c);
+        // CrmID: FEC_ID_Search__c
+        String crmId = resolveCrmIdForCmsIppBlock(c);
+        if (String.isBlank(crmId)) {
+            ctx.errorMessage = String.format(System.Label.FEC_MSG_Param_Required, new List<String>{ 'Case ID' });
+            return ctx;
+        }
+        String accountNumber = resolveAccountForCmsIppBlock(c);
         if (String.isBlank(accountNumber)) {
             ctx.errorMessage = System.Label.FEC_MSG_AccountNumber_Invalid;
             return ctx;
         }
-        FEC_CommonUltils.beginDeferredApiLogging();
-        try {
-            String crmId = resolveApplicationIdForCase(c, accountNumber);
-            if (String.isBlank(crmId)) {
-                ctx.errorMessage = String.format(System.Label.FEC_MSG_Param_Required, new List<String>{ 'Application Id' });
-                return ctx;
-            }
-            String disbChannel = resolveDisbursementChannel(crmId);
-            if (String.isBlank(disbChannel)) {
-                disbChannel = FEC_ConstantCommon.PRODUCT_TYPE_CARD;
-            }
-            ctx.crmId = crmId;
-            ctx.disbChannel = disbChannel;
-            ctx.success = true;
-        } catch (Exception e) {
-            ctx.errorMessage = System.Label.FEC_Unknown_Error;
-        } finally {
-            FEC_CommonUltils.flushDeferredApiLogs();
-        }
+        ctx.crmId = crmId;
+        ctx.disbChannel = DEFAULT_CMS_IPP_DISB_CHANNEL;
+        ctx.success = true;
         return ctx;
     }
 
@@ -224,71 +217,89 @@ public without sharing class FEC_FastCashCaseController {
     ) {
         BlockResultDTO res = new BlockResultDTO();
         res.success = false;
-        if (caseId == null || blockAmount == null) {
-            res.errorMessage = String.format(System.Label.FEC_MSG_Param_Required, new List<String>{ 'Case / Amount' });
-            return res;
-        }
-        if (String.isBlank(crmId) || String.isBlank(disbChannel)) {
-            res.errorMessage = String.format(System.Label.FEC_MSG_Param_Required, new List<String>{ 'Application Id / Disb Channel' });
-            return res;
-        }
-        List<Case> caseRows = queryCaseForFastCash(caseId);
-        if (caseRows.isEmpty()) {
-            res.errorMessage = String.format(System.Label.FEC_MSG_Not_Found, new List<String>{ 'Case' });
-            return res;
-        }
-        Case c = caseRows[0];
-        String accountNumber = resolveAccountNumberForCase(c);
-        if (String.isBlank(accountNumber)) {
-            res.errorMessage = System.Label.FEC_MSG_AccountNumber_Invalid;
-            return res;
-        }
-        FEC_CMSIPPBlockWS.ResponseWrapper apiRes;
+        Case c;
         try {
-            apiRes = FEC_CMSIPPBlockWS.cmsIPPBlockWS(
-                FEC_ConstantCommon.REQUESTOR_CRM,
-                crmId,
-                disbChannel,
-                accountNumber,
-                blockAmount,
-                DEFAULT_FAST_CASH_TENURE,
-                true,
-                '',
-                0,
-                '',
-                '',
-                '',
-                0,
-                0,
-                ''
-            );
-        } catch (Exception e) {
-            FEC_CommonUltils.logApi(
-                'FEC_CMS_IPP_BlockWS',
-                null,
-                FEC_ConstantCommon.API_METHOD_POST,
-                null,
-                null,
-                e.getMessage()
-            );
-            res.errorMessage = System.Label.FEC_Unknown_Error;
+            if (caseId == null) {
+                res.errorMessage = String.format(System.Label.FEC_MSG_Param_Required, new List<String>{ 'Case Id' });
+                return res;
+            }
+            List<Case> caseRows = queryCaseForFastCash(caseId);
+            if (caseRows.isEmpty()) {
+                res.errorMessage = String.format(System.Label.FEC_MSG_Not_Found, new List<String>{ 'Case' });
+                return res;
+            }
+            c = caseRows[0];
+            // 29/05/2026 14:00 linhdev - map payload CMSIPPBlockWS theo spec (Case fields + default PC/TMN/0)
+            String crmIdForApi = resolveCrmIdForCmsIppBlock(c);
+            if (String.isBlank(crmIdForApi)) {
+                res.errorMessage = String.format(System.Label.FEC_MSG_Param_Required, new List<String>{ 'Case ID' });
+                return res;
+            }
+            String accountNumber = resolveAccountForCmsIppBlock(c);
+            if (String.isBlank(accountNumber)) {
+                res.errorMessage = System.Label.FEC_MSG_AccountNumber_Invalid;
+                return res;
+            }
+            Decimal amountForApi = resolveBlockAmountForCmsIppBlock(c, blockAmount);
+            if (amountForApi == null) {
+                res.errorMessage = String.format(System.Label.FEC_MSG_Param_Required, new List<String>{ 'Amount' });
+                return res;
+            }
+            FEC_CMSIPPBlockWS.ResponseWrapper apiRes;
+            try {
+                apiRes = FEC_CMSIPPBlockWS.cmsIPPBlockWS(
+                    FEC_ConstantCommon.REQUESTOR_PEGA_CSM_LEGACY,
+                    crmIdForApi,
+                    DEFAULT_CMS_IPP_DISB_CHANNEL,
+                    accountNumber,
+                    amountForApi,
+                    DEFAULT_FAST_CASH_TENURE,
+                    true,
+                    DEFAULT_CMS_IPP_CAMPAIGN_NAME,
+                    0,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null
+                );
+            } catch (Exception e) {
+                FEC_CommonUltils.logApi(
+                    'FEC_CMS_IPP_BlockWS',
+                    null,
+                    FEC_ConstantCommon.API_METHOD_POST,
+                    null,
+                    null,
+                    e.getMessage()
+                );
+                res.errorMessage = System.Label.FEC_Unknown_Error;
+                return res;
+            }
+            if (apiRes == null || apiRes.Sys == null) {
+                res.errorMessage = System.Label.FEC_MSG_Response_Null;
+                return res;
+            }
+            res.sysCode = apiRes.Sys.Code;
+            res.sysDescription = apiRes.Sys.Description;
+            if (isCmsBlockBusinessSuccess(apiRes)) {
+                res.success = true;
+                saveFastCashCaseAmounts(caseId, amountForApi, c.FEC_Max_Amount__c);
+            } else {
+                res.errorMessage = String.isNotBlank(apiRes.Sys.Description)
+                    ? apiRes.Sys.Description
+                    : System.Label.FEC_Unknown_Error;
+            }
             return res;
+        } finally {
+            if (c != null) {
+                FEC_CommonUltils.createProcessActionHistory(
+                    FEC_CMSIPPBlockWS.API_CONFIG_NAME,
+                    c,
+                    res.success == true
+                );
+            }
         }
-        if (apiRes == null || apiRes.Sys == null) {
-            res.errorMessage = System.Label.FEC_MSG_Response_Null;
-            return res;
-        }
-        res.sysCode = apiRes.Sys.Code;
-        res.sysDescription = apiRes.Sys.Description;
-        if (isCmsBlockBusinessSuccess(apiRes)) {
-            res.success = true;
-            saveFastCashCaseAmounts(caseId, blockAmount, c.FEC_Max_Amount__c);
-        } else {
-            res.errorMessage = String.isNotBlank(apiRes.Sys.Description)
-                ? apiRes.Sys.Description
-                : System.Label.FEC_Unknown_Error;
-        }
-        return res;
     }
 
     private static FastCashEligibilityDTO notEligibleNoAccount(FastCashEligibilityDTO outDto) {
@@ -325,7 +336,7 @@ public without sharing class FEC_FastCashCaseController {
             return false;
         }
         String e = accEligibility.trim();
-        return 'true'.equalsIgnoreCase(e) || 'eligible'.equalsIgnoreCase(e) || '1'.equals(e);
+        return 'true'.equalsIgnoreCase(e) || 'eligible'.equalsIgnoreCase(e) || FEC_ConstantCommon.SUCCESS_CODE_1.equals(e);
     }
 
     private static FastCashEligibilityDTO loadMaxFromCardSecAndFinish(FastCashEligibilityDTO outDto, String accountNumber) {
@@ -374,12 +385,59 @@ public without sharing class FEC_FastCashCaseController {
         return accountNumber;
     }
 
+    @TestVisible
+    private static String resolveCrmIdForCmsIppBlock(Case c) {
+        if (c == null) {
+            return null;
+        }
+        return resolveCrmIdFromIdSearch(c);
+    }
+
+    @TestVisible
+    private static String resolveCrmIdFromIdSearch(Case c) {
+        if (c == null || String.isBlank(c.FEC_ID_Search__c)) {
+            return null;
+        }
+        String idSearch = c.FEC_ID_Search__c.trim();
+        if (idSearch.contains(FEC_ConstantCommon.FEC_ID_SEARCH_DELIMITER)) {
+            String numberPart = idSearch.substringAfterLast(FEC_ConstantCommon.FEC_ID_SEARCH_DELIMITER);
+            return String.isNotBlank(numberPart) ? numberPart.trim() : null;
+        }
+        return idSearch;
+    }
+
+    // 29/05/2026 14:00 linhdev - Account: Case.FEC_Account_Contract_Number_Text__c (16/19 số)
+    @TestVisible
+    private static String resolveAccountForCmsIppBlock(Case c) {
+        if (c == null || String.isBlank(c.FEC_Account_Contract_Number_Text__c)) {
+            return null;
+        }
+        String raw = c.FEC_Account_Contract_Number_Text__c.trim();
+        if (!Pattern.matches(FEC_ConstantCommon.PATTERN_ACCOUNT_NUMBER, raw)) {
+            return null;
+        }
+        return raw;
+    }
+
+    // 29/05/2026 14:00 linhdev - Amount: Case.FEC_Requested_Amount__c (spec Fast Cash Requested Amount), fallback UI
+    @TestVisible
+    private static Decimal resolveBlockAmountForCmsIppBlock(Case c, Decimal blockAmountFromUi) {
+        if (c != null && c.FEC_Requested_Amount__c != null) {
+            return c.FEC_Requested_Amount__c;
+        }
+        return blockAmountFromUi;
+    }
+
     private static List<Case> queryCaseForFastCash(Id caseId) {
         return [
             SELECT Id,
                 FEC_Account_Number__c,
-                FEC_Application_ID__c,
                 FEC_Max_Amount__c,
+                FEC_Requested_Amount__c,
+                FEC_ID_Search__c,
+                FEC_Account_Contract_Number_Text__c,
+                FEC_Current_Case_Stage__c,
+                FEC_Current_Case_Stage__r.Name,
                 FEC_Account_or_Contract__r.FEC_Account_Number__c,
                 FEC_Account_or_Contract__r.FEC_Contract_Number__c,
                 FEC_Product_Type__r.Name
@@ -387,49 +445,6 @@ public without sharing class FEC_FastCashCaseController {
             WHERE Id = :caseId
             LIMIT 1
         ];
-    }
-
-    private static String resolveApplicationIdForCase(Case c, String accountNumber) {
-        if (c == null) {
-            return null;
-        }
-        if (String.isNotBlank(c.FEC_Application_ID__c)) {
-            return c.FEC_Application_ID__c.trim();
-        }
-        if (String.isBlank(accountNumber)) {
-            return null;
-        }
-        if (!Pattern.matches(FEC_ConstantCommon.PATTERN_ACCOUNT_NUMBER, accountNumber)) {
-            return null;
-        }
-        try {
-            FEC_GetCustomerList.ResponseWrapper response = FEC_GetCustomerList.getCustomerList(
-                FEC_ConstantCommon.REQUESTOR_CRM,
-                null,
-                false,
-                null,
-                null,
-                null,
-                null,
-                accountNumber,
-                null,
-                null,
-                null
-            );
-            if (response != null
-                && response.Sys != null
-                && '1'.equals(response.Sys.Code)
-                && response.Customers != null
-                && !response.Customers.isEmpty()) {
-                FEC_GetCustomerList.Customer customer = response.Customers[0];
-                if (customer.Applications != null && !customer.Applications.isEmpty()) {
-                    return customer.Applications[0].ApplicationID;
-                }
-            }
-        } catch (Exception e) {
-            return null;
-        }
-        return null;
     }
 
     private static String resolveDisbursementChannel(String applicationId) {
@@ -452,11 +467,14 @@ public without sharing class FEC_FastCashCaseController {
     }
 
     private static Boolean isCmsBlockBusinessSuccess(FEC_CMSIPPBlockWS.ResponseWrapper w) {
-        if (w == null || w.Sys == null || String.isBlank(w.Sys.Code)) {
+        if (w == null || w.Sys == null) {
             return false;
         }
-        String c = w.Sys.Code.trim();
-        return '0'.equals(c) || '1'.equals(c) || '4'.equals(c);
+        String c = String.isBlank(w.Sys.Code) ? FEC_ConstantCommon.STR_EMPTY : w.Sys.Code.trim();
+        return FEC_ConstantCommon.SUCCESS_STATUS_CODE.equals(c)
+            || FEC_ConstantCommon.SUCCESS_CODE_1.equals(c)
+            || (String.isNotBlank(w.Sys.Description)
+                && w.Sys.Description.trim().equalsIgnoreCase(FEC_ConstantCommon.SUCCESS_MESSAGE));
     }
 
     private static Boolean isFastCashRc35Case(Case c) {
@@ -465,7 +483,7 @@ public without sharing class FEC_FastCashCaseController {
         }
         String code = c.FEC_SubCategory__r.FEC_Code__c;
         return FEC_ConstantCommon.FAST_CASH_SUB_CATEGORY_CODE_RC35.equalsIgnoreCase(
-            String.isBlank(code) ? '' : code.trim()
+            String.isBlank(code) ? FEC_ConstantCommon.STR_EMPTY : code.trim()
         );
     }
 
@@ -505,7 +523,7 @@ public without sharing class FEC_FastCashCaseController {
         upsertPendingDisbursementStatus(
             c.Id,
             FEC_ConstantCommon.FAST_CASH_DISB_STATUS_PENDING_CUSTOMER_WITHDRAWAL,
-            c.FEC_Application_ID__c
+            c.FEC_ID_Search__c
         );
     }
 

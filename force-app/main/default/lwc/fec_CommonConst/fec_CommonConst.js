@@ -35,6 +35,9 @@ const MSG_INVALID_NATIONAL_ID = 'Invalid National ID number';
 const MSG_NATIONAL_ID_DIGITS_ONLY_9_OR_12 = 'National ID must contain digits only (9 or 12 digits)';
 const MSG_INVALID_EMAIL_FORMAT = 'Email must be one of (randomString1)@(randomString2).(2-5 chars) or (randomString1)@(randomString2).(2-5 chars).(2-5 chars)';
 const UBANK_PRODUCT_NAME = 'UBank';
+const INSURANCE_PRODUCT_NAME = "Insurance";
+const B2_PRODUCT_NAME = "B2";
+const CASH24_PRODUCT_NAME = "Cash24";
 const RECORD_TYPE_INTERACTION = 'Interaction';
 const RECORD_TYPE_CUSTOMER_CASE = 'Customer_Case';
 const RECORD_TYPE_INTERNAL_CASE = 'Internal_Case';
@@ -273,6 +276,7 @@ const PAGE_SIZE_OPTIONS_MAP = new Map([
 const FIELD_CUSTOMER_PHONE_NUMBER = 'FEC_Customer_Phone_Number__c';
 const FIELD_RECEIVING_PHONE_NUMBER = 'FEC_Receiving_Phone_Number__c';
 const FIELD_CONTACT_CHANNEL = 'FEC_Contact_Channel__c';
+const DOWNLOAD_LOCK_KEY = 'FEC_Download_Running';
 
 export { 
     AUTO_NOTIFICATION_HEADER_VI, 
@@ -398,5 +402,9 @@ export {
   PAGE_SIZE_OPTIONS_MAP,
   FIELD_CUSTOMER_PHONE_NUMBER,
   FIELD_RECEIVING_PHONE_NUMBER,
-  FIELD_CONTACT_CHANNEL
+  FIELD_CONTACT_CHANNEL,
+  DOWNLOAD_LOCK_KEY,
+  INSURANCE_PRODUCT_NAME,
+  B2_PRODUCT_NAME,
+  CASH24_PRODUCT_NAME
 };
