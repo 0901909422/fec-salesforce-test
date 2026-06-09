@@ -191,6 +191,7 @@
         <members>fec_Search</members>
         <members>fec_holdCaseManual</members>
         <members>fec_SkipModal</members>
+        <members>customDblclickCell</members>
         <name>LightningComponentBundle</name>
     </types>
     <types>
