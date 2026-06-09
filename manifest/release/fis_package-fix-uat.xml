@@ -150,6 +150,7 @@
         <members>FEC_Download_Report__c.Interactions_Service_Cases_TAT_DS</members>
         <members>FEC_Download_Report__c.Interactions_Service_Cases_TAT_PM</members>
         <members>FEC_Download_Report__c.Interactions_Service_Cases_TAT_TS</members>
+        <members>Case.FEC_Ubank_Email_Case</members>
         <name>ListView</name>
     </types>
     <types>
