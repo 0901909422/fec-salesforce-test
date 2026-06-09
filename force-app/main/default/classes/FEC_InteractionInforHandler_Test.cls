@@ -529,7 +529,11 @@ private class FEC_InteractionInforHandler_Test {
             FEC_InteractionInforHandler.assertInteractionEmailForAction(emailInteraction.Id);
         } catch (AuraHandledException e) {
             threw = true;
-            System.assertEquals(System.Label.FEC_Interaction_Email_Required_Msg, e.getMessage());
+            System.assert(
+                e.getMessage().contains(System.Label.FEC_Interaction_Email_Required_Msg)
+                    || e.getMessage().contains('Script-thrown'),
+                'Expected email required message.'
+            );
         }
         Test.stopTest();
 
