@@ -450,6 +450,21 @@ public without sharing class FEC_AccountOrContractPicklistHandler {
             throw new AuraHandledException(e.getMessage());
         }
     }
+
+    @AuraEnabled
+    public static String getInteractionSearchProducts(Id caseId){
+        try {
+            Case c = [
+            SELECT FEC_Search_Products__c 
+            FROM Case
+            WHERE Id = :caseId
+            LIMIT 1
+         ];
+            return c.FEC_Search_Products__c ;
+        } catch (Exception e) {
+            throw new AuraHandledException(e.getMessage());
+        }
+    }
     
     //Hieutt74 - Get account/contract number from first customer history record of interaction
     //Updated by Hieutt74 - 2026-04-17 - Add product code check to ensure correct account/contract number is returned

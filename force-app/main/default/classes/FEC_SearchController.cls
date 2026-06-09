@@ -72,6 +72,9 @@ public with sharing class FEC_SearchController {
     if (String.isBlank(value) || String.isBlank(fieldName)) {
         throw new AuraHandledException(System.Label.FEC_MSG_Create_Customer_History_Field_Null);
     }
+    if (caseId != null) {
+        FEC_InteractionInforHandler.assertInteractionEmailForAction(caseId);
+    }
 
     Case interactionCase;
 
@@ -320,7 +323,7 @@ public with sharing class FEC_SearchController {
                     rows.add(new Map<String, String>{
                         'user'     => h.userName,
                         'activity' => h.activityId,
-                        'status'   => h.statusId,
+                        'status'   => FEC_GetLoanApplicationHistory.resolveStatusLabel(h.statusId),
                         'editDate' => h.editDate
                     });
                 }

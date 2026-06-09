@@ -9685,7 +9685,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>Waiting for data message</shortDescription>
-        <value>Đang chờ dữ liệu từ hệ thống...</value>
+        <value>Waiting for data from the system...</value>
     </labels>
     <labels>
         <fullName>FEC_Last_Credit_Limit</fullName>
@@ -18576,5 +18576,53 @@
         <protected>false</protected>
         <shortDescription>Label</shortDescription>
         <value>No Case Found</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Email_File_Select_Files</fullName>
+        <categories>fecEmailSection</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Email_File_Select_Files</shortDescription>
+        <value>Select Files</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Email_File_Related_Files</fullName>
+        <categories>fecEmailSection</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Email_File_Related_Files</shortDescription>
+        <value>Related Files</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Email_File_Search_Files</fullName>
+        <categories>fecEmailSection</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Email_File_Search_Files</shortDescription>
+        <value>Search files</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Email_File_Selected_Suffix</fullName>
+        <categories>fecEmailSection</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Email_File_Selected_Suffix</shortDescription>
+        <value>files selected</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Email_File_Upload_Help</fullName>
+        <categories>fecEmailSection</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Email_File_Upload_Help</shortDescription>
+        <value>Use Upload Files to upload files with Salesforce standard upload. Uploaded files are saved to this Case and attached to this email.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Email_File_Uploaded_Added</fullName>
+        <categories>fecEmailSection</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Email_File_Uploaded_Added</shortDescription>
+        <value>File uploaded and added to email.</value>
     </labels>
 </CustomLabels>

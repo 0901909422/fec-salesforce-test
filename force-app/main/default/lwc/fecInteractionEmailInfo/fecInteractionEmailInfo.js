@@ -246,6 +246,15 @@ export default class FecInteractionEmailInfo extends NavigationMixin(LightningEl
     return !this.isReview && !this.hasInteractionEmail && !this.isEditingEmail;
   }
 
+  get showEmailRequiredInline() {
+    return (
+      this.channel === "Email" &&
+      !this.hasInteractionEmail &&
+      !this.isReview &&
+      !this.isEditingEmail
+    );
+  }
+
   get displayInteractionEmail() {
     return this.record?.[INTERACTION_EMAIL_FIELD.fieldApiName] || STR_EMPTY;
   }
