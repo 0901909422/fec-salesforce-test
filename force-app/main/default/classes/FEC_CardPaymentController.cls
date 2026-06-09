@@ -16,84 +16,68 @@ public with sharing class FEC_CardPaymentController {
         @AuraEnabled public Decimal totalDeferredInterest;
     }
     
-    /** Tải Card Payment: query DB → gọi API mỗi lần load; save chỉ INSERT mới (key Rec+Plan). */
+    /** Tải Card Payment: Mock ON → hardcode; Mock OFF → query DB → gọi API → save → trả DB (không fallback mock khi lỗi). */
     @AuraEnabled(cacheable=false)
     public static List<Map<String, Object>> loadCardPaymentInfo(Id caseId) {
         if (caseId == null) {
             throw new AuraHandledException(String.format(System.Label.FEC_MSG_Param_Required, new List<String>{'Case Id'}));
         }
 
-        Case c = [SELECT Id, FEC_Account_or_Contract__c, FEC_Account_Number__c, FEC_Account_or_Contract__r.FEC_Account_Number__c FROM Case WHERE Id = :caseId LIMIT 1];
-        Id customerHistoryId = c.FEC_Account_or_Contract__c;
-        String accountNumber = getAccountNumber(c);
-        List<Map<String, Object>> records = new List<Map<String, Object>>();
-        try {
-            List<FEC_Card_Payment__c> payments = [
-                SELECT FEC_Rec__c, FEC_Plan__c, FEC_REF_Number__c, FEC_Current_Balance__c, FEC_Open_Date__c,
-                       FEC_Base_Rate__c, FEC_Begin_Date__c, FEC_Accrued_Interest__c, FEC_Per_Diem__c,
-                       FEC_Deferred_Interest__c, FEC_IPP_Interest__c, FEC_IPP_Accrued_Interest__c,
-                       FEC_Close_Fee__c, FEC_Close_Fee_Amount__c, FEC_Plan_Payment_Amount__c
-                FROM FEC_Card_Payment__c
-                WHERE FEC_Customer_History__c = :customerHistoryId
-                ORDER BY FEC_Open_Date__c DESC NULLS LAST
-            ];
-            for (FEC_Card_Payment__c p : payments) {
-                records.add(buildCardPaymentRecordMap(p));
-            }
-        } catch (Exception e) { }
-
-        // Mock OFF: gọi GetCardPlanInfo, save DB; Mock ON: fallback hardcode
-        FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
-        if (apiSetting != null && apiSetting.FEC_Call_Mock__c == false) {
-            try {
-                if (String.isNotBlank(accountNumber)) {
-                    Id custHistoryId = customerHistoryId;
-                    if (custHistoryId == null) {
-                        List<FEC_Customer_History__c> histories = [SELECT Id FROM FEC_Customer_History__c WHERE FEC_Account_Number__c = :accountNumber LIMIT 1];
-                        if (!histories.isEmpty()) { custHistoryId = histories[0].Id; }
-                    }
-                    if (custHistoryId != null) {
-                        FEC_GetCardPlanInfo.CardPlanResult apiResult = FEC_GetCardPlanInfo.getCardPlanInfo(accountNumber);
-                        if (apiResult != null && apiResult.responseCode == '1' && apiResult.plans != null && !apiResult.plans.isEmpty()) {
-                            saveCardPlanToDatabase(apiResult.plans, accountNumber, custHistoryId);
-                            List<FEC_Card_Payment__c> payments = [
-                                SELECT FEC_Rec__c, FEC_REF_Number__c, FEC_Current_Balance__c, FEC_Open_Date__c, FEC_Plan__c, FEC_Base_Rate__c,
-                                       FEC_Begin_Date__c, FEC_Accrued_Interest__c, FEC_Per_Diem__c, FEC_Deferred_Interest__c, FEC_IPP_Interest__c,
-                                       FEC_IPP_Accrued_Interest__c, FEC_Close_Fee__c, FEC_Close_Fee_Amount__c, FEC_Plan_Payment_Amount__c
-                                FROM FEC_Card_Payment__c
-                                WHERE FEC_Customer_History__c = :custHistoryId
-                                ORDER BY FEC_Open_Date__c DESC NULLS LAST
-                            ];
-                            records = new List<Map<String, Object>>();
-                            for (FEC_Card_Payment__c p : payments) {
-                                records.add(buildCardPaymentRecordMap(p));
-                            }
-                            if (!records.isEmpty()) {
-                                return records;
-                            }
-                        }
-                    }
-                }
-            } catch (Exception e) {
-                System.debug('Mock GetCardPlanInfo error: ' + e.getMessage());
-            }
+        if (isCallMockEnabled()) {
             return FEC_MockData.getHardcodedCardPaymentRecordsForUI();
         }
 
-        // Gọi GetCardPlanInfo mỗi lần load
+        Case c = [SELECT Id, FEC_Account_or_Contract__c, FEC_Account_Number__c, FEC_Account_or_Contract__r.FEC_Account_Number__c FROM Case WHERE Id = :caseId LIMIT 1];
+        Id customerHistoryId = c.FEC_Account_or_Contract__c;
+        String accountNumber = getAccountNumber(c);
+        List<Map<String, Object>> records = queryCardPaymentRecordMaps(customerHistoryId);
+
         if (String.isBlank(accountNumber)) {
             return records;
         }
 
         try {
             FEC_GetCardPlanInfo.CardPlanResult apiResult = FEC_GetCardPlanInfo.getCardPlanInfo(accountNumber);
-            if (apiResult != null && apiResult.responseCode == '1' && !apiResult.plans.isEmpty()) {
-                saveCardPlanToDatabase(apiResult.plans, accountNumber, customerHistoryId);
+            if (apiResult != null && apiResult.responseCode == '1' && apiResult.plans != null && !apiResult.plans.isEmpty()) {
+                Id custHistoryId = resolveCustomerHistoryId(customerHistoryId, accountNumber);
+                if (custHistoryId != null) {
+                    saveCardPlanToDatabase(apiResult.plans, accountNumber, custHistoryId);
+                    return queryCardPaymentRecordMaps(custHistoryId);
+                }
             }
         } catch (Exception e) {
             System.debug('### GetCardPlanInfo API FAILED: ' + e.getMessage());
         }
 
+        return records;
+    }
+
+    private static Boolean isCallMockEnabled() {
+        FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
+        return apiSetting != null && apiSetting.FEC_Call_Mock__c == true;
+    }
+
+    private static Id resolveCustomerHistoryId(Id customerHistoryId, String accountNumber) {
+        if (customerHistoryId != null) {
+            return customerHistoryId;
+        }
+        if (String.isBlank(accountNumber)) {
+            return null;
+        }
+        List<FEC_Customer_History__c> histories = [
+            SELECT Id
+            FROM FEC_Customer_History__c
+            WHERE FEC_Account_Number__c = :accountNumber
+            LIMIT 1
+        ];
+        return histories.isEmpty() ? null : histories[0].Id;
+    }
+
+    private static List<Map<String, Object>> queryCardPaymentRecordMaps(Id customerHistoryId) {
+        List<Map<String, Object>> records = new List<Map<String, Object>>();
+        if (customerHistoryId == null) {
+            return records;
+        }
         try {
             List<FEC_Card_Payment__c> payments = [
                 SELECT FEC_Rec__c, FEC_Plan__c, FEC_REF_Number__c, FEC_Current_Balance__c, FEC_Open_Date__c,
@@ -104,7 +88,6 @@ public with sharing class FEC_CardPaymentController {
                 WHERE FEC_Customer_History__c = :customerHistoryId
                 ORDER BY FEC_Open_Date__c DESC NULLS LAST
             ];
-            records = new List<Map<String, Object>>();
             for (FEC_Card_Payment__c p : payments) {
                 records.add(buildCardPaymentRecordMap(p));
             }
@@ -155,7 +138,7 @@ public with sharing class FEC_CardPaymentController {
         return loadCardPaymentInfo(caseId);
     }
     
-    /** Tải Card Payment Totals: query DB → gọi API mỗi lần load. */
+    /** Tải Card Payment Totals: Mock ON → hardcode; Mock OFF → query DB → gọi API (không fallback mock khi lỗi). */
     @AuraEnabled(cacheable=false)
     public static CardPaymentTotalsDTO loadCardPaymentTotals(Id caseId) {
         if (caseId == null) {
@@ -175,6 +158,10 @@ public with sharing class FEC_CardPaymentController {
         dto.totalPerDiem = 0;
         dto.totalDeferredInterest = 0;
         dto.helpTexts = FEC_CommonUltils.buildHelpTextMap(FEC_Card_Payment__c.SObjectType);
+
+        if (isCallMockEnabled()) {
+            return FEC_MockData.getHardcodedCardPaymentTotalsForUI();
+        }
 
         Case c = [SELECT Id, FEC_Account_or_Contract__c, FEC_Account_Number__c, FEC_Account_or_Contract__r.FEC_Account_Number__c FROM Case WHERE Id = :caseId LIMIT 1];
         Id customerHistoryId = c.FEC_Account_or_Contract__c;
@@ -271,8 +258,6 @@ public with sharing class FEC_CardPaymentController {
 
         // Gọi 4 API mỗi lần load: GetCardPaymentInfo, GetCardBasicInfo, EmeaAccountInq, GetCardPlanInfo
         if (String.isBlank(accountNumber)) return dto;
-        FEC_API_Setting__c apiSettingTotals = FEC_API_Setting__c.getOrgDefaults();
-        Boolean isMockTotals = (apiSettingTotals != null && apiSettingTotals.FEC_Call_Mock__c == true);
 
         try {
             Decimal fullPaymentAmount = 0;
@@ -436,17 +421,11 @@ public with sharing class FEC_CardPaymentController {
         } catch (AuraHandledException e) {
             throw e;
         } catch (Exception e) {
-            if (isMockTotals) {
-                return FEC_MockData.getHardcodedCardPaymentTotalsForUI();
-            }
             throw new AuraHandledException(System.Label.FEC_MSG_Error_API_Label);
         }
 
         return dto;
         } catch (Exception e) {
-            if (isMockTotals) {
-                return FEC_MockData.getHardcodedCardPaymentTotalsForUI();
-            }
             throw new AuraHandledException(System.Label.FEC_MSG_Error_API_Label);
         }
     }
