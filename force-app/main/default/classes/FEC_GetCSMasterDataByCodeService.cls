@@ -61,7 +61,7 @@ global with sharing class FEC_GetCSMasterDataByCodeService {
                 ? CustomerType.Language
                 : FEC_ConstantCommon.LANGUAGE_EN;
 
-            String customerTypeFilter = resolveCustomerTypeFilter(CustomerType);
+            List<String> customerTypeFilters = resolveCustomerTypeFilters(CustomerType);
             String returnLevel = resolveReturnLevel(
                 productTypeCode,
                 caseTypeCode,
@@ -78,7 +78,7 @@ global with sharing class FEC_GetCSMasterDataByCodeService {
                 categoryCode,
                 subCategoryCode,
                 subCode,
-                customerTypeFilter,
+                customerTypeFilters,
                 returnLevel
             );
 
@@ -161,17 +161,23 @@ global with sharing class FEC_GetCSMasterDataByCodeService {
         return FEC_ConstantCommon.KEY_SUBCODE;
     }
 
-    private static String resolveCustomerTypeFilter(CustomerTypeRequest customerType) {
+    private static List<String> resolveCustomerTypeFilters(CustomerTypeRequest customerType) {
         if (customerType == null || String.isBlank(customerType.UserType)) {
             return null;
         }
 
         String userType = customerType.UserType.trim().toUpperCase();
         if (userType == FEC_ConstantCommon.REQUEST_EXISTING_USER_TYPE) {
-            return FEC_ConstantCommon.CASE_EXISTING_CUSTOMER;
+            return new List<String>{
+                FEC_ConstantCommon.CASE_EXISTING_CUSTOMER,
+                FEC_ConstantCommon.CASE_ALL_CUSTOMER
+            };
         }
         if (userType == FEC_ConstantCommon.REQUEST_NON_EXISTING_USER_TYPE) {
-            return FEC_ConstantCommon.CASE_NON_EXISTING_CUSTOMER;
+            return new List<String>{
+                FEC_ConstantCommon.CASE_NON_EXISTING_CUSTOMER,
+                FEC_ConstantCommon.CASE_ALL_CUSTOMER
+            };
         }
         return null;
     }
@@ -254,14 +260,17 @@ global with sharing class FEC_GetCSMasterDataByCodeService {
         String categoryCode,
         String subCategoryCode,
         String subCode,
-        String customerTypeFilter,
+        List<String> customerTypeFilters,
         String returnLevel
     ) {
-        String channelPattern = FEC_CommonUltils.buildNatureOfCaseChannelLikePattern(channel);
+        String channelFilter = FEC_CommonUltils.buildNatureOfCaseChannelFilterClause(
+            'FEC_Channel__c',
+            channel
+        );
 
         List<String> conditions = new List<String>();
         conditions.add('FEC_Active__c = true');
-        conditions.add('FEC_Channel__c LIKE :channelPattern');
+        conditions.add(channelFilter);
 
         if (String.isNotBlank(productTypeCode)) {
             conditions.add('FEC_Product_Type__r.FEC_Code__c = :productTypeCode');
@@ -278,8 +287,8 @@ global with sharing class FEC_GetCSMasterDataByCodeService {
         if (String.isNotBlank(subCode)) {
             conditions.add('FEC_Sub_Code__r.FEC_Code__c = :subCode');
         }
-        if (String.isNotBlank(customerTypeFilter)) {
-            conditions.add('FEC_Customer_Type__c = :customerTypeFilter');
+        if (customerTypeFilters != null && !customerTypeFilters.isEmpty()) {
+            conditions.add('FEC_Customer_Type__c IN :customerTypeFilters');
         }
 
         if (returnLevel == FEC_ConstantCommon.KEY_SUBCODE) {
@@ -345,6 +354,12 @@ global with sharing class FEC_GetCSMasterDataByCodeService {
             result.errorMessage = FEC_CommonUltils.buildUnsupportedChannelMessage(Sys.Channel);
             return result;
         }
+        if (!isGetCSMasterDataByCodeChannelFunctionAllowed(Sys.Channel)) {
+            result.isValid = false;
+            result.errorMessage =
+                FEC_ConstantCommon.MY_CASE_CHANNEL_GET_MASTER_DATA_BY_CODE_NOT_ALLOWED_MSG;
+            return result;
+        }
 
         // TransactionID
         if (String.isBlank(Sys.TransactionID) ||
@@ -367,6 +382,13 @@ global with sharing class FEC_GetCSMasterDataByCodeService {
 
         result.isValid = true;
         return result;
+    }
+
+    private static Boolean isGetCSMasterDataByCodeChannelFunctionAllowed(String channel) {
+        return FEC_ChannelFunctionService.isFunctionAllowed(
+            channel,
+            FEC_ConstantCommon.MY_CASE_FUNCTION_GET_CS_MASTER_DATA_BY_CODE
+        );
     }
 
     private class ValidationResult {

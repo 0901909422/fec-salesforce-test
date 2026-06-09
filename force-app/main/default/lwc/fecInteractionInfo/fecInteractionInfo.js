@@ -2,9 +2,7 @@ import { LightningElement, api, track, wire } from "lwc";
 import { getRecord, getFieldValue } from "lightning/uiRecordApi";
 import { loadStyle } from "lightning/platformResourceLoader";
 import COMMON_STYLES from "@salesforce/resourceUrl/FEC_CommonCss";
-import {
-  notifyRecordUpdateAvailable,
-} from "lightning/uiRecordApi";
+import { notifyRecordUpdateAvailable } from "lightning/uiRecordApi";
 
 // ================= APEX =================
 import getInteraction from "@salesforce/apex/FEC_InteractionInforHandler.getInteraction";
@@ -81,6 +79,7 @@ export default class FecInteractionInfo extends LightningElement {
   interactionId;
 
   activeSections = ["interactionInfo"];
+  phoneRequiredMsg = FEC_PHONE_IS_REQUIRED_MSG;
 
   // ================= WIRE: CASE CONTEXT =================
   @wire(getRecord, {
@@ -171,7 +170,7 @@ export default class FecInteractionInfo extends LightningElement {
   }
 
   // ================= GETTERS =================
-   get isInteractionCase() {
+  get isInteractionCase() {
     return this.recordTypeDevName === RECORD_TYPES.INTERACTION;
   }
 
@@ -179,13 +178,15 @@ export default class FecInteractionInfo extends LightningElement {
     return this.recordTypeDevName === RECORD_TYPES.CUSTOMER_CASE;
   }
 
-
   get isInteractionClosed() {
-    if (this.record?.FEC_Interaction_Status__c === "Closed"|| this.record?.FEC_Interaction_Status__c === "Auto-Closed") return true;
+    if (
+      this.record?.FEC_Interaction_Status__c === "Closed" ||
+      this.record?.FEC_Interaction_Status__c === "Auto-Closed"
+    )
+      return true;
     return false;
   }
 
-  
   get isReview() {
     return this.viewMode === VIEW_MODE_REVIEW;
   }
@@ -260,6 +261,13 @@ export default class FecInteractionInfo extends LightningElement {
     return this.record?.FEC_Interaction_Remarks__c;
   }
 
+  get isPhoneRequired() {
+    return (
+      this.record?.FEC_Is_Manual__c === true &&
+      ["Inbound", "Outbound"].includes(this.record?.FEC_Channel__c)
+    );
+  }
+
   // ================= PHONE ACTIONS =================
   handleToggleMask() {
     if (this.isMasked) {
@@ -278,54 +286,70 @@ export default class FecInteractionInfo extends LightningElement {
     this.phoneDraft = event.target.value;
 
     const input = event.target;
-    const value = this.phoneDraft;
+    const value = (this.phoneDraft || "").trim();
 
-    // reset lỗi
     input.setCustomValidity("");
 
-    if (!value) {
+    if (this.isPhoneRequired && !value) {
       input.setCustomValidity(FEC_PHONE_IS_REQUIRED_MSG);
-    } else if (value.startsWith("0")) {
-      if (!/^\d{10}$/.test(value)) {
-        input.setCustomValidity(FEC_PHONE_IS_INVALID_FORMAT_1_MSG);
+    } else if (value) {
+      if (value.startsWith("0")) {
+        if (!/^\d{10}$/.test(value)) {
+          input.setCustomValidity(FEC_PHONE_IS_INVALID_FORMAT_1_MSG);
+        }
+      } else if (value.startsWith("84")) {
+        if (!/^\d{11}$/.test(value)) {
+          input.setCustomValidity(FEC_PHONE_IS_INVALID_FORMAT_2_MSG);
+        }
+      } else {
+        input.setCustomValidity(FEC_PHONE_IS_INVALID_FORMAT_3_MSG);
       }
-    } else if (value.startsWith("84")) {
-      if (!/^\d{11}$/.test(value)) {
-        input.setCustomValidity(FEC_PHONE_IS_INVALID_FORMAT_2_MSG);
-      }
-    } else {
-      input.setCustomValidity(FEC_PHONE_IS_INVALID_FORMAT_3_MSG);
     }
 
     input.reportValidity();
   }
-
   async handleSavePhone() {
-    const input = this.template.querySelector("lightning-input");
+    const input = this.template.querySelector('[data-id="interactionPhone"]');
+
+    const value = (this.phoneDraft || "").trim();
+
+    const isPhoneRequired =
+      this.record?.FEC_Is_Manual__c === true &&
+      ["Inbound", "Outbound"].includes(this.record?.FEC_Channel__c);
+
+    if (isPhoneRequired && !value) {
+      input.setCustomValidity(FEC_PHONE_IS_REQUIRED_MSG);
+      input.reportValidity();
+      return;
+    }
+
+    input.setCustomValidity("");
 
     if (!input || !input.checkValidity()) {
       input.reportValidity();
       return;
     }
 
-    if (!this.phoneDraft || !this.interactionId) return;
+    if (!value || !this.interactionId) {
+      return;
+    }
 
     try {
       const maskedPhone = await updateInteractionPhone({
         recordId: this.interactionId,
-        phone: this.phoneDraft,
+        phone: value,
       });
 
       this.record = {
         ...this.record,
         FEC_Interaction_Masked_Phone__c: maskedPhone,
+        FEC_Phone_Number__c: value,
       };
 
       this.isEditingPhone = false;
       this.isMasked = true;
       this.phoneDraft = null;
 
-      // 🔥 refresh LDS
       await notifyRecordUpdateAvailable([{ recordId: this.recordId }]);
     } catch (error) {
       console.error("updateInteractionPhone error", error);

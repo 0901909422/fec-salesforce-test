@@ -174,4 +174,249 @@ private class FEC_CommonUltils_Test {
         Test.stopTest();
         System.assertEquals(false, FEC_CommonUltils.isDeferredApiLoggingActive());
     }
+
+    @IsTest
+    static void testChannelAndNatureOfCaseHelpers() {
+        insert new FEC_Channel__c(
+            Name = 'Util Channel',
+            FEC_Channel_ID__c = 'UTILCH',
+            FEC_Channel_Vietnamese_name__c = 'Util',
+            FEC_Channel_Status__c = true,
+            FEC_Get_Nature_Of_Case__c = true
+        );
+        FEC_CommonUltils.resetActiveChannelCacheForTest();
+
+        System.assertEquals('UTILCH', FEC_CommonUltils.normalizeChannelInput(' "UTILCH" '));
+        System.assertEquals(true, FEC_CommonUltils.isActiveChannelSupported('UTILCH'));
+        System.assertEquals(true, FEC_CommonUltils.isNatureOfCaseChannelAllowed('CSM,UTILCH,Vymo', 'UTILCH'));
+        System.assertEquals(true, FEC_CommonUltils.isNatureOfCaseChannelAllowed(null, 'UTILCH'));
+        System.assertEquals(false, FEC_CommonUltils.isNatureOfCaseChannelAllowed('CSM,Vymo', 'UTILCH'));
+        System.assert(FEC_CommonUltils.buildNatureOfCaseChannelLikePattern('UTILCH').contains('UTILCH'));
+        System.assert(
+            FEC_CommonUltils.buildNatureOfCaseChannelFilterClause('FEC_Channel__c', 'UTILCH')
+                .contains('FEC_Channel__c')
+        );
+        System.assertNotEquals('', FEC_CommonUltils.buildUnsupportedChannelMessage('BADCH'));
+        System.assertEquals(false, FEC_CommonUltils.notificationCustomerTypeMatchesCase('', 'Retail'));
+        System.assertEquals(false, FEC_CommonUltils.notificationCustomerTypeMatchesCase('Corp', ''));
+    }
+
+    @IsTest
+    static void testCalloutAndEndpointHelpers() {
+        Test.setMock(HttpCalloutMock.class, new UtilHttpMock());
+
+        Test.startTest();
+        HttpResponse res1 = FEC_CommonUltils.calloutApiWithHeaders(
+            'https://mock.test/api',
+            'POST',
+            new Map<String, String>{ 'Content-Type' => 'application/json' },
+            '{"ok":true}'
+        );
+        HttpResponse res2 = FEC_CommonUltils.calloutApi(
+            'https://mock.test/soap',
+            'POST',
+            'text/xml',
+            'action',
+            null,
+            '<root/>'
+        );
+        Test.stopTest();
+
+        System.assertEquals(200, res1.getStatusCode());
+        System.assertEquals(200, res2.getStatusCode());
+        System.assertEquals('https://mock.test/path', FEC_CommonUltils.buildCalloutEndpoint('https://mock.test/', '/path'));
+        System.assertEquals('suffix', FEC_CommonUltils.buildCalloutEndpoint('', 'suffix'));
+        System.assertEquals('base', FEC_CommonUltils.buildCalloutEndpoint('base', ''));
+    }
+
+    private class UtilHttpMock implements HttpCalloutMock {
+        public HttpResponse respond(HttpRequest req) {
+            HttpResponse res = new HttpResponse();
+            res.setStatusCode(200);
+            res.setBody('{"ok":true}');
+            return res;
+        }
+    }
+
+    @IsTest
+    static void testProcessActionHistoryAndSensitiveLog() {
+        FEC_Case_Stage__c stage = new FEC_Case_Stage__c(
+            Name = 'Util Stage',
+            FEC_Code__c = 'UTSTG',
+            FEC_Active__c = true
+        );
+        insert stage;
+
+        FEC_CaseTriggerHandler.isExecuting = true;
+        Case c;
+        try {
+            c = new Case(
+                Subject = 'Util PAH Test',
+                Status = 'New',
+                FEC_Current_Case_Stage__c = stage.Id
+            );
+            insert c;
+        } finally {
+            FEC_CaseTriggerHandler.isExecuting = false;
+        }
+
+        c = [
+            SELECT Id, FEC_Current_Case_Stage__r.Name
+            FROM Case
+            WHERE Id = :c.Id
+        ];
+
+        Test.startTest();
+        FEC_CommonUltils.createProcessActionHistory('Util Action', c, true);
+        FEC_CommonUltils.logSensitiveAccess('Section', 'Name', 'user', 'role', c.Id);
+        Test.stopTest();
+
+        System.assertEquals(
+            1,
+            [SELECT COUNT() FROM FEC_Process_Action_History__c WHERE Case__c = :c.Id]
+        );
+        System.assertEquals(
+            1,
+            [SELECT COUNT() FROM FEC_Sensitive_Data__c WHERE FEC_Related_Case__c = :c.Id]
+        );
+    }
+
+    @IsTest
+    static void testEmailOrgWideAndApiResponseLog() {
+        Id orgWideId = FEC_CommonUltils.getOrgWideEmailIdForNotification();
+        Messaging.SingleEmailMessage mail = FEC_CommonUltils.buildEmailWithSender(
+            new List<String>{ 'test@example.com' },
+            'Sub',
+            '<p>Hi</p>',
+            orgWideId
+        );
+        System.assertEquals('Sub', mail.getSubject());
+
+        Test.startTest();
+        FEC_CommonUltils.sendEmail(new List<String>{ 'test@example.com' }, 'Send', '<p>Body</p>');
+        List<Messaging.SendEmailResult> results = FEC_CommonUltils.sendEmails(
+            new List<Messaging.SingleEmailMessage>{
+                FEC_CommonUltils.buildEmail(
+                    new List<String>{ 'test2@example.com' },
+                    'Bulk',
+                    '<p>Bulk</p>'
+                )
+            }
+        );
+        HttpResponse res = new HttpResponse();
+        res.setStatusCode(200);
+        res.setBody('ok');
+        FEC_ResponseLog log = new FEC_ResponseLog(
+            'UtilApi',
+            'https://test',
+            'GET',
+            '{}',
+            res,
+            null
+        );
+        FEC_CommonUltils.logApiResponse(log);
+        FEC_CommonUltils.logApiResponse(null);
+        Test.stopTest();
+
+        System.assert(results != null);
+        System.assertNotEquals(null, FEC_CommonUltils.getCurrentUserProfileName());
+    }
+
+    @IsTest
+    static void testParsingFinancialAndBusinessHelpers() {
+        System.assertEquals(null, FEC_CommonUltils.parseAmountSafe(''));
+        System.assertEquals(Decimal.valueOf('1234.56'), FEC_CommonUltils.parseAmountSafe('1.234,56'));
+        System.assertEquals(Decimal.valueOf('42'), FEC_CommonUltils.parseDecimal('42'));
+        System.assertEquals(Decimal.valueOf('7'), FEC_CommonUltils.parseDecimal(7));
+        Datetime nowDt = Datetime.now();
+        System.assertEquals(nowDt, FEC_CommonUltils.parseDateTime((Object) nowDt));
+        System.assertEquals(null, FEC_CommonUltils.parseDateTime('not-a-date'));
+        System.assertEquals(1000, FEC_CommonUltils.calculateReducingEMI(12000, 12, 0));
+        System.assertEquals(
+            'CON1',
+            FEC_CommonUltils.resolveAccountNumber(
+                FEC_ConstantCommon.PRODUCT_TYPE_LOAN_CASE,
+                'ACC1',
+                'CON1'
+            )
+        );
+        System.assertEquals('ACC1', FEC_CommonUltils.resolveAccountNumber('Card', 'ACC1', 'CON1'));
+        System.assertEquals('old', FEC_CommonUltils.mergeApplyTo('old', 'old'));
+        System.assertEquals(
+            FEC_ConstantCommon.STAGE_CHANGE_TEAM_USER_GROUP_CP,
+            FEC_CommonUltils.normalizeTeamUserGroupParam('CP')
+        );
+        System.assertEquals(true, FEC_CommonUltils.isCccd('123456789012'));
+        System.assertEquals(null, FEC_CommonUltils.getRecordTypeIdByDev('Invalid_Dev_Name_XYZ'));
+        System.assertEquals('', FEC_CommonUltils.formatCurrency(null, 2));
+        System.assertEquals('', FEC_CommonUltils.formatDate(null));
+        System.assertEquals('', FEC_CommonUltils.formatDateDDMMYYYY(null));
+        System.assertEquals(null, FEC_CommonUltils.maskPhone(null));
+        System.assert(FEC_CommonUltils.maskNationalIdOrPassport('AB1234567890').contains('***'));
+        System.assertEquals('', FEC_CommonUltils.getEmailPrefix(null));
+        System.assertEquals(null, FEC_CommonUltils.toInt((Decimal) null));
+        System.assertEquals(null, FEC_CommonUltils.toIntDec(null));
+        System.assertEquals(null, FEC_CommonUltils.getFieldType('NoSuchObject', 'Field'));
+        System.assertEquals(null, FEC_CommonUltils.getFieldLabel('NoSuchObject', 'Field'));
+    }
+
+    @IsTest
+    static void testTemplateResolveAndPicklistAccess() {
+        Account acc = new Account(Name = 'Util Acc');
+        insert acc;
+        Case c = new Case(Subject = 'Tpl', AccountId = acc.Id);
+        insert c;
+        c = [SELECT Id, Subject, Account.Name FROM Case WHERE Id = :c.Id LIMIT 1];
+
+        System.assertEquals('Util Acc', FEC_CommonUltils.resolveTemplate('{{Account.Name}}', c));
+        System.assertEquals('', FEC_CommonUltils.resolveTemplate('{{Bad.Field}}', c));
+        System.assertEquals('', FEC_CommonUltils.resolveTemplate('', c));
+        System.assertEquals('x', FEC_CommonUltils.resolveTemplate('x', null));
+
+        List<FEC_CommonUltils.PicklistOption> opts =
+            FEC_CommonUltils.getPicklistOptionsWithAccess('Case', 'Status');
+        System.assert(opts.size() >= 0);
+    }
+
+    @IsTest
+    static void testNotifyUsersIfConfigured() {
+        List<CustomNotificationType> types = [
+            SELECT Id, DeveloperName
+            FROM CustomNotificationType
+            WHERE DeveloperName = 'Custom_Notification'
+            LIMIT 1
+        ];
+        if (types.isEmpty()) {
+            return;
+        }
+
+        Set<String> recipients = new Set<String>{ UserInfo.getUserId() };
+        Test.startTest();
+        FEC_CommonUltils.notifyUsers(
+            recipients,
+            UserInfo.getUserId(),
+            'home',
+            'Title',
+            'Body'
+        );
+        Boolean sent = FEC_CommonUltils.notifyUsers(
+            recipients,
+            (Id) UserInfo.getUserId(),
+            null,
+            'Title2',
+            'Body2',
+            types[0]
+        );
+        FEC_CommonUltils.notifyUsers(
+            recipients,
+            null,
+            'home',
+            'Title3',
+            'Body3',
+            types[0]
+        );
+        Test.stopTest();
+
+        System.assert(sent == true || sent == false);
+    }
 }

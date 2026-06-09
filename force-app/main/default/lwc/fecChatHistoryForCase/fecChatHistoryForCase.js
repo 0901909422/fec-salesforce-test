@@ -219,8 +219,8 @@ export default class ChatHistory extends LightningElement {
             await refreshApex(this.wiredMessagesResult);
             this.dispatchEvent(
                 new ShowToastEvent({
-                    title: 'Thành công',
-                    message: 'Lưu chat thành công',
+                    title: 'Success',
+                    message: 'Chat saved successfully',
                     variant: 'success'
                 })
             );

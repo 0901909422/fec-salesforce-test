@@ -2231,6 +2231,9 @@ public without sharing class FEC_BatchCaseHandlingImportService {
             new List<FEC_BCH_AssignmentRevertService.ImportRevertItem>();
         List<FEC_BCH_ImportRoutingHistoryService.ImportHistoryItem> importHistoryItems =
             new List<FEC_BCH_ImportRoutingHistoryService.ImportHistoryItem>();
+        //08/06/2026 dungLTdev: Gom payload Routing Action History cho Case-level Resolve import.
+        List<FEC_BCC_ImportResolveHistService.ImportResolveHistoryItem> resolveHistoryItems =
+            new List<FEC_BCC_ImportResolveHistService.ImportResolveHistoryItem>();
         //PhongBT 02/06/26: Sửa routing action cho cof/gsr — Route To level Case tạo Assignment mới.
         List<FEC_BCH_CofGsrImportRouteToService.CreateContext> cofGsrRouteToCreateItems =
             new List<FEC_BCH_CofGsrImportRouteToService.CreateContext>();
@@ -2534,6 +2537,19 @@ public without sharing class FEC_BatchCaseHandlingImportService {
                     );
                     // 04/06/2026 16:45 linhdev - queueable gọi runInternal; tránh AuraHandledException crash import Processing
                     FEC_CaseBusinessService.runInternal(methodKey, runParams);
+                    //08/06/2026 dungLTdev: Excel Routing Action = Resolve — tạo FEC_Routing_Action_History__c sau run thành công.
+                    if (assignmentOnly != true &&
+                        methodKey == FEC_CaseBusinessService.RESOLVE) {
+                        Case caseLiteForResolve = caseLiteById.get(caseId);
+                        FEC_BCC_ImportResolveHistService.collectItem(
+                            resolveHistoryItems,
+                            rr,
+                            caseId,
+                            stageIdForRow,
+                            caseLiteForResolve == null ? null : caseLiteForResolve.FEC_Current_Case_Stage__r?.FEC_Code__c,
+                            caseLiteForResolve == null ? null : caseLiteForResolve.FEC_Final_Status__c
+                        );
+                    }
                 }
             } catch (Exception ex) {
                 rr.status = System.Label.FEC_Batch_Case_Handling_Import_Row_Status_Failed;
@@ -2617,6 +2633,8 @@ public without sharing class FEC_BatchCaseHandlingImportService {
         }
         FEC_BCH_AssignmentRevertService.applyImportBulk(validAssignmentRevertItems);
         FEC_BCH_ImportRoutingHistoryService.applyAfterAssignmentBulk(importHistoryItems);
+        //08/06/2026 dungLTdev: Insert Routing Action History cho các dòng Excel Routing Action = Resolve.
+        FEC_BCC_ImportResolveHistService.applyAfterCaseRunBulk(resolveHistoryItems);
         applyDraftRemarksBulk(validRemarkItems, cofOrGsr);
     }
 
