@@ -74,6 +74,8 @@
         <members>FEC_InteractionInforHandler</members>
         <members>FEC_InteractionInforHandler_Test</members>
         <members>FEC_MyCaseSoapXml</members>
+        <members>FEC_NocChannelConfigController</members>
+        <members>FEC_NocChannelConfigController_Test</members>
         <members>FEC_PaymentHistoryValidationService</members>
         <members>FEC_PaymentHistoryValidationService_Test</members>
         <members>FEC_PsDNBServiceCallout</members>
@@ -105,6 +107,7 @@
         <members>fec_DownloadReports</members>
         <members>fecInteractionCreationHighlight</members>
         <members>fec_IncorrectPaymentForm</members>
+        <members>fec_NocChannelConfig</members>
         <members>fec_customerAdditionalData</members>
         <members>fecInteractionInfo</members>
         <members>fec_Search</members>
