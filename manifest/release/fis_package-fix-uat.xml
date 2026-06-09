@@ -82,6 +82,8 @@
         <members>FEC_GetUnbilledTransactions_Test</members>
         <members>FEC_InteractionInforHandler</members>
         <members>FEC_InteractionInforHandler_Test</members>
+        <members>FEC_MainInfoLoanAccountController</members>
+        <members>FEC_MainInfoLoanAccountController_Test</members>
         <members>FEC_MyCaseSoapXml</members>
         <members>FEC_NocChannelConfigController</members>
         <members>FEC_NocChannelConfigController_Test</members>
@@ -93,6 +95,8 @@
         <members>FEC_RdPaymentRoutingHelper_Test</members>
         <members>FEC_SearchController</members>
         <members>FEC_SearchController_Test</members>
+        <members>FEC_SecondaryInfoLoanAccountController</members>
+        <members>FEC_SecondInfoLoanAccountController_Test</members>
         <members>FEC_TransactionsController</members>
         <members>FEC_TransactionsController_Test</members>
         <members>FEC_ServiceCaseEmailService</members>
