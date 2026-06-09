@@ -239,8 +239,8 @@ public without sharing class FEC_RoutingHistTatSvc {
     }
 
     /**
-     * Gán FEC_Updated_Group__c và Is_{Team}_Queue_User__c từ team lookup theo Owner Id
-     * (FEC_Updated_User_Queue_ID__c / FEC_Original_User_Queue_ID__c), không dùng label text.
+     * Gán FEC_Updated_Group__c và Is_{Team}_Queue_User__c từ mã team ngắn (FEC_Team_Queue__c.FEC_Team__c)
+     * theo Owner Id (FEC_Updated_User_Queue_ID__c / FEC_Original_User_Queue_ID__c).
      */
     private static void applyUpdatedGroup(
         List<FEC_Routing_Action_History__c> newRows,
@@ -333,18 +333,11 @@ public without sharing class FEC_RoutingHistTatSvc {
         String idText = updatedSide
             ? h.FEC_Updated_User_Queue_ID__c
             : h.FEC_Original_User_Queue_ID__c;
-        String label = updatedSide
-            ? h.FEC_Updated_User_Queue__c
-            : h.FEC_Original_User_Queue__c;
         Id ownerId = parseOwnerIdField(idText);
-        if (ownerId != null) {
-            String team = teamByOwner != null ? teamByOwner.get(ownerId) : null;
-            if (String.isNotBlank(team)) {
-                return team;
-            }
+        if (ownerId == null || teamByOwner == null) {
+            return null;
         }
-        String labelCandidate = String.isNotBlank(label) ? label : idText;
-        return FEC_OwnerTeamLookupSvc.getTeamByOwnerLabel(labelCandidate);
+        return teamByOwner.get(ownerId);
     }
 
     private static Id parseOwnerIdField(String idText) {
