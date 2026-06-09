@@ -769,6 +769,7 @@ public without sharing class FEC_InteractionInforHandler {
             if (currentCase.FEC_Interaction__c != null) {
                 List<Case> interactions = [
                     SELECT FEC_Customer_Username__c,
+                           FEC_KYC_Status__c,
                            FEC_Created_On__c,
                            FEC_Created_by__c,
                            FEC_External_Interaction_ID__c,
@@ -807,7 +808,14 @@ public without sharing class FEC_InteractionInforHandler {
         result.put('FEC_Customer_Username__c', interactionCase != null && String.isNotBlank(interactionCase.FEC_Customer_Username__c) ? interactionCase.FEC_Customer_Username__c : (customerCase != null && String.isNotBlank(customerCase.FEC_Customer_Username__c) ? customerCase.FEC_Customer_Username__c : currentCase.FEC_Customer_Username__c));
         result.put('FEC_Interaction_Masked_Phone__c', customerCase != null && String.isNotBlank(customerCase.FEC_Interaction_Masked_Phone__c) ? customerCase.FEC_Interaction_Masked_Phone__c : currentCase.FEC_Interaction_Masked_Phone__c);
         result.put('FEC_Phone_Number__c', customerCase != null && String.isNotBlank(customerCase.FEC_Phone_Number__c) ? customerCase.FEC_Phone_Number__c : currentCase.FEC_Phone_Number__c);
-        result.put('FEC_KYC_Status__c', customerCase != null && String.isNotBlank(customerCase.FEC_KYC_Status__c) ? customerCase.FEC_KYC_Status__c : currentCase.FEC_KYC_Status__c);
+        result.put(
+            'FEC_KYC_Status__c',
+            interactionCase != null && String.isNotBlank(interactionCase.FEC_KYC_Status__c)
+                ? interactionCase.FEC_KYC_Status__c
+                : (customerCase != null && String.isNotBlank(customerCase.FEC_KYC_Status__c)
+                    ? customerCase.FEC_KYC_Status__c
+                    : currentCase.FEC_KYC_Status__c)
+        );
         result.put('FEC_Created_On__c', interactionCase != null && interactionCase.FEC_Created_On__c != null ? interactionCase.FEC_Created_On__c : currentCase.FEC_Created_On__c);
         result.put('FEC_Created_by__c', interactionCase != null && String.isNotBlank(interactionCase.FEC_Created_by__c) ? interactionCase.FEC_Created_by__c : currentCase.FEC_Created_by__c);
         result.put('FEC_External_Interaction_ID__c', interactionCase != null && String.isNotBlank(interactionCase.FEC_External_Interaction_ID__c) ? interactionCase.FEC_External_Interaction_ID__c : currentCase.FEC_External_Interaction_ID__c);
