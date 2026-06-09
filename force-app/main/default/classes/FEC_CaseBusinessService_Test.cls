@@ -88,6 +88,10 @@ private class FEC_CaseBusinessService_Test {
         );
         insert testAgent;
 
+        // Assign Permission Sets để đảm bảo FLS cho custom objects
+        FEC_TestDataFactory.assignStandardFECPermissions(testAgent.Id);
+        FEC_TestDataFactory.assignStandardFECPermissions(managerUser.Id);
+
         System.runAs(testAgent) {
             FEC_Business_Process__c bp = new FEC_Business_Process__c(
                 Name = 'Phone Update Process',
@@ -953,6 +957,9 @@ private class FEC_CaseBusinessService_Test {
         System.runAs(testRunAsUser()) {
             insert targetUser;
         }
+
+        // Assign Permission Sets cho FLS access
+        FEC_TestDataFactory.assignStandardFECPermissions(targetUser.Id);
 
         Test.startTest();
         Map<String, String> transferParams = new Map<String, String>{ 'caseId' => c.Id, 'userOrQueueId' => targetUser.Id };

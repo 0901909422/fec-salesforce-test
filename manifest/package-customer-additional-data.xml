@@ -10,21 +10,21 @@
         <members>FEC_BixIngestCallout</members>
         <members>FEC_BixIngestQueueable</members>
         <members>FEC_ConstantCommon</members>
-
+ 
         <members>FEC_CustAddInfoListCtrlTest</members>
         <members>FEC_CustAddHistHandlerTest</members>
         <members>FEC_ProcessCustDataBatchTest</members>
         <members>FEC_BixIngestTest</members>
         <members>FEC_BixIngestMock</members>
-
+ 
         <name>ApexClass</name>
     </types>
-
+ 
     <types>
         <members>FEC_CustomerAdditionalConfigHistory</members>
         <name>ApexTrigger</name>
     </types>
-
+ 
     <types>
         <members>fec_customerAdditionalInfoList</members>
         <members>fecCustomDatatable</members>
@@ -36,12 +36,12 @@
         <members>fecNoRecordDisplay</members>
         <name>LightningComponentBundle</name>
     </types>
-
+ 
     <types>
         <members>FEC_SheetJS</members>
         <name>StaticResource</name>
     </types>
-
+ 
     <types>
         <members>FEC_CustomerAdditionalInfoConfig__c</members>
         <members>FEC_CustomerAdditionalInfo__c</members>
@@ -49,22 +49,35 @@
         <members>FEC_API_Config__mdt</members>
         <name>CustomObject</name>
     </types>
-
+ 
     <types>
         <members>ContentVersion.FEC_Comments__c</members>
         <members>FEC_CustomerAdditionalInfo__c.FEC_CompositeKey__c</members>
         <name>CustomField</name>
     </types>
-
+ 
     <types>
         <members>*</members>
         <name>CustomLabel</name>
     </types>
-
+ 
     <types>
         <members>FEC_API_Config.FEC_BIX_Ingest</members>
         <name>CustomMetadata</name>
     </types>
-
+ 
+    <types>
+        <members>Customer_Data_Management</members>
+        <name>PermissionSet</name>
+    </types>
+ 
+    <types>
+        <members>FEC_PSG_CS_CS_Support_Manager</members>
+        <members>FEC_PSG_CS_Senior_CS_Support_Specialist</members>
+        <members>FEC_PSG_CS_Unit_Head_of_CS_Support</members>
+        <members>PSG_RD_IT_User</members>
+        <name>PermissionSetGroup</name>
+    </types>
+ 
     <version>65.0</version>
 </Package>

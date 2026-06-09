@@ -1,6 +1,13 @@
 //PhongBT 29/05/26: Tạo FEC_Routing_Action_History__c sau import COF/GSR Assignment Routing Action (assignmentOnly / skipCaseRun).
 public with sharing class FEC_BCH_ImportRoutingHistoryService {
 
+    //08/06/2026 dungLTdev: Lỗi import khi không reload được Case sau cập nhật Assignment.
+    private static final String ERR_CASE_AFTER_ASSIGNMENT_NOT_LOADED = 'Không tải được Case sau khi cập nhật Assignment.';
+    //08/06/2026 dungLTdev: Lỗi import khi không resolve được Routing Action code từ metadata.
+    private static final String ERR_ROUTING_ACTION_UNDETERMINED = 'Không xác định được Routing Action.';
+    //08/06/2026 dungLTdev: Lỗi import khi insert FEC_Routing_Action_History__c thất bại.
+    private static final String ERR_ROUTING_ACTION_HISTORY_INSERT_FAILED = 'Tạo Routing Action History thất bại.';
+
     public class ImportHistoryItem {
         public FEC_BatchCaseHandlingImportRow row;
         public Id caseId;
@@ -74,7 +81,7 @@ public with sharing class FEC_BCH_ImportRoutingHistoryService {
         for (ImportHistoryItem item : validItems) {
             Case caseAfter = caseAfterById == null ? null : caseAfterById.get(item.caseId);
             if (caseAfter == null) {
-                markRowFailed(item, 'Không tải được Case sau khi cập nhật Assignment.');
+                markRowFailed(item, ERR_CASE_AFTER_ASSIGNMENT_NOT_LOADED);
                 continue;
             }
             ActionButtonMeta actionMeta = item.actionButtonId == null
@@ -82,7 +89,7 @@ public with sharing class FEC_BCH_ImportRoutingHistoryService {
                 : actionMetaById.get(item.actionButtonId);
             String routingActionCode = resolveRoutingActionCode(item.methodKey, actionMeta);
             if (String.isBlank(routingActionCode)) {
-                markRowFailed(item, 'Không xác định được Routing Action.');
+                markRowFailed(item, ERR_ROUTING_ACTION_UNDETERMINED);
                 continue;
             }
             String importerEmailId = FEC_CaseBusinessService.emailLocalPart(importer.Email);
@@ -149,7 +156,7 @@ public with sharing class FEC_BCH_ImportRoutingHistoryService {
                 }
             } else {
                 String message = saveResults[i].getErrors().isEmpty()
-                    ? 'Tạo Routing Action History thất bại.'
+                    ? ERR_ROUTING_ACTION_HISTORY_INSERT_FAILED
                     : saveResults[i].getErrors()[0].getMessage();
                 markRowFailed(item, message);
             }

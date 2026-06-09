@@ -1,0 +1,63 @@
+<template>
+    <lightning-card title={cardTitle} icon-name={cardIcon}>
+        <template if:true={hasItem}>
+            <div class="slds-p-horizontal_medium slds-p-bottom_medium">
+                <div class="slds-form" role="list">
+                    <div class="slds-form__row">
+                        <div class="slds-form__item" role="listitem">
+                            <div class="slds-form-element slds-form-element_readonly slds-form-element_stacked">
+                                <span class="slds-form-element__label">{labelName}</span>
+                                <div class="slds-form-element__control">
+                                    <span class="slds-form-element__static">{item.label}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="slds-form__row">
+                        <div class="slds-form__item" role="listitem">
+                            <div class="slds-form-element slds-form-element_readonly slds-form-element_stacked">
+                                <span class="slds-form-element__label">{labelNameEN}</span>
+                                <div class="slds-form-element__control">
+                                    <span class="slds-form-element__static">{itemNameEN}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="slds-form__row">
+                        <div class="slds-form__item" role="listitem">
+                            <div class="slds-form-element slds-form-element_readonly slds-form-element_stacked">
+                                <span class="slds-form-element__label">{labelNameVN}</span>
+                                <div class="slds-form-element__control">
+                                    <span class="slds-form-element__static">{itemNameVN}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="slds-form__row">
+                        <div class="slds-form__item" role="listitem">
+                            <div class="slds-form-element slds-form-element_readonly slds-form-element_stacked">
+                                <span class="slds-form-element__label">{labelOrder}</span>
+                                <div class="slds-form-element__control">
+                                    <span class="slds-form-element__static">{itemOrder}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="slds-form__row">
+                        <div class="slds-form__item" role="listitem">
+                            <div class="slds-form-element slds-form-element_readonly slds-form-element_stacked">
+                                <span class="slds-form-element__label">{labelStatus}</span>
+                                <div class="slds-form-element__control">
+                                    <span class={statusBadgeClass}>{statusLabel}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </template>
+        <template if:false={hasItem}>
+            <c-fec-no-record-display></c-fec-no-record-display>
+        </template>
+    </lightning-card>
+</template>

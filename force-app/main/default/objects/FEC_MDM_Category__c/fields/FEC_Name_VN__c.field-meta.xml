@@ -3,7 +3,7 @@
     <fullName>FEC_Name_VN__c</fullName>
     <description>Tên tiếng Việt của mã danh mục</description>
     <externalId>false</externalId>
-    <label>Name VN</label>
+    <label>Vietnamese Name</label>
     <length>255</length>
     <required>false</required>
     <trackHistory>true</trackHistory>

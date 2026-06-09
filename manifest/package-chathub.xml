@@ -8,8 +8,11 @@
         <members>FEC_ChatHubInitController</members>
         <members>FEC_Utils</members>
         <members>FEC_AttachmentControllerTest</members>
-        <members>FEC_ChatControllersTest</members>
         <members>FEC_ChatHubInitControllerTest</members>
+        <members>FEC_ChatHistoryControllerTest</members>
+        <members>FEC_ChatHubCaseControllerTest</members>
+        <members>CaseTriggerHandlerTest</members>
+        <members>FEC_UtilsTest</members>
         <name>ApexClass</name>
     </types>
 
@@ -18,7 +21,6 @@
         <members>fecChathubContainer</members>
         <members>fecChathubStatus</members>
         <members>fecChathubUtils</members>
-        <members>fecSelectAttachment</members>
         <name>LightningComponentBundle</name>
     </types>
 
@@ -64,7 +66,7 @@
     <types>
         <members>Admin</members>
         <name>Profile</name>
-    </types>
+    </types>    
 
     <types>
         <members>FEC_ChatHubAccess</members>
@@ -72,9 +74,54 @@
     </types>
 
     <types>
-        <members>Case.FEC_External_Interaction_ID__c</members>
-        <name>CustomField</name>
+        <members>FEC_Error_ChatHistory_Blank</members>
+        <members>FEC_Error_ChatHistory_Empty</members>
+        <members>FEC_Error_CreateInteractionCase</members>
+        <members>FEC_Error_DownloadFile</members>
+        <members>FEC_Error_FileURL_Empty</members>
+        <members>FEC_Error_InteractionDTO_Null</members>
+        <members>FEC_Error_SaveChatHistory</members>
+        <members>FEC_Error_SessionID_Missing</members>
+        <members>FEC_Label_ChatHubDisabled</members>
+        <members>FEC_Label_CurrentStatus</members>
+        <members>FEC_Label_FileNotFound</members>
+        <members>FEC_Label_NoChatHistory</members>
+        <members>FEC_Label_WaitingForData</members>
+        <name>CustomLabel</name>
     </types>
 
+    <types>
+        <members>FEC_CS_CS_Ecom_Officer_Interaction_Case_Service_Case</members>
+        <members>FEC_CS_CS_Ecom_Specialist_Interaction_Case_Service_Case</members>
+        <members>FEC_CS_CS_Ecom_Team_Leader_Interaction_Case_Service_Case</members>
+        <members>FEC_CS_CS_Inbound_Officer_Interaction_Case_Service_Case</members>
+        <members>FEC_CS_CS_Inbound_Specialist_Interaction_Case_Service_Case</members>
+        <members>FEC_CS_CS_Inbound_Team_Leader_Interaction_Case_Service_Case</members>
+        <members>FEC_CS_Head_of_CS_Contact_Center_Dept_Interaction_Case_Service_Case</members>
+        <members>FEC_CS_Senior_CS_Ecom_Specialist_Interaction_Case_Service_Case</members>
+        <members>FEC_CS_Senior_CS_Inbound_Specialist_Interaction_Case_Service_Case</members>
+        <members>FEC_CS_Unit_Head_of_CS_Ecom_Interaction_Case_Service_Case</members>
+        <members>FEC_CS_Unit_Head_of_CS_Inbound_Interaction_Case_Service_Case</members>
+        <name>PermissionSet</name>
+    </types>
+
+    <types>
+        <members>Case.FEC_External_Interaction_ID__c</members>
+        <members>Case.FEC_Is_Chat_Automation__c</members>
+        <members>Case.FEC_Chat_History__c</members>
+        <name>CustomField</name>
+    </types>
+        
+    <types>
+        <members>FEC_Service</members>
+        <name>CustomApplication</name>
+    </types>
+
+    <types>
+        <members>FEC_Service_UtilityBar</members>
+        <members>FEC_Interaction_Case_Record_Page</members>
+        <name>FlexiPage</name>
+    </types>
+    
     <version>66.0</version>
 </Package>

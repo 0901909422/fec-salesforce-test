@@ -52,6 +52,9 @@ private class FEC_CaseManagerListService_Test {
         );
         insert new List<User>{grandParentUser, parentUser1, parentUser2, childUser, isolatedUser};
 
+        // Assign Permission Sets cho FLS access
+        FEC_TestDataFactory.assignStandardFECPermissions(childUser.Id);
+
         // 3. Tạo Queue Hệ thống để kiểm tra luồng xóa Manager CSV
         Group testQueue = new Group(Name = 'Queue CS Test', Type = 'Queue');
         insert testQueue;

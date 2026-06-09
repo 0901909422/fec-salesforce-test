@@ -1,0 +1,32 @@
+Checklist 
+	 - Custom Setting | CustomSyncSetting__c
+		- record Default
+		- Quantity call: số lượng lần sync 
+		- Email: add Email
+        - Endpoint
+	 - Email:  Setup > Deliverability > Select All Emal > Go Organization-Wide Addresses and add Email > email cần add
+	 - FEC_Custom_Sync__C  | object lưu config
+		- ProcessingQuantity__c: số lượng reocord trong 1 lần gửi 
+		- FEC_Total_RecordSync__c: Số lượng reocrd đc Sync trong kỳ trước 
+        - Request Body Mapping: Là json với cấu trúc Map<'FieldBix','FieldSalesforce'> phải đúng cấu trúc và các field của SF phải đúng
+        - Mapping Data Type: là json với cấu trức Map<'FieldBix','DataType'> DataType của field dưới Bix
+        - Table Name: là Table của Bix
+        - Case Business Code: là Business process code của case 
+        - TargetObject: là lấy data từ object nào 
+    - WhatSync__c phải giống với FEC_Business_Process__r.FEC_Code__c
+        - điều kiện quét record: FEC_Actual_Nature_of_Case__r.FEC_Business_Process__r.FEC_Code__c = :whatName
+- Tất cả sử dụng permision FEC_Common_System_Setting
+
+
+- Scrip Run Schedule
+    FEC_ScheduledSyncDataToBix syncJob = new FEC_ScheduledSyncDataToBix(); 
+    String cronExp = '0 0 * * * ?'; 
+    String jobID = System.schedule('Custom Sync Hourly', cronExp, syncJob);
+
+================================= Scrtip Test ========================================================
+   
+script run Custumsync by Id
+Map<Id,Case> mCase = new Map<Id,Case>([Select id from Case limit 100]);
+//Map<Id,FEC_Case_Remarks__c> mCase = new Map<Id,FEC_Case_Remarks__c>([Select id from FEC_Case_Remarks__c limit 100]);
+FEC_BatchCustomSyncByIds batch = new FEC_BatchCustomSyncByIds('a1FAz000001KdxVMAS', mCase.keyset());
+Database.executeBatch(batch, 10);

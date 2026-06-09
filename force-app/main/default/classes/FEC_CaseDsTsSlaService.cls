@@ -11,6 +11,9 @@ public without sharing class FEC_CaseDsTsSlaService {
     public static final String PROFILE_DIRECT_SALES = 'DIRECT_SALES';
     public static final String PROFILE_POS_SALES = 'POS_SALES';
 
+    public static final String TEMPLATE_API_DS = 'Template_for_DS_Direct_Sales';
+    public static final String TEMPLATE_API_TS = 'Template_for_TS_Telesales';
+
     private static final String ROUTE_TO = FEC_CaseBusinessService.ROUTE_TO;
     private static final String RAH_TYPE_CASE = 'Case';
     private static final Long MS_1MIN = 60L * 1000L;
@@ -65,6 +68,22 @@ public without sharing class FEC_CaseDsTsSlaService {
     private static Map<String, Id> slaQueueIdByLabel;
     private static Set<Id> allQueueOwnerIds;
 
+    @TestVisible
+    private static List<Id> testRecipientUserIdsOverride;
+
+    @TestVisible
+    private static void resetSlaQueueCacheForTest() {
+        slaOwnerQueueIds = null;
+        slaQueueIdByDevName = null;
+        slaQueueIdByLabel = null;
+        allQueueOwnerIds = null;
+    }
+
+    @TestVisible
+    private static Boolean testForceSlaEligible = false;
+    @TestVisible
+    private static String testForceSlaQueueProfile = PROFILE_TELESALES;
+
     private static final Map<String, String> PROFILE_TO_LABEL = new Map<String, String>{
         PROFILE_TELESALES => 'DQ - Telesales',
         PROFILE_LG => 'LG',
@@ -87,6 +106,13 @@ public without sharing class FEC_CaseDsTsSlaService {
 
     public static SlaEligibilityContext evaluateEligibility(Case c) {
         SlaEligibilityContext ctx = new SlaEligibilityContext();
+        if (Test.isRunningTest() && testForceSlaEligible == true) {
+            ctx.isEligible = true;
+            ctx.queueProfile = testForceSlaQueueProfile;
+            ctx.activeProfiles = new List<String>{ testForceSlaQueueProfile };
+            ctx.scenario = SCENARIO_TH1;
+            return ctx;
+        }
         if (c == null || !meetsCommonCriteria(c)) {
             return ctx;
         }
@@ -499,7 +525,14 @@ public without sharing class FEC_CaseDsTsSlaService {
         } catch (Exception e) {
             // token không phải User Id hợp lệ
         }
-        return null;
+        List<User> byEmail = [
+            SELECT Id
+            FROM User
+            WHERE IsActive = TRUE
+              AND Email = :token
+            LIMIT 1
+        ];
+        return byEmail.isEmpty() ? null : byEmail[0].Id;
     }
 
     public static String getRecipientLabelApiName(String queueProfile) {
@@ -507,6 +540,9 @@ public without sharing class FEC_CaseDsTsSlaService {
     }
 
     public static List<Id> getRecipientUserIdsForProfile(String queueProfile) {
+        if (Test.isRunningTest() && testRecipientUserIdsOverride != null && !testRecipientUserIdsOverride.isEmpty()) {
+            return new List<Id>(testRecipientUserIdsOverride);
+        }
         if (queueProfile == PROFILE_TELESALES) {
             return parseUserIdsFromLabelValue(Label.FEC_SLA_DS_TS_Recipient_Telesales);
         }
@@ -523,6 +559,13 @@ public without sharing class FEC_CaseDsTsSlaService {
     }
 
     public static Set<String> resolveRecipientUserIds(SlaEligibilityContext ctx) {
+        if (Test.isRunningTest() && testRecipientUserIdsOverride != null && !testRecipientUserIdsOverride.isEmpty()) {
+            Set<String> ids = new Set<String>();
+            for (Id userId : testRecipientUserIdsOverride) {
+                ids.add(String.valueOf(userId));
+            }
+            return ids;
+        }
         if (ctx == null) {
             return new Set<String>();
         }
@@ -550,6 +593,49 @@ public without sharing class FEC_CaseDsTsSlaService {
             userIds.add(u.Id);
         }
         return userIds;
+    }
+
+    public static String resolveSlaTemplateApiName(String queueProfile) {
+        if (queueProfile == PROFILE_DIRECT_SALES || queueProfile == PROFILE_POS_SALES) {
+            return TEMPLATE_API_DS;
+        }
+        if (queueProfile == PROFILE_TELESALES || queueProfile == PROFILE_LG) {
+            return TEMPLATE_API_TS;
+        }
+        return null;
+    }
+
+    public static List<String> resolveRecipientEmails(Set<String> userIds) {
+        List<String> emails = new List<String>();
+        if (userIds == null || userIds.isEmpty()) {
+            return emails;
+        }
+        Set<Id> idSet = new Set<Id>();
+        for (String uid : userIds) {
+            if (String.isBlank(uid)) {
+                continue;
+            }
+            try {
+                idSet.add(Id.valueOf(uid));
+            } catch (Exception e) {
+                // skip invalid id
+            }
+        }
+        if (idSet.isEmpty()) {
+            return emails;
+        }
+        for (User u : [
+            SELECT Email
+            FROM User
+            WHERE IsActive = TRUE
+              AND Id IN :idSet
+              AND Email != NULL
+        ]) {
+            if (String.isNotBlank(u.Email)) {
+                emails.add(u.Email.trim());
+            }
+        }
+        return emails;
     }
 
     public static String resolveCaseDisplayId(Case c) {

@@ -129,12 +129,17 @@
           >
           </lightning-input>
         </lightning-layout-item>
+        <!-- 08/06/2026 14:30 linhdev - Excess Amount cho phép edit; tổng Adjusted Amount phải bằng giá trị nhập -->
         <lightning-layout-item size="6" padding="around-small">
           <lightning-input
-            type="text"
+            data-id="excess-amount"
+            name="excessAmount"
+            type="number"
             label={customLabel.excessAmount}
-            value={displayExcessAmount}
-            disabled
+            value={excessAmount}
+            disabled={isReadOnly}
+            onchange={handleExcessAmountChange}
+            formatter="decimal"
             required
           >
           </lightning-input>

@@ -1,0 +1,69 @@
+.master-data-layout {
+    display: grid;
+    grid-template-columns: 370px 1fr;
+    gap: 1rem;
+    height: calc(100vh - 200px);
+    padding: 1rem;
+    background-color: #f8f9fa;
+}
+
+.tree-panel {
+    background-color: white;
+    border-radius: 0.5rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    overflow-y: auto;
+    max-height: 100%;
+}
+
+.detail-panel {
+    background-color: white;
+    border-radius: 0.5rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    overflow-y: auto;
+    max-height: 100%;
+}
+
+/* Scrollbar Styling */
+.tree-panel::-webkit-scrollbar,
+.detail-panel::-webkit-scrollbar {
+    width: 8px;
+}
+
+.tree-panel::-webkit-scrollbar-track,
+.detail-panel::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+
+.tree-panel::-webkit-scrollbar-thumb,
+.detail-panel::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 4px;
+}
+
+.tree-panel::-webkit-scrollbar-thumb:hover,
+.detail-panel::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+    .master-data-layout {
+        grid-template-columns: 300px 1fr;
+    }
+}
+
+@media (max-width: 768px) {
+    .master-data-layout {
+        grid-template-columns: 1fr;
+        height: auto;
+    }
+
+    .tree-panel {
+        max-height: 400px;
+    }
+
+    .detail-panel {
+        max-height: none;
+    }
+}

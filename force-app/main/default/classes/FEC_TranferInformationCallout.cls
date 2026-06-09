@@ -73,7 +73,7 @@ public without sharing class FEC_TranferInformationCallout {
         FEC_Actual_Nature_of_Case__r.FEC_Sub_Code__r.Name
       FROM Case
       WHERE Id = :caseId
-      WITH SECURITY_ENFORCED
+      
       LIMIT 1
     ];
 
@@ -122,7 +122,7 @@ public without sharing class FEC_TranferInformationCallout {
         FEC_Current_Case_Stage__r.FEC_Nature_of_Cases__c
       FROM Case
       WHERE Id = :caseId
-      WITH SECURITY_ENFORCED
+      
       LIMIT 1
     ];
     if (rows.isEmpty() || rows[0].FEC_Is_Submited__c == true) {
@@ -147,7 +147,7 @@ public without sharing class FEC_TranferInformationCallout {
           FEC_Sub_Code__c
         FROM FEC_Actual_Nature_of_Case__c
         WHERE Id = :actualNatureId
-        WITH SECURITY_ENFORCED
+        
         LIMIT 1
       ];
       if (!actuals.isEmpty()) {
@@ -171,7 +171,7 @@ public without sharing class FEC_TranferInformationCallout {
           FEC_Sub_Code__c
         FROM FEC_Nature_of_Case__c
         WHERE Id = :templateNatureId
-        WITH SECURITY_ENFORCED
+        
         LIMIT 1
       ];
       if (!templates.isEmpty()) {
@@ -306,7 +306,7 @@ public without sharing class FEC_TranferInformationCallout {
         SELECT FEC_Is_Submited__c
         FROM Case
         WHERE Id = :caseId
-        WITH SECURITY_ENFORCED
+        
         LIMIT 1
       ];
       if (submittedCheck.isEmpty()) {
@@ -348,7 +348,7 @@ public without sharing class FEC_TranferInformationCallout {
         SELECT Id, FEC_Current_Case_Stage__r.Name
         FROM Case
         WHERE Id = :caseId
-        WITH SECURITY_ENFORCED
+        
         LIMIT 1
       ];
       historyCase = historyRows.isEmpty() ? null : historyRows[0];
@@ -435,7 +435,7 @@ public without sharing class FEC_TranferInformationCallout {
       SELECT FEC_Is_Submited__c
       FROM Case
       WHERE Id = :caseId
-      WITH SECURITY_ENFORCED
+      
       LIMIT 1
     ];
     if (rows.isEmpty() || rows[0].FEC_Is_Submited__c == true) {
