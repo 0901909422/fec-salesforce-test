@@ -360,16 +360,17 @@ private class FEC_InteractionInforHandler_Test {
         Case interaction = getMainInteraction();
 
         Test.startTest();
-        Case chatInfo = FEC_InteractionInforHandler.getChatInteractionInfo(interaction.Id);
+        Map<String, Object> chatInfo = FEC_InteractionInforHandler.getChatInteractionInfo(interaction.Id);
         FEC_InteractionInforHandler.updateChatInteractionFields(
             interaction.Id,
             'chat_user',
             '0987654321'
         );
-        Case missing = FEC_InteractionInforHandler.getChatInteractionInfo(fakeCaseId());
+        Map<String, Object> missing = FEC_InteractionInforHandler.getChatInteractionInfo(fakeCaseId());
         Test.stopTest();
 
         System.assertNotEquals(null, chatInfo);
+        System.assertEquals(true, chatInfo.get('hasRelatedCustomerCase'));
         System.assertEquals(null, missing);
 
         Case updated = [
