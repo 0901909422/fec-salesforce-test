@@ -117,6 +117,7 @@
         <members>FEC_VMXAUTHDETAILINQ</members>
         <members>FEC_VMXAUTHDETAILINQ_Test</members>
         <members>FEC_AssignmentExecuteService</members>
+        <members>FEC_MainInfoController</members>
         <name>ApexClass</name>
     </types>
     <types>
