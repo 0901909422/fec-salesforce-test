@@ -118,7 +118,10 @@
         <members>fec_DoNotBotherExistingCustomer</members>
         <members>fec_DoNotBotherNonExistingCustomer</members>
         <members>fec_DownloadReports</members>
+        <members>fecInteractionChatInfo</members>
         <members>fecInteractionCreationHighlight</members>
+        <members>fecInteractionEmailInfo</members>
+        <members>fecInteractionEmailInfoUbank</members>
         <members>fec_IncorrectPaymentForm</members>
         <members>fec_IPPDetailPage</members>
         <members>fec_IPPDetails</members>
