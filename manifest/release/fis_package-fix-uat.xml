@@ -89,6 +89,8 @@
         <members>FEC_PaymentHistoryValidationService_Test</members>
         <members>FEC_PsDNBServiceCallout</members>
         <members>FEC_PsDNBServiceCallout_Test</members>
+        <members>FEC_RdPaymentRoutingHelper</members>
+        <members>FEC_RdPaymentRoutingHelper_Test</members>
         <members>FEC_SearchController</members>
         <members>FEC_SearchController_Test</members>
         <members>FEC_TransactionsController</members>
@@ -114,6 +116,7 @@
         <members>fec_BatchCaseCreation</members>
         <members>fec_BatchDataCreation</members>
         <members>fec_CaseBussiness</members>
+        <members>fec_CaseBussinessScopedRoutingIntegration</members>
         <members>fec_CaseEditNOC</members>
         <members>fec_DoNotBotherExistingCustomer</members>
         <members>fec_DoNotBotherNonExistingCustomer</members>
@@ -126,6 +129,7 @@
         <members>fec_IPPDetailPage</members>
         <members>fec_IPPDetails</members>
         <members>fec_NocChannelConfig</members>
+        <members>fec_RdPaymentRoutingUtils</members>
         <members>fec_RelatedListPaging</members>
         <members>fec_customerAdditionalData</members>
         <members>fecInteractionInfo</members>
