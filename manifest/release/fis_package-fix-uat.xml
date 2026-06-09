@@ -64,6 +64,8 @@
         <members>FEC_GetCSAttachedFileRestService_Test</members>
         <members>FEC_GetCSAttachedFile_Test</members>
         <members>FEC_GetCSMasterDataByCodeService</members>
+        <members>FEC_IPPController</members>
+        <members>FEC_IPPController_Test</members>
         <members>FEC_IPPClosureController</members>
         <members>FEC_IPPClosureController_Test</members>
         <members>FEC_GetCSMasterDataByCodeService_Test</members>
@@ -71,6 +73,8 @@
         <members>FEC_GetCSMasterDataService</members>
         <members>FEC_GetCSMasterDataService_Test</members>
         <members>FEC_GetCSMdByCodeRest_Test</members>
+        <members>FEC_GetCardSecInfo</members>
+        <members>FEC_GetCardSecInfo_Test</members>
         <members>FEC_InteractionInforHandler</members>
         <members>FEC_InteractionInforHandler_Test</members>
         <members>FEC_MyCaseSoapXml</members>
@@ -107,7 +111,10 @@
         <members>fec_DownloadReports</members>
         <members>fecInteractionCreationHighlight</members>
         <members>fec_IncorrectPaymentForm</members>
+        <members>fec_IPPDetailPage</members>
+        <members>fec_IPPDetails</members>
         <members>fec_NocChannelConfig</members>
+        <members>fec_RelatedListPaging</members>
         <members>fec_customerAdditionalData</members>
         <members>fecInteractionInfo</members>
         <members>fec_Search</members>
