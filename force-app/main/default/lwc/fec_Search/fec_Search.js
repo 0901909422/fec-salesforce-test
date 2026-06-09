@@ -1214,7 +1214,7 @@ hasAnySearchCriteria(params) {
                             FullName: cust.FullName,
                             NationalID1: currentNationalId,
                             NationalID2: "",
-                            DateOfBirth: cust.DateOfBirth,
+                            DateOfBirth: this.formatDate(cust.DateOfBirth),
                             AccountNumber: accNum,
                             AccountStatus: app.Status,
                             PlasticID: "Loading...", // Hiển thị trạng thái đang lấy data
@@ -1670,12 +1670,14 @@ hasAnySearchCriteria(params) {
         }
 
         // 2. Check Loan data (If ANY of the three have records)
-        if (
-          (this.loanContractData && this.loanContractData.length > 0) ||
-          (this.loanB2Data && this.loanB2Data.length > 0) ||
-          (this.loanCash24Data && this.loanCash24Data.length > 0)
-        ) {
+        if (this.loanContractData && this.loanContractData.length > 0) {
           categories.push("Loan");
+        }
+        if (this.loanB2Data && this.loanB2Data.length > 0) {
+          categories.push("B2");
+        }
+        if (this.loanCash24Data && this.loanCash24Data.length > 0) {
+          categories.push("Cash24");
         }
 
         // 3. Check Insurance data
@@ -1812,11 +1814,15 @@ hasAnySearchCriteria(params) {
   //linhdev Fix jira FECREDIT_CSM_2025_KH-1243
   get isDisplayCreateCase() {
     return (
+      !this.isSearchServiceError &&
       (this.isCreateCaseTab ||
-        this.tabName === 'FEC_Customer_Search' ||
         this.tabName === 'FEC_Account_Contract_Search' ||
-        !!this.recordId) &&
-      !this.isSearchServiceError
+        this.showSkipButton ||
+        this.isListView ||
+        this.caseRecordTypeName === 'Internal Case' ||
+        this.caseRecordTypeName === 'Interaction' || 
+        this.caseRecordTypeName === 'Customer Case' ||
+        this.caseRecordTypeName === 'Search Interaction')
     );
   }
 

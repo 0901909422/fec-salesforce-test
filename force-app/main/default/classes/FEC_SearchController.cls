@@ -76,6 +76,31 @@ public with sharing class FEC_SearchController {
         FEC_InteractionInforHandler.assertInteractionEmailForAction(caseId);
     }
 
+    Case interactionCase;
+
+    if (caseId != null) {
+        interactionCase = [
+            SELECT Id,
+                FEC_Is_Manual__c,
+                FEC_Channel__c,
+                FEC_Phone_Number__c
+            FROM Case
+            WHERE Id = :caseId
+            LIMIT 1
+        ];
+
+        if (
+            interactionCase.FEC_Is_Manual__c == true &&
+            (interactionCase.FEC_Channel__c == 'Inbound'
+            || interactionCase.FEC_Channel__c == 'Outbound') &&
+            String.isBlank(interactionCase.FEC_Phone_Number__c)
+        ) {
+            throw new AuraHandledException(
+                System.Label.FEC_PHONE_IS_REQUIRED_MSG
+            );
+        }
+    }
+
     try {
         // 2. Xử lý Product Type
         Id productTypeId = null;

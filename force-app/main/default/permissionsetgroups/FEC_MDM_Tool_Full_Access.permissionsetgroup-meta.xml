@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<PermissionSetGroup xmlns="http://soap.sforce.com/2006/04/metadata">
+    <description>All-in-one access to the MDM Tool. Assign this to any user who needs to use the MDM Tool. Bundles object CRUD, field-level edit, and Apex class access for MDM staging and Live FEC objects.</description>
+    <hasActivationRequired>false</hasActivationRequired>
+    <label>FEC MDM Tool — Full Access</label>
+    <permissionSets>FEC_MDM_Full_Field_Access</permissionSets>
+    <permissionSets>FEC_MDM_Tool_Apex_Access</permissionSets>
+    <permissionSets>FEC_MDM_Tool_Objects_Access</permissionSets>
+    <status>Updated</status>
+</PermissionSetGroup>

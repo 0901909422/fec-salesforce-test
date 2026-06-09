@@ -1,6 +1,8 @@
-import { LightningElement, track , wire} from 'lwc';
+import { LightningElement, track , wire, api} from 'lwc';
 
 import { CurrentPageReference } from 'lightning/navigation';
+import { publish, MessageContext } from 'lightning/messageService';
+import FRAUD_FIELD_SYNC from '@salesforce/messageChannel/FEC_Fraud_Field_Sync__c';
 
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import getFraudCaseById from '@salesforce/apex/FEC_IntegrationCreateFraudController.getFraudCaseById';
@@ -11,6 +13,7 @@ import submitUpdateFraudCase from '@salesforce/apex/FEC_IntegrationCreateFraudCo
 import loadMasterDataIntegrationMappingById from '@salesforce/apex/FEC_IntegrationCreateFraudController.loadMasterDataIntegrationMappingById';
 import loadCategoryMapping from '@salesforce/apex/FEC_IntegrationCreateFraudController.loadCategoryMapping';
 import submitCancelFraudCase from '@salesforce/apex/FEC_IntegrationCreateFraudController.submitCancelFraudCase';
+import getFileBase64ByDocumentIds from '@salesforce/apex/FEC_IntegrationCreateFraudController.getFileBase64ByDocumentIds';
 
 
 
@@ -52,16 +55,25 @@ import LBL_Cancel_Fraud_Case_Button from '@salesforce/label/c.LBL_Cancel_Fraud_C
 import LBL_Create_Fraud_Case_Button from '@salesforce/label/c.LBL_Create_Fraud_Case_Button';
 import LBL_DownloadFile from '@salesforce/label/c.LBL_DownloadFile';
 
+import getIntegrationActionModes from '@salesforce/apex/FEC_IntegrationCreateFraudController.getIntegrationActionModes';
 
 
 export default class IntegrationCreateFraudCase extends LightningElement {
 
+    @api fraudHandlingCaseId;
+    @api actionMode;
+    @api serviceCaseId;
+    @api caseDataId;
     @track caseId;
     @track loading = true;
     @track showPreview = false;
     @track previewJson = '';
     isUpdateSubmitting = false;
     isCancelSubmitting = false;
+    @track showCancelConfirm = false;
+
+    @wire(MessageContext)
+    messageContext;
     
     fraudIntUserType = '';
     fraudIntChannel = '';
@@ -70,7 +82,9 @@ export default class IntegrationCreateFraudCase extends LightningElement {
     fraudIntCategory = '';
     fraudIntSubCategory = '';
     fraudIntSubCode = '';
+    intCaseId = '';
     fieldTypes = {};
+    actionModes = {};
     createActionType = 'create';
     updateActionType = 'update';
     cancelActionType = 'cancel';
@@ -80,6 +94,10 @@ export default class IntegrationCreateFraudCase extends LightningElement {
     subCodesAll = [];
     @track rows = [];
     get notLoading() { return !this.loading; }
+    get showCancelButton() {
+        console.log('[DEBUG] showCancelButton — actionMode:', this.actionMode, '| actionModes.EDIT_MODE:', this.actionModes.EDIT_MODE, '| result:', this.actionMode === this.actionModes.EDIT_MODE);
+        return this.actionMode === this.actionModes.EDIT_MODE;
+    }
 
     master = null;
     resultMessage = '';
@@ -145,17 +163,19 @@ export default class IntegrationCreateFraudCase extends LightningElement {
    
 
     connectedCallback() {
-        //this.loading = true;   
+        getIntegrationActionModes()
+            .then(res => { this.actionModes = res || {}; })
+            .catch(err => { console.error('getIntegrationActionModes error', err); });
     }
 
     @wire(CurrentPageReference)
-    handlePageRef(pageRef) {
-        const caseId = pageRef?.state?.c__caseId;        
-        if (!caseId || this.caseId === caseId) {
+    handlePageReference(pageRef) {
+        if (pageRef && pageRef.state) {
+            this.caseId = pageRef.state.c__caseId || this.fraudHandlingCaseId;
+        } else {
             this.loading = false;
             return;
-        }
-        this.caseId = caseId;        
+        }        
         console.log('this.caseId: ', this.caseId);
          // Load case data
          this.loadIntegrationCaseInfo(this.caseId);
@@ -166,7 +186,7 @@ export default class IntegrationCreateFraudCase extends LightningElement {
         try {
             this.fieldTypes = await getIntegrationFieldTypes();    
             const caseData = await getFraudCaseById({ fraudCaseId: recordId });   
-            //console.log('caseData: ', JSON.stringify(caseData));
+            console.log('caseData: ', JSON.stringify(caseData));
             const infoList = caseData.propertyValues || [];
     
             this.fraudIntChannel = caseData.intChannel;
@@ -182,6 +202,7 @@ export default class IntegrationCreateFraudCase extends LightningElement {
             this.category = caseData.intCategory;
             this.subCategory = caseData.intSubCategory;
             this.subCode = caseData.intSubCode;
+            this.intCaseId = caseData.intCaseId;
     
             const resultData = await loadCategoryMapping({
                 channelCode: this.fraudIntChannel
@@ -258,121 +279,49 @@ export default class IntegrationCreateFraudCase extends LightningElement {
     }
    
 
-    /* ================= CATEGORY CHANGE ================= */
-
-    handleCategory(e) {
-        this.category = e.detail.value;
-        this.additionalProps = [];
-        console.log('[CHANGE] Category:', this.category);
-    
-        this.subCategory = null;
-        this.subCode = null;
-    
-        this.subCategoryOptions = this.subCategoriesAll
-            .filter(sc => sc.parentId === this.category)
-            .map(sc => ({
-                label: sc.label,
-                value: sc.value
-            }));
-    
-        this.subCodeOptions = [];
-        this.rows = [];
-    }
-    
-      
-    /* ================= SUB CATEGORY CHANGE ================= */
-
-    handleSubCategory(e) {
-        this.subCategory = e.detail.value;   
-        this.additionalProps = []; 
-        this.subCode = null;
-        this.subCodeOptions = [];    
-        this.subCodeOptions = this.subCodesAll
-            .filter(sc => sc.parentId === this.subCategory)
-            .map(sc => ({
-                label: sc.label,
-                value: sc.value
-            }));    
-        //If no subcode → load mapping at SubCategory level
-        if (this.subCodeOptions.length === 0) {
-            // find selected subcategory
-            const selectedSubCat = this.getSubCategoryByValue(this.subCategory);
-            let mappingId = selectedSubCat?.mappingId ?? null;        
-            // If SubCategory mapping not found → fallback to Category
-            if (mappingId == null) {                
-                const selectedCat = this.categoryOptions.find(sc => sc.value === this.category);   
-                mappingId = selectedCat?.mappingId ?? null;
-            }
-        
-            // Load only if mappingId exists
-            if (mappingId != null) {
-                this.loadMasterDataIntegrationMapping(mappingId);
-            }
-        }
-        
-        
-    }
-    
-
-    /* ================= SUB CODE CHANGE ================= */
-
-    handleSubCode(e) {
-        this.subCode = e.detail.value;
-        this.additionalProps = [];
-        console.log('[CHANGE] SubCode:', this.subCode);
-        const selectedSubCode = this.subCodesAll.find(
-            sc => sc.value === this.subCode
-        );
-    
-        let mappingId = selectedSubCode?.mappingId || null;
-        if(mappingId == null) {
-            //Get mapping at SubCategory level
-            const selectedSubCat = this.getSubCategoryByValue(this.subCategory);
-            mappingId = selectedSubCat?.mappingId || null;
-            if(mappingId == null) {
-                //Get mapping at Category level               
-                const selectedCat = this.categoryOptions.find(
-                    sc => sc.value === this.category
-                );
-                mappingId = selectedCat?.mappingId || null;
-            }
-        }
-        console.log('[LOAD] Mapping at handleSubCode:', mappingId);
-        if(mappingId != null) {
-            this.loadMasterDataIntegrationMapping(mappingId);
-        }    
-    }
-
 
     loadAdditionalProps(responseData) {
         const list = Array.isArray(responseData) ? responseData : [];
+        console.log('[loadAdditionalProps] fieldTypes:', JSON.stringify(this.fieldTypes));
         
         this.additionalProps = list.map(p => {
             const type = p.type?.trim().toLowerCase();
+            console.log('[loadAdditionalProps] prop:', p.displayName, 'type:', type, 'fieldTypes.FILE:', this.fieldTypes.FILE);
             let fileName = null;
-            if(type == this.fieldTypes.FILE) {
+            if(type == this.fieldTypes.FILE?.toLowerCase()) {
                 if (p.value && p.value.includes('|')) {
-                    const [fileName, extension, contentDocumentId] = p.value.split('|');
+                    const parts = p.value.split('|');
+                    fileName = parts[0];
                     console.log('this.additionalProps-fileName:', fileName);
+                } else if (p.value) {
+                    fileName = p.value;
+                    console.log('this.additionalProps-fileName (no pipe):', fileName);
                 } else {
-                    console.log('p.value does not contain "|" :', p.value);
+                    console.log('p.value is empty:', p.value);
                 }
             }
            
     
+            const isFileType = type === this.fieldTypes.FILE?.toLowerCase();
+            const fileHasValue = isFileType && !!fileName;
+
             return {
                 ...p,
                 type,    
                 // type flags
-                isString: type === this.fieldTypes.STRING,
-                isMulti: type === this.fieldTypes.MULTI,
-                isDate: type === this.fieldTypes.DATE,
-                isFile: type === this.fieldTypes.FILE,
-                isNumber: type === this.fieldTypes.NUMBER,
-                isBoolean: type === this.fieldTypes.BOOLEAN,
-                isPicklist: type ===  this.fieldTypes.PICKLIST,
-                isList: type ===  this.fieldTypes.LIST,
+                isString: type === this.fieldTypes.STRING?.toLowerCase(),
+                isMulti: type === this.fieldTypes.MULTI?.toLowerCase(),
+                isDate: type === this.fieldTypes.DATE?.toLowerCase(),
+                isFile: isFileType,
+                isFileWithValue: isFileType && !!p.value,
+                isFileWithoutValue: isFileType && !p.value,
+                isNumber: type === this.fieldTypes.NUMBER?.toLowerCase(),
+                isBoolean: type === this.fieldTypes.BOOLEAN?.toLowerCase(),
+                isPicklist: type ===  this.fieldTypes.PICKLIST?.toLowerCase(),
+                isList: type ===  this.fieldTypes.LIST?.toLowerCase(),
                 fileName: fileName,
+                // Skip HTML required for file inputs that already have data loaded from server
+                fileRequired: isFileType && p.mandatory && !fileHasValue,
     
                 options: (p.availableValues || []).map(v => ({
                     label: v.displayName,
@@ -394,6 +343,16 @@ export default class IntegrationCreateFraudCase extends LightningElement {
 
 
     // OTHER FIELD CHANGES
+    @api
+    setFieldValue(fieldId, value) {
+        console.log('[fecIntegrationUpdateFraudCase] setFieldValue:', fieldId, value, '| props count:', this.additionalProps?.length, '| matched:', this.additionalProps?.some(p => p.id === fieldId || p.property === fieldId));
+        this.additionalProps = this.additionalProps.map(p =>
+            (p.id === fieldId || p.property === fieldId)
+                ? { ...p, value }
+                : p
+        );
+    }
+
     onSimpleChange(event) {
         const field = event.target.dataset.field;
         if (field) {
@@ -417,6 +376,16 @@ export default class IntegrationCreateFraudCase extends LightningElement {
                 ? { ...p, value }
                 : p
         );
+
+        // Publish fraud→case sync via LMS
+        const prop = this.additionalProps.find(p => p.id === fieldId);
+        if (prop && prop.property) {
+            publish(this.messageContext, FRAUD_FIELD_SYNC, {
+                fieldId: prop.property,
+                value: value,
+                source: 'fraud'
+            });
+        }
     }
 
     // -------------------------------------------------------------------
@@ -453,26 +422,40 @@ export default class IntegrationCreateFraudCase extends LightningElement {
     // -------------------------------------------------------------------
     // BUILD PAYLOAD — USE ID INSTEAD OF NAME
     // -------------------------------------------------------------------
-    buildPayload() {
+    async buildPayload() {
         const additionalInfoPayload = this.additionalProps
-            .filter(p => {
-                if (p.type === this.fieldTypes.FILE) {
-                    return !!p.fileName;
-                }
-                if (p.isBoolean) {
-                    return p.value !== null && p.value !== undefined;
-                }
-            
-                return p.value !== null && p.value !== undefined && p.value !== '';
-            })
             .map(p => ({
                 ID: p.property,
                 Value: p.value !== null && p.value !== undefined
                     ? String(p.value)
-                    : null,
+                    : '',
                 FileName: p.fileName || null,
                 Type: p.type
             }));
+
+        // Resolve ContentDocument IDs to base64 for file types
+        const fileItems = additionalInfoPayload.filter(p => p.Type === this.fieldTypes.FILE?.toLowerCase() && p.Value);
+        const docIds = [];
+        for (const item of fileItems) {
+            const parts = item.Value.split('|');
+            if (parts.length === 3) {
+                const possibleId = parts[2];
+                // ContentDocument IDs are 15 or 18 chars starting with '069'
+                if (possibleId && possibleId.startsWith('069') && (possibleId.length === 15 || possibleId.length === 18)) {
+                    docIds.push(possibleId);
+                }
+            }
+        }
+
+        if (docIds.length > 0) {
+            const base64Map = await getFileBase64ByDocumentIds({ documentIds: docIds });
+            for (const item of fileItems) {
+                const parts = item.Value.split('|');
+                if (parts.length === 3 && base64Map[parts[2]]) {
+                    item.Value = parts[0] + '|' + parts[1] + '|' + base64Map[parts[2]];
+                }
+            }
+        }
     
         return {
             CaseType: this.fraudIntServiceType,
@@ -485,6 +468,7 @@ export default class IntegrationCreateFraudCase extends LightningElement {
             CreatorEmail: this.creatorEmail,
             FraudCaseId: this.fraudCase,
             ServiceCaseId: this.ServiceCaseId,
+            IntCaseId: this.intCaseId,
             AdditionalInfo: additionalInfoPayload
         };
     }
@@ -495,10 +479,19 @@ export default class IntegrationCreateFraudCase extends LightningElement {
 
     async onSubmitCancel() {
         if (this.isCancelSubmitting) return;
+        this.showCancelConfirm = true;
+    }
+
+    closeCancelConfirm() {
+        this.showCancelConfirm = false;
+    }
+
+    async confirmCancelFraudCase() {
+        this.showCancelConfirm = false;
         this.loading = true;
         this.isCancelSubmitting = true;
         try {
-            const payload = this.buildPayload();    
+            const payload = await this.buildPayload();    
             const serviceCaseId = payload?.ServiceCaseId;
             const fraudCaseId = payload?.FraudCaseId;    
             if (!serviceCaseId || !fraudCaseId) {
@@ -534,8 +527,19 @@ export default class IntegrationCreateFraudCase extends LightningElement {
     
         let isValid = true;
         let firstInvalid = null;
+
+        // Collect file field IDs that already have data loaded from server
+        const fileFieldsWithData = new Set(
+            this.additionalProps
+                .filter(p => p.isFile && p.fileName)
+                .map(p => p.id)
+        );
     
         allInputs.forEach(el => {
+            // Skip validation for file inputs that already have data
+            if (el.type === 'file' && fileFieldsWithData.has(el.dataset.id)) {
+                return;
+            }
             if (!el.checkValidity()) {
                 el.reportValidity();
                 isValid = false;
@@ -607,7 +611,7 @@ export default class IntegrationCreateFraudCase extends LightningElement {
         // PROCESSING STARTS HERE
         // =============================    
         try {
-            const payload = this.buildPayload();
+            const payload = await this.buildPayload();
             this.previewJson = JSON.stringify(payload, null, 2);
             //this.showPreview = true;
     
@@ -658,7 +662,7 @@ export default class IntegrationCreateFraudCase extends LightningElement {
             //this.showPreview = false;
             //return;
         }
-    
+       
         let actionPromise;
        
         if (this.actionType === this.cancelActionType) {
@@ -672,6 +676,12 @@ export default class IntegrationCreateFraudCase extends LightningElement {
                 this.labels.responseSuccess,
                 actionPromise.message
             );
+            // Notify parent to reload
+            this.dispatchEvent(new CustomEvent('fraudcasesuccess', {
+                detail: { message: actionPromise.message },
+                bubbles: true,
+                composed: true
+            }));
         } else {
             this.showErrorToast(
                 this.labels.responseFailed,

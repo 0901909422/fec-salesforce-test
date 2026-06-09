@@ -1,0 +1,124 @@
+<template>
+  <lightning-tabset variant="default">
+    <lightning-tab label="Config" icon-name="utility:settings">
+      <div class="master-data-layout">
+        <div class="tree-panel">
+          <c-fec-live-noc-tree onitemselect={handleItemSelect}></c-fec-live-noc-tree>
+        </div>
+        <div class="detail-panel">
+          <c-fec-live-node-detail item={selectedItem}></c-fec-live-node-detail>
+          <c-fec-live-master-data-setting item={selectedItem}></c-fec-live-master-data-setting>
+        </div>
+      </div>
+    </lightning-tab>
+    <lightning-tab label="Channels" icon-name="standard:channel_programs">
+      <div class="slds-p-around_medium">
+        <!-- Table 1: FEC Channels -->
+        <h3 class="slds-text-heading_small slds-m-bottom_small">FEC Channels</h3>
+        <template if:true={isLoadingChannels}>
+          <lightning-spinner alternative-text="Loading channels" size="medium"></lightning-spinner>
+        </template>
+        <template if:false={isLoadingChannels}>
+          <template if:true={hasChannels}>
+            <div style="height: 300px;">
+              <lightning-datatable
+                key-field="Id"
+                data={channels}
+                columns={channelColumns}
+                hide-checkbox-column
+                show-row-number-column>
+              </lightning-datatable>
+            </div>
+          </template>
+          <template if:false={hasChannels}>
+            <p class="slds-text-color_weak slds-p-around_medium">No channel records found.</p>
+          </template>
+        </template>
+
+        <!-- Table 2: Case Channels -->
+        <h3 class="slds-text-heading_small slds-m-top_large slds-m-bottom_small">Case Channels</h3>
+        <template if:true={isLoadingCaseChannels}>
+          <lightning-spinner alternative-text="Loading case channels" size="medium"></lightning-spinner>
+        </template>
+        <template if:false={isLoadingCaseChannels}>
+          <template if:true={hasCaseChannels}>
+            <div style="height: 300px;">
+              <lightning-datatable
+                key-field="Id"
+                data={caseChannels}
+                columns={caseChannelColumns}
+                hide-checkbox-column
+                show-row-number-column>
+              </lightning-datatable>
+            </div>
+          </template>
+          <template if:false={hasCaseChannels}>
+            <p class="slds-text-color_weak slds-p-around_medium">No case channel records found.</p>
+          </template>
+        </template>
+      </div>
+    </lightning-tab>
+    <lightning-tab label="Propertys" icon-name="standard:drafts">
+      <div class="slds-p-around_medium">
+        <!-- Additional Fields Table -->
+        <template if:true={isLoadingFields}>
+          <lightning-spinner alternative-text="Loading properties" size="medium"></lightning-spinner>
+        </template>
+        <template if:false={isLoadingFields}>
+          <template if:true={hasAdditionalFields}>
+            <div style="height: 350px;">
+              <lightning-datatable
+                key-field="Id"
+                data={additionalFields}
+                columns={additionalFieldColumns}
+                show-row-number-column
+                max-row-selection="1"
+                onrowselection={handleFieldRowSelect}>
+              </lightning-datatable>
+            </div>
+          </template>
+          <template if:false={hasAdditionalFields}>
+            <p class="slds-text-color_weak slds-p-around_medium">No additional field records found.</p>
+          </template>
+        </template>
+
+        <!-- Sub-table: Field List Values (shown on row click) -->
+        <template if:true={showFieldListValuesSection}>
+          <div class="slds-m-top_large slds-box slds-p-around_medium">
+            <h3 class="slds-text-heading_small slds-m-bottom_small">{fieldListValuesTitle}</h3>
+            <template if:true={isLoadingListValues}>
+              <lightning-spinner alternative-text="Loading list values" size="small"></lightning-spinner>
+            </template>
+            <template if:false={isLoadingListValues}>
+              <template if:true={hasFieldListValues}>
+                <div style="height: 250px;">
+                  <lightning-datatable
+                    key-field="Id"
+                    data={fieldListValues}
+                    columns={fieldListValueColumns}
+                    hide-checkbox-column
+                    show-row-number-column>
+                  </lightning-datatable>
+                </div>
+              </template>
+              <template if:false={hasFieldListValues}>
+                <p class="slds-text-color_weak">No list values found for this field.</p>
+              </template>
+            </template>
+          </div>
+        </template>
+      </div>
+    </lightning-tab>
+    <lightning-tab label="ServiceType's Property Mappings" icon-name="standard:drafts">
+      <div class="slds-p-around_medium">
+        <c-fec-live-service-type-mapping></c-fec-live-service-type-mapping>
+      </div>
+    </lightning-tab>
+    <lightning-tab label="Review" icon-name="standard:database">
+      <div class="slds-p-around_medium">
+        <c-fec-live-data-review></c-fec-live-data-review>
+      </div>
+    </lightning-tab>
+
+  </lightning-tabset>
+</template>
