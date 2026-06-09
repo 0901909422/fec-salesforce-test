@@ -2349,6 +2349,14 @@
         <value>Sort</value>
     </labels>
     <labels>
+        <fullName>FEC_BCH_TemplateFileMismatch</fullName>
+        <categories>LWC fec_BatchCaseHandling</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_BCH_TemplateFileMismatch</shortDescription>
+        <value>Tên file không khớp template Bulk Actions của quy trình và nhóm người dùng.</value>
+    </labels>
+    <labels>
         <fullName>FEC_BCH_TooManyRows</fullName>
         <categories>LWC fec_BatchCaseHandling</categories>
         <language>en_US</language>
@@ -18568,5 +18576,53 @@
         <protected>false</protected>
         <shortDescription>Label</shortDescription>
         <value>No Case Found</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Email_File_Select_Files</fullName>
+        <categories>fecEmailSection</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Email_File_Select_Files</shortDescription>
+        <value>Select Files</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Email_File_Related_Files</fullName>
+        <categories>fecEmailSection</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Email_File_Related_Files</shortDescription>
+        <value>Related Files</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Email_File_Search_Files</fullName>
+        <categories>fecEmailSection</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Email_File_Search_Files</shortDescription>
+        <value>Search files</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Email_File_Selected_Suffix</fullName>
+        <categories>fecEmailSection</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Email_File_Selected_Suffix</shortDescription>
+        <value>files selected</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Email_File_Upload_Help</fullName>
+        <categories>fecEmailSection</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Email_File_Upload_Help</shortDescription>
+        <value>Use Upload Files to upload files with Salesforce standard upload. Uploaded files are saved to this Case and attached to this email.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Email_File_Uploaded_Added</fullName>
+        <categories>fecEmailSection</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Email_File_Uploaded_Added</shortDescription>
+        <value>File uploaded and added to email.</value>
     </labels>
 </CustomLabels>

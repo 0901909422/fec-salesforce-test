@@ -91,6 +91,47 @@ private class FEC_GetMRCInfo_Test {
         Test.stopTest();
     }
 
+    @IsTest
+    static void testParseResponse_ErrorPaths() {
+        FEC_GetMRCInfo.MRCInfoResult nullResult = FEC_GetMRCInfo.parseResponse(null, 500);
+        System.assertEquals(false, nullResult.success);
+
+        FEC_GetMRCInfo.MRCInfoResult jsonResult = FEC_GetMRCInfo.parseResponse('{"error":true}', 200);
+        System.assertEquals(false, jsonResult.success);
+
+        FEC_GetMRCInfo.MRCInfoResult emptyResult = FEC_GetMRCInfo.parseResponse('   ', 200);
+        System.assertEquals(false, emptyResult.success);
+
+        FEC_GetMRCInfo.MRCInfoResult invalidXml = FEC_GetMRCInfo.parseResponse(
+            '<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/"><soapenv:Body/></soapenv:Envelope>',
+            200
+        );
+        System.assertEquals(false, invalidXml.success);
+    }
+
+    @IsTest
+    static void testBuildEnvelope_AndBlankCaseId() {
+        FEC_GetMRCInfo.MRCInfoRequest req = new FEC_GetMRCInfo.MRCInfoRequest();
+        req.ContractNumber = 'CON999';
+        String envelope = FEC_GetMRCInfo.buildEnvelope(req, 'TX-1', '2026-06-04T00:00:00');
+        System.assert(envelope.contains('CON999'));
+
+        System.assertEquals(null, FEC_GetMRCInfo.updateMRCRecord(null));
+    }
+
+    @IsTest
+    static void testGetMRCInfo_ApiFailure() {
+        Test.setMock(HttpCalloutMock.class, new MockHttpResponseGenerator(500, 'Server Error'));
+        FEC_GetMRCInfo.MRCInfoRequest req = new FEC_GetMRCInfo.MRCInfoRequest();
+        req.ContractNumber = 'CON123';
+
+        Test.startTest();
+        FEC_GetMRCInfo.MRCInfoResult res = FEC_GetMRCInfo.getMRCInfo(req);
+        Test.stopTest();
+
+        System.assertEquals(false, res.success);
+    }
+
     // Helper class để Mock HTTP Response
     private class MockHttpResponseGenerator implements HttpCalloutMock {
         Integer statusCode;

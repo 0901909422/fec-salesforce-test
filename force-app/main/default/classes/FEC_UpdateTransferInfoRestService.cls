@@ -15,7 +15,7 @@
  * Response:
  *   Description – mô tả kết quả
  *   RequestorID – echo lại RequestorID từ request
- *   Status      – "Success" / "Error"
+ *   Status      – "Success" / "Fail"
  *   TransID     – UUID giao dịch
  */
 @RestResource(urlMapping='/collections/v1/call-transfer')
@@ -67,7 +67,7 @@ global without sharing class FEC_UpdateTransferInfoRestService {
             String validationError = validate(reqBody);
             if (validationError != null) {
                 response = buildResponse(
-                    FEC_ConstantCommon.KEY_ERROR,
+                    FEC_ConstantCommon.UPDATE_TRANSFER_STATUS_FAIL,
                     validationError,
                     reqBody?.RequestorID,
                     transId
@@ -86,7 +86,7 @@ global without sharing class FEC_UpdateTransferInfoRestService {
 
             if (cases.isEmpty()) {
                 response = buildResponse(
-                    FEC_ConstantCommon.KEY_ERROR,
+                    FEC_ConstantCommon.UPDATE_TRANSFER_STATUS_FAIL,
                     FEC_ConstantCommon.UPDATE_TRANSFER_ERR_SERVICE_CASE_NOT_FOUND_PREFIX
                         + reqBody.ServiceCaseID,
                     reqBody.RequestorID,
@@ -119,7 +119,7 @@ global without sharing class FEC_UpdateTransferInfoRestService {
             System.debug(LoggingLevel.ERROR,
                 '[UpdateTransferInfo] ' + e.getMessage() + '\n' + e.getStackTraceString());
             response = buildResponse(
-                FEC_ConstantCommon.KEY_ERROR,
+                FEC_ConstantCommon.UPDATE_TRANSFER_STATUS_FAIL,
                 e.getMessage(),
                 reqBody?.RequestorID,
                 transId
