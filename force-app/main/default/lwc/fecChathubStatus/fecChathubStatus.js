@@ -67,6 +67,7 @@ export default class FecChathubStatus extends LightningElement {
             }
         } catch (err) {
             console.error('[FEC-AgentStatus] Permission Set check error:', err);
+            removeUtilityItemByLabel(STATUS_UTILITY_LABEL);
         }
     }
 
