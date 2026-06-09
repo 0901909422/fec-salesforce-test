@@ -322,6 +322,7 @@
         <members>FEC_CS_Senior_CS_Operations_Management_Specialist_Master_Data_Management</members>
         <members>FEC_CS_Senior_CS_Outbound_Specialist_Master_Data_Management</members>
         <members>FEC_CS_Senior_CS_Quality_Control_Specialist_Master_Data_Management</members>
+        <members>FEC_CS_Senior_CS_Support_Specialist_Master_Data_Management</members>
         <members>FEC_CS_Senior_Card_Risk_Monitoring_Specialist_Master_Data_Management</members>
         <members>FEC_CS_Senior_Customer_Care_Specialist_Master_Data_Management</members>
         <members>FEC_CS_Senior_Office_Based_Specialist_Master_Data_Management</members>
@@ -342,6 +343,7 @@
         <members>FEC_RD_Payment_User_Master_Data_Management</members>
         <members>FEC_RD_Telesales_User_1_Master_Data_Management</members>
         <members>FEC_RD_Telesales_User_2_Master_Data_Management</members>
+        <members>RD_IT_User_Master_Data_Management</members>
         <members>FEC_Common_System_Setting</members>
         <members>RD_IT_User_System_Management</members>
         <name>PermissionSet</name>
