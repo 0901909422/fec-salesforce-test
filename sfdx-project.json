@@ -1,14 +1,21 @@
 {
-   "packageDirectories": [
-      {
-         "path": "force-app",
-         "default": true,
-         "package": "GitLabPipelinesPkg",
-         "versionName": "Version 1.0",
-         "versionNumber": "1.0.0.NEXT"
-      }
-   ],
-   "namespace": "",
-   "sfdcLoginUrl": "https://login.salesforce.com",
-   "sourceApiVersion": "65.0"
+  "packageDirectories": [
+    {
+      "versionName": "ver 0.3",
+      "versionNumber": "0.2.0.NEXT",
+      "path": "force-app",
+      "package": "GitLabPipelinesPkg",
+      "versionDescription": "",
+      "definitionFile": "config/project-scratch-def.json"
+    }
+  ],
+  "namespace": "",
+  "sfdcLoginUrl": "https://login.salesforce.com",
+  "sourceApiVersion": "66.0",
+  "packageAliases": {
+    "GitLabPipelinesPkg": "0HoIW000000021p0AA",
+    "GitLabPipelinesPkg@0.1.0-1": "04tIW000004HwjdYAC",
+    "GitLabPipelinesPkg@0.2.0-2": "04tIW000004I9NVYA0",
+    "GitLabPipelinesPkg@0.2.0-3": "04tIW000004IEVFYA4"
+  }
 }

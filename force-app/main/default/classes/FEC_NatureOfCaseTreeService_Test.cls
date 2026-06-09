@@ -70,7 +70,7 @@ private class FEC_NatureOfCaseTreeService_Test {
                 OBJ_NOC,
                 new Map<String, Object>{
                     'Name' => 'PT' + suffix,
-                    'FEC_Customer_Type__c' => 'Retail',
+                    'FEC_Customer_Type__c' => 'Existing',
                     'FEC_Product_Type__c' => ptId,
                     'FEC_Business_Process__c' => bpId
                 }

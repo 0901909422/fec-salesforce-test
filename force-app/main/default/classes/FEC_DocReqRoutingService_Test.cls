@@ -273,7 +273,16 @@ private class FEC_DocReqRoutingService_Test {
     @IsTest
     static void testGetStageChangeRouting_QueueById() {
         Case c = getCaseBySubject('Doc Routing Stage2');
-        Group queue = [SELECT Id FROM Group WHERE Type = :FEC_ConstantCommon.GROUP_TYPE_QUEUE LIMIT 1];
+        FEC_Stage_Change__c stageChange = [
+            SELECT FEC_Next_Queue__c
+            FROM FEC_Stage_Change__c
+            WHERE FEC_Previous_Stage__c = :c.FEC_Current_Case_Stage__c
+              AND FEC_Team_User_Group__c = 'CC'
+              AND FEC_Active__c = TRUE
+              AND FEC_IsReverted__c = FALSE
+            LIMIT 1
+        ];
+        String expectedQueueId = stageChange.FEC_Next_Queue__c;
 
         Test.startTest();
         FEC_DocumentRequestRoutingService.StageRoutingResult result =
@@ -281,6 +290,6 @@ private class FEC_DocReqRoutingService_Test {
         Test.stopTest();
 
         System.assertEquals('CC', result.nextTeam);
-        System.assertEquals(String.valueOf(queue.Id), result.nextQueueId);
+        System.assertEquals(expectedQueueId, result.nextQueueId);
     }
 }

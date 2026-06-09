@@ -1,121 +1,109 @@
 @IsTest
 private class FEC_ChannelFunctionServiceTest {
     @IsTest
-    static void testIsFunctionAllowedTrueWhenNocContainsChannelAndFlagEnabled() {
-        FEC_Channel__c ch = new FEC_Channel__c(
+    static void testVtigerCancelCSCaseAllowedWhenCancelCheckboxOn() {
+        insert new FEC_Channel__c(
             Name = 'Vtiger',
-            FEC_Code__c = 'VTIGER',
-            FEC_Channel_ID__c = 'CH-VTIGER',
             FEC_Channel_Vietnamese_name__c = 'Vtiger VN',
-            FEC_Channel_Status__c = true,
-            FEC_Update_Case_Status__c = true,
-            FEC_Get_Nature_Of_Case__c = false,
-            FEC_Self_Service_Flag__c = false
-        );
-        insert ch;
-
-        insert new FEC_Nature_of_Case__c(
-            FEC_Channel__c = ch.Id
-        );
-
-        Test.startTest();
-        Boolean allowed = FEC_ChannelFunctionService.isFunctionAllowed('Vtiger', 'Update_Case_Status');
-        Boolean allowedCamel = FEC_ChannelFunctionService.isFunctionAllowed('Vtiger', 'UpdateCaseStatus');
-        Test.stopTest();
-
-        System.assertEquals(true, allowed, 'Legacy underscore form.');
-        System.assertEquals(true, allowedCamel, 'CamelCase UpdateCaseStatus.');
-    }
-
-    @IsTest
-    static void testIsFunctionAllowedByChannelIdCancelCase() {
-        FEC_Channel__c ch = new FEC_Channel__c(
-            Name = 'test2',
-            FEC_Code__c = 'FEMOBILE',
-            FEC_Channel_ID__c = 'FEMobile',
-            FEC_Channel_Vietnamese_name__c = 'Mobile VN',
+            FEC_Channel_ID__c = 'CH-VTIGER',
             FEC_Channel_Status__c = true,
             FEC_Cancel_Case__c = true,
-            FEC_Update_Case_Status__c = false,
             FEC_Get_Nature_Of_Case__c = false,
-            FEC_Self_Service_Flag__c = false
-        );
-        insert ch;
-
-        Test.startTest();
-        Boolean byId = FEC_ChannelFunctionService.isFunctionAllowed('FEMobile', 'CancelCase');
-        Boolean byLabel = FEC_ChannelFunctionService.isFunctionAllowed('FEMobile', 'Cancel_Case');
-        Test.stopTest();
-
-        System.assertEquals(true, byId, 'Channel ID + FEC_Cancel_Case__c; no NOC required.');
-        System.assertEquals(true, byLabel, 'Cancel_Case normalizes to same capability.');
-    }
-
-    @IsTest
-    static void testCancelCaseFalseWhenCheckboxOff() {
-        FEC_Channel__c ch = new FEC_Channel__c(
-            Name = 'MobileOnly',
-            FEC_Code__c = 'FEMOBILE2',
-            FEC_Channel_ID__c = 'FEMobile2',
-            FEC_Channel_Vietnamese_name__c = 'Mobile Only VN',
-            FEC_Channel_Status__c = true,
-            FEC_Cancel_Case__c = false,
-            FEC_Get_Nature_Of_Case__c = false,
-            FEC_Update_Case_Status__c = false,
-            FEC_Self_Service_Flag__c = false
-        );
-        insert ch;
-
-        System.assertEquals(
-            false,
-            FEC_ChannelFunctionService.isFunctionAllowed('FEMobile2', 'CancelCase'),
-            'FEC_Cancel_Case__c false must return false.'
-        );
-    }
-
-    @IsTest
-    static void testIsFunctionAllowedFalseWhenNoMatchingNocOrUnknownFunction() {
-        FEC_Channel__c ch = new FEC_Channel__c(
-            Name = 'Zalo',
-            FEC_Code__c = 'ZALO',
-            FEC_Channel_ID__c = 'CH-ZALO',
-            FEC_Channel_Vietnamese_name__c = 'Zalo VN',
-            FEC_Channel_Status__c = true,
-            FEC_Get_Nature_Of_Case__c = true,
-            FEC_Self_Service_Flag__c = true,
             FEC_Update_Case_Status__c = false
         );
-        insert ch;
-
-        Test.startTest();
-        Boolean noNoc = FEC_ChannelFunctionService.isFunctionAllowed('Zalo', 'Self_Service_Flag');
-        Boolean unknownFn = FEC_ChannelFunctionService.isFunctionAllowed('Zalo', 'Unknown_Feature_Xyz');
-        Test.stopTest();
-
-        System.assertEquals(false, noNoc, 'Must return false if no Nature of Case contains the channel.');
-        System.assertEquals(false, unknownFn, 'Must return false for unknown function names.');
-    }
-
-    @IsTest
-    static void testGetNatureOfCaseCamelCaseRequiresNoc() {
-        FEC_Channel__c ch = new FEC_Channel__c(
-            Name = 'ApiCh',
-            FEC_Code__c = 'APICH',
-            FEC_Channel_ID__c = 'CH-API',
-            FEC_Channel_Vietnamese_name__c = 'API Channel VN',
-            FEC_Channel_Status__c = true,
-            FEC_Get_Nature_Of_Case__c = true,
-            FEC_Update_Case_Status__c = false,
-            FEC_Cancel_Case__c = false,
-            FEC_Self_Service_Flag__c = false
-        );
-        insert ch;
-        insert new FEC_Nature_of_Case__c(FEC_Channel__c = ch.Id);
 
         System.assertEquals(
             true,
-            FEC_ChannelFunctionService.isFunctionAllowed('ApiCh', 'GetNatureOfCase'),
-            'GetNatureOfCase maps to FEC_Get_Nature_Of_Case__c with NOC.'
+            FEC_ChannelFunctionService.isFunctionAllowed('Vtiger', 'CancelCSCase'),
+            'Cancel Case checkbox true should allow CancelCSCase.'
         );
+        System.assertEquals(
+            false,
+            FEC_ChannelFunctionService.isFunctionAllowed('Vtiger', 'GetCSCaseStatus'),
+            'Update Case Status checkbox false should deny GetCSCaseStatus.'
+        );
+        System.assertEquals(
+            false,
+            FEC_ChannelFunctionService.isFunctionAllowed('Vtiger', 'CreateCSCase'),
+            'Get Nature Of Case checkbox false should deny CreateCSCase.'
+        );
+    }
+
+    @IsTest
+    static void testGetCSCaseStatusAllowedWhenUpdateCheckboxOn() {
+        insert new FEC_Channel__c(
+            Name = 'Mobile',
+            FEC_Channel_Vietnamese_name__c = 'Mobile VN',
+            FEC_Channel_ID__c = 'FEMobile',
+            FEC_Channel_Status__c = true,
+            FEC_Update_Case_Status__c = true,
+            FEC_Cancel_Case__c = false,
+            FEC_Get_Nature_Of_Case__c = false
+        );
+
+        System.assertEquals(
+            true,
+            FEC_ChannelFunctionService.isFunctionAllowed('FEMobile', 'GetCSCaseStatus')
+        );
+    }
+
+    @IsTest
+    static void testMasterDataAndCreateCaseUseGetNatureOfCaseCheckbox() {
+        insert new FEC_Channel__c(
+            Name = 'ApiCh',
+            FEC_Channel_Vietnamese_name__c = 'ApiCh VN',
+            FEC_Channel_ID__c = 'CH-API',
+            FEC_Channel_Status__c = true,
+            FEC_Get_Nature_Of_Case__c = true,
+            FEC_Update_Case_Status__c = false,
+            FEC_Cancel_Case__c = false
+        );
+
+        System.assertEquals(
+            true,
+            FEC_ChannelFunctionService.isFunctionAllowed('ApiCh', 'GetCSMasterData')
+        );
+        System.assertEquals(
+            true,
+            FEC_ChannelFunctionService.isFunctionAllowed('CH-API', 'GetCSMasterDataByCode')
+        );
+        System.assertEquals(
+            true,
+            FEC_ChannelFunctionService.isFunctionAllowed('ApiCh', 'CreateCSCase')
+        );
+    }
+
+    @IsTest
+    static void testFalseWhenChannelInactiveOrUnknownFunction() {
+        insert new FEC_Channel__c(
+            Name = 'InactiveCh',
+            FEC_Channel_Vietnamese_name__c = 'Inactive VN',
+            FEC_Channel_ID__c = 'CH-OFF',
+            FEC_Channel_Status__c = false,
+            FEC_Cancel_Case__c = true
+        );
+
+        System.assertEquals(
+            false,
+            FEC_ChannelFunctionService.isFunctionAllowed('CH-OFF', 'CancelCSCase'),
+            'Inactive channel must return false.'
+        );
+        System.assertEquals(
+            false,
+            FEC_ChannelFunctionService.isFunctionAllowed('Missing', 'CancelCSCase'),
+            'Unknown channel must return false.'
+        );
+        System.assertEquals(
+            false,
+            FEC_ChannelFunctionService.isFunctionAllowed('InactiveCh', 'UnknownApi'),
+            'Unknown function must return false.'
+        );
+    }
+
+    @IsTest
+    static void testBlankInputsReturnFalse() {
+        System.assertEquals(false, FEC_ChannelFunctionService.isFunctionAllowed(null, 'CancelCSCase'));
+        System.assertEquals(false, FEC_ChannelFunctionService.isFunctionAllowed('Vtiger', null));
+        System.assertEquals(false, FEC_ChannelFunctionService.isFunctionAllowed('', 'CancelCSCase'));
     }
 }

@@ -17,6 +17,8 @@ global with sharing class FEC_GetCSMasterDataByCodeService {
     // CONSTANTS
     // =========================================================================
     private static final Integer MAX_LENGTH_STANDARD = 255;
+    private static final Integer FEC_API_LOG_RESPONSE_FIELD_LEN = 131072;
+    private static final String API_LOG_TRUNCATED_SUFFIX = '...[truncated]';
 
     // =========================================================================
     // MAIN
@@ -29,13 +31,24 @@ global with sharing class FEC_GetCSMasterDataByCodeService {
         String Remarks
     ) {
         GetCSMasterDataByCodeResponse res = initResponse(Sys);
+        Boolean isSuccess = false;
+        String errorMessage = null;
+        Map<String, Object> logRequest = buildApiLogRequest(
+            Sys,
+            MasterDataCode,
+            CustomerType,
+            AdditionalInfo,
+            Remarks
+        );
 
         try {
             // ===== VALIDATION =====
             ValidationResult sysVal = validateSys(Sys);
             if (!sysVal.isValid) {
-                return errorResponse(res, sysVal.errorMessage);
-            }
+                res.Sys.Code = '0';
+                res.Sys.Description = sysVal.errorMessage;
+                errorMessage = sysVal.errorMessage;
+            } else {
 
             // ===== EXTRACT =====
             String productTypeCode = (MasterDataCode != null) ? MasterDataCode.ProductType : null;
@@ -48,7 +61,7 @@ global with sharing class FEC_GetCSMasterDataByCodeService {
                 ? CustomerType.Language
                 : FEC_ConstantCommon.LANGUAGE_EN;
 
-            String customerTypeFilter = resolveCustomerTypeFilter(CustomerType);
+            List<String> customerTypeFilters = resolveCustomerTypeFilters(CustomerType);
             String returnLevel = resolveReturnLevel(
                 productTypeCode,
                 caseTypeCode,
@@ -65,7 +78,7 @@ global with sharing class FEC_GetCSMasterDataByCodeService {
                 categoryCode,
                 subCategoryCode,
                 subCode,
-                customerTypeFilter,
+                customerTypeFilters,
                 returnLevel
             );
 
@@ -108,13 +121,18 @@ global with sharing class FEC_GetCSMasterDataByCodeService {
             // ===== SUCCESS =====
             res.Sys.Code = '1';
             res.Sys.Description = 'Success';
+            isSuccess = true;
+
+            }
 
         } catch (Exception e) {
             res.Sys.Code = '0';
             res.Sys.Description = e.getMessage();
+            errorMessage = e.getMessage();
         }
 
         normalizeResponse(res);
+        writeGetCSMasterDataByCodeApiLog(logRequest, res, isSuccess, errorMessage);
         return res;
     }
 
@@ -143,17 +161,23 @@ global with sharing class FEC_GetCSMasterDataByCodeService {
         return FEC_ConstantCommon.KEY_SUBCODE;
     }
 
-    private static String resolveCustomerTypeFilter(CustomerTypeRequest customerType) {
+    private static List<String> resolveCustomerTypeFilters(CustomerTypeRequest customerType) {
         if (customerType == null || String.isBlank(customerType.UserType)) {
             return null;
         }
 
         String userType = customerType.UserType.trim().toUpperCase();
         if (userType == FEC_ConstantCommon.REQUEST_EXISTING_USER_TYPE) {
-            return FEC_ConstantCommon.CASE_EXISTING_CUSTOMER;
+            return new List<String>{
+                FEC_ConstantCommon.CASE_EXISTING_CUSTOMER,
+                FEC_ConstantCommon.CASE_ALL_CUSTOMER
+            };
         }
         if (userType == FEC_ConstantCommon.REQUEST_NON_EXISTING_USER_TYPE) {
-            return FEC_ConstantCommon.CASE_NON_EXISTING_CUSTOMER;
+            return new List<String>{
+                FEC_ConstantCommon.CASE_NON_EXISTING_CUSTOMER,
+                FEC_ConstantCommon.CASE_ALL_CUSTOMER
+            };
         }
         return null;
     }
@@ -236,14 +260,17 @@ global with sharing class FEC_GetCSMasterDataByCodeService {
         String categoryCode,
         String subCategoryCode,
         String subCode,
-        String customerTypeFilter,
+        List<String> customerTypeFilters,
         String returnLevel
     ) {
-        String channelPattern = FEC_CommonUltils.buildNatureOfCaseChannelLikePattern(channel);
+        String channelFilter = FEC_CommonUltils.buildNatureOfCaseChannelFilterClause(
+            'FEC_Channel__c',
+            channel
+        );
 
         List<String> conditions = new List<String>();
         conditions.add('FEC_Active__c = true');
-        conditions.add('FEC_Channel__c LIKE :channelPattern');
+        conditions.add(channelFilter);
 
         if (String.isNotBlank(productTypeCode)) {
             conditions.add('FEC_Product_Type__r.FEC_Code__c = :productTypeCode');
@@ -260,8 +287,8 @@ global with sharing class FEC_GetCSMasterDataByCodeService {
         if (String.isNotBlank(subCode)) {
             conditions.add('FEC_Sub_Code__r.FEC_Code__c = :subCode');
         }
-        if (String.isNotBlank(customerTypeFilter)) {
-            conditions.add('FEC_Customer_Type__c = :customerTypeFilter');
+        if (customerTypeFilters != null && !customerTypeFilters.isEmpty()) {
+            conditions.add('FEC_Customer_Type__c IN :customerTypeFilters');
         }
 
         if (returnLevel == FEC_ConstantCommon.KEY_SUBCODE) {
@@ -312,7 +339,8 @@ global with sharing class FEC_GetCSMasterDataByCodeService {
             return result;
         }
 
-        // Channel
+        // Channel (normalize trim / quotes from XML)
+        Sys.Channel = FEC_CommonUltils.normalizeChannelInput(Sys.Channel);
         if (String.isBlank(Sys.Channel)) {
             result.isValid = false;
             result.errorMessage = String.format(
@@ -323,7 +351,13 @@ global with sharing class FEC_GetCSMasterDataByCodeService {
         }
         if (!FEC_CommonUltils.isActiveChannelSupported(Sys.Channel)) {
             result.isValid = false;
-            result.errorMessage = buildUnsupportedChannelMessage(Sys.Channel);
+            result.errorMessage = FEC_CommonUltils.buildUnsupportedChannelMessage(Sys.Channel);
+            return result;
+        }
+        if (!isGetCSMasterDataByCodeChannelFunctionAllowed(Sys.Channel)) {
+            result.isValid = false;
+            result.errorMessage =
+                FEC_ConstantCommon.MY_CASE_CHANNEL_GET_MASTER_DATA_BY_CODE_NOT_ALLOWED_MSG;
             return result;
         }
 
@@ -350,13 +384,11 @@ global with sharing class FEC_GetCSMasterDataByCodeService {
         return result;
     }
 
-    private static String buildUnsupportedChannelMessage(String channel) {
-        String normalizedChannel = FEC_CommonUltils.sanitizeChannelForMessage(channel);
-        return String.valueOf(System.Label.FEC_MSG_Channel_Validation).trim() +
-            ' ' +
-            normalizedChannel +
-            ' ' +
-            String.valueOf(System.Label.FEC_MSG_Data_Request_Master_Data).trim();
+    private static Boolean isGetCSMasterDataByCodeChannelFunctionAllowed(String channel) {
+        return FEC_ChannelFunctionService.isFunctionAllowed(
+            channel,
+            FEC_ConstantCommon.MY_CASE_FUNCTION_GET_CS_MASTER_DATA_BY_CODE
+        );
     }
 
     private class ValidationResult {
@@ -365,15 +397,64 @@ global with sharing class FEC_GetCSMasterDataByCodeService {
     }
 
     // =========================================================================
-    // RESPONSE HELPERS
+    // API LOG
     // =========================================================================
-    private static GetCSMasterDataByCodeResponse errorResponse(GetCSMasterDataByCodeResponse res, String message) {
-        res.Sys.Code = '0';
-        res.Sys.Description = message;
-        normalizeResponse(res);
-        return res;
+    private static Map<String, Object> buildApiLogRequest(
+        SysRequestType sys,
+        MasterDataCodeType masterDataCode,
+        CustomerTypeRequest customerType,
+        AdditionalInfoRequest additionalInfo,
+        String remarks
+    ) {
+        return new Map<String, Object>{
+            'Sys' => sys,
+            'MasterDataCode' => masterDataCode,
+            'CustomerType' => customerType,
+            'AdditionalInfo' => additionalInfo,
+            'Remarks' => remarks
+        };
     }
 
+    private static void writeGetCSMasterDataByCodeApiLog(
+        Map<String, Object> request,
+        GetCSMasterDataByCodeResponse response,
+        Boolean isSuccess,
+        String errorMessage
+    ) {
+        try {
+            HttpResponse apiResponse = new HttpResponse();
+            apiResponse.setStatusCode(isSuccess ? 200 : 500);
+            apiResponse.setBody(buildApiLogResponseBody(response));
+            FEC_CommonUltils.logApi(
+                'GetCSMasterDataByCode',
+                'GetCSMasterDataByCode',
+                FEC_ConstantCommon.API_METHOD_POST,
+                FEC_CommonUltils.serializeSafe(request),
+                apiResponse,
+                errorMessage
+            );
+        } catch (Exception logEx) {
+            System.debug('LOG_API_ERROR GetCSMasterDataByCode: ' + logEx.getMessage());
+        }
+    }
+
+    private static String buildApiLogResponseBody(GetCSMasterDataByCodeResponse response) {
+        if (response == null) {
+            return null;
+        }
+        String body = FEC_CommonUltils.serializeSafe(response);
+        Integer maxBodyLen =
+            FEC_API_LOG_RESPONSE_FIELD_LEN - API_LOG_TRUNCATED_SUFFIX.length();
+        return FEC_CommonUltils.truncateForLog(
+            body,
+            maxBodyLen,
+            API_LOG_TRUNCATED_SUFFIX
+        );
+    }
+
+    // =========================================================================
+    // RESPONSE HELPERS
+    // =========================================================================
     private static void normalizeResponse(GetCSMasterDataByCodeResponse res) {
         if (res == null) return;
 

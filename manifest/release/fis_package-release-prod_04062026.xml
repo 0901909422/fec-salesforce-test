@@ -190,6 +190,7 @@
         <members>FEC_DownloadReportController</members>
         <members>FEC_DownloadReportService</members>
         <members>FEC_AutoHoldCaseApi</members>
+        <members>FEC_AutoHoldCaseApi_Test</members>
         <members>FEC_AutoHoldCaseExpireBatch</members>
         <members>FEC_AutoHoldCaseExpireSchedulable</members>
         <members>FEC_AutoHoldCaseHistoryService</members>
@@ -368,11 +369,15 @@
         <members>FEC_AssignmentRoutingActionHandler_Test</members>
         <members>FEC_AssignmentTriggerHandler_Test</members>
         <members>FEC_AssignmentTrigger_Test</members>
-        <members>FEC_AutoHoldCaseServiceTest</members>
+        <members>FEC_AutoHoldCaseExpireBatch_Test</members>
+        <members>FEC_AutoHoldCaseExpireSchedulable_Test</members>
+        <members>FEC_AutoHoldCaseHistoryService_Test</members>
         <members>FEC_AutoHoldCaseQueueable_Test</members>
+        <members>FEC_AutoHoldCaseServiceTest</members>
         <members>FEC_BCH_AssignmentRouteToService_Test</members>
         <members>FEC_BCH_AssignmentUpdateService_Test</members>
         <members>FEC_BCH_CofGsrImportRouteToService_Test</members>
+        <members>FEC_BCH_ExpAsgRemarkLoader_Test</members>
         <members>FEC_BCH_ExportPropertyService_Test</members>
         <members>FEC_BCH_IPTemplateWriter_Test</members>
         <members>FEC_BCH_PicklistTranslationCtrl_Test</members>
@@ -3552,6 +3557,7 @@
         <members>CaseOrigin</members>
         <members>CasePriority</members>
         <members>CaseReason</members>
+        <members>CaseType</members>
         <name>StandardValueSet</name>
     </types>
     <types>

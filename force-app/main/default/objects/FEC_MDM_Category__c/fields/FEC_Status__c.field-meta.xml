@@ -3,7 +3,6 @@
     <fullName>FEC_Status__c</fullName>
     <defaultValue>false</defaultValue>
     <description>Trạng thái danh mục</description>
-    <externalId>false</externalId>
     <label>Status</label>
     <trackHistory>true</trackHistory>
     <trackTrending>false</trackTrending>

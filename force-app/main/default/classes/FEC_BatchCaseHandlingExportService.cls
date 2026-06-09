@@ -225,25 +225,26 @@ public without sharing class FEC_BatchCaseHandlingExportService {
 
     public static FEC_BatchCaseHandlingExportRow mapCaseToExportRow(Case c) {
         FEC_BatchCaseHandlingExportRow r = new FEC_BatchCaseHandlingExportRow();
+        Map<String, Object> populated = c.getPopulatedFieldsAsMap();
         r.caseId = c.Id;
-        r.customerType = c.FEC_Customer_Type__c;
+        r.customerType = populated.containsKey('FEC_Customer_Type__c') ? c.FEC_Customer_Type__c : null;
         SObject ch = safeRelatedSObject(c, 'FEC_Account_or_Contract__r');
         String chCustomerName = safeRelatedFieldString(ch, 'FEC_Customer_Name__c');
-        r.customerName = String.isNotBlank(chCustomerName) ? chCustomerName : c.FEC_Customer_Name__c;
+        r.customerName = String.isNotBlank(chCustomerName) ? chCustomerName : (populated.containsKey('FEC_Customer_Name__c') ? c.FEC_Customer_Name__c : null);
         String chAccountName = safeRelatedFieldString(ch, 'Name');
         r.accountContractNumber = String.isNotBlank(chAccountName)
             ? chAccountName
-            : c.FEC_Account_Contract_Number_Text__c;
+            : (populated.containsKey('FEC_Account_Contract_Number_Text__c') ? c.FEC_Account_Contract_Number_Text__c : null);
         String chAppId = safeRelatedFieldString(ch, 'FEC_Application_ID__c');
-        r.appId = String.isNotBlank(chAppId) ? chAppId : c.FEC_Application_ID__c;
-        r.caseIdSearch = c.FEC_ID_Search__c;
-        r.caseStatus = c.FEC_Final_Status__c;
-        r.caseCreatedOn = c.FEC_Case_Created_On__c;
-        r.lastUpdatedOn = c.FEC_Last_Updated_On__c;
-        r.caseCreatedOnLabel = formatExportDatetime(c.FEC_Case_Created_On__c);
-        r.lastUpdatedOnLabel = formatExportDatetime(c.FEC_Last_Updated_On__c);
-        r.complaintType = c.FEC_Complain_Type__c;
-        r.complaintSource = c.FEC_Complaint_Source__c;
+        r.appId = String.isNotBlank(chAppId) ? chAppId : (populated.containsKey('FEC_Application_ID__c') ? c.FEC_Application_ID__c : null);
+        r.caseIdSearch = populated.containsKey('FEC_ID_Search__c') ? c.FEC_ID_Search__c : null;
+        r.caseStatus = populated.containsKey('FEC_Final_Status__c') ? c.FEC_Final_Status__c : null;
+        r.caseCreatedOn = populated.containsKey('FEC_Case_Created_On__c') ? c.FEC_Case_Created_On__c : null;
+        r.lastUpdatedOn = populated.containsKey('FEC_Last_Updated_On__c') ? c.FEC_Last_Updated_On__c : null;
+        r.caseCreatedOnLabel = populated.containsKey('FEC_Case_Created_On__c') ? formatExportDatetime(c.FEC_Case_Created_On__c) : FEC_ConstantCommon.STR_EMPTY;
+        r.lastUpdatedOnLabel = populated.containsKey('FEC_Last_Updated_On__c') ? formatExportDatetime(c.FEC_Last_Updated_On__c) : FEC_ConstantCommon.STR_EMPTY;
+        r.complaintType = populated.containsKey('FEC_Complain_Type__c') ? c.FEC_Complain_Type__c : null;
+        r.complaintSource = populated.containsKey('FEC_Complaint_Source__c') ? c.FEC_Complaint_Source__c : null;
         SObject interaction = safeRelatedSObject(c, 'FEC_Interaction__r');
         // Export interaction: lấy từ FEC_Interaction__r theo design (Interaction ID đã đúng ở dưới)
         r.interactionChannel = safeRelatedFieldString(interaction, 'FEC_Channel__c');
@@ -281,41 +282,47 @@ public without sharing class FEC_BatchCaseHandlingExportService {
             r.ippInsurance = safeRelatedFieldString(ipp, 'FEC_IPP_Insurance__c'); // Toannd 28/5/2026
             r.ippCurrentTerm = safeRelatedFieldString(ipp, 'FEC_IPP_Current_Term__c'); // Toannd 28/5/2026
         }
-        r.interactionId = c.FEC_Interaction__r == null ? FEC_ConstantCommon.STR_EMPTY : c.FEC_Interaction__r.FEC_ID_Search__c;
-        r.productType = c.FEC_Product_Type__r == null
-            ? FEC_ConstantCommon.STR_EMPTY
-            : String.isNotBlank(c.FEC_Product_Type__r.FEC_Code__c)
-                ? c.FEC_Product_Type__r.FEC_Code__c
-                : c.FEC_Product_Type__r.Name;
-        r.categoryCode = c.FEC_Category__r == null ? null : c.FEC_Category__r.FEC_Code__c;
-        r.subCategoryCode = c.FEC_SubCategory__r == null ? null : c.FEC_SubCategory__r.FEC_Code__c;
-        r.subCodeCode = c.FEC_SubCode__r == null ? null : c.FEC_SubCode__r.FEC_Code__c;
-        r.categoryDisplay = formatCategoryDisplay(c.FEC_Category__r);
-        r.subCategoryDisplay = formatSubDisplay(c.FEC_SubCategory__r);
-        r.subCodeDisplay = formatSubDisplay(c.FEC_SubCode__r);
-        r.originalCategoryDisplay = formatCategoryDisplay(c.FEC_Original_Category__r);
-        r.originalSubCategoryDisplay = formatSubDisplay(c.FEC_Original_Sub_Category__r);
-        r.originalSubCodeDisplay = formatSubDisplay(c.FEC_Original_Sub_Code__r);
+        SObject interactionRel = safeRelatedSObject(c, 'FEC_Interaction__r');
+        r.interactionId = interactionRel == null ? FEC_ConstantCommon.STR_EMPTY : safeRelatedFieldString(interactionRel, 'FEC_ID_Search__c');
+        SObject productTypeRel = safeRelatedSObject(c, 'FEC_Product_Type__r');
+        if (productTypeRel == null) {
+            r.productType = FEC_ConstantCommon.STR_EMPTY;
+        } else {
+            String ptCode = safeRelatedFieldString(productTypeRel, 'FEC_Code__c');
+            r.productType = String.isNotBlank(ptCode) ? ptCode : safeRelatedFieldString(productTypeRel, 'Name');
+        }
+        SObject categoryRel = safeRelatedSObject(c, 'FEC_Category__r');
+        SObject subCategoryRel = safeRelatedSObject(c, 'FEC_SubCategory__r');
+        SObject subCodeRel = safeRelatedSObject(c, 'FEC_SubCode__r');
+        r.categoryCode = categoryRel == null ? null : (String) categoryRel.get('FEC_Code__c');
+        r.subCategoryCode = subCategoryRel == null ? null : (String) subCategoryRel.get('FEC_Code__c');
+        r.subCodeCode = subCodeRel == null ? null : (String) subCodeRel.get('FEC_Code__c');
+        r.categoryDisplay = formatCategoryDisplay(categoryRel);
+        r.subCategoryDisplay = formatSubDisplay(subCategoryRel);
+        r.subCodeDisplay = formatSubDisplay(subCodeRel);
+        r.originalCategoryDisplay = formatCategoryDisplay(safeRelatedSObject(c, 'FEC_Original_Category__r'));
+        r.originalSubCategoryDisplay = formatSubDisplay(safeRelatedSObject(c, 'FEC_Original_Sub_Category__r'));
+        r.originalSubCodeDisplay = formatSubDisplay(safeRelatedSObject(c, 'FEC_Original_Sub_Code__r'));
         r.caseReviewUrl = '/lightning/r/Case/' + String.valueOf(c.Id) + '/view';
         FEC_BatchCaseHandlingTemplateHelper.applyStageBusinessProcessToExportRow(r, c);
-        r.blockLimitDateLabel = formatExportDate(c.FEC_CS_Check_Block_Limit_Date__c);
-        r.blockLimitAmount = formatExportCurrency(c.FEC_CS_Check_Block_Limit_Amount__c);
-        r.classificationByCs = c.FEC_CS_Check_Classification_by_CS__c;
-        r.evaluationByCs = c.FEC_CS_Check_Evaluation_by_CS__c;
-        r.finalProduct = c.FEC_CS_Check_Final_Product__c;
-        r.paymentContractAssessment = c.FEC_RD_Payment_Contract_Assessment__c; // Toannd 28/5/2026
-        r.evaluationBySales = c.FEC_Sales_Check_Evaluation_by_Sales__c;
-        r.disciplineResult = c.FEC_Sales_Check_Discipline_Result__c;
-        r.contactPoint = c.FEC_Sales_Check_Contact_Point__c;
-        r.teamLeader = c.FEC_Sales_Check_Team_Leader__c;
-        r.supervisor = c.FEC_Sales_Check_Supervisor__c;
-        r.incorrectContractNumber = c.FEC_Incorrect_Contract_Number__c;
-        r.paymentMethod = c.FEC_Payment_Method__c;
-        r.billDate = formatExportDate(c.FEC_Bill_Date__c);
-        r.billAmount = formatExportCurrency(c.FEC_Bill_Amount__c);
+        r.blockLimitDateLabel = populated.containsKey('FEC_CS_Check_Block_Limit_Date__c') ? formatExportDate(c.FEC_CS_Check_Block_Limit_Date__c) : FEC_ConstantCommon.STR_EMPTY;
+        r.blockLimitAmount = populated.containsKey('FEC_CS_Check_Block_Limit_Amount__c') ? formatExportCurrency(c.FEC_CS_Check_Block_Limit_Amount__c) : FEC_ConstantCommon.STR_EMPTY;
+        r.classificationByCs = populated.containsKey('FEC_CS_Check_Classification_by_CS__c') ? c.FEC_CS_Check_Classification_by_CS__c : null;
+        r.evaluationByCs = populated.containsKey('FEC_CS_Check_Evaluation_by_CS__c') ? c.FEC_CS_Check_Evaluation_by_CS__c : null;
+        r.finalProduct = populated.containsKey('FEC_CS_Check_Final_Product__c') ? c.FEC_CS_Check_Final_Product__c : null;
+        r.paymentContractAssessment = populated.containsKey('FEC_RD_Payment_Contract_Assessment__c') ? c.FEC_RD_Payment_Contract_Assessment__c : null;
+        r.evaluationBySales = populated.containsKey('FEC_Sales_Check_Evaluation_by_Sales__c') ? c.FEC_Sales_Check_Evaluation_by_Sales__c : null;
+        r.disciplineResult = populated.containsKey('FEC_Sales_Check_Discipline_Result__c') ? c.FEC_Sales_Check_Discipline_Result__c : null;
+        r.contactPoint = populated.containsKey('FEC_Sales_Check_Contact_Point__c') ? c.FEC_Sales_Check_Contact_Point__c : null;
+        r.teamLeader = populated.containsKey('FEC_Sales_Check_Team_Leader__c') ? c.FEC_Sales_Check_Team_Leader__c : null;
+        r.supervisor = populated.containsKey('FEC_Sales_Check_Supervisor__c') ? c.FEC_Sales_Check_Supervisor__c : null;
+        r.incorrectContractNumber = populated.containsKey('FEC_Incorrect_Contract_Number__c') ? c.FEC_Incorrect_Contract_Number__c : null;
+        r.paymentMethod = populated.containsKey('FEC_Payment_Method__c') ? c.FEC_Payment_Method__c : null;
+        r.billDate = populated.containsKey('FEC_Bill_Date__c') ? formatExportDate(c.FEC_Bill_Date__c) : FEC_ConstantCommon.STR_EMPTY;
+        r.billAmount = populated.containsKey('FEC_Bill_Amount__c') ? formatExportCurrency(c.FEC_Bill_Amount__c) : FEC_ConstantCommon.STR_EMPTY;
         r.paymentDate = r.billDate;
         r.excessAmount = r.billAmount;
-        r.selectedContractNumber = c.FEC_Selected_Contract_Number__c; // tungnm37
+        r.selectedContractNumber = populated.containsKey('FEC_Selected_Contract_Number__c') ? c.FEC_Selected_Contract_Number__c : null;
         r.correctContractNumber = FEC_ConstantCommon.STR_EMPTY; // tungnm37
         r.correctAccountContract = FEC_ConstantCommon.STR_EMPTY; // tungnm37
         r.adjustedAmount = FEC_ConstantCommon.STR_EMPTY; // tungnm37

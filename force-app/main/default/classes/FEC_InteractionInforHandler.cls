@@ -21,7 +21,8 @@ public without sharing class FEC_InteractionInforHandler {
                Parent.FEC_ID_Search__c,
                IsClosed,
                FEC_Interaction_Status__c,
-               Origin
+               Origin,
+               FEC_Is_Manual__c
         FROM Case
         WHERE Id = :recordId
     ];
@@ -740,12 +741,32 @@ public without sharing class FEC_InteractionInforHandler {
                    FEC_Phone_Number__c,
                    FEC_Created_On__c,
                    FEC_Created_by__c,
-                   FEC_External_Interaction_ID__c
+                   FEC_KYC_Status__c,
+                   FEC_External_Interaction_ID__c,
+                   FEC_Outcome_Code__c,
+                   FEC_Interaction_Remarks__c,
+                   IsClosed
             FROM Case
             WHERE Id = :recordId
             LIMIT 1
         ];
-        return caseList.isEmpty() ? null : caseList[0];
+        if (caseList.isEmpty()) return null;
+
+        Case interactionCase = caseList[0];
+        if (String.isBlank(interactionCase.FEC_KYC_Status__c)) {
+            List<FEC_KYC_Result__c> kycResults = [
+                SELECT FEC_KYC_Result__c
+                FROM FEC_KYC_Result__c
+                WHERE FEC_Case_Interaction__c = :recordId
+                AND FEC_KYC_Result__c != null
+                ORDER BY CreatedDate DESC
+                LIMIT 1
+            ];
+            if (!kycResults.isEmpty()) {
+                interactionCase.FEC_KYC_Status__c = kycResults[0].FEC_KYC_Result__c;
+            }
+        }
+        return interactionCase;
     }
 
     @AuraEnabled
@@ -760,3 +781,4 @@ public without sharing class FEC_InteractionInforHandler {
         update c;
     }
 }
+

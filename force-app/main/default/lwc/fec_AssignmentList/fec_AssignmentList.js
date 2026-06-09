@@ -663,6 +663,15 @@ export default class Fec_AssignmentList extends LightningElement {
       }
 
       await refreshExecuteVisibility({ caseId: this.recordId });
+
+      this.dispatchEvent(
+        new CustomEvent("assignmentsubmitsuccess", {
+          bubbles: true,
+          composed: true,
+          detail: { caseId: this.recordId },
+        }),
+      );
+
       setTimeout(() => {
         this.modeEditCase = false;
         this.handlePublishMode(false);
