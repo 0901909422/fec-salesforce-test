@@ -26,7 +26,7 @@ public without sharing class FEC_InteractionInforHandler {
         FROM Case
         WHERE Id = :recordId
     ];
-
+        
         return caseList.isEmpty() ? null : caseList[0];
     }
     
@@ -74,7 +74,18 @@ public without sharing class FEC_InteractionInforHandler {
         
         return FEC_CommonUltils.maskPhone(phone);
     }
-
+    
+    @AuraEnabled
+    public static String updateInteractionExternalId(Id recordId, String externalId) {
+        
+        update new Case(
+            Id = recordId,
+        FEC_External_Interaction_ID__c = externalId
+            );
+        
+        return externalId;
+    }
+    
     @AuraEnabled(cacheable=false)
     public static void updateInteractionEmail(Id recordId, String email) {
         if (recordId == null) {
@@ -82,8 +93,8 @@ public without sharing class FEC_InteractionInforHandler {
         }
         update new Case(
             Id = recordId,
-            FEC_Interaction_Email__c = String.isNotBlank(email) ? email.trim() : null
-        );
+        FEC_Interaction_Email__c = String.isNotBlank(email) ? email.trim() : null
+            );
     }
 
     public static Boolean isEmailChannelWithMissingInteractionEmail(Case interactionCase) {
@@ -128,8 +139,8 @@ public without sharing class FEC_InteractionInforHandler {
         }
         update new Case(
             Id = recordId,
-            FEC_On_Hold__c = onHold
-        );
+        FEC_On_Hold__c = onHold
+            );
     }
     
     @AuraEnabled(cacheable=true)
@@ -707,7 +718,7 @@ public without sharing class FEC_InteractionInforHandler {
     @AuraEnabled
     public static String resetViewMode(Id recordId, String viewMode) {
         if (recordId == null) return null;
-
+        
         List<Case> caselst = [
             SELECT
                 Id,
@@ -719,17 +730,17 @@ public without sharing class FEC_InteractionInforHandler {
             FROM Case
             WHERE Id = :recordId
         ];
-
+        
         if (caselst.isEmpty())
             return null;
-
+        
         Case c = caselst[0];
         if (c.FEC_Get_Next_Work__c == true) {
             viewMode = FEC_ConstantCommon.INTERACTION_HANDLING_MODE;
         } else if (c.FEC_First_Access__c == true) {
             viewMode = c.FEC_Interaction_View_Mode__c;
         }
-
+        
         Boolean needsUpdate =
             c.FEC_First_Access__c == true ||
             c.FEC_Get_Next_Work__c == true ||
@@ -737,15 +748,15 @@ public without sharing class FEC_InteractionInforHandler {
         if (!needsUpdate) {
             return viewMode;
         }
-
+        
         FEC_CaseInitUpdateService.runSystemCaseUpdate(
             new Case(
-                Id = recordId,
-                FEC_Interaction_View_Mode__c = viewMode,
-                FEC_First_Access__c = false,
-                FEC_Get_Next_Work__c = false
+            Id = recordId,
+        FEC_Interaction_View_Mode__c = viewMode,
+        FEC_First_Access__c = false,
+        FEC_Get_Next_Work__c = false
             )
-        );
+            );
         return viewMode;
     }
     
@@ -759,7 +770,7 @@ public without sharing class FEC_InteractionInforHandler {
         string recordTypeName = caseList.isEmpty() ? null : caseList[0].RecordType.DeveloperName;
         return recordTypeName;
     }
-
+    
     @AuraEnabled
     public static String getParentCaseNumber(Id caseId) {
         List<Case> caseList = [SELECT ParentId FROM Case WHERE Id = :caseId LIMIT 1];
@@ -852,7 +863,7 @@ public without sharing class FEC_InteractionInforHandler {
         result.put('IsClosed', interactionCase != null ? interactionCase.IsClosed : currentCase.IsClosed);
         return result;
     }
-
+    
     @AuraEnabled
     public static void updateChatInteractionFields(Id recordId, String username, String phone) {
         if (recordId == null) return;
