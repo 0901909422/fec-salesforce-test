@@ -24,10 +24,19 @@
         <members>FEC_BatchCaseHandlingController_Test</members>
         <members>FEC_BatchCaseHandlingImportService</members>
         <members>FEC_BatchCaseHandlingImportService_Test</members>
+        <members>FEC_BCC_CreationResolveHistService</members>
+        <members>FEC_BCC_CreationResolveHistService_Test</members>
         <members>FEC_BCC_ImportResolveHistService</members>
         <members>FEC_BCC_ImportResolveHistService_Test</members>
+        <members>FEC_BCH_ImportQueueable_Test</members>
+        <members>FEC_BCH_ImportValidateQueueable</members>
         <members>FEC_BCH_ImportRoutingHistoryService</members>
         <members>FEC_BCH_ImportRoutingHistoryServiceTest</members>
+        <members>FEC_BCH_TemplateExportService</members>
+        <members>FEC_BatchCaseCreationService</members>
+        <members>FEC_BatchCaseCreationService_Test</members>
+        <members>FEC_BatchCaseHandlingImportQueueable</members>
+        <members>FEC_BatchCaseHandlingImportQueueableTest</members>
         <members>FEC_BatchCaseHandlingTemplateHelper</members>
         <members>FEC_BatchCaseHandlingTemplateHelper_Test</members>
         <members>FEC_CaseBusinessService</members>
@@ -191,6 +200,7 @@
         <members>Case.FEC_KYC_Status__c</members>
         <members>Case.FEC_Search_Products__c</members>
         <members>FEC_Actual_Master_Data_Setting__c.FEC_Channel__c</members>
+        <members>FEC_Master_Data_Setting__c.FEC_Channel__c</members>
         <members>FEC_Application_Status_Mapping__mdt.FEC_Status_Code__c</members>
         <members>FEC_Application_Status_Mapping__mdt.FEC_Status_Label__c</members>
         <name>CustomField</name>
@@ -202,6 +212,7 @@
         <members>FEC_Email_File_Selected_Suffix</members>
         <members>FEC_Email_File_Upload_Help</members>
         <members>FEC_Email_File_Uploaded_Added</members>
+        <members>FEC_BCH_TemplateFileMismatch</members>
         <name>CustomLabel</name>
     </types>
     <types>
