@@ -44,13 +44,7 @@ public without sharing class FEC_Il10DeliveryController {
         Id histId
     ) {
         List<FEC_ContractClosureController.AddressRowDTO> rows = new List<FEC_ContractClosureController.AddressRowDTO>();
-        if (
-            histId == null ||
-            !Schema.sObjectType.FEC_Address_Info__c.isAccessible() ||
-            !Schema.SObjectType.FEC_Address_Info__c.fields.FEC_Address_Type__c.isAccessible() ||
-            !Schema.SObjectType.FEC_Address_Info__c.fields.FEC_Full_Address__c.isAccessible() ||
-            !Schema.SObjectType.FEC_Address_Info__c.fields.FEC_Mailing_Address__c.isAccessible()
-        ) {
+        if (histId == null || !Schema.sObjectType.FEC_Address_Info__c.isAccessible()) {
             return rows;
         }
         for (FEC_Address_Info__c a : [

@@ -338,6 +338,115 @@ private class FEC_CustomEmailService_Test {
         System.assertEquals(null, dataUri);
     }
 
+    @IsTest
+    static void testGetCaseFileInfosAndContentDocumentAttachments() {
+        Case c = [SELECT Id FROM Case LIMIT 1];
+
+        ContentVersion cv = new ContentVersion(
+            Title = 'CaseFile',
+            PathOnClient = 'CaseFile.pdf',
+            VersionData = Blob.valueOf('pdf-content')
+        );
+        insert cv;
+        ContentVersion insertedCv = [
+            SELECT ContentDocumentId
+            FROM ContentVersion
+            WHERE Id = :cv.Id
+            LIMIT 1
+        ];
+        insert new ContentDocumentLink(
+            LinkedEntityId = c.Id,
+            ContentDocumentId = insertedCv.ContentDocumentId,
+            ShareType = 'V'
+        );
+
+        Test.startTest();
+        List<Map<String, String>> files = FEC_CustomEmailService.getCaseFileInfos(c.Id);
+        List<FEC_ServiceCaseEmailService.AttachmentWrapper> attachments =
+            FEC_CustomEmailService.getEmailAttachmentsFromContentDocuments(
+                new List<String>{ String.valueOf(insertedCv.ContentDocumentId) }
+            );
+        List<Map<String, String>> emptyFiles = FEC_CustomEmailService.getCaseFileInfos('');
+        List<FEC_ServiceCaseEmailService.AttachmentWrapper> emptyAttachments =
+            FEC_CustomEmailService.getEmailAttachmentsFromContentDocuments(new List<String>());
+        Test.stopTest();
+
+        System.assertEquals(1, files.size(), 'Phải trả về file gắn với Case.');
+        System.assert(files[0].get('name').contains('CaseFile'), files[0].get('name'));
+        System.assertEquals(1, attachments.size(), 'Phải build attachment từ ContentDocument.');
+        System.assert(String.isNotBlank(attachments[0].base64Data));
+        System.assertEquals(0, emptyFiles.size());
+        System.assertEquals(0, emptyAttachments.size());
+    }
+
+    @IsTest
+    static void testGetEmailMessageAttachmentsAndResolveTemplate() {
+        Case c = [SELECT Id FROM Case LIMIT 1];
+        EmailMessage em = new EmailMessage(
+            ParentId = c.Id,
+            FromAddress = 'from@test.com',
+            ToAddress = 'to@test.com',
+            Incoming = false,
+            Subject = 'Outbound',
+            TextBody = 'Body',
+            MessageDate = Datetime.now()
+        );
+        insert em;
+
+        ContentVersion cv = new ContentVersion(
+            Title = 'EmailAttachment',
+            PathOnClient = 'EmailAttachment.txt',
+            VersionData = Blob.valueOf('attach-body')
+        );
+        insert cv;
+        Id docId = [SELECT ContentDocumentId FROM ContentVersion WHERE Id = :cv.Id LIMIT 1].ContentDocumentId;
+        insert new ContentDocumentLink(
+            LinkedEntityId = em.Id,
+            ContentDocumentId = docId,
+            ShareType = 'V'
+        );
+
+        Test.startTest();
+        Map<String, List<Map<String, String>>> emailAttachments =
+            FEC_CustomEmailService.getEmailMessageAttachments(
+                new List<String>{ String.valueOf(em.Id) }
+            );
+        Map<String, String> resolved = FEC_CustomEmailService.resolveEmailTemplate(
+            c.Id,
+            'Subject {{Case.Subject}}',
+            'Body {{User.Name}}'
+        );
+        Map<String, List<Map<String, String>>> emptyEmailAttachments =
+            FEC_CustomEmailService.getEmailMessageAttachments(new List<String>());
+        Test.stopTest();
+
+        System.assert(emailAttachments.containsKey(String.valueOf(em.Id)));
+        System.assertEquals(1, emailAttachments.get(String.valueOf(em.Id)).size());
+        System.assert(resolved.containsKey('subject'));
+        System.assert(resolved.containsKey('body'));
+        System.assertEquals(0, emptyEmailAttachments.size());
+    }
+
+    @IsTest
+    static void testSendEmailForServiceCase() {
+        Case c = [SELECT Id FROM Case LIMIT 1];
+
+        Test.startTest();
+        String result = FEC_CustomEmailService.sendEmailForServiceCase(
+            c.Id,
+            'support@fecredit.com.vn',
+            'customer@test.com',
+            '',
+            'Service case subject',
+            'Service case body',
+            null,
+            ''
+        );
+        Test.stopTest();
+
+        System.assertEquals('OK', result);
+    }
+
     private class MockImageHttpResponse implements HttpCalloutMock {
         public HttpResponse respond(HttpRequest req) {
             HttpResponse res = new HttpResponse();

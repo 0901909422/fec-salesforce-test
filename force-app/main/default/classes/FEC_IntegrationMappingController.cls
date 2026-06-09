@@ -90,7 +90,8 @@ public with sharing class FEC_IntegrationMappingController{
         @AuraEnabled public String csmPropertyId;     // Selected CSM property id
         @AuraEnabled public String csmProperty;       // Selected CSM property
         @AuraEnabled public String csmPropertyType;   // Type of CSM property
-        @AuraEnabled public Boolean autoMapping;      // Auto-mapping flag
+        @AuraEnabled public Boolean autoMapping;      // Auto-mapping flag,
+        @AuraEnabled public String autoMappingPropertySource;   // Auto mapping Property from CS
     }
     
     /**
@@ -195,8 +196,8 @@ public with sharing class FEC_IntegrationMappingController{
             mapping.FEC_Int_Sub_Category_Id__c = (String) header.get(caseField.SOURCE_TYPE_SUBCATEGORY);
             mapping.FEC_Int_Sub_Code_Id__c     = (String) header.get(caseField.SOURCE_TYPE_SUBCODE);
             
-            System.debug('### Before upsert mapping ###');
-            System.debug('Mapping fields: ' + mapping);
+            log('### Before upsert mapping ###');
+            log('Mapping fields: ' + mapping);
 
             upsert mapping;
     
@@ -231,6 +232,7 @@ public with sharing class FEC_IntegrationMappingController{
                 info.FEC_CSM_Property_Type__c         = (String) row.get(caseField.ROW_CSM_PROPERTY_TYPE);
                 info.FEC_Auto_Mapping_Property__c     = (Boolean) row.get(caseField.ROW_AUTO_MAPPING);
                 info.FEC_Mandatory__c                 = (Boolean) row.get(caseField.ROW_MANDATORY);
+                info.FEC_Auto_Mapping_Property_Source__c            = (String) row.get(caseField.ROW_AUTO_MAPPING_PROPERTY_SOURCE_ID);
     
                 infos.add(info);
             }
@@ -378,7 +380,8 @@ public with sharing class FEC_IntegrationMappingController{
                 FEC_Data_Integration_Mapping__c,
                 FEC_Integrating_Property__c,
                 FEC_Integrating_Property_Type__c,
-                FEC_Mandatory__c
+                FEC_Mandatory__c,
+                FEC_Auto_Mapping_Property_Source__c
             FROM FEC_Data_Integration_Mapping_Info__c           
             WHERE FEC_Data_Integration_Mapping__c = :mData.Id            
         ];
@@ -407,6 +410,7 @@ public with sharing class FEC_IntegrationMappingController{
 
             // Auto mapping flag
             info.autoMapping = i.FEC_Auto_Mapping_Property__c;
+            info.autoMappingPropertySource = i.FEC_Auto_Mapping_Property_Source__c;
 
             dto.infos.add(info);
 
@@ -525,17 +529,66 @@ public with sharing class FEC_IntegrationMappingController{
         String subCategory,
         String subCode,
         String channelCode,
-        String serviceType
+        String serviceType,
+        String userTypeId
     ) {
 
         // Result list returned to LWC
         List<PropertyDTO> result = new List<PropertyDTO>();
          //Choose correct name field
         Boolean isVietnamese = userLang != null && userLang.startsWith(FEC_FraudConstantCommon.LANG_VI);
+        String syncedStatus = FEC_FraudConstantCommon.CONFIG_SYNC_STATUS_SYNCED;
+        /*
+         * Step 1: Query FEC_Map_A_Properties_To_Master_Data_Item__c
+         *   by channel (via FEC_Channel_ID__c) + Status + Sync Status
+         *   Build map: FEC_Additional_Field__r.FEC_Unique_ID__c → FEC_Additional_Field__c (Id)
+         */
+        Map<String, String> additionalFieldMap = new Map<String, String>();
+        if (String.isNotBlank(channelCode)) {           
+            for (FEC_Map_A_Properties_To_Master_Data_Item__c mapItem : [
+                SELECT Id,FEC_Additional_Field_Unique_ID__c,
+                FEC_Additional_Field_Unique_ID_Synced__c
+                FROM FEC_Map_A_Properties_To_Master_Data_Item__c
+                WHERE FEC_Status__c = true
+                  AND FEC_Is_Deleted__c = false
+                  AND FEC_User_Type__c =:userTypeId
+                  AND FEC_Sync_Status__c = :syncedStatus
+                  AND FEC_Channel__r.FEC_Channel_ID__c = :channelCode
+            ]) {
+                String uniqueId = mapItem.FEC_Additional_Field_Unique_ID_Synced__c;
+                if (String.isNotBlank(uniqueId) && !additionalFieldMap.containsKey(uniqueId)) {
+                    additionalFieldMap.put(uniqueId, uniqueId);
+                }
+            }
+        }
+
+        log('[loadAdditionalProperties] additionalFieldMap size = ' + additionalFieldMap.size());
+
+        // Step 1.5: Join additionalFieldMap to FEC_Auto_Intetgrating_Property_Mapping__c
+        // via FEC_Soure_Property_ID__c to get FEC_Property_ID_Synced__c
+        Map<String, String> autoIntegratingMap = new Map<String, String>();
+        if (!additionalFieldMap.isEmpty() && String.isNotBlank(channelCode)) {
+            Set<String> additionalFieldKeys = additionalFieldMap.keySet();
+            for (FEC_Auto_Intetgrating_Property_Mapping__c autoMap : [
+                SELECT Id, FEC_Property_ID_Synced__c, FEC_Soure_Property_ID__c
+                FROM FEC_Auto_Intetgrating_Property_Mapping__c
+                WHERE FEC_Soure_Property_ID__c IN :additionalFieldKeys
+                  AND FEC_Status__c = true
+                  AND FEC_Is_Deleted__c = false
+                  AND FEC_Sync_Status__c = :syncedStatus
+                  AND FEC_Channel__r.FEC_Channel_ID__c = :channelCode
+            ]) {
+                if (String.isNotBlank(autoMap.FEC_Property_ID_Synced__c) && String.isNotBlank(autoMap.FEC_Soure_Property_ID__c)) {
+                    autoIntegratingMap.put(autoMap.FEC_Property_ID_Synced__c, autoMap.FEC_Soure_Property_ID__c);
+                }
+            }
+        }
+        log('[loadAdditionalProperties] autoIntegratingMap size = ' + autoIntegratingMap.size());
 
         /*
-         * Query AdditionalProperty records
+         * Step 2: Query AdditionalProperty records
          * - Can be linked at Category, SubCategory, or SubCode level
+         * - If FEC_Source_Id__c exists in additionalFieldMap → populate autoMappingPropertySource
          */
         for (FEC_Master_Data_Integration__c rec : [
             SELECT Id,
@@ -570,13 +623,24 @@ public with sharing class FEC_IntegrationMappingController{
             // These fields will be populated from UI later
             dto.csmProperty = null;
             dto.csmPropertyType = null;
-            dto.autoMapping = false;
+
+            // Populate autoMappingPropertySource from autoIntegratingMap (FEC_Property_ID_Synced__c match)
+            if (autoIntegratingMap.containsKey(rec.FEC_Source_Id__c)) {
+                dto.autoMappingPropertySource = autoIntegratingMap.get(rec.FEC_Source_Id__c);
+                dto.autoMapping = true;
+            } else {
+                dto.autoMappingPropertySource = null;
+                dto.autoMapping = false;
+            }
 
             result.add(dto);
         }
 
         return result;
     }
+    
+    
+   
 
      /**
      * Loads hierarchical Master Integration data based on the requested source type.
@@ -737,6 +801,7 @@ public with sharing class FEC_IntegrationMappingController{
             FEC_Channel_Vietnamese_name__c
             FROM FEC_Channel__c
             WHERE FEC_Channel_Status__c = True
+            AND FEC_Channel_ID__c = :FEC_FraudConstantCommon.DEFAULT_CHANNEL_INTEGRATION_CODE
         ];
 
         // Convert queried records to NodeDTO list

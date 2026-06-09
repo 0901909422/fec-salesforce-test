@@ -237,6 +237,8 @@ const MSG_INVALID_FILE_FORMAT = FEC_BCH_InvalidFileFormat;
 const MSG_FILE_TOO_LARGE = FEC_BCH_FileTooLarge;
 const MSG_FILE_NO_DATA = FEC_BCH_FileNoData;
 const MSG_HEADER_INVALID = FEC_BCH_HeaderInvalid;
+const MSG_IMPORT_FILE_NAME_MISMATCH =
+  "Tên file không khớp template Bulk Actions của quy trình và nhóm người dùng.";
 const IMPORT_TIMEOUT_MS = 60 * 1000;
 const IMPORT_TIMEOUT_MESSAGE = FEC_BCH_RequestTimeout;
 const MAX_UPLOAD_SIZE_BYTES = 150 * 1024 * 1024;
@@ -2465,8 +2467,7 @@ export default class Fec_BatchCaseHandling extends LightningElement {
       if (!validation || validation.valid !== true) {
         this.showError(
           MSG_IMPORT_FAILED,
-          validation?.message ||
-            "Tên file không khớp template Bulk Actions của quy trình và nhóm người dùng."
+          validation?.message || MSG_IMPORT_FILE_NAME_MISMATCH
         );
         this.clearSelectedImportFile();
         return;
