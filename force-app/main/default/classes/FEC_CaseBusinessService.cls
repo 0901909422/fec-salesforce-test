@@ -9,6 +9,8 @@ public without sharing class FEC_CaseBusinessService {
   public static final String REVERT = 'Revert';
   public static final String CANCEL = 'Cancel';
   public static final String ESCALATE = 'Escalate';
+  // 09/06/2026 18:00 linhdev - bulk import Escalate: gán Owner = ManagerId của user đang import
+  public static final String PARAM_ESCALATE_TO_ACTING_USER_MANAGER = 'escalateToActingUserManager';
   public static final String TRANSFER = 'Transfer';
   public static final String REJECT = 'Reject';
   public static final String RECALL = 'Recall';
@@ -223,10 +225,6 @@ public without sharing class FEC_CaseBusinessService {
           FEC_Assignment_Count__c,
           FEC_SubCode__r.FEC_Code__c, //linhdev fix jira FECREDIT_CSM_2025_KH-1393-1394
           FEC_Actual_Nature_of_Case__r.FEC_Business_Process__r.FEC_Code__c,
-          FEC_Actual_Nature_of_Case__r.FEC_Product_Type__c,
-          FEC_Actual_Nature_of_Case__r.FEC_Category__c,
-          FEC_Actual_Nature_of_Case__r.FEC_Sub_Category__c,
-          FEC_Actual_Nature_of_Case__r.FEC_Sub_Code__c,
           CreatedDate
         FROM Case
         WHERE Id = :caseId
@@ -328,26 +326,6 @@ public without sharing class FEC_CaseBusinessService {
           ) ||
           nocLookupDimensionDiffersIds(selectedCase.FEC_SubCode__c, flowHistSubCodeId);
       }
-      Boolean isCofGsrStage2ToStage1RevertAtLoad =
-        FEC_CaseMasterDataHelper.isCofGsrRevertStage2ToStage1(selectedCase.Id);
-      Boolean isCaseUpdatedNocDifferentFromActual =
-        selectedCase.FEC_Actual_Nature_of_Case__r != null &&
-        (nocLookupDimensionDiffersIds(
-            selectedCase.FEC_Product_Type__c,
-            selectedCase.FEC_Actual_Nature_of_Case__r.FEC_Product_Type__c
-          ) ||
-          nocLookupDimensionDiffersIds(
-            selectedCase.FEC_Category__c,
-            selectedCase.FEC_Actual_Nature_of_Case__r.FEC_Category__c
-          ) ||
-          nocLookupDimensionDiffersIds(
-            selectedCase.FEC_SubCategory__c,
-            selectedCase.FEC_Actual_Nature_of_Case__r.FEC_Sub_Category__c
-          ) ||
-          nocLookupDimensionDiffersIds(
-            selectedCase.FEC_SubCode__c,
-            selectedCase.FEC_Actual_Nature_of_Case__r.FEC_Sub_Code__c
-          ));
       String actualBusinessProcessCode = selectedCase.FEC_Actual_Nature_of_Case__r == null
         ? null
         : selectedCase.FEC_Actual_Nature_of_Case__r.FEC_Business_Process__r?.FEC_Code__c;
@@ -529,12 +507,8 @@ public without sharing class FEC_CaseBusinessService {
       Boolean isGsrNocOnlyDisplayMode =
         isActualNatureGsrOnly;
       Boolean useActualNatureAndSettingObj = String.isNotBlank(selectedNatureOfCaseId);
-      Boolean treatAsUpdatedNocForMasterData =
-        isUpdatedNocDifferentFromCurrent ||
-        (isCofGsrStage2ToStage1RevertAtLoad &&
-          (isCaseUpdatedNocDifferentFromActual || hasIncomingNocSelection));
-      if (isGsrCofNocDisplayMode && treatAsUpdatedNocForMasterData) {
-        // COF/GSR Updated NOC khác Original/Actual baseline: dùng template NOC + Master Data Setting theo Case.
+      if (isGsrCofNocDisplayMode && isUpdatedNocDifferentFromCurrent) {
+        // GSR + chọn bộ NOC mới khác bộ cũ: dùng NOC thường + Master Data Setting.
         useActualNatureAndSettingObj = false;
       }
 
@@ -716,65 +690,16 @@ public without sharing class FEC_CaseBusinessService {
         additionalRolelst
       );
 
-      // COF/GSR Revert Stage 2→1: stage phải theo Updated NOC trên Case (bộ B), không theo
-      // FEC_Current_Case_Stage__c sau revert() (thường là Stage 1 của NOC gốc / flow history).
-      if (isCofGsrStage2ToStage1RevertAtLoad) {
-        Id updatedNocTemplateId;
-        if (hasIncomingNocSelection) {
-          updatedNocTemplateId =
-            FEC_CofGsrRoutePrepareService.resolveTemplateNatureIdFromDimensionIds(
-              String.isNotBlank(productTypeId) ? (Id) productTypeId : null,
-              String.isNotBlank(categoryId) ? (Id) categoryId : null,
-              String.isNotBlank(subCategoryId) ? (Id) subCategoryId : null,
-              String.isNotBlank(subCodeId) ? (Id) subCodeId : null
-            );
-        } else {
-          updatedNocTemplateId =
-            FEC_CofGsrRoutePrepareService.resolveTemplateNatureIdFromCaseId(
-              selectedCase.Id
-            );
-        }
-        if (updatedNocTemplateId == null) {
-          updatedNocTemplateId =
-            FEC_CofGsrRoutePrepareService.resolveTemplateNatureIdFromCaseId(
-              selectedCase.Id
-            );
-        }
-        if (updatedNocTemplateId != null) {
-          templateNatureIdForCaseStages = updatedNocTemplateId;
-        }
-      }
-
       // ================================= GET CASE STAGE ===========================
       selectedNatureOfCaseId = (String) selectedNatureOfCase.get('Id');
 
       List<FEC_Case_Stage__c> stagelst = new List<FEC_Case_Stage__c>();
-      if (
-        isCofGsrStage2ToStage1RevertAtLoad &&
-        templateNatureIdForCaseStages != null
-      ) {
-        Id stage1ForUpdatedNocId =
-          FEC_CofGsrRoutePrepareService.resolveCaseStageIdForTemplateNature(
-            templateNatureIdForCaseStages,
-            FEC_ConstantCommon.STAGE_ONE
-          );
-        if (stage1ForUpdatedNocId != null) {
-          stagelst = [
-            SELECT Id, Name, FEC_Business_Process__r.Name
-            FROM FEC_Case_Stage__c
-            WHERE Id = :stage1ForUpdatedNocId AND FEC_Active__c = TRUE
-            LIMIT 1
-          ];
-        }
-      }
       //PhongBT: Fix cập nhật sai case stage
       // Remap stage theo NOC case hiện tại, giữ số stage (Stage 2 → Stage 2 NOC đúng):
       // - Có payload NOC từ UI (đổi bộ NOC trên màn), hoặc
       // - Mới vào màn (không payload) nhưng Case đã Submit: nếu FEC_Current_Case_Stage__c
       //   thuộc NOC khác với bộ NOC trên Case thì resolveCaseStageForNewNatureOfCase đồng bộ lại.
       Boolean shouldTryRemapStageToCaseNature =
-        stagelst.isEmpty() &&
-        !isCofGsrStage2ToStage1RevertAtLoad &&
         String.isNotBlank(caseStageIdPreservedAtLoad) &&
         //PhongBT: Fix cập nhật sai case stage
         templateNatureIdForCaseStages != null &&
@@ -799,6 +724,7 @@ public without sharing class FEC_CaseBusinessService {
         //PhongBT: Fix cập nhật sai case stage
         // Tránh load stage theo Id khi Id trỏ NOC khác với bộ NOC đang chọn (UI) hoặc với NOC trên Case (đã submit, mở màn).
         if (
+          hasIncomingNocSelection &&
           templateNatureIdForCaseStages != null &&
           String.isNotBlank(selectedCaseStageId) &&
           (hasIncomingNocSelection || selectedCase.FEC_Is_Submited__c == true)
@@ -906,22 +832,6 @@ public without sharing class FEC_CaseBusinessService {
 
       // ============================= GET MASTET DATA SETTING ===========================
       if (err.errorlst.isEmpty()) {
-        // COF/GSR Updated NOC khác Actual baseline: MD query phải theo template NOC (bộ B) + stage B,
-        // không dùng FEC_Actual_Nature_of_Case__c (baseline A) dù selectedNatureOfCaseId vẫn là Actual.
-        String masterDataSettingObjForQuery = masterDataSettingObj;
-        String natureOfCaseObjForMasterData = natureOfCaseObj;
-        String natureOfCaseIdForMasterData = selectedNatureOfCaseId;
-        if (
-          treatAsUpdatedNocForMasterData &&
-          templateNatureIdForCaseStages != null
-        ) {
-          masterDataSettingObjForQuery = 'FEC_Master_Data_Setting__c';
-          natureOfCaseObjForMasterData = 'FEC_Nature_of_Case__c';
-          natureOfCaseIdForMasterData = String.valueOf(
-            templateNatureIdForCaseStages
-          );
-          result.natureOfCase = natureOfCaseIdForMasterData;
-        }
         String soql =
           'SELECT Id, FEC_Field_API_Name__c, FEC_Field_Editable__c, ' +
           'FEC_Field_Mandatory__c, FEC_Field_Object_Name__c, ' +
@@ -930,12 +840,12 @@ public without sharing class FEC_CaseBusinessService {
           'FEC_Sub_Section__c, FEC_Sub_Section_Order__c, FEC_Sub_Section_Layout__c, FEC_Field_Reverted__c, FEC_Sub_Section_Field_Layout__c, ' +
           'FEC_LWC_Name__c, FEC_Type__c, FEC_Hidden__c ' +
           'FROM ' +
-          masterDataSettingObjForQuery +
+          masterDataSettingObj +
           ' ' +
           'WHERE ' +
-          natureOfCaseObjForMasterData +
+          natureOfCaseObj +
           ' = \'' +
-          String.escapeSingleQuotes(natureOfCaseIdForMasterData) +
+          String.escapeSingleQuotes(selectedNatureOfCaseId) +
           '\' ' +
           'AND FEC_Stage_Name__c = \'' +
           String.escapeSingleQuotes(String.valueOf(selectedStage.Id)) +
@@ -985,8 +895,8 @@ public without sharing class FEC_CaseBusinessService {
           isGsrBusinessProcess &&
           checkStageName(selectedStage.Name, FEC_ConstantCommon.STAGE_ONE);
         result.contextFlags.put('isGsrStage1Revert', isGsrStage1Revert);
-        Boolean isStage2ToStage1Revert =
-          (isGsrStage1Revert || isCOFStage1Revert) &&
+        Boolean isGsrStage2ToStage1Revert =
+          isGsrStage1Revert &&
           FEC_CaseMasterDataHelper.isGsrRevertFromPreviousStageName(
             selectedCase.Id,
             selectedStage.Id,
@@ -995,7 +905,7 @@ public without sharing class FEC_CaseBusinessService {
           );
         result.contextFlags.put(
           'isGsrStage2ToStage1Revert',
-          isStage2ToStage1Revert
+          isGsrStage2ToStage1Revert
         );
         Boolean isGsrStage1Recall =
           isGsrBusinessProcess &&
@@ -2521,16 +2431,16 @@ public without sharing class FEC_CaseBusinessService {
               'true'.equalsIgnoreCase((String) params.get('revertPreferRevertedChange'));
           }
           revert(caseId, revertActionId, finalStatusBeforeSubmit, routingActionValue, preferRevertedStageChange);
-          // COF/GSR Revert Stage 2→1 (Updated NOC khác Original): không áp NOC Stage 2 từ UI.
-          Boolean isStage2ToStage1Revert =
-            FEC_CaseMasterDataHelper.isCofGsrRevertStage2ToStage1(caseId);
-          if (String.isNotBlank(revertNocId) && !isStage2ToStage1Revert) {
+          // GSR Revert Stage 2→1 (NOC Stage 2 khác Original): không áp NOC Stage 2 từ UI.
+          Boolean isGsrStage2ToStage1Revert =
+            FEC_CaseMasterDataHelper.isGsrRevertStage2ToStage1(caseId);
+          if (String.isNotBlank(revertNocId) && !isGsrStage2ToStage1Revert) {
             FEC_CofGsrRoutePrepareService.updateCaseNocFromSelection(
               caseId,
               revertNocId
             );
           }
-          if (isStage2ToStage1Revert) {
+          if (isGsrStage2ToStage1Revert) {
             FEC_CofGsrRoutePrepareService.restoreGsrStage1BaselineAfterStage2Revert(
               caseId
             );
@@ -2569,7 +2479,7 @@ public without sharing class FEC_CaseBusinessService {
         when ESCALATE {
           finalStatusBeforeSubmit = readCaseFinalStatusBeforeSubmit(caseId);
           markCaseSubmittedAndClearDrafts(caseId);
-          escalate(caseId);
+          escalate(caseId, params);
           createRoutingActionHis('Escalate', '', oldOwnerName, oldOwnerId, caseId, stageName, finalStatusBeforeSubmit, currentStageId);
           return null;
         }
@@ -3567,9 +3477,12 @@ public without sharing class FEC_CaseBusinessService {
     }
   }
 
-  private static void escalate(String caseId) {
+  private static void escalate(String caseId, Map<String, String> params) {
     try {
       Id currentUserId = UserInfo.getUserId();
+      // 09/06/2026 18:00 linhdev - import: ManagerId của user thực hiện import; UI: Owner.ManagerId
+      Boolean useActingUserManager = params != null &&
+        'true'.equalsIgnoreCase((String) params.get(PARAM_ESCALATE_TO_ACTING_USER_MANAGER));
       
       // 1. Use TYPEOF to safely access User-specific fields on the Owner polymorphic lookup
       List<Case> caselst = [
@@ -3591,32 +3504,50 @@ public without sharing class FEC_CaseBusinessService {
       }
 
       Case updatedCase = caselst.get(0);
+      Id targetOwnerId = null;
       
-      // Kiểm tra xem user hiện tại có phải là Owner không
-      // if (updatedCase.OwnerId != currentUserId) {
-      //   throw new CaseBusinessServiceException(
-      //     System.Label.FEC_MSG_Escalate_Owner_Only
-      //   );
-      // }
-
-      // 2. Check if the Owner is actually a User (not a Queue)
-      if (updatedCase.Owner instanceof User) {
-        // Cast the Owner relationship to a User object to access ManagerId
-        User ownerUser = (User) updatedCase.Owner;
-
-        if (ownerUser.ManagerId != null) {
-          updatedCase.OwnerId = ownerUser.ManagerId;
+      if (useActingUserManager) {
+        List<User> actingUsers = [
+          SELECT ManagerId
+          FROM User
+          WHERE Id = :currentUserId
+          LIMIT 1
+        ];
+        if (!actingUsers.isEmpty() && actingUsers[0].ManagerId != null) {
+          targetOwnerId = actingUsers[0].ManagerId;
         } else {
           throw new CaseBusinessServiceException(
             System.Label.FEC_MSG_Manager_Not_Found
           );
         }
       } else {
-        throw new CaseBusinessServiceException(
-          System.Label.FEC_MSG_Owner_Is_Queue_Escalation
-        );
+        // Kiểm tra xem user hiện tại có phải là Owner không
+        if (updatedCase.OwnerId != currentUserId) {
+          throw new CaseBusinessServiceException(
+            System.Label.FEC_MSG_Escalate_Owner_Only
+          );
+        }
+
+        // 2. Check if the Owner is actually a User (not a Queue)
+        if (updatedCase.Owner instanceof User) {
+          // Cast the Owner relationship to a User object to access ManagerId
+          User ownerUser = (User) updatedCase.Owner;
+
+          if (ownerUser.ManagerId != null) {
+            targetOwnerId = ownerUser.ManagerId;
+          } else {
+            throw new CaseBusinessServiceException(
+              System.Label.FEC_MSG_Manager_Not_Found
+            );
+          }
+        } else {
+          throw new CaseBusinessServiceException(
+            System.Label.FEC_MSG_Owner_Is_Queue_Escalation
+          );
+        }
       }
 
+      updatedCase.OwnerId = targetOwnerId;
       registerSkipOwnerChangeRoutingHistory(updatedCase.Id);
       update updatedCase;
     } catch (Exception e) {
@@ -3768,7 +3699,7 @@ public without sharing class FEC_CaseBusinessService {
           }
 
       //thangtv: giữ map Frontline → main queue như cũ
-      queueId = applyFrontlineMainQueueIfUserOwner(queueId);
+          queueId = applyFrontlineMainQueueIfUserOwner(queueId);
 
       String nextUser;
           if (String.isNotBlank(queueId)) {
@@ -3786,7 +3717,6 @@ public without sharing class FEC_CaseBusinessService {
       if (String.isBlank(nextUser)) {
         nextUser = currentOwnerName;
           }
-      String revertDecisionLabel = nextUser;
 
           List<User> userlst = [
             SELECT Email, UserRole.Name, Id
@@ -3814,7 +3744,11 @@ public without sharing class FEC_CaseBusinessService {
             FEC_Routing_Action__c = REVERT,
             FEC_Case__c = caseId,
             FEC_Perform_User__c = userlst.get(0).Id,
-            FEC_Decision__c = revertDecisionLabel,
+            // FEC_Previous_Stage__c = selectedChange.FEC_Previous_Stage__c,
+            // FEC_Next_Stage__c = selectedChange.FEC_Next_Stage__c,
+            // FEC_Routing_Action__c = ROUTE_TO,
+            // FEC_Case__c = caseId,
+            // FEC_Decision__c = '',
             FEC_Original_User_Queue__c = currentOwnerName,
             FEC_Original_User_Queue_ID__c = String.valueOf(updatedCase.OwnerId),
             FEC_Updated_User_Queue__c = nextUser,
@@ -3906,6 +3840,7 @@ public without sharing class FEC_CaseBusinessService {
         FEC_Active__c,
         FEC_User_Group__c,
         FEC_Customer_Type__c,
+        FEC_Channel__c,
         FEC_Product_Type__c,
         FEC_Category__c,
         FEC_Sub_Category__c,
@@ -3926,6 +3861,7 @@ public without sharing class FEC_CaseBusinessService {
     tgt.FEC_Active__c = src.FEC_Active__c;
     tgt.FEC_User_Group__c = src.FEC_User_Group__c;
     tgt.FEC_Customer_Type__c = src.FEC_Customer_Type__c;
+    tgt.FEC_Channel__c = src.FEC_Channel__c;
     tgt.FEC_Product_Type__c = src.FEC_Product_Type__c;
     tgt.FEC_Category__c = src.FEC_Category__c;
     tgt.FEC_Sub_Category__c = src.FEC_Sub_Category__c;
