@@ -1998,31 +1998,6 @@ public without sharing class FEC_CaseBusinessService {
     }
   }
 
-  /**
-   * Decision hiển thị trên Routing Action History khi Revert:
-   * email prefix (vd anhptn48) nếu revert về user; tên queue nếu CS Frontline map sang Main Queue.
-   */
-  @TestVisible
-  public static String resolveRevertDecisionDisplayLabel(
-    String ownerIdBeforeFrontlineMapping,
-    String ownerIdAfterFrontlineMapping
-  ) {
-    String targetOwnerId = String.isNotBlank(ownerIdAfterFrontlineMapping)
-      ? ownerIdAfterFrontlineMapping
-      : ownerIdBeforeFrontlineMapping;
-    if (String.isBlank(targetOwnerId)) {
-      return null;
-    }
-    try {
-      return resolveRoutingHistoryOwnerLabel(
-        Id.valueOf(targetOwnerId.trim()),
-        null
-      );
-    } catch (Exception e) {
-      return null;
-    }
-  }
-
   //thangtv: Stage Change.FEC_Next_Queue__c có thể là Queue Id hoặc DeveloperName, luôn quy đổi về Queue Id để set Owner
   private static String resolveQueueOwnerIdFromStageChangeValue(String nextQueueValue) {
     if (String.isBlank(nextQueueValue)) {
