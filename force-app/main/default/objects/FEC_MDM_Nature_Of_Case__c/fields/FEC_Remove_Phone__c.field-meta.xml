@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>FEC_Remove_Phone__c</fullName>
+    <defaultValue>false</defaultValue>
+    <description>Quy trình Remove Phone được áp dụng</description>
+    <label>Remove Phone</label>
+    <trackHistory>true</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Checkbox</type>
+</CustomField>

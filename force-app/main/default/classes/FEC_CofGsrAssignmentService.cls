@@ -181,15 +181,17 @@ public without sharing class FEC_CofGsrAssignmentService {
         }, '|');
     }
 
+    //tugnnm37 - assignment Completed được phép add lại cùng queue nên không tính duplicate
     private static Set<String> loadExistingAssignmentDedupKeys(String caseId) {
         Set<String> keys = new Set<String>();
         if (String.isBlank(caseId)) {
             return keys;
         }
         for (FEC_Assignment__c row : [
-            SELECT FEC_Case__c, FEC_Team__c, FEC_OwnerID__c, FEC_Assignment_Routing_Action__c, FEC_Manual__c
+            SELECT FEC_Case__c, FEC_Team__c, FEC_OwnerID__c, FEC_Assignment_Routing_Action__c, FEC_Manual__c, FEC_Assignment_Status__c
             FROM FEC_Assignment__c
             WHERE FEC_Case__c = :caseId
+              AND FEC_Assignment_Status__c != :FEC_ConstantCommon.ASSIGNMENT_STATUS_COMPLETED
         ]) {
             keys.add(buildAssignmentDedupKey(
                 String.valueOf(row.FEC_Case__c),
@@ -202,6 +204,48 @@ public without sharing class FEC_CofGsrAssignmentService {
         return keys;
     }
  
+    private static String buildCaseQueueDedupKey(String caseId, String queueName) {
+        return normalizeAssignmentKeyPart(caseId) + '|' + normalizeAssignmentKeyPart(queueName);
+    }
+
+    //tugnnm37 - chỉ chặn queue trùng với assignment chưa Completed
+    private static Set<String> loadExistingAssignmentQueueKeys(String caseId) {
+        Set<String> keys = new Set<String>();
+        if (String.isBlank(caseId)) {
+            return keys;
+        }
+        for (FEC_Assignment__c row : [
+            SELECT FEC_Case__c, FEC_OwnerID__c, FEC_Assignment_Status__c
+            FROM FEC_Assignment__c
+            WHERE FEC_Case__c = :caseId
+              AND FEC_Assignment_Type__c = :FEC_ConstantCommon.ASSIGNMENT_TYPE_ROUTING
+              AND FEC_Assignment_Status__c != :FEC_ConstantCommon.ASSIGNMENT_STATUS_COMPLETED
+              AND FEC_OwnerID__c != null
+        ]) {
+            keys.add(buildCaseQueueDedupKey(String.valueOf(row.FEC_Case__c), row.FEC_OwnerID__c));
+        }
+        return keys;
+    }
+
+    @AuraEnabled
+    public static List<String> getExistingAssignmentQueueNames(String caseId) {
+        //tugnnm37 - trả queue đã tồn tại trong Assignment List để LWC chặn Add Item trùng ngay bằng toast
+        List<String> queues = new List<String>();
+        if (String.isBlank(caseId)) {
+            return queues;
+        }
+        for (FEC_Assignment__c row : [
+            SELECT FEC_OwnerID__c, FEC_Assignment_Status__c
+            FROM FEC_Assignment__c
+            WHERE FEC_Case__c = :caseId
+              AND FEC_Assignment_Type__c = :FEC_ConstantCommon.ASSIGNMENT_TYPE_ROUTING
+              AND FEC_Assignment_Status__c != :FEC_ConstantCommon.ASSIGNMENT_STATUS_COMPLETED
+              AND FEC_OwnerID__c != null
+        ]) {
+            queues.add(row.FEC_OwnerID__c);
+        }
+        return queues;
+    }
     public static void createAssignmentsOnRoute(
         String caseId, Set<Id> nocIds, User currentUser, Id historyId,
         String stageName, String remarkContentParam
@@ -408,6 +452,7 @@ public without sharing class FEC_CofGsrAssignmentService {
             //tungnm37 end
 
             Set<String> existingAssignmentKeys = loadExistingAssignmentDedupKeys(caseId);
+            Set<String> existingAssignmentQueueKeys = loadExistingAssignmentQueueKeys(caseId);
             List<FEC_Assignment__c> assignments = new List<FEC_Assignment__c>();
             List<String> remarkList = new List<String>();
             List<String> queueNameList = new List<String>(); // tungnm37: lưu queueName để dùng cho history
@@ -417,6 +462,10 @@ public without sharing class FEC_CofGsrAssignmentService {
                 String queueName = (String) item.get('queueName');
                 String remark = (String) item.get('remark');
                 String displayQueueName = queueDevNameToDisplayName.containsKey(queueName) ? queueDevNameToDisplayName.get(queueName) : queueName;
+                String queueDedupKey = buildCaseQueueDedupKey(caseId, displayQueueName);
+                if (existingAssignmentQueueKeys.contains(queueDedupKey)) {
+                    throw new AuraHandledException(System.Label.FEC_Assignment_Duplicate_Queue_Error);
+                }
                 String dedupKey = buildAssignmentDedupKey(caseId, teamName, displayQueueName, stageName, true);
                 if (existingAssignmentKeys.contains(dedupKey) || txnCreatedAssignmentKeys.contains(dedupKey)) {
                     System.debug('FEC_DEBUG skip duplicate manual assignment key=' + dedupKey);
@@ -439,6 +488,7 @@ public without sharing class FEC_CofGsrAssignmentService {
                 remarkList.add(remark);
                 queueNameList.add(displayQueueName); // tungnm37: lưu display name cho history
                 existingAssignmentKeys.add(dedupKey);
+                existingAssignmentQueueKeys.add(queueDedupKey);
                 txnCreatedAssignmentKeys.add(dedupKey);
             }
             if (assignments.isEmpty()) return;
@@ -501,6 +551,9 @@ public without sharing class FEC_CofGsrAssignmentService {
                 Database.insert(histories, AccessLevel.SYSTEM_MODE);
             }
         } catch (Exception e) {
+            if (e instanceof AuraHandledException) {
+                throw e;
+            }
             System.debug('createAssignmentsFromManualItems error: ' + e.getMessage() + ' | ' + e.getStackTraceString());
             FEC_CommonUltils.logException('tungnm37', 'createAssignmentsFromManualItems', e.getMessage(), e.getStackTraceString());
         }
@@ -712,6 +765,69 @@ public without sharing class FEC_CofGsrAssignmentService {
             System.debug('FEC_DEBUG Stack trace: ' + eu.getStackTraceString());
         } finally {
             FEC_CaseTriggerHandler.isSystemUpdate = false;
+        }
+    }
+
+    // 04/06/2026 17:10 linhdev - Route To chuẩn: chỉ auto Assignment khi BP stage hoặc NOC thuộc COF/GSR
+    public static Boolean shouldCreateAssignmentsOnStandardRoute(
+        Case caseRow,
+        String natureOfCaseId
+    ) {
+        String stageBpCode = caseRow == null ||
+            caseRow.FEC_Current_Case_Stage__r == null ||
+            caseRow.FEC_Current_Case_Stage__r.FEC_Business_Process__r == null
+            ? null
+            : caseRow.FEC_Current_Case_Stage__r.FEC_Business_Process__r.FEC_Code__c;
+        if (isCofOrGsrBusinessProcessCode(stageBpCode)) {
+            return true;
+        }
+        return isCofOrGsrNatureOfCaseInput(natureOfCaseId);
+    }
+
+    private static Boolean isCofOrGsrBusinessProcessCode(String bpCode) {
+        if (String.isBlank(bpCode)) {
+            return false;
+        }
+        String u = bpCode.toUpperCase();
+        return u.contains('COF') || u.contains('GSR');
+    }
+
+    private static Boolean isCofOrGsrNatureOfCaseInput(String inputId) {
+        if (String.isBlank(inputId)) {
+            return false;
+        }
+        try {
+            Id recordId = Id.valueOf(inputId.trim());
+            String objName = recordId.getSObjectType().getDescribe().getName();
+            String bpCode;
+            if (objName == 'FEC_Nature_of_Case__c') {
+                List<FEC_Nature_of_Case__c> nocs = [
+                    SELECT FEC_Business_Process__r.FEC_Code__c
+                    FROM FEC_Nature_of_Case__c
+                    WHERE Id = :recordId
+                    LIMIT 1
+                ];
+                if (nocs.isEmpty()) {
+                    return false;
+                }
+                bpCode = nocs[0].FEC_Business_Process__r.FEC_Code__c;
+            } else if (objName == 'FEC_Actual_Nature_of_Case__c') {
+                List<FEC_Actual_Nature_of_Case__c> actualNocs = [
+                    SELECT FEC_Business_Process__r.FEC_Code__c
+                    FROM FEC_Actual_Nature_of_Case__c
+                    WHERE Id = :recordId
+                    LIMIT 1
+                ];
+                if (actualNocs.isEmpty()) {
+                    return false;
+                }
+                bpCode = actualNocs[0].FEC_Business_Process__r.FEC_Code__c;
+            } else {
+                return false;
+            }
+            return isCofOrGsrBusinessProcessCode(bpCode);
+        } catch (Exception e) {
+            return false;
         }
     }
 

@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    ═══════════════════════════════════════════════════════════════════════
+    MDM SUPPLEMENT PACKAGE — file bổ sung cho repo GitLab (salesforce-new-csm)
+    ───────────────────────────────────────────────────────────────────────
+    Mục đích: dev retrieve các metadata MDM/Fraud-scope CÒN THIẾU trong git
+    để fix lỗi "package version create" (Cannot find / Invalid type / Field
+    does not exist / does not have history tracking enabled).
+
+    Cách dùng (chạy ở repo salesforce-new-csm, target org UAT):
+      sf project retrieve start \
+        --manifest manifest/Master-Data-Management/mdm-supplement-package.xml \
+        --target-org fecuat
+
+    LƯU Ý: CustomObject members tự động kéo theo toàn bộ fields + object-meta
+    (gồm enableHistory) nên không cần khai báo field lẻ.
+
+    Generated: 2026-06-04 | Author: DAT NGO
+    ═══════════════════════════════════════════════════════════════════════
+-->
+<Package xmlns="http://soap.sforce.com/2006/04/metadata">
+
+    <!-- ── Lightning Web Components (5 bundle báo "Cannot find Lightning Component Bundle") ── -->
+    <types>
+        <members>fecDecisionEngineHistory</members>
+        <members>fecPropertiesMappingHistory</members>
+        <members>fecHoldCaseConfigList</members>
+        <members>fecSettingHistoryByNoc</members>
+        <members>fecAddEditRuleModal</members>
+        <name>LightningComponentBundle</name>
+    </types>
+
+    <!-- ── Custom Objects (kéo full fields + object-meta history config) ── -->
+    <types>
+        <!-- MDM Hold Case Config: lỗi (179-182) Entity not found, (335-371) Invalid type,
+             (1-3) history tracking not enabled -->
+        <members>FEC_MDM_Hold_Case_Config__c</members>
+        <!-- MDM Sub objects: lỗi (399-410) No such column FEC_Order__c -->
+        <members>FEC_MDM_Sub_Category__c</members>
+        <members>FEC_MDM_Sub_Code__c</members>
+        <!-- Stage History: lỗi (60-92) Invalid type FEC_Stage_History__c (StageTransitionResolver) -->
+        <members>FEC_Stage_History__c</members>
+        <!-- Location objects: lỗi (376-387) Province/Ward + lookups -->
+        <members>FEC_Country__c</members>
+        <members>FEC_Province__c</members>
+        <members>FEC_District__c</members>
+        <members>FEC_Ward__c</members>
+        <!-- External Object (DataSource ODI) — lỗi Invalid type CifFeDictLocationVw__x -->
+        <members>CifFeDictLocationVw__x</members>
+        <!-- History tracking objects: lỗi (146/475) does not have history tracking enabled -->
+        <members>FEC_Integration_Case_Snapshot__c</members>
+        <members>FEC_Map_A_Properties_To_Master_Data_Item__c</members>
+        <members>FEC_Auto_Intetgrating_Property_Mapping__c</members>
+        <members>FEC_Decison_Reason__c</members>
+        <name>CustomObject</name>
+    </types>
+
+    <!-- ── Apex Classes MDM/Fraud bị "needs recompilation" do dependency thiếu ── -->
+    <types>
+        <members>FEC_HistoryController</members>
+        <members>FEC_HoldCaseConfigController</members>
+        <members>FEC_IntegrationLocationService</members>
+        <members>FEC_LocationSyncScheduler</members>
+        <members>FEC_IntegrationMappingController</members>
+        <members>FEC_NatureOfCaseTreeBuilder</members>
+        <members>FEC_NatureOfCaseTreeService</members>
+        <members>FEC_NatureOfCaseTreeController</members>
+        <members>FEC_StageTransitionResolver</members>
+        <members>FEC_StageTransitionEngine</members>
+        <members>FEC_StageTransitionExecutor</members>
+        <name>ApexClass</name>
+    </types>
+
+    <!-- ── Triggers liên quan ── -->
+    <types>
+        <members>FEC_MDM_HoldCaseConfigTrigger</members>
+        <name>ApexTrigger</name>
+    </types>
+
+    <version>64.0</version>
+</Package>

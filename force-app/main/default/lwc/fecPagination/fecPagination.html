@@ -1,0 +1,46 @@
+<template>
+    <div class="pagination-container slds-grid slds-grid_align-spread slds-grid_vertical-align-center slds-p-vertical_x-small">
+        <!-- Left: Page size selector -->
+        <div class="slds-grid slds-grid_vertical-align-center">
+            <span class="slds-m-right_xx-small page-label">Page size</span>
+            <div class="page-size-select">
+                <select class="slds-select slds-select_compact" onchange={handlePageSizeChange} aria-label="Page size">
+                    <template for:each={pageSizeOptions} for:item="opt">
+                        <option key={opt.value} value={opt.value} selected={opt.selected}>{opt.label}</option>
+                    </template>
+                </select>
+            </div>
+        </div>
+
+        <!-- Center: Prev / page buttons / Next -->
+        <div class="slds-grid slds-grid_vertical-align-center">
+            <button class="slds-button slds-button_neutral slds-button_small nav-btn"
+                disabled={isPrevDisabled} onclick={handlePrev} aria-label="Previous page">
+                <lightning-icon icon-name="utility:chevronleft" size="xx-small" class="nav-icon"></lightning-icon>
+            </button>
+
+            <template for:each={pageButtons} for:item="pb">
+                <button key={pb.key} class={pb.className} onclick={handlePageClick}
+                    data-page={pb.page} disabled={pb.isCurrent} aria-label={pb.ariaLabel}
+                    aria-current={pb.ariaCurrent}>{pb.label}</button>
+            </template>
+
+            <button class="slds-button slds-button_neutral slds-button_small nav-btn"
+                disabled={isNextDisabled} onclick={handleNext} aria-label="Next page">
+                <lightning-icon icon-name="utility:chevronright" size="xx-small" class="nav-icon"></lightning-icon>
+            </button>
+        </div>
+
+        <!-- Right: Go to page -->
+        <div class="slds-grid slds-grid_vertical-align-center">
+            <span class="slds-m-right_xx-small page-label">Go to page</span>
+            <input type="number" class="slds-input slds-input_small goto-input"
+                min="1" max={totalPages} value={goToValue}
+                onchange={handleGoToChange} onkeyup={handleGoToKeyUp}
+                aria-label="Go to page number" />
+            <span class="slds-m-horizontal_xx-small page-label">of {totalPages}</span>
+            <button class="slds-button slds-button_brand slds-button_small go-btn"
+                onclick={handleGoTo} disabled={isGoToDisabled}>Go</button>
+        </div>
+    </div>
+</template>

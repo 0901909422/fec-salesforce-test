@@ -156,8 +156,8 @@
     <externalSharingModel>Private</externalSharingModel>
     <label>Product Type MDM</label>
     <nameField>
-        <label>Product Type Name</label>
-        <trackHistory>false</trackHistory>
+        <label>English Name</label>
+        <trackHistory>true</trackHistory>
         <type>Text</type>
     </nameField>
     <pluralLabel>Product Type MDM</pluralLabel>

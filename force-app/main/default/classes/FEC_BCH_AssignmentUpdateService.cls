@@ -34,6 +34,12 @@ public with sharing class FEC_BCH_AssignmentUpdateService {
         FEC_ConstantCommon.DECISION_TASK_UNDER_REVIEW
     };
 
+    // 05/06/2026 17:30 linhdev - message lỗi __Errors Import Result
+    private static final String ERR_NO_ASSIGNMENT_UPDATE_DATA = 'Không có dữ liệu cập nhật Assignment Update.';
+    private static final String ERR_MISSING_CASE_OR_ASSIGNMENT_ID = 'Thiếu Case Id hoặc Assignment Id.';
+    private static final String ERR_MISSING_UPDATE_DECISION = 'Thiếu giá trị Update to (decision).';
+    private static final String ERR_ASSIGNMENT_UPDATE_FAILED = 'Cập nhật Assignment Update thất bại.';
+
     //PhongBT 29/05/26: Chuẩn hóa label Excel / Stage Screen → decision key (vd Pending Product, Pending Contract Processing).
     public static String resolveDecisionLabel(String rawDecision) {
         if (String.isBlank(rawDecision)) {
@@ -161,7 +167,7 @@ public with sharing class FEC_BCH_AssignmentUpdateService {
         List<ApplyResult> results = applyUpdateAssignmentsBulk(new List<UpdateContext>{ ctx });
         if (results.isEmpty()) {
             ApplyResult empty = new ApplyResult(assignmentId);
-            empty.errorMessage = 'Không có dữ liệu cập nhật Assignment Update.';
+            empty.errorMessage = ERR_NO_ASSIGNMENT_UPDATE_DATA;
             return empty;
         }
         return results[0];
@@ -182,12 +188,12 @@ public with sharing class FEC_BCH_AssignmentUpdateService {
             ApplyResult rowResult = new ApplyResult(ctx == null ? null : ctx.assignmentId);
             results.add(rowResult);
             if (ctx == null || ctx.assignmentId == null || ctx.caseId == null) {
-                rowResult.errorMessage = 'Thiếu Case Id hoặc Assignment Id.';
+                rowResult.errorMessage = ERR_MISSING_CASE_OR_ASSIGNMENT_ID;
                 continue;
             }
             String decision = resolveDecisionLabel(ctx.decision);
             if (String.isBlank(decision)) {
-                rowResult.errorMessage = 'Thiếu giá trị Update to (decision).';
+                rowResult.errorMessage = ERR_MISSING_UPDATE_DECISION;
                 continue;
             }
             ctx.decision = decision;
@@ -275,7 +281,7 @@ public with sharing class FEC_BCH_AssignmentUpdateService {
                 rowResult.errorMessage = null;
             } else {
                 rowResult.errorMessage = assignmentSaveResults[i].getErrors().isEmpty()
-                    ? 'Cập nhật Assignment Update thất bại.'
+                    ? ERR_ASSIGNMENT_UPDATE_FAILED
                     : assignmentSaveResults[i].getErrors()[0].getMessage();
             }
         }

@@ -515,7 +515,7 @@
         </columns>
         <columns>
             <checkedByDefault>false</checkedByDefault>
-            <displayNameOverride>Interaction Channel</displayNameOverride>
+            <displayNameOverride>Case: Interaction Channel</displayNameOverride>
             <field>FEC_Case__c.FEC_Channel__c</field>
             <table>FEC_Routing_Action_History__c</table>
         </columns>
@@ -567,7 +567,7 @@
         </columns>
         <columns>
             <checkedByDefault>false</checkedByDefault>
-            <displayNameOverride>Interaction Sub Channel</displayNameOverride>
+            <displayNameOverride>Case: Interaction Sub Channel</displayNameOverride>
             <field>FEC_Case__c.FEC_Interaction_Subchannel__c</field>
             <table>FEC_Routing_Action_History__c</table>
         </columns>
@@ -680,6 +680,18 @@
             <checkedByDefault>false</checkedByDefault>
             <displayNameOverride>User ID</displayNameOverride>
             <field>FEC_Case__c.FEC_User_ID__c</field>
+            <table>FEC_Routing_Action_History__c</table>
+        </columns>
+        <columns>
+            <checkedByDefault>false</checkedByDefault>
+            <displayNameOverride>Interaction Sub Channel</displayNameOverride>
+            <field>FEC_Case__c.FEC_Interaction__c.FEC_Interaction_Subchannel__c</field>
+            <table>FEC_Routing_Action_History__c</table>
+        </columns>
+        <columns>
+            <checkedByDefault>false</checkedByDefault>
+            <displayNameOverride>Interaction Channel</displayNameOverride>
+            <field>FEC_Case__c.FEC_Interaction__c.FEC_Channel__c</field>
             <table>FEC_Routing_Action_History__c</table>
         </columns>
         <masterLabel>Cases</masterLabel>

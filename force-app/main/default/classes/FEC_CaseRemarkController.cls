@@ -197,8 +197,10 @@ public without sharing class FEC_CaseRemarkController {
       Datetime cutoff = Datetime.now().addSeconds(-30);
       List<FEC_Case_Remarks__c> recentForCase = [
         SELECT Id, FEC_Case_Remarks__c FROM FEC_Case_Remarks__c
-        WHERE FEC_Case__c = :caseId AND CreatedDate >= :cutoff
-          AND FEC_Remark_Type__c != :FEC_ConstantCommon.REMARK_TYPE_ASSIGNMENT
+        WHERE FEC_Case__c = :caseId
+          AND CreatedDate >= :cutoff
+          AND (FEC_Remark_Type__c = null
+            OR FEC_Remark_Type__c != :FEC_ConstantCommon.REMARK_TYPE_ASSIGNMENT)
         ORDER BY CreatedDate DESC LIMIT 1
       ];
       Boolean isDuplicate = !recentForCase.isEmpty() && remarkContent.equals(recentForCase[0].FEC_Case_Remarks__c);

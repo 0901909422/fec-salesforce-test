@@ -17,6 +17,11 @@ public without sharing class FEC_CardClosureRefundController {
     private static final String CS_DECISION_NOTI_18 = 'Có khoản chờ giải ngân. Cần tư vấn khách hàng giữ thẻ';
     private static final String PROCESS_ACTION_CARD_LOCK = 'FEC_CardLockUnLock';
     private static final String PROCESS_ACTION_VMX_BLKCD = 'FEC_Vmx_Acct_Blkcd_Upd_Emea';
+    private static final String LOCK_API_SUCCESS_DESCRIPTION = 'LOCK_SUCCESS';
+    private static final String UNLOCK_API_SUCCESS_CODE = '2';
+    private static final String UNLOCK_API_SUCCESS_DESCRIPTION = 'UNLOCK_SUCCESS';
+    private static final Pattern API_DESCRIPTION_SUCCESS_PATTERN =
+        Pattern.compile('(?i)(?:^|[^a-zA-Z])success(?:[^a-zA-Z]|$)');
 
     public class LockUnlockResultDTO {
         @AuraEnabled public Boolean success;
@@ -84,9 +89,9 @@ public without sharing class FEC_CardClosureRefundController {
                 FEC_Is_Test_API__c
             FROM Case
             WHERE Id = :caseId
+            WITH SYSTEM_MODE
             LIMIT 1
         ];
-        caseRows = (List<Case>) Security.stripInaccessible(AccessType.READABLE, caseRows).getRecords();
         if (caseRows.isEmpty()) {
             return dto;
         }
@@ -104,9 +109,9 @@ public without sharing class FEC_CardClosureRefundController {
                 SELECT Id, FEC_Block_Code__c, FEC_Account_Number__c, FEC_Block_Code_1__c
                 FROM FEC_Customer_History__c
                 WHERE Id = :c.FEC_Account_or_Contract__c
+                WITH SYSTEM_MODE
                 LIMIT 1
             ];
-            histories = (List<FEC_Customer_History__c>) Security.stripInaccessible(AccessType.READABLE, histories).getRecords();
             if (!histories.isEmpty()) {
                 FEC_Customer_History__c h = histories[0];
                 cardBlock = h.FEC_Block_Code__c;
@@ -184,17 +189,17 @@ public without sharing class FEC_CardClosureRefundController {
                     ' WHERE ' + caseLookupField + ' = :caseId' +
                     ' LIMIT 1'
                 );
-                pendingRows = (List<FEC_Pending_Disbursement__c>) Security.stripInaccessible(AccessType.READABLE, pendingRows).getRecords();
                 if (!pendingRows.isEmpty()) {
                     FEC_Pending_Disbursement__c p = pendingRows[0];
-                    dto.pendingApplicationId = p.FEC_PD_Application_ID__c;
-                    dto.pendingApplicationStatus = p.FEC_PD_Application_Status__c;
-                    dto.pendingDisbursedAmount = p.FEC_PD_Disbursed_Amount__c;
-                    dto.pendingDisbursementApprovalDate = p.FEC_PD_Disbursement_Approval_Date__c;
-                    dto.pendingDisbursementStatus = p.FEC_PD_Disbursement_Status__c;
+                    Map<String, Object> pdPopulated = p.getPopulatedFieldsAsMap();
+                    dto.pendingApplicationId = pdPopulated.containsKey('FEC_PD_Application_ID__c') ? p.FEC_PD_Application_ID__c : null;
+                    dto.pendingApplicationStatus = pdPopulated.containsKey('FEC_PD_Application_Status__c') ? p.FEC_PD_Application_Status__c : null;
+                    dto.pendingDisbursedAmount = pdPopulated.containsKey('FEC_PD_Disbursed_Amount__c') ? p.FEC_PD_Disbursed_Amount__c : null;
+                    dto.pendingDisbursementApprovalDate = pdPopulated.containsKey('FEC_PD_Disbursement_Approval_Date__c') ? p.FEC_PD_Disbursement_Approval_Date__c : null;
+                    dto.pendingDisbursementStatus = pdPopulated.containsKey('FEC_PD_Disbursement_Status__c') ? p.FEC_PD_Disbursement_Status__c : null;
                     dto.pendingCsDecision = resolvePendingDisbursementCsDecision(
-                        p.FEC_PD_Disbursement_Status__c,
-                        p.FEC_PD_Application_Status__c
+                        pdPopulated.containsKey('FEC_PD_Disbursement_Status__c') ? p.FEC_PD_Disbursement_Status__c : null,
+                        pdPopulated.containsKey('FEC_PD_Application_Status__c') ? p.FEC_PD_Application_Status__c : null
                     );
                 }
             }
@@ -234,7 +239,15 @@ public without sharing class FEC_CardClosureRefundController {
         LockUnlockApiResultDTO vmxApiResult = blockCardAccountBlkcdApi(caseId);
         Boolean callAccountBlkcd = vmxApiResult?.skipped != true;
         Boolean vmxSuccess = callAccountBlkcd ? (vmxApiResult?.success == true) : true;
-        return finalizeBlockCard(caseId, lockApiResult?.success == true, vmxSuccess, callAccountBlkcd);
+        LockUnlockResultDTO result = finalizeBlockCard(caseId, lockApiResult?.success == true, vmxSuccess, callAccountBlkcd);
+        if (lockApiResult != null) {
+            result.code = lockApiResult.code;
+            result.description = lockApiResult.description;
+            if (String.isNotBlank(lockApiResult.transId)) {
+                result.transId = lockApiResult.transId;
+            }
+        }
+        return result;
     }
 
     @AuraEnabled
@@ -367,9 +380,9 @@ public without sharing class FEC_CardClosureRefundController {
                 FEC_Current_Case_Stage__r.Name
             FROM Case
             WHERE Id = :caseId
+            WITH SYSTEM_MODE
             LIMIT 1
         ];
-        caseRows = (List<Case>) Security.stripInaccessible(AccessType.READABLE, caseRows).getRecords();
         if (caseRows.isEmpty()) {
             ctx.errorMessage = String.format(System.Label.FEC_MSG_Not_Found, new List<String>{ 'Case' });
             return ctx;
@@ -395,9 +408,9 @@ public without sharing class FEC_CardClosureRefundController {
                 FEC_Block_Code_1__c
             FROM FEC_Customer_History__c
             WHERE Id = :ctx.caseRecord.FEC_Account_or_Contract__c
+            WITH SYSTEM_MODE
             LIMIT 1
         ];
-        historyRows = (List<FEC_Customer_History__c>) Security.stripInaccessible(AccessType.READABLE, historyRows).getRecords();
         if (historyRows.isEmpty()) {
             ctx.errorMessage = String.format(System.Label.FEC_MSG_Not_Found, new List<String>{ 'Customer History' });
             return ctx;
@@ -451,14 +464,7 @@ public without sharing class FEC_CardClosureRefundController {
             );
             FEC_CardLockUnLockCallout.logApiResponse();
 
-            dto.transId = transId;
-            dto.success = FEC_CardLockUnLockCallout.isSuccess(response);
-            dto.code = response != null && response.Sys != null ? response.Sys.Code : null;
-            dto.description = response != null && response.Sys != null ? response.Sys.Description : null;
-            dto.errorMessage = response != null ? response.errorMessage : null;
-            if (!dto.success && String.isBlank(dto.errorMessage) && String.isNotBlank(dto.description)) {
-                dto.errorMessage = dto.description;
-            }
+            applyCardLockApiResponse(dto, response, transId, true);
         } catch (Exception ex) {
             dto.success = false;
             dto.errorMessage = System.Label.FEC_MSG_Card_Block_Failed;
@@ -482,15 +488,12 @@ public without sharing class FEC_CardClosureRefundController {
                 FEC_VmxAcctBlkcdUpdEmeaCallout.buildDefaultInput(vmxCardNbr);
             FEC_VmxAcctBlkcdUpdEmeaCallout.BlkcdUpdResult vmxResult =
                 FEC_VmxAcctBlkcdUpdEmeaCallout.executeUpdateAccountBlockCode(vmxInput);
-            dto.success = FEC_VmxAcctBlkcdUpdEmeaCallout.isBlkcdUpdSuccess(vmxResult);
-            if (!dto.success) {
-                dto.errorMessage = String.isNotBlank(vmxResult?.responseDesc)
-                    ? vmxResult.responseDesc
-                    : System.Label.FEC_MSG_Card_Block_Failed;
-            }
+            applyVmxBlkcdApiResponse(dto, vmxResult);
         } catch (Exception ex) {
             dto.success = false;
-            dto.errorMessage = System.Label.FEC_MSG_Card_Block_Failed;
+            dto.errorMessage = String.isNotBlank(ex.getMessage())
+                ? ex.getMessage()
+                : System.Label.FEC_MSG_Card_Block_Failed;
         } finally {
             FEC_VmxAcctBlkcdUpdEmeaCallout.logApiResponse();
             logBlockCardProcessActionHistory(ctx, PROCESS_ACTION_VMX_BLKCD, dto.success == true);
@@ -550,17 +553,111 @@ public without sharing class FEC_CardClosureRefundController {
             );
             FEC_CardLockUnLockCallout.logApiResponse();
 
-            dto.transId = transId;
-            dto.success = FEC_CardLockUnLockCallout.isSuccess(response);
-            dto.code = response != null && response.Sys != null ? response.Sys.Code : null;
-            dto.description = response != null && response.Sys != null ? response.Sys.Description : null;
-            dto.errorMessage = response != null ? response.errorMessage : null;
+            applyCardLockApiResponse(dto, response, transId, false);
         } catch (Exception ex) {
             dto.success = false;
             dto.errorMessage = System.Label.FEC_MSG_Card_Unlock_Failed;
         }
 
         return dto;
+    }
+
+    private static void applyCardLockApiResponse(
+        LockUnlockApiResultDTO dto,
+        FEC_CardLockUnLockCallout.LockUnlockResponse response,
+        String requestTransId,
+        Boolean isBlockOperation
+    ) {
+        dto.transId = requestTransId;
+        if (response != null && response.Sys != null) {
+            dto.code = response.Sys.Code;
+            dto.description = response.Sys.Description;
+            if (String.isNotBlank(response.Sys.TransID)) {
+                dto.transId = response.Sys.TransID;
+            }
+        }
+        dto.success = isBlockOperation
+            ? isCardLockBlockApiSuccess(response)
+            : isCardLockUnblockApiSuccess(response);
+        dto.errorMessage = response != null ? response.errorMessage : null;
+        if (!dto.success && String.isBlank(dto.errorMessage) && String.isNotBlank(dto.description)) {
+            dto.errorMessage = dto.description;
+        }
+    }
+
+    private static void applyCardLockApiResponse(
+        LockUnlockResultDTO dto,
+        FEC_CardLockUnLockCallout.LockUnlockResponse response,
+        String requestTransId,
+        Boolean isBlockOperation
+    ) {
+        dto.transId = requestTransId;
+        if (response != null && response.Sys != null) {
+            dto.code = response.Sys.Code;
+            dto.description = response.Sys.Description;
+            if (String.isNotBlank(response.Sys.TransID)) {
+                dto.transId = response.Sys.TransID;
+            }
+        }
+        dto.success = isBlockOperation
+            ? isCardLockBlockApiSuccess(response)
+            : isCardLockUnblockApiSuccess(response);
+        dto.errorMessage = response != null ? response.errorMessage : null;
+        if (!dto.success && String.isBlank(dto.errorMessage) && String.isNotBlank(dto.description)) {
+            dto.errorMessage = dto.description;
+        }
+    }
+
+    private static Boolean isCardLockBlockApiSuccess(FEC_CardLockUnLockCallout.LockUnlockResponse response) {
+        return response != null
+            && response.Sys != null
+            && FEC_ConstantCommon.CODE_SUCCESS.equals(response.Sys.Code)
+            && isLockUnlockSysDescriptionSuccess(response.Sys.Description, LOCK_API_SUCCESS_DESCRIPTION);
+    }
+
+    private static Boolean isCardLockUnblockApiSuccess(FEC_CardLockUnLockCallout.LockUnlockResponse response) {
+        return response != null
+            && response.Sys != null
+            && UNLOCK_API_SUCCESS_CODE.equals(response.Sys.Code)
+            && isLockUnlockSysDescriptionSuccess(response.Sys.Description, UNLOCK_API_SUCCESS_DESCRIPTION);
+    }
+
+    private static Boolean isLockUnlockSysDescriptionSuccess(String description, String expectedDescription) {
+        if (String.isBlank(description)) {
+            return false;
+        }
+        String normalized = description.trim();
+        if (expectedDescription.equalsIgnoreCase(normalized)) {
+            return true;
+        }
+        return descriptionContainsSuccess(normalized);
+    }
+
+    private static void applyVmxBlkcdApiResponse(
+        LockUnlockApiResultDTO dto,
+        FEC_VmxAcctBlkcdUpdEmeaCallout.BlkcdUpdResult result
+    ) {
+        if (result != null) {
+            dto.code = result.responseCode;
+            dto.description = result.responseDesc;
+            if (String.isNotBlank(result.transId)) {
+                dto.transId = result.transId;
+            }
+        }
+        dto.success = FEC_VmxAcctBlkcdUpdEmeaCallout.isBlkcdUpdBusinessSuccess(result);
+        if (!dto.success) {
+            String vmxErr = FEC_VmxAcctBlkcdUpdEmeaCallout.resolveBlkcdUpdErrorMessage(result);
+            dto.errorMessage = String.isNotBlank(vmxErr)
+                ? vmxErr
+                : System.Label.FEC_MSG_Card_Block_Failed;
+        }
+    }
+
+    private static Boolean descriptionContainsSuccess(String description) {
+        if (String.isBlank(description)) {
+            return false;
+        }
+        return API_DESCRIPTION_SUCCESS_PATTERN.matcher(description.trim()).find();
     }
 
     /**
@@ -596,10 +693,10 @@ public without sharing class FEC_CardClosureRefundController {
             SELECT Id, FEC_Card_Block_Service_Attempts__c
             FROM Case
             WHERE Id = :caseId
+            WITH SYSTEM_MODE
             LIMIT 1
             FOR UPDATE
         ];
-        rows = (List<Case>) Security.stripInaccessible(AccessType.READABLE, rows).getRecords();
         if (rows.isEmpty()) {
             return null;
         }
@@ -642,11 +739,7 @@ public without sharing class FEC_CardClosureRefundController {
         if (!cardOnlyLock) {
             recordToUpdate.FEC_Block_Code_1__c = BLOCK_CODE_CARD;
         }
-        List<FEC_Customer_History__c> updateRows = new List<FEC_Customer_History__c>{ recordToUpdate };
-        updateRows = (List<FEC_Customer_History__c>) Security.stripInaccessible(AccessType.UPDATABLE, updateRows).getRecords();
-        if (!updateRows.isEmpty()) {
-            update updateRows;
-        }
+        update recordToUpdate;
     }
 
     private static String getLast4Digit(String cardNumber) {

@@ -630,6 +630,12 @@
         <field>Case.FEC_Is_Manager_For_Cur_User__c</field>
         <readable>true</readable>
     </fieldPermissions>
+
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>Case.FEC_Is_Manual__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
         <field>Case.FEC_Is_MyCaseAPI_Interaction__c</field>
@@ -683,6 +689,12 @@
     <fieldPermissions>
         <editable>true</editable>
         <field>Case.FEC_KYC_Result__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>Case.FEC_KYC_Status__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
@@ -1197,11 +1209,6 @@
     </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
-        <field>Case.Language</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>true</editable>
         <field>Case.MilestoneStatus</field>
         <readable>true</readable>
     </fieldPermissions>
@@ -1248,11 +1255,6 @@
     <fieldPermissions>
         <editable>true</editable>
         <field>Case.SlaStartDate</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>true</editable>
-        <field>Case.SourceId</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
@@ -4619,16 +4621,6 @@
         <allowEdit>true</allowEdit>
         <allowRead>true</allowRead>
         <modifyAllRecords>true</modifyAllRecords>
-        <object>ProfileSkill</object>
-        <viewAllFields>true</viewAllFields>
-        <viewAllRecords>true</viewAllRecords>
-    </objectPermissions>
-    <objectPermissions>
-        <allowCreate>true</allowCreate>
-        <allowDelete>true</allowDelete>
-        <allowEdit>true</allowEdit>
-        <allowRead>true</allowRead>
-        <modifyAllRecords>true</modifyAllRecords>
         <object>ServiceResource</object>
         <viewAllFields>false</viewAllFields>
         <viewAllRecords>true</viewAllRecords>
@@ -4679,10 +4671,6 @@
     </tabSettings>
     <tabSettings>
         <tab>standard-EmailTemplate</tab>
-        <visibility>Visible</visibility>
-    </tabSettings>
-    <tabSettings>
-        <tab>standard-ProfileSkill</tab>
         <visibility>Visible</visibility>
     </tabSettings>
     <tabSettings>

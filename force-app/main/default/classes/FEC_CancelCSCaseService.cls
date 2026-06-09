@@ -106,6 +106,11 @@ global with sharing class FEC_CancelCSCaseService {
                 new List<String>{String.join(FEC_ConstantCommon.CANCEL_CS_VALID_CHANNELS_ORDERED, ', ')}
             ));
         }
+        if (!isCancelCSCaseChannelFunctionAllowed(Sys.Channel)) {
+            throw new ServiceException(
+                FEC_ConstantCommon.MY_CASE_CHANNEL_CANCEL_CASE_NOT_ALLOWED_MSG
+            );
+        }
 
         // 2. TransactionID
         if (String.isBlank(Sys.TransactionID)) {
@@ -180,6 +185,13 @@ global with sharing class FEC_CancelCSCaseService {
         if (Sys.DateTime_x == null) {
             throw new ServiceException(String.format(System.Label.FEC_MSG_Param_Required, new List<String>{'Sys.DateTime'}));
         }
+    }
+
+    private static Boolean isCancelCSCaseChannelFunctionAllowed(String channel) {
+        return FEC_ChannelFunctionService.isFunctionAllowed(
+            channel,
+            FEC_ConstantCommon.MY_CASE_FUNCTION_CANCEL_CS_CASE
+        );
     }
     
     private static Case getCaseById(String caseIdInput) {

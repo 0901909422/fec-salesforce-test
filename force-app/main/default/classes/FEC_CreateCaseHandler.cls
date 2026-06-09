@@ -27,6 +27,7 @@ public without sharing class FEC_CreateCaseHandler {
         public String transcription;
         public String kycMethod;
         public String kycResult;
+        public String kycStatus;
 
         /** MyCase API: Owner = User theo CreatorEmail (nếu resolve được). */
         public Id ownerUserId;
@@ -140,7 +141,8 @@ public without sharing class FEC_CreateCaseHandler {
     
     /**
      * Chỉ dùng cho MyCase CreateCSCase API (REST/SOAP).
-     * Set FEC_Is_Submited__c, FEC_Interaction_View_Mode__c = review, FEC_Channel__c từ DTO (Sys.Channel XML).
+     * Interaction Case: FEC_Channel__c = External, FEC_Interaction_Subchannel__c = Other.
+     * Sys.Channel XML chỉ dùng cho FEC_Other_Subchannel__c trên Customer/Interaction Case.
      * //Thangtv
      */
     @AuraEnabled
@@ -159,13 +161,11 @@ public without sharing class FEC_CreateCaseHandler {
         // ---------------------------
         // CHANNEL / STATUS
         // ---------------------------
-        
-        if( dto.channel != null ) {
-            interactionCase.FEC_Channel__c = dto.channel;
-        }
-        
-        if( dto.subChannel != null ) {
-            interactionCase.FEC_Interaction_Subchannel__c = dto.subChannel;
+        interactionCase.FEC_Channel__c = FEC_ConstantCommon.CHANNEL_EXTERNAL;
+        interactionCase.FEC_Interaction_Subchannel__c =
+            FEC_ConstantCommon.CHANNEL_EXTERNAL_SUBCHANNEL_OTHER_NAME;
+        if (String.isNotBlank(dto.channel)) {
+            interactionCase.FEC_Other_Subchannel__c = dto.channel.trim();
         }
         
         interactionCase.FEC_External_Interaction_ID__c = dto.externalInteractionId;
@@ -354,8 +354,8 @@ public without sharing class FEC_CreateCaseHandler {
 
     /**
      * Chỉ dùng cho MyCase CreateCSCase API (REST/SOAP).
-     * Set FEC_Is_Submited__c = true, FEC_Interaction_View_Mode__c = review,
-     * FEC_Channel__c = channelFromXml (Sys.Channel trong XML).
+     * Customer Case: FEC_Case_Channel__c / FEC_Channel__c = External, FEC_Sub_Channel__c = Other.
+     * Sys.Channel XML → FEC_Other_Subchannel__c (Sub-channel = Other).
      * //Thangtv
      */
     public static Case createCustomerCaseMyCaseAPI(
@@ -366,8 +366,11 @@ public without sharing class FEC_CreateCaseHandler {
         Case c = buildCustomerCaseRecord(dto, interactionCaseId);
         c.FEC_Is_Submited__c = true; //Thangtv
         c.FEC_Interaction_View_Mode__c = FEC_ConstantCommon.INTERACTION_REVIEW_MODE; //Thangtv
+        c.FEC_Case_Channel__c = FEC_ConstantCommon.CHANNEL_EXTERNAL;
+        c.FEC_Sub_Channel__c = FEC_ConstantCommon.CHANNEL_EXTERNAL_SUBCHANNEL_OTHER_NAME;
+        c.FEC_Channel__c = FEC_ConstantCommon.CHANNEL_EXTERNAL;
         if (String.isNotBlank(channelFromXml)) {
-            c.FEC_Channel__c = channelFromXml.trim(); //Thangtv
+            c.FEC_Other_Subchannel__c = channelFromXml.trim();
         }
         insert c;
         return c;
@@ -552,6 +555,7 @@ public without sharing class FEC_CreateCaseHandler {
         // ---------------------------
         interactionCase.FEC_Transcription__c = dto.transcription;
         interactionCase.FEC_KYC_Method__c = dto.kycMethod;
+        interactionCase.FEC_KYC_Status__c = dto.kycStatus;
         
         insert interactionCase;
         

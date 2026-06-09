@@ -4,6 +4,7 @@
 	    <members>FEC_IPPClosureController</members>
 	    <members>FEC_AssignmentListHandler</members>
 	    <members>FEC_CaseBusinessService</members>
+	    <members>FEC_CaseBusinessService_Test</members>
 	    <members>FEC_CaseEditNOCController</members>
 	    <members>FEC_CaseEditNOCControllerTest</members>
 	    <members>FEC_CofGsrRoutePrepareService</members>
@@ -15,6 +16,7 @@
 	    <members>FEC_MainInfoController</members>
 	    <members>FEC_UpdateDisbursementStatusRestService</members>
 	    <members>FEC_CofGsrAssignmentService</members>
+	    <members>FEC_CofGsrAssignmentService_Test</members>
 	    <members>FEC_ConstantCommon</members>
 	    <members>FEC_CommonUltils</members>
 	    <members>FEC_MainInfoLoanAccountController</members>
@@ -56,6 +58,7 @@
         <members>FEC_GetIPPDetailsCallout</members>
         <members>FEC_UpdateCustomerAddress</members>
         <members>FEC_UpdateCustomerContact</members>
+        <members>FEC_UMSUserManagementRestService</members>
         <members>FEC_CardEligibilityController</members>
         <members>FEC_AssignmentTriggerHandler</members>
         <members>FEC_BancaController</members>
@@ -63,6 +66,7 @@
         <members>FEC_DocumentRequestRoutingService</members>
         <members>FEC_DocumentRequestRoutingActionService</members>
         <members>FEC_GetCSCaseStatusService</members>
+        <members>FEC_GetCSCaseStatusService_Test</members>
 		<members>Fec_HoldCaseConfigurationController</members>
 		<members>FEC_HoldCaseInheritanceService</members>
 		<members>FEC_HoldCaseStage2DisplayService</members>
@@ -102,6 +106,7 @@
 		<members>FEC_MrcReturnCaseService</members>
 		<members>FEC_MrcReturnCaseServiceTest</members>
 		<members>FEC_CreateCSCaseService</members>
+		<members>FEC_CreateCaseInteractionController</members>
 		<members>FEC_CreateInteractionGenesys</members>
 		<members>FEC_GsrStage1RevertMasterDataHelper</members>
 		<members>FEC_AssignAutoDistribSched</members>
@@ -120,6 +125,7 @@
 		<members>FEC_CaseAssignmentConflictService_Test</members>
 		<members>FEC_CaseManagerListService</members>
 		<members>FEC_CaseMasterDataHelper</members>
+		<members>FEC_CaseMigrationService</members>
 		<members>FEC_AutoHoldCaseApi</members>
 		<members>FEC_AutoHoldCaseExpireBatch</members>
 		<members>FEC_AutoHoldCaseExpireSchedulable</members>
@@ -134,7 +140,12 @@
         <members>FEC_CMSRewardRedeemServiceTest</members>
         <members>FEC_CMSIPPBlockWS</members>
         <members>FEC_GetMRCInfo</members>
+        <members>FEC_GetCSMasterDataService</members>
+        <members>FEC_GetCSMasterDataByCodeService</members>
+        <members>FEC_GetRepaymentScheduleByAppIdCallout</members>
+        <members>FEC_MyCaseSoapXml</members>
         <members>FEC_BCH_ExportPropertyService</members>
+        <members>FEC_BCH_ExportAssignmentRemarkLoader</members>
         <members>FEC_BCH_FilterPropertyService</members>
         <members>FEC_BatchCaseHandlingCaseFilter</members>
         <members>FEC_BatchCaseHandlingImportRow</members>
@@ -176,6 +187,8 @@
 		<members>FEC_BCH_IncorrectPaymentTemplateWriter</members>
 		<members>FEC_BCH_AssignmentRouteToService</members>
 		<members>FEC_BCH_AssignmentUpdateService</members>
+		<members>FEC_BCH_CofGsrImportRouteToService</members>
+		<members>FEC_BCH_ImportFileNameValidator</members>
 		<members>FEC_BCH_ImportRoutingHistoryService</members>
 		<members>FEC_BCH_ImportRoutingResolver</members>
 		<members>FEC_BCH_PicklistTranslationCtrl</members>
@@ -199,6 +212,10 @@
         <members>FEC_CloseInterationSchedulerBatch</members>
         <members>FEC_IPPScheduleController</members>
         <members>FEC_ApplicationsListController</members>
+        <members>FEC_GetCSAttachedFile</members>
+        <members>FEC_GetLoanSecInfo</members>
+        <members>FEC_CancelCSCaseService</members>
+        <members>FEC_FollowUpController</members>
 		<name>ApexClass</name>
 	</types>
     <types>
@@ -225,6 +242,7 @@
 	    <members>fec_SensitiveDataTable</members>
 	    <members>fec_customerAdditionalData</members>
 	    <members>fec_RepaymentSchedulePaymentHistory</members>
+	    <members>fecRelevantTicketModalHost</members>
 	    <members>fec_UpdateAddress</members>
 	    <members>fec_CollectionInteractions</members>
 	    <members>fec_allocationHistory</members>
@@ -307,6 +325,7 @@
         <members>fec_Rl0502RdPaymentRouting</members>
 		<members>fecRoutingAssignmentEditForm</members>
 		<members>fec_DownloadReports</members>
+		<members>fecPdfGenerator</members>
 		<members>fec_GenesysSoftphone</members>
 		<members>fec_BatchDataCreation</members>
 		<members>fecMrcReturnStageChangeRouting</members>
@@ -327,6 +346,7 @@
         <members>Case.FEC_Original_Category__c</members>
         <members>Case.FEC_Original_Sub_Category__c</members>
         <members>Case.FEC_Original_Sub_Code__c</members>
+        <members>Case.FEC_Assignment_Count__c</members>
         <members>Case.FEC_Recently_Auto_Case_Assignment__c</members>
         <members>Case.FEC_NFU_Description_Result__c</members>
         <members>Case.FEC_Collections_Response__c</members>
@@ -455,6 +475,7 @@
         <members>FEC_MSG_Service_Error_Label</members>
         <members>FEC_UpdateDisb_Msg_DisbDT_Required</members>
         <members>FEC_Assignment_Remark_Label</members>
+        <members>FEC_Assignment_Duplicate_Queue_Error</members>
 		<members>FEC_LABEL_Months</members>
         <members>FEC_LABEL_API_Code</members>
         <members>FEC_LABEL_Description</members>
@@ -584,6 +605,13 @@
 		<members>FEC_Batch_Case_Handling_Success</members>
 		<members>FEC_NFU_Modal_Save_Error</members>
         <members>FEC_Send_Manual_Notification</members>
+        <members>FEC_RelevantTicket_Field_Interaction</members>
+        <members>FEC_RelevantTicket_Action_Not_Allowed</members>
+        <members>FEC_MSG_FollowUp_Add_User_To_Watcher_Success</members>
+        <members>FEC_MSG_FollowUp_Case_Follow_Success</members>
+        <members>FEC_MSG_FollowUp_Type_Updated_Success</members>
+        <members>FEC_MSG_FollowUp_Unfollow_Success</members>
+        <members>FEC_Success_Title</members>
 		<name>CustomLabel</name>
 	</types>
     <types>
@@ -592,10 +620,12 @@
 		<members>FEC_API_Config.FEC_Search_Test_Service_Error_Account</members>
 		<members>FEC_API_Config.FEC_Get_IPP_Detail</members>
 		<members>FEC_API_Config.FEC_Get_MRC_Info</members>
+		<members>FEC_API_Config.FEC_Get_Repayment_Schedule_By_App_Id</members>
 	    <members>FEC_API_Config.FEC_MFASOUTSTANDINGAUTHINQ</members>
 		<members>FEC_API_Config.FEC_VMX_AUTH_DETAIL_INQ</members>
 		<members>FEC_API_Config.FEC_Vmx_Acct_Blkcd_Upd_Emea</members>
 		<members>FEC_API_Config.FEC_Get_Customer_List</members>
+		<members>FEC_API_Config.FEC_CheckEligible</members>
 		<name>CustomMetadata</name>
 	</types>
     <types>

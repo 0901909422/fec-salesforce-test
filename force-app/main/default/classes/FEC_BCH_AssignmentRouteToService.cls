@@ -3,6 +3,16 @@
 // (3) FEC_User_Role__c = null, (4) FEC_OwnerID__c = Group.Name, FEC_Team__c từ FEC_Team_Queue__c theo queue developer name.
 public with sharing class FEC_BCH_AssignmentRouteToService {
 
+    // 05/06/2026 17:30 linhdev - message lỗi __Errors Import Result
+    private static final String ERR_NO_ASSIGNMENT_ROUTE_TO_DATA = 'Không có dữ liệu cập nhật Assignment.';
+    private static final String ERR_MISSING_ASSIGNMENT_ID = 'Thiếu Assignment Id.';
+    private static final String ERR_ROUTE_TO_QUEUE_NOT_FOUND = 'Không xác định được queue đích (FEC_Team_Queue__c).';
+    private static final String ERR_TEAM_QUEUE_NOT_FOUND_PREFIX =
+        'Không tìm thấy FEC_Team_Queue__c với FEC_Queue_Name__c = ';
+    private static final String ERR_QUEUE_DEVNAME_NOT_FOUND_PREFIX =
+        'Không tìm thấy Queue với DeveloperName = ';
+    private static final String ERR_ASSIGNMENT_ROUTE_TO_UPDATE_FAILED = 'Cập nhật Assignment thất bại.';
+
     //PhongBT 28/05/26: Input bulk/single — assignment cần update và queue đích (developer name).
     public class RouteToContext {
         public Id assignmentId;
@@ -93,7 +103,7 @@ public with sharing class FEC_BCH_AssignmentRouteToService {
         List<ApplyResult> results = applyRouteToAssignmentsBulk(new List<RouteToContext>{ ctx });
         if (results.isEmpty()) {
             ApplyResult empty = new ApplyResult(assignmentId);
-            empty.errorMessage = 'Không có dữ liệu cập nhật Assignment.';
+            empty.errorMessage = ERR_NO_ASSIGNMENT_ROUTE_TO_DATA;
             return empty;
         }
         return results[0];
@@ -114,11 +124,11 @@ public with sharing class FEC_BCH_AssignmentRouteToService {
             ApplyResult rowResult = new ApplyResult(ctx == null ? null : ctx.assignmentId);
             results.add(rowResult);
             if (ctx == null || ctx.assignmentId == null) {
-                rowResult.errorMessage = 'Thiếu Assignment Id.';
+                rowResult.errorMessage = ERR_MISSING_ASSIGNMENT_ID;
                 continue;
             }
             if (String.isBlank(ctx.queueDeveloperName)) {
-                rowResult.errorMessage = 'Không xác định được queue đích (FEC_Team_Queue__c).';
+                rowResult.errorMessage = ERR_ROUTE_TO_QUEUE_NOT_FOUND;
                 continue;
             }
             assignmentIds.add(ctx.assignmentId);
@@ -152,13 +162,13 @@ public with sharing class FEC_BCH_AssignmentRouteToService {
             FEC_Team_Queue__c teamQueue = teamQueueByDevName.get(devName);
             if (teamQueue == null) {
                 rowResult.errorMessage =
-                    'Không tìm thấy FEC_Team_Queue__c với FEC_Queue_Name__c = ' + devName + '.';
+                    ERR_TEAM_QUEUE_NOT_FOUND_PREFIX + devName + '.';
                 continue;
             }
             Group targetQueue = queueByDevName.get(devName);
             if (targetQueue == null || String.isBlank(targetQueue.Name)) {
                 rowResult.errorMessage =
-                    'Không tìm thấy Queue với DeveloperName = ' + devName + '.';
+                    ERR_QUEUE_DEVNAME_NOT_FOUND_PREFIX + devName + '.';
                 continue;
             }
             Datetime submitTs = ctx.submittedOn == null ? System.now() : ctx.submittedOn;
@@ -189,7 +199,7 @@ public with sharing class FEC_BCH_AssignmentRouteToService {
                 rowResult.errorMessage = null;
             } else {
                 rowResult.errorMessage = saveResults[i].getErrors().isEmpty()
-                    ? 'Cập nhật Assignment thất bại.'
+                    ? ERR_ASSIGNMENT_ROUTE_TO_UPDATE_FAILED
                     : saveResults[i].getErrors()[0].getMessage();
             }
         }
@@ -238,10 +248,12 @@ public with sharing class FEC_BCH_AssignmentRouteToService {
         if (String.isBlank(queueHintNorm)) {
             return null;
         }
+        //PhongBT 02/06/26: Sửa routing action cho cof/gsr — alias label Excel (phần sau dấu "-").
         Map<String, String> mapped = new Map<String, String>{
             'qualitycontrolmailbox' => FEC_ConstantCommon.QUEUE_QUALITY_CONTROL_MAILBOX_NAME,
             'dqcontractprocessing' => FEC_ConstantCommon.QUEUE_DQ_CONTRACT_PROCESSING_NAME,
-            'contractprocessing' => FEC_ConstantCommon.QUEUE_DQ_CONTRACT_PROCESSING_NAME
+            'contractprocessing' => FEC_ConstantCommon.QUEUE_DQ_CONTRACT_PROCESSING_NAME,
+            'dqcssupport' => FEC_ConstantCommon.QUEUE_DQ_CS_SUPPORT_NAME
         };
         return mapped.containsKey(queueHintNorm) ? mapped.get(queueHintNorm) : null;
     }

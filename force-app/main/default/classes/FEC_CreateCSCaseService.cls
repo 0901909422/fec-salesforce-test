@@ -6,7 +6,7 @@ global with sharing class FEC_CreateCSCaseService {
     // SOAP ENTRY POINT (WSDL COMPATIBLE)
     // REST/XML: FEC_CreateCSCaseRestService → FEC_MyCaseSoapXml.parseCreateCSCaseRequest → CreateCSCaseRequest
     // =================================================
-     webService  static CreateCSCaseResponse CreateCSCaseRequest(
+    webService  static CreateCSCaseResponse CreateCSCaseRequest(
         CaseRequestType req
     ) {
         Boolean isSuccess = true;
@@ -34,13 +34,13 @@ global with sharing class FEC_CreateCSCaseService {
             CustomerResponse customerResp = getCustomerInfo(req.CustomerInfo.ContractOrAccountNumber);
             // -------------------------
             // CREATE INTERACTION CASE
-            // //Thangtv: MyCase API — channel/review/submitted qua createInteractionCaseMyCaseAPI
+            // //Thangtv: Interaction = External/Other; Sys.Channel → Customer Case + FEC_Other_Subchannel__c
             // -------------------------
             FEC_CreateCaseHandler.FEC_InteractionCaseDTO interactionDTO =
                 FEC_MyCaseSoapXml.buildInteractionCaseDto(req);
             Id creatorOwnerId = resolveOwnerIdByCreatorEmail(req);
             interactionDTO.ownerUserId = creatorOwnerId;
-
+            
             FEC_CreateCaseHandler.FEC_InteractionCaseResponse interactionResp =
                 FEC_CreateCaseHandler.createInteractionCaseMyCaseAPI(interactionDTO);
             
@@ -88,17 +88,17 @@ global with sharing class FEC_CreateCSCaseService {
             }
             customerDTO.remarks     = req.RequestInfo.Remarks;
             customerDTO.ownerUserId = creatorOwnerId; //Thangtv: CreatorEmail
-
-            //Thangtv: Customer Case MyCase API — submitted + review mode + FEC_Channel__c từ Sys.Channel
+            
+            //Thangtv: Customer Case MyCase API — External/Other; Sys.Channel → FEC_Other_Subchannel__c
             String channelFromXml = req.Sys != null && String.isNotBlank(req.Sys.Channel)
                 ? req.Sys.Channel.trim()
                 : null;
             Case customerCase = FEC_CreateCaseHandler.createCustomerCaseMyCaseAPI(
                 customerDTO,
-                interactionResp.caseId,
-                channelFromXml
-            );
-
+            interactionResp.caseId,
+            channelFromXml
+                );
+            
             // Reload to get Link ID
             customerCase = [
                 SELECT Id, FEC_Link_ID__c
@@ -128,7 +128,7 @@ global with sharing class FEC_CreateCSCaseService {
             if (!filePayloads.isEmpty()) {
                 uploadFilesToCase(customerCase.Id, filePayloads);
             }
-
+            
             // -------------------------
             // MAP ADDITIONAL INFO TO FEC_Additional_Info__c
             // -------------------------
@@ -151,26 +151,37 @@ global with sharing class FEC_CreateCSCaseService {
             
         } catch (ValidationException ve) {
             isSuccess = false;
-            return errorResponse(ve.transactionId, ve.code, ve.getMessage());
-        } catch (Exception e) {
+            errorMessage = ve.getMessage();
+            
+            response = errorResponse(
+                ve.transactionId,
+            ve.code,
+            ve.getMessage()
+                );
+        }catch (Exception e) {
             isSuccess = false;
-            return errorResponse(
-                req != null && req.Sys != null ? req.Sys.TransactionID : null,
+            errorMessage = e.getMessage();
+            
+            response = errorResponse(
+                req != null && req.Sys != null
+                ? req.Sys.TransactionID
+                : null,
             '500',
             'Internal server error: ' + e.getMessage()
                 );
         }
         
-        // 🔥 ALWAYS LOG HERE (DUY NHẤT 1 CHỖ)
         logApiFull(
-            'CreateCSCase',
+            FEC_ConstantCommon.MY_CASE_FUNCTION_CREATE_CS_CASE,
         'POST',
         req,
         response,
         isSuccess,
         isSuccess ? '200' : '500',
         errorMessage,
-        req != null && req.Sys != null ? req.Sys.TransactionID : null
+        req != null && req.Sys != null
+            ? req.Sys.TransactionID
+            : null
             );
         
         return response;
@@ -196,6 +207,7 @@ global with sharing class FEC_CreateCSCaseService {
         }
         validateDateTime(sys.DateTime_x,  sys.TransactionID);
         validateChannel(sys.Channel, sys.TransactionID);
+        validateChannelCreateCaseFunction(sys.Channel, sys.TransactionID);
         
         validateCustomerInfo(customer, sys.TransactionID);
         
@@ -219,17 +231,17 @@ global with sharing class FEC_CreateCSCaseService {
         
         FEC_Business_Process__c businessProcess = validateCaseType(
             request.CaseType,
-            sys.TransactionID
-        );
+        sys.TransactionID
+            );
         FEC_Product_Type__c productTypeRec = validateProductType(
             request.ProductType,
-            sys.TransactionID
-        );
+        sys.TransactionID
+            );
         FEC_Category__c categoryRec = validateCategory(
             request.Category,
-            sys.TransactionID
-        );
-
+        sys.TransactionID
+            );
+        
         ctx.businessProcessId = businessProcess.Id;
         ctx.productTypeId = productTypeRec.Id;
         ctx.categoryId = categoryRec.Id;
@@ -238,7 +250,7 @@ global with sharing class FEC_CreateCSCaseService {
         if (!String.isBlank(request.SubCode)) {
             ctx.subCodeId = validateSubCode(request.SubCode, sys.TransactionID).Id;
         }
-
+        
         if(String.isBlank(request.Remarks)){
             throw new ValidationException(sys.TransactionID,System.Label.FEC_CS_CASE_ERROR_CODE, System.Label.FEC_CS_CASE_REMARKS_REQUIRED_MSG);
         }
@@ -253,30 +265,30 @@ global with sharing class FEC_CreateCSCaseService {
                     throw new ValidationException(sys.TransactionID,System.Label.FEC_CS_CASE_ERROR_CODE, System.Label.FEC_CS_CASE_ADDITIONAL_INFO_VALUE_REQUIRED_MSG);
             }
         }
-
+        
         //Thangtv: kiểm tra tồn tại Nature of Case (Channel + BP/Product/Category code + SubCategory/SubCode)
         validateNatureOfCase(
             sys.Channel,
-            businessProcess.FEC_Code__c,
-            productTypeRec.FEC_Code__c,
-            categoryRec.FEC_Code__c,
-            request.SubCategory,
-            request.SubCode,
-            sys.TransactionID
-        );
-
+        businessProcess.FEC_Code__c,
+        productTypeRec.FEC_Code__c,
+        categoryRec.FEC_Code__c,
+        request.SubCategory,
+        request.SubCode,
+        sys.TransactionID
+            );
+        
         return ctx;
     }
-
+    
     //Thangtv — SubCode optional: khi null thì match NOC có FEC_Sub_Code__c = null
     private static void validateNatureOfCase(
         String channel,
-        String caseTypeCode,
-        String productTypeCode,
-        String categoryCode,
-        String subCategory,
-        String subCode,
-        String transactionId
+    String caseTypeCode,
+    String productTypeCode,
+    String categoryCode,
+    String subCategory,
+    String subCode,
+    String transactionId
     ) {
         if (
             String.isBlank(channel) ||
@@ -287,44 +299,36 @@ global with sharing class FEC_CreateCSCaseService {
         ) {
             return;
         }
-
-        String channelPattern = '%' + channel.trim() + '%';
-        List<FEC_Nature_of_Case__c> natureOfCases;
-
+        
+        String channelFilter = FEC_CommonUltils.buildNatureOfCaseChannelFilterClause(
+            'FEC_Channel__c',
+            channel
+        );
+        List<String> conditions = new List<String>();
+        conditions.add(channelFilter);
+        conditions.add('FEC_Business_Process__r.FEC_Code__c = :caseTypeCode');
+        conditions.add('FEC_Product_Type__r.FEC_Code__c = :productTypeCode');
+        conditions.add('FEC_Category__r.FEC_Code__c = :categoryCode');
+        conditions.add('FEC_Sub_Category__r.FEC_Name_VN__c = :subCategory');
+        conditions.add('FEC_Active__c = TRUE');
         if (String.isNotBlank(subCode)) {
-            natureOfCases = [
-                SELECT Id, Name, FEC_Channel__c, FEC_Active__c
-                FROM FEC_Nature_of_Case__c
-                WHERE FEC_Channel__c LIKE :channelPattern
-                AND FEC_Business_Process__r.FEC_Code__c = :caseTypeCode
-                AND FEC_Product_Type__r.FEC_Code__c = :productTypeCode
-                AND FEC_Category__r.FEC_Code__c = :categoryCode
-                AND FEC_Sub_Category__r.FEC_Name_VN__c = :subCategory
-                AND FEC_Sub_Code__r.FEC_Name_VN__c = :subCode
-                AND FEC_Active__c = TRUE
-                LIMIT 1
-            ];
+            conditions.add('FEC_Sub_Code__r.FEC_Name_VN__c = :subCode');
         } else {
-            natureOfCases = [
-                SELECT Id, Name, FEC_Channel__c, FEC_Active__c
-                FROM FEC_Nature_of_Case__c
-                WHERE FEC_Channel__c LIKE :channelPattern
-                AND FEC_Business_Process__r.FEC_Code__c = :caseTypeCode
-                AND FEC_Product_Type__r.FEC_Code__c = :productTypeCode
-                AND FEC_Category__r.FEC_Code__c = :categoryCode
-                AND FEC_Sub_Category__r.FEC_Name_VN__c = :subCategory
-                AND FEC_Sub_Code__c = NULL
-                AND FEC_Active__c = TRUE
-                LIMIT 1
-            ];
+            conditions.add('FEC_Sub_Code__c = NULL');
         }
 
+        String soql =
+            'SELECT Id, Name, FEC_Channel__c, FEC_Active__c FROM FEC_Nature_of_Case__c WHERE ' +
+            String.join(conditions, ' AND ') +
+            ' LIMIT 1';
+        List<FEC_Nature_of_Case__c> natureOfCases = Database.query(soql);
+        
         if (natureOfCases.isEmpty()) {
             throw new ValidationException(
                 transactionId,
-                System.Label.FEC_CS_CASE_ERROR_CODE,
-                System.Label.FEC_MSG_Nature_Of_Case_Id_Invalid
-            );
+            System.Label.FEC_CS_CASE_ERROR_CODE,
+            System.Label.FEC_MSG_Nature_Of_Case_Id_Invalid
+                );
         }
     }
     
@@ -347,12 +351,33 @@ global with sharing class FEC_CreateCSCaseService {
         String normalizedChannel = channel.trim();
         
         // Validate value
-        if (!channelSet.contains(normalizedChannel)) {
+        List<FEC_Channel__c> channels = [
+            SELECT Id
+            FROM FEC_Channel__c
+            WHERE FEC_Channel_ID__c = :normalizedChannel
+            AND FEC_Channel_Status__c = true
+            LIMIT 1
+        ];
+        
+        if (channels.isEmpty()) {
             throw new ValidationException(
                 txnId,
             System.Label.FEC_CS_CASE_ERROR_CODE,
             System.Label.FEC_CS_CASE_CHANNEL_INVALID_MSG
                 );
+        }
+    }
+
+    private static void validateChannelCreateCaseFunction(String channel, String txnId) {
+        if (!FEC_ChannelFunctionService.isFunctionAllowed(
+            channel,
+            FEC_ConstantCommon.MY_CASE_FUNCTION_CREATE_CS_CASE
+        )) {
+            throw new ValidationException(
+                txnId,
+                System.Label.FEC_CS_CASE_ERROR_CODE,
+                FEC_ConstantCommon.MY_CASE_CHANNEL_CREATE_CASE_NOT_ALLOWED_MSG
+            );
         }
     }
     
@@ -378,10 +403,10 @@ global with sharing class FEC_CreateCSCaseService {
         if (req == null || req.CreatorInfo == null || String.isBlank(req.CreatorInfo.CreatorEmail)) {
             return null;
         }
-
+        
         String email = req.CreatorInfo.CreatorEmail.trim();
         String txnId = req.Sys != null ? req.Sys.TransactionID : null;
-
+        
         List<User> users = [
             SELECT Id
             FROM User
@@ -389,18 +414,18 @@ global with sharing class FEC_CreateCSCaseService {
             AND Email = :email
             LIMIT 1
         ];
-
+        
         if (users.isEmpty()) {
             throw new ValidationException(
                 txnId,
-                System.Label.FEC_CS_CASE_ERROR_CODE,
-                System.Label.FEC_CS_CASE_INVALID_CREATOR_EMAIL_MSG
-            );
+            System.Label.FEC_CS_CASE_ERROR_CODE,
+            System.Label.FEC_CS_CASE_INVALID_CREATOR_EMAIL_MSG
+                );
         }
-
+        
         return users[0].Id;
     }
-
+    
     // =================================================
     // CUSTOMER VALIDATION
     // =================================================
@@ -437,8 +462,28 @@ global with sharing class FEC_CreateCSCaseService {
         if(String.isBlank(c.NationalID) || c.NationalID.length()>15)
             throw new ValidationException(txnId,System.Label.FEC_CS_CASE_ERROR_CODE, System.Label.FEC_CS_CASE_INVALID_NATIONAL_ID_MSG);
         
-        if(String.isBlank(c.ContractOrAccountNumber) || c.ContractOrAccountNumber.length()>255)
-            throw new ValidationException(txnId,System.Label.FEC_CS_CASE_ERROR_CODE, System.Label.FEC_CS_CASE_INVALID_CONTRACT_OR_ACCOUNT_NUMBER_MSG);
+        if (String.isBlank(c.ContractOrAccountNumber) || c.ContractOrAccountNumber.length() > 255) {
+            throw new ValidationException(
+                txnId,
+                System.Label.FEC_CS_CASE_ERROR_CODE,
+                System.Label.FEC_CS_CASE_INVALID_CONTRACT_OR_ACCOUNT_NUMBER_MSG
+            );
+        }
+        if (!isValidContractOrAccountNumber(c.ContractOrAccountNumber)) {
+            throw new ValidationException(
+                txnId,
+                System.Label.FEC_CS_CASE_ERROR_CODE,
+                System.Label.FEC_CS_CASE_INVALID_CONTRACT_OR_ACCOUNT_NUMBER_MSG
+            );
+        }
+    }
+
+    private static Boolean isValidContractOrAccountNumber(String value) {
+        if (String.isBlank(value)) {
+            return false;
+        }
+        return Pattern.matches(FEC_ConstantCommon.PATTERN_ACCOUNT_NUMBER, value)
+            || Pattern.matches(FEC_ConstantCommon.PATTERN_CONTRACT_NUMBER, value);
     }
     
     // =================================================
@@ -662,15 +707,15 @@ global with sharing class FEC_CreateCSCaseService {
             insert versions;
         }
     }
-
+    
     private static void upsertAdditionalInfoByMasterSetting(
         Id caseId,
-        RequestInfoType requestInfo
+    RequestInfoType requestInfo
     ) {
         if (caseId == null || requestInfo == null || requestInfo.AdditionalInfo == null) {
             return;
         }
-
+        
         Map<String, String> additionalInfoMap = new Map<String, String>();
         for (AdditionalInfoType info : requestInfo.AdditionalInfo) {
             if (info == null || String.isBlank(info.ID) || String.isBlank(info.Value)) {
@@ -685,12 +730,12 @@ global with sharing class FEC_CreateCSCaseService {
         if (additionalInfoMap.isEmpty()) {
             return;
         }
-
+        
         List<FEC_Master_Data_Setting__c> mappings = queryAdditionalInfoMappings(requestInfo);
         if (mappings.isEmpty()) {
             return;
         }
-
+        
         Set<String> allowedAdditionalInfoIds = new Set<String>();
         for (FEC_Master_Data_Setting__c setting : mappings) {
             if (String.isBlank(setting.FEC_Code__c)) {
@@ -698,14 +743,14 @@ global with sharing class FEC_CreateCSCaseService {
             }
             allowedAdditionalInfoIds.add(setting.FEC_Code__c.trim());
         }
-
+        
         Map<String, Schema.SObjectField> additionalInfoFieldMap =
             Schema.SObjectType.FEC_Additional_Info__c.fields.getMap();
         FEC_Additional_Info__c additionalInfoRecord = new FEC_Additional_Info__c(
             FEC_Case__c = caseId
-        );
+            );
         Boolean hasMappedValue = false;
-
+        
         for (String additionalInfoId : additionalInfoMap.keySet()) {
             if (
                 !allowedAdditionalInfoIds.isEmpty() &&
@@ -720,19 +765,19 @@ global with sharing class FEC_CreateCSCaseService {
             additionalInfoRecord.put(targetFieldApi, additionalInfoMap.get(additionalInfoId));
             hasMappedValue = true;
         }
-
+        
         if (hasMappedValue) {
             insert additionalInfoRecord;
         }
     }
-
+    
     private static List<FEC_Master_Data_Setting__c> queryAdditionalInfoMappings(
         RequestInfoType requestInfo
     ) {
         if (requestInfo == null) {
             return new List<FEC_Master_Data_Setting__c>();
         }
-
+        
         return [
             SELECT
                 Id,
@@ -775,8 +820,15 @@ global with sharing class FEC_CreateCSCaseService {
         return r;
     }
     
-    private static CustomerResponse getCustomerInfo(String accountContractNumber  ) {
+    private static CustomerResponse getCustomerInfo(String accountContractNumber) {
         CustomerResponse resp = new CustomerResponse();
+        String accountNumber = null;
+        String contractNumber = null;
+        if (Pattern.matches(FEC_ConstantCommon.PATTERN_ACCOUNT_NUMBER, accountContractNumber)) {
+            accountNumber = accountContractNumber;
+        } else if (Pattern.matches(FEC_ConstantCommon.PATTERN_CONTRACT_NUMBER, accountContractNumber)) {
+            contractNumber = accountContractNumber;
+        }
         FEC_GetCustomerList.ResponseWrapper res =
             FEC_GetCustomerList.getCustomerList(
             FEC_ConstantCommon.REQUESTOR_PEGA_CSM_HYPHEN,                 // requestorId
@@ -786,8 +838,8 @@ global with sharing class FEC_CreateCSCaseService {
         null,            // nationalId
         null,               // applicationId
         null,     // creditCardNumber
-        accountContractNumber,     // accountNumber
-        null, // contractNumber
+        accountNumber,
+        contractNumber,
         null,  // email
         null               // personId
             );
@@ -820,7 +872,7 @@ global with sharing class FEC_CreateCSCaseService {
             apiResponse.setBody(FEC_CommonUltils.serializeSafe(responseObj));
             
             FEC_CommonUltils.logApi(
-                'CreateCSCase',
+                FEC_ConstantCommon.MY_CASE_FUNCTION_CREATE_CS_CASE,
             endpoint,
             method,
             FEC_CommonUltils.serializeSafe(requestObj),
@@ -832,7 +884,7 @@ global with sharing class FEC_CreateCSCaseService {
             System.debug('LOG_API_ERROR: ' + e.getMessage());
         }
     }
-  
+    
     private static String truncateLongString(String input) {
         Integer MAX_LENGTH = 30000; // adjust theo field length
         
@@ -847,20 +899,20 @@ global with sharing class FEC_CreateCSCaseService {
     // REQUEST / RESPONSE TYPES (WSDL)
     // =================================================
     global  class CaseRequestType {
-       webservice SysType Sys;
+        webservice SysType Sys;
         webservice CustomerInfoType CustomerInfo;
         webservice RequestInfoType RequestInfo;
         webservice CreatorInfoType CreatorInfo;
     }
     
-   global class SysType {
+    global class SysType {
         webservice String Channel;
         webservice String SubChannel;
         webservice String TransactionID;
         webservice Datetime DateTime_x;
     }
     
-   global class CustomerInfoType {
+    global class CustomerInfoType {
         webservice String Name;
         webservice String PhoneNumber;
         webservice String UserType;
@@ -869,7 +921,7 @@ global with sharing class FEC_CreateCSCaseService {
         webservice String EmailAddress;
     }
     
-   global class RequestInfoType {
+    global class RequestInfoType {
         webservice String CaseType;
         webservice String RequestType;
         webservice String ProductType;
@@ -880,12 +932,12 @@ global with sharing class FEC_CreateCSCaseService {
         webservice List<AdditionalInfoType> AdditionalInfo;
     }
     
-   global class AdditionalInfoType {
+    global class AdditionalInfoType {
         webservice String ID;
         webservice String Value;
     }
     
-   global class CreatorInfoType {
+    global class CreatorInfoType {
         webservice String CreatorName;
         webservice String CreatorCode;
         webservice String CreatorDepartment;
@@ -934,15 +986,6 @@ global with sharing class FEC_CreateCSCaseService {
         public String cifNumber;
     }
     
-    private static Set<String> channelSet = new Set<String>{
-        FEC_ConstantCommon.CHANNEL_INBOUND_NAME,
-        FEC_ConstantCommon.CHANNEL_OUTBOUND_NAME,
-        FEC_ConstantCommon.CHANNEL_EMAIL_NAME,
-        FEC_ConstantCommon.CHANNEL_LETTER_NAME,
-        FEC_ConstantCommon.CHANNEL_F2F_NAME,
-        FEC_ConstantCommon.CHANNEL_INTERNAL_NAME,
-        FEC_ConstantCommon.CHANNEL_EXTERNAL_NAME
-    };
     
     private static Set<String> internalSystems = new Set<String>{
         FEC_ConstantCommon.SYSTEM_SOURCE_VTIGER,

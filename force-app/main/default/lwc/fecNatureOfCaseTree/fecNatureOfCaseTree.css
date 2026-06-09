@@ -1,19 +1,19 @@
 /* fecNatureOfCaseTree.css */
 
 .card-title-clickable {
-    font-size: 1rem; /* Kích thước font chuẩn của title */
-    font-weight: 500; /* Độ đậm chuẩn */
+    font-size: 1rem;
+    font-weight: 500;
     color: var(--lwc-colorTextHeading);
-    padding: 0.5rem 0.75rem; /* Padding phù hợp */
+    padding: 0.25rem 0.75rem;
     cursor: pointer;
     transition: background-color 0.1s;
 }
 
 /* THÊM HIỆU ỨNG SELECTED */
 .card-title-clickable.is-selected {
-    background-color: var(--lwc-colorBackgroundHighlightInverse); /* Màu nền nhạt */
-    color: var(--lwc-colorTextBrand); /* Hoặc màu chữ đậm hơn */
-    border-left: 4px solid var(--lwc-colorBorderBrand); /* Hiệu ứng gạch chân */
+    background-color: var(--lwc-colorBackgroundHighlightInverse);
+    color: var(--lwc-colorTextBrand);
+    border-left: 4px solid var(--lwc-colorBorderBrand);
     padding-left: 0.5rem;
 }
 
@@ -21,4 +21,19 @@
     display: flex;
     flex-direction: column;
     gap: 4px;
+}
+
+/* Thu gọn khoảng cách tổng thể */
+:host {
+    --slds-c-card-body-padding-top: 0;
+    --slds-c-card-body-padding-bottom: 0;
+}
+
+/* Giảm padding các section bên trong card */
+lightning-card .slds-p-around_small {
+    padding: 0.25rem 0.5rem !important;
+}
+
+lightning-card .slds-p-around_medium {
+    padding: 0.25rem 0.5rem !important;
 }

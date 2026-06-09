@@ -13,11 +13,7 @@ private class FEC_GetCSMdByCodeRest_Test {
         '<DateTime>2026-05-25T06:52:33.618Z</DateTime>' +
         '</Sys>' +
         '<MasterDataCode>' +
-        '<CaseType>Complaint</CaseType>' +
-        '<Category>Request</Category>' +
         '<SubCategory>SC01</SubCategory>' +
-        '<ProductType>CARD</ProductType>' +
-        '<SubCode>SUB01</SubCode>' +
         '</MasterDataCode>' +
         '<CustomerType>' +
         '<UserType>EXISTING</UserType>' +
@@ -29,6 +25,14 @@ private class FEC_GetCSMdByCodeRest_Test {
 
     @TestSetup
     static void setupData() {
+        FEC_UnitTestMyCaseChannelUtil.ensureApiChannel();
+        FEC_Product_Type__c productType = new FEC_Product_Type__c(
+            Name = 'Card',
+            FEC_Code__c = 'CARD',
+            FEC_Active__c = true
+        );
+        insert productType;
+
         FEC_Sub_Category__c subCat = new FEC_Sub_Category__c(
             Name = 'Test SubCat REST',
             FEC_Code__c = 'SC01',
@@ -38,9 +42,12 @@ private class FEC_GetCSMdByCodeRest_Test {
         insert subCat;
 
         insert new FEC_Nature_of_Case__c(
+            FEC_Product_Type__c = productType.Id,
             FEC_Sub_Category__c = subCat.Id,
+            FEC_Channel__c = FEC_ConstantCommon.KEY_VALID_CHANNELS_API,
             FEC_Active__c = true
         );
+        FEC_CommonUltils.resetActiveChannelCacheForTest();
     }
 
     @IsTest
@@ -54,11 +61,7 @@ private class FEC_GetCSMdByCodeRest_Test {
         System.assertNotEquals(null, parsed.Sys.DateTime_x);
 
         System.assertNotEquals(null, parsed.MasterDataCode);
-        System.assertEquals('Complaint', parsed.MasterDataCode.CaseType);
-        System.assertEquals('Request', parsed.MasterDataCode.Category);
         System.assertEquals('SC01', parsed.MasterDataCode.SubCategory);
-        System.assertEquals('CARD', parsed.MasterDataCode.ProductType);
-        System.assertEquals('SUB01', parsed.MasterDataCode.SubCode);
 
         System.assertNotEquals(null, parsed.CustomerType);
         System.assertEquals('EXISTING', parsed.CustomerType.UserType);
@@ -106,6 +109,7 @@ private class FEC_GetCSMdByCodeRest_Test {
 
     @IsTest
     static void testRestPost_getMasterDataByCodeSuccess() {
+        FEC_CommonUltils.resetActiveChannelCacheForTest();
         RestRequest req = new RestRequest();
         RestResponse res = new RestResponse();
         req.requestUri = '/services/apexrest/MyCase/v1/GetCSMasterDataByCode';

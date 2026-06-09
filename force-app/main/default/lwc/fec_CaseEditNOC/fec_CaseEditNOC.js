@@ -47,7 +47,7 @@ import DO_NOT_BOTHER_CHANNEL from "@salesforce/messageChannel/FEC_DoNotBother__c
 import { 
   ACTION_REOPEN, 
   ACTION_RECALL,
-  RECORD_TYPE_INTERNAL_CASE, 
+  RECORD_TYPE_INTERNAL_CASE,
   VIEW_MODE_HANDLING, 
   VIEW_MODE_REVIEW, 
   // STR_UNDEFINED, 
@@ -76,7 +76,8 @@ export default class Fec_CaseEditNOC extends LightningElement {
   _isInternalRequest = false;
   _internalProductTypeId = null;
   _internalApplied = false;
-  
+  _productTypeOptionlstFull = null;
+
   //HieuTT74-[UPDATE - 5/5/2026]: Lưu NOC sau khi call api Reset Pin,...
   isDisableNOC = false;
   _lastPersistedNatureOfCaseId = null;
@@ -109,6 +110,7 @@ export default class Fec_CaseEditNOC extends LightningElement {
   updatedSubCodeId;        // Sub-Code đã chọn trong Updated section
   @track updatedNocDisplayNames = {};
   hasAutoRoutingAssignment = false; // true → ẩn Updated section (có Routing Assignment)
+  _selectedNocDisplayNames = {};
   //PhongBT: Original Information của NOC lấy từ FEC_Case_Flow_History__c
   @track originalNOC = null;
   originalNOCBusinessProcessCode;
@@ -246,6 +248,28 @@ export default class Fec_CaseEditNOC extends LightningElement {
     };
   }
 
+  _setSelectedNocDisplayNamesFromCase(caseRecord) {
+    this._selectedNocDisplayNames = {
+      productType: caseRecord?.FEC_Product_Type__r?.Name ?? null,
+      category: caseRecord?.FEC_Category__r?.Name ?? null,
+      subCategory: caseRecord?.FEC_SubCategory__r?.Name ?? null,
+      subCode: caseRecord?.FEC_SubCode__r?.Name ?? null,
+    };
+  }
+
+  //PhongBT 02/06/26: Vẫn hiển thị Name cho user không có phân quyền xem noc: bổ sung option hiện tại theo Name lấy từ Case khi list option bị filter theo user group.
+  _ensureSelectedOptionLabel(options, selectedId, selectedName) {
+    const normalizedOptions = Array.isArray(options) ? [...options] : [];
+    if (!selectedId) {
+      return normalizedOptions;
+    }
+    const hasSelected = normalizedOptions.some((opt) => opt?.value === selectedId);
+    if (hasSelected || !selectedName) {
+      return normalizedOptions;
+    }
+    return [{ label: selectedName, value: selectedId }, ...normalizedOptions];
+  }
+
   get isEdit() {
     //linhdev fix jira FECREDIT_CSM_2025_KH-1366 — sau pop-up Block Amount: reload vẫn giữ combo disable, không chuyển output-field Case (resetViewMode → review)
     if (this.isNocNatureLocked && !this.isSubmited) {
@@ -278,6 +302,7 @@ export default class Fec_CaseEditNOC extends LightningElement {
   subscription = null;
   subscriptionNOC = null;
   _nocResolveEpoch = 0;
+  _subCodeRequestId = 0;
   subscriptionResetPin = null;
   subscriptionPinReissue = null;
   subscriptionDoNotBother = null;
@@ -588,6 +613,7 @@ export default class Fec_CaseEditNOC extends LightningElement {
           this.disableProdType = !!this.productTypeSelectedId;
           this._applyPointsRedemptionNocSelectionFromStorage();
         }
+        this._setSelectedNocDisplayNamesFromCase(res);
 
         this.isSubmited = res.FEC_Is_Submited__c;
         this.interactionViewMode = res.FEC_Interaction_View_Mode__c;
@@ -1088,7 +1114,7 @@ export default class Fec_CaseEditNOC extends LightningElement {
     if (this._incomingAccountType == null && hasExistingNOCSelection && !isInternalType) {
       this._incomingAccountType = accountType;
       this._accountContractPl = accountType;
-      this._syncProductTypeOptionsForInternalNonExisting();
+      this._refreshProductTypeOptionsForAccountContract(accountType);
       return;
     }
 
@@ -1121,8 +1147,9 @@ export default class Fec_CaseEditNOC extends LightningElement {
 
     if (isInternalType) {
       this._isInternalRequest = accountType === INTERNAL_REQUEST;
+      this._refreshProductTypeOptionsForAccountContract(accountType);
 
-      const option = this.productTypeOptionlst?.find(
+      const option = (this._productTypeOptionlstFull ?? this.productTypeOptionlst)?.find(
         (opt) => opt.label === accountType
       );
 
@@ -1140,7 +1167,7 @@ export default class Fec_CaseEditNOC extends LightningElement {
         }, 50);
       }
     } else {
-      this._syncProductTypeOptionsForInternalNonExisting();
+      this._refreshProductTypeOptionsForAccountContract(accountType);
       this.handleDisable('category');
       this.handleDisable('sub-category');
       this.handleDisable('sub-code');
@@ -1290,6 +1317,7 @@ export default class Fec_CaseEditNOC extends LightningElement {
         this._currentStageName = res.FEC_Current_Case_Stage__r?.Name || null;
         this._actualBusinessProcessCode =
           res.FEC_Actual_Nature_of_Case__r?.FEC_Business_Process__r?.FEC_Code__c || null;
+        this._setSelectedNocDisplayNamesFromCase(res);
         this.getProdType();
         this.getCategory();
         this.getSubCategory();
@@ -1460,23 +1488,28 @@ export default class Fec_CaseEditNOC extends LightningElement {
     );
   }
 
-  _filterProductTypeForInternalNonExisting(options) {
-    if (!this._isInternalCaseWithNonExistingAccount()) {
+  _filterProductTypeForInternalNonExisting(options, accountType) {
+    if (!this._isInternalCaseWithNonExistingAccount(accountType)) {
       return options ?? [];
     }
     const hidden = new Set([INTERNAL_UBANK, INTERNAL_REQUEST, UBANK_PRODUCT_NAME]);
     return (options ?? []).filter((opt) => !hidden.has(opt.label));
   }
 
-  _syncProductTypeOptionsForInternalNonExisting() {
-    if (!this._isInternalCaseWithNonExistingAccount()) {
-      return;
-    }
+  _applyProductTypeOptionList(accountType) {
+    const full = this._productTypeOptionlstFull ?? [];
+    this.productTypeOptionlst = this._filterProductTypeForInternalNonExisting(
+      full,
+      accountType,
+    );
     if (this.productTypeOptionlst?.length) {
-      this.productTypeOptionlst = this._filterProductTypeForInternalNonExisting(
-        this.productTypeOptionlst,
-      );
       this.handleChangeOption('prod-type', this.productTypeOptionlst);
+    }
+  }
+
+  _refreshProductTypeOptionsForAccountContract(accountType) {
+    if (this._productTypeOptionlstFull?.length) {
+      this._applyProductTypeOptionList(accountType);
       return;
     }
     this.getProdType();
@@ -1488,9 +1521,17 @@ export default class Fec_CaseEditNOC extends LightningElement {
         "🚀 ~ Fec_CaseEditNOC ~ getProdType ~ res:",
         JSON.stringify(res)
       );
-      this.productTypeOptionlst = this._filterProductTypeForInternalNonExisting(res);
+      //PhongBT 03/06/26: Lấy Name để hiển thị trên bộ NOC
+      this._productTypeOptionlstFull = this._ensureSelectedOptionLabel(
+        res,
+        this.productTypeSelectedId,
+        this._selectedNocDisplayNames?.productType
+      );
+      this._applyProductTypeOptionList(this._accountContractPl ?? this._incomingAccountType);
       if (this._isInternalRequest && !this.productTypeSelectedId) {
-        const internalOption = res?.find((opt) => opt.label === INTERNAL_REQUEST);
+        const internalOption = this._productTypeOptionlstFull?.find(
+          (opt) => opt.label === INTERNAL_REQUEST
+        );
 
         if (internalOption) {
           this.productTypeSelectedId = internalOption.value;
@@ -1515,7 +1556,11 @@ export default class Fec_CaseEditNOC extends LightningElement {
           "🚀 ~ Fec_CaseEditNOC ~ getCategory ~ res:",
           JSON.stringify(res)
         );
-        this.categoryOptionlst = res;
+        this.categoryOptionlst = this._ensureSelectedOptionLabel(
+          res,
+          this.categorySelectedId,
+          this._selectedNocDisplayNames?.category
+        );
 
         this.handleChangeOption("category", this.categoryOptionlst);
       })
@@ -1535,7 +1580,11 @@ export default class Fec_CaseEditNOC extends LightningElement {
           "🚀 ~ Fec_CaseEditNOC ~ getSubCategory ~ res:",
           JSON.stringify(res)
         );
-        this.subCategoryOptionlst = res;
+        this.subCategoryOptionlst = this._ensureSelectedOptionLabel(
+          res,
+          this.subCategorySelectedId,
+          this._selectedNocDisplayNames?.subCategory
+        );
 
         this.handleChangeOption("sub-category", this.subCategoryOptionlst);
       })
@@ -1544,7 +1593,39 @@ export default class Fec_CaseEditNOC extends LightningElement {
       });
   }
 
+  /**
+   * Chỉ auto-resolve/persist NOC không Sub-Code khi draft và chưa chọn Sub-Code.
+   * Tránh reload/revert (Case đã submit hoặc đã có FEC_SubCode__c) bị ghi đè null lên DB.
+   */
+  _shouldAutoResolveNocWithoutSubCode() {
+    if (this.isDisableNOC || this.isSubmited) {
+      return false;
+    }
+    return !this.subCodeSelectedId;
+  }
+
+  _resolveAndPersistNocWithoutSubCode() {
+    return getNatureOfCaseWithoutSubCode({
+      productTypeId: this.productTypeSelectedId,
+      categoryId: this.categorySelectedId,
+      subCategoryId: this.subCategorySelectedId
+    })
+      .then((noc) => {
+        this.natureOfCase = noc;
+        return this._persistSelectedNocToDatabase(noc?.Id);
+      })
+      .then(() => {
+        this.handlePublishMessageChanel();
+      })
+      .catch((e) => {
+        console.log("getNatureOfCaseWithoutSubCode err:", e);
+        this.natureOfCase = null;
+        this.handlePublishMessageChanel();
+      });
+  }
+
   getSubCode() {
+    const requestId = ++this._subCodeRequestId;
     getSubCodelst({
       recordId: this.recordId,
       productTypeId: this.productTypeSelectedId,
@@ -1552,12 +1633,19 @@ export default class Fec_CaseEditNOC extends LightningElement {
       subCategoryId: this.subCategorySelectedId
     })
       .then((res) => {
+        if (requestId !== this._subCodeRequestId) {
+          return;
+        }
         console.log(
           "🚀 ~ Fec_CaseEditNOC ~ getSubCode ~ res:",
           JSON.stringify(res)
         );
 
-        this.subCodeOptionlst = res;
+        this.subCodeOptionlst = this._ensureSelectedOptionLabel(
+          res,
+          this.subCodeSelectedId,
+          this._selectedNocDisplayNames?.subCode
+        );
 
         this.handleChangeOption("sub-code", this.subCodeOptionlst);
         // Không có option Sub-Code: resolve NOC không Sub-Code; getByCase (Apex) không fallback Sub-Code từ Case khi đã có Sub-Category từ UI.
@@ -1567,26 +1655,10 @@ export default class Fec_CaseEditNOC extends LightningElement {
           this.subCategorySelectedId;
         const noSubCodeOptions = !res || res.length === 0;
 
-        if (triple && noSubCodeOptions) {
+        if (triple && noSubCodeOptions && this._shouldAutoResolveNocWithoutSubCode()) {
           this.subCodeSelectedId = null;
           this.syncSubCodeComboValue();
-          return getNatureOfCaseWithoutSubCode({
-            productTypeId: this.productTypeSelectedId,
-            categoryId: this.categorySelectedId,
-            subCategoryId: this.subCategorySelectedId
-          })
-            .then((noc) => {
-              this.natureOfCase = noc;
-              return this._persistSelectedNocToDatabase(noc?.Id);
-            })
-            .then(() => {
-              this.handlePublishMessageChanel();
-            })
-            .catch((e) => {
-              console.log("getNatureOfCaseWithoutSubCode err:", e);
-              this.natureOfCase = null;
-              this.handlePublishMessageChanel();
-            });
+          return this._resolveAndPersistNocWithoutSubCode();
         }
       })
       .catch((err) => {

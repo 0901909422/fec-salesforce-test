@@ -235,6 +235,12 @@ public with sharing class FEC_CMSIPPBlockWS {
 
         // DisbChannel 
         Dom.XmlNode disbChannelNode = action.addChildElement('DisbChannel', null, null).addTextNode(disbChannel);
+        
+        //Nhánh FastCard
+        if (disbChannel == DEFAULT_DISB_CHANNEL) {
+            action.addChildElement('IsACL', null, null).addTextNode('true');
+            action.addChildElement('RequestType', null, null).addTextNode('false');
+        }
 
         // Account 
         Dom.XmlNode accountNode = action.addChildElement('Account', null, null).addTextNode(accountNumber);

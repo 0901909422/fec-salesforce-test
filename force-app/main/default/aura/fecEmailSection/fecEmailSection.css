@@ -857,3 +857,25 @@
     border-top: 1px solid #e5e5e5;
     padding-top: 16px;
 }
+
+/*tugnnm37 - render Gmail Drive video/file chip in email body as a clean link instead of the ugly original Gmail block*/
+.THIS .fec-email-drive-link {
+    display: inline-flex;
+    align-items: center;
+    max-width: 420px;
+    margin: 6px 0;
+    padding: 4px 8px;
+    border: 1px solid #dddbda;
+    border-radius: 4px;
+    background: #f3f2f2;
+    font-size: 12px;
+}
+.THIS .fec-email-drive-link:before {
+    content: "\1F4CE";
+    margin-right: 6px;
+}
+.THIS .fec-email-drive-link a {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}

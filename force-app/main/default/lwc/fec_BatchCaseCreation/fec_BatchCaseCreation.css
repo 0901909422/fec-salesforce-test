@@ -13,16 +13,16 @@
   border-radius: 0.5rem;
   overflow-x: hidden;
   overflow-y: visible;
-  border: 1px solid #e5e5e5;
+  border: 1px solid var(--slds-g-color-border-base-1, var(--lwc-colorBorder, #dddbda));
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
-  background: #ffffff;
+  background: var(--slds-g-color-neutral-base-100, #ffffff);
 }
 
 .fec-session-accordion {
-  --sds-c-accordion-summary-color-background: #eff0f0;
-  --sds-c-accordion-heading-font-size: 0.875rem;
-  --sds-c-accordion-heading-font-weight: 600;
-  --sds-c-accordion-heading-text-color: #16325c;
+  --slds-c-accordion-summary-color-background: var(--slds-g-color-neutral-base-95, var(--lwc-colorBackground, #f3f3f3));
+  --slds-c-accordion-heading-font-size: 0.875rem;
+  --slds-c-accordion-heading-font-weight: 600;
+  --slds-c-accordion-heading-text-color: #16325c;
   border: none;
   box-shadow: none;
 }
@@ -84,7 +84,7 @@
 .fec-import-grid__left {
   min-width: 0;
   padding-bottom: 0.65rem;
-  border-bottom: 1px solid #e5e5e5;
+  border-bottom: 1px solid var(--slds-g-color-border-base-1, var(--lwc-colorBorder, #dddbda));
 }
 
 .fec-import-grid__right {
@@ -125,7 +125,7 @@
   min-width: 0;
   min-height: 2.25rem;
   padding: 0 0.5rem 0 0.65rem;
-  border: 1px solid #dddbda;
+  border: 1px solid var(--slds-g-color-border-base-1, var(--lwc-colorBorder, #dddbda));
   border-radius: 0.25rem;
   background: #fafaf9;
 }
@@ -191,7 +191,7 @@
   min-height: 2.25rem;
   min-width: 8rem;
   padding: 0 0.65rem;
-  border: 1px solid #dddbda;
+  border: 1px solid var(--slds-g-color-border-base-1, var(--lwc-colorBorder, #dddbda));
   border-radius: 0.25rem;
   background: #fff;
   cursor: pointer;
@@ -234,7 +234,7 @@
 
 .fec-table-wrap {
   overflow-x: auto;
-  border: 1px solid #dddbda;
+  border: 1px solid var(--slds-g-color-border-base-1, var(--lwc-colorBorder, #dddbda));
   border-radius: 0.25rem;
 }
 
@@ -247,14 +247,14 @@
 
 .fec-table th,
 .fec-table td {
-  border-bottom: 1px solid #e5e5e5;
+  border-bottom: 1px solid var(--slds-g-color-border-base-1, var(--lwc-colorBorder, #dddbda));
   padding: 0.5rem 0.65rem;
   text-align: left;
   vertical-align: middle;
 }
 
 .fec-table th {
-  background: #f3f3f2;
+  background: var(--lwc-colorBackground, #f3f2f2);
   color: #16325c;
   font-weight: 600;
   white-space: nowrap;
@@ -368,7 +368,7 @@
   }
 
   .fec-import-inner {
-    border-bottom: 1px solid #e5e5e5;
+    border-bottom: 1px solid var(--slds-g-color-border-base-1, var(--lwc-colorBorder, #dddbda));
     padding-bottom: 0.65rem;
   }
 }

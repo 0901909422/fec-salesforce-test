@@ -1,6 +1,7 @@
 import LightningDatatable from "lightning/datatable";
 import radioCell    from "./fec_RadioCell.html";
 import nameLinkCell from "./fec_NameLinkCell.html";
+import conditionalTextCell from "./fec_ConditionalTextCell.html";
 
 export default class Fec_CustomDatatable extends LightningDatatable {
   static customTypes = {
@@ -13,6 +14,11 @@ export default class Fec_CustomDatatable extends LightningDatatable {
       template: nameLinkCell,
       standardCellLayout: true,
       typeAttributes: ["label", "rowId", "columnName"],
+    },
+    conditionalText: {
+      template: conditionalTextCell,
+      standardCellLayout: true,
+      typeAttributes: ["isStrikethrough"],
     },
   };
 }

@@ -59,7 +59,7 @@ export default class Fec_DoNotBotherNonExistingCustomer extends LightningElement
   maxRetry = 3;
 
   isMaxRetryReached = false;
-
+  @track initialHasDNBData = null;
   labels = {
     pageSizeLabel: FEC_RECORDS_PER_PAGE_LABEL,
     goToPageLabel: FEC_GO_TO_PAGE_LABEL,
@@ -289,68 +289,6 @@ export default class Fec_DoNotBotherNonExistingCustomer extends LightningElement
     });
   }
 
-  // async handleCheckDNB() {
-  //   this.isCheckingDNB = true;
-
-  //   try {
-  //     /*
-  //      * CHECK API ONLY
-  //      */
-  //     const result = await this.checkDNB();
-
-  //     console.log("DNB RESULT:", JSON.stringify(result));
-
-  //     this.isDNBChecked = true;
-
-  //     /*
-  //      * API FAIL
-  //      */
-  //     if (!result?.success) {
-  //       this.showToast(
-  //         "Error",
-  //         result?.errorMessage || "Check DNB failed",
-  //         "error",
-  //       );
-
-  //       return;
-  //     }
-
-  //     /*
-  //      * HAS DATA
-  //      */
-  //     const hasData = result?.result && result.result.length > 0;
-
-  //     this.hasExistingDNB = hasData;
-
-  //     this.hasDNBData = hasData;
-
-  //     // /*
-  //     //  * default selection
-  //     //  */
-  //     // this.selectedOption = hasData ? "yes" : "no";
-
-  //     /*
-  //      * IMPORTANT:
-  //      * clear table
-  //      */
-  //     this.data = [];
-
-  //     this.currentPage = 1;
-
-  //     this.updatePagedData();
-  //   } catch (e) {
-  //     console.error("handleCheckDNB ERROR", e);
-
-  //     this.showToast(
-  //       "Error",
-  //       e?.body?.message || e?.message || "Unexpected error",
-  //       "error",
-  //     );
-  //   } finally {
-  //     this.isCheckingDNB = false;
-  //   }
-  // }
-
   async handleCheckDNB() {
     /*
      * Validate NID first
@@ -362,9 +300,6 @@ export default class Fec_DoNotBotherNonExistingCustomer extends LightningElement
     this.isCheckingDNB = true;
 
     try {
-      /*
-       * CHECK API ONLY
-       */
       const result = await this.checkDNB();
 
       console.log("DNB RESULT:", JSON.stringify(result));
@@ -380,28 +315,30 @@ export default class Fec_DoNotBotherNonExistingCustomer extends LightningElement
           result?.errorMessage || "Check DNB failed",
           "error",
         );
-
         return;
       }
 
       /*
-       * HAS DATA
+       * NO DATA FOUND
        */
-      const hasData = result?.result && result.result.length > 0;
+      const hasData = Array.isArray(result?.result) && result.result.length > 0;
 
       this.hasExistingDNB = hasData;
-
       this.hasDNBData = hasData;
 
+      if (this.initialHasDNBData === null) {
+        this.initialHasDNBData = hasData;
+      }
       /*
-       * IMPORTANT:
        * clear table
        */
       this.data = [];
-
       this.currentPage = 1;
-
       this.updatePagedData();
+
+      if (!hasData) {
+        return;
+      }
     } catch (e) {
       console.error("handleCheckDNB ERROR", e);
 
@@ -521,6 +458,10 @@ export default class Fec_DoNotBotherNonExistingCustomer extends LightningElement
   }
 
   get hasDataAtDNB() {
+    if (this.initialHasDNBData !== null) {
+      return this.initialHasDNBData;
+    }
+
     return this.hasDNBData;
   }
 
@@ -749,22 +690,17 @@ export default class Fec_DoNotBotherNonExistingCustomer extends LightningElement
          */
         await updateDNBProcessCount({
           caseId: this.recordId,
-
           isSuccess: true,
         });
 
-        /*
-         * Success state
-         */
+        this.syncUIValuesBeforeReadonly();
+
         this.isDNBUpdated = true;
 
         this.isReadonlyMode = true;
 
         this.applyReadonlyState();
 
-        /*
-         * Publish LMS
-         */
         this.publishReadonlyMessage();
 
         this.showToast("Success", "DNB created successfully", "success");
@@ -772,9 +708,10 @@ export default class Fec_DoNotBotherNonExistingCustomer extends LightningElement
         /*
          * BUSINESS ERROR
          */
-        let errorMessage = result?.sys?.message || "Unknown error";
+        let errorMessage =
+          result?.errorMessage || result?.description || "Unknown error";
 
-        const invalidFields = (result?.result || [])
+        const invalidFields = (result?.resultList || [])
           .flatMap((item) => item?.list_invalid || [])
           .filter(Boolean)
           .join(", ");
@@ -888,7 +825,7 @@ export default class Fec_DoNotBotherNonExistingCustomer extends LightningElement
           row.channel === "Email"
             ? row.contact
             : this.normalizePhone(row.contact),
-        contract_id: this.contractId || "UNKNOWN",
+        // contract_id: this.contractId || "UNKNOWN",
       }));
   }
   mapType(channel) {
@@ -966,30 +903,46 @@ export default class Fec_DoNotBotherNonExistingCustomer extends LightningElement
     );
   }
 
+  // syncUIValuesBeforeReadonly() {
+  //   this.data = this.data.map((row) => {
+  //     /*
+  //      * Only submitted rows
+  //      */
+  //     if (!row.active) {
+  //       return row;
+  //     }
+
+  //     return {
+  //       ...row,
+
+  //       /*
+  //        * Persist current UI values
+  //        */
+  //       originalReasonLabel: this.getReasonLabel(row.originalReason),
+
+  //       updateReasonLabel: this.getReasonLabel(row.updateReason),
+
+  //       remarks: row.remarks || "-",
+  //     };
+  //   });
+
+  //   this.updatePagedData();
+  // }
+
   syncUIValuesBeforeReadonly() {
-    this.data = this.data.map((row) => {
-      /*
-       * Only submitted rows
-       */
-      if (!row.active) {
-        return row;
-      }
+    this.data = this.data.map((row) => ({
+      ...row,
 
-      return {
-        ...row,
+      originalReasonLabel: this.getReasonLabel(row.originalReason),
 
-        /*
-         * Persist current UI values
-         */
-        originalReasonLabel: this.getReasonLabel(row.originalReason),
+      updateReasonLabel: row.updateReason
+        ? this.getReasonLabel(row.updateReason)
+        : "",
 
-        updateReasonLabel: this.getReasonLabel(row.updateReason),
+      remarks: row.remarks || "",
+    }));
 
-        remarks: row.remarks || "-",
-      };
-    });
-
-    this.updatePagedData();
+    this.refreshData();
   }
 
   showToast(title, message, variant, mode = "dismissable") {
@@ -1041,16 +994,28 @@ export default class Fec_DoNotBotherNonExistingCustomer extends LightningElement
       return true;
     }
 
-    /*
-     * HANDLING MODE
-     */
-    return this.isReadonlyMode;
+    // /*
+    //  * HANDLING MODE
+    //  */
+    // return this.isReadonlyMode;
   }
 
   get showUpdateButton() {
     return (
       !this.isReadonlyMode && !this.isDNBUpdated && !this.isMaxRetryReached
     );
+  }
+
+  get isActionLocked() {
+    return this.isReadonlyMode || this.isDNBUpdated || this.isMaxRetryReached;
+  }
+
+  get isUpdateButtonDisabled() {
+    return this.isUpdateDisabled || this.isActionLocked;
+  }
+
+  get isCheckDNBDisabled() {
+    return this.isCheckingDNB;
   }
 
   //FECREDIT_CSM_2025_KH-1561
