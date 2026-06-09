@@ -139,8 +139,13 @@
     </types>
     <types>
         <members>FEC_Customer_Case_Record_Page</members>
+        <members>Master_Data_Setting_Record_Page</members>
         <name>FlexiPage</name>
     </types>
+    <types>
+        <members>FEC_Master_Data_Setting__c-Master Data Setting Layout</members>
+        <name>Layout</name>
+	</types>
     <types>
         <members>fec_AccountOrContractPicklistContainer</members>
         <members>fec_AccountOrContractPicklistCustomerCase</members>
