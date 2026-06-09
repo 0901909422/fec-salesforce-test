@@ -54,6 +54,7 @@
         <members>FEC_CustomerAdditionalDataController</members>
         <members>FEC_CustomerAddDataController_Test</members>
         <members>FEC_CustomerIntegrationService</members>
+        <members>FEC_CustomerIntegrationService_Test</members>
         <members>FEC_DNBHandler</members>
         <members>FEC_DNBHandler_Test</members>
         <members>FEC_DownloadReportController</members>
