@@ -623,6 +623,25 @@
             var range = sel.getRangeAt(0);
             var editorEl = quill.root;
 
+            // Handle Enter natively so caret stays at the current cursor position.
+            if (e.keyCode === 13) {
+                e.preventDefault();
+                e.stopImmediatePropagation();
+
+                var br = document.createElement('br');
+                var spacer = document.createTextNode('\u200B');
+                range.deleteContents();
+                range.insertNode(spacer);
+                range.insertNode(br);
+
+                var nextRange = document.createRange();
+                nextRange.setStartAfter(spacer);
+                nextRange.collapse(true);
+                sel.removeAllRanges();
+                sel.addRange(nextRange);
+                return;
+            }
+
             // Template HTML is injected directly into the editor, so Quill's internal delta
             // may not know about all nodes. For Backspace/Delete, bypass Quill keyboard
             // handlers and let the browser edit the real DOM natively.
