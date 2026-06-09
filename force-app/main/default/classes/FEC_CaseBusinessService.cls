@@ -2860,7 +2860,10 @@ public without sharing class FEC_CaseBusinessService {
           teamUserGroup,
           queueId
         );
-      if (!routeByLatestRevertHistory) {
+      if (
+        !routeByLatestRevertHistory &&
+        FEC_BlockCodeRoutingService.isCaseAtStageOne(updatedCase)
+      ) {
         if (
           FEC_BlockCodeRoutingService.isClientBlockCodeForcedOmDay2ForRc27Route(
             updatedCase,
