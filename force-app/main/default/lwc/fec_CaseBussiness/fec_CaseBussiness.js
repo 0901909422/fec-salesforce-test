@@ -504,6 +504,7 @@ import {
   CASE_RD_PAYMENT_CONTRACT_ASSESSMENT,
   FIELD_RD_PAYMENT_CONTRACT_ASSESSMENT,
   isRdPaymentSubCode,
+  isRdPaymentCloseWithoutStatement,
   setRdPaymentScopedStageTeamMap,
   getRdPaymentScopedStageTeam,
 } from "c/fec_RdPaymentRoutingUtils";
@@ -3895,7 +3896,24 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
 
         // Toannd61 — RD Payment Assessment (backup: adHocFieldlst switch)
         case CASE_RD_PAYMENT_CONTRACT_ASSESSMENT:
-          toRouteTo = !!value && value !== STR_EMPTY;
+          if (
+            this._isRdPaymentSubCode &&
+            !isMrcRl05Branch(this.business) &&
+            value &&
+            value !== STR_EMPTY
+          ) {
+            const rdPayOpts =
+              this.business?.picklistOptionsMap?.Case?.[
+                FIELD_RD_PAYMENT_CONTRACT_ASSESSMENT
+              ];
+            if (isRdPaymentCloseWithoutStatement(value, rdPayOpts)) {
+              toResolve = true;
+            } else {
+              toRouteTo = true;
+            }
+          } else if (value && value !== STR_EMPTY) {
+            toRouteTo = true;
+          }
           break;
 
         default:

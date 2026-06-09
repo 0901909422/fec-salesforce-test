@@ -20,6 +20,7 @@
         <members>FEC_CommonUltils</members>
         <members>FEC_GetCSMasterDataByCodeService</members>
         <members>FEC_ConstantCommon</members>
+        <members>FEC_RdPaymentRoutingHelper</members>
         <name>ApexClass</name>
     </types>
     <types>
@@ -32,6 +33,7 @@
         <members>fec_BatchCaseCreation</members>
         <members>fec_BatchDataCreation</members>
         <members>fec_CaseBussiness</members>
+        <members>fec_CaseBussinessScopedRoutingIntegration</members>
         <members>fec_CaseEditNOC</members>
         <members>fec_DoNotBotherExistingCustomer</members>
         <members>fec_DoNotBotherNonExistingCustomer</members>
@@ -39,6 +41,7 @@
         <members>fecInteractionCreationHighlight</members>
         <members>fecInteractionInfo</members>
         <members>fec_Search</members>
+        <members>fec_RdPaymentRoutingUtils</members>
         <name>LightningComponentBundle</name>
     </types>
     <types>
