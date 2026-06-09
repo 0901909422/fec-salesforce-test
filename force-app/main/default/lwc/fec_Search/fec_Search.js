@@ -1781,11 +1781,15 @@ hasAnySearchCriteria(params) {
   //linhdev Fix jira FECREDIT_CSM_2025_KH-1243
   get isDisplayCreateCase() {
     return (
+      !this.isSearchServiceError &&
       (this.isCreateCaseTab ||
-        this.tabName === 'FEC_Customer_Search' ||
         this.tabName === 'FEC_Account_Contract_Search' ||
-        !!this.recordId) &&
-      !this.isSearchServiceError
+        this.showSkipButton ||
+        this.isListView ||
+        this.caseRecordTypeName === 'Internal Case' ||
+        this.caseRecordTypeName === 'Interaction' || 
+        this.caseRecordTypeName === 'Customer Case' ||
+        this.caseRecordTypeName === 'Search Interaction')
     );
   }
 
