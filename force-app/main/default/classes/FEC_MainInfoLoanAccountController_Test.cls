@@ -149,12 +149,13 @@ private class FEC_MainInfoLoanAccountController_Test {
         update cust;
 
         Test.startTest();
-        Map<String, Object> result =
+        try {
             FEC_MainInfoLoanAccountController.loadLoanAccountInfo(c.Id);
+            System.assert(false, 'Blank contract phải throw AuraHandledException.');
+        } catch (AuraHandledException e) {
+            System.assertNotEquals(null, e.getMessage());
+        }
         Test.stopTest();
-
-        System.assertNotEquals(null, result);
-        System.assertEquals(null, result.get('contractNumber'));
     }
 
     @IsTest
@@ -293,12 +294,13 @@ private class FEC_MainInfoLoanAccountController_Test {
         Test.setMock(HttpCalloutMock.class, new LoanAccountErrorHttpMock());
 
         Test.startTest();
-        Map<String, Object> result =
+        try {
             FEC_MainInfoLoanAccountController.loadLoanAccountInfo(c.Id);
+            System.assert(false, 'API failure phải throw AuraHandledException.');
+        } catch (AuraHandledException e) {
+            System.assertNotEquals(null, e.getMessage());
+        }
         Test.stopTest();
-
-        System.assertNotEquals(null, result);
-        System.assertEquals(CONTRACT_NUMBER, result.get('contractNumber'));
     }
 
     @IsTest

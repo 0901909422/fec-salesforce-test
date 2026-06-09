@@ -701,9 +701,10 @@ export default class Fec_DoNotBotherExistingCustomer extends LightningElement {
         /*
          * BUSINESS ERROR
          */
-        let errorMessage = result?.sys?.message || "Unknown error";
+        let errorMessage =
+          result?.errorMessage || result?.description || "Unknown error";
 
-        const invalidFields = (result?.result || [])
+        const invalidFields = (result?.resultList || [])
           .flatMap((item) => item?.list_invalid || [])
           .filter(Boolean)
           .join(", ");
@@ -775,6 +776,7 @@ export default class Fec_DoNotBotherExistingCustomer extends LightningElement {
         remarks: row.remarks,
         full_name: this.customerName || "UNKNOWN",
         nid: this.nationalId || "000000000000",
+        // nid:  "001098035301",
         do_not_bother: true,
         type: this.mapType(row.channel),
         type_value:
