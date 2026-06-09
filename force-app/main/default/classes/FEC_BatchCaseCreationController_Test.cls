@@ -820,6 +820,30 @@ private class FEC_BatchCaseCreationController_Test {
             LIMIT 1
         ];
         System.assertNotEquals(null, refreshed.FEC_Status__c);
+
+        //09/06/2026 dungLTdev: Verify Routing Action History qua luồng processPendingBatchImport (UI).
+        List<Case> customerCases = [
+            SELECT Id
+            FROM Case
+            WHERE Subject LIKE 'Welcome Call Case - 20140807-103046-0001%'
+            ORDER BY CreatedDate DESC
+            LIMIT 1
+        ];
+        System.assertEquals(1, customerCases.size(), 'Welcome pending import phải tạo Customer Case.');
+        List<FEC_Routing_Action_History__c> histories = [
+            SELECT FEC_Routing_Action__c, FEC_Routing_Action_Type__c, FEC_Current_Status__c,
+                FEC_Changed_Status__c
+            FROM FEC_Routing_Action_History__c
+            WHERE FEC_Case__c = :customerCases[0].Id
+        ];
+        System.assertEquals(1, histories.size(), 'Resolved Welcome pending import phải tạo Routing Action History.');
+        System.assertEquals(FEC_CaseBusinessService.RESOLVE, histories[0].FEC_Routing_Action__c);
+        System.assertEquals('Case', histories[0].FEC_Routing_Action_Type__c);
+        System.assertEquals(FEC_ConstantCommon.CASE_STATUS_OPEN, histories[0].FEC_Current_Status__c);
+        System.assertEquals(
+            FEC_ConstantCommon.CASE_STATUS_RESOLVED_COMPLETED,
+            histories[0].FEC_Changed_Status__c
+        );
     }
 
     @IsTest

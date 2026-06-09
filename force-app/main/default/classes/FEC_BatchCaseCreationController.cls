@@ -1407,6 +1407,9 @@ public without sharing class FEC_BatchCaseCreationController {
         List<CaseRowResult> rowResults,
         Id importerUserId
     ) {
+        //09/06/2026 dungLTdev: Luồng UI import (processPendingBatchImport) — gom payload Resolve history.
+        List<FEC_BCC_CreationResolveHistService.CreationResolveHistoryItem> resolveHistoryItems =
+            new List<FEC_BCC_CreationResolveHistService.CreationResolveHistoryItem>();
         Id intRt = FEC_CommonUltils.getRecordTypeIdByDev(FEC_ConstantCommon.CASE_INTERACTION_RECORD_TYPE_DEV_NAME);
         Id custRt = FEC_BatchImportCommon.getCustomerCaseRecordTypeId();
         if (intRt == null) {
@@ -1513,6 +1516,14 @@ public without sharing class FEC_BatchCaseCreationController {
                         rr.recordId = '';
                         rr.fecIdSearch = '';
                         rr.errors = remarkError;
+                    } else {
+                        //09/06/2026 dungLTdev: Case Status Resolved-* — gom item tạo FEC_Routing_Action_History__c.
+                        FEC_BCC_CreationResolveHistService.collectItemIfResolvedStatus(
+                            resolveHistoryItems,
+                            rr,
+                            customerCaseId,
+                            customerCases[k].Status
+                        );
                     }
                 } else {
                     rr.status = 'Failed';
@@ -1526,6 +1537,8 @@ public without sharing class FEC_BatchCaseCreationController {
                 }
             }
         }
+        //09/06/2026 dungLTdev: Insert Routing Action History Resolve sau khi tạo Case import thành công.
+        FEC_BCC_CreationResolveHistService.applyAfterCreationBulk(resolveHistoryItems);
     }
 
     private static void insertStandardCasesWithInteraction(
@@ -1533,6 +1546,9 @@ public without sharing class FEC_BatchCaseCreationController {
         List<CaseRowResult> rowResults,
         Id importerUserId
     ) {
+        //09/06/2026 dungLTdev: Luồng UI import (processPendingBatchImport) — gom payload Resolve history.
+        List<FEC_BCC_CreationResolveHistService.CreationResolveHistoryItem> resolveHistoryItems =
+            new List<FEC_BCC_CreationResolveHistService.CreationResolveHistoryItem>();
         Id intRt = FEC_CommonUltils.getRecordTypeIdByDev(FEC_ConstantCommon.CASE_INTERACTION_RECORD_TYPE_DEV_NAME);
         Id custRt = FEC_BatchImportCommon.getCustomerCaseRecordTypeId();
         if (intRt == null) {
@@ -1639,6 +1655,14 @@ public without sharing class FEC_BatchCaseCreationController {
                         rr.recordId = '';
                         rr.fecIdSearch = '';
                         rr.errors = remarkError;
+                    } else {
+                        //09/06/2026 dungLTdev: Case Status Resolved-* — gom item tạo FEC_Routing_Action_History__c.
+                        FEC_BCC_CreationResolveHistService.collectItemIfResolvedStatus(
+                            resolveHistoryItems,
+                            rr,
+                            customerCaseId,
+                            customerCases[k].Status
+                        );
                     }
                 } else {
                     rr.status = 'Failed';
@@ -1651,6 +1675,8 @@ public without sharing class FEC_BatchCaseCreationController {
                 }
             }
         }
+        //09/06/2026 dungLTdev: Insert Routing Action History Resolve sau khi tạo Case import thành công.
+        FEC_BCC_CreationResolveHistService.applyAfterCreationBulk(resolveHistoryItems);
     }
 
     private static String buildSubject(String contractNumber) {
