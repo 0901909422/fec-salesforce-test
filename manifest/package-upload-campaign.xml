@@ -70,5 +70,24 @@
         <members>FEC_SheetJSStyle</members>
         <name>StaticResource</name>
     </types>
+    <types>
+        <members>Upload_Outbound_Campaign</members>
+        <name>PermissionSet</name>
+    </types>
+    <types>
+        <members>FEC_PSG_CS_CS_Ecom_Team_Leader</members>
+        <members>FEC_PSG_CS_CS_Inbound_Team_Leader</members>
+        <members>FEC_PSG_CS_CS_Outbound_Team_Leader</members>
+        <members>FEC_PSG_CS_CS_Support_Manager</members>
+        <members>FEC_PSG_CS_Office_Based_Team_Leader</members>
+        <members>FEC_PSG_CS_Senior_CS_Support_Specialist</members>
+        <members>FEC_PSG_CS_Unit_Head_of_CS_Ecom</members>
+        <members>FEC_PSG_CS_Unit_Head_of_CS_Inbound</members>
+        <members>FEC_PSG_CS_Unit_Head_of_CS_Outbound</members>
+        <members>FEC_PSG_CS_Unit_Head_of_CS_Support</members>
+        <members>FEC_PSG_CS_Unit_Head_of_Office_Based</members>
+        <members>PSG_RD_IT_User</members>
+        <name>PermissionSetGroup</name>
+    </types>
     <version>65.0</version>
 </Package>
