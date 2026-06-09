@@ -1,6 +1,5 @@
 <template>
     <div class="flow-config-container">
-        
         <template if:true={shouldShowFlow}>
             <lightning-card>
                 <div slot="title">
@@ -11,37 +10,38 @@
                 </div>
                 <div slot="actions">
                     <template lwc:if={isBusinessProcess}>
-                        <lightning-button label={labelAddStage} icon-name="utility:add" onclick={handleAddStage}
-                            variant="brand-outline" class="slds-m-left_small">
-                        </lightning-button>
+                        <lightning-button label={labelAddStage} icon-name="utility:add" onclick={handleAddStage} variant="brand-outline" class="slds-m-left_small"></lightning-button>
                     </template>
                 </div>
-
                 <div class="compact-flow-wrapper">
                     <div class="flow-stages">
                         <template for:each={stagesList} for:item="stage" for:index="index">
                             <div key={stage.id} class="stage-wrapper">
                                 <div class={stage.cssClass} data-stage-id={stage.id} onclick={handleStageClick}>
                                     <div class="stage-number">{stage.order}</div>
+                                    <template lwc:if={stage.defaultStage}>
+                                        <div class="stage-type-label">
+                                            <lightning-icon icon-name="utility:play" size="xx-small" variant="inverse" class="stage-type-icon"></lightning-icon>
+                                            <span>START</span>
+                                        </div>
+                                    </template>
+                                    <template lwc:if={stage.endStage}>
+                                        <div class="stage-type-label">
+                                            <lightning-icon icon-name="utility:stop" size="xx-small" variant="inverse" class="stage-type-icon"></lightning-icon>
+                                            <span>END</span>
+                                        </div>
+                                    </template>
                                     <div class="stage-name">{stage.label}</div>
                                 </div>
-                                
                                 <div class="stage-hover-actions">
-                                    <lightning-button-icon icon-name="utility:edit" variant="bare"
-                                        size="xx-small" alternative-text={labelAltEdit} data-stage-id={stage.id}
-                                        onclick={handleEditStageName} class="action-button-edit" title="Edit">
-                                    </lightning-button-icon>
-                                    <lightning-button-icon icon-name="utility:delete" variant="bare"
-                                        size="xx-small" alternative-text={labelAltRemove} data-stage-id={stage.id}
-                                        onclick={handleRemoveStage} class="action-button-delete" title="Delete">
-                                    </lightning-button-icon>
+                                    <lightning-button-icon icon-name="utility:edit" variant="bare" size="xx-small" alternative-text={labelAltEdit} data-stage-id={stage.id} onclick={handleEditStageName} class="action-button-edit" title="Edit"></lightning-button-icon>
+                                    <!-- Stage Screens hidden — feature not in use -->
+                                    <lightning-button-icon icon-name="utility:delete" variant="bare" size="xx-small" alternative-text={labelAltRemove} data-stage-id={stage.id} onclick={handleRemoveStage} class="action-button-delete" title="Delete"></lightning-button-icon>
                                 </div>
-
                                 <template if:false={stage.isLast}>
                                     <div class="stage-connector">
                                         <svg width="28" height="35" viewBox="0 0 28 35">
-                                            <path d="M 0 17.5 L 18 17.5 L 13 12.5 M 18 17.5 L 13 22.5" stroke="currentColor"
-                                                stroke-width="2" fill="none" />
+                                            <path d="M 0 17.5 L 18 17.5 L 13 12.5 M 18 17.5 L 13 22.5" stroke="currentColor" stroke-width="2" fill="none" />
                                         </svg>
                                     </div>
                                 </template>
@@ -51,8 +51,96 @@
                 </div>
             </lightning-card>
 
+            <!-- Stage Screen Table -->
+            <template lwc:if={showStageScreenSection}>
+                <lightning-card class="slds-m-top_medium">
+                    <div slot="title">
+                        <div class="card-title">
+                            <lightning-icon icon-name="utility:table" size="small" class="title-icon"></lightning-icon>
+                            <span class="title-text">Stage Screens</span>
+                        </div>
+                    </div>
+                    <div slot="actions">
+                        <template lwc:if={isBusinessProcess}>
+                            <lightning-button label="Add Action Button" icon-name="utility:add" onclick={handleAddScreen} variant="brand-outline" class="slds-m-left_small"></lightning-button>
+                        </template>
+                    </div>
+                    <div class="slds-p-horizontal_medium slds-p-bottom_medium">
+                        <template lwc:if={isLoadingScreens}>
+                            <div class="slds-align_absolute-center slds-p-around_medium">
+                                <lightning-spinner alternative-text="Loading" size="small"></lightning-spinner>
+                            </div>
+                        </template>
+                        <template lwc:if={hasStageScreens}>
+                            <table class="slds-table slds-table_cell-buffer slds-table_bordered slds-table_striped">
+                                <thead>
+                                    <tr class="slds-line-height_reset">
+                                        <th scope="col"><div class="slds-truncate" title="Action Button Name">Action Button Name</div></th>
+                                        <th scope="col"><div class="slds-truncate" title="User Group">User Group</div></th>
+                                        <th scope="col"><div class="slds-truncate" title="Active">Active</div></th>
+                                        <th scope="col"><div class="slds-truncate" title="Code">Code</div></th>
+                                        <th scope="col"><div class="slds-truncate" title="Actions">Actions</div></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <template for:each={stageScreens} for:item="screen">
+                                        <tr key={screen.id}>
+                                            <td><div class="slds-truncate">{screen.actionButtonName}</div></td>
+                                            <td><div class="slds-truncate">{screen.userGroup}</div></td>
+                                            <td>
+                                                <lightning-input type="toggle" checked={screen.active} data-screen-id={screen.id} onchange={handleToggleScreenActive} label="Active" variant="label-hidden" message-toggle-active="" message-toggle-inactive=""></lightning-input>
+                                            </td>
+                                            <td><div class="slds-truncate">{screen.code}</div></td>
+                                            <td>
+                                                <lightning-button-icon icon-name="utility:delete" variant="bare" size="small" alternative-text="Delete" data-screen-id={screen.id} onclick={handleDeleteScreen} class="slds-text-color_error"></lightning-button-icon>
+                                            </td>
+                                        </tr>
+                                    </template>
+                                </tbody>
+                            </table>
+                        </template>
+                        <template lwc:if={showEmptyScreenMessage}>
+                            <div class="slds-align_absolute-center slds-p-around_medium slds-text-color_weak">
+                                Chưa có Action Button nào được gắn cho stage này
+                            </div>
+                        </template>
+                    </div>
+                </lightning-card>
+            </template>
+
+            <template lwc:if={showAddScreenModal}>
+                <section role="dialog" tabindex="-1" class="slds-modal slds-fade-in-open slds-modal_medium">
+                    <div class="slds-modal__container">
+                        <header class="slds-modal__header">
+                            <button class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse" title="Close" onclick={handleCancelAddScreen}>
+                                <lightning-icon icon-name="utility:close" alternative-text="close" variant="inverse" size="small"></lightning-icon>
+                            </button>
+                            <h2 class="slds-text-heading_medium">Add Action Button</h2>
+                        </header>
+                        <div class="slds-modal__content slds-p-around_medium">
+                            <div class="slds-grid slds-wrap slds-gutters">
+                                <div class="slds-col slds-size_1-of-1 slds-p-bottom_small">
+                                    <lightning-combobox label="Action Button" value={newScreenActionButtonId} options={actionButtonOptions} onchange={handleChangeNewScreenActionButton} placeholder="Select an Action Button" required></lightning-combobox>
+                                </div>
+                                <div class="slds-col slds-size_1-of-1 slds-p-bottom_small">
+                                    <lightning-dual-listbox label="User Group" source-label="Available" selected-label="Selected" options={userGroupOptions} value={newScreenUserGroup} onchange={handleChangeNewScreenUserGroup}></lightning-dual-listbox>
+                                </div>
+                                <div class="slds-col slds-size_1-of-1 slds-p-bottom_small">
+                                    <lightning-input label="Active" type="checkbox" checked={newScreenActive} onchange={handleChangeNewScreenActive}></lightning-input>
+                                </div>
+                            </div>
+                        </div>
+                        <footer class="slds-modal__footer">
+                            <lightning-button label="Cancel" onclick={handleCancelAddScreen} class="slds-m-right_x-small"></lightning-button>
+                            <lightning-button label="Save" variant="brand" onclick={handleSaveScreen}></lightning-button>
+                        </footer>
+                    </div>
+                </section>
+                <div class="slds-backdrop slds-backdrop_open"></div>
+            </template>
+
             <template lwc:if={showEditModal}>
-                <section role="dialog" tabindex="-1" class="slds-modal slds-fade-in-open">
+                <section role="dialog" tabindex="-1" class="slds-modal slds-fade-in-open slds-modal_medium">
                     <div class="slds-modal__container">
                         <header class="slds-modal__header">
                             <button class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse" title="Close" onclick={handleCancelEdit}>
@@ -61,11 +149,48 @@
                             <h2 class="slds-text-heading_medium">{labelAltEdit}</h2>
                         </header>
                         <div class="slds-modal__content slds-p-around_medium">
-                            <lightning-input label="Stage Name" value={editingStageName} onchange={handleStageNameChange}></lightning-input>
+                            <div class="slds-grid slds-wrap slds-gutters">
+                                <div class="slds-col slds-size_1-of-2 slds-p-bottom_small">
+                                    <lightning-input label="Stage Name" value={editingStageName} onchange={handleChangeName} required></lightning-input>
+                                </div>
+                                <div class="slds-col slds-size_1-of-2 slds-p-bottom_small">
+                                    <lightning-input label="Name VN" value={editingNameVN} onchange={handleChangeNameVN}></lightning-input>
+                                </div>
+                                <div class="slds-col slds-size_1-of-2 slds-p-bottom_small">
+                                    <lightning-input label="Alias" value={editingAlias} onchange={handleChangeAlias}></lightning-input>
+                                </div>
+                                <div class="slds-col slds-size_1-of-2 slds-p-bottom_small">
+                                    <template lwc:if={showPosOrderField}>
+                                        <div class="slds-form-element">
+                                            <label class="slds-form-element__label">Pos Order</label>
+                                            <div class="slds-form-element__control">
+                                                <input type="text" class="slds-input" value={editingPosOrder} maxlength="2" inputmode="numeric" pattern="[0-9]*" onkeydown={handlePosOrderKeyDown} oninput={handlePosOrderInput} onchange={handleChangePosOrder} />
+                                            </div>
+                                        </div>
+                                    </template>
+                                </div>
+                                <div class="slds-col slds-size_1-of-2 slds-p-bottom_small">
+                                    <lightning-input label="Active" type="checkbox" checked={editingActive} onchange={handleChangeActive}></lightning-input>
+                                </div>
+                                <div class="slds-col slds-size_1-of-2 slds-p-bottom_small">
+                                    <lightning-input label="Status Name" value={editingStatusName} onchange={handleChangeStatusName}></lightning-input>
+                                </div>
+                                <div class="slds-col slds-size_1-of-2 slds-p-bottom_small">
+                                    <lightning-input label="Default Stage" type="checkbox" checked={editingDefaultStage} disabled></lightning-input>
+                                </div>
+                                <div class="slds-col slds-size_1-of-2 slds-p-bottom_small">
+                                    <template lwc:if={editingEndStage}>
+                                        <lightning-input label="End Stage" type="checkbox" checked={editingEndStage} disabled></lightning-input>
+                                    </template>
+                                </div>
+                                <div class="slds-col slds-size_1-of-1 slds-p-bottom_small">
+                                    <lightning-dual-listbox label="User Group" source-label="Available" selected-label="Selected" options={userGroupOptions} value={editingUserGroup} onchange={handleChangeUserGroup}></lightning-dual-listbox>
+                                </div>
+                            </div>
                         </div>
                         <footer class="slds-modal__footer">
                             <lightning-button label="Cancel" onclick={handleCancelEdit} class="slds-m-right_x-small"></lightning-button>
-                            <lightning-button label="Save" variant="brand" onclick={handleSaveStageName}></lightning-button>
+                            <lightning-button label="Save" variant="brand" onclick={handleSaveStage}></lightning-button>
                         </footer>
                     </div>
                 </section>

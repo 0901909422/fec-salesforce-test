@@ -1,6 +1,41 @@
 @IsTest
 private class FEC_CaseEditNOCController_Test {
 
+    private static void ensureTestUserGroupAndMainQueue() {
+        Map<String, Schema.SObjectField> userFields = User.SObjectType.getDescribe().fields.getMap();
+        User runUser = new User(Id = UserInfo.getUserId());
+        Boolean needsUpdate = false;
+
+        if (userFields.containsKey('FEC_User_Group__c')) {
+            runUser.FEC_User_Group__c = 'CC';
+            needsUpdate = true;
+        }
+        if (userFields.containsKey('FEC_Main_Queue__c')) {
+            List<Group> queues = [
+                SELECT DeveloperName
+                FROM Group
+                WHERE Type = 'Queue'
+                  AND DeveloperName = :FEC_ConstantCommon.QUEUE_DQ_CS_SUPPORT_NAME
+                LIMIT 1
+            ];
+            if (queues.isEmpty()) {
+                Group q = new Group(
+                    Name = 'NOC Test CS Support Queue',
+                    DeveloperName = FEC_ConstantCommon.QUEUE_DQ_CS_SUPPORT_NAME,
+                    Type = 'Queue'
+                );
+                insert q;
+                runUser.FEC_Main_Queue__c = q.DeveloperName;
+            } else {
+                runUser.FEC_Main_Queue__c = queues[0].DeveloperName;
+            }
+            needsUpdate = true;
+        }
+        if (needsUpdate) {
+            update runUser;
+        }
+    }
+
     @TestSetup
     static void setupData() {
         // 1. Tạo cấu trúc Master Data Nature of Case nền tảng
@@ -40,9 +75,9 @@ private class FEC_CaseEditNOCController_Test {
         );
         insert new List<FEC_Nature_of_Case__c>{nocFull, nocWithoutSubCode};
 
-        // 3. Gán User Group cho user chạy test (khớp NOC — INCLUDES trong controller)
+        // 3. Gán User Group + Main Queue cho user chạy test (khớp NOC — INCLUDES trong controller)
         System.runAs(new User(Id = UserInfo.getUserId())) {
-            update new User(Id = UserInfo.getUserId(), FEC_User_Group__c = 'CC');
+            ensureTestUserGroupAndMainQueue();
         }
 
         // 4. Khởi tạo các bản ghi chức năng và Case mồi

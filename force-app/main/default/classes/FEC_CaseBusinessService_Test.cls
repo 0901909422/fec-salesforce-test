@@ -1,6 +1,34 @@
 @IsTest
 private class FEC_CaseBusinessService_Test {
 
+    private static String picklistValue(String objectApi, String fieldApi, String preferred) {
+        Schema.SObjectType token = Schema.getGlobalDescribe().get(objectApi);
+        if (token == null) {
+            return preferred;
+        }
+        Map<String, Schema.SObjectField> fieldMap = token.getDescribe().fields.getMap();
+        if (!fieldMap.containsKey(fieldApi)) {
+            return preferred;
+        }
+        Schema.DescribeFieldResult describe = fieldMap.get(fieldApi).getDescribe();
+        if (describe.getType() != Schema.DisplayType.PICKLIST) {
+            return preferred;
+        }
+        String fallback;
+        for (Schema.PicklistEntry entry : describe.getPicklistValues()) {
+            if (!entry.isActive()) {
+                continue;
+            }
+            if (fallback == null) {
+                fallback = entry.getValue();
+            }
+            if (preferred != null && entry.getValue().equalsIgnoreCase(preferred)) {
+                return entry.getValue();
+            }
+        }
+        return fallback != null ? fallback : preferred;
+    }
+
     private static User testRunAsUser() {
         List<User> admins = [
             SELECT Id
@@ -59,6 +87,10 @@ private class FEC_CaseBusinessService_Test {
             ManagerId = managerUser.Id
         );
         insert testAgent;
+
+        // Assign Permission Sets để đảm bảo FLS cho custom objects
+        FEC_TestDataFactory.assignStandardFECPermissions(testAgent.Id);
+        FEC_TestDataFactory.assignStandardFECPermissions(managerUser.Id);
 
         System.runAs(testAgent) {
             FEC_Business_Process__c bp = new FEC_Business_Process__c(
@@ -336,7 +368,11 @@ private class FEC_CaseBusinessService_Test {
                 FEC_Section__c = 'Case Information',
                 FEC_Sub_Section__c = 'Original Info',
                 FEC_Sub_Section_Order__c = 1,
-                FEC_Type__c = FEC_CaseBusinessService.TYPE_LWC,
+                FEC_Type__c = picklistValue(
+                    'FEC_Master_Data_Setting__c',
+                    'FEC_Type__c',
+                    FEC_CaseBusinessService.TYPE_LWC
+                ),
                 FEC_LWC_Name__c = FEC_CaseBusinessService.LWC_INCORRECT_PAYMENT_FORM,
                 FEC_Field_Status__c = true,
                 FEC_Field_Editable__c = true
@@ -347,7 +383,11 @@ private class FEC_CaseBusinessService_Test {
                 FEC_Section__c = 'Case Information',
                 FEC_Sub_Section__c = 'Original Info',
                 FEC_Sub_Section_Order__c = 1,
-                FEC_Type__c = FEC_CaseBusinessService.TYPE_LWC,
+                FEC_Type__c = picklistValue(
+                    'FEC_Master_Data_Setting__c',
+                    'FEC_Type__c',
+                    FEC_CaseBusinessService.TYPE_LWC
+                ),
                 FEC_LWC_Name__c = FEC_ConstantCommon.ORIGINAL_LWC_COF,
                 FEC_Field_Status__c = true,
                 FEC_Field_Editable__c = true
@@ -369,7 +409,11 @@ private class FEC_CaseBusinessService_Test {
                 FEC_Stage_Name__c = gsrStage2.Id,
                 FEC_Section__c = 'Case Information',
                 FEC_Sub_Section__c = 'Assignment List',
-                FEC_Type__c = FEC_CaseBusinessService.TYPE_ASSIGNMENT,
+                FEC_Type__c = picklistValue(
+                    'FEC_Master_Data_Setting__c',
+                    'FEC_Type__c',
+                    FEC_CaseBusinessService.TYPE_ASSIGNMENT
+                ),
                 FEC_Field_Object_Name__c = 'Case',
                 FEC_Field_API_Name__c = 'Subject',
                 FEC_Field_Status__c = true,
@@ -391,7 +435,11 @@ private class FEC_CaseBusinessService_Test {
                 FEC_Stage_Name__c = cofStage1.Id,
                 FEC_Section__c = 'Case Information',
                 FEC_Sub_Section__c = 'Original Info',
-                FEC_Type__c = FEC_CaseBusinessService.TYPE_LWC,
+                FEC_Type__c = picklistValue(
+                    'FEC_Master_Data_Setting__c',
+                    'FEC_Type__c',
+                    FEC_CaseBusinessService.TYPE_LWC
+                ),
                 FEC_LWC_Name__c = FEC_ConstantCommon.ORIGINAL_LWC_COF,
                 FEC_Field_Status__c = true,
                 FEC_Field_Editable__c = true
@@ -909,6 +957,9 @@ private class FEC_CaseBusinessService_Test {
         System.runAs(testRunAsUser()) {
             insert targetUser;
         }
+
+        // Assign Permission Sets cho FLS access
+        FEC_TestDataFactory.assignStandardFECPermissions(targetUser.Id);
 
         Test.startTest();
         Map<String, String> transferParams = new Map<String, String>{ 'caseId' => c.Id, 'userOrQueueId' => targetUser.Id };

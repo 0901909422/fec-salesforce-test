@@ -89,9 +89,9 @@ public without sharing class FEC_CardClosureRefundController {
                 FEC_Is_Test_API__c
             FROM Case
             WHERE Id = :caseId
+            WITH SYSTEM_MODE
             LIMIT 1
         ];
-        caseRows = (List<Case>) Security.stripInaccessible(AccessType.READABLE, caseRows).getRecords();
         if (caseRows.isEmpty()) {
             return dto;
         }
@@ -109,9 +109,9 @@ public without sharing class FEC_CardClosureRefundController {
                 SELECT Id, FEC_Block_Code__c, FEC_Account_Number__c, FEC_Block_Code_1__c
                 FROM FEC_Customer_History__c
                 WHERE Id = :c.FEC_Account_or_Contract__c
+                WITH SYSTEM_MODE
                 LIMIT 1
             ];
-            histories = (List<FEC_Customer_History__c>) Security.stripInaccessible(AccessType.READABLE, histories).getRecords();
             if (!histories.isEmpty()) {
                 FEC_Customer_History__c h = histories[0];
                 cardBlock = h.FEC_Block_Code__c;
@@ -189,17 +189,17 @@ public without sharing class FEC_CardClosureRefundController {
                     ' WHERE ' + caseLookupField + ' = :caseId' +
                     ' LIMIT 1'
                 );
-                pendingRows = (List<FEC_Pending_Disbursement__c>) Security.stripInaccessible(AccessType.READABLE, pendingRows).getRecords();
                 if (!pendingRows.isEmpty()) {
                     FEC_Pending_Disbursement__c p = pendingRows[0];
-                    dto.pendingApplicationId = p.FEC_PD_Application_ID__c;
-                    dto.pendingApplicationStatus = p.FEC_PD_Application_Status__c;
-                    dto.pendingDisbursedAmount = p.FEC_PD_Disbursed_Amount__c;
-                    dto.pendingDisbursementApprovalDate = p.FEC_PD_Disbursement_Approval_Date__c;
-                    dto.pendingDisbursementStatus = p.FEC_PD_Disbursement_Status__c;
+                    Map<String, Object> pdPopulated = p.getPopulatedFieldsAsMap();
+                    dto.pendingApplicationId = pdPopulated.containsKey('FEC_PD_Application_ID__c') ? p.FEC_PD_Application_ID__c : null;
+                    dto.pendingApplicationStatus = pdPopulated.containsKey('FEC_PD_Application_Status__c') ? p.FEC_PD_Application_Status__c : null;
+                    dto.pendingDisbursedAmount = pdPopulated.containsKey('FEC_PD_Disbursed_Amount__c') ? p.FEC_PD_Disbursed_Amount__c : null;
+                    dto.pendingDisbursementApprovalDate = pdPopulated.containsKey('FEC_PD_Disbursement_Approval_Date__c') ? p.FEC_PD_Disbursement_Approval_Date__c : null;
+                    dto.pendingDisbursementStatus = pdPopulated.containsKey('FEC_PD_Disbursement_Status__c') ? p.FEC_PD_Disbursement_Status__c : null;
                     dto.pendingCsDecision = resolvePendingDisbursementCsDecision(
-                        p.FEC_PD_Disbursement_Status__c,
-                        p.FEC_PD_Application_Status__c
+                        pdPopulated.containsKey('FEC_PD_Disbursement_Status__c') ? p.FEC_PD_Disbursement_Status__c : null,
+                        pdPopulated.containsKey('FEC_PD_Application_Status__c') ? p.FEC_PD_Application_Status__c : null
                     );
                 }
             }
@@ -380,9 +380,9 @@ public without sharing class FEC_CardClosureRefundController {
                 FEC_Current_Case_Stage__r.Name
             FROM Case
             WHERE Id = :caseId
+            WITH SYSTEM_MODE
             LIMIT 1
         ];
-        caseRows = (List<Case>) Security.stripInaccessible(AccessType.READABLE, caseRows).getRecords();
         if (caseRows.isEmpty()) {
             ctx.errorMessage = String.format(System.Label.FEC_MSG_Not_Found, new List<String>{ 'Case' });
             return ctx;
@@ -408,9 +408,9 @@ public without sharing class FEC_CardClosureRefundController {
                 FEC_Block_Code_1__c
             FROM FEC_Customer_History__c
             WHERE Id = :ctx.caseRecord.FEC_Account_or_Contract__c
+            WITH SYSTEM_MODE
             LIMIT 1
         ];
-        historyRows = (List<FEC_Customer_History__c>) Security.stripInaccessible(AccessType.READABLE, historyRows).getRecords();
         if (historyRows.isEmpty()) {
             ctx.errorMessage = String.format(System.Label.FEC_MSG_Not_Found, new List<String>{ 'Customer History' });
             return ctx;
@@ -693,10 +693,10 @@ public without sharing class FEC_CardClosureRefundController {
             SELECT Id, FEC_Card_Block_Service_Attempts__c
             FROM Case
             WHERE Id = :caseId
+            WITH SYSTEM_MODE
             LIMIT 1
             FOR UPDATE
         ];
-        rows = (List<Case>) Security.stripInaccessible(AccessType.READABLE, rows).getRecords();
         if (rows.isEmpty()) {
             return null;
         }
@@ -739,11 +739,7 @@ public without sharing class FEC_CardClosureRefundController {
         if (!cardOnlyLock) {
             recordToUpdate.FEC_Block_Code_1__c = BLOCK_CODE_CARD;
         }
-        List<FEC_Customer_History__c> updateRows = new List<FEC_Customer_History__c>{ recordToUpdate };
-        updateRows = (List<FEC_Customer_History__c>) Security.stripInaccessible(AccessType.UPDATABLE, updateRows).getRecords();
-        if (!updateRows.isEmpty()) {
-            update updateRows;
-        }
+        update recordToUpdate;
     }
 
     private static String getLast4Digit(String cardNumber) {

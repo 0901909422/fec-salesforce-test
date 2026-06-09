@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<LightningMessageChannel xmlns="http://soap.sforce.com/2006/04/metadata">
+    <description>Channel for field sync between Case Business and Fraud Case components</description>
+    <isExposed>true</isExposed>
+    <lightningMessageFields>
+        <fieldName>fieldId</fieldName>
+        <description>The field identifier being synced</description>
+    </lightningMessageFields>
+    <lightningMessageFields>
+        <fieldName>value</fieldName>
+        <description>The field value being synced</description>
+    </lightningMessageFields>
+    <lightningMessageFields>
+        <fieldName>source</fieldName>
+        <description>Source component: case or fraud</description>
+    </lightningMessageFields>
+    <lightningMessageFields>
+        <fieldName>caseId</fieldName>
+        <description>The Case record Id for scoping</description>
+    </lightningMessageFields>
+    <masterLabel>FEC Fraud Field Sync</masterLabel>
+</LightningMessageChannel>

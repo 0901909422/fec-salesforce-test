@@ -1,0 +1,13 @@
+/* Stretch container to fill available viewport height */
+:host {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+}
+
+/* Remove min-height from inner tabset to prevent excess whitespace */
+lightning-tabset,
+lightning-tab {
+    --sds-c-tabs-scoped-panel-sizing-min-height: 0 !important;
+}

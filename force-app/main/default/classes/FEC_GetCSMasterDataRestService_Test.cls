@@ -8,7 +8,7 @@ private class FEC_GetCSMasterDataRestService_Test {
         '<soap:Body>' +
         '<GetCSMasterDataRequest xmlns="urn:PegaRULES:SOAP:MyCase:Services">' +
         '<Sys>' +
-        '<Channel>' + VALID_CHANNEL + '</Channel>' +
+        '<Channel>Inbound</Channel>' +
         '<TransactionID>TXN-MASTER-2026-99999999999</TransactionID>' +
         '<DateTime>2026-05-25T06:52:33.617Z</DateTime>' +
         '</Sys>' +
@@ -18,14 +18,7 @@ private class FEC_GetCSMasterDataRestService_Test {
 
     @TestSetup
     static void setupData() {
-        insert new FEC_Channel__c(
-            Name = VALID_CHANNEL,
-            FEC_Code__c = 'INBOUND',
-            FEC_Channel_ID__c = VALID_CHANNEL,
-            FEC_Channel_Vietnamese_name__c = 'Inbound',
-            FEC_Channel_Status__c = true
-        );
-
+        FEC_UnitTestMyCaseChannelUtil.ensureInboundMyCaseChannel();
         String suffix = String.valueOf(Math.mod(Math.abs(Crypto.getRandomInteger()), 1000));
 
         FEC_Product_Type__c prod = new FEC_Product_Type__c(

@@ -30,6 +30,10 @@ private class FEC_AssignmentTriggerHandler_Test {
         );
         insert new List<User>{testUser1, testUser2};
 
+        // Assign Permission Sets cho FLS access
+        FEC_TestDataFactory.assignStandardFECPermissions(testUser1.Id);
+        FEC_TestDataFactory.assignStandardFECPermissions(testUser2.Id);
+
         // 3. Khởi tạo các bản ghi FEC_Assignment__c ban đầu
         
         // Bản ghi 1: Loại ROUTING thuộc Case 1
