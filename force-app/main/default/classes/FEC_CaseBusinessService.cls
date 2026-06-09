@@ -3768,7 +3768,7 @@ public without sharing class FEC_CaseBusinessService {
           }
 
       //thangtv: giữ map Frontline → main queue như cũ
-          queueId = applyFrontlineMainQueueIfUserOwner(queueId);
+      queueId = applyFrontlineMainQueueIfUserOwner(queueId);
 
       String nextUser;
           if (String.isNotBlank(queueId)) {
@@ -3786,6 +3786,7 @@ public without sharing class FEC_CaseBusinessService {
       if (String.isBlank(nextUser)) {
         nextUser = currentOwnerName;
           }
+      String revertDecisionLabel = nextUser;
 
           List<User> userlst = [
             SELECT Email, UserRole.Name, Id
@@ -3813,11 +3814,7 @@ public without sharing class FEC_CaseBusinessService {
             FEC_Routing_Action__c = REVERT,
             FEC_Case__c = caseId,
             FEC_Perform_User__c = userlst.get(0).Id,
-            // FEC_Previous_Stage__c = selectedChange.FEC_Previous_Stage__c,
-            // FEC_Next_Stage__c = selectedChange.FEC_Next_Stage__c,
-            // FEC_Routing_Action__c = ROUTE_TO,
-            // FEC_Case__c = caseId,
-            // FEC_Decision__c = '',
+            FEC_Decision__c = revertDecisionLabel,
             FEC_Original_User_Queue__c = currentOwnerName,
             FEC_Original_User_Queue_ID__c = String.valueOf(updatedCase.OwnerId),
             FEC_Updated_User_Queue__c = nextUser,
