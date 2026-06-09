@@ -133,6 +133,31 @@ private class FEC_CaseTriggerHandler_Test {
     }
 
     @IsTest
+    static void testAfterUpdate_systemUpdateRunsLastModified() {
+        Case row = new Case(
+            Subject = 'System Last Modified',
+            Status = FEC_ConstantCommon.CASE_STATUS_OPEN,
+            FEC_ID_Search__c = 'SYSLM-' + String.valueOf(System.currentTimeMillis())
+        );
+        insert row;
+        Datetime beforeUpdate = [SELECT LastModifiedDate FROM Case WHERE Id = :row.Id].LastModifiedDate;
+
+        Boolean prior = FEC_CaseTriggerHandler.isSystemUpdate;
+        FEC_CaseTriggerHandler.isSystemUpdate = true;
+        try {
+            Test.startTest();
+            update new Case(Id = row.Id, FEC_SLA_Warning__c = 'Red');
+            Test.stopTest();
+        } finally {
+            FEC_CaseTriggerHandler.isSystemUpdate = prior;
+        }
+
+        Case updated = [SELECT LastModifiedDate, FEC_SLA_Warning__c FROM Case WHERE Id = :row.Id];
+        System.assertEquals('Red', updated.FEC_SLA_Warning__c);
+        System.assert(updated.LastModifiedDate >= beforeUpdate);
+    }
+
+    @IsTest
     static void testBeforeUpdate_samePendingStatusDoesNotDuplicateHistory() {
         Case row = new Case(
             Subject = 'Duplicate Pending History',

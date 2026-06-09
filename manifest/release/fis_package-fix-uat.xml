@@ -30,13 +30,19 @@
         <members>FEC_BatchCaseHandlingTemplateHelper_Test</members>
         <members>FEC_CaseBusinessService</members>
         <members>FEC_CaseBusinessService_Test</members>
+        <members>FEC_CaseMasterDataHelper</members>
+        <members>FEC_CaseMasterDataHelper_Test</members>
         <members>FEC_CaseDsTsSlaNotificationSender</members>
         <members>FEC_CaseDsTsSlaNotificationSender_Test</members>
         <members>FEC_CaseDsTsSlaService</members>
         <members>FEC_CaseDsTsSlaService_Test</members>
+        <members>FEC_CaseTriggerHandler</members>
+        <members>FEC_CaseTriggerHandler_Test</members>
         <members>FEC_ChannelFunctionService</members>
         <members>FEC_CofGsrAssignmentService</members>
         <members>FEC_CofGsrAssignmentService_Test</members>
+        <members>FEC_CofGsrRoutePrepareService</members>
+        <members>FEC_CofGsrRoutePrepareService_Test</members>
         <members>FEC_CommonUltils</members>
         <members>FEC_CommonUltils_Test</members>
         <members>FEC_ConstantCommon</members>
@@ -76,6 +82,8 @@
         <members>FEC_GetCSMdByCodeRest_Test</members>
         <members>FEC_GetLoanApplicationHistory</members>
         <members>FEC_GetLoanApplicationHistory_Test</members>
+        <members>FEC_GetMRCInfo</members>
+        <members>FEC_GetMRCInfo_Test</members>
         <members>FEC_GetCardSecInfo</members>
         <members>FEC_GetCardSecInfo_Test</members>
         <members>FEC_GetCardFinancialTransactions</members>
@@ -87,6 +95,8 @@
         <members>FEC_MainInfoLoanAccountController</members>
         <members>FEC_MainInfoLoanAccountController_Test</members>
         <members>FEC_MyCaseSoapXml</members>
+        <members>FEC_Notification</members>
+        <members>FEC_Notification_Test</members>
         <members>FEC_NocChannelConfigController</members>
         <members>FEC_NocChannelConfigController_Test</members>
         <members>FEC_PaymentHistoryValidationService</members>
@@ -122,9 +132,11 @@
         <members>fec_AssignmentMasterFieldUtils</members>
         <members>fec_BatchCaseCreation</members>
         <members>fec_BatchDataCreation</members>
+        <members>fec_BatchCaseHandling</members>
         <members>fec_CaseBussiness</members>
         <members>fec_CommonUtils</members>
         <members>fec_CaseBussinessScopedRoutingIntegration</members>
+        <members>fec_CaseDetail_Customer</members>
         <members>fec_CaseEditNOC</members>
         <members>fec_DoNotBotherExistingCustomer</members>
         <members>fec_DoNotBotherNonExistingCustomer</members>
@@ -162,10 +174,16 @@
         <name>ListView</name>
     </types>
     <types>
+        <members>FEC_Application_Status_Mapping__mdt</members>
+        <name>CustomObject</name>
+    </types>
+    <types>
         <members>Case.FEC_Is_Manual__c</members>
         <members>Case.FEC_KYC_Status__c</members>
         <members>Case.FEC_Search_Products__c</members>
         <members>FEC_Actual_Master_Data_Setting__c.FEC_Channel__c</members>
+        <members>FEC_Application_Status_Mapping__mdt.FEC_Status_Code__c</members>
+        <members>FEC_Application_Status_Mapping__mdt.FEC_Status_Label__c</members>
         <name>CustomField</name>
     </types>
     <types>
@@ -297,6 +315,17 @@
         <members>FEC_API_Config.FEC_Get_Card_Financial_Transaction</members>
         <members>FEC_API_Config.FEC_Get_Unbilled_Transaction</members>
         <members>FEC_API_Config.FEC_VMX_AUTH_DETAIL_INQ</members>
+        <members>FEC_Application_Status_Mapping.FEC_App_Status_A</members>
+        <members>FEC_Application_Status_Mapping.FEC_App_Status_AP</members>
+        <members>FEC_Application_Status_Mapping.FEC_App_Status_C</members>
+        <members>FEC_Application_Status_Mapping.FEC_App_Status_F</members>
+        <members>FEC_Application_Status_Mapping.FEC_App_Status_H</members>
+        <members>FEC_Application_Status_Mapping.FEC_App_Status_P</members>
+        <members>FEC_Application_Status_Mapping.FEC_App_Status_R</members>
+        <members>FEC_Application_Status_Mapping.FEC_App_Status_RA</members>
+        <members>FEC_Application_Status_Mapping.FEC_App_Status_RJ</members>
+        <members>FEC_Application_Status_Mapping.FEC_App_Status_S</members>
+        <members>FEC_Application_Status_Mapping.FEC_App_Status_SR</members>
         <name>CustomMetadata</name>
     </types>
     <types>

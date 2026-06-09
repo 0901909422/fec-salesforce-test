@@ -323,7 +323,7 @@ public with sharing class FEC_SearchController {
                     rows.add(new Map<String, String>{
                         'user'     => h.userName,
                         'activity' => h.activityId,
-                        'status'   => h.statusId,
+                        'status'   => FEC_GetLoanApplicationHistory.resolveStatusLabel(h.statusId),
                         'editDate' => h.editDate
                     });
                 }
