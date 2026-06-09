@@ -134,6 +134,7 @@
         <members>fec_customerAdditionalData</members>
         <members>fecInteractionInfo</members>
         <members>fec_Search</members>
+        <members>fec_holdCaseManual</members>
         <name>LightningComponentBundle</name>
     </types>
     <types>
