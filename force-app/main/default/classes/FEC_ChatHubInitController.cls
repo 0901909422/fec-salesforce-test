@@ -49,6 +49,34 @@ public with sharing class FEC_ChatHubInitController {
         return strResult;
     }
     
+    /** Lấy danh sách Permission Set Name và Permission Set Group DeveloperName đang gán cho User hiện tại.
+    * @return List<String> tổng hợp PS Name và PSG DeveloperName
+    */
+    @AuraEnabled(cacheable=true)
+    public static List<String> getCurrentUserPermissionSets() {
+        Set<String> setNames = new Set<String>();
+        for (PermissionSetAssignment psa : [
+            SELECT PermissionSet.Name,
+                   PermissionSet.Type,
+                   PermissionSetGroupId,
+                   PermissionSetGroup.DeveloperName
+            FROM PermissionSetAssignment
+            WHERE AssigneeId = :UserInfo.getUserId()
+        ]) {
+            // Nếu là PermissionSetGroup -> dùng PSG DeveloperName
+            if (psa.PermissionSetGroupId != null && psa.PermissionSetGroup != null
+                && psa.PermissionSetGroup.DeveloperName != null) {
+                setNames.add(psa.PermissionSetGroup.DeveloperName);
+            } else if (psa.PermissionSet != null && psa.PermissionSet.Name != null) {
+                // Bỏ qua PermissionSet được tự sinh từ PSG (Type = 'Group') để tránh trùng
+                if (psa.PermissionSet.Type != 'Group') {
+                    setNames.add(psa.PermissionSet.Name);
+                }
+            }
+        }
+        return new List<String>(setNames);
+    }
+
     /** Kiểm tra Custom Permission và trạng thái Enable trong Metadata
     * @return isAllowed: Boolean
     * @created: 2025/12/03 long.nguyen.50

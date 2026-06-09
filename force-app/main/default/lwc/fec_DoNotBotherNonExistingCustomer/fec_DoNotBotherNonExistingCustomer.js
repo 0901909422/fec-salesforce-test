@@ -708,9 +708,10 @@ export default class Fec_DoNotBotherNonExistingCustomer extends LightningElement
         /*
          * BUSINESS ERROR
          */
-        let errorMessage = result?.sys?.message || "Unknown error";
+        let errorMessage =
+          result?.errorMessage || result?.description || "Unknown error";
 
-        const invalidFields = (result?.result || [])
+        const invalidFields = (result?.resultList || [])
           .flatMap((item) => item?.list_invalid || [])
           .filter(Boolean)
           .join(", ");

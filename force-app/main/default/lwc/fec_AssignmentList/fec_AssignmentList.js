@@ -24,6 +24,7 @@ import executeSubmit from "@salesforce/apex/FEC_AssignmentRoutingActionHandler.e
 import persistAssignmentMasterFields from "@salesforce/apex/FEC_AssignmentMasterFieldPersistService.persistOnAssignmentSubmit";
 //thangtv: refresh ẩn/hiện nút Execute Assignment sau Submit
 import refreshExecuteVisibility from "@salesforce/apex/FEC_AssignmentExecuteService.refreshExecuteAssignmentVisibility";
+import resetViewMode from "@salesforce/apex/FEC_AssignmentExecuteService.setAssignmentViewMode";
 import {
   subscribe,
   unsubscribe,
@@ -32,6 +33,7 @@ import {
   MessageContext,
 } from "lightning/messageService";
 import IS_MODE_EDIT from "@salesforce/messageChannel/FEC_Assignment_Mode__c";
+import CASE_INFORMATION_EDIT from "@salesforce/messageChannel/FEC_Case_Information_Edit__c";
 
 import FEC_Assignment_List from "@salesforce/label/c.FEC_Assignment_List";
 import FEC_Assignment_Routing_Action from "@salesforce/label/c.FEC_Assignment_Routing_Action";
@@ -663,11 +665,22 @@ export default class Fec_AssignmentList extends LightningElement {
       }
 
       await refreshExecuteVisibility({ caseId: this.recordId });
-      setTimeout(() => {
-        this.modeEditCase = false;
-        this.handlePublishMode(false);
-      }, 0);
-      
+
+      // Tắt partial edit (Execute Assignment) — giống F5: master data assignment không edit nữa
+      await this._exitCaseInformationEditMode();
+
+      this.dispatchEvent(
+        new CustomEvent("assignmentsubmitsuccess", {
+          bubbles: true,
+          composed: true,
+          detail: { caseId: this.recordId },
+        }),
+      );
+
+      this.modeEditCase = false;
+      await this.initData();
+      this.refreshReadonlyState();
+      await this.handlePublishMode(false);
     } catch (error) {
       console.error("FULL ERROR:", error);
 
@@ -750,10 +763,10 @@ export default class Fec_AssignmentList extends LightningElement {
         }),
       );
       await refreshExecuteVisibility({ caseId: this.recordId });
-      setTimeout(() => {
-        this.modeEditCase = false;
-        this.handlePublishMode(false);
-      }, 0);
+      this.modeEditCase = false;
+      await this.initData();
+      this.refreshReadonlyState();
+      await this.handlePublishMode(false);
     } catch (e) {
       console.error(e);
     }
@@ -766,6 +779,26 @@ export default class Fec_AssignmentList extends LightningElement {
       isEditMode: Boolean(isEdit),
     };
     publish(this.messageContext, IS_MODE_EDIT, payload);
+  }
+
+  async _exitCaseInformationEditMode() {
+    try {
+      await resetViewMode({
+        recordId: this.recordId,
+        viewMode: "review",
+      });
+    } catch (error) {
+      console.error("resetViewMode after assignment submit", error);
+    }
+
+    if (this.messageContext == null) {
+      return;
+    }
+
+    publish(this.messageContext, CASE_INFORMATION_EDIT, {
+      caseId: this.recordId,
+      isCaseInformationEdit: false,
+    });
   }
 
   //---pagination handlers---//

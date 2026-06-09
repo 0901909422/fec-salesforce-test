@@ -41,6 +41,10 @@ private class FEC_NatureOfCaseUserGroupService_Test {
         );
         
         insert new List<User>{u1, u2};
+
+        // Assign Permission Sets cho FLS access
+        FEC_TestDataFactory.assignStandardFECPermissions(u1.Id);
+        FEC_TestDataFactory.assignStandardFECPermissions(u2.Id);
         
         Test.startTest();
         // Phương thức nhận tham số đầu vào nhưng không sử dụng trong logic query nội bộ
@@ -70,6 +74,9 @@ private class FEC_NatureOfCaseUserGroupService_Test {
             IsActive = true
         );
         insert backOffice;
+
+        // Assign Permission Sets cho FLS access
+        FEC_TestDataFactory.assignStandardFECPermissions(backOffice.Id);
 
         Test.startTest();
         List<String> roles = FEC_NatureOfCaseUserGroupService.buildRoleListForIncludes('ignored');

@@ -4,6 +4,11 @@ import { publish, subscribe, MessageContext, APPLICATION_SCOPE } from 'lightning
 import FEC_CHATHUB_STATUS from '@salesforce/messageChannel/FecChatHubStatus__c';
 import labelCurrentStatus from '@salesforce/label/c.FEC_Label_CurrentStatus';
 import labelWaitingForData from '@salesforce/label/c.FEC_Label_WaitingForData';
+import getCurrentUserPermissionSets from '@salesforce/apex/FEC_ChatHubInitController.getCurrentUserPermissionSets';
+import { ALLOWED_CHATHUB_PERMISSION_SETS, removeUtilityItemByLabel } from 'c/fecChathubUtils';
+
+// Working Status Utility Item label - dùng để identify utility item trong DOM
+const STATUS_UTILITY_LABEL = 'Working Status';
 
 /**
  * FecChathubStatus - Utility bar component for managing agent status
@@ -39,7 +44,31 @@ export default class FecChathubStatus extends LightningElement {
      * @return {void}
      */
     connectedCallback() {
+        // Kiểm tra Permission Set, nếu user không có thì xóa Working Status utility item khỏi DOM
+        this.checkAccessAndRemoveUtilityIfNeeded();
         this.subscribeToMessageChannel();
+    }
+
+    /**
+     * Kiểm tra permission set của user hiện tại.
+     * Nếu user không thuộc bất kỳ permission set nào trong ALLOWED_CHATHUB_PERMISSION_SETS,
+     * xóa <li> utility item Working Status khỏi DOM của Utility Bar.
+     * @return {Promise<void>}
+     */
+    async checkAccessAndRemoveUtilityIfNeeded() {
+        try {
+            const userPermissionSets = await getCurrentUserPermissionSets();
+            const hasAccess = Array.isArray(userPermissionSets)
+                && userPermissionSets.some(ps => ALLOWED_CHATHUB_PERMISSION_SETS.includes(ps));
+
+            if (!hasAccess) {
+                console.warn('[FEC-AgentStatus] User has no allowed Permission Set - removing Working Status utility item');
+                removeUtilityItemByLabel(STATUS_UTILITY_LABEL);
+            }
+        } catch (err) {
+            console.error('[FEC-AgentStatus] Permission Set check error:', err);
+            removeUtilityItemByLabel(STATUS_UTILITY_LABEL);
+        }
     }
 
     // ===== MESSAGE SERVICE & EVENT HANDLERS =====

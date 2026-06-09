@@ -207,11 +207,6 @@ export default class Fec_IncorrectPaymentForm extends LightningElement {
             : this.customLabel.adjustedAmountMustEqualPayment;
     }
 
-    get displayExcessAmount() {
-        if (this.excessAmount == null) return STR_EMPTY;
-        return this.formatAmount(this.excessAmount);
-    }
-
     get displayPaymentDate() {
         if (this.paymentDate) return this.paymentDate;
         return this.selectedPayment ? (this.selectedPayment.paymentDate || STR_EMPTY) : STR_EMPTY;
@@ -393,6 +388,11 @@ export default class Fec_IncorrectPaymentForm extends LightningElement {
                 }
                 if (data.billAmount != null && data.billAmount !== undefined) {
                     this.manualBillAmount = data.billAmount;
+                    // 08/06/2026 14:30 linhdev - TH2: khôi phục Excess Amount đã lưu trên Case
+                    const loadedSubCode = (data.subCode || STR_EMPTY).trim();
+                    if (loadedSubCode && this.th2Codes.includes(loadedSubCode)) {
+                        this.excessAmount = data.billAmount;
+                    }
                 } else {
                     this.manualBillAmount = null;
                 }
@@ -587,6 +587,29 @@ export default class Fec_IncorrectPaymentForm extends LightningElement {
     handleManualBillAmountChange(event) {
         const v = event.detail != null && event.detail.value !== undefined ? event.detail.value : event.target.value;
         this.manualBillAmount = v === STR_EMPTY || v == null ? null : (Number(v) || null);
+    }
+
+    // 08/06/2026 14:30 linhdev - Excess Amount nhập tùy ý khi chọn payment history (TH2)
+    handleExcessAmountChange(event) {
+        const v = event.detail != null && event.detail.value !== undefined ? event.detail.value : event.target.value;
+        this.excessAmount = v === STR_EMPTY || v == null ? null : (Number(v) || null);
+    }
+
+    // 08/06/2026 14:30 linhdev - TH2 dùng excessAmount (không lấy cứng paymentAmount) để validate/lưu
+    _getBillAmountForSave() {
+        if (this.isTh1 && this.th1EditableBillAmount != null) {
+            return this.th1EditableBillAmount;
+        }
+        if (this.isTh2) {
+            if (this.selectedPaymentId) {
+                return this.excessAmount ?? null;
+            }
+            return this.manualBillAmount ?? null;
+        }
+        if (this.selectedPayment) {
+            return this.selectedPayment.paymentAmount ?? null;
+        }
+        return this.manualBillAmount ?? null;
     }
 
     handlePaymentMethodChange(event) {
@@ -856,6 +879,25 @@ export default class Fec_IncorrectPaymentForm extends LightningElement {
             }
         }
 
+        // 08/06/2026 14:30 linhdev - bắt buộc nhập Excess Amount trước khi so tổng Adjusted Amount
+        if (this.showTh2Row1) {
+            const excessAmtSel = 'lightning-input[data-id="excess-amount"]';
+            const excessAmtOk = this.validateFields([excessAmtSel]);
+            const excessAmtMissing = this.excessAmount == null;
+            if (!excessAmtOk || excessAmtMissing) {
+                const excessAmtEl = this.template.querySelector(excessAmtSel);
+                if (excessAmtEl && excessAmtEl.reportValidity) {
+                    excessAmtEl.reportValidity();
+                }
+                this.dispatchEvent(new ShowToastEvent({
+                    title: FEC_Toast_Validation_Title,
+                    message: this.customLabel.excessAmount + ': ' + FEC_Complete_This_Field,
+                    variant: CONST.VARIANT_WARNING
+                }));
+                return false;
+            }
+        }
+
         this.clearAdjustmentFieldsCustomValidity();
         const incompleteRows = [];
         this.adjustments.forEach((a, index) => {
@@ -898,14 +940,7 @@ export default class Fec_IncorrectPaymentForm extends LightningElement {
         }
 
         const billDate = this.selectedPayment ? (this.selectedPayment.paymentDate || null) : (this.manualBillDate || null);
-        let billAmount = null;
-        if (this.isTh1 && this.th1EditableBillAmount != null) {
-            billAmount = this.th1EditableBillAmount;
-        } else if (this.selectedPayment) {
-            billAmount = this.selectedPayment.paymentAmount ?? null;
-        } else {
-            billAmount = this.manualBillAmount ?? null;
-        }
+        const billAmount = this._getBillAmountForSave();
 
         const billFieldsRendered = this.showManualBill || this.selectedPaymentId;
         if (!billFieldsRendered && (billAmount == null || billAmount === 0)) {
@@ -968,14 +1003,7 @@ export default class Fec_IncorrectPaymentForm extends LightningElement {
 
         const draftFirst = this._getDraftFirstAdjustment();
         const billDate = this.selectedPayment ? (this.selectedPayment.paymentDate || null) : (this.manualBillDate || null);
-        let billAmount = null;
-        if (this.isTh1 && this.th1EditableBillAmount != null) {
-            billAmount = this.th1EditableBillAmount;
-        } else if (this.selectedPayment) {
-            billAmount = this.selectedPayment.paymentAmount ?? null;
-        } else {
-            billAmount = this.manualBillAmount ?? null;
-        }
+        const billAmount = this._getBillAmountForSave();
 
         return saveAdjustmentDraft({
             caseId: this.recordId,

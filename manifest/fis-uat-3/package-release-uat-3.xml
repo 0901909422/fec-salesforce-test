@@ -711,6 +711,7 @@
         <members>Case.FEC_Original_Category__c</members>
         <members>Case.FEC_Original_Sub_Category__c</members>
         <members>Case.FEC_Original_Sub_Code__c</members>
+        <members>Case.FEC_Search_Products__c</members>
         <members>FEC_Sales_Logic__c.FEC_CC_Code__c</members>
 		<members>FEC_Sales_Logic__c.FEC_DSA_Code__c</members>
 		<members>FEC_Sales_Logic__c.FEC_TSA_Code__c</members>
@@ -758,6 +759,7 @@
         <name>CustomTab</name>
     </types>
 	<types>
+        <members>Case</members>
 		<members>FEC_Assignment__c</members>
 		<members>FEC_CustomerAdditionalInfoConfig__c</members>
 		<members>FEC_CustomerAdditionalInfo__c</members>
@@ -2104,6 +2106,7 @@
         <members>FEC_PSG_RD_Telesales_User_2</members>
         <members>FEC_PSG_RD_Credit_Assessment_User</members>
         <members>FEC_PSG_RD_Internal_Audit_User</members>
+        <members>FEC_PSG_RD_Contract_Processing_User</members>
 		<name>PermissionSetGroup</name>
 	</types>
 
@@ -2286,6 +2289,7 @@
         <members>FEC_RD_Telesales_User_1_Master_Data_Management</members>
         <members>FEC_RD_Telesales_User_2_Master_Data_Management</members>
         <members>RD_IT_User_Master_Data_Management</members>
+        <members>FEC_RD_Contract_Processing_User_Search_Functions</members>
         <name>PermissionSet</name>
     </types>
     <types>
@@ -2314,6 +2318,7 @@
         <members>FEC_CaseRemarksRollupService</members>
         <members>FEC_CaseRemarksTriggerHandler</members>
         <members>FEC_CaseRemarksRollupServiceTest</members>
+        <members>FEC_BCC_ImportResolveHistService</members>
         <members>FEC_BCH_ImportRoutingHistoryService</members>
         <members>FEC_BCH_ImportRoutingResolver</members>
         <members>FEC_BCH_AssignmentRouteToService</members>
@@ -2379,6 +2384,7 @@
         <members>FEC_Actual_Master_Data_Setting__c.FEC_Type__c</members>
         <members>FEC_Case_Assignment_Log_Detail__c.FEC_Case_Assignment_log_Name__c</members>
         <members>FEC_Master_Data_Setting__c.FEC_Type__c</members>
+        <members>FEC_Actual_Master_Data_Setting__c.FEC_Channel__c</members>
         <name>CustomField</name>
     </types>
     <types>
@@ -2532,6 +2538,7 @@
         <members>FEC_AssignmentTriggerHandler_Test</members>
         <members>FEC_AssignmentTrigger_Test</members>
         <members>FEC_AutoHoldCaseServiceTest</members>
+        <members>FEC_BCC_ImportResolveHistService_Test</members>
         <members>FEC_BCH_IPTemplateWriter_Test</members>
         <members>FEC_BCH_PicklistTranslationCtrl_Test</members>
         <members>FEC_BancaController_Test</members>

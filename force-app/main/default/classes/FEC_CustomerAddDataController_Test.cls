@@ -10,8 +10,9 @@ private class FEC_CustomerAddDataController_Test {
             FEC_FieldID__c = 'TestField',
             FEC_Status__c = FEC_ConstantCommon.PROCESSED_STATUS,
             FEC_IsActive__c = true,
-            FEC_StartDate__c = Date.today().addDays(-1),
-            FEC_EndDate__c = Date.today().addDays(1),
+            // 05/06/2026 18:00 linhdev - StartDate = today VN (inclusive >=)
+            FEC_StartDate__c = FEC_CustomerAdditionalDataController.getTodayVietnam(),
+            FEC_EndDate__c = FEC_CustomerAdditionalDataController.getTodayVietnam().addDays(1),
             FEC_FieldName__c = 'Test Field'
         );
         insert cfg;
@@ -72,6 +73,26 @@ private class FEC_CustomerAddDataController_Test {
         System.assertEquals(1, rows.size(), 'Phải lấy được 1 dòng dữ liệu.');
         System.assertEquals('ValueABC', rows[0].fieldValue);
         System.assertEquals('Test Field', rows[0].fieldLabel);
+    }
+
+    // 05/06/2026 18:00 linhdev - StartDate = EndDate = today VN phải hiển thị
+    @IsTest
+    static void testGetAdditionalDataRows_StartDateEqualsTodayVietnam() {
+        Case c = [SELECT Id FROM Case LIMIT 1];
+        FEC_CustomerAdditionalInfoConfig__c cfg = [
+            SELECT Id FROM FEC_CustomerAdditionalInfoConfig__c LIMIT 1
+        ];
+        Date todayVn = FEC_CustomerAdditionalDataController.getTodayVietnam();
+        cfg.FEC_StartDate__c = todayVn;
+        cfg.FEC_EndDate__c = todayVn;
+        update cfg;
+
+        Test.startTest();
+        List<FEC_CustomerAdditionalDataController.RowDTO> rows =
+            FEC_CustomerAdditionalDataController.getAdditionalDataRows(c.Id);
+        Test.stopTest();
+
+        System.assertEquals(1, rows.size(), 'StartDate = today VN phải hiển thị dữ liệu.');
     }
 
     @IsTest
