@@ -2,7 +2,7 @@
  * LWC C360 — tab Additional Data: đọc FEC_CustomerAdditionalInfo__c (chỉ field trên object)
  * đã lọc theo Case; config FEC_CustomerAdditionalInfoConfig__c truy vấn riêng theo FEC_Config__c.
  * Khớp KeyIdentifier + KeyIDValue với FEC_Account_or_Contract__r; chỉ bản ghi chi tiết isActive, config isActive,
- * trong khoảng StartDate–EndDate của config.
+ * trong khoảng StartDate–EndDate của config (today theo Asia/Ho_Chi_Minh; today >= StartDate, today <= EndDate).
  * Một Case chỉ dùng một điều kiện lookup (ưu tiên theo STT design: CIF_NUMBER → ID_CARD → PHONE_NUMBER →
  * APPLICATION_ID → ACCOUNT_NO/CONTRACT_NO); nếu nhiều bản ghi FEC_CustomerAdditionalInfo__c khớp thì chỉ trả 1 bản (CreatedDate mới nhất).
  * Chỉ trả bản ghi chi tiết khi Case.CreatedDate >= FEC_CustomerAdditionalInfo__c.CreatedDate (spec B3 Lưu ý).
@@ -23,7 +23,8 @@ public with sharing class FEC_CustomerAdditionalDataController {
     private static final String KEY_ACCOUNT_NO = 'ACCOUNT_NO';
     private static final String KEY_CONTRACT_NO = 'CONTRACT_NO';
 
-    @AuraEnabled(cacheable=true)
+    // 05/06/2026 18:00 linhdev - bỏ cacheable: dữ liệu phụ thuộc today VN + import async, tránh stale cache trên C360
+    @AuraEnabled
     public static List<RowDTO> getAdditionalDataRows(Id caseId) {
         return getRowsForCase(caseId);
     }
@@ -49,7 +50,8 @@ public with sharing class FEC_CustomerAdditionalDataController {
         for (Set<String> vs : keyToValues.values()) {
             allValues.addAll(vs);
         }
-        Date today = Date.today();
+        // 05/06/2026 18:00 linhdev - today theo Asia/Ho_Chi_Minh (spec: today >= StartDate, today <= EndDate)
+        Date today = getTodayVietnam();
         List<FEC_CustomerAdditionalInfo__c> raw = [
             SELECT Id, CreatedDate, Name, FEC_FieldID__c, FEC_FieldValue__c, FEC_KeyIdentifier__c, FEC_KeyIDValue__c,
                    FEC_LinkedFilename__c, FEC_Config__c
@@ -161,13 +163,18 @@ public with sharing class FEC_CustomerAdditionalDataController {
         return true;
     }
 
+    // 05/06/2026 18:00 linhdev - lấy ngày hiện tại theo timezone VN
+    @TestVisible
+    private static Date getTodayVietnam() {
+        return Date.valueOf(
+            Datetime.now().format(FEC_ConstantCommon.DATE_FORMAT, FEC_ConstantCommon.USER_TIMEZONE_VIETNAM)
+        );
+    }
+
+    // 05/06/2026 18:00 linhdev - inclusive: today >= StartDate AND today <= EndDate
     private static Boolean isInDateWindow(FEC_CustomerAdditionalInfoConfig__c cfg, Date today) {
-        if (cfg.FEC_StartDate__c != null && today < cfg.FEC_StartDate__c) {
-            return false;
-        }
-        if (cfg.FEC_EndDate__c != null && today > cfg.FEC_EndDate__c) {
-            return false;
-        }
-        return true;
+        Boolean startOk = cfg.FEC_StartDate__c == null || today >= cfg.FEC_StartDate__c;
+        Boolean endOk = cfg.FEC_EndDate__c == null || today <= cfg.FEC_EndDate__c;
+        return startOk && endOk;
     }
 }

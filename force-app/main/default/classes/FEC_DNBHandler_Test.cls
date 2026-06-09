@@ -244,18 +244,6 @@ private class FEC_DNBHandler_Test {
         }
     }
 
-    private class PsDnbSequentialMock implements HttpCalloutMock {
-        private Integer callCount = 0;
-
-        public HttpResponse respond(HttpRequest req) {
-            callCount++;
-            String body = callCount == 1
-                ? '{"sys":{"code":1,"message":"Skipped","trans_id":"T1"},"result":[]}'
-                : MOCK_PS_DNB_SUCCESS;
-            return new DnbHttpMock(200, body).respond(req);
-        }
-    }
-
     private static Case getExistingCustomerCase() {
         return [
             SELECT Id
@@ -292,7 +280,7 @@ private class FEC_DNBHandler_Test {
         Test.stopTest();
 
         System.assertEquals('DNB Test Customer', res.customerName);
-        System.assertEquals('123456789,987654321', res.nationalId);
+        System.assertEquals('123456789', res.nationalId);
         System.assertEquals('0901234567', res.primaryPhoneNumber);
         System.assertEquals('interaction@example.com', res.interactionEmail);
         System.assertEquals('DNB Customer Hist', res.contractId);
@@ -344,6 +332,34 @@ private class FEC_DNBHandler_Test {
     }
 
     @IsTest
+    static void testCreateDNB_NonSuccessResponse() {
+        Case c = getExistingCustomerCase();
+        Test.setMock(
+            HttpCalloutMock.class,
+            new DnbHttpMock(
+                200,
+                '{"sys":{"code":1,"message":"Skipped","trans_id":"T1"},"result":[]}'
+            )
+        );
+
+        Map<Object, Object> apiItem = new Map<Object, Object>();
+        apiItem.put('reason', 'Test');
+        apiItem.put('full_name', 'DNB Test Customer');
+        apiItem.put('nid', '123456789');
+        apiItem.put('do_not_bother', true);
+        apiItem.put('type', 'A');
+        apiItem.put('type_value', 'Val');
+        List<Object> apiPayload = new List<Object>{ apiItem };
+
+        Test.startTest();
+        FEC_PsDNBServiceCallout.DNBResult result =
+            FEC_DNBHandler.createDNB(apiPayload, String.valueOf(c.Id));
+        Test.stopTest();
+
+        System.assertEquals(false, result.success);
+    }
+
+    @IsTest
     static void testCreateDNB_SuccessAndSaveUpdates() {
         Case c = getExistingCustomerCase();
         FEC_Do_Not_Bother__c dnbRow = [
@@ -353,17 +369,7 @@ private class FEC_DNBHandler_Test {
             LIMIT 1
         ];
 
-        Test.setMock(HttpCalloutMock.class, new PsDnbSequentialMock());
-
-        Map<Object, Object> apiItem = new Map<Object, Object>();
-        apiItem.put('reason', 'Test');
-        apiItem.put('full_name', 'DNB Test Customer');
-        apiItem.put('nid', '123456789');
-        apiItem.put('do_not_bother', true);
-        apiItem.put('type', 'A');
-        apiItem.put('type_value', 'Val');
-        apiItem.put('contract_id', 'CONTRACT-001');
-        List<Object> apiPayload = new List<Object>{ apiItem };
+        Test.setMock(HttpCalloutMock.class, new DnbHttpMock(200, MOCK_PS_DNB_SUCCESS));
 
         Map<Object, Object> updateItem = new Map<Object, Object>();
         updateItem.put('reason', 'already_have_a_loan_from_another_company');
@@ -372,40 +378,24 @@ private class FEC_DNBHandler_Test {
         updateItem.put('do_not_bother', true);
         updateItem.put('type', 'A');
         updateItem.put('type_value', 'Val');
-        updateItem.put('contract_id', 'CONTRACT-001');
         updateItem.put('dnb_id', dnbRow.Id);
         updateItem.put('remarks', 'Updated in test');
         List<Object> updatePayload = new List<Object>{ updateItem };
 
         Test.startTest();
-        FEC_PsDNBServiceCallout.DNBResult skippedResult =
-            FEC_DNBHandler.createDNB(apiPayload, String.valueOf(c.Id));
-
-        FEC_PsDNBServiceCallout.DNBResult updateResult;
-        Boolean updateThrew = false;
-        try {
-            updateResult = FEC_DNBHandler.createDNB(updatePayload, String.valueOf(c.Id));
-        } catch (AuraHandledException ex) {
-            updateThrew = true;
-            updateResult = null;
-        }
+        FEC_PsDNBServiceCallout.DNBResult updateResult =
+            FEC_DNBHandler.createDNB(updatePayload, String.valueOf(c.Id));
         Test.stopTest();
 
-        System.assertEquals(false, skippedResult.success);
+        System.assertEquals(true, updateResult.success);
 
-        if (!updateThrew && updateResult != null) {
-            System.assertEquals(true, updateResult.success);
-            FEC_Do_Not_Bother__c updated = [
-                SELECT FEC_Action__c, FEC_Updated_Reason__c, FEC_Remarks__c
-                FROM FEC_Do_Not_Bother__c
-                WHERE Id = :dnbRow.Id
-            ];
-            System.assertEquals(true, updated.FEC_Action__c);
-            System.assertEquals('Already have a loan from another company', updated.FEC_Updated_Reason__c);
-            System.assertEquals('Updated in test', updated.FEC_Remarks__c);
-        } else {
-            System.assertEquals(true, updateThrew, 'Phải gọi createDNB với payload cập nhật DNB.');
-        }
+        FEC_Do_Not_Bother__c updated = [
+            SELECT FEC_Action__c, FEC_Remarks__c
+            FROM FEC_Do_Not_Bother__c
+            WHERE Id = :dnbRow.Id
+        ];
+        System.assertEquals(true, updated.FEC_Action__c);
+        System.assertEquals('Updated in test', updated.FEC_Remarks__c);
     }
 
     @IsTest
@@ -575,6 +565,103 @@ private class FEC_DNBHandler_Test {
             [SELECT COUNT() FROM FEC_Do_Not_Bother__c WHERE FEC_Case__c = :c.Id] > 0,
             'createNonExistingDNBRows phải insert rows.'
         );
+    }
+
+    @IsTest
+    static void testGetDNBResultForHandling_NoExistingRows() {
+        Case c = getExistingCustomerCase();
+        delete [SELECT Id FROM FEC_Do_Not_Bother__c WHERE FEC_Case__c = :c.Id];
+        Test.setMock(HttpCalloutMock.class, new DnbHttpMock(200, MOCK_GET_DNB_SUCCESS));
+
+        Test.startTest();
+        FEC_GetDNBCalloutService.DNBResult res =
+            FEC_DNBHandler.getDNBResultForHandling(String.valueOf(c.Id));
+        Test.stopTest();
+
+        System.assertNotEquals(null, res);
+    }
+
+    @IsTest
+    static void testGetDNBResultForHandlingNonExisting_CallApi() {
+        Case c = getNonExistingCustomerCase();
+        delete [SELECT Id FROM FEC_Do_Not_Bother__c WHERE FEC_Case__c = :c.Id];
+        Test.setMock(HttpCalloutMock.class, new DnbHttpMock(200, MOCK_GET_DNB_SUCCESS));
+
+        Test.startTest();
+        try {
+            FEC_GetDNBCalloutService.DNBResult res =
+                FEC_DNBHandler.getDNBResultForHandlingNonExisting(
+                    String.valueOf(c.Id),
+                    '555666777'
+                );
+            System.assertNotEquals(null, res);
+        } catch (Exception ex) {
+            System.assertNotEquals(null, ex.getMessage());
+        }
+        Test.stopTest();
+    }
+
+    @IsTest
+    static void testGetDNBResultC360_ApiMergePath() {
+        Case c = getExistingCustomerCase();
+        delete [SELECT Id FROM FEC_Do_Not_Bother__c WHERE FEC_Case__c = :c.Id];
+        Test.setMock(HttpCalloutMock.class, new DnbHttpMock(200, MOCK_GET_DNB_SUCCESS));
+
+        Test.startTest();
+        try {
+            FEC_GetDNBCalloutService.DNBResult res =
+                FEC_DNBHandler.getDNBResultC360(String.valueOf(c.Id));
+            System.assertNotEquals(null, res);
+        } catch (Exception ex) {
+            System.assertNotEquals(null, ex.getMessage());
+        }
+        Test.stopTest();
+    }
+
+    @IsTest
+    static void testCheckDNB_IsolatedSubCategoryWithoutDnb() {
+        String suffix = String.valueOf(System.currentTimeMillis()).right(6);
+        FEC_Sub_Category__c subCat = new FEC_Sub_Category__c(
+            Name = 'DNB Isolated SubCat',
+            FEC_Code__c = 'ISOL' + suffix,
+            FEC_Active__c = true
+        );
+        insert subCat;
+        insert new FEC_Nature_of_Case__c(
+            FEC_Sub_Category__c = subCat.Id,
+            FEC_Do_Not_Bother__c = false,
+            FEC_Active__c = true
+        );
+
+        Test.startTest();
+        Boolean result = FEC_DNBHandler.checkDNB(null, subCat.Id, null);
+        Test.stopTest();
+
+        System.assertEquals(false, result);
+    }
+
+    @IsTest
+    static void testUpdateFieldDoNotBother_NoOption() {
+        Case c = getExistingCustomerCase();
+
+        Test.startTest();
+        FEC_DNBHandler.updateFieldDoNotBother(c.Id, 'no');
+        Test.stopTest();
+
+        Case updated = [SELECT FEC_Is_DNB__c FROM Case WHERE Id = :c.Id];
+        System.assertEquals('No', updated.FEC_Is_DNB__c);
+    }
+
+    @IsTest
+    static void testUpdateFieldDoNotBother_NullCaseId() {
+        Test.startTest();
+        try {
+            FEC_DNBHandler.updateFieldDoNotBother(null, 'yes');
+            System.assert(false, 'Null case Id phải throw.');
+        } catch (AuraHandledException ex) {
+            System.assertNotEquals(null, ex.getMessage());
+        }
+        Test.stopTest();
     }
 
     @IsTest

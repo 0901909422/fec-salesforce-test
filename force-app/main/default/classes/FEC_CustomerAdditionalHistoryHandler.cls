@@ -20,7 +20,12 @@ public with sharing class FEC_CustomerAdditionalHistoryHandler {
             history.FEC_StartDate__c = config.FEC_StartDate__c;
             history.FEC_EndDate__c = config.FEC_EndDate__c;
 
-            history.FEC_Status__c = config.FEC_Status__c;
+            // If this is an update and status is 'Uploaded', it means re-upload → record as 'Reuploaded'
+            if (isUpdate && config.FEC_Status__c == FEC_ConstantCommon.UPLOADED_STATUS) {
+                history.FEC_Status__c = FEC_ConstantCommon.REUPLOADED_STATUS;
+            } else {
+                history.FEC_Status__c = config.FEC_Status__c;
+            }
 
             historyRecords.add(history);
         }

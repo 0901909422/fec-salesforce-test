@@ -134,7 +134,7 @@ public with sharing class FEC_VMXAUTHDETAILINQ {
         FEC_API_Config__mdt apiConfig  =
             FEC_API_Config__mdt.getInstance('FEC_VMX_AUTH_DETAIL_INQ');
 
-        String acctForCall = resolveAccountForCall(acctNbr, apiSetting, apiConfig);
+        String acctForCall = resolveAccountForCall(acctNbr);
 
         String ctx     = String.isNotBlank(context)
                              ? context.trim()
@@ -198,15 +198,7 @@ public with sharing class FEC_VMXAUTHDETAILINQ {
         return response;
     }
 
-    private static String resolveAccountForCall(
-        String acctNbr,
-        FEC_API_Setting__c  apiSetting,
-        FEC_API_Config__mdt apiConfig
-    ) {
-        if (apiSetting?.FEC_Enviroment__c == FEC_ConstantCommon.ENVIROMENT_NON_PRODUCTION
-            && String.isNotBlank(apiConfig?.FEC_Account_Number_Hard_Code__c)) {
-            return apiConfig.FEC_Account_Number_Hard_Code__c.trim();
-        }
+    private static String resolveAccountForCall(String acctNbr) {
         return String.isNotBlank(acctNbr) ? acctNbr.trim() : acctNbr;
     }
 

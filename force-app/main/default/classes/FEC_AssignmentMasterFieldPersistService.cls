@@ -96,6 +96,9 @@ public without sharing class FEC_AssignmentMasterFieldPersistService {
         }
 
         CaseContext ctx = loadCaseContext(caseId);
+        if (ctx == null) {
+            return;
+        }
         Map<String, SObject> recordsByObject = resolveTargetRecords(ctx, allowlist.values());
 
         Map<String, Map<String, String>> updatesByObject = new Map<String, Map<String, String>>();
@@ -124,6 +127,9 @@ public without sharing class FEC_AssignmentMasterFieldPersistService {
                 continue;
             }
             Map<String, String> fieldMap = updatesByObject.get(objName);
+            if (fieldMap == null || fieldMap.isEmpty()) {
+                continue;
+            }
             for (String fieldApi : fieldMap.keySet()) {
                 setFieldFromString(rec, fieldApi, fieldMap.get(fieldApi));
             }
@@ -180,19 +186,25 @@ public without sharing class FEC_AssignmentMasterFieldPersistService {
             AccessLevel.USER_MODE
         );
 
-        masterDatalst = FEC_CaseMasterDataHelper.filterRevertedAssignmentRowsByStageContext(
-            masterDatalst,
-            ctx.isRevertContext,
-            ctx.revertConfirmAssessmentSourceStage
+        masterDatalst = coalesceMasterDataList(
+            FEC_CaseMasterDataHelper.filterRevertedAssignmentRowsByStageContext(
+                masterDatalst,
+                ctx.isRevertContext,
+                ctx.revertConfirmAssessmentSourceStage
+            )
         );
-        masterDatalst = FEC_CaseMasterDataHelper.filterAssignmentRowsByCurrentUserGroup(
-            masterDatalst,
-            ctx.userGroup
+        masterDatalst = coalesceMasterDataList(
+            FEC_CaseMasterDataHelper.filterAssignmentRowsByCurrentUserGroup(
+                masterDatalst,
+                ctx.userGroup
+            )
         );
-        masterDatalst = FEC_CaseMasterDataHelper.removeMasterDataRowsByHiddenAssignmentFieldApis(
-            masterDatalst,
-            true,
-            ctx.userGroup
+        masterDatalst = coalesceMasterDataList(
+            FEC_CaseMasterDataHelper.removeMasterDataRowsByHiddenAssignmentFieldApis(
+                masterDatalst,
+                true,
+                ctx.userGroup
+            )
         );
 
         for (SObject row : masterDatalst) {
@@ -232,6 +244,9 @@ public without sharing class FEC_AssignmentMasterFieldPersistService {
         Map<String, SObject> result = new Map<String, SObject>();
         Set<String> objectNames = new Set<String>();
         for (AllowlistField f : allowlistFields) {
+            if (f == null || String.isBlank(f.objectApiName)) {
+                continue;
+            }
             objectNames.add(f.objectApiName);
         }
 
@@ -245,7 +260,7 @@ public without sharing class FEC_AssignmentMasterFieldPersistService {
     }
 
     private static SObject queryRecordForObject(CaseContext ctx, String objName) {
-        if (ctx == null || ctx.caseId == null) {
+        if (ctx == null || ctx.caseId == null || String.isBlank(objName)) {
             return null;
         }
         if ('Case'.equalsIgnoreCase(objName)) {
@@ -304,23 +319,36 @@ public without sharing class FEC_AssignmentMasterFieldPersistService {
             return;
         }
         Schema.DisplayType dt = dfr.getType();
-        if (dt == Schema.DisplayType.Boolean) {
-            rec.put(fieldApi, Boolean.valueOf(stringValue));
-        } else if (dt == Schema.DisplayType.Date) {
-            rec.put(fieldApi, Date.valueOf(stringValue));
-        } else if (dt == Schema.DisplayType.DateTime) {
-            rec.put(fieldApi, DateTime.valueOf(stringValue));
-        } else if (
-            dt == Schema.DisplayType.Double ||
-            dt == Schema.DisplayType.Currency ||
-            dt == Schema.DisplayType.Percent
-        ) {
-            rec.put(fieldApi, Decimal.valueOf(stringValue));
-        } else if (dt == Schema.DisplayType.Integer) {
-            rec.put(fieldApi, Integer.valueOf(stringValue));
-        } else {
-            rec.put(fieldApi, stringValue);
+        try {
+            if (dt == Schema.DisplayType.Boolean) {
+                rec.put(fieldApi, Boolean.valueOf(stringValue));
+            } else if (dt == Schema.DisplayType.Date) {
+                rec.put(fieldApi, Date.valueOf(stringValue));
+            } else if (dt == Schema.DisplayType.DateTime) {
+                rec.put(fieldApi, DateTime.valueOfGmt(stringValue.replace('T', ' ').replace('Z', '')));
+            } else if (
+                dt == Schema.DisplayType.Double ||
+                dt == Schema.DisplayType.Currency ||
+                dt == Schema.DisplayType.Percent
+            ) {
+                rec.put(fieldApi, Decimal.valueOf(stringValue));
+            } else if (dt == Schema.DisplayType.Integer) {
+                rec.put(fieldApi, Integer.valueOf(stringValue));
+            } else {
+                rec.put(fieldApi, stringValue);
+            }
+        } catch (Exception e) {
+            throw new AuraHandledException(
+                String.format(
+                    System.Label.FEC_MSG_Invalid,
+                    new List<String>{ fieldApi + ': ' + stringValue }
+                )
+            );
         }
+    }
+
+    private static List<SObject> coalesceMasterDataList(List<SObject> rows) {
+        return rows == null ? new List<SObject>() : rows;
     }
 
     private static String buildKey(String objectApiName, String fieldApiName) {
@@ -348,7 +376,12 @@ public without sharing class FEC_AssignmentMasterFieldPersistService {
                 FEC_Current_Case_Stage__c,
                 FEC_Current_Case_Stage__r.Name,
                 FEC_Assignment_Count__c,
-                FEC_Account_or_Contract__c
+                FEC_Account_or_Contract__c,
+                FEC_Product_Type__c,
+                FEC_Category__c,
+                FEC_SubCategory__c,
+                FEC_SubCode__c,
+                FEC_Customer_Type__c
             FROM Case
             WHERE Id = :caseId
             LIMIT 1
@@ -374,9 +407,7 @@ public without sharing class FEC_AssignmentMasterFieldPersistService {
             : c.FEC_Assignment_Count__c;
         ctx.userGroup = u.FEC_User_Group__c;
         ctx.useActualMasterData = String.isNotBlank(c.FEC_Actual_Nature_of_Case__c);
-        ctx.natureOfCaseId = ctx.useActualMasterData
-            ? (Id) c.FEC_Actual_Nature_of_Case__c
-            : null;
+        ctx.natureOfCaseId = resolveNatureOfCaseIdForMasterData(c);
         if (ctx.natureOfCaseId == null) {
             return ctx;
         }
@@ -392,6 +423,43 @@ public without sharing class FEC_AssignmentMasterFieldPersistService {
             false
         );
         return ctx;
+    }
+
+    /**
+     * Khớp getByCase: Actual NOC → Actual MDS; không có Actual → template FEC_Nature_of_Case__c.
+     */
+    private static Id resolveNatureOfCaseIdForMasterData(Case c) {
+        if (c == null) {
+            return null;
+        }
+        if (String.isNotBlank(c.FEC_Actual_Nature_of_Case__c)) {
+            return c.FEC_Actual_Nature_of_Case__c;
+        }
+        if (
+            c.FEC_Product_Type__c == null ||
+            c.FEC_Category__c == null ||
+            c.FEC_SubCategory__c == null ||
+            c.FEC_SubCode__c == null
+        ) {
+            return null;
+        }
+        List<String> customerTypes = new List<String>{ 'All' };
+        if (String.isNotBlank(c.FEC_Customer_Type__c)) {
+            customerTypes.add(c.FEC_Customer_Type__c);
+        }
+        List<FEC_Nature_of_Case__c> templateNocs = [
+            SELECT Id
+            FROM FEC_Nature_of_Case__c
+            WHERE
+                FEC_Product_Type__c = :c.FEC_Product_Type__c
+                AND FEC_Category__c = :c.FEC_Category__c
+                AND FEC_Sub_Category__c = :c.FEC_SubCategory__c
+                AND FEC_Sub_Code__c = :c.FEC_SubCode__c
+                AND FEC_Customer_Type__c IN :customerTypes
+                AND FEC_Active__c = TRUE
+            LIMIT 1
+        ];
+        return templateNocs.isEmpty() ? null : templateNocs[0].Id;
     }
 
     private static Boolean isLatestRevertToCurrentStage(

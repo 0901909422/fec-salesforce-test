@@ -36,6 +36,9 @@ private class FEC_CaseAssignmentQueueRoleResolver_Test {
         );
         insert agentUser;
 
+        // Assign Permission Sets cho FLS access
+        FEC_TestDataFactory.assignStandardFECPermissions(agentUser.Id);
+
         // 5. Thiết lập sơ đồ thành viên đa tầng (GroupMember Mapping)
         // Thành viên 1: Gắn User trực tiếp vào Sub-Group
         GroupMember gmUserToSubGroup = new GroupMember(GroupId = subGroup.Id, UserOrGroupId = agentUser.Id);

@@ -58,6 +58,9 @@ private class FEC_UMSUserManagementRestService_Test {
         );
         insert existing;
 
+        // Assign Permission Sets cho FLS access
+        FEC_TestDataFactory.assignStandardFECPermissions(existing.Id);
+
         System.runAs(adminUser()) {
             insert new GroupMember(GroupId = umsQueue.Id, UserOrGroupId = existing.Id);
         }

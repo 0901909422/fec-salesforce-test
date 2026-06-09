@@ -6,7 +6,7 @@
     <filters>
         <field>NAME</field>
         <operation>contains</operation>
-        <value>Interactions &amp; Service Cases Summary TAT - Contract Processing</value>
+        <value>Interactions &amp; Service Cases TAT - CP</value>
     </filters>
     <label>Interactions &amp; Service Cases TAT - CP</label>
     <sharedTo>

@@ -3,7 +3,6 @@
     <fullName>FEC_Self_Service_Flag__c</fullName>
     <defaultValue>false</defaultValue>
     <description>Cờ đánh dấu có giới hạn dữ liệu được khai thác hay không</description>
-    <externalId>false</externalId>
     <label>Self-Service Flag</label>
     <trackHistory>true</trackHistory>
     <trackTrending>false</trackTrending>

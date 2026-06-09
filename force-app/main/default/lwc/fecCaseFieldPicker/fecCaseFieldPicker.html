@@ -1,0 +1,71 @@
+<template>
+    <div class="slds-form-element">
+        <div class={dropdownClass}>
+            <div class="slds-combobox__form-element slds-input-has-icon slds-input-has-icon_right" role="none">
+                <input
+                    type="text"
+                    class={inputClass}
+                    placeholder={placeholder}
+                    aria-label={label}
+                    value={searchTerm}
+                    disabled={disabled}
+                    onfocus={handleFocus}
+                    onblur={handleBlur}
+                    oninput={handleInput}
+                    autocomplete="off"
+                    role="textbox"
+                />
+                <lightning-icon
+                    icon-name="utility:search"
+                    size="x-small"
+                    class="slds-input__icon slds-input__icon_right slds-icon-text-default">
+                </lightning-icon>
+            </div>
+
+            <template lwc:if={isOpen}>
+                <div class="slds-listbox slds-listbox_vertical slds-dropdown slds-dropdown_fluid slds-dropdown_length-with-icon-7" role="listbox">
+                    <template lwc:if={hasResults}>
+                        <template for:each={filteredGroups} for:item="grp">
+                            <div key={grp.name}>
+                                <div class="slds-listbox__item slds-listbox__option_plain group-header slds-p-around_xx-small">
+                                    <lightning-icon
+                                        icon-name={grp.iconName}
+                                        size="xx-small"
+                                        class="slds-m-right_xx-small">
+                                    </lightning-icon>
+                                    <span class="slds-text-title_caps slds-text-color_weak">{grp.name}</span>
+                                </div>
+                                <template for:each={grp.items} for:item="opt">
+                                    <div
+                                        key={opt.value}
+                                        class="slds-listbox__item"
+                                        role="presentation">
+                                        <div
+                                            class="slds-media slds-listbox__option slds-listbox__option_plain slds-media_small slds-p-left_medium"
+                                            data-value={opt.value}
+                                            onmousedown={handleOptionClick}
+                                            role="option">
+                                            <span class="slds-truncate" title={opt.label}>{opt.label}</span>
+                                        </div>
+                                    </div>
+                                </template>
+                            </div>
+                        </template>
+                    </template>
+                    <template lwc:else>
+                        <div class="slds-listbox__item slds-text-color_weak slds-p-around_small">
+                            {noMatchLabel}
+                        </div>
+                    </template>
+                </div>
+            </template>
+        </div>
+
+        <template lwc:if={isValueInvalid}>
+            <div class="slds-form-element__help slds-text-color_warning slds-text-body_small">
+                <lightning-icon icon-name="utility:warning" size="xx-small" class="slds-m-right_xx-small"></lightning-icon>
+                {invalidValueLabel}
+            </div>
+        </template>
+    </div>
+</template>

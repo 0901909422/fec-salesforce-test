@@ -45,7 +45,7 @@ public without sharing class FEC_DNBHandler {
         // Simulate fetching data from server
         Case caseRecord = [
       SELECT Id, FEC_Customer_Name__c,
-      FEC_Account_or_Contract__r.FEC_Search_Result_National_ID__c ,
+      FEC_Account_or_Contract__r.FEC_National_ID_Passport_ID__c ,
       FEC_Phone_Number__c, FEC_Interaction__r.FEC_Phone_Number__c,
       FEC_Interaction__r.FEC_Interaction_Masked_Phone__c,
       FEC_Interaction__r.FEC_Interaction_Email__c,
@@ -57,7 +57,7 @@ public without sharing class FEC_DNBHandler {
         CaseInfoResponse response = new CaseInfoResponse();
         response.customerName = caseRecord.FEC_Customer_Name__c;
         response.nationalId =
-            caseRecord.FEC_Account_or_Contract__r.FEC_Search_Result_National_ID__c;
+            caseRecord.FEC_Account_or_Contract__r.FEC_National_ID_Passport_ID__c;
         response.primaryPhoneNumber = caseRecord.FEC_Phone_Number__c;
         response.interactionPhoneNumber =
             caseRecord.FEC_Interaction__r.FEC_Phone_Number__c;
@@ -184,10 +184,11 @@ public without sharing class FEC_DNBHandler {
             FEC_PsDNBServiceCallout.DNBResult result =
                 FEC_PsDNBServiceCallout.notifyPsDNB(reqList);
             
+            System.debug('RESULT = ' + JSON.serialize(result));
             /*
              * Persist DB if success
              */
-            if (result != null && Integer.valueOf(result.code) == 0) {
+            if (result != null && result.success == true)  {
                 saveDNBUpdates(payload);
                 
                 
@@ -201,12 +202,28 @@ public without sharing class FEC_DNBHandler {
             return result;
             
         } catch (Exception e) {
+            
+            System.debug('===== ERROR MESSAGE =====');
+            System.debug(e.getMessage());
+            
+            System.debug('===== ERROR TYPE =====');
+            System.debug(e.getTypeName());
+            
+            System.debug('===== STACK =====');
+            System.debug(e.getStackTraceString());
+            
             FEC_CommonUltils.createProcessActionHistory(
                 'Create DNB',
             selectedCase,
             false
                 );
-            throw new AuraHandledException('Create DNB failed: ' + e.getMessage());
+            
+            throw new AuraHandledException(
+                'Create DNB failed: ' +
+                e.getTypeName() +
+                ' - ' +
+                e.getMessage()
+                );
         }
     }
     

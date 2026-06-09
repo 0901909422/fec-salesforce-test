@@ -135,7 +135,8 @@ public with sharing class FEC_CustomerAdditionalInfoListController {
         try {
             if (configId != null) {
                 FEC_CustomerAdditionalInfoConfig__c config = [
-                    SELECT Id, FEC_Status__c 
+                    SELECT Id, FEC_Status__c, FEC_KeyIdentifier__c, FEC_FieldID__c,
+                           FEC_IsActive__c, FEC_StartDate__c, FEC_EndDate__c
                     FROM FEC_CustomerAdditionalInfoConfig__c 
                     WHERE Id = :configId 
                     LIMIT 1

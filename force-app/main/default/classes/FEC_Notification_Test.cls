@@ -93,6 +93,9 @@ private class FEC_Notification_Test {
         );
         insert testUser;
 
+        // Assign Permission Sets cho FLS access
+        FEC_TestDataFactory.assignStandardFECPermissions(testUser.Id);
+
         String queueDevName = ('Test_Queue_' + suffix).left(40);
 
         User runAsUser = [SELECT Id FROM User WHERE Id = :UserInfo.getUserId()];

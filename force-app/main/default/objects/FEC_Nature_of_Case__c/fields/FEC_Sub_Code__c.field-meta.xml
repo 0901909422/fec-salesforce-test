@@ -3,7 +3,6 @@
     <fullName>FEC_Sub_Code__c</fullName>
     <deleteConstraint>SetNull</deleteConstraint>
     <description>Thông tin danh mục con</description>
-    <externalId>false</externalId>
     <label>Sub Code</label>
     <lookupFilter>
         <active>true</active>
