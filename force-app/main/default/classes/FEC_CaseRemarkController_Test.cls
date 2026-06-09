@@ -1,6 +1,34 @@
 @IsTest
 private class FEC_CaseRemarkController_Test {
 
+    private static void updateRunUserWithRole(Id roleId) {
+        Map<String, Schema.SObjectField> userFields = User.SObjectType.getDescribe().fields.getMap();
+        User runUser = new User(Id = UserInfo.getUserId(), UserRoleId = roleId);
+
+        if (userFields.containsKey('FEC_Main_Queue__c')) {
+            List<Group> queues = [
+                SELECT DeveloperName
+                FROM Group
+                WHERE Type = 'Queue'
+                  AND DeveloperName = :FEC_ConstantCommon.QUEUE_DQ_CS_SUPPORT_NAME
+                LIMIT 1
+            ];
+            if (queues.isEmpty()) {
+                Group q = new Group(
+                    Name = 'Remark Test CS Support Queue',
+                    DeveloperName = FEC_ConstantCommon.QUEUE_DQ_CS_SUPPORT_NAME,
+                    Type = 'Queue'
+                );
+                insert q;
+                runUser.FEC_Main_Queue__c = q.DeveloperName;
+            } else {
+                runUser.FEC_Main_Queue__c = queues[0].DeveloperName;
+            }
+        }
+
+        update runUser;
+    }
+
     @TestSetup
     static void setupData() {
         String suffix = String.valueOf(System.currentTimeMillis());
@@ -10,7 +38,7 @@ private class FEC_CaseRemarkController_Test {
         insert agentRole;
 
         System.runAs(new User(Id = UserInfo.getUserId())) {
-            update new User(Id = UserInfo.getUserId(), UserRoleId = agentRole.Id);
+            updateRunUserWithRole(agentRole.Id);
 
             FEC_Case_Stage__c stage1 = new FEC_Case_Stage__c(
                 Name = 'Stage 1', FEC_Code__c = 'STG1', FEC_Active__c = true

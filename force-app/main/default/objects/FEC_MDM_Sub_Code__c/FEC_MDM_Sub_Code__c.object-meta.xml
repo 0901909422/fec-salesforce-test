@@ -153,9 +153,10 @@
     <enableSharing>true</enableSharing>
     <enableStreamingApi>true</enableStreamingApi>
     <externalSharingModel>Private</externalSharingModel>
-    <label>FEC_MDM_Sub_Code__c</label>
+    <label>Sub Code MDM</label>
     <nameField>
-        <label>FEC_MDM_Sub_Code__c</label>
+        <label>English Name</label>
+        <trackHistory>true</trackHistory>
         <type>Text</type>
     </nameField>
     <pluralLabel>FEC_MDM_Sub_Codes__c</pluralLabel>

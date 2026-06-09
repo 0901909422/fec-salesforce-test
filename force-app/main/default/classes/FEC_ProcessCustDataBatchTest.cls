@@ -67,7 +67,7 @@ private class FEC_ProcessCustDataBatchTest {
 
     @isTest
     static void testQueueableWithFullFinalize() {
-        FEC_CustomerAdditionalInfoConfig__c cfg = [SELECT Id FROM FEC_CustomerAdditionalInfoConfig__c LIMIT 1];
+        FEC_CustomerAdditionalInfoConfig__c cfg = [SELECT Id, FEC_KeyIdentifier__c, FEC_FieldID__c FROM FEC_CustomerAdditionalInfoConfig__c LIMIT 1];
 
         // Tạo Excel file để test finalize update
         ContentVersion cvExcel = new ContentVersion(
@@ -91,9 +91,13 @@ private class FEC_ProcessCustDataBatchTest {
         insert cvJson;
         Id jsonDocId = [SELECT ContentDocumentId FROM ContentVersion WHERE Id = :cvJson.Id].ContentDocumentId;
 
+        // Must populate required fields and CompositeKey for successful upsert
         FEC_CustomerAdditionalInfo__c detail = new FEC_CustomerAdditionalInfo__c(
             FEC_Config__c = cfg.Id,
-            FEC_KeyIDValue__c = 'FULL_TEST'
+            FEC_KeyIDValue__c = 'FULL_TEST',
+            FEC_KeyIdentifier__c = cfg.FEC_KeyIdentifier__c,
+            FEC_FieldID__c = cfg.FEC_FieldID__c,
+            FEC_CompositeKey__c = 'FULL_TEST' + FEC_ConstantCommon.COMPOSITE_KEY_DELIMITER + cfg.FEC_KeyIdentifier__c + FEC_ConstantCommon.COMPOSITE_KEY_DELIMITER + cfg.FEC_FieldID__c
         );
 
         Test.startTest();
@@ -145,8 +149,8 @@ private class FEC_ProcessCustDataBatchTest {
         Database.executeBatch(new FEC_ProcessCustomerDataBatch());
         Test.stopTest();
 
-        // Config without JSON should remain Uploaded (not processed)
+        // Config without JSON is marked Processed by batch (no data to process = done)
         FEC_CustomerAdditionalInfoConfig__c result = [SELECT FEC_Status__c FROM FEC_CustomerAdditionalInfoConfig__c WHERE Id = :cfgNoJson.Id];
-        System.assertEquals(FEC_ConstantCommon.UPLOADED_STATUS, result.FEC_Status__c, 'Config không có JSON phải giữ nguyên status');
+        System.assertEquals(FEC_ConstantCommon.PROCESSED_STATUS, result.FEC_Status__c, 'Config không có JSON phải chuyển sang Processed');
     }
 }

@@ -104,6 +104,37 @@ public without sharing class FEC_ServiceCaseEmailService {
                 em.Status      = '3';
                 em.MessageDate = Datetime.now();
                 insert em;
+
+                // Store outgoing email attachments on the EmailMessage history record
+                if (attachments != null && !attachments.isEmpty()) {
+                    List<ContentVersion> cvs = new List<ContentVersion>();
+                    for (AttachmentWrapper att : attachments) {
+                        if (String.isBlank(att.base64Data) || String.isBlank(att.fileName)) continue;
+                        ContentVersion cv = new ContentVersion();
+                        cv.Title = att.fileName.contains('.') ? att.fileName.substringBeforeLast('.') : att.fileName;
+                        cv.PathOnClient = att.fileName;
+                        cv.VersionData = EncodingUtil.base64Decode(att.base64Data);
+                        cvs.add(cv);
+                    }
+                    if (!cvs.isEmpty()) {
+                        insert cvs;
+                        List<ContentVersion> insertedCvs = [
+                            SELECT Id, ContentDocumentId
+                            FROM ContentVersion
+                            WHERE Id IN :cvs
+                        ];
+                        List<ContentDocumentLink> links = new List<ContentDocumentLink>();
+                        for (ContentVersion cv : insertedCvs) {
+                            links.add(new ContentDocumentLink(
+                                ContentDocumentId = cv.ContentDocumentId,
+                                LinkedEntityId = em.Id,
+                                ShareType = 'V',
+                                Visibility = 'AllUsers'
+                            ));
+                        }
+                        if (!links.isEmpty()) insert links;
+                    }
+                }
             } catch (Exception emEx) {
                 System.debug('EmailMessage insert skipped: ' + emEx.getMessage());
             }

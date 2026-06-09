@@ -3,6 +3,31 @@ private class FEC_AutoHoldCaseServiceTest {
 
     private static final String CONTRACT_NUMBER = '12345678-123456-1234';
 
+    private static String holdConfigStatusValue(String fieldApi, String preferred) {
+        Map<String, Schema.SObjectField> fieldMap =
+            FEC_Hold_Case_Config__c.SObjectType.getDescribe().fields.getMap();
+        if (!fieldMap.containsKey(fieldApi)) {
+            return preferred;
+        }
+        Schema.DescribeFieldResult d = fieldMap.get(fieldApi).getDescribe();
+        if (d.getType() != Schema.DisplayType.PICKLIST) {
+            return preferred;
+        }
+        String fallback;
+        for (Schema.PicklistEntry entry : d.getPicklistValues()) {
+            if (!entry.isActive()) {
+                continue;
+            }
+            if (fallback == null) {
+                fallback = entry.getValue();
+            }
+            if (preferred != null && entry.getValue().equalsIgnoreCase(preferred)) {
+                return entry.getValue();
+            }
+        }
+        return fallback != null ? fallback : preferred;
+    }
+
     @TestSetup
     static void setupData() {
         // 1. Tạo các danh mục cơ sở
@@ -58,8 +83,8 @@ private class FEC_AutoHoldCaseServiceTest {
             FEC_Nature_of_Cases__c = noc.Id,
             FEC_Case_Stage__c = stage.Id,
             FEC_NFU_Code__c = 'NFU001',
-            FEC_Current_Status__c = 'New',
-            FEC_Changed_Status__c = 'Pending'
+            FEC_Current_Status__c = holdConfigStatusValue('FEC_Current_Status__c', 'New'),
+            FEC_Changed_Status__c = holdConfigStatusValue('FEC_Changed_Status__c', 'Pending')
         );
         insert config;
 
@@ -209,13 +234,21 @@ private class FEC_AutoHoldCaseServiceTest {
     @IsTest
     static void testProcessAutoHoldCase_Success() {
         Case c = [SELECT Id, FEC_Current_Case_Stage__c FROM Case LIMIT 1];
-        
-        // Tạo History giả lập hành động Submit
+
+        // Query the config to get the actual status values (may differ from 'New'/'Pending' if picklist restricted)
+        FEC_Hold_Case_Config__c config = [
+            SELECT FEC_Current_Status__c, FEC_Changed_Status__c
+            FROM FEC_Hold_Case_Config__c WHERE FEC_Active__c = true AND Hold_Case_Type__c = 'Auto' LIMIT 1
+        ];
+        String currentStatusVal = config.FEC_Current_Status__c;
+        String changedStatusVal = config.FEC_Changed_Status__c;
+
+        // Tạo History giả lập hành động Submit with matching status values
         FEC_Routing_Action_History__c history = new FEC_Routing_Action_History__c(
             FEC_Case__c = c.Id,
             FEC_Routing_Action__c = 'Submit',
-            FEC_Current_Status__c = 'New',
-            FEC_Changed_Status__c = 'Pending',
+            FEC_Current_Status__c = currentStatusVal,
+            FEC_Changed_Status__c = changedStatusVal,
             FEC_Previous_Stage__c = c.FEC_Current_Case_Stage__c
         );
         insert history;
@@ -243,11 +276,18 @@ private class FEC_AutoHoldCaseServiceTest {
     @IsTest
     static void testProcessAutoHoldCase_AlreadyMarked() {
         Case c = [SELECT Id, FEC_Current_Case_Stage__c FROM Case LIMIT 1];
+
+        // Query the config to get the actual status values
+        FEC_Hold_Case_Config__c config = [
+            SELECT FEC_Current_Status__c, FEC_Changed_Status__c
+            FROM FEC_Hold_Case_Config__c WHERE FEC_Active__c = true AND Hold_Case_Type__c = 'Auto' LIMIT 1
+        ];
+
         FEC_Routing_Action_History__c history = new FEC_Routing_Action_History__c(
             FEC_Case__c = c.Id,
             FEC_Routing_Action__c = 'Submit',
-            FEC_Current_Status__c = 'New',
-            FEC_Changed_Status__c = 'Pending',
+            FEC_Current_Status__c = config.FEC_Current_Status__c,
+            FEC_Changed_Status__c = config.FEC_Changed_Status__c,
             FEC_Previous_Stage__c = c.FEC_Current_Case_Stage__c
         );
         insert history;

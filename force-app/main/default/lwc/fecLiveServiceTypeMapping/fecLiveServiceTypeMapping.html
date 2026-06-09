@@ -1,0 +1,59 @@
+<template>
+    <div class="slds-grid slds-wrap slds-box slds-theme_default slds-is-relative">
+        <template if:true={isLoading}>
+            <lightning-spinner alternative-text="Loading..." size="medium"></lightning-spinner>
+        </template>
+
+        <div class="slds-col slds-size_1-of-4 slds-border_right slds-p-around_small">
+            <h3 class="slds-text-heading_small slds-m-bottom_medium">{labelServiceTypes}</h3>
+            <template if:true={hasTreeItems}>
+                <lightning-tree
+                    items={treeItems}
+                    onselect={handleSelect}>
+                </lightning-tree>
+            </template>
+            <template if:false={hasTreeItems}>
+                <template if:false={isLoading}>
+                    <p class="slds-text-color_weak slds-p-around_medium">{labelNoData}</p>
+                </template>
+            </template>
+        </div>
+
+        <div class="slds-col slds-size_3-of-4 slds-p-around_small">
+            <div class="slds-page-header">
+                <h2 class="slds-page-header__title">{title}</h2>
+            </div>
+
+            <template if:true={selectedProperty}>
+                <div class="slds-m-top_large">
+                    <table class="slds-table slds-table_bordered">
+                        <thead>
+                            <tr class="slds-line-height_reset">
+                                <th scope="col">{tableHeaderProperty}</th>
+                                <th scope="col">{tableHeaderReference}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="slds-theme_shade">
+                                    <strong>{selectedProperty.label}</strong>
+                                    <p class="slds-text-color_weak slds-text-body_small">BP: {selectedProperty.parentName}</p>
+                                </td>
+                                <td>
+                                    <lightning-formatted-text value={selectedProperty.propertyRef}></lightning-formatted-text>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </template>
+
+            <template if:false={selectedProperty}>
+                <div class="slds-align_absolute-center slds-m-top_xx-large slds-text-color_weak">
+                    <lightning-icon icon-name="utility:info" size="small" class="slds-m-right_x-small"></lightning-icon>
+                    {messageSelectProperty}
+                </div>
+            </template>
+        </div>
+    </div>
+</template>

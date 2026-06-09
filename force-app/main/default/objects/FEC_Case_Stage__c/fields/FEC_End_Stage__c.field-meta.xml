@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>FEC_End_Stage__c</fullName>
+    <defaultValue>false</defaultValue>
+    <description>Xác định đâu là Stage kết thúc của quy trình</description>
+    <label>End Stage</label>
+    <trackHistory>true</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Checkbox</type>
+</CustomField>

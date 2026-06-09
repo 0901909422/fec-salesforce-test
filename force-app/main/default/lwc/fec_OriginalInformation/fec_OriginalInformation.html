@@ -19,4 +19,13 @@
             </div>
         </template>
     </div>
+    <template if:true={isFraudCase}>
+        <div class="slds-col slds-size_1-of-1 slds-m-top_medium">
+            <c-fec-integration-manage-fraud-case
+                record-id={recordId}
+                nature-of-case-id={natureOfCaseId}
+                action-view="ViewOriginal">
+            </c-fec-integration-manage-fraud-case>
+        </div>
+    </template>
 </template>

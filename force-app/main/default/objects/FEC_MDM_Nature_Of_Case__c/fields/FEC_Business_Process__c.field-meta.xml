@@ -2,7 +2,6 @@
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
     <fullName>FEC_Business_Process__c</fullName>
     <deleteConstraint>SetNull</deleteConstraint>
-    <externalId>false</externalId>
     <label>Business Process</label>
     <referenceTo>FEC_MDM_Business_Process__c</referenceTo>
     <relationshipLabel>Nature of Case MDM</relationshipLabel>
