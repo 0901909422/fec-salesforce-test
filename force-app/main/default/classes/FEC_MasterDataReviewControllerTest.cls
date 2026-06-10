@@ -79,7 +79,7 @@ private class FEC_MasterDataReviewControllerTest {
         // FEC_Code__c = 'EXT_SYNC' để match với MDM record bên dưới → verify updateList
         FEC_Master_Data_Setting__c live = new FEC_Master_Data_Setting__c(
             FEC_Code__c = 'EXT_SYNC',
-            FEC_Channel__c = chWeb.Id,
+            // FEC_Channel__c = chWeb.Id,
             FEC_Field_Mandatory__c = false
         );
         insert live;
