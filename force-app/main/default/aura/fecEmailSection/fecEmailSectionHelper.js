@@ -182,6 +182,35 @@
         quill.root.style.fontFamily = '"Times New Roman",serif';
         quill.root.style.fontSize = '14px';
         window._fecQuill = quill;
+        // Template HTML is written directly to the editor DOM, so use a native paste
+        // handler to keep pasted content at the real browser caret position.
+        quill.root.addEventListener('paste', function(e) {
+            var sel = window.getSelection && window.getSelection();
+            if (!sel || sel.rangeCount === 0) return;
+            var range = sel.getRangeAt(0);
+            if (!quill.root.contains(range.commonAncestorContainer)) return;
+
+            e.preventDefault();
+            e.stopImmediatePropagation();
+
+            var cd = e.clipboardData || window.clipboardData;
+            var text = cd ? cd.getData('text/plain') : '';
+            var html = cd ? cd.getData('text/html') : '';
+
+            window._fecPasteUndoHtml = quill.root.innerHTML;
+            // Prefer browser editing commands so paste is added to the native undo stack
+            // and Ctrl+Z can undo it. Plain text keeps insertion inline at the caret.
+            sel.removeAllRanges();
+            sel.addRange(range);
+            if (text) {
+                document.execCommand('insertText', false, text);
+            } else if (html) {
+                document.execCommand('insertHTML', false, self.cleanBody(html));
+            }
+            self._makeTableCellsEditable(quill.root);
+            component.set('v.body', quill.root.innerHTML);
+            component.set('v.rawBody', quill.root.innerHTML);
+        }, true);
         // Override Quill's built-in image handler (uses window.prompt by default)
         var tbMod = quill.getModule('toolbar');
         if (tbMod) tbMod.addHandler('image', function() {});
@@ -652,6 +681,34 @@
 
         // Keyboard handler: xá»­ lÃ½ table + Backspace/Delete
         quill.root.addEventListener('keydown', function(e) {
+            // Quill history does not know about native DOM paste into template HTML.
+            // Route undo/redo to the browser edit stack so Ctrl+Z can undo pasted text.
+            if ((e.ctrlKey || e.metaKey) && !e.altKey) {
+                var key = (e.key || '').toLowerCase();
+                if (key === 'z' || e.keyCode === 90) {
+                    e.preventDefault();
+                    e.stopImmediatePropagation();
+                    var beforeUndoHtml = quill.root.innerHTML;
+                    var undoOk = document.execCommand(e.shiftKey ? 'redo' : 'undo', false, null);
+                    if (!e.shiftKey && window._fecPasteUndoHtml && quill.root.innerHTML === beforeUndoHtml) {
+                        quill.root.innerHTML = window._fecPasteUndoHtml;
+                        quill.root.classList.remove('ql-blank');
+                        self._makeTableCellsEditable(quill.root);
+                        window._fecPasteUndoHtml = null;
+                    }
+                    component.set('v.body', quill.root.innerHTML);
+                    component.set('v.rawBody', quill.root.innerHTML);
+                    return;
+                }
+                if (key === 'y' || e.keyCode === 89) {
+                    e.preventDefault();
+                    e.stopImmediatePropagation();
+                    document.execCommand('redo', false, null);
+                    component.set('v.body', quill.root.innerHTML);
+                    component.set('v.rawBody', quill.root.innerHTML);
+                    return;
+                }
+            }
             var sel = window.getSelection();
             if (!sel || sel.rangeCount === 0) return;
             var range = sel.getRangeAt(0);
@@ -825,7 +882,7 @@
                 component.set('v.toEmail', d.toEmail||'');
                 component.set('v.isManualInteraction', d.isManual === 'true');
                 component.set('v.incomingToAddress', d.fromEmail||'');
-                // Interaction: dùng From dropdown gi?ng Service Case, default theo From dã resolve t? field/source.
+                // Interaction: dï¿½ng From dropdown gi?ng Service Case, default theo From dï¿½ resolve t? field/source.
                 self.loadFromAddresses(component, d.fromEmail || '');
                 if (!d.fromEmail) {
                     self.loadTemplates(component, component.get('v.fromEmail') || '');
