@@ -51,7 +51,8 @@ private class FEC_CustomerIntegrationService_Test {
                     '<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">' +
                     '<soapenv:Body><GetDocumentsListResponse>' +
                     '<Sys><Code>1</Code><Description>OK</Description></Sys>' +
-                    '<Documents><Document><DocumentID>DOC-SYNC-001</DocumentID></Document></Documents>' +
+                    '<Documents><Document><DocumentID>DOC-SYNC-001</DocumentID>' +
+                    '<IDDocumentNumber>DOC-SYNC-001</IDDocumentNumber></Document></Documents>' +
                     '</GetDocumentsListResponse></soapenv:Body></soapenv:Envelope>'
                 );
                 return res;

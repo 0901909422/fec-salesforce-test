@@ -96,7 +96,7 @@ public with sharing class FEC_SearchController {
             String.isBlank(interactionCase.FEC_Phone_Number__c)
         ) {
             throw new AuraHandledException(
-                System.Label.FEC_PHONE_IS_REQUIRED_MSG
+                System.Label.FEC_INTERACTION_PHONE_REQUIRED
             );
         }
     }
@@ -320,10 +320,15 @@ public with sharing class FEC_SearchController {
             List<Map<String, String>> rows = new List<Map<String, String>>();
             if (res != null && res.success && res.histories != null) {
                 for (FEC_GetLoanApplicationHistory.ApplicationHistory h : res.histories) {
+                    String statusLabel = FEC_GetLoanApplicationHistory.resolveStatusLabel(
+                        h.statusId
+                    );
                     rows.add(new Map<String, String>{
                         'user'     => h.userName,
                         'activity' => h.activityId,
-                        'status'   => FEC_GetLoanApplicationHistory.resolveStatusLabel(h.statusId),
+                        'status'   => String.isNotBlank(statusLabel)
+                            ? statusLabel
+                            : h.statusId,
                         'editDate' => h.editDate
                     });
                 }

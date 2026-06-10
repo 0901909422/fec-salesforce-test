@@ -29,9 +29,10 @@
         <members>FEC_BCC_ImportResolveHistService</members>
         <members>FEC_BCC_ImportResolveHistService_Test</members>
         <members>FEC_BCH_ImportQueueable_Test</members>
-        <members>FEC_BCH_ImportValidateQueueable</members>
         <members>FEC_BCH_ImportRoutingHistoryService</members>
         <members>FEC_BCH_ImportRoutingHistoryServiceTest</members>
+        <members>FEC_BCH_ImportValidateQueueable</members>
+        <members>FEC_BCH_ImportValidateQueueable_Test</members>
         <members>FEC_BCH_TemplateExportService</members>
         <members>FEC_BatchCaseCreationService</members>
         <members>FEC_BatchCaseCreationService_Test</members>
@@ -39,10 +40,10 @@
         <members>FEC_BatchCaseHandlingImportQueueableTest</members>
         <members>FEC_BatchCaseHandlingTemplateHelper</members>
         <members>FEC_BatchCaseHandlingTemplateHelper_Test</members>
-        <members>FEC_CaseBusinessService</members>
-        <members>FEC_CaseBusinessService_Test</members>
         <members>FEC_CaseMasterDataHelper</members>
         <members>FEC_CaseMasterDataHelper_Test</members>
+        <members>FEC_CaseBusinessService</members>
+        <members>FEC_CaseBusinessService_Test</members>
         <members>FEC_CaseDsTsSlaNotificationSender</members>
         <members>FEC_CaseDsTsSlaNotificationSender_Test</members>
         <members>FEC_CaseDsTsSlaService</members>
@@ -75,6 +76,8 @@
         <members>FEC_DNBHandler</members>
         <members>FEC_DNBHandler_Test</members>
         <members>FEC_DownloadReportController</members>
+        <members>FEC_FetchWelcomeCallDetailsRestService</members>
+        <members>FEC_FetchWelcomeCallDetailsRest_Test</members>
         <members>FEC_GetCSCaseStatusRestService_Test</members>
         <members>FEC_GetCSCaseStatusService</members>
         <members>FEC_GetCSCaseStatusService_Test</members>
@@ -107,6 +110,8 @@
         <members>FEC_GetUnbilledTransactions_Test</members>
         <members>FEC_InteractionInforHandler</members>
         <members>FEC_InteractionInforHandler_Test</members>
+        <members>FEC_MainInfoController</members>
+        <members>FEC_MainInfoController_Test</members>
         <members>FEC_MainInfoLoanAccountController</members>
         <members>FEC_MainInfoLoanAccountController_Test</members>
         <members>FEC_MyCaseSoapXml</members>
@@ -134,9 +139,19 @@
         <members>FEC_VMXAUTHDETAILINQ</members>
         <members>FEC_VMXAUTHDETAILINQ_Test</members>
         <members>FEC_AssignmentExecuteService</members>
-        <members>FEC_MainInfoController</members>
+        <members>FEC_AssignmentExecuteService_Test</members>
         <members>FEC_CardPaymentController</members>
+        <members>FEC_CardPaymentController_Test</members>
         <members>FEC_RepaySchedPayHistController</members>
+        <members>FEC_RepaySchedPayHistController_Test</members>
+        <members>FEC_DownloadReportController_Test</members>
+        <members>FEC_OwnerTeamLookupSvc</members>
+        <members>FEC_RoutingHistTatSvc</members>
+        <members>FEC_TeamGroupCodeUtil</members>
+        <members>FEC_UMSUserManagementRestService</members>
+        <members>FEC_UMSUserManagementRestService_Test</members>
+        <members>FEC_BlockCodeRoutingService</members>
+        <members>FEC_ContentDocumentLinkTriggerHandler</members>
         <name>ApexClass</name>
     </types>
     <types>
@@ -192,6 +207,8 @@
         <members>fec_holdCaseManual</members>
         <members>fec_SkipModal</members>
         <members>customDblclickCell</members>
+        <members>fec_SecondaryInfoLoanAccount</members>
+        <members>fec_AppInfo</members>
         <name>LightningComponentBundle</name>
     </types>
     <types>
@@ -214,6 +231,10 @@
         <members>Case.FEC_Is_Manual__c</members>
         <members>Case.FEC_KYC_Status__c</members>
         <members>Case.FEC_Search_Products__c</members>
+        <members>Case.FEC_Category_Text__c</members>
+		<members>Case.FEC_Product_Type_Text__c</members>
+		<members>Case.FEC_Sub_Category_Text__c</members>
+		<members>Case.FEC_Sub_Code_Text__c</members>
         <members>FEC_Actual_Master_Data_Setting__c.FEC_Channel__c</members>
         <members>FEC_Master_Data_Setting__c.FEC_Channel__c</members>
         <members>FEC_Application_Status_Mapping__mdt.FEC_Status_Code__c</members>
@@ -228,6 +249,8 @@
         <members>FEC_Email_File_Upload_Help</members>
         <members>FEC_Email_File_Uploaded_Added</members>
         <members>FEC_BCH_TemplateFileMismatch</members>
+        <members>FEC_INTERACTION_PHONE_REQUIRED</members>
+        <members>FEC_Email_File_Already_In_Email</members>
         <name>CustomLabel</name>
     </types>
     <types>
@@ -291,6 +314,7 @@
         <members>FEC_CS_CS_Outbound_Officer_Search_Functions</members>
         <members>FEC_CS_CS_Outbound_Specialist_Search_Functions</members>
         <members>FEC_RD_Contract_Processing_User_Search_Functions</members>
+		<members>RD_IT_User_Search_Functions</members>
         <members>FEC_CS_CS_Ecom_Officer_Master_Data_Management</members>
         <members>FEC_CS_CS_Ecom_Specialist_Master_Data_Management</members>
         <members>FEC_CS_CS_Ecom_Team_Leader_Master_Data_Management</members>
@@ -368,6 +392,10 @@
     <types>
         <members>FEC_CommonCss</members>
         <name>StaticResource</name>
+    </types>
+    <types>
+        <members>FEC_Case_With_Customer_Histories</members>
+        <name>ReportType</name>
     </types>
     <version>66.0</version>
 </Package>

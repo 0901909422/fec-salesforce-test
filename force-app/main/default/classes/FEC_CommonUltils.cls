@@ -1971,6 +1971,7 @@ public with sharing class FEC_CommonUltils {
     return FEC_ConstantCommon.STR_EMPTY;
   }
 
+  /** Map Code2 CheckExistUser sang FEMOBILEAPP SocialStatus: 1 -> YES, 2 -> NO. */
   public static String mapCheckExistUserCode2ToSocialStatus(Integer code2) {
     if (code2 == FEC_ConstantCommon.CHECK_EXIST_USER_CODE_EXISTS) {
       return FEC_ConstantCommon.SOCIAL_STATUS_YES;

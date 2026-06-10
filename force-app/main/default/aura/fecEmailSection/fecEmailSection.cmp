@@ -82,6 +82,7 @@
     <aura:attribute name="lblFilesSelectedSuffix" type="String" default="{!$Label.c.FEC_Email_File_Selected_Suffix}" />
     <aura:attribute name="lblFilesUploadHelp" type="String" default="{!$Label.c.FEC_Email_File_Upload_Help}" />
     <aura:attribute name="lblFileUploadedAdded" type="String" default="{!$Label.c.FEC_Email_File_Uploaded_Added}" />
+    <aura:attribute name="lblFileAlreadyInEmail" type="String" default="{!$Label.c.FEC_Email_File_Already_In_Email}" />
 
     <!-- Load viewMode từ Case record -->
     <force:recordData aura:id="caseData"
@@ -563,6 +564,11 @@
         </div>
     </aura:if>
 </aura:component>
+
+
+
+
+
 
 
 

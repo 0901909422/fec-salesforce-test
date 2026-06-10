@@ -256,12 +256,17 @@ export default class AccountOrContractPicklistCustomerCase extends LightningElem
 
       if (this.interactionSearchProducts) {
         this.interactionSearchProducts
-          .split("/")
+          .split(";")
           .map((item) => item.trim())
-          .filter(Boolean)
+          .filter(
+            (product) =>
+              product === INSURANCE_PRODUCT_NAME ||
+              product === B2_PRODUCT_NAME ||
+              product === CASH24_PRODUCT_NAME,
+          )
           .forEach((product) => {
-            mapped.push({
-              id: String(mapped.length + 1),
+            mappedData.push({
+              id: String(mappedData.length + 1),
               product: product,
               accountContractNumber: product,
               displayValue: "",

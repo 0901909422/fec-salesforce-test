@@ -35,6 +35,23 @@ public with sharing class FEC_GetLoanApplicationHistory {
     public List<ApplicationHistory> histories;
   }
 
+  public class CaseApplicationHistoryDisplay {
+    @AuraEnabled
+    public Id id;
+
+    @AuraEnabled
+    public String user;
+
+    @AuraEnabled
+    public String activityId;
+
+    @AuraEnabled
+    public String status;
+
+    @AuraEnabled
+    public Datetime editDate;
+  }
+
   public class ApplicationHistory {
     @AuraEnabled
     public String applicationId;
@@ -116,15 +133,15 @@ public with sharing class FEC_GetLoanApplicationHistory {
         for (Object appInfoObj : appInfosList) {
           Map<String, Object> appInfoMap = (Map<String, Object>) appInfoObj;
           ApplicationHistory appInfo = new ApplicationHistory();
-          appInfo.applicationId = (String) appInfoMap.get('APPLICATION_ID');
-          appInfo.userId = (String) appInfoMap.get('USER_ID');
-          appInfo.userName = (String) appInfoMap.get('USER_NAME');
-          appInfo.activityId = (String) appInfoMap.get('ACTIVITIY_ID');
-          appInfo.activityName = (String) appInfoMap.get('ACTIVITIY_NAME');
-          appInfo.statusId = (String) appInfoMap.get('STATUS_ID');
-          appInfo.editDate = (String) appInfoMap.get('EDIT_DATE');
-          appInfo.endDate = (String) appInfoMap.get('END_DATE');
-          appInfo.createdDate = (String) appInfoMap.get('CREATED_DATE');
+          appInfo.applicationId = toApiString(appInfoMap.get('APPLICATION_ID'));
+          appInfo.userId = toApiString(appInfoMap.get('USER_ID'));
+          appInfo.userName = toApiString(appInfoMap.get('USER_NAME'));
+          appInfo.activityId = toApiString(appInfoMap.get('ACTIVITIY_ID'));
+          appInfo.activityName = toApiString(appInfoMap.get('ACTIVITIY_NAME'));
+          appInfo.statusId = parseStatusId(appInfoMap);
+          appInfo.editDate = toApiString(appInfoMap.get('EDIT_DATE'));
+          appInfo.endDate = toApiString(appInfoMap.get('END_DATE'));
+          appInfo.createdDate = toApiString(appInfoMap.get('CREATED_DATE'));
           result.histories.add(appInfo);
         }
       }
@@ -202,6 +219,20 @@ public with sharing class FEC_GetLoanApplicationHistory {
   }
 
   @TestVisible
+  private static String toApiString(Object value) {
+    return value == null ? null : String.valueOf(value).trim();
+  }
+
+  @TestVisible
+  private static String parseStatusId(Map<String, Object> appInfoMap) {
+    String statusId = toApiString(appInfoMap.get('STATUS_ID'));
+    if (String.isNotBlank(statusId)) {
+      return statusId;
+    }
+    return toApiString(appInfoMap.get('STATUS'));
+  }
+
+  @TestVisible
   private static Map<String, String> statusLabelCache;
 
   public static String resolveStatusLabel(String statusCode) {
@@ -214,7 +245,10 @@ public with sharing class FEC_GetLoanApplicationHistory {
         SELECT FEC_Status_Code__c, FEC_Status_Label__c
         FROM FEC_Application_Status_Mapping__mdt
       ]) {
-        if (String.isNotBlank(mapping.FEC_Status_Code__c)) {
+        if (
+          String.isNotBlank(mapping.FEC_Status_Code__c) &&
+          String.isNotBlank(mapping.FEC_Status_Label__c)
+        ) {
           statusLabelCache.put(
             mapping.FEC_Status_Code__c.trim().toUpperCase(),
             mapping.FEC_Status_Label__c
@@ -223,13 +257,12 @@ public with sharing class FEC_GetLoanApplicationHistory {
       }
     }
     String key = statusCode.trim().toUpperCase();
-    return statusLabelCache.containsKey(key)
-      ? statusLabelCache.get(key)
-      : statusCode;
+    String mappedLabel = statusLabelCache.get(key);
+    return String.isNotBlank(mappedLabel) ? mappedLabel : statusCode;
   }
 
   @AuraEnabled
-  public static FEC_Application_History__c updateCaseApplicationHistory(
+  public static CaseApplicationHistoryDisplay updateCaseApplicationHistory(
     Id caseId
   ) {
     if (caseId == null) {
@@ -313,14 +346,25 @@ public with sharing class FEC_GetLoanApplicationHistory {
     if (targetApiHistory != null) {
       historyRec.FEC_User__c = targetApiHistory.userName;
       historyRec.FEC_Activity_ID__c = targetApiHistory.activityId;
-      historyRec.FEC_Status__c = resolveStatusLabel(targetApiHistory.statusId);
+      String statusLabel = resolveStatusLabel(targetApiHistory.statusId);
+      historyRec.FEC_Status__c = String.isNotBlank(statusLabel)
+        ? statusLabel
+        : targetApiHistory.statusId;
       historyRec.FEC_Edit_Date__c = String.isNotBlank(targetApiHistory.editDate)
         ? Date.valueOf(targetApiHistory.editDate)
         : null;
 
       upsert historyRec;
+
+      CaseApplicationHistoryDisplay display = new CaseApplicationHistoryDisplay();
+      display.id = historyRec.Id;
+      display.user = historyRec.FEC_User__c;
+      display.activityId = historyRec.FEC_Activity_ID__c;
+      display.status = historyRec.FEC_Status__c;
+      display.editDate = historyRec.FEC_Edit_Date__c;
+      return display;
     }
 
-    return historyRec;
+    return null;
   }
 }

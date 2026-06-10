@@ -208,7 +208,7 @@ public with sharing class FEC_LiveReviewService {
         Map<String, FEC_Master_Data_Setting__c> liveMap = new Map<String, FEC_Master_Data_Setting__c>();
         if (mdmCodes.isEmpty()) return liveMap;
         List<FEC_Master_Data_Setting__c> liveQuery = [
-            SELECT Name, FEC_Code__c, FEC_Channel__c, FEC_Channel__r.Name,
+            SELECT Name, FEC_Code__c, 
                    FEC_Stage_Name__c, FEC_Section__c, FEC_Field_Mandatory__c
             FROM   FEC_Master_Data_Setting__c
             WHERE  FEC_Code__c IN :mdmCodes
