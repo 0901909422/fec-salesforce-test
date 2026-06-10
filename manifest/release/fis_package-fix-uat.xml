@@ -76,6 +76,8 @@
         <members>FEC_DNBHandler</members>
         <members>FEC_DNBHandler_Test</members>
         <members>FEC_DownloadReportController</members>
+        <members>FEC_FetchWelcomeCallDetailsRestService</members>
+        <members>FEC_FetchWelcomeCallDetailsRest_Test</members>
         <members>FEC_GetCSCaseStatusRestService_Test</members>
         <members>FEC_GetCSCaseStatusService</members>
         <members>FEC_GetCSCaseStatusService_Test</members>
