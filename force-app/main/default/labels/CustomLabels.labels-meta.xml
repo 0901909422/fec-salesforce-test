@@ -18617,4 +18617,12 @@
         <shortDescription>FEC_Email_File_Uploaded_Added</shortDescription>
         <value>File uploaded and added to email.</value>
     </labels>
+    <labels>
+        <fullName>FEC_Email_File_Already_In_Email</fullName>
+        <categories>fecEmailSection</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Email_File_Already_In_Email</shortDescription>
+        <value>1 file is already in email.</value>
+    </labels>
 </CustomLabels>
