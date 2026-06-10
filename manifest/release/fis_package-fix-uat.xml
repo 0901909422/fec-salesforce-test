@@ -202,6 +202,7 @@
         <members>FEC_Email_File_Selected_Suffix</members>
         <members>FEC_Email_File_Upload_Help</members>
         <members>FEC_Email_File_Uploaded_Added</members>
+        <members>FEC_INTERACTION_PHONE_REQUIRED</members>
         <name>CustomLabel</name>
     </types>
     <types>

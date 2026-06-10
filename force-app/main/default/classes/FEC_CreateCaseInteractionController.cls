@@ -21,7 +21,7 @@ public with sharing class FEC_CreateCaseInteractionController {
       String.isBlank(interation.FEC_Phone_Number__c)
     ) {
       throw new AuraHandledException(
-        System.Label.FEC_PHONE_IS_REQUIRED_MSG
+        System.Label.FEC_INTERACTION_PHONE_REQUIRED
         );
     }
     
@@ -104,7 +104,7 @@ public with sharing class FEC_CreateCaseInteractionController {
         String.isBlank(interaction.FEC_Phone_Number__c)
       ) {
         throw new AuraHandledException(
-          System.Label.FEC_PHONE_IS_REQUIRED_MSG
+          System.Label.FEC_INTERACTION_PHONE_REQUIRED
           );
       }
       

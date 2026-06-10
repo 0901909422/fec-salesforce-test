@@ -18617,4 +18617,12 @@
         <shortDescription>FEC_Email_File_Uploaded_Added</shortDescription>
         <value>File uploaded and added to email.</value>
     </labels>
+    <labels>
+        <fullName>FEC_INTERACTION_PHONE_REQUIRED</fullName>
+        <categories>fecInteraction</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Interaction phone is required</shortDescription>
+        <value>Interaction phone is required</value>
+    </labels>
 </CustomLabels>

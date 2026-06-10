@@ -96,33 +96,7 @@ public with sharing class FEC_SearchController {
             String.isBlank(interactionCase.FEC_Phone_Number__c)
         ) {
             throw new AuraHandledException(
-                System.Label.FEC_PHONE_IS_REQUIRED_MSG
-            );
-        }
-    }
-
-
-    Case interactionCase;
-
-    if (caseId != null) {
-        interactionCase = [
-            SELECT Id,
-                FEC_Is_Manual__c,
-                FEC_Channel__c,
-                FEC_Phone_Number__c
-            FROM Case
-            WHERE Id = :caseId
-            LIMIT 1
-        ];
-
-        if (
-            interactionCase.FEC_Is_Manual__c == true &&
-            (interactionCase.FEC_Channel__c == 'Inbound'
-            || interactionCase.FEC_Channel__c == 'Outbound') &&
-            String.isBlank(interactionCase.FEC_Phone_Number__c)
-        ) {
-            throw new AuraHandledException(
-                System.Label.FEC_PHONE_IS_REQUIRED_MSG
+                System.Label.FEC_INTERACTION_PHONE_REQUIRED
             );
         }
     }
@@ -349,7 +323,7 @@ public with sharing class FEC_SearchController {
                     rows.add(new Map<String, String>{
                         'user'     => h.userName,
                         'activity' => h.activityId,
-                        'status'   => FEC_GetLoanApplicationHistory.resolveStatusLabel(h.statusId),
+                        'status'   => h.statusId,
                         'editDate' => h.editDate
                     });
                 }
