@@ -1775,6 +1775,14 @@ hasAnySearchCriteria(params) {
     }
   }
 
+  get isDisplayCreateCaseOnlyB2OrCash24() {
+    const hasB2OrCash24 = (this.loanB2Data && this.loanB2Data.length > 0) || (this.loanCash24Data && this.loanCash24Data.length > 0);
+    const hasOthers = (this.cardData && this.cardData.length > 0) || 
+                      (this.loanContractData && this.loanContractData.length > 0) || 
+                      (this.insuranceData && this.insuranceData.length > 0);
+    return hasB2OrCash24 && !hasOthers;
+  }
+
   async _pollHistoryReady(caseId) {
       const MAX_ATTEMPTS = 4;
       const INTERVAL_MS  = 1000;
