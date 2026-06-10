@@ -1998,6 +1998,24 @@ public without sharing class FEC_CaseBusinessService {
     }
   }
 
+  /** Revert history: FEC_Decision__c hiển thị "User" hoặc "User's Team Queue" (không lưu tên user/queue). */
+  private static String resolveRevertDecisionDisplayLabel(String ownerIdStr) {
+    if (String.isBlank(ownerIdStr)) {
+      return '';
+    }
+    try {
+      Id ownerId = Id.valueOf(ownerIdStr.trim());
+      if (ownerId.getSObjectType() == User.SObjectType) {
+        return 'User';
+      }
+      if (ownerId.getSObjectType() == Group.SObjectType) {
+        return 'User\'s Team Queue';
+      }
+    } catch (Exception ignore) {
+    }
+    return '';
+  }
+
   //thangtv: Stage Change.FEC_Next_Queue__c có thể là Queue Id hoặc DeveloperName, luôn quy đổi về Queue Id để set Owner
   private static String resolveQueueOwnerIdFromStageChangeValue(String nextQueueValue) {
     if (String.isBlank(nextQueueValue)) {
@@ -3694,7 +3712,7 @@ public without sharing class FEC_CaseBusinessService {
       if (String.isBlank(nextUser)) {
         nextUser = currentOwnerName;
           }
-      String revertDecisionLabel = nextUser;
+      String revertDecisionLabel = resolveRevertDecisionDisplayLabel(queueId);
 
           List<User> userlst = [
             SELECT Email, UserRole.Name, Id
