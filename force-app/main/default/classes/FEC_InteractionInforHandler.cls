@@ -822,6 +822,7 @@ public without sharing class FEC_InteractionInforHandler {
                    FEC_Outcome_Code__c,
                    FEC_Interaction_Remarks__c,
                    FEC_Interaction__c,
+                   FEC_Is_Manual__c,
                    IsClosed,
                    RecordType.DeveloperName
             FROM Case
@@ -849,6 +850,7 @@ public without sharing class FEC_InteractionInforHandler {
                            FEC_External_Interaction_ID__c,
                            FEC_Outcome_Code__c,
                            FEC_Interaction_Remarks__c,
+                           FEC_Is_Manual__c,
                            IsClosed
                     FROM Case
                     WHERE Id = :currentCase.FEC_Interaction__c
@@ -895,19 +897,22 @@ public without sharing class FEC_InteractionInforHandler {
         result.put('FEC_External_Interaction_ID__c', interactionCase != null && String.isNotBlank(interactionCase.FEC_External_Interaction_ID__c) ? interactionCase.FEC_External_Interaction_ID__c : currentCase.FEC_External_Interaction_ID__c);
         result.put('FEC_Outcome_Code__c', interactionCase != null && String.isNotBlank(interactionCase.FEC_Outcome_Code__c) ? interactionCase.FEC_Outcome_Code__c : currentCase.FEC_Outcome_Code__c);
         result.put('FEC_Interaction_Remarks__c', interactionCase != null && String.isNotBlank(interactionCase.FEC_Interaction_Remarks__c) ? interactionCase.FEC_Interaction_Remarks__c : currentCase.FEC_Interaction_Remarks__c);
+        result.put('FEC_Is_Manual__c', interactionCase != null ? interactionCase.FEC_Is_Manual__c : currentCase.FEC_Is_Manual__c);
         result.put('IsClosed', interactionCase != null ? interactionCase.IsClosed : currentCase.IsClosed);
         return result;
     }
 
     @AuraEnabled
-    public static void updateChatInteractionFields(Id recordId, String username, String phone) {
+    public static void updateChatInteractionFields(Id recordId, String username, String phone, String kycStatus, String externalInteractionId) {
         if (recordId == null) return;
         Case c = new Case(Id = recordId);
-        if (String.isNotBlank(username)) c.FEC_Customer_Username__c = username;
-        if (String.isNotBlank(phone)) {
-            c.FEC_Phone_Number__c = phone;
-            c.FEC_Search_Phone_Number__c = phone;
+        if (username != null) c.FEC_Customer_Username__c = String.isNotBlank(username) ? username.trim() : null;
+        if (phone != null) {
+            c.FEC_Phone_Number__c = String.isNotBlank(phone) ? phone.trim() : null;
+            c.FEC_Search_Phone_Number__c = String.isNotBlank(phone) ? phone.trim() : null;
         }
+        if (kycStatus != null) c.FEC_KYC_Status__c = String.isNotBlank(kycStatus) ? kycStatus.trim() : null;
+        if (externalInteractionId != null) c.FEC_External_Interaction_ID__c = String.isNotBlank(externalInteractionId) ? externalInteractionId.trim() : null;
         update c;
     }
 }
