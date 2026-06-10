@@ -260,17 +260,28 @@ export default class Fec_CaseEditNOC extends LightningElement {
     };
   }
 
+  //linhdev 10/06/26 17:49: sort NOC combobox options alphabetically by label
+  _sortPicklistOptionsByLabel(options) {
+    return (options ?? []).slice().sort((a, b) =>
+      (a?.label ?? '').localeCompare(b?.label ?? '', undefined, { sensitivity: 'base' })
+    );
+  }
+
   //PhongBT 02/06/26: Vẫn hiển thị Name cho user không có phân quyền xem noc: bổ sung option hiện tại theo Name lấy từ Case khi list option bị filter theo user group.
+  //linhdev 10/06/26 17:49: sort options alphabetically after ensure selected label
   _ensureSelectedOptionLabel(options, selectedId, selectedName) {
     const normalizedOptions = Array.isArray(options) ? [...options] : [];
     if (!selectedId) {
-      return normalizedOptions;
+      return this._sortPicklistOptionsByLabel(normalizedOptions);
     }
     const hasSelected = normalizedOptions.some((opt) => opt?.value === selectedId);
     if (hasSelected || !selectedName) {
-      return normalizedOptions;
+      return this._sortPicklistOptionsByLabel(normalizedOptions);
     }
-    return [{ label: selectedName, value: selectedId }, ...normalizedOptions];
+    return this._sortPicklistOptionsByLabel([
+      { label: selectedName, value: selectedId },
+      ...normalizedOptions
+    ]);
   }
 
   get isEdit() {
@@ -1932,7 +1943,8 @@ export default class Fec_CaseEditNOC extends LightningElement {
         categoryId: this.updatedCategoryId
       })
         .then((res) => {
-          this.subCategoryOptionlst = res;
+          //linhdev 10/06/26 17:49: sort Sub-Category options alphabetically (Updated section)
+          this.subCategoryOptionlst = this._sortPicklistOptionsByLabel(res);
         })
         .catch((err) => {
           console.error("getSubCategorylst error (Updated section):", err);
@@ -1967,7 +1979,8 @@ export default class Fec_CaseEditNOC extends LightningElement {
           if (!this._isNocResolveEpochCurrent(epoch)) {
             return;
           }
-          this.subCodeOptionlst = res;
+          //linhdev 10/06/26 17:49: sort Sub-Code options alphabetically (Updated section)
+          this.subCodeOptionlst = this._sortPicklistOptionsByLabel(res);
 
           const noSubCodeOptions = !res || res.length === 0;
           if (this.productTypeSelectedId && resolvedCategoryId && resolvedSubCategoryId && noSubCodeOptions) {
