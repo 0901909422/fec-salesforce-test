@@ -137,7 +137,13 @@ public with sharing class FEC_CreateCaseInteractionController {
       newCase.Origin = FEC_ConstantCommon.CASE_WEB_ORIGIN;
       newCase.FEC_Customer_Type__c = FEC_ConstantCommon.CUSTOMER_HISTORY_NON_EXISTING_CUSTOMER;
       newCase.FEC_Interaction__c = interaction.Id;
-      newCase.FEC_Account_Contract_Number_PL__c = FEC_ConstantCommon.PRODUCT_NON_EXISTING_CUSTOMER;
+      if (
+        interaction.RecordType.DeveloperName !=
+        FEC_ConstantCommon.CASE_INTERNAL_RECORD_TYPE_DEV_NAME
+      ) {
+        newCase.FEC_Account_Contract_Number_PL__c =
+          FEC_ConstantCommon.PRODUCT_NON_EXISTING_CUSTOMER;
+      }
       newCase.FEC_Interaction_View_Mode__c = FEC_ConstantCommon.INTERACTION_HANDLING_MODE;
       newCase.FEC_Product_Type__c = interaction.FEC_Product_Type__c;
       newCase.FEC_Phone_Number__c = interaction.FEC_Phone_Number__c;
@@ -211,7 +217,17 @@ public with sharing class FEC_CreateCaseInteractionController {
     c.FEC_Customer_Name__c = customerName;
     c.FEC_National_ID_Passport_ID__c = nationalId;
     c.FEC_Interaction_View_Mode__c = FEC_ConstantCommon.INTERACTION_HANDLING_MODE;
-    
+    c.FEC_Customer_Type__c = FEC_ConstantCommon.CASE_ALL_REQUEST;
+    List<FEC_Product_Type__c> productTypes = [
+      SELECT Id
+      FROM FEC_Product_Type__c
+      WHERE FEC_Code__c = :FEC_ConstantCommon.CASE_INTERNAL_REQUEST
+      LIMIT 1
+    ];
+    if (!productTypes.isEmpty()) {
+      c.FEC_Product_Type__c = productTypes[0].Id;
+    }
+
     insert c;
     return c.Id;
   }
