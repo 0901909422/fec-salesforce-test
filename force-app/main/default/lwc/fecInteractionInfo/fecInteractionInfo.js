@@ -374,10 +374,12 @@ export default class FecInteractionInfo extends LightningElement {
 
   async handleSaveExternalId() {
     try {
-      await updateExternalId({
+      const result = await updateInteractionExternalId({
         recordId: this.interactionId,
         externalId: this.externalIdDraft,
       });
+
+      console.log(JSON.stringify(result));
 
       this.record = {
         ...this.record,
@@ -391,7 +393,15 @@ export default class FecInteractionInfo extends LightningElement {
         { recordId: this.interactionId },
       ]);
     } catch (error) {
-      console.error("updateExternalId error", error);
+      console.error(
+        "updateExternalId error",
+        JSON.parse(JSON.stringify(error)),
+      );
+
+      console.error("message:", error?.body?.message);
+      console.error("body:", error?.body);
+      console.error("status:", error?.status);
+      console.error("full:", error);
     }
   }
 
