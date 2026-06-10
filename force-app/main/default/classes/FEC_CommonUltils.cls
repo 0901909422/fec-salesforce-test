@@ -1960,6 +1960,27 @@ public with sharing class FEC_CommonUltils {
   public static Boolean isCccd(String value) {
     return String.isNotBlank(value) && Pattern.matches(FEC_ConstantCommon.INPUT_SEPARATOR_REGEX_12, value.trim());
   }
+
+  public static String mapCode2ToStatus(Integer code2) {
+    if (code2 == FEC_ConstantCommon.CHECK_EXIST_USER_CODE_EXISTS) {
+      return String.valueOf(FEC_ConstantCommon.CHECK_EXIST_USER_CODE_EXISTS);
+    }
+    if (code2 == FEC_ConstantCommon.CHECK_EXIST_USER_CODE_NOT_EXISTS) {
+      return String.valueOf(FEC_ConstantCommon.CHECK_EXIST_USER_CODE_NOT_EXISTS);
+    }
+    return FEC_ConstantCommon.STR_EMPTY;
+  }
+
+  public static String mapCheckExistUserCode2ToSocialStatus(Integer code2) {
+    if (code2 == FEC_ConstantCommon.CHECK_EXIST_USER_CODE_EXISTS) {
+      return FEC_ConstantCommon.SOCIAL_STATUS_YES;
+    }
+    if (code2 == FEC_ConstantCommon.CHECK_EXIST_USER_CODE_NOT_EXISTS) {
+      return FEC_ConstantCommon.SOCIAL_STATUS_NO;
+    }
+    return FEC_ConstantCommon.STR_EMPTY;
+  }
+
   public static String mapApiContractStatusToPicklist(String apiContractStatus) {
     if (String.isBlank(apiContractStatus)) {
       return null;
