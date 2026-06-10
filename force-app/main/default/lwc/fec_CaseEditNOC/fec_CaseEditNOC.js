@@ -1935,6 +1935,13 @@ export default class Fec_CaseEditNOC extends LightningElement {
     this.updatedSubCategoryId = null;
     this.updatedSubCodeId = null;
 
+    //linhdev 10/06/26 17:49: clear child options when Updated Category is removed
+    if (!this.updatedCategoryId) {
+      this.subCategoryOptionlst = [];
+      this.subCodeOptionlst = [];
+      return;
+    }
+
     // Reload Sub-Category options theo Category mới
     if (this.updatedCategoryId) {
       getSubCategorylst({
