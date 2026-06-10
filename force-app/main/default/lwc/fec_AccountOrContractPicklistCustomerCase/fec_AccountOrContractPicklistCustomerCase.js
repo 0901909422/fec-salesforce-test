@@ -4,6 +4,9 @@ import getInteractionAccountNumber from "@salesforce/apex/FEC_AccountOrContractP
 import getProductsListByCif from "@salesforce/apex/FEC_AccountOrContractPicklistHandler.getProductsListByCif";
 import {
   UBANK_PRODUCT_NAME,
+  INSURANCE_PRODUCT_NAME,
+  B2_PRODUCT_NAME,
+  CASH24_PRODUCT_NAME,
   NON_EXISTING_CUSTOMER_PRODUCT_NAME,
   NON_EXISTING_CUSTOMER_TYPE,
 } from "c/fec_CommonConst";
@@ -18,6 +21,7 @@ import createHistoryNonExistingCustomer from "@salesforce/apex/FEC_AccountOrCont
 import getCustomerHistoryId from "@salesforce/apex/FEC_AccountOrContractPicklistHandler.getCustomerHistoryId";
 import getAccountNumberCustomerCase from "@salesforce/apex/FEC_AccountOrContractPicklistHandler.getAccountNumberCustomerCase";
 import getInteractionCustomerType from "@salesforce/apex/FEC_AccountOrContractPicklistHandler.getInteractionCustomerType";
+import getInteractionSearchProducts from "@salesforce/apex/FEC_AccountOrContractPicklistHandler.getInteractionSearchProducts";
 import IS_MODE_EDIT from "@salesforce/messageChannel/FEC_Case_Mode__c";
 import FEC_ACCOUNT_CONTRACT_NUMBER_LABEL from "@salesforce/label/c.FEC_Account_Contract_Number_Label";
 import { notifyRecordUpdateAvailable } from "lightning/uiRecordApi";
@@ -39,6 +43,7 @@ export default class AccountOrContractPicklistCustomerCase extends LightningElem
   isEditMode = false;
   recordTypeId;
   customerHistoryId;
+  interactionSearchProducts;
   recordTypeDevName;
   subscription = null;
   interactionCustomerType;
@@ -87,7 +92,10 @@ export default class AccountOrContractPicklistCustomerCase extends LightningElem
   handleModeMessage(message) {
     console.log("[LMS] Mode received:", message);
 
-    if (message?.isModeEdit !== undefined && message?.caseId === this.recordId) {
+    if (
+      message?.isModeEdit !== undefined &&
+      message?.caseId === this.recordId
+    ) {
       this.isEditMode = message.isModeEdit;
 
       console.log("[LMS] isEditMode:", this.isEditMode);
@@ -127,6 +135,10 @@ export default class AccountOrContractPicklistCustomerCase extends LightningElem
       });
 
       this.interactionCustomerType = await getInteractionCustomerType({
+        caseId: this.interactionId,
+      });
+
+      this.interactionSearchProducts = await getInteractionSearchProducts({
         caseId: this.interactionId,
       });
 
@@ -242,6 +254,23 @@ export default class AccountOrContractPicklistCustomerCase extends LightningElem
         isSelected: UBANK_PRODUCT_NAME === this.selectedValue,
       });
 
+      if (this.interactionSearchProducts) {
+        this.interactionSearchProducts
+          .split("/")
+          .map((item) => item.trim())
+          .filter(Boolean)
+          .forEach((product) => {
+            mapped.push({
+              id: String(mapped.length + 1),
+              product: product,
+              accountContractNumber: product,
+              displayValue: "",
+              productName: null,
+              isSelected: product === this.selectedValue,
+            });
+          });
+      }
+
       this.data = mappedData;
     } catch (error) {
       console.error("[APEX] getProductsListByCif error:", error);
@@ -324,7 +353,12 @@ export default class AccountOrContractPicklistCustomerCase extends LightningElem
           selectedType: selectedRow.product,
         });
       } else {
-        if (selectedRow.product === UBANK_PRODUCT_NAME) {
+        if (
+          selectedRow.product === UBANK_PRODUCT_NAME ||
+          selectedRow.product === INSURANCE_PRODUCT_NAME ||
+          selectedRow.product === B2_PRODUCT_NAME ||
+          selectedRow.product === CASH24_PRODUCT_NAME
+        ) {
           this.selectedValue = this.firstAccountContractNumber;
         }
 

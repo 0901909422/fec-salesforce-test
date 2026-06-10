@@ -72,6 +72,34 @@ public with sharing class FEC_SearchController {
     if (String.isBlank(value) || String.isBlank(fieldName)) {
         throw new AuraHandledException(System.Label.FEC_MSG_Create_Customer_History_Field_Null);
     }
+    if (caseId != null) {
+        FEC_InteractionInforHandler.assertInteractionEmailForAction(caseId);
+    }
+
+    Case interactionCase;
+
+    if (caseId != null) {
+        interactionCase = [
+            SELECT Id,
+                FEC_Is_Manual__c,
+                FEC_Channel__c,
+                FEC_Phone_Number__c
+            FROM Case
+            WHERE Id = :caseId
+            LIMIT 1
+        ];
+
+        if (
+            interactionCase.FEC_Is_Manual__c == true &&
+            (interactionCase.FEC_Channel__c == 'Inbound'
+            || interactionCase.FEC_Channel__c == 'Outbound') &&
+            String.isBlank(interactionCase.FEC_Phone_Number__c)
+        ) {
+            throw new AuraHandledException(
+                System.Label.FEC_PHONE_IS_REQUIRED_MSG
+            );
+        }
+    }
 
     try {
         // 2. Xử lý Product Type
@@ -295,7 +323,7 @@ public with sharing class FEC_SearchController {
                     rows.add(new Map<String, String>{
                         'user'     => h.userName,
                         'activity' => h.activityId,
-                        'status'   => h.statusId,
+                        'status'   => FEC_GetLoanApplicationHistory.resolveStatusLabel(h.statusId),
                         'editDate' => h.editDate
                     });
                 }

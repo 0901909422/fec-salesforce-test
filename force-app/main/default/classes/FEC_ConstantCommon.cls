@@ -737,10 +737,19 @@ public with sharing class FEC_ConstantCommon {
     // ================= MY CASE API — channel function names =================
     public static final String MY_CASE_FUNCTION_CREATE_CS_CASE = 'CreateCSCase';
     public static final String MY_CASE_FUNCTION_GET_CS_CASE_STATUS = 'GetCSCaseStatus';
+    public static final String MY_CASE_FUNCTION_GET_CS_MASTER_DATA = 'GetCSMasterData';
+    public static final String MY_CASE_FUNCTION_GET_CS_MASTER_DATA_BY_CODE = 'GetCSMasterDataByCode';
+    public static final String MY_CASE_FUNCTION_CANCEL_CS_CASE = 'CancelCSCase';
     public static final String MY_CASE_CHANNEL_CREATE_CASE_NOT_ALLOWED_MSG =
         'Channel is not allowed to execute CreateCSCase';
     public static final String MY_CASE_CHANNEL_GET_CASE_STATUS_NOT_ALLOWED_MSG =
         'Channel is not allowed to execute GetCSCaseStatus';
+    public static final String MY_CASE_CHANNEL_GET_MASTER_DATA_NOT_ALLOWED_MSG =
+        'Channel is not allowed to execute GetCSMasterData';
+    public static final String MY_CASE_CHANNEL_GET_MASTER_DATA_BY_CODE_NOT_ALLOWED_MSG =
+        'Channel is not allowed to execute GetCSMasterDataByCode';
+    public static final String MY_CASE_CHANNEL_CANCEL_CASE_NOT_ALLOWED_MSG =
+        'Channel is not allowed to execute CancelCSCase';
     
     // ================= ROUTE STATUS =================
     public static final String STATUS_CS_BACKOFFICE = 'CSBackOfficeReview';
@@ -813,6 +822,8 @@ public with sharing class FEC_ConstantCommon {
     public static final String UPDATE_TRANSFER_REST_SERVICE_NAME = 'FEC_UpdateTransferInfoRestService';
     public static final String UPDATE_TRANSFER_MSG_SUCCESS =
         'Update call transfer information by ServiceCaseID successfully';
+    /** REST call-transfer response Status khi lỗi (đồng bộ API cũ). */
+    public static final String UPDATE_TRANSFER_STATUS_FAIL = 'Fail';
     public static final String UPDATE_TRANSFER_VAL_REQUEST_BODY_REQUIRED = 'Request body is required';
     public static final String UPDATE_TRANSFER_VAL_SERVICE_CASE_ID_REQUIRED = 'ServiceCaseID is required';
     public static final String UPDATE_TRANSFER_VAL_REQUESTOR_ID_REQUIRED = 'RequestorID is required';

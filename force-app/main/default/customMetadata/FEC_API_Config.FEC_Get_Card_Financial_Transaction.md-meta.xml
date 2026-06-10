@@ -4,7 +4,7 @@
     <protected>false</protected>
     <values>
         <field>FEC_Account_Number_Hard_Code__c</field>
-        <value xsi:type="xsd:string">0001500040000372077</value>
+        <value xsi:nil="true"/>
     </values>
     <values>
         <field>FEC_Endpoint__c</field>
@@ -12,7 +12,7 @@
     </values>
     <values>
         <field>FEC_FromDate_Hard_Code__c</field>
-        <value xsi:type="xsd:date">2020-05-26</value>
+        <value xsi:nil="true"/>
     </values>
     <values>
         <field>FEC_Last_4_Digit_Hard_Code__c</field>
@@ -32,6 +32,6 @@
     </values>
     <values>
         <field>FEC_ToDate_Hard_Code__c</field>
-        <value xsi:type="xsd:date">2025-05-26</value>
+        <value xsi:nil="true"/>
     </values>
 </CustomMetadata>

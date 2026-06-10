@@ -232,11 +232,6 @@ public without sharing class FEC_CaseTriggerHandler {
      */
     private void onAfterUpdate(List<Case> newCases, Map<Id, Case> oldMap) {
         isExecuting = true;
-        // Batch/system chỉ patch vài field — tránh handler đọc field chưa có trên Trigger.new
-        if (isSystemUpdate) {
-            isExecuting = false;
-            return;
-        }
         updateLastModified(newCases, oldMap);
         handleFollowUpOnResolved(newCases, oldMap);
         handleAutoFollowUpOnUpdate(newCases, oldMap);

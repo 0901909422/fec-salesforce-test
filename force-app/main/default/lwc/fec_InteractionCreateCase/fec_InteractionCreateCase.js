@@ -9,7 +9,9 @@ import {
   getFocusedTabInfo
 } from "lightning/platformWorkspaceApi";
 import { publish, MessageContext } from "lightning/messageService";
+import { ShowToastEvent } from "lightning/platformShowToastEvent";
 import IS_MODE_EDIT from "@salesforce/messageChannel/FEC_Case_Mode__c";
+import FEC_Toast_Validation_Title from "@salesforce/label/c.FEC_Toast_Validation_Title";
 import createCustomerCaseFromCase from "@salesforce/apex/FEC_CreateCaseInteractionController.createCustomerCaseFromCase";
 import createCustomerCaseFromCaseNonExistingCustomer from "@salesforce/apex/FEC_CreateCaseInteractionController.createCustomerCaseFromCaseNonExistingCustomer";
 import {
@@ -175,6 +177,7 @@ export default class Fec_InteractionCreateCase extends NavigationMixin(
         .catch((error) => {
           this.isLoading = false;
           console.error(error);
+          this.showActionError(error);
         });
     } else {
       createCustomerCaseFromCaseNonExistingCustomer({
@@ -224,8 +227,20 @@ export default class Fec_InteractionCreateCase extends NavigationMixin(
         .catch((error) => {
           this.isLoading = false;
           console.error(error);
+          this.showActionError(error);
         });
     }
+  }
+
+  showActionError(error) {
+    const message = error?.body?.message || error?.message || "Failed to create case.";
+    this.dispatchEvent(
+      new ShowToastEvent({
+        title: FEC_Toast_Validation_Title,
+        message,
+        variant: "error",
+      }),
+    );
   }
 
   async handlePublishMessageChanel() {

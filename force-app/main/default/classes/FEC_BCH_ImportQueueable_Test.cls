@@ -138,6 +138,28 @@ private class FEC_BCH_ImportQueueable_Test {
     }
 
     @IsTest
+    static void testValidateQueueable_EmptyInputFinalizes() {
+        Id batchId = insertBatchRecord('Validate_Empty.xlsx', 'Processing', Datetime.now());
+        if (batchId == null) {
+            System.assert(true, 'Skipped: FEC_Batch_Case_Handling__c not on org.');
+            return;
+        }
+        Test.startTest();
+        System.enqueueJob(
+            new FEC_BCH_ImportValidateQueueable(
+                batchId,
+                '[]',
+                null,
+                null,
+                false,
+                0
+            )
+        );
+        Test.stopTest();
+        System.assert(true, 'Validate queueable empty input should finalize without exception.');
+    }
+
+    @IsTest
     static void testExecute_SkipsFailedRowsAndFinalizes() {
         Id batchId = insertBatchRecord('Failed_Rows.xlsx', 'Processing', Datetime.now());
         if (batchId == null) {

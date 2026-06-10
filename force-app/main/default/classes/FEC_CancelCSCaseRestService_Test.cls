@@ -15,7 +15,7 @@ private class FEC_CancelCSCaseRestService_Test {
         '<CaseInfo>' +
         '<ContractOrAccountNumber>CON-19032003</ContractOrAccountNumber>' +
         '<PhoneNumber>0912345678</PhoneNumber>' +
-        '<CaseID>CS-OPEN-REST-2026</CaseID>' +
+        '<CaseID>CS-CANCEL-01</CaseID>' +
         '<UserType>EXISTING</UserType>' +
         '</CaseInfo>' +
         '</CancelCSCaseRequest>' +
@@ -24,36 +24,22 @@ private class FEC_CancelCSCaseRestService_Test {
 
     @TestSetup
     static void setupData() {
-        insert new FEC_Channel__c(
-            Name = VALID_CHANNEL,
-            FEC_Code__c = 'INBOUND',
-            FEC_Channel_ID__c = VALID_CHANNEL,
-            FEC_Channel_Vietnamese_name__c = 'Inbound',
-            FEC_Channel_Status__c = true
-        );
-
+        FEC_UnitTestMyCaseChannelUtil.ensureInboundMyCaseChannel();
         FEC_CaseTriggerHandler.isExecuting = true;
         try {
-            Case cancelCase = new Case(
+            Case openCase = new Case(
                 Subject = 'REST Cancel Test',
                 Status = FEC_ConstantCommon.CASE_STATUS_OPEN,
                 Origin = 'Phone',
-                FEC_ID_Search__c = 'CS-OPEN-REST-2026',
-                Type = 'Request',
-                FEC_Customer_Type__c = FEC_ConstantCommon.REQUEST_EXISTING_USER_TYPE
-            );
-            insert cancelCase;
-
-            FEC_Customer_History__c custHist = new FEC_Customer_History__c(
-                Name = 'CON-19032003',
-                FEC_Case__c = cancelCase.Id,
+                FEC_Customer_Type__c = FEC_ConstantCommon.CASE_EXISTING_CUSTOMER,
                 FEC_Contract_Number__c = 'CON-19032003',
-                FEC_Primary_Phone__c = '0912345678'
+                Type = 'Request'
             );
-            insert custHist;
-
-            cancelCase.FEC_Account_or_Contract__c = custHist.Id;
-            update cancelCase;
+            insert openCase;
+            update new Case(
+                Id = openCase.Id,
+                FEC_ID_Search__c = 'CS-CANCEL-01'
+            );
         } finally {
             FEC_CaseTriggerHandler.isExecuting = false;
         }
@@ -70,7 +56,7 @@ private class FEC_CancelCSCaseRestService_Test {
         System.assertNotEquals(null, parsed.Sys.DateTime_x);
 
         System.assertNotEquals(null, parsed.CaseInfo);
-        System.assertEquals('CS-OPEN-REST-2026', parsed.CaseInfo.CaseID);
+        System.assertEquals('CS-CANCEL-01', parsed.CaseInfo.CaseID);
         System.assertEquals('CON-19032003', parsed.CaseInfo.ContractOrAccountNumber);
         System.assertEquals('0912345678', parsed.CaseInfo.PhoneNumber);
         System.assertEquals('EXISTING', parsed.CaseInfo.UserType);
@@ -94,80 +80,60 @@ private class FEC_CancelCSCaseRestService_Test {
         System.assert(xml.contains('<Code>1</Code>'));
     }
 
-    private static User runAsAdmin() {
-        return [
-            SELECT Id
-            FROM User
-            WHERE IsActive = TRUE AND Profile.Name = 'System Administrator'
-            LIMIT 1
-        ];
-    }
-
     @IsTest
     static void testRestPost_cancelSuccess() {
-        System.runAs(runAsAdmin()) {
-            RestRequest req = new RestRequest();
-            RestResponse res = new RestResponse();
-            req.requestUri = '/services/apexrest/MyCase/v1/CancelCSCase';
-            req.httpMethod = 'POST';
-            req.requestBody = Blob.valueOf(SAMPLE_CANCEL_REQUEST);
-            RestContext.request = req;
-            RestContext.response = res;
+        RestRequest req = new RestRequest();
+        RestResponse res = new RestResponse();
+        req.requestUri = '/services/apexrest/MyCase/v1/CancelCSCase';
+        req.httpMethod = 'POST';
+        req.requestBody = Blob.valueOf(SAMPLE_CANCEL_REQUEST);
+        RestContext.request = req;
+        RestContext.response = res;
 
-            FEC_CaseTriggerHandler.isExecuting = true;
-            Test.startTest();
-            try {
-                FEC_CancelCSCaseRestService.doPost();
-            } finally {
-                FEC_CaseTriggerHandler.isExecuting = false;
-            }
-            Test.stopTest();
+        Test.startTest();
+        FEC_CancelCSCaseRestService.doPost();
+        Test.stopTest();
 
-            String body = res.responseBody.toString();
-            System.assertEquals(FEC_ConstantCommon.HTTP_STATUS_OK, res.statusCode);
-            System.assert(body.contains('CancelCSCaseResponse'));
-            System.assert(
-                body.contains('<Code>1</Code>') || body.contains('<Code>3</Code>'),
-                'Response phải chứa mã kết quả SOAP: ' + body
-            );
-            if (body.contains('<Code>1</Code>')) {
-            System.assert(body.contains('<CaseID>CS-OPEN-REST-2026</CaseID>'));
+        String body = res.responseBody.toString();
+        System.assertEquals(FEC_ConstantCommon.HTTP_STATUS_OK, res.statusCode);
+        System.assert(body.contains('CancelCSCaseResponse'));
+        System.assert(body.contains('<Code>1</Code>'), body);
+        System.assert(body.contains('<CaseID>CS-CANCEL-01</CaseID>'));
 
-            Case updated = [
-                SELECT Status
-                FROM Case
-                WHERE FEC_ID_Search__c = 'CS-OPEN-REST-2026'
-                LIMIT 1
-            ];
-                System.assertEquals(FEC_ConstantCommon.STATUS_CANCELLED, updated.Status);
-            }
-        }
+        Case updated = [
+            SELECT Status
+            FROM Case
+            WHERE FEC_ID_Search__c = 'CS-CANCEL-01'
+            LIMIT 1
+        ];
+        System.assertEquals(FEC_ConstantCommon.STATUS_CANCELLED, updated.Status);
     }
 
     @IsTest
     static void testRestPost_invalidXml_returnsErrorEnvelope() {
-        System.runAs(runAsAdmin()) {
-            String invalidEnvelope =
-                '<?xml version="1.0" encoding="utf-8"?>' +
-                '<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">' +
-                '<soap:Body><UnknownCancelRequest /></soap:Body></soap:Envelope>';
+        RestRequest req = new RestRequest();
+        RestResponse res = new RestResponse();
+        req.requestUri = '/services/apexrest/MyCase/v1/CancelCSCase';
+        req.httpMethod = 'POST';
+        req.requestBody = Blob.valueOf(
+            '<?xml version="1.0" encoding="utf-8"?>' +
+            '<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">' +
+            '<soap:Body></soap:Body>' +
+            '</soap:Envelope>'
+        );
+        RestContext.request = req;
+        RestContext.response = res;
 
-            RestRequest req = new RestRequest();
-            RestResponse res = new RestResponse();
-            req.requestUri = '/services/apexrest/MyCase/v1/CancelCSCase';
-            req.httpMethod = 'POST';
-            req.requestBody = Blob.valueOf(invalidEnvelope);
-            RestContext.request = req;
-            RestContext.response = res;
+        Test.startTest();
+        FEC_CancelCSCaseRestService.doPost();
+        Test.stopTest();
 
-            Test.startTest();
-            FEC_CancelCSCaseRestService.doPost();
-            Test.stopTest();
-
-            System.assert(
-                res.responseBody != null && res.responseBody.toString().contains('CancelCSCaseResponse'),
-                'Invalid request element phải trả SOAP error envelope.'
-            );
-        }
+        System.assertEquals(
+            FEC_ConstantCommon.HTTP_STATUS_BAD_REQUEST,
+            res.statusCode
+        );
+        System.assert(
+            res.responseBody.toString().contains('CancelCSCaseResponse')
+        );
     }
 }

@@ -547,6 +547,14 @@ export default class Fec_RelatedListPaging extends LightningElement {
     }
 
     /* ================= SORT LOGIC ================= */
+    resolveSortFieldName(columnFieldName) {
+        if (!columnFieldName || !Array.isArray(this.columns)) {
+            return columnFieldName;
+        }
+        const col = this.columns.find((c) => c.fieldName === columnFieldName);
+        return col?.sortFieldName || columnFieldName;
+    }
+
     handleSort(event) {
         const fieldName = event.currentTarget.dataset.field;
         if (!fieldName) return;
@@ -567,16 +575,21 @@ export default class Fec_RelatedListPaging extends LightningElement {
     sortData(fieldName, direction) {
         if (!fieldName) return;
 
+        const sortKey = this.resolveSortFieldName(fieldName);
         const dir = direction === 'asc' ? 1 : -1;
         const records = [...this._records];
 
         const toTime = (v) => {
-            if (!v) return null;
+            if (v == null || v === '') return null;
+            // Số (vd recordNoSort, effectiveSortEpoch) không được parse như ngày
+            if (typeof v === 'number') return null;
 
             if (typeof v === 'string' && /^\d{2}\/\d{2}\/\d{4}$/.test(v)) {
                 const [d, m, y] = v.split('/');
                 return new Date(+y, +m - 1, +d).getTime();
             }
+
+            if (typeof v !== 'string') return null;
 
             const t = Date.parse(v);
             return isNaN(t) ? null : t;
@@ -602,11 +615,26 @@ export default class Fec_RelatedListPaging extends LightningElement {
             const match = s.match(/\d+$/);
             return match ? Number(match[0]) : NaN;
         };
-        
+
+        const recordNoToNumeric = (recordNo) => {
+            if (recordNo == null || recordNo === '') return null;
+            const digits = String(recordNo).trim().replace(/\D/g, '');
+            if (digits === '') return null;
+            const n = Number(digits);
+            return Number.isNaN(n) ? null : n;
+        };
+
+        const resolveSortValue = (row) => {
+            let raw = row[sortKey];
+            if ((raw == null || raw === '') && sortKey === 'recordNoSort') {
+                raw = recordNoToNumeric(row.recordNo);
+            }
+            return raw;
+        };
 
         this._records = records.sort((a, b) => {
-            const rawA = a[fieldName];
-            const rawB = b[fieldName];
+            const rawA = resolveSortValue(a);
+            const rawB = resolveSortValue(b);
 
             if (fieldName === 'caseIdText') {
                 const numA = parseCaseNumber(rawA);
@@ -617,18 +645,18 @@ export default class Fec_RelatedListPaging extends LightningElement {
                 }
             }
 
-            const timeA = toTime(rawA);
-            const timeB = toTime(rawB);
-
-            if (timeA !== null && timeB !== null) {
-                return (timeA - timeB) * dir;
-            }
-
             const numA = toNumeric(rawA);
             const numB = toNumeric(rawB);
             if (numA !== null && numB !== null) {
                 if (numA !== numB) return (numA - numB) * dir;
                 return 0;
+            }
+
+            const timeA = toTime(rawA);
+            const timeB = toTime(rawB);
+
+            if (timeA !== null && timeB !== null) {
+                return (timeA - timeB) * dir;
             }
 
             if (rawA == null && rawB != null) return -dir;

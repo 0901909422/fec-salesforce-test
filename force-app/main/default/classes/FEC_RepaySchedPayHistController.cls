@@ -218,6 +218,67 @@ public with sharing class FEC_RepaySchedPayHistController {
         }
     }
 
+    /** Key dedupe Payment History theo Particulars (API GetLoanSecInfo.ChkNo). */
+    private static String paymentHistoryParticularsKey(String particulars) {
+        return String.isNotBlank(particulars) ? particulars.trim() : HYPHEN;
+    }
+
+    private static List<FEC_GetLoanSecInfo.PaymentHistory> dedupeSecPaymentHistoriesByParticulars(
+        List<FEC_GetLoanSecInfo.PaymentHistory> secPh
+    ) {
+        List<FEC_GetLoanSecInfo.PaymentHistory> deduped = new List<FEC_GetLoanSecInfo.PaymentHistory>();
+        if (secPh == null || secPh.isEmpty()) {
+            return deduped;
+        }
+        Set<String> seen = new Set<String>();
+        for (FEC_GetLoanSecInfo.PaymentHistory ph : secPh) {
+            String key = paymentHistoryParticularsKey(ph != null ? ph.ChkNo : null);
+            if (seen.contains(key)) {
+                continue;
+            }
+            seen.add(key);
+            deduped.add(ph);
+        }
+        return deduped;
+    }
+
+    private static List<PaymentHistoryRowDTO> dedupePaymentHistoryRowsByParticulars(List<PaymentHistoryRowDTO> rows) {
+        List<PaymentHistoryRowDTO> deduped = new List<PaymentHistoryRowDTO>();
+        if (rows == null || rows.isEmpty()) {
+            return deduped;
+        }
+        Set<String> seen = new Set<String>();
+        for (PaymentHistoryRowDTO row : rows) {
+            String key = paymentHistoryParticularsKey(row != null ? row.particulars : null);
+            if (seen.contains(key)) {
+                continue;
+            }
+            seen.add(key);
+            deduped.add(row);
+        }
+        Integer idx = 0;
+        for (PaymentHistoryRowDTO row : deduped) {
+            row.paymentNo = ++idx;
+        }
+        return deduped;
+    }
+
+    private static Decimal sumPaymentHistoryRowAmounts(List<PaymentHistoryRowDTO> rows) {
+        Decimal sum = 0;
+        if (rows == null) {
+            return sum;
+        }
+        for (PaymentHistoryRowDTO row : rows) {
+            if (row == null || String.isBlank(row.paymentAmount) || row.paymentAmount == HYPHEN) {
+                continue;
+            }
+            try {
+                sum += Decimal.valueOf(row.paymentAmount.replace(',', '').trim());
+            } catch (Exception e) { }
+        }
+        return sum;
+    }
+
     private static void fillPaymentHistoryFromApis(
         SectionDataResult result,
         FEC_GetLoanBasicInfo.ResponseWrapper basicRes,
@@ -234,12 +295,12 @@ public with sharing class FEC_RepaySchedPayHistController {
         List<FEC_GetLoanSecInfo.PaymentHistory> secPh = (secRes != null && secRes.LoanSecInfo != null && secRes.LoanSecInfo.PaymentHistories != null)
             ? secRes.LoanSecInfo.PaymentHistories
             : new List<FEC_GetLoanSecInfo.PaymentHistory>();
+        secPh = dedupeSecPaymentHistoriesByParticulars(secPh);
         List<FEC_GetPaymentInfo.PaymentInfo> payments = (paymentRes != null && paymentRes.Payments != null)
             ? paymentRes.Payments
             : new List<FEC_GetPaymentInfo.PaymentInfo>();
 
         Integer rowCount = Math.max(Math.max(basicPh.size(), secPh.size()), payments.size());
-        Decimal sumPaymentAmount = 0;
         for (Integer i = 0; i < rowCount; i++) {
             PaymentHistoryRowDTO row = new PaymentHistoryRowDTO();
             row.paymentNo = i + 1;
@@ -256,14 +317,13 @@ public with sharing class FEC_RepaySchedPayHistController {
                 row.bookingDate = HYPHEN;
             }
             row.paymentAmount = i < secPh.size() ? FEC_CommonUltils.decimalToString(secPh[i].AmountOfMoney) : HYPHEN;
-            if (i < secPh.size() && secPh[i].AmountOfMoney != null) {
-                sumPaymentAmount += secPh[i].AmountOfMoney;
-            }
             row.particulars = (i < secPh.size() && secPh[i].ChkNo != null) ? secPh[i].ChkNo : HYPHEN;
             row.paymentChannel = (i < payments.size() && payments[i].Username != null) ? payments[i].Username : HYPHEN;
             result.paymentHistoryTable.add(row);
         }
 
+        result.paymentHistoryTable = dedupePaymentHistoryRowsByParticulars(result.paymentHistoryTable);
+        Decimal sumPaymentAmount = sumPaymentHistoryRowAmounts(result.paymentHistoryTable);
         if (sumPaymentAmount != 0) {
             result.paymentHistoryTotals.totalPaymentAmount = String.valueOf(sumPaymentAmount);
         }
@@ -286,6 +346,7 @@ public with sharing class FEC_RepaySchedPayHistController {
             ? basicRes.LoanBasicInfo.PaymentHistories : new List<FEC_GetLoanBasicInfo.PaymentHistory>();
         List<FEC_GetLoanSecInfo.PaymentHistory> secPh = (secRes != null && secRes.LoanSecInfo != null && secRes.LoanSecInfo.PaymentHistories != null)
             ? secRes.LoanSecInfo.PaymentHistories : new List<FEC_GetLoanSecInfo.PaymentHistory>();
+        secPh = dedupeSecPaymentHistoriesByParticulars(secPh);
         List<FEC_GetPaymentInfo.PaymentInfo> payments = (paymentRes != null && paymentRes.Payments != null)
             ? paymentRes.Payments : new List<FEC_GetPaymentInfo.PaymentInfo>();
 
@@ -293,15 +354,28 @@ public with sharing class FEC_RepaySchedPayHistController {
         if (rowCount == 0) return;
 
         Decimal totalPaymentAmount = 0;
-        for (Integer j = 0; j < secPh.size(); j++) {
-            if (secPh[j].AmountOfMoney != null) totalPaymentAmount += secPh[j].AmountOfMoney;
+        for (FEC_GetLoanSecInfo.PaymentHistory ph : secPh) {
+            if (ph.AmountOfMoney != null) {
+                totalPaymentAmount += ph.AmountOfMoney;
+            }
         }
 
         List<FEC_Payment_History__c> toInsert = new List<FEC_Payment_History__c>();
+        Set<String> seenParticulars = new Set<String>();
+        Integer paymentNo = 0;
         for (Integer i = 0; i < rowCount; i++) {
+            String particularsKey = paymentHistoryParticularsKey(
+                (i < secPh.size() && secPh[i].ChkNo != null) ? secPh[i].ChkNo : null
+            );
+            if (seenParticulars.contains(particularsKey)) {
+                continue;
+            }
+            seenParticulars.add(particularsKey);
+            paymentNo++;
+
             FEC_Payment_History__c rec = new FEC_Payment_History__c();
             rec.FEC_Customer_History__c = customerHistoryId;
-            rec.FEC_Payment_No__c = i + 1;
+            rec.FEC_Payment_No__c = paymentNo;
             // GetPaymentInfo: TransactionDate→FEC_Payment_Date__c, AmountPaid→FEC_Payment_Amount__c, Username→FEC_Payment_Channel__c
             // GetLoanSecInfo: BookingDate→FEC_Booking_Date__c, AmountOfMoney→FEC_Payment_Amount__c, ChkNo→FEC_Particulars__c, ValueDate→FEC_Payment_Date__c
             // GetLoanBasicInfo: ValueDate→FEC_Payment_Date__c, AmountOfMoney→FEC_Payment_Amount__c
@@ -320,7 +394,9 @@ public with sharing class FEC_RepaySchedPayHistController {
             rec.FEC_Total_Payment_Amount__c = totalPaymentAmount != 0 ? totalPaymentAmount : null;
             toInsert.add(rec);
         }
-        insert toInsert;
+        if (!toInsert.isEmpty()) {
+            insert toInsert;
+        }
     }
 
     private static void fillRealTimePaymentFromApi(
