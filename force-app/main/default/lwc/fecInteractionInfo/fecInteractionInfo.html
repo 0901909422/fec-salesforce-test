@@ -10,7 +10,10 @@
             <div class="col">
               <template if:true={isReview}>
                 <div class="row">
-                  <span class="label">{labels.interactionPhone}</span>
+                  <span class="label">
+                    <span class="slds-required">*</span>
+                    {labels.interactionPhone}
+                  </span>
                   <span class="value">
                     <!-- Có phone -->
                     <template if:true={hasPhone}>
@@ -26,7 +29,10 @@
               </template>
               <template if:false={isReview}>
                 <div class="row">
-                  <span class="label">{labels.interactionPhone}</span>
+                  <span class="label">
+                    <span class="slds-required">*</span>
+                    {labels.interactionPhone}
+                  </span>
                   <span class="value">
                     <!-- Có phone -->
                     <template if:true={hasPhone}>
@@ -36,8 +42,9 @@
                     <!-- Không có phone -->
                     <template if:false={hasPhone}>
                       <template if:true={isEditingPhone}>
-                        <lightning-input  data-id="interactionPhone" type="tel" value={phoneDraft} onchange={handlePhoneChange}
-                          variant="label-hidden" required={isPhoneRequired}  message-when-value-missing={phoneRequiredMsg}>
+                        <lightning-input data-id="interactionPhone" type="tel" value={phoneDraft}
+                          onchange={handlePhoneChange} variant="label-hidden" required={isPhoneRequired}
+                          message-when-value-missing={phoneRequiredMsg}>
                         </lightning-input>
                       </template>
 
@@ -85,11 +92,45 @@
 
             <!-- RIGHT -->
             <div class="col">
-              <div class="row">
-                <span class="label">{labels.externalId}</span>
-                <span class="value">{externalId}</span>
-                <span></span>
-              </div>
+              <template if:true={isReview}>
+                <div class="row">
+                  <span class="label">{labels.externalId}</span>
+                  <span class="value">{externalId}</span>
+                  <span></span>
+                </div>
+              </template>
+              <template if:false={isReview}>
+                <div class="row">
+                  <span class="label">{labels.externalId}</span>
+
+                  <span class="value">
+                    <template if:true={isEditingExternalId}>
+                      <lightning-input type="text" value={externalIdDraft} onchange={handleExternalIdChange}
+                        variant="label-hidden">
+                      </lightning-input>
+                    </template>
+
+                    <template if:false={isEditingExternalId}>
+                      {externalId}
+                    </template>
+                  </span>
+                  <span>
+                    <template if:true={canEditExternalId}>
+                      <template if:false={isEditingExternalId}>
+                        <lightning-icon icon-name="utility:edit" size="x-small" class="eye-icon"
+                          onclick={handleEditExternalId}>
+                        </lightning-icon>
+                      </template>
+
+                      <template if:true={isEditingExternalId}>
+                        <lightning-icon icon-name="utility:check" size="x-small" class="eye-icon save-icon"
+                          onclick={handleSaveExternalId}>
+                        </lightning-icon>
+                      </template>
+                    </template>
+                  </span>
+                </div>
+              </template>
               <div class="row">
                 <span class="label">{labels.interactionCreatedBy}</span>
                 <span class="value">{createdBy}</span>

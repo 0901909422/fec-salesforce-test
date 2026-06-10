@@ -702,32 +702,8 @@ public without sharing class FEC_Notification {
                 info.subject = PATTERN_FLEXIBLE.matcher(info.subject).replaceAll(FEC_ConstantCommon.MERGE_FIELD_NORMALIZE_REPLACEMENT);
             }
             
-            if (String.isNotBlank(info.body) && info.body.contains(FEC_ConstantCommon.MERGE_FIELD_OPEN)) {
-                Matcher m = PATTERN_MERGE.matcher(info.body);
-                while (m.find()) {
-                    List<String> parts = m.group(1).split('\\.');
-                    if (parts.size() == 2) {
-                        String objName = parts[0]; String fieldName = parts[1];
-                        if (objName.equalsIgnoreCase('Case')) caseFields.add(fieldName);
-                        else if (objName.equalsIgnoreCase('User')) userFields.add(fieldName);
-                        else if (objName.equalsIgnoreCase('FEC_Additional_Info__c')) addInfoFields.add(fieldName);
-                        else if (objName.equalsIgnoreCase('FEC_Customer_History__c')) custHistoryFields.add(fieldName);
-                    }
-                }
-            }
-            if (String.isNotBlank(info.subject) && info.subject.contains(FEC_ConstantCommon.MERGE_FIELD_OPEN)) {
-                Matcher m = PATTERN_MERGE.matcher(info.subject);
-                while (m.find()) {
-                    List<String> parts = m.group(1).split('\\.');
-                    if (parts.size() == 2) {
-                        String objName = parts[0]; String fieldName = parts[1];
-                        if (objName.equalsIgnoreCase('Case')) caseFields.add(fieldName);
-                        else if (objName.equalsIgnoreCase('User')) userFields.add(fieldName);
-                        else if (objName.equalsIgnoreCase('FEC_Additional_Info__c')) addInfoFields.add(fieldName);
-                        else if (objName.equalsIgnoreCase('FEC_Customer_History__c')) custHistoryFields.add(fieldName);
-                    }
-                }
-            }
+            collectMergeTokens(info.body, caseFields, userFields, addInfoFields, custHistoryFields);
+            collectMergeTokens(info.subject, caseFields, userFields, addInfoFields, custHistoryFields);
         }
 
         if (caseFields.isEmpty() && userFields.isEmpty() && addInfoFields.isEmpty() && custHistoryFields.isEmpty()) {
@@ -741,22 +717,42 @@ public without sharing class FEC_Notification {
         Map<Id, FEC_Customer_History__c> custHistoryMap = new Map<Id, FEC_Customer_History__c>();
 
         if (!caseFields.isEmpty() && !caseIds.isEmpty()) {
-            String qCase = 'SELECT Id, ' + String.join(new List<String>(caseFields), ', ') + ' FROM Case WHERE Id IN :caseIds';
+            Set<String> caseSelectFields = new Set<String>{ 'Id' };
+            caseSelectFields.addAll(caseFields);
+            String qCase =
+                'SELECT ' + String.join(new List<String>(caseSelectFields), ', ') +
+                ' FROM Case WHERE Id IN :caseIds';
             try {
-                for(Case c : Database.query(qCase)) { caseMap.put(c.Id, c); }
-            } catch (Exception e) {}
+                for (Case c : Database.query(qCase)) {
+                    caseMap.put(c.Id, c);
+                }
+            } catch (Exception e) {
+                System.debug('FEC_Notification.mergeFields Case query failed: ' + e.getMessage());
+            }
         }
 
         if (!userFields.isEmpty() && String.isNotBlank(fromEmail)) {
-            String qUser = 'SELECT Id, ' + String.join(new List<String>(userFields), ', ') + ' FROM User WHERE Email = :fromEmail LIMIT 1';
+            Set<String> userSelectFields = new Set<String>{ 'Id' };
+            userSelectFields.addAll(userFields);
+            String qUser =
+                'SELECT ' + String.join(new List<String>(userSelectFields), ', ') +
+                ' FROM User WHERE Email = :fromEmail LIMIT 1';
             try {
                 List<User> usList = Database.query(qUser);
-                if (!usList.isEmpty()) senderUser = usList[0];
-            } catch (Exception e) {}
+                if (!usList.isEmpty()) {
+                    senderUser = usList[0];
+                }
+            } catch (Exception e) {
+                System.debug('FEC_Notification.mergeFields User query failed: ' + e.getMessage());
+            }
         }
 
         if (!addInfoFields.isEmpty() && !caseIds.isEmpty()) {
-            String qAddInfo = 'SELECT Id, FEC_Case__c, ' + String.join(new List<String>(addInfoFields), ', ') + ' FROM FEC_Additional_Info__c WHERE FEC_Case__c IN :caseIds ORDER BY CreatedDate ASC';
+            Set<String> addInfoSelectFields = new Set<String>{ 'Id', 'FEC_Case__c' };
+            addInfoSelectFields.addAll(addInfoFields);
+            String qAddInfo =
+                'SELECT ' + String.join(new List<String>(addInfoSelectFields), ', ') +
+                ' FROM FEC_Additional_Info__c WHERE FEC_Case__c IN :caseIds ORDER BY CreatedDate ASC';
             try {
                 for(FEC_Additional_Info__c info : Database.query(qAddInfo)) {
                     addInfoMap.put(info.FEC_Case__c, info); 
@@ -765,12 +761,54 @@ public without sharing class FEC_Notification {
         }
 
         if (!custHistoryFields.isEmpty() && !caseIds.isEmpty()) {
-            String qCustHist = 'SELECT Id, FEC_Case__c, ' + String.join(new List<String>(custHistoryFields), ', ') + ' FROM FEC_Customer_History__c WHERE FEC_Case__c IN :caseIds ORDER BY CreatedDate ASC';
+            Set<String> custHistSelectFields = new Set<String>{ 'Id', 'FEC_Case__c' };
+            custHistSelectFields.addAll(custHistoryFields);
+            String qCustHist =
+                'SELECT ' + String.join(new List<String>(custHistSelectFields), ', ') +
+                ' FROM FEC_Customer_History__c WHERE FEC_Case__c IN :caseIds ORDER BY CreatedDate ASC';
             try {
                 for(FEC_Customer_History__c hist : Database.query(qCustHist)) {
                     custHistoryMap.put(hist.FEC_Case__c, hist); 
                 }
             } catch (Exception e) {}
+
+            // DSA/CC thường nằm trên Customer History link qua Case.FEC_Account_or_Contract__c
+            Set<Id> missingCaseIds = new Set<Id>();
+            for (Id caseId : caseIds) {
+                if (!custHistoryMap.containsKey(caseId)) {
+                    missingCaseIds.add(caseId);
+                }
+            }
+            if (!missingCaseIds.isEmpty()) {
+                Map<Id, Id> accountContractByCaseId = new Map<Id, Id>();
+                for (Case c : [
+                    SELECT Id, FEC_Account_or_Contract__c
+                    FROM Case
+                    WHERE Id IN :missingCaseIds
+                      AND FEC_Account_or_Contract__c != NULL
+                ]) {
+                    accountContractByCaseId.put(c.Id, c.FEC_Account_or_Contract__c);
+                }
+                if (!accountContractByCaseId.isEmpty()) {
+                    Set<Id> customerHistoryIds = new Set<Id>(accountContractByCaseId.values());
+                    try {
+                        Set<String> custHistByIdFields = new Set<String>{ 'Id' };
+                        custHistByIdFields.addAll(custHistoryFields);
+                        String qByAccountContract =
+                            'SELECT ' + String.join(new List<String>(custHistByIdFields), ', ') +
+                            ' FROM FEC_Customer_History__c WHERE Id IN :customerHistoryIds';
+                        Map<Id, FEC_Customer_History__c> histById = new Map<Id, FEC_Customer_History__c>(
+                            (List<FEC_Customer_History__c>) Database.query(qByAccountContract)
+                        );
+                        for (Id caseId : accountContractByCaseId.keySet()) {
+                            FEC_Customer_History__c hist = histById.get(accountContractByCaseId.get(caseId));
+                            if (hist != null) {
+                                custHistoryMap.put(caseId, hist);
+                            }
+                        }
+                    } catch (Exception e) {}
+                }
+            }
         }
 
         // Phase 3: Replace
@@ -784,6 +822,49 @@ public without sharing class FEC_Notification {
         }
     }
 
+    private static void collectMergeTokens(
+        String text,
+        Set<String> caseFields,
+        Set<String> userFields,
+        Set<String> addInfoFields,
+        Set<String> custHistoryFields
+    ) {
+        if (String.isBlank(text) || !text.contains(FEC_ConstantCommon.MERGE_FIELD_OPEN)) {
+            return;
+        }
+        Matcher m = PATTERN_MERGE.matcher(text);
+        while (m.find()) {
+            registerMergeToken(m.group(1), caseFields, userFields, addInfoFields, custHistoryFields);
+        }
+    }
+
+    private static void registerMergeToken(
+        String token,
+        Set<String> caseFields,
+        Set<String> userFields,
+        Set<String> addInfoFields,
+        Set<String> custHistoryFields
+    ) {
+        Integer dotIdx = token.indexOf('.');
+        if (dotIdx <= 0 || dotIdx >= token.length() - 1) {
+            return;
+        }
+        String objName = token.substring(0, dotIdx);
+        String fieldPath = token.substring(dotIdx + 1);
+        if (String.isBlank(fieldPath)) {
+            return;
+        }
+        if (objName.equalsIgnoreCase('Case')) {
+            caseFields.add(fieldPath);
+        } else if (objName.equalsIgnoreCase('User')) {
+            userFields.add(fieldPath);
+        } else if (objName.equalsIgnoreCase('FEC_Additional_Info__c')) {
+            addInfoFields.add(fieldPath);
+        } else if (objName.equalsIgnoreCase('FEC_Customer_History__c')) {
+            custHistoryFields.add(fieldPath);
+        }
+    }
+
     private static String performReplacements(String text, Id caseId, Map<Id, Case> caseMap, User senderUser, Map<Id, FEC_Additional_Info__c> addInfoMap, Map<Id, FEC_Customer_History__c> custHistoryMap) {
         Matcher m = PATTERN_MERGE.matcher(text);
         Set<String> uniqueTokens = new Set<String>();
@@ -791,29 +872,49 @@ public without sharing class FEC_Notification {
 
         for(String token : uniqueTokens) {
             String fullToken = FEC_ConstantCommon.MERGE_FIELD_OPEN + token + FEC_ConstantCommon.MERGE_FIELD_CLOSE;
-            List<String> parts = token.split('\\.');
+            Integer dotIdx = token.indexOf('.');
             String resolvedValue = '';
-            
-            if(parts.size() == 2) {
-                String objName = parts[0];
-                String fieldName = parts[1];
+
+            if (dotIdx > 0 && dotIdx < token.length() - 1) {
+                String objName = token.substring(0, dotIdx);
+                String fieldPath = token.substring(dotIdx + 1);
                 sObject targetRef = null;
 
-                if (objName.equalsIgnoreCase('Case') && caseMap.containsKey(caseId)) targetRef = caseMap.get(caseId);
-                else if (objName.equalsIgnoreCase('User') && senderUser != null) targetRef = senderUser;
-                else if (objName.equalsIgnoreCase('FEC_Additional_Info__c') && addInfoMap.containsKey(caseId)) targetRef = addInfoMap.get(caseId);
-                else if (objName.equalsIgnoreCase('FEC_Customer_History__c') && custHistoryMap.containsKey(caseId)) targetRef = custHistoryMap.get(caseId);
+                if (objName.equalsIgnoreCase('Case') && caseMap.containsKey(caseId)) {
+                    targetRef = caseMap.get(caseId);
+                } else if (objName.equalsIgnoreCase('User') && senderUser != null) {
+                    targetRef = senderUser;
+                } else if (objName.equalsIgnoreCase('FEC_Additional_Info__c') && addInfoMap.containsKey(caseId)) {
+                    targetRef = addInfoMap.get(caseId);
+                } else if (objName.equalsIgnoreCase('FEC_Customer_History__c') && custHistoryMap.containsKey(caseId)) {
+                    targetRef = custHistoryMap.get(caseId);
+                }
 
                 if (targetRef != null) {
-                    try {
-                        Object val = targetRef.get(fieldName);
-                        resolvedValue = val != null ? String.valueOf(val) : '';
-                    } catch (Exception e) {}
+                    resolvedValue = resolveMergeFieldValue(targetRef, fieldPath);
                 }
             }
             text = text.replace(fullToken, resolvedValue);
         }
         return text;
+    }
+
+    private static String resolveMergeFieldValue(SObject sobj, String fieldPath) {
+        try {
+            List<String> parts = fieldPath.split('\\.');
+            if (parts.size() == 1) {
+                Object val = sobj.get(parts[0]);
+                return val == null ? '' : String.valueOf(val);
+            }
+            SObject parent = sobj.getSObject(parts[0]);
+            if (parent == null) {
+                return '';
+            }
+            Object val = parent.get(parts[1]);
+            return val == null ? '' : String.valueOf(val);
+        } catch (Exception e) {
+            return '';
+        }
     }
 
     // =========================================================

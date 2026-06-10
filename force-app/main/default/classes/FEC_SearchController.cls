@@ -72,6 +72,9 @@ public with sharing class FEC_SearchController {
     if (String.isBlank(value) || String.isBlank(fieldName)) {
         throw new AuraHandledException(System.Label.FEC_MSG_Create_Customer_History_Field_Null);
     }
+    if (caseId != null) {
+        FEC_InteractionInforHandler.assertInteractionEmailForAction(caseId);
+    }
 
     Case interactionCase;
 
@@ -93,7 +96,7 @@ public with sharing class FEC_SearchController {
             String.isBlank(interactionCase.FEC_Phone_Number__c)
         ) {
             throw new AuraHandledException(
-                System.Label.FEC_PHONE_IS_REQUIRED_MSG
+                System.Label.FEC_INTERACTION_PHONE_REQUIRED
             );
         }
     }

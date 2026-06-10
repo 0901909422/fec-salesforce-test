@@ -141,8 +141,7 @@ public without sharing class FEC_CreateCaseHandler {
     
     /**
      * Chỉ dùng cho MyCase CreateCSCase API (REST/SOAP).
-     * Interaction Case: FEC_Channel__c = External, FEC_Interaction_Subchannel__c = Other.
-     * Sys.Channel XML chỉ dùng cho FEC_Other_Subchannel__c trên Customer/Interaction Case.
+     * Set FEC_Is_Submited__c, FEC_Interaction_View_Mode__c = review, FEC_Channel__c từ DTO (Sys.Channel XML).
      * //Thangtv
      */
     @AuraEnabled
@@ -161,11 +160,13 @@ public without sharing class FEC_CreateCaseHandler {
         // ---------------------------
         // CHANNEL / STATUS
         // ---------------------------
-        interactionCase.FEC_Channel__c = FEC_ConstantCommon.CHANNEL_EXTERNAL;
-        interactionCase.FEC_Interaction_Subchannel__c =
-            FEC_ConstantCommon.CHANNEL_EXTERNAL_SUBCHANNEL_OTHER_NAME;
-        if (String.isNotBlank(dto.channel)) {
-            interactionCase.FEC_Other_Subchannel__c = dto.channel.trim();
+        
+        if( dto.channel != null ) {
+            interactionCase.FEC_Channel__c = dto.channel;
+        }
+        
+        if( dto.subChannel != null ) {
+            interactionCase.FEC_Interaction_Subchannel__c = dto.subChannel;
         }
         
         interactionCase.FEC_External_Interaction_ID__c = dto.externalInteractionId;
@@ -269,6 +270,7 @@ public without sharing class FEC_CreateCaseHandler {
             interactionCase.Status = FEC_ConstantCommon.CASE_STATUS_OPEN;
         }
         interactionCase.FEC_Interaction_View_Mode__c  = FEC_ConstantCommon.INTERACTION_HANDLING_MODE;
+        interactionCase.FEC_Is_Manual__c = true;
         
         insert interactionCase;
         
@@ -334,8 +336,18 @@ public without sharing class FEC_CreateCaseHandler {
         
         if(dto.agentId != null && dto.agentId != '') {
             System.debug('Assigning Agent ID: ' + dto.agentId + ' to User Id    : ' + createdInteraction.OwnerId);
-            User userInfo = [SELECT Id, FEC_Agent_ID__c,FEC_Main_Queue__c FROM User WHERE Id = :createdInteraction.OwnerId];
+            User userInfo = (User) Database.queryWithBinds(
+                'SELECT Id, FEC_Agent_ID__c, FEC_Main_Queue__c FROM User WHERE Id = :ownerId LIMIT 1',
+                new Map<String, Object>{ 'ownerId' => createdInteraction.OwnerId },
+                AccessLevel.SYSTEM_MODE
+            )[0];
             userInfo.FEC_Agent_ID__c = dto.agentId;
+            if (
+                User.SObjectType.getDescribe().fields.getMap().containsKey('FEC_Main_Queue__c') &&
+                String.isBlank(userInfo.FEC_Main_Queue__c)
+            ) {
+                userInfo.FEC_Main_Queue__c = FEC_ConstantCommon.QUEUE_DQ_CS_SUPPORT_NAME;
+            }
             update userInfo;
         }
         
@@ -354,8 +366,8 @@ public without sharing class FEC_CreateCaseHandler {
 
     /**
      * Chỉ dùng cho MyCase CreateCSCase API (REST/SOAP).
-     * Customer Case: FEC_Case_Channel__c / FEC_Channel__c = External, FEC_Sub_Channel__c = Other.
-     * Sys.Channel XML → FEC_Other_Subchannel__c (Sub-channel = Other).
+     * Set FEC_Is_Submited__c = true, FEC_Interaction_View_Mode__c = review,
+     * FEC_Channel__c = channelFromXml (Sys.Channel trong XML).
      * //Thangtv
      */
     public static Case createCustomerCaseMyCaseAPI(
@@ -366,11 +378,8 @@ public without sharing class FEC_CreateCaseHandler {
         Case c = buildCustomerCaseRecord(dto, interactionCaseId);
         c.FEC_Is_Submited__c = true; //Thangtv
         c.FEC_Interaction_View_Mode__c = FEC_ConstantCommon.INTERACTION_REVIEW_MODE; //Thangtv
-        c.FEC_Case_Channel__c = FEC_ConstantCommon.CHANNEL_EXTERNAL;
-        c.FEC_Sub_Channel__c = FEC_ConstantCommon.CHANNEL_EXTERNAL_SUBCHANNEL_OTHER_NAME;
-        c.FEC_Channel__c = FEC_ConstantCommon.CHANNEL_EXTERNAL;
         if (String.isNotBlank(channelFromXml)) {
-            c.FEC_Other_Subchannel__c = channelFromXml.trim();
+            c.FEC_Channel__c = channelFromXml.trim(); //Thangtv
         }
         insert c;
         return c;

@@ -11,7 +11,7 @@ public without sharing class FEC_AccountOrContractPicklistHandler {
     public static String getInteractionAccountNumber(String caseId){
         try {
             Case interactionCase = [
-            SELECT Id, FEC_Product_Type__r.Name,
+            SELECT Id,FEC_Customer_Type__c, FEC_Product_Type__r.Name, 
                    FEC_Account_or_Contract__r.FEC_Contract_Number__c,
                    FEC_Account_or_Contract__r.FEC_Account_Number__c,
                    FEC_Account_or_Contract__r.FEC_Product_Code__c,
@@ -25,42 +25,87 @@ public without sharing class FEC_AccountOrContractPicklistHandler {
             
             Map<String, Object> result = new Map<String, Object>();
             
-            if (interactionCase.FEC_Account_or_Contract__r != null) {
+            // ===== NON-EXISTING CUSTOMER =====
+            if ('Non-existing'.equalsIgnoreCase(interactionCase.FEC_Customer_Type__c)) {
                 
-                String productCode =
-                    interactionCase.FEC_Product_Type__r.Name ;
+                result.put(
+                    'accountNumber',
+                interactionCase.FEC_Account_or_Contract__r != null
+                    ? interactionCase.FEC_Account_or_Contract__r.FEC_Account_Number__c
+                    : null
+                    );
                 
+                result.put(
+                    'productCode',
+                interactionCase.FEC_Account_or_Contract__r != null
+                    ? interactionCase.FEC_Account_or_Contract__r.FEC_Product_Code__c
+                    : null
+                    );
+                
+                result.put('phone', interactionCase.FEC_Phone_Number__c);
+                result.put(
+                    'hasContractAccount',
+                interactionCase.FEC_Has_Account_or_Contract__c
+                    );
+                
+                return JSON.serialize(result);
+            }else {
+                // ===== EXISTING CUSTOMER =====
+                if (interactionCase.FEC_Account_or_Contract__r == null ||
+                interactionCase.FEC_Product_Type__r == null) {
+                    
+                    return JSON.serialize(result);
+                }
+                
+                String productType = interactionCase.FEC_Product_Type__r.Name;
                 String accountNumber;
                 
-                // 🎯 CORE LOGIC
-                if (productCode.toLowerCase() == FEC_ConstantCommon.PRODUCT_TYPE_LOAN.toLowerCase() ||
-                productCode.toLowerCase() == FEC_ConstantCommon.PRODUCT_TYPE_INSURANCE.toLowerCase()) {
+                if (
+                    FEC_ConstantCommon.PRODUCT_TYPE_LOAN.equalsIgnoreCase(productType) ||
+                    FEC_ConstantCommon.PRODUCT_TYPE_INSURANCE.equalsIgnoreCase(productType)
+                ) {
                     
                     accountNumber =
                         interactionCase.FEC_Account_or_Contract__r.FEC_Contract_Number__c;
                     
-                } else if (productCode.toLowerCase() == FEC_ConstantCommon.PRODUCT_TYPE_CARD.toLowerCase() ) {
+                } else if (
+                FEC_ConstantCommon.PRODUCT_TYPE_CARD.equalsIgnoreCase(productType)
+                ) {
                     
                     accountNumber =
                         interactionCase.FEC_Account_or_Contract__r.FEC_Account_Number__c;
-                }else if (productCode.toLowerCase() == FEC_ConstantCommon.PRODUCT_TYPE_UBANK.toLowerCase()) {
-                    accountNumber = interactionCase.FEC_Account_or_Contract__r.FEC_Product_Code__c;
+                    
+                } else if (
+                FEC_ConstantCommon.PRODUCT_TYPE_UBANK.equalsIgnoreCase(productType)
+                ) {
+                    
+                    accountNumber =
+                        interactionCase.FEC_Account_or_Contract__r.FEC_Product_Code__c;
+                    
+                } else {
+                    accountNumber = null;
                 }
                 
                 result.put('accountNumber', accountNumber);
-                result.put('cifNumber',
-                interactionCase.FEC_Account_or_Contract__r.FEC_CIF_Number__c);
-                result.put('productCode', productCode);
-                result.put('hasContractAccount',
-                interactionCase.FEC_Has_Account_or_Contract__c);
+                result.put(
+                    'cifNumber',
+                interactionCase.FEC_Account_or_Contract__r.FEC_CIF_Number__c
+                    );
+                result.put('productCode', productType);
+                result.put(
+                    'hasContractAccount',
+                interactionCase.FEC_Has_Account_or_Contract__c
+                    );
                 result.put('phone', interactionCase.FEC_Phone_Number__c);
                 
+                return JSON.serialize(result);
             }
             
-            return JSON.serialize(result);
-            
         } catch (Exception e) {
-            System.debug('ERROR: ' + e.getMessage());
+            System.debug(
+                LoggingLevel.ERROR,
+            'getInteractionAccountNumber Error: ' + e.getStackTraceString()
+                );
             return JSON.serialize(new Map<String, Object>());
         }
     }
@@ -337,6 +382,10 @@ public without sharing class FEC_AccountOrContractPicklistHandler {
     @AuraEnabled
     public static void createHistoryNonExistingCustomer( Id caseId, String selectedType) {
         
+        List<Case> cases = [SELECT Id, FEC_Account_or_Contract__c, FEC_Account_or_Contract__r.FEC_Customer_Name__c,FEC_Account_or_Contract__r.FEC_National_ID_Passport_ID__c FROM Case WHERE Id = :caseId LIMIT 1];
+        if (cases.isEmpty()) {
+            return;
+        }
         
         FEC_Customer_History__c rec = new FEC_Customer_History__c();
         
@@ -350,7 +399,8 @@ public without sharing class FEC_AccountOrContractPicklistHandler {
             rec.Name = FEC_ConstantCommon.PRODUCT_NON_EXISTING_CUSTOMER;
             rec.FEC_Account_Number__c = FEC_ConstantCommon.PRODUCT_NON_EXISTING_CUSTOMER;
         }
-        
+        rec.FEC_Customer_Name__c = cases[0].FEC_Account_or_Contract__r.FEC_Customer_Name__c;
+        rec.FEC_National_ID_Passport_ID__c = cases[0].FEC_Account_or_Contract__r.FEC_National_ID_Passport_ID__c;
         rec.FEC_Case__c = caseId;
         rec.FEC_Product_Code__c = selectedType;
         rec.FEC_Customer_Type__c = FEC_ConstantCommon.CUSTOMER_HISTORY_NON_EXISTING_CUSTOMER;
@@ -446,6 +496,21 @@ public without sharing class FEC_AccountOrContractPicklistHandler {
             LIMIT 1
          ];
             return c.FEC_Customer_Type__c;
+        } catch (Exception e) {
+            throw new AuraHandledException(e.getMessage());
+        }
+    }
+    
+    @AuraEnabled
+    public static String getInteractionSearchProducts(Id caseId){
+        try {
+            Case c = [
+            SELECT FEC_Search_Products__c 
+            FROM Case
+            WHERE Id = :caseId
+            LIMIT 1
+         ];
+            return c.FEC_Search_Products__c ;
         } catch (Exception e) {
             throw new AuraHandledException(e.getMessage());
         }

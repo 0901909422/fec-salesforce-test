@@ -117,6 +117,10 @@
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
+        <apexClass>FEC_BCC_CreationResolveHistService</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
         <apexClass>FEC_BCC_ImportResolveHistService</apexClass>
         <enabled>true</enabled>
     </classAccesses>
@@ -142,6 +146,10 @@
     </classAccesses>
     <classAccesses>
         <apexClass>FEC_BCH_ImportFileNameValidator</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_BCH_ImportValidateQueueable</apexClass>
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
@@ -1405,6 +1413,10 @@
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
+        <apexClass>FEC_TeamGroupCodeUtil</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
         <apexClass>FEC_TeamQueue</apexClass>
         <enabled>true</enabled>
     </classAccesses>
@@ -1419,6 +1431,10 @@
     <customMetadataTypeAccesses>
         <enabled>true</enabled>
         <name>FEC_API_Config__mdt</name>
+    </customMetadataTypeAccesses>
+    <customMetadataTypeAccesses>
+        <enabled>true</enabled>
+        <name>FEC_Application_Status_Mapping__mdt</name>
     </customMetadataTypeAccesses>
     <customMetadataTypeAccesses>
         <enabled>true</enabled>

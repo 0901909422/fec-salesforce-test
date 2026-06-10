@@ -1,9 +1,9 @@
 public without sharing class FEC_BatchCaseHandlingImportQueueable implements Queueable {
 
-    // 28/05/2026 15:30 linhdev - production safety: queueable execute chỉ xử lý 1 row
-    // để tránh vượt giới hạn enqueue khi FEC_CaseBusinessService.run tự enqueue job theo routing action.
+    // 08/06/2026 linhdev - 2 row/transaction (IMPORT_QUEUEABLE_MAX_ROWS_PER_EXECUTE) cân bằng throughput vs SOQL runInternal
     @TestVisible
-    private static final Integer MAX_APPLICABLE_ROWS_PER_EXECUTE = 1;
+    private static final Integer MAX_APPLICABLE_ROWS_PER_EXECUTE =
+        FEC_BatchCaseHandlingImportService.IMPORT_QUEUEABLE_MAX_ROWS_PER_EXECUTE;
 
     private final Id batchRecordId;
     private final String rowsJson;

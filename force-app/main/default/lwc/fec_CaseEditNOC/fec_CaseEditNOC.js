@@ -149,10 +149,13 @@ export default class Fec_CaseEditNOC extends LightningElement {
     );
   }
 
-  /** GSR (Actual NOC) + Revert Stage 2 → Stage 1: cho phép sửa Updated NOC khi bật mode edit Case. */
+  /** COF/GSR + Revert Stage 2 → Stage 1: cho phép sửa Updated NOC khi bật mode edit Case. */
   _isGsrStage2ToStage1RevertEditable() {
     const actualBp = (this._actualBusinessProcessCode || '').toUpperCase();
-    if (!actualBp.includes('GSR') || !this._isStage1) {
+    if (
+      (!actualBp.includes('GSR') && !actualBp.includes('COF')) ||
+      !this._isStage1
+    ) {
       return false;
     }
     return this._caseBusinessContextFlags?.isGsrStage2ToStage1Revert === true;
@@ -453,23 +456,49 @@ export default class Fec_CaseEditNOC extends LightningElement {
     }
   }
 
-  _syncPublishedNocToCaseBusinessIfComplete() {
-    if (
-      !this._isNocSelectionComplete({
+  /**
+   * Bộ NOC active để sync sang fec_CaseBussiness: sau submit dùng Updated Information,
+   * không dùng categorySelectedId (có thể lệch Updated NOC sau đổi ở Stage 2).
+   */
+  _resolveActiveNocPayloadForPublish() {
+    if (this.showUpdatedSection) {
+      return {
         productTypeId: this.productTypeSelectedId,
-        categoryId: this.categorySelectedId,
-        subCategoryId: this.subCategorySelectedId,
-        subCodeId: this.subCodeSelectedId
-      })
-    ) {
+        categoryId: this.updatedCategoryId ?? this.categorySelectedId,
+        subCategoryId: this.updatedSubCategoryId ?? this.subCategorySelectedId,
+        subCodeId: this.updatedSubCodeId ?? this.subCodeSelectedId,
+        natureOfCaseId: this.natureOfCase?.Id ?? null,
+      };
+    }
+    return {
+      productTypeId: this.productTypeSelectedId,
+      categoryId: this.categorySelectedId,
+      subCategoryId: this.subCategorySelectedId,
+      subCodeId: this.subCodeSelectedId,
+      natureOfCaseId: this.natureOfCase?.Id ?? null,
+    };
+  }
+
+  _isActiveNocPayloadCompleteForSync(payload) {
+    return !!(
+      payload &&
+      payload.productTypeId &&
+      payload.categoryId &&
+      payload.subCategoryId
+    );
+  }
+
+  _syncPublishedNocToCaseBusinessIfComplete() {
+    const payload = this._resolveActiveNocPayloadForPublish();
+    if (!this._isActiveNocPayloadCompleteForSync(payload)) {
       return;
     }
     if (!this.messageContext) {
       return;
     }
-    // eslint-disable-next-line @lwc/lwc/no-async-operation
-    Promise.resolve().then(() => {
-      this.handlePublishMessageChanel();
+    publish(this.messageContext, CASE_NOC, {
+      caseId: this.recordId,
+      ...payload,
     });
   }
 
@@ -1240,16 +1269,11 @@ export default class Fec_CaseEditNOC extends LightningElement {
   }
 
   async handlePublishMessageChanel() {
-    const payload = {
+    const active = this._resolveActiveNocPayloadForPublish();
+    publish(this.messageContext, CASE_NOC, {
       caseId: this.recordId,
-      productTypeId: this.productTypeSelectedId,
-      categoryId: this.categorySelectedId,
-      subCategoryId: this.subCategorySelectedId,
-      subCodeId: this.subCodeSelectedId,
-      natureOfCaseId: this.natureOfCase?.Id
-    };
-
-    publish(this.messageContext, CASE_NOC, payload);
+      ...active,
+    });
   }
 
   _publishCaseNocAfterPersist(payload) {
@@ -1287,6 +1311,10 @@ export default class Fec_CaseEditNOC extends LightningElement {
     this.modeEditCase = nextModeEdit;
     if (nextModeEdit) {
       this._isCaseInformationEdit = false;
+    }
+    if (prevModeEdit !== nextModeEdit && nextModeEdit) {
+      // Execute: đẩy Updated NOC sang fec_CaseBussiness trước reload master data
+      this._syncPublishedNocToCaseBusinessIfComplete();
     }
     if (prevModeEdit !== nextModeEdit && !nextModeEdit) {
       this.reloadData();

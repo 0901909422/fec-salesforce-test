@@ -14,6 +14,7 @@ public without sharing class FEC_InteractionInforHandler {
                FEC_Outcome_Code__c,
                FEC_Interaction_Remarks__c,
                FEC_Interaction_Email__c,
+               FEC_Is_Manual__c,
                FEC_Send_To__c,
                FEC_On_Hold__c,
                ParentId,
@@ -21,8 +22,7 @@ public without sharing class FEC_InteractionInforHandler {
                Parent.FEC_ID_Search__c,
                IsClosed,
                FEC_Interaction_Status__c,
-               Origin,
-               FEC_Is_Manual__c
+               Origin
         FROM Case
         WHERE Id = :recordId
     ];
@@ -85,6 +85,31 @@ public without sharing class FEC_InteractionInforHandler {
             FEC_Interaction_Email__c = String.isNotBlank(email) ? email.trim() : null
         );
     }
+
+    @AuraEnabled(cacheable=false)
+    public static void updateInteractionSendTo(Id recordId, String sendTo) {
+        if (recordId == null) {
+            throw new AuraHandledException(System.Label.FEC_MSG_Record_Id_Invalid);
+        }
+        update new Case(
+            Id = recordId,
+            FEC_Send_To__c = String.isNotBlank(sendTo) ? sendTo.trim() : null
+        );
+    }
+
+    @AuraEnabled(cacheable=false)
+    public static void updateInteractionExternalId(Id recordId, String externalInteractionId) {
+        if (recordId == null) {
+            throw new AuraHandledException(System.Label.FEC_MSG_Record_Id_Invalid);
+        }
+        update new Case(
+            Id = recordId,
+            FEC_External_Interaction_ID__c = String.isNotBlank(externalInteractionId)
+                ? externalInteractionId.trim()
+                : null
+        );
+    }
+
     @AuraEnabled(cacheable=false)
     public static void updateInteractionOnHold(Id recordId, Boolean onHold) {
         if (recordId == null) {
@@ -96,6 +121,55 @@ public without sharing class FEC_InteractionInforHandler {
         );
     }
     
+    private static Boolean requiresManualInteractionEmail(Case interaction) {
+        return interaction != null
+            && interaction.FEC_Is_Manual__c == true
+            && interaction.FEC_Channel__c == FEC_ConstantCommon.CHANNEL_EMAIL_NAME
+            && String.isBlank(interaction.FEC_Interaction_Email__c);
+    }
+
+    private static Case getInteractionForEmailAction(Id recordId) {
+        if (recordId == null) {
+            return null;
+        }
+        List<Case> rows = [
+            SELECT Id, RecordType.DeveloperName, FEC_Interaction__c,
+                   FEC_Is_Manual__c, FEC_Channel__c, FEC_Interaction_Email__c
+            FROM Case
+            WHERE Id = :recordId
+            LIMIT 1
+        ];
+        if (rows.isEmpty()) {
+            return null;
+        }
+        Case current = rows[0];
+        if (current.RecordType.DeveloperName == FEC_ConstantCommon.CASE_INTERACTION_RECORD_TYPE_DEV_NAME) {
+            return current;
+        }
+        if (current.RecordType.DeveloperName == FEC_ConstantCommon.CASE_CUSTOMER_RECORD_TYPE_DEV_NAME
+            && current.FEC_Interaction__c != null) {
+            List<Case> interactions = [
+                SELECT Id, FEC_Is_Manual__c, FEC_Channel__c, FEC_Interaction_Email__c
+                FROM Case
+                WHERE Id = :current.FEC_Interaction__c
+                LIMIT 1
+            ];
+            return interactions.isEmpty() ? null : interactions[0];
+        }
+        return null;
+    }
+
+    @AuraEnabled(cacheable=false)
+    public static Boolean isInteractionEmailActionBlocked(Id recordId) {
+        return requiresManualInteractionEmail(getInteractionForEmailAction(recordId));
+    }
+
+    public static void assertInteractionEmailForAction(Id recordId) {
+        if (requiresManualInteractionEmail(getInteractionForEmailAction(recordId))) {
+            throw new AuraHandledException(System.Label.FEC_Interaction_Email_Required_Msg);
+        }
+    }
+
     @AuraEnabled(cacheable=true)
     public static Id getInteractionIdFromCustomerCase(Id caseId) {
         Case c = [
@@ -739,18 +813,18 @@ public without sharing class FEC_InteractionInforHandler {
 
         List<Case> caseList = [
             SELECT FEC_Customer_Username__c,
-                   FEC_Interaction_Masked_Phone__c, 
-                   FEC_Phone_Number__c, 
-                   FEC_Created_On__c, 
-                   FEC_Created_by__c, 
-                   FEC_KYC_Status__c, 
-                   FEC_External_Interaction_ID__c, 
-                   FEC_Outcome_Code__c, 
-                   FEC_Interaction_Remarks__c, 
-                   FEC_Interaction__c, 
-                   IsClosed, 
-                   RecordType.DeveloperName 
-            FROM Case 
+                   FEC_Interaction_Masked_Phone__c,
+                   FEC_Phone_Number__c,
+                   FEC_Created_On__c,
+                   FEC_Created_by__c,
+                   FEC_KYC_Status__c,
+                   FEC_External_Interaction_ID__c,
+                   FEC_Outcome_Code__c,
+                   FEC_Interaction_Remarks__c,
+                   FEC_Interaction__c,
+                   IsClosed,
+                   RecordType.DeveloperName
+            FROM Case
             WHERE Id = :recordId
             LIMIT 1
         ];

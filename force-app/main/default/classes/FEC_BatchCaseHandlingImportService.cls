@@ -84,6 +84,51 @@ public without sharing class FEC_BatchCaseHandlingImportService {
         public String routeQueueHint;
     }
 
+    private class ImportCaseValidateSnap {
+        public String searchKey;
+        public Id caseId;
+        public Boolean isClosed;
+        public Id ownerId;
+        public Id currentStageId;
+        public Decimal assignmentCount;
+        public String businessProcessCode;
+    }
+
+    private class ImportAssignmentValidateSnap {
+        public String assignmentLookupName;
+        public Id assignmentId;
+        public Id caseId;
+        public String assignmentStatus;
+    }
+
+    public class ImportValidateChunkContext {
+        public Boolean cofOrGsr;
+        public Id currentUserId;
+        public String currentUserGroup;
+        public Set<Id> currentUserQueueIds;
+        public Map<String, Case> caseBySearch;
+        public Map<Id, String> businessProcessCodeByCaseId;
+        public Map<String, FEC_Assignment__c> assignmentByName;
+        public Map<Id, FEC_Assignment__c> assignmentByRecordId;
+        public Map<Id, Set<String>> configuredLabelsByStage;
+        public Map<String, Map<String, String>> picklistValueByNormByField;
+        public Set<String> seenCaseSearch;
+        public Map<String, String> routingSignatureByCaseSearch;
+    }
+
+    public class ImportValidateChunkStatePayload {
+        public Boolean cofOrGsr;
+        public String currentUserGroup;
+        public List<String> seenCaseSearch;
+        public Map<String, String> routingSignatureByCaseSearch;
+        public List<ImportCaseValidateSnap> caseSnaps;
+        public List<ImportAssignmentValidateSnap> assignmentSnapsByName;
+        public List<ImportAssignmentValidateSnap> assignmentSnapsByRecordId;
+        public Map<String, List<String>> configuredLabelsByStage;
+        public List<String> currentUserQueueIds;
+        public Boolean prepared;
+    }
+
     private static final String BATCH_OBJECT_API_NAME = 'FEC_Batch_Case_Handling__c';
     @TestVisible
     private static final Integer IMPORT_PROCESSING_TIMEOUT_HOURS = 1;
@@ -96,6 +141,14 @@ public without sharing class FEC_BatchCaseHandlingImportService {
     // 28/05/2026 11:20 linhdev - dừng apply sớm trước 101 SOQL (mỗi row run + trigger tốn thêm query)
     @TestVisible
     private static final Integer IMPORT_SOQL_SAFE_THRESHOLD_PERCENT = 72;
+    // 08/06/2026 linhdev - file >5000 row: validate async theo chunk Queueable (tránh CPU/heap sync)
+    @TestVisible
+    public static final Integer IMPORT_ASYNC_VALIDATE_MIN_ROWS = 5000;
+    @TestVisible
+    public static final Integer IMPORT_VALIDATE_MAX_ROWS_PER_CHUNK = 400;
+    // 08/06/2026 linhdev - ~8-12 SOQL/row runInternal; 2 row/transaction an toàn dưới ngưỡng 72%
+    @TestVisible
+    public static final Integer IMPORT_QUEUEABLE_MAX_ROWS_PER_EXECUTE = 2;
     private static Map<String, Map<String, String>> routeParamsCacheByKey = new Map<String, Map<String, String>>();
     private static Map<String, String> revertActionIdCacheByStage = new Map<String, String>();
     private static Map<String, String> queueIdCacheByToken = new Map<String, String>();
@@ -132,6 +185,10 @@ public without sharing class FEC_BatchCaseHandlingImportService {
     public static Boolean shouldProcessImportSynchronously(List<FEC_BatchCaseHandlingImportRow> rows) {
         // 28/05/2026 15:24 linhdev - production safety: always process via queueable to avoid sync SOQL 101
         return false;
+    }
+
+    public static Boolean shouldValidateImportAsynchronously(Integer rowCount) {
+        return rowCount != null && rowCount > IMPORT_ASYNC_VALIDATE_MIN_ROWS;
     }
 
     @TestVisible
@@ -1838,8 +1895,17 @@ public without sharing class FEC_BatchCaseHandlingImportService {
     }
 
     public static List<FEC_BatchCaseHandlingImportRow> validateCaseHandlingImportRows(List<Object> inputRows, Boolean cofOrGsr) {
+        List<FEC_BatchCaseHandlingImportRow> output = buildImportRowsFromInputObjects(inputRows);
+        ImportValidateChunkContext ctx = prepareImportValidateChunkContext(output, cofOrGsr);
+        validateImportRowsChunk(output, ctx, 0, output.size());
+        return output;
+    }
+
+    public static List<FEC_BatchCaseHandlingImportRow> buildImportRowsFromInputObjects(List<Object> inputRows) {
         List<FEC_BatchCaseHandlingImportRow> output = new List<FEC_BatchCaseHandlingImportRow>();
-        List<String> searchKeys = new List<String>();
+        if (inputRows == null || inputRows.isEmpty()) {
+            return output;
+        }
         for (Object rowObj : inputRows) {
             if (!(rowObj instanceof Map<String, Object>)) {
                 continue;
@@ -1935,67 +2001,109 @@ public without sharing class FEC_BatchCaseHandlingImportService {
             rr.status = System.Label.FEC_Batch_Case_Handling_Success;
             rr.errors = FEC_ConstantCommon.STR_EMPTY;
             output.add(rr);
-            if (String.isNotBlank(rr.caseIdSearch)) {
+        }
+        return output;
+    }
+
+    public static ImportValidateChunkContext prepareImportValidateChunkContext(
+        List<FEC_BatchCaseHandlingImportRow> output,
+        Boolean cofOrGsr
+    ) {
+        ImportValidateChunkContext ctx = new ImportValidateChunkContext();
+        ctx.cofOrGsr = cofOrGsr == true;
+        ctx.caseBySearch = new Map<String, Case>();
+        ctx.businessProcessCodeByCaseId = new Map<Id, String>();
+        ctx.seenCaseSearch = new Set<String>();
+        ctx.routingSignatureByCaseSearch = new Map<String, String>();
+        if (output == null || output.isEmpty()) {
+            return ctx;
+        }
+        Set<String> searchKeys = new Set<String>();
+        for (FEC_BatchCaseHandlingImportRow rr : output) {
+            if (rr != null && String.isNotBlank(rr.caseIdSearch)) {
                 searchKeys.add(rr.caseIdSearch);
             }
         }
-
-        Map<String, Case> caseBySearch = new Map<String, Case>();
         if (!searchKeys.isEmpty()) {
-            for (Case c : [
-                SELECT Id, IsClosed, FEC_ID_Search__c, OwnerId, FEC_Current_Case_Stage__c,
-                    FEC_Assignment_Count__c,
-                    FEC_Business_Process__r.FEC_Code__c, FEC_Current_Case_Stage__r.FEC_Business_Process__r.FEC_Code__c
-                FROM Case
-                WHERE FEC_ID_Search__c IN :searchKeys
-                LIMIT 5000
-            ]) {
-                if (c.FEC_ID_Search__c != null) {
-                    caseBySearch.put(c.FEC_ID_Search__c, c);
+            List<String> searchKeyList = new List<String>(searchKeys);
+            for (Integer startIdx = 0; startIdx < searchKeyList.size(); startIdx += 5000) {
+                Integer endIdx = Math.min(startIdx + 5000, searchKeyList.size());
+                List<String> keyChunk = new List<String>();
+                for (Integer idx = startIdx; idx < endIdx; idx++) {
+                    keyChunk.add(searchKeyList[idx]);
+                }
+                for (Case c : [
+                    SELECT Id, IsClosed, FEC_ID_Search__c, OwnerId, FEC_Current_Case_Stage__c,
+                        FEC_Assignment_Count__c,
+                        FEC_Business_Process__r.FEC_Code__c, FEC_Current_Case_Stage__r.FEC_Business_Process__r.FEC_Code__c
+                    FROM Case
+                    WHERE FEC_ID_Search__c IN :keyChunk
+                ]) {
+                    if (c.FEC_ID_Search__c != null) {
+                        ctx.caseBySearch.put(c.FEC_ID_Search__c, c);
+                        ctx.businessProcessCodeByCaseId.put(c.Id, resolveCaseBusinessProcessCode(c));
+                    }
                 }
             }
         }
-
         Set<String> assignmentNames = new Set<String>();
         Set<Id> assignmentRecordIds = new Set<Id>();
         for (FEC_BatchCaseHandlingImportRow rr : output) {
-            if (!cofOrGsr || String.isBlank(rr.assignmentId)) {
+            if (ctx.cofOrGsr != true || rr == null || String.isBlank(rr.assignmentId)) {
                 continue;
             }
             collectAssignmentLookupKeys(rr.assignmentId, assignmentNames, assignmentRecordIds);
         }
-        Map<String, FEC_Assignment__c> assignmentByName = loadAssignmentsByName(assignmentNames);
-        Map<Id, FEC_Assignment__c> assignmentByRecordId = loadAssignmentsByRecordId(assignmentRecordIds);
-
-        Id currentUserId = UserInfo.getUserId();
-        String currentUserGroup = null;
+        ctx.assignmentByName = loadAssignmentsByName(assignmentNames);
+        ctx.assignmentByRecordId = loadAssignmentsByRecordId(assignmentRecordIds);
+        ctx.currentUserId = UserInfo.getUserId();
+        ctx.currentUserGroup = null;
         List<User> importUsers = [
             SELECT FEC_User_Group__c
             FROM User
-            WHERE Id = :currentUserId
+            WHERE Id = :ctx.currentUserId
             LIMIT 1
         ];
         if (!importUsers.isEmpty()) {
-            currentUserGroup = importUsers[0].FEC_User_Group__c;
+            ctx.currentUserGroup = importUsers[0].FEC_User_Group__c;
         }
         Set<Id> stageIds = new Set<Id>();
-        for (Case c : caseBySearch.values()) {
+        for (Case c : ctx.caseBySearch.values()) {
             if (c != null && c.FEC_Current_Case_Stage__c != null) {
                 stageIds.add(c.FEC_Current_Case_Stage__c);
             }
         }
-        Map<Id, Set<String>> configuredLabelsByStage = loadConfiguredLabelsByStage(stageIds);
+        ctx.configuredLabelsByStage = loadConfiguredLabelsByStage(stageIds);
         FEC_BatchCaseHandlingPicklistResolver.clearCache();
         FEC_BCH_ImportRoutingResolver.clearCache();
-        FEC_BCH_ImportRoutingResolver.preloadStageScreens(stageIds, currentUserGroup);
-        Map<String, Map<String, String>> picklistValueByNormByField =
+        FEC_BCH_ImportRoutingResolver.preloadStageScreens(stageIds, ctx.currentUserGroup);
+        ctx.picklistValueByNormByField =
             FEC_BatchCaseHandlingPicklistResolver.buildNormalizedToApiValueByField(
                 importPicklistFieldApis()
             );
+        ctx.currentUserQueueIds = FEC_AssignmentListHandler.getCurrentUserQueueIds(ctx.currentUserId);
+        return ctx;
+    }
 
-        Set<String> seenCaseSearch = new Set<String>();
-        Map<String, String> routingSignatureByCaseSearch = new Map<String, String>();
-        for (FEC_BatchCaseHandlingImportRow rr : output) {
+    public static void validateImportRowsChunk(
+        List<FEC_BatchCaseHandlingImportRow> output,
+        ImportValidateChunkContext ctx,
+        Integer startIdx,
+        Integer endIdx
+    ) {
+        if (output == null || output.isEmpty() || ctx == null || startIdx == null || endIdx == null) {
+            return;
+        }
+        Integer safeStart = startIdx < 0 ? 0 : startIdx;
+        Integer safeEnd = endIdx > output.size() ? output.size() : endIdx;
+        if (safeStart >= safeEnd) {
+            return;
+        }
+        for (Integer rowIdx = safeStart; rowIdx < safeEnd; rowIdx++) {
+            FEC_BatchCaseHandlingImportRow rr = output[rowIdx];
+            if (rr == null) {
+                continue;
+            }
             List<String> errs = new List<String>();
             Case matched = null;
             try {
@@ -2010,36 +2118,36 @@ public without sharing class FEC_BatchCaseHandlingImportService {
             if (String.isBlank(rr.caseIdSearch)) {
                 addImportError(errs, System.Label.FEC_Batch_Case_Handling_Import_Err_Missing_Case_Id);
             }
-            matched = String.isNotBlank(rr.caseIdSearch) ? caseBySearch.get(rr.caseIdSearch) : null;
+            matched = String.isNotBlank(rr.caseIdSearch) ? ctx.caseBySearch.get(rr.caseIdSearch) : null;
             if (String.isNotBlank(rr.caseIdSearch) && matched == null) {
                 errs.add(System.Label.FEC_Batch_Case_Handling_Import_Err_Case_Id_Not_Found);
             } else if (matched != null && matched.IsClosed) {
                 errs.add(System.Label.FEC_Batch_Case_Handling_Import_Err_Case_Closed);
-            } else if (matched != null && !canImportCaseForCurrentUser(matched, currentUserId)) {
+            } else if (matched != null && !canImportCaseForCurrentUser(matched, ctx.currentUserId, ctx.currentUserQueueIds)) {
                 errs.add(ERR_NOT_OWNER);
             }
             if (!remarkOverMax) {
             if (String.isNotBlank(rr.caseIdSearch)) {
-                if (seenCaseSearch.contains(rr.caseIdSearch)) {
+                if (ctx.seenCaseSearch.contains(rr.caseIdSearch)) {
                     errs.add(System.Label.FEC_Batch_Case_Handling_Import_Err_Duplicate_Case_Id);
                 } else {
-                    seenCaseSearch.add(rr.caseIdSearch);
+                    ctx.seenCaseSearch.add(rr.caseIdSearch);
                 }
-                String routingSig = buildRoutingSignature(rr, cofOrGsr);
-                if (routingSignatureByCaseSearch.containsKey(rr.caseIdSearch)) {
-                    if (routingSignatureByCaseSearch.get(rr.caseIdSearch) != routingSig) {
+                String routingSig = buildRoutingSignature(rr, ctx.cofOrGsr);
+                if (ctx.routingSignatureByCaseSearch.containsKey(rr.caseIdSearch)) {
+                    if (ctx.routingSignatureByCaseSearch.get(rr.caseIdSearch) != routingSig) {
                         errs.add(ERR_ROUTING_CONFLICT);
                     }
                 } else if (String.isNotBlank(routingSig)) {
-                    routingSignatureByCaseSearch.put(rr.caseIdSearch, routingSig);
+                    ctx.routingSignatureByCaseSearch.put(rr.caseIdSearch, routingSig);
                 }
             }
 
-            if (matched != null && cofOrGsr != true) {
+            if (matched != null && ctx.cofOrGsr != true) {
                 FEC_BatchCaseHandlingImportProfile.ImportScope importScope =
                     FEC_BatchCaseHandlingImportProfile.resolveForCase(
-                        resolveCaseBusinessProcessCode(matched),
-                        currentUserGroup
+                        resolveImportValidateBusinessProcessCode(matched, ctx),
+                        ctx.currentUserGroup
                     );
                 if (importScope != null && importScope.allowed == false) {
                     addImportError(errs, importScope.errorMessage);
@@ -2049,32 +2157,32 @@ public without sharing class FEC_BatchCaseHandlingImportService {
                             rr,
                             matched,
                             importScope,
-                            configuredLabelsByStage,
-                            picklistValueByNormByField
+                            ctx.configuredLabelsByStage,
+                            ctx.picklistValueByNormByField
                         )
                     );
                 }
             }
 
             // 28/05/2026 14:30 linhdev - resolve Routing Action vs Datagroup (tránh duplicate với block bên dưới)
-            List<String> resolvedRoutingErrs = validateResolvedRoutingForRow(rr, matched, cofOrGsr);
+            List<String> resolvedRoutingErrs = validateResolvedRoutingForRow(rr, matched, ctx.cofOrGsr);
             errs.addAll(resolvedRoutingErrs);
 
             //PhongBT 29/05/26: COF/GSR — Routing Action (case) Revert/Update/Escalate khi Case có Assignment.
-            if (cofOrGsr == true && matched != null) {
+            if (ctx.cofOrGsr == true && matched != null) {
                 String routingBlockedByAssignment = validateCaseRoutingActionBlockedByAssignmentCount(rr, matched);
                 if (String.isNotBlank(routingBlockedByAssignment)) {
                     errs.add(routingBlockedByAssignment);
                 }
             }
 
-            if (cofOrGsr) {
+            if (ctx.cofOrGsr) {
                 Boolean hasAssignment = String.isNotBlank(rr.assignmentId);
                 if (hasAssignment) {
                     FEC_Assignment__c asg = resolveAssignmentForImport(
                         rr.assignmentId,
-                        assignmentByName,
-                        assignmentByRecordId,
+                        ctx.assignmentByName,
+                        ctx.assignmentByRecordId,
                         matched == null ? null : matched.Id
                     );
                     if (asg == null) {
@@ -2156,7 +2264,214 @@ public without sharing class FEC_BatchCaseHandlingImportService {
                 rr.recordId = matched == null ? FEC_ConstantCommon.STR_EMPTY : String.valueOf(matched.Id);
             }
         }
-        return output;
+    }
+
+    public static String serializeImportValidateChunkContext(ImportValidateChunkContext ctx) {
+        ImportValidateChunkStatePayload payload = new ImportValidateChunkStatePayload();
+        if (ctx == null) {
+            payload.prepared = false;
+            return JSON.serialize(payload);
+        }
+        payload.prepared = true;
+        payload.cofOrGsr = ctx.cofOrGsr == true;
+        payload.currentUserGroup = ctx.currentUserGroup;
+        payload.seenCaseSearch = ctx.seenCaseSearch == null
+            ? new List<String>()
+            : new List<String>(ctx.seenCaseSearch);
+        payload.routingSignatureByCaseSearch = ctx.routingSignatureByCaseSearch == null
+            ? new Map<String, String>()
+            : new Map<String, String>(ctx.routingSignatureByCaseSearch);
+        payload.caseSnaps = new List<ImportCaseValidateSnap>();
+        if (ctx.caseBySearch != null) {
+            for (String searchKey : ctx.caseBySearch.keySet()) {
+                Case matched = ctx.caseBySearch.get(searchKey);
+                if (matched == null) {
+                    continue;
+                }
+                ImportCaseValidateSnap snap = new ImportCaseValidateSnap();
+                snap.searchKey = searchKey;
+                snap.caseId = matched.Id;
+                snap.isClosed = matched.IsClosed;
+                snap.ownerId = matched.OwnerId;
+                snap.currentStageId = matched.FEC_Current_Case_Stage__c;
+                snap.assignmentCount = matched.FEC_Assignment_Count__c;
+                snap.businessProcessCode = ctx.businessProcessCodeByCaseId == null
+                    ? resolveCaseBusinessProcessCode(matched)
+                    : ctx.businessProcessCodeByCaseId.get(matched.Id);
+                payload.caseSnaps.add(snap);
+            }
+        }
+        payload.assignmentSnapsByName = new List<ImportAssignmentValidateSnap>();
+        if (ctx.assignmentByName != null) {
+            for (String nameKey : ctx.assignmentByName.keySet()) {
+                FEC_Assignment__c asg = ctx.assignmentByName.get(nameKey);
+                ImportAssignmentValidateSnap snap = toImportAssignmentValidateSnap(asg);
+                if (snap != null) {
+                    snap.assignmentLookupName = nameKey;
+                    payload.assignmentSnapsByName.add(snap);
+                }
+            }
+        }
+        payload.assignmentSnapsByRecordId = new List<ImportAssignmentValidateSnap>();
+        if (ctx.assignmentByRecordId != null) {
+            for (Id asgId : ctx.assignmentByRecordId.keySet()) {
+                FEC_Assignment__c asg = ctx.assignmentByRecordId.get(asgId);
+                ImportAssignmentValidateSnap snap = toImportAssignmentValidateSnap(asg);
+                if (snap != null) {
+                    payload.assignmentSnapsByRecordId.add(snap);
+                }
+            }
+        }
+        payload.configuredLabelsByStage = new Map<String, List<String>>();
+        if (ctx.configuredLabelsByStage != null) {
+            for (Id stageId : ctx.configuredLabelsByStage.keySet()) {
+                Set<String> labels = ctx.configuredLabelsByStage.get(stageId);
+                payload.configuredLabelsByStage.put(
+                    String.valueOf(stageId),
+                    labels == null ? new List<String>() : new List<String>(labels)
+                );
+            }
+        }
+        payload.currentUserQueueIds = new List<String>();
+        if (ctx.currentUserQueueIds != null) {
+            for (Id queueId : ctx.currentUserQueueIds) {
+                payload.currentUserQueueIds.add(String.valueOf(queueId));
+            }
+        }
+        return JSON.serialize(payload);
+    }
+
+    public static ImportValidateChunkContext deserializeImportValidateChunkContext(String jsonPayload) {
+        ImportValidateChunkContext ctx = new ImportValidateChunkContext();
+        ctx.caseBySearch = new Map<String, Case>();
+        ctx.businessProcessCodeByCaseId = new Map<Id, String>();
+        ctx.assignmentByName = new Map<String, FEC_Assignment__c>();
+        ctx.assignmentByRecordId = new Map<Id, FEC_Assignment__c>();
+        ctx.seenCaseSearch = new Set<String>();
+        ctx.routingSignatureByCaseSearch = new Map<String, String>();
+        ctx.configuredLabelsByStage = new Map<Id, Set<String>>();
+        ctx.currentUserQueueIds = new Set<Id>();
+        if (String.isBlank(jsonPayload)) {
+            return ctx;
+        }
+        ImportValidateChunkStatePayload payload = (ImportValidateChunkStatePayload) JSON.deserialize(
+            jsonPayload,
+            ImportValidateChunkStatePayload.class
+        );
+        if (payload == null || payload.prepared != true) {
+            return ctx;
+        }
+        ctx.cofOrGsr = payload.cofOrGsr == true;
+        ctx.currentUserGroup = payload.currentUserGroup;
+        ctx.currentUserId = UserInfo.getUserId();
+        if (payload.seenCaseSearch != null) {
+            ctx.seenCaseSearch.addAll(payload.seenCaseSearch);
+        }
+        if (payload.routingSignatureByCaseSearch != null) {
+            ctx.routingSignatureByCaseSearch.putAll(payload.routingSignatureByCaseSearch);
+        }
+        if (payload.caseSnaps != null) {
+            for (ImportCaseValidateSnap snap : payload.caseSnaps) {
+                if (snap == null || String.isBlank(snap.searchKey) || snap.caseId == null) {
+                    continue;
+                }
+                Case matched = new Case(Id = snap.caseId);
+                matched.put('IsClosed', snap.isClosed);
+                matched.put('OwnerId', snap.ownerId);
+                matched.put('FEC_Current_Case_Stage__c', snap.currentStageId);
+                matched.put('FEC_Assignment_Count__c', snap.assignmentCount);
+                ctx.caseBySearch.put(snap.searchKey, matched);
+                if (String.isNotBlank(snap.businessProcessCode)) {
+                    ctx.businessProcessCodeByCaseId.put(snap.caseId, snap.businessProcessCode);
+                }
+            }
+        }
+        if (payload.assignmentSnapsByName != null) {
+            for (ImportAssignmentValidateSnap snap : payload.assignmentSnapsByName) {
+                FEC_Assignment__c asg = fromImportAssignmentValidateSnap(snap);
+                if (asg != null && String.isNotBlank(snap.assignmentLookupName)) {
+                    ctx.assignmentByName.put(snap.assignmentLookupName, asg);
+                }
+            }
+        }
+        if (payload.assignmentSnapsByRecordId != null) {
+            for (ImportAssignmentValidateSnap snap : payload.assignmentSnapsByRecordId) {
+                FEC_Assignment__c asg = fromImportAssignmentValidateSnap(snap);
+                if (asg != null && asg.Id != null) {
+                    ctx.assignmentByRecordId.put(asg.Id, asg);
+                }
+            }
+        }
+        if (payload.configuredLabelsByStage != null) {
+            for (String stageIdKey : payload.configuredLabelsByStage.keySet()) {
+                try {
+                    Id stageId = Id.valueOf(stageIdKey);
+                    List<String> labels = payload.configuredLabelsByStage.get(stageIdKey);
+                    ctx.configuredLabelsByStage.put(
+                        stageId,
+                        labels == null ? new Set<String>() : new Set<String>(labels)
+                    );
+                } catch (Exception ex) {
+                }
+            }
+        }
+        if (payload.currentUserQueueIds != null) {
+            for (String queueIdKey : payload.currentUserQueueIds) {
+                try {
+                    ctx.currentUserQueueIds.add(Id.valueOf(queueIdKey));
+                } catch (Exception ex) {
+                }
+            }
+        }
+        Set<Id> stageIds = new Set<Id>();
+        for (Case matched : ctx.caseBySearch.values()) {
+            if (matched != null && matched.FEC_Current_Case_Stage__c != null) {
+                stageIds.add(matched.FEC_Current_Case_Stage__c);
+            }
+        }
+        FEC_BatchCaseHandlingPicklistResolver.clearCache();
+        FEC_BCH_ImportRoutingResolver.clearCache();
+        FEC_BCH_ImportRoutingResolver.preloadStageScreens(stageIds, ctx.currentUserGroup);
+        ctx.picklistValueByNormByField =
+            FEC_BatchCaseHandlingPicklistResolver.buildNormalizedToApiValueByField(
+                importPicklistFieldApis()
+            );
+        return ctx;
+    }
+
+    private static ImportAssignmentValidateSnap toImportAssignmentValidateSnap(FEC_Assignment__c asg) {
+        if (asg == null || asg.Id == null) {
+            return null;
+        }
+        ImportAssignmentValidateSnap snap = new ImportAssignmentValidateSnap();
+        snap.assignmentId = asg.Id;
+        snap.caseId = asg.FEC_Case__c;
+        snap.assignmentStatus = asg.FEC_Assignment_Status__c;
+        return snap;
+    }
+
+    private static FEC_Assignment__c fromImportAssignmentValidateSnap(ImportAssignmentValidateSnap snap) {
+        if (snap == null || snap.assignmentId == null) {
+            return null;
+        }
+        return new FEC_Assignment__c(
+            Id = snap.assignmentId,
+            FEC_Case__c = snap.caseId,
+            FEC_Assignment_Status__c = snap.assignmentStatus
+        );
+    }
+
+    private static String resolveImportValidateBusinessProcessCode(
+        Case matched,
+        ImportValidateChunkContext ctx
+    ) {
+        if (matched == null || matched.Id == null) {
+            return FEC_ConstantCommon.STR_EMPTY;
+        }
+        if (ctx != null && ctx.businessProcessCodeByCaseId != null && ctx.businessProcessCodeByCaseId.containsKey(matched.Id)) {
+            return ctx.businessProcessCodeByCaseId.get(matched.Id);
+        }
+        return resolveCaseBusinessProcessCode(matched);
     }
 
     public static void applyCaseHandlingUpdates(List<FEC_BatchCaseHandlingImportRow> rows, Boolean cofOrGsr) {
@@ -3176,6 +3491,14 @@ public without sharing class FEC_BatchCaseHandlingImportService {
 
     // 05/06/2026 14:00 linhdev - quy trình không GSR/COF: cho phép Case owner Queue mà login user là member
     private static Boolean canImportCaseForCurrentUser(Case matched, Id currentUserId) {
+        return canImportCaseForCurrentUser(matched, currentUserId, null);
+    }
+
+    private static Boolean canImportCaseForCurrentUser(
+        Case matched,
+        Id currentUserId,
+        Set<Id> preloadedUserQueueIds
+    ) {
         if (matched == null || currentUserId == null) {
             return false;
         }
@@ -3188,7 +3511,9 @@ public without sharing class FEC_BatchCaseHandlingImportService {
         if (!isQueueCaseOwnerId(matched.OwnerId)) {
             return false;
         }
-        Set<Id> userQueueIds = FEC_AssignmentListHandler.getCurrentUserQueueIds(currentUserId);
+        Set<Id> userQueueIds = preloadedUserQueueIds == null
+            ? FEC_AssignmentListHandler.getCurrentUserQueueIds(currentUserId)
+            : preloadedUserQueueIds;
         return userQueueIds != null && userQueueIds.contains(matched.OwnerId);
     }
 
