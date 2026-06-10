@@ -611,10 +611,10 @@ function shouldHideRevertConfirmSubSection(subSectionName, sourceStage) {
     return false;
   }
   const n = normalizeSubSectionName(subSectionName);
-  if (sourceStage === 3) {
+  if (sourceStage === 2) {
     return n.includes("confirm") && n.includes("d2c");
   }
-  if (sourceStage === 2) {
+  if (sourceStage === 3) {
     return n.includes("confirm") && (n.includes("cs sp") || n.includes("support"));
   }
   return false;
@@ -1283,7 +1283,7 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
       return;
     }
     const hideApi =
-      sourceStage === 2 ? CONFIRM_CS_SP_ASSESMENT : CONFIRM_D2C_ASSESMENT;
+      sourceStage === 2 ? CONFIRM_D2C_ASSESMENT : CONFIRM_CS_SP_ASSESMENT;
     let changed = false;
     this.business.sectionlst?.forEach((section) => {
       section.subSectionlst?.forEach((sub) => {
