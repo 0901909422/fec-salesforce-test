@@ -450,6 +450,24 @@ private class FEC_GetCSCaseStatusService_Test {
     }
 
     @IsTest
+    static void testGetCSCaseStatus_MissingCaseRequestInfo() {
+        FEC_GetCSCaseStatusService.GetCSCaseStatusRequest req =
+            new FEC_GetCSCaseStatusService.GetCSCaseStatusRequest();
+        req.Sys = new FEC_GetCSCaseStatusService.SysType();
+        req.Sys.TransactionID = 'TXN-NO-CRI';
+        req.Sys.Channel = FEC_ConstantCommon.CHANNEL_INBOUND_NAME;
+        req.CaseRequestInfo = null;
+
+        Test.startTest();
+        FEC_GetCSCaseStatusService.GetCSCaseStatusResponse res =
+            FEC_GetCSCaseStatusService.GetCSCaseStatus(req);
+        Test.stopTest();
+
+        System.assertEquals(2, res.Sys.Code);
+        System.assert(String.isNotBlank(res.Sys.Description));
+    }
+
+    @IsTest
     static void testGetCSCaseStatus_AdditionalInfoInResponse() {
         if (!Schema.getGlobalDescribe().containsKey('FEC_Additional_Info__c')) {
             System.assert(true, 'Skipped: FEC_Additional_Info__c unavailable.');
