@@ -2630,6 +2630,7 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
     this._holdCaseNocBaselineCaptured = false;
     this._boundCheckHoldCaseRefresh = this._checkHoldCaseRefreshFlag.bind(this);
     window.addEventListener("focus", this._boundCheckHoldCaseRefresh);
+    window.addEventListener("fecmanualholdcaserefresh", this._boundCheckHoldCaseRefresh);
     this._checkHoldCaseRefreshFlag();
     void this._initializeHoldCaseVisibility();
     this._reloadBusinessPreservingNocSelection();
@@ -2659,6 +2660,7 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
     }
     if (this._boundCheckHoldCaseRefresh) {
       window.removeEventListener("focus", this._boundCheckHoldCaseRefresh);
+      window.removeEventListener("fecmanualholdcaserefresh", this._boundCheckHoldCaseRefresh);
     }
     localStorage.removeItem(this.draftStorageKey);
     this._clearCardReplacementBlockCodesLocalStorage();
