@@ -143,6 +143,9 @@
         <members>FEC_RepaySchedPayHistController</members>
         <members>FEC_RepaySchedPayHistController_Test</members>
         <members>FEC_DownloadReportController_Test</members>
+        <members>FEC_OwnerTeamLookupSvc</members>
+        <members>FEC_RoutingHistTatSvc</members>
+        <members>FEC_TeamGroupCodeUtil</members>
         <members>FEC_UMSUserManagementRestService</members>
         <members>FEC_UMSUserManagementRestService_Test</members>
         <name>ApexClass</name>
@@ -376,6 +379,10 @@
     <types>
         <members>FEC_CommonCss</members>
         <name>StaticResource</name>
+    </types>
+    <types>
+        <members>FEC_Case_With_Customer_Histories</members>
+        <name>ReportType</name>
     </types>
     <version>66.0</version>
 </Package>
