@@ -73,11 +73,13 @@ export default class Fec_AppInfo extends LightningElement {
         this.isLoading = true;
 
         updateCaseApplicationHistory({ caseId: this.recordId })
-            .then((rows) => {
+            .then((res) => {
                 this.errorText = '';
-                this.histories = Array.isArray(rows)
-                    ? rows.map((row, index) => this.mapHistory(row, index))
-                    : [];
+                if (res) {
+                    this.histories = [this.mapHistory(res)];
+                } else {
+                    this.histories = [];
+                }
             })
             .catch((err) => {
                 console.error('[FEC] updateCaseApplicationHistory error', err);
@@ -89,9 +91,9 @@ export default class Fec_AppInfo extends LightningElement {
             });
     }
 
-    mapHistory(record, index) {
+    mapHistory(record) {
         return {
-            Id: record.id || `history-${index}`,
+            Id: record.id,
             user: record.user || '',
             activityId: record.activityId || '',
             status: record.status || '',
