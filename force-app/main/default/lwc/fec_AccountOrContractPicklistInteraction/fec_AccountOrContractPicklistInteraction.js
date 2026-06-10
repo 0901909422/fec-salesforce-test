@@ -231,22 +231,25 @@ export default class Fec_AccountOrContractPicklistInteraction extends LightningE
         isSelected: UBANK_PRODUCT_NAME === this.selectedValue,
       });
 
-      if (this.searchProducts) {
-        this.searchProducts
-          .split("/")
-          .map((item) => item.trim())
-          .filter(Boolean)
-          .forEach((product) => {
-            mapped.push({
-              id: String(mapped.length + 1),
-              product: product,
-              accountContractNumber: product,
-              displayValue: "",
-              productName: null,
-              isSelected: product === this.selectedValue,
-            });
+      this.searchProducts
+        .split(";")
+        .map((item) => item.trim())
+        .filter(
+          (product) =>
+            product === INSURANCE_PRODUCT_NAME ||
+            product === B2_PRODUCT_NAME ||
+            product === CASH24_PRODUCT_NAME,
+        )
+        .forEach((product) => {
+          mapped.push({
+            id: String(mapped.length + 1),
+            product,
+            accountContractNumber: product,
+            displayValue: "",
+            productName: null,
+            isSelected: product === this.selectedValue,
           });
-      }
+        });
 
       this.data = mapped;
     } catch (e) {

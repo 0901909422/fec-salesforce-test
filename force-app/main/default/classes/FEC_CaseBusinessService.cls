@@ -225,6 +225,7 @@ public without sharing class FEC_CaseBusinessService {
           FEC_Assignment_Count__c,
           FEC_SubCode__r.FEC_Code__c, //linhdev fix jira FECREDIT_CSM_2025_KH-1393-1394
           FEC_Actual_Nature_of_Case__r.FEC_Business_Process__r.FEC_Code__c,
+          Status,
           CreatedDate
         FROM Case
         WHERE Id = :caseId
@@ -1447,6 +1448,7 @@ public without sharing class FEC_CaseBusinessService {
           && !currentStageIsDefault; // tungnm37
       // tungnm37 thêm: trả customerType để LWC fec_RoutingAssignment query đúng
       result.customerType = selectedCase.FEC_Customer_Type__c;
+      result.caseStatus = selectedCase.Status;
 
       // RL05 duplicate + UI context đã resolve trước vòng master data (mrcRl05Ui / mrcRl0502Duplicate*).
 
@@ -2770,7 +2772,10 @@ public without sharing class FEC_CaseBusinessService {
           teamUserGroup,
           queueId
         );
-      if (!routeByLatestRevertHistory) {
+      if (
+        !routeByLatestRevertHistory &&
+        FEC_BlockCodeRoutingService.isCaseAtStageOne(updatedCase)
+      ) {
         if (
           FEC_BlockCodeRoutingService.isClientBlockCodeForcedOmDay2ForRc27Route(
             updatedCase,
@@ -4453,6 +4458,10 @@ public without sharing class FEC_CaseBusinessService {
     @AuraEnabled
     public String customerType;
 
+    /** Case Status — Non-Existing Account Information chỉ edit khi Open. */
+    @AuraEnabled
+    public String caseStatus;
+
     @AuraEnabled
     public String code;
 
@@ -5560,6 +5569,10 @@ public without sharing class FEC_CaseBusinessService {
       c.FEC_Account_or_Contract__r?.FEC_Customer_Type__c
     );
 
+    Boolean nonExistingAccountEditable =
+      !isExisting &&
+      FEC_ConstantCommon.CASE_STATUS_OPEN.equals(c.Status);
+
     if (isExisting)
       caseObj.fieldlst.add(
         new Field(
@@ -5582,8 +5595,12 @@ public without sharing class FEC_CaseBusinessService {
         'FEC_Customer_Name__c',
         'Customer Name',
         c.FEC_Customer_Name__c,
-        isExisting || String.isNotBlank(c.FEC_Customer_Name__c),
-        !isExisting && String.isBlank(c.FEC_Customer_Name__c),
+        isExisting ||
+          String.isNotBlank(c.FEC_Customer_Name__c) ||
+          !nonExistingAccountEditable,
+        !isExisting &&
+          String.isBlank(c.FEC_Customer_Name__c) &&
+          nonExistingAccountEditable,
         !isExisting,
         1,
         false,
@@ -5599,8 +5616,8 @@ public without sharing class FEC_CaseBusinessService {
           'FEC_Account_Contract_Number_PL__c',
           'Account/ Contract Number',
           c.FEC_Account_Contract_Number_PL__c,
-          false,
-          true,
+          !nonExistingAccountEditable,
+          nonExistingAccountEditable,
           true,
           1,
           false,
@@ -5615,8 +5632,10 @@ public without sharing class FEC_CaseBusinessService {
           'FEC_National_ID_Passport_ID__c',
           'National ID/Passport ID',
           c.FEC_National_ID_Passport_ID__c,
-          String.isNotBlank(c.FEC_National_ID_Passport_ID__c),
-          String.isBlank(c.FEC_National_ID_Passport_ID__c),
+          !nonExistingAccountEditable ||
+            String.isNotBlank(c.FEC_National_ID_Passport_ID__c),
+          nonExistingAccountEditable &&
+            String.isBlank(c.FEC_National_ID_Passport_ID__c),
           false,
           1,
           true,
@@ -5631,8 +5650,8 @@ public without sharing class FEC_CaseBusinessService {
           'FEC_Case_Phone_Number__c',
           'Phone Number',
           c.FEC_Case_Phone_Number__c,
-          false,
-          true,
+          !nonExistingAccountEditable,
+          nonExistingAccountEditable,
           false,
           1,
           true,
@@ -5647,8 +5666,8 @@ public without sharing class FEC_CaseBusinessService {
           'FEC_Case_Email__c',
           'Email',
           c.FEC_Case_Email__c,
-          false,
-          true,
+          !nonExistingAccountEditable,
+          nonExistingAccountEditable,
           false,
           1,
           false,
@@ -5662,8 +5681,8 @@ public without sharing class FEC_CaseBusinessService {
         'FEC_Customer_Type__c',
         'Customer Type',
         c.FEC_Customer_Type__c,
-        false,
-        true,
+        !nonExistingAccountEditable,
+        nonExistingAccountEditable,
         false,
         1,
         true,

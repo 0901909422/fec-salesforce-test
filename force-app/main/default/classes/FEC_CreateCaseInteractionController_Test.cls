@@ -158,4 +158,216 @@ private class FEC_CreateCaseInteractionController_Test {
         }
         Test.stopTest();
     }
+
+    @IsTest
+    static void testCreateInteractionCase_Success() {
+        Test.startTest();
+        Id caseId = FEC_CreateCaseInteractionController.createInteractionCase(
+            'Listview Customer',
+            'NAT-001'
+        );
+        Test.stopTest();
+
+        Case created = [
+            SELECT FEC_Customer_Name__c, FEC_National_ID_Passport_ID__c, RecordType.DeveloperName
+            FROM Case
+            WHERE Id = :caseId
+        ];
+        System.assertEquals('Listview Customer', created.FEC_Customer_Name__c);
+        System.assertEquals('NAT-001', created.FEC_National_ID_Passport_ID__c);
+        System.assertEquals(
+            FEC_ConstantCommon.CASE_INTERNAL_RECORD_TYPE_DEV_NAME,
+            created.RecordType.DeveloperName
+        );
+    }
+
+    @IsTest
+    static void testCreateHistoryNonExistingCustomer_Success() {
+        Case interaction = [
+            SELECT Id FROM Case
+            WHERE RecordType.DeveloperName = :FEC_ConstantCommon.CASE_INTERACTION_RECORD_TYPE_DEV_NAME
+            LIMIT 1
+        ];
+
+        Test.startTest();
+        FEC_Customer_History__c hist = FEC_CreateCaseInteractionController.createHistoryNonExistingCustomer(
+            interaction.Id,
+            'Direct History',
+            'DOC-999'
+        );
+        Test.stopTest();
+
+        System.assertNotEquals(null, hist.Id);
+        System.assertEquals('Direct History', hist.FEC_Customer_Name__c);
+    }
+
+    @IsTest
+    static void testCreateCustomerCaseFromCase_PhoneRequiredForManualInbound() {
+        String suffix = String.valueOf(System.currentTimeMillis());
+        Id interactionRtId = Schema.SObjectType.Case.getRecordTypeInfosByDeveloperName()
+            .get(FEC_ConstantCommon.CASE_INTERACTION_RECORD_TYPE_DEV_NAME)
+            .getRecordTypeId();
+
+        Case manualInteraction;
+        FEC_CaseTriggerHandler.isExecuting = true;
+        try {
+            manualInteraction = new Case(
+                RecordTypeId = interactionRtId,
+                Subject = 'Manual Inbound',
+                Status = FEC_ConstantCommon.CASE_STATUS_OPEN,
+                FEC_Is_Manual__c = true,
+                FEC_Channel__c = FEC_ConstantCommon.CHANNEL_INBOUND_NAME,
+                FEC_ID_Search__c = 'CCI-MAN-' + suffix
+            );
+            insert manualInteraction;
+        } finally {
+            FEC_CaseTriggerHandler.isExecuting = false;
+        }
+
+        Boolean threw = false;
+        Test.startTest();
+        try {
+            FEC_CreateCaseInteractionController.createCustomerCaseFromCase(manualInteraction.Id);
+        } catch (AuraHandledException e) {
+            threw = true;
+            System.assert(
+                e.getMessage().contains(System.Label.FEC_PHONE_IS_REQUIRED_MSG)
+                    || e.getMessage().contains('Script-thrown'),
+                'Expected phone required message.'
+            );
+        }
+        Test.stopTest();
+        System.assertEquals(true, threw);
+    }
+
+    @IsTest
+    static void testCreateCustomerCaseFromCaseNonExistingCustomer_Validations() {
+        Case interaction = [
+            SELECT Id FROM Case
+            WHERE RecordType.DeveloperName = :FEC_ConstantCommon.CASE_INTERACTION_RECORD_TYPE_DEV_NAME
+            LIMIT 1
+        ];
+
+        Boolean nullCaseThrew = false;
+        Test.startTest();
+        try {
+            FEC_CreateCaseInteractionController.createCustomerCaseFromCaseNonExistingCustomer(
+                null,
+                'X',
+                'Y',
+                'false'
+            );
+        } catch (AuraHandledException e) {
+            nullCaseThrew = true;
+        }
+
+        Id newCaseId = FEC_CreateCaseInteractionController.createCustomerCaseFromCaseNonExistingCustomer(
+            interaction.Id,
+            'No Search Flag',
+            'ID-555',
+            'false'
+        );
+        Test.stopTest();
+
+        System.assertEquals(true, nullCaseThrew);
+        Case newCase = [
+            SELECT FEC_Is_Created_From_Search__c
+            FROM Case
+            WHERE Id = :newCaseId
+        ];
+        System.assertNotEquals(true, newCase.FEC_Is_Created_From_Search__c);
+    }
+
+    @IsTest
+    static void testCreateCustomerCaseFromCaseNonExistingCustomer_PhoneRequired() {
+        String suffix = String.valueOf(System.currentTimeMillis());
+        Id interactionRtId = Schema.SObjectType.Case.getRecordTypeInfosByDeveloperName()
+            .get(FEC_ConstantCommon.CASE_INTERACTION_RECORD_TYPE_DEV_NAME)
+            .getRecordTypeId();
+
+        Case manualInteraction;
+        FEC_CaseTriggerHandler.isExecuting = true;
+        try {
+            manualInteraction = new Case(
+                RecordTypeId = interactionRtId,
+                Subject = 'Manual Outbound',
+                Status = FEC_ConstantCommon.CASE_STATUS_OPEN,
+                FEC_Is_Manual__c = true,
+                FEC_Channel__c = 'Outbound',
+                FEC_ID_Search__c = 'CCI-OUT-' + suffix
+            );
+            insert manualInteraction;
+        } finally {
+            FEC_CaseTriggerHandler.isExecuting = false;
+        }
+
+        Boolean threw = false;
+        Test.startTest();
+        try {
+            FEC_CreateCaseInteractionController.createCustomerCaseFromCaseNonExistingCustomer(
+                manualInteraction.Id,
+                'X',
+                'Y',
+                'false'
+            );
+        } catch (AuraHandledException e) {
+            threw = true;
+            System.assert(
+                e.getMessage().contains(System.Label.FEC_PHONE_IS_REQUIRED_MSG)
+                    || e.getMessage().contains('Script-thrown'),
+                'Expected phone required message.'
+            );
+        }
+        Test.stopTest();
+        System.assertEquals(true, threw);
+    }
+
+    @IsTest
+    static void testCreateCustomerCaseFromCaseNonExistingCustomer_InternalRecordType() {
+        Map<String, Schema.RecordTypeInfo> rtMap = Schema.SObjectType.Case.getRecordTypeInfosByDeveloperName();
+        if (!rtMap.containsKey(FEC_ConstantCommon.CASE_INTERNAL_RECORD_TYPE_DEV_NAME)) {
+            return;
+        }
+
+        String suffix = String.valueOf(System.currentTimeMillis());
+        Id internalRtId = rtMap.get(FEC_ConstantCommon.CASE_INTERNAL_RECORD_TYPE_DEV_NAME).getRecordTypeId();
+        List<FEC_Product_Type__c> productTypes = [
+            SELECT Id
+            FROM FEC_Product_Type__c
+            WHERE FEC_Code__c = :FEC_ConstantCommon.CASE_INTERNAL_REQUEST
+            LIMIT 1
+        ];
+
+        Case internalInteraction;
+        FEC_CaseTriggerHandler.isExecuting = true;
+        try {
+            internalInteraction = new Case(
+                RecordTypeId = internalRtId,
+                Subject = 'Internal Interaction',
+                Status = FEC_ConstantCommon.CASE_STATUS_OPEN,
+                FEC_Channel__c = FEC_ConstantCommon.CHANNEL_INBOUND_NAME,
+                FEC_Phone_Number__c = '0909999888',
+                FEC_Customer_Type__c = FEC_ConstantCommon.CASE_ALL_REQUEST,
+                FEC_ID_Search__c = 'INT-' + suffix
+            );
+            if (!productTypes.isEmpty()) {
+                internalInteraction.FEC_Product_Type__c = productTypes[0].Id;
+            }
+            insert internalInteraction;
+        } finally {
+            FEC_CaseTriggerHandler.isExecuting = false;
+        }
+
+        Test.startTest();
+        Id newCaseId = FEC_CreateCaseInteractionController.createCustomerCaseFromCaseNonExistingCustomer(
+            internalInteraction.Id,
+            'Internal Non Existing',
+            'INT-ID-1',
+            'true'
+        );
+        Test.stopTest();
+
+        Case newCase = [SELECT RecordTypeId FROM Case WHERE Id = :newCaseId];
+        System.assertEquals(internalRtId, newCase.RecordTypeId);
+    }
 }

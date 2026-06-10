@@ -10,8 +10,8 @@ import updateChatInteractionFields from '@salesforce/apex/FEC_InteractionInforHa
 import getRecordTypeName from '@salesforce/apex/FEC_InteractionInforHandler.getRecordTypeName';
 
 import ISCLOSED from '@salesforce/schema/Case.IsClosed';
-import VIEW_MODE from '@salesforce/schema/Case.FEC_Interaction_View_Mode__c';
 import HAS_ACCOUNT_OR_CONTRACT from '@salesforce/schema/Case.FEC_Has_Account_or_Contract__c';
+import VIEW_MODE from '@salesforce/schema/Case.FEC_Interaction_View_Mode__c';
 
 import FEC_Interaction_Information_Label from '@salesforce/label/c.FEC_Interaction_Information_Label';
 import FEC_Interaction_Created_On_Label from '@salesforce/label/c.FEC_Interaction_Created_On_Label';
@@ -73,7 +73,7 @@ export default class FecInteractionChatInfo extends LightningElement {
     @wire(MessageContext)
     messageContext;
 
-    @wire(getRecord, { recordId: '$recordId', fields: [ISCLOSED, VIEW_MODE] })
+    @wire(getRecord, { recordId: '$recordId', fields: [ISCLOSED, VIEW_MODE, HAS_ACCOUNT_OR_CONTRACT] })
     wiredCase({ data, error }) {
         if (data) {
             this.viewMode = getFieldValue(data, VIEW_MODE);

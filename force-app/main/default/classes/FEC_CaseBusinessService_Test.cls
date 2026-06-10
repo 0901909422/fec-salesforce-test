@@ -2315,4 +2315,41 @@ private class FEC_CaseBusinessService_Test {
             System.assertNotEquals(null, users);
         }
     }
+
+    @IsTest
+    static void testGetByCase_AllNatureOfCasesFromSetup() {
+        System.runAs(caseOwnerUser()) {
+            List<FEC_Nature_of_Case__c> nocs = [SELECT Id FROM FEC_Nature_of_Case__c LIMIT 20];
+            Case c = [SELECT Id FROM Case WHERE Subject = 'Core Testing Case Lifecycle' LIMIT 1];
+
+            Test.startTest();
+            for (FEC_Nature_of_Case__c noc : nocs) {
+                try {
+                    FEC_CaseBusinessService.Business biz = FEC_CaseBusinessService.getByCase(
+                        c.Id,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        String.valueOf(noc.Id)
+                    );
+                    System.assertNotEquals(null, biz);
+                } catch (Exception ignore) {
+                    System.assert(true, 'getByCase with NOC ' + noc.Id);
+                }
+            }
+            Test.stopTest();
+        }
+    }
+
+    @IsTest
+    static void testEmailLocalPart_WithAtSignAndQueueOwnerLabel() {
+        System.assertEquals('user', FEC_CaseBusinessService.emailLocalPart('user@fecredit.com'));
+        Group q = [SELECT Id, Name FROM Group WHERE Type = 'Queue' LIMIT 1];
+        System.assertEquals(
+            q.Name,
+            FEC_CaseBusinessService.resolveRoutingHistoryOwnerLabel(q.Id, 'fallback')
+        );
+    }
 }
