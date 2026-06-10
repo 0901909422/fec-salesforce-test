@@ -11,10 +11,6 @@
         <value xsi:nil="true"/>
     </values>
     <values>
-        <field>FEC_Consumer_Name__c</field>
-        <value xsi:nil="true"/>
-    </values>
-    <values>
         <field>FEC_Disb_Channel__c</field>
         <value xsi:nil="true"/>
     </values>
