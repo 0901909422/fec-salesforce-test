@@ -755,6 +755,65 @@ private class FEC_AcctOrContractPicklist_Test {
             'Existing',
             FEC_AccountOrContractPicklistHandler.getInteractionCustomerType(interaction.Id)
         );
+        System.assertEquals(
+            null,
+            FEC_AccountOrContractPicklistHandler.getInteractionSearchProducts(interaction.Id)
+        );
+        Test.stopTest();
+    }
+
+    private class ProductListMock implements HttpCalloutMock {
+        public HttpResponse respond(HttpRequest req) {
+            HttpResponse res = new HttpResponse();
+            res.setStatusCode(200);
+            String body = req.getBody() != null ? req.getBody().toLowerCase() : '';
+            String endpoint = req.getEndpoint() != null ? req.getEndpoint().toLowerCase() : '';
+            if (body.contains('getproductslist') || endpoint.contains('product')) {
+                res.setBody(
+                    '<?xml version="1.0"?><soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" ' +
+                    'xmlns:cif="http://fecredit.com.vn/CIF_CustomerInfo">' +
+                    '<soapenv:Body><cif:GetProductsListResponse><Sys><Code>1</Code></Sys><Products>' +
+                    '<Product><AccountNumber>1234567890123456</AccountNumber><ProductName>Card Prod</ProductName></Product>' +
+                    '<Product><ContractNumber>12345678-123456-1234</ContractNumber><ProductName>Loan Prod</ProductName></Product>' +
+                    '</Products></cif:GetProductsListResponse></soapenv:Body></soapenv:Envelope>'
+                );
+                return res;
+            }
+            if (body.contains('getcardbasicinfo') || endpoint.contains('cardbasic')) {
+                res.setBody(
+                    '<?xml version="1.0"?><soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">' +
+                    '<soapenv:Body><GetCardBasicInfoResponse><Sys><Code>1</Code></Sys>' +
+                    '<CardBasicInfo><MainCard><PlasticIndicator>Primary Card</PlasticIndicator></MainCard></CardBasicInfo>' +
+                    '</GetCardBasicInfoResponse></soapenv:Body></soapenv:Envelope>'
+                );
+                return res;
+            }
+            res.setBody('<?xml version="1.0"?><soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/"><soapenv:Body></soapenv:Body></soapenv:Envelope>');
+            return res;
+        }
+    }
+
+    @IsTest
+    static void testGetProductsListByCif_Success() {
+        Test.setMock(HttpCalloutMock.class, new ProductListMock());
+        Test.startTest();
+        List<FEC_AccountOrContractPicklistHandler.GetProductsListResponse> results =
+            FEC_AccountOrContractPicklistHandler.getProductsListByCif('CIF-PRODUCT-001');
+        Test.stopTest();
+
+        System.assertEquals(2, results.size());
+        System.assertEquals(FEC_ConstantCommon.PRODUCT_TYPE_CARD, results[0].productType);
+        System.assertEquals(FEC_ConstantCommon.PRODUCT_TYPE_LOAN, results[1].productType);
+    }
+
+    @IsTest
+    static void testGetInteractionSearchProducts() {
+        Case c = insertCase(null, null, null, false, null, null);
+        c.FEC_Search_Products__c = 'Card;Loan';
+        update c;
+
+        Test.startTest();
+        System.assertEquals('Card;Loan', FEC_AccountOrContractPicklistHandler.getInteractionSearchProducts(c.Id));
         Test.stopTest();
     }
 }
