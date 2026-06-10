@@ -269,6 +269,13 @@ export default class Fec_holdCaseManual extends LightningElement {
             // ignore
         }
         getRecordNotifyChange([{ recordId: this._recordId }]);
+        try {
+            window.dispatchEvent(new CustomEvent('fecmanualholdcaserefresh', {
+                detail: { recordId: this._recordId, resultType }
+            }));
+        } catch (e) {
+            // ignore
+        }
         // Đợi LDS propagate trước khi user đóng popup
         await new Promise((resolve) => {
             // eslint-disable-next-line @lwc/lwc/no-async-operation

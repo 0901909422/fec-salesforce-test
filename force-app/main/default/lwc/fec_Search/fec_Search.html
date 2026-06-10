@@ -97,8 +97,8 @@
                                     <template if:true={isAccountContractSearch}>
                                         <template if:true={row._historyState}>
                                             <template if:true={row._historyState.expanded}>
-                                                <div key={row.AccountNumber} class="fec-history-wrap">
-                                                    <div class="fec-history-label">Application History: {row.AccountNumber}</div>
+                                                <div key={row._historyKey} class="fec-history-wrap">
+                                                    <div class="fec-history-label">Application History: {row._historyKey}</div>
                                                     <template if:true={row._historyState.loading}>
                                                         <lightning-spinner size="small" alternative-text="Loading"></lightning-spinner>
                                                     </template>
@@ -141,8 +141,8 @@
                                         <template if:true={isAccountContractSearch}>
                                             <template if:true={row._historyState}>
                                                 <template if:true={row._historyState.expanded}>
-                                                    <div key={row.ContractNumber} class="fec-history-wrap">
-                                                        <div class="fec-history-label">Application History: {row.ContractNumber}</div>
+                                                <div key={row._historyKey} class="fec-history-wrap">
+                                                    <div class="fec-history-label">Application History: {row._historyKey}</div>
                                                         <template if:true={row._historyState.loading}>
                                                             <lightning-spinner size="small" alternative-text="Loading"></lightning-spinner>
                                                         </template>
@@ -183,6 +183,21 @@
                                         <h3 class="slds-text-heading_small slds-m-bottom_x-small">Cash24 Contracts</h3>
                                         <c-masked-toggle-datatable key-field="id" data={loanCash24Data} columns={loanCash24Columns} hide-checkbox-column onrowaction={handleRowAction}></c-masked-toggle-datatable>
                                     </div>
+                                    <template if:true={isDisplayCreateCaseOnlyB2OrCash24}>
+                                                    <div class="slds-m-top_medium">
+                                                        <div class="slds-grid slds-gutters slds-m-bottom_medium">
+                                                            <div class="slds-col slds-size_1-of-2">
+                                                                <lightning-input label="Customer Name" placeholder="Nhập Customer Name" value={custNameForCreate} required onchange={handleCustNameChange}></lightning-input>
+                                                            </div>
+                                                            <div class="slds-col slds-size_1-of-2">
+                                                    <lightning-input label={FEC_National_ID_Passport_ID_Label} placeholder={nationalId_PassPortId_PlaceHolder} value={nationalIdForCreate} data-id="national-id" onchange={handleNationalIdChange}></lightning-input>
+                                                </div>
+                                            </div>
+                                            <div class="slds-grid slds-grid_align-center">
+                                                <lightning-button label="Create Case" variant="brand" onclick={handleNewCase} disabled={isNewCaseDisabled}></lightning-button>
+                                            </div>
+                                        </div>
+                                    </template>
                                 </template>
                             </lightning-tab>
                             <template if:false={isAccountContractSearch}>

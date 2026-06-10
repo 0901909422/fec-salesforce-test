@@ -611,10 +611,10 @@ function shouldHideRevertConfirmSubSection(subSectionName, sourceStage) {
     return false;
   }
   const n = normalizeSubSectionName(subSectionName);
-  if (sourceStage === 3) {
+  if (sourceStage === 2) {
     return n.includes("confirm") && n.includes("d2c");
   }
-  if (sourceStage === 2) {
+  if (sourceStage === 3) {
     return n.includes("confirm") && (n.includes("cs sp") || n.includes("support"));
   }
   return false;
@@ -1283,7 +1283,7 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
       return;
     }
     const hideApi =
-      sourceStage === 2 ? CONFIRM_CS_SP_ASSESMENT : CONFIRM_D2C_ASSESMENT;
+      sourceStage === 2 ? CONFIRM_D2C_ASSESMENT : CONFIRM_CS_SP_ASSESMENT;
     let changed = false;
     this.business.sectionlst?.forEach((section) => {
       section.subSectionlst?.forEach((sub) => {
@@ -1918,46 +1918,8 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
     return fromForm != null && String(fromForm).trim() !== STR_EMPTY;
   }
 
-  _hasPersistedCardReplacementDependentData() {
-    const dependentApis = [
-      FIELD_NEW_BLOCK_CODE_CARD_REPLACE,
-      FIELD_CARD_REPLACEMENT_FEE,
-      FIELD_RECIPIENT_NAME,
-      FIELD_RECIPIENT_PHONE_NUMBER,
-    ];
-    for (const api of dependentApis) {
-      const original = this._getCaseFieldOriginalValue(api);
-      if (original != null && String(original).trim() !== STR_EMPTY) {
-        return true;
-      }
-    }
-    const addressId =
-      this._caseSelectedAddressId || this._getCaseFieldValue("FEC_Selected_Address__c");
-    return addressId != null && String(addressId).trim().length >= 15;
-  }
-
-  _getCaseFieldOriginalValue(apiName) {
-    const sections = this.business?.sectionlst ?? [];
-    for (const section of sections) {
-      for (const sub of section.subSectionlst ?? []) {
-        for (const obj of sub.objlst ?? []) {
-          if (obj.name !== "Case") continue;
-          const f = obj.fieldlst?.find((x) => x.apiName === apiName);
-          if (f != null) {
-            const v = f.original != null ? f.original : f.value;
-            return typeof v === "string" ? v.trim() : (v ?? STR_EMPTY);
-          }
-        }
-      }
-    }
-    return STR_EMPTY;
-  }
-
   _shouldShowCardReplacementDependentFields() {
-    return (
-      this._hasCardReplacementReasonValue() ||
-      this._hasPersistedCardReplacementDependentData()
-    );
+    return this._hasCardReplacementReasonValue();
   }
 
   _shouldSuppressRc27CardReplacementProcessInfo() {
@@ -2668,6 +2630,7 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
     this._holdCaseNocBaselineCaptured = false;
     this._boundCheckHoldCaseRefresh = this._checkHoldCaseRefreshFlag.bind(this);
     window.addEventListener("focus", this._boundCheckHoldCaseRefresh);
+    window.addEventListener("fecmanualholdcaserefresh", this._boundCheckHoldCaseRefresh);
     this._checkHoldCaseRefreshFlag();
     void this._initializeHoldCaseVisibility();
     this._reloadBusinessPreservingNocSelection();
@@ -2697,6 +2660,7 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
     }
     if (this._boundCheckHoldCaseRefresh) {
       window.removeEventListener("focus", this._boundCheckHoldCaseRefresh);
+      window.removeEventListener("fecmanualholdcaserefresh", this._boundCheckHoldCaseRefresh);
     }
     localStorage.removeItem(this.draftStorageKey);
     this._clearCardReplacementBlockCodesLocalStorage();

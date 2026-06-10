@@ -317,6 +317,7 @@
 
     openAttachModal: function(component, event, helper) {
         component.set('v.showUploadModal', true);
+        helper.watchStandardUploadFailure(component);
         helper.loadCaseFiles(component);
     },
 
@@ -351,12 +352,19 @@
             if (resp.getState() === 'SUCCESS') {
                 var existing = component.get('v.attachments') || [];
                 var uploaded = resp.getReturnValue() || [];
-                var merged = existing.concat(uploaded.map(function(a) {
-                    return { name: a.fileName, size: 0, _fromStandardUpload: true, _base64: a.base64Data, _mime: a.mimeType };
-                }));
-                component.set('v.attachments', merged);
+                var existingDocIds = {};
+                var existingNames = {};
+                existing.forEach(function(e) { if (e._contentDocumentId) existingDocIds[e._contentDocumentId] = true; if (e.name) existingNames[(e.name || '').toLowerCase()] = true; });
+                var duplicateFound = false;
+                var toAdd = [];
+                uploaded.forEach(function(a) {
+                    if ((a.contentDocumentId && existingDocIds[a.contentDocumentId]) || (a.fileName && existingNames[(a.fileName || '').toLowerCase()])) { duplicateFound = true; return; }
+                    toAdd.push({ name: a.fileName, size: 0, _fromStandardUpload: true, _base64: a.base64Data, _mime: a.mimeType, _contentDocumentId: a.contentDocumentId }); if (a.contentDocumentId) existingDocIds[a.contentDocumentId] = true; if (a.fileName) existingNames[(a.fileName || '').toLowerCase()] = true;
+                });
+                if (duplicateFound) helper.showEmailToast(component, 'error', 'Error', component.get('v.lblFileAlreadyInEmail') || '1 file is already in email.');
+                if (toAdd.length) component.set('v.attachments', existing.concat(toAdd));
                 component.set('v.selectedCaseFileIds', []);
-                component.set('v.showUploadModal', false);
+                if (toAdd.length) component.set('v.showUploadModal', false);
             }
         });
         $A.enqueueAction(action);
@@ -379,20 +387,27 @@
                     }
                     if (uploaded.length > 0) {
                         var existing = component.get('v.attachments') || [];
-                        var merged = existing.concat(uploaded.map(function(a) {
-                            return { name: a.fileName, size: 0, _fromStandardUpload: true, _base64: a.base64Data, _mime: a.mimeType, _contentDocumentId: a.contentDocumentId };
-                        }));
-                        component.set('v.attachments', merged);
+                        var existingDocIds = {};
+                var existingNames = {};
+                existing.forEach(function(e) { if (e._contentDocumentId) existingDocIds[e._contentDocumentId] = true; if (e.name) existingNames[(e.name || '').toLowerCase()] = true; });
+                        var duplicateFound = false;
+                        var toAdd = [];
+                        uploaded.forEach(function(a) {
+                            if ((a.contentDocumentId && existingDocIds[a.contentDocumentId]) || (a.fileName && existingNames[(a.fileName || '').toLowerCase()])) { duplicateFound = true; return; }
+                            toAdd.push({ name: a.fileName, size: 0, _fromStandardUpload: true, _base64: a.base64Data, _mime: a.mimeType, _contentDocumentId: a.contentDocumentId }); if (a.contentDocumentId) existingDocIds[a.contentDocumentId] = true; if (a.fileName) existingNames[(a.fileName || '').toLowerCase()] = true;
+                        });
+                        if (duplicateFound) helper.showEmailToast(component, 'error', 'Error', component.get('v.lblFileAlreadyInEmail') || '1 file is already in email.');
+                        if (toAdd.length) component.set('v.attachments', existing.concat(toAdd));
                         try {
                             var t = $A.get('e.force:showToast');
-                            if (t) {
+                            if (t && toAdd.length) {
                                 t.setParams({ title: component.get('v.lblSuccessTitle') || 'Success', message: component.get('v.lblFileUploadedAdded'), type: 'success', duration: 3000 });
                                 t.fire();
                             }
                         } catch (e) {}
                     }
                     helper.loadCaseFiles(component, attempt < 3 ? 800 : 0);
-                    if (uploaded.length > 0) { component.set('v.showUploadModal', false); }
+                    if (toAdd && toAdd.length > 0) { component.set('v.showUploadModal', false); }
                 }
             });
             $A.enqueueAction(action);
@@ -411,8 +426,14 @@
         var MAX_SIZE = 25 * 1024 * 1024; // 25MB - chỉ áp dụng cho file không phải ảnh
         var existing = component.get('v.attachments') || [];
         var newList = existing.slice();
+        var existingLocalKeys = {};
+        existing.forEach(function(e) { existingLocalKeys[((e.name || '').toLowerCase()) + '|' + (e.size || 0)] = true; });
+        var duplicateFound = false;
         for (var i = 0; i < files.length; i++) {
             var f = files[i];
+            var localKey = (f.name || '').toLowerCase() + '|' + (f.size || 0);
+            if (existingLocalKeys[localKey]) { duplicateFound = true; continue; }
+            existingLocalKeys[localKey] = true;
             var isImage = f.type && f.type.indexOf('image/') === 0;
             // tungnm37 sửa: ảnh không giới hạn size, chỉ check 25MB với file thường
             if (!isImage && f.size > MAX_SIZE) {
@@ -424,6 +445,7 @@
                 newList.push({ name: f.name, size: f.size, file: f });
             }
         }
+        if (duplicateFound) helper.showEmailToast(component, 'error', 'Error', component.get('v.lblFileAlreadyInEmail') || '1 file is already in email.');
         component.set('v.attachments', newList);
         // tungnm37 sửa: reset sau setTimeout để lần 2 vẫn trigger onchange
         window.setTimeout(function() {
@@ -712,6 +734,15 @@
         });
     }
 })
+
+
+
+
+
+
+
+
+
 
 
 

@@ -425,10 +425,10 @@ public without sharing class FEC_CaseMasterDataHelper {
       return false;
     }
     String n = subSectionName.trim().toLowerCase();
-    if (revertSourceStageNumber == 3) {
+    if (revertSourceStageNumber == 2) {
       return n.contains('confirm') && n.contains('d2c');
     }
-    if (revertSourceStageNumber == 2) {
+    if (revertSourceStageNumber == 3) {
       return n.contains('confirm') &&
         (n.contains('cs sp') || n.contains('support'));
     }
@@ -475,10 +475,10 @@ public without sharing class FEC_CaseMasterDataHelper {
       return false;
     }
     if (revertSourceStageNumber == 2) {
-      return API_CONFIRM_CS_SP_ASSESSMENT.equals(fieldApiName);
+      return API_CONFIRM_D2C_ASSESSMENT.equals(fieldApiName);
     }
     if (revertSourceStageNumber == 3) {
-      return API_CONFIRM_D2C_ASSESSMENT.equals(fieldApiName);
+      return API_CONFIRM_CS_SP_ASSESSMENT.equals(fieldApiName);
     }
     return false;
   }

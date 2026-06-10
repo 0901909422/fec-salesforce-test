@@ -14,6 +14,7 @@ public without sharing class FEC_InteractionInforHandler {
                FEC_Outcome_Code__c,
                FEC_Interaction_Remarks__c,
                FEC_Interaction_Email__c,
+               FEC_Is_Manual__c,
                FEC_Send_To__c,
                FEC_On_Hold__c,
                ParentId,
@@ -21,12 +22,11 @@ public without sharing class FEC_InteractionInforHandler {
                Parent.FEC_ID_Search__c,
                IsClosed,
                FEC_Interaction_Status__c,
-               Origin,
-               FEC_Is_Manual__c
+               Origin
         FROM Case
         WHERE Id = :recordId
     ];
-        
+
         return caseList.isEmpty() ? null : caseList[0];
     }
     
@@ -74,18 +74,7 @@ public without sharing class FEC_InteractionInforHandler {
         
         return FEC_CommonUltils.maskPhone(phone);
     }
-    
-    @AuraEnabled
-    public static String updateInteractionExternalId(Id recordId, String externalId) {
-        
-        update new Case(
-            Id = recordId,
-        FEC_External_Interaction_ID__c = externalId
-            );
-        
-        return externalId;
-    }
-    
+
     @AuraEnabled(cacheable=false)
     public static void updateInteractionEmail(Id recordId, String email) {
         if (recordId == null) {
@@ -93,45 +82,34 @@ public without sharing class FEC_InteractionInforHandler {
         }
         update new Case(
             Id = recordId,
-        FEC_Interaction_Email__c = String.isNotBlank(email) ? email.trim() : null
-            );
+            FEC_Interaction_Email__c = String.isNotBlank(email) ? email.trim() : null
+        );
     }
-
-    public static Boolean isEmailChannelWithMissingInteractionEmail(Case interactionCase) {
-        return interactionCase != null
-            && interactionCase.FEC_Channel__c == FEC_ConstantCommon.CHANNEL_EMAIL_NAME
-            && String.isBlank(interactionCase.FEC_Interaction_Email__c);
+    
+    @AuraEnabled(cacheable=false)
+    public static void updateInteractionSendTo(Id recordId, String sendTo) {
+        if (recordId == null) {
+            throw new AuraHandledException(System.Label.FEC_MSG_Record_Id_Invalid);
+        }
+        update new Case(
+            Id = recordId,
+            FEC_Send_To__c = String.isNotBlank(sendTo) ? sendTo.trim() : null
+        );
     }
 
     @AuraEnabled(cacheable=false)
-    public static Boolean isInteractionEmailActionBlocked(Id recordId) {
+    public static void updateInteractionExternalId(Id recordId, String externalInteractionId) {
         if (recordId == null) {
-            return false;
+            throw new AuraHandledException(System.Label.FEC_MSG_Record_Id_Invalid);
         }
-        List<Case> caseList = [
-            SELECT FEC_Channel__c, FEC_Interaction_Email__c
-            FROM Case
-            WHERE Id = :recordId
-            LIMIT 1
-        ];
-        return !caseList.isEmpty() && isEmailChannelWithMissingInteractionEmail(caseList[0]);
+        update new Case(
+            Id = recordId,
+            FEC_External_Interaction_ID__c = String.isNotBlank(externalInteractionId)
+                ? externalInteractionId.trim()
+                : null
+        );
     }
 
-    public static void assertInteractionEmailForAction(Id recordId) {
-        if (recordId == null) {
-            return;
-        }
-        List<Case> caseList = [
-            SELECT FEC_Channel__c, FEC_Interaction_Email__c
-            FROM Case
-            WHERE Id = :recordId
-            LIMIT 1
-        ];
-        if (!caseList.isEmpty() && isEmailChannelWithMissingInteractionEmail(caseList[0])) {
-            throw new AuraHandledException(System.Label.FEC_Interaction_Email_Required_Msg);
-        }
-    }
-    
     @AuraEnabled(cacheable=false)
     public static void updateInteractionOnHold(Id recordId, Boolean onHold) {
         if (recordId == null) {
@@ -139,10 +117,59 @@ public without sharing class FEC_InteractionInforHandler {
         }
         update new Case(
             Id = recordId,
-        FEC_On_Hold__c = onHold
-            );
+            FEC_On_Hold__c = onHold
+        );
     }
     
+    private static Boolean requiresManualInteractionEmail(Case interaction) {
+        return interaction != null
+            && interaction.FEC_Is_Manual__c == true
+            && interaction.FEC_Channel__c == FEC_ConstantCommon.CHANNEL_EMAIL_NAME
+            && String.isBlank(interaction.FEC_Interaction_Email__c);
+    }
+
+    private static Case getInteractionForEmailAction(Id recordId) {
+        if (recordId == null) {
+            return null;
+        }
+        List<Case> rows = [
+            SELECT Id, RecordType.DeveloperName, FEC_Interaction__c,
+                   FEC_Is_Manual__c, FEC_Channel__c, FEC_Interaction_Email__c
+            FROM Case
+            WHERE Id = :recordId
+            LIMIT 1
+        ];
+        if (rows.isEmpty()) {
+            return null;
+        }
+        Case current = rows[0];
+        if (current.RecordType.DeveloperName == FEC_ConstantCommon.CASE_INTERACTION_RECORD_TYPE_DEV_NAME) {
+            return current;
+        }
+        if (current.RecordType.DeveloperName == FEC_ConstantCommon.CASE_CUSTOMER_RECORD_TYPE_DEV_NAME
+            && current.FEC_Interaction__c != null) {
+            List<Case> interactions = [
+                SELECT Id, FEC_Is_Manual__c, FEC_Channel__c, FEC_Interaction_Email__c
+                FROM Case
+                WHERE Id = :current.FEC_Interaction__c
+                LIMIT 1
+            ];
+            return interactions.isEmpty() ? null : interactions[0];
+        }
+        return null;
+    }
+
+    @AuraEnabled(cacheable=false)
+    public static Boolean isInteractionEmailActionBlocked(Id recordId) {
+        return requiresManualInteractionEmail(getInteractionForEmailAction(recordId));
+    }
+
+    public static void assertInteractionEmailForAction(Id recordId) {
+        if (requiresManualInteractionEmail(getInteractionForEmailAction(recordId))) {
+            throw new AuraHandledException(System.Label.FEC_Interaction_Email_Required_Msg);
+        }
+    }
+
     @AuraEnabled(cacheable=true)
     public static Id getInteractionIdFromCustomerCase(Id caseId) {
         Case c = [
@@ -718,7 +745,7 @@ public without sharing class FEC_InteractionInforHandler {
     @AuraEnabled
     public static String resetViewMode(Id recordId, String viewMode) {
         if (recordId == null) return null;
-        
+
         List<Case> caselst = [
             SELECT
                 Id,
@@ -730,17 +757,17 @@ public without sharing class FEC_InteractionInforHandler {
             FROM Case
             WHERE Id = :recordId
         ];
-        
+
         if (caselst.isEmpty())
             return null;
-        
+
         Case c = caselst[0];
         if (c.FEC_Get_Next_Work__c == true) {
             viewMode = FEC_ConstantCommon.INTERACTION_HANDLING_MODE;
         } else if (c.FEC_First_Access__c == true) {
             viewMode = c.FEC_Interaction_View_Mode__c;
         }
-        
+
         Boolean needsUpdate =
             c.FEC_First_Access__c == true ||
             c.FEC_Get_Next_Work__c == true ||
@@ -748,15 +775,15 @@ public without sharing class FEC_InteractionInforHandler {
         if (!needsUpdate) {
             return viewMode;
         }
-        
+
         FEC_CaseInitUpdateService.runSystemCaseUpdate(
             new Case(
-            Id = recordId,
-        FEC_Interaction_View_Mode__c = viewMode,
-        FEC_First_Access__c = false,
-        FEC_Get_Next_Work__c = false
+                Id = recordId,
+                FEC_Interaction_View_Mode__c = viewMode,
+                FEC_First_Access__c = false,
+                FEC_Get_Next_Work__c = false
             )
-            );
+        );
         return viewMode;
     }
     
@@ -770,7 +797,7 @@ public without sharing class FEC_InteractionInforHandler {
         string recordTypeName = caseList.isEmpty() ? null : caseList[0].RecordType.DeveloperName;
         return recordTypeName;
     }
-    
+
     @AuraEnabled
     public static String getParentCaseNumber(Id caseId) {
         List<Case> caseList = [SELECT ParentId FROM Case WHERE Id = :caseId LIMIT 1];
@@ -780,23 +807,15 @@ public without sharing class FEC_InteractionInforHandler {
         return String.isNotBlank(parentList[0].FEC_ID_Search__c) ? parentList[0].FEC_ID_Search__c : null;
     }
 
-    @AuraEnabled(cacheable=false)
+    @AuraEnabled(cacheable=true)
     public static Map<String, Object> getChatInteractionInfo(Id recordId) {
-        if (recordId == null) return null;
-
         List<Case> caseList = [
             SELECT FEC_Customer_Username__c,
                    FEC_Interaction_Masked_Phone__c,
                    FEC_Phone_Number__c,
                    FEC_Created_On__c,
                    FEC_Created_by__c,
-                   FEC_KYC_Status__c,
-                   FEC_External_Interaction_ID__c,
-                   FEC_Outcome_Code__c,
-                   FEC_Interaction_Remarks__c,
-                   FEC_Interaction__c,
-                   IsClosed,
-                   RecordType.DeveloperName
+                   FEC_External_Interaction_ID__c
             FROM Case
             WHERE Id = :recordId
             LIMIT 1
@@ -816,6 +835,7 @@ public without sharing class FEC_InteractionInforHandler {
             if (currentCase.FEC_Interaction__c != null) {
                 List<Case> interactions = [
                     SELECT FEC_Customer_Username__c,
+                           FEC_KYC_Status__c,
                            FEC_Created_On__c,
                            FEC_Created_by__c,
                            FEC_External_Interaction_ID__c,
@@ -854,7 +874,14 @@ public without sharing class FEC_InteractionInforHandler {
         result.put('FEC_Customer_Username__c', interactionCase != null && String.isNotBlank(interactionCase.FEC_Customer_Username__c) ? interactionCase.FEC_Customer_Username__c : (customerCase != null && String.isNotBlank(customerCase.FEC_Customer_Username__c) ? customerCase.FEC_Customer_Username__c : currentCase.FEC_Customer_Username__c));
         result.put('FEC_Interaction_Masked_Phone__c', customerCase != null && String.isNotBlank(customerCase.FEC_Interaction_Masked_Phone__c) ? customerCase.FEC_Interaction_Masked_Phone__c : currentCase.FEC_Interaction_Masked_Phone__c);
         result.put('FEC_Phone_Number__c', customerCase != null && String.isNotBlank(customerCase.FEC_Phone_Number__c) ? customerCase.FEC_Phone_Number__c : currentCase.FEC_Phone_Number__c);
-        result.put('FEC_KYC_Status__c', customerCase != null && String.isNotBlank(customerCase.FEC_KYC_Status__c) ? customerCase.FEC_KYC_Status__c : currentCase.FEC_KYC_Status__c);
+        result.put(
+            'FEC_KYC_Status__c',
+            interactionCase != null && String.isNotBlank(interactionCase.FEC_KYC_Status__c)
+                ? interactionCase.FEC_KYC_Status__c
+                : (customerCase != null && String.isNotBlank(customerCase.FEC_KYC_Status__c)
+                    ? customerCase.FEC_KYC_Status__c
+                    : currentCase.FEC_KYC_Status__c)
+        );
         result.put('FEC_Created_On__c', interactionCase != null && interactionCase.FEC_Created_On__c != null ? interactionCase.FEC_Created_On__c : currentCase.FEC_Created_On__c);
         result.put('FEC_Created_by__c', interactionCase != null && String.isNotBlank(interactionCase.FEC_Created_by__c) ? interactionCase.FEC_Created_by__c : currentCase.FEC_Created_by__c);
         result.put('FEC_External_Interaction_ID__c', interactionCase != null && String.isNotBlank(interactionCase.FEC_External_Interaction_ID__c) ? interactionCase.FEC_External_Interaction_ID__c : currentCase.FEC_External_Interaction_ID__c);
@@ -863,7 +890,7 @@ public without sharing class FEC_InteractionInforHandler {
         result.put('IsClosed', interactionCase != null ? interactionCase.IsClosed : currentCase.IsClosed);
         return result;
     }
-    
+
     @AuraEnabled
     public static void updateChatInteractionFields(Id recordId, String username, String phone) {
         if (recordId == null) return;
@@ -875,5 +902,6 @@ public without sharing class FEC_InteractionInforHandler {
         }
         update c;
     }
-}
 
+   
+}

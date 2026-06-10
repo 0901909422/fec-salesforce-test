@@ -96,7 +96,7 @@ public with sharing class FEC_SearchController {
             String.isBlank(interactionCase.FEC_Phone_Number__c)
         ) {
             throw new AuraHandledException(
-                System.Label.FEC_PHONE_IS_REQUIRED_MSG
+                System.Label.FEC_INTERACTION_PHONE_REQUIRED
             );
         }
     }
@@ -323,7 +323,7 @@ public with sharing class FEC_SearchController {
                     rows.add(new Map<String, String>{
                         'user'     => h.userName,
                         'activity' => h.activityId,
-                        'status'   => FEC_GetLoanApplicationHistory.resolveStatusLabel(h.statusId),
+                        'status'   => h.statusId,
                         'editDate' => h.editDate
                     });
                 }
