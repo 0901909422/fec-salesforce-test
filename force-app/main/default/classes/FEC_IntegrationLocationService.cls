@@ -106,12 +106,15 @@ public class FEC_IntegrationLocationService {
             log('[syncLocation] Using external object CifFeDictLocationVw__x');
             records = new List<Map<String, Object>>();
 
-            // External objects limit OFFSET to 2000 globally,
-            // so query per SCHEME and paginate within each using OFFSET up to 2000
-            List<String> schemes = new List<String>{FEC_FraudConstantCommon.LOCATION_SCHEME_COUNTRY, FEC_FraudConstantCommon.LOCATION_SCHEME_PROVINCE, FEC_FraudConstantCommon.LOCATION_SCHEME_CITY_DISTRICT, FEC_FraudConstantCommon.LOCATION_SCHEME_WARD};
+            // External objects limit OFFSET to 2000 globally.
+            // For schemes with >2000 records (Ward, City District), use parent-based pagination.
+            List<String> smallSchemes = new List<String>{FEC_FraudConstantCommon.LOCATION_SCHEME_COUNTRY, FEC_FraudConstantCommon.LOCATION_SCHEME_PROVINCE};
+            List<String> largeSchemes = new List<String>{FEC_FraudConstantCommon.LOCATION_SCHEME_CITY_DISTRICT, FEC_FraudConstantCommon.LOCATION_SCHEME_WARD};
             Integer pageSize = FEC_FraudConstantCommon.LOCATION_PAGE_SIZE;
+            Integer offsetCap = FEC_FraudConstantCommon.LOCATION_OFFSET;
 
-            for (String scheme : schemes) {
+            // Small schemes (Country, Province) - standard offset pagination
+            for (String scheme : smallSchemes) {
                 Integer offset = 0;
                 Boolean hasMore = true;
 
@@ -142,14 +145,111 @@ public class FEC_IntegrationLocationService {
                         hasMore = false;
                     } else {
                         offset += pageSize;
-                        // External object OFFSET cap is 2000
-                        if (offset >= FEC_FraudConstantCommon.LOCATION_OFFSET) {
-                            log('[syncLocation] SCHEME=' + scheme + ' reached OFFSET limit 2000');
+                        if (offset >= offsetCap) {
                             hasMore = false;
                         }
                     }
                 }
             }
+
+            // Large schemes (City District, Ward) - paginate by PARENTCODE batches to bypass OFFSET limit
+            // Each batch uses IN clause with subset of parent codes, each query stays under OFFSET 2000
+            Set<String> provinceCodes = new Set<String>();
+            Set<String> districtCodes = new Set<String>();
+            for (Map<String, Object> rec : records) {
+                String recScheme = (String) rec.get('SCHEME__c');
+                String code = (String) rec.get('CODE__c');
+                if (recScheme == FEC_FraudConstantCommon.LOCATION_SCHEME_PROVINCE && String.isNotBlank(code)) {
+                    provinceCodes.add(code);
+                }
+            }
+
+            // Load City Districts - batch by province parent codes (each province has ~40 districts)
+            log('[syncLocation] Loading City District by ' + provinceCodes.size() + ' province parents');
+            String districtScheme = FEC_FraudConstantCommon.LOCATION_SCHEME_CITY_DISTRICT;
+            List<String> provinceList = new List<String>(provinceCodes);
+            Integer batchSize = 20; // ~20 provinces per query → ~800 districts per query (safe under 2000)
+
+            for (Integer i = 0; i < provinceList.size(); i += batchSize) {
+                Integer endIdx = Math.min(i + batchSize, provinceList.size());
+                List<String> parentBatch = new List<String>();
+                for (Integer j = i; j < endIdx; j++) {
+                    parentBatch.add(provinceList[j]);
+                }
+
+                Integer offset = 0;
+                Boolean hasMore = true;
+                while (hasMore) {
+                    List<CifFeDictLocationVw__x> batch = [
+                        SELECT ExternalId, CODE__c, NAME__c, NAME_EN__c,
+                               PARENTCODE__c, ISACTIVE__c, SCHEME__c, EFFECTIVEDATE__c
+                        FROM CifFeDictLocationVw__x
+                        WHERE SCHEME__c = :districtScheme
+                          AND PARENTCODE__c IN :parentBatch
+                        LIMIT :pageSize OFFSET :offset
+                    ];
+                    for (CifFeDictLocationVw__x loc : batch) {
+                        records.add(new Map<String, Object>{
+                            'ExternalId' => loc.ExternalId,
+                            'CODE__c' => loc.CODE__c,
+                            'NAME__c' => loc.NAME__c,
+                            'NAME_EN__c' => loc.NAME_EN__c,
+                            'PARENTCODE__c' => loc.PARENTCODE__c,
+                            'ISACTIVE__c' => loc.ISACTIVE__c,
+                            'SCHEME__c' => loc.SCHEME__c,
+                            'EFFECTIVEDATE__c' => loc.EFFECTIVEDATE__c
+                        });
+                        districtCodes.add(loc.CODE__c);
+                    }
+                    hasMore = (batch.size() == pageSize && offset + pageSize < offsetCap);
+                    offset += pageSize;
+                }
+            }
+            log('[syncLocation] City District total loaded: ' + districtCodes.size());
+
+            // Load Wards - batch by district parent codes (each district has ~3 wards)
+            log('[syncLocation] Loading Ward by ' + districtCodes.size() + ' district parents');
+            String wardScheme = FEC_FraudConstantCommon.LOCATION_SCHEME_WARD;
+            List<String> districtList = new List<String>(districtCodes);
+            Integer wardBatchSize = 50; // ~50 districts per query → ~150 wards per query (safe under 2000)
+            Integer wardTotal = 0;
+
+            for (Integer i = 0; i < districtList.size(); i += wardBatchSize) {
+                Integer endIdx = Math.min(i + wardBatchSize, districtList.size());
+                List<String> parentBatch = new List<String>();
+                for (Integer j = i; j < endIdx; j++) {
+                    parentBatch.add(districtList[j]);
+                }
+
+                Integer offset = 0;
+                Boolean hasMore = true;
+                while (hasMore) {
+                    List<CifFeDictLocationVw__x> batch = [
+                        SELECT ExternalId, CODE__c, NAME__c, NAME_EN__c,
+                               PARENTCODE__c, ISACTIVE__c, SCHEME__c, EFFECTIVEDATE__c
+                        FROM CifFeDictLocationVw__x
+                        WHERE SCHEME__c = :wardScheme
+                          AND PARENTCODE__c IN :parentBatch
+                        LIMIT :pageSize OFFSET :offset
+                    ];
+                    for (CifFeDictLocationVw__x loc : batch) {
+                        records.add(new Map<String, Object>{
+                            'ExternalId' => loc.ExternalId,
+                            'CODE__c' => loc.CODE__c,
+                            'NAME__c' => loc.NAME__c,
+                            'NAME_EN__c' => loc.NAME_EN__c,
+                            'PARENTCODE__c' => loc.PARENTCODE__c,
+                            'ISACTIVE__c' => loc.ISACTIVE__c,
+                            'SCHEME__c' => loc.SCHEME__c,
+                            'EFFECTIVEDATE__c' => loc.EFFECTIVEDATE__c
+                        });
+                    }
+                    wardTotal += batch.size();
+                    hasMore = (batch.size() == pageSize && offset + pageSize < offsetCap);
+                    offset += pageSize;
+                }
+            }
+            log('[syncLocation] Ward total loaded: ' + wardTotal);
             log('[syncLocation] Total external records loaded: ' + records.size());
         }
 
@@ -160,8 +260,195 @@ public class FEC_IntegrationLocationService {
         log('syncLocation-data: '+ records);
 
         log('[syncLocation] Processing ' + records.size() + ' records');
-        upsertFromFlatRecords(records);
-        log('[syncLocation] END');
+        // Use Queueable chain to avoid DML row limit (10,000 per transaction)
+        System.enqueueJob(new LocationSyncQueueable(records));
+        log('[syncLocation] Enqueued LocationSyncQueueable');
+    }
+
+    /**
+     * Queueable that processes location sync in steps to stay within DML limits.
+     * Step 0: Country, Step 1: Province, Step 2: District, Step 3+: Ward (chunked by 8000)
+     */
+    public class LocationSyncQueueable implements Queueable {
+        private List<Map<String, Object>> records;
+        private Integer step;
+        private Integer wardOffset;
+
+        public LocationSyncQueueable(List<Map<String, Object>> records) {
+            this.records = records;
+            this.step = 0;
+            this.wardOffset = 0;
+        }
+
+        public LocationSyncQueueable(List<Map<String, Object>> records, Integer step, Integer wardOffset) {
+            this.records = records;
+            this.step = step;
+            this.wardOffset = wardOffset;
+        }
+
+        public void execute(QueueableContext context) {
+            try {
+                if (step == 0) {
+                    upsertCountries(records);
+                    System.enqueueJob(new LocationSyncQueueable(records, 1, 0));
+                } else if (step == 1) {
+                    upsertProvinces(records);
+                    System.enqueueJob(new LocationSyncQueueable(records, 2, 0));
+                } else if (step == 2) {
+                    upsertDistricts(records);
+                    System.enqueueJob(new LocationSyncQueueable(records, 3, 0));
+                } else if (step == 3) {
+                    Boolean hasMore = upsertWardsChunk(records, wardOffset);
+                    if (hasMore) {
+                        System.enqueueJob(new LocationSyncQueueable(records, 3, wardOffset + 3000));
+                    } else {
+                        log('[LocationSyncQueueable] All steps completed');
+                    }
+                }
+            } catch (Exception ex) {
+                log('[LocationSyncQueueable] ERROR at step ' + step + ' offset ' + wardOffset + ': ' + ex.getMessage());
+            }
+        }
+    }
+
+    @TestVisible
+    private static void upsertCountries(List<Map<String, Object>> records) {
+        Map<String, FEC_Country__c> countries = new Map<String, FEC_Country__c>();
+        for (Map<String, Object> r : records) {
+            String scheme = (String) r.get('SCHEME__c');
+            if (scheme != FEC_FraudConstantCommon.LOCATION_SCHEME_COUNTRY) continue;
+            String code = (String) r.get('CODE__c');
+            if (String.isBlank(code)) continue;
+            countries.put(code, new FEC_Country__c(
+                FEC_Code__c = code,
+                Name = (String) r.get('NAME_EN__c'),
+                FEC_Name_VN__c = (String) r.get('NAME__c'),
+                FEC_Is_Active__c = r.get('ISACTIVE__c') == true,
+                FEC_Effective_Date__c = parseDate(r.get('EFFECTIVEDATE__c'))
+            ));
+        }
+        log('[upsertCountries] count: ' + countries.size());
+        if (!countries.isEmpty()) {
+            upsert countries.values() FEC_Code__c;
+        }
+    }
+
+    @TestVisible
+    private static void upsertProvinces(List<Map<String, Object>> records) {
+        Map<String, Id> countryMap = new Map<String, Id>();
+        for (FEC_Country__c c : [SELECT Id, FEC_Code__c FROM FEC_Country__c]) {
+            countryMap.put(c.FEC_Code__c, c.Id);
+        }
+        Map<String, FEC_Province__c> provinces = new Map<String, FEC_Province__c>();
+        for (Map<String, Object> r : records) {
+            String scheme = (String) r.get('SCHEME__c');
+            if (scheme != FEC_FraudConstantCommon.LOCATION_SCHEME_PROVINCE) continue;
+            String code = (String) r.get('CODE__c');
+            String parentCode = (String) r.get('PARENTCODE__c');
+            if (String.isBlank(code) || !countryMap.containsKey(parentCode)) continue;
+            provinces.put(code, new FEC_Province__c(
+                FEC_Code__c = code,
+                Name = (String) r.get('NAME_EN__c'),
+                FEC_Name_VN__c = (String) r.get('NAME__c'),
+                FEC_Country_Code__c = parentCode,
+                FEC_Country__c = countryMap.get(parentCode),
+                FEC_Is_Active__c = r.get('ISACTIVE__c') == true,
+                FEC_Effective_Date__c = parseDate(r.get('EFFECTIVEDATE__c'))
+            ));
+        }
+        log('[upsertProvinces] count: ' + provinces.size());
+        if (!provinces.isEmpty()) {
+            upsert provinces.values() FEC_Code__c;
+        }
+    }
+
+    @TestVisible
+    private static void upsertDistricts(List<Map<String, Object>> records) {
+        Map<String, Id> provinceMap = new Map<String, Id>();
+        Map<String, Id> provinceToCountryMap = new Map<String, Id>();
+        for (FEC_Province__c p : [SELECT Id, FEC_Code__c, FEC_Country__c FROM FEC_Province__c]) {
+            provinceMap.put(p.FEC_Code__c, p.Id);
+            if (p.FEC_Country__c != null) provinceToCountryMap.put(p.FEC_Code__c, p.FEC_Country__c);
+        }
+        List<FEC_District__c> districtList = new List<FEC_District__c>();
+        for (Map<String, Object> r : records) {
+            String scheme = (String) r.get('SCHEME__c');
+            if (scheme != FEC_FraudConstantCommon.LOCATION_SCHEME_CITY_DISTRICT) continue;
+            String code = (String) r.get('CODE__c');
+            String parentCode = (String) r.get('PARENTCODE__c');
+            if (String.isBlank(code) || !provinceMap.containsKey(parentCode)) continue;
+            districtList.add(new FEC_District__c(
+                FEC_Code__c = code,
+                Name = (String) r.get('NAME_EN__c'),
+                FEC_Name_VN__c = (String) r.get('NAME__c'),
+                FEC_Province__c = provinceMap.get(parentCode),
+                FEC_Province_Code__c = parentCode,
+                FEC_Country__c = provinceToCountryMap.get(parentCode),
+                FEC_Is_Active__c = r.get('ISACTIVE__c') == true,
+                FEC_Effective_Date__c = parseDate(r.get('EFFECTIVEDATE__c'))
+            ));
+        }
+        log('[upsertDistricts] count: ' + districtList.size());
+        if (!districtList.isEmpty()) {
+            safeBatchUpsert(districtList);
+        }
+    }
+
+    @TestVisible
+    private static void upsertWards(List<Map<String, Object>> records) {
+        upsertWardsChunk(records, 0);
+    }
+
+    /**
+     * Upserts a chunk of Ward records starting at the given offset.
+     * Returns true if there are more wards to process.
+     */
+    @TestVisible
+    private static Boolean upsertWardsChunk(List<Map<String, Object>> records, Integer offset) {
+        Map<String, Id> districtMap = new Map<String, Id>();
+        Map<String, Id> districtToProvinceMap = new Map<String, Id>();
+        Map<String, Id> districtToCountryMap = new Map<String, Id>();
+        for (FEC_District__c d : [SELECT Id, FEC_Code__c, FEC_Province__c, FEC_Country__c FROM FEC_District__c]) {
+            districtMap.put(d.FEC_Code__c, d.Id);
+            if (d.FEC_Province__c != null) districtToProvinceMap.put(d.FEC_Code__c, d.FEC_Province__c);
+            if (d.FEC_Country__c != null) districtToCountryMap.put(d.FEC_Code__c, d.FEC_Country__c);
+        }
+        // Collect all ward records first
+        List<FEC_Ward__c> allWards = new List<FEC_Ward__c>();
+        for (Map<String, Object> r : records) {
+            String scheme = (String) r.get('SCHEME__c');
+            if (scheme != FEC_FraudConstantCommon.LOCATION_SCHEME_WARD) continue;
+            String code = (String) r.get('CODE__c');
+            String parentCode = (String) r.get('PARENTCODE__c');
+            if (String.isBlank(code) || !districtMap.containsKey(parentCode)) continue;
+            allWards.add(new FEC_Ward__c(
+                FEC_Code__c = code,
+                Name = (String) r.get('NAME_EN__c'),
+                FEC_Name_VN__c = (String) r.get('NAME__c'),
+                FEC_District__c = districtMap.get(parentCode),
+                FEC_District_Code__c = parentCode,
+                FEC_Province__c = districtToProvinceMap.get(parentCode),
+                FEC_Country__c = districtToCountryMap.get(parentCode),
+                FEC_Is_Active__c = r.get('ISACTIVE__c') == true,
+                FEC_Effective_Date__c = parseDate(r.get('EFFECTIVEDATE__c'))
+            ));
+        }
+        log('[upsertWardsChunk] total wards: ' + allWards.size() + ', offset: ' + offset);
+        
+        Integer chunkSize = 3000;
+        Integer endIdx = Math.min(offset + chunkSize, allWards.size());
+        if (offset >= allWards.size()) return false;
+        
+        List<SObject> chunk = new List<SObject>();
+        for (Integer i = offset; i < endIdx; i++) {
+            chunk.add(allWards[i]);
+        }
+        if (!chunk.isEmpty()) {
+            Schema.SObjectField extField = FEC_Ward__c.FEC_Code__c;
+            Database.upsert(chunk, extField, false);
+            log('[upsertWardsChunk] Upserted ' + chunk.size() + ' wards');
+        }
+        return endIdx < allWards.size();
     }
 
     /**
@@ -190,7 +477,7 @@ public class FEC_IntegrationLocationService {
         log('countries: ' + countries.size());
         log('countries-data: ' + countries);
         if (!countries.isEmpty()) {
-            upsert countries.values() FEC_Code__c;
+            upsertInBatches(countries.values(), 'FEC_Code__c');
         }
 
         // Build code → Id map
@@ -221,7 +508,7 @@ public class FEC_IntegrationLocationService {
         log('provinces: ' + provinces.size());
         log('provinces-data: ' + provinces);
         if (!provinces.isEmpty()) {
-            upsert provinces.values() FEC_Code__c;
+            upsertInBatches(provinces.values(), 'FEC_Code__c');
         }
 
         Map<String, Id> provinceMap = new Map<String, Id>();
@@ -256,7 +543,7 @@ public class FEC_IntegrationLocationService {
         log('districts: ' + districts.size());
         log('districts-data: ' + districts);
         if (!districts.isEmpty()) {
-            upsert districts.values() FEC_Code__c;
+            upsertInBatches(districts.values(), 'FEC_Code__c');
         }
 
         Map<String, Id> districtMap = new Map<String, Id>();
@@ -292,7 +579,7 @@ public class FEC_IntegrationLocationService {
         log('wards: ' + wards.size());
          log('wards-data: ' + wards);
         if (!wards.isEmpty()) {
-            upsert wards.values() FEC_Code__c;
+            upsertInBatches(wards.values(), 'FEC_Code__c');
         }
     }
 
@@ -449,6 +736,43 @@ public class FEC_IntegrationLocationService {
         log('wards: '+ wards);
         if (!wards.isEmpty()) {
             upsert wards.values() FEC_Code__c;
+        }
+    }
+
+    /**
+     * Upserts records in batches to avoid DML row limits.
+     * Uses FEC_Code__c as the external ID field for upsert.
+     */
+    private static void upsertInBatches(List<SObject> records, String externalIdField) {
+        Schema.SObjectField extField = records[0].getSObjectType().getDescribe().fields.getMap().get(externalIdField);
+        Integer batchSize = 2000;
+        for (Integer i = 0; i < records.size(); i += batchSize) {
+            Integer endIdx = Math.min(i + batchSize, records.size());
+            List<SObject> batch = new List<SObject>();
+            for (Integer j = i; j < endIdx; j++) {
+                batch.add(records[j]);
+            }
+            Database.upsert(batch, extField, false);
+            log('Upserted batch: ' + i + ' to ' + endIdx + ' (' + batch.size() + ' records)');
+        }
+    }
+
+    /**
+     * Safely upserts a large list of SObjects using FEC_Code__c as external ID.
+     * Splits into chunks of 5000 to stay within the 10,000 DML row governor limit.
+     */
+    private static void safeBatchUpsert(List<SObject> records) {
+        if (records == null || records.isEmpty()) return;
+        Schema.SObjectField extField = records[0].getSObjectType().getDescribe().fields.getMap().get('FEC_Code__c');
+        Integer batchSize = 3000;
+        for (Integer i = 0; i < records.size(); i += batchSize) {
+            Integer endIdx = Math.min(i + batchSize, records.size());
+            List<SObject> batch = new List<SObject>();
+            for (Integer j = i; j < endIdx; j++) {
+                batch.add(records[j]);
+            }
+            Database.upsert(batch, extField, false);
+            log('[safeBatchUpsert] Upserted ' + batch.size() + ' records (offset ' + i + ')');
         }
     }
 

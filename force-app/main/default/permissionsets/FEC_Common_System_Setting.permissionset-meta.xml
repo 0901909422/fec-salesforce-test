@@ -1413,6 +1413,10 @@
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
+        <apexClass>FEC_TeamGroupCodeUtil</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
         <apexClass>FEC_TeamQueue</apexClass>
         <enabled>true</enabled>
     </classAccesses>
