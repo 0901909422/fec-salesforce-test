@@ -825,11 +825,10 @@
                 component.set('v.toEmail', d.toEmail||'');
                 component.set('v.isManualInteraction', d.isManual === 'true');
                 component.set('v.incomingToAddress', d.fromEmail||'');
-                // tungnm37 thÃªm: load templates theo fromEmail cá»§a Interaction (giá»‘ng Service Case)
-                if (d.isManual === 'true') {
-                    component.set('v.hasFromOptions', false);
-                } else if (d.fromEmail) {
-                    self.loadTemplates(component, d.fromEmail);
+                // Interaction: dùng From dropdown gi?ng Service Case, default theo From dã resolve t? field/source.
+                self.loadFromAddresses(component, d.fromEmail || '');
+                if (!d.fromEmail) {
+                    self.loadTemplates(component, component.get('v.fromEmail') || '');
                 }
             }
         });
