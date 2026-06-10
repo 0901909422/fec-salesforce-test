@@ -150,6 +150,8 @@
         <members>FEC_UMSUserManagementRestService_Test</members>
         <members>FEC_BlockCodeRoutingService</members>
         <members>FEC_ContentDocumentLinkTriggerHandler</members>
+        <members>FEC_RefundRequestController</members>
+        <members>FEC_RefundRequestController_Test</members>
         <name>ApexClass</name>
     </types>
     <types>
@@ -206,6 +208,8 @@
         <members>fec_SkipModal</members>
         <members>customDblclickCell</members>
         <members>fec_SecondaryInfoLoanAccount</members>
+        <members>fec_AppInfo</members>
+        <members>fec_RefundRequestForm</members>
         <name>LightningComponentBundle</name>
     </types>
     <types>
