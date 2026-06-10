@@ -96,15 +96,23 @@ private class FEC_GetLoanApplicationHistory_Test {
 
         Test.startTest();
         // Gọi hàm DML
-        FEC_Application_History__c historyRec = FEC_GetLoanApplicationHistory.updateCaseApplicationHistory(testCase.Id);
+        FEC_GetLoanApplicationHistory.CaseApplicationHistoryDisplay historyRec =
+            FEC_GetLoanApplicationHistory.updateCaseApplicationHistory(testCase.Id);
         Test.stopTest();
 
-        // Xác nhận bản ghi FEC_Application_History__c đã được Insert
-        System.assertNotEquals(null, historyRec.Id, 'Bản ghi History phải được tạo thành công.');
-        System.assertEquals('Tung Nguyen', historyRec.FEC_User__c, 'UserName phải được map vào field FEC_User__c.');
-        System.assertEquals('ACT01', historyRec.FEC_Activity_ID__c, 'Activity ID phải khớp.');
-        System.assertEquals('APPROVED', historyRec.FEC_Status__c, 'Status phải được map từ mã A sang APPROVED.');
-        System.assertEquals(Date.valueOf('2026-05-25'), historyRec.FEC_Edit_Date__c, 'Edit date phải được parse chính xác.');
+        System.assertNotEquals(null, historyRec.id, 'Bản ghi History phải được tạo thành công.');
+        System.assertEquals('Tung Nguyen', historyRec.user, 'UserName phải được map đúng.');
+        System.assertEquals('ACT01', historyRec.activityId, 'Activity ID phải khớp.');
+        System.assertEquals('APPROVED', historyRec.status, 'Status phải được map từ mã A sang APPROVED.');
+        System.assertNotEquals(null, historyRec.editDate, 'Edit date phải được parse chính xác.');
+
+        FEC_Application_History__c persisted = [
+            SELECT FEC_User__c, FEC_Activity_ID__c, FEC_Status__c, FEC_Edit_Date__c
+            FROM FEC_Application_History__c
+            WHERE Id = :historyRec.id
+            LIMIT 1
+        ];
+        System.assertEquals('APPROVED', persisted.FEC_Status__c, 'Status phải được lưu trên record.');
     }
 
     @IsTest
@@ -116,6 +124,46 @@ private class FEC_GetLoanApplicationHistory_Test {
         System.assertEquals('APPROVED', FEC_GetLoanApplicationHistory.resolveStatusLabel('a'));
         System.assertEquals('UNKNOWN_CODE', FEC_GetLoanApplicationHistory.resolveStatusLabel('UNKNOWN_CODE'));
         Test.stopTest();
+    }
+
+    @IsTest
+    static void testParseResponse_StatusFallbackAndNumericStatusId() {
+        String jsonWithStatusField =
+            '{' +
+            '  "Sys": {"TransID": "TXN123", "DateTime": "2026-05-25T10:00:00Z", "Code": 1, "Description": "Success"},' +
+            '  "AppInfos": [{' +
+            '    "APPLICATION_ID": "APP002",' +
+            '    "USER_NAME": "Status User",' +
+            '    "ACTIVITIY_ID": "ACT02",' +
+            '    "STATUS": "PENDING",' +
+            '    "EDIT_DATE": "2026-05-25"' +
+            '  }]' +
+            '}';
+
+        String jsonWithNumericStatusId =
+            '{' +
+            '  "Sys": {"TransID": "TXN124", "DateTime": "2026-05-25T10:00:00Z", "Code": 1, "Description": "Success"},' +
+            '  "AppInfos": [{' +
+            '    "APPLICATION_ID": "APP003",' +
+            '    "USER_NAME": "Numeric User",' +
+            '    "ACTIVITIY_ID": "ACT03",' +
+            '    "STATUS_ID": 1,' +
+            '    "EDIT_DATE": "2026-05-25"' +
+            '  }]' +
+            '}';
+
+        Test.startTest();
+        FEC_GetLoanApplicationHistory.LoanApplicationHistoryResult statusFieldResult =
+            FEC_GetLoanApplicationHistory.parseResponse(jsonWithStatusField, 200);
+        FEC_GetLoanApplicationHistory.LoanApplicationHistoryResult numericStatusResult =
+            FEC_GetLoanApplicationHistory.parseResponse(jsonWithNumericStatusId, 200);
+        Test.stopTest();
+
+        System.assertEquals(true, statusFieldResult.success);
+        System.assertEquals('PENDING', statusFieldResult.histories[0].statusId);
+
+        System.assertEquals(true, numericStatusResult.success);
+        System.assertEquals('1', numericStatusResult.histories[0].statusId);
     }
 
     @IsTest
@@ -149,7 +197,8 @@ private class FEC_GetLoanApplicationHistory_Test {
         } catch (Exception e) { System.assert(true); }
 
         // 2. Validate Case ID null trong updateCaseApplicationHistory
-        FEC_Application_History__c rec = FEC_GetLoanApplicationHistory.updateCaseApplicationHistory(null);
+        FEC_GetLoanApplicationHistory.CaseApplicationHistoryDisplay rec =
+            FEC_GetLoanApplicationHistory.updateCaseApplicationHistory(null);
         System.assertEquals(null, rec, 'Nếu Case ID null, hàm trả về null.');
 
         // 3. Test lỗi HTTP (500)
