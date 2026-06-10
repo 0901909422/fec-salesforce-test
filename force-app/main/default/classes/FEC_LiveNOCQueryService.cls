@@ -105,7 +105,7 @@ public with sharing class FEC_LiveNOCQueryService {
                    FEC_Field_Order_Display__c,
                    FEC_Section__c, FEC_Sub_Section__c, FEC_Sub_Section_Order__c,
                    FEC_Sub_Section_Layout__c, FEC_Sub_Section_Field_Layout__c,
-                   FEC_Channel__c, FEC_Applicable_Role__c,
+                    FEC_Applicable_Role__c,
                    FEC_Field_Editable__c, FEC_Field_Masking__c,
                    FEC_Masking_Type__c, FEC_Field_Reverted__c,
                    FEC_Editable_Role__c,
@@ -126,7 +126,7 @@ public with sharing class FEC_LiveNOCQueryService {
                    FEC_Field_Order_Display__c,
                    FEC_Section__c, FEC_Sub_Section__c, FEC_Sub_Section_Order__c,
                    FEC_Sub_Section_Layout__c, FEC_Sub_Section_Field_Layout__c,
-                   FEC_Channel__c, FEC_Applicable_Role__c,
+                    FEC_Applicable_Role__c,
                    FEC_Field_Editable__c, FEC_Field_Masking__c,
                    FEC_Masking_Type__c, FEC_Field_Reverted__c,
                    FEC_Editable_Role__c

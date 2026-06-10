@@ -43,6 +43,7 @@ import FEC_BCH_ImportFailed from "@salesforce/label/c.FEC_BCH_ImportFailed";
 import FEC_BCH_Import_Submitted from "@salesforce/label/c.FEC_BCH_Import_Submitted";
 import FEC_BCH_RequireFile from "@salesforce/label/c.FEC_BCH_RequireFile";
 import FEC_BCH_InvalidFileFormat from "@salesforce/label/c.FEC_BCH_InvalidFileFormat";
+import FEC_BCH_TemplateFileMismatch from "@salesforce/label/c.FEC_BCH_TemplateFileMismatch";
 import FEC_BCH_FileTooLarge from "@salesforce/label/c.FEC_BCH_FileTooLarge";
 import FEC_BCH_FileNoData from "@salesforce/label/c.FEC_BCH_FileNoData";
 import FEC_BCH_HeaderInvalid from "@salesforce/label/c.FEC_BCH_HeaderInvalid";
@@ -237,8 +238,7 @@ const MSG_INVALID_FILE_FORMAT = FEC_BCH_InvalidFileFormat;
 const MSG_FILE_TOO_LARGE = FEC_BCH_FileTooLarge;
 const MSG_FILE_NO_DATA = FEC_BCH_FileNoData;
 const MSG_HEADER_INVALID = FEC_BCH_HeaderInvalid;
-const MSG_IMPORT_FILE_NAME_MISMATCH =
-  "Tên file không khớp template Bulk Actions của quy trình và nhóm người dùng.";
+const MSG_TEMPLATE_FILE_MISMATCH = FEC_BCH_TemplateFileMismatch;
 const IMPORT_TIMEOUT_MS = 60 * 1000;
 const IMPORT_TIMEOUT_MESSAGE = FEC_BCH_RequestTimeout;
 const MAX_UPLOAD_SIZE_BYTES = 150 * 1024 * 1024;
@@ -2111,8 +2111,8 @@ export default class Fec_BatchCaseHandling extends LightningElement {
 
   get allBpRowsSelected() {
     return (
-      this.bpPagedRows.length > 0 &&
-      this.bpPagedRows.every((r) => r.selected)
+      this.bpRows.length > 0 &&
+      this.bpRows.every((r) => r.selected)
     );
   }
 
@@ -2134,12 +2134,7 @@ export default class Fec_BatchCaseHandling extends LightningElement {
 
   handleBpSelectAll(event) {
     const checked = !!event.detail?.checked;
-    const visibleCodes = new Set(
-      this.bpPagedRows.map((r) => r.businessProcessCode)
-    );
-    this.bpRows = this.bpRows.map((r) =>
-      visibleCodes.has(r.businessProcessCode) ? { ...r, selected: checked } : r
-    );
+    this.bpRows = this.bpRows.map((r) => ({ ...r, selected: checked }));
     this.rebuildBpPagedRows();
   }
 
@@ -2467,7 +2462,7 @@ export default class Fec_BatchCaseHandling extends LightningElement {
       if (!validation || validation.valid !== true) {
         this.showError(
           MSG_IMPORT_FAILED,
-          validation?.message || MSG_IMPORT_FILE_NAME_MISMATCH
+          validation?.message || MSG_TEMPLATE_FILE_MISMATCH
         );
         this.clearSelectedImportFile();
         return;

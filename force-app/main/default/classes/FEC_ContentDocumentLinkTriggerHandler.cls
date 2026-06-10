@@ -42,6 +42,7 @@ public without sharing class FEC_ContentDocumentLinkTriggerHandler {
 
   private void onBeforeInsert(List<ContentDocumentLink> newlst) {
     preventUploadInCaseReview(newlst);
+    preventDuplicateFilesOnCase(newlst);
     preventShareWhenFileOnReviewCase(newlst);
     preventCaseLinksExceeding2GBTotal(newlst);
   }
@@ -116,6 +117,53 @@ public without sharing class FEC_ContentDocumentLinkTriggerHandler {
   }
 
   // Chặn Share khi file đã gắn Case review; xét cả link hiện có và link trong batch.
+
+  private void preventDuplicateFilesOnCase(List<ContentDocumentLink> newlst) {
+    List<ContentDocumentLink> caseLinks = new List<ContentDocumentLink>();
+    Set<Id> caseIds = new Set<Id>();
+    Set<Id> newDocIds = new Set<Id>();
+    for (ContentDocumentLink cdl : newlst) {
+      if (cdl.LinkedEntityId != null && cdl.LinkedEntityId.getSObjectType() == Case.SObjectType && cdl.ContentDocumentId != null) {
+        caseLinks.add(cdl);
+        caseIds.add(cdl.LinkedEntityId);
+        newDocIds.add(cdl.ContentDocumentId);
+      }
+    }
+    if (caseLinks.isEmpty()) return;
+
+    Map<Id, String> docIdToKey = new Map<Id, String>();
+    for (ContentVersion cv : [SELECT ContentDocumentId, Title, FileExtension FROM ContentVersion WHERE ContentDocumentId IN :newDocIds AND IsLatest = true]) {
+      docIdToKey.put(cv.ContentDocumentId, buildFileDuplicateKey(cv.Title, cv.FileExtension));
+    }
+
+    Map<Id, Set<String>> caseIdToExistingKeys = new Map<Id, Set<String>>();
+    for (ContentDocumentLink existing : [
+      SELECT LinkedEntityId, ContentDocument.LatestPublishedVersion.Title, ContentDocument.LatestPublishedVersion.FileExtension
+      FROM ContentDocumentLink
+      WHERE LinkedEntityId IN :caseIds
+    ]) {
+      if (!caseIdToExistingKeys.containsKey(existing.LinkedEntityId)) caseIdToExistingKeys.put(existing.LinkedEntityId, new Set<String>());
+      caseIdToExistingKeys.get(existing.LinkedEntityId).add(buildFileDuplicateKey(existing.ContentDocument.LatestPublishedVersion.Title, existing.ContentDocument.LatestPublishedVersion.FileExtension));
+    }
+
+    for (ContentDocumentLink cdl : caseLinks) {
+      String key = docIdToKey.get(cdl.ContentDocumentId);
+      if (String.isBlank(key)) continue;
+      if (!caseIdToExistingKeys.containsKey(cdl.LinkedEntityId)) caseIdToExistingKeys.put(cdl.LinkedEntityId, new Set<String>());
+      Set<String> keys = caseIdToExistingKeys.get(cdl.LinkedEntityId);
+      if (keys.contains(key)) {
+        cdl.addError(System.Label.FEC_Email_File_Already_In_Email);
+      } else {
+        keys.add(key);
+      }
+    }
+  }
+
+  private String buildFileDuplicateKey(String title, String fileExtension) {
+    String t = String.isBlank(title) ? '' : title.trim().toLowerCase();
+    String e = String.isBlank(fileExtension) ? '' : fileExtension.trim().toLowerCase();
+    return t + '.' + e;
+  }
   private void preventShareWhenFileOnReviewCase(List<ContentDocumentLink> newlst) {
     Set<Id> docIds = new Set<Id>();
     for (ContentDocumentLink cdl : newlst) {
@@ -252,3 +300,4 @@ public without sharing class FEC_ContentDocumentLinkTriggerHandler {
     }
   }
 }
+

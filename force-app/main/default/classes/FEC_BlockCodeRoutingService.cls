@@ -3,7 +3,8 @@
  * 1) RC27 tại Stage 2 → Stage 3: Team/Queue theo FEC_Stage_Change__c (Action Route to), ưu tiên hơn Block Code.
  * 2) RC27 + blockCode/blockCode1 null + không sibling RC09 → Stage Change OM / FEC_Day_2_Check (bỏ qua Stage 1→3 SP).
  * 3) Customer History Block Code → Team OM, queue FEC_Day_2_Check.
- * 4) RC27 + không block ép OM + sibling RC09 → Stage Change SP / FEC_DQ_CS_Support (Stage 1→3).
+ * 4) RC27 + không block ép OM + sibling RC09 → Stage Change SP / FEC_DQ_CS_Support (chỉ Stage 1→3).
+ * 5) Stage 3+ (vd. SP→CO / Card Operations): giữ FEC_Stage_Change__c, không ghi đè rule 2–4.
  * Tách khỏi FEC_CaseBusinessService để dễ bảo trì.
  * @author Toannd61
  */
@@ -212,6 +213,20 @@ public without sharing class FEC_BlockCodeRoutingService {
     }
   }
 
+  /** Case đang ở Stage 1 (theo FEC_Code__c hoặc Name trên FEC_Case_Stage__c). */
+  public static Boolean isCaseAtStageOne(Case c) {
+    if (c == null || c.FEC_Current_Case_Stage__r == null) {
+      return false;
+    }
+    String stageCode = trimSafe(c.FEC_Current_Case_Stage__r.FEC_Code__c);
+    if (FEC_ConstantCommon.STAGE_ONE.equals(stageCode)) {
+      return true;
+    }
+    String stageName = c.FEC_Current_Case_Stage__r.Name;
+    return String.isNotBlank(stageName) &&
+      stageName.contains(FEC_ConstantCommon.STAGE_ONE);
+  }
+
   /** Case đang ở Stage 2 (theo FEC_Code__c hoặc Name trên FEC_Case_Stage__c). */
   public static Boolean isCaseAtStageTwo(Case c) {
     if (c == null || c.FEC_Current_Case_Stage__r == null) {
@@ -224,6 +239,15 @@ public without sharing class FEC_BlockCodeRoutingService {
     String stageName = c.FEC_Current_Case_Stage__r.Name;
     return String.isNotBlank(stageName) &&
       stageName.contains(FEC_ConstantCommon.STAGE_TWO);
+  }
+
+  /**
+   * RC27 OM/Day2, Block Code, sibling RC09 → SP/CS Support chỉ khi Route from Stage 1.
+   * Stage 2→3 dùng isRc27StageTwoToThreeRouting; Stage 3+ giữ FEC_Stage_Change__c (vd. CO / Card Operations).
+   */
+  @TestVisible
+  private static Boolean isRc27StageOneSpecialRouting(Case c) {
+    return isCaseAtStageOne(c);
   }
 
   /**
@@ -701,6 +725,10 @@ public without sharing class FEC_BlockCodeRoutingService {
       return;
     }
 
+    if (!isRc27StageOneSpecialRouting(theCase)) {
+      return;
+    }
+
     if (
       isRc27ClientBlockCodeRoutingActive(
         theCase,
@@ -943,6 +971,9 @@ public without sharing class FEC_BlockCodeRoutingService {
       return queueId;
     }
     if (isRc27StageTwoToThreeRouting(routeCase)) {
+      return queueId;
+    }
+    if (!isRc27StageOneSpecialRouting(routeCase)) {
       return queueId;
     }
     if (

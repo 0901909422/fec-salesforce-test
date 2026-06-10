@@ -1,4 +1,38 @@
 ({
+    showEmailToast: function(component, type, title, message) {
+        try {
+            var t = $A.get('e.force:showToast');
+            if (t) {
+                t.setParams({ title: title || '', message: message || '', type: type || 'info', duration: 5000 });
+                t.fire();
+            } else if (message) {
+                component.set('v.errorMsg', message);
+            }
+        } catch (e) {
+            if (message) component.set('v.errorMsg', message);
+        }
+    },
+    watchStandardUploadFailure: function(component) {
+        var self = this;
+        if (window._fecUploadFailWatch) {
+            try { document.removeEventListener('click', window._fecUploadFailWatch, true); } catch (e) {}
+        }
+        window._fecUploadFailWatch = $A.getCallback(function(evt) {
+            var target = evt.target;
+            var txt = (target && (target.innerText || target.textContent) || '').trim();
+            if (txt !== 'Got It') return;
+            var bodyText = (document.body && (document.body.innerText || document.body.textContent) || '');
+            if (bodyText.indexOf('1 file is already in email') === -1 && bodyText.indexOf("Can't upload") === -1) return;
+            window.setTimeout($A.getCallback(function() {
+                component.set('v.showUploadModal', false);
+                component.set('v.selectedCaseFileIds', []);
+                self.showEmailToast(component, 'error', 'Error', component.get('v.lblFileAlreadyInEmail') || '1 file is already in email.');
+                try { document.removeEventListener('click', window._fecUploadFailWatch, true); } catch (e) {}
+                window._fecUploadFailWatch = null;
+            }), 250);
+        });
+        document.addEventListener('click', window._fecUploadFailWatch, true);
+    },
     FONTS: [
         {v:'',l:'(Default)',f:'inherit'},
         {v:'arial',l:'Arial',f:'Arial,sans-serif'},
@@ -623,6 +657,25 @@
             var range = sel.getRangeAt(0);
             var editorEl = quill.root;
 
+            // Handle Enter natively so caret stays at the current cursor position.
+            if (e.keyCode === 13) {
+                e.preventDefault();
+                e.stopImmediatePropagation();
+
+                var br = document.createElement('br');
+                var spacer = document.createTextNode('\u200B');
+                range.deleteContents();
+                range.insertNode(spacer);
+                range.insertNode(br);
+
+                var nextRange = document.createRange();
+                nextRange.setStartAfter(spacer);
+                nextRange.collapse(true);
+                sel.removeAllRanges();
+                sel.addRange(nextRange);
+                return;
+            }
+
             // Template HTML is injected directly into the editor, so Quill's internal delta
             // may not know about all nodes. For Backspace/Delete, bypass Quill keyboard
             // handlers and let the browser edit the real DOM natively.
@@ -1227,6 +1280,9 @@
         $A.enqueueAction(a);
     }
 })
+
+
+
 
 
 

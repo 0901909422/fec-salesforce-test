@@ -2,10 +2,14 @@ import { LightningElement, api, wire, track } from "lwc";
 import { getRecord, getFieldValue } from "lightning/uiRecordApi";
 import HAS_ACCOUNT_OR_CONTACT from "@salesforce/schema/Case.FEC_Has_Account_or_Contract__c";
 import CUSTOMER_TYPE from "@salesforce/schema/Case.FEC_Customer_Type__c";
+import FEC_SEARCH_PRODUCTS from "@salesforce/schema/Case.FEC_Search_Products__c";
 import getInteractionAccountNumber from "@salesforce/apex/FEC_AccountOrContractPicklistHandler.getInteractionAccountNumber";
 import getProductsListByCif from "@salesforce/apex/FEC_AccountOrContractPicklistHandler.getProductsListByCif";
 import {
   UBANK_PRODUCT_NAME,
+  INSURANCE_PRODUCT_NAME,
+  B2_PRODUCT_NAME,
+  CASH24_PRODUCT_NAME,
   NON_EXISTING_CUSTOMER_PRODUCT_NAME,
   NON_EXISTING_CUSTOMER_TYPE,
 } from "c/fec_CommonConst";
@@ -43,6 +47,7 @@ export default class Fec_AccountOrContractPicklistInteraction extends LightningE
   selectedRows = [];
   isEditMode = false;
   recordTypeId;
+  searchProducts;
   recordTypeDevName;
   subscription = null;
   customerType;
@@ -122,7 +127,12 @@ export default class Fec_AccountOrContractPicklistInteraction extends LightningE
 
   @wire(getRecord, {
     recordId: "$recordId",
-    fields: [HAS_ACCOUNT_OR_CONTACT, CUSTOMER_TYPE, RECORDTYPE_ID],
+    fields: [
+      HAS_ACCOUNT_OR_CONTACT,
+      CUSTOMER_TYPE,
+      RECORDTYPE_ID,
+      FEC_SEARCH_PRODUCTS,
+    ],
   })
   wiredCase({ data, error }) {
     if (data) {
@@ -131,7 +141,7 @@ export default class Fec_AccountOrContractPicklistInteraction extends LightningE
       this.isOpen = false;
       this.hasAccountOrContact = getFieldValue(data, HAS_ACCOUNT_OR_CONTACT);
       this.customerType = getFieldValue(data, CUSTOMER_TYPE);
-
+      this.searchProducts = getFieldValue(data, FEC_SEARCH_PRODUCTS);
       //  FIX: chỉ load khi có recordId và chưa init
       if (this.recordId) {
         this.loadAccountData();
@@ -220,6 +230,26 @@ export default class Fec_AccountOrContractPicklistInteraction extends LightningE
         productName: null,
         isSelected: UBANK_PRODUCT_NAME === this.selectedValue,
       });
+
+      this.searchProducts
+        .split(";")
+        .map((item) => item.trim())
+        .filter(
+          (product) =>
+            product === INSURANCE_PRODUCT_NAME ||
+            product === B2_PRODUCT_NAME ||
+            product === CASH24_PRODUCT_NAME,
+        )
+        .forEach((product) => {
+          mapped.push({
+            id: String(mapped.length + 1),
+            product,
+            accountContractNumber: product,
+            displayValue: "",
+            productName: null,
+            isSelected: product === this.selectedValue,
+          });
+        });
 
       this.data = mapped;
     } catch (e) {
@@ -315,7 +345,12 @@ export default class Fec_AccountOrContractPicklistInteraction extends LightningE
           selectedType: selectedRow.product,
         });
       } else {
-        if (selectedRow.product === UBANK_PRODUCT_NAME) {
+        if (
+          selectedRow.product === UBANK_PRODUCT_NAME ||
+          selectedRow.product === INSURANCE_PRODUCT_NAME ||
+          selectedRow.product === B2_PRODUCT_NAME ||
+          selectedRow.product === CASH24_PRODUCT_NAME
+        ) {
           this.selectedValue = this.firstAccountContractNumber;
         }
 

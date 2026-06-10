@@ -357,12 +357,12 @@ public without sharing class FEC_CustomerIntegrationService {
         }
 
         FEC_GetDocumentsList.DocumentInfo doc = docRes.Documents[0];
-        hist.FEC_National_ID_Passport_ID__c = doc.DocumentID;
+        hist.FEC_National_ID_Passport_ID__c = doc.IDDocumentNumber;
         hist.FEC_Date_of_Issue__c = doc.IssueDate;
         hist.FEC_Place_of_Issue__c = doc.IssuePlace;
 
         if (result != null) {
-            result.nationalId = doc.DocumentID;
+            result.nationalId = doc.IDDocumentNumber;
         }
     }
 

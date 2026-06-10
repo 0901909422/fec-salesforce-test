@@ -1,13 +1,20 @@
-public with sharing class FEC_GetInteractionCases {
+public without sharing class FEC_GetInteractionCases {
 
     /**
      * Returns all non-archived Interaction records (Case with RecordType = Interaction).
      */
     @AuraEnabled
-    public static List<InteractionRow> getAllInteractions() {
+    public static List<InteractionRow> getAllInteractions(Id recordId) {
         if (!Schema.sObjectType.Case.isAccessible()) {
             return new List<InteractionRow>();
         }
+        FEC_GetServiceCases.CustomerFilterContext filterCtx =
+            FEC_GetServiceCases.resolveCustomerFilterContext(recordId);
+        if (filterCtx == null) {
+            return new List<InteractionRow>();
+        }
+        String filterAccountContractName = filterCtx.accountContractName;
+        List<String> filterNationalIds = filterCtx.nationalIds;
         //DateTime archiveThreshold = DateTime.now().addMonths(-3);
         List<String> rtNames = new List<String>{
             FEC_ConstantCommon.CASE_INTERACTION_RECORD_TYPE_DEV_NAME
@@ -18,16 +25,17 @@ public with sharing class FEC_GetInteractionCases {
             'FEC_Channel__c, FEC_Interaction_Subchannel__c, FEC_External_Interaction_ID__c, ' +
             'FEC_Interaction_Email__c, FEC_Last_Updated_On_View__c, FEC_Last_Updated_By_View__c ' +
             'FROM Case ' +
-            'WHERE RecordType.DeveloperName IN :rtNames ' +
-            //'AND (IsClosed = false OR ClosedDate >= :archiveThreshold) ' +
-            'ORDER BY FEC_Created_On__c DESC NULLS LAST';
+            'WHERE RecordType.DeveloperName IN :rtNames ';
+        soql += FEC_GetServiceCases.buildCustomerFilterClause(filterCtx);
+        //'AND (IsClosed = false OR ClosedDate >= :archiveThreshold) ' +
+        soql += 'ORDER BY FEC_Created_On__c DESC NULLS LAST';
         List<Case> cases = new List<Case>();
         try {
             cases = Database.query(soql);
         } catch (Exception e) {
             throw new AuraHandledException(e.getMessage());
         }
-        // FLS: class is `with sharing` — CRUD checked above. Skip stripInaccessible to avoid FLS issues in scratch org.
+        // FLS: CRUD checked above. Skip stripInaccessible to avoid FLS issues in scratch org.
         Set<String> stripped = null;
         List<InteractionRow> rows = new List<InteractionRow>();
         for (Case c : cases) {

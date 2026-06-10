@@ -199,4 +199,196 @@ private class FEC_CaseMasterDataHelper_Test {
         Test.stopTest();
         System.assertEquals(false, result);
     }
+
+    @IsTest
+    static void testCofGsrBusinessProcessHelpers() {
+        Test.startTest();
+        System.assertEquals(true, FEC_CaseMasterDataHelper.isCofOrGsrBusinessProcessCode('COF'));
+        System.assertEquals(true, FEC_CaseMasterDataHelper.isCofOrGsrBusinessProcessCode('GSR'));
+        System.assertEquals(false, FEC_CaseMasterDataHelper.isCofOrGsrBusinessProcessCode('OTHER'));
+        System.assertEquals(false, FEC_CaseMasterDataHelper.isCofGsrRevertStage2ToStage1(''));
+        System.assertEquals(
+            false,
+            FEC_CaseMasterDataHelper.shouldHideRevertConfirmSubSection(1, 'Confirm to D2C Assessment')
+        );
+        System.assertEquals(
+            true,
+            FEC_CaseMasterDataHelper.shouldHideRevertConfirmSubSection(
+                3,
+                'Confirm to D2C Assessment'
+            )
+        );
+        System.assertEquals(
+            true,
+            FEC_CaseMasterDataHelper.shouldSkipRevertConfirmAssessmentField(
+                3,
+                FEC_CaseMasterDataHelper.API_CONFIRM_D2C_ASSESSMENT
+            )
+        );
+        Test.stopTest();
+    }
+
+    @IsTest
+    static void testRoutingHistoryAndRevertHelpers() {
+        String suffix = String.valueOf(System.currentTimeMillis());
+
+        FEC_Business_Process__c bp = new FEC_Business_Process__c(
+            Name = 'GSR MDH BP ' + suffix,
+            FEC_Code__c = 'GSRMDH' + suffix,
+            FEC_Active__c = true
+        );
+        insert bp;
+
+        FEC_Product_Type__c prod = new FEC_Product_Type__c(
+            Name = 'MDH PT',
+            FEC_Code__c = 'MDHPT' + suffix,
+            FEC_Active__c = true
+        );
+        insert prod;
+        FEC_Category__c cat = new FEC_Category__c(
+            Name = 'MDH Cat',
+            FEC_Code__c = 'MDHCAT' + suffix,
+            FEC_Active__c = true
+        );
+        insert cat;
+        FEC_Sub_Category__c subCat = new FEC_Sub_Category__c(
+            Name = 'MDH SubCat',
+            FEC_Code__c = 'MDHSUB' + suffix,
+            FEC_Active__c = true
+        );
+        insert subCat;
+
+        FEC_Nature_of_Case__c noc = new FEC_Nature_of_Case__c(
+            FEC_Product_Type__c = prod.Id,
+            FEC_Category__c = cat.Id,
+            FEC_Sub_Category__c = subCat.Id,
+            FEC_Business_Process__c = bp.Id,
+            FEC_Active__c = true
+        );
+        insert noc;
+
+        FEC_Case_Stage__c stage1 = new FEC_Case_Stage__c(
+            Name = 'Flow - ' + FEC_ConstantCommon.STAGE_ONE + ' - Open',
+            FEC_Code__c = 'MDHS1' + suffix,
+            FEC_Nature_of_Cases__c = noc.Id,
+            FEC_Active__c = true,
+            FEC_Business_Process__c = bp.Id
+        );
+        FEC_Case_Stage__c stage2 = new FEC_Case_Stage__c(
+            Name = 'Flow - ' + FEC_ConstantCommon.STAGE_TWO + ' - Review',
+            FEC_Code__c = 'MDHS2' + suffix,
+            FEC_Nature_of_Cases__c = noc.Id,
+            FEC_Active__c = true,
+            FEC_Business_Process__c = bp.Id
+        );
+        insert new List<FEC_Case_Stage__c>{ stage1, stage2 };
+
+        FEC_Actual_Nature_of_Case__c actualNoc = new FEC_Actual_Nature_of_Case__c(
+            FEC_Business_Process__c = bp.Id,
+            FEC_Category__c = cat.Id,
+            FEC_Sub_Category__c = subCat.Id
+        );
+        insert actualNoc;
+
+        Case revertCase;
+        Case recallCase;
+        FEC_CaseTriggerHandler.isExecuting = true;
+        try {
+            revertCase = new Case(
+                Subject = 'Revert MDH Case',
+                FEC_Current_Case_Stage__c = stage1.Id,
+                FEC_Actual_Nature_of_Case__c = actualNoc.Id
+            );
+            recallCase = new Case(Subject = 'Recall MDH Case');
+            insert new List<Case>{ revertCase, recallCase };
+        } finally {
+            FEC_CaseTriggerHandler.isExecuting = false;
+        }
+
+        insert new FEC_Routing_Action_History__c(
+            FEC_Case__c = recallCase.Id,
+            FEC_Routing_Action__c = 'Recall'
+        );
+        insert new FEC_Routing_Action_History__c(
+            FEC_Case__c = revertCase.Id,
+            FEC_Previous_Stage__c = stage2.Id,
+            FEC_Next_Stage__c = stage1.Id,
+            FEC_IsReverted__c = true,
+            FEC_Routing_Action__c = 'Revert'
+        );
+
+        List<SObject> csSpRows = new List<SObject>{
+            buildMasterRow(
+                'Assignment',
+                FEC_CaseMasterDataHelper.API_CONFIRM_CS_SP_ASSESSMENT,
+                false,
+                null,
+                true,
+                false
+            ),
+            buildMasterRow('Field', 'Keep_Field__c', false, null, false, false)
+        };
+
+        Test.startTest();
+        Boolean recall = FEC_CaseMasterDataHelper.isLatestRoutingActionRecall(recallCase.Id);
+        String prevStage = FEC_CaseMasterDataHelper.getLatestRevertPreviousStageName(
+            revertCase.Id,
+            stage1.Id,
+            stage1.Name
+        );
+        Integer sourceStage = FEC_CaseMasterDataHelper.resolveRevertConfirmAssessmentSourceStage(
+            revertCase.Id,
+            stage1.Id,
+            stage1.Name,
+            true
+        );
+        Boolean gsrRevert = FEC_CaseMasterDataHelper.isGsrRevertFromPreviousStageName(
+            revertCase.Id,
+            stage1.Id,
+            FEC_ConstantCommon.STAGE_TWO,
+            stage1.Name
+        );
+        Boolean cofGsrRevert = FEC_CaseMasterDataHelper.isCofGsrRevertStage2ToStage1(revertCase.Id);
+        Boolean skipCsSp = FEC_CaseMasterDataHelper.shouldSkipRevertConfirmAssessmentField(
+            2,
+            FEC_CaseMasterDataHelper.API_CONFIRM_CS_SP_ASSESSMENT
+        );
+        Boolean hideCsSp = FEC_CaseMasterDataHelper.shouldHideRevertConfirmSubSection(
+            2,
+            'Confirm CS SP Assessment'
+        );
+        List<SObject> revertCtx2 =
+            FEC_CaseMasterDataHelper.filterRevertedAssignmentRowsByStageContext(csSpRows, true, 2);
+        List<SObject> emptyFilter =
+            FEC_CaseMasterDataHelper.filterAssignmentRowsByCurrentUserGroup(new List<SObject>(), 'CC');
+        Test.stopTest();
+
+        System.assertEquals(true, recall);
+        System.assert(prevStage.contains(FEC_ConstantCommon.STAGE_TWO));
+        System.assertEquals(2, sourceStage);
+        System.assertEquals(true, gsrRevert);
+        System.assertEquals(true, cofGsrRevert);
+        System.assertEquals(true, skipCsSp);
+        System.assertEquals(true, hideCsSp);
+        System.assertEquals(1, revertCtx2.size());
+        System.assertEquals('Keep_Field__c', revertCtx2[0].get('FEC_Field_API_Name__c'));
+        System.assertEquals(0, emptyFilter.size());
+    }
+
+    @IsTest
+    static void testResolveCustomerHistoryForCase_NoLookup() {
+        Case bareCase = new Case(Subject = 'No History Case');
+        FEC_CaseTriggerHandler.isExecuting = true;
+        try {
+            insert bareCase;
+        } finally {
+            FEC_CaseTriggerHandler.isExecuting = false;
+        }
+
+        Test.startTest();
+        FEC_Customer_History__c result = FEC_CaseMasterDataHelper.resolveCustomerHistoryForCase(bareCase);
+        Test.stopTest();
+
+        System.assertEquals(null, result);
+    }
 }
