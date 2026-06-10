@@ -198,7 +198,6 @@
         <members>fec_NocChannelConfig</members>
         <members>fec_PendingServiceCases</members>
         <members>fec_ClosedServiceCases</members>
-        <members>fec_InteractionCases</members>
         <members>fec_RdPaymentRoutingUtils</members>
         <members>fec_RelatedListPaging</members>
         <members>fec_customerAdditionalData</members>
