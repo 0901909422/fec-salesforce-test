@@ -595,12 +595,6 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
               input.setCustomValidity(
                 "Application ID must contain only digits",
               );
-            } else if (
-              !(val.length === 6 || val.length === 8 || val.length === 9)
-            ) {
-              input.setCustomValidity(
-                "Application ID must be 6, 8, or 9 digits",
-              );
             } else {
               input.setCustomValidity("");
             }
