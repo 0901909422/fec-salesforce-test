@@ -97,8 +97,8 @@
                                     <template if:true={isAccountContractSearch}>
                                         <template if:true={row._historyState}>
                                             <template if:true={row._historyState.expanded}>
-                                                <div key={row.AccountNumber} class="fec-history-wrap">
-                                                    <div class="fec-history-label">Application History: {row.AccountNumber}</div>
+                                                <div key={row._historyKey} class="fec-history-wrap">
+                                                    <div class="fec-history-label">Application History: {row._historyKey}</div>
                                                     <template if:true={row._historyState.loading}>
                                                         <lightning-spinner size="small" alternative-text="Loading"></lightning-spinner>
                                                     </template>
@@ -141,8 +141,8 @@
                                         <template if:true={isAccountContractSearch}>
                                             <template if:true={row._historyState}>
                                                 <template if:true={row._historyState.expanded}>
-                                                    <div key={row.ContractNumber} class="fec-history-wrap">
-                                                        <div class="fec-history-label">Application History: {row.ContractNumber}</div>
+                                                <div key={row._historyKey} class="fec-history-wrap">
+                                                    <div class="fec-history-label">Application History: {row._historyKey}</div>
                                                         <template if:true={row._historyState.loading}>
                                                             <lightning-spinner size="small" alternative-text="Loading"></lightning-spinner>
                                                         </template>

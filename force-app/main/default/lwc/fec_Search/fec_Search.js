@@ -164,16 +164,24 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
   // Active tab state
   activeTabValue = "Card";
 
+  get cardDisplayFieldName() {
+    return this.isAccountContractSearch ? 'ContractNumber' : 'AccountNumber';
+  }
+
+  get cardDisplayLabel() {
+    return this.isAccountContractSearch ? 'Contract Number' : 'Account Number';
+  }
+
   // Demo columns per tab (adjust fields as needed)
   get cardColumns() {
     return [
       {
-        label: "Account Number",
+        label: this.cardDisplayLabel,
         type: "dblclickText",
-        fieldName: "AccountNumber",
+        fieldName: this.cardDisplayFieldName,
         typeAttributes:  {
-              value: { fieldName: "AccountNumber" },
-              fieldName: "AccountNumber",
+              value: { fieldName: this.cardDisplayFieldName },
+              fieldName: this.cardDisplayFieldName,
               selectedType: "Card",
               isExpanded: this.isAccountContractSearch ? { fieldName: "_isExpanded" } : false,
               isAccountContractSearch: this.isAccountContractSearch
@@ -1216,6 +1224,7 @@ hasAnySearchCriteria(params) {
                             NationalID2: "",
                             DateOfBirth: this.formatDate(cust.DateOfBirth),
                             AccountNumber: accNum,
+                            ContractNumber: app.ContractNumber || accNum,
                             AccountStatus: app.Status,
                             PlasticID: "Loading...", // Hiển thị trạng thái đang lấy data
                             CIFNumber: cust.CIFNumber,
@@ -1535,7 +1544,8 @@ hasAnySearchCriteria(params) {
   _refreshData() {
     this.cardData = this.cardData.map(r => ({
       ...r,
-      _isExpanded: !!(this.appHistoryMap[r.AccountNumber]?.expanded)
+      _historyKey: r.ContractNumber || r.AccountNumber,
+      _isExpanded: !!(this.appHistoryMap[r.ContractNumber || r.AccountNumber]?.expanded)
     }));
     this.loanContractData = this.loanContractData.map(r => ({
       ...r,
@@ -1545,8 +1555,9 @@ hasAnySearchCriteria(params) {
   get cardDataWithHistory() {
     return this.cardData.map(r => ({
       ...r,
-      _historyState: this.appHistoryMap[r.AccountNumber] || null,
-      _btnClass: (this.appHistoryMap[r.AccountNumber]?.expanded) ? 'fec-toggle-btn fec-expanded' : 'fec-toggle-btn',
+      _historyKey: r.ContractNumber || r.AccountNumber,
+      _historyState: this.appHistoryMap[r.ContractNumber || r.AccountNumber] || null,
+      _btnClass: (this.appHistoryMap[r.ContractNumber || r.AccountNumber]?.expanded) ? 'fec-toggle-btn fec-expanded' : 'fec-toggle-btn',
       _dateOfBirth: this._formatDate(r.DateOfBirth)
     }));
   }
@@ -1571,10 +1582,11 @@ hasAnySearchCriteria(params) {
   get cardRowsInterleaved() {
     const result = [];
     this.cardData.forEach(r => {
-      result.push({ ...r, _isDataRow: true, _key: 'data_' + r.AccountNumber, _singleRow: [r] });
-      const hs = this.appHistoryMap[r.AccountNumber];
+      const historyKey = r.ContractNumber || r.AccountNumber;
+      result.push({ ...r, _isDataRow: true, _key: 'data_' + historyKey, _historyKey: historyKey, _singleRow: [r] });
+      const hs = this.appHistoryMap[historyKey];
       if (hs && hs.expanded) {
-        result.push({ _isDataRow: false, _key: 'hist_' + r.AccountNumber, _historyState: hs });
+        result.push({ _isDataRow: false, _key: 'hist_' + historyKey, _historyKey: historyKey, _historyState: hs });
       }
     });
     return result;
