@@ -164,12 +164,6 @@ public without sharing class FEC_InteractionInforHandler {
         return requiresManualInteractionEmail(getInteractionForEmailAction(recordId));
     }
 
-    public static void assertInteractionEmailForAction(Id recordId) {
-        if (requiresManualInteractionEmail(getInteractionForEmailAction(recordId))) {
-            throw new AuraHandledException(System.Label.FEC_Interaction_Email_Required_Msg);
-        }
-    }
-
     @AuraEnabled(cacheable=true)
     public static Id getInteractionIdFromCustomerCase(Id caseId) {
         Case c = [

@@ -502,11 +502,12 @@ private class FEC_InteractionInforHandler_Test {
     }
 
     @IsTest
-    static void testInteractionEmailActionBlocked_EmailChannelMissingEmail() {
+    static void testInteractionEmailActionBlocked_ManualEmailMissingEmail() {
         String suffix = String.valueOf(System.currentTimeMillis());
         Case emailInteraction = new Case(
             Subject = 'Email Interaction ' + suffix,
             Status = 'New',
+            FEC_Is_Manual__c = true,
             FEC_Channel__c = FEC_ConstantCommon.CHANNEL_EMAIL_NAME,
             FEC_Interaction_Email__c = null,
             FEC_ID_Search__c = 'EMAIL-BLOCK-' + suffix
@@ -524,28 +525,16 @@ private class FEC_InteractionInforHandler_Test {
 
         Test.startTest();
         System.assertEquals(true, FEC_InteractionInforHandler.isInteractionEmailActionBlocked(emailInteraction.Id));
-        Boolean threw = false;
-        try {
-            FEC_InteractionInforHandler.assertInteractionEmailForAction(emailInteraction.Id);
-        } catch (AuraHandledException e) {
-            threw = true;
-            System.assert(
-                e.getMessage().contains(System.Label.FEC_Interaction_Email_Required_Msg)
-                    || e.getMessage().contains('Script-thrown'),
-                'Expected email required message.'
-            );
-        }
         Test.stopTest();
-
-        System.assertEquals(true, threw);
     }
 
     @IsTest
-    static void testInteractionEmailActionBlocked_EmailChannelWithEmail() {
+    static void testInteractionEmailActionBlocked_ManualEmailWithEmail() {
         String suffix = String.valueOf(System.currentTimeMillis());
         Case emailInteraction = new Case(
             Subject = 'Email Interaction ' + suffix,
             Status = 'New',
+            FEC_Is_Manual__c = true,
             FEC_Channel__c = FEC_ConstantCommon.CHANNEL_EMAIL_NAME,
             FEC_Interaction_Email__c = 'valid@test.com',
             FEC_ID_Search__c = 'EMAIL-OK-' + suffix
@@ -563,7 +552,6 @@ private class FEC_InteractionInforHandler_Test {
 
         Test.startTest();
         System.assertEquals(false, FEC_InteractionInforHandler.isInteractionEmailActionBlocked(emailInteraction.Id));
-        FEC_InteractionInforHandler.assertInteractionEmailForAction(emailInteraction.Id);
         Test.stopTest();
     }
 }
