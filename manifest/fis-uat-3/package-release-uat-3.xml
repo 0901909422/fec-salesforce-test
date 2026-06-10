@@ -2291,6 +2291,7 @@
         <members>FEC_RD_Telesales_User_2_Master_Data_Management</members>
         <members>RD_IT_User_Master_Data_Management</members>
         <members>FEC_RD_Contract_Processing_User_Search_Functions</members>
+        <members>RD_IT_User_Search_Functions</members>
         <name>PermissionSet</name>
     </types>
     <types>
