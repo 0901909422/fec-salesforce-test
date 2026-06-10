@@ -48,6 +48,7 @@
         <members>FEC_CaseDsTsSlaNotificationSender_Test</members>
         <members>FEC_CaseDsTsSlaService</members>
         <members>FEC_CaseDsTsSlaService_Test</members>
+        <members>FEC_CaseEditNOCController</members>
         <members>FEC_CaseTriggerHandler</members>
         <members>FEC_CaseTriggerHandler_Test</members>
         <members>FEC_ChannelFunctionService</members>
@@ -184,6 +185,7 @@
         <members>fec_CaseBussinessScopedRoutingIntegration</members>
         <members>fec_CaseDetail_Customer</members>
         <members>fec_CaseEditNOC</members>
+        <members>fec_CaseNocUpdatedSection</members>
         <members>fec_ClosedServiceCases</members>
         <members>fec_DoNotBotherExistingCustomer</members>
         <members>fec_DoNotBotherNonExistingCustomer</members>
