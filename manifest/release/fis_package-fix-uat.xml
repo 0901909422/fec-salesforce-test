@@ -137,6 +137,8 @@
         <members>FEC_MainInfoController</members>
         <members>FEC_CardPaymentController</members>
         <members>FEC_RepaySchedPayHistController</members>
+        <members>FEC_UMSUserManagementRestService</members>
+        <members>FEC_UMSUserManagementRestService_Test</members>
         <name>ApexClass</name>
     </types>
     <types>

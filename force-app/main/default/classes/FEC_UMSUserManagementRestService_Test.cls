@@ -13,7 +13,31 @@ private class FEC_UMSUserManagementRestService_Test {
 
     @IsTest
     static void doGet_info_success() {
-        User me = [SELECT Username FROM User WHERE Id = :UserInfo.getUserId() LIMIT 1];
+        User me = [
+            SELECT Username
+            FROM User
+            WHERE Username LIKE 'ums.existing.%@test.invalid'
+            LIMIT 1
+        ];
+
+        RestRequest req = new RestRequest();
+        req.requestUri = '/services/apexrest/ums/v1/users/info';
+        req.httpMethod = 'GET';
+        req.addParameter('RequestorID', 'UT');
+        req.addParameter('UserID', me.Username);
+        RestResponse res = new RestResponse();
+        RestContext.request = req;
+        RestContext.response = res;
+
+        Test.startTest();
+        FEC_UMSUserManagementRestService.doGet();
+        Test.stopTest();
+
+        System.assertEquals(200, res.statusCode);
+        String responseBody = res.responseBody.toString();
+        System.assert(responseBody.contains('"Status":"S"'), responseBody);
+        System.assert(responseBody.contains('"UserID":"' + me.Username + '"'), responseBody);
+    }
 
     private static User adminUser() {
         List<User> admins = [
@@ -68,26 +92,6 @@ private class FEC_UMSUserManagementRestService_Test {
         System.runAs(adminUser()) {
             insert new GroupMember(GroupId = umsQueue.Id, UserOrGroupId = existing.Id);
         }
-    }
-
-    private static void setRestContext(String method, String uri, String body, Map<String, String> params) {
-        RestRequest req = new RestRequest();
-        req.requestUri = '/services/apexrest/ums/v1/users/info';
-        req.httpMethod = 'GET';
-        req.addParameter('RequestorID', 'UT');
-        req.addParameter('UserID', me.Username);
-        RestResponse res = new RestResponse();
-        RestContext.request = req;
-        RestContext.response = res;
-
-        Test.startTest();
-        FEC_UMSUserManagementRestService.doGet();
-        Test.stopTest();
-
-        System.assertEquals(200, res.statusCode);
-        String body = res.responseBody.toString();
-        System.assert(body.contains('"Status":"S"'), body);
-        System.assert(body.contains('"UserID":"' + me.Username + '"'), body);
     }
 
     @IsTest
