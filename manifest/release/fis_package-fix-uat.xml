@@ -24,10 +24,19 @@
         <members>FEC_BatchCaseHandlingController_Test</members>
         <members>FEC_BatchCaseHandlingImportService</members>
         <members>FEC_BatchCaseHandlingImportService_Test</members>
+        <members>FEC_BCC_CreationResolveHistService</members>
+        <members>FEC_BCC_CreationResolveHistService_Test</members>
         <members>FEC_BCC_ImportResolveHistService</members>
         <members>FEC_BCC_ImportResolveHistService_Test</members>
+        <members>FEC_BCH_ImportQueueable_Test</members>
+        <members>FEC_BCH_ImportValidateQueueable</members>
         <members>FEC_BCH_ImportRoutingHistoryService</members>
         <members>FEC_BCH_ImportRoutingHistoryServiceTest</members>
+        <members>FEC_BCH_TemplateExportService</members>
+        <members>FEC_BatchCaseCreationService</members>
+        <members>FEC_BatchCaseCreationService_Test</members>
+        <members>FEC_BatchCaseHandlingImportQueueable</members>
+        <members>FEC_BatchCaseHandlingImportQueueableTest</members>
         <members>FEC_BatchCaseHandlingTemplateHelper</members>
         <members>FEC_BatchCaseHandlingTemplateHelper_Test</members>
         <members>FEC_CaseBusinessService</members>
@@ -90,6 +99,10 @@
         <members>FEC_GetCardSecInfo_Test</members>
         <members>FEC_GetCardFinancialTransactions</members>
         <members>FEC_GetCardFinancialTransactions_Test</members>
+        <members>FEC_GetInteractionCases</members>
+        <members>FEC_GetInteractionCases_Test</members>
+        <members>FEC_GetServiceCases</members>
+        <members>FEC_GetServiceCases_Test</members>
         <members>FEC_GetUnbilledTransactions</members>
         <members>FEC_GetUnbilledTransactions_Test</members>
         <members>FEC_InteractionInforHandler</members>
@@ -122,6 +135,8 @@
         <members>FEC_VMXAUTHDETAILINQ_Test</members>
         <members>FEC_AssignmentExecuteService</members>
         <members>FEC_MainInfoController</members>
+        <members>FEC_CardPaymentController</members>
+        <members>FEC_RepaySchedPayHistController</members>
         <name>ApexClass</name>
     </types>
     <types>
@@ -130,8 +145,13 @@
     </types>
     <types>
         <members>FEC_Customer_Case_Record_Page</members>
+        <members>Master_Data_Setting_Record_Page</members>
         <name>FlexiPage</name>
     </types>
+    <types>
+        <members>FEC_Master_Data_Setting__c-Master Data Setting Layout</members>
+        <name>Layout</name>
+	</types>
     <types>
         <members>fec_AccountOrContractPicklistContainer</members>
         <members>fec_AccountOrContractPicklistCustomerCase</members>
@@ -147,11 +167,13 @@
         <members>fec_CaseBussinessScopedRoutingIntegration</members>
         <members>fec_CaseDetail_Customer</members>
         <members>fec_CaseEditNOC</members>
+        <members>fec_ClosedServiceCases</members>
         <members>fec_DoNotBotherExistingCustomer</members>
         <members>fec_DoNotBotherNonExistingCustomer</members>
         <members>fec_DownloadReports</members>
         <members>fecInteractionChatInfo</members>
         <members>fec_InteractionCreateCase</members>
+        <members>fec_InteractionCases</members>
         <members>fec_InteractionHighlightMain</members>
         <members>fec_InteractionSLA</members>
         <members>fecInteractionCreationHighlight</members>
@@ -161,6 +183,7 @@
         <members>fec_IPPDetailPage</members>
         <members>fec_IPPDetails</members>
         <members>fec_NocChannelConfig</members>
+        <members>fec_PendingServiceCases</members>
         <members>fec_RdPaymentRoutingUtils</members>
         <members>fec_RelatedListPaging</members>
         <members>fec_customerAdditionalData</members>
@@ -168,6 +191,7 @@
         <members>fec_Search</members>
         <members>fec_holdCaseManual</members>
         <members>fec_SkipModal</members>
+        <members>customDblclickCell</members>
         <name>LightningComponentBundle</name>
     </types>
     <types>
@@ -191,6 +215,7 @@
         <members>Case.FEC_KYC_Status__c</members>
         <members>Case.FEC_Search_Products__c</members>
         <members>FEC_Actual_Master_Data_Setting__c.FEC_Channel__c</members>
+        <members>FEC_Master_Data_Setting__c.FEC_Channel__c</members>
         <members>FEC_Application_Status_Mapping__mdt.FEC_Status_Code__c</members>
         <members>FEC_Application_Status_Mapping__mdt.FEC_Status_Label__c</members>
         <name>CustomField</name>
@@ -202,6 +227,7 @@
         <members>FEC_Email_File_Selected_Suffix</members>
         <members>FEC_Email_File_Upload_Help</members>
         <members>FEC_Email_File_Uploaded_Added</members>
+        <members>FEC_BCH_TemplateFileMismatch</members>
         <members>FEC_INTERACTION_PHONE_REQUIRED</members>
         <name>CustomLabel</name>
     </types>
@@ -297,6 +323,7 @@
         <members>FEC_CS_Senior_CS_Operations_Management_Specialist_Master_Data_Management</members>
         <members>FEC_CS_Senior_CS_Outbound_Specialist_Master_Data_Management</members>
         <members>FEC_CS_Senior_CS_Quality_Control_Specialist_Master_Data_Management</members>
+        <members>FEC_CS_Senior_CS_Support_Specialist_Master_Data_Management</members>
         <members>FEC_CS_Senior_Card_Risk_Monitoring_Specialist_Master_Data_Management</members>
         <members>FEC_CS_Senior_Customer_Care_Specialist_Master_Data_Management</members>
         <members>FEC_CS_Senior_Office_Based_Specialist_Master_Data_Management</members>
@@ -317,6 +344,7 @@
         <members>FEC_RD_Payment_User_Master_Data_Management</members>
         <members>FEC_RD_Telesales_User_1_Master_Data_Management</members>
         <members>FEC_RD_Telesales_User_2_Master_Data_Management</members>
+        <members>RD_IT_User_Master_Data_Management</members>
         <members>FEC_Common_System_Setting</members>
         <members>RD_IT_User_System_Management</members>
         <name>PermissionSet</name>

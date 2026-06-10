@@ -2349,6 +2349,14 @@
         <value>Sort</value>
     </labels>
     <labels>
+        <fullName>FEC_BCH_TemplateFileMismatch</fullName>
+        <categories>LWC fec_BatchCaseHandling</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_BCH_TemplateFileMismatch</shortDescription>
+        <value>Tên file không khớp template Bulk Actions của quy trình và nhóm người dùng.</value>
+    </labels>
+    <labels>
         <fullName>FEC_BCH_TooManyRows</fullName>
         <categories>LWC fec_BatchCaseHandling</categories>
         <language>en_US</language>
