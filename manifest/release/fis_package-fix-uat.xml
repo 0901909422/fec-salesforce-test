@@ -149,6 +149,7 @@
         <members>FEC_UMSUserManagementRestService</members>
         <members>FEC_UMSUserManagementRestService_Test</members>
         <members>FEC_BlockCodeRoutingService</members>
+        <members>FEC_ContentDocumentLinkTriggerHandler</members>
         <name>ApexClass</name>
     </types>
     <types>
@@ -226,8 +227,8 @@
         <members>Case.FEC_Is_Manual__c</members>
         <members>Case.FEC_KYC_Status__c</members>
         <members>Case.FEC_Search_Products__c</members>
-        <!--<members>FEC_Actual_Master_Data_Setting__c.FEC_Channel__c</members>
-        <members>FEC_Master_Data_Setting__c.FEC_Channel__c</members>-->
+        <members>FEC_Actual_Master_Data_Setting__c.FEC_Channel__c</members>
+        <members>FEC_Master_Data_Setting__c.FEC_Channel__c</members>
         <members>FEC_Application_Status_Mapping__mdt.FEC_Status_Code__c</members>
         <members>FEC_Application_Status_Mapping__mdt.FEC_Status_Label__c</members>
         <name>CustomField</name>
@@ -241,6 +242,7 @@
         <members>FEC_Email_File_Uploaded_Added</members>
         <members>FEC_BCH_TemplateFileMismatch</members>
         <members>FEC_INTERACTION_PHONE_REQUIRED</members>
+        <members>FEC_Email_File_Already_In_Email</members>
         <name>CustomLabel</name>
     </types>
     <types>
