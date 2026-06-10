@@ -206,6 +206,7 @@
         <members>fec_SkipModal</members>
         <members>customDblclickCell</members>
         <members>fec_SecondaryInfoLoanAccount</members>
+        <members>fec_AppInfo</members>
         <name>LightningComponentBundle</name>
     </types>
     <types>
