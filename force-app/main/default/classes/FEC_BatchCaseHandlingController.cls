@@ -949,6 +949,9 @@ public without sharing class FEC_BatchCaseHandlingController {
         ) {
             return fromFileName;
         }
+        if (String.isNotBlank(fromBusinessProcess)) {
+            return fromBusinessProcess;
+        }
         if (
             !isPlaceholderImportTemplateName(templateName) &&
             FEC_BCH_ImportFileNameValidator.validateExactFileNameMatch(fileName, templateName)
@@ -1271,6 +1274,26 @@ public without sharing class FEC_BatchCaseHandlingController {
                 || FEC_BatchCaseHandlingImportService.isCofOrGsrTemplate(resolvedTemplateName);
             // 01/06/2026 22:00 linhdev - đọc Case ID/Routing/Remark/D2C từ file upload trước validate (LWC aoa lệch cột)
             FEC_BatchCaseHandlingImportService.enrichImportRowValidateFieldsFromImportFile(cv.Id, inputRows);
+            // 08/06/2026 linhdev - file >5000 row: validate async theo chunk Queueable (tránh CPU/heap sync)
+            if (FEC_BatchCaseHandlingImportService.shouldValidateImportAsynchronously(inputRows.size())) {
+                System.enqueueJob(
+                    new FEC_BCH_ImportValidateQueueable(
+                        (Id) batchRow.get('Id'),
+                        JSON.serialize(inputRows),
+                        null,
+                        null,
+                        cofOrGsr,
+                        0
+                    )
+                );
+                out.success = true;
+                out.message = System.Label.FEC_BCH_Import_Submitted;
+                out.batchRecordId = (Id) batchRow.get('Id');
+                out.contentDocumentId = insertedCv.ContentDocumentId;
+                out.status = 'Processing';
+                out.resultRowsJson = FEC_ConstantCommon.STR_EMPTY;
+                return out;
+            }
             List<FEC_BatchCaseHandlingImportRow> rowResults = FEC_BatchCaseHandlingImportService.validateCaseHandlingImportRows(inputRows, cofOrGsr);
             if (FEC_BatchCaseHandlingImportService.hasApplicableImportRows(rowResults)) {
                 // 27/05/2026 22:15 linhdev - Card Replacement 1 case: xử lý sync thay vì queueable để tránh Processing timeout 1 giờ
@@ -1453,7 +1476,8 @@ public without sharing class FEC_BatchCaseHandlingController {
         row.originalDataRowIndex = row.originalHeaderRowIndex == null ? 1 : row.originalHeaderRowIndex + 1;
         row.originalSheetName = parseResult == null ? FEC_ConstantCommon.STR_EMPTY : parseResult.sheetName;
         row.status = System.Label.FEC_Batch_Case_Handling_Import_Row_Status_Failed;
-        row.errors = errorMessage;
+        // 05/06/2026 16:00 linhdev - __Errors Export Result luôn tiếng Việt
+        row.errors = FEC_BatchCaseHandlingImportService.localizeImportResultErrors(errorMessage);
         return new List<FEC_BatchCaseHandlingImportRow>{ row };
     }
     @AuraEnabled

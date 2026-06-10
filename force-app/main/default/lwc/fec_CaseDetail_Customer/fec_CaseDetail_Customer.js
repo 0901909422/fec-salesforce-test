@@ -454,7 +454,10 @@ export default class Fec_CaseDetail_Customer extends LightningElement {
           pointsRedemptionNocSel.subCodeId
         );
       } else {
-        caseBusinessEle.getData();
+        // Chờ fec_CaseEditNOC publish Updated NOC (CASE_NOC) rồi mới reload master data
+        queueMicrotask(() => {
+          caseBusinessEle.reloadDataPreservingNoc();
+        });
       }
     }
   }

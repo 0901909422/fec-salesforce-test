@@ -9,9 +9,19 @@ public with sharing class FEC_GetServiceCases {
         FEC_ConstantCommon.CASE_STATUS_RESOLVED_CANNOT_CONTACT_CUSTOMER
     };
 
+    public class CustomerFilterContext {
+        public String accountNumber;
+        public String contractNumber;
+        public String nationalId;
+    }
+
     @AuraEnabled
-    public static List<PendingCaseRow> getPendingServiceCases() {
+    public static List<PendingCaseRow> getPendingServiceCases(Id recordId) {
         if (!Schema.sObjectType.Case.isAccessible()) {
+            return new List<PendingCaseRow>();
+        }
+        CustomerFilterContext filterCtx = resolveCustomerFilterContext(recordId);
+        if (filterCtx == null) {
             return new List<PendingCaseRow>();
         }
         List<String> rtNames = new List<String>{
@@ -19,6 +29,9 @@ public with sharing class FEC_GetServiceCases {
             FEC_ConstantCommon.CASE_INTERNAL_RECORD_TYPE_DEV_NAME
         };
         List<String> resolvedStatuses = RESOLVED_SERVICE_CASE_STATUSES;
+        String filterAccountNumber = filterCtx.accountNumber;
+        String filterContractNumber = filterCtx.contractNumber;
+        String filterNationalId = filterCtx.nationalId;
         String soql =
             'SELECT Id, FEC_ID_Search__c, FEC_Case_Status__c, ' +
             'FEC_Account_or_Contract__r.FEC_Account_Number__c, FEC_Product_Type__c, FEC_Product_Type__r.Name, ' +
@@ -29,8 +42,9 @@ public with sharing class FEC_GetServiceCases {
             'FEC_Last_Updated_On_View__c, FEC_Last_Updated_By_View__c ' +
             'FROM Case ' +
             'WHERE RecordType.DeveloperName IN :rtNames AND IsClosed = false ' +
-            'AND (FEC_Case_Status__c = null OR FEC_Case_Status__c NOT IN :resolvedStatuses) ' +
-            'ORDER BY FEC_Case_Created_On__c DESC NULLS LAST';
+            'AND (FEC_Case_Status__c = null OR FEC_Case_Status__c NOT IN :resolvedStatuses) ';
+        soql += buildCustomerFilterClause(filterCtx, filterAccountNumber, filterContractNumber, filterNationalId);
+        soql += 'ORDER BY FEC_Case_Created_On__c DESC NULLS LAST';
         List<Case> cases = new List<Case>();
         try {
             cases = Database.query(soql);
@@ -70,8 +84,12 @@ public with sharing class FEC_GetServiceCases {
     }
 
     @AuraEnabled
-    public static List<ClosedCaseRow> getClosedServiceCases() {
+    public static List<ClosedCaseRow> getClosedServiceCases(Id recordId) {
         if (!Schema.sObjectType.Case.isAccessible()) {
+            return new List<ClosedCaseRow>();
+        }
+        CustomerFilterContext filterCtx = resolveCustomerFilterContext(recordId);
+        if (filterCtx == null) {
             return new List<ClosedCaseRow>();
         }
         List<String> rtNames = new List<String>{
@@ -79,6 +97,9 @@ public with sharing class FEC_GetServiceCases {
             FEC_ConstantCommon.CASE_INTERNAL_RECORD_TYPE_DEV_NAME
         };
         List<String> resolvedStatuses = RESOLVED_SERVICE_CASE_STATUSES;
+        String filterAccountNumber = filterCtx.accountNumber;
+        String filterContractNumber = filterCtx.contractNumber;
+        String filterNationalId = filterCtx.nationalId;
         //DateTime archiveThreshold = DateTime.now().addMonths(-3);
         String soql =
             'SELECT Id, FEC_ID_Search__c, FEC_Case_Status__c, ' +
@@ -89,9 +110,10 @@ public with sharing class FEC_GetServiceCases {
             'FEC_Case_Created_On__c, FEC_Case_Created_By__c, ' +
             'FEC_Last_Updated_On_View__c, FEC_Last_Updated_By_View__c ' +
             'FROM Case ' +
-            'WHERE RecordType.DeveloperName IN :rtNames AND FEC_Case_Status__c IN :resolvedStatuses ' +
-            //'AND (ClosedDate = null OR ClosedDate >= :archiveThreshold) ' +
-            'ORDER BY FEC_Case_Created_On__c DESC NULLS LAST';
+            'WHERE RecordType.DeveloperName IN :rtNames AND FEC_Case_Status__c IN :resolvedStatuses ';
+        soql += buildCustomerFilterClause(filterCtx, filterAccountNumber, filterContractNumber, filterNationalId);
+        //'AND (ClosedDate = null OR ClosedDate >= :archiveThreshold) ' +
+        soql += 'ORDER BY FEC_Case_Created_On__c DESC NULLS LAST';
         List<Case> cases = new List<Case>();
         try {
             cases = Database.query(soql);
@@ -133,6 +155,113 @@ public with sharing class FEC_GetServiceCases {
     @AuraEnabled(cacheable=true)
     public static Map<String, String> getCaseFieldHelpTexts() {
         return FEC_CommonUltils.buildHelpTextMap(Case.SObjectType);
+    }
+
+    @TestVisible
+    public static CustomerFilterContext resolveCustomerFilterContext(Id recordId) {
+        if (recordId == null) {
+            return null;
+        }
+        List<Case> ctxCases = [
+            SELECT FEC_Account_Number__c,
+                   FEC_Contract_Number__c,
+                   FEC_National_ID_Passport_ID__c,
+                   FEC_Product_Type__r.FEC_Code__c,
+                   FEC_Product_Type__r.Name,
+                   FEC_Account_or_Contract__r.FEC_Account_Number__c,
+                   FEC_Account_or_Contract__r.FEC_Contract_Number__c,
+                   FEC_Account_or_Contract__r.FEC_National_ID_Passport_ID__c
+            FROM Case
+            WHERE Id = :recordId
+            LIMIT 1
+        ];
+        if (ctxCases.isEmpty()) {
+            return null;
+        }
+        Case ctx = ctxCases[0];
+        String accountNumber = String.isNotBlank(ctx.FEC_Account_Number__c)
+            ? ctx.FEC_Account_Number__c
+            : (ctx.FEC_Account_or_Contract__r != null ? ctx.FEC_Account_or_Contract__r.FEC_Account_Number__c : null);
+        String contractNumber = String.isNotBlank(ctx.FEC_Contract_Number__c)
+            ? ctx.FEC_Contract_Number__c
+            : (ctx.FEC_Account_or_Contract__r != null ? ctx.FEC_Account_or_Contract__r.FEC_Contract_Number__c : null);
+        String nationalId = String.isNotBlank(ctx.FEC_National_ID_Passport_ID__c)
+            ? ctx.FEC_National_ID_Passport_ID__c
+            : (ctx.FEC_Account_or_Contract__r != null ? ctx.FEC_Account_or_Contract__r.FEC_National_ID_Passport_ID__c : null);
+
+        CustomerFilterContext result = new CustomerFilterContext();
+        if (isCardProductType(ctx)) {
+            if (String.isNotBlank(accountNumber)) {
+                result.accountNumber = accountNumber;
+            } else if (String.isNotBlank(nationalId)) {
+                result.nationalId = nationalId;
+            } else {
+                return null;
+            }
+        } else if (isLoanProductType(ctx)) {
+            if (String.isNotBlank(contractNumber)) {
+                result.contractNumber = contractNumber;
+            } else if (String.isNotBlank(nationalId)) {
+                result.nationalId = nationalId;
+            } else {
+                return null;
+            }
+        } else if (String.isNotBlank(nationalId)) {
+            result.nationalId = nationalId;
+        } else {
+            return null;
+        }
+        return result;
+    }
+
+    @TestVisible
+    public static String buildCustomerFilterClause(
+        CustomerFilterContext filterCtx,
+        String filterAccountNumber,
+        String filterContractNumber,
+        String filterNationalId
+    ) {
+        if (filterCtx == null) {
+            return 'AND Id = null ';
+        }
+        if (String.isNotBlank(filterAccountNumber)) {
+            return 'AND (FEC_Account_Number__c = :filterAccountNumber ' +
+                'OR FEC_Account_or_Contract__r.FEC_Account_Number__c = :filterAccountNumber ' +
+                'OR FEC_Account_Contract_Number_Text__c = :filterAccountNumber) ';
+        }
+        if (String.isNotBlank(filterContractNumber)) {
+            return 'AND (FEC_Contract_Number__c = :filterContractNumber ' +
+                'OR FEC_Account_or_Contract__r.FEC_Contract_Number__c = :filterContractNumber ' +
+                'OR FEC_Account_Contract_Number_Text__c = :filterContractNumber) ';
+        }
+        if (String.isNotBlank(filterNationalId)) {
+            return 'AND (FEC_National_ID_Passport_ID__c = :filterNationalId ' +
+                'OR FEC_Account_or_Contract__r.FEC_National_ID_Passport_ID__c = :filterNationalId) ';
+        }
+        return 'AND Id = null ';
+    }
+
+    private static Boolean isCardProductType(Case ctx) {
+        return matchesProductType(ctx, FEC_ConstantCommon.PRODUCT_TYPE_CARD)
+            || matchesProductType(ctx, FEC_ConstantCommon.PRODUCT_TYPE_CARD_CASE);
+    }
+
+    private static Boolean isLoanProductType(Case ctx) {
+        return matchesProductType(ctx, FEC_ConstantCommon.PRODUCT_TYPE_LOAN)
+            || matchesProductType(ctx, FEC_ConstantCommon.PRODUCT_TYPE_LOAN_CASE)
+            || matchesProductType(ctx, FEC_ConstantCommon.PRODUCT_TYPE_INSURANCE)
+            || matchesProductType(ctx, FEC_ConstantCommon.PRODUCT_TYPE_INSURANCE_CASE);
+    }
+
+    private static Boolean matchesProductType(Case ctx, String productTypeValue) {
+        if (ctx == null || ctx.FEC_Product_Type__r == null || String.isBlank(productTypeValue)) {
+            return false;
+        }
+        String code = ctx.FEC_Product_Type__r.FEC_Code__c;
+        String name = ctx.FEC_Product_Type__r.Name;
+        String expected = productTypeValue.toLowerCase();
+        return (String.isNotBlank(code) && code.toLowerCase() == expected)
+            || (String.isNotBlank(name) && name.toLowerCase() == expected);
     }
 
     public class PendingCaseRow {

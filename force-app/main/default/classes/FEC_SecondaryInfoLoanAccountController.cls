@@ -1,8 +1,16 @@
+/** Controller LWC fec_SecondaryInfoLoanAccount. Hiển thị từ API; ghi FEC_Customer_History__c sau khi API thành công. */
 public without sharing class FEC_SecondaryInfoLoanAccountController {
 
-    private class LoanBasicSyncOutcome {
-        public Boolean hasUpdate;
-        public String applicationId;
+    private class SecondaryLoanContext {
+        Id customerHistoryId;
+        String contractNumber;
+        String applicationId;
+    }
+
+    private class ApiBundle {
+        FEC_GetLoanBasicInfo.ResponseWrapper loanBasic;
+        FEC_GetLoanSecInfo.ResponseWrapper loanSec;
+        FEC_GetCustomerSaleDisburseInfoCallout.CustomerSaleDisburseInfoResponse saleDisburse;
     }
 
     /* ===================== LOAD DISBURSEMENT (INIT SCREEN) ===================== */
@@ -14,388 +22,351 @@ public without sharing class FEC_SecondaryInfoLoanAccountController {
 
     @AuraEnabled(cacheable=false)
     public static Map<String, Object> loadSecondaryLoanDisbursement(Id caseId) {
-        Case c = loadValidatedCase(caseId);
-        Id historyId = c.FEC_Account_or_Contract__c;
-        String contractNumber = getContractNumber(historyId);
+        SecondaryLoanContext ctx = resolveContext(caseId);
+        ApiBundle bundle = new ApiBundle();
 
-        FEC_Customer_History__c upd = new FEC_Customer_History__c(Id = historyId);
-        Boolean hasUpdate = false;
-
-        LoanBasicSyncOutcome lb = new LoanBasicSyncOutcome();
+        FEC_CommonUltils.beginDeferredApiLogging();
         try {
-            lb = runLoanBasicSync(contractNumber, upd);
-            hasUpdate |= lb.hasUpdate;
-        } catch (Exception e) {
-            System.debug('### LOAN API ERROR (SecondaryInfo Disbursement): ' + e.getMessage());
+            String applicationId = resolveApplicationId(ctx, bundle, true);
+            bundle.saleDisburse = callSaleDisburseRequired(applicationId);
+        } finally {
+            FEC_CommonUltils.flushDeferredApiLogs();
         }
 
-        try {
-            hasUpdate |= syncSaleDisburseApis(lb.applicationId, upd);
-        } catch (Exception e) {
-            System.debug('### SALE API ERROR (SecondaryInfo Disbursement): ' + e.getMessage());
-        }
-
-        if (hasUpdate) {
-            update upd;
-        }
-
-        return mapToDisbursementResult(loadHistoryRecord(historyId));
+        saveApiDataToCustomerHistory(ctx.customerHistoryId, bundle);
+        return mapDisbursementResult(bundle);
     }
 
     /* ===================== LAZY: COLLECTIONS ===================== */
 
     @AuraEnabled(cacheable=false)
     public static Map<String, Object> loadSecondaryLoanCollections(Id caseId) {
-        Case c = loadValidatedCase(caseId);
-        Id historyId = c.FEC_Account_or_Contract__c;
-        String contractNumber = getContractNumber(historyId);
-
-        if (String.isBlank(contractNumber)) {
+        SecondaryLoanContext ctx = resolveContext(caseId);
+        if (String.isBlank(ctx.contractNumber)) {
             throw new AuraHandledException(System.Label.FEC_MSG_Error_API_Label);
         }
 
-        // Một callout (Sec) — tránh hai callout liên tiếp gây lỗi uncommitted work; đơn vị thu hồi đã sync ở Disbursement.
-        FEC_Customer_History__c upd = new FEC_Customer_History__c(Id = historyId);
-        Boolean hasUpdate = false;
-
+        ApiBundle bundle = new ApiBundle();
+        FEC_CommonUltils.beginDeferredApiLogging();
         try {
-            hasUpdate = syncLoanSecApis(contractNumber, upd);
-        } catch (AuraHandledException e) {
-            throw e;
-        } catch (Exception e) {
-            System.debug('### LOAN SEC API ERROR (SecondaryInfo Collections): ' + e.getMessage());
-            throw new AuraHandledException(System.Label.FEC_MSG_Error_API_Label);
+            bundle.loanBasic = callLoanBasicRequired(ctx.contractNumber);
+            bundle.loanSec = callLoanSecRequired(ctx.contractNumber);
+        } finally {
+            FEC_CommonUltils.flushDeferredApiLogs();
         }
 
-        if (hasUpdate) {
-            update upd;
-        }
-
-        return mapToCollectionsResult(loadHistoryRecord(historyId));
+        saveApiDataToCustomerHistory(ctx.customerHistoryId, bundle);
+        return mapCollectionsResult(bundle);
     }
 
     /* ===================== LAZY: SALES ===================== */
 
     @AuraEnabled(cacheable=false)
     public static Map<String, Object> loadSecondaryLoanSales(Id caseId) {
-        Case c = loadValidatedCase(caseId);
-        Id historyId = c.FEC_Account_or_Contract__c;
-        String contractNumber = getContractNumber(historyId);
+        SecondaryLoanContext ctx = resolveContext(caseId);
+        ApiBundle bundle = new ApiBundle();
 
-        FEC_Customer_History__c upd = new FEC_Customer_History__c(Id = historyId);
-        Boolean hasUpdate = false;
-        LoanBasicSyncOutcome lb = new LoanBasicSyncOutcome();
-
-        FEC_Customer_History__c rowForApp = [
-            SELECT FEC_Application_ID__c
-            FROM FEC_Customer_History__c
-            WHERE Id = :historyId
-            LIMIT 1
-        ];
-        String applicationId = rowForApp.FEC_Application_ID__c;
-
-        if (String.isBlank(applicationId) && String.isNotBlank(contractNumber)) {
-            try {
-                lb = runLoanBasicSync(contractNumber, upd);
-                hasUpdate |= lb.hasUpdate;
-                applicationId = lb.applicationId;
-            } catch (AuraHandledException e) {
-                throw e;
-            } catch (Exception e) {
-                System.debug('### LOAN API ERROR (SecondaryInfo Sales): ' + e.getMessage());
-                throw new AuraHandledException(System.Label.FEC_MSG_Error_API_Label);
-            }
-        }
-
-        if (String.isBlank(applicationId)) {
-            throw new AuraHandledException(System.Label.FEC_MSG_Error_API_Label);
-        }
-
+        FEC_CommonUltils.beginDeferredApiLogging();
         try {
-            hasUpdate |= syncSaleDisburseApis(applicationId, upd);
-        } catch (AuraHandledException e) {
-            throw e;
-        } catch (Exception e) {
-            System.debug('### SALE API ERROR (SecondaryInfo Sales): ' + e.getMessage());
-            throw new AuraHandledException(System.Label.FEC_MSG_Error_API_Label);
+            String applicationId = resolveApplicationId(ctx, bundle, true);
+            bundle.saleDisburse = callSaleDisburseRequired(applicationId);
+        } finally {
+            FEC_CommonUltils.flushDeferredApiLogs();
         }
 
-        if (hasUpdate) {
-            update upd;
-        }
-
-        return mapToSalesResult(loadHistoryRecord(historyId));
+        saveApiDataToCustomerHistory(ctx.customerHistoryId, bundle);
+        return mapSalesResult(bundle);
     }
 
     /* ===================== REFRESH BUTTON ===================== */
 
     @AuraEnabled(cacheable=false)
     public static Map<String, Object> refreshSecondaryLoanInfo(Id caseId) {
-        Case c = loadValidatedCase(caseId);
-        if (c.FEC_Account_or_Contract__c == null) {
-            throw new AuraHandledException(System.Label.FEC_MSG_Not_Account_Linked);
+        SecondaryLoanContext ctx = resolveContext(caseId);
+        if (String.isBlank(ctx.contractNumber)) {
+            throw new AuraHandledException(System.Label.FEC_MSG_Error_API_Label);
         }
 
+        ApiBundle bundle = new ApiBundle();
+        FEC_CommonUltils.beginDeferredApiLogging();
         try {
-            syncFromApi(c);
-        } catch (Exception e) {
-            System.debug('### SecondaryInfo refresh syncFromApi ERROR: ' + e.getStackTraceString());
+            bundle.loanBasic = callLoanBasicRequired(ctx.contractNumber);
+            bundle.loanSec = callLoanSecRequired(ctx.contractNumber);
+            String applicationId = resolveApplicationIdFromBundle(ctx, bundle);
+            if (String.isNotBlank(applicationId)) {
+                bundle.saleDisburse = callSaleDisburseRequired(applicationId);
+            }
+        } finally {
+            FEC_CommonUltils.flushDeferredApiLogs();
         }
-        return mapToFullResult(loadHistoryRecord(c.FEC_Account_or_Contract__c));
+
+        saveApiDataToCustomerHistory(ctx.customerHistoryId, bundle);
+        return mapFullResult(bundle);
     }
 
-    /* ===================== CALL API & UPDATE DB (FULL) ===================== */
+    /* ===================== CONTEXT & API CALLS ===================== */
 
-    private static void syncFromApi(Case c) {
-        Id historyId = c.FEC_Account_or_Contract__c;
-
-        String contractNumber = getContractNumber(historyId);
-
-        FEC_Customer_History__c upd = new FEC_Customer_History__c(Id = historyId);
-        Boolean hasUpdate = false;
-
-        LoanBasicSyncOutcome lb = new LoanBasicSyncOutcome();
-        try {
-            lb = runLoanBasicSync(contractNumber, upd);
-            hasUpdate |= lb.hasUpdate;
-        } catch (Exception e) {
-            System.debug('### LOAN API ERROR (SecondaryInfo): ' + e.getMessage());
-        }
-
-        try {
-            hasUpdate |= syncLoanSecApis(contractNumber, upd);
-        } catch (Exception e) {
-            System.debug('### LOAN SEC API ERROR (SecondaryInfo): ' + e.getMessage());
-        }
-
-        try {
-            hasUpdate |= syncSaleDisburseApis(lb.applicationId, upd);
-        } catch (Exception e) {
-            System.debug('### SALE API ERROR (SecondaryInfo): ' + e.getMessage());
-        }
-
-        if (hasUpdate) {
-            update upd;
-        }
-    }
-
-    private static LoanBasicSyncOutcome runLoanBasicSync(
-        String contractNumber,
-        FEC_Customer_History__c upd
-    ) {
-        LoanBasicSyncOutcome r = new LoanBasicSyncOutcome();
-        r.hasUpdate = false;
-        r.applicationId = null;
-
-        if (String.isBlank(contractNumber)) {
-            return r;
-        }
-
-        FEC_GetLoanBasicInfo.ResponseWrapper loanRes =
-            FEC_GetLoanBasicInfo.callGetLoanBasicInfo(
-                FEC_CommonUltils.generateTransactionId(),
-                FEC_ConstantCommon.REQUESTOR_CRM,
-                Datetime.now().formatGMT(FEC_ConstantCommon.DATETIME_FORMAT),
-                contractNumber
-            );
-
-        if (loanRes?.LoanBasicInfo?.PassDue != null) {
-            upd.FEC_Responsible_Unit__c = loanRes.LoanBasicInfo.PassDue.ResponsibleUnit;
-            r.hasUpdate = true;
-        }
-
-        if (loanRes?.LoanBasicInfo?.Loan != null) {
-            r.applicationId = loanRes.LoanBasicInfo.Loan.ApplicationID;
-            upd.FEC_Application_ID__c = r.applicationId;
-            r.hasUpdate = true;
-        }
-
-        return r;
-    }
-
-    private static Boolean syncLoanSecApis(String contractNumber, FEC_Customer_History__c upd) {
-        Boolean hasUpdate = false;
-        if (String.isBlank(contractNumber)) {
-            return false;
-        }
-
-        FEC_GetLoanSecInfo.ResponseWrapper secRes =
-            FEC_GetLoanSecInfo.callGetLoanSecInfo(
-                FEC_CommonUltils.generateTransactionId(),
-                FEC_ConstantCommon.REQUESTOR_CRM,
-                Datetime.now().formatGMT(FEC_ConstantCommon.DATETIME_FORMAT),
-                contractNumber
-            );
-
-        if (secRes?.LoanSecInfo?.PassDue != null) {
-            upd.FEC_Responsible_Person__c = secRes.LoanSecInfo.PassDue.ResponsiblePerson;
-            upd.FEC_Date_Assigned__c = secRes.LoanSecInfo.PassDue.DateAssigned;
-            hasUpdate = true;
-        }
-
-        return hasUpdate;
-    }
-
-    private static Boolean syncSaleDisburseApis(String applicationId, FEC_Customer_History__c upd) {
-        Boolean hasUpdate = false;
-        if (String.isBlank(applicationId)) {
-            return false;
-        }
-
-        FEC_GetCustomerSaleDisburseInfoCallout.CustomerSaleDisburseInfoResponse saleRes =
-            FEC_GetCustomerSaleDisburseInfoCallout.getCustomerSaleDisburseInfo(applicationId);
-
-        if (saleRes != null && saleRes.CustomerSaleInfos != null && !saleRes.CustomerSaleInfos.isEmpty()) {
-            FEC_GetCustomerSaleDisburseInfoCallout.CustomerSaleInfo s = saleRes.CustomerSaleInfos[0];
-
-            upd.FEC_CC_Code__c = s.CC_CODE;
-            upd.FEC_CC_Name__c = s.CC_NAME;
-            upd.FEC_DSA_Code__c = s.DSA_CODE;
-            upd.FEC_DSA_Name__c = s.DSA_NAME;
-            upd.FEC_TSA_Code__c = s.TSA_CODE;
-            upd.FEC_TSA_Name__c = s.TSA_NAME;
-            upd.FEC_Bank_Name__c = s.BANK_NAME;
-            upd.FEC_Branch_Name__c = s.BRANCH_NAME;
-            upd.FEC_Account_Number__c = s.BANK_ACCOUNT_NUMBER;
-            upd.FEC_Disbursement_Channel__c = s.DISB_CHANNEL;
-            upd.FEC_Disbursement_Date__c = FEC_CommonUltils.parseDate(s.DATE_STATUS);
-            upd.FEC_Is_Top_Up_Account__c = s.TOPUP_FLAG;
-            upd.FEC_Top_Up_Loan_Amount_Requested__c = s.TOP_UP_LOAN_AMT;
-            upd.FEC_Top_Up_Old_A_c_Outstanding__c = s.TOP_UP_OLD_AC_OUSTANDING;
-            upd.FEC_Top_Up_Old_Account_App_ID__c = s.TOP_UP_AGREEMENT_ID;
-
-            hasUpdate = true;
-        }
-
-        return hasUpdate;
-    }
-
-    /* ===================== QUERY HELPERS ===================== */
-
-    private static Case loadValidatedCase(Id caseId) {
+    /** Chỉ lấy Id + số HĐ/Application từ Case lookup — không load field hiển thị từ DB. */
+    private static SecondaryLoanContext resolveContext(Id caseId) {
         if (caseId == null) {
             throw new AuraHandledException(
                 String.format(System.Label.FEC_MSG_Param_Required, new List<String>{ 'Case Id' })
             );
         }
 
-        Case c = [
-            SELECT FEC_Account_or_Contract__c
+        List<Case> cases = [
+            SELECT FEC_Account_or_Contract__c,
+                   FEC_Account_or_Contract__r.FEC_Contract_Number__c,
+                   FEC_Account_or_Contract__r.FEC_Application_ID__c
             FROM Case
             WHERE Id = :caseId
             LIMIT 1
         ];
 
-        if (c.FEC_Account_or_Contract__c == null) {
+        if (cases.isEmpty() || cases[0].FEC_Account_or_Contract__c == null) {
             throw new AuraHandledException(System.Label.FEC_MSG_Not_Account_Linked);
         }
 
-        return c;
+        Case c = cases[0];
+        SecondaryLoanContext ctx = new SecondaryLoanContext();
+        ctx.customerHistoryId = c.FEC_Account_or_Contract__c;
+        ctx.contractNumber = c.FEC_Account_or_Contract__r.FEC_Contract_Number__c;
+        ctx.applicationId = c.FEC_Account_or_Contract__r.FEC_Application_ID__c;
+        return ctx;
     }
 
-    private static String getContractNumber(Id historyId) {
-        List<FEC_Customer_History__c> historyList = [
-            SELECT FEC_Contract_Number__c
-            FROM FEC_Customer_History__c
-            WHERE Id = :historyId
-            LIMIT 1
-        ];
+    private static String resolveApplicationId(
+        SecondaryLoanContext ctx,
+        ApiBundle bundle,
+        Boolean required
+    ) {
+        String applicationId = ctx.applicationId;
 
-        if (historyList.isEmpty() || historyList[0] == null) {
-            return null;
+        if (String.isBlank(applicationId) && String.isNotBlank(ctx.contractNumber)) {
+            bundle.loanBasic = callLoanBasicRequired(ctx.contractNumber);
+            applicationId = bundle.loanBasic?.LoanBasicInfo?.Loan?.ApplicationID;
         }
-        return historyList[0].FEC_Contract_Number__c;
+
+        if (required && String.isBlank(applicationId)) {
+            throw new AuraHandledException(System.Label.FEC_MSG_Error_API_Label);
+        }
+        return applicationId;
     }
 
-    private static FEC_Customer_History__c loadHistoryRecord(Id historyId) {
-        return [
-            SELECT
-                FEC_Responsible_Unit__c,
-                FEC_Responsible_Person__c,
-                FEC_CC_Code__c,
-                FEC_CC_Name__c,
-                FEC_DSA_Code__c,
-                FEC_DSA_Name__c,
-                FEC_TSA_Code__c,
-                FEC_TSA_Name__c,
-                FEC_Bank_Name__c,
-                FEC_Branch_Name__c,
-                FEC_Account_Number__c,
-                FEC_Disbursement_Channel__c,
-                FEC_Disbursement_Date__c,
-                FEC_Is_Top_Up_Account__c,
-                FEC_Top_Up_Loan_Amount_Requested__c,
-                FEC_Top_Up_Old_A_c_Outstanding__c,
-                FEC_Top_Up_Old_Account_App_ID__c,
-                FEC_Date_Assigned__c
-            FROM FEC_Customer_History__c
-            WHERE Id = :historyId
-            LIMIT 1
-        ];
+    private static String resolveApplicationIdFromBundle(SecondaryLoanContext ctx, ApiBundle bundle) {
+        String applicationId = bundle.loanBasic?.LoanBasicInfo?.Loan?.ApplicationID;
+        return String.isNotBlank(applicationId) ? applicationId : ctx.applicationId;
     }
 
-    /* ===================== MAP RECORD → RESULT SLICES ===================== */
+    private static FEC_GetLoanBasicInfo.ResponseWrapper callLoanBasicRequired(String contractNumber) {
+        try {
+            FEC_GetLoanBasicInfo.ResponseWrapper res = FEC_GetLoanBasicInfo.callGetLoanBasicInfo(
+                FEC_CommonUltils.generateTransactionId(),
+                FEC_ConstantCommon.REQUESTOR_CRM,
+                Datetime.now().formatGMT(FEC_ConstantCommon.DATETIME_FORMAT),
+                contractNumber
+            );
+            if (res?.LoanBasicInfo == null) {
+                throw new AuraHandledException(
+                    String.format(System.Label.FEC_MSG_API_Error, new List<String>{ 'LoanBasicInfo' })
+                );
+            }
+            return res;
+        } catch (AuraHandledException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new AuraHandledException(
+                String.format(System.Label.FEC_MSG_API_Error, new List<String>{ e.getMessage() })
+            );
+        } finally {
+            FEC_GetLoanBasicInfo.logApiResponse();
+        }
+    }
 
-    private static Map<String, Object> mapToFullResult(FEC_Customer_History__c a) {
+    private static FEC_GetLoanSecInfo.ResponseWrapper callLoanSecRequired(String contractNumber) {
+        try {
+            FEC_GetLoanSecInfo.ResponseWrapper res = FEC_GetLoanSecInfo.callGetLoanSecInfo(
+                FEC_CommonUltils.generateTransactionId(),
+                FEC_ConstantCommon.REQUESTOR_CRM,
+                Datetime.now().formatGMT(FEC_ConstantCommon.DATETIME_FORMAT),
+                contractNumber
+            );
+            if (res?.LoanSecInfo == null) {
+                throw new AuraHandledException(
+                    String.format(System.Label.FEC_MSG_API_Error, new List<String>{ 'LoanSecInfo' })
+                );
+            }
+            return res;
+        } catch (AuraHandledException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new AuraHandledException(System.Label.FEC_MSG_Error_API_Label);
+        }
+    }
+
+    private static FEC_GetCustomerSaleDisburseInfoCallout.CustomerSaleDisburseInfoResponse callSaleDisburseRequired(
+        String applicationId
+    ) {
+        if (String.isBlank(applicationId)) {
+            throw new AuraHandledException(System.Label.FEC_MSG_Error_API_Label);
+        }
+
+        FEC_GetCustomerSaleDisburseInfoCallout.CustomerSaleDisburseInfoResponse saleRes =
+            FEC_GetCustomerSaleDisburseInfoCallout.getCustomerSaleDisburseInfo(applicationId);
+
+        if (!FEC_GetCustomerSaleDisburseInfoCallout.isSuccess(saleRes)
+            || FEC_GetCustomerSaleDisburseInfoCallout.getFirstSaleInfo(saleRes) == null) {
+            String err = saleRes?.errorMessage;
+            if (String.isBlank(err) && saleRes?.Sys != null) {
+                err = saleRes.Sys.Description;
+            }
+            if (String.isBlank(err)) {
+                err = 'CustomerSaleDisburseInfo';
+            }
+            throw new AuraHandledException(
+                String.format(System.Label.FEC_MSG_API_Error, new List<String>{ err })
+            );
+        }
+        return saleRes;
+    }
+
+    /* ===================== SAVE API → DB ===================== */
+
+    private static void saveApiDataToCustomerHistory(Id customerHistoryId, ApiBundle bundle) {
+        if (customerHistoryId == null || bundle == null) {
+            return;
+        }
+
+        FEC_Customer_History__c rec = new FEC_Customer_History__c(Id = customerHistoryId);
+        Boolean hasUpdate = false;
+
+        if (bundle.loanBasic?.LoanBasicInfo != null) {
+            if (bundle.loanBasic.LoanBasicInfo.PassDue != null) {
+                rec.FEC_Responsible_Unit__c = bundle.loanBasic.LoanBasicInfo.PassDue.ResponsibleUnit;
+                hasUpdate = true;
+            }
+            if (bundle.loanBasic.LoanBasicInfo.Loan != null
+                && String.isNotBlank(bundle.loanBasic.LoanBasicInfo.Loan.ApplicationID)) {
+                rec.FEC_Application_ID__c = bundle.loanBasic.LoanBasicInfo.Loan.ApplicationID;
+                hasUpdate = true;
+            }
+        }
+
+        if (bundle.loanSec?.LoanSecInfo?.PassDue != null) {
+            FEC_GetLoanSecInfo.PassDue passDue = bundle.loanSec.LoanSecInfo.PassDue;
+            rec.FEC_Responsible_Person__c = passDue.ResponsiblePerson;
+            rec.FEC_Date_Assigned__c = passDue.DateAssigned;
+            hasUpdate = true;
+        }
+
+        FEC_GetCustomerSaleDisburseInfoCallout.CustomerSaleInfo saleInfo =
+            FEC_GetCustomerSaleDisburseInfoCallout.getFirstSaleInfo(bundle.saleDisburse);
+        if (saleInfo != null) {
+            rec.FEC_CC_Code__c = saleInfo.CC_CODE;
+            rec.FEC_CC_Name__c = saleInfo.CC_NAME;
+            rec.FEC_DSA_Code__c = saleInfo.DSA_CODE;
+            rec.FEC_DSA_Name__c = saleInfo.DSA_NAME;
+            rec.FEC_TSA_Code__c = saleInfo.TSA_CODE;
+            rec.FEC_TSA_Name__c = saleInfo.TSA_NAME;
+            rec.FEC_Bank_Name__c = saleInfo.BANK_NAME;
+            rec.FEC_Branch_Name__c = saleInfo.BRANCH_NAME;
+            rec.FEC_Account_Number__c = saleInfo.BANK_ACCOUNT_NUMBER;
+            rec.FEC_Disbursement_Channel__c = saleInfo.DISB_CHANNEL;
+            rec.FEC_Disbursement_Date__c = FEC_CommonUltils.parseDate(saleInfo.DATE_STATUS);
+            rec.FEC_Is_Top_Up_Account__c = saleInfo.TOPUP_FLAG;
+            rec.FEC_Top_Up_Loan_Amount_Requested__c = saleInfo.TOP_UP_LOAN_AMT;
+            rec.FEC_Top_Up_Old_A_c_Outstanding__c = saleInfo.TOP_UP_OLD_AC_OUSTANDING;
+            rec.FEC_Top_Up_Old_Account_App_ID__c = saleInfo.TOP_UP_AGREEMENT_ID;
+            hasUpdate = true;
+        }
+
+        if (hasUpdate) {
+            update rec;
+        }
+    }
+
+    /* ===================== MAP API → RESULT SLICES ===================== */
+
+    private static Map<String, Object> mapFullResult(ApiBundle bundle) {
         Map<String, Object> result = new Map<String, Object>();
-        putDisbursementFields(result, a);
-        putCollectionsFields(result, a);
-        putSalesFields(result, a);
+        putDisbursementFieldsFromApi(result, bundle);
+        putCollectionsFieldsFromApi(result, bundle);
+        putSalesFieldsFromApi(result, bundle);
         result.put('helpTexts', FEC_CommonUltils.buildHelpTextMap(FEC_Customer_History__c.SObjectType));
         return result;
     }
 
-    private static Map<String, Object> mapToDisbursementResult(FEC_Customer_History__c a) {
+    private static Map<String, Object> mapDisbursementResult(ApiBundle bundle) {
         Map<String, Object> result = new Map<String, Object>();
-        putDisbursementFields(result, a);
+        putDisbursementFieldsFromApi(result, bundle);
         result.put('helpTexts', FEC_CommonUltils.buildHelpTextMap(FEC_Customer_History__c.SObjectType));
         return result;
     }
 
-    private static Map<String, Object> mapToCollectionsResult(FEC_Customer_History__c a) {
+    private static Map<String, Object> mapCollectionsResult(ApiBundle bundle) {
         Map<String, Object> result = new Map<String, Object>();
-        putCollectionsFields(result, a);
+        putCollectionsFieldsFromApi(result, bundle);
         result.put('helpTexts', FEC_CommonUltils.buildHelpTextMap(FEC_Customer_History__c.SObjectType));
         return result;
     }
 
-    private static Map<String, Object> mapToSalesResult(FEC_Customer_History__c a) {
+    private static Map<String, Object> mapSalesResult(ApiBundle bundle) {
         Map<String, Object> result = new Map<String, Object>();
-        /* Đồng bộ snapshot: Loan Basic + Sale có thể cập nhật nhiều nhóm trường trên cùng bản ghi. */
-        putDisbursementFields(result, a);
-        putCollectionsFields(result, a);
-        putSalesFields(result, a);
+        putDisbursementFieldsFromApi(result, bundle);
+        putCollectionsFieldsFromApi(result, bundle);
+        putSalesFieldsFromApi(result, bundle);
         result.put('helpTexts', FEC_CommonUltils.buildHelpTextMap(FEC_Customer_History__c.SObjectType));
         return result;
     }
 
-    private static void putDisbursementFields(Map<String, Object> result, FEC_Customer_History__c a) {
-        result.put('bankName', a.FEC_Bank_Name__c);
-        result.put('branchName', a.FEC_Branch_Name__c);
-        result.put('accountNumber', a.FEC_Account_Number__c);
-        result.put('disbursementChannel', a.FEC_Disbursement_Channel__c);
-        result.put('disbursementDate', FEC_CommonUltils.formatDateDDMMYYYY(a.FEC_Disbursement_Date__c));
+    private static void putDisbursementFieldsFromApi(Map<String, Object> result, ApiBundle bundle) {
+        FEC_GetCustomerSaleDisburseInfoCallout.CustomerSaleInfo s =
+            FEC_GetCustomerSaleDisburseInfoCallout.getFirstSaleInfo(bundle?.saleDisburse);
+        if (s == null) {
+            return;
+        }
+
+        result.put('bankName', s.BANK_NAME);
+        result.put('branchName', s.BRANCH_NAME);
+        result.put('accountNumber', s.BANK_ACCOUNT_NUMBER);
+        result.put('disbursementChannel', s.DISB_CHANNEL);
+        result.put('disbursementDate', FEC_CommonUltils.formatDateDDMMYYYY(FEC_CommonUltils.parseDate(s.DATE_STATUS)));
         result.put(
             'isTopUpAccount',
-            a.FEC_Is_Top_Up_Account__c == null ? null : (a.FEC_Is_Top_Up_Account__c == 'Y' ? 'Yes' : 'No')
+            s.TOPUP_FLAG == null ? null : (s.TOPUP_FLAG == 'Y' ? 'Yes' : 'No')
         );
-        result.put('topUpLoanAmountRequested', FEC_CommonUltils.formatCurrency(a.FEC_Top_Up_Loan_Amount_Requested__c, 2));
-        result.put('topUpOldAcOutstanding', FEC_CommonUltils.formatCurrency(a.FEC_Top_Up_Old_A_c_Outstanding__c, 2));
-        result.put('topUpOldAcAppId', a.FEC_Top_Up_Old_Account_App_ID__c);
+        result.put('topUpLoanAmountRequested', FEC_CommonUltils.formatCurrency(s.TOP_UP_LOAN_AMT, 2));
+        result.put('topUpOldAcOutstanding', FEC_CommonUltils.formatCurrency(s.TOP_UP_OLD_AC_OUSTANDING, 2));
+        result.put('topUpOldAcAppId', s.TOP_UP_AGREEMENT_ID);
     }
 
-    private static void putCollectionsFields(Map<String, Object> result, FEC_Customer_History__c a) {
-        result.put('responsibleUnit', a.FEC_Responsible_Unit__c);
-        result.put('responsiblePerson', a.FEC_Responsible_Person__c);
-        result.put('dateAssigned', a.FEC_Date_Assigned__c != null ? FEC_CommonUltils.formatDate(a.FEC_Date_Assigned__c) : '0');
+    private static void putCollectionsFieldsFromApi(Map<String, Object> result, ApiBundle bundle) {
+        if (bundle?.loanBasic?.LoanBasicInfo?.PassDue != null) {
+            result.put('responsibleUnit', bundle.loanBasic.LoanBasicInfo.PassDue.ResponsibleUnit);
+        }
+
+        if (bundle?.loanSec?.LoanSecInfo?.PassDue != null) {
+            FEC_GetLoanSecInfo.PassDue passDue = bundle.loanSec.LoanSecInfo.PassDue;
+            result.put('responsiblePerson', passDue.ResponsiblePerson);
+            result.put(
+                'dateAssigned',
+                passDue.DateAssigned != null ? FEC_CommonUltils.formatDate(passDue.DateAssigned) : '0'
+            );
+        }
     }
 
-    private static void putSalesFields(Map<String, Object> result, FEC_Customer_History__c a) {
-        result.put('ccCode', a.FEC_CC_Code__c);
-        result.put('ccName', a.FEC_CC_Name__c);
-        result.put('dsaCode', a.FEC_DSA_Code__c);
-        result.put('dsaName', a.FEC_DSA_Name__c);
-        result.put('tsaCode', a.FEC_TSA_Code__c);
-        result.put('tsaName', a.FEC_TSA_Name__c);
+    private static void putSalesFieldsFromApi(Map<String, Object> result, ApiBundle bundle) {
+        FEC_GetCustomerSaleDisburseInfoCallout.CustomerSaleInfo s =
+            FEC_GetCustomerSaleDisburseInfoCallout.getFirstSaleInfo(bundle?.saleDisburse);
+        if (s == null) {
+            return;
+        }
+
+        result.put('ccCode', s.CC_CODE);
+        result.put('ccName', s.CC_NAME);
+        result.put('dsaCode', s.DSA_CODE);
+        result.put('dsaName', s.DSA_NAME);
+        result.put('tsaCode', s.TSA_CODE);
+        result.put('tsaName', s.TSA_NAME);
     }
 }
