@@ -36,6 +36,7 @@ import FRAUD_FIELD_SYNC from "@salesforce/messageChannel/FEC_Fraud_Field_Sync__c
 import STAGE_NAME_FIELD from "@salesforce/schema/Case.FEC_Stage_Name__c";
 import CASE_CURRENT_STAGE_NAME_FIELD from "@salesforce/schema/Case.FEC_Current_Case_Stage__r.Name";
 import CASE_SELECTED_ADDRESS_FIELD from "@salesforce/schema/Case.FEC_Selected_Address__c";
+import CASE_STATUS_FIELD from "@salesforce/schema/Case.Status";
 import {
   mask,
   maskValue,
@@ -54,7 +55,7 @@ import {
 } from "c/fec_CommonUtils";
 import { collectAssignmentMasterFieldPayload } from "c/fec_AssignmentMasterFieldUtils";
 
-import { MASKING_TYPE_PHONE, MASKING_TYPE_PASSPORT, STR_EMPTY, ICON_HIDE, ICON_PREVIEW, INTERNAL_REQUEST, CASE_OBJECT_API_NAME, FIELD_CUSTOMER_PHONE_NUMBER, FIELD_RECEIVING_PHONE_NUMBER, FEC_FAST_CASH_STORAGE_MODAL_CONFIRMED_PREFIX, FEC_FAST_CASH_STORAGE_NOC_SELECTION_PREFIX, FEC_POINTS_REDEMPTION_STORAGE_NOC_SELECTION_PREFIX, isPointsRedemptionRedeemOkInStorage } from "c/fec_CommonConst";
+import { MASKING_TYPE_PHONE, MASKING_TYPE_PASSPORT, STR_EMPTY, ICON_HIDE, ICON_PREVIEW, INTERNAL_REQUEST, CASE_OBJECT_API_NAME, FIELD_CUSTOMER_PHONE_NUMBER, FIELD_RECEIVING_PHONE_NUMBER, FEC_FAST_CASH_STORAGE_MODAL_CONFIRMED_PREFIX, FEC_FAST_CASH_STORAGE_NOC_SELECTION_PREFIX, FEC_POINTS_REDEMPTION_STORAGE_NOC_SELECTION_PREFIX, isPointsRedemptionRedeemOkInStorage, OPEN_STATUS, NON_EXISTING_CUSTOMER_TYPE } from "c/fec_CommonConst";
 import FEC_MSG_UPDATED_INFO_NOT_UPDATED from "@salesforce/label/c.FEC_MSG_UPDATED_INFO_NOT_UPDATED";
 import FEC_MSG_Can_Not_Find_Next_Stage from "@salesforce/label/c.FEC_MSG_Can_Not_Find_Next_Stage";
 import FEC_Error_Title from "@salesforce/label/c.FEC_Error_Title";
@@ -339,6 +340,7 @@ const SECTION_NAME_CASE_INFORMATION = 'Case Information';
 const SUBSECTION_NAME_PROPERTY_INFO = 'Property Info';
 const SUBSECTION_NAME_UPDATED_INFO = 'Updated Info';
 const SUBSECTION_NAME_C360_INFO = 'C360 Info';
+const CASE_CUSTOMER_TYPE_NON_EXISTING = 'Non-Existing';
 //******************Start merge with Fraud********************* */
 // Field mapping: Case field → Fraud additional prop field (loaded from Apex)
 let CASE_TO_FRAUD_FIELD_MAP = {};
@@ -803,7 +805,26 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
     if (sectionName === SECTION_NAME_CASE_INFORMATION) {
       return this._isEdit || this._isCaseInformationEdit;
     }
+    if (sectionName === SECTION_NAME_ACCOUNT_INFORMATION) {
+      if (!this._isEdit) {
+        return false;
+      }
+      if (this._isNonExistingCustomerCase() && !this._isCaseStatusOpen()) {
+        return false;
+      }
+      return true;
+    }
     return this._isEdit;
+  }
+
+  _isNonExistingCustomerCase() {
+    const ct = this.business?.customerType;
+    return ct === CASE_CUSTOMER_TYPE_NON_EXISTING || ct === NON_EXISTING_CUSTOMER_TYPE;
+  }
+
+  _isCaseStatusOpen() {
+    const status = this._caseStatus ?? this.business?.caseStatus;
+    return status === OPEN_STATUS;
   }
 
   _isMrcRl05MasterDataFieldLocked(fieldApiName, subSectionName) {
@@ -884,6 +905,7 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
   /** FEC_Current_Case_Stage__r.Name — áp dụng/khóa RD Payment assessment → Team khi tên stage chứa PM. */
   _currentCaseStageName;
   _caseSelectedAddressId;
+  _caseStatus;
 
   @wire(getRecord, { recordId: USER_ID, fields: [USER_GROUP_FIELD] })
   wiredUser({ error, data }) {
@@ -897,7 +919,7 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
   // PhuongNT add get Case data + tên stage hiện tại (RD Payment assessment → Team khi Name chứa PM)
   @wire(getRecord, {
     recordId: "$recordId",
-    fields: [STAGE_NAME_FIELD, CASE_CURRENT_STAGE_NAME_FIELD, CASE_SELECTED_ADDRESS_FIELD],
+    fields: [STAGE_NAME_FIELD, CASE_CURRENT_STAGE_NAME_FIELD, CASE_SELECTED_ADDRESS_FIELD, CASE_STATUS_FIELD],
   })
   wiredCase({ error, data }) {
     if (data) {
@@ -907,6 +929,11 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
         CASE_CURRENT_STAGE_NAME_FIELD,
       );
       this._caseSelectedAddressId = getFieldValue(data, CASE_SELECTED_ADDRESS_FIELD);
+      this._caseStatus = getFieldValue(data, CASE_STATUS_FIELD);
+      if (this.business?.sectionlst) {
+        this._applyEditModeToBusiness();
+        this._updateDynCmpIsEditFlags();
+      }
     } else if (error) {
       console.error("Get Case record error:", error);
     }
@@ -3384,6 +3411,8 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
         this.handleSetUpdateFieldReadOnly();
 
         console.log("🚀 ~ Fec_CaseBussiness ~ getData ~ this.business after:", JSON.stringify(this.business))
+        this._applyEditModeToBusiness();
+        this._updateDynCmpIsEditFlags();
         publish(this.messageContext, CASE_NOTIFICATION, {
           caseId: this.recordId,
           productTypeId: productTypeId,
