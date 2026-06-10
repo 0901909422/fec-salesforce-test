@@ -76,6 +76,8 @@
         <members>FEC_DNBHandler</members>
         <members>FEC_DNBHandler_Test</members>
         <members>FEC_DownloadReportController</members>
+        <members>FEC_FetchWelcomeCallDetailsRestService</members>
+        <members>FEC_FetchWelcomeCallDetailsRest_Test</members>
         <members>FEC_GetCSCaseStatusRestService_Test</members>
         <members>FEC_GetCSCaseStatusService</members>
         <members>FEC_GetCSCaseStatusService_Test</members>
@@ -100,6 +102,7 @@
         <members>FEC_GetCardSecInfo_Test</members>
         <members>FEC_GetCardFinancialTransactions</members>
         <members>FEC_GetCardFinancialTransactions_Test</members>
+        <members>FEC_GetCheckExistUser</members>
         <members>FEC_GetInteractionCases</members>
         <members>FEC_GetInteractionCases_Test</members>
         <members>FEC_GetServiceCases</members>
@@ -125,6 +128,7 @@
         <members>FEC_RdPaymentRoutingHelper_Test</members>
         <members>FEC_SearchController</members>
         <members>FEC_SearchController_Test</members>
+        <members>FEC_SecondaryController</members>
         <members>FEC_SecondaryInfoLoanAccountController</members>
         <members>FEC_SecondInfoLoanAccountController_Test</members>
         <members>FEC_TransactionsController</members>
@@ -425,6 +429,7 @@
         <name>PermissionSet</name>
     </types>
     <types>
+        <members>FEC_API_Config.FEC_GetCheckExistUser</members>
         <members>FEC_API_Config.FEC_Get_Card_Financial_Transaction</members>
         <members>FEC_API_Config.FEC_Get_Unbilled_Transaction</members>
         <members>FEC_API_Config.FEC_VMX_AUTH_DETAIL_INQ</members>
