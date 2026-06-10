@@ -1,4 +1,4 @@
-public with sharing class FEC_GetServiceCases {
+public without sharing class FEC_GetServiceCases {
 
     private static final List<String> RESOLVED_SERVICE_CASE_STATUSES = new List<String>{
         FEC_ConstantCommon.CASE_STATUS_RESOLVED,
@@ -166,11 +166,13 @@ public with sharing class FEC_GetServiceCases {
             SELECT FEC_Account_Number__c,
                    FEC_Contract_Number__c,
                    FEC_National_ID_Passport_ID__c,
+                   FEC_Account_Contract_Number_Text__c,
                    FEC_Product_Type__r.FEC_Code__c,
                    FEC_Product_Type__r.Name,
                    FEC_Account_or_Contract__r.FEC_Account_Number__c,
                    FEC_Account_or_Contract__r.FEC_Contract_Number__c,
-                   FEC_Account_or_Contract__r.FEC_National_ID_Passport_ID__c
+                   FEC_Account_or_Contract__r.FEC_National_ID_Passport_ID__c,
+                   FEC_Account_or_Contract__r.Name
             FROM Case
             WHERE Id = :recordId
             LIMIT 1
@@ -188,11 +190,16 @@ public with sharing class FEC_GetServiceCases {
         String nationalId = String.isNotBlank(ctx.FEC_National_ID_Passport_ID__c)
             ? ctx.FEC_National_ID_Passport_ID__c
             : (ctx.FEC_Account_or_Contract__r != null ? ctx.FEC_Account_or_Contract__r.FEC_National_ID_Passport_ID__c : null);
+        String accountContractFromHistory = String.isNotBlank(ctx.FEC_Account_Contract_Number_Text__c)
+            ? ctx.FEC_Account_Contract_Number_Text__c
+            : (ctx.FEC_Account_or_Contract__r != null ? ctx.FEC_Account_or_Contract__r.Name : null);
 
         CustomerFilterContext result = new CustomerFilterContext();
         if (isCardProductType(ctx)) {
             if (String.isNotBlank(accountNumber)) {
                 result.accountNumber = accountNumber;
+            } else if (String.isNotBlank(accountContractFromHistory)) {
+                result.accountNumber = accountContractFromHistory;
             } else if (String.isNotBlank(nationalId)) {
                 result.nationalId = nationalId;
             } else {
@@ -201,6 +208,8 @@ public with sharing class FEC_GetServiceCases {
         } else if (isLoanProductType(ctx)) {
             if (String.isNotBlank(contractNumber)) {
                 result.contractNumber = contractNumber;
+            } else if (String.isNotBlank(accountContractFromHistory)) {
+                result.contractNumber = accountContractFromHistory;
             } else if (String.isNotBlank(nationalId)) {
                 result.nationalId = nationalId;
             } else {
@@ -208,6 +217,8 @@ public with sharing class FEC_GetServiceCases {
             }
         } else if (String.isNotBlank(nationalId)) {
             result.nationalId = nationalId;
+        } else if (String.isNotBlank(accountContractFromHistory)) {
+            result.accountNumber = accountContractFromHistory;
         } else {
             return null;
         }

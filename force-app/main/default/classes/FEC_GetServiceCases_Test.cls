@@ -343,6 +343,64 @@ private class FEC_GetServiceCases_Test {
     }
 
     @IsTest
+    static void testResolveCustomerFilterContext_CardAccountFromCustomerHistoryName() {
+        Schema.RecordTypeInfo interactionRtInfo = Schema.SObjectType.Case.getRecordTypeInfosByDeveloperName()
+            .get(FEC_ConstantCommon.CASE_INTERACTION_RECORD_TYPE_DEV_NAME);
+        if (interactionRtInfo == null) {
+            return;
+        }
+        String suffix = String.valueOf(System.currentTimeMillis());
+        String accountNumber = 'ACC-HIST-NAME-' + suffix;
+        List<FEC_Product_Type__c> cardProductTypes = [
+            SELECT Id
+            FROM FEC_Product_Type__c
+            WHERE FEC_Code__c = :FEC_ConstantCommon.PRODUCT_TYPE_CARD_CASE
+            LIMIT 1
+        ];
+        if (cardProductTypes.isEmpty()) {
+            return;
+        }
+
+        FEC_CaseTriggerHandler.isExecuting = true;
+        Case contextCase;
+        try {
+            contextCase = new Case(
+                Subject = 'FEC_GetServiceCases_Test Card History Name',
+                RecordTypeId = interactionRtInfo.getRecordTypeId(),
+                Status = FEC_ConstantCommon.CASE_STATUS_NEW,
+                FEC_Product_Type__c = cardProductTypes[0].Id
+            );
+            insert contextCase;
+        } finally {
+            FEC_CaseTriggerHandler.isExecuting = false;
+        }
+
+        FEC_Customer_History__c history = new FEC_Customer_History__c(
+            Name = accountNumber,
+            FEC_Case__c = contextCase.Id
+        );
+        insert history;
+
+        FEC_CaseTriggerHandler.isExecuting = true;
+        try {
+            update new Case(
+                Id = contextCase.Id,
+                FEC_Account_or_Contract__c = history.Id
+            );
+        } finally {
+            FEC_CaseTriggerHandler.isExecuting = false;
+        }
+
+        FEC_GetServiceCases.CustomerFilterContext ctx =
+            FEC_GetServiceCases.resolveCustomerFilterContext(contextCase.Id);
+
+        System.assertNotEquals(null, ctx);
+        System.assertEquals(accountNumber, ctx.accountNumber);
+        System.assertEquals(null, ctx.contractNumber);
+        System.assertEquals(null, ctx.nationalId);
+    }
+
+    @IsTest
     static void testBuildCustomerFilterClause_Branches() {
         FEC_GetServiceCases.CustomerFilterContext accountCtx = new FEC_GetServiceCases.CustomerFilterContext();
         accountCtx.accountNumber = 'ACC-1';

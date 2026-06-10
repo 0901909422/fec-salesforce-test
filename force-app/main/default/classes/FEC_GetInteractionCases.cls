@@ -1,4 +1,4 @@
-public with sharing class FEC_GetInteractionCases {
+public without sharing class FEC_GetInteractionCases {
 
     /**
      * Returns all non-archived Interaction records (Case with RecordType = Interaction).
@@ -41,7 +41,7 @@ public with sharing class FEC_GetInteractionCases {
         } catch (Exception e) {
             throw new AuraHandledException(e.getMessage());
         }
-        // FLS: class is `with sharing` — CRUD checked above. Skip stripInaccessible to avoid FLS issues in scratch org.
+        // FLS: CRUD checked above. Skip stripInaccessible to avoid FLS issues in scratch org.
         Set<String> stripped = null;
         List<InteractionRow> rows = new List<InteractionRow>();
         for (Case c : cases) {
