@@ -104,9 +104,6 @@ public with sharing class FEC_GetCheckExistUser {
         Map<String, String> headers = new Map<String, String>{
             'Content-Type' => FEC_ConstantCommon.API_CONTENT_TYPE_JSON
         };
-        if (String.isNotBlank(apiConfig?.FEC_Consumer_Name__c)) {
-            headers.put('Authorization', apiConfig.FEC_Consumer_Name__c);
-        }
 
         String requestBody = JSON.serialize(new Map<String, String>{
             'PhoneNumber' => normalizedPhone,
