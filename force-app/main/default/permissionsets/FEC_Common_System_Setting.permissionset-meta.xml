@@ -841,6 +841,10 @@
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
+        <apexClass>FEC_GetCheckExistUser</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
         <apexClass>FEC_GetContactsList</apexClass>
         <enabled>true</enabled>
     </classAccesses>
