@@ -1,27 +1,30 @@
 public with sharing class FEC_BatchCaseCreationService {
+    @TestVisible
     private class ParsedCaseRow {
-        String fileType;
-        String layout;
-        String contractNumber;
-        String interactionPhone;
-        String productType;
-        String category;
-        String subCategory;
-        String subCode;
-        String caseStatus;
-        String caseRemarks;
-        String interactionChannel;
-        String interactionSubChannel;
-        String interactionEmail;
+        @TestVisible String fileType;
+        @TestVisible String layout;
+        @TestVisible String contractNumber;
+        @TestVisible String interactionPhone;
+        @TestVisible String productType;
+        @TestVisible String category;
+        @TestVisible String subCategory;
+        @TestVisible String subCode;
+        @TestVisible String caseStatus;
+        @TestVisible String caseRemarks;
+        @TestVisible String interactionChannel;
+        @TestVisible String interactionSubChannel;
+        @TestVisible String interactionEmail;
     }
 
+    @TestVisible
     private class LookupMaps {
-        Map<String, String> productMap;
-        Map<String, String> categoryMap;
-        Map<String, String> subCategoryMap;
-        Map<String, String> subCodeMap;
+        @TestVisible Map<String, String> productMap;
+        @TestVisible Map<String, String> categoryMap;
+        @TestVisible Map<String, String> subCategoryMap;
+        @TestVisible Map<String, String> subCodeMap;
     }
 
+    @TestVisible
     private class NatureOfCaseResolveMaps {
         Map<String, Id> nocIdByCompositeKey = new Map<String, Id>();
         Map<String, Id> nocIdByFullTextKey = new Map<String, Id>();
@@ -177,21 +180,13 @@ public with sharing class FEC_BatchCaseCreationService {
                     errs
                 );
             } else if (extended) {
-                String channelApi = matchPicklist(channelDfr, r.interactionChannel);
-                String subChannelApi = matchPicklist(subChannelDfr, r.interactionSubChannel);
-                if (String.isNotBlank(r.interactionChannel) && channelApi == null) {
-                    errs.add(System.Label.FEC_Batch_Import_Invalid_Interaction_Channel);
-                }
-                if (String.isNotBlank(r.interactionSubChannel) && subChannelApi == null) {
-                    errs.add(System.Label.FEC_Batch_Import_Invalid_Interaction_Sub_Channel);
-                }
-                if (
-                    String.isNotBlank(channelApi) &&
-                    String.isNotBlank(subChannelApi) &&
-                    !isSubChannelValidForChannel(channelApi, subChannelApi, subChannelsByChannel)
-                ) {
-                    errs.add(System.Label.FEC_Batch_Import_Invalid_Sub_Channel_For_Channel);
-                }
+                appendWelcomeExtendedChannelValidation(
+                    r,
+                    channelDfr,
+                    subChannelDfr,
+                    subChannelsByChannel,
+                    errs
+                );
             }
 
             if (String.isNotBlank(r.interactionEmail) && !Pattern.matches(FEC_ConstantCommon.PATTERN_EMAIL, r.interactionEmail)) {
@@ -204,33 +199,6 @@ public with sharing class FEC_BatchCaseCreationService {
         }
 
         return rowResults;
-    }
-
-    private static List<Case> buildCasesFromResults(List<ParsedCaseRow> parsed) {
-        Id rtId = FEC_BatchImportCommon.getCustomerCaseRecordTypeId();
-        if (rtId == null) {
-            throw new AuraHandledException(System.Label.FEC_Batch_Import_RT_Customer_Case_Not_Found);
-        }
-
-        LookupMaps maps = loadLookupMaps(parsed);
-        Schema.DescribeFieldResult channelDfr = Case.FEC_Channel__c.getDescribe();
-        Schema.DescribeFieldResult subChannelDfr = Case.FEC_Interaction_Subchannel__c.getDescribe();
-        Schema.DescribeFieldResult statusDfr = Case.Status.getDescribe();
-
-        List<Case> cases = new List<Case>();
-        for (Integer i = 0; i < parsed.size(); i++) {
-            ParsedCaseRow r = parsed[i];
-            String statusApi = matchCaseStatus(statusDfr, r.caseStatus);
-
-            Case c = new Case();
-            c.RecordTypeId = rtId;
-            c.Subject = buildSubject(r.contractNumber);
-            c.Status = statusApi;
-            applyNatureFields(c, r, maps, channelDfr, subChannelDfr);
-
-            cases.add(c);
-        }
-        return cases;
     }
 
     private static LookupMaps loadLookupMaps(List<ParsedCaseRow> parsed) {
@@ -252,6 +220,7 @@ public with sharing class FEC_BatchCaseCreationService {
         return lm;
     }
 
+    @TestVisible
     private static void applyNatureFields(
         Case c,
         ParsedCaseRow r,
@@ -297,6 +266,7 @@ public with sharing class FEC_BatchCaseCreationService {
         return 'welcome'.equalsIgnoreCase(resolveConsistentImportFileType(parsed));
     }
 
+    @TestVisible
     private static String resolveConsistentImportFileType(List<ParsedCaseRow> parsed) {
         if (parsed == null || parsed.isEmpty()) {
             return null;
@@ -329,6 +299,7 @@ public with sharing class FEC_BatchCaseCreationService {
         }
     }
 
+    @TestVisible
     private static void appendWelcomeCaseStatusRules(
         ParsedCaseRow r,
         Schema.DescribeFieldResult statusDfr,
@@ -343,6 +314,7 @@ public with sharing class FEC_BatchCaseCreationService {
         }
     }
 
+    @TestVisible
     private static String formatSaveResultErrors(Database.SaveResult sr) {
         List<String> parts = new List<String>();
         for (Database.Error err : sr.getErrors()) {
@@ -351,6 +323,7 @@ public with sharing class FEC_BatchCaseCreationService {
         return String.join(parts, ' ');
     }
 
+    @TestVisible
     private static String truncateWelcomeSubject(String prefix, String contractNumber) {
         String base = prefix + (String.isNotBlank(contractNumber) ? contractNumber : 'Unknown');
         if (base.length() > 255) {
@@ -359,6 +332,7 @@ public with sharing class FEC_BatchCaseCreationService {
         return base;
     }
 
+    @TestVisible
     private static Boolean contractNumberContainsLetter(String contractNumber) {
         if (String.isBlank(contractNumber)) {
             return false;
@@ -366,6 +340,7 @@ public with sharing class FEC_BatchCaseCreationService {
         return Pattern.compile('[A-Za-z]').matcher(contractNumber).find();
     }
 
+    @TestVisible
     private static Boolean isOtherCasesContractNumber(String contractNumber) {
         if (String.isBlank(contractNumber)) {
             return false;
@@ -373,6 +348,7 @@ public with sharing class FEC_BatchCaseCreationService {
         return contractNumberContainsLetter(contractNumber) || contractNumber.contains('-');
     }
 
+    @TestVisible
     private static void applyOtherAccountOrContractNumber(Case c, String contractNumber) {
         if (c == null || String.isBlank(contractNumber)) {
             return;
@@ -386,6 +362,7 @@ public with sharing class FEC_BatchCaseCreationService {
         }
     }
 
+    @TestVisible
     private static void applyOtherInteractionFields(
         Case c,
         ParsedCaseRow r,
@@ -421,6 +398,7 @@ public with sharing class FEC_BatchCaseCreationService {
         applyWelcomeChannelDefaults(caseToFill, channelDfr, subChannelDfr);
     }
 
+    @TestVisible
     private static String resolveOtherInteractionStatusApi(
         Schema.DescribeFieldResult statusDfr,
         String rawCaseStatus
@@ -459,6 +437,35 @@ public with sharing class FEC_BatchCaseCreationService {
         customerCase.FEC_Interaction_View_Mode__c = FEC_ConstantCommon.INTERACTION_REVIEW_MODE;
     }
 
+    @TestVisible
+    private static void appendWelcomeExtendedChannelValidation(
+        ParsedCaseRow r,
+        Schema.DescribeFieldResult channelDfr,
+        Schema.DescribeFieldResult subChannelDfr,
+        Map<String, Set<String>> subChannelsByChannel,
+        List<String> errs
+    ) {
+        if (r == null || errs == null) {
+            return;
+        }
+        String channelApi = matchPicklist(channelDfr, r.interactionChannel);
+        String subChannelApi = matchPicklist(subChannelDfr, r.interactionSubChannel);
+        if (String.isNotBlank(r.interactionChannel) && channelApi == null) {
+            errs.add(System.Label.FEC_Batch_Import_Invalid_Interaction_Channel);
+        }
+        if (String.isNotBlank(r.interactionSubChannel) && subChannelApi == null) {
+            errs.add(System.Label.FEC_Batch_Import_Invalid_Interaction_Sub_Channel);
+        }
+        if (
+            String.isNotBlank(channelApi) &&
+            String.isNotBlank(subChannelApi) &&
+            !isSubChannelValidForChannel(channelApi, subChannelApi, subChannelsByChannel)
+        ) {
+            errs.add(System.Label.FEC_Batch_Import_Invalid_Sub_Channel_For_Channel);
+        }
+    }
+
+    @TestVisible
     private static void appendOtherInteractionChannelValidation(
         ParsedCaseRow r,
         Boolean extended,
@@ -689,6 +696,7 @@ public with sharing class FEC_BatchCaseCreationService {
         caseRecord.FEC_IsImported__c = true;
     }
 
+    @TestVisible
     private static Boolean hasAnySucceededRowResult(
         List<FEC_BatchCaseCreationController.CaseRowResult> rowResults
     ) {
@@ -711,6 +719,7 @@ public with sharing class FEC_BatchCaseCreationService {
         }
     }
 
+    @TestVisible
     private static void applyWelcomeChannelDefaults(
         Case caseToFill,
         Schema.DescribeFieldResult channelDfr,
@@ -723,6 +732,8 @@ public with sharing class FEC_BatchCaseCreationService {
     }
 
     private static void insertWelcomeCallCases(List<ParsedCaseRow> parsed, List<FEC_BatchCaseCreationController.CaseRowResult> rowResults) {
+        List<FEC_BCC_CreationResolveHistService.CreationResolveHistoryItem> resolveHistoryItems =
+            new List<FEC_BCC_CreationResolveHistService.CreationResolveHistoryItem>();
         Id intRt = FEC_CommonUltils.getRecordTypeIdByDev(FEC_ConstantCommon.CASE_INTERACTION_RECORD_TYPE_DEV_NAME);
         Id custRt = FEC_BatchImportCommon.getCustomerCaseRecordTypeId();
         if (intRt == null) {
@@ -820,6 +831,13 @@ public with sharing class FEC_BatchCaseCreationService {
                         rr.status = 'Failed';
                         rr.recordId = '';
                         rr.errors = remarkError;
+                    } else {
+                        FEC_BCC_CreationResolveHistService.collectItemIfResolvedStatus(
+                            resolveHistoryItems,
+                            rr,
+                            customerCaseId,
+                            customerCases[k].Status
+                        );
                     }
                 } else {
                     rr.status = 'Failed';
@@ -832,9 +850,12 @@ public with sharing class FEC_BatchCaseCreationService {
                 }
             }
         }
+        FEC_BCC_CreationResolveHistService.applyAfterCreationBulk(resolveHistoryItems);
     }
 
     private static void insertStandardCasesWithInteraction(List<ParsedCaseRow> parsed, List<FEC_BatchCaseCreationController.CaseRowResult> rowResults) {
+        List<FEC_BCC_CreationResolveHistService.CreationResolveHistoryItem> resolveHistoryItems =
+            new List<FEC_BCC_CreationResolveHistService.CreationResolveHistoryItem>();
         Id intRt = FEC_CommonUltils.getRecordTypeIdByDev(FEC_ConstantCommon.CASE_INTERACTION_RECORD_TYPE_DEV_NAME);
         Id custRt = FEC_BatchImportCommon.getCustomerCaseRecordTypeId();
         if (intRt == null) {
@@ -934,6 +955,13 @@ public with sharing class FEC_BatchCaseCreationService {
                         rr.recordId = '';
                         rr.fecIdSearch = '';
                         rr.errors = remarkError;
+                    } else {
+                        FEC_BCC_CreationResolveHistService.collectItemIfResolvedStatus(
+                            resolveHistoryItems,
+                            rr,
+                            customerCaseId,
+                            customerCases[k].Status
+                        );
                     }
                 } else {
                     rr.status = 'Failed';
@@ -945,8 +973,10 @@ public with sharing class FEC_BatchCaseCreationService {
                 }
             }
         }
+        FEC_BCC_CreationResolveHistService.applyAfterCreationBulk(resolveHistoryItems);
     }
 
+    @TestVisible
     private static String buildNatureOfCaseCompositeKey(
         Id productTypeId,
         Id categoryId,
@@ -962,6 +992,7 @@ public with sharing class FEC_BatchCaseCreationService {
             (subCodeId == null ? '' : String.valueOf(subCodeId));
     }
 
+    @TestVisible
     private static NatureOfCaseResolveMaps loadNatureOfCaseResolveMaps(
         List<ParsedCaseRow> parsed,
         LookupMaps maps
@@ -1023,6 +1054,7 @@ public with sharing class FEC_BatchCaseCreationService {
         return out;
     }
 
+    @TestVisible
     private static Set<String> natureTextAliases(String name, String code) {
         Set<String> aliases = new Set<String>();
         if (String.isNotBlank(name)) {
@@ -1034,6 +1066,7 @@ public with sharing class FEC_BatchCaseCreationService {
         return aliases;
     }
 
+    @TestVisible
     private static void registerNatureOfCaseLookupKeys(
         NatureOfCaseResolveMaps out,
         FEC_Nature_of_Case__c noc
@@ -1088,6 +1121,7 @@ public with sharing class FEC_BatchCaseCreationService {
         }
     }
 
+    @TestVisible
     private static List<String> importNatureTextCandidates(String raw) {
         List<String> candidates = new List<String>();
         if (String.isBlank(raw)) {
@@ -1220,6 +1254,7 @@ public with sharing class FEC_BatchCaseCreationService {
         keys.add(extractCodeKey(raw).toLowerCase());
     }
 
+    @TestVisible
     private static Id lookupFromMap(String raw, Map<String, String> m) {
         if (String.isBlank(raw) || m == null || m.isEmpty()) {
             return null;
@@ -1234,6 +1269,7 @@ public with sharing class FEC_BatchCaseCreationService {
         return String.isNotBlank(s2) ? (Id) s2 : null;
     }
 
+    @TestVisible
     private static String extractCodeKey(String raw) {
         if (String.isBlank(raw)) {
             return '';
@@ -1354,6 +1390,7 @@ public with sharing class FEC_BatchCaseCreationService {
         return idByKey;
     }
 
+    @TestVisible
     private static String matchPicklist(Schema.DescribeFieldResult dfr, String raw) {
         if (String.isBlank(raw) || dfr == null) {
             return null;
@@ -1370,6 +1407,7 @@ public with sharing class FEC_BatchCaseCreationService {
         return null;
     }
 
+    @TestVisible
     private static String matchCaseStatus(Schema.DescribeFieldResult statusDfr, String raw) {
         if (String.isBlank(raw)) {
             return null;
@@ -1387,6 +1425,7 @@ public with sharing class FEC_BatchCaseCreationService {
         return null;
     }
 
+    @TestVisible
     private static String matchBatchImportCaseStatus(Schema.DescribeFieldResult statusDfr, String raw) {
         if (String.isBlank(raw)) {
             return null;
@@ -1415,6 +1454,7 @@ public with sharing class FEC_BatchCaseCreationService {
         return null;
     }
 
+    @TestVisible
     private static Map<String, Set<String>> buildSubChannelsByChannelMap(
         Schema.DescribeFieldResult channelDfr,
         Schema.DescribeFieldResult subChannelDfr
@@ -1481,6 +1521,7 @@ public with sharing class FEC_BatchCaseCreationService {
         subChannelsByChannel.get(channelKey.trim().toLowerCase()).add(subChannelKey.trim().toLowerCase());
     }
 
+    @TestVisible
     private static String readPicklistEntryValidFor(Schema.PicklistEntry entry) {
         if (entry == null) {
             return null;
@@ -1490,6 +1531,7 @@ public with sharing class FEC_BatchCaseCreationService {
         return validForObj == null ? null : String.valueOf(validForObj);
     }
 
+    @TestVisible
     private static Boolean isPicklistEntryValidForControllerIndex(Schema.PicklistEntry entry, Integer controllerIndex) {
         if (entry == null || controllerIndex == null || controllerIndex < 0) {
             return false;
@@ -1509,6 +1551,7 @@ public with sharing class FEC_BatchCaseCreationService {
         return (byteValue & (1 << controlBitIndex)) != 0;
     }
 
+    @TestVisible
     private static Integer hexStringToInt(String hex) {
         if (String.isBlank(hex)) {
             return 0;
@@ -1527,6 +1570,7 @@ public with sharing class FEC_BatchCaseCreationService {
         return result;
     }
 
+    @TestVisible
     private static Boolean isSubChannelValidForChannel(
         String channelApi,
         String subChannelApi,

@@ -68,35 +68,62 @@ public without sharing class FEC_CaseDsTsSlaNotificationSender {
         List<FEC_Notification.EmailInfo> emailsToSend = new List<FEC_Notification.EmailInfo>();
 
         for (Id caseId : caseIds) {
-            FEC_Notification.EmailInfo info = buildEmailInfoForCase(
-                caseId,
-                enriched.get(caseId),
-                templateByApi
+            emailsToSend.addAll(
+                buildEmailInfosForCase(caseId, enriched.get(caseId), templateByApi)
             );
-            if (info != null) {
-                emailsToSend.add(info);
-            }
         }
         return emailsToSend;
     }
 
     @TestVisible
-    private static FEC_Notification.EmailInfo buildEmailInfoForCase(
+    private static List<FEC_Notification.EmailInfo> buildEmailInfosForCase(
         Id caseId,
         Case row,
         Map<String, FEC_Template__c> templateByApi
     ) {
+        List<FEC_Notification.EmailInfo> emails = new List<FEC_Notification.EmailInfo>();
         if (row == null) {
-            return null;
+            return emails;
         }
 
         FEC_CaseDsTsSlaService.SlaEligibilityContext ctx =
             FEC_CaseDsTsSlaService.evaluateEligibility(row);
-        if (!ctx.isEligible || String.isBlank(ctx.queueProfile)) {
+        if (!ctx.isEligible) {
+            return emails;
+        }
+
+        List<String> profiles = ctx.activeProfiles != null && !ctx.activeProfiles.isEmpty()
+            ? ctx.activeProfiles
+            : (String.isNotBlank(ctx.queueProfile)
+                ? new List<String>{ ctx.queueProfile }
+                : new List<String>());
+
+        for (String queueProfile : profiles) {
+            FEC_Notification.EmailInfo info = buildEmailInfoForProfile(
+                caseId,
+                row,
+                queueProfile,
+                templateByApi
+            );
+            if (info != null) {
+                emails.add(info);
+            }
+        }
+        return emails;
+    }
+
+    @TestVisible
+    private static FEC_Notification.EmailInfo buildEmailInfoForProfile(
+        Id caseId,
+        Case row,
+        String queueProfile,
+        Map<String, FEC_Template__c> templateByApi
+    ) {
+        if (String.isBlank(queueProfile)) {
             return null;
         }
 
-        String templateApi = FEC_CaseDsTsSlaService.resolveSlaTemplateApiName(ctx.queueProfile);
+        String templateApi = FEC_CaseDsTsSlaService.resolveSlaTemplateApiName(queueProfile);
         if (String.isBlank(templateApi)) {
             return null;
         }
@@ -104,13 +131,15 @@ public without sharing class FEC_CaseDsTsSlaNotificationSender {
         FEC_Template__c tmpl = templateByApi.get(templateApi);
         if (tmpl == null || String.isBlank(tmpl.FEC_Subject_Line__c)) {
             System.debug(
-                'FEC_DEBUG DS/TS SLA: skip case ' + caseId + ' template=' + templateApi
+                'FEC_DEBUG DS/TS SLA: skip case ' + caseId
+                    + ' profile=' + queueProfile
+                    + ' template=' + templateApi
             );
             return null;
         }
 
         List<String> toEmails = FEC_CaseDsTsSlaService.resolveRecipientEmails(
-            FEC_CaseDsTsSlaService.resolveRecipientUserIds(ctx)
+            FEC_CaseDsTsSlaService.resolveRecipientUserIdsByProfile(queueProfile)
         );
         if (toEmails.isEmpty()) {
             return null;

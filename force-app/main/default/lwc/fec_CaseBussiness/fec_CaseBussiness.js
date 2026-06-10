@@ -36,6 +36,7 @@ import FRAUD_FIELD_SYNC from "@salesforce/messageChannel/FEC_Fraud_Field_Sync__c
 import STAGE_NAME_FIELD from "@salesforce/schema/Case.FEC_Stage_Name__c";
 import CASE_CURRENT_STAGE_NAME_FIELD from "@salesforce/schema/Case.FEC_Current_Case_Stage__r.Name";
 import CASE_SELECTED_ADDRESS_FIELD from "@salesforce/schema/Case.FEC_Selected_Address__c";
+import CASE_STATUS_FIELD from "@salesforce/schema/Case.Status";
 import {
   mask,
   maskValue,
@@ -54,7 +55,7 @@ import {
 } from "c/fec_CommonUtils";
 import { collectAssignmentMasterFieldPayload } from "c/fec_AssignmentMasterFieldUtils";
 
-import { MASKING_TYPE_PHONE, MASKING_TYPE_PASSPORT, STR_EMPTY, ICON_HIDE, ICON_PREVIEW, INTERNAL_REQUEST, CASE_OBJECT_API_NAME, FIELD_CUSTOMER_PHONE_NUMBER, FIELD_RECEIVING_PHONE_NUMBER, FEC_FAST_CASH_STORAGE_MODAL_CONFIRMED_PREFIX, FEC_FAST_CASH_STORAGE_NOC_SELECTION_PREFIX, FEC_POINTS_REDEMPTION_STORAGE_NOC_SELECTION_PREFIX, isPointsRedemptionRedeemOkInStorage } from "c/fec_CommonConst";
+import { MASKING_TYPE_PHONE, MASKING_TYPE_PASSPORT, STR_EMPTY, ICON_HIDE, ICON_PREVIEW, INTERNAL_REQUEST, CASE_OBJECT_API_NAME, FIELD_CUSTOMER_PHONE_NUMBER, FIELD_RECEIVING_PHONE_NUMBER, FEC_FAST_CASH_STORAGE_MODAL_CONFIRMED_PREFIX, FEC_FAST_CASH_STORAGE_NOC_SELECTION_PREFIX, FEC_POINTS_REDEMPTION_STORAGE_NOC_SELECTION_PREFIX, isPointsRedemptionRedeemOkInStorage, OPEN_STATUS, NON_EXISTING_CUSTOMER_TYPE } from "c/fec_CommonConst";
 import FEC_MSG_UPDATED_INFO_NOT_UPDATED from "@salesforce/label/c.FEC_MSG_UPDATED_INFO_NOT_UPDATED";
 import FEC_MSG_Can_Not_Find_Next_Stage from "@salesforce/label/c.FEC_MSG_Can_Not_Find_Next_Stage";
 import FEC_Error_Title from "@salesforce/label/c.FEC_Error_Title";
@@ -339,6 +340,7 @@ const SECTION_NAME_CASE_INFORMATION = 'Case Information';
 const SUBSECTION_NAME_PROPERTY_INFO = 'Property Info';
 const SUBSECTION_NAME_UPDATED_INFO = 'Updated Info';
 const SUBSECTION_NAME_C360_INFO = 'C360 Info';
+const CASE_CUSTOMER_TYPE_NON_EXISTING = 'Non-Existing';
 //******************Start merge with Fraud********************* */
 // Field mapping: Case field → Fraud additional prop field (loaded from Apex)
 let CASE_TO_FRAUD_FIELD_MAP = {};
@@ -504,6 +506,7 @@ import {
   CASE_RD_PAYMENT_CONTRACT_ASSESSMENT,
   FIELD_RD_PAYMENT_CONTRACT_ASSESSMENT,
   isRdPaymentSubCode,
+  isRdPaymentCloseWithoutStatement,
   setRdPaymentScopedStageTeamMap,
   getRdPaymentScopedStageTeam,
 } from "c/fec_RdPaymentRoutingUtils";
@@ -608,10 +611,10 @@ function shouldHideRevertConfirmSubSection(subSectionName, sourceStage) {
     return false;
   }
   const n = normalizeSubSectionName(subSectionName);
-  if (sourceStage === 3) {
+  if (sourceStage === 2) {
     return n.includes("confirm") && n.includes("d2c");
   }
-  if (sourceStage === 2) {
+  if (sourceStage === 3) {
     return n.includes("confirm") && (n.includes("cs sp") || n.includes("support"));
   }
   return false;
@@ -786,7 +789,7 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
     this._isCaseInformationEdit = next;
     // Execute Assignment: reload master data (hasCaseAssignment, assignment groups) rồi áp rule từng field.
     if (next) {
-      this.getData().then(() => {
+      this._reloadBusinessPreservingNocSelection().then(() => {
         this._updateDynCmpIsEditFlags();
       });
       return;
@@ -802,7 +805,26 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
     if (sectionName === SECTION_NAME_CASE_INFORMATION) {
       return this._isEdit || this._isCaseInformationEdit;
     }
+    if (sectionName === SECTION_NAME_ACCOUNT_INFORMATION) {
+      if (!this._isEdit) {
+        return false;
+      }
+      if (this._isNonExistingCustomerCase() && !this._isCaseStatusOpen()) {
+        return false;
+      }
+      return true;
+    }
     return this._isEdit;
+  }
+
+  _isNonExistingCustomerCase() {
+    const ct = this.business?.customerType;
+    return ct === CASE_CUSTOMER_TYPE_NON_EXISTING || ct === NON_EXISTING_CUSTOMER_TYPE;
+  }
+
+  _isCaseStatusOpen() {
+    const status = this._caseStatus ?? this.business?.caseStatus;
+    return status === OPEN_STATUS;
   }
 
   _isMrcRl05MasterDataFieldLocked(fieldApiName, subSectionName) {
@@ -883,6 +905,7 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
   /** FEC_Current_Case_Stage__r.Name — áp dụng/khóa RD Payment assessment → Team khi tên stage chứa PM. */
   _currentCaseStageName;
   _caseSelectedAddressId;
+  _caseStatus;
 
   @wire(getRecord, { recordId: USER_ID, fields: [USER_GROUP_FIELD] })
   wiredUser({ error, data }) {
@@ -896,7 +919,7 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
   // PhuongNT add get Case data + tên stage hiện tại (RD Payment assessment → Team khi Name chứa PM)
   @wire(getRecord, {
     recordId: "$recordId",
-    fields: [STAGE_NAME_FIELD, CASE_CURRENT_STAGE_NAME_FIELD, CASE_SELECTED_ADDRESS_FIELD],
+    fields: [STAGE_NAME_FIELD, CASE_CURRENT_STAGE_NAME_FIELD, CASE_SELECTED_ADDRESS_FIELD, CASE_STATUS_FIELD],
   })
   wiredCase({ error, data }) {
     if (data) {
@@ -906,6 +929,11 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
         CASE_CURRENT_STAGE_NAME_FIELD,
       );
       this._caseSelectedAddressId = getFieldValue(data, CASE_SELECTED_ADDRESS_FIELD);
+      this._caseStatus = getFieldValue(data, CASE_STATUS_FIELD);
+      if (this.business?.sectionlst) {
+        this._applyEditModeToBusiness();
+        this._updateDynCmpIsEditFlags();
+      }
     } else if (error) {
       console.error("Get Case record error:", error);
     }
@@ -1255,7 +1283,7 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
       return;
     }
     const hideApi =
-      sourceStage === 2 ? CONFIRM_CS_SP_ASSESMENT : CONFIRM_D2C_ASSESMENT;
+      sourceStage === 2 ? CONFIRM_D2C_ASSESMENT : CONFIRM_CS_SP_ASSESMENT;
     let changed = false;
     this.business.sectionlst?.forEach((section) => {
       section.subSectionlst?.forEach((sub) => {
@@ -1890,46 +1918,8 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
     return fromForm != null && String(fromForm).trim() !== STR_EMPTY;
   }
 
-  _hasPersistedCardReplacementDependentData() {
-    const dependentApis = [
-      FIELD_NEW_BLOCK_CODE_CARD_REPLACE,
-      FIELD_CARD_REPLACEMENT_FEE,
-      FIELD_RECIPIENT_NAME,
-      FIELD_RECIPIENT_PHONE_NUMBER,
-    ];
-    for (const api of dependentApis) {
-      const original = this._getCaseFieldOriginalValue(api);
-      if (original != null && String(original).trim() !== STR_EMPTY) {
-        return true;
-      }
-    }
-    const addressId =
-      this._caseSelectedAddressId || this._getCaseFieldValue("FEC_Selected_Address__c");
-    return addressId != null && String(addressId).trim().length >= 15;
-  }
-
-  _getCaseFieldOriginalValue(apiName) {
-    const sections = this.business?.sectionlst ?? [];
-    for (const section of sections) {
-      for (const sub of section.subSectionlst ?? []) {
-        for (const obj of sub.objlst ?? []) {
-          if (obj.name !== "Case") continue;
-          const f = obj.fieldlst?.find((x) => x.apiName === apiName);
-          if (f != null) {
-            const v = f.original != null ? f.original : f.value;
-            return typeof v === "string" ? v.trim() : (v ?? STR_EMPTY);
-          }
-        }
-      }
-    }
-    return STR_EMPTY;
-  }
-
   _shouldShowCardReplacementDependentFields() {
-    return (
-      this._hasCardReplacementReasonValue() ||
-      this._hasPersistedCardReplacementDependentData()
-    );
+    return this._hasCardReplacementReasonValue();
   }
 
   _shouldSuppressRc27CardReplacementProcessInfo() {
@@ -2230,6 +2220,23 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
     });
   }
 
+  _isHoldCaseNocSelectionComplete(noc) {
+    return !!(
+      noc &&
+      noc.productTypeId &&
+      noc.categoryId &&
+      noc.subCategoryId
+    );
+  }
+
+  _resolveNatureOfCaseIdFallback() {
+    return (
+      this._lastCaseNocTemplateNatureId ??
+      this.business?.natureOfCase ??
+      null
+    );
+  }
+
   _reloadBusinessPreservingNocSelection() {
     const fastCashNocSel = readFastCashNocSelectionFromStorage(this.recordId);
     const pointsRedemptionNocSel = readPointsRedemptionNocSelectionFromStorage(
@@ -2258,7 +2265,27 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
         pointsRedemptionNocSel.subCodeId,
       );
     }
+    const noc =
+      this.holdCaseNocParams?.productTypeId &&
+      this.holdCaseNocParams?.categoryId &&
+      this.holdCaseNocParams?.subCategoryId
+        ? this.holdCaseNocParams
+        : this._lastGetByCaseNocParams;
+    if (this._isHoldCaseNocSelectionComplete(noc)) {
+      return this.getData(
+        noc.productTypeId,
+        noc.categoryId,
+        noc.subCategoryId,
+        noc.subCodeId ?? null,
+        this._resolveNatureOfCaseIdFallback(),
+      );
+    }
     return this.getData();
+  }
+
+  /** Execute / reload: giữ bộ Updated NOC đang chọn (holdCaseNocParams), không chỉ đọc Case DB. */
+  @api reloadDataPreservingNoc() {
+    return this._reloadBusinessPreservingNocSelection();
   }
 
   hasContractProcessingAssessmentTypeChanged() {
@@ -2603,6 +2630,7 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
     this._holdCaseNocBaselineCaptured = false;
     this._boundCheckHoldCaseRefresh = this._checkHoldCaseRefreshFlag.bind(this);
     window.addEventListener("focus", this._boundCheckHoldCaseRefresh);
+    window.addEventListener("fecmanualholdcaserefresh", this._boundCheckHoldCaseRefresh);
     this._checkHoldCaseRefreshFlag();
     void this._initializeHoldCaseVisibility();
     this._reloadBusinessPreservingNocSelection();
@@ -2632,6 +2660,7 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
     }
     if (this._boundCheckHoldCaseRefresh) {
       window.removeEventListener("focus", this._boundCheckHoldCaseRefresh);
+      window.removeEventListener("fecmanualholdcaserefresh", this._boundCheckHoldCaseRefresh);
     }
     localStorage.removeItem(this.draftStorageKey);
     this._clearCardReplacementBlockCodesLocalStorage();
@@ -3346,6 +3375,8 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
         this.handleSetUpdateFieldReadOnly();
 
         console.log("🚀 ~ Fec_CaseBussiness ~ getData ~ this.business after:", JSON.stringify(this.business))
+        this._applyEditModeToBusiness();
+        this._updateDynCmpIsEditFlags();
         publish(this.messageContext, CASE_NOTIFICATION, {
           caseId: this.recordId,
           productTypeId: productTypeId,
@@ -3951,7 +3982,24 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
 
         // Toannd61 — RD Payment Assessment (backup: adHocFieldlst switch)
         case CASE_RD_PAYMENT_CONTRACT_ASSESSMENT:
-          toRouteTo = !!value && value !== STR_EMPTY;
+          if (
+            this._isRdPaymentSubCode &&
+            !isMrcRl05Branch(this.business) &&
+            value &&
+            value !== STR_EMPTY
+          ) {
+            const rdPayOpts =
+              this.business?.picklistOptionsMap?.Case?.[
+                FIELD_RD_PAYMENT_CONTRACT_ASSESSMENT
+              ];
+            if (isRdPaymentCloseWithoutStatement(value, rdPayOpts)) {
+              toResolve = true;
+            } else {
+              toRouteTo = true;
+            }
+          } else if (value && value !== STR_EMPTY) {
+            toRouteTo = true;
+          }
           break;
 
         default:
@@ -5138,9 +5186,10 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
             //Toannd61: action.value (label/value dropdown) cho Apex phân nhánh FEC_IsReverted__c + custom label history
             routingActionValue: selectedAction?.value ?? "",
           };
-          // GSR: không gửi NOC Stage 2 — Apex sync Actual theo template Stage 1 sau revert
-          const bpCode = (this.business?.code || "").toUpperCase();
-          if (!bpCode.includes("GSR")) {
+          // COF/GSR Revert Stage 2→1: không gửi natureOfCaseId — Apex giữ Updated NOC trên Case + restore baseline
+          const isStage2ToStage1Revert =
+            this.business?.contextFlags?.isGsrStage2ToStage1Revert === true;
+          if (!isStage2ToStage1Revert) {
             const revertNocId = this._resolveRevertNatureOfCaseId();
             if (revertNocId) {
               revertParams.natureOfCaseId = revertNocId;

@@ -159,7 +159,7 @@ public without sharing class FEC_CofGsrRoutePrepareService {
   }
 
   /**
-   * GSR Revert Stage 2 → Stage 1:
+   * COF/GSR Revert Stage 2 → Stage 1:
    * - FEC_Actual_Nature_of_Case__c: clone mới từ template NOC gốc (FEC_Case_Flow_History__c) + Actual MD — không reuse Actual theo 4 dimension (tránh lấy nhầm case khác).
    * - 4 trường NOC trên Case (Product Type / Category / Sub Category / Sub Code): giữ bộ Updated NOC Stage 2.
    * - FEC_Current_Case_Stage__c: Case Stage 1 tương ứng bộ Updated NOC trên Case.
@@ -205,7 +205,7 @@ public without sharing class FEC_CofGsrRoutePrepareService {
     }
     FEC_Nature_of_Case__c baselineTemplateNoc = baselineTemplateLst[0];
     String bpCode = baselineTemplateNoc.FEC_Business_Process__r?.FEC_Code__c;
-    if (String.isBlank(bpCode) || !bpCode.toUpperCase().contains('GSR')) {
+    if (!FEC_CaseMasterDataHelper.isCofOrGsrBusinessProcessCode(bpCode)) {
       return;
     }
 
@@ -267,6 +267,68 @@ public without sharing class FEC_CofGsrRoutePrepareService {
       LIMIT 1
     ];
     return templateLst.isEmpty() ? null : templateLst[0].Id;
+  }
+
+  /**
+   * Tra template FEC_Nature_of_Case__c theo 4 dimension NOC đang có trên Case (bộ Updated NOC).
+   */
+  public static Id resolveTemplateNatureIdFromCaseId(String caseId) {
+    if (String.isBlank(caseId)) {
+      return null;
+    }
+    List<Case> caseRows = [
+      SELECT
+        FEC_Product_Type__c,
+        FEC_Category__c,
+        FEC_SubCategory__c,
+        FEC_SubCode__c
+      FROM Case
+      WHERE Id = :caseId
+      LIMIT 1
+    ];
+    return caseRows.isEmpty()
+      ? null
+      : resolveTemplateNatureIdFromCaseDimensions(caseRows[0]);
+  }
+
+  /**
+   * Case Stage theo template NOC + fragment tên stage (vd Stage 1).
+   */
+  public static Id resolveCaseStageIdForTemplateNature(
+    Id templateNatureId,
+    String stageNameFragment
+  ) {
+    return resolveCaseStageIdForTemplateByStageFragment(
+      templateNatureId,
+      stageNameFragment
+    );
+  }
+
+  /**
+   * Tra template FEC_Nature_of_Case__c theo 4 dimension NOC (payload UI / Case).
+   */
+  public static Id resolveTemplateNatureIdFromDimensionIds(
+    Id productTypeId,
+    Id categoryId,
+    Id subCategoryId,
+    Id subCodeId
+  ) {
+    if (
+      productTypeId == null ||
+      categoryId == null ||
+      subCategoryId == null ||
+      subCodeId == null
+    ) {
+      return null;
+    }
+    return resolveTemplateNatureIdFromCaseDimensions(
+      new Case(
+        FEC_Product_Type__c = productTypeId,
+        FEC_Category__c = categoryId,
+        FEC_SubCategory__c = subCategoryId,
+        FEC_SubCode__c = subCodeId
+      )
+    );
   }
 
   /**

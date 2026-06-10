@@ -357,12 +357,12 @@ public without sharing class FEC_CustomerIntegrationService {
         }
 
         FEC_GetDocumentsList.DocumentInfo doc = docRes.Documents[0];
-        hist.FEC_National_ID_Passport_ID__c = doc.DocumentID;
+        hist.FEC_National_ID_Passport_ID__c = doc.IDDocumentNumber;
         hist.FEC_Date_of_Issue__c = doc.IssueDate;
         hist.FEC_Place_of_Issue__c = doc.IssuePlace;
 
         if (result != null) {
-            result.nationalId = doc.DocumentID;
+            result.nationalId = doc.IDDocumentNumber;
         }
     }
 
@@ -747,7 +747,6 @@ public without sharing class FEC_CustomerIntegrationService {
         Integer planCount = cardPlans.size();
         Integer ippCount = orderedIppList.size();
         Integer maxSize = Math.max(planCount, ippCount);
-        String todayStr = Datetime.now().formatGmt(FEC_ConstantCommon.DATE_FORMAT);
 
         for (Integer i = 0; i < maxSize; i++) {
             FEC_GetCardPlanInfo.CardPlan cardPlan = (i < planCount) ? cardPlans[i] : null;
@@ -758,6 +757,9 @@ public without sharing class FEC_CustomerIntegrationService {
                 String planNumberKey = String.isNotBlank(cardPlan.planNumber)
                     ? cardPlan.planNumber.trim()
                     : '';
+                if (ipp != null && String.isNotBlank(ipp.IPPPlan)) {
+                    planNumberKey = ipp.IPPPlan.trim();
+                }
                 if (String.isBlank(planNumberKey)) {
                     continue;
                 }
@@ -773,7 +775,6 @@ public without sharing class FEC_CustomerIntegrationService {
                 continue;
             }
 
-            enrichIppRecordFromDetailsApi(rec, accountNumber, rec.FEC_IPP_Plan__c, todayStr);
             toInsert.add(rec);
         }
 
@@ -794,6 +795,7 @@ public without sharing class FEC_CustomerIntegrationService {
         );
 
         if (ipp != null) {
+            applyCardSecIppDetailFields(rec, ipp);
             rec.FEC_IPP_Record_No__c = ipp.IPPRecordNo != null ? ipp.IPPRecordNo.trim() : null;
             rec.FEC_IPP_First_Due_Date__c = FEC_CommonUltils.parseDate(ipp.IPPStartDate);
             rec.FEC_IPP_Mature_Date__c = FEC_CommonUltils.parseDate(ipp.IPPMatureDate);
@@ -802,6 +804,27 @@ public without sharing class FEC_CustomerIntegrationService {
         }
 
         return rec;
+    }
+
+    private static void applyCardSecIppDetailFields(FEC_IPP__c rec, FEC_GetCardSecInfo.IPP ipp) {
+        if (rec == null || ipp == null) {
+            return;
+        }
+        if (String.isNotBlank(ipp.IPPPlan)) {
+            rec.FEC_IPP_Plan__c = ipp.IPPPlan.trim();
+        }
+        if (String.isNotBlank(ipp.IPPOpenDate)) {
+            rec.FEC_IPP_Open_Date__c = FEC_CommonUltils.parseDate(ipp.IPPOpenDate);
+        }
+        if (ipp.IPPBalance != null) {
+            rec.FEC_IPP_Balance__c = ipp.IPPBalance;
+        }
+        if (ipp.InterestRate != null) {
+            rec.FEC_IPP_Interest_Rate__c = ipp.InterestRate;
+        }
+        if (ipp.Term != null) {
+            rec.FEC_IPP_Term__c = ipp.Term;
+        }
     }
 
     private static FEC_IPP__c buildIppRecordFromSecIppOnly(
@@ -817,17 +840,17 @@ public without sharing class FEC_CustomerIntegrationService {
             planNumberKey = FEC_ConstantCommon.STR_DASH;
         }
 
-        return new FEC_IPP__c(
+        FEC_IPP__c rec = new FEC_IPP__c(
             FEC_Customer_History__c = customerHistoryId,
             FEC_IPP_Plan__c = planNumberKey,
             FEC_IPP_Record_No__c = ipp.IPPRecordNo != null ? ipp.IPPRecordNo.trim() : null,
-            FEC_IPP_Balance__c = ipp.IPPBalance,
             FEC_IPP_First_Due_Date__c = FEC_CommonUltils.parseDate(ipp.IPPStartDate),
             FEC_IPP_Mature_Date__c = FEC_CommonUltils.parseDate(ipp.IPPMatureDate),
             FEC_IPP_Current_Balance__c = ipp.IPPCurrentBalance,
-            FEC_IPP_Current_Term__c = ipp.currentTerm,
-            FEC_IPP_Interest_Rate__c = ipp.InterestRate
+            FEC_IPP_Current_Term__c = ipp.currentTerm
         );
+        applyCardSecIppDetailFields(rec, ipp);
+        return rec;
     }
 
     private static void persistIppRecords(Id customerHistoryId, List<FEC_IPP__c> toInsert) {
@@ -956,49 +979,6 @@ public without sharing class FEC_CustomerIntegrationService {
             }
         }
         return orderedList;
-    }
-
-    private static void enrichIppRecordFromDetailsApi(
-        FEC_IPP__c rec,
-        String accountNumber,
-        String planNumber,
-        String todayStr
-    ) {
-        if (rec == null
-            || String.isBlank(planNumber)
-            || FEC_ConstantCommon.STR_DASH.equals(planNumber)) {
-            return;
-        }
-
-        try {
-            FEC_GetIPPDetailsCallout.IPPRequest req = new FEC_GetIPPDetailsCallout.IPPRequest();
-            req.accountNumber = accountNumber;
-            req.effectiveDate = todayStr;
-            req.amount = 1;
-            req.postingDate = todayStr;
-            req.planNumber = planNumber;
-
-            FEC_GetIPPDetailsCallout.IPPDetailsResponse detailResp =
-                FEC_GetIPPDetailsCallout.getIPPDetails(req);
-
-            Boolean isSuccess = detailResp != null && (
-                detailResp.status == FEC_ConstantCommon.SUCCESS_MESSAGE
-                || detailResp.status == FEC_ConstantCommon.SUCCESS_STATUS_CODE
-                || (detailResp.sysMessage != null
-                    && detailResp.sysMessage.equalsIgnoreCase(FEC_ConstantCommon.SUCCESS_MESSAGE))
-            );
-
-            if (isSuccess) {
-                if (detailResp.interestRate != null) {
-                    rec.FEC_IPP_Interest_Rate__c = detailResp.interestRate;
-                }
-                if (String.isNotBlank(detailResp.ippTerm)) {
-                    rec.FEC_IPP_Term__c = Decimal.valueOf(detailResp.ippTerm.trim());
-                }
-            }
-        } catch (Exception e) {
-            System.debug('### GetIPPDetails ERROR for plan ' + planNumber + ': ' + e.getMessage());
-        }
     }
 
     private static void deleteExistingIppRecords(Id customerHistoryId) {

@@ -51,7 +51,7 @@ public with sharing class FEC_LiveMasterDataSettingController {
             'FEC_Field_API_Name__c', 'FEC_Field_Label_Name__c',
             'FEC_Additional_Field__c', 'FEC_Additional_Field__r.Name',
             'FEC_Stage_Name__r.Name', 'FEC_Nature_Of_Case__r.Name',
-            'FEC_Channel__c', 'FEC_Channel__r.Name',
+            // 'FEC_Channel__c', 'FEC_Channel__r.Name',
             'FEC_Field_Masking__c', 'FEC_Masking_Type__c', 'FEC_Field_Reverted__c',
             'FEC_Sub_Section__c', 'FEC_Sub_Section_Field_Layout__c', 'FEC_Sub_Section_Layout__c',
             'FEC_Sub_Section_Order__c', 'FEC_Editable_User_Group__c',
@@ -88,7 +88,7 @@ public with sharing class FEC_LiveMasterDataSettingController {
             for (FEC_Master_Data_Setting__c s : safe) {
                 FEC_Master_Data_Setting__c orig = originalMap.get(s.Id);
                 if (orig == null) continue;
-                if (orig.FEC_Channel__c != null) s.FEC_Channel__c = orig.FEC_Channel__c;
+                // if (orig.FEC_Channel__c != null) s.FEC_Channel__c = orig.FEC_Channel__c;
                 if (orig.FEC_Sub_Section__c != null) s.FEC_Sub_Section__c = orig.FEC_Sub_Section__c;
                 if (orig.FEC_Sub_Section_Order__c != null) s.FEC_Sub_Section_Order__c = orig.FEC_Sub_Section_Order__c;
                 if (orig.FEC_Sub_Section_Layout__c != null) s.FEC_Sub_Section_Layout__c = orig.FEC_Sub_Section_Layout__c;
@@ -304,7 +304,7 @@ public with sharing class FEC_LiveMasterDataSettingController {
             if (req.containsKey(FEC_FieldConstants.FIELD_STAGE_NAME))     rec.FEC_Stage_Name__c     = getOptionalId(req, FEC_FieldConstants.FIELD_STAGE_NAME);
             if (req.containsKey(FEC_FieldConstants.FIELD_ADDITIONAL_FIELD)) rec.FEC_Additional_Field__c = (String) req.get(FEC_FieldConstants.FIELD_ADDITIONAL_FIELD);
             if (req.containsKey(FEC_FieldConstants.FIELD_SECTION))        rec.FEC_Section__c        = (String) req.get(FEC_FieldConstants.FIELD_SECTION);
-            if (req.containsKey('FEC_Channel__c'))                         rec.FEC_Channel__c        = getOptionalId(req, 'FEC_Channel__c');
+            // if (req.containsKey('FEC_Channel__c'))                         rec.FEC_Channel__c        = getOptionalId(req, 'FEC_Channel__c');
             if (req.containsKey(FEC_FieldConstants.FIELD_APPLICABLE_ROLE)) rec.FEC_Applicable_Role__c = getOptionalId(req, FEC_FieldConstants.FIELD_APPLICABLE_ROLE);
             if (req.containsKey(FEC_FieldConstants.FIELD_FIELD_ORDER_DISPLAY)) {
                 Object v = req.get(FEC_FieldConstants.FIELD_FIELD_ORDER_DISPLAY);
@@ -341,7 +341,7 @@ public with sharing class FEC_LiveMasterDataSettingController {
             validateSchemaFields(rec.FEC_Field_Object_Name__c, rec.FEC_Field_API_Name__c);
 
             // Preserve lookups before FLS strip
-            Id preservedChannelId = rec.FEC_Channel__c;
+            // Id preservedChannelId = rec.FEC_Channel__c;
             Id preservedIntegrationMappingId = rec.FEC_Data_Integration_Mapping__c;
             Id preservedNocId = rec.FEC_Nature_Of_Case__c;
             Id preservedStageId = rec.FEC_Stage_Name__c;
@@ -362,7 +362,7 @@ public with sharing class FEC_LiveMasterDataSettingController {
             String objKey = 'FEC_Master_Data_Setting__c';
             if (removedFields.containsKey(objKey)) {
                 Set<String> removed = removedFields.get(objKey);
-                if (removed.contains('FEC_Channel__c') && preservedChannelId != null) sanitized.FEC_Channel__c = preservedChannelId;
+                // if (removed.contains('FEC_Channel__c') && preservedChannelId != null) sanitized.FEC_Channel__c = preservedChannelId;
                 if (removed.contains('FEC_Data_Integration_Mapping__c') && preservedIntegrationMappingId != null) sanitized.FEC_Data_Integration_Mapping__c = preservedIntegrationMappingId;
                 if (removed.contains('FEC_Nature_Of_Case__c') && preservedNocId != null) sanitized.FEC_Nature_Of_Case__c = preservedNocId;
                 if (removed.contains('FEC_Stage_Name__c') && preservedStageId != null) sanitized.FEC_Stage_Name__c = preservedStageId;

@@ -425,10 +425,10 @@ public without sharing class FEC_CaseMasterDataHelper {
       return false;
     }
     String n = subSectionName.trim().toLowerCase();
-    if (revertSourceStageNumber == 3) {
+    if (revertSourceStageNumber == 2) {
       return n.contains('confirm') && n.contains('d2c');
     }
-    if (revertSourceStageNumber == 2) {
+    if (revertSourceStageNumber == 3) {
       return n.contains('confirm') &&
         (n.contains('cs sp') || n.contains('support'));
     }
@@ -475,10 +475,10 @@ public without sharing class FEC_CaseMasterDataHelper {
       return false;
     }
     if (revertSourceStageNumber == 2) {
-      return API_CONFIRM_CS_SP_ASSESSMENT.equals(fieldApiName);
+      return API_CONFIRM_D2C_ASSESSMENT.equals(fieldApiName);
     }
     if (revertSourceStageNumber == 3) {
-      return API_CONFIRM_D2C_ASSESSMENT.equals(fieldApiName);
+      return API_CONFIRM_CS_SP_ASSESSMENT.equals(fieldApiName);
     }
     return false;
   }
@@ -504,9 +504,10 @@ public without sharing class FEC_CaseMasterDataHelper {
   }
 
   /**
-   * GSR revert về Stage 1 từ Stage 2 — dùng để skip updateCaseNocFromSelection theo NOC Stage 2.
+   * COF/GSR revert về Stage 1 từ Stage 2 — skip updateCaseNocFromSelection theo NOC Stage 2;
+   * dùng restoreStage1BaselineAfterStage2Revert (Actual từ flow history gốc + giữ Updated NOC trên Case).
    */
-  public static Boolean isGsrRevertStage2ToStage1(String caseId) {
+  public static Boolean isCofGsrRevertStage2ToStage1(String caseId) {
     if (String.isBlank(caseId)) {
       return false;
     }
@@ -524,7 +525,7 @@ public without sharing class FEC_CaseMasterDataHelper {
     }
     Case c = caseRows[0];
     String bpCode = c.FEC_Actual_Nature_of_Case__r?.FEC_Business_Process__r?.FEC_Code__c;
-    if (String.isBlank(bpCode) || !bpCode.toUpperCase().contains('GSR')) {
+    if (!isCofOrGsrBusinessProcessCode(bpCode)) {
       return false;
     }
     if (!stageNameContains(c.FEC_Current_Case_Stage__r?.Name, FEC_ConstantCommon.STAGE_ONE)) {
@@ -536,6 +537,19 @@ public without sharing class FEC_CaseMasterDataHelper {
       FEC_ConstantCommon.STAGE_TWO,
       c.FEC_Current_Case_Stage__r.Name
     );
+  }
+
+  /** @deprecated Dùng {@link #isCofGsrRevertStage2ToStage1} — giữ alias GSR. */
+  public static Boolean isGsrRevertStage2ToStage1(String caseId) {
+    return isCofGsrRevertStage2ToStage1(caseId);
+  }
+
+  public static Boolean isCofOrGsrBusinessProcessCode(String businessProcessCode) {
+    if (String.isBlank(businessProcessCode)) {
+      return false;
+    }
+    String normalized = businessProcessCode.toUpperCase();
+    return normalized.contains('GSR') || normalized.contains('COF');
   }
 
   @TestVisible

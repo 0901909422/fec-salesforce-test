@@ -2349,6 +2349,14 @@
         <value>Sort</value>
     </labels>
     <labels>
+        <fullName>FEC_BCH_TemplateFileMismatch</fullName>
+        <categories>LWC fec_BatchCaseHandling</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_BCH_TemplateFileMismatch</shortDescription>
+        <value>Tên file không khớp template Bulk Actions của quy trình và nhóm người dùng.</value>
+    </labels>
+    <labels>
         <fullName>FEC_BCH_TooManyRows</fullName>
         <categories>LWC fec_BatchCaseHandling</categories>
         <language>en_US</language>
@@ -18616,6 +18624,14 @@
         <protected>false</protected>
         <shortDescription>FEC_Email_File_Uploaded_Added</shortDescription>
         <value>File uploaded and added to email.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_INTERACTION_PHONE_REQUIRED</fullName>
+        <categories>fecInteraction</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Interaction phone is required</shortDescription>
+        <value>Interaction phone is required</value>
     </labels>
     <labels>
         <fullName>FEC_Email_File_Already_In_Email</fullName>

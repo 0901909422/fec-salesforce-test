@@ -214,6 +214,10 @@ export default class Fec_holdCaseManual extends LightningElement {
             && (this.responseType === 'SUCCESS' || this.responseType === 'ALREADY_MARKED');
     }
 
+
+    get showFooterActions() {
+        return !this.isCompleted && !(this.responseType === 'ERROR' && this._retryCount >= this._maxRetries);
+    }
     handleReasonChange(event) {
         this.selectedReason = event.detail.value;
         const meta = this._nfuReasonMap[this.selectedReason];
@@ -265,6 +269,13 @@ export default class Fec_holdCaseManual extends LightningElement {
             // ignore
         }
         getRecordNotifyChange([{ recordId: this._recordId }]);
+        try {
+            window.dispatchEvent(new CustomEvent('fecmanualholdcaserefresh', {
+                detail: { recordId: this._recordId, resultType }
+            }));
+        } catch (e) {
+            // ignore
+        }
         // Đợi LDS propagate trước khi user đóng popup
         await new Promise((resolve) => {
             // eslint-disable-next-line @lwc/lwc/no-async-operation
@@ -288,6 +299,7 @@ export default class Fec_holdCaseManual extends LightningElement {
         if (this._retryCount >= this._maxRetries) return;
 
         const attemptNumber = this._retryCount + 1;
+        const retryMessage = `${FEC_MSG_ERROR} Vui l\u00f2ng th\u1eed l\u1ea1i.`;
         this.isLoading = true;
         try {
             const response = await saveHoldCase({
@@ -326,14 +338,14 @@ export default class Fec_holdCaseManual extends LightningElement {
                     }
                     await this._notifyCaseRefresh('ERROR');
                 } else {
-                    this.responseMessage = FEC_MSG_ERROR;
+                    this.responseMessage = retryMessage;
+                    await this._notifyCaseRefresh('ERROR');
                 }
             }
 
         } catch (error) {
             this._retryCount += 1;
             this.responseType = 'ERROR';
-            const msg = error?.body?.message ?? this.customLabel.anUnexpectedError;
             if (this._retryCount >= this._maxRetries) {
                 this.responseMessage = FEC_MSG_ERROR;
                 try {
@@ -343,7 +355,8 @@ export default class Fec_holdCaseManual extends LightningElement {
                 }
                 await this._notifyCaseRefresh('ERROR');
             } else {
-                this.responseMessage = FEC_MSG_ERROR;
+                this.responseMessage = retryMessage;
+                await this._notifyCaseRefresh('ERROR');
             }
         } finally {
             this.isLoading = false;

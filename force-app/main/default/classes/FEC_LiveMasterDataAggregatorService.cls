@@ -56,7 +56,7 @@ public with sharing class FEC_LiveMasterDataAggregatorService {
         try {
             masterDataMap.put(FEC_ObjectConstants.KEY_MASTER_SETTING,
                 Security.stripInaccessible(AccessType.READABLE,
-                    [SELECT Id, Name, FEC_Code__c, FEC_Stage_Name__c, FEC_Nature_Of_Case__c, FEC_Channel__c
+                    [SELECT Id, Name, FEC_Code__c, FEC_Stage_Name__c, FEC_Nature_Of_Case__c
                      FROM FEC_Master_Data_Setting__c ORDER BY Name]
                 ).getRecords());
         } catch (Exception e) {
