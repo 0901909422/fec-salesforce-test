@@ -13,19 +13,19 @@
         <valueSetDefinition>
             <sorted>false</sorted>
             <value>
-                <fullName>A</fullName>
+                <fullName>Temporarily Locked</fullName>
                 <default>false</default>
-                <label>Tạm khoá</label>
+                <label>Temporarily Locked</label>
             </value>
             <value>
-                <fullName>Không sử dụng</fullName>
+                <fullName>Not In Use</fullName>
                 <default>false</default>
-                <label>Không sử dụng</label>
+                <label>Not In Use</label>
             </value>
             <value>
-                <fullName>Thẻ bị mất/ đánh cắp có phát sinh giao dịch</fullName>
+                <fullName>Lost/Stolen Card with Transaction Activity</fullName>
                 <default>false</default>
-                <label>Thẻ bị mất/ đánh cắp có phát sinh giao dịch</label>
+                <label>Lost/Stolen Card with Transaction Activity</label>
             </value>
         </valueSetDefinition>
     </valueSet>

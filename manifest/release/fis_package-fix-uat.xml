@@ -232,6 +232,7 @@
 		<members>Case.FEC_Product_Type_Text__c</members>
 		<members>Case.FEC_Sub_Category_Text__c</members>
 		<members>Case.FEC_Sub_Code_Text__c</members>
+        <members>Case.FEC_Card_Block_Reason__c</members>
         <members>FEC_Actual_Master_Data_Setting__c.FEC_Channel__c</members>
         <members>FEC_Master_Data_Setting__c.FEC_Channel__c</members>
         <members>FEC_Application_Status_Mapping__mdt.FEC_Status_Code__c</members>
@@ -388,6 +389,10 @@
     <types>
         <members>FEC_CommonCss</members>
         <name>StaticResource</name>
+    </types>
+	<types>
+        <members>Case-en_US</members>
+        <name>CustomObjectTranslation</name>
     </types>
     <types>
         <members>FEC_Case_With_Customer_Histories</members>
