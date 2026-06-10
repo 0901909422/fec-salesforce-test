@@ -18,8 +18,7 @@
           </template>
           </template>
         </div>
-        <div onchange={handleChildInputChange}>
-        <div class="slds-grid slds-wrap slds-m-top--small">
+        <div class="slds-grid slds-wrap slds-m-top--small" onchange={handleChildInputChange}>
           <template for:each={section.sortedSectionContentlst} for:item="row">
             <div key={row.rowKey} class={row.outerClass}>
               <template if:true={row.isFields}>
@@ -365,7 +364,6 @@
             </template>
           </template>
         </div>
-      </div>
         <!-- Fraud Manage Component fallback: only show when no Updated Info section -->
         <template if:true={section.isCaseInformationSection}>
           <template if:true={showFraudFallback}>

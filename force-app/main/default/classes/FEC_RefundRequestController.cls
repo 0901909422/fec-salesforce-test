@@ -144,14 +144,15 @@ public without sharing class FEC_RefundRequestController {
         if (refundAmount <= 0) {
             throw new AuraHandledException(System.Label.FEC_MSG_Refund_Request_Refund_Amount_Positive);
         }
-        if (receiptLines == null || receiptLines.isEmpty()) {
-            throw new AuraHandledException(System.Label.FEC_MSG_Refund_Request_Receipt_Lines_Required);
-        }
+        // 10/06/2026 15:29 linhdev - bỏ bắt buộc receipt line khi submit (chưa chắc đã có hóa đơn)
     }
 
     private static void assertSubmitRefundLinesValidated(List<ReceiptLineDTO> receiptLines) {
+        // 10/06/2026 15:29 linhdev - cho phép submit không có receipt line; chỉ validate line đã nhập dữ liệu
+        if (receiptLines == null || receiptLines.isEmpty()) {
+            return;
+        }
         Date todayDt = Date.today();
-        Integer validLineCount = 0;
         for (ReceiptLineDTO line : receiptLines) {
             if (line == null) {
                 continue;
@@ -161,7 +162,6 @@ public without sharing class FEC_RefundRequestController {
             if (lineBlank) {
                 continue;
             }
-            validLineCount++;
             if (String.isBlank(line.receiptDateIso) || line.receiptAmount == null || line.receiptAmount <= 0 || String.isBlank(line.transactionNo)
                 || String.isBlank(line.paymentChannel)) {
                 throw new AuraHandledException(System.Label.FEC_MSG_Refund_Request_Receipt_Line_Incomplete);
@@ -173,9 +173,6 @@ public without sharing class FEC_RefundRequestController {
             if (rd > todayDt) {
                 throw new AuraHandledException(System.Label.FEC_MSG_Refund_Request_Receipt_Date_Future);
             }
-        }
-        if (validLineCount == 0) {
-            throw new AuraHandledException(System.Label.FEC_MSG_Refund_Request_Receipt_Lines_Required);
         }
     }
 
