@@ -167,6 +167,8 @@ export default class fec_genesysSoftphone extends NavigationMixin(
     const vfOrigin = window.location.origin.replace(
       ".sandbox.lightning.force.com",
       "--c.sandbox.vf.force.com",
+      ".lightning.force.com",
+      ".vf.force.com",
     );
 
     if (iframe && iframe.contentWindow) {
