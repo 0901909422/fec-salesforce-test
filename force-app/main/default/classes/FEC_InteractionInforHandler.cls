@@ -739,18 +739,18 @@ public without sharing class FEC_InteractionInforHandler {
 
         List<Case> caseList = [
             SELECT FEC_Customer_Username__c,
-                   FEC_Interaction_Masked_Phone__c,
-                   FEC_Phone_Number__c,
-                   FEC_Created_On__c,
-                   FEC_Created_by__c,
-                   FEC_KYC_Status__c,
-                   FEC_External_Interaction_ID__c,
-                   FEC_Outcome_Code__c,
-                   FEC_Interaction_Remarks__c,
-                   FEC_Interaction__c,
-                   IsClosed,
-                   RecordType.DeveloperName
-            FROM Case
+                   FEC_Interaction_Masked_Phone__c, 
+                   FEC_Phone_Number__c, 
+                   FEC_Created_On__c, 
+                   FEC_Created_by__c, 
+                   FEC_KYC_Status__c, 
+                   FEC_External_Interaction_ID__c, 
+                   FEC_Outcome_Code__c, 
+                   FEC_Interaction_Remarks__c, 
+                   FEC_Interaction__c, 
+                   IsClosed, 
+                   RecordType.DeveloperName 
+            FROM Case 
             WHERE Id = :recordId
             LIMIT 1
         ];
