@@ -554,4 +554,58 @@ private class FEC_InteractionInforHandler_Test {
         System.assertEquals(false, FEC_InteractionInforHandler.isInteractionEmailActionBlocked(emailInteraction.Id));
         Test.stopTest();
     }
+
+    @IsTest
+    static void testInteractionPhoneActionBlocked_ManualInboundMissingPhone() {
+        String suffix = String.valueOf(System.currentTimeMillis());
+        Case phoneInteraction = new Case(
+            Subject = 'Inbound Interaction ' + suffix,
+            Status = 'New',
+            FEC_Is_Manual__c = true,
+            FEC_Channel__c = FEC_ConstantCommon.CHANNEL_INBOUND_NAME,
+            FEC_Phone_Number__c = null,
+            FEC_ID_Search__c = 'PHONE-BLOCK-' + suffix
+        );
+        Id rtId = interactionRecordTypeId();
+        if (rtId != null) {
+            phoneInteraction.RecordTypeId = rtId;
+        }
+        FEC_CaseTriggerHandler.isExecuting = true;
+        try {
+            insert phoneInteraction;
+        } finally {
+            FEC_CaseTriggerHandler.isExecuting = false;
+        }
+
+        Test.startTest();
+        System.assertEquals(true, FEC_InteractionInforHandler.isInteractionPhoneActionBlocked(phoneInteraction.Id));
+        Test.stopTest();
+    }
+
+    @IsTest
+    static void testInteractionPhoneActionBlocked_ManualInboundWithPhone() {
+        String suffix = String.valueOf(System.currentTimeMillis());
+        Case phoneInteraction = new Case(
+            Subject = 'Inbound Interaction ' + suffix,
+            Status = 'New',
+            FEC_Is_Manual__c = true,
+            FEC_Channel__c = FEC_ConstantCommon.CHANNEL_INBOUND_NAME,
+            FEC_Phone_Number__c = '0901234567',
+            FEC_ID_Search__c = 'PHONE-OK-' + suffix
+        );
+        Id rtId = interactionRecordTypeId();
+        if (rtId != null) {
+            phoneInteraction.RecordTypeId = rtId;
+        }
+        FEC_CaseTriggerHandler.isExecuting = true;
+        try {
+            insert phoneInteraction;
+        } finally {
+            FEC_CaseTriggerHandler.isExecuting = false;
+        }
+
+        Test.startTest();
+        System.assertEquals(false, FEC_InteractionInforHandler.isInteractionPhoneActionBlocked(phoneInteraction.Id));
+        Test.stopTest();
+    }
 }

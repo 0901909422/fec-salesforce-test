@@ -164,6 +164,50 @@ public without sharing class FEC_InteractionInforHandler {
         return requiresManualInteractionEmail(getInteractionForEmailAction(recordId));
     }
 
+    private static Boolean requiresManualInteractionPhone(Case interaction) {
+        return interaction != null
+            && interaction.FEC_Is_Manual__c == true
+            && (interaction.FEC_Channel__c == FEC_ConstantCommon.CHANNEL_INBOUND_NAME
+                || interaction.FEC_Channel__c == FEC_ConstantCommon.CHANNEL_OUTBOUND_NAME)
+            && String.isBlank(interaction.FEC_Phone_Number__c);
+    }
+
+    private static Case getInteractionForPhoneAction(Id recordId) {
+        if (recordId == null) {
+            return null;
+        }
+        List<Case> rows = [
+            SELECT Id, RecordType.DeveloperName, FEC_Interaction__c,
+                   FEC_Is_Manual__c, FEC_Channel__c, FEC_Phone_Number__c
+            FROM Case
+            WHERE Id = :recordId
+            LIMIT 1
+        ];
+        if (rows.isEmpty()) {
+            return null;
+        }
+        Case current = rows[0];
+        if (current.RecordType.DeveloperName == FEC_ConstantCommon.CASE_INTERACTION_RECORD_TYPE_DEV_NAME) {
+            return current;
+        }
+        if (current.RecordType.DeveloperName == FEC_ConstantCommon.CASE_CUSTOMER_RECORD_TYPE_DEV_NAME
+            && current.FEC_Interaction__c != null) {
+            List<Case> interactions = [
+                SELECT Id, FEC_Is_Manual__c, FEC_Channel__c, FEC_Phone_Number__c
+                FROM Case
+                WHERE Id = :current.FEC_Interaction__c
+                LIMIT 1
+            ];
+            return interactions.isEmpty() ? null : interactions[0];
+        }
+        return null;
+    }
+
+    @AuraEnabled(cacheable=false)
+    public static Boolean isInteractionPhoneActionBlocked(Id recordId) {
+        return requiresManualInteractionPhone(getInteractionForPhoneAction(recordId));
+    }
+
     @AuraEnabled(cacheable=true)
     public static Id getInteractionIdFromCustomerCase(Id caseId) {
         Case c = [

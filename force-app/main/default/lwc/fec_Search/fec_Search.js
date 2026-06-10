@@ -32,7 +32,9 @@ import FEC_Error_Callout_Insurance from '@salesforce/label/c.FEC_Error_Callout_I
 import FEC_MSG_Service_Error_Label from '@salesforce/label/c.FEC_MSG_Service_Error_Label';
 import FEC_Common_No_Results_Label from '@salesforce/label/c.FEC_Common_No_Results_Label';
 import isInteractionEmailActionBlocked from '@salesforce/apex/FEC_InteractionInforHandler.isInteractionEmailActionBlocked';
+import isInteractionPhoneActionBlocked from '@salesforce/apex/FEC_InteractionInforHandler.isInteractionPhoneActionBlocked';
 import VALIDATE_INTERACTION_EMAIL from "@salesforce/messageChannel/FEC_Validate_Interaction_Email__c";
+import VALIDATE_INTERACTION_PHONE from "@salesforce/messageChannel/FEC_Validate_Interaction_Phone__c";
 
 import checkFieldEditPermissions from "@salesforce/apex/FEC_SearchController.checkFieldEditPermissions";
 import SkipModal from "c/fec_SkipModal";
@@ -1293,7 +1295,7 @@ hasAnySearchCriteria(params) {
       }
 
       if (this.recordId) {
-        const canProceed = await this.ensureInteractionEmailBeforeCreateCase(this.recordId);
+        const canProceed = await this.ensureInteractionFieldsBeforeCreateCase(this.recordId);
         if (!canProceed) {
           return;
         }
@@ -1622,6 +1624,31 @@ hasAnySearchCriteria(params) {
     }
   }
 
+  async ensureInteractionPhoneBeforeCreateCase(recordId) {
+    if (!recordId) {
+      return true;
+    }
+    try {
+      const blocked = await isInteractionPhoneActionBlocked({ recordId });
+      if (blocked) {
+        publish(this.messageContext, VALIDATE_INTERACTION_PHONE, { recordId });
+        return false;
+      }
+      return true;
+    } catch (error) {
+      console.error('isInteractionPhoneActionBlocked error', error);
+      return true;
+    }
+  }
+
+  async ensureInteractionFieldsBeforeCreateCase(recordId) {
+    const emailOk = await this.ensureInteractionEmailBeforeCreateCase(recordId);
+    if (!emailOk) {
+      return false;
+    }
+    return this.ensureInteractionPhoneBeforeCreateCase(recordId);
+  }
+
   // Handle button actions from datatable rows
   async handleRowAction(event) {
     console.log("Row action event:", event);
@@ -1655,7 +1682,7 @@ hasAnySearchCriteria(params) {
     switch (action.name) {
       case "create_history": {
         if (this.recordId) {
-          const canProceed = await this.ensureInteractionEmailBeforeCreateCase(this.recordId);
+          const canProceed = await this.ensureInteractionFieldsBeforeCreateCase(this.recordId);
           if (!canProceed) {
             return;
           }

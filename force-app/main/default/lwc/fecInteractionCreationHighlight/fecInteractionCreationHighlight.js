@@ -24,7 +24,9 @@ import FEC_INTERACTION_CHANNEL from "@salesforce/label/c.FEC_Interaction_Channel
 import FEC_INTERACTION_SUB_CHANNEL from "@salesforce/label/c.FEC_Interaction_Sub_Channel_Label";
 import FEC_No_Permission_Msg from '@salesforce/label/c.FEC_No_Permission_Msg';
 import isInteractionEmailActionBlocked from '@salesforce/apex/FEC_InteractionInforHandler.isInteractionEmailActionBlocked';
+import isInteractionPhoneActionBlocked from '@salesforce/apex/FEC_InteractionInforHandler.isInteractionPhoneActionBlocked';
 import VALIDATE_INTERACTION_EMAIL from "@salesforce/messageChannel/FEC_Validate_Interaction_Email__c";
+import VALIDATE_INTERACTION_PHONE from "@salesforce/messageChannel/FEC_Validate_Interaction_Phone__c";
 import {
   publish,
   MessageContext,
@@ -237,13 +239,38 @@ export default class FecInteractionCreationHighlight extends NavigationMixin(
     }
   }
 
+  async ensureInteractionPhoneBeforeCreateCase(recordId) {
+    if (!recordId) {
+      return true;
+    }
+    try {
+      const blocked = await isInteractionPhoneActionBlocked({ recordId });
+      if (blocked) {
+        publish(this.messageContext, VALIDATE_INTERACTION_PHONE, { recordId });
+        return false;
+      }
+      return true;
+    } catch (error) {
+      console.error("isInteractionPhoneActionBlocked error", error);
+      return true;
+    }
+  }
+
+  async ensureInteractionFieldsBeforeCreateCase(recordId) {
+    const emailOk = await this.ensureInteractionEmailBeforeCreateCase(recordId);
+    if (!emailOk) {
+      return false;
+    }
+    return this.ensureInteractionPhoneBeforeCreateCase(recordId);
+  }
+
   async handleCreateCase() {
     console.log("handleCreateCase from creation highlight");
     if (this._userProfile === PROFILE_RELEVANT_DEPTS) {
       this.dispatchEvent(new ShowToastEvent({ title: 'Lỗi', message: FEC_No_Permission_Msg, variant: 'error' }));
       return;
     }
-    const canProceed = await this.ensureInteractionEmailBeforeCreateCase(this.recordId);
+    const canProceed = await this.ensureInteractionFieldsBeforeCreateCase(this.recordId);
     if (!canProceed) {
       return;
     }
