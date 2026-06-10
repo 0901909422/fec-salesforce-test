@@ -5,11 +5,22 @@ public with sharing class FEC_CreateCaseInteractionController {
     Case interation = [
       SELECT Id, FEC_Account_or_Contract__c, FEC_Account_or_Contract__r.FEC_Customer_Name__c,
              FEC_Product_Type__c, FEC_Phone_Number__c,
-             FEC_Account_Number__c, FEC_Contract_Number__c, FEC_CIF_Number__c, FEC_Is_Manual__c, FEC_Channel__c
+             FEC_Account_Number__c, FEC_Contract_Number__c, FEC_CIF_Number__c, FEC_Customer_Username__c, FEC_Is_Manual__c, FEC_Channel__c
       FROM Case
       WHERE Id = :caseId
       LIMIT 1
-    ];
+     ];
+    //tungnm37 - Require Customer Username when creating Customer Case from manual Chat interaction.
+    if (
+      interation.FEC_Is_Manual__c == true &&
+      interation.FEC_Channel__c == FEC_ConstantCommon.CHANNEL_CHAT &&
+      String.isBlank(interation.FEC_Customer_Username__c)
+    ) {
+      throw new AuraHandledException(
+        System.Label.FEC_Manual_Chat_Customer_Username_Required
+        );
+    }
+    
     
     
     if (
@@ -87,7 +98,7 @@ public with sharing class FEC_CreateCaseInteractionController {
       Case interaction = [
         SELECT Id, FEC_Account_or_Contract__r.FEC_Customer_Name__c, FEC_Product_Type__c, FEC_Phone_Number__c,
                FEC_Customer_Type__c, FEC_Account_or_Contract__c, RecordType.DeveloperName,
-               FEC_Account_Number__c, FEC_Contract_Number__c, FEC_CIF_Number__c, FEC_Is_Manual__c, FEC_Channel__c
+               FEC_Account_Number__c, FEC_Contract_Number__c, FEC_CIF_Number__c, FEC_Customer_Username__c, FEC_Is_Manual__c, FEC_Channel__c
         FROM Case
         WHERE Id = :caseId
         LIMIT 1
@@ -95,6 +106,17 @@ public with sharing class FEC_CreateCaseInteractionController {
       System.debug('Manual=' + interaction.FEC_Is_Manual__c);
       System.debug('Channel=' + interaction.FEC_Channel__c);
       System.debug('Phone=' + interaction.FEC_Phone_Number__c);
+      //tungnm37 - Require Customer Username when creating Customer Case from manual Chat interaction.
+      if (
+        interaction.FEC_Is_Manual__c == true &&
+        interaction.FEC_Channel__c == FEC_ConstantCommon.CHANNEL_CHAT &&
+        String.isBlank(interaction.FEC_Customer_Username__c)
+      ) {
+        throw new AuraHandledException(
+          System.Label.FEC_Manual_Chat_Customer_Username_Required
+          );
+      }
+      
       if (
         interaction.FEC_Is_Manual__c == true &&
         (
