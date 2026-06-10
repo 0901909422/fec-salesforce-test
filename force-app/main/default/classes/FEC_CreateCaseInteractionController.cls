@@ -10,18 +10,6 @@ public with sharing class FEC_CreateCaseInteractionController {
       WHERE Id = :caseId
       LIMIT 1
      ];
-    //tungnm37 - Require Customer Username when creating Customer Case from manual Chat interaction.
-    if (
-      interation.FEC_Is_Manual__c == true &&
-      interation.FEC_Channel__c == FEC_ConstantCommon.CHANNEL_CHAT &&
-      String.isBlank(interation.FEC_Customer_Username__c)
-    ) {
-      throw new AuraHandledException(
-        System.Label.FEC_Manual_Chat_Customer_Username_Required
-        );
-    }
-    
-    
     
     if (
       interation.FEC_Is_Manual__c == true &&
@@ -106,16 +94,6 @@ public with sharing class FEC_CreateCaseInteractionController {
       System.debug('Manual=' + interaction.FEC_Is_Manual__c);
       System.debug('Channel=' + interaction.FEC_Channel__c);
       System.debug('Phone=' + interaction.FEC_Phone_Number__c);
-      //tungnm37 - Require Customer Username when creating Customer Case from manual Chat interaction.
-      if (
-        interaction.FEC_Is_Manual__c == true &&
-        interaction.FEC_Channel__c == FEC_ConstantCommon.CHANNEL_CHAT &&
-        String.isBlank(interaction.FEC_Customer_Username__c)
-      ) {
-        throw new AuraHandledException(
-          System.Label.FEC_Manual_Chat_Customer_Username_Required
-          );
-      }
       
       if (
         interaction.FEC_Is_Manual__c == true &&
