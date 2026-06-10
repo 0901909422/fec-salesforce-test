@@ -283,6 +283,13 @@ public with sharing class FEC_GetMRCInfo {
     String transId = FEC_CommonUltils.generateTransactionUUID();
     String timestamp = FEC_CommonUltils.formatTimestamp(Datetime.now(), FEC_ConstantCommon.DATETIME_FORMAT);
     String envelope = buildEnvelope(req, transId, timestamp);
+
+    FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
+    FEC_API_Config__mdt apiConfig = FEC_API_Config__mdt.getInstance(API_CONFIG_NAME);
+    String endpoint = apiSetting?.FEC_Call_Mock__c
+      ? FEC_MockupEndpoint.GET_MRC_INFO_ENDPOINT_MOCKUP
+      : (apiSetting?.FEC_Endpoint__c + apiConfig?.FEC_Endpoint__c);
+
     try {
       HttpResponse res = sendRequest(envelope);
       Integer status = (res == null) ? null : res.getStatusCode();
@@ -300,14 +307,6 @@ public with sharing class FEC_GetMRCInfo {
         System.debug('Response is NULL');
     }
 
-      FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
-      FEC_API_Config__mdt apiConfig = FEC_API_Config__mdt.getInstance(API_CONFIG_NAME);
-      String endpoint = apiSetting?.FEC_Call_Mock__c
-        ? FEC_MockupEndpoint.GET_MRC_INFO_ENDPOINT_MOCKUP
-        : (
-            apiSetting?.FEC_Endpoint__c + apiConfig?.FEC_Endpoint__c
-          );
-	  
       responseLog = new FEC_ResponseLog(
         'FEC_GetMRCInfo',
         endpoint,
@@ -324,11 +323,36 @@ public with sharing class FEC_GetMRCInfo {
         finalResult.httpStatus = status;
       if (finalResult.rawResponse == null)
         finalResult.rawResponse = body;
+
+      if (responseLog != null && !finalResult.success) {
+        responseLog.errorMessage = String.isNotBlank(finalResult.errorMessage)
+          ? finalResult.errorMessage
+          : finalResult.description;
+      }
     } catch (Exception ex) {
       finalResult.errorMessage = ex.getMessage();
       finalResult.success = false;
+      if (responseLog == null) {
+        responseLog = new FEC_ResponseLog(
+          'FEC_GetMRCInfo',
+          endpoint,
+          FEC_ConstantCommon.API_METHOD_POST,
+          envelope,
+          null,
+          ex.getMessage()
+        );
+      } else {
+        responseLog.errorMessage = ex.getMessage();
+      }
+    } finally {
+      logApiResponse();
     }
     return finalResult;
+  }
+
+  /** Ghi FEC_API_Log__c sau mỗi lần gọi Get MRC Info. */
+  public static void logApiResponse() {
+    FEC_CommonUltils.logApiResponse(responseLog);
   }
 
   private static void validate(

@@ -15,6 +15,62 @@ private class FEC_UMSUserManagementRestService_Test {
     static void doGet_info_success() {
         User me = [SELECT Username FROM User WHERE Id = :UserInfo.getUserId() LIMIT 1];
 
+    private static User adminUser() {
+        List<User> admins = [
+            SELECT Id
+            FROM User
+            WHERE IsActive = TRUE AND Profile.Name = 'System Administrator'
+            LIMIT 1
+        ];
+        return admins.isEmpty() ? new User(Id = UserInfo.getUserId()) : admins[0];
+    }
+
+    private static Id umsQueueId() {
+        return [SELECT Id FROM Group WHERE Type = 'Queue' AND DeveloperName LIKE 'UMS_Test_Queue_%' LIMIT 1].Id;
+    }
+
+    @TestSetup
+    static void setupData() {
+        String suffix = String.valueOf(System.currentTimeMillis());
+        String devName = 'UMS_Test_Queue_' + suffix.right(8);
+
+        Group umsQueue = new Group(
+            Name = 'UMS Test Queue ' + suffix,
+            DeveloperName = devName,
+            Type = 'Queue'
+        );
+        insert umsQueue;
+
+        System.runAs(new User(Id = UserInfo.getUserId())) {
+            insert new QueueSobject(QueueId = umsQueue.Id, SobjectType = 'Case');
+        }
+
+        Profile p = [SELECT Id FROM Profile WHERE Name = 'Standard User' LIMIT 1];
+        String username = 'ums.existing.' + suffix + '@test.invalid';
+        User existing = new User(
+            Alias = 'umsexist',
+            Email = 'ums.existing.' + suffix + '@test.invalid',
+            EmailEncodingKey = 'UTF-8',
+            FirstName = 'Existing',
+            LastName = 'User',
+            LanguageLocaleKey = 'en_US',
+            LocaleSidKey = 'en_US',
+            ProfileId = p.Id,
+            TimeZoneSidKey = 'America/Los_Angeles',
+            Username = username,
+            IsActive = true
+        );
+        insert existing;
+
+        // Assign Permission Sets cho FLS access
+        FEC_TestDataFactory.assignStandardFECPermissions(existing.Id);
+
+        System.runAs(adminUser()) {
+            insert new GroupMember(GroupId = umsQueue.Id, UserOrGroupId = existing.Id);
+        }
+    }
+
+    private static void setRestContext(String method, String uri, String body, Map<String, String> params) {
         RestRequest req = new RestRequest();
         req.requestUri = '/services/apexrest/ums/v1/users/info';
         req.httpMethod = 'GET';

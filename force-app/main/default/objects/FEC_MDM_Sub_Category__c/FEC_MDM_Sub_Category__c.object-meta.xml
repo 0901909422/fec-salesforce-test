@@ -155,7 +155,8 @@
     <externalSharingModel>Private</externalSharingModel>
     <label>FEC_Sub Category MDM</label>
     <nameField>
-        <label>Sub Category  Name</label>
+        <label>English Name</label>
+        <trackHistory>true</trackHistory>
         <type>Text</type>
     </nameField>
     <pluralLabel>FEC_Sub Categories</pluralLabel>

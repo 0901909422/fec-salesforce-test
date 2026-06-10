@@ -1,4 +1,4 @@
-import { LightningElement, track, wire } from 'lwc';
+import { LightningElement, api, track, wire } from 'lwc';
 import { NavigationMixin } from 'lightning/navigation';
 import getClosedServiceCases from '@salesforce/apex/FEC_GetServiceCases.getClosedServiceCases';
 import getCaseFieldHelpTexts from '@salesforce/apex/FEC_GetServiceCases.getCaseFieldHelpTexts';
@@ -25,6 +25,7 @@ import FEC_Last_Updated_By_Label from '@salesforce/label/c.FEC_Last_Updated_By_L
 import FEC_Interaction_Title_Label from '@salesforce/label/c.FEC_Interaction_Title_Label';
 
 export default class Fec_ClosedServiceCases extends NavigationMixin(LightningElement) {
+  @api recordId;
   @track data = [];
   @track lastRefreshTime = null;
   @track isLoading = false;
@@ -142,10 +143,14 @@ export default class Fec_ClosedServiceCases extends NavigationMixin(LightningEle
   }
 
   async fetchData() {
+    if (!this.recordId) {
+      this.data = [];
+      return;
+    }
     this.isLoading = true;
     this.error = undefined;
     try {
-      const result = await getClosedServiceCases();
+      const result = await getClosedServiceCases({ recordId: this.recordId });
       this.lastRefreshTime = new Date().toISOString();
       this.data = (result || []).map((row) => ({
         ...row,

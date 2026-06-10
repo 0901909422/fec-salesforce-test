@@ -201,6 +201,33 @@ public with sharing class FEC_GetLoanApplicationHistory {
     }
   }
 
+  @TestVisible
+  private static Map<String, String> statusLabelCache;
+
+  public static String resolveStatusLabel(String statusCode) {
+    if (String.isBlank(statusCode)) {
+      return '';
+    }
+    if (statusLabelCache == null) {
+      statusLabelCache = new Map<String, String>();
+      for (FEC_Application_Status_Mapping__mdt mapping : [
+        SELECT FEC_Status_Code__c, FEC_Status_Label__c
+        FROM FEC_Application_Status_Mapping__mdt
+      ]) {
+        if (String.isNotBlank(mapping.FEC_Status_Code__c)) {
+          statusLabelCache.put(
+            mapping.FEC_Status_Code__c.trim().toUpperCase(),
+            mapping.FEC_Status_Label__c
+          );
+        }
+      }
+    }
+    String key = statusCode.trim().toUpperCase();
+    return statusLabelCache.containsKey(key)
+      ? statusLabelCache.get(key)
+      : statusCode;
+  }
+
   @AuraEnabled
   public static FEC_Application_History__c updateCaseApplicationHistory(
     Id caseId
@@ -286,7 +313,7 @@ public with sharing class FEC_GetLoanApplicationHistory {
     if (targetApiHistory != null) {
       historyRec.FEC_User__c = targetApiHistory.userName;
       historyRec.FEC_Activity_ID__c = targetApiHistory.activityId;
-      historyRec.FEC_Status__c = targetApiHistory.statusId;
+      historyRec.FEC_Status__c = resolveStatusLabel(targetApiHistory.statusId);
       historyRec.FEC_Edit_Date__c = String.isNotBlank(targetApiHistory.editDate)
         ? Date.valueOf(targetApiHistory.editDate)
         : null;

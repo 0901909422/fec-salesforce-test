@@ -43,6 +43,10 @@ private class FEC_CaseAssignmentConfigController_Test {
         );
         insert new List<User>{ userA, userB };
 
+        // Assign Permission Sets cho FLS access
+        FEC_TestDataFactory.assignStandardFECPermissions(userA.Id);
+        FEC_TestDataFactory.assignStandardFECPermissions(userB.Id);
+
         insert new List<GroupMember>{
             new GroupMember(GroupId = testQueue.Id, UserOrGroupId = userA.Id),
             new GroupMember(GroupId = testQueue.Id, UserOrGroupId = userB.Id)

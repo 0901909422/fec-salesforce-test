@@ -16,6 +16,7 @@ export default class fec_TeamQueueTree extends LightningElement {
     @track showModalNewQueue = false;
     @track queueLabel = '';
     @track queueName = '';
+    @track queueLabelStatus = '';
     @track errorMessage = '';
     @track currentTeamName = '';
     @track currentTeamID = '';
@@ -60,6 +61,8 @@ export default class fec_TeamQueueTree extends LightningElement {
                     name: team.teamLabel,
                     id: team.teamId,
                     teamQueueID: team.teamId,
+                    description: team.teamDescription,
+                    apiname: team.teamName,
                     expanded: false,
                     _children: [],
                     hasChildren: true
@@ -89,21 +92,27 @@ export default class fec_TeamQueueTree extends LightningElement {
         let teamQueueID = '';
         let teamQueueRecordID = '';
         let rowId = '';
+        let teamApiName = '';
+        let teamDescription = '';
+        let queueLabelStatus = '';
         
         // Check if it's an expand/collapse event (from onexpand/oncollapse)
        if (event.detail && event.detail.row) {
             let detailRow = event.detail.row;
             rowName = detailRow.name ? detailRow.name : '';
+            teamApiName = detailRow.apiname ? detailRow.apiname : '';
+            teamDescription = detailRow.description ? detailRow.description : '';
             rowType = detailRow.rowType ? detailRow.rowType : '';
             queueId = detailRow.queueId ? detailRow.queueId : '';
             teamQueueID = detailRow.teamQueueID ? detailRow.teamQueueID : '';
             teamQueueRecordID = detailRow.teamQueueRecordID ? detailRow.teamQueueRecordID : '';
             rowId = detailRow.id ? detailRow.id : '';
+            queueLabelStatus = detailRow.queueLabelStatus ? detailRow.queueLabelStatus : '';
         }
-        console.log('rowId: ', rowId, ' rowName:', rowName, ' rowType:', rowType, ' queueId:', queueId, ' teamQueueID:', teamQueueID, ' ;teamQueueRecordID: ', teamQueueRecordID);
+        console.log('rowId: ', rowId, ' rowName:', rowName, ' rowType:', rowType, ' teamApiName:', teamApiName, ' teamDescription:', teamDescription, ' queueId:', queueId, ' teamQueueID:', teamQueueID, ' ;teamQueueRecordID: ', teamQueueRecordID);
         if (rowType === 'QUEUE' && queueId) {
             // New custom event to get queue users show on parent LWC
-            this.dispatchEvent(new CustomEvent('getqueueusers', { detail: { queueId: queueId, teamQueueRecordID: teamQueueRecordID, curentTeamId: teamQueueID} }));
+            this.dispatchEvent(new CustomEvent('getqueueusers', { detail: { queueId: queueId, teamQueueRecordID: teamQueueRecordID, curentTeamId: teamQueueID, queueLabelStatus: queueLabelStatus} }));
         } else if (rowType === 'ADD_QUEUE' && teamQueueID) {
             // Handle show model Add queue form
             this.openModal(teamQueueID);
@@ -113,7 +122,7 @@ export default class fec_TeamQueueTree extends LightningElement {
             // Expand row
             this.expandedTeams = [...this.expandedTeams, rowId];
             // Call loadHistory
-            this.dispatchEvent(new CustomEvent('selectteam', { detail: { teamId: rowId, teamName: rowName} }));
+            this.dispatchEvent(new CustomEvent('selectteam', { detail: { teamId: rowId, teamName: rowName, teamApiName: teamApiName, teamDescription: teamDescription } }));
             this.loadQueuesForTeam(rowId);
         } else if (this.expandedTeams.includes(rowId)) {
             // Handle collapse row
@@ -132,7 +141,8 @@ export default class fec_TeamQueueTree extends LightningElement {
                 rowType: 'QUEUE',
                 teamQueueID: teamID,
                 teamQueueRecordID: queue.id,
-                queueId: queue.queueId
+                queueId: queue.queueId,
+                queueLabelStatus: queue.queueLabelStatus
             }));
            
             // Record Add Queue in Team
@@ -175,6 +185,7 @@ export default class fec_TeamQueueTree extends LightningElement {
         this.showModalNewQueue = true;
         this.queueLabel = '';
         this.queueName = '';
+        this.queueLabelStatus = '';
         this.errorMessage = '';
         this.currentTeamID = teamID;
     }
@@ -184,6 +195,7 @@ export default class fec_TeamQueueTree extends LightningElement {
         this.showModalNewQueue = false;
         this.queueLabel = '';
         this.queueName = '';
+        this.queueLabelStatus = '';
         this.errorMessage = '';
     }
 
@@ -203,6 +215,19 @@ export default class fec_TeamQueueTree extends LightningElement {
 
     handleQueueNameChange(event) {
         this.queueName = event.target.value;
+    }
+
+    handleQueueLabelStatusChange(event) {
+        this.queueLabelStatus = event.target.value;
+    }
+    validateInputFields() {
+        const allValid = [
+            ...this.template.querySelectorAll('.validate-input'),
+        ].reduce((validSoFar, inputCmp) => {
+            inputCmp.reportValidity();
+            return validSoFar && inputCmp.checkValidity();
+        }, true);
+        return allValid;
     }
 
     // Validate queue name format using regex
@@ -247,6 +272,11 @@ export default class fec_TeamQueueTree extends LightningElement {
     async saveNewTeam() {
         this.teamErrorMessage = '';
         this.isLoadingTeam = true;
+        const allValid = this.validateInputFields();
+        if (!allValid) {
+            this.isLoadingTeam = false;
+            return;
+        }
         try {
             // Basic client-side validations
             if (!this.teamLabel || this.teamLabel.trim().length === 0) {
@@ -304,11 +334,17 @@ export default class fec_TeamQueueTree extends LightningElement {
         }
     }
 
-    // Save new queue
+    // Save new queue and new queue team
+    // MIXED_DML_OPERATION, DML operation on setup object is not permitted after you have updated a non-setup object
     async saveNewQueue() {
         // Reset any previous errors
         this.errorMessage = '';
         this.isLoading = true;
+        const allValid = this.validateInputFields();
+        if (!allValid) {
+            this.isLoading = false;
+            return;
+        }
 
         try {
             // Validate queue name format first
@@ -330,7 +366,7 @@ export default class fec_TeamQueueTree extends LightningElement {
             const queueResultId = await createQueue({ queueLabel: this.queueLabel, queueName: this.queueName });
             if (queueResultId !== null) {
                 // Create record in FEC_Team_Queue__c custom object
-                const teamQueueResult = await createTeamQueueRecord({ teamID: this.currentTeamID, queueName: this.queueName });
+                const teamQueueResult = await createTeamQueueRecord({ teamID: this.currentTeamID, queueName: this.queueName, labelStatus: this.queueLabelStatus });
                 if (teamQueueResult) {
                     // Refresh the queue list for the team
                     await this.refreshQueuesForTeam(this.currentTeamID);

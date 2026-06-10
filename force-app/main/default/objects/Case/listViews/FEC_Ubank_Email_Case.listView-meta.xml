@@ -14,9 +14,55 @@
     <columns>FEC_Created_On__c</columns>
     <columns>FEC_Created_by__c</columns>
     <filterScope>Queue</filterScope>
+    <filters>
+        <field>CASES.STATUS</field>
+        <operation>equals</operation>
+        <value>Open</value>
+    </filters>
+    <filters>
+        <field>FEC_Channel__c</field>
+        <operation>equals</operation>
+        <value>Email</value>
+    </filters>
+    <filters>
+        <field>CASES.RECORDTYPE</field>
+        <operation>equals</operation>
+        <value>Case.Interaction</value>
+    </filters>
     <label>Ubank Email</label>
     <queue>FEC_Ubank_Email</queue>
     <sharedTo>
-        <allInternalUsers></allInternalUsers>
+        <role>FEC_Customer_Service_Ecom_Officer_1</role>
+        <role>FEC_Customer_Service_Ecom_Officer_2</role>
+        <role>FEC_Customer_Service_Ecom_Specialist_1</role>
+        <role>FEC_Customer_Service_Ecom_Specialist_2</role>
+        <role>FEC_Customer_Service_Ecom_Team_1_Leader</role>
+        <role>FEC_Customer_Service_Ecom_Team_2_Leader</role>
+        <role>FEC_Customer_Service_Inbound_Officer_1</role>
+        <role>FEC_Customer_Service_Inbound_Officer_2</role>
+        <role>FEC_Customer_Service_Inbound_Officer_3</role>
+        <role>FEC_Customer_Service_Inbound_Officer_4</role>
+        <role>FEC_Customer_Service_Inbound_Officer_5</role>
+        <role>FEC_Customer_Service_Inbound_Officer_6</role>
+        <role>FEC_Customer_Service_Inbound_Officer_7</role>
+        <role>FEC_Customer_Service_Inbound_Team_1_Leader</role>
+        <role>FEC_Customer_Service_Inbound_Team_2_Leader</role>
+        <role>FEC_Customer_Service_Inbound_Team_3_Leader</role>
+        <role>FEC_Customer_Service_Inbound_Team_4_Leader</role>
+        <role>FEC_Customer_Service_Inbound_Team_5_Leader</role>
+        <role>FEC_Customer_Service_Inbound_Team_6_Leader</role>
+        <role>FEC_Customer_Service_Inbound_Team_7_Leader</role>
+        <role>FEC_Head_of_Customer_Service_Contact_Center_Department</role>
+        <role>FEC_Senior_Customer_Service_Ecom_Specialist_1</role>
+        <role>FEC_Senior_Customer_Service_Ecom_Specialist_2</role>
+        <role>FEC_Senior_Customer_Service_Inbound_Specialist_1</role>
+        <role>FEC_Senior_Customer_Service_Inbound_Specialist_2</role>
+        <role>FEC_Senior_Customer_Service_Inbound_Specialist_3</role>
+        <role>FEC_Senior_Customer_Service_Inbound_Specialist_4</role>
+        <role>FEC_Senior_Customer_Service_Inbound_Specialist_5</role>
+        <role>FEC_Senior_Customer_Service_Inbound_Specialist_6</role>
+        <role>FEC_Senior_Customer_Service_Inbound_Specialist_7</role>
+        <role>FEC_Unit_Head_of_Customer_Service_Ecom</role>
+        <role>FEC_Unit_Head_of_Customer_Service_Inbound</role>
     </sharedTo>
 </ListView>

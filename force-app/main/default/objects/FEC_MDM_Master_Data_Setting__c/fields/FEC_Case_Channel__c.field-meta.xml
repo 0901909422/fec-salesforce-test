@@ -2,7 +2,6 @@
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
     <fullName>FEC_Case_Channel__c</fullName>
     <deleteConstraint>SetNull</deleteConstraint>
-    <externalId>false</externalId>
     <label>Case Channel</label>
     <referenceTo>FEC_MDM_Case_Channel__c</referenceTo>
     <relationshipLabel>Master MDM Data Setting</relationshipLabel>

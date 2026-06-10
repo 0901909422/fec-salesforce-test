@@ -4,6 +4,8 @@ public without sharing class FEC_BCH_TemplateExportService {
     private static final Integer MAX_EXPORT_DATA_ROWS = 5000;
     //tugnnm37 - cache source xlsx entries trong transaction để build result không query ContentVersion từng cell gây SOQL 101
     private static Map<Id, Map<String, Blob>> importCellZipEntriesCache = new Map<Id, Map<String, Blob>>();
+    // 08/06/2026 linhdev - cache map header->cột Excel; tránh query ContentVersion lặp khi enrich từng row COF/GSR
+    private static Map<String, List<Integer>> importMappedColumnIndexesCache = new Map<String, List<Integer>>();
 
     public class ExportRequest {
         @AuraEnabled public Id contentVersionId;
@@ -191,24 +193,22 @@ public without sharing class FEC_BCH_TemplateExportService {
         if (contentVersionId == null || headers == null || headers.isEmpty()) {
             return mapped;
         }
+        String cacheKey = buildImportMappedColumnIndexesCacheKey(contentVersionId, headerRowIndex, sheetName, headers);
+        if (importMappedColumnIndexesCache.containsKey(cacheKey)) {
+            List<Integer> cached = importMappedColumnIndexesCache.get(cacheKey);
+            return cached == null ? mapped : new List<Integer>(cached);
+        }
         try {
-            List<ContentVersion> versions = [
-                SELECT VersionData
-                FROM ContentVersion
-                WHERE Id = :contentVersionId
-                LIMIT 1
-            ];
-            if (versions.isEmpty() || versions[0].VersionData == null) {
-                return mapped;
-            }
-            Map<String, Blob> entryByPath = readZipEntries(versions[0].VersionData);
+            Map<String, Blob> entryByPath = getImportCellZipEntries(contentVersionId);
             if (entryByPath.isEmpty()) {
+                importMappedColumnIndexesCache.put(cacheKey, mapped);
                 return mapped;
             }
             String workbookXml = blobToUtf8(entryByPath.get('xl/workbook.xml'));
             String workbookRelsXml = blobToUtf8(entryByPath.get('xl/_rels/workbook.xml.rels'));
             String worksheetPath = resolveWorksheetPath(workbookXml, workbookRelsXml, sheetName);
             if (String.isBlank(worksheetPath) || !entryByPath.containsKey(worksheetPath)) {
+                importMappedColumnIndexesCache.put(cacheKey, mapped);
                 return mapped;
             }
             String worksheetXml = blobToUtf8(entryByPath.get(worksheetPath));
@@ -216,11 +216,29 @@ public without sharing class FEC_BCH_TemplateExportService {
                 blobToUtf8(entryByPath.get('xl/sharedStrings.xml'))
             );
             Integer headerRowNum1 = headerRowIndex == null || headerRowIndex < 0 ? 1 : headerRowIndex + 1;
-            return resolveMappedColumnIndexesFromHeaderRow(worksheetXml, headerRowNum1, sharedStrings, headers);
+            mapped = resolveMappedColumnIndexesFromHeaderRow(worksheetXml, headerRowNum1, sharedStrings, headers);
+            importMappedColumnIndexesCache.put(cacheKey, mapped);
+            return mapped;
         } catch (Exception ex) {
             dbg('RESOLVE_MAP_FAIL', ex.getMessage());
+            importMappedColumnIndexesCache.put(cacheKey, mapped);
             return mapped;
         }
+    }
+
+    private static String buildImportMappedColumnIndexesCacheKey(
+        Id contentVersionId,
+        Integer headerRowIndex,
+        String sheetName,
+        List<String> headers
+    ) {
+        return String.valueOf(contentVersionId) +
+            '|' +
+            String.valueOf(headerRowIndex) +
+            '|' +
+            (String.isBlank(sheetName) ? FEC_ConstantCommon.STR_EMPTY : sheetName.trim()) +
+            '|' +
+            String.join(headers, '\u0001');
     }
 
     // 30/05/2026 18:30 linhdev - đọc remark trực tiếp từ file import (SheetJS/LWC có thể không gửi đủ chuỗi dài)

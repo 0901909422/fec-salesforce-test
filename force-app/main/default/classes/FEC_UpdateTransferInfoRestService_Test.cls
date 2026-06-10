@@ -87,7 +87,7 @@ private class FEC_UpdateTransferInfoRestService_Test {
 
         System.assertEquals(200, RestContext.response.statusCode);
         FEC_UpdateTransferInfoRestService.UpdateTransferInfoResponse res = parseResponse();
-        System.assertEquals(FEC_ConstantCommon.KEY_ERROR, res.Status);
+        System.assertEquals(FEC_ConstantCommon.UPDATE_TRANSFER_STATUS_FAIL, res.Status);
         System.assert(
             res.Description.contains(FEC_ConstantCommon.UPDATE_TRANSFER_ERR_SERVICE_CASE_NOT_FOUND_PREFIX),
             'Description phải báo ServiceCaseID not found.'
@@ -107,7 +107,7 @@ private class FEC_UpdateTransferInfoRestService_Test {
 
         System.assertEquals(400, RestContext.response.statusCode);
         FEC_UpdateTransferInfoRestService.UpdateTransferInfoResponse res = parseResponse();
-        System.assertEquals(FEC_ConstantCommon.KEY_ERROR, res.Status);
+        System.assertEquals(FEC_ConstantCommon.UPDATE_TRANSFER_STATUS_FAIL, res.Status);
     }
 
     @IsTest
