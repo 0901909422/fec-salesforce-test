@@ -161,14 +161,22 @@ export default class fec_genesysSoftphone extends NavigationMixin(
     });
   }
 
+  get vfOrigin() {
+    const origin = window.location.origin;
+    if (origin.includes(".sandbox.lightning.force.com")) {
+      return origin.replace(
+        ".sandbox.lightning.force.com",
+        "--c.sandbox.vf.force.com",
+      );
+    }
+    return origin.replace(".lightning.force.com", "--c.vf.force.com");
+  }
+ 
   sendEventToGenesys(strAction, objPayload) {
     const iframe = this.template.querySelector(".iws-iframe");
-
-    const vfOrigin = window.location.origin.replace(
-      ".sandbox.lightning.force.com",
-      "--c.sandbox.vf.force.com",
-    );
-
+ 
+    const vfOrigin = this.vfOrigin;
+ 
     if (iframe && iframe.contentWindow) {
       const message = {
         source: FEC_GENESYS_CONST.SOURCE_LWC_TO_GENESYS,

@@ -26,6 +26,23 @@ public without sharing class FEC_OwnerTeamLookupSvc {
         return resolveTeamMap(ownerIds, reportTeamByOwnerId, teamByQueueNameForReport, true);
     }
 
+    /**
+     * Legacy queue-name lookup retained for prod classes compiled before getReportTeamByOwnerIds.
+     */
+    public static String getTeamByOwnerLabel(String ownerLabel) {
+        if (String.isBlank(ownerLabel)) {
+            return null;
+        }
+        ensureTeamByQueueNameMaps();
+        if (teamByQueueNameForCase.containsKey(ownerLabel)) {
+            return teamByQueueNameForCase.get(ownerLabel);
+        }
+        if (teamByQueueNameForReport.containsKey(ownerLabel)) {
+            return teamByQueueNameForReport.get(ownerLabel);
+        }
+        return null;
+    }
+
     private static Map<Id, String> resolveTeamMap(
         Set<Id> ownerIds,
         Map<Id, String> cache,

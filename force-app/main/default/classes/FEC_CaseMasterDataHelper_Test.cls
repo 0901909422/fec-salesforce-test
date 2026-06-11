@@ -78,7 +78,7 @@ private class FEC_CaseMasterDataHelper_Test {
         List<SObject> notRevertCtx =
             FEC_CaseMasterDataHelper.filterRevertedAssignmentRowsByStageContext(rows, false);
         List<SObject> revertCtx =
-            FEC_CaseMasterDataHelper.filterRevertedAssignmentRowsByStageContext(rows, true, 3);
+            FEC_CaseMasterDataHelper.filterRevertedAssignmentRowsByStageContext(rows, true, 2);
         Test.stopTest();
 
         System.assertEquals(1, notRevertCtx.size());
@@ -124,18 +124,21 @@ private class FEC_CaseMasterDataHelper_Test {
         Boolean editable = FEC_CaseMasterDataHelper.isAssignmentFieldEditable(true, 'CC;SP', 'CC');
         Boolean inGroup = FEC_CaseMasterDataHelper.isUserInEditableGroup('CC;SP', 'CC');
         Boolean recall = FEC_CaseMasterDataHelper.isLatestRoutingActionRecall(null);
-        Boolean skipD2c = FEC_CaseMasterDataHelper.shouldSkipRevertConfirmAssessmentField(
+        Boolean skipCsSp = FEC_CaseMasterDataHelper.shouldSkipRevertConfirmAssessmentField(
             3,
-            FEC_CaseMasterDataHelper.API_CONFIRM_D2C_ASSESSMENT
+            FEC_CaseMasterDataHelper.API_CONFIRM_CS_SP_ASSESSMENT
         );
-        Boolean hideSub = FEC_CaseMasterDataHelper.shouldHideRevertConfirmSubSection(3, 'Confirm to D2C Assessment');
+        Boolean hideSub = FEC_CaseMasterDataHelper.shouldHideRevertConfirmSubSection(
+            3,
+            'Confirm CS SP Assessment'
+        );
         Test.stopTest();
 
         System.assertEquals('CC;SP', groups.get('Editable_API__c'));
         System.assertEquals(true, editable);
         System.assertEquals(true, inGroup);
         System.assertEquals(false, recall);
-        System.assertEquals(true, skipD2c);
+        System.assertEquals(true, skipCsSp);
         System.assertEquals(true, hideSub);
     }
 
@@ -151,7 +154,7 @@ private class FEC_CaseMasterDataHelper_Test {
         Test.startTest();
         FEC_CaseMasterDataHelper.pruneRevertConfirmAssessmentSubSections(
             new List<FEC_CaseBusinessService.Section>{ parent },
-            3
+            2
         );
         FEC_CaseMasterDataHelper.pruneRevertConfirmAssessmentSubSections(null, 2);
         Test.stopTest();
@@ -214,6 +217,13 @@ private class FEC_CaseMasterDataHelper_Test {
         System.assertEquals(
             true,
             FEC_CaseMasterDataHelper.shouldHideRevertConfirmSubSection(
+                2,
+                'Confirm to D2C Assessment'
+            )
+        );
+        System.assertEquals(
+            false,
+            FEC_CaseMasterDataHelper.shouldHideRevertConfirmSubSection(
                 3,
                 'Confirm to D2C Assessment'
             )
@@ -221,7 +231,7 @@ private class FEC_CaseMasterDataHelper_Test {
         System.assertEquals(
             true,
             FEC_CaseMasterDataHelper.shouldSkipRevertConfirmAssessmentField(
-                3,
+                2,
                 FEC_CaseMasterDataHelper.API_CONFIRM_D2C_ASSESSMENT
             )
         );
@@ -349,16 +359,27 @@ private class FEC_CaseMasterDataHelper_Test {
             stage1.Name
         );
         Boolean cofGsrRevert = FEC_CaseMasterDataHelper.isCofGsrRevertStage2ToStage1(revertCase.Id);
-        Boolean skipCsSp = FEC_CaseMasterDataHelper.shouldSkipRevertConfirmAssessmentField(
+        Boolean skipD2c = FEC_CaseMasterDataHelper.shouldSkipRevertConfirmAssessmentField(
             2,
-            FEC_CaseMasterDataHelper.API_CONFIRM_CS_SP_ASSESSMENT
+            FEC_CaseMasterDataHelper.API_CONFIRM_D2C_ASSESSMENT
         );
-        Boolean hideCsSp = FEC_CaseMasterDataHelper.shouldHideRevertConfirmSubSection(
+        Boolean hideD2c = FEC_CaseMasterDataHelper.shouldHideRevertConfirmSubSection(
             2,
-            'Confirm CS SP Assessment'
+            'Confirm to D2C Assessment'
         );
+        List<SObject> csSpRowsStage3 = new List<SObject>{
+            buildMasterRow(
+                'Assignment',
+                FEC_CaseMasterDataHelper.API_CONFIRM_CS_SP_ASSESSMENT,
+                false,
+                null,
+                true,
+                false
+            ),
+            buildMasterRow('Field', 'Keep_Field__c', false, null, false, false)
+        };
         List<SObject> revertCtx2 =
-            FEC_CaseMasterDataHelper.filterRevertedAssignmentRowsByStageContext(csSpRows, true, 2);
+            FEC_CaseMasterDataHelper.filterRevertedAssignmentRowsByStageContext(csSpRowsStage3, true, 3);
         List<SObject> emptyFilter =
             FEC_CaseMasterDataHelper.filterAssignmentRowsByCurrentUserGroup(new List<SObject>(), 'CC');
         Test.stopTest();
@@ -368,8 +389,8 @@ private class FEC_CaseMasterDataHelper_Test {
         System.assertEquals(2, sourceStage);
         System.assertEquals(true, gsrRevert);
         System.assertEquals(true, cofGsrRevert);
-        System.assertEquals(true, skipCsSp);
-        System.assertEquals(true, hideCsSp);
+        System.assertEquals(true, skipD2c);
+        System.assertEquals(true, hideD2c);
         System.assertEquals(1, revertCtx2.size());
         System.assertEquals('Keep_Field__c', revertCtx2[0].get('FEC_Field_API_Name__c'));
         System.assertEquals(0, emptyFilter.size());
