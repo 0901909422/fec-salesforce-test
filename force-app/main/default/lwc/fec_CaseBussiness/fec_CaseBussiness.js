@@ -455,6 +455,9 @@ const SLDS_MEDIUM_SIZE_OF_12 = {
 };
 
 const MAP_NEW_BLOCK_CODE = {
+  'Temporarily Locked': 'A',
+  'Not In Use': 'L',
+  'Lost/Stolen Card with Transaction Activity': 'S',
   'Tạm khoá': 'A',
   'Không sử dụng': 'L',
   'Thẻ bị mất/ đánh cắp có phát sinh giao dịch': 'S',
