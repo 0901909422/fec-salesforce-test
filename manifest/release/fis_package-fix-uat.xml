@@ -170,6 +170,8 @@
     <types>
         <members>FEC_Customer_Case_Record_Page</members>
         <members>Master_Data_Setting_Record_Page</members>
+        <members>Stage_Change_Record_Page</members>
+		<members>Stage_Screen_Record_Page</members>
         <name>FlexiPage</name>
     </types>
     <types>
