@@ -40,6 +40,11 @@ public with sharing class FEC_BCC_CreationResolveHistService {
     }
 
     public static void applyAfterCreationBulk(List<CreationResolveHistoryItem> items) {
+        applyAfterCreationBulk(items, null);
+    }
+
+    //09/06/2026 dungLTdev: importerUserId từ payload batch — scheduler/queueable không dùng UserInfo context.
+    public static void applyAfterCreationBulk(List<CreationResolveHistoryItem> items, Id importerUserId) {
         if (items == null || items.isEmpty()) {
             return;
         }
@@ -59,17 +64,18 @@ public with sharing class FEC_BCC_CreationResolveHistService {
             FROM Case
             WHERE Id IN :caseIds
         ]);
-        applyCreationBulk(items, caseAfterById);
+        applyCreationBulk(items, caseAfterById, importerUserId);
     }
 
     private static void applyCreationBulk(
         List<CreationResolveHistoryItem> items,
-        Map<Id, Case> caseAfterById
+        Map<Id, Case> caseAfterById,
+        Id importerUserId
     ) {
         if (items == null || items.isEmpty()) {
             return;
         }
-        User importer = loadImporter();
+        User importer = loadImporter(importerUserId);
         if (importer == null) {
             markAllFailed(items, ERR_IMPORTER_NOT_FOUND);
             return;
@@ -167,11 +173,13 @@ public with sharing class FEC_BCC_CreationResolveHistService {
         }
     }
 
-    private static User loadImporter() {
+    //09/06/2026 dungLTdev: Ưu tiên importer từ payload batch; fallback UserInfo khi gọi sync/test.
+    private static User loadImporter(Id importerUserId) {
+        Id userId = importerUserId != null ? importerUserId : UserInfo.getUserId();
         List<User> users = [
             SELECT Id, Email, UserRole.Name
             FROM User
-            WHERE Id = :UserInfo.getUserId()
+            WHERE Id = :userId
             LIMIT 1
         ];
         return users.isEmpty() ? null : users[0];

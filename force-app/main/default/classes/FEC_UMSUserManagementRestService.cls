@@ -26,6 +26,9 @@ global without sharing class FEC_UMSUserManagementRestService {
         global String OrgDivision;
         global String MainQueue;
         global String DefaultQueue;
+        /** Salesforce UserRole.Name, e.g. Customer Service E-com Team Leader 1 */
+        global String Role;
+        /** Permission Set Group DeveloperName / Label / Id */
         global List<String> ListUserRole;
     }
 
@@ -179,8 +182,29 @@ global without sharing class FEC_UMSUserManagementRestService {
         if (String.isBlank(payload.FEEmail)) {
             return buildMessage(STATUS_FAIL, 'UMS-001: Missing required field: FEEmail', payload.UserID);
         }
+        if (String.isBlank(payload.Role)) {
+            return buildMessage(STATUS_FAIL, 'UMS-001: Missing required field: Role', payload.UserID);
+        }
         if (payload.ListUserRole == null || payload.ListUserRole.isEmpty()) {
             return buildMessage(STATUS_FAIL, 'UMS-001: Missing required field: ListUserRole', payload.UserID);
+        }
+
+        Id userRoleId = resolveUserRoleId(payload.Role.trim());
+        if (userRoleId == null) {
+            return buildMessage(
+                STATUS_FAIL,
+                'UMS-007: Role not found: ' + payload.Role.trim(),
+                payload.UserID
+            );
+        }
+
+        PermissionSetGroupResolveResult psgResult = resolvePermissionSetGroups(payload.ListUserRole);
+        if (!psgResult.missingKeys.isEmpty()) {
+            return buildMessage(
+                STATUS_FAIL,
+                'UMS-005: Permission Set Group not found: ' + String.join(psgResult.missingKeys, ','),
+                payload.UserID
+            );
         }
 
         List<User> existing = [
@@ -200,27 +224,19 @@ global without sharing class FEC_UMSUserManagementRestService {
 
         User target;
         if (isCreate) {
-            target = buildCreateUser(payload);
+            target = buildCreateUser(payload, userRoleId);
             insert target;
         } else {
-            target = buildUpdateUser(existing[0].Id, payload);
+            target = buildUpdateUser(existing[0].Id, payload, userRoleId);
             update target;
             target = [SELECT Id FROM User WHERE Id = :target.Id LIMIT 1];
         }
 
-        QueueResolveResult queueResult = resolveQueues(payload.ListUserRole);
-        if (!queueResult.missingKeys.isEmpty()) {
-            return buildMessage(
-                STATUS_FAIL,
-                'UMS-005: Queue not found: ' + String.join(queueResult.missingKeys, ','),
-                payload.UserID
-            );
-        }
-        syncQueueMembership(target.Id, queueResult.queueIds, updateType);
+        syncPermissionSetGroupAssignments(target.Id, psgResult.groupIds, updateType);
         return buildMessage(STATUS_SUCCESS, isCreate ? 'Create success' : 'Update success', payload.UserID);
     }
 
-    private static User buildCreateUser(UserPayload payload) {
+    private static User buildCreateUser(UserPayload payload, Id userRoleId) {
         Profile p = [SELECT Id FROM Profile WHERE Id = :System.UserInfo.getProfileId() LIMIT 1];
         User current = [
             SELECT TimeZoneSidKey, LocaleSidKey, LanguageLocaleKey, EmailEncodingKey
@@ -234,7 +250,7 @@ global without sharing class FEC_UMSUserManagementRestService {
         u.Alias = buildAlias(payload.UserID);
         u.LastName = resolveLastName(payload);
         u.FirstName = payload.FirstName;
-        u.Title = payload.Position;
+        applyRoleAndTitleFields(u, payload, userRoleId);
         u.ManagerId = resolveManagerId(payload.ReportTo);
         u.FEC_User_Group__c = payload.OrgUnit;
         u.FEC_User_Division_Group__c = payload.OrgDivision;
@@ -247,12 +263,12 @@ global without sharing class FEC_UMSUserManagementRestService {
         return u;
     }
 
-    private static User buildUpdateUser(Id userId, UserPayload payload) {
+    private static User buildUpdateUser(Id userId, UserPayload payload, Id userRoleId) {
         User u = new User(Id = userId);
         u.Email = payload.FEEmail;
-        u.Title = payload.Position;
         u.FirstName = payload.FirstName;
         u.LastName = resolveLastName(payload);
+        applyRoleAndTitleFields(u, payload, userRoleId);
         u.ManagerId = resolveManagerId(payload.ReportTo);
         u.FEC_User_Group__c = payload.OrgUnit;
         u.FEC_User_Division_Group__c = payload.OrgDivision;
@@ -414,24 +430,24 @@ global without sharing class FEC_UMSUserManagementRestService {
         res.responseBody = Blob.valueOf(JSON.serialize(response));
     }
 
-    private class QueueResolveResult {
-        Set<Id> queueIds = new Set<Id>();
+    private class PermissionSetGroupResolveResult {
+        Set<Id> groupIds = new Set<Id>();
         List<String> missingKeys = new List<String>();
     }
 
-    private static QueueResolveResult resolveQueues(List<String> inputKeys) {
-        QueueResolveResult result = new QueueResolveResult();
+    private static PermissionSetGroupResolveResult resolvePermissionSetGroups(List<String> inputKeys) {
+        PermissionSetGroupResolveResult result = new PermissionSetGroupResolveResult();
         if (inputKeys == null) return result;
 
         Set<Id> idKeys = new Set<Id>();
         Set<String> devNameKeys = new Set<String>();
-        Set<String> nameKeys = new Set<String>();
+        Set<String> labelKeys = new Set<String>();
         for (String raw : inputKeys) {
             if (String.isBlank(raw)) continue;
             String key = raw.trim();
             try {
                 Id keyId = (Id) key;
-                if (String.valueOf(keyId).startsWith('00G')) {
+                if (String.valueOf(keyId).startsWith('0PG')) {
                     idKeys.add(keyId);
                     continue;
                 }
@@ -439,24 +455,21 @@ global without sharing class FEC_UMSUserManagementRestService {
                 // ignore parse failure
             }
             devNameKeys.add(key);
-            nameKeys.add(key);
+            labelKeys.add(key);
         }
 
         Map<String, Id> foundByKey = new Map<String, Id>();
-        for (Group g : [
-            SELECT Id, Name, DeveloperName
-            FROM Group
-            WHERE Type = 'Queue'
-            AND (
-                Id IN :idKeys OR
-                DeveloperName IN :devNameKeys OR
-                Name IN :nameKeys
-            )
+        for (PermissionSetGroup psg : [
+            SELECT Id, DeveloperName, MasterLabel
+            FROM PermissionSetGroup
+            WHERE Id IN :idKeys
+            OR DeveloperName IN :devNameKeys
+            OR MasterLabel IN :labelKeys
         ]) {
-            result.queueIds.add(g.Id);
-            foundByKey.put(String.valueOf(g.Id), g.Id);
-            if (String.isNotBlank(g.DeveloperName)) foundByKey.put(g.DeveloperName, g.Id);
-            if (String.isNotBlank(g.Name)) foundByKey.put(g.Name, g.Id);
+            result.groupIds.add(psg.Id);
+            foundByKey.put(String.valueOf(psg.Id), psg.Id);
+            if (String.isNotBlank(psg.DeveloperName)) foundByKey.put(psg.DeveloperName, psg.Id);
+            if (String.isNotBlank(psg.MasterLabel)) foundByKey.put(psg.MasterLabel, psg.Id);
         }
 
         for (String raw : inputKeys) {
@@ -469,37 +482,73 @@ global without sharing class FEC_UMSUserManagementRestService {
         return result;
     }
 
-    private static void syncQueueMembership(Id userId, Set<Id> queueIds, String updateType) {
+    private static void syncPermissionSetGroupAssignments(
+        Id userId,
+        Set<Id> groupIds,
+        String updateType
+    ) {
         if (userId == null) return;
-        if (queueIds == null) queueIds = new Set<Id>();
+        if (groupIds == null) groupIds = new Set<Id>();
 
-        Map<Id, GroupMember> existingByQueue = new Map<Id, GroupMember>();
-        for (GroupMember gm : [
-            SELECT Id, GroupId
-            FROM GroupMember
-            WHERE UserOrGroupId = :userId
-            AND Group.Type = 'Queue'
+        Map<Id, PermissionSetAssignment> existingByGroup = new Map<Id, PermissionSetAssignment>();
+        for (PermissionSetAssignment psa : [
+            SELECT Id, PermissionSetGroupId
+            FROM PermissionSetAssignment
+            WHERE AssigneeId = :userId
+            AND PermissionSetGroupId != NULL
         ]) {
-            existingByQueue.put(gm.GroupId, gm);
+            existingByGroup.put(psa.PermissionSetGroupId, psa);
         }
 
         if (updateType == UPDATE_TYPE_REPLACE) {
-            List<GroupMember> toDelete = new List<GroupMember>();
-            for (Id groupId : existingByQueue.keySet()) {
-                if (!queueIds.contains(groupId)) {
-                    toDelete.add(existingByQueue.get(groupId));
+            List<PermissionSetAssignment> toDelete = new List<PermissionSetAssignment>();
+            for (Id groupId : existingByGroup.keySet()) {
+                if (!groupIds.contains(groupId)) {
+                    toDelete.add(existingByGroup.get(groupId));
                 }
             }
             if (!toDelete.isEmpty()) delete toDelete;
         }
 
-        List<GroupMember> toInsert = new List<GroupMember>();
-        for (Id groupId : queueIds) {
-            if (!existingByQueue.containsKey(groupId)) {
-                toInsert.add(new GroupMember(GroupId = groupId, UserOrGroupId = userId));
+        List<PermissionSetAssignment> toInsert = new List<PermissionSetAssignment>();
+        for (Id groupId : groupIds) {
+            if (!existingByGroup.containsKey(groupId)) {
+                toInsert.add(new PermissionSetAssignment(
+                    AssigneeId = userId,
+                    PermissionSetGroupId = groupId
+                ));
             }
         }
         if (!toInsert.isEmpty()) insert toInsert;
+    }
+
+    private static void applyRoleAndTitleFields(User u, UserPayload payload, Id userRoleId) {
+        if (u == null || payload == null) return;
+        if (String.isNotBlank(payload.Role)) {
+            u.UserRoleId = userRoleId;
+            u.Title = deriveTitleFromRole(payload.Role);
+        } else if (String.isNotBlank(payload.Position)) {
+            u.Title = payload.Position;
+        }
+    }
+
+    @TestVisible
+    private static Id resolveUserRoleId(String roleName) {
+        if (String.isBlank(roleName)) return null;
+        List<UserRole> roles = [
+            SELECT Id
+            FROM UserRole
+            WHERE Name = :roleName.trim()
+            LIMIT 1
+        ];
+        return roles.isEmpty() ? null : roles[0].Id;
+    }
+
+    /** Job Title = Role bỏ số ở cuối, e.g. "... Team Leader 1" → "... Team Leader". */
+    @TestVisible
+    private static String deriveTitleFromRole(String role) {
+        if (String.isBlank(role)) return null;
+        return role.trim().replaceAll('\\s+\\d+$', '');
     }
 
     private static UserInfo toUserInfo(User u) {
@@ -518,25 +567,50 @@ global without sharing class FEC_UMSUserManagementRestService {
         info.OrgDivision = u.FEC_User_Division_Group__c;
         info.MainQueue = u.FEC_Main_Queue__c;
         info.DefaultQueue = u.FEC_Default_Queue__c;
-        info.RoleList = String.join(getQueueRoleList(u.Id), ',');
+        info.RoleList = String.join(getPermissionRoleList(u.Id), ',');
         return info;
     }
 
-    private static List<String> getQueueRoleList(Id userId) {
-        List<String> roles = new List<String>();
-        if (userId == null) return roles;
-        for (GroupMember gm : [
-            SELECT Group.DeveloperName
-            FROM GroupMember
-            WHERE UserOrGroupId = :userId
-            AND Group.Type = 'Queue'
-            ORDER BY Group.DeveloperName
+    /**
+     * RoleList = Permission Set Group (DeveloperName) + Permission Set (Name) gán trực tiếp cho user.
+     * Không gồm permission set của Profile.
+     */
+    @TestVisible
+    private static List<String> getPermissionRoleList(Id userId) {
+        Set<String> roleNames = new Set<String>();
+        if (userId == null) {
+            return new List<String>();
+        }
+
+        for (PermissionSetAssignment psa : [
+            SELECT
+                PermissionSet.Name,
+                PermissionSet.IsOwnedByProfile,
+                PermissionSetGroup.DeveloperName,
+                PermissionSetGroupId
+            FROM PermissionSetAssignment
+            WHERE AssigneeId = :userId
         ]) {
-            if (gm.Group != null && String.isNotBlank(gm.Group.DeveloperName)) {
-                roles.add(gm.Group.DeveloperName);
+            if (
+                psa.PermissionSetGroupId != null &&
+                psa.PermissionSetGroup != null &&
+                String.isNotBlank(psa.PermissionSetGroup.DeveloperName)
+            ) {
+                roleNames.add(psa.PermissionSetGroup.DeveloperName);
+                continue;
+            }
+            if (
+                psa.PermissionSet != null &&
+                psa.PermissionSet.IsOwnedByProfile == false &&
+                String.isNotBlank(psa.PermissionSet.Name)
+            ) {
+                roleNames.add(psa.PermissionSet.Name);
             }
         }
-        return roles;
+
+        List<String> sorted = new List<String>(roleNames);
+        sorted.sort();
+        return sorted;
     }
 
     private static String resolveLastName(UserPayload payload) {

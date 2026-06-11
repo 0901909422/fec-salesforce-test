@@ -29,6 +29,7 @@
       label="Case Remarks History"
     >
       <div class="slds-p-around--x-small">
+        <!-- OLD: revert về related-list-paging nếu cần
         <c-fec_-related-list-paging
           if:true={loadRemarklst}
           records={remarklst}
@@ -36,6 +37,24 @@
           sorted-by="Registration"
         >
         </c-fec_-related-list-paging>
+        -->
+        <template if:true={loadRemarklst}>
+          <template if:true={hasRemarkHistory}>
+            <lightning-datatable
+              key-field="Id"
+              data={remarklst}
+              columns={remarkHistoryColumns}
+              hide-checkbox-column
+            ></lightning-datatable>
+          </template>
+          <template if:false={hasRemarkHistory}>
+            <p
+              class="slds-p-around_medium slds-text-align_center slds-text-color_weak"
+            >
+              {noResultsLabel}
+            </p>
+          </template>
+        </template>
       </div>
     </lightning-accordion-section>
   </lightning-accordion>

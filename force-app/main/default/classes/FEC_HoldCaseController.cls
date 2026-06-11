@@ -325,6 +325,7 @@ public with sharing class FEC_HoldCaseController {
     private static final String NFU_STATUS_YES        = 'Yes';
     private static final String DESC_ALREADY_MARKED   = 'Contract has already marked as NFU';
     private static final String DESC_SUCCESS            = 'Success';
+    private static final String HOLD_CASE_TYPE_MANUAL   = 'Manual';
 
     // ─────────────────────────────────────────────────────
     // METHOD: saveHoldCase
@@ -451,6 +452,8 @@ public with sharing class FEC_HoldCaseController {
                 );
                 //tungnm37
                 FEC_CommonUltils.createProcessActionHistory('Hold Case', c, false);
+            } else {
+                persistManualHoldCaseType(c.Id);
             }
 
             return resp;
@@ -545,7 +548,8 @@ public with sharing class FEC_HoldCaseController {
         if (resultType == RESULT_ERROR) {
             Case errorPatch = new Case(
                 Id = caseId,
-                FEC_NFU_Description_Result__c = resultType
+                FEC_NFU_Description_Result__c = resultType,
+                FEC_Hold_Case_Type__c = HOLD_CASE_TYPE_MANUAL
             );
             if (String.isNotBlank(collectionsResponse)) {
                 errorPatch.FEC_Collections_Response__c = collectionsResponse;
@@ -556,7 +560,8 @@ public with sharing class FEC_HoldCaseController {
 
         Case patch = new Case(
             Id = caseId,
-            FEC_NFU_Description_Result__c = resultType
+            FEC_NFU_Description_Result__c = resultType,
+            FEC_Hold_Case_Type__c = HOLD_CASE_TYPE_MANUAL
         );
 
         if (String.isNotBlank(collectionsResponse)) {
@@ -573,6 +578,18 @@ public with sharing class FEC_HoldCaseController {
         patch.FEC_NFU_Started_Date__c = startedDate;
         patch.FEC_NFU_Expiry_Date__c = expiryDate;
         saveCasePatch(patch);
+    }
+
+    /** Luu loai Hold Case thu cong ngay sau khi da call API, ke ca cac lan API tra loi chua du 3 retry. */
+    @TestVisible
+    private static void persistManualHoldCaseType(Id caseId) {
+        if (caseId == null) {
+            return;
+        }
+        saveCasePatch(new Case(
+            Id = caseId,
+            FEC_Hold_Case_Type__c = HOLD_CASE_TYPE_MANUAL
+        ));
     }
 
     /** Giống FEC_AutoHoldCaseService — tránh FLS chặn ghi Case patch. */

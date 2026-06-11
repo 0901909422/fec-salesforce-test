@@ -339,6 +339,70 @@ private class FEC_BatchCaseCreationController_Test {
     }
 
     @IsTest
+    static void testProcessPendingBatchImport_StandardResolvedCreatesHistory() {
+        String contractNumber = '0001500010000000261';
+        List<Object> rows = new List<Object>{
+            new Map<String, Object>{
+                'layout' => 'simple',
+                'contractNumber' => contractNumber,
+                'interactionPhone' => '0912345678',
+                'productType' => 'Credit Card',
+                'category' => 'Inquiry',
+                'subCategory' => 'Card Issue',
+                'subCode' => 'Lost Card',
+                'caseStatus' => FEC_ConstantCommon.CASE_STATUS_RESOLVED_COMPLETED,
+                'caseRemarks' => 'standard resolved pending import'
+            }
+        };
+
+        FEC_Batch_Case_Creation__c pending = new FEC_Batch_Case_Creation__c(
+            Name = 'Pending_Standard_Resolved.xlsx',
+            FEC_Status__c = FEC_ConstantCommon.UPLOADED_STATUS
+        );
+        insert pending;
+        FEC_BatchCaseCreationPendingService.attachPendingImportPayload(
+            pending.Id,
+            'Standard Case Template',
+            JSON.serialize(rows),
+            null,
+            null,
+            String.valueOf(UserInfo.getUserId())
+        );
+
+        Test.setMock(HttpCalloutMock.class, new BatchCaseCustomerListMock(contractNumber));
+        FEC_CaseTriggerHandler.isExecuting = true;
+        Test.startTest();
+        FEC_BatchCaseCreationController.processPendingBatchImport(pending.Id);
+        Test.stopTest();
+        FEC_CaseTriggerHandler.isExecuting = false;
+
+        //09/06/2026 dungLTdev: Verify Routing Action History qua luồng processPendingBatchImport (Standard Resolved).
+        List<Case> customerCases = [
+            SELECT Id
+            FROM Case
+            WHERE Subject LIKE :('Batch Case Creation - ' + contractNumber + '%')
+            ORDER BY CreatedDate DESC
+            LIMIT 1
+        ];
+        System.assertEquals(1, customerCases.size(), 'Standard pending import phải tạo Customer Case.');
+        List<FEC_Routing_Action_History__c> histories = [
+            SELECT FEC_Routing_Action__c, FEC_Routing_Action_Type__c, FEC_Current_Status__c,
+                FEC_Changed_Status__c, FEC_Perform_User__c
+            FROM FEC_Routing_Action_History__c
+            WHERE FEC_Case__c = :customerCases[0].Id
+        ];
+        System.assertEquals(1, histories.size(), 'Resolved Standard pending import phải tạo Routing Action History.');
+        System.assertEquals(FEC_CaseBusinessService.RESOLVE, histories[0].FEC_Routing_Action__c);
+        System.assertEquals('Case', histories[0].FEC_Routing_Action_Type__c);
+        System.assertEquals(FEC_ConstantCommon.CASE_STATUS_OPEN, histories[0].FEC_Current_Status__c);
+        System.assertEquals(
+            FEC_ConstantCommon.CASE_STATUS_RESOLVED_COMPLETED,
+            histories[0].FEC_Changed_Status__c
+        );
+        System.assertEquals(UserInfo.getUserId(), histories[0].FEC_Perform_User__c);
+    }
+
+    @IsTest
     static void testImportParsedRowsPublicApi() {
         List<Object> inputRows = new List<Object>{
             new Map<String, Object>{
@@ -803,7 +867,8 @@ private class FEC_BatchCaseCreationController_Test {
             'welcome call template',
             JSON.serialize(rows),
             '["Case ID"]',
-            '[["20140807-103046-0001"]]'
+            '[["20140807-103046-0001"]]',
+            String.valueOf(UserInfo.getUserId())
         );
 
         Test.setMock(HttpCalloutMock.class, new BatchCaseCustomerListMock('20140807-103046-0001'));
@@ -820,6 +885,31 @@ private class FEC_BatchCaseCreationController_Test {
             LIMIT 1
         ];
         System.assertNotEquals(null, refreshed.FEC_Status__c);
+
+        //09/06/2026 dungLTdev: Verify Routing Action History qua luồng processPendingBatchImport (UI).
+        List<Case> customerCases = [
+            SELECT Id
+            FROM Case
+            WHERE Subject LIKE 'Welcome Call Case - 20140807-103046-0001%'
+            ORDER BY CreatedDate DESC
+            LIMIT 1
+        ];
+        System.assertEquals(1, customerCases.size(), 'Welcome pending import phải tạo Customer Case.');
+        List<FEC_Routing_Action_History__c> histories = [
+            SELECT FEC_Routing_Action__c, FEC_Routing_Action_Type__c, FEC_Current_Status__c,
+                FEC_Changed_Status__c, FEC_Perform_User__c
+            FROM FEC_Routing_Action_History__c
+            WHERE FEC_Case__c = :customerCases[0].Id
+        ];
+        System.assertEquals(1, histories.size(), 'Resolved Welcome pending import phải tạo Routing Action History.');
+        System.assertEquals(FEC_CaseBusinessService.RESOLVE, histories[0].FEC_Routing_Action__c);
+        System.assertEquals('Case', histories[0].FEC_Routing_Action_Type__c);
+        System.assertEquals(FEC_ConstantCommon.CASE_STATUS_OPEN, histories[0].FEC_Current_Status__c);
+        System.assertEquals(
+            FEC_ConstantCommon.CASE_STATUS_RESOLVED_COMPLETED,
+            histories[0].FEC_Changed_Status__c
+        );
+        System.assertEquals(UserInfo.getUserId(), histories[0].FEC_Perform_User__c);
     }
 
     @IsTest
@@ -1140,6 +1230,245 @@ private class FEC_BatchCaseCreationController_Test {
             return;
         }
         update new FEC_Batch_Case_Creation__c(Id = batchId, FEC_Status__c = 'Processed');
+    }
+
+    @IsTest
+    static void testGetTemplateOptionsAndRecentRowsCoverage() {
+        Test.startTest();
+        List<FEC_BatchCaseCreationController.TemplateOption> templates =
+            FEC_BatchCaseCreationController.getTemplateOptions();
+        List<FEC_BatchDataCreationController.BatchRow> recentRows =
+            FEC_BatchCaseCreationController.getRecentRows();
+        List<FEC_BatchDataCreationController.BatchRow> recentData =
+            FEC_BatchCaseCreationController.getRecentData();
+        FEC_BatchCaseCreationController.runPendingImportBatch();
+        FEC_BatchCaseCreationController.processAllPendingImports();
+        Test.stopTest();
+
+        System.assertNotEquals(null, templates);
+        System.assertNotEquals(null, recentRows);
+        System.assertNotEquals(null, recentData);
+    }
+
+    @IsTest
+    static void testGetTemplateOptions_DownloadUrlPopulated() {
+        List<FEC_BatchCaseCreationController.TemplateOption> options =
+            FEC_BatchCaseCreationController.getTemplateOptions();
+        System.assertNotEquals(null, options);
+        for (FEC_BatchCaseCreationController.TemplateOption opt : options) {
+            if ('Standard Case Template'.equals(opt.value)) {
+                System.assertNotEquals(null, opt.templateId);
+                System.assert(String.isNotBlank(opt.downloadUrl), 'Template file link should resolve.');
+                return;
+            }
+        }
+    }
+
+    @IsTest
+    static void testGetRecentRows_WithSourceAndResultFiles() {
+        ContentVersion sourceCv = new ContentVersion(
+            Title = 'Batch_Source.xlsx',
+            PathOnClient = 'Batch_Source.xlsx',
+            VersionData = Blob.valueOf('source-bytes')
+        );
+        insert sourceCv;
+        ContentVersion sourceInserted = [
+            SELECT ContentDocumentId FROM ContentVersion WHERE Id = :sourceCv.Id LIMIT 1
+        ];
+
+        ContentVersion resultCv = new ContentVersion(
+            Title = 'Batch_Source_ImportResult',
+            PathOnClient = 'Batch_Source_ImportResult.xlsx',
+            VersionData = Blob.valueOf('result-bytes')
+        );
+        insert resultCv;
+        ContentVersion resultInserted = [
+            SELECT ContentDocumentId FROM ContentVersion WHERE Id = :resultCv.Id LIMIT 1
+        ];
+
+        SObject batch = Schema.getGlobalDescribe().get('FEC_Batch_Case_Creation__c').newSObject();
+        batch.put('Name', 'Batch_Source.xlsx');
+        batch.put('FEC_Status__c', 'Processed');
+        batch.put('FEC_Total_Records__c', 1);
+        batch.put('FEC_Total_Success_Records__c', 1);
+        Map<String, Schema.SObjectField> batchFields =
+            Schema.SObjectType.FEC_Batch_Case_Creation__c.fields.getMap();
+        String docField = FEC_BatchImportCommon.pickField(
+            batchFields,
+            new List<String>{ 'FEC_File_Content_Document_Id__c' }
+        );
+        if (String.isNotBlank(docField)) {
+            batch.put(docField, sourceInserted.ContentDocumentId);
+        }
+        insert batch;
+
+        Id batchId = (Id) batch.get('Id');
+        insert new List<ContentDocumentLink>{
+            new ContentDocumentLink(
+                LinkedEntityId = batchId,
+                ContentDocumentId = sourceInserted.ContentDocumentId,
+                ShareType = 'V'
+            ),
+            new ContentDocumentLink(
+                LinkedEntityId = batchId,
+                ContentDocumentId = resultInserted.ContentDocumentId,
+                ShareType = 'V'
+            )
+        };
+
+        Test.startTest();
+        List<FEC_BatchDataCreationController.BatchRow> rows =
+            FEC_BatchCaseCreationController.getRecentRows();
+        Test.stopTest();
+
+        FEC_BatchDataCreationController.BatchRow matched;
+        for (FEC_BatchDataCreationController.BatchRow row : rows) {
+            if (row.id == batchId) {
+                matched = row;
+                break;
+            }
+        }
+        System.assertNotEquals(null, matched, 'Imported batch should appear in recent rows.');
+        System.assert(String.isNotBlank(matched.fileDownloadUrl));
+    }
+
+    @IsTest
+    static void testMarkBatchImportSystemFailure() {
+        FEC_Batch_Case_Creation__c batch = new FEC_Batch_Case_Creation__c(
+            Name = 'SystemFail.xlsx',
+            FEC_Status__c = FEC_ConstantCommon.UPLOADED_STATUS
+        );
+        insert batch;
+
+        Test.startTest();
+        FEC_BatchCaseCreationController.markBatchImportSystemFailure(batch.Id, 'System failure reason');
+        FEC_BatchCaseCreationController.markBatchImportSystemFailure(null, 'ignored');
+        Test.stopTest();
+
+        batch = [
+            SELECT FEC_Status__c, FEC_Failure_Reason__c
+            FROM FEC_Batch_Case_Creation__c
+            WHERE Id = :batch.Id
+        ];
+        System.assertEquals('Failure', batch.FEC_Status__c);
+        System.assertEquals('System failure reason', batch.FEC_Failure_Reason__c);
+    }
+
+    @IsTest
+    static void testProcessPendingBatchImport_NonUploadedStatusSkipped() {
+        FEC_Batch_Case_Creation__c processed = new FEC_Batch_Case_Creation__c(
+            Name = 'AlreadyProcessed.xlsx',
+            FEC_Status__c = 'Processed'
+        );
+        insert processed;
+
+        Test.startTest();
+        FEC_BatchCaseCreationController.processPendingBatchImport(processed.Id);
+        Test.stopTest();
+
+        System.assertEquals(
+            'Processed',
+            [SELECT FEC_Status__c FROM FEC_Batch_Case_Creation__c WHERE Id = :processed.Id].FEC_Status__c
+        );
+    }
+
+    @IsTest
+    static void testGetRecentRows_ResultDownloadUrlWithoutSourceDocField() {
+        ContentVersion resultCv = new ContentVersion(
+            Title = 'Batch_NoSource_ImportResult',
+            PathOnClient = 'Batch_NoSource_ImportResult.xlsx',
+            VersionData = Blob.valueOf('result-only')
+        );
+        insert resultCv;
+        Id resultDocId = [
+            SELECT ContentDocumentId FROM ContentVersion WHERE Id = :resultCv.Id LIMIT 1
+        ].ContentDocumentId;
+
+        FEC_Batch_Case_Creation__c batch = new FEC_Batch_Case_Creation__c(
+            Name = 'Batch_NoSource.xlsx',
+            FEC_Status__c = 'Processed',
+            FEC_Total_Records__c = 1,
+            FEC_Total_Success_Records__c = 1
+        );
+        insert batch;
+
+        insert new ContentDocumentLink(
+            LinkedEntityId = batch.Id,
+            ContentDocumentId = resultDocId,
+            ShareType = 'V'
+        );
+
+        Test.startTest();
+        List<FEC_BatchDataCreationController.BatchRow> rows =
+            FEC_BatchCaseCreationController.getRecentRows();
+        Test.stopTest();
+
+        FEC_BatchDataCreationController.BatchRow matched;
+        for (FEC_BatchDataCreationController.BatchRow row : rows) {
+            if (row.id == batch.Id) {
+                matched = row;
+                break;
+            }
+        }
+        System.assertNotEquals(null, matched);
+        System.assert(String.isNotBlank(matched.resultDownloadUrl));
+    }
+
+    @IsTest
+    static void testGetRecentRows_SecondAttachmentBecomesResultUrl() {
+        ContentVersion firstCv = new ContentVersion(
+            Title = 'Batch_TwoFile_Source.xlsx',
+            PathOnClient = 'Batch_TwoFile_Source.xlsx',
+            VersionData = Blob.valueOf('first')
+        );
+        ContentVersion secondCv = new ContentVersion(
+            Title = 'Batch_TwoFile_Result.xlsx',
+            PathOnClient = 'Batch_TwoFile_Result.xlsx',
+            VersionData = Blob.valueOf('second')
+        );
+        insert new List<ContentVersion>{ firstCv, secondCv };
+
+        Map<Id, Id> docByCv = new Map<Id, Id>();
+        for (ContentVersion cv : [
+            SELECT Id, ContentDocumentId FROM ContentVersion WHERE Id IN (:firstCv.Id, :secondCv.Id)
+        ]) {
+            docByCv.put(cv.Id, cv.ContentDocumentId);
+        }
+
+        FEC_Batch_Case_Creation__c batch = new FEC_Batch_Case_Creation__c(
+            Name = 'Batch_TwoFile.xlsx',
+            FEC_Status__c = 'Processed',
+            FEC_Total_Records__c = 2,
+            FEC_Total_Success_Records__c = 2
+        );
+        insert batch;
+
+        insert new List<ContentDocumentLink>{
+            new ContentDocumentLink(
+                LinkedEntityId = batch.Id,
+                ContentDocumentId = docByCv.get(firstCv.Id),
+                ShareType = 'V'
+            ),
+            new ContentDocumentLink(
+                LinkedEntityId = batch.Id,
+                ContentDocumentId = docByCv.get(secondCv.Id),
+                ShareType = 'V'
+            )
+        };
+
+        Test.startTest();
+        List<FEC_BatchDataCreationController.BatchRow> rows =
+            FEC_BatchCaseCreationController.getRecentRows();
+        Test.stopTest();
+
+        for (FEC_BatchDataCreationController.BatchRow row : rows) {
+            if (row.id == batch.Id) {
+                System.assert(String.isNotBlank(row.fileDownloadUrl));
+                System.assert(String.isNotBlank(row.resultDownloadUrl));
+                return;
+            }
+        }
+        System.assert(false, 'Batch with two attachments should appear in recent rows.');
     }
 
 }

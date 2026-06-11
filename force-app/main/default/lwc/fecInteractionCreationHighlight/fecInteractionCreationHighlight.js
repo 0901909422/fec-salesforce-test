@@ -23,9 +23,14 @@ import FEC_WRAP_UP_BTN_LABEL from "@salesforce/label/c.FEC_Wrap_up_Btn_Label";
 import FEC_INTERACTION_CHANNEL from "@salesforce/label/c.FEC_Interaction_Channel_Label";
 import FEC_INTERACTION_SUB_CHANNEL from "@salesforce/label/c.FEC_Interaction_Sub_Channel_Label";
 import FEC_No_Permission_Msg from '@salesforce/label/c.FEC_No_Permission_Msg';
-import FEC_Interaction_Email_Required_Msg from '@salesforce/label/c.FEC_Interaction_Email_Required_Msg';
-import FEC_Toast_Validation_Title from '@salesforce/label/c.FEC_Toast_Validation_Title';
 import isInteractionEmailActionBlocked from '@salesforce/apex/FEC_InteractionInforHandler.isInteractionEmailActionBlocked';
+import isInteractionPhoneActionBlocked from '@salesforce/apex/FEC_InteractionInforHandler.isInteractionPhoneActionBlocked';
+import VALIDATE_INTERACTION_EMAIL from "@salesforce/messageChannel/FEC_Validate_Interaction_Email__c";
+import VALIDATE_INTERACTION_PHONE from "@salesforce/messageChannel/FEC_Validate_Interaction_Phone__c";
+import {
+  publish,
+  MessageContext,
+} from "lightning/messageService";
 import { formatDateTime } from "c/fec_CommonUtils";
 import { PROFILE_RELEVANT_DEPTS } from 'c/fec_CommonConst';
 
@@ -46,6 +51,9 @@ export default class FecInteractionCreationHighlight extends NavigationMixin(
   };
 
   @api recordId;
+
+  @wire(MessageContext)
+  messageContext;
 
   record;
   viewMode; // handling | review
@@ -214,26 +222,56 @@ export default class FecInteractionCreationHighlight extends NavigationMixin(
     }
   }
 
+  async ensureInteractionEmailBeforeCreateCase(recordId) {
+    if (!recordId) {
+      return true;
+    }
+    try {
+      const blocked = await isInteractionEmailActionBlocked({ recordId });
+      if (blocked) {
+        publish(this.messageContext, VALIDATE_INTERACTION_EMAIL, { recordId });
+        return false;
+      }
+      return true;
+    } catch (error) {
+      console.error("isInteractionEmailActionBlocked error", error);
+      return true;
+    }
+  }
+
+  async ensureInteractionPhoneBeforeCreateCase(recordId) {
+    if (!recordId) {
+      return true;
+    }
+    try {
+      const blocked = await isInteractionPhoneActionBlocked({ recordId });
+      if (blocked) {
+        publish(this.messageContext, VALIDATE_INTERACTION_PHONE, { recordId });
+        return false;
+      }
+      return true;
+    } catch (error) {
+      console.error("isInteractionPhoneActionBlocked error", error);
+      return true;
+    }
+  }
+
+  async ensureInteractionFieldsBeforeCreateCase(recordId) {
+    const emailOk = await this.ensureInteractionEmailBeforeCreateCase(recordId);
+    if (!emailOk) {
+      return false;
+    }
+    return this.ensureInteractionPhoneBeforeCreateCase(recordId);
+  }
+
   async handleCreateCase() {
     console.log("handleCreateCase from creation highlight");
     if (this._userProfile === PROFILE_RELEVANT_DEPTS) {
       this.dispatchEvent(new ShowToastEvent({ title: 'Lỗi', message: FEC_No_Permission_Msg, variant: 'error' }));
       return;
     }
-    try {
-      const blocked = await isInteractionEmailActionBlocked({ recordId: this.recordId });
-      if (blocked) {
-        this.dispatchEvent(
-          new ShowToastEvent({
-            title: FEC_Toast_Validation_Title,
-            message: FEC_Interaction_Email_Required_Msg,
-            variant: 'error',
-          }),
-        );
-        return;
-      }
-    } catch (error) {
-      console.error('isInteractionEmailActionBlocked error:', error);
+    const canProceed = await this.ensureInteractionFieldsBeforeCreateCase(this.recordId);
+    if (!canProceed) {
       return;
     }
     this.isOpen = true;

@@ -1,39 +1,37 @@
 public with sharing class FEC_CreateCaseInteractionController {
   @AuraEnabled
   public static Id createCustomerCaseFromCase(Id caseId) {
-    FEC_InteractionInforHandler.assertInteractionEmailForAction(caseId);
     Case interation = [
       SELECT Id, FEC_Account_or_Contract__c, FEC_Account_or_Contract__r.FEC_Customer_Name__c,
              FEC_Product_Type__c, FEC_Phone_Number__c,
-             FEC_Account_Number__c, FEC_Contract_Number__c, FEC_CIF_Number__c, FEC_Is_Manual__c, FEC_Channel__c
+             FEC_Account_Number__c, FEC_Contract_Number__c, FEC_CIF_Number__c, FEC_Customer_Username__c, FEC_Is_Manual__c, FEC_Channel__c
       FROM Case
       WHERE Id = :caseId
       LIMIT 1
     ];
-
+    //tungnm37 - Require Customer Username when creating Customer Case from manual Chat interaction.
     if (
         interation.FEC_Is_Manual__c == true &&
-        (
-            interation.FEC_Channel__c == 'Inbound' ||
-            interation.FEC_Channel__c == 'Outbound'
-        ) &&
-        String.isBlank(interation.FEC_Phone_Number__c)
+        interation.FEC_Channel__c == FEC_ConstantCommon.CHANNEL_CHAT &&
+        String.isBlank(interation.FEC_Customer_Username__c)
     ) {
         throw new AuraHandledException(
-            System.Label.FEC_PHONE_IS_REQUIRED_MSG
+            System.Label.FEC_Manual_Chat_Customer_Username_Required
         );
     }
-    
-     if (
-        interation.FEC_Is_Manual__c == true &&
-        (
-            interation.FEC_Channel__c == 'Inbound' ||
-            interation.FEC_Channel__c == 'Outbound'
-        ) &&
-        String.isBlank(interation.FEC_Phone_Number__c)
+
+
+
+    if (
+      interation.FEC_Is_Manual__c == true &&
+      (
+      interation.FEC_Channel__c == 'Inbound' ||
+      interation.FEC_Channel__c == 'Outbound'
+      ) &&
+      String.isBlank(interation.FEC_Phone_Number__c)
     ) {
-        throw new AuraHandledException(
-            System.Label.FEC_PHONE_IS_REQUIRED_MSG
+      throw new AuraHandledException(
+        System.Label.FEC_INTERACTION_PHONE_REQUIRED
         );
     }
     
@@ -43,7 +41,7 @@ public with sharing class FEC_CreateCaseInteractionController {
     
     Case newCase = new Case();
     newCase.RecordTypeId = customerCaseRtId;
-    newCase.OwnerId = UserInfo.getUserId(); 
+    newCase.OwnerId = UserInfo.getUserId();
     newCase.FEC_Account_or_Contract__c = interation.FEC_Account_or_Contract__c;
     newCase.Status = FEC_ConstantCommon.CASE_STATUS_OPEN;
     newCase.Origin = FEC_ConstantCommon.CASE_WEB_ORIGIN;
@@ -51,7 +49,7 @@ public with sharing class FEC_CreateCaseInteractionController {
     newCase.FEC_Interaction__c = caseId;
     newCase.FEC_Interaction_View_Mode__c = FEC_ConstantCommon.INTERACTION_HANDLING_MODE;
     if (interation.FEC_Account_or_Contract__r != null) {
-        newCase.FEC_Customer_Name__c = interation.FEC_Account_or_Contract__r.FEC_Customer_Name__c;
+      newCase.FEC_Customer_Name__c = interation.FEC_Account_or_Contract__r.FEC_Customer_Name__c;
     }
     //newCase.FEC_Customer_Name__c = interation.FEC_Account_or_Contract__r?.FEC_Customer_Name__c;
     newCase.FEC_Product_Type__c = interation.FEC_Product_Type__c;
@@ -93,48 +91,60 @@ public with sharing class FEC_CreateCaseInteractionController {
       if (caseId == null) {
         throw new AuraHandledException(String.format(System.Label.FEC_MSG_Param_Required, new List<String>{'Case Id'}));
       }
-      FEC_InteractionInforHandler.assertInteractionEmailForAction(caseId);
 
       // 2. Get interaction case
       Case interaction = [
         SELECT Id, FEC_Account_or_Contract__r.FEC_Customer_Name__c, FEC_Product_Type__c, FEC_Phone_Number__c,
                FEC_Customer_Type__c, FEC_Account_or_Contract__c, RecordType.DeveloperName,
-               FEC_Account_Number__c, FEC_Contract_Number__c, FEC_CIF_Number__c, FEC_Is_Manual__c, FEC_Channel__c
+               FEC_Account_Number__c, FEC_Contract_Number__c, FEC_CIF_Number__c, FEC_Customer_Username__c, FEC_Is_Manual__c, FEC_Channel__c
         FROM Case
         WHERE Id = :caseId
         LIMIT 1
       ];
+      System.debug('Manual=' + interaction.FEC_Is_Manual__c);
+      System.debug('Channel=' + interaction.FEC_Channel__c);
+      System.debug('Phone=' + interaction.FEC_Phone_Number__c);
+      //tungnm37 - Require Customer Username when creating Customer Case from manual Chat interaction.
+      if (
+        interaction.FEC_Is_Manual__c == true &&
+        interaction.FEC_Channel__c == FEC_ConstantCommon.CHANNEL_CHAT &&
+        String.isBlank(interaction.FEC_Customer_Username__c)
+      ) {
+        throw new AuraHandledException(
+            System.Label.FEC_Manual_Chat_Customer_Username_Required
+        );
+      }
 
       if (
         interaction.FEC_Is_Manual__c == true &&
         (
-            interaction.FEC_Channel__c == 'Inbound' ||
-            interaction.FEC_Channel__c == 'Outbound'
+        interaction.FEC_Channel__c == 'Inbound' ||
+        interaction.FEC_Channel__c == 'Outbound'
         ) &&
         String.isBlank(interaction.FEC_Phone_Number__c)
-    ) {
+      ) {
         throw new AuraHandledException(
-            System.Label.FEC_PHONE_IS_REQUIRED_MSG
-        );
-    }
+          System.Label.FEC_INTERACTION_PHONE_REQUIRED
+          );
+      }
 
       Id recordTypeToUse;
 
       if (interaction.RecordType.DeveloperName == FEC_ConstantCommon.CASE_INTERNAL_RECORD_TYPE_DEV_NAME) {
-          recordTypeToUse = interaction.RecordTypeId;
+        recordTypeToUse = interaction.RecordTypeId;
       } else {
-          // 3. Get RecordType safely
-          Map<String, Schema.RecordTypeInfo> rtMap = Schema.SObjectType.Case.getRecordTypeInfosByDeveloperName();
+        // 3. Get RecordType safely
+        Map<String, Schema.RecordTypeInfo> rtMap = Schema.SObjectType.Case.getRecordTypeInfosByDeveloperName();
 
-          if (!rtMap.containsKey(FEC_ConstantCommon.CASE_CUSTOMER_RECORD_TYPE_DEV_NAME)) {
-              throw new AuraHandledException(
-                  String.format(System.Label.FEC_MSG_Not_Found,
-                  new List<String>{FEC_ConstantCommon.CASE_CUSTOMER_RECORD_TYPE_DEV_NAME})
-              );
-          }
+        if (!rtMap.containsKey(FEC_ConstantCommon.CASE_CUSTOMER_RECORD_TYPE_DEV_NAME)) {
+          throw new AuraHandledException(
+            String.format(System.Label.FEC_MSG_Not_Found,
+          new List<String>{FEC_ConstantCommon.CASE_CUSTOMER_RECORD_TYPE_DEV_NAME})
+          );
+        }
 
-          recordTypeToUse = rtMap.get(
-              FEC_ConstantCommon.CASE_CUSTOMER_RECORD_TYPE_DEV_NAME
+        recordTypeToUse = rtMap.get(
+          FEC_ConstantCommon.CASE_CUSTOMER_RECORD_TYPE_DEV_NAME
           ).getRecordTypeId();
       }
       
@@ -182,9 +192,15 @@ public with sharing class FEC_CreateCaseInteractionController {
       update newCase;
       
       return newCase.Id;
+    }catch (AuraHandledException e) {
+      throw e;
     } catch (Exception e) {
+      System.debug('TYPE=' + e.getTypeName());
+      System.debug('MSG=' + e.getMessage());
+      System.debug('STACK=' + e.getStackTraceString());
+
       throw new AuraHandledException(
-        e.getMessage()
+        e.getTypeName() + ': ' + e.getMessage()
         );
     }
   }
@@ -211,28 +227,28 @@ public with sharing class FEC_CreateCaseInteractionController {
   // Create case with no recordId in Lisview
   @AuraEnabled
   public static Id createInteractionCase(String customerName, String nationalId) {
-      Case c = new Case();
-      c.RecordTypeId = Schema.SObjectType.Case.getRecordTypeInfosByDeveloperName()
-          .get(FEC_ConstantCommon.CASE_INTERNAL_RECORD_TYPE_DEV_NAME)
-          .getRecordTypeId();
-      c.OwnerId = UserInfo.getUserId();
-      c.Status = FEC_ConstantCommon.CASE_STATUS_NEW;
-      c.Origin = FEC_ConstantCommon.CASE_WEB_ORIGIN;
-      c.FEC_Customer_Name__c = customerName;
-      c.FEC_National_ID_Passport_ID__c = nationalId;
-      c.FEC_Interaction_View_Mode__c = FEC_ConstantCommon.INTERACTION_HANDLING_MODE;
-      c.FEC_Customer_Type__c = FEC_ConstantCommon.CASE_ALL_REQUEST;
-      List<FEC_Product_Type__c> productTypes = [
-          SELECT Id
-          FROM FEC_Product_Type__c
-          WHERE FEC_Code__c = :FEC_ConstantCommon.CASE_INTERNAL_REQUEST
-          LIMIT 1
-      ];
-      if (!productTypes.isEmpty()) {
-          c.FEC_Product_Type__c = productTypes[0].Id;
-      }
+    Case c = new Case();
+    c.RecordTypeId = Schema.SObjectType.Case.getRecordTypeInfosByDeveloperName()
+      .get(FEC_ConstantCommon.CASE_INTERNAL_RECORD_TYPE_DEV_NAME)
+      .getRecordTypeId();
+    c.OwnerId = UserInfo.getUserId();
+    c.Status = FEC_ConstantCommon.CASE_STATUS_NEW;
+    c.Origin = FEC_ConstantCommon.CASE_WEB_ORIGIN;
+    c.FEC_Customer_Name__c = customerName;
+    c.FEC_National_ID_Passport_ID__c = nationalId;
+    c.FEC_Interaction_View_Mode__c = FEC_ConstantCommon.INTERACTION_HANDLING_MODE;
+    c.FEC_Customer_Type__c = FEC_ConstantCommon.CASE_ALL_REQUEST;
+    List<FEC_Product_Type__c> productTypes = [
+      SELECT Id
+      FROM FEC_Product_Type__c
+      WHERE FEC_Code__c = :FEC_ConstantCommon.CASE_INTERNAL_REQUEST
+      LIMIT 1
+    ];
+    if (!productTypes.isEmpty()) {
+      c.FEC_Product_Type__c = productTypes[0].Id;
+    }
 
-      insert c;
-      return c.Id;
+    insert c;
+    return c.Id;
   }
 }

@@ -26,6 +26,8 @@ import FEC_Button_Save_Close from "@salesforce/label/c.FEC_Button_Save_Close";
 import FEC_Button_Submit from "@salesforce/label/c.FEC_Button_Submit";
 import FEC_MSG_Submit from "@salesforce/label/c.FEC_MSG_Submit";
 import FEC_Case_Remark_Label from "@salesforce/label/c.FEC_Case_Remark_Label";
+// Chỉ dùng cho lightning-datatable empty state; bỏ khi revert về related-list-paging
+import FEC_Common_No_Results_Label from "@salesforce/label/c.FEC_Common_No_Results_Label";
 import FEC_Tab_Nature_Of_Case from "@salesforce/label/c.FEC_Tab_Nature_Of_Case";
 import FEC_MSG_CARD_REPLACEMENT_ADDRESS_SELECT from "@salesforce/label/c.FEC_MSG_CARD_REPLACEMENT_ADDRESS_SELECT";
 import getCase from "@salesforce/apex/FEC_CaseEditNOCController.getCase";
@@ -199,18 +201,48 @@ export default class Fec_CaseDetail_Customer extends LightningElement {
   // tungnm37 thêm: track COF/GSR để filter remark type Assignment
   _isCofGsr = false;
 
-  get remarkColumnlst() {
+  // OLD: revert về related-list-paging — bỏ comment block này và dùng lại trong HTML
+  // get remarkColumnlst() {
+  //   return [
+  //     {
+  //       label: FEC_Case_Remark_Label,
+  //       fieldName: "FEC_Case_Remarks__c",
+  //       cellAttributes: { class: "cell-address-wrap" },
+  //     },
+  //     { label: "Stage Name", fieldName: "FEC_Stage_Name__c" },
+  //     { label: "User", fieldName: "FEC_User__c" },
+  //     { label: "User Role", fieldName: "FEC_User_Role__c" },
+  //     { label: "Date Time", fieldName: "CreatedDate" },
+  //   ];
+  // }
+
+  // NEW: lightning-datatable — comment block này khi revert về related-list-paging
+  get remarkHistoryColumns() {
     return [
       {
         label: FEC_Case_Remark_Label,
         fieldName: "FEC_Case_Remarks__c",
-        cellAttributes: { class: "cell-address-wrap" },
+        type: "text",
+        wrapText: true,
+        initialWidth: 490,
       },
-      { label: "Stage Name", fieldName: "FEC_Stage_Name__c" },
-      { label: "User", fieldName: "FEC_User__c" },
-      { label: "User Role", fieldName: "FEC_User_Role__c" },
-      { label: "Date Time", fieldName: "CreatedDate" },
+      {
+        label: "Stage Name",
+        fieldName: "FEC_Stage_Name__c",
+        type: "text",
+      },
+      { label: "User", fieldName: "FEC_User__c", type: "text" },
+      { label: "User Role", fieldName: "FEC_User_Role__c", type: "text" },
+      { label: "Date Time", fieldName: "CreatedDate", type: "text" },
     ];
+  }
+
+  get hasRemarkHistory() {
+    return Array.isArray(this.remarklst) && this.remarklst.length > 0;
+  }
+
+  get noResultsLabel() {
+    return FEC_Common_No_Results_Label;
   }
 
   loadRemarklst = false;

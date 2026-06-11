@@ -13,7 +13,7 @@ public with sharing class FEC_CleanUpMasterDataController {
             
             // --- 4 Tabs mới thêm ---
             // 6. Master Data Setting
-            masterDataMap.put(FEC_ObjectConstants.KEY_MASTER_SETTING, [SELECT Id, Name, FEC_Code__c, FEC_Stage_Name__c, FEC_Nature_Of_Case__c, FEC_Channel__c FROM FEC_Master_Data_Setting__c ORDER BY Name]);
+            masterDataMap.put(FEC_ObjectConstants.KEY_MASTER_SETTING, [SELECT Id, Name, FEC_Code__c, FEC_Stage_Name__c, FEC_Nature_Of_Case__c FROM FEC_Master_Data_Setting__c ORDER BY Name]);
             
             masterDataMap.put(FEC_ObjectConstants.KEY_CHANNEL, [SELECT Id, Name, FEC_Code__c FROM FEC_Channel__c ORDER BY Name]);
             

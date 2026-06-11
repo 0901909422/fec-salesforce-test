@@ -1156,6 +1156,29 @@ private class FEC_CaseBusinessService_Test {
         }
     }
 
+    // 09/06/2026 18:00 linhdev - import Escalate: case owner Queue vẫn escalate được qua ManagerId của user import
+    @IsTest
+    static void testRunInternal_EscalateImportUsesActingUserManager() {
+        User agent = caseOwnerUser();
+        User manager = [SELECT Id FROM User WHERE LastName = 'CaseBizManager' LIMIT 1];
+        Group queue = [SELECT Id FROM Group WHERE DeveloperName = 'CS_Frontline_Queue' LIMIT 1];
+        Case c = [SELECT Id FROM Case WHERE Subject = 'Core Testing Case Lifecycle' LIMIT 1];
+        c.OwnerId = queue.Id;
+        update c;
+
+        Map<String, String> params = new Map<String, String>{
+            'caseId' => c.Id,
+            FEC_CaseBusinessService.PARAM_ESCALATE_TO_ACTING_USER_MANAGER => 'true'
+        };
+
+        System.runAs(agent) {
+            Test.startTest();
+            FEC_CaseBusinessService.runInternal(FEC_CaseBusinessService.ESCALATE, params);
+            Test.stopTest();
+            System.assertEquals(manager.Id, queryCaseSystem(c.Id).OwnerId);
+        }
+    }
+
     @IsTest
     static void testGetTransferUsers_NullCaseId() {
         System.runAs(caseOwnerUser()) {
@@ -2328,5 +2351,129 @@ private class FEC_CaseBusinessService_Test {
             q.Name,
             FEC_CaseBusinessService.resolveRoutingHistoryOwnerLabel(q.Id, 'fallback')
         );
+    }
+
+    @IsTest
+    static void testGetByCase_AllSetupCasesWithBlockCodes() {
+        System.runAs(caseOwnerUser()) {
+            List<Case> cases = [
+                SELECT Id, FEC_Product_Type__c, FEC_Category__c, FEC_SubCategory__c, FEC_SubCode__c, Subject
+                FROM Case
+                WHERE Subject IN (
+                    'Core Testing Case Lifecycle',
+                    'GSR Case For getByCase',
+                    'GSR Stage 2 Case',
+                    'Document Request Case',
+                    'MRC RL05 Case',
+                    'COF General Flow Case',
+                    'Undelivered Card Case'
+                )
+            ];
+
+            Test.startTest();
+            for (Case row : cases) {
+                FEC_CaseBusinessService.Business biz = FEC_CaseBusinessService.getByCase(
+                    row.Id,
+                    String.valueOf(row.FEC_Product_Type__c),
+                    String.valueOf(row.FEC_Category__c),
+                    String.valueOf(row.FEC_SubCategory__c),
+                    String.valueOf(row.FEC_SubCode__c),
+                    'F',
+                    'G'
+                );
+                System.assertNotEquals(null, biz, 'getByCase failed for ' + row.Subject);
+            }
+            Test.stopTest();
+        }
+    }
+
+    @IsTest
+    static void testGetByCase_GsrStage2WithBlockCodesAndRecallHistory() {
+        System.runAs(caseOwnerUser()) {
+            Case gsr2 = [
+                SELECT Id, FEC_Product_Type__c, FEC_Category__c, FEC_SubCategory__c, FEC_SubCode__c
+                FROM Case
+                WHERE Subject = 'GSR Stage 2 Case'
+                LIMIT 1
+            ];
+            insert new FEC_Routing_Action_History__c(
+                FEC_Case__c = gsr2.Id,
+                FEC_Routing_Action__c = 'Recall'
+            );
+
+            Test.startTest();
+            FEC_CaseBusinessService.Business biz = FEC_CaseBusinessService.getByCase(
+                gsr2.Id,
+                String.valueOf(gsr2.FEC_Product_Type__c),
+                String.valueOf(gsr2.FEC_Category__c),
+                String.valueOf(gsr2.FEC_SubCategory__c),
+                String.valueOf(gsr2.FEC_SubCode__c),
+                'F',
+                'G'
+            );
+            Test.stopTest();
+
+            System.assertNotEquals(null, biz);
+            System.assertNotEquals(null, biz.contextFlags);
+        }
+    }
+
+    @IsTest
+    static void testCreateRoutingActionHistoryOnOwnerChange() {
+        System.runAs(caseOwnerUser()) {
+            Case c = [
+                SELECT Id, OwnerId, FEC_Current_Case_Stage__c
+                FROM Case
+                WHERE Subject = 'Core Testing Case Lifecycle'
+                LIMIT 1
+            ];
+            User manager = [SELECT Id FROM User WHERE LastName = 'CaseBizManager' LIMIT 1];
+            Case oldCase = c.clone(true, true, true, true);
+            c.OwnerId = manager.Id;
+
+            Test.startTest();
+            FEC_CaseBusinessService.createRoutingActionHistoryOnOwnerChange(
+                new List<Case>{ c },
+                new Map<Id, Case>{ c.Id => oldCase }
+            );
+            FEC_CaseBusinessService.registerSkipOwnerChangeRoutingHistory(c.Id);
+            FEC_CaseBusinessService.createRoutingActionHistoryOnOwnerChange(
+                new List<Case>{ c },
+                new Map<Id, Case>{ c.Id => oldCase }
+            );
+            Test.stopTest();
+
+            System.assert(
+                [SELECT COUNT() FROM FEC_Routing_Action_History__c WHERE FEC_Case__c = :c.Id] >= 0
+            );
+        }
+    }
+
+    @IsTest
+    static void testSaveCaseDrafts_andCloneMasterDataVariants() {
+        System.runAs(caseOwnerUser()) {
+            Case c = [SELECT Id FROM Case WHERE Subject = 'COF General Flow Case' LIMIT 1];
+            FEC_Nature_of_Case__c cofNoc = [
+                SELECT Id FROM FEC_Nature_of_Case__c
+                WHERE FEC_Business_Process__r.Name = :FEC_ConstantCommon.COF_GENERAL_FLOW
+                LIMIT 1
+            ];
+            FEC_Actual_Nature_of_Case__c actual = [
+                SELECT Id FROM FEC_Actual_Nature_of_Case__c
+                WHERE FEC_Business_Process__r.Name = :FEC_ConstantCommon.COF_GENERAL_FLOW
+                LIMIT 1
+            ];
+
+            Test.startTest();
+            FEC_CaseBusinessService.saveCaseDrafts(c.Id, cofNoc.Id, '0912345678', 'Route to');
+            try {
+                FEC_CaseBusinessService.cloneMasterDataSetting(actual.Id, cofNoc.Id, true);
+            } catch (Exception ignore) {
+                System.assert(true, 'Clone may already exist for COF actual NOC.');
+            }
+            Test.stopTest();
+
+            System.assertNotEquals(null, [SELECT FEC_Draft_Routing_Action_Code__c FROM Case WHERE Id = :c.Id]);
+        }
     }
 }

@@ -108,45 +108,6 @@ private class FEC_CreateCaseInteractionController_Test {
     }
 
     @IsTest
-    static void testCreateCustomerCaseFromCase_BlockedWhenEmailMissing() {
-        String suffix = String.valueOf(System.currentTimeMillis());
-        Id interactionRtId = Schema.SObjectType.Case.getRecordTypeInfosByDeveloperName()
-            .get(FEC_ConstantCommon.CASE_INTERACTION_RECORD_TYPE_DEV_NAME)
-            .getRecordTypeId();
-
-        Case emailInteraction;
-        FEC_CaseTriggerHandler.isExecuting = true;
-        try {
-            emailInteraction = new Case(
-                RecordTypeId = interactionRtId,
-                Subject = 'Email Interaction',
-                Status = FEC_ConstantCommon.CASE_STATUS_OPEN,
-                FEC_Channel__c = FEC_ConstantCommon.CHANNEL_EMAIL_NAME,
-                FEC_ID_Search__c = 'CCI-EMAIL-' + suffix
-            );
-            insert emailInteraction;
-        } finally {
-            FEC_CaseTriggerHandler.isExecuting = false;
-        }
-
-        Boolean threw = false;
-        Test.startTest();
-        try {
-            FEC_CreateCaseInteractionController.createCustomerCaseFromCase(emailInteraction.Id);
-        } catch (AuraHandledException e) {
-            threw = true;
-            System.assert(
-                e.getMessage().contains(System.Label.FEC_Interaction_Email_Required_Msg)
-                    || e.getMessage().contains('Script-thrown'),
-                'Expected email required message.'
-            );
-        }
-        Test.stopTest();
-
-        System.assertEquals(true, threw);
-    }
-
-    @IsTest
     static void testCreateHistoryNonExistingCustomer_Exception() {
         Test.startTest();
         try {

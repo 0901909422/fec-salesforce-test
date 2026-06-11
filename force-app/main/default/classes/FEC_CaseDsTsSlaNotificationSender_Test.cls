@@ -661,16 +661,67 @@ private class FEC_CaseDsTsSlaNotificationSender_Test {
 
         Test.startTest();
         try {
-            FEC_Notification.EmailInfo info = FEC_CaseDsTsSlaNotificationSender.buildEmailInfoForCase(
-                loaded.Id,
-                loaded,
-                templateByApi
-            );
-            System.assertNotEquals(null, info);
-            System.assert(String.isNotBlank(info.subject));
+            List<FEC_Notification.EmailInfo> infos =
+                FEC_CaseDsTsSlaNotificationSender.buildEmailInfosForCase(
+                    loaded.Id,
+                    loaded,
+                    templateByApi
+                );
+            System.assertEquals(1, infos.size());
+            System.assert(String.isNotBlank(infos[0].subject));
         } finally {
             FEC_CaseDsTsSlaService.testRecipientUserIdsOverride = null;
             FEC_CaseDsTsSlaService.testForceSlaEligible = false;
+        }
+        Test.stopTest();
+    }
+
+    @IsTest
+    static void testBuildEmailInfoForProfile_perQueueTemplateAndRecipients() {
+        ensureSlaTemplates();
+        FEC_CaseDsTsSlaService.testRecipientUserIdsOverride = new List<Id>{ UserInfo.getUserId() };
+
+        Map<String, FEC_Template__c> templateByApi = new Map<String, FEC_Template__c>();
+        for (FEC_Template__c tmpl : [
+            SELECT Id, FEC_API_Name__c, FEC_Subject_Line__c, FEC_Body__c,
+                   FEC_Enhanced_Letterhead__c,
+                   FEC_Enhanced_Letterhead__r.FEC_Header__c,
+                   FEC_Enhanced_Letterhead__r.FEC_Footer__c
+            FROM FEC_Template__c
+            WHERE FEC_API_Name__c IN (:TEMPLATE_API_DS, :TEMPLATE_API_TS)
+              AND FEC_Active__c = true
+        ]) {
+            templateByApi.put(tmpl.FEC_API_Name__c, tmpl);
+        }
+
+        Case row = new Case(
+            Id = '500000000000000AAA',
+            FEC_ID_Search__c = 'DSTS-MULTI'
+        );
+
+        Test.startTest();
+        try {
+            FEC_Notification.EmailInfo dsInfo =
+                FEC_CaseDsTsSlaNotificationSender.buildEmailInfoForProfile(
+                    row.Id,
+                    row,
+                    FEC_CaseDsTsSlaService.PROFILE_DIRECT_SALES,
+                    templateByApi
+                );
+            FEC_Notification.EmailInfo tsInfo =
+                FEC_CaseDsTsSlaNotificationSender.buildEmailInfoForProfile(
+                    row.Id,
+                    row,
+                    FEC_CaseDsTsSlaService.PROFILE_TELESALES,
+                    templateByApi
+                );
+            System.assertNotEquals(null, dsInfo);
+            System.assertNotEquals(null, tsInfo);
+            System.assertEquals('DS SLA Alert', dsInfo.subject);
+            System.assertEquals('TS SLA Alert', tsInfo.subject);
+            System.assertNotEquals(dsInfo.subject, tsInfo.subject);
+        } finally {
+            FEC_CaseDsTsSlaService.testRecipientUserIdsOverride = null;
         }
         Test.stopTest();
     }

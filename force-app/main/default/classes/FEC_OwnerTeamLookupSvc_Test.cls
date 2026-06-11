@@ -121,4 +121,15 @@ private class FEC_OwnerTeamLookupSvc_Test {
             'User không cấu hình Main Queue không được map Team.'
         );
     }
+
+    @IsTest
+    static void testGetTeamByOwnerLabel_LegacyLookup() {
+        Test.startTest();
+        System.assertEquals(null, FEC_OwnerTeamLookupSvc.getTeamByOwnerLabel(null));
+        System.assertEquals(null, FEC_OwnerTeamLookupSvc.getTeamByOwnerLabel('UNKNOWN_QUEUE'));
+        Map<Id, String> reportTeams =
+            FEC_OwnerTeamLookupSvc.getReportTeamByOwnerIds(new Set<Id>{ UserInfo.getUserId() });
+        Test.stopTest();
+        System.assertNotEquals(null, reportTeams);
+    }
 }

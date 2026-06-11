@@ -5,7 +5,7 @@
     <deployed>true</deployed>
     <description>Báo cáo Case With Customer Histories</description>
     <join>
-        <outerJoin>false</outerJoin>
+        <outerJoin>true</outerJoin>
         <relationship>Customer_Histories__r</relationship>
     </join>
     <label>Case With Customer Histories</label>

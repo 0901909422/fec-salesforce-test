@@ -278,6 +278,8 @@ public without sharing class FEC_CaseEditNOCController {
           AND FEC_Customer_Type__c IN :customerTypelst
           AND FEC_Product_Type__c != NULL
         GROUP BY FEC_Product_Type__c, FEC_Product_Type__r.Name
+        //linhdev 10/06/26 17:49: sort Product Type combobox alphabetically by Name
+        ORDER BY FEC_Product_Type__r.Name
       ];
       for (AggregateResult ar : natureOfCases) {
         productTypelst.add(
@@ -327,6 +329,8 @@ public without sharing class FEC_CaseEditNOCController {
           AND FEC_Product_Type__c = :productTypeId
           AND FEC_Category__c != NULL
         GROUP BY FEC_Category__c, FEC_Category__r.Name
+        //linhdev 10/06/26 17:49: sort Category combobox alphabetically by Name
+        ORDER BY FEC_Category__r.Name
       ];
 
       for (AggregateResult ar : natureOfCases) {
@@ -379,6 +383,8 @@ public without sharing class FEC_CaseEditNOCController {
           AND FEC_Category__c = :categoryId
           AND FEC_Sub_Category__c != NULL
         GROUP BY FEC_Sub_Category__c, FEC_Sub_Category__r.Name
+        //linhdev 10/06/26 17:49: sort Sub-Category combobox alphabetically by Name
+        ORDER BY FEC_Sub_Category__r.Name
       ];
       for (AggregateResult ar : natureOfCases) {
         subCategorylst.add(
@@ -511,6 +517,8 @@ public without sharing class FEC_CaseEditNOCController {
           AND FEC_Category__c = :categoryId
           AND FEC_Sub_Category__c = :subCategoryId
           AND FEC_Sub_Code__c != NULL
+        //linhdev 10/06/26 17:49: sort Sub-Code combobox alphabetically by Name
+        ORDER BY FEC_Sub_Code__r.Name
       ]) {
         subCodelst.add(
           new FEC_CommonUltils.PicklistOption(

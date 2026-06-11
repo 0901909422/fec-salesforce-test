@@ -34,9 +34,6 @@ import FEC_MSG_Close_Interaction_Complete_Case_Warning from "@salesforce/label/c
 import FEC_MSG_Select_outcome_code from "@salesforce/label/c.FEC_MSG_Select_outcome_code";
 import FEC_MSG_check_related_case_error from "@salesforce/label/c.FEC_MSG_check_related_case_error";
 import FEC_MSG_check_case_type_error from "@salesforce/label/c.FEC_MSG_check_case_type_error";
-import FEC_Interaction_Email_Required_Msg from "@salesforce/label/c.FEC_Interaction_Email_Required_Msg";
-import FEC_Toast_Validation_Title from "@salesforce/label/c.FEC_Toast_Validation_Title";
-import isInteractionEmailActionBlocked from "@salesforce/apex/FEC_InteractionInforHandler.isInteractionEmailActionBlocked";
 import { urlCmpWithRecordId } from "c/fec_CommonUtils";
 import {
   OUTCOME_CODE,
@@ -507,16 +504,6 @@ export default class Fec_InteractionSLA extends NavigationMixin(
   }
 
   async handleCreateCase() {
-    try {
-      const blocked = await isInteractionEmailActionBlocked({ recordId: this.recordId });
-      if (blocked) {
-        this.showToast(FEC_Toast_Validation_Title, FEC_Interaction_Email_Required_Msg, "error");
-        return;
-      }
-    } catch (error) {
-      console.error("isInteractionEmailActionBlocked error:", error);
-      return;
-    }
     if (this.isConsoleNavigation) {
       await openTab({
         url: urlCmpWithRecordId("fec_InteractionCreateCase", this.recordId),

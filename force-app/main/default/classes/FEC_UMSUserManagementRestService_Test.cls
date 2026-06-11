@@ -1,14 +1,42 @@
 @IsTest
 private class FEC_UMSUserManagementRestService_Test {
+    @IsTest
+    static void parseDateTimeInput_supportsIsoAndMmDdYyyy() {
+        Datetime iso = FEC_UMSUserManagementRestService.parseDateTimeInput('2026-06-02T07:00:00Z');
+        Datetime mdy = FEC_UMSUserManagementRestService.parseDateTimeInput('06-02-2026');
+        Datetime bad = FEC_UMSUserManagementRestService.parseDateTimeInput('invalid');
 
-    private static final String REQUESTOR_ID = 'PEGA-UMS-TEST';
-
-    private static String queueDevName() {
-        return [SELECT DeveloperName FROM Group WHERE Type = 'Queue' AND DeveloperName LIKE 'UMS_Test_Queue_%' LIMIT 1].DeveloperName;
+        System.assertNotEquals(null, iso);
+        System.assertNotEquals(null, mdy);
+        System.assertEquals(null, bad);
     }
 
-    private static String existingUsername() {
-        return [SELECT Username FROM User WHERE Username LIKE 'ums.existing.%@test.invalid' LIMIT 1].Username;
+    @IsTest
+    static void doGet_info_success() {
+        User me = [
+            SELECT Username
+            FROM User
+            WHERE Username LIKE 'ums.existing.%@test.invalid'
+            LIMIT 1
+        ];
+
+        RestRequest req = new RestRequest();
+        req.requestUri = '/services/apexrest/ums/v1/users/info';
+        req.httpMethod = 'GET';
+        req.addParameter('RequestorID', 'UT');
+        req.addParameter('UserID', me.Username);
+        RestResponse res = new RestResponse();
+        RestContext.request = req;
+        RestContext.response = res;
+
+        Test.startTest();
+        FEC_UMSUserManagementRestService.doGet();
+        Test.stopTest();
+
+        System.assertEquals(200, res.statusCode);
+        String responseBody = res.responseBody.toString();
+        System.assert(responseBody.contains('"Status":"S"'), responseBody);
+        System.assert(responseBody.contains('"UserID":"' + me.Username + '"'), responseBody);
     }
 
     private static User adminUser() {
@@ -66,323 +94,357 @@ private class FEC_UMSUserManagementRestService_Test {
         }
     }
 
-    private static void setRestContext(String method, String uri, String body, Map<String, String> params) {
+    @IsTest
+    static void doGet_all_invalidDateRange() {
         RestRequest req = new RestRequest();
+        req.requestUri = '/services/apexrest/ums/v1/users';
+        req.httpMethod = 'GET';
+        req.addParameter('RequestorID', 'UT');
+        req.addParameter('FromDate', '06-02-2026');
+        req.addParameter('ToDate', '06-01-2026');
         RestResponse res = new RestResponse();
-        req.httpMethod = method;
-        req.requestURI = uri;
-        if (body != null) {
-            req.requestBody = Blob.valueOf(body);
-        }
-        if (params != null) {
-            for (String key : params.keySet()) {
-                req.addParameter(key, params.get(key));
-            }
-        }
         RestContext.request = req;
         RestContext.response = res;
-    }
 
-    private static FEC_UMSUserManagementRestService.UMSMutationResponse parseMutationResponse() {
-        return (FEC_UMSUserManagementRestService.UMSMutationResponse) JSON.deserialize(
-            RestContext.response.responseBody.toString(),
-            FEC_UMSUserManagementRestService.UMSMutationResponse.class
-        );
-    }
+        Test.startTest();
+        FEC_UMSUserManagementRestService.doGet();
+        Test.stopTest();
 
-    private static String buildUpsertBody(
-        String updateType,
-        String userId,
-        List<String> roles
-    ) {
-        Map<String, Object> payload = new Map<String, Object>{
-            'RequestorID' => REQUESTOR_ID,
-            'UpdateType' => updateType,
-            'UserList' => new List<Object>{
-                new Map<String, Object>{
-                    'UserID' => userId,
-                    'UserName' => 'UMS User',
-                    'FirstName' => 'UMS',
-                    'LastName' => 'Test',
-                    'FEEmail' => userId,
-                    'Position' => 'Agent',
-                    'OrgUnit' => 'CC',
-                    'OrgDivision' => 'CS Frontline',
-                    'MainQueue' => 'CS_Frontline_Queue',
-                    'DefaultQueue' => 'CS_Frontline_Queue',
-                    'ListUserRole' => roles
-                }
-            }
-        };
-        return JSON.serialize(payload);
+        System.assertEquals(400, res.statusCode);
+        System.assert(res.responseBody.toString().contains('"Status":"F"'));
     }
 
     @IsTest
-    static void testDoPost_CreateUser_Success() {
-        String suffix = String.valueOf(System.currentTimeMillis());
-        String newUsername = 'ums.create.' + suffix + '@test.invalid';
-        setRestContext(
-            'POST',
-            '/services/apexrest/ums/v1/users',
-            buildUpsertBody('C', newUsername, new List<String>{ String.valueOf(umsQueueId()) }),
-            null
+    static void doPost_status_invalidAction() {
+        RestRequest req = new RestRequest();
+        req.requestUri = '/services/apexrest/ums/v1/users/status';
+        req.httpMethod = 'POST';
+        req.requestBody = Blob.valueOf(
+            '{"RequestorID":"UT","ActionType":"X","UserList":[{"UserID":"abc"}]}'
         );
+        RestResponse res = new RestResponse();
+        RestContext.request = req;
+        RestContext.response = res;
 
         Test.startTest();
-        System.runAs(adminUser()) {
-            FEC_UMSUserManagementRestService.doPost();
+        FEC_UMSUserManagementRestService.doPost();
+        Test.stopTest();
+
+        System.assertEquals(400, res.statusCode);
+        System.assert(res.responseBody.toString().contains('ActionType must be D or R'));
+    }
+
+    @IsTest
+    static void deriveTitleFromRole_stripsTrailingNumber() {
+        System.assertEquals(
+            'Customer Service E-com Team Leader',
+            FEC_UMSUserManagementRestService.deriveTitleFromRole('Customer Service E-com Team Leader 1')
+        );
+        System.assertEquals(
+            'Senior Customer Service Inbound Specialist',
+            FEC_UMSUserManagementRestService.deriveTitleFromRole('Senior Customer Service Inbound Specialist 5')
+        );
+        System.assertEquals(
+            'Unit Head of Customer Service Inbound',
+            FEC_UMSUserManagementRestService.deriveTitleFromRole('Unit Head of Customer Service Inbound')
+        );
+        System.assertEquals(null, FEC_UMSUserManagementRestService.deriveTitleFromRole(null));
+    }
+
+    @IsTest
+    static void getPermissionRoleList_returnsAssignedRolesForCurrentUser() {
+        User me = [SELECT Id FROM User WHERE Id = :UserInfo.getUserId() LIMIT 1];
+
+        Test.startTest();
+        List<String> roles = FEC_UMSUserManagementRestService.getPermissionRoleList(me.Id);
+        Test.stopTest();
+
+        System.assertNotEquals(null, roles);
+        Integer psaCount = [
+            SELECT COUNT()
+            FROM PermissionSetAssignment
+            WHERE AssigneeId = :me.Id
+            AND (
+                PermissionSetGroupId != NULL OR
+                (PermissionSet.IsOwnedByProfile = FALSE)
+            )
+        ];
+        if (psaCount > 0) {
+            System.assert(!roles.isEmpty(), 'User có permission assignment thì RoleList không rỗng');
         }
-        Test.stopTest();
-
-        System.assertEquals(FEC_ConstantCommon.HTTP_STATUS_OK, RestContext.response.statusCode);
-        FEC_UMSUserManagementRestService.UMSMutationResponse res = parseMutationResponse();
-        System.assertEquals(1, res.Message.size());
-        System.assertEquals('S', res.Message[0].Status);
-        System.assertEquals('Create success', res.Message[0].Description);
-
-        User created = [SELECT Id, Username, Email FROM User WHERE Username = :newUsername LIMIT 1];
-        System.assertEquals(newUsername, created.Email);
     }
 
     @IsTest
-    static void testDoPost_AppendUser_Success() {
-        String username = existingUsername();
-        setRestContext(
-            'POST',
-            '/services/apexrest/ums/v1/users',
-            buildUpsertBody('A', username, new List<String>{ String.valueOf(umsQueueId()) }),
-            null
+    static void doPost_upsert_missingRole() {
+        RestRequest req = new RestRequest();
+        req.requestUri = '/services/apexrest/ums/v1/users';
+        req.httpMethod = 'POST';
+        req.requestBody = Blob.valueOf(
+            '{"RequestorID":"UT","UserList":[{"UserID":"u1","UserName":"Test","FEEmail":"t@fpt.com","ListUserRole":["FEC_PSG_CS_Senior_CS_Support_Specialist"]}]}'
         );
+        RestResponse res = new RestResponse();
+        RestContext.request = req;
+        RestContext.response = res;
 
         Test.startTest();
-        System.runAs(adminUser()) {
-            FEC_UMSUserManagementRestService.doPost();
+        FEC_UMSUserManagementRestService.doPost();
+        Test.stopTest();
+
+        System.assertEquals(200, res.statusCode);
+        System.assert(RestContext.response.responseBody.toString().contains('Missing required field: Role'));
+    }
+
+    @IsTest
+    static void doPost_upsert_missingRequired() {
+        RestRequest req = new RestRequest();
+        req.requestUri = '/services/apexrest/ums/v1/users';
+        req.httpMethod = 'POST';
+        req.requestBody = Blob.valueOf('{"RequestorID":"UT","UserList":[{"UserID":"u1"}]}');
+        RestResponse res = new RestResponse();
+        RestContext.request = req;
+        RestContext.response = res;
+
+        Test.startTest();
+        FEC_UMSUserManagementRestService.doPost();
+        Test.stopTest();
+
+        System.assertEquals(200, res.statusCode);
+        String body = res.responseBody.toString();
+        System.assert(body.contains('"Status":"F"'), body);
+        System.assert(body.contains('Missing required field'), body);
+    }
+
+    @IsTest
+    static void resolveUserRoleId_returnsIdForExistingRole() {
+        Id roleId = FEC_UMSUserManagementRestService.resolveUserRoleId(
+            'Customer Service E-com Team Leader 1'
+        );
+        System.assertNotEquals(null, roleId);
+        System.assertEquals(null, FEC_UMSUserManagementRestService.resolveUserRoleId('NONEXISTENT_ROLE_XYZ'));
+    }
+
+    @IsTest
+    static void doPost_upsert_roleNotFound() {
+        RestRequest req = new RestRequest();
+        req.requestUri = '/services/apexrest/ums/v1/users';
+        req.httpMethod = 'POST';
+        req.requestBody = Blob.valueOf(
+            '{"RequestorID":"UT","UserList":[{"UserID":"u1","UserName":"Test","FEEmail":"t@fpt.com","Role":"NONEXISTENT_ROLE_XYZ","ListUserRole":["FEC_PSG_CS_CS_Ecom_Team_Leader"]}]}'
+        );
+        RestResponse res = new RestResponse();
+        RestContext.request = req;
+        RestContext.response = res;
+
+        Test.startTest();
+        FEC_UMSUserManagementRestService.doPost();
+        Test.stopTest();
+
+        System.assertEquals(200, res.statusCode);
+        System.assert(res.responseBody.toString().contains('UMS-007: Role not found'));
+    }
+
+    @IsTest
+    static void doPost_upsert_psgNotFound() {
+        RestRequest req = new RestRequest();
+        req.requestUri = '/services/apexrest/ums/v1/users';
+        req.httpMethod = 'POST';
+        req.requestBody = Blob.valueOf(
+            '{"RequestorID":"UT","UserList":[{"UserID":"u1","UserName":"Test","FEEmail":"t@fpt.com","Role":"Customer Service E-com Team Leader 1","ListUserRole":["NONEXISTENT_PSG_XYZ"]}]}'
+        );
+        RestResponse res = new RestResponse();
+        RestContext.request = req;
+        RestContext.response = res;
+
+        Test.startTest();
+        FEC_UMSUserManagementRestService.doPost();
+        Test.stopTest();
+
+        System.assertEquals(200, res.statusCode);
+        System.assert(res.responseBody.toString().contains('UMS-005: Permission Set Group not found'));
+    }
+
+    @IsTest
+    static void doPost_upsert_invalidUpdateType() {
+        RestRequest req = new RestRequest();
+        req.requestUri = '/services/apexrest/ums/v1/users';
+        req.httpMethod = 'POST';
+        req.requestBody = Blob.valueOf(
+            '{"RequestorID":"UT","UpdateType":"X","UserList":[{"UserID":"u1","UserName":"Test","FEEmail":"t@fpt.com","Role":"Customer Service E-com Team Leader 1","ListUserRole":["FEC_PSG_CS_CS_Ecom_Team_Leader"]}]}'
+        );
+        RestResponse res = new RestResponse();
+        RestContext.request = req;
+        RestContext.response = res;
+
+        Test.startTest();
+        FEC_UMSUserManagementRestService.doPost();
+        Test.stopTest();
+
+        System.assertEquals(400, res.statusCode);
+        System.assert(res.responseBody.toString().contains('Invalid UpdateType'));
+    }
+
+    @IsTest
+    static void doPost_upsert_createUpdateRoleAndPsg() {
+        List<PermissionSetGroup> updatedPsgs = [
+            SELECT DeveloperName
+            FROM PermissionSetGroup
+            WHERE Status = 'Updated'
+              AND DeveloperName LIKE 'FEC_PSG_CS_CS_Ecom%'
+            ORDER BY DeveloperName
+            LIMIT 2
+        ];
+        if (updatedPsgs.size() < 2) {
+            return;
         }
-        Test.stopTest();
+        String createPsgName = updatedPsgs[0].DeveloperName;
+        String replacePsgName = updatedPsgs[1].DeveloperName;
 
-        System.assertEquals(FEC_ConstantCommon.HTTP_STATUS_OK, RestContext.response.statusCode);
-        FEC_UMSUserManagementRestService.UMSMutationResponse res = parseMutationResponse();
-        System.assertEquals('S', res.Message[0].Status);
-        System.assertEquals('Update success', res.Message[0].Description);
-    }
+        String unique = String.valueOf(Datetime.now().getTime());
+        String username = 'ums.test.' + unique + '@example.com';
+        String roleName = 'Customer Service E-com Team Leader 1';
+        String expectedTitle = 'Customer Service E-com Team Leader';
+        Id expectedRoleId = FEC_UMSUserManagementRestService.resolveUserRoleId(roleName);
 
-    @IsTest
-    static void testDoPost_UpdateUser_Replace() {
-        String username = existingUsername();
-        setRestContext(
-            'POST',
-            '/services/apexrest/ums/v1/users',
-            buildUpsertBody('R', username, new List<String>{ String.valueOf(umsQueueId()) }),
-            null
+        RestRequest createReq = new RestRequest();
+        createReq.requestUri = '/services/apexrest/ums/v1/users';
+        createReq.httpMethod = 'POST';
+        createReq.requestBody = Blob.valueOf(
+            '{"RequestorID":"UT","UpdateType":"C","UserList":[{"UserID":"' + username +
+            '","UserName":"UMS Test","FirstName":"UMS","LastName":"User","FEEmail":"' + username +
+            '","MainQueue":"CS_Ecom","DefaultQueue":"CS_Ecom","Role":"' + roleName +
+            '","ListUserRole":["' + createPsgName + '"]}]}'
         );
-
-        Test.startTest();
-        System.runAs(adminUser()) {
-            FEC_UMSUserManagementRestService.doPost();
-        }
-        Test.stopTest();
-
-        System.assertEquals(FEC_ConstantCommon.HTTP_STATUS_OK, RestContext.response.statusCode);
-        FEC_UMSUserManagementRestService.UMSMutationResponse res = parseMutationResponse();
-        System.assertEquals('S', res.Message[0].Status);
-        System.assertEquals('Update success', res.Message[0].Description);
-    }
-
-    @IsTest
-    static void testDoPost_Status_DeactivateAndReactivate() {
-        String username = existingUsername();
-
-        String deactivateBody = JSON.serialize(new Map<String, Object>{
-            'RequestorID' => REQUESTOR_ID,
-            'ActionType' => 'D',
-            'UserList' => new List<Object>{ new Map<String, Object>{ 'UserID' => username } }
-        });
-        setRestContext(
-            'POST',
-            '/services/apexrest/ums/v1/users/status',
-            deactivateBody,
-            null
-        );
+        RestResponse createRes = new RestResponse();
+        RestContext.request = createReq;
+        RestContext.response = createRes;
 
         Test.startTest();
         FEC_UMSUserManagementRestService.doPost();
         Test.stopTest();
 
-        System.assertEquals(FEC_ConstantCommon.HTTP_STATUS_OK, RestContext.response.statusCode);
-        FEC_UMSUserManagementRestService.UMSMutationResponse deactivateRes = parseMutationResponse();
-        System.assertEquals('S', deactivateRes.Message[0].Status);
-        System.assertEquals('User inactivated', deactivateRes.Message[0].Description);
+        System.assertEquals(200, createRes.statusCode, createRes.responseBody.toString());
+        System.assert(createRes.responseBody.toString().contains('Create success'), createRes.responseBody.toString());
 
-        User deactivated = [SELECT IsActive FROM User WHERE Username = :username LIMIT 1];
-        System.assertEquals(false, deactivated.IsActive);
+        User created = [
+            SELECT Id, UserRoleId, Title
+            FROM User
+            WHERE Username = :username
+            LIMIT 1
+        ];
+        System.assertEquals(expectedRoleId, created.UserRoleId);
+        System.assertEquals(expectedTitle, created.Title);
 
-        String reactivateBody = JSON.serialize(new Map<String, Object>{
-            'RequestorID' => REQUESTOR_ID,
-            'ActionType' => 'R',
-            'UserList' => new List<Object>{ new Map<String, Object>{ 'UserID' => username } }
-        });
-        setRestContext(
-            'POST',
-            '/services/apexrest/ums/v1/users/status',
-            reactivateBody,
-            null
+        Integer psgCount = [
+            SELECT COUNT()
+            FROM PermissionSetAssignment
+            WHERE AssigneeId = :created.Id
+            AND PermissionSetGroupId != NULL
+        ];
+        System.assert(psgCount > 0, 'PSG should be assigned on create');
+
+        RestRequest replaceReq = new RestRequest();
+        replaceReq.requestUri = '/services/apexrest/ums/v1/users';
+        replaceReq.httpMethod = 'POST';
+        replaceReq.requestBody = Blob.valueOf(
+            '{"RequestorID":"UT","UpdateType":"R","UserList":[{"UserID":"' + username +
+            '","UserName":"UMS Test","FEEmail":"' + username +
+            '","MainQueue":"CS_Ecom","DefaultQueue":"CS_Ecom","Role":"' + roleName +
+            '","ListUserRole":["' + replacePsgName + '"]}]}'
         );
-
+        RestResponse replaceRes = new RestResponse();
+        RestContext.request = replaceReq;
+        RestContext.response = replaceRes;
         FEC_UMSUserManagementRestService.doPost();
-        FEC_UMSUserManagementRestService.UMSMutationResponse reactivateRes = parseMutationResponse();
-        System.assertEquals('S', reactivateRes.Message[0].Status);
-        System.assertEquals('User activated', reactivateRes.Message[0].Description);
 
-        User reactivated = [SELECT IsActive FROM User WHERE Username = :username LIMIT 1];
-        System.assertEquals(true, reactivated.IsActive);
+        System.assertEquals(200, replaceRes.statusCode, replaceRes.responseBody.toString());
+        System.assert(replaceRes.responseBody.toString().contains('Update success'));
+
+        PermissionSetGroup specialistPsg = [
+            SELECT Id
+            FROM PermissionSetGroup
+            WHERE DeveloperName = :replacePsgName
+            LIMIT 1
+        ];
+        List<PermissionSetAssignment> assignments = [
+            SELECT PermissionSetGroupId
+            FROM PermissionSetAssignment
+            WHERE AssigneeId = :created.Id
+            AND PermissionSetGroupId != NULL
+        ];
+        System.assertEquals(1, assignments.size(), 'Replace should leave exactly one PSG');
+        System.assertEquals(specialistPsg.Id, assignments[0].PermissionSetGroupId);
     }
 
     @IsTest
-    static void testDoGet_GetUserInfo() {
-        String username = existingUsername();
-        setRestContext(
-            'GET',
-            '/services/apexrest/ums/v1/users/info',
-            null,
-            new Map<String, String>{
-                'RequestorID' => REQUESTOR_ID,
-                'UserID' => username
-            }
-        );
-
-        Test.startTest();
-        FEC_UMSUserManagementRestService.doGet();
-        Test.stopTest();
-
-        System.assertEquals(FEC_ConstantCommon.HTTP_STATUS_OK, RestContext.response.statusCode);
-        FEC_UMSUserManagementRestService.UMSGetInfoResponse res =
-            (FEC_UMSUserManagementRestService.UMSGetInfoResponse) JSON.deserialize(
-                RestContext.response.responseBody.toString(),
-                FEC_UMSUserManagementRestService.UMSGetInfoResponse.class
-            );
-        System.assertEquals('S', res.Status);
-        System.assertNotEquals(null, res.Infor);
-        System.assertEquals(username, res.Infor.UserID);
-    }
-
-    @IsTest
-    static void testDoGet_GetAllUsers() {
-        Datetime fromDt = Datetime.now().addDays(-1);
-        Datetime toDt = Datetime.now().addDays(1);
-        setRestContext(
-            'GET',
-            '/services/apexrest/ums/v1/users',
-            null,
-            new Map<String, String>{
-                'RequestorID' => REQUESTOR_ID,
-                'FromDate' => JSON.serialize(fromDt).replace('"', ''),
-                'ToDate' => JSON.serialize(toDt).replace('"', '')
-            }
-        );
+    static void doGet_all_success() {
+        RestRequest req = new RestRequest();
+        req.requestUri = '/services/apexrest/ums/v1/users';
+        req.httpMethod = 'GET';
+        req.addParameter('RequestorID', 'UT');
+        req.addParameter('FromDate', '01-01-1900');
+        req.addParameter('ToDate', '01-02-1900');
+        RestResponse res = new RestResponse();
+        RestContext.request = req;
+        RestContext.response = res;
 
         Test.startTest();
         FEC_UMSUserManagementRestService.doGet();
         Test.stopTest();
 
-        System.assertEquals(FEC_ConstantCommon.HTTP_STATUS_OK, RestContext.response.statusCode);
-        FEC_UMSUserManagementRestService.UMSGetAllResponse res =
-            (FEC_UMSUserManagementRestService.UMSGetAllResponse) JSON.deserialize(
-                RestContext.response.responseBody.toString(),
-                FEC_UMSUserManagementRestService.UMSGetAllResponse.class
-            );
-        System.assertEquals('S', res.Status);
-        System.assertNotEquals(null, res.Data);
+        System.assertEquals(200, res.statusCode);
+        System.assert(res.responseBody.toString().contains('"Status":"S"'));
     }
 
     @IsTest
-    static void testDoPost_ValidationErrors() {
-        setRestContext('POST', '/services/apexrest/ums/v1/users', null, null);
-        FEC_UMSUserManagementRestService.doPost();
-        System.assertEquals(FEC_ConstantCommon.HTTP_STATUS_BAD_REQUEST, RestContext.response.statusCode);
-
-        setRestContext(
-            'POST',
-            '/services/apexrest/ums/v1/users',
-            JSON.serialize(new Map<String, Object>{
-                'RequestorID' => REQUESTOR_ID,
-                'UpdateType' => 'X',
-                'UserList' => new List<Object>()
-            }),
-            null
+    static void doPost_status_deactivateAndReactivate() {
+        Profile p = [SELECT Id FROM Profile WHERE Id = :UserInfo.getProfileId() LIMIT 1];
+        String unique = String.valueOf(Datetime.now().getTime());
+        User u = new User(
+            Alias = 'umstst',
+            Email = 'umsstatus' + unique + '@example.com',
+            EmailEncodingKey = 'UTF-8',
+            LastName = 'StatusTest',
+            LanguageLocaleKey = 'en_US',
+            LocaleSidKey = 'en_US',
+            TimeZoneSidKey = 'America/Los_Angeles',
+            ProfileId = p.Id,
+            Username = 'ums.status.' + unique + '@example.com',
+            FEC_Main_Queue__c = 'CS_Ecom',
+            IsActive = true
         );
-        FEC_UMSUserManagementRestService.doPost();
-        System.assertEquals(FEC_ConstantCommon.HTTP_STATUS_BAD_REQUEST, RestContext.response.statusCode);
+        insert u;
 
-        String username = existingUsername();
-        setRestContext(
-            'POST',
-            '/services/apexrest/ums/v1/users',
-            buildUpsertBody('C', username, new List<String>{ queueDevName() }),
-            null
+        RestRequest deactivateReq = new RestRequest();
+        deactivateReq.requestUri = '/services/apexrest/ums/v1/users/status';
+        deactivateReq.httpMethod = 'POST';
+        deactivateReq.requestBody = Blob.valueOf(
+            '{"RequestorID":"UT","ActionType":"D","UserList":[{"UserID":"' + u.Username + '"}]}'
         );
-        FEC_UMSUserManagementRestService.doPost();
-        FEC_UMSUserManagementRestService.UMSMutationResponse dupRes = parseMutationResponse();
-        System.assertEquals('F', dupRes.Message[0].Status);
-        System.assert(dupRes.Message[0].Description.contains('UMS-004'));
-    }
-
-    @IsTest
-    static void testDoPost_Status_InvalidActionType() {
-        setRestContext(
-            'POST',
-            '/services/apexrest/ums/v1/users/status',
-            JSON.serialize(new Map<String, Object>{
-                'RequestorID' => REQUESTOR_ID,
-                'ActionType' => 'X',
-                'UserList' => new List<Object>{ new Map<String, Object>{ 'UserID' => 'missing@test.invalid' } }
-            }),
-            null
-        );
+        RestResponse deactivateRes = new RestResponse();
+        RestContext.request = deactivateReq;
+        RestContext.response = deactivateRes;
 
         Test.startTest();
         FEC_UMSUserManagementRestService.doPost();
         Test.stopTest();
 
-        System.assertEquals(FEC_ConstantCommon.HTTP_STATUS_BAD_REQUEST, RestContext.response.statusCode);
-    }
+        System.assertEquals(200, deactivateRes.statusCode);
+        System.assert(deactivateRes.responseBody.toString().contains('User inactivated'));
+        System.assertEquals(false, [SELECT IsActive FROM User WHERE Id = :u.Id].IsActive);
 
-    @IsTest
-    static void testDoGet_ValidationErrors() {
-        setRestContext(
-            'GET',
-            '/services/apexrest/ums/v1/users/info',
-            null,
-            new Map<String, String>{ 'UserID' => 'missing@test.invalid' }
+        RestRequest reactivateReq = new RestRequest();
+        reactivateReq.requestUri = '/services/apexrest/ums/v1/users/status';
+        reactivateReq.httpMethod = 'POST';
+        reactivateReq.requestBody = Blob.valueOf(
+            '{"RequestorID":"UT","ActionType":"R","UserList":[{"UserID":"' + u.Username + '"}]}'
         );
-        FEC_UMSUserManagementRestService.doGet();
-        System.assertEquals(FEC_ConstantCommon.HTTP_STATUS_BAD_REQUEST, RestContext.response.statusCode);
+        RestResponse reactivateRes = new RestResponse();
+        RestContext.request = reactivateReq;
+        RestContext.response = reactivateRes;
+        FEC_UMSUserManagementRestService.doPost();
 
-        setRestContext(
-            'GET',
-            '/services/apexrest/ums/v1/users',
-            null,
-            new Map<String, String>{
-                'RequestorID' => REQUESTOR_ID,
-                'FromDate' => '06-01-2026',
-                'ToDate' => '06-01-2025'
-            }
-        );
-        FEC_UMSUserManagementRestService.doGet();
-        System.assertEquals(FEC_ConstantCommon.HTTP_STATUS_BAD_REQUEST, RestContext.response.statusCode);
-    }
-
-    @IsTest
-    static void testParseDateTimeInput() {
-        Test.startTest();
-        Datetime isoDt = FEC_UMSUserManagementRestService.parseDateTimeInput('2026-06-01T00:00:00.000Z');
-        Datetime mmddDt = FEC_UMSUserManagementRestService.parseDateTimeInput('06-01-2026');
-        Datetime blankDt = FEC_UMSUserManagementRestService.parseDateTimeInput('');
-        Datetime invalidDt = FEC_UMSUserManagementRestService.parseDateTimeInput('bad-date');
-        Test.stopTest();
-
-        System.assertNotEquals(null, isoDt);
-        System.assertNotEquals(null, mmddDt);
-        System.assertEquals(null, blankDt);
-        System.assertEquals(null, invalidDt);
+        System.assertEquals(200, reactivateRes.statusCode);
+        System.assert(reactivateRes.responseBody.toString().contains('User activated'));
+        System.assertEquals(true, [SELECT IsActive FROM User WHERE Id = :u.Id].IsActive);
     }
 }
