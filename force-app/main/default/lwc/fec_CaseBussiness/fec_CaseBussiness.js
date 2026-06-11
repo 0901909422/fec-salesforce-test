@@ -457,7 +457,7 @@ const SLDS_MEDIUM_SIZE_OF_12 = {
 };
 
 const MAP_NEW_BLOCK_CODE = {
-  'A': 'A',
+  'Tạm khoá': 'A',
   'Không sử dụng': 'L',
   'Thẻ bị mất/ đánh cắp có phát sinh giao dịch': 'S',
 }
