@@ -260,6 +260,7 @@
         <members>FEC_BCH_TemplateFileMismatch</members>
         <members>FEC_INTERACTION_PHONE_REQUIRED</members>
         <members>FEC_Email_File_Already_In_Email</members>
+        <members>FEC_Manual_Chat_Customer_Username_Required</members>
         <name>CustomLabel</name>
     </types>
     <types>
