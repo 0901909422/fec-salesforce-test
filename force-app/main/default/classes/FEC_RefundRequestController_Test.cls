@@ -156,6 +156,31 @@ private class FEC_RefundRequestController_Test {
         );
     }
 
+    // 10/06/2026 15:29 linhdev - submit refund chỉ với amount, không bắt buộc receipt line
+    @IsTest
+    static void testSaveRefundRequest_NoReceiptLines() {
+        Case c = [SELECT Id FROM Case LIMIT 1];
+
+        Test.startTest();
+        FEC_RefundRequestController.saveRefundRequest(
+            c.Id,
+            100000,
+            new List<FEC_RefundRequestController.ReceiptLineDTO>()
+        );
+        Test.stopTest();
+
+        Case updated = [
+            SELECT FEC_Refund_Amount__c
+            FROM Case
+            WHERE Id = :c.Id
+        ];
+        System.assertEquals(100000, updated.FEC_Refund_Amount__c);
+        System.assertEquals(
+            0,
+            [SELECT COUNT() FROM FEC_Case_Refund_Details__c WHERE FEC_Case__c = :c.Id]
+        );
+    }
+
     @IsTest
     static void testSaveRefundRequest_MergeUpdateAndDelete() {
         Case c = [SELECT Id FROM Case LIMIT 1];
@@ -247,17 +272,6 @@ private class FEC_RefundRequestController_Test {
             FEC_RefundRequestController.saveRefundRequest(
                 c.Id,
                 100,
-                new List<FEC_RefundRequestController.ReceiptLineDTO>()
-            );
-            expectAuraHandledException();
-        } catch (AuraHandledException e) {
-            System.assert(true);
-        }
-
-        try {
-            FEC_RefundRequestController.saveRefundRequest(
-                c.Id,
-                100,
                 new List<FEC_RefundRequestController.ReceiptLineDTO>{
                     newLine(String.valueOf(Date.today().addDays(1)), 100, 'T', 'C')
                 }
@@ -286,20 +300,6 @@ private class FEC_RefundRequestController_Test {
                 100,
                 new List<FEC_RefundRequestController.ReceiptLineDTO>{
                     newLine(String.valueOf(Date.today()), 100, '', 'C')
-                }
-            );
-            expectAuraHandledException();
-        } catch (AuraHandledException e) {
-            System.assert(true);
-        }
-
-        try {
-            FEC_RefundRequestController.saveRefundRequest(
-                c.Id,
-                100,
-                new List<FEC_RefundRequestController.ReceiptLineDTO>{
-                    null,
-                    new FEC_RefundRequestController.ReceiptLineDTO()
                 }
             );
             expectAuraHandledException();

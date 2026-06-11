@@ -4,13 +4,24 @@ public with sharing class FEC_CreateCaseInteractionController {
     Case interation = [
       SELECT Id, FEC_Account_or_Contract__c, FEC_Account_or_Contract__r.FEC_Customer_Name__c,
              FEC_Product_Type__c, FEC_Phone_Number__c,
-             FEC_Account_Number__c, FEC_Contract_Number__c, FEC_CIF_Number__c, FEC_Is_Manual__c, FEC_Channel__c
+             FEC_Account_Number__c, FEC_Contract_Number__c, FEC_CIF_Number__c, FEC_Customer_Username__c, FEC_Is_Manual__c, FEC_Channel__c
       FROM Case
       WHERE Id = :caseId
       LIMIT 1
     ];
-    
-    
+    //tungnm37 - Require Customer Username when creating Customer Case from manual Chat interaction.
+    if (
+        interation.FEC_Is_Manual__c == true &&
+        interation.FEC_Channel__c == FEC_ConstantCommon.CHANNEL_CHAT &&
+        String.isBlank(interation.FEC_Customer_Username__c)
+    ) {
+        throw new AuraHandledException(
+            System.Label.FEC_Manual_Chat_Customer_Username_Required
+        );
+    }
+
+
+
     if (
       interation.FEC_Is_Manual__c == true &&
       (
@@ -80,11 +91,13 @@ public with sharing class FEC_CreateCaseInteractionController {
       if (caseId == null) {
         throw new AuraHandledException(String.format(System.Label.FEC_MSG_Param_Required, new List<String>{'Case Id'}));
       }
+      FEC_InteractionInforHandler.assertInteractionEmailForAction(caseId);
+
       // 2. Get interaction case
       Case interaction = [
         SELECT Id, FEC_Account_or_Contract__r.FEC_Customer_Name__c, FEC_Product_Type__c, FEC_Phone_Number__c,
                FEC_Customer_Type__c, FEC_Account_or_Contract__c, RecordType.DeveloperName,
-               FEC_Account_Number__c, FEC_Contract_Number__c, FEC_CIF_Number__c, FEC_Is_Manual__c, FEC_Channel__c
+               FEC_Account_Number__c, FEC_Contract_Number__c, FEC_CIF_Number__c, FEC_Customer_Username__c, FEC_Is_Manual__c, FEC_Channel__c
         FROM Case
         WHERE Id = :caseId
         LIMIT 1
@@ -92,6 +105,17 @@ public with sharing class FEC_CreateCaseInteractionController {
       System.debug('Manual=' + interaction.FEC_Is_Manual__c);
       System.debug('Channel=' + interaction.FEC_Channel__c);
       System.debug('Phone=' + interaction.FEC_Phone_Number__c);
+      //tungnm37 - Require Customer Username when creating Customer Case from manual Chat interaction.
+      if (
+        interaction.FEC_Is_Manual__c == true &&
+        interaction.FEC_Channel__c == FEC_ConstantCommon.CHANNEL_CHAT &&
+        String.isBlank(interaction.FEC_Customer_Username__c)
+      ) {
+        throw new AuraHandledException(
+            System.Label.FEC_Manual_Chat_Customer_Username_Required
+        );
+      }
+
       if (
         interaction.FEC_Is_Manual__c == true &&
         (
@@ -104,22 +128,22 @@ public with sharing class FEC_CreateCaseInteractionController {
           System.Label.FEC_INTERACTION_PHONE_REQUIRED
           );
       }
-      
+
       Id recordTypeToUse;
-      
+
       if (interaction.RecordType.DeveloperName == FEC_ConstantCommon.CASE_INTERNAL_RECORD_TYPE_DEV_NAME) {
         recordTypeToUse = interaction.RecordTypeId;
       } else {
         // 3. Get RecordType safely
         Map<String, Schema.RecordTypeInfo> rtMap = Schema.SObjectType.Case.getRecordTypeInfosByDeveloperName();
-        
+
         if (!rtMap.containsKey(FEC_ConstantCommon.CASE_CUSTOMER_RECORD_TYPE_DEV_NAME)) {
           throw new AuraHandledException(
             String.format(System.Label.FEC_MSG_Not_Found,
           new List<String>{FEC_ConstantCommon.CASE_CUSTOMER_RECORD_TYPE_DEV_NAME})
           );
         }
-        
+
         recordTypeToUse = rtMap.get(
           FEC_ConstantCommon.CASE_CUSTOMER_RECORD_TYPE_DEV_NAME
           ).getRecordTypeId();
@@ -147,7 +171,7 @@ public with sharing class FEC_CreateCaseInteractionController {
       newCase.FEC_Account_Number__c = interaction.FEC_Account_Number__c;
       newCase.FEC_Contract_Number__c = interaction.FEC_Contract_Number__c;
       newCase.FEC_CIF_Number__c = interaction.FEC_CIF_Number__c;
-      
+
       if (isCreatedFromSearch == 'true') {
         newCase.FEC_Is_Created_From_Search__c = true;
       }
@@ -160,11 +184,11 @@ public with sharing class FEC_CreateCaseInteractionController {
       insert newInfo;
       
       FEC_Customer_History__c newHistory = createHistoryNonExistingCustomer(interaction.Id, customerName, nationalPassportId);
-      
+
       interaction.FEC_Customer_Type__c = FEC_ConstantCommon.CUSTOMER_HISTORY_NON_EXISTING_CUSTOMER;
       interaction.FEC_Account_or_Contract__c = newHistory.Id;
       update interaction;
-      
+
       newCase.FEC_Account_or_Contract__c = newHistory.Id;
       update newCase;
       
@@ -175,7 +199,7 @@ public with sharing class FEC_CreateCaseInteractionController {
       System.debug('TYPE=' + e.getTypeName());
       System.debug('MSG=' + e.getMessage());
       System.debug('STACK=' + e.getStackTraceString());
-      
+
       throw new AuraHandledException(
         e.getTypeName() + ': ' + e.getMessage()
         );
@@ -200,7 +224,7 @@ public with sharing class FEC_CreateCaseInteractionController {
     }
     return rec;
   }
-  
+
   // Create case with no recordId in Lisview
   @AuraEnabled
   public static Id createInteractionCase(String customerName, String nationalId) {

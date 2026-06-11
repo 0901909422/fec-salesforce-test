@@ -339,6 +339,70 @@ private class FEC_BatchCaseCreationController_Test {
     }
 
     @IsTest
+    static void testProcessPendingBatchImport_StandardResolvedCreatesHistory() {
+        String contractNumber = '0001500010000000261';
+        List<Object> rows = new List<Object>{
+            new Map<String, Object>{
+                'layout' => 'simple',
+                'contractNumber' => contractNumber,
+                'interactionPhone' => '0912345678',
+                'productType' => 'Credit Card',
+                'category' => 'Inquiry',
+                'subCategory' => 'Card Issue',
+                'subCode' => 'Lost Card',
+                'caseStatus' => FEC_ConstantCommon.CASE_STATUS_RESOLVED_COMPLETED,
+                'caseRemarks' => 'standard resolved pending import'
+            }
+        };
+
+        FEC_Batch_Case_Creation__c pending = new FEC_Batch_Case_Creation__c(
+            Name = 'Pending_Standard_Resolved.xlsx',
+            FEC_Status__c = FEC_ConstantCommon.UPLOADED_STATUS
+        );
+        insert pending;
+        FEC_BatchCaseCreationPendingService.attachPendingImportPayload(
+            pending.Id,
+            'Standard Case Template',
+            JSON.serialize(rows),
+            null,
+            null,
+            String.valueOf(UserInfo.getUserId())
+        );
+
+        Test.setMock(HttpCalloutMock.class, new BatchCaseCustomerListMock(contractNumber));
+        FEC_CaseTriggerHandler.isExecuting = true;
+        Test.startTest();
+        FEC_BatchCaseCreationController.processPendingBatchImport(pending.Id);
+        Test.stopTest();
+        FEC_CaseTriggerHandler.isExecuting = false;
+
+        //09/06/2026 dungLTdev: Verify Routing Action History qua luồng processPendingBatchImport (Standard Resolved).
+        List<Case> customerCases = [
+            SELECT Id
+            FROM Case
+            WHERE Subject LIKE :('Batch Case Creation - ' + contractNumber + '%')
+            ORDER BY CreatedDate DESC
+            LIMIT 1
+        ];
+        System.assertEquals(1, customerCases.size(), 'Standard pending import phải tạo Customer Case.');
+        List<FEC_Routing_Action_History__c> histories = [
+            SELECT FEC_Routing_Action__c, FEC_Routing_Action_Type__c, FEC_Current_Status__c,
+                FEC_Changed_Status__c, FEC_Perform_User__c
+            FROM FEC_Routing_Action_History__c
+            WHERE FEC_Case__c = :customerCases[0].Id
+        ];
+        System.assertEquals(1, histories.size(), 'Resolved Standard pending import phải tạo Routing Action History.');
+        System.assertEquals(FEC_CaseBusinessService.RESOLVE, histories[0].FEC_Routing_Action__c);
+        System.assertEquals('Case', histories[0].FEC_Routing_Action_Type__c);
+        System.assertEquals(FEC_ConstantCommon.CASE_STATUS_OPEN, histories[0].FEC_Current_Status__c);
+        System.assertEquals(
+            FEC_ConstantCommon.CASE_STATUS_RESOLVED_COMPLETED,
+            histories[0].FEC_Changed_Status__c
+        );
+        System.assertEquals(UserInfo.getUserId(), histories[0].FEC_Perform_User__c);
+    }
+
+    @IsTest
     static void testImportParsedRowsPublicApi() {
         List<Object> inputRows = new List<Object>{
             new Map<String, Object>{
@@ -803,7 +867,8 @@ private class FEC_BatchCaseCreationController_Test {
             'welcome call template',
             JSON.serialize(rows),
             '["Case ID"]',
-            '[["20140807-103046-0001"]]'
+            '[["20140807-103046-0001"]]',
+            String.valueOf(UserInfo.getUserId())
         );
 
         Test.setMock(HttpCalloutMock.class, new BatchCaseCustomerListMock('20140807-103046-0001'));
@@ -820,6 +885,31 @@ private class FEC_BatchCaseCreationController_Test {
             LIMIT 1
         ];
         System.assertNotEquals(null, refreshed.FEC_Status__c);
+
+        //09/06/2026 dungLTdev: Verify Routing Action History qua luồng processPendingBatchImport (UI).
+        List<Case> customerCases = [
+            SELECT Id
+            FROM Case
+            WHERE Subject LIKE 'Welcome Call Case - 20140807-103046-0001%'
+            ORDER BY CreatedDate DESC
+            LIMIT 1
+        ];
+        System.assertEquals(1, customerCases.size(), 'Welcome pending import phải tạo Customer Case.');
+        List<FEC_Routing_Action_History__c> histories = [
+            SELECT FEC_Routing_Action__c, FEC_Routing_Action_Type__c, FEC_Current_Status__c,
+                FEC_Changed_Status__c, FEC_Perform_User__c
+            FROM FEC_Routing_Action_History__c
+            WHERE FEC_Case__c = :customerCases[0].Id
+        ];
+        System.assertEquals(1, histories.size(), 'Resolved Welcome pending import phải tạo Routing Action History.');
+        System.assertEquals(FEC_CaseBusinessService.RESOLVE, histories[0].FEC_Routing_Action__c);
+        System.assertEquals('Case', histories[0].FEC_Routing_Action_Type__c);
+        System.assertEquals(FEC_ConstantCommon.CASE_STATUS_OPEN, histories[0].FEC_Current_Status__c);
+        System.assertEquals(
+            FEC_ConstantCommon.CASE_STATUS_RESOLVED_COMPLETED,
+            histories[0].FEC_Changed_Status__c
+        );
+        System.assertEquals(UserInfo.getUserId(), histories[0].FEC_Perform_User__c);
     }
 
     @IsTest

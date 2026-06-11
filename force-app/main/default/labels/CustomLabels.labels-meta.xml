@@ -18641,4 +18641,11 @@
         <shortDescription>FEC_Email_File_Already_In_Email</shortDescription>
         <value>1 file is already in email.</value>
     </labels>
+    <labels>
+        <fullName>FEC_Manual_Chat_Customer_Username_Required</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Manual Chat Customer Username Required</shortDescription>
+        <value>Customer Username is required for manual Chat interaction.</value>
+    </labels>
 </CustomLabels>

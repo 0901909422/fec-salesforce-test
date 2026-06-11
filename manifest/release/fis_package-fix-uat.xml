@@ -34,6 +34,8 @@
         <members>FEC_BCH_ImportValidateQueueable</members>
         <members>FEC_BCH_ImportValidateQueueable_Test</members>
         <members>FEC_BCH_TemplateExportService</members>
+        <members>FEC_BatchCaseCreationController</members>
+        <members>FEC_BatchCaseCreationController_Test</members>
         <members>FEC_BatchCaseCreationService</members>
         <members>FEC_BatchCaseCreationService_Test</members>
         <members>FEC_BatchCaseHandlingImportQueueable</members>
@@ -154,6 +156,11 @@
         <members>FEC_UMSUserManagementRestService_Test</members>
         <members>FEC_BlockCodeRoutingService</members>
         <members>FEC_ContentDocumentLinkTriggerHandler</members>
+        <members>FEC_RefundRequestController</members>
+        <members>FEC_RefundRequestController_Test</members>
+        <members>FEC_CaseExecuteService</members>
+        <members>FEC_MFASOUTSTANDINGAUTHINQ</members>
+        <members>FEC_MainInfoAccountController</members>
         <name>ApexClass</name>
     </types>
     <types>
@@ -211,6 +218,7 @@
         <members>customDblclickCell</members>
         <members>fec_SecondaryInfoLoanAccount</members>
         <members>fec_AppInfo</members>
+        <members>fec_RefundRequestForm</members>
         <name>LightningComponentBundle</name>
     </types>
     <types>
@@ -237,6 +245,7 @@
 		<members>Case.FEC_Product_Type_Text__c</members>
 		<members>Case.FEC_Sub_Category_Text__c</members>
 		<members>Case.FEC_Sub_Code_Text__c</members>
+        <members>Case.FEC_Card_Block_Reason__c</members>
         <members>FEC_Actual_Master_Data_Setting__c.FEC_Channel__c</members>
         <members>FEC_Master_Data_Setting__c.FEC_Channel__c</members>
         <members>FEC_Application_Status_Mapping__mdt.FEC_Status_Code__c</members>
@@ -253,6 +262,7 @@
         <members>FEC_BCH_TemplateFileMismatch</members>
         <members>FEC_INTERACTION_PHONE_REQUIRED</members>
         <members>FEC_Email_File_Already_In_Email</members>
+        <members>FEC_Manual_Chat_Customer_Username_Required</members>
         <name>CustomLabel</name>
     </types>
     <types>
@@ -395,6 +405,10 @@
     <types>
         <members>FEC_CommonCss</members>
         <name>StaticResource</name>
+    </types>
+	<types>
+        <members>Case-en_US</members>
+        <name>CustomObjectTranslation</name>
     </types>
     <types>
         <members>FEC_Case_With_Customer_Histories</members>

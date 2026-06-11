@@ -9,6 +9,8 @@ public without sharing class FEC_CaseBusinessService {
   public static final String REVERT = 'Revert';
   public static final String CANCEL = 'Cancel';
   public static final String ESCALATE = 'Escalate';
+  // 09/06/2026 18:00 linhdev - bulk import Escalate: gán Owner = ManagerId của user đang import
+  public static final String PARAM_ESCALATE_TO_ACTING_USER_MANAGER = 'escalateToActingUserManager';
   public static final String TRANSFER = 'Transfer';
   public static final String REJECT = 'Reject';
   public static final String RECALL = 'Recall';
@@ -948,7 +950,8 @@ public without sharing class FEC_CaseBusinessService {
         masterDatalst = FEC_CaseMasterDataHelper.filterRevertedAssignmentRowsByStageContext(
           masterDatalst,
           isCurrentStageRevertedContext,
-          result.revertConfirmAssessmentSourceStage
+          result.revertConfirmAssessmentSourceStage,
+          isRc2701OrRc2702
         );
         masterDatalst = FEC_CaseMasterDataHelper.filterAssignmentRowsByCurrentUserGroup(
           masterDatalst,
@@ -1155,7 +1158,8 @@ public without sharing class FEC_CaseBusinessService {
           if (
             FEC_CaseMasterDataHelper.shouldSkipRevertConfirmAssessmentField(
               result.revertConfirmAssessmentSourceStage,
-              fieldApiNameTemp
+              fieldApiNameTemp,
+              isRc2701OrRc2702
             )
           ) {
             continue;
@@ -1378,7 +1382,8 @@ public without sharing class FEC_CaseBusinessService {
 
         FEC_CaseMasterDataHelper.pruneRevertConfirmAssessmentSubSections(
           result.sectionlst,
-          result.revertConfirmAssessmentSourceStage
+          result.revertConfirmAssessmentSourceStage,
+          isRc2701OrRc2702
         );
 
         result.removeEmptySections();
@@ -2589,7 +2594,7 @@ public without sharing class FEC_CaseBusinessService {
         when ESCALATE {
           finalStatusBeforeSubmit = readCaseFinalStatusBeforeSubmit(caseId);
           markCaseSubmittedAndClearDrafts(caseId);
-          escalate(caseId);
+          escalate(caseId, params);
           createRoutingActionHis('Escalate', '', oldOwnerName, oldOwnerId, caseId, stageName, finalStatusBeforeSubmit, currentStageId);
           return null;
         }
@@ -3590,9 +3595,12 @@ public without sharing class FEC_CaseBusinessService {
     }
   }
 
-  private static void escalate(String caseId) {
+  private static void escalate(String caseId, Map<String, String> params) {
     try {
       Id currentUserId = UserInfo.getUserId();
+      // 09/06/2026 18:00 linhdev - import: ManagerId của user thực hiện import; UI: Owner.ManagerId
+      Boolean useActingUserManager = params != null &&
+        'true'.equalsIgnoreCase((String) params.get(PARAM_ESCALATE_TO_ACTING_USER_MANAGER));
       
       // 1. Use TYPEOF to safely access User-specific fields on the Owner polymorphic lookup
       List<Case> caselst = [
@@ -3614,32 +3622,50 @@ public without sharing class FEC_CaseBusinessService {
       }
 
       Case updatedCase = caselst.get(0);
+      Id targetOwnerId = null;
       
-      // Kiểm tra xem user hiện tại có phải là Owner không
-      // if (updatedCase.OwnerId != currentUserId) {
-      //   throw new CaseBusinessServiceException(
-      //     System.Label.FEC_MSG_Escalate_Owner_Only
-      //   );
-      // }
-
-      // 2. Check if the Owner is actually a User (not a Queue)
-      if (updatedCase.Owner instanceof User) {
-        // Cast the Owner relationship to a User object to access ManagerId
-        User ownerUser = (User) updatedCase.Owner;
-
-        if (ownerUser.ManagerId != null) {
-          updatedCase.OwnerId = ownerUser.ManagerId;
+      if (useActingUserManager) {
+        List<User> actingUsers = [
+          SELECT ManagerId
+          FROM User
+          WHERE Id = :currentUserId
+          LIMIT 1
+        ];
+        if (!actingUsers.isEmpty() && actingUsers[0].ManagerId != null) {
+          targetOwnerId = actingUsers[0].ManagerId;
         } else {
           throw new CaseBusinessServiceException(
             System.Label.FEC_MSG_Manager_Not_Found
           );
         }
       } else {
-        throw new CaseBusinessServiceException(
-          System.Label.FEC_MSG_Owner_Is_Queue_Escalation
-        );
+        // Kiểm tra xem user hiện tại có phải là Owner không
+        if (updatedCase.OwnerId != currentUserId) {
+          throw new CaseBusinessServiceException(
+            System.Label.FEC_MSG_Escalate_Owner_Only
+          );
+        }
+
+        // 2. Check if the Owner is actually a User (not a Queue)
+        if (updatedCase.Owner instanceof User) {
+          // Cast the Owner relationship to a User object to access ManagerId
+          User ownerUser = (User) updatedCase.Owner;
+
+          if (ownerUser.ManagerId != null) {
+            targetOwnerId = ownerUser.ManagerId;
+          } else {
+            throw new CaseBusinessServiceException(
+              System.Label.FEC_MSG_Manager_Not_Found
+            );
+          }
+        } else {
+          throw new CaseBusinessServiceException(
+            System.Label.FEC_MSG_Owner_Is_Queue_Escalation
+          );
+        }
       }
 
+      updatedCase.OwnerId = targetOwnerId;
       registerSkipOwnerChangeRoutingHistory(updatedCase.Id);
       update updatedCase;
     } catch (Exception e) {

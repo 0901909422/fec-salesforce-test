@@ -24,6 +24,8 @@ import executeSubmit from "@salesforce/apex/FEC_AssignmentRoutingActionHandler.e
 import persistAssignmentMasterFields from "@salesforce/apex/FEC_AssignmentMasterFieldPersistService.persistOnAssignmentSubmit";
 //thangtv: refresh ẩn/hiện nút Execute Assignment sau Submit
 import refreshExecuteVisibility from "@salesforce/apex/FEC_AssignmentExecuteService.refreshExecuteAssignmentVisibility";
+//HieuTT: refresh ẩn/hiện nút Execute sau Submit
+import refreshExecuteCaseVisibility from "@salesforce/apex/FEC_CaseExecuteService.refreshExecuteVisibility";
 import resetViewMode from "@salesforce/apex/FEC_AssignmentExecuteService.setAssignmentViewMode";
 import {
   subscribe,
@@ -665,6 +667,7 @@ export default class Fec_AssignmentList extends LightningElement {
       }
 
       await refreshExecuteVisibility({ caseId: this.recordId });
+      await refreshExecuteCaseVisibility({ caseId: this.recordId });
 
       // Tắt partial edit (Execute Assignment) — giống F5: master data assignment không edit nữa
       await this._exitCaseInformationEditMode();

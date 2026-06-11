@@ -457,7 +457,7 @@ const SLDS_MEDIUM_SIZE_OF_12 = {
 };
 
 const MAP_NEW_BLOCK_CODE = {
-  'A': 'A',
+  'Tạm khoá': 'A',
   'Không sử dụng': 'L',
   'Thẻ bị mất/ đánh cắp có phát sinh giao dịch': 'S',
 }
@@ -605,17 +605,23 @@ function isD2cAssessmentSubSectionName(subSectionName) {
   return n.includes("d2c") && (n.includes("assessment") || n.includes("assesment"));
 }
 
-/** Revert 2→1 / 3→1: ẩn subsection xác nhận (khớp logic Apex shouldHideRevertConfirmSubSection). */
-function shouldHideRevertConfirmSubSection(subSectionName, sourceStage) {
+/**
+ * Revert 2→1 / 3→1: ẩn subsection xác nhận (khớp Apex shouldHideRevertConfirmSubSection).
+ * Luồng thường: 2→1 ẩn D2C; 3→1 ẩn CS SP. RC27: ngược lại.
+ */
+function shouldHideRevertConfirmSubSection(subSectionName, sourceStage, isRc27Flow) {
   if (!subSectionName || (sourceStage !== 2 && sourceStage !== 3)) {
     return false;
   }
   const n = normalizeSubSectionName(subSectionName);
+  const hideD2c = n.includes("confirm") && n.includes("d2c");
+  const hideCsSp =
+    n.includes("confirm") && (n.includes("cs sp") || n.includes("support"));
   if (sourceStage === 2) {
-    return n.includes("confirm") && n.includes("d2c");
+    return isRc27Flow ? hideCsSp : hideD2c;
   }
   if (sourceStage === 3) {
-    return n.includes("confirm") && (n.includes("cs sp") || n.includes("support"));
+    return isRc27Flow ? hideD2c : hideCsSp;
   }
   return false;
 }
@@ -1282,12 +1288,23 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
     if (sourceStage !== 2 && sourceStage !== 3) {
       return;
     }
+    const isRc27Flow = this._isRc27CardReplacementFlow();
     const hideApi =
-      sourceStage === 2 ? CONFIRM_D2C_ASSESMENT : CONFIRM_CS_SP_ASSESMENT;
+      sourceStage === 2
+        ? isRc27Flow
+          ? CONFIRM_CS_SP_ASSESMENT
+          : CONFIRM_D2C_ASSESMENT
+        : isRc27Flow
+          ? CONFIRM_D2C_ASSESMENT
+          : CONFIRM_CS_SP_ASSESMENT;
     let changed = false;
     this.business.sectionlst?.forEach((section) => {
       section.subSectionlst?.forEach((sub) => {
-        const hideSub = shouldHideRevertConfirmSubSection(sub.name, sourceStage);
+        const hideSub = shouldHideRevertConfirmSubSection(
+          sub.name,
+          sourceStage,
+          isRc27Flow,
+        );
         if (sub._hideForRevertConfirmAssessment !== hideSub) {
           sub._hideForRevertConfirmAssessment = hideSub;
           changed = true;
@@ -3955,8 +3972,12 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
           }
           break;
 
-        case CASE_CONFIRM_D2C_ASSESMENT:
-          if (this.business?.revertConfirmAssessmentSourceStage === 3) {
+        case CASE_CONFIRM_D2C_ASSESMENT: {
+          const rc27Flow = this._isRc27CardReplacementFlow();
+          const sourceStageD2c = this.business?.revertConfirmAssessmentSourceStage;
+          const skipD2cRouting =
+            sourceStageD2c === 3 || (sourceStageD2c === 2 && !rc27Flow);
+          if (skipD2cRouting) {
             break;
           }
           toReject = TYPE_AGREE == value;
@@ -3971,14 +3992,20 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
             });
           }
           break;
+        }
 
-        case CASE_CONFIRM_CS_SP_ASSESMENT:
-          if (this.business?.revertConfirmAssessmentSourceStage === 2) {
+        case CASE_CONFIRM_CS_SP_ASSESMENT: {
+          const rc27Flow = this._isRc27CardReplacementFlow();
+          const sourceStageCsSp = this.business?.revertConfirmAssessmentSourceStage;
+          const skipCsSpRouting =
+            sourceStageCsSp === 2 || (sourceStageCsSp === 3 && !rc27Flow);
+          if (skipCsSpRouting) {
             break;
           }
           toReject = TYPE_AGREE == value;
           toRouteTo = TYPE_DISAGREE == value;
           break;
+        }
 
         // Toannd61 — RD Payment Assessment (backup: adHocFieldlst switch)
         case CASE_RD_PAYMENT_CONTRACT_ASSESSMENT:
