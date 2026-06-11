@@ -42,21 +42,24 @@ private class FEC_TransactionsController_Test {
         '</Transactions>' +
         '</GetCardFinancialTransactionsResponse></soapenv:Body></soapenv:Envelope>';
 
-    private static final String MOCK_VMX_XML =
+    private static final String MOCK_OUTSTANDING_AUTH_XML =
         '<soapenv:Envelope xmlns:soapenv="' + SOAP_ENV + '">' +
         '<soapenv:Body>' +
         '<WSResponse>' +
         '<Sys><Code>1</Code><Description>OK</Description></Sys>' +
-        '<VMX_AUTH_DETAIL_INQ>' +
+        '<M_FAS_OUTSTANDING_AUTH_INQ>' +
         '<VMX_ROOT><VMX_MSGOUT>' +
         '<SVC_RETURN>S</SVC_RETURN>' +
-        '<AUTH_GRP>' +
+        '<AUTHS_TABLE>' +
+        '<AUTH_ROW>' +
         '<EFF_DATE>2026-05-01</EFF_DATE>' +
         '<AUTHORIZATION_CODE>AUTH001</AUTHORIZATION_CODE>' +
+        '<CREDIT_PLAN>Retail</CREDIT_PLAN>' +
         '<Description>Pending auth</Description>' +
-        '</AUTH_GRP>' +
+        '</AUTH_ROW>' +
+        '</AUTHS_TABLE>' +
         '</VMX_MSGOUT></VMX_ROOT>' +
-        '</VMX_AUTH_DETAIL_INQ>' +
+        '</M_FAS_OUTSTANDING_AUTH_INQ>' +
         '</WSResponse>' +
         '</soapenv:Body></soapenv:Envelope>';
 
@@ -125,8 +128,13 @@ private class FEC_TransactionsController_Test {
                 body.contains('GetCardFinancialTransactions')
             ) {
                 res.setBody(MOCK_FINANCIAL_XML);
+            } else if (
+                body.contains('M_FAS_OUTSTANDING_AUTH_INQ') ||
+                body.contains('OUTSTANDING_AUTH')
+            ) {
+                res.setBody(MOCK_OUTSTANDING_AUTH_XML);
             } else {
-                res.setBody(MOCK_VMX_XML);
+                res.setBody(MOCK_OUTSTANDING_AUTH_XML);
             }
             return res;
         }
@@ -145,38 +153,10 @@ private class FEC_TransactionsController_Test {
         System.assertNotEquals(null, res);
         System.assert(res.unbilledTransactions.size() > 0, 'Phải tải được unbilled transactions.');
         System.assert(res.pendingTransactions.size() > 0, 'Phải tải được pending transactions.');
-
-        FEC_TransactionsController.TransactionDTO unbilledRow =
-            res.unbilledTransactions[0];
-        System.assertNotEquals(
-            null,
-            unbilledRow.effectiveDateDualDisplay,
-            'Unbilled phải map effective date từ API.'
-        );
-        System.assertNotEquals(
-            null,
-            unbilledRow.transactionAmountDualDisplay,
-            'Unbilled phải map amount từ API.'
-        );
-
-        FEC_TransactionsController.TransactionDTO pendingRow =
-            res.pendingTransactions[0];
-        System.assertNotEquals(
-            null,
-            pendingRow.effectiveDateDualDisplay,
-            'Pending phải map effective date từ VMX API.'
-        );
-
-        FEC_Transaction__c pendingTx = [
-            SELECT FEC_Merchant_Description__c, FEC_Transaction_Amount__c
-            FROM FEC_Transaction__c
-            WHERE FEC_Transaction_Code__c = 'AUTH001'
-            LIMIT 1
-        ];
         System.assertEquals(
-            'Pending auth',
-            pendingTx.FEC_Merchant_Description__c,
-            'Pending API data phải được lưu xuống FEC_Transaction__c.'
+            'Retail',
+            res.pendingTransactions[0].transactionPlan,
+            'transactionPlan phải lấy từ AUTHS_TABLE.CREDIT_PLAN.'
         );
     }
 

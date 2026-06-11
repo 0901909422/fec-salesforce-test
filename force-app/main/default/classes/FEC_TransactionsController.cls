@@ -9,6 +9,7 @@
  * ===============================================================
    1.0      2025-01-10     Quangdv7             Create
    1.1      2026-06-10     Agent                API log Unbilled / Pending via deferred FEC_API_Log__c
+   1.2      2026-06-10     Agent                Pending: M_FAS_OUTSTANDING_AUTH_INQ AUTHS_TABLE.CREDIT_PLAN
  
 ****************************************************************************************/
 
@@ -228,16 +229,16 @@ public without sharing class FEC_TransactionsController {
         List<TransactionDTO> result = new List<TransactionDTO>();
 
         try {
-            FEC_VMXAUTHDETAILINQ.ResponseWrapper res =
-                FEC_VMXAUTHDETAILINQ.callService(
+            FEC_MFASOUTSTANDINGAUTHINQ.ResponseWrapper res =
+                FEC_MFASOUTSTANDINGAUTHINQ.callService(
                     FEC_CommonUltils.generateTransactionId(),
                     FEC_ConstantCommon.REQUESTOR_CRM,
                     Datetime.now().formatGMT(FEC_ConstantCommon.DATETIME_FORMAT),
                     FEC_ConstantCommon.VMX_VERSION_DEFAULT,
                     FEC_ConstantCommon.REQUESTOR_VMX_CONTEXT,
                     FEC_ConstantCommon.REQUESTOR_VMX_CONTEXT,
-                    accNumber,
-                    FEC_ConstantCommon.STR_EMPTY
+                    FEC_ConstantCommon.REQUESTOR_ORG,
+                    accNumber
                 );
 
             if (res == null
@@ -247,11 +248,11 @@ public without sharing class FEC_TransactionsController {
                 return result;
             }
 
-            List<FEC_VMXAUTHDETAILINQ.AuthTableRow> auths = res.VMXMsgOut.Auths;
+            List<FEC_MFASOUTSTANDINGAUTHINQ.AuthTableRow> auths = res.VMXMsgOut.Auths;
             List<String> txCodes = new List<String>();
 
             Integer idx = 0;
-            for (FEC_VMXAUTHDETAILINQ.AuthTableRow auth : auths) {
+            for (FEC_MFASOUTSTANDINGAUTHINQ.AuthTableRow auth : auths) {
                 idx++;
                 txCodes.add(resolvePendingTxCode(auth, idx));
             }
@@ -268,13 +269,14 @@ public without sharing class FEC_TransactionsController {
 
             List<FEC_Transaction__c> toUpsert = new List<FEC_Transaction__c>();
             idx = 0;
-            for (FEC_VMXAUTHDETAILINQ.AuthTableRow auth : auths) {
+            for (FEC_MFASOUTSTANDINGAUTHINQ.AuthTableRow auth : auths) {
                 idx++;
                 String txCode = txCodes[idx - 1];
                 FEC_Transaction__c tx = existedByCode.containsKey(txCode)
                     ? existedByCode.get(txCode)
                     : new FEC_Transaction__c(FEC_Customer_History__c = historyId);
-                mapPendingAuthToTransaction(tx, auth, txCode);
+                tx.FEC_Transaction_Code__c = txCode;
+                tx.FEC_Transaction_Plan__c = auth.CREDIT_PLAN;
                 toUpsert.add(tx);
             }
 
@@ -286,7 +288,7 @@ public without sharing class FEC_TransactionsController {
                 FEC_CommonUltils.buildHelpTextMap(FEC_Transaction__c.SObjectType);
 
             idx = 0;
-            for (FEC_Transaction__c tx : toUpsert) {
+            for (FEC_MFASOUTSTANDINGAUTHINQ.AuthTableRow auth : auths) {
                 idx++;
                 result.add(mapPendingToDto(tx, auths[idx - 1], helpTexts));
             }
@@ -300,8 +302,9 @@ public without sharing class FEC_TransactionsController {
     }
 
     private static String resolvePendingTxCode(
-        FEC_VMXAUTHDETAILINQ.AuthTableRow auth,
-        Integer idx
+        FEC_MFASOUTSTANDINGAUTHINQ.AuthTableRow auth,
+        Integer idx,
+        Long pendingKeySuffix
     ) {
         if (String.isNotBlank(auth.AUTHORIZATION_CODE)) {
             return auth.AUTHORIZATION_CODE;
