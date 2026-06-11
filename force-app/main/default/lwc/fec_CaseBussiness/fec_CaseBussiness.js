@@ -607,23 +607,18 @@ function isD2cAssessmentSubSectionName(subSectionName) {
   return n.includes("d2c") && (n.includes("assessment") || n.includes("assesment"));
 }
 
-/**
- * Revert 2→1 / 3→1: ẩn subsection xác nhận (khớp Apex shouldHideRevertConfirmSubSection).
- * Luồng thường: 2→1 ẩn D2C; 3→1 ẩn CS SP. RC27: ngược lại.
- */
-function shouldHideRevertConfirmSubSection(subSectionName, sourceStage, isRc27Flow) {
+/** Revert 2→1 / 3→1: ẩn subsection xác nhận (khớp logic Apex shouldHideRevertConfirmSubSection). */
+function shouldHideRevertConfirmSubSection(subSectionName, sourceStage) {
   if (!subSectionName || (sourceStage !== 2 && sourceStage !== 3)) {
     return false;
   }
   const n = normalizeSubSectionName(subSectionName);
-  const hideD2c = n.includes("confirm") && n.includes("d2c");
-  const hideCsSp =
-    n.includes("confirm") && (n.includes("cs sp") || n.includes("support"));
+  // Revert 2→1 (OM): ẩn subsection CS SP; revert 3→1 (Support): ẩn subsection D2C.
   if (sourceStage === 2) {
-    return isRc27Flow ? hideCsSp : hideD2c;
+    return n.includes("confirm") && (n.includes("cs sp") || n.includes("support"));
   }
   if (sourceStage === 3) {
-    return isRc27Flow ? hideD2c : hideCsSp;
+    return n.includes("confirm") && n.includes("d2c");
   }
   return false;
 }
