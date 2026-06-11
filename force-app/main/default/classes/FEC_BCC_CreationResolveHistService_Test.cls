@@ -223,4 +223,50 @@ private class FEC_BCC_CreationResolveHistService_Test {
         System.assertEquals('CRS1', history.FEC_Stage_Name__c);
         System.assertEquals('Custom Resolve', history.FEC_Custom_Action_Button_Label__c);
     }
+
+    @IsTest
+    static void applyAfterCreationBulk_usesExplicitImporterUserId() {
+        Case testCase = new Case(
+            Subject = 'BCC Creation Resolve Importer',
+            Status = FEC_ConstantCommon.CASE_STATUS_RESOLVED_COMPLETED,
+            OwnerId = UserInfo.getUserId()
+        );
+        FEC_CaseTriggerHandler.isExecuting = true;
+        try {
+            insert testCase;
+        } finally {
+            FEC_CaseTriggerHandler.isExecuting = false;
+        }
+
+        Id importerUserId = UserInfo.getUserId();
+        List<User> otherUsers = [
+            SELECT Id
+            FROM User
+            WHERE IsActive = true
+            AND Id != :UserInfo.getUserId()
+            LIMIT 1
+        ];
+        if (!otherUsers.isEmpty()) {
+            importerUserId = otherUsers[0].Id;
+        }
+
+        FEC_BatchCaseCreationController.CaseRowResult rowResult =
+            new FEC_BatchCaseCreationController.CaseRowResult();
+        rowResult.status = 'Succeeded';
+        List<FEC_BCC_CreationResolveHistService.CreationResolveHistoryItem> items =
+            new List<FEC_BCC_CreationResolveHistService.CreationResolveHistoryItem>();
+        FEC_BCC_CreationResolveHistService.collectItem(items, rowResult, testCase.Id);
+
+        Test.startTest();
+        FEC_BCC_CreationResolveHistService.applyAfterCreationBulk(items, importerUserId);
+        Test.stopTest();
+
+        FEC_Routing_Action_History__c history = [
+            SELECT FEC_Perform_User__c
+            FROM FEC_Routing_Action_History__c
+            WHERE FEC_Case__c = :testCase.Id
+            LIMIT 1
+        ];
+        System.assertEquals(importerUserId, history.FEC_Perform_User__c);
+    }
 }
