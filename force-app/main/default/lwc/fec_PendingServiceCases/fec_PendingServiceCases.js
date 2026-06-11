@@ -1,5 +1,5 @@
 import { LightningElement, api, track, wire } from 'lwc';
-import { NavigationMixin } from 'lightning/navigation';
+import { NavigationMixin, CurrentPageReference } from 'lightning/navigation';
 import getPendingServiceCases from '@salesforce/apex/FEC_GetServiceCases.getPendingServiceCases';
 import getCaseFieldHelpTexts from '@salesforce/apex/FEC_GetServiceCases.getCaseFieldHelpTexts';
 import { formatDateTimeVN } from 'c/fec_CommonUtils';
@@ -25,7 +25,23 @@ import FEC_Last_Updated_By_Label from '@salesforce/label/c.FEC_Last_Updated_By_L
 import FEC_Interaction_Title_Label from '@salesforce/label/c.FEC_Interaction_Title_Label';
 
 export default class Fec_PendingServiceCases extends NavigationMixin(LightningElement) {
-  @api recordId;
+  _recordId;
+  _connected = false;
+
+  @api
+  get recordId() {
+    return this._recordId;
+  }
+  set recordId(value) {
+    if (!value || value === this._recordId) {
+      return;
+    }
+    this._recordId = value;
+    if (this._connected) {
+      this.fetchData();
+    }
+  }
+
   @track data = [];
   @track lastRefreshTime = null;
   @track isLoading = false;
@@ -132,19 +148,34 @@ export default class Fec_PendingServiceCases extends NavigationMixin(LightningEl
     return this.data;
   }
 
+  @wire(CurrentPageReference)
+  handlePageRef(pageRef) {
+    const idFromPage = pageRef?.attributes?.recordId;
+    if (!idFromPage || idFromPage === this._recordId) {
+      return;
+    }
+    this._recordId = idFromPage;
+    if (this._connected) {
+      this.fetchData();
+    }
+  }
+
   connectedCallback() {
-    this.fetchData();
+    this._connected = true;
+    if (this._recordId) {
+      this.fetchData();
+    }
   }
 
   async fetchData() {
-    if (!this.recordId) {
+    if (!this._recordId) {
       this.data = [];
       return;
     }
     this.isLoading = true;
     this.error = undefined;
     try {
-      const result = await getPendingServiceCases({ recordId: this.recordId });
+      const result = await getPendingServiceCases({ recordId: this._recordId });
       this.lastRefreshTime = new Date().toISOString();
       this.data = (result || []).map((row) => ({
         ...row,
