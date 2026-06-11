@@ -34,7 +34,6 @@ import FEC_Parent_ID_Label from "@salesforce/label/c.FEC_Parent_ID_Label";
 import FEC_Outcome_Code_Label from "@salesforce/label/c.FEC_Outcome_Code_Label";
 import FEC_Interaction_Remark_Label from "@salesforce/label/c.FEC_Interaction_Remark_Label";
 import FEC_Interaction_Email_Input_Placeholder from "@salesforce/label/c.FEC_Interaction_Email_Input_Placeholder";
-import FEC_Interaction_Email_Required_Msg from "@salesforce/label/c.FEC_Interaction_Email_Required_Msg";
 import FEC_Interaction_Email_Invalid_Msg from "@salesforce/label/c.FEC_Interaction_Email_Invalid_Msg";
 import FEC_Interaction_Email_Save_Error from "@salesforce/label/c.FEC_Interaction_Email_Save_Error";
 import FEC_Empty from "@salesforce/label/c.FEC_Empty";
@@ -55,7 +54,6 @@ export default class FecInteractionEmailInfoUbank extends NavigationMixin(Lightn
     interactionRemark: FEC_Interaction_Remark_Label,
     externalInteractionId: FEC_External_Interaction_ID_Label,
     inputPlaceholder: FEC_Interaction_Email_Input_Placeholder,
-    emailRequiredMsg: FEC_Interaction_Email_Required_Msg,
     emailInvalidMsg: FEC_Interaction_Email_Invalid_Msg,
     emailSaveError: FEC_Interaction_Email_Save_Error,
     empty: FEC_Empty
@@ -163,14 +161,6 @@ export default class FecInteractionEmailInfoUbank extends NavigationMixin(Lightn
     return this.record?.FEC_Channel__c || STR_EMPTY;
   }
 
-  get showEmailRequiredInline() {
-    return (
-      this.channel === "Email" &&
-      !this.hasInteractionEmail &&
-      !this.isEditingEmail
-    );
-  }
-
   get displayInteractionEmail() {
     return this.record?.[INTERACTION_EMAIL_FIELD.fieldApiName] || STR_EMPTY;
   }
@@ -224,7 +214,7 @@ export default class FecInteractionEmailInfoUbank extends NavigationMixin(Lightn
   }
 
   validateEmail(value) {
-    if (!value || !value.trim()) return this.labels.emailRequiredMsg;
+    if (!value || !value.trim()) return STR_EMPTY;
     if (!EMAIL_REGEX.test(value.trim())) return this.labels.emailInvalidMsg;
     return STR_EMPTY;
   }

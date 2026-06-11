@@ -1,4 +1,4 @@
-import { LightningElement, api, wire } from "lwc";
+﻿import { LightningElement, api, wire } from "lwc";
 import { NavigationMixin } from "lightning/navigation";
 import {
   updateRecord,
@@ -31,8 +31,10 @@ import FEC_MSG_Create_Customer_History_Success from '@salesforce/label/c.FEC_MSG
 import FEC_Error_Callout_Insurance from '@salesforce/label/c.FEC_Error_Callout_Insurance';
 import FEC_MSG_Service_Error_Label from '@salesforce/label/c.FEC_MSG_Service_Error_Label';
 import FEC_Common_No_Results_Label from '@salesforce/label/c.FEC_Common_No_Results_Label';
-import FEC_Interaction_Email_Required_Msg from '@salesforce/label/c.FEC_Interaction_Email_Required_Msg';
-import isInteractionEmailActionBlockedApex from '@salesforce/apex/FEC_InteractionInforHandler.isInteractionEmailActionBlocked';
+import isInteractionEmailActionBlocked from '@salesforce/apex/FEC_InteractionInforHandler.isInteractionEmailActionBlocked';
+import isInteractionPhoneActionBlocked from '@salesforce/apex/FEC_InteractionInforHandler.isInteractionPhoneActionBlocked';
+import VALIDATE_INTERACTION_EMAIL from "@salesforce/messageChannel/FEC_Validate_Interaction_Email__c";
+import VALIDATE_INTERACTION_PHONE from "@salesforce/messageChannel/FEC_Validate_Interaction_Phone__c";
 
 import checkFieldEditPermissions from "@salesforce/apex/FEC_SearchController.checkFieldEditPermissions";
 import SkipModal from "c/fec_SkipModal";
@@ -1292,6 +1294,13 @@ hasAnySearchCriteria(params) {
         return;
       }
 
+      if (this.recordId) {
+        const canProceed = await this.ensureInteractionFieldsBeforeCreateCase(this.recordId);
+        if (!canProceed) {
+          return;
+        }
+      }
+
       let caseIdToUse = this.recordId;
 
       if (!caseIdToUse) {
@@ -1598,22 +1607,46 @@ hasAnySearchCriteria(params) {
     return result;
   }
 
-  async assertInteractionEmailBeforeAction() {
-    if (!this.recordId) {
+  async ensureInteractionEmailBeforeCreateCase(recordId) {
+    if (!recordId) {
       return true;
     }
     try {
-      const blocked = await isInteractionEmailActionBlockedApex({ recordId: this.recordId });
+      const blocked = await isInteractionEmailActionBlocked({ recordId });
       if (blocked) {
-        this.showToast(this.FEC_Toast_Validation_Title, FEC_Interaction_Email_Required_Msg, 'error');
+        publish(this.messageContext, VALIDATE_INTERACTION_EMAIL, { recordId });
         return false;
       }
       return true;
     } catch (error) {
       console.error('isInteractionEmailActionBlocked error', error);
-      this.showToast(this.FEC_Toast_Error, FEC_Toast_Error_Generic, 'error');
+      return true;
+    }
+  }
+
+  async ensureInteractionPhoneBeforeCreateCase(recordId) {
+    if (!recordId) {
+      return true;
+    }
+    try {
+      const blocked = await isInteractionPhoneActionBlocked({ recordId });
+      if (blocked) {
+        publish(this.messageContext, VALIDATE_INTERACTION_PHONE, { recordId });
+        return false;
+      }
+      return true;
+    } catch (error) {
+      console.error('isInteractionPhoneActionBlocked error', error);
+      return true;
+    }
+  }
+
+  async ensureInteractionFieldsBeforeCreateCase(recordId) {
+    const emailOk = await this.ensureInteractionEmailBeforeCreateCase(recordId);
+    if (!emailOk) {
       return false;
     }
+    return this.ensureInteractionPhoneBeforeCreateCase(recordId);
   }
 
   // Handle button actions from datatable rows
@@ -1649,7 +1682,7 @@ hasAnySearchCriteria(params) {
     switch (action.name) {
       case "create_history": {
         if (this.recordId) {
-          const canProceed = await this.assertInteractionEmailBeforeAction();
+          const canProceed = await this.ensureInteractionFieldsBeforeCreateCase(this.recordId);
           if (!canProceed) {
             return;
           }

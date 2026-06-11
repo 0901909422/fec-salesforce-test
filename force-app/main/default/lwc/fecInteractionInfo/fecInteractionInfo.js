@@ -3,6 +3,13 @@ import { getRecord, getFieldValue } from "lightning/uiRecordApi";
 import { loadStyle } from "lightning/platformResourceLoader";
 import COMMON_STYLES from "@salesforce/resourceUrl/FEC_CommonCss";
 import { notifyRecordUpdateAvailable } from "lightning/uiRecordApi";
+import {
+  subscribe,
+  unsubscribe,
+  APPLICATION_SCOPE,
+  MessageContext,
+} from "lightning/messageService";
+import VALIDATE_INTERACTION_PHONE from "@salesforce/messageChannel/FEC_Validate_Interaction_Phone__c";
 
 // ================= APEX =================
 import getInteraction from "@salesforce/apex/FEC_InteractionInforHandler.getInteraction";
@@ -30,6 +37,7 @@ import FEC_INTERACTION_SUB_CHANNEL_LABEL from "@salesforce/label/c.FEC_Interacti
 import FEC_Interaction_Information_Label from "@salesforce/label/c.FEC_Interaction_Information_Label";
 
 import FEC_PHONE_IS_REQUIRED_MSG from "@salesforce/label/c.FEC_PHONE_IS_REQUIRED_MSG";
+import FEC_Complete_This_Field from "@salesforce/label/c.FEC_Complete_This_Field";
 import FEC_PHONE_IS_INVALID_FORMAT_1_MSG from "@salesforce/label/c.FEC_PHONE_IS_INVALID_FORMAT_1_MSG";
 import FEC_PHONE_IS_INVALID_FORMAT_2_MSG from "@salesforce/label/c.FEC_PHONE_IS_INVALID_FORMAT_2_MSG";
 import FEC_PHONE_IS_INVALID_FORMAT_3_MSG from "@salesforce/label/c.FEC_PHONE_IS_INVALID_FORMAT_3_MSG";
@@ -83,6 +91,11 @@ export default class FecInteractionInfo extends LightningElement {
   externalIdDraft;
   activeSections = ["interactionInfo"];
   phoneRequiredMsg = FEC_PHONE_IS_REQUIRED_MSG;
+  completeFieldMsg = FEC_Complete_This_Field;
+  validatePhoneSubscription = null;
+
+  @wire(MessageContext)
+  messageContext;
 
   // ================= WIRE: CASE CONTEXT =================
   @wire(getRecord, {
@@ -107,6 +120,36 @@ export default class FecInteractionInfo extends LightningElement {
   // ================= LIFECYCLE =================
   connectedCallback() {
     this.loadStyles();
+    this.subscribeToValidatePhoneChannel();
+  }
+
+  disconnectedCallback() {
+    this.unsubscribeFromValidatePhoneChannel();
+  }
+
+  subscribeToValidatePhoneChannel() {
+    if (!this.validatePhoneSubscription) {
+      this.validatePhoneSubscription = subscribe(
+        this.messageContext,
+        VALIDATE_INTERACTION_PHONE,
+        (message) => this.handleValidatePhoneMessage(message),
+        { scope: APPLICATION_SCOPE }
+      );
+    }
+  }
+
+  unsubscribeFromValidatePhoneChannel() {
+    if (this.validatePhoneSubscription) {
+      unsubscribe(this.validatePhoneSubscription);
+      this.validatePhoneSubscription = null;
+    }
+  }
+
+  handleValidatePhoneMessage(message) {
+    if (!message?.recordId || message.recordId !== this.recordId) {
+      return;
+    }
+    this.showInlinePhoneRequiredError();
   }
 
   @wire(getRecord, {
@@ -270,9 +313,65 @@ export default class FecInteractionInfo extends LightningElement {
 
   get isPhoneRequired() {
     return (
+      !this.isReview &&
       this.record?.FEC_Is_Manual__c === true &&
       ["Inbound", "Outbound"].includes(this.record?.FEC_Channel__c)
     );
+  }
+
+  get isPhoneReadOnly() {
+    if (this.isReview) {
+      return true;
+    }
+    if (this.hasPhone && !this.isEditingPhone) {
+      return true;
+    }
+    if (!this.hasPhone && !this.isPhoneRequired && !this.isEditingPhone) {
+      return true;
+    }
+    return false;
+  }
+
+  get showPhoneEditIcon() {
+    return !this.isPhoneRequired && !this.hasPhone && !this.isEditingPhone;
+  }
+
+  get showPhoneSaveIcon() {
+    return !this.isReview && !this.hasPhone && (this.isEditingPhone || this.isPhoneRequired);
+  }
+
+  getPhoneInput() {
+    return this.template.querySelector('[data-id="interactionPhone"]');
+  }
+
+  clearPhoneInputValidity() {
+    const input = this.getPhoneInput();
+    if (input) {
+      input.setCustomValidity("");
+      input.reportValidity();
+    }
+  }
+
+  showInlinePhoneRequiredError() {
+    if (!this.isPhoneRequired || this.record?.FEC_Phone_Number__c) {
+      return false;
+    }
+
+    this.activeSections = ["interactionInfo"];
+    this.isEditingPhone = true;
+    this.phoneDraft = this.phoneDraft || "";
+
+    // eslint-disable-next-line @lwc/lwc/no-async-operation
+    requestAnimationFrame(() => {
+      const input = this.getPhoneInput();
+      if (input) {
+        input.setCustomValidity(FEC_Complete_This_Field);
+        input.reportValidity();
+        input.focus();
+      }
+    });
+
+    return true;
   }
 
   // ================= PHONE ACTIONS =================
@@ -287,6 +386,7 @@ export default class FecInteractionInfo extends LightningElement {
   handleEditPhone() {
     this.isEditingPhone = true;
     this.phoneDraft = "";
+    this.clearPhoneInputValidity();
   }
 
   handleEditExternalId() {

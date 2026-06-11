@@ -28,51 +28,41 @@
                 </div>
               </template>
               <template if:false={isReview}>
-                <div class="row">
+                <div class="row row--phone-field">
                   <span class="label">
-                    <span class="slds-required">*</span>
+                    <template if:true={isPhoneRequired}>
+                      <abbr class="required-indicator" title="required">*</abbr>
+                    </template>
                     {labels.interactionPhone}
                   </span>
-                  <span class="value">
-                    <!-- Có phone -->
-                    <template if:true={hasPhone}>
+                  <span class="value phone-field-value">
+                    <template if:true={isPhoneReadOnly}>
                       {displayPhone}
                     </template>
-
-                    <!-- Không có phone -->
-                    <template if:false={hasPhone}>
-                      <template if:true={isEditingPhone}>
+                    <template if:false={isPhoneReadOnly}>
+                      <div class="phone-input-wrap">
                         <lightning-input data-id="interactionPhone" type="tel" value={phoneDraft}
                           onchange={handlePhoneChange} variant="label-hidden" required={isPhoneRequired}
-                          message-when-value-missing={phoneRequiredMsg}>
+                          message-when-value-missing={completeFieldMsg}>
                         </lightning-input>
-                      </template>
-
-                      <template if:false={isEditingPhone}>
-                        <span class="empty">--</span>
-                      </template>
+                      </div>
                     </template>
                   </span>
-                  <!-- ICON -->
                   <template if:true={hasPhone}>
                     <lightning-icon icon-name={eyeIcon} size="x-small" class="eye-icon" onclick={handleToggleMask}>
                     </lightning-icon>
                   </template>
-
-                  <!-- ICON EDIT: chỉ hiện khi CHƯA edit -->
                   <template if:false={hasPhone}>
-                    <template if:false={isEditingPhone}>
+                    <template if:true={showPhoneEditIcon}>
                       <lightning-icon icon-name="utility:edit" size="x-small" class="eye-icon"
                         onclick={handleEditPhone}>
                       </lightning-icon>
                     </template>
-                  </template>
-
-                  <!-- SAVE ICON -->
-                  <template if:true={isEditingPhone}>
-                    <lightning-icon icon-name="utility:check" size="x-small" class="eye-icon save-icon"
-                      onclick={handleSavePhone}>
-                    </lightning-icon>
+                    <template if:true={showPhoneSaveIcon}>
+                      <lightning-icon icon-name="utility:check" size="x-small" class="eye-icon save-icon"
+                        onclick={handleSavePhone}>
+                      </lightning-icon>
+                    </template>
                   </template>
                 </div>
               </template>
