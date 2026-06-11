@@ -139,12 +139,11 @@ private class FEC_CreateCaseHandler_Test {
         System.assertEquals(true, created.FEC_Is_Submited__c);
         System.assertEquals(true, created.FEC_Is_MyCaseAPI_Interaction__c);
         System.assertEquals('mycase@example.com', created.FEC_Interaction_Email__c);
-        System.assertEquals(FEC_ConstantCommon.CHANNEL_EXTERNAL, created.FEC_Channel__c);
+        System.assertEquals(FEC_ConstantCommon.CHANNEL_INBOUND_NAME, created.FEC_Channel__c);
         System.assertEquals(
-            FEC_ConstantCommon.CHANNEL_EXTERNAL_SUBCHANNEL_OTHER_NAME,
+            FEC_ConstantCommon.CHANNEL_INBOUND_SUBCHANNEL_NAME,
             created.FEC_Interaction_Subchannel__c
         );
-        System.assertEquals(FEC_ConstantCommon.CHANNEL_INBOUND_NAME, created.FEC_Other_Subchannel__c);
     }
 
     @IsTest
@@ -287,13 +286,7 @@ private class FEC_CreateCaseHandler_Test {
         Test.stopTest();
 
         System.assertEquals(true, c.FEC_Is_Submited__c);
-        System.assertEquals(FEC_ConstantCommon.CHANNEL_EXTERNAL, c.FEC_Channel__c);
-        System.assertEquals(FEC_ConstantCommon.CHANNEL_EXTERNAL, c.FEC_Case_Channel__c);
-        System.assertEquals(
-            FEC_ConstantCommon.CHANNEL_EXTERNAL_SUBCHANNEL_OTHER_NAME,
-            c.FEC_Sub_Channel__c
-        );
-        System.assertEquals(FEC_ConstantCommon.CHANNEL_INBOUND_NAME, c.FEC_Other_Subchannel__c);
+        System.assertEquals(FEC_ConstantCommon.CHANNEL_INBOUND_NAME, c.FEC_Channel__c);
     }
 
     @IsTest

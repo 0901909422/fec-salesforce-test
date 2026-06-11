@@ -294,6 +294,45 @@ private class FEC_HoldCaseController_Test {
         System.assertEquals('ERROR', refreshed.FEC_NFU_Description_Result__c);
     }
 
+    @IsTest
+    static void testCallMarkNFUAndGetInfo_BlankCaseId() {
+        try {
+            FEC_HoldCaseController.callMarkNFUAndGetInfo('');
+            System.assert(false, 'Expected required parameter error.');
+        } catch (AuraHandledException e) {
+            System.assertNotEquals(null, e.getMessage());
+        }
+    }
+
+    @IsTest
+    static void testResponseModelSuccessAndError() {
+        FEC_HoldCaseController.ResponseModel ok =
+            new FEC_HoldCaseController.ResponseModel().success(UserInfo.getUserId(), 'ok');
+        System.assertEquals(true, ok.isSuccess);
+        System.assertEquals(FEC_ConstantCommon.STATUS_SUCCESS, ok.status);
+
+        FEC_HoldCaseController.ResponseModel err =
+            new FEC_HoldCaseController.ResponseModel().error('failed');
+        System.assertEquals(false, err.isSuccess);
+        System.assertEquals(FEC_ConstantCommon.CASE_STATUS_ERROR, err.status);
+    }
+
+    @IsTest
+    static void testSaveHoldCase_Attempt3ApiError() {
+        System.runAs(adminUser()) {
+            Case c = [SELECT Id FROM Case LIMIT 1];
+            Test.setMock(HttpCalloutMock.class, new MarkNFUErrorMock());
+
+            Test.startTest();
+            FEC_HoldCaseController.ResponseModel resp =
+                FEC_HoldCaseController.saveHoldCase(c.Id, 'Test Reason', 'NFU01', 1, 3);
+            Test.stopTest();
+
+            System.assertNotEquals(null, resp);
+            System.assertEquals(false, resp.isSuccess);
+        }
+    }
+
     private class MarkNFUErrorMock implements HttpCalloutMock {
         public HttpResponse respond(HttpRequest req) {
             HttpResponse res = new HttpResponse();
