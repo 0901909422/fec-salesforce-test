@@ -456,7 +456,6 @@ const SLDS_MEDIUM_SIZE_OF_12 = {
   12: 'slds-medium-size_12-of-12'
 };
 
-//linhdev 11/06/2026 — Card Block Reason picklist VI/EN → New Block Code (dependency + MAP)
 const MAP_NEW_BLOCK_CODE = {
   'Temporarily Locked': 'A',
   'Not In Use': 'L',
@@ -2119,45 +2118,6 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
     return val;
   }
 
-  //linhdev 11/06/2026 — Card Block Reason: normalize label/API → New Block Code A/L/S
-  _resolveNewBlockCodeFromCardBlockReason(rawValue) {
-    if (rawValue == null || String(rawValue).trim() === STR_EMPTY) {
-      return null;
-    }
-    const apiVal = this._casePicklistRawToApi(FIELD_CARD_BLOCK_REASON, rawValue);
-    const lookupKey = apiVal ?? rawValue;
-    return MAP_NEW_BLOCK_CODE[lookupKey] ?? MAP_NEW_BLOCK_CODE[rawValue] ?? null;
-  }
-
-  //linhdev 11/06/2026 — gán FEC_New_Block_Code__c readonly sau chọn Reason / reload getData
-  _applyNewBlockCodeFromCardBlockReason(rawValue) {
-    const newBlockCode = this._resolveNewBlockCodeFromCardBlockReason(rawValue);
-    const isEmptyReason =
-      rawValue == null || String(rawValue).trim() === STR_EMPTY;
-    if (!newBlockCode) {
-      if (!isEmptyReason) {
-        return;
-      }
-      this.newBlockCode = null;
-    } else {
-      this.newBlockCode = newBlockCode;
-    }
-    this.business.sectionlst.forEach(section => {
-      section.subSectionlst.forEach(sub => {
-        sub.objlst.forEach(obj => {
-          obj.fieldlst.forEach(field => {
-            if (field.editable) return;
-            if (field.apiName === FIELD_NEW_BLOCK_CODE) {
-              field.value = newBlockCode;
-              field.displayValue = newBlockCode;
-              field.readonlyDisplayValue = newBlockCode;
-            }
-          });
-        });
-      });
-    });
-  }
-
   _syncCasePicklistValueFromForm(fieldApiName) {
     if (!this.isEdit) {
       return;
@@ -3431,13 +3391,6 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
         if (this.business?.code === PROCESS_BLOCK_CARD || this.business?.code === PROCESS_UNBLOCK_CARD) {
           this.handleGetCardStatus();
         }
-        //linhdev 11/06/2026 — reload Card Block: sync New Block Code từ Reason đã lưu
-        if (this.business?.code === PROCESS_BLOCK_CARD) {
-          const reasonField = this._findCaseFieldByApiName(FIELD_CARD_BLOCK_REASON);
-          if (reasonField?.value) {
-            this._applyNewBlockCodeFromCardBlockReason(reasonField.value);
-          }
-        }
         // PhuongNT add handle set update field read only
         this.handleSetUpdateFieldReadOnly();
 
@@ -4105,7 +4058,7 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
       }
     }
 
-    //linhdev 11/06/2026 — Card Block Reason đổi: API value + dependency New Block Code
+    // card block
     if (fieldName === FIELD_CARD_BLOCK_REASON) {
       this.isProcessActionInfo = false;
       this.isProcessActionFailed = false;
@@ -4114,21 +4067,21 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
         this.showProcessAction = false;
       }
 
-      const apiVal = this._casePicklistRawToApi(FIELD_CARD_BLOCK_REASON, value);
-      if (apiVal != null) {
-        value = apiVal;
-        if (field) {
-          field.value = apiVal;
-          const opt = findPicklistOptionByRaw(
-            this._casePicklistOptions(FIELD_CARD_BLOCK_REASON),
-            apiVal,
-          );
-          if (opt) {
-            field.displayValue = opt.label;
-          }
-        }
-      }
-      this._applyNewBlockCodeFromCardBlockReason(value);
+      this.business.sectionlst.forEach(section => {
+        section.subSectionlst.forEach(sub => {
+          sub.objlst.forEach(obj => {
+            obj.fieldlst.forEach(field => {
+              if (field.editable) return; // ignore editable
+              if (field.apiName === FIELD_NEW_BLOCK_CODE) {
+                field.value = MAP_NEW_BLOCK_CODE[value];
+                field.displayValue = field.value;
+                field.readonlyDisplayValue = field.value;
+                this.newBlockCode = field.value;
+              }
+            });
+          });
+        });
+      });
       this.handleCheckProcessActionCardBlock();
     }
     // card replacement
