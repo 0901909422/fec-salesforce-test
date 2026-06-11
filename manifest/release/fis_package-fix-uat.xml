@@ -418,5 +418,10 @@
         <members>FEC_Case_With_Customer_Histories</members>
         <name>ReportType</name>
     </types>
+    <types>
+        <members>FEC_Validate_Interaction_Email</members>
+        <members>FEC_Validate_Interaction_Phone</members>
+        <name>LightningMessageChannel</name>
+    </types>
     <version>66.0</version>
 </Package>
