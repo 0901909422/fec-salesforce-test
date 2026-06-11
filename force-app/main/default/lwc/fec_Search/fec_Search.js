@@ -3,7 +3,6 @@ import { NavigationMixin } from "lightning/navigation";
 import {
   updateRecord,
   notifyRecordUpdateAvailable,
-  getRecordNotifyChange,
 } from "lightning/uiRecordApi";
 import Toast from "lightning/toast";
 import { refreshApex } from "@salesforce/apex";
@@ -39,7 +38,8 @@ import checkFieldEditPermissions from "@salesforce/apex/FEC_SearchController.che
 import SkipModal from "c/fec_SkipModal";
 import createInternalCase from "@salesforce/apex/FEC_CreateCaseHandler.createInternalCase";
 import createInternalCaseOnSkip from "@salesforce/apex/FEC_SearchController.createInternalCaseOnSkip";
-import isIntegrationJobFinished from '@salesforce/apex/FEC_SearchController.isIntegrationJobFinished';
+import getHistoryStatus from '@salesforce/apex/FEC_SearchController.getHistoryStatus';
+import isCaseIntegrationFinished from '@salesforce/apex/FEC_SearchController.isCaseIntegrationFinished';
 import getCaseRecordTypeDevName from "@salesforce/apex/FEC_CreateCaseHandler.getCaseRecordTypeDevName";
 import {
   publish,
@@ -172,6 +172,7 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
   get cardDisplayLabel() {
     return this.isAccountContractSearch ? 'Contract Number' : 'Account Number';
   }
+
   // Demo columns per tab (adjust fields as needed)
   get cardColumns() {
     return [
@@ -594,12 +595,6 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
             } else if (!/^\d+$/.test(val)) {
               input.setCustomValidity(
                 "Application ID must contain only digits",
-              );
-            } else if (
-              !(val.length === 6 || val.length === 8 || val.length === 9)
-            ) {
-              input.setCustomValidity(
-                "Application ID must be 6, 8, or 9 digits",
               );
             } else {
               input.setCustomValidity("");
@@ -1140,40 +1135,6 @@ async fetchBancaInsuranceByPhone(phones) {
     );
   }
 
-  _resolvePhoneFromRow(row) {
-    const fromRaw = (raw) => {
-      if (!raw) {
-        return null;
-      }
-      const normalized = normalizePhone(raw);
-      return normalized || null;
-    };
-
-    const fromSearch = fromRaw(this.phoneNumber);
-    if (fromSearch) {
-      return fromSearch;
-    }
-
-    const fromRow = fromRaw(row?.Phone);
-    if (fromRow) {
-      return fromRow;
-    }
-
-    const cif = row?.CIFNumber;
-    const nationalId =
-      row?.NationalID1 || row?.BuyerNID || row?.NationalID2 || this.nationalId;
-    const customer = (this._customers || []).find(
-      (cust) =>
-        (cif && cust.CIFNumber === cif) ||
-        (nationalId && cust.NationalID === nationalId)
-    );
-    if (customer?.Phones?.length > 0) {
-      return fromRaw(customer.Phones[0].Phone);
-    }
-
-    return null;
-  }
-
 /**
  * Build Apex params from UI inputs (NO hard-coding).
  * Matches Apex signature: getCustomerList({ requestorId, phoneNumber, ... })
@@ -1249,9 +1210,6 @@ hasAnySearchCriteria(params) {
                         if (existingRec.NationalID1) {
                             existingRec.NationalID2 = currentNationalId;
                         }
-                        if (!existingRec.Phone && phone) {
-                            existingRec.Phone = phone;
-                        }
                     } else {
                         cardMap.set(accNum, {
                             id: app.ApplicationID,
@@ -1276,9 +1234,6 @@ hasAnySearchCriteria(params) {
                         let existingRec = loanContractMap.get(contractNum);
                         if (existingRec.NationalID1) {
                             existingRec.NationalID2 = currentNationalId;
-                        }
-                        if (!existingRec.Phone && phone) {
-                            existingRec.Phone = phone;
                         }
                     } else {
                         loanContractMap.set(contractNum, {
@@ -1509,7 +1464,7 @@ hasAnySearchCriteria(params) {
       const row = this.cardData.find(r => r.AccountNumber === key);
       applicationId = row?.ApplicationID;
     } else if (fieldName === 'ContractNumber') {
-      const row = this.loanContractData.find(r => r.ContractNumber === key);
+      const row = this.loanContractData.find(r => r.ContractNumber === key) || this.cardData.find(r => r.ContractNumber === key);
       applicationId = row?.ApplicationID;
     }
     if (!applicationId) return;
@@ -1544,7 +1499,7 @@ hasAnySearchCriteria(params) {
       const row = this.cardData.find(r => r.AccountNumber === key);
       applicationId = row?.ApplicationID;
     } else if (fieldName === 'ContractNumber') {
-      const row = this.loanContractData.find(r => r.ContractNumber === key);
+      const row = this.loanContractData.find(r => r.ContractNumber === key) || this.cardData.find(r => r.ContractNumber === key);
       applicationId = row?.ApplicationID;
     }
     if (!applicationId) return;
@@ -1584,7 +1539,8 @@ hasAnySearchCriteria(params) {
   _refreshData() {
     this.cardData = this.cardData.map(r => ({
       ...r,
-      _isExpanded: !!(this.appHistoryMap[r.AccountNumber]?.expanded)
+      _historyKey: r.ContractNumber || r.AccountNumber,
+      _isExpanded: !!(this.appHistoryMap[r.ContractNumber || r.AccountNumber]?.expanded)
     }));
     this.loanContractData = this.loanContractData.map(r => ({
       ...r,
@@ -1594,8 +1550,9 @@ hasAnySearchCriteria(params) {
   get cardDataWithHistory() {
     return this.cardData.map(r => ({
       ...r,
-      _historyState: this.appHistoryMap[r.AccountNumber] || null,
-      _btnClass: (this.appHistoryMap[r.AccountNumber]?.expanded) ? 'fec-toggle-btn fec-expanded' : 'fec-toggle-btn',
+      _historyKey: r.ContractNumber || r.AccountNumber,
+      _historyState: this.appHistoryMap[r.ContractNumber || r.AccountNumber] || null,
+      _btnClass: (this.appHistoryMap[r.ContractNumber || r.AccountNumber]?.expanded) ? 'fec-toggle-btn fec-expanded' : 'fec-toggle-btn',
       _dateOfBirth: this._formatDate(r.DateOfBirth)
     }));
   }
@@ -1620,10 +1577,11 @@ hasAnySearchCriteria(params) {
   get cardRowsInterleaved() {
     const result = [];
     this.cardData.forEach(r => {
-      result.push({ ...r, _isDataRow: true, _key: 'data_' + r.AccountNumber, _singleRow: [r] });
-      const hs = this.appHistoryMap[r.AccountNumber];
+      const historyKey = r.ContractNumber || r.AccountNumber;
+      result.push({ ...r, _isDataRow: true, _key: 'data_' + historyKey, _historyKey: historyKey, _singleRow: [r] });
+      const hs = this.appHistoryMap[historyKey];
       if (hs && hs.expanded) {
-        result.push({ _isDataRow: false, _key: 'hist_' + r.AccountNumber, _historyState: hs });
+        result.push({ _isDataRow: false, _key: 'hist_' + historyKey, _historyKey: historyKey, _historyState: hs });
       }
     });
     return result;
@@ -1761,14 +1719,7 @@ hasAnySearchCriteria(params) {
           isListViewActual = this.isListView || this.isCaseListView;
         }
 
-        const resolvedPhone = this._resolvePhoneFromRow(row);
-        const resolvedBuyerNID =
-          (row?.NationalID1 && String(row.NationalID1).trim()) ||
-          (row?.BuyerNID && String(row.BuyerNID).trim()) ||
-          this._resolveSearchNationalIdFromRow(row) ||
-          "";
-        const resolvedNationalId2 =
-          (row?.NationalID2 && String(row.NationalID2).trim()) || "";
+        const resolvedPhone = (this.phoneNumber && normalizePhone(this.phoneNumber)) || null;
 
         createHistory({
           value: id,
@@ -1782,35 +1733,36 @@ hasAnySearchCriteria(params) {
           applicationId: row?.ApplicationID,
           isListView: isListViewActual,
           policyNumber: row?.PolicyNumber || '', // Only for Insurance
-          buyerNID: resolvedBuyerNID,
-          searchNationalId2: resolvedNationalId2,
+          buyerNID:
+            (row?.NationalID1 && String(row.NationalID1).trim()) ||
+            (row?.BuyerNID && String(row.BuyerNID).trim()) ||
+            "",
+          searchNationalId2:
+            (row?.NationalID2 && String(row.NationalID2).trim()) || "",
         })
           .then(async (res) => {
             this.showToast("Success", "History created successfully", "success");
-
-            const caseId = res?.caseId ?? res;
-            const integrationJobId = res?.integrationJobId;
-
+            
             if (this.recordId) {
+                if (action.label.fieldName === 'AccountNumber') {
+                    await this._waitForAccountIntegration(this.recordId);
+                }
                 this.handlePublishMessageChanel();
-                await this._pollIntegrationJob(integrationJobId);
-                getRecordNotifyChange([{ recordId: this.recordId }]);
                 await notifyRecordUpdateAvailable([{ recordId: this.recordId }]);
                 this.dispatchEvent(new RefreshEvent());
-                await this.refreshTab();
             } else {
-                const devName = await getCaseRecordTypeDevName({ caseId });
+                const devName = await getCaseRecordTypeDevName({ caseId: res });
                 if (devName === 'Internal_Case') {
                     this.dispatchEvent(
                         new CustomEvent('closerequest', {
-                            detail: { recordId: caseId }
+                            detail: { recordId: res }
                         })
                     );
                   } else {
                       this[NavigationMixin.Navigate]({
                           type: "standard__recordPage",
                           attributes: {
-                              recordId: caseId,
+                              recordId: res,
                               objectApiName: "Case",
                               actionName: "view"
                           }
@@ -1833,30 +1785,54 @@ hasAnySearchCriteria(params) {
     }
   }
 
-  async _pollIntegrationJob(jobId) {
+  get isDisplayCreateCaseOnlyB2OrCash24() {
+    const hasB2OrCash24 = (this.loanB2Data && this.loanB2Data.length > 0) || (this.loanCash24Data && this.loanCash24Data.length > 0);
+    const hasOthers = (this.cardData && this.cardData.length > 0) || 
+                      (this.loanContractData && this.loanContractData.length > 0) || 
+                      (this.insuranceData && this.insuranceData.length > 0);
+    return hasB2OrCash24 && !hasOthers;
+  }
+
+  async _waitForAccountIntegration(caseId) {
       const MAX_ATTEMPTS = 45;
       const INTERVAL_MS = 2000;
-
-      if (!jobId) {
-          await new Promise((resolve) => setTimeout(resolve, INTERVAL_MS * 3));
-          return;
-      }
 
       for (let i = 0; i < MAX_ATTEMPTS; i++) {
           if (i > 0) {
               await new Promise((resolve) => setTimeout(resolve, INTERVAL_MS));
           }
-
           try {
-              const finished = await isIntegrationJobFinished({ jobId });
+              const finished = await isCaseIntegrationFinished({ caseId });
               if (finished) {
                   return;
               }
           } catch (e) {
-              console.error('Integration job polling error:', e);
+              console.error('Account integration polling error:', e);
           }
       }
-      console.warn('Integration job polling timeout, refreshing anyway.');
+  }
+
+  async _pollHistoryReady(caseId) {
+      const MAX_ATTEMPTS = 4;
+      const INTERVAL_MS  = 1000;
+
+      let historyId = await this._getHistoryIdFromCase(caseId);
+      if (!historyId) return; 
+
+      for (let i = 0; i < MAX_ATTEMPTS; i++) {
+          await new Promise(resolve => setTimeout(resolve, INTERVAL_MS));
+
+          try {
+              const status = await getHistoryStatus({ historyId });
+              if (status?.isReady) {
+                  return;
+              }
+          } catch (e) {
+              console.error('Polling error:', e);
+              return; 
+          }
+      }
+      console.warn('Polling timeout, refreshing anyway.');
   }
 
   async _getHistoryIdFromCase(caseId) {
