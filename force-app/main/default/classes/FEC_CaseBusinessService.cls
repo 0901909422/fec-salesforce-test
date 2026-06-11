@@ -950,7 +950,8 @@ public without sharing class FEC_CaseBusinessService {
         masterDatalst = FEC_CaseMasterDataHelper.filterRevertedAssignmentRowsByStageContext(
           masterDatalst,
           isCurrentStageRevertedContext,
-          result.revertConfirmAssessmentSourceStage
+          result.revertConfirmAssessmentSourceStage,
+          isRc2701OrRc2702
         );
         masterDatalst = FEC_CaseMasterDataHelper.filterAssignmentRowsByCurrentUserGroup(
           masterDatalst,
@@ -1157,7 +1158,8 @@ public without sharing class FEC_CaseBusinessService {
           if (
             FEC_CaseMasterDataHelper.shouldSkipRevertConfirmAssessmentField(
               result.revertConfirmAssessmentSourceStage,
-              fieldApiNameTemp
+              fieldApiNameTemp,
+              isRc2701OrRc2702
             )
           ) {
             continue;
@@ -1380,7 +1382,8 @@ public without sharing class FEC_CaseBusinessService {
 
         FEC_CaseMasterDataHelper.pruneRevertConfirmAssessmentSubSections(
           result.sectionlst,
-          result.revertConfirmAssessmentSourceStage
+          result.revertConfirmAssessmentSourceStage,
+          isRc2701OrRc2702
         );
 
         result.removeEmptySections();
