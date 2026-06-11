@@ -51,6 +51,9 @@
         <members>FEC_CaseDsTsSlaService</members>
         <members>FEC_CaseDsTsSlaService_Test</members>
         <members>FEC_CaseEditNOCController</members>
+        <members>FEC_CaseEditNOCController_Test</members>
+        <members>FEC_CaseTatFullProcessSvc</members>
+        <members>FEC_CaseTatFullProcessSvc_Test</members>
         <members>FEC_CaseTriggerHandler</members>
         <members>FEC_CaseTriggerHandler_Test</members>
         <members>FEC_ChannelFunctionService</members>
@@ -106,6 +109,7 @@
         <members>FEC_GetCardFinancialTransactions</members>
         <members>FEC_GetCardFinancialTransactions_Test</members>
         <members>FEC_GetCheckExistUser</members>
+        <members>FEC_GetCheckExistUser_Test</members>
         <members>FEC_GetInteractionCases</members>
         <members>FEC_GetInteractionCases_Test</members>
         <members>FEC_GetServiceCases</members>
@@ -132,6 +136,7 @@
         <members>FEC_SearchController</members>
         <members>FEC_SearchController_Test</members>
         <members>FEC_SecondaryController</members>
+        <members>FEC_SecondaryController_Test</members>
         <members>FEC_SecondaryInfoLoanAccountController</members>
         <members>FEC_SecondInfoLoanAccountController_Test</members>
         <members>FEC_TransactionsController</members>
@@ -151,17 +156,22 @@
         <members>FEC_RepaySchedPayHistController_Test</members>
         <members>FEC_DownloadReportController_Test</members>
         <members>FEC_OwnerTeamLookupSvc</members>
+        <members>FEC_OwnerTeamLookupSvc_Test</members>
         <members>FEC_RoutingHistTatSvc</members>
         <members>FEC_TeamGroupCodeUtil</members>
         <members>FEC_UMSUserManagementRestService</members>
         <members>FEC_UMSUserManagementRestService_Test</members>
         <members>FEC_BlockCodeRoutingService</members>
+        <members>FEC_BlockCodeRoutingService_Test</members>
         <members>FEC_ContentDocumentLinkTriggerHandler</members>
         <members>FEC_RefundRequestController</members>
         <members>FEC_RefundRequestController_Test</members>
         <members>FEC_CaseExecuteService</members>
+        <members>FEC_CaseExecuteService_Test</members>
         <members>FEC_MFASOUTSTANDINGAUTHINQ</members>
+        <members>FEC_MFASOUTSTANDINGAUTHINQ_Test</members>
         <members>FEC_MainInfoAccountController</members>
+        <members>FEC_MainInfoAccountController_Test</members>
         <members>FEC_HoldCaseController</members>
         <name>ApexClass</name>
     </types>

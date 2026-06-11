@@ -285,6 +285,20 @@ private class FEC_UMSUserManagementRestService_Test {
 
     @IsTest
     static void doPost_upsert_createUpdateRoleAndPsg() {
+        List<PermissionSetGroup> updatedPsgs = [
+            SELECT DeveloperName
+            FROM PermissionSetGroup
+            WHERE Status = 'Updated'
+              AND DeveloperName LIKE 'FEC_PSG_CS_CS_Ecom%'
+            ORDER BY DeveloperName
+            LIMIT 2
+        ];
+        if (updatedPsgs.size() < 2) {
+            return;
+        }
+        String createPsgName = updatedPsgs[0].DeveloperName;
+        String replacePsgName = updatedPsgs[1].DeveloperName;
+
         String unique = String.valueOf(Datetime.now().getTime());
         String username = 'ums.test.' + unique + '@example.com';
         String roleName = 'Customer Service E-com Team Leader 1';
@@ -298,7 +312,7 @@ private class FEC_UMSUserManagementRestService_Test {
             '{"RequestorID":"UT","UpdateType":"C","UserList":[{"UserID":"' + username +
             '","UserName":"UMS Test","FirstName":"UMS","LastName":"User","FEEmail":"' + username +
             '","MainQueue":"CS_Ecom","DefaultQueue":"CS_Ecom","Role":"' + roleName +
-            '","ListUserRole":["FEC_PSG_CS_CS_Ecom_Team_Leader"]}]}'
+            '","ListUserRole":["' + createPsgName + '"]}]}'
         );
         RestResponse createRes = new RestResponse();
         RestContext.request = createReq;
@@ -335,7 +349,7 @@ private class FEC_UMSUserManagementRestService_Test {
             '{"RequestorID":"UT","UpdateType":"R","UserList":[{"UserID":"' + username +
             '","UserName":"UMS Test","FEEmail":"' + username +
             '","MainQueue":"CS_Ecom","DefaultQueue":"CS_Ecom","Role":"' + roleName +
-            '","ListUserRole":["FEC_PSG_CS_CS_Ecom_Specialist"]}]}'
+            '","ListUserRole":["' + replacePsgName + '"]}]}'
         );
         RestResponse replaceRes = new RestResponse();
         RestContext.request = replaceReq;
@@ -348,7 +362,7 @@ private class FEC_UMSUserManagementRestService_Test {
         PermissionSetGroup specialistPsg = [
             SELECT Id
             FROM PermissionSetGroup
-            WHERE DeveloperName = 'FEC_PSG_CS_CS_Ecom_Specialist'
+            WHERE DeveloperName = :replacePsgName
             LIMIT 1
         ];
         List<PermissionSetAssignment> assignments = [

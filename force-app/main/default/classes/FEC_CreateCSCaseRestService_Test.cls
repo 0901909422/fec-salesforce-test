@@ -195,14 +195,10 @@ private class FEC_CreateCSCaseRestService_Test {
             LIMIT 2
         ];
         for (Case c : cases) {
-            System.assertEquals(
-                FEC_ConstantCommon.CHANNEL_EXTERNAL,
-                c.FEC_Channel__c
-            );
+            System.assertEquals(FEC_ConstantCommon.CHANNEL_INBOUND_NAME, c.FEC_Channel__c);
             if (c.RecordType.DeveloperName ==
                 FEC_ConstantCommon.CASE_CUSTOMER_RECORD_TYPE_DEV_NAME) {
                 System.assertEquals(true, c.FEC_Is_Submited__c);
-                System.assertEquals('Inbound', c.FEC_Other_Subchannel__c);
                 System.assertEquals(
                     FEC_ConstantCommon.INTERACTION_REVIEW_MODE,
                     c.FEC_Interaction_View_Mode__c

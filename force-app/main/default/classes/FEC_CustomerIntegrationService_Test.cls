@@ -3,6 +3,19 @@ private class FEC_CustomerIntegrationService_Test {
 
     private static final String ACCOUNT_NUMBER = '1234567890123456';
 
+    private static void linkCaseForCardSync(Case c, FEC_Customer_History__c hist) {
+        FEC_CaseTriggerHandler.isExecuting = true;
+        try {
+            update new Case(
+                Id = c.Id,
+                FEC_Account_Number__c = ACCOUNT_NUMBER,
+                FEC_Account_or_Contract__c = hist.Id
+            );
+        } finally {
+            FEC_CaseTriggerHandler.isExecuting = false;
+        }
+    }
+
     private class CustomerIntegrationMock implements HttpCalloutMock {
         public HttpResponse respond(HttpRequest req) {
             String endpoint = req.getEndpoint() != null ? req.getEndpoint().toLowerCase() : '';
@@ -233,6 +246,7 @@ private class FEC_CustomerIntegrationService_Test {
             FEC_National_ID_Passport_ID__c = '123456789'
         );
         insert hist;
+        linkCaseForCardSync(c, hist);
 
         hist = FEC_CustomerIntegrationService.queryHistoryForSync(hist.Id);
 
@@ -278,9 +292,11 @@ private class FEC_CustomerIntegrationService_Test {
 
         FEC_Customer_History__c hist = new FEC_Customer_History__c(
             FEC_Case__c = c.Id,
+            FEC_Account_Number__c = ACCOUNT_NUMBER,
             FEC_National_ID_Passport_ID__c = '123456789'
         );
         insert hist;
+        linkCaseForCardSync(c, hist);
 
         hist = FEC_CustomerIntegrationService.queryHistoryForSync(hist.Id);
 
@@ -293,9 +309,7 @@ private class FEC_CustomerIntegrationService_Test {
 
         System.assertNotEquals(null, result);
         System.assertEquals('DOC-SYNC-001', result.nationalId);
-        if (result.plasticID != null) {
-            System.assertEquals('PLASTIC-001', result.plasticID);
-        }
+        System.assertEquals('PLASTIC-001', result.plasticID);
     }
 
     @IsTest
@@ -673,6 +687,7 @@ private class FEC_CustomerIntegrationService_Test {
             FEC_National_ID_Passport_ID__c = '123456789'
         );
         insert hist;
+        linkCaseForCardSync(c, hist);
 
         insert new FEC_IPP__c(
             FEC_Customer_History__c = hist.Id,
@@ -956,6 +971,7 @@ private class FEC_CustomerIntegrationService_Test {
             FEC_National_ID_Passport_ID__c = '123456789'
         );
         insert hist;
+        linkCaseForCardSync(c, hist);
 
         insert new FEC_Address_Info__c(
             Name = 'Office Address',
@@ -1233,6 +1249,7 @@ private class FEC_CustomerIntegrationService_Test {
             FEC_National_ID_Passport_ID__c = '123456789'
         );
         insert hist;
+        linkCaseForCardSync(parentCase, hist);
 
         FEC_CaseTriggerHandler.isExecuting = true;
         try {
