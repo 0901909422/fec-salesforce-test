@@ -113,4 +113,9 @@ private class FEC_GetCardFinancialTransactions_Test {
             return res;
         }
     }
+
+    @IsTest
+    static void testLogApiResponse_Null() {
+        FEC_GetCardFinancialTransactions.logApiResponse();
+    }
 }

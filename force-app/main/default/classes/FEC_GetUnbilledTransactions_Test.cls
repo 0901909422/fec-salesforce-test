@@ -97,4 +97,9 @@ private class FEC_GetUnbilledTransactions_Test {
             return res;
         }
     }
+
+    @IsTest
+    static void testLogApiResponse_Null() {
+        FEC_GetUnbilledTransactions.logApiResponse();
+    }
 }

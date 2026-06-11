@@ -11,6 +11,8 @@
 ****************************************************************************************/
  
 public with sharing class FEC_GetUnbilledTransactions {
+
+    private static FEC_ResponseLog responseLog;
  
     // =========================================================================
     // PUBLIC METHOD
@@ -45,6 +47,15 @@ public with sharing class FEC_GetUnbilledTransactions {
                 ? FEC_MockupEndpoint.GET_UNBILLED_TRANSACTION_ENDPOINT_MOCKUP
                 : (apiSetting?.FEC_Endpoint__c + apiConfig?.FEC_Endpoint__c);
             HttpResponse res = FEC_CommonUltils.calloutApi(endpoint, 'POST', FEC_ConstantCommon.API_CONTENT_TYPE, apiConfig?.FEC_SOAP_Action__c, null, soapBody);
+
+            responseLog = new FEC_ResponseLog(
+                'FEC_GetUnbilledTransactions',
+                endpoint,
+                FEC_ConstantCommon.API_METHOD_POST,
+                soapBody,
+                res,
+                null
+            );
             
             if (res.getStatusCode() != 200 || String.isBlank(res.getBody())) {
                 throw new CalloutException(
@@ -63,9 +74,19 @@ public with sharing class FEC_GetUnbilledTransactions {
             return response;
  
         } catch (Exception ex) {
+            if (responseLog != null) {
+                responseLog.errorMessage = ex.getMessage();
+            }
             System.debug('### UNBILLED TXN ERROR: ' + ex.getMessage());
             throw ex;
+        } finally {
+            logApiResponse();
         }
+    }
+
+    public static void logApiResponse() {
+        FEC_CommonUltils.logApiResponse(responseLog);
+        responseLog = null;
     }
 
     /* =====================================================
