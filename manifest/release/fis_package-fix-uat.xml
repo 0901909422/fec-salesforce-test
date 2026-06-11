@@ -34,6 +34,8 @@
         <members>FEC_BCH_ImportValidateQueueable</members>
         <members>FEC_BCH_ImportValidateQueueable_Test</members>
         <members>FEC_BCH_TemplateExportService</members>
+        <members>FEC_BatchCaseCreationController</members>
+        <members>FEC_BatchCaseCreationController_Test</members>
         <members>FEC_BatchCaseCreationService</members>
         <members>FEC_BatchCaseCreationService_Test</members>
         <members>FEC_BatchCaseHandlingImportQueueable</members>
