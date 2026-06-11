@@ -41,6 +41,7 @@ import SkipModal from "c/fec_SkipModal";
 import createInternalCase from "@salesforce/apex/FEC_CreateCaseHandler.createInternalCase";
 import createInternalCaseOnSkip from "@salesforce/apex/FEC_SearchController.createInternalCaseOnSkip";
 import getHistoryStatus from '@salesforce/apex/FEC_SearchController.getHistoryStatus';
+import isCaseIntegrationFinished from '@salesforce/apex/FEC_SearchController.isCaseIntegrationFinished';
 import getCaseRecordTypeDevName from "@salesforce/apex/FEC_CreateCaseHandler.getCaseRecordTypeDevName";
 import {
   publish,
@@ -1776,6 +1777,9 @@ hasAnySearchCriteria(params) {
             this.showToast("Success", "History created successfully", "success");
             
             if (this.recordId) {
+                if (action.label.fieldName === 'AccountNumber') {
+                    await this._waitForAccountIntegration(this.recordId);
+                }
                 this.handlePublishMessageChanel();
                 await notifyRecordUpdateAvailable([{ recordId: this.recordId }]);
                 this.dispatchEvent(new RefreshEvent());
@@ -1820,6 +1824,25 @@ hasAnySearchCriteria(params) {
                       (this.loanContractData && this.loanContractData.length > 0) || 
                       (this.insuranceData && this.insuranceData.length > 0);
     return hasB2OrCash24 && !hasOthers;
+  }
+
+  async _waitForAccountIntegration(caseId) {
+      const MAX_ATTEMPTS = 45;
+      const INTERVAL_MS = 2000;
+
+      for (let i = 0; i < MAX_ATTEMPTS; i++) {
+          if (i > 0) {
+              await new Promise((resolve) => setTimeout(resolve, INTERVAL_MS));
+          }
+          try {
+              const finished = await isCaseIntegrationFinished({ caseId });
+              if (finished) {
+                  return;
+              }
+          } catch (e) {
+              console.error('Account integration polling error:', e);
+          }
+      }
   }
 
   async _pollHistoryReady(caseId) {

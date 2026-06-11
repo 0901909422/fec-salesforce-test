@@ -513,6 +513,41 @@ public with sharing class FEC_SearchController {
     }
 
     @AuraEnabled
+    public static Boolean isCaseIntegrationFinished(Id caseId) {
+        if (caseId == null) {
+            return true;
+        }
+
+        List<FEC_Customer_History__c> histories = [
+            SELECT CreatedDate
+            FROM FEC_Customer_History__c
+            WHERE FEC_Case__c = :caseId
+            ORDER BY CreatedDate DESC
+            LIMIT 1
+        ];
+        if (histories.isEmpty()) {
+            return true;
+        }
+
+        List<AsyncApexJob> jobs = [
+            SELECT Status
+            FROM AsyncApexJob
+            WHERE ApexClass.Name = 'FEC_FullCustomerIntegrationJob'
+              AND CreatedDate >= :histories[0].CreatedDate
+            ORDER BY CreatedDate DESC
+            LIMIT 1
+        ];
+        if (jobs.isEmpty()) {
+            return false;
+        }
+
+        String status = jobs[0].Status;
+        return status == 'Completed'
+            || status == 'Failed'
+            || status == 'Aborted';
+    }
+
+    @AuraEnabled
     public static Map<String, Object> getHistoryStatus(Id historyId) {
         try {
             FEC_Customer_History__c hist = [
