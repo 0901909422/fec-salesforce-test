@@ -364,7 +364,9 @@ private class FEC_InteractionInforHandler_Test {
         FEC_InteractionInforHandler.updateChatInteractionFields(
             interaction.Id,
             'chat_user',
-            '0987654321'
+            '0987654321',
+            null,
+            null
         );
         Map<String, Object> missing = FEC_InteractionInforHandler.getChatInteractionInfo(fakeCaseId());
         Test.stopTest();
@@ -386,7 +388,7 @@ private class FEC_InteractionInforHandler_Test {
     @IsTest
     static void testUpdateChatInteractionFields_NullRecordId() {
         Test.startTest();
-        FEC_InteractionInforHandler.updateChatInteractionFields(null, 'user', '0901111111');
+        FEC_InteractionInforHandler.updateChatInteractionFields(null, 'user', '0901111111', null, null);
         Test.stopTest();
         System.assert(true, 'Null recordId phải return sớm không lỗi.');
     }

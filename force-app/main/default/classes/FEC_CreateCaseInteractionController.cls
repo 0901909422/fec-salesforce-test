@@ -91,7 +91,6 @@ public with sharing class FEC_CreateCaseInteractionController {
       if (caseId == null) {
         throw new AuraHandledException(String.format(System.Label.FEC_MSG_Param_Required, new List<String>{'Case Id'}));
       }
-      FEC_InteractionInforHandler.assertInteractionEmailForAction(caseId);
 
       // 2. Get interaction case
       Case interaction = [
