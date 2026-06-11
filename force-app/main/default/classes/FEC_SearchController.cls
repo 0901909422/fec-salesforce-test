@@ -1,4 +1,8 @@
 public with sharing class FEC_SearchController {
+    public class CreateHistoryResult {
+        @AuraEnabled public Id caseId;
+        @AuraEnabled public Id integrationJobId;
+    }
     /**
      * Returns minimal Case context for fec_Search initialization.
      * Selects only fields needed by the component.
@@ -66,7 +70,7 @@ public with sharing class FEC_SearchController {
     }
 
     @AuraEnabled
-    public static Id createHistory(String value, String fieldName, Id caseId, String searchProducts, String selectedType, String cifNumber, String phone, 
+    public static CreateHistoryResult createHistory(String value, String fieldName, Id caseId, String searchProducts, String selectedType, String cifNumber, String phone, 
                 String customerName, String applicationId, Boolean isListView, String policyNumber, String buyerNID, String searchNationalId2 ) {
     // 1. Validation
     if (String.isBlank(value) || String.isBlank(fieldName)) {
@@ -293,16 +297,19 @@ public with sharing class FEC_SearchController {
         update objCase;
 
         // ===== CALL API Demographic  =====
-       System.enqueueJob(
+        Id integrationJobId = System.enqueueJob(
             new FEC_FullCustomerIntegrationJob(
-            rec.Id,
-            cifNumber,
-            phone,
+                rec.Id,
+                cifNumber,
+                phone,
                 fieldName == 'AccountNumber' ? value : null
-                )
+            )
         );
 
-        return objCase.Id;
+        CreateHistoryResult createResult = new CreateHistoryResult();
+        createResult.caseId = objCase.Id;
+        createResult.integrationJobId = integrationJobId;
+        return createResult;
         } catch (Exception e) {
             throw new AuraHandledException('Line: ' + e.getLineNumber() + ' | Type: ' + e.getTypeName() + ' | Msg: ' + e.getMessage());
         }
@@ -320,15 +327,10 @@ public with sharing class FEC_SearchController {
             List<Map<String, String>> rows = new List<Map<String, String>>();
             if (res != null && res.success && res.histories != null) {
                 for (FEC_GetLoanApplicationHistory.ApplicationHistory h : res.histories) {
-                    String statusLabel = FEC_GetLoanApplicationHistory.resolveStatusLabel(
-                        h.statusId
-                    );
                     rows.add(new Map<String, String>{
                         'user'     => h.userName,
                         'activity' => h.activityId,
-                        'status'   => String.isNotBlank(statusLabel)
-                            ? statusLabel
-                            : h.statusId,
+                        'status'   => h.statusId,
                         'editDate' => h.editDate
                     });
                 }
@@ -517,6 +519,29 @@ public with sharing class FEC_SearchController {
     }
 
     @AuraEnabled
+    public static Boolean isIntegrationJobFinished(Id jobId) {
+        if (jobId == null) {
+            return false;
+        }
+
+        List<AsyncApexJob> jobs = [
+            SELECT Status
+            FROM AsyncApexJob
+            WHERE Id = :jobId
+            LIMIT 1
+        ];
+
+        if (jobs.isEmpty()) {
+            return false;
+        }
+
+        String status = jobs[0].Status;
+        return status == 'Completed'
+            || status == 'Failed'
+            || status == 'Aborted';
+    }
+
+    @AuraEnabled
     public static Map<String, Object> getHistoryStatus(Id historyId) {
         try {
             FEC_Customer_History__c hist = [
@@ -533,13 +558,13 @@ public with sharing class FEC_SearchController {
                 LIMIT 1
             ];
 
-          Boolean isReady = 
-                    String.isNotBlank(hist.FEC_Customer_Name__c)
-                    || String.isNotBlank(hist.FEC_Primary_Phone__c)
-                    || hist.FEC_Date_of_Birth__c != null
-                    || String.isNotBlank(hist.FEC_Gender__c)
-                    || String.isNotBlank(hist.FEC_Email__c)
-                    || String.isNotBlank(hist.FEC_Plastic_ID__c);
+            Boolean isReady =
+                String.isNotBlank(hist.FEC_Customer_Name__c)
+                || String.isNotBlank(hist.FEC_Primary_Phone__c)
+                || hist.FEC_Date_of_Birth__c != null
+                || String.isNotBlank(hist.FEC_Gender__c)
+                || String.isNotBlank(hist.FEC_Email__c)
+                || String.isNotBlank(hist.FEC_Plastic_ID__c);
             return new Map<String, Object>{
                 'isReady'      => isReady,
                 'customerName' => hist.FEC_Customer_Name__c,

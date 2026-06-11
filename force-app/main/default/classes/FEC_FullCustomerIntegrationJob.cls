@@ -137,12 +137,8 @@ public with sharing class FEC_FullCustomerIntegrationJob
             FROM Case
             WHERE FEC_Account_or_Contract__c = :req.historyId
         ];
-        Id caseId = hist.FEC_Case__c;
         if (!cases.isEmpty()) {
             for (Case c : cases) {
-                if (caseId == null) {
-                    caseId = c.Id;
-                }
                 if (result != null && String.isNotBlank(result.customerName)) {
                     c.FEC_Recipient_Name__c = result.customerName;
                 }
@@ -155,18 +151,5 @@ public with sharing class FEC_FullCustomerIntegrationJob
             update cases;
             FEC_CaseTriggerHandler.isExecuting = false;
         }
-
-        publishIntegrationRefresh(caseId);
-    }
-
-    private static void publishIntegrationRefresh(Id caseId) {
-        if (caseId == null) {
-            return;
-        }
-        EventBus.publish(
-            new FEC_Customer_Integration_Refresh__e(
-                FEC_Case_Id__c = String.valueOf(caseId)
-            )
-        );
     }
 }
