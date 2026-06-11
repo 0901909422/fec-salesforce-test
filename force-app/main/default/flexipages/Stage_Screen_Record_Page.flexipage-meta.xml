@@ -78,6 +78,16 @@
                     <name>uiBehavior</name>
                     <value>none</value>
                 </fieldInstanceProperties>
+                <fieldItem>Record.FEC_Custom_Action_Button_Label__c</fieldItem>
+                <identifier>RecordFEC_Custom_Action_Button_Label_cField</identifier>
+            </fieldInstance>
+        </itemInstances>
+        <itemInstances>
+            <fieldInstance>
+                <fieldInstanceProperties>
+                    <name>uiBehavior</name>
+                    <value>none</value>
+                </fieldInstanceProperties>
                 <fieldItem>Record.FEC_Active__c</fieldItem>
                 <identifier>RecordFEC_Active_cField</identifier>
             </fieldInstance>

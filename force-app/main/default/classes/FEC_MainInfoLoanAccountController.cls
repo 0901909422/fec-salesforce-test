@@ -5,6 +5,7 @@ public with sharing class FEC_MainInfoLoanAccountController {
         Id customerHistoryId;
         String contractNumber;
         String accountNumber;
+        String applicationId;
     }
 
     /** Sync Loan Account từ API (GetLoanBasicInfo + GetCustomerList + GetLoanSecInfo) → FEC_Customer_History__c. */
@@ -24,7 +25,11 @@ public with sharing class FEC_MainInfoLoanAccountController {
             return;
         }
 
-        ApiLoanAccountData apiData = fetchLoanAccountFromApis(ctx.contractNumber, ctx.accountNumber);
+        ApiLoanAccountData apiData = fetchLoanAccountFromApis(
+            ctx.contractNumber,
+            ctx.accountNumber,
+            ctx.applicationId
+        );
         saveApiDataToCustomerHistory(
             ctx.customerHistoryId,
             apiData.loanResponse,
@@ -53,7 +58,11 @@ public with sharing class FEC_MainInfoLoanAccountController {
             );
         }
 
-        ApiLoanAccountData apiData = fetchLoanAccountFromApis(ctx.contractNumber, ctx.accountNumber);
+        ApiLoanAccountData apiData = fetchLoanAccountFromApis(
+            ctx.contractNumber,
+            ctx.accountNumber,
+            ctx.applicationId
+        );
 
         saveApiDataToCustomerHistory(
             ctx.customerHistoryId,
@@ -84,7 +93,8 @@ public with sharing class FEC_MainInfoLoanAccountController {
             SELECT Id,
                    FEC_Account_or_Contract__c,
                    FEC_Account_or_Contract__r.FEC_Contract_Number__c,
-                   FEC_Account_or_Contract__r.FEC_Account_Number__c
+                   FEC_Account_or_Contract__r.FEC_Account_Number__c,
+                   FEC_Account_or_Contract__r.FEC_Application_ID__c
             FROM Case
             WHERE Id = :caseId
             LIMIT 1
@@ -98,12 +108,14 @@ public with sharing class FEC_MainInfoLoanAccountController {
         ctx.customerHistoryId = c.FEC_Account_or_Contract__c;
         ctx.contractNumber = c.FEC_Account_or_Contract__r.FEC_Contract_Number__c;
         ctx.accountNumber = c.FEC_Account_or_Contract__r.FEC_Account_Number__c;
+        ctx.applicationId = c.FEC_Account_or_Contract__r.FEC_Application_ID__c;
         return ctx;
     }
 
     private static ApiLoanAccountData fetchLoanAccountFromApis(
         String contractNumber,
-        String accountNumber
+        String accountNumber,
+        String applicationId
     ) {
         String transId = FEC_CommonUltils.generateTransactionId();
         String dateTimeStr = Datetime.now().formatGMT(FEC_ConstantCommon.DATETIME_FORMAT);
@@ -124,24 +136,7 @@ public with sharing class FEC_MainInfoLoanAccountController {
                 FEC_GetLoanBasicInfo.logApiResponse();
             }
 
-            if (String.isNotBlank(accountNumber)) {
-                try {
-                    FEC_GetCustomerList.ResponseWrapper custResponse = FEC_GetCustomerList.getCustomerList(
-                        FEC_ConstantCommon.REQUESTOR_CRM, null, false, null, null, null, null,
-                        accountNumber, null, null, null
-                    );
-                    Map<String, String> scheme = extractScheme(custResponse, contractNumber);
-                    data.schemeID = scheme.get('schemeID');
-                    data.schemeDesc = scheme.get('schemeDesc');
-                } catch (Exception e) {
-                    if (FEC_GetCustomerList.responseLog != null) {
-                        FEC_GetCustomerList.responseLog.errorMessage = e.getMessage();
-                    }
-                    System.debug('### GET CUSTOMER LIST ERROR: ' + e.getMessage());
-                } finally {
-                    FEC_CommonUltils.logApiResponse(FEC_GetCustomerList.responseLog);
-                }
-            }
+            fetchSchemeFromCustomerList(data, contractNumber, accountNumber, applicationId);
 
             try {
                 FEC_GetLoanSecInfo.ResponseWrapper secResponse = FEC_GetLoanSecInfo.callGetLoanSecInfo(
@@ -293,11 +288,74 @@ public with sharing class FEC_MainInfoLoanAccountController {
         return null;
     }
 
-    /* Extract schemeID/schemeDesc from GetCustomerList by contractNumber */
+    private static void fetchSchemeFromCustomerList(
+        ApiLoanAccountData data,
+        String contractNumber,
+        String accountNumber,
+        String applicationId
+    ) {
+        String resolvedApplicationId = String.isNotBlank(applicationId)
+            ? applicationId
+            : data.loanResponse?.LoanBasicInfo?.Loan?.ApplicationID;
+
+        if (String.isBlank(accountNumber)
+            && String.isBlank(resolvedApplicationId)
+            && String.isBlank(contractNumber)) {
+            return;
+        }
+
+        try {
+            FEC_GetCustomerList.ResponseWrapper custResponse = callGetCustomerListForScheme(
+                accountNumber,
+                resolvedApplicationId,
+                contractNumber
+            );
+            Map<String, String> scheme = extractScheme(
+                custResponse,
+                contractNumber,
+                resolvedApplicationId
+            );
+            data.schemeID = scheme.get('schemeID');
+            data.schemeDesc = scheme.get('schemeDesc');
+        } catch (Exception e) {
+            if (FEC_GetCustomerList.responseLog != null) {
+                FEC_GetCustomerList.responseLog.errorMessage = e.getMessage();
+            }
+            System.debug('### GET CUSTOMER LIST ERROR: ' + e.getMessage());
+        } finally {
+            FEC_CommonUltils.logApiResponse(FEC_GetCustomerList.responseLog);
+        }
+    }
+
+    private static FEC_GetCustomerList.ResponseWrapper callGetCustomerListForScheme(
+        String accountNumber,
+        String applicationId,
+        String contractNumber
+    ) {
+        if (String.isNotBlank(accountNumber)) {
+            return FEC_GetCustomerList.getCustomerList(
+                FEC_ConstantCommon.REQUESTOR_CRM, null, false, null, null, null, null,
+                accountNumber, null, null, null
+            );
+        }
+        if (String.isNotBlank(applicationId)) {
+            return FEC_GetCustomerList.getCustomerList(
+                FEC_ConstantCommon.REQUESTOR_CRM, null, false, null, null, applicationId, null,
+                null, null, null, null
+            );
+        }
+        return FEC_GetCustomerList.getCustomerList(
+            FEC_ConstantCommon.REQUESTOR_CRM, null, false, null, null, null, null,
+            null, contractNumber, null, null
+        );
+    }
+
+    /* Extract schemeID/schemeDesc from GetCustomerList by contractNumber or applicationId */
 
     private static Map<String, String> extractScheme(
         FEC_GetCustomerList.ResponseWrapper response,
-        String contractNumber
+        String contractNumber,
+        String applicationId
     ) {
         Map<String, String> scheme = new Map<String, String>();
         if (response?.Customers == null || response.Customers.isEmpty()) {
@@ -305,10 +363,15 @@ public with sharing class FEC_MainInfoLoanAccountController {
         }
 
         for (FEC_GetCustomerList.Customer customer : response.Customers) {
-            if (customer.Applications == null) continue;
+            if (customer.Applications == null) {
+                continue;
+            }
             for (FEC_GetCustomerList.Application app : customer.Applications) {
-                if (String.isNotBlank(contractNumber)
-                    && contractNumber.equals(app.ContractNumber)) {
+                Boolean contractMatch = String.isNotBlank(contractNumber)
+                    && contractNumber.equals(app.ContractNumber);
+                Boolean applicationMatch = String.isNotBlank(applicationId)
+                    && applicationId.equals(app.ApplicationID);
+                if (contractMatch || applicationMatch) {
                     scheme.put('schemeID', app.SchemeID);
                     scheme.put('schemeDesc', app.SchemeDesc);
                     return scheme;

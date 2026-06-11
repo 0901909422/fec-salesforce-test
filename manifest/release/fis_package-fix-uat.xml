@@ -170,6 +170,8 @@
     <types>
         <members>FEC_Customer_Case_Record_Page</members>
         <members>Master_Data_Setting_Record_Page</members>
+        <members>Stage_Change_Record_Page</members>
+		<members>Stage_Screen_Record_Page</members>
         <name>FlexiPage</name>
     </types>
     <types>
@@ -208,6 +210,7 @@
         <members>fec_IPPDetails</members>
         <members>fec_NocChannelConfig</members>
         <members>fec_PendingServiceCases</members>
+        <members>fec_ClosedServiceCases</members>
         <members>fec_RdPaymentRoutingUtils</members>
         <members>fec_RelatedListPaging</members>
         <members>fec_customerAdditionalData</members>
@@ -263,6 +266,7 @@
         <members>FEC_INTERACTION_PHONE_REQUIRED</members>
         <members>FEC_Email_File_Already_In_Email</members>
         <members>FEC_Manual_Chat_Customer_Username_Required</members>
+        <members>FEC_MSG_ApplicationID_Invalid</members>
         <name>CustomLabel</name>
     </types>
     <types>

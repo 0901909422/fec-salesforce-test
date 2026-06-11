@@ -1472,7 +1472,7 @@ hasAnySearchCriteria(params) {
       const row = this.cardData.find(r => r.AccountNumber === key);
       applicationId = row?.ApplicationID;
     } else if (fieldName === 'ContractNumber') {
-      const row = this.loanContractData.find(r => r.ContractNumber === key);
+      const row = this.loanContractData.find(r => r.ContractNumber === key) || this.cardData.find(r => r.ContractNumber === key);
       applicationId = row?.ApplicationID;
     }
     if (!applicationId) return;
@@ -1507,7 +1507,7 @@ hasAnySearchCriteria(params) {
       const row = this.cardData.find(r => r.AccountNumber === key);
       applicationId = row?.ApplicationID;
     } else if (fieldName === 'ContractNumber') {
-      const row = this.loanContractData.find(r => r.ContractNumber === key);
+      const row = this.loanContractData.find(r => r.ContractNumber === key) || this.cardData.find(r => r.ContractNumber === key);
       applicationId = row?.ApplicationID;
     }
     if (!applicationId) return;

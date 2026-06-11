@@ -1,5 +1,5 @@
 import { LightningElement, api, track, wire } from 'lwc';
-import { NavigationMixin } from 'lightning/navigation';
+import { NavigationMixin, CurrentPageReference } from 'lightning/navigation';
 import getAllInteractions from '@salesforce/apex/FEC_GetInteractionCases.getAllInteractions';
 import getCaseFieldHelpTexts from '@salesforce/apex/FEC_GetInteractionCases.getCaseFieldHelpTexts';
 import logSensitiveAccess from '@salesforce/apex/FEC_InteractionHighlightController.logSensitiveAccess';
@@ -17,7 +17,23 @@ import FEC_Interaction_Channel_Label from '@salesforce/label/c.FEC_Interaction_C
 import FEC_Interaction_Sub_Channel_Label from '@salesforce/label/c.FEC_Interaction_Sub_Channel_Label';
 
 export default class Fec_InteractionCases extends NavigationMixin(LightningElement) {
-  @api recordId;
+  _recordId;
+  _connected = false;
+
+  @api
+  get recordId() {
+    return this._recordId;
+  }
+  set recordId(value) {
+    if (!value || value === this._recordId) {
+      return;
+    }
+    this._recordId = value;
+    if (this._connected) {
+      this.fetchData();
+    }
+  }
+
   @track data = [];
   @track lastRefreshTime = null;
   @track isLoading = false;
@@ -95,19 +111,34 @@ export default class Fec_InteractionCases extends NavigationMixin(LightningEleme
     return this.data && this.data.length > 0;
   }
 
+  @wire(CurrentPageReference)
+  handlePageRef(pageRef) {
+    const idFromPage = pageRef?.attributes?.recordId;
+    if (!idFromPage || idFromPage === this._recordId) {
+      return;
+    }
+    this._recordId = idFromPage;
+    if (this._connected) {
+      this.fetchData();
+    }
+  }
+
   connectedCallback() {
-    this.fetchData();
+    this._connected = true;
+    if (this._recordId) {
+      this.fetchData();
+    }
   }
 
   async fetchData() {
-    if (!this.recordId) {
+    if (!this._recordId) {
       this.data = [];
       return;
     }
     this.isLoading = true;
     this.error = undefined;
     try {
-      const result = await getAllInteractions({ recordId: this.recordId });
+      const result = await getAllInteractions({ recordId: this._recordId });
       this.lastRefreshTime = new Date().toISOString();
       this.data = (result || []).map((row) => ({
         ...row,
