@@ -271,8 +271,6 @@ const FIELD_OLD_CITIZEN_ID_NUMBER = "FEC_Old_Citizen_ID_Number__c";
 const FIELD_ORIGINAL_INFO_NATIONAL_ID = "FEC_Original_Info_National_ID__c";
 const FIELD_UPDATED_INFO_NATIONAL_ID = "FEC_Updated_Info_National_ID__c";
 const FIELD_NATIONAL_ID_PASSPORT_ID = "FEC_National_ID_Passport_ID__c";
-const FIELD_NATIONAL_ID = "FEC_National_ID__c";
-const FIELD_FEOL_ID = "FEC_FEOL_ID__c";
 const OBJ_FEC_ADDITIONAL_INFO = "FEC_Additional_Info__c";
 const FIELD_FEC_REF_NUMBER = "FEC_REF_Number__c";
 const NATIONAL_ID_PASSPORT_FIELDS = new Set([
@@ -3578,8 +3576,6 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
     const nationalIdOnlyFields = [
       FIELD_NEW_CITIZEN_ID_NUMBER,
       FIELD_OLD_CITIZEN_ID_NUMBER,
-      FIELD_NATIONAL_ID,
-      FIELD_FEOL_ID,
     ];
     const nationalIdOrPassportFields = [FIELD_UPDATED_INFO_NATIONAL_ID];
 
@@ -3864,17 +3860,6 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
       this.business = { ...this.business };
     }
     if (fieldName === FIELD_OLD_CITIZEN_ID_NUMBER && field) {
-      const trimmed =
-        value != null && typeof value === "string" ? value.trim() : STR_EMPTY;
-      const idResult = validateNationalId(value);
-      field.customError =
-        trimmed === STR_EMPTY ? null : idResult.isValid ? null : idResult.message;
-      field.editWrapperClass =
-        "edit slds-m-around--small slds-p-around--x-small" +
-        (field.customError ? " slds-has-error" : STR_EMPTY);
-      this.business = { ...this.business };
-    }
-    if ((fieldName === FIELD_NATIONAL_ID || fieldName === FIELD_FEOL_ID) && field) {
       const trimmed =
         value != null && typeof value === "string" ? value.trim() : STR_EMPTY;
       const idResult = validateNationalId(value);
