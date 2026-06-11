@@ -49,8 +49,30 @@
             <!-- KYC Status -->
             <div class="fec-info-row">
               <span class="fec-info-label">{labels.kycStatus}</span>
-              <span class="fec-info-value">{kycStatus}</span>
-              <span class="fec-info-action"></span>
+              <span class="fec-info-value">
+                <template if:true={isKycStatusReadOnly}>
+                  {kycStatus}
+                </template>
+                <template if:false={isKycStatusReadOnly}>
+                  <lightning-input type="text" value={kycDraft} onchange={handleKycStatusChange}
+                    variant="label-hidden"></lightning-input>
+                  <template if:true={kycError}>
+                    <span class="fec-error-text">{kycError}</span>
+                  </template>
+                </template>
+              </span>
+              <span class="fec-info-action">
+                <template if:true={showKycStatusEditIcon}>
+                  <lightning-icon icon-name="utility:edit" size="x-small" class="fec-edit-icon"
+                    onclick={handleEditKycStatus} title="Edit"></lightning-icon>
+                </template>
+                <template if:true={isEditingKycStatus}>
+                  <lightning-icon icon-name="utility:check" size="x-small" class="fec-edit-icon fec-save-icon"
+                    onclick={handleSaveKycStatus} title="Save"></lightning-icon>
+                  <lightning-icon icon-name="utility:close" size="x-small" class="fec-edit-icon"
+                    onclick={handleCancelEditKycStatus} title="Cancel"></lightning-icon>
+                </template>
+              </span>
             </div>
             <template if:true={showClosedOnlyFields}>
               <div class="fec-info-row">
@@ -105,8 +127,30 @@
             <!-- External Interaction ID -->
             <div class="fec-info-row">
               <span class="fec-info-label">{labels.externalInteractionId}</span>
-              <span class="fec-info-value">{externalInteractionId}</span>
-              <span class="fec-info-action"></span>
+              <span class="fec-info-value">
+                <template if:true={isExternalInteractionIdReadOnly}>
+                  {externalInteractionId}
+                </template>
+                <template if:false={isExternalInteractionIdReadOnly}>
+                  <lightning-input type="text" value={externalInteractionIdDraft} onchange={handleExternalInteractionIdChange}
+                    variant="label-hidden"></lightning-input>
+                  <template if:true={externalInteractionIdError}>
+                    <span class="fec-error-text">{externalInteractionIdError}</span>
+                  </template>
+                </template>
+              </span>
+              <span class="fec-info-action">
+                <template if:true={showExternalInteractionIdEditIcon}>
+                  <lightning-icon icon-name="utility:edit" size="x-small" class="fec-edit-icon"
+                    onclick={handleEditExternalInteractionId} title="Edit"></lightning-icon>
+                </template>
+                <template if:true={isEditingExternalInteractionId}>
+                  <lightning-icon icon-name="utility:check" size="x-small" class="fec-edit-icon fec-save-icon"
+                    onclick={handleSaveExternalInteractionId} title="Save"></lightning-icon>
+                  <lightning-icon icon-name="utility:close" size="x-small" class="fec-edit-icon"
+                    onclick={handleCancelEditExternalInteractionId} title="Cancel"></lightning-icon>
+                </template>
+              </span>
             </div>
             <template if:true={showClosedOnlyFields}>
               <div class="fec-info-row">
