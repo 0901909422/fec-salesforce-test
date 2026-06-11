@@ -266,7 +266,7 @@
                 + btn('indent','-1',ic.indent_dec,'Decrease Indent') + btn('indent','+1',ic.indent_inc,'Increase Indent'))
             + grp(btn('align','',ic.align_l,'Align Left') + btn('align','center',ic.align_c,'Center')
                 + btn('align','right',ic.align_r,'Align Right') + btn('align','justify',ic.align_j,'Justify'))
-            + grp(btn('link','',ic.link,'Insert Link') + btn('image','',ic.image,'Insert Image')
+            + grp(btn('link','',ic.link,'Insert Link') + btn('image','',ic.image,'Insert Image') + btn('table','',ic.table,'Insert Table')
                 + btn('blockquote','',ic.quote,'Blockquote')
                 + btn('clean','',ic.clean,'Remove Formatting'))
             + '</div>';
