@@ -82,6 +82,10 @@ public with sharing class FEC_ConstantCommon {
     public static final String CHANNEL_ZALO = 'ZALO';
     public static final String CHANNEL_WEBSITE = 'WEBSITE';
     public static final String CHANNEL_FE_MOBILE_APP = 'FEMOBILEAPP';
+    public static final Integer CHECK_EXIST_USER_CODE_EXISTS = 1;
+    public static final Integer CHECK_EXIST_USER_CODE_NOT_EXISTS = 2;
+    public static final String SOCIAL_STATUS_YES = 'YES';
+    public static final String SOCIAL_STATUS_NO = 'NO';
     public static final String CHANNEL_EXTERNAL = 'External';
     public static final String CHANNEL_INTERNAL = 'Internal';
     public static final String STR_NA = 'N/A';
@@ -107,7 +111,7 @@ public with sharing class FEC_ConstantCommon {
     
     public static final String PATTERN_PHONE_NUMBER = '^(0\\d{9}|84\\d{9})$';
     public static final String PATTERN_NATIONAL_ID = '^(\\d{9}|\\d{12})$';
-    public static final String PATTERN_APPLICATION_ID = '^(\\d{6}|\\d{8}|\\d{9})$';
+    public static final String PATTERN_APPLICATION_ID = '^\\d+$';
     public static final String PATTERN_ACCOUNT_NUMBER = '^(\\d{16}|\\d{19})$';
     public static final String PATTERN_CONTRACT_NUMBER = '^(\\d{8}-\\d{6}-\\d{4}|\\d{8}-\\d{7}-\\d{3}|\\d{8}-\\d{7}-\\d{2}|\\d{8}-\\d{7}-\\d{1}|\\d{8}-\\d{7}|\\d{2}-\\d{2}-\\d{2}-\\d{2})$';
     public static final String PATTERN_EMAIL = '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,5}(\\.[A-Za-z]{2,5})?$';
@@ -457,7 +461,8 @@ public with sharing class FEC_ConstantCommon {
     public static final String SUCCESS_MESSAGE_CANCEL_CASE = System.Label.FEC_MSG_CancelCS_Success;
     public static final String PHONE_REGEX_VN    = '^0[0-9]{9}$';
     public static final String PHONE_REGEX_INTL  = '^\\+[0-9]{8,15}$';
-    
+    public static final String PHONE_NORMALIZE_REGEX = '^(?:\\+?84|0)?([1-9]\\d{8,9})$';
+
     /** Kênh hợp lệ cho API FEC_CancelCSCaseService (SOAP). */
     public static final String CANCEL_CS_CHANNEL_CHAT = 'Chat';
     public static final String CANCEL_CS_CHANNEL_F2F = 'F2F';

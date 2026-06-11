@@ -72,10 +72,6 @@ public with sharing class FEC_SearchController {
     if (String.isBlank(value) || String.isBlank(fieldName)) {
         throw new AuraHandledException(System.Label.FEC_MSG_Create_Customer_History_Field_Null);
     }
-    if (caseId != null) {
-        FEC_InteractionInforHandler.assertInteractionEmailForAction(caseId);
-    }
-
     Case interactionCase;
 
     if (caseId != null) {
@@ -96,7 +92,7 @@ public with sharing class FEC_SearchController {
             String.isBlank(interactionCase.FEC_Phone_Number__c)
         ) {
             throw new AuraHandledException(
-                System.Label.FEC_PHONE_IS_REQUIRED_MSG
+                System.Label.FEC_INTERACTION_PHONE_REQUIRED
             );
         }
     }
@@ -320,10 +316,15 @@ public with sharing class FEC_SearchController {
             List<Map<String, String>> rows = new List<Map<String, String>>();
             if (res != null && res.success && res.histories != null) {
                 for (FEC_GetLoanApplicationHistory.ApplicationHistory h : res.histories) {
+                    String statusLabel = FEC_GetLoanApplicationHistory.resolveStatusLabel(
+                        h.statusId
+                    );
                     rows.add(new Map<String, String>{
                         'user'     => h.userName,
                         'activity' => h.activityId,
-                        'status'   => FEC_GetLoanApplicationHistory.resolveStatusLabel(h.statusId),
+                        'status'   => String.isNotBlank(statusLabel)
+                            ? statusLabel
+                            : h.statusId,
                         'editDate' => h.editDate
                     });
                 }
@@ -509,6 +510,41 @@ public with sharing class FEC_SearchController {
                 ' | Msg: ' + e.getMessage()
             );
         }
+    }
+
+    @AuraEnabled
+    public static Boolean isCaseIntegrationFinished(Id caseId) {
+        if (caseId == null) {
+            return true;
+        }
+
+        List<FEC_Customer_History__c> histories = [
+            SELECT CreatedDate
+            FROM FEC_Customer_History__c
+            WHERE FEC_Case__c = :caseId
+            ORDER BY CreatedDate DESC
+            LIMIT 1
+        ];
+        if (histories.isEmpty()) {
+            return true;
+        }
+
+        List<AsyncApexJob> jobs = [
+            SELECT Status
+            FROM AsyncApexJob
+            WHERE ApexClass.Name = 'FEC_FullCustomerIntegrationJob'
+              AND CreatedDate >= :histories[0].CreatedDate
+            ORDER BY CreatedDate DESC
+            LIMIT 1
+        ];
+        if (jobs.isEmpty()) {
+            return false;
+        }
+
+        String status = jobs[0].Status;
+        return status == 'Completed'
+            || status == 'Failed'
+            || status == 'Aborted';
     }
 
     @AuraEnabled

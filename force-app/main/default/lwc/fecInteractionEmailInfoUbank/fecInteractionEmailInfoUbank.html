@@ -18,19 +18,13 @@
                   <template if:false={isEmailReadOnly}>
                     <template if:true={isEditingEmail}>
                       <lightning-input type="email" value={emailDraft} onchange={handleEmailChange}
-                        variant="label-hidden" placeholder={labels.inputPlaceholder}
-                        message-when-value-missing={labels.emailRequiredMsg}></lightning-input>
+                        variant="label-hidden" placeholder={labels.inputPlaceholder}></lightning-input>
                       <template if:true={emailError}>
                         <span class="fec-error-text">{emailError}</span>
                       </template>
                     </template>
                     <template if:false={isEditingEmail}>
-                      <template if:true={showEmailRequiredInline}>
-                        <span class="fec-error-text">{labels.emailRequiredMsg}</span>
-                      </template>
-                      <template if:false={showEmailRequiredInline}>
-                        <span class="fec-empty">{labels.empty}</span>
-                      </template>
+                      <span class="fec-empty">{labels.empty}</span>
                     </template>
                   </template>
                 </span>

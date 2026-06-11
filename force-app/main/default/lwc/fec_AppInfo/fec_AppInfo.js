@@ -93,11 +93,11 @@ export default class Fec_AppInfo extends LightningElement {
 
     mapHistory(record) {
         return {
-            Id: record.Id,
-            user: record.FEC_User__c || '',
-            activityId: record.FEC_Activity_ID__c || '',
-            status: record.FEC_Status__c || '',
-            editDate: formatDate(record.FEC_Edit_Date__c)
+            Id: record.id,
+            user: record.user || '',
+            activityId: record.activityId || '',
+            status: record.status || '',
+            editDate: formatDate(record.editDate)
         };
     }
 }

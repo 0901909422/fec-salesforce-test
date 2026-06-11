@@ -41,6 +41,15 @@ private class FEC_GetInteractionCases_Test {
                     FEC_National_ID_Passport_ID__c = '123456789012'
                 );
                 insert contextCase;
+                FEC_Customer_History__c contextHistory = new FEC_Customer_History__c(
+                    Name = TEST_ACCOUNT_NUMBER,
+                    FEC_Case__c = contextCase.Id
+                );
+                insert contextHistory;
+                update new Case(
+                    Id = contextCase.Id,
+                    FEC_Account_or_Contract__c = contextHistory.Id
+                );
 
                 // FEC_Interaction_Status__c is formula (FEC_Final_Status__c); set Status instead.
                 testInteraction = new Case(

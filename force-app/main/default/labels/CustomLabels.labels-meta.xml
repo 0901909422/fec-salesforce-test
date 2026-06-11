@@ -10590,7 +10590,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>MSG ApplicationID Invalid</shortDescription>
-        <value>ApplicationID must be 6 characters or 8 characters or 9 characters</value>
+        <value>ApplicationID must contain only numeric characters</value>
     </labels>
     <labels>
         <fullName>FEC_MSG_ApplicationID_must_number</fullName>
@@ -18624,5 +18624,28 @@
         <protected>false</protected>
         <shortDescription>FEC_Email_File_Uploaded_Added</shortDescription>
         <value>File uploaded and added to email.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_INTERACTION_PHONE_REQUIRED</fullName>
+        <categories>fecInteraction</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Interaction phone is required</shortDescription>
+        <value>Interaction phone is required</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Email_File_Already_In_Email</fullName>
+        <categories>fecEmailSection</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Email_File_Already_In_Email</shortDescription>
+        <value>1 file is already in email.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Manual_Chat_Customer_Username_Required</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Manual Chat Customer Username Required</shortDescription>
+        <value>Customer Username is required for manual Chat interaction.</value>
     </labels>
 </CustomLabels>

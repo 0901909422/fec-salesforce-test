@@ -29,15 +29,15 @@
             </value>
         </valueSetDefinition>
         <valueSettings>
-            <controllingFieldValue>A</controllingFieldValue>
+            <controllingFieldValue>Temporarily Locked</controllingFieldValue>
             <valueName>A</valueName>
         </valueSettings>
         <valueSettings>
-            <controllingFieldValue>Không sử dụng</controllingFieldValue>
+            <controllingFieldValue>Not In Use</controllingFieldValue>
             <valueName>L</valueName>
         </valueSettings>
         <valueSettings>
-            <controllingFieldValue>Thẻ bị mất/ đánh cắp có phát sinh giao dịch</controllingFieldValue>
+            <controllingFieldValue>Lost/Stolen Card with Transaction Activity</controllingFieldValue>
             <valueName>S</valueName>
         </valueSettings>
     </valueSet>

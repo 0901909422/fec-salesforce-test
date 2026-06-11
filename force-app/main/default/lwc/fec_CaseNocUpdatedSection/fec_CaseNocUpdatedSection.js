@@ -86,6 +86,13 @@ export default class Fec_CaseNocUpdatedSection extends LightningElement {
   }
 
   // ─── Getters: parse JSON options ─────────────────────────────────────────
+  //linhdev 10/06/26 17:49: sort Updated NOC combobox options alphabetically by label
+  _sortOptionsByLabel(list) {
+    return (list ?? []).slice().sort((a, b) =>
+      (a?.label ?? '').localeCompare(b?.label ?? '', undefined, { sensitivity: 'base' })
+    );
+  }
+
   _optionsWithDisplayName(optionsJson, value, displayName) {
     let list = [];
     try {
@@ -94,9 +101,12 @@ export default class Fec_CaseNocUpdatedSection extends LightningElement {
       list = [];
     }
     if (!value || !displayName || list.some((item) => item.value === value)) {
-      return JSON.stringify(list);
+      return JSON.stringify(this._sortOptionsByLabel(list));
     }
-    return JSON.stringify([...list, { label: displayName, value, helpText: null }]);
+    return JSON.stringify(this._sortOptionsByLabel([
+      ...list,
+      { label: displayName, value, helpText: null }
+    ]));
   }
 
   get formattedProductTypeOption() {

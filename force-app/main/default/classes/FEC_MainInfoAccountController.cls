@@ -493,6 +493,13 @@ public without sharing class FEC_MainInfoAccountController {
     ) {
         if (accountId == null) return;
 
+        FEC_Customer_History__c hist = [
+            SELECT FEC_Account_Number__c, FEC_CIF_Number__c, FEC_Contract_Number__c, Name
+            FROM FEC_Customer_History__c
+            WHERE Id = :accountId
+            LIMIT 1
+        ];
+
         FEC_GetCardBasicInfo.MainCard m;
             if(cardRes != null && cardRes.CardBasicInfo != null){
                 m = cardRes.CardBasicInfo.MainCard;
@@ -506,12 +513,18 @@ public without sharing class FEC_MainInfoAccountController {
             }
 
         FEC_GetCustomerList.Application a;
-            if(cusRes != null 
-                && cusRes.Customers != null 
+            if (cusRes != null
+                && cusRes.Customers != null
                 && !cusRes.Customers.isEmpty()
                 && cusRes.Customers[0].Applications != null
-                && !cusRes.Customers[0].Applications.isEmpty()){
-                a = cusRes.Customers[0].Applications[0];
+                && !cusRes.Customers[0].Applications.isEmpty()
+                && String.isNotBlank(hist.Name)) {
+                for (FEC_GetCustomerList.Application app : cusRes.Customers[0].Applications) {
+                    if (hist.Name == app.AccountNumber || hist.Name == app.ContractNumber) {
+                        a = app;
+                        break;
+                    }
+                }
             }
        FEC_GetApplicationsList.ApplicationInfo l;
             if (appRes != null 

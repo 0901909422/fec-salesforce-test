@@ -1,4 +1,4 @@
-import { LightningElement, api, wire } from "lwc";
+﻿import { LightningElement, api, wire } from "lwc";
 import { NavigationMixin } from "lightning/navigation";
 import {
   updateRecord,
@@ -31,14 +31,17 @@ import FEC_MSG_Create_Customer_History_Success from '@salesforce/label/c.FEC_MSG
 import FEC_Error_Callout_Insurance from '@salesforce/label/c.FEC_Error_Callout_Insurance';
 import FEC_MSG_Service_Error_Label from '@salesforce/label/c.FEC_MSG_Service_Error_Label';
 import FEC_Common_No_Results_Label from '@salesforce/label/c.FEC_Common_No_Results_Label';
-import FEC_Interaction_Email_Required_Msg from '@salesforce/label/c.FEC_Interaction_Email_Required_Msg';
-import isInteractionEmailActionBlockedApex from '@salesforce/apex/FEC_InteractionInforHandler.isInteractionEmailActionBlocked';
+import isInteractionEmailActionBlocked from '@salesforce/apex/FEC_InteractionInforHandler.isInteractionEmailActionBlocked';
+import isInteractionPhoneActionBlocked from '@salesforce/apex/FEC_InteractionInforHandler.isInteractionPhoneActionBlocked';
+import VALIDATE_INTERACTION_EMAIL from "@salesforce/messageChannel/FEC_Validate_Interaction_Email__c";
+import VALIDATE_INTERACTION_PHONE from "@salesforce/messageChannel/FEC_Validate_Interaction_Phone__c";
 
 import checkFieldEditPermissions from "@salesforce/apex/FEC_SearchController.checkFieldEditPermissions";
 import SkipModal from "c/fec_SkipModal";
 import createInternalCase from "@salesforce/apex/FEC_CreateCaseHandler.createInternalCase";
 import createInternalCaseOnSkip from "@salesforce/apex/FEC_SearchController.createInternalCaseOnSkip";
 import getHistoryStatus from '@salesforce/apex/FEC_SearchController.getHistoryStatus';
+import isCaseIntegrationFinished from '@salesforce/apex/FEC_SearchController.isCaseIntegrationFinished';
 import getCaseRecordTypeDevName from "@salesforce/apex/FEC_CreateCaseHandler.getCaseRecordTypeDevName";
 import {
   publish,
@@ -164,16 +167,24 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
   // Active tab state
   activeTabValue = "Card";
 
+  get cardDisplayFieldName() {
+    return this.isAccountContractSearch ? 'ContractNumber' : 'AccountNumber';
+  }
+
+  get cardDisplayLabel() {
+    return this.isAccountContractSearch ? 'Contract Number' : 'Account Number';
+  }
+
   // Demo columns per tab (adjust fields as needed)
   get cardColumns() {
     return [
       {
-        label: "Account Number",
+        label: this.cardDisplayLabel,
         type: "dblclickText",
-        fieldName: "AccountNumber",
+        fieldName: this.cardDisplayFieldName,
         typeAttributes:  {
-              value: { fieldName: "AccountNumber" },
-              fieldName: "AccountNumber",
+              value: { fieldName: this.cardDisplayFieldName },
+              fieldName: this.cardDisplayFieldName,
               selectedType: "Card",
               isExpanded: this.isAccountContractSearch ? { fieldName: "_isExpanded" } : false,
               isAccountContractSearch: this.isAccountContractSearch
@@ -586,12 +597,6 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
             } else if (!/^\d+$/.test(val)) {
               input.setCustomValidity(
                 "Application ID must contain only digits",
-              );
-            } else if (
-              !(val.length === 6 || val.length === 8 || val.length === 9)
-            ) {
-              input.setCustomValidity(
-                "Application ID must be 6, 8, or 9 digits",
               );
             } else {
               input.setCustomValidity("");
@@ -1216,6 +1221,7 @@ hasAnySearchCriteria(params) {
                             NationalID2: "",
                             DateOfBirth: this.formatDate(cust.DateOfBirth),
                             AccountNumber: accNum,
+                            ContractNumber: app.ContractNumber || accNum,
                             AccountStatus: app.Status,
                             PlasticID: "Loading...", // Hiển thị trạng thái đang lấy data
                             CIFNumber: cust.CIFNumber,
@@ -1287,6 +1293,13 @@ hasAnySearchCriteria(params) {
           "error"
         );
         return;
+      }
+
+      if (this.recordId) {
+        const canProceed = await this.ensureInteractionFieldsBeforeCreateCase(this.recordId);
+        if (!canProceed) {
+          return;
+        }
       }
 
       let caseIdToUse = this.recordId;
@@ -1460,7 +1473,7 @@ hasAnySearchCriteria(params) {
       const row = this.cardData.find(r => r.AccountNumber === key);
       applicationId = row?.ApplicationID;
     } else if (fieldName === 'ContractNumber') {
-      const row = this.loanContractData.find(r => r.ContractNumber === key);
+      const row = this.loanContractData.find(r => r.ContractNumber === key) || this.cardData.find(r => r.ContractNumber === key);
       applicationId = row?.ApplicationID;
     }
     if (!applicationId) return;
@@ -1495,7 +1508,7 @@ hasAnySearchCriteria(params) {
       const row = this.cardData.find(r => r.AccountNumber === key);
       applicationId = row?.ApplicationID;
     } else if (fieldName === 'ContractNumber') {
-      const row = this.loanContractData.find(r => r.ContractNumber === key);
+      const row = this.loanContractData.find(r => r.ContractNumber === key) || this.cardData.find(r => r.ContractNumber === key);
       applicationId = row?.ApplicationID;
     }
     if (!applicationId) return;
@@ -1535,7 +1548,8 @@ hasAnySearchCriteria(params) {
   _refreshData() {
     this.cardData = this.cardData.map(r => ({
       ...r,
-      _isExpanded: !!(this.appHistoryMap[r.AccountNumber]?.expanded)
+      _historyKey: r.ContractNumber || r.AccountNumber,
+      _isExpanded: !!(this.appHistoryMap[r.ContractNumber || r.AccountNumber]?.expanded)
     }));
     this.loanContractData = this.loanContractData.map(r => ({
       ...r,
@@ -1545,8 +1559,9 @@ hasAnySearchCriteria(params) {
   get cardDataWithHistory() {
     return this.cardData.map(r => ({
       ...r,
-      _historyState: this.appHistoryMap[r.AccountNumber] || null,
-      _btnClass: (this.appHistoryMap[r.AccountNumber]?.expanded) ? 'fec-toggle-btn fec-expanded' : 'fec-toggle-btn',
+      _historyKey: r.ContractNumber || r.AccountNumber,
+      _historyState: this.appHistoryMap[r.ContractNumber || r.AccountNumber] || null,
+      _btnClass: (this.appHistoryMap[r.ContractNumber || r.AccountNumber]?.expanded) ? 'fec-toggle-btn fec-expanded' : 'fec-toggle-btn',
       _dateOfBirth: this._formatDate(r.DateOfBirth)
     }));
   }
@@ -1571,10 +1586,11 @@ hasAnySearchCriteria(params) {
   get cardRowsInterleaved() {
     const result = [];
     this.cardData.forEach(r => {
-      result.push({ ...r, _isDataRow: true, _key: 'data_' + r.AccountNumber, _singleRow: [r] });
-      const hs = this.appHistoryMap[r.AccountNumber];
+      const historyKey = r.ContractNumber || r.AccountNumber;
+      result.push({ ...r, _isDataRow: true, _key: 'data_' + historyKey, _historyKey: historyKey, _singleRow: [r] });
+      const hs = this.appHistoryMap[historyKey];
       if (hs && hs.expanded) {
-        result.push({ _isDataRow: false, _key: 'hist_' + r.AccountNumber, _historyState: hs });
+        result.push({ _isDataRow: false, _key: 'hist_' + historyKey, _historyKey: historyKey, _historyState: hs });
       }
     });
     return result;
@@ -1592,22 +1608,46 @@ hasAnySearchCriteria(params) {
     return result;
   }
 
-  async assertInteractionEmailBeforeAction() {
-    if (!this.recordId) {
+  async ensureInteractionEmailBeforeCreateCase(recordId) {
+    if (!recordId) {
       return true;
     }
     try {
-      const blocked = await isInteractionEmailActionBlockedApex({ recordId: this.recordId });
+      const blocked = await isInteractionEmailActionBlocked({ recordId });
       if (blocked) {
-        this.showToast(this.FEC_Toast_Validation_Title, FEC_Interaction_Email_Required_Msg, 'error');
+        publish(this.messageContext, VALIDATE_INTERACTION_EMAIL, { recordId });
         return false;
       }
       return true;
     } catch (error) {
       console.error('isInteractionEmailActionBlocked error', error);
-      this.showToast(this.FEC_Toast_Error, FEC_Toast_Error_Generic, 'error');
+      return true;
+    }
+  }
+
+  async ensureInteractionPhoneBeforeCreateCase(recordId) {
+    if (!recordId) {
+      return true;
+    }
+    try {
+      const blocked = await isInteractionPhoneActionBlocked({ recordId });
+      if (blocked) {
+        publish(this.messageContext, VALIDATE_INTERACTION_PHONE, { recordId });
+        return false;
+      }
+      return true;
+    } catch (error) {
+      console.error('isInteractionPhoneActionBlocked error', error);
+      return true;
+    }
+  }
+
+  async ensureInteractionFieldsBeforeCreateCase(recordId) {
+    const emailOk = await this.ensureInteractionEmailBeforeCreateCase(recordId);
+    if (!emailOk) {
       return false;
     }
+    return this.ensureInteractionPhoneBeforeCreateCase(recordId);
   }
 
   // Handle button actions from datatable rows
@@ -1643,7 +1683,7 @@ hasAnySearchCriteria(params) {
     switch (action.name) {
       case "create_history": {
         if (this.recordId) {
-          const canProceed = await this.assertInteractionEmailBeforeAction();
+          const canProceed = await this.ensureInteractionFieldsBeforeCreateCase(this.recordId);
           if (!canProceed) {
             return;
           }
@@ -1737,6 +1777,9 @@ hasAnySearchCriteria(params) {
             this.showToast("Success", "History created successfully", "success");
             
             if (this.recordId) {
+                if (action.label.fieldName === 'AccountNumber') {
+                    await this._waitForAccountIntegration(this.recordId);
+                }
                 this.handlePublishMessageChanel();
                 await notifyRecordUpdateAvailable([{ recordId: this.recordId }]);
                 this.dispatchEvent(new RefreshEvent());
@@ -1773,6 +1816,33 @@ hasAnySearchCriteria(params) {
       default:
         break;
     }
+  }
+
+  get isDisplayCreateCaseOnlyB2OrCash24() {
+    const hasB2OrCash24 = (this.loanB2Data && this.loanB2Data.length > 0) || (this.loanCash24Data && this.loanCash24Data.length > 0);
+    const hasOthers = (this.cardData && this.cardData.length > 0) || 
+                      (this.loanContractData && this.loanContractData.length > 0) || 
+                      (this.insuranceData && this.insuranceData.length > 0);
+    return hasB2OrCash24 && !hasOthers;
+  }
+
+  async _waitForAccountIntegration(caseId) {
+      const MAX_ATTEMPTS = 45;
+      const INTERVAL_MS = 2000;
+
+      for (let i = 0; i < MAX_ATTEMPTS; i++) {
+          if (i > 0) {
+              await new Promise((resolve) => setTimeout(resolve, INTERVAL_MS));
+          }
+          try {
+              const finished = await isCaseIntegrationFinished({ caseId });
+              if (finished) {
+                  return;
+              }
+          } catch (e) {
+              console.error('Account integration polling error:', e);
+          }
+      }
   }
 
   async _pollHistoryReady(caseId) {

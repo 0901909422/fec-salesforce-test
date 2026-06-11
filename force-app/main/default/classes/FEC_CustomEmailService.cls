@@ -170,6 +170,7 @@ public without sharing class FEC_CustomEmailService {
             else if (cv.FileType == FEC_ConstantCommon.FILE_TYPE_EXCEL_X || cv.FileType == FEC_ConstantCommon.FILE_TYPE_EXCEL) mime = FEC_ConstantCommon.MIME_EXCEL;
             else if (cv.FileType == FEC_ConstantCommon.FILE_TYPE_WORD_X || cv.FileType == FEC_ConstantCommon.FILE_TYPE_WORD) mime = FEC_ConstantCommon.MIME_WORD;
             att.mimeType = mime;
+            att.contentDocumentId = String.valueOf(cv.ContentDocumentId);
             result.add(att);
         }
         return result;
@@ -658,3 +659,4 @@ public without sharing class FEC_CustomEmailService {
         insert t;
     }
 }
+

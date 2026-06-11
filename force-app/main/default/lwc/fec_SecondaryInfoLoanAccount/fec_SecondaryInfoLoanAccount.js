@@ -189,11 +189,8 @@ export default class Fec_SecondaryInfoLoanAccount extends LightningElement {
         return this.isSalesOpen ? 'slds-accordion__content' : 'slds-accordion__content slds-hide';
     }
 
-    get disbursementHeaderText() {
-        if (this.disbursementInitError) {
-            return `${this.customLabel.disbursementLabel} - ${this.customLabel.msgErrorAPI}`;
-        }
-        return this.customLabel.disbursementLabel;
+    get disbursementSectionLabelError() {
+        return this.disbursementInitError ? this.customLabel.msgErrorAPI : null;
     }
 
     ensureCollectionsLoaded() {

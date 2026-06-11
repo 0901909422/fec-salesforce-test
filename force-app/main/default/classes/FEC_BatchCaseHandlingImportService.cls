@@ -2850,6 +2850,13 @@ public without sharing class FEC_BatchCaseHandlingImportService {
                         methodKey,
                         caseLiteById
                     );
+                    // 09/06/2026 18:00 linhdev - import Escalate: Owner = ManagerId của user đang import (không dùng Owner.ManagerId)
+                    if (methodKey == FEC_CaseBusinessService.ESCALATE) {
+                        runParams.put(
+                            FEC_CaseBusinessService.PARAM_ESCALATE_TO_ACTING_USER_MANAGER,
+                            'true'
+                        );
+                    }
                     // 04/06/2026 16:45 linhdev - queueable gọi runInternal; tránh AuraHandledException crash import Processing
                     FEC_CaseBusinessService.runInternal(methodKey, runParams);
                     //08/06/2026 dungLTdev: Excel Routing Action = Resolve — tạo FEC_Routing_Action_History__c sau run thành công.

@@ -71,6 +71,8 @@ public without sharing class FEC_SecondaryController {
                    FEC_Mobile_App_Account__c,
                    FEC_API_Cache_Secondary_Demo__c,
                    FEC_Work_Phone__c,
+                   FEC_Primary_Phone__c,
+                   FEC_National_ID_Passport_ID__c,
                    FEC_Email__c
             FROM FEC_Customer_History__c
             WHERE Id = :c.FEC_Account_or_Contract__c
@@ -119,6 +121,28 @@ public without sharing class FEC_SecondaryController {
             }
         } catch (Exception e) {
             System.debug('### DigitalAccountStatus FAILED: ' + e.getMessage());
+        }
+
+        /* ---------- 1b. CHECK EXIST USER (Mobile App) ---------- */
+        try {
+            String phoneForCheck = String.isNotBlank(hist.FEC_Primary_Phone__c)
+                ? hist.FEC_Primary_Phone__c
+                : hist.FEC_Work_Phone__c;
+            String nationalId = hist.FEC_National_ID_Passport_ID__c;
+
+            if (String.isNotBlank(phoneForCheck) && String.isNotBlank(nationalId)) {
+                FEC_GetCheckExistUser.ResponseWrapper checkExistRes =
+                    FEC_GetCheckExistUser.getCheckExistUser(phoneForCheck, nationalId);
+
+                if (checkExistRes != null && checkExistRes.Sys != null && checkExistRes.Sys.Code2 != null) {
+                    String socialStatus = FEC_CommonUltils.mapCheckExistUserCode2ToSocialStatus(checkExistRes.Sys.Code2);
+                    hist.FEC_Mobile_App_Account__c = FEC_CommonUltils.normalizeInsuranceFlag(socialStatus);
+                }
+
+                FEC_GetCheckExistUser.logApiResponse();
+            }
+        } catch (Exception e) {
+            System.debug('### GetCheckExistUser FAILED: ' + e.getMessage());
         }
 
         /* ---------- 2. CONTACT LIST ---------- */

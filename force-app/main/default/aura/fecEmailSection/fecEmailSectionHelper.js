@@ -1,4 +1,38 @@
 ({
+    showEmailToast: function(component, type, title, message) {
+        try {
+            var t = $A.get('e.force:showToast');
+            if (t) {
+                t.setParams({ title: title || '', message: message || '', type: type || 'info', duration: 5000 });
+                t.fire();
+            } else if (message) {
+                component.set('v.errorMsg', message);
+            }
+        } catch (e) {
+            if (message) component.set('v.errorMsg', message);
+        }
+    },
+    watchStandardUploadFailure: function(component) {
+        var self = this;
+        if (window._fecUploadFailWatch) {
+            try { document.removeEventListener('click', window._fecUploadFailWatch, true); } catch (e) {}
+        }
+        window._fecUploadFailWatch = $A.getCallback(function(evt) {
+            var target = evt.target;
+            var txt = (target && (target.innerText || target.textContent) || '').trim();
+            if (txt !== 'Got It') return;
+            var bodyText = (document.body && (document.body.innerText || document.body.textContent) || '');
+            if (bodyText.indexOf('1 file is already in email') === -1 && bodyText.indexOf("Can't upload") === -1) return;
+            window.setTimeout($A.getCallback(function() {
+                component.set('v.showUploadModal', false);
+                component.set('v.selectedCaseFileIds', []);
+                self.showEmailToast(component, 'error', 'Error', component.get('v.lblFileAlreadyInEmail') || '1 file is already in email.');
+                try { document.removeEventListener('click', window._fecUploadFailWatch, true); } catch (e) {}
+                window._fecUploadFailWatch = null;
+            }), 250);
+        });
+        document.addEventListener('click', window._fecUploadFailWatch, true);
+    },
     FONTS: [
         {v:'',l:'(Default)',f:'inherit'},
         {v:'arial',l:'Arial',f:'Arial,sans-serif'},
@@ -90,7 +124,7 @@
             st.setAttribute('data-fec-qcss','1');
             st.innerHTML = self._css();
             document.head.appendChild(st);
-            // Inject table border override riêng với priority cao nhất
+            // Inject table border override riÃªng vá»›i priority cao nháº¥t
             var stTbl = document.createElement('style');
             stTbl.setAttribute('data-fec-qtbl','1');
             stTbl.innerHTML = [
@@ -134,7 +168,7 @@
                 }
                 quill.root.innerHTML = cleanedBody;
                 quill.root.classList.remove('ql-blank');
-                // tungnm37 thêm: đảm bảo td/th từ template có contenteditable để xóa được nội dung
+                // tungnm37 thÃªm: Ä‘áº£m báº£o td/th tá»« template cÃ³ contenteditable Ä‘á»ƒ xÃ³a Ä‘Æ°á»£c ná»™i dung
                 self._makeTableCellsEditable(quill.root);
                 // Reconnect after DOM is stable
                 window.setTimeout(function() {
@@ -148,13 +182,46 @@
         quill.root.style.fontFamily = '"Times New Roman",serif';
         quill.root.style.fontSize = '14px';
         window._fecQuill = quill;
+        // Template HTML is written directly to the editor DOM, so use a native paste
+        // handler to keep pasted content at the real browser caret position.
+        quill.root.addEventListener('paste', function(e) {
+            var sel = window.getSelection && window.getSelection();
+            if (!sel || sel.rangeCount === 0) return;
+            var range = sel.getRangeAt(0);
+            if (!quill.root.contains(range.commonAncestorContainer)) return;
+
+            e.preventDefault();
+            e.stopImmediatePropagation();
+
+            var cd = e.clipboardData || window.clipboardData;
+            var text = cd ? cd.getData('text/plain') : '';
+            var html = cd ? cd.getData('text/html') : '';
+
+            window._fecPasteUndoHtml = quill.root.innerHTML;
+            // Prefer browser editing commands so paste is added to the native undo stack
+            // and Ctrl+Z can undo it. Plain text keeps insertion inline at the caret.
+            sel.removeAllRanges();
+            sel.addRange(range);
+            if (text) {
+                document.execCommand('insertText', false, text);
+            } else if (html) {
+                document.execCommand('insertHTML', false, self.cleanBody(html));
+            }
+            self._makeTableCellsEditable(quill.root);
+            component.set('v.body', quill.root.innerHTML);
+            component.set('v.rawBody', quill.root.innerHTML);
+        }, true);
         // Override Quill's built-in image handler (uses window.prompt by default)
         var tbMod = quill.getModule('toolbar');
         if (tbMod) tbMod.addHandler('image', function() {});
         self._wire(tbEl, quill, component);
-        // tungnm37 thêm: lắng nghe event thêm ảnh vào attachments list
-        // Không thêm vào attachments list — ảnh chỉ hiển thị inline trong editor
-        // (blob URL sẽ bị strip khi gửi, không gửi kèm attachment)
+        quill.on('text-change', function() { self._syncEditorBody(component, quill); });
+        quill.root.addEventListener('input', function() { self._syncEditorBody(component, quill); });
+        quill.root.addEventListener('keyup', function() { self._syncEditorBody(component, quill); });
+        quill.root.addEventListener('mouseup', function() { self._syncEditorBody(component, quill); });
+        // tungnm37 thÃªm: láº¯ng nghe event thÃªm áº£nh vÃ o attachments list
+        // KhÃ´ng thÃªm vÃ o attachments list â€” áº£nh chá»‰ hiá»ƒn thá»‹ inline trong editor
+        // (blob URL sáº½ bá»‹ strip khi gá»­i, khÃ´ng gá»­i kÃ¨m attachment)
     },
 
 
@@ -199,13 +266,41 @@
                 + btn('indent','-1',ic.indent_dec,'Decrease Indent') + btn('indent','+1',ic.indent_inc,'Increase Indent'))
             + grp(btn('align','',ic.align_l,'Align Left') + btn('align','center',ic.align_c,'Center')
                 + btn('align','right',ic.align_r,'Align Right') + btn('align','justify',ic.align_j,'Justify'))
-            + grp(btn('link','',ic.link,'Insert Link') + btn('image','',ic.image,'Insert Image')
+            + grp(btn('link','',ic.link,'Insert Link') + btn('image','',ic.image,'Insert Image') + btn('table','',ic.table,'Insert Table')
                 + btn('blockquote','',ic.quote,'Blockquote')
                 + btn('clean','',ic.clean,'Remove Formatting'))
             + '</div>';
     },
 
 
+    _syncEditorBody: function(component, quill) {
+        if (!quill || !quill.root) return;
+        component.set('v.body', quill.root.innerHTML);
+        component.set('v.rawBody', quill.root.innerHTML);
+    },
+
+    _focusRestoreSelection: function(quill) {
+        if (!quill || !quill.root) return false;
+        try {
+            quill.root.focus();
+            var sel = window.getSelection && window.getSelection();
+            return !!(sel && sel.rangeCount > 0 && quill.root.contains(sel.getRangeAt(0).commonAncestorContainer));
+        } catch (e) { return false; }
+    },
+
+    _nativeFormat: function(component, quill, command, value) {
+        this._focusRestoreSelection(quill);
+        try { document.execCommand(command, false, value); } catch (e) {}
+        if (quill && quill.root) quill.root.classList.remove('ql-blank');
+        this._makeTableCellsEditable(quill.root);
+        this._syncEditorBody(component, quill);
+    },
+
+    _applyBlockTag: function(component, quill, tagName) {
+        this._focusRestoreSelection(quill);
+        try { document.execCommand('formatBlock', false, tagName || 'p'); } catch (e) {}
+        this._syncEditorBody(component, quill);
+    },
     _wire: function(tbEl, quill, component) {
         var self = this;
         var ddEl = window._fecQDD;
@@ -216,7 +311,7 @@
             activePk = null;
         }
 
-        // Picker buttons — open fixed dropdown
+        // Picker buttons â€” open fixed dropdown
         tbEl.querySelectorAll('.fec-pk').forEach(function(pk) {
             pk.querySelector('.fec-pk-btn').addEventListener('mousedown', function(e) {
                 e.preventDefault();
@@ -257,9 +352,19 @@
                         // Update button label
                         pk.querySelector('.fec-pk-btn').childNodes[0].textContent = it.textContent + ' ';
                         closeDD();
-                        if (type==='font') quill.format('font', val||false);
-                        else if (type==='size') quill.format('size', val||false);
-                        else quill.format('header', val ? parseInt(val,10) : false);
+                        if (type==='font') {
+                            var ff = (items.filter(function(x){return x.v===val;})[0] || {}).f || '';
+                            self._nativeFormat(component, quill, 'fontName', ff.split('"').join('') || '');
+                        } else if (type==='size') {
+                            var px = val || '';
+                            self._nativeFormat(component, quill, 'fontSize', px ? '3' : '');
+                            if (px) {
+                                quill.root.querySelectorAll('font[size="3"]').forEach(function(n){ n.removeAttribute('size'); n.style.fontSize = px; });
+                                self._syncEditorBody(component, quill);
+                            }
+                        } else {
+                            self._applyBlockTag(component, quill, val ? ('h' + val) : 'p');
+                        }
                     });
                 });
             });
@@ -273,20 +378,22 @@
                 var cmd = btn.getAttribute('data-cmd');
                 var val = btn.getAttribute('data-val');
                 if (cmd==='bold'||cmd==='italic'||cmd==='underline'||cmd==='strike') {
-                    var cur = quill.getFormat(); quill.format(cmd, !cur[cmd]);
-                    btn.classList.toggle('fec-active', !cur[cmd]);
+                    var nativeCmd = cmd === 'strike' ? 'strikeThrough' : cmd;
+                    self._nativeFormat(component, quill, nativeCmd, null);
+                    btn.classList.toggle('fec-active');
                 } else if (cmd==='list') {
-                    var cf = quill.getFormat(); quill.format('list', cf.list===val ? false : val);
+                    self._nativeFormat(component, quill, val === 'ordered' ? 'insertOrderedList' : 'insertUnorderedList', null);
                 } else if (cmd==='indent') {
-                    quill.format('indent', val);
+                    self._nativeFormat(component, quill, val === '-1' ? 'outdent' : 'indent', null);
                 } else if (cmd==='align') {
-                    quill.format('align', val||false);
+                    var ac = val === 'center' ? 'justifyCenter' : (val === 'right' ? 'justifyRight' : (val === 'justify' ? 'justifyFull' : 'justifyLeft'));
+                    self._nativeFormat(component, quill, ac, null);
                 } else if (cmd==='blockquote') {
-                    var cf2=quill.getFormat(); quill.format('blockquote',!cf2.blockquote);
+                    self._applyBlockTag(component, quill, 'blockquote');
                 } else if (cmd==='code-block') {
-                    var cf3=quill.getFormat(); quill.format('code-block',!cf3['code-block']);
+                    self._applyBlockTag(component, quill, 'pre');
                 } else if (cmd==='table') {
-                    // Lưu selection trước khi mở modal
+                    // LÆ°u selection trÆ°á»›c khi má»Ÿ modal
                     var savedRange = null;
                     try {
                         var selNow = window.getSelection();
@@ -318,7 +425,7 @@
                         var cols = Math.max(1, Math.min(20, parseInt(document.getElementById('fec-tbl-cols').value, 10) || 3));
                         document.body.removeChild(tblOverlay);
 
-                        // Build table node trực tiếp
+                        // Build table node trá»±c tiáº¿p
                         var tbl = document.createElement('table');
                         tbl.style.cssText = 'border-collapse:collapse;width:100%;margin:8px 0;';
                         for (var r = 0; r < rows; r++) {
@@ -335,11 +442,11 @@
                         var br = document.createElement('p');
                         br.innerHTML = '<br>';
 
-                        // Lấy selection hiện tại trong quill.root
+                        // Láº¥y selection hiá»‡n táº¡i trong quill.root
                         var editorEl = quill.root;
                         var sel = window.getSelection();
                         var inserted = false;
-                        // Dùng savedRange nếu có (selection trước khi mở modal)
+                        // DÃ¹ng savedRange náº¿u cÃ³ (selection trÆ°á»›c khi má»Ÿ modal)
                         var insertRange = savedRange;
                         if (!insertRange && sel && sel.rangeCount > 0) {
                             insertRange = sel.getRangeAt(0);
@@ -360,16 +467,16 @@
                             editorEl.appendChild(br);
                         }
 
-                        // Dùng setTimeout để đảm bảo Quill không reset sau insert
+                        // DÃ¹ng setTimeout Ä‘á»ƒ Ä‘áº£m báº£o Quill khÃ´ng reset sau insert
                         window.setTimeout(function() {
-                            // Xóa class ql-blank để ẩn placeholder
+                            // XÃ³a class ql-blank Ä‘á»ƒ áº©n placeholder
                             editorEl.classList.remove('ql-blank');
-                            // Nếu table bị Quill xóa, append lại
+                            // Náº¿u table bá»‹ Quill xÃ³a, append láº¡i
                             if (!editorEl.contains(tbl)) {
                                 editorEl.appendChild(tbl);
                                 editorEl.appendChild(br);
                             }
-                            // Focus vào cell đầu tiên
+                            // Focus vÃ o cell Ä‘áº§u tiÃªn
                             var firstTd = tbl.querySelector('td');
                             if (firstTd) {
                                 firstTd.focus();
@@ -441,7 +548,7 @@
                     imgDD.style.left = rr.left + 'px';
                     imgDD.style.top = (rr.bottom + 2) + 'px';
                     function closeImgDD() { var d=document.getElementById('fec-img-dd'); if(d&&d.parentNode) d.parentNode.removeChild(d); }
-                    // Browse or Upload → file picker → base64 nếu ≤3MB, Object URL nếu lớn hơn
+                    // Browse or Upload â†’ file picker â†’ base64 náº¿u â‰¤3MB, Object URL náº¿u lá»›n hÆ¡n
                     document.getElementById('fec-img-browse').addEventListener('mousedown', function(ev2) {
                         ev2.preventDefault(); closeImgDD();
                         var fi = document.createElement('input');
@@ -453,16 +560,16 @@
                             if (!f) { document.body.removeChild(fi); return; }
                             var MAX_IMG = 3 * 1024 * 1024; // 3MB
                             if (f.size > MAX_IMG) {
-                                // tungnm37 sửa: ảnh quá lớn → báo lỗi, không insert
+                                // tungnm37 sá»­a: áº£nh quÃ¡ lá»›n â†’ bÃ¡o lá»—i, khÃ´ng insert
                                 try {
                                     var toastBig = $A.get('e.force:showToast');
-                                    // tungnm37 sửa: dùng custom labels
+                                    // tungnm37 sá»­a: dÃ¹ng custom labels
                                     if (toastBig) { toastBig.setParams({ title: component.get('v.lblImgTooLargeTitle'), message: component.get('v.lblImgTooLargeMsg'), type: 'error', duration: 6000 }); toastBig.fire(); }
                                 } catch(ex) {}
                                 document.body.removeChild(fi);
                                 return;
                             }
-                            // ≤3MB → dùng base64 để lưu được vào EmailMessage
+                            // â‰¤3MB â†’ dÃ¹ng base64 Ä‘á»ƒ lÆ°u Ä‘Æ°á»£c vÃ o EmailMessage
                             var rd = new FileReader();
                             rd.onload = function(ev3) {
                                 var sel = quill.getSelection(true);
@@ -474,7 +581,7 @@
                         });
                         fi.click();
                     });
-                    // Web Image → modal nhập URL → insert trực tiếp (browser render được)
+                    // Web Image â†’ modal nháº­p URL â†’ insert trá»±c tiáº¿p (browser render Ä‘Æ°á»£c)
                     document.getElementById('fec-img-url').addEventListener('mousedown', function(ev2) {
                         ev2.preventDefault(); closeImgDD();
                         var overlay = document.createElement('div');
@@ -507,7 +614,7 @@
                     setTimeout(function() {
                         document.addEventListener('mousedown', function onOut(ev2) {
                             var d = document.getElementById('fec-img-dd');
-                            // tungnm37 sửa: không đóng nếu click vào chính button ảnh (tránh toggle conflict)
+                            // tungnm37 sá»­a: khÃ´ng Ä‘Ã³ng náº¿u click vÃ o chÃ­nh button áº£nh (trÃ¡nh toggle conflict)
                             if (d && !d.contains(ev2.target) && !imgBtn.contains(ev2.target)) {
                                 closeImgDD();
                                 document.removeEventListener('mousedown', onOut);
@@ -616,8 +723,36 @@
         }
         window.addEventListener('scroll', onScroll, true);
 
-        // Keyboard handler: xử lý table + Backspace/Delete
+        // Keyboard handler: xá»­ lÃ½ table + Backspace/Delete
         quill.root.addEventListener('keydown', function(e) {
+            // Quill history does not know about native DOM paste into template HTML.
+            // Route undo/redo to the browser edit stack so Ctrl+Z can undo pasted text.
+            if ((e.ctrlKey || e.metaKey) && !e.altKey) {
+                var key = (e.key || '').toLowerCase();
+                if (key === 'z' || e.keyCode === 90) {
+                    e.preventDefault();
+                    e.stopImmediatePropagation();
+                    var beforeUndoHtml = quill.root.innerHTML;
+                    var undoOk = document.execCommand(e.shiftKey ? 'redo' : 'undo', false, null);
+                    if (!e.shiftKey && window._fecPasteUndoHtml && quill.root.innerHTML === beforeUndoHtml) {
+                        quill.root.innerHTML = window._fecPasteUndoHtml;
+                        quill.root.classList.remove('ql-blank');
+                        self._makeTableCellsEditable(quill.root);
+                        window._fecPasteUndoHtml = null;
+                    }
+                    component.set('v.body', quill.root.innerHTML);
+                    component.set('v.rawBody', quill.root.innerHTML);
+                    return;
+                }
+                if (key === 'y' || e.keyCode === 89) {
+                    e.preventDefault();
+                    e.stopImmediatePropagation();
+                    document.execCommand('redo', false, null);
+                    component.set('v.body', quill.root.innerHTML);
+                    component.set('v.rawBody', quill.root.innerHTML);
+                    return;
+                }
+            }
             var sel = window.getSelection();
             if (!sel || sel.rangeCount === 0) return;
             var range = sel.getRangeAt(0);
@@ -650,7 +785,7 @@
                 return;
             }
 
-            // Kiểm tra cursor/selection có trong table không
+            // Kiá»ƒm tra cursor/selection cÃ³ trong table khÃ´ng
             var anchorNode = range.commonAncestorContainer;
             var cur = anchorNode.nodeType === 3 ? anchorNode.parentNode : anchorNode;
             var inTable = false;
@@ -670,24 +805,24 @@
                 return;
             }
 
-            // Ngoài table, chỉ xử lý Backspace/Delete
+            // NgoÃ i table, chá»‰ xá»­ lÃ½ Backspace/Delete
             if (e.keyCode !== 8 && e.keyCode !== 46) return;
 
-            // Case A: có selection (bôi đen) chứa table → xóa table trước, để browser xóa text
+            // Case A: cÃ³ selection (bÃ´i Ä‘en) chá»©a table â†’ xÃ³a table trÆ°á»›c, Ä‘á»ƒ browser xÃ³a text
             if (!range.collapsed) {
                 var frag = range.cloneContents();
                 if (frag.querySelector('table')) {
                     editorEl.querySelectorAll('table').forEach(function(t) {
                         if (range.intersectsNode(t)) t.parentNode.removeChild(t);
                     });
-                    // Không preventDefault → browser xóa phần text còn lại trong selection
+                    // KhÃ´ng preventDefault â†’ browser xÃ³a pháº§n text cÃ²n láº¡i trong selection
                 }
-                return; // luôn để browser xử lý phần text
+                return; // luÃ´n Ä‘á»ƒ browser xá»­ lÃ½ pháº§n text
             }
 
-            // Case B: cursor collapsed, liền kề table
+            // Case B: cursor collapsed, liá»n ká» table
             var startEl = range.startContainer.nodeType === 3 ? range.startContainer.parentNode : range.startContainer;
-            // Tìm sibling trực tiếp hoặc qua parent
+            // TÃ¬m sibling trá»±c tiáº¿p hoáº·c qua parent
             var sib = e.keyCode === 8 ? startEl.previousSibling : startEl.nextSibling;
             if (!sib && startEl.parentNode && startEl.parentNode !== editorEl) {
                 sib = e.keyCode === 8 ? startEl.parentNode.previousSibling : startEl.parentNode.nextSibling;
@@ -736,7 +871,7 @@
             '.fec-ed .ql-editor p{margin:0!important;padding:0!important;line-height:1.5!important}',
             '.fec-ed .ql-editor p+p{margin-top:0!important}',
             '.fec-ed .ql-editor.ql-blank::before{color:#aaa;font-style:normal}',
-            // Ẩn placeholder khi editor có table (table nằm ngoài Quill delta)
+            // áº¨n placeholder khi editor cÃ³ table (table náº±m ngoÃ i Quill delta)
             '.fec-ed .ql-editor:has(table)::before{display:none!important}',
             // Table borders
             '.fec-ed .ql-editor table{border-collapse:collapse!important;width:100%!important;margin:8px 0!important}',
@@ -759,7 +894,7 @@
     loadCaseData: function(component) {
         var caseId = component.get('v.recordId');
         var self = this;
-        // Detect record type để biết Interaction hay Service Case
+        // Detect record type Ä‘á»ƒ biáº¿t Interaction hay Service Case
         var aRT = component.get('c.getCaseRecordTypeName');
         aRT.setParams({ caseId: caseId });
         aRT.setCallback(this, function(r) {
@@ -770,7 +905,7 @@
                 if (isServiceCase) {
                     // Service Case: load from picklist theo queue owner
                     self.loadFromAddresses(component, '');
-                    // Pre-fill To từ outgoing email gần nhất
+                    // Pre-fill To tá»« outgoing email gáº§n nháº¥t
                     var emails = component.get('v.emailList') || [];
                     var lastOutgoing = emails.find(function(e) { return !e.incoming; });
                     if (lastOutgoing && lastOutgoing.toAddress) {
@@ -791,11 +926,10 @@
                 component.set('v.toEmail', d.toEmail||'');
                 component.set('v.isManualInteraction', d.isManual === 'true');
                 component.set('v.incomingToAddress', d.fromEmail||'');
-                // tungnm37 thêm: load templates theo fromEmail của Interaction (giống Service Case)
-                if (d.isManual === 'true') {
-                    component.set('v.hasFromOptions', false);
-                } else if (d.fromEmail) {
-                    self.loadTemplates(component, d.fromEmail);
+                // Interaction: dï¿½ng From dropdown gi?ng Service Case, default theo From dï¿½ resolve t? field/source.
+                self.loadFromAddresses(component, d.fromEmail || '');
+                if (!d.fromEmail) {
+                    self.loadTemplates(component, component.get('v.fromEmail') || '');
                 }
             }
         });
@@ -821,7 +955,7 @@
                 component.set('v.hasFromOptions', opts.length > 0);
                 if (opts.length === 0) return;
 
-                // Ưu tiên: incoming ToAddress (mailbox nhận email khách) → Queue default → option đầu
+                // Æ¯u tiÃªn: incoming ToAddress (mailbox nháº­n email khÃ¡ch) â†’ Queue default â†’ option Ä‘áº§u
                 var incomingLower = (incomingToAddress || '').toLowerCase();
                 var matchIncoming = opts.filter(function(o) {
                     return o.value && o.value.toLowerCase() === incomingLower;
@@ -957,14 +1091,14 @@
                 component.set('v.templateSubjects',subjects);
                 component.set('v.templateHeaders',headers);
                 component.set('v.templateFooters',footers);
-                // Reset template selection nếu template hiện tại không còn trong list
+                // Reset template selection náº¿u template hiá»‡n táº¡i khÃ´ng cÃ²n trong list
                 var currentTemplate = component.get('v.replyTemplate');
                 if (currentTemplate && !bodies[currentTemplate]) {
                     component.set('v.replyTemplate', '');
                     component.set('v.body', '');
                     if (window._fecQuill) window._fecQuill.root.innerHTML = '';
                 }
-                // Pre-load attachments cho tất cả templates
+                // Pre-load attachments cho táº¥t cáº£ templates
                 if (templateIds.length > 0) {
                     var attAction = component.get('c.getTemplateAttachmentsBulk');
                     attAction.setParams({ templateIds: templateIds });
@@ -981,13 +1115,13 @@
     },
 
     replaceDanhXung: function(html, title) {
-        // Dùng split/join thay vì regex Unicode để tránh lỗi Aura JS compiler
+        // DÃ¹ng split/join thay vÃ¬ regex Unicode Ä‘á»ƒ trÃ¡nh lá»—i Aura JS compiler
         var markers = [
             'Anh/ Ch\u1ECB', 'Anh/Ch\u1ECB', 'Anh / Ch\u1ECB',
             'Anh/ Chi', 'Anh/Chi', 'Anh / Chi',
             '{danh_xung}', '{DANH_XUNG}',
-            'Quý khách hàng', 'Quý Khách hàng', 'Quý Khách Hàng',
-            'Quý khách', 'Quý Khách',
+            'QuÃ½ khÃ¡ch hÃ ng', 'QuÃ½ KhÃ¡ch hÃ ng', 'QuÃ½ KhÃ¡ch HÃ ng',
+            'QuÃ½ khÃ¡ch', 'QuÃ½ KhÃ¡ch',
             'Ch\u1ECB', 'Chi', 'Anh'
         ];
         var result = html;
@@ -997,13 +1131,13 @@
         return result.split('\x00T\x00').join(title);
     },
 
-    // tungnm37 thêm: đảm bảo tất cả td/th trong editor có contenteditable để xóa/sửa được
+    // tungnm37 thÃªm: Ä‘áº£m báº£o táº¥t cáº£ td/th trong editor cÃ³ contenteditable Ä‘á»ƒ xÃ³a/sá»­a Ä‘Æ°á»£c
     _makeTableCellsEditable: function(rootEl) {
         if (!rootEl) return;
         var cells = rootEl.querySelectorAll('td, th');
         for (var i = 0; i < cells.length; i++) {
             cells[i].setAttribute('contenteditable', 'true');
-            // Nếu cell rỗng hoặc chỉ có &nbsp;, đặt nội dung là khoảng trắng để cursor vào được
+            // Náº¿u cell rá»—ng hoáº·c chá»‰ cÃ³ &nbsp;, Ä‘áº·t ná»™i dung lÃ  khoáº£ng tráº¯ng Ä‘á»ƒ cursor vÃ o Ä‘Æ°á»£c
             if (!cells[i].textContent.trim() || cells[i].innerHTML === '&nbsp;') {
                 cells[i].innerHTML = '\u00a0';
             }
@@ -1031,7 +1165,7 @@
     },
 
     sanitizeIncomingEmailBody: function(html) {
-        //tugnnm37 - Gmail/Genesys có thể trả video/drive chip trong HtmlBody; không render block chip xấu, convert thành link gọn
+        //tugnnm37 - Gmail/Genesys cÃ³ thá»ƒ tráº£ video/drive chip trong HtmlBody; khÃ´ng render block chip xáº¥u, convert thÃ nh link gá»n
         if (!html || html.indexOf('gmail_drive_chip') === -1) {
             return html || '';
         }
@@ -1132,7 +1266,7 @@
                 component.set('v.attachments', []);
                 if (window._fecQuill) { window._fecQuill.root.innerHTML = ''; }
 
-                // Thêm email vừa gửi vào feed ngay lập tức
+                // ThÃªm email vá»«a gá»­i vÃ o feed ngay láº­p tá»©c
                 var now = new Date();
                 var MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
                 var h = now.getHours(), min = now.getMinutes(), ampm = h >= 12 ? 'pm' : 'am';
@@ -1159,7 +1293,7 @@
                 try {
                     var toast = $A.get('e.force:showToast');
                     if (toast) {
-                        // tungnm37 sửa: dùng custom labels
+                        // tungnm37 sá»­a: dÃ¹ng custom labels
                         toast.setParams({ title: component.get('v.lblSuccessTitle'), message: component.get('v.lblSuccessSentMsg'), type: 'success', duration: 4000 });
                         toast.fire();
                     }
@@ -1175,11 +1309,11 @@
                 }
                 console.error('sendEmail error state=' + state + ' msg=' + msg, errors);
                 component.set('v.errorMsg', msg);
-                // Toast error - tungnm37 sửa: dùng custom label
+                // Toast error - tungnm37 sá»­a: dÃ¹ng custom label
                 try {
                     var toastErr = $A.get('e.force:showToast');
                     if (toastErr) {
-                        toastErr.setParams({ title: component.get('v.lblWeHitASnag') || 'Lỗi gửi email', message: msg, type: 'error', duration: 8000 });
+                        toastErr.setParams({ title: component.get('v.lblWeHitASnag') || 'Lá»—i gá»­i email', message: msg, type: 'error', duration: 8000 });
                         toastErr.fire();
                     }
                 } catch(te2) { console.log('toast error2', te2); }
@@ -1246,6 +1380,11 @@
         $A.enqueueAction(a);
     }
 })
+
+
+
+
+
 
 
 
