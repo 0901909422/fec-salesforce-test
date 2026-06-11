@@ -56,6 +56,7 @@ public with sharing class FEC_MFASOUTSTANDINGAUTHINQ {
         public String CreditDebitFlag;
         public String CREDIT_PLAN;
         public String AUTHORIZATION_CODE;
+        public String AUTH_TYPE;
         public String AUTH_CD;
         public String MERCH_CAT;
         public String TXN_CURR_CODE;
@@ -356,6 +357,7 @@ public with sharing class FEC_MFASOUTSTANDINGAUTHINQ {
                 readAuthTableCell(rowNode, 'AUTHORIZATION_CODE'),
                 readAuthTableCell(rowNode, 'AuthCode')
             );
+            ar.AUTH_TYPE = readAuthTableCell(rowNode, 'AUTH_TYPE');
             ar.AUTH_CD = firstNonBlankAuth(
                 readAuthTableCell(rowNode, 'AUTH_CD'),
                 out.AUTH_CD
