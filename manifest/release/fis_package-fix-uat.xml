@@ -160,6 +160,7 @@
         <members>FEC_RefundRequestController_Test</members>
         <members>FEC_CaseExecuteService</members>
         <members>FEC_MFASOUTSTANDINGAUTHINQ</members>
+        <members>FEC_MainInfoAccountController</members>
         <name>ApexClass</name>
     </types>
     <types>
