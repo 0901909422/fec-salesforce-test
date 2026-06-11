@@ -9,6 +9,8 @@ public without sharing class FEC_CaseBusinessService {
   public static final String REVERT = 'Revert';
   public static final String CANCEL = 'Cancel';
   public static final String ESCALATE = 'Escalate';
+  // 09/06/2026 18:00 linhdev - bulk import Escalate: gán Owner = ManagerId của user đang import
+  public static final String PARAM_ESCALATE_TO_ACTING_USER_MANAGER = 'escalateToActingUserManager';
   public static final String TRANSFER = 'Transfer';
   public static final String REJECT = 'Reject';
   public static final String RECALL = 'Recall';
@@ -223,6 +225,7 @@ public without sharing class FEC_CaseBusinessService {
           FEC_Assignment_Count__c,
           FEC_SubCode__r.FEC_Code__c, //linhdev fix jira FECREDIT_CSM_2025_KH-1393-1394
           FEC_Actual_Nature_of_Case__r.FEC_Business_Process__r.FEC_Code__c,
+          Status,
           FEC_Actual_Nature_of_Case__r.FEC_Product_Type__c,
           FEC_Actual_Nature_of_Case__r.FEC_Category__c,
           FEC_Actual_Nature_of_Case__r.FEC_Sub_Category__c,
@@ -947,7 +950,8 @@ public without sharing class FEC_CaseBusinessService {
         masterDatalst = FEC_CaseMasterDataHelper.filterRevertedAssignmentRowsByStageContext(
           masterDatalst,
           isCurrentStageRevertedContext,
-          result.revertConfirmAssessmentSourceStage
+          result.revertConfirmAssessmentSourceStage,
+          isRc2701OrRc2702
         );
         masterDatalst = FEC_CaseMasterDataHelper.filterAssignmentRowsByCurrentUserGroup(
           masterDatalst,
@@ -1154,7 +1158,8 @@ public without sharing class FEC_CaseBusinessService {
           if (
             FEC_CaseMasterDataHelper.shouldSkipRevertConfirmAssessmentField(
               result.revertConfirmAssessmentSourceStage,
-              fieldApiNameTemp
+              fieldApiNameTemp,
+              isRc2701OrRc2702
             )
           ) {
             continue;
@@ -1377,7 +1382,8 @@ public without sharing class FEC_CaseBusinessService {
 
         FEC_CaseMasterDataHelper.pruneRevertConfirmAssessmentSubSections(
           result.sectionlst,
-          result.revertConfirmAssessmentSourceStage
+          result.revertConfirmAssessmentSourceStage,
+          isRc2701OrRc2702
         );
 
         result.removeEmptySections();
@@ -1537,6 +1543,7 @@ public without sharing class FEC_CaseBusinessService {
           && !currentStageIsDefault; // tungnm37
       // tungnm37 thêm: trả customerType để LWC fec_RoutingAssignment query đúng
       result.customerType = selectedCase.FEC_Customer_Type__c;
+      result.caseStatus = selectedCase.Status;
 
       // RL05 duplicate + UI context đã resolve trước vòng master data (mrcRl05Ui / mrcRl0502Duplicate*).
 
@@ -2090,6 +2097,24 @@ public without sharing class FEC_CaseBusinessService {
     }
   }
 
+  /** Revert history: FEC_Decision__c hiển thị "User" hoặc "User's Team Queue" (không lưu tên user/queue). */
+  private static String resolveRevertDecisionDisplayLabel(String ownerIdStr) {
+    if (String.isBlank(ownerIdStr)) {
+      return '';
+    }
+    try {
+      Id ownerId = Id.valueOf(ownerIdStr.trim());
+      if (ownerId.getSObjectType() == User.SObjectType) {
+        return 'User';
+      }
+      if (ownerId.getSObjectType() == Group.SObjectType) {
+        return 'User\'s Team Queue';
+      }
+    } catch (Exception ignore) {
+    }
+    return '';
+  }
+
   //thangtv: Stage Change.FEC_Next_Queue__c có thể là Queue Id hoặc DeveloperName, luôn quy đổi về Queue Id để set Owner
   private static String resolveQueueOwnerIdFromStageChangeValue(String nextQueueValue) {
     if (String.isBlank(nextQueueValue)) {
@@ -2569,7 +2594,7 @@ public without sharing class FEC_CaseBusinessService {
         when ESCALATE {
           finalStatusBeforeSubmit = readCaseFinalStatusBeforeSubmit(caseId);
           markCaseSubmittedAndClearDrafts(caseId);
-          escalate(caseId);
+          escalate(caseId, params);
           createRoutingActionHis('Escalate', '', oldOwnerName, oldOwnerId, caseId, stageName, finalStatusBeforeSubmit, currentStageId);
           return null;
         }
@@ -2860,7 +2885,10 @@ public without sharing class FEC_CaseBusinessService {
           teamUserGroup,
           queueId
         );
-      if (!routeByLatestRevertHistory) {
+      if (
+        !routeByLatestRevertHistory &&
+        FEC_BlockCodeRoutingService.isCaseAtStageOne(updatedCase)
+      ) {
         if (
           FEC_BlockCodeRoutingService.isClientBlockCodeForcedOmDay2ForRc27Route(
             updatedCase,
@@ -3567,9 +3595,12 @@ public without sharing class FEC_CaseBusinessService {
     }
   }
 
-  private static void escalate(String caseId) {
+  private static void escalate(String caseId, Map<String, String> params) {
     try {
       Id currentUserId = UserInfo.getUserId();
+      // 09/06/2026 18:00 linhdev - import: ManagerId của user thực hiện import; UI: Owner.ManagerId
+      Boolean useActingUserManager = params != null &&
+        'true'.equalsIgnoreCase((String) params.get(PARAM_ESCALATE_TO_ACTING_USER_MANAGER));
       
       // 1. Use TYPEOF to safely access User-specific fields on the Owner polymorphic lookup
       List<Case> caselst = [
@@ -3591,32 +3622,50 @@ public without sharing class FEC_CaseBusinessService {
       }
 
       Case updatedCase = caselst.get(0);
+      Id targetOwnerId = null;
       
-      // Kiểm tra xem user hiện tại có phải là Owner không
-      // if (updatedCase.OwnerId != currentUserId) {
-      //   throw new CaseBusinessServiceException(
-      //     System.Label.FEC_MSG_Escalate_Owner_Only
-      //   );
-      // }
-
-      // 2. Check if the Owner is actually a User (not a Queue)
-      if (updatedCase.Owner instanceof User) {
-        // Cast the Owner relationship to a User object to access ManagerId
-        User ownerUser = (User) updatedCase.Owner;
-
-        if (ownerUser.ManagerId != null) {
-          updatedCase.OwnerId = ownerUser.ManagerId;
+      if (useActingUserManager) {
+        List<User> actingUsers = [
+          SELECT ManagerId
+          FROM User
+          WHERE Id = :currentUserId
+          LIMIT 1
+        ];
+        if (!actingUsers.isEmpty() && actingUsers[0].ManagerId != null) {
+          targetOwnerId = actingUsers[0].ManagerId;
         } else {
           throw new CaseBusinessServiceException(
             System.Label.FEC_MSG_Manager_Not_Found
           );
         }
       } else {
-        throw new CaseBusinessServiceException(
-          System.Label.FEC_MSG_Owner_Is_Queue_Escalation
-        );
+        // Kiểm tra xem user hiện tại có phải là Owner không
+        if (updatedCase.OwnerId != currentUserId) {
+          throw new CaseBusinessServiceException(
+            System.Label.FEC_MSG_Escalate_Owner_Only
+          );
+        }
+
+        // 2. Check if the Owner is actually a User (not a Queue)
+        if (updatedCase.Owner instanceof User) {
+          // Cast the Owner relationship to a User object to access ManagerId
+          User ownerUser = (User) updatedCase.Owner;
+
+          if (ownerUser.ManagerId != null) {
+            targetOwnerId = ownerUser.ManagerId;
+          } else {
+            throw new CaseBusinessServiceException(
+              System.Label.FEC_MSG_Manager_Not_Found
+            );
+          }
+        } else {
+          throw new CaseBusinessServiceException(
+            System.Label.FEC_MSG_Owner_Is_Queue_Escalation
+          );
+        }
       }
 
+      updatedCase.OwnerId = targetOwnerId;
       registerSkipOwnerChangeRoutingHistory(updatedCase.Id);
       update updatedCase;
     } catch (Exception e) {
@@ -3786,7 +3835,7 @@ public without sharing class FEC_CaseBusinessService {
       if (String.isBlank(nextUser)) {
         nextUser = currentOwnerName;
           }
-      String revertDecisionLabel = nextUser;
+      String revertDecisionLabel = resolveRevertDecisionDisplayLabel(queueId);
 
           List<User> userlst = [
             SELECT Email, UserRole.Name, Id
@@ -4516,6 +4565,10 @@ public without sharing class FEC_CaseBusinessService {
     // tungnm37 thêm: customerType - để LWC fec_RoutingAssignment query đúng theo Customer Type
     @AuraEnabled
     public String customerType;
+
+    /** Case Status — Non-Existing Account Information chỉ edit khi Open. */
+    @AuraEnabled
+    public String caseStatus;
 
     @AuraEnabled
     public String code;
@@ -5624,6 +5677,10 @@ public without sharing class FEC_CaseBusinessService {
       c.FEC_Account_or_Contract__r?.FEC_Customer_Type__c
     );
 
+    Boolean nonExistingAccountEditable =
+      !isExisting &&
+      FEC_ConstantCommon.CASE_STATUS_OPEN.equals(c.Status);
+
     if (isExisting)
       caseObj.fieldlst.add(
         new Field(
@@ -5646,8 +5703,12 @@ public without sharing class FEC_CaseBusinessService {
         'FEC_Customer_Name__c',
         'Customer Name',
         c.FEC_Customer_Name__c,
-        isExisting || String.isNotBlank(c.FEC_Customer_Name__c),
-        !isExisting && String.isBlank(c.FEC_Customer_Name__c),
+        isExisting ||
+          String.isNotBlank(c.FEC_Customer_Name__c) ||
+          !nonExistingAccountEditable,
+        !isExisting &&
+          String.isBlank(c.FEC_Customer_Name__c) &&
+          nonExistingAccountEditable,
         !isExisting,
         1,
         false,
@@ -5663,8 +5724,8 @@ public without sharing class FEC_CaseBusinessService {
           'FEC_Account_Contract_Number_PL__c',
           'Account/ Contract Number',
           c.FEC_Account_Contract_Number_PL__c,
-          false,
-          true,
+          !nonExistingAccountEditable,
+          nonExistingAccountEditable,
           true,
           1,
           false,
@@ -5679,8 +5740,10 @@ public without sharing class FEC_CaseBusinessService {
           'FEC_National_ID_Passport_ID__c',
           'National ID/Passport ID',
           c.FEC_National_ID_Passport_ID__c,
-          String.isNotBlank(c.FEC_National_ID_Passport_ID__c),
-          String.isBlank(c.FEC_National_ID_Passport_ID__c),
+          !nonExistingAccountEditable ||
+            String.isNotBlank(c.FEC_National_ID_Passport_ID__c),
+          nonExistingAccountEditable &&
+            String.isBlank(c.FEC_National_ID_Passport_ID__c),
           false,
           1,
           true,
@@ -5695,8 +5758,8 @@ public without sharing class FEC_CaseBusinessService {
           'FEC_Case_Phone_Number__c',
           'Phone Number',
           c.FEC_Case_Phone_Number__c,
-          false,
-          true,
+          !nonExistingAccountEditable,
+          nonExistingAccountEditable,
           false,
           1,
           true,
@@ -5711,8 +5774,8 @@ public without sharing class FEC_CaseBusinessService {
           'FEC_Case_Email__c',
           'Email',
           c.FEC_Case_Email__c,
-          false,
-          true,
+          !nonExistingAccountEditable,
+          nonExistingAccountEditable,
           false,
           1,
           false,
@@ -5726,8 +5789,8 @@ public without sharing class FEC_CaseBusinessService {
         'FEC_Customer_Type__c',
         'Customer Type',
         c.FEC_Customer_Type__c,
-        false,
-        true,
+        !nonExistingAccountEditable,
+        nonExistingAccountEditable,
         false,
         1,
         true,

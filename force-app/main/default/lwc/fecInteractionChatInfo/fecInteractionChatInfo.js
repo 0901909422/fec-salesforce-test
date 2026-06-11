@@ -10,8 +10,8 @@ import updateChatInteractionFields from '@salesforce/apex/FEC_InteractionInforHa
 import getRecordTypeName from '@salesforce/apex/FEC_InteractionInforHandler.getRecordTypeName';
 
 import ISCLOSED from '@salesforce/schema/Case.IsClosed';
-import VIEW_MODE from '@salesforce/schema/Case.FEC_Interaction_View_Mode__c';
 import HAS_ACCOUNT_OR_CONTRACT from '@salesforce/schema/Case.FEC_Has_Account_or_Contract__c';
+import VIEW_MODE from '@salesforce/schema/Case.FEC_Interaction_View_Mode__c';
 
 import FEC_Interaction_Information_Label from '@salesforce/label/c.FEC_Interaction_Information_Label';
 import FEC_Interaction_Created_On_Label from '@salesforce/label/c.FEC_Interaction_Created_On_Label';
@@ -61,9 +61,15 @@ export default class FecInteractionChatInfo extends LightningElement {
     @track usernameError = STR_EMPTY;
     @track phoneDraft = STR_EMPTY;
     @track phoneError = STR_EMPTY;
+    @track kycDraft = STR_EMPTY;
+    @track kycError = STR_EMPTY;
+    @track externalInteractionIdDraft = STR_EMPTY;
+    @track externalInteractionIdError = STR_EMPTY;
 
     isEditingUsername = false;
     isEditingPhone = false;
+    isEditingKycStatus = false;
+    isEditingExternalInteractionId = false;
     viewMode;
     hasAccountOrContract = false;
     recordTypeDevName;
@@ -73,7 +79,7 @@ export default class FecInteractionChatInfo extends LightningElement {
     @wire(MessageContext)
     messageContext;
 
-    @wire(getRecord, { recordId: '$recordId', fields: [ISCLOSED, VIEW_MODE] })
+    @wire(getRecord, { recordId: '$recordId', fields: [ISCLOSED, VIEW_MODE, HAS_ACCOUNT_OR_CONTRACT] })
     wiredCase({ data, error }) {
         if (data) {
             this.viewMode = getFieldValue(data, VIEW_MODE);
@@ -102,6 +108,8 @@ export default class FecInteractionChatInfo extends LightningElement {
                     if (!msg.isModeEdit) {
                         this.isEditingUsername = false;
                         this.isEditingPhone = false;
+                        this.isEditingKycStatus = false;
+                        this.isEditingExternalInteractionId = false;
                     }
                 }
             }, { scope: APPLICATION_SCOPE });
@@ -135,6 +143,9 @@ export default class FecInteractionChatInfo extends LightningElement {
         // 05/06/2026 10:00 tungnm37 - Allow edit only on new Interaction before selecting account/contract.
         return this.isInteractionCase && this.hasAccountOrContract !== true && this.record?.hasRelatedCustomerCase !== true;
     }
+    get canEditManualInteractionFields() {
+        return this.isInteractionCase && this.record?.FEC_Is_Manual__c === true;
+    }
 
     get customerUsername() { return this.record?.FEC_Customer_Username__c || STR_EMPTY; }
     get maskedPhone() { return this.record?.FEC_Interaction_Masked_Phone__c || null; }
@@ -153,6 +164,11 @@ export default class FecInteractionChatInfo extends LightningElement {
     get isPhoneReadOnly() { return !this.canEditChatFields || (!!(this.maskedPhone || this.realPhone) && !this.isEditingPhone); }
     get showPhoneEditIcon() { return this.canEditChatFields && !this.isEditingPhone; }
 
+    get isKycStatusReadOnly() { return !this.canEditManualInteractionFields || !this.isEditingKycStatus; }
+    get showKycStatusEditIcon() { return this.canEditManualInteractionFields && !this.isEditingKycStatus; }
+    get isExternalInteractionIdReadOnly() { return !this.canEditManualInteractionFields || !this.isEditingExternalInteractionId; }
+    get showExternalInteractionIdEditIcon() { return this.canEditManualInteractionFields && !this.isEditingExternalInteractionId; }
+
     get displayPhone() {
         return this.maskedPhone || this.realPhone || '';
     }
@@ -165,7 +181,7 @@ export default class FecInteractionChatInfo extends LightningElement {
         if (!this.canEditChatFields) return;
         const val = this.usernameDraft?.trim();
         if (!val) { this.usernameError = this.labels.usernameRequired; return; }
-        updateChatInteractionFields({ recordId: this.recordId, username: val, phone: null })
+        updateChatInteractionFields({ recordId: this.recordId, username: val, phone: null, kycStatus: null, externalInteractionId: null })
             .then(() => {
                 this.record = { ...this.record, FEC_Customer_Username__c: val };
                 this.isEditingUsername = false;
@@ -174,6 +190,37 @@ export default class FecInteractionChatInfo extends LightningElement {
             .catch(e => { this.usernameError = e?.body?.message || this.labels.saveFailed; });
     }
 
+
+    // ===== MANUAL CHAT FIELDS ACTIONS =====
+    handleEditKycStatus() { if (!this.canEditManualInteractionFields) return; this.isEditingKycStatus = true; this.kycDraft = this.kycStatus; }
+    handleKycStatusChange(e) { this.kycDraft = e.target.value; this.kycError = STR_EMPTY; }
+    handleCancelEditKycStatus() { this.isEditingKycStatus = false; this.kycDraft = STR_EMPTY; this.kycError = STR_EMPTY; }
+    handleSaveKycStatus() {
+        if (!this.canEditManualInteractionFields) return;
+        const val = this.kycDraft?.trim() || null;
+        updateChatInteractionFields({ recordId: this.recordId, username: null, phone: null, kycStatus: val, externalInteractionId: null })
+            .then(() => {
+                this.record = { ...this.record, FEC_KYC_Status__c: val || STR_EMPTY };
+                this.isEditingKycStatus = false;
+                this.kycDraft = STR_EMPTY;
+            })
+            .catch(e => { this.kycError = e?.body?.message || this.labels.saveFailed; });
+    }
+
+    handleEditExternalInteractionId() { if (!this.canEditManualInteractionFields) return; this.isEditingExternalInteractionId = true; this.externalInteractionIdDraft = this.externalInteractionId; }
+    handleExternalInteractionIdChange(e) { this.externalInteractionIdDraft = e.target.value; this.externalInteractionIdError = STR_EMPTY; }
+    handleCancelEditExternalInteractionId() { this.isEditingExternalInteractionId = false; this.externalInteractionIdDraft = STR_EMPTY; this.externalInteractionIdError = STR_EMPTY; }
+    handleSaveExternalInteractionId() {
+        if (!this.canEditManualInteractionFields) return;
+        const val = this.externalInteractionIdDraft?.trim() || null;
+        updateChatInteractionFields({ recordId: this.recordId, username: null, phone: null, kycStatus: null, externalInteractionId: val })
+            .then(() => {
+                this.record = { ...this.record, FEC_External_Interaction_ID__c: val || STR_EMPTY };
+                this.isEditingExternalInteractionId = false;
+                this.externalInteractionIdDraft = STR_EMPTY;
+            })
+            .catch(e => { this.externalInteractionIdError = e?.body?.message || this.labels.saveFailed; });
+    }
     // ===== PHONE ACTIONS =====
     handleEditPhone() { if (!this.canEditChatFields) return; this.isEditingPhone = true; this.phoneDraft = this.realPhone; }
     handlePhoneChange(e) { this.phoneDraft = e.target.value; this.phoneError = STR_EMPTY; }
@@ -186,7 +233,7 @@ export default class FecInteractionChatInfo extends LightningElement {
             this.phoneError = this.labels.phoneInvalid;
             return;
         }
-        updateChatInteractionFields({ recordId: this.recordId, username: null, phone: val })
+        updateChatInteractionFields({ recordId: this.recordId, username: null, phone: val, kycStatus: null, externalInteractionId: null })
             .then(() => {
                 this.record = { ...this.record, FEC_Phone_Number__c: val };
                 this.isEditingPhone = false;

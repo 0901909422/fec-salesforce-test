@@ -42,6 +42,8 @@ global without sharing class FEC_FetchWelcomeCallDetailsRestService {
         global String UpdateDateTime;
         global String StatusWork;
         global String SubCategory;
+        global String SCCategory;
+        global String ChannelID;
     }
 
     global class FetchWelcomeCallDetailsResponse {
@@ -178,6 +180,9 @@ global without sharing class FEC_FetchWelcomeCallDetailsRestService {
                 FEC_Customer_Name__c,
                 FEC_Phone_Number__c,
                 FEC_Case_Status__c,
+                FEC_Category__c,
+                FEC_Category__r.Name,
+                FEC_Channel__c,
                 Status,
                 LastModifiedDate,
                 CreatedBy.Email
@@ -203,6 +208,10 @@ global without sharing class FEC_FetchWelcomeCallDetailsRestService {
                 ? c.FEC_Case_Status__c
                 : c.Status;
             details.SubCategory = null;
+            details.SCCategory = c.FEC_Category__r != null
+                ? c.FEC_Category__r.Name
+                : null;
+            details.ChannelID = c.FEC_Channel__c;
             detailsList.add(details);
         }
         return detailsList;
@@ -363,6 +372,8 @@ global without sharing class FEC_FetchWelcomeCallDetailsRestService {
             detailMap.put('UpdateDateTime', detail.UpdateDateTime);
             detailMap.put('StatusWork', detail.StatusWork);
             detailMap.put('SubCategory', detail.SubCategory);
+            detailMap.put('SCCategory', detail.SCCategory);
+            detailMap.put('ChannelID', detail.ChannelID);
             detailsList.add(detailMap);
         }
         envelope.put('WelcomeCallCaseDetails', detailsList);

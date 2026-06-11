@@ -1156,6 +1156,29 @@ private class FEC_CaseBusinessService_Test {
         }
     }
 
+    // 09/06/2026 18:00 linhdev - import Escalate: case owner Queue vẫn escalate được qua ManagerId của user import
+    @IsTest
+    static void testRunInternal_EscalateImportUsesActingUserManager() {
+        User agent = caseOwnerUser();
+        User manager = [SELECT Id FROM User WHERE LastName = 'CaseBizManager' LIMIT 1];
+        Group queue = [SELECT Id FROM Group WHERE DeveloperName = 'CS_Frontline_Queue' LIMIT 1];
+        Case c = [SELECT Id FROM Case WHERE Subject = 'Core Testing Case Lifecycle' LIMIT 1];
+        c.OwnerId = queue.Id;
+        update c;
+
+        Map<String, String> params = new Map<String, String>{
+            'caseId' => c.Id,
+            FEC_CaseBusinessService.PARAM_ESCALATE_TO_ACTING_USER_MANAGER => 'true'
+        };
+
+        System.runAs(agent) {
+            Test.startTest();
+            FEC_CaseBusinessService.runInternal(FEC_CaseBusinessService.ESCALATE, params);
+            Test.stopTest();
+            System.assertEquals(manager.Id, queryCaseSystem(c.Id).OwnerId);
+        }
+    }
+
     @IsTest
     static void testGetTransferUsers_NullCaseId() {
         System.runAs(caseOwnerUser()) {

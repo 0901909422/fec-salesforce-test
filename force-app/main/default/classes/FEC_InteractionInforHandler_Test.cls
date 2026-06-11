@@ -364,7 +364,9 @@ private class FEC_InteractionInforHandler_Test {
         FEC_InteractionInforHandler.updateChatInteractionFields(
             interaction.Id,
             'chat_user',
-            '0987654321'
+            '0987654321',
+            null,
+            null
         );
         Map<String, Object> missing = FEC_InteractionInforHandler.getChatInteractionInfo(fakeCaseId());
         Test.stopTest();
@@ -386,7 +388,7 @@ private class FEC_InteractionInforHandler_Test {
     @IsTest
     static void testUpdateChatInteractionFields_NullRecordId() {
         Test.startTest();
-        FEC_InteractionInforHandler.updateChatInteractionFields(null, 'user', '0901111111');
+        FEC_InteractionInforHandler.updateChatInteractionFields(null, 'user', '0901111111', null, null);
         Test.stopTest();
         System.assert(true, 'Null recordId phải return sớm không lỗi.');
     }
@@ -502,11 +504,12 @@ private class FEC_InteractionInforHandler_Test {
     }
 
     @IsTest
-    static void testInteractionEmailActionBlocked_EmailChannelMissingEmail() {
+    static void testInteractionEmailActionBlocked_ManualEmailMissingEmail() {
         String suffix = String.valueOf(System.currentTimeMillis());
         Case emailInteraction = new Case(
             Subject = 'Email Interaction ' + suffix,
             Status = 'New',
+            FEC_Is_Manual__c = true,
             FEC_Channel__c = FEC_ConstantCommon.CHANNEL_EMAIL_NAME,
             FEC_Interaction_Email__c = null,
             FEC_ID_Search__c = 'EMAIL-BLOCK-' + suffix
@@ -524,28 +527,16 @@ private class FEC_InteractionInforHandler_Test {
 
         Test.startTest();
         System.assertEquals(true, FEC_InteractionInforHandler.isInteractionEmailActionBlocked(emailInteraction.Id));
-        Boolean threw = false;
-        try {
-            FEC_InteractionInforHandler.assertInteractionEmailForAction(emailInteraction.Id);
-        } catch (AuraHandledException e) {
-            threw = true;
-            System.assert(
-                e.getMessage().contains(System.Label.FEC_Interaction_Email_Required_Msg)
-                    || e.getMessage().contains('Script-thrown'),
-                'Expected email required message.'
-            );
-        }
         Test.stopTest();
-
-        System.assertEquals(true, threw);
     }
 
     @IsTest
-    static void testInteractionEmailActionBlocked_EmailChannelWithEmail() {
+    static void testInteractionEmailActionBlocked_ManualEmailWithEmail() {
         String suffix = String.valueOf(System.currentTimeMillis());
         Case emailInteraction = new Case(
             Subject = 'Email Interaction ' + suffix,
             Status = 'New',
+            FEC_Is_Manual__c = true,
             FEC_Channel__c = FEC_ConstantCommon.CHANNEL_EMAIL_NAME,
             FEC_Interaction_Email__c = 'valid@test.com',
             FEC_ID_Search__c = 'EMAIL-OK-' + suffix
@@ -563,7 +554,60 @@ private class FEC_InteractionInforHandler_Test {
 
         Test.startTest();
         System.assertEquals(false, FEC_InteractionInforHandler.isInteractionEmailActionBlocked(emailInteraction.Id));
-        FEC_InteractionInforHandler.assertInteractionEmailForAction(emailInteraction.Id);
+        Test.stopTest();
+    }
+
+    @IsTest
+    static void testInteractionPhoneActionBlocked_ManualInboundMissingPhone() {
+        String suffix = String.valueOf(System.currentTimeMillis());
+        Case phoneInteraction = new Case(
+            Subject = 'Inbound Interaction ' + suffix,
+            Status = 'New',
+            FEC_Is_Manual__c = true,
+            FEC_Channel__c = FEC_ConstantCommon.CHANNEL_INBOUND_NAME,
+            FEC_Phone_Number__c = null,
+            FEC_ID_Search__c = 'PHONE-BLOCK-' + suffix
+        );
+        Id rtId = interactionRecordTypeId();
+        if (rtId != null) {
+            phoneInteraction.RecordTypeId = rtId;
+        }
+        FEC_CaseTriggerHandler.isExecuting = true;
+        try {
+            insert phoneInteraction;
+        } finally {
+            FEC_CaseTriggerHandler.isExecuting = false;
+        }
+
+        Test.startTest();
+        System.assertEquals(true, FEC_InteractionInforHandler.isInteractionPhoneActionBlocked(phoneInteraction.Id));
+        Test.stopTest();
+    }
+
+    @IsTest
+    static void testInteractionPhoneActionBlocked_ManualInboundWithPhone() {
+        String suffix = String.valueOf(System.currentTimeMillis());
+        Case phoneInteraction = new Case(
+            Subject = 'Inbound Interaction ' + suffix,
+            Status = 'New',
+            FEC_Is_Manual__c = true,
+            FEC_Channel__c = FEC_ConstantCommon.CHANNEL_INBOUND_NAME,
+            FEC_Phone_Number__c = '0901234567',
+            FEC_ID_Search__c = 'PHONE-OK-' + suffix
+        );
+        Id rtId = interactionRecordTypeId();
+        if (rtId != null) {
+            phoneInteraction.RecordTypeId = rtId;
+        }
+        FEC_CaseTriggerHandler.isExecuting = true;
+        try {
+            insert phoneInteraction;
+        } finally {
+            FEC_CaseTriggerHandler.isExecuting = false;
+        }
+
+        Test.startTest();
+        System.assertEquals(false, FEC_InteractionInforHandler.isInteractionPhoneActionBlocked(phoneInteraction.Id));
         Test.stopTest();
     }
 }

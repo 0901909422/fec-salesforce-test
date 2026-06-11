@@ -31,7 +31,13 @@ global with sharing class FEC_CreateCSCaseService {
             req.CreatorInfo
                 );
             
-            CustomerResponse customerResp = getCustomerInfo(req.CustomerInfo.ContractOrAccountNumber);
+            CustomerResponse customerResp = null;
+            if (
+                !isNonExistingUserType(req.CustomerInfo.UserType) &&
+                String.isNotBlank(req.CustomerInfo.ContractOrAccountNumber)
+            ) {
+                customerResp = getCustomerInfo(req.CustomerInfo.ContractOrAccountNumber);
+            }
             // -------------------------
             // CREATE INTERACTION CASE
             // //Thangtv: Interaction = External/Other; Sys.Channel → Customer Case + FEC_Other_Subchannel__c
@@ -82,7 +88,7 @@ global with sharing class FEC_CreateCSCaseService {
             
             customerDTO.customerName = req.CustomerInfo.Name;
             customerDTO.phoneNumber = req.CustomerInfo.PhoneNumber;
-            customerDTO.userType    = req.CustomerInfo.UserType;
+            customerDTO.userType    = normalizeCustomerTypeForCase(req.CustomerInfo.UserType);
             if (customerResp != null){
                 customerDTO.customerHistoryId = custHistoryRec.Id;
             }
@@ -441,6 +447,11 @@ global with sharing class FEC_CreateCSCaseService {
         if (String.isBlank(c.UserType) || c.UserType.length() > 15) {
             throw new ValidationException(txnId, System.Label.FEC_CS_CASE_ERROR_CODE, System.Label.FEC_CS_CASE_INVALID_USER_TYPE_MSG);
         }
+
+        if (isNonExistingUserType(c.UserType)) {
+            validateOptionalCustomerContactFields(c, txnId);
+            return;
+        }
         
         if (String.isBlank(c.PhoneNumber)
             || c.PhoneNumber.length() > 15
@@ -475,6 +486,66 @@ global with sharing class FEC_CreateCSCaseService {
                 System.Label.FEC_CS_CASE_ERROR_CODE,
                 System.Label.FEC_CS_CASE_INVALID_CONTRACT_OR_ACCOUNT_NUMBER_MSG
             );
+        }
+    }
+
+    /** NON-EXISTING / Non-existing: only Name required; other contact fields optional. */
+    @TestVisible
+    private static Boolean isNonExistingUserType(String userType) {
+        if (String.isBlank(userType)) {
+            return false;
+        }
+        String normalized = userType.trim().toUpperCase().replace(' ', '').replace('-', '');
+        return normalized == 'NONEXISTING'
+            || userType.equalsIgnoreCase(FEC_ConstantCommon.CASE_NON_EXISTING_CUSTOMER)
+            || userType.equalsIgnoreCase(FEC_ConstantCommon.CUSTOMER_HISTORY_NON_EXISTING_CUSTOMER)
+            || userType.equalsIgnoreCase(FEC_ConstantCommon.REQUEST_NON_EXISTING_USER_TYPE);
+    }
+
+    /** Map API UserType to Case.FEC_Customer_Type__c picklist value. */
+    @TestVisible
+    private static String normalizeCustomerTypeForCase(String userType) {
+        if (isNonExistingUserType(userType)) {
+            return FEC_ConstantCommon.CUSTOMER_HISTORY_NON_EXISTING_CUSTOMER;
+        }
+        if (String.isNotBlank(userType)
+            && userType.trim().equalsIgnoreCase(FEC_ConstantCommon.REQUEST_EXISTING_USER_TYPE)) {
+            return FEC_ConstantCommon.CASE_EXISTING_CUSTOMER;
+        }
+        return userType;
+    }
+
+    private static void validateOptionalCustomerContactFields(CustomerInfoType c, String txnId) {
+        if (String.isNotBlank(c.PhoneNumber)) {
+            if (c.PhoneNumber.length() > 15
+                || !Pattern.matches(FEC_ConstantCommon.PATTERN_PHONE_NUMBER, c.PhoneNumber)
+            ) {
+                throw new ValidationException(txnId, System.Label.FEC_CS_CASE_ERROR_CODE, System.Label.FEC_CS_CASE_INVALID_PHONE_NUMBER_MSG);
+            }
+        }
+        if (String.isNotBlank(c.EmailAddress)) {
+            if (c.EmailAddress.length() > 255
+                || !Pattern.matches(
+                    FEC_ConstantCommon.PATTERN_EMAIL,
+                    c.EmailAddress.toUpperCase()
+                )
+            ) {
+                throw new ValidationException(txnId, System.Label.FEC_CS_CASE_ERROR_CODE, System.Label.FEC_CS_CASE_INVALID_EMAIL_ADDRESS_MSG);
+            }
+        }
+        if (String.isNotBlank(c.NationalID) && c.NationalID.length() > 15) {
+            throw new ValidationException(txnId, System.Label.FEC_CS_CASE_ERROR_CODE, System.Label.FEC_CS_CASE_INVALID_NATIONAL_ID_MSG);
+        }
+        if (String.isNotBlank(c.ContractOrAccountNumber)) {
+            if (c.ContractOrAccountNumber.length() > 255
+                || !isValidContractOrAccountNumber(c.ContractOrAccountNumber)
+            ) {
+                throw new ValidationException(
+                    txnId,
+                    System.Label.FEC_CS_CASE_ERROR_CODE,
+                    System.Label.FEC_CS_CASE_INVALID_CONTRACT_OR_ACCOUNT_NUMBER_MSG
+                );
+            }
         }
     }
 
@@ -821,6 +892,9 @@ global with sharing class FEC_CreateCSCaseService {
     }
     
     private static CustomerResponse getCustomerInfo(String accountContractNumber) {
+        if (String.isBlank(accountContractNumber)) {
+            return null;
+        }
         CustomerResponse resp = new CustomerResponse();
         String accountNumber = null;
         String contractNumber = null;

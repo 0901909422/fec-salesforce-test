@@ -612,6 +612,7 @@
         <members>FEC_MSG_FollowUp_Type_Updated_Success</members>
         <members>FEC_MSG_FollowUp_Unfollow_Success</members>
         <members>FEC_Success_Title</members>
+		<members>FEC_MSG_ApplicationID_Invalid</members>
 		<name>CustomLabel</name>
 	</types>
     <types>

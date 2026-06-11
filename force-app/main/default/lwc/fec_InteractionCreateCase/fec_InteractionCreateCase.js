@@ -6,7 +6,7 @@ import {
   openSubtab,
   openTab,
   closeTab,
-  getFocusedTabInfo
+  getFocusedTabInfo,
 } from "lightning/platformWorkspaceApi";
 import { publish, MessageContext } from "lightning/messageService";
 import { ShowToastEvent } from "lightning/platformShowToastEvent";
@@ -14,9 +14,7 @@ import IS_MODE_EDIT from "@salesforce/messageChannel/FEC_Case_Mode__c";
 import FEC_Toast_Validation_Title from "@salesforce/label/c.FEC_Toast_Validation_Title";
 import createCustomerCaseFromCase from "@salesforce/apex/FEC_CreateCaseInteractionController.createCustomerCaseFromCase";
 import createCustomerCaseFromCaseNonExistingCustomer from "@salesforce/apex/FEC_CreateCaseInteractionController.createCustomerCaseFromCaseNonExistingCustomer";
-import {
-  setMode,
-} from "c/fec_CustomerCaseModeStore";
+import { setMode } from "c/fec_CustomerCaseModeStore";
 // import { getRecord, getFieldValue } from "lightning/uiRecordApi";
 // import resetViewMode from "@salesforce/apex/FEC_InteractionInforHandler.resetViewMode";
 // import VIEW_MODE from "@salesforce/schema/Case.FEC_Interaction_View_Mode__c";
@@ -93,46 +91,52 @@ export default class Fec_InteractionCreateCase extends NavigationMixin(
 
   async connectedCallback() {
     this.isLoading = true;
-    if (this.isCreatedFromSearch === 'true' && this.recordId && this.recordTypeDevName === 'Internal_Case') {
-        this.isLoading = false;
-      console.log('recordTypeDevName =====>', this.recordTypeDevName);
-        if (this.isConsoleNavigation) {
-            const allTabs = await getAllTabInfo();
-            const componentTab = allTabs.find(t =>
-                t.pageReference?.type === 'standard__component' &&
-                t.pageReference?.attributes?.componentName === 'c__fec_InteractionCreateCase'
-            );
+    if (
+      this.isCreatedFromSearch === "true" &&
+      this.recordId &&
+      this.recordTypeDevName === "Internal_Case"
+    ) {
+      this.isLoading = false;
+      console.log("recordTypeDevName =====>", this.recordTypeDevName);
+      if (this.isConsoleNavigation) {
+        const allTabs = await getAllTabInfo();
+        const componentTab = allTabs.find(
+          (t) =>
+            t.pageReference?.type === "standard__component" &&
+            t.pageReference?.attributes?.componentName ===
+              "c__fec_InteractionCreateCase",
+        );
 
-            const focusedTab = await getFocusedTabInfo();
-            if (focusedTab?.parentTabId) {
-                await openSubtab(focusedTab.parentTabId, {
-                    recordId: this.recordId,
-                    focus: true,
-                });
-            } else {
-                await openTab({
-                    recordId: this.recordId,
-                    focus: true,
-                });
-            }
-
-            setTimeout(async () => {
-                await this.handlePublishMessageChanel();
-                if (componentTab?.tabId) {
-                    closeTab(componentTab.tabId);
-                }
-            }, 2000);
+        const focusedTab = await getFocusedTabInfo();
+        if (focusedTab?.parentTabId) {
+          await openSubtab(focusedTab.parentTabId, {
+            recordId: this.recordId,
+            focus: true,
+          });
         } else {
-            this[NavigationMixin.Navigate]({
-                type: "standard__recordPage",
-                attributes: {
-                    recordId: this.recordId,
-                    objectApiName: "Case",
-                    actionName: "view",
-                },
-            });
+          await openTab({
+            recordId: this.recordId,
+            focus: true,
+          });
         }
-        return;
+
+        setTimeout(async () => {
+          await this.handlePublishMessageChanel();
+          if (componentTab?.tabId) {
+            closeTab(componentTab.tabId);
+          }
+        }, 2000);
+      } else {
+        this[NavigationMixin.Navigate]({
+          type: "standard__recordPage",
+          attributes: {
+            recordId: this.recordId,
+            objectApiName: "Case",
+            actionName: "view",
+          },
+        });
+      }
+      return;
     }
     if (!this.isNonExistingCustomer) {
       createCustomerCaseFromCase({ caseId: this.recordId })
@@ -184,7 +188,7 @@ export default class Fec_InteractionCreateCase extends NavigationMixin(
         caseId: this.recordId,
         customerName: this.customerName,
         nationalPassportId: this.identityNo,
-        isCreatedFromSearch: this.isCreatedFromSearch
+        isCreatedFromSearch: this.isCreatedFromSearch,
       })
         .then(async (newCaseId) => {
           this.isLoading = false;
@@ -223,17 +227,32 @@ export default class Fec_InteractionCreateCase extends NavigationMixin(
           //     await resetViewMode({ recordId: this.recordId, viewMode: "handling" });
           //   }
         })
-
-        .catch((error) => {
+        .catch(async (error) => {
           this.isLoading = false;
+
           console.error(error);
           this.showActionError(error);
+
+          if (this.isConsoleNavigation) {
+            try {
+              const focusedTab = await getFocusedTabInfo();
+              const currentTabId = focusedTab.tabId;
+
+              setTimeout(async () => {
+                await this.handlePublishMessageChanel();
+                await closeTab(currentTabId);
+              }, 2000);
+            } catch (e) {
+              console.error("Error closing tab:", e);
+            }
+          }
         });
     }
   }
 
   showActionError(error) {
-    const message = error?.body?.message || error?.message || "Failed to create case.";
+    const message =
+      error?.body?.message || error?.message || "Failed to create case.";
     this.dispatchEvent(
       new ShowToastEvent({
         title: FEC_Toast_Validation_Title,

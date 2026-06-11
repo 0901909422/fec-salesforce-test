@@ -7,7 +7,12 @@
                         <lightning-icon icon-name={disbursementIconName} size="x-small"
                             class="slds-m-right_x-small">
                         </lightning-icon>
-                        <span>{disbursementHeaderText}</span>
+                        <span>
+                            {customLabel.disbursementLabel}
+                            <template if:true={disbursementSectionLabelError}>
+                                <span class="fec-secondary-loan-header-error"> - {disbursementSectionLabelError}</span>
+                            </template>
+                        </span>
                     </span>
                 </h3>
             </div>

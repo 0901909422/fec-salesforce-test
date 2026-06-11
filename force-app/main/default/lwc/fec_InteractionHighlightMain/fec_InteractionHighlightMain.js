@@ -12,8 +12,9 @@ import { notifyRecordUpdateAvailable } from "lightning/uiRecordApi";
 import resetViewMode from "@salesforce/apex/FEC_InteractionInforHandler.resetViewMode";
 import getRecordTypeName from "@salesforce/apex/FEC_InteractionInforHandler.getRecordTypeName";
 import isInteractionEmailActionBlocked from "@salesforce/apex/FEC_InteractionInforHandler.isInteractionEmailActionBlocked";
-import FEC_Interaction_Email_Required_Msg from "@salesforce/label/c.FEC_Interaction_Email_Required_Msg";
-import FEC_Toast_Validation_Title from "@salesforce/label/c.FEC_Toast_Validation_Title";
+import isInteractionPhoneActionBlocked from "@salesforce/apex/FEC_InteractionInforHandler.isInteractionPhoneActionBlocked";
+import VALIDATE_INTERACTION_EMAIL from "@salesforce/messageChannel/FEC_Validate_Interaction_Email__c";
+import VALIDATE_INTERACTION_PHONE from "@salesforce/messageChannel/FEC_Validate_Interaction_Phone__c";
 
 import FIRST_ACCESS from "@salesforce/schema/Case.FEC_First_Access__c";
 import VIEW_MODE from "@salesforce/schema/Case.FEC_Interaction_View_Mode__c";
@@ -341,24 +342,54 @@ export default class Fec_InteractionHighlightMain extends NavigationMixin(
     this.handlePublishMode(true);
   }
 
+  async ensureInteractionEmailBeforeCreateCase(recordId) {
+    if (!recordId) {
+      return true;
+    }
+    try {
+      const blocked = await isInteractionEmailActionBlocked({ recordId });
+      if (blocked) {
+        publish(this.messageContext, VALIDATE_INTERACTION_EMAIL, { recordId });
+        return false;
+      }
+      return true;
+    } catch (error) {
+      console.error("isInteractionEmailActionBlocked error", error);
+      return true;
+    }
+  }
+
+  async ensureInteractionPhoneBeforeCreateCase(recordId) {
+    if (!recordId) {
+      return true;
+    }
+    try {
+      const blocked = await isInteractionPhoneActionBlocked({ recordId });
+      if (blocked) {
+        publish(this.messageContext, VALIDATE_INTERACTION_PHONE, { recordId });
+        return false;
+      }
+      return true;
+    } catch (error) {
+      console.error("isInteractionPhoneActionBlocked error", error);
+      return true;
+    }
+  }
+
+  async ensureInteractionFieldsBeforeCreateCase(recordId) {
+    const emailOk = await this.ensureInteractionEmailBeforeCreateCase(recordId);
+    if (!emailOk) {
+      return false;
+    }
+    return this.ensureInteractionPhoneBeforeCreateCase(recordId);
+  }
+
   async handleCreateCase() {
     console.log("handleCreateCase from creation highlight");
-    try {
-      const blocked = await isInteractionEmailActionBlocked({
-        recordId: this.createCaseSourceId,
-      });
-      if (blocked) {
-        this.dispatchEvent(
-          new ShowToastEvent({
-            title: FEC_Toast_Validation_Title,
-            message: FEC_Interaction_Email_Required_Msg,
-            variant: "error",
-          }),
-        );
-        return;
-      }
-    } catch (error) {
-      console.error("isInteractionEmailActionBlocked error:", error);
+    const canProceed = await this.ensureInteractionFieldsBeforeCreateCase(
+      this.createCaseSourceId
+    );
+    if (!canProceed) {
       return;
     }
     this.handlePublishMode(true);

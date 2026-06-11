@@ -14,6 +14,7 @@ public without sharing class FEC_ServiceCaseEmailService {
         @AuraEnabled public String fileName { get; set; }
         @AuraEnabled public String base64Data { get; set; }
         @AuraEnabled public String mimeType { get; set; }
+        @AuraEnabled public String contentDocumentId { get; set; }
     }
 
     @AuraEnabled
@@ -172,3 +173,4 @@ public without sharing class FEC_ServiceCaseEmailService {
         return FEC_CustomEmailService.getFromAddresses(caseId);
     }
 }
+

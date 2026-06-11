@@ -1144,11 +1144,6 @@ const normalizeInteractionResult = (data) => {
   return { ...record, FEC_Interaction_Masked_Phone__c: masked };
 };
 
-const CHANNEL_EMAIL = 'Email';
-
-const isInteractionEmailActionBlocked = (channel, interactionEmail) =>
-  channel === CHANNEL_EMAIL && !(interactionEmail && String(interactionEmail).trim());
-
 export {
   formatDate,
   formatDateTime,
@@ -1158,7 +1153,6 @@ export {
   formatDateVNI,
   formatToDDMMYYYY,
   formatDateFlexibleVN,
-  isInteractionEmailActionBlocked,
   parseDateVNI,
   maskWorkPhone,
   maskValue,

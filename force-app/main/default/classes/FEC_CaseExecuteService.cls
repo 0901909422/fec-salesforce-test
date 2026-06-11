@@ -124,6 +124,12 @@ public without sharing class FEC_CaseExecuteService {
     
     return buildResult(c, canExecute,'');
   }
+
+
+  @AuraEnabled
+    public static ExecuteVisibilityResult refreshExecuteVisibility(Id caseId) {
+        return canExecute(caseId);
+    }
   
   private static Boolean hasCaseAccess(Case c, Id currentUserId) {
     if (c == null || currentUserId == null || c.OwnerId == null) {

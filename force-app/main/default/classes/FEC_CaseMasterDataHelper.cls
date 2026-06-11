@@ -118,6 +118,20 @@ public without sharing class FEC_CaseMasterDataHelper {
     Boolean isCurrentStageRevertedContext,
     Integer revertConfirmAssessmentSourceStage
   ) {
+    return filterRevertedAssignmentRowsByStageContext(
+      masterDatalst,
+      isCurrentStageRevertedContext,
+      revertConfirmAssessmentSourceStage,
+      false
+    );
+  }
+
+  public static List<SObject> filterRevertedAssignmentRowsByStageContext(
+    List<SObject> masterDatalst,
+    Boolean isCurrentStageRevertedContext,
+    Integer revertConfirmAssessmentSourceStage,
+    Boolean isRc27Flow
+  ) {
     if (masterDatalst == null || masterDatalst.isEmpty()) {
       return masterDatalst;
     }
@@ -141,7 +155,8 @@ public without sharing class FEC_CaseMasterDataHelper {
         revertConfirmAssessmentSourceStage != null &&
         shouldSkipRevertConfirmAssessmentField(
           revertConfirmAssessmentSourceStage,
-          fieldApi
+          fieldApi,
+          isRc27Flow
         )
       ) {
         continue;
@@ -149,6 +164,16 @@ public without sharing class FEC_CaseMasterDataHelper {
       filtered.add(mdsRow);
     }
     return filtered;
+  }
+
+  /** RC27.01 / RC27.02 — luồng Thay thế thẻ: revert 2→1/3→1 hiển thị field xác nhận ngược luồng thường. */
+  public static Boolean isRc27SubCode(String subCodeCode) {
+    if (String.isBlank(subCodeCode)) {
+      return false;
+    }
+    String code = subCodeCode.trim();
+    return FEC_ConstantCommon.SUB_CODE_CARD_REPLACEMENT_FEE.equalsIgnoreCase(code) ||
+      FEC_ConstantCommon.SUB_CODE_CARD_REPLACEMENT_FREE.equalsIgnoreCase(code);
   }
 
   /**
@@ -415,22 +440,39 @@ public without sharing class FEC_CaseMasterDataHelper {
   }
 
   /**
-   * Revert 2→1 / 3→1: ẩn cả subsection (vd "Confirm to D2C Assessment") — không chỉ field.
+   * Revert 2→1 / 3→1: ẩn subsection xác nhận không thuộc stage nguồn.
+   * Luồng thường: 2→1 ẩn D2C; 3→1 ẩn CS SP.
+   * RC27: 2→1 ẩn CS SP (chỉ hiện D2C); 3→1 ẩn D2C (chỉ hiện CS Support).
    */
   public static Boolean shouldHideRevertConfirmSubSection(
     Integer revertSourceStageNumber,
     String subSectionName
   ) {
+    return shouldHideRevertConfirmSubSection(
+      revertSourceStageNumber,
+      subSectionName,
+      false
+    );
+  }
+
+  public static Boolean shouldHideRevertConfirmSubSection(
+    Integer revertSourceStageNumber,
+    String subSectionName,
+    Boolean isRc27Flow
+  ) {
     if (revertSourceStageNumber == null || String.isBlank(subSectionName)) {
       return false;
     }
     String n = subSectionName.trim().toLowerCase();
-    if (revertSourceStageNumber == 3) {
-      return n.contains('confirm') && n.contains('d2c');
-    }
+    Boolean hideD2c = n.contains('confirm') && n.contains('d2c');
+    Boolean hideCsSp =
+      n.contains('confirm') &&
+      (n.contains('cs sp') || n.contains('support'));
     if (revertSourceStageNumber == 2) {
-      return n.contains('confirm') &&
-        (n.contains('cs sp') || n.contains('support'));
+      return isRc27Flow == true ? hideCsSp : hideD2c;
+    }
+    if (revertSourceStageNumber == 3) {
+      return isRc27Flow == true ? hideD2c : hideCsSp;
     }
     return false;
   }
@@ -441,6 +483,18 @@ public without sharing class FEC_CaseMasterDataHelper {
   public static void pruneRevertConfirmAssessmentSubSections(
     List<FEC_CaseBusinessService.Section> sectionlst,
     Integer revertConfirmAssessmentSourceStage
+  ) {
+    pruneRevertConfirmAssessmentSubSections(
+      sectionlst,
+      revertConfirmAssessmentSourceStage,
+      false
+    );
+  }
+
+  public static void pruneRevertConfirmAssessmentSubSections(
+    List<FEC_CaseBusinessService.Section> sectionlst,
+    Integer revertConfirmAssessmentSourceStage,
+    Boolean isRc27Flow
   ) {
     if (
       sectionlst == null ||
@@ -457,7 +511,8 @@ public without sharing class FEC_CaseMasterDataHelper {
         if (
           shouldHideRevertConfirmSubSection(
             revertConfirmAssessmentSourceStage,
-            sub.name
+            sub.name,
+            isRc27Flow
           )
         ) {
           section.subSectionlst.remove(i);
@@ -466,19 +521,39 @@ public without sharing class FEC_CaseMasterDataHelper {
     }
   }
 
-  /** Ẩn field xác nhận không thuộc stage nguồn khi revert 2→1 hoặc 3→1. */
+  /**
+   * Ẩn field xác nhận không thuộc stage nguồn khi revert 2→1 hoặc 3→1.
+   * Luồng thường: 2→1 skip D2C; 3→1 skip CS SP.
+   * RC27: 2→1 skip CS SP; 3→1 skip D2C.
+   */
   public static Boolean shouldSkipRevertConfirmAssessmentField(
     Integer revertSourceStageNumber,
     String fieldApiName
+  ) {
+    return shouldSkipRevertConfirmAssessmentField(
+      revertSourceStageNumber,
+      fieldApiName,
+      false
+    );
+  }
+
+  public static Boolean shouldSkipRevertConfirmAssessmentField(
+    Integer revertSourceStageNumber,
+    String fieldApiName,
+    Boolean isRc27Flow
   ) {
     if (revertSourceStageNumber == null || String.isBlank(fieldApiName)) {
       return false;
     }
     if (revertSourceStageNumber == 2) {
-      return API_CONFIRM_CS_SP_ASSESSMENT.equals(fieldApiName);
+      return isRc27Flow == true
+        ? API_CONFIRM_CS_SP_ASSESSMENT.equals(fieldApiName)
+        : API_CONFIRM_D2C_ASSESSMENT.equals(fieldApiName);
     }
     if (revertSourceStageNumber == 3) {
-      return API_CONFIRM_D2C_ASSESSMENT.equals(fieldApiName);
+      return isRc27Flow == true
+        ? API_CONFIRM_D2C_ASSESSMENT.equals(fieldApiName)
+        : API_CONFIRM_CS_SP_ASSESSMENT.equals(fieldApiName);
     }
     return false;
   }
