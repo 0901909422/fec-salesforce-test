@@ -165,16 +165,23 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
   // Active tab state
   activeTabValue = "Card";
 
+  get cardDisplayFieldName() {
+    return this.isAccountContractSearch ? 'ContractNumber' : 'AccountNumber';
+  }
+
+  get cardDisplayLabel() {
+    return this.isAccountContractSearch ? 'Contract Number' : 'Account Number';
+  }
   // Demo columns per tab (adjust fields as needed)
   get cardColumns() {
     return [
       {
-        label: "Account Number",
+        label: this.cardDisplayLabel,
         type: "dblclickText",
-        fieldName: "AccountNumber",
+        fieldName: this.cardDisplayFieldName,
         typeAttributes:  {
-              value: { fieldName: "AccountNumber" },
-              fieldName: "AccountNumber",
+              value: { fieldName: this.cardDisplayFieldName },
+              fieldName: this.cardDisplayFieldName,
               selectedType: "Card",
               isExpanded: this.isAccountContractSearch ? { fieldName: "_isExpanded" } : false,
               isAccountContractSearch: this.isAccountContractSearch
