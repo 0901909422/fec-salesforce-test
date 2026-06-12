@@ -481,4 +481,429 @@ private class FEC_BlockCodeRoutingService_Test {
         System.assertEquals('00G000000000001AAA', skipped);
         System.assertNotEquals(null, clientBiz);
     }
+
+    @IsTest
+    static void testStageHelpersAndQueueResolvers() {
+        Case currentCase = [
+            SELECT Id, FEC_Current_Case_Stage__c, FEC_Current_Case_Stage__r.FEC_Code__c,
+                FEC_Current_Case_Stage__r.Name, FEC_Interaction__c, FEC_Category__c,
+                FEC_SubCategory__c, FEC_SubCode__c, FEC_Account_or_Contract__c
+            FROM Case
+            WHERE Subject = 'Current Case RC27'
+            LIMIT 1
+        ];
+
+        Test.startTest();
+        System.assertEquals(
+            false,
+            FEC_BlockCodeRoutingService.isCaseAtStageOne(null)
+        );
+        System.assertEquals(
+            false,
+            FEC_BlockCodeRoutingService.isCaseAtStageTwo(null)
+        );
+        Boolean atStageOne = FEC_BlockCodeRoutingService.isCaseAtStageOne(currentCase);
+        Boolean atStageTwo = FEC_BlockCodeRoutingService.isCaseAtStageTwo(currentCase);
+        Id day2Queue = FEC_BlockCodeRoutingService.resolveDay2CheckQueueId();
+        Id dqQueue = FEC_BlockCodeRoutingService.resolveDqCsSupportQueueId();
+        Boolean forcedOm = FEC_BlockCodeRoutingService.isCustomerHistoryForcedOmDay2(
+            currentCase.FEC_Account_or_Contract__c
+        );
+        Boolean rc27ByNoc = FEC_BlockCodeRoutingService.isCurrentCaseRc27ByCurrentNoc(
+            currentCase,
+            String.valueOf(currentCase.FEC_Category__c),
+            String.valueOf(currentCase.FEC_SubCategory__c),
+            String.valueOf(currentCase.FEC_SubCode__c)
+        );
+        Boolean rc27ByFields = FEC_BlockCodeRoutingService.isCurrentCaseRc27ByCaseFields(currentCase);
+        Test.stopTest();
+
+        System.assertNotEquals(null, atStageOne);
+        System.assertNotEquals(null, atStageTwo);
+        System.assertNotEquals(null, forcedOm);
+        System.assertNotEquals(null, rc27ByNoc);
+        System.assertNotEquals(null, rc27ByFields);
+    }
+
+    @IsTest
+    static void testIsClientBlockCodeForcedOmDay2ForRc27Route() {
+        Case currentCase = [
+            SELECT Id, FEC_Interaction__c, FEC_Category__c, FEC_SubCategory__c, FEC_SubCode__c
+            FROM Case
+            WHERE Subject = 'Current Case RC27'
+            LIMIT 1
+        ];
+        Test.startTest();
+        Boolean forced = FEC_BlockCodeRoutingService.isClientBlockCodeForcedOmDay2ForRc27Route(
+            currentCase,
+            'F',
+            'G',
+            null
+        );
+        Boolean notForced = FEC_BlockCodeRoutingService.isClientBlockCodeForcedOmDay2ForRc27Route(
+            currentCase,
+            'A',
+            'B',
+            null
+        );
+        Test.stopTest();
+
+        System.assertEquals(true, forced);
+        System.assertEquals(false, notForced);
+    }
+
+    @IsTest
+    static void testApplyRouteQueueOverride_WithClientBlockCodes() {
+        Case currentCase = [
+            SELECT Id, FEC_Interaction__c, FEC_Category__c, FEC_SubCategory__c, FEC_SubCode__c,
+                FEC_Account_or_Contract__c, FEC_Current_Case_Stage__c,
+                FEC_Current_Case_Stage__r.FEC_Code__c, FEC_Current_Case_Stage__r.Name
+            FROM Case
+            WHERE Subject = 'Current Case RC27'
+            LIMIT 1
+        ];
+        String defaultQueue = '00G000000000001AAA';
+
+        Test.startTest();
+        String skipped = FEC_BlockCodeRoutingService.applyRouteQueueOverrideIfApplicable(
+            currentCase,
+            defaultQueue,
+            true
+        );
+        String withClientBc = FEC_BlockCodeRoutingService.applyRouteQueueOverrideIfApplicable(
+            currentCase,
+            defaultQueue,
+            false,
+            'F',
+            'G',
+            null
+        );
+        Test.stopTest();
+
+        System.assertEquals(defaultQueue, skipped);
+        System.assertNotEquals(null, withClientBc);
+    }
+
+    @IsTest
+    static void testApplyToBusiness_RevertBypassAndClientBlockCode() {
+        Case currentCase = [
+            SELECT Id, FEC_Interaction__c, FEC_Category__c, FEC_SubCategory__c, FEC_SubCode__c,
+                FEC_Account_or_Contract__c, FEC_Current_Case_Stage__c,
+                FEC_Current_Case_Stage__r.FEC_Code__c, FEC_Current_Case_Stage__r.Name
+            FROM Case
+            WHERE Subject = 'Current Case RC27'
+            LIMIT 1
+        ];
+        FEC_Category__c cat = [SELECT Id FROM FEC_Category__c WHERE FEC_Code__c = 'Request' LIMIT 1];
+        FEC_Sub_Category__c subCat = [SELECT Id FROM FEC_Sub_Category__c WHERE FEC_Code__c = 'RC27' LIMIT 1];
+        FEC_Sub_Code__c subCode = [SELECT Id FROM FEC_Sub_Code__c WHERE FEC_Code__c = 'RC27.01' LIMIT 1];
+        FEC_Case_Stage__c stage1 = new FEC_Case_Stage__c(
+            Name = 'Stage 1 Client BC',
+            FEC_Code__c = FEC_ConstantCommon.STAGE_ONE,
+            FEC_Active__c = true
+        );
+        insert stage1;
+
+        FEC_CaseBusinessService.Business revertBiz = new FEC_CaseBusinessService.Business();
+        revertBiz.routeByLatestRevertHistory = true;
+        FEC_CaseBusinessService.Business clientBiz = new FEC_CaseBusinessService.Business();
+
+        Test.startTest();
+        FEC_BlockCodeRoutingService.applyToBusinessIfApplicable(
+            currentCase,
+            revertBiz,
+            String.valueOf(cat.Id),
+            String.valueOf(subCat.Id),
+            String.valueOf(subCode.Id),
+            stage1.Id,
+            null,
+            'F',
+            'G'
+        );
+        FEC_BlockCodeRoutingService.applyToBusinessIfApplicable(
+            currentCase,
+            clientBiz,
+            String.valueOf(cat.Id),
+            String.valueOf(subCat.Id),
+            String.valueOf(subCode.Id),
+            stage1.Id,
+            null,
+            'F',
+            'G'
+        );
+        Test.stopTest();
+
+        System.assertEquals(true, revertBiz.routeByLatestRevertHistory);
+        System.assertNotEquals(null, clientBiz);
+    }
+
+    @IsTest
+    static void testApplyRouteQueueOverride_NatureOfCaseAndClientBlock() {
+        Case currentCase = [
+            SELECT Id, FEC_Interaction__c, FEC_Category__c, FEC_SubCategory__c, FEC_SubCode__c,
+                FEC_Account_or_Contract__c, FEC_Current_Case_Stage__c,
+                FEC_Current_Case_Stage__r.FEC_Code__c, FEC_Current_Case_Stage__r.Name
+            FROM Case
+            WHERE Subject = 'Current Case RC27'
+            LIMIT 1
+        ];
+        FEC_Case_Stage__c stage1 = new FEC_Case_Stage__c(
+            Name = 'Stage 1 Route Override',
+            FEC_Code__c = FEC_ConstantCommon.STAGE_ONE,
+            FEC_Active__c = true
+        );
+        insert stage1;
+        currentCase.FEC_Current_Case_Stage__c = stage1.Id;
+        update currentCase;
+        currentCase = [
+            SELECT Id, FEC_Interaction__c, FEC_Category__c, FEC_SubCategory__c, FEC_SubCode__c,
+                FEC_Account_or_Contract__c, FEC_Current_Case_Stage__c,
+                FEC_Current_Case_Stage__r.FEC_Code__c, FEC_Current_Case_Stage__r.Name
+            FROM Case
+            WHERE Id = :currentCase.Id
+        ];
+
+        String defaultQueue = '00G000000000001AAA';
+        String nocId = String.valueOf(currentCase.FEC_Category__c);
+
+        Test.startTest();
+        String forced = FEC_BlockCodeRoutingService.applyRouteQueueOverrideIfApplicable(
+            currentCase,
+            defaultQueue,
+            false,
+            'F',
+            'G',
+            nocId
+        );
+        String sibling = FEC_BlockCodeRoutingService.applyRouteQueueOverrideIfApplicable(
+            currentCase,
+            defaultQueue,
+            false,
+            'A',
+            'B',
+            null
+        );
+        System.assertEquals(
+            false,
+            FEC_BlockCodeRoutingService.isRc27DefaultOmDay2Routing(currentCase)
+        );
+        Test.stopTest();
+
+        System.assertNotEquals(null, forced);
+        System.assertNotEquals(null, sibling);
+    }
+
+    @IsTest
+    static void testApplyToBusiness_Stage1ClientBlockAndHistoryOm() {
+        Case currentCase = [
+            SELECT Id, FEC_Interaction__c, FEC_Category__c, FEC_SubCategory__c, FEC_SubCode__c,
+                FEC_Account_or_Contract__c, FEC_Current_Case_Stage__c,
+                FEC_Current_Case_Stage__r.FEC_Code__c, FEC_Current_Case_Stage__r.Name
+            FROM Case
+            WHERE Subject = 'Current Case RC27'
+            LIMIT 1
+        ];
+        FEC_Category__c cat = [SELECT Id FROM FEC_Category__c WHERE FEC_Code__c = 'Request' LIMIT 1];
+        FEC_Sub_Category__c subCat = [SELECT Id FROM FEC_Sub_Category__c WHERE FEC_Code__c = 'RC27' LIMIT 1];
+        FEC_Sub_Code__c subCode = [SELECT Id FROM FEC_Sub_Code__c WHERE FEC_Code__c = 'RC27.01' LIMIT 1];
+        FEC_Customer_History__c custOm = [SELECT Id FROM FEC_Customer_History__c WHERE Name = 'CUST-OM-001' LIMIT 1];
+        FEC_Case_Stage__c stage1 = new FEC_Case_Stage__c(
+            Name = 'Stage 1 Client BC Apply',
+            FEC_Code__c = FEC_ConstantCommon.STAGE_ONE,
+            FEC_Active__c = true
+        );
+        insert stage1;
+        FEC_Action_Button__c btnRoute = new FEC_Action_Button__c(
+            Name = 'Route To Block Code Test',
+            FEC_Code__c = 'Route to',
+            FEC_Type__c = 'Routing Action',
+            FEC_Active__c = true
+        );
+        insert btnRoute;
+        insert new FEC_Stage_Change__c(
+            FEC_Previous_Stage__c = stage1.Id,
+            FEC_Team_User_Group__c = 'OM',
+            FEC_Next_Queue__c = FEC_ConstantCommon.QUEUE_DAY_2_CHECK_NAME,
+            FEC_Action_Button__c = btnRoute.Id,
+            FEC_Active__c = true,
+            FEC_IsReverted__c = false
+        );
+
+        currentCase.FEC_Current_Case_Stage__c = stage1.Id;
+        currentCase.FEC_Account_or_Contract__c = custOm.Id;
+        update currentCase;
+        currentCase = [
+            SELECT Id, FEC_Interaction__c, FEC_Category__c, FEC_SubCategory__c, FEC_SubCode__c,
+                FEC_Account_or_Contract__c, FEC_Current_Case_Stage__c,
+                FEC_Current_Case_Stage__r.FEC_Code__c, FEC_Current_Case_Stage__r.Name
+            FROM Case
+            WHERE Id = :currentCase.Id
+        ];
+
+        FEC_CaseBusinessService.Business forcedBiz = new FEC_CaseBusinessService.Business();
+        FEC_CaseBusinessService.Business historyBiz = new FEC_CaseBusinessService.Business();
+
+        Test.startTest();
+        FEC_BlockCodeRoutingService.applyToBusinessIfApplicable(
+            currentCase,
+            forcedBiz,
+            String.valueOf(cat.Id),
+            String.valueOf(subCat.Id),
+            String.valueOf(subCode.Id),
+            stage1.Id,
+            btnRoute.Id,
+            'F',
+            'G'
+        );
+        FEC_BlockCodeRoutingService.applyToBusinessIfApplicable(
+            currentCase,
+            historyBiz,
+            String.valueOf(cat.Id),
+            String.valueOf(subCat.Id),
+            String.valueOf(subCode.Id),
+            stage1.Id,
+            btnRoute.Id,
+            null,
+            null
+        );
+        FEC_Stage_Change__c withAction = FEC_BlockCodeRoutingService.queryRc27DefaultOmDay2StageChange(
+            stage1.Id,
+            btnRoute.Id
+        );
+        Test.stopTest();
+
+        System.assertNotEquals(null, forcedBiz);
+        System.assertNotEquals(null, historyBiz);
+        System.assertNotEquals(null, withAction);
+    }
+
+    @IsTest
+    static void testApplyToBusiness_Stage2UsesStageChangeRow() {
+        FEC_Case_Stage__c stage2 = new FEC_Case_Stage__c(
+            Name = 'Stage 2 Apply Business',
+            FEC_Code__c = FEC_ConstantCommon.STAGE_TWO,
+            FEC_Active__c = true
+        );
+        insert stage2;
+
+        Case currentCase = [
+            SELECT Id, FEC_Interaction__c, FEC_Category__c, FEC_SubCategory__c, FEC_SubCode__c,
+                FEC_Account_or_Contract__c, FEC_Current_Case_Stage__c,
+                FEC_Current_Case_Stage__r.FEC_Code__c, FEC_Current_Case_Stage__r.Name
+            FROM Case
+            WHERE Subject = 'Current Case RC27'
+            LIMIT 1
+        ];
+        currentCase.FEC_Current_Case_Stage__c = stage2.Id;
+        update currentCase;
+        currentCase = [
+            SELECT Id, FEC_Interaction__c, FEC_Category__c, FEC_SubCategory__c, FEC_SubCode__c,
+                FEC_Account_or_Contract__c, FEC_Current_Case_Stage__c,
+                FEC_Current_Case_Stage__r.FEC_Code__c, FEC_Current_Case_Stage__r.Name
+            FROM Case
+            WHERE Id = :currentCase.Id
+        ];
+
+        FEC_Category__c cat = [SELECT Id FROM FEC_Category__c WHERE FEC_Code__c = 'Request' LIMIT 1];
+        FEC_Sub_Category__c subCat = [SELECT Id FROM FEC_Sub_Category__c WHERE FEC_Code__c = 'RC27' LIMIT 1];
+        FEC_Sub_Code__c subCode = [SELECT Id FROM FEC_Sub_Code__c WHERE FEC_Code__c = 'RC27.01' LIMIT 1];
+        FEC_Action_Button__c btnRoute = new FEC_Action_Button__c(
+            Name = 'Route To Stage2 Test',
+            FEC_Code__c = 'Route to',
+            FEC_Type__c = 'Routing Action',
+            FEC_Active__c = true
+        );
+        insert btnRoute;
+        insert new FEC_Stage_Change__c(
+            FEC_Previous_Stage__c = stage2.Id,
+            FEC_Team_User_Group__c = 'SP',
+            FEC_Next_Queue__c = FEC_ConstantCommon.QUEUE_DQ_CS_SUPPORT_NAME,
+            FEC_Action_Button__c = btnRoute.Id,
+            FEC_Active__c = true,
+            FEC_IsReverted__c = false
+        );
+
+        FEC_CaseBusinessService.Business stage2Biz = new FEC_CaseBusinessService.Business();
+        String defaultQueue = '00G000000000001AAA';
+
+        Test.startTest();
+        FEC_BlockCodeRoutingService.applyToBusinessIfApplicable(
+            currentCase,
+            stage2Biz,
+            String.valueOf(cat.Id),
+            String.valueOf(subCat.Id),
+            String.valueOf(subCode.Id),
+            stage2.Id,
+            btnRoute.Id
+        );
+        String keptQueue = FEC_BlockCodeRoutingService.applyRouteQueueOverrideIfApplicable(
+            currentCase,
+            defaultQueue
+        );
+        Test.stopTest();
+
+        System.assertNotEquals(null, stage2Biz);
+        System.assertEquals(defaultQueue, keptQueue);
+    }
+
+    @IsTest
+    static void testIsRc27RouteContext_andSiblingQueueOverride() {
+        FEC_Category__c cat = [SELECT Id FROM FEC_Category__c WHERE FEC_Code__c = 'Request' LIMIT 1];
+        FEC_Sub_Category__c subCat = [SELECT Id FROM FEC_Sub_Category__c WHERE FEC_Code__c = 'RC27' LIMIT 1];
+        FEC_Sub_Code__c subCode = [SELECT Id FROM FEC_Sub_Code__c WHERE FEC_Code__c = 'RC27.01' LIMIT 1];
+
+        Case currentCase = [
+            SELECT Id, FEC_Interaction__c, FEC_Category__c, FEC_SubCategory__c, FEC_SubCode__c,
+                FEC_Account_or_Contract__c, FEC_Current_Case_Stage__c,
+                FEC_Current_Case_Stage__r.FEC_Code__c, FEC_Current_Case_Stage__r.Name
+            FROM Case
+            WHERE Subject = 'Current Case RC27'
+            LIMIT 1
+        ];
+        FEC_Case_Stage__c stage1 = new FEC_Case_Stage__c(
+            Name = 'Stage 1 Sibling Queue',
+            FEC_Code__c = FEC_ConstantCommon.STAGE_ONE,
+            FEC_Active__c = true
+        );
+        insert stage1;
+        currentCase.FEC_Current_Case_Stage__c = stage1.Id;
+        update currentCase;
+        currentCase = [
+            SELECT Id, FEC_Interaction__c, FEC_Category__c, FEC_SubCategory__c, FEC_SubCode__c,
+                FEC_Account_or_Contract__c, FEC_Current_Case_Stage__c,
+                FEC_Current_Case_Stage__r.FEC_Code__c, FEC_Current_Case_Stage__r.Name
+            FROM Case
+            WHERE Id = :currentCase.Id
+        ];
+
+        FEC_CaseBusinessService.Business siblingBiz = new FEC_CaseBusinessService.Business();
+        String defaultQueue = '00G000000000001AAA';
+
+        Test.startTest();
+        Boolean byCase = FEC_BlockCodeRoutingService.isRc27RouteContext(currentCase, null);
+        Boolean byBadNoc = FEC_BlockCodeRoutingService.isRc27RouteContext(null, 'not-a-valid-id');
+        FEC_BlockCodeRoutingService.applyToBusinessIfApplicable(
+            currentCase,
+            siblingBiz,
+            String.valueOf(cat.Id),
+            String.valueOf(subCat.Id),
+            String.valueOf(subCode.Id),
+            stage1.Id,
+            null
+        );
+        String siblingQueue = FEC_BlockCodeRoutingService.applyRouteQueueOverrideIfApplicable(
+            currentCase,
+            defaultQueue,
+            false,
+            null,
+            null,
+            null
+        );
+        Test.stopTest();
+
+        System.assertEquals(true, byCase);
+        System.assertEquals(false, byBadNoc);
+        System.assertNotEquals(null, siblingBiz);
+        System.assertNotEquals(null, siblingQueue);
+    }
 }
