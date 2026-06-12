@@ -111,9 +111,7 @@ export default class FecChathubContainer extends NavigationMixin(LightningElemen
                 localStorage.setItem(CHATHUB_URL_KEY, urlChatHub);
                 this.updateUsername(this.chatHubUsername);
                 // Dynamic Handshake - Encrypt URL with parent origin for security
-                const currentOrigin = window.location.origin;
                 let finalUrl = this.encryptUrl(urlChatHub, usernameEncrypted);
-                finalUrl = finalUrl + '&parentOrigin=' + encodeURIComponent(currentOrigin);
                 this.chatHubUrl = finalUrl;
                 this.isInitialized = true;
                 this.isChatHubVisible = true;
@@ -900,7 +898,7 @@ export default class FecChathubContainer extends NavigationMixin(LightningElemen
         if (attachments.length > 0) {
             try {
                 const caseId = await checkExistCaseByExtInteractionID({ strExtInteractionID: data.sessionID });
-
+                console.log('File URL:', data.fileUrl)
                 await downloadAndSaveBase64({
                     s3Url: data.fileUrl,
                     interactionCaseId: caseId,

@@ -34,15 +34,6 @@ public with sharing class FEC_ChatHubInitController {
 
         // 4. Thực hiện mã hóa Token
         String strUsernameEncrypted = buildEncryptedToken(strUsername, strEncryptKey, strSalt); 
-        // String strUsernameEncrypted = '';
-        // // Todo: remove this comment when merge to uat
-        // String payload = '{"text": "' + strUsername.split('@')[0] + '","secretKey": "' + CHATHUB_ENCRYPT_KEY + '"}';
-        // Map<String, String> header = new Map<String, String>{'X-API-KEY' => 'RkVDX1NBTEVTRk9SQ0U='};
-        // HttpResponse res = FEC_Utils.sendRequest('POST', 'callout:FECredit_Service/archival/chathub/api/v1/crypto/encrypt',payload , header);
-        // if (res != null && res.getStatusCode() == 200) {
-        //    Map<String, Object> responseMap = (Map<String, Object>) JSON.deserializeUntyped(res.getBody());
-        //     strUsernameEncrypted = (String) responseMap.get('data');
-        // }
         // Định dạng trả về: username | urlChatHub | usernameEncrypted
         String strResult = strUsername + '|' + strChatHubUrl + '|' + strUsernameEncrypted;
 

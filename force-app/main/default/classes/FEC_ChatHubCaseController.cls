@@ -46,6 +46,7 @@ public with sharing class FEC_ChatHubCaseController {
         public String transcription;
         public String kycMethod;
         public String kycResult;
+        public String kycStatus;
     }
     
     
@@ -121,6 +122,7 @@ public with sharing class FEC_ChatHubCaseController {
             dto.customerName = (String)mapCustomer.get('customerName');
             // dto.kycResult = (String)mapCustomer.get('kYCStatus');
             dto.kycResult = FEC_Utils.mappingKYCs((String)mapCustomer.get('kYCStatus'));
+            dto.kycStatus = (String)mapCustomer.get('kYCStatus');
             // Optional: Validation
             if (String.isBlank(dto.externalInteractionId)) {
                 throw new AuraHandledException(System.Label.FEC_Error_SessionID_Missing);
@@ -410,6 +412,7 @@ public with sharing class FEC_ChatHubCaseController {
         // ---------------------------
             interactionCase.FEC_Transcription__c = dto.transcription;
             interactionCase.FEC_KYC_Method__c = dto.kycMethod;
+            interactionCase.FEC_KYC_Status__c = dto.kycStatus;
             // interactionCase.FEC_KYC_Result__c = dto.kycResult;
 
             // Mark as Chat Automation since case is created from ChatHub
