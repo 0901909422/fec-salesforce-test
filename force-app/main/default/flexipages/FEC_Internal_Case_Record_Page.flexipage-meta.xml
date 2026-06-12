@@ -859,6 +859,19 @@
                 </componentInstanceProperties>
                 <componentName>flexipage:tab</componentName>
                 <identifier>flexipage_tab3</identifier>
+                <visibilityRule>
+                    <booleanFilter>1 OR 2</booleanFilter>
+                    <criteria>
+                        <leftValue>{!$User.FEC_User_Group__c}</leftValue>
+                        <operator>EQUAL</operator>
+                        <rightValue>SP</rightValue>
+                    </criteria>
+                    <criteria>
+                        <leftValue>{!$User.FEC_User_Group__c}</leftValue>
+                        <operator>EQUAL</operator>
+                        <rightValue>IT</rightValue>
+                    </criteria>
+                </visibilityRule>
             </componentInstance>
         </itemInstances>
         <itemInstances>
