@@ -100,29 +100,27 @@ public with sharing class FEC_ChatHubCaseController {
             if (mapRaw == null) return null;
     
             // 2. Safe Extraction of Child Maps
-            // Initialize as empty maps if key is missing to avoid NullPointerException on .get()
-            Object objSession = mapRaw.get('chatSession');
-            Map<String, Object> mapSession = (objSession != null) ? (Map<String, Object>)objSession : new Map<String, Object>();
-    
-            Object objCustomer = mapRaw.get('customerInfo');
-            Map<String, Object> mapCustomer = (objCustomer != null) ? (Map<String, Object>)objCustomer : new Map<String, Object>();
+            // Use instanceof guard to avoid TypeException when chatSession/customerInfo
+            // arrives as a non-object value (string, number, array, etc.)
+            Map<String, Object> mapSession = getMapSafe(mapRaw.get('chatSession'));
+            Map<String, Object> mapCustomer = getMapSafe(mapRaw.get('customerInfo'));
     
             // 3. Prepare DTO
             FEC_InteractionCaseDTO dto = new FEC_InteractionCaseDTO();
             
             dto.channel = 'Chat';
             
-            String strRawChannel = (mapSession.containsKey('chatChannel')) ? (String)mapSession.get('chatChannel') : '';
+            // Safe string extraction (handles values that arrive as number/boolean
+            // from JSON.deserializeUntyped without throwing TypeException)
+            String strRawChannel = getStringSafe(mapSession, 'chatChannel');
 
-            // Safe .get() calls (even if map is empty, .get() returns null, not Exception)
             dto.subChannel = FEC_Utils.getInteractionChannel(strRawChannel);
-            dto.externalInteractionId = (String)mapSession.get('sessionID');
-            dto.phoneNumber = (String)mapCustomer.get('phoneNumber');
-            dto.nationalId = (String)mapCustomer.get('nationalID');
-            dto.customerName = (String)mapCustomer.get('customerName');
-            // dto.kycResult = (String)mapCustomer.get('kYCStatus');
-            dto.kycResult = FEC_Utils.mappingKYCs((String)mapCustomer.get('kYCStatus'));
-            dto.kycStatus = (String)mapCustomer.get('kYCStatus');
+            dto.externalInteractionId = getStringSafe(mapSession, 'sessionID');
+            dto.phoneNumber = getStringSafe(mapCustomer, 'phoneNumber');
+            dto.nationalId = getStringSafe(mapCustomer, 'nationalID');
+            dto.customerName = getStringSafe(mapCustomer, 'customerName');
+            dto.kycStatus = getStringSafe(mapCustomer, 'kYCStatus');
+            dto.kycResult = FEC_Utils.mappingKYCs(dto.kycStatus);
             // Optional: Validation
             if (String.isBlank(dto.externalInteractionId)) {
                 throw new AuraHandledException(System.Label.FEC_Error_SessionID_Missing);
@@ -137,6 +135,27 @@ public with sharing class FEC_ChatHubCaseController {
         } catch (Exception e) {
             throw new AuraHandledException(e.getMessage());
         }
+    }
+
+    /** * getMapSafe
+    * Safely casts an untyped JSON value to Map<String, Object>.
+    * Returns an empty map when the value is null or not an object,
+    * preventing TypeException during JSON.deserializeUntyped processing.
+    */
+    private static Map<String, Object> getMapSafe(Object objValue) {
+        return (objValue instanceof Map<String, Object>)
+            ? (Map<String, Object>)objValue
+            : new Map<String, Object>();
+    }
+
+    /** * getStringSafe
+    * Safely extracts a String value from an untyped map.
+    * Uses String.valueOf so values arriving as number/boolean from
+    * JSON.deserializeUntyped are converted instead of throwing TypeException.
+    */
+    private static String getStringSafe(Map<String, Object> mapData, String strKey) {
+        Object objValue = (mapData != null) ? mapData.get(strKey) : null;
+        return (objValue == null) ? null : String.valueOf(objValue);
     }
 
     /** * saveChatHistoryAndAttachment
@@ -376,6 +395,28 @@ public with sharing class FEC_ChatHubCaseController {
              throw new IllegalArgumentException(System.Label.FEC_Error_InteractionDTO_Null);
         }
         try {
+            // ---------------------------
+            // DEDUP: nếu đã có Case với cùng External Interaction ID thì trả về Case cũ
+            // (tránh DUPLICATE_VALUE khi user F5/mở 2 tab/retry network với cùng sessionID)
+            // ---------------------------
+            if (String.isNotBlank(dto.externalInteractionId)) {
+                List<Case> lstExisting = [
+                    SELECT Id, FEC_Link_ID__c
+                    FROM Case
+                    WHERE FEC_External_Interaction_ID__c = :dto.externalInteractionId
+                    LIMIT 1
+                ];
+                if (!lstExisting.isEmpty()) {
+                    FEC_InteractionCaseResponse existingRes = new FEC_InteractionCaseResponse();
+                    existingRes.caseId = lstExisting[0].Id;
+                    existingRes.linkId = lstExisting[0].FEC_Link_ID__c;
+                    if (existingRes.linkId != null && existingRes.linkId.contains('>')) {
+                        existingRes.caseNo = existingRes.linkId.substringBetween('>', '</');
+                    }
+                    return existingRes;
+                }
+            }
+
             Id interactionRecordTypeId = Schema.SObjectType.Case.getRecordTypeInfosByDeveloperName().get(FEC_ConstantCommon.CASE_INTERACTION_RECORD_TYPE_DEV_NAME).getRecordTypeId();
             Case interactionCase = new Case();
             interactionCase.RecordTypeId = interactionRecordTypeId;

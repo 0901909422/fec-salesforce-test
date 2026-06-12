@@ -660,21 +660,18 @@ export default class FecChathubContainer extends NavigationMixin(LightningElemen
             return;
         }
         this.notifyIfPanelClosed();
-        this.attemptCreateCase(payload, data, 5);
+        this.attemptCreateCase(payload, data, 2);
     }
 
     /**
      * Call Apex to create Case with Retry mechanism to handle Race Condition
+     * Apex side has dedup by FEC_External_Interaction_ID__c, so retry only needs to cover
+     * the small race window where Tab A has not committed yet when Tab B reads.
      * @param {string} payload - JSON data to send to Apex
      * @param {Object} data - Original data to extract chatSession info
      * @param {number} retriesLeft - Number of remaining retry attempts
      */
     attemptCreateCase(payload, data, retriesLeft) {
-        // If chat is re-assigned, first attempt should wait longer (1000ms) to allow Tab A enough time to commit DB.
-        // Subsequent retry attempts only need to wait 500ms.
-        const isReassigned = data.chatSession.oldAgentID && data.chatSession.oldAgentID !== this.chatHubUsername;
-        const delayTime = (isReassigned && retriesLeft === 5) ? 1000 : 500;
-
         setTimeout(() => {
             createCaseOnNewSession({ strJsonData: payload })
                 .then(res => {
@@ -712,7 +709,7 @@ export default class FecChathubContainer extends NavigationMixin(LightningElemen
                         showToast(this, 'Error', 'Unable to create Interaction Case after multiple attempts. Please try again.', 'error');
                     }
                 });
-        }, delayTime);
+        }, 300);
     }
 
     async updateOldCase(extInteractionID, newUsername) {
