@@ -365,7 +365,7 @@ public without sharing class FEC_DNBHandler {
         // ===== Get Case =====
         List<Case> caseRecord = [
       SELECT Id, FEC_Phone_Number__c, FEC_Interaction__c,
-      FEC_Account_or_Contract__r.FEC_Primary_Phone__c,
+      FEC_Account_or_Contract__r.FEC_Primary_Phone__c,FEC_Current_Case_Stage__r.Name,
       FEC_Interaction__r.FEC_Phone_Number__c,
       FEC_Interaction__r.FEC_Interaction_Email__c,
       FEC_Account_or_Contract__r.FEC_National_ID_Passport_ID__c FROM Case WHERE
@@ -570,7 +570,7 @@ public without sharing class FEC_DNBHandler {
                 FEC_Interaction__r.FEC_Phone_Number__c, 
                 FEC_Interaction__r.FEC_Interaction_Email__c, 
                 FEC_Case_Email__c,
-                FEC_National_ID_Passport_ID__c
+                FEC_National_ID_Passport_ID__c,FEC_Current_Case_Stage__r.Name
             FROM Case
             WHERE Id = :caseId
             LIMIT 1
@@ -1094,7 +1094,7 @@ public without sharing class FEC_DNBHandler {
         // ===== Get Case =====
         Case caseRecord = [
     SELECT Id, FEC_Phone_Number__c, FEC_Interaction__r.FEC_Interaction_Email__c,
-    FEC_Account_or_Contract__c,
+    FEC_Account_or_Contract__c, FEC_Current_Case_Stage__r.Name,
     FEC_Account_or_Contract__r.FEC_Search_Result_National_ID__c FROM Case WHERE
         Id = : caseId LIMIT 1
   ];
