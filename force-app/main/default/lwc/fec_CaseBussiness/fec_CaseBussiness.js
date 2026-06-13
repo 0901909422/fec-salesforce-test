@@ -271,12 +271,20 @@ const FIELD_OLD_CITIZEN_ID_NUMBER = "FEC_Old_Citizen_ID_Number__c";
 const FIELD_ORIGINAL_INFO_NATIONAL_ID = "FEC_Original_Info_National_ID__c";
 const FIELD_UPDATED_INFO_NATIONAL_ID = "FEC_Updated_Info_National_ID__c";
 const FIELD_NATIONAL_ID_PASSPORT_ID = "FEC_National_ID_Passport_ID__c";
+const FIELD_FEOL_ID = "FEC_FEOL_ID__c";
+const FIELD_NATIONAL_ID = "FEC_National_ID__c";
 const OBJ_FEC_ADDITIONAL_INFO = "FEC_Additional_Info__c";
 const FIELD_FEC_REF_NUMBER = "FEC_REF_Number__c";
 const NATIONAL_ID_PASSPORT_FIELDS = new Set([
   FIELD_ORIGINAL_INFO_NATIONAL_ID,
   FIELD_UPDATED_INFO_NATIONAL_ID,
   FIELD_NATIONAL_ID_PASSPORT_ID,
+]);
+const ID_NUMBER_VALIDATED_FIELDS = new Set([
+  FIELD_NATIONAL_ID_PASSPORT_ID,
+  FIELD_UPDATED_INFO_NATIONAL_ID,
+  FIELD_FEOL_ID,
+  FIELD_NATIONAL_ID,
 ]);
 const FIELD_CORRECT_DATE_OF_BIRTH = "FEC_Correct_Date_of_Birth__c";
 const FIELD_INCORRECT_DATE_OF_BIRTH = "FEC_Incorrect_Date_of_Birth__c";
@@ -3577,8 +3585,6 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
       FIELD_NEW_CITIZEN_ID_NUMBER,
       FIELD_OLD_CITIZEN_ID_NUMBER,
     ];
-    const nationalIdOrPassportFields = [FIELD_UPDATED_INFO_NATIONAL_ID];
-
     const fieldName = e.target.fieldName || e.target.dataset?.field;
     if (!fieldName) return;
 
@@ -3611,7 +3617,7 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
       }
     } else if (nationalIdOnlyFields.includes(fieldName)) {
       if (!isDigit && !isControl) e.preventDefault();
-    } else if (nationalIdOrPassportFields.includes(fieldName)) {
+    } else if (ID_NUMBER_VALIDATED_FIELDS.has(fieldName)) {
       const val = e.target.value || STR_EMPTY;
       const startsWithUppercase = /^[A-Z]/.test(val);
       if (isLetter && !isLetterUppercase) {
@@ -3687,7 +3693,7 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
     if (PHONE_VALIDATED_FIELD_APIS.has(fieldName)) {
       value = applyPhoneInputMaxLength(value);
     }
-    if (fieldName === FIELD_UPDATED_INFO_NATIONAL_ID) {
+    if (ID_NUMBER_VALIDATED_FIELDS.has(fieldName)) {
       value = validateUpdatedInfoNationalID(value);
     }
 
@@ -3870,22 +3876,7 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
         (field.customError ? " slds-has-error" : STR_EMPTY);
       this.business = { ...this.business };
     }
-    if (fieldName === FIELD_NATIONAL_ID_PASSPORT_ID && field) {
-      const trimmed =
-        value != null && typeof value === "string" ? value.trim() : STR_EMPTY;
-      const idResult = validateIdNumber(value);
-      field.customError =
-        trimmed === STR_EMPTY
-          ? null
-          : idResult.isValid
-            ? null
-            : idResult.message;
-      field.editWrapperClass =
-        "edit slds-m-around--small slds-p-around--x-small" +
-        (field.customError ? " slds-has-error" : STR_EMPTY);
-      this.business = { ...this.business };
-    }
-    if (fieldName === FIELD_UPDATED_INFO_NATIONAL_ID && field) {
+    if (ID_NUMBER_VALIDATED_FIELDS.has(fieldName) && field) {
       const trimmed =
         value != null && typeof value === "string" ? value.trim() : STR_EMPTY;
       const idResult = validateIdNumber(value);
