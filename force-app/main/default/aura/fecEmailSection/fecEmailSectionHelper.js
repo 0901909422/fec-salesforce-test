@@ -216,9 +216,9 @@
         if (tbMod) tbMod.addHandler('image', function() {});
         self._wire(tbEl, quill, component);
         quill.on('text-change', function() { self._syncEditorBody(component, quill); });
-        quill.root.addEventListener('input', function() { self._syncEditorBody(component, quill); });
-        quill.root.addEventListener('keyup', function() { self._syncEditorBody(component, quill); });
-        quill.root.addEventListener('mouseup', function() { self._syncEditorBody(component, quill); });
+        quill.root.addEventListener('input', function() { self._saveNativeSelection(quill); self._syncEditorBody(component, quill); });
+        quill.root.addEventListener('keyup', function() { self._saveNativeSelection(quill); self._syncEditorBody(component, quill); });
+        quill.root.addEventListener('mouseup', function() { self._saveNativeSelection(quill); self._syncEditorBody(component, quill); });
         // tungnm37 thÃªm: láº¯ng nghe event thÃªm áº£nh vÃ o attachments list
         // KhÃ´ng thÃªm vÃ o attachments list â€” áº£nh chá»‰ hiá»ƒn thá»‹ inline trong editor
         // (blob URL sáº½ bá»‹ strip khi gá»­i, khÃ´ng gá»­i kÃ¨m attachment)
@@ -279,12 +279,39 @@
         component.set('v.rawBody', quill.root.innerHTML);
     },
 
+    _saveNativeSelection: function(quill) {
+        try {
+            if (!quill || !quill.root) return null;
+            var sel = window.getSelection && window.getSelection();
+            if (!sel || sel.rangeCount === 0) return null;
+            var range = sel.getRangeAt(0);
+            if (!quill.root.contains(range.commonAncestorContainer)) return null;
+            window._fecEmailSavedRange = range.cloneRange();
+            return window._fecEmailSavedRange;
+        } catch (e) {
+            return null;
+        }
+    },
     _focusRestoreSelection: function(quill) {
         if (!quill || !quill.root) return false;
         try {
-            quill.root.focus();
             var sel = window.getSelection && window.getSelection();
-            return !!(sel && sel.rangeCount > 0 && quill.root.contains(sel.getRangeAt(0).commonAncestorContainer));
+            var saved = window._fecEmailSavedRange;
+
+            quill.root.focus();
+
+            if (sel && saved && quill.root.contains(saved.commonAncestorContainer)) {
+                sel.removeAllRanges();
+                sel.addRange(saved);
+                return true;
+            }
+
+            if (sel && sel.rangeCount > 0 && quill.root.contains(sel.getRangeAt(0).commonAncestorContainer)) {
+                window._fecEmailSavedRange = sel.getRangeAt(0).cloneRange();
+                return true;
+            }
+
+            return false;
         } catch (e) { return false; }
     },
 
@@ -296,6 +323,58 @@
         this._syncEditorBody(component, quill);
     },
 
+    _applyHeaderStyleUsingFontTags: function(component, quill, headerConfig) {
+        // Avoid formatBlock and Range.extractContents: both can corrupt complex email templates.
+        // Reuse the same browser command path as Size picker, then convert generated font tags to inline styles.
+        this._focusRestoreSelection(quill);
+        try { document.execCommand('fontSize', false, '3'); } catch (e) {}
+        if (quill && quill.root) {
+            var sz = (headerConfig && headerConfig.sz) ? headerConfig.sz : '14px';
+            var fw = (headerConfig && headerConfig.b) ? '700' : '400';
+            quill.root.querySelectorAll('font[size="3"]').forEach(function(n) {
+                n.removeAttribute('size');
+                n.style.fontSize = sz;
+                n.style.fontWeight = fw;
+                n.style.lineHeight = '1.25';
+            });
+            quill.root.classList.remove('ql-blank');
+            this._makeTableCellsEditable(quill.root);
+        }
+        this._syncEditorBody(component, quill);
+    },
+    _applyInlineStyleToSelection: function(component, quill, styleMap) {
+        this._focusRestoreSelection(quill);
+        try {
+            var sel = window.getSelection && window.getSelection();
+            if (!sel || sel.rangeCount === 0 || !quill || !quill.root) return;
+            var range = sel.getRangeAt(0);
+            if (!quill.root.contains(range.commonAncestorContainer)) return;
+
+            // Do not use formatBlock for templates/images/tables. It can restructure the editor DOM
+            // and drop content after the selected block. Wrap only the selected fragment inline.
+            if (range.collapsed) return;
+
+            var span = document.createElement('span');
+            Object.keys(styleMap || {}).forEach(function(k) {
+                if (styleMap[k] !== null && styleMap[k] !== undefined && styleMap[k] !== '') {
+                    span.style[k] = styleMap[k];
+                }
+            });
+
+            var frag = range.extractContents();
+            span.appendChild(frag);
+            range.insertNode(span);
+
+            var newRange = document.createRange();
+            newRange.selectNodeContents(span);
+            sel.removeAllRanges();
+            sel.addRange(newRange);
+            window._fecEmailSavedRange = newRange.cloneRange();
+        } catch (e) {}
+        if (quill && quill.root) quill.root.classList.remove('ql-blank');
+        this._makeTableCellsEditable(quill.root);
+        this._syncEditorBody(component, quill);
+    },
     _applyBlockTag: function(component, quill, tagName) {
         this._focusRestoreSelection(quill);
         try { document.execCommand('formatBlock', false, tagName || 'p'); } catch (e) {}
@@ -315,6 +394,7 @@
         tbEl.querySelectorAll('.fec-pk').forEach(function(pk) {
             pk.querySelector('.fec-pk-btn').addEventListener('mousedown', function(e) {
                 e.preventDefault();
+                self._saveNativeSelection(quill);
                 var type = pk.getAttribute('data-pk');
                 if (activePk === pk) { closeDD(); return; }
                 closeDD();
@@ -348,6 +428,7 @@
                 ddEl.querySelectorAll('.fec-dd-it').forEach(function(it) {
                     it.addEventListener('mousedown', function(e2) {
                         e2.preventDefault();
+                        self._focusRestoreSelection(quill);
                         var val = it.getAttribute('data-val');
                         // Update button label
                         pk.querySelector('.fec-pk-btn').childNodes[0].textContent = it.textContent + ' ';
@@ -363,7 +444,8 @@
                                 self._syncEditorBody(component, quill);
                             }
                         } else {
-                            self._applyBlockTag(component, quill, val ? ('h' + val) : 'p');
+                            var hd = (items.filter(function(x){return x.v===val;})[0] || {});
+                            self._applyHeaderStyleUsingFontTags(component, quill, val ? hd : { sz: '14px', b: false });
                         }
                     });
                 });
@@ -867,7 +949,10 @@
             '.fec-clr-a{font-size:13px;font-weight:700;color:#333;line-height:1;padding-bottom:1px}',
             // Editor
             '.fec-ed .ql-container.ql-snow{border:none;font-size:14px}',
-            '.fec-ed .ql-editor{min-height:200px;max-height:500px;overflow-y:auto;padding:10px 12px;line-height:1.5;resize:vertical;font-family:"Times New Roman",serif;font-size:14px;color:#000}',
+            '.fec-ed .ql-editor{min-height:200px;max-height:500px;overflow-y:auto;overflow-x:hidden;padding:10px calc(100% - 500px) 10px 12px!important;line-height:1.5;resize:vertical;font-family:"Times New Roman",serif;font-size:14px;color:#000;width:100%!important;max-width:none!important;margin:0;box-sizing:border-box;white-space:normal!important;overflow-wrap:anywhere!important;word-break:break-word!important}',
+            '.fec-ed .ql-editor img{display:block!important;width:500px!important;max-width:500px!important;height:auto!important;box-sizing:border-box}',
+            '.fec-ed .ql-editor > *,.fec-ed .ql-editor p,.fec-ed .ql-editor div,.fec-ed .ql-editor table,.fec-ed .ql-editor ul,.fec-ed .ql-editor ol,.fec-ed .ql-editor li{width:500px!important;max-width:500px!important;box-sizing:border-box;overflow-wrap:anywhere!important;word-break:break-word!important;white-space:normal!important}',
+            '.fec-ed .ql-editor span,.fec-ed .ql-editor a{overflow-wrap:anywhere!important;word-break:break-word!important;white-space:normal!important}',
             '.fec-ed .ql-editor p{margin:0!important;padding:0!important;line-height:1.5!important}',
             '.fec-ed .ql-editor p+p{margin-top:0!important}',
             '.fec-ed .ql-editor.ql-blank::before{color:#aaa;font-style:normal}',
@@ -1023,7 +1108,7 @@
         var modal = document.createElement('div');
         modal.setAttribute('style', [
             'background:#fff','border-radius:8px',
-            'width:760px','max-width:92vw','max-height:88vh',
+            'width:560px','max-width:92vw','max-height:88vh',
             'display:flex','flex-direction:column',
             'box-shadow:0 8px 32px rgba(0,0,0,.35)',
             'overflow:hidden','position:relative'
@@ -1041,8 +1126,28 @@
         header.appendChild(closeBtn);
 
         var bodyDiv = document.createElement('div');
-        bodyDiv.setAttribute('style','flex:1;overflow-y:auto;padding:24px 32px;font-family:"Times New Roman",serif;font-size:14px;line-height:1.5;color:#333;');
-        bodyDiv.innerHTML = body || '';
+        bodyDiv.setAttribute('style','flex:1;overflow-y:auto;overflow-x:hidden;padding:16px 20px;font-family:"Times New Roman",serif;font-size:14px;line-height:1.5;color:#333;box-sizing:border-box;');
+
+        var previewContent = document.createElement('div');
+        previewContent.setAttribute('style','max-width:500px;width:500px;margin:0;box-sizing:border-box;overflow-wrap:anywhere;word-break:break-word;');
+        previewContent.innerHTML = body || '';
+
+        var previewImgs = previewContent.getElementsByTagName('img');
+        for (var pi = 0; pi < previewImgs.length; pi++) {
+            previewImgs[pi].style.maxWidth = '500px';
+            previewImgs[pi].style.width = '500px';
+            previewImgs[pi].style.height = 'auto';
+            previewImgs[pi].style.boxSizing = 'border-box';
+        }
+
+        var previewTables = previewContent.getElementsByTagName('table');
+        for (var pt = 0; pt < previewTables.length; pt++) {
+            previewTables[pt].style.maxWidth = '500px';
+            previewTables[pt].style.width = '100%';
+            previewTables[pt].style.boxSizing = 'border-box';
+        }
+
+        bodyDiv.appendChild(previewContent);
 
         var footer = document.createElement('div');
         footer.setAttribute('style','padding:12px 24px;border-top:1px solid #e5e5e5;display:flex;justify-content:flex-end;flex-shrink:0;');
