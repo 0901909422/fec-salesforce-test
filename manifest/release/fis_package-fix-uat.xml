@@ -226,6 +226,7 @@
         <members>fec_ClosedServiceCases</members>
         <members>fec_RdPaymentRoutingUtils</members>
         <members>fec_RelatedListPaging</members>
+        <members>fec_RemovePhoneForm</members>
         <members>fec_customerAdditionalData</members>
         <members>fecInteractionInfo</members>
         <members>fec_Search</members>
