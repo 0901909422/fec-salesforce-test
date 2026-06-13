@@ -265,6 +265,8 @@
         <members>Case.FEC_Card_Block_Reason__c</members>
         <members>Case.FEC_New_Block_Code__c</members>
 		<members>Case.FEC_Hold_Case_Type__c</members>
+        <members>Case.FEC_Draft_Remarks__c</members>
+		<members>Case.FEC_Refund_Request_Draft__c</members>
         <members>FEC_Actual_Master_Data_Setting__c.FEC_Channel__c</members>
         <members>FEC_Master_Data_Setting__c.FEC_Channel__c</members>
         <members>FEC_Application_Status_Mapping__mdt.FEC_Status_Code__c</members>

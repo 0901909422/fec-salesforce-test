@@ -235,6 +235,10 @@ public without sharing class FEC_CaseEditNOCController {
           FEC_Interaction_View_Mode__c,
           RecordType.DeveloperName,
           FEC_Is_Call_API_Success__c,
+          //linhdev 11/06/26 fix jira FECREDIT_CSM_2025_KH-1893 — getCase trả draft fields để giữ NOC sau Save & Close
+          FEC_Draft_Remarks__c,
+          FEC_Draft_Routing_Action_Code__c,
+          FEC_Actual_Nature_of_Case__c,
           //PhongBT: update bộ noc chọn ở updated khi revert về
           FEC_Current_Case_Stage__r.Name,
           FEC_Actual_Nature_of_Case__r.FEC_Business_Process__r.FEC_Code__c
