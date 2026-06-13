@@ -594,7 +594,14 @@ export default class Fec_CaseDetail_Customer extends LightningElement {
 
     this.isLoaded = false;
 
-    const natureOfCaseId = caseBusinessEle?.getNatureOfCaseId?.() ?? null;
+    //linhdev 11/06/26 fix jira FECREDIT_CSM_2025_KH-1893 — Save & Close: fallback natureOfCaseId từ CASE_NOC khi business chưa sync
+    let natureOfCaseId = caseBusinessEle?.getNatureOfCaseId?.() ?? null;
+    if (!natureOfCaseId && this.lastNatureOfCaseIdFromNOC) {
+      natureOfCaseId = this.lastNatureOfCaseIdFromNOC;
+      if (caseBusinessEle) {
+        caseBusinessEle.setNatureOfCaseId(natureOfCaseId);
+      }
+    }
     const updatedPhoneNumber =
       caseBusinessEle?.getUpdatedInfoPhoneNumber?.() ?? null;
     const routingActionCode = caseBusinessEle?.getRoutingActionCode?.() ?? null;
