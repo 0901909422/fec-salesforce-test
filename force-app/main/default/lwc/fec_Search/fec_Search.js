@@ -319,6 +319,15 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
     ];
   }
 
+  get hasCardOrLoanResults() {
+    return (
+      (this.cardData?.length > 0) ||
+      (this.loanContractData?.length > 0) ||
+      (this.loanB2Data?.length > 0) ||
+      (this.loanCash24Data?.length > 0)
+    );
+  }
+
   get insuranceColumns() {
     return [
       {
@@ -328,7 +337,8 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
         typeAttributes:  {
               value: { fieldName: "UserId" },
               fieldName: "UserId",
-              selectedType: "Insurance"
+              selectedType: "Insurance",
+              isDblClickDisabled: this.hasCardOrLoanResults
             },
         sortable: false,
       },
@@ -1732,7 +1742,7 @@ hasAnySearchCriteria(params) {
         let customerName = row?.FullName;
         let isListViewActual = this.isListView || this.isCaseListView;
         if (action.label.fieldName === 'UserId') {
-          if (categories.includes("Card") || categories.includes("Loan")) {
+          if (this.hasCardOrLoanResults) {
             this.isLoaded = true;
             return;
           }
