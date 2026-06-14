@@ -41,6 +41,11 @@ public without sharing class FEC_BatchCaseHandlingExportRow {
     @AuraEnabled public String caseRemarksEnteredBy;
     @AuraEnabled public String caseRemarksEnteredByRole;
     @AuraEnabled public String caseRemarksEnteredOn;
+    // Toannd 11/06/2026 - Case Remarks gom (extended filter) cho GSR/COF Temp2/Temp8_CA/OtherCS
+    @AuraEnabled public String caseRemarksExtended;
+    @AuraEnabled public String caseRemarksEnteredByExtended;
+    @AuraEnabled public String caseRemarksEnteredByRoleExtended;
+    @AuraEnabled public String caseRemarksEnteredOnExtended;
     @AuraEnabled public String assignmentId;
     @AuraEnabled public String assignmentOwner;
     @AuraEnabled public String assignmentRemarks;

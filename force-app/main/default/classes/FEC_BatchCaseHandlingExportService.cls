@@ -145,7 +145,8 @@ public without sharing class FEC_BatchCaseHandlingExportService {
             return;
         }
 
-        Map<Id, RemarkBlocks> caseRemarkBlocksByCaseId = loadCaseRemarkBlocks(caseIds);
+        Map<Id, RemarkBlocks> strictCaseRemarkBlocksByCaseId = loadCaseRemarkBlocks(caseIds, false);
+        Map<Id, RemarkBlocks> extendedCaseRemarkBlocksByCaseId = loadCaseRemarkBlocks(caseIds, true);
         Map<Id, AssignmentExportData> assignmentByCaseId = loadPrimaryAssignmentExportData(caseIds);
         // 03/06/2026 - Assignment remarks: FEC_Case_Remarks__c (thay FEC_Routing_Action_History__c) — FEC_BCH_ExportAssignmentRemarkLoader
         Map<Id, FEC_BCH_ExportAssignmentRemarkLoader.AssignmentRemarkExportBundle> assignmentRemarkByCaseId =
@@ -158,12 +159,14 @@ public without sharing class FEC_BatchCaseHandlingExportService {
             if (r == null || r.caseId == null) {
                 continue;
             }
-            RemarkBlocks caseRemarks = caseRemarkBlocksByCaseId.get(r.caseId);
-            if (caseRemarks != null) {
-                r.caseRemarks = caseRemarks.remarks;
-                r.caseRemarksEnteredBy = caseRemarks.enteredBy;
-                r.caseRemarksEnteredByRole = caseRemarks.enteredByRole;
-                r.caseRemarksEnteredOn = caseRemarks.enteredOn;
+            RemarkBlocks strictCaseRemarks = strictCaseRemarkBlocksByCaseId.get(r.caseId);
+            RemarkBlocks extendedCaseRemarks = extendedCaseRemarkBlocksByCaseId.get(r.caseId);
+            // Toannd 11/06/2026 - strict: template thường; extended: GSR/COF Temp2/Temp8_CA/OtherCS
+            if (strictCaseRemarks != null) {
+                applyStrictCaseRemarkBlocksToRow(r, strictCaseRemarks);
+            }
+            if (extendedCaseRemarks != null) {
+                applyExtendedCaseRemarkBlocksToRow(r, extendedCaseRemarks);
             }
             // 03/06/2026 - Ưu tiên assignment remark từ FEC_Case_Remarks__c; không có remark thì fallback FEC_Assignment__c (ID/Owner)
             FEC_BCH_ExportAssignmentRemarkLoader.AssignmentRemarkExportBundle asgRemarkBundle =
@@ -567,19 +570,79 @@ public without sharing class FEC_BatchCaseHandlingExportService {
         // return String.isBlank(code) ? FEC_ConstantCommon.STR_EMPTY : code;
     }
 
-    private static Map<Id, RemarkBlocks> loadCaseRemarkBlocks(Set<Id> caseIds) {
+    // Toannd 11/06/2026 - Case Remarks gom (1 ô) cho template thường — loại Assignment remark
+    private static void applyStrictCaseRemarkBlocksToRow(
+        FEC_BatchCaseHandlingExportRow row,
+        RemarkBlocks caseRemarks
+    ) {
+        if (row == null || caseRemarks == null) {
+            return;
+        }
+        row.caseRemarks = caseRemarks.remarks;
+        row.caseRemarksEnteredBy = caseRemarks.enteredBy;
+        row.caseRemarksEnteredByRole = caseRemarks.enteredByRole;
+        row.caseRemarksEnteredOn = caseRemarks.enteredOn;
+    }
+
+    // Toannd 11/06/2026 - Case Remarks extended cho GSR/COF Temp2/Temp8_CA/OtherCS
+    private static void applyExtendedCaseRemarkBlocksToRow(
+        FEC_BatchCaseHandlingExportRow row,
+        RemarkBlocks caseRemarks
+    ) {
+        if (row == null || caseRemarks == null) {
+            return;
+        }
+        // Toannd 11/06/2026 - gom không giới hạn #1, #2, ... trong 1 ô (giống template thường)
+        row.caseRemarksExtended = caseRemarks.remarks;
+        row.caseRemarksEnteredByExtended = caseRemarks.enteredBy;
+        row.caseRemarksEnteredByRoleExtended = caseRemarks.enteredByRole;
+        row.caseRemarksEnteredOnExtended = caseRemarks.enteredOn;
+    }
+
+    // Toannd 11/06/2026 - template thường: loại toàn bộ Assignment remark (03/06/2026 jira 1726)
+    @TestVisible
+    private static Boolean includeCaseRemarkInStrictExport(FEC_Case_Remarks__c remark) {
+        if (remark == null) {
+            return false;
+        }
+        return remark.FEC_Remark_Type__c != FEC_ConstantCommon.REMARK_TYPE_ASSIGNMENT;
+    }
+
+    // Toannd 11/06/2026 - GSR/COF Temp2/Temp8: khớp fec_CaseDetail_Customer.loadRemarkHistory
+    @TestVisible
+    private static Boolean includeCaseRemarkInExtendedExport(FEC_Case_Remarks__c remark) {
+        if (remark == null) {
+            return false;
+        }
+        if (remark.FEC_Remark_Type__c != FEC_ConstantCommon.REMARK_TYPE_ASSIGNMENT) {
+            return true;
+        }
+        String stageName = remark.FEC_Stage_Name__c;
+        if (String.isBlank(stageName)) {
+            return true;
+        }
+        return !Pattern.compile('(?i).*stage\\s*1.*').matcher(stageName).matches();
+    }
+
+    private static Map<Id, RemarkBlocks> loadCaseRemarkBlocks(Set<Id> caseIds, Boolean useExtendedFilter) {
         Map<Id, RemarkBlocks> out = new Map<Id, RemarkBlocks>();
-        // 03/06/2026 - Case Remarks export: loại Remark Type Assignment (khớp FEC_CaseRemarkController)
         for (FEC_Case_Remarks__c remark : [
-            SELECT FEC_Case__c, FEC_Case_Remarks__c, FEC_User__c, FEC_User_Role__c, CreatedDate
+            SELECT
+                FEC_Case__c,
+                FEC_Case_Remarks__c,
+                FEC_User__c,
+                FEC_User_Role__c,
+                FEC_Remark_Type__c,
+                FEC_Stage_Name__c,
+                CreatedDate
             FROM FEC_Case_Remarks__c
             WHERE FEC_Case__c IN :caseIds
-            AND (FEC_Remark_Type__c = null
-                OR FEC_Remark_Type__c != :FEC_ConstantCommon.REMARK_TYPE_ASSIGNMENT)
-            ORDER BY FEC_Case__c, CreatedDate ASC
+            ORDER BY FEC_Case__c, CreatedDate ASC, Id ASC
         ]) {
-            // Cũ: WHERE FEC_Case__c IN :caseIds — gồm cả assignment remark → lẫn Case Remarks
-            if (remark.FEC_Case__c == null) {
+            Boolean include = useExtendedFilter == true
+                ? includeCaseRemarkInExtendedExport(remark)
+                : includeCaseRemarkInStrictExport(remark);
+            if (remark.FEC_Case__c == null || !include) {
                 continue;
             }
             if (!out.containsKey(remark.FEC_Case__c)) {
