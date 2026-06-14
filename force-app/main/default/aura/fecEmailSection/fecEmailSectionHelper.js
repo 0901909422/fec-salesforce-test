@@ -160,22 +160,8 @@
         });
         var body = bodyHtml || component.get('v.body') || '';
         if (body) {
-            var cleanedBody = self.cleanBody(body);
-            // Disconnect Quill's MutationObserver to prevent table stripping
             window.setTimeout(function() {
-                if (quill.scroll && quill.scroll.observer) {
-                    quill.scroll.observer.disconnect();
-                }
-                quill.root.innerHTML = cleanedBody;
-                quill.root.classList.remove('ql-blank');
-                // tungnm37 thÃªm: Ä‘áº£m báº£o td/th tá»« template cÃ³ contenteditable Ä‘á»ƒ xÃ³a Ä‘Æ°á»£c ná»™i dung
-                self._makeTableCellsEditable(quill.root);
-                // Reconnect after DOM is stable
-                window.setTimeout(function() {
-                    if (quill.scroll && quill.scroll.observer) {
-                        quill.scroll.observer.observe(quill.root, quill.scroll.observer._options || { childList: true, subtree: true, characterData: true });
-                    }
-                }, 100);
+                self._setEditorHtml(component, quill, body);
             }, 50);
         }
         // Set default font Times New Roman
@@ -216,6 +202,12 @@
         if (tbMod) tbMod.addHandler('image', function() {});
         self._wire(tbEl, quill, component);
         quill.on('text-change', function() { self._syncEditorBody(component, quill); });
+        quill.root.addEventListener('keydown', function(e) {
+            var key = e && e.key;
+            if (key && key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
+                self._applyActiveToolbarFormats(tbEl, quill);
+            }
+        }, true);
         quill.root.addEventListener('input', function() { self._saveNativeSelection(quill); self._syncEditorBody(component, quill); });
         quill.root.addEventListener('keyup', function() { self._saveNativeSelection(quill); self._syncEditorBody(component, quill); });
         quill.root.addEventListener('mouseup', function() { self._saveNativeSelection(quill); self._syncEditorBody(component, quill); });
@@ -273,10 +265,58 @@
     },
 
 
+    _setEditorHtml: function(component, quill, html) {
+        if (!quill || !quill.root) return;
+        var cleaned = this.cleanBody(html || '');
+        try {
+            if (quill.scroll && quill.scroll.observer) {
+                quill.scroll.observer.disconnect();
+            }
+            quill.setText('', 'silent');
+            quill.clipboard.dangerouslyPasteHTML(0, cleaned, 'silent');
+        } catch (e) {
+            quill.root.innerHTML = cleaned;
+        }
+        quill.root.classList.remove('ql-blank');
+        this._makeTableCellsEditable(quill.root);
+        this._syncEditorBody(component, quill);
+        var self = this;
+        window.setTimeout(function() {
+            if (quill.scroll && quill.scroll.observer) {
+                quill.scroll.observer.observe(quill.root, quill.scroll.observer._options || { childList: true, subtree: true, characterData: true });
+            }
+            self._syncEditorBody(component, quill);
+        }, 100);
+    },
+
+    _formatQuillSelection: function(component, quill, name, value) {
+        if (!quill || !quill.root) return;
+        this._focusRestoreSelection(quill);
+        var range = quill.getSelection(true);
+        if (!range) return;
+        quill.format(name, value, 'user');
+        quill.root.classList.remove('ql-blank');
+        this._makeTableCellsEditable(quill.root);
+        this._syncEditorBody(component, quill);
+    },
     _syncEditorBody: function(component, quill) {
         if (!quill || !quill.root) return;
         component.set('v.body', quill.root.innerHTML);
         component.set('v.rawBody', quill.root.innerHTML);
+    },
+
+    _applyActiveToolbarFormats: function(tbEl, quill) {
+        if (!tbEl || !quill) return;
+        try {
+            var range = quill.getSelection(true);
+            if (!range || range.length !== 0) return;
+            ['bold', 'italic', 'underline', 'strike'].forEach(function(cmd) {
+                var btn = tbEl.querySelector('.fec-btn[data-cmd="' + cmd + '"]');
+                if (btn && btn.classList.contains('fec-active')) {
+                    quill.format(cmd, true, 'silent');
+                }
+            });
+        } catch (e) {}
     },
 
     _saveNativeSelection: function(quill) {
@@ -435,17 +475,13 @@
                         closeDD();
                         if (type==='font') {
                             var ff = (items.filter(function(x){return x.v===val;})[0] || {}).f || '';
-                            self._nativeFormat(component, quill, 'fontName', ff.split('"').join('') || '');
+                            self._formatQuillSelection(component, quill, 'font', val || false);
                         } else if (type==='size') {
                             var px = val || '';
-                            self._nativeFormat(component, quill, 'fontSize', px ? '3' : '');
-                            if (px) {
-                                quill.root.querySelectorAll('font[size="3"]').forEach(function(n){ n.removeAttribute('size'); n.style.fontSize = px; });
-                                self._syncEditorBody(component, quill);
-                            }
+                            self._formatQuillSelection(component, quill, 'size', px || false);
                         } else {
                             var hd = (items.filter(function(x){return x.v===val;})[0] || {});
-                            self._applyHeaderStyleUsingFontTags(component, quill, val ? hd : { sz: '14px', b: false });
+                            self._formatQuillSelection(component, quill, 'header', val ? parseInt(val, 10) : false);
                         }
                     });
                 });
@@ -460,9 +496,11 @@
                 var cmd = btn.getAttribute('data-cmd');
                 var val = btn.getAttribute('data-val');
                 if (cmd==='bold'||cmd==='italic'||cmd==='underline'||cmd==='strike') {
-                    var nativeCmd = cmd === 'strike' ? 'strikeThrough' : cmd;
-                    self._nativeFormat(component, quill, nativeCmd, null);
-                    btn.classList.toggle('fec-active');
+                    var qCmd = cmd === 'strike' ? 'strike' : cmd;
+                    self._focusRestoreSelection(quill);
+                    var nextValue = !btn.classList.contains('fec-active');
+                    self._formatQuillSelection(component, quill, qCmd, nextValue);
+                    btn.classList.toggle('fec-active', nextValue);
                 } else if (cmd==='list') {
                     self._nativeFormat(component, quill, val === 'ordered' ? 'insertOrderedList' : 'insertUnorderedList', null);
                 } else if (cmd==='indent') {
@@ -724,7 +762,7 @@
             autoRow.innerHTML = '<span style="width:18px;height:18px;border:1px solid #ccc;background:#fff;display:inline-block;flex-shrink:0;border-radius:2px"></span><span style="font-size:13px;color:#333">Automatic</span>';
             autoRow.addEventListener('mousedown', function(e) {
                 e.preventDefault();
-                quill.format(cmd, false);
+                self._formatQuillSelection(component, quill, cmd, false);
                 var ind = tbEl.querySelector('.fec-clr-btn[data-cmd="'+cmd+'"] .fec-clr-a');
                 if (ind) { if(cmd==='color') ind.style.borderBottomColor='#000'; else ind.style.background='transparent'; }
                 closeClrDD();
@@ -738,7 +776,7 @@
                 sw.title = c;
                 sw.addEventListener('mousedown', function(e) {
                     e.preventDefault();
-                    quill.format(cmd, c);
+                    self._formatQuillSelection(component, quill, cmd, c);
                     var ind = tbEl.querySelector('.fec-clr-btn[data-cmd="'+cmd+'"] .fec-clr-a');
                     if (ind) { if(cmd==='color') ind.style.borderBottomColor=c; else ind.style.background=c; }
                     closeClrDD();
@@ -756,7 +794,7 @@
                 inp.type='color'; inp.style.cssText='position:fixed;opacity:0;width:0;height:0;';
                 document.body.appendChild(inp);
                 inp.addEventListener('input', function() {
-                    quill.format(cmd, inp.value);
+                    self._formatQuillSelection(component, quill, cmd, inp.value);
                     var ind = tbEl.querySelector('.fec-clr-btn[data-cmd="'+cmd+'"] .fec-clr-a');
                     if (ind) { if(cmd==='color') ind.style.borderBottomColor=inp.value; else ind.style.background=inp.value; }
                 });
@@ -840,22 +878,16 @@
             var range = sel.getRangeAt(0);
             var editorEl = quill.root;
 
-            // Handle Enter natively so caret stays at the current cursor position.
+            // Handle Enter through Quill so line breaks are persisted and toolbar state remains stable.
             if (e.keyCode === 13) {
                 e.preventDefault();
                 e.stopImmediatePropagation();
-
-                var br = document.createElement('br');
-                var spacer = document.createTextNode('\u200B');
-                range.deleteContents();
-                range.insertNode(spacer);
-                range.insertNode(br);
-
-                var nextRange = document.createRange();
-                nextRange.setStartAfter(spacer);
-                nextRange.collapse(true);
-                sel.removeAllRanges();
-                sel.addRange(nextRange);
+                var qRange = quill.getSelection(true);
+                if (qRange) {
+                    quill.insertText(qRange.index, '\n', 'user');
+                    quill.setSelection(qRange.index + 1, 0, 'silent');
+                    self._syncEditorBody(component, quill);
+                }
                 return;
             }
 
@@ -1006,15 +1038,21 @@
         a1.setCallback(this, function(r) {
             if (r.getState()==='SUCCESS') {
                 var d=r.getReturnValue()||{};
+                var isManualInteraction = d.isManual === 'true';
                 component.set('v.fromEmail', d.fromEmail||'');
                 component.set('v.fromDisplay', d.fromDisplay||d.fromEmail||'');
                 component.set('v.toEmail', d.toEmail||'');
-                component.set('v.isManualInteraction', d.isManual === 'true');
+                component.set('v.isManualInteraction', isManualInteraction);
                 component.set('v.incomingToAddress', d.fromEmail||'');
-                // Interaction: dï¿½ng From dropdown gi?ng Service Case, default theo From dï¿½ resolve t? field/source.
-                self.loadFromAddresses(component, d.fromEmail || '');
-                if (!d.fromEmail) {
-                    self.loadTemplates(component, component.get('v.fromEmail') || '');
+
+                if (isManualInteraction) {
+                    // Manual Interaction: allow selecting From from configured outbound emails.
+                    self.loadFromAddresses(component, d.fromEmail || '');
+                } else {
+                    // Non-manual Interaction: From is original inbound ToAddress/FEC_Send_To__c and read-only.
+                    component.set('v.fromOptions', []);
+                    component.set('v.hasFromOptions', false);
+                    self.loadTemplates(component, d.fromEmail || '');
                 }
             }
         });
@@ -1323,19 +1361,7 @@
         component.set('v.body', updated);
         component.set('v.rawBody', updated);
         if (window._fecQuill) {
-            var q = window._fecQuill;
-            var cleaned = this.cleanBody(updated);
-            if (q.scroll && q.scroll.observer) {
-                q.scroll.observer.disconnect();
-            }
-            q.root.innerHTML = cleaned;
-            q.root.classList.remove('ql-blank');
-            this._makeTableCellsEditable(q.root);
-            window.setTimeout(function() {
-                if (q.scroll && q.scroll.observer) {
-                    q.scroll.observer.observe(q.root, q.scroll.observer._options || { childList: true, subtree: true, characterData: true });
-                }
-            }, 100);
+            this._setEditorHtml(component, window._fecQuill, updated);
         }
     },
 

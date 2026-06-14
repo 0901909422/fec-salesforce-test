@@ -74,18 +74,7 @@
                     var _q = window._fecQuill;
                     var _body = helper.cleanBody(displayBody);
                     window.setTimeout(function() {
-                        if (_q.scroll && _q.scroll.observer) {
-                            _q.scroll.observer.disconnect();
-                        }
-                        _q.root.innerHTML = _body;
-                        _q.root.classList.remove('ql-blank');
-                        // tungnm37 thêm: đảm bảo td/th từ template có contenteditable
-                        helper._makeTableCellsEditable(_q.root);
-                        window.setTimeout(function() {
-                            if (_q.scroll && _q.scroll.observer) {
-                                _q.scroll.observer.observe(_q.root, _q.scroll.observer._options || { childList: true, subtree: true, characterData: true });
-                            }
-                        }, 100);
+                        helper._setEditorHtml(component, _q, _body);
                     }, 50);
                 }
                 if (resolvedSubject) {
