@@ -46,6 +46,19 @@ public without sharing class FEC_BatchCaseHandlingExportRow {
     @AuraEnabled public String caseRemarksEnteredByExtended;
     @AuraEnabled public String caseRemarksEnteredByRoleExtended;
     @AuraEnabled public String caseRemarksEnteredOnExtended;
+    // Toannd 11/06/2026 - export đủ Case Remarks theo từng remark (GSRTemp2_OtherCS)
+    @AuraEnabled public String caseRemarks1;
+    @AuraEnabled public String caseRemarksEnteredBy1;
+    @AuraEnabled public String caseRemarksEnteredByRole1;
+    @AuraEnabled public String caseRemarksEnteredOn1;
+    @AuraEnabled public String caseRemarks2;
+    @AuraEnabled public String caseRemarksEnteredBy2;
+    @AuraEnabled public String caseRemarksEnteredByRole2;
+    @AuraEnabled public String caseRemarksEnteredOn2;
+    @AuraEnabled public String caseRemarks3;
+    @AuraEnabled public String caseRemarksEnteredBy3;
+    @AuraEnabled public String caseRemarksEnteredByRole3;
+    @AuraEnabled public String caseRemarksEnteredOn3;
     @AuraEnabled public String assignmentId;
     @AuraEnabled public String assignmentOwner;
     @AuraEnabled public String assignmentRemarks;
