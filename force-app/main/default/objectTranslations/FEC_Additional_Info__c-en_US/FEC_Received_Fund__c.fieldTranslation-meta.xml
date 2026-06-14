@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomFieldTranslation xmlns="http://soap.sforce.com/2006/04/metadata">
+    <label><!-- Received Fund --></label>
+    <name>FEC_Received_Fund__c</name>
+    <picklistValues>
+        <masterLabel>Yes</masterLabel>
+        <translation>Có</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>No</masterLabel>
+        <translation>Không</translation>
+    </picklistValues>
+</CustomFieldTranslation>
