@@ -274,8 +274,6 @@ public with sharing class FEC_SearchController {
         insert rec;
 
         objCase.FEC_Account_or_Contract__c = rec.Id;
-        objCase.FEC_Phone_Number__c =
-            rec.FEC_Primary_Phone__c != null ? rec.FEC_Primary_Phone__c : phone;
         objCase.FEC_Recipient_Phone_Number__c =
             rec.FEC_Primary_Phone__c != null ? rec.FEC_Primary_Phone__c : phone;
 
