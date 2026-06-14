@@ -263,16 +263,23 @@ public without sharing class FEC_RoutingHistTatSvc {
                 continue;
             }
             h.FEC_Updated_Group__c = resolveUpdatedGroupCode(h, reportTeamByOwner);
-            applyQueueUserFlags(h, reportTeamByOwner);
+            applyQueueUserFlags(h, reportTeamByOwner, h.FEC_Updated_Group__c);
         }
     }
 
     private static void applyQueueUserFlags(
         FEC_Routing_Action_History__c h,
-        Map<Id, String> teamByOwner
+        Map<Id, String> teamByOwner,
+        String updatedGroupCode
     ) {
-        String updTeam = resolveTeamForQueueSide(h, teamByOwner, true);
-        String origTeam = resolveTeamForQueueSide(h, teamByOwner, false);
+        String updTeam = String.isNotBlank(updatedGroupCode)
+            ? updatedGroupCode
+            : FEC_TeamGroupCodeUtil.normalizeForReport(
+                resolveTeamForQueueSide(h, teamByOwner, true)
+            );
+        String origTeam = FEC_TeamGroupCodeUtil.normalizeForReport(
+            resolveTeamForQueueSide(h, teamByOwner, false)
+        );
         h.FEC_Is_CA_Queue_User__c = teamMatches(updTeam, origTeam, 'CA');
         h.FEC_Is_CL_Queue_User__c = teamMatches(updTeam, origTeam, 'CL');
         h.FEC_Is_CO_Queue_User__c = teamMatches(updTeam, origTeam, 'CO');
@@ -318,11 +325,11 @@ public without sharing class FEC_RoutingHistTatSvc {
         FEC_Routing_Action_History__c h,
         Map<Id, String> teamByOwner
     ) {
-        String updTeam = resolveTeamForQueueSide(h, teamByOwner, true);
-        if (String.isNotBlank(updTeam)) {
-            return updTeam;
+        String team = resolveTeamForQueueSide(h, teamByOwner, true);
+        if (String.isNotBlank(team)) {
+            return FEC_TeamGroupCodeUtil.normalizeForReport(team);
         }
-        return resolveTeamForQueueSide(h, teamByOwner, false);
+        return FEC_OwnerTeamLookupSvc.getReportTeamByQueueLabel(h.FEC_Updated_User_Queue__c);
     }
 
     private static String resolveTeamForQueueSide(

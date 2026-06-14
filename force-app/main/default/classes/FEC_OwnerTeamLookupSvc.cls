@@ -14,16 +14,35 @@ public without sharing class FEC_OwnerTeamLookupSvc {
     private static Map<Id, String> groupDevNameById = new Map<Id, String>();
     private static Map<String, String> teamByQueueNameForCase = new Map<String, String>();
     private static Map<String, String> teamByQueueNameForReport = new Map<String, String>();
+    private static Map<String, String> reportTeamByQueueLabel = new Map<String, String>();
     private static Boolean teamByQueueNameLoaded = false;
 
     /** Team hiển thị trên Case (Pending - SP, FEC_Team__c). */
     public static Map<Id, String> getByOwnerIds(Set<Id> ownerIds) {
-        return resolveTeamMap(ownerIds, teamByOwnerId, teamByQueueNameForCase, false);
+        return resolveTeamMap(ownerIds, teamByOwnerId, teamByQueueNameForCase);
     }
 
     /** Mã team ngắn cho báo cáo TAT (FEC_Updated_Group__c). */
     public static Map<Id, String> getReportTeamByOwnerIds(Set<Id> ownerIds) {
-        return resolveTeamMap(ownerIds, reportTeamByOwnerId, teamByQueueNameForReport, true);
+        return resolveTeamMap(ownerIds, reportTeamByOwnerId, teamByQueueNameForReport);
+    }
+
+    /**
+     * Fallback báo cáo khi FEC_Updated_User_Queue_ID__c không map được — tra theo nhãn queue
+     * (vd "DQ - Contract Processing").
+     */
+    public static String getReportTeamByQueueLabel(String queueLabel) {
+        if (String.isBlank(queueLabel)) {
+            return null;
+        }
+        String key = queueLabel.trim();
+        if (reportTeamByQueueLabel.containsKey(key)) {
+            return reportTeamByQueueLabel.get(key);
+        }
+        ensureTeamByQueueNameMaps();
+        String teamCode = resolveReportTeamCodeFromQueueLabel(key);
+        reportTeamByQueueLabel.put(key, teamCode);
+        return teamCode;
     }
 
     /**
@@ -46,8 +65,7 @@ public without sharing class FEC_OwnerTeamLookupSvc {
     private static Map<Id, String> resolveTeamMap(
         Set<Id> ownerIds,
         Map<Id, String> cache,
-        Map<String, String> queueTeamMap,
-        Boolean forReport
+        Map<String, String> queueTeamMap
     ) {
         Map<Id, String> out = new Map<Id, String>();
         if (ownerIds == null || ownerIds.isEmpty()) {
@@ -183,6 +201,20 @@ public without sharing class FEC_OwnerTeamLookupSvc {
             }
         }
         teamByQueueNameLoaded = true;
+    }
+
+    private static String resolveReportTeamCodeFromQueueLabel(String queueLabel) {
+        for (Group g : [
+            SELECT DeveloperName
+            FROM Group
+            WHERE Name = :queueLabel AND Type = :FEC_ConstantCommon.GROUP_TYPE_QUEUE
+            LIMIT 1
+        ]) {
+            if (teamByQueueNameForReport.containsKey(g.DeveloperName)) {
+                return teamByQueueNameForReport.get(g.DeveloperName);
+            }
+        }
+        return null;
     }
 
     /**
