@@ -97,7 +97,7 @@ private class FEC_GetLoanApplicationHistory_Test {
         Test.startTest();
         // Gọi hàm DML
         FEC_GetLoanApplicationHistory.CaseApplicationHistoryDisplay historyRec =
-            FEC_GetLoanApplicationHistory.updateCaseApplicationHistory(testCase.Id);
+            FEC_GetLoanApplicationHistory.updateCaseApplicationHistory(testCase.Id)[0];
         Test.stopTest();
 
         System.assertNotEquals(null, historyRec.id, 'Bản ghi History phải được tạo thành công.');
@@ -113,6 +113,52 @@ private class FEC_GetLoanApplicationHistory_Test {
             LIMIT 1
         ];
         System.assertEquals('APPROVED', persisted.FEC_Status__c, 'Status phải được lưu trên record.');
+    }
+
+    @IsTest
+    static void testUpdateCaseApplicationHistory_ReturnsAllRows() {
+        String mockJsonMultiple =
+            '{' +
+            '  "Sys": {"TransID": "TXN123", "DateTime": "2026-05-25T10:00:00Z", "Code": 1, "Description": "Success"},' +
+            '  "AppInfos": [' +
+            '    {"APPLICATION_ID": "APP001", "USER_NAME": "User Two", "ACTIVITIY_ID": "ACT02", "STATUS_ID": "P", "EDIT_DATE": "2026-05-24"},' +
+            '    {"APPLICATION_ID": "APP001", "USER_NAME": "User One", "ACTIVITIY_ID": "ACT01", "STATUS_ID": "A", "EDIT_DATE": "2026-05-25"}' +
+            '  ]' +
+            '}';
+
+        Test.setMock(HttpCalloutMock.class, new MockHttpResponseGenerator(200, mockJsonMultiple));
+
+        Case testCase = [SELECT Id FROM Case LIMIT 1];
+
+        Test.startTest();
+        List<FEC_GetLoanApplicationHistory.CaseApplicationHistoryDisplay> rows =
+            FEC_GetLoanApplicationHistory.updateCaseApplicationHistory(testCase.Id);
+        Test.stopTest();
+
+        System.assertEquals(2, rows.size(), 'Phải trả về đủ 2 dòng từ API.');
+        System.assertEquals('User One', rows[0].user, 'Dòng mới nhất theo EDIT_DATE phải đứng đầu.');
+        System.assertEquals('User Two', rows[1].user);
+        System.assertEquals('APPROVED', rows[0].status);
+        System.assertEquals('PENDING', rows[1].status);
+    }
+
+    @IsTest
+    static void testUpdateCaseApplicationHistory_UsesSearchAppIdWhenNoCustomerHistory() {
+        Case testCase = new Case(
+            Subject = 'Search App Only',
+            FEC_Search_Application_ID__c = 'APP-SEARCH-001'
+        );
+        insert testCase;
+
+        Test.setMock(HttpCalloutMock.class, new MockHttpResponseGenerator(200, MOCK_JSON_SUCCESS));
+
+        Test.startTest();
+        List<FEC_GetLoanApplicationHistory.CaseApplicationHistoryDisplay> rows =
+            FEC_GetLoanApplicationHistory.updateCaseApplicationHistory(testCase.Id);
+        Test.stopTest();
+
+        System.assertEquals(1, rows.size(), 'Phải gọi API thành công khi không có FEC_Customer_History__c.');
+        System.assertEquals('Tung Nguyen', rows[0].user);
     }
 
     @IsTest
@@ -197,9 +243,9 @@ private class FEC_GetLoanApplicationHistory_Test {
         } catch (Exception e) { System.assert(true); }
 
         // 2. Validate Case ID null trong updateCaseApplicationHistory
-        FEC_GetLoanApplicationHistory.CaseApplicationHistoryDisplay rec =
+        List<FEC_GetLoanApplicationHistory.CaseApplicationHistoryDisplay> rec =
             FEC_GetLoanApplicationHistory.updateCaseApplicationHistory(null);
-        System.assertEquals(null, rec, 'Nếu Case ID null, hàm trả về null.');
+        System.assertEquals(0, rec.size(), 'Nếu Case ID null, hàm trả về list rỗng.');
 
         // 3. Test lỗi HTTP (500)
         Test.setMock(HttpCalloutMock.class, new MockHttpResponseGenerator(500, 'Internal Server Error'));
