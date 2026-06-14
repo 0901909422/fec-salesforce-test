@@ -35,6 +35,11 @@
                 <default>false</default>
                 <label>Verification Failed</label>
             </value>
+            <value>
+                <fullName>Product Not Introduced / No Interest</fullName>
+                <default>false</default>
+                <label>Product Not Introduced / No Interest</label>
+            </value>
         </valueSetDefinition>
     </valueSet>
 </CustomField>

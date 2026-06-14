@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomFieldTranslation xmlns="http://soap.sforce.com/2006/04/metadata">
+    <label><!-- MRC Address --></label>
+    <name>FEC_MRC_Address__c</name>
+    <picklistValues>
+        <masterLabel>Dealer Store</masterLabel>
+        <translation>Cửa hàng xe</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Home Address</masterLabel>
+        <translation>Địa chỉ</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Office</masterLabel>
+        <translation>Văn phòng</translation>
+    </picklistValues>
+</CustomFieldTranslation>
