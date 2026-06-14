@@ -10,8 +10,12 @@ import FEC_Interactions_Section_Title from '@salesforce/label/c.FEC_Interactions
 import FEC_Interaction_ID from '@salesforce/label/c.FEC_Interaction_ID';
 import FEC_Interaction_Status_Label from '@salesforce/label/c.FEC_Interaction_Status_Label';
 import FEC_Interaction_Created_On_Label from '@salesforce/label/c.FEC_Interaction_Created_On_Label';
+import FEC_Interaction_Created_By_Label from '@salesforce/label/c.FEC_Interaction_Created_By_Label';
 import FEC_Last_Updated_On_Label from '@salesforce/label/c.FEC_Last_Updated_On_Label';
+import FEC_Last_Updated_By_Label from '@salesforce/label/c.FEC_Last_Updated_By_Label';
 import FEC_Interaction_Duration_Label from '@salesforce/label/c.FEC_Interaction_Duration_Label';
+import FEC_External_Interaction_ID_Label from '@salesforce/label/c.FEC_External_Interaction_ID_Label';
+import FEC_Interaction_Email_Label from '@salesforce/label/c.FEC_Interaction_Email_Label';
 import FEC_Interaction_Phone_Label from '@salesforce/label/c.FEC_Interaction_Phone_Label';
 import FEC_Interaction_Channel_Label from '@salesforce/label/c.FEC_Interaction_Channel_Label';
 import FEC_Interaction_Sub_Channel_Label from '@salesforce/label/c.FEC_Interaction_Sub_Channel_Label';
@@ -51,8 +55,12 @@ export default class Fec_InteractionCases extends NavigationMixin(LightningEleme
     interactionIdLabel: FEC_Interaction_ID,
     interactionStatusLabel: FEC_Interaction_Status_Label,
     interactionCreatedOnLabel: FEC_Interaction_Created_On_Label,
+    interactionCreatedByLabel: FEC_Interaction_Created_By_Label,
     lastUpdatedOnLabel: FEC_Last_Updated_On_Label,
+    lastUpdatedByLabel: FEC_Last_Updated_By_Label,
     interactionDurationLabel: FEC_Interaction_Duration_Label,
+    externalInteractionIdLabel: FEC_External_Interaction_ID_Label,
+    interactionEmailLabel: FEC_Interaction_Email_Label,
     interactionPhoneLabel: FEC_Interaction_Phone_Label,
     interactionChannelLabel: FEC_Interaction_Channel_Label,
     interactionSubChannelLabel: FEC_Interaction_Sub_Channel_Label,
@@ -64,7 +72,7 @@ export default class Fec_InteractionCases extends NavigationMixin(LightningEleme
       {
         label: this.customLabel.interactionIdLabel,
         fieldName: 'interactionIdText',
-        fieldApiName: 'FEC_ID_Search__c',
+        fieldApiName: 'FEC_Interaction_ID__c',
         type: 'link',
         recordIdField: 'Id',
         hoverTitle: this.customLabel.sectionTitle,
@@ -73,20 +81,28 @@ export default class Fec_InteractionCases extends NavigationMixin(LightningEleme
           { label: this.customLabel.interactionIdLabel, fieldName: 'interactionIdText' },
           { label: this.customLabel.interactionStatusLabel, fieldName: 'interactionStatus' },
           { label: this.customLabel.interactionCreatedOnLabel, fieldName: 'interactionCreatedOnFormatted' },
-          { label: this.customLabel.lastUpdatedOnLabel, fieldName: 'lastUpdatedOnFormatted' },
+          { label: this.customLabel.interactionCreatedByLabel, fieldName: 'interactionCreatedBy' },
           { label: this.customLabel.interactionDurationLabel, fieldName: 'interactionDurationFormatted' },
           { label: this.customLabel.interactionPhoneLabel, fieldName: 'interactionPhone' },
           { label: this.customLabel.interactionChannelLabel, fieldName: 'channel' },
           { label: this.customLabel.interactionSubChannelLabel, fieldName: 'interactionSubChannel' },
+          { label: this.customLabel.externalInteractionIdLabel, fieldName: 'externalInteractionId' },
+          { label: this.customLabel.interactionEmailLabel, fieldName: 'interactionEmail' },
+          { label: this.customLabel.lastUpdatedOnLabel, fieldName: 'lastUpdatedOnFormatted' },
+          { label: this.customLabel.lastUpdatedByLabel, fieldName: 'lastUpdatedBy' },
         ],
       },
       { label: this.customLabel.interactionStatusLabel, fieldName: 'interactionStatus', fieldApiName: 'FEC_Interaction_Status__c', type: 'text', cellAlign: 'center' },
       { label: this.customLabel.interactionCreatedOnLabel, fieldName: 'interactionCreatedOnFormatted', fieldApiName: 'FEC_Created_On__c', type: 'text', cellAlign: 'center' },
-      { label: this.customLabel.lastUpdatedOnLabel, fieldName: 'lastUpdatedOnFormatted', fieldApiName: 'FEC_Last_Updated_On_View__c', type: 'text', cellAlign: 'center' },
+      { label: this.customLabel.interactionCreatedByLabel, fieldName: 'interactionCreatedBy', fieldApiName: 'FEC_Created_by__c', type: 'text', cellAlign: 'center' },
       { label: this.customLabel.interactionDurationLabel, fieldName: 'interactionDurationFormatted', fieldApiName: 'FEC_Interaction_Duration__c', type: 'text', cellAlign: 'center' },
       { label: this.customLabel.interactionPhoneLabel, fieldName: 'interactionPhone', fieldApiName: 'FEC_Phone_Number__c', type: 'eye', eyeMaskType: 'phone', cellAlign: 'center' },
       { label: this.customLabel.interactionChannelLabel, fieldName: 'channel', fieldApiName: 'FEC_Channel__c', type: 'text', cellAlign: 'center' },
       { label: this.customLabel.interactionSubChannelLabel, fieldName: 'interactionSubChannel', fieldApiName: 'FEC_Interaction_Subchannel__c', type: 'text' },
+      { label: this.customLabel.externalInteractionIdLabel, fieldName: 'externalInteractionId', fieldApiName: 'FEC_External_Interaction_ID__c', type: 'text', cellAlign: 'center' },
+      { label: this.customLabel.interactionEmailLabel, fieldName: 'interactionEmail', fieldApiName: 'FEC_Interaction_Email__c', type: 'text', cellAlign: 'center' },
+      { label: this.customLabel.lastUpdatedOnLabel, fieldName: 'lastUpdatedOnFormatted', fieldApiName: 'FEC_Last_Updated_On_View__c', type: 'text', cellAlign: 'center' },
+      { label: this.customLabel.lastUpdatedByLabel, fieldName: 'lastUpdatedBy', fieldApiName: 'FEC_Last_Updated_By_View__c', type: 'text', cellAlign: 'center' },
     ];
   }
 
@@ -146,7 +162,11 @@ export default class Fec_InteractionCases extends NavigationMixin(LightningEleme
         interactionIdText: row.interactionIdText || STR_EMPTY,
         interactionCreatedOn: row.interactionCreatedOn,
         interactionCreatedOnFormatted: formatDateTimeVN(row.interactionCreatedOn),
+        interactionCreatedBy: row.interactionCreatedBy || STR_EMPTY,
         lastUpdatedOnFormatted: formatDateTimeVN(row.lastUpdatedOn),
+        lastUpdatedBy: row.lastUpdatedBy || STR_EMPTY,
+        externalInteractionId: row.externalInteractionId || STR_EMPTY,
+        interactionEmail: row.interactionEmail || STR_EMPTY,
         interactionDurationFormatted: formatDuration(row.interactionDuration),
       }));
     } catch (e) {
