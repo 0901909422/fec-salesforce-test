@@ -1,13 +1,20 @@
 /**
- * Ghi FEC_Manager_ID_List__c trên Case: CSV Id User theo Role Hierarchy phía trên Owner
+ * Ghi FEC_Manager_ID_List__c và FEC_Manager_ID_List_2__c trên Case:
+ * CSV Id User theo Role Hierarchy phía trên Owner
  * (User.UserRoleId → UserRole.ParentRoleId), gom mọi User active trong từng role cấp trên
- * (cấp gần trước, xa sau). Owner là Queue hoặc User không có Role → xóa FEC_Manager_ID_List__c.
+ * (cấp gần trước, xa sau). Owner là Queue hoặc User không có Role → xóa cả 2 field.
+ *
+ * Vì CONTAINS() trong formula không hỗ trợ LongTextArea, 2 field Text(255) được dùng nối tiếp:
+ *   - FEC_Manager_ID_List__c  : 13 manager gần nhất (≤255 ký tự)
+ *   - FEC_Manager_ID_List_2__c: 13 manager tiếp theo (≤255 ký tự)
+ * Formula FEC_Is_Manager_For_Cur_User__c dùng OR để kiểm tra cả 2 field.
  *
  * Role hierarchy: UserRole được nạp theo lớp (bulk), không SOQL trong vòng while từng bậc.
  */
 public without sharing class FEC_CaseManagerListService {
   private static final String CSV_DELIMITER = ',';
   private static final Integer MAX_ROLE_HIERARCHY_DEPTH = 100;
+  private static final Integer FIELD_MAX_LENGTH = 255;
   // SOQL 101: cache/dedupe theo transaction, tránh query lặp khi submit NOC bulk.
   private static Set<Id> txnManagerListSyncedCaseIds = new Set<Id>();
 
@@ -38,12 +45,17 @@ public without sharing class FEC_CaseManagerListService {
         continue;
       }
       if (c.OwnerId.getSObjectType() != User.SObjectType) {
-        toUpdate.add(new Case(Id = c.Id, FEC_Manager_ID_List__c = null));
+        toUpdate.add(
+          new Case(Id = c.Id, FEC_Manager_ID_List__c = null, FEC_Manager_ID_List_2__c = null)
+        );
       } else {
+        String fullCsv = csvByOwner.containsKey(c.OwnerId) ? csvByOwner.get(c.OwnerId) : null;
+        List<String> chunks = splitManagerCsv(fullCsv);
         toUpdate.add(
           new Case(
             Id = c.Id,
-            FEC_Manager_ID_List__c = csvByOwner.containsKey(c.OwnerId) ? csvByOwner.get(c.OwnerId) : null
+            FEC_Manager_ID_List__c = chunks[0],
+            FEC_Manager_ID_List_2__c = chunks[1]
           )
         );
       }
@@ -115,6 +127,7 @@ public without sharing class FEC_CaseManagerListService {
   /**
    * Bulk: một lần SOQL User, vài vòng SOQL UserRole theo chiều sâu tối đa (chung cho mọi owner),
    * một SOQL User theo các role tổ tiên đã gom.
+   * Trả về full CSV (không giới hạn độ dài) — việc split 2 field do splitManagerCsv() xử lý.
    */
   public static Map<Id, String> buildManagerCsvForUserIds(Set<Id> ownerUserIds) {
     Map<Id, String> result = new Map<Id, String>();
@@ -282,6 +295,7 @@ public without sharing class FEC_CaseManagerListService {
     return ancestorRoleIdsOrdered;
   }
 
+  /** Ghép full CSV theo thứ tự từ role gần đến xa, không giới hạn độ dài. */
   private static String composeManagerCsv(
     List<Id> ancestorRoleIdsOrdered,
     Map<Id, List<Id>> roleIdToUserIds
@@ -312,7 +326,50 @@ public without sharing class FEC_CaseManagerListService {
   }
 
   /**
-   * Đồng bộ lại FEC_Manager_ID_List__c cho các Case đã tồn tại (backfill sau deploy, hoặc khi Role/User thay đổi).
+   * Chia full CSV thành 2 chunk, mỗi chunk tối đa FIELD_MAX_LENGTH ký tự, không cắt giữa ID.
+   * Trả về List gồm đúng 2 phần tử: [chunk1, chunk2] — null nếu chunk rỗng.
+   * chunk1: các manager gần nhất (ưu tiên); chunk2: các manager xa hơn.
+   */
+  @TestVisible
+  private static List<String> splitManagerCsv(String fullCsv) {
+    List<String> chunks = new List<String>{ null, null };
+    if (String.isBlank(fullCsv)) {
+      return chunks;
+    }
+
+    List<String> ids = fullCsv.split(CSV_DELIMITER);
+    List<String> chunk1 = new List<String>();
+    List<String> chunk2 = new List<String>();
+    Integer len1 = 0;
+    Integer len2 = 0;
+    Boolean chunk1Full = false;
+
+    for (String id : ids) {
+      if (!chunk1Full) {
+        Integer needed = chunk1.isEmpty() ? id.length() : 1 + id.length();
+        if (len1 + needed <= FIELD_MAX_LENGTH) {
+          chunk1.add(id);
+          len1 += needed;
+          continue;
+        }
+        chunk1Full = true;
+      }
+      Integer needed = chunk2.isEmpty() ? id.length() : 1 + id.length();
+      if (len2 + needed <= FIELD_MAX_LENGTH) {
+        chunk2.add(id);
+        len2 += needed;
+      }
+      // IDs vượt quá 2 field (>~26 managers) bị bỏ qua — trường hợp hierarchy rất lớn.
+    }
+
+    chunks[0] = chunk1.isEmpty() ? null : String.join(chunk1, CSV_DELIMITER);
+    chunks[1] = chunk2.isEmpty() ? null : String.join(chunk2, CSV_DELIMITER);
+    return chunks;
+  }
+
+  /**
+   * Đồng bộ lại FEC_Manager_ID_List__c và FEC_Manager_ID_List_2__c cho các Case đã tồn tại
+   * (backfill sau deploy, hoặc khi Role/User thay đổi).
    * Truyền oldMap = null nên mọi bản ghi trong list đều được tính lại.
    */
   public static void recalculateForCaseIds(Set<Id> caseIds) {
