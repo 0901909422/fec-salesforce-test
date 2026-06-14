@@ -243,7 +243,7 @@ public with sharing class FEC_HoldCaseController {
             System.debug('[callMarkNFUAndGetInfo] Case: ' + JSON.serialize(c));
             // 2. Lấy NFU Code từ Config theo subCode
             List<FEC_Hold_Case_Config__c> configs = [
-                SELECT FEC_NFU_Code__c
+                SELECT FEC_NFU_Code__c, Hold_Case_Type__c
                 FROM FEC_Hold_Case_Config__c
                 WHERE FEC_Nature_of_Cases__r.FEC_Sub_Code__c = :c.FEC_SubCode__c
                 AND   FEC_Active__c   = true
@@ -259,6 +259,7 @@ public with sharing class FEC_HoldCaseController {
             }
 
             String nfuCode = configs[0].FEC_NFU_Code__c.split(',')[0].trim();
+            String holdCaseType = configs[0].Hold_Case_Type__c;
 
              System.debug('[callMarkNFUAndGetInfo] nfuCode to send: ' + nfuCode);
 
@@ -277,6 +278,15 @@ public with sharing class FEC_HoldCaseController {
 
             FEC_MarkNFU.MarkNFUResult markResult = FEC_MarkNFU.markNFU(req);
             System.debug('[callMarkNFUAndGetInfo] MarkNFUResult: ' + JSON.serialize(markResult));
+
+            // Lưu Hold Case Type vào Case bất kể API thành công hay thất bại
+            if (String.isNotBlank(holdCaseType)) {
+                saveCasePatch(new Case(
+                    Id = c.Id,
+                    FEC_Hold_Case_Type__c = holdCaseType
+                ));
+            }
+
             NfuInfoResult result = new NfuInfoResult();
 
             if (!markResult.success) {
