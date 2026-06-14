@@ -121,6 +121,10 @@ public without sharing class FEC_BCH_TemplateExportService {
                     templateDataRow1,
                     insertBefore
                 );
+                // 13/06/2026 00:15 linhdev - đánh dấu loại insert để gán style/border đúng cho Property Info
+                if (resultColStyles != null) {
+                    resultColStyles.resultStatusErrorsInsert = isResultStatusErrorsInsert(insertHeaders);
+                }
                 worksheetXml = insertPropertyColumnsInWorksheet(
                     worksheetXml,
                     headerRowIndex + 1,
@@ -295,7 +299,7 @@ public without sharing class FEC_BCH_TemplateExportService {
             );
             // 30/05/2026 19:30 linhdev - đọc đúng cell ref; tránh regex row ăn nhầm cell self-closing trước cột remark
             String cellRef = columnIndexToLetter(worksheetColIndex0) + String.valueOf(dataRowIndex0 + 1);
-            Pattern cellPat = Pattern.compile('(?s)<c r="' + cellRef + '"([^/>]*)(?:>(.*?)</c>|/>)');
+            Pattern cellPat = Pattern.compile('(?s)<c r="' + cellRef + '"([^/>]*)(?:/>|>(.*?)</c>)');
             Matcher cellMat = cellPat.matcher(worksheetXml);
             if (!cellMat.find()) {
                 return FEC_ConstantCommon.STR_EMPTY;
@@ -522,6 +526,8 @@ public without sharing class FEC_BCH_TemplateExportService {
         String headerCellStyleAttr;
         String dataStatusStyleAttr;
         String dataErrorsWrapStyleAttr;
+        // 13/06/2026 00:15 linhdev - phân biệt __Status/__Errors vs Property Info khi gán style/border
+        Boolean resultStatusErrorsInsert = false;
     }
 
     private static String patchWorksheetXml(
@@ -731,7 +737,7 @@ public without sharing class FEC_BCH_TemplateExportService {
         if (String.isBlank(rowXml)) {
             return out;
         }
-        Pattern cellPat = Pattern.compile('(?s)<c r="([A-Z]{1,3})' + rowNum1 + '"([^>]*)(?:>(.*?)</c>|/>)');
+        Pattern cellPat = Pattern.compile('(?s)<c r="([A-Z]{1,3})' + rowNum1 + '"([^/>]*)(?:/>|>(.*?)</c>)');
         Matcher cellMat = cellPat.matcher(rowXml);
         while (cellMat.find()) {
             String col = cellMat.group(1);
@@ -790,7 +796,7 @@ public without sharing class FEC_BCH_TemplateExportService {
         if (String.isBlank(rowXml)) {
             return out;
         }
-        Pattern cellPat = Pattern.compile('(?s)<c r="([A-Z]{1,3})' + rowNum1 + '"([^>]*)(?:>(.*?)</c>|/>)');
+        Pattern cellPat = Pattern.compile('(?s)<c r="([A-Z]{1,3})' + rowNum1 + '"([^/>]*)(?:/>|>(.*?)</c>)');
         Matcher cellMat = cellPat.matcher(rowXml);
         while (cellMat.find()) {
             String col = cellMat.group(1);
@@ -856,7 +862,7 @@ public without sharing class FEC_BCH_TemplateExportService {
                 continue;
             }
             String rowInner = rowMat.group(2);
-            Pattern cellPat = Pattern.compile('(?s)<c r="([A-Z]{1,3})(\\d+)"([^>]*)(?:>(.*?)</c>|/>)');
+            Pattern cellPat = Pattern.compile('(?s)<c r="([A-Z]{1,3})(\\d+)"([^/>]*)(?:/>|>(.*?)</c>)');
             Matcher cellMat = cellPat.matcher(rowInner);
             while (cellMat.find()) {
                 Integer cellRow = Integer.valueOf(cellMat.group(2));
@@ -1486,7 +1492,8 @@ public without sharing class FEC_BCH_TemplateExportService {
                 resultColStyles,
                 insertBeforeColIndex,
                 insertedColumnCount,
-                colIdx
+                colIdx,
+                resultColStyles == null ? false : resultColStyles.resultStatusErrorsInsert
             );
             if (String.isNotBlank(styleAttr)) {
                 rowXml = removeCellAtAddress(rowXml, colLetter + String.valueOf(targetRowNum1));
@@ -1515,28 +1522,36 @@ public without sharing class FEC_BCH_TemplateExportService {
         return clearFixedRowHeight(rowXml);
     }
 
+    // 13/06/2026 00:15 linhdev - mọi cột chèn lấy border/style cột kề; __Status/__Errors giữ riêng wrap cho __Errors
     private static String resolveResultDataCellStyleAttr(
         ResultInsertColumnStyles resultColStyles,
         Integer insertBeforeColIndex,
         Integer insertedColumnCount,
-        Integer colIdx
+        Integer colIdx,
+        Boolean resultStatusErrorsInsert
     ) {
         if (
             resultColStyles == null ||
             insertBeforeColIndex == null ||
             insertedColumnCount == null ||
-            insertedColumnCount < 2 ||
+            insertedColumnCount < 1 ||
             colIdx == null
         ) {
             return null;
         }
-        if (colIdx == insertBeforeColIndex) {
-            return resultColStyles.dataStatusStyleAttr;
+        if (colIdx < insertBeforeColIndex || colIdx >= insertBeforeColIndex + insertedColumnCount) {
+            return null;
         }
-        if (colIdx == insertBeforeColIndex + 1) {
-            return resultColStyles.dataErrorsWrapStyleAttr;
+        if (resultStatusErrorsInsert == true && insertedColumnCount == 2) {
+            if (colIdx == insertBeforeColIndex) {
+                return resultColStyles.dataStatusStyleAttr;
+            }
+            if (colIdx == insertBeforeColIndex + 1) {
+                return resultColStyles.dataErrorsWrapStyleAttr;
+            }
+            return null;
         }
-        return null;
+        return resultColStyles.dataStatusStyleAttr;
     }
 
     // 01/06/2026 18:00 linhdev - giữ mappedCols[i] khớp dataRows[i]; dịch chỉ số cột worksheet, append __Status/__Errors cuối list
@@ -1635,9 +1650,10 @@ public without sharing class FEC_BCH_TemplateExportService {
             return xml;
         }
         Integer shift = headers.size();
+        // 13/06/2026 00:15 linhdev - dịch mọi row trên header (Ghi chú/Mandatory) theo Routing Action
+        xml = shiftAllSheetDataRowsUpTo(xml, headerRowNum1, insertBeforeColIndex, shift);
         String headerRowXml = extractRowXml(xml, headerRowNum1);
         if (String.isNotBlank(headerRowXml)) {
-            headerRowXml = shiftRowCellsRight(headerRowXml, headerRowNum1, insertBeforeColIndex, shift);
             String headerStyleAttr = resultColStyles == null
                 ? null
                 : resultColStyles.headerCellStyleAttr;
@@ -1682,6 +1698,62 @@ public without sharing class FEC_BCH_TemplateExportService {
         return m.replaceFirst(Matcher.quoteReplacement(rowXml));
     }
 
+    // 13/06/2026 00:15 linhdev - dịch cell các row trên header (note Ghi chú/Mandatory) khi chèn Property
+    @TestVisible
+    private static String shiftAllSheetDataRowsUpTo(
+        String xml,
+        Integer upToRowNum1,
+        Integer insertBeforeColIndex,
+        Integer shift
+    ) {
+        if (
+            String.isBlank(xml) ||
+            upToRowNum1 == null ||
+            upToRowNum1 < 1 ||
+            shift == null ||
+            shift < 1 ||
+            insertBeforeColIndex == null
+        ) {
+            return xml;
+        }
+        Pattern rowPat = Pattern.compile('(?s)<row r="(\\d+)"[^>]*>.*?</row>');
+        Matcher rowMat = rowPat.matcher(xml);
+        List<MergeRefReplacement> replacements = new List<MergeRefReplacement>();
+        while (rowMat.find()) {
+            Integer rowNum1 = Integer.valueOf(rowMat.group(1));
+            if (rowNum1 > upToRowNum1) {
+                continue;
+            }
+            String rowXml = rowMat.group(0);
+            String shiftedRowXml = shiftRowCellsRight(
+                rowXml,
+                rowNum1,
+                insertBeforeColIndex,
+                shift
+            );
+            if (shiftedRowXml == rowXml) {
+                continue;
+            }
+            MergeRefReplacement rep = new MergeRefReplacement();
+            rep.startPos = rowMat.start();
+            rep.endPos = rowMat.end();
+            rep.replacementText = shiftedRowXml;
+            replacements.add(rep);
+        }
+        if (replacements.isEmpty()) {
+            return xml;
+        }
+        String out = xml;
+        for (Integer i = replacements.size() - 1; i >= 0; i--) {
+            MergeRefReplacement rep = replacements[i];
+            out =
+                out.substring(0, rep.startPos) +
+                rep.replacementText +
+                out.substring(rep.endPos);
+        }
+        return out;
+    }
+
     private static String shiftRowCellsRight(
         String rowXml,
         Integer rowNum1,
@@ -1691,7 +1763,8 @@ public without sharing class FEC_BCH_TemplateExportService {
         if (String.isBlank(rowXml) || shift == null || shift < 1) {
             return rowXml;
         }
-        Pattern cellPat = Pattern.compile('(?s)<c r="([A-Z]{1,3})' + rowNum1 + '"([^>]*)(?:>(.*?)</c>|/>)');
+        // 13/06/2026 00:30 linhdev - [^/>]* + ưu tiên /> để parse đúng cell self-closing (Ghi chú row 1)
+        Pattern cellPat = Pattern.compile('(?s)<c r="([A-Z]{1,3})' + rowNum1 + '"([^/>]*)(?:/>|>(.*?)</c>)');
         Matcher cellMat = cellPat.matcher(rowXml);
         List<CellFragment> cells = new List<CellFragment>();
         while (cellMat.find()) {
@@ -2034,7 +2107,7 @@ public without sharing class FEC_BCH_TemplateExportService {
             return rowXml;
         }
         Integer targetColIdx = columnLetterToIndex(colLetter);
-        Pattern cellPat = Pattern.compile('(?s)<c r="([A-Z]{1,3})' + rowNum1 + '"[^>]*(?:/>|>.*?</c>)');
+        Pattern cellPat = Pattern.compile('(?s)<c r="([A-Z]{1,3})' + rowNum1 + '"[^/>]*(?:/>|>.*?</c>)');
         Matcher cellMat = cellPat.matcher(rowXml);
         Integer insertPos = closeIdx;
         while (cellMat.find()) {
@@ -2164,7 +2237,7 @@ public without sharing class FEC_BCH_TemplateExportService {
             return rowXml;
         }
         Pattern cellPat = Pattern.compile(
-            '(?s)<c r="' + Pattern.quote(addr) + '"[^>]*(?:/>|>.*?</c>)'
+            '(?s)<c r="' + Pattern.quote(addr) + '"[^/>]*(?:/>|>.*?</c>)'
         );
         Matcher cellMat = cellPat.matcher(rowXml);
         if (!cellMat.find()) {
@@ -2184,7 +2257,7 @@ public without sharing class FEC_BCH_TemplateExportService {
         String colLetter = columnIndexToLetter(colIndex);
         String addr = colLetter + String.valueOf(rowNum1);
         Pattern cellPat = Pattern.compile(
-            '<c r="' + Pattern.quote(addr) + '"([^>]*)(?:>(.*?)</c>|/>)'
+            '<c r="' + Pattern.quote(addr) + '"([^/>]*)(?:/>|>(.*?)</c>)'
         );
         Matcher cellMat = cellPat.matcher(rowXml);
         if (!cellMat.find()) {
@@ -2402,7 +2475,7 @@ public without sharing class FEC_BCH_TemplateExportService {
         String sourceAddr = columnIndexToLetter(sourceColIdx) + String.valueOf(sourceRowNum1);
         String targetAddr = columnIndexToLetter(targetColIdx) + String.valueOf(targetRowNum1);
         Pattern cellPat = Pattern.compile(
-            '(?s)<c r="' + Pattern.quote(sourceAddr) + '"([^>]*)(?:>(.*?)</c>|/>)'
+            '(?s)<c r="' + Pattern.quote(sourceAddr) + '"([^/>]*)(?:/>|>(.*?)</c>)'
         );
         Matcher cellMat = cellPat.matcher(sourceRowXml);
         if (!cellMat.find()) {
