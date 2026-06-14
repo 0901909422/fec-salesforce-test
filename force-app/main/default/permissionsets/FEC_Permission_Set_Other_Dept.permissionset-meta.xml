@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<PermissionSet xmlns="http://soap.sforce.com/2006/04/metadata">
+    <description>Permission set cho Common System Setting</description>
+    <hasActivationRequired>false</hasActivationRequired>
+    <label>Permission Set - Tab - Other Dept</label>
+    <license>Salesforce</license>
+    <tabSettings>
+        <tab>standard-Case</tab>
+        <visibility>Visible</visibility>
+    </tabSettings>
+</PermissionSet>
