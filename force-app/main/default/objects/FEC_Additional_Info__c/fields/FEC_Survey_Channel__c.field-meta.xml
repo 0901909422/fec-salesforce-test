@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>FEC_Survey_Channel__c</fullName>
+    <description>Survey thao tác trên FEO 2.0, Ubank</description>
+    <label>Survey Channel</label>
+    <required>false</required>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>Not Disbursed via UBank</fullName>
+                <default>false</default>
+                <label>Not Disbursed via UBank</label>
+            </value>
+            <value>
+                <fullName>Customer/Third Party Used FEO 2.0, UBank</fullName>
+                <default>false</default>
+                <label>Customer/Third Party Used FEO 2.0, UBank</label>
+            </value>
+            <value>
+                <fullName>Staff Assisted Customer on FEO 2.0, UBank</fullName>
+                <default>false</default>
+                <label>Staff Assisted Customer on FEO 2.0, UBank</label>
+            </value>
+            <value>
+                <fullName>Survey Not Conducted</fullName>
+                <default>false</default>
+                <label>Survey Not Conducted</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>

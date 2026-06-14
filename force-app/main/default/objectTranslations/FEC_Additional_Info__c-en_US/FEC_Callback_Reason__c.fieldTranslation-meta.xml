@@ -15,6 +15,10 @@
         <translation>KH bận</translation>
     </picklistValues>
     <picklistValues>
+        <masterLabel>Product Not Introduced / No Interest</masterLabel>
+        <translation>Chưa giới thiệu sản phẩm/ Không có nhu cầu</translation>
+    </picklistValues>
+    <picklistValues>
         <masterLabel>Relative Requested Callback</masterLabel>
         <translation>Gặp người thân hẹn gọi lại</translation>
     </picklistValues>

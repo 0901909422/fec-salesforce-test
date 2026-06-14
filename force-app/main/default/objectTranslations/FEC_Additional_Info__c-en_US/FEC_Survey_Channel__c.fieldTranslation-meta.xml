@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomFieldTranslation xmlns="http://soap.sforce.com/2006/04/metadata">
+    <label><!-- Survey Channel --></label>
+    <name>FEC_Survey_Channel__c</name>
+    <picklistValues>
+        <masterLabel>Customer/Third Party Used FEO 2.0, UBank</masterLabel>
+        <translation>KH/ NT3 thao tác trên FEO 2.0, Ubank</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Not Disbursed via UBank</masterLabel>
+        <translation>KH không giải ngân qua Ubank</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Staff Assisted Customer on FEO 2.0, UBank</masterLabel>
+        <translation>NV thao tác giúp KH trên FEO 2.0, Ubank</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Survey Not Conducted</masterLabel>
+        <translation>Chưa có cơ hội khảo sát</translation>
+    </picklistValues>
+</CustomFieldTranslation>
