@@ -83,11 +83,12 @@ public without sharing class FEC_CaseTriggerHandler {
      * @created: 2026/02/02 Toannd61
      */
     private void onBeforeUpdate(List<Case> newCases, Map<Id, Case> oldMap) {
+        // Luôn cập nhật participants kể cả khi isSystemUpdate=true (VD: executeCase thay Owner với isSystemUpdate)
+        updateCaseParticipantsOnUpdate(newCases, oldMap);
         // Batch/system chỉ patch vài field — bỏ qua before-handlers tránh đọc field chưa có trên Trigger.new
         if (isSystemUpdate) {
             return;
         }
-        updateCaseParticipantsOnUpdate(newCases, oldMap);
         syncChannelFromInteractionForCustomerCase(newCases, oldMap);
                 
         // Delegate: Check duplicate External Interaction ID (Story 4)
