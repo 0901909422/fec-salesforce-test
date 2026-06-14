@@ -1608,6 +1608,63 @@ private class FEC_CaseBusinessService_Test {
     }
 
     @IsTest
+    static void testRunInternal_CalloutMethodsSkipRoutePrepare() {
+        System.runAs(caseOwnerUser()) {
+            Case c = new Case(
+                Subject = 'Callout Skip Prepare',
+                Status = FEC_ConstantCommon.CASE_STATUS_OPEN,
+                FEC_Is_Submited__c = false,
+                FEC_ID_Search__c = 'CSP-' + String.valueOf(System.currentTimeMillis())
+            );
+            insert c;
+
+            System.assertEquals(
+                false,
+                FEC_CaseBusinessService.requiresRoutePrepareBeforeRun(
+                    FEC_CaseBusinessService.PHONE_UPDATE
+                )
+            );
+            System.assertEquals(
+                true,
+                FEC_CaseBusinessService.requiresRoutePrepareBeforeRun(
+                    FEC_CaseBusinessService.ROUTE_TO
+                )
+            );
+
+            Integer histBefore = [
+                SELECT COUNT()
+                FROM FEC_Case_Flow_History__c
+                WHERE FEC_Case__c = :c.Id
+            ];
+
+            Test.startTest();
+            try {
+                FEC_CaseBusinessService.runInternal(
+                    FEC_CaseBusinessService.PHONE_UPDATE,
+                    new Map<String, String>{
+                        'caseId' => c.Id,
+                        'fieldListJson' => '[]'
+                    }
+                );
+            } catch (Exception e) {
+                System.assert(true, 'Phone Update may fail without integration data.');
+            }
+            Test.stopTest();
+
+            Integer histAfter = [
+                SELECT COUNT()
+                FROM FEC_Case_Flow_History__c
+                WHERE FEC_Case__c = :c.Id
+            ];
+            System.assertEquals(
+                histBefore,
+                histAfter,
+                'Callout methods must not insert flow history via route prepare before HTTP callout.'
+            );
+        }
+    }
+
+    @IsTest
     static void testRunAction_UpdateCicRelated() {
         System.runAs(caseOwnerUser()) {
             Case c = [SELECT Id FROM Case WHERE Subject = 'Core Testing Case Lifecycle' LIMIT 1];
