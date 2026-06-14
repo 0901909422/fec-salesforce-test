@@ -21,12 +21,12 @@ public without sharing class FEC_ReplacementCardCallout {
         public String CardNumber;
         public String pxObjClass;
         public String REPL_FEE_FLAG;
-        public Sys2 Sys2;
+        public Sys Sys;
         public String errorCode;
         public String errorMessage;
     }
 
-    public class Sys2 {
+    public class Sys {
         public String Code;
         public String DateTimeStr;
         public String Description;
@@ -135,8 +135,8 @@ public without sharing class FEC_ReplacementCardCallout {
 
     public static Boolean isSuccess(ReplaceCardResponse response){
         return response != null
-            && response.Sys2 != null
-            && response.Sys2.Code == '1';
+            && response.Sys != null
+            && response.Sys.Code == '1';
     }
 
     // ============================================================
