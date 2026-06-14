@@ -49,10 +49,6 @@
         <visibility>Visible</visibility>
     </tabSettings>
     <tabSettings>
-        <tab>FEC_DownloadReport</tab>
-        <visibility>Visible</visibility>
-    </tabSettings>
-    <tabSettings>
         <tab>FEC_General_Assignment__c</tab>
         <visibility>Visible</visibility>
     </tabSettings>
@@ -98,10 +94,6 @@
     </tabSettings>
     <tabSettings>
         <tab>FEC_Sub_Code__c</tab>
-        <visibility>Visible</visibility>
-    </tabSettings>
-    <tabSettings>
-        <tab>FEC_Team_Queue__c</tab>
         <visibility>Visible</visibility>
     </tabSettings>
     <tabSettings>
