@@ -1,6 +1,7 @@
 public with sharing class FEC_BCH_ExportPropertyService {
 
-    private static final String SUB_SECTION_PROPERTY = 'Property';
+    // 12/06/2026 23:15 linhdev - Sub Section đúng theo Case Detail/MDS là 'Property Info' (FEC_ConstantCommon.PROPERTY_INFO), không phải 'Property'
+    private static final String SUB_SECTION_PROPERTY = FEC_ConstantCommon.PROPERTY_INFO;
 
     public class ExportPropertyColumn {
         @AuraEnabled public String columnKey;
@@ -26,15 +27,6 @@ public with sharing class FEC_BCH_ExportPropertyService {
         if (includeAllProperties != true) {
             return bundle;
         }
-        Set<String> codeSet = normalizeCodes(businessProcessCodes);
-        if (codeSet.isEmpty()) {
-            return bundle;
-        }
-        List<ExportPropertyColumn> columns = loadPropertyColumns(codeSet);
-        bundle.columns = columns;
-        if (columns.isEmpty()) {
-            return bundle;
-        }
         Set<Id> caseIdSet = new Set<Id>();
         if (caseIds != null) {
             for (Id caseId : caseIds) {
@@ -46,69 +38,82 @@ public with sharing class FEC_BCH_ExportPropertyService {
         if (caseIdSet.isEmpty()) {
             return bundle;
         }
+        // 12/06/2026 23:15 linhdev - Property scope phải khớp Business/Stage/NOC của chính Case đang xử lý
+        // (Stage hiện tại của Case đã gắn Business Process + NOC), không lấy toàn bộ stage của BP.
+        CaseStageContext stageContext = loadCaseStageContext(caseIdSet);
+        if (stageContext.stageIds.isEmpty()) {
+            return bundle;
+        }
+        List<ExportPropertyColumn> columns = loadPropertyColumns(
+            stageContext.stageIds,
+            stageContext.natureOfCaseIds
+        );
+        bundle.columns = columns;
+        if (columns.isEmpty()) {
+            return bundle;
+        }
         bundle.valuesByCaseId = resolvePropertyValues(caseIdSet, columns);
         return bundle;
     }
 
-    private static Set<String> normalizeCodes(List<String> businessProcessCodes) {
-        Set<String> out = new Set<String>();
-        if (businessProcessCodes == null) {
-            return out;
-        }
-        for (String code : businessProcessCodes) {
-            if (String.isBlank(code)) {
-                continue;
-            }
-            out.add(code.trim());
-        }
-        return out;
+    // 12/06/2026 23:15 linhdev - Stage/NOC context của các Case đang export (Stage gắn Business Process + NOC)
+    private class CaseStageContext {
+        Set<Id> stageIds = new Set<Id>();
+        Set<Id> natureOfCaseIds = new Set<Id>();
     }
 
-    private static List<ExportPropertyColumn> loadPropertyColumns(Set<String> businessProcessCodes) {
-        List<ExportPropertyColumn> out = new List<ExportPropertyColumn>();
-        if (businessProcessCodes == null || businessProcessCodes.isEmpty()) {
-            return out;
+    // 12/06/2026 23:15 linhdev - lấy Stage hiện tại + NOC của Stage (FEC_Nature_of_Cases__c) cho từng Case
+    private static CaseStageContext loadCaseStageContext(Set<Id> caseIds) {
+        CaseStageContext ctx = new CaseStageContext();
+        if (caseIds == null || caseIds.isEmpty()) {
+            return ctx;
         }
-        Map<String, Id> bpIdByCode = new Map<String, Id>();
-        for (FEC_Business_Process__c bp : [
-            SELECT Id, FEC_Code__c
-            FROM FEC_Business_Process__c
-            WHERE FEC_Code__c IN :businessProcessCodes
+        for (Case c : [
+            SELECT
+                Id,
+                FEC_Current_Case_Stage__c,
+                FEC_Current_Case_Stage__r.FEC_Nature_of_Cases__c
+            FROM Case
+            WHERE Id IN :caseIds
+            AND FEC_Current_Case_Stage__c != NULL
         ]) {
-            if (bp.FEC_Code__c != null) {
-                bpIdByCode.put(bp.FEC_Code__c.trim(), bp.Id);
+            ctx.stageIds.add(c.FEC_Current_Case_Stage__c);
+            Id nocId = c.FEC_Current_Case_Stage__r == null
+                ? null
+                : c.FEC_Current_Case_Stage__r.FEC_Nature_of_Cases__c;
+            if (nocId != null) {
+                ctx.natureOfCaseIds.add(nocId);
             }
         }
-        if (bpIdByCode.isEmpty()) {
+        return ctx;
+    }
+
+    // 12/06/2026 23:15 linhdev - query MDS Property Info theo Stage (+ NOC nếu xác định được) của Case đang xử lý
+    private static List<ExportPropertyColumn> loadPropertyColumns(
+        Set<Id> stageIds,
+        Set<Id> natureOfCaseIds
+    ) {
+        List<ExportPropertyColumn> out = new List<ExportPropertyColumn>();
+        if (stageIds == null || stageIds.isEmpty()) {
             return out;
         }
-        Set<Id> stageIds = new Set<Id>();
-        for (FEC_Case_Stage__c stage : [
-            SELECT Id
-            FROM FEC_Case_Stage__c
-            WHERE FEC_Business_Process__c IN :bpIdByCode.values()
-        ]) {
-            stageIds.add(stage.Id);
+        String subSection = SUB_SECTION_PROPERTY;
+        String soql =
+            'SELECT FEC_Field_Label_Name__c, FEC_Field_Object_Name__c, ' +
+            'FEC_Field_API_Name__c, FEC_Field_Order_Display__c ' +
+            'FROM FEC_Master_Data_Setting__c ' +
+            'WHERE FEC_Stage_Name__c IN :stageIds ' +
+            'AND FEC_Sub_Section__c = :subSection ' +
+            'AND FEC_Field_Status__c = TRUE ' +
+            'AND FEC_Field_API_Name__c != NULL ' +
+            'AND FEC_Field_Object_Name__c != NULL';
+        if (natureOfCaseIds != null && !natureOfCaseIds.isEmpty()) {
+            soql += ' AND FEC_Nature_Of_Case__c IN :natureOfCaseIds';
         }
-        if (stageIds.isEmpty()) {
-            return out;
-        }
-        List<FEC_Master_Data_Setting__c> mdsRows = [
-            SELECT
-                FEC_Field_Label_Name__c,
-                FEC_Field_Object_Name__c,
-                FEC_Field_API_Name__c,
-                FEC_Field_Order_Display__c
-            FROM FEC_Master_Data_Setting__c
-            WHERE FEC_Stage_Name__c IN :stageIds
-            AND FEC_Sub_Section__c = :SUB_SECTION_PROPERTY
-            AND FEC_Field_Status__c = TRUE
-            AND FEC_Field_API_Name__c != NULL
-            AND FEC_Field_Object_Name__c != NULL
-            ORDER BY
-                FEC_Field_Order_Display__c NULLS LAST,
-                FEC_Field_Label_Name__c NULLS LAST
-        ];
+        soql +=
+            ' ORDER BY FEC_Field_Order_Display__c NULLS LAST, ' +
+            'FEC_Field_Label_Name__c NULLS LAST';
+        List<FEC_Master_Data_Setting__c> mdsRows = Database.query(soql);
         Map<String, ExportPropertyColumn> deduped = new Map<String, ExportPropertyColumn>();
         for (FEC_Master_Data_Setting__c row : mdsRows) {
             if (!isReadableField(row.FEC_Field_Object_Name__c, row.FEC_Field_API_Name__c)) {
