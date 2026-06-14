@@ -1847,6 +1847,11 @@
     </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
+        <field>FEC_Additional_Info__c.FEC_Card_Delivery_Issue_Reason__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
         <field>FEC_Additional_Info__c.FEC_Cancel_Reason__c</field>
         <readable>true</readable>
     </fieldPermissions>
@@ -1928,6 +1933,21 @@
     <fieldPermissions>
         <editable>true</editable>
         <field>FEC_Additional_Info__c.FEC_Complaint_Product_2__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Additional_Info__c.FEC_Complaint_Reason__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Additional_Info__c.FEC_Consultant_Info__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Additional_Info__c.FEC_Consumption_Loan__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
@@ -2152,6 +2172,11 @@
     </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
+        <field>FEC_Additional_Info__c.FEC_Fraud_Type__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
         <field>FEC_Additional_Info__c.FEC_Dunning_Contract_No__c</field>
         <readable>true</readable>
     </fieldPermissions>
@@ -2322,6 +2347,16 @@
     </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
+        <field>FEC_Additional_Info__c.FEC_MRC_Address__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Additional_Info__c.FEC_MRC_Rejection_Reason__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
         <field>FEC_Additional_Info__c.FEC_Legal_List__c</field>
         <readable>true</readable>
     </fieldPermissions>
@@ -2398,6 +2433,11 @@
     <fieldPermissions>
         <editable>true</editable>
         <field>FEC_Additional_Info__c.FEC_New_Place_of_Issue__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Additional_Info__c.FEC_No_Interest_Reason__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
@@ -2942,6 +2982,11 @@
     </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
+        <field>FEC_Additional_Info__c.FEC_Survey_Channel__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
         <field>FEC_Additional_Info__c.FEC_Store_Address__c</field>
         <readable>true</readable>
     </fieldPermissions>
@@ -3098,6 +3143,11 @@
     <fieldPermissions>
         <editable>true</editable>
         <field>FEC_Additional_Info__c.FEC_Verify_Information__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Additional_Info__c.FEC_Welcome_Call_Installment_No__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>

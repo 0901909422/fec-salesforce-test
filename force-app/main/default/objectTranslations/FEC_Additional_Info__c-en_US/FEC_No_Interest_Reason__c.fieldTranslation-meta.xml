@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomFieldTranslation xmlns="http://soap.sforce.com/2006/04/metadata">
+    <label><!-- No Interest Reason --></label>
+    <name>FEC_No_Interest_Reason__c</name>
+    <picklistValues>
+        <masterLabel>Card Not Received</masterLabel>
+        <translation>Chưa nhận thẻ</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Debt Collection Staff Attitude</masterLabel>
+        <translation>Thái độ NV nhắc nợ</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Excessive Debt Reminders</masterLabel>
+        <translation>Nhắc nợ quá nhiều</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>High Interest/Fee</masterLabel>
+        <translation>Lãi/ phí cao</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Low Credit Limit</masterLabel>
+        <translation>Hạn mức thấp</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Not Interested After Consultation</masterLabel>
+        <translation>Đã thuyết phục nhưng không có nhu cầu</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Relatives Contacted for Debt Reminder</masterLabel>
+        <translation>Nhắc nợ người thân</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Remote Area</masterLabel>
+        <translation>Ở vùng sâu, vùng xa</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Survey Unsuccessful</masterLabel>
+        <translation>Khảo sát không thành công (ghi chú chi tiết)</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Too Many Loan Offers</masterLabel>
+        <translation>Mời vay quá nhiều</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Unattractive Promotions</masterLabel>
+        <translation>Chương trình/ khuyến mãi ít hoặc không hấp dẫn</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Unclear Outstanding Balance</masterLabel>
+        <translation>Dư nợ phát sinh không rõ ràng</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Using Another Lender</masterLabel>
+        <translation>Cần vay bên khác</translation>
+    </picklistValues>
+</CustomFieldTranslation>

@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>FEC_MRC_Rejection_Reason__c</fullName>
+    <description>Lý do không ghi nhận MRC</description>
+    <label>MRC Rejection Reason</label>
+    <required>false</required>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>Customer Uses Different Phone Number</fullName>
+                <default>false</default>
+                <label>Customer Uses Different Phone Number</label>
+            </value>
+            <value>
+                <fullName>Phone Number Update Failed</fullName>
+                <default>false</default>
+                <label>Phone Number Update Failed</label>
+            </value>
+            <value>
+                <fullName>Customer Refused MRC</fullName>
+                <default>false</default>
+                <label>Customer Refused MRC</label>
+            </value>
+            <value>
+                <fullName>Customer Prefers Direct Support</fullName>
+                <default>false</default>
+                <label>Customer Prefers Direct Support</label>
+            </value>
+            <value>
+                <fullName>Phone Update Request Pending</fullName>
+                <default>false</default>
+                <label>Phone Update Request Pending</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>

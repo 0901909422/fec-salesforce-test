@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>FEC_Card_Delivery_Issue_Reason__c</fullName>
+    <description>Lý do KH chưa nhận được thẻ</description>
+    <label>Card Delivery Issue Reason</label>
+    <required>false</required>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>Contacted but Card Not Delivered</fullName>
+                <default>false</default>
+                <label>Contacted but Card Not Delivered</label>
+            </value>
+            <value>
+                <fullName>No Delivery Contact</fullName>
+                <default>false</default>
+                <label>No Delivery Contact</label>
+            </value>
+            <value>
+                <fullName>Missed Delivery Call</fullName>
+                <default>false</default>
+                <label>Missed Delivery Call</label>
+            </value>
+            <value>
+                <fullName>Unavailable at Delivery Address</fullName>
+                <default>false</default>
+                <label>Unavailable at Delivery Address</label>
+            </value>
+            <value>
+                <fullName>Unavailable During Business Hours</fullName>
+                <default>false</default>
+                <label>Unavailable During Business Hours</label>
+            </value>
+            <value>
+                <fullName>Prefer Pickup at Post Office/Office</fullName>
+                <default>false</default>
+                <label>Prefer Pickup at Post Office/Office</label>
+            </value>
+            <value>
+                <fullName>Previously Refused Card</fullName>
+                <default>false</default>
+                <label>Previously Refused Card</label>
+            </value>
+            <value>
+                <fullName>Other</fullName>
+                <default>false</default>
+                <label>Other</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>
