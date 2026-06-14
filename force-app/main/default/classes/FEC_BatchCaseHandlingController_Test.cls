@@ -267,6 +267,47 @@ private class FEC_BatchCaseHandlingController_Test {
     }
 
     /**
+     * 12/06/2026 19:20 linhdev - export/datatable hiển thị __r.Name theo design (không phải FEC_Code__c)
+     */
+    @IsTest
+    static void testExportRowUsesMasterDataNameNotCode() {
+        User privileged = privilegedUserForBulkCaseRead();
+        System.runAs(privileged) {
+            Test.startTest();
+            FEC_BatchCaseHandlingController.BulkCaseSearchResult gridResult =
+                FEC_BatchCaseHandlingController.searchBulkCases('[]', 10, 1);
+            FEC_BatchCaseHandlingController.BulkCaseSearchResult exportResult =
+                FEC_BatchCaseHandlingController.searchBulkCasesForExport('[]', '', 10);
+            Test.stopTest();
+
+            FEC_BatchCaseHandlingExportRow gridRow = null;
+            for (FEC_BatchCaseHandlingExportRow r : gridResult.rows) {
+                if (r != null && r.caseIdSearch == 'SRCH-001') {
+                    gridRow = r;
+                    break;
+                }
+            }
+            System.assertNotEquals(null, gridRow, 'Phải tìm thấy case SRCH-001 trên datatable.');
+            System.assertEquals('Request', gridRow.categoryCode, 'Category datatable phải là Name.');
+            System.assertEquals('RC27', gridRow.subCategoryCode, 'Sub Category datatable phải là Name.');
+            System.assertEquals('RC27.01', gridRow.subCodeCode, 'Sub Code datatable phải là Name.');
+
+            FEC_BatchCaseHandlingExportRow exportRow = null;
+            for (FEC_BatchCaseHandlingExportRow r : exportResult.rows) {
+                if (r != null && r.caseIdSearch == 'SRCH-001') {
+                    exportRow = r;
+                    break;
+                }
+            }
+            System.assertNotEquals(null, exportRow, 'Phải tìm thấy case SRCH-001 khi export.');
+            System.assertEquals('Credit Card', exportRow.productType, 'Product Type export phải là Name.');
+            System.assertEquals('Request', exportRow.categoryCode, 'Category export phải là Name.');
+            System.assertEquals('RC27', exportRow.subCategoryDisplay, 'Sub Category export phải là Name.');
+            System.assertEquals('RC27.01', exportRow.subCodeDisplay, 'Sub Code export phải là Name.');
+        }
+    }
+
+    /**
      * Kịch bản 5: Tính toán dải phân đoạn phân chia cụm tải file đính kèm Zip (getAttachmentCaseSetOptions).
      */
     @IsTest
