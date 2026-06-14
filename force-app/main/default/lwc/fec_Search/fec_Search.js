@@ -484,7 +484,7 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
       this.interactionChannel = result?.FEC_Channel__c;
       this.interactionEmail = result?.FEC_Interaction_Email__c;
       this.isTestApiCase = result?.FEC_Is_Test_API__c === true;
-      this.nationalId = this.fieldPermissions['FEC_Search_National_ID__c'] ? result.FEC_Search_Result_National_ID__c : null;
+      this.nationalId = this.fieldPermissions['FEC_Search_National_ID__c'] ? result.FEC_Search_National_ID__c : null;
       this.phoneNumber = this.fieldPermissions['FEC_Search_Phone_Number__c'] ? result.FEC_Phone_Number__c : null;
       this.applicationId = this.fieldPermissions['FEC_Search_Application_ID__c'] ? result.FEC_Application_ID__c : null;
       this.contractNumber = this.fieldPermissions['FEC_Search_Contract_Number__c'] ? result.FEC_Contract_Number__c : null;

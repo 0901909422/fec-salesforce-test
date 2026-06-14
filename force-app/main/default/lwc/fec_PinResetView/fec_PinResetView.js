@@ -151,7 +151,7 @@ export default class Fec_PinResetView extends LightningElement {
     })
       .then((res) => {
         console.log("res from api: ", JSON.stringify(res));
-        if (res.RespCode != "1") {
+        if (res.RespCode == "1") {
           this.successReset = true;
           this.publishResetResult("SUCCESS");
         } else {

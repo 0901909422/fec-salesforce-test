@@ -555,9 +555,13 @@ public without sharing class FEC_CreateCaseHandler {
         // ---------------------------
         interactionCase.FEC_Customer_Username__c = dto.customerName;
         interactionCase.FEC_Phone_Number__c = dto.phoneNumber;
+        interactionCase.FEC_Search_Phone_Number__c = dto.phoneNumber;
         interactionCase.FEC_National_ID_Passport_ID__c = dto.nationalId;
+        interactionCase.FEC_Search_National_ID__c = dto.nationalId;
         interactionCase.FEC_Account_Number__c = dto.accountNumber;
+        interactionCase.FEC_Search_Account_Number__c = dto.accountNumber;
         interactionCase.FEC_Contract_Number__c = dto.contractNumber;
+        interactionCase.FEC_Search_Contract_Number__c = dto.contractNumber;
         
         // ---------------------------
         // INTERACTION DATA
