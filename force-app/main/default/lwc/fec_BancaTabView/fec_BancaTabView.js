@@ -16,7 +16,8 @@ import { CurrentPageReference } from 'lightning/navigation';
 import {
     formatDateVNI,
     maskValue,
-    setConsoleTab
+    setConsoleTab,
+    formatCurrency0
 } from 'c/fec_CommonUtils';
 
 import loadInsuranceDetail from '@salesforce/apex/FEC_BancaController.loadInsuranceDetail';
@@ -138,6 +139,7 @@ export default class Fec_BancaTabView extends LightningElement {
             label: this.customLabel.premiumFree,
             fieldName: 'premiumFree',
             fieldApiName: 'FEC_Premium_Fee__c',
+            isCurrency: true
         },
 
         {
@@ -304,6 +306,10 @@ export default class Fec_BancaTabView extends LightningElement {
 
             if (cfg.isDate && value !== '-') {
                 value = formatDateVNI(value);
+            }
+
+            if (cfg.isCurrency && value !== '-') {
+                value = formatCurrency0(value);
             }
 
             let iconName;
