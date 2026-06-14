@@ -12,29 +12,14 @@
         <valueSetDefinition>
             <sorted>false</sorted>
             <value>
-                <fullName>Tổng khoản vay</fullName>
+                <fullName>Tiền góp</fullName>
                 <default>false</default>
-                <label>Tổng khoản vay</label>
+                <label>Tiền góp</label>
             </value>
             <value>
-                <fullName>Lãi suất</fullName>
+                <fullName>Tiền thanh lý</fullName>
                 <default>false</default>
-                <label>Lãi suất</label>
-            </value>
-            <value>
-                <fullName>Lịch thanh toán</fullName>
-                <default>false</default>
-                <label>Lịch thanh toán</label>
-            </value>
-            <value>
-                <fullName>Nợ quá hạn</fullName>
-                <default>false</default>
-                <label>Nợ quá hạn</label>
-            </value>
-            <value>
-                <fullName>Thanh lý HĐ</fullName>
-                <default>false</default>
-                <label>Thanh lý HĐ</label>
+                <label>Tiền thanh lý</label>
             </value>
             <value>
                 <fullName>Các loại phí, lãi phát sinh</fullName>
@@ -42,24 +27,24 @@
                 <label>Các loại phí, lãi phát sinh</label>
             </value>
             <value>
+                <fullName>Thời hạn thanh toán</fullName>
+                <default>false</default>
+                <label>Thời hạn thanh toán</label>
+            </value>
+            <value>
                 <fullName>Chương trình miễn giảm tiền</fullName>
                 <default>false</default>
                 <label>Chương trình miễn giảm tiền</label>
             </value>
             <value>
-                <fullName>Bảo hiểm khoản vay</fullName>
+                <fullName>Nợ quá hạn</fullName>
                 <default>false</default>
-                <label>Bảo hiểm khoản vay</label>
+                <label>Nợ quá hạn</label>
             </value>
             <value>
-                <fullName>Chương trình khuyến mãi</fullName>
+                <fullName>Nhóm nợ</fullName>
                 <default>false</default>
-                <label>Chương trình khuyến mãi</label>
-            </value>
-            <value>
-                <fullName>Thủ tục giấy tờ</fullName>
-                <default>false</default>
-                <label>Thủ tục giấy tờ</label>
+                <label>Nhóm nợ</label>
             </value>
         </valueSetDefinition>
     </valueSet>
