@@ -579,6 +579,7 @@ public without sharing class FEC_MainInfoAccountController {
             FEC_Application_ID__c = a != null ? a.ApplicationId : null,
             FEC_Account_Open_Date__c = l != null ? l.DateStatus : null,
             /* ===== ACCOUNT STATUS ===== */
+            FEC_Block_Code_1__c = m != null ? m.BlockCode1 : null,
             FEC_Block_Date_1__c = m != null ? m.AccountBlockCode1Date : null,
             FEC_Reason_1__c = m != null ? m.RsnBlockCode1 : null,
             FEC_Block_Code_2__c = m != null ? m.BlockCode2 : null,
