@@ -143,7 +143,6 @@ public with sharing class FEC_FullCustomerIntegrationJob
                     c.FEC_Recipient_Name__c = result.customerName;
                 }
                 if (result != null && String.isNotBlank(result.primaryPhone)) {
-                    c.FEC_Phone_Number__c = result.primaryPhone;
                     c.FEC_Recipient_Phone_Number__c = result.primaryPhone;
                 }
             }
