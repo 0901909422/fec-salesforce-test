@@ -7,6 +7,8 @@ import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import getInteractionHighlightData from "@salesforce/apex/FEC_InteractionInforHandler.getInteractionHighlightData";
 import resetViewMode from "@salesforce/apex/FEC_InteractionInforHandler.resetViewMode";
 import getCurrentUserProfileName from '@salesforce/apex/FEC_SearchController.getCurrentUserProfileName';
+import canExecuteCase from '@salesforce/apex/FEC_CaseExecuteService.canExecute';
+import canExecuteUbankEmailInteraction from '@salesforce/apex/FEC_CaseExecuteService.canExecuteUbankEmailInteraction';
 import HAS_ACCOUNT_OR_CONTRACT from "@salesforce/schema/Case.FEC_Has_Account_or_Contract__c";
 import VIEW_MODE from "@salesforce/schema/Case.FEC_Interaction_View_Mode__c";
 import ISOWNER from "@salesforce/schema/Case.FEC_Is_Owner__c";
@@ -62,6 +64,7 @@ export default class FecInteractionCreationHighlight extends NavigationMixin(
   isOpen = false;
   isOwner = false;
   canExecuteFlag = false;
+  ubankExecuteAccess = false;
   _userProfile;
 
   // ===============================
@@ -73,6 +76,18 @@ export default class FecInteractionCreationHighlight extends NavigationMixin(
   @wire(getCurrentUserProfileName)
   wiredProfile({ data }) {
     if (data) this._userProfile = data;
+  }
+  @wire(canExecuteUbankEmailInteraction, { caseId: "$recordId" })
+  wiredUbankExecuteAccess({ data, error }) {
+    if (data !== undefined) {
+      this.ubankExecuteAccess = data === true;
+      if (this.ubankExecuteAccess) {
+        this.canExecuteFlag = true;
+      }
+    } else if (error) {
+      this.ubankExecuteAccess = false;
+      console.error("canExecuteUbankEmailInteraction wire error", error);
+    }
   }
 
   // ===============================
@@ -126,11 +141,26 @@ export default class FecInteractionCreationHighlight extends NavigationMixin(
           viewMode: "review",
         });
         await notifyRecordUpdateAvailable([{ recordId: this.recordId }]);
+        await refreshApex(this.wiredViewModeResult);
+        await this.refreshExecuteAccess();
       } catch (error) {
-        console.error("Error in resetViewMode:", error);
+        console.error("Error in connectedCallback:", error);
       }
   }
 
+  async refreshExecuteAccess() {
+    const result = await canExecuteCase({ caseId: this.recordId });
+    if (result?.value === true) {
+      this.canExecuteFlag = true;
+      return;
+    }
+
+    const canExecuteUbank = await canExecuteUbankEmailInteraction({
+      caseId: this.recordId,
+    });
+    this.ubankExecuteAccess = canExecuteUbank === true;
+    this.canExecuteFlag = this.ubankExecuteAccess;
+  }
   // ===============================
   // LOAD RECORD (APEX)
   // ===============================
@@ -156,7 +186,7 @@ export default class FecInteractionCreationHighlight extends NavigationMixin(
 
   get showExecute() {
     // 05/06/2026 10:00 tungnm37 - Hide Execute when current user is not Interaction owner on creation screen.
-    return !this.isHandling && (this.isOwner === true || this.canExecuteFlag === true);
+    return this.canExecuteFlag === true || this.ubankExecuteAccess === true || (!this.isHandling && this.isOwner === true);
   }
 
   // ===============================
@@ -216,6 +246,8 @@ export default class FecInteractionCreationHighlight extends NavigationMixin(
       await refreshApex(this.wiredViewModeResult); // 🔥 KEY FIX
       // await notifyRecordUpdateAvailable([{ recordId: this.recordId }]);
       this.viewMode = "handling";
+      this.ubankExecuteAccess = false;
+      this.canExecuteFlag = false;
       console.log("Update viewMode to handling successfully");
     } catch (error) {
       console.error("Error in handleExecute:", error);
