@@ -6,6 +6,7 @@ export default class CustomDblclickCell extends LightningElement {
     @api selectedType;
     @api isExpanded = false;
     @api isAccountContractSearch = false;
+    @api isDblClickDisabled = false;
     clickTimer;
 
     // Single click:
@@ -41,7 +42,7 @@ export default class CustomDblclickCell extends LightningElement {
     handleDblClick(event) {
         window.clearTimeout(this.clickTimer);
         // Account/Contract Search: double click không làm gì
-        if (this.isAccountContractSearch) return;
+        if (this.isAccountContractSearch || this.isDblClickDisabled) return;
         const detail = {
             action: {
                 name: 'create_history',

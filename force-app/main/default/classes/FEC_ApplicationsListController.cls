@@ -92,7 +92,10 @@ public without sharing class FEC_ApplicationsListController {
 
         List<Map<String, Object>> cacheData =
             new List<Map<String, Object>>();
+        Set<String> applicationIdsForSaleInfo = new Set<String>();
 
+        FEC_CommonUltils.beginDeferredApiLogging();
+        try {
         /* =====================================================
          * API 1 – CUSTOMER LIST
          * ===================================================== */
@@ -177,6 +180,10 @@ public without sharing class FEC_ApplicationsListController {
 
                 // Province/District maps already cached outside loop
                 // (moved to avoid SOQL-in-loop governor limit violation)
+
+            if (statusRes == null || statusRes.Applications == null) {
+                continue;
+            }
 
             for (FEC_GetApplicationsList.ApplicationInfo st: statusRes.Applications) {
                 String accountNumbers = FEC_ConstantCommon.STR_NA;
@@ -273,28 +280,8 @@ public without sharing class FEC_ApplicationsListController {
                     }
                 }
 
-                /* =====================================================
-                * API 4 – CUSTOMER SALE DISBURSE INFO
-                * ===================================================== */
-                FEC_GetCustomerSaleDisburseInfoCallout.CustomerSaleDisburseInfoResponse saleRes;
-                try {
-                    saleRes = FEC_GetCustomerSaleDisburseInfoCallout.getCustomerSaleDisburseInfo(st.ApplicationID);
-                    if (saleRes != null &&
-                        saleRes.CustomerSaleInfos != null &&
-                        !saleRes.CustomerSaleInfos.isEmpty()) {
-
-                        FEC_GetCustomerSaleDisburseInfoCallout.CustomerSaleInfo sale =
-                            saleRes.CustomerSaleInfos[0];
-
-                        row.put('ccCode', sale.CC_CODE);
-                        row.put('ccName', sale.CC_NAME);
-                        row.put('dSACode', sale.DSA_CODE);
-                        row.put('dSAName', sale.DSA_NAME);
-                        row.put('tSACode', sale.TSA_CODE);
-                        row.put('tSAName', sale.TSA_NAME);
-                    }
-                } catch (Exception e) {
-                    System.debug('SaleDisburseInfo API failed: ' + e.getMessage());
+                if (String.isNotBlank(st.ApplicationID)) {
+                    applicationIdsForSaleInfo.add(st.ApplicationID);
                 }
 
                 cacheData.add(row);
@@ -305,6 +292,18 @@ public without sharing class FEC_ApplicationsListController {
             JSON.serialize(cacheData);
 
         upsert cacheRec;
+
+        if (!applicationIdsForSaleInfo.isEmpty()) {
+            System.enqueueJob(
+                new FEC_SaleInfoQueueable(
+                    cacheRec.Id,
+                    new List<String>(applicationIdsForSaleInfo)
+                )
+            );
+        }
+        } finally {
+            FEC_CommonUltils.flushDeferredApiLogs();
+        }
     }
 
     @AuraEnabled(cacheable=true)

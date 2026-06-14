@@ -540,9 +540,10 @@ public without sharing class FEC_BatchCaseHandlingController {
             'FEC_Final_Status__c',
             'FEC_Case_Created_On__c',
             'FEC_Last_Updated_On__c',
-            'FEC_Category__r.FEC_Code__c',
-            'FEC_SubCategory__r.FEC_Code__c',
-            'FEC_SubCode__r.FEC_Code__c'
+            // 12/06/2026 19:20 linhdev - datatable Category/Sub Category/Sub Code theo design: __r.Name
+            'FEC_Category__r.Name',
+            'FEC_SubCategory__r.Name',
+            'FEC_SubCode__r.Name'
         };
         selectFields.addAll(FEC_BatchCaseHandlingTemplateHelper.buildCaseStageBusinessProcessSelectFields());
         String dataSoql =
@@ -562,9 +563,10 @@ public without sharing class FEC_BatchCaseHandlingController {
             r.caseId = c.Id;
             r.customerType = pop.containsKey('FEC_Customer_Type__c') ? c.FEC_Customer_Type__c : null;
             r.caseIdSearch = pop.containsKey('FEC_ID_Search__c') ? c.FEC_ID_Search__c : null;
-            r.categoryCode = pop.containsKey('FEC_Category__c') && c.FEC_Category__r != null ? c.FEC_Category__r.FEC_Code__c : null;
-            r.subCategoryCode = pop.containsKey('FEC_SubCategory__c') && c.FEC_SubCategory__r != null ? c.FEC_SubCategory__r.FEC_Code__c : null;
-            r.subCodeCode = pop.containsKey('FEC_SubCode__c') && c.FEC_SubCode__r != null ? c.FEC_SubCode__r.FEC_Code__c : null;
+            // 12/06/2026 19:20 linhdev - datatable Category/Sub Category/Sub Code theo design: __r.Name
+            r.categoryCode = pop.containsKey('FEC_Category__c') && c.FEC_Category__r != null ? c.FEC_Category__r.Name : null;
+            r.subCategoryCode = pop.containsKey('FEC_SubCategory__c') && c.FEC_SubCategory__r != null ? c.FEC_SubCategory__r.Name : null;
+            r.subCodeCode = pop.containsKey('FEC_SubCode__c') && c.FEC_SubCode__r != null ? c.FEC_SubCode__r.Name : null;
             r.caseStatus = pop.containsKey('FEC_Final_Status__c') ? c.FEC_Final_Status__c : null;
             r.caseCreatedOn = pop.containsKey('FEC_Case_Created_On__c') ? c.FEC_Case_Created_On__c : null;
             r.lastUpdatedOn = pop.containsKey('FEC_Last_Updated_On__c') ? c.FEC_Last_Updated_On__c : null;

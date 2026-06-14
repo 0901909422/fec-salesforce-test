@@ -54,10 +54,15 @@
                   {kycStatus}
                 </template>
                 <template if:false={isKycStatusReadOnly}>
-                  <lightning-input type="text" value={kycDraft} onchange={handleKycStatusChange}
-                    variant="label-hidden"></lightning-input>
-                  <template if:true={kycError}>
-                    <span class="fec-error-text">{kycError}</span>
+                  <template if:true={isEditingKycStatus}>
+                    <lightning-input type="text" value={kycDraft} onchange={handleKycStatusChange}
+                      variant="label-hidden"></lightning-input>
+                    <template if:true={kycError}>
+                      <span class="fec-error-text">{kycError}</span>
+                    </template>
+                  </template>
+                  <template if:false={isEditingKycStatus}>
+                    <span class="fec-empty">--</span>
                   </template>
                 </template>
               </span>
@@ -132,10 +137,15 @@
                   {externalInteractionId}
                 </template>
                 <template if:false={isExternalInteractionIdReadOnly}>
-                  <lightning-input type="text" value={externalInteractionIdDraft} onchange={handleExternalInteractionIdChange}
-                    variant="label-hidden"></lightning-input>
-                  <template if:true={externalInteractionIdError}>
-                    <span class="fec-error-text">{externalInteractionIdError}</span>
+                  <template if:true={isEditingExternalInteractionId}>
+                    <lightning-input type="text" value={externalInteractionIdDraft}
+                      onchange={handleExternalInteractionIdChange} variant="label-hidden"></lightning-input>
+                    <template if:true={externalInteractionIdError}>
+                      <span class="fec-error-text">{externalInteractionIdError}</span>
+                    </template>
+                  </template>
+                  <template if:false={isEditingExternalInteractionId}>
+                    <span class="fec-empty">--</span>
                   </template>
                 </template>
               </span>

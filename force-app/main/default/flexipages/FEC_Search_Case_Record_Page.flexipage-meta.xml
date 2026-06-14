@@ -725,14 +725,14 @@
             <componentInstance>
                 <componentInstanceProperties>
                     <name>body</name>
-                    <value>Facet-1446c2e8-c835-4cb9-929a-cb307b5746e4</value>
+                        <value>Facet-100362dc-d2c9-4737-9a42-5da94c3febab</value>
                 </componentInstanceProperties>
                 <componentInstanceProperties>
                     <name>title</name>
-                    <value>Collection Summary</value>
+                    <value>Additional Info</value>
                 </componentInstanceProperties>
                 <componentName>flexipage:tab</componentName>
-                <identifier>flexipage_tab28</identifier>
+                <identifier>flexipage_tab29</identifier>
             </componentInstance>
         </itemInstances>
         <itemInstances>
@@ -753,20 +753,6 @@
             <componentInstance>
                 <componentInstanceProperties>
                     <name>body</name>
-                    <value>Facet-100362dc-d2c9-4737-9a42-5da94c3febab</value>
-                </componentInstanceProperties>
-                <componentInstanceProperties>
-                    <name>title</name>
-                    <value>Additional Info</value>
-                </componentInstanceProperties>
-                <componentName>flexipage:tab</componentName>
-                <identifier>flexipage_tab29</identifier>
-            </componentInstance>
-        </itemInstances>
-        <itemInstances>
-            <componentInstance>
-                <componentInstanceProperties>
-                    <name>body</name>
                     <value>Facet-961ba216-521a-4718-b6f1-a6373271902a</value>
                 </componentInstanceProperties>
                 <componentInstanceProperties>
@@ -775,6 +761,20 @@
                 </componentInstanceProperties>
                 <componentName>flexipage:tab</componentName>
                 <identifier>flexipage_tab32</identifier>
+            </componentInstance>
+        </itemInstances>
+        <itemInstances>
+            <componentInstance>
+                <componentInstanceProperties>
+                    <name>body</name>
+                    <value>Facet-1446c2e8-c835-4cb9-929a-cb307b5746e4</value>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>title</name>
+                    <value>Collection Summary</value>
+                </componentInstanceProperties>
+                <componentName>flexipage:tab</componentName>
+                <identifier>flexipage_tab28</identifier>
             </componentInstance>
         </itemInstances>
         <itemInstances>

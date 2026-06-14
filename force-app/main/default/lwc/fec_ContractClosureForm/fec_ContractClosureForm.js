@@ -184,6 +184,15 @@ export default class Fec_ContractClosureForm extends LightningElement {
 
     addressTypeTemporaryLabel = CONTRACT_CLOSURE_ADDRESS_TYPE_TEMPORARY;
 
+    // 12/06/2026 10:41 linhdev — tempAddress modal province/ward: c-fec_-combo-box option JSON
+    get provinceOptionsJson() {
+        return JSON.stringify(this.provinceOptions || []);
+    }
+
+    get wardOptionsJson() {
+        return JSON.stringify(this.wardOptions || []);
+    }
+
     get emailRadioOptions() {
         const opts = [];
         if (this.hasDemographicEmail) {
@@ -1051,6 +1060,21 @@ export default class Fec_ContractClosureForm extends LightningElement {
         this.modalWardId = event.detail.value;
         const opt = this.wardOptions.find((o) => o.value === this.modalWardId);
         this.modalWardLabel = opt ? opt.label : STR_EMPTY;
+    }
+
+    // 12/06/2026 10:41 linhdev — tempAddress modal: onremove province combo
+    handleModalProvinceRemove() {
+        this.modalProvinceId = STR_EMPTY;
+        this.modalProvinceLabel = STR_EMPTY;
+        this.modalWardId = STR_EMPTY;
+        this.modalWardLabel = STR_EMPTY;
+        this.wardOptions = [];
+    }
+
+    // 12/06/2026 10:41 linhdev — tempAddress modal: onremove ward combo
+    handleModalWardRemove() {
+        this.modalWardId = STR_EMPTY;
+        this.modalWardLabel = STR_EMPTY;
     }
 
     async handleModalSave() {

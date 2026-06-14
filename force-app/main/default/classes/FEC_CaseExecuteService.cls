@@ -126,6 +126,52 @@ public without sharing class FEC_CaseExecuteService {
   }
 
 
+  @AuraEnabled(cacheable=true)
+  public static Boolean canExecuteUbankEmailInteraction(Id caseId) {
+    if (caseId == null) {
+      return false;
+    }
+
+    Case c = [
+      SELECT Id, OwnerId, IsClosed, FEC_Case_Executor__c
+      FROM Case
+      WHERE Id = :caseId
+      LIMIT 1
+    ];
+
+    if (c.IsClosed || c.OwnerId == null || !isQueueOwner(c.OwnerId)) {
+      return false;
+    }
+
+    User currentUser = [
+      SELECT Id, Username
+      FROM User
+      WHERE Id = :UserInfo.getUserId()
+      LIMIT 1
+    ];
+
+    if (String.isNotBlank(c.FEC_Case_Executor__c)
+      && c.FEC_Case_Executor__c != currentUser.Username) {
+      return false;
+    }
+
+    List<Group> ubankQueues = [
+      SELECT Id, Name, DeveloperName
+      FROM Group
+      WHERE Id = :c.OwnerId
+        AND Type = :FEC_ConstantCommon.GROUP_TYPE_QUEUE
+        AND (DeveloperName = 'FEC_Ubank_Email' OR Name = 'Ubank Email')
+      LIMIT 1
+    ];
+
+    if (ubankQueues.isEmpty()) {
+      return false;
+    }
+
+    Id queueId = ubankQueues[0].Id;
+    return QUEUE_MEMBERSHIP_ACCESS.isUserInQueue(currentUser.Id, queueId)
+      || QUEUE_MEMBERSHIP_ACCESS.isUserRoleInQueue(currentUser.Id, queueId);
+  }
   @AuraEnabled
     public static ExecuteVisibilityResult refreshExecuteVisibility(Id caseId) {
         return canExecute(caseId);

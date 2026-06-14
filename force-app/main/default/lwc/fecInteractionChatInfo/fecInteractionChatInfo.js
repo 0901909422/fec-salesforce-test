@@ -1,4 +1,4 @@
-import { LightningElement, api, track, wire } from 'lwc';
+﻿import { LightningElement, api, track, wire } from 'lwc';
 import { getRecord, getFieldValue } from 'lightning/uiRecordApi';
 import { loadStyle } from 'lightning/platformResourceLoader';
 import COMMON_STYLES from '@salesforce/resourceUrl/FEC_CommonCss';
@@ -164,10 +164,22 @@ export default class FecInteractionChatInfo extends LightningElement {
     get isPhoneReadOnly() { return !this.canEditChatFields || (!!(this.maskedPhone || this.realPhone) && !this.isEditingPhone); }
     get showPhoneEditIcon() { return this.canEditChatFields && !this.isEditingPhone; }
 
-    get isKycStatusReadOnly() { return !this.canEditManualInteractionFields || !this.isEditingKycStatus; }
-    get showKycStatusEditIcon() { return this.canEditManualInteractionFields && !this.isEditingKycStatus; }
-    get isExternalInteractionIdReadOnly() { return !this.canEditManualInteractionFields || !this.isEditingExternalInteractionId; }
-    get showExternalInteractionIdEditIcon() { return this.canEditManualInteractionFields && !this.isEditingExternalInteractionId; }
+    get isKycStatusReadOnly() {
+        return !this.canEditManualInteractionFields || (!!this.kycStatus && !this.isEditingKycStatus);
+    }
+    get showKycStatusEditIcon() {
+        return this.canEditManualInteractionFields && !this.isReview && !this.kycStatus && !this.isEditingKycStatus;
+    }
+    get isExternalInteractionIdReadOnly() {
+        return !this.canEditManualInteractionFields
+            || (!!this.externalInteractionId && !this.isEditingExternalInteractionId);
+    }
+    get showExternalInteractionIdEditIcon() {
+        return this.canEditManualInteractionFields
+            && !this.isReview
+            && !this.externalInteractionId
+            && !this.isEditingExternalInteractionId;
+    }
 
     get displayPhone() {
         return this.maskedPhone || this.realPhone || '';
@@ -211,11 +223,12 @@ export default class FecInteractionChatInfo extends LightningElement {
     handleExternalInteractionIdChange(e) { this.externalInteractionIdDraft = e.target.value; this.externalInteractionIdError = STR_EMPTY; }
     handleCancelEditExternalInteractionId() { this.isEditingExternalInteractionId = false; this.externalInteractionIdDraft = STR_EMPTY; this.externalInteractionIdError = STR_EMPTY; }
     handleSaveExternalInteractionId() {
-        if (!this.canEditManualInteractionFields) return;
-        const val = this.externalInteractionIdDraft?.trim() || null;
+        if (!this.canEditManualInteractionFields || this.isReview || this.externalInteractionId) return;
+        const val = this.externalInteractionIdDraft?.trim();
+        if (!val) return;
         updateChatInteractionFields({ recordId: this.recordId, username: null, phone: null, kycStatus: null, externalInteractionId: val })
             .then(() => {
-                this.record = { ...this.record, FEC_External_Interaction_ID__c: val || STR_EMPTY };
+                this.record = { ...this.record, FEC_External_Interaction_ID__c: val };
                 this.isEditingExternalInteractionId = false;
                 this.externalInteractionIdDraft = STR_EMPTY;
             })

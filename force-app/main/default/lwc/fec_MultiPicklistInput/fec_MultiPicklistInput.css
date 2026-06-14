@@ -15,10 +15,6 @@
   cursor: pointer;
 }
 
-.required {
-  color: red;
-}
-
 .badge__value {
   white-space: nowrap;
   overflow: hidden;
@@ -26,14 +22,18 @@
   max-width: 100px;
 }
 
-.has-error .slds-input_faux,
-.has-error .slds-combobox__input {
-  border: 1px solid #ea001e;
-  box-shadow: #ea001e 0 0 0 1px inset;
+.slds-combobox__form-element.slds-has-error .slds-input_faux,
+.slds-combobox__form-element.slds-has-error .slds-combobox__input {
+  border-width: 1px;
+  border-style: solid;
+  border-color: var(--slds-g-color-error-base-40, #ea001e);
+  box-shadow: none;
 }
 
-.has-error .slds-input_faux.slds-has-focus {
-  box-shadow: 0 0 0 2px #0b5cab;
+.slds-dropdown .slds-checkbox_faux {
+  border-width: 1px;
+  border-color: var(--lwc-colorBorderInput, #747474);
+  box-shadow: none;
 }
 
 .slds-dropdown {
@@ -111,8 +111,10 @@
   min-width: 0;
 }
 
-.error-msg {
+.slds-form-element__help {
   grid-column: 1;
   grid-row: 3;
-  color: var(--lwc-colorTextError, #ea001e);
+  color: var(--slds-g-color-error-base-40, var(--lwc-colorTextError, #ea001e));
+  font-size: 0.75rem;
+  margin-top: 0.125rem;
 }

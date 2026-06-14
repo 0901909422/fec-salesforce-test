@@ -920,7 +920,8 @@ public without sharing class FEC_AutoHoldCaseService {
     ) {
         Case patch = new Case(
             Id = caseId,
-            FEC_NFU_Description_Result__c = resultType
+            FEC_NFU_Description_Result__c = resultType,
+            FEC_Hold_Case_Type__c = HOLD_CASE_TYPE_AUTO
         );
 
         if (String.isNotBlank(collectionsResponse)) {

@@ -526,14 +526,6 @@ public without sharing class FEC_MainInfoAccountController {
                     }
                 }
             }
-       FEC_GetApplicationsList.ApplicationInfo l;
-            if (appRes != null 
-                && appRes.Applications != null 
-                && !appRes.Applications.isEmpty()) {
-
-                l = appRes.Applications[0];
-            }
-
         FEC_GetCardSecInfo.MainCardBalance cs;
 
             if(cardSecRes != null 
@@ -562,6 +554,19 @@ public without sharing class FEC_MainInfoAccountController {
 
                 ecomFlag = cardSecRes.CardSecInfo.MainCardPlastic.EcomActiveFlag;
             }
+
+        Date accountOpenDateParsed = null;
+        if (cardSecRes != null
+            && cardSecRes.CardSecInfo != null
+            && cardSecRes.CardSecInfo.CardsDeliveries != null
+            && !cardSecRes.CardSecInfo.CardsDeliveries.isEmpty()) {
+
+            String issueLastUpdate = cardSecRes.CardSecInfo.CardsDeliveries[0].IssuelastUpdate;
+            if (String.isNotBlank(issueLastUpdate)) {
+                accountOpenDateParsed = FEC_CommonUltils.parseDate(issueLastUpdate);
+            }
+        }
+
         String localUse;
         if (emeaRes != null) {
             localUse = emeaRes.localUseInd;
@@ -577,8 +582,9 @@ public without sharing class FEC_MainInfoAccountController {
             FEC_Hold_Amount__c = m != null ? m.HoldAmount : null,
             FEC_Total_Balance__c = cs != null ? cs.TotalBalance : null,
             FEC_Application_ID__c = a != null ? a.ApplicationId : null,
-            FEC_Account_Open_Date__c = l != null ? l.DateStatus : null,
+            FEC_Account_Open_Date__c = accountOpenDateParsed,
             /* ===== ACCOUNT STATUS ===== */
+            FEC_Block_Code_1__c = m != null ? m.BlockCode1 : null,
             FEC_Block_Date_1__c = m != null ? m.AccountBlockCode1Date : null,
             FEC_Reason_1__c = m != null ? m.RsnBlockCode1 : null,
             FEC_Block_Code_2__c = m != null ? m.BlockCode2 : null,
@@ -619,24 +625,29 @@ public without sharing class FEC_MainInfoAccountController {
 
         /* ===================== EMEA ===================== */
 
-        Decimal totalBalance;
         Date blockDate1;
         Date blockDate2;
         String warningCode;
 
         if (emeaRes != null) {
-
-            totalBalance =
-                (emeaRes.currBal != null ? emeaRes.currBal : 0) +
-                (emeaRes.amtMemoDb != null ? emeaRes.amtMemoDb : 0) -
-                (emeaRes.amtMemoCr != null ? emeaRes.amtMemoCr : 0);
-
             blockDate1 = emeaRes.dtBlkCd1;
             blockDate2 = emeaRes.dtBlkCd2;
 
             if (emeaRes.warnCodes != null && !emeaRes.warnCodes.isEmpty()) {
                 warningCode = String.join(emeaRes.warnCodes, ' ');
             }
+        }
+        
+        Decimal onlineOtb = null;
+        Decimal onlineCurrentBalance = null;
+        Decimal onlineTotalBalance = null;
+        if (emeaRes != null && emeaRes.responseCode == '1') {
+            onlineOtb = emeaRes.availCr;
+            onlineCurrentBalance = emeaRes.currBal;
+            onlineTotalBalance =
+                (emeaRes.currBal != null ? emeaRes.currBal : 0) +
+                (emeaRes.amtMemoDb != null ? emeaRes.amtMemoDb : 0) -
+                (emeaRes.amtMemoCr != null ? emeaRes.amtMemoCr : 0);
         }
 
         /* ===================== MCMS ===================== */
@@ -697,15 +708,12 @@ public without sharing class FEC_MainInfoAccountController {
 
         /* ===================== UPDATE ===================== */
 
-        update new FEC_Customer_History__c(
+        FEC_Customer_History__c accountToUpdate = new FEC_Customer_History__c(
             Id = accountId,
 
             /* ===== ACCOUNT (EMEA) ===== */
             FEC_Account_Status__c    = emeaRes != null ? emeaRes.intStat : null,
-            FEC_OTB__c               = emeaRes != null ? emeaRes.availCr : null,
-            FEC_Current_Balance__c   = emeaRes != null ? emeaRes.currBal : null,
             FEC_Hold_Amount__c       = emeaRes != null ? emeaRes.amtMemoDb : null,
-            FEC_Total_Balance__c     = totalBalance,
 
             /* ===== WARNING ===== */
             FEC_Warning_Code__c      = warningCode,
@@ -724,5 +732,17 @@ public without sharing class FEC_MainInfoAccountController {
                     ? FEC_CommonUltils.checkActiveAndInacive(data.CURR_FST_USG_FLG)
                     : null
         );
+
+        if (onlineOtb != null) {
+            accountToUpdate.FEC_OTB__c = onlineOtb;
+        }
+        if (onlineCurrentBalance != null) {
+            accountToUpdate.FEC_Current_Balance__c = onlineCurrentBalance;
+        }
+        if (onlineTotalBalance != null) {
+            accountToUpdate.FEC_Total_Balance__c = onlineTotalBalance;
+        }
+
+        update accountToUpdate;
     }
 }

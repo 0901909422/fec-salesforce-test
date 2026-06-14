@@ -749,6 +749,11 @@
     </fieldPermissions>
     <fieldPermissions>
         <editable>false</editable>
+        <field>Case.FEC_Manager_ID_List_2__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
         <field>Case.FEC_Max_Amount__c</field>
         <readable>true</readable>
     </fieldPermissions>
@@ -4287,6 +4292,11 @@
         <field>FEC_Routing_Action_History__c.FEC_Is_TS_Queue_User__c</field>
         <readable>true</readable>
     </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
+        <field>Case.FEC_Is_Non_Restricted_Group__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
     <hasActivationRequired>false</hasActivationRequired>
     <label>CS - Unit Head of Office Based - Interaction Case &amp; Service Case</label>
     <license>Salesforce</license>
@@ -4649,4 +4659,3 @@
         <visibility>Visible</visibility>
     </tabSettings>
 </PermissionSet>
-

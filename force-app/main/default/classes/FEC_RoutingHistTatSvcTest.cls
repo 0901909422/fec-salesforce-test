@@ -34,7 +34,7 @@ private class FEC_RoutingHistTatSvcTest {
     }
 
     @isTest
-    static void updatedGroupFallsBackToOriginalOwnerTeam() {
+    static void updatedGroupDoesNotFallBackToOriginalOwnerTeam() {
         Id origOwnerId = nextId(User.SObjectType);
         Map<Id, String> teamByOwner = new Map<Id, String>{ origOwnerId => 'DS' };
 
@@ -43,8 +43,9 @@ private class FEC_RoutingHistTatSvcTest {
         );
 
         System.assertEquals(
-            'DS',
-            FEC_RoutingHistTatSvc.resolveUpdatedGroupCode(row, teamByOwner)
+            null,
+            FEC_RoutingHistTatSvc.resolveUpdatedGroupCode(row, teamByOwner),
+            'FEC_Updated_Group__c chỉ lấy updated queue, không fallback original.'
         );
     }
 

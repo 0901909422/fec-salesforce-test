@@ -83,6 +83,7 @@ public with sharing class FEC_GetCardBasicInfo {
 
     public class StatementInfo {
         @AuraEnabled public Decimal StatementBalance;
+        @AuraEnabled public Decimal LastPaymentAmount;
         @AuraEnabled public Date LastStatementDate;
         @AuraEnabled public Date NextStatementDate;
         @AuraEnabled public Date LastStatementDueDate;

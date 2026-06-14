@@ -10,6 +10,7 @@ public without sharing class FEC_TeamGroupCodeUtil {
         'Sales' => 'DS',
         'CreditAssessment' => 'CA',
         'CardOperations' => 'CO',
+        'CardOps' => 'CO',
         'Collections' => 'CL',
         'DirectSales' => 'DS',
         'Telesales' => 'TS',
@@ -20,7 +21,8 @@ public without sharing class FEC_TeamGroupCodeUtil {
         if (String.isBlank(raw)) {
             return null;
         }
-        String trimmed = raw.trim();
+        // FEC_Team__c trên org có thể kết thúc bằng NBSP (U+00A0); Apex trim() không loại được.
+        String trimmed = raw.replace('\u00a0', ' ').trim();
         if (LONG_NAME_TO_CODE.containsKey(trimmed)) {
             return LONG_NAME_TO_CODE.get(trimmed);
         }

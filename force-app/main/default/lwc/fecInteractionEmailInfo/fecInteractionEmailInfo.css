@@ -27,6 +27,13 @@
   font-weight: 500;
 }
 
+.required-indicator {
+  color: #c23934;
+  text-decoration: none;
+  margin-right: 2px;
+  font-weight: 700;
+}
+
 .value {
   font-size: 13px;
   font-weight: 600;
@@ -68,13 +75,6 @@
   font-size: 12px;
   font-weight: 400;
   width: 100%;
-}
-
-.required-indicator {
-  color: #c23934;
-  text-decoration: none;
-  margin-right: 2px;
-  font-weight: 700;
 }
 
 .row--email-field {

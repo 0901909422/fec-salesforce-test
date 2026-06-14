@@ -145,7 +145,8 @@ public without sharing class FEC_BatchCaseHandlingExportService {
             return;
         }
 
-        Map<Id, RemarkBlocks> caseRemarkBlocksByCaseId = loadCaseRemarkBlocks(caseIds);
+        Map<Id, RemarkBlocks> strictCaseRemarkBlocksByCaseId = loadCaseRemarkBlocks(caseIds, false);
+        Map<Id, RemarkBlocks> extendedCaseRemarkBlocksByCaseId = loadCaseRemarkBlocks(caseIds, true);
         Map<Id, AssignmentExportData> assignmentByCaseId = loadPrimaryAssignmentExportData(caseIds);
         // 03/06/2026 - Assignment remarks: FEC_Case_Remarks__c (thay FEC_Routing_Action_History__c) — FEC_BCH_ExportAssignmentRemarkLoader
         Map<Id, FEC_BCH_ExportAssignmentRemarkLoader.AssignmentRemarkExportBundle> assignmentRemarkByCaseId =
@@ -158,12 +159,14 @@ public without sharing class FEC_BatchCaseHandlingExportService {
             if (r == null || r.caseId == null) {
                 continue;
             }
-            RemarkBlocks caseRemarks = caseRemarkBlocksByCaseId.get(r.caseId);
-            if (caseRemarks != null) {
-                r.caseRemarks = caseRemarks.remarks;
-                r.caseRemarksEnteredBy = caseRemarks.enteredBy;
-                r.caseRemarksEnteredByRole = caseRemarks.enteredByRole;
-                r.caseRemarksEnteredOn = caseRemarks.enteredOn;
+            RemarkBlocks strictCaseRemarks = strictCaseRemarkBlocksByCaseId.get(r.caseId);
+            RemarkBlocks extendedCaseRemarks = extendedCaseRemarkBlocksByCaseId.get(r.caseId);
+            // Toannd 11/06/2026 - strict: template thường; extended: GSR/COF Temp2/Temp8_CA/OtherCS
+            if (strictCaseRemarks != null) {
+                applyStrictCaseRemarkBlocksToRow(r, strictCaseRemarks);
+            }
+            if (extendedCaseRemarks != null) {
+                applyExtendedCaseRemarkBlocksToRow(r, extendedCaseRemarks);
             }
             // 03/06/2026 - Ưu tiên assignment remark từ FEC_Case_Remarks__c; không có remark thì fallback FEC_Assignment__c (ID/Owner)
             FEC_BCH_ExportAssignmentRemarkLoader.AssignmentRemarkExportBundle asgRemarkBundle =
@@ -285,18 +288,17 @@ public without sharing class FEC_BatchCaseHandlingExportService {
         SObject interactionRel = safeRelatedSObject(c, 'FEC_Interaction__r');
         r.interactionId = interactionRel == null ? FEC_ConstantCommon.STR_EMPTY : safeRelatedFieldString(interactionRel, 'FEC_ID_Search__c');
         SObject productTypeRel = safeRelatedSObject(c, 'FEC_Product_Type__r');
-        if (productTypeRel == null) {
-            r.productType = FEC_ConstantCommon.STR_EMPTY;
-        } else {
-            String ptCode = safeRelatedFieldString(productTypeRel, 'FEC_Code__c');
-            r.productType = String.isNotBlank(ptCode) ? ptCode : safeRelatedFieldString(productTypeRel, 'Name');
-        }
+        // 12/06/2026 19:20 linhdev - export Product Type theo design: FEC_Product_Type__r.Name
+        r.productType = productTypeRel == null
+            ? FEC_ConstantCommon.STR_EMPTY
+            : safeRelatedFieldString(productTypeRel, 'Name');
         SObject categoryRel = safeRelatedSObject(c, 'FEC_Category__r');
         SObject subCategoryRel = safeRelatedSObject(c, 'FEC_SubCategory__r');
         SObject subCodeRel = safeRelatedSObject(c, 'FEC_SubCode__r');
-        r.categoryCode = categoryRel == null ? null : (String) categoryRel.get('FEC_Code__c');
-        r.subCategoryCode = subCategoryRel == null ? null : (String) subCategoryRel.get('FEC_Code__c');
-        r.subCodeCode = subCodeRel == null ? null : (String) subCodeRel.get('FEC_Code__c');
+        // 12/06/2026 19:20 linhdev - export Category/Sub Category/Sub Code theo design: __r.Name
+        r.categoryCode = categoryRel == null ? null : safeRelatedFieldString(categoryRel, 'Name');
+        r.subCategoryCode = subCategoryRel == null ? null : safeRelatedFieldString(subCategoryRel, 'Name');
+        r.subCodeCode = subCodeRel == null ? null : safeRelatedFieldString(subCodeRel, 'Name');
         r.categoryDisplay = formatCategoryDisplay(categoryRel);
         r.subCategoryDisplay = formatSubDisplay(subCategoryRel);
         r.subCodeDisplay = formatSubDisplay(subCodeRel);
@@ -538,48 +540,108 @@ public without sharing class FEC_BatchCaseHandlingExportService {
         return dt.format('dd/MM/yyyy hh:mm:ss a');
     }
 
+    // 12/06/2026 19:20 linhdev - export Category display theo design: __r.Name
     private static String formatCategoryDisplay(SObject rel) {
         if (rel == null) {
             return FEC_ConstantCommon.STR_EMPTY;
         }
-        //PhongBT 03/06/26: 4 trường bộ noc hiển thị là code theo design
-        String code = safeRelatedFieldString(rel, 'FEC_Code__c');
-        return String.isBlank(code) ? FEC_ConstantCommon.STR_EMPTY : code;
-        // String name = (String) rel.get('Name');
-        // return String.isBlank(name) ? FEC_ConstantCommon.STR_EMPTY : name;
+        String name = safeRelatedFieldString(rel, 'Name');
+        return String.isBlank(name) ? FEC_ConstantCommon.STR_EMPTY : name;
     }
 
+    // 12/06/2026 19:20 linhdev - export Sub Category/Sub Code display theo design: __r.Name
     private static String formatSubDisplay(SObject rel) {
         if (rel == null) {
             return FEC_ConstantCommon.STR_EMPTY;
         }
-        //PhongBT 03/06/26: 4 trường bộ noc hiển thị là code theo design
-        String code = safeRelatedFieldString(rel, 'FEC_Code__c');
-        return String.isBlank(code) ? FEC_ConstantCommon.STR_EMPTY : code;
-        // String nameVn = (String) rel.get('FEC_Name_VN__c');
-        // String name = String.isNotBlank(nameVn) ? nameVn : (String) rel.get('Name');
-        // if (String.isNotBlank(code) && String.isNotBlank(name)) {
-        //     return code + '-' + name;
-        // }
-        // if (String.isNotBlank(name)) {
-        //     return name;
-        // }
-        // return String.isBlank(code) ? FEC_ConstantCommon.STR_EMPTY : code;
+        String name = safeRelatedFieldString(rel, 'Name');
+        return String.isBlank(name) ? FEC_ConstantCommon.STR_EMPTY : name;
     }
 
-    private static Map<Id, RemarkBlocks> loadCaseRemarkBlocks(Set<Id> caseIds) {
+    // Toannd 11/06/2026 - Case Remarks gom (1 ô) cho template thường — loại Assignment remark
+    private static void applyStrictCaseRemarkBlocksToRow(
+        FEC_BatchCaseHandlingExportRow row,
+        RemarkBlocks caseRemarks
+    ) {
+        if (row == null || caseRemarks == null) {
+            return;
+        }
+        row.caseRemarks = caseRemarks.remarks;
+        row.caseRemarksEnteredBy = caseRemarks.enteredBy;
+        row.caseRemarksEnteredByRole = caseRemarks.enteredByRole;
+        row.caseRemarksEnteredOn = caseRemarks.enteredOn;
+    }
+
+    // Toannd 11/06/2026 - Case Remarks extended cho GSR/COF Temp2/Temp8_CA/OtherCS
+    private static void applyExtendedCaseRemarkBlocksToRow(
+        FEC_BatchCaseHandlingExportRow row,
+        RemarkBlocks caseRemarks
+    ) {
+        if (row == null || caseRemarks == null) {
+            return;
+        }
+        row.caseRemarksExtended = caseRemarks.remarks;
+        row.caseRemarksEnteredByExtended = caseRemarks.enteredBy;
+        row.caseRemarksEnteredByRoleExtended = caseRemarks.enteredByRole;
+        row.caseRemarksEnteredOnExtended = caseRemarks.enteredOn;
+        row.caseRemarks1 = caseRemarks.remarkAt(1);
+        row.caseRemarksEnteredBy1 = caseRemarks.enteredByAt(1);
+        row.caseRemarksEnteredByRole1 = caseRemarks.enteredByRoleAt(1);
+        row.caseRemarksEnteredOn1 = caseRemarks.enteredOnAt(1);
+        row.caseRemarks2 = caseRemarks.remarkAt(2);
+        row.caseRemarksEnteredBy2 = caseRemarks.enteredByAt(2);
+        row.caseRemarksEnteredByRole2 = caseRemarks.enteredByRoleAt(2);
+        row.caseRemarksEnteredOn2 = caseRemarks.enteredOnAt(2);
+        row.caseRemarks3 = caseRemarks.remarkAt(3);
+        row.caseRemarksEnteredBy3 = caseRemarks.enteredByAt(3);
+        row.caseRemarksEnteredByRole3 = caseRemarks.enteredByRoleAt(3);
+        row.caseRemarksEnteredOn3 = caseRemarks.enteredOnAt(3);
+    }
+
+    // Toannd 11/06/2026 - template thường: loại toàn bộ Assignment remark (03/06/2026 jira 1726)
+    @TestVisible
+    private static Boolean includeCaseRemarkInStrictExport(FEC_Case_Remarks__c remark) {
+        if (remark == null) {
+            return false;
+        }
+        return remark.FEC_Remark_Type__c != FEC_ConstantCommon.REMARK_TYPE_ASSIGNMENT;
+    }
+
+    // Toannd 11/06/2026 - GSR/COF Temp2/Temp8: khớp fec_CaseDetail_Customer.loadRemarkHistory
+    @TestVisible
+    private static Boolean includeCaseRemarkInExtendedExport(FEC_Case_Remarks__c remark) {
+        if (remark == null) {
+            return false;
+        }
+        if (remark.FEC_Remark_Type__c != FEC_ConstantCommon.REMARK_TYPE_ASSIGNMENT) {
+            return true;
+        }
+        String stageName = remark.FEC_Stage_Name__c;
+        if (String.isBlank(stageName)) {
+            return true;
+        }
+        return !Pattern.compile('(?i).*stage\\s*1.*').matcher(stageName).matches();
+    }
+
+    private static Map<Id, RemarkBlocks> loadCaseRemarkBlocks(Set<Id> caseIds, Boolean useExtendedFilter) {
         Map<Id, RemarkBlocks> out = new Map<Id, RemarkBlocks>();
-        // 03/06/2026 - Case Remarks export: loại Remark Type Assignment (khớp FEC_CaseRemarkController)
         for (FEC_Case_Remarks__c remark : [
-            SELECT FEC_Case__c, FEC_Case_Remarks__c, FEC_User__c, FEC_User_Role__c, CreatedDate
+            SELECT
+                FEC_Case__c,
+                FEC_Case_Remarks__c,
+                FEC_User__c,
+                FEC_User_Role__c,
+                FEC_Remark_Type__c,
+                FEC_Stage_Name__c,
+                CreatedDate
             FROM FEC_Case_Remarks__c
             WHERE FEC_Case__c IN :caseIds
-            AND (FEC_Remark_Type__c = null
-                OR FEC_Remark_Type__c != :FEC_ConstantCommon.REMARK_TYPE_ASSIGNMENT)
-            ORDER BY FEC_Case__c, CreatedDate ASC
+            ORDER BY FEC_Case__c, CreatedDate ASC, Id ASC
         ]) {
-            // Cũ: WHERE FEC_Case__c IN :caseIds — gồm cả assignment remark → lẫn Case Remarks
-            if (remark.FEC_Case__c == null) {
+            Boolean include = useExtendedFilter == true
+                ? includeCaseRemarkInExtendedExport(remark)
+                : includeCaseRemarkInStrictExport(remark);
+            if (remark.FEC_Case__c == null || !include) {
                 continue;
             }
             if (!out.containsKey(remark.FEC_Case__c)) {
@@ -706,20 +768,75 @@ public without sharing class FEC_BatchCaseHandlingExportService {
         return out;
     }
 
+    // Toannd 11/06/2026 - lưu từng dòng remark để export theo cột (GSRTemp2_OtherCS)
+    private class RemarkLine {
+        public String remark = FEC_ConstantCommon.STR_EMPTY;
+        public String enteredBy = FEC_ConstantCommon.STR_EMPTY;
+        public String enteredByRole = FEC_ConstantCommon.STR_EMPTY;
+        public String enteredOn = FEC_ConstantCommon.STR_EMPTY;
+    }
+
     private class RemarkBlocks {
         public String remarks = FEC_ConstantCommon.STR_EMPTY;
         public String enteredBy = FEC_ConstantCommon.STR_EMPTY;
         public String enteredByRole = FEC_ConstantCommon.STR_EMPTY;
         public String enteredOn = FEC_ConstantCommon.STR_EMPTY;
         private Integer lineIndex = 0;
+        private List<RemarkLine> lines = new List<RemarkLine>();
 
         public void add(String remarkText, String userText, String roleText, Datetime createdDt) {
             lineIndex += 1;
             String prefix = '#' + String.valueOf(lineIndex) + ': ';
-            remarks = appendLine(remarks, prefix + safeText(remarkText));
-            enteredBy = appendLine(enteredBy, prefix + safeText(userText));
-            enteredByRole = appendLine(enteredByRole, prefix + safeText(roleText));
-            enteredOn = appendLine(enteredOn, prefix + formatExportDatetime(createdDt));
+            RemarkLine line = new RemarkLine();
+            line.remark = prefix + safeText(remarkText);
+            line.enteredBy = prefix + safeText(userText);
+            line.enteredByRole = prefix + safeText(roleText);
+            line.enteredOn = prefix + formatExportDatetime(createdDt);
+            lines.add(line);
+            remarks = appendLine(remarks, line.remark);
+            enteredBy = appendLine(enteredBy, line.enteredBy);
+            enteredByRole = appendLine(enteredByRole, line.enteredByRole);
+            enteredOn = appendLine(enteredOn, line.enteredOn);
+        }
+
+        public String remarkAt(Integer index) {
+            return valueAt(index, 'remark');
+        }
+
+        public String enteredByAt(Integer index) {
+            return valueAt(index, 'enteredBy');
+        }
+
+        public String enteredByRoleAt(Integer index) {
+            return valueAt(index, 'enteredByRole');
+        }
+
+        public String enteredOnAt(Integer index) {
+            return valueAt(index, 'enteredOn');
+        }
+
+        // Toannd 11/06/2026 - lấy giá trị remark theo thứ tự (#1, #2, #3)
+        private String valueAt(Integer index, String fieldName) {
+            if (index == null || index < 1 || index > lines.size()) {
+                return FEC_ConstantCommon.STR_EMPTY;
+            }
+            RemarkLine line = lines[index - 1];
+            if (line == null) {
+                return FEC_ConstantCommon.STR_EMPTY;
+            }
+            if (fieldName == 'remark') {
+                return line.remark;
+            }
+            if (fieldName == 'enteredBy') {
+                return line.enteredBy;
+            }
+            if (fieldName == 'enteredByRole') {
+                return line.enteredByRole;
+            }
+            if (fieldName == 'enteredOn') {
+                return line.enteredOn;
+            }
+            return FEC_ConstantCommon.STR_EMPTY;
         }
 
         private String appendLine(String current, String incoming) {

@@ -52,10 +52,22 @@ private class FEC_BCH_ExportPropertyService_Test {
         );
         insert bp;
 
+        // 12/06/2026 23:15 linhdev - NOC gắn vào Stage để test scope theo Business/Stage/NOC
+        FEC_Nature_of_Case__c noc = new FEC_Nature_of_Case__c(
+            FEC_Business_Process__c = bp.Id,
+            FEC_Active__c = true
+        );
+        FEC_Nature_of_Case__c otherNoc = new FEC_Nature_of_Case__c(
+            FEC_Business_Process__c = bp.Id,
+            FEC_Active__c = true
+        );
+        insert new List<FEC_Nature_of_Case__c>{ noc, otherNoc };
+
         FEC_Case_Stage__c stage = new FEC_Case_Stage__c(
             Name = 'Export Property Stage ' + suffix,
             FEC_Code__c = 'EXPSTG' + suffix,
             FEC_Business_Process__c = bp.Id,
+            FEC_Nature_of_Cases__c = noc.Id,
             FEC_Active__c = true
         );
         insert stage;
@@ -63,7 +75,8 @@ private class FEC_BCH_ExportPropertyService_Test {
         insert new List<FEC_Master_Data_Setting__c>{
             new FEC_Master_Data_Setting__c(
                 FEC_Stage_Name__c = stage.Id,
-                FEC_Sub_Section__c = 'Property',
+                FEC_Nature_Of_Case__c = noc.Id,
+                FEC_Sub_Section__c = FEC_ConstantCommon.PROPERTY_INFO,
                 FEC_Field_Object_Name__c = 'Case',
                 FEC_Field_API_Name__c = 'Subject',
                 FEC_Field_Label_Name__c = 'Subject',
@@ -72,11 +85,34 @@ private class FEC_BCH_ExportPropertyService_Test {
             ),
             new FEC_Master_Data_Setting__c(
                 FEC_Stage_Name__c = stage.Id,
-                FEC_Sub_Section__c = 'Property',
+                FEC_Nature_Of_Case__c = noc.Id,
+                FEC_Sub_Section__c = FEC_ConstantCommon.PROPERTY_INFO,
                 FEC_Field_Object_Name__c = 'FEC_Customer_History__c',
                 FEC_Field_API_Name__c = 'Name',
                 FEC_Field_Label_Name__c = 'Customer Name',
                 FEC_Field_Order_Display__c = 2,
+                FEC_Field_Status__c = true
+            ),
+            // 12/06/2026 23:15 linhdev - decoy: đúng Stage nhưng khác NOC -> phải bị loại
+            new FEC_Master_Data_Setting__c(
+                FEC_Stage_Name__c = stage.Id,
+                FEC_Nature_Of_Case__c = otherNoc.Id,
+                FEC_Sub_Section__c = FEC_ConstantCommon.PROPERTY_INFO,
+                FEC_Field_Object_Name__c = 'Case',
+                FEC_Field_API_Name__c = 'Description',
+                FEC_Field_Label_Name__c = 'Description',
+                FEC_Field_Order_Display__c = 3,
+                FEC_Field_Status__c = true
+            ),
+            // 12/06/2026 23:15 linhdev - decoy: đúng Stage/NOC nhưng sai Sub Section -> phải bị loại
+            new FEC_Master_Data_Setting__c(
+                FEC_Stage_Name__c = stage.Id,
+                FEC_Nature_Of_Case__c = noc.Id,
+                FEC_Sub_Section__c = FEC_ConstantCommon.UPDATED_INFO,
+                FEC_Field_Object_Name__c = 'Case',
+                FEC_Field_API_Name__c = 'Priority',
+                FEC_Field_Label_Name__c = 'Priority',
+                FEC_Field_Order_Display__c = 4,
                 FEC_Field_Status__c = true
             )
         };
@@ -114,6 +150,9 @@ private class FEC_BCH_ExportPropertyService_Test {
             columnKeys.add(col.columnKey);
         }
         System.assert(columnKeys.contains('case::subject'));
+        // 12/06/2026 23:15 linhdev - decoy khác NOC / sai Sub Section phải bị loại khỏi cột Property
+        System.assert(!columnKeys.contains('case::description'), 'NOC khác phải bị loại');
+        System.assert(!columnKeys.contains('case::priority'), 'Sub Section khác phải bị loại');
         System.assert(bundle.valuesByCaseId.containsKey(testCase.Id));
 
         Map<String, String> rowValues = bundle.valuesByCaseId.get(testCase.Id);

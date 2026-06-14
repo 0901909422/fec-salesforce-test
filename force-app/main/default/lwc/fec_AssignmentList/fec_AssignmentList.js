@@ -36,6 +36,7 @@ import {
 } from "lightning/messageService";
 import IS_MODE_EDIT from "@salesforce/messageChannel/FEC_Assignment_Mode__c";
 import CASE_INFORMATION_EDIT from "@salesforce/messageChannel/FEC_Case_Information_Edit__c";
+import CASE_ACTION_CHANNEL from "@salesforce/messageChannel/FEC_CaseAction__c";
 
 import FEC_Assignment_List from "@salesforce/label/c.FEC_Assignment_List";
 import FEC_Assignment_Routing_Action from "@salesforce/label/c.FEC_Assignment_Routing_Action";
@@ -668,7 +669,9 @@ export default class Fec_AssignmentList extends LightningElement {
 
       await refreshExecuteVisibility({ caseId: this.recordId });
       await refreshExecuteCaseVisibility({ caseId: this.recordId });
-
+      publish(this.messageContext, CASE_ACTION_CHANNEL, {
+        caseId: this.recordId,
+      });
       // Tắt partial edit (Execute Assignment) — giống F5: master data assignment không edit nữa
       await this._exitCaseInformationEditMode();
 

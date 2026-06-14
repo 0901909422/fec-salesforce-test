@@ -98,42 +98,68 @@ export default class Fec_ApplicationsList extends NavigationMixin(LightningEleme
         try {
             await refreshApplications({ caseId: this.recordId });
 
-            const data = await getApplications({ caseId: this.recordId });
-            this.registration = (data || []).map(row => ({
-                Id: row.Id,  
-                applicationId: row.applicationId,
-                accountNumber: row.accountNumber,
-                contractNumber: row.contractNumber,
-                lastStatus: row.lastStatus,
-                updateDate: formatDateVNI(row.updateDate),
-                productGroup: row.productGroup,
-                nationalPassportID: row.nationalPassportID,
-                registrationPhone: row.registrationPhone,
-                nationalPassportIDMasked: maskValue(row.nationalPassportID, false),
-                registrationPhoneMasked: maskValue(row.registrationPhone, false),
-                registrationEmail: row.registrationEmail,
-                currentAddress: row.currentAddress,
-                permanentAddress: row.permanentAddress,
-                officeAddress: row.officeAddress,
-                ccCode: row.ccCode,
-                ccName: row.ccName,
-                dSACode: row.dSACode,
-                dSAName: row.dSAName,
-                tSACode: row.tSACode,
-                tSAName: row.tSAName
+            let data = await getApplications({ caseId: this.recordId });
+            this.applyRegistrationData(data);
 
-            }));
-            this.registration.sort((a,b)=>{
-                return new Date(parseDateVNI(b.updateDate)) - new Date(parseDateVNI(a.updateDate));
-            });
-            this.hasData = this.registration.length > 0;
-
+            if (this.hasData && this.isSaleInfoPending(data)) {
+                await this.pollSaleInfo();
+            }
         } catch (err) {
             this.error = err?.body?.message || err.message;
             this.registration = [];
             this.hasData = false;
         } finally {
             this.isLoading = false;
+        }
+    }
+
+    applyRegistrationData(data) {
+        this.registration = (data || []).map(row => ({
+            Id: row.Id,
+            applicationId: row.applicationId,
+            accountNumber: row.accountNumber,
+            contractNumber: row.contractNumber,
+            lastStatus: row.lastStatus,
+            updateDate: formatDateVNI(row.updateDate),
+            productGroup: row.productGroup,
+            nationalPassportID: row.nationalPassportID,
+            registrationPhone: row.registrationPhone,
+            nationalPassportIDMasked: maskValue(row.nationalPassportID, false),
+            registrationPhoneMasked: maskValue(row.registrationPhone, false),
+            registrationEmail: row.registrationEmail,
+            currentAddress: row.currentAddress,
+            permanentAddress: row.permanentAddress,
+            officeAddress: row.officeAddress,
+            ccCode: row.ccCode,
+            ccName: row.ccName,
+            dSACode: row.dSACode,
+            dSAName: row.dSAName,
+            tSACode: row.tSACode,
+            tSAName: row.tSAName
+        }));
+        this.registration.sort((a, b) => {
+            return new Date(parseDateVNI(b.updateDate)) - new Date(parseDateVNI(a.updateDate));
+        });
+        this.hasData = this.registration.length > 0;
+    }
+
+    isSaleInfoPending(data) {
+        return (data || []).some(row =>
+            row.applicationId &&
+            !row.ccCode && !row.ccName &&
+            !row.dSACode && !row.dSAName &&
+            !row.tSACode && !row.tSAName
+        );
+    }
+
+    async pollSaleInfo(maxAttempts = 4, delayMs = 2000) {
+        for (let attempt = 0; attempt < maxAttempts; attempt++) {
+            await new Promise(resolve => setTimeout(resolve, delayMs));
+            const data = await getApplications({ caseId: this.recordId });
+            this.applyRegistrationData(data);
+            if (!this.isSaleInfoPending(data)) {
+                break;
+            }
         }
     }
 

@@ -1,24 +1,30 @@
 import { LightningElement, api, track, wire } from "lwc";
-import { getRecord, getFieldValue } from "lightning/uiRecordApi";
+import { getRecord, getFieldValue, notifyRecordUpdateAvailable } from "lightning/uiRecordApi";
 import { NavigationMixin } from "lightning/navigation";
 import { loadStyle } from "lightning/platformResourceLoader";
 import COMMON_STYLES from "@salesforce/resourceUrl/FEC_CommonCss";
 import {
   subscribe,
   unsubscribe,
+  publish,
   APPLICATION_SCOPE,
   MessageContext,
 } from "lightning/messageService";
 import IS_MODE_EDIT from "@salesforce/messageChannel/FEC_Case_Mode__c";
+import INTERACTION_EMAIL_UPDATED from "@salesforce/messageChannel/FEC_Interaction_Email_Updated__c";
 import VALIDATE_INTERACTION_EMAIL from "@salesforce/messageChannel/FEC_Validate_Interaction_Email__c";
 
+// ================= APEX =================
 import getInteraction from "@salesforce/apex/FEC_InteractionInforHandler.getInteraction";
 import updateInteractionEmail from "@salesforce/apex/FEC_InteractionInforHandler.updateInteractionEmail";
+import updateInteractionSendTo from "@salesforce/apex/FEC_InteractionInforHandler.updateInteractionSendTo";
+import updateInteractionExternalId from "@salesforce/apex/FEC_InteractionInforHandler.updateInteractionExternalId";
 import updateInteractionOnHold from "@salesforce/apex/FEC_InteractionInforHandler.updateInteractionOnHold";
 import getRecordTypeName from "@salesforce/apex/FEC_InteractionInforHandler.getRecordTypeName";
 import getInteractionIdFromCustomerCase from "@salesforce/apex/FEC_InteractionInforHandler.getInteractionIdFromCustomerCase";
 import getParentCaseNumber from "@salesforce/apex/FEC_InteractionInforHandler.getParentCaseNumber";
 
+// ================= SCHEMA =================
 import ISCLOSED from "@salesforce/schema/Case.IsClosed";
 import VIEW_MODE from "@salesforce/schema/Case.FEC_Interaction_View_Mode__c";
 import RECORDTYPE_ID from "@salesforce/schema/Case.RecordTypeId";
@@ -28,26 +34,30 @@ import INTERACTION_EMAIL_FIELD from "@salesforce/schema/Case.FEC_Interaction_Ema
 import CREATED_ON_FIELD from "@salesforce/schema/Case.FEC_Created_On__c";
 import CREATED_BY_FIELD from "@salesforce/schema/Case.FEC_Created_by__c";
 import SEND_TO_FIELD from "@salesforce/schema/Case.FEC_Send_To__c";
+import IS_MANUAL_FIELD from "@salesforce/schema/Case.FEC_Is_Manual__c";
+import EXTERNAL_INTERACTION_ID_FIELD from "@salesforce/schema/Case.FEC_External_Interaction_ID__c";
 import PARENT_ID_FIELD from "@salesforce/schema/Case.ParentId";
 import ON_HOLD_FIELD from "@salesforce/schema/Case.FEC_On_Hold__c";
 import CHANNEL_FIELD from "@salesforce/schema/Case.FEC_Channel__c";
-import IS_MANUAL_FIELD from "@salesforce/schema/Case.FEC_Is_Manual__c";
+import SUBCHANNEL_FIELD from "@salesforce/schema/Case.FEC_Interaction_Subchannel__c";
 
+// ================= LABELS =================
 import FEC_Interaction_Information_Label from "@salesforce/label/c.FEC_Interaction_Information_Label";
 import FEC_Interaction_Email_Label from "@salesforce/label/c.FEC_Interaction_Email_Label";
 import FEC_Interaction_Created_On_Label from "@salesforce/label/c.FEC_Interaction_Created_On_Label";
 import FEC_Interaction_Created_By_Label from "@salesforce/label/c.FEC_Interaction_Created_By_Label";
 import FEC_Send_To_Label from "@salesforce/label/c.FEC_Send_To_Label";
+import FEC_External_Interaction_ID_Label from "@salesforce/label/c.FEC_External_Interaction_ID_Label";
 import FEC_Parent_ID_Label from "@salesforce/label/c.FEC_Parent_ID_Label";
 import FEC_Outcome_Code_Label from "@salesforce/label/c.FEC_Outcome_Code_Label";
 import FEC_Interaction_Remark_Label from "@salesforce/label/c.FEC_Interaction_Remark_Label";
-import FEC_Interaction_Email_Input_Placeholder from "@salesforce/label/c.FEC_Interaction_Email_Input_Placeholder";
 import FEC_Complete_This_Field from "@salesforce/label/c.FEC_Complete_This_Field";
 import FEC_Interaction_Email_Invalid_Msg from "@salesforce/label/c.FEC_Interaction_Email_Invalid_Msg";
 import FEC_Interaction_Email_Save_Error from "@salesforce/label/c.FEC_Interaction_Email_Save_Error";
 import FEC_Empty from "@salesforce/label/c.FEC_Empty";
 import FEC_On_Hold_Label from "@salesforce/label/c.FEC_On_Hold_Label";
 import FEC_On_Hold_Help_Text from "@salesforce/label/c.FEC_On_Hold_Help_Text";
+import UBankCustomberServiceEmail from "@salesforce/label/c.UBankCustomberServiceEmail";
 
 import {
   STR_EMPTY,
@@ -67,28 +77,36 @@ export default class FecInteractionEmailInfo extends NavigationMixin(LightningEl
     interactionCreatedOn: FEC_Interaction_Created_On_Label,
     interactionCreatedBy: FEC_Interaction_Created_By_Label,
     sendTo: FEC_Send_To_Label,
+    externalInteractionId: FEC_External_Interaction_ID_Label,
     parentId: FEC_Parent_ID_Label,
     outcomeCode: FEC_Outcome_Code_Label,
     interactionRemark: FEC_Interaction_Remark_Label,
-    inputPlaceholder: FEC_Interaction_Email_Input_Placeholder,
     emailInvalidMsg: FEC_Interaction_Email_Invalid_Msg,
     emailSaveError: FEC_Interaction_Email_Save_Error,
     empty: FEC_Empty,
     onHold: FEC_On_Hold_Label,
-    onHoldHelpText: FEC_On_Hold_Help_Text,
+    onHoldHelpText: FEC_On_Hold_Help_Text
   };
 
-  completeFieldMsg = FEC_Complete_This_Field;
-
   @api recordId;
+
+  completeFieldMsg = FEC_Complete_This_Field;
 
   @track record;
   @track emailDraft = STR_EMPTY;
   @track emailError = STR_EMPTY;
+  @track sendToDraft = STR_EMPTY;
+  @track sendToError = STR_EMPTY;
+  @track externalIdDraft = STR_EMPTY;
+  @track externalIdError = STR_EMPTY;
   @track parentCaseNumber = STR_EMPTY;
+
+  EXTERNAL_ID_MAX_LENGTH = 255;
 
   isLoaded = false;
   isEditingEmail = false;
+  isEditingSendTo = false;
+  isEditingExternalId = false;
 
   isClosed = false;
   viewMode;
@@ -129,6 +147,7 @@ export default class FecInteractionEmailInfo extends NavigationMixin(LightningEl
     this.unsubscribeFromMessageChannels();
   }
 
+  // ================= LMS HANDLERS =================
   subscribeToMessageChannels() {
     if (!this.subscription) {
       this.subscription = subscribe(
@@ -169,11 +188,18 @@ export default class FecInteractionEmailInfo extends NavigationMixin(LightningEl
   handleMessage(message) {
     if (message && typeof message.isModeEdit !== "undefined") {
       this.viewMode = message.isModeEdit ? VIEW_MODE_HANDLING : VIEW_MODE_REVIEW;
+      // Close editing mode if switched to review
       if (!message.isModeEdit) {
         this.isEditingEmail = false;
         this.emailDraft = STR_EMPTY;
         this.emailError = STR_EMPTY;
         this.clearEmailInputValidity();
+        this.isEditingSendTo = false;
+        this.sendToDraft = STR_EMPTY;
+        this.sendToError = STR_EMPTY;
+        this.isEditingExternalId = false;
+        this.externalIdDraft = STR_EMPTY;
+        this.externalIdError = STR_EMPTY;
       }
     }
   }
@@ -216,18 +242,15 @@ export default class FecInteractionEmailInfo extends NavigationMixin(LightningEl
         this.record = result;
         this.isLoaded = true;
         getParentCaseNumber({ caseId: this.recordId })
-          .then((num) => {
-            this.parentCaseNumber = num || STR_EMPTY;
-          })
-          .catch(() => {
-            this.parentCaseNumber = STR_EMPTY;
-          });
+          .then((num) => { this.parentCaseNumber = num || STR_EMPTY; })
+          .catch(() => { this.parentCaseNumber = STR_EMPTY; });
       })
       .catch((error) => {
         console.error("getInteraction error", error);
       });
   }
 
+  // ================= GETTERS =================
   get isReview() {
     return this.viewMode === VIEW_MODE_REVIEW;
   }
@@ -256,25 +279,28 @@ export default class FecInteractionEmailInfo extends NavigationMixin(LightningEl
     return this.record?.IsClosed === true;
   }
 
-  get isInteractionEmailRequired() {
-    return this.isManualEmailInteraction && !this.isReview;
-  }
-
+  /**
+   * Readonly: chỉ hiển thị text khi đã có dữ liệu và không đang edit.
+   * Edit enable: khi đã có dữ liệu (click icon edit) hoặc khi trống (nhập mới).
+   */
   get isEmailReadOnly() {
-    return this.isReview || (this.hasInteractionEmail && !this.isEditingEmail);
+    return this.hasInteractionEmail && !this.isEditingEmail;
   }
 
   get showEmailEditIcon() {
-    return (
-      !this.isReview &&
-      this.hasInteractionEmail &&
-      !this.isEditingEmail &&
-      !this.isInteractionEmailRequired
-    );
+    return false;
   }
 
-  get showEmailSaveCancelIcons() {
+  get showEmailSaveIcon() {
+    return !this.isReview && !this.isEmailReadOnly;
+  }
+
+  get showEmailCancelIcon() {
     return !this.isReview && this.isEditingEmail && this.hasInteractionEmail;
+  }
+
+  get isInteractionEmailRequired() {
+    return this.isManualEmailInteraction && !this.isReview;
   }
 
   get displayInteractionEmail() {
@@ -293,18 +319,79 @@ export default class FecInteractionEmailInfo extends NavigationMixin(LightningEl
     return this.record?.[CHANNEL_FIELD.fieldApiName] || STR_EMPTY;
   }
 
+  get subChannel() {
+    return this.record?.[SUBCHANNEL_FIELD.fieldApiName] || STR_EMPTY;
+  }
+
+  get isInternalEmailChannel() {
+    return this.channel === "Internal" && this.subChannel === "Internal Email";
+  }
+
+  get showExternalInteractionId() {
+    return !this.isInternalEmailChannel;
+  }
+
   get isManualEmailInteraction() {
+    if (this.record?.[IS_MANUAL_FIELD.fieldApiName] !== true) {
+      return false;
+    }
     return (
-      this.record?.[IS_MANUAL_FIELD.fieldApiName] === true &&
-      this.channel === "Email"
+      this.channel === "Email" ||
+      (this.channel === "Internal" && this.subChannel === "Internal Email")
     );
+  }
+
+  get hasSendTo() {
+    return !!this.record?.[SEND_TO_FIELD.fieldApiName];
   }
 
   get sendTo() {
     return this.record?.[SEND_TO_FIELD.fieldApiName] || STR_EMPTY;
   }
 
+  get isSendToReadOnly() {
+    return !this.isManualEmailInteraction || this.isReview || (this.hasSendTo && !this.isEditingSendTo);
+  }
+
+  get showSendToEditIcon() {
+    return this.isManualEmailInteraction && !this.isReview && !this.isEditingSendTo;
+  }
+
+  get displaySendTo() {
+    return this.sendTo;
+  }
+
+  get hasExternalInteractionId() {
+    return !!this.record?.[EXTERNAL_INTERACTION_ID_FIELD.fieldApiName];
+  }
+
+  get externalInteractionId() {
+    return this.record?.[EXTERNAL_INTERACTION_ID_FIELD.fieldApiName] || STR_EMPTY;
+  }
+
+  get displayExternalInteractionId() {
+    return this.externalInteractionId;
+  }
+
+  get isExternalIdReadOnly() {
+    return (
+      !this.showExternalInteractionId ||
+      !this.isManualEmailInteraction ||
+      this.isReview ||
+      (this.hasExternalInteractionId && !this.isEditingExternalId)
+    );
+  }
+
+  get showExternalIdEditIcon() {
+    return this.showExternalInteractionId
+      && this.isManualEmailInteraction
+      && !this.isReview
+      && !this.isEditingExternalId;
+  }
+
   get showOnHold() {
+    // Tạm thời comment điều kiện Send To == 'dichvukhachhang@ubank.vn' để test
+    // return this.channel === "Email" && this.sendTo === UBankCustomberServiceEmail;
     return this.channel === "Email" && this.sendTo !== STR_EMPTY && this.sendTo != null;
   }
 
@@ -326,6 +413,7 @@ export default class FecInteractionEmailInfo extends NavigationMixin(LightningEl
     return !!(this.record?.[PARENT_ID_FIELD.fieldApiName] || this.parentCaseNumber);
   }
 
+  // ================= EMAIL/ON HOLD ACTIONS =================
   async handleOnHoldChange(event) {
     const isChecked = event.target.checked;
     if (!this.interactionId) return;
@@ -341,6 +429,7 @@ export default class FecInteractionEmailInfo extends NavigationMixin(LightningEl
       };
     } catch (error) {
       console.error("updateInteractionOnHold error", error);
+      // Revert UI on error
       event.target.checked = !isChecked;
     }
   }
@@ -401,10 +490,6 @@ export default class FecInteractionEmailInfo extends NavigationMixin(LightningEl
   handleSaveEmail() {
     const trimmed = this.emailDraft?.trim() || STR_EMPTY;
     this.emailError = this.validateEmail(trimmed);
-    if (this.isInteractionEmailRequired && !trimmed) {
-      this.showInlineEmailRequiredError();
-      return;
-    }
     if (this.emailError) return;
     if (!trimmed || !this.interactionId) return;
 
@@ -412,7 +497,7 @@ export default class FecInteractionEmailInfo extends NavigationMixin(LightningEl
       recordId: this.interactionId,
       email: trimmed,
     })
-      .then(() => {
+      .then(async () => {
         this.record = {
           ...this.record,
           [INTERACTION_EMAIL_FIELD.fieldApiName]: trimmed,
@@ -421,8 +506,15 @@ export default class FecInteractionEmailInfo extends NavigationMixin(LightningEl
         this.emailDraft = STR_EMPTY;
         this.emailError = STR_EMPTY;
         this.clearEmailInputValidity();
+        await notifyRecordUpdateAvailable([{ recordId: this.interactionId }]);
+        publish(
+          this.messageContext,
+          INTERACTION_EMAIL_UPDATED,
+          { recordId: this.interactionId },
+          { scope: APPLICATION_SCOPE }
+        );
       })
-      .catch((error) => {
+      .catch((error) => { 
         console.error("updateInteractionEmail error", error);
         this.emailError = error?.body?.message || this.labels.emailSaveError;
       });
@@ -433,6 +525,106 @@ export default class FecInteractionEmailInfo extends NavigationMixin(LightningEl
     this.emailDraft = STR_EMPTY;
     this.emailError = STR_EMPTY;
     this.clearEmailInputValidity();
+  }
+
+  handleEditSendTo() {
+    this.isEditingSendTo = true;
+    this.sendToDraft = this.displaySendTo || STR_EMPTY;
+    this.sendToError = STR_EMPTY;
+  }
+
+  handleSendToChange(event) {
+    this.sendToDraft = event.target.value;
+    this.sendToError = STR_EMPTY;
+  }
+
+  validateSendTo(value) {
+    const trimmed = value?.trim() || STR_EMPTY;
+    if (!trimmed) return STR_EMPTY;
+    if (!EMAIL_REGEX.test(trimmed)) return this.labels.emailInvalidMsg;
+    return STR_EMPTY;
+  }
+
+  handleSaveSendTo() {
+    const trimmed = this.sendToDraft?.trim() || STR_EMPTY;
+    this.sendToError = this.validateSendTo(trimmed);
+    if (this.sendToError) return;
+    if (!this.interactionId) return;
+
+    updateInteractionSendTo({
+      recordId: this.interactionId,
+      sendTo: trimmed || null,
+    })
+      .then(() => {
+        this.record = {
+          ...this.record,
+          [SEND_TO_FIELD.fieldApiName]: trimmed || null,
+        };
+        this.isEditingSendTo = false;
+        this.sendToDraft = STR_EMPTY;
+        this.sendToError = STR_EMPTY;
+      })
+      .catch((error) => {
+        console.error("updateInteractionSendTo error", error);
+        this.sendToError = error?.body?.message || this.labels.emailSaveError;
+      });
+  }
+
+  handleCancelEditSendTo() {
+    this.isEditingSendTo = false;
+    this.sendToDraft = STR_EMPTY;
+    this.sendToError = STR_EMPTY;
+  }
+
+  handleEditExternalId() {
+    this.isEditingExternalId = true;
+    this.externalIdDraft = this.displayExternalInteractionId || STR_EMPTY;
+    this.externalIdError = STR_EMPTY;
+  }
+
+  handleExternalIdChange(event) {
+    this.externalIdDraft = event.target.value;
+    this.externalIdError = STR_EMPTY;
+  }
+
+  validateExternalId(value) {
+    const trimmed = value?.trim() || STR_EMPTY;
+    if (!trimmed) return STR_EMPTY;
+    if (trimmed.length > this.EXTERNAL_ID_MAX_LENGTH) {
+      return `Maximum ${this.EXTERNAL_ID_MAX_LENGTH} characters allowed.`;
+    }
+    return STR_EMPTY;
+  }
+
+  handleSaveExternalId() {
+    const trimmed = this.externalIdDraft?.trim() || STR_EMPTY;
+    this.externalIdError = this.validateExternalId(trimmed);
+    if (this.externalIdError) return;
+    if (!this.interactionId) return;
+
+    updateInteractionExternalId({
+      recordId: this.interactionId,
+      externalInteractionId: trimmed || null,
+    })
+      .then(() => {
+        this.record = {
+          ...this.record,
+          [EXTERNAL_INTERACTION_ID_FIELD.fieldApiName]: trimmed || null,
+        };
+        this.isEditingExternalId = false;
+        this.externalIdDraft = STR_EMPTY;
+        this.externalIdError = STR_EMPTY;
+      })
+      .catch((error) => {
+        console.error("updateInteractionExternalId error", error);
+        this.externalIdError = error?.body?.message || this.labels.emailSaveError;
+      });
+  }
+
+  handleCancelEditExternalId() {
+    this.isEditingExternalId = false;
+    this.externalIdDraft = STR_EMPTY;
+    this.externalIdError = STR_EMPTY;
   }
 
   handleNavigateToParent() {

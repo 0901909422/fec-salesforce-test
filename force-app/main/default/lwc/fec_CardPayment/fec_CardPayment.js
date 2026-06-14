@@ -93,23 +93,34 @@ export default class Fec_CardPayment extends LightningElement {
                 formattedRecord.FEC_Close_Fee_Formatted__c = value.toFixed(2) + '%';
             }
             
-            // Format các trường số với dấu phẩy - Number(18,0) - không có số thập phân
-            const currencyFields = [
+            // Format các trường số nguyên với dấu phẩy - Number(18,0)
+            const currencyFields0 = [
                 'FEC_Current_Balance__c',
                 'FEC_Close_Fee_Amount__c',
                 'FEC_Plan_Payment_Amount__c',
-                'FEC_Accrued_Interest__c',
-                'FEC_Per_Diem__c',
                 'FEC_Deferred_Interest__c',
                 'FEC_IPP_Accrued_Interest__c'
             ];
             
-            currencyFields.forEach(field => {
+            currencyFields0.forEach(field => {
                 if (formattedRecord[field] != null && formattedRecord[field] !== undefined) {
                     const value = Number(formattedRecord[field]);
-                    // Thay __c bằng _Formatted__c để tạo tên field đúng
                     const formattedFieldName = field.replace('__c', '_Formatted__c');
                     formattedRecord[formattedFieldName] = formatCurrency(value, 0);
+                }
+            });
+
+            // Format Per Diem và Accrued Interest với 2 chữ số thập phân (ví dụ: 25,461.91)
+            const currencyFields2 = [
+                'FEC_Accrued_Interest__c',
+                'FEC_Per_Diem__c'
+            ];
+
+            currencyFields2.forEach(field => {
+                if (formattedRecord[field] != null && formattedRecord[field] !== undefined) {
+                    const value = Number(formattedRecord[field]);
+                    const formattedFieldName = field.replace('__c', '_Formatted__c');
+                    formattedRecord[formattedFieldName] = formatCurrency(value, 2);
                 }
             });
             
@@ -446,7 +457,7 @@ export default class Fec_CardPayment extends LightningElement {
     }
     
     get formattedTotalAccruedInterest() {
-        return formatCurrency(this.totalAccruedInterest, 0);
+        return formatCurrency(this.totalAccruedInterest, 2);
     }
     
     get isTotalAccruedInterestNegative() {
@@ -462,7 +473,7 @@ export default class Fec_CardPayment extends LightningElement {
     }
     
     get formattedTotalPerDiem() {
-        return formatCurrency(this.totalPerDiem, 0);
+        return formatCurrency(this.totalPerDiem, 2);
     }
     
     get isTotalPerDiemNegative() {

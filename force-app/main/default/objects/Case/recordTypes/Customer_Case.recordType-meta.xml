@@ -21,6 +21,21 @@
         </values>
     </picklistValues>
     <picklistValues>
+        <picklist>FEC_Card_Block_Reason__c</picklist>
+        <values>
+            <fullName>Lost/Stolen Card with Transaction Activity</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>Not In Use</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>Temporarily Locked</fullName>
+            <default>false</default>
+        </values>
+    </picklistValues>
+    <picklistValues>
         <picklist>FEC_Complain_Type__c</picklist>
         <values>
             <fullName>High risk</fullName>
@@ -139,6 +154,21 @@
         </values>
         <values>
             <fullName>RL05_POS</fullName>
+            <default>false</default>
+        </values>
+    </picklistValues>
+    <picklistValues>
+        <picklist>FEC_RD_Payment_Contract_Assessment__c</picklist>
+        <values>
+            <fullName>Cannot close contract</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>Contract can be closed with statement</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>Contract can be closed without statement</fullName>
             <default>false</default>
         </values>
     </picklistValues>
