@@ -13,7 +13,7 @@ export default class Fec_MultiPicklistInput extends LightningElement {
 
   combobox;
   input;
-  formElement;
+  comboboxFormElement;
 
   @track _options = [];
 
@@ -113,7 +113,9 @@ export default class Fec_MultiPicklistInput extends LightningElement {
       this.firstTimeLoaded = false;
       this.combobox = this.template.querySelector(".slds-combobox");
       this.input = this.template.querySelector(".slds-input_faux");
-      this.formElement = this.template.querySelector(".slds-form-element");
+      this.comboboxFormElement = this.template.querySelector(
+        ".slds-combobox__form-element"
+      );
     }
   }
 
@@ -292,14 +294,14 @@ export default class Fec_MultiPicklistInput extends LightningElement {
   @api checkValidity() {
     if (this.readOnly) {
       this.isError = false;
-      if (this.formElement) {
-        this.formElement.classList.remove("has-error");
+      if (this.comboboxFormElement) {
+        this.comboboxFormElement.classList.remove("slds-has-error");
       }
       return true;
     }
     if (this.required && this.selectedlst.length == 0) {
-      if (this.formElement) {
-        this.formElement.classList.add("has-error");
+      if (this.comboboxFormElement) {
+        this.comboboxFormElement.classList.add("slds-has-error");
       }
       this.isError = true;
 
@@ -307,8 +309,8 @@ export default class Fec_MultiPicklistInput extends LightningElement {
     }
 
     this.isError = false;
-    if (this.formElement) {
-      this.formElement.classList.remove("has-error");
+    if (this.comboboxFormElement) {
+      this.comboboxFormElement.classList.remove("slds-has-error");
     }
 
     return true;

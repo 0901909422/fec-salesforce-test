@@ -207,14 +207,8 @@
                 ></lightning-input>
               </lightning-layout-item>
               <lightning-layout-item size="6" padding="around-small">
-                <lightning-combobox
-                  label={customLabel.provinceCityLabel}
-                  value={modalProvinceId}
-                  placeholder={customLabel.placeholderAdmin}
-                  options={provinceOptions}
-                  onchange={handleModalProvincePick}
-                  required
-                ></lightning-combobox>
+                <!-- 12/06/2026 10:41 linhdev — tempAddress modal: province dùng c-fec_-combo-box -->
+                <c-fec_-combo-box data-pick="province" label={customLabel.provinceCityLabel} option={provinceOptionsJson} value={modalProvinceId} placeholder={customLabel.placeholderAdmin} required onchange={handleModalProvincePick} onremove={handleModalProvinceRemove}></c-fec_-combo-box>
               </lightning-layout-item>
               <lightning-layout-item size="6" padding="around-small">
                 <lightning-input
@@ -225,14 +219,8 @@
                 ></lightning-input>
               </lightning-layout-item>
               <lightning-layout-item size="6" padding="around-small">
-                <lightning-combobox
-                  label={customLabel.ward}
-                  value={modalWardId}
-                  placeholder={customLabel.placeholderAdmin}
-                  options={wardOptions}
-                  onchange={handleModalWardPick}
-                  required
-                ></lightning-combobox>
+                <!-- 12/06/2026 10:41 linhdev — tempAddress modal: ward dùng c-fec_-combo-box -->
+                <c-fec_-combo-box data-pick="ward" label={customLabel.ward} option={wardOptionsJson} value={modalWardId} placeholder={customLabel.placeholderAdmin} required onchange={handleModalWardPick} onremove={handleModalWardRemove}></c-fec_-combo-box>
               </lightning-layout-item>
               <lightning-layout-item size="6" padding="around-small">
                 <lightning-input

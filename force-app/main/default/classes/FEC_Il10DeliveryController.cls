@@ -88,7 +88,7 @@ public without sharing class FEC_Il10DeliveryController {
         String provinceLabel = String.isNotBlank(a.FEC_Province_Text__c)
             ? a.FEC_Province_Text__c
             : (a.FEC_Province__r == null ? null : a.FEC_Province__r.FEC_Name_VN__c);
-        row.address = a.FEC_Full_Address__c;
+        row.address = FEC_CommonUltils.removeTrailingComma(a.FEC_Full_Address__c);
         row.mailingAddressLabel = a.FEC_Mailing_Address__c == null
             ? FEC_ConstantCommon.STR_EMPTY
             : String.valueOf(a.FEC_Mailing_Address__c);
