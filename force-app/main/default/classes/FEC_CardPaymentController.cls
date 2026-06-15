@@ -652,9 +652,13 @@ public with sharing class FEC_CardPaymentController {
             record.FEC_IPP_Interest__c = p.ippInterest;           // IPPInterest
             record.FEC_IPP_Accrued_Interest__c = ippAccruedInterest; // AccruedInt (IPP)
             
-            // Close Fee: CloseFeeIndicatorAmount
-            record.FEC_Close_Fee__c = p.closeFeeIndicatorAmt != null ? p.closeFeeIndicatorAmt : 0;
-            // Close Fee Amount: CloseFeeAmount
+            // FEC_Close_Fee__c là Percent: (CloseFeelIndicatorAmount / PlanCurrentBalance) * 100
+            Decimal closeFeePercent = 0;
+            if (p.closeFeeIndicator == 'Y' && currentBalance > 0 && p.closeFeeIndicatorAmt != null) {
+                closeFeePercent = (p.closeFeeIndicatorAmt / currentBalance) * 100;
+                closeFeePercent = closeFeePercent.setScale(2, RoundingMode.HALF_UP);
+            }
+            record.FEC_Close_Fee__c = closeFeePercent;
             record.FEC_Close_Fee_Amount__c = p.closeFeeAmount != null ? p.closeFeeAmount : 0;
             Decimal planPaymentAmount = p.totalPaymentAmount != null ? p.totalPaymentAmount : 0;
             record.FEC_Plan_Payment_Amount__c = planPaymentAmount;
