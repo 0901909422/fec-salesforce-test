@@ -139,10 +139,70 @@ private class FEC_CreateCaseHandler_Test {
         System.assertEquals(true, created.FEC_Is_Submited__c);
         System.assertEquals(true, created.FEC_Is_MyCaseAPI_Interaction__c);
         System.assertEquals('mycase@example.com', created.FEC_Interaction_Email__c);
-        System.assertEquals(FEC_ConstantCommon.CHANNEL_INBOUND_NAME, created.FEC_Channel__c);
+        System.assertEquals(FEC_ConstantCommon.CHANNEL_EXTERNAL, created.FEC_Channel__c);
         System.assertEquals(
-            FEC_ConstantCommon.CHANNEL_INBOUND_SUBCHANNEL_NAME,
+            FEC_ConstantCommon.CHANNEL_EXTERNAL_SUBCHANNEL_OTHER_NAME,
             created.FEC_Interaction_Subchannel__c
+        );
+        System.assertEquals(FEC_ConstantCommon.CHANNEL_INBOUND_NAME, created.FEC_Other_Subchannel__c);
+    }
+
+    @IsTest
+    static void testCreateInteractionCaseMyCaseAPI_iCollectChannel() {
+        FEC_CreateCaseHandler.FEC_InteractionCaseDTO dto =
+            new FEC_CreateCaseHandler.FEC_InteractionCaseDTO();
+        dto.channel = FEC_ConstantCommon.SYSTEM_SOURCE_ICOLLECT;
+        dto.phoneNumber = '0901234567';
+
+        Test.startTest();
+        FEC_CreateCaseHandler.FEC_InteractionCaseResponse res =
+            FEC_CreateCaseHandler.createInteractionCaseMyCaseAPI(dto);
+        Test.stopTest();
+
+        Case created = [
+            SELECT FEC_Channel__c, FEC_Interaction_Subchannel__c, FEC_Other_Subchannel__c
+            FROM Case
+            WHERE Id = :res.caseId
+        ];
+        System.assertEquals(FEC_ConstantCommon.CHANNEL_EXTERNAL, created.FEC_Channel__c);
+        System.assertEquals(
+            FEC_ConstantCommon.CHANNEL_EXTERNAL_SUBCHANNEL_OTHER_NAME,
+            created.FEC_Interaction_Subchannel__c
+        );
+        System.assertEquals(
+            FEC_ConstantCommon.SYSTEM_SOURCE_ICOLLECT,
+            created.FEC_Other_Subchannel__c
+        );
+    }
+
+    @IsTest
+    static void testCreateCustomerCaseMyCaseAPI_iCollectChannel() {
+        Id interactionId = getInteractionCaseId();
+        FEC_Category__c cat = [
+            SELECT Id
+            FROM FEC_Category__c
+            WHERE Name = :FEC_ConstantCommon.FEC_CATEGORY_REQUEST
+            LIMIT 1
+        ];
+
+        FEC_CreateCaseHandler.FEC_CustomerCaseDTO dto =
+            new FEC_CreateCaseHandler.FEC_CustomerCaseDTO();
+        dto.customerName = 'MyCase iCollect Customer';
+        dto.categoryId = cat.Id;
+        dto.ownerUserId = UserInfo.getUserId();
+
+        Test.startTest();
+        Case c = FEC_CreateCaseHandler.createCustomerCaseMyCaseAPI(
+            dto,
+            interactionId,
+            FEC_ConstantCommon.SYSTEM_SOURCE_ICOLLECT
+        );
+        Test.stopTest();
+
+        System.assertEquals(FEC_ConstantCommon.CHANNEL_EXTERNAL, c.FEC_Channel__c);
+        System.assertEquals(
+            FEC_ConstantCommon.SYSTEM_SOURCE_ICOLLECT,
+            c.FEC_Other_Subchannel__c
         );
     }
 
@@ -286,7 +346,13 @@ private class FEC_CreateCaseHandler_Test {
         Test.stopTest();
 
         System.assertEquals(true, c.FEC_Is_Submited__c);
-        System.assertEquals(FEC_ConstantCommon.CHANNEL_INBOUND_NAME, c.FEC_Channel__c);
+        System.assertEquals(FEC_ConstantCommon.CHANNEL_EXTERNAL, c.FEC_Channel__c);
+        System.assertEquals(FEC_ConstantCommon.CHANNEL_EXTERNAL, c.FEC_Case_Channel__c);
+        System.assertEquals(
+            FEC_ConstantCommon.CHANNEL_EXTERNAL_SUBCHANNEL_OTHER_NAME,
+            c.FEC_Sub_Channel__c
+        );
+        System.assertEquals(FEC_ConstantCommon.CHANNEL_INBOUND_NAME, c.FEC_Other_Subchannel__c);
     }
 
     @IsTest

@@ -59,6 +59,71 @@ public without sharing class FEC_MyCaseSoapXml {
         return mapCreateCSCaseRequest(createReq);
     }
 
+    /**
+     * Parse CreateCSCase from raw HTTP body Blob.
+     * Large UploadDocument: strip base64 from XML before Dom load (string slice, not convertToHex).
+     */
+    public static FEC_CreateCSCaseService.CaseRequestType parseCreateCSCaseRequestFromBlob(
+        Blob rawBody
+    ) {
+        if (rawBody == null || rawBody.size() == 0) {
+            throw new SoapParseException(
+                null,
+                System.Label.FEC_CS_CASE_ERROR_CODE,
+                System.Label.FEC_CS_CASE_REQUEST_IS_NULL_MSG
+            );
+        }
+
+        String bodyStr = FEC_MyCaseBlobUtil.blobToAsciiStringForParse(rawBody);
+        if (bodyStr == null) {
+            throw FEC_MyCaseBlobUtil.buildPayloadTooLargeException(rawBody.size());
+        }
+
+        if (!FEC_MyCaseBlobUtil.needsUploadDocumentSliceForParse(bodyStr)) {
+            return parseCreateCSCaseRequest(bodyStr);
+        }
+
+        FEC_MyCaseBlobUtil.UploadDocumentSlice slice =
+            FEC_MyCaseBlobUtil.extractUploadDocumentSlice(rawBody);
+        FEC_CreateCSCaseService.CaseRequestType req =
+            parseCreateCSCaseRequest(slice.liteXml);
+        injectUploadDocumentPayload(req, slice.uploadPayload);
+        return req;
+    }
+
+    @TestVisible
+    private static void injectUploadDocumentPayload(
+        FEC_CreateCSCaseService.CaseRequestType req,
+        String uploadPayload
+    ) {
+        if (req == null || String.isBlank(uploadPayload)) {
+            return;
+        }
+        if (req.RequestInfo == null) {
+            req.RequestInfo = new FEC_CreateCSCaseService.RequestInfoType();
+        }
+        if (req.RequestInfo.AdditionalInfo == null) {
+            req.RequestInfo.AdditionalInfo =
+                new List<FEC_CreateCSCaseService.AdditionalInfoType>();
+        }
+
+        for (FEC_CreateCSCaseService.AdditionalInfoType info : req.RequestInfo.AdditionalInfo) {
+            if (
+                info != null &&
+                FEC_ConstantCommon.UPLOAD_DOCUMENT.equalsIgnoreCase(info.ID)
+            ) {
+                info.Value = uploadPayload;
+                return;
+            }
+        }
+
+        FEC_CreateCSCaseService.AdditionalInfoType uploadInfo =
+            new FEC_CreateCSCaseService.AdditionalInfoType();
+        uploadInfo.ID = FEC_ConstantCommon.UPLOAD_DOCUMENT;
+        uploadInfo.Value = uploadPayload;
+        req.RequestInfo.AdditionalInfo.add(uploadInfo);
+    }
+
     public static String buildCreateCSCaseSoapResponse(
         FEC_CreateCSCaseService.CreateCSCaseResponse resp
     ) {
@@ -292,6 +357,11 @@ public without sharing class FEC_MyCaseSoapXml {
             return '';
         }
         return '<' + tag + '>' + xmlEscape(value) + '</' + tag + '>';
+    }
+
+    /** Always emit the XML tag; null becomes empty element content. */
+    private static String buildXmlElementAlways(String tag, String value) {
+        return buildXmlElement(tag, value != null ? value : FEC_ConstantCommon.STR_EMPTY);
     }
 
     // =========================================================================
@@ -531,7 +601,7 @@ public without sharing class FEC_MyCaseSoapXml {
         String xml = '<CaseResultInfo>' +
             buildXmlElement('CaseID', caseResult.CaseID) +
             buildXmlElement('CaseStatus', caseResult.CaseStatus) +
-            buildXmlElement('Remarks', caseResult.Remarks) +
+            buildXmlElementAlways('Remarks', caseResult.Remarks) +
             buildXmlElement('CreatedTime', caseResult.CreatedTime) +
             buildXmlElement('UpdatedTime', caseResult.UpdatedTime);
         if (originalRequest != null) {
@@ -591,7 +661,7 @@ public without sharing class FEC_MyCaseSoapXml {
             buildXmlElement('Category', requestInfo.Category) +
             buildXmlElement('SubCategory', requestInfo.SubCategory) +
             buildXmlElement('SubCode', requestInfo.SubCode) +
-            buildXmlElement('Remarks', requestInfo.Remarks);
+            buildXmlElementAlways('Remarks', requestInfo.Remarks);
         if (requestInfo.AdditionalInfo != null && !requestInfo.AdditionalInfo.isEmpty()) {
             for (FEC_GetCSCaseStatusService.AdditionalInfor addInfo : requestInfo.AdditionalInfo) {
                 if (addInfo == null) {

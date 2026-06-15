@@ -72,7 +72,14 @@ private class FEC_CreateCSCaseRestService_Test {
 
     @TestSetup
     static void setupData() {
-        FEC_UnitTestMyCaseChannelUtil.ensureInboundMyCaseChannel();
+        insert new FEC_Channel__c(
+            Name = 'Inbound',
+            FEC_Channel_ID__c = FEC_ConstantCommon.CHANNEL_INBOUND_NAME,
+            FEC_Channel_Vietnamese_name__c = 'Inbound',
+            FEC_Channel_Status__c = true,
+            FEC_Get_Nature_Of_Case__c = true
+        );
+
         FEC_Business_Process__c bp = new FEC_Business_Process__c(
             Name = 'Complaint',
             FEC_Code__c = 'Complaint',
@@ -183,9 +190,13 @@ private class FEC_CreateCSCaseRestService_Test {
         System.assert(body.contains('CreateCSCaseResponse'));
         System.assert(body.contains('<Code>1</Code>'), body);
 
-        //Thangtv: assert field MyCase API (submitted, channel, review mode)
+        //Thangtv: Interaction/Customer Case = External/Other; Sys.Channel → FEC_Other_Subchannel__c
         List<Case> cases = [
-            SELECT FEC_Channel__c,
+            SELECT
+                FEC_Channel__c,
+                FEC_Case_Channel__c,
+                FEC_Sub_Channel__c,
+                FEC_Interaction_Subchannel__c,
                 FEC_Other_Subchannel__c,
                 FEC_Is_Submited__c,
                 FEC_Interaction_View_Mode__c,
@@ -195,16 +206,97 @@ private class FEC_CreateCSCaseRestService_Test {
             LIMIT 2
         ];
         for (Case c : cases) {
-            System.assertEquals(FEC_ConstantCommon.CHANNEL_INBOUND_NAME, c.FEC_Channel__c);
-            if (c.RecordType.DeveloperName ==
-                FEC_ConstantCommon.CASE_CUSTOMER_RECORD_TYPE_DEV_NAME) {
-                System.assertEquals(true, c.FEC_Is_Submited__c);
+            System.assertEquals(true, c.FEC_Is_Submited__c);
+            System.assertEquals(
+                FEC_ConstantCommon.INTERACTION_REVIEW_MODE,
+                c.FEC_Interaction_View_Mode__c
+            );
+            System.assertEquals(FEC_ConstantCommon.CHANNEL_EXTERNAL, c.FEC_Channel__c);
+            System.assertEquals(
+                FEC_ConstantCommon.CHANNEL_INBOUND_NAME,
+                c.FEC_Other_Subchannel__c
+            );
+
+            if (
+                c.RecordType.DeveloperName ==
+                FEC_ConstantCommon.CASE_INTERACTION_RECORD_TYPE_DEV_NAME
+            ) {
                 System.assertEquals(
-                    FEC_ConstantCommon.INTERACTION_REVIEW_MODE,
-                    c.FEC_Interaction_View_Mode__c
+                    FEC_ConstantCommon.CHANNEL_EXTERNAL_SUBCHANNEL_OTHER_NAME,
+                    c.FEC_Interaction_Subchannel__c
+                );
+            } else if (
+                c.RecordType.DeveloperName ==
+                FEC_ConstantCommon.CASE_CUSTOMER_RECORD_TYPE_DEV_NAME
+            ) {
+                System.assertEquals(
+                    FEC_ConstantCommon.CHANNEL_EXTERNAL,
+                    c.FEC_Case_Channel__c
+                );
+                System.assertEquals(
+                    FEC_ConstantCommon.CHANNEL_EXTERNAL_SUBCHANNEL_OTHER_NAME,
+                    c.FEC_Sub_Channel__c
                 );
             }
         }
+    }
+
+    @IsTest
+    static void testRestPost_emptyBody_returnsBadRequest() {
+        RestRequest req = new RestRequest();
+        RestResponse res = new RestResponse();
+        req.requestUri = '/services/apexrest/MyCase/v1/CreateCSCase';
+        req.httpMethod = 'POST';
+        req.requestBody = null;
+        RestContext.request = req;
+        RestContext.response = res;
+
+        Test.startTest();
+        FEC_CreateCSCaseRestService.doPost();
+        Test.stopTest();
+
+        System.assertEquals(
+            FEC_ConstantCommon.HTTP_STATUS_BAD_REQUEST,
+            res.statusCode
+        );
+        System.assert(
+            res.responseBody.toString().contains('CreateCSCaseResponse')
+        );
+    }
+
+    @IsTest
+    static void testRestPost_channelNotAllowed_returnsError() {
+        insert new FEC_Channel__c(
+            Name = 'Vtiger',
+            FEC_Channel_ID__c = 'Vtiger',
+            FEC_Channel_Vietnamese_name__c = 'Vtiger',
+            FEC_Channel_Status__c = true,
+            FEC_Get_Nature_Of_Case__c = false
+        );
+
+        String vtigerRequest = SAMPLE_REQUEST.replace(
+            '<Channel>Inbound</Channel>',
+            '<Channel>Vtiger</Channel>'
+        );
+
+        RestRequest req = new RestRequest();
+        RestResponse res = new RestResponse();
+        req.requestUri = '/services/apexrest/MyCase/v1/CreateCSCase';
+        req.httpMethod = 'POST';
+        req.requestBody = Blob.valueOf(vtigerRequest);
+        RestContext.request = req;
+        RestContext.response = res;
+
+        Test.startTest();
+        FEC_CreateCSCaseRestService.doPost();
+        Test.stopTest();
+
+        System.assertEquals(FEC_ConstantCommon.HTTP_STATUS_OK, res.statusCode);
+        System.assert(
+            res.responseBody.toString().contains(
+                FEC_ConstantCommon.MY_CASE_CHANNEL_CREATE_CASE_NOT_ALLOWED_MSG
+            )
+        );
     }
 
     @IsTest
