@@ -1582,6 +1582,26 @@
         <field>FEC_Custom_Sync__c.FEC_Total_Record_Sync__c</field>
         <readable>true</readable>
     </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Custom_Sync__c.FEC_Additional_Conditions__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Custom_Sync__c.FEC_Created_Date_Field__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Custom_Sync__c.FEC_Modified_Date_Field__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Custom_Sync__c.FEC_Static_Map_Value__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
         <fieldPermissions>
         <editable>true</editable>
         <field>CustomSyncSetting__c.ApiKey__c</field>
