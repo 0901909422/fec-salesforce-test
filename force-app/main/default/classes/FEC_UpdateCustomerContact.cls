@@ -324,6 +324,20 @@ public with sharing class FEC_UpdateCustomerContact {
     return false;
   }
 
+  // 13/06/2026 linhdev - Internal_Case gửi Channel=Internal; Customer_Case gửi FEC_Channel__c
+  @TestVisible
+  private static String resolveChannelForApi(Case selectedCase) {
+    if (
+      selectedCase.RecordType != null &&
+      FEC_ConstantCommon.CASE_INTERNAL_RECORD_TYPE_DEV_NAME.equals(
+        selectedCase.RecordType.DeveloperName
+      )
+    ) {
+      return FEC_ConstantCommon.CHANNEL_INTERNAL;
+    }
+    return selectedCase.FEC_Channel__c;
+  }
+
   private static String resolveCommunicationTypeForApi(
     Case selectedCase,
     FEC_Contact_List__c matched,
@@ -463,9 +477,11 @@ public with sharing class FEC_UpdateCustomerContact {
   }
 
   public static UpdateContactResult updateValue(String caseId, String method) {
+    // 13/06/2026 linhdev - query RecordType.DeveloperName để xác định Channel gửi API
     List<Case> caselst = [
       SELECT
         Id,
+        RecordType.DeveloperName,
         FEC_Channel__c,
         FEC_Account_or_Contract__c,
         FEC_Updated_Info_Phone_Number__c,
@@ -505,7 +521,8 @@ public with sharing class FEC_UpdateCustomerContact {
       if (!contactlst.isEmpty()) {
         FEC_Contact_List__c matched = contactlst.get(0);
         req.ContactId = matched.FEC_Contact_ID__c;
-        req.Channel = selectedCase.FEC_Channel__c;
+        // 13/06/2026 linhdev - Channel theo Record Type (Customer_Case / Internal_Case)
+        req.Channel = resolveChannelForApi(selectedCase);
         req.CommunicationType = resolveCommunicationTypeForApi(
           selectedCase,
           matched,
