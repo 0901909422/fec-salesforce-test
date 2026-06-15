@@ -4,10 +4,16 @@
     <description>My Follow-Up</description>
     <externalId>false</externalId>
     <formula>AND(
-  OwnerId &lt;&gt; $User.Id,
   OR(
     CONTAINS(FEC_Follow_Up_User__c, CASESAFEID($User.Id)),
     CONTAINS(FEC_Follow_Up_User__c, $User.Id)
+  ),
+  OR(
+    AND(
+      OR(ISPICKVAL(Status, "Open"), ISPICKVAL(Status, "Pending")),
+      OwnerId &lt;&gt; $User.Id
+    ),
+    NOT(OR(ISPICKVAL(Status, "Open"), ISPICKVAL(Status, "Pending")))
   )
 )</formula>
     <formulaTreatBlanksAs>BlankAsZero</formulaTreatBlanksAs>
