@@ -138,6 +138,7 @@ public without sharing class FEC_MainInfoController {
             hist.FEC_Account_Number__c,
             hist.FEC_Contract_Number__c
         );
+        String productTypeName = c.FEC_Product_Type__r.Name;
         String cifNumber = hist.FEC_CIF_Number__c;
         String contractNumber = hist.FEC_Contract_Number__c;
         /* ===== CACHE HIT ===== */
@@ -148,6 +149,13 @@ public without sharing class FEC_MainInfoController {
             );
             /* Luôn lấy địa chỉ từ FEC_Address_Info__c — không tin mảng addresses trong JSON cache (dễ lệch sau khi đồng bộ API / map PERMNENT). */
             cached.addresses = buildAddressDTOListFromHistory(hist.Id);
+            Boolean phoneUpdated = syncPrimaryPhoneForCacheHit(
+                cached, hist, productTypeName, accountNumber, contractNumber
+            );
+            if (phoneUpdated) {
+                hist.FEC_API_Cache__c = JSON.serialize(cached);
+                update hist;
+            }
             if (cached.addresses != null && !cached.addresses.isEmpty()) {
                 applyAddressEligibilityToDto(cached, hist.Id, null);
                 applyPendingAddressFields(cached, c.Id);
@@ -223,7 +231,10 @@ public without sharing class FEC_MainInfoController {
 
         /* ===== 3. GetCustomerList ===== */
         try {
-            hist.FEC_Primary_Phone__c = getPrimaryPhoneOnly(accountNumber, contractNumber);
+            String apiPhone = getPrimaryPhoneOnly(productTypeName, accountNumber, contractNumber);
+            if (String.isNotBlank(apiPhone)) {
+                hist.FEC_Primary_Phone__c = apiPhone;
+            }
         } catch (Exception e) {
             System.debug('### GetCustomerList FAILED: ' + e.getMessage());
         }
@@ -857,46 +868,122 @@ public without sharing class FEC_MainInfoController {
         }
     }
 
-    private static String getPrimaryPhoneOnly(String accountNumber, String contractNumber) {
-
-        FEC_GetCustomerList.ResponseWrapper res;
-
-        if (String.isNotBlank(contractNumber)) {
-            res = FEC_GetCustomerList.getCustomerList(
-                FEC_ConstantCommon.REQUESTOR_PEGA_CSM_HYPHEN,
-                null,
-                false,
-                null, null, null, null,
-                null,             
-                contractNumber,    
-                null, null
-            );
-        }
-        else if (String.isNotBlank(accountNumber)) {
-            res = FEC_GetCustomerList.getCustomerList(
-                FEC_ConstantCommon.REQUESTOR_PEGA_CSM_HYPHEN,
-                null,
-                false,
-                null, null, null, null,
-                accountNumber,    
-                null,            
-                null, null
-            );
-        } else {
+    private static String getPrimaryPhoneOnly(
+        String productTypeName,
+        String accountNumber,
+        String contractNumber
+    ) {
+        FEC_GetCustomerList.ResponseWrapper res = callGetCustomerListForPhone(
+            productTypeName,
+            accountNumber,
+            contractNumber
+        );
+        if (res == null || res.Customers == null) {
             return null;
         }
 
-        if (res == null) return null;
-
         for (FEC_GetCustomerList.Customer c : res.Customers) {
-            for (FEC_GetCustomerList.Phone p : c.Phones) {
-                if (p.Type == 'Mobile') {
-                    return p.Phone;
-                }
+            String phone = extractPhoneFromCustomerList(c);
+            if (String.isNotBlank(phone)) {
+                return phone;
             }
         }
 
         return null;
+    }
+
+    private static FEC_GetCustomerList.ResponseWrapper callGetCustomerListForPhone(
+        String productTypeName,
+        String accountNumber,
+        String contractNumber
+    ) {
+        Boolean preferContract =
+            (productTypeName == FEC_ConstantCommon.PRODUCT_TYPE_LOAN_CASE
+                || productTypeName == FEC_ConstantCommon.PRODUCT_TYPE_INSURANCE_CASE)
+            && String.isNotBlank(contractNumber);
+
+        if (preferContract) {
+            return FEC_GetCustomerList.getCustomerList(
+                FEC_ConstantCommon.REQUESTOR_PEGA_CSM_HYPHEN,
+                null,
+                false,
+                null, null, null, null,
+                null,
+                contractNumber,
+                null, null
+            );
+        }
+        if (String.isNotBlank(accountNumber)) {
+            return FEC_GetCustomerList.getCustomerList(
+                FEC_ConstantCommon.REQUESTOR_PEGA_CSM_HYPHEN,
+                null,
+                false,
+                null, null, null, null,
+                accountNumber,
+                null,
+                null, null
+            );
+        }
+        if (String.isNotBlank(contractNumber)) {
+            return FEC_GetCustomerList.getCustomerList(
+                FEC_ConstantCommon.REQUESTOR_PEGA_CSM_HYPHEN,
+                null,
+                false,
+                null, null, null, null,
+                null,
+                contractNumber,
+                null, null
+            );
+        }
+        return null;
+    }
+
+    private static String extractPhoneFromCustomerList(FEC_GetCustomerList.Customer customer) {
+        if (customer == null || customer.Phones == null) {
+            return null;
+        }
+        String fallbackPhone = null;
+        for (FEC_GetCustomerList.Phone p : customer.Phones) {
+            if (p == null || String.isBlank(p.Phone)) {
+                continue;
+            }
+            String type = (p.Type != null) ? p.Type.trim() : '';
+            if ('Mobile'.equalsIgnoreCase(type)) {
+                return p.Phone.trim();
+            }
+            if (fallbackPhone == null && 'Phone'.equalsIgnoreCase(type)) {
+                fallbackPhone = p.Phone.trim();
+            }
+        }
+        return fallbackPhone;
+    }
+
+    private static Boolean syncPrimaryPhoneForCacheHit(
+        MainInfoDTO cached,
+        FEC_Customer_History__c hist,
+        String productTypeName,
+        String accountNumber,
+        String contractNumber
+    ) {
+        if (cached == null || hist == null) {
+            return false;
+        }
+        if (String.isNotBlank(hist.FEC_Primary_Phone__c)) {
+            cached.primaryPhone = hist.FEC_Primary_Phone__c;
+            return false;
+        }
+        try {
+            String apiPhone = getPrimaryPhoneOnly(productTypeName, accountNumber, contractNumber);
+            if (String.isNotBlank(apiPhone)) {
+                hist.FEC_Primary_Phone__c = apiPhone;
+                cached.primaryPhone = apiPhone;
+                return true;
+            }
+        } catch (Exception e) {
+            System.debug('### GetCustomerList (cache resync phone) FAILED: ' + e.getMessage());
+        }
+        cached.primaryPhone = null;
+        return false;
     }
 
     /** Bộ master quốc gia legacy (tỉnh/địa chỉ cũ) vs bộ API CIF. */
