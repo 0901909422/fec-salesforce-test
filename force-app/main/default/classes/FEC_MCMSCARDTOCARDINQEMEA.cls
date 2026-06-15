@@ -132,50 +132,128 @@ public with sharing class FEC_MCMSCARDTOCARDINQEMEA {
         String endpoint = (String.isNotBlank(apiSetting?.FEC_Endpoint__c) ? apiSetting.FEC_Endpoint__c : '')
                 + (String.isNotBlank(apiConfig?.FEC_Endpoint__c) ? apiConfig.FEC_Endpoint__c : '');
 
-        HttpResponse res = FEC_CommonUltils.calloutApi(
-            endpoint,
-            FEC_ConstantCommon.API_METHOD_POST,
-            FEC_ConstantCommon.API_CONTENT_TYPE,
-            apiConfig?.FEC_SOAP_Action__c,
-            null,
-            soapBody
-        );
-        // Log Api
-        responseLog = new FEC_ResponseLog(
-            'FEC_MCMSCARDTOCARDINQEMEA',
-            endpoint,
-            FEC_ConstantCommon.API_METHOD_POST,
-            soapBody,
-            res,
-            null
-        );
-
-        if (res.getStatusCode() != 200 || String.isBlank(res.getBody())) {
-            throw new CalloutException(
-                String.format(System.Label.FEC_MSG_HTTP_Error,
-                    new List<String>{ res.getStatusCode().toString() })
+        try {
+            HttpResponse res = FEC_CommonUltils.calloutApi(
+                endpoint,
+                FEC_ConstantCommon.API_METHOD_POST,
+                FEC_ConstantCommon.API_CONTENT_TYPE,
+                apiConfig?.FEC_SOAP_Action__c,
+                null,
+                soapBody
             );
-        }
 
-        ResponseWrapper response = parseResponse(res.getBody());
-
-        if (response.Sys == null || response.Sys.Code != 1) {
-            throw new CalloutException(
-                String.format(System.Label.FEC_MSG_API_Error,
-                    new List<String>{ response.Sys?.Description })
+            responseLog = new FEC_ResponseLog(
+                'FEC_MCMSCARDTOCARDINQEMEA',
+                endpoint,
+                FEC_ConstantCommon.API_METHOD_POST,
+                soapBody,
+                res,
+                null
             );
-        }
 
-        if (response.VMXMsgOut != null && response.VMXMsgOut.SVC_RETURN == 'F') {
-            String errorMsg = System.Label.FEC_MSG_API_Error;
-            if (response.VMXMsgOut.RC_DATA != null
-                    && !response.VMXMsgOut.RC_DATA.isEmpty()) {
-                errorMsg = response.VMXMsgOut.RC_DATA[0].RETURN_DESC;
+            if (res.getStatusCode() != 200 || String.isBlank(res.getBody())) {
+                throw new CalloutException(
+                    String.format(System.Label.FEC_MSG_HTTP_Error,
+                        new List<String>{ res.getStatusCode().toString() })
+                );
             }
-            throw new CalloutException(errorMsg);
+
+            ResponseWrapper response = parseResponse(res.getBody());
+
+            if (response.Sys == null || response.Sys.Code != 1) {
+                throw new CalloutException(
+                    String.format(System.Label.FEC_MSG_API_Error,
+                        new List<String>{ response.Sys?.Description })
+                );
+            }
+
+            if (response.VMXMsgOut != null && response.VMXMsgOut.SVC_RETURN == 'F') {
+                String errorMsg = System.Label.FEC_MSG_API_Error;
+                if (response.VMXMsgOut.RC_DATA != null
+                        && !response.VMXMsgOut.RC_DATA.isEmpty()) {
+                    errorMsg = response.VMXMsgOut.RC_DATA[0].RETURN_DESC;
+                }
+                throw new CalloutException(errorMsg);
+            }
+
+            return response;
+
+        } catch (Exception ex) {
+            if (responseLog != null) {
+                responseLog.errorMessage = ex.getMessage();
+            }
+            throw ex;
+        } finally {
+            logApiResponse();
+        }
+    }
+
+    /**
+     * Ghi FEC_API_Log__c sau callout. Insert chạy @future để tránh DML trước callout tiếp theo
+     * (lỗi "uncommitted work pending"). Khi đã nằm trong deferred scope thì enqueue cùng batch flush.
+     */
+    public static void logApiResponse() {
+        if (responseLog == null) {
+            return;
         }
 
-        return response;
+        String statusCodeStr = responseLog.response == null
+            ? null
+            : String.valueOf(responseLog.response.getStatusCode());
+        String responseBody = responseLog.response == null ? null : responseLog.response.getBody();
+
+        if (FEC_CommonUltils.isDeferredApiLoggingActive()) {
+            FEC_CommonUltils.logApi(
+                responseLog.apiName,
+                responseLog.endpoint,
+                responseLog.method,
+                responseLog.requestBody,
+                responseLog.response,
+                responseLog.errorMessage
+            );
+            return;
+        }
+
+        if (System.isFuture() || System.isBatch()) {
+            FEC_CommonUltils.logApi(
+                responseLog.apiName,
+                responseLog.endpoint,
+                responseLog.method,
+                responseLog.requestBody,
+                responseLog.response,
+                responseLog.errorMessage
+            );
+            return;
+        }
+
+        persistApiLogAsync(
+            responseLog.apiName,
+            responseLog.endpoint,
+            responseLog.method,
+            responseLog.requestBody,
+            statusCodeStr,
+            responseBody,
+            responseLog.errorMessage
+        );
+    }
+
+    @future
+    private static void persistApiLogAsync(
+        String apiName,
+        String endpoint,
+        String method,
+        String requestBody,
+        String statusCodeStr,
+        String responseBody,
+        String errorMessage
+    ) {
+        HttpResponse res = null;
+        if (String.isNotBlank(statusCodeStr)) {
+            res = new HttpResponse();
+            res.setStatusCode(Integer.valueOf(statusCodeStr));
+            res.setBody(responseBody != null ? responseBody : '');
+        }
+        FEC_CommonUltils.logApi(apiName, endpoint, method, requestBody, res, errorMessage);
     }
 
     /* =====================================================
