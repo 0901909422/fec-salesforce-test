@@ -347,7 +347,7 @@ public without sharing class FEC_Notification {
             }
             // Filter by subCodeCode in memory (Long Text Area)
             if (String.isNotBlank(subCodeCode)) {
-                if (String.isBlank(notif.FEC_SubCode__c) || !notif.FEC_SubCode__c.contains(subCodeCode)) {
+                if (String.isNotBlank(notif.FEC_SubCode__c) && !notif.FEC_SubCode__c.contains(subCodeCode)) {
                     continue;
                 }
             }
