@@ -412,7 +412,18 @@ const EXPORT_HEADER_FIELD_MAP = {
   correctcontractnumber: "correctContractNumber",
   correctaccountcontract: "correctAccountContract",
   correctaccountandcontract: "correctAccountContract",
-  adjustedamount: "adjustedAmount"
+  adjustedamount: "adjustedAmount",
+  ipprecordno: "ippRecordNo", // Toannd 14/6/2026
+  ippplan: "ippPlan", // Toannd 14/6/2026
+  ippopendate: "ippOpenDate", // Toannd 14/6/2026
+  ippfirstduedate: "ippFirstDueDate", // Toannd 14/6/2026
+  ippmaturedate: "ippMatureDate", // Toannd 14/6/2026
+  ippbalance: "ippBalance", // Toannd 14/6/2026
+  ippcurrentbalance: "ippCurrentBalance", // Toannd 14/6/2026
+  ippinterestrate: "ippInterestRate", // Toannd 14/6/2026
+  ippterm: "ippTerm", // Toannd 14/6/2026
+  ippinsurance: "ippInsurance", // Toannd 14/6/2026
+  ippcurrentterm: "ippCurrentTerm" // Toannd 14/6/2026
 };
 const RESULT_COL_STATUS = "__Status";
 const RESULT_COL_ERRORS = "__Errors";

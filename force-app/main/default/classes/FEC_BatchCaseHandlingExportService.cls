@@ -211,6 +211,24 @@ public without sharing class FEC_BatchCaseHandlingExportService {
         return value == null ? FEC_ConstantCommon.STR_EMPTY : value;
     }
 
+    // 14/06/2026 Toannd - trả về chuỗi ngày YYYY-MM-DD, bỏ phần thời gian 00:00:00 với trường DateTime
+    private static String safeRelatedFieldDateString(SObject row, String fieldApiName) {
+        if (row == null || String.isBlank(fieldApiName)) {
+            return FEC_ConstantCommon.STR_EMPTY;
+        }
+        Object val = row.get(fieldApiName);
+        if (val == null) {
+            return FEC_ConstantCommon.STR_EMPTY;
+        }
+        if (val instanceof DateTime) {
+            return String.valueOf(((DateTime) val).dateGmt());
+        }
+        if (val instanceof Date) {
+            return String.valueOf((Date) val);
+        }
+        return String.valueOf(val);
+    }
+
     // 01/06/2026 12:00 linhdev - stripInaccessible có thể bỏ relationship: không gọi getSObject khi chưa populated
     private static SObject safeRelatedSObject(SObject row, String relationshipApiName) {
         if (row == null || String.isBlank(relationshipApiName)) {
@@ -263,15 +281,9 @@ public without sharing class FEC_BatchCaseHandlingExportService {
         if (ipp != null) { // Toannd 28/5/2026
             r.ippRecordNo = safeRelatedFieldString(ipp, 'FEC_IPP_Record_No__c'); // Toannd 28/5/2026
             r.ippPlan = safeRelatedFieldString(ipp, 'FEC_IPP_Plan__c'); // Toannd 28/5/2026
-            r.ippOpenDate = ipp.get('FEC_IPP_Open_Date__c') == null // Toannd 28/5/2026
-                ? FEC_ConstantCommon.STR_EMPTY
-                : String.valueOf(ipp.get('FEC_IPP_Open_Date__c'));
-            r.ippFirstDueDate = ipp.get('FEC_IPP_First_Due_Date__c') == null // Toannd 28/5/2026
-                ? FEC_ConstantCommon.STR_EMPTY
-                : String.valueOf(ipp.get('FEC_IPP_First_Due_Date__c'));
-            r.ippMatureDate = ipp.get('FEC_IPP_Mature_Date__c') == null // Toannd 28/5/2026
-                ? FEC_ConstantCommon.STR_EMPTY
-                : String.valueOf(ipp.get('FEC_IPP_Mature_Date__c'));
+            r.ippOpenDate = safeRelatedFieldDateString(ipp, 'FEC_IPP_Open_Date__c'); // Toannd 14/06/2026
+            r.ippFirstDueDate = safeRelatedFieldDateString(ipp, 'FEC_IPP_First_Due_Date__c'); // Toannd 14/06/2026
+            r.ippMatureDate = safeRelatedFieldDateString(ipp, 'FEC_IPP_Mature_Date__c'); // Toannd 14/06/2026
             r.ippBalance = ipp.get('FEC_IPP_Balance__c') == null // Toannd 28/5/2026
                 ? FEC_ConstantCommon.STR_EMPTY
                 : String.valueOf(ipp.get('FEC_IPP_Balance__c'));
