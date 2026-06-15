@@ -735,7 +735,11 @@ public with sharing class FEC_CommonUltils {
     return parseAmountSafe(getXmlValue(n, name));
   }
 
-  /** BaseRate API dạng packed (vd 1000000): 4 ký tự đầu / 100 = % (1000 → 10%). */
+  /**
+   * BaseRate từ API:
+   * - Dạng decimal trực tiếp (vd "55.00" → 55%): parse thẳng, không chia 100.
+   * - Dạng packed integer (vd "1000000" → 4 ký tự đầu "1000" / 100 = 10%): chia 100.
+   */
   public static Decimal xmlPackedBaseRateToPercent(Dom.XmlNode n, String name) {
     String v = getXmlValue(n, name);
     if (String.isBlank(v)) {
@@ -745,8 +749,13 @@ public with sharing class FEC_CommonUltils {
     if (v.length() == 0) {
       return null;
     }
-    String head = v.length() >= 4 ? v.substring(0, 4) : v;
     try {
+      if (v.contains('.')) {
+        // Decimal format: value is already a percentage (e.g. 55.00 → 55%)
+        return Decimal.valueOf(v);
+      }
+      // Packed integer format (e.g. 1000000 → "1000" / 100 = 10%)
+      String head = v.length() >= 4 ? v.substring(0, 4) : v;
       return Decimal.valueOf(head) / 100;
     } catch (Exception e) {
       System.debug('Invalid BaseRate packed value for tag ' + name + ': [' + v + ']');
