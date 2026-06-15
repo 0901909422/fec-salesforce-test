@@ -888,34 +888,9 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
       // 2. Customer API (API 20)
       promises.push(getCustomerList(params));
 
-      // [CHANGE][Author : LongNH76] Insurance gọi song song API 88/90 để không bỏ sót kết quả khi user nhập cả NID + Phone.
-      // UAT: phone -> API 20 + 90; NID -> API 20 + 88; both -> 20 + 88 + 90.
-      // Old behavior (kept for reference):
-      // - Chỉ gọi 1 API insurance theo nhánh if/else (NID hoặc Phone), không gọi song song.
-      // if (this.nationalId) {
-      //   promises.push(this.fetchBancaInsurance([this.nationalId]));
-      // } else if (this.phoneNumber) {
-      //   promises.push(this.fetchBancaInsuranceByPhone([this.phoneNumber]));
-      // } else {
-      //   promises.push(Promise.resolve([]));
-      // }
-      const insurancePromises = [];
-      if (this.nationalId) {
-        insurancePromises.push(this.fetchBancaInsurance([this.nationalId]));
-      }
-      if (this.phoneNumber) {
-        const normalizedPhone = normalizePhone(this.phoneNumber);
-        insurancePromises.push(this.fetchBancaInsuranceByPhone([normalizedPhone]));
-      }
-      if (insurancePromises.length === 0) {
-        insurancePromises.push(Promise.resolve([]));
-      }
-      promises.push(Promise.all(insurancePromises));
-
       const [
         [b2Result, cash24Result],
-        customerResult,
-        insuranceResults
+        customerResult
       ] = await Promise.all(promises);
 
       // =========================
@@ -953,9 +928,20 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
         this.fetchPlasticIds();
       }
 
-      // [CHANGE][Author : LongNH76] Merge + dedupe kết quả insurance từ nhiều API.
-      // Old behavior (kept for reference):
-      // this.insuranceData = insuranceResult || [];
+      let insuranceResults = [];
+      const { nationalIds, phones } =
+        this._collectInsuranceSearchKeysFromCustomers(customers);
+      const insurancePromises = [];
+      if (nationalIds.length > 0) {
+        insurancePromises.push(this.fetchBancaInsurance(nationalIds));
+      }
+      if (phones.length > 0) {
+        insurancePromises.push(this.fetchBancaInsuranceByPhone(phones));
+      }
+      if (insurancePromises.length > 0) {
+        insuranceResults = await Promise.all(insurancePromises);
+      }
+
       const mergedInsurance = (insuranceResults || []).flat();
       this.insuranceData = this.mergeInsuranceRows(mergedInsurance);
 
@@ -1142,6 +1128,30 @@ async fetchBancaInsuranceByPhone(phones) {
       return a;
     }
     return a;
+  }
+
+  _collectInsuranceSearchKeysFromCustomers(customers) {
+    const nationalIdSet = new Set();
+    const phoneSet = new Set();
+    const trim = (v) => (v != null && v !== undefined ? String(v).trim() : "");
+
+    (customers || []).forEach((cust) => {
+      const nid = trim(cust?.NationalID);
+      if (nid) {
+        nationalIdSet.add(nid);
+      }
+      (cust?.Phones || []).forEach((p) => {
+        const phone = trim(p?.Phone);
+        if (phone) {
+          phoneSet.add(normalizePhone(phone));
+        }
+      });
+    });
+
+    return {
+      nationalIds: [...nationalIdSet],
+      phones: [...phoneSet]
+    };
   }
 
   /** CCCD từ dòng kết quả (GetCustomerList / Banca), fallback ô search. */
