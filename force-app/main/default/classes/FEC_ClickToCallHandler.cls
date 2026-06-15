@@ -1,8 +1,10 @@
 public without sharing class FEC_ClickToCallHandler {
     public class PhoneWrapper {
+        @AuraEnabled public String phoneType;
         @AuraEnabled public String phone;
         
-        public PhoneWrapper(String label, String phone) {
+        public PhoneWrapper(String phoneType, String phone) {
+            this.phoneType = phoneType;
             this.phone = phone;
         }
     }
@@ -20,65 +22,77 @@ public without sharing class FEC_ClickToCallHandler {
         
         List<PhoneWrapper> phoneList = new List<PhoneWrapper>();
         
-        try {
+        if (caseId == null) {
+            return phoneList;
+        }
+        
+        Case caseRecord = [
+        SELECT Id,
+               FEC_Case_Phone_Number__c,
+               FEC_Interaction__r.FEC_Phone_Number__c,
+               FEC_Account_or_Contract__c
+        FROM Case
+        WHERE Id = :caseId
+        LIMIT 1
+    ];
+        
+        // Interaction Phone
+        if (String.isNotBlank(caseRecord.FEC_Interaction__r?.FEC_Phone_Number__c)) {
+            phoneList.add(
+                new PhoneWrapper(
+                'Interaction Phone',
+            caseRecord.FEC_Interaction__r.FEC_Phone_Number__c
+                )
+                );
+        }
+        
+        // Case Phone
+        if (String.isNotBlank(caseRecord.FEC_Case_Phone_Number__c)) {
+            phoneList.add(
+                new PhoneWrapper(
+                'Case Phone',
+            caseRecord.FEC_Case_Phone_Number__c
+                )
+                );
+        }
+        
+        if (caseRecord.FEC_Account_or_Contract__c != null) {
             
-            if (caseId == null) {
-                return phoneList;
-            }
-            
-            Map<String, Schema.SObjectField> fieldMap =
-                Case.SObjectType.getDescribe().fields.getMap();
-            
-            List<String> phoneFields = new List<String>();
-            
-            for (Schema.SObjectField f : fieldMap.values()) {
+            // Contact List
+            for (FEC_Contact_List__c contact : [
+            SELECT FEC_Contact_String__c,
+                   FEC_Communication_Type__c
+            FROM FEC_Contact_List__c
+            WHERE FEC_Customer_History__c = :caseRecord.FEC_Account_or_Contract__c
+              AND FEC_Channel__c = 'Phone'
+        ]) {
                 
-                Schema.DescribeFieldResult d = f.getDescribe();
-                
-                if (d.getType() == Schema.DisplayType.Phone) {
-                    phoneFields.add(d.getName());
+                if (String.isNotBlank(contact.FEC_Contact_String__c)) {
+                    phoneList.add(
+                        new PhoneWrapper(
+                        contact.FEC_Communication_Type__c,
+                    contact.FEC_Contact_String__c
+                        )
+                        );
                 }
             }
             
-            if (phoneFields.isEmpty()) {
-                return phoneList;
-            }
-
-            System.debug('Phone fields to query: ' + phoneFields);
-            
-            String query =
-                'SELECT ' + String.join(phoneFields, ',') +
-                ' FROM Case WHERE Id = :caseId LIMIT 1';
-            
-            List<Case> results = Database.queryWithBinds(
-                query,
-                new Map<String, Object>{ 'caseId' => caseId },
-                AccessLevel.SYSTEM_MODE
-            );
-            
-            if (results.isEmpty()) {
-                return phoneList;
-            }
-            
-            Case c = results[0];
-            
-            for (String fieldName : phoneFields) {
+            // Registration Phone
+            for (FEC_Application_List__c app : [
+            SELECT FEC_Registration_Phone__c
+            FROM FEC_Application_List__c
+            WHERE FEC_Customer_History__c = :caseRecord.FEC_Account_or_Contract__c
+        ]) {
                 
-                Object val = c.get(fieldName);
-                
-                if (val != null) {
-                    phoneList.add(new PhoneWrapper(fieldName, String.valueOf(val)));
+                if (String.isNotBlank(app.FEC_Registration_Phone__c)) {
+                    phoneList.add(
+                        new PhoneWrapper(
+                        'Registration Phone',
+                    app.FEC_Registration_Phone__c
+                        )
+                        );
                 }
             }
-            
-        } catch (Exception e) {
-            
-            // Log full error for debugging
-            System.debug('Error in getPhoneList: ' + e.getMessage());
-            
-            // Optional: rethrow user-friendly message
-            // throw new AuraHandledException('Unable to load phone fields.');
-            
         }
         
         return phoneList;

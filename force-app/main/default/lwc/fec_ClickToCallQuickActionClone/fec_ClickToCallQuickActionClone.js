@@ -18,7 +18,21 @@ export default class Fec_ClickToCallQuickActionClone extends LightningElement {
   messageContext;
 
   columns = [
-    { label: "Số điện thoại", fieldName: "phone" },
+    {
+      label: "Phone Number",
+      fieldName: "phone",
+      type: "maskedContact",
+      typeAttributes: {
+        maskedValue: { fieldName: "maskedValue" },
+        rawValue: { fieldName: "rawValue" },
+        isVisible: { fieldName: "isVisible" },
+        rowId: { fieldName: "id" },
+      },
+    },
+    {
+      label: "Phone Type",
+      fieldName: "phoneType",
+    },
     {
       type: "button",
       initialWidth: 230,
@@ -40,11 +54,9 @@ export default class Fec_ClickToCallQuickActionClone extends LightningElement {
     }
   }
 
-
-   connectedCallback() {
+  connectedCallback() {
     this.loadStyles();
   }
-
 
   /* ================= DATA ================= */
 
@@ -67,7 +79,14 @@ export default class Fec_ClickToCallQuickActionClone extends LightningElement {
   loadPhoneList() {
     getPhoneList({ caseId: this.caseId })
       .then((result) => {
-        this.phones = result;
+        this.phones = result.map((item, index) => ({
+          id: index + 1,
+          phone: item.phone,
+          phoneType: item.phoneType,
+          rawValue: item.phone,
+          maskedValue: this.maskPhone(item.phone),
+          isVisible: false,
+        }));
       })
       .catch((error) => {
         this.showErrorToast(
@@ -112,6 +131,51 @@ export default class Fec_ClickToCallQuickActionClone extends LightningElement {
     });
   }
 
+  maskPhone(phone) {
+    const cleaned = phone.replace(/\D/g, "");
+
+    // 024 / 028
+    if (cleaned.startsWith("024") || cleaned.startsWith("028")) {
+      return (
+        cleaned.substring(0, 3) +
+        "*".repeat(cleaned.length - 6) +
+        cleaned.substring(cleaned.length - 3)
+      );
+    }
+
+    // 0xxxxxxxxx
+    if (cleaned.startsWith("0")) {
+      return (
+        cleaned.substring(0, 4) + "***" + cleaned.substring(cleaned.length - 3)
+      );
+    }
+
+    // 84xxxxxxxxx
+    if (cleaned.startsWith("84")) {
+      return (
+        cleaned.substring(0, 5) + "***" + cleaned.substring(cleaned.length - 3)
+      );
+    }
+
+    return (
+      cleaned.substring(0, 3) + "***" + cleaned.substring(cleaned.length - 3)
+    );
+  }
+
+  handleToggleMask(event) {
+    const rowId = event.detail.rowId;
+
+    this.phones = this.phones.map((row) => {
+      if (row.id === rowId) {
+        return {
+          ...row,
+          isVisible: !row.isVisible,
+        };
+      }
+
+      return row;
+    });
+  }
   /* ================= TOAST ================= */
 
   showSuccessToast(message) {
