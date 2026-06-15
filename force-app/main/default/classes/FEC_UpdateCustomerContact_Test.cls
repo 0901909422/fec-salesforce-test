@@ -85,6 +85,24 @@ private class FEC_UpdateCustomerContact_Test {
         }
     }
 
+    private class SoapCaptureMock implements HttpCalloutMock {
+        public String requestBody;
+
+        public HttpResponse respond(HttpRequest req) {
+            requestBody = req.getBody();
+            HttpResponse res = new HttpResponse();
+            res.setStatusCode(200);
+            res.setBody('<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">' +
+                        '<soapenv:Body>' +
+                        '<cif:UpdateCustomerContactResponse xmlns:cif="http://fecredit.com.vn/CIF_CustomerInfoUpdate">' +
+                        '<Sys><TransID>T123</TransID><Code>1</Code><Description>Success</Description></Sys>' +
+                        '</cif:UpdateCustomerContactResponse>' +
+                        '</soapenv:Body>' +
+                        '</soapenv:Envelope>');
+            return res;
+        }
+    }
+
     @IsTest
     static void testUpdateCustomerContact_Success() {
         FEC_UpdateCustomerContact.CustomerContactRequest req = new FEC_UpdateCustomerContact.CustomerContactRequest();
@@ -298,5 +316,76 @@ private class FEC_UpdateCustomerContact_Test {
         Test.stopTest();
 
         System.assert(phoneMatch.size() > 0, 'Phải tìm thấy contact phone.');
+    }
+
+    @IsTest
+    static void testResolveChannelForApi() {
+        String channel = validChannel();
+        Case customerCase = new Case(
+            FEC_Channel__c = channel,
+            RecordType = new RecordType(
+                DeveloperName = FEC_ConstantCommon.CASE_CUSTOMER_RECORD_TYPE_DEV_NAME
+            )
+        );
+        Case internalCase = new Case(
+            FEC_Channel__c = channel,
+            RecordType = new RecordType(
+                DeveloperName = FEC_ConstantCommon.CASE_INTERNAL_RECORD_TYPE_DEV_NAME
+            )
+        );
+
+        Test.startTest();
+        System.assertEquals(
+            channel,
+            FEC_UpdateCustomerContact.resolveChannelForApi(customerCase),
+            'Customer_Case phải gửi FEC_Channel__c.'
+        );
+        System.assertEquals(
+            FEC_ConstantCommon.CHANNEL_INTERNAL,
+            FEC_UpdateCustomerContact.resolveChannelForApi(internalCase),
+            'Internal_Case phải gửi Internal.'
+        );
+        Test.stopTest();
+    }
+
+    @IsTest
+    static void testUpdateValue_InternalCase_SendsInternalChannel() {
+        Map<String, Schema.RecordTypeInfo> rtMap = Schema.SObjectType.Case.getRecordTypeInfosByDeveloperName();
+        if (!rtMap.containsKey(FEC_ConstantCommon.CASE_INTERNAL_RECORD_TYPE_DEV_NAME)) {
+            return;
+        }
+
+        Case c = [
+            SELECT Id, FEC_Account_or_Contract__c
+            FROM Case
+            LIMIT 1
+        ];
+        Id internalRtId = rtMap.get(FEC_ConstantCommon.CASE_INTERNAL_RECORD_TYPE_DEV_NAME).getRecordTypeId();
+
+        FEC_CaseTriggerHandler.isExecuting = true;
+        try {
+            update new Case(
+                Id = c.Id,
+                RecordTypeId = internalRtId
+            );
+        } finally {
+            FEC_CaseTriggerHandler.isExecuting = false;
+        }
+
+        SoapCaptureMock captureMock = new SoapCaptureMock();
+        Test.setMock(HttpCalloutMock.class, captureMock);
+
+        Test.startTest();
+        FEC_UpdateCustomerContact.UpdateContactResult res =
+            FEC_UpdateCustomerContact.updateValue(c.Id, FEC_UpdateCustomerContact.PHONE_UPDATE);
+        Test.stopTest();
+
+        System.assertEquals(true, res.success);
+        System.assert(
+            captureMock.requestBody.contains(
+                '<Channel>' + FEC_ConstantCommon.CHANNEL_INTERNAL + '</Channel>'
+            ),
+            'Internal_Case phải gửi Channel=Internal trong SOAP request.'
+        );
     }
 }
