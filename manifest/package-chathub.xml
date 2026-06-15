@@ -40,10 +40,12 @@
         <members>AWS_FIS</members>
         <members>ChatHubURL</members>
         <members>CloudFont_Upload</members>
+        <members>CloudFont_Upload_2</members>
         <members>Facebook_CDN_atl3_1</members>
         <members>Facebook_CDN_atl3_2</members>
         <members>Facebook_CDN_atl3_3</members>
         <members>Facebook_CDN_sin2_1</members>
+        <members>Facebook_CDN_xx</members>
         <members>Facebook_CDN</members>
         <members>S3_FPT</members>
         <name>RemoteSiteSetting</name>
@@ -51,6 +53,7 @@
 
     <types>
         <members>Cloudfront_Upload</members>
+        <members>Cloudfront_Upload_2</members>
         <members>Facebook_CDN_2</members>
         <members>Facebook_CDN</members>
         <members>FE_ChatHub</members>
