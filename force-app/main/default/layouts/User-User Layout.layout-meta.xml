@@ -31,6 +31,10 @@
             </layoutItems>
             <layoutItems>
                 <behavior>Edit</behavior>
+                <field>FEC_User_Division_Group__c</field>
+            </layoutItems>
+            <layoutItems>
+                <behavior>Edit</behavior>
                 <field>FEC_User_Group__c</field>
             </layoutItems>
         </layoutColumns>
