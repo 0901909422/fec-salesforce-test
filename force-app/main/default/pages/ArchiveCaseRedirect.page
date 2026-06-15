@@ -1,0 +1,50 @@
+<apex:page standardController="AthenaCases__x" 
+           extensions="ArchiveCaseController" 
+           lightningStylesheets="true" 
+           showHeader="false" 
+           sidebar="false">
+<!-- <apex:page standardController="Account" 
+           extensions="ArchiveCaseController"  
+           lightningStylesheets="true" 
+           showHeader="false" 
+           sidebar="false"> -->
+           
+    <apex:slds />
+
+    <div class="slds-scope">
+        <apex:outputPanel id="errorPanel">
+            <apex:outputPanel rendered="{!hasError}">
+                <div class="slds-notify slds-notify_alert slds-theme_alert-texture slds-theme_error" role="alert">
+                    <span class="slds-assistive-text">error</span>
+                    <h2>{!errorMessage}</h2>
+                </div>
+            </apex:outputPanel>
+        </apex:outputPanel>
+        
+        <apex:outputPanel id="loadingPanel">
+            <apex:outputPanel rendered="{!!hasError}">
+                <div style="position: relative; min-height: 200px; text-align: center; padding-top: 80px;">
+                    <div class="slds-spinner_container">
+                        <div role="status" class="slds-spinner slds-spinner_medium">
+                            <span class="slds-assistive-text">Loading</span>
+                            <div class="slds-spinner__dot-a"></div>
+                            <div class="slds-spinner__dot-b"></div>
+                        </div>
+                    </div>
+                </div>
+            </apex:outputPanel>
+        </apex:outputPanel>
+    </div>
+
+    <apex:form>
+        <apex:actionFunction name="runFetchAndRedirect" 
+                             action="{!fetchAndRedirect}" 
+                             reRender="errorPanel, loadingPanel" />
+    </apex:form>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            runFetchAndRedirect();
+        });
+    </script>
+</apex:page>
