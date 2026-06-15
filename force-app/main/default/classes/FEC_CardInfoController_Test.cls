@@ -119,6 +119,14 @@ private class FEC_CardInfoController_Test {
 
     @TestSetup
     static void setupData() {
+        FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
+        if (apiSetting == null) {
+            apiSetting = new FEC_API_Setting__c();
+        }
+        apiSetting.FEC_Endpoint__c = 'https://mock-api.fecredit.com.vn';
+        apiSetting.FEC_Call_Mock__c = false;
+        upsert apiSetting;
+
         Case c1 = new Case(
             Subject = 'Case With Customer History Access',
             Status = FEC_ConstantCommon.CASE_STATUS_OPEN,
@@ -270,6 +278,52 @@ private class FEC_CardInfoController_Test {
             System.assertEquals(1, result.cardDeliveries.size());
             System.assertEquals(null, result.cardDeliveries[0].issueDate);
             System.assertEquals(null, result.cardDeliveries[0].deliveryDate);
+        }
+    }
+
+    @IsTest
+    static void testLoadCardInfo_MockMode() {
+        FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
+        if (apiSetting == null) {
+            apiSetting = new FEC_API_Setting__c();
+        }
+        apiSetting.FEC_Call_Mock__c = true;
+        upsert apiSetting;
+
+        System.runAs(testRunAsUser()) {
+            Case c = [SELECT Id FROM Case WHERE Subject = 'Case With Customer History Access' LIMIT 1];
+            Test.startTest();
+            FEC_CardInfoController.CardInfoDTO result = FEC_CardInfoController.loadCardInfo(c.Id);
+            Test.stopTest();
+
+            System.assertNotEquals(null, result);
+            System.assertNotEquals(null, result.cardDeliveries);
+            System.assertNotEquals(null, result.otherCards);
+        }
+    }
+
+    @IsTest
+    static void testLoadCardInfo_ResolvesCustomerHistoryByAccountNumber() {
+        System.runAs(testRunAsUser()) {
+            FEC_Customer_History__c customer = [
+                SELECT FEC_Account_Number__c
+                FROM FEC_Customer_History__c
+                LIMIT 1
+            ];
+            Case lookupCase = new Case(
+                Subject = 'Case History Lookup',
+                Status = FEC_ConstantCommon.CASE_STATUS_OPEN,
+                Origin = 'Phone',
+                FEC_Account_Number__c = customer.FEC_Account_Number__c
+            );
+            insert lookupCase;
+
+            Test.setMock(HttpCalloutMock.class, new CardSecInfoEmptyMock());
+            Test.startTest();
+            FEC_CardInfoController.CardInfoDTO result = FEC_CardInfoController.loadCardInfo(lookupCase.Id);
+            Test.stopTest();
+
+            System.assertNotEquals(null, result);
         }
     }
 
