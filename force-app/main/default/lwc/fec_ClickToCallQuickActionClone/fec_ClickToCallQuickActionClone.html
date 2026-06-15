@@ -1,9 +1,14 @@
 <template>
     <lightning-accordion class="interaction-infor" allow-multiple-sections-open active-section-name={activeSections}>
         <lightning-accordion-section name="interactionInfo" label="Click To Call">
-            <lightning-datatable key-field="label" data={phones} columns={columns} onrowaction={handleRowAction}
+            <!-- <lightning-datatable key-field="label" data={phones} columns={columns} onrowaction={handleRowAction}
                 hide-checkbox-column>
-            </lightning-datatable>
+            </lightning-datatable> -->
+
+
+            <c-fec_-custom-click-to-call-phone-list key-field="id" data={phones} columns={columns}
+                ontogglemask={handleToggleMask} onrowaction={handleRowAction} hide-checkbox-column>
+            </c-fec_-custom-click-to-call-phone-list>
         </lightning-accordion-section>
     </lightning-accordion>
 </template>

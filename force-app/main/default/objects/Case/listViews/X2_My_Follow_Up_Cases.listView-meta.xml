@@ -24,10 +24,5 @@
         <operation>equals</operation>
         <value>1</value>
     </filters>
-    <filters>
-        <field>CASES.STATUS</field>
-        <operation>equals</operation>
-        <value>Open,Pending,Resolved-Rejected,Resolved-CannotContactCustomer,Resolved-AutoCancelled,Resolved-Cancelled,Auto-Closed,Resolved-Completed,Closed</value>
-    </filters>
     <label>2. My Follow-Up Cases</label>
 </ListView>
