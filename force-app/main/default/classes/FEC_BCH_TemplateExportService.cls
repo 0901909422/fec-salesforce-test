@@ -602,6 +602,8 @@ public without sharing class FEC_BCH_TemplateExportService {
         Integer lastRow1 = templateDataRow1 + rowCount - 1;
         Integer lastColIndex = resolveLastPatchedColumnIndex(mappedCols);
         out = updateDimensionRef(out, lastRow1, lastColIndex);
+        // 14/06/2026 toannd - xóa column-merge trong vùng data rows để mỗi ô IPP (và cột mapped) có ô riêng
+        out = removeDataRowColumnMergeCells(out, templateDataRow1, lastRow1);
         // 28/05/2026 17:45 linhdev - lỗi rebuild validation không được làm fail export (vẫn giữ format + data)
         try {
             out = applyHeaderBasedListValidations(
@@ -2345,6 +2347,57 @@ public without sharing class FEC_BCH_TemplateExportService {
         Integer startPos;
         Integer endPos;
         String replacementText;
+    }
+
+    /**
+     * 14/06/2026 toannd - Xóa các column-spanning merge cells trong vùng data rows.
+     * Mục đích: template có thể có merged cells cho vùng IPP (vd. I5:M5) khiến nhiều cột IPP
+     * gộp vào 1 ô. Xóa các merges này để mỗi cột IPP nhận giá trị riêng.
+     * Chỉ xóa column merge (startCol != endCol) trong row range [fromRow1, toRow1].
+     * Row-spanning merges (cùng cột) và merges ngoài vùng data không bị ảnh hưởng.
+     */
+    @TestVisible
+    private static String removeDataRowColumnMergeCells(String xml, Integer fromRow1, Integer toRow1) {
+        if (String.isBlank(xml) || fromRow1 == null || toRow1 == null || fromRow1 > toRow1) {
+            return xml;
+        }
+        Pattern mergesPat = Pattern.compile('(?s)(<mergeCells[^>]*>)(.*?)(</mergeCells>)');
+        Matcher mergesMat = mergesPat.matcher(xml);
+        if (!mergesMat.find()) {
+            return xml;
+        }
+        Integer mergesStart = mergesMat.start();
+        Integer mergesEnd = mergesMat.end();
+        String mergesBody = mergesMat.group(2);
+        Pattern cellPat = Pattern.compile('(?s)<mergeCell[^/]*/?>');
+        Pattern refPat = Pattern.compile('ref="([A-Z]{1,3})(\\d+):([A-Z]{1,3})(\\d+)"');
+        Matcher cellMat = cellPat.matcher(mergesBody);
+        List<String> kept = new List<String>();
+        while (cellMat.find()) {
+            String cell = cellMat.group(0);
+            Matcher refMat = refPat.matcher(cell);
+            if (!refMat.find()) {
+                kept.add(cell);
+                continue;
+            }
+            String startColLetter = refMat.group(1);
+            Integer startRow = Integer.valueOf(refMat.group(2));
+            String endColLetter = refMat.group(3);
+            Integer endRow = Integer.valueOf(refMat.group(4));
+            Boolean isColumnMerge = !startColLetter.equals(endColLetter);
+            Boolean overlapsDataRows = !(endRow < fromRow1 || startRow > toRow1);
+            if (isColumnMerge && overlapsDataRows) {
+                continue;
+            }
+            kept.add(cell);
+        }
+        String newSection;
+        if (kept.isEmpty()) {
+            newSection = FEC_ConstantCommon.STR_EMPTY;
+        } else {
+            newSection = '<mergeCells count="' + kept.size() + '">' + String.join(kept, FEC_ConstantCommon.STR_EMPTY) + '</mergeCells>';
+        }
+        return xml.substring(0, mergesStart) + newSection + xml.substring(mergesEnd);
     }
 
     private static String extractCellXfByIndex(String stylesXml, Integer styleIndex) {
