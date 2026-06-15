@@ -1713,6 +1713,26 @@
     <flexiPageRegions>
         <itemInstances>
             <componentInstance>
+                <componentName>fec_CollectionInteractions</componentName>
+                <identifier>c_fec_CollectionInteractions</identifier>
+            </componentInstance>
+        </itemInstances>
+        <name>Facet-a1b2c3d4-e5f6-7890-abcd-ef1234567890</name>
+        <type>Facet</type>
+    </flexiPageRegions>
+    <flexiPageRegions>
+        <itemInstances>
+            <componentInstance>
+                <componentName>fec_customerAdditionalData</componentName>
+                <identifier>c_fec_customerAdditionalData</identifier>
+            </componentInstance>
+        </itemInstances>
+        <name>Facet-b2c3d4e5-f6a7-8901-bcde-f12345678901</name>
+        <type>Facet</type>
+    </flexiPageRegions>
+    <flexiPageRegions>
+        <itemInstances>
+            <componentInstance>
                 <componentInstanceProperties>
                     <name>active</name>
                     <value>true</value>
@@ -1775,6 +1795,34 @@
             <componentInstance>
                 <componentInstanceProperties>
                     <name>body</name>
+                    <value>Facet-a1b2c3d4-e5f6-7890-abcd-ef1234567890</value>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>title</name>
+                    <value>Interaction History</value>
+                </componentInstanceProperties>
+                <componentName>flexipage:tab</componentName>
+                <identifier>flexipage_tab_interaction_history</identifier>
+            </componentInstance>
+        </itemInstances>
+        <itemInstances>
+            <componentInstance>
+                <componentInstanceProperties>
+                    <name>body</name>
+                    <value>Facet-b2c3d4e5-f6a7-8901-bcde-f12345678901</value>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>title</name>
+                    <value>Additional Data</value>
+                </componentInstanceProperties>
+                <componentName>flexipage:tab</componentName>
+                <identifier>flexipage_tab_additional_data</identifier>
+            </componentInstance>
+        </itemInstances>
+        <itemInstances>
+            <componentInstance>
+                <componentInstanceProperties>
+                    <name>body</name>
                     <value>Facet-4a031182-8cf0-4e37-b787-0f5b5961f7f9</value>
                 </componentInstanceProperties>
                 <componentInstanceProperties>
@@ -1784,16 +1832,10 @@
                 <componentName>flexipage:tab</componentName>
                 <identifier>flexipage_tab_banca</identifier>
                 <visibilityRule>
-                    <booleanFilter>1 AND 2</booleanFilter>
                     <criteria>
                         <leftValue>{!Record.FEC_Has_Account_or_Contract__c}</leftValue>
                         <operator>EQUAL</operator>
                         <rightValue>true</rightValue>
-                    </criteria>
-                    <criteria>
-                        <leftValue>{!Record.FEC_Product_Type__r.Name}</leftValue>
-                        <operator>EQUAL</operator>
-                        <rightValue>Insurance</rightValue>
                     </criteria>
                 </visibilityRule>
             </componentInstance>
