@@ -88,7 +88,6 @@ public without sharing class FEC_CustomerIntegrationService {
         String timestampZ = Datetime.now().format(FEC_ConstantCommon.STR_DATETIME_FORMAT_Z);
 
         FEC_GetCustomerInfoBasic.ResponseWrapper basicRes;
-        FEC_GetContactsList.ResponseWrapper contactsRes;
         FEC_GetAddressesList.ResponseWrapper addressesRes;
         FEC_GetDocumentsList.ResponseWrapper docRes;
         FEC_GetCardBasicInfo.ResponseWrapper cardRes;
@@ -108,17 +107,6 @@ public without sharing class FEC_CustomerIntegrationService {
             );
         } catch (Exception e) {
             System.debug('### BASIC CALLOUT ERROR: ' + e.getMessage());
-        }
-
-        try {
-            contactsRes = FEC_GetContactsList.callGetContactsList(
-                FEC_CommonUltils.generateTransactionId(),
-                requestor,
-                timestampZ,
-                effectiveCif
-            );
-        } catch (Exception e) {
-            System.debug('### CONTACTS LIST CALLOUT ERROR: ' + e.getMessage());
         }
 
         try {
@@ -244,9 +232,7 @@ public without sharing class FEC_CustomerIntegrationService {
         }
 
         try {
-            if (contactsRes != null && contactsRes.Contacts != null) {
-                saveContactsListFromApi(hist, contactsRes.Contacts);
-            }
+            saveContactsListFromApi(hist, basicRes);
         } catch (Exception e) {
             System.debug('### CONTACTS LIST DML ERROR: ' + e.getMessage());
         }
@@ -1068,25 +1054,30 @@ public without sharing class FEC_CustomerIntegrationService {
 
     private static void saveContactsListFromApi(
         FEC_Customer_History__c hist,
-        List<FEC_GetContactsList.ContactInfo> contacts
+        FEC_GetCustomerInfoBasic.ResponseWrapper basicRes
     ) {
-        if (hist == null || contacts == null || contacts.isEmpty()) {
+        if (hist == null
+            || basicRes == null
+            || basicRes.CustomerBasicInfo == null
+            || basicRes.CustomerBasicInfo.PreferredContacts == null) {
             return;
         }
 
         List<FEC_Contact_List__c> contactsToInsert = new List<FEC_Contact_List__c>();
 
-        for (FEC_GetContactsList.ContactInfo c : contacts) {
-            if (!isPhoneOrEmailChannelContact(c)) {
+        for (FEC_GetCustomerInfoBasic.PreferredContact pc :
+            basicRes.CustomerBasicInfo.PreferredContacts) {
+
+            if (pc == null || pc.Contact == null) {
                 continue;
             }
 
             contactsToInsert.add(new FEC_Contact_List__c(
                 FEC_Customer_History__c   = hist.Id,
-                FEC_Channel__c            = c.Channel,
-                FEC_Communication_Type__c = c.CommunicationType,
-                FEC_Contact_String__c     = c.ContactString,
-                FEC_Contact_ID__c         = c.ContactId
+                FEC_Channel__c            = pc.Contact.Channel,
+                FEC_Communication_Type__c = pc.Contact.CommunicationType,
+                FEC_Contact_String__c     = pc.Contact.ContactString,
+                FEC_Contact_ID__c         = pc.Contact.ContactId
             ));
         }
 
@@ -1094,18 +1085,11 @@ public without sharing class FEC_CustomerIntegrationService {
             return;
         }
 
-        deleteExistingPhoneEmailContacts(hist.Id);
+        deleteExistingContacts(hist.Id);
         insert contactsToInsert;
     }
 
-    private static Boolean isPhoneOrEmailChannelContact(FEC_GetContactsList.ContactInfo c) {
-        return c != null
-            && String.isNotBlank(c.ContactString)
-            && (c.Channel == FEC_ConstantCommon.EMAIL
-                || c.Channel == FEC_ConstantCommon.PHONE);
-    }
-
-    private static void deleteExistingPhoneEmailContacts(Id customerHistoryId) {
+    private static void deleteExistingContacts(Id customerHistoryId) {
         if (customerHistoryId == null) {
             return;
         }
@@ -1114,10 +1098,6 @@ public without sharing class FEC_CustomerIntegrationService {
             SELECT Id
             FROM FEC_Contact_List__c
             WHERE FEC_Customer_History__c = :customerHistoryId
-              AND FEC_Channel__c IN (
-                  :FEC_ConstantCommon.EMAIL,
-                  :FEC_ConstantCommon.PHONE
-              )
         ];
 
         if (!existing.isEmpty()) {

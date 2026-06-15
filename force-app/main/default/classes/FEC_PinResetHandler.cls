@@ -75,7 +75,7 @@ public without sharing class FEC_PinResetHandler {
                 ? 0
                 : Integer.valueOf(selectedCase.FEC_Process_Action_Count__c);
             
-            Boolean isSuccess = response.RespCode != '1';
+            Boolean isSuccess = response.RespCode == '1';
             
             if (isSuccess) {
                 

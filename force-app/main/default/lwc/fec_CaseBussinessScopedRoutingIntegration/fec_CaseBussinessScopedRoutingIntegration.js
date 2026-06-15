@@ -748,6 +748,28 @@ export async function trySubmitScopedRouteTo(host) {
   }
 
   try {
+    if (typeof host._persistChildDataBeforeCaseRecordFormSubmit === "function") {
+      try {
+        await host._persistChildDataBeforeCaseRecordFormSubmit();
+      } catch (childPersistErr) {
+        const msgs = childPersistErr?.messages;
+        const message =
+          Array.isArray(msgs) && msgs.length > 0
+            ? msgs.join(", ")
+            : FEC_Error_Title;
+        host.showToast?.(FEC_Error_Title, message, "error");
+        return false;
+      }
+    }
+
+    if (typeof host._submitFormsPromise === "function") {
+      await host._submitFormsPromise();
+    }
+
+    if (typeof host.handleSaveFieldReadOnly === "function") {
+      host.handleSaveFieldReadOnly();
+    }
+
     if (
       typeof host.persistSubmitCasePicklistFieldsBeforeSubmit === "function"
     ) {

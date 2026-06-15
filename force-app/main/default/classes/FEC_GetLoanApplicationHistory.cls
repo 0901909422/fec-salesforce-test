@@ -262,11 +262,11 @@ public with sharing class FEC_GetLoanApplicationHistory {
   }
 
   @AuraEnabled
-  public static CaseApplicationHistoryDisplay updateCaseApplicationHistory(
+  public static List<CaseApplicationHistoryDisplay> updateCaseApplicationHistory(
     Id caseId
   ) {
     if (caseId == null) {
-      return null;
+      return new List<CaseApplicationHistoryDisplay>();
     }
 
     // Query for the Case to get the Application ID
@@ -291,7 +291,15 @@ public with sharing class FEC_GetLoanApplicationHistory {
       );
     }
 
-    if (String.isBlank(cases[0].FEC_Application_ID__c) && String.isBlank(cases[0].FEC_Search_Application_ID__c)  && String.isBlank(histories[0].FEC_Application_ID__c)) {
+    String customerHistoryAppId = histories.isEmpty()
+      ? null
+      : histories[0].FEC_Application_ID__c;
+
+    if (
+      String.isBlank(cases[0].FEC_Application_ID__c) &&
+      String.isBlank(cases[0].FEC_Search_Application_ID__c) &&
+      String.isBlank(customerHistoryAppId)
+    ) {
       throw new AuraHandledException(
         String.format(
           System.Label.FEC_MSG_Invalid,
@@ -304,10 +312,10 @@ public with sharing class FEC_GetLoanApplicationHistory {
     LoanApplicationHistoryRequest req = new LoanApplicationHistoryRequest();
     req.applicationId = cases[0].FEC_Application_ID__c;
     if (String.isBlank(req.applicationId)) {
-        req.applicationId = cases[0].FEC_Search_Application_ID__c;
-        if (String.isBlank(req.applicationId)) {
-            req.applicationId = histories[0].FEC_Application_ID__c;
-        }
+      req.applicationId = cases[0].FEC_Search_Application_ID__c;
+      if (String.isBlank(req.applicationId)) {
+        req.applicationId = customerHistoryAppId;
+      }
     }
     LoanApplicationHistoryResult response = getLoanApplicationHistory(req);
 
@@ -320,6 +328,61 @@ public with sharing class FEC_GetLoanApplicationHistory {
     }
 
     if (response.histories == null || response.histories.isEmpty()) {
+      return new List<CaseApplicationHistoryDisplay>();
+    }
+
+    List<ApplicationHistory> sortedHistories = sortHistoriesByEditDateDesc(
+      response.histories
+    );
+
+    Id persistedHistoryId = upsertFirstApplicationHistory(
+      caseId,
+      sortedHistories[0]
+    );
+
+    List<CaseApplicationHistoryDisplay> displays =
+      new List<CaseApplicationHistoryDisplay>();
+    for (Integer i = 0; i < sortedHistories.size(); i++) {
+      Id rowId = i == 0 ? persistedHistoryId : null;
+      displays.add(toCaseApplicationHistoryDisplay(sortedHistories[i], rowId));
+    }
+    return displays;
+  }
+
+  @TestVisible
+  private static List<ApplicationHistory> sortHistoriesByEditDateDesc(
+    List<ApplicationHistory> histories
+  ) {
+    if (histories == null || histories.size() <= 1) {
+      return histories;
+    }
+    List<ApplicationHistory> sorted = new List<ApplicationHistory>(histories);
+    sorted.sort(new ApplicationHistoryEditDateComparator());
+    return sorted;
+  }
+
+  private class ApplicationHistoryEditDateComparator implements Comparator<ApplicationHistory> {
+    public Integer compare(ApplicationHistory a, ApplicationHistory b) {
+      Datetime aDt = parseEditDateTime(a?.editDate);
+      Datetime bDt = parseEditDateTime(b?.editDate);
+      if (aDt == bDt) {
+        return 0;
+      }
+      if (aDt == null) {
+        return 1;
+      }
+      if (bDt == null) {
+        return -1;
+      }
+      return aDt > bDt ? -1 : 1;
+    }
+  }
+
+  private static Id upsertFirstApplicationHistory(
+    Id caseId,
+    ApplicationHistory targetApiHistory
+  ) {
+    if (targetApiHistory == null) {
       return null;
     }
 
@@ -337,34 +400,42 @@ public with sharing class FEC_GetLoanApplicationHistory {
       historyRec = historiesToUpdate[0];
     }
 
-    ApplicationHistory targetApiHistory;
+    historyRec.FEC_User__c = targetApiHistory.userName;
+    historyRec.FEC_Activity_ID__c = targetApiHistory.activityId;
+    String statusLabel = resolveStatusLabel(targetApiHistory.statusId);
+    historyRec.FEC_Status__c = String.isNotBlank(statusLabel)
+      ? statusLabel
+      : targetApiHistory.statusId;
+    historyRec.FEC_Edit_Date__c = parseEditDateTime(targetApiHistory.editDate);
 
-    if (!response.histories.isEmpty()) {
-      targetApiHistory = response.histories[0];
+    upsert historyRec;
+    return historyRec.Id;
+  }
+
+  private static CaseApplicationHistoryDisplay toCaseApplicationHistoryDisplay(
+    ApplicationHistory apiHistory,
+    Id persistedId
+  ) {
+    CaseApplicationHistoryDisplay display = new CaseApplicationHistoryDisplay();
+    display.id = persistedId;
+    display.user = apiHistory.userName;
+    display.activityId = apiHistory.activityId;
+    String statusLabel = resolveStatusLabel(apiHistory.statusId);
+    display.status = String.isNotBlank(statusLabel)
+      ? statusLabel
+      : apiHistory.statusId;
+    display.editDate = parseEditDateTime(apiHistory.editDate);
+    return display;
+  }
+
+  private static Datetime parseEditDateTime(String editDate) {
+    if (String.isBlank(editDate)) {
+      return null;
     }
-
-    if (targetApiHistory != null) {
-      historyRec.FEC_User__c = targetApiHistory.userName;
-      historyRec.FEC_Activity_ID__c = targetApiHistory.activityId;
-      String statusLabel = resolveStatusLabel(targetApiHistory.statusId);
-      historyRec.FEC_Status__c = String.isNotBlank(statusLabel)
-        ? statusLabel
-        : targetApiHistory.statusId;
-      historyRec.FEC_Edit_Date__c = String.isNotBlank(targetApiHistory.editDate)
-        ? Date.valueOf(targetApiHistory.editDate)
-        : null;
-
-      upsert historyRec;
-
-      CaseApplicationHistoryDisplay display = new CaseApplicationHistoryDisplay();
-      display.id = historyRec.Id;
-      display.user = historyRec.FEC_User__c;
-      display.activityId = historyRec.FEC_Activity_ID__c;
-      display.status = historyRec.FEC_Status__c;
-      display.editDate = historyRec.FEC_Edit_Date__c;
-      return display;
+    try {
+      return Datetime.newInstance(Date.valueOf(editDate), Time.newInstance(0, 0, 0, 0));
+    } catch (Exception ex) {
+      return null;
     }
-
-    return null;
   }
 }

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomFieldTranslation xmlns="http://soap.sforce.com/2006/04/metadata">
+    <label><!-- MRC Rejection Reason --></label>
+    <name>FEC_MRC_Rejection_Reason__c</name>
+    <picklistValues>
+        <masterLabel>Customer Prefers Direct Support</masterLabel>
+        <translation>KH muốn làm việc trực tiếp với cửa hàng/ tổng đài/ văn phòng</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Customer Refused MRC</masterLabel>
+        <translation>KH từ chối nhận MRC</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Customer Uses Different Phone Number</masterLabel>
+        <translation>KH liên hệ SĐT khác với SĐT trên hệ thống</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Phone Number Update Failed</masterLabel>
+        <translation>CS cập nhật SĐT mới của KH không thành công</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Phone Update Request Pending</masterLabel>
+        <translation>Đang có yêu cầu cập nhật SĐT chờ xử lý</translation>
+    </picklistValues>
+</CustomFieldTranslation>

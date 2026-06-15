@@ -360,6 +360,17 @@ public without sharing class FEC_CofGsrAssignmentService {
                     FEC_Stage_Name__c = stageName
                 ));
             }
+            if (String.isNotBlank(remarkContent)) {
+                // Fix: save Case Remarks separately from Assignment Remarks.
+                // Insert in the same DML so Case Remarks History rollup sees both rows in this transaction.
+                remarksToInsert.add(new FEC_Case_Remarks__c(
+                    FEC_Case__c = caseId,
+                    FEC_Case_Remarks__c = remarkContent,
+                    FEC_User__c = emailLocalPart(remarkUserEmail),
+                    FEC_User_Role__c = userRoleName,
+                    FEC_Stage_Name__c = stageName
+                ));
+            }
             if (!remarksToInsert.isEmpty()) insert remarksToInsert;
 
             if (historyId == null) {
@@ -404,6 +415,12 @@ public without sharing class FEC_CofGsrAssignmentService {
 
     public static void createAssignmentsFromManualItems(
         String caseId, String manualItemsJson, User currentUser, String stageName
+    ) {
+        createAssignmentsFromManualItems(caseId, manualItemsJson, currentUser, stageName, null);
+    }
+
+    public static void createAssignmentsFromManualItems(
+        String caseId, String manualItemsJson, User currentUser, String stageName, String caseRemarkContent
     ) {
         try {
             List<Object> rawItems = (List<Object>) JSON.deserializeUntyped(manualItemsJson);
@@ -521,6 +538,17 @@ public without sharing class FEC_CofGsrAssignmentService {
                     FEC_User__c = emailLocalPart(currentUser.Email), // tungnm37 sửa: lấy phần trước @
                     FEC_User_Role__c = userRoleName, // tungnm37 fix: thêm User Role
                     FEC_Assignment__c = assignments[i].Id,
+                    FEC_Stage_Name__c = stageName
+                ));
+            }
+            if (String.isNotBlank(caseRemarkContent)) {
+                // Fix manual flow: save both Case Remarks and per-assignment Assignment Remarks.
+                // Insert in the same DML so Case Remarks History rollup includes both types.
+                remarks.add(new FEC_Case_Remarks__c(
+                    FEC_Case__c = caseId,
+                    FEC_Case_Remarks__c = caseRemarkContent,
+                    FEC_User__c = emailLocalPart(currentUser.Email),
+                    FEC_User_Role__c = userRoleName,
                     FEC_Stage_Name__c = stageName
                 ));
             }
@@ -914,7 +942,7 @@ public without sharing class FEC_CofGsrAssignmentService {
         User currentUser = [SELECT Email, UserRole.Name, Id, FEC_User_Group__c FROM User WHERE Id = :UserInfo.getUserId() LIMIT 1];
 
         if (String.isNotBlank(manualItemsJson)) {
-            createAssignmentsFromManualItems(caseId, manualItemsJson, currentUser, stageName);
+            createAssignmentsFromManualItems(caseId, manualItemsJson, currentUser, stageName, remarkContent);
             return null;
         }
 

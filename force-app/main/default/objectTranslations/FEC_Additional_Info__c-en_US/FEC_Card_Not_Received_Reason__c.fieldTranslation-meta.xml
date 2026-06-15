@@ -19,6 +19,10 @@
         <translation>Không muốn nhận thẻ</translation>
     </picklistValues>
     <picklistValues>
+        <masterLabel>No Fixed Address</masterLabel>
+        <translation>Không có địa chỉ cố định</translation>
+    </picklistValues>
+    <picklistValues>
         <masterLabel>Pickup at Post Office/Branch</masterLabel>
         <translation>Muốn nhận tại bưu cục/ văn phòng</translation>
     </picklistValues>

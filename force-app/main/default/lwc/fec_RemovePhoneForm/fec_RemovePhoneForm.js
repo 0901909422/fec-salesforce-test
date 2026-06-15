@@ -674,10 +674,7 @@ export default class Fec_RemovePhoneForm extends LightningElement {
             this._showRemovePhoneValidationToast(FEC_Btn_Remove_Phone_Check_Eligibility);
             return false;
         }
-        if (this._hasRemovePhoneTableData() && !this._hasRemovePhoneRowSelection()) {
-            this._showRemovePhoneValidationToast(FEC_Complete_This_Field);
-            return false;
-        }
+        // 11/06/2026 linhdev - không bắt buộc chọn dòng remove phone khi submit case
         return true;
     }
 

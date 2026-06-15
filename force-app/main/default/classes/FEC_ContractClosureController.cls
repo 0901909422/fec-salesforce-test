@@ -195,7 +195,7 @@ public without sharing class FEC_ContractClosureController {
                         String provinceLabel = String.isNotBlank(a.FEC_Province_Text__c)
                             ? a.FEC_Province_Text__c
                             : (a.FEC_Province__r == null ? null : a.FEC_Province__r.FEC_Name_VN__c);
-                        row.address = a.FEC_Full_Address__c;
+                        row.address = FEC_CommonUltils.removeTrailingComma(a.FEC_Full_Address__c);
                         row.mailingAddressLabel = a.FEC_Mailing_Address__c == null
                             ? FEC_ConstantCommon.STR_EMPTY
                             : String.valueOf(a.FEC_Mailing_Address__c);
@@ -242,18 +242,17 @@ public without sharing class FEC_ContractClosureController {
             out.savedTemporaryEmail = loadTemporaryEmailFromContactList(c);
             out.verifyInformationOptions = describePicklist(OBJ_ADDITIONAL_INFO, FLD_AI_VERIFY);
             out.callbackOptions = describePicklist(OBJ_ADDITIONAL_INFO, FLD_AI_CALLBACK);
-            if (Schema.sObjectType.FEC_Additional_Info__c.isAccessible()) {
-                List<FEC_Additional_Info__c> aiRows = (List<FEC_Additional_Info__c>) Database.queryWithBinds(
-                    'SELECT Id, FEC_Verify_Information__c, FEC_Callback__c' +
-                        ' FROM FEC_Additional_Info__c WHERE FEC_Case__c = :caseId LIMIT 1',
-                    new Map<String, Object>{ 'caseId' => caseId },
-                    AccessLevel.SYSTEM_MODE
-                );
-                if (!aiRows.isEmpty()) {
-                    out.additionalInfoId = aiRows[0].Id;
-                    out.savedVerifyInformation = aiRows[0].FEC_Verify_Information__c;
-                    out.savedCallback = aiRows[0].FEC_Callback__c;
-                }
+            // 12/06/2026 10:41 linhdev — bỏ check isAccessible FEC_Additional_Info__c
+            List<FEC_Additional_Info__c> aiRows = (List<FEC_Additional_Info__c>) Database.queryWithBinds(
+                'SELECT Id, FEC_Verify_Information__c, FEC_Callback__c' +
+                    ' FROM FEC_Additional_Info__c WHERE FEC_Case__c = :caseId LIMIT 1',
+                new Map<String, Object>{ 'caseId' => caseId },
+                AccessLevel.SYSTEM_MODE
+            );
+            if (!aiRows.isEmpty()) {
+                out.additionalInfoId = aiRows[0].Id;
+                out.savedVerifyInformation = aiRows[0].FEC_Verify_Information__c;
+                out.savedCallback = aiRows[0].FEC_Callback__c;
             }
             for (String cashApi : CASE_CASH24_FIELD_CANDIDATES) {
                 if (!caseFields.containsKey(flc(cashApi))) {
@@ -321,10 +320,7 @@ public without sharing class FEC_ContractClosureController {
         if (String.isBlank(objectApiName) || !ADMIN_UNIT_OBJECTS.contains(objectApiName)) {
             return opts;
         }
-        Map<String, Schema.SObjectType> gd = Schema.getGlobalDescribe();
-        if (!gd.containsKey(objectApiName) || !gd.get(objectApiName).getDescribe().isAccessible()) {
-            return opts;
-        }
+        // 12/06/2026 10:41 linhdev — bỏ check isAccessible administrative unit object
         String term = searchKey == null ? FEC_ConstantCommon.STR_EMPTY : searchKey.trim();
         String likeTerm = '%' + term + '%';
         Boolean hasSearchTerm = String.isNotBlank(term);
@@ -392,10 +388,8 @@ public without sharing class FEC_ContractClosureController {
         if (addressInfoId == null) {
             return;
         }
-        if (!Schema.sObjectType.FEC_Address_Info__c.isDeletable()) {
-            throw new AuraHandledException(System.Label.FEC_Error_No_Delete_Permission);
-        }
-        delete as user [SELECT Id FROM FEC_Address_Info__c WHERE Id = :addressInfoId LIMIT 1];
+        // 12/06/2026 10:41 linhdev — bỏ check isDeletable FEC_Address_Info__c
+        delete [SELECT Id FROM FEC_Address_Info__c WHERE Id = :addressInfoId LIMIT 1];
     }
 
     @AuraEnabled
@@ -546,10 +540,7 @@ public without sharing class FEC_ContractClosureController {
         if (!m.containsKey(fk)) {
             return;
         }
-        Schema.DescribeFieldResult d = m.get(fk).getDescribe();
-        if (d.isUpdateable()) {
-            rec.put(api, val);
-        }
+        rec.put(api, val);
     }
 
     private static SavePayloadDTO parsePayload(String payloadJson) {
@@ -564,14 +555,8 @@ public without sharing class FEC_ContractClosureController {
         try {
             SObject caseRec = buildCaseUpdate(caseId, p);
             if (caseRec != null && hasNonIdField(caseRec)) {
-                SObjectAccessDecision dec = Security.stripInaccessible(
-                    AccessType.UPDATABLE,
-                    new List<SObject>{ caseRec }
-                );
-                List<SObject> safe = dec.getRecords();
-                if (!safe.isEmpty() && hasNonIdField(safe[0])) {
-                    update as user safe;
-                }
+                // 12/06/2026 10:41 linhdev — bỏ stripInaccessible Case update
+                update caseRec;
             }
             persistAdditionalInfoRow(caseId, init.additionalInfoId, p.verifyInformation, p.callback);
             if (p.deliveryEmailSelected == true) {
@@ -698,7 +683,7 @@ public without sharing class FEC_ContractClosureController {
         SObject c = Case.SObjectType.newSObject();
         c.put('Id', caseId);
         Schema.SObjectField fDel = fm.get(flc(FLD_DELIVERY));
-        if (fDel != null && fDel.getDescribe().isUpdateable()) {
+        if (fDel != null) {
             String combined = p.deliveryOptionCombined;
             if (String.isBlank(combined) && p.deliveryValues != null && !p.deliveryValues.isEmpty()) {
                 combined = String.join(p.deliveryValues, ';');
@@ -706,11 +691,11 @@ public without sharing class FEC_ContractClosureController {
             c.put(FLD_DELIVERY, combined);
         }
         Schema.SObjectField fRn = fm.get(flc(FLD_RECIPIENT_NAME));
-        if (fRn != null && fRn.getDescribe().isUpdateable()) {
+        if (fRn != null) {
             c.put(FLD_RECIPIENT_NAME, p.recipientName);
         }
         Schema.SObjectField fRp = fm.get(flc(FLD_RECIPIENT_PHONE));
-        if (fRp != null && fRp.getDescribe().isUpdateable()) {
+        if (fRp != null) {
             c.put(FLD_RECIPIENT_PHONE, FEC_CommonUltils.normalizePhone(p.recipientPhone));
         }
         if (String.isNotBlank(p.selectedAddressId)) {
@@ -745,9 +730,7 @@ public without sharing class FEC_ContractClosureController {
         if (String.isBlank(countryCode)) {
             return null;
         }
-        if (!Schema.sObjectType.FEC_Country__c.isAccessible()) {
-            return null;
-        }
+        // 12/06/2026 10:41 linhdev — bỏ check isAccessible FEC_Country__c
         List<FEC_Country__c> rows = [
             SELECT Id, FEC_Code__c
             FROM FEC_Country__c
@@ -771,16 +754,13 @@ public without sharing class FEC_ContractClosureController {
         String fallbackApi;
         for (String api : new List<String>{ 'FEC_Selected_Address__c', 'FEC_Selected_Address_Info__c', 'FEC_Selected_Address_Id__c' }) {
             Schema.SObjectField fieldRef = fm.get(flc(api));
-            if (fieldRef != null && fieldRef.getDescribe().isUpdateable()) {
+            if (fieldRef != null) {
                 caseSelectedAddressFieldApiCache = fieldRef.getDescribe().getName();
                 return caseSelectedAddressFieldApiCache;
             }
         }
         for (String apiLower : fm.keySet()) {
             Schema.DescribeFieldResult d = fm.get(apiLower).getDescribe();
-            if (!d.isUpdateable()) {
-                continue;
-            }
             Boolean isAddressInfoRef = false;
             if (d.getType() == DisplayType.REFERENCE) {
                 for (Schema.SObjectType refType : d.getReferenceTo()) {
@@ -821,7 +801,7 @@ public without sharing class FEC_ContractClosureController {
         Map<String, Schema.SObjectField> fm = Case.SObjectType.getDescribe().fields.getMap();
         for (String api : CASE_CASH24_FIELD_CANDIDATES) {
             Schema.SObjectField f = fm.get(flc(api));
-            if (f == null || !f.getDescribe().isUpdateable()) {
+            if (f == null) {
                 continue;
             }
             Schema.DisplayType t = f.getDescribe().getType();
@@ -837,9 +817,6 @@ public without sharing class FEC_ContractClosureController {
         if (caseRow == null) {
             return null;
         }
-        if (!Schema.sObjectType.FEC_Contact_List__c.isAccessible()) {
-            return null;
-        }
         String caseFieldApi = resolveContactListCaseFieldApi();
         if (String.isBlank(caseFieldApi)) {
             return null;
@@ -847,14 +824,10 @@ public without sharing class FEC_ContractClosureController {
         Map<String, Schema.SObjectField> clf = Schema.SObjectType.FEC_Contact_List__c.fields.getMap();
         String fk = flc(FLD_CL_CONTACT_STRING);
         String caseFk = flc(caseFieldApi);
-        if (
-            !clf.containsKey(fk) ||
-            !clf.get(fk).getDescribe().isAccessible() ||
-            !clf.containsKey(caseFk) ||
-            !clf.get(caseFk).getDescribe().isAccessible()
-        ) {
+        if (!clf.containsKey(fk) || !clf.containsKey(caseFk)) {
             return null;
         }
+        // 12/06/2026 10:41 linhdev — bỏ check isAccessible FEC_Contact_List__c / field
         Id caseIdRef = caseRow.Id;
         String emailCommType = FEC_ConstantCommon.EMAIL;
         List<SObject> teRows = Database.queryWithBinds(
@@ -890,8 +863,6 @@ public without sharing class FEC_ContractClosureController {
         if (!clf.containsKey(fk) || !clf.containsKey(caseFk)) {
             return;
         }
-        Schema.DescribeFieldResult fdTe = clf.get(fk).getDescribe();
-        Schema.DescribeFieldResult fdCase = clf.get(caseFk).getDescribe();
         List<SObject> caseRows = Database.query(
             'SELECT Id, FEC_Account_or_Contract__c, FEC_Channel__c FROM Case WHERE Id = :caseId LIMIT 1'
         );
@@ -913,27 +884,11 @@ public without sharing class FEC_ContractClosureController {
             ' ORDER BY LastModifiedDate DESC LIMIT 1'
         );
         if (!matches.isEmpty()) {
-            if (!Schema.sObjectType.FEC_Contact_List__c.isUpdateable() || !fdTe.isUpdateable()) {
-                return;
-            }
+            // 12/06/2026 10:41 linhdev — bỏ check isUpdateable / stripInaccessible FEC_Contact_List__c
             SObject row = matches[0];
             row.put(FLD_CL_CONTACT_STRING, te);
-            SObjectAccessDecision dec = Security.stripInaccessible(
-                AccessType.UPDATABLE,
-                new List<SObject>{ row }
-            );
-            List<SObject> safe = dec.getRecords();
-            if (!safe.isEmpty()) {
-                update as user safe;
-            }
+            update row;
         } else if (te != null) {
-            if (
-                !Schema.sObjectType.FEC_Contact_List__c.isCreateable() ||
-                !fdTe.isCreateable() ||
-                !fdCase.isCreateable()
-            ) {
-                return;
-            }
             Id histId = caseRec.FEC_Account_or_Contract__c;
             if (histId == null) {
                 return;
@@ -944,14 +899,7 @@ public without sharing class FEC_ContractClosureController {
             n.put(FLD_CL_COMM_TYPE, FEC_ConstantCommon.EMAIL);
             n.put(caseFieldApi, caseRec.Id);
             n.put(FLD_CL_CONTACT_STRING, te);
-            SObjectAccessDecision decIns = Security.stripInaccessible(
-                AccessType.CREATABLE,
-                new List<SObject>{ n }
-            );
-            List<SObject> toIns = decIns.getRecords();
-            if (!toIns.isEmpty()) {
-                insert as user toIns;
-            }
+            insert n;
         }
     }
 
@@ -967,9 +915,6 @@ public without sharing class FEC_ContractClosureController {
                 continue;
             }
             Schema.DescribeFieldResult d = sf.getDescribe();
-            if (!d.isAccessible()) {
-                continue;
-            }
             if (d.getType() == DisplayType.REFERENCE) {
                 for (Schema.SObjectType refType : d.getReferenceTo()) {
                     if (refType.getDescribe().getName() == OBJ_CASE) {
@@ -981,7 +926,7 @@ public without sharing class FEC_ContractClosureController {
         }
         for (String apiLower : fm.keySet()) {
             Schema.DescribeFieldResult d = fm.get(apiLower).getDescribe();
-            if (!d.isAccessible() || d.getType() != DisplayType.REFERENCE) {
+            if (d.getType() != DisplayType.REFERENCE) {
                 continue;
             }
             for (Schema.SObjectType refType : d.getReferenceTo()) {
@@ -998,41 +943,21 @@ public without sharing class FEC_ContractClosureController {
         if (String.isBlank(verify) && String.isBlank(callback)) {
             return;
         }
-        if (!Schema.sObjectType.FEC_Additional_Info__c.isAccessible()) {
-            return;
-        }
+        // 12/06/2026 10:41 linhdev — bỏ check isAccessible/isCreateable/isUpdateable FEC_Additional_Info__c
         if (rowId != null) {
-            if (!Schema.sObjectType.FEC_Additional_Info__c.isUpdateable()) {
-                return;
-            }
             FEC_Additional_Info__c u = new FEC_Additional_Info__c(
                 Id = rowId,
                 FEC_Verify_Information__c = verify,
                 FEC_Callback__c = callback
             );
-            SObjectAccessDecision dec = Security.stripInaccessible(
-                AccessType.UPDATABLE,
-                new List<SObject>{ u }
-            );
-            if (!dec.getRecords().isEmpty()) {
-                update as user dec.getRecords();
-            }
+            update u;
         } else {
-            if (!Schema.sObjectType.FEC_Additional_Info__c.isCreateable()) {
-                return;
-            }
             FEC_Additional_Info__c n = new FEC_Additional_Info__c(
                 FEC_Case__c = caseId,
                 FEC_Verify_Information__c = verify,
                 FEC_Callback__c = callback
             );
-            SObjectAccessDecision dec = Security.stripInaccessible(
-                AccessType.CREATABLE,
-                new List<SObject>{ n }
-            );
-            if (!dec.getRecords().isEmpty()) {
-                insert as user dec.getRecords();
-            }
+            insert n;
         }
     }
 
@@ -1042,10 +967,7 @@ public without sharing class FEC_ContractClosureController {
         if (!m.containsKey(fk)) {
             return;
         }
-        Schema.DescribeFieldResult d = m.get(fk).getDescribe();
-        if (d.isCreateable()) {
-            rec.put(api, val);
-        }
+        rec.put(api, val);
     }
 
     private static Boolean hasNonIdField(SObject rec) {
@@ -1067,7 +989,8 @@ public without sharing class FEC_ContractClosureController {
 
     private static List<PicklistEntryDTO> describePicklist(String obj, String fieldApi) {
         List<PicklistEntryDTO> opts = new List<PicklistEntryDTO>();
-        for (FEC_CommonUltils.PicklistOption po : FEC_CommonUltils.getPicklistOptionsWithAccess(obj, fieldApi)) {
+        // 12/06/2026 10:41 linhdev — bỏ getPicklistOptionsWithAccess, dùng getPicklistOptions
+        for (FEC_CommonUltils.PicklistOption po : FEC_CommonUltils.getPicklistOptions(obj, fieldApi)) {
             opts.add(new PicklistEntryDTO(po.label, po.value));
         }
         return opts;

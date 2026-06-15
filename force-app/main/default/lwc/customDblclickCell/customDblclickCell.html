@@ -1,5 +1,10 @@
 <template>
     <span class="fec-cell-wrap">
-        <span class="slds-button custom-dblclick-cell" onclick={handleClick} ondblclick={handleDblClick} role="button" tabindex="0">{value}</span>
+        <template if:true={isDblClickDisabled}>
+            <span class="fec-dblclick-value fec-dblclick-value--disabled">{value}</span>
+        </template>
+        <template if:false={isDblClickDisabled}>
+            <span class="slds-button custom-dblclick-cell" onclick={handleClick} ondblclick={handleDblClick} role="button" tabindex="0">{value}</span>
+        </template>
     </span>
 </template>

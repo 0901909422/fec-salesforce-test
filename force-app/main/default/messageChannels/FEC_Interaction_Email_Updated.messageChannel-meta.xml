@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<LightningMessageChannel xmlns="http://soap.sforce.com/2006/04/metadata">
+    <description>Notify components when Interaction Email is saved</description>
+    <isExposed>true</isExposed>
+    <lightningMessageFields>
+        <description>Interaction Case Id</description>
+        <fieldName>recordId</fieldName>
+    </lightningMessageFields>
+    <masterLabel>FEC Interaction Email Updated</masterLabel>
+</LightningMessageChannel>

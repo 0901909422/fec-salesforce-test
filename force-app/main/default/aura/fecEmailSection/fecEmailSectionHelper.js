@@ -160,22 +160,8 @@
         });
         var body = bodyHtml || component.get('v.body') || '';
         if (body) {
-            var cleanedBody = self.cleanBody(body);
-            // Disconnect Quill's MutationObserver to prevent table stripping
             window.setTimeout(function() {
-                if (quill.scroll && quill.scroll.observer) {
-                    quill.scroll.observer.disconnect();
-                }
-                quill.root.innerHTML = cleanedBody;
-                quill.root.classList.remove('ql-blank');
-                // tungnm37 thÃªm: Ä‘áº£m báº£o td/th tá»« template cÃ³ contenteditable Ä‘á»ƒ xÃ³a Ä‘Æ°á»£c ná»™i dung
-                self._makeTableCellsEditable(quill.root);
-                // Reconnect after DOM is stable
-                window.setTimeout(function() {
-                    if (quill.scroll && quill.scroll.observer) {
-                        quill.scroll.observer.observe(quill.root, quill.scroll.observer._options || { childList: true, subtree: true, characterData: true });
-                    }
-                }, 100);
+                self._setEditorHtml(component, quill, body);
             }, 50);
         }
         // Set default font Times New Roman
@@ -216,9 +202,15 @@
         if (tbMod) tbMod.addHandler('image', function() {});
         self._wire(tbEl, quill, component);
         quill.on('text-change', function() { self._syncEditorBody(component, quill); });
-        quill.root.addEventListener('input', function() { self._syncEditorBody(component, quill); });
-        quill.root.addEventListener('keyup', function() { self._syncEditorBody(component, quill); });
-        quill.root.addEventListener('mouseup', function() { self._syncEditorBody(component, quill); });
+        quill.root.addEventListener('keydown', function(e) {
+            var key = e && e.key;
+            if (key && key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
+                self._applyActiveToolbarFormats(tbEl, quill);
+            }
+        }, true);
+        quill.root.addEventListener('input', function() { self._saveNativeSelection(quill); self._syncEditorBody(component, quill); });
+        quill.root.addEventListener('keyup', function() { self._saveNativeSelection(quill); self._syncEditorBody(component, quill); });
+        quill.root.addEventListener('mouseup', function() { self._saveNativeSelection(quill); self._syncEditorBody(component, quill); });
         // tungnm37 thÃªm: láº¯ng nghe event thÃªm áº£nh vÃ o attachments list
         // KhÃ´ng thÃªm vÃ o attachments list â€” áº£nh chá»‰ hiá»ƒn thá»‹ inline trong editor
         // (blob URL sáº½ bá»‹ strip khi gá»­i, khÃ´ng gá»­i kÃ¨m attachment)
@@ -273,27 +265,215 @@
     },
 
 
+    _setEditorHtml: function(component, quill, html) {
+        if (!quill || !quill.root) return;
+        var cleaned = this.cleanBody(html || '');
+        try {
+            if (quill.scroll && quill.scroll.observer) {
+                quill.scroll.observer.disconnect();
+            }
+            quill.setText('', 'silent');
+            quill.clipboard.dangerouslyPasteHTML(0, cleaned, 'silent');
+        } catch (e) {
+            quill.root.innerHTML = cleaned;
+        }
+        quill.root.classList.remove('ql-blank');
+        this._makeTableCellsEditable(quill.root);
+        this._syncEditorBody(component, quill);
+        var self = this;
+        window.setTimeout(function() {
+            if (quill.scroll && quill.scroll.observer) {
+                quill.scroll.observer.observe(quill.root, quill.scroll.observer._options || { childList: true, subtree: true, characterData: true });
+            }
+            self._syncEditorBody(component, quill);
+        }, 100);
+    },
+
+    _formatQuillSelection: function(component, quill, name, value) {
+        if (!quill || !quill.root) return;
+        this._focusRestoreSelection(quill);
+        var range = quill.getSelection(true);
+        if (!range) return;
+        quill.format(name, value, 'user');
+        quill.root.classList.remove('ql-blank');
+        this._makeTableCellsEditable(quill.root);
+        this._syncEditorBody(component, quill);
+    },
     _syncEditorBody: function(component, quill) {
         if (!quill || !quill.root) return;
         component.set('v.body', quill.root.innerHTML);
         component.set('v.rawBody', quill.root.innerHTML);
     },
 
+    _applyActiveToolbarFormats: function(tbEl, quill) {
+        if (!tbEl || !quill) return;
+        try {
+            var range = quill.getSelection(true);
+            if (!range || range.length !== 0) return;
+            ['bold', 'italic', 'underline', 'strike'].forEach(function(cmd) {
+                var btn = tbEl.querySelector('.fec-btn[data-cmd="' + cmd + '"]');
+                if (btn && btn.classList.contains('fec-active')) {
+                    quill.format(cmd, true, 'silent');
+                }
+            });
+        } catch (e) {}
+    },
+
+    _saveNativeSelection: function(quill) {
+        try {
+            if (!quill || !quill.root) return null;
+            var sel = window.getSelection && window.getSelection();
+            if (!sel || sel.rangeCount === 0) return null;
+            var range = sel.getRangeAt(0);
+            if (!quill.root.contains(range.commonAncestorContainer)) return null;
+            window._fecEmailSavedRange = range.cloneRange();
+            return window._fecEmailSavedRange;
+        } catch (e) {
+            return null;
+        }
+    },
     _focusRestoreSelection: function(quill) {
         if (!quill || !quill.root) return false;
         try {
-            quill.root.focus();
             var sel = window.getSelection && window.getSelection();
-            return !!(sel && sel.rangeCount > 0 && quill.root.contains(sel.getRangeAt(0).commonAncestorContainer));
+            var saved = window._fecEmailSavedRange;
+
+            quill.root.focus();
+
+            if (sel && saved && quill.root.contains(saved.commonAncestorContainer)) {
+                sel.removeAllRanges();
+                sel.addRange(saved);
+                return true;
+            }
+
+            if (sel && sel.rangeCount > 0 && quill.root.contains(sel.getRangeAt(0).commonAncestorContainer)) {
+                window._fecEmailSavedRange = sel.getRangeAt(0).cloneRange();
+                return true;
+            }
+
+            return false;
         } catch (e) { return false; }
     },
 
     _nativeFormat: function(component, quill, command, value) {
+        if (!quill || !quill.root) return;
+        // tungnm37 fix: chi chay khi co selection hop le trong editor
+        var sel = window.getSelection && window.getSelection();
+        var inEditor = sel && sel.rangeCount > 0 && quill.root.contains(sel.getRangeAt(0).commonAncestorContainer);
+        var saved = window._fecEmailSavedRange;
+        var savedOk = saved && quill.root.contains(saved.commonAncestorContainer);
+        if (!inEditor && !savedOk) { return; }
         this._focusRestoreSelection(quill);
         try { document.execCommand(command, false, value); } catch (e) {}
+        if (quill.root) quill.root.classList.remove('ql-blank');
+        this._makeTableCellsEditable(quill.root);
+        this._syncEditorBody(component, quill);
+    },
+
+    _applyHeaderStyleUsingFontTags: function(component, quill, headerConfig) {
+        // Avoid formatBlock and Range.extractContents: both can corrupt complex email templates.
+        // Reuse the same browser command path as Size picker, then convert generated font tags to inline styles.
+        this._focusRestoreSelection(quill);
+        try { document.execCommand('fontSize', false, '3'); } catch (e) {}
+        if (quill && quill.root) {
+            var sz = (headerConfig && headerConfig.sz) ? headerConfig.sz : '14px';
+            var fw = (headerConfig && headerConfig.b) ? '700' : '400';
+            quill.root.querySelectorAll('font[size="3"]').forEach(function(n) {
+                n.removeAttribute('size');
+                n.style.fontSize = sz;
+                n.style.fontWeight = fw;
+                n.style.lineHeight = '1.25';
+            });
+            quill.root.classList.remove('ql-blank');
+            this._makeTableCellsEditable(quill.root);
+        }
+        this._syncEditorBody(component, quill);
+    },
+    _applyInlineStyleToSelection: function(component, quill, styleMap) {
+        this._focusRestoreSelection(quill);
+        try {
+            var sel = window.getSelection && window.getSelection();
+            if (!sel || sel.rangeCount === 0 || !quill || !quill.root) return;
+            var range = sel.getRangeAt(0);
+            if (!quill.root.contains(range.commonAncestorContainer)) return;
+
+            // Do not use formatBlock for templates/images/tables. It can restructure the editor DOM
+            // and drop content after the selected block. Wrap only the selected fragment inline.
+            if (range.collapsed) return;
+
+            var span = document.createElement('span');
+            Object.keys(styleMap || {}).forEach(function(k) {
+                if (styleMap[k] !== null && styleMap[k] !== undefined && styleMap[k] !== '') {
+                    span.style[k] = styleMap[k];
+                }
+            });
+
+            var frag = range.extractContents();
+            span.appendChild(frag);
+            range.insertNode(span);
+
+            var newRange = document.createRange();
+            newRange.selectNodeContents(span);
+            sel.removeAllRanges();
+            sel.addRange(newRange);
+            window._fecEmailSavedRange = newRange.cloneRange();
+        } catch (e) {}
         if (quill && quill.root) quill.root.classList.remove('ql-blank');
         this._makeTableCellsEditable(quill.root);
         this._syncEditorBody(component, quill);
+    },
+    // tungnm37 fix v2: dung Quill API, khong cham DOM truc tiep
+    _indentBlocks: function(component, quill, direction) {
+        if (!quill || !quill.root) return;
+        // Buoc 1: dam bao co native selection trong editor
+        var nsel = window.getSelection && window.getSelection();
+        var savedNative = window._fecEmailSavedRange;
+        var hasNative = nsel && nsel.rangeCount > 0 && quill.root.contains(nsel.getRangeAt(0).commonAncestorContainer);
+        var hasSaved = savedNative && quill.root.contains(savedNative.commonAncestorContainer);
+        if (!hasNative && !hasSaved) {
+            // Dat caret vao cuoi noi dung de van indent duoc
+            quill.focus();
+            var len = quill.getLength();
+            quill.setSelection(Math.max(0, len - 1), 0, 'silent');
+        } else {
+            this._focusRestoreSelection(quill);
+        }
+        // Buoc 2: lay Quill range tu native selection
+        var qRange = quill.getSelection(true);
+        if (!qRange) {
+            qRange = { index: Math.max(0, quill.getLength() - 1), length: 0 };
+        }
+        // Buoc 3: tim cac line/block ma range bao trum, apply format indent qua Quill API
+        var lines = quill.getLines(qRange.index, Math.max(qRange.length, 1));
+        if (!lines || !lines.length) {
+            // Fallback: chi line tai vi tri caret
+            try { lines = [quill.getLine(qRange.index)[0]]; } catch (e) {}
+        }
+        if (!lines || !lines.length) return;
+        for (var i = 0; i < lines.length; i++) {
+            var line = lines[i];
+            if (!line || !line.format) continue;
+            try {
+                var fmt = line.formats ? line.formats() : {};
+                var current = parseInt(fmt && fmt.indent, 10) || 0;
+                var next = current + direction;
+                if (next < 0) next = 0;
+                if (next > 8) next = 8;
+                line.format('indent', next || false);
+            } catch (e2) {}
+        }
+        quill.root.classList.remove('ql-blank');
+        this._makeTableCellsEditable(quill.root);
+        // Sync v.body sau khi format
+        component.set('v.body', quill.root.innerHTML);
+        component.set('v.rawBody', quill.root.innerHTML);
+        // Luu lai native range moi
+        try {
+            var ns = window.getSelection && window.getSelection();
+            if (ns && ns.rangeCount > 0) {
+                window._fecEmailSavedRange = ns.getRangeAt(0).cloneRange();
+            }
+        } catch (e3) {}
     },
 
     _applyBlockTag: function(component, quill, tagName) {
@@ -315,6 +495,7 @@
         tbEl.querySelectorAll('.fec-pk').forEach(function(pk) {
             pk.querySelector('.fec-pk-btn').addEventListener('mousedown', function(e) {
                 e.preventDefault();
+                self._saveNativeSelection(quill);
                 var type = pk.getAttribute('data-pk');
                 if (activePk === pk) { closeDD(); return; }
                 closeDD();
@@ -348,22 +529,20 @@
                 ddEl.querySelectorAll('.fec-dd-it').forEach(function(it) {
                     it.addEventListener('mousedown', function(e2) {
                         e2.preventDefault();
+                        self._focusRestoreSelection(quill);
                         var val = it.getAttribute('data-val');
                         // Update button label
                         pk.querySelector('.fec-pk-btn').childNodes[0].textContent = it.textContent + ' ';
                         closeDD();
                         if (type==='font') {
                             var ff = (items.filter(function(x){return x.v===val;})[0] || {}).f || '';
-                            self._nativeFormat(component, quill, 'fontName', ff.split('"').join('') || '');
+                            self._formatQuillSelection(component, quill, 'font', val || false);
                         } else if (type==='size') {
                             var px = val || '';
-                            self._nativeFormat(component, quill, 'fontSize', px ? '3' : '');
-                            if (px) {
-                                quill.root.querySelectorAll('font[size="3"]').forEach(function(n){ n.removeAttribute('size'); n.style.fontSize = px; });
-                                self._syncEditorBody(component, quill);
-                            }
+                            self._formatQuillSelection(component, quill, 'size', px || false);
                         } else {
-                            self._applyBlockTag(component, quill, val ? ('h' + val) : 'p');
+                            var hd = (items.filter(function(x){return x.v===val;})[0] || {});
+                            self._formatQuillSelection(component, quill, 'header', val ? parseInt(val, 10) : false);
                         }
                     });
                 });
@@ -378,13 +557,16 @@
                 var cmd = btn.getAttribute('data-cmd');
                 var val = btn.getAttribute('data-val');
                 if (cmd==='bold'||cmd==='italic'||cmd==='underline'||cmd==='strike') {
-                    var nativeCmd = cmd === 'strike' ? 'strikeThrough' : cmd;
-                    self._nativeFormat(component, quill, nativeCmd, null);
-                    btn.classList.toggle('fec-active');
+                    var qCmd = cmd === 'strike' ? 'strike' : cmd;
+                    self._focusRestoreSelection(quill);
+                    var nextValue = !btn.classList.contains('fec-active');
+                    self._formatQuillSelection(component, quill, qCmd, nextValue);
+                    btn.classList.toggle('fec-active', nextValue);
                 } else if (cmd==='list') {
                     self._nativeFormat(component, quill, val === 'ordered' ? 'insertOrderedList' : 'insertUnorderedList', null);
                 } else if (cmd==='indent') {
-                    self._nativeFormat(component, quill, val === '-1' ? 'outdent' : 'indent', null);
+                    // tungnm37 fix: dung DOM thuan thay vi execCommand de tranh Quill wipe template
+                    self._indentBlocks(component, quill, val === '-1' ? -1 : 1);
                 } else if (cmd==='align') {
                     var ac = val === 'center' ? 'justifyCenter' : (val === 'right' ? 'justifyRight' : (val === 'justify' ? 'justifyFull' : 'justifyLeft'));
                     self._nativeFormat(component, quill, ac, null);
@@ -642,7 +824,7 @@
             autoRow.innerHTML = '<span style="width:18px;height:18px;border:1px solid #ccc;background:#fff;display:inline-block;flex-shrink:0;border-radius:2px"></span><span style="font-size:13px;color:#333">Automatic</span>';
             autoRow.addEventListener('mousedown', function(e) {
                 e.preventDefault();
-                quill.format(cmd, false);
+                self._formatQuillSelection(component, quill, cmd, false);
                 var ind = tbEl.querySelector('.fec-clr-btn[data-cmd="'+cmd+'"] .fec-clr-a');
                 if (ind) { if(cmd==='color') ind.style.borderBottomColor='#000'; else ind.style.background='transparent'; }
                 closeClrDD();
@@ -656,7 +838,7 @@
                 sw.title = c;
                 sw.addEventListener('mousedown', function(e) {
                     e.preventDefault();
-                    quill.format(cmd, c);
+                    self._formatQuillSelection(component, quill, cmd, c);
                     var ind = tbEl.querySelector('.fec-clr-btn[data-cmd="'+cmd+'"] .fec-clr-a');
                     if (ind) { if(cmd==='color') ind.style.borderBottomColor=c; else ind.style.background=c; }
                     closeClrDD();
@@ -674,7 +856,7 @@
                 inp.type='color'; inp.style.cssText='position:fixed;opacity:0;width:0;height:0;';
                 document.body.appendChild(inp);
                 inp.addEventListener('input', function() {
-                    quill.format(cmd, inp.value);
+                    self._formatQuillSelection(component, quill, cmd, inp.value);
                     var ind = tbEl.querySelector('.fec-clr-btn[data-cmd="'+cmd+'"] .fec-clr-a');
                     if (ind) { if(cmd==='color') ind.style.borderBottomColor=inp.value; else ind.style.background=inp.value; }
                 });
@@ -758,22 +940,16 @@
             var range = sel.getRangeAt(0);
             var editorEl = quill.root;
 
-            // Handle Enter natively so caret stays at the current cursor position.
+            // Handle Enter through Quill so line breaks are persisted and toolbar state remains stable.
             if (e.keyCode === 13) {
                 e.preventDefault();
                 e.stopImmediatePropagation();
-
-                var br = document.createElement('br');
-                var spacer = document.createTextNode('\u200B');
-                range.deleteContents();
-                range.insertNode(spacer);
-                range.insertNode(br);
-
-                var nextRange = document.createRange();
-                nextRange.setStartAfter(spacer);
-                nextRange.collapse(true);
-                sel.removeAllRanges();
-                sel.addRange(nextRange);
+                var qRange = quill.getSelection(true);
+                if (qRange) {
+                    quill.insertText(qRange.index, '\n', 'user');
+                    quill.setSelection(qRange.index + 1, 0, 'silent');
+                    self._syncEditorBody(component, quill);
+                }
                 return;
             }
 
@@ -867,7 +1043,10 @@
             '.fec-clr-a{font-size:13px;font-weight:700;color:#333;line-height:1;padding-bottom:1px}',
             // Editor
             '.fec-ed .ql-container.ql-snow{border:none;font-size:14px}',
-            '.fec-ed .ql-editor{min-height:200px;max-height:500px;overflow-y:auto;padding:10px 12px;line-height:1.5;resize:vertical;font-family:"Times New Roman",serif;font-size:14px;color:#000}',
+            '.fec-ed .ql-editor{min-height:200px;max-height:500px;overflow-y:auto;overflow-x:hidden;padding:10px calc(100% - 500px) 10px 12px!important;line-height:1.5;resize:vertical;font-family:"Times New Roman",serif;font-size:14px;color:#000;width:100%!important;max-width:none!important;margin:0;box-sizing:border-box;white-space:normal!important;overflow-wrap:anywhere!important;word-break:break-word!important}',
+            '.fec-ed .ql-editor img{display:block!important;width:500px!important;max-width:500px!important;height:auto!important;box-sizing:border-box}',
+            '.fec-ed .ql-editor > *,.fec-ed .ql-editor p,.fec-ed .ql-editor div,.fec-ed .ql-editor table,.fec-ed .ql-editor ul,.fec-ed .ql-editor ol,.fec-ed .ql-editor li{width:500px!important;max-width:500px!important;box-sizing:border-box;overflow-wrap:anywhere!important;word-break:break-word!important;white-space:normal!important}',
+            '.fec-ed .ql-editor span,.fec-ed .ql-editor a{overflow-wrap:anywhere!important;word-break:break-word!important;white-space:normal!important}',
             '.fec-ed .ql-editor p{margin:0!important;padding:0!important;line-height:1.5!important}',
             '.fec-ed .ql-editor p+p{margin-top:0!important}',
             '.fec-ed .ql-editor.ql-blank::before{color:#aaa;font-style:normal}',
@@ -876,6 +1055,15 @@
             // Table borders
             '.fec-ed .ql-editor table{border-collapse:collapse!important;width:100%!important;margin:8px 0!important}',
             '.fec-ed .ql-editor table td,.fec-ed .ql-editor table th{border:1px solid #999!important;padding:6px 10px!important;min-width:60px!important}',
+            // tungnm37 fix: indent CSS classes (Quill format indent)
+            '.fec-ed .ql-editor .ql-indent-1{padding-left:3em!important}',
+            '.fec-ed .ql-editor .ql-indent-2{padding-left:6em!important}',
+            '.fec-ed .ql-editor .ql-indent-3{padding-left:9em!important}',
+            '.fec-ed .ql-editor .ql-indent-4{padding-left:12em!important}',
+            '.fec-ed .ql-editor .ql-indent-5{padding-left:15em!important}',
+            '.fec-ed .ql-editor .ql-indent-6{padding-left:18em!important}',
+            '.fec-ed .ql-editor .ql-indent-7{padding-left:21em!important}',
+            '.fec-ed .ql-editor .ql-indent-8{padding-left:24em!important}',
             // Dropdown item hover
             '.fec-dd-it{padding:5px 12px;font-size:13px;color:#333;cursor:pointer;white-space:nowrap}',
             '.fec-dd-it:hover{background:#e8f0fe;color:#1a73e8}'
@@ -921,15 +1109,21 @@
         a1.setCallback(this, function(r) {
             if (r.getState()==='SUCCESS') {
                 var d=r.getReturnValue()||{};
+                var isManualInteraction = d.isManual === 'true';
                 component.set('v.fromEmail', d.fromEmail||'');
                 component.set('v.fromDisplay', d.fromDisplay||d.fromEmail||'');
                 component.set('v.toEmail', d.toEmail||'');
-                component.set('v.isManualInteraction', d.isManual === 'true');
+                component.set('v.isManualInteraction', isManualInteraction);
                 component.set('v.incomingToAddress', d.fromEmail||'');
-                // Interaction: dï¿½ng From dropdown gi?ng Service Case, default theo From dï¿½ resolve t? field/source.
-                self.loadFromAddresses(component, d.fromEmail || '');
-                if (!d.fromEmail) {
-                    self.loadTemplates(component, component.get('v.fromEmail') || '');
+
+                if (isManualInteraction) {
+                    // Manual Interaction: allow selecting From from configured outbound emails.
+                    self.loadFromAddresses(component, d.fromEmail || '');
+                } else {
+                    // Non-manual Interaction: From is original inbound ToAddress/FEC_Send_To__c and read-only.
+                    component.set('v.fromOptions', []);
+                    component.set('v.hasFromOptions', false);
+                    self.loadTemplates(component, d.fromEmail || '');
                 }
             }
         });
@@ -1023,7 +1217,7 @@
         var modal = document.createElement('div');
         modal.setAttribute('style', [
             'background:#fff','border-radius:8px',
-            'width:760px','max-width:92vw','max-height:88vh',
+            'width:560px','max-width:92vw','max-height:88vh',
             'display:flex','flex-direction:column',
             'box-shadow:0 8px 32px rgba(0,0,0,.35)',
             'overflow:hidden','position:relative'
@@ -1041,8 +1235,28 @@
         header.appendChild(closeBtn);
 
         var bodyDiv = document.createElement('div');
-        bodyDiv.setAttribute('style','flex:1;overflow-y:auto;padding:24px 32px;font-family:"Times New Roman",serif;font-size:14px;line-height:1.5;color:#333;');
-        bodyDiv.innerHTML = body || '';
+        bodyDiv.setAttribute('style','flex:1;overflow-y:auto;overflow-x:hidden;padding:16px 20px;font-family:"Times New Roman",serif;font-size:14px;line-height:1.5;color:#333;box-sizing:border-box;');
+
+        var previewContent = document.createElement('div');
+        previewContent.setAttribute('style','max-width:500px;width:500px;margin:0;box-sizing:border-box;overflow-wrap:anywhere;word-break:break-word;');
+        previewContent.innerHTML = body || '';
+
+        var previewImgs = previewContent.getElementsByTagName('img');
+        for (var pi = 0; pi < previewImgs.length; pi++) {
+            previewImgs[pi].style.maxWidth = '500px';
+            previewImgs[pi].style.width = '500px';
+            previewImgs[pi].style.height = 'auto';
+            previewImgs[pi].style.boxSizing = 'border-box';
+        }
+
+        var previewTables = previewContent.getElementsByTagName('table');
+        for (var pt = 0; pt < previewTables.length; pt++) {
+            previewTables[pt].style.maxWidth = '500px';
+            previewTables[pt].style.width = '100%';
+            previewTables[pt].style.boxSizing = 'border-box';
+        }
+
+        bodyDiv.appendChild(previewContent);
 
         var footer = document.createElement('div');
         footer.setAttribute('style','padding:12px 24px;border-top:1px solid #e5e5e5;display:flex;justify-content:flex-end;flex-shrink:0;');
@@ -1218,19 +1432,7 @@
         component.set('v.body', updated);
         component.set('v.rawBody', updated);
         if (window._fecQuill) {
-            var q = window._fecQuill;
-            var cleaned = this.cleanBody(updated);
-            if (q.scroll && q.scroll.observer) {
-                q.scroll.observer.disconnect();
-            }
-            q.root.innerHTML = cleaned;
-            q.root.classList.remove('ql-blank');
-            this._makeTableCellsEditable(q.root);
-            window.setTimeout(function() {
-                if (q.scroll && q.scroll.observer) {
-                    q.scroll.observer.observe(q.root, q.scroll.observer._options || { childList: true, subtree: true, characterData: true });
-                }
-            }, 100);
+            this._setEditorHtml(component, window._fecQuill, updated);
         }
     },
 
@@ -1380,12 +1582,3 @@
         $A.enqueueAction(a);
     }
 })
-
-
-
-
-
-
-
-
-

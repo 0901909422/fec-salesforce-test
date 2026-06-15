@@ -2,7 +2,7 @@
   <div class="container">
     <div class="slds-form-element">
       <label class="slds-form-element__label">
-        <span class="required" if:true={required}> * </span>
+        <abbr class="slds-required" title="required" if:true={required}>*</abbr>
         {label}
       </label>
       <div class="slds-form-element__control">
@@ -137,8 +137,8 @@
         </div>
       </div>
 
-      <div if:true={isError} class="error-msg">
-        <span>{errorMsg}</span>
+      <div if:true={isError} class="slds-form-element__help" role="alert">
+        {errorMsg}
       </div>
     </div>
   </div>

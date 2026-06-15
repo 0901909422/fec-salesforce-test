@@ -13,7 +13,7 @@
 import { LightningElement, api, track } from 'lwc';
 import { loadStyle } from 'lightning/platformResourceLoader';
 import { NavigationMixin } from 'lightning/navigation';
-import { maskValue, formatDateVNI } from 'c/fec_CommonUtils';
+import { formatDateVNI, formatCurrency0 } from 'c/fec_CommonUtils';
 import { getFocusedTabInfo, openSubtab } from 'lightning/platformWorkspaceApi';
 
 import COMMON_STYLES from '@salesforce/resourceUrl/FEC_CommonCss';
@@ -108,7 +108,9 @@ export default class Fec_Banca extends NavigationMixin(LightningElement) {
                 buyerNID: row.buyerNID,
 
                 productName: row.productName,
-                premiumFree: row.premiumFree,
+                premiumFree: row.premiumFree
+                    ? formatCurrency0(row.premiumFree)
+                    : '',
                 status: row.status,
 
                 gender: row.gender,

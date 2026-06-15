@@ -306,6 +306,31 @@ const EXPORT_USER_FILL_HEADERS = new Set([
   ...HEADERS_PAYMENT_CONTRACT_ASSESSMENT,
   ...HEADERS_CP_ASSESSMENT
 ]);
+// Toannd 11/06/2026 - chỉ áp dụng export Case Remarks extended cho 4 template GSR/COF
+const EXTENDED_CASE_REMARK_EXPORT_TEMPLATE_KEYS = new Set([
+  "gsrtemp8_ca",
+  "gsrtemp2_othercs",
+  "coftemp8_ca",
+  "coftemp2_othercs"
+]);
+const EXPORT_REMARK_HEADER_KEYS = [
+  "caseremarks",
+  "caseremarksenteredby",
+  "caseremarksenteredbyrole",
+  "caseremarksenteredon"
+];
+const EXPORT_REMARK_STANDARD_FIELD_PREFIXES = {
+  caseremarks: "caseRemarks",
+  caseremarksenteredby: "caseRemarksEnteredBy",
+  caseremarksenteredbyrole: "caseRemarksEnteredByRole",
+  caseremarksenteredon: "caseRemarksEnteredOn"
+};
+const EXPORT_REMARK_EXTENDED_FIELD_PREFIXES = {
+  caseremarks: "caseRemarksExtended",
+  caseremarksenteredby: "caseRemarksEnteredByExtended",
+  caseremarksenteredbyrole: "caseRemarksEnteredByRoleExtended",
+  caseremarksenteredon: "caseRemarksEnteredOnExtended"
+};
 const EXPORT_HEADER_FIELD_MAP = {
   customername: "customerName",
   accountcontractnumber: "accountContractNumber",
@@ -340,6 +365,10 @@ const EXPORT_HEADER_FIELD_MAP = {
   caseremarksenteredby: "caseRemarksEnteredBy",
   caseremarksenteredbyrole: "caseRemarksEnteredByRole",
   caseremarksenteredon: "caseRemarksEnteredOn",
+  caseremarksextended: "caseRemarksExtended",
+  caseremarksenteredbyextended: "caseRemarksEnteredByExtended",
+  caseremarksenteredbyroleextended: "caseRemarksEnteredByRoleExtended",
+  caseremarksenteredonextended: "caseRemarksEnteredOnExtended",
   assignmentid: "assignmentId",
   assignmentowner: "assignmentOwner",
   assignmentremarks: "assignmentRemarks",
@@ -3303,14 +3332,50 @@ export default class Fec_BatchCaseHandling extends LightningElement {
     return false;
   }
 
-  buildExportColumnMappings(headerRow, isCofOrGsr) {
+  normalizeExportTemplateKey(templateName) {
+    return String(templateName || STR_EMPTY)
+      .trim()
+      .toLowerCase()
+      .replace(/\.xlsx$/i, STR_EMPTY);
+  }
+
+  // Toannd 11/06/2026 - 4 template GSR/COF Temp2/Temp8_CA/OtherCS
+  isExtendedCaseRemarkExportTemplate(templateName) {
+    return EXTENDED_CASE_REMARK_EXPORT_TEMPLATE_KEYS.has(
+      this.normalizeExportTemplateKey(templateName)
+    );
+  }
+
+  // Toannd 11/06/2026 - GSR/COF Temp2/Temp8: gom không giới hạn remark trong 1 ô
+  resolveRemarkExportFieldKey(normalizedHeader, useExtendedRemarkExport) {
+    if (!EXPORT_REMARK_HEADER_KEYS.includes(normalizedHeader)) {
+      return null;
+    }
+    const prefixMap = useExtendedRemarkExport
+      ? EXPORT_REMARK_EXTENDED_FIELD_PREFIXES
+      : EXPORT_REMARK_STANDARD_FIELD_PREFIXES;
+    return prefixMap[normalizedHeader] || null;
+  }
+
+  buildExportColumnMappings(headerRow, isCofOrGsr, templateName) {
     const mappings = [];
     const normalized = (headerRow || []).map((h) =>
       this.normalizeExportHeader(h)
     );
+    const useExtendedRemarkExport =
+      this.isExtendedCaseRemarkExportTemplate(templateName);
     for (let i = 0; i < normalized.length; i++) {
+      const token = normalized[i];
+      const remarkField = this.resolveRemarkExportFieldKey(
+        token,
+        useExtendedRemarkExport
+      );
+      if (remarkField) {
+        mappings.push(remarkField);
+        continue;
+      }
       // Toannd 29/5/2026 - map cột original category/subcategory/subcode
-      mappings.push(this.resolveExportFieldKey(normalized[i], isCofOrGsr));
+      mappings.push(this.resolveExportFieldKey(token, isCofOrGsr));
     }
     return mappings;
   }
@@ -3550,7 +3615,11 @@ export default class Fec_BatchCaseHandling extends LightningElement {
       headerRow,
       businessProcessCode
     );
-    const finalMappings = this.buildExportColumnMappings(headerRow, isCofOrGsr);
+    const finalMappings = this.buildExportColumnMappings(
+      headerRow,
+      isCofOrGsr,
+      templateMeta?.templateName
+    );
     const fullRows = this.buildMappedTemplateDataRows(list, finalMappings);
     const dataRows = this.compressExportDataRows(fullRows, finalMappings);
     const mappedColumnIndexes = [];

@@ -36,6 +36,11 @@
                 <default>false</default>
                 <label>Pickup at Post Office/Branch</label>
             </value>
+            <value>
+                <fullName>No Fixed Address</fullName>
+                <default>false</default>
+                <label>No Fixed Address</label>
+            </value>
         </valueSetDefinition>
     </valueSet>
 </CustomField>

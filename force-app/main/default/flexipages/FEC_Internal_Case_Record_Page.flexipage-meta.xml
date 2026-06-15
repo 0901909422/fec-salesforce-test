@@ -740,10 +740,51 @@
                 <componentName>force:relatedListSingleContainer</componentName>
                 <identifier>force_relatedListSingleContainer5</identifier>
                 <visibilityRule>
+                    <booleanFilter>1 AND 2 AND 3 AND 4 AND 5 AND 6 AND 7 AND 8 AND 9</booleanFilter>
                     <criteria>
                         <leftValue>{!Record.FEC_Interaction_View_Mode__c}</leftValue>
                         <operator>EQUAL</operator>
                         <rightValue>review</rightValue>
+                    </criteria>
+                    <criteria>
+                        <leftValue>{!$User.FEC_User_Group__c}</leftValue>
+                        <operator>NE</operator>
+                        <rightValue>CO</rightValue>
+                    </criteria>
+                    <criteria>
+                        <leftValue>{!$User.FEC_User_Group__c}</leftValue>
+                        <operator>NE</operator>
+                        <rightValue>CL</rightValue>
+                    </criteria>
+                    <criteria>
+                        <leftValue>{!$User.FEC_User_Group__c}</leftValue>
+                        <operator>NE</operator>
+                        <rightValue>CP</rightValue>
+                    </criteria>
+                    <criteria>
+                        <leftValue>{!$User.FEC_User_Group__c}</leftValue>
+                        <operator>NE</operator>
+                        <rightValue>PM</rightValue>
+                    </criteria>
+                    <criteria>
+                        <leftValue>{!$User.FEC_User_Group__c}</leftValue>
+                        <operator>NE</operator>
+                        <rightValue>DS</rightValue>
+                    </criteria>
+                    <criteria>
+                        <leftValue>{!$User.FEC_User_Group__c}</leftValue>
+                        <operator>NE</operator>
+                        <rightValue>TS</rightValue>
+                    </criteria>
+                    <criteria>
+                        <leftValue>{!$User.FEC_User_Group__c}</leftValue>
+                        <operator>NE</operator>
+                        <rightValue>CA</rightValue>
+                    </criteria>
+                    <criteria>
+                        <leftValue>{!$User.FEC_User_Group__c}</leftValue>
+                        <operator>EQUAL</operator>
+                        <rightValue>IA</rightValue>
                     </criteria>
                 </visibilityRule>
             </componentInstance>
@@ -773,10 +814,51 @@
                 <componentName>force:relatedListSingleContainer</componentName>
                 <identifier>force_relatedListSingleContainer</identifier>
                 <visibilityRule>
+                    <booleanFilter>1 AND 2 AND 3 AND 4 AND 5 AND 6 AND 7 AND 8 AND 9</booleanFilter>
                     <criteria>
                         <leftValue>{!Record.FEC_Interaction_View_Mode__c}</leftValue>
                         <operator>EQUAL</operator>
                         <rightValue>handling</rightValue>
+                    </criteria>
+                    <criteria>
+                        <leftValue>{!$User.FEC_User_Group__c}</leftValue>
+                        <operator>NE</operator>
+                        <rightValue>CO</rightValue>
+                    </criteria>
+                    <criteria>
+                        <leftValue>{!$User.FEC_User_Group__c}</leftValue>
+                        <operator>NE</operator>
+                        <rightValue>CL</rightValue>
+                    </criteria>
+                    <criteria>
+                        <leftValue>{!$User.FEC_User_Group__c}</leftValue>
+                        <operator>NE</operator>
+                        <rightValue>CP</rightValue>
+                    </criteria>
+                    <criteria>
+                        <leftValue>{!$User.FEC_User_Group__c}</leftValue>
+                        <operator>NE</operator>
+                        <rightValue>PM</rightValue>
+                    </criteria>
+                    <criteria>
+                        <leftValue>{!$User.FEC_User_Group__c}</leftValue>
+                        <operator>NE</operator>
+                        <rightValue>DS</rightValue>
+                    </criteria>
+                    <criteria>
+                        <leftValue>{!$User.FEC_User_Group__c}</leftValue>
+                        <operator>NE</operator>
+                        <rightValue>TS</rightValue>
+                    </criteria>
+                    <criteria>
+                        <leftValue>{!$User.FEC_User_Group__c}</leftValue>
+                        <operator>NE</operator>
+                        <rightValue>CA</rightValue>
+                    </criteria>
+                    <criteria>
+                        <leftValue>{!$User.FEC_User_Group__c}</leftValue>
+                        <operator>NE</operator>
+                        <rightValue>IA</rightValue>
                     </criteria>
                 </visibilityRule>
             </componentInstance>
@@ -859,6 +941,19 @@
                 </componentInstanceProperties>
                 <componentName>flexipage:tab</componentName>
                 <identifier>flexipage_tab3</identifier>
+                <visibilityRule>
+                    <booleanFilter>1 OR 2</booleanFilter>
+                    <criteria>
+                        <leftValue>{!$User.FEC_User_Group__c}</leftValue>
+                        <operator>EQUAL</operator>
+                        <rightValue>SP</rightValue>
+                    </criteria>
+                    <criteria>
+                        <leftValue>{!$User.FEC_User_Group__c}</leftValue>
+                        <operator>EQUAL</operator>
+                        <rightValue>IT</rightValue>
+                    </criteria>
+                </visibilityRule>
             </componentInstance>
         </itemInstances>
         <itemInstances>

@@ -521,11 +521,13 @@ export default class Fec_CaseEditNOC extends LightningElement {
     if (this._isPointsRedemptionModalConfirmedInStorage()) {
       return false;
     }
-    return (
-      caseRecord &&
-      caseRecord.FEC_Is_Submited__c !== true &&
-      caseRecord.FEC_Is_Call_API_Success__c !== true
-    );
+    if (!caseRecord || caseRecord.FEC_Is_Submited__c === true || caseRecord.FEC_Is_Call_API_Success__c === true) {
+      return false;
+    }
+    //linhdev 11/06/26 fix jira FECREDIT_CSM_2025_KH-1893 — giữ NOC đã Save & Close (có draft marker trên Case)
+    const hasDraftSaved = caseRecord.FEC_Draft_Remarks__c != null || caseRecord.FEC_Draft_Routing_Action_Code__c != null;
+    const hasNocOnCase = caseRecord.FEC_Category__c != null || caseRecord.FEC_SubCategory__c != null || caseRecord.FEC_SubCode__c != null || caseRecord.FEC_Actual_Nature_of_Case__c != null;
+    return !(hasDraftSaved && hasNocOnCase);
   }
 
   _stripNocFieldsOnCaseRecord(caseRecord) {

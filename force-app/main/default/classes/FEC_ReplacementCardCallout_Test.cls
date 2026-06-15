@@ -23,7 +23,7 @@ private class FEC_ReplacementCardCallout_Test {
     @IsTest
     static void testCallReplaceCard_Success() {
         // Giả lập JSON phản hồi thành công (Code = '1' dựa theo logic isSuccess của bạn)
-        String jsonRes = '{"AccountNumber":"123", "Sys2":{"Code":"1", "Description":"Success"}}';
+        String jsonRes = '{"AccountNumber":"123", "Sys":{"Code":"1", "Description":"Success"}}';
         Test.setMock(HttpCalloutMock.class, new ReplacementCardMock(200, jsonRes));
 
         Test.startTest();
@@ -34,7 +34,7 @@ private class FEC_ReplacementCardCallout_Test {
         Test.stopTest();
 
         System.assertEquals(true, FEC_ReplacementCardCallout.isSuccess(res), 'Kết quả phải thành công.');
-        System.assertEquals('1', res.Sys2.Code);
+        System.assertEquals('1', res.Sys.Code);
     }
 
     @IsTest

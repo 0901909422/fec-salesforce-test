@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomFieldTranslation xmlns="http://soap.sforce.com/2006/04/metadata">
+    <label><!-- Card Delivery Issue Reason --></label>
+    <name>FEC_Card_Delivery_Issue_Reason__c</name>
+    <picklistValues>
+        <masterLabel>Contacted but Card Not Delivered</masterLabel>
+        <translation>Giao phát có liên hệ nhưng không giao thẻ</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Missed Delivery Call</masterLabel>
+        <translation>Không nghe máy khi giao phát liên hệ</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>No Delivery Contact</masterLabel>
+        <translation>Giao phát không liên hệ</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Other</masterLabel>
+        <translation>Khác</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Prefer Pickup at Post Office/Office</masterLabel>
+        <translation>Muốn nhận tại bưu cục/ văn phòng</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Previously Refused Card</masterLabel>
+        <translation>Từ chối nhận thẻ trước đó</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Unavailable During Business Hours</masterLabel>
+        <translation>Không nhận được trong giờ hành chính</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Unavailable at Delivery Address</masterLabel>
+        <translation>Không nhận được tại địa chỉ giao phát</translation>
+    </picklistValues>
+</CustomFieldTranslation>

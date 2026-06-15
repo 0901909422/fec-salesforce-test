@@ -117,6 +117,26 @@ public without sharing class FEC_CaseBusinessService {
     DOCUMENT_REQUEST => Method.DOCUMENT_REQUEST
   };
 
+  /** Process actions gọi HTTP callout — không chạy route prepare (tránh DML trước callout). */
+  private static final Set<Method> METHODS_SKIP_ROUTE_PREPARE = new Set<Method>{
+    Method.PHONE_UPDATE,
+    Method.EMAIL_UPDATE,
+    Method.FULLNAME_UPDATE,
+    Method.DOB_UPDATE,
+    Method.GENDER_UPDATE,
+    Method.ADDRESS_UPDATE,
+    Method.BLOCK_CARD,
+    Method.UNBLOCK_CARD,
+    Method.PIN_REISSUE,
+    Method.REPLACE_CARD
+  };
+
+  @TestVisible
+  private static Boolean requiresRoutePrepareBeforeRun(String method) {
+    Method selected = METHOD_MAP.get(method);
+    return selected != null && !METHODS_SKIP_ROUTE_PREPARE.contains(selected);
+  }
+
   @AuraEnabled
   public static Business getByCase(
     String caseId,
@@ -2466,13 +2486,14 @@ public without sharing class FEC_CaseBusinessService {
       String blockCode = (String)params.get('blockCode');
       String replacementFee = (String)params.get('replacementFee');
       String last4Digit = (String)params.get('last4Digit');
-      //PhongBT: Clone Actual NOC + Actual MDS
-      //PhongBT: Tạo case flow history
-      FEC_CofGsrRoutePrepareService.prepareActualNatureCloneAndCreationHistory(
-        caseId,
-        params,
-        method
-      );
+      //PhongBT: Clone Actual NOC + Actual MDS + Case Flow History — chỉ routing; bỏ qua process action callout API.
+      if (requiresRoutePrepareBeforeRun(method)) {
+        FEC_CofGsrRoutePrepareService.prepareActualNatureCloneAndCreationHistory(
+          caseId,
+          params,
+          method
+        );
+      }
       switch on selectedMethod {
         when ROUTE_TO {
           String queueId = (String) params.get('queueId');

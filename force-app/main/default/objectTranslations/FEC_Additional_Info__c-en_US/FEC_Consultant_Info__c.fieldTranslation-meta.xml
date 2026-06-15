@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomFieldTranslation xmlns="http://soap.sforce.com/2006/04/metadata">
+    <label><!-- Consultant Info --></label>
+    <name>FEC_Consultant_Info__c</name>
+    <picklistValues>
+        <masterLabel>Collection Fee</masterLabel>
+        <translation>Phí thu hộ</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Contract Settlement</masterLabel>
+        <translation>Thanh lý HĐ</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Due Date</masterLabel>
+        <translation>Ngày kỳ hạn</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Duplicate Top-up Contract Period</masterLabel>
+        <translation>Giai đoạn trùng lặp HĐ Top-up</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Installment Amount</masterLabel>
+        <translation>Tiền góp</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Interest Rate</masterLabel>
+        <translation>Lãi suất</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Loan Insurance</masterLabel>
+        <translation>Bảo hiểm khoản vay</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Number of Installments</masterLabel>
+        <translation>Số kỳ góp</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Other</masterLabel>
+        <translation>Khác</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Penalty Interest/Fee</masterLabel>
+        <translation>Lãi/ phí phạt</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Total Loan Amount</masterLabel>
+        <translation>Tổng khoản vay</translation>
+    </picklistValues>
+</CustomFieldTranslation>

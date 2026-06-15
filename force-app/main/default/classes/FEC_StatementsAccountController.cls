@@ -149,7 +149,7 @@ public without sharing class FEC_StatementsAccountController {
         header.FEC_Next_Statement_Date__c = info.Statement.NextStatementDate;
 
         /* ===== PAYMENT ===== */
-        header.FEC_Total_Payment_Due__c   = info?.Statement?.StatementBalance;
+        header.FEC_Total_Payment_Due__c   = info?.Statement?.LastPaymentAmount;
         header.FEC_Minimum_Payment_Due__c = info?.Statement?.LastStatementMPA;
         header.FEC_Payment_Due_Date__c    = info?.Statement?.LastStatementDueDate;
 
@@ -204,7 +204,7 @@ public without sharing class FEC_StatementsAccountController {
             s.FEC_Beginning_Balance__c = cs.BalanceForBeginningOfPeriod;
             s.FEC_End_Balance__c       = cs.BalanceForEndOfPeriod;
 
-            s.FEC_Total_Interest__c = cs.TotalInterest;
+            s.FEC_Total_Interest__c = cs.InterestCurrent;
             s.FEC_IPP_Principal__c  = cs.IPPPrincipal;
             s.FEC_IPP_Interest__c   = cs.IPPInterest;
 

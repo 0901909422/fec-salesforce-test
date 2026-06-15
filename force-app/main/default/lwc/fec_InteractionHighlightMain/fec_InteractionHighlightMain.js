@@ -10,6 +10,7 @@ import { ShowToastEvent } from "lightning/platformShowToastEvent";
 import { getRecord, getFieldValue } from "lightning/uiRecordApi";
 import { notifyRecordUpdateAvailable } from "lightning/uiRecordApi";
 import resetViewMode from "@salesforce/apex/FEC_InteractionInforHandler.resetViewMode";
+import canExecuteUbankEmailInteraction from "@salesforce/apex/FEC_CaseExecuteService.canExecuteUbankEmailInteraction";
 import getRecordTypeName from "@salesforce/apex/FEC_InteractionInforHandler.getRecordTypeName";
 import isInteractionEmailActionBlocked from "@salesforce/apex/FEC_InteractionInforHandler.isInteractionEmailActionBlocked";
 import isInteractionPhoneActionBlocked from "@salesforce/apex/FEC_InteractionInforHandler.isInteractionPhoneActionBlocked";
@@ -23,6 +24,7 @@ import ISOWNER from "@salesforce/schema/Case.FEC_Is_Owner__c";
 import HAS_ACCOUNT_OR_CONTRACT from "@salesforce/schema/Case.FEC_Has_Account_or_Contract__c";
 import RECORDTYPE_ID from "@salesforce/schema/Case.RecordTypeId";
 import OWNERID from "@salesforce/schema/Case.OwnerId";
+import CAN_EXECUTE from "@salesforce/schema/Case.FEC_Can_Execute__c";
 import INTERACTION_RECORD_ID from "@salesforce/schema/Case.FEC_Interaction__c";
 import FEC_ID_SEARCH from "@salesforce/schema/Case.FEC_ID_Search__c";
 import {
@@ -100,6 +102,8 @@ export default class Fec_InteractionHighlightMain extends NavigationMixin(
   isCaseClosed = false;
   isInteractionClosed;
   isOwner = false;
+  ubankExecuteAccess = false;
+  canExecuteFlag = false;
 
   // ===============================
   // LOAD CASE DATA
@@ -107,6 +111,18 @@ export default class Fec_InteractionHighlightMain extends NavigationMixin(
   @wire(EnclosingTabId)
   enclosingTabId;
 
+  @wire(canExecuteUbankEmailInteraction, { caseId: "$recordId" })
+  wiredUbankExecuteAccess({ data, error }) {
+    if (data !== undefined) {
+      this.ubankExecuteAccess = data === true;
+      if (this.ubankExecuteAccess) {
+        this.canExecuteFlag = true;
+      }
+    } else if (error) {
+      this.ubankExecuteAccess = false;
+      console.error("canExecuteUbankEmailInteraction wire error", error);
+    }
+  }
   @wire(getRecord, {
     recordId: "$recordId",
     fields: [
@@ -119,6 +135,7 @@ export default class Fec_InteractionHighlightMain extends NavigationMixin(
       CUSTOMER_TYPE,
       OWNERID,
       FEC_ID_SEARCH,
+      CAN_EXECUTE,
     ],
   })
   wiredCase({ data, error }) {
@@ -132,6 +149,8 @@ export default class Fec_InteractionHighlightMain extends NavigationMixin(
       this.isOwner = getFieldValue(data, ISOWNER);
       this.customerType = getFieldValue(data, CUSTOMER_TYPE);
       this.ownerId = getFieldValue(data, OWNERID);
+      this.canExecuteFlag = getFieldValue(data, CAN_EXECUTE);
+      this.refreshUbankExecuteAccess();
 
       const fecIdSearch = getFieldValue(data, FEC_ID_SEARCH);
       if (fecIdSearch && this.enclosingTabId) {
@@ -214,8 +233,8 @@ export default class Fec_InteractionHighlightMain extends NavigationMixin(
   }
 
   get showExecute() {
-    // 1. Chỉ người sở hữu (Owner) mới được quyền thấy nút
-    if (!this.isOwner) {
+    // Owner or Ubank Email queue member can execute.
+    if (!this.isOwner && !this.ubankExecuteAccess && this.canExecuteFlag !== true) {
       return false;
     }
 
@@ -230,11 +249,10 @@ export default class Fec_InteractionHighlightMain extends NavigationMixin(
 
     // 3. Logic hiển thị nút "Execute" (Bắt đầu xử lý)
     // - Phải CHƯA Ở TRONG trong chế độ xử lý (!isHandling)
-    if (!this.isHandling) {
+    if (this.canExecuteFlag === true || this.ubankExecuteAccess) {
       return true;
-    } else {
-      return false;
     }
+    return !this.isHandling;
   }
 
   get isInteractionCase() {
@@ -316,6 +334,16 @@ export default class Fec_InteractionHighlightMain extends NavigationMixin(
     this.customerSegment = data.customerSegment || "";
   }
 
+  async refreshUbankExecuteAccess() {
+    try {
+      this.ubankExecuteAccess = await canExecuteUbankEmailInteraction({
+        caseId: this.recordId,
+      }) === true;
+    } catch (error) {
+      this.ubankExecuteAccess = false;
+      console.error("canExecuteUbankEmailInteraction error:", error);
+    }
+  }
   // ===============================
   // ACTIONS
   // ===============================
@@ -330,6 +358,8 @@ export default class Fec_InteractionHighlightMain extends NavigationMixin(
     resetViewMode({ recordId: this.recordId, viewMode: "handling" })
       .then(() => {
         this.viewMode = "handling";
+        this.ubankExecuteAccess = false;
+        this.canExecuteFlag = false;
         //this._resetDone = false;
         console.log(
           "Update viewMode to handling successfully in Fec_InteractionHighlightMain handleExecute",
