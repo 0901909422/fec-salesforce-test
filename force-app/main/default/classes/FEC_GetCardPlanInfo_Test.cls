@@ -45,9 +45,9 @@ private class FEC_GetCardPlanInfo_Test {
         Test.startTest();
         try {
             FEC_GetCardPlanInfo.getCardPlanInfo('');
-            System.assert(false, 'Phải ném AuraHandledException khi AccountNumber rỗng.');
-        } catch (AuraHandledException e) {
-            System.assert(true);
+            System.assert(false, 'Phải ném CalloutException khi AccountNumber rỗng.');
+        } catch (CalloutException e) {
+            System.assert(e.getMessage().contains('AccountNumber'));
         }
         Test.stopTest();
     }
@@ -60,9 +60,9 @@ private class FEC_GetCardPlanInfo_Test {
         Test.startTest();
         try {
             FEC_GetCardPlanInfo.getCardPlanInfo('ACC123');
-            System.assert(false, 'Phải ném AuraHandledException khi status code != 200.');
-        } catch (AuraHandledException e) {
-            System.assert(true);
+            System.assert(false, 'Phải ném CalloutException khi status code != 200.');
+        } catch (CalloutException e) {
+            System.assert(e.getMessage().contains('Internal Server Error'));
         }
         Test.stopTest();
     }
