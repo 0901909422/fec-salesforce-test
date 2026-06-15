@@ -337,6 +337,53 @@ private class FEC_CreateCSCaseService_Test {
     }
 
     @IsTest
+    static void testCreateCSCaseRequest_WithZipUploadDocument() {
+        Compression.ZipWriter writer = new Compression.ZipWriter();
+        writer.addEntry('samplepic.png', Blob.valueOf('png-bytes'));
+        String zipPayload =
+            'Samplepic.png|png|' + EncodingUtil.base64Encode(writer.getArchive());
+
+        FEC_CreateCSCaseService.CaseRequestType req = buildValidRequest();
+        FEC_CreateCSCaseService.AdditionalInfoType uploadInfo =
+            new FEC_CreateCSCaseService.AdditionalInfoType();
+        uploadInfo.ID = FEC_ConstantCommon.UPLOAD_DOCUMENT;
+        uploadInfo.Value = zipPayload;
+        req.RequestInfo.AdditionalInfo =
+            new List<FEC_CreateCSCaseService.AdditionalInfoType>{ uploadInfo };
+
+        Test.setMock(HttpCalloutMock.class, new MockGetCustomerListCallout());
+        FEC_CaseTriggerHandler.isExecuting = true;
+        Test.startTest();
+        FEC_CreateCSCaseService.CreateCSCaseResponse res =
+            FEC_CreateCSCaseService.CreateCSCaseRequest(req);
+        Test.stopTest();
+        FEC_CaseTriggerHandler.isExecuting = false;
+
+        System.assertEquals('1', res.Sys.Code, res.Sys.Description);
+
+        Case customerCase = [
+            SELECT Id, FEC_Interaction_View_Mode__c
+            FROM Case
+            WHERE RecordType.DeveloperName = :FEC_ConstantCommon.CASE_CUSTOMER_RECORD_TYPE_DEV_NAME
+            ORDER BY CreatedDate DESC
+            LIMIT 1
+        ];
+        System.assertEquals(
+            FEC_ConstantCommon.INTERACTION_REVIEW_MODE,
+            customerCase.FEC_Interaction_View_Mode__c
+        );
+
+        ContentVersion cv = [
+            SELECT Title, VersionData
+            FROM ContentVersion
+            WHERE FirstPublishLocationId = :customerCase.Id
+            LIMIT 1
+        ];
+        System.assertEquals('Samplepic.png', cv.Title);
+        System.assertEquals('png-bytes', cv.VersionData.toString());
+    }
+
+    @IsTest
     static void testCreateCSCaseRequest_WithAdditionalInfo() {
         FEC_CreateCSCaseService.CaseRequestType req = buildValidRequest();
         FEC_CreateCSCaseService.AdditionalInfoType additionalInfo =
@@ -355,6 +402,56 @@ private class FEC_CreateCSCaseService_Test {
         FEC_CaseTriggerHandler.isExecuting = false;
 
         System.assertEquals('1', res.Sys.Code, res.Sys.Description);
+    }
+
+    @IsTest
+    static void testCreateCSCaseRequest_MissingCreatorInfo_UsesRunningUserOwner() {
+        FEC_CreateCSCaseService.CaseRequestType req = buildValidRequest();
+        req.CreatorInfo = null;
+
+        Test.setMock(HttpCalloutMock.class, new MockGetCustomerListCallout());
+        FEC_CaseTriggerHandler.isExecuting = true;
+        Test.startTest();
+        FEC_CreateCSCaseService.CreateCSCaseResponse res =
+            FEC_CreateCSCaseService.CreateCSCaseRequest(req);
+        Test.stopTest();
+        FEC_CaseTriggerHandler.isExecuting = false;
+
+        System.assertEquals('1', res.Sys.Code, res.Sys.Description);
+
+        Case customerCase = [
+            SELECT OwnerId
+            FROM Case
+            WHERE RecordType.DeveloperName = :FEC_ConstantCommon.CASE_CUSTOMER_RECORD_TYPE_DEV_NAME
+            ORDER BY CreatedDate DESC
+            LIMIT 1
+        ];
+        System.assertEquals(UserInfo.getUserId(), customerCase.OwnerId);
+    }
+
+    @IsTest
+    static void testCreateCSCaseRequest_NullCreatorEmail_UsesRunningUserOwner() {
+        FEC_CreateCSCaseService.CaseRequestType req = buildValidRequest();
+        req.CreatorInfo.CreatorEmail = null;
+
+        Test.setMock(HttpCalloutMock.class, new MockGetCustomerListCallout());
+        FEC_CaseTriggerHandler.isExecuting = true;
+        Test.startTest();
+        FEC_CreateCSCaseService.CreateCSCaseResponse res =
+            FEC_CreateCSCaseService.CreateCSCaseRequest(req);
+        Test.stopTest();
+        FEC_CaseTriggerHandler.isExecuting = false;
+
+        System.assertEquals('1', res.Sys.Code, res.Sys.Description);
+
+        Case interactionCase = [
+            SELECT OwnerId
+            FROM Case
+            WHERE RecordType.DeveloperName = :FEC_ConstantCommon.CASE_INTERACTION_RECORD_TYPE_DEV_NAME
+            ORDER BY CreatedDate DESC
+            LIMIT 1
+        ];
+        System.assertEquals(UserInfo.getUserId(), interactionCase.OwnerId);
     }
 
     @IsTest
@@ -472,6 +569,67 @@ private class FEC_CreateCSCaseService_Test {
         Test.stopTest();
 
         System.assertNotEquals('1', res.Sys.Code);
+    }
+
+    @IsTest
+    static void testCreateCSCaseRequest_SubCategorySubCodeMatchByCode() {
+        FEC_Business_Process__c bp = [
+            SELECT Id FROM FEC_Business_Process__c WHERE FEC_Code__c = 'Complaint' LIMIT 1
+        ];
+        FEC_Product_Type__c pt = [
+            SELECT Id FROM FEC_Product_Type__c WHERE FEC_Code__c = 'CARD' LIMIT 1
+        ];
+        FEC_Category__c cat = [
+            SELECT Id FROM FEC_Category__c WHERE FEC_Code__c = 'Request' LIMIT 1
+        ];
+        FEC_Sub_Category__c scat = new FEC_Sub_Category__c(
+            FEC_Name_VN__c = 'OU-AC01-Liên hệ thành công',
+            FEC_Code__c = 'OU-AC01',
+            FEC_Active__c = true
+        );
+        FEC_Sub_Code__c sc = new FEC_Sub_Code__c(
+            FEC_Name_VN__c = 'OU-AC01.01-Đã hỗ trợ',
+            FEC_Code__c = 'OU-AC01.01',
+            FEC_Active__c = true
+        );
+        insert new List<SObject>{ scat, sc };
+        insert new FEC_Nature_of_Case__c(
+            FEC_Product_Type__c = pt.Id,
+            FEC_Business_Process__c = bp.Id,
+            FEC_Category__c = cat.Id,
+            FEC_Sub_Category__c = scat.Id,
+            FEC_Sub_Code__c = sc.Id,
+            FEC_Channel__c = FEC_ConstantCommon.CHANNEL_INBOUND_NAME,
+            FEC_Active__c = true
+        );
+
+        FEC_CreateCSCaseService.CaseRequestType req = buildValidRequest();
+        req.RequestInfo.SubCategory = 'OU-AC01';
+        req.RequestInfo.SubCode = 'OU-AC01.01';
+
+        Test.setMock(HttpCalloutMock.class, new MockGetCustomerListCallout());
+        FEC_CaseTriggerHandler.isExecuting = true;
+        Test.startTest();
+        FEC_CreateCSCaseService.CreateCSCaseResponse res =
+            FEC_CreateCSCaseService.CreateCSCaseRequest(req);
+        Test.stopTest();
+        FEC_CaseTriggerHandler.isExecuting = false;
+
+        System.assertEquals(
+            '1',
+            res.Sys.Code,
+            'Expected success with SubCategory/SubCode code. Actual: ' + res.Sys.Description
+        );
+
+        Case customerCase = [
+            SELECT FEC_SubCategory__r.FEC_Code__c, FEC_SubCode__r.FEC_Code__c
+            FROM Case
+            WHERE RecordType.DeveloperName = :FEC_ConstantCommon.CASE_CUSTOMER_RECORD_TYPE_DEV_NAME
+            ORDER BY CreatedDate DESC
+            LIMIT 1
+        ];
+        System.assertEquals('OU-AC01', customerCase.FEC_SubCategory__r.FEC_Code__c);
+        System.assertEquals('OU-AC01.01', customerCase.FEC_SubCode__r.FEC_Code__c);
     }
 
     @IsTest

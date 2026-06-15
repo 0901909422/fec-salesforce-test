@@ -20,10 +20,10 @@ global without sharing class FEC_CreateCSCaseRestService {
             FEC_ConstantCommon.API_CONTENT_TYPE
         );
 
-        String rawXml = req.requestBody != null ? req.requestBody.toString() : null;
+        Blob rawBody = req.requestBody;
 
         try {
-            if (String.isBlank(rawXml)) {
+            if (rawBody == null || rawBody.size() == 0) {
                 res.statusCode = FEC_ConstantCommon.HTTP_STATUS_BAD_REQUEST;
                 res.responseBody = Blob.valueOf(
                     FEC_MyCaseSoapXml.buildErrorSoapResponse(
@@ -36,7 +36,7 @@ global without sharing class FEC_CreateCSCaseRestService {
             }
 
             FEC_CreateCSCaseService.CaseRequestType caseReq =
-                FEC_MyCaseSoapXml.parseCreateCSCaseRequest(rawXml);
+                FEC_MyCaseSoapXml.parseCreateCSCaseRequestFromBlob(rawBody);
             FEC_CreateCSCaseService.CreateCSCaseResponse caseResp =
                 FEC_CreateCSCaseService.CreateCSCaseRequest(caseReq);
 
