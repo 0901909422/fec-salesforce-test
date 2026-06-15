@@ -40,8 +40,9 @@ global class FEC_BatchReCallCustomSync  implements Database.Batchable<sObject>, 
                 String cleanRecords = log.Records__c.stripHtmlTags().unescapeHtml4();
                 recordIdObject = (List<String>) JSON.deserialize(cleanRecords, List<String>.class);
             }
+            String targetObject = String.isNotBlank(cus.FEC_Target_Object__c) ? cus.FEC_Target_Object__c : 'Case';
             String queryString = 'Select ' + fieldList +
-                ' From Case ' +  
+                ' From ' + targetObject +  
                 ' where id in :recordIdObject';  
             List<sObject> records = Database.query(queryString);  
             List<FEC_integration_service_log__c> resultLogs = FEC_CustomSyncCallout.sendRequest(cus,log,records); 
@@ -69,7 +70,9 @@ global class FEC_BatchReCallCustomSync  implements Database.Batchable<sObject>, 
             'FEC_End_At__c, FEC_Processing_Quantity__c, ' +
             'FEC_Case_Business_Code__c, FEC_Table_Name__c, ' +
             'FEC_Total_Record_Sync__c, FEC_Target_Object__c, ' +
-            'FEC_Request_Body_Mapping__c, FEC_Mapping_Data_Type__c ' +
+            'FEC_Request_Body_Mapping__c, FEC_Mapping_Data_Type__c, ' + 
+            'FEC_Static_Map_Value__c, FEC_Modified_Date_Field__c,FEC_Additional_Conditions__c, ' +
+            'FEC_Created_Date_Field__c ' + 
             'FROM FEC_Custom_Sync__c ' +
             'WHERE FEC_Sync_To__c = \'Bix\' AND FEC_Active__c = true';
          

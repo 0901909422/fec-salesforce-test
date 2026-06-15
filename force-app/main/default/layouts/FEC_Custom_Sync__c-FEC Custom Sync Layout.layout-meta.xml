@@ -36,6 +36,14 @@
                 <field>FEC_Target_Object__c</field>
             </layoutItems>
             <layoutItems>
+                <behavior>Edit</behavior> 
+                <field>OwnerId</field>
+            </layoutItems>
+            <layoutItems>
+                <behavior>Edit</behavior> 
+                <field>FEC_Additional_Conditions__c</field>
+            </layoutItems>
+            <layoutItems>
                 <behavior>Edit</behavior>
                 <field>FEC_Request_Body_Mapping__c</field>
             </layoutItems>
@@ -67,11 +75,19 @@
             </layoutItems>
             <layoutItems>
                 <behavior>Edit</behavior>
-                <field>OwnerId</field>
+                <field>FEC_Created_Date_Field__c</field>
+            </layoutItems>
+            <layoutItems>
+                <behavior>Edit</behavior>
+                <field>FEC_Modified_Date_Field__c</field>
             </layoutItems>
             <layoutItems>
                 <behavior>Readonly</behavior>
                 <field>LastModifiedById</field>
+            </layoutItems>
+            <layoutItems>
+                <behavior>Edit</behavior>
+                <field>FEC_Static_Map_Value__c</field>
             </layoutItems>
             <layoutItems>
                 <behavior>Edit</behavior>

@@ -95,10 +95,13 @@ global class FEC_BatchCustomSync implements Database.Batchable<sObject>, Databas
     public static String getFields(FEC_Custom_Sync__c cus) { 
         String fieldList = extractFieldsFromMapping(cus.FEC_Request_Body_Mapping__c);
         if (Test.isRunningTest()) return 'SELECT ' + fieldList + ' FROM ' + cus.FEC_Target_Object__c; 
+        String additionalConditions = String.isNotBlank(cus.FEC_Additional_Conditions__c) ? ' ' + cus.FEC_Additional_Conditions__c + ' ' : ''; 
+        String modifiedField = String.isNotBlank(cus.FEC_Modified_Date_Field__c) ? cus.FEC_Modified_Date_Field__c : 'LastModifiedDate';
+        String createdField = String.isNotBlank(cus.FEC_Created_Date_Field__c) ? cus.FEC_Created_Date_Field__c : 'CreatedDate';
         String caseType = cus.FEC_Case_Business_Code__c != null  ? ' and FEC_Actual_Nature_of_Case__r.FEC_Business_Process__r.FEC_Code__c = :whatName ' : '';
-        String wherePart = ' WHERE ((LastModifiedDate > :startTime AND LastModifiedDate <= :toDate) ' +
-                           ' OR (CreatedDate > :startTime AND CreatedDate <= :toDate) )' + 
-                           caseType;  
+        String wherePart = ' WHERE ((' + modifiedField + ' > :startTime AND ' + modifiedField + ' <= :toDate) ' +
+                           ' OR (' + createdField + ' > :startTime AND ' + createdField + ' <= :toDate) )' + 
+                           caseType + additionalConditions;   
         return 'SELECT ' + fieldList + ' FROM ' + cus.FEC_Target_Object__c + wherePart;
     }
 
@@ -107,8 +110,12 @@ global class FEC_BatchCustomSync implements Database.Batchable<sObject>, Databas
         Set<String> fields = new Set<String>();
         for (String key : mapping.keySet()) {
             Object val = mapping.get(key);
-            if (val instanceof String) {
-                fields.add((String) val);
+            if (val instanceof String && (String) val != 'DateTimeNow') {
+                String strVal = (String) val;
+                // Skip static map keys (suffix __g) — they are not SF fields
+                if (!strVal.endsWith('__g')) {
+                    fields.add(strVal);
+                }
             }
         }
         return String.join(new List<String>(fields), ', ');

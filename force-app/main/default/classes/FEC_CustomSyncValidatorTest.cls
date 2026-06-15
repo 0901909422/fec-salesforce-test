@@ -4,8 +4,10 @@ Company:       Isobar
 Description:   Test class for FEC_CustomSyncValidator + CustomSyncTrigger
 History
 <Date>         <Authors Name>     <Brief Description of Change>
-2026/04/29     Duan Nguyen                 Rewrite - align with actual trigger/validator logic
-2026/05/14     Duan Nguyen                 Update - cover 5 new validation rules
+2026/04/29     Duan Nguyen          Rewrite - align with actual trigger/validator logic
+2026/05/14     Duan Nguyen          Update - cover 5 new validation rules
+2026/06/05     Duan Nguyen          Add coverage: Static Map Value validation rules
+2026/06/11     Duan Nguyen          Add coverage: Invalid TargetObject, MappingDataType invalid JSON, StaticMapValue key not in mapping
 ------------------------------------------------------------*/
 @isTest
 private class FEC_CustomSyncValidatorTest {
@@ -396,6 +398,208 @@ private class FEC_CustomSyncValidatorTest {
         System.assertEquals(-99, updated.FEC_Processing_Quantity__c);
     }
 
+    // ─── Rule 6: Static Map Value validation ─────────────────────────────────
+
+    @isTest
+    static void testStaticMapValue_InvalidJson_Fails() {
+        FEC_Custom_Sync__c rec = buildRecord(true);
+        rec.FEC_Static_Map_Value__c = '{invalid json}';
+        Test.startTest();
+        try {
+            insert rec;
+            System.assert(false, 'Should have thrown');
+        } catch (DmlException e) {
+            System.assert(e.getMessage().contains('Invalid JSON format in Static Map Value'));
+        }
+        Test.stopTest();
+    }
+
+    @isTest
+    static void testStaticMapValue_KeyWithoutSuffix_Fails() {
+        FEC_Custom_Sync__c rec = buildRecord(true);
+        rec.FEC_Static_Map_Value__c = '{"BadKey":"value"}';
+        Test.startTest();
+        try {
+            insert rec;
+            System.assert(false, 'Should have thrown');
+        } catch (DmlException e) {
+            System.assert(e.getMessage().contains('must end with "__g" suffix'));
+        }
+        Test.stopTest();
+    }
+
+    @isTest
+    static void testStaticMapValue_ValidKeys_Passes() {
+        FEC_Custom_Sync__c rec = buildRecord(true);
+        rec.FEC_Static_Map_Value__c = '{"ObjectClass__g":"NAME123"}';
+        rec.FEC_Request_Body_Mapping__c = '{"col1":"Id","col2":"CaseNumber","col3":"ObjectClass__g"}';
+        rec.FEC_Mapping_Data_Type__c = '{"col1":"VARCHAR2","col2":"VARCHAR2","col3":"VARCHAR2"}';
+        Test.startTest();
+        insert rec;
+        Test.stopTest();
+        System.assertNotEquals(null, rec.Id);
+    }
+
+    @isTest
+    static void testStaticMapValue_NumberTypeMismatch_Fails() {
+        FEC_Custom_Sync__c rec = buildRecord(true);
+        rec.FEC_Request_Body_Mapping__c = '{"col1":"Id","col2":"ObjectClass__g"}';
+        rec.FEC_Mapping_Data_Type__c = '{"col1":"VARCHAR2","col2":"NUMBER"}';
+        rec.FEC_Static_Map_Value__c = '{"ObjectClass__g":"NotANumber"}';
+        Test.startTest();
+        try {
+            insert rec;
+            System.assert(false, 'Should have thrown');
+        } catch (DmlException e) {
+            System.assert(e.getMessage().contains('is not compatible with DataType NUMBER'));
+        }
+        Test.stopTest();
+    }
+
+    @isTest
+    static void testStaticMapValue_NumberTypeValid_Passes() {
+        FEC_Custom_Sync__c rec = buildRecord(true);
+        rec.FEC_Request_Body_Mapping__c = '{"col1":"Id","col2":"ObjectClass__g"}';
+        rec.FEC_Mapping_Data_Type__c = '{"col1":"VARCHAR2","col2":"NUMBER"}';
+        rec.FEC_Static_Map_Value__c = '{"ObjectClass__g":123}';
+        Test.startTest();
+        insert rec;
+        Test.stopTest();
+        System.assertNotEquals(null, rec.Id);
+    }
+
+    @isTest
+    static void testStaticMapValue_TimestampTypeMismatch_Fails() {
+        FEC_Custom_Sync__c rec = buildRecord(true);
+        rec.FEC_Request_Body_Mapping__c = '{"col1":"Id","col2":"ObjectClass__g"}';
+        rec.FEC_Mapping_Data_Type__c = '{"col1":"VARCHAR2","col2":"TIMESTAMP(6)"}';
+        rec.FEC_Static_Map_Value__c = '{"ObjectClass__g":12345}';
+        Test.startTest();
+        try {
+            insert rec;
+            System.assert(false, 'Should have thrown');
+        } catch (DmlException e) {
+            System.assert(e.getMessage().contains('must be a date/time string for DataType TIMESTAMP'));
+        }
+        Test.stopTest();
+    }
+
+    @isTest
+    static void testStaticMapValue_TimestampInvalidString_Fails() {
+        FEC_Custom_Sync__c rec = buildRecord(true);
+        rec.FEC_Request_Body_Mapping__c = '{"col1":"Id","col2":"time__g"}';
+        rec.FEC_Mapping_Data_Type__c = '{"col1":"VARCHAR2","col2":"TIMESTAMP(6)"}';
+        rec.FEC_Static_Map_Value__c = '{"time__g":"TriggerClass"}';
+        Test.startTest();
+        try {
+            insert rec;
+            System.assert(false, 'Should have thrown');
+        } catch (DmlException e) {
+            System.assert(e.getMessage().contains('is not a valid date/time format for DataType TIMESTAMP'));
+        }
+        Test.stopTest();
+    }
+
+    @isTest
+    static void testStaticMapValue_TimestampValidFormat_Passes() {
+        FEC_Custom_Sync__c rec = buildRecord(true);
+        rec.FEC_Request_Body_Mapping__c = '{"col1":"Id","col2":"time__g"}';
+        rec.FEC_Mapping_Data_Type__c = '{"col1":"VARCHAR2","col2":"TIMESTAMP(6)"}';
+        rec.FEC_Static_Map_Value__c = '{"time__g":"2024-01-15 10:30:00"}';
+        Test.startTest();
+        insert rec;
+        Test.stopTest();
+        System.assertNotEquals(null, rec.Id);
+    }
+
+    @isTest
+    static void testStaticMapValue_TimestampSlashFormat_Passes() {
+        FEC_Custom_Sync__c rec = buildRecord(true);
+        rec.FEC_Request_Body_Mapping__c = '{"col1":"Id","col2":"time__g"}';
+        rec.FEC_Mapping_Data_Type__c = '{"col1":"VARCHAR2","col2":"TIMESTAMP"}';
+        rec.FEC_Static_Map_Value__c = '{"time__g":"12/12/2020"}';
+        Test.startTest();
+        insert rec;
+        Test.stopTest();
+        System.assertNotEquals(null, rec.Id);
+    }
+
+    @isTest
+    static void testStaticMapValue_Null_SkipsCheck() {
+        FEC_Custom_Sync__c rec = buildRecord(true);
+        rec.FEC_Static_Map_Value__c = null;
+        Test.startTest();
+        insert rec;
+        Test.stopTest();
+        System.assertNotEquals(null, rec.Id);
+    }
+
+    // ─── Rule 7: Additional Conditions must start with AND or OR ─────────────
+
+    @isTest
+    static void testAdditionalConditions_StartsWithAND_Passes() {
+        FEC_Custom_Sync__c rec = buildRecord(true);
+        rec.FEC_Additional_Conditions__c = 'AND Status = \'New\'';
+        Test.startTest();
+        insert rec;
+        Test.stopTest();
+        System.assertNotEquals(null, rec.Id);
+    }
+
+    @isTest
+    static void testAdditionalConditions_StartsWithOR_Passes() {
+        FEC_Custom_Sync__c rec = buildRecord(true);
+        rec.FEC_Additional_Conditions__c = 'OR Status = \'Closed\'';
+        Test.startTest();
+        insert rec;
+        Test.stopTest();
+        System.assertNotEquals(null, rec.Id);
+    }
+
+    @isTest
+    static void testAdditionalConditions_StartsWithInvalid_Fails() {
+        FEC_Custom_Sync__c rec = buildRecord(true);
+        rec.FEC_Additional_Conditions__c = 'Status = \'New\'';
+        Test.startTest();
+        try {
+            insert rec;
+            System.assert(false, 'Should have thrown');
+        } catch (DmlException e) {
+            System.assert(e.getMessage().contains('Additional Conditions must start with "AND" or "OR"'));
+        }
+        Test.stopTest();
+    }
+
+    @isTest
+    static void testAdditionalConditions_Null_Passes() {
+        FEC_Custom_Sync__c rec = buildRecord(true);
+        rec.FEC_Additional_Conditions__c = null;
+        Test.startTest();
+        insert rec;
+        Test.stopTest();
+        System.assertNotEquals(null, rec.Id);
+    }
+
+    @isTest
+    static void testAdditionalConditions_Blank_Passes() {
+        FEC_Custom_Sync__c rec = buildRecord(true);
+        rec.FEC_Additional_Conditions__c = '';
+        Test.startTest();
+        insert rec;
+        Test.stopTest();
+        System.assertNotEquals(null, rec.Id);
+    }
+
+    @isTest
+    static void testAdditionalConditions_CaseInsensitive_Passes() {
+        FEC_Custom_Sync__c rec = buildRecord(true);
+        rec.FEC_Additional_Conditions__c = 'and Status = \'New\'';
+        Test.startTest();
+        insert rec;
+        Test.stopTest();
+        System.assertNotEquals(null, rec.Id);
+    }
+
     // ─── Bulk test ────────────────────────────────────────────────────────────
 
     @isTest
@@ -408,6 +612,73 @@ private class FEC_CustomSyncValidatorTest {
         insert records;
         Test.stopTest();
         System.assertEquals(50, [SELECT COUNT() FROM FEC_Custom_Sync__c WHERE Id IN :records]);
+    }
+
+    // ─── Rule 4: Invalid TargetObject name ───────────────────────────────────
+
+    @isTest
+    static void testRule4_InvalidTargetObject_Fails() {
+        FEC_Custom_Sync__c rec = buildRecord(true);
+        rec.FEC_Case_Business_Code__c = null;
+        rec.FEC_Target_Object__c = 'NonExistentObject__x';
+        rec.FEC_Request_Body_Mapping__c = '{"col1":"Id"}';
+        rec.FEC_Mapping_Data_Type__c = '{"col1":"VARCHAR2"}';
+        Test.startTest();
+        try {
+            insert rec;
+            System.assert(false, 'Should have thrown');
+        } catch (DmlException e) {
+            System.assert(e.getMessage().contains('Invalid fields in RequestBodyMapping'));
+        }
+        Test.stopTest();
+    }
+
+    // ─── Rule 3: MappingDataType invalid JSON ────────────────────────────────
+
+    @isTest
+    static void testRule3_MappingDataTypeInvalidJson_Fails() {
+        FEC_Custom_Sync__c rec = buildRecord(true);
+        rec.FEC_Mapping_Data_Type__c = '{not valid json!!!}';
+        Test.startTest();
+        try {
+            insert rec;
+            System.assert(false, 'Should have thrown');
+        } catch (DmlException e) {
+            System.assert(e.getMessage().contains('Invalid JSON format'));
+        }
+        Test.stopTest();
+    }
+
+    // ─── Static Map Value: key not referenced in RequestBodyMapping ──────────
+
+    @isTest
+    static void testStaticMapValue_KeyNotInMapping_StillPasses() {
+        // StaticMapValue has a key that's not used in mapping - validator only checks __g suffix and type compatibility
+        FEC_Custom_Sync__c rec = buildRecord(true);
+        rec.FEC_Static_Map_Value__c = '{"UnusedKey__g":"someValue"}';
+        Test.startTest();
+        insert rec;
+        Test.stopTest();
+        System.assertNotEquals(null, rec.Id);
+    }
+
+    // ─── Trigger: Update non-active record, then activate with invalid data ──
+
+    @isTest
+    static void testTrigger_InsertInactive_ThenActivateWithInvalidMapping_Fails() {
+        FEC_Custom_Sync__c rec = buildRecord(false);
+        insert rec;
+
+        rec.FEC_Active__c = true;
+        rec.FEC_Request_Body_Mapping__c = '{invalid}';
+        Test.startTest();
+        try {
+            update rec;
+            System.assert(false, 'Should have thrown');
+        } catch (DmlException e) {
+            System.assert(e.getMessage().contains('Invalid JSON format'));
+        }
+        Test.stopTest();
     }
 
     // ─── Helper ───────────────────────────────────────────────────────────────

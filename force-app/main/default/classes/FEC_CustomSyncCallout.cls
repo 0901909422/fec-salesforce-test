@@ -156,6 +156,10 @@ public with sharing class FEC_CustomSyncCallout {
         Map<String, Object> dataTypeMap = String.isNotBlank(cus.FEC_Mapping_Data_Type__c)
             ? (Map<String, Object>) JSON.deserializeUntyped(cus.FEC_Mapping_Data_Type__c)
             : new Map<String, Object>();
+        // Parse static map value
+        Map<String, Object> staticMap = String.isNotBlank(cus.FEC_Static_Map_Value__c)
+            ? (Map<String, Object>) JSON.deserializeUntyped(cus.FEC_Static_Map_Value__c)
+            : new Map<String, Object>();
         List<Map<String, Object>> mappedRecords = new List<Map<String, Object>>();
 
         for (SObject record : scope) {
@@ -165,6 +169,12 @@ public with sharing class FEC_CustomSyncCallout {
                 Object rawValue;
                 if (mappingVal == null) {
                     rawValue = null;
+                } else if (mappingVal instanceof String && ((String) mappingVal).endsWith('__g')) {
+                    // Static map lookup: get value from FEC_Static_Map_Value__c
+                    String staticKey = (String) mappingVal;
+                    rawValue = staticMap.containsKey(staticKey) ? staticMap.get(staticKey) : null;
+                } else if (mappingVal instanceof String && (String) mappingVal == 'DateTimeNow') {
+                    rawValue = System.now();
                 } else if (mappingVal instanceof String) {
                     rawValue = getFieldValue(record, (String) mappingVal);
                 } else {

@@ -46,8 +46,12 @@ public class FEC_CustomSyncValidator {
                         fieldsByTargetObject.put(rec.FEC_Target_Object__c, new Set<String>());
                     }
                     for (Object val : bodyMap.values()) {
-                        if (val != null && val instanceof String) {
-                            fieldsByTargetObject.get(rec.FEC_Target_Object__c).add((String) val);
+                        if (val != null && val instanceof String && (String) val != 'DateTimeNow') {
+                            String strVal = (String) val;
+                            // Skip static map keys (suffix __g) — they are not SF fields
+                            if (!strVal.endsWith('__g')) {
+                                fieldsByTargetObject.get(rec.FEC_Target_Object__c).add(strVal);
+                            }
                         }
                     }
                 } catch (Exception e) {
@@ -96,7 +100,36 @@ public class FEC_CustomSyncValidator {
                 rec.addError('ProcessingQuantity must be greater than 0.');
             }
 
-            // Rule 3: Compare keys between RequestBodyMapping and MappingDataType
+            // Rule 3: Validate JSON format for RequestBodyMapping, MappingDataType, StaticMapValue
+            if (String.isNotBlank(rec.FEC_Request_Body_Mapping__c)) {
+                try {
+                    JSON.deserializeUntyped(rec.FEC_Request_Body_Mapping__c);
+                } catch (Exception e) {
+                    rec.addError('Invalid JSON format in Request Body Mapping: ' + e.getMessage());
+                }
+            }
+            if (String.isNotBlank(rec.FEC_Mapping_Data_Type__c)) {
+                try {
+                    JSON.deserializeUntyped(rec.FEC_Mapping_Data_Type__c);
+                } catch (Exception e) {
+                    rec.addError('Invalid JSON format in Mapping Data Type: ' + e.getMessage());
+                }
+            }
+            if (String.isNotBlank(rec.FEC_Static_Map_Value__c)) {
+                try {
+                    Map<String, Object> staticMap = (Map<String, Object>) JSON.deserializeUntyped(rec.FEC_Static_Map_Value__c);
+                    for (String key : staticMap.keySet()) {
+                        if (!key.endsWith('__g')) {
+                            rec.addError('Static Map Value key "' + key + '" must end with "__g" suffix.');
+                            break;
+                        }
+                    }
+                } catch (Exception e) {
+                    rec.addError('Invalid JSON format in Static Map Value: ' + e.getMessage());
+                }
+            }
+
+            // Rule 3b: Compare keys between RequestBodyMapping and MappingDataType
             if (String.isNotBlank(rec.FEC_Request_Body_Mapping__c) && String.isNotBlank(rec.FEC_Mapping_Data_Type__c)) {
                 try {
                     Map<String, Object> bodyMap = (Map<String, Object>) JSON.deserializeUntyped(rec.FEC_Request_Body_Mapping__c);
@@ -118,7 +151,72 @@ public class FEC_CustomSyncValidator {
                         rec.addError('MappingDataType is missing keys from RequestBodyMapping: ' + String.join(new List<String>(missingInType), ', '));
                     }
                 } catch (Exception e) {
-                    rec.addError('Invalid JSON format in RequestBodyMapping or MappingDataType: ' + e.getMessage());
+                    // JSON parse errors already caught above
+                }
+            }
+
+            // Rule 3c: Validate __g static values are compatible with MappingDataType
+            if (String.isNotBlank(rec.FEC_Request_Body_Mapping__c) 
+                && String.isNotBlank(rec.FEC_Static_Map_Value__c) 
+                && String.isNotBlank(rec.FEC_Mapping_Data_Type__c)) {
+                try {
+                    Map<String, Object> bodyMap = (Map<String, Object>) JSON.deserializeUntyped(rec.FEC_Request_Body_Mapping__c);
+                    Map<String, Object> staticMap = (Map<String, Object>) JSON.deserializeUntyped(rec.FEC_Static_Map_Value__c);
+                    Map<String, Object> typeMap = (Map<String, Object>) JSON.deserializeUntyped(rec.FEC_Mapping_Data_Type__c);
+
+                    for (String jsonKey : bodyMap.keySet()) {
+                        Object mappingVal = bodyMap.get(jsonKey);
+                        if (!(mappingVal instanceof String) || !((String) mappingVal).endsWith('__g')) continue;
+
+                        String staticKey = (String) mappingVal;
+                        if (!staticMap.containsKey(staticKey)) continue;
+
+                        Object staticVal = staticMap.get(staticKey);
+                        if (staticVal == null) continue;
+
+                        String targetType = typeMap.containsKey(jsonKey) ? ((String) typeMap.get(jsonKey)).toUpperCase() : null;
+                        if (String.isBlank(targetType)) continue;
+
+                        if (targetType == 'NUMBER') {
+                            if (!(staticVal instanceof Decimal) && !(staticVal instanceof Integer)) {
+                                try {
+                                    Decimal.valueOf(String.valueOf(staticVal));
+                                } catch (Exception e) {
+                                    rec.addError('Static Map Value "' + staticKey + '" = "' + staticVal + '" is not compatible with DataType NUMBER for key "' + jsonKey + '".');
+                                }
+                            }
+                        } else if (targetType.startsWith('TIMESTAMP')) {
+                            if (!(staticVal instanceof String)) {
+                                rec.addError('Static Map Value "' + staticKey + '" must be a date/time string for DataType TIMESTAMP for key "' + jsonKey + '".');
+                            } else {
+                                // Validate format: try to parse as DateTime or Date
+                                String dateStr = (String) staticVal;
+                                Boolean validDate = false;
+                                // Try ISO format: yyyy-MM-dd'T'HH:mm:ss
+                                try {
+                                    Datetime.valueOf(dateStr.replace('T', ' ').replace('Z', ''));
+                                    validDate = true;
+                                } catch (Exception e) {}
+                                // Try date-only format: yyyy-MM-dd
+                                if (!validDate) {
+                                    try {
+                                        Date.valueOf(dateStr);
+                                        validDate = true;
+                                    } catch (Exception e) {}
+                                }
+                                // Try dd/MM/yyyy format
+                                if (!validDate) {
+                                    Pattern p = Pattern.compile('^\\d{1,2}[/\\-]\\d{1,2}[/\\-]\\d{4}(\\s\\d{1,2}:\\d{2}(:\\d{2})?)?$');
+                                    validDate = p.matcher(dateStr).matches();
+                                }
+                                if (!validDate) {
+                                    rec.addError('Static Map Value "' + staticKey + '" = "' + dateStr + '" is not a valid date/time format for DataType TIMESTAMP for key "' + jsonKey + '".');
+                                }
+                            }
+                        }
+                    }
+                } catch (Exception e) {
+                    // JSON parse errors already caught above
                 }
             }
 
@@ -130,6 +228,14 @@ public class FEC_CustomSyncValidator {
             // Rule 5: CaseBusinessCode must exist in FEC_Business_Process__c
             if (String.isNotBlank(rec.FEC_Case_Business_Code__c) && !validCodes.contains(rec.FEC_Case_Business_Code__c)) {
                 rec.addError('Case Business Code "' + rec.FEC_Case_Business_Code__c + '" does not exist in FEC_Business_Process__c.');
+            }
+
+            // Rule 6: Additional Conditions must start with AND or OR
+            if (String.isNotBlank(rec.FEC_Additional_Conditions__c)) {
+                String trimmed = rec.FEC_Additional_Conditions__c.trim().toUpperCase();
+                if (!trimmed.startsWith('AND') && !trimmed.startsWith('OR')) {
+                    rec.addError('Additional Conditions must start with "AND" or "OR".');
+                }
             }
         }
     }

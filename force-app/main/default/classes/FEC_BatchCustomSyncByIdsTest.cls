@@ -5,6 +5,7 @@ Description:   Test class for FEC_BatchCustomSyncByIds
 History
 <Date>         <Authors Name>     <Brief Description of Change>
 2026/05/04     DuanNguyen           Init
+2026/06/11     DuanNguyen           Add coverage: empty recordIds set, multiple records in scope
 ------------------------------------------------------------*/
 @isTest
 private class FEC_BatchCustomSyncByIdsTest {
@@ -171,5 +172,56 @@ private class FEC_BatchCustomSyncByIdsTest {
         for (FEC_integration_service_log__c log : logs) {
             System.assertEquals(1, log.FEC_Quantity_Call__c, 'No recall should have been triggered');
         }
+    }
+
+    @isTest
+    static void testBatchWithEmptyIdSet() {
+        Test.setMock(HttpCalloutMock.class, new MockSuccess());
+
+        FEC_Custom_Sync__c cus = [SELECT Id FROM FEC_Custom_Sync__c LIMIT 1];
+
+        Test.startTest();
+        FEC_BatchCustomSyncByIds batch = new FEC_BatchCustomSyncByIds(cus.Id, new Set<Id>());
+        Database.executeBatch(batch, 10);
+        Test.stopTest();
+
+        // Empty set means query returns nothing, execute() never fires
+        List<FEC_integration_service_log__c> logs = [SELECT Id FROM FEC_integration_service_log__c];
+        System.assertEquals(0, logs.size(), 'No logs should be created when recordIds is empty');
+    }
+
+    @isTest
+    static void testBatchMultipleRecordsInScope() {
+        Test.setMock(HttpCalloutMock.class, new MockSuccess());
+
+        FEC_Custom_Sync__c cus = [SELECT Id FROM FEC_Custom_Sync__c LIMIT 1];
+
+        // Create additional case records
+        FEC_Business_Process__c bp = [SELECT Id FROM FEC_Business_Process__c LIMIT 1];
+        FEC_Actual_Nature_of_Case__c anoc = [SELECT Id FROM FEC_Actual_Nature_of_Case__c LIMIT 1];
+
+        List<Case> cases = new List<Case>();
+        for (Integer i = 0; i < 5; i++) {
+            cases.add(new Case(
+                FEC_Customer_Name__c = 'tester' + i,
+                FEC_ID_Search__c = 'S-000' + (i + 2),
+                FEC_Actual_Nature_of_Case__c = anoc.Id,
+                RecordTypeId = Schema.SObjectType.Case.getRecordTypeInfosByDeveloperName().get('Customer_Case').getRecordTypeId()
+            ));
+        }
+        insert cases;
+
+        Set<Id> allCaseIds = new Set<Id>();
+        for (Case c : [SELECT Id FROM Case]) {
+            allCaseIds.add(c.Id);
+        }
+
+        Test.startTest();
+        FEC_BatchCustomSyncByIds batch = new FEC_BatchCustomSyncByIds(cus.Id, allCaseIds);
+        Database.executeBatch(batch, 10);
+        Test.stopTest();
+
+        List<FEC_integration_service_log__c> logs = [SELECT Id, FEC_Bix_Is_Success__c FROM FEC_integration_service_log__c];
+        System.assert(!logs.isEmpty(), 'Logs should be created for multiple records');
     }
 }

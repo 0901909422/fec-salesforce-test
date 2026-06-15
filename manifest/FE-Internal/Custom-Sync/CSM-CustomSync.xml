@@ -19,6 +19,10 @@
         <members>FEC_Custom_Sync__c.FEC_Request_Body_Mapping__c</members>
         <members>FEC_Custom_Sync__c.FEC_Table_Name__c</members>
         <members>FEC_Custom_Sync__c.FEC_Mapping_Data_Type__c</members>
+        <members>FEC_Custom_Sync__c.FEC_Static_Map_Value__c</members>
+        <members>FEC_Custom_Sync__c.FEC_Modified_Date_Field__c</members>
+        <members>FEC_Custom_Sync__c.FEC_Created_Date_Field__c</members>
+        <members>FEC_Custom_Sync__c.FEC_Additional_Conditions__c</members>
 
         <members>FEC_integration_service_log__c.FEC_Quantity_Call__c</members> 
         <members>FEC_integration_service_log__c.FEC_Custom_Sync__c</members>
@@ -74,7 +78,7 @@
     <types>
         <members>FEC_Custom_Sync__c.All</members>  
         <name>ListView</name>
-    </types>
+    </types>  
     <types>
         <members>FEC_Common_System_Setting</members>
         <members>RD_IT_User_System_Management</members>
