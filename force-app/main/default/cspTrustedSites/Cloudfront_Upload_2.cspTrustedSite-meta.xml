@@ -3,12 +3,12 @@
     <canAccessCamera>false</canAccessCamera>
     <canAccessMicrophone>false</canAccessMicrophone>
     <context>All</context>
-    <endpointUrl>https://chathub.fecredit.com.vn</endpointUrl>
+    <endpointUrl>https://d3iu0cbqje22jw.cloudfront.net</endpointUrl>
     <isActive>true</isActive>
-    <isApplicableToConnectSrc>false</isApplicableToConnectSrc>
-    <isApplicableToFontSrc>false</isApplicableToFontSrc>
+    <isApplicableToConnectSrc>true</isApplicableToConnectSrc>
+    <isApplicableToFontSrc>true</isApplicableToFontSrc>
     <isApplicableToFrameSrc>true</isApplicableToFrameSrc>
     <isApplicableToImgSrc>true</isApplicableToImgSrc>
     <isApplicableToMediaSrc>true</isApplicableToMediaSrc>
-    <isApplicableToStyleSrc>false</isApplicableToStyleSrc>
+    <isApplicableToStyleSrc>true</isApplicableToStyleSrc>
 </CspTrustedSite>

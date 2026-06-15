@@ -16,6 +16,6 @@
     </values>
     <values>
         <field>FEC_ChatHubURL__c</field>
-        <value xsi:type="xsd:string">https://portal-chathub-uat.fecredit.cloud</value>
+        <value xsi:type="xsd:string">https://chathub.fecredit.com.vn</value>
     </values>
 </CustomMetadata>

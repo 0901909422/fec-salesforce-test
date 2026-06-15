@@ -115,30 +115,41 @@ public with sharing class FEC_AttachmentController {
     @AuraEnabled
     public static void attachFileToInteractionCase(String interactionCaseId, String base64File, String fileName, String uniqueMessageId){
         try {
-            if(uniqueMessageId != null) {
-                // FOR UPDATE lock ensures concurrent queries are queued and processed sequentially
-                List<Case> lockCase = [SELECT Id FROM Case WHERE Id = :interactionCaseId FOR UPDATE];
-                List<ContentVersion> existingFiles = [
-                    SELECT Id FROM ContentVersion 
-                    WHERE FirstPublishLocationId = :interactionCaseId 
-                    AND Description = :uniqueMessageId
-                    LIMIT 1
-                ];
-                if (!existingFiles.isEmpty()) {
-                    return; 
-                }
-            }
-            Blob fileBody = EncodingUtil.base64Decode(base64File);
-            ContentVersion cv = new ContentVersion();
-            cv.Title = fileName;          
-            cv.PathOnClient = fileName;     
-            cv.VersionData = fileBody;
-            cv.FirstPublishLocationId = interactionCaseId;
-            cv.Description = uniqueMessageId ?? ''; // Use Description field to store uniqueMessageId for duplicate checking
-            insert cv;
+            doAttachFileToInteractionCase(interactionCaseId, base64File, fileName, uniqueMessageId);
         } catch (Exception e) {
-            throw new AuraHandledException(e.getMessage());
+            AuraHandledException ex = new AuraHandledException(e.getMessage());
+            ex.setMessage(e.getMessage());
+            throw ex;
         }
+    }
+
+    /**
+     * Internal worker that performs the actual file attach. Throws raw exceptions
+     * (no AuraHandledException wrapping) so callers can surface the real message
+     * instead of the generic "Script-thrown exception".
+     */
+    private static void doAttachFileToInteractionCase(String interactionCaseId, String base64File, String fileName, String uniqueMessageId){
+        if(uniqueMessageId != null) {
+            // FOR UPDATE lock ensures concurrent queries are queued and processed sequentially
+            List<Case> lockCase = [SELECT Id FROM Case WHERE Id = :interactionCaseId FOR UPDATE];
+            List<ContentVersion> existingFiles = [
+                SELECT Id FROM ContentVersion 
+                WHERE FirstPublishLocationId = :interactionCaseId 
+                AND Description = :uniqueMessageId
+                LIMIT 1
+            ];
+            if (!existingFiles.isEmpty()) {
+                return; 
+            }
+        }
+        Blob fileBody = EncodingUtil.base64Decode(base64File);
+        ContentVersion cv = new ContentVersion();
+        cv.Title = fileName;          
+        cv.PathOnClient = fileName;     
+        cv.VersionData = fileBody;
+        cv.FirstPublishLocationId = interactionCaseId;
+        cv.Description = uniqueMessageId ?? ''; // Use Description field to store uniqueMessageId for duplicate checking
+        insert cv;
     }
 
     /** * downloadAndSaveBase64
@@ -155,10 +166,14 @@ public with sharing class FEC_AttachmentController {
         try {
             Blob fileBlob = FEC_Utils.downloadFileAsBlob(s3Url);
             String base64String = EncodingUtil.base64Encode(fileBlob);
-            attachFileToInteractionCase(interactionCaseId, base64String, fileName, uniqueMessageId);
+            doAttachFileToInteractionCase(interactionCaseId, base64String, fileName, uniqueMessageId);
             
         } catch (Exception e) {
-            throw new AuraHandledException('Error processing file: ' + e.getMessage());
+            // setMessage is required: without it AuraHandledException.getMessage()
+            // returns the generic "Script-thrown exception" on the client.
+            AuraHandledException ex = new AuraHandledException('Error processing file: ' + e.getMessage());
+            ex.setMessage('Error processing file: ' + e.getMessage());
+            throw ex;
         }
     }
 
