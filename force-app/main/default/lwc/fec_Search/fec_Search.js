@@ -929,15 +929,29 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
       }
 
       let insuranceResults = [];
+      const insurancePromises = [];
+
+      // Từ kết quả FEC_GetCustomerList (logic cũ — giữ nguyên)
       const { nationalIds, phones } =
         this._collectInsuranceSearchKeysFromCustomers(customers);
-      const insurancePromises = [];
       if (nationalIds.length > 0) {
         insurancePromises.push(this.fetchBancaInsurance(nationalIds));
       }
       if (phones.length > 0) {
         insurancePromises.push(this.fetchBancaInsuranceByPhone(phones));
       }
+
+      // Bổ sung: gọi trực tiếp theo giá trị ô input nationalId / phoneNumber
+      const trim = (v) => (v != null && v !== undefined ? String(v).trim() : "");
+      const inputNid = trim(this.nationalId);
+      const inputPhone = trim(this.phoneNumber);
+      if (inputNid) {
+        insurancePromises.push(this.fetchBancaInsurance([inputNid]));
+      }
+      if (inputPhone) {
+        insurancePromises.push(this.fetchBancaInsuranceByPhone([normalizePhone(inputPhone)]));
+      }
+
       if (insurancePromises.length > 0) {
         insuranceResults = await Promise.all(insurancePromises);
       }
