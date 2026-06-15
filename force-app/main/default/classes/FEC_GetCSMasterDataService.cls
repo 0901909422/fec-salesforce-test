@@ -85,57 +85,50 @@ global with sharing class FEC_GetCSMasterDataService {
             loadSettings(true);
         }
 
-        List<FEC_Nature_of_Case__c> records = [
-            SELECT
-                FEC_Customer_Type__c,
-                FEC_Channel__c,
+        String channelFilter = FEC_CommonUltils.buildNatureOfCaseChannelFilterClause(
+            'FEC_Channel__c',
+            requestChannel
+        );
 
-                FEC_Product_Type__r.FEC_Code__c,
-                FEC_Product_Type__r.Name,
-                FEC_Product_Type__r.FEC_Name_VN__c,
-                FEC_Product_Type__r.FEC_Order__c,
+        String soql =
+            'SELECT ' +
+            'FEC_Customer_Type__c, ' +
+            'FEC_Channel__c, ' +
+            'FEC_Product_Type__r.FEC_Code__c, ' +
+            'FEC_Product_Type__r.Name, ' +
+            'FEC_Product_Type__r.FEC_Name_VN__c, ' +
+            'FEC_Product_Type__r.FEC_Order__c, ' +
+            'FEC_Business_Process__r.FEC_Code__c, ' +
+            'FEC_Business_Process__r.Name, ' +
+            'FEC_Business_Process__r.FEC_Name_VN__c, ' +
+            'FEC_Business_Process__r.FEC_Order__c, ' +
+            'FEC_Category__r.FEC_Code__c, ' +
+            'FEC_Category__r.Name, ' +
+            'FEC_Category__r.FEC_Name_VN__c, ' +
+            'FEC_Category__r.FEC_Order__c, ' +
+            'FEC_Sub_Category__r.FEC_Code__c, ' +
+            'FEC_Sub_Category__r.Name, ' +
+            'FEC_Sub_Category__r.FEC_Name_VN__c, ' +
+            'FEC_Sub_Category__r.FEC_Order__c, ' +
+            'FEC_Sub_Code__r.FEC_Code__c, ' +
+            'FEC_Sub_Code__r.Name, ' +
+            'FEC_Sub_Code__r.FEC_Name_VN__c, ' +
+            'FEC_Sub_Code__r.FEC_Order__c ' +
+            'FROM FEC_Nature_of_Case__c ' +
+            'WHERE ' +
+            channelFilter +
+            ' ORDER BY ' +
+            'FEC_Product_Type__r.FEC_Order__c, ' +
+            'FEC_Business_Process__r.FEC_Order__c, ' +
+            'FEC_Category__r.FEC_Order__c, ' +
+            'FEC_Sub_Category__r.FEC_Order__c, ' +
+            'FEC_Sub_Code__r.FEC_Order__c';
 
-                FEC_Business_Process__r.FEC_Code__c,
-                FEC_Business_Process__r.Name,
-                FEC_Business_Process__r.FEC_Name_VN__c,
-                FEC_Business_Process__r.FEC_Order__c,
-
-                FEC_Category__r.FEC_Code__c,
-                FEC_Category__r.Name,
-                FEC_Category__r.FEC_Name_VN__c,
-                FEC_Category__r.FEC_Order__c,
-
-                FEC_Sub_Category__r.FEC_Code__c,
-                FEC_Sub_Category__r.Name,
-                FEC_Sub_Category__r.FEC_Name_VN__c,
-                FEC_Sub_Category__r.FEC_Order__c,
-
-                FEC_Sub_Code__r.FEC_Code__c,
-                FEC_Sub_Code__r.Name,
-                FEC_Sub_Code__r.FEC_Name_VN__c,
-                FEC_Sub_Code__r.FEC_Order__c
-
-            FROM FEC_Nature_of_Case__c
-            ORDER BY
-                FEC_Product_Type__r.FEC_Order__c,
-                FEC_Business_Process__r.FEC_Order__c,
-                FEC_Category__r.FEC_Order__c,
-                FEC_Sub_Category__r.FEC_Order__c,
-                FEC_Sub_Code__r.FEC_Order__c
-        ];
+        List<FEC_Nature_of_Case__c> records = Database.query(soql);
 
         Map<String, MasterDataItemType> productMap = new Map<String, MasterDataItemType>();
 
         for (FEC_Nature_of_Case__c n : records) {
-            if (
-                !FEC_CommonUltils.isNatureOfCaseChannelAllowed(
-                    n.FEC_Channel__c,
-                    requestChannel
-                )
-            ) {
-                continue;
-            }
-
             if (n.FEC_Product_Type__r == null ||
                 n.FEC_Business_Process__r == null ||
                 n.FEC_Category__r == null ||

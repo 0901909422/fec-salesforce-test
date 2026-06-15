@@ -35,6 +35,7 @@ global without sharing class FEC_FetchWelcomeCallDetailsRestService {
     }
 
     global class WelcomeCallCaseDetailsType {
+        global String CaseID;
         global String ContractNumber;
         global String CustomerName;
         global String PrimaryPhone;
@@ -176,12 +177,17 @@ global without sharing class FEC_FetchWelcomeCallDetailsRestService {
         return [
             SELECT
                 Id,
+                FEC_ID_Search__c,
                 FEC_Contract_Number__c,
                 FEC_Customer_Name__c,
                 FEC_Phone_Number__c,
                 FEC_Case_Status__c,
                 FEC_Category__c,
                 FEC_Category__r.Name,
+                FEC_SubCategory__c,
+                FEC_SubCategory__r.Name,
+                FEC_SubCategory__r.FEC_Code__c,
+                FEC_SubCategory__r.FEC_Name_VN__c,
                 FEC_Channel__c,
                 Status,
                 LastModifiedDate,
@@ -197,6 +203,7 @@ global without sharing class FEC_FetchWelcomeCallDetailsRestService {
         List<WelcomeCallCaseDetailsType> detailsList = new List<WelcomeCallCaseDetailsType>();
         for (Case c : caseRecords) {
             WelcomeCallCaseDetailsType details = new WelcomeCallCaseDetailsType();
+            details.CaseID = c.FEC_ID_Search__c;
             details.ContractNumber = c.FEC_Contract_Number__c;
             details.CustomerName = c.FEC_Customer_Name__c;
             details.PrimaryPhone = c.FEC_Phone_Number__c;
@@ -207,7 +214,7 @@ global without sharing class FEC_FetchWelcomeCallDetailsRestService {
             details.StatusWork = String.isNotBlank(c.FEC_Case_Status__c)
                 ? c.FEC_Case_Status__c
                 : c.Status;
-            details.SubCategory = null;
+            details.SubCategory = resolveSubCategory(c);
             details.SCCategory = c.FEC_Category__r != null
                 ? c.FEC_Category__r.Name
                 : null;
@@ -215,6 +222,21 @@ global without sharing class FEC_FetchWelcomeCallDetailsRestService {
             detailsList.add(details);
         }
         return detailsList;
+    }
+
+    private static String resolveSubCategory(Case caseRecord) {
+        if (caseRecord == null || caseRecord.FEC_SubCategory__r == null) {
+            return null;
+        }
+        if (String.isNotBlank(caseRecord.FEC_SubCategory__r.FEC_Code__c)) {
+            return caseRecord.FEC_SubCategory__r.FEC_Code__c.trim();
+        }
+        if (String.isNotBlank(caseRecord.FEC_SubCategory__r.FEC_Name_VN__c)) {
+            return caseRecord.FEC_SubCategory__r.FEC_Name_VN__c.trim();
+        }
+        return String.isNotBlank(caseRecord.FEC_SubCategory__r.Name)
+            ? caseRecord.FEC_SubCategory__r.Name.trim()
+            : null;
     }
 
     private static FetchWelcomeCallDetailsResponse buildSuccessResponse(
@@ -365,6 +387,7 @@ global without sharing class FEC_FetchWelcomeCallDetailsRestService {
         List<Object> detailsList = new List<Object>();
         for (WelcomeCallCaseDetailsType detail : response.WelcomeCallCaseDetails) {
             Map<String, Object> detailMap = new Map<String, Object>();
+            detailMap.put('CaseID', detail.CaseID);
             detailMap.put('ContractNumber', detail.ContractNumber);
             detailMap.put('CustomerName', detail.CustomerName);
             detailMap.put('PrimaryPhone', detail.PrimaryPhone);

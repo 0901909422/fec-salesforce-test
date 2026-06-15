@@ -517,6 +517,12 @@
                 <identifier>c_fec_PendingServiceCases</identifier>
             </componentInstance>
         </itemInstances>
+        <itemInstances>
+            <componentInstance>
+                <componentName>fec_ClosedServiceCases</componentName>
+                <identifier>c_fec_ClosedServiceCases</identifier>
+            </componentInstance>
+        </itemInstances>
         <name>Facet-d2a2c81a-512f-48c8-98b5-83e494397eba</name>
         <type>Facet</type>
     </flexiPageRegions>

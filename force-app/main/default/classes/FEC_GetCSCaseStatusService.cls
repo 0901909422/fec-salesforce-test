@@ -68,6 +68,8 @@ global with sharing class FEC_GetCSCaseStatusService {
             }
             Map<Id, List<AdditionalInfor>> additionalInfoByCaseId =
                 getAdditionalInfoBulk(caseIds);
+            Map<Id, String> lastRemarkByCaseId =
+                getLastCaseRemarksBulk(caseIds);
             
             List<CaseResultInfoType> results =
                 new List<CaseResultInfoType>();
@@ -79,7 +81,11 @@ global with sharing class FEC_GetCSCaseStatusService {
                 
                 result.CaseID = resultCase.FEC_ID_Search__c;
                 result.CaseStatus = mapCaseStatusForApi(resultCase.FEC_Case_Status__c);
-                result.Remarks = resultCase.FEC_Remarks__c;
+                result.Remarks = resolveCaseResultRemarks(
+                    resultCase.Id,
+                    lastRemarkByCaseId,
+                    resultCase.FEC_Remarks__c
+                );
                 result.CreatedTime =
                     String.valueOf(resultCase.CreatedDate);
                 result.UpdatedTime =
@@ -156,7 +162,7 @@ global with sharing class FEC_GetCSCaseStatusService {
                     requestTypeMapping.requestTypeEn;
                 
                 originalRequest.RequestInfo.Remarks =
-                    resultCase.FEC_Remarks__c;
+                    FEC_CommonUltils.defaultToEmpty(resultCase.FEC_Remarks__c);
                 
                 originalRequest.RequestInfo.AdditionalInfo =
                     additionalInfoByCaseId.containsKey(resultCase.Id)
@@ -406,22 +412,32 @@ global with sharing class FEC_GetCSCaseStatusService {
                     resultCase.FEC_SubCategory__r.FEC_Name_VN__c,
                     resultCase.FEC_SubCategory__r.Name
                 );
-                mapping.requestTypeVn = resultCase.FEC_SubCategory__r.FEC_Name_VN__c;
-                mapping.requestTypeEn = resultCase.FEC_SubCategory__r.Name;
             }
-            return mapping;
-        }
-
-        if (resultCase.FEC_Business_Process__r != null) {
+        } else if (resultCase.FEC_Business_Process__r != null) {
             mapping.requestType = firstNonBlank(
                 resultCase.FEC_Business_Process__r.FEC_Alias__c,
                 resultCase.FEC_Business_Process__r.FEC_Name_VN__c,
                 resultCase.FEC_Business_Process__r.Name
             );
-            mapping.requestTypeVn = resultCase.FEC_Business_Process__r.FEC_Name_VN__c;
-            mapping.requestTypeEn = resultCase.FEC_Business_Process__r.Name;
         }
+
+        applySubCategoryRequestTypeLabels(mapping, resultCase);
         return mapping;
+    }
+
+    private static void applySubCategoryRequestTypeLabels(
+        RequestTypeMapping mapping,
+        Case resultCase
+    ) {
+        if (mapping == null || resultCase == null || resultCase.FEC_SubCategory__r == null) {
+            return;
+        }
+        mapping.requestTypeVn = firstNonBlank(
+            resultCase.FEC_SubCategory__r.FEC_Name_VN__c,
+            resultCase.FEC_SubCategory__r.Name,
+            null
+        );
+        mapping.requestTypeEn = resultCase.FEC_SubCategory__r.Name;
     }
 
     private static Boolean usesSubCategoryRequestType(Case resultCase) {
@@ -695,6 +711,41 @@ global with sharing class FEC_GetCSCaseStatusService {
         }
 
         return resultByCaseId;
+    }
+
+    @TestVisible
+    private static Map<Id, String> getLastCaseRemarksBulk(Set<Id> caseIds) {
+        Map<Id, String> resultByCaseId = new Map<Id, String>();
+        if (caseIds == null || caseIds.isEmpty()) {
+            return resultByCaseId;
+        }
+
+        for (FEC_Case_Remarks__c remark : [
+            SELECT FEC_Case__c, FEC_Case_Remarks__c
+            FROM FEC_Case_Remarks__c
+            WHERE FEC_Case__c IN :caseIds
+            ORDER BY CreatedDate DESC
+        ]) {
+            if (!resultByCaseId.containsKey(remark.FEC_Case__c)) {
+                resultByCaseId.put(remark.FEC_Case__c, remark.FEC_Case_Remarks__c);
+            }
+        }
+
+        return resultByCaseId;
+    }
+
+    private static String resolveCaseResultRemarks(
+        Id caseId,
+        Map<Id, String> lastRemarkByCaseId,
+        String createCaseRemarks
+    ) {
+        if (caseId != null
+            && lastRemarkByCaseId != null
+            && lastRemarkByCaseId.containsKey(caseId)
+            && String.isNotBlank(lastRemarkByCaseId.get(caseId))) {
+            return lastRemarkByCaseId.get(caseId);
+        }
+        return FEC_CommonUltils.defaultToEmpty(createCaseRemarks);
     }
 
     private static List<AdditionalInfor> buildAdditionalInfoList(

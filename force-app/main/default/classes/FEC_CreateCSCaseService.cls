@@ -1,7 +1,4 @@
 global with sharing class FEC_CreateCSCaseService {
-    
-    
-    
     // =================================================
     // SOAP ENTRY POINT (WSDL COMPATIBLE)
     // REST/XML: FEC_CreateCSCaseRestService → FEC_MyCaseSoapXml.parseCreateCSCaseRequest → CreateCSCaseRequest
@@ -315,10 +312,10 @@ global with sharing class FEC_CreateCSCaseService {
         conditions.add('FEC_Business_Process__r.FEC_Code__c = :caseTypeCode');
         conditions.add('FEC_Product_Type__r.FEC_Code__c = :productTypeCode');
         conditions.add('FEC_Category__r.FEC_Code__c = :categoryCode');
-        conditions.add('FEC_Sub_Category__r.FEC_Name_VN__c = :subCategory');
+        conditions.add('FEC_Sub_Category__r.FEC_Code__c = :subCategory');
         conditions.add('FEC_Active__c = TRUE');
         if (String.isNotBlank(subCode)) {
-            conditions.add('FEC_Sub_Code__r.FEC_Name_VN__c = :subCode');
+            conditions.add('FEC_Sub_Code__r.FEC_Code__c = :subCode');
         } else {
             conditions.add('FEC_Sub_Code__c = NULL');
         }
@@ -403,11 +400,11 @@ global with sharing class FEC_CreateCSCaseService {
     
     /**
      * CreatorInfo.CreatorEmail → User.Id làm Case Owner (Interaction + Customer).
-     * //Thangtv
+     * Thiếu CreatorInfo hoặc CreatorEmail rỗng → User đang gọi API.
      */
     private static Id resolveOwnerIdByCreatorEmail(CaseRequestType req) {
         if (req == null || req.CreatorInfo == null || String.isBlank(req.CreatorInfo.CreatorEmail)) {
-            return null;
+            return UserInfo.getUserId();
         }
         
         String email = req.CreatorInfo.CreatorEmail.trim();
@@ -683,9 +680,9 @@ global with sharing class FEC_CreateCSCaseService {
         }
         
         List<FEC_Sub_Category__c> subCategories = [
-        SELECT Id, FEC_Name_VN__c, FEC_Active__c
+        SELECT Id, FEC_Code__c, FEC_Active__c
         FROM FEC_Sub_Category__c
-        WHERE FEC_Name_VN__c = :subCategory
+        WHERE FEC_Code__c = :subCategory
         LIMIT 1
     ];
         
@@ -720,9 +717,9 @@ global with sharing class FEC_CreateCSCaseService {
         }
         
         List<FEC_Sub_Code__c> subCodes = [
-        SELECT Id, FEC_Name_VN__c, FEC_Active__c
+        SELECT Id, FEC_Code__c, FEC_Active__c
         FROM FEC_Sub_Code__c
-        WHERE FEC_Name_VN__c = :subCode
+        WHERE FEC_Code__c = :subCode
         LIMIT 1
     ];
         
@@ -752,30 +749,31 @@ global with sharing class FEC_CreateCSCaseService {
     }
     
     private static void uploadFilesToCase(Id caseId, List<String> payloads) {
-        
-        List<ContentVersion> versions = new List<ContentVersion>();
-        
-        for (String payload : payloads) {
-            
-            List<String> parts = payload.split('\\|');
-            
-            if (parts.size() != 3) {
-                continue; // skip invalid payload
-            }
-            
-            Blob body = EncodingUtil.base64Decode(parts[2]);
-            
-            ContentVersion cv = new ContentVersion();
-            cv.Title = parts[0];
-            cv.PathOnClient = '/' + parts[0];
-            cv.VersionData = body;
-            cv.FirstPublishLocationId = caseId;
-            
-            versions.add(cv);
+        Case caseRow = [
+            SELECT FEC_Interaction_View_Mode__c
+            FROM Case
+            WHERE Id = :caseId
+            LIMIT 1
+        ];
+        String previousMode = caseRow.FEC_Interaction_View_Mode__c;
+        Boolean restoreReviewMode = FEC_ConstantCommon.INTERACTION_REVIEW_MODE.equals(previousMode);
+
+        if (restoreReviewMode) {
+            update new Case(
+                Id = caseId,
+                FEC_Interaction_View_Mode__c = FEC_ConstantCommon.INTERACTION_HANDLING_MODE
+            );
         }
-        
-        if (!versions.isEmpty()) {
-            insert versions;
+
+        try {
+            FEC_CaseFileUploadService.uploadMyCaseDocumentsToCase(caseId, payloads);
+        } finally {
+            if (restoreReviewMode) {
+                update new Case(
+                    Id = caseId,
+                    FEC_Interaction_View_Mode__c = previousMode
+                );
+            }
         }
     }
     

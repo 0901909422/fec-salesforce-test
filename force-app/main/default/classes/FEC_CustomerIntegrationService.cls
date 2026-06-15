@@ -134,10 +134,10 @@ public without sharing class FEC_CustomerIntegrationService {
         try {
             if (String.isBlank(result.primaryPhone)
                 && (String.isNotBlank(acctNum) || String.isNotBlank(contractNum))) {
-                String mobilePhone = getPrimaryPhone(acctNum, contractNum);
-                if (String.isNotBlank(mobilePhone)) {
-                    hist.FEC_Primary_Phone__c = mobilePhone;
-                    result.primaryPhone = mobilePhone;
+                String primaryPhone = getPrimaryPhone(acctNum, contractNum);
+                if (String.isNotBlank(primaryPhone)) {
+                    hist.FEC_Primary_Phone__c = primaryPhone;
+                    result.primaryPhone = primaryPhone;
                 }
             }
         } catch (Exception e) {
@@ -1033,10 +1033,10 @@ public without sharing class FEC_CustomerIntegrationService {
             result.dateOfBirth = customer.DateOfBirth;
         }
 
-        String mobilePhone = extractMobilePhone(customer);
-        if (String.isNotBlank(mobilePhone)) {
-            hist.FEC_Primary_Phone__c = mobilePhone;
-            result.primaryPhone = mobilePhone;
+        String primaryPhone = extractPhoneFromCustomerList(customer);
+        if (String.isNotBlank(primaryPhone)) {
+            hist.FEC_Primary_Phone__c = primaryPhone;
+            result.primaryPhone = primaryPhone;
         }
 
         if (customer.Emails != null && !customer.Emails.isEmpty()) {
@@ -1142,16 +1142,24 @@ public without sharing class FEC_CustomerIntegrationService {
         return null;
     }
 
-    private static String extractMobilePhone(FEC_GetCustomerList.Customer customer) {
+    private static String extractPhoneFromCustomerList(FEC_GetCustomerList.Customer customer) {
         if (customer == null || customer.Phones == null) {
             return null;
         }
+        String fallbackPhone = null;
         for (FEC_GetCustomerList.Phone p : customer.Phones) {
-            if (p != null && p.Type == 'Mobile' && String.isNotBlank(p.Phone)) {
-                return p.Phone;
+            if (p == null || String.isBlank(p.Phone)) {
+                continue;
+            }
+            String type = (p.Type != null) ? p.Type.trim() : '';
+            if ('Mobile'.equalsIgnoreCase(type)) {
+                return p.Phone.trim();
+            }
+            if (fallbackPhone == null && 'Phone'.equalsIgnoreCase(type)) {
+                fallbackPhone = p.Phone.trim();
             }
         }
-        return null;
+        return fallbackPhone;
     }
 
     private static String getPrimaryPhone(String accountNumber, String contractNumber) {
@@ -1160,7 +1168,7 @@ public without sharing class FEC_CustomerIntegrationService {
             return null;
         }
         for (FEC_GetCustomerList.Customer c : res.Customers) {
-            String phone = extractMobilePhone(c);
+            String phone = extractPhoneFromCustomerList(c);
             if (String.isNotBlank(phone)) {
                 return phone;
             }

@@ -1,5 +1,7 @@
 public with sharing class FEC_CommonUltils {
   private static Set<String> cachedActiveChannelIds;
+  @TestVisible
+  private static Map<String, Set<String>> cachedNatureOfCaseChannelMatchKeys;
 
   public static void notifyUsers(
     Set<String> recipientsIds,
@@ -280,12 +282,25 @@ public with sharing class FEC_CommonUltils {
     if (String.isBlank(normalized)) {
       return keys;
     }
+
+    String cacheKey = normalizeChannelKey(normalized);
+    if (
+      cachedNatureOfCaseChannelMatchKeys != null &&
+      cachedNatureOfCaseChannelMatchKeys.containsKey(cacheKey)
+    ) {
+      return cachedNatureOfCaseChannelMatchKeys.get(cacheKey);
+    }
+
     addNatureOfCaseChannelMatchKey(keys, normalized);
 
     String channelObjectApi = resolveFirstExistingObjectApi(
       new List<String>{ 'FEC_Channel__c', 'FEC_Channel_c' }
     );
     if (String.isBlank(channelObjectApi)) {
+      if (cachedNatureOfCaseChannelMatchKeys == null) {
+        cachedNatureOfCaseChannelMatchKeys = new Map<String, Set<String>>();
+      }
+      cachedNatureOfCaseChannelMatchKeys.put(cacheKey, keys);
       return keys;
     }
 
@@ -343,6 +358,11 @@ public with sharing class FEC_CommonUltils {
         addNatureOfCaseChannelMatchKey(keys, (String) row.get(channelCodeFieldApi));
       }
     }
+
+    if (cachedNatureOfCaseChannelMatchKeys == null) {
+      cachedNatureOfCaseChannelMatchKeys = new Map<String, Set<String>>();
+    }
+    cachedNatureOfCaseChannelMatchKeys.put(cacheKey, keys);
     return keys;
   }
 
@@ -381,6 +401,7 @@ public with sharing class FEC_CommonUltils {
   @TestVisible
   public static void resetActiveChannelCacheForTest() {
     cachedActiveChannelIds = null;
+    cachedNatureOfCaseChannelMatchKeys = null;
   }
 
   public static Set<String> getActiveChannelIds() {

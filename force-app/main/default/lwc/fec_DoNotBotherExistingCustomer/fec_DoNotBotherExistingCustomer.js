@@ -269,6 +269,13 @@ export default class Fec_DoNotBotherExistingCustomer extends LightningElement {
         return;
       }
 
+       /*
+       * DEFAULT UI
+       */
+      this.hasDNBData = result?.result.length > 0;
+      this.initialHasDNBData = this.hasDNBData;
+
+
       /*
        * STEP 2:
        * CREATE DB ROWS
@@ -281,12 +288,7 @@ export default class Fec_DoNotBotherExistingCustomer extends LightningElement {
        */
       await this.loadDNBRecords();
 
-      /*
-       * DEFAULT UI
-       */
-      this.hasDNBData = this.data.length > 0;
-      this.initialHasDNBData = this.hasDNBData;
-
+     
       // this.selectedOption = this.hasDNBData ? "yes" : "no";
     } catch (e) {
       console.error("initializeDNBFlow ERROR", e);

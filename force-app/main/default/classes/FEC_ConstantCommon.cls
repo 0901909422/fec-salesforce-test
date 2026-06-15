@@ -82,7 +82,9 @@ public with sharing class FEC_ConstantCommon {
     public static final String CHANNEL_ZALO = 'ZALO';
     public static final String CHANNEL_WEBSITE = 'WEBSITE';
     public static final String CHANNEL_FE_MOBILE_APP = 'FEMOBILEAPP';
+    /** CheckExistUser API Code2: user exists. */
     public static final Integer CHECK_EXIST_USER_CODE_EXISTS = 1;
+    /** CheckExistUser API Code2: user not exists. */
     public static final Integer CHECK_EXIST_USER_CODE_NOT_EXISTS = 2;
     public static final String SOCIAL_STATUS_YES = 'YES';
     public static final String SOCIAL_STATUS_NO = 'NO';
