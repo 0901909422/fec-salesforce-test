@@ -66,22 +66,68 @@
               </template>
             </div>
 
-            <!-- RIGHT -->
-            <div class="col">
+          <div class="col">
+            <div class="row">
+              <span class="label">{labels.interactionCreatedBy}</span>
+              <span class="value">{createdBy}</span>
+              <span></span>
+            </div>
+            <template if:true={showField}>
               <div class="row">
-                <span class="label">{labels.interactionCreatedBy}</span>
-                <span class="value">{createdBy}</span>
+                <span class="label">{labels.remarks}</span>
+                <span class="value">{interactionRemark}</span>
                 <span></span>
               </div>
-              <template if:true={showField}>
-                <div class="row">
-                  <span class="label">{labels.remarks}</span>
-                  <span class="value">{interactionRemark}</span>
-                  <span></span>
-                </div>
-              </template>
-            </div>
+            </template>
+            <!-- Interaction Email -->
+            <template if:true={isReview}>
+              <div class="row">
+                <span class="label">
+                  <span class="slds-required"></span>
+                  {labels.interactionEmail}
+                </span>
+                <span class="value">
+                  <template if:true={hasInteractionEmail}>
+                    {displayInteractionEmail}
+                  </template>
+                </span>
+                <span></span>
+              </div>
+            </template>
+            <template if:false={isReview}>
+              <div class="row">
+                <span class="label">{labels.interactionEmail}</span>
+                <span class="value">
+                  <template if:true={isEmailReadOnly}>
+                    {displayInteractionEmail}
+                  </template>
+                  <template if:false={isEmailReadOnly}>
+                    <template if:true={isEditingEmail}>
+                      <lightning-input type="email" data-id="interactionEmail" value={emailDraft} onchange={handleEmailChange}
+                        variant="label-hidden"></lightning-input>
+                      <template if:true={emailError}>
+                        <span class="fec-error-text">{emailError}</span>
+                      </template>
+                    </template>
+                    <template if:false={isEditingEmail}>
+                      <span class="fec-empty">{labels.empty}</span>
+                    </template>
+                  </template>
+                </span>
+                <span class="fec-info-action">
+                  <template if:true={showEmailEditIcon}>
+                    <lightning-icon icon-name="utility:edit" size="x-small" class="eye-icon"
+                      onclick={handleEditEmail} title="Edit email"></lightning-icon>
+                  </template>
+                  <template if:true={isEditingEmail}>
+                    <lightning-icon icon-name="utility:check" size="x-small" class="eye-icon save-icon"
+                      onclick={handleSaveEmail} title="Save"></lightning-icon>
+                  </template>
+                </span>
+              </div>
+            </template>
           </div>
+        </div>
         </div>
       </template>
 
@@ -136,6 +182,17 @@
                   <span></span>
                 </div>
               </template>
+              <!-- Interaction Email -->
+              <div class="row">
+                <span class="label">{labels.interactionEmail}</span>
+                <span class="value">
+                  <!-- Có phone -->
+                  <template if:true={hasInteractionEmail}>
+                    {displayInteractionEmail}
+                  </template>
+                </span>
+                <span></span>
+              </div>
             </div>
           </div>
         </div>
