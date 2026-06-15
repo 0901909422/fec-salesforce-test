@@ -1710,6 +1710,329 @@
         <name>Facet-4a031182-8cf0-4e37-b787-0f5b5961f7f9</name>
         <type>Facet</type>
     </flexiPageRegions>
+    <!-- Interaction History tab: sub-tab "All Service Cases" content -->
+    <flexiPageRegions>
+        <itemInstances>
+            <componentInstance>
+                <componentName>fec_PendingServiceCases</componentName>
+                <identifier>c_fec_PendingServiceCases</identifier>
+            </componentInstance>
+        </itemInstances>
+        <itemInstances>
+            <componentInstance>
+                <componentName>fec_ClosedServiceCases</componentName>
+                <identifier>c_fec_ClosedServiceCases</identifier>
+            </componentInstance>
+        </itemInstances>
+        <name>Facet-cust-ih-sc-content</name>
+        <type>Facet</type>
+    </flexiPageRegions>
+    <!-- Interaction History tab: sub-tab "All Interactions" content -->
+    <flexiPageRegions>
+        <itemInstances>
+            <componentInstance>
+                <componentName>fec_InteractionCases</componentName>
+                <identifier>c_fec_InteractionCases</identifier>
+            </componentInstance>
+        </itemInstances>
+        <name>Facet-cust-ih-interact-content</name>
+        <type>Facet</type>
+    </flexiPageRegions>
+    <!-- Interaction History tab: tab definitions -->
+    <flexiPageRegions>
+        <itemInstances>
+            <componentInstance>
+                <componentInstanceProperties>
+                    <name>active</name>
+                    <value>true</value>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>body</name>
+                    <value>Facet-cust-ih-sc-content</value>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>title</name>
+                    <value>All Service Cases</value>
+                </componentInstanceProperties>
+                <componentName>flexipage:tab</componentName>
+                <identifier>flexipage_cust_tab_ih_sc</identifier>
+            </componentInstance>
+        </itemInstances>
+        <itemInstances>
+            <componentInstance>
+                <componentInstanceProperties>
+                    <name>body</name>
+                    <value>Facet-cust-ih-interact-content</value>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>title</name>
+                    <value>All Interactions</value>
+                </componentInstanceProperties>
+                <componentName>flexipage:tab</componentName>
+                <identifier>flexipage_cust_tab_ih_interact</identifier>
+            </componentInstance>
+        </itemInstances>
+        <name>Facet-cust-ih-tabs-def</name>
+        <type>Facet</type>
+    </flexiPageRegions>
+    <!-- Interaction History tab body: tabset wrapping the sub-tabs -->
+    <flexiPageRegions>
+        <itemInstances>
+            <componentInstance>
+                <componentInstanceProperties>
+                    <name>label</name>
+                    <value>Tabs</value>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>tabs</name>
+                    <value>Facet-cust-ih-tabs-def</value>
+                </componentInstanceProperties>
+                <componentName>flexipage:tabset</componentName>
+                <identifier>flexipage_cust_tabset_ih</identifier>
+            </componentInstance>
+        </itemInstances>
+        <name>Facet-a1b2c3d4-e5f6-7890-abcd-ef1234567890</name>
+        <type>Facet</type>
+    </flexiPageRegions>
+    <!-- Additional Data tab: "Additional Info" sub-tab content -->
+    <flexiPageRegions>
+        <itemInstances>
+            <componentInstance>
+                <componentName>fec_customerAdditionalData</componentName>
+                <identifier>c_fec_customerAdditionalData</identifier>
+            </componentInstance>
+        </itemInstances>
+        <name>Facet-cust-add-info-content</name>
+        <type>Facet</type>
+    </flexiPageRegions>
+    <!-- Additional Data tab: "Do Not Bother" sub-tab content -->
+    <flexiPageRegions>
+        <itemInstances>
+            <componentInstance>
+                <componentName>fec_DoNotBotherInformationView</componentName>
+                <identifier>c_fec_DoNotBotherInformationView</identifier>
+            </componentInstance>
+        </itemInstances>
+        <name>Facet-cust-dnb-content</name>
+        <type>Facet</type>
+    </flexiPageRegions>
+    <!-- Additional Data tab: "Promotion/ Offer" sub-tab content -->
+    <flexiPageRegions>
+        <itemInstances>
+            <componentInstance>
+                <componentName>fecCheckEligibleLoanSection</componentName>
+                <identifier>c_fecCheckEligibleLoanSection</identifier>
+                <visibilityRule>
+                    <booleanFilter>1 OR (2 AND 3)</booleanFilter>
+                    <criteria>
+                        <leftValue>{!Record.FEC_Search_Products__c}</leftValue>
+                        <operator>EQUAL</operator>
+                        <rightValue>Loan</rightValue>
+                    </criteria>
+                    <criteria>
+                        <leftValue>{!Record.FEC_Search_Products__c}</leftValue>
+                        <operator>CONTAINS</operator>
+                        <rightValue>Card</rightValue>
+                    </criteria>
+                    <criteria>
+                        <leftValue>{!Record.FEC_Search_Products__c}</leftValue>
+                        <operator>CONTAINS</operator>
+                        <rightValue>Loan</rightValue>
+                    </criteria>
+                </visibilityRule>
+            </componentInstance>
+        </itemInstances>
+        <itemInstances>
+            <componentInstance>
+                <componentInstanceProperties>
+                    <name>recordId</name>
+                    <value>checkAccountEligibility</value>
+                </componentInstanceProperties>
+                <componentName>fec_CardEligibilitySection</componentName>
+                <identifier>c_fec_CardEligibilitySection</identifier>
+                <visibilityRule>
+                    <booleanFilter>1 OR (2 AND 3)</booleanFilter>
+                    <criteria>
+                        <leftValue>{!Record.FEC_Search_Products__c}</leftValue>
+                        <operator>EQUAL</operator>
+                        <rightValue>Card</rightValue>
+                    </criteria>
+                    <criteria>
+                        <leftValue>{!Record.FEC_Search_Products__c}</leftValue>
+                        <operator>CONTAINS</operator>
+                        <rightValue>Loan</rightValue>
+                    </criteria>
+                    <criteria>
+                        <leftValue>{!Record.FEC_Search_Products__c}</leftValue>
+                        <operator>CONTAINS</operator>
+                        <rightValue>Card</rightValue>
+                    </criteria>
+                </visibilityRule>
+            </componentInstance>
+        </itemInstances>
+        <name>Facet-cust-promo-content</name>
+        <type>Facet</type>
+    </flexiPageRegions>
+    <!-- Additional Data tab: "Collection Summary" sub-tab content -->
+    <flexiPageRegions>
+        <itemInstances>
+            <componentInstance>
+                <componentName>fec_CollectionDateFilter</componentName>
+                <identifier>c_fec_CollectionDateFilter</identifier>
+            </componentInstance>
+        </itemInstances>
+        <itemInstances>
+            <componentInstance>
+                <componentInstanceProperties>
+                    <name>previewSampleData</name>
+                    <value>false</value>
+                </componentInstanceProperties>
+                <componentName>fec_allocationHistory</componentName>
+                <identifier>c_fec_allocationHistory</identifier>
+            </componentInstance>
+        </itemInstances>
+        <itemInstances>
+            <componentInstance>
+                <componentInstanceProperties>
+                    <name>previewSampleData</name>
+                    <value>false</value>
+                </componentInstanceProperties>
+                <componentName>fec_communicationHistory</componentName>
+                <identifier>c_fec_communicationHistory</identifier>
+            </componentInstance>
+        </itemInstances>
+        <itemInstances>
+            <componentInstance>
+                <componentInstanceProperties>
+                    <name>previewSampleData</name>
+                    <value>false</value>
+                </componentInstanceProperties>
+                <componentName>fec_CollectionInteractions</componentName>
+                <identifier>c_fec_CollectionInteractions</identifier>
+            </componentInstance>
+        </itemInstances>
+        <itemInstances>
+            <componentInstance>
+                <componentInstanceProperties>
+                    <name>previewSampleData</name>
+                    <value>false</value>
+                </componentInstanceProperties>
+                <componentName>fec_NFU</componentName>
+                <identifier>c_fec_NFU</identifier>
+            </componentInstance>
+        </itemInstances>
+        <name>Facet-cust-coll-summary-content</name>
+        <type>Facet</type>
+    </flexiPageRegions>
+    <!-- Additional Data tab: "Notifications History" sub-tab content -->
+    <flexiPageRegions>
+        <itemInstances>
+            <componentInstance>
+                <componentName>fe_Notification_History</componentName>
+                <identifier>c_fe_Notification_History</identifier>
+            </componentInstance>
+        </itemInstances>
+        <name>Facet-cust-notif-content</name>
+        <type>Facet</type>
+    </flexiPageRegions>
+    <!-- Additional Data tab: tab definitions (5 sub-tabs) -->
+    <flexiPageRegions>
+        <itemInstances>
+            <componentInstance>
+                <componentInstanceProperties>
+                    <name>active</name>
+                    <value>true</value>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>body</name>
+                    <value>Facet-cust-add-info-content</value>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>title</name>
+                    <value>Additional Info</value>
+                </componentInstanceProperties>
+                <componentName>flexipage:tab</componentName>
+                <identifier>flexipage_cust_tab_add_info</identifier>
+            </componentInstance>
+        </itemInstances>
+        <itemInstances>
+            <componentInstance>
+                <componentInstanceProperties>
+                    <name>body</name>
+                    <value>Facet-cust-dnb-content</value>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>title</name>
+                    <value>Do Not Bother</value>
+                </componentInstanceProperties>
+                <componentName>flexipage:tab</componentName>
+                <identifier>flexipage_cust_tab_dnb</identifier>
+            </componentInstance>
+        </itemInstances>
+        <itemInstances>
+            <componentInstance>
+                <componentInstanceProperties>
+                    <name>body</name>
+                    <value>Facet-cust-promo-content</value>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>title</name>
+                    <value>Promotion/ Offer</value>
+                </componentInstanceProperties>
+                <componentName>flexipage:tab</componentName>
+                <identifier>flexipage_cust_tab_promo</identifier>
+            </componentInstance>
+        </itemInstances>
+        <itemInstances>
+            <componentInstance>
+                <componentInstanceProperties>
+                    <name>body</name>
+                    <value>Facet-cust-coll-summary-content</value>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>title</name>
+                    <value>Collection Summary</value>
+                </componentInstanceProperties>
+                <componentName>flexipage:tab</componentName>
+                <identifier>flexipage_cust_tab_coll_sum</identifier>
+            </componentInstance>
+        </itemInstances>
+        <itemInstances>
+            <componentInstance>
+                <componentInstanceProperties>
+                    <name>body</name>
+                    <value>Facet-cust-notif-content</value>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>title</name>
+                    <value>Notifications History</value>
+                </componentInstanceProperties>
+                <componentName>flexipage:tab</componentName>
+                <identifier>flexipage_cust_tab_notif</identifier>
+            </componentInstance>
+        </itemInstances>
+        <name>Facet-cust-add-tabs-def</name>
+        <type>Facet</type>
+    </flexiPageRegions>
+    <!-- Additional Data tab body: tabset wrapping the 5 sub-tabs -->
+    <flexiPageRegions>
+        <itemInstances>
+            <componentInstance>
+                <componentInstanceProperties>
+                    <name>label</name>
+                    <value>Tabs</value>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>tabs</name>
+                    <value>Facet-cust-add-tabs-def</value>
+                </componentInstanceProperties>
+                <componentName>flexipage:tabset</componentName>
+                <identifier>flexipage_cust_tabset_add</identifier>
+            </componentInstance>
+        </itemInstances>
+        <name>Facet-b2c3d4e5-f6a7-8901-bcde-f12345678901</name>
+        <type>Facet</type>
+    </flexiPageRegions>
     <flexiPageRegions>
         <itemInstances>
             <componentInstance>
@@ -1775,6 +2098,34 @@
             <componentInstance>
                 <componentInstanceProperties>
                     <name>body</name>
+                    <value>Facet-a1b2c3d4-e5f6-7890-abcd-ef1234567890</value>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>title</name>
+                    <value>Interaction History</value>
+                </componentInstanceProperties>
+                <componentName>flexipage:tab</componentName>
+                <identifier>flexipage_tab_interaction_history</identifier>
+            </componentInstance>
+        </itemInstances>
+        <itemInstances>
+            <componentInstance>
+                <componentInstanceProperties>
+                    <name>body</name>
+                    <value>Facet-b2c3d4e5-f6a7-8901-bcde-f12345678901</value>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>title</name>
+                    <value>Additional Data</value>
+                </componentInstanceProperties>
+                <componentName>flexipage:tab</componentName>
+                <identifier>flexipage_tab_additional_data</identifier>
+            </componentInstance>
+        </itemInstances>
+        <itemInstances>
+            <componentInstance>
+                <componentInstanceProperties>
+                    <name>body</name>
                     <value>Facet-4a031182-8cf0-4e37-b787-0f5b5961f7f9</value>
                 </componentInstanceProperties>
                 <componentInstanceProperties>
@@ -1784,16 +2135,10 @@
                 <componentName>flexipage:tab</componentName>
                 <identifier>flexipage_tab_banca</identifier>
                 <visibilityRule>
-                    <booleanFilter>1 AND 2</booleanFilter>
                     <criteria>
                         <leftValue>{!Record.FEC_Has_Account_or_Contract__c}</leftValue>
                         <operator>EQUAL</operator>
                         <rightValue>true</rightValue>
-                    </criteria>
-                    <criteria>
-                        <leftValue>{!Record.FEC_Product_Type__r.Name}</leftValue>
-                        <operator>EQUAL</operator>
-                        <rightValue>Insurance</rightValue>
                     </criteria>
                 </visibilityRule>
             </componentInstance>

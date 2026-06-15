@@ -3,7 +3,7 @@ public with sharing class FEC_NewAssignmentController {
     @AuraEnabled(cacheable=true)
     public static List<Map<String, String>> getGeneralAssignmentNames(Id caseId) {
         List<Case> cases = [
-            SELECT FEC_Product_Type__c, FEC_Category__c, FEC_SubCategory__c, FEC_SubCode__c
+            SELECT FEC_Product_Type__c, FEC_Category__c, FEC_SubCategory__c, FEC_SubCode__c, FEC_Current_Case_Stage__c, FEC_Current_Case_Stage__r.Name, FEC_Customer_Type__c
             FROM Case
             WHERE Id = :caseId
             LIMIT 1
@@ -11,34 +11,81 @@ public with sharing class FEC_NewAssignmentController {
         if (cases.isEmpty()) return new List<Map<String, String>>();
 
         Case c = cases[0];
+        if (c.FEC_Current_Case_Stage__c == null || String.isBlank(c.FEC_Current_Case_Stage__r?.Name)) return new List<Map<String, String>>();
 
         List<FEC_Nature_of_Case__c> nocs = [
-            SELECT Id
+            SELECT Id, FEC_Customer_Type__c
             FROM FEC_Nature_of_Case__c
             WHERE FEC_Product_Type__c = :c.FEC_Product_Type__c
               AND FEC_Category__c = :c.FEC_Category__c
               AND FEC_Sub_Category__c = :c.FEC_SubCategory__c
               AND FEC_Sub_Code__c = :c.FEC_SubCode__c
-            LIMIT 1
+              AND FEC_Active__c = true
         ];
         if (nocs.isEmpty()) return new List<Map<String, String>>();
 
+        Set<Id> nocIds = new Set<Id>();
+        for (FEC_Nature_of_Case__c noc : nocs) {
+            if (noc.FEC_Customer_Type__c == 'All'
+                || (String.isNotBlank(c.FEC_Customer_Type__c) && noc.FEC_Customer_Type__c == c.FEC_Customer_Type__c)) {
+                nocIds.add(noc.Id);
+            }
+        }
+        if (nocIds.isEmpty()) return new List<Map<String, String>>();
+
+        User currentUser = [
+            SELECT FEC_User_Group__c
+            FROM User
+            WHERE Id = :UserInfo.getUserId()
+            LIMIT 1
+        ];
+
         List<FEC_General_Assignment_Config__c> assignments = [
-            SELECT Id, FEC_General_Assignment_Name__c
+            SELECT Id,
+                   FEC_General_Assignment_Name__c,
+                   FEC_Case_Stage__c,
+                   FEC_Case_Stage__r.Name,
+                   FEC_Case_Stage__r.FEC_User_Group__c
             FROM FEC_General_Assignment_Config__c
-            WHERE FEC_Nature_of_Cases__c = :nocs[0].Id
+            WHERE FEC_Nature_of_Cases__c IN :nocIds
               AND FEC_Active__c = true
+              AND FEC_Case_Stage__c != null
             ORDER BY FEC_General_Assignment_Name__c ASC
         ];
 
+        String currentStageSuffix = getStageSuffix(c.FEC_Current_Case_Stage__r.Name);
+
         List<Map<String, String>> result = new List<Map<String, String>>();
         for (FEC_General_Assignment_Config__c ga : assignments) {
+            if (getStageSuffix(ga.FEC_Case_Stage__r?.Name) != currentStageSuffix) {
+                continue;
+            }
+            if (!isAllowedForUserGroup(ga.FEC_Case_Stage__r?.FEC_User_Group__c, currentUser.FEC_User_Group__c)) {
+                continue;
+            }
             result.add(new Map<String, String>{
                 'label' => ga.FEC_General_Assignment_Name__c,
-                'value' => ga.FEC_General_Assignment_Name__c
+                'value' => ga.Id
             });
         }
         return result;
+    }
+
+    private static String getStageSuffix(String stageName) {
+        if (String.isBlank(stageName)) return '';
+        Integer idx = stageName.lastIndexOf(' - ');
+        return idx >= 0 ? stageName.substring(idx + 3).trim() : stageName.trim();
+    }
+
+    private static Boolean isAllowedForUserGroup(String configuredGroups, String currentUserGroup) {
+        if (String.isBlank(configuredGroups)) return true;
+        if (String.isBlank(currentUserGroup)) return false;
+        for (String groupName : configuredGroups.split(';')) {
+            if (currentUserGroup == groupName?.trim()) {
+                return true;
+            }
+        }
+        return false;
     }
 
     @AuraEnabled
@@ -62,12 +109,24 @@ public with sharing class FEC_NewAssignmentController {
 
         Case c = cases[0];
 
+        String assignmentNameToSave = assignmentName;
+        if (assignmentType == 'General' && String.isNotBlank(assignmentName)) {
+            List<FEC_General_Assignment_Config__c> configs = [
+                SELECT FEC_General_Assignment_Name__c
+                FROM FEC_General_Assignment_Config__c
+                WHERE Id = :assignmentName
+                LIMIT 1
+            ];
+            if (!configs.isEmpty()) {
+                assignmentNameToSave = configs[0].FEC_General_Assignment_Name__c;
+            }
+        }
         // Tạo Assignment
         FEC_Assignment__c assignment = new FEC_Assignment__c(
             FEC_Case__c = caseId,
             FEC_Assignment_Type__c = assignmentType,
             FEC_Assignment_Status__c = assignmentStatus,
-            FEC_Assignment_Name__c = assignmentName
+            FEC_Assignment_Name__c = assignmentNameToSave
         );
         insert assignment;
 

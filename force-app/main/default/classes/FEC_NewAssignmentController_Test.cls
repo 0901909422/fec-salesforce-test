@@ -41,15 +41,10 @@ private class FEC_NewAssignmentController_Test {
             FEC_Category__c = cat.Id,
             FEC_Sub_Category__c = subCat.Id,
             FEC_Sub_Code__c = subCode.Id,
+            FEC_Customer_Type__c = 'All',
             FEC_Active__c = true
         );
         insert noc;
-
-        insert new FEC_General_Assignment_Config__c(
-            FEC_Nature_of_Cases__c = noc.Id,
-            FEC_General_Assignment_Name__c = 'Assignment Mẫu',
-            FEC_Active__c = true
-        );
 
         FEC_Case_Stage__c stage = new FEC_Case_Stage__c(
             Name = 'Stage 1',
@@ -58,6 +53,13 @@ private class FEC_NewAssignmentController_Test {
             FEC_Active__c = true
         );
         insert stage;
+
+        insert new FEC_General_Assignment_Config__c(
+            FEC_Nature_of_Cases__c = noc.Id,
+            FEC_General_Assignment_Name__c = 'Assignment Mẫu',
+            FEC_Case_Stage__c = stage.Id,
+            FEC_Active__c = true
+        );
 
         FEC_CaseTriggerHandler.isExecuting = true;
         try {
@@ -110,7 +112,13 @@ private class FEC_NewAssignmentController_Test {
 
         System.assertEquals(1, result.size(), 'Phải lấy được 1 Assignment Config.');
         System.assertEquals('Assignment Mẫu', result[0].get('label'));
-        System.assertEquals('Assignment Mẫu', result[0].get('value'));
+        FEC_General_Assignment_Config__c config = [
+            SELECT Id
+            FROM FEC_General_Assignment_Config__c
+            WHERE FEC_General_Assignment_Name__c = 'Assignment Mẫu'
+            LIMIT 1
+        ];
+        System.assertEquals(config.Id, result[0].get('value'));
     }
 
     @IsTest

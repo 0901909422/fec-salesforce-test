@@ -335,7 +335,7 @@ public without sharing class FEC_Notification {
         for (FEC_Notification__c notif : queried) {
             // Filter by stageName in memory (Long Text Area)
             if (String.isNotBlank(stageName)) {
-                if (String.isBlank(notif.FEC_Case_Stage__c) || !notif.FEC_Case_Stage__c.contains(stageName)) {
+                if (String.isNotBlank(notif.FEC_Case_Stage__c) && !notif.FEC_Case_Stage__c.contains(stageName)) {
                     continue;
                 }
             }
@@ -347,7 +347,7 @@ public without sharing class FEC_Notification {
             }
             // Filter by subCodeCode in memory (Long Text Area)
             if (String.isNotBlank(subCodeCode)) {
-                if (String.isBlank(notif.FEC_SubCode__c) || !notif.FEC_SubCode__c.contains(subCodeCode)) {
+                if (String.isNotBlank(notif.FEC_SubCode__c) && !notif.FEC_SubCode__c.contains(subCodeCode)) {
                     continue;
                 }
             }
