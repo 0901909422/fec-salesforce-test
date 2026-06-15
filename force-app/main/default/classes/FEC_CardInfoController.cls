@@ -87,11 +87,12 @@ public with sharing class FEC_CardInfoController {
                             System.debug('Insert Card Deliveries: ' + ex.getMessage());
                         }
                     }
-                    if (!hasOc && info.SupplementaryCards != null && !info.SupplementaryCards.isEmpty()) {
+                    // Luôn upsert SupplementaryCards để đồng bộ Gender và các field mới từ API
+                    if (info.SupplementaryCards != null && !info.SupplementaryCards.isEmpty()) {
                         try {
-                            insertSupplementaryCards(info.SupplementaryCards, customerHistoryId);
+                            upsertSupplementaryCards(info.SupplementaryCards, customerHistoryId);
                         } catch (Exception ex) {
-                            System.debug('Insert Supplementary Cards: ' + ex.getMessage());
+                            System.debug('Upsert Supplementary Cards: ' + ex.getMessage());
                         }
                     }
                 }
@@ -104,9 +105,7 @@ public with sharing class FEC_CardInfoController {
             if (!hasCd) {
                 dto.cardDeliveries = mapCardDeliveriesToDTO(queryCardDeliveries(customerHistoryId));
             }
-            if (!hasOc) {
-                dto.otherCards = mapOtherCardsToDTO(queryOtherCards(customerHistoryId));
-            }
+            dto.otherCards = mapOtherCardsToDTO(queryOtherCards(customerHistoryId));
         }
 
         return dto;
@@ -279,7 +278,8 @@ public with sharing class FEC_CardInfoController {
         return null;
     }
 
-    private static List<FEC_Other_Card__c> insertSupplementaryCards(
+    /** Upsert SupplementaryCards từ API: insert mới, update Gender + fields cho record cũ. */
+    private static void upsertSupplementaryCards(
         List<FEC_GetCardSecInfo.SupplementaryCard> suppList,
         Id customerHistoryId
     ) {
@@ -287,48 +287,77 @@ public with sharing class FEC_CardInfoController {
             throw new AuraHandledException(String.format(System.Label.FEC_MSG_Param_Required, new List<String>{'Customer History ID'}));
         }
 
-        Set<String> inDb = new Set<String>();
+        Map<String, FEC_Other_Card__c> inDb = new Map<String, FEC_Other_Card__c>();
         for (FEC_Other_Card__c x : [
-            SELECT FEC_Card_Number__c FROM FEC_Other_Card__c
+            SELECT Id, FEC_Card_Number__c, FEC_Gender__c, FEC_Block_Code__c,
+                   FEC_Cardholder__c, FEC_Plastic_ID__c, FEC_Embossing_Name__c,
+                   FEC_Expiry_Date__c, FEC_Card_Activation_Date__c, FEC_Issue_Date__c
+            FROM FEC_Other_Card__c
             WHERE FEC_Customer_History__c = :customerHistoryId
         ]) {
             if (String.isNotBlank(x.FEC_Card_Number__c)) {
-                inDb.add(x.FEC_Card_Number__c);
+                inDb.put(x.FEC_Card_Number__c, x);
             }
         }
 
         List<FEC_Other_Card__c> toInsert = new List<FEC_Other_Card__c>();
+        List<FEC_Other_Card__c> toUpdate = new List<FEC_Other_Card__c>();
         Set<String> seen = new Set<String>();
 
         for (FEC_GetCardSecInfo.SupplementaryCard item : suppList) {
-            if (String.isBlank(item.CardNumber) || inDb.contains(item.CardNumber) || seen.contains(item.CardNumber)) {
+            if (String.isBlank(item.CardNumber) || seen.contains(item.CardNumber)) {
                 continue;
             }
             seen.add(item.CardNumber);
-            FEC_Other_Card__c rec = new FEC_Other_Card__c();
-            rec.FEC_Customer_History__c = customerHistoryId;
-            rec.FEC_Card_Number__c = item.CardNumber;
-            rec.FEC_Cardholder__c = item.CardholderName;
-            rec.FEC_Plastic_ID__c = item.PlasticIndicator;
-            rec.FEC_Embossing_Name__c = item.EmbossingName;
-            rec.FEC_Block_Code__c = item.BlockCode;
-            rec.FEC_Gender__c = item.Gender;
-            rec.FEC_Expiry_Date__c = FEC_CommonUltils.parseDate(item.ExpiryDate);
-            rec.FEC_Card_Activation_Date__c = item.CardActivationDate;
-            rec.FEC_Issue_Date__c = item.CardIssueDate;
-            toInsert.add(rec);
+
+            if (inDb.containsKey(item.CardNumber)) {
+                // Update record đã có: đồng bộ Gender và các field từ API
+                FEC_Other_Card__c rec = inDb.get(item.CardNumber);
+                rec.FEC_Gender__c = item.Gender;
+                rec.FEC_Block_Code__c = item.BlockCode;
+                rec.FEC_Cardholder__c = item.CardholderName;
+                rec.FEC_Plastic_ID__c = item.PlasticIndicator;
+                rec.FEC_Embossing_Name__c = item.EmbossingName;
+                rec.FEC_Expiry_Date__c = FEC_CommonUltils.parseDate(item.ExpiryDate);
+                rec.FEC_Card_Activation_Date__c = item.CardActivationDate;
+                rec.FEC_Issue_Date__c = item.CardIssueDate;
+                toUpdate.add(rec);
+            } else {
+                FEC_Other_Card__c rec = new FEC_Other_Card__c();
+                rec.FEC_Customer_History__c = customerHistoryId;
+                rec.FEC_Card_Number__c = item.CardNumber;
+                rec.FEC_Cardholder__c = item.CardholderName;
+                rec.FEC_Plastic_ID__c = item.PlasticIndicator;
+                rec.FEC_Embossing_Name__c = item.EmbossingName;
+                rec.FEC_Block_Code__c = item.BlockCode;
+                rec.FEC_Gender__c = item.Gender;
+                rec.FEC_Expiry_Date__c = FEC_CommonUltils.parseDate(item.ExpiryDate);
+                rec.FEC_Card_Activation_Date__c = item.CardActivationDate;
+                rec.FEC_Issue_Date__c = item.CardIssueDate;
+                toInsert.add(rec);
+            }
         }
 
-        if (toInsert.isEmpty()) {
-            return new List<FEC_Other_Card__c>();
-        }
         try {
-            insert toInsert;
-            return toInsert;
+            if (!toInsert.isEmpty()) {
+                insert toInsert;
+            }
+            if (!toUpdate.isEmpty()) {
+                update toUpdate;
+            }
         } catch (Exception ex) {
-            System.debug('insertSupplementaryCards: ' + ex.getMessage());
+            System.debug('upsertSupplementaryCards: ' + ex.getMessage());
             throw new AuraHandledException(ex.getMessage());
         }
+    }
+
+    /** @deprecated Dùng upsertSupplementaryCards thay thế. Giữ lại để backward compatibility. */
+    private static List<FEC_Other_Card__c> insertSupplementaryCards(
+        List<FEC_GetCardSecInfo.SupplementaryCard> suppList,
+        Id customerHistoryId
+    ) {
+        upsertSupplementaryCards(suppList, customerHistoryId);
+        return new List<FEC_Other_Card__c>();
     }
 
     private static List<CardDeliveryDTO> mapCardDeliveriesToDTO(List<FEC_Card_Delivery__c> records) {

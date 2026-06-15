@@ -65,6 +65,7 @@ import SEARCH_CONTRACT_FIELD from "@salesforce/schema/Case.FEC_Search_Contract_N
 import SEARCH_ACCOUNT_FIELD from "@salesforce/schema/Case.FEC_Search_Account_Number__c";
 import SEARCH_EMAIL_FIELD from "@salesforce/schema/Case.FEC_Search_Email_Address__c";
 import SEARCH_CUSTOMER_NUM_FIELD from "@salesforce/schema/Case.FEC_Search_Customer_Number__c";
+import SEARCH_PRODUCTS_FIELD from "@salesforce/schema/Case.FEC_Search_Products__c";
 import { CurrentPageReference } from 'lightning/navigation';
 import { formatDateTimeVNShort, normalizePhone, formatDateVNI } from 'c/fec_CommonUtils';
 
@@ -983,6 +984,14 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
         this.isNoCustomerFound = !hasAnyData;
       }
 
+      if (this.recordId) {
+        try {
+          await this._updateCaseSearchProducts(this.recordId);
+        } catch (error) {
+          console.error("Failed to sync search products to Case record:", error);
+        }
+      }
+
     } catch (e) {
       console.error("Error fetching data:", e);
 
@@ -1293,6 +1302,42 @@ hasAnySearchCriteria(params) {
     }
   }
 
+  _buildSearchProductsFromTabData() {
+    const categories = [];
+
+    if (this.cardData?.length > 0) {
+      categories.push("Card");
+    }
+    if (this.loanContractData?.length > 0) {
+      categories.push("Loan");
+    }
+    if (this.loanB2Data?.length > 0) {
+      categories.push("B2");
+    }
+    if (this.loanCash24Data?.length > 0) {
+      categories.push("Cash24");
+    }
+    if (this.insuranceData?.length > 0) {
+      categories.push("Insurance");
+    }
+
+    return categories.join(";");
+  }
+
+  async _updateCaseSearchProducts(caseId) {
+    if (!caseId) {
+      return;
+    }
+
+    const searchProducts = this._buildSearchProductsFromTabData();
+    await updateRecord({
+      fields: {
+        [CASE_ID_FIELD.fieldApiName]: caseId,
+        [SEARCH_PRODUCTS_FIELD.fieldApiName]: searchProducts,
+      },
+    });
+  }
+
   async handleNewCase() {
     try {
       let input = this.template.querySelector('[data-id="national-id"]');
@@ -1320,6 +1365,8 @@ hasAnySearchCriteria(params) {
           nationalId: this.nationalIdForCreate
         });
       }
+
+      await this._updateCaseSearchProducts(caseIdToUse);
 
       const devName = await getCaseRecordTypeDevName({
         caseId: caseIdToUse
@@ -1736,7 +1783,6 @@ hasAnySearchCriteria(params) {
           categories.push("Insurance");
         }
 
-        // Combine them into a string (e.g., "Card, Loan, Insurance")
         let searchProducts = categories.join(";");
         this.isLoaded = false;
         let customerName = row?.FullName;

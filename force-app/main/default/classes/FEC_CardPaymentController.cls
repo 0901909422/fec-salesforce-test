@@ -78,6 +78,22 @@ public with sharing class FEC_CardPaymentController {
         if (customerHistoryId == null) {
             return records;
         }
+        // IPP Accrued Interest chỉ hiện khi (NextStatementDate - today) ≤ 4 ngày
+        Boolean showIppAccruedInterest = false;
+        try {
+            List<FEC_Customer_History__c> histories = [
+                SELECT FEC_Next_Statement_Date__c
+                FROM FEC_Customer_History__c
+                WHERE Id = :customerHistoryId
+                LIMIT 1
+            ];
+            if (!histories.isEmpty() && histories[0].FEC_Next_Statement_Date__c != null) {
+                Integer daysUntilNextStatement = Date.today().daysBetween(histories[0].FEC_Next_Statement_Date__c);
+                showIppAccruedInterest = daysUntilNextStatement <= 4;
+            }
+        } catch (Exception e) {
+            System.debug('Query NextStatementDate error: ' + e.getMessage());
+        }
         try {
             List<FEC_Card_Payment__c> payments = [
                 SELECT FEC_Rec__c, FEC_Plan__c, FEC_REF_Number__c, FEC_Current_Balance__c, FEC_Open_Date__c,
@@ -89,7 +105,7 @@ public with sharing class FEC_CardPaymentController {
                 ORDER BY FEC_Open_Date__c DESC NULLS LAST
             ];
             for (FEC_Card_Payment__c p : payments) {
-                records.add(buildCardPaymentRecordMap(p));
+                records.add(buildCardPaymentRecordMap(p, showIppAccruedInterest));
             }
         } catch (Exception e) { }
         return records;
@@ -111,8 +127,9 @@ public with sharing class FEC_CardPaymentController {
         return c.FEC_Account_Number__c;
     }
 
-    /** Map FEC_Card_Payment__c → Map cho LWC */
-    private static Map<String, Object> buildCardPaymentRecordMap(FEC_Card_Payment__c p) {
+    /** Map FEC_Card_Payment__c → Map cho LWC.
+     *  showIppAccruedInterest: true khi (NextStatementDate - today) ≤ 4 ngày. */
+    private static Map<String, Object> buildCardPaymentRecordMap(FEC_Card_Payment__c p, Boolean showIppAccruedInterest) {
         Map<String, Object> record = new Map<String, Object>();
         record.put('FEC_Rec__c', p.FEC_Rec__c);
         record.put('FEC_REF_Number__c', p.FEC_REF_Number__c);
@@ -125,7 +142,8 @@ public with sharing class FEC_CardPaymentController {
         record.put('FEC_Per_Diem__c', p.FEC_Per_Diem__c);
         record.put('FEC_Deferred_Interest__c', p.FEC_Deferred_Interest__c);
         record.put('FEC_IPP_Interest__c', p.FEC_IPP_Interest__c);
-        record.put('FEC_IPP_Accrued_Interest__c', p.FEC_IPP_Accrued_Interest__c);
+        // IPP Accrued Interest: chỉ show khi (NextStatementDate - today) ≤ 4 ngày
+        record.put('FEC_IPP_Accrued_Interest__c', showIppAccruedInterest ? p.FEC_IPP_Accrued_Interest__c : null);
         record.put('FEC_Close_Fee__c', p.FEC_Close_Fee__c);
         record.put('FEC_Close_Fee_Amount__c', p.FEC_Close_Fee_Amount__c);
         record.put('FEC_Plan_Payment_Amount__c', p.FEC_Plan_Payment_Amount__c);
@@ -634,16 +652,14 @@ public with sharing class FEC_CardPaymentController {
             record.FEC_IPP_Interest__c = p.ippInterest;           // IPPInterest
             record.FEC_IPP_Accrued_Interest__c = ippAccruedInterest; // AccruedInt (IPP)
             
-            // Close Fee % = (Close Fee Amount / Current Balance) * 100
-            // FEC_Close_Fee__c là Decimal/Percent field
+            // FEC_Close_Fee__c là Percent: (CloseFeelIndicatorAmount / PlanCurrentBalance) * 100
             Decimal closeFeePercent = 0;
             if (p.closeFeeIndicator == 'Y' && currentBalance > 0 && p.closeFeeIndicatorAmt != null) {
                 closeFeePercent = (p.closeFeeIndicatorAmt / currentBalance) * 100;
                 closeFeePercent = closeFeePercent.setScale(2, RoundingMode.HALF_UP);
             }
             record.FEC_Close_Fee__c = closeFeePercent;
-            Decimal closeFeeAmount = p.closeFeeIndicatorAmt != null ? p.closeFeeIndicatorAmt : 0;
-            record.FEC_Close_Fee_Amount__c = closeFeeAmount;
+            record.FEC_Close_Fee_Amount__c = p.closeFeeAmount != null ? p.closeFeeAmount : 0;
             Decimal planPaymentAmount = p.totalPaymentAmount != null ? p.totalPaymentAmount : 0;
             record.FEC_Plan_Payment_Amount__c = planPaymentAmount;
 
