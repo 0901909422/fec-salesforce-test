@@ -384,6 +384,370 @@ private class FEC_DocReqRoutingActionService_Test {
     }
 
     @IsTest
+    static void testGetRoutingActionsForMrcRl05_InvalidCaseId() {
+        Test.startTest();
+        List<FEC_CaseBusinessService.Action> actions =
+            FEC_DocumentRequestRoutingActionService.getRoutingActionsForMrcRl05(
+                '500000000000000AAA'
+            );
+        Test.stopTest();
+
+        System.assertEquals(0, actions.size());
+    }
+
+    @IsTest
+    static void testGetRoutingActionsForMrcRl05_NoUserGroup() {
+        User noGroupUser = createUserWithoutGroup();
+        Case c = [
+            SELECT Id
+            FROM Case
+            WHERE Subject = 'RL05 Case'
+            LIMIT 1
+        ];
+
+        Test.startTest();
+        List<FEC_CaseBusinessService.Action> actions;
+        System.runAs(noGroupUser) {
+            actions = FEC_DocumentRequestRoutingActionService.getRoutingActionsForMrcRl05(c.Id);
+        }
+        Test.stopTest();
+
+        System.assertEquals(0, actions.size());
+    }
+
+    @IsTest
+    static void testGetRoutingActionsForMrcRl05_NewActionType() {
+        FEC_Case_Stage__c stage = [
+            SELECT Id
+            FROM FEC_Case_Stage__c
+            WHERE FEC_Code__c = 'STG-RL05-S'
+            LIMIT 1
+        ];
+        FEC_Action_Button__c btn = [
+            SELECT Id
+            FROM FEC_Action_Button__c
+            WHERE FEC_Code__c = 'Route to'
+            LIMIT 1
+        ];
+        insert new FEC_Stage_Screen__c(
+            FEC_Case_Stage__c = stage.Id,
+            FEC_Action_Button__c = btn.Id,
+            FEC_User_Group__c = 'CC',
+            FEC_Active__c = true,
+            FEC_Field_Type__c = FEC_ConstantCommon.STAGE_SCREEN_FIELD_TYPE_NEW,
+            FEC_Custom_Action_Button_Label__c = 'RL05 New Route'
+        );
+
+        Case c = [
+            SELECT Id
+            FROM Case
+            WHERE Subject = 'RL05 Case'
+            LIMIT 1
+        ];
+
+        Test.startTest();
+        List<FEC_CaseBusinessService.Action> actions =
+            FEC_DocumentRequestRoutingActionService.getRoutingActionsForMrcRl05(c.Id);
+        Test.stopTest();
+
+        Boolean hasNewLabel = false;
+        for (FEC_CaseBusinessService.Action act : actions) {
+            if (act.label == 'RL05 New Route') {
+                hasNewLabel = true;
+            }
+        }
+        System.assertEquals(true, hasNewLabel);
+    }
+
+    @IsTest
+    static void testGetRoutingActionsForRl0402Rl0403_DefaultStageFallback() {
+        Case c = [
+            SELECT Id
+            FROM Case
+            WHERE Subject = 'Doc RL04 Case'
+            LIMIT 1
+        ];
+        c.FEC_Current_Case_Stage__c = null;
+        update c;
+
+        Test.startTest();
+        List<FEC_CaseBusinessService.Action> actions =
+            FEC_DocumentRequestRoutingActionService.getRoutingActionsForRl0402Rl0403(c.Id);
+        Test.stopTest();
+
+        System.assert(actions.size() > 0, 'Phải resolve default stage khi FEC_Current_Case_Stage__c null.');
+    }
+
+    @IsTest
+    static void testGetRoutingActionsForRl0402Rl0403_CustomLabel() {
+        FEC_Case_Stage__c stage = [
+            SELECT Id
+            FROM FEC_Case_Stage__c
+            WHERE FEC_Code__c = 'STG-DOC-1'
+            LIMIT 1
+        ];
+        FEC_Action_Button__c btn = [
+            SELECT Id
+            FROM FEC_Action_Button__c
+            WHERE FEC_Code__c = 'Route to'
+            LIMIT 1
+        ];
+        insert new FEC_Stage_Screen__c(
+            FEC_Case_Stage__c = stage.Id,
+            FEC_Action_Button__c = btn.Id,
+            FEC_User_Group__c = 'CC',
+            FEC_Active__c = true,
+            FEC_Field_Type__c = FEC_ConstantCommon.STAGE_SCREEN_FIELD_TYPE_ALL,
+            FEC_Custom_Action_Button_Label__c = 'Custom Route Label'
+        );
+
+        Case c = [
+            SELECT Id
+            FROM Case
+            WHERE Subject = 'Doc RL04 Case'
+            LIMIT 1
+        ];
+
+        Test.startTest();
+        List<FEC_CaseBusinessService.Action> actions =
+            FEC_DocumentRequestRoutingActionService.getRoutingActionsForRl0402Rl0403(c.Id);
+        Test.stopTest();
+
+        Boolean hasCustom = false;
+        for (FEC_CaseBusinessService.Action act : actions) {
+            if (act.label == 'Custom Route Label') {
+                hasCustom = true;
+            }
+        }
+        System.assertEquals(true, hasCustom);
+    }
+
+    @IsTest
+    static void testGetRoutingActionsForRl0402Rl0403_NoUserGroup() {
+        User noGroupUser = createUserWithoutGroup();
+        Case c = [
+            SELECT Id
+            FROM Case
+            WHERE Subject = 'Doc RL04 Case'
+            LIMIT 1
+        ];
+
+        Test.startTest();
+        List<FEC_CaseBusinessService.Action> actions;
+        System.runAs(noGroupUser) {
+            actions = FEC_DocumentRequestRoutingActionService.getRoutingActionsForRl0402Rl0403(
+                c.Id
+            );
+        }
+        Test.stopTest();
+
+        System.assertEquals(0, actions.size());
+    }
+
+    @IsTest
+    static void testGetRoutingActionsForRl0402Rl0403_RouteToHistory() {
+        Case c = [
+            SELECT Id
+            FROM Case
+            WHERE Subject = 'Doc RL04 Case'
+            LIMIT 1
+        ];
+        insert new FEC_Routing_Action_History__c(
+            FEC_Case__c = c.Id,
+            FEC_Routing_Action__c = FEC_CaseBusinessService.ROUTE_TO
+        );
+
+        Test.startTest();
+        List<FEC_CaseBusinessService.Action> actions =
+            FEC_DocumentRequestRoutingActionService.getRoutingActionsForRl0402Rl0403(c.Id);
+        Test.stopTest();
+
+        System.assert(actions.size() > 0, 'Route To history vẫn phải trả New/All actions.');
+        Boolean hasRevert = false;
+        for (FEC_CaseBusinessService.Action act : actions) {
+            if (act.code == FEC_ConstantCommon.ACTION_REVERT) {
+                hasRevert = true;
+            }
+        }
+        System.assertEquals(false, hasRevert);
+    }
+
+    @IsTest
+    static void testGetRoutingActionsForRl0402Rl0403_MissingNocFields() {
+        FEC_CaseTriggerHandler.isExecuting = true;
+        Case bareCase;
+        try {
+            bareCase = new Case(
+                Subject = 'Bare Doc Case',
+                Status = FEC_ConstantCommon.CASE_STATUS_OPEN,
+                FEC_ID_Search__c = 'DOC-BARE-' + String.valueOf(System.currentTimeMillis())
+            );
+            insert bareCase;
+        } finally {
+            FEC_CaseTriggerHandler.isExecuting = false;
+        }
+
+        Test.startTest();
+        List<FEC_CaseBusinessService.Action> actions =
+            FEC_DocumentRequestRoutingActionService.getRoutingActionsForRl0402Rl0403(
+                bareCase.Id
+            );
+        Test.stopTest();
+
+        System.assertEquals(0, actions.size());
+    }
+
+    @IsTest
+    static void testGetRoutingActionsForRl0402Rl0403_NoMatchingNoc() {
+        FEC_Product_Type__c prod = [
+            SELECT Id
+            FROM FEC_Product_Type__c
+            WHERE FEC_Code__c = 'CARD'
+            LIMIT 1
+        ];
+        FEC_Category__c cat = [
+            SELECT Id
+            FROM FEC_Category__c
+            WHERE FEC_Code__c = 'Request'
+            LIMIT 1
+        ];
+        FEC_Sub_Category__c subCat = [
+            SELECT Id
+            FROM FEC_Sub_Category__c
+            WHERE FEC_Code__c = 'DOC'
+            LIMIT 1
+        ];
+        FEC_Sub_Code__c orphanSubCode = new FEC_Sub_Code__c(
+            Name = 'ORPHAN',
+            FEC_Code__c = 'ORPHAN',
+            FEC_Active__c = true
+        );
+        insert orphanSubCode;
+
+        FEC_CaseTriggerHandler.isExecuting = true;
+        Case c;
+        try {
+            c = new Case(
+                Subject = 'Orphan NOC Case',
+                Status = FEC_ConstantCommon.CASE_STATUS_OPEN,
+                FEC_Product_Type__c = prod.Id,
+                FEC_Category__c = cat.Id,
+                FEC_SubCategory__c = subCat.Id,
+                FEC_SubCode__c = orphanSubCode.Id,
+                FEC_Customer_Type__c = 'Existing',
+                FEC_ID_Search__c = 'DOC-ORPHAN-' + String.valueOf(System.currentTimeMillis())
+            );
+            insert c;
+        } finally {
+            FEC_CaseTriggerHandler.isExecuting = false;
+        }
+
+        Test.startTest();
+        List<FEC_CaseBusinessService.Action> actions =
+            FEC_DocumentRequestRoutingActionService.getRoutingActionsForRl0402Rl0403(c.Id);
+        Test.stopTest();
+
+        System.assertEquals(0, actions.size());
+    }
+
+    @IsTest
+    static void testGetRoutingActionsForRl0402Rl0403_NoDefaultStageOnNoc() {
+        FEC_Business_Process__c bp = [
+            SELECT Id
+            FROM FEC_Business_Process__c
+            WHERE FEC_Code__c = 'DOCBP'
+            LIMIT 1
+        ];
+        FEC_Product_Type__c prod = [
+            SELECT Id
+            FROM FEC_Product_Type__c
+            WHERE FEC_Code__c = 'CARD'
+            LIMIT 1
+        ];
+        FEC_Category__c cat = [
+            SELECT Id
+            FROM FEC_Category__c
+            WHERE FEC_Code__c = 'Request'
+            LIMIT 1
+        ];
+        FEC_Sub_Category__c subCat = [
+            SELECT Id
+            FROM FEC_Sub_Category__c
+            WHERE FEC_Code__c = 'DOC'
+            LIMIT 1
+        ];
+        FEC_Sub_Code__c subCode = new FEC_Sub_Code__c(
+            Name = 'NO-DEF-STG',
+            FEC_Code__c = 'NO-DEF-STG',
+            FEC_Active__c = true
+        );
+        insert subCode;
+
+        FEC_Nature_of_Case__c noc = new FEC_Nature_of_Case__c(
+            FEC_Product_Type__c = prod.Id,
+            FEC_Category__c = cat.Id,
+            FEC_Sub_Category__c = subCat.Id,
+            FEC_Sub_Code__c = subCode.Id,
+            FEC_Business_Process__c = bp.Id,
+            FEC_Customer_Type__c = 'Existing',
+            FEC_User_Group__c = 'CC',
+            FEC_Active__c = true
+        );
+        insert noc;
+
+        insert new FEC_Case_Stage__c(
+            Name = 'Non Default Stage',
+            FEC_Code__c = 'STG-NODEF',
+            FEC_Nature_of_Cases__c = noc.Id,
+            FEC_Default_Stage__c = false,
+            FEC_Active__c = true,
+            FEC_Business_Process__c = bp.Id
+        );
+
+        FEC_CaseTriggerHandler.isExecuting = true;
+        Case c;
+        try {
+            c = new Case(
+                Subject = 'No Default Stage Case',
+                Status = FEC_ConstantCommon.CASE_STATUS_OPEN,
+                FEC_Product_Type__c = prod.Id,
+                FEC_Category__c = cat.Id,
+                FEC_SubCategory__c = subCat.Id,
+                FEC_SubCode__c = subCode.Id,
+                FEC_Customer_Type__c = 'Existing',
+                FEC_ID_Search__c = 'DOC-NODEF-' + String.valueOf(System.currentTimeMillis())
+            );
+            insert c;
+        } finally {
+            FEC_CaseTriggerHandler.isExecuting = false;
+        }
+
+        Test.startTest();
+        List<FEC_CaseBusinessService.Action> actions =
+            FEC_DocumentRequestRoutingActionService.getRoutingActionsForRl0402Rl0403(c.Id);
+        Test.stopTest();
+
+        System.assertEquals(0, actions.size());
+    }
+
+    private static User createUserWithoutGroup() {
+        Profile p = [SELECT Id FROM Profile WHERE Name = 'Standard User' LIMIT 1];
+        User u = new User(
+            Alias = 'nogrup',
+            Email = 'nogrup' + String.valueOf(System.currentTimeMillis()) + '@test.fec.com',
+            EmailEncodingKey = 'UTF-8',
+            LastName = 'NoGroup',
+            LanguageLocaleKey = 'en_US',
+            LocaleSidKey = 'en_US',
+            ProfileId = p.Id,
+            TimeZoneSidKey = 'America/Los_Angeles',
+            Username = 'nogrup' + String.valueOf(System.currentTimeMillis()) + '@test.fec.com'
+        );
+        insert u;
+        return u;
+    }
+
+    @IsTest
     static void testIsRl0402OrRl0403SubCode_andNullCaseGuards() {
         System.assertEquals(false, FEC_DocumentRequestRoutingActionService.isRl0402OrRl0403SubCode(null));
         System.assertEquals(
