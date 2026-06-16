@@ -221,10 +221,26 @@ public without sharing class FEC_PaymentHistoryController {
     public static void syncRealtimePayment(Id caseId) {
 
         Id customerHistoryId;
-        String contractOrAccountNo;
+        String contractNumber;
         try {
-            customerHistoryId = getCustomerHistoryId(caseId);
-            contractOrAccountNo = getCustomerAccountNumber(caseId);
+            Case c = [
+                SELECT FEC_Account_or_Contract__c
+                FROM Case
+                WHERE Id = :caseId
+                LIMIT 1
+            ];
+            if (c.FEC_Account_or_Contract__c == null) return;
+
+            FEC_Customer_History__c ch = [
+                SELECT FEC_Contract_Number__c
+                FROM FEC_Customer_History__c
+                WHERE Id = :c.FEC_Account_or_Contract__c
+                LIMIT 1
+            ];
+
+            customerHistoryId = c.FEC_Account_or_Contract__c;
+            contractNumber = ch.FEC_Contract_Number__c;
+            if (String.isBlank(contractNumber)) return;
         } catch (Exception e) {
             return;
         }
@@ -235,7 +251,7 @@ public without sharing class FEC_PaymentHistoryController {
                 String.valueOf(UUID.randomUUID()),
                 FEC_ConstantCommon.REQUESTOR_CRM,
                 Datetime.now().formatGMT(FEC_ConstantCommon.DATETIME_FORMAT),
-                contractOrAccountNo
+                contractNumber
             );
         } catch (Exception e) {
             apiRes = null;
