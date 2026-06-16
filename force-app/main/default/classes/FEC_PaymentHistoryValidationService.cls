@@ -50,24 +50,30 @@ public with sharing class FEC_PaymentHistoryValidationService {
    *   OTB            : FEC_Customer_History__c.FEC_OTB__c
    *   Card Limit     : FEC_Customer_History__c.FEC_Credit_Limit__c
    */
-  private static String buildRc0404InfoMessageIfEligible(Id customerHistoryId) {
-    if (customerHistoryId == null) {
+  private static String buildRc0404InfoMessageIfEligible(Id caseId) {
+    if (caseId == null) {
       return System.Label.FEC_MSG_Cannot_Create_Card_Close_Certificate;
     }
-    List<FEC_Customer_History__c> rows = [
+    List<Case> cases = [
       SELECT
-        FEC_Account_Status__c,
-        FEC_Block_Code__c,
-        FEC_OTB__c,
-        FEC_Credit_Limit__c
-      FROM FEC_Customer_History__c
-      WHERE Id = :customerHistoryId
+        FEC_Account_or_Contract__c,
+        FEC_Account_or_Contract__r.FEC_Account_Status__c,
+        FEC_Account_or_Contract__r.FEC_Block_Code__c,
+        FEC_Account_or_Contract__r.FEC_OTB__c,
+        FEC_Account_or_Contract__r.FEC_Credit_Limit__c
+      FROM Case
+      WHERE Id = :caseId
       LIMIT 1
     ];
-    if (rows.isEmpty()) {
+    if (
+      cases.isEmpty() ||
+      cases[0].FEC_Account_or_Contract__c == null ||
+      cases[0].FEC_Account_or_Contract__r == null
+    ) {
       return System.Label.FEC_MSG_Cannot_Create_Card_Close_Certificate;
     }
-    FEC_Customer_History__c h = rows[0];
+    Id customerHistoryId = cases[0].FEC_Account_or_Contract__c;
+    FEC_Customer_History__c h = cases[0].FEC_Account_or_Contract__r;
 
     String acctStatus = String.isBlank(h.FEC_Account_Status__c)
       ? FEC_ConstantCommon.STR_EMPTY
@@ -155,7 +161,7 @@ public with sharing class FEC_PaymentHistoryValidationService {
         : null;
 
     if (isRc0404) {
-      result.infoMessage = buildRc0404InfoMessageIfEligible(customerHistoryId);
+      result.infoMessage = buildRc0404InfoMessageIfEligible(Id.valueOf(caseId));
       return result;
     }
 
