@@ -28,8 +28,9 @@ global class FEC_BatchCustomSyncByIds implements Database.Batchable<sObject>, Da
     global Database.QueryLocator start(Database.BatchableContext bc) {
         this.cus = [
             SELECT Id, Name, FEC_Case_Business_Code__c, FEC_Table_Name__c, FEC_Target_Object__c,
-                   FEC_Request_Body_Mapping__c, FEC_Mapping_Data_Type__c,
-                   FEC_Processing_Quantity__c
+                   FEC_Request_Body_Mapping__c, FEC_Mapping_Data_Type__c, 
+                   FEC_Processing_Quantity__c, FEC_Static_Map_Value__c, FEC_Additional_Conditions__c,
+                   FEC_Modified_Date_Field__c, FEC_Created_Date_Field__c 
             FROM FEC_Custom_Sync__c
             WHERE Id = :customSyncId
             LIMIT 1

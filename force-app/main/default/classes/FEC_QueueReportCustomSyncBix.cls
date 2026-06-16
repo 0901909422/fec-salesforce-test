@@ -12,7 +12,7 @@ public class FEC_QueueReportCustomSyncBix implements Queueable {
 
     public void execute(QueueableContext context) { 
         List<FEC_Custom_Sync__c> records = [
-            SELECT name, FEC_Case_Business_Code__c, FEC_Start_At__c, FEC_End_At__c, FEC_Sync_Failed__c,
+            SELECT Id, name, FEC_Case_Business_Code__c, FEC_Start_At__c, FEC_End_At__c, FEC_Sync_Failed__c,
                    FEC_Sync_Successfully__c, FEC_Total_Record_Sync__c, FEC_Active__c, FEC_Processing_Quantity__c
             FROM FEC_Custom_Sync__c
             WHERE FEC_Active__c = true
@@ -34,7 +34,7 @@ public class FEC_QueueReportCustomSyncBix implements Queueable {
         htmlRows.add('<thead style="background-color:#0070d2;color:#ffffff;"><tr>');
         
         htmlRows.add('<th>Number</th>'); 
-        htmlRows.add('<th>Sync Name</th>'); 
+        htmlRows.add('<th>Business Rule Name</th>'); 
         htmlRows.add('<th>Start At</th>');
         htmlRows.add('<th>End At</th>');
         htmlRows.add('<th>Status (Success Rate)</th>');  
@@ -70,7 +70,8 @@ public class FEC_QueueReportCustomSyncBix implements Queueable {
             htmlRows.add('<td style="text-align:center; font-weight:bold;">' + count + '</td>');
             count++; 
             
-            htmlRows.add('<td style="font-weight:bold;">' + rec.Name + '</td>');
+            String recordUrl = URL.getOrgDomainURL().toExternalForm() + '/' + rec.Id;
+            htmlRows.add('<td style="font-weight:bold;"><a href="' + recordUrl + '">' + rec.Name + '</a></td>');
             htmlRows.add('<td>' + (rec.FEC_Start_At__c != null ? rec.FEC_Start_At__c.format('dd/MM/yyyy HH:mm') : '') + '</td>');
             htmlRows.add('<td>' + (rec.FEC_End_At__c != null ? rec.FEC_End_At__c.format('dd/MM/yyyy HH:mm') : '') + '</td>');
              

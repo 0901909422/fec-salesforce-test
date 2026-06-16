@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>FEC_Modified_Date_Field__c</fullName>
+    <defaultValue>&quot;LastModifiedDate&quot;</defaultValue>
+    <description>Field path for modified date filter in sync query. E.g. LastModifiedDate or A__r.LastModifiedDate. Defaults to LastModifiedDate if blank.</description>
+    <externalId>false</externalId>
+    <label>Modified Date Field</label>
+    <length>255</length>
+    <required>false</required>
+    <trackTrending>false</trackTrending>
+    <type>Text</type>
+    <unique>false</unique>
+</CustomField>
