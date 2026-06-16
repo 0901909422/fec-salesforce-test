@@ -2117,6 +2117,14 @@
         <value>Không tìm thấy Business Process phù hợp.</value>
     </labels>
     <labels>
+        <fullName>FEC_BCH_ExportNoTemplate</fullName>
+        <categories>LWC fec_BatchCaseHandling</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_BCH_ExportNoTemplate</shortDescription>
+        <value>Chưa cấu hình template export Bulk Actions cho quy trình này.</value>
+    </labels>
+    <labels>
         <fullName>FEC_BCH_NoDataExport</fullName>
         <categories>LWC fec_BatchCaseHandling</categories>
         <language>en_US</language>

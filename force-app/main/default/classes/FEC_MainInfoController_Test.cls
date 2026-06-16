@@ -662,13 +662,20 @@ private class FEC_MainInfoController_Test {
             FEC_Name_VN__c = 'Quan RD',
             FEC_Province__c = legacyProv.Id
         );
+        insert new FEC_District__c(
+            Name = 'Remap District Api',
+            FEC_Code__c = 'RD2',
+            FEC_Name_VN__c = 'Quan RD Api',
+            FEC_Province__c = apiProv.Id
+        );
 
         Test.startTest();
         List<FEC_MainInfoController.PicklistOptionDTO> districts =
             FEC_MainInfoController.getDistrictOptionsForProvinceCode('RP2');
         Test.stopTest();
 
-        System.assertNotEquals(0, districts.size());
+        System.assertEquals(1, districts.size());
+        System.assertEquals('RD2', districts[0].value);
     }
 
     @IsTest

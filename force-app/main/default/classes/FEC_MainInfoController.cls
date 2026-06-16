@@ -363,42 +363,16 @@ public without sharing class FEC_MainInfoController {
         }
         String code = provinceCode.trim();
         List<FEC_Province__c> provs = [
-            SELECT Id, Name, FEC_Name_VN__c, FEC_Country__r.FEC_Code__c
+            SELECT Id
             FROM FEC_Province__c
             WHERE FEC_Code__c = :code
-            ORDER BY FEC_Country__r.FEC_Code__c NULLS LAST
+              AND FEC_Country__r.FEC_Code__c = :FEC_COUNTRY_MASTER_API
             LIMIT 1
         ];
         if (provs.isEmpty()) {
             return opts;
         }
-        FEC_Province__c prov = provs[0];
-        Id provinceId = prov.Id;
-
-        /*
-         * District được lưu dưới province bộ legacy (country 1).
-         * Khi UI truyền vào mã province bộ CIF (country 2) — sau khi remap từ 1→2 —
-         * cần tra ngược về province cùng tên trong country 1 để lấy đúng danh sách district.
-         */
-        String countryCode = prov.FEC_Country__r?.FEC_Code__c;
-        // '2' = bộ CIF (API set); '1' = bộ legacy — district thực tế lưu dưới bộ 1.
-        if ('2'.equals(countryCode)) {
-            String matchName = String.isNotBlank(prov.FEC_Name_VN__c)
-                ? prov.FEC_Name_VN__c.trim()
-                : (prov.Name != null ? prov.Name.trim() : null);
-            if (String.isNotBlank(matchName)) {
-                List<FEC_Province__c> legacyProvs = [
-                    SELECT Id
-                    FROM FEC_Province__c
-                    WHERE FEC_Country__r.FEC_Code__c = '1'
-                      AND (FEC_Name_VN__c = :matchName OR Name = :matchName)
-                    LIMIT 1
-                ];
-                if (!legacyProvs.isEmpty()) {
-                    provinceId = legacyProvs[0].Id;
-                }
-            }
-        }
+        Id provinceId = provs[0].Id;
 
         for (FEC_District__c d : [
             SELECT Name, FEC_Code__c, FEC_Name_VN__c
