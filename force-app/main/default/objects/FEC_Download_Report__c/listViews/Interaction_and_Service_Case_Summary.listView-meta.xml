@@ -15,7 +15,7 @@
         <operation>notContain</operation>
         <value>TAT</value>
     </filters>
-    <label>INTERACTIONS &amp; SERVICE CASES SUMMARY</label>
+    <label>Interactions &amp; Service Cases Summary</label>
     <sharedTo>
         <role>FEC_Card_Risk_Monitoring_Specialist</role>
         <role>FEC_Customer_Care_Manager</role>

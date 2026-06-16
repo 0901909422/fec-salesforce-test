@@ -67,17 +67,16 @@ public without sharing class FEC_DownloadReportService {
 
             List<String> excelHeaders = buildExcelHeaders(results);
 
-            List<String> xmlParts = new List<String>();
-            xmlParts.add(buildExcelXmlStart(excelHeaders));
-            appendReportRowsXml(results, xmlParts);
-            xmlParts.add(buildExcelXmlEnd());
+            List<String> sheetRowParts = new List<String>();
+            sheetRowParts.add(buildOoxmlHeaderRow(excelHeaders));
+            appendReportRowsOoxml(results, sheetRowParts);
 
             results = null;
 
-            String excelContent = String.join(xmlParts, '');
-            xmlParts = null;
+            Blob xlsxBlob = buildXlsxBlob(sheetRowParts);
+            sheetRowParts = null;
 
-            String fileName = today.replace('/', '') + '_' + uniqueName + '.xls';
+            String fileName = today.replace('/', '') + '_' + uniqueName + '.xlsx';
 
             List<FEC_Download_Report__c> existing = [
                 SELECT Id
@@ -101,12 +100,12 @@ public without sharing class FEC_DownloadReportService {
             ContentVersion cv = new ContentVersion();
             cv.Title = today + ' - ' + reportName;
             cv.PathOnClient = fileName;
-            cv.VersionData = Blob.valueOf(excelContent);
+            cv.VersionData = xlsxBlob;
             cv.IsMajorVersion = true;
             cv.FirstPublishLocationId = reportRecordId;
             insert cv;
 
-            excelContent = null;
+            xlsxBlob = null;
 
             cv = [
                 SELECT ContentDocumentId
@@ -136,6 +135,7 @@ public without sharing class FEC_DownloadReportService {
     // =========================================================
     // REPORT DATA
     // =========================================================
+    @TestVisible
     private static List<String> buildExcelHeaders(Reports.ReportResults results) {
 
         List<String> excelHeaders = new List<String>();
@@ -157,13 +157,16 @@ public without sharing class FEC_DownloadReportService {
         return excelHeaders;
     }
 
-    private static void appendReportRowsXml(
+    @TestVisible
+    private static void appendReportRowsOoxml(
         Reports.ReportResults results,
-        List<String> xmlParts
+        List<String> sheetRowParts
     ) {
         Map<String, Reports.ReportFact> factMap = results.getFactMap();
         List<String> factKeys = new List<String>(factMap.keySet());
         factKeys.sort();
+
+        Integer rowNum = 2;
 
         for (String key : factKeys) {
 
@@ -185,11 +188,16 @@ public without sharing class FEC_DownloadReportService {
             }
 
             for (Reports.ReportDetailRow row : section.getRows()) {
-                xmlParts.add(buildExcelRowXml(row));
+                String rowXml = buildOoxmlDataRow(rowNum, row);
+                if (String.isNotBlank(rowXml)) {
+                    sheetRowParts.add(rowXml);
+                    rowNum++;
+                }
             }
         }
     }
 
+    @TestVisible
     private static String resolveCellLabel(Reports.ReportDataCell cell) {
 
         String label = '';
@@ -212,28 +220,82 @@ public without sharing class FEC_DownloadReportService {
     }
 
     // =========================================================
-    // BUILD EXCEL
+    // BUILD XLSX (Office Open XML)
     // =========================================================
-    private static String buildExcelXmlStart(List<String> headers) {
+    @TestVisible
+    private static Blob buildXlsxBlob(List<String> sheetRowParts) {
 
-        String xml = '<?xml version="1.0" encoding="UTF-8"?>';
-        xml += '<?mso-application progid="Excel.Sheet"?>';
-        xml += '<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"';
-        xml += ' xmlns:o="urn:schemas-microsoft-com:office:office"';
-        xml += ' xmlns:x="urn:schemas-microsoft-com:office:excel"';
-        xml += ' xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">';
-        xml += '<Worksheet ss:Name="Report"><Table>';
-        xml += '<Row>';
+        String sheetXml =
+            '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+            '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">' +
+            '<sheetData>' + String.join(sheetRowParts, '') + '</sheetData>' +
+            '</worksheet>';
 
-        for (String h : headers) {
-            xml += '<Cell><Data ss:Type="String">' + escapeXml(h) + '</Data></Cell>';
-        }
+        Compression.ZipWriter writer = new Compression.ZipWriter();
+        writer.addEntry('[Content_Types].xml', Blob.valueOf(buildContentTypesXml()));
+        writer.addEntry('_rels/.rels', Blob.valueOf(buildRootRelsXml()));
+        writer.addEntry('xl/workbook.xml', Blob.valueOf(buildWorkbookXml()));
+        writer.addEntry('xl/_rels/workbook.xml.rels', Blob.valueOf(buildWorkbookRelsXml()));
+        writer.addEntry('xl/styles.xml', Blob.valueOf(buildStylesXml()));
+        writer.addEntry('xl/worksheets/sheet1.xml', Blob.valueOf(sheetXml));
 
-        xml += '</Row>';
-        return xml;
+        return writer.getArchive();
     }
 
-    private static String buildExcelRowXml(Reports.ReportDetailRow row) {
+    private static String buildContentTypesXml() {
+        return '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+            '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">' +
+            '<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>' +
+            '<Default Extension="xml" ContentType="application/xml"/>' +
+            '<Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>' +
+            '<Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>' +
+            '<Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>' +
+            '</Types>';
+    }
+
+    private static String buildRootRelsXml() {
+        return '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+            '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">' +
+            '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/>' +
+            '</Relationships>';
+    }
+
+    private static String buildWorkbookXml() {
+        return '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+            '<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">' +
+            '<sheets><sheet name="Report" sheetId="1" r:id="rId1"/></sheets>' +
+            '</workbook>';
+    }
+
+    private static String buildWorkbookRelsXml() {
+        return '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+            '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">' +
+            '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/>' +
+            '<Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>' +
+            '</Relationships>';
+    }
+
+    private static String buildStylesXml() {
+        return '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+            '<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">' +
+            '<fonts count="1"><font><sz val="11"/><name val="Calibri"/></font></fonts>' +
+            '<fills count="1"><fill><patternFill patternType="none"/></fill></fills>' +
+            '<borders count="1"><border/></borders>' +
+            '<cellXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellXfs>' +
+            '</styleSheet>';
+    }
+
+    @TestVisible
+    private static String buildOoxmlHeaderRow(List<String> headers) {
+        List<String> cells = new List<String>();
+        for (Integer i = 0; i < headers.size(); i++) {
+            cells.add(buildOoxmlCell(1, i, headers[i]));
+        }
+        return '<row r="1">' + String.join(cells, '') + '</row>';
+    }
+
+    @TestVisible
+    private static String buildOoxmlDataRow(Integer rowNum, Reports.ReportDetailRow row) {
 
         List<Reports.ReportDataCell> dataCells = row.getDataCells();
 
@@ -241,25 +303,37 @@ public without sharing class FEC_DownloadReportService {
             return '';
         }
 
-        String xml = '<Row>';
-
-        for (Reports.ReportDataCell cell : dataCells) {
-            xml += '<Cell><Data ss:Type="String">' +
-                escapeXml(resolveCellLabel(cell)) +
-                '</Data></Cell>';
+        List<String> cells = new List<String>();
+        for (Integer i = 0; i < dataCells.size(); i++) {
+            cells.add(buildOoxmlCell(rowNum, i, resolveCellLabel(dataCells[i])));
         }
 
-        xml += '</Row>';
-        return xml;
+        return '<row r="' + rowNum + '">' + String.join(cells, '') + '</row>';
     }
 
-    private static String buildExcelXmlEnd() {
-        return '</Table></Worksheet></Workbook>';
+    @TestVisible
+    private static String buildOoxmlCell(Integer rowNum, Integer colIndex, String value) {
+        String cellRef = columnLetter(colIndex) + String.valueOf(rowNum);
+        return '<c r="' + cellRef + '" t="inlineStr"><is><t>' +
+            escapeXml(value) +
+            '</t></is></c>';
+    }
+
+    @TestVisible
+    private static String columnLetter(Integer colIndex) {
+        String letters = '';
+        Integer idx = colIndex;
+        while (idx >= 0) {
+            letters = String.fromCharArray(new List<Integer>{ 65 + Math.mod(idx, 26) }) + letters;
+            idx = (idx / 26) - 1;
+        }
+        return letters;
     }
 
     // =========================================================
     // ESCAPE XML
     // =========================================================
+    @TestVisible
     private static String escapeXml(String val) {
 
         if (String.isBlank(val)) return '';
@@ -275,6 +349,7 @@ public without sharing class FEC_DownloadReportService {
     // =========================================================
     // STRIP HTML
     // =========================================================
+    @TestVisible
     private static String stripHtml(String val) {
 
         if (String.isBlank(val)) return '';

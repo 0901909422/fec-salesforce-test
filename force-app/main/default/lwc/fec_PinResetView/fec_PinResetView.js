@@ -15,6 +15,8 @@ import {
   SUCCESS_MODAL_TITLE,
   SUCCESS_TOAST_TYPE,
   ERROR_TOAST_TYPE,
+  RESET_PIN_SUCCESS_MESSAGE,
+  RESET_PIN_FAILURE_MESSAGE,
 } from "c/fec_CommonConst";
 
 import FEC_RESET_PIN_SUCCESS from "@salesforce/label/c.FEC_RESET_PIN_SUCCESS";
@@ -94,11 +96,11 @@ export default class Fec_PinResetView extends LightningElement {
 
   get hiddenButton() {
     return Boolean(this.successReset || this.processActionCount >= 3);
-}
+  }
 
   get message() {
     if (this.successReset) {
-      return this.label.FEC_RESET_PIN_SUCCESS;
+      return RESET_PIN_SUCCESS_MESSAGE;
     }
 
     if (this.processActionCount >= 3) {
@@ -148,27 +150,22 @@ export default class Fec_PinResetView extends LightningElement {
       caseId: this.recordId,
       nationalId: this.nationalId,
       mobile: this.mobile,
+      method: "Reset PIN",
     })
       .then((res) => {
         console.log("res from api: ", JSON.stringify(res));
-        if (res.RespCode == "1") {
+        if (res.RespCode == "0") {
           this.successReset = true;
           this.publishResetResult("SUCCESS");
         } else {
           this.successReset = false;
 
           this.publishResetResult("ERROR", res.RespDesc || res.errorMessage);
-          this.showToast(
-            ERROR_MODAL_TITLE,
-            res.RespDesc || res.errorMessage,
-            ERROR_MODAL_TITLE,
-          );
         }
       })
       .catch((err) => {
         console.error("error from resetPin: ", JSON.stringify(err));
         this.publishResetResult("ERROR", err?.body?.message);
-        this.showToast(ERROR_MODAL_TITLE, err?.body?.message, ERROR_TOAST_TYPE);
       })
       .finally(() => {
         this.loadCardInfo();

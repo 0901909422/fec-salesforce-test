@@ -57,7 +57,8 @@ private class FEC_PinResetHandler_Test {
         FEC_PINReissueServiceCallout.PINResponse resp = FEC_PinResetHandler.resetPin(
             c.Id,
             '123456789',
-            '0901234567'
+            '0901234567',
+            'Reset PIN'
         );
         Test.stopTest();
 
@@ -82,7 +83,8 @@ private class FEC_PinResetHandler_Test {
         FEC_PINReissueServiceCallout.PINResponse resp = FEC_PinResetHandler.resetPin(
             c.Id,
             '123456789',
-            '0901234567'
+            '0901234567',
+            'Reset PIN'
         );
         Test.stopTest();
 
