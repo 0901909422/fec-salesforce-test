@@ -86,7 +86,7 @@ public without sharing class FEC_GetNextWorkController {
         }
 
         List<Case> cases = [
-            SELECT Id, CreatedDate, OwnerId, RecordType.DeveloperName
+            SELECT Id, FEC_Case_Created_On__c, OwnerId, RecordType.DeveloperName
             FROM Case
             WHERE OwnerId = :queueId
             AND RecordType.DeveloperName IN (:FEC_ConstantCommon.CASE_INTERNAL_RECORD_TYPE_DEV_NAME, :FEC_ConstantCommon.CASE_CUSTOMER_RECORD_TYPE_DEV_NAME)
@@ -97,7 +97,7 @@ public without sharing class FEC_GetNextWorkController {
                 :FEC_ConstantCommon.CASE_STATUS_RESOLVED_CANNOT_CONTACT_CUSTOMER,
                 :FEC_ConstantCommon.CASE_STATUS_RESOLVED_COMPLETED
             )
-            ORDER BY CreatedDate ASC
+            ORDER BY FEC_Case_Created_On__c ASC NULLS LAST, CreatedDate ASC
             LIMIT 1
         ];
 
