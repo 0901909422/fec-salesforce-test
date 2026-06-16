@@ -135,6 +135,7 @@ public without sharing class FEC_DownloadReportService {
     // =========================================================
     // REPORT DATA
     // =========================================================
+    @TestVisible
     private static List<String> buildExcelHeaders(Reports.ReportResults results) {
 
         List<String> excelHeaders = new List<String>();
@@ -156,6 +157,7 @@ public without sharing class FEC_DownloadReportService {
         return excelHeaders;
     }
 
+    @TestVisible
     private static void appendReportRowsOoxml(
         Reports.ReportResults results,
         List<String> sheetRowParts
@@ -195,6 +197,7 @@ public without sharing class FEC_DownloadReportService {
         }
     }
 
+    @TestVisible
     private static String resolveCellLabel(Reports.ReportDataCell cell) {
 
         String label = '';
@@ -219,6 +222,7 @@ public without sharing class FEC_DownloadReportService {
     // =========================================================
     // BUILD XLSX (Office Open XML)
     // =========================================================
+    @TestVisible
     private static Blob buildXlsxBlob(List<String> sheetRowParts) {
 
         String sheetXml =
@@ -281,6 +285,7 @@ public without sharing class FEC_DownloadReportService {
             '</styleSheet>';
     }
 
+    @TestVisible
     private static String buildOoxmlHeaderRow(List<String> headers) {
         List<String> cells = new List<String>();
         for (Integer i = 0; i < headers.size(); i++) {
@@ -289,6 +294,7 @@ public without sharing class FEC_DownloadReportService {
         return '<row r="1">' + String.join(cells, '') + '</row>';
     }
 
+    @TestVisible
     private static String buildOoxmlDataRow(Integer rowNum, Reports.ReportDetailRow row) {
 
         List<Reports.ReportDataCell> dataCells = row.getDataCells();
@@ -305,6 +311,7 @@ public without sharing class FEC_DownloadReportService {
         return '<row r="' + rowNum + '">' + String.join(cells, '') + '</row>';
     }
 
+    @TestVisible
     private static String buildOoxmlCell(Integer rowNum, Integer colIndex, String value) {
         String cellRef = columnLetter(colIndex) + String.valueOf(rowNum);
         return '<c r="' + cellRef + '" t="inlineStr"><is><t>' +
@@ -312,6 +319,7 @@ public without sharing class FEC_DownloadReportService {
             '</t></is></c>';
     }
 
+    @TestVisible
     private static String columnLetter(Integer colIndex) {
         String letters = '';
         Integer idx = colIndex;
@@ -325,6 +333,7 @@ public without sharing class FEC_DownloadReportService {
     // =========================================================
     // ESCAPE XML
     // =========================================================
+    @TestVisible
     private static String escapeXml(String val) {
 
         if (String.isBlank(val)) return '';
@@ -340,6 +349,7 @@ public without sharing class FEC_DownloadReportService {
     // =========================================================
     // STRIP HTML
     // =========================================================
+    @TestVisible
     private static String stripHtml(String val) {
 
         if (String.isBlank(val)) return '';
