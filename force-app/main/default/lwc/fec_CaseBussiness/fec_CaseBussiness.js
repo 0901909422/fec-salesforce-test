@@ -189,6 +189,7 @@ const OUTBOUND_CAMPAIGN = 'Outbound Campaign';
 
 const SUB_CODE_RL0402 = "RL04.02";
 const SUB_CODE_RL0403 = "RL04.03";
+const SUB_CODE_RC0404 = "RC04.04";
 
 const ACTION_BLOCK_CARD = "Block Card";
 const ACTION_UNBLOCK_CARD = "Unblock Card";
@@ -2427,7 +2428,11 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
 
   _isRl0402OrRl0403SubCode() {
     const code = this.business?.subCodeCode;
-    return code === SUB_CODE_RL0402 || code === SUB_CODE_RL0403;
+    return (
+      code === SUB_CODE_RL0402 ||
+      code === SUB_CODE_RL0403 ||
+      code === SUB_CODE_RC0404
+    );
   }
 
   _hasDocumentRequestPaperValidationError() {
@@ -2439,7 +2444,7 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
   }
 
   /**
-   * RL04.02/RL04.03 — bổ sung routing actions riêng khi không đủ điều kiện phát hành giấy
+   * RL04.02/RL04.03/RC04.04 — bổ sung routing actions khi không đủ điều kiện phát hành giấy
    * (getByCase có thể trả routingActionlst rỗng).
    */
   async _supplementRl0402Rl0403RoutingActionsIfNeeded() {
@@ -2461,7 +2466,7 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
         }
       } catch (err) {
         console.error(
-          "[RL04 routing supplement]",
+          "[Document Request routing supplement]",
           JSON.stringify(err),
         );
       }

@@ -245,6 +245,7 @@ private class FEC_DocReqRoutingActionService_Test {
     static void testIsRl0402OrRl0403SubCode() {
         System.assertEquals(true, FEC_DocumentRequestRoutingActionService.isRl0402OrRl0403SubCode('RL04.02'));
         System.assertEquals(true, FEC_DocumentRequestRoutingActionService.isRl0402OrRl0403SubCode(' rl04.03 '));
+        System.assertEquals(true, FEC_DocumentRequestRoutingActionService.isRl0402OrRl0403SubCode('RC04.04'));
         System.assertEquals(false, FEC_DocumentRequestRoutingActionService.isRl0402OrRl0403SubCode('RL05.01'));
         System.assertEquals(false, FEC_DocumentRequestRoutingActionService.isRl0402OrRl0403SubCode(null));
         System.assertEquals(false, FEC_DocumentRequestRoutingActionService.isRl0402OrRl0403SubCode(''));
