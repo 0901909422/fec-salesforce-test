@@ -370,4 +370,310 @@ private class FEC_BatchCaseHandlingTemplateHelper_Test {
         System.assertEquals('IPPConversion', FEC_BatchCaseHandlingTemplateHelper.mapBusinessProcessToTemplatePrefix('IPP Conversion'));
         Test.stopTest();
     }
+
+    @IsTest
+    static void extractTemplateTeamSuffix_parsesAddressUpdateCssupport() {
+        System.assertEquals(
+            'cssupport',
+            FEC_BatchCaseHandlingTemplateHelper.extractTemplateTeamSuffix(
+                'AddressUpdateTemp1_CSSupport.xlsx'
+            )
+        );
+    }
+
+    @IsTest
+    static void validateUploadedTemplateForUserGroup_spUserAddressUpdateCssupportAllowed() {
+        System.assertEquals(
+            null,
+            FEC_BatchCaseHandlingTemplateHelper.validateUploadedTemplateForUserGroup(
+                'AddressUpdateTemp1_CSSupport.xlsx',
+                'Address Update',
+                'SP'
+            )
+        );
+    }
+
+    @IsTest
+    static void validateUploadedTemplateForUserGroup_nonSpUserAddressUpdateCssupportRejected() {
+        System.assertEquals(
+            FEC_BatchCaseHandlingTemplateHelper.ERR_ROLE_TEMPLATE_MISMATCH,
+            FEC_BatchCaseHandlingTemplateHelper.validateUploadedTemplateForUserGroup(
+                'AddressUpdateTemp1_CSSupport.xlsx',
+                'Address Update',
+                'OM'
+            )
+        );
+    }
+
+    @IsTest
+    static void validateUploadedTemplateForUserGroup_gsrCoUserCoTemplateAllowed() {
+        System.assertEquals(
+            null,
+            FEC_BatchCaseHandlingTemplateHelper.validateUploadedTemplateForUserGroup(
+                'GSRTemp3_CO.xlsx',
+                'GSR - General Flow',
+                'CO'
+            )
+        );
+    }
+
+    @IsTest
+    static void validateUploadedTemplateForUserGroup_gsrCoUserSpTemplateRejected() {
+        System.assertEquals(
+            FEC_BatchCaseHandlingTemplateHelper.ERR_ROLE_TEMPLATE_MISMATCH,
+            FEC_BatchCaseHandlingTemplateHelper.validateUploadedTemplateForUserGroup(
+                'GSRTemp1_CSSupport.xlsx',
+                'GSR - General Flow',
+                'CO'
+            )
+        );
+    }
+
+    @IsTest
+    static void resolveTemplateNameFromUploadedFileName_skipsUserGroupMismatch() {
+        SObject cssupportTemplate = buildTemplateRow(
+            'AddressUpdateTemp1_CSSupport.xlsx',
+            'CSSupport'
+        );
+        List<SObject> templates = new List<SObject>{ cssupportTemplate };
+
+        System.assertEquals(
+            null,
+            FEC_BatchCaseHandlingTemplateHelper.resolveTemplateNameFromUploadedFileName(
+                'AddressUpdateTemp1_CSSupport.xlsx',
+                'OM',
+                templates
+            )
+        );
+        System.assertEquals(
+            'AddressUpdateTemp1_CSSupport.xlsx',
+            FEC_BatchCaseHandlingTemplateHelper.resolveTemplateNameFromUploadedFileName(
+                'AddressUpdateTemp1_CSSupport.xlsx',
+                'SP',
+                templates
+            )
+        );
+    }
+
+    @IsTest
+    static void resolveExportTemplateBinding_ccUserAddressUpdateReturnsEmpty() {
+        Id templateId = buildFakeId(FEC_Template_Import__c.SObjectType);
+        Id versionId = buildFakeId(ContentVersion.SObjectType);
+        SObject cssupportTemplate = buildTemplateRow(
+            'AddressUpdateTemp1_CSSupport.xlsx',
+            'CSSupport',
+            'Address Update'
+        );
+        cssupportTemplate.put('Id', templateId);
+        Map<Id, Id> versionIdByTemplateId = new Map<Id, Id>{ templateId => versionId };
+        Map<Id, String> urlByTemplateId = new Map<Id, String>{ templateId => '/download/' + versionId };
+
+        FEC_BatchCaseHandlingTemplateHelper.TemplateExportBinding ccBinding =
+            FEC_BatchCaseHandlingTemplateHelper.resolveExportTemplateBinding(
+                'Address Update',
+                'Address Update',
+                'CC',
+                new List<SObject>{ cssupportTemplate },
+                versionIdByTemplateId,
+                urlByTemplateId
+            );
+        System.assertEquals(FEC_ConstantCommon.STR_EMPTY, ccBinding.templateName);
+        System.assertEquals(null, ccBinding.templateContentVersionId);
+
+        FEC_BatchCaseHandlingTemplateHelper.TemplateExportBinding spBinding =
+            FEC_BatchCaseHandlingTemplateHelper.resolveExportTemplateBinding(
+                'Address Update',
+                'Address Update',
+                'SP',
+                new List<SObject>{ cssupportTemplate },
+                versionIdByTemplateId,
+                urlByTemplateId
+            );
+        System.assertEquals('AddressUpdateTemp1_CSSupport.xlsx', spBinding.templateName);
+        System.assertEquals(versionId, spBinding.templateContentVersionId);
+    }
+
+    @IsTest
+    static void hasExportTemplateBinding_requiresNameAndContentVersion() {
+        FEC_BatchCaseHandlingTemplateHelper.TemplateExportBinding empty =
+            new FEC_BatchCaseHandlingTemplateHelper.TemplateExportBinding();
+        System.assertEquals(false, FEC_BatchCaseHandlingTemplateHelper.hasExportTemplateBinding(null));
+        System.assertEquals(false, FEC_BatchCaseHandlingTemplateHelper.hasExportTemplateBinding(empty));
+
+        FEC_BatchCaseHandlingTemplateHelper.TemplateExportBinding nameOnly =
+            new FEC_BatchCaseHandlingTemplateHelper.TemplateExportBinding();
+        nameOnly.templateName = 'IncorrectPaymentTemp1_PM';
+        System.assertEquals(false, FEC_BatchCaseHandlingTemplateHelper.hasExportTemplateBinding(nameOnly));
+
+        FEC_BatchCaseHandlingTemplateHelper.TemplateExportBinding complete =
+            new FEC_BatchCaseHandlingTemplateHelper.TemplateExportBinding();
+        complete.templateName = 'IncorrectPaymentTemp1_CSSupport.xlsx';
+        complete.templateContentVersionId = buildFakeId(ContentVersion.SObjectType);
+        System.assertEquals(true, FEC_BatchCaseHandlingTemplateHelper.hasExportTemplateBinding(complete));
+    }
+
+    @IsTest
+    static void resolveExportTemplateBinding_cardReplacementSpUserReturnsBinding() {
+        Id templateId = buildFakeId(FEC_Template_Import__c.SObjectType);
+        Id versionId = buildFakeId(ContentVersion.SObjectType);
+        SObject cardReplacementTemplate = buildTemplateRow(
+            'CardReplacementTemp2_CSSupport',
+            'SP',
+            'Card Replacement'
+        );
+        cardReplacementTemplate.put('Id', templateId);
+        Map<Id, Id> versionIdByTemplateId = new Map<Id, Id>{ templateId => versionId };
+        Map<Id, String> urlByTemplateId = new Map<Id, String>{
+            templateId => '/sfc/servlet.shepherd/version/download/' + versionId
+        };
+
+        FEC_BatchCaseHandlingTemplateHelper.TemplateExportBinding binding =
+            FEC_BatchCaseHandlingTemplateHelper.resolveExportTemplateBinding(
+                'Card Replacement',
+                'Card Replacement',
+                'SP',
+                new List<SObject>{ cardReplacementTemplate },
+                versionIdByTemplateId,
+                urlByTemplateId
+            );
+        System.assertEquals('CardReplacementTemp2_CSSupport', binding.templateName);
+        System.assertEquals(versionId, binding.templateContentVersionId);
+        System.assertNotEquals(null, binding.templateDownloadUrl);
+    }
+
+    @IsTest
+    // 15/06/2026 18:00 linhdev - export gap: user group user detail khác FEC_Template_Import__c
+    static void resolveExportBindingGapCode_userGroupMismatch() {
+        Id templateId = buildFakeId(FEC_Template_Import__c.SObjectType);
+        Id versionId = buildFakeId(ContentVersion.SObjectType);
+        SObject cssupportTemplate = buildTemplateRow(
+            'AddressUpdateTemp1_CSSupport.xlsx',
+            'SP',
+            'Address Update'
+        );
+        cssupportTemplate.put('Id', templateId);
+        Map<Id, Id> versionIdByTemplateId = new Map<Id, Id>{ templateId => versionId };
+
+        System.assertEquals(
+            FEC_BatchCaseHandlingTemplateHelper.EXPORT_GAP_USER_GROUP,
+            FEC_BatchCaseHandlingTemplateHelper.resolveExportBindingGapCode(
+                'Address Update',
+                'Address Update',
+                'IB',
+                new List<SObject>{ cssupportTemplate },
+                versionIdByTemplateId
+            )
+        );
+    }
+
+    @IsTest
+    // 15/06/2026 18:00 linhdev - export gap: template record có nhưng chưa attach file xlsx
+    static void resolveExportBindingGapCode_missingTemplateFile() {
+        Id templateId = buildFakeId(FEC_Template_Import__c.SObjectType);
+        SObject cssupportTemplate = buildTemplateRow(
+            'AddressUpdateTemp1_CSSupport.xlsx',
+            'SP',
+            'Address Update'
+        );
+        cssupportTemplate.put('Id', templateId);
+
+        System.assertEquals(
+            FEC_BatchCaseHandlingTemplateHelper.EXPORT_GAP_NO_TEMPLATE_FILE,
+            FEC_BatchCaseHandlingTemplateHelper.resolveExportBindingGapCode(
+                'Address Update',
+                'Address Update',
+                'SP',
+                new List<SObject>{ cssupportTemplate },
+                new Map<Id, Id>()
+            )
+        );
+    }
+
+    @IsTest
+    // 15/06/2026 18:00 linhdev - export gap: không có FEC_Template_Import__c active cho BP
+    static void resolveExportBindingGapCode_noTemplateRecord() {
+        System.assertEquals(
+            FEC_BatchCaseHandlingTemplateHelper.EXPORT_GAP_NO_TEMPLATE,
+            FEC_BatchCaseHandlingTemplateHelper.resolveExportBindingGapCode(
+                'Address Update',
+                'Address Update',
+                'SP',
+                new List<SObject>(),
+                new Map<Id, Id>()
+            )
+        );
+    }
+
+    @IsTest
+    // 15/06/2026 18:00 linhdev - export gap: User.FEC_User_Group__c null
+    static void resolveExportBindingGapCode_blankUserGroup() {
+        System.assertEquals(
+            FEC_BatchCaseHandlingTemplateHelper.EXPORT_GAP_USER_GROUP,
+            FEC_BatchCaseHandlingTemplateHelper.resolveExportBindingGapCode(
+                'Address Update',
+                'Address Update',
+                null,
+                new List<SObject>(),
+                new Map<Id, Id>()
+            )
+        );
+    }
+
+    @IsTest
+    // 15/06/2026 18:00 linhdev - export gap: FEC_User_Group__c null trên template nhưng suffix tên file khớp user
+    static void resolveExportBindingGapCode_nullTemplateUserGroupMissingFile() {
+        Id templateId = buildFakeId(FEC_Template_Import__c.SObjectType);
+        SObject cssupportTemplate = buildTemplateRow(
+            'AddressUpdateTemp1_CSSupport.xlsx',
+            null,
+            'Address Update'
+        );
+        cssupportTemplate.put('Id', templateId);
+
+        System.assertEquals(
+            FEC_BatchCaseHandlingTemplateHelper.EXPORT_GAP_NO_TEMPLATE_FILE,
+            FEC_BatchCaseHandlingTemplateHelper.resolveExportBindingGapCode(
+                'Address Update',
+                'Address Update',
+                'SP',
+                new List<SObject>{ cssupportTemplate },
+                new Map<Id, Id>()
+            )
+        );
+    }
+
+    private static Integer fakeIdSeq = 1;
+
+    private static Id buildFakeId(Schema.SObjectType sobjectType) {
+        String prefix = sobjectType.getDescribe().getKeyPrefix();
+        String suffix = String.valueOf(fakeIdSeq++).leftPad(12, '0');
+        return (Id) (prefix + suffix);
+    }
+
+    private static SObject buildTemplateRow(String templateName, String templateUserGroup) {
+        return buildTemplateRow(templateName, templateUserGroup, null);
+    }
+
+    private static SObject buildTemplateRow(
+        String templateName,
+        String templateUserGroup,
+        String businessProcessCode
+    ) {
+        SObject row = Schema.getGlobalDescribe().get('FEC_Template_Import__c').newSObject();
+        row.put('Name', templateName);
+        Map<String, Schema.SObjectField> fieldMap = Schema.SObjectType.FEC_Template_Import__c.fields.getMap();
+        if (fieldMap.containsKey('FEC_User_Group__c')) {
+            row.put('FEC_User_Group__c', templateUserGroup);
+        }
+        if (String.isNotBlank(businessProcessCode) && fieldMap.containsKey('FEC_Business_Process__c')) {
+            Id bpId = buildFakeId(FEC_Business_Process__c.SObjectType);
+            row.put('FEC_Business_Process__c', bpId);
+            SObject bp = FEC_Business_Process__c.SObjectType.newSObject();
+            bp.put('Id', bpId);
+            bp.put('FEC_Code__c', businessProcessCode);
+            bp.put('Name', businessProcessCode);
+            row.putSObject('FEC_Business_Process__r', bp);
+        }
+        return row;
+    }
 }

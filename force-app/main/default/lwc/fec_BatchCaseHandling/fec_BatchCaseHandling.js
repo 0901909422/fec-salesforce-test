@@ -38,6 +38,7 @@ import FEC_BCH_NoDataExport from "@salesforce/label/c.FEC_BCH_NoDataExport";
 import FEC_BCH_NoDataFound from "@salesforce/label/c.FEC_BCH_NoDataFound";
 import FEC_BCH_ExportSuccess from "@salesforce/label/c.FEC_BCH_ExportSuccess";
 import FEC_BCH_ExportFailed from "@salesforce/label/c.FEC_BCH_ExportFailed";
+import FEC_BCH_ExportNoTemplate from "@salesforce/label/c.FEC_BCH_ExportNoTemplate";
 import FEC_BCH_ImportSuccess from "@salesforce/label/c.FEC_BCH_ImportSuccess";
 import FEC_BCH_ImportFailed from "@salesforce/label/c.FEC_BCH_ImportFailed";
 import FEC_BCH_Import_Submitted from "@salesforce/label/c.FEC_BCH_Import_Submitted";
@@ -229,6 +230,7 @@ const MSG_NO_DATA_FOUND = FEC_BCH_NoDataFound;
 const MSG_NO_FILTERS_ADDED = FEC_BCH_FilterResetHint;
 const MSG_EXPORT_SUCCESS = FEC_BCH_ExportSuccess;
 const MSG_EXPORT_FAILED = FEC_BCH_ExportFailed;
+const MSG_EXPORT_NO_TEMPLATE = FEC_BCH_ExportNoTemplate;
 const MSG_IMPORT_SUCCESS = FEC_BCH_ImportSuccess;
 const MSG_IMPORT_FAILED = FEC_BCH_ImportFailed;
 const MSG_IMPORT_SUBMITTED = FEC_BCH_Import_Submitted;
@@ -239,6 +241,10 @@ const MSG_FILE_TOO_LARGE = FEC_BCH_FileTooLarge;
 const MSG_FILE_NO_DATA = FEC_BCH_FileNoData;
 const MSG_HEADER_INVALID = FEC_BCH_HeaderInvalid;
 const MSG_TEMPLATE_FILE_MISMATCH = FEC_BCH_TemplateFileMismatch;
+// 15/06/2026 18:00 linhdev - mã lỗi export template từ Apex resolveExportBindingGapCode
+const EXPORT_GAP_USER_GROUP = "USER_GROUP_MISMATCH";
+const EXPORT_GAP_NO_TEMPLATE_FILE = "NO_TEMPLATE_FILE";
+const EXPORT_GAP_NO_TEMPLATE = "NO_TEMPLATE";
 const IMPORT_TIMEOUT_MS = 60 * 1000;
 const IMPORT_TIMEOUT_MESSAGE = FEC_BCH_RequestTimeout;
 const MAX_UPLOAD_SIZE_BYTES = 150 * 1024 * 1024;
@@ -345,6 +351,16 @@ const EXPORT_HEADER_FIELD_MAP = {
   interactionsubchannel: "interactionSubChannel",
   interactionphone: "interactionPhone",
   interactionemail: "interactionEmail",
+  // 15/06/2026 14:30 linhdev - Phone Update export (PhoneUpdateTemp1/Temp2)
+  originalinfophonenumber: "originalInfoPhoneNumber",
+  updatedinfophonenumber: "updatedInfoPhoneNumber",
+  // 15/06/2026 linhdev - Address Update export (AddressUpdateTemp1_CSSupport)
+  originalinfoaddresstype: "originalInfoAddressType",
+  originalinfoaddress: "originalInfoAddress",
+  originalinfomailingaddress: "originalInfoMailingAddress",
+  updatedinfoaddresstype: "updatedInfoAddressType",
+  updatedinfoaddress: "updatedInfoAddress",
+  updatedinfomailingaddress: "updatedInfoMailingAddress",
   casestatus: "caseStatus",
   casecreatedon: "caseCreatedOnLabel",
   lastupdatedon: "lastUpdatedOnLabel",
@@ -2074,13 +2090,21 @@ export default class Fec_BatchCaseHandling extends LightningElement {
           rowKey: `bp-${code}`,
           businessProcessCode: code,
           businessProcessName: code,
-          templateName: (this.lookupBpTemplateMeta(code) || {}).templateName || code,
+          templateName: (this.lookupBpTemplateMeta(code) || {}).templateName || STR_EMPTY,
           selected: true
         }));
     }
 
+    // 15/06/2026 18:00 linhdev - chỉ hiện BP có ContentVersion; báo lỗi user group/thiếu file thay vì NO_TEMPLATE_CV
+    list = this.filterBusinessProcessRowsWithExportTemplate(list);
+
     if (!list.length) {
-      this.showInfo(FEC_BCH_ExportToastTitle, MSG_NO_DATA_EXPORT);
+      const exportGapMessage = this.resolveExportGapMessageFromSourceKeys(keysFromSource);
+      if (exportGapMessage) {
+        this.showError(FEC_BCH_ExportToastTitle, exportGapMessage);
+      } else {
+        this.showInfo(FEC_BCH_ExportToastTitle, MSG_NO_DATA_EXPORT);
+      }
       return;
     }
 
@@ -2235,7 +2259,8 @@ export default class Fec_BatchCaseHandling extends LightningElement {
     const meta = {
       templateName: bpRow.templateName || STR_EMPTY,
       templateDownloadUrl: bpRow.templateDownloadUrl || STR_EMPTY,
-      templateContentVersionId: bpRow.templateContentVersionId || null
+      templateContentVersionId: bpRow.templateContentVersionId || null,
+      exportUnavailableCode: bpRow.exportUnavailableCode || null
     };
     if (!this.bpTemplateMetaByCode) {
       this.bpTemplateMetaByCode = {};
@@ -2300,10 +2325,11 @@ export default class Fec_BatchCaseHandling extends LightningElement {
           businessProcessName: pair.businessProcessName,
           templateName: resolved?.templateName,
           templateDownloadUrl: resolved?.templateDownloadUrl,
-          templateContentVersionId: resolved?.templateContentVersionId
+          templateContentVersionId: resolved?.templateContentVersionId,
+          exportUnavailableCode: resolved?.exportUnavailableCode
         });
       } catch (error) {
-        // keep export error path in buildExcelFileFromTemplate
+        // 15/06/2026 20:00 linhdev - giữ meta rỗng; lỗi export sẽ fallback MSG_TEMPLATE_FILE_MISMATCH
       }
     }
   }
@@ -2328,6 +2354,97 @@ export default class Fec_BatchCaseHandling extends LightningElement {
     const tail = url.substring(idx + prefix.length);
     const id = tail.split(/[?&#]/)[0].trim();
     return /^[a-zA-Z0-9]{15,18}$/.test(id) ? id : null;
+  }
+
+  // 15/06/2026 18:00 linhdev - export chỉ khi có ContentVersion template hợp lệ
+  isExportTemplateReady(templateMeta) {
+    return !!this.resolveTemplateContentVersionId(templateMeta);
+  }
+
+  filterBusinessProcessRowsWithExportTemplate(rows) {
+    return (Array.isArray(rows) ? rows : []).filter((row) => {
+      const code = String(row?.businessProcessCode || STR_EMPTY).trim();
+      if (!code) {
+        return false;
+      }
+      return this.isExportTemplateReady(this.lookupBpTemplateMeta(code));
+    });
+  }
+
+  resolveExportGapMessage(exportUnavailableCode) {
+    const code = String(exportUnavailableCode || STR_EMPTY).trim();
+    if (code === EXPORT_GAP_USER_GROUP) {
+      return MSG_TEMPLATE_FILE_MISMATCH;
+    }
+    if (code === EXPORT_GAP_NO_TEMPLATE_FILE) {
+      return FEC_BCH_CannotCreateExportFile;
+    }
+    if (code === EXPORT_GAP_NO_TEMPLATE) {
+      return MSG_EXPORT_NO_TEMPLATE;
+    }
+    return MSG_TEMPLATE_FILE_MISMATCH;
+  }
+
+  // 15/06/2026 20:00 linhdev - ưu tiên lỗi export: chưa có template record > user group > thiếu file
+  resolveExportGapPriority(exportUnavailableCode) {
+    const code = String(exportUnavailableCode || STR_EMPTY).trim();
+    if (code === EXPORT_GAP_NO_TEMPLATE) {
+      return 1;
+    }
+    if (code === EXPORT_GAP_USER_GROUP) {
+      return 2;
+    }
+    if (code === EXPORT_GAP_NO_TEMPLATE_FILE) {
+      return 3;
+    }
+    return 99;
+  }
+
+  // 15/06/2026 20:00 linhdev - map lỗi exportTemplateWorkbook Apex sang label LWC
+  normalizeExportWorkbookErrorMessage(errorCode, errorMessage) {
+    const code = String(errorCode || STR_EMPTY).trim();
+    const message = String(errorMessage || STR_EMPTY).trim();
+    if (code === "ROLE_TEMPLATE_MISMATCH" || message === "role/template không phù hợp") {
+      return MSG_TEMPLATE_FILE_MISMATCH;
+    }
+    return message || FEC_BCH_CannotCreateExportFile;
+  }
+
+  resolveExportGapMessageFromTemplateMeta(templateMeta) {
+    if (!templateMeta) {
+      return MSG_TEMPLATE_FILE_MISMATCH;
+    }
+    if (this.isExportTemplateReady(templateMeta)) {
+      return null;
+    }
+    return this.resolveExportGapMessage(templateMeta.exportUnavailableCode);
+  }
+
+  resolveExportGapMessageFromSourceKeys(keysFromSource) {
+    const keys = keysFromSource instanceof Map ? Array.from(keysFromSource.keys()) : [];
+    let bestPriority = 999;
+    let bestMessage = null;
+    for (let i = 0; i < keys.length; i += 1) {
+      const bpKey = keys[i];
+      const meta = this.lookupBpTemplateMeta(bpKey);
+      if (this.isExportTemplateReady(meta)) {
+        continue;
+      }
+      const gapCode = String(meta?.exportUnavailableCode || STR_EMPTY).trim();
+      const priority = this.resolveExportGapPriority(gapCode);
+      const gapMessage = this.resolveExportGapMessageFromTemplateMeta(meta);
+      if (!gapMessage) {
+        continue;
+      }
+      if (priority < bestPriority) {
+        bestPriority = priority;
+        bestMessage = gapMessage;
+      }
+    }
+    if (bestMessage) {
+      return bestMessage;
+    }
+    return keys.length ? MSG_TEMPLATE_FILE_MISMATCH : null;
   }
 
   resolveTemplateGroupKey(templateMeta, businessProcessCode) {
@@ -2398,13 +2515,19 @@ export default class Fec_BatchCaseHandling extends LightningElement {
       const groupKeys = Object.keys(groups);
       for (let i = 0; i < groupKeys.length; i += 1) {
         const groupItem = groups[groupKeys[i]];
-        const tmplMeta = groupItem?.templateMeta || {};
         const fallbackBp = groupItem?.fallbackBusinessProcessCode || "Other";
+        // 15/06/2026 18:00 linhdev - re-lookup meta sau ensureExportTemplateMetaForRows (có exportUnavailableCode)
+        const tmplMeta =
+          this.lookupBpTemplateMeta(fallbackBp) || groupItem?.templateMeta || {};
         const fileName = this.resolveExportFileName(
           tmplMeta.templateName,
           fallbackBp
         );
         const contentVersionId = this.resolveTemplateContentVersionId(tmplMeta);
+        // 15/06/2026 18:00 linhdev - chặn sớm khi user group/template/file không hợp lệ
+        if (!contentVersionId) {
+          throw new Error(this.resolveExportGapMessageFromTemplateMeta(tmplMeta));
+        }
         // 27/05/2026 10:00 linhdev - Export with all Properties: load MDS columns + values khi user chọn Yes
         const propertyBundle = await this.loadExportPropertyBundleForRows(groupItem?.rows || []);
         const file = await this.withTimeout(
@@ -2462,9 +2585,10 @@ export default class Fec_BatchCaseHandling extends LightningElement {
       this.showError(FEC_BCH_ExportToastTitle, FEC_BCH_RequestTimeout);
       return;
     }
-    this.exportErrorMessage = MSG_EXPORT_FAILED;
+    // 15/06/2026 18:00 linhdev - hiển thị chi tiết lỗi export (user group/thiếu file) trên toast và inline alert
+    this.exportErrorMessage = detail || MSG_EXPORT_FAILED;
     this.showError(
-      MSG_EXPORT_FAILED,
+      FEC_BCH_ExportToastTitle,
       detail || FEC_BCH_CannotCreateExportFile
     );
   }
@@ -3568,14 +3692,9 @@ export default class Fec_BatchCaseHandling extends LightningElement {
 
   // 27/05/2026 10:00 linhdev - propertyBundle: insertColumnsBeforeIndex/Headers/Values gửi FEC_BCH_TemplateExportService
   async buildExcelFileFromTemplate(rows, fileName, contentVersionId, templateMeta, propertyBundle) {
+    // 15/06/2026 18:00 linhdev - thông báo user group/thiếu file thay vì [NO_TEMPLATE_CV]
     if (!contentVersionId) {
-      const templateName = String(templateMeta?.templateName || STR_EMPTY).trim();
-      const hasUrl = !!String(templateMeta?.templateDownloadUrl || STR_EMPTY).trim();
-      throw new Error(
-        `[NO_TEMPLATE_CV] Missing template ContentVersion Id` +
-        (templateName ? ` (template=${templateName})` : STR_EMPTY) +
-        (hasUrl ? "" : "; no template file on FEC_Template_Import__c")
-      );
+      throw new Error(this.resolveExportGapMessageFromTemplateMeta(templateMeta));
     }
     await this.ensureSheetJsLoaded();
     const base64 = await getTemplateFileBase64({ contentVersionId });
@@ -3656,10 +3775,12 @@ export default class Fec_BatchCaseHandling extends LightningElement {
     }
     const exportResult = await exportTemplateWorkbook({ requestJson: JSON.stringify(exportRequest) });
     if (!exportResult?.success || !exportResult?.base64Body) {
-      const code = exportResult?.errorCode || "EXPORT_FAILED";
-      const detail =
-        exportResult?.errorMessage || FEC_BCH_CannotCreateExportFile;
-      throw new Error(`[${code}] ${detail}`);
+      throw new Error(
+        this.normalizeExportWorkbookErrorMessage(
+          exportResult?.errorCode,
+          exportResult?.errorMessage
+        )
+      );
     }
     return { fileName, base64Body: exportResult.base64Body };
   }

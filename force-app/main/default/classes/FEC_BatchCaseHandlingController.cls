@@ -40,6 +40,8 @@ public without sharing class FEC_BatchCaseHandlingController {
         @AuraEnabled public String templateName;
         @AuraEnabled public String templateDownloadUrl;
         @AuraEnabled public Id templateContentVersionId;
+        // 15/06/2026 18:00 linhdev - mã lỗi export khi template/user group không khớp hoặc thiếu file
+        @AuraEnabled public String exportUnavailableCode;
     }
 
     public class BatchRow {
@@ -816,6 +818,16 @@ public without sharing class FEC_BatchCaseHandlingController {
             ? FEC_ConstantCommon.STR_EMPTY
             : binding.templateDownloadUrl;
         item.templateContentVersionId = binding == null ? null : binding.templateContentVersionId;
+        // 15/06/2026 18:00 linhdev - trả mã lỗi export cho LWC (tránh NO_TEMPLATE_CV khi user group/template null)
+        if (!FEC_BatchCaseHandlingTemplateHelper.hasExportTemplateBinding(binding)) {
+            item.exportUnavailableCode = FEC_BatchCaseHandlingTemplateHelper.resolveExportBindingGapCode(
+                item.businessProcessCode,
+                item.businessProcessName,
+                userGroup,
+                templateRows,
+                versionIdByTemplateId
+            );
+        }
         // 29/05/2026 15:00 linhdev - debug log export template binding (Dev Console)
         FEC_BatchCaseHandlingTemplateHelper.logExportTemplateBindingDebug(
             'resolveExportTemplateMeta',

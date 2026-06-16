@@ -67,41 +67,68 @@
                               </template>
                               <template if:false={field.isDate}>
                                 <template if:false={field.isPhone}>
-                                  <div class="hide-help-icon">
-                                      <lightning-input-field data-section={section.id} data-sub={row.sub.name}
-                                        data-obj={obj.id} data-field={field.apiName} data-obj-name={obj.name}
-                                        variant="label-hidden" field-name={field.apiName} required={field.mandatory}
-                                        disabled={field.isInternalRequest} onchange={handleChangeInput}
-                                        onkeydown={handleInputKeydown} onpaste={handlePaste} value={field.value}>
-                                      </lightning-input-field>
-                                  </div>
-                                  <template if:true={field.showMrcDupInline}>
-                                    <template if:true={showMrcRl0502DupBanner}>
-                                      <c-fec_-mrc-return-dup-banner
-                                        record-id={recordId}
-                                        duplicate-case-id={business.mrcRl0502DuplicateOpenCaseId}
-                                        duplicate-case-number={business.mrcRl0502DuplicateCaseNumber}
-                                        handling-option-value={mrcReturnHandlingOptionValue}
-                                        handling-option-options={mrcHandlingOptionOptions}
-                                        is-edit={isEdit}
-                                        section-id={section.id}
-                                        sub-section-name={row.sub.name}
-                                        obj-id={obj.id}
-                                        display-mode="inline"
-                                        onhandlingoptionchange={handleMrcReturnHandlingOptionChange}>
-                                      </c-fec_-mrc-return-dup-banner>
-                                      <lightning-input-field
-                                        class="slds-hide"
-                                        data-section={section.id}
-                                        data-sub={row.sub.name}
-                                        data-obj={obj.id}
-                                        data-field="FEC_MRC_Request_Handling_Option__c"
-                                        data-obj-name={obj.name}
-                                        variant="label-hidden"
-                                        field-name="FEC_MRC_Request_Handling_Option__c"
-                                        value={mrcReturnHandlingOptionValue}
-                                        onchange={handleChangeInput}>
-                                      </lightning-input-field>
+                                  <template if:true={field.isProvinceLookup}>
+                                    <c-fec_searchable-combobox
+                                      value={field.value}
+                                      options={provinceCityLookupOptions}
+                                      placeholder="Tìm tỉnh/thành phố..."
+                                      required={field.mandatory}
+                                      data-section={section.id}
+                                      data-sub={row.sub.name}
+                                      data-obj={obj.id}
+                                      data-field={field.apiName}
+                                      data-obj-name={obj.name}
+                                      onchange={handleChangeInput}>
+                                    </c-fec_searchable-combobox>
+                                    <lightning-input-field
+                                      class="slds-hide"
+                                      field-name={field.apiName}
+                                      value={field.value}
+                                      data-obj={obj.id}
+                                      onchange={handleChangeInput}
+                                      data-section={section.id}
+                                      data-sub={row.sub.name}
+                                      data-field={field.apiName}
+                                      data-obj-name={obj.name}>
+                                    </lightning-input-field>
+                                  </template>
+                                  <template if:false={field.isProvinceLookup}>
+                                    <div class="hide-help-icon">
+                                        <lightning-input-field data-section={section.id} data-sub={row.sub.name}
+                                          data-obj={obj.id} data-field={field.apiName} data-obj-name={obj.name}
+                                          variant="label-hidden" field-name={field.apiName} required={field.mandatory}
+                                          disabled={field.isInternalRequest} onchange={handleChangeInput}
+                                          onkeydown={handleInputKeydown} onpaste={handlePaste} value={field.value}>
+                                        </lightning-input-field>
+                                    </div>
+                                    <template if:true={field.showMrcDupInline}>
+                                      <template if:true={showMrcRl0502DupBanner}>
+                                        <c-fec_-mrc-return-dup-banner
+                                          record-id={recordId}
+                                          duplicate-case-id={business.mrcRl0502DuplicateOpenCaseId}
+                                          duplicate-case-number={business.mrcRl0502DuplicateCaseNumber}
+                                          handling-option-value={mrcReturnHandlingOptionValue}
+                                          handling-option-options={mrcHandlingOptionOptions}
+                                          is-edit={isEdit}
+                                          section-id={section.id}
+                                          sub-section-name={row.sub.name}
+                                          obj-id={obj.id}
+                                          display-mode="inline"
+                                          onhandlingoptionchange={handleMrcReturnHandlingOptionChange}>
+                                        </c-fec_-mrc-return-dup-banner>
+                                        <lightning-input-field
+                                          class="slds-hide"
+                                          data-section={section.id}
+                                          data-sub={row.sub.name}
+                                          data-obj={obj.id}
+                                          data-field="FEC_MRC_Request_Handling_Option__c"
+                                          data-obj-name={obj.name}
+                                          variant="label-hidden"
+                                          field-name="FEC_MRC_Request_Handling_Option__c"
+                                          value={mrcReturnHandlingOptionValue}
+                                          onchange={handleChangeInput}>
+                                        </lightning-input-field>
+                                      </template>
                                     </template>
                                   </template>
                                 </template>
@@ -179,41 +206,68 @@
                                   </template>
                                   <template if:false={field.isDate}>
                                     <template if:false={field.isPhone}>
-                                      <div class="hide-help-icon">
-                                          <lightning-input-field data-section={section.id} data-sub={row.sub.name}
-                                            data-obj={obj.id} data-field={field.apiName} data-obj-name={obj.name}
-                                            variant="label-hidden" field-name={field.apiName} required={field.mandatory}
-                                            disabled={field.isInternalRequest} onchange={handleChangeInput}
-                                            onkeydown={handleInputKeydown} onpaste={handlePaste} value={field.value}>
-                                          </lightning-input-field>
-                                      </div>
-                                      <template if:true={field.showMrcDupInline}>
-                                        <template if:true={showMrcRl0502DupBanner}>
-                                          <c-fec_-mrc-return-dup-banner
-                                            record-id={recordId}
-                                            duplicate-case-id={business.mrcRl0502DuplicateOpenCaseId}
-                                            duplicate-case-number={business.mrcRl0502DuplicateCaseNumber}
-                                            handling-option-value={mrcReturnHandlingOptionValue}
-                                            handling-option-options={mrcHandlingOptionOptions}
-                                            is-edit={isEdit}
-                                            section-id={section.id}
-                                            sub-section-name={row.sub.name}
-                                            obj-id={obj.id}
-                                            display-mode="inline"
-                                            onhandlingoptionchange={handleMrcReturnHandlingOptionChange}>
-                                          </c-fec_-mrc-return-dup-banner>
-                                          <lightning-input-field
-                                            class="slds-hide"
-                                            data-section={section.id}
-                                            data-sub={row.sub.name}
-                                            data-obj={obj.id}
-                                            data-field="FEC_MRC_Request_Handling_Option__c"
-                                            data-obj-name={obj.name}
-                                            variant="label-hidden"
-                                            field-name="FEC_MRC_Request_Handling_Option__c"
-                                            value={mrcReturnHandlingOptionValue}
-                                            onchange={handleChangeInput}>
-                                          </lightning-input-field>
+                                      <template if:true={field.isProvinceLookup}>
+                                        <c-fec_searchable-combobox
+                                          value={field.value}
+                                          options={provinceCityLookupOptions}
+                                          placeholder="Tìm tỉnh/thành phố..."
+                                          required={field.mandatory}
+                                          data-section={section.id}
+                                          data-sub={row.sub.name}
+                                          data-obj={obj.id}
+                                          data-field={field.apiName}
+                                          data-obj-name={obj.name}
+                                          onchange={handleChangeInput}>
+                                        </c-fec_searchable-combobox>
+                                        <lightning-input-field
+                                          class="slds-hide"
+                                          field-name={field.apiName}
+                                          value={field.value}
+                                          data-obj={obj.id}
+                                          onchange={handleChangeInput}
+                                          data-section={section.id}
+                                          data-sub={row.sub.name}
+                                          data-field={field.apiName}
+                                          data-obj-name={obj.name}>
+                                        </lightning-input-field>
+                                      </template>
+                                      <template if:false={field.isProvinceLookup}>
+                                        <div class="hide-help-icon">
+                                            <lightning-input-field data-section={section.id} data-sub={row.sub.name}
+                                              data-obj={obj.id} data-field={field.apiName} data-obj-name={obj.name}
+                                              variant="label-hidden" field-name={field.apiName} required={field.mandatory}
+                                              disabled={field.isInternalRequest} onchange={handleChangeInput}
+                                              onkeydown={handleInputKeydown} onpaste={handlePaste} value={field.value}>
+                                            </lightning-input-field>
+                                        </div>
+                                        <template if:true={field.showMrcDupInline}>
+                                          <template if:true={showMrcRl0502DupBanner}>
+                                            <c-fec_-mrc-return-dup-banner
+                                              record-id={recordId}
+                                              duplicate-case-id={business.mrcRl0502DuplicateOpenCaseId}
+                                              duplicate-case-number={business.mrcRl0502DuplicateCaseNumber}
+                                              handling-option-value={mrcReturnHandlingOptionValue}
+                                              handling-option-options={mrcHandlingOptionOptions}
+                                              is-edit={isEdit}
+                                              section-id={section.id}
+                                              sub-section-name={row.sub.name}
+                                              obj-id={obj.id}
+                                              display-mode="inline"
+                                              onhandlingoptionchange={handleMrcReturnHandlingOptionChange}>
+                                            </c-fec_-mrc-return-dup-banner>
+                                            <lightning-input-field
+                                              class="slds-hide"
+                                              data-section={section.id}
+                                              data-sub={row.sub.name}
+                                              data-obj={obj.id}
+                                              data-field="FEC_MRC_Request_Handling_Option__c"
+                                              data-obj-name={obj.name}
+                                              variant="label-hidden"
+                                              field-name="FEC_MRC_Request_Handling_Option__c"
+                                              value={mrcReturnHandlingOptionValue}
+                                              onchange={handleChangeInput}>
+                                            </lightning-input-field>
+                                          </template>
                                         </template>
                                       </template>
                                     </template>
