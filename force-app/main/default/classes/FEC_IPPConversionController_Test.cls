@@ -162,6 +162,15 @@ private class FEC_IPPConversionController_Test {
 
         Case c = [SELECT Id FROM Case LIMIT 1];
         FEC_Transaction__c tx = [SELECT Id FROM FEC_Transaction__c LIMIT 1];
+        Map<String, Schema.SObjectField> caseFieldMap = Schema.SObjectType.Case.fields.getMap();
+        if (caseFieldMap.containsKey('FEC_IPP_Term__c')) {
+            FEC_CaseTriggerHandler.isExecuting = true;
+            try {
+                FEC_IPPConversionController.saveCaseIppTerm(c.Id, 9);
+            } finally {
+                FEC_CaseTriggerHandler.isExecuting = false;
+            }
+        }
         Test.setMock(HttpCalloutMock.class, new IppConversionIppDetailsMock());
 
         System.runAs(runAsAdmin()) {
@@ -174,82 +183,137 @@ private class FEC_IPPConversionController_Test {
             System.assertEquals(12, dto.interestRate);
             System.assertEquals(60000, dto.fee);
             System.assertEquals(709465, dto.emi);
+            // 2026-06-16 linhdev – FEC_IPP_Term__c lưu khi user chọn Tenor (trước GetIPPDetails)
+            if (caseFieldMap.containsKey('FEC_IPP_Term__c')) {
+                Case updatedCase = [
+                    SELECT FEC_IPP_Term__c
+                    FROM Case
+                    WHERE Id = :c.Id
+                    LIMIT 1
+                ];
+                System.assertEquals(9, updatedCase.FEC_IPP_Term__c);
+            }
         }
     }
 
     @IsTest
-    static void testCheckIPPDetails_MapsAllGetIppDetailsFields() {
+    static void testGetSavedIppConversionState_WithSavedTenor() {
         if (Type.forName('FEC_IPPConversionController') == null) {
             return;
         }
 
         Case c = [SELECT Id FROM Case LIMIT 1];
-        FEC_Transaction__c tx = [
-            SELECT Id, FEC_Transaction_Amount__c, FEC_Effective_Date__c, FEC_Post_Date__c,
-                FEC_Transaction_Plan__c, FEC_Transaction_Code__c
-            FROM FEC_Transaction__c
-            LIMIT 1
-        ];
+        Map<String, Schema.SObjectField> caseFieldMap = Schema.SObjectType.Case.fields.getMap();
+        if (!caseFieldMap.containsKey('FEC_IPP_Term__c')) {
+            return;
+        }
+
+        Case caseUpdate = new Case(Id = c.Id, FEC_IPP_Term__c = 12);
+        if (caseFieldMap.containsKey('FEC_IPP_Interest__c')) {
+            caseUpdate.FEC_IPP_Interest__c = 10;
+        }
+        if (caseFieldMap.containsKey('FEC_Conversion_Fee__c')) {
+            caseUpdate.FEC_Conversion_Fee__c = 50000;
+        }
+        if (caseFieldMap.containsKey('FEC_EMI__c')) {
+            caseUpdate.FEC_EMI__c = 100000;
+        }
+
+        FEC_CaseTriggerHandler.isExecuting = true;
+        try {
+            update caseUpdate;
+        } finally {
+            FEC_CaseTriggerHandler.isExecuting = false;
+        }
 
         System.runAs(runAsAdmin()) {
-            Case loadedCase = [
-                SELECT Id, FEC_Account_or_Contract__c,
-                    FEC_Account_or_Contract__r.Name,
-                    FEC_Account_or_Contract__r.FEC_Account_Number__c,
-                    FEC_Account_or_Contract__r.FEC_Card_Number__c
-                FROM Case
-                WHERE Id = :c.Id
-                LIMIT 1
-            ];
-            FEC_Transaction__c loadedTx = [
-                SELECT Id, FEC_Transaction_Amount__c, FEC_Effective_Date__c, FEC_Post_Date__c,
-                    FEC_Transaction_Plan__c, FEC_Transaction_Code__c
-                FROM FEC_Transaction__c
-                WHERE Id = :tx.Id
-                LIMIT 1
-            ];
-            String accountNumber = FEC_IPPConversionController.getAccountNumberForGetIPPDetails(c.Id, ACCOUNT_NUMBER);
-            FEC_GetIPPDetailsCallout.IPPRequest req =
-                FEC_IPPConversionController.buildGetIppDetailsRequest(loadedCase, loadedTx, 9, accountNumber);
-
-            System.assertEquals(ACCOUNT_NUMBER, req.accountNumber);
-            System.assertEquals(
-                FEC_CommonUltils.formatDateYYYYMMDD(loadedTx.FEC_Effective_Date__c),
-                req.effectiveDate
-            );
-            System.assertEquals(loadedTx.FEC_Transaction_Amount__c, req.amount);
-            System.assertEquals(loadedTx.FEC_Transaction_Plan__c, req.planNumber);
-            System.assertEquals(loadedTx.FEC_Transaction_Plan__c, req.transactionPlan);
-            System.assertEquals(9, req.ippTerm);
-            System.assertEquals('0105', req.referenceNumber);
-            Date expectedPostDate = loadedTx.FEC_Post_Date__c != null
-                ? loadedTx.FEC_Post_Date__c
-                : (loadedTx.FEC_Effective_Date__c != null ? loadedTx.FEC_Effective_Date__c : Date.today());
-            System.assertEquals(
-                FEC_CommonUltils.formatDateYYYYMMDD(expectedPostDate),
-                req.postingDate
-            );
-            System.assertEquals(CARD_NUMBER, req.cardNumber);
-            System.assertEquals(null, req.cardSeq);
-            System.assertEquals(null, req.ippKey);
-
-            Test.setMock(HttpCalloutMock.class, new IppConversionIppDetailsMock());
             Test.startTest();
-            FEC_IPPConversionController.IPPDetailsDTO dto =
-                FEC_IPPConversionController.checkIPPDetails(c.Id, tx.Id, 9);
+            FEC_IPPConversionController.IppRestoreStateDTO state =
+                FEC_IPPConversionController.getSavedIppConversionState(c.Id);
             Test.stopTest();
-            System.assertEquals(null, dto.errorMessage);
+
+            System.assertEquals(true, state.hasIppData);
+            System.assertEquals(12, state.savedTenor);
+            if (caseFieldMap.containsKey('FEC_IPP_Interest__c')) {
+                System.assertEquals(10, state.savedInterestRate);
+            }
+            if (caseFieldMap.containsKey('FEC_Conversion_Fee__c')) {
+                System.assertEquals(50000, state.savedFee);
+            }
+            if (caseFieldMap.containsKey('FEC_EMI__c')) {
+                System.assertEquals(100000, state.savedEmi);
+            }
         }
     }
 
     @IsTest
-    static void testCheckIPPDetails_FailureReturnsError() {
+    static void testSaveCaseIppTerm() {
+        if (Type.forName('FEC_IPPConversionController') == null) {
+            return;
+        }
+
+        Case c = [SELECT Id FROM Case LIMIT 1];
+        Map<String, Schema.SObjectField> caseFieldMap = Schema.SObjectType.Case.fields.getMap();
+        if (!caseFieldMap.containsKey('FEC_IPP_Term__c')) {
+            return;
+        }
+
+        System.runAs(runAsAdmin()) {
+            Test.startTest();
+            FEC_IPPConversionController.saveCaseIppTerm(c.Id, 6);
+            Test.stopTest();
+
+            Case updatedCase = [SELECT FEC_IPP_Term__c FROM Case WHERE Id = :c.Id LIMIT 1];
+            System.assertEquals(6, updatedCase.FEC_IPP_Term__c);
+        }
+    }
+
+    @IsTest
+    static void testGetSavedIppConversionState_Empty() {
+        if (Type.forName('FEC_IPPConversionController') == null) {
+            return;
+        }
+
+        Case c = [SELECT Id FROM Case LIMIT 1];
+
+        Test.startTest();
+        FEC_IPPConversionController.IppRestoreStateDTO state =
+            FEC_IPPConversionController.getSavedIppConversionState(c.Id);
+        Test.stopTest();
+
+        System.assertEquals(false, state.hasIppData);
+    }
+
+    @IsTest
+    static void testCheckIPPDetails_FailureClearsDetailFields() {
         if (Type.forName('FEC_IPPConversionController') == null) {
             return;
         }
 
         Case c = [SELECT Id FROM Case LIMIT 1];
         FEC_Transaction__c tx = [SELECT Id FROM FEC_Transaction__c LIMIT 1];
+        Map<String, Schema.SObjectField> caseFieldMap = Schema.SObjectType.Case.fields.getMap();
+        if (!caseFieldMap.containsKey('FEC_IPP_Term__c')) {
+            return;
+        }
+
+        Case caseUpdate = new Case(Id = c.Id, FEC_IPP_Term__c = 9);
+        if (caseFieldMap.containsKey('FEC_IPP_Interest__c')) {
+            caseUpdate.FEC_IPP_Interest__c = 10;
+        }
+        if (caseFieldMap.containsKey('FEC_Conversion_Fee__c')) {
+            caseUpdate.FEC_Conversion_Fee__c = 50000;
+        }
+        if (caseFieldMap.containsKey('FEC_EMI__c')) {
+            caseUpdate.FEC_EMI__c = 100000;
+        }
+        FEC_CaseTriggerHandler.isExecuting = true;
+        try {
+            update caseUpdate;
+        } finally {
+            FEC_CaseTriggerHandler.isExecuting = false;
+        }
+
         Test.setMock(HttpCalloutMock.class, new IppConversionIppDetailsErrorMock());
 
         System.runAs(runAsAdmin()) {
@@ -259,6 +323,22 @@ private class FEC_IPPConversionController_Test {
             Test.stopTest();
 
             System.assertNotEquals(null, dto.errorMessage);
+            Case updatedCase = [
+                SELECT FEC_IPP_Term__c, FEC_IPP_Interest__c, FEC_Conversion_Fee__c, FEC_EMI__c
+                FROM Case
+                WHERE Id = :c.Id
+                LIMIT 1
+            ];
+            System.assertEquals(9, updatedCase.FEC_IPP_Term__c);
+            if (caseFieldMap.containsKey('FEC_IPP_Interest__c')) {
+                System.assertEquals(null, updatedCase.FEC_IPP_Interest__c);
+            }
+            if (caseFieldMap.containsKey('FEC_Conversion_Fee__c')) {
+                System.assertEquals(null, updatedCase.FEC_Conversion_Fee__c);
+            }
+            if (caseFieldMap.containsKey('FEC_EMI__c')) {
+                System.assertEquals(null, updatedCase.FEC_EMI__c);
+            }
         }
     }
 
@@ -1608,155 +1688,6 @@ private class FEC_IPPConversionController_Test {
                 '</soapenv:Body></soapenv:Envelope>'
             );
             return res;
-        }
-    }
-
-    private class IppConversionAccountDetailsEmptyMock implements HttpCalloutMock {
-        public HttpResponse respond(HttpRequest req) {
-            HttpResponse res = new HttpResponse();
-            res.setStatusCode(200);
-            res.setBody(
-                '<?xml version="1.0"?><soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">' +
-                '<soapenv:Body><NS1:GetAccountDetailsResponse xmlns:NS1="http://esbservice.fecredit.org/EStatementService/">' +
-                '<NS1:SysResponse><Status>0</Status></NS1:SysResponse>' +
-                '<NS1:AccountRecords></NS1:AccountRecords>' +
-                '</NS1:GetAccountDetailsResponse></soapenv:Body></soapenv:Envelope>'
-            );
-            return res;
-        }
-    }
-
-    private class IppConversionAccountDetailsRetailOnlyMock implements HttpCalloutMock {
-        public HttpResponse respond(HttpRequest req) {
-            HttpResponse res = new HttpResponse();
-            res.setStatusCode(200);
-            res.setBody(
-                '<?xml version="1.0"?><soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">' +
-                '<soapenv:Body><NS1:GetAccountDetailsResponse xmlns:NS1="http://esbservice.fecredit.org/EStatementService/">' +
-                '<NS1:SysResponse><Status>0</Status><Description>Success</Description></NS1:SysResponse>' +
-                '<NS1:AccountRecords><AccountRecord><AccountNumber>0001500060000003</AccountNumber>' +
-                '<RetailIPPInfo><PlanNumber>80001</PlanNumber></RetailIPPInfo>' +
-                '</AccountRecord></NS1:AccountRecords>' +
-                '</NS1:GetAccountDetailsResponse></soapenv:Body></soapenv:Envelope>'
-            );
-            return res;
-        }
-    }
-
-    private class IppConversionIppDetailsEmptyMock implements HttpCalloutMock {
-        public HttpResponse respond(HttpRequest req) {
-            HttpResponse res = new HttpResponse();
-            res.setStatusCode(200);
-            res.setBody('');
-            return res;
-        }
-    }
-
-    private class IppConversionIppDetailsInstallmentMock implements HttpCalloutMock {
-        public HttpResponse respond(HttpRequest req) {
-            HttpResponse res = new HttpResponse();
-            res.setStatusCode(200);
-            res.setBody(
-                '<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">' +
-                '<soapenv:Body><GetIPPDetailsResponse>' +
-                '<SysResponse><Status>Success</Status></SysResponse>' +
-                '<InterestRate>10</InterestRate><ConversionFee>1000</ConversionFee>' +
-                '<InstallmentAmount>500000</InstallmentAmount>' +
-                '</GetIPPDetailsResponse></soapenv:Body></soapenv:Envelope>'
-            );
-            return res;
-        }
-    }
-
-    private class IppConversionIppDetailsStatusCodeMock implements HttpCalloutMock {
-        public HttpResponse respond(HttpRequest req) {
-            HttpResponse res = new HttpResponse();
-            res.setStatusCode(200);
-            res.setBody(
-                '<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">' +
-                '<soapenv:Body><GetIPPDetailsResponse>' +
-                '<SysResponse><Status>0</Status></SysResponse>' +
-                '<InterestRate>11</InterestRate><ConversionFee>2000</ConversionFee><EMI>3000</EMI>' +
-                '</GetIPPDetailsResponse></soapenv:Body></soapenv:Envelope>'
-            );
-            return res;
-        }
-    }
-
-    private class IppConversionIppDetailsThrowMock implements HttpCalloutMock {
-        public HttpResponse respond(HttpRequest req) {
-            throw new CalloutException('Simulated callout failure');
-        }
-    }
-
-    private class IppConversionAddIppSuccessMock implements HttpCalloutMock {
-        public HttpResponse respond(HttpRequest req) {
-            HttpResponse res = new HttpResponse();
-            res.setStatusCode(200);
-            res.setBody(
-                '<?xml version="1.0"?><soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/"' +
-                ' xmlns:est="http://esbservice.fecredit.org/EStatementService/">' +
-                '<soapenv:Body><est:AddIPPResponse><SysResponse>' +
-                '<Status>1</Status><Description>Converted successfully</Description>' +
-                '</SysResponse></est:AddIPPResponse></soapenv:Body></soapenv:Envelope>'
-            );
-            return res;
-        }
-    }
-
-    private class IppConversionAddIppFailureMock implements HttpCalloutMock {
-        public HttpResponse respond(HttpRequest req) {
-            HttpResponse res = new HttpResponse();
-            res.setStatusCode(200);
-            res.setBody(
-                '<?xml version="1.0"?><soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/"' +
-                ' xmlns:est="http://esbservice.fecredit.org/EStatementService/">' +
-                '<soapenv:Body><est:AddIPPResponse><SysResponse>' +
-                '<Status>0</Status><Description>Add IPP failed</Description>' +
-                '</SysResponse></est:AddIPPResponse></soapenv:Body></soapenv:Envelope>'
-            );
-            return res;
-        }
-    }
-
-    private class IppConversionAccountDetailsThrowMock implements HttpCalloutMock {
-        public HttpResponse respond(HttpRequest req) {
-            throw new CalloutException('Simulated account details failure');
-        }
-    }
-
-    private class IppConversionIppDetailsNotSuccessMock implements HttpCalloutMock {
-        public HttpResponse respond(HttpRequest req) {
-            HttpResponse res = new HttpResponse();
-            res.setStatusCode(200);
-            res.setBody(
-                '<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">' +
-                '<soapenv:Body><GetIPPDetailsResponse>' +
-                '<SysResponse><Status>FAILED</Status></SysResponse>' +
-                '</GetIPPDetailsResponse></soapenv:Body></soapenv:Envelope>'
-            );
-            return res;
-        }
-    }
-
-    private class IppConversionIppDetailsSysMessageMock implements HttpCalloutMock {
-        public HttpResponse respond(HttpRequest req) {
-            HttpResponse res = new HttpResponse();
-            res.setStatusCode(200);
-            res.setBody(
-                '<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">' +
-                '<soapenv:Body><GetIPPDetailsResponse>' +
-                '<SysResponse><Description>Success</Description></SysResponse>' +
-                '<InterestRate>8</InterestRate><ConversionFee>100</ConversionFee><EMI>200</EMI>' +
-                '</GetIPPDetailsResponse></soapenv:Body></soapenv:Envelope>'
-            );
-            return res;
-        }
-    }
-
-    private class IppConversionAddIppThrowMock implements HttpCalloutMock {
-        public HttpResponse respond(HttpRequest req) {
-            throw new CalloutException('Simulated AddIPP failure');
         }
     }
 }

@@ -7,8 +7,9 @@ import { LightningElement, api, track } from 'lwc';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import { NavigationMixin } from 'lightning/navigation';
 import getEligibleTransactions from '@salesforce/apex/FEC_IPPConversionController.getEligibleTransactions';
-import getSavedIppTransactionId from '@salesforce/apex/FEC_IPPConversionController.getSavedIppTransactionId';
-import saveSelectedTransaction from '@salesforce/apex/FEC_IPPConversionController.saveSelectedTransaction';
+import loadIppTenorOptions from '@salesforce/apex/FEC_IPPConversionController.loadIppTenorOptions';
+import getSavedIppConversionState from '@salesforce/apex/FEC_IPPConversionController.getSavedIppConversionState';
+import saveCaseIppTerm from '@salesforce/apex/FEC_IPPConversionController.saveCaseIppTerm';
 import checkIPPDetails from '@salesforce/apex/FEC_IPPConversionController.checkIPPDetails';
 import convertIPP from '@salesforce/apex/FEC_IPPConversionController.convertIPP';
 import convertIPPManualRetail from '@salesforce/apex/FEC_IPPConversionController.convertIPPManualRetail';
@@ -17,6 +18,7 @@ import FEC_MSG_IPP_Conversion_Success from '@salesforce/label/c.FEC_MSG_IPP_Conv
 import FEC_MSG_IPP_Conversion_Fail_Retry from '@salesforce/label/c.FEC_MSG_IPP_Conversion_Fail_Retry';
 import FEC_MSG_IPP_Noti_10 from '@salesforce/label/c.FEC_MSG_IPP_Noti_10';
 import FEC_MSG_IPP_No_Eligible_Transactions from '@salesforce/label/c.FEC_MSG_IPP_No_Eligible_Transactions';
+import FEC_MSG_IPP_Sync_Failed from '@salesforce/label/c.FEC_MSG_IPP_Sync_Failed';
 import FEC_MSG_IPP_AddIpp_Default_Failed from '@salesforce/label/c.FEC_MSG_IPP_AddIpp_Default_Failed';
 import FEC_LBL_IPP_Retail_UI from '@salesforce/label/c.FEC_LBL_IPP_Retail_UI';
 import FEC_Button_Close from '@salesforce/label/c.FEC_Button_Close';
@@ -62,6 +64,7 @@ const CONST = {
     VARIANT_WARNING: 'warning',
     SPIN_CONVERTING: 'Converting',
     LBL_TENOR: 'Tenor',
+    LBL_TENOR_PLACEHOLDER: '-- Chọn Tenor --',
     LBL_INTEREST: 'Interest',
     LBL_CONVERSION_FEE: 'Conversion Fee',
     LBL_EMI: 'EMI',
@@ -101,6 +104,9 @@ export default class Fec_IPPConversionRetailForm extends NavigationMixin(Lightni
     @track tenorOptions = [];
     @track selectedTenor = null;
     @track tenorBlockReady = false;
+    @track tenorSyncError = null;
+    @track showTenorSection = false;
+    @track ippDetailsLoading = false;
     @track isLoading = false;
     @track detailsLoading = false;
     @track convertLoading = false;
@@ -129,6 +135,9 @@ export default class Fec_IPPConversionRetailForm extends NavigationMixin(Lightni
     @track manualInstallmentTerm = null;
     @track manualConversionInterest = null;
     @track manualSubmitLoading = false;
+
+    _savedIppState = null;
+    _ippRestorePending = false;
 
     ippRetailUi = IPP_RETAIL_UI;
 
@@ -169,6 +178,7 @@ export default class Fec_IPPConversionRetailForm extends NavigationMixin(Lightni
     ];
 
     lblTenor = CONST.LBL_TENOR;
+    lblTenorPlaceholder = CONST.LBL_TENOR_PLACEHOLDER;
     lblInterest = CONST.LBL_INTEREST;
     lblConversionFee = CONST.LBL_CONVERSION_FEE;
     lblEmi = CONST.LBL_EMI;
@@ -178,8 +188,34 @@ export default class Fec_IPPConversionRetailForm extends NavigationMixin(Lightni
     lblClose = FEC_Button_Close;
 
     connectedCallback() {
-        this.loadEligibleTransactions();
         this.loadConvertActionStatus();
+        if (!this.recordId) {
+            return;
+        }
+        // 2026-06-16 linhdev – chờ saved state + transactions xong rồi mới restore (tránh race)
+        Promise.all([
+            this.loadSavedIppState(),
+            this.loadEligibleTransactions()
+        ]).then(() => {
+            this.tryRestoreIppTenorSection();
+        }).catch(() => {
+        });
+    }
+
+    // 2026-06-16 linhdev – đọc IPP đã lưu trên Case để restore sau refresh / Save & Closed
+    loadSavedIppState() {
+        if (!this.recordId) {
+            return Promise.resolve();
+        }
+        return getSavedIppConversionState({ caseId: this.recordId })
+            .then((res) => {
+                if (res && res.hasIppData) {
+                    this._savedIppState = res;
+                    this._ippRestorePending = true;
+                }
+            })
+            .catch(() => {
+            });
     }
 
     loadConvertActionStatus() {
@@ -207,14 +243,11 @@ export default class Fec_IPPConversionRetailForm extends NavigationMixin(Lightni
     loadEligibleTransactions() {
         if (!this.recordId) {
             this.state = FORM_STATE_NONE;
-            return;
+            return Promise.resolve();
         }
         this.isLoading = true;
-        return Promise.all([
-            getEligibleTransactions({ caseId: this.recordId }),
-            getSavedIppTransactionId({ caseId: this.recordId })
-        ])
-            .then(([data, savedId]) => {
+        return getEligibleTransactions({ caseId: this.recordId })
+            .then((data) => {
                 this.transactions = (data || []).map(t => ({
                     ...t,
                     amountDisplay: t.amount != null ? this.formatAmount(t.amount) : STR_EMPTY,
@@ -228,6 +261,8 @@ export default class Fec_IPPConversionRetailForm extends NavigationMixin(Lightni
                 this.details = null;
                 this.selectedTenor = null;
                 this.tenorBlockReady = false;
+                this.showTenorSection = false;
+                this.tenorSyncError = null;
                 if (this.transactions.length === 0) {
                     this.state = FORM_STATE_NONE;
                 } else {
@@ -259,11 +294,11 @@ export default class Fec_IPPConversionRetailForm extends NavigationMixin(Lightni
             this.tenorBlockReady = false;
             this.showTenorSection = false;
             this.tenorSyncError = null;
-            saveSelectedTransaction({
-                caseId: this.recordId,
-                transactionId: this.selectedTransactionId
-            }).catch(() => {
-            });
+            // 2026-06-16 linhdev – restore Tenor picklist nếu Case đã có dữ liệu IPP
+            if (this._savedIppState && this._savedIppState.hasIppData) {
+                this._ippRestorePending = true;
+                this.tryRestoreIppTenorSection();
+            }
             return;
         }
         if (selectedRows.length === 0) {
@@ -279,11 +314,6 @@ export default class Fec_IPPConversionRetailForm extends NavigationMixin(Lightni
             this.tenorBlockReady = false;
             this.showTenorSection = false;
             this.tenorSyncError = null;
-            saveSelectedTransaction({
-                caseId: this.recordId,
-                transactionId: null
-            }).catch(() => {
-            });
         }
     }
 
@@ -406,28 +436,117 @@ export default class Fec_IPPConversionRetailForm extends NavigationMixin(Lightni
             this.showToast(FEC_Toast_Warning, FEC_Toast_Validation_Message, CONST.VARIANT_WARNING);
             return;
         }
+        this.loadTenorOptionsFromApi(false);
+    }
+
+    // 2026-06-16 linhdev – Service 38 GetAccountDetails: load Tenor picklist (không auto gọi Service 40)
+    loadTenorOptionsFromApi(isRestore) {
         this.tenorBlockReady = false;
         this.detailsLoading = true;
-        this.details = null;
-        checkIPPDetails({ caseId: this.recordId, transactionId: this.selectedTransactionId })
+        if (!isRestore) {
+            this.ippDetailsLoading = false;
+            this.details = null;
+            this.tenorSyncError = null;
+            this.showTenorSection = false;
+            this.selectedTenor = null;
+        }
+        loadIppTenorOptions({ caseId: this.recordId })
             .then((res) => {
-                if (res && res.errorMessage) {
-                    this.showToast(FEC_Toast_Error, res.errorMessage, CONST.VARIANT_ERROR);
-                    return;
-                }
-                this.tenorBlockReady = false;
-                this.details = res;
-                this.tenorOptions = (res.tenorOptions || []).map(t => ({ label: String(t), value: String(t) }));
-                this.selectedTenor = this.tenorOptions.length > 0 ? this.tenorOptions[0].value : null;
-                Promise.resolve().then(() => {
-                    this.tenorBlockReady = true;
-                });
+                this.applyTenorOptionsResponse(res);
             })
-            .catch((err) => {
-                this.showToast(FEC_Toast_Error, err?.body?.message || err?.message || FEC_Toast_Error_Generic, CONST.VARIANT_ERROR);
+            .catch(() => {
+                this.tenorSyncError = FEC_MSG_IPP_Sync_Failed;
+                this.showTenorSection = true;
             })
             .finally(() => {
                 this.detailsLoading = false;
+            });
+    }
+
+    // 2026-06-16 linhdev – map response API 38; chỉ pre-select Tenor nếu Case đã lưu FEC_IPP_Term__c
+    applyTenorOptionsResponse(res) {
+        if (res && res.errorMessage) {
+            this.tenorSyncError = res.errorMessage;
+            this.showTenorSection = true;
+            return;
+        }
+        this.tenorOptions = (res.tenorOptions || []).map(t => ({ label: String(t), value: String(t) }));
+        if (this.tenorOptions.length === 0) {
+            this.tenorSyncError = FEC_MSG_IPP_Sync_Failed;
+            this.showTenorSection = true;
+            return;
+        }
+        this.showTenorSection = true;
+        this.tenorSyncError = null;
+        const savedTenor = res.savedTenor != null ? String(res.savedTenor) : null;
+        this.selectedTenor = savedTenor && this.tenorOptions.some(o => o.value === savedTenor)
+            ? savedTenor
+            : null;
+        Promise.resolve().then(() => {
+            this.tenorBlockReady = true;
+        });
+        const hasSavedDetails = res.savedInterestRate != null
+            && res.savedFee != null
+            && res.savedEmi != null
+            && savedTenor
+            && this.selectedTenor === savedTenor;
+        if (hasSavedDetails) {
+            this.details = {
+                interestRate: res.savedInterestRate,
+                fee: res.savedFee,
+                emi: res.savedEmi
+            };
+        } else {
+            this.details = null;
+        }
+    }
+
+    // 2026-06-16 linhdev – restore Tenor section khi mở lại Case đã có FEC_IPP_Term__c / IPP details
+    tryRestoreIppTenorSection() {
+        if (!this._ippRestorePending || !this._savedIppState || !this._savedIppState.hasIppData) {
+            return;
+        }
+        if (this.isReadOnly || !this.recordId) {
+            return;
+        }
+        if (!this.selectedTransactionId && (this.transactions || []).length === 1) {
+            this.selectedTransactionId = this.transactions[0].transactionId;
+            this._bumpTableKey();
+        }
+        if (!this.selectedTransactionId) {
+            return;
+        }
+        this._ippRestorePending = false;
+        this.loadTenorOptionsFromApi(true);
+    }
+
+    loadIppDetailsForSelectedTenor() {
+        if (!this.selectedTransactionId || !this.selectedTenor) {
+            return;
+        }
+        this.ippDetailsLoading = true;
+        this.details = null;
+        this.tenorSyncError = null;
+        const tenorVal = parseInt(this.selectedTenor, 10);
+        // 2026-06-16 linhdev – lưu FEC_IPP_Term__c trước, sau đó Service 40 GetIPPDetails (tách DML/callout)
+        saveCaseIppTerm({ caseId: this.recordId, tenor: tenorVal })
+            .then(() => checkIPPDetails({
+                caseId: this.recordId,
+                transactionId: this.selectedTransactionId,
+                tenor: tenorVal
+            }))
+            .then((res) => {
+                if (res && res.errorMessage) {
+                    this.tenorSyncError = res.errorMessage;
+                    return;
+                }
+                this.details = res;
+            })
+            .catch(() => {
+                this.tenorSyncError = FEC_MSG_IPP_Sync_Failed;
+            })
+            .finally(() => {
+                this.ippDetailsLoading = false;
             });
     }
 
@@ -510,6 +629,12 @@ export default class Fec_IPPConversionRetailForm extends NavigationMixin(Lightni
         }
         const v = event.detail.value;
         this.selectedTenor = v != null && v !== STR_EMPTY ? String(v) : null;
+        if (!this.selectedTenor) {
+            this.details = null;
+            return;
+        }
+        // 2026-06-16 linhdev – Service 40 GetIPPDetails chỉ khi user chọn Tenor
+        this.loadIppDetailsForSelectedTenor();
     }
 
     navigateToCase() {
@@ -690,7 +815,15 @@ export default class Fec_IPPConversionRetailForm extends NavigationMixin(Lightni
     }
 
     get showDetailsSection() {
-        return this.details != null && !this.details.errorMessage;
+        return this.showTenorSection;
+    }
+
+    get showIppDetailsFields() {
+        return this.details != null && !this.details.errorMessage && !this.tenorSyncError;
+    }
+
+    get showConvertIppButton() {
+        return this.showIppDetailsFields && !this.ippDetailsLoading;
     }
 
     get showNoti09BelowButton() {
