@@ -278,6 +278,20 @@ const FIELD_RECEIVING_PHONE_NUMBER = 'FEC_Receiving_Phone_Number__c';
 const FIELD_CONTACT_CHANNEL = 'FEC_Contact_Channel__c';
 const DOWNLOAD_LOCK_KEY = 'FEC_Download_Running';
 
+
+const RESET_PIN_SUCCESS_MESSAGE = 'Mở khóa Pin thành công';
+const RESET_PIN_FAILURE_MESSAGE = 'Mở khóa Pin thất bại. Vui lòng thử lại';
+
+
+const ASSIGNMENT_ACTION = {
+  RESOLVE: "Resolve",
+  REJECT: "Reject",
+  UPDATE: "Update",
+};
+
+const ASSIGNMENT_DECISION = {
+  CANNOT_CONTACT_CUSTOMER: "Cannot Contact Customer",
+};
 export { 
     AUTO_NOTIFICATION_HEADER_VI, 
     MANUAL_NOTIFICATION_HEADER_VI, 
@@ -406,5 +420,9 @@ export {
   DOWNLOAD_LOCK_KEY,
   INSURANCE_PRODUCT_NAME,
   B2_PRODUCT_NAME,
-  CASH24_PRODUCT_NAME
+  CASH24_PRODUCT_NAME,
+  RESET_PIN_SUCCESS_MESSAGE,
+  RESET_PIN_FAILURE_MESSAGE,
+  ASSIGNMENT_ACTION,
+  ASSIGNMENT_DECISION,
 };

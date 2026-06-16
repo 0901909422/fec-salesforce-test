@@ -695,44 +695,6 @@ public without sharing class FEC_AssignmentController {
 
         return FEC_RoutingActionHistoryTriggerHandler.getTeamsFromIds(ownerIds);
     }
-
-    // =========================================================
-    //HieuTT cập nhật ngày 15/6/2026 - Fix JIRA 1839
-    // =========================================================
-    @AuraEnabled
-    public static void reloadCaseStatusWhenSubmitAssignment(String caseId) {
-
-        List<FEC_Assignment__c> assignments = [
-            SELECT Id, FEC_Assignment_Status__c
-            FROM FEC_Assignment__c
-            WHERE FEC_Case__c = :caseId
-        ];
-
-        if (assignments.isEmpty()) {
-            return;
-        }
-
-        Boolean allFinished = true;
-
-        for (FEC_Assignment__c a : assignments) {
-            String status = a.FEC_Assignment_Status__c;
-
-            Boolean isFinished =
-                status == FEC_ConstantCommon.STATUS_COMPLETED ||
-                (status != null && status.contains('Resolved'));
-
-            if (!isFinished) {
-                allFinished = false;
-                break;
-            }
-        }
-
-        if (allFinished) {
-            update new Case(
-                Id = caseId,
-                Status = FEC_ConstantCommon.CASE_STATUS_RESOLVED_COMPLETED,
-                FEC_Team__c = null
-            );
-        }
-    }
+    
+    
 }

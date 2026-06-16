@@ -4,7 +4,7 @@ import { loadStyle } from "lightning/platformResourceLoader";
 import COMMON_STYLES from "@salesforce/resourceUrl/FEC_CommonCss";
 // import getAssignments from "@salesforce/apex/FEC_AssignmentListHandler.getAssignments";
 import getAssignmentsNEW from "@salesforce/apex/FEC_AssignmentListHandler.getAssignmentsNEW";
-import reloadCaseStatusWhenSubmitAssignment from "@salesforce/apex/FEC_AssignmentController.reloadCaseStatusWhenSubmitAssignment";
+import isLastOpenAssignment from "@salesforce/apex/FEC_AssignmentListHandler.isLastOpenAssignment";
 import getQueueNames from "@salesforce/apex/FEC_AssignmentListHandler.getQueueNames"; // tungnm37 thêm
 import getAction from "@salesforce/apex/FEC_AssignmentListHandler.getAction";
 import getUserDepartment from "@salesforce/apex/FEC_AssignmentListHandler.getUserDepartment";
@@ -58,6 +58,8 @@ import {
   OPEN_STATUS,
   QUEUE_ID_START,
   NEW_STATUS,
+  ASSIGNMENT_ACTION,
+  ASSIGNMENT_DECISION,
 } from "c/fec_CommonConst";
 import { getUsernameBeforeAt } from "c/fec_CommonUtils";
 import isCSSupport from "@salesforce/apex/FEC_AssignmentListHandler.isCSSupport";
@@ -587,6 +589,7 @@ export default class Fec_AssignmentList extends LightningElement {
   }
 
   async handleSubmit() {
+    let shouldReloadPage = false;
     if (this.isSubmitting) return;
     this.isSubmitting = true;
 
@@ -647,6 +650,21 @@ export default class Fec_AssignmentList extends LightningElement {
         subDecision: selected.subDecision,
       });
 
+      const shouldCheckCloseCase =
+        selected.action === ASSIGNMENT_ACTION.RESOLVE ||
+        selected.action === ASSIGNMENT_ACTION.REJECT ||
+        (selected.action === ASSIGNMENT_ACTION.UPDATE &&
+          selected.decision === ASSIGNMENT_DECISION.CANNOT_CONTACT_CUSTOMER);
+
+      if (shouldCheckCloseCase) {
+        const isLastAssignment = await isLastOpenAssignment({
+          caseId: this.recordId,
+          assignmentId: selected.id,
+        });
+
+        shouldReloadPage = isLastAssignment;
+      }
+
       // ===== SUCCESS =====
       console.log("Submit success");
       this.dispatchEvent(
@@ -668,9 +686,6 @@ export default class Fec_AssignmentList extends LightningElement {
         await remarkHistoryCmp.refreshData();
       }
 
-      await reloadCaseStatusWhenSubmitAssignment({
-        caseId: this.recordId,
-      });
       await refreshExecuteCaseVisibility({ caseId: this.recordId });
       await refreshExecuteVisibility({ caseId: this.recordId });
       publish(this.messageContext, CASE_ACTION_CHANNEL, {
@@ -691,6 +706,12 @@ export default class Fec_AssignmentList extends LightningElement {
       await this.initData();
       this.refreshReadonlyState();
       await this.handlePublishMode(false);
+
+      if (shouldReloadPage) {
+        setTimeout(() => {
+          window.location.reload();
+        }, 1000);
+      }
     } catch (error) {
       console.error("FULL ERROR:", error);
 
