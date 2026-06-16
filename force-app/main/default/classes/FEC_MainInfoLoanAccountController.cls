@@ -1,5 +1,5 @@
 /** Controller LWC fec_MainInfoLoanAccount. Load từ API; ghi FEC_Customer_History__c sau khi API thành công. */
-public with sharing class FEC_MainInfoLoanAccountController {
+public without sharing class FEC_MainInfoLoanAccountController {
 
     private class LoanAccountContext {
         Id customerHistoryId;
@@ -91,6 +91,7 @@ public with sharing class FEC_MainInfoLoanAccountController {
     private static LoanAccountContext resolveLoanAccountContext(Id caseId) {
         List<Case> cases = [
             SELECT Id,
+                   FEC_Contract_Number__c,
                    FEC_Account_or_Contract__c,
                    FEC_Account_or_Contract__r.FEC_Contract_Number__c,
                    FEC_Account_or_Contract__r.FEC_Account_Number__c,
@@ -106,10 +107,19 @@ public with sharing class FEC_MainInfoLoanAccountController {
         Case c = cases[0];
         LoanAccountContext ctx = new LoanAccountContext();
         ctx.customerHistoryId = c.FEC_Account_or_Contract__c;
-        ctx.contractNumber = c.FEC_Account_or_Contract__r.FEC_Contract_Number__c;
+        ctx.contractNumber = resolveContractNumber(c);
         ctx.accountNumber = c.FEC_Account_or_Contract__r.FEC_Account_Number__c;
         ctx.applicationId = c.FEC_Account_or_Contract__r.FEC_Application_ID__c;
         return ctx;
+    }
+
+    /** Ưu tiên FEC_Contract_Number__c trên Customer History; fallback Case.FEC_Contract_Number__c. */
+    private static String resolveContractNumber(Case c) {
+        String histContractNumber = c.FEC_Account_or_Contract__r.FEC_Contract_Number__c;
+        if (String.isNotBlank(histContractNumber)) {
+            return histContractNumber;
+        }
+        return String.isNotBlank(c.FEC_Contract_Number__c) ? c.FEC_Contract_Number__c : null;
     }
 
     private static ApiLoanAccountData fetchLoanAccountFromApis(
