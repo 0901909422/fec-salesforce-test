@@ -116,4 +116,12 @@ public without sharing class FEC_BatchCaseHandlingExportRow {
     @AuraEnabled public String correctContractNumber;
     @AuraEnabled public String correctAccountContract;
     @AuraEnabled public String adjustedAmount;
+    // 16/06/2026 toannd - Contract Closure export (ContractClosureTemp2_CSSupport Level Case info)
+    @AuraEnabled public String deliveryOption;
+    @AuraEnabled public String recipientName;
+    @AuraEnabled public String recipientPhoneNumber;
+    @AuraEnabled public String closureAddress;
+    @AuraEnabled public String temporaryAddress;
+    @AuraEnabled public String closureEmail;
+    @AuraEnabled public String temporaryEmail;
 }

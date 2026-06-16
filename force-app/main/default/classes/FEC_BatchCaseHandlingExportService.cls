@@ -81,7 +81,14 @@ public without sharing class FEC_BatchCaseHandlingExportService {
             'FEC_Selected_Contract_Number__c',
             // 15/06/2026 14:30 linhdev - Phone Update export (PhoneUpdateTemp1/Temp2)
             'FEC_Original_Info_Phone_Number__c',
-            'FEC_Updated_Info_Phone_Number__c'
+            'FEC_Updated_Info_Phone_Number__c',
+            // 16/06/2026 toannd - Contract Closure export (ContractClosureTemp2_CSSupport)
+            'FEC_Delivery_Option_2__c',
+            'FEC_Recipient_Name__c',
+            'FEC_Recipient_Phone_Number__c',
+            'FEC_Selected_Address__c',
+            'FEC_Selected_Address__r.FEC_Full_Address__c',
+            'FEC_Account_or_Contract__r.FEC_Email__c'
         };
         selectFields.addAll(FEC_BatchCaseHandlingTemplateHelper.buildCaseStageBusinessProcessSelectFields());
         return selectFields;
@@ -205,6 +212,7 @@ public without sharing class FEC_BatchCaseHandlingExportService {
         enrichApplicationListExportFields(rows);
         enrichPendingCsSupportLabels(rows);
         enrichAddressUpdateExportFields(rows);
+        enrichContractClosureExportFields(rows);
     }
 
     // 15/06/2026 linhdev - Address Update export: Updated = Address Info gắn Case có Parent; Original = parent record
@@ -319,6 +327,127 @@ public without sharing class FEC_BatchCaseHandlingExportService {
         return row.FEC_Mailing_Address__c ? 'true' : 'false';
     }
 
+    // 16/06/2026 toannd - Contract Closure export: Temporary Address + Temporary Email (Level Case info)
+    private static void enrichContractClosureExportFields(List<FEC_BatchCaseHandlingExportRow> rows) {
+        if (rows == null || rows.isEmpty()) {
+            return;
+        }
+        Set<Id> caseIds = new Set<Id>();
+        for (FEC_BatchCaseHandlingExportRow r : rows) {
+            if (r != null && r.caseId != null) {
+                caseIds.add(r.caseId);
+            }
+        }
+        if (caseIds.isEmpty()) {
+            return;
+        }
+
+        Map<Id, String> temporaryAddressByCaseId = new Map<Id, String>();
+        if (Schema.sObjectType.FEC_Address_Info__c.isAccessible()) {
+            List<FEC_Address_Info__c> tempAddresses = [
+                SELECT FEC_Case__c, FEC_Full_Address__c, LastModifiedDate
+                FROM FEC_Address_Info__c
+                WHERE FEC_Case__c IN :caseIds
+                AND FEC_Address_Type__c = :FEC_ConstantCommon.CONTRACT_CLOSURE_ADDRESS_TYPE_TEMPORARY
+                ORDER BY LastModifiedDate DESC
+            ];
+            SObjectAccessDecision tempAddrDecision = Security.stripInaccessible(
+                AccessType.READABLE,
+                tempAddresses
+            );
+            tempAddresses = (List<FEC_Address_Info__c>) tempAddrDecision.getRecords();
+            for (FEC_Address_Info__c addr : tempAddresses) {
+                if (addr == null || addr.FEC_Case__c == null || temporaryAddressByCaseId.containsKey(addr.FEC_Case__c)) {
+                    continue;
+                }
+                temporaryAddressByCaseId.put(addr.FEC_Case__c, formatAddressInfoAddress(addr));
+            }
+        }
+
+        Map<Id, String> temporaryEmailByCaseId = loadContractClosureTemporaryEmailsByCaseId(caseIds);
+
+        for (FEC_BatchCaseHandlingExportRow r : rows) {
+            if (r == null || r.caseId == null) {
+                continue;
+            }
+            if (temporaryAddressByCaseId.containsKey(r.caseId)) {
+                r.temporaryAddress = temporaryAddressByCaseId.get(r.caseId);
+            }
+            if (temporaryEmailByCaseId.containsKey(r.caseId)) {
+                r.temporaryEmail = temporaryEmailByCaseId.get(r.caseId);
+            }
+        }
+    }
+
+    private static Map<Id, String> loadContractClosureTemporaryEmailsByCaseId(Set<Id> caseIds) {
+        Map<Id, String> out = new Map<Id, String>();
+        if (caseIds == null || caseIds.isEmpty()) {
+            return out;
+        }
+        String caseFieldApi = resolveContactListCaseFieldApiForExport();
+        if (String.isBlank(caseFieldApi)) {
+            return out;
+        }
+        Map<String, Schema.SObjectField> clf = Schema.SObjectType.FEC_Contact_List__c.fields.getMap();
+        String contactStringApi = 'FEC_Contact_String__c'.toLowerCase();
+        String commTypeApi = 'FEC_Communication_Type__c'.toLowerCase();
+        if (!clf.containsKey(contactStringApi) || !clf.containsKey(commTypeApi) || !clf.containsKey(caseFieldApi.toLowerCase())) {
+            return out;
+        }
+        String emailCommType = FEC_ConstantCommon.EMAIL;
+        List<SObject> contactRows = Database.queryWithBinds(
+            'SELECT ' + caseFieldApi + ', FEC_Contact_String__c, LastModifiedDate' +
+                ' FROM FEC_Contact_List__c' +
+                ' WHERE ' + caseFieldApi + ' IN :caseIds' +
+                ' AND FEC_Communication_Type__c = :emailCommType' +
+                ' ORDER BY LastModifiedDate DESC',
+            new Map<String, Object>{
+                'caseIds' => caseIds,
+                'emailCommType' => emailCommType
+            },
+            AccessLevel.SYSTEM_MODE
+        );
+        for (SObject row : contactRows) {
+            Id caseIdRef = (Id) row.get(caseFieldApi);
+            if (caseIdRef == null || out.containsKey(caseIdRef)) {
+                continue;
+            }
+            String emailVal = (String) row.get('FEC_Contact_String__c');
+            out.put(caseIdRef, emailVal == null ? FEC_ConstantCommon.STR_EMPTY : emailVal);
+        }
+        return out;
+    }
+
+    private static String resolveContactListCaseFieldApiForExport() {
+        Map<String, Schema.SObjectField> fm = Schema.SObjectType.FEC_Contact_List__c.fields.getMap();
+        for (String api : new List<String>{ 'FEC_Case__c', 'Case__c', 'FEC_Interaction__c' }) {
+            String apiLower = api.toLowerCase();
+            if (!fm.containsKey(apiLower)) {
+                continue;
+            }
+            Schema.DescribeFieldResult d = fm.get(apiLower).getDescribe();
+            if (d.getType() == DisplayType.REFERENCE) {
+                for (Schema.SObjectType refType : d.getReferenceTo()) {
+                    if (refType.getDescribe().getName() == 'Case') {
+                        return d.getName();
+                    }
+                }
+            }
+        }
+        for (String apiLower : fm.keySet()) {
+            Schema.DescribeFieldResult d = fm.get(apiLower).getDescribe();
+            if (d.getType() != DisplayType.REFERENCE) {
+                continue;
+            }
+            for (Schema.SObjectType refType : d.getReferenceTo()) {
+                if (refType.getDescribe().getName() == 'Case') {
+                    return d.getName();
+                }
+            }
+        }
+        return null;
+    }
+
     private static String safeRelatedFieldString(SObject row, String fieldApiName) {
         if (row == null || String.isBlank(fieldApiName)) {
             return FEC_ConstantCommon.STR_EMPTY;
@@ -395,6 +524,23 @@ public without sharing class FEC_BatchCaseHandlingExportService {
         r.updatedInfoPhoneNumber = populated.containsKey('FEC_Updated_Info_Phone_Number__c')
             ? c.FEC_Updated_Info_Phone_Number__c
             : null;
+        // 16/06/2026 toannd - Contract Closure export (ContractClosureTemp2_CSSupport Level Case info)
+        r.deliveryOption = populated.containsKey('FEC_Delivery_Option_2__c')
+            ? c.FEC_Delivery_Option_2__c
+            : null;
+        r.recipientName = populated.containsKey('FEC_Recipient_Name__c')
+            ? c.FEC_Recipient_Name__c
+            : null;
+        r.recipientPhoneNumber = populated.containsKey('FEC_Recipient_Phone_Number__c')
+            ? c.FEC_Recipient_Phone_Number__c
+            : null;
+        SObject selectedAddressRel = safeRelatedSObject(c, 'FEC_Selected_Address__r');
+        r.closureAddress = selectedAddressRel == null
+            ? FEC_ConstantCommon.STR_EMPTY
+            : safeRelatedFieldString(selectedAddressRel, 'FEC_Full_Address__c');
+        r.closureEmail = ch == null
+            ? FEC_ConstantCommon.STR_EMPTY
+            : safeRelatedFieldString(ch, 'FEC_Email__c');
         // Cũ: field trên Case (masked / copy) — không khớp design export
         // r.interactionChannel = c.FEC_Channel__c;
         // r.interactionSubChannel = c.FEC_Interaction_Subchannel__c;
