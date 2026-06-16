@@ -7,7 +7,7 @@
    1.0      2026-03-13     toannd61            Create
 ****************************************************************************************/
 
-public with sharing class FEC_TerminationLoanController {
+public without sharing class FEC_TerminationLoanController {
 
     /** DTO trả về cho LWC. */
     public class TerminationDataDTO {

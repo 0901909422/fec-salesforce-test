@@ -1,5 +1,5 @@
 /** Controller LWC 4 section: GetLoanBasicInfo, GetLoanSecInfo, GetPaymentInfo. */
-public with sharing class FEC_RepaySchedPayHistController {
+public without sharing class FEC_RepaySchedPayHistController {
 
     public class FieldItemDTO {
         @AuraEnabled public String label;
