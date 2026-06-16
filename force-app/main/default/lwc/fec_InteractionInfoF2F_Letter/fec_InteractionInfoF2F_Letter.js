@@ -2,7 +2,13 @@ import { LightningElement, api, wire, track } from "lwc";
 import { getRecord, getFieldValue } from "lightning/uiRecordApi";
 import { loadStyle } from "lightning/platformResourceLoader";
 import COMMON_STYLES from "@salesforce/resourceUrl/FEC_CommonCss";
-import { notifyRecordUpdateAvailable } from "lightning/uiRecordApi";
+import {
+  subscribe,
+  unsubscribe,
+  APPLICATION_SCOPE,
+  MessageContext,
+} from "lightning/messageService";
+import VALIDATE_INTERACTION_PHONE from "@salesforce/messageChannel/FEC_Validate_Interaction_Phone__c";
 // ================= APEX =================
 import getInteraction from "@salesforce/apex/FEC_InteractionInforHandler.getInteraction";
 import getInteractionPhoneReveal from "@salesforce/apex/FEC_InteractionInforHandler.getInteractionPhoneReveal";
@@ -23,6 +29,7 @@ import FEC_INTERACTION_CREATED_BY_LABEL from "@salesforce/label/c.FEC_Interactio
 import FEC_Interaction_Information_Label from "@salesforce/label/c.FEC_Interaction_Information_Label";
 import FEC_Interaction_Email_Label from "@salesforce/label/c.FEC_Interaction_Email_Label";
 import FEC_PHONE_IS_REQUIRED_MSG from "@salesforce/label/c.FEC_PHONE_IS_REQUIRED_MSG";
+import FEC_Complete_This_Field from "@salesforce/label/c.FEC_Complete_This_Field";
 import FEC_PHONE_IS_INVALID_FORMAT_1_MSG from "@salesforce/label/c.FEC_PHONE_IS_INVALID_FORMAT_1_MSG";
 import FEC_PHONE_IS_INVALID_FORMAT_2_MSG from "@salesforce/label/c.FEC_PHONE_IS_INVALID_FORMAT_2_MSG";
 import FEC_PHONE_IS_INVALID_FORMAT_3_MSG from "@salesforce/label/c.FEC_PHONE_IS_INVALID_FORMAT_3_MSG";
@@ -42,6 +49,29 @@ import {
   STR_EMPTY,
   EMAIL_REGEX,
 } from "c/fec_CommonConst";
+
+const MANUAL_PHONE_CHANNELS = new Set([
+  "Inbound",
+  "Outbound",
+  "F2F",
+  "Letter",
+  "External",
+]);
+const SUBCHANNEL_INTERNAL_EMAIL = "Internal Email";
+
+function isManualPhoneRequiredChannel(record) {
+  if (!record) {
+    return false;
+  }
+  const channel = record.FEC_Channel__c;
+  if (MANUAL_PHONE_CHANNELS.has(channel)) {
+    return true;
+  }
+  if (channel === "Internal") {
+    return record.FEC_Interaction_Subchannel__c !== SUBCHANNEL_INTERNAL_EMAIL;
+  }
+  return false;
+}
 
 export default class Fec_InteractionInfoF2F_Letter extends LightningElement {
   labels = {
@@ -77,9 +107,14 @@ export default class Fec_InteractionInfoF2F_Letter extends LightningElement {
   recordTypeId;
   recordTypeDevName;
 
-  interactionId; // 🔥 ID dùng thực sự để load Interaction
+  interactionId;
 
   activeSections = ["interactionInfo"];
+  completeFieldMsg = FEC_Complete_This_Field;
+  validatePhoneSubscription = null;
+
+  @wire(MessageContext)
+  messageContext;
 
   // ================= WIRE: CASE CONTEXT =================
   @wire(getRecord, {
@@ -214,7 +249,12 @@ export default class Fec_InteractionInfoF2F_Letter extends LightningElement {
   }
 
   get isInteractionClosed() {
-    if (this.record?.FEC_Interaction_Status__c === CLOSED_STATUS ||this.record?.FEC_Interaction_Status__c === 'Auto-Closed') return true;
+    if (
+      this.record?.FEC_Interaction_Status__c === CLOSED_STATUS ||
+      this.record?.FEC_Interaction_Status__c === "Auto-Closed"
+    ) {
+      return true;
+    }
     return false;
   }
 
@@ -259,6 +299,73 @@ export default class Fec_InteractionInfoF2F_Letter extends LightningElement {
     return this.record?.FEC_Interaction_Remarks__c;
   }
 
+  get isPhoneRequired() {
+    return (
+      !this.isReview &&
+      this.record?.FEC_Is_Manual__c === true &&
+      isManualPhoneRequiredChannel(this.record)
+    );
+  }
+
+  get isPhoneReadOnly() {
+    if (this.isReview) {
+      return true;
+    }
+    if (this.hasPhone && !this.isEditingPhone) {
+      return true;
+    }
+    if (!this.hasPhone && !this.isPhoneRequired && !this.isEditingPhone) {
+      return true;
+    }
+    return false;
+  }
+
+  get showPhoneEditIcon() {
+    return !this.isPhoneRequired && !this.hasPhone && !this.isEditingPhone;
+  }
+
+  get showPhoneSaveIcon() {
+    return (
+      !this.isReview &&
+      !this.hasPhone &&
+      (this.isEditingPhone || this.isPhoneRequired)
+    );
+  }
+
+  getPhoneInput() {
+    return this.template.querySelector('[data-id="interactionPhone"]');
+  }
+
+  clearPhoneInputValidity() {
+    const input = this.getPhoneInput();
+    if (input) {
+      input.setCustomValidity("");
+      input.reportValidity();
+    }
+  }
+
+  showInlinePhoneRequiredError() {
+    if (!this.isPhoneRequired || this.record?.FEC_Phone_Number__c) {
+      return false;
+    }
+
+    this.activeSections = ["interactionInfo"];
+    this.isEditingPhone = true;
+    this.phoneDraft = this.phoneDraft || "";
+
+    // eslint-disable-next-line @lwc/lwc/no-async-operation
+    requestAnimationFrame(() => {
+      const input = this.getPhoneInput();
+      if (input) {
+        input.setCustomValidity(FEC_Complete_This_Field);
+        input.reportValidity();
+        input.focus();
+      }
+    });
+
+    return true;
+  }
+
   // ================= PHONE ACTIONS =================
   handleToggleMask() {
     if (this.isMasked) {
@@ -271,57 +378,71 @@ export default class Fec_InteractionInfoF2F_Letter extends LightningElement {
   handleEditPhone() {
     this.isEditingPhone = true;
     this.phoneDraft = "";
+    this.clearPhoneInputValidity();
   }
-
-  // handlePhoneChange(event) {
-  //   this.phoneDraft = event.target.value;
-  // }
 
   handlePhoneChange(event) {
     this.phoneDraft = event.target.value;
 
     const input = event.target;
-    const value = this.phoneDraft;
+    const value = (this.phoneDraft || "").trim();
 
-    // reset lỗi
     input.setCustomValidity("");
 
-    if (!value) {
+    if (this.isPhoneRequired && !value) {
       input.setCustomValidity(FEC_PHONE_IS_REQUIRED_MSG);
-    } else if (value.startsWith("0")) {
-      if (!/^\d{10}$/.test(value)) {
-        input.setCustomValidity(FEC_PHONE_IS_INVALID_FORMAT_1_MSG);
+    } else if (value) {
+      if (value.startsWith("0")) {
+        if (!/^\d{10}$/.test(value)) {
+          input.setCustomValidity(FEC_PHONE_IS_INVALID_FORMAT_1_MSG);
+        }
+      } else if (value.startsWith("84")) {
+        if (!/^\d{11}$/.test(value)) {
+          input.setCustomValidity(FEC_PHONE_IS_INVALID_FORMAT_2_MSG);
+        }
+      } else {
+        input.setCustomValidity(FEC_PHONE_IS_INVALID_FORMAT_3_MSG);
       }
-    } else if (value.startsWith("84")) {
-      if (!/^\d{11}$/.test(value)) {
-        input.setCustomValidity(FEC_PHONE_IS_INVALID_FORMAT_2_MSG);
-      }
-    } else {
-      input.setCustomValidity(FEC_PHONE_IS_INVALID_FORMAT_3_MSG);
     }
 
     input.reportValidity();
   }
 
   async handleSavePhone() {
-    const input = this.template.querySelector("lightning-input");
+    const input = this.getPhoneInput();
+    const value = (this.phoneDraft || "").trim();
 
-    if (!input || !input.checkValidity()) {
+    const isPhoneRequired =
+      this.record?.FEC_Is_Manual__c === true &&
+      isManualPhoneRequiredChannel(this.record);
+
+    if (isPhoneRequired && !value) {
+      input.setCustomValidity(FEC_PHONE_IS_REQUIRED_MSG);
       input.reportValidity();
       return;
     }
 
-    if (!this.phoneDraft || !this.interactionId) return;
+    if (input) {
+      input.setCustomValidity("");
+    }
+
+    if (!input || !input.checkValidity()) {
+      input?.reportValidity();
+      return;
+    }
+
+    if (!value || !this.interactionId) return;
 
     try {
       const maskedPhone = await updateInteractionPhone({
         recordId: this.interactionId,
-        phone: this.phoneDraft,
+        phone: value,
       });
 
       this.record = {
         ...this.record,
         FEC_Interaction_Masked_Phone__c: maskedPhone,
+        FEC_Phone_Number__c: value,
       };
 
       this.isEditingPhone = false;
