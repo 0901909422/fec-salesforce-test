@@ -113,98 +113,96 @@ public without sharing class FEC_MainInfoAccountController {
             cifNumber = acc.FEC_CIF_Number__c;
         }
 
-        /* ========= 2. CALL GetCardBasicInfo ========= */
-
         FEC_GetCardBasicInfo.ResponseWrapper cardRes;
-
-        try {
-            cardRes = FEC_GetCardBasicInfo.callGetCardBasicInfo(
-                FEC_CommonUltils.generateTransactionId(),
-                FEC_ConstantCommon.REQUESTOR_CRM,
-                Datetime.now().formatGMT(FEC_ConstantCommon.DATETIME_FORMAT),
-                accountNumber
-            );
-        } catch (Exception e) {
-            System.debug(System.Label.FEC_MSG_API_Error + e.getMessage());
-            cardRes = null;
-        }
-
-        /* ========= 3. CALL CUSTOMER LIST ========= */
         FEC_GetCustomerList.ResponseWrapper cusRes;
-
-        try {
-            cusRes = FEC_GetCustomerList.getCustomerList(
-                FEC_ConstantCommon.REQUESTOR_PEGA_CSM_HYPHEN,
-                null,
-                false,
-                null,
-                null,
-                null,
-                null,
-                accountNumber,
-                null,
-                null,
-                null
-            );
-        } catch (Exception e) {
-            System.debug(System.Label.FEC_MSG_API_Error + e.getMessage());
-            cusRes = null;
-        }
-
-        /* ========= 4. CALL GetApplicationsList ========= */
         FEC_GetApplicationsList.ResponseWrapper appRes;
+        FEC_EmeaAccountInqService.EmeaResult emeaRes;
+        FEC_GetCardSecInfo.ResponseWrapper cardSecRes;
 
+        FEC_CommonUltils.beginDeferredApiLogging();
         try {
+            /* ========= 2. CALL GetCardBasicInfo ========= */
+            try {
+                cardRes = FEC_GetCardBasicInfo.callGetCardBasicInfo(
+                    FEC_CommonUltils.generateTransactionId(),
+                    FEC_ConstantCommon.REQUESTOR_CRM,
+                    Datetime.now().formatGMT(FEC_ConstantCommon.DATETIME_FORMAT),
+                    accountNumber
+                );
+            } catch (Exception e) {
+                System.debug(System.Label.FEC_MSG_API_Error + e.getMessage());
+                cardRes = null;
+            }
+
+            /* ========= 3. CALL CUSTOMER LIST ========= */
+            try {
+                cusRes = FEC_GetCustomerList.getCustomerList(
+                    FEC_ConstantCommon.REQUESTOR_PEGA_CSM_HYPHEN,
+                    null,
+                    false,
+                    null,
+                    null,
+                    null,
+                    null,
+                    accountNumber,
+                    null,
+                    null,
+                    null
+                );
+            } catch (Exception e) {
+                System.debug(System.Label.FEC_MSG_API_Error + e.getMessage());
+                cusRes = null;
+            }
+
+            /* ========= 4. CALL GetApplicationsList ========= */
+            try {
                 appRes = FEC_GetApplicationsList.callGetApplicationsList(
-                        FEC_CommonUltils.generateTransactionId(),
-                        FEC_ConstantCommon.REQUESTOR_CRM,
-                        Datetime.now().format(FEC_ConstantCommon.DATETIME_FORMAT),
-                        cifNumber
-                        
-                    );
+                    FEC_CommonUltils.generateTransactionId(),
+                    FEC_ConstantCommon.REQUESTOR_CRM,
+                    Datetime.now().format(FEC_ConstantCommon.DATETIME_FORMAT),
+                    cifNumber
+                );
             } catch (Exception e) {
                 System.debug(System.Label.FEC_MSG_API_Error + e.getMessage());
                 appRes = null;
-        }
+            }
 
-        /* ========= 5. CALL EMEA_ACCOUNT_INQ ========= */
-        FEC_EmeaAccountInqService.EmeaResult emeaRes;
+            /* ========= 5. CALL EMEA_ACCOUNT_INQ ========= */
+            try {
+                FEC_EmeaAccountInqService.EmeaInput input =
+                    new FEC_EmeaAccountInqService.EmeaInput();
 
-        try {
-            FEC_EmeaAccountInqService.EmeaInput input =
-                new FEC_EmeaAccountInqService.EmeaInput();
+                input.context    = FEC_ConstantCommon.REQUESTOR_CONTEXT;
+                input.name       = UserInfo.getUserId();
+                input.org        = FEC_ConstantCommon.REQUESTOR_ORG;
+                input.account    = accountNumber;
+                input.dualInd    = FEC_ConstantCommon.SUCCESS_STATUS_CODE;
+                input.vmxVersion = FEC_ConstantCommon.REQUESTOR_VMXVERSION_EMEA;
 
-            input.context    = FEC_ConstantCommon.REQUESTOR_CONTEXT;
-            input.name       = UserInfo.getUserId();
-            input.org        = FEC_ConstantCommon.REQUESTOR_ORG;
-            input.account    = accountNumber;
-            input.dualInd    = FEC_ConstantCommon.SUCCESS_STATUS_CODE;
-            input.vmxVersion = FEC_ConstantCommon.REQUESTOR_VMXVERSION_EMEA;
+                emeaRes = FEC_EmeaAccountInqService.callAccountInquiry(input);
+            } catch (Exception e) {
+                System.debug(System.Label.FEC_MSG_API_Error + e.getMessage());
+                emeaRes = null;
+            }
 
-            emeaRes = FEC_EmeaAccountInqService.callAccountInquiry(input);
-
-        } catch (Exception e) {
-            System.debug(System.Label.FEC_MSG_API_Error + e.getMessage());
-            emeaRes = null;
-        }
-
-        /* ========= 6. CALL GetCardSecInfo ========= */
-        FEC_GetCardSecInfo.ResponseWrapper cardSecRes;
-
-        try {
-           cardSecRes =  FEC_GetCardSecInfo.callGetCardSecInfo(
+            /* ========= 6. CALL GetCardSecInfo ========= */
+            try {
+                cardSecRes = FEC_GetCardSecInfo.callGetCardSecInfo(
                     FEC_CommonUltils.generateTransactionId(),
                     FEC_ConstantCommon.REQUESTOR_CRM,
                     Datetime.now().formatGMT(FEC_ConstantCommon.DATETIME_FORMAT),
                     accountNumber,
                     c.FEC_Is_Test_API__c
                 );
-        } catch (Exception e) {
-            System.debug(System.Label.FEC_MSG_API_Error + e.getMessage());
-            cardSecRes = null;
+            } catch (Exception e) {
+                System.debug(System.Label.FEC_MSG_API_Error + e.getMessage());
+                cardSecRes = null;
+            }
+        } finally {
+            FEC_CommonUltils.flushDeferredApiLogs();
         }
 
-        updateAccountFromAPI(c.FEC_Account_or_Contract__c, cardRes, cusRes, null, appRes, cardSecRes);
+        updateAccountFromAPI(c.FEC_Account_or_Contract__c, cardRes, cusRes, emeaRes, appRes, cardSecRes);
 
         return getAccountInfoLocal(c.FEC_Account_or_Contract__c);
     }
@@ -283,6 +281,13 @@ public without sharing class FEC_MainInfoAccountController {
 
     @AuraEnabled(cacheable=true)
     public static MainInfoDTO getAccountInfoLocal(Id accountId) {
+        return fetchAccountInfoDto(accountId);
+    }
+
+    private static MainInfoDTO fetchAccountInfoDto(Id accountId) {
+        if (accountId == null) {
+            return null;
+        }
 
         List<FEC_Customer_History__c> lst = [
             SELECT
@@ -376,51 +381,55 @@ public without sharing class FEC_MainInfoAccountController {
             );
         }
 
-        /* ========= 1. CALL FEC_MCMSCARDTOCARDINQEMEA ========= */
         FEC_MCMSCARDTOCARDINQEMEA.ResponseWrapper mcms;
-
-        try {
-            mcms = FEC_MCMSCARDTOCARDINQEMEA.callService(
-                FEC_CommonUltils.generateTransactionId(),
-                FEC_ConstantCommon.REQUESTOR_CRM,
-                Datetime.now().formatGMT(FEC_ConstantCommon.DATETIME_FORMAT),
-                FEC_ConstantCommon.REQUESTOR_VMXVERSION_EMEA_CARD,
-                FEC_ConstantCommon.REQUESTOR_VMX_CONTEXT,
-                FEC_ConstantCommon.REQUESTOR_VMX_CONTEXT,
-                FEC_ConstantCommon.REQUESTOR_ORG,
-                accountNumber,
-                UserInfo.getUserId()
-            );
-            
-        } catch (Exception e) {
-            System.debug(System.Label.FEC_MSG_API_Error + e.getMessage());
-            mcms = null;
-        }
-
-        /* ========= 2. CALL FEC_EmeaAccountInqService ========= */
         FEC_EmeaAccountInqService.EmeaResult emeaRes;
 
+        FEC_CommonUltils.beginDeferredApiLogging();
         try {
-            FEC_EmeaAccountInqService.EmeaInput input =
-                new FEC_EmeaAccountInqService.EmeaInput();
+            /* ========= 1. CALL FEC_MCMSCARDTOCARDINQEMEA ========= */
+            try {
+                mcms = FEC_MCMSCARDTOCARDINQEMEA.callService(
+                    FEC_CommonUltils.generateTransactionId(),
+                    FEC_ConstantCommon.REQUESTOR_CRM,
+                    Datetime.now().formatGMT(FEC_ConstantCommon.DATETIME_FORMAT),
+                    FEC_ConstantCommon.REQUESTOR_VMXVERSION_EMEA_CARD,
+                    FEC_ConstantCommon.REQUESTOR_VMX_CONTEXT,
+                    FEC_ConstantCommon.REQUESTOR_VMX_CONTEXT,
+                    FEC_ConstantCommon.REQUESTOR_ORG,
+                    accountNumber,
+                    UserInfo.getUserId()
+                );
+            } catch (Exception e) {
+                System.debug(System.Label.FEC_MSG_API_Error + e.getMessage());
+                mcms = null;
+            }
 
-            input.context    = FEC_ConstantCommon.REQUESTOR_CONTEXT;
-            input.name       = UserInfo.getUserId();
-            input.org        = FEC_ConstantCommon.REQUESTOR_ORG;
-            input.account    = accountNumber;
-            input.dualInd    = FEC_ConstantCommon.SUCCESS_STATUS_CODE;
-            input.vmxVersion = FEC_ConstantCommon.REQUESTOR_VMXVERSION_EMEA;
+            /* ========= 2. CALL FEC_EmeaAccountInqService ========= */
+            try {
+                FEC_EmeaAccountInqService.EmeaInput input =
+                    new FEC_EmeaAccountInqService.EmeaInput();
 
-            emeaRes = FEC_EmeaAccountInqService.callAccountInquiry(input);
+                input.context    = FEC_ConstantCommon.REQUESTOR_CONTEXT;
+                input.name       = UserInfo.getUserId();
+                input.org        = FEC_ConstantCommon.REQUESTOR_ORG;
+                input.account    = accountNumber;
+                input.dualInd    = FEC_ConstantCommon.SUCCESS_STATUS_CODE;
+                input.vmxVersion = FEC_ConstantCommon.REQUESTOR_VMXVERSION_EMEA;
 
-        } catch (Exception e) {
-            System.debug(System.Label.FEC_MSG_API_Error + e.getMessage());
-            emeaRes = null;
+                emeaRes = FEC_EmeaAccountInqService.callAccountInquiry(input);
+            } catch (Exception e) {
+                System.debug(System.Label.FEC_MSG_API_Error + e.getMessage());
+                emeaRes = null;
+            }
+        } finally {
+            FEC_CommonUltils.flushDeferredApiLogs();
         }
 
         updateAccountFromRefreshAPI(c.FEC_Account_or_Contract__c, mcms, emeaRes);
 
-        return getAccountInfoLocal(c.FEC_Account_or_Contract__c);
+        MainInfoDTO dto = fetchAccountInfoDto(c.FEC_Account_or_Contract__c);
+        overlayEmeaFinancialsOnDto(dto, emeaRes);
+        return dto;
     }
 
     /* ===================== MAPPER ===================== */
@@ -479,6 +488,55 @@ public without sharing class FEC_MainInfoAccountController {
         dto.soldNote            = acc.FEC_Sold_Note__c;
         dto.debtSaleType        = acc.FEC_Debt_Sale_Type__c;
         return dto;
+    }
+
+    private class EmeaFinancials {
+        Decimal otb;
+        Decimal currentBalance;
+        Decimal totalBalance;
+    }
+
+    private static Boolean isEmeaAccountInqSuccess(FEC_EmeaAccountInqService.EmeaResult emeaRes) {
+        if (emeaRes == null || String.isBlank(emeaRes.responseCode)) {
+            return false;
+        }
+        String code = emeaRes.responseCode.trim();
+        return code == '1' || code == FEC_ConstantCommon.SUCCESS_STATUS_CODE;
+    }
+
+    private static EmeaFinancials resolveEmeaFinancials(FEC_EmeaAccountInqService.EmeaResult emeaRes) {
+        EmeaFinancials fin = new EmeaFinancials();
+        if (!isEmeaAccountInqSuccess(emeaRes)) {
+            return fin;
+        }
+
+        fin.otb = emeaRes.availCr;
+        fin.currentBalance = emeaRes.currBal;
+        fin.totalBalance =
+                (emeaRes.currBal != null ? emeaRes.currBal : 0) +
+                (emeaRes.amtMemoDb != null ? emeaRes.amtMemoDb : 0) -
+                (emeaRes.amtMemoCr != null ? emeaRes.amtMemoCr : 0);
+        return fin;
+    }
+
+    private static void overlayEmeaFinancialsOnDto(
+        MainInfoDTO dto,
+        FEC_EmeaAccountInqService.EmeaResult emeaRes
+    ) {
+        if (dto == null) {
+            return;
+        }
+
+        EmeaFinancials fin = resolveEmeaFinancials(emeaRes);
+        if (fin.otb != null) {
+            dto.otb = FEC_CommonUltils.formatCurrency(fin.otb, 0);
+        }
+        if (fin.currentBalance != null) {
+            dto.currentBalance = FEC_CommonUltils.formatCurrency(fin.currentBalance, 2);
+        }
+        if (fin.totalBalance != null) {
+            dto.totalBalance = FEC_CommonUltils.formatCurrency(fin.totalBalance, 2);
+        }
     }
 
     /* ===================== HELPERS ===================== */
@@ -638,17 +696,7 @@ public without sharing class FEC_MainInfoAccountController {
             }
         }
         
-        Decimal onlineOtb = null;
-        Decimal onlineCurrentBalance = null;
-        Decimal onlineTotalBalance = null;
-        if (emeaRes != null && emeaRes.responseCode == '1') {
-            onlineOtb = emeaRes.availCr;
-            onlineCurrentBalance = emeaRes.currBal;
-            onlineTotalBalance =
-                (emeaRes.currBal != null ? emeaRes.currBal : 0) +
-                (emeaRes.amtMemoDb != null ? emeaRes.amtMemoDb : 0) -
-                (emeaRes.amtMemoCr != null ? emeaRes.amtMemoCr : 0);
-        }
+        EmeaFinancials fin = resolveEmeaFinancials(emeaRes);
 
         /* ===================== MCMS ===================== */
 
@@ -733,14 +781,14 @@ public without sharing class FEC_MainInfoAccountController {
                     : null
         );
 
-        if (onlineOtb != null) {
-            accountToUpdate.FEC_OTB__c = onlineOtb;
+        if (fin.otb != null) {
+            accountToUpdate.FEC_OTB__c = fin.otb;
         }
-        if (onlineCurrentBalance != null) {
-            accountToUpdate.FEC_Current_Balance__c = onlineCurrentBalance;
+        if (fin.currentBalance != null) {
+            accountToUpdate.FEC_Current_Balance__c = fin.currentBalance;
         }
-        if (onlineTotalBalance != null) {
-            accountToUpdate.FEC_Total_Balance__c = onlineTotalBalance;
+        if (fin.totalBalance != null) {
+            accountToUpdate.FEC_Total_Balance__c = fin.totalBalance;
         }
 
         update accountToUpdate;

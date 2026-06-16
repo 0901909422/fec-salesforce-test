@@ -2,54 +2,70 @@
   <lightning-accordion class="interaction-infor" allow-multiple-sections-open active-section-name={activeSections}>
     <lightning-accordion-section name="interactionInfo" label={labels.interactionInformation}>
       <template if:true={isInteractionCase}>
-        <!-- SLDS spacing instead of custom card -->
         <div class="slds-p-horizontal_medium slds-p-vertical_small">
-
           <div class="interaction-grid">
-            <!-- LEFT -->
             <div class="col">
-              <div class="row">
-                <span class="label">{labels.interactionPhone}</span>
-                <span class="value">
-                  <!-- Có phone -->
+              <template if:true={isReview}>
+                <div class="row">
+                  <span class="label">
+                    <span class="slds-required">*</span>
+                    {labels.interactionPhone}
+                  </span>
+                  <span class="value">
+                    <template if:true={hasPhone}>
+                      {displayPhone}
+                    </template>
+                  </span>
                   <template if:true={hasPhone}>
-                    {displayPhone}
-                  </template>
-
-                  <!-- Không có phone -->
-                  <template if:false={hasPhone}>
-                    <template if:true={isEditingPhone}>
-                      <lightning-input type="tel" value={phoneDraft} onchange={handlePhoneChange}
-                        variant="label-hidden">
-                      </lightning-input>
-                    </template>
-
-                    <template if:false={isEditingPhone}>
-                      <span class="empty">--</span>
-                    </template>
-                  </template>
-                </span>
-                <!-- ICON -->
-                <template if:true={hasPhone}>
-                  <lightning-icon icon-name={eyeIcon} size="x-small" class="eye-icon" onclick={handleToggleMask}>
-                  </lightning-icon>
-                </template>
-
-                <!-- ICON EDIT: chỉ hiện khi CHƯA edit -->
-                <template if:false={hasPhone}>
-                  <template if:false={isEditingPhone}>
-                    <lightning-icon icon-name="utility:edit" size="x-small" class="eye-icon" onclick={handleEditPhone}>
+                    <lightning-icon icon-name={eyeIcon} size="x-small" class="eye-icon" onclick={handleToggleMask}>
                     </lightning-icon>
                   </template>
-                </template>
-
-                <!-- SAVE ICON -->
-                <template if:true={isEditingPhone}>
-                  <lightning-icon icon-name="utility:check" size="x-small" class="eye-icon save-icon"
-                    onclick={handleSavePhone}>
-                  </lightning-icon>
-                </template>
-              </div>
+                </div>
+              </template>
+              <template if:false={isReview}>
+                <div class="row row--phone-field">
+                  <span class="label">
+                    <template if:true={isPhoneRequired}>
+                      <abbr class="required-indicator" title="required">*</abbr>
+                    </template>
+                    {labels.interactionPhone}
+                  </span>
+                  <span class="value phone-field-value">
+                    <template if:true={isPhoneReadOnly}>
+                      <template if:true={hasPhone}>
+                        {displayPhone}
+                      </template>
+                      <template if:false={hasPhone}>
+                        <span class="empty">--</span>
+                      </template>
+                    </template>
+                    <template if:false={isPhoneReadOnly}>
+                      <div class="phone-input-wrap">
+                        <lightning-input data-id="interactionPhone" type="tel" value={phoneDraft}
+                          onchange={handlePhoneChange} variant="label-hidden" required={isPhoneRequired}
+                          message-when-value-missing={completeFieldMsg}>
+                        </lightning-input>
+                      </div>
+                    </template>
+                  </span>
+                  <template if:true={hasPhone}>
+                    <lightning-icon icon-name={eyeIcon} size="x-small" class="eye-icon" onclick={handleToggleMask}>
+                    </lightning-icon>
+                  </template>
+                  <template if:false={hasPhone}>
+                    <template if:true={showPhoneEditIcon}>
+                      <lightning-icon icon-name="utility:edit" size="x-small" class="eye-icon"
+                        onclick={handleEditPhone}>
+                      </lightning-icon>
+                    </template>
+                    <template if:true={showPhoneSaveIcon}>
+                      <lightning-icon icon-name="utility:check" size="x-small" class="eye-icon save-icon"
+                        onclick={handleSavePhone}>
+                      </lightning-icon>
+                    </template>
+                  </template>
+                </div>
+              </template>
 
               <div class="row">
                 <span class="label">{labels.interactionCreatedOn}</span>
@@ -66,41 +82,82 @@
               </template>
             </div>
 
-            <!-- RIGHT -->
-            <div class="col">
+          <div class="col">
+            <div class="row">
+              <span class="label">{labels.interactionCreatedBy}</span>
+              <span class="value">{createdBy}</span>
+              <span></span>
+            </div>
+            <template if:true={showField}>
               <div class="row">
-                <span class="label">{labels.interactionCreatedBy}</span>
-                <span class="value">{createdBy}</span>
+                <span class="label">{labels.remarks}</span>
+                <span class="value">{interactionRemark}</span>
                 <span></span>
               </div>
-              <template if:true={showField}>
-                <div class="row">
-                  <span class="label">{labels.remarks}</span>
-                  <span class="value">{interactionRemark}</span>
-                  <span></span>
-                </div>
-              </template>
-            </div>
+            </template>
+            <!-- Interaction Email -->
+            <template if:true={isReview}>
+              <div class="row">
+                <span class="label">
+                  <span class="slds-required"></span>
+                  {labels.interactionEmail}
+                </span>
+                <span class="value">
+                  <template if:true={hasInteractionEmail}>
+                    {displayInteractionEmail}
+                  </template>
+                </span>
+                <span></span>
+              </div>
+            </template>
+            <template if:false={isReview}>
+              <div class="row">
+                <span class="label">{labels.interactionEmail}</span>
+                <span class="value">
+                  <template if:true={isEmailReadOnly}>
+                    {displayInteractionEmail}
+                  </template>
+                  <template if:false={isEmailReadOnly}>
+                    <template if:true={isEditingEmail}>
+                      <lightning-input type="email" data-id="interactionEmail" value={emailDraft} onchange={handleEmailChange}
+                        variant="label-hidden"></lightning-input>
+                      <template if:true={emailError}>
+                        <span class="fec-error-text">{emailError}</span>
+                      </template>
+                    </template>
+                    <template if:false={isEditingEmail}>
+                      <span class="fec-empty"></span>
+                    </template>
+                  </template>
+                </span>
+                <span class="fec-info-action">
+                  <template if:true={showEmailEditIcon}>
+                    <lightning-icon icon-name="utility:edit" size="x-small" class="eye-icon"
+                      onclick={handleEditEmail} title="Edit email"></lightning-icon>
+                  </template>
+                  <template if:true={isEditingEmail}>
+                    <lightning-icon icon-name="utility:check" size="x-small" class="eye-icon save-icon"
+                      onclick={handleSaveEmail} title="Save"></lightning-icon>
+                  </template>
+                </span>
+              </div>
+            </template>
           </div>
+        </div>
         </div>
       </template>
 
       <template if:true={isCustomerCase}>
-        <!-- SLDS spacing instead of custom card -->
         <div class="slds-p-horizontal_medium slds-p-vertical_small">
-
           <div class="interaction-grid">
-            <!-- LEFT -->
             <div class="col">
               <div class="row">
                 <span class="label">{labels.interactionPhone}</span>
                 <span class="value">
-                  <!-- Có phone -->
                   <template if:true={hasPhone}>
                     {displayPhone}
                   </template>
                 </span>
-                <!-- ICON -->
                 <template if:true={hasPhone}>
                   <lightning-icon icon-name={eyeIcon} size="x-small" class="eye-icon" onclick={handleToggleMask}>
                   </lightning-icon>
@@ -119,10 +176,8 @@
                   <span></span>
                 </div>
               </template>
-
             </div>
 
-            <!-- RIGHT -->
             <div class="col">
               <div class="row">
                 <span class="label">{labels.interactionCreatedBy}</span>
@@ -136,11 +191,21 @@
                   <span></span>
                 </div>
               </template>
+              <!-- Interaction Email -->
+              <div class="row">
+                <span class="label">{labels.interactionEmail}</span>
+                <span class="value">
+                  <!-- Có phone -->
+                  <template if:true={hasInteractionEmail}>
+                    {displayInteractionEmail}
+                  </template>
+                </span>
+                <span></span>
+              </div>
             </div>
           </div>
         </div>
       </template>
-
     </lightning-accordion-section>
   </lightning-accordion>
 </template>
