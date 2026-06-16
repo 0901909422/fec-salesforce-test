@@ -2026,4 +2026,13 @@ public with sharing class FEC_CommonUltils {
     return FEC_ConstantCommon.API_CONTRACT_STATUS_TO_PICKLIST.get(normalizedKey);
   }
 
+  public static String deriveInsuranceStatus(Date expiryDate, Date cancelDate) {
+    if (cancelDate != null) {
+        return FEC_ConstantCommon.STATUS_EXPIRED;
+    }
+    if (expiryDate != null && Date.today() > expiryDate) {
+        return FEC_ConstantCommon.STATUS_EXPIRED;
+    }
+    return FEC_ConstantCommon.STATUS_ACTIVE;
+  }
 }

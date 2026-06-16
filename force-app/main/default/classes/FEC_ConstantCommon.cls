@@ -1057,4 +1057,7 @@ public with sharing class FEC_ConstantCommon {
     public static final String INPUT_SEPARATOR_REGEX_12 =  '^\\d{12}$';
     public static final String INPUT_SEPARATOR_REGEX_9 =  '^\\d{9}$';
     public static final String INPUT_SEPARATOR_REGEX_7 = '^[A-Z]\\d{7}$'; 
+    public static final String ERROR_SAVING_SEARCH_HISTORY = 'Error saving search history';
+    public static final String STATUS_ACTIVE = 'Còn hiệu lực';
+    public static final String STATUS_EXPIRED = 'Hết hiệu lực';
 }
