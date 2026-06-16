@@ -4,7 +4,7 @@
     <protected>false</protected>
     <values>
         <field>Parent_Child_Mapping__c</field>
-        <value xsi:type="xsd:string">{"FEC_Customer_History__c":"FEC_Address_Info__c,FEC_Card_Payment__c,FEC_Collection_Interactions__c,FEC_Contact_List__c,FEC_Do_Not_Bother__c,FEC_Fast_Cash_Info__c,FEC_IPP__c,FEC_Insurance_Info__c,FEC_Other_Card__c,FEC_Payment_History__c,FEC_RePayment_Schedule__c,FEC_Reference_Info__c,FEC_Statement__c,FEC_Transaction__c","FEC_CustomerAdditionalInfoConfig__c":"FEC_CustomerAdditionalInfo__c"}</value>
+        <value xsi:type="xsd:string">{"FEC_Customer_History__c":"FEC_Address_Info__c,FEC_Card_Payment__c,FEC_Collection_Interactions__c,FEC_Contact_List__c,FEC_Do_Not_Bother__c,FEC_Fast_Cash_Info__c,FEC_IPP__c,FEC_Insurance_Info__c,FEC_Other_Card__c,FEC_Payment_History__c,FEC_RePayment_Schedule__c,FEC_Reference_Info__c,FEC_Statement__c,FEC_Transaction__c,FEC_Application_List__c","FEC_CustomerAdditionalInfoConfig__c":"FEC_CustomerAdditionalInfo__c"}</value>
     </values>
 
 </CustomMetadata>
