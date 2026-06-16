@@ -185,6 +185,151 @@ private class FEC_BatchCaseHandlingExportService_Test {
         System.assert(selected.rows.size() > 0);
     }
 
+    // 15/06/2026 14:30 linhdev - Phone Update export: Original/Updated Info Phone Number
+    @IsTest
+    static void testMapCaseToExportRow_phoneUpdateInfoFields() {
+        FEC_CaseTriggerHandler.isExecuting = true;
+        Case phoneCase;
+        try {
+            phoneCase = new Case(
+                Subject = 'Phone Update Export Case',
+                FEC_ID_Search__c = 'BCH-EXP-PHONE',
+                FEC_Original_Info_Phone_Number__c = '0901234567',
+                FEC_Updated_Info_Phone_Number__c = '0987654323'
+            );
+            insert phoneCase;
+        } finally {
+            FEC_CaseTriggerHandler.isExecuting = false;
+        }
+
+        Id caseId = phoneCase.Id;
+        String soql =
+            'SELECT ' +
+            String.join(FEC_BatchCaseHandlingExportService.buildCaseExportSelectFields(), ',') +
+            ' FROM Case WHERE Id = :caseId';
+        Case fullCase = Database.query(soql);
+
+        Test.startTest();
+        FEC_BatchCaseHandlingExportRow row = FEC_BatchCaseHandlingExportService.mapCaseToExportRow(fullCase);
+        Test.stopTest();
+
+        System.assertEquals('0901234567', row.originalInfoPhoneNumber);
+        System.assertEquals('0987654323', row.updatedInfoPhoneNumber);
+    }
+
+    @IsTest
+    static void testBuildCaseExportSelectFields_includesPhoneUpdateInfoFields() {
+        Test.startTest();
+        List<String> fields = FEC_BatchCaseHandlingExportService.buildCaseExportSelectFields();
+        Test.stopTest();
+
+        System.assert(fields.contains('FEC_Original_Info_Phone_Number__c'));
+        System.assert(fields.contains('FEC_Updated_Info_Phone_Number__c'));
+    }
+
+    // 15/06/2026 linhdev - Address Update export: Updated = Case + Parent khác null; Original = parent record
+    @IsTest
+    static void testEnrichExportRows_addressUpdateInfoFields() {
+        Case exportCase = [SELECT Id FROM Case WHERE FEC_ID_Search__c = 'BCH-EXP-001' LIMIT 1];
+        FEC_Customer_History__c hist = new FEC_Customer_History__c(
+            FEC_Case__c = exportCase.Id,
+            FEC_Customer_Name__c = 'Address Export Customer',
+            FEC_CIF_Number__c = 'CIF-ADDR-EXP'
+        );
+        insert hist;
+        FEC_CaseTriggerHandler.isExecuting = true;
+        try {
+            update new Case(
+                Id = exportCase.Id,
+                FEC_Account_or_Contract__c = hist.Id
+            );
+        } finally {
+            FEC_CaseTriggerHandler.isExecuting = false;
+        }
+
+        FEC_Address_Info__c original = new FEC_Address_Info__c(
+            Name = 'Original Current',
+            FEC_Customer_History__c = hist.Id,
+            FEC_Address_Type__c = FEC_ConstantCommon.SF_ADDRESS_TYPE_CURRENT,
+            FEC_Building__c = 'Old Tower',
+            FEC_Number__c = '10',
+            FEC_Street__c = 'Old Street',
+            FEC_Mailing_Address__c = false
+        );
+        insert original;
+
+        insert new FEC_Address_Info__c(
+            Name = 'Updated Current',
+            FEC_Case__c = exportCase.Id,
+            FEC_Customer_History__c = hist.Id,
+            FEC_Parent_Address__c = original.Id,
+            FEC_Address_Type__c = FEC_ConstantCommon.SF_ADDRESS_TYPE_CURRENT,
+            FEC_Building__c = 'fec',
+            FEC_Number__c = '111',
+            FEC_Street__c = 'cong hoa',
+            FEC_Mailing_Address__c = true
+        );
+
+        FEC_BatchCaseHandlingExportRow row = new FEC_BatchCaseHandlingExportRow();
+        row.caseId = exportCase.Id;
+
+        Test.startTest();
+        FEC_BatchCaseHandlingExportService.enrichExportRows(new List<FEC_BatchCaseHandlingExportRow>{ row });
+        Test.stopTest();
+
+        System.assertEquals(FEC_ConstantCommon.SF_ADDRESS_TYPE_CURRENT, row.updatedInfoAddressType);
+        System.assert(row.updatedInfoAddress.contains('cong hoa'));
+        System.assertEquals('true', row.updatedInfoMailingAddress);
+        System.assertEquals(FEC_ConstantCommon.SF_ADDRESS_TYPE_CURRENT, row.originalInfoAddressType);
+        System.assert(row.originalInfoAddress.contains('Old Street'));
+        System.assertEquals('false', row.originalInfoMailingAddress);
+    }
+
+    @IsTest
+    static void testEnrichExportRows_addressUpdateInfoFields_skipsNullParent() {
+        Case exportCase = [SELECT Id FROM Case WHERE FEC_ID_Search__c = 'BCH-EXP-001' LIMIT 1];
+        FEC_Customer_History__c hist = new FEC_Customer_History__c(
+            FEC_Case__c = exportCase.Id,
+            FEC_Customer_Name__c = 'Address Export Customer Null Parent',
+            FEC_CIF_Number__c = 'CIF-ADDR-EXP-NULL'
+        );
+        insert hist;
+        FEC_CaseTriggerHandler.isExecuting = true;
+        try {
+            update new Case(
+                Id = exportCase.Id,
+                FEC_Account_or_Contract__c = hist.Id
+            );
+        } finally {
+            FEC_CaseTriggerHandler.isExecuting = false;
+        }
+
+        insert new FEC_Address_Info__c(
+            Name = 'Updated Without Parent',
+            FEC_Case__c = exportCase.Id,
+            FEC_Customer_History__c = hist.Id,
+            FEC_Address_Type__c = FEC_ConstantCommon.SF_ADDRESS_TYPE_CURRENT,
+            FEC_Building__c = 'fec',
+            FEC_Number__c = '111',
+            FEC_Street__c = 'cong hoa',
+            FEC_Mailing_Address__c = true
+        );
+
+        FEC_BatchCaseHandlingExportRow row = new FEC_BatchCaseHandlingExportRow();
+        row.caseId = exportCase.Id;
+
+        Test.startTest();
+        FEC_BatchCaseHandlingExportService.enrichExportRows(new List<FEC_BatchCaseHandlingExportRow>{ row });
+        Test.stopTest();
+
+        System.assert(String.isBlank(row.updatedInfoAddressType));
+        System.assert(String.isBlank(row.updatedInfoAddress));
+        System.assert(String.isBlank(row.updatedInfoMailingAddress));
+        System.assert(String.isBlank(row.originalInfoAddressType));
+        System.assert(String.isBlank(row.originalInfoAddress));
+        System.assert(String.isBlank(row.originalInfoMailingAddress));
+    }
+
     @IsTest
     static void testMapCaseToExportRow_minimalCase() {
         FEC_CaseTriggerHandler.isExecuting = true;

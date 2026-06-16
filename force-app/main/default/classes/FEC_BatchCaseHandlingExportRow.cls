@@ -13,6 +13,17 @@ public without sharing class FEC_BatchCaseHandlingExportRow {
     @AuraEnabled public String interactionSubChannel;
     @AuraEnabled public String interactionPhone;
     @AuraEnabled public String interactionEmail;
+    // 15/06/2026 14:30 linhdev - Phone Update export: Original/Updated Info Phone Number (PhoneUpdateTemp1/Temp2)
+    @AuraEnabled public String originalInfoPhoneNumber;
+    @AuraEnabled public String updatedInfoPhoneNumber;
+    // 15/06/2026 linhdev - Address Update export: Original/Updated Info từ FEC_Address_Info__c (AddressUpdateTemp1_CSSupport)
+    // Updated: FEC_Address_Info__c gắn Case, FEC_Parent_Address__c khác null. Original: record parent theo Parent ID.
+    @AuraEnabled public String originalInfoAddressType;
+    @AuraEnabled public String originalInfoAddress;
+    @AuraEnabled public String originalInfoMailingAddress;
+    @AuraEnabled public String updatedInfoAddressType;
+    @AuraEnabled public String updatedInfoAddress;
+    @AuraEnabled public String updatedInfoMailingAddress;
     @AuraEnabled public String ippRecordNo; // Toannd 28/5/2026
     @AuraEnabled public String ippPlan; // Toannd 28/5/2026
     @AuraEnabled public String ippOpenDate; // Toannd 28/5/2026
