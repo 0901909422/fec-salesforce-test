@@ -618,6 +618,489 @@ private class FEC_MainInfoController_Test {
         );
     }
 
+    @IsTest
+    static void testGetProvinceCityLookupOptions() {
+        FEC_Country__c country = new FEC_Country__c(FEC_Code__c = '2');
+        insert country;
+        insert new FEC_Province__c(
+            Name = 'Lookup Prov',
+            FEC_Code__c = 'LP',
+            FEC_Name_VN__c = 'Tinh LP',
+            FEC_Country__c = country.Id
+        );
+
+        Test.startTest();
+        List<FEC_MainInfoController.PicklistOptionDTO> opts =
+            FEC_MainInfoController.getProvinceCityLookupOptions();
+        Test.stopTest();
+
+        System.assertNotEquals(0, opts.size());
+    }
+
+    @IsTest
+    static void testGetDistrictOptions_LegacyProvinceRemap() {
+        FEC_Country__c legacy = new FEC_Country__c(FEC_Code__c = '1', FEC_Name_VN__c = 'VN');
+        FEC_Country__c api = new FEC_Country__c(FEC_Code__c = '2', FEC_Name_VN__c = 'VN');
+        insert new List<FEC_Country__c>{ legacy, api };
+
+        FEC_Province__c legacyProv = new FEC_Province__c(
+            Name = 'Remap Prov',
+            FEC_Code__c = 'RP1',
+            FEC_Name_VN__c = 'Remap Prov',
+            FEC_Country__c = legacy.Id
+        );
+        FEC_Province__c apiProv = new FEC_Province__c(
+            Name = 'Remap Prov',
+            FEC_Code__c = 'RP2',
+            FEC_Name_VN__c = 'Remap Prov',
+            FEC_Country__c = api.Id
+        );
+        insert new List<FEC_Province__c>{ legacyProv, apiProv };
+        insert new FEC_District__c(
+            Name = 'Remap District',
+            FEC_Code__c = 'RD1',
+            FEC_Name_VN__c = 'Quan RD',
+            FEC_Province__c = legacyProv.Id
+        );
+
+        Test.startTest();
+        List<FEC_MainInfoController.PicklistOptionDTO> districts =
+            FEC_MainInfoController.getDistrictOptionsForProvinceCode('RP2');
+        Test.stopTest();
+
+        System.assertNotEquals(0, districts.size());
+    }
+
+    @IsTest
+    static void testGetWardOptions_WithWards() {
+        FEC_Country__c country = new FEC_Country__c(FEC_Code__c = '2');
+        insert country;
+        FEC_Province__c prov = new FEC_Province__c(
+            Name = 'Ward Prov',
+            FEC_Code__c = 'WP',
+            FEC_Name_VN__c = 'Tinh Ward',
+            FEC_Country__c = country.Id
+        );
+        insert prov;
+        insert new FEC_Ward__c(
+            Name = 'Ward 1',
+            FEC_Code__c = 'W1',
+            FEC_Name_VN__c = 'Phuong 1',
+            FEC_Province__c = prov.Id
+        );
+
+        Test.startTest();
+        List<FEC_MainInfoController.PicklistOptionDTO> wards =
+            FEC_MainInfoController.getWardOptionsForProvinceCode('WP');
+        Test.stopTest();
+
+        System.assertEquals(1, wards.size());
+    }
+
+    @IsTest
+    static void testLoadMainInfo_CacheHitWithAddresses() {
+        Case c = [SELECT Id, FEC_Account_or_Contract__c FROM Case LIMIT 1];
+        Id chId = c.FEC_Account_or_Contract__c;
+        insert new FEC_Address_Info__c(
+            FEC_Customer_History__c = chId,
+            FEC_Address_Type__c = FEC_ConstantCommon.SF_ADDRESS_TYPE_PERMANENT,
+            FEC_Street__c = '123 Main',
+            FEC_District_Text__c = 'Ward Text'
+        );
+
+        FEC_Customer_History__c hist = [SELECT Id FROM FEC_Customer_History__c WHERE Id = :chId LIMIT 1];
+        FEC_MainInfoController.MainInfoDTO cached = new FEC_MainInfoController.MainInfoDTO();
+        cached.fullName = 'Cached With Addr';
+        hist.FEC_API_Cache__c = JSON.serialize(cached);
+        update hist;
+
+        Test.startTest();
+        FEC_MainInfoController.MainInfoDTO result = FEC_MainInfoController.loadMainInfo(c.Id);
+        Test.stopTest();
+
+        System.assertEquals('Cached With Addr', result.fullName);
+        System.assertNotEquals(null, result.addresses);
+        System.assertEquals(1, result.addresses.size());
+    }
+
+    @IsTest
+    static void testLoadMainInfo_CacheHitPhoneResync() {
+        Case c = [SELECT Id, FEC_Account_or_Contract__c FROM Case LIMIT 1];
+        FEC_Customer_History__c hist = [
+            SELECT Id
+            FROM FEC_Customer_History__c
+            WHERE Id = :c.FEC_Account_or_Contract__c
+            LIMIT 1
+        ];
+        insert new FEC_Address_Info__c(
+            FEC_Customer_History__c = hist.Id,
+            FEC_Address_Type__c = FEC_ConstantCommon.SF_ADDRESS_TYPE_PERMANENT,
+            FEC_Street__c = '456 Main'
+        );
+
+        FEC_MainInfoController.MainInfoDTO cached = new FEC_MainInfoController.MainInfoDTO();
+        cached.fullName = 'Phone Resync';
+        hist.FEC_API_Cache__c = JSON.serialize(cached);
+        hist.FEC_Primary_Phone__c = null;
+        hist.FEC_CIF_Number__c = CIF_NUMBER;
+        update hist;
+
+        Test.setMock(HttpCalloutMock.class, new MainInfoHttpCalloutMock());
+        Test.startTest();
+        FEC_MainInfoController.MainInfoDTO result = FEC_MainInfoController.loadMainInfo(c.Id);
+        Test.stopTest();
+
+        System.assertEquals('Phone Resync', result.fullName);
+        System.assertNotEquals(null, result.addresses);
+    }
+
+    @IsTest
+    static void testLoadMainInfo_AddressEligibilityBlocked() {
+        Case c = [SELECT Id, FEC_Account_or_Contract__c FROM Case LIMIT 1];
+        FEC_Customer_History__c hist = [
+            SELECT Id
+            FROM FEC_Customer_History__c
+            WHERE Id = :c.FEC_Account_or_Contract__c
+            LIMIT 1
+        ];
+        hist.FEC_API_Cache__c = null;
+        hist.FEC_CIF_Number__c = CIF_NUMBER;
+        hist.FEC_Block_Code_1__c = 'B';
+        update hist;
+
+        Test.setMock(HttpCalloutMock.class, new MainInfoHttpCalloutMock());
+        Test.startTest();
+        FEC_MainInfoController.MainInfoDTO result = FEC_MainInfoController.loadMainInfo(c.Id);
+        Test.stopTest();
+
+        System.assertNotEquals(null, result.addressUpdateNotEligibleTitle);
+        System.assertNotEquals(null, result.addressUpdateNotEligibleReasons);
+    }
+
+    @IsTest
+    static void testLoadMainInfo_FullAddressSyncWithMasterData() {
+        Case c = [SELECT Id, FEC_Account_or_Contract__c FROM Case LIMIT 1];
+        FEC_Customer_History__c hist = [
+            SELECT Id
+            FROM FEC_Customer_History__c
+            WHERE Id = :c.FEC_Account_or_Contract__c
+            LIMIT 1
+        ];
+        hist.FEC_API_Cache__c = null;
+        hist.FEC_CIF_Number__c = CIF_NUMBER;
+        update hist;
+
+        FEC_Country__c legacy = new FEC_Country__c(
+            FEC_Code__c = '1',
+            FEC_Name_VN__c = 'Viet Nam',
+            Name = 'Viet Nam'
+        );
+        FEC_Country__c api = new FEC_Country__c(
+            FEC_Code__c = '2',
+            FEC_Name_VN__c = 'Viet Nam',
+            Name = 'Viet Nam'
+        );
+        insert new List<FEC_Country__c>{ legacy, api };
+        FEC_Province__c legacyProv = new FEC_Province__c(
+            Name = 'City 1',
+            FEC_Code__c = '1',
+            FEC_Name_VN__c = 'City 1',
+            FEC_Country__c = legacy.Id
+        );
+        insert legacyProv;
+        insert new FEC_District__c(
+            Name = 'District 1',
+            FEC_Code__c = 'D1',
+            FEC_Province__c = legacyProv.Id
+        );
+
+        Test.setMock(HttpCalloutMock.class, new FullAddressesListMock());
+        Test.startTest();
+        FEC_MainInfoController.MainInfoDTO result = FEC_MainInfoController.loadMainInfo(c.Id);
+        Test.stopTest();
+
+        System.assertNotEquals(null, result.addresses);
+        System.assert(result.addresses.size() > 0);
+    }
+
+    @IsTest
+    static void testLoadMainInfo_LoanContractPhonePath() {
+        Case c = [SELECT Id, FEC_Account_or_Contract__c, FEC_Product_Type__c FROM Case LIMIT 1];
+        update new FEC_Product_Type__c(
+            Id = c.FEC_Product_Type__c,
+            Name = FEC_ConstantCommon.PRODUCT_TYPE_LOAN_CASE
+        );
+        FEC_Customer_History__c hist = [
+            SELECT Id
+            FROM FEC_Customer_History__c
+            WHERE Id = :c.FEC_Account_or_Contract__c
+            LIMIT 1
+        ];
+        hist.FEC_API_Cache__c = null;
+        hist.FEC_CIF_Number__c = CIF_NUMBER;
+        hist.FEC_Contract_Number__c = 'CONTRACT-001';
+        hist.FEC_Primary_Phone__c = null;
+        update hist;
+
+        Test.setMock(HttpCalloutMock.class, new MainInfoHttpCalloutMock());
+        Test.startTest();
+        FEC_MainInfoController.MainInfoDTO result = FEC_MainInfoController.loadMainInfo(c.Id);
+        Test.stopTest();
+
+        System.assertNotEquals(null, result);
+        System.assertNotEquals(null, result.addresses);
+    }
+
+    @IsTest
+    static void testGetMailingAddressUpdateContext_OfficeAndPermFallback() {
+        Case c = [SELECT Id FROM Case LIMIT 1];
+        Test.setMock(HttpCalloutMock.class, new PermanentFallbackAddressesMock());
+
+        Test.startTest();
+        FEC_MainInfoController.MailingAddressContextDTO officeCtx =
+            FEC_MainInfoController.getMailingAddressUpdateContext(
+                c.Id,
+                FEC_ConstantCommon.SF_ADDRESS_TYPE_OFFICE
+            );
+        FEC_MainInfoController.MailingAddressContextDTO permCtx =
+            FEC_MainInfoController.getMailingAddressUpdateContext(
+                c.Id,
+                FEC_ConstantCommon.SF_ADDRESS_TYPE_PERMANENT
+            );
+        FEC_MainInfoController.MailingAddressContextDTO invalidType =
+            FEC_MainInfoController.getMailingAddressUpdateContext(
+                c.Id,
+                'Unknown Address'
+            );
+        Test.stopTest();
+
+        System.assertEquals(true, officeCtx.found);
+        System.assertEquals(true, permCtx.found);
+        System.assertEquals(false, invalidType.found);
+    }
+
+    @IsTest
+    static void testGetMailingAddressUpdateContext_CifFromCache() {
+        Case c = [SELECT Id, FEC_Account_or_Contract__c FROM Case LIMIT 1];
+        FEC_Customer_History__c hist = [
+            SELECT Id
+            FROM FEC_Customer_History__c
+            WHERE Id = :c.FEC_Account_or_Contract__c
+            LIMIT 1
+        ];
+        hist.FEC_CIF_Number__c = null;
+        hist.FEC_API_Cache__c = '{"cifNumber":"' + CIF_NUMBER + '"}';
+        update hist;
+
+        Test.setMock(HttpCalloutMock.class, new AddressesListMock());
+        Test.startTest();
+        FEC_MainInfoController.MailingAddressContextDTO ctx =
+            FEC_MainInfoController.getMailingAddressUpdateContext(
+                c.Id,
+                FEC_ConstantCommon.SF_ADDRESS_TYPE_PERMANENT
+            );
+        Test.stopTest();
+
+        System.assertEquals(true, ctx.found);
+        System.assertEquals(CIF_NUMBER, ctx.cifNumber);
+    }
+
+    @IsTest
+    static void testSavePendingAddress_UpdateExistingAndParent() {
+        Case c = [SELECT Id, FEC_Account_or_Contract__c FROM Case LIMIT 1];
+        FEC_Address_Info__c parent = new FEC_Address_Info__c(
+            FEC_Customer_History__c = c.FEC_Account_or_Contract__c,
+            FEC_Address_Type__c = FEC_ConstantCommon.SF_ADDRESS_TYPE_PERMANENT,
+            FEC_Street__c = 'Parent Addr'
+        );
+        insert parent;
+
+        FEC_MainInfoController.savePendingAddress(
+            c.Id,
+            FEC_ConstantCommon.SF_ADDRESS_TYPE_CURRENT,
+            false,
+            null,
+            'B1',
+            '1',
+            'First St',
+            null,
+            null,
+            false
+        );
+
+        Test.startTest();
+        FEC_MainInfoController.savePendingAddress(
+            c.Id,
+            FEC_ConstantCommon.SF_ADDRESS_TYPE_CURRENT,
+            false,
+            parent.Id,
+            'B2',
+            '2',
+            'Updated St',
+            null,
+            null,
+            true
+        );
+        Test.stopTest();
+
+        FEC_Address_Info__c row = [
+            SELECT FEC_Building__c, FEC_Parent_Address__c, FEC_Mailing_Address__c
+            FROM FEC_Address_Info__c
+            WHERE FEC_Case__c = :c.Id
+              AND FEC_Address_Type__c = :FEC_ConstantCommon.SF_ADDRESS_TYPE_CURRENT
+            LIMIT 1
+        ];
+        System.assertEquals('B2', row.FEC_Building__c);
+        System.assertEquals(parent.Id, row.FEC_Parent_Address__c);
+        System.assertEquals(true, row.FEC_Mailing_Address__c);
+    }
+
+    @IsTest
+    static void testSavePendingAddress_InvalidParentAndType() {
+        Case c = [SELECT Id FROM Case LIMIT 1];
+        Boolean invalidParent = false;
+        Boolean invalidType = false;
+
+        Test.startTest();
+        try {
+            FEC_MainInfoController.savePendingAddress(
+                c.Id,
+                FEC_ConstantCommon.SF_ADDRESS_TYPE_OFFICE,
+                false,
+                UserInfo.getUserId(),
+                'B',
+                '1',
+                'St',
+                null,
+                null,
+                false
+            );
+        } catch (AuraHandledException e) {
+            invalidParent = true;
+        }
+        try {
+            FEC_MainInfoController.savePendingAddress(
+                c.Id,
+                'Bad Type',
+                false,
+                null,
+                'B',
+                '1',
+                'St',
+                null,
+                null,
+                false
+            );
+        } catch (AuraHandledException e) {
+            invalidType = true;
+        }
+        Test.stopTest();
+
+        System.assertEquals(true, invalidParent);
+        System.assertEquals(true, invalidType);
+    }
+
+    @IsTest
+    static void testSyncLocalMailingAddressSelection_ClearAndInvalid() {
+        Case c = [SELECT Id, FEC_Account_or_Contract__c FROM Case LIMIT 1];
+        Id chId = c.FEC_Account_or_Contract__c;
+        insert new FEC_Address_Info__c(
+            FEC_Customer_History__c = chId,
+            FEC_Address_Type__c = FEC_ConstantCommon.SF_ADDRESS_TYPE_OFFICE,
+            FEC_Mailing_Address__c = true
+        );
+
+        Test.startTest();
+        FEC_MainInfoController.syncLocalMailingAddressSelection(c.Id, null);
+        FEC_MainInfoController.syncLocalMailingAddressSelection(c.Id, 'Invalid Type');
+        FEC_MainInfoController.clearMainInfoCache(null);
+        FEC_MainInfoController.clearCasePendingAddressRows(null);
+        Test.stopTest();
+
+        System.assertEquals(
+            false,
+            [SELECT FEC_Mailing_Address__c FROM FEC_Address_Info__c WHERE FEC_Customer_History__c = :chId LIMIT 1]
+                .FEC_Mailing_Address__c
+        );
+    }
+
+    @IsTest
+    static void testLoadCasePendingAddressJsonMap_WithJsonAddress() {
+        Case c = [SELECT Id, FEC_Account_or_Contract__c FROM Case LIMIT 1];
+        insert new FEC_Address_Info__c(
+            FEC_Case__c = c.Id,
+            FEC_Customer_History__c = c.FEC_Account_or_Contract__c,
+            FEC_Address_Type__c = FEC_ConstantCommon.SF_ADDRESS_TYPE_OFFICE,
+            FEC_Address__c = '{"cifNumber":"CIF_JSON","addressId":"AID1","addressType":"OFFICE"}',
+            FEC_Building__c = 'Json Bld',
+            FEC_Number__c = '9',
+            FEC_Street__c = 'Json St'
+        );
+
+        Test.startTest();
+        Map<String, String> pendingMap =
+            FEC_MainInfoController.loadCasePendingAddressJsonMap(c.Id);
+        Test.stopTest();
+
+        System.assert(pendingMap.get(FEC_ConstantCommon.SF_ADDRESS_TYPE_OFFICE).contains('CIF_JSON'));
+    }
+
+    @IsTest
+    static void testNormalizeProvinceCodeForAddressUi_Blank() {
+        Test.startTest();
+        System.assertEquals(null, FEC_MainInfoController.normalizeProvinceCodeForAddressUi(null));
+        System.assertEquals('', FEC_MainInfoController.normalizeProvinceCodeForAddressUi(''));
+        Test.stopTest();
+    }
+
+    private class FullAddressesListMock implements HttpCalloutMock {
+        public HttpResponse respond(HttpRequest req) {
+            HttpResponse res = new HttpResponse();
+            res.setStatusCode(200);
+            res.setBody(
+                '<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">' +
+                '<soapenv:Body><GetAddressesListResponse>' +
+                '<Sys><Code>1</Code></Sys>' +
+                '<Addresses>' +
+                '<Address><AddressType>PERMNENT</AddressType><AddressId>ADDR-P</AddressId>' +
+                '<Building>B1</Building><NumberStr>10</NumberStr><Street>Main St</Street>' +
+                '<District>D1</District><City>1</City><CountryCode>1</CountryCode><CountryName>Viet Nam</CountryName>' +
+                '<ZipCode>70000</ZipCode></Address>' +
+                '<Address><AddressType>PERMANENT</AddressType><AddressId>ADDR-OLD</AddressId>' +
+                '<Building>Old</Building><NumberStr>1</NumberStr><Street>Old St</Street>' +
+                '<District>D1</District><City>1</City></Address>' +
+                '<Address><AddressType>OFFICE</AddressType><AddressId>ADDR-O</AddressId>' +
+                '<Building>Off</Building><NumberStr>2</NumberStr><Street>Office St</Street>' +
+                '<District>UNKNOWN</District><City>UNKNOWN</City></Address>' +
+                '<Address><AddressType>CURRES</AddressType><AddressId>ADDR-C</AddressId>' +
+                '<Building>Cur</Building><NumberStr>3</NumberStr><Street>Current St</Street>' +
+                '</Address>' +
+                '</Addresses></GetAddressesListResponse></soapenv:Body></soapenv:Envelope>'
+            );
+            return res;
+        }
+    }
+
+    private class PermanentFallbackAddressesMock implements HttpCalloutMock {
+        public HttpResponse respond(HttpRequest req) {
+            HttpResponse res = new HttpResponse();
+            res.setStatusCode(200);
+            res.setBody(
+                '<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">' +
+                '<soapenv:Body><GetAddressesListResponse><Sys><Code>1</Code></Sys>' +
+                '<Addresses>' +
+                '<Address><AddressType>PERMANENT</AddressType><AddressId>ADDR-PERM</AddressId>' +
+                '<Building>B</Building><NumberStr>1</NumberStr><Street>St</Street>' +
+                '<District>D1</District><City>1</City></Address>' +
+                '<Address><AddressType>OFFICE</AddressType><AddressId>ADDR-OFF</AddressId>' +
+                '<Building>O</Building><NumberStr>2</NumberStr><Street>Office</Street>' +
+                '<District>D2</District><City>2</City></Address>' +
+                '</Addresses></GetAddressesListResponse></soapenv:Body></soapenv:Envelope>'
+            );
+            return res;
+        }
+    }
+
     private class UpdateAddressMock implements HttpCalloutMock {
         public HttpResponse respond(HttpRequest req) {
             HttpResponse res = new HttpResponse();

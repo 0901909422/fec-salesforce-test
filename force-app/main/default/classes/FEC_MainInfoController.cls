@@ -302,6 +302,30 @@ public without sharing class FEC_MainInfoController {
     }
 
     /**
+     * Tỉnh/Thành phố lookup options cho trường FEC_Province_City__c (FEC_Additional_Info__c).
+     * Trả về { label: tên hiển thị, value: Id record FEC_Province__c } — bộ quốc gia 2 (Việt Nam).
+     * Dùng cho c-fec_searchable-combobox thay thế standard lookup để tìm kiếm chuỗi con / không dấu.
+     */
+    @AuraEnabled(cacheable=true)
+    public static List<PicklistOptionDTO> getProvinceCityLookupOptions() {
+        List<PicklistOptionDTO> opts = new List<PicklistOptionDTO>();
+        for (FEC_Province__c p : [
+            SELECT Id, FEC_Name_VN__c
+            FROM FEC_Province__c
+            WHERE FEC_Country__r.FEC_Code__c = '2'
+            ORDER BY FEC_Name_VN__c NULLS LAST, Name
+        ]) {
+            String lbl = FEC_CommonUltils.picklistLabelFromFecNameVn(p.FEC_Name_VN__c);
+            if (String.isBlank(lbl)) continue;
+            PicklistOptionDTO o = new PicklistOptionDTO();
+            o.label = lbl;
+            o.value = String.valueOf(p.Id);
+            opts.add(o);
+        }
+        return opts;
+    }
+
+    /**
      * Danh sách tỉnh/thành theo mã quốc gia master (FEC_Country__c.FEC_Code__c), ví dụ "2" cho form thêm địa chỉ mới.
      */
     @AuraEnabled(cacheable=true)

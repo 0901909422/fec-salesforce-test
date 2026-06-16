@@ -101,8 +101,13 @@ public with sharing class FEC_GetCheckExistUser {
         endpoint += '?PhoneNumber=' + EncodingUtil.urlEncode(normalizedPhone, 'UTF-8')
             + '&NationalID=' + EncodingUtil.urlEncode(nationalId, 'UTF-8');
 
+        String requestDateTime = FEC_CommonUltils.formatTransferCallRequestDateTime(Datetime.now());
+
         Map<String, String> headers = new Map<String, String>{
-            'Content-Type' => FEC_ConstantCommon.API_CONTENT_TYPE_JSON
+            'Content-Type' => FEC_ConstantCommon.API_CONTENT_TYPE_JSON,
+            'RequestorID' => FEC_ConstantCommon.REQUESTOR_PEGA_CSM_HYPHEN,
+            'TransID' => FEC_CommonUltils.generateTransactionUUID(),
+            'DateTime' => requestDateTime
         };
 
         String requestBody = JSON.serialize(new Map<String, String>{
@@ -110,29 +115,38 @@ public with sharing class FEC_GetCheckExistUser {
             'NationalID' => nationalId
         });
 
-        HttpResponse res = FEC_CommonUltils.calloutApiWithHeaders(
-            endpoint,
-            FEC_ConstantCommon.API_METHOD_GET,
-            headers,
-            null
-        );
-
-        responseLog = new ResponseLog(
-            'FEC_GetCheckExistUser',
-            endpoint,
-            FEC_ConstantCommon.API_METHOD_GET,
-            requestBody,
-            res,
-            null
-        );
-
-        if (res.getStatusCode() != 200 || String.isBlank(res.getBody())) {
-            throw new CalloutException(
-                String.format(System.Label.FEC_MSG_HTTP_Error, new List<String>{ res.getStatusCode().toString() })
+        try {
+            HttpResponse res = FEC_CommonUltils.calloutApiWithHeaders(
+                endpoint,
+                FEC_ConstantCommon.API_METHOD_GET,
+                headers,
+                null
             );
-        }
 
-        return parseResponse(res.getBody());
+            responseLog = new ResponseLog(
+                'FEC_GetCheckExistUser',
+                endpoint,
+                FEC_ConstantCommon.API_METHOD_GET,
+                requestBody,
+                res,
+                null
+            );
+
+            if (res.getStatusCode() != 200 || String.isBlank(res.getBody())) {
+                throw new CalloutException(
+                    String.format(System.Label.FEC_MSG_HTTP_Error, new List<String>{ res.getStatusCode().toString() })
+                );
+            }
+
+            return parseResponse(res.getBody());
+        } catch (Exception ex) {
+            if (responseLog != null) {
+                responseLog.errorMessage = ex.getMessage();
+            }
+            throw ex;
+        } finally {
+            logApiResponse();
+        }
     }
 
     // =========================================================================

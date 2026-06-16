@@ -15,6 +15,7 @@ import markCaseSubmittedWithoutRoutingWithHistory from "@salesforce/apex/FEC_Cas
 //PhongBT: query FEC_Case_Flow_History__c sau khi đổi bộ noc khác để lấy lại giá trị đã nhập lên
 import getPropertyFieldsFromFlowHistory from "@salesforce/apex/FEC_CaseEditNOCController.getPropertyFieldsFromFlowHistory";
 import saveRl0502PropertyInfo from "@salesforce/apex/FEC_MrcReturnCaseService.saveRl0502PropertyInfo";
+import getProvinceCityLookupOptions from "@salesforce/apex/FEC_MainInfoController.getProvinceCityLookupOptions";
 import logSensitiveAccess from "@salesforce/apex/FEC_InteractionHighlightController.logSensitiveAccess";
 import getCardStatus from "@salesforce/apex/FEC_CardLockUnLockController.getCardStatus";
 import checkProcessActionCardBlock from "@salesforce/apex/FEC_CardLockUnLockController.checkProcessActionCardBlock";
@@ -866,6 +867,7 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
   wiredCaseHoldResultWire;
   // wiredHoldCaseSubProcessesWire;
   holdCaseResultOnCase = false;
+  @track _provinceCityLookupOptions = [];
   holdCaseResultOverride = null;
   showHoldCase = false;
   showHoldCaseManual = false;
@@ -960,6 +962,16 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
 
   @wire(MessageContext)
   messageContext;
+
+  @wire(getProvinceCityLookupOptions)
+  wiredProvinceCityLookupOptions({ data, error }) {
+    if (data) {
+      this._provinceCityLookupOptions = data;
+      this._applyProvinceLookupReadonlyLabels();
+    } else if (error) {
+      console.error('[fec_CaseBussiness] getProvinceCityLookupOptions error', error);
+    }
+  }
 
   @wire(getRecord, { recordId: "$recordId", fields: [FEC_NFU_DESCRIPTION_RESULT] })
   wiredCaseHoldResult(result) {
@@ -3172,6 +3184,9 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
                 field.isDate =
                   field.type === "DATE" || DATE_FIELDS.has(field.apiName);
                 field.isPhone = PHONE_VALIDATED_FIELD_APIS.has(field.apiName);
+                field.isProvinceLookup =
+                  field.apiName === 'FEC_Province_City__c' &&
+                  obj.name === 'FEC_Additional_Info__c';
                 if (field.isDate) {
                   field.displayValue = formatToDDMMYYYY(field.value);
                 } else {
@@ -3234,6 +3249,11 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
                 field.readonlyDisplayValue = field.masked
                   ? field.value
                   : field.displayValue;
+
+                if (field.isProvinceLookup && field.value && this._provinceCityLookupOptions.length) {
+                  const provOpt = this._provinceCityLookupOptions.find(o => o.value === field.value);
+                  if (provOpt) field.readonlyDisplayValue = provOpt.label;
+                }
 
                 field.editWrapperClass =
                   "edit slds-p-around--x-small";
@@ -3645,6 +3665,33 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
         });
       }
     }, 0);
+  }
+
+  get provinceCityLookupOptions() {
+    return this._provinceCityLookupOptions;
+  }
+
+  /** Cập nhật readonlyDisplayValue cho province lookup fields sau khi options tải xong. */
+  _applyProvinceLookupReadonlyLabels() {
+    if (!this.business?.sectionlst?.length || !this._provinceCityLookupOptions.length) return;
+    let changed = false;
+    this.business.sectionlst.forEach(section => {
+      section.subSectionlst?.forEach(sub => {
+        sub.objlst?.forEach(obj => {
+          if (obj.name !== 'FEC_Additional_Info__c') return;
+          obj.fieldlst?.forEach(field => {
+            if (field.apiName !== 'FEC_Province_City__c') return;
+            if (!field.value) return;
+            const opt = this._provinceCityLookupOptions.find(o => o.value === field.value);
+            if (opt && field.readonlyDisplayValue !== opt.label) {
+              field.readonlyDisplayValue = opt.label;
+              changed = true;
+            }
+          });
+        });
+      });
+    });
+    if (changed) this.business = { ...this.business };
   }
 
   handleDateChange(e) {
