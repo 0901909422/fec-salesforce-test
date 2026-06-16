@@ -5,6 +5,10 @@ public without sharing class FEC_BatchCaseHandlingTemplateHelper {
     public static final String ERR_ROLE_TEMPLATE_MISMATCH = 'role/template không phù hợp';
     // 05/06/2026 17:30 linhdev - mã lỗi validateUploadedTemplateFileName
     public static final String ERR_TEMPLATE_FILE_NAME_MISMATCH = 'TEMPLATE_MISMATCH';
+    // 15/06/2026 18:00 linhdev - mã lỗi export khi không resolve được template binding
+    public static final String EXPORT_GAP_USER_GROUP = 'USER_GROUP_MISMATCH';
+    public static final String EXPORT_GAP_NO_TEMPLATE_FILE = 'NO_TEMPLATE_FILE';
+    public static final String EXPORT_GAP_NO_TEMPLATE = 'NO_TEMPLATE';
 
     public static final List<String> ALLOWED_BUSINESS_PROCESS_NAMES = new List<String>{
         'COF - General Flow',
@@ -487,6 +491,87 @@ public without sharing class FEC_BatchCaseHandlingTemplateHelper {
             return false;
         }
         return binding.templateContentVersionId != null;
+    }
+
+    // 15/06/2026 18:00 linhdev - thứ tự: user group null > không có template record > không khớp user group > thiếu file
+    public static String resolveExportBindingGapCode(
+        String businessProcessCode,
+        String businessProcessName,
+        String userGroup,
+        List<SObject> activeTemplates,
+        Map<Id, Id> versionIdByTemplateId
+    ) {
+        if (String.isBlank(userGroup)) {
+            return EXPORT_GAP_USER_GROUP;
+        }
+        if (activeTemplates == null || activeTemplates.isEmpty()) {
+            return EXPORT_GAP_NO_TEMPLATE;
+        }
+        List<SObject> bpMatches = collectTemplatesForBusinessProcess(
+            businessProcessCode,
+            businessProcessName,
+            activeTemplates
+        );
+        if (bpMatches.isEmpty()) {
+            return EXPORT_GAP_NO_TEMPLATE;
+        }
+        Boolean hasRoleMatch = false;
+        Boolean hasRoleMatchWithFile = false;
+        for (SObject tr : bpMatches) {
+            String templateName = tr.get('Name') == null
+                ? FEC_ConstantCommon.STR_EMPTY
+                : String.valueOf(tr.get('Name'));
+            Boolean suffixMatch = String.isBlank(
+                validateUploadedTemplateForUserGroup(templateName, businessProcessCode, userGroup)
+            );
+            Boolean roleMatch = templateRowMatchesUserGroup(tr, userGroup) || suffixMatch;
+            if (!roleMatch) {
+                continue;
+            }
+            hasRoleMatch = true;
+            if (hasTemplateFile(tr, versionIdByTemplateId)) {
+                hasRoleMatchWithFile = true;
+                break;
+            }
+        }
+        if (!hasRoleMatch) {
+            return EXPORT_GAP_USER_GROUP;
+        }
+        if (!hasRoleMatchWithFile) {
+            return EXPORT_GAP_NO_TEMPLATE_FILE;
+        }
+        return EXPORT_GAP_USER_GROUP;
+    }
+
+    // 15/06/2026 18:00 linhdev - gom template theo BP field hoặc prefix tên file (kể cả FEC_Business_Process__c null)
+    private static List<SObject> collectTemplatesForBusinessProcess(
+        String businessProcessCode,
+        String businessProcessName,
+        List<SObject> activeTemplates
+    ) {
+        List<SObject> out = new List<SObject>();
+        if (activeTemplates == null || activeTemplates.isEmpty()) {
+            return out;
+        }
+        String bpKey = String.isNotBlank(businessProcessCode) ? businessProcessCode : businessProcessName;
+        String namePrefix = mapBusinessProcessToTemplatePrefix(bpKey);
+        String prefixLower = String.isBlank(namePrefix) ? null : namePrefix.toLowerCase();
+        for (SObject tr : activeTemplates) {
+            if (businessProcessFieldMatches(tr, businessProcessCode, businessProcessName)) {
+                out.add(tr);
+                continue;
+            }
+            if (prefixLower == null) {
+                continue;
+            }
+            String name = tr.get('Name') == null
+                ? FEC_ConstantCommon.STR_EMPTY
+                : String.valueOf(tr.get('Name'));
+            if (String.isNotBlank(name) && name.toLowerCase().startsWith(prefixLower + 'temp')) {
+                out.add(tr);
+            }
+        }
+        return out;
     }
 
     public static TemplateExportBinding resolveExportTemplateBinding(

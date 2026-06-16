@@ -78,7 +78,10 @@ public without sharing class FEC_BatchCaseHandlingExportService {
             'FEC_Payment_Method__c',
             'FEC_Bill_Date__c',
             'FEC_Bill_Amount__c',
-            'FEC_Selected_Contract_Number__c'
+            'FEC_Selected_Contract_Number__c',
+            // 15/06/2026 14:30 linhdev - Phone Update export (PhoneUpdateTemp1/Temp2)
+            'FEC_Original_Info_Phone_Number__c',
+            'FEC_Updated_Info_Phone_Number__c'
         };
         selectFields.addAll(FEC_BatchCaseHandlingTemplateHelper.buildCaseStageBusinessProcessSelectFields());
         return selectFields;
@@ -201,6 +204,119 @@ public without sharing class FEC_BatchCaseHandlingExportService {
         }
         enrichApplicationListExportFields(rows);
         enrichPendingCsSupportLabels(rows);
+        enrichAddressUpdateExportFields(rows);
+    }
+
+    // 15/06/2026 linhdev - Address Update export: Updated = Address Info gắn Case có Parent; Original = parent record
+    private static void enrichAddressUpdateExportFields(List<FEC_BatchCaseHandlingExportRow> rows) {
+        if (rows == null || rows.isEmpty()) {
+            return;
+        }
+        if (!Schema.sObjectType.FEC_Address_Info__c.isAccessible()) {
+            return;
+        }
+        Set<Id> caseIds = new Set<Id>();
+        for (FEC_BatchCaseHandlingExportRow r : rows) {
+            if (r != null && r.caseId != null) {
+                caseIds.add(r.caseId);
+            }
+        }
+        if (caseIds.isEmpty()) {
+            return;
+        }
+        List<FEC_Address_Info__c> caseAddresses = [
+            SELECT
+                Id,
+                FEC_Case__c,
+                FEC_Parent_Address__c,
+                FEC_Address_Type__c,
+                FEC_Full_Address__c,
+                FEC_Mailing_Address__c,
+                LastModifiedDate
+            FROM FEC_Address_Info__c
+            WHERE FEC_Case__c IN :caseIds
+            AND FEC_Parent_Address__c != NULL
+            ORDER BY LastModifiedDate DESC
+        ];
+        SObjectAccessDecision caseAddrDecision = Security.stripInaccessible(
+            AccessType.READABLE,
+            caseAddresses
+        );
+        caseAddresses = (List<FEC_Address_Info__c>) caseAddrDecision.getRecords();
+        Map<Id, FEC_Address_Info__c> updatedByCaseId = new Map<Id, FEC_Address_Info__c>();
+        Set<Id> parentIds = new Set<Id>();
+        for (FEC_Address_Info__c addr : caseAddresses) {
+            if (addr == null || addr.FEC_Case__c == null || addr.FEC_Parent_Address__c == null) {
+                continue;
+            }
+            if (!updatedByCaseId.containsKey(addr.FEC_Case__c)) {
+                updatedByCaseId.put(addr.FEC_Case__c, addr);
+                parentIds.add(addr.FEC_Parent_Address__c);
+            }
+        }
+        Map<Id, FEC_Address_Info__c> originalById = new Map<Id, FEC_Address_Info__c>();
+        if (!parentIds.isEmpty()) {
+            List<FEC_Address_Info__c> parents = [
+                SELECT Id, FEC_Address_Type__c, FEC_Full_Address__c, FEC_Mailing_Address__c
+                FROM FEC_Address_Info__c
+                WHERE Id IN :parentIds
+            ];
+            SObjectAccessDecision parentDecision = Security.stripInaccessible(
+                AccessType.READABLE,
+                parents
+            );
+            parents = (List<FEC_Address_Info__c>) parentDecision.getRecords();
+            for (FEC_Address_Info__c parentRow : parents) {
+                originalById.put(parentRow.Id, parentRow);
+            }
+        }
+        for (FEC_BatchCaseHandlingExportRow r : rows) {
+            if (r == null || r.caseId == null) {
+                continue;
+            }
+            FEC_Address_Info__c updated = updatedByCaseId.get(r.caseId);
+            if (updated == null) {
+                continue;
+            }
+            FEC_Address_Info__c original = originalById.get(updated.FEC_Parent_Address__c);
+            applyAddressInfoExportFields(r, original, updated);
+        }
+    }
+
+    private static void applyAddressInfoExportFields(
+        FEC_BatchCaseHandlingExportRow r,
+        FEC_Address_Info__c original,
+        FEC_Address_Info__c updated
+    ) {
+        r.updatedInfoAddressType = formatAddressInfoType(updated);
+        r.updatedInfoAddress = formatAddressInfoAddress(updated);
+        r.updatedInfoMailingAddress = formatAddressInfoMailing(updated);
+        r.originalInfoAddressType = formatAddressInfoType(original);
+        r.originalInfoAddress = formatAddressInfoAddress(original);
+        r.originalInfoMailingAddress = formatAddressInfoMailing(original);
+    }
+
+    private static String formatAddressInfoType(FEC_Address_Info__c row) {
+        if (row == null) {
+            return FEC_ConstantCommon.STR_EMPTY;
+        }
+        String val = row.FEC_Address_Type__c;
+        return String.isBlank(val) ? FEC_ConstantCommon.STR_EMPTY : val;
+    }
+
+    private static String formatAddressInfoAddress(FEC_Address_Info__c row) {
+        if (row == null) {
+            return FEC_ConstantCommon.STR_EMPTY;
+        }
+        String val = row.FEC_Full_Address__c;
+        return String.isBlank(val) ? FEC_ConstantCommon.STR_EMPTY : val;
+    }
+
+    private static String formatAddressInfoMailing(FEC_Address_Info__c row) {
+        if (row == null || row.FEC_Mailing_Address__c == null) {
+            return FEC_ConstantCommon.STR_EMPTY;
+        }
+        return row.FEC_Mailing_Address__c ? 'true' : 'false';
     }
 
     private static String safeRelatedFieldString(SObject row, String fieldApiName) {
@@ -272,6 +388,13 @@ public without sharing class FEC_BatchCaseHandlingExportService {
         r.interactionSubChannel = safeRelatedFieldString(interaction, 'FEC_Interaction_Subchannel__c');
         r.interactionPhone = safeRelatedFieldString(interaction, 'FEC_Phone_Number__c');
         r.interactionEmail = safeRelatedFieldString(interaction, 'FEC_Interaction_Email__c');
+        // 15/06/2026 14:30 linhdev - Phone Update export: map cột Original/Updated Info - Phone Number
+        r.originalInfoPhoneNumber = populated.containsKey('FEC_Original_Info_Phone_Number__c')
+            ? c.FEC_Original_Info_Phone_Number__c
+            : null;
+        r.updatedInfoPhoneNumber = populated.containsKey('FEC_Updated_Info_Phone_Number__c')
+            ? c.FEC_Updated_Info_Phone_Number__c
+            : null;
         // Cũ: field trên Case (masked / copy) — không khớp design export
         // r.interactionChannel = c.FEC_Channel__c;
         // r.interactionSubChannel = c.FEC_Interaction_Subchannel__c;
