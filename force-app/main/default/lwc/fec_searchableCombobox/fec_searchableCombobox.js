@@ -130,6 +130,15 @@ export default class Fec_searchableCombobox extends LightningElement {
         }
     }
 
+    /**
+     * Kiểm tra chuỗi term có chứa dấu tiếng Việt không.
+     * Nếu có → dùng khớp chính xác (phân biệt "Hồ" vs "Hòa").
+     * Nếu không → dùng fold-based (bỏ dấu, tìm mọi biến thể).
+     */
+    hasDiacritics(s) {
+        return this.foldForSearch(s) !== s.toLowerCase().trim();
+    }
+
     /** Filtered options based on search term */
     get filteredOptions() {
         const term = (this._searchTerm || '').trim();
@@ -140,12 +149,23 @@ export default class Fec_searchableCombobox extends LightningElement {
         if (!foldedTerm) {
             return this._options;
         }
+
+        // Gõ có dấu → khớp chính xác lowercase (phân biệt "Hồ" ≠ "Hòa").
+        // Gõ không dấu → fold-based word-start (rộng hơn, bắt mọi biến thể dấu).
+        const exactMode = this.hasDiacritics(term);
+        const lowerTerm = term.toLowerCase();
+
         return this._options.filter((o) => {
             const lbl = this.optionLabel(o);
             if (!lbl.trim()) {
                 return false;
             }
-            return this.foldForSearch(lbl).includes(foldedTerm);
+            if (exactMode) {
+                // Khớp đầu từ chính xác — phân biệt dấu
+                return lbl.toLowerCase().split(/\s+/).some(word => word.startsWith(lowerTerm));
+            }
+            // Khớp đầu từ sau khi bỏ dấu — tìm không phân biệt dấu
+            return this.foldForSearch(lbl).split(/\s+/).some(word => word.startsWith(foldedTerm));
         });
     }
 
