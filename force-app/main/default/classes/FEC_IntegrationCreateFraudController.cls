@@ -1486,6 +1486,13 @@ private static FraudPropertyDTO getDataIntegrationMapping(String integrationMapp
             }
 
             rec.OwnerId = UserInfo.getUserId();
+
+            // Set business "Created Time" only when creating a new record so it is not
+            // overwritten on subsequent upserts.
+            if (existing.isEmpty()) {
+                rec.FEC_Created_Time__c = Datetime.now();
+            }
+
             log('LOG-upsertFraudCaseService RECORD: '+ JSON.serialize(rec));
 
             // =============================================================

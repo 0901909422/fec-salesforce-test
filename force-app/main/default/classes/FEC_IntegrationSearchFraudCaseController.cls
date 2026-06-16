@@ -99,8 +99,8 @@ global with sharing class FEC_IntegrationSearchFraudCaseController {
             SELECT 
             Id, Name, FEC_CaseID__c, FEC_Service_Case_ID__c, FEC_Parent_CaseID__c,
             FEC_Case_Status__c, FEC_Category__c, FEC_Sub_Category__c, FEC_Sub_Code__c,
-            FEC_Remark__c, CreatedDate, FEC_Sys_Channel__c, FEC_Creator_Email__c, 
-            CreatedBy.Id, CreatedBy.Name, CreatedBy.Email,FEC_Integrate_Case_ID__c 
+            FEC_Remark__c, CreatedDate, FEC_Sys_Channel__c, FEC_Creator_Email__c, FEC_Message_Time__c,
+            CreatedBy.Id, CreatedBy.Name, CreatedBy.Email,FEC_Integrate_Case_ID__c ,FEC_Created_Time__c,FEC_Updated_Time__c
             FROM FEC_Integration_Case__c
             WHERE FEC_Parent_CaseID__c IN :buIds
             AND FEC_CaseID__c LIKE :likeTKValue
@@ -521,7 +521,7 @@ global with sharing class FEC_IntegrationSearchFraudCaseController {
             'SELECT Id, Name, FEC_CaseID__c, FEC_Service_Case_ID__c, ' +
             'FEC_Parent_CaseID__c, FEC_Case_Status__c, FEC_Category__c, ' +
             'FEC_Sub_Category__c, FEC_Sub_Code__c, FEC_Remark__c, ' +
-            'CreatedDate, FEC_Sys_Channel__c, FEC_Creator_Email__c, ' +
+            'CreatedDate, FEC_Created_Time__c, FEC_Sys_Channel__c, FEC_Creator_Email__c, ' +
             'CreatedBy.Id, CreatedBy.Name, CreatedBy.Email, FEC_Integrate_Case_ID__c ' +
             'FROM FEC_Integration_Case__c';
     
@@ -529,7 +529,13 @@ global with sharing class FEC_IntegrationSearchFraudCaseController {
             soql += ' WHERE ' + String.join(parentWhere, ' AND ');
         }
     
-        soql += ' ORDER BY ' + sortBy + ' ' + sortDirection;
+        // When sorting by CreatedDate, prefer FEC_Created_Time__c (business created time)
+        // and fall back to system CreatedDate so display and order match.
+        String orderBy = (sortBy == 'CreatedDate')
+            ? 'FEC_Created_Time__c ' + sortDirection + ' NULLS LAST, CreatedDate ' + sortDirection
+            : sortBy + ' ' + sortDirection;
+
+        soql += ' ORDER BY ' + orderBy;
     
         return Database.query(soql);
     }
@@ -783,7 +789,9 @@ global with sharing class FEC_IntegrationSearchFraudCaseController {
                 'FEC_Sub_Category__c'    => c.FEC_Sub_Category__c,
                 'FEC_Sub_Code__c'        => c.FEC_Sub_Code__c,
                 'FEC_Case_Status__c'     => c.FEC_Case_Status__c,
-                'CreatedDate'            => FEC_IntegrationFraudCaseUtil.formatDateTime(c.CreatedDate),
+                'CreatedDate'            => (c.FEC_Created_Time__c != null)
+                                            ? FEC_IntegrationFraudCaseUtil.formatDateTime(c.FEC_Created_Time__c)
+                                            : FEC_IntegrationFraudCaseUtil.formatDateTime(c.CreatedDate),
                 'FEC_Sys_Channel__c'     => c.FEC_Sys_Channel__c,
                 
                 //Correct Account Number from AdditionalInfo
@@ -794,9 +802,11 @@ global with sharing class FEC_IntegrationSearchFraudCaseController {
                 'CreatedByName'  => c.CreatedBy.Name,                                       
 
                 //Hyperlink for LWC
-                 'ServiceCaseLink'        => (c.FEC_Service_Case_ID__c != null && (c.FEC_Service_Case_ID__c.startsWith(fraudConstant.CASE_SERVICE)))
-                ? + FEC_FraudConstantCommon.SERVICE_CASE_LINK + c.FEC_Integrate_Case_ID__c + '/view'
-                : + FEC_FraudConstantCommon.SERVICE_SFT_CASE_LINK + c.FEC_Integrate_Case_ID__c + '/view',
+                 'ServiceCaseLink'        => (c.FEC_Integrate_Case_ID__c != null && c.FEC_Service_Case_ID__c != null)
+                ? ((c.FEC_Service_Case_ID__c.startsWith(fraudConstant.CASE_SERVICE))
+                    ? FEC_FraudConstantCommon.SERVICE_CASE_LINK + c.FEC_Integrate_Case_ID__c + '/view'
+                    : FEC_FraudConstantCommon.SERVICE_SFT_CASE_LINK + c.FEC_Integrate_Case_ID__c + '/view')
+                : c.FEC_Service_Case_ID__c,
                 'FraudCaseLink'        => (c.FEC_CaseID__c != null && (c.FEC_CaseID__c.startsWith(fraudConstant.CASEFH) || c.FEC_CaseID__c.startsWith(fraudConstant.CASETK)))
                 ? '/lightning/n/'+ FEC_FraudConstantCommon.FRAUD_HANDLING_CASE_DETAIL_PATH + '?c__caseId=' + c.FEC_CaseID__c
                 : null,
