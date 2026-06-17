@@ -208,13 +208,46 @@ public without sharing class FEC_RepaySchedPayHistController {
             rec.FEC_Interest__c = rs.Interest;
             rec.FEC_Opening_Principal__c = rs.OpeningPrincipal;
             rec.FEC_Closing_Principal__c = rs.ClosingPrincipal;
-            rec.FEC_Total_Installment_Amount__c = totalInstallmentAmount;
-            rec.FEC_Total_Principal__c = sumPrincipal != 0 ? sumPrincipal : null;
-            rec.FEC_Total_Interest__c = sumInterest != 0 ? sumInterest : null;
             toInsert.add(rec);
         }
         if (!toInsert.isEmpty()) {
             insert toInsert;
+        }
+        saveRepaymentScheduleTotalsToCustomerHistory(getCustomerHistoryId(caseId), totalInstallmentAmount, sumPrincipal, sumInterest);
+    }
+
+    private static void saveRepaymentScheduleTotalsToCustomerHistory(
+        Id customerHistoryId,
+        Decimal totalInstallmentAmount,
+        Decimal sumPrincipal,
+        Decimal sumInterest
+    ) {
+        if (customerHistoryId == null) {
+            return;
+        }
+        try {
+            update new FEC_Customer_History__c(
+                Id = customerHistoryId,
+                FEC_Total_Installment_Amount__c = totalInstallmentAmount,
+                FEC_Total_Principal__c = sumPrincipal != 0 ? sumPrincipal : null,
+                FEC_Total_Interest__c = sumInterest != 0 ? sumInterest : null
+            );
+        } catch (Exception e) {
+            System.debug('Save repayment schedule totals to Customer History error: ' + e.getMessage());
+        }
+    }
+
+    private static void savePaymentHistoryTotalToCustomerHistory(Id customerHistoryId, Decimal totalPaymentAmount) {
+        if (customerHistoryId == null) {
+            return;
+        }
+        try {
+            update new FEC_Customer_History__c(
+                Id = customerHistoryId,
+                FEC_Total_Payment_Amount__c = totalPaymentAmount != 0 ? totalPaymentAmount : null
+            );
+        } catch (Exception e) {
+            System.debug('Save payment history total to Customer History error: ' + e.getMessage());
         }
     }
 
@@ -391,12 +424,12 @@ public without sharing class FEC_RepaySchedPayHistController {
             }
             rec.FEC_Booking_Date__c = i < secPh.size() ? secPh[i].BookingDate : null;
             rec.FEC_Particulars__c = (i < secPh.size() && secPh[i].ChkNo != null) ? secPh[i].ChkNo : null;
-            rec.FEC_Total_Payment_Amount__c = totalPaymentAmount != 0 ? totalPaymentAmount : null;
             toInsert.add(rec);
         }
         if (!toInsert.isEmpty()) {
             insert toInsert;
         }
+        savePaymentHistoryTotalToCustomerHistory(customerHistoryId, totalPaymentAmount);
     }
 
     private static void fillRealTimePaymentFromApi(
@@ -459,6 +492,7 @@ public without sharing class FEC_RepaySchedPayHistController {
         result.helpTexts = new Map<String, String>();
         result.helpTexts.putAll(FEC_CommonUltils.buildHelpTextMap(FEC_RePayment_Schedule__c.SObjectType));
         result.helpTexts.putAll(FEC_CommonUltils.buildHelpTextMap(FEC_Payment_History__c.SObjectType));
+        result.helpTexts.putAll(FEC_CommonUltils.buildHelpTextMap(FEC_Customer_History__c.SObjectType));
         result.errorMessage = null;
         result.repaymentScheduleError = false;
         result.repaymentScheduleTotals = new RepaymentScheduleTotalsDTO();
