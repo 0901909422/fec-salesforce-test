@@ -854,7 +854,18 @@ public with sharing class FEC_CommonUltils {
         Integer year = Integer.valueOf(dateStr.substring(0, 4));
         Integer month = Integer.valueOf(dateStr.substring(4, 6));
         Integer day = Integer.valueOf(dateStr.substring(6, 8));
-        return Date.newInstance(year, month, day);
+        if (month >= 1 && month <= 12 && day >= 1 && day <= 31) {
+          return Date.newInstance(year, month, day);
+        }
+      }
+
+      // Format: YYYYDDD Julian (e.g. 2026166 = 2026 day 166)
+      if (dateStr.length() == 7 && dateStr.isNumeric()) {
+        Integer year = Integer.valueOf(dateStr.substring(0, 4));
+        Integer dayOfYear = Integer.valueOf(dateStr.substring(4, 7));
+        if (dayOfYear >= 1 && dayOfYear <= 366) {
+          return Date.newInstance(year, 1, 1).addDays(dayOfYear - 1);
+        }
       }
 
       // Fallback: Format YYYY-MM-DD
@@ -1248,6 +1259,12 @@ public with sharing class FEC_CommonUltils {
             if (mo >= 1 && mo <= 12 && da >= 1 && da <= 31) {
                 return Date.newInstance(y, mo, da);
             }
+        }
+
+        // Format: YYYYDDD Julian (e.g. 2026166)
+        Date julian = parseDate(v);
+        if (julian != null) {
+            return julian;
         }
 
     } catch (Exception e) {
