@@ -113,8 +113,7 @@ private class FEC_CustomerAddDataController_Test {
     }
 
     @IsTest
-    static void testGetAdditionalDataRows_InvalidRecordType() {
-        // Tạo case khác record type
+    static void testGetAdditionalDataRows_NoAccountOrContract() {
         FEC_CaseTriggerHandler.isExecuting = true;
         Case otherCase;
         try {
@@ -132,6 +131,102 @@ private class FEC_CustomerAddDataController_Test {
             FEC_CustomerAdditionalDataController.getAdditionalDataRows(otherCase.Id);
         Test.stopTest();
 
-        System.assertEquals(0, rows.size());
+        System.assertEquals(0, rows.size(), 'Case không có Account/Contract thì không trả dữ liệu.');
+    }
+
+    @IsTest
+    static void testGetAdditionalDataRows_InternalRecordType() {
+        Map<String, Schema.RecordTypeInfo> rtMap = Schema.SObjectType.Case.getRecordTypeInfosByDeveloperName();
+        if (!rtMap.containsKey(FEC_ConstantCommon.CASE_INTERNAL_RECORD_TYPE_DEV_NAME)) {
+            return;
+        }
+
+        Case c = [
+            SELECT Id, FEC_Account_or_Contract__c
+            FROM Case
+            LIMIT 1
+        ];
+        Id internalRtId = rtMap.get(FEC_ConstantCommon.CASE_INTERNAL_RECORD_TYPE_DEV_NAME).getRecordTypeId();
+
+        FEC_CaseTriggerHandler.isExecuting = true;
+        try {
+            update new Case(
+                Id = c.Id,
+                RecordTypeId = internalRtId
+            );
+        } finally {
+            FEC_CaseTriggerHandler.isExecuting = false;
+        }
+
+        Test.startTest();
+        List<FEC_CustomerAdditionalDataController.RowDTO> rows =
+            FEC_CustomerAdditionalDataController.getAdditionalDataRows(c.Id);
+        Test.stopTest();
+
+        System.assertEquals(1, rows.size(), 'Internal Case với Account/Contract phải hiển thị Additional Data.');
+    }
+
+    @IsTest
+    static void testGetAdditionalDataRows_CustomerRecordType() {
+        Map<String, Schema.RecordTypeInfo> rtMap = Schema.SObjectType.Case.getRecordTypeInfosByDeveloperName();
+        if (!rtMap.containsKey(FEC_ConstantCommon.CASE_CUSTOMER_RECORD_TYPE_DEV_NAME)) {
+            return;
+        }
+
+        Case c = [
+            SELECT Id, FEC_Account_or_Contract__c
+            FROM Case
+            LIMIT 1
+        ];
+        Id customerRtId = rtMap.get(FEC_ConstantCommon.CASE_CUSTOMER_RECORD_TYPE_DEV_NAME).getRecordTypeId();
+
+        FEC_CaseTriggerHandler.isExecuting = true;
+        try {
+            update new Case(
+                Id = c.Id,
+                RecordTypeId = customerRtId
+            );
+        } finally {
+            FEC_CaseTriggerHandler.isExecuting = false;
+        }
+
+        Test.startTest();
+        List<FEC_CustomerAdditionalDataController.RowDTO> rows =
+            FEC_CustomerAdditionalDataController.getAdditionalDataRows(c.Id);
+        Test.stopTest();
+
+        System.assertEquals(1, rows.size(), 'Customer Case với Account/Contract phải hiển thị Additional Data.');
+    }
+
+    @IsTest
+    static void testGetAdditionalDataRows_SearchRecordType() {
+        Map<String, Schema.RecordTypeInfo> rtMap = Schema.SObjectType.Case.getRecordTypeInfosByDeveloperName();
+        if (!rtMap.containsKey(FEC_ConstantCommon.CASE_SEARCH_RECORD_TYPE_DEV_NAME)) {
+            return;
+        }
+
+        Case c = [
+            SELECT Id, FEC_Account_or_Contract__c
+            FROM Case
+            LIMIT 1
+        ];
+        Id searchRtId = rtMap.get(FEC_ConstantCommon.CASE_SEARCH_RECORD_TYPE_DEV_NAME).getRecordTypeId();
+
+        FEC_CaseTriggerHandler.isExecuting = true;
+        try {
+            update new Case(
+                Id = c.Id,
+                RecordTypeId = searchRtId
+            );
+        } finally {
+            FEC_CaseTriggerHandler.isExecuting = false;
+        }
+
+        Test.startTest();
+        List<FEC_CustomerAdditionalDataController.RowDTO> rows =
+            FEC_CustomerAdditionalDataController.getAdditionalDataRows(c.Id);
+        Test.stopTest();
+
+        System.assertEquals(1, rows.size(), 'Search Interaction với Account/Contract phải hiển thị Additional Data.');
     }
 }
