@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>FEC_Delivery_Method_3__c</fullName>
+    <description>Hình thức giao phát 3</description>
+    <label>Delivery Method 3</label>
+    <required>false</required>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>Postal Address</fullName>
+                <default>false</default>
+                <label>Postal Address</label>
+            </value>
+            <value>
+                <fullName>Email (Debt Sale Confirmation Only)</fullName>
+                <default>false</default>
+                <label>Email (Debt Sale Confirmation Only)</label>
+            </value>
+            <value>
+                <fullName>Office Pickup (Debt Sale Confirmation Only)</fullName>
+                <default>false</default>
+                <label>Office Pickup (Debt Sale Confirmation Only)</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>

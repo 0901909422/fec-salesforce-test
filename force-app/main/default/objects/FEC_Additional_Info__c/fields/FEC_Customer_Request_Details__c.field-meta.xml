@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>FEC_Customer_Request_Details__c</fullName>
+    <description>Nội dung KH yêu cầu 2</description>
+    <label>Customer Request Details</label>
+    <required>false</required>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>Card Outstanding Balance</fullName>
+                <default>false</default>
+                <label>Card Outstanding Balance</label>
+            </value>
+            <value>
+                <fullName>Request Card Cancellation</fullName>
+                <default>false</default>
+                <label>Request Card Cancellation</label>
+            </value>
+            <value>
+                <fullName>Other (Specify Details)</fullName>
+                <default>false</default>
+                <label>Other (Specify Details)</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>
