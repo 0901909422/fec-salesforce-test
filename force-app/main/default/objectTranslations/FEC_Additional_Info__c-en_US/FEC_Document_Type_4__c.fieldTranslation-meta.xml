@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomFieldTranslation xmlns="http://soap.sforce.com/2006/04/metadata">
+    <label><!-- Document Type 4 --></label>
+    <name>FEC_Document_Type_4__c</name>
+    <picklistValues>
+        <masterLabel>Debt Sale Confirmation</masterLabel>
+        <translation>Xác nhận bán nợ</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Card Outstanding Balance Confirmation</masterLabel>
+        <translation>Xác nhận dư nợ thẻ</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Card Closure Confirmation</masterLabel>
+        <translation>Xác nhận đóng thẻ</translation>
+    </picklistValues>
+</CustomFieldTranslation>

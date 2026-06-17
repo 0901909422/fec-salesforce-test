@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomFieldTranslation xmlns="http://soap.sforce.com/2006/04/metadata">
+    <label><!-- Card Closure Confirmation Request --></label>
+    <name>FEC_Card_Closure_Confirmation_Request__c</name>
+    <picklistValues>
+        <masterLabel>No</masterLabel>
+        <translation>Không</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Office Pickup</masterLabel>
+        <translation>VP</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Postal Address</masterLabel>
+        <translation>Địa chỉ</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Both Email and Postal Address</masterLabel>
+        <translation>Nhận cả 2 hình thức</translation>
+    </picklistValues>
+</CustomFieldTranslation>

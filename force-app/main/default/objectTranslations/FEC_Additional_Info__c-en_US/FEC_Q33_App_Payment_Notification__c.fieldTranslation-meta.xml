@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomFieldTranslation xmlns="http://soap.sforce.com/2006/04/metadata">
+    <label><!-- Q33 App Payment Notification --></label>
+    <name>FEC_Q33_App_Payment_Notification__c</name>
+    <picklistValues>
+        <masterLabel>No App Installed</masterLabel>
+        <translation>Không có App</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Has Not Checked the App</masterLabel>
+        <translation>Chưa vô App xem</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Does Not Know How to Check</masterLabel>
+        <translation>Không biết cách xem</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Checked but No Notification Found</masterLabel>
+        <translation>Đã xem nhưng không thấy thông báo</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>No Opportunity to Survey / Customer Did Not Ask About Payment Update</masterLabel>
+        <translation>Chưa có cơ hội khảo sát/ KH không hỏi về việc cập nhật tiền</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Checked but Still Wants Customer Service Support</masterLabel>
+        <translation>Đã xem nhưng vẫn muốn gặp CS</translation>
+    </picklistValues>
+</CustomFieldTranslation>

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomFieldTranslation xmlns="http://soap.sforce.com/2006/04/metadata">
+    <label><!-- Customer Issue --></label>
+    <name>FEC_Customer_Issue__c</name>
+    <picklistValues>
+        <masterLabel>Payment Partner Cannot Find Information</masterLabel>
+        <translation>Kênh chi hộ không tìm thấy thông tin</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Verify Disbursement Information</masterLabel>
+        <translation>Kiểm tra lại thông tin giải ngân</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Request Disbursement Documents</masterLabel>
+        <translation>Cung cấp chứng từ giải ngân</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Security Code / Disbursement Code</masterLabel>
+        <translation>Mã bảo mật/ Mã giải ngân</translation>
+    </picklistValues>
+</CustomFieldTranslation>
