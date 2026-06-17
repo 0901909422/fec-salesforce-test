@@ -257,28 +257,25 @@ public without sharing class FEC_PaymentHistoryController {
             apiRes = null;
         }
 
-        if (apiRes == null || apiRes.Payments == null) {
+        if (apiRes == null || apiRes.Payments == null || apiRes.Payments.isEmpty()) {
             return;
         }
 
         Map<String, FEC_Payment_History__c> existingMap = new Map<String, FEC_Payment_History__c>();
-
         for (FEC_Payment_History__c h : [
-            SELECT Id, FEC_Payment_Date__c, FEC_Payment_Channel__c
+            SELECT Id, FEC_Payment_Date__c, FEC_Payment_Channel__c, FEC_Payment_Amount__c
             FROM FEC_Payment_History__c
             WHERE FEC_Customer_History__c = :customerHistoryId
-              AND FEC_Payment_Channel__c != NULL
+            AND FEC_Payment_Channel__c != NULL
         ]) {
-            String key = h.FEC_Payment_Date__c + '|' + h.FEC_Payment_Channel__c;
+            String key = String.valueOf(h.FEC_Payment_Date__c) + '|' + h.FEC_Payment_Channel__c + '|' + String.valueOf(h.FEC_Payment_Amount__c);
             existingMap.put(key, h);
         }
 
         List<FEC_Payment_History__c> toUpsert = new List<FEC_Payment_History__c>();
-
         for (FEC_GetPaymentInfo.PaymentInfo p : apiRes.Payments) {
-
             Date paymentDate = FEC_CommonUltils.parseDate(p.TransactionDate);
-            String key = paymentDate + '|' + p.Username;
+            String key = String.valueOf(paymentDate) + '|' + p.Username + '|' + String.valueOf(p.AmountPaid);
 
             FEC_Payment_History__c r =
                 existingMap.containsKey(key)
@@ -290,13 +287,10 @@ public without sharing class FEC_PaymentHistoryController {
             r.FEC_Payment_Date__c    = paymentDate;
             r.FEC_Payment_Amount__c  = p.AmountPaid;
             r.FEC_Payment_Channel__c = p.Username;
-
             toUpsert.add(r);
         }
 
-        if (!toUpsert.isEmpty()) {
-            upsert toUpsert;
-        }
+        if (!toUpsert.isEmpty()) upsert toUpsert;
     }
 
     /* =====================================================
