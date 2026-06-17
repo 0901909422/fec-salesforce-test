@@ -494,10 +494,13 @@ public without sharing class FEC_CaseMasterDataHelper {
       return false;
     }
     String n = subSectionName.trim().toLowerCase();
-    // Revert 2→1 (OM): ẩn subsection CS SP; revert 3→1 (Support): ẩn subsection D2C.
+    // sourceStage=2: non-RC27 ẩn D2C (hiện CS SP); RC27 ẩn CS SP (hiện D2C).
+    // sourceStage=3: luôn ẩn D2C, hiện CS SP — áp dụng cho cả revert 3→1 và Stage 3→2 Route To.
     if (revertSourceStageNumber == 2) {
-      return n.contains('confirm') &&
-        (n.contains('cs sp') || n.contains('support'));
+      if (isRc27Flow == true) {
+        return n.contains('confirm') && (n.contains('cs sp') || n.contains('support'));
+      }
+      return n.contains('confirm') && n.contains('d2c');
     }
     if (revertSourceStageNumber == 3) {
       return n.contains('confirm') && n.contains('d2c');
@@ -573,9 +576,11 @@ public without sharing class FEC_CaseMasterDataHelper {
     if (revertSourceStageNumber == null || String.isBlank(fieldApiName)) {
       return false;
     }
-    // Revert 2→1 (OM): ẩn CS SP confirm; revert 3→1 (Support): ẩn D2C confirm.
+    // sourceStage=2: non-RC27 skip D2C (hiện CS SP); RC27 skip CS SP (hiện D2C).
+    // sourceStage=3: luôn skip D2C, hiện CS SP — revert 3→1 và Stage 3→2 Route To.
     if (revertSourceStageNumber == 2) {
-      return API_CONFIRM_CS_SP_ASSESSMENT.equals(fieldApiName);
+      if (isRc27Flow == true) return API_CONFIRM_CS_SP_ASSESSMENT.equals(fieldApiName);
+      return API_CONFIRM_D2C_ASSESSMENT.equals(fieldApiName);
     }
     if (revertSourceStageNumber == 3) {
       return API_CONFIRM_D2C_ASSESSMENT.equals(fieldApiName);
