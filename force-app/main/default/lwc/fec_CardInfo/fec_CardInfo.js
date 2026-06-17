@@ -10,6 +10,17 @@ import FEC_MSG_Error_API_Label from '@salesforce/label/c.FEC_MSG_Error_API_Label
 import FEC_Common_No_Results_Label from '@salesforce/label/c.FEC_Common_No_Results_Label';
 import FEC_Gender_Label from '@salesforce/label/c.FEC_Gender_Label';
 
+const formatGenderDisplay = (gender) => {
+    const value = String(gender ?? '').trim();
+    if (value === '1') {
+        return 'Male';
+    }
+    if (value === '2') {
+        return 'Female';
+    }
+    return '-';
+};
+
 export default class Fec_CardInfo extends LightningElement {
     @api recordId;
     
@@ -135,7 +146,8 @@ export default class Fec_CardInfo extends LightningElement {
                     FEC_Issue_Date__c: dto.issueDate,
                     FEC_Issue_Date_Formatted__c: formatDate(dto.issueDate),
                     FEC_Block_Code__c: dto.blockCode,
-                    FEC_Gender__c: dto.gender
+                    FEC_Gender__c: dto.gender,
+                    FEC_Gender_Formatted__c: formatGenderDisplay(dto.gender)
                 };
             })
             .sort((a, b) => {
@@ -289,7 +301,7 @@ export default class Fec_CardInfo extends LightningElement {
         { label: 'Card Activation Date', fieldName: 'FEC_Card_Activation_Date_Formatted__c', type: 'text', cellAlign: 'center', width: '145px', minWidth: '130px' },
         { label: 'Issue Date', fieldName: 'FEC_Issue_Date_Formatted__c', type: 'text', cellAlign: 'center', width: '100px', minWidth: '90px' },
         { label: 'Block Code', fieldName: 'FEC_Block_Code__c', cellAlign: 'center', width: '100px', minWidth: '90px' },
-        { label: 'Gender', fieldName: 'FEC_Gender__c', cellAlign: 'center', width: '90px', minWidth: '80px' }
+        { label: FEC_Gender_Label, fieldName: 'FEC_Gender_Formatted__c', cellAlign: 'center', width: '90px', minWidth: '80px' }
     ];
 
     // Refresh lại dữ liệu từ API (force refresh)
