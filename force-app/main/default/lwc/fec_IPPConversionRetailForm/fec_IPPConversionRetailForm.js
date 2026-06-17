@@ -1,6 +1,6 @@
 /****************************************************************************************
  * File Name    : fec_IPPConversionRetailForm.js
- * Description  : RC34.01 – Chuyển đổi IPP Retail: eligible transactions, Check IPP Details, Convert IPP, retry 3, manual entry.
+ * Description  : RC34.01 / RC34.02 – Chuyển đổi IPP: eligible transactions, Check IPP Details, Convert IPP (convertIPP), retry 3.
  ****************************************************************************************/
 
 import { LightningElement, api, track } from 'lwc';
@@ -11,7 +11,6 @@ import loadIppTenorOptions from '@salesforce/apex/FEC_IPPConversionController.lo
 import saveCaseIppTerm from '@salesforce/apex/FEC_IPPConversionController.saveCaseIppTerm';
 import checkIPPDetails from '@salesforce/apex/FEC_IPPConversionController.checkIPPDetails';
 import convertIPP from '@salesforce/apex/FEC_IPPConversionController.convertIPP';
-import convertIPPManualRetail from '@salesforce/apex/FEC_IPPConversionController.convertIPPManualRetail';
 import getConvertActionStatus from '@salesforce/apex/FEC_IPPConversionController.getConvertActionStatus';
 import FEC_MSG_IPP_Conversion_Success from '@salesforce/label/c.FEC_MSG_IPP_Conversion_Success';
 import FEC_MSG_IPP_Conversion_Fail_Retry from '@salesforce/label/c.FEC_MSG_IPP_Conversion_Fail_Retry';
@@ -116,24 +115,6 @@ export default class Fec_IPPConversionRetailForm extends NavigationMixin(Lightni
     @track showNoti10 = false;
     @track retryCount = 0;
     @track showConfirmModal = false;
-    @track showManualEntry = false;
-    @track manualAmount = null;
-    @track manualTenor = null;
-    @track manualInterestRate = null;
-    @track manualFee = null;
-    @track manualVerificationInfo = null;
-    @track manualCallback = null;
-    @track manualCardType2 = null;
-    @track manualStatementDate = null;
-    @track manualDueDate = null;
-    @track manualTransactionDate = null;
-    @track manualTransactionAmount = null;
-    @track manualApprovalCode = null;
-    @track manualTransactionPlan = null;
-    @track manualInstallmentAmount = null;
-    @track manualInstallmentTerm = null;
-    @track manualConversionInterest = null;
-    @track manualSubmitLoading = false;
 
     ippRetailUi = IPP_RETAIL_UI;
 
@@ -595,144 +576,6 @@ export default class Fec_IPPConversionRetailForm extends NavigationMixin(Lightni
                 actionName: 'view'
             }
         });
-    }
-
-    resetManualEntryFields() {
-        this.manualVerificationInfo = null;
-        this.manualCallback = null;
-        this.manualCardType2 = null;
-        this.manualStatementDate = null;
-        this.manualDueDate = null;
-        this.manualTransactionDate = null;
-        this.manualTransactionAmount = null;
-        this.manualApprovalCode = null;
-        this.manualTransactionPlan = null;
-        this.manualInstallmentAmount = null;
-        this.manualInstallmentTerm = null;
-        this.manualConversionInterest = null;
-    }
-
-    handleShowManualEntry() {
-        if (this.isReadOnly) {
-            return;
-        }
-        this.resetManualEntryFields();
-        this.showManualEntry = true;
-    }
-
-    handleManualEntryCancel() {
-        this.showManualEntry = false;
-        this.resetManualEntryFields();
-    }
-
-    handleManualVerificationInfoChange(event) { this.manualVerificationInfo = event.detail.value; }
-    handleManualCallbackChange(event) { this.manualCallback = event.detail.value; }
-    handleManualCardType2Change(event) { this.manualCardType2 = event.detail.value; }
-    handleManualStatementDateChange(event) { this.manualStatementDate = event.detail.value; }
-    handleManualDueDateChange(event) { this.manualDueDate = event.detail.value; }
-    handleManualTransactionDateChange(event) { this.manualTransactionDate = event.detail.value; }
-    handleManualTransactionAmountChange(event) {
-        const v = event.detail.value;
-        this.manualTransactionAmount = v !== STR_EMPTY && v != null ? parseFloat(v, 10) : null;
-    }
-    handleManualApprovalCodeChange(event) { this.manualApprovalCode = event.detail.value; }
-    handleManualTransactionPlanChange(event) { this.manualTransactionPlan = event.detail.value; }
-    handleManualInstallmentAmountChange(event) {
-        const v = event.detail.value;
-        this.manualInstallmentAmount = v !== STR_EMPTY && v != null ? parseFloat(v, 10) : null;
-    }
-    handleManualInstallmentTermChange(event) {
-        const v = event.detail.value;
-        this.manualInstallmentTerm = v !== STR_EMPTY && v != null ? parseInt(v, 10) : null;
-    }
-    get displayConversionInterest() {
-        return this.manualConversionInterest != null && this.manualConversionInterest !== STR_EMPTY
-            ? String(this.manualConversionInterest) + '%'
-            : STR_EMPTY;
-    }
-    handleManualConversionInterestChange(event) {
-        const raw = event.detail.value;
-        if (raw === CONST.EMPTY || raw == null) {
-            this.manualConversionInterest = null;
-            return;
-        }
-        const s = String(raw).replace(/%/g, STR_EMPTY).trim();
-        const num = parseFloat(s, 10);
-        this.manualConversionInterest = isNaN(num) ? null : num;
-    }
-
-    handleManualEntrySubmit() {
-        if (this.isReadOnly) {
-            return;
-        }
-        const allFields = [
-            this.manualVerificationInfo,
-            this.manualCallback,
-            this.manualCardType2,
-            this.manualStatementDate,
-            this.manualDueDate,
-            this.manualTransactionDate,
-            this.manualTransactionAmount,
-            this.manualApprovalCode,
-            this.manualTransactionPlan,
-            this.manualInstallmentAmount,
-            this.manualInstallmentTerm,
-            this.manualConversionInterest
-        ];
-        if (allFields.some(f => f === undefined || f === null || f === STR_EMPTY)) {
-            this.showToast(FEC_Toast_Warning, FEC_Toast_Validation_Message, CONST.VARIANT_WARNING);
-            return;
-        }
-        if (!this.recordId) {
-            this.showToast(FEC_Toast_Error, FEC_MSG_Param_Required.replace('{0}', CONST.CASE_ID_PARAM), CONST.VARIANT_ERROR);
-            return;
-        }
-        this.manualSubmitLoading = true;
-        convertIPPManualRetail({
-            caseId: this.recordId,
-            verificationInfo: this.manualVerificationInfo,
-            callback: this.manualCallback,
-            cardType2: this.manualCardType2,
-            statementDateStr: this.manualStatementDate,
-            dueDateStr: this.manualDueDate,
-            transactionDateStr: this.manualTransactionDate,
-            transactionAmount: this.manualTransactionAmount,
-            approvalCode: this.manualApprovalCode,
-            transactionPlan: this.manualTransactionPlan,
-            installmentAmount: this.manualInstallmentAmount,
-            installmentTerm: this.manualInstallmentTerm,
-            conversionInterestRate: this.manualConversionInterest
-        })
-            .then((res) => {
-                if (res && res.success) {
-                    this.convertSucceeded = true;
-                    this.convertDisabled = true;
-                    this.showNoti08 = true;
-                    this.showManualEntry = false;
-                    this.navigateToCase();
-                } else {
-                    const actionCount = res?.actionCount != null ? Number(res.actionCount) : null;
-                    if (actionCount != null) {
-                        this.retryCount = actionCount;
-                    }
-                    if (res?.maxRetriesExceeded === true || (actionCount != null && actionCount >= CONST.MAX_RETRY)) {
-                        this.convertDisabled = true;
-                        this.showNoti10 = true;
-                        this.showManualEntry = false;
-                        window.setTimeout(() => {
-                            this.navigateToCase();
-                        }, 2000);
-                    } else {
-                        this.showNoti09 = true;
-                    }
-                }
-            })
-            .catch((err) => {
-                this.showToast(FEC_Toast_Error, err?.body?.message || err?.message || FEC_Toast_Error_Generic, CONST.VARIANT_ERROR);
-            })
-            .finally(() => {
-                this.manualSubmitLoading = false;
-            });
     }
 
     formatAmount(val) {
