@@ -50,9 +50,9 @@ public with sharing class FEC_GetCheckExistUser {
     // =========================================================================
     public class SysResponse {
         public String pxObjClass;
-        public Integer Code2;
+        public Integer Code;
         public String Description;
-        public String DateTime2;
+        public String DateTimeStr;
         public String TransID;
     }
 
@@ -166,9 +166,9 @@ public with sharing class FEC_GetCheckExistUser {
             Map<String, Object> responseGet = (Map<String, Object>) responseGetObj;
             result.Sys = new SysResponse();
             result.Sys.pxObjClass = (String) responseGet.get('pxObjClass');
-            result.Sys.Code2 = toInteger(responseGet.get('Code2'));
+            result.Sys.Code = toInteger(responseGet.get('Code'));
             result.Sys.Description = (String) responseGet.get('Description');
-            result.Sys.DateTime2 = (String) responseGet.get('DateTime2');
+            result.Sys.DateTimeStr = (String) responseGet.get('DateTime');
             result.Sys.TransID = (String) responseGet.get('TransID');
         }
 
