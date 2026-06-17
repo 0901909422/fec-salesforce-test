@@ -65,16 +65,38 @@ public with sharing class FEC_FetchCollectionDataServiceCallout {
     public static CollectionDataResponse fetchCollectionData(String contractNumber, String recordType) {
         //PhongBT11: Giữ nguyên signature cũ, delegate sang method mới với default date values
         // để không break các caller hiện tại
-        return fetchCollectionDataWithDates(contractNumber, recordType, '20251212', '99991212');
+        return fetchCollectionDataWithDates(contractNumber, recordType, '20251212', '99991212', null);
+    }
+
+    @AuraEnabled
+    public static CollectionDataResponse fetchCollectionData(String contractNumber, String recordType, Id caseId) {
+        return fetchCollectionDataWithDates(contractNumber, recordType, '20251212', '99991212', caseId);
     }
 
     // Overload mới: thêm startDate và endDate
     @AuraEnabled
-    public static CollectionDataResponse fetchCollectionDataWithDates(String contractNumber, String recordType, String startDate, String endDate) {
+    public static CollectionDataResponse fetchCollectionDataWithDates(
+        String contractNumber,
+        String recordType,
+        String startDate,
+        String endDate
+    ) {
+        return fetchCollectionDataWithDates(contractNumber, recordType, startDate, endDate, null);
+    }
+
+    @AuraEnabled
+    public static CollectionDataResponse fetchCollectionDataWithDates(
+        String contractNumber,
+        String recordType,
+        String startDate,
+        String endDate,
+        Id caseId
+    ) {
         System.debug('contractNumber: ' + contractNumber);
         System.debug('recordType: ' + recordType);
         System.debug('startDate: ' + startDate);
         System.debug('endDate: ' + endDate);
+        System.debug('caseId: ' + caseId);
 
         if (String.isBlank(contractNumber)) {
             throw new CalloutException(System.Label.FEC_Contract_Number_Is_Null);
@@ -83,6 +105,9 @@ public with sharing class FEC_FetchCollectionDataServiceCallout {
             throw new CalloutException(System.Label.FEC_Record_Type_Is_Null);
         }
 
+        String apiContractNumber = resolveContractNumberForApi(contractNumber, caseId);
+        System.debug('apiContractNumber: ' + apiContractNumber);
+
         String transactionId = String.valueOf(UUID.randomUUID());
 
         FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
@@ -90,7 +115,7 @@ public with sharing class FEC_FetchCollectionDataServiceCallout {
 
         String endpoint = (String.isNotBlank(apiSetting?.FEC_Endpoint__c) ? apiSetting.FEC_Endpoint__c : '')
                 + (String.isNotBlank(apiConfig?.FEC_Endpoint__c) ? apiConfig.FEC_Endpoint__c : '');
-        endpoint += '?ContractNumber=' + contractNumber
+        endpoint += '?ContractNumber=' + apiContractNumber
                     + '&StartDate=' + startDate
                     + '&EndDate=' + endDate
                     + '&RecordType=' + recordType;
@@ -124,6 +149,58 @@ public with sharing class FEC_FetchCollectionDataServiceCallout {
             err.Success = 'false';
             return err;
         }
+    }
+
+    @TestVisible
+    private static String resolveContractNumberForApi(String contractNumber, Id caseId) {
+        if (caseId == null) {
+            return contractNumber;
+        }
+
+        List<Case> cases = [
+            SELECT FEC_Product_Type__r.Name,
+                   FEC_Account_Number__c,
+                   FEC_Account_or_Contract__c,
+                   FEC_Account_or_Contract__r.FEC_Account_Number__c
+            FROM Case
+            WHERE Id = :caseId
+            LIMIT 1
+        ];
+        if (cases.isEmpty() || !isCardProductType(cases[0].FEC_Product_Type__r?.Name)) {
+            return contractNumber;
+        }
+
+        String accountNumber = resolveAccountNumberFromCase(cases[0]);
+        return String.isNotBlank(accountNumber) ? accountNumber : contractNumber;
+    }
+
+    @TestVisible
+    private static Boolean isCardProductType(String productTypeName) {
+        return String.isNotBlank(productTypeName)
+            && productTypeName.trim().equalsIgnoreCase(FEC_ConstantCommon.PRODUCT_TYPE_CARD_CASE);
+    }
+
+    @TestVisible
+    private static String resolveAccountNumberFromCase(Case c) {
+        if (c == null) {
+            return null;
+        }
+        if (c.FEC_Account_or_Contract__r != null
+            && String.isNotBlank(c.FEC_Account_or_Contract__r.FEC_Account_Number__c)) {
+            return c.FEC_Account_or_Contract__r.FEC_Account_Number__c;
+        }
+        if (c.FEC_Account_or_Contract__c != null) {
+            List<FEC_Customer_History__c> rows = [
+                SELECT FEC_Account_Number__c
+                FROM FEC_Customer_History__c
+                WHERE Id = :c.FEC_Account_or_Contract__c
+                LIMIT 1
+            ];
+            if (!rows.isEmpty() && String.isNotBlank(rows[0].FEC_Account_Number__c)) {
+                return rows[0].FEC_Account_Number__c;
+            }
+        }
+        return c.FEC_Account_Number__c;
     }
 
 }
