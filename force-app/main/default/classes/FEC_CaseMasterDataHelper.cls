@@ -440,6 +440,36 @@ public without sharing class FEC_CaseMasterDataHelper {
   }
 
   /**
+   * Route To Stage 3→Stage 2: case đang ở Stage 2, routing mới nhất là Route To từ Stage 3.
+   * Trả về 3 để hiển thị field FEC_Confirm_CS_SP_Assessment__c tương tự cơ chế revert 3→1.
+   */
+  public static Integer resolveStage3ToStage2RouteSourceStage(
+    Id caseId,
+    Id currentStageId,
+    String currentStageName
+  ) {
+    if (!stageNameContains(currentStageName, FEC_ConstantCommon.STAGE_TWO)) {
+      return null;
+    }
+    List<FEC_Routing_Action_History__c> latestRouteHist = [
+      SELECT FEC_Previous_Stage__r.Name
+      FROM FEC_Routing_Action_History__c
+      WHERE
+        FEC_Case__c = :caseId
+        AND FEC_Routing_Action__c = :FEC_ConstantCommon.HISTORY_ACTION_ROUTE_TO
+        AND FEC_Next_Stage__c = :currentStageId
+      ORDER BY CreatedDate DESC, Id DESC
+      LIMIT 1
+    ];
+    if (latestRouteHist.isEmpty()) {
+      return null;
+    }
+    String previousStageName = latestRouteHist[0].FEC_Previous_Stage__r?.Name;
+    Integer previousStageNum = extractStageNumberFromStageName(previousStageName);
+    return previousStageNum == 3 ? 3 : null;
+  }
+
+  /**
    * Revert 2→1 / 3→1: ẩn subsection xác nhận không thuộc stage nguồn.
    * Luồng thường: 2→1 ẩn D2C; 3→1 ẩn CS SP.
    * RC27: 2→1 ẩn CS SP (chỉ hiện D2C); 3→1 ẩn D2C (chỉ hiện CS Support).
