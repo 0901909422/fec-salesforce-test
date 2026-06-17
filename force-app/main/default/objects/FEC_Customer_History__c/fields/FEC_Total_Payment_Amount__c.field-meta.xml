@@ -2,7 +2,7 @@
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
     <fullName>FEC_Total_Payment_Amount__c</fullName>
     <label>Total Payment Amount</label>
-    <summarizedField>FEC_Payment_History__c.FEC_Total_Payment_Amount__c</summarizedField>
+    <summarizedField>FEC_Payment_History__c.FEC_Payment_Amount__c</summarizedField>
     <summaryForeignKey>FEC_Payment_History__c.FEC_Customer_History__c</summaryForeignKey>
     <summaryOperation>sum</summaryOperation>
     <trackHistory>false</trackHistory>

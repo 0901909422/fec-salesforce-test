@@ -403,7 +403,6 @@ public without sharing class FEC_RepaySchedPayHistController {
             }
             rec.FEC_Booking_Date__c = i < secPh.size() ? secPh[i].BookingDate : null;
             rec.FEC_Particulars__c = (i < secPh.size() && secPh[i].ChkNo != null) ? secPh[i].ChkNo : null;
-            rec.FEC_Total_Payment_Amount__c = rec.FEC_Payment_Amount__c;
             toInsert.add(rec);
         }
         if (!toInsert.isEmpty()) {
