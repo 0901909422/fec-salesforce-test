@@ -506,7 +506,22 @@ export default class Fec_RepaymentSchedulePaymentHistory extends LightningElemen
                 this.refreshStatusMap.realTimePayment = 'SUCCESS';
                 this.showToast('Success', this.customLabel.msgLoadSuccess, 'success');
             })
-            .catch(() => {
+            .catch((err) => {
+                const apiMessage = err?.body?.message || err?.message || '';
+                const normalizedMsg = String(apiMessage).toLowerCase();
+                const isNoDataError =
+                    normalizedMsg.includes('khong co du lieu') ||
+                    normalizedMsg.includes('không có dữ liệu') ||
+                    normalizedMsg.includes('no data') ||
+                    normalizedMsg.includes('no record');
+
+                if (isNoDataError) {
+                    this.sectionData = { ...this.sectionData, realTimePaymentTable: [] };
+                    this.refreshStatusMap.realTimePayment = 'SUCCESS';
+                    this.showToast('Success', this.customLabel.msgLoadSuccess, 'success');
+                    return;
+                }
+
                 this.refreshStatusMap.realTimePayment = 'ERROR';
                 this.showToast('Error', this.customLabel.msgErrorAPI, 'error');
             })
