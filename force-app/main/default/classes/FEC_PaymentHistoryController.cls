@@ -163,7 +163,10 @@ public without sharing class FEC_PaymentHistoryController {
             upsert toUpsert;
         }
 
-        if (!toUpsert.isEmpty()) upsert toUpsert;
+        update new FEC_Customer_History__c(
+            Id = customerHistoryId,
+            FEC_Total_Payment_Amount__c = totalAmount
+        );
     }
 
     /* =====================================================
@@ -189,13 +192,19 @@ public without sharing class FEC_PaymentHistoryController {
         List<PaymentHistoryDTO> result = new List<PaymentHistoryDTO>();
         Integer idx = 1;
 
+        FEC_Customer_History__c ch = [
+            SELECT FEC_Total_Payment_Amount__c
+            FROM FEC_Customer_History__c
+            WHERE Id = :customerHistoryId
+            LIMIT 1
+        ];
+
         for (FEC_Payment_History__c r : [
             SELECT
                 FEC_Payment_Date__c,
                 FEC_Booking_Date__c,
                 FEC_Payment_Amount__c,
-                FEC_Particulars__c,
-                FEC_Total_Payment_Amount__c
+                FEC_Particulars__c
             FROM FEC_Payment_History__c
             WHERE FEC_Customer_History__c = :customerHistoryId
             AND FEC_Payment_Channel__c = NULL
@@ -207,7 +216,7 @@ public without sharing class FEC_PaymentHistoryController {
             dto.bookingDate        = r.FEC_Booking_Date__c;
             dto.paymentAmount      = r.FEC_Payment_Amount__c;
             dto.particulars        = r.FEC_Particulars__c;
-            dto.totalPaymentAmount = r.FEC_Total_Payment_Amount__c;
+            dto.totalPaymentAmount = ch.FEC_Total_Payment_Amount__c;
             result.add(dto);
         }
 

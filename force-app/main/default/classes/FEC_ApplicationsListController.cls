@@ -321,6 +321,8 @@ public without sharing class FEC_ApplicationsListController {
 
         upsert cacheRec;
 
+        saveApplicationFieldsToDb(historyId, cacheData);
+
         if (!applicationIdsForSaleInfo.isEmpty()) {
             System.enqueueJob(
                 new FEC_SaleInfoQueueable(
@@ -461,6 +463,80 @@ public without sharing class FEC_ApplicationsListController {
         }
 
         return result;
+    }
+
+    /* =====================================================
+     * SAVE FIELDS TO DB
+     * ===================================================== */
+    private static void saveApplicationFieldsToDb(
+        Id historyId,
+        List<Map<String, Object>> rows
+    ) {
+        if (historyId == null || rows == null || rows.isEmpty()) {
+            return;
+        }
+
+        Set<String> appIds = new Set<String>();
+        for (Map<String, Object> row : rows) {
+            String appId = (String) row.get('applicationId');
+            if (String.isNotBlank(appId)) {
+                appIds.add(appId);
+            }
+        }
+
+        if (appIds.isEmpty()) {
+            return;
+        }
+
+        Map<String, FEC_Application_List__c> existedByAppId =
+            new Map<String, FEC_Application_List__c>();
+
+        for (FEC_Application_List__c rec : [
+            SELECT Id, FEC_Application_ID__c
+            FROM FEC_Application_List__c
+            WHERE FEC_Customer_History__c = :historyId
+              AND FEC_Application_ID__c IN :appIds
+        ]) {
+            existedByAppId.put(rec.FEC_Application_ID__c, rec);
+        }
+
+        List<FEC_Application_List__c> toUpsert = new List<FEC_Application_List__c>();
+
+        for (Map<String, Object> row : rows) {
+            String appId = (String) row.get('applicationId');
+            if (String.isBlank(appId)) {
+                continue;
+            }
+
+            FEC_Application_List__c rec = existedByAppId.containsKey(appId)
+                ? existedByAppId.get(appId)
+                : new FEC_Application_List__c(
+                    FEC_Customer_History__c = historyId,
+                    FEC_Application_ID__c = appId
+                );
+
+            rec.FEC_Application_ID__c = appId;
+            rec.FEC_Account_Number__c = (String) row.get('accountNumber');
+            rec.FEC_Contract_Number__c = (String) row.get('contractNumber');
+            rec.FEC_Last_Status__c = (String) row.get('lastStatus');
+            Object updateDateVal = row.get('updateDate');
+            rec.FEC_Updated_Date__c = updateDateVal instanceof Date
+                ? (Date) updateDateVal
+                : FEC_CommonUltils.toDateStr((String) updateDateVal);
+            rec.FEC_Product_Group__c = (String) row.get('productGroup');
+            rec.FEC_National_Passport_ID__c = (String) row.get('nationalPassportID');
+            rec.FEC_Registration_Phone__c = (String) row.get('registrationPhone');
+            rec.FEC_Registration_Email__c = (String) row.get('registrationEmail');
+            rec.FEC_Current_Address__c = (String) row.get('currentAddress');
+            rec.FEC_Permanent_Address__c = (String) row.get('permanentAddress');
+            rec.FEC_Office_Address__c = (String) row.get('officeAddress');
+
+            toUpsert.add(rec);
+        }
+
+        if (!toUpsert.isEmpty()) {
+            upsert toUpsert;
+        }
     }
 
     /* =====================================================
