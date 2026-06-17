@@ -382,6 +382,12 @@
         </columns>
         <columns>
             <checkedByDefault>false</checkedByDefault>
+            <displayNameOverride>Case ID</displayNameOverride>
+            <field>FEC_Case__c.FEC_Case_ID_Report__c</field>
+            <table>FEC_Routing_Action_History__c</table>
+        </columns>
+        <columns>
+            <checkedByDefault>false</checkedByDefault>
             <field>FEC_Case__c.CaseNumber</field>
             <table>FEC_Routing_Action_History__c</table>
         </columns>
@@ -552,6 +558,12 @@
             <checkedByDefault>false</checkedByDefault>
             <displayNameOverride>Interaction ID</displayNameOverride>
             <field>FEC_Case__c.FEC_Interaction_ID__c</field>
+            <table>FEC_Routing_Action_History__c</table>
+        </columns>
+        <columns>
+            <checkedByDefault>false</checkedByDefault>
+            <displayNameOverride>Interaction ID</displayNameOverride>
+            <field>FEC_Case__c.FEC_Interaction_ID_Report__c</field>
             <table>FEC_Routing_Action_History__c</table>
         </columns>
         <columns>
