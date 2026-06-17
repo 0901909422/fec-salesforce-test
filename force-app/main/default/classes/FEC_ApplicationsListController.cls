@@ -104,6 +104,7 @@ public without sharing class FEC_ApplicationsListController {
         List<Map<String, Object>> cacheData =
             new List<Map<String, Object>>();
         Set<String> applicationIdsForSaleInfo = new Set<String>();
+        Set<String> processedApplicationIds = new Set<String>();
 
         FEC_CommonUltils.beginDeferredApiLogging();
         try {
@@ -140,11 +141,17 @@ public without sharing class FEC_ApplicationsListController {
             districtMap.put(d.FEC_Code__c, d.FEC_Name_VN__c);
         }
 
+        Set<String> processedCifs = new Set<String>();
+
         for (FEC_GetCustomerList.Customer cus : cusRes.Customers) {
 
             if (cus.Applications == null) continue;
 
             String cif = cus.CIFNumber;
+            if (String.isBlank(cif) || processedCifs.contains(cif)) {
+                continue;
+            }
+            processedCifs.add(cif);
 
             Map<String, FEC_GetProductListCallout.ProductInfo> productMap =
                 new Map<String, FEC_GetProductListCallout.ProductInfo>();
@@ -204,6 +211,11 @@ public without sharing class FEC_ApplicationsListController {
             }
 
             for (FEC_GetApplicationsList.ApplicationInfo st: statusRes.Applications) {
+                if (String.isBlank(st.ApplicationID)
+                    || processedApplicationIds.contains(st.ApplicationID)) {
+                    continue;
+                }
+
                 String accountNumbers = FEC_ConstantCommon.STR_NA;
                 Map<String,Object> row = new Map<String,Object>();
                 
@@ -298,10 +310,8 @@ public without sharing class FEC_ApplicationsListController {
                     }
                 }
 
-                if (String.isNotBlank(st.ApplicationID)) {
-                    applicationIdsForSaleInfo.add(st.ApplicationID);
-                }
-
+                processedApplicationIds.add(st.ApplicationID);
+                applicationIdsForSaleInfo.add(st.ApplicationID);
                 cacheData.add(row);
             }
         }
@@ -427,6 +437,7 @@ public without sharing class FEC_ApplicationsListController {
 
         List<ApplicationRowDTO> result =
             new List<ApplicationRowDTO>();
+        Set<String> seenApplicationIds = new Set<String>();
 
         for (Object o : raw) {
             ApplicationRowDTO dto =
@@ -434,6 +445,16 @@ public without sharing class FEC_ApplicationsListController {
                     JSON.serialize(o),
                     ApplicationRowDTO.class
                 );
+
+            if (String.isNotBlank(dto.applicationId)
+                && seenApplicationIds.contains(dto.applicationId)) {
+                continue;
+            }
+
+            if (String.isNotBlank(dto.applicationId)) {
+                seenApplicationIds.add(dto.applicationId);
+            }
+
             dto.Id = rec.Id;
             dto.helpTexts = FEC_CommonUltils.buildHelpTextMap(FEC_Application_List__c.SObjectType);
             result.add(dto);
