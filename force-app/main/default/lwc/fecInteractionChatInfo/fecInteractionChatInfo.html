@@ -7,24 +7,25 @@
 
           <!-- COL LEFT -->
           <div class="fec-info-col">
-            <!-- Customer Username -->
-            <div class="fec-info-row">
-              <span class="fec-info-label">{labels.customerUsername}</span>
+            <!-- Customer Name -->
+            <div class="fec-info-row fec-info-row--username">
+              <span class="fec-info-label">
+                <template if:true={isUsernameRequired}>
+                  <abbr class="required-indicator" title="required">*</abbr>
+                </template>
+                {labels.customerUsername}
+              </span>
               <span class="fec-info-value">
                 <template if:true={isUsernameReadOnly}>
                   {customerUsername}
                 </template>
                 <template if:false={isUsernameReadOnly}>
-                  <template if:true={isEditingUsername}>
-                    <lightning-input type="text" value={usernameDraft} onchange={handleUsernameChange}
-                      variant="label-hidden" placeholder={labels.usernamePlaceholder}></lightning-input>
-                    <template if:true={usernameError}>
-                      <span class="fec-error-text">{usernameError}</span>
-                    </template>
-                  </template>
-                  <template if:false={isEditingUsername}>
-                    <span class="fec-empty">--</span>
-                  </template>
+                  <div class="fec-input-wrap">
+                    <lightning-input data-id="chat-username-input" type="text" value={usernameDraft}
+                      onchange={handleUsernameChange} variant="label-hidden"
+                      required={isUsernameRequired}
+                      message-when-value-missing={completeFieldMsg}></lightning-input>
+                  </div>
                 </template>
               </span>
               <span class="fec-info-action">
@@ -32,7 +33,7 @@
                   <lightning-icon icon-name="utility:edit" size="x-small" class="fec-edit-icon"
                     onclick={handleEditUsername} title="Edit"></lightning-icon>
                 </template>
-                <template if:true={isEditingUsername}>
+                <template if:true={showUsernameSaveActions}>
                   <lightning-icon icon-name="utility:check" size="x-small" class="fec-edit-icon fec-save-icon"
                     onclick={handleSaveUsername} title="Save"></lightning-icon>
                   <lightning-icon icon-name="utility:close" size="x-small" class="fec-edit-icon"
@@ -91,23 +92,24 @@
           <!-- COL RIGHT -->
           <div class="fec-info-col">
             <!-- Interaction Phone -->
-            <div class="fec-info-row">
-              <span class="fec-info-label">{labels.interactionPhone}</span>
+            <div class="fec-info-row fec-info-row--phone">
+              <span class="fec-info-label">
+                <template if:true={isPhoneRequired}>
+                  <abbr class="required-indicator" title="required">*</abbr>
+                </template>
+                {labels.interactionPhone}
+              </span>
               <span class="fec-info-value">
                 <template if:true={isPhoneReadOnly}>
                   {displayPhone}
                 </template>
                 <template if:false={isPhoneReadOnly}>
-                  <template if:true={isEditingPhone}>
-                    <lightning-input type="tel" value={phoneDraft} onchange={handlePhoneChange}
-                      variant="label-hidden" placeholder={labels.phonePlaceholder}></lightning-input>
-                    <template if:true={phoneError}>
-                      <span class="fec-error-text">{phoneError}</span>
-                    </template>
-                  </template>
-                  <template if:false={isEditingPhone}>
-                    <span class="fec-empty">--</span>
-                  </template>
+                  <div class="fec-input-wrap">
+                    <lightning-input data-id="chat-phone-input" type="tel" value={phoneDraft}
+                      onchange={handlePhoneChange} variant="label-hidden"
+                      required={isPhoneRequired}
+                      message-when-value-missing={completeFieldMsg}></lightning-input>
+                  </div>
                 </template>
               </span>
               <span class="fec-info-action">
@@ -115,7 +117,7 @@
                   <lightning-icon icon-name="utility:edit" size="x-small" class="fec-edit-icon"
                     onclick={handleEditPhone} title="Edit"></lightning-icon>
                 </template>
-                <template if:true={isEditingPhone}>
+                <template if:true={showPhoneSaveActions}>
                   <lightning-icon icon-name="utility:check" size="x-small" class="fec-edit-icon fec-save-icon"
                     onclick={handleSavePhone} title="Save"></lightning-icon>
                   <lightning-icon icon-name="utility:close" size="x-small" class="fec-edit-icon"

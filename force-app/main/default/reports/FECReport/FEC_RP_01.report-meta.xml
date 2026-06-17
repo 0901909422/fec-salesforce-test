@@ -40,7 +40,7 @@
         <field>Case.Customer_Histories__r$FEC_Tenure__c</field>
     </columns>
     <columns>
-        <field>Case$FEC_Interaction_ID__c</field>
+        <field>Case$FEC_Interaction_ID_Report__c</field>
     </columns>
     <columns>
         <field>Case$FEC_Interaction_Status__c</field>
@@ -82,7 +82,7 @@
         <field>Case$FEC_Send_To__c</field>
     </columns>
     <columns>
-        <field>Case$FEC_Case_ID__c</field>
+        <field>Case$FEC_Case_ID_Report__c</field>
     </columns>
     <columns>
         <field>Case$FEC_Case_Status__c</field>
@@ -204,7 +204,7 @@
         <language>en_US</language>
     </filter>
     <format>Tabular</format>
-    <name>Interaction &amp; Service Case Summary</name>
+    <name>Interactions &amp; Service Cases Summary</name>
     <params>
         <name>co</name>
         <value>1</value>

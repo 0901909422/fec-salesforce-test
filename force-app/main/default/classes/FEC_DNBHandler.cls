@@ -983,7 +983,7 @@ public without sharing class FEC_DNBHandler {
         Case caseRecord = [
     SELECT Id, FEC_Phone_Number__c, FEC_Interaction__r.FEC_Interaction_Email__c,
     FEC_Account_or_Contract__c, FEC_Current_Case_Stage__r.Name,
-    FEC_Account_or_Contract__r.FEC_Search_Result_National_ID__c FROM Case WHERE
+    FEC_Account_or_Contract__r.FEC_Search_Result_National_ID__c, FEC_Account_or_Contract__r.FEC_Primary_Phone__c FROM Case WHERE
         Id = : caseId LIMIT 1
   ];
         
@@ -1015,8 +1015,8 @@ public without sharing class FEC_DNBHandler {
         }
         
         // ===== Shared request data =====
-        String phone = String.isNotBlank(caseRecord.FEC_Phone_Number__c)
-            ? caseRecord.FEC_Phone_Number__c
+        String phone = String.isNotBlank(caseRecord.FEC_Account_or_Contract__r.FEC_Primary_Phone__c)
+            ? caseRecord.FEC_Account_or_Contract__r.FEC_Primary_Phone__c
             : '';
         
         String email =

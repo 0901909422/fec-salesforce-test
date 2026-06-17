@@ -924,6 +924,21 @@ public without sharing class FEC_CaseBusinessService {
         isRevert
       );
 
+      // Stage 3→Stage 2 Route To: hiển thị field Xác nhận đối với đánh giá của CS Support (giống revert 3→1).
+      Boolean isStage3ToStage2RouteTo = false;
+      if (result.revertConfirmAssessmentSourceStage == null && !isRevert) {
+        Integer stage3To2SourceStage = FEC_CaseMasterDataHelper.resolveStage3ToStage2RouteSourceStage(
+          selectedCase.Id, selectedStage.Id, selectedStage.Name
+        );
+        if (stage3To2SourceStage != null) {
+          result.revertConfirmAssessmentSourceStage = stage3To2SourceStage;
+          isCurrentStageRevertedContext = true;
+          isStage3ToStage2RouteTo = true;
+        }
+      }
+      // isStageRevertContext: dùng cho transform() — bao gồm cả revert thực sự và Stage 3→2 Route To.
+      Boolean isStageRevertContext = isRevert || isStage3ToStage2RouteTo;
+
       //01/06/2026 linhdev: persist Case (RL09 Original/Updated, stage, business process) trước getData — master data query đọc DB đúng ngay lần Execute.
       FEC_CaseInitUpdateService.runSystemCaseUpdateIfChanged(selectedCase, caseBaseline);
 
@@ -1347,7 +1362,7 @@ public without sharing class FEC_CaseBusinessService {
                       masterDataItem,
                       objTemp,
                       currentUser.FEC_User_Group__c,
-                      isRevert,
+                      isStageRevertContext,
                       isGsrStage1RevertMasterReadonly ||
                         forceGsrPropertyInfoReadonly ||
                         forceUpdatedInfoReadonly,

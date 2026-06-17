@@ -635,12 +635,12 @@ public without sharing class FEC_CustomerIntegrationService {
 
             String authCode = auth.AUTHORIZATION_CODE;
             String amtRaw = pickFirstNonBlank(auth.AUTH_AMOUNT, auth.DTL_AUTH_AMT);
-            Date effDate = FEC_CommonUltils.toDate(auth.EFF_DATE);
+            Date effDate = FEC_CommonUltils.parseDate(auth.EFF_DATE);
             if (effDate == null) {
-                effDate = FEC_CommonUltils.toDate(auth.EFF_DATE_AUTH_DETAIL);
+                effDate = FEC_CommonUltils.parseDate(auth.EFF_DATE_AUTH_DETAIL);
             }
             if (effDate == null) {
-                effDate = FEC_CommonUltils.toDate(auth.POSTING_DATE);
+                effDate = FEC_CommonUltils.parseDate(auth.POSTING_DATE);
             }
             Decimal amt = FEC_CommonUltils.parseAmountSafe(amtRaw);
             if (effDate == null && amt == null && String.isBlank(authCode)) {
@@ -651,7 +651,7 @@ public without sharing class FEC_CustomerIntegrationService {
                 FEC_Customer_History__c = hist.Id
             );
             rec.FEC_Effective_Date__c = effDate;
-            rec.FEC_Post_Date__c = FEC_CommonUltils.toDate(auth.POSTING_DATE);
+            rec.FEC_Post_Date__c = FEC_CommonUltils.parseDate(auth.POSTING_DATE);
             rec.FEC_Transaction_Amount__c = amt;
             rec.FEC_Merchant_Description__c = pickFirstNonBlank(
                 auth.Description,

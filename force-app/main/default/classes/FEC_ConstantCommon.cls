@@ -239,6 +239,7 @@ public with sharing class FEC_ConstantCommon {
     public static final String YES_VALUE = 'yes';
     
     public static final String PRODUCT_TYPE_INSURANCE = 'INSURANCE';
+    
     public static final String PRODUCT_TYPE_LOAN = 'LOAN';
     public static final String PRODUCT_TYPE_CARD = 'CARD';
     public static final String PRODUCT_TYPE_UBANK = 'UBank';
@@ -526,6 +527,9 @@ public with sharing class FEC_ConstantCommon {
     public static final String PRODUCT_TYPE_CARD_CASE = 'Card';
     public static final String PRODUCT_TYPE_LOAN_CASE = 'Loan';
     public static final String PRODUCT_TYPE_INSURANCE_CASE = 'Insurance';
+    public static final String PRODUCT_TYPE_B2_CASE = 'B2';
+    public static final String PRODUCT_TYPE_CASH24_CASE = 'Cash24';
+    public static final String PRODUCT_TYPE_UBANK_CASE = 'Ubank';
     public static final String TARGET_GROUP_CUSTOMER = 'Customer';
     public static final String NOTIFICATION_SUBJECT = 'Notification';
     
@@ -1053,4 +1057,7 @@ public with sharing class FEC_ConstantCommon {
     public static final String INPUT_SEPARATOR_REGEX_12 =  '^\\d{12}$';
     public static final String INPUT_SEPARATOR_REGEX_9 =  '^\\d{9}$';
     public static final String INPUT_SEPARATOR_REGEX_7 = '^[A-Z]\\d{7}$'; 
+    public static final String ERROR_SAVING_SEARCH_HISTORY = 'Error saving search history';
+    public static final String STATUS_ACTIVE = 'Còn hiệu lực';
+    public static final String STATUS_EXPIRED = 'Hết hiệu lực';
 }
