@@ -1,11 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CustomFieldTranslation xmlns="http://soap.sforce.com/2006/04/metadata">
-    <label><!-- Callback Reason (MRC) --></label>
+    <label><!-- Callback Reason --></label>
     <name>FEC_Callback_Reason_MRC__c</name>
-    <picklistValues>
-        <masterLabel>Agreed to Recheck Info</masterLabel>
-        <translation>KH đồng ý kiểm tra lại thông tin</translation>
-    </picklistValues>
     <picklistValues>
         <masterLabel>CS Callback Scheduled</masterLabel>
         <translation>CS hẹn gọi lại</translation>
@@ -15,15 +11,11 @@
         <translation>KH bận</translation>
     </picklistValues>
     <picklistValues>
-        <masterLabel>Product Not Introduced / No Interest</masterLabel>
-        <translation>Chưa giới thiệu sản phẩm/ Không có nhu cầu</translation>
+        <masterLabel>Customer Requests Delivery Address Verification</masterLabel>
+        <translation>KH cần kiểm tra lại địa chỉ giao phát</translation>
     </picklistValues>
     <picklistValues>
         <masterLabel>Relative Requested Callback</masterLabel>
         <translation>Gặp người thân hẹn gọi lại</translation>
-    </picklistValues>
-    <picklistValues>
-        <masterLabel>Verification Failed</masterLabel>
-        <translation>XMTT không thành công</translation>
     </picklistValues>
 </CustomFieldTranslation>
