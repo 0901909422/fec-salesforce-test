@@ -216,6 +216,7 @@ export default class Fec_DoNotBotherExistingCustomer extends LightningElement {
     try {
       const result = await getListDNBs({
         caseId: this.recordId,
+        nationalId: this.nationalId,
       });
 
       console.log("DNB DB RECORDS:", JSON.stringify(result));
