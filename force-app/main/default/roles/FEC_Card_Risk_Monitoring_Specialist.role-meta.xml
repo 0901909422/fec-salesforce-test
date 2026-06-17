@@ -3,7 +3,7 @@
     <caseAccessLevel>Edit</caseAccessLevel>
     <contactAccessLevel>Edit</contactAccessLevel>
     <mayForecastManagerShare>false</mayForecastManagerShare>
-    <name>Card Risk Monitoring Specialist</name>
+    <name>Card Card Risk Monitoring Specialist</name>
     <opportunityAccessLevel>Read</opportunityAccessLevel>
-    <parentRole>FEC_Customer_Service_Operations_Manager</parentRole>
+    <parentRole>FEC_Senior_Card_Risk_Monitoring_Specialist</parentRole>
 </Role>

@@ -5,5 +5,5 @@
     <mayForecastManagerShare>false</mayForecastManagerShare>
     <name>Customer Service Inbound Specialist 2</name>
     <opportunityAccessLevel>Read</opportunityAccessLevel>
-    <parentRole>FEC_Customer_Service_Inbound_Team_2_Leader</parentRole>
+    <parentRole>FEC_Senior_Customer_Service_Inbound_Specialist_2</parentRole>
 </Role>
