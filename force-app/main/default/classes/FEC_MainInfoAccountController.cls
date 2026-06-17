@@ -614,14 +614,16 @@ public without sharing class FEC_MainInfoAccountController {
             }
 
         Date accountOpenDateParsed = null;
-        if (cardSecRes != null
-            && cardSecRes.CardSecInfo != null
-            && cardSecRes.CardSecInfo.CardsDeliveries != null
-            && !cardSecRes.CardSecInfo.CardsDeliveries.isEmpty()) {
-
-            String issueLastUpdate = cardSecRes.CardSecInfo.CardsDeliveries[0].IssuelastUpdate;
-            if (String.isNotBlank(issueLastUpdate)) {
-                accountOpenDateParsed = FEC_CommonUltils.parseDate(issueLastUpdate);
+        if (appRes != null
+            && appRes.Applications != null
+            && !appRes.Applications.isEmpty()
+            && a != null
+            && String.isNotBlank(a.ApplicationID)) {
+            for (FEC_GetApplicationsList.ApplicationInfo appInfo : appRes.Applications) {
+                if (a.ApplicationID == appInfo.ApplicationID) {
+                    accountOpenDateParsed = appInfo.DateStatus;
+                    break;
+                }
             }
         }
 
@@ -636,9 +638,7 @@ public without sharing class FEC_MainInfoAccountController {
             FEC_Account_Status__c = m != null ? m.Status : null,
             FEC_Credit_Limit__c = m != null ? m.CreditLimit : null,
             FEC_OTB__c = m != null ? m.OTB : null,
-            FEC_Current_Balance__c = cs != null ? cs.CurrentBalance : null,
             FEC_Hold_Amount__c = m != null ? m.HoldAmount : null,
-            FEC_Total_Balance__c = cs != null ? cs.TotalBalance : null,
             FEC_Application_ID__c = a != null ? a.ApplicationId : null,
             FEC_Account_Open_Date__c = accountOpenDateParsed,
             /* ===== ACCOUNT STATUS ===== */
@@ -654,7 +654,7 @@ public without sharing class FEC_MainInfoAccountController {
             FEC_Insurance_Flag__c = m != null ? FEC_CommonUltils.normalizeInsuranceFlag(m.InsuranceFlag) : null,
             FEC_Customer_Segment__c = m != null ? m.CustomerSegment : null,
             FEC_Expiry_Date__c = m != null ? m.ExpiryDate : null,
-            //FEC_Card_Type__c =  m != null ? m.DigitalCardIndicator : null,
+            FEC_Card_Type__c =  m != null ? m.DigitalCardIndicator : null,
             FEC_Plastic_ID__c = m != null ? m.PlasticIndicator : null,
             FEC_Scheme_ID__c      = a != null ? a.SchemeId : null,
             FEC_Scheme_Desc__c    = a != null ? a.SchemeDesc : null,
