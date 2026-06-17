@@ -1,11 +1,12 @@
 /**
- * RL04.02 / RL04.03 — bổ sung routing actions khi không đủ điều kiện phát hành giấy
+ * RL04.02 / RL04.03 / RC04.04 — bổ sung routing actions khi không đủ điều kiện phát hành giấy
  * (getByCase có thể trả routingActionlst rỗng). Không thay đổi luồng getByCase hiện tại.
  */
 public with sharing class FEC_DocumentRequestRoutingActionService {
 
   private static final String SUB_CODE_RL0402 = 'RL04.02';
   private static final String SUB_CODE_RL0403 = 'RL04.03';
+  private static final String SUB_CODE_RC0404 = 'RC04.04';
 
   @AuraEnabled(cacheable=false)
   public static List<FEC_CaseBusinessService.Action> getRoutingActionsForRl0402Rl0403(
@@ -163,7 +164,8 @@ public with sharing class FEC_DocumentRequestRoutingActionService {
     }
     String code = subCodeCode.trim();
     return SUB_CODE_RL0402.equalsIgnoreCase(code) ||
-      SUB_CODE_RL0403.equalsIgnoreCase(code);
+      SUB_CODE_RL0403.equalsIgnoreCase(code) ||
+      SUB_CODE_RC0404.equalsIgnoreCase(code);
   }
 
   /**

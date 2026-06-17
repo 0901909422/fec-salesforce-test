@@ -189,6 +189,7 @@ const OUTBOUND_CAMPAIGN = 'Outbound Campaign';
 
 const SUB_CODE_RL0402 = "RL04.02";
 const SUB_CODE_RL0403 = "RL04.03";
+const SUB_CODE_RC0404 = "RC04.04";
 
 const ACTION_BLOCK_CARD = "Block Card";
 const ACTION_UNBLOCK_CARD = "Unblock Card";
@@ -624,14 +625,14 @@ function shouldHideRevertConfirmSubSection(subSectionName, sourceStage, isRc27Fl
     return false;
   }
   const n = normalizeSubSectionName(subSectionName);
-  const hideD2c = n.includes("confirm") && n.includes("d2c");
-  const hideCsSp =
-    n.includes("confirm") && (n.includes("cs sp") || n.includes("support"));
+  // sourceStage=2: non-RC27 ẩn D2C (hiện CS SP); RC27 ẩn CS SP (hiện D2C).
+  // sourceStage=3: luôn ẩn D2C, hiện CS SP — revert 3→1 và Stage 3→2 Route To.
   if (sourceStage === 2) {
-    return isRc27Flow ? hideCsSp : hideD2c;
+    if (isRc27Flow) return n.includes("confirm") && (n.includes("cs sp") || n.includes("support"));
+    return n.includes("confirm") && n.includes("d2c");
   }
   if (sourceStage === 3) {
-    return isRc27Flow ? hideD2c : hideCsSp;
+    return n.includes("confirm") && n.includes("d2c");
   }
   return false;
 }
@@ -1310,14 +1311,12 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
       return;
     }
     const isRc27Flow = this._isRc27CardReplacementFlow();
+    // sourceStage=2: non-RC27 ẩn D2C (hiện CS SP); RC27 ẩn CS SP (hiện D2C).
+    // sourceStage=3: luôn ẩn D2C, hiện CS SP.
     const hideApi =
       sourceStage === 2
-        ? isRc27Flow
-          ? CONFIRM_CS_SP_ASSESMENT
-          : CONFIRM_D2C_ASSESMENT
-        : isRc27Flow
-          ? CONFIRM_D2C_ASSESMENT
-          : CONFIRM_CS_SP_ASSESMENT;
+        ? (isRc27Flow ? CONFIRM_CS_SP_ASSESMENT : CONFIRM_D2C_ASSESMENT)
+        : CONFIRM_D2C_ASSESMENT;
     let changed = false;
     this.business.sectionlst?.forEach((section) => {
       section.subSectionlst?.forEach((sub) => {
@@ -2427,7 +2426,11 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
 
   _isRl0402OrRl0403SubCode() {
     const code = this.business?.subCodeCode;
-    return code === SUB_CODE_RL0402 || code === SUB_CODE_RL0403;
+    return (
+      code === SUB_CODE_RL0402 ||
+      code === SUB_CODE_RL0403 ||
+      code === SUB_CODE_RC0404
+    );
   }
 
   _hasDocumentRequestPaperValidationError() {
@@ -2439,7 +2442,7 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
   }
 
   /**
-   * RL04.02/RL04.03 — bổ sung routing actions riêng khi không đủ điều kiện phát hành giấy
+   * RL04.02/RL04.03/RC04.04 — bổ sung routing actions khi không đủ điều kiện phát hành giấy
    * (getByCase có thể trả routingActionlst rỗng).
    */
   async _supplementRl0402Rl0403RoutingActionsIfNeeded() {
@@ -2461,7 +2464,7 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
         }
       } catch (err) {
         console.error(
-          "[RL04 routing supplement]",
+          "[Document Request routing supplement]",
           JSON.stringify(err),
         );
       }

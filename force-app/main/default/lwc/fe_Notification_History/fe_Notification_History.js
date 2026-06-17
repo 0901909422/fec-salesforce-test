@@ -1,6 +1,5 @@
 import { LightningElement, api, track, wire } from 'lwc';
 import { getRecord } from 'lightning/uiRecordApi';
-import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import { loadStyle } from 'lightning/platformResourceLoader';
 import COMMON_STYLES from '@salesforce/resourceUrl/FEC_CommonCss';
 import { formatDateTimeVN } from 'c/fec_CommonUtils';
@@ -10,7 +9,6 @@ import getNotificationHistoryForCase from '@salesforce/apex/FEC_NotificationHist
 
 import lblLoading from '@salesforce/label/c.FEC_Notification_History_Loading';
 import lblCaseReadError from '@salesforce/label/c.FEC_Notification_History_Case_Read_Error';
-import lblSmsNoLogDefault from '@salesforce/label/c.FEC_Notification_History_SMS_No_Log_Default';
 import lblSmsLoadFailed from '@salesforce/label/c.FEC_Notification_History_SMS_Load_Failed';
 import lblSmsHttpFailed from '@salesforce/label/c.FEC_Notification_History_SMS_Http_Failed';
 import lblErrorUnknown from '@salesforce/label/c.FEC_Notification_History_Error_Unknown';
@@ -33,7 +31,6 @@ import lblSortDateTime from '@salesforce/label/c.FEC_Notification_History_Sort_D
 import lblEmptyDash from '@salesforce/label/c.FEC_Notification_History_Empty_Dash';
 import lblNoResults from '@salesforce/label/c.FEC_List_relevant_case_empty';
 
-import FEC_Toast_Error from '@salesforce/label/c.FEC_Toast_Error';
 import FEC_Toast_Error_Generic from '@salesforce/label/c.FEC_Toast_Error_Generic';
 
 const CASE_PHONE_FIELDS = ['Case.FEC_Account_or_Contract__r.FEC_Primary_Phone__c'];
@@ -226,16 +223,16 @@ export default class Fe_Notification_History extends LightningElement {
     }
 
     get smsEmptyMessage() {
+        if (!this.recordId) {
+            return lblEmailNeedRecord;
+        }
         if (this.smsLoading) {
             return lblLoading;
         }
         if (this.smsLoadError) {
             return this.smsLoadError;
         }
-        if (!this.resolvedPhone) {
-            return lblNoResults;
-        }
-        if (this.smsFetched && (!this.smsRows || this.smsRows.length === 0)) {
+        if (!this.resolvedPhone || (this.smsFetched && !this.smsHasRows)) {
             return lblNoResults;
         }
         return lblEmptyDash;
@@ -382,11 +379,12 @@ export default class Fe_Notification_History extends LightningElement {
 
             if (result && result.success) {
                 this.smsRows = this._flattenSmsRecords(result);
-                if (result.dataNotFound) {
-                    this.smsInfoBanner = result.sysDescription || lblSmsNoLogDefault;
-                } else if (this.smsRows.length === 0) {
-                    this.smsInfoBanner = '';
-                }
+                this.smsLoadError = '';
+                this.smsInfoBanner = '';
+            } else if (this._isSmsNotFoundResult(result)) {
+                this.smsRows = [];
+                this.smsLoadError = '';
+                this.smsInfoBanner = '';
             } else {
                 this.smsRows = [];
                 this.smsInfoBanner = '';
@@ -397,7 +395,6 @@ export default class Fe_Notification_History extends LightningElement {
                         ? lblSmsHttpFailed.replace('{0}', String(result.httpStatus))
                         : lblSmsLoadFailed);
                 this.smsLoadError = msg;
-                this._toast(FEC_Toast_Error, msg, 'error');
             }
         } catch (e) {
             if (requestId !== this._smsRequestId) {
@@ -407,7 +404,6 @@ export default class Fe_Notification_History extends LightningElement {
             this.smsInfoBanner = '';
             this.smsLoadError = this._extractErrorMsg(e);
             console.error('[fe_Notification_History] SMS', e);
-            this._toast(FEC_Toast_Error, this.smsLoadError, 'error');
         } finally {
             if (requestId === this._smsRequestId) {
                 this.smsLoading = false;
@@ -452,8 +448,15 @@ export default class Fe_Notification_History extends LightningElement {
         return rows;
     }
 
-    _toast(title, message, variant) {
-        this.dispatchEvent(new ShowToastEvent({ title, message, variant }));
+    _isSmsNotFoundResult(result) {
+        if (!result) {
+            return false;
+        }
+        if (result.dataNotFound) {
+            return true;
+        }
+        const desc = (result.sysDescription || result.errorMessage || '').trim().toUpperCase();
+        return desc.includes('DATA_NOT_FOUND') || desc.includes('DATA NOT FOUND');
     }
 
     _extractErrorMsg(error) {

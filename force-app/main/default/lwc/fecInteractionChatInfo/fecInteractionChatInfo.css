@@ -40,6 +40,23 @@
   align-items: center;
 }
 
+.required-indicator {
+  color: var(--fec-error-color);
+  text-decoration: none;
+  margin-right: 0.125rem;
+}
+
+.fec-input-wrap {
+  width: 100%;
+}
+
+.fec-info-row--username,
+.fec-info-row--phone {
+  align-items: flex-start;
+  padding-top: 0.25rem;
+  padding-bottom: 0.25rem;
+}
+
 .fec-info-value {
   font-size: 0.8125rem;
   font-weight: 400;

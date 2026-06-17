@@ -419,7 +419,6 @@ public without sharing class FEC_BancaController {
         dto.buyerNID         = item.buyerNID;
         dto.productName      = item.productNameEn;
         dto.premiumFree      = String.valueOf(item.collectedPremiumFee);
-        dto.status           = item.StatusDisplay;
 
         dto.gender           = item.buyerGender;
         dto.salesChannel     = item.saleChannel;
@@ -435,6 +434,7 @@ public without sharing class FEC_BancaController {
         dto.paymentID        = item.paymentID;
         dto.cancelDate       = FEC_CommonUltils.toDateStr(item.cancelDate);
         dto.effectiveDate    = FEC_CommonUltils.toDateStr(item.effectiveDate);
+        dto.status           = FEC_CommonUltils.deriveInsuranceStatus(dto.expiryDate, dto.cancelDate);
 
         return dto;
     }
@@ -456,7 +456,6 @@ public without sharing class FEC_BancaController {
         dto.buyerNID         = item.buyerNID;
         dto.productName      = item.productNameEn;
         dto.premiumFree      = String.valueOf(item.collectedPremiumFee);
-        dto.status           = item.statusDisplay;
 
         dto.gender           = item.buyerGender;
         dto.salesChannel     = item.saleChannel;
@@ -472,6 +471,7 @@ public without sharing class FEC_BancaController {
         dto.paymentID        = item.paymentID;
         dto.cancelDate       = FEC_CommonUltils.toDateStr(item.cancelDate);
         dto.effectiveDate    = FEC_CommonUltils.toDateStr(item.effectiveDate);
+        dto.status           = FEC_CommonUltils.deriveInsuranceStatus(dto.expiryDate, dto.cancelDate);
 
         return dto;
     }

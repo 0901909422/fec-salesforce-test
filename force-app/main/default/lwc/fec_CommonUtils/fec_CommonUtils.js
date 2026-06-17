@@ -1,5 +1,24 @@
 import { getFocusedTabInfo, setTabLabel, setTabIcon } from 'lightning/platformWorkspaceApi';
-import { STR_EMPTY, LOCALE_VN, MSG_PHONE_ONLY_NUMBERS, MSG_PHONE_FORMAT_0_OR_84, MSG_INVALID_NATIONAL_ID_OR_PASSPORT, MSG_NATIONAL_ID_9_OR_12_CHARS, MSG_PASSPORT_1_LETTER_7_DIGITS, MSG_PASSPORT_START_UPPERCASE_THEN_7, MSG_PASSPORT_1_UPPERCASE_FOLLOWED_BY_7, MSG_PASSPORT_1_LETTER_7_DIGITS_ONLY, MSG_NATIONAL_ID_9_OR_12_DIGITS, MSG_NATIONAL_ID_9_OR_12_DIGITS_ONLY, MSG_NATIONAL_ID_PASSPORT_RULES, MSG_INVALID_NATIONAL_ID, MSG_NATIONAL_ID_DIGITS_ONLY_9_OR_12, MSG_INVALID_EMAIL_FORMAT } from 'c/fec_CommonConst';
+import {
+  STR_EMPTY,
+  LOCALE_VN,
+  MSG_PHONE_ONLY_NUMBERS,
+  MSG_PHONE_FORMAT_0_OR_84,
+  MSG_INVALID_NATIONAL_ID_OR_PASSPORT,
+  MSG_NATIONAL_ID_9_OR_12_CHARS,
+  MSG_PASSPORT_1_LETTER_7_DIGITS,
+  MSG_PASSPORT_START_UPPERCASE_THEN_7,
+  MSG_PASSPORT_1_UPPERCASE_FOLLOWED_BY_7,
+  MSG_PASSPORT_1_LETTER_7_DIGITS_ONLY,
+  MSG_NATIONAL_ID_9_OR_12_DIGITS,
+  MSG_NATIONAL_ID_9_OR_12_DIGITS_ONLY,
+  MSG_NATIONAL_ID_PASSPORT_RULES,
+  MSG_INVALID_NATIONAL_ID,
+  MSG_NATIONAL_ID_DIGITS_ONLY_9_OR_12,
+  MSG_INVALID_EMAIL_FORMAT,
+  INSURANCE_STATUS_ACTIVE,
+  INSURANCE_STATUS_EXPIRED
+} from 'c/fec_CommonConst';
 
 const formatDate = (curr) => {
   if (!curr) {
@@ -1144,6 +1163,62 @@ const normalizeInteractionResult = (data) => {
   return { ...record, FEC_Interaction_Masked_Phone__c: masked };
 };
 
+function parseApiDateString(value) {
+  if (!value || typeof value !== 'string') {
+    return null;
+  }
+
+  const v = value.trim();
+  if (!v) {
+    return null;
+  }
+
+  try {
+    if (v.includes('-')) {
+      const [year, month, day] = v.split('-').map((part) => parseInt(part, 10));
+      if (year && month && day) {
+        return new Date(year, month - 1, day);
+      }
+    }
+
+    if (v.includes('/')) {
+      const [day, month, year] = v.split('/').map((part) => parseInt(part, 10));
+      if (day && month && year) {
+        return new Date(year, month - 1, day);
+      }
+    }
+
+    if (v.length === 8 && /^\d{8}$/.test(v)) {
+      const year = parseInt(v.substring(0, 4), 10);
+      const month = parseInt(v.substring(4, 6), 10);
+      const day = parseInt(v.substring(6, 8), 10);
+      if (month >= 1 && month <= 12 && day >= 1 && day <= 31) {
+        return new Date(year, month - 1, day);
+      }
+    }
+  } catch (e) {
+    return null;
+  }
+
+  return null;
+}
+
+function deriveInsuranceStatus(expiryDateStr, cancelDateStr) {
+  const cancelDate = parseApiDateString(cancelDateStr);
+  if (cancelDate) {
+    return INSURANCE_STATUS_EXPIRED;
+  }
+
+  const expiryDate = parseApiDateString(expiryDateStr);
+  const today = new Date();
+  const startOfToday = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  if (expiryDate && startOfToday > expiryDate) {
+    return INSURANCE_STATUS_EXPIRED;
+  }
+
+  return INSURANCE_STATUS_ACTIVE;
+}
+
 export {
   formatDate,
   formatDateTime,
@@ -1201,5 +1276,6 @@ export {
   formatDateTimeEnGb,
   extractErrorMessage,
   arrayBufferToBase64,
-  normalizeInteractionResult
+  normalizeInteractionResult,
+  deriveInsuranceStatus
 };

@@ -42,51 +42,45 @@ public without sharing class FEC_PinResetHandler {
     
     
     @AuraEnabled
-    public static FEC_PINReissueServiceCallout.PINResponse resetPin(String caseId, string nationalId, string mobile){
+    public static FEC_PINReissueServiceCallout.PINResponse resetPin(String caseId, string nationalId, string mobile, String method) {
+        Case selectedCase;
+        FEC_PINReissueServiceCallout.PINResponse response;
         try {
             
-            List<Case> caselst = [
-                        SELECT
-                            Id,
-                            FEC_Process_Action_Count__c, FEC_Is_Test_API__c , FEC_Is_PIN_Reset_Success__c
-                        FROM Case
-                        WHERE Id = :caseId
-                        ];
-            if (caselst.isEmpty()) {
+            List<Case> caseList = [
+                SELECT
+                    Id,
+                    FEC_Process_Action_Count__c,
+                    FEC_Is_Test_API__c,
+                    FEC_Is_PIN_Reset_Success__c,
+                    FEC_Current_Case_Stage__c,
+                    FEC_Current_Case_Stage__r.Name
+                FROM Case
+                WHERE Id = :caseId
+            ];
+            
+            if (caseList.isEmpty()) {
                 throw new FEC_APIServiceException(String.format(System.Label.FEC_MSG_Not_Found, new List<String>{'Case Id'}));
             }
+            selectedCase = caseList[0];
             
-            Case selectedCase = caselst.get(0);
             String transactionId = String.valueOf(UUID.randomUUID());
-            FEC_PINReissueServiceCallout.PINResponse response = FEC_PINReissueServiceCallout.callPINReissue(nationalId,transactionId, mobile, selectedCase.FEC_Is_Test_API__c);
+            response = FEC_PINReissueServiceCallout.callPINReissue(nationalId,transactionId, mobile, selectedCase.FEC_Is_Test_API__c);
             FEC_PINReissueServiceCallout.logApiResponse();
-            
-            // if (response.RespCode != '1' && selectedCase.FEC_Process_Action_Count__c > 0) {
-                //     selectedCase.FEC_Process_Action_Count__c -= 1;
-                //     selectedCase.FEC_Is_PIN_Reset_Success__c = true;
-            // } else if (response.RespCode == '1') {
-                //     selectedCase.FEC_Process_Action_Count__c =
-                //         (selectedCase.FEC_Process_Action_Count__c == null ? 0 :
-                //         selectedCase.FEC_Process_Action_Count__c) + 1;
-            // }
             
             Integer count =
                 selectedCase.FEC_Process_Action_Count__c == null
                 ? 0
                 : Integer.valueOf(selectedCase.FEC_Process_Action_Count__c);
             
-            Boolean isSuccess = response.RespCode == '1';
+            Boolean isSuccess = response.RespCode == '0';
             
             if (isSuccess) {
-                
                 selectedCase.FEC_Is_PIN_Reset_Success__c = true;
-                
                 if (count > 0) {
                     selectedCase.FEC_Process_Action_Count__c = count - 1;
                 }
-                
             } else {
-                
                 selectedCase.FEC_Process_Action_Count__c = count + 1;
             }
             
@@ -104,7 +98,18 @@ public without sharing class FEC_PinResetHandler {
             
         } catch (Exception e) {
             throw new AuraHandledException(e.getMessage());
+        }finally {
+            if (selectedCase != null) {
+                FEC_CommonUltils.createProcessActionHistory(
+                    method,
+                selectedCase,
+                response != null && response.RespCode == '0' ? true : false
+                    );
+            }
+            
         }
     }
+    
+    
     
 }

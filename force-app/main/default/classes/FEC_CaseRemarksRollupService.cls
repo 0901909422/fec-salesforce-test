@@ -1,18 +1,20 @@
 /**
- * Gộp toàn bộ FEC_Case_Remarks__c của Case lên 3 trường Long Text trên Case:
- * mỗi remark một dòng "#<n>: <nội dung>", đầy 256 ký tự ở bucket 1 rồi bucket 2, phần còn lại bucket 3 (Text 255).
+ * Gộp toàn bộ FEC_Case_Remarks__c của Case lên 3 bucket Text 255 trên Case:
+ * mỗi remark một dòng "#<n>: <nội dung>", đầy 255 ký tự ở bucket 1 rồi bucket 2, phần còn lại bucket 3.
  *
  * Đồng thời rollup 3 trường meta (#n: ...) tối đa 255 ký tự mỗi trường: người tạo (email),
  * FEC_User_Role__c, thời điểm CreatedDate — nối bằng khoảng trắng giữa các phần.
+ *
+ * Gán bucket field bằng SObject.put để có thể đổi kiểu field trên org (Long Text Area → Text 255).
  */
 public without sharing class FEC_CaseRemarksRollupService {
   // SOQL 101: cache/dedupe theo transaction, tránh query lặp khi submit NOC bulk.
   private static Set<Id> txnRemarkRollupDoneCaseIds = new Set<Id>();
 
   @TestVisible
-  private static final Integer BUCKET_1_MAX = 256;
+  private static final Integer BUCKET_1_MAX = 255;
   @TestVisible
-  private static final Integer BUCKET_2_MAX = 256;
+  private static final Integer BUCKET_2_MAX = 255;
   @TestVisible
   private static final Integer BUCKET_3_MAX = 255;
   @TestVisible
@@ -86,29 +88,7 @@ public without sharing class FEC_CaseRemarksRollupService {
       String fullStatusHistory = caseRecord != null ? caseRecord.FEC_Case_Status_History__c : null;
       StatusHistoryBuckets statusBuckets = distributeStatusHistory(fullStatusHistory, pack);
 
-      toUpdate.add(
-        new Case(
-          Id = caseId,
-          FEC_Case_Remarks_1__c = pack.part1,
-          FEC_Case_Remarks_2__c = pack.part2,
-          FEC_Case_Remarks_3__c = pack.part3,
-          FEC_Case_Remarks_Entered_By__c = meta.enteredBy,
-          FEC_Case_Remarks_Entered_By_Role__c = meta.enteredByRole,
-          FEC_Case_Remarks_Entered_On__c = meta.enteredOn,
-          FEC_Case_Remarks_Entered_By_1__c = meta.enteredBy1,
-          FEC_Case_Remarks_Entered_By_2__c = meta.enteredBy2,
-          FEC_Case_Remarks_Entered_By_3__c = meta.enteredBy3,
-          FEC_Case_Remarks_Entered_By_Role_1__c = meta.enteredByRole1,
-          FEC_Case_Remarks_Entered_By_Role_2__c = meta.enteredByRole2,
-          FEC_Case_Remarks_Entered_By_Role_3__c = meta.enteredByRole3,
-          FEC_Case_Remarks_Entered_On_1__c = meta.enteredOn1,
-          FEC_Case_Remarks_Entered_On_2__c = meta.enteredOn2,
-          FEC_Case_Remarks_Entered_On_3__c = meta.enteredOn3,
-          FEC_Case_Status_History_1__c = statusBuckets.part1,
-          FEC_Case_Status_History_2__c = statusBuckets.part2,
-          FEC_Case_Status_History_3__c = statusBuckets.part3
-        )
-      );
+      toUpdate.add(buildRollupCaseUpdate(caseId, pack, meta, statusBuckets));
     }
 
     if (!toUpdate.isEmpty()) {
@@ -121,6 +101,41 @@ public without sharing class FEC_CaseRemarksRollupService {
       // SOQL 101: cache/dedupe theo transaction, tránh query lặp khi submit NOC bulk.
       txnRemarkRollupDoneCaseIds.addAll(pendingCaseIds);
     }
+  }
+
+  @TestVisible
+  private static Case buildRollupCaseUpdate(
+    Id caseId,
+    BucketPack pack,
+    MetaRollup meta,
+    StatusHistoryBuckets statusBuckets
+  ) {
+    Case caseUpdate = new Case(
+      Id = caseId,
+      FEC_Case_Remarks_Entered_By__c = meta.enteredBy,
+      FEC_Case_Remarks_Entered_By_Role__c = meta.enteredByRole,
+      FEC_Case_Remarks_Entered_On__c = meta.enteredOn
+    );
+    putBucketField(caseUpdate, 'FEC_Case_Remarks_1__c', pack.part1);
+    putBucketField(caseUpdate, 'FEC_Case_Remarks_2__c', pack.part2);
+    putBucketField(caseUpdate, 'FEC_Case_Remarks_3__c', pack.part3);
+    putBucketField(caseUpdate, 'FEC_Case_Remarks_Entered_By_1__c', meta.enteredBy1);
+    putBucketField(caseUpdate, 'FEC_Case_Remarks_Entered_By_2__c', meta.enteredBy2);
+    putBucketField(caseUpdate, 'FEC_Case_Remarks_Entered_By_3__c', meta.enteredBy3);
+    putBucketField(caseUpdate, 'FEC_Case_Remarks_Entered_By_Role_1__c', meta.enteredByRole1);
+    putBucketField(caseUpdate, 'FEC_Case_Remarks_Entered_By_Role_2__c', meta.enteredByRole2);
+    putBucketField(caseUpdate, 'FEC_Case_Remarks_Entered_By_Role_3__c', meta.enteredByRole3);
+    putBucketField(caseUpdate, 'FEC_Case_Remarks_Entered_On_1__c', meta.enteredOn1);
+    putBucketField(caseUpdate, 'FEC_Case_Remarks_Entered_On_2__c', meta.enteredOn2);
+    putBucketField(caseUpdate, 'FEC_Case_Remarks_Entered_On_3__c', meta.enteredOn3);
+    putBucketField(caseUpdate, 'FEC_Case_Status_History_1__c', statusBuckets.part1);
+    putBucketField(caseUpdate, 'FEC_Case_Status_History_2__c', statusBuckets.part2);
+    putBucketField(caseUpdate, 'FEC_Case_Status_History_3__c', statusBuckets.part3);
+    return caseUpdate;
+  }
+
+  private static void putBucketField(Case caseUpdate, String fieldApiName, String value) {
+    caseUpdate.put(fieldApiName, value);
   }
 
   @TestVisible

@@ -221,10 +221,26 @@ public without sharing class FEC_PaymentHistoryController {
     public static void syncRealtimePayment(Id caseId) {
 
         Id customerHistoryId;
-        String contractOrAccountNo;
+        String contractNumber;
         try {
-            customerHistoryId = getCustomerHistoryId(caseId);
-            contractOrAccountNo = getCustomerAccountNumber(caseId);
+            Case c = [
+                SELECT FEC_Account_or_Contract__c
+                FROM Case
+                WHERE Id = :caseId
+                LIMIT 1
+            ];
+            if (c.FEC_Account_or_Contract__c == null) return;
+
+            FEC_Customer_History__c ch = [
+                SELECT FEC_Contract_Number__c
+                FROM FEC_Customer_History__c
+                WHERE Id = :c.FEC_Account_or_Contract__c
+                LIMIT 1
+            ];
+
+            customerHistoryId = c.FEC_Account_or_Contract__c;
+            contractNumber = ch.FEC_Contract_Number__c;
+            if (String.isBlank(contractNumber)) return;
         } catch (Exception e) {
             return;
         }
@@ -235,34 +251,31 @@ public without sharing class FEC_PaymentHistoryController {
                 String.valueOf(UUID.randomUUID()),
                 FEC_ConstantCommon.REQUESTOR_CRM,
                 Datetime.now().formatGMT(FEC_ConstantCommon.DATETIME_FORMAT),
-                contractOrAccountNo
+                contractNumber
             );
         } catch (Exception e) {
             apiRes = null;
         }
 
-        if (apiRes == null || apiRes.Payments == null) {
+        if (apiRes == null || apiRes.Payments == null || apiRes.Payments.isEmpty()) {
             return;
         }
 
         Map<String, FEC_Payment_History__c> existingMap = new Map<String, FEC_Payment_History__c>();
-
         for (FEC_Payment_History__c h : [
-            SELECT Id, FEC_Payment_Date__c, FEC_Payment_Channel__c
+            SELECT Id, FEC_Payment_Date__c, FEC_Payment_Channel__c, FEC_Payment_Amount__c
             FROM FEC_Payment_History__c
             WHERE FEC_Customer_History__c = :customerHistoryId
-              AND FEC_Payment_Channel__c != NULL
+            AND FEC_Payment_Channel__c != NULL
         ]) {
-            String key = h.FEC_Payment_Date__c + '|' + h.FEC_Payment_Channel__c;
+            String key = String.valueOf(h.FEC_Payment_Date__c) + '|' + h.FEC_Payment_Channel__c + '|' + String.valueOf(h.FEC_Payment_Amount__c);
             existingMap.put(key, h);
         }
 
         List<FEC_Payment_History__c> toUpsert = new List<FEC_Payment_History__c>();
-
         for (FEC_GetPaymentInfo.PaymentInfo p : apiRes.Payments) {
-
             Date paymentDate = FEC_CommonUltils.parseDate(p.TransactionDate);
-            String key = paymentDate + '|' + p.Username;
+            String key = String.valueOf(paymentDate) + '|' + p.Username + '|' + String.valueOf(p.AmountPaid);
 
             FEC_Payment_History__c r =
                 existingMap.containsKey(key)
@@ -274,13 +287,10 @@ public without sharing class FEC_PaymentHistoryController {
             r.FEC_Payment_Date__c    = paymentDate;
             r.FEC_Payment_Amount__c  = p.AmountPaid;
             r.FEC_Payment_Channel__c = p.Username;
-
             toUpsert.add(r);
         }
 
-        if (!toUpsert.isEmpty()) {
-            upsert toUpsert;
-        }
+        if (!toUpsert.isEmpty()) upsert toUpsert;
     }
 
     /* =====================================================

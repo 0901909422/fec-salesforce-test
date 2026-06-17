@@ -49,6 +49,7 @@ public with sharing class FEC_MFASOUTSTANDINGAUTHINQ {
 
     public class AuthTableRow {
         public String EFF_DATE;
+        public String TRANS_TIME;
         public String EFF_DATE_AUTH_DETAIL;
         public String POSTING_DATE;
         public String AUTH_AMOUNT;
@@ -310,68 +311,104 @@ public with sharing class FEC_MFASOUTSTANDINGAUTHINQ {
         out.PREV_TOKEN.TIME_X = FEC_CommonUltils.toInt(FEC_CommonUltils.getValueSafe(prevNode, 'TIME_PREV'));
     }
 
-    Dom.XmlNode authTableNode = FEC_CommonUltils.findChildByName(msgOutNode, 'AUTHS_TABLE');
-    if (authTableNode != null) {
-        for (Dom.XmlNode rowNode : authTableNode.getChildElements()) {
-            if (rowNode == null) {
-                continue;
+    for (Dom.XmlNode child : msgOutNode.getChildElements()) {
+        if (!isAuthsTableNode(child)) {
+            continue;
+        }
+        for (Dom.XmlNode rowNode : collectAuthTableRowNodes(child)) {
+            AuthTableRow ar = authRowFromAuthsTableNode(rowNode, out.AUTH_CD);
+            if (ar != null) {
+                out.Auths.add(ar);
             }
-            String effRaw = readAuthTableCell(rowNode, 'EFF_DATE');
-            if (String.isBlank(effRaw)) {
-                effRaw = readAuthTableCell(rowNode, 'POSTING_DATE');
-            }
-            String amtRaw = firstNonBlankAuth(
-                readAuthTableCell(rowNode, 'AUTH_AMOUNT'),
-                readAuthTableCell(rowNode, 'AUTH_AMT')
-            );
-            if (String.isBlank(effRaw) && String.isBlank(amtRaw)) {
-                continue;
-            }
-            if (String.isBlank(effRaw)) {
-                effRaw = readAuthTableCell(rowNode, 'POSTING_DATE');
-            }
-            if (String.isBlank(effRaw)) {
-                continue;
-            }
-
-            AuthTableRow ar = new AuthTableRow();
-            ar.EFF_DATE = effRaw.trim();
-            ar.POSTING_DATE = readAuthTableCell(rowNode, 'POSTING_DATE');
-            ar.AUTH_AMOUNT = amtRaw;
-            ar.Description = readAuthTableCell(rowNode, 'Description');
-            if (String.isBlank(ar.Description)) {
-                ar.Description = readAuthTableCell(rowNode, 'MERCHANT_NAME');
-            }
-            if (String.isBlank(ar.Description)) {
-                ar.Description = readAuthTableCell(rowNode, 'MERC_NAME_LOC');
-            }
-            ar.CreditDebitFlag = readAuthTableCell(rowNode, 'CreditDebitFlag');
-            if (String.isBlank(ar.CreditDebitFlag)) {
-                ar.CreditDebitFlag = readAuthTableCell(rowNode, 'DEBIT_CREDIT_FLAG');
-            }
-            ar.CREDIT_PLAN = firstNonBlankAuth(
-                readAuthTableCell(rowNode, 'CREDIT_PLAN'),
-                readAuthTableCell(rowNode, 'CR_PLAN')
-            );
-            ar.AUTHORIZATION_CODE = firstNonBlankAuth(
-                readAuthTableCell(rowNode, 'AUTHORIZATION_CODE'),
-                readAuthTableCell(rowNode, 'AuthCode')
-            );
-            ar.AUTH_TYPE = readAuthTableCell(rowNode, 'AUTH_TYPE');
-            ar.AUTH_CD = firstNonBlankAuth(
-                readAuthTableCell(rowNode, 'AUTH_CD'),
-                out.AUTH_CD
-            );
-            ar.MERCH_CAT = readAuthTableCell(rowNode, 'MERCH_CAT');
-            ar.TXN_CURR_CODE = readAuthTableCell(rowNode, 'TXN_CURR_CODE');
-            ar.FINAL_ACTN = readAuthTableCell(rowNode, 'FINAL_ACTN');
-            ar.ACTN_RSN_DESC = readAuthTableCell(rowNode, 'ACTN_RSN_DESC');
-            out.Auths.add(ar);
         }
     }
 
     return result;
 }
+
+    private static AuthTableRow authRowFromAuthsTableNode(
+        Dom.XmlNode rowNode,
+        String msgAuthCd
+    ) {
+        if (rowNode == null) {
+            return null;
+        }
+
+        String effRaw = readAuthTableCell(rowNode, 'EFF_DATE');
+        if (String.isBlank(effRaw)) {
+            effRaw = readAuthTableCell(rowNode, 'POSTING_DATE');
+        }
+        String amtRaw = firstNonBlankAuth(
+            readAuthTableCell(rowNode, 'AUTH_AMOUNT'),
+            readAuthTableCell(rowNode, 'AUTH_AMT')
+        );
+        if (String.isBlank(effRaw) && String.isBlank(amtRaw)) {
+            return null;
+        }
+        if (String.isBlank(effRaw)) {
+            effRaw = readAuthTableCell(rowNode, 'POSTING_DATE');
+        }
+        if (String.isBlank(effRaw)) {
+            return null;
+        }
+
+        AuthTableRow ar = new AuthTableRow();
+        ar.EFF_DATE = effRaw.trim();
+        ar.TRANS_TIME = readAuthTableCell(rowNode, 'TIME');
+        ar.POSTING_DATE = readAuthTableCell(rowNode, 'POSTING_DATE');
+        ar.AUTH_AMOUNT = amtRaw;
+        ar.Description = readAuthTableCell(rowNode, 'Description');
+        if (String.isBlank(ar.Description)) {
+            ar.Description = readAuthTableCell(rowNode, 'TRANSACTION_DESC');
+        }
+        if (String.isBlank(ar.Description)) {
+            ar.Description = readAuthTableCell(rowNode, 'MERCHANT_NAME');
+        }
+        if (String.isBlank(ar.Description)) {
+            ar.Description = readAuthTableCell(rowNode, 'MERC_NAME_LOC');
+        }
+        if (String.isBlank(ar.Description)) {
+            ar.Description = readAuthTableCell(rowNode, 'CRD_ACCPT_NAME_LOC');
+        }
+        ar.CreditDebitFlag = readAuthTableCell(rowNode, 'CreditDebitFlag');
+        if (String.isBlank(ar.CreditDebitFlag)) {
+            ar.CreditDebitFlag = readAuthTableCell(rowNode, 'DEBIT_CREDIT_FLAG');
+        }
+        ar.CREDIT_PLAN = firstNonBlankAuth(
+            readAuthTableCell(rowNode, 'CREDIT_PLAN'),
+            readAuthTableCell(rowNode, 'CR_PLAN')
+        );
+        ar.AUTHORIZATION_CODE = firstNonBlankAuth(
+            readAuthTableCell(rowNode, 'AUTHORIZATION_CODE'),
+            readAuthTableCell(rowNode, 'AuthCode')
+        );
+        ar.AUTH_TYPE = readAuthTableCell(rowNode, 'AUTH_TYPE');
+        ar.AUTH_CD = firstNonBlankAuth(
+            readAuthTableCell(rowNode, 'AUTH_CD'),
+            msgAuthCd
+        );
+        ar.MERCH_CAT = firstNonBlankAuth(
+            readAuthTableCell(rowNode, 'MERCH_CAT'),
+            readAuthTableCell(rowNode, 'MERCH_CAT_CD')
+        );
+        ar.TXN_CURR_CODE = readAuthTableCell(rowNode, 'TXN_CURR_CODE');
+        ar.FINAL_ACTN = readAuthTableCell(rowNode, 'FINAL_ACTN');
+        ar.ACTN_RSN_DESC = firstNonBlankAuth(
+            readAuthTableCell(rowNode, 'ACTN_RSN_DESC'),
+            readAuthTableCell(rowNode, 'REASON_DESC')
+        );
+        return ar;
+    }
+
+    private static Boolean isAuthsTableNode(Dom.XmlNode n) {
+        if (n == null || n.getName() == null) {
+            return false;
+        }
+        String nm = n.getName();
+        Integer colon = nm.indexOf(':');
+        String local = colon >= 0 ? nm.substring(colon + 1) : nm;
+        return local.equalsIgnoreCase('AUTHS_TABLE');
+    }
 
     private static String readAuthTableCell(Dom.XmlNode rowNode, String tagName) {
         if (rowNode == null || String.isBlank(tagName)) {
@@ -382,9 +419,13 @@ public with sharing class FEC_MFASOUTSTANDINGAUTHINQ {
             return v.trim();
         }
         for (Dom.XmlNode childEl : rowNode.getChildElements()) {
-            if (childEl != null
-                && childEl.getName() != null
-                && childEl.getName().equalsIgnoreCase(tagName)) {
+            if (childEl == null || childEl.getName() == null) {
+                continue;
+            }
+            String nm = childEl.getName();
+            Integer colon = nm.indexOf(':');
+            String local = colon >= 0 ? nm.substring(colon + 1) : nm;
+            if (local.equalsIgnoreCase(tagName)) {
                 String t = childEl.getText();
                 return String.isBlank(t) ? null : t.trim();
             }
@@ -400,6 +441,44 @@ public with sharing class FEC_MFASOUTSTANDINGAUTHINQ {
             return b.trim();
         }
         return null;
+    }
+
+    /**
+     * Some VMX responses return a single auth record where EFF_DATE/AUTH_AMOUNT
+     * live directly under AUTHS_TABLE (no <Row> wrapper). Others return multiple
+     * records as child nodes inside AUTHS_TABLE.
+     */
+    private static List<Dom.XmlNode> collectAuthTableRowNodes(Dom.XmlNode authTableNode) {
+        List<Dom.XmlNode> rows = new List<Dom.XmlNode>();
+        if (authTableNode == null) return rows;
+
+        // If AUTHS_TABLE directly contains fields for a single record, treat it as one row.
+        if (hasDirectChild(authTableNode, 'EFF_DATE')
+            || hasDirectChild(authTableNode, 'POSTING_DATE')
+            || hasDirectChild(authTableNode, 'AUTH_AMOUNT')
+            || hasDirectChild(authTableNode, 'AUTH_AMT')) {
+            rows.add(authTableNode);
+            return rows;
+        }
+
+        // Otherwise, treat each child element as a row node.
+        rows.addAll(authTableNode.getChildElements());
+        return rows;
+    }
+
+    private static Boolean hasDirectChild(Dom.XmlNode node, String childName) {
+        if (node == null || String.isBlank(childName)) return false;
+
+        for (Dom.XmlNode child : node.getChildElements()) {
+            if (child == null || child.getName() == null) continue;
+
+            // Handles both local-name-only and potential "prefix:tag" formats.
+            String nm = child.getName();
+            if (nm.equalsIgnoreCase(childName)) return true;
+            if (nm.endsWith(':' + childName)) return true;
+        }
+
+        return false;
     }
     /* =====================================================
        VALIDATION

@@ -13,6 +13,7 @@ public without sharing class FEC_CaseTriggerHandler {
     // SOQL 101: cache RecordType / Interaction Case channel — submit NOC update Case nhiều lần.
     private static Map<Id, String> txnCaseRecordTypeDevName = new Map<Id, String>();
     private static Map<Id, String> txnInteractionCaseChannel = new Map<Id, String>();
+    private static Map<Id, String> txnInteractionCaseSubchannel = new Map<Id, String>();
     private static Id slaNotificationTypeId;
     
     /**
@@ -993,6 +994,12 @@ public without sharing class FEC_CaseTriggerHandler {
             if (String.isNotBlank(channel)) {
                 c.FEC_Channel__c = channel;
             }
+            if (oldMap == null && String.isBlank(c.FEC_Interaction_Subchannel__c)) {
+                String subchannel = txnInteractionCaseSubchannel.get(c.FEC_Interaction__c);
+                if (String.isNotBlank(subchannel)) {
+                    c.FEC_Interaction_Subchannel__c = subchannel;
+                }
+            }
         }
     }
 
@@ -1031,7 +1038,7 @@ public without sharing class FEC_CaseTriggerHandler {
             return;
         }
         for (Case interactionCase : [
-            SELECT Id, FEC_Channel__c
+            SELECT Id, FEC_Channel__c, FEC_Interaction_Subchannel__c
             FROM Case
             WHERE Id IN :missing
         ]) {
@@ -1039,10 +1046,17 @@ public without sharing class FEC_CaseTriggerHandler {
                 interactionCase.Id,
                 interactionCase.FEC_Channel__c
             );
+            txnInteractionCaseSubchannel.put(
+                interactionCase.Id,
+                interactionCase.FEC_Interaction_Subchannel__c
+            );
         }
         for (Id caseId : missing) {
             if (!txnInteractionCaseChannel.containsKey(caseId)) {
                 txnInteractionCaseChannel.put(caseId, null);
+            }
+            if (!txnInteractionCaseSubchannel.containsKey(caseId)) {
+                txnInteractionCaseSubchannel.put(caseId, null);
             }
         }
     }

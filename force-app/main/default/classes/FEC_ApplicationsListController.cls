@@ -51,22 +51,33 @@ public without sharing class FEC_ApplicationsListController {
         }
 
         Case cs = [
-            SELECT FEC_Account_or_Contract__c, FEC_Account_or_Contract__r.FEC_Account_Number__c, FEC_Account_or_Contract__r.FEC_Contract_Number__c, FEC_Product_Type__r.Name
+            SELECT FEC_Account_or_Contract__c,
+                FEC_Account_or_Contract__r.FEC_Account_Number__c,
+                FEC_Account_or_Contract__r.FEC_Contract_Number__c,
+                FEC_Product_Type__r.Name
             FROM Case
             WHERE Id = :caseId
             LIMIT 1
         ];
 
-       String productTypeName = 
-            cs.FEC_Product_Type__c != null 
-            ? cs.FEC_Product_Type__r.Name 
+        String productTypeName =
+            cs.FEC_Product_Type__c != null
+            ? cs.FEC_Product_Type__r.Name
             : null;
+
+        String rawAccountNumber = cs.FEC_Account_or_Contract__r.FEC_Account_Number__c;
+        String rawContractNumber = cs.FEC_Account_or_Contract__r.FEC_Contract_Number__c;
 
         String accountNumber = FEC_CommonUltils.resolveAccountNumber(
             productTypeName,
-            cs.FEC_Account_or_Contract__r.FEC_Account_Number__c,
-            cs.FEC_Account_or_Contract__r.FEC_Contract_Number__c
+            rawAccountNumber,
+            rawContractNumber
         );
+
+        Boolean searchByContract =
+            (productTypeName == FEC_ConstantCommon.PRODUCT_TYPE_LOAN_CASE
+            || productTypeName == FEC_ConstantCommon.PRODUCT_TYPE_INSURANCE_CASE)
+            && String.isNotBlank(rawContractNumber);
 
         Id historyId = cs.FEC_Account_or_Contract__c;
 
@@ -101,10 +112,17 @@ public without sharing class FEC_ApplicationsListController {
          * ===================================================== */
         FEC_GetCustomerList.ResponseWrapper cusRes;
         try {
-            cusRes = FEC_GetCustomerList.getCustomerList(
-                FEC_ConstantCommon.REQUESTOR_PEGA_CSM_HYPHEN, null, false,
-                null, null, null, null, accountNumber, null, null, null
-            );
+            if (searchByContract) {
+                cusRes = FEC_GetCustomerList.getCustomerList(
+                    FEC_ConstantCommon.REQUESTOR_PEGA_CSM_HYPHEN, null, false,
+                    null, null, null, null, null, rawContractNumber, null, null
+                );
+            } else if (String.isNotBlank(accountNumber)) {
+                cusRes = FEC_GetCustomerList.getCustomerList(
+                    FEC_ConstantCommon.REQUESTOR_PEGA_CSM_HYPHEN, null, false,
+                    null, null, null, null, accountNumber, null, null, null
+                );
+            }
         } catch (Exception e) {
             cusRes = null;
         }

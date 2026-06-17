@@ -440,6 +440,36 @@ public without sharing class FEC_CaseMasterDataHelper {
   }
 
   /**
+   * Route To Stage 3→Stage 2: case đang ở Stage 2, routing mới nhất là Route To từ Stage 3.
+   * Trả về 3 để hiển thị field FEC_Confirm_CS_SP_Assessment__c tương tự cơ chế revert 3→1.
+   */
+  public static Integer resolveStage3ToStage2RouteSourceStage(
+    Id caseId,
+    Id currentStageId,
+    String currentStageName
+  ) {
+    if (!stageNameContains(currentStageName, FEC_ConstantCommon.STAGE_TWO)) {
+      return null;
+    }
+    List<FEC_Routing_Action_History__c> latestRouteHist = [
+      SELECT FEC_Previous_Stage__r.Name
+      FROM FEC_Routing_Action_History__c
+      WHERE
+        FEC_Case__c = :caseId
+        AND FEC_Routing_Action__c = :FEC_ConstantCommon.HISTORY_ACTION_ROUTE_TO
+        AND FEC_Next_Stage__c = :currentStageId
+      ORDER BY CreatedDate DESC, Id DESC
+      LIMIT 1
+    ];
+    if (latestRouteHist.isEmpty()) {
+      return null;
+    }
+    String previousStageName = latestRouteHist[0].FEC_Previous_Stage__r?.Name;
+    Integer previousStageNum = extractStageNumberFromStageName(previousStageName);
+    return previousStageNum == 3 ? 3 : null;
+  }
+
+  /**
    * Revert 2→1 / 3→1: ẩn subsection xác nhận không thuộc stage nguồn.
    * Luồng thường: 2→1 ẩn D2C; 3→1 ẩn CS SP.
    * RC27: 2→1 ẩn CS SP (chỉ hiện D2C); 3→1 ẩn D2C (chỉ hiện CS Support).
@@ -464,15 +494,16 @@ public without sharing class FEC_CaseMasterDataHelper {
       return false;
     }
     String n = subSectionName.trim().toLowerCase();
-    Boolean hideD2c = n.contains('confirm') && n.contains('d2c');
-    Boolean hideCsSp =
-      n.contains('confirm') &&
-      (n.contains('cs sp') || n.contains('support'));
+    // sourceStage=2: non-RC27 ẩn D2C (hiện CS SP); RC27 ẩn CS SP (hiện D2C).
+    // sourceStage=3: luôn ẩn D2C, hiện CS SP — áp dụng cho cả revert 3→1 và Stage 3→2 Route To.
     if (revertSourceStageNumber == 2) {
-      return isRc27Flow == true ? hideCsSp : hideD2c;
+      if (isRc27Flow == true) {
+        return n.contains('confirm') && (n.contains('cs sp') || n.contains('support'));
+      }
+      return n.contains('confirm') && n.contains('d2c');
     }
     if (revertSourceStageNumber == 3) {
-      return isRc27Flow == true ? hideD2c : hideCsSp;
+      return n.contains('confirm') && n.contains('d2c');
     }
     return false;
   }
@@ -545,15 +576,14 @@ public without sharing class FEC_CaseMasterDataHelper {
     if (revertSourceStageNumber == null || String.isBlank(fieldApiName)) {
       return false;
     }
+    // sourceStage=2: non-RC27 skip D2C (hiện CS SP); RC27 skip CS SP (hiện D2C).
+    // sourceStage=3: luôn skip D2C, hiện CS SP — revert 3→1 và Stage 3→2 Route To.
     if (revertSourceStageNumber == 2) {
-      return isRc27Flow == true
-        ? API_CONFIRM_CS_SP_ASSESSMENT.equals(fieldApiName)
-        : API_CONFIRM_D2C_ASSESSMENT.equals(fieldApiName);
+      if (isRc27Flow == true) return API_CONFIRM_CS_SP_ASSESSMENT.equals(fieldApiName);
+      return API_CONFIRM_D2C_ASSESSMENT.equals(fieldApiName);
     }
     if (revertSourceStageNumber == 3) {
-      return isRc27Flow == true
-        ? API_CONFIRM_D2C_ASSESSMENT.equals(fieldApiName)
-        : API_CONFIRM_CS_SP_ASSESSMENT.equals(fieldApiName);
+      return API_CONFIRM_D2C_ASSESSMENT.equals(fieldApiName);
     }
     return false;
   }
