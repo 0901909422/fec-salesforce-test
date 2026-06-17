@@ -7,7 +7,7 @@
     <filters>
         <field>NAME</field>
         <operation>contains</operation>
-        <value>Interactions &amp; Service Cases TAT - CO</value>
+        <value>Interactions &amp; Service Cases TAT – CO</value>
     </filters>
     <label>Interactions &amp; Service Cases TAT - CO</label>
     <sharedTo>
