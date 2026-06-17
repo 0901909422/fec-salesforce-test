@@ -56,6 +56,13 @@ public without sharing class FEC_CaseBusinessService {
   }
 
   public static final String CATEGORY_UNDELIVERED_CARD = 'Undelivered Card';
+  public static final String SUB_CATEGORY_UNDELIVERED_CARD_OU01_REDELIVER =
+    'OU01-Đã gọi được KH, giao lại';
+  public static final String SUB_CATEGORY_CODE_OU01 = 'OU01';
+  private static final String RECEIVE_REQUEST_UPDATE_STATUS_YES = 'YES';
+  private static final String RECEIVE_REQUEST_UPDATE_STATUS_CODE_OU01 = '01';
+  private static final String API_RECEIVE_REQUEST_UPDATE_ERROR_PREFIX =
+    'API Receive Request Update bị lỗi : ';
 
   public static final String FRONT_LINE = 'CS Frontline';
 
@@ -2457,8 +2464,10 @@ public without sharing class FEC_CaseBusinessService {
   public static Object run(String method, Map<String, String> params) {
     try {
       return runInternal(method, params);
+    } catch (CaseBusinessServiceException e) {
+      throw new AuraHandledException(resolveExceptionMessage(e));
     } catch (Exception e) {
-      throw new AuraHandledException(e.getMessage());
+      throw new AuraHandledException(resolveExceptionMessage(e));
     }
   }
 
@@ -2466,6 +2475,16 @@ public without sharing class FEC_CaseBusinessService {
   public static Object runInternal(String method, Map<String, String> params) {
     try {
       Method selectedMethod = METHOD_MAP.get(method);
+      if (
+        RESOLVE.equals(method) &&
+        params != null &&
+        String.isNotBlank((String) params.get('caseId'))
+      ) {
+        processUndeliveredCardResolveIntegration(
+          (String) params.get('caseId'),
+          (String) params.get('remarkContent')
+        );
+      }
       String caseId;
       String oldOwnerName;
       String stageName;
@@ -2503,11 +2522,11 @@ public without sharing class FEC_CaseBusinessService {
       String last4Digit = (String)params.get('last4Digit');
       //PhongBT: Clone Actual NOC + Actual MDS + Case Flow History — chỉ routing; bỏ qua process action callout API.
       if (requiresRoutePrepareBeforeRun(method)) {
-        FEC_CofGsrRoutePrepareService.prepareActualNatureCloneAndCreationHistory(
-          caseId,
-          params,
-          method
-        );
+      FEC_CofGsrRoutePrepareService.prepareActualNatureCloneAndCreationHistory(
+        caseId,
+        params,
+        method
+      );
       }
       switch on selectedMethod {
         when ROUTE_TO {
@@ -2715,8 +2734,12 @@ public without sharing class FEC_CaseBusinessService {
 
       markCaseSubmittedAndClearDrafts(caseId);
       return null;
+    } catch (CaseBusinessServiceException e) {
+      throw e;
     } catch (AuraHandledException e) {
-      throw new CaseBusinessServiceException(e.getMessage());
+      throw new CaseBusinessServiceException(resolveExceptionMessage(e));
+    } catch (Exception e) {
+      throw new CaseBusinessServiceException(resolveExceptionMessage(e));
     }
   }
 
@@ -5531,7 +5554,7 @@ public without sharing class FEC_CaseBusinessService {
   }
 
   private static void undeliveriedCardUpdate(Case selectedCase) {
-    FEC_GetStatus.CardDeliveryInfo cardDeliveryInfo = FEC_GetStatus.getDeliveryStatus(
+    FEC_GetStatus.CardDeliveryInfo cardDeliveryInfo = FEC_GetStatus.fetchDeliveryStatus(
       selectedCase.FEC_Account_or_Contract__r.FEC_Account_Number__c
     );
 
@@ -5539,6 +5562,110 @@ public without sharing class FEC_CaseBusinessService {
       selectedCase.FEC_Delivery_Status__c = cardDeliveryInfo.status;
       selectedCase.FEC_Delay_Note__c = cardDeliveryInfo.deliveryNotes;
     }
+  }
+
+  @TestVisible
+  private static Boolean isUndeliveredCardOu01RedeliverCase(Case selectedCase) {
+    if (selectedCase == null || selectedCase.FEC_Category__r == null) {
+      return false;
+    }
+
+    Boolean isUndeliveredCard =
+      CATEGORY_UNDELIVERED_CARD.equals(selectedCase.FEC_Category__r.FEC_Code__c) ||
+      CATEGORY_UNDELIVERED_CARD.equals(selectedCase.FEC_Category__r.Name);
+    if (!isUndeliveredCard || selectedCase.FEC_SubCategory__r == null) {
+      return false;
+    }
+
+    String subCategoryName = selectedCase.FEC_SubCategory__r.Name;
+    String subCategoryCode = selectedCase.FEC_SubCategory__r.FEC_Code__c;
+    return SUB_CATEGORY_UNDELIVERED_CARD_OU01_REDELIVER.equals(subCategoryName) ||
+      SUB_CATEGORY_UNDELIVERED_CARD_OU01_REDELIVER.equals(subCategoryCode) ||
+      SUB_CATEGORY_CODE_OU01.equals(subCategoryCode);
+  }
+
+  @TestVisible
+  private static void processUndeliveredCardResolveIntegration(
+    String caseId,
+    String remarkContent
+  ) {
+    if (String.isBlank(caseId)) {
+      return;
+    }
+
+    List<Case> caselst = [
+      SELECT
+        Id,
+        FEC_Category__r.Name,
+        FEC_Category__r.FEC_Code__c,
+        FEC_SubCategory__r.Name,
+        FEC_SubCategory__r.FEC_Code__c,
+        FEC_Account_or_Contract__r.FEC_Account_Number__c
+      FROM Case
+      WHERE Id = :caseId
+      LIMIT 1
+    ];
+    if (caselst.isEmpty() || !isUndeliveredCardOu01RedeliverCase(caselst[0])) {
+      return;
+    }
+
+    String accountNumber = caselst[0].FEC_Account_or_Contract__r?.FEC_Account_Number__c;
+    if (String.isBlank(accountNumber)) {
+      throw new CaseBusinessServiceException(
+        String.format(System.Label.FEC_MSG_Not_Found, new List<String>{ 'Account/ Contract Number' })
+      );
+    }
+
+    FEC_GetStatus.CardDeliveryInfo deliveryInfo;
+    try {
+      deliveryInfo = FEC_GetStatus.fetchDeliveryStatus(accountNumber);
+    } catch (Exception e) {
+      throw new CaseBusinessServiceException(resolveExceptionMessage(e));
+    }
+
+    if (deliveryInfo == null || String.isBlank(deliveryInfo.trackingNo)) {
+      throw new CaseBusinessServiceException(
+        FEC_GetStatus.API_GET_STATUS_ERROR_PREFIX + 'TrackingNo không tìm thấy'
+      );
+    }
+
+    FEC_ReceiveRequestUpdateCallout.CalloutResult result;
+    try {
+      result = FEC_ReceiveRequestUpdateCallout.sendRequest(
+        RECEIVE_REQUEST_UPDATE_STATUS_YES,
+        deliveryInfo.trackingNo,
+        RECEIVE_REQUEST_UPDATE_STATUS_CODE_OU01,
+        remarkContent,
+        Datetime.now().format('yyyy-MM-dd\'T\'HH:mm:ss')
+      );
+    } catch (Exception e) {
+      throw new CaseBusinessServiceException(
+        API_RECEIVE_REQUEST_UPDATE_ERROR_PREFIX + resolveExceptionMessage(e)
+      );
+    }
+
+    if (result == null || result.isSuccess != true) {
+      String errorMessage = result != null && String.isNotBlank(result.errorMessage)
+        ? result.errorMessage
+        : 'ReceiveRequestUpdate';
+      throw new CaseBusinessServiceException(
+        API_RECEIVE_REQUEST_UPDATE_ERROR_PREFIX + errorMessage
+      );
+    }
+  }
+
+  @TestVisible
+  private static String resolveExceptionMessage(Exception e) {
+    if (e == null) {
+      return 'Unknown error';
+    }
+    if (String.isNotBlank(e.getMessage()) && e.getMessage() != 'Script-thrown exception') {
+      return e.getMessage();
+    }
+    if (e.getCause() != null && String.isNotBlank(e.getCause().getMessage())) {
+      return e.getCause().getMessage();
+    }
+    return e.getTypeName();
   }
 
   // tungnm37: delegate sang FEC_CofGsrAssignmentService

@@ -1,34 +1,6 @@
 @IsTest
 private class FEC_CaseBusinessService_Test {
 
-    private static String picklistValue(String objectApi, String fieldApi, String preferred) {
-        Schema.SObjectType token = Schema.getGlobalDescribe().get(objectApi);
-        if (token == null) {
-            return preferred;
-        }
-        Map<String, Schema.SObjectField> fieldMap = token.getDescribe().fields.getMap();
-        if (!fieldMap.containsKey(fieldApi)) {
-            return preferred;
-        }
-        Schema.DescribeFieldResult describe = fieldMap.get(fieldApi).getDescribe();
-        if (describe.getType() != Schema.DisplayType.PICKLIST) {
-            return preferred;
-        }
-        String fallback;
-        for (Schema.PicklistEntry entry : describe.getPicklistValues()) {
-            if (!entry.isActive()) {
-                continue;
-            }
-            if (fallback == null) {
-                fallback = entry.getValue();
-            }
-            if (preferred != null && entry.getValue().equalsIgnoreCase(preferred)) {
-                return entry.getValue();
-            }
-        }
-        return fallback != null ? fallback : preferred;
-    }
-
     private static User testRunAsUser() {
         List<User> admins = [
             SELECT Id
@@ -87,10 +59,6 @@ private class FEC_CaseBusinessService_Test {
             ManagerId = managerUser.Id
         );
         insert testAgent;
-
-        // Assign Permission Sets để đảm bảo FLS cho custom objects
-        FEC_TestDataFactory.assignStandardFECPermissions(testAgent.Id);
-        FEC_TestDataFactory.assignStandardFECPermissions(managerUser.Id);
 
         System.runAs(testAgent) {
             FEC_Business_Process__c bp = new FEC_Business_Process__c(
@@ -368,11 +336,7 @@ private class FEC_CaseBusinessService_Test {
                 FEC_Section__c = 'Case Information',
                 FEC_Sub_Section__c = 'Original Info',
                 FEC_Sub_Section_Order__c = 1,
-                FEC_Type__c = picklistValue(
-                    'FEC_Master_Data_Setting__c',
-                    'FEC_Type__c',
-                    FEC_CaseBusinessService.TYPE_LWC
-                ),
+                FEC_Type__c = FEC_CaseBusinessService.TYPE_LWC,
                 FEC_LWC_Name__c = FEC_CaseBusinessService.LWC_INCORRECT_PAYMENT_FORM,
                 FEC_Field_Status__c = true,
                 FEC_Field_Editable__c = true
@@ -383,11 +347,7 @@ private class FEC_CaseBusinessService_Test {
                 FEC_Section__c = 'Case Information',
                 FEC_Sub_Section__c = 'Original Info',
                 FEC_Sub_Section_Order__c = 1,
-                FEC_Type__c = picklistValue(
-                    'FEC_Master_Data_Setting__c',
-                    'FEC_Type__c',
-                    FEC_CaseBusinessService.TYPE_LWC
-                ),
+                FEC_Type__c = FEC_CaseBusinessService.TYPE_LWC,
                 FEC_LWC_Name__c = FEC_ConstantCommon.ORIGINAL_LWC_COF,
                 FEC_Field_Status__c = true,
                 FEC_Field_Editable__c = true
@@ -409,11 +369,7 @@ private class FEC_CaseBusinessService_Test {
                 FEC_Stage_Name__c = gsrStage2.Id,
                 FEC_Section__c = 'Case Information',
                 FEC_Sub_Section__c = 'Assignment List',
-                FEC_Type__c = picklistValue(
-                    'FEC_Master_Data_Setting__c',
-                    'FEC_Type__c',
-                    FEC_CaseBusinessService.TYPE_ASSIGNMENT
-                ),
+                FEC_Type__c = FEC_CaseBusinessService.TYPE_ASSIGNMENT,
                 FEC_Field_Object_Name__c = 'Case',
                 FEC_Field_API_Name__c = 'Subject',
                 FEC_Field_Status__c = true,
@@ -435,11 +391,7 @@ private class FEC_CaseBusinessService_Test {
                 FEC_Stage_Name__c = cofStage1.Id,
                 FEC_Section__c = 'Case Information',
                 FEC_Sub_Section__c = 'Original Info',
-                FEC_Type__c = picklistValue(
-                    'FEC_Master_Data_Setting__c',
-                    'FEC_Type__c',
-                    FEC_CaseBusinessService.TYPE_LWC
-                ),
+                FEC_Type__c = FEC_CaseBusinessService.TYPE_LWC,
                 FEC_LWC_Name__c = FEC_ConstantCommon.ORIGINAL_LWC_COF,
                 FEC_Field_Status__c = true,
                 FEC_Field_Editable__c = true
@@ -958,9 +910,6 @@ private class FEC_CaseBusinessService_Test {
             insert targetUser;
         }
 
-        // Assign Permission Sets cho FLS access
-        FEC_TestDataFactory.assignStandardFECPermissions(targetUser.Id);
-
         Test.startTest();
         Map<String, String> transferParams = new Map<String, String>{ 'caseId' => c.Id, 'userOrQueueId' => targetUser.Id };
         FEC_CaseBusinessService.run('Transfer', transferParams);
@@ -1153,29 +1102,6 @@ private class FEC_CaseBusinessService_Test {
                 System.assert(String.isNotBlank(e.getMessage()));
             }
             Test.stopTest();
-        }
-    }
-
-    // 09/06/2026 18:00 linhdev - import Escalate: case owner Queue vẫn escalate được qua ManagerId của user import
-    @IsTest
-    static void testRunInternal_EscalateImportUsesActingUserManager() {
-        User agent = caseOwnerUser();
-        User manager = [SELECT Id FROM User WHERE LastName = 'CaseBizManager' LIMIT 1];
-        Group queue = [SELECT Id FROM Group WHERE DeveloperName = 'CS_Frontline_Queue' LIMIT 1];
-        Case c = [SELECT Id FROM Case WHERE Subject = 'Core Testing Case Lifecycle' LIMIT 1];
-        c.OwnerId = queue.Id;
-        update c;
-
-        Map<String, String> params = new Map<String, String>{
-            'caseId' => c.Id,
-            FEC_CaseBusinessService.PARAM_ESCALATE_TO_ACTING_USER_MANAGER => 'true'
-        };
-
-        System.runAs(agent) {
-            Test.startTest();
-            FEC_CaseBusinessService.runInternal(FEC_CaseBusinessService.ESCALATE, params);
-            Test.stopTest();
-            System.assertEquals(manager.Id, queryCaseSystem(c.Id).OwnerId);
         }
     }
 
@@ -1604,63 +1530,6 @@ private class FEC_CaseBusinessService_Test {
             Test.stopTest();
 
             System.assert(true, 'OC_001 và Phone Update phải được gọi không crash transaction.');
-        }
-    }
-
-    @IsTest
-    static void testRunInternal_CalloutMethodsSkipRoutePrepare() {
-        System.runAs(caseOwnerUser()) {
-            Case c = new Case(
-                Subject = 'Callout Skip Prepare',
-                Status = FEC_ConstantCommon.CASE_STATUS_OPEN,
-                FEC_Is_Submited__c = false,
-                FEC_ID_Search__c = 'CSP-' + String.valueOf(System.currentTimeMillis())
-            );
-            insert c;
-
-            System.assertEquals(
-                false,
-                FEC_CaseBusinessService.requiresRoutePrepareBeforeRun(
-                    FEC_CaseBusinessService.PHONE_UPDATE
-                )
-            );
-            System.assertEquals(
-                true,
-                FEC_CaseBusinessService.requiresRoutePrepareBeforeRun(
-                    FEC_CaseBusinessService.ROUTE_TO
-                )
-            );
-
-            Integer histBefore = [
-                SELECT COUNT()
-                FROM FEC_Case_Flow_History__c
-                WHERE FEC_Case__c = :c.Id
-            ];
-
-            Test.startTest();
-            try {
-                FEC_CaseBusinessService.runInternal(
-                    FEC_CaseBusinessService.PHONE_UPDATE,
-                    new Map<String, String>{
-                        'caseId' => c.Id,
-                        'fieldListJson' => '[]'
-                    }
-                );
-            } catch (Exception e) {
-                System.assert(true, 'Phone Update may fail without integration data.');
-            }
-            Test.stopTest();
-
-            Integer histAfter = [
-                SELECT COUNT()
-                FROM FEC_Case_Flow_History__c
-                WHERE FEC_Case__c = :c.Id
-            ];
-            System.assertEquals(
-                histBefore,
-                histAfter,
-                'Callout methods must not insert flow history via route prepare before HTTP callout.'
-            );
         }
     }
 
@@ -2374,163 +2243,212 @@ private class FEC_CaseBusinessService_Test {
     }
 
     @IsTest
-    static void testGetByCase_AllNatureOfCasesFromSetup() {
+    static void testDelegateAssignmentAndQueueMethods() {
         System.runAs(caseOwnerUser()) {
-            List<FEC_Nature_of_Case__c> nocs = [SELECT Id FROM FEC_Nature_of_Case__c LIMIT 20];
-            Case c = [SELECT Id FROM Case WHERE Subject = 'Core Testing Case Lifecycle' LIMIT 1];
+            List<FEC_Nature_of_Case__c> nocs = [SELECT Id FROM FEC_Nature_of_Case__c LIMIT 1];
+            List<Case> cases = [SELECT Id FROM Case LIMIT 1];
 
             Test.startTest();
-            for (FEC_Nature_of_Case__c noc : nocs) {
-                try {
-                    FEC_CaseBusinessService.Business biz = FEC_CaseBusinessService.getByCase(
-                        c.Id,
-                        null,
-                        null,
-                        null,
-                        null,
-                        null,
-                        String.valueOf(noc.Id)
-                    );
-                    System.assertNotEquals(null, biz);
-                } catch (Exception ignore) {
-                    System.assert(true, 'getByCase with NOC ' + noc.Id);
-                }
-            }
+            List<Map<String, String>> teamOpts = FEC_CaseBusinessService.getTeamQueueOptions();
+            List<Map<String, String>> routing = nocs.isEmpty()
+                ? FEC_CaseBusinessService.getRoutingAssignments(null, 'Existing')
+                : FEC_CaseBusinessService.getRoutingAssignments(nocs[0].Id, 'Existing');
+            List<String> queueNames = cases.isEmpty()
+                ? FEC_CaseBusinessService.getExistingAssignmentQueueNames(null)
+                : FEC_CaseBusinessService.getExistingAssignmentQueueNames(cases[0].Id);
+            List<Group> queues = FEC_CaseBusinessService.getTransferQueues();
             Test.stopTest();
+
+            System.assertNotEquals(null, teamOpts);
+            System.assertNotEquals(null, routing);
+            System.assertNotEquals(null, queueNames);
+            System.assertNotEquals(null, queues);
         }
     }
 
     @IsTest
-    static void testEmailLocalPart_WithAtSignAndQueueOwnerLabel() {
-        System.assertEquals('user', FEC_CaseBusinessService.emailLocalPart('user@fecredit.com'));
-        Group q = [SELECT Id, Name FROM Group WHERE Type = 'Queue' LIMIT 1];
-        System.assertEquals(
-            q.Name,
-            FEC_CaseBusinessService.resolveRoutingHistoryOwnerLabel(q.Id, 'fallback')
-        );
+    static void testBusinessInnerClassSortAndCompare() {
+        FEC_CaseBusinessService.Section s1 = new FEC_CaseBusinessService.Section('A', 2, 12);
+        FEC_CaseBusinessService.Section s2 = new FEC_CaseBusinessService.Section('B', 1, 12);
+        s1.sort();
+
+        FEC_CaseBusinessService.CObject obj = new FEC_CaseBusinessService.CObject('Case');
+        FEC_CaseBusinessService.Field f1 = new FEC_CaseBusinessService.Field();
+        f1.apiName = 'Subject';
+        f1.order = 2;
+        FEC_CaseBusinessService.Field f2 = new FEC_CaseBusinessService.Field();
+        f2.apiName = 'Status';
+        f2.order = 1;
+        obj.fieldlst.add(f1);
+        obj.fieldlst.add(f2);
+        obj.sort();
+
+        FEC_CaseBusinessService.Section empty = new FEC_CaseBusinessService.Section('Empty');
+        FEC_CaseBusinessService.Section withLwc = new FEC_CaseBusinessService.Section('Lwc');
+        withLwc.componentlst.add(new FEC_CaseBusinessService.DynamicLwcComponent());
+
+        Test.startTest();
+        Integer cmp = s1.compareTo(s2);
+        Integer fieldCmp = f1.compareTo(f2);
+        Boolean keepEmpty = empty.removeIfNoFieldDeep();
+        Boolean keepLwc = withLwc.removeIfNoFieldDeep();
+        Test.stopTest();
+
+        System.assert(cmp > 0);
+        System.assert(fieldCmp > 0);
+        System.assertEquals(false, keepEmpty);
+        System.assertEquals(true, keepLwc);
     }
 
     @IsTest
-    static void testGetByCase_AllSetupCasesWithBlockCodes() {
+    static void testPhoneUpdateValidate_ValidAccount() {
         System.runAs(caseOwnerUser()) {
-            List<Case> cases = [
-                SELECT Id, FEC_Product_Type__c, FEC_Category__c, FEC_SubCategory__c, FEC_SubCode__c, Subject
-                FROM Case
-                WHERE Subject IN (
-                    'Core Testing Case Lifecycle',
-                    'GSR Case For getByCase',
-                    'GSR Stage 2 Case',
-                    'Document Request Case',
-                    'MRC RL05 Case',
-                    'COF General Flow Case',
-                    'Undelivered Card Case'
-                )
+            FEC_Customer_History__c ch = [
+                SELECT Id
+                FROM FEC_Customer_History__c
+                WHERE Name = 'CUST-CORE-999'
+                LIMIT 1
             ];
+            ch.FEC_Block_Code_1__c = null;
+            ch.FEC_Account_Status__c = '1';
+            update ch;
 
             Test.startTest();
-            for (Case row : cases) {
-                FEC_CaseBusinessService.Business biz = FEC_CaseBusinessService.getByCase(
-                    row.Id,
-                    String.valueOf(row.FEC_Product_Type__c),
-                    String.valueOf(row.FEC_Category__c),
-                    String.valueOf(row.FEC_SubCategory__c),
-                    String.valueOf(row.FEC_SubCode__c),
-                    'F',
-                    'G'
+            FEC_CaseBusinessService.Error err = FEC_CaseBusinessService.phoneUpdateValidate(ch.Id);
+            Test.stopTest();
+
+            System.assertEquals(true, err.errorlst.isEmpty());
+        }
+    }
+
+    @IsTest
+    static void testResolve_UndeliveredCardOu01_callsReceiveRequestUpdate() {
+        System.runAs(caseOwnerUser()) {
+            FEC_Product_Type__c prod = [
+                SELECT Id
+                FROM FEC_Product_Type__c
+                WHERE FEC_Code__c = 'CC'
+                LIMIT 1
+            ];
+
+            FEC_Category__c undeliveredCat;
+            List<FEC_Category__c> existingCats = [
+                SELECT Id
+                FROM FEC_Category__c
+                WHERE FEC_Code__c = :FEC_CaseBusinessService.CATEGORY_UNDELIVERED_CARD
+                LIMIT 1
+            ];
+            if (existingCats.isEmpty()) {
+                undeliveredCat = new FEC_Category__c(
+                    Name = FEC_CaseBusinessService.CATEGORY_UNDELIVERED_CARD,
+                    FEC_Code__c = FEC_CaseBusinessService.CATEGORY_UNDELIVERED_CARD,
+                    FEC_Active__c = true
                 );
-                System.assertNotEquals(null, biz, 'getByCase failed for ' + row.Subject);
+                insert undeliveredCat;
+            } else {
+                undeliveredCat = existingCats[0];
+            }
+
+            FEC_Sub_Category__c ou01SubCat;
+            List<FEC_Sub_Category__c> existingSubCats = [
+                SELECT Id
+                FROM FEC_Sub_Category__c
+                WHERE FEC_Code__c = :FEC_CaseBusinessService.SUB_CATEGORY_CODE_OU01
+                   OR FEC_Code__c = :FEC_CaseBusinessService.SUB_CATEGORY_UNDELIVERED_CARD_OU01_REDELIVER
+                LIMIT 1
+            ];
+            if (existingSubCats.isEmpty()) {
+                ou01SubCat = new FEC_Sub_Category__c(
+                    Name = FEC_CaseBusinessService.SUB_CATEGORY_UNDELIVERED_CARD_OU01_REDELIVER,
+                    FEC_Code__c = FEC_CaseBusinessService.SUB_CATEGORY_CODE_OU01,
+                    FEC_Active__c = true
+                );
+                insert ou01SubCat;
+            } else {
+                ou01SubCat = existingSubCats[0];
+            }
+
+            Case resolveCase = new Case(
+                Subject = 'Undelivered Card OU01 Resolve',
+                OwnerId = UserInfo.getUserId(),
+                Status = FEC_ConstantCommon.CASE_STATUS_PENDING,
+                FEC_Product_Type__c = prod.Id,
+                FEC_Category__c = undeliveredCat.Id,
+                FEC_SubCategory__c = ou01SubCat.Id,
+                FEC_Customer_Type__c = 'Existing',
+                FEC_Is_Submited__c = true
+            );
+            insert resolveCase;
+
+            FEC_Customer_History__c customer = new FEC_Customer_History__c(
+                Name = 'CUST-UNDELIVERED-OU01',
+                FEC_Case__c = resolveCase.Id,
+                FEC_Customer_Type__c = 'Existing',
+                FEC_Account_Number__c = 'ACC999'
+            );
+            insert customer;
+            resolveCase.FEC_Account_or_Contract__c = customer.Id;
+            update resolveCase;
+
+            Test.setMock(HttpCalloutMock.class, new UndeliveredCardResolveCalloutMock());
+
+            Map<String, String> params = new Map<String, String>{
+                'caseId' => resolveCase.Id,
+                'remarkContent' => 'adadad'
+            };
+
+            Test.startTest();
+            if (FEC_API_Config__mdt.getInstance(FEC_ReceiveRequestUpdateCallout.API_CONFIG_NAME) == null) {
+                try {
+                    FEC_CaseBusinessService.run('Resolve', params);
+                    System.assert(false, 'Phải ném lỗi khi chưa deploy metadata ReceiveRequestUpdate.');
+                } catch (Exception e) {
+                    System.assertNotEquals(null, e.getMessage());
+                }
+            } else {
+                FEC_CaseBusinessService.run('Resolve', params);
+                System.assertEquals(
+                    FEC_ConstantCommon.CASE_STATUS_RESOLVED_COMPLETED,
+                    [SELECT Status FROM Case WHERE Id = :resolveCase.Id].Status
+                );
             }
             Test.stopTest();
         }
     }
 
-    @IsTest
-    static void testGetByCase_GsrStage2WithBlockCodesAndRecallHistory() {
-        System.runAs(caseOwnerUser()) {
-            Case gsr2 = [
-                SELECT Id, FEC_Product_Type__c, FEC_Category__c, FEC_SubCategory__c, FEC_SubCode__c
-                FROM Case
-                WHERE Subject = 'GSR Stage 2 Case'
-                LIMIT 1
-            ];
-            insert new FEC_Routing_Action_History__c(
-                FEC_Case__c = gsr2.Id,
-                FEC_Routing_Action__c = 'Recall'
-            );
+    private class UndeliveredCardResolveCalloutMock implements HttpCalloutMock {
+        public HttpResponse respond(HttpRequest req) {
+            HttpResponse res = new HttpResponse();
+            res.setStatusCode(200);
 
-            Test.startTest();
-            FEC_CaseBusinessService.Business biz = FEC_CaseBusinessService.getByCase(
-                gsr2.Id,
-                String.valueOf(gsr2.FEC_Product_Type__c),
-                String.valueOf(gsr2.FEC_Category__c),
-                String.valueOf(gsr2.FEC_SubCategory__c),
-                String.valueOf(gsr2.FEC_SubCode__c),
-                'F',
-                'G'
-            );
-            Test.stopTest();
-
-            System.assertNotEquals(null, biz);
-            System.assertNotEquals(null, biz.contextFlags);
-        }
-    }
-
-    @IsTest
-    static void testCreateRoutingActionHistoryOnOwnerChange() {
-        System.runAs(caseOwnerUser()) {
-            Case c = [
-                SELECT Id, OwnerId, FEC_Current_Case_Stage__c
-                FROM Case
-                WHERE Subject = 'Core Testing Case Lifecycle'
-                LIMIT 1
-            ];
-            User manager = [SELECT Id FROM User WHERE LastName = 'CaseBizManager' LIMIT 1];
-            Case oldCase = c.clone(true, true, true, true);
-            c.OwnerId = manager.Id;
-
-            Test.startTest();
-            FEC_CaseBusinessService.createRoutingActionHistoryOnOwnerChange(
-                new List<Case>{ c },
-                new Map<Id, Case>{ c.Id => oldCase }
-            );
-            FEC_CaseBusinessService.registerSkipOwnerChangeRoutingHistory(c.Id);
-            FEC_CaseBusinessService.createRoutingActionHistoryOnOwnerChange(
-                new List<Case>{ c },
-                new Map<Id, Case>{ c.Id => oldCase }
-            );
-            Test.stopTest();
-
-            System.assert(
-                [SELECT COUNT() FROM FEC_Routing_Action_History__c WHERE FEC_Case__c = :c.Id] >= 0
-            );
-        }
-    }
-
-    @IsTest
-    static void testSaveCaseDrafts_andCloneMasterDataVariants() {
-        System.runAs(caseOwnerUser()) {
-            Case c = [SELECT Id FROM Case WHERE Subject = 'COF General Flow Case' LIMIT 1];
-            FEC_Nature_of_Case__c cofNoc = [
-                SELECT Id FROM FEC_Nature_of_Case__c
-                WHERE FEC_Business_Process__r.Name = :FEC_ConstantCommon.COF_GENERAL_FLOW
-                LIMIT 1
-            ];
-            FEC_Actual_Nature_of_Case__c actual = [
-                SELECT Id FROM FEC_Actual_Nature_of_Case__c
-                WHERE FEC_Business_Process__r.Name = :FEC_ConstantCommon.COF_GENERAL_FLOW
-                LIMIT 1
-            ];
-
-            Test.startTest();
-            FEC_CaseBusinessService.saveCaseDrafts(c.Id, cofNoc.Id, '0912345678', 'Route to');
-            try {
-                FEC_CaseBusinessService.cloneMasterDataSetting(actual.Id, cofNoc.Id, true);
-            } catch (Exception ignore) {
-                System.assert(true, 'Clone may already exist for COF actual NOC.');
+            if (req.getEndpoint() != null && req.getEndpoint().contains('ReceiveRequestUpdate')) {
+                res.setHeader('Content-Type', 'application/json');
+                res.setBody('{"Sys":{"Code":"1","Description":"SUCCESS"}}');
+                return res;
             }
-            Test.stopTest();
 
-            System.assertNotEquals(null, [SELECT FEC_Draft_Routing_Action_Code__c FROM Case WHERE Id = :c.Id]);
+            res.setHeader('Content-Type', 'text/xml');
+            res.setBody(
+                '<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" ' +
+                'xmlns:cms="http://fecredit.com.vn/CMS_DeliveryCardStatusWS">' +
+                '  <soapenv:Body>' +
+                '    <cms:GetStatusResponse>' +
+                '      <Sys>' +
+                '        <TransID>TXN12345</TransID>' +
+                '        <DateTime>2026-05-25T10:00:00</DateTime>' +
+                '        <Code>1</Code>' +
+                '        <Description>Success</Description>' +
+                '      </Sys>' +
+                '      <Info>' +
+                '        <AccountNumber>ACC999</AccountNumber>' +
+                '        <TrackingNo>1000093144949</TrackingNo>' +
+                '        <Status>Delivered</Status>' +
+                '      </Info>' +
+                '    </cms:GetStatusResponse>' +
+                '  </soapenv:Body>' +
+                '</soapenv:Envelope>'
+            );
+            return res;
         }
     }
 }

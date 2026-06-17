@@ -5274,7 +5274,13 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
           };
           break;
         default:
-          params = { ...params, params: { caseId: this.recordId } };
+          params = {
+            ...params,
+            params: {
+              caseId: this.recordId,
+              remarkContent: this.remarkContent || null,
+            },
+          };
           break;
       }
       // tungnm37 sửa: COF/GSR không cần nextQueue
