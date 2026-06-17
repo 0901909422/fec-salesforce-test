@@ -81,6 +81,11 @@
 .nh-placeholder-table thead th {
     background-color: #f3f3f2;
     padding: 0.5rem;
+    text-align: center;
+}
+
+.nh-placeholder-table thead th .slds-truncate {
+    text-align: center;
 }
 
 .nh-placeholder-table tbody td {

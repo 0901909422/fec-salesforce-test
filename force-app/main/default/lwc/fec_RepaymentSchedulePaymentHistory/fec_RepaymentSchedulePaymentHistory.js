@@ -92,6 +92,7 @@ export default class Fec_RepaymentSchedulePaymentHistory extends LightningElemen
         realTimePayment: FEC_Real_Time_Payment_Label,
         repaymentSchedulePaymentHistory: FEC_Repayment_Schedule_Payment_History_Label,
         msgErrorAPI: FEC_MSG_Error_API_Label,
+        msgLoadSuccess: 'Tải dữ liệu thành công',
         loadingAlt: FEC_Termination_Loading_Alt,
         totalInstallmentAmount: FEC_Repay_Total_Installment_Amount_Label,
         totalPrincipal: FEC_Repay_Total_Principal_Label,
@@ -503,16 +504,11 @@ export default class Fec_RepaymentSchedulePaymentHistory extends LightningElemen
                 const realTime = Array.isArray(rows) ? rows : [];
                 this.sectionData = { ...this.sectionData, realTimePaymentTable: realTime };
                 this.refreshStatusMap.realTimePayment = 'SUCCESS';
-                this.showToast(
-                    'Success',
-                    `${FEC_Real_Time_Payment_Label} refreshed`,
-                    'success'
-                );
+                this.showToast('Success', this.customLabel.msgLoadSuccess, 'success');
             })
-            .catch((err) => {
+            .catch(() => {
                 this.refreshStatusMap.realTimePayment = 'ERROR';
-                const msg = err?.body?.message || err?.message || 'Unknown error';
-                this.showToast('Error', msg, 'error');
+                this.showToast('Error', this.customLabel.msgErrorAPI, 'error');
             })
             .finally(() => {
                 this.isRefreshingRealTime = false;
