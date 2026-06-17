@@ -239,6 +239,7 @@ public with sharing class FEC_ConstantCommon {
     public static final String YES_VALUE = 'yes';
     
     public static final String PRODUCT_TYPE_INSURANCE = 'INSURANCE';
+    
     public static final String PRODUCT_TYPE_LOAN = 'LOAN';
     public static final String PRODUCT_TYPE_CARD = 'CARD';
     public static final String PRODUCT_TYPE_UBANK = 'UBank';
@@ -526,6 +527,9 @@ public with sharing class FEC_ConstantCommon {
     public static final String PRODUCT_TYPE_CARD_CASE = 'Card';
     public static final String PRODUCT_TYPE_LOAN_CASE = 'Loan';
     public static final String PRODUCT_TYPE_INSURANCE_CASE = 'Insurance';
+    public static final String PRODUCT_TYPE_B2_CASE = 'B2';
+    public static final String PRODUCT_TYPE_CASH24_CASE = 'Cash24';
+    public static final String PRODUCT_TYPE_UBANK_CASE = 'Ubank';
     public static final String TARGET_GROUP_CUSTOMER = 'Customer';
     public static final String NOTIFICATION_SUBJECT = 'Notification';
     
