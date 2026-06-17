@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ListView xmlns="http://soap.sforce.com/2006/04/metadata">
     <fullName>Interactions_Service_Cases_TAT_CA</fullName>
-    <columns>CREATED_DATE</columns>
     <columns>NAME</columns>
+    <columns>CREATED_DATE</columns>
     <filterScope>Everything</filterScope>
     <filters>
         <field>NAME</field>
