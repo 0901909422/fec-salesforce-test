@@ -252,6 +252,8 @@ public without sharing class FEC_CaseTriggerHandler {
         // tungnm37 fix: comment out syncAssignmentUsersOnOwnerChange vì đã được xử lý trong FEC_AssignmentTriggerHandler
         // tungnm37 fix: logic cũ set FEC_Assignment_Users__c = OwnerId mà không check assignment type
         // syncAssignmentUsersOnOwnerChange(newCases, oldMap);
+        // 15/06/2026 20:30 linhdev - rollup Eligibility Details từ FEC_Contract_List_for_Remove_Phone__c khi Case submit (không liên quan NOC.FEC_Remove_Phone__c)
+        rollupRemovePhoneEligibilityOnCaseSubmit(newCases, oldMap);
         isExecuting = false;
     }
 
@@ -1389,6 +1391,29 @@ public without sharing class FEC_CaseTriggerHandler {
             }
         } catch (Exception e) {
             System.debug('FEC_DEBUG sendSLANotifications error: ' + e.getMessage());
+        }
+    }
+
+    // 15/06/2026 20:30 linhdev - rollup Eligibility Details từ FEC_Contract_List_for_Remove_Phone__c khi Case submit (không liên quan NOC.FEC_Remove_Phone__c)
+    private static void rollupRemovePhoneEligibilityOnCaseSubmit(List<Case> newCases, Map<Id, Case> oldMap) {
+        if (newCases == null || newCases.isEmpty() || oldMap == null) {
+            return;
+        }
+        Set<Id> caseIds = new Set<Id>();
+        for (Case c : newCases) {
+            if (c == null || c.Id == null) {
+                continue;
+            }
+            Case oldCase = oldMap.get(c.Id);
+            if (oldCase == null) {
+                continue;
+            }
+            if (c.FEC_Is_Submited__c == true && oldCase.FEC_Is_Submited__c != true) {
+                caseIds.add(c.Id);
+            }
+        }
+        if (!caseIds.isEmpty()) {
+            FEC_RemovePhoneEligibilityRollupService.rollup(caseIds);
         }
     }
 }
