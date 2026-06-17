@@ -74,10 +74,6 @@
         <visibility>DefaultOff</visibility>
     </tabVisibilities>
     <tabVisibilities>
-        <tab>FEC_Assignment__c</tab>
-        <visibility>DefaultOff</visibility>
-    </tabVisibilities>
-    <tabVisibilities>
         <tab>FEC_BancaTabView</tab>
         <visibility>DefaultOff</visibility>
     </tabVisibilities>
@@ -127,10 +123,6 @@
     </tabVisibilities>
     <tabVisibilities>
         <tab>FEC_HoldCaseConfiguration</tab>
-        <visibility>DefaultOff</visibility>
-    </tabVisibilities>
-    <tabVisibilities>
-        <tab>FEC_Hold_Case_Config__c</tab>
         <visibility>DefaultOff</visibility>
     </tabVisibilities>
     <tabVisibilities>
