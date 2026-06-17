@@ -149,7 +149,7 @@ public without sharing class FEC_StatementsAccountController {
         header.FEC_Next_Statement_Date__c = info.Statement.NextStatementDate;
 
         /* ===== PAYMENT ===== */
-        header.FEC_Total_Payment_Due__c   = info?.Statement?.LastPaymentAmount;
+        header.FEC_Total_Payment_Due__c   = info?.MainCard?.LastPaymentAmount;
         header.FEC_Minimum_Payment_Due__c = info?.Statement?.LastStatementMPA;
         header.FEC_Payment_Due_Date__c    = info?.Statement?.LastStatementDueDate;
 
