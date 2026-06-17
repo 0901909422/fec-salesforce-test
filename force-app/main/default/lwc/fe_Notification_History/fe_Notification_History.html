@@ -4,8 +4,8 @@
 
             <lightning-accordion-section name="sms" label={labelTabSms}>
                 <div class={smsSectionClass}>
-                    <div class="slds-is-relative">
-                        <template lwc:if={smsHasRows}>
+                    <template lwc:if={smsHasRows}>
+                        <div class="slds-is-relative">
                             <template lwc:if={smsLoading}>
                                 <div class="channel-spinner-overlay">
                                     <lightning-spinner alternative-text={labelLoading} size="small"></lightning-spinner>
@@ -16,18 +16,37 @@
                                 default-sorted-by="dateTime" default-sort-direction="desc"
                                 sorted-by-description={labelSortDateTime} hide-updated-time="true" column-count="3">
                             </c-fec_-related-list-paging>
-                        </template>
-                        <template lwc:else>
+                        </div>
+                    </template>
+                    <template lwc:else>
+                        <div class="slds-is-relative">
                             <template lwc:if={smsLoading}>
                                 <div class="channel-spinner-overlay">
                                     <lightning-spinner alternative-text={labelLoading} size="small"></lightning-spinner>
                                 </div>
                             </template>
-                            <div class={smsEmptyMsgClass}>{smsEmptyMessage}</div>
-                        </template>
-                    </div>
-                    <template lwc:if={smsInfoBanner}>
-                        <div class="channel-banner">{smsInfoBanner}</div>
+                            <div class="nh-placeholder-table-container">
+                                <table
+                                    class="slds-table slds-table_bordered slds-table_cell-buffer nh-placeholder-table">
+                                    <thead>
+                                        <tr class="slds-line-height_reset">
+                                            <template for:each={smsColumns} for:item="col">
+                                                <th key={col.fieldName} scope="col">
+                                                    <div class="slds-truncate" title={col.label}>{col.label}</div>
+                                                </th>
+                                            </template>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td colspan="3">
+                                                <div class={smsEmptyMsgClass}>{smsEmptyMessage}</div>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
                     </template>
                 </div>
             </lightning-accordion-section>

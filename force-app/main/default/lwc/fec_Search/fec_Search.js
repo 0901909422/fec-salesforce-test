@@ -67,7 +67,7 @@ import SEARCH_EMAIL_FIELD from "@salesforce/schema/Case.FEC_Search_Email_Address
 import SEARCH_CUSTOMER_NUM_FIELD from "@salesforce/schema/Case.FEC_Search_Customer_Number__c";
 import SEARCH_PRODUCTS_FIELD from "@salesforce/schema/Case.FEC_Search_Products__c";
 import { CurrentPageReference } from 'lightning/navigation';
-import { formatDateTimeVNShort, normalizePhone, formatDateVNI } from 'c/fec_CommonUtils';
+import { formatDateTimeVNShort, normalizePhone, formatDateVNI, deriveInsuranceStatus } from 'c/fec_CommonUtils';
 
 const FIELDS_TO_CHECK = [
     'FEC_Search_National_ID__c',
@@ -1043,7 +1043,7 @@ async fetchBancaInsurance(ids) {
       PremiumFee: Number(el.collectedPremiumFee),
       PaymentId: el.paymentID,
       EffectiveDate: el.effectiveDate,
-      Status: el.StatusDisplay,
+      Status: deriveInsuranceStatus(el.expireDate, el.cancelDate),
       PolicyNumber: el.policyNumber,
       Phone: el.buyerPhone
     }));
@@ -1082,7 +1082,7 @@ async fetchBancaInsuranceByPhone(phones) {
       PremiumFee: Number(el.collectedPremiumFee),
       PaymentId: el.paymentID,
       EffectiveDate: el.effectiveDate,
-      Status: el.statusDisplay,
+      Status: deriveInsuranceStatus(el.expireDate, el.cancelDate),
       PolicyNumber: el.policyNumber,
       Phone: el.buyerPhone
     }));
@@ -2194,7 +2194,7 @@ hasAnySearchCriteria(params) {
                       PremiumFee: element.collectedPremiumFee,
                       PaymentId:  element.paymentID,
                       EffectiveDate:  element.effectiveDate,
-                      Status:  element.StatusDisplay,
+                      Status: deriveInsuranceStatus(element.expireDate, element.cancelDate),
                       PolicyNumber:  element.policyNumber,
                     })
                   });

@@ -35,7 +35,7 @@ public without sharing class FEC_TransactionsController {
         /** Sort key for unbilled/pending tables (epoch ms). */
         @AuraEnabled public Long effectiveSortEpoch;
 
-        /* Unbilled list/detail: BasicInfo (GetUnbilledTransactions) | M_FAS (GetCardFinancialTransactions) */
+        /* Unbilled list/detail: BasicInfo (GetCardBasicInfo) | M_FAS (M_FAS_OUTSTANDING_AUTH_INQ) */
         @AuraEnabled public String effectiveDateDualDisplay;
         @AuraEnabled public String postDateDualDisplay;
         @AuraEnabled public String transactionAmountDualDisplay;
@@ -95,30 +95,35 @@ public without sharing class FEC_TransactionsController {
         res.pendingTransactions  = new List<TransactionDTO>();
 
         /* ===============================
-           HISTORY - CALL OUT
+           UNBILLED – API calls (GetCardBasicInfo + M_FAS_OUTSTANDING_AUTH_INQ only)
            =============================== */
         FEC_CommonUltils.beginDeferredApiLogging();
-        List<FEC_GetUnbilledTransactions.TransactionRecord> unbilled;
-        List<FEC_GetCardFinancialTransactions.FinancialTransaction> financial;
+        List<FEC_GetCardBasicInfo.TransactionInfo> cardTransactions;
+        List<FEC_MFASOUTSTANDINGAUTHINQ.AuthTableRow> outstandingAuths;
         try {
-            unbilled = callUnbilledSafe(accNumber);
-            financial = callFinancialSafe(accNumber);
+            cardTransactions = callCardBasicInfoSafe(accNumber);
+            outstandingAuths = callOutstandingAuthSafe(accNumber);
+
+            /* ===============================
+               PENDING – unchanged (FEC_VMXAUTHDETAILINQ)
+               =============================== */
             res.pendingTransactions = loadPendingRealtime(accNumber, ch.Id);
         } finally {
             FEC_CommonUltils.flushDeferredApiLogs();
         }
 
         /* ===============================
-           Persist + build UI from live API (Fields List mapping)
+           UNBILLED – persist + build UI
            =============================== */
-        if (!unbilled.isEmpty() || !financial.isEmpty()) {
-            upsertHistory(ch.Id, unbilled, financial);
+        if (!cardTransactions.isEmpty()
+            || (outstandingAuths != null && !outstandingAuths.isEmpty())) {
+            upsertUnbilledHistory(ch.Id, cardTransactions, outstandingAuths);
         }
 
         Map<String, Id> idsByCompositeKey = loadTransactionIdsByCompositeKey(ch.Id);
         res.unbilledTransactions = buildUnbilledTransactionsForUi(
-            unbilled,
-            financial,
+            cardTransactions,
+            outstandingAuths,
             idsByCompositeKey
         );
         if (res.unbilledTransactions.isEmpty()) {
@@ -387,52 +392,68 @@ public without sharing class FEC_TransactionsController {
 
     /**
      * Unbilled table: dual column = BasicInfo | M_FAS
-     * - BasicInfo: GetUnbilledTransactions (E-Statement)
-     * - M_FAS: GetCardFinancialTransactions (CIF Card Info)
+     * - BasicInfo: GetCardBasicInfo.CardBasicInfo.Transactions
+     * - M_FAS: M_FAS_OUTSTANDING_AUTH_INQ.AUTHS_TABLE
      */
     private static List<TransactionDTO> buildUnbilledTransactionsForUi(
-        List<FEC_GetUnbilledTransactions.TransactionRecord> uList,
-        List<FEC_GetCardFinancialTransactions.FinancialTransaction> fList,
+        List<FEC_GetCardBasicInfo.TransactionInfo> cardTxList,
+        List<FEC_MFASOUTSTANDINGAUTHINQ.AuthTableRow> authList,
         Map<String, Id> idsByCompositeKey
     ) {
         List<TransactionDTO> result = new List<TransactionDTO>();
         Map<String, String> helpTexts =
             FEC_CommonUltils.buildHelpTextMap(FEC_Transaction__c.SObjectType);
 
-        Map<String, FEC_GetCardFinancialTransactions.FinancialTransaction> finMap =
-            buildFinancialMap(fList);
-        Set<String> processedFinKeys = new Set<String>();
+        Map<String, FEC_MFASOUTSTANDINGAUTHINQ.AuthTableRow> authMap =
+            buildOutstandingAuthMap(authList);
+        Set<String> processedAuthKeys = new Set<String>();
 
-        if (uList != null) {
-            for (FEC_GetUnbilledTransactions.TransactionRecord u : uList) {
-                Date postDate = FEC_CommonUltils.toDateStr(u.PostingDate);
-                if (postDate == null || u.Amount == null) {
+        if (cardTxList != null) {
+            for (FEC_GetCardBasicInfo.TransactionInfo cardTx : cardTxList) {
+                if (cardTx == null || cardTx.PostingDate == null || cardTx.Amount == null) {
                     continue;
                 }
-                String key = buildKey(postDate, u.Amount, u.TransactionType);
-                FEC_GetCardFinancialTransactions.FinancialTransaction f =
-                    finMap.containsKey(key) ? finMap.get(key) : null;
-                if (key != null && f != null) {
-                    processedFinKeys.add(key);
+                String key = buildKey(
+                    cardTx.PostingDate,
+                    cardTx.Amount,
+                    cardTx.CreditDebitFlag
+                );
+                FEC_MFASOUTSTANDINGAUTHINQ.AuthTableRow auth = findOutstandingAuth(
+                    authMap,
+                    cardTx.PostingDate,
+                    cardTx.Amount,
+                    cardTx.AuthCode
+                );
+                if (auth != null) {
+                    String authKey = buildAuthMatchKey(cardTx.PostingDate, cardTx.Amount);
+                    if (authKey != null) {
+                        processedAuthKeys.add(authKey);
+                    }
                 }
                 result.add(
-                    buildUnbilledDto(u, f, idsByCompositeKey.get(key), helpTexts)
+                    buildUnbilledDto(
+                        cardTx,
+                        auth,
+                        idsByCompositeKey.get(key),
+                        helpTexts
+                    )
                 );
             }
         }
 
-        if (fList != null) {
-            for (FEC_GetCardFinancialTransactions.FinancialTransaction f : fList) {
-                Date postDate = FEC_CommonUltils.toDateStr(f.PostingDate);
-                if (postDate == null || f.TRNXAmount == null) {
+        if (authList != null) {
+            for (FEC_MFASOUTSTANDINGAUTHINQ.AuthTableRow auth : authList) {
+                if (auth == null) {
                     continue;
                 }
-                String key = buildKey(postDate, f.TRNXAmount, f.CreditDebitFlag);
-                if (key == null || processedFinKeys.contains(key)) {
+                Date postDate = FEC_CommonUltils.parseDate(auth.POSTING_DATE);
+                Decimal amt = FEC_CommonUltils.parseAmountSafe(auth.AUTH_AMOUNT);
+                String authKey = buildAuthMatchKey(postDate, amt);
+                if (authKey == null || processedAuthKeys.contains(authKey)) {
                     continue;
                 }
                 result.add(
-                    buildUnbilledDto(null, f, idsByCompositeKey.get(key), helpTexts)
+                    buildUnbilledDto(null, auth, null, helpTexts)
                 );
             }
         }
@@ -440,29 +461,9 @@ public without sharing class FEC_TransactionsController {
         return result;
     }
 
-    private static Map<String, FEC_GetCardFinancialTransactions.FinancialTransaction>
-    buildFinancialMap(List<FEC_GetCardFinancialTransactions.FinancialTransaction> fList) {
-        Map<String, FEC_GetCardFinancialTransactions.FinancialTransaction> finMap =
-            new Map<String, FEC_GetCardFinancialTransactions.FinancialTransaction>();
-        if (fList == null) {
-            return finMap;
-        }
-        for (FEC_GetCardFinancialTransactions.FinancialTransaction f : fList) {
-            Date postDate = FEC_CommonUltils.toDateStr(f.PostingDate);
-            if (postDate == null || f.TRNXAmount == null) {
-                continue;
-            }
-            String key = buildKey(postDate, f.TRNXAmount, f.CreditDebitFlag);
-            if (key != null) {
-                finMap.put(key, f);
-            }
-        }
-        return finMap;
-    }
-
     private static TransactionDTO buildUnbilledDto(
-        FEC_GetUnbilledTransactions.TransactionRecord u,
-        FEC_GetCardFinancialTransactions.FinancialTransaction f,
+        FEC_GetCardBasicInfo.TransactionInfo cardTx,
+        FEC_MFASOUTSTANDINGAUTHINQ.AuthTableRow auth,
         Id recordId,
         Map<String, String> helpTexts
     ) {
@@ -470,17 +471,25 @@ public without sharing class FEC_TransactionsController {
         dto.Id = recordId;
         dto.helpTexts = helpTexts;
 
-        String biTransactionDate = u != null ? u.TransactionDate : null;
-        String biPostingDate = u != null ? u.PostingDate : null;
-        String biAmount = formatAmountForDual(u != null ? u.Amount : null);
-        String biAuthCode = null;
-        String biPlan = null;
+        String biTransactionDate = formatCardBasicEffDateTime(cardTx);
+        String biPostingDate = cardTx != null && cardTx.PostingDate != null
+            ? formatDateDdMmYyyy(cardTx.PostingDate)
+            : null;
+        String biAmount = formatAmountForDual(cardTx != null ? cardTx.Amount : null);
+        String biAuthCode = cardTx != null ? cardTx.AuthCode : null;
+        String biPlan = cardTx != null ? cardTx.Plan : null;
 
-        String mfTransactionDate = f != null ? f.TRNXDateAndTime : null;
-        String mfPostingDate = f != null ? f.PostingDate : null;
-        String mfAmount = formatAmountForDual(f != null ? f.TRNXAmount : null);
-        String mfAuthCode = f != null ? f.AuthCode : null;
-        String mfPlan = f != null ? f.Plan : null;
+        String mfTransactionDate = auth != null
+            ? formatOutstandingAuthEffDateTime(auth)
+            : null;
+        String mfPostingDate = auth != null
+            ? formatOutstandingAuthPostDate(auth)
+            : null;
+        String mfAmount = auth != null
+            ? formatAmountForDual(FEC_CommonUltils.parseAmountSafe(auth.AUTH_AMOUNT))
+            : null;
+        String mfAuthCode = auth != null ? auth.AUTHORIZATION_CODE : null;
+        String mfPlan = auth != null ? auth.CREDIT_PLAN : null;
 
         dto.effectiveDateDualDisplay = dualDisplay(biTransactionDate, mfTransactionDate);
         dto.postDateDualDisplay = dualDisplay(biPostingDate, mfPostingDate);
@@ -488,37 +497,46 @@ public without sharing class FEC_TransactionsController {
         dto.authorizationCodeDualDisplay = dualDisplay(biAuthCode, mfAuthCode);
         dto.transactionPlanDualDisplay = dualDisplay(biPlan, mfPlan);
 
-        dto.effectiveDate = FEC_CommonUltils.toDateStr(biTransactionDate);
-        if (dto.effectiveDate == null && f != null) {
-            dto.effectiveDate = FEC_CommonUltils.toDateStr(f.TRNXDateAndTime);
-            if (dto.effectiveDate == null) {
-                dto.effectiveDate = FEC_CommonUltils.toDateStr(f.PostingDate);
-            }
+        if (cardTx != null && cardTx.TRNXDateTime != null) {
+            dto.effectiveDate = cardTx.TRNXDateTime.date();
         }
-        dto.postingDate = FEC_CommonUltils.toDateStr(biPostingDate);
-        if (dto.postingDate == null && f != null) {
-            dto.postingDate = FEC_CommonUltils.toDateStr(f.PostingDate);
+        if (dto.effectiveDate == null && auth != null) {
+            dto.effectiveDate = FEC_CommonUltils.parseDate(auth.EFF_DATE);
         }
-        dto.transactionAmount = u != null ? u.Amount : (f != null ? f.TRNXAmount : null);
-        dto.creditDebitFlag = u != null
-            ? u.TransactionType
-            : (f != null ? f.CreditDebitFlag : null);
-        dto.merchantDescription = u != null
-            ? u.MerchantName
-            : (f != null
-                ? (String.isBlank(f.MerchantName) ? f.Description : f.MerchantName)
-                : null);
-        dto.merchantCategoryCode = u != null ? u.MCC : null;
-        dto.currencyCode = u != null
-            ? u.CurrencyCode
-            : (f != null ? f.TRNXCurrencyCode : null);
-        dto.transactionPlan = f != null ? f.Plan : null;
-        dto.transactionCode = f != null && String.isNotBlank(f.TransactionCode)
-            ? f.TransactionCode
-            : 'UNBILLED';
-        dto.authorizationCode = f != null ? f.AuthCode : null;
-        if (f != null && f.OTPSent != null) {
-            dto.otpSent = f.OTPSent == 1 ? 'Yes' : (f.OTPSent == 0 ? 'No' : null);
+        dto.postingDate = cardTx != null ? cardTx.PostingDate : null;
+        if (dto.postingDate == null && auth != null) {
+            dto.postingDate = FEC_CommonUltils.parseDate(auth.POSTING_DATE);
+        }
+        if (cardTx != null) {
+            dto.transactionAmount = cardTx.Amount;
+        } else if (auth != null) {
+            dto.transactionAmount = FEC_CommonUltils.parseAmountSafe(auth.AUTH_AMOUNT);
+        }
+        dto.creditDebitFlag = cardTx != null
+            ? cardTx.CreditDebitFlag
+            : (auth != null ? auth.CreditDebitFlag : null);
+        dto.merchantDescription = cardTx != null
+            ? (String.isBlank(cardTx.MerchantName) ? cardTx.Description : cardTx.MerchantName)
+            : (auth != null ? auth.Description : null);
+        dto.merchantCategoryCode = cardTx != null
+            ? cardTx.MCC
+            : (auth != null ? auth.MERCH_CAT : null);
+        dto.currencyCode = cardTx != null
+            ? cardTx.TRNXCurrencyCode
+            : (auth != null ? auth.TXN_CURR_CODE : null);
+        dto.transactionPlan = auth != null
+            ? auth.CREDIT_PLAN
+            : (cardTx != null ? cardTx.Plan : null);
+        dto.transactionCode = cardTx != null && String.isNotBlank(cardTx.TransactionCode)
+            ? cardTx.TransactionCode
+            : (auth != null && String.isNotBlank(auth.AUTHORIZATION_CODE)
+                ? auth.AUTHORIZATION_CODE
+                : 'UNBILLED');
+        dto.authorizationCode = auth != null
+            ? auth.AUTHORIZATION_CODE
+            : (cardTx != null ? cardTx.AuthCode : null);
+        if (cardTx != null && cardTx.OTPSent != null) {
+            dto.otpSent = cardTx.OTPSent == 1 ? 'Yes' : (cardTx.OTPSent == 0 ? 'No' : null);
         }
 
         dto.effectiveSortEpoch = effectiveSortEpochFromRaw(
@@ -584,6 +602,7 @@ public without sharing class FEC_TransactionsController {
                    FEC_Credit_Debit_Flag__c
             FROM FEC_Transaction__c
             WHERE FEC_Customer_History__c = :customerHistoryId
+              AND FEC_Approval_Code__c = NULL
         ]) {
             String key = buildKey(
                 tx.FEC_Post_Date__c,
@@ -623,6 +642,140 @@ public without sharing class FEC_TransactionsController {
         return amount == null ? null : String.valueOf(amount.setScale(2));
     }
 
+    private static Map<String, FEC_MFASOUTSTANDINGAUTHINQ.AuthTableRow> buildOutstandingAuthMap(
+        List<FEC_MFASOUTSTANDINGAUTHINQ.AuthTableRow> authList
+    ) {
+        Map<String, FEC_MFASOUTSTANDINGAUTHINQ.AuthTableRow> authMap =
+            new Map<String, FEC_MFASOUTSTANDINGAUTHINQ.AuthTableRow>();
+        if (authList == null) {
+            return authMap;
+        }
+        for (FEC_MFASOUTSTANDINGAUTHINQ.AuthTableRow auth : authList) {
+            if (auth == null) {
+                continue;
+            }
+            Date postDate = FEC_CommonUltils.parseDate(auth.POSTING_DATE);
+            Decimal amt = FEC_CommonUltils.parseAmountSafe(auth.AUTH_AMOUNT);
+            String key = buildAuthMatchKey(postDate, amt);
+            if (key != null) {
+                authMap.put(key, auth);
+            }
+            if (String.isNotBlank(auth.AUTHORIZATION_CODE)) {
+                authMap.put(
+                    'AUTH:' + auth.AUTHORIZATION_CODE.trim(),
+                    auth
+                );
+            }
+        }
+        return authMap;
+    }
+
+    private static FEC_MFASOUTSTANDINGAUTHINQ.AuthTableRow findOutstandingAuth(
+        Map<String, FEC_MFASOUTSTANDINGAUTHINQ.AuthTableRow> authMap,
+        Date postDate,
+        Decimal amount,
+        String authCode
+    ) {
+        if (authMap == null || authMap.isEmpty()) {
+            return null;
+        }
+        String key = buildAuthMatchKey(postDate, amount);
+        if (key != null && authMap.containsKey(key)) {
+            return authMap.get(key);
+        }
+        if (String.isNotBlank(authCode)) {
+            String authCodeKey = 'AUTH:' + authCode.trim();
+            if (authMap.containsKey(authCodeKey)) {
+                return authMap.get(authCodeKey);
+            }
+        }
+        return null;
+    }
+
+    private static String formatCardBasicEffDateTime(
+        FEC_GetCardBasicInfo.TransactionInfo cardTx
+    ) {
+        if (cardTx == null || cardTx.TRNXDateTime == null) {
+            return null;
+        }
+        Datetime dt = cardTx.TRNXDateTime;
+        return formatDateDdMmYyyy(dt.date())
+            + ' '
+            + pad2(dt.hour())
+            + ':'
+            + pad2(dt.minute())
+            + ':'
+            + pad2(dt.second());
+    }
+
+    private static String buildAuthMatchKey(Date postDate, Decimal amount) {
+        if (postDate == null || amount == null) {
+            return null;
+        }
+        return postDate.format() + '_' + amount.setScale(2);
+    }
+
+    private static String formatOutstandingAuthEffDateTime(
+        FEC_MFASOUTSTANDINGAUTHINQ.AuthTableRow auth
+    ) {
+        if (auth == null) {
+            return null;
+        }
+        Date effDate = FEC_CommonUltils.parseDate(auth.EFF_DATE);
+        String datePart = effDate != null
+            ? formatDateDdMmYyyy(effDate)
+            : auth.EFF_DATE;
+        String timePart = formatHostTime(auth.TRANS_TIME);
+        if (String.isBlank(datePart)) {
+            return null;
+        }
+        return String.isNotBlank(timePart) ? datePart + ' ' + timePart : datePart;
+    }
+
+    private static String formatOutstandingAuthPostDate(
+        FEC_MFASOUTSTANDINGAUTHINQ.AuthTableRow auth
+    ) {
+        if (auth == null) {
+            return null;
+        }
+        Date postDate = FEC_CommonUltils.parseDate(auth.POSTING_DATE);
+        return postDate != null
+            ? formatDateDdMmYyyy(postDate)
+            : auth.POSTING_DATE;
+    }
+
+    private static String formatDateDdMmYyyy(Date d) {
+        if (d == null) {
+            return null;
+        }
+        return pad2(d.day()) + '/' + pad2(d.month()) + '/' + String.valueOf(d.year());
+    }
+
+    private static String formatHostTime(String timeRaw) {
+        if (String.isBlank(timeRaw)) {
+            return null;
+        }
+        String t = timeRaw.trim();
+        if (t.length() < 6 || !t.isNumeric()) {
+            return null;
+        }
+        try {
+            Integer hh = Integer.valueOf(t.substring(0, 2));
+            Integer mm = Integer.valueOf(t.substring(2, 4));
+            Integer ss = Integer.valueOf(t.substring(4, 6));
+            return pad2(hh) + ':' + pad2(mm) + ':' + pad2(ss);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    private static String pad2(Integer n) {
+        if (n == null) {
+            return '00';
+        }
+        return n < 10 ? '0' + String.valueOf(n) : String.valueOf(n);
+    }
+
     private static Long effectiveSortEpochFromRaw(Date fallbackDate, String rawDateTime) {
         if (String.isNotBlank(rawDateTime)) {
             Datetime dt = FEC_CommonUltils.parseDateTime(rawDateTime);
@@ -637,37 +790,16 @@ public without sharing class FEC_TransactionsController {
     }
 
     /* =====================================================
-       UPSERT HISTORY
+       UNBILLED – UPSERT HISTORY (does not touch pending rows)
        ===================================================== */
-   private static void upsertHistory(
+   private static void upsertUnbilledHistory(
         Id historyId,
-        List<FEC_GetUnbilledTransactions.TransactionRecord> uList,
-        List<FEC_GetCardFinancialTransactions.FinancialTransaction> fList
+        List<FEC_GetCardBasicInfo.TransactionInfo> cardTxList,
+        List<FEC_MFASOUTSTANDINGAUTHINQ.AuthTableRow> authList
     ) {
+        Map<String, FEC_MFASOUTSTANDINGAUTHINQ.AuthTableRow> authMap =
+            buildOutstandingAuthMap(authList);
 
-        /* ===============================
-           1. Build Financial map
-           Key = PostDate + Amount + Debit/Credit
-           =============================== */
-        Map<String, FEC_GetCardFinancialTransactions.FinancialTransaction> finMap =
-            new Map<String, FEC_GetCardFinancialTransactions.FinancialTransaction>();
-
-        for (FEC_GetCardFinancialTransactions.FinancialTransaction f : fList) {
-            Date postDate = FEC_CommonUltils.toDateStr(f.PostingDate);
-            if (postDate == null || f.TRNXAmount == null) continue;
-
-            String key = buildKey(
-                postDate,
-                f.TRNXAmount,
-                f.CreditDebitFlag
-            );
-
-            finMap.put(key, f);
-        }
-
-        /* ===============================
-           2. Load existed transactions
-           =============================== */
         Map<String, FEC_Transaction__c> existed = new Map<String, FEC_Transaction__c>();
         for (FEC_Transaction__c tx : [
             SELECT Id,
@@ -676,6 +808,7 @@ public without sharing class FEC_TransactionsController {
                    FEC_Credit_Debit_Flag__c
             FROM FEC_Transaction__c
             WHERE FEC_Customer_History__c = :historyId
+              AND FEC_Approval_Code__c = NULL
         ]) {
             String key = buildKey(
                 tx.FEC_Post_Date__c,
@@ -685,90 +818,109 @@ public without sharing class FEC_TransactionsController {
             existed.put(key, tx);
         }
 
-        /* ===============================
-           3. Merge Unbilled + Financial
-           =============================== */
         Map<String, FEC_Transaction__c> working = new Map<String, FEC_Transaction__c>();
+        Set<String> processedAuthKeys = new Set<String>();
 
-        for (FEC_GetUnbilledTransactions.TransactionRecord u : uList) {
-            Date postDate = FEC_CommonUltils.toDateStr(u.PostingDate);
-            if (postDate == null || u.Amount == null) continue;
+        if (cardTxList != null) {
+            for (FEC_GetCardBasicInfo.TransactionInfo cardTx : cardTxList) {
+                if (cardTx == null || cardTx.PostingDate == null || cardTx.Amount == null) {
+                    continue;
+                }
 
-            String key = buildKey(
-                postDate,
-                u.Amount,
-                u.TransactionType
-            );
+                String key = buildKey(
+                    cardTx.PostingDate,
+                    cardTx.Amount,
+                    cardTx.CreditDebitFlag
+                );
+                FEC_MFASOUTSTANDINGAUTHINQ.AuthTableRow auth = findOutstandingAuth(
+                    authMap,
+                    cardTx.PostingDate,
+                    cardTx.Amount,
+                    cardTx.AuthCode
+                );
+                if (auth != null) {
+                    String authKey = buildAuthMatchKey(cardTx.PostingDate, cardTx.Amount);
+                    if (authKey != null) {
+                        processedAuthKeys.add(authKey);
+                    }
+                }
 
-            FEC_Transaction__c rec =
-                working.containsKey(key)
+                FEC_Transaction__c rec = working.containsKey(key)
                     ? working.get(key)
                     : existed.containsKey(key)
                         ? existed.get(key)
-                        : new FEC_Transaction__c(
-                            FEC_Customer_History__c = historyId
-                        );
+                        : new FEC_Transaction__c(FEC_Customer_History__c = historyId);
 
-            // ===== Base fields (Unbilled) =====
-            rec.FEC_Effective_Date__c = FEC_CommonUltils.toDateStr(u.TransactionDate);
-            rec.FEC_Post_Date__c = postDate;
-            rec.FEC_Transaction_Amount__c = u.Amount;
-            rec.FEC_Credit_Debit_Flag__c = u.TransactionType;
-            rec.FEC_Merchant_Description__c = u.MerchantName;
-            rec.FEC_Merchant_Category_Code__c = u.MCC;
-            rec.FEC_Currency_Code__c = u.CurrencyCode;
+                rec.FEC_Effective_Date__c = cardTx.TRNXDateTime != null
+                    ? cardTx.TRNXDateTime.date()
+                    : cardTx.PostingDate;
+                rec.FEC_Post_Date__c = cardTx.PostingDate;
+                rec.FEC_Transaction_Amount__c = cardTx.Amount;
+                rec.FEC_Credit_Debit_Flag__c = cardTx.CreditDebitFlag;
+                rec.FEC_Merchant_Description__c = String.isBlank(cardTx.MerchantName)
+                    ? cardTx.Description
+                    : cardTx.MerchantName;
+                rec.FEC_Merchant_Category_Code__c = cardTx.MCC;
+                rec.FEC_Currency_Code__c = cardTx.TRNXCurrencyCode;
+                rec.FEC_Transaction_Code__c = String.isNotBlank(cardTx.TransactionCode)
+                    ? cardTx.TransactionCode
+                    : 'UNBILLED';
+                rec.FEC_Transaction_Plan__c = cardTx.Plan;
+                rec.FEC_Authorization_Code__c = cardTx.AuthCode;
+                rec.FEC_OTP_Sent__c = cardTx.OTPSent == 1
+                    ? 'Yes'
+                    : (cardTx.OTPSent == 0 ? 'No' : null);
 
-            // ===== Enrich from Financial =====
-            if (finMap.containsKey(key)) {
-                FEC_GetCardFinancialTransactions.FinancialTransaction f = finMap.get(key);
-                rec.FEC_Transaction_Code__c = f.TransactionCode;
-                rec.FEC_Transaction_Plan__c = f.Plan;
-                rec.FEC_Authorization_Code__c = f.AuthCode;
-                rec.FEC_OTP_Sent__c = f.OTPSent == 1 ? 'Yes' : 'No';
-            } else {
-                rec.FEC_Transaction_Code__c = 'UNBILLED';
+                if (auth != null) {
+                    if (String.isNotBlank(auth.CREDIT_PLAN)) {
+                        rec.FEC_Transaction_Plan__c = auth.CREDIT_PLAN;
+                    }
+                    if (String.isNotBlank(auth.AUTHORIZATION_CODE)) {
+                        rec.FEC_Authorization_Code__c = auth.AUTHORIZATION_CODE;
+                    }
+                }
+
+                working.put(key, rec);
             }
-
-            working.put(key, rec);
         }
 
-        /* ===============================
-           4. Financial-only rows (no unbilled match)
-           =============================== */
-        for (FEC_GetCardFinancialTransactions.FinancialTransaction f : fList) {
-            Date postDate = FEC_CommonUltils.toDateStr(f.PostingDate);
-            if (postDate == null || f.TRNXAmount == null) {
-                continue;
+        if (authList != null) {
+            for (FEC_MFASOUTSTANDINGAUTHINQ.AuthTableRow auth : authList) {
+                if (auth == null) {
+                    continue;
+                }
+                Date postDate = FEC_CommonUltils.parseDate(auth.POSTING_DATE);
+                Decimal amt = FEC_CommonUltils.parseAmountSafe(auth.AUTH_AMOUNT);
+                String authKey = buildAuthMatchKey(postDate, amt);
+                if (authKey == null || processedAuthKeys.contains(authKey)) {
+                    continue;
+                }
+
+                String key = buildKey(postDate, amt, auth.CreditDebitFlag);
+                FEC_Transaction__c rec = working.containsKey(key)
+                    ? working.get(key)
+                    : existed.containsKey(key)
+                        ? existed.get(key)
+                        : new FEC_Transaction__c(FEC_Customer_History__c = historyId);
+
+                rec.FEC_Effective_Date__c = FEC_CommonUltils.parseDate(auth.EFF_DATE);
+                if (rec.FEC_Effective_Date__c == null) {
+                    rec.FEC_Effective_Date__c = postDate;
+                }
+                rec.FEC_Post_Date__c = postDate;
+                rec.FEC_Transaction_Amount__c = amt;
+                rec.FEC_Merchant_Description__c = auth.Description;
+                rec.FEC_Credit_Debit_Flag__c = auth.CreditDebitFlag;
+                rec.FEC_Transaction_Plan__c = auth.CREDIT_PLAN;
+                rec.FEC_Transaction_Code__c = String.isNotBlank(auth.AUTHORIZATION_CODE)
+                    ? auth.AUTHORIZATION_CODE
+                    : 'UNBILLED';
+                rec.FEC_Authorization_Code__c = auth.AUTHORIZATION_CODE;
+                rec.FEC_Merchant_Category_Code__c = auth.MERCH_CAT;
+                rec.FEC_Currency_Code__c = auth.TXN_CURR_CODE;
+
+                working.put(key, rec);
             }
-
-            String key = buildKey(postDate, f.TRNXAmount, f.CreditDebitFlag);
-            if (key == null || working.containsKey(key)) {
-                continue;
-            }
-
-            FEC_Transaction__c rec = existed.containsKey(key)
-                ? existed.get(key)
-                : new FEC_Transaction__c(FEC_Customer_History__c = historyId);
-
-            Date effDate = FEC_CommonUltils.toDateStr(f.TRNXDateAndTime);
-            if (effDate == null) {
-                effDate = postDate;
-            }
-
-            rec.FEC_Effective_Date__c = effDate;
-            rec.FEC_Post_Date__c = postDate;
-            rec.FEC_Transaction_Amount__c = f.TRNXAmount;
-            rec.FEC_Credit_Debit_Flag__c = f.CreditDebitFlag;
-            rec.FEC_Merchant_Description__c = String.isBlank(f.MerchantName)
-                ? f.Description
-                : f.MerchantName;
-            rec.FEC_Transaction_Code__c = f.TransactionCode;
-            rec.FEC_Transaction_Plan__c = f.Plan;
-            rec.FEC_Authorization_Code__c = f.AuthCode;
-            rec.FEC_Currency_Code__c = f.TRNXCurrencyCode;
-            rec.FEC_OTP_Sent__c = f.OTPSent == 1 ? 'Yes' : (f.OTPSent == 0 ? 'No' : null);
-
-            working.put(key, rec);
         }
 
         if (!working.isEmpty()) {
@@ -781,41 +933,47 @@ public without sharing class FEC_TransactionsController {
     /* =====================================================
        SAFE CALLS
        ===================================================== */
-    private static List<FEC_GetUnbilledTransactions.TransactionRecord>
-    callUnbilledSafe(String acc) {
+    private static List<FEC_GetCardBasicInfo.TransactionInfo>
+    callCardBasicInfoSafe(String acc) {
         try {
-            FEC_GetUnbilledTransactions.ResponseWrapper res =
-                FEC_GetUnbilledTransactions.callGetUnbilledTransactions(
+            FEC_GetCardBasicInfo.ResponseWrapper res =
+                FEC_GetCardBasicInfo.callGetCardBasicInfo(
                     FEC_CommonUltils.generateTransactionId(),
                     FEC_ConstantCommon.REQUESTOR_CRM,
                     Datetime.now().formatGMT(FEC_ConstantCommon.DATETIME_FORMAT),
                     acc
                 );
-            return res != null && res.Transactions != null
-                ? res.Transactions
-                : new List<FEC_GetUnbilledTransactions.TransactionRecord>();
+            return res != null
+                && res.CardBasicInfo != null
+                && res.CardBasicInfo.Transactions != null
+                ? res.CardBasicInfo.Transactions
+                : new List<FEC_GetCardBasicInfo.TransactionInfo>();
         } catch (Exception e) {
-            return new List<FEC_GetUnbilledTransactions.TransactionRecord>();
+            return new List<FEC_GetCardBasicInfo.TransactionInfo>();
         }
     }
 
-    private static List<FEC_GetCardFinancialTransactions.FinancialTransaction>
-    callFinancialSafe(String acc) {
+    private static List<FEC_MFASOUTSTANDINGAUTHINQ.AuthTableRow>
+    callOutstandingAuthSafe(String acc) {
         try {
-            FEC_GetCardFinancialTransactions.ResponseWrapper res =
-                FEC_GetCardFinancialTransactions.callGetCardFinancialTransactions(
+            FEC_MFASOUTSTANDINGAUTHINQ.ResponseWrapper res =
+                FEC_MFASOUTSTANDINGAUTHINQ.callService(
                     FEC_CommonUltils.generateTransactionId(),
                     FEC_ConstantCommon.REQUESTOR_CRM,
                     Datetime.now().formatGMT(FEC_ConstantCommon.DATETIME_FORMAT),
-                    acc,
-                    Date.today().addMonths(-3),
-                    Date.today()
+                    FEC_ConstantCommon.VMX_VERSION_DEFAULT,
+                    FEC_ConstantCommon.REQUESTOR_VMX_CONTEXT,
+                    FEC_ConstantCommon.REQUESTOR_VMX_CONTEXT,
+                    FEC_ConstantCommon.REQUESTOR_ORG,
+                    acc
                 );
-            return res != null && res.Transactions != null
-                ? res.Transactions
-                : new List<FEC_GetCardFinancialTransactions.FinancialTransaction>();
+            return res != null
+                && res.VMXMsgOut != null
+                && res.VMXMsgOut.Auths != null
+                ? res.VMXMsgOut.Auths
+                : new List<FEC_MFASOUTSTANDINGAUTHINQ.AuthTableRow>();
         } catch (Exception e) {
-            return new List<FEC_GetCardFinancialTransactions.FinancialTransaction>();
+            return new List<FEC_MFASOUTSTANDINGAUTHINQ.AuthTableRow>();
         }
     }
 

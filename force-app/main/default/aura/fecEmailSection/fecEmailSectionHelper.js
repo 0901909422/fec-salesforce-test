@@ -89,14 +89,64 @@
         window.setTimeout($A.getCallback(run), 120);
     },
 
+    /**
+     * tungnm37 fix: Huy instance Quill cu + abort document-level listeners (scroll, mousedown)
+     * + replace shared dropdown container (Font/Size/Format) + remove image/color dropdowns.
+     * Goi tu onRecordIdChange truoc khi load Interaction moi de tranh stuck toolbar.
+     */
+    tearDownQuill: function(component) {
+        try {
+            // 1. Abort document-level listeners (close dropdown, scroll reposition) cu
+            try { if (this._fecDocAbort && typeof this._fecDocAbort.abort === 'function') { this._fecDocAbort.abort(); } } catch(eA) {}
+            this._fecDocAbort = null;
+        } catch(e1) {}
+        try {
+            // 2. Destroy Quill instance cu neu co method
+            if (window._fecQuill) {
+                try {
+                    // Remove native event listeners (paste, keydown capture, input) trc
+                    var oldRoot = window._fecQuill.root;
+                    if (oldRoot) {
+                        try { oldRoot.outerHTML = oldRoot.outerHTML; } catch(eClone) {}
+                    }
+                    if (typeof window._fecQuill.destroy === 'function') {
+                        window._fecQuill.destroy();
+                    } else if (window._fecQuill.scroll && window._fecQuill.scroll.observer) {
+                        try { window._fecQuill.scroll.observer.disconnect(); } catch(eObs) {}
+                    }
+                } catch (eDestroy) { /* old Quill version - ignore */ }
+                window._fecQuill = null;
+            }
+        } catch(e2) {}
+        try {
+            // 3. Replace shared dropdown container (Font/Size/Format) - cloneNode de remove listeners cu
+            if (window._fecQDD && window._fecQDD.parentNode) {
+                var oldDD = window._fecQDD;
+                var newDD = oldDD.cloneNode(false);
+                newDD.id = 'fec-q-dd';
+                newDD.innerHTML = '';
+                newDD.style.cssText = oldDD.style.cssText;
+                newDD.style.display = 'none';
+                oldDD.parentNode.replaceChild(newDD, oldDD);
+                window._fecQDD = newDD;
+            }
+        } catch(e3) {}
+        try {
+            // 4. Remove any orphaned image/color dropdowns
+            var orphanImgDD = document.getElementById('fec-img-dd');
+            if (orphanImgDD && orphanImgDD.parentNode) orphanImgDD.parentNode.removeChild(orphanImgDD);
+        } catch(e4) {}
+    },
+
+
     _buildEditor: function(component, bodyHtml) {
+        var self = this;
         var wrapper = component.find('quillWrapper');
         if (!wrapper) return;
         var wrapEl = wrapper.getElement();
         if (!wrapEl) return;
-        if (window._fecQuill) { window._fecQuill = null; }
+        if (window._fecQuill) { self.tearDownQuill(component); }
         wrapEl.innerHTML = '';
-        var self = this;
         if (!window._fecQReg) {
             var FA = window.Quill.import('formats/font');
             FA.whitelist = self.FONTS.filter(function(f){return f.v;}).map(function(f){return f.v;});
@@ -903,7 +953,8 @@
                 }
             }
         }
-        window.addEventListener('scroll', onScroll, true);
+        if (!self._fecDocAbort) { self._fecDocAbort = new AbortController(); }
+        window.addEventListener('scroll', onScroll, { capture: true, signal: self._fecDocAbort.signal });
 
         // Keyboard handler: xá»­ lÃ½ table + Backspace/Delete
         quill.root.addEventListener('keydown', function(e) {
@@ -1008,11 +1059,12 @@
                 sib.parentNode.removeChild(sib);
             }
         }, true);
-        // Close on outside click
+        // Close on outside click (use AbortController so we can clean up on teardown)
+        if (!self._fecDocAbort) { self._fecDocAbort = new AbortController(); }
         document.addEventListener('mousedown', function(e) {
             if (clrDDEl && !clrDDEl.contains(e.target) && !tbEl.contains(e.target)) closeClrDD();
             if (!tbEl.contains(e.target) && e.target!==ddEl && !ddEl.contains(e.target)) closeDD();
-        });
+        }, { signal: self._fecDocAbort.signal });
     },
 
 

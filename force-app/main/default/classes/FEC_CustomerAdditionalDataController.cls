@@ -6,6 +6,7 @@
  * Một Case chỉ dùng một điều kiện lookup (ưu tiên theo STT design: CIF_NUMBER → ID_CARD → PHONE_NUMBER →
  * APPLICATION_ID → ACCOUNT_NO/CONTRACT_NO); nếu nhiều bản ghi FEC_CustomerAdditionalInfo__c khớp thì chỉ trả 1 bản (CreatedDate mới nhất).
  * Chỉ trả bản ghi chi tiết khi Case.CreatedDate >= FEC_CustomerAdditionalInfo__c.CreatedDate (spec B3 Lưu ý).
+ * Không giới hạn record type Case (Interaction, Search Interaction, Internal Case, Customer Case, ...).
  */
 public with sharing class FEC_CustomerAdditionalDataController {
 
@@ -36,9 +37,6 @@ public with sharing class FEC_CustomerAdditionalDataController {
         }
         Case c = queryCase(caseId);
         if (c == null) {
-            return result;
-        }
-        if (c.RecordType == null || c.RecordType.DeveloperName != FEC_ConstantCommon.CASE_INTERACTION_RECORD_TYPE_DEV_NAME) {
             return result;
         }
         Map<String, Set<String>> keyToValues = buildKeyValueMap(c);

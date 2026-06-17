@@ -264,7 +264,7 @@ export default class Fec_AccountOrContractPicklistInteraction extends LightningE
       caseId: this.recordId,
     });
 
-    console.log("AccountNumber:", result);
+    console.log("AccountNumber raw:", result, "type:", typeof result);
 
     this.firstAccountContractNumber = result || "";
   }

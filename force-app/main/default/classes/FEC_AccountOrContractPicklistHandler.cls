@@ -61,8 +61,7 @@ public without sharing class FEC_AccountOrContractPicklistHandler {
                 String accountNumber;
                 
                 if (
-                    FEC_ConstantCommon.PRODUCT_TYPE_LOAN.equalsIgnoreCase(productType) ||
-                    FEC_ConstantCommon.PRODUCT_TYPE_INSURANCE.equalsIgnoreCase(productType)
+                    FEC_ConstantCommon.PRODUCT_TYPE_LOAN.equalsIgnoreCase(productType)
                 ) {
                     
                     accountNumber =
@@ -76,7 +75,10 @@ public without sharing class FEC_AccountOrContractPicklistHandler {
                         interactionCase.FEC_Account_or_Contract__r.FEC_Account_Number__c;
                     
                 } else if (
-                FEC_ConstantCommon.PRODUCT_TYPE_UBANK.equalsIgnoreCase(productType)
+                FEC_ConstantCommon.PRODUCT_TYPE_UBANK.equalsIgnoreCase(productType) ||
+                    FEC_ConstantCommon.PRODUCT_TYPE_INSURANCE.equalsIgnoreCase(productType)||
+                    FEC_ConstantCommon.PRODUCT_TYPE_B2_CASE.equalsIgnoreCase(productType)||
+                    FEC_ConstantCommon.PRODUCT_TYPE_CASH24_CASE.equalsIgnoreCase(productType)
                 ) {
                     
                     accountNumber =
@@ -151,8 +153,7 @@ public without sharing class FEC_AccountOrContractPicklistHandler {
                 String accountNumber;
                 
                 // 🎯 CORE LOGIC
-                if (productCode.toLowerCase() == FEC_ConstantCommon.PRODUCT_TYPE_LOAN.toLowerCase() ||
-                productCode.toLowerCase() == FEC_ConstantCommon.PRODUCT_TYPE_INSURANCE.toLowerCase()) {
+                if (productCode.toLowerCase() == FEC_ConstantCommon.PRODUCT_TYPE_LOAN.toLowerCase()) {
                     
                     accountNumber =
                         customerCase.FEC_Account_or_Contract__r.FEC_Contract_Number__c;
@@ -161,7 +162,7 @@ public without sharing class FEC_AccountOrContractPicklistHandler {
                     
                     accountNumber =
                         customerCase.FEC_Account_or_Contract__r.FEC_Account_Number__c;
-                }else if(productCode.toLowerCase() == FEC_ConstantCommon.PRODUCT_TYPE_UBANK.toLowerCase()) {
+                }else if(productCode.toLowerCase() == FEC_ConstantCommon.PRODUCT_TYPE_UBANK.toLowerCase() || productCode.toLowerCase() == FEC_ConstantCommon.PRODUCT_TYPE_INSURANCE.toLowerCase() || productCode.toLowerCase() == FEC_ConstantCommon.PRODUCT_TYPE_B2_CASE.toLowerCase() || productCode.toLowerCase() == FEC_ConstantCommon.PRODUCT_TYPE_CASH24_CASE.toLowerCase()) {
                     accountNumber = customerCase.FEC_Account_or_Contract__r.FEC_Product_Code__c;
                 }
                 
@@ -269,11 +270,7 @@ public without sharing class FEC_AccountOrContractPicklistHandler {
                     
                     String contract = p.contractNumber;
                     
-                    if (Pattern.matches(FEC_ConstantCommon.PATTERN_INSURANCE, contract)) {
-                        item.accountContractNumber = contract;
-                        item.productType = FEC_ConstantCommon.PRODUCT_TYPE_INSURANCE;
-                    }
-                    else if (Pattern.matches(FEC_ConstantCommon.PATTERN_LOAN, contract)) {
+                    if (Pattern.matches(FEC_ConstantCommon.PATTERN_LOAN, contract)) {
                         item.accountContractNumber = contract;
                         item.productType = FEC_ConstantCommon.PRODUCT_TYPE_LOAN;
                     }
@@ -341,11 +338,11 @@ public without sharing class FEC_AccountOrContractPicklistHandler {
         }
         FEC_Customer_History__c rec = new FEC_Customer_History__c();
         rec.Name = selectedAccountContractNumber;
-        if (selectedType.toLowerCase() == FEC_ConstantCommon.PRODUCT_TYPE_INSURANCE || selectedType.toLowerCase() == FEC_ConstantCommon.PRODUCT_TYPE_LOAN.toLowerCase()) {
+        if (selectedType.toLowerCase() == FEC_ConstantCommon.PRODUCT_TYPE_LOAN.toLowerCase()) {
             rec.FEC_Contract_Number__c = selectedAccountContractNumber;
         } else if (selectedType.toLowerCase() == FEC_ConstantCommon.PRODUCT_TYPE_CARD.toLowerCase()) {
             rec.FEC_Account_Number__c = selectedAccountContractNumber;
-        }else if(selectedType.toLowerCase() == FEC_ConstantCommon.PRODUCT_TYPE_UBANK.toLowerCase()){
+        }else if(selectedType.toLowerCase() == FEC_ConstantCommon.PRODUCT_TYPE_UBANK.toLowerCase() || selectedType.toLowerCase() == FEC_ConstantCommon.PRODUCT_TYPE_INSURANCE.toLowerCase() || selectedType.toLowerCase() == FEC_ConstantCommon.PRODUCT_TYPE_B2_CASE.toLowerCase() || selectedType.toLowerCase() == FEC_ConstantCommon.PRODUCT_TYPE_CASH24_CASE.toLowerCase()){
             rec.FEC_Account_Number__c = selectedAccountContractNumber;
         }
         rec.FEC_Case__c = caseId;
@@ -436,7 +433,10 @@ public without sharing class FEC_AccountOrContractPicklistHandler {
         FEC_Account_or_Contract__c = customerHistoryId,
         FEC_Product_Type__c = productTypeId
             );
-        
+
+        // [CHANGE] Reset Account/Contract Number Picklist truoc khi map theo productType moi
+        c.FEC_Account_Contract_Number_PL__c = null;
+
         if (productType.toLowerCase() == FEC_ConstantCommon.PRODUCT_TYPE_LOAN.toLowerCase() ||
         productType.toLowerCase() == FEC_ConstantCommon.PRODUCT_TYPE_INSURANCE.toLowerCase()) {
             
@@ -444,16 +444,35 @@ public without sharing class FEC_AccountOrContractPicklistHandler {
                 c.FEC_Contract_Number__c = accountContractNumber;
                 c.FEC_Account_Number__c = null  ;
             }
-            
+            // Insurance => set picklist = 'Insurance' (Loan => None)
+            if (productType.toLowerCase() == FEC_ConstantCommon.PRODUCT_TYPE_INSURANCE.toLowerCase()) {
+                c.FEC_Account_Contract_Number_PL__c = FEC_ConstantCommon.PRODUCT_TYPE_INSURANCE_CASE;
+            }
+
         } else if (productType.toLowerCase() == FEC_ConstantCommon.PRODUCT_TYPE_CARD.toLowerCase()) {
             
             if (String.isNotBlank(accountContractNumber)) {
                 c.FEC_Account_Number__c = accountContractNumber;
                 c.FEC_Contract_Number__c = null;
             }
+            // Card => None (khong set picklist)
         }else if(productType.toLowerCase() == FEC_ConstantCommon.PRODUCT_TYPE_UBANK.toLowerCase()){
             c.FEC_Account_Number__c = FEC_ConstantCommon.PRODUCT_TYPE_UBANK;
             c.FEC_Contract_Number__c = null;
+            c.FEC_Account_Contract_Number_PL__c = FEC_ConstantCommon.PRODUCT_TYPE_UBANK_CASE;
+        }else if(productType.toLowerCase() == FEC_ConstantCommon.PRODUCT_TYPE_UBANK.toLowerCase()){
+            c.FEC_Account_Number__c = FEC_ConstantCommon.PRODUCT_TYPE_UBANK;
+            c.FEC_Contract_Number__c = null;
+        }
+        else if(productType.toLowerCase() == FEC_ConstantCommon.PRODUCT_TYPE_B2_CASE.toLowerCase()){
+            c.FEC_Account_Number__c = FEC_ConstantCommon.PRODUCT_TYPE_B2_CASE;
+            c.FEC_Contract_Number__c = null;
+            c.FEC_Account_Contract_Number_PL__c = FEC_ConstantCommon.PRODUCT_TYPE_B2_CASE;
+        }
+        else if(productType.toLowerCase() == FEC_ConstantCommon.PRODUCT_TYPE_CASH24_CASE.toLowerCase()){
+            c.FEC_Account_Number__c = FEC_ConstantCommon.PRODUCT_TYPE_CASH24_CASE;
+            c.FEC_Contract_Number__c = null;
+            c.FEC_Account_Contract_Number_PL__c = FEC_ConstantCommon.PRODUCT_TYPE_CASH24_CASE;
         }
         
         try {
@@ -538,8 +557,7 @@ public without sharing class FEC_AccountOrContractPicklistHandler {
             String productCode = record.FEC_Product_Code__c;
             if (String.isBlank(productCode)) return null;
             
-            if (productCode.equalsIgnoreCase(FEC_ConstantCommon.PRODUCT_TYPE_LOAN) ||
-            productCode.equalsIgnoreCase(FEC_ConstantCommon.PRODUCT_TYPE_INSURANCE)) {
+            if (productCode.equalsIgnoreCase(FEC_ConstantCommon.PRODUCT_TYPE_LOAN)) {
                 
                 return record.FEC_Contract_Number__c;
                 
