@@ -446,7 +446,7 @@ export default class Fec_Il10DeliveryForm extends LightningElement {
         const street = (row.street || STR_EMPTY).trim();
         const wardLabel = (row.wardLabel || STR_EMPTY).trim();
         const provinceLabel = (row.provinceLabel || STR_EMPTY).trim();
-        if (!building || !streetNumber || !street || !wardLabel || !provinceLabel) {
+        if (!street || !wardLabel || !provinceLabel) {
             return undefined;
         }
         return {
@@ -469,24 +469,26 @@ export default class Fec_Il10DeliveryForm extends LightningElement {
             .split(',')
             .map((s) => (s || STR_EMPTY).trim())
             .filter((s) => !!s);
-        if (chunks.length < 5) {
+        if (chunks.length < 3) {
             return undefined;
         }
-        const building = chunks[0] || STR_EMPTY;
-        const streetNumber = chunks[1] || STR_EMPTY;
         const provinceLabel = chunks[chunks.length - 1] || STR_EMPTY;
         const wardLabel = chunks[chunks.length - 2] || STR_EMPTY;
-        const streetChunks = chunks.slice(2, chunks.length - 2);
-        if (
-            streetChunks.length > 0 &&
-            wardLabel &&
-            ((streetChunks[streetChunks.length - 1] || STR_EMPTY).trim().toLowerCase() ===
-                wardLabel.toLowerCase())
-        ) {
-            streetChunks.pop();
+        const head = chunks.slice(0, chunks.length - 2);
+        let building = STR_EMPTY;
+        let streetNumber = STR_EMPTY;
+        let street = STR_EMPTY;
+        if (head.length === 1) {
+            street = head[0];
+        } else if (head.length === 2) {
+            building = head[0];
+            street = head[1];
+        } else if (head.length >= 3) {
+            building = head[0];
+            streetNumber = head[1];
+            street = head.slice(2).join(', ');
         }
-        const street = streetChunks.join(', ');
-        if (!building || !streetNumber || !street || !wardLabel || !provinceLabel) {
+        if (!street || !wardLabel || !provinceLabel) {
             return undefined;
         }
         return {
