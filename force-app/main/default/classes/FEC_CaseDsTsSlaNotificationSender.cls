@@ -23,10 +23,10 @@ public without sharing class FEC_CaseDsTsSlaNotificationSender {
         }
 
         String senderEmail = resolveSenderEmailAddress();
-        Map<Id, Case> enriched = queryCasesForNotification(caseIdsToNotify);
+        Map<Id, Case> casesById = buildCasesFromTrigger(newCases, caseIdsToNotify);
         List<FEC_Notification.EmailInfo> emailsToSend = buildEmailInfos(
             caseIdsToNotify,
-            enriched,
+            casesById,
             templateByApi
         );
 
@@ -42,34 +42,51 @@ public without sharing class FEC_CaseDsTsSlaNotificationSender {
             if (oldC == null) {
                 continue;
             }
-            if (detectNewlyStampedSlot(c, oldC) != null) {
+            if (detectNewlyStampedSlot(c, oldC) != null && c.IsClosed != true) {
                 caseIds.add(c.Id);
             }
         }
         return caseIds;
     }
 
-    private static Map<Id, Case> queryCasesForNotification(Set<Id> caseIds) {
-        return new Map<Id, Case>([
-            SELECT Id, FEC_ID_Search__c, OwnerId, FEC_Case_Status__c, FEC_Team__c,
-                   FEC_Assignment_Count__c, FEC_Assignment_Users__c,
-                   FEC_SLA_Notification_1__c, FEC_SLA_Notification_2__c, FEC_SLA_Notification_3__c,
-                   FEC_Category__r.Name
-            FROM Case
-            WHERE Id IN :caseIds
-        ]);
+    private static Map<Id, Case> buildCasesFromTrigger(List<Case> newCases, Set<Id> caseIds) {
+        Map<Id, Case> casesById = new Map<Id, Case>();
+        Set<Id> categoryIds = new Set<Id>();
+        for (Case c : newCases) {
+            if (!caseIds.contains(c.Id)) {
+                continue;
+            }
+            casesById.put(c.Id, c);
+            if (c.FEC_Category__c != null) {
+                categoryIds.add(c.FEC_Category__c);
+            }
+        }
+        if (!categoryIds.isEmpty()) {
+            Map<Id, FEC_Category__c> categoriesById = new Map<Id, FEC_Category__c>([
+                SELECT Id, Name
+                FROM FEC_Category__c
+                WHERE Id IN :categoryIds
+            ]);
+            for (Case c : casesById.values()) {
+                FEC_Category__c category = categoriesById.get(c.FEC_Category__c);
+                if (category != null) {
+                    c.FEC_Category__r = category;
+                }
+            }
+        }
+        return casesById;
     }
 
     private static List<FEC_Notification.EmailInfo> buildEmailInfos(
         Set<Id> caseIds,
-        Map<Id, Case> enriched,
+        Map<Id, Case> casesById,
         Map<String, FEC_Template__c> templateByApi
     ) {
         List<FEC_Notification.EmailInfo> emailsToSend = new List<FEC_Notification.EmailInfo>();
 
         for (Id caseId : caseIds) {
             emailsToSend.addAll(
-                buildEmailInfosForCase(caseId, enriched.get(caseId), templateByApi)
+                buildEmailInfosForCase(caseId, casesById.get(caseId), templateByApi)
             );
         }
         return emailsToSend;

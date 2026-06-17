@@ -12,6 +12,9 @@
 ****************************************************************************************/
 public with sharing class FEC_SearchByListNIDsServiceCallout {
 
+    private static final String API_NAME = 'FEC_Search_By_List_NIDs';
+    public static FEC_ResponseLog responseLog;
+
     public class NIDsResponse {
         @AuraEnabled public String pxObjClass;
         @AuraEnabled public Sys sys;
@@ -73,24 +76,55 @@ public with sharing class FEC_SearchByListNIDsServiceCallout {
 
         String requestBody = JSON.serialize(bodyMap);
 
-        HttpResponse resp = FEC_CommonUltils.calloutApi(
-            endpoint,
-            FEC_ConstantCommon.API_METHOD_POST,
-            FEC_ConstantCommon.API_CONTENT_TYPE_JSON,
-            null,
-            null,
-            requestBody
-        );
+        try {
+            HttpResponse resp = FEC_CommonUltils.calloutApi(
+                endpoint,
+                FEC_ConstantCommon.API_METHOD_POST,
+                FEC_ConstantCommon.API_CONTENT_TYPE_JSON,
+                null,
+                null,
+                requestBody
+            );
 
-        if (resp.getStatusCode() >= 200 && resp.getStatusCode() < 300) {
-            return (NIDsResponse) JSON.deserialize(resp.getBody(), NIDsResponse.class);
-            
+            responseLog = new FEC_ResponseLog(
+                API_NAME,
+                endpoint,
+                FEC_ConstantCommon.API_METHOD_POST,
+                requestBody,
+                resp,
+                null
+            );
+
+            if (resp.getStatusCode() >= 200 && resp.getStatusCode() < 300) {
+                return (NIDsResponse) JSON.deserialize(resp.getBody(), NIDsResponse.class);
+            }
+
+            NIDsResponse err = new NIDsResponse();
+            err.sys = new Sys();
+            err.sys.code = resp.getStatusCode();
+            err.sys.description = 'HTTP Error: ' + resp.getStatus();
+            err.sys.transID = transactionId;
+            return err;
+        } catch (Exception ex) {
+            if (responseLog != null) {
+                responseLog.errorMessage = ex.getMessage();
+            }
+            throw ex;
+        } finally {
+            logApiResponse();
         }
-        NIDsResponse err = new NIDsResponse();
-        err.sys = new Sys();
-        err.sys.code = resp.getStatusCode();
-        err.sys.description = 'HTTP Error: ' + resp.getStatus();
-        err.sys.transID = transactionId;
-        return err;
+    }
+
+    public static void logApiResponse() {
+        if (responseLog != null) {
+            FEC_CommonUltils.logApi(
+                responseLog.apiName,
+                responseLog.endpoint,
+                responseLog.method,
+                responseLog.requestBody,
+                responseLog.response,
+                responseLog.errorMessage
+            );
+        }
     }
 }

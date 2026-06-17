@@ -84,17 +84,32 @@ export default class Fec_CardPayment extends LightningElement {
             // IPP Interest - format với 2 chữ số thập phân + %
             if (formattedRecord.FEC_IPP_Interest__c != null && formattedRecord.FEC_IPP_Interest__c !== undefined) {
                 const value = Number(formattedRecord.FEC_IPP_Interest__c);
-                formattedRecord.FEC_IPP_Interest_Formatted__c = value.toFixed(2) + '%';
+                formattedRecord.FEC_IPP_Interest_Formatted__c = value.toFixed(2) + ' %';
             }
+
+            // Close Fee: CloseFeelIndicatorAmount / 100000 + %
+            if (formattedRecord.FEC_Close_Fee__c != null && formattedRecord.FEC_Close_Fee__c !== undefined) {
+                const value = Number(formattedRecord.FEC_Close_Fee__c);
+                formattedRecord.FEC_Close_Fee_Formatted__c = value.toFixed(2) + ' %';
+            }
+
+            const decimalFields = [
+                'FEC_Accrued_Interest__c',
+                'FEC_Per_Diem__c'
+            ];
+            decimalFields.forEach(field => {
+                const formattedFieldName = field.replace('__c', '_Formatted__c');
+                if (formattedRecord[field] != null && formattedRecord[field] !== undefined) {
+                    const value = Number(formattedRecord[field]);
+                    formattedRecord[formattedFieldName] = formatCurrency(value, 2);
+                }
+            });
 
             // Format các trường số với dấu phẩy - Number(18,0) - không có số thập phân
             const currencyFields = [
                 'FEC_Current_Balance__c',
-                'FEC_Close_Fee__c',
                 'FEC_Close_Fee_Amount__c',
                 'FEC_Plan_Payment_Amount__c',
-                'FEC_Accrued_Interest__c',
-                'FEC_Per_Diem__c',
                 'FEC_Deferred_Interest__c',
                 'FEC_IPP_Accrued_Interest__c'
             ];
@@ -106,7 +121,7 @@ export default class Fec_CardPayment extends LightningElement {
                     formattedRecord[formattedFieldName] = formatCurrency(value, 0);
                 } else if (field === 'FEC_IPP_Accrued_Interest__c') {
                     // (NextStatementDate - today) > 4 ngày → không hiển thị dữ liệu
-                    formattedRecord[formattedFieldName] = '---';
+                    formattedRecord[formattedFieldName] = '–';
                 }
             });
             
@@ -443,7 +458,7 @@ export default class Fec_CardPayment extends LightningElement {
     }
     
     get formattedTotalAccruedInterest() {
-        return formatCurrency(this.totalAccruedInterest, 0);
+        return formatCurrency(this.totalAccruedInterest, 2);
     }
     
     get isTotalAccruedInterestNegative() {
@@ -459,7 +474,7 @@ export default class Fec_CardPayment extends LightningElement {
     }
     
     get formattedTotalPerDiem() {
-        return formatCurrency(this.totalPerDiem, 0);
+        return formatCurrency(this.totalPerDiem, 2);
     }
     
     get isTotalPerDiemNegative() {
