@@ -4,6 +4,7 @@ import { loadStyle } from "lightning/platformResourceLoader";
 import COMMON_STYLES from "@salesforce/resourceUrl/FEC_CommonCss";
 // import getAssignments from "@salesforce/apex/FEC_AssignmentListHandler.getAssignments";
 import getAssignmentsNEW from "@salesforce/apex/FEC_AssignmentListHandler.getAssignmentsNEW";
+import reloadCaseStatusWhenSubmitAssignment from "@salesforce/apex/FEC_AssignmentController.reloadCaseStatusWhenSubmitAssignment";
 import getQueueNames from "@salesforce/apex/FEC_AssignmentListHandler.getQueueNames"; // tungnm37 thêm
 import getAction from "@salesforce/apex/FEC_AssignmentListHandler.getAction";
 import getUserDepartment from "@salesforce/apex/FEC_AssignmentListHandler.getUserDepartment";
@@ -667,8 +668,11 @@ export default class Fec_AssignmentList extends LightningElement {
         await remarkHistoryCmp.refreshData();
       }
 
-      await refreshExecuteVisibility({ caseId: this.recordId });
+      await reloadCaseStatusWhenSubmitAssignment({
+        caseId: this.recordId,
+      });
       await refreshExecuteCaseVisibility({ caseId: this.recordId });
+      await refreshExecuteVisibility({ caseId: this.recordId });
       publish(this.messageContext, CASE_ACTION_CHANNEL, {
         caseId: this.recordId,
       });
