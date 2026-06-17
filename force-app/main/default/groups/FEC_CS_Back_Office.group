@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Group xmlns="http://soap.sforce.com/2006/04/metadata">
+    <description>Toàn bộ người dùng thuộc Back Office (bao gồm SP, CC, QC, OM, CX)</description>
+    <doesIncludeBosses>true</doesIncludeBosses>
+    <name>CS Back Office</name>
+</Group>
