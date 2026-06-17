@@ -494,15 +494,13 @@ public without sharing class FEC_CaseMasterDataHelper {
       return false;
     }
     String n = subSectionName.trim().toLowerCase();
-    Boolean hideD2c = n.contains('confirm') && n.contains('d2c');
-    Boolean hideCsSp =
-      n.contains('confirm') &&
-      (n.contains('cs sp') || n.contains('support'));
+    // Revert 2→1 (OM): ẩn subsection CS SP; revert 3→1 (Support): ẩn subsection D2C.
     if (revertSourceStageNumber == 2) {
-      return isRc27Flow == true ? hideCsSp : hideD2c;
+      return n.contains('confirm') &&
+        (n.contains('cs sp') || n.contains('support'));
     }
     if (revertSourceStageNumber == 3) {
-      return isRc27Flow == true ? hideD2c : hideCsSp;
+      return n.contains('confirm') && n.contains('d2c');
     }
     return false;
   }
@@ -575,15 +573,12 @@ public without sharing class FEC_CaseMasterDataHelper {
     if (revertSourceStageNumber == null || String.isBlank(fieldApiName)) {
       return false;
     }
+    // Revert 2→1 (OM): ẩn CS SP confirm; revert 3→1 (Support): ẩn D2C confirm.
     if (revertSourceStageNumber == 2) {
-      return isRc27Flow == true
-        ? API_CONFIRM_CS_SP_ASSESSMENT.equals(fieldApiName)
-        : API_CONFIRM_D2C_ASSESSMENT.equals(fieldApiName);
+      return API_CONFIRM_CS_SP_ASSESSMENT.equals(fieldApiName);
     }
     if (revertSourceStageNumber == 3) {
-      return isRc27Flow == true
-        ? API_CONFIRM_D2C_ASSESSMENT.equals(fieldApiName)
-        : API_CONFIRM_CS_SP_ASSESSMENT.equals(fieldApiName);
+      return API_CONFIRM_D2C_ASSESSMENT.equals(fieldApiName);
     }
     return false;
   }
