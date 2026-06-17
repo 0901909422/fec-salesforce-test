@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>FEC_Interaction_ID_Report__c</fullName>
+    <description>Trường Interaction ID tạo mới phục vụ report (không phải dạng hyperlink)</description>
+    <externalId>false</externalId>
+    <formula>IF( RecordType.Name = &apos;Interaction&apos;, FEC_ID_Search__c,
+IF( FEC_Interaction__c &lt;&gt; null, FEC_Interaction__r.FEC_ID_Search__c, &apos;&apos;)
+)</formula>
+    <formulaTreatBlanksAs>BlankAsZero</formulaTreatBlanksAs>
+    <label>Interaction ID (Report)</label>
+    <required>false</required>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Text</type>
+    <unique>false</unique>
+</CustomField>

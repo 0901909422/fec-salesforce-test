@@ -246,6 +246,11 @@
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
+        <editable>false</editable>
+        <field>Case.FEC_Case_ID_Report__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
         <editable>true</editable>
         <field>Case.FEC_Case_Participants__c</field>
         <readable>true</readable>
@@ -518,6 +523,11 @@
     <fieldPermissions>
         <editable>false</editable>
         <field>Case.FEC_Interaction_ID__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
+        <field>Case.FEC_Interaction_ID_Report__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>

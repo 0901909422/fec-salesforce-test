@@ -135,6 +135,12 @@
         </columns>
         <columns>
             <checkedByDefault>false</checkedByDefault>
+            <displayNameOverride>Case ID</displayNameOverride>
+            <field>FEC_Case_ID_Report__c</field>
+            <table>Case</table>
+        </columns>
+        <columns>
+            <checkedByDefault>false</checkedByDefault>
             <displayNameOverride>Updated Category</displayNameOverride>
             <field>FEC_Category__c</field>
             <table>Case</table>
@@ -192,6 +198,12 @@
         <columns>
             <checkedByDefault>false</checkedByDefault>
             <field>FEC_Interaction_ID__c</field>
+            <table>Case</table>
+        </columns>
+        <columns>
+            <checkedByDefault>false</checkedByDefault>
+            <displayNameOverride>Interaction ID</displayNameOverride>
+            <field>FEC_Interaction_ID_Report__c</field>
             <table>Case</table>
         </columns>
         <columns>
