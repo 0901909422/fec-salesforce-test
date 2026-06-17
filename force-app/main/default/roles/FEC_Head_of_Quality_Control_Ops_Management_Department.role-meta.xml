@@ -3,7 +3,7 @@
     <caseAccessLevel>Edit</caseAccessLevel>
     <contactAccessLevel>Edit</contactAccessLevel>
     <mayForecastManagerShare>false</mayForecastManagerShare>
-    <name>Head of Quality Control &amp; Operations Management Department</name>
+    <name>Head of Customer Service Quality Control &amp; Operations Management Department</name>
     <opportunityAccessLevel>Read</opportunityAccessLevel>
     <parentRole>FEC_Customer_Service_Center_Director</parentRole>
 </Role>
