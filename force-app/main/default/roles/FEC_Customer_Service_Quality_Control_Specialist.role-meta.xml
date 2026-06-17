@@ -5,5 +5,5 @@
     <mayForecastManagerShare>false</mayForecastManagerShare>
     <name>Customer Service Quality Control Specialist</name>
     <opportunityAccessLevel>Read</opportunityAccessLevel>
-    <parentRole>FEC_Customer_Service_Quality_Control_Manager</parentRole>
+    <parentRole>FEC_Senior_Customer_Service_Quality_Control_Specialist</parentRole>
 </Role>

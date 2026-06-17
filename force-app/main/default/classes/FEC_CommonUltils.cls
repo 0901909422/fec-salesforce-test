@@ -2052,4 +2052,27 @@ public with sharing class FEC_CommonUltils {
     }
     return FEC_ConstantCommon.STATUS_ACTIVE;
   }
+
+  public static String resolveCardType(String digitalCardIndicator, String plasticId) {
+    if (digitalCardIndicator == 'Digital'
+        || digitalCardIndicator == 'Physical'
+        || digitalCardIndicator == 'Other') {
+      return digitalCardIndicator;
+    }
+
+    String indicator = String.isNotBlank(digitalCardIndicator)
+      ? digitalCardIndicator.trim()
+      : null;
+    String plastic = String.isNotBlank(plasticId) ? plasticId.trim().toUpperCase() : null;
+    Set<String> digitalPlasticIds = new Set<String>{ 'VC1', 'MT1' };
+    Boolean isDigitalPlastic = plastic != null && digitalPlasticIds.contains(plastic);
+
+    if (indicator == '2' || isDigitalPlastic) {
+      return 'Digital';
+    }
+    if (indicator == '0') {
+      return 'Physical';
+    }
+    return 'Other';
+  }
 }

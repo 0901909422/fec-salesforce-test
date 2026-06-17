@@ -22,6 +22,14 @@
             <fullName>Ubank</fullName>
             <default>false</default>
         </values>
+        <values>
+            <fullName>B2</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>Cash24</fullName>
+            <default>false</default>
+        </values>
     </picklistValues>
     <picklistValues>
         <picklist>FEC_Actions_Taken_D2C_Assessment__c</picklist>
@@ -297,6 +305,10 @@
     <picklistValues>
         <picklist>FEC_Interaction_Subchannel__c</picklist>
         <values>
+            <fullName>CIC</fullName>
+            <default>false</default>
+        </values>
+        <values>
             <fullName>EA</fullName>
             <default>false</default>
         </values>
@@ -318,6 +330,10 @@
         </values>
         <values>
             <fullName>Internal Email</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>Internal Task</fullName>
             <default>false</default>
         </values>
         <values>
@@ -346,6 +362,10 @@
         </values>
         <values>
             <fullName>SBV</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>VCCA</fullName>
             <default>false</default>
         </values>
         <values>

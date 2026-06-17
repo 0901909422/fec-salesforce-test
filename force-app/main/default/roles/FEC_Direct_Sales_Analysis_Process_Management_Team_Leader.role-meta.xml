@@ -5,4 +5,5 @@
     <mayForecastManagerShare>false</mayForecastManagerShare>
     <name>Direct Sales Analysis &amp; Process Management Team Leader</name>
     <opportunityAccessLevel>Read</opportunityAccessLevel>
+    <parentRole>FEC_Unit_Head_of_POS_Sales_Operations</parentRole>
 </Role>
