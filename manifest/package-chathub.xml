@@ -15,9 +15,9 @@
         <members>FEC_UtilsTest</members>
         <members>FEC_CreateCaseHandler</members>
         <members>FEC_CreateInteractionGenesys</members>
-        <members>FEC_Chathub/members>
-        <members>FEC_FileActionOnReviewService/members>
-        <members>FEC_FileActionOnReviewService_Test/members>
+        <members>FEC_Chathub</members>
+        <members>FEC_FileActionOnReviewService</members>
+        <members>FEC_FileActionOnReviewService_Test</members>
         <name>ApexClass</name>
     </types>
 
