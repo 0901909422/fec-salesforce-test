@@ -4,6 +4,10 @@ private class FEC_UserManagerSync_Test {
     private static final String USER_GROUP_CC = 'CC';
     private static final String USER_GROUP_OB = 'OB';
 
+  private static void abortDailySyncJobs() {
+    FEC_UserManagerSyncScheduler.abortExistingScheduledJobs();
+  }
+
     @TestSetup
     static void setupData() {
         UserRole parentRole = new UserRole(DeveloperName = 'UMS_Parent_Role', Name = 'UMS Manager Level');
@@ -223,9 +227,11 @@ private class FEC_UserManagerSync_Test {
         User managerCc = [SELECT Id FROM User WHERE LastName = 'AlphaManager' LIMIT 1];
         System.assertNotEquals(managerCc.Id, childUser.ManagerId);
 
+        abortDailySyncJobs();
         Test.startTest();
         Database.executeBatch(new FEC_UserManagerSyncBatch(), 200);
         Test.stopTest();
+        abortDailySyncJobs();
 
         childUser = [SELECT ManagerId FROM User WHERE Id = :childUser.Id];
         System.assertEquals(managerCc.Id, childUser.ManagerId);
@@ -237,9 +243,11 @@ private class FEC_UserManagerSync_Test {
         User managerCc = [SELECT Id FROM User WHERE LastName = 'AlphaManager' LIMIT 1];
         System.assertNotEquals(managerCc.Id, childUser.ManagerId);
 
+        abortDailySyncJobs();
         Test.startTest();
         new FEC_UserManagerSyncScheduler().execute(null);
         Test.stopTest();
+        abortDailySyncJobs();
 
         childUser = [SELECT ManagerId FROM User WHERE Id = :childUser.Id];
         System.assertEquals(managerCc.Id, childUser.ManagerId);
@@ -247,10 +255,10 @@ private class FEC_UserManagerSync_Test {
 
     @IsTest
     static void testScheduler_scheduleDailyJob() {
-        Test.startTest();
+        abortDailySyncJobs();
+
         String firstJobId = FEC_UserManagerSyncScheduler.scheduleDailyJob();
         String secondJobId = FEC_UserManagerSyncScheduler.scheduleDailyJob();
-        Test.stopTest();
 
         System.assertNotEquals(null, firstJobId);
         System.assertNotEquals(null, secondJobId);
@@ -261,5 +269,7 @@ private class FEC_UserManagerSync_Test {
             WHERE CronJobDetail.Name LIKE 'FEC User Manager Sync Daily%'
         ];
         System.assertEquals(1, scheduledJobs.size());
+
+        abortDailySyncJobs();
     }
 }

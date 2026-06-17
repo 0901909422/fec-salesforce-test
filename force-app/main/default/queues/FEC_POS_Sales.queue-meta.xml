@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Queue xmlns="http://soap.sforce.com/2006/04/metadata">
+    <doesIncludeBosses>false</doesIncludeBosses>
+    <doesSendEmailToMembers>false</doesSendEmailToMembers>
+    <name>POS Sales</name>
+    <queueMembers>
+        <roles>
+            <role>FEC_Senior_POS_Sales_Process_Management_Specialist</role>
+            <role>FEC_Unit_Head_of_POS_Sales_Operations</role>
+        </roles>
+    </queueMembers>
+    <queueSobject>
+        <sobjectType>Case</sobjectType>
+    </queueSobject>
+</Queue>

@@ -8,6 +8,7 @@ public without sharing class FEC_DNBHandler {
     public class CaseInfoResponse {
         @AuraEnabled public String customerName;
         @AuraEnabled public String nationalId;
+        @AuraEnabled public String nationalIds;
         @AuraEnabled public String primaryPhoneNumber;
         @AuraEnabled public String interactionPhoneNumber;
         @AuraEnabled public String interactionMaskedPhone;
@@ -46,6 +47,7 @@ public without sharing class FEC_DNBHandler {
         Case caseRecord = [
       SELECT Id, FEC_Customer_Name__c,
       FEC_Account_or_Contract__r.FEC_National_ID_Passport_ID__c ,
+      FEC_Account_or_Contract__r.FEC_Search_Result_National_ID__c ,
       FEC_Phone_Number__c, FEC_Interaction__r.FEC_Phone_Number__c,
       FEC_Interaction__r.FEC_Interaction_Masked_Phone__c,
       FEC_Interaction__r.FEC_Interaction_Email__c,
@@ -58,6 +60,7 @@ public without sharing class FEC_DNBHandler {
         response.customerName = caseRecord.FEC_Customer_Name__c;
         response.nationalId =
             caseRecord.FEC_Account_or_Contract__r.FEC_National_ID_Passport_ID__c;
+        response.nationalIds = caseRecord.FEC_Account_or_Contract__r.FEC_Search_Result_National_ID__c;
         response.primaryPhoneNumber = caseRecord.FEC_Phone_Number__c;
         response.interactionPhoneNumber =
             caseRecord.FEC_Interaction__r.FEC_Phone_Number__c;
@@ -739,7 +742,7 @@ public without sharing class FEC_DNBHandler {
     
     @AuraEnabled
     public static FEC_GetDNBCalloutService.DNBResult checkDNBExisting(
-    Id caseId) {
+    Id caseId,  String nationalId) {
         // ===== Get Case =====
         List<Case> caseRecords = [
       SELECT Id, FEC_Phone_Number__c,FEC_Account_or_Contract__r.FEC_Search_Result_National_ID__c,
@@ -754,11 +757,7 @@ public without sharing class FEC_DNBHandler {
             new FEC_GetDNBCalloutService.DNBRequest();
         
         
-        String nationalId = caseRecord.FEC_Account_or_Contract__r.FEC_Search_Result_National_ID__c;
-        
-        req.nid = String.isBlank(nationalId)
-            ? ''
-            : nationalId.split(',')[0].trim();
+        req.nid = String.isBlank(nationalId)? '': nationalId.trim();
         
         req.email = caseRecord.FEC_Interaction__r != null && caseRecord.FEC_Interaction__r.FEC_Interaction_Email__c != null
             ? caseRecord.FEC_Interaction__r.FEC_Interaction_Email__c
@@ -983,7 +982,7 @@ public without sharing class FEC_DNBHandler {
         Case caseRecord = [
     SELECT Id, FEC_Phone_Number__c, FEC_Interaction__r.FEC_Interaction_Email__c,
     FEC_Account_or_Contract__c, FEC_Current_Case_Stage__r.Name,
-    FEC_Account_or_Contract__r.FEC_Search_Result_National_ID__c, FEC_Account_or_Contract__r.FEC_Primary_Phone__c FROM Case WHERE
+    FEC_Account_or_Contract__r.FEC_Search_Result_National_ID__c,  FEC_Account_or_Contract__r.FEC_Primary_Phone__c FROM Case WHERE
         Id = : caseId LIMIT 1
   ];
         
@@ -1158,6 +1157,38 @@ public without sharing class FEC_DNBHandler {
         return finalRes;
     }
     
+    @AuraEnabled
+    public static List<DNBResponseItem> getListDNBsExistingCustomer(String caseId, String nationalId) {
+        List<DNBResponseItem> dnbList = new List<DNBResponseItem>();
+        
+        try {
+            List<FEC_Do_Not_Bother__c> dnbRecords = [
+        SELECT Id, FEC_Current_Status__c, FEC_Expiry_Date__c,
+        FEC_Original_Reason__c, FEC_DNB_Channel__c, FEC_Type__c, FEC_Remarks__c,
+        FEC_Phone_Email__c FROM FEC_Do_Not_Bother__c WHERE
+            FEC_Case__c = : caseId
+             AND FEC_National_ID__c = :nationalId
+      ];
+            
+            for (FEC_Do_Not_Bother__c record : dnbRecords) {
+                DNBResponseItem item = new DNBResponseItem();
+                item.id = record.Id;
+                item.doNotBother = record.FEC_Current_Status__c;
+                item.expectedExcludeTime = record.FEC_Expiry_Date__c != null
+                    ? String.valueOf(record.FEC_Expiry_Date__c)
+                    : null;
+                item.reason2 = record.FEC_Original_Reason__c;
+                item.type = record.FEC_Type__c;
+                item.channel = record.FEC_DNB_Channel__c;
+                item.typeValue = record.FEC_Phone_Email__c;
+                dnbList.add(item);
+            }
+            
+        } catch (Exception e) {
+            System.debug('Error fetching DNB records: ' + e.getMessage());
+        }
+        return dnbList;
+    }
     
     @AuraEnabled
     public static List<DNBResponseItem> getListDNBs(String caseId) {
@@ -1284,7 +1315,7 @@ public without sharing class FEC_DNBHandler {
         return rows;
     }
     
-    private static List<FEC_Do_Not_Bother__c> mergeDNBRows(Id caseId,
+    private static List<FEC_Do_Not_Bother__c> mergeDNBRows(Id caseId, String nationalId,
     List<DNBRowTemplate> templates,
     List<FEC_GetDNBCalloutService.ResultItem> apiResults) {
         Map<String, FEC_GetDNBCalloutService.ResultItem> apiMap =
@@ -1296,7 +1327,7 @@ public without sharing class FEC_DNBHandler {
          * FIXED ROWS
          */
         for (DNBRowTemplate template : templates) {
-            FEC_Do_Not_Bother__c row = buildFixedRow(caseId, template);
+            FEC_Do_Not_Bother__c row = buildFixedRow(caseId, nationalId, template);
             
             String key = mapType(template.channel) + '_'
                 + normalizeCompareValue(template.value);
@@ -1319,7 +1350,7 @@ public without sharing class FEC_DNBHandler {
          * UNMATCHED ROWS
          */
         for (FEC_GetDNBCalloutService.ResultItem item : apiMap.values()) {
-            rows.add(buildDynamicRow(caseId, item));
+            rows.add(buildDynamicRow(caseId, item, nationalId));
         }
         
         return rows;
@@ -1345,7 +1376,7 @@ public without sharing class FEC_DNBHandler {
     }
     
     private static FEC_Do_Not_Bother__c buildDynamicRow(
-    Id caseId, FEC_GetDNBCalloutService.ResultItem item) {
+    Id caseId, FEC_GetDNBCalloutService.ResultItem item, String nationalId) {
         
         List<Case> cases = [
       SELECT Id,  FEC_Account_or_Contract__c
@@ -1356,7 +1387,7 @@ public without sharing class FEC_DNBHandler {
         FEC_Do_Not_Bother__c row = new FEC_Do_Not_Bother__c();
         
         row.FEC_Case__c = caseId;
-        
+        row.FEC_National_ID__c = nationalId;
         row.FEC_DNB_Channel__c =
             mapChannel(item.type);
         
@@ -1371,12 +1402,12 @@ public without sharing class FEC_DNBHandler {
     }
     
     @AuraEnabled
-    public static void createExistingDNBRows(Id caseId) {
+    public static void createExistingDNBRows(Id caseId, String nationalId) {
         /*
          * Prevent duplicate
          */
         List<FEC_Do_Not_Bother__c> existing = [
-      SELECT Id FROM FEC_Do_Not_Bother__c WHERE FEC_Case__c = : caseId LIMIT 1
+      SELECT Id FROM FEC_Do_Not_Bother__c WHERE FEC_Case__c = : caseId AND FEC_National_ID__c = :nationalId 
     ];
         
         if (!existing.isEmpty()) {
@@ -1405,18 +1436,16 @@ public without sharing class FEC_DNBHandler {
          * Call DNB API
          */
         FEC_GetDNBCalloutService.DNBResult res = checkDNB(
-    caseRecord.FEC_Interaction__r != null
-        ? caseRecord.FEC_Interaction__r.FEC_Phone_Number__c
-        : null,
-
-    String.isBlank(caseRecord.FEC_Account_or_Contract__r.FEC_Search_Result_National_ID__c)
-        ? ''
-        : caseRecord.FEC_Account_or_Contract__r.FEC_Search_Result_National_ID__c.split(',')[0].trim(),
-
-    caseRecord.FEC_Interaction__r != null
-        ? caseRecord.FEC_Interaction__r.FEC_Interaction_Email__c
-        : null
-    );
+            caseRecord.FEC_Interaction__r != null
+            ? caseRecord.FEC_Interaction__r.FEC_Phone_Number__c
+            : null,
+        
+        nationalId,
+        
+        caseRecord.FEC_Interaction__r != null
+            ? caseRecord.FEC_Interaction__r.FEC_Interaction_Email__c
+            : null
+            );
         
         /*
          * API FAIL
@@ -1439,6 +1468,8 @@ public without sharing class FEC_DNBHandler {
             
         caseId,
         
+        nationalId,
+        
         templates,
         
         res.result);
@@ -1460,7 +1491,7 @@ public without sharing class FEC_DNBHandler {
          * Prevent duplicate
          */
         List<FEC_Do_Not_Bother__c> existing = [
-            SELECT Id FROM FEC_Do_Not_Bother__c WHERE FEC_Case__c = : caseId LIMIT 1
+            SELECT Id FROM FEC_Do_Not_Bother__c WHERE FEC_Case__c = : caseId AND FEC_National_ID__c = :nid
         ];
         
         if (!existing.isEmpty()) {
@@ -1517,6 +1548,8 @@ public without sharing class FEC_DNBHandler {
         List<FEC_Do_Not_Bother__c> rows = mergeDNBRows(
             
         caseId,
+        
+        nid,
         
         templates,
         
@@ -1628,6 +1661,7 @@ public without sharing class FEC_DNBHandler {
     private static FEC_Do_Not_Bother__c
         buildFixedRow(
         Id caseId,
+    String nationalId,
     DNBRowTemplate template
     ) {
         
@@ -1642,7 +1676,7 @@ public without sharing class FEC_DNBHandler {
             new FEC_Do_Not_Bother__c();
         
         dnb.FEC_Case__c = caseId;
-        
+        dnb.FEC_National_ID__c = nationalId;
         dnb.FEC_DNB_Channel__c =
             template.channel;
         

@@ -2540,6 +2540,11 @@
         <field>FEC_Currency_Code__c.FEC_Customer_History__c</field>
         <readable>true</readable>
     </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Do_Not_Bother__c.FEC_National_ID__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
     <hasActivationRequired>false</hasActivationRequired>
     <label>CS - Senior CS Outbound Specialist - Customer 360</label>
     <license>Salesforce</license>
