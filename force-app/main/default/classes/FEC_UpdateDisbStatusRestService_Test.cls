@@ -72,7 +72,7 @@ private class FEC_UpdateDisbStatusRestService_Test {
         System.assertEquals('200', responseCode());
 
         Case updatedCase = [
-            SELECT Status, FEC_Disbursement_Status__c, FEC_Remarks__c
+            SELECT Id, Status, FEC_Disbursement_Status__c, FEC_Disbursement_Date__c, FEC_Remarks__c
             FROM Case
             WHERE FEC_ID_Search__c = 'CRM12345'
         ];
@@ -80,7 +80,21 @@ private class FEC_UpdateDisbStatusRestService_Test {
             FEC_ConstantCommon.CASE_STATUS_RESOLVED_COMPLETED,
             updatedCase.Status
         );
+        System.assertEquals('Withdrawn', updatedCase.FEC_Disbursement_Status__c);
+        System.assertEquals(Date.valueOf('2026-05-27'), updatedCase.FEC_Disbursement_Date__c);
         System.assertEquals('Test Remarks', updatedCase.FEC_Remarks__c);
+
+        FEC_Pending_Disbursement__c pending = [
+            SELECT FEC_PD_Disbursement_Status__c, FEC_PD_Application_ID__c
+            FROM FEC_Pending_Disbursement__c
+            WHERE FEC_Case__c = :updatedCase.Id
+            LIMIT 1
+        ];
+        System.assertEquals(
+            FEC_ConstantCommon.FAST_CASH_DISB_STATUS_SUCCESS,
+            pending.FEC_PD_Disbursement_Status__c
+        );
+        System.assertEquals('CRM12345', pending.FEC_PD_Application_ID__c);
     }
 
     @IsTest
@@ -129,9 +143,10 @@ private class FEC_UpdateDisbStatusRestService_Test {
                 Status = 'New'
             )
         );
+        Id closedCaseId = [SELECT Id FROM Case WHERE FEC_ID_Search__c = 'CRM999' LIMIT 1].Id;
         updateCase(
             new Case(
-                Id = [SELECT Id FROM Case WHERE FEC_ID_Search__c = 'CRM999' LIMIT 1].Id,
+                Id = closedCaseId,
                 Status = FEC_ConstantCommon.CASE_STATUS_RESOLVED_COMPLETED
             )
         );
@@ -151,6 +166,31 @@ private class FEC_UpdateDisbStatusRestService_Test {
         Test.stopTest();
 
         System.assertEquals(200, RestContext.response.statusCode);
-        System.assertEquals('201', responseCode(), 'Phải trả về lỗi 201 (Business Error).');
+        System.assertEquals('200', responseCode(), 'Phải cập nhật disbursement trên Case đã đóng.');
+
+        Case updatedCase = [
+            SELECT Status, FEC_Disbursement_Status__c, FEC_Disbursement_Date__c
+            FROM Case
+            WHERE Id = :closedCaseId
+        ];
+        System.assertEquals(
+            FEC_ConstantCommon.CASE_STATUS_RESOLVED_COMPLETED,
+            updatedCase.Status,
+            'Không đổi Case Status khi Case đã đóng.'
+        );
+        System.assertEquals('Withdrawn', updatedCase.FEC_Disbursement_Status__c);
+        System.assertEquals(Date.valueOf('2026-05-27'), updatedCase.FEC_Disbursement_Date__c);
+
+        FEC_Pending_Disbursement__c pending = [
+            SELECT FEC_PD_Disbursement_Status__c, FEC_PD_Application_ID__c
+            FROM FEC_Pending_Disbursement__c
+            WHERE FEC_Case__c = :closedCaseId
+            LIMIT 1
+        ];
+        System.assertEquals(
+            FEC_ConstantCommon.FAST_CASH_DISB_STATUS_SUCCESS,
+            pending.FEC_PD_Disbursement_Status__c
+        );
+        System.assertEquals('CRM999', pending.FEC_PD_Application_ID__c);
     }
 }
