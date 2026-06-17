@@ -1213,7 +1213,7 @@ public with sharing class FEC_CommonUltils {
   }
 
   public static String checkActiveAndInacive(String cardStatus) {
-    if (cardStatus == 'Y') {
+    if (cardStatus == 'N') {
         return 'Active';
     }
     return 'Inactive';
